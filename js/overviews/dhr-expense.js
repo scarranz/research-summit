@@ -15,20 +15,23 @@
 // line — it runs *through* cost of sales and SG&A — so it is the one thing a reader cannot find
 // by looking at the statement, and the entire GAAP-to-adjusted gap is it.
 //
+// ── DEFINITIONS: SEVERAL QUOTES PER LINE, NOT ONE ─────────────────────────────────────────────
+// Danaher does not define most of its expense lines as a whole. It publishes scattered policy
+// sentences that each say "this falls in that line". One borrowed quote standing in for a
+// definition is worse than three real ones plus a note saying no single definition exists —
+// which is what `defNote` is for. Saying "the company never defines this" is information.
+//
 // ── THE DATA COMES IN, IT IS NOT REDECLARED ───────────────────────────────────────────────────
 // `dhrExpenseHtml(A)` takes the annual array from dhr-bottomline.js rather than importing it,
 // which would make a cycle (bottom line imports this module). One home for the numbers.
 
-import { DHR_KIT_CSS } from './dhr-chartkit.js';
-
-var BRAND = '#0F7DC2', BRAND2 = '#1E3A5F', GREEN = '#2E8B57', RED = '#C0504D', AMBER = '#B7791F', GRAY = '#9AA4B0';
+var BRAND = '#0F7DC2', BRAND2 = '#1E3A5F', GREEN = '#2E8B57', AMBER = '#B7791F', GRAY = '#9AA4B0';
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fM(v){ return v == null ? '—' : '$' + Math.round(v).toLocaleString('en-US') + 'M'; }
 function fP(v, d){ return v == null ? '—' : v.toFixed(d == null ? 1 : d) + '%'; }
 
-// ─── Inline SVG sparkline. No Chart.js: these are eight points inside a heading, not a chart, and
-// a canvas per line would cost eight chart instances for something a path renders exactly. It
-// carries its own value labels at both ends so it is never a shape without numbers.
+// ─── Inline SVG sparkline. No Chart.js: these are seven points inside a heading, not a chart, and
+// a canvas per line would cost four more chart instances for something a path renders exactly. It
+// carries its value at both ends so it is never a shape without numbers.
 function spark(pts, labels, color, fmt){
   var vals = pts.filter(function(v){ return v != null; });
   if (vals.length < 2) return '';
@@ -45,7 +48,7 @@ function spark(pts, labels, color, fmt){
   var f = fmt || function(v){ return fP(v); };
   return '<div class="ew-spark">' +
     '<span class="ew-spark-e">' + esc(labels[0]) + ' <b>' + f(pts[0]) + '</b></span>' +
-    '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="serie">' +
+    '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="share of revenue over time">' +
       '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' + dots +
     '</svg>' +
     '<span class="ew-spark-e">' + esc(labels[n - 1]) + ' <b>' + f(pts[n - 1]) + '</b></span>' +
@@ -53,115 +56,115 @@ function spark(pts, labels, color, fmt){
 }
 
 // ═══ The four lines ═══════════════════════════════════════════════════════════════════════════
-// `pick(A)` returns the % -of-revenue series for the sparkline; `kpis` are FY2025 unless said.
+// `pick(a)` returns the %-of-revenue series for the sparkline; `kpis` are FY2025 unless said.
 var LINES = [
   {
     k:'cogs', n:'Cost of sales', c:BRAND2, tag:'$10,045M · 40.9%',
     pick:function(a){ return a.rev ? a.cogs / a.rev * 100 : null; },
-    kpis:[['$10,045M','Cost of sales, FY2025'],['59.1%','Gross margin'],['58.7–60.8%','Rango de 4 años'],['+3.9%','Crecimiento a/a']],
-    defNote:'Danaher <b>no publica una definición única</b> de cost of sales. Publica tres políticas que, juntas, determinan qué cae dentro:',
+    kpis:[['$10,045M','Cost of sales, FY2025'],['59.1%','Gross margin'],['58.7–60.8%','Four-year range'],['+3.9%','Year on year']],
+    defNote:'Danaher publishes <b>no single definition</b> of cost of sales. It publishes three policies which, together, decide what falls inside:',
     defs:[
-      { x:'<b>Inventories</b> — Inventories include the costs of <b>material, labor and overhead</b>.', src:'10-K FY2025, políticas contables' },
-      { x:'<b>Shipping and Handling</b> — Shipping and handling costs are included <b>as a component of cost of sales</b>. Revenue derived from shipping and handling costs billed to customers is included in sales.', src:'10-K FY2025, políticas contables' },
-      { x:'…reflects cost of sales, SG&A expenses and R&D expenses, <b>excluding depreciation, amortization of intangible assets and impairments</b>. Included within these categories of expenses are overhead expenses, stock compensation expense, restructuring charges and allocated corporate expenses.', src:'10-K FY2025, nota de segmentos — sobre el beneficio por segmento, no sobre esta línea' }
+      { x:'<b>Inventories</b> — Inventories include the costs of <b>material, labor and overhead</b>.', src:'10-K FY2025, accounting policies' },
+      { x:'<b>Shipping and Handling</b> — Shipping and handling costs are included <b>as a component of cost of sales</b>. Revenue derived from shipping and handling costs billed to customers is included in sales.', src:'10-K FY2025, accounting policies' },
+      { x:'…reflects cost of sales, SG&A expenses and R&D expenses, <b>excluding depreciation, amortization of intangible assets and impairments</b>. Included within these categories of expenses are overhead expenses, stock compensation expense, restructuring charges and allocated corporate expenses.', src:'10-K FY2025, segment note — about segment profit, not about this line' }
     ],
     comp:[
-      ['Materiales y trabajo directo','El grueso. Consumibles de bioprocessing, reactivos de diagnóstico, instrumentos.'],
-      ['Overhead de manufactura','Incluido explícitamente por la nota de segmentos, junto con SBC y cargos de reestructuración.'],
-      ['Envío y manejo','Lo que se factura al cliente entra en ventas; el costo entra aquí.'],
-      ['Amortización de intangibles','Una parte corre por esta línea — ver el cuarto panel. No se puede separar desde el estado de resultados.']
+      ['Materials and direct labour','The bulk of it. Bioprocessing consumables, diagnostic reagents, instruments.'],
+      ['Manufacturing overhead','Named explicitly by the segment note, alongside stock compensation and restructuring charges.'],
+      ['Shipping and handling','What is billed to the customer goes to sales; the cost lands here.'],
+      ['Intangible amortisation','Part of it runs through this line — see the fourth panel. It cannot be separated from the income statement.']
     ],
-    why:'Es la línea que define el margen bruto, y el margen bruto de Danaher es notablemente estable: <b>58.7% a 60.8% en cuatro años</b>, a través de una caída de ventas del 10% en 2023 y de una recuperación. Eso es mezcla, no precio: los consumibles recurrentes sostienen el margen cuando los instrumentos caen.',
+    why:'This is the line that sets gross margin, and Danaher\'s gross margin is remarkably steady: <b>58.7% to 60.8% across four years</b>, through a 10% revenue decline in 2023 and the recovery out of it. That is mix, not price — recurring consumables hold the margin up when instruments fall.',
     drivers:[
-      ['Mezcla consumibles vs equipo','Los consumibles llevan margen más alto. En 2023–2024 cayó el equipo y el margen bruto <i>subió</i>.'],
-      ['FX','Danaher vende ~60% fuera de EE.UU. El impacto en ventas se guía por separado (~+0.5% en FY26).'],
-      ['Aranceles','El costo arancelario de 2025 fue <b>&lt;$300M</b>. Desde 3T26 los reembolsos salen de core sales.'],
-      ['Precio','Danaher no publica un puente de precio/volumen. No lo inventes.']
+      ['Consumables vs equipment mix','Consumables carry the higher margin. Equipment fell in 2023–2024 and gross margin <i>rose</i>.'],
+      ['FX','Danaher sells ~60% outside the US. The revenue impact is guided separately (~+0.5% for FY26).'],
+      ['Tariffs','The 2025 tariff cost was <b>&lt;$300M</b>. From 3Q26 the refunds come out of core sales.'],
+      ['Price','Danaher publishes no price/volume bridge. Do not invent one.']
     ]
   },
   {
     k:'sga', n:'SG&A', c:BRAND, tag:'$8,235M · 33.5%',
     pick:function(a){ return a.rev ? a.sga / a.rev * 100 : null; },
-    kpis:[['$8,235M','SG&A, FY2025'],['33.5%','% de ventas'],['$562M','Deterioros totales FY2025'],['$432M','…de los cuales, el trade name']],
-    defNote:'⚠ <b>Danaher nunca define SG&A como línea.</b> Lo que publica son frases sueltas que dicen «esto cae en SG&A» — y resultan ser exactamente las que explican por qué la línea creció. Los deterioros están dentro, en las propias palabras del filing:',
+    kpis:[['$8,235M','SG&A, FY2025'],['33.5%','Of revenue'],['$562M','Total FY2025 impairments'],['$432M','…of which, the trade name']],
+    defNote:'⚠ <b>Danaher never defines SG&A as a line.</b> What it publishes are scattered sentences saying “this lands in SG&A” — and they turn out to be exactly the ones that explain why the line grew. The impairments are inside it, in the filing\'s own words:',
     defs:[
-      { x:'…the Company recorded a noncash impairment charge of <b>$432 million pretax</b> ($328 million after-tax) for the year ended December 31, 2025 related to a trade name <b>which is included in SG&A expenses</b> in the Consolidated Statement of Earnings.', src:'10-K FY2025, nota de intangibles — el deterioro de FY2025' },
-      { x:'…a noncash impairment charge of <b>$222 million pretax</b> ($169 million after-tax) related to the trade name for the year ended December 31, 2024, <b>which is included in SG&A expenses</b>…', src:'10-K FY2025 — el mismo cargo, un año antes' },
+      { x:'…the Company recorded a noncash impairment charge of <b>$432 million pretax</b> ($328 million after-tax) for the year ended December 31, 2025 related to a trade name <b>which is included in SG&A expenses</b> in the Consolidated Statement of Earnings.', src:'10-K FY2025, intangibles note — the FY2025 charge' },
+      { x:'…a noncash impairment charge of <b>$222 million pretax</b> ($169 million after-tax) related to the trade name for the year ended December 31, 2024, <b>which is included in SG&A expenses</b>…', src:'10-K FY2025 — the same charge, a year earlier' },
       { x:'…the Company terminated three contracts with distributors and incurred <b>$56 million of costs</b> related to the termination of the arrangements, <b>which are recorded within SG&A expenses</b>…', src:'10-K FY2025' },
-      { x:'Earnings attributable to noncontrolling interests have been reflected in <b>selling, general and administrative (“SG&A”) expenses</b> and were insignificant in all periods presented.', src:'10-K FY2025, bases de presentación' },
-      { x:'<b>Advertising</b> — Advertising costs are expensed as incurred.', src:'10-K FY2025, políticas contables' }
+      { x:'Earnings attributable to noncontrolling interests have been reflected in <b>selling, general and administrative (“SG&A”) expenses</b> and were insignificant in all periods presented.', src:'10-K FY2025, basis of presentation' },
+      { x:'<b>Advertising</b> — Advertising costs are expensed as incurred.', src:'10-K FY2025, accounting policies' }
     ],
     comp:[
-      ['Fuerza de ventas y marketing','El costo comercial de vender instrumentos y consumibles a través de tres segmentos.'],
-      ['Amortización de intangibles','La mayor parte de los ~$1.7B corre por aquí. Es la razón principal de que SG&A suba mientras las ventas no.'],
-      ['<b>Deterioros</b>','$265M en FY2024 y <b>$562M en FY2025</b> — casi todos en Life Sciences, y todos dentro de esta línea.'],
-      ['Costos de transacción de M&A','Los cargos de Masimo aterrizan aquí y en Diagnostics.']
+      ['Sales force and marketing','The commercial cost of selling instruments and consumables across three segments.'],
+      ['Intangible amortisation','Most of the ~$1.7B runs through here. It is the main reason SG&A rises while revenue does not.'],
+      ['<b>Impairments</b>','$265M in FY2024 and <b>$562M in FY2025</b> — almost all in Life Sciences, and all inside this line.'],
+      ['M&A transaction costs','The Masimo charges land here and in Diagnostics.']
     ],
-    compNote: '<b>Sobre las dos cifras de deterioro:</b> los <b>$562M</b> son el total de la compañía en FY2025; los <b>$432M</b> que cita el filing arriba son el cargo del <i>trade name</i>, que es la pieza mayor de ese total y cae en Life Sciences. No se contradicen — una contiene a la otra.<br><br>⚠ <b>Esta es la línea que hace que la tendencia del margen operativo engañe.</b> El margen reportado cayó de 21.8% (FY23) a 19.1% (FY25). Sumando los deterioros de vuelta, el margen limpio va de ~21.8% a <b>~21.4%</b> — prácticamente plano. La caída de 270pb es casi toda deterioros, no deterioro operativo.',
-    why:'SG&A creció <b>+15.6% entre FY2022 y FY2025</b> mientras las ventas cayeron 7.8%. Casi nada de eso es gasto comercial: es amortización de adquisiciones y deterioros. Leer esta línea como ineficiencia comercial es el error más fácil de cometer con Danaher.',
+    compNote:'<b>On the two impairment figures:</b> the <b>$562M</b> is the company total for FY2025; the <b>$432M</b> the filing quotes above is the <i>trade name</i> charge, the largest piece of that total, and it sits in Life Sciences. They do not contradict each other — one contains the other.<br><br>⚠ <b>This is the line that makes the operating-margin trend mislead.</b> Reported margin fell from 21.8% (FY23) to 19.1% (FY25). Add the impairments back and the clean margin goes from ~21.8% to <b>~21.4%</b> — essentially flat. The 270bp fall is almost all impairments, not operating deterioration.',
+    why:'SG&A grew <b>+15.6% between FY2022 and FY2025</b> while revenue fell 7.8%. Almost none of that is commercial spend: it is acquisition amortisation and impairments. Reading this line as commercial inefficiency is the easiest mistake to make with Danaher.',
     drivers:[
-      ['Deterioros','FY2024 $265M, FY2025 $562M. Concentrados en Life Sciences. No recurrentes, pero han ocurrido dos años seguidos.'],
-      ['Amortización creciente','Cada adquisición grande sube el escalón. Masimo añade ~$200M en 2026.'],
-      ['Apalancamiento operativo negativo','Con ventas planas, un gasto que crece comprime el margen aunque nada empeore.']
+      ['Impairments','FY2024 $265M, FY2025 $562M. Concentrated in Life Sciences. Non-recurring, but they have now recurred two years running.'],
+      ['Rising amortisation','Every large acquisition steps it up. Masimo adds ~$200M in 2026.'],
+      ['Negative operating leverage','With flat revenue, an expense that grows compresses the margin even when nothing is getting worse.']
     ]
   },
   {
-    k:'rnd', n:'I+D', c:GREEN, tag:'$1,598M · 6.5%',
+    k:'rnd', n:'R&D', c:GREEN, tag:'$1,598M · 6.5%',
     pick:function(a){ return a.rev ? a.rnd / a.rev * 100 : null; },
-    kpis:[['$1,598M','I+D, FY2025'],['6.5%','% de ventas'],['6.3–6.6%','Rango de 4 años'],['+0.9%','Crecimiento a/a']],
-    defNote:'La única de las tres líneas que Danaher <b>sí define de frente</b>:',
+    kpis:[['$1,598M','R&D, FY2025'],['6.5%','Of revenue'],['6.3–6.6%','Four-year range'],['+0.9%','Year on year']],
+    defNote:'The one line of the three Danaher <b>does define head-on</b>:',
     defs:[
-      { x:'<b>Research and Development</b> — The Company conducts research and development (“R&D”) activities for the purpose of developing new products, enhancing the functionality, effectiveness, ease of use and reliability of the Company’s existing products and expanding the applications for which uses of the Company’s products are appropriate. The Company’s R&D efforts include internal initiatives and those that use <b>licensed or acquired technology</b>. <b>R&D costs are expensed as incurred.</b>', src:'10-K FY2025, políticas contables' }
+      { x:'<b>Research and Development</b> — The Company conducts research and development (“R&D”) activities for the purpose of developing new products, enhancing the functionality, effectiveness, ease of use and reliability of the Company’s existing products and expanding the applications for which uses of the Company’s products are appropriate. The Company’s R&D efforts include internal initiatives and those that use <b>licensed or acquired technology</b>. <b>R&D costs are expensed as incurred.</b>', src:'10-K FY2025, accounting policies' }
     ],
     comp:[
-      ['Desarrollo interno','El grueso, a través de los tres segmentos.'],
-      ['Tecnología licenciada o adquirida','El 10-K lo nombra explícitamente como parte del esfuerzo de I+D.'],
-      ['Nada se capitaliza','"Expensed as incurred" — no hay activo de desarrollo que amortizar después.']
+      ['Internal development','The bulk of it, across all three segments.'],
+      ['Licensed or acquired technology','Named explicitly by the 10-K as part of the R&D effort.'],
+      ['Nothing is capitalised','“Expensed as incurred” — there is no development asset to amortise later.']
     ],
-    why:'Es la línea <b>más estable de todo el estado de resultados</b>: 6.3% a 6.6% de ventas durante cuatro años, sin importar el ciclo. Danaher no recorta I+D en la caída, que es la señal de que el Danaher Business System se aplica al gasto discrecional de verdad.',
+    why:'It is the <b>steadiest line in the whole income statement</b>: 6.3% to 6.6% of revenue across four years, regardless of the cycle. Danaher does not cut R&D in the downturn, which is the sign that the Danaher Business System is actually applied to discretionary spend.',
     drivers:[
-      ['Lanzamientos','Biacore 8S, SCIEX novus V55 y los sistemas de automatización de Beckman fueron nombrados como motores de Life Sciences en 2T26.'],
-      ['Sin capitalización','No hay palanca contable aquí. Lo que se gasta, se gasta.']
+      ['Launches','Biacore 8S, SCIEX novus V55 and Beckman automation systems were named as Life Sciences drivers in 2Q26.'],
+      ['No capitalisation','There is no accounting lever here. What is spent is spent.']
     ]
   },
   {
-    k:'amort', n:'Amortización de intangibles', c:AMBER, tag:'$1,697M · 6.9%',
+    k:'amort', n:'Intangible amortisation', c:AMBER, tag:'$1,697M · 6.9%',
     pick:function(a){ return a.rev ? a.amort / a.rev * 100 : null; },
-    kpis:[['$1,697M','Amortización, FY2025'],['6.9%','% de ventas'],['~$1,900M','Guía FY2026 (post-Masimo)'],['$2.77','Por acción, FY2025']],
-    defNote:'No es una línea del estado de resultados, así que no tiene política contable propia. Lo que sí hay es la razón por la que Danaher la excluye del ajustado, y la confirmación de que corre por dentro de otras líneas:',
+    kpis:[['$1,697M','Amortisation, FY2025'],['6.9%','Of revenue'],['~$1,900M','FY2026 guide (post-Masimo)'],['$2.77','Per share, FY2025']],
+    defNote:'Not an income-statement line, so it has no accounting policy of its own. What does exist is the reason Danaher excludes it from adjusted earnings, and the confirmation that it runs inside the other lines:',
     defs:[
-      { x:'<b>Amortization of Intangible Assets:</b> We exclude the amortization of acquisition-related intangible assets because <b>the amount and timing of such charges are significantly impacted by the timing and size of the Company’s acquisitions</b>.', src:'8-K 2T26, definición del non-GAAP' },
-      { x:'…reflects cost of sales, SG&A expenses and R&D expenses, <b>excluding depreciation, amortization of intangible assets and impairments</b>.', src:'10-K FY2025, nota de segmentos — por eso el beneficio por segmento no la lleva y el consolidado sí' }
+      { x:'<b>Amortization of Intangible Assets:</b> We exclude the amortization of acquisition-related intangible assets because <b>the amount and timing of such charges are significantly impacted by the timing and size of the Company’s acquisitions</b>.', src:'8-K 2Q26, non-GAAP definition' },
+      { x:'…reflects cost of sales, SG&A expenses and R&D expenses, <b>excluding depreciation, amortization of intangible assets and impairments</b>.', src:'10-K FY2025, segment note — which is why segment profit does not carry it and the consolidated figure does' }
     ],
     comp:[
-      ['No tiene línea propia','Corre <b>dentro</b> de cost of sales y de SG&A. No se puede leer desde el estado de resultados — sólo desde el flujo de efectivo y las notas.'],
-      ['Es todo el puente GAAP → ajustado','FY2025: EPS GAAP $5.03 contra ajustado $7.80. La brecha de $2.77 es esencialmente esta línea.'],
-      ['Es efectivo ya gastado','La caja salió cuando se compró la empresa. Por eso Danaher lo excluye — y por eso el FCF supera al ingreso neto todos los años.']
+      ['It has no line of its own','It runs <b>inside</b> cost of sales and SG&A. It cannot be read off the income statement — only from the cash flow statement and the notes.'],
+      ['It is the entire GAAP → adjusted bridge','FY2025: GAAP EPS $5.03 against adjusted $7.80. The $2.77 gap is essentially this line.'],
+      ['It is cash already spent','The money left when the business was bought. That is why Danaher excludes it — and why free cash flow beats net earnings every year.']
     ],
-    compNote: '⚠ <b>Usa la guía del 8-K, no la tabla del 10-K.</b> La nota 10 del 10-K FY2025 es <b>pre-Masimo</b> y proyecta ~$1.7B para 2026. El 8-K del 21-jul-2026, ya con Masimo cerrado, dice <b>~$1,900M</b> para FY2026 y ~$500M para el 3T26. La diferencia es Masimo: ~$200M en 2026 desde el 10-jun, que implica un run-rate anual de ~$300–360M.',
-    why:'Es el número más consecuente del P&L de Danaher y el que explica por qué el mercado mira el ajustado. También es el que <b>va a cambiar</b>: el measurement period de la PPA de Masimo cierra hasta jun-2027 y la empresa dice explícitamente que la asignación se va a mover, y con ella la amortización.',
+    compNote:'⚠ <b>Use the 8-K guide, not the 10-K table.</b> Note 10 of the FY2025 10-K is <b>pre-Masimo</b> and projects ~$1.7B for 2026. The 21-Jul-2026 8-K, with Masimo closed, says <b>~$1,900M</b> for FY2026 and ~$500M for 3Q26. The difference is Masimo: ~$200M in 2026 from 10 June, implying an annual run-rate of ~$300–360M.',
+    why:'It is the most consequential number in Danaher\'s P&L and the reason the market reads the adjusted figures. It is also the one that <b>will change</b>: the Masimo purchase-price-allocation measurement period runs to June 2027 and the company says explicitly that the allocation will move, and the amortisation with it.',
     drivers:[
-      ['Masimo','+$200M en 2026 sobre $4,844M de intangibles adquiridos. Vida mezclada implícita de 13–17 años.'],
-      ['StatLab','Aún no está en ningún filing. Cierra antes de fin de 2026.'],
-      ['El escalón no baja solo','En régimen (2027, Masimo completo): ~$1.6B de base + ~$330M ≈ <b>$1.9–2.0B</b>.']
+      ['Masimo','+$200M in 2026 on $4,844M of acquired intangibles. Implied blended life of 13–17 years.'],
+      ['StatLab','Not in any filing yet. Closes before the end of 2026.'],
+      ['The step does not come back down on its own','At run-rate (2027, full Masimo): ~$1.6B of base + ~$330M ≈ <b>$1.9–2.0B</b>.']
     ],
     calls:[
-      { s:'Matt Gugino', w:'1T26', x:'Post-close of Masimo we will be around 2.5 times net debt to EBITDA.' },
-      { s:'Rainer Blair', w:'1T26', x:'We expect Masimo to be accretive to adjusted diluted net earnings per common share in the first full year post-acquisition and to deliver a high-single-digit return on invested capital by the fifth full year of our ownership.' }
+      { s:'Matt Gugino', w:'1Q26', x:'Post-close of Masimo we will be around 2.5 times net debt to EBITDA.' },
+      { s:'Rainer Blair', w:'1Q26', x:'We expect Masimo to be accretive to adjusted diluted net earnings per common share in the first full year post-acquisition and to deliver a high-single-digit return on invested capital by the fifth full year of our ownership.' }
     ]
   }
 ];
 
 // ═══ KPI strip ════════════════════════════════════════════════════════════════════════════════
 var STRIP = [
-  { v:'59.1%',   l:'Margen bruto FY2025',            n:'Estable en 58.7–60.8% durante cuatro años.' },
-  { v:'19.1%',   l:'Margen operativo reportado',      n:'', warn:true },
-  { v:'~21.4%',  l:'Margen operativo sin deterioros', n:'La diferencia son $562M que no son operativos.', good:true },
-  { v:'28.2%',   l:'Margen operativo ajustado',       n:'El que la empresa guía y discute.' },
-  { v:'$1,697M', l:'Amortización de adquisiciones',   n:'6.9% de ventas. Todo el puente GAAP→ajustado.' },
-  { v:'$298M',   l:'Stock-based compensation',        n:'1.2% de ventas — un orden de magnitud menor que la amortización.' },
-  { v:'$5,260M', l:'Free cash flow FY2025',           n:'21.4% de ventas.' },
-  { v:'34',      l:'Años seguidos de FCF > utilidad neta', n:'', good:true }
+  { v:'59.1%',   l:'Gross margin FY2025',             n:'Steady in a 58.7–60.8% band for four years.' },
+  { v:'19.1%',   l:'Reported operating margin',       n:'', warn:true },
+  { v:'~21.4%',  l:'Operating margin ex-impairments', n:'The difference is $562M that is not operating.', good:true },
+  { v:'28.2%',   l:'Adjusted operating margin',       n:'The one the company guides and discusses.' },
+  { v:'$1,697M', l:'Acquisition amortisation',        n:'6.9% of revenue. The whole GAAP→adjusted bridge.' },
+  { v:'$298M',   l:'Stock-based compensation',        n:'1.2% of revenue — an order of magnitude below the amortisation.' },
+  { v:'$5,260M', l:'Free cash flow FY2025',           n:'21.4% of revenue.' },
+  { v:'34',      l:'Straight years of FCF > net earnings', n:'', good:true }
 ];
 
 // ═══ Style ════════════════════════════════════════════════════════════════════════════════════
@@ -221,28 +224,24 @@ function panel(line, A){
   var h = '<div class="ew-strip">' + line.kpis.map(function(k){
     return '<div class="ew-tile"><div class="ew-tv">' + esc(k[0]) + '</div><div class="ew-tl">' + esc(k[1]) + '</div></div>';
   }).join('') + '</div>';
-  // Several quotes per line, not one. Danaher does not define most of its expense lines as a
-  // whole — it publishes scattered policy sentences that each say "this falls in that line". One
-  // borrowed quote standing in for a definition is worse than three real ones plus a note saying
-  // no single definition exists, which is what `defNote` is for.
   if (line.defs && line.defs.length){
-    h += '<div class="ew-h">Cómo lo define el filing</div>';
+    h += '<div class="ew-h">How the filing defines it</div>';
     if (line.defNote) h += '<div class="ew-defnote">' + line.defNote + '</div>';
     h += line.defs.map(function(d){
       return '<p class="ew-q">“' + d.x + '”<span class="ew-att">' + esc(d.src) + '</span></p>';
     }).join('');
   }
-  h += '<div class="ew-h">Qué hay dentro de esta línea</div>' + boxes(line.comp);
+  h += '<div class="ew-h">What sits inside this line</div>' + boxes(line.comp);
   if (line.compNote) h += '<div class="ew-warn">' + line.compNote + '</div>';
-  h += '<div class="ew-h">Como % de ventas en el tiempo</div>' + spark(pts, labs, line.c);
-  h += '<div class="ew-h">Por qué importa al resultado</div><div class="ew-note">' + line.why + '</div>';
-  if (line.drivers){ h += '<div class="ew-h">Qué la mueve</div>' + boxes(line.drivers); }
+  h += '<div class="ew-h">Share of revenue over time</div>' + spark(pts, labs, line.c);
+  h += '<div class="ew-h">Why it matters to the bottom line</div><div class="ew-note">' + line.why + '</div>';
+  if (line.drivers){ h += '<div class="ew-h">What moves it</div>' + boxes(line.drivers); }
   if (line.calls){
-    h += '<div class="ew-h">Lo que dijo la dirección</div>' + line.calls.map(function(q){
+    h += '<div class="ew-h">What management said</div>' + line.calls.map(function(q){
       return '<blockquote>“' + esc(q.x) + '”<cite>' + esc(q.s) + ' · ' + esc(q.w) + '</cite></blockquote>';
     }).join('');
   }
-  h += '<div class="ew-foot">Cifras FY2025 salvo que se indique. Fuentes: 10-K FY2025 (MD&A y notas) y los 8-K de 1T26 y 2T26, vía SEC EDGAR CIK 0000313616; comentarios de dirección, de los earnings calls.</div>';
+  h += '<div class="ew-foot">FY2025 figures unless noted. Sources: 10-K FY2025 (MD&A and notes) and the 1Q26 / 2Q26 8-Ks, via SEC EDGAR CIK 0000313616; management commentary from the earnings calls.</div>';
   return h;
 }
 
@@ -254,7 +253,7 @@ export function dhrExpenseHtml(A){
         '<div class="ew-tv">' + esc(t.v) + '</div><div class="ew-tl">' + esc(t.l) + '</div>' +
         (t.n ? '<div class="ew-tn">' + t.n + '</div>' : '') + '</div>';
     }).join('') + '</div>' +
-    '<div class="exp-explorer"><div class="exp-explorer-h">Explorador de gastos — las tres líneas que Danaher publica, más la que no <span class="exp-hint">toca una línea para cambiar</span></div>' +
+    '<div class="exp-explorer"><div class="exp-explorer-h">Expense explorer — the three lines Danaher publishes, plus the one it does not <span class="exp-hint">tap a line to switch</span></div>' +
     '<div class="exp-tabs">' + LINES.map(function(l, i){
       return '<button type="button" class="exp-tab' + (i === 0 ? ' active' : '') + '" data-dxptab="' + l.k + '">' +
         '<span class="exp-dot" style="background:' + l.c + '"></span>' + esc(l.n) + ' <span class="exp-tag">' + esc(l.tag) + '</span></button>';

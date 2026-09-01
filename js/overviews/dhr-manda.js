@@ -19,11 +19,11 @@
 //   `calc` Derived here: the announced enterprise value divided by a target revenue figure the
 //          announcement itself gives. The arithmetic is shown so it can be checked.
 //   `none` Not disclosed and not derivable — a private target that never published revenue. It
-//          says "no divulgado" and stays empty. It is never estimated.
+//          says "not disclosed" and stays empty. It is never estimated.
 // A multiple with no source behind it would be the easiest thing in this pane to invent and the
 // hardest for a reader to catch, which is exactly why each one carries its provenance chip.
 
-import { dStdScaffold, dStdRender, dWireTables, D_ACT, D_ADJ, D_REF, D_UP, D_DOWN, D_NEUT } from './dhr-chartkit.js';
+import { dStdScaffold, dStdRender, dWireTables, D_ACT } from './dhr-chartkit.js';
 import { A } from './dhr-bottomline.js';
 
 var BRAND = '#0F7DC2', BRAND2 = '#1E3A5F', GRAY = '#9AA4B0', AMBER = '#B7791F', GREEN = '#2E8B57', PURPLE = '#7A5AF8';
@@ -40,50 +40,50 @@ var SEG = {
 // ═══ The platform deals ═══════════════════════════════════════════════════════════════════════
 // `ev` in $M. `mult` is what is shown; `multSrc` is its provenance (see the header).
 var DEALS = [
-  { co:'Masimo', closed:'jun-2026', year:2026, ev:9900, evLab:'~$9.9B EV', seg:'dx',
-    mult:'~18× EBITDA 2027E', multSrc:'co', multNote:'15× incluyendo el beneficio pleno de las sinergias anuales esperadas. Cifra de Danaher en el anuncio del 17-feb-2026. $180.00 por acción.',
-    prod:'Oximetría de pulso y monitoreo de paciente', prodX:'Cuidado agudo. ~$1.5B de ventas. Es la primera vez que Danaher compra un negocio de dispositivo médico de cabecera y no de laboratorio.',
-    flag:'El más reciente. Cerró antes de lo previsto y llevó la deuda neta de $13.8B a $22.2B.' },
+  { co:'Masimo', closed:'Jun 2026', year:2026, ev:9900, evLab:'~$9.9B EV', seg:'dx',
+    mult:'~18× 2027E EBITDA', multSrc:'co', multNote:'15× including the full benefit of expected annual synergies. Danaher\'s own figure in the 17-Feb-2026 announcement. $180.00 per share.',
+    prod:'Pulse oximetry and patient monitoring', prodX:'Acute care. ~$1.5B of revenue. The first time Danaher has bought a bedside medical-device business rather than a laboratory one.',
+    flag:'The most recent. Closed earlier than planned and took net debt from $13.8B to $22.2B.' },
 
-  { co:'StatLab', closed:'pendiente', year:2026, ev:null, evLab:'no divulgado', seg:'dx',
-    mult:'no divulgado', multSrc:'none',
-    prod:'Consumibles de histología', prodX:'~$250M de ventas 2025 y <b>más de 85% de ingreso recurrente</b>. Entra por Leica Biosystems. Danaher espera crecimiento de high-single digit a largo plazo y que sea accretiva al primer año completo.',
-    flag:'Anunciada en julio de 2026, sujeta a aprobaciones. Aún no aparece en ningún 10-K ni 10-Q.' },
+  { co:'StatLab', closed:'pending', year:2026, ev:null, evLab:'not disclosed', seg:'dx',
+    mult:'not disclosed', multSrc:'none',
+    prod:'Histology consumables', prodX:'~$250M of 2025 revenue and <b>more than 85% recurring</b>. Comes in through Leica Biosystems. Danaher expects high-single-digit growth over the long term and accretion in the first full year.',
+    flag:'Announced in July 2026, subject to approvals. Not yet in any 10-K or 10-Q.' },
 
-  { co:'Abcam', closed:'dic-2023', year:2023, ev:5700, evLab:'$5.7B', seg:'ls',
-    mult:'7.9× ventas · 22.7× EBITDA', multSrc:'co', multNote:'Ambos sobre CY2023. $24.00 por acción.',
-    prod:'Anticuerpos y reactivos de investigación', prodX:'Catálogo de consumibles para investigación, con marca propia y venta directa. En 2T26 la dirección lo nombró como "su mejor trimestre desde la adquisición".',
-    flag:'El múltiplo más alto sobre EBITDA de la lista.' },
+  { co:'Abcam', closed:'Dec 2023', year:2023, ev:5700, evLab:'$5.7B', seg:'ls',
+    mult:'7.9× revenue · 22.7× EBITDA', multSrc:'co', multNote:'Both on CY2023. $24.00 per share.',
+    prod:'Research antibodies and reagents', prodX:'A branded, direct-sold catalogue of research consumables. On the 2Q26 call management called it “its best quarter since acquisition”.',
+    flag:'The highest EBITDA multiple on the list.' },
 
-  { co:'Aldevron', closed:'ago-2021', year:2021, ev:9600, evLab:'$9.6B', seg:'bio',
-    mult:'~32× ventas 2020', multSrc:'calc', multNote:'$9.6B ÷ ~$300M de ventas 2020. Danaher no publicó múltiplo; la cifra de ventas es la del anuncio.',
-    prod:'ADN plasmídico, ARNm y proteínas', prodX:'Insumos de grado GMP para terapias génicas y celulares y para vacunas de ARNm. Comprado a EQT en el pico del ciclo post-COVID.',
-    flag:'Comprado en 2021, cuando el mercado de bioprocessing pagaba múltiplos que no volvieron.' },
+  { co:'Aldevron', closed:'Aug 2021', year:2021, ev:9600, evLab:'$9.6B', seg:'bio',
+    mult:'~32× 2020 revenue', multSrc:'calc', multNote:'$9.6B ÷ ~$300M of 2020 revenue. Danaher published no multiple; the revenue figure is the one in the announcement.',
+    prod:'Plasmid DNA, mRNA and proteins', prodX:'GMP-grade inputs for gene and cell therapies and for mRNA vaccines. Bought from EQT at the peak of the post-COVID cycle.',
+    flag:'Bought in 2021, when the bioprocessing market was paying multiples that have not come back.' },
 
-  { co:'Cytiva (GE Biopharma)', closed:'mar-2020', year:2020, ev:21400, evLab:'$21.4B', seg:'bio',
-    mult:'~17× EBITDA 2019E', multSrc:'co', multNote:'Cifra de Danaher. Precio neto ~$20B después de beneficios fiscales esperados ⇒ ~6.7× sobre ~$3.2B de ventas, con ~75% de ingreso recurrente.',
-    prod:'Bioprocessing: equipos y consumibles', prodX:'Resinas de cromatografía, filtración, sistemas de un solo uso. Es el corazón del segmento Biotechnology y el origen de los envíos de resina que se difirieron a 2027.',
-    flag:'La operación más grande de la historia de Danaher, y la que define el segmento Biotechnology.' },
+  { co:'Cytiva (GE Biopharma)', closed:'Mar 2020', year:2020, ev:21400, evLab:'$21.4B', seg:'bio',
+    mult:'~17× 2019E EBITDA', multSrc:'co', multNote:'Danaher\'s own figure. Net price ~$20B after expected tax benefits ⇒ ~6.7× on ~$3.2B of revenue, with ~75% recurring.',
+    prod:'Bioprocessing equipment and consumables', prodX:'Chromatography resins, filtration, single-use systems. It is the heart of the Biotechnology segment, and the origin of the resin shipments that slipped into 2027.',
+    flag:'The largest deal in Danaher\'s history, and the one that defines the Biotechnology segment.' },
 
-  { co:'Integrated DNA Technologies (IDT)', closed:'abr-2018', year:2018, ev:2100, evLab:'~$2.1B neto de caja', seg:'ls',
-    mult:'no divulgado', multSrc:'none', multNote:'IDT era privada y no publicaba ingresos; el precio tampoco se divulgó en el anuncio inicial.',
-    prod:'ADN sintético y oligonucleótidos', prodX:'Consumibles de alto valor para genómica. Fabricación por encargo de oligos para investigación, diagnóstico y terapias.',
+  { co:'Integrated DNA Technologies (IDT)', closed:'Apr 2018', year:2018, ev:2100, evLab:'~$2.1B net of cash', seg:'ls',
+    mult:'not disclosed', multSrc:'none', multNote:'IDT was private and published no revenue; the price was not disclosed in the initial announcement either.',
+    prod:'Synthetic DNA and oligonucleotides', prodX:'High-value consumables for genomics. Made-to-order oligos for research, diagnostics and therapeutics.',
     flag:'' },
 
-  { co:'Cepheid', closed:'nov-2016', year:2016, ev:4000, evLab:'~$4.0B', seg:'dx',
-    mult:'~6.3–6.5× ventas 2016E', multSrc:'calc', multNote:'~$4.0B ÷ los $618–635M que Cepheid guiaba para 2016 (ventas 2015: $539M). $53.00 por acción, incluyendo deuda y neto de caja adquirida.',
-    prod:'Diagnóstico molecular — GeneXpert', prodX:'Plataforma de PCR en punto de atención con cartuchos cerrados. Es el negocio que hace las pruebas respiratorias — los ~$1.6B que hoy son el mayor swing factor de la guía.',
-    flag:'Sin esta compra no existiría el problema del respiratorio, ni el auge de 2020–2022.' },
+  { co:'Cepheid', closed:'Nov 2016', year:2016, ev:4000, evLab:'~$4.0B', seg:'dx',
+    mult:'~6.3–6.5× 2016E revenue', multSrc:'calc', multNote:'~$4.0B ÷ the $618–635M Cepheid was guiding for 2016 (2015 revenue: $539M). $53.00 per share, including debt and net of cash acquired.',
+    prod:'Molecular diagnostics — GeneXpert', prodX:'Point-of-care PCR on closed cartridges. This is the business that runs the respiratory tests — the ~$1.6B that is today the largest single swing factor in the guide.',
+    flag:'Without this deal there would be no respiratory problem, and no 2020–2022 boom either.' },
 
-  { co:'Pall Corporation', closed:'ago-2015', year:2015, ev:13800, evLab:'$13.8B', seg:'ls',
-    mult:'~18× EBITDA · ~4.9× ventas', multSrc:'calc', multNote:'El múltiplo de EBITDA (~18×) es el que reportó la prensa financiera en el anuncio; el de ventas es $13.8B ÷ $2.8B de ingresos del ejercicio cerrado en julio de 2014. $127.20 por acción.',
-    prod:'Filtración, separación y purificación', prodX:'Consumibles de filtración para biofarma e industria. Es el negocio de "applied filtration" que en 2T26 creció ~10% empujado por microelectrónica de semiconductores.',
+  { co:'Pall Corporation', closed:'Aug 2015', year:2015, ev:13800, evLab:'$13.8B', seg:'ls',
+    mult:'~18× EBITDA · ~4.9× revenue', multSrc:'calc', multNote:'The EBITDA multiple (~18×) is the one the financial press reported at announcement; the revenue multiple is $13.8B ÷ $2.8B of revenue for the year ended July 2014. $127.20 per share.',
+    prod:'Filtration, separation and purification', prodX:'Filtration consumables for biopharma and industry. This is the “applied filtration” business that grew ~10% in 2Q26 on semiconductor microelectronics.',
     flag:'' },
 
-  { co:'Beckman Coulter', closed:'jun-2011', year:2011, ev:6800, evLab:'~$6.8B EV', seg:'mix',
-    mult:'~1.8× ventas', multSrc:'calc', multNote:'~$6.8B de valor de empresa ÷ ~$3.7B de ingresos anuales. $83.50 por acción, incluyendo deuda asumida y neto de caja. El anuncio no dio múltiplo de EBITDA.',
-    prod:'Diagnóstico clínico e instrumentos de laboratorio', prodX:'Química clínica, inmunoensayo, hematología y automatización de laboratorio. Se reparte hoy entre Diagnostics y Life Sciences.',
-    flag:'El múltiplo más bajo de la lista, y con diferencia — otra época y otro tipo de activo.' }
+  { co:'Beckman Coulter', closed:'Jun 2011', year:2011, ev:6800, evLab:'~$6.8B EV', seg:'mix',
+    mult:'~1.8× revenue', multSrc:'calc', multNote:'~$6.8B of enterprise value ÷ ~$3.7B of annual revenue. $83.50 per share, including assumed debt and net of cash. The announcement gave no EBITDA multiple.',
+    prod:'Clinical diagnostics and laboratory instruments', prodX:'Clinical chemistry, immunoassay, haematology and lab automation. Today it is split between Diagnostics and Life Sciences.',
+    flag:'The lowest multiple on the list, by a wide margin — a different era and a different kind of asset.' }
 ];
 
 // ═══ Capital deployed ═════════════════════════════════════════════════════════════════════════
@@ -112,14 +112,12 @@ function style(){
     '.dma .dma-tv{font-size:20px;font-weight:800;color:var(--navy);line-height:1.15;letter-spacing:-.01em}',
     '.dma .dma-tl{font-size:9.5px;font-weight:800;letter-spacing:.045em;text-transform:uppercase;color:var(--mu);margin-top:5px;line-height:1.4}',
     '.dma .dma-tn{font-size:10.5px;color:var(--mu);margin-top:5px;line-height:1.5}',
-    /* segment filter */
     '.dma .dma-filter{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px}',
     '.dma .dma-fl{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);margin-right:3px}',
     '.dma .dma-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bdr);background:#fff;border-radius:999px;padding:5px 12px;cursor:pointer;font:inherit;font-size:11px;font-weight:800;color:var(--navy);transition:.13s}',
     '.dma .dma-chip:hover{border-color:' + BRAND + '}',
     '.dma .dma-chip.off{opacity:.4}',
     '.dma .dma-dot{width:9px;height:9px;border-radius:3px;flex:none}',
-    /* deal cards */
     '.dma .dma-deal{border:1px solid var(--bdr);border-left:3px solid var(--bdr);border-radius:11px;padding:13px 15px;margin-bottom:9px;background:var(--w)}',
     '.dma .dma-deal[hidden]{display:none}',
     '.dma .dma-dh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:3px}',
@@ -143,7 +141,7 @@ function style(){
   ].join('') + '</style>';
 }
 
-var PROV = { co:['fuente: la empresa','co'], calc:['derivado aquí','calc'], none:['no divulgado','none'] };
+var PROV = { co:['company-stated','co'], calc:['derived here','calc'], none:['not disclosed','none'] };
 
 function dealCard(d){
   var s = SEG[d.seg];
@@ -152,11 +150,11 @@ function dealCard(d){
     '<span class="dma-seg" style="background:' + s.c + '">' + esc(s.n) + '</span>' +
     '<span class="dma-dd">' + esc(d.closed) + '</span></div>' +
     '<div class="dma-grid">' +
-      '<div class="dma-f"><div class="dma-fk">Precio</div><div class="dma-fv">' + esc(d.evLab) + '</div></div>' +
-      '<div class="dma-f"><div class="dma-fk">Múltiplo pagado</div><div class="dma-fv">' + esc(d.mult) +
+      '<div class="dma-f"><div class="dma-fk">Price</div><div class="dma-fv">' + esc(d.evLab) + '</div></div>' +
+      '<div class="dma-f"><div class="dma-fk">Multiple paid</div><div class="dma-fv">' + esc(d.mult) +
         '<span class="dma-prov ' + PROV[d.multSrc][1] + '">' + PROV[d.multSrc][0] + '</span></div>' +
         (d.multNote ? '<div class="dma-fx">' + d.multNote + '</div>' : '') + '</div>' +
-      '<div class="dma-f"><div class="dma-fk">Qué hace</div><div class="dma-fv">' + esc(d.prod) + '</div>' +
+      '<div class="dma-f"><div class="dma-fk">What it makes</div><div class="dma-fv">' + esc(d.prod) + '</div>' +
         '<div class="dma-fx">' + d.prodX + '</div></div>' +
     '</div>';
   if (d.flag) h += '<div class="dma-flag">' + d.flag + '</div>';
@@ -167,38 +165,38 @@ export function dhrMandaHtml(){
   if (!A || !A.length) return '';                    // rule 6 — nothing, never broken
   var total = A.reduce(function(t, a){ return t + (a.acq || 0); }, 0) + Y2026E;
   return style() + '<div class="dma">' +
-    '<p class="dma-lede"><b>Danaher es un adquirente antes que cualquier otra cosa</b>, y su estado de resultados sólo se entiende leído así: los ~$1.9B anuales de amortización de intangibles que separan el GAAP del ajustado son el precio acumulado de esta tabla. Aquí están las <b>nueve operaciones de plataforma</b> — no todas: Danaher ha hecho decenas de compras pequeñas que los 10-K divulgan sólo en agregado, sin nombre ni precio ni múltiplo. Esas viven en el gráfico, que es donde son las barras que realmente fueron.</p>' +
+    '<p class="dma-lede"><b>Danaher is an acquirer before it is anything else</b>, and its income statement only makes sense read that way: the ~$1.9B of annual intangible amortisation that separates GAAP from adjusted earnings is the accumulated price of this table. These are the <b>nine platform deals</b> — not all of them: Danaher has done scores of smaller acquisitions that the 10-Ks disclose only in aggregate, with no name, no price and no multiple. Those live in the chart, which is where they are the bars they actually were.</p>' +
 
     '<div class="dma-strip">' +
-      '<div class="dma-tile"><div class="dma-tv">$' + (total / 1000).toFixed(1) + 'B</div><div class="dma-tl">Efectivo en adquisiciones, 2016–2026E</div><div class="dma-tn">De la línea del flujo de efectivo, no de los precios anunciados.</div></div>' +
-      '<div class="dma-tile"><div class="dma-tv">9</div><div class="dma-tl">Operaciones de plataforma</div><div class="dma-tn">De 2011 a hoy. Una está pendiente de cerrar.</div></div>' +
-      '<div class="dma-tile"><div class="dma-tv">$21.4B</div><div class="dma-tl">La más grande — Cytiva, 2020</div><div class="dma-tn">Define el segmento Biotechnology entero.</div></div>' +
-      '<div class="dma-tile"><div class="dma-tv">~1.8× → ~32×</div><div class="dma-tl">Rango de múltiplos de ventas</div><div class="dma-tn">Beckman en 2011 contra Aldevron en 2021. No son comparables entre sí.</div></div>' +
-      '<div class="dma-tile"><div class="dma-tv">$22.2B</div><div class="dma-tl">Deuda neta a jun-2026</div><div class="dma-tn">Desde $13.8B antes de Masimo. ~2.5× deuda neta/EBITDA.</div></div>' +
-      '<div class="dma-tile"><div class="dma-tv">~$1.9B</div><div class="dma-tl">Amortización anual resultante</div><div class="dma-tn">Guía FY2026. Es la factura contable de todo lo de arriba.</div></div>' +
+      '<div class="dma-tile"><div class="dma-tv">$' + (total / 1000).toFixed(1) + 'B</div><div class="dma-tl">Cash on acquisitions, 2016–2026E</div><div class="dma-tn">From the cash flow statement, not from announced prices.</div></div>' +
+      '<div class="dma-tile"><div class="dma-tv">9</div><div class="dma-tl">Platform deals</div><div class="dma-tn">2011 to today. One is still pending.</div></div>' +
+      '<div class="dma-tile"><div class="dma-tv">$21.4B</div><div class="dma-tl">The largest — Cytiva, 2020</div><div class="dma-tn">It defines the entire Biotechnology segment.</div></div>' +
+      '<div class="dma-tile"><div class="dma-tv">~1.8× → ~32×</div><div class="dma-tl">Range of revenue multiples</div><div class="dma-tn">Beckman in 2011 against Aldevron in 2021. They are not comparable with each other.</div></div>' +
+      '<div class="dma-tile"><div class="dma-tv">$22.2B</div><div class="dma-tl">Net debt at Jun 2026</div><div class="dma-tn">From $13.8B before Masimo. ~2.5× net debt/EBITDA.</div></div>' +
+      '<div class="dma-tile"><div class="dma-tv">~$1.9B</div><div class="dma-tl">Resulting annual amortisation</div><div class="dma-tn">FY2026 guide. It is the accounting bill for everything above.</div></div>' +
     '</div>' +
 
-    '<div class="ov-sec-h">Efectivo desplegado en adquisiciones, por año</div>' +
-    '<p class="dma-sub">Es la línea <i>Acquisitions of businesses</i> del estado de flujo de efectivo, así que recoge también las compras pequeñas que no tienen ficha abajo: <b>2022</b> son siete negocios por $582M y <b>2024</b> son tres por $558M, sin nombre en el filing. Pall (2015) queda fuera del gráfico porque la serie arranca en 2016. <b>2025 fue cero</b> — el único año en blanco de la década, justo antes de Masimo.</p>' +
-    dStdScaffold({ id:'dhrAcq', title:'Efectivo pagado por adquisiciones ($M)', height:300,
-      metricSel:[{ v:'acq', label:'Efectivo pagado por adquisiciones', on:true }],
-      presets:[['all','Todo'],['l5','Últimos 5'],['big','Sólo años de plataforma']],
-      note:'FY2016–FY2025 del flujo de efectivo de Danaher, neto de caja adquirida. <b>FY2026 es estimación</b> (consenso Bloomberg), y es esencialmente el cheque de Masimo.' }) +
+    '<div class="ov-sec-h">Cash deployed on acquisitions, by year</div>' +
+    '<p class="dma-sub">This is the <i>Acquisitions of businesses</i> line of the cash flow statement, so it also picks up the small deals that have no card below: <b>2022</b> is seven businesses for $582M and <b>2024</b> is three for $558M, unnamed in the filing. Pall (2015) falls outside the chart because the series starts in 2016. <b>2025 was zero</b> — the only blank year of the decade, immediately before Masimo.</p>' +
+    dStdScaffold({ id:'dhrAcq', title:'Cash paid for acquisitions ($M)', height:300,
+      metricSel:[{ v:'acq', label:'Cash paid for acquisitions', on:true }],
+      presets:[['all','All'],['l5','Last 5'],['big','Platform years only']],
+      note:'FY2016–FY2025 from Danaher\'s cash flow statement, net of cash acquired. <b>FY2026 is an estimate</b> (Bloomberg consensus), and it is essentially the Masimo cheque.' }) +
 
-    '<div class="ov-sec-h">Las operaciones de plataforma</div>' +
-    '<p class="dma-legend"><b>Sobre la columna de múltiplo</b>, que es la que hay que leer con cuidado. ' +
-      '<span class="dma-prov co">fuente: la empresa</span> el múltiplo lo dijo Danaher en el anuncio. ' +
-      '<span class="dma-prov calc">derivado aquí</span> es el valor de empresa anunciado dividido entre una cifra de ventas que el propio anuncio da — la aritmética está escrita para que se pueda revisar. ' +
-      '<span class="dma-prov none">no divulgado</span> ni se divulgó ni se puede derivar, y se queda vacío en vez de estimarse. ' +
-      'Los múltiplos de años distintos <b>no son comparables entre sí</b>: 2011 y 2021 son dos mercados diferentes.</p>' +
-    '<div class="dma-filter"><span class="dma-fl">Segmento</span>' +
+    '<div class="ov-sec-h">The platform deals</div>' +
+    '<p class="dma-legend"><b>On the multiple column</b>, which is the one to read carefully. ' +
+      '<span class="dma-prov co">company-stated</span> Danaher gave the multiple in the announcement. ' +
+      '<span class="dma-prov calc">derived here</span> announced enterprise value divided by a revenue figure the announcement itself gives — the arithmetic is written out so it can be checked. ' +
+      '<span class="dma-prov none">not disclosed</span> neither disclosed nor derivable, and left empty rather than estimated. ' +
+      'Multiples from different years are <b>not comparable with each other</b>: 2011 and 2021 are two different markets.</p>' +
+    '<div class="dma-filter"><span class="dma-fl">Segment</span>' +
       Object.keys(SEG).map(function(k){
         return '<button type="button" class="dma-chip" data-dmaseg="' + k + '"><span class="dma-dot" style="background:' + SEG[k].c + '"></span>' + esc(SEG[k].n) + '</button>';
       }).join('') + '</div>' +
     '<div id="dmaDeals">' + DEALS.map(dealCard).join('') + '</div>' +
-    '<div class="dma-none" id="dmaNone" hidden>Ningún segmento seleccionado — vuelve a activar al menos uno.</div>' +
+    '<div class="dma-none" id="dmaNone" hidden>No segment selected — switch at least one back on.</div>' +
 
-    '<p class="dma-foot">Precios y fechas: comunicados de Danaher y de las empresas adquiridas, más los 8-K/10-K correspondientes (SEC EDGAR, CIK 0000313616). Serie de efectivo: estado de flujo de efectivo consolidado, FY2016–FY2025. Los múltiplos llevan su procedencia marcada uno a uno; ninguno está estimado.</p>' +
+    '<p class="dma-foot">Prices and dates: Danaher and target-company announcements, plus the corresponding 8-K/10-K filings (SEC EDGAR, CIK 0000313616). Cash series: consolidated statement of cash flows, FY2016–FY2025. Every multiple carries its provenance one by one; none is estimated.</p>' +
   '</div>';
 }
 
@@ -212,10 +210,10 @@ function acqDerive(st){
   if (pr === 'big') vals = vals.map(function(v){ return (v != null && v >= 2000) ? v : null; });
   return {
     labels: s.labels.slice(), lastAct: s.lastAct,
-    series: [{ k:'acq', grp:'acq', src:'Efectivo en adquisiciones', label:'Efectivo pagado por adquisiciones ($M)', color:D_ACT, type:'bar', data:vals }],
+    series: [{ k:'acq', grp:'acq', src:'Cash on acquisitions', label:'Cash paid for acquisitions ($M)', color:D_ACT, type:'bar', data:vals }],
     yFmt: function(v){ return '$' + Math.round(v).toLocaleString('en-US') + 'M'; },
-    tblTitle:'Datos — lo que dibuja el gráfico',
-    legNote:'La barra clara (FY2026) es estimación.'
+    tblTitle:'Data — what the chart draws',
+    legNote:'The pale bar (FY2026) is an estimate.'
   };
 }
 

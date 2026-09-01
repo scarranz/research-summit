@@ -29,6 +29,7 @@ import { segmentsHtml, initSegments, segmentsOverviewHtml, initSegmentsOverview,
          segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line ▸ General · Segments · Other · Customers
 import { amznSens } from './amzn-sensitivity.js';   // Valuation ▸ Sensitivity Analysis
 import { amznTargetMult } from './amzn-target-multiple.js';   // Valuation ▸ Target Multiple
+import { SUMMIT_CAT, SUMMIT_INK } from '../viz-palette.js';   // the portal's fixed categorical palette (see the file header)
 import { amznHistMult } from './amzn-histmult.js';            // Valuation ▸ Historic Multiple
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode) ──
@@ -146,7 +147,12 @@ function ceNoteAddPop(anchor){
 }
 
 // ─── Brand: Amazon orange + Amazon blue ─────────────────────────────────────────────────────
-var BRAND='#FF9900', BRAND2='#146EB4', SQUID='#232F3E', GREEN='#2E8B57', GRAY='#9AA4B0';
+// These were Amazon's own brand hexes (#FF9900 smile orange, #146EB4 blue, #232F3E squid ink), used
+// as chart colours in ~175 places. They now point at the portal's fixed categorical palette, so the
+// profile no longer paints itself in the company's brand — the brand belongs in the logo, and slot 1
+// is the same blue on every company. The NAMES are kept deliberately: renaming 175 call sites would
+// bury a palette change inside an unreviewable diff. Read BRAND as "series 1", BRAND2 as "series 2".
+var BRAND=SUMMIT_CAT[0], BRAND2=SUMMIT_CAT[1], SQUID=SUMMIT_INK, GREEN='#2E8B57', GRAY='#9AA4B0';
 var _co=null;   // open company (id + ticker), captured in html/deepDiveHtml for the shared Watch List engine
 
 function collapsible(title, inner, open){
@@ -5070,7 +5076,7 @@ function amznTrackBody(){
 
 function html(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring
-  var h='<div class="ov ov-amzn" data-brand="AMZN" style="--brand:'+BRAND+';--brand-2:'+BRAND2+';--brand-soft:rgba(255,153,0,0.10)">';
+  var h='<div class="ov ov-amzn" data-brand="AMZN" style="--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">';
   h+=stdOverviewBody(c);
   h+='<div class="ov-modal-back" id="amznModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="amznModalX" aria-label="Close">×</button>'+
@@ -5376,7 +5382,7 @@ function aOtherAnalysisBody(){
 }
 function deepDiveHtml(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring
-  var h='<div class="ov ov-amzn ov-amzn-dd" data-brand="AMZN" style="--brand:'+BRAND+';--brand-2:'+BRAND2+';--brand-soft:rgba(255,153,0,0.10)">';
+  var h='<div class="ov ov-amzn ov-amzn-dd" data-brand="AMZN" style="--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">';
   h+='<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
       '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+

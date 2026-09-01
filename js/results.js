@@ -3251,7 +3251,10 @@ function wireResults(pane){
     if (stb){
       var sst2 = rsSurpSt();
       sst2.tbl = sst2.tbl === false;
-      var sbody = document.getElementById('rsSurpTableBody');
+      // Scope to the collapsible that was actually clicked. The engine renders up to THREE times on
+      // one profile (Earnings Setup · Results · Estimates), so these ids are not unique in the
+      // document and getElementById would toggle the first instance — i.e. a different tab's table.
+      var sbody = (stb.closest('.rs-collap') || document).querySelector('#rsSurpTableBody');
       if (sbody) sbody.hidden = sst2.tbl === false;
       stb.innerHTML = rsSurpTableHeadHtml();
       return;
@@ -3260,7 +3263,7 @@ function wireResults(pane){
     if (tb){
       var tk = tb.getAttribute('data-rstblb'), tst = rsSt(tk);
       tst.tbl = tst.tbl === false;
-      var tbody = document.getElementById('rsTableBody-' + tk);
+      var tbody = (tb.closest('.rs-collap') || document).querySelector('#rsTableBody-' + tk);   // same three-instance caveat as above
       if (tbody) tbody.hidden = tst.tbl === false;
       tb.innerHTML = rsTableHeadHtml(tk, rsMetric(tk));
       return;

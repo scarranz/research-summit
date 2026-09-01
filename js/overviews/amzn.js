@@ -3011,6 +3011,15 @@ function aCollap(title, inner, open){
 // PERIOD window with rs-ticks dots + drag-to-zoom on the X. A chart registers a derive(state) fn that
 // returns {labels,lastAct,series:[{k,label,color,data,fwdDash}],yFmt}; controls re-render via it.
 var ASTD_ACT='rgba(30,39,51,0.92)', ASTD_SUMMIT='rgba(37,99,235,0.85)', ASTD_CONS='rgba(124,134,148,0.85)';
+// Fade a series colour to a given alpha. Accepts BOTH '#rrggbb' and 'rgba(r,g,b,a)' — the ASTD_*
+// palette is authored as rgba(), and feeding that to acxRGBA (hex-only) yields 'rgba(NaN,186,NaN,0.5)',
+// which paints nothing. That silently hid every forward-period bar on the profitability charts.
+function aFadeC(c,a){
+  if(!c) return c;
+  if(c.charAt(0)==='#') return acxRGBA(c,a);
+  var m=/^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i.exec(c);
+  return m ? 'rgba('+m[1]+','+m[2]+','+m[3]+','+a+')' : c;
+}
 var _aStd={}, _aStdDerive={};
 function aStdScaffold(cfg){
   var id=cfg.id;
@@ -3046,7 +3055,7 @@ function aStdRender(id, derive){
   var stk=spec.stacked?'s':undefined, needY2=false;   // engine supports bars + a secondary right axis (SAB dual-axis)
   var ds=spec.series.filter(function(s){ return !st.hidden[s.k]; }).map(function(s){
     var t=s.type||spec.type||'line'; if(s.yAxisID==='y2') needY2=true;
-    if(t==='bar') return { type:'bar', label:s.label, data:s.data.slice(lo,hi+1), backgroundColor:s.data.slice(lo,hi+1).map(function(_,i){ return (lo+i)>la?acxRGBA(s.color,0.5):s.color; }), borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:stk, yAxisID:s.yAxisID||'y', order:s.order||3 };
+    if(t==='bar') return { type:'bar', label:s.label, data:s.data.slice(lo,hi+1), backgroundColor:s.data.slice(lo,hi+1).map(function(_,i){ return (lo+i)>la?aFadeC(s.color,0.5):s.color; }), borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:stk, yAxisID:s.yAxisID||'y', order:s.order||3 };
     return { type:'line', label:s.label, data:s.data.slice(lo,hi+1), borderColor:s.color, backgroundColor:s.color, borderWidth:2.2, pointRadius:2, tension:0.2, spanGaps:false, yAxisID:s.yAxisID||'y', order:s.order||2,
       borderDash:s.dash?[5,4]:undefined, segment: s.fwdDash?{ borderDash:function(ctx){ return (lo+ctx.p1DataIndex)>la?[5,4]:undefined; } }:undefined }; });
   var anyBar=spec.series.some(function(s){ return (s.type||spec.type)==='bar'; }), y2f=spec.y2Fmt||function(v){return v;};
@@ -5267,6 +5276,9 @@ function wireModal(root){
   function openM(t,b){ mT.innerHTML=t; mB.innerHTML=b; back.hidden=false; requestAnimationFrame(function(){ back.classList.add('on'); }); document.addEventListener('keydown', onEsc); }
   function closeM(){ back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden=true; }, 180); }
   root.querySelector('#amznModalX').onclick=closeM; back.onclick=function(e){ if(e.target===back) closeM(); };
+  // The modal is hoisted to #co-detailview so it survives a hidden pane — which also means a tab
+  // switch would leave it floating over the pane the reader just moved to. wireDD calls this.
+  root._amznCloseModal=closeM;
   function resolve(key){
     var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
     if(kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
@@ -5339,8 +5351,10 @@ function ceEqualizeTabBars(root){
     el.querySelectorAll(':scope > button').forEach(function(btn){ btn.style.flex='1'; }); });
 }
 function wireDD(root){
+  function shutModal(){ if(root._amznCloseModal) root._amznCloseModal(); }
   root.querySelectorAll('.ov-amzn-dd .dd-tab').forEach(function(btn){ btn.onclick=function(){
     var key=btn.getAttribute('data-dd');
+    shutModal();
     root.querySelectorAll('.ov-amzn-dd .dd-tab').forEach(function(b){ b.classList.toggle('active', b===btn); });
     root.querySelectorAll('.ov-amzn-dd .dd-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-dd')!==key); });
     var pane=root.querySelector('.ov-amzn-dd .dd-pane[data-dd="'+key+'"]');
@@ -5356,6 +5370,7 @@ function wireDD(root){
     var SUB=':scope > .ovt-subtabs > .ovt-subtab, :scope > .ce-evohead > .ovt-subtabs > .ovt-subtab';
     pane.querySelectorAll(SUB).forEach(function(btn){ btn.onclick=function(){
       var key=btn.getAttribute('data-ovst');
+      shutModal();
       ceKeepPos(btn, function(){
         pane.querySelectorAll(SUB).forEach(function(b){ b.classList.toggle('active', b===btn); });
         pane.querySelectorAll(':scope > .ovt-subpane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovst')!==key); });

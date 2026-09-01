@@ -52,6 +52,9 @@ import { dhrCallPrepHtml, dhrCallPrepInit } from './dhr-callprep.js';
 // Evolution ▸ Guidance — what the company put in writing (the 8-K driver table), the quotes, and
 // the event timeline. Sits after Estimates, per the sub-tab row the conventions define.
 import { dhrGuidanceHtml, dhrGuidanceInit } from './dhr-guidance.js';
+// Evolution ▸ M&A — the nine platform deals, what was paid and what each one makes. It lives in
+// Evolution because the ~$1.9B of annual intangible amortisation is the accumulated price of it.
+import { dhrMandaHtml, dhrMandaInit } from './dhr-manda.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -645,6 +648,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="evres">Results</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="evest">Estimates</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="evguid">Guidance</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="evma">M&amp;A</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="evearn">'+dhrCallPrepHtml()+'</div>'+
       '<div class="ovt-subpane" data-ovst="evres" hidden>'+resultsHtml('DHR')+'</div>'+
@@ -661,6 +665,7 @@ function deepDiveHtml(c){
          '<b>A Summit DCF model.</b> <code>search_ticker(&quot;Danaher&quot;)</code> returns no matches, so there is no projection history and no Summit line anywhere in this tab.',
          'Analyst figures spoken on the Q2&#39;26 call are individual numbers, NOT consensus &mdash; they must never be labelled as such.'])) +'</div>'+
       '<div class="ovt-subpane" data-ovst="evguid" hidden>'+dhrGuidanceHtml()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="evma" hidden>'+dhrMandaHtml()+'</div>'+
     '</div>';
 
   h+='<div class="dd-pane" data-dd="valuation" hidden>'+
@@ -712,11 +717,15 @@ function deepDiveHtml(c){
          'Amortisation of acquisition intangibles, guided ~$1,900M FY26'],
         ['FY2025 and prior depreciation &mdash; the XBRL puller closes this',
          'Capex guidance &mdash; Danaher does not guide it']) +'</div>'+
+      // The deal history now lives in Evolution ▸ M&A. This placeholder is kept as a POINTER
+      // rather than filled, because two homes for the same table is how they drift apart. What
+      // is genuinely still missing here is a different question from "what did they buy": the
+      // criteria and the capacity, which Danaher discloses only qualitatively.
       '<div class="ovt-subpane" data-ovst="msma" hidden>'+ddPending('M&amp;A capacity and criteria',
-        'Danaher discloses acquisition criteria only qualitatively &mdash; no financial hurdle, no return threshold, no size criterion.',
-        ['Balance-sheet capacity and the stated priorities',
-         'StatLab, the only named pending transaction'],
-        ['Post-Masimo leverage &mdash; needs the Q2&#39;26 10-Q balance sheet']) +'</div>'+
+        '<b>The deal history moved to Evolution &#9656; M&amp;A</b> &mdash; the nine platform acquisitions, what was paid, the multiple and its provenance, and what each business makes. This pane keeps the other half of the question.',
+        ['Balance-sheet capacity: net debt $22.2B and ~2.5&times; net debt/EBITDA after Masimo, against &gt;$5B of annual free cash flow',
+         'The stated priority &mdash; Blair, Q1&#39;26: &ldquo;Our bias for capital deployment is M&amp;A&rdquo;'],
+        ['A financial hurdle, a return threshold or a size criterion &mdash; Danaher publishes none of the three, so there is nothing to chart here without inventing it.']) +'</div>'+
       '<div class="ovt-subpane" data-ovst="msoth" hidden>'+dhrMiscOtherHtml()+'</div>'+
     '</div>';
 
@@ -843,6 +852,8 @@ function wireDD(root){
         dhrCallPrepInit(pane.querySelector('.ovt-subpane[data-ovst="evearn"]'), _dhrCo); });
       if(key==='evguid') requestAnimationFrame(function(){
         dhrGuidanceInit(pane.querySelector('.ovt-subpane[data-ovst="evguid"]')); });
+      if(key==='evma') requestAnimationFrame(function(){
+        dhrMandaInit(pane.querySelector('.ovt-subpane[data-ovst="evma"]')); });
     }; });
   });
 }

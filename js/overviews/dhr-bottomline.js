@@ -44,7 +44,9 @@ import { dhrExpenseHtml, dhrExpenseInit } from './dhr-expense.js';
 // Annual, $M except EPS. As-filed; newest restatement wins. `b` is the reporting basis.
 // `epsC` is diluted EPS from CONTINUING operations — the one bottom-line series clean across all
 // ten years. Balance-sheet fields are the fiscal-year-end instants from the same filings.
-var A = [
+// Exported so the M&A pane can read the `acq` series (cash paid for acquisitions) without a second
+// copy of it. One home for the numbers; dhr-manda.js imports FROM here, never the other way round.
+export var A = [
   { y:2016, b:'a', rev:16882.4, cogs:7547.8, gp:9334.6, sga:5624.3, rnd: 975.1, op:2735.2, pretax:2611.3, tax:457.9, ni:2553.7, epsC:3.08,
     cfo:3521.8, capex:589.6, dep:545,   amort: 583, sbc:129.8, div:399.8, bb:null, acq: 4880.1,
     cash: 963.7, debtL: 9674.2, debtC:2594.8, equity:23002.8, assets:45295.3, gw:23826.9, intang:11818 },

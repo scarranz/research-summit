@@ -28,6 +28,11 @@
 import { dhrResults } from '../results-data/dhr.js';
 import { DHR_THEMES } from '../themes-data/dhr.js';
 import { mountWatchList } from '../watchlist.js';
+// The Setup chart IS the Results engine, one MERGED section (the DHR_SETUP dataset) — the same
+// chart + integrated table + period lever + margin lines as the Results sub-tab, clubbed into one
+// (§6a-viii-bis). Two engine instances coexist on this page; the `setup` section key is what keeps
+// their canvases, tables and sliders from colliding.
+import { resultsHtml, initResults } from '../results.js';
 
 var BRAND = '#0F7DC2', BRAND2 = '#1E3A5F', GRAY = '#9AA4B0';
 var UP = '#2E8B57', DOWN = '#C0504D', AMBER = '#B7791F';
@@ -162,7 +167,11 @@ function style(){
     '.ce-dhr .ce-upd li b{color:var(--navy)}',
     '.ce-dhr .ce-seg-h{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:' + GRAY + ';margin:14px 0 7px}',
     '.ce-dhr .ce-seg-h:first-child{margin-top:0}',
-    '.ce-dhr .ce-empty{color:' + GRAY + ';font-style:italic}'
+    '.ce-dhr .ce-empty{color:' + GRAY + ';font-style:italic}',
+    '.ce-dhr .ce-ann{margin:22px 0 4px;padding:16px 0 0;border-top:2px solid var(--bdr)}',
+    /* css/results.css sets .rs-wrap{--brand:var(--navy)}; the Setup instance lives inside .ce-dhr,
+       which would otherwise leave the engine's accent reading as the page navy rather than DHR blue. */
+    '.ce-dhr .ce-ann .rs-wrap{--brand:' + BRAND + '}'
   ].join('') + '</style>';
 }
 
@@ -294,7 +303,16 @@ function setupBody(){
     if (Q.status === 'reported' && !DEBATE[Q.pk])
       h += '<p class="ce-sub"><span class="ce-empty">No frozen going-in read was recorded for this quarter — the pane started at Q2 2026. The numbers above are the Street figures the dataset carries, which are contemporaneous.</span></p>';
     return h + '</div>';
-  }).join('');
+  }).join('') + setupChart();
+}
+
+// The Setup chart sits OUTSIDE the per-quarter blocks, after them — it plots a run of periods, so
+// a quarter selector does not apply to it and it must not be duplicated per pill. Same placement
+// as Amazon's `ceAnnualBody()`.
+function setupChart(){
+  return '<div class="ce-ann"><div class="ce-h">The Setup picture — reported against the Street</div>' +
+    '<p class="ce-sub">Every tracked line in one chart: pick any of the 17 metrics, window the period with the range pills or the slider, drag on the chart to zoom, click a legend chip to drop a series from the chart <i>and</i> its table. Profit lines carry their margin on the right axis; revenue and growth lines carry none, because a margin on them would be meaningless. Forward periods sit inside the shaded FORECAST zone. <b>No Summit series</b> — Danaher is not in the DCF universe.</p>' +
+    resultsHtml('DHR_SETUP') + '</div>';
 }
 
 // ═══ Post-Results ═════════════════════════════════════════════════════════════════════════════
@@ -540,8 +558,12 @@ export function dhrCallPrepInit(pane, c){
       // by design — so they are hidden there rather than left to imply a filter that does not exist.
       var pills = root.querySelector('.ce-qpills'); if (pills) pills.hidden = (k === 'watch');
       if (k === 'watch') mountWL(root, c);
+      if (k === 'setup') requestAnimationFrame(function(){ buildSetupChart(root); });
     };
   });
+
+  // Setup is the DEFAULT phase, so its chart is on screen at mount and never gets a tab click.
+  requestAnimationFrame(function(){ buildSetupChart(root); });
 
   // Quarter pills — toggle the .ce-qblock of that quarter inside every phase at once.
   root.querySelectorAll('.ce-qpill').forEach(function(btn){
@@ -569,6 +591,18 @@ export function dhrCallPrepInit(pane, c){
     var open = b.hidden; b.hidden = !open;
     var ic = h.querySelector('.ce-acc-ic'); if (ic) ic.textContent = open ? '−' : '+';
   });
+}
+
+// Re-run on EVERY show, never once. `_rs` is a single shared engine state: visiting Evolution ▸
+// Results re-points it at the DHR dataset, and Top Line ▸ Segments re-points it at a composed one,
+// so coming back to Setup has to re-establish DHR_SETUP or the chart redraws from whichever
+// dataset was last in. Passing the ticker to initResults is what makes the click order stop
+// mattering. Chart.js also measures a canvas with a null offsetParent as zero and never recovers,
+// which is why this is called on visibility rather than at mount.
+function buildSetupChart(root){
+  var wrap = root.querySelector('.ce-ann .rs-wrap');
+  if (!wrap || !wrap.offsetParent) return;
+  initResults(wrap, 'DHR_SETUP');
 }
 
 // The shared Watch List needs a company row to persist against. Without one (a harness, or a

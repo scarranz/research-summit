@@ -34,6 +34,7 @@ import { lyftResults } from './results-data/lyft.js';
 import { lyftSetup } from './results-data/lyft-setup.js';
 import { tbbbResults } from './results-data/tbbb.js';
 import { dhrResults } from './results-data/dhr.js';
+import { dhrSetup } from './results-data/dhr-setup.js';
 import { tbbbSetup } from './results-data/tbbb-setup.js';
 
 var RESULTS_DATA = {
@@ -53,7 +54,8 @@ var RESULTS_DATA = {
   LYFT_SETUP: lyftSetup,
   TBBB: tbbbResults,
   TBBB_SETUP: tbbbSetup,
-  DHR: dhrResults
+  DHR: dhrResults,
+  DHR_SETUP: dhrSetup
 };
 
 // Register a dataset at runtime, so a caller can compose one and get the whole engine — every

@@ -252,6 +252,20 @@ If a PR has merge conflicts:
 
 The Companies tab is the core of the portal. Each company has a profile that is **designed and built individually with Claude's help**.
 
+### Building or extending a company profile (start here)
+
+Before touching a company's Deep Dive, read **`docs/COMPANY_PROFILE_BLUEPRINT.md`**. **Amazon is the
+reference implementation** and that file is the map from it to any other ticker: the six-section tab
+spine (Top Line · Bottom Line · Evolution · Valuation · Management · Miscellaneous), the list of
+**shared engines you feed with a data file instead of writing a pane** (`results.js`, `segments.js`,
+`consensus-evolution.js`, `watchlist.js`, `management.js`), the canonical design components and the
+rule that a new profile adds **no inline `<style>`**, the palette rule (**Summit tokens everywhere;
+the company's brand only in its logo**), where every number comes from, the interaction contract, the
+build order, how to audit it in a harness, and a pre-ship checklist. The `/build-profile <TICKER>`
+command runs it end-to-end. Key invariants: **prefer an engine over a bespoke pane**; **never delete
+existing content**; **no sub-tab that is a placeholder**; **every pane ends with a source footer**;
+produce a **draft for review** — don't commit/push/PR automatically.
+
 ### Adding a chart (anywhere in the portal)
 
 Before writing a new chart, read **`docs/CHART_ENGINE_REFERENCE.md` §0 — the standard**. It is the

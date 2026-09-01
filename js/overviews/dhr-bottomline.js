@@ -38,6 +38,11 @@ import { esc, dStdScaffold, dStdRender, dWaterfall, dTbl, dPicker, dWirePicker, 
 // The KPI strip and the expense explorer that close this pane. They take `A` as an argument rather
 // than importing it, because that module would otherwise have to import this one back.
 import { dhrExpenseHtml, dhrExpenseInit } from './dhr-expense.js';
+// The ADJUSTED series are read from the Results dataset rather than re-derived here. It carries
+// the reported adjusted figures straight from the 8-K releases — five quarters and three years of
+// adjusted operating profit against the two-and-two the local AADJ/QADJ tables could reach — so
+// this is both more complete and one home for the number.
+import { dhrResults } from '../results-data/dhr.js';
 
 // ═══ Data ═════════════════════════════════════════════════════════════════════════════════════
 
@@ -147,13 +152,29 @@ var BSQ = { p:"Q2'26", cash:4348, debtL:25147, debtC:1411, equity:52581, assets:
 // ═══ Section 1 — Profitability & margins ══════════════════════════════════════════════════════
 // Bars are the $ amount, lines are the margin on the right axis. The chips are the two BASES
 // Danaher reports on — GAAP and adjusted — and hiding one drops its bar and its line together.
+// `adjKey` points at the Results dataset metric that carries the REPORTED adjusted figure. Where
+// it exists it wins outright: it is what Danaher published, not a margin percentage multiplied
+// back out. `adjQ`/`adjA` stay as the fallback for the two lines the dataset does not carry, and a
+// metric never mixes the two — one series, one provenance.
 var MARG = {
   gp:     { lab:'Gross profit',      num:function(r){ return r.gp; },            adjQ:function(a, r){ return r.rev - a.cogs; }, adjA:null },
-  op:     { lab:'Operating profit',  num:function(r){ return r.op; },            adjQ:function(a){ return a.op; }, adjA:function(r, a){ return r.rev * a.opm/100; } },
-  ebitda: { lab:'EBITDA',            num:function(r){ return r.op + r.dep + r.amort; }, annualOnly:true },
+  op:     { lab:'Operating profit',  num:function(r){ return r.op; },            adjKey:'adjopinc' },
+  ebitda: { lab:'EBITDA',            num:function(r){ return r.op + r.dep + r.amort; }, annualOnly:true, adjKey:'adjebitda' },
   ni:     { lab:'Net earnings',      num:function(r){ return r.ni; },            adjQ:function(a){ return a.ni; }, adjA:null },
   fcf:    { lab:'Free cash flow',    num:function(r){ return r.cfo - r.capex; }, annualOnly:true }
 };
+
+// Pull an adjusted series out of the Results dataset, aligned to this pane's own row order.
+// Annual rows are keyed by year ('2025'), quarterly by period ('2Q26'); anything the dataset does
+// not reach back to stays null, which is what the chart wants anyway.
+function resAdj(gran, key, rows){
+  var v = dhrResults.views[gran === 'y' ? 'y' : 'q'], m = v && v.metrics[key];
+  if (!m) return rows.map(function(){ return null; });
+  return rows.map(function(r){
+    var i = m.periods.indexOf(gran === 'y' ? String(r.y) : r.p);
+    return (i < 0 || m.act[i] == null) ? null : m.act[i];
+  });
+}
 function margDerive(st){
   var key = st.sel || 'op', m = MARG[key], gran = st.modes.gran || 'y';
   if (gran === 'q' && m.annualOnly)
@@ -161,21 +182,31 @@ function margDerive(st){
   var rows = gran === 'y' ? A : Q;
   var labels = rows.map(function(r){ return gran === 'y' ? ('FY' + String(r.y).slice(2)) : r.p; });
   var gaapN = rows.map(function(r){ var v = m.num(r); return (v == null || isNaN(v)) ? null : v; });
-  var adjN = rows.map(function(r){
+  var adjN = m.adjKey ? resAdj(gran, m.adjKey, rows) : rows.map(function(r){
     if (gran === 'q'){ var a = QADJ[r.p]; return (a && m.adjQ) ? m.adjQ(a, r) : null; }
     var aa = AADJ[r.y]; return (aa && m.adjA) ? m.adjA(r, aa) : null;
   });
   var hasAdj = adjN.some(function(v){ return v != null; });
+  // The basis toggle. It only means anything where an adjusted figure exists, so it is hidden
+  // rather than shown-and-inert on the lines Danaher never adjusts (free cash flow, and gross
+  // profit annually). Default 'both' keeps what the pane did before the toggle existed.
+  var basis = hasAdj ? (st.modes.basis || 'both') : 'gaap';
+  var showG = basis !== 'adj', showA = hasAdj && basis !== 'gaap';
   function marg(arr){ return arr.map(function(v, i){ return (v == null || !rows[i].rev) ? null : Math.round(v/rows[i].rev*1000)/10; }); }
-  var series = [{ k:'g$', grp:'gaap', src:'GAAP', label:m.lab + ' — GAAP', color:D_ACT, type:'bar', data:gaapN }];
-  if (hasAdj) series.push({ k:'a$', grp:'adj', src:'Adjusted', label:m.lab + ' — adjusted', color:D_ADJ, type:'bar', data:adjN });
-  series.push({ k:'gM', grp:'gaap', src:'GAAP', label:'Margin — GAAP', color:D_ACT, type:'line', yAxisID:'y2', data:marg(gaapN) });
-  if (hasAdj) series.push({ k:'aM', grp:'adj', src:'Adjusted', label:'Margin — adjusted', color:D_ADJ, type:'line', yAxisID:'y2', dash:true, data:marg(adjN) });
+  var series = [];
+  if (showG) series.push({ k:'g$', grp:'gaap', src:'GAAP', label:m.lab + ' — GAAP', color:D_ACT, type:'bar', data:gaapN });
+  if (showA) series.push({ k:'a$', grp:'adj', src:'Adjusted', label:m.lab + ' — adjusted', color:D_ADJ, type:'bar', data:adjN });
+  if (showG) series.push({ k:'gM', grp:'gaap', src:'GAAP', label:'Margin — GAAP', color:D_ACT, type:'line', yAxisID:'y2', data:marg(gaapN) });
+  if (showA) series.push({ k:'aM', grp:'adj', src:'Adjusted', label:'Margin — adjusted', color:D_ADJ, type:'line', yAxisID:'y2', dash:true, data:marg(adjN) });
   return {
     labels: labels, series: series, yFmt: fMs, y2Fmt: fPct,
     cmpFrom: gran === 'y' ? A_CMP_FROM : 0,
+    hideModes: hasAdj ? [] : ['basis'],
     legNote: 'Bars = $M &nbsp;·&nbsp; lines = margin (right axis)' +
-      (hasAdj ? '' : ' &nbsp;·&nbsp; Danaher publishes no adjusted ' + m.lab.toLowerCase() + ' for these periods'),
+      (hasAdj
+        ? (m.adjKey ? ' &nbsp;·&nbsp; adjusted is the figure Danaher reported in each release, not a margin multiplied back out — it starts where the releases do'
+                    : ' &nbsp;·&nbsp; adjusted is derived from the release detail for the periods a release covers')
+        : ' &nbsp;·&nbsp; Danaher publishes no adjusted ' + m.lab.toLowerCase() + ' for these periods'),
     tblTitle: m.lab + ' — ' + (gran === 'y' ? 'annual' : 'quarterly') + ', $M and margin',
     note: gran === 'y'
       ? function(i){ return 'Reporting basis: ' + BASES[A[i].b]; }
@@ -472,7 +503,8 @@ export function dhrBottomLineHtml(){
       metricSel:[{ v:'gp', label:'Gross profit' }, { v:'op', label:'Operating profit', on:true },
                  { v:'ebitda', label:'EBITDA (op. profit + D&A)' }, { v:'ni', label:'Net earnings' },
                  { v:'fcf', label:'Free cash flow' }],
-      modes:[{ cls:'gran', label:'Period', opts:[{ v:'y', label:'Annual', on:true }, { v:'q', label:'Quarterly' }] }],
+      modes:[{ cls:'gran', label:'Period', opts:[{ v:'y', label:'Annual', on:true }, { v:'q', label:'Quarterly' }] },
+             { cls:'basis', label:'Basis', opts:[{ v:'both', label:'Both', on:true }, { v:'gaap', label:'GAAP' }, { v:'adj', label:'Adjusted' }] }],
       presets:[['all','All'],['cmp','Comparable'],['l5','Last 5'],['l8','Last 8']],
       note:'Every figure is as-filed, from Danaher\'s own filings through SEC XBRL, newest filing per period so ' +
         'restatements are picked up. <b>Comparable</b> snaps the annual window to FY2021–FY2025, the years on today\'s ' +

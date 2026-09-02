@@ -1,5 +1,5 @@
 // market-analysis.js — extracted from summit-research-portal.html
-import { ALL_STOCKS, SP500_TODAY26, SP500_B25, SP500_B24, SP500_BMK, SP500_CUM3, SCOLS, SDATA, COMPANY_NAMES, QQQ_TODAY26 } from './portal-data.js';
+import { ALL_STOCKS, SP500_TODAY26, SP500_B25, SP500_B24, SP500_BMK, SCOLS, SDATA, COMPANY_NAMES, QQQ_TODAY26 } from './portal-data.js';
 
 // ─── Market snapshot — single seam for "live" data ─────────────
 // Everything the top stat row needs funnels through this one function
@@ -42,7 +42,7 @@ function renderMarketSnapshot() {
   set('ma-beating-sp500-sub', 'vs ' + (snap.spyYtd >= 0 ? '+' : '') + snap.spyYtd.toFixed(1) + '% benchmark');
 }
 
-let scatChart = null, tblData = [], tblData2 = [], sortCol = 5, sortAsc = false, sortCol2 = 7, sortAsc2 = false, IMAP = {}, SB_MODE = 'abs', SECTOR_RETS = {};
+let tblData = [], tblData2 = [], sortCol = 5, sortAsc = false, sortCol2 = 7, sortAsc2 = false, IMAP = {}, SB_MODE = 'abs', SECTOR_RETS = {};
 
 // Sector Alpha's current-year slot is always YTD-through-today now (no more
 // "last meeting" vs "today" split) — 'ytd' reads SECTOR_RETS[s].r26, the
@@ -136,7 +136,6 @@ function fillInd(dropId, secVal){
 function onSecChange(which){
   if(which==='tbl'){fillInd('ind-flt',safeVal('sec-flt'));applyFilters();}
   else if(which==='tbl2'){fillInd('ind-flt2',safeVal('sec-flt2'));applyFilters2();}
-  else{fillInd('scat-ind',safeVal('scat-sec'));renderScatter();}
 }
 
 function fmt(v){return v==null?'&mdash;':(v>0?'+':'')+v.toFixed(1)+'%';}
@@ -365,90 +364,6 @@ function renderTbl2(){
   body.innerHTML=rows;
 }
 
-function renderScatter(){
-  var canvas=document.getElementById('scat-c');if(!canvas)return;
-  var sec=safeVal('scat-sec'),ind=safeVal('scat-ind');
-  var data=ALL_STOCKS.filter(function(d){
-    return d.r25!=null&&d.r26!=null&&(!sec||d.s===sec)&&(!ind||d.i===ind);
-  });
-  if(scatChart){scatChart.destroy();scatChart=null;}
-  // Quadrant counts
-  var q1=0,q2=0,q3=0,q4=0;
-  data.forEach(function(d){
-    if(d.r25>SP500_B25&&d.r26>SP500_TODAY26)q1++;
-    else if(d.r25<=SP500_B25&&d.r26>SP500_TODAY26)q2++;
-    else if(d.r25<=SP500_B25&&d.r26<=SP500_TODAY26)q3++;
-    else q4++;
-  });
-  var qEl=document.getElementById('quad-counts');
-  if(qEl)qEl.innerHTML='<span class="qc q1">&#x2197; Beat both: <strong>'+q1+'</strong></span><span class="qc">&#x2196; Beat 2026 only: <strong>'+q2+'</strong></span><span class="qc q3">&#x2199; Lag both: <strong>'+q3+'</strong></span><span class="qc">&#x2198; Beat 2025 only: <strong>'+q4+'</strong></span><span class="qc" style="background:rgba(74,127,181,.07)">Total shown: <strong>'+data.length+'</strong></span>';
-  var sects=[];
-  data.forEach(function(d){if(sects.indexOf(d.s)<0)sects.push(d.s);});
-  sects.sort();
-  var shadPlugin={id:'sh',beforeDraw:function(ch){
-    var ctx=ch.ctx,sx=ch.scales.x,sy=ch.scales.y,ca=ch.chartArea;
-    ctx.save();ctx.fillStyle='rgba(180,30,30,0.07)';
-    ctx.fillRect(ca.left,sy.getPixelForValue(0),Math.min(sx.getPixelForValue(0),ca.right)-ca.left,ca.bottom-sy.getPixelForValue(0));ctx.restore();
-    var xl=sx.getPixelForValue(SP500_B25);
-    if(xl>=ca.left&&xl<=ca.right){ctx.save();ctx.strokeStyle='rgba(74,127,181,0.75)';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(xl,ca.top);ctx.lineTo(xl,ca.bottom);ctx.stroke();ctx.fillStyle='rgba(74,127,181,.9)';ctx.font='bold 10px Inter,sans-serif';ctx.fillText('S&P 2025 +15.7%',xl+4,ca.top+13);ctx.restore();}
-    var yl=sy.getPixelForValue(SP500_TODAY26);
-    if(yl>=ca.top&&yl<=ca.bottom){ctx.save();ctx.strokeStyle='rgba(23,122,78,0.75)';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(ca.left,yl);ctx.lineTo(ca.right,yl);ctx.stroke();ctx.fillStyle='rgba(23,122,78,.9)';ctx.font='bold 10px Inter,sans-serif';ctx.fillText('S&P 2026 +12.3%',ca.left+4,yl-4);ctx.restore();}
-  }};
-  var ds=[];
-  sects.forEach(function(sec2){
-    var pts=data.filter(function(d){return d.s===sec2;}).map(function(d){return{x:Math.max(-80,Math.min(200,d.r25)),y:Math.max(-80,Math.min(250,d.r26)),t:d.t,n:d.n||d.t,s:d.s,i:d.i,r25:d.r25,r26:d.r26};});
-    ds.push({label:sec2,data:pts,backgroundColor:(SCOLS[sec2]||'#888')+'BB',pointRadius:5,pointHoverRadius:8});
-  });
-  scatChart=new Chart(canvas,{type:'scatter',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(17,30,51,.95)',callbacks:{title:function(c){return c[0].raw.t+' \u2014 '+c[0].raw.n;},label:function(c){return[c.raw.s+' | '+c.raw.i,'2025: '+(c.raw.r25>0?"+":"-")+Math.abs(c.raw.r25).toFixed(1)+'%','2026: '+(c.raw.r26>0?"+":"-")+Math.abs(c.raw.r26).toFixed(1)+'%'];}}}},
-    scales:{x:{title:{display:true,text:'2025 Return (%)',color:'#5A6E83',font:{size:11}},grid:{color:'#E8EFF7'},ticks:{color:'#5A6E83',font:{size:10},callback:function(v){return v+'%';}}},y:{title:{display:true,text:'2026 YTD Return (%)',color:'#5A6E83',font:{size:11}},grid:{color:'#E8EFF7'},ticks:{color:'#5A6E83',font:{size:10},callback:function(v){return v+'%';}}}}},plugins:[shadPlugin]});
-  var legEl=document.getElementById('scleg');
-  if(legEl){var lh='';Object.keys(SCOLS).forEach(function(s){lh+='<span class="scli"><span class="scdt" style="background:'+SCOLS[s]+'"></span>'+s+'</span>';});legEl.innerHTML=lh;}
-}
-
-function doSearch(val){
-  var res=document.getElementById('sr-res');if(!val){res.style.display='none';return;}
-  var q=val.toUpperCase(),matches=[];
-  ALL_STOCKS.forEach(function(s){if(matches.length<12&&(s.t.indexOf(q)===0||s.t.indexOf(q)>=0))matches.push(s);});
-  if(!matches.length){res.style.display='none';return;}
-  var html='';
-  matches.forEach(function(s){var clr=s.r26==null?'var(--mu)':s.r26>=0?'var(--pos)':'var(--neg)';
-    html+='<div class="srrow" data-tk="'+s.t+'"><span><span class="srtk">'+s.t+'</span><span class="srsec">'+s.s+'</span></span><span style="font-weight:600;color:'+clr+'">'+fmt(s.r26)+'</span></div>';});
-  res.innerHTML=html;res.style.display='block';
-}
-
-function closeSrch(){var r=document.getElementById('sr-res');if(r)r.style.display='none';}
-
-function showDetail(ticker){
-  closeSrch();var inp=document.getElementById('sr-inp');if(inp)inp.value=ticker;
-  var s=ALL_STOCKS.find(function(x){return x.t===ticker;});if(!s)return;
-  var cum=s.c3;var cb=cum!=null&&cum>SP500_CUM3;
-  function bs(r,b){return r!=null&&r>b?'<span style="color:var(--pos);font-weight:600">&#x2705; Beat</span>':'<span style="color:var(--mu)">&#x274C;</span>';}
-  function cd(yr,r,bench){var c=r==null?'var(--mu)':r>0?'var(--pos)':'var(--neg)';return '<div style="background:var(--w);border:.5px solid var(--bdr);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">'+yr+'</div><div style="font-size:16px;font-weight:600;color:'+c+'">'+fmt(r)+'</div><div style="font-size:10px;margin-top:3px">'+bs(r,bench)+'</div></div>';}
-  var cumBg=cb?'#E6F3EC':'var(--w)',cumBrd=cb?'1px solid #B3D9C3':'.5px solid var(--bdr)';
-  var html='<div style="display:flex;align-items:center;gap:10px;margin-bottom:11px"><span style="font-family:Inter,serif;font-size:21px;font-weight:600;color:var(--navy)">'+s.t+'</span><span style="font-size:11px;color:var(--mu)">'+(s.n||s.t)+' &middot; '+s.s+'</span></div>';
-  html+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:9px">';
-  html+=cd('2022',s.r22,SP500_BMK['2022'])+cd('2023',s.r23,SP500_BMK['2023'])+cd('2024',s.r24,SP500_B24)+cd('2025',s.r25,SP500_B25)+cd('2026 YTD',s.r26,SP500_TODAY26);
-  html+='<div style="background:'+cumBg+';border:'+cumBrd+';border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">3yr Cumul.</div><div style="font-size:16px;font-weight:600;color:'+(cum==null?'var(--mu)':cum>0?'var(--pos)':'var(--neg)')+'">'+fmt(cum)+'</div><div style="font-size:10px;margin-top:3px;color:'+(cb?'var(--pos)':'var(--mu)')+'">'+( cum!=null?(cb?'&#x2705; Beats S&P':'vs S&P'):'N/A')+'</div></div>';
-  html+='</div>';
-  var det=document.getElementById('sr-det-c');if(det)det.innerHTML=html;
-  var sd=document.getElementById('sr-det');if(sd)sd.style.display='block';
-}
-
-function renderRotTbl(){
-  var body=document.getElementById('rot-body');if(!body)return;
-  var rows=ALL_STOCKS.filter(function(d){return d.r25!=null&&d.r26!=null&&d.r25<0&&d.r26>SP500_TODAY26;});
-  rows.sort(function(a,b){return b.r26-a.r26;});rows=rows.slice(0,18);
-  var html='';
-  rows.forEach(function(d){var cb=d.c3!=null&&d.c3>SP500_CUM3;var cc=SCOLS[d.s]||'#888';
-    html+='<tr><td><span class="tkr" title="'+(d.n||d.t)+'">'+d.t+'</span></td><td><span class="sch" style="background:'+cc+'22;color:'+cc+'">'+d.s+'</span></td>';
-    html+='<td class="'+(d.r22!=null?(d.r22>0?'pos':'neg'):'neu')+'">'+fmt(d.r22)+'</td><td class="'+(d.r23!=null?(d.r23>0?'pos':'neg'):'neu')+'">'+fmt(d.r23)+'</td>';
-    html+='<td class="'+(d.r24!=null?(d.r24>0?'pos':'neg'):'neu')+'">'+fmt(d.r24)+'</td><td class="neg">'+d.r25.toFixed(1)+'%</td><td class="pos">+'+d.r26.toFixed(1)+'%</td>';
-    html+='<td>'+(d.c3!=null?'<span class="'+(d.c3>0?'cpos':'cneg')+'">'+fmt(d.c3)+'</span>':'&mdash;')+'</td><td>'+(d.c3!=null?(cb?'<span class="bful">&#x2705; Beats S&P</span>':'<span class="nbt">Lags S&P</span>'):'&mdash;')+'</td></tr>';
-  });
-  body.innerHTML=html;
-}
-
 function sbBar(label,v,maxV,hlClass,keyClass){
   if(v==null)return '<div class="sby'+hlClass+'"><span class="sbyl">'+label+'</span><div class="sbtr-div"></div><span class="sbi" style="color:var(--mu);font-weight:600">n/a</span></div>';
   var pct=Math.min(Math.abs(v)/maxV*50,50);var sign=v>=0?'+':'';var color=v>=0?'#1E3A5F':'#9B2A20';var left=v>=0?50:50-pct;
@@ -549,9 +464,6 @@ window.clearFilters = clearFilters;
 window.applyFilters2 = applyFilters2;
 window.clearFilters2 = clearFilters2;
 window.sortTbl2 = sortTbl2;
-window.doSearch = doSearch;
-window.closeSrch = closeSrch;
-window.showDetail = showDetail;
 window.toggleSecExp = toggleSecExp;
 
 export function loadMarketAnalysisPage() {
@@ -602,13 +514,4 @@ export function loadMarketAnalysisPage() {
   renderSectorBars();
   renderTbl();
   renderTbl2();
-  renderRotTbl();
-  setTimeout(renderScatter, 120);
-
-  // Search input
-  var si = document.getElementById('sr-inp');
-  if (si) {
-    si.addEventListener('input', function() { doSearch(this.value); });
-    si.addEventListener('blur', function() { setTimeout(closeSrch, 200); });
-  }
 }

@@ -273,37 +273,6 @@
       </table></div>
     </div>
   </div>
-  <div class="sec">
-    <div class="sechdr"><span class="sect">Return Scatter &mdash; 2025 vs 2026 YTD</span><span class="secn">Quadrant counts update with filters</span></div>
-    <div class="card">
-      <div class="fbar2" style="margin-bottom:10px">
-        <span class="flm">Sector:</span>
-        <select class="fsel" id="scat-sec" onchange="onSecChange('scat')">
-          <option value="">All Sectors</option>
-          <option>Communication Services</option><option>Consumer Discretionary</option><option>Consumer Staples</option><option>Energy</option><option>Financials</option><option>Health Care</option><option>Industrials</option><option>Materials</option><option>Real Estate</option><option>Technology</option><option>Utilities</option>
-        </select>
-        <span class="flm">Subsector:</span>
-        <select class="fsel" id="scat-ind" onchange="renderScatter()" style="max-width:240px"><option value="">All Subsectors</option></select>
-      </div>
-      <div class="qcounts" id="quad-counts"></div>
-      <div class="scrl">
-        <span class="scrli"><span class="scline" style="border-color:#4A7FB5"></span>S&amp;P 2025 (+15.7%)</span>
-        <span class="scrli"><span class="scline" style="border-color:#177A4E"></span>S&amp;P 2026 (+12.3%)</span>
-        <span class="scrli"><span style="width:12px;height:12px;background:rgba(180,30,30,.1);border:1px solid rgba(180,30,30,.25);display:inline-block;border-radius:2px"></span>Lag both years</span>
-      </div>
-      <div style="position:relative;height:390px"><canvas id="scat-c"></canvas></div>
-      <div class="scleg" id="scleg"></div>
-    </div>
-  </div>
-  <div class="sec">
-    <div class="sechdr"><span class="sect">Stock Lookup &amp; Rotation Winners</span></div>
-    <div class="card">
-      <div class="srw"><span class="sric">&#x1F50D;</span><input type="text" class="sri" id="sr-inp" placeholder="Search any S&amp;P 500 ticker (AAPL, XOM, DVN...)" autocomplete="off"><div class="srres" id="sr-res"></div></div>
-      <div id="sr-det" style="display:none;margin-bottom:16px"><div style="background:var(--surface);border-radius:10px;padding:14px 17px;border:1px solid var(--bdr)"><div id="sr-det-c"></div></div></div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:9px;letter-spacing:.5px">NEGATIVE 2025 &rarr; BEATING MARKET 2026</div>
-      <table class="rt"><thead><tr><th>Ticker</th><th>Sector</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026 YTD</th><th>3yr Cumulative</th><th>vs S&amp;P 3yr</th></tr></thead><tbody id="rot-body"></tbody></table>
-    </div>
-  </div>
 </div>
 
 <!-- HEDGE FUNDS TAB -->

@@ -5,8 +5,9 @@ industry, and (eventually) ticker. This is written to be portable — the goal
 is to hand this document to another portal's team and have them wire up the
 same data with the same rules, without guessing.
 
-**Status: draft, sector + industry group levels only.** Ticker-level sourcing
-(mapping each company to its GICS classification) is a separate, later step.
+**Status: sector, industry group, and ticker levels all verified (2026-09-03).**
+Ticker-level sourcing (mapping each company to its GICS classification) is
+in `js/gics-industry-map.js` — see §5.
 
 ---
 
@@ -71,7 +72,7 @@ industry group with no dedicated fund still rolls up into its sector).
 | Industrials | Capital Goods (Aerospace & Defense sub-industry) | `XAR` | partial — Aerospace & Defense only |
 | Industrials | Capital Goods (rest) / Commercial & Professional Services | `XLI` | sector fallback |
 | Consumer Discretionary | Consumer Discretionary Distribution & Retail | `XRT` | dedicated |
-| Consumer Discretionary | Consumer Durables & Apparel (Homebuilding sub-industry) | `XHB` | partial — Homebuilders only |
+| Consumer Discretionary | Consumer Durables & Apparel (Homebuilding sub-industry) | `XHB` | partial — Homebuilders, plus adjacent Building Products/Home Furnishings/Home Improvement Retail/Household Appliances sub-industries |
 | Consumer Discretionary | Automobiles & Components / Consumer Services / Durables & Apparel (rest) | `XLY` | sector fallback |
 | Consumer Staples | Consumer Staples Distribution & Retail | `XRT` | dedicated (shared with Discretionary retail) |
 | Consumer Staples | Food, Beverage & Tobacco / Household & Personal Products | `XLP` | sector fallback |
@@ -84,21 +85,45 @@ industry group with no dedicated fund still rolls up into its sector).
 | Financials | Insurance | `KIE` | dedicated |
 | Information Technology | Semiconductors & Semiconductor Equipment | `XSD` | dedicated |
 | Information Technology | Software & Services | `XSW` | dedicated |
-| Information Technology | Technology Hardware & Equipment | `XLK` | sector fallback — no dedicated SPDR confirmed |
+| Information Technology | Technology Hardware & Equipment | `XLK` | sector fallback — dedicated fund (`XTH`) existed but was liquidated by SSGA in June 2020 |
 | Communication Services | Telecommunication Services | `XTL` | dedicated |
 | Communication Services | Media & Entertainment | `XLC` | sector fallback |
 | Utilities | *(Electric, Gas, Multi, Water, Independent Power)* | `XLU` | sector fallback — no dedicated SPDR for any |
-| Real Estate | Equity REITs | `RWR` | dedicated |
+| Real Estate | Equity REITs | `RWR`¹ | dedicated |
 | Real Estate | Real Estate Management & Development | `XLRE` | sector fallback |
 
 Source: [ssga.com — GICS Sector and Industry Map](https://www.ssga.com/us/en/intermediary/capabilities/equities/sector-investing/gics-sector-and-industry-map)
 and [ssga.com — Sector and Industry ETFs](https://www.ssga.com/us/en/intermediary/capabilities/equities/sector-investing/sector-and-industry-etfs).
 
-**This table needs one manual pass** before it's treated as final: it was
-compiled by fetching the SSGA mapping page through an AI summarizer, and a
-couple of rows (Capital Goods, Technology Hardware & Equipment) came back
-ambiguous between passes. Re-check those two directly on the live page before
-this doc leaves the repo.
+¹ `RWR` tracks a **Dow Jones** U.S. Select REIT index, not an S&P Select
+Industry index like every other fund in this table — still issued by SSGA,
+still Equity-REITs-only (excludes mortgage/hybrid/specialty REITs), so it's
+the right fund; it's just the one exception to the index family.
+
+**Verification status:** the two rows that came back ambiguous from the
+first AI-summarized pass are now resolved — `XAR` is confirmed (SEC filing
+text) to track only the Aerospace & Defense sub-industry of Capital Goods,
+and Technology Hardware & Equipment's dedicated fund (`XTH`) turned out to
+have been liquidated by SSGA in June 2020, confirming today's `XLK` fallback
+is correct rather than an oversight. `XRT`'s dual Discretionary/Staples
+retail coverage was also confirmed directly against its index's sub-industry
+list.
+
+**Fully verified 2026-09-03** against a live screenshot of the SSGA "Sector
+and Industry ETFs" page (that page renders as a JS app automated fetches
+can't read as a table, so this needed a human screenshot). The screenshot's
+"Industry ETFs" table lists SSGA's complete current industry-fund lineup and
+confirms two things: `XME`, `XTN`, `XES`, `XPH`, `XHE`, `XHS` all match this
+table exactly, and — because the table is exhaustive — every row still
+marked "sector fallback" above genuinely has no dedicated fund today (none
+snuck in since this doc was written). Two funds appear on the live page that
+are deliberately **not** in this table: `XLSR` (US Sector Rotation ETF, an
+active multi-sector strategy, not a single-sector tracker) and `XNTK` (NYSE
+Technology ETF, a broad NYSE-tech benchmark that doesn't correspond to the
+GICS Technology Hardware & Equipment sub-industry specifically). The
+"Sector with Income" variants (`XLCI`, `XLYI`, etc.) are covered-call
+overlay products on top of each sector, not plain sector exposure, and are
+excluded for the same reason.
 
 ---
 
@@ -122,21 +147,98 @@ Source: [S&P 500 rebalance schedule reporting, 2026](https://www.stocktitan.net/
 
 ---
 
-## 5. Open items before this integrates anywhere else
+## 5. Ticker-level GICS re-tag (done 2026-09-03)
 
-- **The portal's existing per-stock `s`/`i` tags are not GICS.** `js/portal-data.js`
-  currently tags all 503 stocks with an 11-sector label that happens to match
-  GICS sector names, but the industry label (`i`) is a *different*, non-GICS
-  vendor taxonomy — 37 buckets like "Media & Publishing" or "Diversified
-  Retail" that don't map 1:1 to the 25 GICS industry groups above. Re-tagging
-  each ticker to GICS is the ticker-level step that comes after this doc.
-- One row in the current data has a broken industry tag (`#VALUE!`, a leaked
-  Excel error, on a Consumer Discretionary stock) — flagging it here since
-  `js/portal-data.js` is off-limits for Claude to edit directly per
-  `CLAUDE.md`; whoever does the GICS re-tag pass should fix it then.
-- Six industry groups have **no dedicated SPDR fund at all** and always fall
-  back to their sector ETF (Commercial & Professional Services, Automobiles &
-  Components, Consumer Services, Food/Beverage/Tobacco, Household & Personal
-  Products, Real Estate Management & Development, and all four Utilities
-  industries). That's a real data limitation, not an oversight — there is no
-  safe, verifiable daily industry-level read for those today.
+**The portal's existing per-stock `s`/`i` tags in `js/portal-data.js` are not
+GICS.** The 11-value `s` (sector) label happens to match GICS sector names,
+but the 50-value `i` (industry) label is a *different*, non-GICS vendor
+taxonomy — things like "Media & Publishing" or "Diversified Retail" — that
+doesn't map 1:1 to the 25 GICS industry groups in §3.
+
+All 504 tickers have now been re-tagged to their correct GICS industry group
+(using §3's taxonomy as the target) and written to **`js/gics-industry-map.js`**
+— a new, separate lookup file, deliberately **not** merged into
+`portal-data.js`, since that file is off-limits for Claude to edit directly
+per `CLAUDE.md`. Each entry carries `sector`, `gicsIndustryGroup`, a
+`confidence` (`high`/`medium`/`low`), and a `note` explaining any judgment
+call. It was built as a (sector, vendor-industry) → GICS-industry-group
+crosswalk covering the ~65 clean pairs, plus ~35 explicit per-ticker
+overrides for cases the crosswalk alone couldn't resolve (a vendor bucket
+splitting across multiple correct GICS groups, or a wrong vendor tag).
+
+**9 tickers are flagged `medium`/`low` confidence** and worth a second pair
+of eyes: `BRK.B`, `DASH`, `TDY`, `FSLR`, `FIS`, `VLTO`, `CSGP`, `CDW`, `POOL`
+— see each one's `note` in `js/gics-industry-map.js` for the specific reason.
+
+**Data-quality issues found in `js/portal-data.js` along the way** (not
+fixed there, per the file being off-limits — flagging for whoever does own
+that edit):
+- **`CCL` (Carnival Corp)** has a broken industry tag (`#VALUE!`, a leaked
+  Excel error).
+- **`MCK` (McKesson)** and **`CAH` (Cardinal Health)** are tagged
+  `Pharmaceuticals`, but both are pharmaceutical *distributors*, not
+  drugmakers — their correct GICS industry group is Health Care Providers &
+  Services, not Pharma/Biotech.
+- **`VLTO` (Veralto)** is tagged sector `Health Care`; its actual GICS
+  sector is Industrials (Environmental & Facilities Services). The re-tag
+  file above tags it by its true sector/industry, not the vendor's.
+
+**A GICS industry with no ETF proxy at all, found during the re-tag:**
+**Life Sciences Tools & Services** (`IQV`, `CRL`, `TECH`, `MTD` — IQVIA,
+Charles River Labs, Bio-Techne, Mettler-Toledo) is a real third industry
+inside the Pharma/Biotech/Life Sciences group, alongside Biotech (`XBI`)
+and Pharma (`XPH`) from §3 — but SSGA has no dedicated fund for it. These 4
+tickers are tagged `Life Sciences Tools & Services` in the map file with no
+corresponding ETF; treat that combination as a known gap, same class of
+limitation as the six sector-fallback-only industries below.
+
+Six industry groups have **no dedicated SPDR fund at all** and always fall
+back to their sector ETF (Commercial & Professional Services, Automobiles &
+Components, Consumer Services, Food/Beverage/Tobacco, Household & Personal
+Products, Real Estate Management & Development, and all four Utilities
+industries). That's a real data limitation, not an oversight — there is no
+safe, verifiable daily industry-level read for those today.
+
+---
+
+## 6. Handoff status — what's ready to wire up vs. what's still to build
+
+This section exists so whoever picks this up next doesn't have to
+re-derive it by reading the code. Checked against `js/market-analysis.js`
+as of 2026-09-03.
+
+**Ready — a live feed is a data swap, not new architecture:**
+- The taxonomy and sourcing rules in §1–§4, and the per-ticker classification
+  in `js/gics-industry-map.js`, are the complete conceptual map: which ETF
+  is which sector/industry, how each data type's cadence works, and which
+  GICS group every one of the 504 tickers belongs to.
+- The **sector level** in the code is already built for this: `getMarketSnapshot()`
+  and `getSectorYtd()` (`js/market-analysis.js` lines 4–32) are explicitly
+  commented as the single seam live data should flow through. `SECTOR_RETS`
+  (line 487) is already labeled "Sector returns from SPDR ETFs (actual
+  market data)" — i.e. the code already assumes the same XLE/XLK/etc. source
+  this doc verifies; today it's just a hardcoded object instead of a fetch.
+- **Reuse existing prior art for the live price connection** rather than
+  building a third one: the TBBB company profile uses the **IBKR MCP**
+  (`get_price_snapshot`), and the SoFi profile uses a **Supabase edge
+  function `get-quote`**. Either pattern already works elsewhere in this
+  codebase.
+
+**Not built yet — this is new work, not a data swap:**
+1. **No live price feed is actually connected.** `SECTOR_RETS` is static
+   data today; picking and wiring one of the two patterns above (or another
+   feed) to populate it daily is still to do.
+2. **No industry-level UI exists at all.** `IMAP` (line 479) only powers a
+   filter dropdown using the old non-GICS vendor tags — there is no
+   industry-equivalent of the Sector Alpha bars today. Rendering §3's
+   industry table is a new feature, not a reconnection of an existing one.
+3. **The SSGA daily holdings-file URL isn't confirmed.** §4 states holdings
+   publish daily per fund, but the literal downloadable endpoint per ticker
+   hasn't been pinned down — needed before any holdings-level automation.
+4. **No automated S&P 500 reconstitution feed.** The quarterly rebalance
+   cadence in §4 is a documented rule, not a subscribed feed — a ticker's
+   sector/industry tag today is only as fresh as the last manual check.
+5. **9 flagged tickers and 3 data-quality issues are still open** (§5) —
+   `BRK.B`, `DASH`, `TDY`, `FSLR`, `FIS`, `VLTO`, `CSGP`, `CDW`, `POOL` need
+   a second look, and `CCL`/`MCK`/`CAH` have tag errors in `portal-data.js`
+   that should be fixed before the mapping is treated as fully authoritative.

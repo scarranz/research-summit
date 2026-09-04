@@ -2780,7 +2780,7 @@ function sensBody(){
       '<input type="range" min="'+d.min+'" max="'+d.max+'" step="'+d.step+'" value="'+d.val+'" data-sk="'+d.k+'">'+
       '<div class="sens-drv-h">'+esc(d.hint)+'</div></div>';
   }).join('')+'</div>';
-  h+='<div class="ov-kpis" id="meSensTiles" style="grid-template-columns:repeat(4,1fr)"></div>';
+  h+='<div class="ov-kpis" id="meSensTiles"></div>';
   h+='<div class="ov-diagram-cap" id="meSensLive" style="margin-top:10px"></div>';
   h+='<div class="ov-foot">Anchors (Summit / filings): FY2025 advertising ~$196B, other revenue ~$4.8B, diluted shares ~2,574M, ~15% tax rate. EPS ≈ [ad-rev×(1+g)+other] × op-margin × (1−tax) ÷ shares; implied price = EPS × P/E. Simplifications: excludes net interest income and one-time tax items (so it approximates a normalized EPS); the model holds shares flat while reality shrinks them. Directional only.</div>';
   return h;
@@ -3176,7 +3176,7 @@ function modelBody(){
   h+='<div class="ov-chart-wrap ovt-vs-wrap"><canvas id="meAveChart"></canvas></div>';
   h+=rangeSlider('ave', 1, '', '');
   h+='<div class="ave-subh-note" id="meAveNote" style="margin:6px 2px 16px"></div>';
-  h+='<div class="ov-kpis" id="meAveStats" style="grid-template-columns:repeat(4,1fr)"></div>';
+  h+='<div class="ov-kpis" id="meAveStats"></div>';
   h+='<div class="ov-foot">Estimates are the model\'s projection_history; actuals are reported. Quarterly back-test 1Q23–1Q26 (Advertising revenue starts 1Q24). Operating margin is derived (operating income ÷ revenue) and its surprise is shown in <b>percentage points (pp)</b>. Snapshot 2026-05-22.</div>';
   return h;
 }

@@ -73,3 +73,53 @@
 #pm-root td.pm-growth.up{color:var(--pos);} #pm-root td.pm-growth.dn{color:var(--neg);}
 #pm-root td.pm-sv{font-variant-numeric:tabular-nums;}
 #pm-root .pm-note{font-size:11px;color:var(--mu);margin-top:10px;line-height:1.5;}
+
+/* Benchmark card (SPY) — its own box below the book, tinted so it doesn't read
+   as another holding. Columns mirror the table above (shared headRow). */
+#pm-root .pm-bmk-h{font-size:10px;color:var(--steel);font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;margin:26px 0 8px;}
+#pm-root .card.pm-bmk{background:var(--pale);border-color:var(--bdr);border-left:3px solid var(--steel);}
+#pm-root .card.pm-bmk th{background:transparent;}
+#pm-root .card.pm-bmk tbody tr:hover{background:transparent;}
+#pm-root .card.pm-bmk td{border-bottom:none;}
+#pm-root .card.pm-bmk td.tk span.muted{font-weight:500;color:var(--mu);font-size:12px;margin-left:6px;}
+
+/* Earnings basis sub-toggle — indented under the metric bar so it reads as a
+   sub-control of Earnings rather than a third top-level selector. */
+#pm-root .pm-basisbar{margin:-4px 0 14px 14px;padding-left:12px;border-left:2px solid var(--bdr);}
+
+/* Source toggle — Consensus lights up amber rather than navy, so a table built on
+   street numbers instead of our own model is never mistaken for the default. */
+#pm-root .pm-seg button[data-source="consensus"].on{background:var(--warn);}
+
+/* Derived values (consensus CFO/FCF) — dotted underline in the warn colour, so a
+   modelled figure never passes for a sourced one. Hover gives the derivation. */
+#pm-root td.pm-derived{
+  text-decoration:underline dotted var(--warn); text-underline-offset:3px; cursor:help;
+}
+
+/* Calendar year riding under a relative period label (FY 0 / FY+1 / FY+2), in the
+   header cells and on the year selector. Deliberately quiet — the relative label
+   is what you read, the calendar year is what you check. */
+#pm-root .pm-cy{display:block;font-size:9px;font-weight:500;letter-spacing:.02em;
+  color:var(--mu);text-transform:none;margin-top:1px;}
+#pm-root .pm-seg button .pm-cy{color:inherit;opacity:.6;}
+
+/* Off-calendar fiscal year (NVDA): badge on the ticker, and the calendarised
+   cells carry a hover naming the fiscal year the number actually came from. */
+#pm-root .pm-fy{font-size:9px;font-weight:700;letter-spacing:.03em;color:var(--warn);
+  border:1px solid var(--warn);border-radius:4px;padding:0 3px;vertical-align:1px;cursor:help;}
+#pm-root td.pm-offcal{cursor:help;}
+
+/* Unit suffix sitting beside an editable field (Paper weight %, typed multiple x). */
+#pm-root td > span.muted{font-size:11.5px;color:var(--mu);}
+
+/* Footer: cash line, then the weighted average. Separated from the holdings by a
+   heavier rule so it reads as a total, not another row. */
+#pm-root tfoot tr.pm-cash td{border-top:2px solid var(--bdr);color:var(--mu);}
+#pm-root tfoot tr.pm-cash td.tk{color:var(--mu);font-weight:600;}
+#pm-root tfoot tr.pm-wavg td{background:var(--pale);font-weight:700;border-bottom:none;}
+#pm-root tfoot tr.pm-wavg td.tk{color:var(--navy);letter-spacing:.01em;}
+#pm-root tfoot tr:hover{background:transparent;}
+#pm-root tfoot td.neg{color:var(--neg);cursor:help;}
+#pm-root tfoot td[title]{cursor:help;}

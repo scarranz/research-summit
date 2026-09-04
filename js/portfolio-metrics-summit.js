@@ -47,11 +47,17 @@ export const SUMMIT_FUND = {
     "2027": { ebitda: 4258.2, earnings: 3234.8, cfo: 4258.2, fcf: 4340.1 },
     "2028": { ebitda: 5535.3, earnings: 4363.4, cfo: 5535.3, fcf: 5621.3 },
   }},
-  NVDA: { name: "NVIDIA Corporation", currency: "USD", snapshot: "2026-08-28", shares: 24804, years: {
+  // NVIDIA closes its fiscal year in January, so its FY label runs one ahead of the
+  // calendar year it mostly covers: FY2028 = Feb 2027 → Jan 2028 ≈ CY2027. fyOffset
+  // is what the tab uses to line it up with the Dec-year names; the keys below stay
+  // NVIDIA's own fiscal labels, exactly as Summit stores them. FY2029 is carried so
+  // the calendar-2028 column has something to show.
+  NVDA: { name: "NVIDIA Corporation", currency: "USD", snapshot: "2026-08-28", shares: 24804, fyOffset: 1, years: {
     "2025": { ebitda: 85093, earnings: 70206.7, cfo: 70135.2, fcf: 66899.2 },
     "2026": { ebitda: 136224.7, earnings: 110555.8, cfo: 116788.2, fcf: 110746.2 },
     "2027": { ebitda: 276114.3, earnings: 225369.8, cfo: 215710.6, fcf: 207436.2 },
     "2028": { ebitda: 483970.9, earnings: 395606.1, cfo: 361485.4, fcf: 346963.5 },
+    "2029": { ebitda: 614242.8, earnings: 507646.8, cfo: 503384.4, fcf: 485302.2 },
   }},
   MA: { name: "Mastercard Incorporated", currency: "USD", snapshot: "2026-07-30", shares: 906, years: {
     "2025": { ebitda: 20100, earnings: 14625, cfo: 17648, fcf: 17159 },

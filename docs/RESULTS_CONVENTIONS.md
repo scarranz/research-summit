@@ -252,6 +252,22 @@ trusting rounded output (the BBG margin rows carry full precision).
 
 ## 7. Open items / next iterations (as of Jul 28, 2026)
 
+- **⭐ PRIORITY — do this first (flagged by SAB, Sep 4 2026): the current fiscal year shows no
+  growth in the Estimates view.** On the Evolution ▸ Estimates sub-tab (and any Results/Estimates
+  table in annual mode), the CURRENT FY — the one straddling reported quarters and forward
+  estimates — renders no YoY growth figure for the Summit/Consensus row, even though it is the
+  single most important growth number on the page (this year vs last year, fully known on the
+  estimate side). Not yet root-caused; start here: `rsRefGrowthPct`/`rsGrowArr` in `js/results.js`
+  (~line 631-646, 703-716) compute growth off `m[series][i]` (the current-year annual
+  estimate) vs `m.act[i-1]` (last year's actual) — the formula itself imposes no "closed year"
+  restriction, so the likely cause is that `m.cons[i]`/`m.summit[i]` (the annual estimate for the
+  IN-PROGRESS fiscal year) is simply absent from the per-ticker dataset
+  (`js/results-data/<ticker>.js`) rather than a bug in the growth math — verify against a live
+  dataset before assuming which it is. Distinguish this from the documented, intentional rule at
+  §5 ("Estimates are not observations: the Actual row never shows growth into estimate periods")
+  — that rule is correctly about the ACTUAL row/CAGR, not about a reference (Summit/Consensus)
+  series' own growth, which should be computable for the current year.
+
 - **GOOGL (Jul 29):** the Evolution **Results + Estimates sub-tabs are wired** in `js/overviews/googl.js`
   (row: `Earnings · Results · Estimates · Guidance · Strategy · Timeline`) and **`GOOGL` is registered
   in `RESULTS_DATA`**. The dataset `js/results-data/googl.js` was **reconstructed from the rolling

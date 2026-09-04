@@ -126,6 +126,7 @@ supabase functions deploy <function-name> --project-ref bvflqjndivouhgwqfbrq
 | `get-margins` | Massive `/stocks/financials/v1/income-statements` + `/cash-flow-statements` | Historical profitability & cash margins (gross/op/net/EBITDA/CFO/FCF) for the Overview Margins box — computed server-side, no DB write |
 | `get-transcript` | Fiscal.ai `/v1/company/ir-events` + `/ir-events/transcript/{eventKey}` | Earnings-call events list + structured transcripts for Earnings — generic for any ticker on our Fiscal.ai tier, no DB write. `unavailable: true` = company not on current plan |
 | `generate-investment-writeup` | Anthropic Messages API (`claude-opus-4-8` + `web_search` tool) | "Research & write with AI" button in the Investment tab's Add modal — researches a company via web search and drafts its Overview/Moat/Opportunity text in Summit's house tone. Requires a separate `ANTHROPIC_API_KEY` secret. |
+| `get-market-history` | Massive `/v2/aggs/ticker/.../range/...` (daily prices) + `/stocks/financials/v1/ratios` (quarterly, for market_cap/enterprise_value/price) | Daily closes + quarterly shares/net-debt for the AMZN Historic Multiple chart (`js/overviews/amzn-histmult.js`) — computed client-side from the raw passthrough, no DB write. **NEW on feat/amzn-polish, not yet deployed** — smoke-test after deploying (see that file's header for exact field-name assumptions to verify). |
 
 **Security:** All edge functions restrict CORS to `research-summit.netlify.app` and `localhost:8000`. Ticker and companyId inputs are validated.
 

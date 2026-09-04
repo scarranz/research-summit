@@ -1234,8 +1234,10 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 .ov-p b { color: var(--navy); font-weight: 600; }
 
 /* ── KPI tiles ── */
+/* auto-fit, not a hard column count: a 2- or 4-tile strip stretches to fill the row instead of
+   leaving holes from an assumed 5-tile layout. Matches AMZN's former private .ew-kpis. */
 .ov-kpis {
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 8px; margin-bottom: 10px;
 }
 .ov-kpi {

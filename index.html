@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="css/team.css">
 <link rel="stylesheet" href="css/fund-returns.css">
 <link rel="stylesheet" href="css/covered-calls.css">
+<link rel="stylesheet" href="css/portfolio-metrics.css">
 <link rel="stylesheet" href="css/industry.css">
 <link rel="stylesheet" href="css/spectrum.css">
 <link rel="stylesheet" href="css/results.css">
@@ -58,6 +59,7 @@
     <button class="ntb nav-item" data-tab="team" data-page="team" onclick="switchTab('team')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Team</button>
     <button class="ntb nav-item" data-tab="ret" data-page="fund-returns" onclick="switchTab('ret')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M19 9l-5 5-4-4-3 3"/></svg>Return Analysis</button>
     <button class="ntb nav-item" data-tab="cc" data-page="covered-calls" onclick="switchTab('cc')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg>Covered Calls</button>
+    <button class="ntb nav-item" data-tab="pm" data-page="portfolio-metrics" onclick="switchTab('pm')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12l0-9"/><path d="M12 12l7 4"/></svg>Portfolio Metrics</button>
   </nav>
   <div class="snav-lbl">Pipeline</div>
   <nav class="snav">
@@ -701,6 +703,11 @@ Each tile is a GICS sector, colored by the average YTD return of the companies t
   <div id="cc-root"></div>
 </div>
 
+<!-- PORTFOLIO METRICS TAB -->
+<div id="tp-pm" class="tp">
+  <div id="pm-root"></div>
+</div>
+
 </main>
 <footer class="ftr"><div class="ftri">
   <div><div class="ftrt">Summit Management Technologies ABX, LP &middot; CIK: 0002074211 &middot; info@summit-mgmtx.com</div><div class="ftrd">All returns net of fees. Past performance is not indicative of future results. For informational purposes only.</div></div>
@@ -733,6 +740,7 @@ import { loadHedgeFundsPage } from './js/hedge-funds.js';
 import { loadTeamPage } from './js/team.js';
 import { loadFundReturnsPage } from './js/fund-returns.js';
 import { loadCoveredCallsPage } from './js/covered-calls.js';
+import { loadPortfolioMetricsPage } from './js/portfolio-metrics.js';
 import { loadIndustryPage } from './js/industry.js';
 
 const statusEl = document.getElementById('status');
@@ -784,6 +792,7 @@ async function boot() {
       registerPageLoader('team', loadTeamPage);
       registerPageLoader('fund-returns', loadFundReturnsPage);
       registerPageLoader('covered-calls', loadCoveredCallsPage);
+      registerPageLoader('portfolio-metrics', loadPortfolioMetricsPage);
 
       // Update user display
       const user = getCurrentUser();

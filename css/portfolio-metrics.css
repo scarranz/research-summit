@@ -1,0 +1,75 @@
+/* Portfolio Metrics tab — all rules scoped under #pm-root so they never touch
+   the rest of the portal. Palette vars are redefined on #pm-root for isolation. */
+#pm-root{
+  --navy:#1E2733; --blue:#2C3E54; --steel:#3E5A82; --mid:#7C8694;
+  --ice:#EEF1F5; --pale:#F4F6F9; --w:#FFFFFF; --text:#1E2733; --mu:#8A93A0;
+  --bdr:#E7EAEE; --pos:#16A34A; --neg:#DC2626; --accent:#2563EB; --warn:#B45309;
+  color:var(--text); font-variant-numeric:tabular-nums;
+}
+#pm-root .pm-wrap{max-width:1480px;margin:0 auto;}
+#pm-root .topbar{display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap;}
+#pm-root .topbar h2{font-size:18px;font-weight:700;color:var(--text);text-transform:none;letter-spacing:-.01em;}
+#pm-root .sub{color:var(--mu);font-size:13px;margin-bottom:18px;}
+
+#pm-root .card{background:var(--w);border:1px solid var(--bdr);border-radius:14px;padding:6px 6px 14px;overflow-x:auto;}
+#pm-root table{width:100%;border-collapse:collapse;font-size:13px;}
+#pm-root th,#pm-root td{padding:8px 12px;border-bottom:1px solid var(--bdr);white-space:nowrap;text-align:right;}
+#pm-root th{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.03em;font-weight:600;background:var(--w);}
+#pm-root th:first-child,#pm-root td:first-child{text-align:left;}
+#pm-root td.tk{font-weight:700;}
+#pm-root tbody tr:hover{background:var(--pale);}
+
+/* Group header rows (Passive / Single Stock) */
+#pm-root tr.grp td{
+  font-size:10px;color:var(--steel);font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;background:var(--pale);padding:7px 12px;text-align:left;
+}
+#pm-root td.num{font-variant-numeric:tabular-nums;}
+#pm-root td.muted{color:var(--mu);}
+
+/* Sub-tabs (Portfolio / Paper) — underline style */
+#pm-root .pm-subnav{display:flex;gap:0;border-bottom:1px solid var(--bdr);margin-bottom:20px;}
+#pm-root .pm-pill{border:none;border-bottom:2px solid transparent;background:transparent;
+  font:500 13.5px 'Inter',sans-serif;color:var(--mu);padding:0 2px 10px;margin-right:28px;
+  margin-bottom:-1px;cursor:pointer;transition:color .15s,border-color .15s;}
+#pm-root .pm-pill:hover{color:var(--text);}
+#pm-root .pm-pill.active{color:var(--navy);font-weight:600;border-bottom-color:var(--navy);}
+#pm-root .pm-sub{display:none;}
+#pm-root .pm-sub.active{display:block;}
+
+/* Paper subtab — editable inputs, add / remove controls */
+#pm-root input.pm-inp{font-family:inherit;font-size:13px;border:1px solid var(--bdr);
+  border-radius:6px;padding:4px 8px;background:var(--w);color:var(--text);text-align:right;}
+#pm-root input.pm-tk{width:120px;text-align:left;font-weight:700;}
+#pm-root input.pm-wt{width:72px;}
+#pm-root input.pm-inp:focus{outline:none;border-color:var(--accent);}
+#pm-root .pm-add{font-family:inherit;font-size:12px;font-weight:600;color:var(--steel);
+  background:var(--w);border:1px dashed var(--bdr);border-radius:7px;padding:5px 12px;
+  cursor:pointer;margin:8px 0 4px 12px;}
+#pm-root .pm-add:hover{border-color:var(--steel);color:var(--navy);background:var(--pale);}
+#pm-root .pm-del{border:none;background:transparent;color:var(--mu);cursor:pointer;
+  font-size:15px;line-height:1;padding:0 4px;}
+#pm-root .pm-del:hover{color:var(--neg);}
+#pm-root td.pm-actions{width:32px;text-align:center;padding:8px 4px;}
+#pm-root .pm-empty{color:var(--mu);font-size:12px;font-style:italic;}
+
+/* Metric selector (EBITDA / Earnings / CFO / FCF) — segmented control */
+#pm-root .pm-metricbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+#pm-root .pm-metricbar .lbl{font-size:10px;color:var(--mu);font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;}
+#pm-root .pm-seg{display:inline-flex;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;}
+#pm-root .pm-seg button{border:none;border-radius:0;background:var(--w);color:var(--steel);
+  padding:7px 14px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
+#pm-root .pm-seg button+button{border-left:1px solid var(--bdr);}
+#pm-root .pm-seg button.on{background:var(--navy);color:#fff;}
+#pm-root .pm-seg button:not(.on):hover{background:var(--pale);}
+
+/* Metric value inputs + computed cells */
+#pm-root input.pm-minp{width:64px;font-family:inherit;font-size:12.5px;border:1px solid var(--bdr);
+  border-radius:6px;padding:4px 7px;background:var(--w);color:var(--text);text-align:right;}
+#pm-root input.pm-minp:focus{outline:none;border-color:var(--accent);}
+#pm-root th.msep,#pm-root td.msep{border-left:1px solid var(--bdr);}
+#pm-root td.pm-growth,#pm-root td.pm-peg{font-weight:600;}
+#pm-root td.pm-growth.up{color:var(--pos);} #pm-root td.pm-growth.dn{color:var(--neg);}
+#pm-root td.pm-sv{font-variant-numeric:tabular-nums;}
+#pm-root .pm-note{font-size:11px;color:var(--mu);margin-top:10px;line-height:1.5;}

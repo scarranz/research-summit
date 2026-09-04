@@ -12,6 +12,7 @@ const TAB_MAP = {
   'team': 'team',
   'fund-returns': 'ret',
   'covered-calls': 'cc',
+  'buy-calls': 'bc',
 };
 
 const TAB_TITLES = {
@@ -21,6 +22,7 @@ const TAB_TITLES = {
   'team': 'Team',
   'ret': 'Return Analysis',
   'cc': 'Covered Calls',
+  'bc': 'Buy Calls',
 };
 
 export function registerPageLoader(page, loader) {

@@ -3618,9 +3618,6 @@ function aBuildMargins(){
 }
 // Expense-line full dives — opened from an Expenses card via data-detail="exp:<key>". VISUAL, not prose.
 var EW_CSS='<style>'+
-  '.ew-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:2px 0 16px}'+
-  '.ew-tile{border:1px solid var(--bdr);border-top:3px solid var(--brand-2);border-radius:10px;padding:10px 12px;background:var(--card,#fff)}'+
-  '.ew-tv{font-size:19px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;letter-spacing:-.02em}.ew-tl{font-size:10px;color:var(--mu);font-weight:600;margin-top:3px;line-height:1.35}'+
   '.ew-h{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--brand-2);margin:18px 0 9px;display:flex;align-items:center;gap:8px}.ew-h::after{content:"";flex:1;height:1px;background:var(--bdr)}'+
   '.ew-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:560px){.ew-two{grid-template-columns:1fr}}'+
   '.ew-box{border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;background:var(--card,#fff)}'+
@@ -3724,7 +3721,7 @@ var SEG_CALLS={
   ]
 };
 function ewBase(c){
-  var h='<div class="ew-kpis">'+c.kpis.map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>';
+  var h='<div class="ov-kpis">'+c.kpis.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-v">'+k[0]+'</div><div class="ov-kpi-d muted">'+k[1]+'</div></div>'; }).join('')+'</div>';
   if(c.def){ h+='<div class="ew-h">How the 10-K defines it</div><div class="ew-q ew-def">“'+c.def+'”<span class="ew-att">'+EW_SRC+'</span></div>'; }
   h+='<div class="ew-h">What sits inside this line</div>'+ewBoxes(c.comp);
   if(c.compNote) h+='<div class="ew-note">'+c.compNote+'</div>';
@@ -4002,7 +3999,7 @@ function segQuarterRows(){
 // Segment deep-dive "worlds" — opened from the Segments tab via data-detail="seg:aws|us|int".
 // VISUAL (reuses EW_CSS / ewSpark from the expense full dives). Data: 10-K Note 10 (segment capex/PP&E),
 // segment operating margins, and the earnings-call record.
-function segTiles(a){ return '<div class="ew-kpis">'+a.map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>'; }
+function segTiles(a){ return '<div class="ov-kpis">'+a.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-v">'+k[0]+'</div><div class="ov-kpi-d muted">'+k[1]+'</div></div>'; }).join('')+'</div>'; }
 function segCapMini(cap,ppe){ return '<div class="ew-flow"><div class="ew-fn"><div class="ew-fn-v">'+cap+'</div><div class="ew-fn-l">net capex, FY25 (Note 10)</div></div><div class="ew-far">→</div><div class="ew-fn"><div class="ew-fn-v">'+ppe+'</div><div class="ew-fn-l">PP&amp;E stock</div></div></div>'; }
 // Per-segment cost structure — Amazon does NOT disclose functional expenses by segment, so this is
 // qualitative (from 10-K MD&A drivers + Note 10 capex/PP&E), explicitly flagged as inferred, with the
@@ -4989,7 +4986,7 @@ var AMZN_MGMT = makeManagement({
 });
 function amznOwnBody(){   // Ownership
   var h='<p class="ov-lede"><b>One share, one vote.</b> Amazon has a <b>single share class</b> — no founder super-voting stock. It is the governance mirror-image of META and GOOGL: influence flows from the stake and the chair, not from a special class.</p>';
-  h+='<div class="ew-kpis">'+[['~9%','Jeff Bezos — largest individual holder'],['1 class','one share, one vote'],['~$19.5B','stock-based comp (FY25)'],['~nil','buybacks · no dividend']].map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="ov-kpis">'+[['~9%','Jeff Bezos — largest individual holder'],['1 class','one share, one vote'],['~$19.5B','stock-based comp (FY25)'],['~nil','buybacks · no dividend']].map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-v">'+k[0]+'</div><div class="ov-kpi-d muted">'+k[1]+'</div></div>'; }).join('')+'</div>';
   h+='<div class="ov-sec-h">Who owns Amazon</div>';
   h+=ewBoxes([
     ['👤','Founder','Jeff Bezos holds ~9% — the largest single holder — as Executive Chair. He sells regularly under pre-set <b>10b5-1</b> plans (funding Blue Origin and philanthropy), so the stake trends down over time even as it stays the largest.'],
@@ -5004,7 +5001,7 @@ function amznOwnBody(){   // Ownership
 }
 function amznGovBody(){   // Governance & SBC
   var h='<p class="ov-lede"><b>Clean, conventional governance.</b> Single-class stock, an independent-majority board, four standing committees and an annual say-on-pay vote — governance risk is low by construction. The trade-off: no outside holder can force a strategy change.</p>';
-  h+='<div class="ew-kpis">'+[['1 vote / sh','single share class'],['12 dirs','majority independent'],['~$19.5B','SBC · ~2.7% of revenue (FY25)'],['~nil','buybacks · no dividend']].map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="ov-kpis">'+[['1 vote / sh','single share class'],['12 dirs','majority independent'],['~$19.5B','SBC · ~2.7% of revenue (FY25)'],['~nil','buybacks · no dividend']].map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-v">'+k[0]+'</div><div class="ov-kpi-d muted">'+k[1]+'</div></div>'; }).join('')+'</div>';
   h+=ewBoxes([
     ['🗳️','Single share class','One share, one vote — no founder super-voting stock. The opposite of META/GOOGL dual-class.'],
     ['⚖️','Independent-majority board','12 directors, the majority independent; an independent Lead Director since 2010.'],

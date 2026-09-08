@@ -9,11 +9,16 @@ own, and links to them instead:
 
 | For | Read |
 |---|---|
+| **Every Deep Dive sub-tab, by name** — exact function, engine-or-bespoke, exact metrics/fields, what a new company hand-authors | `PANE_CATALOG.md` |
 | The standardized **Overview** tab (the 7 blocks, Key Facts, competitor scatter, timeline) | `OVERVIEW_CONVENTIONS.md` |
 | **Any chart at all** — the six non-negotiables, the optional menu, the pre-ship list | `CHART_ENGINE_REFERENCE.md` §0 |
 | A **metric-over-time** chart (Results / Estimates) — the dataset contract | `RESULTS_CONVENTIONS.md`, `CHART_TOOLKIT.md` |
 | The **Earnings** tab machinery (Setup · Post-Results · Notes) | `EARNINGS_CONVENTIONS.md` |
 | Per-print **Street consensus** compiled by hand | `docs/calls/<TICKER>.md` |
+
+**Use this file for the process and the rules. Use `PANE_CATALOG.md` when you're actually about to
+write a specific sub-tab and need the exact data shape it expects — that file is the pane-by-pane
+inventory this one deliberately doesn't duplicate.**
 
 **The one sentence that matters most:** almost everything in the Amazon profile is a *shared engine
 fed by a per-company data file*, not bespoke code. Before you write a pane, find out which engine
@@ -147,8 +152,11 @@ What this fixed on Amazon: the seven product lines on Top Line ▸ Other were dr
 ramp of four blues (**a ramp encodes magnitude, not identity**) that also **cycled**, so a seventh
 entity silently re-used the first one's colour. Both are categorical-colour errors.
 
-**Still open:** `results.js` carries its own copy of the old ramp for eight companies, so converging
-it is a portal-wide PR, not a per-company change.
+**✓ Resolved (Sep 8, 2026).** `results.js`'s own `EVO_RAMP` (the Estimates tab's per-fiscal-year
+ordinal ramp) had the same cycling flaw as the old `SG_RAMP` — 4 fixed slots, `% length` indexing —
+just latent, since no live dataset had outgrown it *after* the forward-horizon trim (Uber's raw
+`years` already had; the trimmed, rendered version hadn't yet). Fixed: sized to 5, indexed
+directly with a `SUMMIT_MUTE` fallback, no modulo. Nothing left open here.
 
 ### 3.2 The canonical components — and where they actually live
 
@@ -191,15 +199,21 @@ first, then point companies at it.** That touches a rule used by **17 overviews 
 it is a portal-wide design-system PR, not a per-company change. (`.ew-foot` was the easy half of the
 same job and has already been folded into `.ov-foot`: the two differed by 2–6px of padding.)
 
-**Why the CSS has not been lifted into a stylesheet yet, and what it will take.** Two things make
-it a PR of its own rather than part of a company's work:
-1. **The CSS is interpolated with JS constants** (`accent-color:'+BRAND+'`), so it cannot be moved
-   statically — the interpolations have to become CSS custom properties first.
-2. **Eight overviews each own a copy of the `.ce-*` Earnings machinery** (amzn 539 references, spot
-   401, uber 379, lyft 368, googl and meta 361 each, bbb 81, ibkr 25). Today they never collide
-   because only one profile renders at a time; the moment one copy moves to a global stylesheet it
-   starts styling the other seven. The fix is one shared `css/earnings.css` for all eight at once —
-   or, if it must be done per company, selectors scoped under that profile's root class.
+**Why the CSS had not been lifted into a stylesheet, and what it took (base file built Sep 8,
+2026, not wired up yet).** Two things made it look like a portal-wide PR rather than part of a
+company's work — the first turned out not to be a real blocker once checked:
+1. ~~**The CSS is interpolated with JS constants**~~ — checked, and every company's `.ov` root
+   already declares `--brand` (and most `--brand-2`) as a real CSS custom property (inline or in
+   `css/overview.css`), so a static stylesheet can read `var(--brand)` directly. No blocker.
+2. **Six overviews each own a copy of the `.ce-*` Earnings machinery** (amzn, googl, uber, lyft,
+   meta, spot — bbb and ibkr don't have one). Diffed all six: googl/lyft/uber/meta are
+   byte-identical; spot differs by 3 lines; amzn is the superset (an extra inline prompt/confirm
+   popover). `css/earnings.css` now exists, built from amzn's body with `BRAND`/`BRAND2` swapped
+   for `var(--brand)`/`var(--brand-2, var(--brand))` and the six semantic state colours (which had
+   drifted between copies from hand-editing, not a deliberate choice) converged to AMZN's values.
+   **Still not wired up**: no `<link>` added anywhere yet, and none of the six overviews' own
+   `ceStyle()` functions have been touched — this remains the portal-wide step, now fully scoped
+   with a finished base file, not a research problem.
 
 Two consequences worth knowing before you copy anything:
 

@@ -16,8 +16,12 @@ Read, in this order:
 
 1. `docs/COMPANY_PROFILE_BLUEPRINT.md` **in full** — the tab spine, the engine list, the design
    system, the data map, the interaction contract, the build order, the checklist.
-2. `docs/CHART_ENGINE_REFERENCE.md` **§0** — before writing any chart at all.
-3. Whichever of these the section needs: `RESULTS_CONVENTIONS.md` (Results/Estimates dataset),
+2. `docs/PANE_CATALOG.md` **for every sub-tab the section you're building contains** — the exact
+   function name, whether it's engine-driven or bespoke, the exact metric/field list, and what a
+   new company hand-authors. This is the file that tells you WHAT DATA TO WRITE, not just where it
+   goes — read the sub-tab's entry before writing its data file.
+3. `docs/CHART_ENGINE_REFERENCE.md` **§0** — before writing any chart at all.
+4. Whichever of these the section needs: `RESULTS_CONVENTIONS.md` (Results/Estimates dataset),
    `EARNINGS_CONVENTIONS.md` (the Earnings tab), `OVERVIEW_CONVENTIONS.md` (if the Overview tab
    is not yet filled — run `/fill-overview <TICKER>` first if so).
 
@@ -61,6 +65,13 @@ For each thing you are about to build, check the blueprint §2 table first:
   seed-from-code path**; rows are authored in-portal, so do not author `band:'lead'` items and
   expect them to appear.
 - Executives & Board → **`js/overviews/management.js`**.
+
+**Valuation, Management (past Executives & Board), and Miscellaneous have no shared engine** —
+every sub-tab there is a bespoke or data-driven function you port from `amzn.js` and adapt.
+`docs/PANE_CATALOG.md` §4-6 spells out, sub-tab by sub-tab, the exact data shape and how much
+hand-authoring each one actually costs (a 5-field peer array is not the same job as a
+Summit-DCF-snapshot transcription) — read the specific sub-tab's entry before starting it, not
+just the section header.
 
 Only write a bespoke canvas when the thing genuinely is not a metric over time, and then follow
 `CHART_ENGINE_REFERENCE.md` §0.7 — §0.2 applies to it in full.

@@ -66,6 +66,7 @@
 
 import { amznResults } from '../results-data/amzn.js';
 import { fetchPriceHistory, fetchRatiosHistory } from '../api.js';
+import { SUMMIT_CAT, fade } from '../viz-palette.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function num(v){ return (typeof v==='number' && isFinite(v)) ? v : null; }
@@ -400,7 +401,11 @@ function buildSeries(mk, hz){
 // which is false. So each metric gets its own axis, BOTH on the right per §0.4 — P/E inboard,
 // EV/EBITDA outboard — and each axis is tinted its metric's colour, which is the only thing that
 // makes a dual-axis chart readable rather than a trap.
-var C_PE_F='#146EB4', C_PE_T='#7FB3E0', C_EV_F='#E08700', C_EV_T='#F5C57A';
+// Two identities (P/E, EV/EBITDA) → the portal's fixed categorical slots 0 and 1, never a hand-picked
+// hue. Trailing is the SAME hue faded, not a different colour — confidence is alpha, identity is hue
+// (viz-palette.js's own rule). Was '#146EB4'/'#7FB3E0'/'#E08700'/'#F5C57A' — the EV/EBITDA pair in
+// particular was Amazon's old smile-orange family, exactly what Stage 2 removed everywhere else.
+var C_PE_F=SUMMIT_CAT[0], C_PE_T=fade(SUMMIT_CAT[0],0.45), C_EV_F=SUMMIT_CAT[1], C_EV_T=fade(SUMMIT_CAT[1],0.45);
 var SERIES = [
   { k:'pe_f',  metric:'pe',       dir:'fwd',   color:C_PE_F, axis:'y',  short:'P/E fwd' },
   { k:'pe_t',  metric:'pe',       dir:'trail', color:C_PE_T, axis:'y',  short:'P/E trail', dash:true },

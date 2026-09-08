@@ -171,7 +171,16 @@ evolution: {
    fetched through the Summit connection (Summit DB → API/edge function), replacing the
    hand-built arrays; the dataset shape in §2 is the contract that connection must fill. Colors are an ordered
    one-hue ramp of the portal blue (`EVO_RAMP` in results.js, darkest = nearest year; validated
-   with the dataviz palette checker). Solid = Summit, dashed = the BBG consensus stored in the
+   with the dataviz palette checker). **Sized to 5** and indexed directly (`EVO_RAMP[yi] ||
+   SUMMIT_MUTE`, never `% length`) — fixed Sep 8, 2026 after finding this was the SAME cycling bug
+   `SG_RAMP` had before its Sep 1 fix. Not yet visibly wrong for anyone: `rsTrimData`'s
+   forward-horizon rule (§7 item 8, `keepY`) caps what actually renders at the current fiscal
+   year + 2, and Uber — the widest raw `years` today, `['2025'..'2029']`, 5 elements — is trimmed
+   to 4 (`2025-2028`) as of Sep 2026, which the OLD 4-slot ramp still covered. But that trim margin
+   closes as the current FY rolls forward: once `fy` reaches 2027 the same dataset keeps all 5
+   years and the old ramp WOULD have silently repainted FY2029 the same colour as FY2025 — this
+   was fixed before that became visible, not after. Adding a 6th year needs a new step, not a
+   bigger modulo. Solid = Summit, dashed = the BBG consensus stored in the
    model at the same snapshot (so both columns are as-of the same date). Each block has a
    **US$B / % display toggle**: Top Line's % = the IMPLIED YoY GROWTH each snapshot carries
    (first year chains to `prior` — own estimate while the year was open, reported actual once

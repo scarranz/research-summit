@@ -5555,7 +5555,7 @@ function aBuildSub(root, dd, key){
     }
     if(key==='results') requestAnimationFrame(function(){
       initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'AMZN'); });
-    if(key==='estevo') requestAnimationFrame(initResultsEvo);
+    if(key==='estevo') requestAnimationFrame(function(){ initResultsEvo('AMZN'); });
   }
 }
 // Give the Evolution sub-tab bar (Earnings · Results · Estimates) and the phase bar (Setup · Post-Results

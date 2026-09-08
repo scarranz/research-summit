@@ -271,12 +271,21 @@ trusting rounded output (the BBG margin rows carry full precision).
   every vintage after the print (and can itself later be re-cut — EBITDA's frozen FY2025 jumped
   168,024→185,600 at the May-13 save), while Bloomberg's `*_BBG_EST` fact zeroes out (→ `null`) the
   moment the year closes, so a Street base only survives on the one pre-print vintage. Added
-  `prior` to all three metrics in `js/results-data/amzn.js` with those verified values; segment op.
-  income (`naopinc`/`intopinc`/`awsopinc`) and `fcf`/`opinc` were left without one — their DCF fact
-  labels (`OPINC`/`OPINC2`/`OPINC3`) don't self-evidently map to NA/Intl/AWS, so filling them needs
-  the same live-snapshot verification, not a guess. **Rule going forward:** `prior` is not
-  Top-Line-only — any metric with a `mode:'grow'` toggle needs one to show current-FY growth; §2
-  below is corrected accordingly.
+  `prior` to all three metrics in `js/results-data/amzn.js` with those verified values.
+  **Follow-up (Sep 8, 2026, same day):** closed the remaining gap — segment op. income
+  (`naopinc`/`intopinc`/`awsopinc`) and `fcf`/`opinc` (Total, derived) now have `prior` too.
+  The DCF fact labels don't self-evidently map to segments, so this was verified, not guessed:
+  `OPINC`/`OPINC2`/`OPINC3` were confirmed to be NA/Intl/AWS GAAP op. income respectively by
+  cross-checking `EBITDA − D&A` per segment (`AWS_EBITDA − AWS_DNA` = `OPINC3` to the dollar at
+  every snapshot checked) and by matching FY2026 vintage-0 values against the metric's own
+  `summit[0][0]` already in the dataset. `opinc` (Total)'s `prior` is the sum of the three
+  segment priors, consistent with how its own `summit`/`cons` arrays are already built. None of
+  the five had a `*_BBG_EST` fact in the model, so all five stay Summit-only — no consensus row.
+  **FCF's caveat:** FY26 growth swings sign (−3.0% Dec → −219.0% Feb → −87.5% Aug 4) because FY26
+  FCF itself crosses zero across vintages — read that one in $ amount mode, not percent, per the
+  existing sign-flip convention. **Rule going forward:** `prior` is not Top-Line-only — any metric
+  with a `mode:'grow'` toggle needs one to show current-FY growth; §2 below is corrected
+  accordingly.
 
 - **GOOGL (Jul 29):** the Evolution **Results + Estimates sub-tabs are wired** in `js/overviews/googl.js`
   (row: `Earnings · Results · Estimates · Guidance · Strategy · Timeline`) and **`GOOGL` is registered

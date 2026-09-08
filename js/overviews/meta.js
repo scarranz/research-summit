@@ -3346,7 +3346,7 @@ function buildSub(root, group, key){
   // (beside the Setup chart) re-establishes its dataset and wires the right wrap.
   if(group==='evolution' && key==='results') requestAnimationFrame(function(){
     initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'META'); });
-  if(group==='evolution' && key==='estevo') requestAnimationFrame(initResultsEvo);
+  if(group==='evolution' && key==='estevo') requestAnimationFrame(function(){ initResultsEvo('META'); });
   if(group==='valuation' && key==='sensitivity') sensInit(root);
   if(group==='valuation' && key==='capalloc') buildCapital();
   if(group==='valuation' && key==='balance') renderFin();

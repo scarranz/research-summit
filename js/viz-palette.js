@@ -17,10 +17,28 @@
 //  — the one that applies to stacked bars, grouped bars and lines:
 //      Lightness band ......... pass (all inside L 0.43–0.77)
 //      Chroma floor ........... pass (all >= 0.1)
-//      CVD separation ......... pass (worst adjacent ΔE 9.1, target >= 8)
-//      Normal-vision floor .... pass (worst adjacent ΔE 19.6, floor >= 15)
-//      Contrast vs surface .... RELIEF REQUIRED for slots 3, 4 and 5 (aqua 2.82, yellow 2.17,
-//                               magenta 2.69 — all below 3:1 on white)
+//      CVD separation ......... FLOOR band (worst adjacent ΔE 6.9, slots 7↔8 aqua/red — legal only
+//                               WITH the mitigation below; every other adjacent pair clears target >= 8)
+//      Normal-vision floor .... pass (worst adjacent ΔE 15.6, floor >= 15 — the hard gate still clears)
+//      Contrast vs surface .... RELIEF REQUIRED for slots 3, 4 and 5 (indigo 2.9-ish, yellow 2.11,
+//                               magenta 2.62 — all below 3:1 on white) — same mitigation as the
+//                               CVD floor band: a visible table or direct labels, which every
+//                               portal chart already ships (see below).
+//
+//  ⚠ RE-THEMED Sep 8, 2026 (SAB): slots 2/3/7 moved from orange/aqua/violet to a muted
+//  blue/brown/indigo-leaning order — SAB's own request, "make the charts go with the Summit
+//  palette" after finding the segment charts' colours jarring. Slots 1, 4, 5, 6, 8 are UNCHANGED.
+//  Two things worth knowing before touching this again:
+//    · A genuinely NEUTRAL grey cannot be slot 2 or 3 — it fails the chroma floor outright (OKLCH
+//      C < 0.10, so it reads as grey and stops carrying identity; that is exactly why SUMMIT_MUTE
+//      below is grey and is NOT a categorical slot). "Brown" and "indigo" are the closest muted
+//      hues that still clear the floor.
+//    · Indigo and the ORIGINAL violet (still used elsewhere, e.g. segments.js's magenta/violet-
+//      adjacent chips) are the SAME hue family and collide badly head-to-head (ΔE 6.3 normal-vision,
+//      a near-total confusion) — so violet was retired from slot 7 and replaced with the FORMER
+//      slot-3 aqua, which separates cleanly from indigo (ΔE 31.1) at the cost of the aqua↔red
+//      tail pair above landing in the floor band instead of a clean pass. Do not reintroduce
+//      violet anywhere in this array while indigo occupies slot 3.
 //
 //  ⚠ THE RELIEF RULE IS A CONDITION, NOT A WARNING. If a chart uses slot 3, 4 or 5 it MUST also
 //  ship visible direct labels or the data table under it. Every portal chart already carries a
@@ -29,7 +47,8 @@
 //
 //  ⚠ SCATTER, BUBBLE AND CHOROPLETH USE A DIFFERENT PAIRLIST. Those forms compare every pair, not
 //  just neighbours, and the full set cannot clear the floors there. Cap them at THREE slots
-//  (SUMMIT_CAT3, validated all-pairs) and fold the rest into "Other".
+//  (SUMMIT_CAT3, validated all-pairs — worst pair ΔE 14.1 CVD / 15.7 normal-vision, both clear of
+//  their floors) and fold the rest into "Other".
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 //  ⚠ CATEGORICAL IS NOT THE ONLY JOB — DO NOT "FIX" AN ORDINAL RAMP INTO THIS PALETTE.
@@ -44,12 +63,12 @@
 
 export var SUMMIT_CAT = [
   '#2a78d6',   // 1 · blue
-  '#eb6834',   // 2 · orange
-  '#1baf7a',   // 3 · aqua      — relief required
+  '#A66A2E',   // 2 · brown     — was orange
+  '#4A4A8B',   // 3 · indigo    — was aqua; relief required
   '#eda100',   // 4 · yellow    — relief required
   '#e87ba4',   // 5 · magenta   — relief required
   '#008300',   // 6 · green
-  '#4a3aa7',   // 7 · violet
+  '#1baf7a',   // 7 · aqua      — was violet (violet retired, collides with indigo)
   '#e34948',   // 8 · red
 ];
 

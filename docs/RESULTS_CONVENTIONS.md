@@ -97,11 +97,17 @@ evolution: {
   metrics: { <key>: { label, unit:'usdM',
     summit: [[v per vintage] per year],       // rows parallel to years
     cons:   [[...]] | null,                   // BBG stored IN the model at each snapshot
-    prior:  { summit:[...], cons:[...] },     // Top Line only: the fiscal year BEFORE
-                                              // years[0], per vintage, for implied-growth —
+    prior:  { summit:[...], cons:[...] },     // needed by ANY metric with a Growth mode (not
+                                              // Top-Line-only — added to Profitability's capex/
+                                              // ebitda/earnings Sep 8, 2026): the fiscal year
+                                              // BEFORE years[0], per vintage, for implied-growth —
                                               // ALWAYS the value stored in that vintage block
                                               // (frozen projection for segments), never the
-                                              // reported actual (provenance rule, §3.6a)
+                                              // reported actual (provenance rule, §3.6a). `cons`
+                                              // is commonly partial/absent: Bloomberg's own
+                                              // estimate for a closed year disappears from the
+                                              // model once the print lands, so only the vintage(s)
+                                              // before that print carry a value.
     marginOf, marginLabel,                    // Profitability only: margin denominator key
     note } }
 }
@@ -252,21 +258,25 @@ trusting rounded output (the BBG margin rows carry full precision).
 
 ## 7. Open items / next iterations (as of Jul 28, 2026)
 
-- **⭐ PRIORITY — do this first (flagged by SAB, Sep 4 2026): the current fiscal year shows no
-  growth in the Estimates view.** On the Evolution ▸ Estimates sub-tab (and any Results/Estimates
-  table in annual mode), the CURRENT FY — the one straddling reported quarters and forward
-  estimates — renders no YoY growth figure for the Summit/Consensus row, even though it is the
-  single most important growth number on the page (this year vs last year, fully known on the
-  estimate side). Not yet root-caused; start here: `rsRefGrowthPct`/`rsGrowArr` in `js/results.js`
-  (~line 631-646, 703-716) compute growth off `m[series][i]` (the current-year annual
-  estimate) vs `m.act[i-1]` (last year's actual) — the formula itself imposes no "closed year"
-  restriction, so the likely cause is that `m.cons[i]`/`m.summit[i]` (the annual estimate for the
-  IN-PROGRESS fiscal year) is simply absent from the per-ticker dataset
-  (`js/results-data/<ticker>.js`) rather than a bug in the growth math — verify against a live
-  dataset before assuming which it is. Distinguish this from the documented, intentional rule at
-  §5 ("Estimates are not observations: the Actual row never shows growth into estimate periods")
-  — that rule is correctly about the ACTUAL row/CAGR, not about a reference (Summit/Consensus)
-  series' own growth, which should be computable for the current year.
+- **✓ RESOLVED (Sep 8, 2026) — the current fiscal year showed no growth in the Estimates
+  (Evolution) view.** Root cause was NOT the growth formula (`rsRefGrowthPct` in the Results table
+  is unaffected; the Evolution chart's own `rsEvoPctAt` was never touching `.act`, per its own
+  design). It was a documented but stale data-schema rule: §2 said `prior` — the FY-before-`years[0]`
+  base every first-tracked-year growth chains to — was "Top Line only," so AMZN's Profitability
+  metrics (`capex` — the section's DEFAULT metric — plus `ebitda`, `earnings`) never got one, and a
+  metric with no `prior` "simply has no growth for its first year" (§3.6a, by design). Verified
+  against the live Summit MCP snapshots (not guessed): pulled FY2025 `CAPEX`/`EBITDA`/`EARNINGS`
+  facts from all 7 AMZN vintages (`projection_history` sheet, `DEFAULT`/`BBG` sources) and confirmed
+  the same pattern already used for `rev`/`aws`/`intrev`: Summit's own frozen figure persists at
+  every vintage after the print (and can itself later be re-cut — EBITDA's frozen FY2025 jumped
+  168,024→185,600 at the May-13 save), while Bloomberg's `*_BBG_EST` fact zeroes out (→ `null`) the
+  moment the year closes, so a Street base only survives on the one pre-print vintage. Added
+  `prior` to all three metrics in `js/results-data/amzn.js` with those verified values; segment op.
+  income (`naopinc`/`intopinc`/`awsopinc`) and `fcf`/`opinc` were left without one — their DCF fact
+  labels (`OPINC`/`OPINC2`/`OPINC3`) don't self-evidently map to NA/Intl/AWS, so filling them needs
+  the same live-snapshot verification, not a guess. **Rule going forward:** `prior` is not
+  Top-Line-only — any metric with a `mode:'grow'` toggle needs one to show current-FY growth; §2
+  below is corrected accordingly.
 
 - **GOOGL (Jul 29):** the Evolution **Results + Estimates sub-tabs are wired** in `js/overviews/googl.js`
   (row: `Earnings · Results · Estimates · Guidance · Strategy · Timeline`) and **`GOOGL` is registered

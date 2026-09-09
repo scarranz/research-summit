@@ -104,6 +104,22 @@ function pickFrom(results, wantStrike, wantExpiry) {
   return pool[0] || null;
 }
 
+// ── Strikes the book doesn't name ─────────────────────────────────────────────
+// The nearest listed strike AT OR ABOVE spot: the first covered call that would
+// not agree to sell the shares below today's price. Resolved live rather than
+// guessed in the data file, and flagged in the table so a strike the tab picked
+// is never mistaken for one somebody chose.
+async function autoStrike(ticker, wantExpiry) {
+  const j = await mfetch('chain', ticker, { contract_type: 'call', expiration_date: wantExpiry, limit: 250 });
+  const list = (j.results || []).filter((c) => c.details?.contract_type === 'call'
+    && c.details?.expiration_date === wantExpiry);
+  if (!list.length) return null;
+  const spot = list.find((c) => c.underlying_asset?.price)?.underlying_asset?.price;
+  if (spot == null) return null;
+  const ks = [...new Set(list.map((c) => c.details.strike_price))].sort((a, b) => a - b);
+  return ks.find((k) => k >= spot) ?? ks[ks.length - 1];
+}
+
 async function fetchCall(ticker, strike, wantExpiry) {
   // 1) exact strike + expiry
   let j = await mfetch('chain', ticker, { contract_type: 'call', strike_price: strike, expiration_date: wantExpiry, limit: 10 });
@@ -123,13 +139,22 @@ async function fetchCall(ticker, strike, wantExpiry) {
 async function fetchRow(row) {
   row.loading = true; row.err = null;
   try {
-    const tasks = [limit(() => fetchCall(row.ticker, row.strike, expiry))];
-    if (!row.isEtf) {
-      tasks.push(limit(() => mfetch('details', row.ticker).catch(() => null)));
-      tasks.push(limit(() => mfetch('ratios', row.ticker).catch(() => null)));
-      const su = SUMMIT[row.ticker];
-      if (su && su.currency !== 'USD') tasks.push(limit(() => mfetch('fx', FXCFG[su.currency].pair).catch(() => null)));
+    // A position with no strike in the book gets one from the chain first.
+    if (row.strike == null) {
+      row.strike = await limit(() => autoStrike(row.ticker, expiry));
+      row.autoStrike = true;
+      if (row.strike == null) throw new Error(`no listed calls at ${expiry}`);
     }
+    // `ratios` is fetched for ETFs too — it carries the price, which is the one
+    // figure an index fund still needs. Only the fundamentals behind the
+    // multiples are skipped for them.
+    const tasks = [
+      limit(() => fetchCall(row.ticker, row.strike, expiry)),
+      limit(() => (row.isEtf ? Promise.resolve(null) : mfetch('details', row.ticker).catch(() => null))),
+      limit(() => mfetch('ratios', row.ticker).catch(() => null)),
+    ];
+    const su0 = SUMMIT[row.ticker];
+    if (!row.isEtf && su0 && su0.currency !== 'USD') tasks.push(limit(() => mfetch('fx', FXCFG[su0.currency].pair).catch(() => null)));
     const [contract, details, ratiosResp, fxResp] = await Promise.all(tasks);
 
     const d = details?.results || {};
@@ -336,7 +361,7 @@ function render() {
       <td><div class="fv">${mult(m.peP)}</div><div class="fg">${peg(m.pegPe)}</div></td>
       <td><div class="fv">${mult(m.evP)}</div><div class="fg">${peg(m.pegEv)}</div></td>
       ${fund}
-      <td class="sep edit"><input type="number" step="1" value="${r.strike}" data-strike="${r.id}"></td>
+      <td class="sep edit"><input type="number" step="1" value="${r.strike}" data-strike="${r.id}" class="${r.autoStrike ? 'auto' : ''}" title="${r.autoStrike ? 'no strike in the book — nearest listed strike at or above spot; type the real one over it' : 'strike sold'}"></td>
       <td class="up">${pct(m.upside, 1)}</td>
       <td class="${richer(m.peS, m.peP)}"><div class="fv">${mult(m.peS)}</div><div class="fg">${peg(m.pegPeS)}</div></td>
       <td class="${richer(m.evS, m.evP)}"><div class="fv">${mult(m.evS)}</div><div class="fg">${peg(m.pegEvS)}</div></td>
@@ -359,13 +384,15 @@ function render() {
     hover the <b>i</b> by Premium for live bid / ask / mid and last trade (local time) ·
     <b>Yield</b> = premium ÷ price · <b>Port. yield</b> = yield × weight · <b>Contrib.</b> = Port. yield ÷ Σ Port. yield (share of total) ·
     <span class="cheap">green</span> = target multiple richer than current (called away at an expensive valuation).<br>
-    Premium/IV/greeks are the live Massive option chain for each strike &amp; target expiry. Edit strike or weight inline; type a premium to override the live midpoint. All figures are in % — no dollar amounts, no contracts, no portfolio value.
+    <b>Target expiry</b> opens on the <b>roll date</b> — the third Friday of January, April, July or October, the Friday before earnings season starts — taking the nearest one that has not expired; the menu carries the next few ordinary expiries alongside every roll date.<br>
+    Premium/IV/greeks are the live Massive option chain for each strike &amp; target expiry. Edit strike or weight inline; type a premium to override the live midpoint. A strike shown <span class="autoink">in blue</span> is not in the book — it is the nearest listed strike at or above spot, picked so the row can price at all; type the real one over it. All figures are in % — no dollar amounts, no contracts, no portfolio value.
     ${anyMismatch ? '<br><span class="warn">⚠ some rows had no contract at the exact strike/expiry — nearest available was used (hover the ⚠).</span>' : ''}`;
 }
 
 function wireRowInputs() {
   document.querySelectorAll('#cc-root [data-strike]').forEach((el) => el.onchange = async () => {
     const r = rows.find((x) => x.id == el.dataset.strike); r.strike = parseFloat(el.value) || r.strike;
+    r.autoStrike = false;   // typed over: it is a chosen strike now
     r.loading = true; render(); await fetchRow(r); render();
   });
   document.querySelectorAll('#cc-root [data-weight]').forEach((el) => el.onchange = () => {
@@ -378,6 +405,30 @@ function wireRowInputs() {
   document.querySelectorAll('#cc-root [data-del]').forEach((el) => el.onclick = () => {
     rows = rows.filter((x) => x.id != el.dataset.del); render();
   });
+}
+
+// ── The roll date ─────────────────────────────────────────────────────────────
+// The book rolls on the Friday before earnings season opens — the third Friday
+// of January, April, July and October — so that is what the tab opens on: the
+// nearest one that has not expired. Computed, not tabulated, so it keeps working
+// every quarter without anyone editing a list.
+function thirdFriday(year, monthIdx) {
+  const first = new Date(Date.UTC(year, monthIdx, 1));
+  const firstFri = 1 + ((5 - first.getUTCDay() + 7) % 7);  // 5 = Friday
+  return new Date(Date.UTC(year, monthIdx, firstFri + 14)).toISOString().slice(0, 10);
+}
+// The next `n` season Fridays from today. A contract expiring today has not
+// expired yet (it dies at the close), so today itself still counts.
+function seasonFridays(n) {
+  const today = new Date().toISOString().slice(0, 10);
+  const out = [];
+  for (let y = new Date().getUTCFullYear(); out.length < n; y++) {
+    [0, 3, 6, 9].forEach((m) => {
+      const d = thirdFriday(y, m);
+      if (d >= today && out.length < n) out.push(d);
+    });
+  }
+  return out;
 }
 
 // ── Expirations dropdown ──────────────────────────────────────────────────────
@@ -393,11 +444,20 @@ async function loadExpirations() {
   if (!dates.length) { // synth a few monthly-ish fallbacks
     const d = new Date(); for (let i = 0; i < 6; i++) { d.setDate(d.getDate() + 30); dates.push(d.toISOString().slice(0, 10)); }
   }
-  dates = dates.slice(0, 12);
-  // default: first expiry ≥ ~20 days out, else nearest
-  const def = dates.find((x) => daysTo(x) >= 20) || dates[0];
+
+  // Each season Friday, mapped onto what is actually listed (they are standard
+  // monthlies, so this is normally the same date). Anything past the end of the
+  // chain simply drops out.
+  const season = seasonFridays(4).map((t) => dates.find((d) => d >= t)).filter(Boolean);
+  const isSeason = new Set(season);
+  // The menu: the next couple of months of ordinary expiries, plus every roll
+  // date, so the book can be moved forward a quarter without leaving the tab.
+  const opts = [...new Set(dates.slice(0, 10).concat(season))].sort();
+
+  const def = season[0] || opts.find((x) => daysTo(x) >= 20) || opts[0];
   expiry = def;
-  $('cc-expiry').innerHTML = dates.map((x) => `<option value="${x}" ${x === def ? 'selected' : ''}>${x} · ${daysTo(x)}d</option>`).join('');
+  $('cc-expiry').innerHTML = opts.map((x) =>
+    `<option value="${x}" ${x === def ? 'selected' : ''}>${x} · ${daysTo(x)}d${isSeason.has(x) ? ' · roll' : ''}</option>`).join('');
   $('cc-expiry').onchange = async () => { expiry = $('cc-expiry').value; await loadAll(); };
 }
 

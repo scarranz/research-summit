@@ -43,6 +43,10 @@
 #cc-root .sep{border-left:1px solid var(--bdr);}
 #cc-root td.edit input{width:62px;text-align:center;padding:4px 6px;font-size:12px;font-weight:600;}
 #cc-root td.edit input.ovr{color:var(--accent);border-color:var(--accent);}
+/* A strike the tab resolved because the book names none — same accent as a manual
+   premium override, dashed so the two are still told apart. */
+#cc-root td.edit input.auto{color:var(--accent);border-color:var(--accent);border-style:dashed;}
+#cc-root .autoink{color:var(--accent);font-weight:600;}
 #cc-root td[data-tip]{cursor:help;}
 #cc-root .ttip{display:inline-block;width:14px;height:14px;line-height:14px;margin-left:5px;text-align:center;font-size:9px;font-weight:700;font-style:italic;color:var(--steel);background:var(--ice);border-radius:50%;cursor:help;vertical-align:middle;}
 #cc-root .ttip:hover{background:var(--steel);color:#fff;}

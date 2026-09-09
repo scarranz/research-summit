@@ -7,20 +7,28 @@ const _loaded = new Set();
 // Map page names to tab panel IDs
 const TAB_MAP = {
   'research': 'res',
+  'portfolio': 'pf',
   'market-analysis': 'rot',
   'hedge-funds': 'inv',
   'team': 'team',
   'fund-returns': 'ret',
   'covered-calls': 'cc',
+  'tools': 'tools',
+  'dcf-models': 'dcf',
+  'betas': 'betas',
 };
 
 const TAB_TITLES = {
   'res': 'Research',
+  'pf': 'Portafolio',
   'rot': 'Market Analysis',
   'inv': 'Hedge Funds',
   'team': 'Team',
   'ret': 'Return Analysis',
   'cc': 'Covered Calls',
+  'tools': 'Tools',
+  'dcf': 'DCF Models',
+  'betas': 'Betas',
 };
 
 export function registerPageLoader(page, loader) {
@@ -56,8 +64,8 @@ export function navigateTo(page) {
   const tab = TAB_MAP[page];
   if (!tab) return;
 
-  // Update active nav button
-  document.querySelectorAll('.ntb[data-tab]').forEach(b => {
+  // Update active nav button (sidebar items + Tools cards)
+  document.querySelectorAll('.ntb[data-tab], .tool-card[data-tab]').forEach(b => {
     b.classList.toggle('active', b.getAttribute('data-tab') === tab);
   });
 

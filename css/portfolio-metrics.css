@@ -37,6 +37,62 @@
 #pm-root .pm-sub{display:none;}
 #pm-root .pm-sub.active{display:block;}
 
+/* Analysis tabs (PEG / Beta / Correlations) inside the Metrics subtab — rounded
+   chips, deliberately distinct from the underline subtabs above and the segmented
+   metric bar below, so the three levels never read as the same control. */
+#pm-root .pm-anav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+#pm-root .pm-atab{border:1px solid var(--bdr);background:var(--w);color:var(--steel);
+  border-radius:999px;padding:6px 16px;font:600 12.5px 'Inter',sans-serif;cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s;}
+#pm-root .pm-atab:hover{background:var(--pale);color:var(--navy);}
+#pm-root .pm-atab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+#pm-root .pm-apane{display:none;}
+#pm-root .pm-apane.active{display:block;}
+#pm-root .pm-ph{color:var(--mu);font-size:13px;font-style:italic;padding:44px 24px;
+  text-align:center;border:1px dashed var(--bdr);border-radius:14px;background:var(--pale);}
+
+/* Blended subtab — Before → After comparison tiles + a compact holdings table. */
+#pm-root .pm-cmp-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;margin-bottom:20px;}
+#pm-root .pm-tile{border:1px solid var(--bdr);border-radius:12px;background:var(--w);padding:12px 14px;}
+#pm-root .pm-tile-h{font-size:10px;color:var(--mu);font-weight:700;text-transform:uppercase;
+  letter-spacing:.04em;margin-bottom:10px;}
+#pm-root .pm-tile-vals{display:flex;align-items:baseline;gap:10px;}
+#pm-root .pm-tile-col{display:flex;flex-direction:column;gap:2px;}
+#pm-root .pm-tile-col span{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.03em;}
+#pm-root .pm-tile-col b{font-size:18px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;}
+#pm-root .pm-tile-arw{color:var(--mu);font-size:15px;align-self:center;}
+#pm-root .pm-tile-d{margin-top:8px;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--mu);}
+#pm-root .pm-tile-d.up{color:var(--pos);} #pm-root .pm-tile-d.dn{color:var(--neg);}
+#pm-root .pm-tile-pend{background:var(--pale);border-style:dashed;}
+#pm-root .pm-tile-pend .pm-pend-txt{font-size:14px;font-style:italic;color:var(--mu);}
+
+/* Row tags — a name entering (Nueva) or leaving (Sale) the book between sides. */
+#pm-root .pm-tag{display:inline-block;margin-left:8px;font-size:9px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;padding:1px 6px;border-radius:5px;vertical-align:1px;}
+#pm-root .pm-tag.new{background:rgba(22,163,74,.12);color:var(--pos);}
+#pm-root .pm-tag.out{background:rgba(220,38,38,.10);color:var(--neg);}
+
+/* Beta analysis — parameter bar (frequency · window · presets) + beta cells. */
+#pm-root .pm-betabar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+#pm-root .pm-betabar .lbl{font-size:10px;color:var(--mu);font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;}
+#pm-root input.pm-binp{width:56px;font-family:inherit;font-size:12.5px;border:1px solid var(--bdr);
+  border-radius:7px;padding:6px 9px;background:var(--w);color:var(--text);text-align:right;}
+#pm-root input.pm-binp:focus{outline:none;border-color:var(--accent);}
+#pm-root td.pm-beta{font-weight:700;font-variant-numeric:tabular-nums;}
+#pm-root td.pm-beta.hi{color:var(--neg);}   /* β ≥ 1 — more volatile than the market */
+#pm-root td.pm-beta.lo{color:var(--steel);} /* β < 1 — less volatile */
+/* Clickable beta → opens the historical chart. Dotted underline signals it. */
+#pm-root td.pm-beta-cell{cursor:pointer;text-decoration:underline dotted rgba(37,99,235,.5);
+  text-underline-offset:3px;}
+#pm-root td.pm-beta-cell:hover{background:rgba(37,99,235,.06);}
+
+/* Beta history modal — wider than the shared default, with a fixed-height chart. */
+#pm-root .pm-beta-card{max-width:680px;}
+#pm-root .pm-bm-sub{font-size:12px;color:var(--mu);margin-top:4px;}
+#pm-root .pm-bm-body{padding:16px 24px 24px;height:340px;position:relative;}
+
 /* Paper subtab — editable inputs, add / remove controls */
 #pm-root input.pm-inp{font-family:inherit;font-size:13px;border:1px solid var(--bdr);
   border-radius:6px;padding:4px 8px;background:var(--w);color:var(--text);text-align:right;}

@@ -19,6 +19,8 @@
 // Manual entries persist in localStorage.
 import { SUMMIT_FUND } from './portfolio-metrics-summit.js';
 import { CONSENSUS_FUND } from './portfolio-metrics-consensus.js';
+import { PRICES } from './portfolio-metrics-prices.js';
+import { PRICES_WEEKLY } from './portfolio-metrics-prices-weekly.js';
 import { liveQuote } from './api.js';
 
 // ── Portfolio subtab: the fixed book ─────────────────────────────────────────
@@ -68,6 +70,13 @@ let earnBasis = 'earnings';           // 'earnings' | 'eps' — only read when m
 let source = 'summit';                // 'summit' | 'consensus' — which estimate set feeds the table
 let yearSel = String(CY + 1);         // selected "last" period; default = current+1
 const quotes = {};                    // ticker → { price, marketCap, ev, netDebt } | null (flows in millions)
+
+// Beta analysis parameters. Default is the market standard: last 5 years, monthly.
+// The embedded price history (portfolio-metrics-prices.js) is monthly, so daily /
+// weekly are surfaced but wait on a live price feed; monthly is fully computed.
+let betaFreq = 'monthly';             // 'daily' | 'weekly' | 'monthly'
+let betaAmt = 5;                      // lookback amount
+let betaUnit = 'y';                   // 'm' (months) | 'y' (years)
 
 // Columns are labelled by position relative to the current calendar year — FY 0,
 // FY+1, FY+2 — with the calendar year itself underneath in small type. The
@@ -442,46 +451,21 @@ function portGroup(label, items, span) {
 
 function metricNote() {
   if (!metricSel) return '';
-  const m = METRICS[metricSel], src = SOURCES[source], onSummit = source === 'summit';
-  const label = `${src.label} ${m.label}`;
-  const formula = metricSel === 'ebitda' ? `EV ÷ ${label}` : `Market Cap ÷ ${label}`;
-  const units = isEps()
-    ? `per share, in each company's reporting currency; SPOT in EUR, TBBB in MXN`
-    : `millions of each company's reporting currency; SPOT in EUR, TBBB in MXN`;
-  // Which names fall through to hand-typed values depends on the source: GOOGL,
-  // TSMC and the ETFs are in neither, and consensus additionally lacks CFO/FCF
-  // entirely, plus TBBB (no BBG coverage) and NVDA's 2026 (its fiscal calendar).
+  const m = METRICS[metricSel], onSummit = source === 'summit';
   const isCash = metricSel === 'cfo' || metricSel === 'fcf';
-  const gaps = onSummit
-    ? `GOOGL, TSMC and the ETFs aren't in Summit — type those by hand.`
-    : `GOOGL, TSMC, the ETFs and TBBB have no consensus in the model — type those by hand.
-       NVDA starts at 2027 on its fiscal calendar, so an earlier year shows an em dash rather than a zero.`;
-  // CFO/FCF under consensus are derived, not sourced — say so where it's read, not
-  // only in the data file, and name what they actually answer.
-  const derivedNote = (!onSummit && isCash) ? `
-    <strong>${m.label} here is derived, not consensus.</strong> The model carries no street CFO or FCF
-    estimate, so the marked cells are the street's EBITDA run through each company's own Summit
-    ${m.label}/EBITDA conversion rate for that year. They answer "what would ${m.label} be if the street's
-    EBITDA converted the way our model says it converts" — not "what does the street forecast for ${m.label}".
-    SOFI is unmarked and hand-typed: Summit projects no ${m.label} for it past 2025, so there's no rate to
-    derive from.` : '';
-  return `<p class="pm-note">
-    Metric values = ${src.note} (${units}).
-    Columns are CALENDAR years, labelled by position (FY 0 = ${CY}) with the year underneath.
-    A name whose fiscal year doesn't close in December is mapped to the calendar year its
-    fiscal year mostly covers and carries an FY badge — NVDA's FY${CY + 2} sits in the FY+1 (${CY + 1})
-    column, so every row in a column describes the same stretch of time.
-    Forward years are estimates; NTM/LTM are calendar-weighted blends.
-    ${m.mult} is computed live = ${formula} for USD names; SPOT/TBBB use a hand-typed multiple (metric is in EUR/MXN, quote in USD).
-    ${gaps} PEG = multiple ÷ growth.${derivedNote}${isEps() ? `
-    EPS = ${label} ÷ diluted shares. ${onSummit
-      ? `Our Summit snapshot carries one share count per name rather than one per year, so under
-         Summit EPS growth matches Earnings growth exactly — switch to Consensus, which does carry a
-         count per year, to see buybacks and dilution pull the two apart.`
-      : `Consensus carries a share count per year, so EPS growth and Earnings growth genuinely differ
-         here — buybacks at MA and UBER, dilution at AMZN and SOFI.`}
-    ${m.mult} is unchanged by this toggle: Market Cap ÷ Earnings and Price ÷ EPS are the same ratio.` : ''}
-  </p>`;
+  // The descriptive note was removed at the user's request. The one thing kept is
+  // the data-integrity disclaimer: under Consensus, CFO/FCF are derived (the model
+  // carries no street CFO/FCF), so a reader never mistakes them for sourced figures.
+  if (!onSummit && isCash) {
+    return `<p class="pm-note">
+      <strong>${m.label} here is derived, not consensus.</strong> The model carries no street CFO or FCF
+      estimate, so the marked cells are the street's EBITDA run through each company's own Summit
+      ${m.label}/EBITDA conversion rate for that year. They answer "what would ${m.label} be if the street's
+      EBITDA converted the way our model says it converts" — not "what does the street forecast for ${m.label}".
+      SOFI is unmarked and hand-typed: Summit projects no ${m.label} for it past 2025, so there's no rate to
+      derive from.</p>`;
+  }
+  return '';
 }
 
 // Earnings-only sub-toggle, sitting under the metric bar: read the metric as the
@@ -596,16 +580,385 @@ function portfolioTable() {
 }
 
 function renderPortfolio() {
-  const el = document.getElementById('pm-sub-portfolio');
+  // Repaint only the PEG pane — the nested analysis tabs (Beta / Correlations)
+  // and the tab bar live in #pm-sub-portfolio around it and must survive.
+  const el = document.getElementById('pm-an-peg');
   if (el) el.innerHTML = portfolioTable();
+}
+
+// Placeholder analyses — structure is in place; content is built out next.
+// ── Beta ─────────────────────────────────────────────────────────────────────
+// β = cov(asset returns, market returns) / var(market returns), over periodic
+// returns computed from the embedded price history. Default: 5 years, monthly —
+// the market standard. Window and frequency are adjustable per the controls; the
+// portfolio β is the weight-weighted average of the per-name betas (cash and
+// names without price data carry β 0, so they pull the aggregate toward zero).
+const _mean = (a) => a.reduce((s, x) => s + x, 0) / a.length;
+
+// Price source for the current frequency. Monthly is embedded in PRICES; weekly
+// in PRICES_WEEKLY. The typeof guard keeps the tab alive if the weekly file has
+// not loaded yet (weekly then simply reports no data rather than throwing).
+function betaData() {
+  if (betaFreq === 'weekly') return (typeof PRICES_WEEKLY !== 'undefined') ? PRICES_WEEKLY : null;
+  return PRICES;
+}
+const betaMarket = () => (PRICES && PRICES.market) || 'SPY';
+
+// Series for a ticker at the current frequency: ascending [key, close] pairs
+// (key = 'YYYY-MM' monthly, 'YYYY-MM-DD' weekly), or null if not embedded.
+function betaSeries(t) {
+  const d = betaData();
+  const s = d && d.series && d.series[t];
+  return Array.isArray(s) && s.length ? s : null;
+}
+
+// Earliest period key kept, given the lookback window (always expressed in
+// months), counted back from the source's asOf. Format matches the series keys.
+function betaCutoffKey() {
+  const d = betaData();
+  const parts = String((d && d.asOf) || '').split('-');
+  const y = Number(parts[0]), m = Number(parts[1]), day = Number(parts[2] || 1);
+  if (!y || !m) return '0000-00';
+  const back = betaUnit === 'y' ? betaAmt * 12 : betaAmt;
+  const dt = new Date(Date.UTC(y, (m - 1) - back, day || 1));
+  return betaFreq === 'weekly' ? dt.toISOString().slice(0, 10) : dt.toISOString().slice(0, 7);
+}
+
+// Periodic simple returns inside the window, as a Map(periodKey → return).
+function betaReturns(t) {
+  const s = betaSeries(t);
+  if (!s) return null;
+  const from = betaCutoffKey();
+  const win = s.filter((r) => r[0] >= from);
+  const out = new Map();
+  for (let i = 1; i < win.length; i++) {
+    const a = win[i - 1][1], b = win[i][1];
+    if (a > 0 && b > 0) out.set(win[i][0], b / a - 1);
+  }
+  return out;
+}
+
+// { beta, n } for one name against the market. n = overlapping return periods.
+function betaOf(t) {
+  if (betaFreq === 'daily') return { beta: null, n: 0, unsupported: true };
+  const mR = betaReturns(betaMarket()), sR = betaReturns(t);
+  if (!mR || !sR) return { beta: null, n: 0 };
+  const xs = [], ys = [];
+  sR.forEach((v, k) => { if (mR.has(k)) { ys.push(v); xs.push(mR.get(k)); } });
+  const n = xs.length;
+  if (n < 6) return { beta: null, n };                // too few points to trust
+  const mx = _mean(xs), my = _mean(ys);
+  let cov = 0, varm = 0;
+  for (let i = 0; i < n; i++) { cov += (xs[i] - mx) * (ys[i] - my); varm += (xs[i] - mx) ** 2; }
+  return { beta: varm > 0 ? cov / varm : null, n };
+}
+
+// Portfolio β = Σ (weight_i × β_i) ÷ 100. Cash (unclaimed weight) and names with
+// no price data contribute 0, so the divisor stays 100 and they drag β toward 0.
+function portBeta(items) {
+  let bSum = 0, wCov = 0;
+  items.forEach((it) => {
+    const w = num(it.weight);
+    if (w === null || w <= 0) return;
+    const r = betaOf(it.ticker);
+    if (!r || r.beta === null) return;
+    bSum += w * r.beta; wCov += w;
+  });
+  return { beta: wCov > 0 ? bSum / 100 : null, covered: wCov };
+}
+
+const betaFreqLabel = () => ({ daily: 'diaria', weekly: 'semanal', monthly: 'mensual' }[betaFreq]);
+const betaNoun = (pl) => betaFreq === 'weekly' ? (pl ? 'semanas' : 'semana') : (pl ? 'meses' : 'mes');
+
+function betaControls() {
+  const freqs = [['daily', 'Diario'], ['weekly', 'Semanal'], ['monthly', 'Mensual']];
+  const units = [['m', 'Meses'], ['y', 'A&ntilde;os']];
+  const presets = [['1', 'y'], ['2', 'y'], ['3', 'y'], ['5', 'y']];
+  return `
+    <div class="pm-betabar">
+      <span class="lbl">Frecuencia</span>
+      <div class="pm-seg">${freqs.map(([k, l]) =>
+        `<button data-bfreq="${k}" class="${betaFreq === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <span class="lbl" style="margin-left:10px">Ventana</span>
+      <input class="pm-binp" data-blb value="${esc(betaAmt)}" inputmode="numeric" aria-label="lookback">
+      <div class="pm-seg">${units.map(([k, l]) =>
+        `<button data-bunit="${k}" class="${betaUnit === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <div class="pm-seg" style="margin-left:10px">${presets.map(([a, u]) =>
+        `<button data-bpreset="${a}${u}" class="${String(betaAmt) === a && betaUnit === u ? 'on' : ''}">${a}A</button>`).join('')}</div>
+    </div>`;
+}
+
+function betaBlock(side) {
+  const items = side === 'paper' ? paperItems() : portItems();
+  const unsupported = betaFreq === 'daily';
+  const pb = portBeta(items);
+  const winTxt = `${betaAmt} ${betaUnit === 'y' ? (betaAmt == 1 ? 'a&ntilde;o' : 'a&ntilde;os') : 'meses'}`;
+
+  const body = unsupported
+    ? `<div class="pm-ph">La frecuencia <b>diaria</b> necesita el feed de precios en vivo (pr&oacute;ximamente).
+         Por ahora el c&aacute;lculo est&aacute; disponible en <b>Semanal</b> y <b>Mensual</b>.</div>`
+    : `<div class="card">
+        <table>
+          <thead><tr><th>Name</th><th>Weight</th><th>Beta</th><th>n</th></tr></thead>
+          <tbody>${items.map((it) => {
+            const r = betaOf(it.ticker);
+            const w = num(it.weight);
+            const b = r && r.beta != null;
+            return `<tr>
+              <td class="tk">${labelOf(it.ticker)}</td>
+              <td class="num">${w === null ? '&mdash;' : w.toFixed(1) + '%'}</td>
+              <td class="num pm-beta${b ? ' pm-beta-cell' : ''}${b && r.beta >= 1 ? ' hi' : b ? ' lo' : ''}"${b ? ` data-bt="${esc(it.ticker)}" title="Ver beta histórica"` : ''}>${b ? r.beta.toFixed(2) : '&mdash;'}</td>
+              <td class="num muted">${r && r.n ? r.n : '&mdash;'}</td>
+            </tr>`;
+          }).join('')}</tbody>
+          <tfoot><tr class="pm-wavg">
+            <td class="tk">Portfolio &beta;</td>
+            <td class="num">${pb.covered.toFixed(1)}%</td>
+            <td class="num pm-beta">${pb.beta != null ? pb.beta.toFixed(2) : '&mdash;'}</td>
+            <td></td>
+          </tr></tfoot>
+        </table>
+      </div>
+      <p class="pm-note">&beta; vs <b>${betaMarket()}</b> &middot; retornos ${({ daily: 'diarios', weekly: 'semanales', monthly: 'mensuales' }[betaFreq])} &middot;
+        ventana ${winTxt} (hasta ${((betaData() || {}).asOf) || '&mdash;'}). &beta; = cov(activo, mercado) / var(mercado);
+        <b>n</b> = ${betaNoun(true)} de retornos. El &beta; del portafolio es el promedio ponderado por peso &mdash; efectivo y
+        nombres sin historial cuentan como &beta; 0.</p>`;
+
+  return `${betaControls()}${body}`;
+}
+
+function renderBeta() {
+  const a = document.getElementById('pm-an-beta');
+  if (a) a.innerHTML = betaBlock('metrics');
+  const b = document.getElementById('pm-an-beta-paper');
+  if (b) b.innerHTML = betaBlock('paper');
+}
+
+// Rolling beta over ALL available history: at each month with `win` trailing
+// return-periods, β over that trailing window. This is what the click-through
+// chart plots — how a name's beta has drifted, independent of the table's
+// selected lookback (that lookback only sets the single number in the table).
+function rollingBeta(t, win) {
+  const s = betaSeries(t), ms = betaSeries(PRICES && PRICES.market);
+  if (!s || !ms) return [];
+  const mret = new Map();
+  for (let i = 1; i < ms.length; i++) {
+    const a = ms[i - 1][1], b = ms[i][1];
+    if (a > 0 && b > 0) mret.set(ms[i][0], b / a - 1);
+  }
+  const sr = []; // [key, stockRet, mktRet] only where both exist
+  for (let i = 1; i < s.length; i++) {
+    const a = s[i - 1][1], b = s[i][1], k = s[i][0];
+    if (a > 0 && b > 0 && mret.has(k)) sr.push([k, b / a - 1, mret.get(k)]);
+  }
+  const out = [];
+  for (let end = win - 1; end < sr.length; end++) {
+    const xs = [], ys = [];
+    for (let i = end - win + 1; i <= end; i++) { ys.push(sr[i][1]); xs.push(sr[i][2]); }
+    const mx = _mean(xs), my = _mean(ys);
+    let cov = 0, varm = 0;
+    for (let i = 0; i < xs.length; i++) { cov += (xs[i] - mx) * (ys[i] - my); varm += (xs[i] - mx) ** 2; }
+    if (varm > 0) out.push({ key: sr[end][0], beta: cov / varm });
+  }
+  return out;
+}
+
+// The single reusable modal that holds the beta chart.
+function betaModal() {
+  return `
+    <div class="modal-overlay pm-beta-ov" id="pm-beta-modal">
+      <div class="modal-card pm-beta-card">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title" id="pm-bm-title">Beta</div>
+            <div class="pm-bm-sub" id="pm-bm-sub"></div>
+          </div>
+          <button class="modal-close" data-bm-close aria-label="Cerrar">&times;</button>
+        </div>
+        <div class="pm-bm-body"><canvas id="pm-bm-canvas"></canvas></div>
+      </div>
+    </div>`;
+}
+
+let _betaChart = null;
+
+function openBetaChart(ticker) {
+  const overlay = document.getElementById('pm-beta-modal');
+  if (!overlay || typeof Chart === 'undefined') return;
+  const avail = (betaSeries(ticker) || []).length - 1;   // return-periods available
+  // Rolling window sized to the frequency: ~2y monthly, ~1y weekly, floored.
+  const target = betaFreq === 'weekly' ? 52 : 24;
+  const floor = betaFreq === 'weekly' ? 26 : 12;
+  const win = Math.max(floor, Math.min(target, avail - 6));
+  const series = rollingBeta(ticker, win);
+
+  document.getElementById('pm-bm-title').textContent = `${labelOf(ticker)} — Beta histórica`;
+  const cur = betaOf(ticker);
+  document.getElementById('pm-bm-sub').innerHTML =
+    `Beta móvil de ${win} ${betaNoun(true)} vs ${betaMarket()} (${betaFreqLabel()})` +
+    (cur && cur.beta != null
+      ? ` &middot; β actual (${betaAmt}${betaUnit === 'y' ? 'A' : 'M'}) = <b>${cur.beta.toFixed(2)}</b>` : '');
+
+  overlay.classList.add('open');
+  if (_betaChart) { _betaChart.destroy(); _betaChart = null; }
+
+  if (!series.length) return;   // nothing to plot (too little history)
+  const ctx = document.getElementById('pm-bm-canvas').getContext('2d');
+  _betaChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: series.map((p) => p.key),
+      datasets: [
+        {
+          label: `Beta (móvil ${win} ${betaNoun(true)})`, data: series.map((p) => p.beta),
+          borderColor: '#2563EB', backgroundColor: 'rgba(37,99,235,.08)',
+          fill: true, tension: 0.25, pointRadius: 0, borderWidth: 2,
+        },
+        {
+          label: 'Mercado (β=1)', data: series.map(() => 1),
+          borderColor: '#8A93A0', borderDash: [4, 4], borderWidth: 1,
+          pointRadius: 0, fill: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (c) => (c.datasetIndex === 0 ? 'β ' : '') + c.parsed.y.toFixed(2) } },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+        y: { grid: { color: '#E7EAEE' }, ticks: { font: { size: 10 } }, title: { display: true, text: 'Beta' } },
+      },
+    },
+  });
+}
+
+function closeBetaChart() {
+  const overlay = document.getElementById('pm-beta-modal');
+  if (overlay) overlay.classList.remove('open');
+  if (_betaChart) { _betaChart.destroy(); _betaChart = null; }
+}
+function corrBlock() {
+  return `<div class="pm-ph">Correlations &mdash; an&aacute;lisis por construir (matriz de correlaciones entre posiciones).</div>`;
+}
+
+// ── Blended subtab: Before (current book) vs After (paper) ────────────────────
+// A summary of the first two subtabs — "how would the portfolio look if we made
+// the paper changes." Before = current book weights, After = paper weights. Per
+// name we show each side's weight, the change, and the name's PEG (new names
+// included). Portfolio-level tiles compare weighted PEG / growth / multiple;
+// Beta and Correlations join once those analyses exist.
+const LABEL_OF = {};
+[...PORTFOLIO.passive, ...PORTFOLIO.single].forEach(x => { LABEL_OF[x.ticker] = x.label; });
+const labelOf = (t) => LABEL_OF[t] || t;
+
+function blendedRows() {
+  const bMap = {}, aMap = {};
+  portItems().forEach(it => { const w = num(it.weight); if (w !== null) bMap[it.ticker] = w; });
+  paperItems().forEach(it => { if (!it.ticker) return; aMap[it.ticker] = num(it.weight); });
+  // Book order first, then any paper-only names appended in the order typed.
+  const order = [];
+  [...PORTFOLIO.passive, ...PORTFOLIO.single].forEach(x => {
+    if (x.ticker in bMap || x.ticker in aMap) order.push(x.ticker);
+  });
+  paperItems().forEach(it => { if (it.ticker && !order.includes(it.ticker)) order.push(it.ticker); });
+  return order.map(t => {
+    const bw = (t in bMap) ? bMap[t] : null;
+    const aw = (t in aMap) ? aMap[t] : null;
+    const g = growthFor(t);
+    return { t, bw, aw, peg: pegFor(t, g) };
+  });
+}
+
+// One comparison tile: a metric before → after with the change beneath.
+function cmpTile(label, b, a, fmt, unit = '') {
+  const d = (b !== null && a !== null) ? a - b : null;
+  const dCls = d === null || Math.abs(d) < 1e-9 ? '' : (d > 0 ? 'up' : 'dn');
+  const dTxt = d === null ? '&mdash;'
+    : `${d > 0 ? '+' : d < 0 ? '&minus;' : ''}${fmt(Math.abs(d))}${unit}`;
+  return `
+    <div class="pm-tile">
+      <div class="pm-tile-h">${label}</div>
+      <div class="pm-tile-vals">
+        <div class="pm-tile-col"><span>Before</span><b>${b === null ? '&mdash;' : fmt(b) + unit}</b></div>
+        <div class="pm-tile-arw">&rarr;</div>
+        <div class="pm-tile-col"><span>After</span><b>${a === null ? '&mdash;' : fmt(a) + unit}</b></div>
+      </div>
+      <div class="pm-tile-d ${dCls}">${dTxt === '&mdash;' ? '' : '&Delta; ' + dTxt}</div>
+    </div>`;
+}
+
+function pendingTile(label, hint) {
+  return `<div class="pm-tile pm-tile-pend">
+    <div class="pm-tile-h">${label}</div>
+    <div class="pm-pend-txt">por construir</div>
+    <div class="pm-tile-d" style="color:var(--mu)">${hint}</div>
+  </div>`;
+}
+
+function blendedBody() {
+  const before = weightedStats(portItems());
+  const after  = weightedStats(paperItems());
+  const peg1 = (v) => v.toFixed(2);
+  const g1   = (v) => v.toFixed(1);
+  const m1   = (v) => v.toFixed(1);
+
+  const rows = blendedRows().map(r => {
+    const isNew  = r.bw === null && r.aw !== null;
+    const isOut  = r.bw !== null && r.aw === null;
+    const d = (r.aw ?? 0) - (r.bw ?? 0);
+    const dCls = Math.abs(d) < 1e-9 ? '' : (d > 0 ? 'up' : 'dn');
+    const dTxt = (r.bw === null && r.aw === null) ? '&mdash;'
+      : `${d > 0 ? '+' : d < 0 ? '&minus;' : ''}${Math.abs(d).toFixed(1)}%`;
+    const tag = isNew ? '<span class="pm-tag new">Nueva</span>'
+      : isOut ? '<span class="pm-tag out">Sale</span>' : '';
+    return `
+      <tr>
+        <td class="tk">${labelOf(r.t)}${tag}</td>
+        <td class="num">${r.bw === null ? '&mdash;' : r.bw.toFixed(1) + '%'}</td>
+        <td class="num">${r.aw === null ? '&mdash;' : r.aw.toFixed(1) + '%'}</td>
+        <td class="num ${dCls}">${dTxt}</td>
+        <td class="num pm-peg">${r.peg === null ? '&mdash;' : r.peg.toFixed(2)}</td>
+      </tr>`;
+  }).join('');
+
+  const wPeg = cmpTile('Weighted PEG', before.peg, after.peg, peg1);
+  const wG   = cmpTile('Weighted Growth', before.growth, after.growth, g1, '%');
+  const wM   = cmpTile('Fwd Multiple', before.mult, after.mult, m1, 'x');
+  const wB   = cmpTile('Portfolio Beta', portBeta(portItems()).beta, portBeta(paperItems()).beta, (v) => v.toFixed(2));
+  const wC   = pendingTile('Avg Correlation', 'del bloque Correlations');
+
+  return `
+    ${metricBar()}
+    <div class="pm-cmp-tiles">${wPeg}${wG}${wM}${wB}${wC}</div>
+    <div class="card">
+      <table>
+        <thead><tr>
+          <th>Name</th><th>Before</th><th>After</th><th>&Delta; wt</th><th>PEG</th>
+        </tr></thead>
+        <tbody>${rows || `<tr><td colspan="5" class="pm-empty">Sin posiciones a&uacute;n.</td></tr>`}</tbody>
+      </table>
+    </div>
+    <p class="pm-note"><b>Before</b> = pesos del portafolio actual (Summit) &middot; <b>After</b> = pesos del Paper &middot;
+      el PEG de cada nombre usa la m&eacute;trica y a&ntilde;o seleccionados arriba. Beta y correlaciones aparecer&aacute;n
+      aqu&iacute; como resumen cuando se construyan esos bloques.</p>`;
+}
+
+function renderBlended() {
+  const el = document.getElementById('pm-sub-blended');
+  if (el) el.innerHTML = blendedBody();
 }
 
 // Both subtabs read the same metric/year/basis state, so a change to any of them
 // has to repaint both — the hidden one included, or it comes back stale.
 function renderAll() {
   renderPortfolio();
-  const el = document.getElementById('pm-sub-paper');
+  const el = document.getElementById('pm-an-peg-paper');
   if (el) el.innerHTML = paperTable();
+  renderBlended();
 }
 
 // Recompute the footer of whichever table the row belongs to, in place — typing a
@@ -770,16 +1123,43 @@ export function loadPortfolioMetricsPage() {
     <p class="sub">Portfolio holdings across passive and single-stock positions.</p>
 
     <div class="pm-subnav">
-      <button class="pm-pill active" data-sub="portfolio">Portfolio</button>
+      <button class="pm-pill active" data-sub="portfolio">Summit</button>
       <button class="pm-pill" data-sub="paper">Paper</button>
+      <button class="pm-pill" data-sub="blended">Comparison</button>
     </div>
 
-    <div class="pm-sub active" id="pm-sub-portfolio">${portfolioTable()}</div>
-    <div class="pm-sub" id="pm-sub-paper">${paperTable()}</div>
-  </div>`;
+    <div class="pm-sub active" id="pm-sub-portfolio">
+      <div class="pm-anav">
+        <button class="pm-atab active" data-an="peg">PEG</button>
+        <button class="pm-atab" data-an="beta">Beta</button>
+        <button class="pm-atab" data-an="corr">Correlations</button>
+      </div>
+      <div class="pm-apane active" data-an="peg" id="pm-an-peg">${portfolioTable()}</div>
+      <div class="pm-apane" data-an="beta" id="pm-an-beta">${betaBlock('metrics')}</div>
+      <div class="pm-apane" data-an="corr">${corrBlock()}</div>
+    </div>
+    <div class="pm-sub" id="pm-sub-paper">
+      <div class="pm-anav">
+        <button class="pm-atab active" data-an="peg">PEG</button>
+        <button class="pm-atab" data-an="beta">Beta</button>
+        <button class="pm-atab" data-an="corr">Correlations</button>
+      </div>
+      <div class="pm-apane active" data-an="peg" id="pm-an-peg-paper">${paperTable()}</div>
+      <div class="pm-apane" data-an="beta" id="pm-an-beta-paper">${betaBlock('paper')}</div>
+      <div class="pm-apane" data-an="corr">${corrBlock()}</div>
+    </div>
+    <div class="pm-sub" id="pm-sub-blended">${blendedBody()}</div>
+  </div>
+  ${betaModal()}`;
 
   wire(root);
   fetchQuotes();
+
+  // Esc closes the beta chart modal — registered once for the session.
+  if (!window.__pmBetaEsc) {
+    window.__pmBetaEsc = true;
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeBetaChart(); });
+  }
 }
 
 function wire(root) {
@@ -790,6 +1170,26 @@ function wire(root) {
       const sub = pill.dataset.sub;
       root.querySelectorAll('.pm-pill').forEach(p => p.classList.toggle('active', p === pill));
       root.querySelectorAll('.pm-sub').forEach(s => s.classList.toggle('active', s.id === 'pm-sub-' + sub));
+      return;
+    }
+    // Analysis tab switch (PEG / Beta / Correlations) inside the Metrics subtab
+    const atab = e.target.closest('.pm-atab');
+    if (atab) {
+      const an = atab.dataset.an;
+      // Scope to this subtab's group so Metrics and Paper switch independently
+      // (both carry the same PEG / Beta / Correlations tabs).
+      const group = atab.closest('.pm-sub');
+      group.querySelectorAll('.pm-atab').forEach(b => b.classList.toggle('active', b === atab));
+      group.querySelectorAll('.pm-apane').forEach(p => p.classList.toggle('active', p.dataset.an === an));
+      return;
+    }
+    // Beta cell → open the historical (rolling) beta chart for that name
+    const bcell = e.target.closest('.pm-beta-cell');
+    if (bcell && bcell.dataset.bt) { openBetaChart(bcell.dataset.bt); return; }
+    // Close the beta chart modal (× button, or a click on the dimmed backdrop)
+    if (e.target.closest('[data-bm-close]') ||
+        (e.target.classList && e.target.classList.contains('pm-beta-ov'))) {
+      closeBetaChart();
       return;
     }
     // Metric selector — click active one again to turn it off
@@ -822,6 +1222,20 @@ function wire(root) {
       renderAll();
       return;
     }
+    // Beta: frequency
+    const bf = e.target.closest('.pm-seg button[data-bfreq]');
+    if (bf) { betaFreq = bf.dataset.bfreq; renderBeta(); renderBlended(); return; }
+    // Beta: lookback unit (months / years)
+    const bu = e.target.closest('.pm-seg button[data-bunit]');
+    if (bu) { betaUnit = bu.dataset.bunit; renderBeta(); renderBlended(); return; }
+    // Beta: lookback preset (e.g. "3y")
+    const bp = e.target.closest('.pm-seg button[data-bpreset]');
+    if (bp) {
+      const v = bp.dataset.bpreset;
+      betaAmt = Number(v.slice(0, -1)); betaUnit = v.slice(-1);
+      renderBeta(); renderBlended();
+      return;
+    }
     // Paper: add row
     const add = e.target.closest('.pm-add');
     if (add) {
@@ -844,6 +1258,14 @@ function wire(root) {
   });
 
   root.addEventListener('input', (e) => {
+    // Beta lookback field — update the amount as they type, but hold the repaint
+    // until they commit (change/blur) so the input keeps focus and cursor.
+    const blb = e.target.closest('.pm-binp');
+    if (blb) {
+      const v = parseInt(blb.value, 10);
+      if (Number.isFinite(v) && v > 0) betaAmt = v;
+      return;
+    }
     // Portfolio metric inputs (manual value or manual multiple) → save + recompute
     const minp = e.target.closest('.pm-minp');
     if (minp) {
@@ -874,6 +1296,7 @@ function wire(root) {
       portWeights[tr.dataset.ticker] = inp.value;
       saveJSON(PWEIGHT_KEY, portWeights);
       refreshFooter(tr);
+      renderBlended(); renderBeta();       // portfolio β + Before/After follow weights
       return;
     }
     const item = paper[tr.dataset.group][Number(tr.dataset.idx)];
@@ -888,5 +1311,11 @@ function wire(root) {
       schedulePaperQuotes();
     }
     refreshFooter(tr);
+    renderBlended(); renderBeta();          // After-side β + Before/After follow weights
+  });
+
+  // Commit the beta lookback field on blur / Enter, then repaint the beta panes.
+  root.addEventListener('change', (e) => {
+    if (e.target.closest('.pm-binp')) { renderBeta(); renderBlended(); }
   });
 }

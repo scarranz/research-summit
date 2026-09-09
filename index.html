@@ -24,7 +24,7 @@
 <link rel="stylesheet" href="css/fund-returns.css">
 <link rel="stylesheet" href="css/covered-calls.css">
 <link rel="stylesheet" href="css/portfolio-metrics.css">
-<link rel="stylesheet" href="css/buy-calls.css">
+<link rel="stylesheet" href="css/derivatives.css">
 <link rel="stylesheet" href="css/industry.css">
 <link rel="stylesheet" href="css/spectrum.css">
 <link rel="stylesheet" href="css/results.css">
@@ -60,8 +60,11 @@
     <button class="ntb nav-item" data-tab="inv" data-page="hedge-funds" onclick="switchTab('inv')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20v-1.5a4.5 4.5 0 0 1 7-3.7"/><circle cx="17" cy="10" r="2.6"/><path d="M14 20v-1a3.6 3.6 0 0 1 6.5-2.1"/></svg>Hedge Funds</button>
     <button class="ntb nav-item" data-tab="team" data-page="team" onclick="switchTab('team')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Team</button>
     <button class="ntb nav-item" data-tab="ret" data-page="fund-returns" onclick="switchTab('ret')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M19 9l-5 5-4-4-3 3"/></svg>Return Analysis</button>
-    <button class="ntb nav-item" data-tab="cc" data-page="covered-calls" onclick="switchTab('cc')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg>Covered Calls</button>
-    <button class="ntb nav-item" data-tab="bc" data-page="buy-calls" onclick="switchTab('bc')"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>Buy Calls</button>
+    <button class="ntb nav-item" data-tab="der" data-page="derivatives" onclick="switchTab('der')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 17h5l6-8"/><path d="M15 9h3v3"/></svg>Derivatives</button>
+  </nav>
+  <div class="snav-lbl">Pipeline</div>
+  <nav class="snav">
+    <button class="ntb" disabled style="opacity:.55;cursor:default"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Idea Backlog</button>
   </nav>
   <div class="side-foot">
     <div class="sfnav">
@@ -672,9 +675,22 @@ Each tile is a GICS sector, colored by the average YTD return of the companies t
   <div id="fr-root"></div>
 </div>
 
-<!-- COVERED CALLS TAB -->
-<div id="tp-cc" class="tp">
-  <div id="cc-root"></div>
+<!-- DERIVATIVES TAB -->
+<div id="tp-der" class="tp">
+  <div class="der-subnav">
+    <button class="der-pill active" data-sub="covered-calls">Covered Calls</button>
+    <button class="der-pill" data-sub="protective-put">Protective Put</button>
+    <button class="der-pill" data-sub="buy-calls">Buy Calls</button>
+    <button class="der-pill" data-sub="short-puts">Short Puts</button>
+  </div>
+  <div class="der-map">
+    <b>Stock you own</b> &mdash; <span class="nm">Covered Calls</span> sells the upside for cash &middot; <span class="nm">Protective Put</span> pays cash for a floor.<br>
+    <b>Stock you want</b> &mdash; <span class="nm">Short Puts</span> get paid to bid for it &middot; <span class="nm">Buy Calls</span> pay for the upside.
+  </div>
+  <div id="der-covered-calls" class="der-sub active"><div id="cc-root"></div></div>
+  <div id="der-protective-put" class="der-sub"><div id="pp-root"></div></div>
+  <div id="der-buy-calls" class="der-sub"><div id="bc-root"></div></div>
+  <div id="der-short-puts" class="der-sub"><div id="sp-root"></div></div>
 </div>
 
 <!-- TOOLS TAB — landing grid of tool cards -->
@@ -743,9 +759,8 @@ import { loadMarketAnalysisPage } from './js/market-analysis.js';
 import { loadHedgeFundsPage } from './js/hedge-funds.js';
 import { loadTeamPage } from './js/team.js';
 import { loadFundReturnsPage } from './js/fund-returns.js';
-import { loadCoveredCallsPage } from './js/covered-calls.js';
 import { loadPortfolioMetricsPage } from './js/portfolio-metrics.js';
-import { loadBuyCallsPage } from './js/buy-calls.js';
+import { loadDerivativesPage } from './js/derivatives.js';
 import { loadIndustryPage } from './js/industry.js';
 
 const statusEl = document.getElementById('status');
@@ -796,9 +811,8 @@ async function boot() {
       registerPageLoader('hedge-funds', loadHedgeFundsPage);
       registerPageLoader('team', loadTeamPage);
       registerPageLoader('fund-returns', loadFundReturnsPage);
-      registerPageLoader('covered-calls', loadCoveredCallsPage);
       registerPageLoader('portfolio', loadPortfolioMetricsPage);
-      registerPageLoader('buy-calls', loadBuyCallsPage);
+      registerPageLoader('derivatives', loadDerivativesPage);
 
       // Update user display
       const user = getCurrentUser();

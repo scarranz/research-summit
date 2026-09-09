@@ -28,7 +28,7 @@ import {
   fetchExpiries, fetchUnderlying, fetchChain,
   listedStrikes, bandAround, premiumOf, quoteTip,
   estimatesFor, yearsOf, estYearsOf, usable, yl, isFlexed,
-  effYears, multiplesAt, renderFundBlock, yearSelect, tickerChips, wireTooltip,
+  effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip,
 } from './options-core.js';
 
 const $ = (id) => document.getElementById(id);
@@ -189,7 +189,7 @@ function renderLadder() {
     <tr>
       <th colspan="${nContract}" class="grp">Contract
         <button type="button" class="xp" id="sp-expand" title="${st.expand ? 'hide IV and delta' : 'show IV and delta'}">${st.expand ? '−' : '+'}</button></th>
-      <th colspan="5" class="grp sep">If assigned · ${yearSelect('sp-basisYear', est, st.basisYear)}</th>
+      <th colspan="5" class="grp sep">If assigned · ${esc(yl(est, st.basisYear))}</th>
       <th colspan="5" class="grp sep">Income on the cash · committing
         <input id="sp-cash" class="hnum wide" type="number" step="10000" min="0" value="${st.cashCommitted}"></th>
       <th rowspan="2" class="sep"></th>
@@ -309,6 +309,8 @@ function syncControls() {
       || '<option>—</option>';
   }
   root().querySelectorAll('#sp-premSel button').forEach((b) => b.classList.toggle('on', b.dataset.prem === st.premBasis));
+  const bw = $('sp-basisWrap');
+  if (bw) bw.innerHTML = yearSegments('sp', est, st.basisYear);
   const tf = $('sp-togFund');
   if (tf) tf.textContent = st.showFund ? 'Hide EBITDA / NI' : 'Show EBITDA / NI';
   const fp = $('sp-flexpill');
@@ -331,6 +333,7 @@ function injectMarkup() {
       <div class="controls">
           <div class="ctl"><label>Ticker</label><input id="sp-ticker" value="${esc(st.ticker)}" size="6"></div>
           <div class="ctl"><label>Expiry</label><select id="sp-expiry"></select></div>
+          <div class="ctl"><label>Multiple basis</label><span id="sp-basisWrap"></span></div>
           <div class="ctl"><label>Premium</label><div class="seg" id="sp-premSel">
             <button data-prem="bid">Bid</button><button data-prem="mid">Mid</button><button data-prem="ask">Ask</button></div></div>
           <div class="ctl"><label>&nbsp;</label><button id="sp-togFund" class="ghost">Hide EBITDA / NI</button></div>
@@ -397,7 +400,6 @@ function wireControls() {
   $('sp-clear').onclick = () => { st.strikes = []; st.selected = null; render(); };
 
   r.addEventListener('change', (ev) => {
-    if (ev.target.id === 'sp-basisYear') { st.basisYear = +ev.target.value; render(); }
     if (ev.target.id === 'sp-cash') {
       const v = parseFloat(ev.target.value);
       st.cashCommitted = (isFinite(v) && v >= 0) ? v : st.cashCommitted;
@@ -414,6 +416,8 @@ function wireControls() {
   r.addEventListener('click', (ev) => {
     const prem = ev.target.closest('#sp-premSel button');
     if (prem) { st.premBasis = prem.dataset.prem; render(); return; }
+    const yb = ev.target.closest('#sp-basisSel button');
+    if (yb) { st.basisYear = +yb.dataset.year; render(); return; }
     if (ev.target.closest('#sp-expand')) { st.expand = !st.expand; render(); return; }
     if (ev.target.closest('#sp-sens')) { st.sens = !st.sens; render(); return; }
     if (ev.target.closest('#sp-sensReset')) { st.revG = {}; render(); return; }

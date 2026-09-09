@@ -28,7 +28,7 @@ import {
   fetchExpiries, fetchUnderlying, fetchChain,
   listedStrikes, bandAround, premiumOf, quoteTip,
   estimatesFor, yearsOf, estYearsOf, usable, yl, isFlexed,
-  effYears, multiplesAt, renderFundBlock, yearSelect, tickerChips, wireTooltip,
+  effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip,
 } from './options-core.js';
 
 const $ = (id) => document.getElementById(id);
@@ -44,7 +44,7 @@ const st = {
 
   strikes: [], rangeFrom: null, rangeTo: null, seeded: false,
 
-  basisYear: null,           // estimate year driving every multiple
+  basisYear: null,           // estimate year driving every multiple (the Multiple basis control)
   premBasis: 'ask',          // a buyer of protection lifts the ask
   held: 1000,                // shares held — the position being insured
   expand: false,             // IV + delta inside the Contract group
@@ -200,7 +200,7 @@ function renderLadder() {
       <th colspan="${nContract}" class="grp">Contract
         <button type="button" class="xp" id="pp-expand" title="${st.expand ? 'hide IV and delta' : 'show IV and delta'}">${st.expand ? '−' : '+'}</button></th>
       <th colspan="2" class="grp sep">Protection</th>
-      <th colspan="2" class="grp sep">Insuring at · ${yearSelect('pp-basisYear', est, st.basisYear)}</th>
+      <th colspan="2" class="grp sep">Insuring at · ${esc(yl(est, st.basisYear))}</th>
       <th colspan="5" class="grp sep">Cost of the hedge · on
         <input id="pp-held" class="hnum wide" type="number" step="100" min="0" value="${st.held}"> shares</th>
       <th rowspan="2" class="sep"></th>
@@ -285,7 +285,7 @@ function renderFoot() {
   $('pp-foot').innerHTML = `
     <b>Contract</b> — a buyer of protection lifts the <b>ask</b> (the default); <b>mid</b> is the fair-value view and <b>last</b> is the last print, which on an illiquid strike can be hours old. Hover the <b>i</b> for bid/ask/mid, last trade, open interest and theta. <b>+</b> opens IV and delta. Rows run from the money down, so the first is the nearest floor.<br>
     <b>Protection</b> — <b>Floor</b> = strike − premium, what a share is worth to you at expiry however far it falls; the strike alone overstates it by exactly what the insurance cost. <b>Max loss</b> = floor ÷ spot − 1, the most the protected position can lose from here. Everything between spot and the strike is the deductible you still eat — that is the <b>Below spot</b> column.<br>
-    <b>Insuring at</b> — the multiples ${esc(st.ticker)} would trade at <em>at the strike</em>, on the estimate year picked in the header. This is the question behind the hedge: <span class="cheap">green</span> means the floor sits below today's multiple, at a valuation you might rather be adding at than insuring; <span class="rich">red</span> means you are paying to protect a price the market already calls expensive. It is a fact about where the floor sits, not a verdict on the trade.<br>
+    <b>Insuring at</b> — the multiples ${esc(st.ticker)} would trade at <em>at the strike</em>, on the estimate year picked in <b>Multiple basis</b> above. This is the question behind the hedge: <span class="cheap">green</span> means the floor sits below today's multiple, at a valuation you might rather be adding at than insuring; <span class="rich">red</span> means you are paying to protect a price the market already calls expensive. It is a fact about where the floor sits, not a verdict on the trade.<br>
     <b>Cost of the hedge</b> — <b>% of spot</b> is the premium relative to the share it insures, and <b>Annualised</b> is that rate × 365 ÷ days to expiry: the drag on the position for as long as you keep rolling it. The <b>shares held</b> box in the group header is the position being insured; set it once and every row follows. Contracts are whole and cover 100 shares each, so ${cov.held.toLocaleString()} shares means ${cov.contracts.toLocaleString()} contract${cov.contracts === 1 ? '' : 's'} over ${cov.covered.toLocaleString()} shares${cov.share != null && cov.share < 1 ? ` — the remaining ${pct(1 - cov.share, 1)} is unhedged` : ''}. <b>Total cost</b> is the premium across them, and <b>Floor value</b> = floor × insured shares: what those shares are guaranteed to be worth at expiry, against the ${cash(st.spot == null ? null : st.spot * cov.held)} the position is worth today.<br>
     Price, premium, IV and greeks are live from the Massive option chain. Nothing on this page is stored — every input is in-memory and resets on reload.`;
 }
@@ -324,6 +324,8 @@ function syncControls() {
       || '<option>—</option>';
   }
   root().querySelectorAll('#pp-premSel button').forEach((b) => b.classList.toggle('on', b.dataset.prem === st.premBasis));
+  const bw = $('pp-basisWrap');
+  if (bw) bw.innerHTML = yearSegments('pp', est, st.basisYear);
   const tf = $('pp-togFund');
   if (tf) tf.textContent = st.showFund ? 'Hide EBITDA / NI' : 'Show EBITDA / NI';
   const fp = $('pp-flexpill');
@@ -346,6 +348,7 @@ function injectMarkup() {
       <div class="controls">
           <div class="ctl"><label>Ticker</label><input id="pp-ticker" value="${esc(st.ticker)}" size="6"></div>
           <div class="ctl"><label>Expiry</label><select id="pp-expiry"></select></div>
+          <div class="ctl"><label>Multiple basis</label><span id="pp-basisWrap"></span></div>
           <div class="ctl"><label>Premium</label><div class="seg" id="pp-premSel">
             <button data-prem="ask">Ask</button><button data-prem="mid">Mid</button><button data-prem="last">Last</button></div></div>
           <div class="ctl"><label>&nbsp;</label><button id="pp-togFund" class="ghost">Hide EBITDA / NI</button></div>
@@ -411,10 +414,9 @@ function wireControls() {
   };
   $('pp-clear').onclick = () => { st.strikes = []; st.selected = null; render(); };
 
-  // Delegated on the tab root: the year dropdown and the shares input live inside
+  // Delegated on the tab root: the shares-held input lives inside
   // the table header, which is rewritten on every render.
   r.addEventListener('change', (ev) => {
-    if (ev.target.id === 'pp-basisYear') { st.basisYear = +ev.target.value; render(); }
     if (ev.target.id === 'pp-held') {
       const v = parseFloat(ev.target.value);
       st.held = (isFinite(v) && v >= 0) ? Math.round(v) : st.held;
@@ -431,6 +433,8 @@ function wireControls() {
   r.addEventListener('click', (ev) => {
     const prem = ev.target.closest('#pp-premSel button');
     if (prem) { st.premBasis = prem.dataset.prem; render(); return; }
+    const yb = ev.target.closest('#pp-basisSel button');
+    if (yb) { st.basisYear = +yb.dataset.year; render(); return; }
     if (ev.target.closest('#pp-expand')) { st.expand = !st.expand; render(); return; }
     if (ev.target.closest('#pp-sens')) { st.sens = !st.sens; render(); return; }
     if (ev.target.closest('#pp-sensReset')) { st.revG = {}; render(); return; }

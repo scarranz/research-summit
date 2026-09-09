@@ -6,7 +6,7 @@
 //
 //   1. What multiple am I underwriting?  A $400 strike is meaningless until it is
 //      "18x 2028E EPS". Every strike and every breakeven is priced back into an
-//      implied P/E and EV/EBITDA on a year picked in the table header itself.
+//      implied P/E and EV/EBITDA on a year picked in Multiple basis, above the table.
 //   2. How big an account does one contract need?  Notional ÷ the share of the
 //      account we allow a single position to control.
 //
@@ -25,7 +25,7 @@ import {
   fetchExpiries, fetchUnderlying, fetchChain,
   listedStrikes, bandAround, premiumOf, quoteTip,
   estimatesFor, yearsOf, estYearsOf, usable, yl, isFlexed,
-  effYears, multiplesAt, renderFundBlock, yearSelect, tickerChips, wireTooltip,
+  effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip,
 } from './options-core.js';
 
 const $ = (id) => document.getElementById(id);
@@ -43,7 +43,7 @@ const st = {
   rangeFrom: null, rangeTo: null,   // the "add range" inputs
   seeded: false,             // has this ticker's default range been laid down yet
 
-  basisYear: null,           // estimate year driving every multiple (picked in the header)
+  basisYear: null,           // estimate year driving every multiple (the Multiple basis control)
   premBasis: 'ask',          // 'ask' | 'mid' | 'last' — a buyer lifts the ask
   notionalBasis: 'strike',   // 'strike' | 'spot'
   exposurePct: 0.02,         // share of the account one contract's notional may be
@@ -200,7 +200,7 @@ function renderLadder() {
     <tr>
       <th colspan="${nContract}" class="grp">Contract
         <button type="button" class="xp" id="bc-expand" title="${st.expand ? 'hide IV and delta' : 'show IV and delta'}">${st.expand ? '−' : '+'}</button></th>
-      <th colspan="2" class="grp sep">At strike · ${yearSelect('bc-basisYear', est, st.basisYear)}</th>
+      <th colspan="2" class="grp sep">At strike · ${esc(yl(est, st.basisYear))}</th>
       <th colspan="4" class="grp sep">Breakeven · ${esc(yl(est, st.basisYear))}</th>
       <th colspan="4" class="grp sep">Summary</th>
       <th rowspan="2" class="sep"></th>
@@ -286,7 +286,7 @@ function renderPicker() {
 function renderFoot() {
   $('bc-foot').innerHTML = `
     <b>Contract</b> — a buyer lifting the offer pays the <b>ask</b> (the default); <b>mid</b> is the fair-value view and <b>last</b> is the last print, which on an illiquid strike can be hours old. Hover the <b>i</b> for bid/ask/mid, last trade, open interest, theta, and the cash cost and notional of one contract. <b>+</b> opens IV and delta.<br>
-    <b>At strike</b> and <b>Breakeven</b> — the multiples the company would trade at <em>at that price</em>, on the estimate year picked in the header (both groups follow it). Breakeven = strike + premium, the price at expiry where the position returns the cheque; <b>% move</b> is the move from spot it needs. EV/EBITDA uses the estimate year's own net debt where the model carries one, otherwise live enterprise value − market cap. <span class="cheap">Green</span> = below today's multiple, <span class="rich">red</span> = above it.<br>
+    <b>At strike</b> and <b>Breakeven</b> — the multiples the company would trade at <em>at that price</em>, on the estimate year picked in <b>Multiple basis</b> above (both groups follow it). Breakeven = strike + premium, the price at expiry where the position returns the cheque; <b>% move</b> is the move from spot it needs. EV/EBITDA uses the estimate year's own net debt where the model carries one, otherwise live enterprise value − market cap. <span class="cheap">Green</span> = below today's multiple, <span class="rich">red</span> = above it.<br>
     <b>Summary</b>, read left to right as the sizing decision itself — <b>Exposure</b> is the share of the account a single contract's notional is allowed to be; set it once in the header and it applies to every row. <b>Cost % of strike</b> = premium ÷ strike, what the optionality costs relative to what it buys. <b>Cost outflow</b> is the cash that actually leaves the account for one contract (premium × 100 — hover the <b>i</b> by the premium for the amount), as a <b>% of the minimum portfolio in the next column</b>: at a ${pct(st.exposurePct, 1)} exposure limit that is the real size of the position, and the most of the account that can be lost on it. <b>Min. portfolio</b> = notional ÷ the exposure limit — the smallest account for which one contract still sits inside it, with notional = ${st.notionalBasis === 'strike' ? 'strike' : 'spot'} × 100. The two columns together are the whole trade: the outflow is what is at risk, the notional behind the minimum is what the position <em>controls</em>, and the exposure limit is a rule about the second, not the first — which is why the outflow lands at a small fraction of it.<br>
     Price, premium, IV and greeks are live from the Massive option chain. Nothing on this page is stored — every input is in-memory and resets on reload.`;
 }
@@ -326,6 +326,8 @@ function syncControls() {
   }
   root().querySelectorAll('#bc-premSel button').forEach((b) => b.classList.toggle('on', b.dataset.prem === st.premBasis));
   root().querySelectorAll('#bc-notSel button').forEach((b) => b.classList.toggle('on', b.dataset.not === st.notionalBasis));
+  const bw = $('bc-basisWrap');
+  if (bw) bw.innerHTML = yearSegments('bc', est, st.basisYear);
   const tf = $('bc-togFund');
   if (tf) tf.textContent = st.showFund ? 'Hide EBITDA / NI' : 'Show EBITDA / NI';
   // Say it out loud when the multiples are no longer running on consensus.
@@ -349,6 +351,7 @@ function injectMarkup() {
       <div class="controls">
           <div class="ctl"><label>Ticker</label><input id="bc-ticker" value="${esc(st.ticker)}" size="6"></div>
           <div class="ctl"><label>Expiry</label><select id="bc-expiry"></select></div>
+          <div class="ctl"><label>Multiple basis</label><span id="bc-basisWrap"></span></div>
           <div class="ctl"><label>Premium</label><div class="seg" id="bc-premSel">
             <button data-prem="ask">Ask</button><button data-prem="mid">Mid</button><button data-prem="last">Last</button></div></div>
           <div class="ctl"><label>Notional basis</label><div class="seg" id="bc-notSel">
@@ -416,11 +419,10 @@ function wireControls() {
   };
   $('bc-clear').onclick = () => { st.strikes = []; st.selected = null; render(); };
 
-  // Delegated on the tab root, never on document. The year dropdown and the
-  // exposure input live inside the table header, which is rewritten on every
-  // render, so they cannot be bound directly.
+  // Delegated on the tab root, never on document. The exposure input lives inside
+  // the table header, which is rewritten on every render, so it cannot be bound
+  // directly.
   r.addEventListener('change', (ev) => {
-    if (ev.target.id === 'bc-basisYear') { st.basisYear = +ev.target.value; render(); }
     if (ev.target.id === 'bc-expo') {
       const v = parseFloat(ev.target.value);
       if (isFinite(v) && v > 0) st.exposurePct = v / 100;
@@ -438,6 +440,8 @@ function wireControls() {
   r.addEventListener('click', (ev) => {
     const prem = ev.target.closest('#bc-premSel button');
     if (prem) { st.premBasis = prem.dataset.prem; render(); return; }
+    const yb = ev.target.closest('#bc-basisSel button');
+    if (yb) { st.basisYear = +yb.dataset.year; render(); return; }
     const not = ev.target.closest('#bc-notSel button');
     if (not) { st.notionalBasis = not.dataset.not; render(); return; }
     if (ev.target.closest('#bc-expand')) { st.expand = !st.expand; render(); return; }

@@ -343,12 +343,16 @@ export function renderFundBlock(wrap, o) {
       ${esc(e.source)}</div>`;
 }
 
-// ── The estimate-year dropdown that lives inside a table header ───────────────
-export function yearSelect(id, est, basisYear, from) {
+// ── Multiple basis: the estimate year every multiple on a pane is computed on ──
+// A segmented control in the pane's own control row, the same shape Covered Calls
+// uses, so all four strategies carry their expiry and their basis in the same
+// place. The years offered are whatever that ticker's estimate set holds.
+export function yearSegments(prefix, est, basisYear, from) {
   const ys = yearsOf(est).filter((y) => y >= (from || 2025));
-  return `<select id="${id}" class="hsel">`
-    + ys.map((y) => `<option value="${y}" ${y === basisYear ? 'selected' : ''}>${y}${est && est.years[y] && est.years[y].est ? 'E' : ''}</option>`).join('')
-    + `</select>`;
+  if (!ys.length) return '<span class="muted">—</span>';
+  return `<div class="seg" id="${prefix}-basisSel">`
+    + ys.map((y) => `<button type="button" data-year="${y}" class="${y === basisYear ? 'on' : ''}">${y}${est && est.years[y] && est.years[y].est ? 'E' : ''}</button>`).join('')
+    + `</div>`;
 }
 
 // ── The ticker chips: the names we hold estimates for ─────────────────────────

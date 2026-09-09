@@ -27,7 +27,7 @@ import {
   esc, px, mult, pct, pctS, cash, daysTo, rich,
   fetchExpiries, fetchUnderlying, fetchChain,
   listedStrikes, bandAround, premiumOf, quoteTip,
-  estimatesFor, yearsOf, estYearsOf, usable, yl, isFlexed,
+  estimatesFor, resolveSource, sourceSegments, estNote, yearsOf, estYearsOf, usable, yl, isFlexed,
   effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip,
 } from './options-core.js';
 
@@ -49,6 +49,7 @@ const st = {
   cashCommitted: 100000,     // the collateral available for this trade
   expand: false,
   showFund: true,
+  estSrc: 'summit',          // 'summit' | 'consensus' — whose numbers every multiple uses
   sens: false, revG: {},
 
   selected: null,
@@ -56,7 +57,16 @@ const st = {
 
 let est = null, E = {};
 const live = () => ({ shares: st.shares, netDebt: st.netDebtLive });
-function refresh() { est = estimatesFor(st.ticker); E = effYears(est, st.revG); }
+// The selected source, the other one (for the comparison lines), and the effective
+// years after the sensitivity. Rebuilt at the top of every render.
+let other = null;
+function refresh() {
+  st.estSrc = resolveSource(st.ticker, st.estSrc) || st.estSrc;
+  est = estimatesFor(st.ticker, st.estSrc);
+  E = effYears(est, st.revG);
+  const alt = st.estSrc === 'summit' ? 'consensus' : 'summit';
+  other = estimatesFor(st.ticker, alt);
+}
 
 // ── The strike ladder ─────────────────────────────────────────────────────────
 const strikesListed = () => listedStrikes(st.chain);
@@ -176,8 +186,8 @@ function renderKpis() {
 
   const note = $('sp-note');
   if (note) {
-    note.innerHTML = usable(est) ? ''
-      : `<span class="muted">${esc(est ? est.name : st.ticker)} reports in ${esc(est ? est.currency : '—')} — multiples against a USD share price would be wrong, so they are not shown.</span>`;
+    const msg = estNote(st.ticker, est);
+    note.innerHTML = msg ? `<span class="muted">${msg}</span>` : '';
   }
 }
 
@@ -295,6 +305,7 @@ function render() {
     renderFundBlock(fund, {
       prefix: 'sp', ticker: st.ticker, est: est, E: E, revG: st.revG,
       basisYear: st.basisYear, sens: st.sens,
+      other: other ? other.years : null, otherLabel: other ? other.label : '',
       spotMult: multiplesAt(st.spot, st.basisYear, E, est, live()),
     });
   }
@@ -309,6 +320,8 @@ function syncControls() {
       || '<option>—</option>';
   }
   root().querySelectorAll('#sp-premSel button').forEach((b) => b.classList.toggle('on', b.dataset.prem === st.premBasis));
+  const sw = $('sp-srcWrap');
+  if (sw) sw.innerHTML = sourceSegments('sp', st.ticker, st.estSrc);
   const bw = $('sp-basisWrap');
   if (bw) bw.innerHTML = yearSegments('sp', est, st.basisYear);
   const tf = $('sp-togFund');
@@ -333,6 +346,7 @@ function injectMarkup() {
       <div class="controls">
           <div class="ctl"><label>Ticker</label><input id="sp-ticker" value="${esc(st.ticker)}" size="6"></div>
           <div class="ctl"><label>Expiry</label><select id="sp-expiry"></select></div>
+          <div class="ctl"><label>Estimates</label><span id="sp-srcWrap"></span></div>
           <div class="ctl"><label>Multiple basis</label><span id="sp-basisWrap"></span></div>
           <div class="ctl"><label>Premium</label><div class="seg" id="sp-premSel">
             <button data-prem="bid">Bid</button><button data-prem="mid">Mid</button><button data-prem="ask">Ask</button></div></div>
@@ -416,6 +430,8 @@ function wireControls() {
   r.addEventListener('click', (ev) => {
     const prem = ev.target.closest('#sp-premSel button');
     if (prem) { st.premBasis = prem.dataset.prem; render(); return; }
+    const sb = ev.target.closest('#sp-srcSel button');
+    if (sb && !sb.disabled) { st.estSrc = sb.dataset.src; st.revG = {}; render(); return; }
     const yb = ev.target.closest('#sp-basisSel button');
     if (yb) { st.basisYear = +yb.dataset.year; render(); return; }
     if (ev.target.closest('#sp-expand')) { st.expand = !st.expand; render(); return; }

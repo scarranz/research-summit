@@ -73,3 +73,6 @@
 #cc-tip{position:fixed;z-index:50;background:#1E2733;color:#fff;font-size:11px;font-weight:500;padding:7px 10px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .1s;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.2);}
 #cc-tip.on{opacity:1;}
 #cc-tip b{color:#9DB4D4;font-weight:600;}
+/* Estimates source segments, matching the Multiple basis control beside them. */
+#cc-root .seg button:disabled{color:#C3C9D2;cursor:not-allowed;background:var(--pale);}
+#cc-root .seg button:disabled:hover{opacity:1;}

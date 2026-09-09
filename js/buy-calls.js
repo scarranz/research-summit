@@ -24,7 +24,7 @@ import {
   esc, px, mult, pct, pctS, cash, daysTo, rich,
   fetchExpiries, fetchUnderlying, fetchChain,
   listedStrikes, bandAround, premiumOf, quoteTip,
-  estimatesFor, yearsOf, estYearsOf, usable, yl, isFlexed,
+  estimatesFor, resolveSource, sourceSegments, estNote, yearsOf, estYearsOf, usable, yl, isFlexed,
   effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip,
 } from './options-core.js';
 
@@ -49,6 +49,7 @@ const st = {
   exposurePct: 0.02,         // share of the account one contract's notional may be
   expand: false,             // show IV + delta inside the Contract group
   showFund: true,            // show the income-statement block
+  estSrc: 'summit',          // 'summit' | 'consensus' — whose numbers every multiple uses
   sens: false,               // revenue-growth sensitivity inputs on/off
   revG: {},                  // year -> overridden revenue growth (decimal)
 
@@ -59,7 +60,16 @@ const st = {
 // been applied. Both are refreshed at the top of every render.
 let est = null, E = {};
 const live = () => ({ shares: st.shares, netDebt: st.netDebtLive });
-function refresh() { est = estimatesFor(st.ticker); E = effYears(est, st.revG); }
+// The selected source, the other one (for the comparison lines), and the effective
+// years after the sensitivity. Rebuilt at the top of every render.
+let other = null;
+function refresh() {
+  st.estSrc = resolveSource(st.ticker, st.estSrc) || st.estSrc;
+  est = estimatesFor(st.ticker, st.estSrc);
+  E = effYears(est, st.revG);
+  const alt = st.estSrc === 'summit' ? 'consensus' : 'summit';
+  other = estimatesFor(st.ticker, alt);
+}
 
 // ── The strike ladder ─────────────────────────────────────────────────────────
 const strikesListed = () => listedStrikes(st.chain);
@@ -187,8 +197,8 @@ function renderKpis() {
 
   const note = $('bc-note');
   if (note) {
-    note.innerHTML = usable(est) ? ''
-      : `<span class="muted">${esc(est ? est.name : st.ticker)} reports in ${esc(est ? est.currency : '—')} — multiples against a USD share price would be wrong, so they are not shown.</span>`;
+    const msg = estNote(st.ticker, est);
+    note.innerHTML = msg ? `<span class="muted">${msg}</span>` : '';
   }
 }
 
@@ -311,6 +321,7 @@ function render() {
     renderFundBlock(fund, {
       prefix: 'bc', ticker: st.ticker, est: est, E: E, revG: st.revG,
       basisYear: st.basisYear, sens: st.sens,
+      other: other ? other.years : null, otherLabel: other ? other.label : '',
       spotMult: multiplesAt(st.spot, st.basisYear, E, est, live()),
     });
   }
@@ -326,6 +337,8 @@ function syncControls() {
   }
   root().querySelectorAll('#bc-premSel button').forEach((b) => b.classList.toggle('on', b.dataset.prem === st.premBasis));
   root().querySelectorAll('#bc-notSel button').forEach((b) => b.classList.toggle('on', b.dataset.not === st.notionalBasis));
+  const sw = $('bc-srcWrap');
+  if (sw) sw.innerHTML = sourceSegments('bc', st.ticker, st.estSrc);
   const bw = $('bc-basisWrap');
   if (bw) bw.innerHTML = yearSegments('bc', est, st.basisYear);
   const tf = $('bc-togFund');
@@ -351,6 +364,7 @@ function injectMarkup() {
       <div class="controls">
           <div class="ctl"><label>Ticker</label><input id="bc-ticker" value="${esc(st.ticker)}" size="6"></div>
           <div class="ctl"><label>Expiry</label><select id="bc-expiry"></select></div>
+          <div class="ctl"><label>Estimates</label><span id="bc-srcWrap"></span></div>
           <div class="ctl"><label>Multiple basis</label><span id="bc-basisWrap"></span></div>
           <div class="ctl"><label>Premium</label><div class="seg" id="bc-premSel">
             <button data-prem="ask">Ask</button><button data-prem="mid">Mid</button><button data-prem="last">Last</button></div></div>
@@ -440,6 +454,8 @@ function wireControls() {
   r.addEventListener('click', (ev) => {
     const prem = ev.target.closest('#bc-premSel button');
     if (prem) { st.premBasis = prem.dataset.prem; render(); return; }
+    const sb = ev.target.closest('#bc-srcSel button');
+    if (sb && !sb.disabled) { st.estSrc = sb.dataset.src; st.revG = {}; render(); return; }
     const yb = ev.target.closest('#bc-basisSel button');
     if (yb) { st.basisYear = +yb.dataset.year; render(); return; }
     const not = ev.target.closest('#bc-notSel button');

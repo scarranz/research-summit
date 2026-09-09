@@ -1,10 +1,30 @@
 // Covered Calls tab — live covered-call book. Price + option chain (premium/IV/
 // greeks) come from Massive via the covered-calls-massive edge function; forward
-// EBITDA/EPS come from the Summit snapshot. Computes the covered-call economics
-// and the "valuation if exercised" multiples. Everything is in %.
+// EBITDA/EPS come from js/options-data.js on whichever source the Estimates toggle
+// is on — the Summit model or the Bloomberg consensus carried in the same snapshot.
+// Computes the covered-call economics and the "valuation if exercised" multiples.
+// Everything is in %.
 import { POSITIONS } from './covered-calls-positions.js';
-import { SUMMIT } from './covered-calls-summit.js';
+import { EST_STORE, optSources } from './options-data.js';
 import { coveredCallsQuote } from './api.js';
+
+// The estimate store, reshaped to what this tab reads: { currency, years } where a
+// year carries ebitda / earnings / shares_out. `estSrc` picks whose numbers those
+// are — Summit's model or Bloomberg consensus, both carried in the same snapshot.
+// A ticker with no set for the selected source falls back to nothing, not to the
+// other source: the multiples go blank and the footnote says why.
+function SU(ticker) {
+  const s = EST_STORE[ticker];
+  if (!s) return null;
+  const rows = s[estSrc];
+  if (!rows) return null;
+  const years = {};
+  Object.keys(rows).forEach((k) => {
+    const r = rows[k];
+    years[k] = { rev: r.rev, ebitda: r.ebitda, earnings: r.earnings, shares_out: r.shares };
+  });
+  return { name: s.name, currency: s.currency, snapshot_date: s.snapshot, years };
+}
 
 const $ = (id) => document.getElementById(id);
 
@@ -48,6 +68,7 @@ const bn = (x) => {
 let rows = POSITIONS.map((p, i) => ({ id: i, ...p, override: null, live: null, loading: true, err: null }));
 let expiry = null;
 let mulBasis = '2026E';  // '2026E' | '2027E' | 'NTM' — fundamental year driving every multiple + PEG
+let estSrc = 'summit';   // 'summit' | 'consensus' — whose estimates every multiple uses
 let showFund = true;     // show/hide the EBITDA & Net Income blocks
 let sortKey = null;      // 'wt' | 'yield' | 'portyield' | 'contrib' | null (book order)
 let sortDir = -1;        // -1 = descending (high→low), 1 = ascending
@@ -62,7 +83,7 @@ function ntmFrac() {
 
 // EBITDA / earnings (+ their YoY growth) for the selected basis, native currency.
 function basisFundamentals(ticker) {
-  const su = SUMMIT[ticker];
+  const su = SU(ticker);
   if (!su || !su.years) return null;
   const yv = (y, k) => su.years[y]?.[k];
   const g  = (y, k) => (yv(y, k) != null && yv(y - 1, k) != null && yv(y - 1, k) > 0) ? yv(y, k) / yv(y - 1, k) - 1 : null;
@@ -80,7 +101,7 @@ function basisFundamentals(ticker) {
 
 // CAGR from t0 (FY[0]) to t+2 (FY[2]); null unless both endpoints are positive.
 function cagr(ticker, key) {
-  const su = SUMMIT[ticker];
+  const su = SU(ticker);
   if (!su || !su.years) return null;
   const a = su.years[FY[0]]?.[key], b = su.years[FY[2]]?.[key];
   return (a != null && b != null && a > 0 && b > 0) ? Math.pow(b / a, 1 / (FY[2] - FY[0])) - 1 : null;
@@ -153,7 +174,7 @@ async function fetchRow(row) {
       limit(() => (row.isEtf ? Promise.resolve(null) : mfetch('details', row.ticker).catch(() => null))),
       limit(() => mfetch('ratios', row.ticker).catch(() => null)),
     ];
-    const su0 = SUMMIT[row.ticker];
+    const su0 = SU(row.ticker);
     if (!row.isEtf && su0 && su0.currency !== 'USD') tasks.push(limit(() => mfetch('fx', FXCFG[su0.currency].pair).catch(() => null)));
     const [contract, details, ratiosResp, fxResp] = await Promise.all(tasks);
 
@@ -167,7 +188,7 @@ async function fetchRow(row) {
     const netDebt = (rt.enterprise_value != null && rt.market_cap != null) ? rt.enterprise_value - rt.market_cap : null;
 
     let fxRate = 1, fxNote = '';
-    const su = SUMMIT[row.ticker];
+    const su = SU(row.ticker);
     if (su && su.currency !== 'USD') {
       const cfg = FXCFG[su.currency]; const cc = fxResp?.results?.[0]?.c;
       if (cc) { fxRate = cfg.invert ? 1 / cc : cc; fxNote = `${su.currency}→USD ${fxRate.toFixed(4)}`; }
@@ -246,7 +267,7 @@ function tradeStamp(ts) {
 // EBITDA / Net Income for t0..t+2 with YoY growth, from the Summit model.
 // Returns [{ v, g }] per year (v = value in native-currency millions, g = YoY).
 function fundSeries(ticker, key) {
-  const su = SUMMIT[ticker];
+  const su = SU(ticker);
   if (!su || !su.years) return null;
   return FY.map((y) => {
     const cur = su.years[y]?.[key];
@@ -346,7 +367,7 @@ function render() {
     const ovr = r.override != null;
     const premVal = (m.premium != null) ? m.premium.toFixed(2) : '';
     const share = (m.contrib != null && portYld) ? m.contrib / portYld : null; // contribution to total premium yield
-    const cur = SUMMIT[r.ticker]?.currency || 'USD';
+    const cur = EST_STORE[r.ticker]?.currency || 'USD';
     const peg = (x) => x == null ? '' : `PEG ${x.toFixed(2)}`;
     const q2 = (x) => x != null ? `$${x.toFixed(2)}` : '—';
     const qtip = `<b>Bid</b> ${q2(L.bid)}   <b>Ask</b> ${q2(L.ask)}   <b>Mid</b> ${q2(L.mid)}<br><b>Last</b> ${q2(L.lastTrade)} · ${tradeStamp(L.lastTradeTs)}`;
@@ -379,7 +400,7 @@ function render() {
 
   const anyMismatch = rows.some((r) => r.live && ((r.live.usedExpiry && expiry && r.live.usedExpiry !== expiry) || (r.live.usedStrike != null && r.live.usedStrike !== r.strike)));
   $('cc-foot').innerHTML = `
-    <b>EBITDA / Net Income</b> = Summit model ${fyLabel(FY[0])}–${fyLabel(FY[2])} (t0 = last reported FY), native-currency millions with YoY growth below · <b>CAGR</b> = ${FY[0]}→${FY[2]} · <b>PEG</b> = current multiple ÷ basis growth% ·
+    <b>EBITDA / Net Income</b> = ${estSrc === 'summit' ? 'Summit model' : 'Bloomberg consensus'} ${fyLabel(FY[0])}–${fyLabel(FY[2])} (t0 = last reported FY), native-currency millions with YoY growth below · <b>CAGR</b> = ${FY[0]}→${FY[2]} · <b>PEG</b> = current multiple ÷ basis growth% ·
     <b>Multiple basis (${mulBasis})</b> drives every P/E &amp; EV/EBITDA${mulBasis === 'NTM' ? ' — NTM is a calendar-weighted blend of '+fyLabel(FY[1])+'/'+fyLabel(FY[2])+' (no quarterly data)' : ''} · <b>Current</b> uses live price, <b>Target</b> uses the strike; the PEG under each multiple = that multiple ÷ basis growth · <b>Impl. Upside</b> = strike ÷ price − 1 ·
     hover the <b>i</b> by Premium for live bid / ask / mid and last trade (local time) ·
     <b>Yield</b> = premium ÷ price · <b>Port. yield</b> = yield × weight · <b>Contrib.</b> = Port. yield ÷ Σ Port. yield (share of total) ·
@@ -478,6 +499,7 @@ function injectMarkup() {
         <span class="pill">live · Massive</span>
         <div class="controls">
           <div class="ctl"><label>Target expiry</label><select id="cc-expiry"><option>loading…</option></select></div>
+          <div class="ctl"><label>Estimates</label><span id="cc-srcWrap"></span></div>
           <div class="ctl"><label>Multiple basis</label>
             <div class="seg" id="cc-basisSel">
               <button data-basis="2026E">2026E</button><button data-basis="2027E">2027E</button><button data-basis="NTM">NTM</button>
@@ -506,6 +528,26 @@ function injectMarkup() {
 
 function wireControls() {
   $('cc-refresh').onclick = () => loadAll();
+
+  // Estimates source. Unlike the single-name panes this is a whole book, so a
+  // source counts as available when ANY position carries it; the rows that do not
+  // simply show "—" for their multiples, which is the honest answer for them.
+  const renderSrc = () => {
+    const have = new Set();
+    rows.forEach((r) => optSources(r.ticker).forEach((k) => have.add(k)));
+    $('cc-srcWrap').innerHTML = [['summit', 'Summit'], ['consensus', 'Consensus']].map(([k, lbl]) => {
+      const missing = !have.has(k);
+      return `<button type="button" data-src="${k}" class="${k === estSrc ? 'on' : ''}"
+        ${missing ? 'disabled' : ''} title="${missing ? 'no ' + lbl + ' estimates in this book' : lbl + ' estimates'}">${lbl}</button>`;
+    }).join('');
+  };
+  $('cc-srcWrap').className = 'seg';
+  renderSrc();
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('#cc-srcWrap button');
+    if (!b || b.disabled) return;
+    estSrc = b.dataset.src; renderSrc(); render();
+  });
 
   // Multiple basis segmented toggle — re-renders only (uses already-fetched data).
   const syncBasis = () => document.querySelectorAll('#cc-basisSel button')
@@ -555,7 +597,7 @@ function wireControls() {
     if (!tk || !strike) return;
     const weight = (parseFloat($('cc-newweight').value) || 0) / 100;
     const r = { id: Date.now(), ticker: tk, reason: '', strike, weight,
-                seedPrime: null, isEtf: !SUMMIT[tk], override: null, live: null, loading: true, err: null };
+                seedPrime: null, isEtf: !EST_STORE[tk], override: null, live: null, loading: true, err: null };
     rows.push(r); $('cc-newtk').value = ''; $('cc-newstrike').value = ''; $('cc-newweight').value = '';
     render(); await fetchRow(r); render();
   };

@@ -143,3 +143,16 @@
   .der-an .kpis,.der-an .kpis.six{grid-template-columns:repeat(2,1fr);}
   #tp-der .der-pill{margin-right:18px;font-size:12.5px;}
 }
+
+/* Estimates source — Summit vs the Street. A source a name does not have is drawn
+   disabled rather than hidden: "there is no Street number for TBBB" is the answer,
+   not a gap. The comparison lines under each level use the same up/down colours as
+   growth, and the gap line restates it for the year the multiples are on. */
+.der-an .seg button:disabled{color:#C3C9D2;cursor:not-allowed;background:var(--pale);}
+.der-an .seg button:disabled:hover{opacity:1;}
+.der-an .block-h .srcname{color:var(--steel);font-weight:600;}
+.der-an .gapline{font-size:11px;color:var(--mid);}
+.der-an .gapline b{font-weight:700;}
+.der-an .gapline b.up{color:var(--pos);} .der-an .gapline b.dn{color:var(--neg);}
+.der-an .an-fundtbl tr.vsrow td{font-size:10.5px;}
+.der-an .an-fundtbl tr.vsrow .rs-ft-h{color:var(--steel);font-style:italic;}

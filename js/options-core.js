@@ -16,7 +16,7 @@
 // its KPI strip and its footnote. Nothing here is stored — every input is
 // in-memory and resets on reload.
 
-import { OPT_ESTIMATES } from './options-data.js';
+import { OPT_ESTIMATES, optEstimates, optSources, optDefaultSource } from './options-data.js';
 import { coveredCallsQuote } from './api.js';
 
 // ── Formatting. No bare numbers, estimates always marked. ─────────────────────
@@ -28,7 +28,13 @@ export function esc(s) {
 export const px = (x) => (x == null || !isFinite(x)) ? '—' : `$${x.toFixed(2)}`;
 export const mult = (x) => (x == null || !isFinite(x) || x <= 0) ? '—' : `${x.toFixed(1)}x`;
 export const pct = (x, d = 1) => (x == null || !isFinite(x)) ? '—' : `${(x * 100).toFixed(d)}%`;
-export const pctS = (x, d = 1) => (x == null || !isFinite(x)) ? '—' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(d)}%`;
+// Signed percent. Rounding a tiny negative gives "-0%", which reads as a fall that
+// is not there — `+ 0` collapses negative zero back to zero before the sign is chosen.
+export const pctS = (x, d = 1) => {
+  if (x == null || !isFinite(x)) return '—';
+  const n = +(x * 100).toFixed(d) + 0;
+  return `${n >= 0 ? '+' : ''}${n.toFixed(d)}%`;
+};
 // Dollars at position size — these get large, so compact above $10K.
 export const cash = (x) => {
   if (x == null || !isFinite(x)) return '—';
@@ -158,7 +164,14 @@ export function quoteTip(c, extra) {
 }
 
 // ── Estimates ─────────────────────────────────────────────────────────────────
-export const estimatesFor = (ticker) => OPT_ESTIMATES[ticker] || null;
+// One ticker's estimate set for ONE source ('summit' | 'consensus'). Null when the
+// name has no set for that source — nothing is silently substituted from the other.
+export const estimatesFor = (ticker, src) => optEstimates(ticker, src);
+export { optSources, optDefaultSource };
+// The source a pane should fall back to when the one it is holding does not exist
+// for the ticker just typed in (APP has no Summit column, TBBB no Street one).
+export const resolveSource = (ticker, want) =>
+  (optSources(ticker).indexOf(want) >= 0 ? want : optDefaultSource(ticker));
 export const yearsOf = (e) => e ? Object.keys(e.years).map(Number).sort((a, b) => a - b) : [];
 export const estYearsOf = (e) => yearsOf(e).filter((y) => e.years[y] && e.years[y].est);
 // Multiples need a USD estimate set: SPOT reports in EUR and TBBB in MXN, and a
@@ -247,6 +260,23 @@ export function margin(E, key, year) {
   return (v != null && rev != null && rev > 0) ? v / rev : null;
 }
 
+// The one-line verdict on the two sources, on the year the multiples are computed
+// on: where the selected estimates sit against the other set. Blank when there is
+// no other set, or when the base is not a positive number to divide by.
+function gapLine(E, o) {
+  if (!o.other) return '';
+  const y = o.basisYear;
+  const cell = (key, label) => {
+    const a = E[y] && E[y][key], b = o.other[y] && o.other[y][key];
+    if (a == null || b == null || !(b > 0)) return null;
+    const g = a / b - 1;
+    return `${esc(label)} <b class="${g >= 0 ? "up" : "dn"}">${pctS(g, 1)}</b>`;
+  };
+  const parts = [cell('rev', 'revenue'), cell('ebitda', 'EBITDA'), cell('netIncome', 'net income')].filter(Boolean);
+  if (!parts.length) return '';
+  return `<span class="gapline">on ${esc(yl(o.est, y))}, ${esc((o.est && o.est.label) || 'this source')} vs ${esc(o.otherLabel)}: ${parts.join(' · ')}</span>`;
+}
+
 // ── The income statement under every ladder ───────────────────────────────────
 // Revenue down to EPS, each level followed by its growth and — where it means
 // anything — its margin on revenue. The CAGR sits on the growth line because that
@@ -303,14 +333,31 @@ export function renderFundBlock(wrap, o) {
     const grow = `<tr class="rs-ft-sub${q.margin ? ' rs-ft-nb' : ''}"><td class="rs-ft-h">growth</td>${gcells}`
       + `<td class="sep ${cg == null ? '' : (cg >= 0 ? 'up' : 'dn')}">${cg == null ? '—' : pctS(cg)}</td><td></td></tr>`;
 
-    if (!q.margin) return lvl + grow;
+    // The comparison line: this source against the other one, year by year. It is
+    // the whole point of carrying both — a multiple on our numbers only means
+    // something next to the same multiple on the Street's.
+    let vs = '';
+    if (o.other) {
+      const cells = cols.map((y) => {
+        const a = E[y] && E[y][key], b = o.other[y] && o.other[y][key];
+        // Only estimate years can differ: a reported year is the same figure under
+        // both sources, so comparing it would print a row of +0.0% for no reason.
+        // A percentage against a negative or missing base is noise, so it is left
+        // blank rather than invented — the same rule the growth lines follow.
+        const g = (E[y] && E[y].est && a != null && b != null && b > 0) ? a / b - 1 : null;
+        return `<td class="${est(y)} ${g == null ? '' : (g >= 0 ? 'up' : 'dn')}">${g == null ? '—' : pctS(g, 0)}</td>`;
+      }).join('');
+      vs = `<tr class="rs-ft-sub vsrow"><td class="rs-ft-h">vs ${esc(o.otherLabel)}</td>${cells}<td class="sep"></td><td></td></tr>`;
+    }
+
+    if (!q.margin) return lvl + grow + vs;
     // No flexed marker on the margin line: the margins are exactly what the
     // sensitivity HOLDS, so painting them as moved would contradict itself.
     const mcells = cols.map((y) => {
       const m = margin(E, key, y);
       return `<td class="${est(y)}">${m == null ? '—' : pct(m, 1)}</td>`;
     }).join('');
-    return lvl + grow + `<tr class="rs-ft-sub"><td class="rs-ft-h">margin</td>${mcells}<td class="sep"></td><td></td></tr>`;
+    return lvl + grow + `<tr class="rs-ft-sub"><td class="rs-ft-h">margin</td>${mcells}<td class="sep"></td><td></td></tr>` + vs;
   }
 
   const plain = (label, fmtv) => `<tr class="rs-ft-main"><td class="rs-ft-h">${esc(label)}</td>`
@@ -319,7 +366,8 @@ export function renderFundBlock(wrap, o) {
 
   wrap.innerHTML = `
     <div class="block-top">
-      <div class="block-h">${esc(e.name)} — income statement</div>
+      <div class="block-h">${esc(e.name)} — income statement · <span class="srcname">${esc(e.label || '')}</span></div>
+      ${gapLine(E, o)}
       <button type="button" class="ghost sm ${o.sens ? 'on' : ''}" id="${p}-sens">${o.sens ? '✓ ' : ''}Sensitivity</button>
       ${isFlexed(o.revG) ? `<button type="button" class="ghost sm" id="${p}-sensReset">Reset to consensus</button>` : ''}
       <span class="muted">CAGR ${firstA}→${lastY} on each growth line · PEG on ${esc(yl(e, o.basisYear))}</span>
@@ -352,6 +400,29 @@ export function yearSegments(prefix, est, basisYear, from) {
   if (!ys.length) return '<span class="muted">—</span>';
   return `<div class="seg" id="${prefix}-basisSel">`
     + ys.map((y) => `<button type="button" data-year="${y}" class="${y === basisYear ? 'on' : ''}">${y}${est && est.years[y] && est.years[y].est ? 'E' : ''}</button>`).join('')
+    + `</div>`;
+}
+
+// Why a pane is showing no multiples — said out loud, because a column of dashes
+// with no explanation reads as a bug. Empty string when there is nothing to say.
+export function estNote(ticker, est) {
+  if (!est) return `No estimate set for ${esc(ticker)} — it is not in the Summit DCF universe and we carry no consensus for it. The option economics still price; the multiples cannot.`;
+  if (!usable(est)) return `${esc(est.name)} reports in ${esc(est.currency)} — multiples against a USD share price would be wrong, so they are not shown.`;
+  return '';
+}
+
+// ── Estimates: whose numbers every multiple on the pane is computed on ────────
+// Summit's model or the Street. A source the ticker does not have is still drawn,
+// disabled, because "there is no Street number for TBBB" is itself the answer.
+export function sourceSegments(prefix, ticker, current) {
+  const have = optSources(ticker);
+  const all = [['summit', 'Summit'], ['consensus', 'Consensus']];
+  return `<div class="seg" id="${prefix}-srcSel">`
+    + all.map(([k, lbl]) => {
+      const on = k === current, missing = have.indexOf(k) < 0;
+      return `<button type="button" data-src="${k}" class="${on ? 'on' : ''}${missing ? ' off' : ''}"
+        ${missing ? 'disabled' : ''} title="${missing ? `no ${lbl} estimates for ${esc(ticker)}` : `${lbl} estimates`}">${lbl}</button>`;
+    }).join('')
     + `</div>`;
 }
 

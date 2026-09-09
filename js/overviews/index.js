@@ -22,8 +22,10 @@ import { googlOverview } from './googl.js';
 import { amznOverview } from './amzn.js';
 import { disOverview } from './dis.js';
 import { appOverview } from './app.js';
+import { sharkninjaOverview } from './sharkninja.js';
 
 var OVERVIEWS = {
+  SN: sharkninjaOverview,
   RELY: remitlyOverview,
   SOFI: sofiOverview,
   MSFT: msftOverview,

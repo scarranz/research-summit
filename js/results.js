@@ -34,6 +34,7 @@ import { lyftResults } from './results-data/lyft.js';
 import { lyftSetup } from './results-data/lyft-setup.js';
 import { tbbbResults } from './results-data/tbbb.js';
 import { tbbbSetup } from './results-data/tbbb-setup.js';
+import { snResults } from './results-data/sn.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
@@ -51,7 +52,8 @@ var RESULTS_DATA = {
   LYFT: lyftResults,
   LYFT_SETUP: lyftSetup,
   TBBB: tbbbResults,
-  TBBB_SETUP: tbbbSetup
+  TBBB_SETUP: tbbbSetup,
+  SN: snResults
 };
 
 // Register a dataset at runtime, so a caller can compose one and get the whole engine — every
@@ -1034,7 +1036,7 @@ function rsLegendHtml(k, m){
   else h += '<span class="rs-noguide" title="This company issued no numeric guidance for this line/period — so there is no guidance band to score against (only Street and Summit).">⚑ No company guidance</span>';
   // The margin LINE chip only exists in level mode — in margin mode the margin IS the chart,
   // and in growth mode it is suppressed (two unrelated percentages on one axis).
-  if (!isTop && !marg && !rsIsGrow(k) && rsHasMargin(k, m)) h += chip('margin', RS_ACT, esc(m.marginLabel || 'margin') + ' %', true);
+  if (!isTop && !marg && !rsIsGrow(k) && rsHasMargin(k, m)) h += chip('margin', RS_ACT, (m.marginLabel || 'margin') + ' %', true);
   h += '<span class="tech-leg-i" style="margin-left:auto">▲ beat · ▼ miss · click a chip to hide it</span>';
   return h;
 }

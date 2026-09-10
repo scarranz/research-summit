@@ -503,9 +503,14 @@ const sarrow = (k) => sortKey === k ? (sortDir < 0 ? ' ▾' : ' ▴') : '';
 
 function render() {
   // KPIs — everything in %, derived purely from weights (no $, no portfolio value).
-  let portYld = 0, portAnn = 0, wUp = 0, wYld = 0, wIv = 0, wSum = 0, priced = 0;
+  let portYld = 0, portAnn = 0, wUp = 0, wYld = 0, wIv = 0, wSum = 0, priced = 0, held = 0;
   rows.forEach((r) => {
     const m = metrics(r); if (r.err || !r.live) return;
+    // An excluded row keeps its own numbers on screen and leaves every TOTAL alone
+    // — the weight too, so Covered weight falls when you drop one and the averages
+    // are taken over what is left rather than being diluted by a position you have
+    // decided is not part of the question.
+    if (r.excluded) { held += 1; return; }
     if (m.contrib != null) portYld += m.contrib;        // Σ weight × premium yield
     if (m.annContrib != null) portAnn += m.annContrib;  // Σ weight × annualized yield
     const w = r.weight || 0; wSum += w; priced += 1;
@@ -515,7 +520,7 @@ function render() {
   });
   const kn = wSum || 1;
   $('cc-kpis').innerHTML = [
-    ['Premium yield', pct(portYld, 2), `portfolio · ${priced} positions`],
+    ['Premium yield', pct(portYld, 2), `portfolio · ${priced} position${priced === 1 ? '' : 's'}${held ? ` · ${held} excluded` : ''}`],
     ['Annualized', pct(portAnn, 1), 'weight-scaled'],
     ['Avg upside to strike', pct(wUp / kn), 'weighted'],
     ['Avg premium yield', pct(wYld / kn, 2), 'per position'],
@@ -554,7 +559,11 @@ function render() {
     const L = r.live, m = metrics(r);
     const ovr = r.override != null;
     const premVal = (m.premium != null) ? m.premium.toFixed(2) : '';
-    const share = (m.contrib != null && portYld) ? m.contrib / portYld : null; // contribution to total premium yield
+    // Share of the TOTAL premium yield — so an excluded row has none by definition,
+    // and blanking it is what keeps the column summing to 100%. Its Port. yield
+    // still prints: that is the row's own number, and seeing what you are setting
+    // aside is the point of setting it aside rather than deleting it.
+    const share = (!r.excluded && m.contrib != null && portYld) ? m.contrib / portYld : null;
     const cur = EST_STORE[r.ticker]?.currency || 'USD';
     const peg = (x) => x == null ? '' : `PEG ${x.toFixed(2)}`;
     const q2 = (x) => x != null ? `$${x.toFixed(2)}` : '—';
@@ -569,7 +578,7 @@ function render() {
         + fundSection(fundSeries(r.ticker, 'earnings'), cagr(r.ticker, 'earnings'), m.pegPe)
       : '';
     const mismatch = (L.usedExpiry && expiry && L.usedExpiry !== expiry) || (L.usedStrike != null && L.usedStrike !== r.strike);
-    return `<tr>
+    return `<tr class="${r.excluded ? 'excl' : ''}">
       <td class="tk" data-pin="0" title="${L.name || ''}">${r.ticker}${r.isEtf ? ' <span class="muted">ETF</span>' : (cur !== 'USD' ? ` <span class="cc" title="reports in ${cur}">${cur}</span>` : '')}</td>
       <td class="sep big" data-pin="1">${px(m.price)}</td>
       <td data-pin="2"><div class="fv">${mult(m.peP)}</div><div class="fg">${peg(m.pegPe)}</div></td>
@@ -589,7 +598,9 @@ function render() {
       <td class="big up">${pct(m.yld, 2)}</td>
       <td class="big up">${pct(m.contrib, 2)}</td>
       <td>${pct(share, 1)}</td>
-      <td class="sep"><button class="x" data-del="${r.id}" title="${mismatch ? 'using '+L.usedStrike+' @ '+L.usedExpiry : ''}">${mismatch ? '⚠' : '✕'}</button></td>
+      <td class="sep nowrap"><button class="ex${r.excluded ? ' off' : ''}" data-excl="${r.id}"
+          title="${r.excluded ? 'excluded from the portfolio totals — click to count it again' : 'counting toward the portfolio totals — click to exclude it without deleting the row'}"
+          aria-pressed="${r.excluded ? 'true' : 'false'}">${r.excluded ? '○' : '●'}</button><button class="x" data-del="${r.id}" title="${mismatch ? 'using '+L.usedStrike+' @ '+L.usedExpiry : 'remove the position'}">${mismatch ? '⚠' : '✕'}</button></td>
     </tr>`;
   }).join('');
 
@@ -605,7 +616,7 @@ function render() {
     <b>Yield</b> = premium ÷ price · <b>Port. yield</b> = yield × weight · <b>Contrib.</b> = Port. yield ÷ Σ Port. yield (share of total) ·
     <span class="cheap">green</span> = target multiple richer than current (called away at an expensive valuation).<br>
     <b>Target expiry</b> opens on the <b>roll date</b> — the third Friday of January, April, July or October, the Friday before earnings season starts — taking the nearest one that has not expired; the menu carries the next few ordinary expiries alongside every roll date.<br>
-    Premium/IV/greeks are the live Massive option chain for each strike &amp; target expiry. <b>Edit the strike either way round.</b> Type a price into <b>Strike</b>, or type a multiple into <b>Target P/E</b> or <b>Target EV/EBITDA</b> and the strike moves to the nearest LISTED strike that produces it — which is the order the decision really happens in: not “$570 on Mastercard” but “happy to be called away at 24x”. The cell then shows the multiple the listed strike actually gives, so it will differ a little from what you typed; hover the strike to see the price the multiple implied before snapping. It reads the SELECTED basis year and estimate source, so change either and the same multiple means a different strike. Edit weight inline; type a premium to override the live midpoint. A strike shown <span class="autoink">in blue</span> is not in the book — it is the nearest listed strike at or above spot, picked so the row can price at all; type the real one over it. All figures are in % — no dollar amounts, no contracts, no portfolio value.
+    Premium/IV/greeks are the live Massive option chain for each strike &amp; target expiry. <b>Edit the strike either way round.</b> Type a price into <b>Strike</b>, or type a multiple into <b>Target P/E</b> or <b>Target EV/EBITDA</b> and the strike moves to the nearest LISTED strike that produces it — which is the order the decision really happens in: not “$570 on Mastercard” but “happy to be called away at 24x”. The cell then shows the multiple the listed strike actually gives, so it will differ a little from what you typed; hover the strike to see the price the multiple implied before snapping. It reads the SELECTED basis year and estimate source, so change either and the same multiple means a different strike. Edit weight inline; type a premium to override the live midpoint. A strike shown <span class="autoink">in blue</span> is not in the book — it is the nearest listed strike at or above spot, picked so the row can price at all; type the real one over it. The <b>●</b> beside each row's ✕ drops that position out of the portfolio TOTALS without deleting it — its own numbers stay on screen and the row dims, but Premium yield, Annualized, both averages and Covered weight are taken over what is left, and Contrib. blanks on an excluded row and re-bases on the rest, so the column still sums to 100%. Port. yield keeps printing on an excluded row — that is its own number, and seeing what you set aside is the point. The KPI strip says how many are set aside. Nothing is stored, so a reload brings them all back. All figures are in % — no dollar amounts, no contracts, no portfolio value.
     ${anyMismatch ? '<br><span class="warn">⚠ some rows had no contract at the exact strike/expiry — nearest available was used (hover the ⚠).</span>' : ''}`;
 }
 
@@ -638,6 +649,12 @@ function wireRowInputs() {
   document.querySelectorAll('#cc-root [data-prem]').forEach((el) => el.onchange = () => {
     const r = rows.find((x) => x.id == el.dataset.prem);
     r.override = el.value === '' ? null : parseFloat(el.value); render();
+  });
+  // Exclude / include. No refetch: the row's own numbers do not change, only whether
+  // the totals count them, so this is a re-render and nothing more.
+  document.querySelectorAll('#cc-root [data-excl]').forEach((el) => el.onclick = () => {
+    const r = rows.find((x) => x.id == el.dataset.excl);
+    if (r) { r.excluded = !r.excluded; render(); }
   });
   document.querySelectorAll('#cc-root [data-del]').forEach((el) => el.onclick = () => {
     rows = rows.filter((x) => x.id != el.dataset.del); render();

@@ -174,10 +174,53 @@ export const resolveSource = (ticker, want) =>
   (optSources(ticker).indexOf(want) >= 0 ? want : optDefaultSource(ticker));
 export const yearsOf = (e) => e ? Object.keys(e.years).map(Number).sort((a, b) => a - b) : [];
 export const estYearsOf = (e) => yearsOf(e).filter((y) => e.years[y] && e.years[y].est);
-// Multiples need a USD estimate set: SPOT reports in EUR and TBBB in MXN, and a
-// EUR EBITDA against a USD share price is simply a wrong number. Show nothing
-// rather than something broken.
-export const usable = (e) => !!e && e.currency === 'USD';
+// ── FX: a multiple compares a USD price to a USD number ───────────────────────
+// SPOT reports in EUR and TBBB in MXN, but both trade in USD. A EUR EBITDA held
+// against a USD share price is simply a wrong number — so instead of refusing to
+// show a multiple (which is what this used to do, leaving two names in the book
+// with a column of dashes), the estimate line is converted at the live spot rate
+// before the multiple is taken. Covered Calls has always done this; the three
+// ladder panes now read the same rate from here, so a multiple means the same
+// thing in all four.
+//
+// The rate is fetched once per currency and cached for the session. If it cannot
+// be fetched the multiples stay blank — a stale or invented FX rate would be the
+// worse answer, and estNote() says so out loud.
+const FXCFG = { EUR: { pair: 'EURUSD', invert: false }, MXN: { pair: 'USDMXN', invert: true } };
+const FX = { USD: { rate: 1, asOf: null } };   // currency → { rate, asOf }, native→USD
+const fxPending = {};
+
+// The native→USD rate for a reporting currency: 1 for USD, the cached spot rate for
+// a currency we have fetched, null for anything else (including a failed fetch).
+export const fxRate = (cur) => (cur && FX[cur]) ? FX[cur].rate : null;
+// "MXN→USD 0.0534" — what the ladder above actually used. Empty for a USD reporter.
+export const fxLabel = (cur) => {
+  const f = cur && FX[cur];
+  return (!f || cur === 'USD') ? '' : `${cur}→USD ${f.rate.toFixed(cur === 'MXN' ? 5 : 4)}`;
+};
+
+// Fetch a currency's rate if we do not hold it yet. Safe to call on every load —
+// it is a no-op once cached, and concurrent callers share the one request.
+export async function ensureFx(cur) {
+  if (!cur || FX[cur]) return fxRate(cur);
+  const cfg = FXCFG[cur];
+  if (!cfg) return null;   // a currency we carry no pair for — nothing to convert with
+  if (!fxPending[cur]) {
+    fxPending[cur] = mfetch('fx', cfg.pair)
+      .then((j) => {
+        const c = j && j.results && j.results[0] && j.results[0].c;
+        if (c) FX[cur] = { rate: cfg.invert ? 1 / c : c, asOf: j.results[0].t || null };
+      })
+      .catch(() => { /* leave it unfetched; estNote explains the blank */ })
+      .finally(() => { delete fxPending[cur]; });   // a failure may be retried later
+  }
+  await fxPending[cur];
+  return fxRate(cur);
+}
+
+// A set is usable for multiples when it is in USD, or when we hold a rate to put
+// it in USD. Show nothing rather than something broken.
+export const usable = (e) => !!e && fxRate(e.currency) != null;
 export const yl = (e, y) => (e && e.years[y] && e.years[y].est) ? `${y}E` : `${y}`;
 // The years the sensitivity opens on: the last two estimate years.
 export const flexYears = (e) => estYearsOf(e).slice(-2);
@@ -221,26 +264,37 @@ export function effYears(e, revG) {
   return out;
 }
 
-// Diluted shares (M) and net debt ($M) for a year, falling back to the live
-// enterprise-value − market-cap when the estimate set carries none.
+// Diluted shares (M) and net debt for a year, falling back to the live
+// enterprise-value − market-cap when the estimate set carries none. `native` says
+// which currency that net debt is in: a figure taken from the estimate set is in
+// the company's REPORTING currency, while the live fallback comes from Massive and
+// is already USD. Only the caller knows the share price it is about to be added
+// to, so the conversion happens there, not here.
 export function capital(E, year, live) {
   const y = E[year];
   const shares = (y && y.shares != null) ? y.shares : (live && live.shares != null ? live.shares / 1e6 : null);
-  const netDebt = (y && y.netDebt != null) ? y.netDebt
-                : (live && live.netDebt != null ? live.netDebt / 1e6 : null);
-  return { shares, netDebt };
+  const fromEst = y && y.netDebt != null;
+  const netDebt = fromEst ? y.netDebt : (live && live.netDebt != null ? live.netDebt / 1e6 : null);
+  return { shares, netDebt, native: fromEst };
 }
 
 // The two multiples a share price implies on a given estimate year.
+// The price is USD; the estimate line may not be, so it is put in USD first (fx is
+// 1 for a USD reporter). Shares are a count and never converted; net debt is
+// converted only when it came from the estimate set — see capital().
 export function multiplesAt(price, year, E, e, live) {
   if (!usable(e) || price == null) return { pe: null, ev: null };
   const y = E[year];
   if (!y) return { pe: null, ev: null };
+  const fx = fxRate(e.currency);
   const cap = capital(E, year, live);
+  const eps = (y.eps != null) ? y.eps * fx : null;
+  const ebitda = (y.ebitda != null) ? y.ebitda * fx : null;
+  const netDebt = (cap.netDebt == null) ? null : (cap.native ? cap.netDebt * fx : cap.netDebt);
   return {
-    pe: (y.eps != null && y.eps > 0) ? price / y.eps : null,
-    ev: (y.ebitda != null && y.ebitda > 0 && cap.shares != null && cap.netDebt != null)
-      ? (price * cap.shares + cap.netDebt) / y.ebitda : null,
+    pe: (eps != null && eps > 0) ? price / eps : null,
+    ev: (ebitda != null && ebitda > 0 && cap.shares != null && netDebt != null)
+      ? (price * cap.shares + netDebt) / ebitda : null,
   };
 }
 
@@ -388,6 +442,7 @@ export function renderFundBlock(wrap, o) {
     <div class="foot">
       <b>Margin</b> is the line as a % of revenue — the common-size view. Revenue has none by definition, and EPS is per share rather than a share of revenue, so neither carries one. <b>PEG</b> = the multiple ${esc(o.ticker)} trades at <em>today</em> on ${esc(yl(e, o.basisYear))} ÷ that year's growth in points: EV/EBITDA ÷ EBITDA growth on the EBITDA line, P/E ÷ net-income growth on Net income. Growth off a loss-making or missing prior year is left blank rather than invented. Diluted shares and net debt carry no growth or margin; they are here because the ladder's EV/EBITDA is built from them.<br>
       <b>Sensitivity</b> holds every margin at consensus and moves revenue only, so it answers "what if the top line compounds differently", not "what if the business changes shape". <b>Net debt is not flexed</b> — restating it would need a cash-flow model, and guessing one behind an input would be false precision.<br>
+      ${e.currency === 'USD' ? '' : `<b>Currency</b> — this table is in ${esc(e.currency)}, the currency ${esc(e.name)} reports in, and is left unconverted so it ties to the filings. The ladder above is priced in USD, so every multiple there puts these figures in USD first, at ${fxLabel(e.currency) ? esc(fxLabel(e.currency)) : '<b>no rate we could fetch — which is why those multiples are blank</b>'}.<br>`}
       ${esc(e.source)}</div>`;
 }
 
@@ -407,7 +462,9 @@ export function yearSegments(prefix, est, basisYear, from) {
 // with no explanation reads as a bug. Empty string when there is nothing to say.
 export function estNote(ticker, est) {
   if (!est) return `No estimate set for ${esc(ticker)} — it is not in the Summit DCF universe and we carry no consensus for it. The option economics still price; the multiples cannot.`;
-  if (!usable(est)) return `${esc(est.name)} reports in ${esc(est.currency)} — multiples against a USD share price would be wrong, so they are not shown.`;
+  if (!usable(est)) return `${esc(est.name)} reports in ${esc(est.currency)} and we could not fetch a ${esc(est.currency)}→USD rate, so the multiples are left blank rather than computed against the wrong currency. Reload to retry.`;
+  // Converted, not blank — but the reader is owed the rate it was converted at.
+  if (est.currency !== 'USD') return `${esc(est.name)} reports in ${esc(est.currency)}; every multiple below converts the estimate line to USD at the live ${esc(fxLabel(est.currency))} before comparing it to the share price. The income statement stays in ${esc(est.currency)}.`;
   return '';
 }
 

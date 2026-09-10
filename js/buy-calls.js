@@ -25,7 +25,7 @@ import {
   fetchExpiries, fetchUnderlying, fetchChain,
   listedStrikes, bandAround, premiumOf, quoteTip,
   estimatesFor, resolveSource, sourceSegments, estNote, yearsOf, estYearsOf, usable, yl, isFlexed, ensureFx,
-  effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip,
+  effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip, vintageBadge,
 } from './options-core.js';
 
 const $ = (id) => document.getElementById(id);
@@ -340,7 +340,11 @@ function syncControls() {
   root().querySelectorAll('#bc-premSel button').forEach((b) => b.classList.toggle('on', b.dataset.prem === st.premBasis));
   root().querySelectorAll('#bc-notSel button').forEach((b) => b.classList.toggle('on', b.dataset.not === st.notionalBasis));
   const sw = $('bc-srcWrap');
+  // The toggle, then how old the set behind it is — a Street column six weeks
+  // past an earnings print is not the Street's view, and should not look like it.
   if (sw) sw.innerHTML = sourceSegments('bc', st.ticker, st.estSrc);
+  const vw = $('bc-vintage');
+  if (vw) vw.innerHTML = vintageBadge(est);
   const bw = $('bc-basisWrap');
   if (bw) bw.innerHTML = yearSegments('bc', est, st.basisYear);
   const tf = $('bc-togFund');
@@ -366,7 +370,7 @@ function injectMarkup() {
       <div class="controls">
           <div class="ctl"><label>Ticker</label><input id="bc-ticker" value="${esc(st.ticker)}" size="6"></div>
           <div class="ctl"><label>Expiry</label><select id="bc-expiry"></select></div>
-          <div class="ctl"><label>Estimates</label><span id="bc-srcWrap"></span></div>
+          <div class="ctl"><label>Estimates <span id="bc-vintage"></span></label><span id="bc-srcWrap"></span></div>
           <div class="ctl"><label>Multiple basis</label><span id="bc-basisWrap"></span></div>
           <div class="ctl"><label>Premium</label><div class="seg" id="bc-premSel">
             <button data-prem="ask">Ask</button><button data-prem="mid">Mid</button><button data-prem="last">Last</button></div></div>

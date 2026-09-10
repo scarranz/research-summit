@@ -483,6 +483,49 @@ export function sourceSegments(prefix, ticker, current) {
     + `</div>`;
 }
 
+// ── How old are these numbers ─────────────────────────────────────────────────
+// A forward estimate is a fact about a MOMENT, so every pane prints the vintage
+// of the set it is showing and ages it in days. Three states, and they are not
+// the same claim:
+//
+//   observed  — a Bloomberg export pulled on that date, on purpose. Trustworthy.
+//   inherited — read out of a Summit workbook saved on that date. The Bloomberg
+//               add-in inside it was refreshed at or before then and the model
+//               records no field saying when, so the date is an UPPER BOUND on
+//               freshness, not a pull date. Rendered with a ~ to say so.
+//   unknown   — nobody wrote it down. Says exactly that, and never guesses.
+export function ageDays(iso) {
+  if (!iso) return null;
+  return Math.max(0, Math.round((Date.now() - new Date(iso + 'T00:00:00')) / 86400000));
+}
+// Anything past a quarter has lived through an earnings season it does not know
+// about, which is the point at which "old" becomes "wrong".
+export const STALE_DAYS = 92;
+
+export function vintage(est) {
+  if (!est) return null;
+  const d = est.asOf, from = est.asOfFrom;
+  if (!d) return { state: 'unknown', text: 'date not recorded', title:
+    `Nobody recorded when this ${est.label || 'estimate'} set was pulled, so its age cannot be judged. ${est.source || ''}` };
+  const n = ageDays(d);
+  const inherited = from !== 'bbg';
+  const nice = new Date(d + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  return {
+    state: n > STALE_DAYS ? 'stale' : (inherited ? 'inherited' : 'observed'),
+    text: `${inherited ? '~' : ''}${nice} · ${n}d`,
+    title: inherited
+      ? `Dated from the Summit workbook saved on ${d}, not from a Bloomberg pull — the model carries no field for when its BBG cells were last refreshed, so ${d} is the OLDEST this can be, and it may be older. ${n} days ago.`
+      : `Exported from Bloomberg on ${d}, ${n} days ago.`,
+  };
+}
+
+// The badge that sits next to the Estimates toggle. Empty when there is no set.
+export function vintageBadge(est) {
+  const v = vintage(est);
+  if (!v) return '';
+  return `<span class="vintage ${v.state}" data-tip="${esc(v.title)}">${esc(v.text)}</span>`;
+}
+
 // ── The ticker chips: the names we hold estimates for ─────────────────────────
 export function tickerChips(current) {
   return Object.keys(OPT_ESTIMATES).map((t) =>

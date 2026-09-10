@@ -28,7 +28,7 @@ import {
   fetchExpiries, fetchUnderlying, fetchChain,
   listedStrikes, bandAround, premiumOf, quoteTip,
   estimatesFor, resolveSource, sourceSegments, estNote, yearsOf, estYearsOf, usable, yl, isFlexed, ensureFx,
-  effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip,
+  effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip, vintageBadge,
 } from './options-core.js';
 
 const $ = (id) => document.getElementById(id);
@@ -323,7 +323,11 @@ function syncControls() {
   }
   root().querySelectorAll('#sp-premSel button').forEach((b) => b.classList.toggle('on', b.dataset.prem === st.premBasis));
   const sw = $('sp-srcWrap');
+  // The toggle, then how old the set behind it is — a Street column six weeks
+  // past an earnings print is not the Street's view, and should not look like it.
   if (sw) sw.innerHTML = sourceSegments('sp', st.ticker, st.estSrc);
+  const vw = $('sp-vintage');
+  if (vw) vw.innerHTML = vintageBadge(est);
   const bw = $('sp-basisWrap');
   if (bw) bw.innerHTML = yearSegments('sp', est, st.basisYear);
   const tf = $('sp-togFund');
@@ -348,7 +352,7 @@ function injectMarkup() {
       <div class="controls">
           <div class="ctl"><label>Ticker</label><input id="sp-ticker" value="${esc(st.ticker)}" size="6"></div>
           <div class="ctl"><label>Expiry</label><select id="sp-expiry"></select></div>
-          <div class="ctl"><label>Estimates</label><span id="sp-srcWrap"></span></div>
+          <div class="ctl"><label>Estimates <span id="sp-vintage"></span></label><span id="sp-srcWrap"></span></div>
           <div class="ctl"><label>Multiple basis</label><span id="sp-basisWrap"></span></div>
           <div class="ctl"><label>Premium</label><div class="seg" id="sp-premSel">
             <button data-prem="bid">Bid</button><button data-prem="mid">Mid</button><button data-prem="ask">Ask</button></div></div>

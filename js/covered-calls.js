@@ -7,6 +7,8 @@
 import { POSITIONS } from './covered-calls-positions.js';
 import { EST_STORE, optSources } from './options-data.js';
 import { coveredCallsQuote } from './api.js';
+// Shared with the other three panes so a date means the same thing everywhere.
+import { esc, ageDays, STALE_DAYS } from './options-core.js';
 
 // The estimate store, reshaped to what this tab reads: { currency, years } where a
 // year carries ebitda / earnings / shares_out. `estSrc` picks whose numbers those
@@ -523,7 +525,7 @@ function injectMarkup() {
         <span class="pill">live · Massive</span>
         <div class="controls">
           <div class="ctl"><label>Target expiry</label><select id="cc-expiry"><option>loading…</option></select></div>
-          <div class="ctl"><label>Estimates</label><span id="cc-srcWrap"></span></div>
+          <div class="ctl"><label>Estimates <span id="cc-vintage"></span></label><span id="cc-srcWrap"></span></div>
           <div class="ctl"><label>Multiple basis</label>
             <div class="seg" id="cc-basisSel">
               <button data-basis="2026E">2026E</button><button data-basis="2027E">2027E</button><button data-basis="2028E">2028E</button><button data-basis="NTM">NTM</button>
@@ -565,12 +567,38 @@ function wireControls() {
         ${missing ? 'disabled' : ''} title="${missing ? 'no ' + lbl + ' estimates in this book' : lbl + ' estimates'}">${lbl}</button>`;
     }).join('');
   };
+  // How old the book's estimates are. This is a BOOK, not one name, and the
+  // positions carry different snapshot dates — so what matters is the OLDEST one,
+  // because that is the weakest number any multiple on screen rests on. The badge
+  // shows the range and names the laggard; hovering lists every position's date.
+  const renderVintage = () => {
+    const el = $('cc-vintage'); if (!el) return;
+    const seen = rows.map((r) => {
+      const s = EST_STORE[r.ticker]; if (!s) return null;
+      const d = estSrc === 'summit' ? s.snapshot : s.consensusAsOf;
+      const from = estSrc === 'summit' ? 'snapshot' : s.consensusFrom;
+      return d ? { tk: r.ticker, d, from, age: ageDays(d) } : null;
+    }).filter(Boolean).sort((a, b) => b.age - a.age);
+    if (!seen.length) { el.innerHTML = ''; return; }
+    const oldest = seen[0], newest = seen[seen.length - 1];
+    // Every date here is inherited from a workbook save, never an observed pull,
+    // so the ~ stays until a dated Bloomberg export replaces one.
+    const inherited = seen.some((s) => s.from !== 'bbg');
+    const fmt = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    const span = oldest.d === newest.d ? fmt(oldest.d) : `${fmt(oldest.d)}–${fmt(newest.d)}`;
+    const tip = `Oldest first — every multiple on a row is only as current as its own set:<br>`
+      + seen.map((s) => `<b>${esc(s.tk)}</b> ${s.d} · ${s.age}d${s.age > STALE_DAYS ? ' — past a full quarter' : ''}`).join('<br>')
+      + (inherited ? `<br><br>A <b>~</b> means the date came from the Summit workbook's save, not from a dated Bloomberg pull, so it is the oldest the numbers can be — they may be older.` : '');
+    el.className = 'vintwrap';
+    el.innerHTML = `<span class="vintage ${oldest.age > STALE_DAYS ? 'stale' : (inherited ? 'inherited' : 'observed')}"
+      data-tip="${esc(tip)}">${inherited ? '~' : ''}${esc(span)} · up to ${oldest.age}d</span>`;
+  };
   $('cc-srcWrap').className = 'seg';
-  renderSrc();
+  renderSrc(); renderVintage();
   document.addEventListener('click', (e) => {
     const b = e.target.closest('#cc-srcWrap button');
     if (!b || b.disabled) return;
-    estSrc = b.dataset.src; renderSrc(); render();
+    estSrc = b.dataset.src; renderSrc(); renderVintage(); render();
   });
 
   // Multiple basis segmented toggle — re-renders only (uses already-fetched data).

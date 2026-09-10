@@ -16,6 +16,27 @@
 //                shares_bbg_est in projection_history). Same vintage as the Summit
 //                column beside it, so the two are always compared like for like.
 //
+// ── WHEN was each set pulled ──────────────────────────────────────────────────
+// A forward estimate without a date is unusable: "2027E revenue of $66.9B" is a
+// fact about a MOMENT, and six weeks later it may be the Street's old view. So
+// every ticker carries the vintage explicitly:
+//
+//   snapshot        — the date of the Summit workbook the numbers were parsed from.
+//   consensusAsOf   — the date the CONSENSUS column is good as of.
+//   consensusFrom   — where that date comes from, and this is the important part:
+//       'snapshot'  the consensus was read out of the Summit workbook, so all we
+//                   actually know is when the WORKBOOK was saved. The Bloomberg
+//                   add-in inside it was refreshed at some point at or before
+//                   that, and the model carries no field saying when — the MCP's
+//                   BBG facts inherit the snapshot_date and nothing else. Treat it
+//                   as an upper bound on freshness, not as a pull date.
+//       'bbg'       a Bloomberg export pulled on that date, on purpose. This is
+//                   the trustworthy one.
+//       null        no consensus for this name at all.
+//
+// The panes print the date next to the Estimates toggle and age it in days, so a
+// stale column announces itself instead of being mistaken for today's Street.
+//
 // Every pane picks one with its Estimates toggle, and the income statement shows
 // the gap between them. A source that does not exist for a name is not faked: TBBB
 // has no Bloomberg coverage in the model, NVDA's Street numbers start at FY2027
@@ -34,6 +55,7 @@ import { AM_YEARS, AM_ISEST, AM_IS, AM_BS } from './overviews/app-model.js';
 export const EST_STORE = {
   UBER: {
     name: "Uber Technologies, Inc.", currency: "USD", snapshot: "2026-08-05", lastActual: 2025,
+    consensusAsOf: "2026-08-05", consensusFrom: "snapshot",
     summit: {
       2024: { rev: 43978, ebitda: 6484, earnings: 3970, shares: 2154.466 },
       2025: { rev: 52017, ebitda: 8730, earnings: 5237, shares: 2124.391 },
@@ -49,6 +71,7 @@ export const EST_STORE = {
   },
   META: {
     name: "Meta Platforms, Inc.", currency: "USD", snapshot: "2026-08-04", lastActual: 2025,
+    consensusAsOf: "2026-08-04", consensusFrom: "snapshot",
     summit: {
       2024: { rev: 164500, ebitda: null, earnings: 56719.51, shares: 2614 },
       2025: { rev: 200965, ebitda: 127054.03, earnings: 73881.33, shares: 2574 },
@@ -64,6 +87,7 @@ export const EST_STORE = {
   },
   NVDA: {
     name: "NVIDIA Corporation", currency: "USD", snapshot: "2026-08-28", lastActual: 2026,
+    consensusAsOf: "2026-08-28", consensusFrom: "snapshot",
     summit: {
       2024: { rev: 60922, ebitda: 35729.51, earnings: 29288.15, shares: 24940 },
       2025: { rev: 130497, ebitda: 85093.05, earnings: 70206.73, shares: 24804 },
@@ -78,6 +102,7 @@ export const EST_STORE = {
   },
   TBBB: {
     name: "BBB Foods Inc.", currency: "MXN", snapshot: "2026-08-13", lastActual: 2025,
+    consensusAsOf: null, consensusFrom: null,   // no Bloomberg coverage at all
     summit: {
       2024: { rev: 57439.02, ebitda: 1498.87, earnings: 681.67, shares: 139.607 },
       2025: { rev: 78153.39, ebitda: 1921.37, earnings: -2275.6, shares: 115.023 },
@@ -89,6 +114,7 @@ export const EST_STORE = {
   },
   AMZN: {
     name: "Amazon.com, Inc.", currency: "USD", snapshot: "2026-08-04", lastActual: 2025,
+    consensusAsOf: "2026-08-04", consensusFrom: "snapshot",
     summit: {
       2024: { rev: 637959, ebitda: 155229.17, earnings: 54772.65, shares: 10721 },
       2025: { rev: 716924, ebitda: 185600.08, earnings: 64969.21, shares: 10827 },
@@ -104,6 +130,7 @@ export const EST_STORE = {
   },
   SPOT: {
     name: "Spotify Technology S.A.", currency: "EUR", snapshot: "2026-08-05", lastActual: 2025,
+    consensusAsOf: "2026-08-05", consensusFrom: "snapshot",
     summit: {
       2024: { rev: 15673, ebitda: 2016.97, earnings: 2136.58, shares: 206.99 },
       2025: { rev: 17186, ebitda: 2549, earnings: 3234.11, shares: 210.509 },
@@ -119,6 +146,7 @@ export const EST_STORE = {
   },
   SOFI: {
     name: "SoFi Technologies, Inc.", currency: "USD", snapshot: "2026-08-05", lastActual: 2025,
+    consensusAsOf: "2026-08-05", consensusFrom: "snapshot",
     summit: {
       2024: { rev: 2676, ebitda: 666.48, earnings: 227.22, shares: 1101.39 },
       2025: { rev: 3613.35, ebitda: 1053.9, earnings: 481.32, shares: 1259.367 },
@@ -134,6 +162,7 @@ export const EST_STORE = {
   },
   MA: {
     name: "Mastercard Incorporated", currency: "USD", snapshot: "2026-07-30", lastActual: 2025,
+    consensusAsOf: "2026-07-30", consensusFrom: "snapshot",
     summit: {
       2024: { rev: 28167, ebitda: 16493, earnings: 12570, shares: 927 },
       2025: { rev: 32791, ebitda: 20100, earnings: 14625, shares: 906 },
@@ -149,6 +178,7 @@ export const EST_STORE = {
   },
   LYFT: {
     name: "Lyft, Inc.", currency: "USD", snapshot: "2026-08-07", lastActual: 2025,
+    consensusAsOf: "2026-08-07", consensusFrom: "snapshot",
     summit: {
       2024: { rev: 5785.98, ebitda: 382.4, earnings: -54.17, shares: 413.651 },
       2025: { rev: 6484.3, ebitda: 528.9, earnings: -2.53, shares: 388.428 },
@@ -164,6 +194,7 @@ export const EST_STORE = {
   },
   CART: {
     name: "Instacart (Maplebear Inc.)", currency: "USD", snapshot: "2026-05-13", lastActual: 2025,
+    consensusAsOf: "2026-05-13", consensusFrom: "snapshot",
     summit: {
       2024: { rev: 3378, ebitda: 884, earnings: 444.6, shares: 282.033 },
       2025: { rev: 3742, ebitda: 1088, earnings: 444.8, shares: 265.278 },
@@ -227,6 +258,7 @@ Object.keys(EST_STORE).forEach((tk) => {
   if (s.summit) {
     sources.summit = {
       label: 'Summit',
+      asOf: s.snapshot, asOfFrom: 'snapshot',
       source: `Summit DCF model, snapshot ${s.snapshot}. FY${s.lastActual} and earlier are reported; later years are the model's own projections. EPS is net income ÷ diluted shares.`,
       years: shape(s.summit, s.lastActual),
     };
@@ -241,7 +273,10 @@ Object.keys(EST_STORE).forEach((tk) => {
     Object.keys(s.consensus).forEach((k) => { rows[k] = s.consensus[k]; });
     sources.consensus = {
       label: 'Consensus',
-      source: `Bloomberg consensus as carried in the Summit snapshot of ${s.snapshot} — the same vintage as the Summit column, so the two are comparable. Consensus covers forward years only; FY${s.lastActual} and earlier are the reported figures, identical under either source. EPS is net income ÷ diluted shares.`,
+      asOf: s.consensusAsOf, asOfFrom: s.consensusFrom,
+      source: `Bloomberg consensus${s.consensusFrom === 'bbg'
+        ? `, exported from Bloomberg on ${s.consensusAsOf}`
+        : ` as carried in the Summit snapshot of ${s.snapshot} — which dates the WORKBOOK, not the Bloomberg refresh inside it, so read it as an upper bound on how fresh the Street column is`}. Same vintage as the Summit column beside it, so the two are comparable. Consensus covers forward years only; FY${s.lastActual} and earlier are the reported figures, identical under either source. EPS is net income ÷ diluted shares.`,
       years: shape(rows, s.lastActual),
     };
   }
@@ -258,7 +293,11 @@ OPT_ESTIMATES.APP = {
   sources: {
     consensus: {
       label: 'Consensus',
-      source: 'Bloomberg consensus (estimate source BST) for 2026E–2028E; FY2023–FY2025 from the FY2025 Form 10-K and the 1Q26/2Q26 10-Qs. Continuing operations only — the Apps business was sold to Tripledot on 6/30/2025 and is discontinued in every period. AppLovin publishes no forward guidance, and is not in the Summit DCF universe, so consensus is the only basis.',
+      // No pull date was recorded when this was typed in. The file landed in the
+      // repo on 2026-08-19, which is the only bound we have, and a bound is not a
+      // vintage — the pane says "date not recorded" rather than implying one.
+      asOf: null, asOfFrom: 'unrecorded',
+      source: 'Bloomberg consensus (estimate source BST) for 2026E–2028E, pulled on a date that was never recorded — the file entered the repo on 2026-08-19, so it is no fresher than that; FY2023–FY2025 from the FY2025 Form 10-K and the 1Q26/2Q26 10-Qs. Continuing operations only — the Apps business was sold to Tripledot on 6/30/2025 and is discontinued in every period. AppLovin publishes no forward guidance, and is not in the Summit DCF universe, so consensus is the only basis.',
       years: appYears(),
     },
   },
@@ -276,6 +315,7 @@ export function optEstimates(ticker, src) {
     name: e.name, currency: e.currency,
     ebitdaLabel: e.ebitdaLabel, epsLabel: e.epsLabel,
     label: s.label, source: s.source, years: s.years,
+    asOf: s.asOf ?? null, asOfFrom: s.asOfFrom ?? null,
   };
 }
 export const optSources = (ticker) => {

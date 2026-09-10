@@ -156,3 +156,30 @@
 .der-an .gapline b.up{color:var(--pos);} .der-an .gapline b.dn{color:var(--neg);}
 .der-an .an-fundtbl tr.vsrow td{font-size:10.5px;}
 .der-an .an-fundtbl tr.vsrow .rs-ft-h{color:var(--steel);font-style:italic;}
+
+/* ── Estimate vintage badge ───────────────────────────────────────────────────
+   How old the numbers behind every multiple are. Three states that are three
+   different claims, so they must not look alike:
+     .observed  a dated Bloomberg pull — steel, unremarkable, it is fine.
+     .inherited a workbook save date standing in for a pull date. Same weight,
+                but prefixed with ~ by the renderer: an upper bound, not a fact.
+     .stale     past a full quarter, so it has lived through an earnings season
+                it knows nothing about. Amber, because that is when old becomes
+                wrong and the reader needs to notice before trusting a multiple. */
+.vintage {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-left: 8px; padding: 2px 7px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .01em;
+  border-radius: 999px; white-space: nowrap; cursor: help;
+  border: 1px solid transparent;
+}
+.vintage.observed  { color: #56637A; background: #EEF1F5; border-color: #DFE4EC; }
+.vintage.inherited { color: #56637A; background: #EEF1F5; border-color: #DFE4EC; }
+.vintage.stale     { color: #8A5A00; background: #FFF4DE; border-color: #F3DFB4; }
+.vintage.unknown   { color: #8A5A00; background: #FFF4DE; border-color: #F3DFB4; }
+/* The dot carries the state for anyone reading shape rather than colour. */
+.vintage::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .7; }
+.vintwrap { display: inline-flex; align-items: center; }
+/* It rides on the control's label, which is uppercase and tracked out; the badge
+   is a date and must not be either. */
+.ctl label .vintage { text-transform: none; letter-spacing: 0; margin-left: 6px; vertical-align: middle; }

@@ -122,14 +122,39 @@ function basisFundamentals(ticker) {
   };
 }
 
-// CAGR across the whole shown window (t0 → the last column); null unless both
-// endpoints are positive.
+// Where the CAGR ends: the year the multiples are on, NOT the last column drawn.
+// The row asks one question — "what am I agreeing to on THIS year" — and a growth
+// rate measured to a year you are not underwriting answers a different one. Move
+// the Multiple basis and the CAGR moves with it, which is also what makes it
+// comparable to the PEG sitting beside it, since the PEG divides by the basis
+// year's growth.
+//
+// NTM is a calendar blend of t+1 and t+2, so it lands BETWEEN two years: its
+// effective horizon is t+1 plus whatever share of the window falls in t+2. The
+// exponent uses that fraction rather than rounding to a whole year.
+function basisEnd() {
+  if (mulBasis === '2026E') return FY[1];
+  if (mulBasis === '2027E') return FY[2];
+  if (mulBasis === '2028E') return FY[3];
+  return FY[1] + (1 - ntmFrac());
+}
+// The label for that endpoint — the header prints it, because a CAGR whose window
+// moves under a toggle is unreadable without saying where it stops.
+function basisEndLabel() { return mulBasis === 'NTM' ? 'NTM' : fyLabel(Math.round(basisEnd())); }
+
+// t0 → the basis year; null unless both endpoints are positive, since a compound
+// rate off a loss is noise.
 function cagr(ticker, key) {
   const su = SU(ticker);
   if (!su || !su.years) return null;
-  const last = FY[FY.length - 1];
-  const a = su.years[FY[0]]?.[key], b = su.years[last]?.[key];
-  return (a != null && b != null && a > 0 && b > 0) ? Math.pow(b / a, 1 / (last - FY[0])) - 1 : null;
+  const a = su.years[FY[0]]?.[key];
+  const end = basisEnd();
+  // On NTM the endpoint is the blended figure itself, which basisFundamentals holds.
+  const bf = mulBasis === 'NTM' ? basisFundamentals(ticker) : null;
+  const b = bf ? bf[key] : su.years[end]?.[key];
+  const yrs = end - FY[0];
+  return (a != null && b != null && a > 0 && b > 0 && yrs > 0)
+    ? Math.pow(b / a, 1 / yrs) - 1 : null;
 }
 
 // ── Pull one option contract (premium/IV/greeks) for a strike+expiry ──────────
@@ -462,7 +487,7 @@ function render() {
     ? `<th colspan="6" class="grp sep">EBITDA</th><th colspan="6" class="grp sep">Net Income</th>` : '';
   // No E in the header: whether a year is still a forecast is a per-NAME fact
   // (NVIDIA reports its fiscal year in January), so the E lives on the cell.
-  const fyHdr = FY.map((y, i) => `<th${i === 0 ? ' class="sep"' : ''}>${fyLabel(y)}</th>`).join('') + `<th>CAGR</th><th>PEG</th>`;
+  const fyHdr = FY.map((y, i) => `<th${i === 0 ? ' class="sep"' : ''}>${fyLabel(y)}</th>`).join('') + `<th title="compound annual growth from ${fyLabel(FY[0])} to the selected Multiple basis — it moves when you change the basis">CAGR ${fyLabel(FY[0])}→${basisEndLabel()}</th><th>PEG</th>`;
   const fundLabels = showFund ? fyHdr + fyHdr : '';
   $('cc-thead').innerHTML = `
     <tr>
@@ -529,7 +554,7 @@ function render() {
 
   const anyMismatch = rows.some((r) => r.live && ((r.live.usedExpiry && expiry && r.live.usedExpiry !== expiry) || (r.live.usedStrike != null && r.live.usedStrike !== r.strike)));
   $('cc-foot').innerHTML = `
-    <b>EBITDA / Net Income</b> = ${estSrc === 'summit' ? 'Summit model' : 'Bloomberg consensus'} ${fyLabel(FY[0])}–${fyLabel(FY[FY.length - 1])} native-currency millions with YoY growth below. A superscript <b>E</b> marks a year that name has not yet reported — most of the book closes in December, but NVIDIA's fiscal 2026 ended in January, so its FY26 is an actual. On <b>Consensus</b>, years already closed carry the reported figure (the Street publishes no estimate for a year that is done), so only the forward columns differ between the two sources · <b>CAGR</b> = ${FY[0]}→${FY[FY.length - 1]} · <b>PEG</b> = current multiple ÷ basis growth% ·
+    <b>EBITDA / Net Income</b> = ${estSrc === 'summit' ? 'Summit model' : 'Bloomberg consensus'} ${fyLabel(FY[0])}–${fyLabel(FY[FY.length - 1])} native-currency millions with YoY growth below. A superscript <b>E</b> marks a year that name has not yet reported — most of the book closes in December, but NVIDIA's fiscal 2026 ended in January, so its FY26 is an actual. On <b>Consensus</b>, years already closed carry the reported figure (the Street publishes no estimate for a year that is done), so only the forward columns differ between the two sources · <b>CAGR</b> = ${fyLabel(FY[0])}→${basisEndLabel()}, i.e. it ENDS on whatever the Multiple basis is set to — change the basis and it re-measures, so it always describes the run into the year the multiples are priced on · <b>PEG</b> = current multiple ÷ basis growth% ·
     <b>Multiple basis (${mulBasis})</b> drives every P/E &amp; EV/EBITDA${mulBasis === 'NTM' ? ' — NTM is a calendar-weighted blend of '+fyLabel(FY[1])+'/'+fyLabel(FY[2])+' (no quarterly data)' : ''} · <b>Current</b> uses live price, <b>Target</b> uses the strike; the PEG under each multiple = that multiple ÷ basis growth · <b>Impl. Upside</b> = strike ÷ price − 1 ·
     hover the <b>i</b> by Premium for live bid / ask / mid and last trade (local time) ·
     <b>Yield</b> = premium ÷ price · <b>Port. yield</b> = yield × weight · <b>Contrib.</b> = Port. yield ÷ Σ Port. yield (share of total) ·

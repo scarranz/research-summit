@@ -84,6 +84,14 @@ const betaUnit = 'y';                 // 'm' (months) | 'y' (years)
 let PRICES_DAILY = null;              // filled by ensureDaily() on first Daily use
 let dailyState = 'idle';              // 'idle' | 'loading' | 'ready' | 'error'
 
+// Correlation matrix parameters. Unlike beta, correlation is pairwise, so the
+// whole matrix must share one frequency + window (can't be per name). Default is
+// the same market standard, 5 years monthly.
+let corrFreq = 'monthly';             // 'daily' | 'weekly' | 'monthly'
+let corrAmt = 5;
+let corrUnit = 'y';                   // 'm' | 'y'
+let corrSub = 'bench';                // active Correlations subtab ('bench' | 'matrix')
+
 // Columns are labelled by position relative to the current calendar year — FY 0,
 // FY+1, FY+2 — with the calendar year itself underneath in small type. The
 // relative label is what keeps the table readable once names sit on different
@@ -110,6 +118,10 @@ const METRIC_KEY = 'pm-metric-v2';
 const PAPER_KEY  = 'pm-paper-v1';
 const PWEIGHT_KEY = 'pm-port-weights-v1';
 const BETA_METHOD_KEY = 'pm-beta-methods-v1';
+const CORR_SLOTS_KEY = 'pm-corr-slots-v1';
+const CORR_MNAMES_KEY = 'pm-corr-matrix-names-v1';
+const PAPER_SRC_KEY = 'pm-paper-source-v1';
+const SUBMITS_KEY = 'pm-submits-v1';
 
 function loadJSON(key, fallback) {
   try { const raw = localStorage.getItem(key); if (raw) return JSON.parse(raw); }
@@ -129,6 +141,22 @@ let paper = (() => { const p = loadJSON(PAPER_KEY, {}); return { passive: p.pass
 // use the global default (betaFreq/betaAmt/betaUnit) — see betaMethod().
 let betaOverrides = loadJSON(BETA_METHOD_KEY, {});
 let betaOpen = null;   // ticker whose inline method strip is expanded (accordion)
+// Extra instruments (4 editable columns) the Benchmarks subtab correlates against,
+// to the right of the fixed SPY column. Empty slots render an empty input header.
+let corrSlots = (() => {
+  const s = loadJSON(CORR_SLOTS_KEY, ['', '', '', '']);
+  const a = Array.isArray(s) ? s.slice(0, 4) : [];
+  while (a.length < 4) a.push('');
+  return a;
+})();
+// Names in the Paper correlation matrix (Paper subtab only). null = mirror the
+// Paper book live; once the user adds/removes a name it becomes a fixed own list.
+let corrMatrixNames = loadJSON(CORR_MNAMES_KEY, null);
+// The prefill source currently loaded into the Paper book (label shown in the bar).
+let paperSource = loadJSON(PAPER_SRC_KEY, null);
+// Submitted portfolio snapshots that show up in Comparison. Each: {id,label,passive,single}.
+let submits = (() => { const s = loadJSON(SUBMITS_KEY, []); return Array.isArray(s) ? s : []; })();
+let cmpView = 'summary';   // Comparison view: 'summary' (portfolio-level) | 'detail' (per holding)
 
 const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
 const esc = (s) => String(s ?? '').replace(/"/g, '&quot;');
@@ -630,6 +658,7 @@ async function ensureDaily() {
   }
   renderBeta();
   renderBlended();
+  renderCorr();
 }
 const betaMarket = () => (PRICES && PRICES.market) || 'SPY';
 
@@ -666,8 +695,8 @@ function setBetaOverride(t, patch) {
   saveJSON(BETA_METHOD_KEY, betaOverrides);
 }
 
-// True when the global default, or any name's override, asks for daily data.
-const needsDaily = () => betaFreq === 'daily' || Object.values(betaOverrides).some((o) => o && o.freq === 'daily');
+// True when a name's beta override, or the correlation matrix, asks for daily data.
+const needsDaily = () => corrFreq === 'daily' || betaFreq === 'daily' || Object.values(betaOverrides).some((o) => o && o.freq === 'daily');
 function maybeLoadDaily() {
   if (needsDaily() && dailyState !== 'ready' && dailyState !== 'loading') ensureDaily();
 }
@@ -938,8 +967,229 @@ function closeBetaChart() {
   if (overlay) overlay.classList.remove('open');
   if (_betaChart) { _betaChart.destroy(); _betaChart = null; }
 }
-function corrBlock() {
-  return `<div class="pm-ph">Correlations &mdash; an&aacute;lisis por construir (matriz de correlaciones entre posiciones).</div>`;
+// ── Correlations ──────────────────────────────────────────────────────────────
+// Pearson correlation of two return series (Map period→return), aligned on their
+// overlapping periods only; < 6 shared points is treated as no read.
+function pearsonMaps(r1, r2) {
+  if (!r1 || !r2) return { r: null, n: 0 };
+  const xs = [], ys = [];
+  r1.forEach((v, k) => { if (r2.has(k)) { xs.push(v); ys.push(r2.get(k)); } });
+  const n = xs.length;
+  if (n < 6) return { r: null, n };
+  const mx = _mean(xs), my = _mean(ys);
+  let cov = 0, vx = 0, vy = 0;
+  for (let i = 0; i < n; i++) { const dx = xs[i] - mx, dy = ys[i] - my; cov += dx * dy; vx += dx * dx; vy += dy * dy; }
+  const den = Math.sqrt(vx * vy);
+  return { r: den > 0 ? cov / den : null, n };
+}
+// Correlation between two tickers over a shared window/frequency.
+const pearson = (t1, t2, m) => pearsonMaps(betaReturns(t1, m), betaReturns(t2, m));
+
+// Average pairwise correlation among a set of positions (over method m), for the
+// Comparison summary. Pairs without enough shared history are skipped.
+function avgCorr(items, m) {
+  const tks = [...new Set(items.map((it) => (it.ticker || '').toUpperCase()).filter(Boolean))];
+  let sum = 0, cnt = 0;
+  for (let i = 0; i < tks.length; i++) for (let j = i + 1; j < tks.length; j++) {
+    const { r } = pearson(tks[i], tks[j], m); if (r != null) { sum += r; cnt++; }
+  }
+  return cnt ? sum / cnt : null;
+}
+
+// Weighted portfolio return series: each period's return is the weight-weighted
+// average across the holdings that have a return that period (re-normalised to the
+// names present, so a short-history name doesn't blank the whole period).
+function portfolioReturns(items, m) {
+  const parts = items
+    .map((it) => ({ w: num(it.weight), r: betaReturns((it.ticker || '').toUpperCase(), m) }))
+    .filter((p) => p.w && p.w > 0 && p.r);
+  if (!parts.length) return null;
+  const keys = new Set();
+  parts.forEach((p) => p.r.forEach((_, k) => keys.add(k)));
+  const out = new Map();
+  keys.forEach((k) => {
+    let wSum = 0, rSum = 0;
+    parts.forEach((p) => { if (p.r.has(k)) { wSum += p.w; rSum += p.w * p.r.get(k); } });
+    if (wSum > 0) out.set(k, rSum / wSum);
+  });
+  return out;
+}
+
+// Matrix-level frequency + window controls (correlation must share one sampling).
+function corrControls() {
+  const freqs = [['daily', 'Diario'], ['weekly', 'Semanal'], ['monthly', 'Mensual']];
+  const units = [['m', 'Meses'], ['y', 'A&ntilde;os']];
+  const presets = [['1', 'y'], ['2', 'y'], ['3', 'y'], ['5', 'y']];
+  return `
+    <div class="pm-betabar">
+      <span class="lbl">Frecuencia</span>
+      <div class="pm-seg">${freqs.map(([k, l]) =>
+        `<button data-cfreq="${k}" class="${corrFreq === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <span class="lbl" style="margin-left:6px">Ventana</span>
+      <input class="pm-cwin" data-cwin value="${esc(corrAmt)}" inputmode="numeric" aria-label="ventana">
+      <div class="pm-seg">${units.map(([k, l]) =>
+        `<button data-cunit="${k}" class="${corrUnit === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <div class="pm-seg">${presets.map(([a, u]) =>
+        `<button data-cpreset="${a}${u}" class="${String(corrAmt) === a && corrUnit === u ? 'on' : ''}">${a}A</button>`).join('')}</div>
+    </div>`;
+}
+
+// The Paper matrix's editable name set. null = mirror the Paper book live; once
+// the user edits it, corrMatrixNames holds a fixed own list. Summit's matrix is
+// always the fixed book.
+const paperMatrixBase = () => [...new Set(paperItems().map((x) => (x.ticker || '').toUpperCase()).filter(Boolean))];
+const paperMatrixNames = () => (corrMatrixNames === null ? paperMatrixBase() : corrMatrixNames);
+
+// Add / remove a name from the Paper matrix (materialises the list on first edit).
+function addCorrName(input) {
+  if (!input) return;
+  const t = (input.value || '').trim().toUpperCase();
+  if (!t) return;
+  if (corrMatrixNames === null) corrMatrixNames = paperMatrixBase();
+  if (!corrMatrixNames.includes(t)) corrMatrixNames.push(t);
+  saveJSON(CORR_MNAMES_KEY, corrMatrixNames);
+  renderCorr();
+}
+function delCorrName(t) {
+  if (corrMatrixNames === null) corrMatrixNames = paperMatrixBase();
+  corrMatrixNames = corrMatrixNames.filter((x) => x !== t);
+  saveJSON(CORR_MNAMES_KEY, corrMatrixNames);
+  renderCorr();
+}
+
+// The editable chip list shown above the Paper matrix (Paper subtab only).
+function corrNamesEditor() {
+  const tks = paperMatrixNames();
+  return `<div class="pm-cnames">
+      <span class="lbl">Nombres de la matriz</span>
+      ${tks.map((t) => `<span class="pm-chip">${esc(t)}<button class="pm-chipx" data-cname-del="${esc(t)}" title="Quitar ${esc(t)}" aria-label="Quitar ${esc(t)}">&times;</button></span>`).join('')}
+      <input class="pm-cnameinp" data-cnameinp placeholder="+ ticker" aria-label="agregar nombre a la matriz">
+    </div>`;
+}
+
+// The correlation matrix for the current side's book (Summit or Paper).
+function corrMatrix(side) {
+  const editor = side === 'paper' ? corrNamesEditor() : '';
+  const tks = side === 'paper'
+    ? [...new Set(paperMatrixNames().map((t) => (t || '').toUpperCase()).filter(Boolean))]
+    : [...new Set(portItems().map((it) => (it.ticker || '').toUpperCase()).filter(Boolean))];
+  const m = { freq: corrFreq, amt: Number(corrAmt), unit: corrUnit };
+
+  if (corrFreq === 'daily' && dailyState !== 'ready') {
+    return corrControls() + editor + `<div class="pm-ph">${dailyState === 'error'
+      ? 'No se pudo cargar el historial diario. Reintenta seleccionando <b>Diario</b>.'
+      : 'Cargando el historial de precios diario&hellip;'}</div>`;
+  }
+  if (tks.length < 2) return corrControls() + editor
+    + `<div class="pm-ph">${side === 'paper' ? 'Agrega al menos 2 nombres a la matriz.' : 'Se necesitan al menos 2 posiciones con ticker.'}</div>`;
+
+  const R = tks.map((a) => tks.map((b) => (a === b ? { r: 1, n: null } : pearson(a, b, m))));
+  let sum = 0, cnt = 0;
+  for (let i = 0; i < tks.length; i++) for (let j = i + 1; j < tks.length; j++) {
+    const r = R[i][j].r; if (r != null) { sum += r; cnt++; }
+  }
+  const avg = cnt ? sum / cnt : null;
+
+  const head = `<tr><th class="pm-cxh"></th>${tks.map((t, j) => `<th class="pm-cxh" data-c="${j}">${esc(t)}</th>`).join('')}</tr>`;
+  const body = tks.map((a, i) => `<tr>
+      <td class="pm-cyh" data-r="${i}">${esc(a)}</td>
+      ${tks.map((b, j) => {
+        if (i === j) return `<td class="pm-cdiag" data-r="${i}" data-c="${j}">1.00</td>`;
+        const { r, n } = R[i][j];
+        if (r == null) return `<td class="pm-ccell muted" data-r="${i}" data-c="${j}" title="datos insuficientes">&mdash;</td>`;
+        return `<td class="pm-ccell" data-r="${i}" data-c="${j}" title="${esc(a)} · ${esc(b)} = ${r.toFixed(2)} (n=${n})">${r.toFixed(2)}</td>`;
+      }).join('')}
+    </tr>`).join('');
+
+  return `${corrControls()}${editor}
+    <div class="pm-cstat">Correlaci&oacute;n promedio del portafolio:
+      <b>${avg != null ? avg.toFixed(2) : '&mdash;'}</b> <span class="muted">(pares con datos)</span></div>
+    <div class="card"><table class="pm-cmatrix"><thead>${head}</thead><tbody>${body}</tbody></table></div>
+    <p class="pm-note">Correlaci&oacute;n de Pearson de retornos ${FREQ_NOUN[corrFreq].adj}, ventana ${corrAmt}${corrUnit === 'y' ? 'A' : 'M'}
+      (hasta ${(betaData(corrFreq) || {}).asOf || '&mdash;'}). <b>Clic</b> en una celda (o en una etiqueta) para resaltar su fila
+      y columna; clic de nuevo para quitar. <b>n</b> = periodos solapados; los pares con poca historia en com&uacute;n
+      (p. ej. TBBB) muestran &mdash;.</p>`;
+}
+
+// Benchmarks subtab: each holding's correlation against SPY (fixed, left) plus up
+// to 4 tickers you type into the editable column headers on the right. A weighted
+// "Portafolio (pond.)" row gives the book's own return series vs each instrument.
+function benchTable(side) {
+  const items = side === 'paper' ? paperItems() : portItems();
+  const m = { freq: corrFreq, amt: Number(corrAmt), unit: corrUnit };
+  const cols = ['SPY', ...corrSlots.map((s) => (s || '').toUpperCase())];   // '' = empty slot
+
+  if (corrFreq === 'daily' && dailyState !== 'ready') {
+    return corrControls() + `<div class="pm-ph">${dailyState === 'error'
+      ? 'No se pudo cargar el historial diario. Reintenta seleccionando <b>Diario</b>.'
+      : 'Cargando el historial de precios diario&hellip;'}</div>`;
+  }
+
+  const slotHeads = corrSlots.map((s, i) =>
+    `<th class="pm-bh pm-slh"><input class="pm-slotinp" data-slot="${i}" value="${esc(s)}" placeholder="+ ticker" aria-label="ticker extra ${i + 1}"></th>`).join('');
+  const thead = `<tr><th>Name</th><th>Weight</th><th class="pm-bh">SPY</th>${slotHeads}</tr>`;
+
+  const corrCell = (t, b) => {
+    if (!t || !b) return `<td class="num muted">&mdash;</td>`;   // no holding or empty slot
+    const { r, n } = pearson(t, b, m);
+    return r == null
+      ? `<td class="num muted" title="datos insuficientes o sin historial de ${esc(b)}">&mdash;</td>`
+      : `<td class="num" title="${esc(t)} vs ${esc(b)} = ${r.toFixed(2)} (n=${n})">${r.toFixed(2)}</td>`;
+  };
+
+  const rowsHtml = items.map((it) => {
+    const t = (it.ticker || '').toUpperCase();
+    const w = num(it.weight);
+    return `<tr>
+        <td class="tk">${labelOf(t) || '&mdash;'}</td>
+        <td class="num">${w == null ? '&mdash;' : w.toFixed(1) + '%'}</td>
+        ${cols.map((b) => corrCell(t, b)).join('')}
+      </tr>`;
+  }).join('');
+
+  const pr = portfolioReturns(items, m);   // the book's own weighted return series
+  const footCells = cols.map((b) => {
+    if (!b) return `<td class="num">&mdash;</td>`;
+    const { r, n } = pearsonMaps(pr, betaReturns(b, m));
+    return r == null ? `<td class="num">&mdash;</td>` : `<td class="num" title="Portafolio vs ${esc(b)} (n=${n})">${r.toFixed(2)}</td>`;
+  }).join('');
+
+  return `${corrControls()}
+    <div class="card"><table class="pm-benchtable">
+      <thead>${thead}</thead>
+      <tbody>${rowsHtml || `<tr><td colspan="7" class="pm-empty">Sin posiciones.</td></tr>`}</tbody>
+      <tfoot><tr class="pm-wavg"><td class="tk">Portafolio (pond.)</td><td class="num"></td>${footCells}</tr></tfoot>
+    </table></div>
+    <p class="pm-note">Correlaci&oacute;n de Pearson de cada posici&oacute;n vs <b>SPY</b> y hasta <b>4 tickers</b> que escribas en los
+      encabezados de la derecha &mdash; retornos ${FREQ_NOUN[corrFreq].adj}, ventana ${corrAmt}${corrUnit === 'y' ? 'A' : 'M'}.
+      <b>Portafolio (pond.)</b> = la serie de retornos del libro (ponderada por peso) vs cada instrumento. Con historial
+      embebido hoy: <b>SPY, QQQ, XLG, SMH</b> y los nombres del portafolio; otros muestran &mdash; hasta que me pidas
+      agregar su historial.</p>`;
+}
+
+function corrBlock(side) {
+  const subs = [['bench', 'Benchmarks'], ['matrix', 'Matrix']];
+  return `
+    <div class="pm-cnav">${subs.map(([k, l]) =>
+      `<button class="pm-ctab ${corrSub === k ? 'active' : ''}" data-ct="${k}">${l}</button>`).join('')}</div>
+    <div class="pm-cbody">${corrSub === 'matrix' ? corrMatrix(side) : benchTable(side)}</div>`;
+}
+
+function renderCorr() {
+  maybeLoadDaily();
+  const a = document.getElementById('pm-an-corr');
+  if (a) a.innerHTML = corrBlock('metrics');
+  const b = document.getElementById('pm-an-corr-paper');
+  if (b) b.innerHTML = corrBlock('paper');
+}
+
+// Commit a typed benchmark slot (one of the 4 editable columns) and repaint.
+function setBenchSlot(input) {
+  if (!input) return;
+  const i = Number(input.dataset.slot);
+  corrSlots[i] = (input.value || '').trim().toUpperCase();
+  saveJSON(CORR_SLOTS_KEY, corrSlots);
+  renderCorr();
 }
 
 // ── Blended subtab: Before (current book) vs After (paper) ────────────────────
@@ -952,96 +1202,108 @@ const LABEL_OF = {};
 [...PORTFOLIO.passive, ...PORTFOLIO.single].forEach(x => { LABEL_OF[x.ticker] = x.label; });
 const labelOf = (t) => LABEL_OF[t] || t;
 
-function blendedRows() {
-  const bMap = {}, aMap = {};
-  portItems().forEach(it => { const w = num(it.weight); if (w !== null) bMap[it.ticker] = w; });
-  paperItems().forEach(it => { if (!it.ticker) return; aMap[it.ticker] = num(it.weight); });
-  // Book order first, then any paper-only names appended in the order typed.
-  const order = [];
-  [...PORTFOLIO.passive, ...PORTFOLIO.single].forEach(x => {
-    if (x.ticker in bMap || x.ticker in aMap) order.push(x.ticker);
+// The portfolios shown in Comparison: the current book (Summit) plus every
+// portfolio submitted from Paper.
+function comparePortfolios() {
+  return [
+    { label: 'Summit (actual)', items: portItems(), fixed: true },
+    ...submits.map((s) => ({ label: s.label, items: [...s.passive, ...s.single], id: s.id })),
+  ];
+}
+const subDel = (p) => (p.fixed ? ''
+  : `<button class="pm-subdel" data-submit-del="${esc(p.id)}" title="Quitar de la comparación" aria-label="Quitar">&times;</button>`);
+
+// Portfolio-level summary: one row per portfolio, weighted PEG / growth / multiple
+// / beta / avg corr.
+function cmpSummary(portfolios, m) {
+  const f2 = (v) => (v == null ? '&mdash;' : v.toFixed(2));
+  const f1 = (v, u = '') => (v == null ? '&mdash;' : v.toFixed(1) + u);
+  const rows = portfolios.map((p) => {
+    const st = weightedStats(p.items);
+    return `<tr class="${p.fixed ? 'pm-cmp-cur' : ''}">
+        <td class="tk">${esc(p.label)}${subDel(p)}</td>
+        <td class="num pm-peg">${f2(st.peg)}</td>
+        <td class="num">${f1(st.growth, '%')}</td>
+        <td class="num">${f1(st.mult, 'x')}</td>
+        <td class="num">${f2(portBeta(p.items).beta)}</td>
+        <td class="num">${f2(avgCorr(p.items, m))}</td>
+      </tr>`;
+  }).join('');
+  return `<div class="card"><table>
+      <thead><tr>
+        <th>Portafolio</th><th>Weighted PEG</th><th>Growth</th><th>Fwd Multiple</th><th>Beta</th><th>Corr prom.</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <p class="pm-note"><b>Summit (actual)</b> es el libro actual; las dem&aacute;s filas son los portafolios que enviaste con
+      <b>Submit</b> desde el subtab <b>Paper</b> (&times; para quitar). PEG / crecimiento / m&uacute;ltiplo usan la m&eacute;trica
+      y a&ntilde;o de arriba; <b>Beta</b> = promedio ponderado (cash y nombres sin historial cuentan &beta; 0); <b>Corr prom.</b>
+      = correlaci&oacute;n promedio entre pares (retornos mensuales, ventana 5A).</p>`;
+}
+
+// Per-holding detail: rows = every name across the compared portfolios. Left block
+// = each portfolio's weight for the name (— where absent, so the differences are
+// explicit); right block = the name's own metrics (β, PEG, growth, fwd multiple),
+// which are stock-level so they're shown once. A Cash footer shows what each book
+// leaves short of 100%.
+function cmpDetail(portfolios) {
+  // weight map + typed-weight sum per portfolio
+  portfolios.forEach((p) => {
+    p.w = {}; p.sum = 0;
+    p.items.forEach((it) => {
+      const t = (it.ticker || '').toUpperCase(); const w = num(it.weight);
+      if (!t) return; p.w[t] = w; if (w && w > 0) p.sum += w;
+    });
   });
-  paperItems().forEach(it => { if (it.ticker && !order.includes(it.ticker)) order.push(it.ticker); });
-  return order.map(t => {
-    const bw = (t in bMap) ? bMap[t] : null;
-    const aw = (t in aMap) ? aMap[t] : null;
+  // name order: Summit's names first, then any submit-only names as they appear
+  const order = [], seen = new Set();
+  portfolios.forEach((p) => p.items.forEach((it) => {
+    const t = (it.ticker || '').toUpperCase();
+    if (t && !seen.has(t)) { seen.add(t); order.push(t); }
+  }));
+
+  const f2 = (v) => (v == null ? '&mdash;' : v.toFixed(2));
+  const f1 = (v, u = '') => (v == null ? '&mdash;' : v.toFixed(1) + u);
+  const head = `<tr>
+      <th>Name</th>
+      ${portfolios.map((p) => `<th class="num">${esc(p.label)}${subDel(p)}</th>`).join('')}
+      <th class="num msep">Beta</th><th class="num">PEG</th><th class="num">Growth</th><th class="num">Fwd Mult</th>
+    </tr>`;
+  const body = order.map((t) => {
     const g = growthFor(t);
-    return { t, bw, aw, peg: pegFor(t, g) };
-  });
-}
+    const gCls = g == null ? '' : (g >= 0 ? 'up' : 'dn');
+    return `<tr>
+      <td class="tk">${esc(labelOf(t) || t)}</td>
+      ${portfolios.map((p) => { const w = p.w[t]; return `<td class="num${w == null ? ' muted' : ''}">${w == null ? '&mdash;' : w.toFixed(1) + '%'}</td>`; }).join('')}
+      <td class="num msep">${f2(betaOf(t).beta)}</td>
+      <td class="num pm-peg">${f2(pegFor(t, g))}</td>
+      <td class="num pm-growth ${gCls}">${f1(g, '%')}</td>
+      <td class="num">${f1(multFor(t), 'x')}</td>
+    </tr>`;
+  }).join('');
+  const cashRow = `<tr class="pm-cash"><td class="tk">Cash</td>${portfolios.map((p) =>
+    `<td class="num">${(100 - p.sum).toFixed(1)}%</td>`).join('')}<td class="msep"></td><td></td><td></td><td></td></tr>`;
 
-// One comparison tile: a metric before → after with the change beneath.
-function cmpTile(label, b, a, fmt, unit = '') {
-  const d = (b !== null && a !== null) ? a - b : null;
-  const dCls = d === null || Math.abs(d) < 1e-9 ? '' : (d > 0 ? 'up' : 'dn');
-  const dTxt = d === null ? '&mdash;'
-    : `${d > 0 ? '+' : d < 0 ? '&minus;' : ''}${fmt(Math.abs(d))}${unit}`;
-  return `
-    <div class="pm-tile">
-      <div class="pm-tile-h">${label}</div>
-      <div class="pm-tile-vals">
-        <div class="pm-tile-col"><span>Before</span><b>${b === null ? '&mdash;' : fmt(b) + unit}</b></div>
-        <div class="pm-tile-arw">&rarr;</div>
-        <div class="pm-tile-col"><span>After</span><b>${a === null ? '&mdash;' : fmt(a) + unit}</b></div>
-      </div>
-      <div class="pm-tile-d ${dCls}">${dTxt === '&mdash;' ? '' : '&Delta; ' + dTxt}</div>
-    </div>`;
-}
-
-function pendingTile(label, hint) {
-  return `<div class="pm-tile pm-tile-pend">
-    <div class="pm-tile-h">${label}</div>
-    <div class="pm-pend-txt">por construir</div>
-    <div class="pm-tile-d" style="color:var(--mu)">${hint}</div>
-  </div>`;
+  return `<div class="card"><table class="pm-cmpdetail">
+      <thead>${head}</thead>
+      <tbody>${body || `<tr><td colspan="${portfolios.length + 5}" class="pm-empty">Sin posiciones.</td></tr>`}</tbody>
+      <tfoot>${cashRow}</tfoot>
+    </table></div>
+    <p class="pm-note">Columnas de peso: cuánto tiene cada portafolio de ese nombre (<b>&mdash;</b> = no lo tiene). A la derecha,
+      métricas de la acción (iguales en todos): <b>Beta</b> (con la metodología de cada nombre del tab Beta), <b>PEG</b> /
+      <b>Growth</b> / <b>Fwd Mult</b> según la métrica y año elegidos arriba. <b>Cash</b> = lo que falta para 100%.</p>`;
 }
 
 function blendedBody() {
-  const before = weightedStats(portItems());
-  const after  = weightedStats(paperItems());
-  const peg1 = (v) => v.toFixed(2);
-  const g1   = (v) => v.toFixed(1);
-  const m1   = (v) => v.toFixed(1);
-
-  const rows = blendedRows().map(r => {
-    const isNew  = r.bw === null && r.aw !== null;
-    const isOut  = r.bw !== null && r.aw === null;
-    const d = (r.aw ?? 0) - (r.bw ?? 0);
-    const dCls = Math.abs(d) < 1e-9 ? '' : (d > 0 ? 'up' : 'dn');
-    const dTxt = (r.bw === null && r.aw === null) ? '&mdash;'
-      : `${d > 0 ? '+' : d < 0 ? '&minus;' : ''}${Math.abs(d).toFixed(1)}%`;
-    const tag = isNew ? '<span class="pm-tag new">Nueva</span>'
-      : isOut ? '<span class="pm-tag out">Sale</span>' : '';
-    return `
-      <tr>
-        <td class="tk">${labelOf(r.t)}${tag}</td>
-        <td class="num">${r.bw === null ? '&mdash;' : r.bw.toFixed(1) + '%'}</td>
-        <td class="num">${r.aw === null ? '&mdash;' : r.aw.toFixed(1) + '%'}</td>
-        <td class="num ${dCls}">${dTxt}</td>
-        <td class="num pm-peg">${r.peg === null ? '&mdash;' : r.peg.toFixed(2)}</td>
-      </tr>`;
-  }).join('');
-
-  const wPeg = cmpTile('Weighted PEG', before.peg, after.peg, peg1);
-  const wG   = cmpTile('Weighted Growth', before.growth, after.growth, g1, '%');
-  const wM   = cmpTile('Fwd Multiple', before.mult, after.mult, m1, 'x');
-  const wB   = cmpTile('Portfolio Beta', portBeta(portItems()).beta, portBeta(paperItems()).beta, (v) => v.toFixed(2));
-  const wC   = pendingTile('Avg Correlation', 'del bloque Correlations');
-
+  const m = { freq: 'monthly', amt: 5, unit: 'y' };   // fixed method for the corr summary
+  const ps = comparePortfolios();
   return `
     ${metricBar()}
-    <div class="pm-cmp-tiles">${wPeg}${wG}${wM}${wB}${wC}</div>
-    <div class="card">
-      <table>
-        <thead><tr>
-          <th>Name</th><th>Before</th><th>After</th><th>&Delta; wt</th><th>PEG</th>
-        </tr></thead>
-        <tbody>${rows || `<tr><td colspan="5" class="pm-empty">Sin posiciones a&uacute;n.</td></tr>`}</tbody>
-      </table>
-    </div>
-    <p class="pm-note"><b>Before</b> = pesos del portafolio actual (Summit) &middot; <b>After</b> = pesos del Paper &middot;
-      el PEG de cada nombre usa la m&eacute;trica y a&ntilde;o seleccionados arriba. Beta y correlaciones aparecer&aacute;n
-      aqu&iacute; como resumen cuando se construyan esos bloques.</p>`;
+    <div class="pm-cmpview"><div class="pm-seg">
+      <button data-cmpview="summary" class="${cmpView === 'summary' ? 'on' : ''}">Resumen</button>
+      <button data-cmpview="detail" class="${cmpView === 'detail' ? 'on' : ''}">Detalle por holding</button>
+    </div></div>
+    ${cmpView === 'detail' ? cmpDetail(ps) : cmpSummary(ps, m)}`;
 }
 
 function renderBlended() {
@@ -1194,26 +1456,94 @@ function applyPrefill(label, next) {
   paper.passive = pfRows(next.passive);
   paper.single  = pfRows(next.single);
   savePaper();
+  paperSource = label;                     // remember what's loaded (shown in the bar)
+  saveJSON(PAPER_SRC_KEY, paperSource);
+  renderPaperHeader();
+  // Prefilling a whole book flows its names into the Paper correlation matrix too:
+  // reset it to mirror the book (drops any earlier per-matrix name customisation).
+  corrMatrixNames = null;
+  saveJSON(CORR_MNAMES_KEY, corrMatrixNames);
   renderPaperBody();
   refreshPaperFoot();
   schedulePaperQuotes();   // pull quotes for the freshly-added names
   renderBeta();            // beta table + portfolio β follow the paper book
   renderBlended();         // Before/After comparison too
+  renderCorr();            // Paper matrix mirrors the new book
 }
 
-function prefillBar() {
+// Paper-subtab header (above the PEG/Beta/Correlations tabs): prefill selector, the
+// currently-loaded source, a name field, and Submit (snapshots the book into
+// Comparison). Always visible while working in Paper, from any analysis tab.
+function paperHeader() {
   const invs = (INVESTORS || []).filter((x) => x.key !== 'summit' && x.holdings && x.holdings.length);
-  return `<div class="pm-prefill">
+  const invSel = paperSource && invs.some((x) => x.name === paperSource);
+  return `<div class="pm-paperbar">
       <span class="lbl">Prellenar con</span>
-      <button class="pm-pf" data-prefill="summit">Summit</button>
-      ${Object.keys(TEAM_BOOKS).map((k) => `<button class="pm-pf" data-prefill="${esc(k)}">${TEAM_BOOKS[k].label}</button>`).join('')}
-      <span class="lbl pm-pf-or">o superinversor</span>
-      <select class="pm-pf-sel" data-prefill-inv aria-label="Prellenar con un superinversor">
-        <option value="">Elegir&hellip;</option>
-        ${invs.map((x) => `<option value="${esc(x.key)}">${esc(x.name)}${x.fund ? ' · ' + esc(x.fund) : ''}</option>`).join('')}
+      <button class="pm-pf${paperSource === 'Summit' ? ' on' : ''}" data-prefill="summit">Summit</button>
+      ${Object.keys(TEAM_BOOKS).map((k) => `<button class="pm-pf${paperSource === TEAM_BOOKS[k].label ? ' on' : ''}" data-prefill="${esc(k)}">${TEAM_BOOKS[k].label}</button>`).join('')}
+      <button class="pm-pf${paperSource === null ? ' on' : ''}" data-prefill="blank" title="Empezar desde cero (Paper vacío)">En blanco</button>
+      <select class="pm-pf-sel${invSel ? ' on' : ''}" data-prefill-inv aria-label="Prellenar con un superinversor">
+        <option value="">Superinversor&hellip;</option>
+        ${invs.map((x) => `<option value="${esc(x.key)}"${x.name === paperSource ? ' selected' : ''}>${esc(x.name)}${x.fund ? ' · ' + esc(x.fund) : ''}</option>`).join('')}
       </select>
-      <span class="pm-pf-hint">reemplaza el Paper &mdash; luego agregas o quitas</span>
+      <span class="pm-loaded">Cargado: <b>${paperSource ? esc(paperSource) : 'manual'}</b></span>
+      <span class="pm-paperbar-gap"></span>
+      <input class="pm-subname" data-subname placeholder="Name" aria-label="nombre del portafolio">
+      <button class="pm-submit" data-submit>Submit to compare &rarr;</button>
+      ${submits.length ? `<span class="pm-subcount">${submits.length} en Comparison</span>` : ''}
     </div>`;
+}
+function renderPaperHeader() {
+  const el = document.getElementById('pm-paper-header');
+  if (el) el.innerHTML = paperHeader();
+}
+
+// Submit: snapshot the current Paper book into Comparison under a name (the field,
+// else the loaded source, else "Portafolio"; de-duplicated).
+function submitPaper() {
+  const passive = paper.passive.filter((x) => (x.ticker || '').trim());
+  const single  = paper.single.filter((x) => (x.ticker || '').trim());
+  if (!passive.length && !single.length) {
+    alert('El Paper está vacío — prellena o agrega posiciones antes de enviar a Comparison.');
+    return;
+  }
+  const inp = document.querySelector('[data-subname]');
+  const base = ((inp && inp.value.trim()) || paperSource || 'Portafolio');
+  let label = base, i = 2;
+  while (submits.some((s) => s.label === label)) label = `${base} (${i++})`;
+  submits.push({
+    id: 'sub' + Date.now() + Math.floor(Math.random() * 1000),
+    label,
+    passive: passive.map((x) => ({ ticker: x.ticker, weight: x.weight })),
+    single:  single.map((x) => ({ ticker: x.ticker, weight: x.weight })),
+  });
+  saveJSON(SUBMITS_KEY, submits);
+  renderPaperHeader();   // updates the count and clears the name field
+  renderBlended();       // Comparison now includes it
+}
+function removeSubmit(id) {
+  submits = submits.filter((s) => s.id !== id);
+  saveJSON(SUBMITS_KEY, submits);
+  renderPaperHeader();
+  renderBlended();
+}
+
+// Start from scratch: empty the Paper book (confirm if it has positions), then
+// build it up with + Add. The correlation matrix reverts to mirroring the (empty) book.
+function clearPaperBook() {
+  const hasContent = paper.passive.length || paper.single.length;
+  if (hasContent && !confirm('¿Vaciar el Paper y empezar desde cero?')) return;
+  paper.passive = [];
+  paper.single = [];
+  savePaper();
+  paperSource = null; saveJSON(PAPER_SRC_KEY, paperSource);
+  corrMatrixNames = null; saveJSON(CORR_MNAMES_KEY, corrMatrixNames);
+  renderPaperHeader();
+  renderPaperBody();
+  refreshPaperFoot();
+  renderBeta();
+  renderBlended();
+  renderCorr();
 }
 
 // Typed tickers are normalised to upper case for every lookup (quotes, SUMMIT_FUND,
@@ -1248,7 +1578,6 @@ function paperGroup(label, group) {
 
 function paperTable() {
   return `
-    ${prefillBar()}
     ${metricBar()}
     <div class="card">
       <table data-side="paper">
@@ -1300,9 +1629,10 @@ export function loadPortfolioMetricsPage() {
       </div>
       <div class="pm-apane active" data-an="peg" id="pm-an-peg">${portfolioTable()}</div>
       <div class="pm-apane" data-an="beta" id="pm-an-beta">${betaBlock('metrics')}</div>
-      <div class="pm-apane" data-an="corr">${corrBlock()}</div>
+      <div class="pm-apane" data-an="corr" id="pm-an-corr">${corrBlock('metrics')}</div>
     </div>
     <div class="pm-sub" id="pm-sub-paper">
+      <div id="pm-paper-header">${paperHeader()}</div>
       <div class="pm-anav">
         <button class="pm-atab active" data-an="peg">PEG</button>
         <button class="pm-atab" data-an="beta">Beta</button>
@@ -1310,7 +1640,7 @@ export function loadPortfolioMetricsPage() {
       </div>
       <div class="pm-apane active" data-an="peg" id="pm-an-peg-paper">${paperTable()}</div>
       <div class="pm-apane" data-an="beta" id="pm-an-beta-paper">${betaBlock('paper')}</div>
-      <div class="pm-apane" data-an="corr">${corrBlock()}</div>
+      <div class="pm-apane" data-an="corr" id="pm-an-corr-paper">${corrBlock('paper')}</div>
     </div>
     <div class="pm-sub" id="pm-sub-blended">${blendedBody()}</div>
   </div>
@@ -1345,6 +1675,9 @@ function wire(root) {
       const group = atab.closest('.pm-sub');
       group.querySelectorAll('.pm-atab').forEach(b => b.classList.toggle('active', b === atab));
       group.querySelectorAll('.pm-apane').forEach(p => p.classList.toggle('active', p.dataset.an === an));
+      // Refresh Correlations on open so the Paper matrix reflects the current book
+      // when it's mirroring it (no per-keystroke cost while editing the book).
+      if (an === 'corr') renderCorr();
       return;
     }
     // Beta cell → open the historical (rolling) beta chart for that name
@@ -1389,6 +1722,51 @@ function wire(root) {
       renderBeta(); renderBlended();
       return;
     }
+    // Correlations subtab switch (Matrix / …)
+    const ct = e.target.closest('.pm-ctab');
+    if (ct) { corrSub = ct.dataset.ct; renderCorr(); return; }
+    // Correlation matrix: frequency
+    const cf = e.target.closest('.pm-seg button[data-cfreq]');
+    if (cf) {
+      corrFreq = cf.dataset.cfreq;
+      if (corrFreq === 'daily' && dailyState !== 'ready') ensureDaily();
+      renderCorr();
+      return;
+    }
+    // Correlation matrix: window unit
+    const cu = e.target.closest('.pm-seg button[data-cunit]');
+    if (cu) { corrUnit = cu.dataset.cunit; renderCorr(); return; }
+    // Correlation matrix: window preset
+    const cp = e.target.closest('.pm-seg button[data-cpreset]');
+    if (cp) {
+      const v = cp.dataset.cpreset;
+      corrAmt = Number(v.slice(0, -1)); corrUnit = v.slice(-1);
+      renderCorr();
+      return;
+    }
+    // Correlation matrix: click a cell (or a row/column label) to shade its whole
+    // row and column. Toggled per table via a DOM class, so scroll isn't reset.
+    const cCell = e.target.closest('.pm-cmatrix [data-r], .pm-cmatrix [data-c]');
+    if (cCell) {
+      const table = cCell.closest('table.pm-cmatrix');
+      // A row label has only data-r, a column label only data-c; a body cell both.
+      // Map a label to the ticker's own cross (its row and its matching column).
+      let R = cCell.dataset.r, C = cCell.dataset.c;
+      if (R == null) R = C;
+      if (C == null) C = R;
+      const key = `${R}:${C}`;
+      table.querySelectorAll('.sel').forEach((el) => el.classList.remove('sel'));
+      if (table.dataset.sel === key) {
+        table.dataset.sel = '';                     // clicking the same cell clears it
+      } else {
+        table.dataset.sel = key;
+        table.querySelectorAll(`[data-r="${R}"], [data-c="${C}"]`).forEach((el) => el.classList.add('sel'));
+      }
+      return;
+    }
+    // Paper matrix: remove a name (chip ×)
+    const cnDel = e.target.closest('[data-cname-del]');
+    if (cnDel) { delCorrName(cnDel.dataset.cnameDel); return; }
     // Close the beta chart modal (× button, or a click on the dimmed backdrop)
     if (e.target.closest('[data-bm-close]') ||
         (e.target.classList && e.target.classList.contains('pm-beta-ov'))) {
@@ -1429,10 +1807,19 @@ function wire(root) {
     const pf = e.target.closest('[data-prefill]');
     if (pf) {
       const k = pf.dataset.prefill;
-      if (k === 'summit') applyPrefill('Summit', summitBook());
+      if (k === 'blank') clearPaperBook();
+      else if (k === 'summit') applyPrefill('Summit', summitBook());
       else if (TEAM_BOOKS[k]) applyPrefill(TEAM_BOOKS[k].label, teamBook(k));
       return;
     }
+    // Paper: submit the current book as a snapshot into Comparison
+    if (e.target.closest('[data-submit]')) { submitPaper(); return; }
+    // Comparison: remove a submitted portfolio
+    const sdel = e.target.closest('[data-submit-del]');
+    if (sdel) { removeSubmit(sdel.dataset.submitDel); return; }
+    // Comparison: switch between summary and per-holding detail
+    const cv = e.target.closest('[data-cmpview]');
+    if (cv) { cmpView = cv.dataset.cmpview; renderBlended(); return; }
     // Paper: add row
     const add = e.target.closest('.pm-add');
     if (add) {
@@ -1450,6 +1837,7 @@ function wire(root) {
       savePaper();
       renderPaperBody();
       refreshPaperFoot();
+      renderCorr();      // Paper matrix follows the book while it mirrors it
       return;
     }
   });
@@ -1463,6 +1851,13 @@ function wire(root) {
       const v = parseInt(mwin.value, 10);
       if (Number.isFinite(v) && v > 0) setBetaOverride(t, { amt: v });
       return;   // hold repaint until commit (change/blur) so the field keeps focus
+    }
+    // Correlation matrix window field — hold repaint until commit, as above.
+    const cwin = e.target.closest('.pm-cwin');
+    if (cwin) {
+      const v = parseInt(cwin.value, 10);
+      if (Number.isFinite(v) && v > 0) corrAmt = v;
+      return;
     }
     // Portfolio metric inputs (manual value or manual multiple) → save + recompute
     const minp = e.target.closest('.pm-minp');
@@ -1522,5 +1917,19 @@ function wire(root) {
       return;
     }
     if (e.target.closest('.pm-mwin')) { renderBeta(); renderBlended(); }
+    if (e.target.closest('.pm-cwin')) { renderCorr(); }
+    // Benchmark slot committed (change/blur) → recompute its column.
+    const slot = e.target.closest('.pm-slotinp');
+    if (slot) { setBenchSlot(slot); return; }
+    // Paper matrix: name typed and committed (change/blur) → add it.
+    const cn = e.target.closest('.pm-cnameinp');
+    if (cn) { addCorrName(cn); }
+  });
+
+  // Enter commits a benchmark slot or a Paper-matrix name, like blurring the field.
+  root.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    if (e.target.closest('.pm-slotinp')) { e.preventDefault(); setBenchSlot(e.target); }
+    else if (e.target.closest('.pm-cnameinp')) { e.preventDefault(); addCorrName(e.target); }
   });
 }

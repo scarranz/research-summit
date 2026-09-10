@@ -28,7 +28,7 @@ import {
   fetchExpiries, fetchUnderlying, fetchChain,
   listedStrikes, bandAround, premiumOf, quoteTip,
   estimatesFor, resolveSource, sourceSegments, estNote, yearsOf, estYearsOf, usable, yl, isFlexed, ensureFx,
-  effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip, vintageBadge,
+  effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip, vintageBadge, whyBlank,
 } from './options-core.js';
 
 const $ = (id) => document.getElementById(id);
@@ -179,7 +179,7 @@ function renderKpis() {
     ['Premium', r ? px(r.prem) : '—', r ? `${cash(r.prem == null ? null : r.prem * 100)} per contract · ${st.premBasis}` : '—'],
     ['Cost basis if assigned', r ? px(r.basis) : '—', r ? `${pctS(r.discount)} vs spot` : '—'],
     [`EV/EBITDA at that basis · ${yl(est, st.basisYear)}`, r ? mult(r.ev) : '—',
-      cur.ev != null ? `spot is ${mult(cur.ev)}` : (usable(est) ? 'no EBITDA estimate' : (est ? `no ${est.currency}→USD rate` : 'no estimate set'))],
+      cur.ev != null ? `spot is ${mult(cur.ev)}` : whyBlank('ev', st.basisYear, E, est, live())],
     ['Annualised yield', r ? pct(r.annYield, 1) : '—',
       r ? `${pct(r.yield, 2)} over ${r.days}d on collateral` : '—'],
   ];

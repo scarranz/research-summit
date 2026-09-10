@@ -146,7 +146,7 @@ export const EST_STORE = {
   },
   SOFI: {
     name: "SoFi Technologies, Inc.", currency: "USD", snapshot: "2026-08-05", lastActual: 2025,
-    consensusAsOf: "2026-08-05", consensusFrom: "snapshot",
+    consensusAsOf: "2026-09-10", consensusFrom: "bbg",
     summit: {
       2024: { rev: 2676, ebitda: 666.48, earnings: 227.22, shares: 1101.39 },
       2025: { rev: 3613.35, ebitda: 1053.9, earnings: 481.32, shares: 1259.367 },
@@ -155,14 +155,16 @@ export const EST_STORE = {
       2028: { rev: 8083.79, ebitda: 2902.39, earnings: 1515.7, shares: 1259.367 },
     },
     consensus: {
-      2026: { rev: 4845.12, ebitda: 1623.95, earnings: 816.58, shares: 1360.331 },
-      2027: { rev: 5939.94, ebitda: 2112.45, earnings: 1134.84, shares: 1392.622 },
-      2028: { rev: 7226.5, ebitda: 2637, earnings: 1482.1, shares: 1391.402 },
+      2024: { rev: 2606.17, ebitda: 666.48, earnings: 498.67, shares: 1101.39 },
+      2025: { rev: 3591.41, ebitda: 1053.9, earnings: 481.32, shares: 1251.77 },
+      2026: { rev: 4897.63, ebitda: 1628.36, earnings: 807.1, shares: 1353.53 },
+      2027: { rev: 6032.47, ebitda: 2121.55, earnings: 1131.3, shares: 1385.15 },
+      2028: { rev: 7350.69, ebitda: 2651.21, earnings: 1476.75, shares: 1391.26 },
     },
   },
   MA: {
     name: "Mastercard Incorporated", currency: "USD", snapshot: "2026-07-30", lastActual: 2025,
-    consensusAsOf: "2026-07-30", consensusFrom: "snapshot",
+    consensusAsOf: "2026-09-10", consensusFrom: "bbg",
     summit: {
       2024: { rev: 28167, ebitda: 16493, earnings: 12570, shares: 927 },
       2025: { rev: 32791, ebitda: 20100, earnings: 14625, shares: 906 },
@@ -171,9 +173,11 @@ export const EST_STORE = {
       2028: { rev: 46385.62, ebitda: 29856.48, earnings: 20777.52, shares: 842.093 },
     },
     consensus: {
-      2026: { rev: 37088.95, ebitda: 23398.92, earnings: 17124.57, shares: 883.459 },
-      2027: { rev: 41753.14, ebitda: 26428.19, earnings: 19554.87, shares: 862.073 },
-      2028: { rev: 46733.96, ebitda: 29820.06, earnings: 22057.62, shares: 841.037 },
+      2024: { rev: 28167, ebitda: 17397, earnings: 12874, shares: 927 },
+      2025: { rev: 32791, ebitda: 20544, earnings: 14968, shares: 906 },
+      2026: { rev: 37278.26, ebitda: 23610.61, earnings: 17286, shares: 880.05 },
+      2027: { rev: 41953.5, ebitda: 26669.18, earnings: 19677.14, shares: 856.14 },
+      2028: { rev: 46966.19, ebitda: 30219.26, earnings: 22271, shares: 834.37 },
     },
   },
   LYFT: {
@@ -206,6 +210,29 @@ export const EST_STORE = {
       2026: { rev: 4153.7, ebitda: 1242.61, earnings: 627.29, shares: 265.005 },
       2027: { rev: 4548.85, ebitda: 1414.29, earnings: 726.67, shares: 262.82 },
       2028: { rev: 4932.1, ebitda: 1554.35, earnings: 827.75, shares: 264.68 },
+    },
+  },
+  // Taiwan Semiconductor. Three things make this one different from every other
+  // name in the store, and all three are traps if missed:
+  //   • it is NOT in the Summit DCF universe, so consensus is the only basis;
+  //   • it reports in TWD while the shares we own trade in USD;
+  //   • the figures below are for the TAIPEI ordinary share (2330 TT). What
+  //     trades in New York is an ADR worth FIVE ordinary shares, so a multiple
+  //     built on the ordinary count against the ADR price is out by 5x — and
+  //     looks perfectly plausible while being wrong. `adrRatio` is applied in
+  //     multiplesAt(); the income statement keeps the ordinary figures, which is
+  //     what the filings say.
+  TSM: {
+    name: "Taiwan Semiconductor Manufacturing Company Limited", currency: "TWD",
+    snapshot: "2026-09-10", lastActual: 2025, adrRatio: 5,
+    consensusAsOf: "2026-09-10", consensusFrom: "bbg",
+    summit: null,   // no Summit DCF model — building one is San's call
+    consensus: {
+      2024: { rev: 2894308, ebitda: 1984849.68, earnings: 1173267.7, shares: 25929.65, netDebt: -1403514.2 },
+      2025: { rev: 3809050, ebitda: 2624188, earnings: 1717883, shares: 25930.56, netDebt: -2035506.9 },
+      2026: { rev: 5434681.94, ebitda: 3994701.97, earnings: 2774373.54, shares: 25936.97, netDebt: -3136801.4 },
+      2027: { rev: 7323472.87, ebitda: 5353009.82, earnings: 3653557.89, shares: 25937.44, netDebt: -4381232.2 },
+      2028: { rev: 9152144.03, ebitda: 6673116.09, earnings: 4519359.5, shares: 25939.35, netDebt: -6407687.2 },
     },
   },
 };
@@ -244,7 +271,10 @@ function shape(rows, lastActual) {
     out[y] = {
       rev: r.rev, ebitda: r.ebitda, netIncome: r.earnings,
       eps: (r.earnings != null && r.shares) ? r.earnings / r.shares : null,
-      shares: r.shares, netDebt: null, est: y > lastActual,
+      // Net debt from the estimate set when it carries one — Massive returns no
+      // enterprise value for foreign issuers (TSM, SPOT, TBBB), so for those the
+      // live fallback is null and EV/EBITDA would go blank without this.
+      shares: r.shares, netDebt: r.netDebt ?? null, est: y > lastActual,
     };
   });
   return out;
@@ -281,7 +311,7 @@ Object.keys(EST_STORE).forEach((tk) => {
     };
   }
   OPT_ESTIMATES[tk] = {
-    name: s.name, currency: s.currency,
+    name: s.name, currency: s.currency, adrRatio: s.adrRatio || 1,
     ebitdaLabel: 'EBITDA', epsLabel: 'EPS (derived)',
     sources,
   };
@@ -312,7 +342,7 @@ export function optEstimates(ticker, src) {
   if (!e || !e.sources[src]) return null;
   const s = e.sources[src];
   return {
-    name: e.name, currency: e.currency,
+    name: e.name, currency: e.currency, adrRatio: e.adrRatio || 1,
     ebitdaLabel: e.ebitdaLabel, epsLabel: e.epsLabel,
     label: s.label, source: s.source, years: s.years,
     asOf: s.asOf ?? null, asOfFrom: s.asOfFrom ?? null,

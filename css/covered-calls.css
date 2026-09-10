@@ -169,3 +169,13 @@
 #cc-root tr.excl td, #cc-root tr.excl td[data-pin] { opacity: .42; }
 #cc-root tr.excl td .ex { opacity: 1; }
 #cc-root tr.excl:hover td, #cc-root tr.excl:hover td[data-pin] { opacity: .72; }
+
+/* Source fallback tag. The row's multiples are not on the selected source because
+   that name has no model there. Deliberately the quietest chip in the table — the
+   number IS usable, it just is not ours, and that is a footnote to the row rather
+   than a warning about it. Hollow where the currency chips are filled. */
+#cc-root td.tk .fb, #cc-root .fbk {
+  font-size: 8.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--mu); border: 1px solid var(--bdr); border-radius: 3px;
+  padding: 0 3px; margin-left: 3px; vertical-align: 1px; cursor: help;
+}

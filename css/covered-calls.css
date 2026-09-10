@@ -82,3 +82,28 @@
    the company, not about the table: NVIDIA's FY2026 closed in January and is
    reported while every other name in the book is still forecasting it. */
 #cc-root td.fund .fv .estm { font-size: 9px; font-weight: 600; color: var(--steel, #7A879B); margin-left: 1px; vertical-align: super; line-height: 0; }
+
+/* The Target multiple cells are inputs: you type the multiple you would accept
+   being called away at and the strike follows. They must read as NUMBERS first
+   and inputs second — the row is scanned far more often than it is edited — so
+   they inherit the cell's colour (red/green for richer/cheaper than spot) and
+   only show a border on hover or focus. */
+#cc-root td.mcell { text-align: center; }
+#cc-root td.mcell input.mx {
+  width: 100%; max-width: 62px; padding: 1px 2px;
+  border: 1px solid transparent; border-radius: 5px; background: transparent;
+  font: inherit; font-weight: 700; font-size: 13px; color: inherit; text-align: center;
+}
+#cc-root td.mcell input.mx:hover:not(:disabled) { border-color: var(--bdr); background: var(--w); }
+#cc-root td.mcell input.mx:focus { border-color: var(--navy); background: var(--w); outline: none; }
+#cc-root td.mcell input.mx:disabled { color: var(--mu); opacity: .55; }
+/* the spinner arrows steal width the number needs */
+#cc-root td.mcell input.mx::-webkit-outer-spin-button,
+#cc-root td.mcell input.mx::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+#cc-root td.mcell input.mx { -moz-appearance: textfield; }
+/* The multiple's unit. It sits outside the input because a number field cannot
+   carry a suffix, and a multiple without its "x" is just a number. */
+#cc-root td.mcell { white-space: nowrap; }
+#cc-root td.mcell input.mx { width: auto; max-width: 46px; }
+#cc-root td.mcell .mxu { font-weight: 700; font-size: 13px; color: inherit; margin-left: -1px; }
+#cc-root td.mcell input.mx:disabled + .mxu { display: none; }

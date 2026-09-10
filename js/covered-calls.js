@@ -166,6 +166,53 @@ async function autoStrike(ticker, wantExpiry) {
   return ks.find((k) => k >= spot) ?? ks[ks.length - 1];
 }
 
+// ── Strike FROM a multiple ────────────────────────────────────────────────────
+// metrics() takes a strike and reports the multiple it implies. This is the same
+// arithmetic read backwards, because that is the order the decision actually
+// happens in: you do not pick $570 on Mastercard, you decide you are content to
+// be called away at 24x and find out that means $570.
+//
+//   EV/EBITDA :  EV = M x EBITDA, so equity = M x EBITDA - net debt
+//   P/E       :  price = M x EPS, i.e. equity = M x earnings
+//
+// Everything is on the SELECTED basis year and the SELECTED estimate source, in
+// USD, with the ADR ratio applied — the same inputs the forward multiple uses, so
+// typing a number back into the cell it came out of returns the strike it came from.
+function strikeFromMultiple(row, kind, M) {
+  const L = row.live;
+  if (!L || row.isEtf || !L.fxOk || !(M > 0)) return null;
+  const bf = basisFundamentals(row.ticker);
+  if (!bf) return null;
+  const f = L.fxRate;
+  const adr = (EST_STORE[row.ticker] && EST_STORE[row.ticker].adrRatio) || 1;
+  const sh = (bf.shares != null && bf.shares > 0) ? bf.shares * 1e6 / adr : L.shares;
+  if (!sh) return null;
+  if (kind === 'ev') {
+    const eb = (bf.ebitda != null) ? bf.ebitda * f * 1e6 : null;
+    const nd = L.netDebt != null ? L.netDebt : (bf.netDebt != null ? bf.netDebt * f * 1e6 : null);
+    if (!(eb > 0) || nd == null) return null;
+    return (M * eb - nd) / sh;
+  }
+  const earn = (bf.earnings != null) ? bf.earnings * f * 1e6 : null;
+  if (!(earn > 0)) return null;
+  return (M * earn) / sh;
+}
+
+// The listed strike closest to a price. A multiple almost never lands on one, and
+// silently keeping the unlisted number would leave a row that cannot be traded —
+// so it snaps, and the cell then shows the multiple the LISTED strike actually
+// gives, which is a slightly different number from the one that was typed.
+async function nearestListed(ticker, wantExpiry, target) {
+  const j = await mfetch('chain', ticker, {
+    contract_type: 'call', expiration_date: wantExpiry,
+    'strike_price.gte': Math.max(0.5, target * 0.45), 'strike_price.lte': target * 1.8, limit: 250 });
+  const ks = [...new Set((j.results || [])
+    .filter((c) => c.details && c.details.contract_type === 'call' && c.details.expiration_date === wantExpiry)
+    .map((c) => c.details.strike_price))].sort((a, b) => a - b);
+  if (!ks.length) return null;
+  return ks.reduce((best, k) => Math.abs(k - target) < Math.abs(best - target) ? k : best, ks[0]);
+}
+
 async function fetchCall(ticker, strike, wantExpiry) {
   // 1) exact strike + expiry
   let j = await mfetch('chain', ticker, { contract_type: 'call', strike_price: strike, expiration_date: wantExpiry, limit: 10 });
@@ -434,10 +481,15 @@ function render() {
       <td><div class="fv">${mult(m.peP)}</div><div class="fg">${peg(m.pegPe)}</div></td>
       <td><div class="fv">${mult(m.evP)}</div><div class="fg">${peg(m.pegEv)}</div></td>
       ${fund}
-      <td class="sep edit"><input type="number" step="1" value="${r.strike}" data-strike="${r.id}" class="${r.autoStrike ? 'auto' : ''}" title="${r.autoStrike ? 'no strike in the book — nearest listed strike at or above spot; type the real one over it' : 'strike sold'}"></td>
+      <td class="sep edit"><input type="number" step="1" value="${r.strike}" data-strike="${r.id}" class="${r.autoStrike ? 'auto' : ''}" title="${r.autoStrike ? 'no strike in the book — nearest listed strike at or above spot; type the real one over it'
+        : (r.strikeFrom ? `set from ${r.strikeFrom.M}x ${r.strikeFrom.kind === 'ev' ? 'EV/EBITDA' : 'P/E'} on ${r.strikeFrom.basis} ${r.strikeFrom.src} — implied $${r.strikeFrom.wanted.toFixed(2)}, snapped to the nearest listed strike` : 'strike sold')}"></td>
       <td class="up">${pct(m.upside, 1)}</td>
-      <td class="${richer(m.peS, m.peP)}"><div class="fv">${mult(m.peS)}</div><div class="fg">${peg(m.pegPeS)}</div></td>
-      <td class="${richer(m.evS, m.evP)}"><div class="fv">${mult(m.evS)}</div><div class="fg">${peg(m.pegEvS)}</div></td>
+      <td class="${richer(m.peS, m.peP)} mcell"><input type="number" step="0.1" class="mx" data-setmult="${r.id}" data-kind="pe"
+          value="${m.peS == null ? '' : m.peS.toFixed(1)}" ${m.peS == null ? 'disabled' : ''}
+          title="${m.peS == null ? 'no P/E on this basis' : 'type the P/E you would accept being called away at — the strike jumps to the nearest listed one that gives it'}"><span class="mxu">x</span><div class="fg">${peg(m.pegPeS)}</div></td>
+      <td class="${richer(m.evS, m.evP)} mcell"><input type="number" step="0.1" class="mx" data-setmult="${r.id}" data-kind="ev"
+          value="${m.evS == null ? '' : m.evS.toFixed(1)}" ${m.evS == null ? 'disabled' : ''}
+          title="${m.evS == null ? 'no EV/EBITDA on this basis' : 'type the EV/EBITDA you would accept being called away at — the strike jumps to the nearest listed one that gives it'}"><span class="mxu">x</span><div class="fg">${peg(m.pegEvS)}</div></td>
       <td class="sep edit"><input type="number" step="0.1" value="${(r.weight * 100).toFixed(2)}" data-weight="${r.id}" title="portfolio weight %"></td>
       <td class="edit"><input type="number" step="0.01" value="${premVal}" data-prem="${r.id}" class="${ovr ? 'ovr' : ''}" title="${ovr ? 'manual override' : 'live midpoint — type to override'}"><span class="ttip" data-tip="${qtip}">i</span></td>
       <td class="big up">${pct(m.yld, 2)}</td>
@@ -458,7 +510,7 @@ function render() {
     <b>Yield</b> = premium ÷ price · <b>Port. yield</b> = yield × weight · <b>Contrib.</b> = Port. yield ÷ Σ Port. yield (share of total) ·
     <span class="cheap">green</span> = target multiple richer than current (called away at an expensive valuation).<br>
     <b>Target expiry</b> opens on the <b>roll date</b> — the third Friday of January, April, July or October, the Friday before earnings season starts — taking the nearest one that has not expired; the menu carries the next few ordinary expiries alongside every roll date.<br>
-    Premium/IV/greeks are the live Massive option chain for each strike &amp; target expiry. Edit strike or weight inline; type a premium to override the live midpoint. A strike shown <span class="autoink">in blue</span> is not in the book — it is the nearest listed strike at or above spot, picked so the row can price at all; type the real one over it. All figures are in % — no dollar amounts, no contracts, no portfolio value.
+    Premium/IV/greeks are the live Massive option chain for each strike &amp; target expiry. <b>Edit the strike either way round.</b> Type a price into <b>Strike</b>, or type a multiple into <b>Target P/E</b> or <b>Target EV/EBITDA</b> and the strike moves to the nearest LISTED strike that produces it — which is the order the decision really happens in: not “$570 on Mastercard” but “happy to be called away at 24x”. The cell then shows the multiple the listed strike actually gives, so it will differ a little from what you typed; hover the strike to see the price the multiple implied before snapping. It reads the SELECTED basis year and estimate source, so change either and the same multiple means a different strike. Edit weight inline; type a premium to override the live midpoint. A strike shown <span class="autoink">in blue</span> is not in the book — it is the nearest listed strike at or above spot, picked so the row can price at all; type the real one over it. All figures are in % — no dollar amounts, no contracts, no portfolio value.
     ${anyMismatch ? '<br><span class="warn">⚠ some rows had no contract at the exact strike/expiry — nearest available was used (hover the ⚠).</span>' : ''}`;
 }
 
@@ -466,7 +518,24 @@ function wireRowInputs() {
   document.querySelectorAll('#cc-root [data-strike]').forEach((el) => el.onchange = async () => {
     const r = rows.find((x) => x.id == el.dataset.strike); r.strike = parseFloat(el.value) || r.strike;
     r.autoStrike = false;   // typed over: it is a chosen strike now
+    r.strikeFrom = null;    // ...and no longer the product of a multiple
     r.loading = true; render(); await fetchRow(r); render();
+  });
+  // Type a multiple, get a strike. The row remembers WHICH multiple set it, on
+  // which basis year and which source, because "$570" means nothing six weeks
+  // later while "24x on 2026E Summit" still does.
+  document.querySelectorAll('#cc-root [data-setmult]').forEach((el) => el.onchange = async () => {
+    const r = rows.find((x) => x.id == el.dataset.setmult);
+    const M = parseFloat(el.value);
+    const px = r ? strikeFromMultiple(r, el.dataset.kind, M) : null;
+    if (px == null || !(px > 0)) { render(); return; }   // unusable input: put the old number back
+    r.loading = true; render();
+    const k = await nearestListed(r.ticker, expiry, px);
+    if (k != null) {
+      r.strike = k; r.autoStrike = false;
+      r.strikeFrom = { kind: el.dataset.kind, M, basis: mulBasis, src: estSrc, wanted: px };
+    }
+    await fetchRow(r); render();
   });
   document.querySelectorAll('#cc-root [data-weight]').forEach((el) => el.onchange = () => {
     const r = rows.find((x) => x.id == el.dataset.weight); r.weight = (parseFloat(el.value) || 0) / 100; render();

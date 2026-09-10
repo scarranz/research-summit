@@ -140,17 +140,22 @@ export const EST_STORE = {
   SPOT: {
     name: "Spotify Technology S.A.", currency: "EUR", snapshot: "2026-08-05", lastActual: 2025,
     consensusAsOf: "2026-08-05", consensusFrom: "snapshot",
+    // Net CASH of 8,930 EUR M (9,390 cash against ~460 of debt), per Fiscal.ai —
+    // SAB, 10 Sep 2026. Carried explicitly for the same two reasons as TBBB:
+    // Massive returns no fundamentals for a foreign issuer, and SPOT's Summit model
+    // has no balance-sheet lines at all — 46 metrics, every one of them P&L or KPI.
+    // Held flat across every year, as net debt is everywhere else here.
     summit: {
-      2024: { rev: 15673, ebitda: 2016.97, earnings: 2136.58, shares: 206.99 },
-      2025: { rev: 17186, ebitda: 2549, earnings: 3234.11, shares: 210.509 },
-      2026: { rev: 19761.54, ebitda: 3345.46, earnings: 2821.64, shares: 206.363 },
-      2027: { rev: 23118.84, ebitda: 4258.22, earnings: 3234.78, shares: 202.218 },
-      2028: { rev: 27097.44, ebitda: 5535.33, earnings: 4363.44, shares: 198.072 },
+      2024: { rev: 15673, ebitda: 2016.97, earnings: 2136.58, shares: 206.99, netDebt: -8930 },
+      2025: { rev: 17186, ebitda: 2549, earnings: 3234.11, shares: 210.509, netDebt: -8930 },
+      2026: { rev: 19761.54, ebitda: 3345.46, earnings: 2821.64, shares: 206.363, netDebt: -8930 },
+      2027: { rev: 23118.84, ebitda: 4258.22, earnings: 3234.78, shares: 202.218, netDebt: -8930 },
+      2028: { rev: 27097.44, ebitda: 5535.33, earnings: 4363.44, shares: 198.072, netDebt: -8930 },
     },
     consensus: {
-      2026: { rev: 19526.64, ebitda: 3004.55, earnings: 2597.91, shares: 209.237 },
-      2027: { rev: 22316.1, ebitda: 3889.24, earnings: 3218.68, shares: 209.921 },
-      2028: { rev: 25332.73, ebitda: 4816.5, earnings: 3972.89, shares: 208.447 },
+      2026: { rev: 19526.64, ebitda: 3004.55, earnings: 2597.91, shares: 209.237, netDebt: -8930 },
+      2027: { rev: 22316.1, ebitda: 3889.24, earnings: 3218.68, shares: 209.921, netDebt: -8930 },
+      2028: { rev: 25332.73, ebitda: 4816.5, earnings: 3972.89, shares: 208.447, netDebt: -8930 },
     },
   },
   SOFI: {

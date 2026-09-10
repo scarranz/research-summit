@@ -132,3 +132,22 @@
    down the left of the ticker. The cells carry 9px of their own padding, so nothing
    ends up touching the border; only the gutter disappears. */
 #cc-root .card { padding-left: 0; padding-right: 0; }
+
+/* ── Wide bid/ask on the Premium cell ─────────────────────────────────────────
+   The column quotes the MID and a covered call is sold on the BID, so a wide
+   spread is money already gone from the yield printed two cells to the right.
+   Shading the CELL rather than the number, because the point is not that the
+   premium is wrong — it is right, as a midpoint — but that it is not what you
+   will be paid. Same amber as the stale-vintage badge: this is the palette this
+   tab uses for "true, but read it with care", distinct from the red/green that
+   means expensive/cheap. */
+#cc-root td.edit.spw { background: #FFF8EB; box-shadow: inset 2px 0 0 #E9B764; }
+#cc-root td.edit.spx { background: #FFEFD6; box-shadow: inset 2px 0 0 #C98A1E; }
+#cc-root td.edit.spw input, #cc-root td.edit.spx input { background: transparent; }
+/* hover paints the row; the flagged cell has to stay legible over it */
+#cc-root tbody tr:hover td.edit.spw { background: #FDF2DF; }
+#cc-root tbody tr:hover td.edit.spx { background: #FBE7C9; }
+/* the footnote's colour key */
+#cc-root .spwk, #cc-root .spxk { padding: 0 5px; border-radius: 4px; font-weight: 700; }
+#cc-root .spwk { background: #FFF8EB; color: #8A5A00; }
+#cc-root .spxk { background: #FFEFD6; color: #7A4A00; }

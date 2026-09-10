@@ -13,17 +13,33 @@ import { coveredCallsQuote } from './api.js';
 // are — Summit's model or Bloomberg consensus, both carried in the same snapshot.
 // A ticker with no set for the selected source falls back to nothing, not to the
 // other source: the multiples go blank and the footnote says why.
+//
+// A REPORTED year is the same figure under either source — the Street carries no
+// estimate for a year already closed — so on Consensus the history comes from the
+// model's own actuals columns and only the forward years differ. Without this the
+// whole book lost its t0 column the moment you toggled to Consensus, and with it
+// every CAGR and the first growth row. (This is the same rule optEstimates()
+// applies for the other three panes; it just never made it into this one.)
 function SU(ticker) {
   const s = EST_STORE[ticker];
   if (!s) return null;
   const rows = s[estSrc];
   if (!rows) return null;
+  const merged = {};
+  if (estSrc !== 'summit' && s.summit) {
+    Object.keys(s.summit).forEach((k) => { if (+k <= s.lastActual) merged[k] = s.summit[k]; });
+  }
+  Object.keys(rows).forEach((k) => { merged[k] = rows[k]; });
   const years = {};
-  Object.keys(rows).forEach((k) => {
-    const r = rows[k];
-    years[k] = { rev: r.rev, ebitda: r.ebitda, earnings: r.earnings, shares_out: r.shares };
+  Object.keys(merged).forEach((k) => {
+    const r = merged[k];
+    years[k] = { rev: r.rev, ebitda: r.ebitda, earnings: r.earnings, shares_out: r.shares,
+                 est: +k > s.lastActual };
   });
-  return { name: s.name, currency: s.currency, snapshot_date: s.snapshot, years };
+  // `lastActual` differs by name: NVIDIA's FY2026 closed in January and is
+  // reported, so its FY26 column is an actual while everyone else's is a forecast.
+  // The cells carry their own E for that reason; the header cannot.
+  return { name: s.name, currency: s.currency, snapshot_date: s.snapshot, lastActual: s.lastActual, years };
 }
 
 const $ = (id) => document.getElementById(id);
@@ -33,7 +49,7 @@ const $ = (id) => document.getElementById(id);
 const FXCFG = { EUR: { pair: 'EURUSD', invert: false }, MXN: { pair: 'USDMXN', invert: true } };
 const T0 = 2025;                 // last reported fiscal year (t0)
 const FY = [T0, T0 + 1, T0 + 2]; // t0, t+1, t+2 shown in the fundamentals block
-const fyLabel = (y) => `FY${String(y).slice(2)}${y > T0 ? 'E' : ''}`;
+const fyLabel = (y) => `FY${String(y).slice(2)}`;
 
 // ── Massive proxy (via the edge function) ─────────────────────────────────────
 async function mfetch(resource, ticker, params = {}) {
@@ -273,7 +289,8 @@ function fundSeries(ticker, key) {
     const cur = su.years[y]?.[key];
     const prev = su.years[y - 1]?.[key];
     const g = (cur != null && prev != null && prev > 0) ? cur / prev - 1 : null;
-    return { v: cur ?? null, g };
+    // Whether THIS name has reported that year, not whether the book has.
+    return { v: cur ?? null, g, est: y > su.lastActual };
   });
 }
 
@@ -281,7 +298,7 @@ function fundSeries(ticker, key) {
 function fundSection(series, cagrVal, pegVal) {
   if (!series) return [0, 1, 2, 3, 4].map((i) => `<td class="${i === 0 ? 'sep ' : ''}fund muted">—</td>`).join('');
   const yrs = series.map((d, i) => `<td class="${i === 0 ? 'sep ' : ''}fund">
-      <div class="fv">${bn(d.v)}</div>
+      <div class="fv">${bn(d.v)}${d.est ? '<sup class="estm">E</sup>' : ''}</div>
       <div class="fg ${d.g == null ? '' : (d.g >= 0 ? 'up' : 'dn')}">${d.g == null ? '—' : pctSign(d.g)}</div>
     </td>`).join('');
   const cg = `<td class="fund"><div class="fv ${cagrVal == null ? '' : (cagrVal >= 0 ? 'up' : 'dn')}">${cagrVal == null ? '—' : pctSign(cagrVal)}</div></td>`;
@@ -339,6 +356,8 @@ function render() {
   // header (two-row grouped). EBITDA/Net Income blocks toggle with showFund.
   const fundGroups = showFund
     ? `<th colspan="5" class="grp sep">EBITDA</th><th colspan="5" class="grp sep">Net Income</th>` : '';
+  // No E in the header: whether a year is still a forecast is a per-NAME fact
+  // (NVIDIA reports its fiscal year in January), so the E lives on the cell.
   const fyHdr = `<th class="sep">${fyLabel(FY[0])}</th><th>${fyLabel(FY[1])}</th><th>${fyLabel(FY[2])}</th><th>CAGR</th><th>PEG</th>`;
   const fundLabels = showFund ? fyHdr + fyHdr : '';
   $('cc-thead').innerHTML = `
@@ -400,7 +419,7 @@ function render() {
 
   const anyMismatch = rows.some((r) => r.live && ((r.live.usedExpiry && expiry && r.live.usedExpiry !== expiry) || (r.live.usedStrike != null && r.live.usedStrike !== r.strike)));
   $('cc-foot').innerHTML = `
-    <b>EBITDA / Net Income</b> = ${estSrc === 'summit' ? 'Summit model' : 'Bloomberg consensus'} ${fyLabel(FY[0])}–${fyLabel(FY[2])} (t0 = last reported FY), native-currency millions with YoY growth below · <b>CAGR</b> = ${FY[0]}→${FY[2]} · <b>PEG</b> = current multiple ÷ basis growth% ·
+    <b>EBITDA / Net Income</b> = ${estSrc === 'summit' ? 'Summit model' : 'Bloomberg consensus'} ${fyLabel(FY[0])}–${fyLabel(FY[2])} native-currency millions with YoY growth below. A superscript <b>E</b> marks a year that name has not yet reported — most of the book closes in December, but NVIDIA's fiscal 2026 ended in January, so its FY26 is an actual. On <b>Consensus</b>, years already closed carry the reported figure (the Street publishes no estimate for a year that is done), so only the forward columns differ between the two sources · <b>CAGR</b> = ${FY[0]}→${FY[2]} · <b>PEG</b> = current multiple ÷ basis growth% ·
     <b>Multiple basis (${mulBasis})</b> drives every P/E &amp; EV/EBITDA${mulBasis === 'NTM' ? ' — NTM is a calendar-weighted blend of '+fyLabel(FY[1])+'/'+fyLabel(FY[2])+' (no quarterly data)' : ''} · <b>Current</b> uses live price, <b>Target</b> uses the strike; the PEG under each multiple = that multiple ÷ basis growth · <b>Impl. Upside</b> = strike ÷ price − 1 ·
     hover the <b>i</b> by Premium for live bid / ask / mid and last trade (local time) ·
     <b>Yield</b> = premium ÷ price · <b>Port. yield</b> = yield × weight · <b>Contrib.</b> = Port. yield ÷ Σ Port. yield (share of total) ·

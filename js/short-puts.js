@@ -27,7 +27,7 @@ import {
   esc, px, mult, pct, pctS, cash, daysTo, rich,
   fetchExpiries, fetchUnderlying, fetchChain,
   listedStrikes, bandAround, premiumOf, quoteTip,
-  estimatesFor, resolveSource, sourceSegments, estNote, yearsOf, estYearsOf, usable, yl, isFlexed,
+  estimatesFor, resolveSource, sourceSegments, estNote, yearsOf, estYearsOf, usable, yl, isFlexed, ensureFx,
   effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip,
 } from './options-core.js';
 
@@ -127,7 +127,9 @@ function defaultExpiry(dates) {
 async function loadChain() {
   st.loading = true; st.err = null; render();
   try {
-    const u = await fetchUnderlying(st.ticker);
+    // The FX rate for a non-USD reporter is fetched alongside the quote: without it
+    // multiplesAt() has nothing to convert with and every multiple would go blank.
+    const [u] = await Promise.all([fetchUnderlying(st.ticker), ensureFx(est && est.currency)]);
     st.spot = u.spot; st.changePct = u.changePct;
     st.name = u.name || (est ? est.name : st.ticker);
     st.shares = u.shares; st.netDebtLive = u.netDebt;
@@ -177,7 +179,7 @@ function renderKpis() {
     ['Premium', r ? px(r.prem) : '—', r ? `${cash(r.prem == null ? null : r.prem * 100)} per contract · ${st.premBasis}` : '—'],
     ['Cost basis if assigned', r ? px(r.basis) : '—', r ? `${pctS(r.discount)} vs spot` : '—'],
     [`EV/EBITDA at that basis · ${yl(est, st.basisYear)}`, r ? mult(r.ev) : '—',
-      cur.ev != null ? `spot is ${mult(cur.ev)}` : (usable(est) ? 'no EBITDA estimate' : 'non-USD estimates')],
+      cur.ev != null ? `spot is ${mult(cur.ev)}` : (usable(est) ? 'no EBITDA estimate' : (est ? `no ${est.currency}→USD rate` : 'no estimate set'))],
     ['Annualised yield', r ? pct(r.annYield, 1) : '—',
       r ? `${pct(r.yield, 2)} over ${r.days}d on collateral` : '—'],
   ];

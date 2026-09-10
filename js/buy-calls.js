@@ -24,7 +24,7 @@ import {
   esc, px, mult, pct, pctS, cash, daysTo, rich,
   fetchExpiries, fetchUnderlying, fetchChain,
   listedStrikes, bandAround, premiumOf, quoteTip,
-  estimatesFor, resolveSource, sourceSegments, estNote, yearsOf, estYearsOf, usable, yl, isFlexed,
+  estimatesFor, resolveSource, sourceSegments, estNote, yearsOf, estYearsOf, usable, yl, isFlexed, ensureFx,
   effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip,
 } from './options-core.js';
 
@@ -136,7 +136,9 @@ function defaultExpiry(dates) {
 async function loadChain() {
   st.loading = true; st.err = null; render();
   try {
-    const u = await fetchUnderlying(st.ticker);
+    // The FX rate for a non-USD reporter is fetched alongside the quote: without it
+    // multiplesAt() has nothing to convert with and every multiple would go blank.
+    const [u] = await Promise.all([fetchUnderlying(st.ticker), ensureFx(est && est.currency)]);
     st.spot = u.spot; st.changePct = u.changePct;
     st.name = u.name || (est ? est.name : st.ticker);
     st.shares = u.shares; st.netDebtLive = u.netDebt;
@@ -188,7 +190,7 @@ function renderKpis() {
     ['Premium', r ? px(r.prem) : '—', r ? `${cash(r.cost)} per contract · ${st.premBasis}` : '—'],
     ['Breakeven', r ? px(r.be) : '—', r ? `${pctS(r.toBe)} from spot` : '—'],
     [`P/E at breakeven · ${yl(est, st.basisYear)}`, r ? mult(r.peBe) : '—',
-      cur.pe != null ? `spot is ${mult(cur.pe)}` : (usable(est) ? 'no EPS estimate' : 'non-USD estimates')],
+      cur.pe != null ? `spot is ${mult(cur.pe)}` : (usable(est) ? 'no EPS estimate' : (est ? `no ${est.currency}→USD rate` : 'no estimate set'))],
     ['Min. portfolio', r ? cash(r.minPort) : '—',
       r ? `${cash(r.notional)} notional at ${pct(st.exposurePct, 1)}` : '—'],
   ];

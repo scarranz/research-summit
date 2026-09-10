@@ -151,3 +151,21 @@
 #cc-root .spwk, #cc-root .spxk { padding: 0 5px; border-radius: 4px; font-weight: 700; }
 #cc-root .spwk { background: #FFF8EB; color: #8A5A00; }
 #cc-root .spxk { background: #FFEFD6; color: #7A4A00; }
+
+/* ── Exclude a row from the totals ────────────────────────────────────────────
+   A filled dot counts, a hollow one does not. It sits beside the ✕ because they
+   are the two ways of saying "not this one" and the softer one should be found
+   first — you almost always want to set a position aside, not delete it. */
+#cc-root td .ex {
+  background: transparent; border: 1px solid transparent; color: var(--navy);
+  padding: 2px 5px; font-size: 12px; line-height: 1; cursor: pointer; margin-right: 2px;
+}
+#cc-root td .ex:hover { border-color: var(--bdr); background: var(--w); }
+#cc-root td .ex.off { color: var(--mu); }
+#cc-root td.nowrap { white-space: nowrap; }
+/* An excluded row stays fully readable — it is still real, it is just not in the
+   sum — so this dims rather than strikes through, and the pinned identity columns
+   dim with it or half the row would look active. */
+#cc-root tr.excl td, #cc-root tr.excl td[data-pin] { opacity: .42; }
+#cc-root tr.excl td .ex { opacity: 1; }
+#cc-root tr.excl:hover td, #cc-root tr.excl:hover td[data-pin] { opacity: .72; }

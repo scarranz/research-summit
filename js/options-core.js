@@ -81,6 +81,16 @@ export async function fetchExpiries(ticker) {
     const j2 = await mfetch('expirations', ticker, { 'expiration_date.gte': dates[dates.length - 1] || today });
     dates = [...new Set(dates.concat((j2.results || []).map((c) => c.expiration_date)))].filter(Boolean).sort();
   } catch { /* the first list stands */ }
+  // On a chain with DAILY expiries — SPY, QQQ — 1000 rows is a few weeks, so even
+  // walking from the far side of that first page never reaches next year. Ask
+  // directly from a year out, which is where a hedge is bought.
+  try {
+    const far = new Date(Date.now() + 300 * 86400000).toISOString().slice(0, 10);
+    if (!dates.length || dates[dates.length - 1] < far) {
+      const j3 = await mfetch('expirations', ticker, { 'expiration_date.gte': far });
+      dates = [...new Set(dates.concat((j3.results || []).map((c) => c.expiration_date)))].filter(Boolean).sort();
+    }
+  } catch { /* what we have stands */ }
   return dates;
 }
 

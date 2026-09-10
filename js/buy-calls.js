@@ -26,6 +26,7 @@ import {
   listedStrikes, bandAround, premiumOf, quoteTip,
   estimatesFor, resolveSource, sourceSegments, estNote, yearsOf, estYearsOf, usable, yl, isFlexed, ensureFx,
   effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip, vintageBadge, whyBlank,
+  selToggle, selHas, selClear, symbolOf, instrumentsBar, renderInstruments, onSelection,
 } from './options-core.js';
 
 const $ = (id) => document.getElementById(id);
@@ -55,6 +56,7 @@ const st = {
 
   selected: null,            // selected strike (drives the KPI strip)
 };
+let instOpen = false;        // the Add to Instruments panel is open
 
 // The estimate set for the current ticker, and its years after the sensitivity has
 // been applied. Both are refreshed at the top of every render.
@@ -215,7 +217,7 @@ function renderLadder() {
       <th colspan="2" class="grp sep">At strike · ${esc(yl(est, st.basisYear))}</th>
       <th colspan="4" class="grp sep">Breakeven · ${esc(yl(est, st.basisYear))}</th>
       <th colspan="4" class="grp sep">Summary</th>
-      <th rowspan="2" class="sep"></th>
+      <th colspan="2" class="grp sep"></th>
     </tr>
     <tr>
       <th class="lft">Strike</th><th>Moneyness</th><th>Premium</th>${st.expand ? '<th>IV</th><th>Delta</th>' : ''}
@@ -225,9 +227,10 @@ function renderLadder() {
       <th>Cost %<br>of strike</th>
       <th>Cost outflow<br>% of portfolio</th>
       <th>Min.<br>portfolio</th>
+      <th class="sep" title="tick the contracts to hand to Instruments">Add</th><th title="drop this strike from the ladder">Remove</th>
     </tr>`;
 
-  const ncol = nContract + 2 + 4 + 4 + 1;
+  const ncol = nContract + 2 + 4 + 4 + 1 + 1;
   if (!rows.length) {
     $('bc-tbody').innerHTML = `<tr><td colspan="${ncol}" class="muted">no strikes picked yet — add them below.</td></tr>`;
     return;
@@ -257,13 +260,42 @@ function renderLadder() {
       <td>${pct(r.costPct, 1)}</td>
       <td>${pct(r.costPctPort, 2)}</td>
       <td class="big">${cash(r.minPort)}</td>
-      <td class="sep"><button class="x" data-del="${r.K}" title="remove this strike">✕</button></td>
+      <td class="sep">${r.c ? `<input type="checkbox" class="pick" data-pick="${r.K}" ${selHas(symbolOf(r.c, st.ticker, st.expiry, 'call', r.K)) ? 'checked' : ''} title="${esc(symbolOf(r.c, st.ticker, st.expiry, 'call', r.K) || '')}">` : '<span class="muted">—</span>'}</td>
+      <td><button class="x" data-del="${r.K}" title="remove this strike">✕</button></td>
     </tr>`;
   }).join('');
   wireLadder();
+  renderInstruments('bc', instOpen);
+  wireInstruments();
+}
+
+// The Instruments bar and the per-row ticks. Here the tick means one thing only —
+// hand this contract over — because a ladder is a search, not a book: there are no
+// portfolio totals for it to modify. Covered Calls is the pane where the same tick
+// also decides what counts.
+function wireInstruments() {
+  const el = document.getElementById('bc-instbar'); if (!el) return;
+  const t = el.querySelector('[data-insttoggle]');
+  if (t) t.onclick = () => { instOpen = !instOpen; renderInstruments('bc', instOpen); wireInstruments(); };
+  const c = el.querySelector('[data-instclear]');
+  if (c) c.onclick = () => selClear();
 }
 
 function wireLadder() {
+  root().querySelectorAll('[data-pick]').forEach((el) => {
+    // The row itself is clickable — it selects the strike and re-renders — so the
+    // click has to stop at the box. Without this the table is rebuilt before the
+    // change event lands and the tick is thrown away on a detached node.
+    el.onclick = (ev) => ev.stopPropagation();
+    el.onchange = (ev) => {
+    ev.stopPropagation();
+    const k = +el.dataset.pick;
+    const r = ladder().find((x) => x.K === k);
+    if (!r || !r.c) return;
+    selToggle({ sym: symbolOf(r.c, st.ticker, st.expiry, 'call', k), ticker: st.ticker,
+                expiry: st.expiry, type: 'call', strike: k, pane: 'buy-calls' });
+    };
+  });
   root().querySelectorAll('[data-del]').forEach((el) => el.onclick = (ev) => {
     ev.stopPropagation();
     const k = +el.dataset.del;
@@ -402,6 +434,7 @@ function injectMarkup() {
         </div>
 
         <div class="block" id="bc-fund"></div>
+        ${instrumentsBar('bc')}
         <div class="foot" id="bc-foot"></div>
       </div>
     </div>`;
@@ -474,6 +507,9 @@ function wireControls() {
   });
 
   wireTooltip(r);
+  // The basket is shared across the four panes, so a pick made anywhere moves
+  // this count too.
+  onSelection(() => { renderInstruments('bc', instOpen); wireInstruments(); });
 }
 
 // ── Page loader ───────────────────────────────────────────────────────────────

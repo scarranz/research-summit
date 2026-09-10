@@ -574,6 +574,74 @@ export function vintageBadge(est) {
   return `<span class="vintage ${v.state}" data-tip="${esc(v.title)}">${esc(v.text)}</span>`;
 }
 
+// ── Selection → Instruments ───────────────────────────────────────────────────
+// Derivatives is where contracts get FOUND. What happens to an attractive one —
+// sizing it, deciding the exposure — happens elsewhere, so every pane needs the
+// same way of saying "these ones" and handing them over.
+//
+// The list lives here, once, shared by all four panes: a contract picked in Short
+// Puts and one picked in Covered Calls belong in the same basket, because the
+// basket is a shopping list, not a view of any single pane. Nothing is stored —
+// a reload empties it, like everything else in this tab.
+//
+// The identity of a contract is its Massive symbol, which the chain already
+// carries as `details.ticker` (O:UBER261016C00040000). Prefer that over building
+// one: it is what the other side will look up, and a symbol we assembled that
+// differs by a digit is worse than no symbol at all.
+const SEL = new Map();          // symbol -> { sym, ticker, expiry, type, strike, pane }
+const selSubs = new Set();
+const selNotify = () => selSubs.forEach((f) => { try { f(); } catch { /* a dead pane must not break the rest */ } });
+
+export const onSelection = (fn) => { selSubs.add(fn); return () => selSubs.delete(fn); };
+export const selCount = () => SEL.size;
+export const selHas = (sym) => SEL.has(sym);
+export const selList = () => [...SEL.values()];
+export function selToggle(item) {
+  if (!item || !item.sym) return;
+  if (SEL.has(item.sym)) SEL.delete(item.sym); else SEL.set(item.sym, item);
+  selNotify();
+}
+export function selClear() { SEL.clear(); selNotify(); }
+
+// The fallback builder, for when a row has no contract object to read from.
+// O: + underlying + YYMMDD + C/P + strike x 1000, zero-padded to 8 digits.
+export function optionSymbol(ticker, expiry, type, strike) {
+  if (!ticker || !expiry || strike == null) return null;
+  const [y, m, d] = expiry.split('-');
+  const k = String(Math.round(strike * 1000)).padStart(8, '0');
+  return `O:${ticker.toUpperCase()}${y.slice(2)}${m}${d}${(type === 'put' ? 'P' : 'C')}${k}`;
+}
+// The symbol a chain row already carries, or one built from its parts.
+export const symbolOf = (c, ticker, expiry, type, strike) =>
+  (c && c.details && c.details.ticker) || optionSymbol(ticker, expiry, type, strike);
+
+// ── The bar that hands them over ──────────────────────────────────────────────
+// Bottom right of every pane. Collapsed it is a count; opened it is the list in
+// the format the other side reads. A textarea rather than a copy button alone,
+// because the first thing anyone does with a list like this is edit it.
+export function instrumentsBar(prefix) {
+  return `<div class="instbar" id="${prefix}-instbar"></div>`;
+}
+export function renderInstruments(prefix, openState) {
+  const el = document.getElementById(`${prefix}-instbar`);
+  if (!el) return;
+  const n = selCount();
+  const list = selList();
+  el.innerHTML = `
+    <div class="instrow">
+      ${openState && n ? `<button type="button" class="ghost sm" data-instclear="1">Clear</button>` : ''}
+      <button type="button" class="instbtn${n ? ' on' : ''}" data-insttoggle="1"
+        ${n ? '' : 'disabled title="tick a contract first"'}>Add to Instruments${n ? ` · ${n}` : ''}</button>
+    </div>
+    ${!openState || !n ? '' : `
+      <div class="instpanel">
+        <div class="insthd">${n} contract${n === 1 ? '' : 's'} — Massive symbols, one per line</div>
+        <textarea class="instta" rows="${Math.min(10, Math.max(3, n))}" spellcheck="false"
+          onclick="this.select()">${esc(list.map((i) => i.sym).join('\n'))}</textarea>
+        <div class="instfoot">${esc(list.map((i) => `${i.ticker} ${i.strike}${i.type === 'put' ? 'P' : 'C'} ${i.expiry}`).join(' · '))}</div>
+      </div>`}`;
+}
+
 // ── The ticker chips: the names we hold estimates for ─────────────────────────
 export function tickerChips(current) {
   return Object.keys(OPT_ESTIMATES).map((t) =>

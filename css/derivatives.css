@@ -183,3 +183,34 @@
 /* It rides on the control's label, which is uppercase and tracked out; the badge
    is a date and must not be either. */
 .ctl label .vintage { text-transform: none; letter-spacing: 0; margin-left: 6px; vertical-align: middle; }
+
+/* ── Selection → Instruments ──────────────────────────────────────────────────
+   Bottom right of every pane. Derivatives is where contracts get found; sizing
+   and exposure happen elsewhere, so this is the hand-off. Right-aligned and quiet
+   until something is ticked — it is the end of the workflow, not the start. */
+.instbar { margin: 10px 0 2px; }
+.instrow { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+.instbtn {
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  padding: 7px 14px; border-radius: 7px;
+  background: var(--w); color: var(--steel); border: 1px solid var(--bdr);
+}
+.instbtn.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+.instbtn:disabled { opacity: .5; cursor: default; }
+.instpanel {
+  margin-top: 8px; margin-left: auto; max-width: 520px;
+  background: var(--w); border: 1px solid var(--bdr); border-radius: 10px; padding: 10px 12px;
+}
+.insthd { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--mu); margin-bottom: 6px; }
+.instta {
+  width: 100%; box-sizing: border-box; resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px; line-height: 1.55; color: var(--text);
+  border: 1px solid var(--bdr); border-radius: 7px; padding: 7px 9px; background: #FBFCFD;
+}
+.instfoot { margin-top: 6px; font-size: 11px; color: var(--mu); line-height: 1.5; }
+/* the per-row tick */
+#cc-root td .pick, .der-an td .pick { width: 14px; height: 14px; cursor: pointer; accent-color: var(--navy); }
+/* Min. portfolio: informative, so it reads a shade quieter than the live numbers */
+#cc-root td.minp { color: var(--steel); font-variant-numeric: tabular-nums; }
+#cc-root th.minp { cursor: help; }

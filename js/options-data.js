@@ -111,6 +111,13 @@ export const EST_STORE = {
   },
   NVDA: {
     name: "NVIDIA Corporation", currency: "USD", snapshot: "2026-08-28", lastActual: 2026,
+    // NVIDIA's fiscal year ends in late January, so its FY2026 ran Feb-2025 to
+    // Jan-2026 and is really CALENDAR 2025. Both sources below are keyed on the
+    // fiscal label — the model and Bloomberg both call that year 2024/2025/2026 —
+    // and the years are shifted to the calendar at import so this name lines up
+    // with the rest of the book. Without it, picking "2026E" compared everyone
+    // else's calendar 2026 against an NVIDIA year that had already been reported.
+    fiscalOffset: 1,   // fiscal year = calendar year + 1
     consensusAsOf: "2026-09-09", consensusFrom: "bbg",
     summit: {
       2024: { rev: 60922, ebitda: 35729.51, earnings: 29288.15, shares: 24940 },
@@ -396,15 +403,28 @@ function shape(rows, lastActual) {
 
 export const OPT_ESTIMATES = {};
 
+// A fiscal year that is not the calendar year is re-keyed here, once, rather than
+// special-cased at every place a year is picked. After this the whole store speaks
+// CALENDAR years: `lastActual` moves with the rows, so a January reporter ends up
+// with the same last reported year as a December one, and every basis-year control,
+// growth rate and CAGR compares like for like across the book.
 Object.keys(EST_STORE).forEach((tk) => {
   const s = EST_STORE[tk];
+  const off = s.fiscalOffset || 0;
+  const cal = (rows) => {
+    if (!off || !rows) return rows;
+    const o = {};
+    Object.keys(rows).forEach((k) => { o[+k - off] = rows[k]; });
+    return o;
+  };
+  const lastA = s.lastActual - off;
   const sources = {};
   if (s.summit) {
     sources.summit = {
       label: 'Summit',
       asOf: s.snapshot, asOfFrom: 'snapshot',
-      source: `Summit DCF model, snapshot ${s.snapshot}. FY${s.lastActual} and earlier are reported; later years are the model's own projections. EPS is net income ÷ diluted shares.`,
-      years: shape(s.summit, s.lastActual),
+      source: `Summit DCF model, snapshot ${s.snapshot}. FY${lastA} and earlier are reported; later years are the model's own projections. EPS is net income ÷ diluted shares.`,
+      years: shape(cal(s.summit), lastA),
     };
   }
   if (s.consensus) {
@@ -413,19 +433,21 @@ Object.keys(EST_STORE).forEach((tk) => {
     // model's own actuals columns and only the forward years differ; without this
     // the consensus view would lose its historical anchor and its CAGR.
     const rows = {};
-    if (s.summit) Object.keys(s.summit).forEach((k) => { if (+k <= s.lastActual) rows[k] = s.summit[k]; });
-    Object.keys(s.consensus).forEach((k) => { rows[k] = s.consensus[k]; });
+    const sm = cal(s.summit) || {};
+    if (s.summit) Object.keys(sm).forEach((k) => { if (+k <= lastA) rows[k] = sm[k]; });
+    const cn = cal(s.consensus);
+    Object.keys(cn).forEach((k) => { rows[k] = cn[k]; });
     sources.consensus = {
       label: 'Consensus',
       asOf: s.consensusAsOf, asOfFrom: s.consensusFrom,
       source: `Bloomberg consensus${s.consensusFrom === 'bbg'
         ? `, exported from Bloomberg on ${s.consensusAsOf}`
-        : ` as carried in the Summit snapshot of ${s.snapshot} — which dates the WORKBOOK, not the Bloomberg refresh inside it, so read it as an upper bound on how fresh the Street column is`}. Same vintage as the Summit column beside it, so the two are comparable. Consensus covers forward years only; FY${s.lastActual} and earlier are the reported figures, identical under either source. EPS is net income ÷ diluted shares.`,
-      years: shape(rows, s.lastActual),
+        : ` as carried in the Summit snapshot of ${s.snapshot} — which dates the WORKBOOK, not the Bloomberg refresh inside it, so read it as an upper bound on how fresh the Street column is`}. Same vintage as the Summit column beside it, so the two are comparable. Consensus covers forward years only; FY${lastA} and earlier are the reported figures, identical under either source. EPS is net income ÷ diluted shares.`,
+      years: shape(rows, lastA),
     };
   }
   OPT_ESTIMATES[tk] = {
-    name: s.name, currency: s.currency, adrRatio: s.adrRatio || 1,
+    name: s.name, currency: s.currency, adrRatio: s.adrRatio || 1, fiscalOffset: off,
     ebitdaLabel: 'EBITDA', epsLabel: 'EPS (derived)',
     sources,
   };
@@ -456,7 +478,7 @@ export function optEstimates(ticker, src) {
   if (!e || !e.sources[src]) return null;
   const s = e.sources[src];
   return {
-    name: e.name, currency: e.currency, adrRatio: e.adrRatio || 1,
+    name: e.name, currency: e.currency, adrRatio: e.adrRatio || 1, fiscalOffset: e.fiscalOffset || 0,
     ebitdaLabel: e.ebitdaLabel, epsLabel: e.epsLabel,
     label: s.label, source: s.source, years: s.years,
     asOf: s.asOf ?? null, asOfFrom: s.asOfFrom ?? null,

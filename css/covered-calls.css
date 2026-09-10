@@ -107,3 +107,28 @@
 #cc-root td.mcell input.mx { width: auto; max-width: 46px; }
 #cc-root td.mcell .mxu { font-weight: 700; font-size: 13px; color: inherit; margin-left: -1px; }
 #cc-root td.mcell input.mx:disabled + .mxu { display: none; }
+
+/* ── Ticker + Current pinned to the left ──────────────────────────────────────
+   The table runs ~1,800px and the card is ~1,220, so the Economics end is only
+   reachable by scrolling — and every number out there is read against the name
+   and the price it trades at. Those four columns stay. The `left` offsets are
+   measured and written by pinColumns(); everything structural is here.
+   Backgrounds are mandatory, not decoration: a transparent sticky cell lets the
+   scrolling columns slide visibly underneath it. */
+#cc-root [data-pin] { position: sticky; background: var(--w); }
+#cc-root tbody [data-pin] { z-index: 2; }
+/* the header is already sticky vertically; pinned header cells are sticky in both
+   axes and must sit above both the body pins and the rest of the header row */
+#cc-root thead th { z-index: 3; }
+#cc-root thead th[data-pin] { z-index: 4; }
+/* hover paints the whole row, so the pinned cells have to follow it */
+#cc-root tbody tr:hover [data-pin] { background: var(--pale); }
+/* the seam: a soft shadow off the last pinned column, so the split reads as a
+   pinned edge rather than a stray border */
+#cc-root [data-pin="3"] { box-shadow: 6px 0 7px -5px rgba(16, 24, 40, .13); }
+/* The card's horizontal padding has to go. A sticky cell anchors to the scroll
+   container's PADDING edge, so those 6px sat OUTSIDE the pinned column and the
+   scrolling columns were visible sliding through them — a sliver of moving numbers
+   down the left of the ticker. The cells carry 9px of their own padding, so nothing
+   ends up touching the border; only the gutter disappears. */
+#cc-root .card { padding-left: 0; padding-right: 0; }

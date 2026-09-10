@@ -386,6 +386,30 @@ function fundSection(series, cagrVal, pegVal) {
   return yrs + cg + pg;
 }
 
+// ── The identity columns stay put ─────────────────────────────────────────────
+// Ticker and Current (price and the two multiples it trades at) are what every
+// other column is read AGAINST, and the table is 1,800px wide — so scrolling to
+// the Economics end used to leave a row of numbers with nothing to say whose they
+// were. They are sticky horizontally now.
+//
+// The offsets have to be measured rather than declared: the columns size to their
+// contents, and a $17.33 book row is not as wide as a $653.61 one. Re-run after
+// every render, and on resize, because the widths move with the content.
+function pinColumns() {
+  const tbl = $('cc-tbl');
+  if (!tbl || tbl.hidden) return;
+  const ref = [...tbl.querySelectorAll('tbody tr')]
+    .find((tr) => tr.querySelectorAll('td[data-pin]').length >= 4);
+  if (!ref) return;
+  const w = [...ref.querySelectorAll('td[data-pin]')].slice(0, 4)
+    .map((td) => td.getBoundingClientRect().width);
+  const off = [0, w[0], w[0] + w[1], w[0] + w[1] + w[2]];
+  tbl.querySelectorAll('[data-pin]').forEach((el) => {
+    const i = +el.dataset.pin;
+    el.style.left = (off[i] != null ? off[i] : 0) + 'px';
+  });
+}
+
 // ── Render ────────────────────────────────────────────────────────────────────
 // Target multiple richer (higher) than current → green = called away at an
 // expensive valuation (good for a call seller); cheaper → red.
@@ -442,15 +466,15 @@ function render() {
   const fundLabels = showFund ? fyHdr + fyHdr : '';
   $('cc-thead').innerHTML = `
     <tr>
-      <th rowspan="2" class="tkh">Ticker</th>
-      <th colspan="3" class="grp sep">Current · ${mulBasis}</th>
+      <th rowspan="2" class="tkh" data-pin="0">Ticker</th>
+      <th colspan="3" class="grp sep" data-pin="1">Current · ${mulBasis}</th>
       ${fundGroups}
       <th colspan="4" class="grp sep">Target · ${mulBasis}</th>
       <th colspan="5" class="grp sep">Economics</th>
       <th rowspan="2" class="sep"></th>
     </tr>
     <tr>
-      <th class="sep">Price</th><th>P/E</th><th>EV/EBITDA</th>
+      <th class="sep" data-pin="1">Price</th><th data-pin="2">P/E</th><th data-pin="3">EV/EBITDA</th>
       ${fundLabels}
       <th class="sep">Strike</th><th>Impl. Upside</th><th>P/E</th><th>EV/EBITDA</th>
       <th class="sep sortable" data-sort="wt">Wt${sarrow('wt')}</th><th>Premium</th><th class="sortable" data-sort="yield">Yield${sarrow('yield')}</th><th class="sortable" data-sort="portyield">Port. yield${sarrow('portyield')}</th><th class="sortable" data-sort="contrib">Contrib.${sarrow('contrib')}</th>
@@ -459,8 +483,8 @@ function render() {
 
   // body
   $('cc-tbody').innerHTML = sortedRows().map((r) => {
-    if (r.loading) return `<tr><td class="tk">${r.ticker}</td><td colspan="${ncol - 1}" class="muted">loading…</td></tr>`;
-    if (r.err) return `<tr><td class="tk">${r.ticker}</td><td colspan="${ncol - 2}" class="err">${r.err}</td>
+    if (r.loading) return `<tr><td class="tk" data-pin="0">${r.ticker}</td><td colspan="${ncol - 1}" class="muted">loading…</td></tr>`;
+    if (r.err) return `<tr><td class="tk" data-pin="0">${r.ticker}</td><td colspan="${ncol - 2}" class="err">${r.err}</td>
       <td class="sep"><button class="x" data-del="${r.id}">✕</button></td></tr>`;
     const L = r.live, m = metrics(r);
     const ovr = r.override != null;
@@ -476,10 +500,10 @@ function render() {
       : '';
     const mismatch = (L.usedExpiry && expiry && L.usedExpiry !== expiry) || (L.usedStrike != null && L.usedStrike !== r.strike);
     return `<tr>
-      <td class="tk" title="${L.name || ''}">${r.ticker}${r.isEtf ? ' <span class="muted">ETF</span>' : (cur !== 'USD' ? ` <span class="cc" title="reports in ${cur}">${cur}</span>` : '')}</td>
-      <td class="sep big">${px(m.price)}</td>
-      <td><div class="fv">${mult(m.peP)}</div><div class="fg">${peg(m.pegPe)}</div></td>
-      <td><div class="fv">${mult(m.evP)}</div><div class="fg">${peg(m.pegEv)}</div></td>
+      <td class="tk" data-pin="0" title="${L.name || ''}">${r.ticker}${r.isEtf ? ' <span class="muted">ETF</span>' : (cur !== 'USD' ? ` <span class="cc" title="reports in ${cur}">${cur}</span>` : '')}</td>
+      <td class="sep big" data-pin="1">${px(m.price)}</td>
+      <td data-pin="2"><div class="fv">${mult(m.peP)}</div><div class="fg">${peg(m.pegPe)}</div></td>
+      <td data-pin="3"><div class="fv">${mult(m.evP)}</div><div class="fg">${peg(m.pegEv)}</div></td>
       ${fund}
       <td class="sep edit"><input type="number" step="1" value="${r.strike}" data-strike="${r.id}" class="${r.autoStrike ? 'auto' : ''}" title="${r.autoStrike ? 'no strike in the book — nearest listed strike at or above spot; type the real one over it'
         : (r.strikeFrom ? `set from ${r.strikeFrom.M}x ${r.strikeFrom.kind === 'ev' ? 'EV/EBITDA' : 'P/E'} on ${r.strikeFrom.basis} ${r.strikeFrom.src} — implied $${r.strikeFrom.wanted.toFixed(2)}, snapped to the nearest listed strike` : 'strike sold')}"></td>
@@ -501,6 +525,7 @@ function render() {
 
   $('cc-tbl').hidden = false; $('cc-status').hidden = true;
   wireRowInputs();
+  pinColumns();
 
   const anyMismatch = rows.some((r) => r.live && ((r.live.usedExpiry && expiry && r.live.usedExpiry !== expiry) || (r.live.usedStrike != null && r.live.usedStrike !== r.strike)));
   $('cc-foot').innerHTML = `
@@ -719,6 +744,9 @@ function wireControls() {
     $('cc-togFund').textContent = showFund ? 'Hide EBITDA / NI' : 'Show EBITDA / NI';
     render();
   };
+
+  // The pinned columns are placed from measured widths, so a resize moves them.
+  window.addEventListener('resize', pinColumns);
 
   // Hover tooltip (bid / ask / mid + trade time on the Premium cell). Delegated
   // on document so it keeps working across re-renders.

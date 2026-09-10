@@ -41,8 +41,8 @@
   color:var(--text); font-variant-numeric:tabular-nums;
 }
 .der-an .an-wrap{max-width:1620px;margin:0 auto;}
-.der-an .topbar{display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap;}
-.der-an .topbar h2{font-size:18px;font-weight:700;color:var(--text);text-transform:none;letter-spacing:-.01em;}
+.der-an .der-head{display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap;}
+.der-an .der-head h2{font-size:18px;font-weight:700;color:var(--text);text-transform:none;letter-spacing:-.01em;}
 .der-an .sub{color:var(--mu);font-size:13px;margin-bottom:12px;max-width:900px;}
 .der-an .controls{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin:0 0 14px;}
 .der-an .ctl{display:flex;flex-direction:column;gap:4px;}

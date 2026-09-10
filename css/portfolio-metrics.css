@@ -179,3 +179,56 @@
 #pm-root tfoot tr:hover{background:transparent;}
 #pm-root tfoot td.neg{color:var(--neg);cursor:help;}
 #pm-root tfoot td[title]{cursor:help;}
+
+/* Per-name beta method — the default bar reads as the default, and each row shows
+   its own method as a compact tag; clicking it expands an inline control strip
+   (accordion, one open at a time), so methodology is per name without a bank of
+   always-on controls cluttering the table. */
+#pm-root .pm-betabar-h{color:var(--navy);font-weight:700;}
+#pm-root .pm-daily-loading{font-size:11px;color:var(--mu);font-style:italic;margin:-8px 0 12px;}
+
+#pm-root td.pm-method{text-align:right;padding:6px 12px;}
+#pm-root .pm-mtag{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--bdr);
+  background:var(--w);color:var(--steel);border-radius:999px;padding:3px 10px;
+  font:600 11px 'Inter',sans-serif;font-variant-numeric:tabular-nums;cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s;}
+#pm-root .pm-mtag:hover{background:var(--pale);color:var(--navy);border-color:var(--steel);}
+#pm-root .pm-mtag.ov{border-color:var(--accent);color:var(--accent);background:rgba(37,99,235,.06);}
+#pm-root .pm-mtag.open{background:var(--navy);color:#fff;border-color:var(--navy);}
+#pm-root .pm-mchev{font-size:9px;opacity:.75;}
+#pm-root .pm-ovdot{display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:var(--accent);margin-left:7px;vertical-align:2px;}
+
+/* Inline control strip revealed under an expanded row. */
+#pm-root tr.pm-brow.open td{border-bottom-color:transparent;}
+#pm-root tr.pm-bctl td{background:var(--pale);padding:10px 14px;}
+#pm-root tr.pm-bctl:hover td{background:var(--pale);}
+#pm-root .pm-mstrip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+#pm-root .pm-mstrip .lbl{font-size:10px;color:var(--mu);font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;}
+#pm-root .pm-seg.pm-seg-sm button{padding:4px 10px;font-size:11.5px;}
+#pm-root input.pm-mwin{width:48px;font-family:inherit;font-size:11.5px;border:1px solid var(--bdr);
+  border-radius:6px;padding:4px 7px;background:var(--w);color:var(--text);text-align:right;}
+#pm-root input.pm-mwin:focus{outline:none;border-color:var(--accent);}
+#pm-root .pm-mn{font-size:10.5px;color:var(--mu);font-variant-numeric:tabular-nums;}
+#pm-root .pm-mreset{border:none;background:transparent;color:var(--steel);cursor:pointer;
+  font:600 11px 'Inter',sans-serif;padding:4px 7px;border-radius:6px;}
+#pm-root .pm-mreset:hover{background:var(--ice);color:var(--navy);}
+#pm-root .pm-mdef{font-size:10.5px;color:var(--mu);font-style:italic;}
+
+/* Paper prefill bar — load a whole book (Summit / a superinvestor / a teammate)
+   into the editable Paper table, then add or remove from there. */
+#pm-root .pm-prefill{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+#pm-root .pm-prefill .lbl{font-size:10px;color:var(--mu);font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;}
+#pm-root .pm-pf{border:1px solid var(--bdr);background:var(--w);color:var(--steel);
+  border-radius:999px;padding:5px 14px;font:600 12px 'Inter',sans-serif;cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s;}
+#pm-root .pm-pf:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+#pm-root .pm-pf-or{margin-left:2px;}
+#pm-root select.pm-pf-sel{font-family:inherit;font-size:12px;font-weight:600;color:var(--steel);
+  border:1px solid var(--bdr);border-radius:999px;padding:5px 12px;background:var(--w);cursor:pointer;
+  max-width:280px;}
+#pm-root select.pm-pf-sel:hover{border-color:var(--steel);color:var(--navy);}
+#pm-root select.pm-pf-sel:focus{outline:none;border-color:var(--accent);}
+#pm-root .pm-pf-hint{font-size:10.5px;color:var(--mu);font-style:italic;margin-left:2px;}

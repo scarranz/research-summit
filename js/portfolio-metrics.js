@@ -21,6 +21,7 @@ import { SUMMIT_FUND } from './portfolio-metrics-summit.js';
 import { CONSENSUS_FUND } from './portfolio-metrics-consensus.js';
 import { PRICES } from './portfolio-metrics-prices.js';
 import { PRICES_WEEKLY } from './portfolio-metrics-prices-weekly.js';
+import { INVESTORS } from './portal-data.js';
 import { liveQuote } from './api.js';
 
 // ── Portfolio subtab: the fixed book ─────────────────────────────────────────
@@ -71,12 +72,17 @@ let source = 'summit';                // 'summit' | 'consensus' — which estima
 let yearSel = String(CY + 1);         // selected "last" period; default = current+1
 const quotes = {};                    // ticker → { price, marketCap, ev, netDebt } | null (flows in millions)
 
-// Beta analysis parameters. Default is the market standard: last 5 years, monthly.
-// The embedded price history (portfolio-metrics-prices.js) is monthly, so daily /
-// weekly are surfaced but wait on a live price feed; monthly is fully computed.
-let betaFreq = 'monthly';             // 'daily' | 'weekly' | 'monthly'
-let betaAmt = 5;                      // lookback amount
-let betaUnit = 'y';                   // 'm' (months) | 'y' (years)
+// The fixed per-name beta default: the market standard, 5 years monthly. There is
+// no global control for it — methodology is chosen per name (see betaOverrides /
+// betaMethod); a name with no override simply computes at this default.
+// Monthly (portfolio-metrics-prices.js) and weekly (…-weekly.js) histories are
+// imported eagerly; the larger daily history (…-daily.js) is loaded on demand the
+// first time any name is switched to Daily, so it never weighs on initial load.
+const betaFreq = 'monthly';           // 'daily' | 'weekly' | 'monthly'
+const betaAmt = 5;                    // lookback amount
+const betaUnit = 'y';                 // 'm' (months) | 'y' (years)
+let PRICES_DAILY = null;              // filled by ensureDaily() on first Daily use
+let dailyState = 'idle';              // 'idle' | 'loading' | 'ready' | 'error'
 
 // Columns are labelled by position relative to the current calendar year — FY 0,
 // FY+1, FY+2 — with the calendar year itself underneath in small type. The
@@ -103,6 +109,7 @@ function periodInfo() {
 const METRIC_KEY = 'pm-metric-v2';
 const PAPER_KEY  = 'pm-paper-v1';
 const PWEIGHT_KEY = 'pm-port-weights-v1';
+const BETA_METHOD_KEY = 'pm-beta-methods-v1';
 
 function loadJSON(key, fallback) {
   try { const raw = localStorage.getItem(key); if (raw) return JSON.parse(raw); }
@@ -118,6 +125,10 @@ let metricData = loadJSON(METRIC_KEY, {});
 // and without them there is nothing for the footer average to weight by.
 let portWeights = loadJSON(PWEIGHT_KEY, {});
 let paper = (() => { const p = loadJSON(PAPER_KEY, {}); return { passive: p.passive || [], single: p.single || [] }; })();
+// Per-name beta method overrides, ticker → { freq, amt, unit }. Names without one
+// use the global default (betaFreq/betaAmt/betaUnit) — see betaMethod().
+let betaOverrides = loadJSON(BETA_METHOD_KEY, {});
+let betaOpen = null;   // ticker whose inline method strip is expanded (accordion)
 
 const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
 const esc = (s) => String(s ?? '').replace(/"/g, '&quot;');
@@ -595,40 +606,97 @@ function renderPortfolio() {
 // names without price data carry β 0, so they pull the aggregate toward zero).
 const _mean = (a) => a.reduce((s, x) => s + x, 0) / a.length;
 
-// Price source for the current frequency. Monthly is embedded in PRICES; weekly
-// in PRICES_WEEKLY. The typeof guard keeps the tab alive if the weekly file has
-// not loaded yet (weekly then simply reports no data rather than throwing).
-function betaData() {
-  if (betaFreq === 'weekly') return (typeof PRICES_WEEKLY !== 'undefined') ? PRICES_WEEKLY : null;
+// Price source for a given frequency. Monthly is embedded in PRICES, weekly in
+// PRICES_WEEKLY, daily in PRICES_DAILY once ensureDaily() has loaded it (null until
+// then, so a daily name reports "loading" instead of throwing).
+function betaData(freq) {
+  if (freq === 'weekly') return (typeof PRICES_WEEKLY !== 'undefined') ? PRICES_WEEKLY : null;
+  if (freq === 'daily') return PRICES_DAILY;
   return PRICES;
+}
+
+// Lazy-load the daily history (~400KB) the first time it is needed, then repaint
+// the Beta and Comparison views. Kept out of the initial bundle on purpose.
+async function ensureDaily() {
+  if (dailyState === 'ready' || dailyState === 'loading') return;
+  dailyState = 'loading';
+  renderBeta();
+  try {
+    const mod = await import('./portfolio-metrics-prices-daily.js');
+    PRICES_DAILY = mod.PRICES_DAILY;
+    dailyState = 'ready';
+  } catch (e) {
+    dailyState = 'error';
+  }
+  renderBeta();
+  renderBlended();
 }
 const betaMarket = () => (PRICES && PRICES.market) || 'SPY';
 
-// Series for a ticker at the current frequency: ascending [key, close] pairs
-// (key = 'YYYY-MM' monthly, 'YYYY-MM-DD' weekly), or null if not embedded.
-function betaSeries(t) {
-  const d = betaData();
+// Vocabulary per frequency, so labels read naturally whatever a name is set to.
+const FREQ_NOUN = {
+  daily:   { many: 'días',    adj: 'diarios',   label: 'diaria'  },
+  weekly:  { many: 'semanas', adj: 'semanales', label: 'semanal' },
+  monthly: { many: 'meses',   adj: 'mensuales', label: 'mensual' },
+};
+
+// The effective method for a name: its own override, else the global default.
+// Methodology varies a lot by name (a recent IPO wants daily/short; a mature name
+// the 5y-monthly standard), so each row may pin its own frequency + window.
+function betaMethod(t) {
+  const o = betaOverrides[t];
+  return (o && o.freq)
+    ? { freq: o.freq, amt: Number(o.amt), unit: o.unit, override: true }
+    : { freq: betaFreq, amt: Number(betaAmt), unit: betaUnit, override: false };
+}
+// Compact label for a method, e.g. "5A·M" (5 años, mensual) or "18M·D".
+const methodTag = (m) => `${m.amt}${m.unit === 'y' ? 'A' : 'M'}·${{ daily: 'D', weekly: 'S', monthly: 'M' }[m.freq]}`;
+
+// Set (or clear) a name's override from a partial patch, seeding missing fields
+// from its current effective method. If the result equals the global default it is
+// stored as "no override" so the name simply tracks the default again.
+function setBetaOverride(t, patch) {
+  const cur = betaMethod(t);
+  const next = { freq: cur.freq, amt: cur.amt, unit: cur.unit, ...patch };
+  if (next.freq === betaFreq && Number(next.amt) === Number(betaAmt) && next.unit === betaUnit) {
+    delete betaOverrides[t];
+  } else {
+    betaOverrides[t] = { freq: next.freq, amt: Number(next.amt), unit: next.unit };
+  }
+  saveJSON(BETA_METHOD_KEY, betaOverrides);
+}
+
+// True when the global default, or any name's override, asks for daily data.
+const needsDaily = () => betaFreq === 'daily' || Object.values(betaOverrides).some((o) => o && o.freq === 'daily');
+function maybeLoadDaily() {
+  if (needsDaily() && dailyState !== 'ready' && dailyState !== 'loading') ensureDaily();
+}
+
+// Series for a ticker at a given frequency: ascending [key, close] pairs
+// (key = 'YYYY-MM' monthly, 'YYYY-MM-DD' weekly/daily), or null if not embedded.
+function betaSeries(t, freq) {
+  const d = betaData(freq);
   const s = d && d.series && d.series[t];
   return Array.isArray(s) && s.length ? s : null;
 }
 
-// Earliest period key kept, given the lookback window (always expressed in
-// months), counted back from the source's asOf. Format matches the series keys.
-function betaCutoffKey() {
-  const d = betaData();
+// Earliest period key kept for a method's window, counted back from the source's
+// asOf. Format matches the series keys (month for monthly, day otherwise).
+function betaCutoffKey(m) {
+  const d = betaData(m.freq);
   const parts = String((d && d.asOf) || '').split('-');
-  const y = Number(parts[0]), m = Number(parts[1]), day = Number(parts[2] || 1);
-  if (!y || !m) return '0000-00';
-  const back = betaUnit === 'y' ? betaAmt * 12 : betaAmt;
-  const dt = new Date(Date.UTC(y, (m - 1) - back, day || 1));
-  return betaFreq === 'weekly' ? dt.toISOString().slice(0, 10) : dt.toISOString().slice(0, 7);
+  const y = Number(parts[0]), mo = Number(parts[1]), day = Number(parts[2] || 1);
+  if (!y || !mo) return '0000-00';
+  const back = m.unit === 'y' ? m.amt * 12 : m.amt;
+  const dt = new Date(Date.UTC(y, (mo - 1) - back, day || 1));
+  return m.freq === 'monthly' ? dt.toISOString().slice(0, 7) : dt.toISOString().slice(0, 10);
 }
 
-// Periodic simple returns inside the window, as a Map(periodKey → return).
-function betaReturns(t) {
-  const s = betaSeries(t);
+// Periodic simple returns inside a method's window, as a Map(periodKey → return).
+function betaReturns(t, m) {
+  const s = betaSeries(t, m.freq);
   if (!s) return null;
-  const from = betaCutoffKey();
+  const from = betaCutoffKey(m);
   const win = s.filter((r) => r[0] >= from);
   const out = new Map();
   for (let i = 1; i < win.length; i++) {
@@ -638,23 +706,24 @@ function betaReturns(t) {
   return out;
 }
 
-// { beta, n } for one name against the market. n = overlapping return periods.
+// { beta, n, method } for one name. Market returns use the SAME method as the name
+// (same frequency and window) so cov/var line up on overlapping periods.
 function betaOf(t) {
-  if (betaFreq === 'daily') return { beta: null, n: 0, unsupported: true };
-  const mR = betaReturns(betaMarket()), sR = betaReturns(t);
-  if (!mR || !sR) return { beta: null, n: 0 };
+  const m = betaMethod(t);
+  const mR = betaReturns(betaMarket(), m), sR = betaReturns(t, m);
+  if (!mR || !sR) return { beta: null, n: 0, method: m };
   const xs = [], ys = [];
   sR.forEach((v, k) => { if (mR.has(k)) { ys.push(v); xs.push(mR.get(k)); } });
   const n = xs.length;
-  if (n < 6) return { beta: null, n };                // too few points to trust
+  if (n < 6) return { beta: null, n, method: m };     // too few points to trust
   const mx = _mean(xs), my = _mean(ys);
   let cov = 0, varm = 0;
   for (let i = 0; i < n; i++) { cov += (xs[i] - mx) * (ys[i] - my); varm += (xs[i] - mx) ** 2; }
-  return { beta: varm > 0 ? cov / varm : null, n };
+  return { beta: varm > 0 ? cov / varm : null, n, method: m };
 }
 
-// Portfolio β = Σ (weight_i × β_i) ÷ 100. Cash (unclaimed weight) and names with
-// no price data contribute 0, so the divisor stays 100 and they drag β toward 0.
+// Portfolio β = Σ (weight_i × β_i) ÷ 100, each name at its own method. Cash and
+// names with no price data contribute 0, so they drag β toward 0.
 function portBeta(items) {
   let bSum = 0, wCov = 0;
   items.forEach((it) => {
@@ -667,79 +736,105 @@ function portBeta(items) {
   return { beta: wCov > 0 ? bSum / 100 : null, covered: wCov };
 }
 
-const betaFreqLabel = () => ({ daily: 'diaria', weekly: 'semanal', monthly: 'mensual' }[betaFreq]);
-const betaNoun = (pl) => betaFreq === 'weekly' ? (pl ? 'semanas' : 'semana') : (pl ? 'meses' : 'mes');
-
-function betaControls() {
-  const freqs = [['daily', 'Diario'], ['weekly', 'Semanal'], ['monthly', 'Mensual']];
-  const units = [['m', 'Meses'], ['y', 'A&ntilde;os']];
+// The per-name control strip, revealed under a row when its method tag is clicked.
+function methodStrip(t, m, n) {
+  const freqs = [['daily', 'D'], ['weekly', 'S'], ['monthly', 'M']];
+  const units = [['m', 'M'], ['y', 'A']];
   const presets = [['1', 'y'], ['2', 'y'], ['3', 'y'], ['5', 'y']];
-  return `
-    <div class="pm-betabar">
-      <span class="lbl">Frecuencia</span>
-      <div class="pm-seg">${freqs.map(([k, l]) =>
-        `<button data-bfreq="${k}" class="${betaFreq === k ? 'on' : ''}">${l}</button>`).join('')}</div>
-      <span class="lbl" style="margin-left:10px">Ventana</span>
-      <input class="pm-binp" data-blb value="${esc(betaAmt)}" inputmode="numeric" aria-label="lookback">
-      <div class="pm-seg">${units.map(([k, l]) =>
-        `<button data-bunit="${k}" class="${betaUnit === k ? 'on' : ''}">${l}</button>`).join('')}</div>
-      <div class="pm-seg" style="margin-left:10px">${presets.map(([a, u]) =>
-        `<button data-bpreset="${a}${u}" class="${String(betaAmt) === a && betaUnit === u ? 'on' : ''}">${a}A</button>`).join('')}</div>
+  return `<div class="pm-mstrip" data-mtk="${esc(t)}">
+      <span class="lbl">Frec</span>
+      <div class="pm-seg pm-seg-sm">${freqs.map(([k, l]) =>
+        `<button data-mfreq="${k}" class="${m.freq === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <span class="lbl">Ventana</span>
+      <input class="pm-mwin" data-mwin value="${esc(m.amt)}" inputmode="numeric" aria-label="ventana">
+      <div class="pm-seg pm-seg-sm">${units.map(([k, l]) =>
+        `<button data-munit="${k}" class="${m.unit === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <div class="pm-seg pm-seg-sm">${presets.map(([a, u]) =>
+        `<button data-mpreset="${a}${u}" class="${String(m.amt) === a && m.unit === u ? 'on' : ''}">${a}A</button>`).join('')}</div>
+      <span class="pm-mn">n&nbsp;=&nbsp;${n || '&mdash;'}</span>
+      ${m.override
+        ? `<button class="pm-mreset" data-mreset title="Volver al método por defecto">&#8635; default</button>`
+        : `<span class="pm-mdef">usa el default</span>`}
     </div>`;
 }
 
 function betaBlock(side) {
   const items = side === 'paper' ? paperItems() : portItems();
-  const unsupported = betaFreq === 'daily';
   const pb = portBeta(items);
-  const winTxt = `${betaAmt} ${betaUnit === 'y' ? (betaAmt == 1 ? 'a&ntilde;o' : 'a&ntilde;os') : 'meses'}`;
+  // Whatever the weights leave short of 100% is cash — it carries no beta, so it
+  // counts as β 0 in the weighted average (same treatment as the metric tables).
+  const sumW = items.reduce((a, it) => { const w = num(it.weight); return a + (w && w > 0 ? w : 0); }, 0);
+  const cash = 100 - sumW;
 
-  const body = unsupported
-    ? `<div class="pm-ph">La frecuencia <b>diaria</b> necesita el feed de precios en vivo (pr&oacute;ximamente).
-         Por ahora el c&aacute;lculo est&aacute; disponible en <b>Semanal</b> y <b>Mensual</b>.</div>`
-    : `<div class="card">
-        <table>
-          <thead><tr><th>Name</th><th>Weight</th><th>Beta</th><th>n</th></tr></thead>
-          <tbody>${items.map((it) => {
-            const r = betaOf(it.ticker);
-            const w = num(it.weight);
-            const b = r && r.beta != null;
-            return `<tr>
-              <td class="tk">${labelOf(it.ticker)}</td>
-              <td class="num">${w === null ? '&mdash;' : w.toFixed(1) + '%'}</td>
-              <td class="num pm-beta${b ? ' pm-beta-cell' : ''}${b && r.beta >= 1 ? ' hi' : b ? ' lo' : ''}"${b ? ` data-bt="${esc(it.ticker)}" title="Ver beta histórica"` : ''}>${b ? r.beta.toFixed(2) : '&mdash;'}</td>
-              <td class="num muted">${r && r.n ? r.n : '&mdash;'}</td>
-            </tr>`;
-          }).join('')}</tbody>
-          <tfoot><tr class="pm-wavg">
+  const rows = items.map((it) => {
+    const t = it.ticker;
+    const r = betaOf(t);
+    const m = r.method;
+    const w = num(it.weight);
+    const has = r.beta != null;
+    const pending = m.freq === 'daily' && dailyState !== 'ready';
+    const open = betaOpen === t;
+
+    const betaCell = has
+      ? `<td class="num pm-beta pm-beta-cell ${r.beta >= 1 ? 'hi' : 'lo'}" data-bt="${esc(t)}" title="Ver beta histórica &middot; n=${r.n}">${r.beta.toFixed(2)}</td>`
+      : `<td class="num pm-beta muted"${pending ? ' title="Cargando historial diario…"' : ''}>${pending ? '&middot;&middot;&middot;' : '&mdash;'}</td>`;
+    const methodCell = `<td class="pm-method">
+        <button class="pm-mtag${m.override ? ' ov' : ''}${open ? ' open' : ''}" data-bopen="${esc(t)}"
+          title="${m.override ? 'Método propio' : 'Método por defecto'} — clic para ajustar">
+          ${methodTag(m)}<span class="pm-mchev">${open ? '&#9662;' : '&#9656;'}</span></button>
+      </td>`;
+
+    const rowTr = `<tr class="pm-brow${open ? ' open' : ''}">
+        <td class="tk">${labelOf(t)}${m.override ? '<span class="pm-ovdot" title="Método propio"></span>' : ''}</td>
+        <td class="num">${w === null ? '&mdash;' : w.toFixed(1) + '%'}</td>
+        ${betaCell}${methodCell}
+      </tr>`;
+    const ctlTr = open ? `<tr class="pm-bctl"><td colspan="4">${methodStrip(t, m, r.n)}</td></tr>` : '';
+    return rowTr + ctlTr;
+  }).join('');
+
+  return `
+    ${dailyState === 'loading' ? '<div class="pm-daily-loading">Cargando historial de precios diario&hellip;</div>' : ''}
+    <div class="card">
+      <table>
+        <thead><tr><th>Name</th><th>Weight</th><th>Beta</th><th>M&eacute;todo</th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          ${cash > 0.05 ? `<tr class="pm-cash">
+            <td class="tk">Cash</td>
+            <td class="num">${cash.toFixed(1)}%</td>
+            <td class="num muted" title="El cash no tiene beta — cuenta como β 0 en el promedio.">&beta; 0.00</td>
+            <td></td>
+          </tr>` : ''}
+          <tr class="pm-wavg">
             <td class="tk">Portfolio &beta;</td>
-            <td class="num">${pb.covered.toFixed(1)}%</td>
+            <td class="num" title="${pb.covered.toFixed(1)}% del libro tiene beta calculable${cash > 0.05 ? ` · ${cash.toFixed(1)}% es cash (β 0)` : ''}${sumW > 100 ? ` · pesos suman ${sumW.toFixed(1)}% (sobre 100%)` : ''}.">${(sumW > 100 ? sumW : 100).toFixed(1)}%</td>
             <td class="num pm-beta">${pb.beta != null ? pb.beta.toFixed(2) : '&mdash;'}</td>
             <td></td>
-          </tr></tfoot>
-        </table>
-      </div>
-      <p class="pm-note">&beta; vs <b>${betaMarket()}</b> &middot; retornos ${({ daily: 'diarios', weekly: 'semanales', monthly: 'mensuales' }[betaFreq])} &middot;
-        ventana ${winTxt} (hasta ${((betaData() || {}).asOf) || '&mdash;'}). &beta; = cov(activo, mercado) / var(mercado);
-        <b>n</b> = ${betaNoun(true)} de retornos. El &beta; del portafolio es el promedio ponderado por peso &mdash; efectivo y
-        nombres sin historial cuentan como &beta; 0.</p>`;
-
-  return `${betaControls()}${body}`;
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <p class="pm-note">&beta; vs <b>${betaMarket()}</b>. Por defecto cada nombre usa <b>5 a&ntilde;os &middot; mensual</b>; clic en su
+      etiqueta de <b>M&eacute;todo</b> para cambiar frecuencia y ventana <b>solo en esa acci&oacute;n</b> (las ajustadas se marcan
+      con &bull;). &beta; = cov(activo, mercado) / var(mercado), ambos a la misma frecuencia y ventana; el &beta; del portafolio
+      es el promedio ponderado por peso &mdash; efectivo y nombres sin historial cuentan como &beta; 0.</p>`;
 }
 
 function renderBeta() {
+  maybeLoadDaily();
   const a = document.getElementById('pm-an-beta');
   if (a) a.innerHTML = betaBlock('metrics');
   const b = document.getElementById('pm-an-beta-paper');
   if (b) b.innerHTML = betaBlock('paper');
 }
 
-// Rolling beta over ALL available history: at each month with `win` trailing
-// return-periods, β over that trailing window. This is what the click-through
-// chart plots — how a name's beta has drifted, independent of the table's
-// selected lookback (that lookback only sets the single number in the table).
-function rollingBeta(t, win) {
-  const s = betaSeries(t), ms = betaSeries(PRICES && PRICES.market);
+// Rolling beta over ALL available history at a given frequency: at each period
+// with `win` trailing return-periods, β over that trailing window. This is what
+// the click-through chart plots — how a name's beta has drifted, independent of
+// the row's selected lookback (that lookback only sets the single table number).
+function rollingBeta(t, win, freq) {
+  const s = betaSeries(t, freq), ms = betaSeries(betaMarket(), freq);
   if (!s || !ms) return [];
   const mret = new Map();
   for (let i = 1; i < ms.length; i++) {
@@ -785,19 +880,21 @@ let _betaChart = null;
 function openBetaChart(ticker) {
   const overlay = document.getElementById('pm-beta-modal');
   if (!overlay || typeof Chart === 'undefined') return;
-  const avail = (betaSeries(ticker) || []).length - 1;   // return-periods available
-  // Rolling window sized to the frequency: ~2y monthly, ~1y weekly, floored.
-  const target = betaFreq === 'weekly' ? 52 : 24;
-  const floor = betaFreq === 'weekly' ? 26 : 12;
+  const m = betaMethod(ticker);                          // the name's own method
+  const noun = FREQ_NOUN[m.freq];
+  const avail = (betaSeries(ticker, m.freq) || []).length - 1;   // return-periods available
+  // Rolling window sized to the frequency: ~1y daily, ~1y weekly, ~2y monthly, floored.
+  const target = { daily: 252, weekly: 52, monthly: 24 }[m.freq];
+  const floor  = { daily: 120, weekly: 26, monthly: 12 }[m.freq];
   const win = Math.max(floor, Math.min(target, avail - 6));
-  const series = rollingBeta(ticker, win);
+  const series = rollingBeta(ticker, win, m.freq);
 
   document.getElementById('pm-bm-title').textContent = `${labelOf(ticker)} — Beta histórica`;
   const cur = betaOf(ticker);
   document.getElementById('pm-bm-sub').innerHTML =
-    `Beta móvil de ${win} ${betaNoun(true)} vs ${betaMarket()} (${betaFreqLabel()})` +
+    `Beta móvil de ${win} ${noun.many} vs ${betaMarket()} (${noun.label})` +
     (cur && cur.beta != null
-      ? ` &middot; β actual (${betaAmt}${betaUnit === 'y' ? 'A' : 'M'}) = <b>${cur.beta.toFixed(2)}</b>` : '');
+      ? ` &middot; β actual (${methodTag(m)}) = <b>${cur.beta.toFixed(2)}</b>` : '');
 
   overlay.classList.add('open');
   if (_betaChart) { _betaChart.destroy(); _betaChart = null; }
@@ -810,7 +907,7 @@ function openBetaChart(ticker) {
       labels: series.map((p) => p.key),
       datasets: [
         {
-          label: `Beta (móvil ${win} ${betaNoun(true)})`, data: series.map((p) => p.beta),
+          label: `Beta (móvil ${win} ${noun.many})`, data: series.map((p) => p.beta),
           borderColor: '#2563EB', backgroundColor: 'rgba(37,99,235,.08)',
           fill: true, tension: 0.25, pointRadius: 0, borderWidth: 2,
         },
@@ -1053,6 +1150,72 @@ function schedulePaperQuotes() {
 // ── Paper subtab: manually-built book ────────────────────────────────────────
 function savePaper() { saveJSON(PAPER_KEY, paper); }
 
+// Prefill the Paper book from a real book — Summit's own or a superinvestor's —
+// so you start from a full set of names and edit from there instead of adding them
+// one by one. A book is { passive, single } of { ticker, weight }; weights are
+// typed percents and a missing one is left blank to fill in.
+const pfRows = (arr) => (arr || []).map((h) => ({
+  ticker: h.ticker, weight: h.weight == null || h.weight === '' ? '' : String(h.weight),
+}));
+
+// Summit's own book, carrying whatever book weights are currently set.
+const summitBook = () => ({
+  passive: PORTFOLIO.passive.map((x) => ({ ticker: x.ticker, weight: portWeights[x.ticker] ?? '' })),
+  single:  PORTFOLIO.single.map((x)  => ({ ticker: x.ticker, weight: portWeights[x.ticker] ?? '' })),
+});
+
+// Teammates' model books — provided by the team, all individual names. Weights are
+// percent of book. Edit here to update a teammate's prefill.
+const TEAM_BOOKS = {
+  pvg: { label: 'PVG', single: [
+    { ticker: 'SE', weight: 15 }, { ticker: 'AFRM', weight: 10 }, { ticker: 'PGY', weight: 8.5 },
+    { ticker: 'KKR', weight: 8 }, { ticker: 'EAT', weight: 5 }, { ticker: 'ADBE', weight: 4.5 },
+    { ticker: 'WRBY', weight: 2.2 },
+  ] },
+  sab: { label: 'SAB', single: [
+    { ticker: 'GRAB', weight: 27.3 }, { ticker: 'SN', weight: 22.5 },
+    { ticker: 'RDDT', weight: 13 }, { ticker: 'ONON', weight: 10 },
+  ] },
+};
+const teamBook = (key) => ({ passive: [], single: TEAM_BOOKS[key].single });
+
+// A superinvestor's latest-snapshot holdings (INVESTORS[].holdings: {t, w}). They
+// are individual names, so everything lands under Single Stock.
+function investorBook(key) {
+  const inv = (INVESTORS || []).find((x) => x.key === key);
+  const holds = (inv && inv.holdings) || [];
+  return { label: inv ? inv.name : key, passive: [], single: holds.map((h) => ({ ticker: h.t, weight: h.w })) };
+}
+
+// Replace the Paper book with a source (confirm first if it already has edits).
+function applyPrefill(label, next) {
+  const hasContent = paper.passive.length || paper.single.length;
+  if (hasContent && !confirm(`¿Reemplazar las posiciones actuales del Paper con las de ${label}?`)) return;
+  paper.passive = pfRows(next.passive);
+  paper.single  = pfRows(next.single);
+  savePaper();
+  renderPaperBody();
+  refreshPaperFoot();
+  schedulePaperQuotes();   // pull quotes for the freshly-added names
+  renderBeta();            // beta table + portfolio β follow the paper book
+  renderBlended();         // Before/After comparison too
+}
+
+function prefillBar() {
+  const invs = (INVESTORS || []).filter((x) => x.key !== 'summit' && x.holdings && x.holdings.length);
+  return `<div class="pm-prefill">
+      <span class="lbl">Prellenar con</span>
+      <button class="pm-pf" data-prefill="summit">Summit</button>
+      ${Object.keys(TEAM_BOOKS).map((k) => `<button class="pm-pf" data-prefill="${esc(k)}">${TEAM_BOOKS[k].label}</button>`).join('')}
+      <span class="lbl pm-pf-or">o superinversor</span>
+      <select class="pm-pf-sel" data-prefill-inv aria-label="Prellenar con un superinversor">
+        <option value="">Elegir&hellip;</option>
+        ${invs.map((x) => `<option value="${esc(x.key)}">${esc(x.name)}${x.fund ? ' · ' + esc(x.fund) : ''}</option>`).join('')}
+      </select>
+      <span class="pm-pf-hint">reemplaza el Paper &mdash; luego agregas o quitas</span>
+    </div>`;
+}
+
 // Typed tickers are normalised to upper case for every lookup (quotes, SUMMIT_FUND,
 // saved metric values) while the input keeps whatever the user actually typed.
 const paperTicker = (item) => (item.ticker || '').trim().toUpperCase();
@@ -1085,6 +1248,7 @@ function paperGroup(label, group) {
 
 function paperTable() {
   return `
+    ${prefillBar()}
     ${metricBar()}
     <div class="card">
       <table data-side="paper">
@@ -1186,6 +1350,45 @@ function wire(root) {
     // Beta cell → open the historical (rolling) beta chart for that name
     const bcell = e.target.closest('.pm-beta-cell');
     if (bcell && bcell.dataset.bt) { openBetaChart(bcell.dataset.bt); return; }
+    // Method tag → expand/collapse that name's method strip (accordion: one open)
+    const bopen = e.target.closest('[data-bopen]');
+    if (bopen) {
+      betaOpen = (betaOpen === bopen.dataset.bopen) ? null : bopen.dataset.bopen;
+      renderBeta();
+      return;
+    }
+    // Per-name method: frequency
+    const mf = e.target.closest('.pm-mstrip button[data-mfreq]');
+    if (mf) {
+      const t = mf.closest('.pm-mstrip').dataset.mtk;
+      setBetaOverride(t, { freq: mf.dataset.mfreq });
+      if (mf.dataset.mfreq === 'daily' && dailyState !== 'ready') ensureDaily();
+      renderBeta(); renderBlended();
+      return;
+    }
+    // Per-name method: lookback unit (months / years)
+    const mu = e.target.closest('.pm-mstrip button[data-munit]');
+    if (mu) {
+      setBetaOverride(mu.closest('.pm-mstrip').dataset.mtk, { unit: mu.dataset.munit });
+      renderBeta(); renderBlended();
+      return;
+    }
+    // Per-name method: lookback preset (e.g. "3y")
+    const mp = e.target.closest('.pm-mstrip button[data-mpreset]');
+    if (mp) {
+      const v = mp.dataset.mpreset;
+      setBetaOverride(mp.closest('.pm-mstrip').dataset.mtk, { amt: Number(v.slice(0, -1)), unit: v.slice(-1) });
+      renderBeta(); renderBlended();
+      return;
+    }
+    // Per-name method: reset to the global default
+    const mr = e.target.closest('.pm-mstrip [data-mreset]');
+    if (mr) {
+      const t = mr.closest('.pm-mstrip').dataset.mtk;
+      delete betaOverrides[t]; saveJSON(BETA_METHOD_KEY, betaOverrides);
+      renderBeta(); renderBlended();
+      return;
+    }
     // Close the beta chart modal (× button, or a click on the dimmed backdrop)
     if (e.target.closest('[data-bm-close]') ||
         (e.target.classList && e.target.classList.contains('pm-beta-ov'))) {
@@ -1222,18 +1425,12 @@ function wire(root) {
       renderAll();
       return;
     }
-    // Beta: frequency
-    const bf = e.target.closest('.pm-seg button[data-bfreq]');
-    if (bf) { betaFreq = bf.dataset.bfreq; renderBeta(); renderBlended(); return; }
-    // Beta: lookback unit (months / years)
-    const bu = e.target.closest('.pm-seg button[data-bunit]');
-    if (bu) { betaUnit = bu.dataset.bunit; renderBeta(); renderBlended(); return; }
-    // Beta: lookback preset (e.g. "3y")
-    const bp = e.target.closest('.pm-seg button[data-bpreset]');
-    if (bp) {
-      const v = bp.dataset.bpreset;
-      betaAmt = Number(v.slice(0, -1)); betaUnit = v.slice(-1);
-      renderBeta(); renderBlended();
+    // Paper: prefill the book from Summit or a teammate's model book
+    const pf = e.target.closest('[data-prefill]');
+    if (pf) {
+      const k = pf.dataset.prefill;
+      if (k === 'summit') applyPrefill('Summit', summitBook());
+      else if (TEAM_BOOKS[k]) applyPrefill(TEAM_BOOKS[k].label, teamBook(k));
       return;
     }
     // Paper: add row
@@ -1258,13 +1455,14 @@ function wire(root) {
   });
 
   root.addEventListener('input', (e) => {
-    // Beta lookback field — update the amount as they type, but hold the repaint
-    // until they commit (change/blur) so the input keeps focus and cursor.
-    const blb = e.target.closest('.pm-binp');
-    if (blb) {
-      const v = parseInt(blb.value, 10);
-      if (Number.isFinite(v) && v > 0) betaAmt = v;
-      return;
+    // Per-name window field (inside a method strip) — update that name's override.
+    // Held until commit (change/blur) so the field keeps focus and cursor.
+    const mwin = e.target.closest('.pm-mwin');
+    if (mwin) {
+      const t = mwin.closest('.pm-mstrip').dataset.mtk;
+      const v = parseInt(mwin.value, 10);
+      if (Number.isFinite(v) && v > 0) setBetaOverride(t, { amt: v });
+      return;   // hold repaint until commit (change/blur) so the field keeps focus
     }
     // Portfolio metric inputs (manual value or manual multiple) → save + recompute
     const minp = e.target.closest('.pm-minp');
@@ -1316,6 +1514,13 @@ function wire(root) {
 
   // Commit the beta lookback field on blur / Enter, then repaint the beta panes.
   root.addEventListener('change', (e) => {
-    if (e.target.closest('.pm-binp')) { renderBeta(); renderBlended(); }
+    // Paper: prefill from a superinvestor picked in the dropdown
+    const pinv = e.target.closest('[data-prefill-inv]');
+    if (pinv) {
+      const key = pinv.value; pinv.value = '';   // reset so the same pick can re-fire
+      if (key) { const book = investorBook(key); applyPrefill(book.label, book); }
+      return;
+    }
+    if (e.target.closest('.pm-mwin')) { renderBeta(); renderBlended(); }
   });
 }

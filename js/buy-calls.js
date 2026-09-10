@@ -25,7 +25,7 @@ import {
   fetchExpiries, fetchUnderlying, fetchChain,
   listedStrikes, bandAround, premiumOf, quoteTip,
   estimatesFor, resolveSource, sourceSegments, estNote, yearsOf, estYearsOf, usable, yl, isFlexed, ensureFx,
-  effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip, vintageBadge,
+  effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip, vintageBadge, whyBlank,
 } from './options-core.js';
 
 const $ = (id) => document.getElementById(id);
@@ -190,7 +190,7 @@ function renderKpis() {
     ['Premium', r ? px(r.prem) : '—', r ? `${cash(r.cost)} per contract · ${st.premBasis}` : '—'],
     ['Breakeven', r ? px(r.be) : '—', r ? `${pctS(r.toBe)} from spot` : '—'],
     [`P/E at breakeven · ${yl(est, st.basisYear)}`, r ? mult(r.peBe) : '—',
-      cur.pe != null ? `spot is ${mult(cur.pe)}` : (usable(est) ? 'no EPS estimate' : (est ? `no ${est.currency}→USD rate` : 'no estimate set'))],
+      cur.pe != null ? `spot is ${mult(cur.pe)}` : whyBlank('pe', st.basisYear, E, est, live())],
     ['Min. portfolio', r ? cash(r.minPort) : '—',
       r ? `${cash(r.notional)} notional at ${pct(st.exposurePct, 1)}` : '—'],
   ];

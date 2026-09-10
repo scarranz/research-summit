@@ -186,7 +186,11 @@ export const estYearsOf = (e) => yearsOf(e).filter((y) => e.years[y] && e.years[
 // The rate is fetched once per currency and cached for the session. If it cannot
 // be fetched the multiples stay blank — a stale or invented FX rate would be the
 // worse answer, and estNote() says so out loud.
-const FXCFG = { EUR: { pair: 'EURUSD', invert: false }, MXN: { pair: 'USDMXN', invert: true } };
+const FXCFG = {
+  EUR: { pair: 'EURUSD', invert: false },
+  MXN: { pair: 'USDMXN', invert: true },
+  TWD: { pair: 'USDTWD', invert: true },
+};
 const FX = { USD: { rate: 1, asOf: null } };   // currency → { rate, asOf }, native→USD
 const fxPending = {};
 
@@ -288,14 +292,45 @@ export function multiplesAt(price, year, E, e, live) {
   if (!y) return { pe: null, ev: null };
   const fx = fxRate(e.currency);
   const cap = capital(E, year, live);
-  const eps = (y.eps != null) ? y.eps * fx : null;
+  // An ADR is worth `adrRatio` ordinary shares, so the price being held is a price
+  // for that many at once. Per-share figures scale UP by the ratio and the share
+  // COUNT scales down: TSM's 25.9bn Taipei ordinaries are 5.19bn New York ADSs.
+  // The ratio is 1 for every ordinary listing, so this is a no-op everywhere else.
+  // Absolute lines (revenue, EBITDA, net debt) are unaffected — the company is the
+  // same size however its equity is sliced.
+  const adr = e.adrRatio || 1;
+  const eps = (y.eps != null) ? y.eps * adr * fx : null;
+  const shares = (cap.shares != null) ? cap.shares / adr : null;
   const ebitda = (y.ebitda != null) ? y.ebitda * fx : null;
   const netDebt = (cap.netDebt == null) ? null : (cap.native ? cap.netDebt * fx : cap.netDebt);
   return {
     pe: (eps != null && eps > 0) ? price / eps : null,
-    ev: (ebitda != null && ebitda > 0 && cap.shares != null && netDebt != null)
-      ? (price * cap.shares + netDebt) / ebitda : null,
+    ev: (ebitda != null && ebitda > 0 && shares != null && netDebt != null)
+      ? (price * shares + netDebt) / ebitda : null,
   };
+}
+
+// Why a multiple came out blank — the INPUT that is missing, not a guess. A KPI
+// that says "no EBITDA estimate" when the EBITDA is right there and it is the net
+// debt that Massive never returned sends the reader looking in the wrong place.
+export function whyBlank(kind, year, E, e, live) {
+  if (!e) return 'no estimate set';
+  if (!usable(e)) return `no ${e.currency}→USD rate`;
+  const y = E[year];
+  if (!y) return `nothing for ${year}`;
+  if (kind === 'pe') {
+    if (y.eps == null) return 'no EPS estimate';
+    if (!(y.eps > 0)) return 'loss-making that year';
+    return '';
+  }
+  if (y.ebitda == null) return 'no EBITDA estimate';
+  if (!(y.ebitda > 0)) return 'EBITDA not positive';
+  const cap = capital(E, year, live);
+  if (cap.shares == null) return 'no share count';
+  // Massive returns no enterprise value for foreign issuers, so there is nothing
+  // to back out net debt from and the estimate set carries none either.
+  if (cap.netDebt == null) return 'no net debt for this name';
+  return '';
 }
 
 // YoY growth of one estimate line, its CAGR across the window, and its margin on

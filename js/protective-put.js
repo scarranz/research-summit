@@ -28,7 +28,7 @@ import {
   fetchExpiries, fetchUnderlying, fetchChain,
   listedStrikes, bandAround, premiumOf, quoteTip,
   estimatesFor, resolveSource, sourceSegments, estNote, yearsOf, estYearsOf, usable, yl, isFlexed, ensureFx,
-  effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip, vintageBadge,
+  effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip, vintageBadge, whyBlank,
 } from './options-core.js';
 
 const $ = (id) => document.getElementById(id);
@@ -187,7 +187,7 @@ function renderKpis() {
     ['Floor', r ? px(r.floor) : '—', r ? `strike − ${px(r.prem)} premium` : '—'],
     ['Max loss', r ? pctS(r.maxLoss) : '—', 'from spot, however far it falls'],
     [`EV/EBITDA at the strike · ${yl(est, st.basisYear)}`, r ? mult(r.evK) : '—',
-      cur.ev != null ? `spot is ${mult(cur.ev)}` : (usable(est) ? 'no EBITDA estimate' : (est ? `no ${est.currency}→USD rate` : 'no estimate set'))],
+      cur.ev != null ? `spot is ${mult(cur.ev)}` : whyBlank('ev', st.basisYear, E, est, live())],
     ['Cost of the hedge', r ? cash(r.costTotal) : '—',
       r ? `${pct(r.costPctPos, 2)} of ${cash(posValue)} · ${pct(r.annCost, 1)} annualised` : '—'],
   ];

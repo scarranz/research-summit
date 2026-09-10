@@ -8,7 +8,7 @@ import { POSITIONS } from './covered-calls-positions.js';
 import { EST_STORE, optSources } from './options-data.js';
 import { coveredCallsQuote } from './api.js';
 // Shared with the other three panes so a date means the same thing everywhere.
-import { esc, ageDays, STALE_DAYS } from './options-core.js';
+import { esc, ageDays, STALE_DAYS, ensureFx, fxRate as coreFxRate, fxLabel } from './options-core.js';
 
 // The estimate store, reshaped to what this tab reads: { currency, years } where a
 // year carries ebitda / earnings / shares_out. `estSrc` picks whose numbers those
@@ -36,7 +36,7 @@ function SU(ticker) {
   Object.keys(merged).forEach((k) => {
     const r = merged[k];
     years[k] = { rev: r.rev, ebitda: r.ebitda, earnings: r.earnings, shares_out: r.shares,
-                 est: +k > s.lastActual };
+                 netDebt: r.netDebt ?? null, est: +k > s.lastActual };
   });
   // `lastActual` differs by name: NVIDIA's FY2026 closed in January and is
   // reported, so its FY26 column is an actual while everyone else's is a forecast.
@@ -46,9 +46,9 @@ function SU(ticker) {
 
 const $ = (id) => document.getElementById(id);
 
-// Foreign currency → Massive forex pair. invert=true means the pair is USD/XXX,
-// so XXX→USD = 1 / close (e.g. USDMXN). EUR uses EURUSD directly.
-const FXCFG = { EUR: { pair: 'EURUSD', invert: false }, MXN: { pair: 'USDMXN', invert: true } };
+// The FX table used to live here, knowing only EUR and MXN. It now lives in
+// options-core.js alongside the three ladder panes' copy of the same problem, so
+// adding a currency (TWD, for TSM) is one edit and every pane gets it.
 const T0 = 2025;                 // last reported fiscal year (t0)
 const FY = [T0, T0 + 1, T0 + 2, T0 + 3]; // t0..t+3 shown in the fundamentals block. The
                                         // store runs to FY2028, so the block and the
@@ -107,14 +107,15 @@ function basisFundamentals(ticker) {
   if (!su || !su.years) return null;
   const yv = (y, k) => su.years[y]?.[k];
   const g  = (y, k) => (yv(y, k) != null && yv(y - 1, k) != null && yv(y - 1, k) > 0) ? yv(y, k) / yv(y - 1, k) - 1 : null;
-  if (mulBasis === '2026E') return { ebitda: yv(FY[1], 'ebitda'), earnings: yv(FY[1], 'earnings'), gEb: g(FY[1], 'ebitda'), gEa: g(FY[1], 'earnings') };
-  if (mulBasis === '2027E') return { ebitda: yv(FY[2], 'ebitda'), earnings: yv(FY[2], 'earnings'), gEb: g(FY[2], 'ebitda'), gEa: g(FY[2], 'earnings') };
-  if (mulBasis === '2028E') return { ebitda: yv(FY[3], 'ebitda'), earnings: yv(FY[3], 'earnings'), gEb: g(FY[3], 'ebitda'), gEa: g(FY[3], 'earnings') };
+  if (mulBasis === '2026E') return { ebitda: yv(FY[1], 'ebitda'), earnings: yv(FY[1], 'earnings'), netDebt: yv(FY[1], 'netDebt'), gEb: g(FY[1], 'ebitda'), gEa: g(FY[1], 'earnings') };
+  if (mulBasis === '2027E') return { ebitda: yv(FY[2], 'ebitda'), earnings: yv(FY[2], 'earnings'), netDebt: yv(FY[2], 'netDebt'), gEb: g(FY[2], 'ebitda'), gEa: g(FY[2], 'earnings') };
+  if (mulBasis === '2028E') return { ebitda: yv(FY[3], 'ebitda'), earnings: yv(FY[3], 'earnings'), netDebt: yv(FY[3], 'netDebt'), gEb: g(FY[3], 'ebitda'), gEa: g(FY[3], 'earnings') };
   const f = ntmFrac(); // NTM = calendar blend of t+1 and t+2
   const blend = (a, b) => (a != null && b != null) ? f * a + (1 - f) * b : null;
   return {
     ebitda:   blend(yv(FY[1], 'ebitda'),   yv(FY[2], 'ebitda')),
     earnings: blend(yv(FY[1], 'earnings'), yv(FY[2], 'earnings')),
+    netDebt:  blend(yv(FY[1], 'netDebt'),  yv(FY[2], 'netDebt')),
     gEb: blend(g(FY[1], 'ebitda'),   g(FY[2], 'ebitda')),
     gEa: blend(g(FY[1], 'earnings'), g(FY[2], 'earnings')),
   };
@@ -197,9 +198,16 @@ async function fetchRow(row) {
       limit(() => (row.isEtf ? Promise.resolve(null) : mfetch('details', row.ticker).catch(() => null))),
       limit(() => mfetch('ratios', row.ticker).catch(() => null)),
     ];
-    const su0 = SU(row.ticker);
-    if (!row.isEtf && su0 && su0.currency !== 'USD') tasks.push(limit(() => mfetch('fx', FXCFG[su0.currency].pair).catch(() => null)));
-    const [contract, details, ratiosResp, fxResp] = await Promise.all(tasks);
+    // The reporting currency is a property of the TICKER, not of the estimate
+    // source selected right now — read it from the store, not through SU(). SU()
+    // returns null when the current source has no numbers for that name, which is
+    // exactly TSM's case on the Summit toggle: the rate was never fetched, and a
+    // TWD net income then divided a USD price as if it were dollars.
+    // One request per CURRENCY per session: ensureFx caches, so fourteen
+    // positions in three currencies cost three calls, not fourteen.
+    const cur0 = EST_STORE[row.ticker] && EST_STORE[row.ticker].currency;
+    if (!row.isEtf && cur0) tasks.push(limit(() => ensureFx(cur0)));
+    const [contract, details, ratiosResp] = await Promise.all(tasks);
 
     const d = details?.results || {};
     const rt = (ratiosResp?.results && ratiosResp.results[0]) || {};
@@ -210,19 +218,19 @@ async function fetchRow(row) {
     const mktCap = (price && shares) ? price * shares : (rt.market_cap ?? null);
     const netDebt = (rt.enterprise_value != null && rt.market_cap != null) ? rt.enterprise_value - rt.market_cap : null;
 
-    let fxRate = 1, fxNote = '';
-    const su = SU(row.ticker);
-    if (su && su.currency !== 'USD') {
-      const cfg = FXCFG[su.currency]; const cc = fxResp?.results?.[0]?.c;
-      if (cc) { fxRate = cfg.invert ? 1 / cc : cc; fxNote = `${su.currency}→USD ${fxRate.toFixed(4)}`; }
-    }
+    // 1 for a USD reporter, and 1 when the rate could not be fetched — in which
+    // case the multiple would be built on a native-currency figure, so `fxOk` is
+    // false and the fundamentals are dropped rather than silently mixed.
+    const fxRate = (cur0 ? coreFxRate(cur0) : 1) || 1;
+    const fxNote = cur0 ? fxLabel(cur0) : '';
+    const fxOk = !cur0 || cur0 === 'USD' || coreFxRate(cur0) != null;
 
     const lt = contract?.last_trade || {};
     row.live = {
       price, premium, iv: contract?.implied_volatility ?? null,
       delta: contract?.greeks?.delta ?? null, theta: contract?.greeks?.theta ?? null,
       oi: contract?.open_interest ?? null, name: d.name || row.ticker,
-      shares, mktCap, netDebt, fxRate, fxNote,
+      shares, mktCap, netDebt, fxRate, fxNote, fxOk,
       bid: q.bid ?? null, ask: q.ask ?? null, mid: q.midpoint ?? null,
       lastTrade: lt.price ?? null, lastTradeTs: lt.sip_timestamp ?? lt.timestamp ?? null,
       usedStrike: contract?.details?.strike_price ?? null,
@@ -254,12 +262,17 @@ function metrics(row) {
   let evP = null, evS = null, peP = null, peS = null;
   let pegEv = null, pegPe = null, pegEvS = null, pegPeS = null;
   const bf = basisFundamentals(row.ticker);
-  if (bf && L.shares && price != null && !row.isEtf) {
+  if (bf && L.shares && price != null && !row.isEtf && L.fxOk) {
     const f = L.fxRate, sh = L.shares;
     const ebitdaUSD = (bf.ebitda != null) ? bf.ebitda * f * 1e6 : null;
     const earnUSD = (bf.earnings != null) ? bf.earnings * f * 1e6 : null;
     const mc = price * sh, mcS = row.strike * sh;
-    const nd = L.netDebt;
+    // Massive returns no enterprise value for a foreign issuer, so EV - market cap
+    // is null for TSM, SPOT and TBBB. Where the estimate set carries its own net
+    // debt, use it — it is in the REPORTING currency, so it converts like the
+    // other lines; the live figure is already USD and must not.
+    const nd = L.netDebt != null ? L.netDebt
+             : (bf.netDebt != null ? bf.netDebt * f * 1e6 : null);
     if (ebitdaUSD && nd != null) { evP = (mc + nd) / ebitdaUSD; evS = (mcS + nd) / ebitdaUSD; }
     if (earnUSD && earnUSD > 0) { peP = mc / earnUSD; peS = mcS / earnUSD; }
     const gEb = (bf.gEb && bf.gEb > 0) ? bf.gEb * 100 : null;

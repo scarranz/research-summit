@@ -8,7 +8,9 @@ import { POSITIONS } from './covered-calls-positions.js';
 import { EST_STORE, optSources } from './options-data.js';
 import { coveredCallsQuote } from './api.js';
 // Shared with the other three panes so a date means the same thing everywhere.
-import { esc, ageDays, STALE_DAYS, ensureFx, fxRate as coreFxRate, fxLabel } from './options-core.js';
+import { esc, ageDays, STALE_DAYS, ensureFx, fxRate as coreFxRate, fxLabel,
+         selToggle, selHas, selCount, selClear, symbolOf, cash,
+         instrumentsBar, renderInstruments, onSelection } from './options-core.js';
 
 // The estimate store, reshaped to what this tab reads: { currency, years } where a
 // year carries ebitda / earnings / shares_out. `estSrc` picks whose numbers those
@@ -113,6 +115,8 @@ let mulBasis = '2027E';  // '2026E' | '2027E' | '2028E' | 'NTM' — the year eve
                          // Opens on 2027E: it is the year the book's strikes were set against.
 let estSrc = 'summit';   // 'summit' | 'consensus' — whose estimates every multiple uses
 let showFund = true;     // show/hide the EBITDA & Net Income blocks
+let showMinPort = false; // the Min. portfolio column — off by default, purely informative
+let instOpen = false;    // the Add to Instruments panel
 let sortKey = null;      // 'wt' | 'yield' | 'portyield' | 'contrib' | null (book order)
 let sortDir = -1;        // -1 = descending (high→low), 1 = ascending
 
@@ -329,6 +333,8 @@ async function fetchRow(row) {
       shares, mktCap, netDebt, fxRate, fxNote, fxOk,
       bid: q.bid ?? null, ask: q.ask ?? null, mid: q.midpoint ?? null,
       lastTrade: lt.price ?? null, lastTradeTs: lt.sip_timestamp ?? lt.timestamp ?? null,
+      sharesPerContract: contract?.details?.shares_per_contract ?? 100,
+      sym: contract?.details?.ticker ?? null,
       usedStrike: contract?.details?.strike_price ?? null,
       usedExpiry: contract?.details?.expiration_date ?? null,
     };
@@ -363,6 +369,21 @@ function spreadOf(L) {
   return { abs, pct: abs / mid, noBid: !(b > 0), cross: (abs / 2) / mid };
 }
 const spreadClass = (sp) => !sp ? '' : (sp.pct >= 0.25 || sp.noBid ? ' spx' : (sp.pct >= 0.10 ? ' spw' : ''));
+
+// The smallest portfolio that can hold ONE contract of this position.
+// A contract is 100 shares, so covering it costs 100 x spot — and this position is
+// only `weight` of the book, so the book has to be that much bigger:
+//     100 x spot / weight
+// Informative only. It is the question "am I even large enough to write this",
+// which has nothing to do with whether the trade is good and everything to do with
+// whether it is available: at a 1% weight a $500 stock needs a $5M portfolio before
+// one contract fits inside the position.
+function minPortfolio(row) {
+  const L = row.live;
+  if (!L || L.price == null || !(row.weight > 0)) return null;
+  const per = (L.sharesPerContract || 100) * L.price;
+  return per / row.weight;
+}
 
 // ── Compute derived metrics for a row ─────────────────────────────────────────
 function metrics(row) {
@@ -529,7 +550,6 @@ function render() {
   const kn = wSum || 1;
   $('cc-kpis').innerHTML = [
     ['Premium yield', pct(portYld, 2), `portfolio · ${priced} position${priced === 1 ? '' : 's'}${held ? ` · ${held} excluded` : ''}`],
-    ['Annualized', pct(portAnn, 1), 'weight-scaled'],
     ['Avg upside to strike', pct(wUp / kn), 'weighted'],
     ['Avg premium yield', pct(wYld / kn, 2), 'per position'],
     ['Covered weight', pct(wSum, 1), 'of portfolio'],
@@ -549,7 +569,9 @@ function render() {
       ${fundGroups}
       <th colspan="4" class="grp sep">Target · ${mulBasis}</th>
       <th colspan="5" class="grp sep">Economics</th>
+      ${showMinPort ? '<th rowspan="2" class="sep minp" title="the smallest portfolio in which this position, at its weight, is large enough to hold one 100-share contract">Min. portfolio</th>' : ''}
       <th rowspan="2" class="sep"></th>
+      <th rowspan="2" title="pick contracts to hand to Instruments">Add</th>
     </tr>
     <tr>
       <th class="sep" data-pin="1">Price</th><th data-pin="2">P/E</th><th data-pin="3">EV/EBITDA</th>
@@ -557,7 +579,7 @@ function render() {
       <th class="sep">Strike</th><th>Impl. Upside</th><th>P/E</th><th>EV/EBITDA</th>
       <th class="sep sortable" data-sort="wt">Wt${sarrow('wt')}</th><th>Premium</th><th class="sortable" data-sort="yield">Yield${sarrow('yield')}</th><th class="sortable" data-sort="portyield">Port. yield${sarrow('portyield')}</th><th class="sortable" data-sort="contrib">Contrib.${sarrow('contrib')}</th>
     </tr>`;
-  const ncol = 1 + 3 + (showFund ? 10 : 0) + 4 + 5 + 1; // total columns for colspans
+  const ncol = 1 + 3 + (showFund ? 12 : 0) + 4 + 5 + (showMinPort ? 1 : 0) + 1 + 1; // total columns for colspans
 
   // body
   $('cc-tbody').innerHTML = sortedRows().map((r) => {
@@ -588,8 +610,8 @@ function render() {
       : '';
     const mismatch = (L.usedExpiry && expiry && L.usedExpiry !== expiry) || (L.usedStrike != null && L.usedStrike !== r.strike);
     return `<tr class="${r.excluded ? 'excl' : ''}">
-      <td class="tk" data-pin="0" title="${L.name || ''}">${r.ticker}${r.isEtf ? ' <span class="muted">ETF</span>' : (cur !== 'USD' ? ` <span class="cc" title="reports in ${cur}">${cur}</span>` : '')}${su && su.fellBack ? ` <span class="fb" title="no ${estSrc === 'summit' ? 'Summit model' : 'Bloomberg consensus'} for ${esc(r.ticker)} — the multiples on this row are on ${su.srcUsed === 'summit' ? 'Summit' : 'consensus'} numbers instead of being left blank">cons</span>` : ''}</td>
-      <td class="sep big" data-pin="1">${px(m.price)}</td>
+      <td class="tk" data-pin="0" title="${L.name || ''}"><span class="tkw">${r.ticker}${r.isEtf ? ' <span class="muted">ETF</span>' : (cur !== 'USD' ? ` <span class="cc" title="reports in ${cur}">${cur}</span>` : '')}${su && su.fellBack ? ` <span class="fb" title="no ${estSrc === 'summit' ? 'Summit model' : 'Bloomberg consensus'} for ${esc(r.ticker)} — the multiples on this row are on ${su.srcUsed === 'summit' ? 'Summit' : 'consensus'} numbers instead of being left blank">cons</span>` : ''}</span></td>
+      <td class="sep big" data-pin="1"><span class="tkw">${px(m.price)}</span></td>
       <td data-pin="2"><div class="fv">${mult(m.peP)}</div><div class="fg">${peg(m.pegPe)}</div></td>
       <td data-pin="3"><div class="fv">${mult(m.evP)}</div><div class="fg">${peg(m.pegEv)}</div></td>
       ${fund}
@@ -607,15 +629,19 @@ function render() {
       <td class="big up">${pct(m.yld, 2)}</td>
       <td class="big up">${pct(m.contrib, 2)}</td>
       <td>${pct(share, 1)}</td>
+      ${showMinPort ? `<td class="sep minp" title="one contract is ${(L.sharesPerContract || 100)} shares at ${px(m.price)}${r.weight ? `, and this is ${pct(r.weight, 2)} of the book` : ''}">${cash(minPortfolio(r))}</td>` : ''}
       <td class="sep nowrap"><button class="ex${r.excluded ? ' off' : ''}" data-excl="${r.id}"
           title="${r.excluded ? 'excluded from the portfolio totals — click to count it again' : 'counting toward the portfolio totals — click to exclude it without deleting the row'}"
           aria-pressed="${r.excluded ? 'true' : 'false'}">${r.excluded ? '○' : '●'}</button><button class="x" data-del="${r.id}" title="${mismatch ? 'using '+L.usedStrike+' @ '+L.usedExpiry : 'remove the position'}">${mismatch ? '⚠' : '✕'}</button></td>
+      <td>${L.sym ? `<input type="checkbox" class="pick" data-pick="${r.id}" ${selHas(L.sym) ? 'checked' : ''} title="${esc(L.sym)}">` : '<span class="muted">—</span>'}</td>
     </tr>`;
   }).join('');
 
   $('cc-tbl').hidden = false; $('cc-status').hidden = true;
   wireRowInputs();
   pinColumns();
+  renderInstruments('cc', instOpen);
+  wireInstruments();
 
   const anyMismatch = rows.some((r) => r.live && ((r.live.usedExpiry && expiry && r.live.usedExpiry !== expiry) || (r.live.usedStrike != null && r.live.usedStrike !== r.strike)));
   $('cc-foot').innerHTML = `
@@ -629,7 +655,24 @@ function render() {
     ${anyMismatch ? '<br><span class="warn">⚠ some rows had no contract at the exact strike/expiry — nearest available was used (hover the ⚠).</span>' : ''}`;
 }
 
+// The Instruments bar re-renders itself, so its buttons are re-wired each time.
+function wireInstruments() {
+  const el = $('cc-instbar'); if (!el) return;
+  const t = el.querySelector('[data-insttoggle]');
+  if (t) t.onclick = () => { instOpen = !instOpen; renderInstruments('cc', instOpen); wireInstruments(); };
+  const c = el.querySelector('[data-instclear]');
+  if (c) c.onclick = () => { selClear(); };
+}
+
 function wireRowInputs() {
+  // Ticking a contract does not touch the row — it only joins or leaves the list —
+  // so this re-renders the bar rather than the table.
+  document.querySelectorAll('#cc-root [data-pick]').forEach((el) => el.onchange = () => {
+    const r = rows.find((x) => x.id == el.dataset.pick);
+    if (!r || !r.live || !r.live.sym) return;
+    selToggle({ sym: r.live.sym, ticker: r.ticker, expiry: r.live.usedExpiry || expiry,
+                type: 'call', strike: r.live.usedStrike ?? r.strike, pane: 'covered-calls' });
+  });
   document.querySelectorAll('#cc-root [data-strike]').forEach((el) => el.onchange = async () => {
     const r = rows.find((x) => x.id == el.dataset.strike); r.strike = parseFloat(el.value) || r.strike;
     r.autoStrike = false;   // typed over: it is a chosen strike now
@@ -748,6 +791,7 @@ function injectMarkup() {
             </div>
           </div>
           <div class="ctl"><label>&nbsp;</label><button id="cc-togFund" class="ghost">Hide EBITDA / NI</button></div>
+          <div class="ctl"><label>&nbsp;</label><button id="cc-togMinPort" class="ghost" title="show the smallest portfolio that can hold one contract of each position — informative only, it changes no other number">Min. portfolio</button></div>
           <div class="ctl"><label>&nbsp;</label><button id="cc-refresh">↻ Refresh live</button></div>
         </div>
       </div>
@@ -763,6 +807,7 @@ function injectMarkup() {
         <div class="ctl"><label>Weight (%)</label><input id="cc-newweight" type="number" step="0.1" /></div>
         <div class="ctl"><label>&nbsp;</label><button id="cc-addbtn" class="ghost sm">+ Add position</button></div>
       </div>
+      ${instrumentsBar('cc')}
       <div class="foot" id="cc-foot"></div>
     </div>
     <div id="cc-tip"></div>`;
@@ -835,14 +880,22 @@ function wireControls() {
   });
 
   // Hide / show the EBITDA & Net Income blocks.
+  $('cc-togMinPort').onclick = () => { showMinPort = !showMinPort; render(); };
   $('cc-togFund').onclick = () => {
     showFund = !showFund;
     $('cc-togFund').textContent = showFund ? 'Hide EBITDA / NI' : 'Show EBITDA / NI';
+    $('cc-togMinPort').classList.toggle('on', showMinPort);
     render();
   };
 
   // The pinned columns are placed from measured widths, so a resize moves them.
   window.addEventListener('resize', pinColumns);
+  // A contract picked in another pane belongs in the same basket, so this bar
+  // follows the shared list rather than only its own ticks.
+  onSelection(() => { renderInstruments('cc', instOpen); wireInstruments();
+                      document.querySelectorAll('#cc-root [data-pick]').forEach((el) => {
+                        const r = rows.find((x) => x.id == el.dataset.pick);
+                        el.checked = !!(r && r.live && r.live.sym && selHas(r.live.sym)); }); });
 
   // Hover tooltip (bid / ask / mid + trade time on the Premium cell). Delegated
   // on document so it keeps working across re-renders.

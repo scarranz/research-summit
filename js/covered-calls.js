@@ -48,7 +48,9 @@ const $ = (id) => document.getElementById(id);
 // so XXX→USD = 1 / close (e.g. USDMXN). EUR uses EURUSD directly.
 const FXCFG = { EUR: { pair: 'EURUSD', invert: false }, MXN: { pair: 'USDMXN', invert: true } };
 const T0 = 2025;                 // last reported fiscal year (t0)
-const FY = [T0, T0 + 1, T0 + 2]; // t0, t+1, t+2 shown in the fundamentals block
+const FY = [T0, T0 + 1, T0 + 2, T0 + 3]; // t0..t+3 shown in the fundamentals block. The
+                                        // store runs to FY2028, so the block and the
+                                        // Multiple basis both reach it.
 const fyLabel = (y) => `FY${String(y).slice(2)}`;
 
 // ── Massive proxy (via the edge function) ─────────────────────────────────────
@@ -105,6 +107,7 @@ function basisFundamentals(ticker) {
   const g  = (y, k) => (yv(y, k) != null && yv(y - 1, k) != null && yv(y - 1, k) > 0) ? yv(y, k) / yv(y - 1, k) - 1 : null;
   if (mulBasis === '2026E') return { ebitda: yv(FY[1], 'ebitda'), earnings: yv(FY[1], 'earnings'), gEb: g(FY[1], 'ebitda'), gEa: g(FY[1], 'earnings') };
   if (mulBasis === '2027E') return { ebitda: yv(FY[2], 'ebitda'), earnings: yv(FY[2], 'earnings'), gEb: g(FY[2], 'ebitda'), gEa: g(FY[2], 'earnings') };
+  if (mulBasis === '2028E') return { ebitda: yv(FY[3], 'ebitda'), earnings: yv(FY[3], 'earnings'), gEb: g(FY[3], 'ebitda'), gEa: g(FY[3], 'earnings') };
   const f = ntmFrac(); // NTM = calendar blend of t+1 and t+2
   const blend = (a, b) => (a != null && b != null) ? f * a + (1 - f) * b : null;
   return {
@@ -115,12 +118,14 @@ function basisFundamentals(ticker) {
   };
 }
 
-// CAGR from t0 (FY[0]) to t+2 (FY[2]); null unless both endpoints are positive.
+// CAGR across the whole shown window (t0 → the last column); null unless both
+// endpoints are positive.
 function cagr(ticker, key) {
   const su = SU(ticker);
   if (!su || !su.years) return null;
-  const a = su.years[FY[0]]?.[key], b = su.years[FY[2]]?.[key];
-  return (a != null && b != null && a > 0 && b > 0) ? Math.pow(b / a, 1 / (FY[2] - FY[0])) - 1 : null;
+  const last = FY[FY.length - 1];
+  const a = su.years[FY[0]]?.[key], b = su.years[last]?.[key];
+  return (a != null && b != null && a > 0 && b > 0) ? Math.pow(b / a, 1 / (last - FY[0])) - 1 : null;
 }
 
 // ── Pull one option contract (premium/IV/greeks) for a strike+expiry ──────────
@@ -294,9 +299,9 @@ function fundSeries(ticker, key) {
   });
 }
 
-// One fundamentals block (5 cells): FY[0..2] value-over-YoY, then CAGR, then PEG.
+// One fundamentals block: one cell per FY column (value over YoY), then CAGR, then PEG.
 function fundSection(series, cagrVal, pegVal) {
-  if (!series) return [0, 1, 2, 3, 4].map((i) => `<td class="${i === 0 ? 'sep ' : ''}fund muted">—</td>`).join('');
+  if (!series) return [0, 1, 2, 3, 4, 5].map((i) => `<td class="${i === 0 ? 'sep ' : ''}fund muted">—</td>`).join('');
   const yrs = series.map((d, i) => `<td class="${i === 0 ? 'sep ' : ''}fund">
       <div class="fv">${bn(d.v)}${d.est ? '<sup class="estm">E</sup>' : ''}</div>
       <div class="fg ${d.g == null ? '' : (d.g >= 0 ? 'up' : 'dn')}">${d.g == null ? '—' : pctSign(d.g)}</div>
@@ -355,10 +360,10 @@ function render() {
 
   // header (two-row grouped). EBITDA/Net Income blocks toggle with showFund.
   const fundGroups = showFund
-    ? `<th colspan="5" class="grp sep">EBITDA</th><th colspan="5" class="grp sep">Net Income</th>` : '';
+    ? `<th colspan="6" class="grp sep">EBITDA</th><th colspan="6" class="grp sep">Net Income</th>` : '';
   // No E in the header: whether a year is still a forecast is a per-NAME fact
   // (NVIDIA reports its fiscal year in January), so the E lives on the cell.
-  const fyHdr = `<th class="sep">${fyLabel(FY[0])}</th><th>${fyLabel(FY[1])}</th><th>${fyLabel(FY[2])}</th><th>CAGR</th><th>PEG</th>`;
+  const fyHdr = FY.map((y, i) => `<th${i === 0 ? ' class="sep"' : ''}>${fyLabel(y)}</th>`).join('') + `<th>CAGR</th><th>PEG</th>`;
   const fundLabels = showFund ? fyHdr + fyHdr : '';
   $('cc-thead').innerHTML = `
     <tr>
@@ -419,7 +424,7 @@ function render() {
 
   const anyMismatch = rows.some((r) => r.live && ((r.live.usedExpiry && expiry && r.live.usedExpiry !== expiry) || (r.live.usedStrike != null && r.live.usedStrike !== r.strike)));
   $('cc-foot').innerHTML = `
-    <b>EBITDA / Net Income</b> = ${estSrc === 'summit' ? 'Summit model' : 'Bloomberg consensus'} ${fyLabel(FY[0])}–${fyLabel(FY[2])} native-currency millions with YoY growth below. A superscript <b>E</b> marks a year that name has not yet reported — most of the book closes in December, but NVIDIA's fiscal 2026 ended in January, so its FY26 is an actual. On <b>Consensus</b>, years already closed carry the reported figure (the Street publishes no estimate for a year that is done), so only the forward columns differ between the two sources · <b>CAGR</b> = ${FY[0]}→${FY[2]} · <b>PEG</b> = current multiple ÷ basis growth% ·
+    <b>EBITDA / Net Income</b> = ${estSrc === 'summit' ? 'Summit model' : 'Bloomberg consensus'} ${fyLabel(FY[0])}–${fyLabel(FY[FY.length - 1])} native-currency millions with YoY growth below. A superscript <b>E</b> marks a year that name has not yet reported — most of the book closes in December, but NVIDIA's fiscal 2026 ended in January, so its FY26 is an actual. On <b>Consensus</b>, years already closed carry the reported figure (the Street publishes no estimate for a year that is done), so only the forward columns differ between the two sources · <b>CAGR</b> = ${FY[0]}→${FY[FY.length - 1]} · <b>PEG</b> = current multiple ÷ basis growth% ·
     <b>Multiple basis (${mulBasis})</b> drives every P/E &amp; EV/EBITDA${mulBasis === 'NTM' ? ' — NTM is a calendar-weighted blend of '+fyLabel(FY[1])+'/'+fyLabel(FY[2])+' (no quarterly data)' : ''} · <b>Current</b> uses live price, <b>Target</b> uses the strike; the PEG under each multiple = that multiple ÷ basis growth · <b>Impl. Upside</b> = strike ÷ price − 1 ·
     hover the <b>i</b> by Premium for live bid / ask / mid and last trade (local time) ·
     <b>Yield</b> = premium ÷ price · <b>Port. yield</b> = yield × weight · <b>Contrib.</b> = Port. yield ÷ Σ Port. yield (share of total) ·
@@ -521,7 +526,7 @@ function injectMarkup() {
           <div class="ctl"><label>Estimates</label><span id="cc-srcWrap"></span></div>
           <div class="ctl"><label>Multiple basis</label>
             <div class="seg" id="cc-basisSel">
-              <button data-basis="2026E">2026E</button><button data-basis="2027E">2027E</button><button data-basis="NTM">NTM</button>
+              <button data-basis="2026E">2026E</button><button data-basis="2027E">2027E</button><button data-basis="2028E">2028E</button><button data-basis="NTM">NTM</button>
             </div>
           </div>
           <div class="ctl"><label>&nbsp;</label><button id="cc-togFund" class="ghost">Hide EBITDA / NI</button></div>

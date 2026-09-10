@@ -25,8 +25,15 @@ import { esc, ageDays, STALE_DAYS, ensureFx, fxRate as coreFxRate, fxLabel } fro
 function SU(ticker) {
   const s = EST_STORE[ticker];
   if (!s) return null;
-  const rows = s[estSrc];
+  // The selected source wins. Where the name has none — GOOGL and TSM are in the
+  // book but not in the Summit DCF universe — fall back to the other one rather
+  // than printing a column of dashes: an estimate on the Street's numbers answers
+  // the question, a blank does not. The row is tagged so it is never mistaken for
+  // a house number; see the `cons` chip beside the ticker.
+  const other = estSrc === 'summit' ? 'consensus' : 'summit';
+  const rows = s[estSrc] || s[other];
   if (!rows) return null;
+  const fellBack = !s[estSrc];
   // A fiscal year that is not the calendar year is re-keyed to the calendar, the
   // same shift optEstimates() applies for the other three panes. This tab reads the
   // store directly, so it has to do it too — and it MUST, because the FY window
@@ -41,7 +48,7 @@ function SU(ticker) {
   const lastA = s.lastActual - off;
   const merged = {};
   const sm = cal(s.summit);
-  if (estSrc !== 'summit' && sm) {
+  if (!fellBack && estSrc !== 'summit' && sm) {
     Object.keys(sm).forEach((k) => { if (+k <= lastA) merged[k] = sm[k]; });
   }
   const cr = cal(rows);
@@ -56,7 +63,7 @@ function SU(ticker) {
   // reported, so its FY26 column is an actual while everyone else's is a forecast.
   // The cells carry their own E for that reason; the header cannot.
   return { name: s.name, currency: s.currency, snapshot_date: s.snapshot,
-           lastActual: lastA, fiscalOffset: off, years };
+           lastActual: lastA, fiscalOffset: off, fellBack, srcUsed: s[estSrc] ? estSrc : other, years };
 }
 
 const $ = (id) => document.getElementById(id);
@@ -102,7 +109,8 @@ const bn = (x) => {
 // ── State ─────────────────────────────────────────────────────────────────────
 let rows = POSITIONS.map((p, i) => ({ id: i, ...p, override: null, live: null, loading: true, err: null }));
 let expiry = null;
-let mulBasis = '2026E';  // '2026E' | '2027E' | 'NTM' — fundamental year driving every multiple + PEG
+let mulBasis = '2027E';  // '2026E' | '2027E' | '2028E' | 'NTM' — the year every multiple + PEG is on.
+                         // Opens on 2027E: it is the year the book's strikes were set against.
 let estSrc = 'summit';   // 'summit' | 'consensus' — whose estimates every multiple uses
 let showFund = true;     // show/hide the EBITDA & Net Income blocks
 let sortKey = null;      // 'wt' | 'yield' | 'portyield' | 'contrib' | null (book order)
@@ -565,6 +573,7 @@ function render() {
     // aside is the point of setting it aside rather than deleting it.
     const share = (!r.excluded && m.contrib != null && portYld) ? m.contrib / portYld : null;
     const cur = EST_STORE[r.ticker]?.currency || 'USD';
+    const su = SU(r.ticker);
     const peg = (x) => x == null ? '' : `PEG ${x.toFixed(2)}`;
     const q2 = (x) => x != null ? `$${x.toFixed(2)}` : '—';
     const sp = spreadOf(L);
@@ -579,7 +588,7 @@ function render() {
       : '';
     const mismatch = (L.usedExpiry && expiry && L.usedExpiry !== expiry) || (L.usedStrike != null && L.usedStrike !== r.strike);
     return `<tr class="${r.excluded ? 'excl' : ''}">
-      <td class="tk" data-pin="0" title="${L.name || ''}">${r.ticker}${r.isEtf ? ' <span class="muted">ETF</span>' : (cur !== 'USD' ? ` <span class="cc" title="reports in ${cur}">${cur}</span>` : '')}</td>
+      <td class="tk" data-pin="0" title="${L.name || ''}">${r.ticker}${r.isEtf ? ' <span class="muted">ETF</span>' : (cur !== 'USD' ? ` <span class="cc" title="reports in ${cur}">${cur}</span>` : '')}${su && su.fellBack ? ` <span class="fb" title="no ${estSrc === 'summit' ? 'Summit model' : 'Bloomberg consensus'} for ${esc(r.ticker)} — the multiples on this row are on ${su.srcUsed === 'summit' ? 'Summit' : 'consensus'} numbers instead of being left blank">cons</span>` : ''}</td>
       <td class="sep big" data-pin="1">${px(m.price)}</td>
       <td data-pin="2"><div class="fv">${mult(m.peP)}</div><div class="fg">${peg(m.pegPe)}</div></td>
       <td data-pin="3"><div class="fv">${mult(m.evP)}</div><div class="fg">${peg(m.pegEv)}</div></td>
@@ -616,7 +625,7 @@ function render() {
     <b>Yield</b> = premium ÷ price · <b>Port. yield</b> = yield × weight · <b>Contrib.</b> = Port. yield ÷ Σ Port. yield (share of total) ·
     <span class="cheap">green</span> = target multiple richer than current (called away at an expensive valuation).<br>
     <b>Target expiry</b> opens on the <b>roll date</b> — the third Friday of January, April, July or October, the Friday before earnings season starts — taking the nearest one that has not expired; the menu carries the next few ordinary expiries alongside every roll date.<br>
-    Premium/IV/greeks are the live Massive option chain for each strike &amp; target expiry. <b>Edit the strike either way round.</b> Type a price into <b>Strike</b>, or type a multiple into <b>Target P/E</b> or <b>Target EV/EBITDA</b> and the strike moves to the nearest LISTED strike that produces it — which is the order the decision really happens in: not “$570 on Mastercard” but “happy to be called away at 24x”. The cell then shows the multiple the listed strike actually gives, so it will differ a little from what you typed; hover the strike to see the price the multiple implied before snapping. It reads the SELECTED basis year and estimate source, so change either and the same multiple means a different strike. Edit weight inline; type a premium to override the live midpoint. A strike shown <span class="autoink">in blue</span> is not in the book — it is the nearest listed strike at or above spot, picked so the row can price at all; type the real one over it. The <b>●</b> beside each row's ✕ drops that position out of the portfolio TOTALS without deleting it — its own numbers stay on screen and the row dims, but Premium yield, Annualized, both averages and Covered weight are taken over what is left, and Contrib. blanks on an excluded row and re-bases on the rest, so the column still sums to 100%. Port. yield keeps printing on an excluded row — that is its own number, and seeing what you set aside is the point. The KPI strip says how many are set aside. Nothing is stored, so a reload brings them all back. All figures are in % — no dollar amounts, no contracts, no portfolio value.
+    Premium/IV/greeks are the live Massive option chain for each strike &amp; target expiry. <b>Edit the strike either way round.</b> Type a price into <b>Strike</b>, or type a multiple into <b>Target P/E</b> or <b>Target EV/EBITDA</b> and the strike moves to the nearest LISTED strike that produces it — which is the order the decision really happens in: not “$570 on Mastercard” but “happy to be called away at 24x”. The cell then shows the multiple the listed strike actually gives, so it will differ a little from what you typed; hover the strike to see the price the multiple implied before snapping. It reads the SELECTED basis year and estimate source, so change either and the same multiple means a different strike. Edit weight inline; type a premium to override the live midpoint. A strike shown <span class="autoink">in blue</span> is not in the book — it is the nearest listed strike at or above spot, picked so the row can price at all; type the real one over it. A name with no model on the selected source falls back to the OTHER one rather than showing dashes — GOOGL and TSM are in the book but not in the Summit DCF universe, so on <b>Summit</b> their multiples are Bloomberg's, marked <span class="fbk">cons</span> beside the ticker. The <b>●</b> beside each row's ✕ drops that position out of the portfolio TOTALS without deleting it — its own numbers stay on screen and the row dims, but Premium yield, Annualized, both averages and Covered weight are taken over what is left, and Contrib. blanks on an excluded row and re-bases on the rest, so the column still sums to 100%. Port. yield keeps printing on an excluded row — that is its own number, and seeing what you set aside is the point. The KPI strip says how many are set aside. Nothing is stored, so a reload brings them all back. All figures are in % — no dollar amounts, no contracts, no portfolio value.
     ${anyMismatch ? '<br><span class="warn">⚠ some rows had no contract at the exact strike/expiry — nearest available was used (hover the ⚠).</span>' : ''}`;
 }
 

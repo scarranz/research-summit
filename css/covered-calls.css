@@ -76,3 +76,9 @@
 /* Estimates source segments, matching the Multiple basis control beside them. */
 #cc-root .seg button:disabled{color:#C3C9D2;cursor:not-allowed;background:var(--pale);}
 #cc-root .seg button:disabled:hover{opacity:1;}
+
+/* Estimate marker on a fundamentals cell. It sits on the CELL rather than the
+   column header because whether a fiscal year is still a forecast is a fact about
+   the company, not about the table: NVIDIA's FY2026 closed in January and is
+   reported while every other name in the book is still forecasting it. */
+#cc-root td.fund .fv .estm { font-size: 9px; font-weight: 600; color: var(--steel, #7A879B); margin-left: 1px; vertical-align: super; line-height: 0; }

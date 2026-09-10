@@ -316,6 +316,31 @@ async function fetchRow(row) {
   }
 }
 
+// ── How much of the premium the spread eats ──────────────────────────────────
+// The Premium column shows the MID, which is a fair-value estimate, not a price
+// anyone will pay you. Selling a covered call means hitting the BID, so half the
+// spread is a real cost taken off the yield the row is advertising — and on a thin
+// strike it is not a rounding error: a $0.10 spread on a $0.50 mid is 20% of the
+// premium gone before the trade exists.
+//
+// Measured relative to the mid, which is the standard way to compare a $0.05
+// spread on a $17 name with a $2 spread on a $650 one. Two bands:
+//   >= 10%  wide      — the mid is an optimistic estimate of what you will get
+//   >= 25%  very wide — or no bid at all, which is the same thing said louder
+// A missing bid is treated as the worst case rather than skipped, because "nobody
+// is bidding" is exactly what the column is there to warn about.
+function spreadOf(L) {
+  if (!L) return null;
+  const bid = L.bid, ask = L.ask;
+  if (ask == null || !(ask > 0)) return null;
+  const b = (bid == null) ? 0 : bid;
+  const mid = (L.mid != null && L.mid > 0) ? L.mid : (b + ask) / 2;
+  if (!(mid > 0)) return null;
+  const abs = ask - b;
+  return { abs, pct: abs / mid, noBid: !(b > 0), cross: (abs / 2) / mid };
+}
+const spreadClass = (sp) => !sp ? '' : (sp.pct >= 0.25 || sp.noBid ? ' spx' : (sp.pct >= 0.10 ? ' spw' : ''));
+
 // ── Compute derived metrics for a row ─────────────────────────────────────────
 function metrics(row) {
   const L = row.live; if (!L) return {};
@@ -518,7 +543,12 @@ function render() {
     const cur = EST_STORE[r.ticker]?.currency || 'USD';
     const peg = (x) => x == null ? '' : `PEG ${x.toFixed(2)}`;
     const q2 = (x) => x != null ? `$${x.toFixed(2)}` : '—';
-    const qtip = `<b>Bid</b> ${q2(L.bid)}   <b>Ask</b> ${q2(L.ask)}   <b>Mid</b> ${q2(L.mid)}<br><b>Last</b> ${q2(L.lastTrade)} · ${tradeStamp(L.lastTradeTs)}`;
+    const sp = spreadOf(L);
+    const spLine = !sp ? '' : `<br><b>Spread</b> ${q2(sp.abs)} · ${(sp.pct * 100).toFixed(0)}% of mid`
+      + (sp.noBid ? ' — <b>no bid</b>, so the mid is guesswork'
+                  : ` — hitting the bid costs ${(sp.cross * 100).toFixed(0)}% of the premium`
+                    + (sp.pct >= 0.10 ? ', and the yield on this row is quoted at the mid' : ''));
+    const qtip = `<b>Bid</b> ${q2(L.bid)}   <b>Ask</b> ${q2(L.ask)}   <b>Mid</b> ${q2(L.mid)}<br><b>Last</b> ${q2(L.lastTrade)} · ${tradeStamp(L.lastTradeTs)}${spLine}`;
     const fund = showFund
       ? fundSection(fundSeries(r.ticker, 'ebitda'), cagr(r.ticker, 'ebitda'), m.pegEv)
         + fundSection(fundSeries(r.ticker, 'earnings'), cagr(r.ticker, 'earnings'), m.pegPe)
@@ -540,7 +570,7 @@ function render() {
           value="${m.evS == null ? '' : m.evS.toFixed(1)}" ${m.evS == null ? 'disabled' : ''}
           title="${m.evS == null ? 'no EV/EBITDA on this basis' : 'type the EV/EBITDA you would accept being called away at — the strike jumps to the nearest listed one that gives it'}"><span class="mxu">x</span><div class="fg">${peg(m.pegEvS)}</div></td>
       <td class="sep edit"><input type="number" step="0.1" value="${(r.weight * 100).toFixed(2)}" data-weight="${r.id}" title="portfolio weight %"></td>
-      <td class="edit"><input type="number" step="0.01" value="${premVal}" data-prem="${r.id}" class="${ovr ? 'ovr' : ''}" title="${ovr ? 'manual override' : 'live midpoint — type to override'}"><span class="ttip" data-tip="${qtip}">i</span></td>
+      <td class="edit${ovr ? '' : spreadClass(sp)}"><input type="number" step="0.01" value="${premVal}" data-prem="${r.id}" class="${ovr ? 'ovr' : ''}" title="${ovr ? 'manual override' : 'live midpoint — type to override'}"><span class="ttip" data-tip="${qtip}">i</span></td>
       <td class="big up">${pct(m.yld, 2)}</td>
       <td class="big up">${pct(m.contrib, 2)}</td>
       <td>${pct(share, 1)}</td>
@@ -556,7 +586,7 @@ function render() {
   $('cc-foot').innerHTML = `
     <b>EBITDA / Net Income</b> = ${estSrc === 'summit' ? 'Summit model' : 'Bloomberg consensus'} ${fyLabel(FY[0])}–${fyLabel(FY[FY.length - 1])} native-currency millions with YoY growth below. A superscript <b>E</b> marks a year that name has not yet reported — most of the book closes in December, but NVIDIA's fiscal 2026 ended in January, so its FY26 is an actual. On <b>Consensus</b>, years already closed carry the reported figure (the Street publishes no estimate for a year that is done), so only the forward columns differ between the two sources · <b>CAGR</b> = ${fyLabel(FY[0])}→${basisEndLabel()}, i.e. it ENDS on whatever the Multiple basis is set to — change the basis and it re-measures, so it always describes the run into the year the multiples are priced on · <b>PEG</b> = current multiple ÷ basis growth% ·
     <b>Multiple basis (${mulBasis})</b> drives every P/E &amp; EV/EBITDA${mulBasis === 'NTM' ? ' — NTM is a calendar-weighted blend of '+fyLabel(FY[1])+'/'+fyLabel(FY[2])+' (no quarterly data)' : ''} · <b>Current</b> uses live price, <b>Target</b> uses the strike; the PEG under each multiple = that multiple ÷ basis growth · <b>Impl. Upside</b> = strike ÷ price − 1 ·
-    hover the <b>i</b> by Premium for live bid / ask / mid and last trade (local time) ·
+    hover the <b>i</b> by Premium for live bid / ask / mid, last trade (local time) and the spread · a Premium cell shaded <span class="spwk">amber</span> has a bid/ask spread of <b>10% of mid or more</b>, <span class="spxk">deeper amber</span> <b>25% or more</b> or no bid at all — the column quotes the MID, and a covered call is sold on the BID, so half that spread comes straight off the yield beside it. An overridden premium is not shaded: the number is yours, not the chain's ·
     <b>Yield</b> = premium ÷ price · <b>Port. yield</b> = yield × weight · <b>Contrib.</b> = Port. yield ÷ Σ Port. yield (share of total) ·
     <span class="cheap">green</span> = target multiple richer than current (called away at an expensive valuation).<br>
     <b>Target expiry</b> opens on the <b>roll date</b> — the third Friday of January, April, July or October, the Friday before earnings season starts — taking the nearest one that has not expired; the menu carries the next few ordinary expiries alongside every roll date.<br>

@@ -102,7 +102,7 @@ export const EST_STORE = {
   },
   TBBB: {
     name: "BBB Foods Inc.", currency: "MXN", snapshot: "2026-08-13", lastActual: 2025,
-    consensusAsOf: null, consensusFrom: null,   // no Bloomberg coverage at all
+    consensusAsOf: "2026-09-09", consensusFrom: "bbg",
     summit: {
       2024: { rev: 57439.02, ebitda: 1498.87, earnings: 681.67, shares: 139.607, netDebt: 9810 },
       2025: { rev: 78153.39, ebitda: 1921.37, earnings: -2275.6, shares: 115.023, netDebt: 9810 },
@@ -119,7 +119,23 @@ export const EST_STORE = {
     // NOTE the basis pairing: the model's EBITDA is AFTER rent while Bloomberg's
     // and the company's add it back, so this net debt is the one that belongs with
     // the Summit column. A Street EBITDA would need lease liabilities added back.
-    consensus: null,   // no Bloomberg coverage in the model
+    // Bloomberg consensus, from BBG_CONSENSUS.txt pulled 2026-09-09. FORWARD YEARS
+    // ONLY: the reported years are backfilled from the model's actuals, which keeps
+    // history identical under both toggles — the .txt carries GAAP lines that do not
+    // tie to the model's on a year both already report.
+    // FY2025 EBITDA is dropped: the rent add-back should put BBG ABOVE the model in
+    // every year and does in 2024/2026/2027/2028, but 2025 came in 36% BELOW it and
+    // implied EBITDA falling 57% while revenue grew 36%. That is a dead cell.
+    // Bloomberg publishes no forward diluted share count for TBBB, so the last
+    // reported one (115.0M) is carried, which is what the model does too.
+    // ⚠ NET DEBT 21,540 = 9,810 (Fiscal.ai, ex-leases) + 11,730 (the model's FY2025
+    // lease liability). The Street EBITDA ADDS RENT BACK, so the net debt paired with
+    // it must include the lease. ASSUMPTION — SAB to confirm the lease figure.
+    consensus: {
+      2026: { rev: 103301.5, ebitda: 3402.3, earnings: -1666.88, shares: 115.02, netDebt: 21540 },
+      2027: { rev: 130196.15, ebitda: 6205.85, earnings: -144.62, shares: 115.02, netDebt: 21540 },
+      2028: { rev: 164742.23, ebitda: 8525.73, earnings: 647.57, shares: 115.02, netDebt: 21540 },
+    },
   },
   AMZN: {
     name: "Amazon.com, Inc.", currency: "USD", snapshot: "2026-08-04", lastActual: 2025,
@@ -224,6 +240,27 @@ export const EST_STORE = {
       2026: { rev: 4153.7, ebitda: 1242.61, earnings: 627.29, shares: 265.005 },
       2027: { rev: 4548.85, ebitda: 1414.29, earnings: 726.67, shares: 262.82 },
       2028: { rev: 4932.1, ebitda: 1554.35, earnings: 827.75, shares: 264.68 },
+    },
+  },
+  // Alphabet. Consensus-only — it has no Summit DCF model, so there is no house
+  // column to compare against and the toggle says so. From BBG_CONSENSUS.txt,
+  // pulled 2026-09-08, which carries 30 vintages of it back to 2019.
+  // ⚠ Net income is Bloomberg's GAAP line (no adjusted twin in the workbook) and it
+  // is LUMPY: 132,170 reported, then 240,570 in 2026E and back down to 185,861 in
+  // 2027E — an 82% jump and a 23% fall, which is a one-off nobody has stripped out.
+  // The EBITDA series is smooth and is the multiple to trust here. Flagged in the
+  // source note so the P/E is read with that in mind rather than at face value.
+  GOOGL: {
+    name: "Alphabet Inc.", currency: "USD", snapshot: "2026-09-08", lastActual: 2025,
+    consensusAsOf: "2026-09-08", consensusFrom: "bbg",
+    summit: null,   // not in the Summit DCF universe — building one is San's call
+    consensus: {
+      2023: { rev: 307394, ebitda: 118699, earnings: 73795, shares: 12722 },
+      2024: { rev: 350018, ebitda: 127701, earnings: 100118, shares: 12447 },
+      2025: { rev: 402836, ebitda: 175128, earnings: 132170, shares: 12230 },
+      2026: { rev: 430767.78, ebitda: 226427.79, earnings: 240569.63, shares: 12294.79 },
+      2027: { rev: 535776.03, ebitda: 291785.21, earnings: 185861.36, shares: 12326.86 },
+      2028: { rev: 657907.18, ebitda: 376882.66, earnings: 220542.31, shares: 12448.55 },
     },
   },
   // Taiwan Semiconductor. Three things make this one different from every other

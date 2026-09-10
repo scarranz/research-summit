@@ -246,7 +246,7 @@ function renderLadder() {
       <td class="muted">${cash(r.collateral)}</td>
       <td>${r.contracts.toLocaleString()}<span class="ttip" data-tip="${esc(`<b>Committed</b> ${cash(r.committed)} of ${cash(st.cashCommitted)} · <b>Idle</b> ${cash(st.cashCommitted - r.committed)}`)}">i</span></td>
       <td class="big up">${cash(r.collected)}</td>
-      <td class="sep">${r.c ? `<input type="checkbox" class="pick" data-pick="${r.K}" ${selHas(symbolOf(r.c, st.ticker, st.expiry, 'put', r.K)) ? 'checked' : ''} title="${esc(symbolOf(r.c, st.ticker, st.expiry, 'put', r.K) || '')}">` : '<span class="muted">—</span>'}</td>
+      <td class="sep">${r.c ? `<input type="checkbox" class="pick" data-pick="${r.K}" ${selHas('sp', symbolOf(r.c, st.ticker, st.expiry, 'put', r.K)) ? 'checked' : ''} title="${esc(symbolOf(r.c, st.ticker, st.expiry, 'put', r.K) || '')}">` : '<span class="muted">—</span>'}</td>
       <td><button class="x" data-del="${r.K}" title="remove this strike">✕</button></td>
     </tr>`;
   }).join('');
@@ -264,7 +264,7 @@ function wireInstruments() {
   const t = el.querySelector('[data-insttoggle]');
   if (t) t.onclick = () => { instOpen = !instOpen; renderInstruments('sp', instOpen); wireInstruments(); };
   const c = el.querySelector('[data-instclear]');
-  if (c) c.onclick = () => selClear();
+  if (c) c.onclick = () => selClear('sp');
 }
 
 function wireLadder() {
@@ -278,8 +278,8 @@ function wireLadder() {
     const k = +el.dataset.pick;
     const r = ladder().find((x) => x.K === k);
     if (!r || !r.c) return;
-    selToggle({ sym: symbolOf(r.c, st.ticker, st.expiry, 'put', k), ticker: st.ticker,
-                expiry: st.expiry, type: 'put', strike: k, pane: 'short-puts' });
+    selToggle('sp', { sym: symbolOf(r.c, st.ticker, st.expiry, 'put', k), ticker: st.ticker,
+                expiry: st.expiry, type: 'put', strike: k });
     };
   });
   root().querySelectorAll('[data-del]').forEach((el) => el.onclick = (ev) => {
@@ -481,9 +481,8 @@ function wireControls() {
   });
 
   wireTooltip(r);
-  // The basket is shared across the four panes, so a pick made anywhere moves
-  // this count too.
-  onSelection(() => { renderInstruments('sp', instOpen); wireInstruments(); });
+  // One list per pane, so this only reacts to its own.
+  onSelection((p) => { if (p !== 'sp') return; renderInstruments('sp', instOpen); wireInstruments(); });
 }
 
 // ── Page loader ───────────────────────────────────────────────────────────────

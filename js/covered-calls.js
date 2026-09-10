@@ -107,15 +107,16 @@ function basisFundamentals(ticker) {
   if (!su || !su.years) return null;
   const yv = (y, k) => su.years[y]?.[k];
   const g  = (y, k) => (yv(y, k) != null && yv(y - 1, k) != null && yv(y - 1, k) > 0) ? yv(y, k) / yv(y - 1, k) - 1 : null;
-  if (mulBasis === '2026E') return { ebitda: yv(FY[1], 'ebitda'), earnings: yv(FY[1], 'earnings'), netDebt: yv(FY[1], 'netDebt'), gEb: g(FY[1], 'ebitda'), gEa: g(FY[1], 'earnings') };
-  if (mulBasis === '2027E') return { ebitda: yv(FY[2], 'ebitda'), earnings: yv(FY[2], 'earnings'), netDebt: yv(FY[2], 'netDebt'), gEb: g(FY[2], 'ebitda'), gEa: g(FY[2], 'earnings') };
-  if (mulBasis === '2028E') return { ebitda: yv(FY[3], 'ebitda'), earnings: yv(FY[3], 'earnings'), netDebt: yv(FY[3], 'netDebt'), gEb: g(FY[3], 'ebitda'), gEa: g(FY[3], 'earnings') };
+  if (mulBasis === '2026E') return { ebitda: yv(FY[1], 'ebitda'), earnings: yv(FY[1], 'earnings'), netDebt: yv(FY[1], 'netDebt'), shares: yv(FY[1], 'shares_out'), gEb: g(FY[1], 'ebitda'), gEa: g(FY[1], 'earnings') };
+  if (mulBasis === '2027E') return { ebitda: yv(FY[2], 'ebitda'), earnings: yv(FY[2], 'earnings'), netDebt: yv(FY[2], 'netDebt'), shares: yv(FY[2], 'shares_out'), gEb: g(FY[2], 'ebitda'), gEa: g(FY[2], 'earnings') };
+  if (mulBasis === '2028E') return { ebitda: yv(FY[3], 'ebitda'), earnings: yv(FY[3], 'earnings'), netDebt: yv(FY[3], 'netDebt'), shares: yv(FY[3], 'shares_out'), gEb: g(FY[3], 'ebitda'), gEa: g(FY[3], 'earnings') };
   const f = ntmFrac(); // NTM = calendar blend of t+1 and t+2
   const blend = (a, b) => (a != null && b != null) ? f * a + (1 - f) * b : null;
   return {
     ebitda:   blend(yv(FY[1], 'ebitda'),   yv(FY[2], 'ebitda')),
     earnings: blend(yv(FY[1], 'earnings'), yv(FY[2], 'earnings')),
     netDebt:  blend(yv(FY[1], 'netDebt'),  yv(FY[2], 'netDebt')),
+    shares:   blend(yv(FY[1], 'shares_out'), yv(FY[2], 'shares_out')),
     gEb: blend(g(FY[1], 'ebitda'),   g(FY[2], 'ebitda')),
     gEa: blend(g(FY[1], 'earnings'), g(FY[2], 'earnings')),
   };
@@ -263,7 +264,19 @@ function metrics(row) {
   let pegEv = null, pegPe = null, pegEvS = null, pegPeS = null;
   const bf = basisFundamentals(row.ticker);
   if (bf && L.shares && price != null && !row.isEtf && L.fxOk) {
-    const f = L.fxRate, sh = L.shares;
+    const f = L.fxRate;
+    // The FORECAST share count for the basis year, not today's — a forward multiple
+    // should carry the dilution or buyback the model expects by then. This is the
+    // rule capital() already applies in the engine, and without it the same name
+    // read 44.9x here and 43.0x in the ladder panes on the same year (TBBB: 120.6M
+    // shares live vs 115.0M modelled). Falls back to the live count when the
+    // estimate set carries none.
+    // ...divided by the ADR ratio where there is one. The estimate set counts the
+    // ORDINARY share (TSM: 25.9bn Taipei) while the price is for an ADR worth five
+    // of them, so without this the market cap is 5x too big. Massive's live count
+    // is already in ADSs (5.19bn), which is why the fallback needs no adjustment.
+    const adr = (EST_STORE[row.ticker] && EST_STORE[row.ticker].adrRatio) || 1;
+    const sh = (bf.shares != null && bf.shares > 0) ? bf.shares * 1e6 / adr : L.shares;
     const ebitdaUSD = (bf.ebitda != null) ? bf.ebitda * f * 1e6 : null;
     const earnUSD = (bf.earnings != null) ? bf.earnings * f * 1e6 : null;
     const mc = price * sh, mcS = row.strike * sh;

@@ -342,6 +342,7 @@ async function fetchRow(row) {
     row.err = e.message;
   } finally {
     row.loading = false;
+    syncPick(row);
   }
 }
 
@@ -570,8 +571,8 @@ function render() {
       <th colspan="4" class="grp sep">Target · ${mulBasis}</th>
       <th colspan="5" class="grp sep">Economics</th>
       ${showMinPort ? '<th rowspan="2" class="sep minp" title="the smallest portfolio in which this position, at its weight, is large enough to hold one 100-share contract">Min. portfolio</th>' : ''}
-      <th rowspan="2" class="sep"></th>
-      <th rowspan="2" title="pick contracts to hand to Instruments">Add</th>
+      <th rowspan="2" class="sep" title="ticked rows count toward the portfolio totals AND are the ones Add to Instruments hands over">Add</th>
+      <th rowspan="2" title="drop the position from the book entirely">Remove</th>
     </tr>
     <tr>
       <th class="sep" data-pin="1">Price</th><th data-pin="2">P/E</th><th data-pin="3">EV/EBITDA</th>
@@ -630,10 +631,9 @@ function render() {
       <td class="big up">${pct(m.contrib, 2)}</td>
       <td>${pct(share, 1)}</td>
       ${showMinPort ? `<td class="sep minp" title="one contract is ${(L.sharesPerContract || 100)} shares at ${px(m.price)}${r.weight ? `, and this is ${pct(r.weight, 2)} of the book` : ''}">${cash(minPortfolio(r))}</td>` : ''}
-      <td class="sep nowrap"><button class="ex${r.excluded ? ' off' : ''}" data-excl="${r.id}"
-          title="${r.excluded ? 'excluded from the portfolio totals — click to count it again' : 'counting toward the portfolio totals — click to exclude it without deleting the row'}"
-          aria-pressed="${r.excluded ? 'true' : 'false'}">${r.excluded ? '○' : '●'}</button><button class="x" data-del="${r.id}" title="${mismatch ? 'using '+L.usedStrike+' @ '+L.usedExpiry : 'remove the position'}">${mismatch ? '⚠' : '✕'}</button></td>
-      <td>${L.sym ? `<input type="checkbox" class="pick" data-pick="${r.id}" ${selHas(L.sym) ? 'checked' : ''} title="${esc(L.sym)}">` : '<span class="muted">—</span>'}</td>
+      <td class="sep"><input type="checkbox" class="pick" data-pick="${r.id}" ${r.excluded ? '' : 'checked'}
+          title="${r.excluded ? 'not counted in the totals and not handed over' : `counted in the totals, and handed over as ${esc(L.sym || 'this contract')}`}"></td>
+      <td><button class="x" data-del="${r.id}" title="${mismatch ? 'using '+L.usedStrike+' @ '+L.usedExpiry : 'remove the position from the book'}">${mismatch ? '⚠' : '✕'}</button></td>
     </tr>`;
   }).join('');
 
@@ -651,11 +651,26 @@ function render() {
     <b>Yield</b> = premium ÷ price · <b>Port. yield</b> = yield × weight · <b>Contrib.</b> = Port. yield ÷ Σ Port. yield (share of total) ·
     <span class="cheap">green</span> = target multiple richer than current (called away at an expensive valuation).<br>
     <b>Target expiry</b> opens on the <b>roll date</b> — the third Friday of January, April, July or October, the Friday before earnings season starts — taking the nearest one that has not expired; the menu carries the next few ordinary expiries alongside every roll date.<br>
-    Premium/IV/greeks are the live Massive option chain for each strike &amp; target expiry. <b>Edit the strike either way round.</b> Type a price into <b>Strike</b>, or type a multiple into <b>Target P/E</b> or <b>Target EV/EBITDA</b> and the strike moves to the nearest LISTED strike that produces it — which is the order the decision really happens in: not “$570 on Mastercard” but “happy to be called away at 24x”. The cell then shows the multiple the listed strike actually gives, so it will differ a little from what you typed; hover the strike to see the price the multiple implied before snapping. It reads the SELECTED basis year and estimate source, so change either and the same multiple means a different strike. Edit weight inline; type a premium to override the live midpoint. A strike shown <span class="autoink">in blue</span> is not in the book — it is the nearest listed strike at or above spot, picked so the row can price at all; type the real one over it. A name with no model on the selected source falls back to the OTHER one rather than showing dashes — GOOGL and TSM are in the book but not in the Summit DCF universe, so on <b>Summit</b> their multiples are Bloomberg's, marked <span class="fbk">cons</span> beside the ticker. The <b>●</b> beside each row's ✕ drops that position out of the portfolio TOTALS without deleting it — its own numbers stay on screen and the row dims, but Premium yield, Annualized, both averages and Covered weight are taken over what is left, and Contrib. blanks on an excluded row and re-bases on the rest, so the column still sums to 100%. Port. yield keeps printing on an excluded row — that is its own number, and seeing what you set aside is the point. The KPI strip says how many are set aside. Nothing is stored, so a reload brings them all back. All figures are in % — no dollar amounts, no contracts, no portfolio value.
+    Premium/IV/greeks are the live Massive option chain for each strike &amp; target expiry. <b>Edit the strike either way round.</b> Type a price into <b>Strike</b>, or type a multiple into <b>Target P/E</b> or <b>Target EV/EBITDA</b> and the strike moves to the nearest LISTED strike that produces it — which is the order the decision really happens in: not “$570 on Mastercard” but “happy to be called away at 24x”. The cell then shows the multiple the listed strike actually gives, so it will differ a little from what you typed; hover the strike to see the price the multiple implied before snapping. It reads the SELECTED basis year and estimate source, so change either and the same multiple means a different strike. Edit weight inline; type a premium to override the live midpoint. A strike shown <span class="autoink">in blue</span> is not in the book — it is the nearest listed strike at or above spot, picked so the row can price at all; type the real one over it. A name with no model on the selected source falls back to the OTHER one rather than showing dashes — GOOGL and TSM are in the book but not in the Summit DCF universe, so on <b>Summit</b> their multiples are Bloomberg's, marked <span class="fbk">cons</span> beside the ticker. <b>Add</b> is one tick doing two jobs: a ticked row counts toward the portfolio totals AND is one of the contracts <b>Add to Instruments</b> hands over — the same decision said once, since a position you are not counting is not one you are about to trade. Unticking leaves the row in place: its own numbers stay on screen and it dims, but Premium yield, both averages and Covered weight are taken over what is left, and Contrib. blanks and re-bases so the column still sums to 100%. Port. yield keeps printing — that is the row's own number, and seeing what you set aside is the point. <b>Remove</b> deletes the position outright. The KPI strip says how many are set aside; nothing is stored, so a reload brings the book back whole. All figures are in % — no dollar amounts, no contracts, no portfolio value.
     ${anyMismatch ? '<br><span class="warn">⚠ some rows had no contract at the exact strike/expiry — nearest available was used (hover the ⚠).</span>' : ''}`;
 }
 
 // The Instruments bar re-renders itself, so its buttons are re-wired each time.
+// One tick, two jobs. It decides whether the row counts toward the portfolio
+// totals AND whether it is one of the contracts handed over — which is the same
+// decision said once instead of twice: a position you are not counting is not one
+// you are about to trade. The basket membership mirrors the row, so it is set from
+// the row rather than toggled, or the two could drift apart.
+function syncPick(r) {
+  if (!r.live || !r.live.sym) return;
+  const inBasket = selHas(r.live.sym);
+  const want = !r.excluded;
+  if (inBasket !== want) {
+    selToggle({ sym: r.live.sym, ticker: r.ticker, expiry: r.live.usedExpiry || expiry,
+                type: 'call', strike: r.live.usedStrike ?? r.strike, pane: 'covered-calls' });
+  }
+}
+
 function wireInstruments() {
   const el = $('cc-instbar'); if (!el) return;
   const t = el.querySelector('[data-insttoggle]');
@@ -669,9 +684,10 @@ function wireRowInputs() {
   // so this re-renders the bar rather than the table.
   document.querySelectorAll('#cc-root [data-pick]').forEach((el) => el.onchange = () => {
     const r = rows.find((x) => x.id == el.dataset.pick);
-    if (!r || !r.live || !r.live.sym) return;
-    selToggle({ sym: r.live.sym, ticker: r.ticker, expiry: r.live.usedExpiry || expiry,
-                type: 'call', strike: r.live.usedStrike ?? r.strike, pane: 'covered-calls' });
+    if (!r) return;
+    r.excluded = !el.checked;
+    syncPick(r);
+    render();
   });
   document.querySelectorAll('#cc-root [data-strike]').forEach((el) => el.onchange = async () => {
     const r = rows.find((x) => x.id == el.dataset.strike); r.strike = parseFloat(el.value) || r.strike;
@@ -701,12 +717,6 @@ function wireRowInputs() {
   document.querySelectorAll('#cc-root [data-prem]').forEach((el) => el.onchange = () => {
     const r = rows.find((x) => x.id == el.dataset.prem);
     r.override = el.value === '' ? null : parseFloat(el.value); render();
-  });
-  // Exclude / include. No refetch: the row's own numbers do not change, only whether
-  // the totals count them, so this is a re-render and nothing more.
-  document.querySelectorAll('#cc-root [data-excl]').forEach((el) => el.onclick = () => {
-    const r = rows.find((x) => x.id == el.dataset.excl);
-    if (r) { r.excluded = !r.excluded; render(); }
   });
   document.querySelectorAll('#cc-root [data-del]').forEach((el) => el.onclick = () => {
     rows = rows.filter((x) => x.id != el.dataset.del); render();
@@ -892,10 +902,7 @@ function wireControls() {
   window.addEventListener('resize', pinColumns);
   // A contract picked in another pane belongs in the same basket, so this bar
   // follows the shared list rather than only its own ticks.
-  onSelection(() => { renderInstruments('cc', instOpen); wireInstruments();
-                      document.querySelectorAll('#cc-root [data-pick]').forEach((el) => {
-                        const r = rows.find((x) => x.id == el.dataset.pick);
-                        el.checked = !!(r && r.live && r.live.sym && selHas(r.live.sym)); }); });
+  onSelection(() => { renderInstruments('cc', instOpen); wireInstruments(); });
 
   // Hover tooltip (bid / ask / mid + trade time on the Premium cell). Delegated
   // on document so it keeps working across re-renders.

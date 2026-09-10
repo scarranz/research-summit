@@ -156,12 +156,9 @@
    A filled dot counts, a hollow one does not. It sits beside the ✕ because they
    are the two ways of saying "not this one" and the softer one should be found
    first — you almost always want to set a position aside, not delete it. */
-#cc-root td .ex {
-  background: transparent; border: 1px solid transparent; color: var(--navy);
-  padding: 2px 5px; font-size: 12px; line-height: 1; cursor: pointer; margin-right: 2px;
-}
-#cc-root td .ex:hover { border-color: var(--bdr); background: var(--w); }
-#cc-root td .ex.off { color: var(--mu); }
+/* One tick, two jobs — counted in the totals, and handed to Instruments. The two
+   action columns are named (Add / Remove) rather than sitting under a blank
+   header, because an unlabelled checkbox beside an unlabelled ✕ is a guess. */
 #cc-root td.nowrap { white-space: nowrap; }
 /* An excluded row stays fully readable — it is still real, it is just not in the
    sum — so this dims rather than strikes through, and the pinned identity columns
@@ -174,7 +171,7 @@
 #cc-root tr.excl td:not([data-pin]) { opacity: .42; }
 #cc-root tr.excl td[data-pin] > *, #cc-root tr.excl td[data-pin] .fv, #cc-root tr.excl td[data-pin] .fg { opacity: .42; }
 #cc-root tr.excl td[data-pin] { background: var(--w); }
-#cc-root tr.excl td .ex { opacity: 1; }
+#cc-root tr.excl td .pick { opacity: 1; }
 #cc-root tr.excl:hover td:not([data-pin]) { opacity: .72; }
 #cc-root tr.excl:hover td[data-pin] > *, #cc-root tr.excl:hover td[data-pin] .fv, #cc-root tr.excl:hover td[data-pin] .fg { opacity: .72; }
 #cc-root tr.excl:hover td[data-pin] { background: var(--pale); }
@@ -188,3 +185,6 @@
   color: var(--mu); border: 1px solid var(--bdr); border-radius: 3px;
   padding: 0 3px; margin-left: 3px; vertical-align: 1px; cursor: help;
 }
+/* The two action columns read as controls, not data: centred, quiet headers. */
+#cc-root th[title*="ticked rows count"], #cc-root th[title*="drop the position"] { font-size: 9px; }
+#cc-root td .pick { width: 15px; height: 15px; cursor: pointer; accent-color: var(--navy); vertical-align: middle; }

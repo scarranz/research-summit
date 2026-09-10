@@ -260,7 +260,7 @@ function renderLadder() {
       <td>${pct(r.costPct, 1)}</td>
       <td>${pct(r.costPctPort, 2)}</td>
       <td class="big">${cash(r.minPort)}</td>
-      <td class="sep">${r.c ? `<input type="checkbox" class="pick" data-pick="${r.K}" ${selHas(symbolOf(r.c, st.ticker, st.expiry, 'call', r.K)) ? 'checked' : ''} title="${esc(symbolOf(r.c, st.ticker, st.expiry, 'call', r.K) || '')}">` : '<span class="muted">—</span>'}</td>
+      <td class="sep">${r.c ? `<input type="checkbox" class="pick" data-pick="${r.K}" ${selHas('bc', symbolOf(r.c, st.ticker, st.expiry, 'call', r.K)) ? 'checked' : ''} title="${esc(symbolOf(r.c, st.ticker, st.expiry, 'call', r.K) || '')}">` : '<span class="muted">—</span>'}</td>
       <td><button class="x" data-del="${r.K}" title="remove this strike">✕</button></td>
     </tr>`;
   }).join('');
@@ -278,7 +278,7 @@ function wireInstruments() {
   const t = el.querySelector('[data-insttoggle]');
   if (t) t.onclick = () => { instOpen = !instOpen; renderInstruments('bc', instOpen); wireInstruments(); };
   const c = el.querySelector('[data-instclear]');
-  if (c) c.onclick = () => selClear();
+  if (c) c.onclick = () => selClear('bc');
 }
 
 function wireLadder() {
@@ -292,8 +292,8 @@ function wireLadder() {
     const k = +el.dataset.pick;
     const r = ladder().find((x) => x.K === k);
     if (!r || !r.c) return;
-    selToggle({ sym: symbolOf(r.c, st.ticker, st.expiry, 'call', k), ticker: st.ticker,
-                expiry: st.expiry, type: 'call', strike: k, pane: 'buy-calls' });
+    selToggle('bc', { sym: symbolOf(r.c, st.ticker, st.expiry, 'call', k), ticker: st.ticker,
+                expiry: st.expiry, type: 'call', strike: k });
     };
   });
   root().querySelectorAll('[data-del]').forEach((el) => el.onclick = (ev) => {
@@ -507,9 +507,8 @@ function wireControls() {
   });
 
   wireTooltip(r);
-  // The basket is shared across the four panes, so a pick made anywhere moves
-  // this count too.
-  onSelection(() => { renderInstruments('bc', instOpen); wireInstruments(); });
+  // One list per pane, so this only reacts to its own.
+  onSelection((p) => { if (p !== 'bc') return; renderInstruments('bc', instOpen); wireInstruments(); });
 }
 
 // ── Page loader ───────────────────────────────────────────────────────────────

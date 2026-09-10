@@ -598,20 +598,27 @@ export function vintageBadge(est) {
 // carries as `details.ticker` (O:UBER261016C00040000). Prefer that over building
 // one: it is what the other side will look up, and a symbol we assembled that
 // differs by a digit is worse than no symbol at all.
-const SEL = new Map();          // symbol -> { sym, ticker, expiry, type, strike, pane }
+// ONE LIST PER PANE, keyed by the pane's prefix. Covered Calls is a book being
+// rolled; the three ladders are searches on one name at a time. Mixing their picks
+// into a single basket would mean a contract found while looking at SPY puts rides
+// along with a covered-call roll that has nothing to do with it — the panes are
+// different questions, so they hand over different answers.
+const SEL = new Map();          // pane -> Map(symbol -> { sym, ticker, expiry, type, strike })
 const selSubs = new Set();
-const selNotify = () => selSubs.forEach((f) => { try { f(); } catch { /* a dead pane must not break the rest */ } });
+const bag = (pane) => { if (!SEL.has(pane)) SEL.set(pane, new Map()); return SEL.get(pane); };
+const selNotify = (pane) => selSubs.forEach((f) => { try { f(pane); } catch { /* a dead pane must not break the rest */ } });
 
 export const onSelection = (fn) => { selSubs.add(fn); return () => selSubs.delete(fn); };
-export const selCount = () => SEL.size;
-export const selHas = (sym) => SEL.has(sym);
-export const selList = () => [...SEL.values()];
-export function selToggle(item) {
+export const selCount = (pane) => bag(pane).size;
+export const selHas = (pane, sym) => bag(pane).has(sym);
+export const selList = (pane) => [...bag(pane).values()];
+export function selToggle(pane, item) {
   if (!item || !item.sym) return;
-  if (SEL.has(item.sym)) SEL.delete(item.sym); else SEL.set(item.sym, item);
-  selNotify();
+  const b = bag(pane);
+  if (b.has(item.sym)) b.delete(item.sym); else b.set(item.sym, item);
+  selNotify(pane);
 }
-export function selClear() { SEL.clear(); selNotify(); }
+export function selClear(pane) { bag(pane).clear(); selNotify(pane); }
 
 // The fallback builder, for when a row has no contract object to read from.
 // O: + underlying + YYMMDD + C/P + strike x 1000, zero-padded to 8 digits.
@@ -635,8 +642,8 @@ export function instrumentsBar(prefix) {
 export function renderInstruments(prefix, openState) {
   const el = document.getElementById(`${prefix}-instbar`);
   if (!el) return;
-  const n = selCount();
-  const list = selList();
+  const n = selCount(prefix);
+  const list = selList(prefix);
   el.innerHTML = `
     <div class="instrow">
       ${openState && n ? `<button type="button" class="ghost sm" data-instclear="1">Clear</button>` : ''}

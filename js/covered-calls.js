@@ -663,11 +663,11 @@ function render() {
 // the row rather than toggled, or the two could drift apart.
 function syncPick(r) {
   if (!r.live || !r.live.sym) return;
-  const inBasket = selHas(r.live.sym);
+  const inBasket = selHas('cc', r.live.sym);
   const want = !r.excluded;
   if (inBasket !== want) {
-    selToggle({ sym: r.live.sym, ticker: r.ticker, expiry: r.live.usedExpiry || expiry,
-                type: 'call', strike: r.live.usedStrike ?? r.strike, pane: 'covered-calls' });
+    selToggle('cc', { sym: r.live.sym, ticker: r.ticker, expiry: r.live.usedExpiry || expiry,
+                      type: 'call', strike: r.live.usedStrike ?? r.strike });
   }
 }
 
@@ -676,7 +676,7 @@ function wireInstruments() {
   const t = el.querySelector('[data-insttoggle]');
   if (t) t.onclick = () => { instOpen = !instOpen; renderInstruments('cc', instOpen); wireInstruments(); };
   const c = el.querySelector('[data-instclear]');
-  if (c) c.onclick = () => { selClear(); };
+  if (c) c.onclick = () => { selClear('cc'); };
 }
 
 function wireRowInputs() {
@@ -902,7 +902,7 @@ function wireControls() {
   window.addEventListener('resize', pinColumns);
   // A contract picked in another pane belongs in the same basket, so this bar
   // follows the shared list rather than only its own ticks.
-  onSelection(() => { renderInstruments('cc', instOpen); wireInstruments(); });
+  onSelection((p) => { if (p !== 'cc') return; renderInstruments('cc', instOpen); wireInstruments(); });
 
   // Hover tooltip (bid / ask / mid + trade time on the Premium cell). Delegated
   // on document so it keeps working across re-renders.

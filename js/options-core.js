@@ -226,6 +226,12 @@ export async function ensureFx(cur) {
 // it in USD. Show nothing rather than something broken.
 export const usable = (e) => !!e && fxRate(e.currency) != null;
 export const yl = (e, y) => (e && e.years[y] && e.years[y].est) ? `${y}E` : `${y}`;
+// Every year in the store is a CALENDAR year. For a company whose fiscal year is
+// not the calendar one, say which fiscal year that column actually is — NVIDIA's
+// calendar 2027 is its FY2028, and someone reading "2027E" next to a filing that
+// says FY2028 needs to be told they are the same period, not two.
+export const fyNote = (e, y) => (e && e.fiscalOffset)
+  ? `calendar ${y} — ${e.name} reports it as FY${y + e.fiscalOffset}` : '';
 // The years the sensitivity opens on: the last two estimate years.
 export const flexYears = (e) => estYearsOf(e).slice(-2);
 export const isFlexed = (revG) => Object.keys(revG || {}).some((y) => revG[y] != null);
@@ -470,7 +476,7 @@ export function renderFundBlock(wrap, o) {
     ${o.sens ? `<div class="senshint">Type a revenue growth for ${flex.map((y) => esc(yl(e, y))).join(' and ')}. Revenue is rebuilt off the prior year and compounds; EBITDA, net income and EPS follow at their <b>consensus margins</b>; shares and net debt are held. Every multiple in the ladder above moves with it.</div>` : ''}
     <div class="rs-tablewrap"><div class="rs-ft-scroll"><table class="rs-ft an-fundtbl">
       <thead><tr><th class="rs-ft-h">${e.currency === 'USD' ? '$M' : esc(e.currency) + ' M'} unless noted</th>
-        ${cols.map((y) => `<th class="${est(y)}">${y}${cons[y].est ? '<span class="rs-ft-e">E</span>' : ''}</th>`).join('')}
+        ${cols.map((y) => `<th class="${est(y)}"${fyNote(e, y) ? ` title="${esc(fyNote(e, y))}"` : ''}>${y}${cons[y].est ? '<span class="rs-ft-e">E</span>' : ''}${e.fiscalOffset ? `<span class="fyx">FY${y + e.fiscalOffset}</span>` : ''}</th>`).join('')}
         <th class="sep">CAGR</th><th>PEG</th></tr></thead>
       <tbody>
         ${lines('Revenue', 'rev', fbn, { editable: true })}
@@ -483,6 +489,7 @@ export function renderFundBlock(wrap, o) {
     <div class="foot">
       <b>Margin</b> is the line as a % of revenue — the common-size view. Revenue has none by definition, and EPS is per share rather than a share of revenue, so neither carries one. <b>PEG</b> = the multiple ${esc(o.ticker)} trades at <em>today</em> on ${esc(yl(e, o.basisYear))} ÷ that year's growth in points: EV/EBITDA ÷ EBITDA growth on the EBITDA line, P/E ÷ net-income growth on Net income. Growth off a loss-making or missing prior year is left blank rather than invented. Diluted shares and net debt carry no growth or margin; they are here because the ladder's EV/EBITDA is built from them.<br>
       <b>Sensitivity</b> holds every margin at consensus and moves revenue only, so it answers "what if the top line compounds differently", not "what if the business changes shape". <b>Net debt is not flexed</b> — restating it would need a cash-flow model, and guessing one behind an input would be false precision.<br>
+      ${!e.fiscalOffset ? '' : `<b>Fiscal year</b> — every column here is a CALENDAR year, so this name lines up with the rest of the book. ${esc(e.name)} closes its year in January and labels it one ahead, so calendar ${o.basisYear} is what its filings call FY${o.basisYear + e.fiscalOffset}. The small FY tag on each header says which.<br>`}
       ${e.currency === 'USD' ? '' : `<b>Currency</b> — this table is in ${esc(e.currency)}, the currency ${esc(e.name)} reports in, and is left unconverted so it ties to the filings. The ladder above is priced in USD, so every multiple there puts these figures in USD first, at ${fxLabel(e.currency) ? esc(fxLabel(e.currency)) : '<b>no rate we could fetch — which is why those multiples are blank</b>'}.<br>`}
       ${esc(e.source)}</div>`;
 }

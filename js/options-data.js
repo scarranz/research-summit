@@ -104,12 +104,21 @@ export const EST_STORE = {
     name: "BBB Foods Inc.", currency: "MXN", snapshot: "2026-08-13", lastActual: 2025,
     consensusAsOf: null, consensusFrom: null,   // no Bloomberg coverage at all
     summit: {
-      2024: { rev: 57439.02, ebitda: 1498.87, earnings: 681.67, shares: 139.607 },
-      2025: { rev: 78153.39, ebitda: 1921.37, earnings: -2275.6, shares: 115.023 },
-      2026: { rev: 106042.06, ebitda: 2547.66, earnings: -962.55, shares: 115.023 },
-      2027: { rev: 141324.66, ebitda: 3838.52, earnings: 1385.92, shares: 115.023 },
-      2028: { rev: 184993.98, ebitda: 5507.57, earnings: 2914.45, shares: 115.023 },
+      2024: { rev: 57439.02, ebitda: 1498.87, earnings: 681.67, shares: 139.607, netDebt: 9810 },
+      2025: { rev: 78153.39, ebitda: 1921.37, earnings: -2275.6, shares: 115.023, netDebt: 9810 },
+      2026: { rev: 106042.06, ebitda: 2547.66, earnings: -962.55, shares: 115.023, netDebt: 9810 },
+      2027: { rev: 141324.66, ebitda: 3838.52, earnings: 1385.92, shares: 115.023, netDebt: 9810 },
+      2028: { rev: 184993.98, ebitda: 5507.57, earnings: 2914.45, shares: 115.023, netDebt: 9810 },
     },
+    // Net debt 9,810 MXN M, per Fiscal.ai — SAB, 10 Sep 2026. Held flat across
+    // every year, which is how net debt already behaves for every other name here
+    // (the live Massive fallback is one current figure applied to all years) and
+    // what the income-statement footnote says. It has to be carried explicitly
+    // because Massive returns no fundamentals at all for a foreign issuer, and the
+    // Summit model projects no balance sheet past the last reported year.
+    // NOTE the basis pairing: the model's EBITDA is AFTER rent while Bloomberg's
+    // and the company's add it back, so this net debt is the one that belongs with
+    // the Summit column. A Street EBITDA would need lease liabilities added back.
     consensus: null,   // no Bloomberg coverage in the model
   },
   AMZN: {

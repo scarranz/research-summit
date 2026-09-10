@@ -23,12 +23,16 @@
 // js/options-data.js and js/options-core.js.
 
 import { OPT_ESTIMATES, OPT_DEFAULT_TICKER } from './options-data.js';
+
+// The name this pane opens on — see loadProtectivePutPage().
+const PP_DEFAULT = 'SPY';
 import {
   esc, px, mult, pct, pctS, cash, daysTo, rich,
   fetchExpiries, fetchUnderlying, fetchChain,
   listedStrikes, bandAround, premiumOf, quoteTip,
   estimatesFor, resolveSource, sourceSegments, estNote, yearsOf, estYearsOf, usable, yl, isFlexed, ensureFx,
   effYears, multiplesAt, renderFundBlock, yearSegments, tickerChips, wireTooltip, vintageBadge, whyBlank,
+  selToggle, selHas, selClear, symbolOf, instrumentsBar, renderInstruments, onSelection,
 } from './options-core.js';
 
 const $ = (id) => document.getElementById(id);
@@ -36,7 +40,7 @@ const root = () => document.getElementById('pp-root');
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const st = {
-  ticker: 'AMZN',            // a name we own, not the long-call idea
+  ticker: PP_DEFAULT,        // the index first — see loadProtectivePutPage()
   expiry: null, expiries: [],
   spot: null, changePct: null, shares: null, netDebtLive: null, name: '',
   chain: [],                 // raw put contracts for the selected expiry
@@ -54,6 +58,7 @@ const st = {
 
   selected: null,
 };
+let instOpen = false;        // the Add to Instruments panel is open
 
 let est = null, E = {};
 const live = () => ({ shares: st.shares, netDebt: st.netDebtLive });
@@ -72,7 +77,14 @@ function refresh() {
 const strikesListed = () => listedStrikes(st.chain);
 // A band 3%–20% below spot: the range where protection is actually bought. Deeper
 // out is a lottery ticket, at the money is a different trade.
-const defaultRange = () => bandAround(strikesListed(), st.spot, 0.80, 0.97);
+// The ladder opens CENTRED on 10% below spot — the strike most people mean by "a
+// hedge" — with roughly as many strikes above it as below, so the interesting one
+// is in the middle of the list rather than at an edge you have to scroll to.
+const PP_CENTER = 0.90;   // the strike the list is built around, as a share of spot
+const PP_HALFBAND = 0.10; // how far either side of it the band reaches
+const PP_ROWS = 15;       // how many strikes the ladder opens with, centred on PP_CENTER
+const defaultRange = () =>
+  bandAround(strikesListed(), st.spot, PP_CENTER - PP_HALFBAND, PP_CENTER + PP_HALFBAND);
 
 // Contracts are whole and each covers 100 shares, so a holding that is not a round
 // lot is partly uninsured. Say so rather than round it away.
@@ -125,9 +137,16 @@ const selectedRow = () => {
 
 // ── Fetching ──────────────────────────────────────────────────────────────────
 // Protection is bought in months, not weeks: a put that expires before the risk
-// does is not a hedge. Open on the nearest expiry at least two months out.
+// does is not a hedge. Open a YEAR out — the nearest listed expiry to 365 days,
+// which on a name with LEAPS is the January a year ahead and on a thinner chain is
+// whatever sits closest. Nearest rather than "at least", because a put three years
+// out is as wrong an answer as one three weeks out.
 function defaultExpiry(dates) {
-  return dates.find((d) => daysTo(d) >= 60) || dates[dates.length - 1];
+  if (!dates.length) return null;
+  const far = dates.filter((d) => daysTo(d) >= 150);
+  const pool = far.length ? far : dates;
+  return pool.reduce((best, d) =>
+    Math.abs(daysTo(d) - 365) < Math.abs(daysTo(best) - 365) ? d : best, pool[0]);
 }
 
 async function loadChain() {
@@ -148,8 +167,20 @@ async function loadChain() {
     if (st.rangeFrom == null) { st.rangeFrom = dr.from; st.rangeTo = dr.to; }
     if (!st.seeded) {
       st.seeded = true;
-      st.strikes = strikesListed().filter((k) => k >= dr.from - 1e-9 && k <= dr.to + 1e-9);
-      st.selected = st.strikes.length ? st.strikes[st.strikes.length - 1] : null;  // nearest the money
+      // Take the band, then keep the PP_ROWS strikes nearest the centre. A ±10%
+      // band is ten strikes on a name that steps in fives and a hundred and fifty
+      // on SPY, which steps in ones — the band decides WHERE to look, the cap
+      // decides how much of it is a list anyone can read.
+      const target0 = st.spot * PP_CENTER;
+      const inBand = strikesListed().filter((k) => k >= dr.from - 1e-9 && k <= dr.to + 1e-9);
+      st.strikes = (inBand.length > PP_ROWS
+        ? inBand.slice().sort((a, b) => Math.abs(a - target0) - Math.abs(b - target0)).slice(0, PP_ROWS)
+        : inBand).sort((a, b) => b - a);
+      // Select the strike closest to the centre, not an end of the ladder.
+      const target = st.spot * PP_CENTER;
+      st.selected = st.strikes.length
+        ? st.strikes.reduce((b, k) => Math.abs(k - target) < Math.abs(b - target) ? k : b, st.strikes[0])
+        : null;  // nearest the money
     }
   } catch (e) {
     st.err = e.message; st.chain = [];
@@ -224,9 +255,10 @@ function renderLadder() {
       <th class="sep">P/E</th><th>EV/EBITDA</th>
       <th class="sep">% of spot</th><th>Annualised</th>
       <th>Contracts</th><th>Total cost</th><th>Floor value</th>
+      <th class="sep" title="tick the contracts to hand to Instruments">Add</th><th title="drop this strike from the ladder">Remove</th>
     </tr>`;
 
-  const ncol = nContract + 2 + 2 + 5 + 1;
+  const ncol = nContract + 2 + 2 + 5 + 1 + 1;
   if (!rows.length) {
     $('pp-tbody').innerHTML = `<tr><td colspan="${ncol}" class="muted">no strikes picked yet — add them below.</td></tr>`;
     return;
@@ -255,13 +287,42 @@ function renderLadder() {
       <td class="muted">${r.contracts.toLocaleString()}</td>
       <td>${cash(r.costTotal)}</td>
       <td class="big">${cash(r.floorValue)}</td>
-      <td class="sep"><button class="x" data-del="${r.K}" title="remove this strike">✕</button></td>
+      <td class="sep">${r.c ? `<input type="checkbox" class="pick" data-pick="${r.K}" ${selHas(symbolOf(r.c, st.ticker, st.expiry, 'put', r.K)) ? 'checked' : ''} title="${esc(symbolOf(r.c, st.ticker, st.expiry, 'put', r.K) || '')}">` : '<span class="muted">—</span>'}</td>
+      <td><button class="x" data-del="${r.K}" title="remove this strike">✕</button></td>
     </tr>`;
   }).join('');
   wireLadder();
+  renderInstruments('pp', instOpen);
+  wireInstruments();
+}
+
+// The Instruments bar and the per-row ticks. Here the tick means one thing only —
+// hand this contract over — because a ladder is a search, not a book: there are no
+// portfolio totals for it to modify. Covered Calls is the pane where the same tick
+// also decides what counts.
+function wireInstruments() {
+  const el = document.getElementById('pp-instbar'); if (!el) return;
+  const t = el.querySelector('[data-insttoggle]');
+  if (t) t.onclick = () => { instOpen = !instOpen; renderInstruments('pp', instOpen); wireInstruments(); };
+  const c = el.querySelector('[data-instclear]');
+  if (c) c.onclick = () => selClear();
 }
 
 function wireLadder() {
+  root().querySelectorAll('[data-pick]').forEach((el) => {
+    // The row itself is clickable — it selects the strike and re-renders — so the
+    // click has to stop at the box. Without this the table is rebuilt before the
+    // change event lands and the tick is thrown away on a detached node.
+    el.onclick = (ev) => ev.stopPropagation();
+    el.onchange = (ev) => {
+    ev.stopPropagation();
+    const k = +el.dataset.pick;
+    const r = ladder().find((x) => x.K === k);
+    if (!r || !r.c) return;
+    selToggle({ sym: symbolOf(r.c, st.ticker, st.expiry, 'put', k), ticker: st.ticker,
+                expiry: st.expiry, type: 'put', strike: k, pane: 'protective-put' });
+    };
+  });
   root().querySelectorAll('[data-del]').forEach((el) => el.onclick = (ev) => {
     ev.stopPropagation();
     const k = +el.dataset.del;
@@ -398,6 +459,7 @@ function injectMarkup() {
         </div>
 
         <div class="block" id="pp-fund"></div>
+        ${instrumentsBar('pp')}
         <div class="foot" id="pp-foot"></div>
       </div>
     </div>`;
@@ -466,6 +528,9 @@ function wireControls() {
   });
 
   wireTooltip(r);
+  // The basket is shared across the four panes, so a pick made anywhere moves
+  // this count too.
+  onSelection(() => { renderInstruments('pp', instOpen); wireInstruments(); });
 }
 
 // ── Page loader ───────────────────────────────────────────────────────────────
@@ -475,5 +540,10 @@ export async function loadProtectivePutPage() {
   _inited = true;
   injectMarkup();
   wireControls();
-  await loadTicker(OPT_ESTIMATES[st.ticker] ? st.ticker : OPT_DEFAULT_TICKER);
+  // Opens on SPY. A protective put is usually asked about the index first — it is
+  // the cheapest way to hedge a book that is mostly beta — and SPY is the most
+  // liquid put chain listed, so the ladder is dense enough to be worth reading.
+  // It carries no estimate set, which is correct: there is nothing to value an
+  // index against, and the pane says so instead of showing dashes it cannot explain.
+  await loadTicker(st.ticker || PP_DEFAULT);
 }

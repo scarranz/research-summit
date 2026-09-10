@@ -55,7 +55,7 @@ import { AM_YEARS, AM_ISEST, AM_IS, AM_BS } from './overviews/app-model.js';
 export const EST_STORE = {
   UBER: {
     name: "Uber Technologies, Inc.", currency: "USD", snapshot: "2026-08-05", lastActual: 2025,
-    consensusAsOf: "2026-08-05", consensusFrom: "snapshot",
+    consensusAsOf: "2026-09-10", consensusFrom: "bbg",
     summit: {
       2024: { rev: 43978, ebitda: 6484, earnings: 3970, shares: 2154.466 },
       2025: { rev: 52017, ebitda: 8730, earnings: 5237, shares: 2124.391 },
@@ -63,15 +63,27 @@ export const EST_STORE = {
       2027: { rev: 70356.42, ebitda: 15891.11, earnings: 9656.38, shares: 1939.096 },
       2028: { rev: 80391.35, ebitda: 18455.43, earnings: 13515.08, shares: 1842.141 },
     },
+    // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
+    // included. It has to be all-or-nothing: the archive carries GAAP lines while
+    // the model carries its own adjusted ones, so mixing a model actual with an
+    // archive forecast would invent a growth rate. UBER FY2025 is 5,237 in the
+    // model and 10,053 here; taking the model's actual would show +29% into 2026E
+    // where the archive's own numbers say -33%.
+    // ⚠ THE REPORTED YEARS THEREFORE DIFFER BETWEEN THE TWO TOGGLES. That is the
+    // accounting basis, not a disagreement about the future, and the "vs" row in
+    // the income statement now prints it on reported years instead of hiding it.
     consensus: {
-      2026: { rev: 58173.1, ebitda: 11390.21, earnings: 6901.39, shares: 2059.461 },
-      2027: { rev: 66900.56, ebitda: 13545.21, earnings: 8926.09, shares: 2025.821 },
-      2028: { rev: 76723.06, ebitda: 16288.18, earnings: 10971.21, shares: 1983.341 },
+      2023: { rev: 37281, ebitda: 4052, earnings: 1887, shares: 2091.78 },
+      2024: { rev: 43978, ebitda: 6484, earnings: 9856, shares: 2150.51 },
+      2025: { rev: 52017, ebitda: 8730, earnings: 10053, shares: 2119.69 },
+      2026: { rev: 57792.22, ebitda: 11383.04, earnings: 6741.22, shares: 2050.31 },
+      2027: { rev: 66656.1, ebitda: 13830.49, earnings: 9055.02, shares: 2020.62 },
+      2028: { rev: 76497, ebitda: 16526.59, earnings: 10880.27, shares: 1975.28 },
     },
   },
   META: {
     name: "Meta Platforms, Inc.", currency: "USD", snapshot: "2026-08-04", lastActual: 2025,
-    consensusAsOf: "2026-08-04", consensusFrom: "snapshot",
+    consensusAsOf: "2026-09-08", consensusFrom: "bbg",
     summit: {
       2024: { rev: 164500, ebitda: null, earnings: 56719.51, shares: 2614 },
       2025: { rev: 200965, ebitda: 127054.03, earnings: 73881.33, shares: 2574 },
@@ -79,15 +91,27 @@ export const EST_STORE = {
       2027: { rev: 326206.34, ebitda: 190857.97, earnings: 101026.33, shares: 2574 },
       2028: { rev: 392845.9, ebitda: 271129.28, earnings: 140777.71, shares: 2574 },
     },
+    // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
+    // included. It has to be all-or-nothing: the archive carries GAAP lines while
+    // the model carries its own adjusted ones, so mixing a model actual with an
+    // archive forecast would invent a growth rate. UBER FY2025 is 5,237 in the
+    // model and 10,053 here; taking the model's actual would show +29% into 2026E
+    // where the archive's own numbers say -33%.
+    // ⚠ THE REPORTED YEARS THEREFORE DIFFER BETWEEN THE TWO TOGGLES. That is the
+    // accounting basis, not a disagreement about the future, and the "vs" row in
+    // the income statement now prints it on reported years instead of hiding it.
     consensus: {
-      2026: { rev: 254015.78, ebitda: 138167.65, earnings: 93461.41, shares: 2566.77 },
-      2027: { rev: 305065.29, ebitda: 178456.02, earnings: 103178.35, shares: 2583.45 },
-      2028: { rev: 360834.75, ebitda: 221169.97, earnings: 124524.43, shares: 2598.418 },
+      2023: { rev: 134902, ebitda: 57929, earnings: 39098, shares: 2629 },
+      2024: { rev: 164501, ebitda: 84878, earnings: 62360, shares: 2614 },
+      2025: { rev: 200966, ebitda: 101892, earnings: 60458, shares: 2574 },
+      2026: { rev: 253945.64, ebitda: 119146.61, earnings: 81357.64, shares: 2566.43 },
+      2027: { rev: 304784.98, ebitda: 150997.09, earnings: 86681.53, shares: 2582.53 },
+      2028: { rev: 361436.61, ebitda: 194833.75, earnings: 101239.57, shares: 2597.27 },
     },
   },
   NVDA: {
     name: "NVIDIA Corporation", currency: "USD", snapshot: "2026-08-28", lastActual: 2026,
-    consensusAsOf: "2026-08-28", consensusFrom: "snapshot",
+    consensusAsOf: "2026-09-09", consensusFrom: "bbg",
     summit: {
       2024: { rev: 60922, ebitda: 35729.51, earnings: 29288.15, shares: 24940 },
       2025: { rev: 130497, ebitda: 85093.05, earnings: 70206.73, shares: 24804 },
@@ -95,9 +119,22 @@ export const EST_STORE = {
       2027: { rev: 413720.31, ebitda: 276114.35, earnings: 225369.79, shares: 24150.438 },
       2028: { rev: 726095.49, ebitda: 483970.93, earnings: 395606.12, shares: 23786.876 },
     },
+    // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
+    // included. It has to be all-or-nothing: the archive carries GAAP lines while
+    // the model carries its own adjusted ones, so mixing a model actual with an
+    // archive forecast would invent a growth rate. UBER FY2025 is 5,237 in the
+    // model and 10,053 here; taking the model's actual would show +29% into 2026E
+    // where the archive's own numbers say -33%.
+    // ⚠ THE REPORTED YEARS THEREFORE DIFFER BETWEEN THE TWO TOGGLES. That is the
+    // accounting basis, not a disagreement about the future, and the "vs" row in
+    // the income statement now prints it on reported years instead of hiding it.
     consensus: {
-      2027: { rev: 406779.46, ebitda: 271111.43, earnings: 239106.56, shares: 24273.473 },
-      2028: { rev: 670087.28, ebitda: 430132.57, earnings: 372561.23, shares: 24051.473 },
+      2024: { rev: 60922, ebitda: 38642, earnings: 32312, shares: 24940 },
+      2025: { rev: 130497, ebitda: 88653, earnings: 74265, shares: 24804 },
+      2026: { rev: 215938, ebitda: 140143, earnings: 116997, shares: 24514 },
+      2027: { rev: 409702.7, ebitda: 272391.84, earnings: 228497.45, shares: 24249.93 },
+      2028: { rev: 693718.06, ebitda: 451047.94, earnings: 380886.77, shares: 23998.13 },
+      2029: { rev: 918348.91, ebitda: 596848, earnings: 503486.14, shares: 23732.79 },
     },
   },
   TBBB: {
@@ -110,28 +147,18 @@ export const EST_STORE = {
       2027: { rev: 141324.66, ebitda: 3838.52, earnings: 1385.92, shares: 115.023, netDebt: 9810 },
       2028: { rev: 184993.98, ebitda: 5507.57, earnings: 2914.45, shares: 115.023, netDebt: 9810 },
     },
-    // Net debt 9,810 MXN M, per Fiscal.ai — SAB, 10 Sep 2026. Held flat across
-    // every year, which is how net debt already behaves for every other name here
-    // (the live Massive fallback is one current figure applied to all years) and
-    // what the income-statement footnote says. It has to be carried explicitly
-    // because Massive returns no fundamentals at all for a foreign issuer, and the
-    // Summit model projects no balance sheet past the last reported year.
-    // NOTE the basis pairing: the model's EBITDA is AFTER rent while Bloomberg's
-    // and the company's add it back, so this net debt is the one that belongs with
-    // the Summit column. A Street EBITDA would need lease liabilities added back.
-    // Bloomberg consensus, from BBG_CONSENSUS.txt pulled 2026-09-09. FORWARD YEARS
-    // ONLY: the reported years are backfilled from the model's actuals, which keeps
-    // history identical under both toggles — the .txt carries GAAP lines that do not
-    // tie to the model's on a year both already report.
-    // FY2025 EBITDA is dropped: the rent add-back should put BBG ABOVE the model in
-    // every year and does in 2024/2026/2027/2028, but 2025 came in 36% BELOW it and
-    // implied EBITDA falling 57% while revenue grew 36%. That is a dead cell.
-    // Bloomberg publishes no forward diluted share count for TBBB, so the last
-    // reported one (115.0M) is carried, which is what the model does too.
-    // ⚠ NET DEBT 21,540 = 9,810 (Fiscal.ai, ex-leases) + 11,730 (the model's FY2025
-    // lease liability). The Street EBITDA ADDS RENT BACK, so the net debt paired with
-    // it must include the lease. ASSUMPTION — SAB to confirm the lease figure.
+    // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
+    // included. It has to be all-or-nothing: the archive carries GAAP lines while
+    // the model carries its own adjusted ones, so mixing a model actual with an
+    // archive forecast would invent a growth rate. UBER FY2025 is 5,237 in the
+    // model and 10,053 here; taking the model's actual would show +29% into 2026E
+    // where the archive's own numbers say -33%.
+    // ⚠ THE REPORTED YEARS THEREFORE DIFFER BETWEEN THE TWO TOGGLES. That is the
+    // accounting basis, not a disagreement about the future, and the "vs" row in
+    // the income statement now prints it on reported years instead of hiding it.
     consensus: {
+      2024: { rev: 57439.02, ebitda: 2847, earnings: 334.42, shares: 139.61, netDebt: 21540 },
+      2025: { rev: 78152.94, ebitda: null, earnings: -2839.57, shares: 115.02, netDebt: 21540 },
       2026: { rev: 103301.5, ebitda: 3402.3, earnings: -1666.88, shares: 115.02, netDebt: 21540 },
       2027: { rev: 130196.15, ebitda: 6205.85, earnings: -144.62, shares: 115.02, netDebt: 21540 },
       2028: { rev: 164742.23, ebitda: 8525.73, earnings: 647.57, shares: 115.02, netDebt: 21540 },
@@ -139,7 +166,7 @@ export const EST_STORE = {
   },
   AMZN: {
     name: "Amazon.com, Inc.", currency: "USD", snapshot: "2026-08-04", lastActual: 2025,
-    consensusAsOf: "2026-08-04", consensusFrom: "snapshot",
+    consensusAsOf: "2026-09-10", consensusFrom: "bbg",
     summit: {
       2024: { rev: 637959, ebitda: 155229.17, earnings: 54772.65, shares: 10721 },
       2025: { rev: 716924, ebitda: 185600.08, earnings: 64969.21, shares: 10827 },
@@ -147,15 +174,27 @@ export const EST_STORE = {
       2027: { rev: 959799.99, ebitda: 332725.53, earnings: 119053.41, shares: 10827 },
       2028: { rev: 1101189.6, ebitda: 430087.74, earnings: 137411.99, shares: 10827 },
     },
+    // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
+    // included. It has to be all-or-nothing: the archive carries GAAP lines while
+    // the model carries its own adjusted ones, so mixing a model actual with an
+    // archive forecast would invent a growth rate. UBER FY2025 is 5,237 in the
+    // model and 10,053 here; taking the model's actual would show +29% into 2026E
+    // where the archive's own numbers say -33%.
+    // ⚠ THE REPORTED YEARS THEREFORE DIFFER BETWEEN THE TWO TOGGLES. That is the
+    // accounting basis, not a disagreement about the future, and the "vs" row in
+    // the income statement now prints it on reported years instead of hiding it.
     consensus: {
-      2026: { rev: 827451.78, ebitda: 216614.33, earnings: 114401.96, shares: 10884.708 },
-      2027: { rev: 946680.13, ebitda: 280171.74, earnings: 116800.63, shares: 10975.598 },
-      2028: { rev: 1069017.11, ebitda: 354937.9, earnings: 149737.54, shares: 11058.166 },
+      2023: { rev: 574785, ebitda: 109538, earnings: 29793, shares: 10492 },
+      2024: { rev: 637959, ebitda: 143399, earnings: 59248, shares: 10721 },
+      2025: { rev: 716924, ebitda: 165198, earnings: 77670, shares: 10827 },
+      2026: { rev: 828782.97, ebitda: 220794.4, earnings: 137894.33, shares: 10888.6 },
+      2027: { rev: 949660.5, ebitda: 283087.5, earnings: 118437.6, shares: 10992.06 },
+      2028: { rev: 1092284.64, ebitda: 356131.13, earnings: 151833.86, shares: 11079.91 },
     },
   },
   SPOT: {
     name: "Spotify Technology S.A.", currency: "EUR", snapshot: "2026-08-05", lastActual: 2025,
-    consensusAsOf: "2026-08-05", consensusFrom: "snapshot",
+    consensusAsOf: "2026-09-09", consensusFrom: "bbg",
     // Net CASH of 8,930 EUR M (9,390 cash against ~460 of debt), per Fiscal.ai —
     // SAB, 10 Sep 2026. Carried explicitly for the same two reasons as TBBB:
     // Massive returns no fundamentals for a foreign issuer, and SPOT's Summit model
@@ -168,10 +207,22 @@ export const EST_STORE = {
       2027: { rev: 23118.84, ebitda: 4258.22, earnings: 3234.78, shares: 202.218, netDebt: -8930 },
       2028: { rev: 27097.44, ebitda: 5535.33, earnings: 4363.44, shares: 198.072, netDebt: -8930 },
     },
+    // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
+    // included. It has to be all-or-nothing: the archive carries GAAP lines while
+    // the model carries its own adjusted ones, so mixing a model actual with an
+    // archive forecast would invent a growth rate. UBER FY2025 is 5,237 in the
+    // model and 10,053 here; taking the model's actual would show +29% into 2026E
+    // where the archive's own numbers say -33%.
+    // ⚠ THE REPORTED YEARS THEREFORE DIFFER BETWEEN THE TWO TOGGLES. That is the
+    // accounting basis, not a disagreement about the future, and the "vs" row in
+    // the income statement now prints it on reported years instead of hiding it.
     consensus: {
-      2026: { rev: 19526.64, ebitda: 3004.55, earnings: 2597.91, shares: 209.237, netDebt: -8930 },
-      2027: { rev: 22316.1, ebitda: 3889.24, earnings: 3218.68, shares: 209.921, netDebt: -8930 },
-      2028: { rev: 25332.73, ebitda: 4816.5, earnings: 3972.89, shares: 208.447, netDebt: -8930 },
+      2023: { rev: 13247, ebitda: -288, earnings: -532, shares: 194.73, netDebt: -8930 },
+      2024: { rev: 15673, ebitda: 1486, earnings: 1138, shares: 206.99, netDebt: -8930 },
+      2025: { rev: 17186, ebitda: 2300, earnings: 2212, shares: 210.51, netDebt: -8930 },
+      2026: { rev: 19522, ebitda: 3011.5, earnings: 2589.47, shares: 209.23, netDebt: -8930 },
+      2027: { rev: 22305.67, ebitda: 3887.12, earnings: 3212.43, shares: 209.91, netDebt: -8930 },
+      2028: { rev: 25231.66, ebitda: 4809.61, earnings: 3947.64, shares: 208.42, netDebt: -8930 },
     },
   },
   SOFI: {
@@ -212,7 +263,7 @@ export const EST_STORE = {
   },
   LYFT: {
     name: "Lyft, Inc.", currency: "USD", snapshot: "2026-08-07", lastActual: 2025,
-    consensusAsOf: "2026-08-07", consensusFrom: "snapshot",
+    consensusAsOf: "2026-09-08", consensusFrom: "bbg",
     summit: {
       2024: { rev: 5785.98, ebitda: 382.4, earnings: -54.17, shares: 413.651 },
       2025: { rev: 6484.3, ebitda: 528.9, earnings: -2.53, shares: 388.428 },
@@ -220,10 +271,22 @@ export const EST_STORE = {
       2027: { rev: 8068.5, ebitda: 959, earnings: 459.29, shares: 359.197 },
       2028: { rev: 8618.45, ebitda: 1186.31, earnings: 591.73, shares: 359.197 },
     },
+    // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
+    // included. It has to be all-or-nothing: the archive carries GAAP lines while
+    // the model carries its own adjusted ones, so mixing a model actual with an
+    // archive forecast would invent a growth rate. UBER FY2025 is 5,237 in the
+    // model and 10,053 here; taking the model's actual would show +29% into 2026E
+    // where the archive's own numbers say -33%.
+    // ⚠ THE REPORTED YEARS THEREFORE DIFFER BETWEEN THE TWO TOGGLES. That is the
+    // accounting basis, not a disagreement about the future, and the "vs" row in
+    // the income statement now prints it on reported years instead of hiding it.
     consensus: {
-      2026: { rev: 7335.24, ebitda: 692.57, earnings: 220.54, shares: 396.767 },
-      2027: { rev: 8255.72, ebitda: 867.4, earnings: 387.13, shares: 395.106 },
-      2028: { rev: 9105.07, ebitda: 1008.68, earnings: 448.71, shares: 390.467 },
+      2023: { rev: 4403.59, ebitda: 222.4, earnings: -340.3, shares: 385.3 },
+      2024: { rev: 5786.02, ebitda: 382.4, earnings: 22.8, shares: 413.7 },
+      2025: { rev: 6316.3, ebitda: 528.8, earnings: 2844, shares: 417.66 },
+      2026: { rev: 7354.98, ebitda: 695.45, earnings: 218.29, shares: 393.18 },
+      2027: { rev: 8287.7, ebitda: 871.76, earnings: 383.56, shares: 390.58 },
+      2028: { rev: 9090.71, ebitda: 1008.54, earnings: 455.64, shares: 388.16 },
     },
   },
   CART: {

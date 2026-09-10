@@ -429,11 +429,17 @@ export function renderFundBlock(wrap, o) {
     if (o.other) {
       const cells = cols.map((y) => {
         const a = E[y] && E[y][key], b = o.other[y] && o.other[y][key];
-        // Only estimate years can differ: a reported year is the same figure under
-        // both sources, so comparing it would print a row of +0.0% for no reason.
+        // REPORTED years are compared too. They used to be skipped on the grounds
+        // that a closed year is the same figure under either source — true while the
+        // Street column came out of the model's own workbook, and false since it
+        // comes from the Bloomberg archive, which carries GAAP lines where the model
+        // carries adjusted ones. UBER's FY2025 net income is 5,237 one way and
+        // 10,053 the other. That gap is the accounting basis rather than a view on
+        // the future, and hiding it would leave the forecast rows looking like
+        // disagreement when part of the distance was there all along.
         // A percentage against a negative or missing base is noise, so it is left
         // blank rather than invented — the same rule the growth lines follow.
-        const g = (E[y] && E[y].est && a != null && b != null && b > 0) ? a / b - 1 : null;
+        const g = (a != null && b != null && b > 0) ? a / b - 1 : null;
         return `<td class="${est(y)} ${g == null ? '' : (g >= 0 ? 'up' : 'dn')}">${g == null ? '—' : pctS(g, 0)}</td>`;
       }).join('');
       vs = `<tr class="rs-ft-sub vsrow"><td class="rs-ft-h">vs ${esc(o.otherLabel)}</td>${cells}<td class="sep"></td><td></td></tr>`;

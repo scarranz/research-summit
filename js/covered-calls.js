@@ -520,7 +520,7 @@ async function loadAll() {
 function injectMarkup() {
   $('cc-root').innerHTML = `
     <div class="cc-wrap">
-      <div class="topbar">
+      <div class="der-head">
         <h2>Covered Calls — Live</h2>
         <span class="pill">live · Massive</span>
         <div class="controls">

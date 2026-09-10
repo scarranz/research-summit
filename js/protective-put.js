@@ -359,7 +359,7 @@ function injectMarkup() {
   root().className = 'der-an';
   root().innerHTML = `
     <div class="an-wrap">
-      <div class="topbar">
+      <div class="der-head">
         <h2>Protective Put — Downside Insurance</h2>
         <span class="pill">live · Massive</span>
         <span class="pill flex" id="pp-flexpill" hidden></span>

@@ -14,6 +14,7 @@
 // that has already reported carries no `summit` value: the model freezes or zeroes it.
 
 export var amznSegments = {
+  company: 'Amazon',
   updated: 'Aug 2026',
   source: 'Segment PP&E, capex and EBITDA from the Summit DCF (snapshot 2026-08-04, actuals_history for reported periods and projection_history forward). Segment D&A, remaining performance obligations, shipping cost and days payable are Bloomberg reported figures assembled across the archive snapshots — Amazon does not publish any of them, so there is no company number to reconcile against. Segment revenue and operating income are read from the Results dataset.',
   axis: { q: ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26'], y: ['2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'] },

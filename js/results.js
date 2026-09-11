@@ -33,6 +33,8 @@ import { spotSetup } from './results-data/spot-setup.js';
 import { lyftResults } from './results-data/lyft.js';
 import { lyftSetup } from './results-data/lyft-setup.js';
 import { tbbbResults } from './results-data/tbbb.js';
+import { dhrResults } from './results-data/dhr.js';
+import { dhrSetup } from './results-data/dhr-setup.js';
 import { tbbbSetup } from './results-data/tbbb-setup.js';
 
 var RESULTS_DATA = {
@@ -51,7 +53,9 @@ var RESULTS_DATA = {
   LYFT: lyftResults,
   LYFT_SETUP: lyftSetup,
   TBBB: tbbbResults,
-  TBBB_SETUP: tbbbSetup
+  TBBB_SETUP: tbbbSetup,
+  DHR: dhrResults,
+  DHR_SETUP: dhrSetup
 };
 
 // Register a dataset at runtime, so a caller can compose one and get the whole engine — every
@@ -581,10 +585,29 @@ function rsApplyVintage(){
 // What each source actually resolved to — stated on screen, because one date means
 // different things for a model refreshed weekly and a consensus file refreshed quarterly,
 // and because a source with no matrix yet is still showing its pre-print series.
+// Does the dataset carry ANY value for this source, in any view, in any metric — flat array or
+// vintage matrix? A ticker we have no model for (DHR) or no Summit line for yet (GOOGL) ships
+// `summit: []` on every metric, and without this guard the note underneath the picker still
+// announced "Summit: no vintage matrix yet — showing the estimate that stood before each print",
+// which reads as a promise that a Summit series is on the chart. It is not; say nothing about it.
+function rsSrcInData(src){
+  var d = _rs.data; if (!d) return false;
+  if (rsMatrix(src)) return true;
+  var vs = d.views || {};
+  for (var vn in vs){
+    var ms = vs[vn].metrics || {};
+    for (var mk in ms){
+      var a = ms[mk][src] || ms[mk]['_flat_' + src];
+      if (a && a.some(function(v){ return v != null; })) return true;
+    }
+  }
+  return false;
+}
 function rsVintNote(){
   var mode = _rs.vint || 'preprint';
   var names = { summit: 'Summit', cons: 'Consensus' }, asof = mode.indexOf('asof:') === 0, out = [];
   ['summit', 'cons'].forEach(function(src){
+    if (!rsSrcInData(src)) return;                 // the source is absent, not merely un-versioned
     var mx = rsMatrix(src);
     if (!mx){ out.push(names[src] + ': no vintage matrix yet — showing the estimate that stood before each print'); return; }
     if (mode === 'preprint'){ out.push(names[src] + ': ' + (mx.vintages || []).length + ' snapshots, each period taken from the last one before its print'); return; }
@@ -2152,10 +2175,20 @@ function rsSrcArr(m, key, mkey){
   return m[key] || null;
 }
 function rsSrcHas(m, key, mkey){ var a = rsSrcArr(m, key, mkey); return !!a && a.some(function(v){ return v != null; }); }
+// A pair is offerable only where the two series overlap ON A REPORTED PERIOD. The block is
+// "Actuals vs Estimates" and its base defaults to the actual, so an overlap that exists only in
+// the forward horizon — a consensus and a company guide for the same future quarter, say — is not
+// a surprise anyone can score, and offering it puts a metric in the dropdown that draws an empty
+// chart. DHR is the dataset that surfaced this: it guides 3Q26 core growth and carries a Street
+// number for the same quarter, and nothing else pairs anywhere, so the whole block rendered with
+// one option and no data. Requiring an actual also makes `rsSurpGroups()` return empty for a
+// ticker with no scoreable history at all, which drops the block entirely (rule 6 — show nothing
+// rather than something broken) instead of shipping a blank canvas.
 function rsSurpPairOk(m, a, b, mkey){
   var A = rsSrcArr(m, a, mkey), B = rsSrcArr(m, b, mkey);
   if (!A || !B) return false;
-  return m.periods.some(function(_, i){ return A[i] != null && B[i] != null; });
+  var act = m.act || [];
+  return m.periods.some(function(_, i){ return A[i] != null && B[i] != null && act[i] != null; });
 }
 // A metric qualifies when ANY two of its series overlap — not just actual-vs-Summit.
 // Deliberately independent of the current base/comparator choice, so changing the

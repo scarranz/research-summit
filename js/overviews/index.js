@@ -22,6 +22,7 @@ import { googlOverview } from './googl.js';
 import { amznOverview } from './amzn.js';
 import { disOverview } from './dis.js';
 import { appOverview } from './app.js';
+import { dhrOverview } from './dhr.js';
 
 var OVERVIEWS = {
   RELY: remitlyOverview,
@@ -45,6 +46,7 @@ var OVERVIEWS = {
   AMZN: amznOverview,
   DIS: disOverview,
   APP: appOverview,
+  DHR: dhrOverview,
 };
 
 // Returns the overview module for a ticker, or null if none is built yet.

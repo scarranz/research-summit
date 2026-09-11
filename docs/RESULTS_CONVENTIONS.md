@@ -296,6 +296,48 @@ ticker, with Summit/guidance filled in later.
 - AMZN Overview/Deep Dive: Deep Dive sections still scaffolded (fill via the Call Prep flow /
   by hand); Call Prep phases pending "arma el Call Prep de AMZN".
 
+### DHR (Aug 31, 2026) — the first ticker with NO Summit model and NO consensus archive
+
+Danaher is on the engine: `DHR` is registered in `RESULTS_DATA`, `js/results-data/dhr.js` carries
+both views, and Evolution's three panes (Earnings · Results · Estimates) are wired in
+`js/overviews/dhr.js`. It is worth reading as the **floor case** of the rollout — what the contract
+still delivers when neither of the two normal sources exists:
+
+* **No Summit model.** `search_ticker('Danaher')` → `no_matches`. `summit` is `[]` on every metric
+  and nothing is invented. The Setup grid's second column is the **company's own guide** instead,
+  which is a better comparator than a blank one.
+* **No consensus archive.** DHR is not in `BBG_CONSENSUS.txt` / `Consensus_Portal.xlsm`. The only
+  snapshot is a single Bloomberg export, archived at `danaher-research/bbg/BBG_DHR_2026-08-31.xlsx`
+  (gitignored — a Bloomberg export never goes in a public repo). One snapshot is a reading, not an
+  axis, so there is **no `estMatrix` and no `evolution` block**, and the Estimates pane falls back
+  to a note naming the blocker. It switches itself on when a second vintage lands.
+* **Two sources that replaced them.** Reported adjusted figures, core growth and *all* guidance
+  come from the 15 quarterly **8-K EX-99.1 releases** (1Q23→2Q26) — that is where adjusted EPS,
+  which Bloomberg only carries for five quarters, is complete. Pre-print consensus for **1Q25–2Q26
+  only** comes from earnings-day coverage, which is what lights up the surprise block.
+
+**Three traps this ticker documents, all live in the dataset header:**
+1. **Bloomberg mixes bases inside one annual row.** Veralto separated in Sept 2023 and Danaher
+   restated only the income statement, back to FY2021. Bloomberg keeps the as-filed figure
+   everywhere else, so FY21/FY22 total revenue arrives with Veralto in it while the segment rows
+   do not. Check any annual row against the segment sum before trusting it.
+2. **Guidance in words is not a band.** Danaher guides core revenue growth, and until the 2Q26
+   release it guided it qualitatively. `guideLo/Hi` is populated on four cells only; the wording
+   for every other period is recorded in prose. Do not translate "mid-single digits" into numbers.
+3. **A percentage metric's surprise is in POINTS, not a ratio.** +3.0% against +2.0% is not "50%".
+
+**Two engine fixes DHR surfaced** (both in `js/results.js`, both verified no-change on AMZN):
+`rsSurpPairOk` now requires a pair to overlap on a **reported** period — a forward-only overlap
+(a Street number and a company guide for the same future quarter) was putting a metric in the
+"Actuals vs Estimates" dropdown that drew an empty chart. `rsVintNote` no longer names a source
+the dataset has no values for — DHR and GOOGL ship `summit: []` and the note still announced a
+Summit series that was not there.
+
+**Also worth knowing:** panes that read their period axis *through* a Results dataset must cut it
+at the last period with an actual. Adding DHR's forward horizon grew phantom FY26–FY29 buttons on
+the Bottom Line segment bridge and made "the latest quarter" resolve to 3Q27. Fixed in
+`dhr-bl-segments.js` / `dhr-misc-other.js`; check the same thing on the next ticker.
+
 ---
 
 # 8. The rollout contract — `estMatrix`, the vintage axis (v2.1 · Aug 17, 2026)

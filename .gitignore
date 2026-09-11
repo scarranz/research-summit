@@ -43,3 +43,6 @@ harness-*.html
 PR_BODY_*.md
 scripts/segments/dcf_*.json
 scripts/segments/tenk/
+
+# Danaher research source material (handoff dump, filings, IR decks) — local only
+danaher-research/

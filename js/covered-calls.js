@@ -6,11 +6,16 @@
 // Everything is in %.
 import { POSITIONS } from './covered-calls-positions.js';
 import { EST_STORE, optSources } from './options-data.js';
-import { coveredCallsQuote } from './api.js';
-// Shared with the other three panes so a date means the same thing everywhere.
+// The shared engine. Everything that is not specific to running a BOOK of covered
+// calls is read from here rather than kept in a second copy, so a multiple, a
+// date and a growth rate mean the same thing in all four Derivatives panes — see
+// the header of options-core.js. What stays local is only what makes this tab a
+// book: the positions and their weights, the quarterly roll date, the
+// strike-from-a-multiple input, the table and its totals.
 import { esc, ageDays, STALE_DAYS, ensureFx, fxRate as coreFxRate, fxLabel,
          selToggle, selHas, selCount, selClear, symbolOf, cash,
-         instrumentsBar, renderInstruments, onSelection } from './options-core.js';
+         instrumentsBar, renderInstruments, onSelection,
+         mfetch, daysTo, px, mult, pct, pctS as pctSign } from './options-core.js';
 
 // The estimate store, reshaped to what this tab reads: { currency, years } where a
 // year carries ebitda / earnings / shares_out. `estSrc` picks whose numbers those
@@ -79,14 +84,10 @@ const FY = [T0, T0 + 1, T0 + 2, T0 + 3]; // t0..t+3 shown in the fundamentals bl
                                         // Multiple basis both reach it.
 const fyLabel = (y) => `FY${String(y).slice(2)}`;
 
-// ── Massive proxy (via the edge function) ─────────────────────────────────────
-async function mfetch(resource, ticker, params = {}) {
-  const res = await coveredCallsQuote(resource, ticker, params);
-  if (!res.success) throw new Error(res.error?.message || 'request failed');
-  return res.data;
-}
-
-// tiny concurrency limiter so we don't hammer the proxy / hit rate limits
+// A tiny concurrency limiter so fourteen positions do not hammer the proxy. This
+// one is local on purpose: the three ladder panes fetch ONE chain for ONE name,
+// while this tab fetches a contract per position — the queue is a property of
+// holding a book, not of pricing an option.
 function pLimit(n) {
   let active = 0; const q = [];
   const next = () => { if (active >= n || !q.length) return; active++; const { fn, res, rej } = q.shift();
@@ -96,14 +97,16 @@ function pLimit(n) {
 const limit = pLimit(5);
 
 // ── Formatting ────────────────────────────────────────────────────────────────
-// No money formatter — the whole analysis is in %. Price is the only $ figure.
-const px   = (x) => (x == null || isNaN(x)) ? '—' : `$${x.toFixed(2)}`;
-const mult = (x) => (x == null || isNaN(x) || !isFinite(x)) ? '—' : `${x.toFixed(1)}x`;
-const pct  = (x, d = 1) => (x == null || isNaN(x)) ? '—' : `${(x * 100).toFixed(d)}%`;
-const pctSign = (x, d = 1) => (x == null || isNaN(x)) ? '—' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(d)}%`;
-// compact magnitude for values already expressed in millions (currency-neutral)
-const bn = (x) => {
-  if (x == null || isNaN(x)) return '—';
+// px / mult / pct / pctSign and the Massive proxy come from the engine now; the
+// analysis is in % and price is the only $ figure, so there is no money formatter.
+//
+// `mag` does NOT come from the engine, and must not be replaced by its bn(): the
+// fundamentals block prints EBITDA and net income in the company's REPORTING
+// currency (TBBB in pesos, SPOT in euros, TSM in Taiwan dollars), so the figure
+// deliberately carries no currency symbol. The engine's bn() prefixes a `$`,
+// which would label a peso figure as dollars.
+const mag = (x) => {
+  if (x == null || !isFinite(x)) return '—';
   const a = Math.abs(x), s = x < 0 ? '-' : '';
   return a >= 1000 ? `${s}${(a / 1000).toFixed(1)}B` : `${s}${a.toFixed(0)}M`;
 };
@@ -440,12 +443,6 @@ function metrics(row) {
   return { price, premium, yld, upside, contrib, annContrib, annYld, days, evP, evS, peP, peS, pegEv, pegPe, pegEvS, pegPeS };
 }
 
-function daysTo(dateStr) {
-  if (!dateStr) return null;
-  const t = new Date(dateStr + 'T16:00:00'); const now = new Date();
-  return Math.max(0, Math.round((t - now) / 86400000));
-}
-
 // Massive option last_trade timestamps come in ns / ms / s — normalize and show
 // in the viewer's local time for the hover tooltip.
 function tradeStamp(ts) {
@@ -473,7 +470,7 @@ function fundSeries(ticker, key) {
 function fundSection(series, cagrVal, pegVal) {
   if (!series) return [0, 1, 2, 3, 4, 5].map((i) => `<td class="${i === 0 ? 'sep ' : ''}fund muted">—</td>`).join('');
   const yrs = series.map((d, i) => `<td class="${i === 0 ? 'sep ' : ''}fund">
-      <div class="fv">${bn(d.v)}${d.est && d.v != null ? '<sup class="estm">E</sup>' : ''}</div>
+      <div class="fv">${mag(d.v)}${d.est && d.v != null ? '<sup class="estm">E</sup>' : ''}</div>
       <div class="fg ${d.g == null ? '' : (d.g >= 0 ? 'up' : 'dn')}">${d.g == null ? '—' : pctSign(d.g)}</div>
     </td>`).join('');
   const cg = `<td class="fund"><div class="fv ${cagrVal == null ? '' : (cagrVal >= 0 ? 'up' : 'dn')}">${cagrVal == null ? '—' : pctSign(cagrVal)}</div></td>`;

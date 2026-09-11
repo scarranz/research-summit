@@ -4,7 +4,7 @@
 </head><body>
 <h3>Covered Calls — estimate/multiple parity: this file's own layer vs options-core.js</h3>
 <pre id="out">running...</pre>
-<script src="env.js"></script>
+<script src="../env.js"></script>
 <script type="module">
 // Numerical regression test for the Covered Calls unification. It computes, for
 // every position in the book x both estimate sources x all four Multiple bases,
@@ -15,17 +15,17 @@
 // and the only thing under test is the estimate/multiple layer. Time-dependent
 // fields (days to expiry, annualised yield) are deliberately excluded; they are
 // not being changed and would drift between two runs minutes apart.
-import { supabase } from './js/supabase-client.js';
+import { supabase } from '../js/supabase-client.js';
 // Only FX is stubbed — it is the one network call the estimate layer makes.
 Object.defineProperty(supabase, 'functions', { configurable: true, value: { invoke: async (n, o) => {
   const t = (o && o.body && o.body.ticker) || '';
   return { data: { results: [{ c: t === 'EURUSD' ? 1.166 : t === 'USDTWD' ? 30.5 : 18.24 }] }, error: null };
 } } });
 
-const { POSITIONS } = await import('./js/covered-calls-positions.js');
-const { EST_STORE } = await import('./js/options-data.js');
-const cc = await import('./js/covered-calls.js');
-const core = await import('./js/options-core.js');
+const { POSITIONS } = await import('../js/covered-calls-positions.js');
+const { EST_STORE } = await import('../js/options-data.js');
+const cc = await import('../js/covered-calls.js');
+const core = await import('../js/options-core.js');
 const P = cc.__parity;
 
 // Fixed market inputs, one per name.

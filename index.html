@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="css/team.css">
 <link rel="stylesheet" href="css/fund-returns.css">
 <link rel="stylesheet" href="css/covered-calls.css">
+<link rel="stylesheet" href="css/portfolio-metrics.css">
 <link rel="stylesheet" href="css/industry.css">
 <link rel="stylesheet" href="css/spectrum.css">
 <link rel="stylesheet" href="css/results.css">
@@ -172,7 +173,7 @@
 
 <!-- PORTAFOLIO TAB (empty — to be built) -->
 <div id="tp-pf" class="tp">
-  <div class="tab-empty">Portafolio</div>
+  <div id="pm-root"></div>
 </div>
 
 <!-- MARKET ANALYSIS TAB -->
@@ -767,6 +768,7 @@ import { loadHedgeFundsPage } from './js/hedge-funds.js';
 import { loadTeamPage } from './js/team.js';
 import { loadFundReturnsPage } from './js/fund-returns.js';
 import { loadCoveredCallsPage } from './js/covered-calls.js';
+import { loadPortfolioMetricsPage } from './js/portfolio-metrics.js';
 import { loadIndustryPage } from './js/industry.js';
 
 const statusEl = document.getElementById('status');
@@ -818,6 +820,7 @@ async function boot() {
       registerPageLoader('team', loadTeamPage);
       registerPageLoader('fund-returns', loadFundReturnsPage);
       registerPageLoader('covered-calls', loadCoveredCallsPage);
+      registerPageLoader('portfolio', loadPortfolioMetricsPage);
 
       // Update user display
       const user = getCurrentUser();

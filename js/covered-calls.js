@@ -12,7 +12,7 @@ import { EST_STORE, optSources } from './options-data.js';
 // the header of options-core.js. What stays local is only what makes this tab a
 // book: the positions and their weights, the quarterly roll date, the
 // strike-from-a-multiple input, the table and its totals.
-import { esc, ageDays, STALE_DAYS, ensureFx, fxRate as coreFxRate, fxLabel,
+import { esc, ageDays, STALE_DAYS, ensureFx, fxRate as coreFxRate,
          selToggle, selHas, selCount, selClear, symbolOf, cash,
          instrumentsBar, renderInstruments, onSelection,
          mfetch, daysTo, px, mult, pct, pctS as pctSign,
@@ -56,7 +56,25 @@ const $ = (id) => document.getElementById(id);
 // The FX table used to live here, knowing only EUR and MXN. It now lives in
 // options-core.js alongside the three ladder panes' copy of the same problem, so
 // adding a currency (TWD, for TSM) is one edit and every pane gets it.
-const T0 = 2025;                 // last reported fiscal year (t0)
+// The last reported year. The fundamentals block draws ONE set of calendar
+// columns for the whole book, so it needs a single one — and it is asked of the
+// engine rather than typed in, because a typed year is a year that goes wrong in
+// silence: when the models roll and FY2026 closes, a hardcoded 2025 would leave
+// the whole book pricing against a year already reported, which is precisely the
+// bug that made NVIDIA read 48x instead of 23x.
+//
+// Asked on 'summit' because a REPORTED year is the same figure under either
+// source, and taken as the latest any name in the book has: NVIDIA's January
+// year is re-keyed onto the calendar by the engine, so every name agrees today.
+const T0 = (() => {
+  const reported = [];
+  POSITIONS.forEach((p) => {
+    const e = estimatesFor(p.ticker, resolveSource(p.ticker, 'summit'));
+    if (!e) return;
+    Object.keys(e.years).forEach((y) => { if (!e.years[y].est) reported.push(+y); });
+  });
+  return reported.length ? Math.max.apply(null, reported) : 2025;
+})();
 const FY = [T0, T0 + 1, T0 + 2, T0 + 3]; // t0..t+3 shown in the fundamentals block. The
                                         // store runs to FY2028, so the block and the
                                         // Multiple basis both reach it.
@@ -318,22 +336,18 @@ async function fetchRow(row) {
     const premium = q.midpoint ?? contract?.day?.close ?? contract?.last_trade?.price ?? row.seedPrime ?? null;
     const price = contract?.underlying_asset?.price ?? rt.price ?? null;
     const shares = d.weighted_shares_outstanding ?? d.share_class_shares_outstanding ?? null;
-    const mktCap = (price && shares) ? price * shares : (rt.market_cap ?? null);
     const netDebt = (rt.enterprise_value != null && rt.market_cap != null) ? rt.enterprise_value - rt.market_cap : null;
 
-    // 1 for a USD reporter, and 1 when the rate could not be fetched — in which
-    // case the multiple would be built on a native-currency figure, so `fxOk` is
-    // false and the fundamentals are dropped rather than silently mixed.
-    const fxRate = (cur0 ? coreFxRate(cur0) : 1) || 1;
-    const fxNote = cur0 ? fxLabel(cur0) : '';
-    const fxOk = !cur0 || cur0 === 'USD' || coreFxRate(cur0) != null;
-
+    // No fx fields on the row any more. Whether a name can be priced in USD, and
+    // at what rate, is the engine's answer — multiplesAt() declines to price a
+    // name it has no rate for. What still has to happen HERE is the ensureFx()
+    // above: the rate must be in the engine's cache before any multiple is taken.
     const lt = contract?.last_trade || {};
     row.live = {
       price, premium, iv: contract?.implied_volatility ?? null,
       delta: contract?.greeks?.delta ?? null, theta: contract?.greeks?.theta ?? null,
       oi: contract?.open_interest ?? null, name: d.name || row.ticker,
-      shares, mktCap, netDebt, fxRate, fxNote, fxOk,
+      shares, netDebt,
       bid: q.bid ?? null, ask: q.ask ?? null, mid: q.midpoint ?? null,
       lastTrade: lt.price ?? null, lastTradeTs: lt.sip_timestamp ?? lt.timestamp ?? null,
       sharesPerContract: contract?.details?.shares_per_contract ?? 100,

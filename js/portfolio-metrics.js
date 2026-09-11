@@ -1481,7 +1481,7 @@ function paperHeader() {
       <span class="lbl">Prellenar con</span>
       <button class="pm-pf${paperSource === 'Summit' ? ' on' : ''}" data-prefill="summit">Summit</button>
       ${Object.keys(TEAM_BOOKS).map((k) => `<button class="pm-pf${paperSource === TEAM_BOOKS[k].label ? ' on' : ''}" data-prefill="${esc(k)}">${TEAM_BOOKS[k].label}</button>`).join('')}
-      <button class="pm-pf${paperSource === null ? ' on' : ''}" data-prefill="blank" title="Empezar desde cero (Paper vacío)">En blanco</button>
+      <button class="pm-pf${paperSource === null ? ' on' : ''}" data-prefill="blank" title="Empezar desde cero (Paper vacío)">New</button>
       <select class="pm-pf-sel${invSel ? ' on' : ''}" data-prefill-inv aria-label="Prellenar con un superinversor">
         <option value="">Superinversor&hellip;</option>
         ${invs.map((x) => `<option value="${esc(x.key)}"${x.name === paperSource ? ' selected' : ''}>${esc(x.name)}${x.fund ? ' · ' + esc(x.fund) : ''}</option>`).join('')}

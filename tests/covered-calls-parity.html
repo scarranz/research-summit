@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Covered Calls parity</title>
+<style>body{font:12px ui-monospace,monospace;margin:16px}pre{white-space:pre-wrap}</style>
+</head><body>
+<h3>Covered Calls — estimate/multiple parity: this file's own layer vs options-core.js</h3>
+<pre id="out">running...</pre>
+<script src="env.js"></script>
+<script type="module">
+// Numerical regression test for the Covered Calls unification. It computes, for
+// every position in the book x both estimate sources x all four Multiple bases,
+// the numbers the tab's OWN layer produces and the ones the shared engine
+// produces from the same fixed inputs — then reports every disagreement.
+//
+// Inputs are FIXED (no chain, no Massive): a parity test has to be deterministic,
+// and the only thing under test is the estimate/multiple layer. Time-dependent
+// fields (days to expiry, annualised yield) are deliberately excluded; they are
+// not being changed and would drift between two runs minutes apart.
+import { supabase } from './js/supabase-client.js';
+// Only FX is stubbed — it is the one network call the estimate layer makes.
+Object.defineProperty(supabase, 'functions', { configurable: true, value: { invoke: async (n, o) => {
+  const t = (o && o.body && o.body.ticker) || '';
+  return { data: { results: [{ c: t === 'EURUSD' ? 1.166 : t === 'USDTWD' ? 30.5 : 18.24 }] }, error: null };
+} } });
+
+const { POSITIONS } = await import('./js/covered-calls-positions.js');
+const { EST_STORE } = await import('./js/options-data.js');
+const cc = await import('./js/covered-calls.js');
+const core = await import('./js/options-core.js');
+const P = cc.__parity;
+
+// Fixed market inputs, one per name.
+const PRICE = { UBER: 96.3, META: 641.2, NVDA: 243.1, TBBB: 27.4, AMZN: 252.4, SPOT: 604.0,
+                SOFI: 20.6, GOOGL: 214.7, MA: 566.2, LYFT: 17.4, TSM: 268.5, QQQ: 612.3,
+                SMH: 322.1, XLG: 68.9 };
+const SHARES = { UBER: 2.09e9, META: 2.52e9, NVDA: 2.44e10, TBBB: 8.5e8, AMZN: 1.072e10,
+                 SPOT: 2.05e8, SOFI: 1.19e9, GOOGL: 1.21e10, MA: 9.1e8, LYFT: 4.2e8,
+                 TSM: 5.19e9, QQQ: 6e8, SMH: 2.4e8, XLG: 4e7 };
+// Massive returns no enterprise value for a foreign issuer, so there is no live
+// net debt for these three and the estimate set's own figure has to carry it.
+const FOREIGN = ['TSM', 'SPOT', 'TBBB'];
+
+for (const cur of ['EUR', 'MXN', 'TWD']) { try { await core.ensureFx(cur); } catch (e) {} }
+
+const liveOf = (t) => {
+  const price = PRICE[t], shares = SHARES[t];
+  const cur = EST_STORE[t] && EST_STORE[t].currency;
+  return { price, premium: +(price * 0.01).toFixed(2), shares,
+           netDebt: FOREIGN.indexOf(t) >= 0 ? null : price * shares * 0.03,
+           fxRate: (cur ? core.fxRate(cur) : 1) || 1,
+           fxOk: !cur || cur === 'USD' || core.fxRate(cur) != null,
+           usedExpiry: null };
+};
+
+const BASES = ['2026E', '2027E', '2028E', 'NTM'];
+const SRCS = ['summit', 'consensus'];
+const r5 = (x) => (x == null || !isFinite(x)) ? null : +x.toFixed(5);
+const rows = [];
+
+for (const src of SRCS) {
+  for (const basis of BASES) {
+    P.set('estSrc', src); P.set('mulBasis', basis);
+    for (const p of POSITIONS) {
+      const t = p.ticker;
+      const live = liveOf(t);
+      const row = { ...p, ticker: t, strike: p.strike != null ? p.strike : +(live.price * 1.1).toFixed(2),
+                    isEtf: !EST_STORE[t], override: null, live };
+
+      // OLD: the tab's own layer
+      const m = P.metrics(row);
+      const bf = P.basisFundamentals(t);
+      // Shares and net debt are compared RESOLVED — after the estimate-set value
+      // has fallen back to the live one — because that is what the multiple is
+      // actually built on. Comparing the raw estimate field against the engine's
+      // resolved one reports a difference where there is none (every USD name
+      // carries no net debt in the model and takes Massive's EV - market cap).
+      const adrT = (EST_STORE[t] && EST_STORE[t].adrRatio) || 1;
+      const oldSh = (bf && bf.shares != null && bf.shares > 0) ? bf.shares * 1e6 / adrT
+                  : (row.isEtf || !bf ? null : live.shares);
+      const oldNd = !bf ? null
+                  : (live.netDebt != null ? live.netDebt
+                     : (bf.netDebt != null ? bf.netDebt * live.fxRate * 1e6 : null));
+      const old = { evP: r5(m.evP), evS: r5(m.evS), peP: r5(m.peP), peS: r5(m.peS),
+                    pegEv: r5(m.pegEv), pegPe: r5(m.pegPe),
+                    ebitda: r5(bf && bf.ebitda), earnings: r5(bf && bf.earnings),
+                    shares: r5(oldSh), netDebt: r5(oldNd),
+                    cagrEb: r5(P.cagr(t, 'ebitda')), cagrEa: r5(P.cagr(t, 'earnings')) };
+
+      // NEW: the same questions asked of the engine
+      const want = core.resolveSource(t, src);           // the fallback SU() does by hand
+      const e = core.estimatesFor(t, want);
+      let nw = { evP: null, evS: null, peP: null, peS: null, pegEv: null, pegPe: null,
+                 ebitda: null, earnings: null, shares: null, netDebt: null,
+                 cagrEb: null, cagrEa: null };
+      if (e && !row.isEtf) {
+        const E0 = core.effYears(e, {});
+        const est = core.estYearsOf(e);
+        const y1 = est[0], y2 = est[1];
+        let E = E0, year;
+        if (basis === 'NTM') {
+          // NTM is a calendar blend of the two nearest estimate years. The engine
+          // is year-based, so the blend becomes a synthetic year row and every
+          // other call stays exactly the same.
+          const f = P.ntmFrac(), bl = (a, b) => (a != null && b != null) ? f * a + (1 - f) * b : null;
+          const A = E0[y1] || {}, B = E0[y2] || {};
+          E = { ...E0, NTM: { rev: bl(A.rev, B.rev), ebitda: bl(A.ebitda, B.ebitda),
+                              netIncome: bl(A.netIncome, B.netIncome),
+                              shares: bl(A.shares, B.shares), netDebt: bl(A.netDebt, B.netDebt),
+                              eps: null, est: true } };
+          if (E.NTM.netIncome != null && E.NTM.shares) E.NTM.eps = E.NTM.netIncome / E.NTM.shares;
+          year = 'NTM';
+        } else { year = +basis.slice(0, 4); }
+        const at = (px) => core.multiplesAt(px, year, E, e, live);
+        const aP = at(live.price), aS = at(row.strike);
+        const cap = core.capital(E, year, live);
+        const yr = E[year] || {};
+        const blendG = (key) => {
+          const f = P.ntmFrac(), g1 = core.growth(E0, key, y1), g2 = core.growth(E0, key, y2);
+          return (g1 != null && g2 != null) ? f * g1 + (1 - f) * g2 : null;
+        };
+        const gEb = basis === 'NTM' ? blendG('ebitda') : core.growth(E, 'ebitda', year);
+        const gEa = basis === 'NTM' ? blendG('netIncome') : core.growth(E, 'netIncome', year);
+        const from = est[0] - 1;   // last reported year, per name
+        const to = basis === 'NTM' ? est[0] + (1 - P.ntmFrac()) : +basis.slice(0, 4);
+        const cg = (key) => {
+          const a = E0[from] && E0[from][key];
+          const b = basis === 'NTM' ? (E.NTM && E.NTM[key]) : (E0[to] && E0[to][key]);
+          return (a != null && b != null && a > 0 && b > 0 && to > from) ? Math.pow(b / a, 1 / (to - from)) - 1 : null;
+        };
+        // Same resolved basis as the old side: absolute shares after the ADR split,
+        // and net debt in USD absolute.
+        const fxT = core.fxRate(e.currency) || 1;
+        nw = { evP: r5(aP.ev), evS: r5(aS.ev), peP: r5(aP.pe), peS: r5(aS.pe),
+               pegEv: r5(aP.ev != null && gEb > 0 ? aP.ev / (gEb * 100) : null),
+               pegPe: r5(aP.pe != null && gEa > 0 ? aP.pe / (gEa * 100) : null),
+               ebitda: r5(yr.ebitda), earnings: r5(yr.netIncome),
+               shares: r5(cap.shares == null ? null : cap.shares * 1e6 / (e.adrRatio || 1)),
+               netDebt: r5(cap.netDebt == null ? null
+                         : (cap.native ? cap.netDebt * fxT : cap.netDebt) * 1e6),
+               cagrEb: r5(cg('ebitda')), cagrEa: r5(cg('netIncome')) };
+      }
+      rows.push({ src, basis, t, old, nw });
+    }
+  }
+}
+
+// Report: every field where the two disagree by more than a rounding hair.
+const near = (a, b) => {
+  if (a == null && b == null) return true;
+  if (a == null || b == null) return false;
+  return Math.abs(a - b) <= Math.max(1e-6, Math.abs(a) * 1e-6);
+};
+const KEYS = Object.keys(rows[0].old);
+const diffs = [];
+rows.forEach((r) => KEYS.forEach((k) => {
+  if (!near(r.old[k], r.nw[k])) diffs.push(`${r.src}/${r.basis}/${r.t}  ${k}:  old=${r.old[k]}  new=${r.nw[k]}`);
+}));
+
+// ── The frozen baseline ───────────────────────────────────────────────────────
+// Fingerprints of what the tab printed BEFORE the unification (captured
+// 2026-09-11 on 37ed3b8, from the tab's own duplicated layer). They are the
+// answer to "did any number move?" — a changed figure anywhere changes the hash
+// of its block. The six dated-year blocks are deterministic and stay valid; the
+// two NTM ones are not, because NTM blends two years by how much of the next
+// twelve months falls in each, so it drifts with the calendar. NTM is covered by
+// the live old-vs-engine comparison above instead.
+const BASELINE = {
+  'summit/2026E': '40eff089', 'summit/2027E': '5bc2c79a', 'summit/2028E': '564a7b05',
+  'consensus/2026E': 'f7105dd6', 'consensus/2027E': 'e686b251', 'consensus/2028E': '2ba9e4b2',
+  'summit/NTM': null, 'consensus/NTM': null,   // time-dependent, see above
+};
+const fnv = (s) => { let a = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) { a ^= s.charCodeAt(i); a = Math.imul(a, 0x01000193) >>> 0; }
+  return a.toString(16).padStart(8, '0'); };
+const nn = (x) => x == null ? '' : String(x);
+const lineOf = (r) => [r.src, r.basis, r.t, ...KEYS.map((k) => nn(r.old[k]))].join(',');
+const blocks = {};
+rows.forEach((r) => { const b = `${r.src}/${r.basis}`; (blocks[b] = blocks[b] || []).push(lineOf(r)); });
+const bl = Object.keys(blocks).map((b) => {
+  const got = fnv(blocks[b].join('\n')), want = BASELINE[b];
+  const verdict = want == null ? 'skipped (time-dependent)' : (got === want ? 'PASS' : `FAIL  expected ${want}`);
+  return `  ${b.padEnd(18)} ${got}  ${verdict}`;
+});
+const failed = Object.keys(blocks).filter((b) => BASELINE[b] != null
+  && fnv(blocks[b].join('\n')) !== BASELINE[b]);
+
+const cells = rows.length * KEYS.length;
+const ok = diffs.length === 0 && failed.length === 0;
+document.getElementById('out').textContent =
+  `${ok ? 'PASS' : 'FAIL'}\n\n` +
+  `A. tab's layer vs options-core.js engine, same fixed inputs\n` +
+  `   cells compared: ${cells}   (${rows.length} rows x ${KEYS.length} fields)\n` +
+  `   disagreements : ${diffs.length}\n` +
+  (diffs.length ? diffs.map((d) => '     ' + d).join('\n') + '\n' : '') +
+  `\nB. tab's numbers vs the frozen pre-unification baseline\n` +
+  bl.join('\n') + '\n';
+window.__parityRows = rows;
+window.__parityDone = true;
+</script>
+</body></html>

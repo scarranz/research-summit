@@ -944,3 +944,15 @@ export async function loadCoveredCallsPage() {
   await loadExpirations();
   await loadAll();
 }
+
+// ── Test-only hook (parity harness) ───────────────────────────────────────────
+// Exposes this file's private estimate/multiple layer so _preview-cc-parity.html
+// can compare it, name by name and year by year, against the shared engine in
+// options-core.js. Nothing in the app reads this — it exists so that "no number
+// moved" is a measurement instead of a claim. Remove it once the two agree and
+// the duplicate layer is gone.
+export const __parity = {
+  set(k, v) { if (k === 'estSrc') estSrc = v; else if (k === 'mulBasis') mulBasis = v; },
+  get state() { return { estSrc, mulBasis }; },
+  SU, basisFundamentals, basisEnd, basisEndLabel, cagr, metrics, fundSeries, ntmFrac, FY, T0,
+};

@@ -15,62 +15,39 @@ import { EST_STORE, optSources } from './options-data.js';
 import { esc, ageDays, STALE_DAYS, ensureFx, fxRate as coreFxRate, fxLabel,
          selToggle, selHas, selCount, selClear, symbolOf, cash,
          instrumentsBar, renderInstruments, onSelection,
-         mfetch, daysTo, px, mult, pct, pctS as pctSign } from './options-core.js';
+         mfetch, daysTo, px, mult, pct, pctS as pctSign,
+         resolveSource, estimatesFor, effYears } from './options-core.js';
 
-// The estimate store, reshaped to what this tab reads: { currency, years } where a
-// year carries ebitda / earnings / shares_out. `estSrc` picks whose numbers those
-// are — Summit's model or Bloomberg consensus, both carried in the same snapshot.
-// A ticker with no set for the selected source falls back to nothing, not to the
-// other source: the multiples go blank and the footnote says why.
+// ── The estimate set for one name ─────────────────────────────────────────────
+// One call into the engine, which is the whole point: the fiscal-year re-key, the
+// merge of reported years into a Street column, the EPS derivation and the choice
+// of source all happen in options-data.js / options-core.js, once, for all four
+// Derivatives panes. This tab used to carry its own copy of every one of them —
+// and each new fact then had to be fixed twice, which is how NVIDIA came to show
+// 48x here and 23x in the ladders on the same day, on the same year.
 //
-// A REPORTED year is the same figure under either source — the Street carries no
-// estimate for a year already closed — so on Consensus the history comes from the
-// model's own actuals columns and only the forward years differ. Without this the
-// whole book lost its t0 column the moment you toggled to Consensus, and with it
-// every CAGR and the first growth row. (This is the same rule optEstimates()
-// applies for the other three panes; it just never made it into this one.)
+// `fellBack` is the one piece of judgement left here: where a name has no set on
+// the selected source — GOOGL and TSM are in the book but not in the Summit DCF
+// universe — the engine's resolveSource() hands back the other one rather than
+// leaving the row blank, and the row is tagged so a Street number is never
+// mistaken for a house number. See the `cons` chip beside the ticker.
 function SU(ticker) {
-  const s = EST_STORE[ticker];
-  if (!s) return null;
-  // The selected source wins. Where the name has none — GOOGL and TSM are in the
-  // book but not in the Summit DCF universe — fall back to the other one rather
-  // than printing a column of dashes: an estimate on the Street's numbers answers
-  // the question, a blank does not. The row is tagged so it is never mistaken for
-  // a house number; see the `cons` chip beside the ticker.
-  const other = estSrc === 'summit' ? 'consensus' : 'summit';
-  const rows = s[estSrc] || s[other];
-  if (!rows) return null;
-  const fellBack = !s[estSrc];
-  // A fiscal year that is not the calendar year is re-keyed to the calendar, the
-  // same shift optEstimates() applies for the other three panes. This tab reads the
-  // store directly, so it has to do it too — and it MUST, because the FY window
-  // below is one shared set of calendar columns for the whole book: without the
-  // shift, NVIDIA's already-reported January year sat in the FY26 column while
-  // every other name had an estimate there.
-  const off = s.fiscalOffset || 0;
-  const cal = (r) => {
-    if (!off || !r) return r;
-    const o = {}; Object.keys(r).forEach((k) => { o[+k - off] = r[k]; }); return o;
+  const want = resolveSource(ticker, estSrc);
+  const e = estimatesFor(ticker, want);
+  if (!e) return null;
+  // No revenue-growth sensitivity in a book — the ladder panes flex estimates,
+  // a position does not — so the years come through unflexed.
+  const years = effYears(e, {});
+  const reported = Object.keys(years).map(Number).filter((y) => !years[y].est);
+  return {
+    e, years,
+    // Per NAME, not per book: NVIDIA's January year is already closed while
+    // everyone else's 2026 is still a forecast, which is why the E lives in the
+    // cell rather than in the column header.
+    lastActual: reported.length ? Math.max.apply(null, reported) : null,
+    fellBack: want !== estSrc,
+    srcUsed: want,
   };
-  const lastA = s.lastActual - off;
-  const merged = {};
-  const sm = cal(s.summit);
-  if (!fellBack && estSrc !== 'summit' && sm) {
-    Object.keys(sm).forEach((k) => { if (+k <= lastA) merged[k] = sm[k]; });
-  }
-  const cr = cal(rows);
-  Object.keys(cr).forEach((k) => { merged[k] = cr[k]; });
-  const years = {};
-  Object.keys(merged).forEach((k) => {
-    const r = merged[k];
-    years[k] = { rev: r.rev, ebitda: r.ebitda, earnings: r.earnings, shares_out: r.shares,
-                 netDebt: r.netDebt ?? null, est: +k > lastA };
-  });
-  // `lastActual` differs by name: NVIDIA's FY2026 closed in January and is
-  // reported, so its FY26 column is an actual while everyone else's is a forecast.
-  // The cells carry their own E for that reason; the header cannot.
-  return { name: s.name, currency: s.currency, snapshot_date: s.snapshot,
-           lastActual: lastA, fiscalOffset: off, fellBack, srcUsed: s[estSrc] ? estSrc : other, years };
 }
 
 const $ = (id) => document.getElementById(id);
@@ -137,18 +114,18 @@ function basisFundamentals(ticker) {
   if (!su || !su.years) return null;
   const yv = (y, k) => su.years[y]?.[k];
   const g  = (y, k) => (yv(y, k) != null && yv(y - 1, k) != null && yv(y - 1, k) > 0) ? yv(y, k) / yv(y - 1, k) - 1 : null;
-  if (mulBasis === '2026E') return { ebitda: yv(FY[1], 'ebitda'), earnings: yv(FY[1], 'earnings'), netDebt: yv(FY[1], 'netDebt'), shares: yv(FY[1], 'shares_out'), gEb: g(FY[1], 'ebitda'), gEa: g(FY[1], 'earnings') };
-  if (mulBasis === '2027E') return { ebitda: yv(FY[2], 'ebitda'), earnings: yv(FY[2], 'earnings'), netDebt: yv(FY[2], 'netDebt'), shares: yv(FY[2], 'shares_out'), gEb: g(FY[2], 'ebitda'), gEa: g(FY[2], 'earnings') };
-  if (mulBasis === '2028E') return { ebitda: yv(FY[3], 'ebitda'), earnings: yv(FY[3], 'earnings'), netDebt: yv(FY[3], 'netDebt'), shares: yv(FY[3], 'shares_out'), gEb: g(FY[3], 'ebitda'), gEa: g(FY[3], 'earnings') };
+  if (mulBasis === '2026E') return { ebitda: yv(FY[1], 'ebitda'), netIncome: yv(FY[1], 'netIncome'), netDebt: yv(FY[1], 'netDebt'), shares: yv(FY[1], 'shares'), gEb: g(FY[1], 'ebitda'), gEa: g(FY[1], 'netIncome') };
+  if (mulBasis === '2027E') return { ebitda: yv(FY[2], 'ebitda'), netIncome: yv(FY[2], 'netIncome'), netDebt: yv(FY[2], 'netDebt'), shares: yv(FY[2], 'shares'), gEb: g(FY[2], 'ebitda'), gEa: g(FY[2], 'netIncome') };
+  if (mulBasis === '2028E') return { ebitda: yv(FY[3], 'ebitda'), netIncome: yv(FY[3], 'netIncome'), netDebt: yv(FY[3], 'netDebt'), shares: yv(FY[3], 'shares'), gEb: g(FY[3], 'ebitda'), gEa: g(FY[3], 'netIncome') };
   const f = ntmFrac(); // NTM = calendar blend of t+1 and t+2
   const blend = (a, b) => (a != null && b != null) ? f * a + (1 - f) * b : null;
   return {
     ebitda:   blend(yv(FY[1], 'ebitda'),   yv(FY[2], 'ebitda')),
-    earnings: blend(yv(FY[1], 'earnings'), yv(FY[2], 'earnings')),
+    netIncome: blend(yv(FY[1], 'netIncome'), yv(FY[2], 'netIncome')),
     netDebt:  blend(yv(FY[1], 'netDebt'),  yv(FY[2], 'netDebt')),
-    shares:   blend(yv(FY[1], 'shares_out'), yv(FY[2], 'shares_out')),
+    shares:   blend(yv(FY[1], 'shares'), yv(FY[2], 'shares')),
     gEb: blend(g(FY[1], 'ebitda'),   g(FY[2], 'ebitda')),
-    gEa: blend(g(FY[1], 'earnings'), g(FY[2], 'earnings')),
+    gEa: blend(g(FY[1], 'netIncome'), g(FY[2], 'netIncome')),
   };
 }
 
@@ -248,7 +225,7 @@ function strikeFromMultiple(row, kind, M) {
     if (!(eb > 0) || nd == null) return null;
     return (M * eb - nd) / sh;
   }
-  const earn = (bf.earnings != null) ? bf.earnings * f * 1e6 : null;
+  const earn = (bf.netIncome != null) ? bf.netIncome * f * 1e6 : null;
   if (!(earn > 0)) return null;
   return (M * earn) / sh;
 }
@@ -423,7 +400,7 @@ function metrics(row) {
     const adr = (EST_STORE[row.ticker] && EST_STORE[row.ticker].adrRatio) || 1;
     const sh = (bf.shares != null && bf.shares > 0) ? bf.shares * 1e6 / adr : L.shares;
     const ebitdaUSD = (bf.ebitda != null) ? bf.ebitda * f * 1e6 : null;
-    const earnUSD = (bf.earnings != null) ? bf.earnings * f * 1e6 : null;
+    const earnUSD = (bf.netIncome != null) ? bf.netIncome * f * 1e6 : null;
     const mc = price * sh, mcS = row.strike * sh;
     // Massive returns no enterprise value for a foreign issuer, so EV - market cap
     // is null for TSM, SPOT and TBBB. Where the estimate set carries its own net
@@ -604,7 +581,7 @@ function render() {
     const qtip = `<b>Bid</b> ${q2(L.bid)}   <b>Ask</b> ${q2(L.ask)}   <b>Mid</b> ${q2(L.mid)}<br><b>Last</b> ${q2(L.lastTrade)} · ${tradeStamp(L.lastTradeTs)}${spLine}`;
     const fund = showFund
       ? fundSection(fundSeries(r.ticker, 'ebitda'), cagr(r.ticker, 'ebitda'), m.pegEv)
-        + fundSection(fundSeries(r.ticker, 'earnings'), cagr(r.ticker, 'earnings'), m.pegPe)
+        + fundSection(fundSeries(r.ticker, 'netIncome'), cagr(r.ticker, 'netIncome'), m.pegPe)
       : '';
     const mismatch = (L.usedExpiry && expiry && L.usedExpiry !== expiry) || (L.usedStrike != null && L.usedStrike !== r.strike);
     return `<tr class="${r.excluded ? 'excl' : ''}">
@@ -841,10 +818,14 @@ function wireControls() {
   // shows the range and names the laggard; hovering lists every position's date.
   const renderVintage = () => {
     const el = $('cc-vintage'); if (!el) return;
+    // Dated through SU(), not off the store, so a row that FELL BACK to the other
+    // source is dated by the numbers actually on screen. Reading the store keyed
+    // by the selected source instead gave GOOGL and TSM a Summit snapshot date
+    // while their multiples were being computed on Street figures — the one thing
+    // a vintage badge exists to prevent.
     const seen = rows.map((r) => {
-      const s = EST_STORE[r.ticker]; if (!s) return null;
-      const d = estSrc === 'summit' ? s.snapshot : s.consensusAsOf;
-      const from = estSrc === 'summit' ? 'snapshot' : s.consensusFrom;
+      const su = SU(r.ticker); if (!su) return null;
+      const d = su.e.asOf, from = su.e.asOfFrom;
       return d ? { tk: r.ticker, d, from, age: ageDays(d) } : null;
     }).filter(Boolean).sort((a, b) => b.age - a.age);
     if (!seen.length) { el.innerHTML = ''; return; }

@@ -81,9 +81,9 @@ for (const src of SRCS) {
                      : (bf.netDebt != null ? bf.netDebt * live.fxRate * 1e6 : null));
       const old = { evP: r5(m.evP), evS: r5(m.evS), peP: r5(m.peP), peS: r5(m.peS),
                     pegEv: r5(m.pegEv), pegPe: r5(m.pegPe),
-                    ebitda: r5(bf && bf.ebitda), earnings: r5(bf && bf.earnings),
+                    ebitda: r5(bf && bf.ebitda), earnings: r5(bf && bf.netIncome),
                     shares: r5(oldSh), netDebt: r5(oldNd),
-                    cagrEb: r5(P.cagr(t, 'ebitda')), cagrEa: r5(P.cagr(t, 'earnings')) };
+                    cagrEb: r5(P.cagr(t, 'ebitda')), cagrEa: r5(P.cagr(t, 'netIncome')) };
 
       // NEW: the same questions asked of the engine
       const want = core.resolveSource(t, src);           // the fallback SU() does by hand

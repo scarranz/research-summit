@@ -65,9 +65,21 @@ for (const src of SRCS) {
       const row = { ...p, ticker: t, strike: p.strike != null ? p.strike : +(live.price * 1.1).toFixed(2),
                     isEtf: !EST_STORE[t], override: null, live };
 
-      // OLD: the tab's own layer
+      // The SHIPPING tab's numbers. Since the unification these come from the
+      // engine too, so comparison A is now a check that the tab still routes
+      // everything through it — the guard against a number moving is comparison B.
       const m = P.metrics(row);
-      const bf = P.basisFundamentals(t);
+      const su = P.SU(t);
+      const fr = P.basisFrame(su);
+      const fy = fr ? fr.E[fr.year] : null;
+      // An object whenever the NAME has an estimate set, with null fields when it
+      // has no row for this particular year — NVIDIA's Summit model stops before
+      // 2028. That is the shape the pre-unification code reported, so the frozen
+      // baseline keeps meaning the same thing; a name with no set at all is null.
+      const bf = fr ? { ebitda: (fy && fy.ebitda) != null ? fy.ebitda : null,
+                        netIncome: (fy && fy.netIncome) != null ? fy.netIncome : null,
+                        shares: (fy && fy.shares) != null ? fy.shares : null,
+                        netDebt: (fy && fy.netDebt) != null ? fy.netDebt : null } : null;
       // Shares and net debt are compared RESOLVED — after the estimate-set value
       // has fallen back to the live one — because that is what the multiple is
       // actually built on. Comparing the raw estimate field against the engine's
@@ -143,6 +155,35 @@ for (const src of SRCS) {
   }
 }
 
+// C. The inverse round-trips.
+// Typing a multiple into the Target P/E or EV/EBITDA cell moves the strike to the
+// price that produces it - the same arithmetic read backwards, and the control the
+// book is actually driven from. So ask for a strike at M, put that strike back
+// through the forward multiple, and require M back. Any drift between the two
+// directions shows here and nowhere else: the matrix above only ever reads the
+// forward direction.
+const rt = [];
+for (const src of SRCS) {
+  for (const basis of BASES) {
+    P.set('estSrc', src); P.set('mulBasis', basis);
+    for (const p of POSITIONS) {
+      const t = p.ticker, live = liveOf(t);
+      const row = { ...p, ticker: t, strike: p.strike != null ? p.strike : +(live.price * 1.1).toFixed(2),
+                    isEtf: !EST_STORE[t], override: null, live };
+      for (const kk of [['ev', 'evS'], ['pe', 'peS']]) {
+        for (const M of [12, 20, 31.5]) {
+          const k = P.strikeFromMultiple(row, kk[0], M);
+          if (k == null) continue;                 // nothing to round-trip
+          const back = P.metrics(Object.assign({}, row, { strike: k }))[kk[1]];
+          if (back == null || Math.abs(back - M) > Math.max(1e-6, M * 1e-9)) {
+            rt.push(src + '/' + basis + '/' + t + ' ' + kk[0] + ' M=' + M + ': strike=' + k + ' -> ' + back);
+          }
+        }
+      }
+    }
+  }
+}
+
 // Report: every field where the two disagree by more than a rounding hair.
 const near = (a, b) => {
   if (a == null && b == null) return true;
@@ -184,7 +225,7 @@ const failed = Object.keys(blocks).filter((b) => BASELINE[b] != null
   && fnv(blocks[b].join('\n')) !== BASELINE[b]);
 
 const cells = rows.length * KEYS.length;
-const ok = diffs.length === 0 && failed.length === 0;
+const ok = diffs.length === 0 && failed.length === 0 && rt.length === 0;
 document.getElementById('out').textContent =
   `${ok ? 'PASS' : 'FAIL'}\n\n` +
   `A. tab's layer vs options-core.js engine, same fixed inputs\n` +
@@ -192,7 +233,10 @@ document.getElementById('out').textContent =
   `   disagreements : ${diffs.length}\n` +
   (diffs.length ? diffs.map((d) => '     ' + d).join('\n') + '\n' : '') +
   `\nB. tab's numbers vs the frozen pre-unification baseline\n` +
-  bl.join('\n') + '\n';
+  bl.join('\n') + '\n' +
+  '\nC. strike-from-a-multiple round-trips back to that multiple\n' +
+  '   round-trip failures: ' + rt.length + '\n' +
+  (rt.length ? rt.map((d) => '     ' + d).join('\n') + '\n' : '');
 window.__parityRows = rows;
 window.__parityDone = true;
 </script>

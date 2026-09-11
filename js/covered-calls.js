@@ -16,7 +16,8 @@ import { esc, ageDays, STALE_DAYS, ensureFx, fxRate as coreFxRate, fxLabel,
          selToggle, selHas, selCount, selClear, symbolOf, cash,
          instrumentsBar, renderInstruments, onSelection,
          mfetch, daysTo, px, mult, pct, pctS as pctSign,
-         resolveSource, estimatesFor, effYears } from './options-core.js';
+         resolveSource, estimatesFor, effYears,
+         multiplesAt, capital, growth, cagr as coreCagr } from './options-core.js';
 
 // ── The estimate set for one name ─────────────────────────────────────────────
 // One call into the engine, which is the whole point: the fiscal-year re-key, the
@@ -108,25 +109,45 @@ function ntmFrac() {
   return Math.min(1, Math.max(0, (end - now) / 86400000 / 365));
 }
 
-// EBITDA / earnings (+ their YoY growth) for the selected basis, native currency.
-function basisFundamentals(ticker) {
-  const su = SU(ticker);
+// ── The basis: which year the multiples are on ────────────────────────────────
+// Returns the year rows plus the year to read them at, in exactly the shape
+// options-core.js wants — so every multiple on this page is computed by the same
+// multiplesAt() the three ladder panes use, and the FX conversion, the ADR ratio,
+// the forward share count and the net-debt fallback all happen in one place.
+//
+// NTM is the one thing the engine has no concept of, because it has no quarterly
+// data to build one from: it is a calendar blend of t+1 and t+2, weighted by how
+// much of the next twelve months falls in each. Making it a SYNTHETIC YEAR ROW
+// rather than a separate calculation is what lets it go through the engine
+// unchanged — as far as multiplesAt() is concerned, 'NTM' is just another year.
+//
+// A missing side of the blend leaves every field null, which is what the old
+// blend() did too: an NTM built off one year is not an NTM.
+function basisFrame(su) {
   if (!su || !su.years) return null;
-  const yv = (y, k) => su.years[y]?.[k];
-  const g  = (y, k) => (yv(y, k) != null && yv(y - 1, k) != null && yv(y - 1, k) > 0) ? yv(y, k) / yv(y - 1, k) - 1 : null;
-  if (mulBasis === '2026E') return { ebitda: yv(FY[1], 'ebitda'), netIncome: yv(FY[1], 'netIncome'), netDebt: yv(FY[1], 'netDebt'), shares: yv(FY[1], 'shares'), gEb: g(FY[1], 'ebitda'), gEa: g(FY[1], 'netIncome') };
-  if (mulBasis === '2027E') return { ebitda: yv(FY[2], 'ebitda'), netIncome: yv(FY[2], 'netIncome'), netDebt: yv(FY[2], 'netDebt'), shares: yv(FY[2], 'shares'), gEb: g(FY[2], 'ebitda'), gEa: g(FY[2], 'netIncome') };
-  if (mulBasis === '2028E') return { ebitda: yv(FY[3], 'ebitda'), netIncome: yv(FY[3], 'netIncome'), netDebt: yv(FY[3], 'netDebt'), shares: yv(FY[3], 'shares'), gEb: g(FY[3], 'ebitda'), gEa: g(FY[3], 'netIncome') };
-  const f = ntmFrac(); // NTM = calendar blend of t+1 and t+2
-  const blend = (a, b) => (a != null && b != null) ? f * a + (1 - f) * b : null;
-  return {
-    ebitda:   blend(yv(FY[1], 'ebitda'),   yv(FY[2], 'ebitda')),
-    netIncome: blend(yv(FY[1], 'netIncome'), yv(FY[2], 'netIncome')),
-    netDebt:  blend(yv(FY[1], 'netDebt'),  yv(FY[2], 'netDebt')),
-    shares:   blend(yv(FY[1], 'shares'), yv(FY[2], 'shares')),
-    gEb: blend(g(FY[1], 'ebitda'),   g(FY[2], 'ebitda')),
-    gEa: blend(g(FY[1], 'netIncome'), g(FY[2], 'netIncome')),
+  const E = su.years;
+  if (mulBasis !== 'NTM') return { E, year: +mulBasis.slice(0, 4), ntm: false };
+  const f = ntmFrac();
+  const A = E[FY[1]] || {}, B = E[FY[2]] || {};
+  const bl = (a, b) => (a != null && b != null) ? f * a + (1 - f) * b : null;
+  const NTM = {
+    rev: bl(A.rev, B.rev), ebitda: bl(A.ebitda, B.ebitda),
+    netIncome: bl(A.netIncome, B.netIncome),
+    shares: bl(A.shares, B.shares), netDebt: bl(A.netDebt, B.netDebt), est: true,
   };
+  NTM.eps = (NTM.netIncome != null && NTM.shares) ? NTM.netIncome / NTM.shares : null;
+  return { E: { ...E, NTM }, year: 'NTM', ntm: true };
+}
+
+// YoY growth of one line on the basis year — what the PEG divides by. Blended on
+// NTM, for the same reason the levels are.
+function basisGrowth(su, key) {
+  const fr = basisFrame(su);
+  if (!fr) return null;
+  if (!fr.ntm) return growth(fr.E, key, fr.year);
+  const f = ntmFrac();
+  const g1 = growth(su.years, key, FY[1]), g2 = growth(su.years, key, FY[2]);
+  return (g1 != null && g2 != null) ? f * g1 + (1 - f) * g2 : null;
 }
 
 // Where the CAGR ends: the year the multiples are on, NOT the last column drawn.
@@ -135,31 +156,24 @@ function basisFundamentals(ticker) {
 // the Multiple basis and the CAGR moves with it, which is also what makes it
 // comparable to the PEG sitting beside it, since the PEG divides by the basis
 // year's growth.
-//
-// NTM is a calendar blend of t+1 and t+2, so it lands BETWEEN two years: its
-// effective horizon is t+1 plus whatever share of the window falls in t+2. The
-// exponent uses that fraction rather than rounding to a whole year.
 function basisEnd() {
-  if (mulBasis === '2026E') return FY[1];
-  if (mulBasis === '2027E') return FY[2];
-  if (mulBasis === '2028E') return FY[3];
-  return FY[1] + (1 - ntmFrac());
+  return mulBasis === 'NTM' ? FY[1] + (1 - ntmFrac()) : +mulBasis.slice(0, 4);
 }
 // The label for that endpoint — the header prints it, because a CAGR whose window
 // moves under a toggle is unreadable without saying where it stops.
 function basisEndLabel() { return mulBasis === 'NTM' ? 'NTM' : fyLabel(Math.round(basisEnd())); }
 
-// t0 → the basis year; null unless both endpoints are positive, since a compound
-// rate off a loss is noise.
+// t0 -> the basis year. The engine's cagr() for a dated year; NTM keeps its own
+// line because it lands BETWEEN two years, so the exponent is the fractional
+// horizon and the endpoint is the blended figure itself.
 function cagr(ticker, key) {
   const su = SU(ticker);
-  if (!su || !su.years) return null;
-  const a = su.years[FY[0]]?.[key];
-  const end = basisEnd();
-  // On NTM the endpoint is the blended figure itself, which basisFundamentals holds.
-  const bf = mulBasis === 'NTM' ? basisFundamentals(ticker) : null;
-  const b = bf ? bf[key] : su.years[end]?.[key];
-  const yrs = end - FY[0];
+  if (!su) return null;
+  if (mulBasis !== 'NTM') return coreCagr(su.years, key, FY[0], +mulBasis.slice(0, 4));
+  const fr = basisFrame(su);
+  const a = su.years[FY[0]] && su.years[FY[0]][key];
+  const b = fr.E.NTM && fr.E.NTM[key];
+  const yrs = basisEnd() - FY[0];
   return (a != null && b != null && a > 0 && b > 0 && yrs > 0)
     ? Math.pow(b / a, 1 / yrs) - 1 : null;
 }
@@ -212,22 +226,31 @@ async function autoStrike(ticker, wantExpiry) {
 // typing a number back into the cell it came out of returns the strike it came from.
 function strikeFromMultiple(row, kind, M) {
   const L = row.live;
-  if (!L || row.isEtf || !L.fxOk || !(M > 0)) return null;
-  const bf = basisFundamentals(row.ticker);
-  if (!bf) return null;
-  const f = L.fxRate;
-  const adr = (EST_STORE[row.ticker] && EST_STORE[row.ticker].adrRatio) || 1;
-  const sh = (bf.shares != null && bf.shares > 0) ? bf.shares * 1e6 / adr : L.shares;
-  if (!sh) return null;
+  if (!L || row.isEtf || !(M > 0)) return null;
+  const su = SU(row.ticker);
+  const fr = basisFrame(su);
+  if (!fr) return null;
+  const y = fr.E[fr.year];
+  if (!y) return null;
+  // The same inputs multiplesAt() uses, read through the same helpers, so typing
+  // a number back into the cell it came out of returns the strike it came from.
+  // Everything is in millions here, as it is in the engine.
+  const fx = coreFxRate(su.e.currency);
+  if (fx == null) return null;
+  const adr = su.e.adrRatio || 1;
+  const cap = capital(fr.E, fr.year, L);
   if (kind === 'ev') {
-    const eb = (bf.ebitda != null) ? bf.ebitda * f * 1e6 : null;
-    const nd = L.netDebt != null ? L.netDebt : (bf.netDebt != null ? bf.netDebt * f * 1e6 : null);
-    if (!(eb > 0) || nd == null) return null;
-    return (M * eb - nd) / sh;
+    const shares = (cap.shares != null) ? cap.shares / adr : null;
+    const eb = (y.ebitda != null) ? y.ebitda * fx : null;
+    const nd = (cap.netDebt == null) ? null : (cap.native ? cap.netDebt * fx : cap.netDebt);
+    if (!shares || !(eb > 0) || nd == null) return null;
+    return (M * eb - nd) / shares;
   }
-  const earn = (bf.netIncome != null) ? bf.netIncome * f * 1e6 : null;
-  if (!(earn > 0)) return null;
-  return (M * earn) / sh;
+  // P/E inverts to price = M x EPS directly — no share count needed, because the
+  // engine's EPS is already per ADS once the ratio is applied.
+  const eps = (y.eps != null) ? y.eps * adr * fx : null;
+  if (!(eps > 0)) return null;
+  return M * eps;
 }
 
 // The listed strike closest to a price. A multiple almost never lands on one, and
@@ -384,34 +407,24 @@ function metrics(row) {
   // PEG = current multiple ÷ (basis growth in %); only meaningful when growth > 0.
   let evP = null, evS = null, peP = null, peS = null;
   let pegEv = null, pegPe = null, pegEvS = null, pegPeS = null;
-  const bf = basisFundamentals(row.ticker);
-  if (bf && L.shares && price != null && !row.isEtf && L.fxOk) {
-    const f = L.fxRate;
-    // The FORECAST share count for the basis year, not today's — a forward multiple
-    // should carry the dilution or buyback the model expects by then. This is the
-    // rule capital() already applies in the engine, and without it the same name
-    // read 44.9x here and 43.0x in the ladder panes on the same year (TBBB: 120.6M
-    // shares live vs 115.0M modelled). Falls back to the live count when the
-    // estimate set carries none.
-    // ...divided by the ADR ratio where there is one. The estimate set counts the
-    // ORDINARY share (TSM: 25.9bn Taipei) while the price is for an ADR worth five
-    // of them, so without this the market cap is 5x too big. Massive's live count
-    // is already in ADSs (5.19bn), which is why the fallback needs no adjustment.
-    const adr = (EST_STORE[row.ticker] && EST_STORE[row.ticker].adrRatio) || 1;
-    const sh = (bf.shares != null && bf.shares > 0) ? bf.shares * 1e6 / adr : L.shares;
-    const ebitdaUSD = (bf.ebitda != null) ? bf.ebitda * f * 1e6 : null;
-    const earnUSD = (bf.netIncome != null) ? bf.netIncome * f * 1e6 : null;
-    const mc = price * sh, mcS = row.strike * sh;
-    // Massive returns no enterprise value for a foreign issuer, so EV - market cap
-    // is null for TSM, SPOT and TBBB. Where the estimate set carries its own net
-    // debt, use it — it is in the REPORTING currency, so it converts like the
-    // other lines; the live figure is already USD and must not.
-    const nd = L.netDebt != null ? L.netDebt
-             : (bf.netDebt != null ? bf.netDebt * f * 1e6 : null);
-    if (ebitdaUSD && nd != null) { evP = (mc + nd) / ebitdaUSD; evS = (mcS + nd) / ebitdaUSD; }
-    if (earnUSD && earnUSD > 0) { peP = mc / earnUSD; peS = mcS / earnUSD; }
-    const gEb = (bf.gEb && bf.gEb > 0) ? bf.gEb * 100 : null;
-    const gEa = (bf.gEa && bf.gEa > 0) ? bf.gEa * 100 : null;
+  const su = row.isEtf ? null : SU(row.ticker);
+  const fr = basisFrame(su);
+  if (fr && price != null) {
+    // One call, twice: the multiple at today's price and the multiple at the
+    // strike. multiplesAt() is where the FX conversion, the ADR ratio, the
+    // FORECAST share count for the basis year and the net-debt fallback live —
+    // the four facts this file used to re-implement, and the four that each had
+    // to be fixed twice. It also decides on its own that a name with no usable
+    // rate gets no multiple, which is what L.fxOk used to be for.
+    const at = (px) => multiplesAt(px, fr.year, fr.E, su.e, L);
+    const mP = at(price), mS = at(row.strike);
+    evP = mP.ev; peP = mP.pe;
+    evS = mS.ev; peS = mS.pe;
+    // PEG = the multiple at today's price / the basis year's growth in %.
+    // Only meaningful when growth is positive.
+    const gb = basisGrowth(su, 'ebitda'), ga = basisGrowth(su, 'netIncome');
+    const gEb = (gb && gb > 0) ? gb * 100 : null;
+    const gEa = (ga && ga > 0) ? ga * 100 : null;
     if (evP != null && gEb) pegEv = evP / gEb;
     if (peP != null && gEa) pegPe = peP / gEa;
     if (evS != null && gEb) pegEvS = evS / gEb;
@@ -932,5 +945,6 @@ export async function loadCoveredCallsPage() {
 export const __parity = {
   set(k, v) { if (k === 'estSrc') estSrc = v; else if (k === 'mulBasis') mulBasis = v; },
   get state() { return { estSrc, mulBasis }; },
-  SU, basisFundamentals, basisEnd, basisEndLabel, cagr, metrics, fundSeries, ntmFrac, FY, T0,
+  SU, basisFrame, basisGrowth, basisEnd, basisEndLabel, cagr, metrics, fundSeries,
+  strikeFromMultiple, ntmFrac, FY, T0,
 };

@@ -36,6 +36,7 @@ import { tbbbResults } from './results-data/tbbb.js';
 import { dhrResults } from './results-data/dhr.js';
 import { dhrSetup } from './results-data/dhr-setup.js';
 import { tbbbSetup } from './results-data/tbbb-setup.js';
+import { SUMMIT_MUTE } from './viz-palette.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
@@ -210,8 +211,17 @@ var rsFwdZone = {
 var RS_GREEN  = '#1E9E62', RS_RED = '#C0392B';
 // Evolution block: one line per fiscal year — an ordered (ordinal) ramp of the
 // portal blue, darkest = nearest year. Validated with the dataviz palette
-// checker (monotone L, visible step gaps, light end ≥2:1 on white).
-var EVO_RAMP = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0'];
+// checker (monotone L, visible step gaps). Sized to 5 (Uber's raw `years` is
+// already ['2025'..'2029']; rsTrimData's forward-horizon rule keeps it at 4
+// today, but that headroom closes as the current FY rolls forward) with a SAFE
+// fallback past that — indexed directly (`[yi]`, never `% length`), same rule
+// as the categorical palette's own fix (Sep 1, 2026): a ramp that cycles
+// silently gives a later year the same colour as an earlier one. The 5th step
+// is lighter than the light-end contrast floor the first four hold to, which
+// is fine ONLY because every Evolution chart ships its own table underneath
+// (the same relief the low-contrast categorical
+// slots rely on) — do not add a 6th step without checking that still holds.
+var EVO_RAMP = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0', '#C8D7F4'];
 
 // Global: dataset + view. Per-section (keyed by section key): metric, window,
 // hidden series, chart instance. `evo` is the vintage-evolution block's state.
@@ -1849,7 +1859,7 @@ function rsEvoLegendHtml(k, m){
   var h = ev.years.map(function(y, i){
     var off = st.hidden['y' + y];
     return '<button type="button" class="rs-leg' + (off ? ' off' : '') + '" data-rsevleg="y' + y + '" title="Show / hide">' +
-      '<span class="ave-leg-act" style="background:' + EVO_RAMP[i % EVO_RAMP.length] + '"></span>FY' + esc(y) + '</button>';
+      '<span class="ave-leg-act" style="background:' + (EVO_RAMP[i] || SUMMIT_MUTE) + '"></span>FY' + esc(y) + '</button>';
   }).join('');
   h += '<button type="button" class="rs-leg' + (st.hidden.summit ? ' off' : '') + '" data-rsevleg="summit" title="Show / hide">' +
     '<span class="rs-leg-line" style="background:var(--navy)"></span>Summit (solid)</button>';
@@ -1944,7 +1954,7 @@ function rsBuildEvo(k){
   var datasets = [];
   ev.years.forEach(function(y, yi){
     if (st.hidden['y' + y]) return;
-    var color = EVO_RAMP[yi % EVO_RAMP.length];
+    var color = EVO_RAMP[yi] || SUMMIT_MUTE;
     var s = !st.hidden.summit ? series('summit', yi) : null;
     if (s && s.some(function(v){ return v != null; })){
       datasets.push({ label: 'FY' + y + ' · Summit', data: s,
@@ -1968,7 +1978,7 @@ function rsBuildEvo(k){
                        : scale(rsEvoActual(st.metric, m, y));
       if (av == null) return;
       datasets.push({ label: 'FY' + y + ' · reported', data: ev.vintages.map(function(){ return av; }),
-        borderColor: EVO_RAMP[yi % EVO_RAMP.length], borderWidth: 1.5, borderDash: [2, 3],
+        borderColor: EVO_RAMP[yi] || SUMMIT_MUTE, borderWidth: 1.5, borderDash: [2, 3],
         pointRadius: 0, pointHitRadius: 6, tension: 0, fill: false, _src: 'act', _yi: yi, order: 99 });
     });
   }
@@ -3284,7 +3294,10 @@ function wireResults(pane){
     if (stb){
       var sst2 = rsSurpSt();
       sst2.tbl = sst2.tbl === false;
-      var sbody = document.getElementById('rsSurpTableBody');
+      // Scope to the collapsible that was actually clicked. The engine renders up to THREE times on
+      // one profile (Earnings Setup · Results · Estimates), so these ids are not unique in the
+      // document and getElementById would toggle the first instance — i.e. a different tab's table.
+      var sbody = (stb.closest('.rs-collap') || document).querySelector('#rsSurpTableBody');
       if (sbody) sbody.hidden = sst2.tbl === false;
       stb.innerHTML = rsSurpTableHeadHtml();
       return;
@@ -3293,7 +3306,7 @@ function wireResults(pane){
     if (tb){
       var tk = tb.getAttribute('data-rstblb'), tst = rsSt(tk);
       tst.tbl = tst.tbl === false;
-      var tbody = document.getElementById('rsTableBody-' + tk);
+      var tbody = (tb.closest('.rs-collap') || document).querySelector('#rsTableBody-' + tk);   // same three-instance caveat as above
       if (tbody) tbody.hidden = tst.tbl === false;
       tb.innerHTML = rsTableHeadHtml(tk, rsMetric(tk));
       return;

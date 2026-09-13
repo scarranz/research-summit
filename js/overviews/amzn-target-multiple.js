@@ -57,6 +57,8 @@
 // before column EM (the 143rd). So in Live the multiples are inputs. Recorded multiple shows the
 // layout once those columns are ingested, with clearly-marked stand-ins.
 
+import { SUMMIT_CAT } from '../viz-palette.js';
+
 // ── Copied verbatim from js/results.js, per CHART_ENGINE_REFERENCE §0.7 ──────────
 // The engine exports five names and none of them is a helper, so these are copies, not imports.
 // esc — js/results.js:209. Used on EVERY interpolated string.
@@ -325,14 +327,17 @@ function metricM(){ if(!METRICS[st.metric]) st.metric='pt'; return METRICS[st.me
 function unitOf(){ return metricM().unit; }
 
 // ── Series — and the ONE predicate every surface reads (§0.2 rule 2) ─────────────
-var C_EV='#146EB4', C_PE='#FF9900';
+// EV/PE keep a FIXED (never-rotating) pair rather than the categorical assignment other multi-
+// series charts use, because they're two valuation METHODS, not sources — the same reasoning that
+// gives RS_ACT/RS_SUMMIT/RS_CONS fixed roles instead of categorical slots. But the fixed pair
+// itself was '#146EB4'/'#FF9900' — the second is Amazon's own old smile-orange brand, exactly what
+// Stage 2 removed everywhere else. Now the portal's own fixed categorical slots 0/1, which are
+// EQUALLY fixed (never rotate here — EV is always slot 0, PE always slot 1) and carry no brand.
+var C_EV=SUMMIT_CAT[0], C_PE=SUMMIT_CAT[1];
 var C_REC='#8E44AD';   // recorded target — purple, matching the placeholder marks in the table
 var C_SPREAD='#5B6B7C';
 var C_MODEL='rgba(37,99,235,0.85)';   // RS_SUMMIT — this line IS the Summit model
 var C_PX='#8A93A0';
-// The RS palette is semantic (navy = reported, blue = us, gray = the Street) and two valuation
-// METHODS are not sources, so the established EV/PE pair is kept rather than repainted; the one
-// place the palette does map is the model underlying, which is Summit blue.
 
 function seriesDefs(){
   if(st.metric==='pt'){
@@ -473,7 +478,7 @@ function tmBody(){
     '.tm-tbl thead tr.tm-grp th{padding:5px 10px;text-align:center;font-size:9.5px;font-weight:800;'+
       'text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bdr)}'+
     '.tm-tbl thead tr.tm-grp th.tm-gh-ev{background:'+C_EV+';color:#fff}'+
-    '.tm-tbl thead tr.tm-grp th.tm-gh-pe{background:'+C_PE+';color:#3A2A00}'+
+    '.tm-tbl thead tr.tm-grp th.tm-gh-pe{background:'+C_PE+';color:#fff}'+
     '.tm-tbl th.tm-gs,.tm-tbl td.tm-gs{border-left:2px solid var(--bdr)}'+
     '.tm-tbl td.tm-flat{color:var(--mu)}'+
     '.tm-tbl thead tr.tm-grp .tm-gsub{display:block;font-size:9px;font-weight:600;letter-spacing:.02em;text-transform:none;opacity:.92;margin-top:2px}'+

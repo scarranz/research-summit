@@ -29,6 +29,7 @@ import { segmentsHtml, initSegments, segmentsOverviewHtml, initSegmentsOverview,
          segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line ▸ General · Segments · Other · Customers
 import { amznSens } from './amzn-sensitivity.js';   // Valuation ▸ Sensitivity Analysis
 import { amznTargetMult } from './amzn-target-multiple.js';   // Valuation ▸ Target Multiple
+import { SUMMIT_CAT, SUMMIT_INK } from '../viz-palette.js';   // the portal's fixed categorical palette (see the file header)
 import { amznHistMult } from './amzn-histmult.js';            // Valuation ▸ Historic Multiple
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode) ──
@@ -146,7 +147,12 @@ function ceNoteAddPop(anchor){
 }
 
 // ─── Brand: Amazon orange + Amazon blue ─────────────────────────────────────────────────────
-var BRAND='#FF9900', BRAND2='#146EB4', SQUID='#232F3E', GREEN='#2E8B57', GRAY='#9AA4B0';
+// These were Amazon's own brand hexes (#FF9900 smile orange, #146EB4 blue, #232F3E squid ink), used
+// as chart colours in ~175 places. They now point at the portal's fixed categorical palette, so the
+// profile no longer paints itself in the company's brand — the brand belongs in the logo, and slot 1
+// is the same blue on every company. The NAMES are kept deliberately: renaming 175 call sites would
+// bury a palette change inside an unreviewable diff. Read BRAND as "series 1", BRAND2 as "series 2".
+var BRAND=SUMMIT_CAT[0], BRAND2=SUMMIT_CAT[1], SQUID=SUMMIT_INK, GREEN='#2E8B57', GRAY='#9AA4B0';
 var _co=null;   // open company (id + ticker), captured in html/deepDiveHtml for the shared Watch List engine
 
 function collapsible(title, inner, open){
@@ -1302,7 +1308,17 @@ function ceProse(h){
   if(bullets.length) out+='<ul class="ce-pop-l">'+bullets.map(function(b){ return '<li>'+b+'</li>'; }).join('')+'</ul>';
   return out+tail;
 }
+// The Earnings CSS is ~21KB and ceStyle() is called by all THREE phase bodies (Setup, Watch,
+// Post-Results), which are built in one deepDiveHtml() pass and all live in the DOM at once — so it
+// was shipping three identical copies, ~43KB of dead duplicate. Emit once per render; the flag is
+// cleared at the top of deepDiveHtml(), so a company switch re-emits correctly.
+// (The real fix is lifting these rules into a stylesheet, but the CSS is interpolated with JS
+//  constants and eight overviews each own a copy of it — that is its own PR.)
+var _ceStyleEmitted = false;
+function ceStyleReset(){ _ceStyleEmitted = false; }
 function ceStyle(){
+  if (_ceStyleEmitted) return '';
+  _ceStyleEmitted = true;
   return '<style>'+
     /* page-styled inline prompt/confirm popover (replaces window.prompt / window.confirm) */
     '.ce-ip{z-index:9999;background:#fff;border:1px solid var(--bdr);border-radius:12px;box-shadow:0 16px 44px rgba(15,23,42,.30);padding:13px 14px;min-width:264px;max-width:380px}'+
@@ -3011,6 +3027,15 @@ function aCollap(title, inner, open){
 // PERIOD window with rs-ticks dots + drag-to-zoom on the X. A chart registers a derive(state) fn that
 // returns {labels,lastAct,series:[{k,label,color,data,fwdDash}],yFmt}; controls re-render via it.
 var ASTD_ACT='rgba(30,39,51,0.92)', ASTD_SUMMIT='rgba(37,99,235,0.85)', ASTD_CONS='rgba(124,134,148,0.85)';
+// Fade a series colour to a given alpha. Accepts BOTH '#rrggbb' and 'rgba(r,g,b,a)' — the ASTD_*
+// palette is authored as rgba(), and feeding that to acxRGBA (hex-only) yields 'rgba(NaN,186,NaN,0.5)',
+// which paints nothing. That silently hid every forward-period bar on the profitability charts.
+function aFadeC(c,a){
+  if(!c) return c;
+  if(c.charAt(0)==='#') return acxRGBA(c,a);
+  var m=/^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i.exec(c);
+  return m ? 'rgba('+m[1]+','+m[2]+','+m[3]+','+a+')' : c;
+}
 var _aStd={}, _aStdDerive={};
 function aStdScaffold(cfg){
   var id=cfg.id;
@@ -3046,7 +3071,7 @@ function aStdRender(id, derive){
   var stk=spec.stacked?'s':undefined, needY2=false;   // engine supports bars + a secondary right axis (SAB dual-axis)
   var ds=spec.series.filter(function(s){ return !st.hidden[s.k]; }).map(function(s){
     var t=s.type||spec.type||'line'; if(s.yAxisID==='y2') needY2=true;
-    if(t==='bar') return { type:'bar', label:s.label, data:s.data.slice(lo,hi+1), backgroundColor:s.data.slice(lo,hi+1).map(function(_,i){ return (lo+i)>la?acxRGBA(s.color,0.5):s.color; }), borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:stk, yAxisID:s.yAxisID||'y', order:s.order||3 };
+    if(t==='bar') return { type:'bar', label:s.label, data:s.data.slice(lo,hi+1), backgroundColor:s.data.slice(lo,hi+1).map(function(_,i){ return (lo+i)>la?aFadeC(s.color,0.5):s.color; }), borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:stk, yAxisID:s.yAxisID||'y', order:s.order||3 };
     return { type:'line', label:s.label, data:s.data.slice(lo,hi+1), borderColor:s.color, backgroundColor:s.color, borderWidth:2.2, pointRadius:2, tension:0.2, spanGaps:false, yAxisID:s.yAxisID||'y', order:s.order||2,
       borderDash:s.dash?[5,4]:undefined, segment: s.fwdDash?{ borderDash:function(ctx){ return (lo+ctx.p1DataIndex)>la?[5,4]:undefined; } }:undefined }; });
   var anyBar=spec.series.some(function(s){ return (s.type||spec.type)==='bar'; }), y2f=spec.y2Fmt||function(v){return v;};
@@ -3593,9 +3618,6 @@ function aBuildMargins(){
 }
 // Expense-line full dives — opened from an Expenses card via data-detail="exp:<key>". VISUAL, not prose.
 var EW_CSS='<style>'+
-  '.ew-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:2px 0 16px}'+
-  '.ew-tile{border:1px solid var(--bdr);border-top:3px solid var(--brand-2);border-radius:10px;padding:10px 12px;background:var(--card,#fff)}'+
-  '.ew-tv{font-size:19px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;letter-spacing:-.02em}.ew-tl{font-size:10px;color:var(--mu);font-weight:600;margin-top:3px;line-height:1.35}'+
   '.ew-h{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--brand-2);margin:18px 0 9px;display:flex;align-items:center;gap:8px}.ew-h::after{content:"";flex:1;height:1px;background:var(--bdr)}'+
   '.ew-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:560px){.ew-two{grid-template-columns:1fr}}'+
   '.ew-box{border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;background:var(--card,#fff)}'+
@@ -3611,7 +3633,7 @@ var EW_CSS='<style>'+
   '.ew-far{display:flex;align-items:center;justify-content:center;color:var(--brand-2);font-size:18px;font-weight:800;padding:0 6px}'+
   '.ew-q{border-left:3px solid var(--brand);background:rgba(0,0,0,.025);border-radius:0 8px 8px 0;padding:9px 13px;margin:8px 0;font-size:12px;line-height:1.55;color:var(--navy)}'+
   '.ew-q .ew-att{display:block;margin-top:4px;font-size:10.5px;font-weight:700;color:var(--mu)}'+
-  '.ew-foot{font-size:10.5px;color:var(--mu);line-height:1.5;margin-top:10px;border-top:1px solid var(--bdr);padding-top:8px}'+
+  
   '.ew-tls{position:relative;margin:8px 0 2px;padding-left:20px}'+'.ew-tls::before{content:"";position:absolute;left:5px;top:5px;bottom:5px;width:2px;background:var(--bdr)}'+'.ew-tli{position:relative;margin-bottom:13px}.ew-tli:last-child{margin-bottom:2px}'+'.ew-tli::before{content:"";position:absolute;left:-18px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--brand-2);border:2px solid var(--card,#fff);box-shadow:0 0 0 1px var(--bdr)}'+'.ew-tlq{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--brand-2)}'+'.ew-tlt{font-size:12px;color:var(--navy);line-height:1.5;margin-top:2px}'+'.ew-tlw{font-size:10px;font-weight:700;color:var(--mu);margin-top:3px}'+'.ew-tag{display:inline-block;font-size:8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:1px 6px;border-radius:5px;margin-left:7px;vertical-align:middle;transform:translateY(-1px)}'+'.ew-tag.why{background:rgba(192,80,77,.13);color:#B23A38}.ew-tag.fwd{background:rgba(46,139,87,.15);color:#2E7D51}.ew-tag.ctx{background:rgba(107,118,131,.15);color:#5B6673}'+
   '.ew-calls{margin-top:14px}.ew-callsum{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--brand-2);cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:5px 0}'+
   '.ew-callsum::-webkit-details-marker{display:none}.ew-callsum::before{content:"▸";font-size:11px;transition:transform .15s}.ew-calls[open] .ew-callsum::before{content:"▾"}.ew-callsum::after{content:"";flex:1;height:1px;background:var(--bdr)}'+
@@ -3699,7 +3721,7 @@ var SEG_CALLS={
   ]
 };
 function ewBase(c){
-  var h='<div class="ew-kpis">'+c.kpis.map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>';
+  var h='<div class="ov-kpis">'+c.kpis.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-v">'+k[0]+'</div><div class="ov-kpi-d muted">'+k[1]+'</div></div>'; }).join('')+'</div>';
   if(c.def){ h+='<div class="ew-h">How the 10-K defines it</div><div class="ew-q ew-def">“'+c.def+'”<span class="ew-att">'+EW_SRC+'</span></div>'; }
   h+='<div class="ew-h">What sits inside this line</div>'+ewBoxes(c.comp);
   if(c.compNote) h+='<div class="ew-note">'+c.compNote+'</div>';
@@ -3709,7 +3731,7 @@ function ewBase(c){
   if(c.drivers){ h+='<div class="ew-h">Why it has moved — the drivers</div>'+ewBoxes(c.drivers); }
   if(c.extra) h+=c.extra;
   if(c.calls){ h+=ewCallsBlock(c.calls); }
-  h+='<div class="ew-foot">FY2025 figures unless noted. Sources: 10-K MD&amp;A + Notes; Amazon earnings calls (management commentary).</div>';
+  h+='<div class="ov-foot">FY2025 figures unless noted. Sources: 10-K MD&amp;A + Notes; Amazon earnings calls (management commentary).</div>';
   return h;
 }
 var EW_LINES=[
@@ -3887,7 +3909,7 @@ function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depre
     '</div>'+
     '<div class="ew-h">Operating-lease payments by maturity</div>'+
     mbar('',[{w:16,c:BRAND2,t:'≤1yr ~$12B'},{w:38,c:acxRGBA(BRAND2,0.7),t:'2–5yr'},{w:46,c:acxRGBA(BRAND2,0.4),t:'thereafter ~$44B'}])+
-    '<div class="ew-foot">Maturities &amp; not-yet-commenced per 10-K Note 4 (FY2024); balance-sheet totals FY2025.</div>';
+    '<div class="ov-foot">Maturities &amp; not-yet-commenced per 10-K Note 4 (FY2024); balance-sheet totals FY2025.</div>';
   // Panel 4 — what Amazon leases
   var p4='<div class="ew-two">'+box('📦','Fulfillment &amp; logistics','Warehouses, sortation centers, delivery stations and (increasingly) grocery — the largest slice of operating leases. Leasing lets Amazon flex the network up and down without owning every building.')+
       box('🖥️','Data centers','A mix — Amazon <b>owns</b> core AWS capacity (the capex build) but also <b>leases</b> data-center space and power, especially to move fast; much of the not-yet-commenced pipeline is here.')+
@@ -3977,7 +3999,7 @@ function segQuarterRows(){
 // Segment deep-dive "worlds" — opened from the Segments tab via data-detail="seg:aws|us|int".
 // VISUAL (reuses EW_CSS / ewSpark from the expense full dives). Data: 10-K Note 10 (segment capex/PP&E),
 // segment operating margins, and the earnings-call record.
-function segTiles(a){ return '<div class="ew-kpis">'+a.map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>'; }
+function segTiles(a){ return '<div class="ov-kpis">'+a.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-v">'+k[0]+'</div><div class="ov-kpi-d muted">'+k[1]+'</div></div>'; }).join('')+'</div>'; }
 function segCapMini(cap,ppe){ return '<div class="ew-flow"><div class="ew-fn"><div class="ew-fn-v">'+cap+'</div><div class="ew-fn-l">net capex, FY25 (Note 10)</div></div><div class="ew-far">→</div><div class="ew-fn"><div class="ew-fn-v">'+ppe+'</div><div class="ew-fn-l">PP&amp;E stock</div></div></div>'; }
 // Per-segment cost structure — Amazon does NOT disclose functional expenses by segment, so this is
 // qualitative (from 10-K MD&A drivers + Note 10 capex/PP&E), explicitly flagged as inferred, with the
@@ -4032,7 +4054,7 @@ var SEG_WORLD={
     '<div class="ew-q">“As fast as we install this capacity, <b>we are monetizing it</b>.” The FY26 capex frame was raised to ~$220B, partly on the higher cost of memory.<span class="ew-att">— Brian Olsavsky, CFO</span></div>'+
     segCostBox('aws')+
     ewCallsBlock(SEG_CALLS.aws)+
-    '<div class="ew-foot">Sources: 10-K Note 10 (segment capex/PP&amp;E); Q4’25–Q2’26 earnings calls; Bloomberg segment series.</div>' },
+    '<div class="ov-foot">Sources: 10-K Note 10 (segment capex/PP&amp;E); Q4’25–Q2’26 earnings calls; Bloomberg segment series.</div>' },
   us:{ t:'North America — the volume base + the ad layer', h:EW_CSS+
     segTiles([['6.9%','operating margin (FY25)'],['$29.6B','operating income'],['$35.9B','net capex (Note 10)'],['$122B','PP&E stock']])+
     '<div class="ew-h">The business</div><div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">🛒</span>First-party store + 3P marketplace + advertising</div><div class="ew-box-t">The retail surface: own inventory, third-party sellers (~61% of units), and the high-margin ad layer riding on top. Margin has climbed ~4% → 7% in three years — on mix and cost, not price.</div></div>'+
@@ -4044,7 +4066,7 @@ var SEG_WORLD={
     '<div class="ew-h">Capital footprint</div>'+segCapMini('$35.9B','$122B')+
     segCostBox('us')+
     ewCallsBlock(SEG_CALLS.us)+
-    '<div class="ew-foot">Sources: 10-K MD&amp;A (drivers: units + advertising, offset by fulfillment/tech/shipping) &amp; Note 10; Bloomberg segment series.</div>' },
+    '<div class="ov-foot">Sources: 10-K MD&amp;A (drivers: units + advertising, offset by fulfillment/tech/shipping) &amp; Note 10; Bloomberg segment series.</div>' },
   int:{ t:'International — the turnaround', h:EW_CSS+
     segTiles([['2.9%','operating margin (FY25)'],['$4.75B','operating income — from −$2.7B in ’22'],['$7.6B','net capex (Note 10)'],['$31B','PP&E stock']])+
     '<div class="ew-h">The business</div><div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">🌍</span>Two businesses under one line</div><div class="ew-box-t"><b>Established markets</b> (Germany, UK, Japan) matured to profit and drive the reported margin; <b>emerging markets</b> (India, Brazil, Middle East) are still in the investment phase NA already passed through.</div></div>'+
@@ -4056,7 +4078,7 @@ var SEG_WORLD={
     '<div class="ew-h">Capital footprint</div>'+segCapMini('$7.6B','$31B')+
     segCostBox('int')+
     ewCallsBlock(SEG_CALLS.int)+
-    '<div class="ew-foot">Sources: 10-K MD&amp;A (units + advertising, FX +$903M) &amp; Note 10; Bloomberg segment series.</div>' }
+    '<div class="ov-foot">Sources: 10-K MD&amp;A (units + advertising, FX +$903M) &amp; Note 10; Bloomberg segment series.</div>' }
 };
 var A_TENK={
   segCapex:{ 2023:{na:17529,int:4144,aws:24843,corp:1828}, 2024:{na:24348,int:6643,aws:53267,corp:1494}, 2025:{na:35919,int:7617,aws:96496,corp:2320} },
@@ -4964,7 +4986,7 @@ var AMZN_MGMT = makeManagement({
 });
 function amznOwnBody(){   // Ownership
   var h='<p class="ov-lede"><b>One share, one vote.</b> Amazon has a <b>single share class</b> — no founder super-voting stock. It is the governance mirror-image of META and GOOGL: influence flows from the stake and the chair, not from a special class.</p>';
-  h+='<div class="ew-kpis">'+[['~9%','Jeff Bezos — largest individual holder'],['1 class','one share, one vote'],['~$19.5B','stock-based comp (FY25)'],['~nil','buybacks · no dividend']].map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="ov-kpis">'+[['~9%','Jeff Bezos — largest individual holder'],['1 class','one share, one vote'],['~$19.5B','stock-based comp (FY25)'],['~nil','buybacks · no dividend']].map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-v">'+k[0]+'</div><div class="ov-kpi-d muted">'+k[1]+'</div></div>'; }).join('')+'</div>';
   h+='<div class="ov-sec-h">Who owns Amazon</div>';
   h+=ewBoxes([
     ['👤','Founder','Jeff Bezos holds ~9% — the largest single holder — as Executive Chair. He sells regularly under pre-set <b>10b5-1</b> plans (funding Blue Origin and philanthropy), so the stake trends down over time even as it stays the largest.'],
@@ -4979,7 +5001,7 @@ function amznOwnBody(){   // Ownership
 }
 function amznGovBody(){   // Governance & SBC
   var h='<p class="ov-lede"><b>Clean, conventional governance.</b> Single-class stock, an independent-majority board, four standing committees and an annual say-on-pay vote — governance risk is low by construction. The trade-off: no outside holder can force a strategy change.</p>';
-  h+='<div class="ew-kpis">'+[['1 vote / sh','single share class'],['12 dirs','majority independent'],['~$19.5B','SBC · ~2.7% of revenue (FY25)'],['~nil','buybacks · no dividend']].map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="ov-kpis">'+[['1 vote / sh','single share class'],['12 dirs','majority independent'],['~$19.5B','SBC · ~2.7% of revenue (FY25)'],['~nil','buybacks · no dividend']].map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-v">'+k[0]+'</div><div class="ov-kpi-d muted">'+k[1]+'</div></div>'; }).join('')+'</div>';
   h+=ewBoxes([
     ['🗳️','Single share class','One share, one vote — no founder super-voting stock. The opposite of META/GOOGL dual-class.'],
     ['⚖️','Independent-majority board','12 directors, the majority independent; an independent Lead Director since 2010.'],
@@ -5061,7 +5083,7 @@ function amznTrackBody(){
 
 function html(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring
-  var h='<div class="ov ov-amzn" data-brand="AMZN" style="--brand:'+BRAND+';--brand-2:'+BRAND2+';--brand-soft:rgba(255,153,0,0.10)">';
+  var h='<div class="ov ov-amzn" data-brand="AMZN" style="--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">';
   h+=stdOverviewBody(c);
   h+='<div class="ov-modal-back" id="amznModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="amznModalX" aria-label="Close">×</button>'+
@@ -5152,15 +5174,223 @@ function aBuildSplc(){
         scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } }, y:{ grid:{ display:false }, ticks:{ font:{ size:10 } } } } } }); aZoom('aSplcGeo'); }
 }
 // ─── Miscellaneous ▸ M&A and Other Analysis — future placeholders (nothing deep-dived for AMZN yet).
-function aMandaBody(){
-  return '<p class="ov-lede"><b>No M&amp;A deep-dived yet.</b> Placeholder for acquisitions Summit has studied in depth — none for Amazon to date.</p>';
+// ── Miscellaneous ▸ M&A ─────────────────────────────────────────────────────────────────────────
+// Every figure here is the number Amazon put in an acquisition note, NET OF CASH ACQUIRED — which
+// is not the number the press printed. Whole Foods was reported at $13.7B and filed at $13.2B; MGM
+// was reported at $8.45B and filed at $6.1B plus $2.5B of assumed debt repaid at closing. Where the
+// two differ, the filing wins and the gap is shown, because the gap IS the point: the cash that
+// left the building is the only figure a capital-allocation read can use.
+//
+// This pane deliberately adds NO inline <style> of its own — it is the reference for how a new pane
+// should be built. .ov-kpis/.ov-kpi, .ov-sec-h, .ov-lede, .ov-fynote and .ov-foot come from
+// css/overview.css; .rs-ft / .rs-ft-scroll from css/results.css. The one borrowed component is
+// .ov-collap, whose CSS is still injected by the Overview's inline <style> block rather than living
+// in a stylesheet — it works only because that block leaks document-wide. That is precisely the
+// thing the design-system pass has to fix, and it is noted here so the fix has a starting point.
+var AMZN_MNA = [
+  { date: 'May 12, 2017',  name: 'Souq Group',        price: 583,   what: 'Middle-East e-commerce', seg: 'International', note: 'Became Amazon.ae / Amazon.sa.' },
+  { date: 'Aug 28, 2017',  name: 'Whole Foods Market', price: 13200, what: 'Grocery chain, 400+ stores', seg: 'North America', note: 'The largest acquisition Amazon has ever made. Press reported $13.7B; the filing says $13.2B net of cash. It contributed $5.8B of net sales and a $(24)M operating loss in its first four months.' },
+  { date: 'Apr 12, 2018',  name: 'Ring',              price: 839,   what: 'Connected doorbells / home security', seg: 'North America', note: 'Devices, and the data behind Amazon Sidewalk.' },
+  { date: 'Sep 11, 2018',  name: 'PillPack',          price: 753,   what: 'Mail-order pharmacy', seg: 'North America', note: 'Became Amazon Pharmacy.' },
+  { date: 'Mar 17, 2022',  name: 'MGM Holdings',      price: 6100,  what: 'Film and TV library', seg: 'North America', note: 'Press reported $8.45B. The filing says $6.1B net of cash <b>plus $2.5B of assumed debt repaid immediately after closing</b>. Acquired assets: $3.4B of video content and $4.9B of goodwill.' },
+  { date: 'Feb 22, 2023',  name: '1Life Healthcare (One Medical)', price: 3500, what: 'Primary-care clinics', seg: 'North America', note: 'Acquired assets: $1.3B of intangibles and $2.5B of goodwill.' },
+];
+// The years Amazon named nobody — the aggregate line from each acquisition note.
+var AMZN_MNA_AGG = [
+  { yr: '2017', amt: 204,  txt: 'other companies, aggregate' },
+  { yr: '2018', amt: 57,   txt: 'other companies, aggregate' },
+  { yr: '2019', amt: 315,  txt: 'aggregate — nobody named' },
+  { yr: '2020', amt: 1200, txt: 'aggregate — nobody named, but <b>$1.1B of it was capitalised to in-process R&amp;D</b>: the shape of a pre-revenue technology purchase. Amazon announced Zoox in June 2020 and has never disclosed its price.' },
+  { yr: '2021', amt: 496,  txt: 'aggregate — nobody named' },
+  { yr: '2022', amt: 141,  txt: 'other companies, aggregate (besides MGM)' },
+  { yr: '2023', amt: null, txt: 'immaterial, besides One Medical' },
+  { yr: '2024', amt: 780,  txt: 'aggregate — nobody named, none individually material' },
+  { yr: '2025', amt: null, txt: '<b>"immaterial aggregate cash consideration"</b> — the whole year, in five words' },
+];
+function aMnaMoney(m){
+  if (m == null) return '<span class="rs-ft-nil">immaterial</span>';
+  return m >= 1000 ? '$' + (m / 1000).toFixed(1) + 'B' : '$' + m + 'M';
 }
+function aMandaBody(){
+  var h = '<p class="ov-lede"><b>Amazon has stopped buying companies.</b> It has named six acquisitions in nine years, none since February 2023. ' +
+    'In FY2025 the whole year of acquisition activity added <b>$112M</b> of goodwill — against <b>$131.8B</b> of capex. ' +
+    'The question this tab answers is not "what did Amazon buy"; it is <b>why a company with this much cash almost never buys anything</b>.</p>';
+
+  h += '<div class="ov-kpis">' + [
+    ['Goodwill added by M&amp;A, FY2025', '$112M', 'from $320M in FY2024', 'muted'],
+    ['FY2025 capex', '$131.8B', '1,177&times; the goodwill it bought', 'muted'],
+    ['Largest deal ever', '$13.2B', 'Whole Foods, Aug 2017 · net of cash', 'muted'],
+    ['Deals named since 2017', '6', 'last one Feb 2023', 'muted'],
+    ['Goodwill sitting in AWS', '$1.3B', '5.7% of group goodwill', 'muted'],
+  ].map(function(k){
+    return '<div class="ov-kpi"><div class="ov-kpi-l">' + k[0] + '</div>' +
+      '<div class="ov-kpi-v">' + k[1] + '</div>' +
+      '<div class="ov-kpi-d ' + k[3] + '">' + k[2] + '</div></div>';
+  }).join('') + '</div>';
+
+  // ① The record ────────────────────────────────────────────────────────────────────────────────
+  h += '<div class="ov-sec-h">Every acquisition Amazon has named, 2017&ndash;2025</div>';
+  h += '<p class="ov-lede">Prices are as filed &mdash; <b>net of cash acquired</b> &mdash; which is why two of them are smaller than the number you remember.</p>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
+    '<th class="rs-ft-h">Acquisition</th><th>Closed</th><th>Price, net of cash</th><th>What it bought</th><th>Segment</th>' +
+    '</tr></thead><tbody>' +
+    AMZN_MNA.map(function(d){
+      return '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(d.name) + '</td>' +
+        '<td>' + esc(d.date) + '</td><td>' + aMnaMoney(d.price) + '</td>' +
+        '<td>' + esc(d.what) + '</td><td>' + esc(d.seg) + '</td></tr>';
+    }).join('') + '</tbody></table></div>';
+  h += collapsible('What each one was for, and what the filing added',
+    AMZN_MNA.map(function(d){
+      return '<div style="margin:0 0 11px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">' +
+        esc(d.name) + ' <span style="font-weight:600;color:var(--mu)">' + esc(d.date) + ' · ' + aMnaMoney(d.price) + '</span></div>' +
+        '<div style="font-size:12px;line-height:1.55;color:var(--navy)">' + d.note + '</div></div>';
+    }).join(''));
+
+  // ② The years with no names ───────────────────────────────────────────────────────────────────
+  h += '<div class="ov-sec-h">The years Amazon named nobody</div>';
+  h += '<p class="ov-lede">A company only has to name an acquisition when it is <i>material</i>. Everything else arrives as one aggregate line ' +
+    '&mdash; and the aggregate line is where the trend shows.</p>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
+    '<th class="rs-ft-h">Year</th><th>Unnamed acquisition activity</th><th>What the note says</th>' +
+    '</tr></thead><tbody>' +
+    AMZN_MNA_AGG.map(function(a){
+      return '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(a.yr) + '</td>' +
+        '<td>' + aMnaMoney(a.amt) + '</td><td>' + a.txt + '</td></tr>';
+    }).join('') + '</tbody></table></div>';
+
+  // ③ Where the goodwill sits ───────────────────────────────────────────────────────────────────
+  h += '<div class="ov-sec-h">AWS was built, not bought</div>';
+  h += '<p class="ov-lede">Goodwill is the accumulated record of what a company paid <i>above</i> the assets it acquired &mdash; so the segment split ' +
+    'says where Amazon grew by buying and where it grew by building.</p>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
+    '<th class="rs-ft-h">Segment</th><th>Goodwill, Dec 31 2025</th><th>Share of group goodwill</th><th>FY2025 revenue</th><th>FY2025 operating income</th>' +
+    '</tr></thead><tbody>' +
+    [['North America', 19363, 426305, 29619], ['International', 2578, 161894, 4750], ['AWS', 1332, 128725, 45606]].map(function(r){
+      return '<tr class="rs-ft-main"><td class="rs-ft-h">' + r[0] + '</td>' +
+        '<td>$' + (r[1] / 1000).toFixed(1) + 'B</td>' +
+        '<td>' + (r[1] / 23273 * 100).toFixed(1) + '%</td>' +
+        '<td>$' + (r[2] / 1000).toFixed(1) + 'B</td>' +
+        '<td>$' + (r[3] / 1000).toFixed(1) + 'B</td></tr>';
+    }).join('') +
+    '<tr class="rs-ft-main"><td class="rs-ft-h" style="font-weight:700">Consolidated</td><td>$23.3B</td><td>100%</td><td>$716.9B</td><td>$80.0B</td></tr>' +
+    '</tbody></table></div>';
+  h += '<p class="ov-fynote">AWS produces <b>57% of group operating income</b> off <b>5.7% of group goodwill</b>. Nothing Amazon bought built that segment ' +
+    '&mdash; and the $19.4B parked in North America is mostly Whole Foods, MGM and One Medical, i.e. the retail and media side is where the acquired value sits.</p>';
+
+  // ④ What replaced M&A ─────────────────────────────────────────────────────────────────────────
+  h += '<div class="ov-sec-h">What replaced buying companies</div>';
+  h += '<p class="ov-lede">Two things: <b>capex</b>, at a scale no acquisition could match, and <b>minority stakes</b> that buy the position without ' +
+    'buying the company &mdash; which is also how Amazon avoids the review that killed its last deal.</p>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
+    '<th class="rs-ft-h">Cash deployed</th><th>FY2024</th><th>FY2025</th><th>What it was</th>' +
+    '</tr></thead><tbody>' +
+    '<tr class="rs-ft-main"><td class="rs-ft-h">Purchases of property &amp; equipment</td><td>$83.0B</td><td>$131.8B</td>' +
+      '<td>Technology infrastructure, majority for AWS; expected to rise again in 2026</td></tr>' +
+    '<tr class="rs-ft-main"><td class="rs-ft-h">Acquisition and other investment activity</td><td>$7.1B</td><td>$3.8B</td>' +
+      '<td>Primarily convertible notes from Anthropic, PBC &mdash; $2.7B of it in 2025</td></tr>' +
+    '<tr class="rs-ft-main"><td class="rs-ft-h">Goodwill actually created by acquisitions</td><td>$320M</td><td>$112M</td>' +
+      '<td>The entire year of buying companies</td></tr>' +
+    '</tbody></table></div>';
+  h += collapsible('The Anthropic position is now bigger than every acquisition except Whole Foods',
+    '<p style="font-size:12px;line-height:1.6;color:var(--navy)">Amazon holds Anthropic through <b>convertible notes and nonvoting preferred stock</b>, not equity control &mdash; ' +
+    'so it never appears in an acquisition note. The convertible notes alone carried an estimated fair value of <b>~$13.8B at Dec 31 2024</b>, ' +
+    'which is already larger than every deal Amazon has ever closed except Whole Foods.</p>' +
+    '<p style="font-size:12px;line-height:1.6;color:var(--navy)">It also drives the income statement. FY2025 <b>Other income (expense), net was +$15.2B</b> ' +
+    '(vs $(2.3)B in FY2024), of which <b>$7.7B</b> was the valuation gain on private-company equity &mdash; primarily the Anthropic nonvoting preferred. ' +
+    'That gain is <b>not operating income</b>, and stripping it is exactly what the <b>Normalized</b> toggle on Bottom Line ▸ General does.</p>');
+
+  // ⑤ The deal that did not happen ──────────────────────────────────────────────────────────────
+  h += '<div class="ov-sec-h">The deal that did not happen</div>';
+  h += '<p class="ov-lede">Amazon agreed to buy <b>iRobot</b> for approximately <b>$1.7B including its debt</b> (August 2022, amended July 2023). ' +
+    'In <b>January 2024 the two sides agreed to terminate</b> it, under European Commission opposition. It is the only deal in this record that Amazon ' +
+    'announced and did not complete &mdash; and the last time it tried to buy anything of size.</p>';
+
+  h += '<div class="ov-foot">Every figure from Amazon\'s own acquisition notes, net of cash acquired: FY2017 10-K (Souq, Whole Foods), FY2020 10-K ' +
+    '(Ring, PillPack, 2019&ndash;2020 aggregates), FY2022 10-K (MGM, 2021&ndash;2022), FY2023 10-K (One Medical, iRobot termination), FY2025 10-K ' +
+    '(2024&ndash;2025 activity, goodwill by segment, Anthropic). Segment revenue and operating income per the FY2025 10-K. Press-reported headline prices ' +
+    'are named only where they differ from the filed figure.</div>';
+  return h;
+}
+// ── Miscellaneous ▸ Other Analysis ──────────────────────────────────────────────────────────────
+// The genre of this tab (set by DHR) is: changes in definition or estimate that move REPORTED profit
+// without anything happening in the business. For Amazon that is overwhelmingly one thing — the
+// useful life of a server — and every figure below is Amazon's own quantification of its own change,
+// taken from the 10-K that announced it. Nothing here is a Summit estimate.
+var AMZN_LIVES = [
+  { eff: 'Jan 1, 2020', asset: 'Servers', chg: '3 → 4 years', dir: 'up',
+    effect: 'D&amp;A <b>−$2.7B</b> · net income <b>+$2.0B</b>', per: '+$3.98 / diluted share', src: 'FY2020 10-K' },
+  { eff: 'Jan 1, 2022', asset: 'Servers (networking to 6 yrs)', chg: '4 → 5 years', dir: 'up',
+    effect: 'D&amp;A <b>−$3.6B</b> · benefit to net loss <b>$2.8B</b>', per: '+$0.28 / diluted share', src: 'FY2022 10-K' },
+  { eff: 'Jan 1, 2024', asset: 'Servers', chg: '5 → 6 years', dir: 'up',
+    effect: 'anticipated <b>+$3.1B</b> to 2024 operating income', per: 'as forecast by Amazon', src: 'FY2023 10-K' },
+  { eff: 'Jan 1, 2025', asset: 'A subset of servers &amp; networking', chg: '6 → 5 years', dir: 'down',
+    effect: 'D&amp;A <b>+$1.4B</b> · net income <b>−$1.0B</b>', per: '−$0.10 / diluted share · primarily AWS', src: 'FY2025 10-K' },
+  { eff: 'Jan 1, 2025', asset: 'Heavy equipment', chg: '10 → 13 years', dir: 'up',
+    effect: 'estimated <b>+$0.9B</b> to 2025 operating income', per: 'in Fulfillment · North America + International', src: 'FY2024 10-K' },
+];
 function aOtherAnalysisBody(){
-  return '<p class="ov-lede"><b>Future placeholder.</b> Ad-hoc analysis will land here — nothing deep-dived for Amazon yet.</p>';
+  var h = '<p class="ov-lede"><b>How long a server lasts is an assumption, and Amazon has changed it four times.</b> ' +
+    'Between 2020 and 2024 every change ran the same way — lives got longer, depreciation got smaller, reported profit got bigger, by roughly ' +
+    '<b>$9.4B</b> of avoided D&amp;A across the three change-years. Then, effective January 2025, it reversed on servers for the first time. ' +
+    'None of this is a Summit adjustment: each figure is Amazon quantifying its own change in the 10-K that announced it.</p>';
+
+  h += '<div class="ov-sec-h">Every useful-life change Amazon has quantified</div>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
+    '<th class="rs-ft-h">Effective</th><th>Asset</th><th>Change</th><th>Effect as Amazon quantified it</th><th>Per share / segment</th><th>Source</th>' +
+    '</tr></thead><tbody>' +
+    AMZN_LIVES.map(function(l){
+      var arrow = l.dir === 'up'
+        ? '<span style="color:var(--pos);font-weight:700">▲ longer</span>'
+        : '<span style="color:var(--neg);font-weight:700">▼ shorter</span>';
+      return '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(l.eff) + '</td>' +
+        '<td>' + l.asset + '</td><td>' + esc(l.chg) + ' &nbsp;' + arrow + '</td>' +
+        '<td>' + l.effect + '</td><td>' + l.per + '</td>' +
+        '<td><span class="rs-ft-dim">' + esc(l.src) + '</span></td></tr>';
+    }).join('') + '</tbody></table></div>';
+  h += '<p class="ov-fynote"><b>Read the last two rows together.</b> Both took effect on the same day. Amazon <i>shortened</i> server lives — a charge that ' +
+    'lands almost entirely in <b>AWS</b> — and in the same motion <i>lengthened</i> heavy-equipment lives, a credit that lands in <b>Fulfillment</b>, ' +
+    'i.e. in the retail segments. Net across the group it is roughly a wash (−$1.4B of D&amp;A against +$0.9B of operating income); across the segments ' +
+    'it is not. A 2025 AWS margin compared with a 2024 AWS margin is not comparing the same accounting.</p>';
+  h += collapsible('Why Amazon says it shortened them, in its own words',
+    '<p style="font-size:12px;line-height:1.6;color:var(--navy)">&ldquo;The shorter useful lives are due to the increased pace of technology development, ' +
+    'particularly in the area of artificial intelligence and machine learning.&rdquo; <span style="color:var(--mu)">— FY2025 10-K, Note 1</span></p>' +
+    '<p style="font-size:12px;line-height:1.6;color:var(--navy)">That sentence is the one to keep. For five years the depreciation assumption moved in the ' +
+    'direction that helped reported profit, and the stated reason was that hardware was lasting longer. The 2025 reversal is the first time the AI cycle ' +
+    'showed up as a reason to assume the opposite — and it is a forward-looking statement about how fast Amazon expects its own AI fleet to become obsolete. ' +
+    'It applies to <b>a subset</b> of servers and networking equipment, not the fleet, so the charge is a floor rather than the full effect if the pace holds.</p>');
+
+  h += '<div class="ov-sec-h">What else sat inside FY2025 reported profit</div>';
+  h += '<p class="ov-lede">A second reason FY2025 margins are hard to compare: an unusually loaded year of settlements, severance and impairments, ' +
+    'which is why &ldquo;Other operating expense, net&rdquo; swung to <b>−$4.6B</b> from −$0.8B in FY2024.</p>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
+    '<th class="rs-ft-h">Item</th><th>FY2025 amount</th><th>Where it was booked</th><th>Segment hit</th>' +
+    '</tr></thead><tbody>' +
+    [['FTC lawsuit settlement (Q3)', '$2.5B', 'Other operating expense, net', 'North America'],
+     ['Q4 settlements, tax disputes, severance, impairments', '$2.4B', 'Other operating expense, net &amp; Fulfillment', 'mostly International'],
+     ['&nbsp;&nbsp;— of which Italy tax disputes + a lawsuit', '$1.1B', 'Other operating expense, net &amp; Fulfillment', 'International'],
+     ['Severance for planned role eliminations', '~$2.7B', 'Technology &amp; infrastructure · Fulfillment · Sales &amp; marketing', 'all segments'],
+     ['Asset impairments', '~$1.3B', 'operating expenses', 'all segments']].map(function(r){
+      return '<tr class="rs-ft-main"><td class="rs-ft-h">' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + r[3] + '</td></tr>';
+    }).join('') + '</tbody></table></div>';
+  h += '<p class="ov-fynote">The severance ($1.8B in Q3, $730M in Q4) is <b>not</b> in &ldquo;Other operating expense&rdquo; — it is spread across the ' +
+    'three functional expense lines, so it depresses each of them without ever appearing as a one-off. That is the item most likely to be read as ' +
+    'operating deleverage when it is a charge.</p>';
+
+  h += '<div class="ov-sec-h">And one that never touches operating income at all</div>';
+  h += '<p class="ov-lede">FY2025 <b>Other income (expense), net was +$15.2B</b>, against −$2.3B in FY2024 — of which <b>$7.7B</b> was the valuation gain ' +
+    'on private-company equity, primarily the <b>Anthropic</b> nonvoting preferred. It is below the operating line, it is non-cash, and it is the single ' +
+    'largest swing in the FY2025 income statement. The <b>Normalized</b> toggle on <b>Bottom Line ▸ General</b> strips it; ' +
+    '<b>Miscellaneous ▸ M&amp;A</b> covers why the stake exists.</p>';
+
+  h += '<div class="ov-foot">Useful-life changes and their quantified effects per the 10-K that announced each one (FY2020, FY2022, FY2023, FY2024 and ' +
+    'FY2025 Form 10-K, Note 1 — Description of Business and Accounting Policies). FY2025 charges and Other income per the FY2025 10-K. ' +
+    'Every amount is Amazon\'s own disclosure; no Summit adjustment is applied on this tab.</div>';
+  return h;
 }
 function deepDiveHtml(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring
-  var h='<div class="ov ov-amzn ov-amzn-dd" data-brand="AMZN" style="--brand:'+BRAND+';--brand-2:'+BRAND2+';--brand-soft:rgba(255,153,0,0.10)">';
+  ceStyleReset();   // one copy of the Earnings CSS per render, not one per phase body
+  var h='<div class="ov ov-amzn ov-amzn-dd" data-brand="AMZN" style="--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">';
   h+='<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
       '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
@@ -5267,6 +5497,9 @@ function wireModal(root){
   function openM(t,b){ mT.innerHTML=t; mB.innerHTML=b; back.hidden=false; requestAnimationFrame(function(){ back.classList.add('on'); }); document.addEventListener('keydown', onEsc); }
   function closeM(){ back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden=true; }, 180); }
   root.querySelector('#amznModalX').onclick=closeM; back.onclick=function(e){ if(e.target===back) closeM(); };
+  // The modal is hoisted to #co-detailview so it survives a hidden pane — which also means a tab
+  // switch would leave it floating over the pane the reader just moved to. wireDD calls this.
+  root._amznCloseModal=closeM;
   function resolve(key){
     var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
     if(kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
@@ -5322,7 +5555,7 @@ function aBuildSub(root, dd, key){
     }
     if(key==='results') requestAnimationFrame(function(){
       initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'AMZN'); });
-    if(key==='estevo') requestAnimationFrame(initResultsEvo);
+    if(key==='estevo') requestAnimationFrame(function(){ initResultsEvo('AMZN'); });
   }
 }
 // Give the Evolution sub-tab bar (Earnings · Results · Estimates) and the phase bar (Setup · Post-Results
@@ -5339,8 +5572,10 @@ function ceEqualizeTabBars(root){
     el.querySelectorAll(':scope > button').forEach(function(btn){ btn.style.flex='1'; }); });
 }
 function wireDD(root){
+  function shutModal(){ if(root._amznCloseModal) root._amznCloseModal(); }
   root.querySelectorAll('.ov-amzn-dd .dd-tab').forEach(function(btn){ btn.onclick=function(){
     var key=btn.getAttribute('data-dd');
+    shutModal();
     root.querySelectorAll('.ov-amzn-dd .dd-tab').forEach(function(b){ b.classList.toggle('active', b===btn); });
     root.querySelectorAll('.ov-amzn-dd .dd-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-dd')!==key); });
     var pane=root.querySelector('.ov-amzn-dd .dd-pane[data-dd="'+key+'"]');
@@ -5356,6 +5591,7 @@ function wireDD(root){
     var SUB=':scope > .ovt-subtabs > .ovt-subtab, :scope > .ce-evohead > .ovt-subtabs > .ovt-subtab';
     pane.querySelectorAll(SUB).forEach(function(btn){ btn.onclick=function(){
       var key=btn.getAttribute('data-ovst');
+      shutModal();
       ceKeepPos(btn, function(){
         pane.querySelectorAll(SUB).forEach(function(b){ b.classList.toggle('active', b===btn); });
         pane.querySelectorAll(':scope > .ovt-subpane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovst')!==key); });

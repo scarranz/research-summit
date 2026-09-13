@@ -37,6 +37,7 @@ import { amznResults } from './results-data/amzn.js';
 import { dhrResults } from './results-data/dhr.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
+import { SUMMIT_CAT, SUMMIT_MUTE } from './viz-palette.js';   // the portal's fixed categorical palette
 
 // The Notes taxonomy names segments in prose; the datasets key them. One map, stated once.
 var THEME_SEG = { AMZN: { 'Amazon US': 'na', 'Amazon International': 'intl', 'AWS': 'aws' } };
@@ -60,7 +61,12 @@ function coName(){
 var RS_ACT  = 'rgba(30,39,51,0.92)';
 var RS_CONS = 'rgba(124,134,148,0.85)';
 var RS_FWD  = '#2563EB';
-var SG_RAMP = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0', '#7A5AF8', '#2E8B57'];
+// WAS a six-step ramp — four blues, a violet and a green — used to tell SEGMENTS apart. A ramp
+// encodes magnitude, not identity, so the seven product lines on Top Line ▸ Other arrived as seven
+// near-identical blues that no reader could separate. It also CYCLED (`i % length`), so a
+// hypothetical seventh entity silently re-used the first one's colour. Both are categorical-colour
+// errors. Now the portal's fixed categorical order, assigned by slot and never cycled.
+var SG_RAMP = SUMMIT_CAT;
 
 function rsRR(ctx, x, y, w, h, r){
   ctx.beginPath();
@@ -468,7 +474,7 @@ function modesHtml(id, opts){
 function chipsHtml(id, list, view, firstIsTarget){
   return blockSeries(list, view).map(function(x, i){
     var money = x.d.unit === 'usdM' || x.d.unit === 'eps';
-    var color = !money ? RS_CONS : (firstIsTarget && i === 0 ? RS_ACT : SG_RAMP[i % SG_RAMP.length]);
+    var color = !money ? RS_CONS : (firstIsTarget && i === 0 ? RS_ACT : (SG_RAMP[i] || SUMMIT_MUTE));
     return '<button type="button" class="rs-leg' + (vis(id, x.key) ? '' : ' off') +
       '" data-sgleg="' + esc(id) + '|' + esc(x.key) + '" title="Show / hide">' +
       '<span class="rs-leg-line" style="background:' + color + '"></span>' +
@@ -536,7 +542,7 @@ function buildChartBlock(id, list, view, opts){
       return (x.d.unit === 'usdM') ? v / 1000 : (x.d.unit === 'pct' ? v * 100 : v);
     });
     var isTarget = opts.firstIsTarget && i === 0;
-    var color = !m ? RS_CONS : (isTarget ? RS_ACT : SG_RAMP[i % SG_RAMP.length]);
+    var color = !m ? RS_CONS : (isTarget ? RS_ACT : (SG_RAMP[i] || SUMMIT_MUTE));
     datasets.push((m && opts.bars && !isTarget)
       ? { label: x.label || x.d.short, data: data, type: 'bar', backgroundColor: color,
           maxBarThickness: 34, order: 3, yAxisID: 'y' }
@@ -771,9 +777,12 @@ function drill(id, title, body, needs){
         (needs ? '<div class="sg-needs">⚑ ' + esc(needs) + '</div>' : '') +
       '</div></div></div>';
 }
+// `n` is kept in the signature — every call site passes it and it still orders the sections — but
+// the numbered badge is no longer drawn (SAB, Sep 2026). The sections read as a sequence without
+// being counted at the reader, and dropping one no longer leaves a gap in the numbering.
 function sec(n, title, sub, body){
   return '<section class="sg-sec">' +
-    '<div class="sg-sec-h"><span class="sg-sec-n">' + n + '</span>' + esc(title) +
+    '<div class="sg-sec-h">' + esc(title) +
       (sub ? '<span class="sg-sec-sub">' + esc(sub) + '</span>' : '') + '</div>' + body + '</section>';
 }
 
@@ -1274,14 +1283,13 @@ export function segmentsOverviewHtml(ticker){
     sec(2, 'How revenue divides', 'amount · share · growth',
       chartBlockHtml('ovrev', ovList(d, 'rev'), view, OV_REV) +
       '<div class="ov-fynote">The number above each column is the group total. <b>Share</b> gives the composition and <b>Growth</b> the rate; <b>Side by side</b> drops the stacking when you want to compare segments to each other rather than to the whole. Share re-bases on whatever is visible, so hiding a segment with its chip asks “of the rest, how much is this”. What each segment earns on this revenue is in Bottom Line.</div>');
-  if (ov.interactions && ov.interactions.length){
-    h += sec(3, 'How the segments act on each other', ov.interactions.length + ' interactions',
-      '<div class="sg-ix">' + ov.interactions.map(function(it){
-        return '<div class="sg-ix-i"><div class="sg-ix-n">' + esc(it.name) + '</div>' +
-          '<p class="sg-ix-w">' + esc(it.what) + '</p>' +
-          (it.evidence ? '<p class="sg-ix-e">' + esc(it.evidence) + '</p>' : '') + '</div>';
-      }).join('') + '</div>');
-  }
+  // "How the segments act on each other" was section 3 here and is no longer rendered (SAB, Sep
+  // 2026). General now answers two questions and stops: what the segments ARE, and how the revenue
+  // divides between them.
+  // The four cards are NOT rendered anywhere else — the "Revenue interactions" section further up
+  // is a different thing (per-segment `s.interactions`, on the Segments sub-tab). Their content is
+  // still carried in the dataset at `seg.overview.interactions`, so restoring the section or moving
+  // it to another sub-tab is one call to sec(); it is simply not drawn today.
   return h + '<div class="ov-fynote sg-src">' + esc(d.seg.source) + '</div></div>';
 }
 function renderOverview(){
@@ -1402,25 +1410,39 @@ function custSplcSection(c, n){
         'revenue the named customers account for between them. Under ~10% it renders as a list of ' +
         'disclosed relationships, never as a concentration chart.</p>'));
   }
-  var rows = sp.customers.slice().sort(function(a, b){ return (b.pct || 0) - (a.pct || 0); });
-  var cov = sp.sumPct != null
-    ? 'They account for <b>' + pctStr(sp.sumPct / 100) + '</b> of revenue between them; the other ' +
-      pctStr(1 - sp.sumPct / 100) + ' is not attributed to anyone here.'
+  var rows = sp.customers.slice().sort(function(a, b){ return (b.amtM || 0) - (a.amtM || 0); });
+  // How much of the company this register actually reaches. Deliberately the FIRST thing said: a
+  // census this thin is a fact about the SOURCE, and reading it as concentration would be wrong.
+  var covPct = (sp.sizedSumM != null && sp.revBaseM) ? (sp.sizedSumM / sp.revBaseM * 100) : null;
+  var cov = covPct != null
+    ? 'The ' + sp.sized + ' sized relationships add to about <b>$' + (sp.sizedSumM / 1000).toFixed(1) +
+      'B</b> as filed — under <b>' + (covPct < 0.2 ? '0.2' : covPct.toFixed(1)) + '%</b> of ' +
+      esc(sp.revBaseLabel || 'revenue') + '. Read that as the reach of the register, not as ' +
+      'concentration: this company\'s customers are consumers and small sellers, and consumers do ' +
+      'not file.'
     : 'None of them carries a size, so they can be listed but not ranked.';
   return sec(n, 'Who has said they buy from ' + coName(), sp.named + ' named · ' + sp.sized + ' sized',
     '<p class="sg-lede">' + tierTag('COUNTERPARTY') +
       'Assembled by Bloomberg from what these companies filed about ' + coName() + ', not from what it ' +
       'filed about them. ' + cov + '</p>' +
     '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
-      '<th class="rs-ft-h">Customer</th><th>Ticker</th><th>Relationship</th>' +
-      '<th>% of revenue</th><th>Basis</th><th>As of</th></tr></thead><tbody>' +
+      '<th class="rs-ft-h">Customer</th><th>Ticker</th><th>What the relationship is</th>' +
+      '<th>Size as filed</th><th>Share of their cost</th><th>Basis</th></tr></thead><tbody>' +
       rows.map(function(r){
+        // Periods differ per counterparty and are NOT annualised, so each size is shown with the
+        // period it belongs to. A blank size is a disclosed relationship Bloomberg never sized.
+        var size = r.amtM == null ? '<span class="rs-ft-nil">not sized</span>'
+          : '$' + (r.amtM >= 1000 ? (r.amtM / 1000).toFixed(1) + 'B' : r.amtM.toFixed(1) + 'M') +
+            ' <span class="rs-ft-dim">· ' + esc(r.period || '') + '</span>';
         return '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(r.name) + '</td>' +
-          '<td>' + esc(r.ticker || '—') + '</td><td>' + esc(r.relationship || '—') + '</td>' +
-          '<td>' + (r.pct == null ? '—' : pctStr(r.pct / 100)) + '</td>' +
-          '<td>' + esc(r.basis || '—') + '</td><td>' + esc(r.asOf || '—') + '</td></tr>';
+          '<td>' + esc(r.ticker || '—') + '</td><td>' + esc(r.what || r.relationship || '—') + '</td>' +
+          '<td>' + size + '</td>' +
+          '<td>' + (r.theirPct == null ? '<span class="rs-ft-nil">—</span>' : r.theirPct.toFixed(1) + '%') + '</td>' +
+          '<td>' + esc(r.basis || '—') + '</td></tr>';
       }).join('') + '</tbody></table></div>' +
-    '<p class="sg-cite">' + esc(sp.source) + (sp.file ? ' · ' + esc(sp.file) : '') + '</p>');
+    '<p class="sg-cite">Share of their cost = SPLC cost percentage: how much of that counterparty\'s ' +
+      'tracked cost goes to this company. ' + esc(sp.source) +
+      (sp.file ? ' · ' + esc(sp.file) : '') + '</p>');
 }
 
 // ── the two card decks, in the same master-detail language as the rest of Top Line ────────────

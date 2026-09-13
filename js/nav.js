@@ -12,11 +12,10 @@ const TAB_MAP = {
   'hedge-funds': 'inv',
   'team': 'team',
   'fund-returns': 'ret',
-  'covered-calls': 'cc',
   'tools': 'tools',
   'dcf-models': 'dcf',
   'betas': 'betas',
-  'buy-calls': 'bc',
+  'derivatives': 'der',
 };
 
 const TAB_TITLES = {
@@ -26,11 +25,10 @@ const TAB_TITLES = {
   'inv': 'Hedge Funds',
   'team': 'Team',
   'ret': 'Return Analysis',
-  'cc': 'Covered Calls',
   'tools': 'Tools',
   'dcf': 'DCF Models',
   'betas': 'Betas',
-  'bc': 'Buy Calls',
+  'der': 'Derivatives',
 };
 
 export function registerPageLoader(page, loader) {

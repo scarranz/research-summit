@@ -1,28 +1,89 @@
 // Covered Calls tab — live covered-call book. Price + option chain (premium/IV/
 // greeks) come from Massive via the covered-calls-massive edge function; forward
-// EBITDA/EPS come from the Summit snapshot. Computes the covered-call economics
-// and the "valuation if exercised" multiples. Everything is in %.
+// EBITDA/EPS come from js/options-data.js on whichever source the Estimates toggle
+// is on — the Summit model or the Bloomberg consensus carried in the same snapshot.
+// Computes the covered-call economics and the "valuation if exercised" multiples.
+// Everything is in %.
 import { POSITIONS } from './covered-calls-positions.js';
-import { SUMMIT } from './covered-calls-summit.js';
-import { coveredCallsQuote } from './api.js';
+import { EST_STORE, optSources } from './options-data.js';
+// The shared engine. Everything that is not specific to running a BOOK of covered
+// calls is read from here rather than kept in a second copy, so a multiple, a
+// date and a growth rate mean the same thing in all four Derivatives panes — see
+// the header of options-core.js. What stays local is only what makes this tab a
+// book: the positions and their weights, the quarterly roll date, the
+// strike-from-a-multiple input, the table and its totals.
+import { esc, ageDays, STALE_DAYS, ensureFx, fxRate as coreFxRate,
+         selToggle, selHas, selCount, selClear, symbolOf, cash,
+         instrumentsBar, renderInstruments, onSelection,
+         mfetch, daysTo, px, mult, pct, pctS as pctSign,
+         resolveSource, estimatesFor, effYears,
+         multiplesAt, capital, growth, cagr as coreCagr } from './options-core.js';
+
+// ── The estimate set for one name ─────────────────────────────────────────────
+// One call into the engine, which is the whole point: the fiscal-year re-key, the
+// merge of reported years into a Street column, the EPS derivation and the choice
+// of source all happen in options-data.js / options-core.js, once, for all four
+// Derivatives panes. This tab used to carry its own copy of every one of them —
+// and each new fact then had to be fixed twice, which is how NVIDIA came to show
+// 48x here and 23x in the ladders on the same day, on the same year.
+//
+// `fellBack` is the one piece of judgement left here: where a name has no set on
+// the selected source — GOOGL and TSM are in the book but not in the Summit DCF
+// universe — the engine's resolveSource() hands back the other one rather than
+// leaving the row blank, and the row is tagged so a Street number is never
+// mistaken for a house number. See the `cons` chip beside the ticker.
+function SU(ticker) {
+  const want = resolveSource(ticker, estSrc);
+  const e = estimatesFor(ticker, want);
+  if (!e) return null;
+  // No revenue-growth sensitivity in a book — the ladder panes flex estimates,
+  // a position does not — so the years come through unflexed.
+  const years = effYears(e, {});
+  const reported = Object.keys(years).map(Number).filter((y) => !years[y].est);
+  return {
+    e, years,
+    // Per NAME, not per book: NVIDIA's January year is already closed while
+    // everyone else's 2026 is still a forecast, which is why the E lives in the
+    // cell rather than in the column header.
+    lastActual: reported.length ? Math.max.apply(null, reported) : null,
+    fellBack: want !== estSrc,
+    srcUsed: want,
+  };
+}
 
 const $ = (id) => document.getElementById(id);
 
-// Foreign currency → Massive forex pair. invert=true means the pair is USD/XXX,
-// so XXX→USD = 1 / close (e.g. USDMXN). EUR uses EURUSD directly.
-const FXCFG = { EUR: { pair: 'EURUSD', invert: false }, MXN: { pair: 'USDMXN', invert: true } };
-const T0 = 2025;                 // last reported fiscal year (t0)
-const FY = [T0, T0 + 1, T0 + 2]; // t0, t+1, t+2 shown in the fundamentals block
-const fyLabel = (y) => `FY${String(y).slice(2)}${y > T0 ? 'E' : ''}`;
+// The FX table used to live here, knowing only EUR and MXN. It now lives in
+// options-core.js alongside the three ladder panes' copy of the same problem, so
+// adding a currency (TWD, for TSM) is one edit and every pane gets it.
+// The last reported year. The fundamentals block draws ONE set of calendar
+// columns for the whole book, so it needs a single one — and it is asked of the
+// engine rather than typed in, because a typed year is a year that goes wrong in
+// silence: when the models roll and FY2026 closes, a hardcoded 2025 would leave
+// the whole book pricing against a year already reported, which is precisely the
+// bug that made NVIDIA read 48x instead of 23x.
+//
+// Asked on 'summit' because a REPORTED year is the same figure under either
+// source, and taken as the latest any name in the book has: NVIDIA's January
+// year is re-keyed onto the calendar by the engine, so every name agrees today.
+const T0 = (() => {
+  const reported = [];
+  POSITIONS.forEach((p) => {
+    const e = estimatesFor(p.ticker, resolveSource(p.ticker, 'summit'));
+    if (!e) return;
+    Object.keys(e.years).forEach((y) => { if (!e.years[y].est) reported.push(+y); });
+  });
+  return reported.length ? Math.max.apply(null, reported) : 2025;
+})();
+const FY = [T0, T0 + 1, T0 + 2, T0 + 3]; // t0..t+3 shown in the fundamentals block. The
+                                        // store runs to FY2028, so the block and the
+                                        // Multiple basis both reach it.
+const fyLabel = (y) => `FY${String(y).slice(2)}`;
 
-// ── Massive proxy (via the edge function) ─────────────────────────────────────
-async function mfetch(resource, ticker, params = {}) {
-  const res = await coveredCallsQuote(resource, ticker, params);
-  if (!res.success) throw new Error(res.error?.message || 'request failed');
-  return res.data;
-}
-
-// tiny concurrency limiter so we don't hammer the proxy / hit rate limits
+// A tiny concurrency limiter so fourteen positions do not hammer the proxy. This
+// one is local on purpose: the three ladder panes fetch ONE chain for ONE name,
+// while this tab fetches a contract per position — the queue is a property of
+// holding a book, not of pricing an option.
 function pLimit(n) {
   let active = 0; const q = [];
   const next = () => { if (active >= n || !q.length) return; active++; const { fn, res, rej } = q.shift();
@@ -32,14 +93,16 @@ function pLimit(n) {
 const limit = pLimit(5);
 
 // ── Formatting ────────────────────────────────────────────────────────────────
-// No money formatter — the whole analysis is in %. Price is the only $ figure.
-const px   = (x) => (x == null || isNaN(x)) ? '—' : `$${x.toFixed(2)}`;
-const mult = (x) => (x == null || isNaN(x) || !isFinite(x)) ? '—' : `${x.toFixed(1)}x`;
-const pct  = (x, d = 1) => (x == null || isNaN(x)) ? '—' : `${(x * 100).toFixed(d)}%`;
-const pctSign = (x, d = 1) => (x == null || isNaN(x)) ? '—' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(d)}%`;
-// compact magnitude for values already expressed in millions (currency-neutral)
-const bn = (x) => {
-  if (x == null || isNaN(x)) return '—';
+// px / mult / pct / pctSign and the Massive proxy come from the engine now; the
+// analysis is in % and price is the only $ figure, so there is no money formatter.
+//
+// `mag` does NOT come from the engine, and must not be replaced by its bn(): the
+// fundamentals block prints EBITDA and net income in the company's REPORTING
+// currency (TBBB in pesos, SPOT in euros, TSM in Taiwan dollars), so the figure
+// deliberately carries no currency symbol. The engine's bn() prefixes a `$`,
+// which would label a peso figure as dollars.
+const mag = (x) => {
+  if (x == null || !isFinite(x)) return '—';
   const a = Math.abs(x), s = x < 0 ? '-' : '';
   return a >= 1000 ? `${s}${(a / 1000).toFixed(1)}B` : `${s}${a.toFixed(0)}M`;
 };
@@ -47,8 +110,12 @@ const bn = (x) => {
 // ── State ─────────────────────────────────────────────────────────────────────
 let rows = POSITIONS.map((p, i) => ({ id: i, ...p, override: null, live: null, loading: true, err: null }));
 let expiry = null;
-let mulBasis = '2026E';  // '2026E' | '2027E' | 'NTM' — fundamental year driving every multiple + PEG
+let mulBasis = '2027E';  // '2026E' | '2027E' | '2028E' | 'NTM' — the year every multiple + PEG is on.
+                         // Opens on 2027E: it is the year the book's strikes were set against.
+let estSrc = 'summit';   // 'summit' | 'consensus' — whose estimates every multiple uses
 let showFund = true;     // show/hide the EBITDA & Net Income blocks
+let showMinPort = false; // the Min. portfolio column — off by default, purely informative
+let instOpen = false;    // the Add to Instruments panel
 let sortKey = null;      // 'wt' | 'yield' | 'portyield' | 'contrib' | null (book order)
 let sortDir = -1;        // -1 = descending (high→low), 1 = ascending
 
@@ -60,30 +127,73 @@ function ntmFrac() {
   return Math.min(1, Math.max(0, (end - now) / 86400000 / 365));
 }
 
-// EBITDA / earnings (+ their YoY growth) for the selected basis, native currency.
-function basisFundamentals(ticker) {
-  const su = SUMMIT[ticker];
+// ── The basis: which year the multiples are on ────────────────────────────────
+// Returns the year rows plus the year to read them at, in exactly the shape
+// options-core.js wants — so every multiple on this page is computed by the same
+// multiplesAt() the three ladder panes use, and the FX conversion, the ADR ratio,
+// the forward share count and the net-debt fallback all happen in one place.
+//
+// NTM is the one thing the engine has no concept of, because it has no quarterly
+// data to build one from: it is a calendar blend of t+1 and t+2, weighted by how
+// much of the next twelve months falls in each. Making it a SYNTHETIC YEAR ROW
+// rather than a separate calculation is what lets it go through the engine
+// unchanged — as far as multiplesAt() is concerned, 'NTM' is just another year.
+//
+// A missing side of the blend leaves every field null, which is what the old
+// blend() did too: an NTM built off one year is not an NTM.
+function basisFrame(su) {
   if (!su || !su.years) return null;
-  const yv = (y, k) => su.years[y]?.[k];
-  const g  = (y, k) => (yv(y, k) != null && yv(y - 1, k) != null && yv(y - 1, k) > 0) ? yv(y, k) / yv(y - 1, k) - 1 : null;
-  if (mulBasis === '2026E') return { ebitda: yv(FY[1], 'ebitda'), earnings: yv(FY[1], 'earnings'), gEb: g(FY[1], 'ebitda'), gEa: g(FY[1], 'earnings') };
-  if (mulBasis === '2027E') return { ebitda: yv(FY[2], 'ebitda'), earnings: yv(FY[2], 'earnings'), gEb: g(FY[2], 'ebitda'), gEa: g(FY[2], 'earnings') };
-  const f = ntmFrac(); // NTM = calendar blend of t+1 and t+2
-  const blend = (a, b) => (a != null && b != null) ? f * a + (1 - f) * b : null;
-  return {
-    ebitda:   blend(yv(FY[1], 'ebitda'),   yv(FY[2], 'ebitda')),
-    earnings: blend(yv(FY[1], 'earnings'), yv(FY[2], 'earnings')),
-    gEb: blend(g(FY[1], 'ebitda'),   g(FY[2], 'ebitda')),
-    gEa: blend(g(FY[1], 'earnings'), g(FY[2], 'earnings')),
+  const E = su.years;
+  if (mulBasis !== 'NTM') return { E, year: +mulBasis.slice(0, 4), ntm: false };
+  const f = ntmFrac();
+  const A = E[FY[1]] || {}, B = E[FY[2]] || {};
+  const bl = (a, b) => (a != null && b != null) ? f * a + (1 - f) * b : null;
+  const NTM = {
+    rev: bl(A.rev, B.rev), ebitda: bl(A.ebitda, B.ebitda),
+    netIncome: bl(A.netIncome, B.netIncome),
+    shares: bl(A.shares, B.shares), netDebt: bl(A.netDebt, B.netDebt), est: true,
   };
+  NTM.eps = (NTM.netIncome != null && NTM.shares) ? NTM.netIncome / NTM.shares : null;
+  return { E: { ...E, NTM }, year: 'NTM', ntm: true };
 }
 
-// CAGR from t0 (FY[0]) to t+2 (FY[2]); null unless both endpoints are positive.
+// YoY growth of one line on the basis year — what the PEG divides by. Blended on
+// NTM, for the same reason the levels are.
+function basisGrowth(su, key) {
+  const fr = basisFrame(su);
+  if (!fr) return null;
+  if (!fr.ntm) return growth(fr.E, key, fr.year);
+  const f = ntmFrac();
+  const g1 = growth(su.years, key, FY[1]), g2 = growth(su.years, key, FY[2]);
+  return (g1 != null && g2 != null) ? f * g1 + (1 - f) * g2 : null;
+}
+
+// Where the CAGR ends: the year the multiples are on, NOT the last column drawn.
+// The row asks one question — "what am I agreeing to on THIS year" — and a growth
+// rate measured to a year you are not underwriting answers a different one. Move
+// the Multiple basis and the CAGR moves with it, which is also what makes it
+// comparable to the PEG sitting beside it, since the PEG divides by the basis
+// year's growth.
+function basisEnd() {
+  return mulBasis === 'NTM' ? FY[1] + (1 - ntmFrac()) : +mulBasis.slice(0, 4);
+}
+// The label for that endpoint — the header prints it, because a CAGR whose window
+// moves under a toggle is unreadable without saying where it stops.
+function basisEndLabel() { return mulBasis === 'NTM' ? 'NTM' : fyLabel(Math.round(basisEnd())); }
+
+// t0 -> the basis year. The engine's cagr() for a dated year; NTM keeps its own
+// line because it lands BETWEEN two years, so the exponent is the fractional
+// horizon and the endpoint is the blended figure itself.
 function cagr(ticker, key) {
-  const su = SUMMIT[ticker];
-  if (!su || !su.years) return null;
-  const a = su.years[FY[0]]?.[key], b = su.years[FY[2]]?.[key];
-  return (a != null && b != null && a > 0 && b > 0) ? Math.pow(b / a, 1 / (FY[2] - FY[0])) - 1 : null;
+  const su = SU(ticker);
+  if (!su) return null;
+  if (mulBasis !== 'NTM') return coreCagr(su.years, key, FY[0], +mulBasis.slice(0, 4));
+  const fr = basisFrame(su);
+  const a = su.years[FY[0]] && su.years[FY[0]][key];
+  const b = fr.E.NTM && fr.E.NTM[key];
+  const yrs = basisEnd() - FY[0];
+  return (a != null && b != null && a > 0 && b > 0 && yrs > 0)
+    ? Math.pow(b / a, 1 / yrs) - 1 : null;
 }
 
 // ── Pull one option contract (premium/IV/greeks) for a strike+expiry ──────────
@@ -102,6 +212,78 @@ function pickFrom(results, wantStrike, wantExpiry) {
   // nearest strike to target
   pool.sort((a, b) => Math.abs(a.details.strike_price - wantStrike) - Math.abs(b.details.strike_price - wantStrike));
   return pool[0] || null;
+}
+
+// ── Strikes the book doesn't name ─────────────────────────────────────────────
+// The nearest listed strike AT OR ABOVE spot: the first covered call that would
+// not agree to sell the shares below today's price. Resolved live rather than
+// guessed in the data file, and flagged in the table so a strike the tab picked
+// is never mistaken for one somebody chose.
+async function autoStrike(ticker, wantExpiry) {
+  const j = await mfetch('chain', ticker, { contract_type: 'call', expiration_date: wantExpiry, limit: 250 });
+  const list = (j.results || []).filter((c) => c.details?.contract_type === 'call'
+    && c.details?.expiration_date === wantExpiry);
+  if (!list.length) return null;
+  const spot = list.find((c) => c.underlying_asset?.price)?.underlying_asset?.price;
+  if (spot == null) return null;
+  const ks = [...new Set(list.map((c) => c.details.strike_price))].sort((a, b) => a - b);
+  return ks.find((k) => k >= spot) ?? ks[ks.length - 1];
+}
+
+// ── Strike FROM a multiple ────────────────────────────────────────────────────
+// metrics() takes a strike and reports the multiple it implies. This is the same
+// arithmetic read backwards, because that is the order the decision actually
+// happens in: you do not pick $570 on Mastercard, you decide you are content to
+// be called away at 24x and find out that means $570.
+//
+//   EV/EBITDA :  EV = M x EBITDA, so equity = M x EBITDA - net debt
+//   P/E       :  price = M x EPS, i.e. equity = M x earnings
+//
+// Everything is on the SELECTED basis year and the SELECTED estimate source, in
+// USD, with the ADR ratio applied — the same inputs the forward multiple uses, so
+// typing a number back into the cell it came out of returns the strike it came from.
+function strikeFromMultiple(row, kind, M) {
+  const L = row.live;
+  if (!L || row.isEtf || !(M > 0)) return null;
+  const su = SU(row.ticker);
+  const fr = basisFrame(su);
+  if (!fr) return null;
+  const y = fr.E[fr.year];
+  if (!y) return null;
+  // The same inputs multiplesAt() uses, read through the same helpers, so typing
+  // a number back into the cell it came out of returns the strike it came from.
+  // Everything is in millions here, as it is in the engine.
+  const fx = coreFxRate(su.e.currency);
+  if (fx == null) return null;
+  const adr = su.e.adrRatio || 1;
+  const cap = capital(fr.E, fr.year, L);
+  if (kind === 'ev') {
+    const shares = (cap.shares != null) ? cap.shares / adr : null;
+    const eb = (y.ebitda != null) ? y.ebitda * fx : null;
+    const nd = (cap.netDebt == null) ? null : (cap.native ? cap.netDebt * fx : cap.netDebt);
+    if (!shares || !(eb > 0) || nd == null) return null;
+    return (M * eb - nd) / shares;
+  }
+  // P/E inverts to price = M x EPS directly — no share count needed, because the
+  // engine's EPS is already per ADS once the ratio is applied.
+  const eps = (y.eps != null) ? y.eps * adr * fx : null;
+  if (!(eps > 0)) return null;
+  return M * eps;
+}
+
+// The listed strike closest to a price. A multiple almost never lands on one, and
+// silently keeping the unlisted number would leave a row that cannot be traded —
+// so it snaps, and the cell then shows the multiple the LISTED strike actually
+// gives, which is a slightly different number from the one that was typed.
+async function nearestListed(ticker, wantExpiry, target) {
+  const j = await mfetch('chain', ticker, {
+    contract_type: 'call', expiration_date: wantExpiry,
+    'strike_price.gte': Math.max(0.5, target * 0.45), 'strike_price.lte': target * 1.8, limit: 250 });
+  const ks = [...new Set((j.results || [])
+    .filter((c) => c.details && c.details.contract_type === 'call' && c.details.expiration_date === wantExpiry)
+    .map((c) => c.details.strike_price))].sort((a, b) => a - b);
+  if (!ks.length) return null;
+  return ks.reduce((best, k) => Math.abs(k - target) < Math.abs(best - target) ? k : best, ks[0]);
 }
 
 async function fetchCall(ticker, strike, wantExpiry) {
@@ -123,14 +305,30 @@ async function fetchCall(ticker, strike, wantExpiry) {
 async function fetchRow(row) {
   row.loading = true; row.err = null;
   try {
-    const tasks = [limit(() => fetchCall(row.ticker, row.strike, expiry))];
-    if (!row.isEtf) {
-      tasks.push(limit(() => mfetch('details', row.ticker).catch(() => null)));
-      tasks.push(limit(() => mfetch('ratios', row.ticker).catch(() => null)));
-      const su = SUMMIT[row.ticker];
-      if (su && su.currency !== 'USD') tasks.push(limit(() => mfetch('fx', FXCFG[su.currency].pair).catch(() => null)));
+    // A position with no strike in the book gets one from the chain first.
+    if (row.strike == null) {
+      row.strike = await limit(() => autoStrike(row.ticker, expiry));
+      row.autoStrike = true;
+      if (row.strike == null) throw new Error(`no listed calls at ${expiry}`);
     }
-    const [contract, details, ratiosResp, fxResp] = await Promise.all(tasks);
+    // `ratios` is fetched for ETFs too — it carries the price, which is the one
+    // figure an index fund still needs. Only the fundamentals behind the
+    // multiples are skipped for them.
+    const tasks = [
+      limit(() => fetchCall(row.ticker, row.strike, expiry)),
+      limit(() => (row.isEtf ? Promise.resolve(null) : mfetch('details', row.ticker).catch(() => null))),
+      limit(() => mfetch('ratios', row.ticker).catch(() => null)),
+    ];
+    // The reporting currency is a property of the TICKER, not of the estimate
+    // source selected right now — read it from the store, not through SU(). SU()
+    // returns null when the current source has no numbers for that name, which is
+    // exactly TSM's case on the Summit toggle: the rate was never fetched, and a
+    // TWD net income then divided a USD price as if it were dollars.
+    // One request per CURRENCY per session: ensureFx caches, so fourteen
+    // positions in three currencies cost three calls, not fourteen.
+    const cur0 = EST_STORE[row.ticker] && EST_STORE[row.ticker].currency;
+    if (!row.isEtf && cur0) tasks.push(limit(() => ensureFx(cur0)));
+    const [contract, details, ratiosResp] = await Promise.all(tasks);
 
     const d = details?.results || {};
     const rt = (ratiosResp?.results && ratiosResp.results[0]) || {};
@@ -138,24 +336,22 @@ async function fetchRow(row) {
     const premium = q.midpoint ?? contract?.day?.close ?? contract?.last_trade?.price ?? row.seedPrime ?? null;
     const price = contract?.underlying_asset?.price ?? rt.price ?? null;
     const shares = d.weighted_shares_outstanding ?? d.share_class_shares_outstanding ?? null;
-    const mktCap = (price && shares) ? price * shares : (rt.market_cap ?? null);
     const netDebt = (rt.enterprise_value != null && rt.market_cap != null) ? rt.enterprise_value - rt.market_cap : null;
 
-    let fxRate = 1, fxNote = '';
-    const su = SUMMIT[row.ticker];
-    if (su && su.currency !== 'USD') {
-      const cfg = FXCFG[su.currency]; const cc = fxResp?.results?.[0]?.c;
-      if (cc) { fxRate = cfg.invert ? 1 / cc : cc; fxNote = `${su.currency}→USD ${fxRate.toFixed(4)}`; }
-    }
-
+    // No fx fields on the row any more. Whether a name can be priced in USD, and
+    // at what rate, is the engine's answer — multiplesAt() declines to price a
+    // name it has no rate for. What still has to happen HERE is the ensureFx()
+    // above: the rate must be in the engine's cache before any multiple is taken.
     const lt = contract?.last_trade || {};
     row.live = {
       price, premium, iv: contract?.implied_volatility ?? null,
       delta: contract?.greeks?.delta ?? null, theta: contract?.greeks?.theta ?? null,
       oi: contract?.open_interest ?? null, name: d.name || row.ticker,
-      shares, mktCap, netDebt, fxRate, fxNote,
+      shares, netDebt,
       bid: q.bid ?? null, ask: q.ask ?? null, mid: q.midpoint ?? null,
       lastTrade: lt.price ?? null, lastTradeTs: lt.sip_timestamp ?? lt.timestamp ?? null,
+      sharesPerContract: contract?.details?.shares_per_contract ?? 100,
+      sym: contract?.details?.ticker ?? null,
       usedStrike: contract?.details?.strike_price ?? null,
       usedExpiry: contract?.details?.expiration_date ?? null,
     };
@@ -163,7 +359,48 @@ async function fetchRow(row) {
     row.err = e.message;
   } finally {
     row.loading = false;
+    syncPick(row);
   }
+}
+
+// ── How much of the premium the spread eats ──────────────────────────────────
+// The Premium column shows the MID, which is a fair-value estimate, not a price
+// anyone will pay you. Selling a covered call means hitting the BID, so half the
+// spread is a real cost taken off the yield the row is advertising — and on a thin
+// strike it is not a rounding error: a $0.10 spread on a $0.50 mid is 20% of the
+// premium gone before the trade exists.
+//
+// Measured relative to the mid, which is the standard way to compare a $0.05
+// spread on a $17 name with a $2 spread on a $650 one. Two bands:
+//   >= 10%  wide      — the mid is an optimistic estimate of what you will get
+//   >= 25%  very wide — or no bid at all, which is the same thing said louder
+// A missing bid is treated as the worst case rather than skipped, because "nobody
+// is bidding" is exactly what the column is there to warn about.
+function spreadOf(L) {
+  if (!L) return null;
+  const bid = L.bid, ask = L.ask;
+  if (ask == null || !(ask > 0)) return null;
+  const b = (bid == null) ? 0 : bid;
+  const mid = (L.mid != null && L.mid > 0) ? L.mid : (b + ask) / 2;
+  if (!(mid > 0)) return null;
+  const abs = ask - b;
+  return { abs, pct: abs / mid, noBid: !(b > 0), cross: (abs / 2) / mid };
+}
+const spreadClass = (sp) => !sp ? '' : (sp.pct >= 0.25 || sp.noBid ? ' spx' : (sp.pct >= 0.10 ? ' spw' : ''));
+
+// The smallest portfolio that can hold ONE contract of this position.
+// A contract is 100 shares, so covering it costs 100 x spot — and this position is
+// only `weight` of the book, so the book has to be that much bigger:
+//     100 x spot / weight
+// Informative only. It is the question "am I even large enough to write this",
+// which has nothing to do with whether the trade is good and everything to do with
+// whether it is available: at a 1% weight a $500 stock needs a $5M portfolio before
+// one contract fits inside the position.
+function minPortfolio(row) {
+  const L = row.live;
+  if (!L || L.price == null || !(row.weight > 0)) return null;
+  const per = (L.sharesPerContract || 100) * L.price;
+  return per / row.weight;
 }
 
 // ── Compute derived metrics for a row ─────────────────────────────────────────
@@ -184,29 +421,30 @@ function metrics(row) {
   // PEG = current multiple ÷ (basis growth in %); only meaningful when growth > 0.
   let evP = null, evS = null, peP = null, peS = null;
   let pegEv = null, pegPe = null, pegEvS = null, pegPeS = null;
-  const bf = basisFundamentals(row.ticker);
-  if (bf && L.shares && price != null && !row.isEtf) {
-    const f = L.fxRate, sh = L.shares;
-    const ebitdaUSD = (bf.ebitda != null) ? bf.ebitda * f * 1e6 : null;
-    const earnUSD = (bf.earnings != null) ? bf.earnings * f * 1e6 : null;
-    const mc = price * sh, mcS = row.strike * sh;
-    const nd = L.netDebt;
-    if (ebitdaUSD && nd != null) { evP = (mc + nd) / ebitdaUSD; evS = (mcS + nd) / ebitdaUSD; }
-    if (earnUSD && earnUSD > 0) { peP = mc / earnUSD; peS = mcS / earnUSD; }
-    const gEb = (bf.gEb && bf.gEb > 0) ? bf.gEb * 100 : null;
-    const gEa = (bf.gEa && bf.gEa > 0) ? bf.gEa * 100 : null;
+  const su = row.isEtf ? null : SU(row.ticker);
+  const fr = basisFrame(su);
+  if (fr && price != null) {
+    // One call, twice: the multiple at today's price and the multiple at the
+    // strike. multiplesAt() is where the FX conversion, the ADR ratio, the
+    // FORECAST share count for the basis year and the net-debt fallback live —
+    // the four facts this file used to re-implement, and the four that each had
+    // to be fixed twice. It also decides on its own that a name with no usable
+    // rate gets no multiple, which is what L.fxOk used to be for.
+    const at = (px) => multiplesAt(px, fr.year, fr.E, su.e, L);
+    const mP = at(price), mS = at(row.strike);
+    evP = mP.ev; peP = mP.pe;
+    evS = mS.ev; peS = mS.pe;
+    // PEG = the multiple at today's price / the basis year's growth in %.
+    // Only meaningful when growth is positive.
+    const gb = basisGrowth(su, 'ebitda'), ga = basisGrowth(su, 'netIncome');
+    const gEb = (gb && gb > 0) ? gb * 100 : null;
+    const gEa = (ga && ga > 0) ? ga * 100 : null;
     if (evP != null && gEb) pegEv = evP / gEb;
     if (peP != null && gEa) pegPe = peP / gEa;
     if (evS != null && gEb) pegEvS = evS / gEb;
     if (peS != null && gEa) pegPeS = peS / gEa;
   }
   return { price, premium, yld, upside, contrib, annContrib, annYld, days, evP, evS, peP, peS, pegEv, pegPe, pegEvS, pegPeS };
-}
-
-function daysTo(dateStr) {
-  if (!dateStr) return null;
-  const t = new Date(dateStr + 'T16:00:00'); const now = new Date();
-  return Math.max(0, Math.round((t - now) / 86400000));
 }
 
 // Massive option last_trade timestamps come in ns / ms / s — normalize and show
@@ -221,26 +459,51 @@ function tradeStamp(ts) {
 // EBITDA / Net Income for t0..t+2 with YoY growth, from the Summit model.
 // Returns [{ v, g }] per year (v = value in native-currency millions, g = YoY).
 function fundSeries(ticker, key) {
-  const su = SUMMIT[ticker];
+  const su = SU(ticker);
   if (!su || !su.years) return null;
   return FY.map((y) => {
     const cur = su.years[y]?.[key];
     const prev = su.years[y - 1]?.[key];
     const g = (cur != null && prev != null && prev > 0) ? cur / prev - 1 : null;
-    return { v: cur ?? null, g };
+    // Whether THIS name has reported that year, not whether the book has.
+    return { v: cur ?? null, g, est: y > su.lastActual };
   });
 }
 
-// One fundamentals block (5 cells): FY[0..2] value-over-YoY, then CAGR, then PEG.
+// One fundamentals block: one cell per FY column (value over YoY), then CAGR, then PEG.
 function fundSection(series, cagrVal, pegVal) {
-  if (!series) return [0, 1, 2, 3, 4].map((i) => `<td class="${i === 0 ? 'sep ' : ''}fund muted">—</td>`).join('');
+  if (!series) return [0, 1, 2, 3, 4, 5].map((i) => `<td class="${i === 0 ? 'sep ' : ''}fund muted">—</td>`).join('');
   const yrs = series.map((d, i) => `<td class="${i === 0 ? 'sep ' : ''}fund">
-      <div class="fv">${bn(d.v)}</div>
+      <div class="fv">${mag(d.v)}${d.est && d.v != null ? '<sup class="estm">E</sup>' : ''}</div>
       <div class="fg ${d.g == null ? '' : (d.g >= 0 ? 'up' : 'dn')}">${d.g == null ? '—' : pctSign(d.g)}</div>
     </td>`).join('');
   const cg = `<td class="fund"><div class="fv ${cagrVal == null ? '' : (cagrVal >= 0 ? 'up' : 'dn')}">${cagrVal == null ? '—' : pctSign(cagrVal)}</div></td>`;
   const pg = `<td class="fund"><div class="fv">${pegVal == null ? '—' : pegVal.toFixed(2)}</div></td>`;
   return yrs + cg + pg;
+}
+
+// ── The identity columns stay put ─────────────────────────────────────────────
+// Ticker and Current (price and the two multiples it trades at) are what every
+// other column is read AGAINST, and the table is 1,800px wide — so scrolling to
+// the Economics end used to leave a row of numbers with nothing to say whose they
+// were. They are sticky horizontally now.
+//
+// The offsets have to be measured rather than declared: the columns size to their
+// contents, and a $17.33 book row is not as wide as a $653.61 one. Re-run after
+// every render, and on resize, because the widths move with the content.
+function pinColumns() {
+  const tbl = $('cc-tbl');
+  if (!tbl || tbl.hidden) return;
+  const ref = [...tbl.querySelectorAll('tbody tr')]
+    .find((tr) => tr.querySelectorAll('td[data-pin]').length >= 4);
+  if (!ref) return;
+  const w = [...ref.querySelectorAll('td[data-pin]')].slice(0, 4)
+    .map((td) => td.getBoundingClientRect().width);
+  const off = [0, w[0], w[0] + w[1], w[0] + w[1] + w[2]];
+  tbl.querySelectorAll('[data-pin]').forEach((el) => {
+    const i = +el.dataset.pin;
+    el.style.left = (off[i] != null ? off[i] : 0) + 'px';
+  });
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -271,9 +534,14 @@ const sarrow = (k) => sortKey === k ? (sortDir < 0 ? ' ▾' : ' ▴') : '';
 
 function render() {
   // KPIs — everything in %, derived purely from weights (no $, no portfolio value).
-  let portYld = 0, portAnn = 0, wUp = 0, wYld = 0, wIv = 0, wSum = 0, priced = 0;
+  let portYld = 0, portAnn = 0, wUp = 0, wYld = 0, wIv = 0, wSum = 0, priced = 0, held = 0;
   rows.forEach((r) => {
     const m = metrics(r); if (r.err || !r.live) return;
+    // An excluded row keeps its own numbers on screen and leaves every TOTAL alone
+    // — the weight too, so Covered weight falls when you drop one and the averages
+    // are taken over what is left rather than being diluted by a position you have
+    // decided is not part of the question.
+    if (r.excluded) { held += 1; return; }
     if (m.contrib != null) portYld += m.contrib;        // Σ weight × premium yield
     if (m.annContrib != null) portAnn += m.annContrib;  // Σ weight × annualized yield
     const w = r.weight || 0; wSum += w; priced += 1;
@@ -283,8 +551,7 @@ function render() {
   });
   const kn = wSum || 1;
   $('cc-kpis').innerHTML = [
-    ['Premium yield', pct(portYld, 2), `portfolio · ${priced} positions`],
-    ['Annualized', pct(portAnn, 1), 'weight-scaled'],
+    ['Premium yield', pct(portYld, 2), `portfolio · ${priced} position${priced === 1 ? '' : 's'}${held ? ` · ${held} excluded` : ''}`],
     ['Avg upside to strike', pct(wUp / kn), 'weighted'],
     ['Avg premium yield', pct(wYld / kn, 2), 'per position'],
     ['Covered weight', pct(wSum, 1), 'of portfolio'],
@@ -292,81 +559,158 @@ function render() {
 
   // header (two-row grouped). EBITDA/Net Income blocks toggle with showFund.
   const fundGroups = showFund
-    ? `<th colspan="5" class="grp sep">EBITDA</th><th colspan="5" class="grp sep">Net Income</th>` : '';
-  const fyHdr = `<th class="sep">${fyLabel(FY[0])}</th><th>${fyLabel(FY[1])}</th><th>${fyLabel(FY[2])}</th><th>CAGR</th><th>PEG</th>`;
+    ? `<th colspan="6" class="grp sep">EBITDA</th><th colspan="6" class="grp sep">Net Income</th>` : '';
+  // No E in the header: whether a year is still a forecast is a per-NAME fact
+  // (NVIDIA reports its fiscal year in January), so the E lives on the cell.
+  const fyHdr = FY.map((y, i) => `<th${i === 0 ? ' class="sep"' : ''}>${fyLabel(y)}</th>`).join('') + `<th title="compound annual growth from ${fyLabel(FY[0])} to the selected Multiple basis — it moves when you change the basis">CAGR ${fyLabel(FY[0])}→${basisEndLabel()}</th><th>PEG</th>`;
   const fundLabels = showFund ? fyHdr + fyHdr : '';
   $('cc-thead').innerHTML = `
     <tr>
-      <th rowspan="2" class="tkh">Ticker</th>
-      <th colspan="3" class="grp sep">Current · ${mulBasis}</th>
+      <th rowspan="2" class="tkh" data-pin="0">Ticker</th>
+      <th colspan="3" class="grp sep" data-pin="1">Current · ${mulBasis}</th>
       ${fundGroups}
       <th colspan="4" class="grp sep">Target · ${mulBasis}</th>
       <th colspan="5" class="grp sep">Economics</th>
-      <th rowspan="2" class="sep"></th>
+      ${showMinPort ? '<th rowspan="2" class="sep minp" title="the smallest portfolio in which this position, at its weight, is large enough to hold one 100-share contract">Min. portfolio</th>' : ''}
+      <th rowspan="2" class="sep" title="ticked rows count toward the portfolio totals AND are the ones Add to Instruments hands over">Add</th>
+      <th rowspan="2" title="drop the position from the book entirely">Remove</th>
     </tr>
     <tr>
-      <th class="sep">Price</th><th>P/E</th><th>EV/EBITDA</th>
+      <th class="sep" data-pin="1">Price</th><th data-pin="2">P/E</th><th data-pin="3">EV/EBITDA</th>
       ${fundLabels}
       <th class="sep">Strike</th><th>Impl. Upside</th><th>P/E</th><th>EV/EBITDA</th>
       <th class="sep sortable" data-sort="wt">Wt${sarrow('wt')}</th><th>Premium</th><th class="sortable" data-sort="yield">Yield${sarrow('yield')}</th><th class="sortable" data-sort="portyield">Port. yield${sarrow('portyield')}</th><th class="sortable" data-sort="contrib">Contrib.${sarrow('contrib')}</th>
     </tr>`;
-  const ncol = 1 + 3 + (showFund ? 10 : 0) + 4 + 5 + 1; // total columns for colspans
+  const ncol = 1 + 3 + (showFund ? 12 : 0) + 4 + 5 + (showMinPort ? 1 : 0) + 1 + 1; // total columns for colspans
 
   // body
   $('cc-tbody').innerHTML = sortedRows().map((r) => {
-    if (r.loading) return `<tr><td class="tk">${r.ticker}</td><td colspan="${ncol - 1}" class="muted">loading…</td></tr>`;
-    if (r.err) return `<tr><td class="tk">${r.ticker}</td><td colspan="${ncol - 2}" class="err">${r.err}</td>
+    if (r.loading) return `<tr><td class="tk" data-pin="0">${r.ticker}</td><td colspan="${ncol - 1}" class="muted">loading…</td></tr>`;
+    if (r.err) return `<tr><td class="tk" data-pin="0">${r.ticker}</td><td colspan="${ncol - 2}" class="err">${r.err}</td>
       <td class="sep"><button class="x" data-del="${r.id}">✕</button></td></tr>`;
     const L = r.live, m = metrics(r);
     const ovr = r.override != null;
     const premVal = (m.premium != null) ? m.premium.toFixed(2) : '';
-    const share = (m.contrib != null && portYld) ? m.contrib / portYld : null; // contribution to total premium yield
-    const cur = SUMMIT[r.ticker]?.currency || 'USD';
+    // Share of the TOTAL premium yield — so an excluded row has none by definition,
+    // and blanking it is what keeps the column summing to 100%. Its Port. yield
+    // still prints: that is the row's own number, and seeing what you are setting
+    // aside is the point of setting it aside rather than deleting it.
+    const share = (!r.excluded && m.contrib != null && portYld) ? m.contrib / portYld : null;
+    const cur = EST_STORE[r.ticker]?.currency || 'USD';
+    const su = SU(r.ticker);
     const peg = (x) => x == null ? '' : `PEG ${x.toFixed(2)}`;
     const q2 = (x) => x != null ? `$${x.toFixed(2)}` : '—';
-    const qtip = `<b>Bid</b> ${q2(L.bid)}   <b>Ask</b> ${q2(L.ask)}   <b>Mid</b> ${q2(L.mid)}<br><b>Last</b> ${q2(L.lastTrade)} · ${tradeStamp(L.lastTradeTs)}`;
+    const sp = spreadOf(L);
+    const spLine = !sp ? '' : `<br><b>Spread</b> ${q2(sp.abs)} · ${(sp.pct * 100).toFixed(0)}% of mid`
+      + (sp.noBid ? ' — <b>no bid</b>, so the mid is guesswork'
+                  : ` — hitting the bid costs ${(sp.cross * 100).toFixed(0)}% of the premium`
+                    + (sp.pct >= 0.10 ? ', and the yield on this row is quoted at the mid' : ''));
+    const qtip = `<b>Bid</b> ${q2(L.bid)}   <b>Ask</b> ${q2(L.ask)}   <b>Mid</b> ${q2(L.mid)}<br><b>Last</b> ${q2(L.lastTrade)} · ${tradeStamp(L.lastTradeTs)}${spLine}`;
     const fund = showFund
       ? fundSection(fundSeries(r.ticker, 'ebitda'), cagr(r.ticker, 'ebitda'), m.pegEv)
-        + fundSection(fundSeries(r.ticker, 'earnings'), cagr(r.ticker, 'earnings'), m.pegPe)
+        + fundSection(fundSeries(r.ticker, 'netIncome'), cagr(r.ticker, 'netIncome'), m.pegPe)
       : '';
     const mismatch = (L.usedExpiry && expiry && L.usedExpiry !== expiry) || (L.usedStrike != null && L.usedStrike !== r.strike);
-    return `<tr>
-      <td class="tk" title="${L.name || ''}">${r.ticker}${r.isEtf ? ' <span class="muted">ETF</span>' : (cur !== 'USD' ? ` <span class="cc" title="reports in ${cur}">${cur}</span>` : '')}</td>
-      <td class="sep big">${px(m.price)}</td>
-      <td><div class="fv">${mult(m.peP)}</div><div class="fg">${peg(m.pegPe)}</div></td>
-      <td><div class="fv">${mult(m.evP)}</div><div class="fg">${peg(m.pegEv)}</div></td>
+    return `<tr class="${r.excluded ? 'excl' : ''}">
+      <td class="tk" data-pin="0" title="${L.name || ''}"><span class="tkw">${r.ticker}${r.isEtf ? ' <span class="muted">ETF</span>' : (cur !== 'USD' ? ` <span class="cc" title="reports in ${cur}">${cur}</span>` : '')}${su && su.fellBack ? ` <span class="fb" title="no ${estSrc === 'summit' ? 'Summit model' : 'Bloomberg consensus'} for ${esc(r.ticker)} — the multiples on this row are on ${su.srcUsed === 'summit' ? 'Summit' : 'consensus'} numbers instead of being left blank">cons</span>` : ''}</span></td>
+      <td class="sep big" data-pin="1"><span class="tkw">${px(m.price)}</span></td>
+      <td data-pin="2"><div class="fv">${mult(m.peP)}</div><div class="fg">${peg(m.pegPe)}</div></td>
+      <td data-pin="3"><div class="fv">${mult(m.evP)}</div><div class="fg">${peg(m.pegEv)}</div></td>
       ${fund}
-      <td class="sep edit"><input type="number" step="1" value="${r.strike}" data-strike="${r.id}"></td>
+      <td class="sep edit"><input type="number" step="1" value="${r.strike}" data-strike="${r.id}" class="${r.autoStrike ? 'auto' : ''}" title="${r.autoStrike ? 'no strike in the book — nearest listed strike at or above spot; type the real one over it'
+        : (r.strikeFrom ? `set from ${r.strikeFrom.M}x ${r.strikeFrom.kind === 'ev' ? 'EV/EBITDA' : 'P/E'} on ${r.strikeFrom.basis} ${r.strikeFrom.src} — implied $${r.strikeFrom.wanted.toFixed(2)}, snapped to the nearest listed strike` : 'strike sold')}"></td>
       <td class="up">${pct(m.upside, 1)}</td>
-      <td class="${richer(m.peS, m.peP)}"><div class="fv">${mult(m.peS)}</div><div class="fg">${peg(m.pegPeS)}</div></td>
-      <td class="${richer(m.evS, m.evP)}"><div class="fv">${mult(m.evS)}</div><div class="fg">${peg(m.pegEvS)}</div></td>
+      <td class="${richer(m.peS, m.peP)} mcell"><input type="number" step="0.1" class="mx" data-setmult="${r.id}" data-kind="pe"
+          value="${m.peS == null ? '' : m.peS.toFixed(1)}" ${m.peS == null ? 'disabled' : ''}
+          title="${m.peS == null ? 'no P/E on this basis' : 'type the P/E you would accept being called away at — the strike jumps to the nearest listed one that gives it'}"><span class="mxu">x</span><div class="fg">${peg(m.pegPeS)}</div></td>
+      <td class="${richer(m.evS, m.evP)} mcell"><input type="number" step="0.1" class="mx" data-setmult="${r.id}" data-kind="ev"
+          value="${m.evS == null ? '' : m.evS.toFixed(1)}" ${m.evS == null ? 'disabled' : ''}
+          title="${m.evS == null ? 'no EV/EBITDA on this basis' : 'type the EV/EBITDA you would accept being called away at — the strike jumps to the nearest listed one that gives it'}"><span class="mxu">x</span><div class="fg">${peg(m.pegEvS)}</div></td>
       <td class="sep edit"><input type="number" step="0.1" value="${(r.weight * 100).toFixed(2)}" data-weight="${r.id}" title="portfolio weight %"></td>
-      <td class="edit"><input type="number" step="0.01" value="${premVal}" data-prem="${r.id}" class="${ovr ? 'ovr' : ''}" title="${ovr ? 'manual override' : 'live midpoint — type to override'}"><span class="ttip" data-tip="${qtip}">i</span></td>
+      <td class="edit${ovr ? '' : spreadClass(sp)}"><input type="number" step="0.01" value="${premVal}" data-prem="${r.id}" class="${ovr ? 'ovr' : ''}" title="${ovr ? 'manual override' : 'live midpoint — type to override'}"><span class="ttip" data-tip="${qtip}">i</span></td>
       <td class="big up">${pct(m.yld, 2)}</td>
       <td class="big up">${pct(m.contrib, 2)}</td>
       <td>${pct(share, 1)}</td>
-      <td class="sep"><button class="x" data-del="${r.id}" title="${mismatch ? 'using '+L.usedStrike+' @ '+L.usedExpiry : ''}">${mismatch ? '⚠' : '✕'}</button></td>
+      ${showMinPort ? `<td class="sep minp" title="one contract is ${(L.sharesPerContract || 100)} shares at ${px(m.price)}${r.weight ? `, and this is ${pct(r.weight, 2)} of the book` : ''}">${cash(minPortfolio(r))}</td>` : ''}
+      <td class="sep"><input type="checkbox" class="pick" data-pick="${r.id}" ${r.excluded ? '' : 'checked'}
+          title="${r.excluded ? 'not counted in the totals and not handed over' : `counted in the totals, and handed over as ${esc(L.sym || 'this contract')}`}"></td>
+      <td><button class="x" data-del="${r.id}" title="${mismatch ? 'using '+L.usedStrike+' @ '+L.usedExpiry : 'remove the position from the book'}">${mismatch ? '⚠' : '✕'}</button></td>
     </tr>`;
   }).join('');
 
   $('cc-tbl').hidden = false; $('cc-status').hidden = true;
   wireRowInputs();
+  pinColumns();
+  renderInstruments('cc', instOpen);
+  wireInstruments();
 
   const anyMismatch = rows.some((r) => r.live && ((r.live.usedExpiry && expiry && r.live.usedExpiry !== expiry) || (r.live.usedStrike != null && r.live.usedStrike !== r.strike)));
   $('cc-foot').innerHTML = `
-    <b>EBITDA / Net Income</b> = Summit model ${fyLabel(FY[0])}–${fyLabel(FY[2])} (t0 = last reported FY), native-currency millions with YoY growth below · <b>CAGR</b> = ${FY[0]}→${FY[2]} · <b>PEG</b> = current multiple ÷ basis growth% ·
+    <b>EBITDA / Net Income</b> = ${estSrc === 'summit' ? 'Summit model' : 'Bloomberg consensus'} ${fyLabel(FY[0])}–${fyLabel(FY[FY.length - 1])} native-currency millions with YoY growth below. Columns are <b>CALENDAR</b> years. A superscript <b>E</b> marks a year that name has not yet reported. NVIDIA closes its year in January and labels it one ahead, so what it calls FY2027 is calendar 2026 — its rows are shifted to the calendar here, which is what lets one set of columns compare the whole book. On <b>Consensus</b>, years already closed carry the reported figure (the Street publishes no estimate for a year that is done), so only the forward columns differ between the two sources · <b>CAGR</b> = ${fyLabel(FY[0])}→${basisEndLabel()}, i.e. it ENDS on whatever the Multiple basis is set to — change the basis and it re-measures, so it always describes the run into the year the multiples are priced on · <b>PEG</b> = current multiple ÷ basis growth% ·
     <b>Multiple basis (${mulBasis})</b> drives every P/E &amp; EV/EBITDA${mulBasis === 'NTM' ? ' — NTM is a calendar-weighted blend of '+fyLabel(FY[1])+'/'+fyLabel(FY[2])+' (no quarterly data)' : ''} · <b>Current</b> uses live price, <b>Target</b> uses the strike; the PEG under each multiple = that multiple ÷ basis growth · <b>Impl. Upside</b> = strike ÷ price − 1 ·
-    hover the <b>i</b> by Premium for live bid / ask / mid and last trade (local time) ·
+    hover the <b>i</b> by Premium for live bid / ask / mid, last trade (local time) and the spread · a Premium cell shaded <span class="spwk">amber</span> has a bid/ask spread of <b>10% of mid or more</b>, <span class="spxk">deeper amber</span> <b>25% or more</b> or no bid at all — the column quotes the MID, and a covered call is sold on the BID, so half that spread comes straight off the yield beside it. An overridden premium is not shaded: the number is yours, not the chain's ·
     <b>Yield</b> = premium ÷ price · <b>Port. yield</b> = yield × weight · <b>Contrib.</b> = Port. yield ÷ Σ Port. yield (share of total) ·
     <span class="cheap">green</span> = target multiple richer than current (called away at an expensive valuation).<br>
-    Premium/IV/greeks are the live Massive option chain for each strike &amp; target expiry. Edit strike or weight inline; type a premium to override the live midpoint. All figures are in % — no dollar amounts, no contracts, no portfolio value.
+    <b>Target expiry</b> opens on the <b>roll date</b> — the third Friday of January, April, July or October, the Friday before earnings season starts — taking the nearest one that has not expired; the menu carries the next few ordinary expiries alongside every roll date.<br>
+    Premium/IV/greeks are the live Massive option chain for each strike &amp; target expiry. <b>Edit the strike either way round.</b> Type a price into <b>Strike</b>, or type a multiple into <b>Target P/E</b> or <b>Target EV/EBITDA</b> and the strike moves to the nearest LISTED strike that produces it — which is the order the decision really happens in: not “$570 on Mastercard” but “happy to be called away at 24x”. The cell then shows the multiple the listed strike actually gives, so it will differ a little from what you typed; hover the strike to see the price the multiple implied before snapping. It reads the SELECTED basis year and estimate source, so change either and the same multiple means a different strike. Edit weight inline; type a premium to override the live midpoint. A strike shown <span class="autoink">in blue</span> is not in the book — it is the nearest listed strike at or above spot, picked so the row can price at all; type the real one over it. A name with no model on the selected source falls back to the OTHER one rather than showing dashes — GOOGL and TSM are in the book but not in the Summit DCF universe, so on <b>Summit</b> their multiples are Bloomberg's, marked <span class="fbk">cons</span> beside the ticker. <b>Add</b> is one tick doing two jobs: a ticked row counts toward the portfolio totals AND is one of the contracts <b>Add to Instruments</b> hands over — the same decision said once, since a position you are not counting is not one you are about to trade. Unticking leaves the row in place: its own numbers stay on screen and it dims, but Premium yield, both averages and Covered weight are taken over what is left, and Contrib. blanks and re-bases so the column still sums to 100%. Port. yield keeps printing — that is the row's own number, and seeing what you set aside is the point. <b>Remove</b> deletes the position outright. The KPI strip says how many are set aside; nothing is stored, so a reload brings the book back whole. All figures are in % — no dollar amounts, no contracts, no portfolio value.
     ${anyMismatch ? '<br><span class="warn">⚠ some rows had no contract at the exact strike/expiry — nearest available was used (hover the ⚠).</span>' : ''}`;
 }
 
+// The Instruments bar re-renders itself, so its buttons are re-wired each time.
+// One tick, two jobs. It decides whether the row counts toward the portfolio
+// totals AND whether it is one of the contracts handed over — which is the same
+// decision said once instead of twice: a position you are not counting is not one
+// you are about to trade. The basket membership mirrors the row, so it is set from
+// the row rather than toggled, or the two could drift apart.
+function syncPick(r) {
+  if (!r.live || !r.live.sym) return;
+  const inBasket = selHas('cc', r.live.sym);
+  const want = !r.excluded;
+  if (inBasket !== want) {
+    selToggle('cc', { sym: r.live.sym, ticker: r.ticker, expiry: r.live.usedExpiry || expiry,
+                      type: 'call', strike: r.live.usedStrike ?? r.strike });
+  }
+}
+
+function wireInstruments() {
+  const el = $('cc-instbar'); if (!el) return;
+  const t = el.querySelector('[data-insttoggle]');
+  if (t) t.onclick = () => { instOpen = !instOpen; renderInstruments('cc', instOpen); wireInstruments(); };
+  const c = el.querySelector('[data-instclear]');
+  if (c) c.onclick = () => { selClear('cc'); };
+}
+
 function wireRowInputs() {
+  // Ticking a contract does not touch the row — it only joins or leaves the list —
+  // so this re-renders the bar rather than the table.
+  document.querySelectorAll('#cc-root [data-pick]').forEach((el) => el.onchange = () => {
+    const r = rows.find((x) => x.id == el.dataset.pick);
+    if (!r) return;
+    r.excluded = !el.checked;
+    syncPick(r);
+    render();
+  });
   document.querySelectorAll('#cc-root [data-strike]').forEach((el) => el.onchange = async () => {
     const r = rows.find((x) => x.id == el.dataset.strike); r.strike = parseFloat(el.value) || r.strike;
+    r.autoStrike = false;   // typed over: it is a chosen strike now
+    r.strikeFrom = null;    // ...and no longer the product of a multiple
     r.loading = true; render(); await fetchRow(r); render();
+  });
+  // Type a multiple, get a strike. The row remembers WHICH multiple set it, on
+  // which basis year and which source, because "$570" means nothing six weeks
+  // later while "24x on 2026E Summit" still does.
+  document.querySelectorAll('#cc-root [data-setmult]').forEach((el) => el.onchange = async () => {
+    const r = rows.find((x) => x.id == el.dataset.setmult);
+    const M = parseFloat(el.value);
+    const px = r ? strikeFromMultiple(r, el.dataset.kind, M) : null;
+    if (px == null || !(px > 0)) { render(); return; }   // unusable input: put the old number back
+    r.loading = true; render();
+    const k = await nearestListed(r.ticker, expiry, px);
+    if (k != null) {
+      r.strike = k; r.autoStrike = false;
+      r.strikeFrom = { kind: el.dataset.kind, M, basis: mulBasis, src: estSrc, wanted: px };
+    }
+    await fetchRow(r); render();
   });
   document.querySelectorAll('#cc-root [data-weight]').forEach((el) => el.onchange = () => {
     const r = rows.find((x) => x.id == el.dataset.weight); r.weight = (parseFloat(el.value) || 0) / 100; render();
@@ -378,6 +722,30 @@ function wireRowInputs() {
   document.querySelectorAll('#cc-root [data-del]').forEach((el) => el.onclick = () => {
     rows = rows.filter((x) => x.id != el.dataset.del); render();
   });
+}
+
+// ── The roll date ─────────────────────────────────────────────────────────────
+// The book rolls on the Friday before earnings season opens — the third Friday
+// of January, April, July and October — so that is what the tab opens on: the
+// nearest one that has not expired. Computed, not tabulated, so it keeps working
+// every quarter without anyone editing a list.
+function thirdFriday(year, monthIdx) {
+  const first = new Date(Date.UTC(year, monthIdx, 1));
+  const firstFri = 1 + ((5 - first.getUTCDay() + 7) % 7);  // 5 = Friday
+  return new Date(Date.UTC(year, monthIdx, firstFri + 14)).toISOString().slice(0, 10);
+}
+// The next `n` season Fridays from today. A contract expiring today has not
+// expired yet (it dies at the close), so today itself still counts.
+function seasonFridays(n) {
+  const today = new Date().toISOString().slice(0, 10);
+  const out = [];
+  for (let y = new Date().getUTCFullYear(); out.length < n; y++) {
+    [0, 3, 6, 9].forEach((m) => {
+      const d = thirdFriday(y, m);
+      if (d >= today && out.length < n) out.push(d);
+    });
+  }
+  return out;
 }
 
 // ── Expirations dropdown ──────────────────────────────────────────────────────
@@ -393,11 +761,20 @@ async function loadExpirations() {
   if (!dates.length) { // synth a few monthly-ish fallbacks
     const d = new Date(); for (let i = 0; i < 6; i++) { d.setDate(d.getDate() + 30); dates.push(d.toISOString().slice(0, 10)); }
   }
-  dates = dates.slice(0, 12);
-  // default: first expiry ≥ ~20 days out, else nearest
-  const def = dates.find((x) => daysTo(x) >= 20) || dates[0];
+
+  // Each season Friday, mapped onto what is actually listed (they are standard
+  // monthlies, so this is normally the same date). Anything past the end of the
+  // chain simply drops out.
+  const season = seasonFridays(4).map((t) => dates.find((d) => d >= t)).filter(Boolean);
+  const isSeason = new Set(season);
+  // The menu: the next couple of months of ordinary expiries, plus every roll
+  // date, so the book can be moved forward a quarter without leaving the tab.
+  const opts = [...new Set(dates.slice(0, 10).concat(season))].sort();
+
+  const def = season[0] || opts.find((x) => daysTo(x) >= 20) || opts[0];
   expiry = def;
-  $('cc-expiry').innerHTML = dates.map((x) => `<option value="${x}" ${x === def ? 'selected' : ''}>${x} · ${daysTo(x)}d</option>`).join('');
+  $('cc-expiry').innerHTML = opts.map((x) =>
+    `<option value="${x}" ${x === def ? 'selected' : ''}>${x} · ${daysTo(x)}d${isSeason.has(x) ? ' · roll' : ''}</option>`).join('');
   $('cc-expiry').onchange = async () => { expiry = $('cc-expiry').value; await loadAll(); };
 }
 
@@ -413,17 +790,19 @@ async function loadAll() {
 function injectMarkup() {
   $('cc-root').innerHTML = `
     <div class="cc-wrap">
-      <div class="topbar">
+      <div class="der-head">
         <h2>Covered Calls — Live</h2>
         <span class="pill">live · Massive</span>
         <div class="controls">
           <div class="ctl"><label>Target expiry</label><select id="cc-expiry"><option>loading…</option></select></div>
+          <div class="ctl"><label>Estimates <span id="cc-vintage"></span></label><span id="cc-srcWrap"></span></div>
           <div class="ctl"><label>Multiple basis</label>
             <div class="seg" id="cc-basisSel">
-              <button data-basis="2026E">2026E</button><button data-basis="2027E">2027E</button><button data-basis="NTM">NTM</button>
+              <button data-basis="2026E">2026E</button><button data-basis="2027E">2027E</button><button data-basis="2028E">2028E</button><button data-basis="NTM">NTM</button>
             </div>
           </div>
           <div class="ctl"><label>&nbsp;</label><button id="cc-togFund" class="ghost">Hide EBITDA / NI</button></div>
+          <div class="ctl"><label>&nbsp;</label><button id="cc-togMinPort" class="ghost" title="show the smallest portfolio that can hold one contract of each position — informative only, it changes no other number">Min. portfolio</button></div>
           <div class="ctl"><label>&nbsp;</label><button id="cc-refresh">↻ Refresh live</button></div>
         </div>
       </div>
@@ -439,6 +818,7 @@ function injectMarkup() {
         <div class="ctl"><label>Weight (%)</label><input id="cc-newweight" type="number" step="0.1" /></div>
         <div class="ctl"><label>&nbsp;</label><button id="cc-addbtn" class="ghost sm">+ Add position</button></div>
       </div>
+      ${instrumentsBar('cc')}
       <div class="foot" id="cc-foot"></div>
     </div>
     <div id="cc-tip"></div>`;
@@ -446,6 +826,56 @@ function injectMarkup() {
 
 function wireControls() {
   $('cc-refresh').onclick = () => loadAll();
+
+  // Estimates source. Unlike the single-name panes this is a whole book, so a
+  // source counts as available when ANY position carries it; the rows that do not
+  // simply show "—" for their multiples, which is the honest answer for them.
+  const renderSrc = () => {
+    const have = new Set();
+    rows.forEach((r) => optSources(r.ticker).forEach((k) => have.add(k)));
+    $('cc-srcWrap').innerHTML = [['summit', 'Summit'], ['consensus', 'Consensus']].map(([k, lbl]) => {
+      const missing = !have.has(k);
+      return `<button type="button" data-src="${k}" class="${k === estSrc ? 'on' : ''}"
+        ${missing ? 'disabled' : ''} title="${missing ? 'no ' + lbl + ' estimates in this book' : lbl + ' estimates'}">${lbl}</button>`;
+    }).join('');
+  };
+  // How old the book's estimates are. This is a BOOK, not one name, and the
+  // positions carry different snapshot dates — so what matters is the OLDEST one,
+  // because that is the weakest number any multiple on screen rests on. The badge
+  // shows the range and names the laggard; hovering lists every position's date.
+  const renderVintage = () => {
+    const el = $('cc-vintage'); if (!el) return;
+    // Dated through SU(), not off the store, so a row that FELL BACK to the other
+    // source is dated by the numbers actually on screen. Reading the store keyed
+    // by the selected source instead gave GOOGL and TSM a Summit snapshot date
+    // while their multiples were being computed on Street figures — the one thing
+    // a vintage badge exists to prevent.
+    const seen = rows.map((r) => {
+      const su = SU(r.ticker); if (!su) return null;
+      const d = su.e.asOf, from = su.e.asOfFrom;
+      return d ? { tk: r.ticker, d, from, age: ageDays(d) } : null;
+    }).filter(Boolean).sort((a, b) => b.age - a.age);
+    if (!seen.length) { el.innerHTML = ''; return; }
+    const oldest = seen[0], newest = seen[seen.length - 1];
+    // Every date here is inherited from a workbook save, never an observed pull,
+    // so the ~ stays until a dated Bloomberg export replaces one.
+    const inherited = seen.some((s) => s.from !== 'bbg');
+    const fmt = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    const span = oldest.d === newest.d ? fmt(oldest.d) : `${fmt(oldest.d)}–${fmt(newest.d)}`;
+    const tip = `Oldest first — every multiple on a row is only as current as its own set:<br>`
+      + seen.map((s) => `<b>${esc(s.tk)}</b> ${s.d} · ${s.age}d${s.age > STALE_DAYS ? ' — past a full quarter' : ''}`).join('<br>')
+      + (inherited ? `<br><br>A <b>~</b> means the date came from the Summit workbook's save, not from a dated Bloomberg pull, so it is the oldest the numbers can be — they may be older.` : '');
+    el.className = 'vintwrap';
+    el.innerHTML = `<span class="vintage ${oldest.age > STALE_DAYS ? 'stale' : (inherited ? 'inherited' : 'observed')}"
+      data-tip="${esc(tip)}">${inherited ? '~' : ''}${esc(span)} · up to ${oldest.age}d</span>`;
+  };
+  $('cc-srcWrap').className = 'seg';
+  renderSrc(); renderVintage();
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('#cc-srcWrap button');
+    if (!b || b.disabled) return;
+    estSrc = b.dataset.src; renderSrc(); renderVintage(); render();
+  });
 
   // Multiple basis segmented toggle — re-renders only (uses already-fetched data).
   const syncBasis = () => document.querySelectorAll('#cc-basisSel button')
@@ -465,11 +895,19 @@ function wireControls() {
   });
 
   // Hide / show the EBITDA & Net Income blocks.
+  $('cc-togMinPort').onclick = () => { showMinPort = !showMinPort; render(); };
   $('cc-togFund').onclick = () => {
     showFund = !showFund;
     $('cc-togFund').textContent = showFund ? 'Hide EBITDA / NI' : 'Show EBITDA / NI';
+    $('cc-togMinPort').classList.toggle('on', showMinPort);
     render();
   };
+
+  // The pinned columns are placed from measured widths, so a resize moves them.
+  window.addEventListener('resize', pinColumns);
+  // A contract picked in another pane belongs in the same basket, so this bar
+  // follows the shared list rather than only its own ticks.
+  onSelection((p) => { if (p !== 'cc') return; renderInstruments('cc', instOpen); wireInstruments(); });
 
   // Hover tooltip (bid / ask / mid + trade time on the Premium cell). Delegated
   // on document so it keeps working across re-renders.
@@ -495,7 +933,7 @@ function wireControls() {
     if (!tk || !strike) return;
     const weight = (parseFloat($('cc-newweight').value) || 0) / 100;
     const r = { id: Date.now(), ticker: tk, reason: '', strike, weight,
-                seedPrime: null, isEtf: !SUMMIT[tk], override: null, live: null, loading: true, err: null };
+                seedPrime: null, isEtf: !EST_STORE[tk], override: null, live: null, loading: true, err: null };
     rows.push(r); $('cc-newtk').value = ''; $('cc-newstrike').value = ''; $('cc-newweight').value = '';
     render(); await fetchRow(r); render();
   };
@@ -511,3 +949,16 @@ export async function loadCoveredCallsPage() {
   await loadExpirations();
   await loadAll();
 }
+
+// ── Test-only hook (parity harness) ───────────────────────────────────────────
+// Exposes this file's private estimate/multiple layer so _preview-cc-parity.html
+// can compare it, name by name and year by year, against the shared engine in
+// options-core.js. Nothing in the app reads this — it exists so that "no number
+// moved" is a measurement instead of a claim. Remove it once the two agree and
+// the duplicate layer is gone.
+export const __parity = {
+  set(k, v) { if (k === 'estSrc') estSrc = v; else if (k === 'mulBasis') mulBasis = v; },
+  get state() { return { estSrc, mulBasis }; },
+  SU, basisFrame, basisGrowth, basisEnd, basisEndLabel, cagr, metrics, fundSeries,
+  strikeFromMultiple, ntmFrac, FY, T0,
+};

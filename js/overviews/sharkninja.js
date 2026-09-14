@@ -39,6 +39,9 @@ import {
   SN_Q_INTRO, SN_CAT_CORRECTION, SN_CAT_CORRECTION_LIMIT, SN_CAT_SOURCES,
   SN_SUBCATS, SN_SUBCATS_NOTE,
   SN_GUIDE_LEDE, SN_GUIDE_YEARS, SN_GUIDE_PATTERN, SN_GUIDE_SOURCES_NOTE,
+  SN_STRAT_LEDE, SN_STRAT_MOAT, SN_STRAT_PROMISE, SN_STRAT_PROMISE_NOTE, SN_STRAT_GM,
+  SN_STRAT_DIVERSIFY, SN_STRAT_INITIATIVES, SN_STRAT_AUDIT, SN_STRAT_SOURCES,
+  SN_TL_LEDE, SN_EXEC_TIMELINE, SN_TL_TAGS, SN_IR_CADENCE, SN_TL_SOURCES,
   SN_TARIFF_KPIS, SN_TARIFF_LEDE, SN_TARIFF_REFUND, SN_TARIFF_TREATMENT,
   SN_TARIFF_MARGIN, SN_TARIFF_NOTE, SN_CAPSTRUCT, SN_QUARTR_SOURCES,
 } from './sharkninja-quartr.js';
@@ -557,6 +560,82 @@ function qGuidance(){
     '<div class="dd-note">' + SN_GUIDE_SOURCES_NOTE + '</div>';
 }
 
+// ── Evolution ▸ Strategy ──────────────────────────────────────────────────────
+// Canonical components only — no inline <style> (blueprint §3.3). The grid override
+// below is a style ATTRIBUTE on one element, the precedented way to get four columns
+// out of .ov-drivers' fixed three.
+function qStrategy(){
+  var moat = '<div class="ov-drivers" style="grid-template-columns:repeat(2,1fr)">' +
+    SN_STRAT_MOAT.map(function(m){
+      return '<div class="ov-driver"><div class="ov-driver-t">' + esc(m[0]) + '</div>' +
+        '<div class="ov-driver-d">' + m[1] + '</div>' +
+        '<div class="ov-driver-d" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--bdr)">' +
+          '<b style="color:var(--brand)">Shows up as</b> — ' + m[2] + '</div></div>';
+    }).join('') + '</div>';
+
+  var promise = '<div class="dd-kpis">' + SN_STRAT_PROMISE.map(function(p){
+    return '<div class="dd-kpi"><div class="dd-kpi-v" style="font-size:15px">' + esc(p[0]) + '</div>' +
+      '<div class="dd-kpi-k">' + esc(p[1]) + '</div><div class="dd-kpi-s"></div></div>';
+  }).join('') + '</div>';
+
+  var inits = SN_STRAT_INITIATIVES.map(function(i){
+    return '<tr><td class="ov-td-name">' + esc(i[0]) + '</td><td>' + i[1] + '</td>' +
+      '<td><span class="ov-tag">' + esc(i[2]) + '</span></td><td>' + i[3] + '</td></tr>';
+  }).join('');
+
+  return '<div class="dd-h">Strategy</div>' +
+    '<div class="dd-sub">' + SN_STRAT_LEDE + '</div>' +
+
+    '<div class="ov-sec"><div class="ov-sec-h">The operating model — four capabilities, and what each should show up as</div>' +
+      moat + '</div>' +
+
+    '<div class="ov-sec"><div class="ov-sec-h">What it promises the consumer</div>' +
+      promise + '<div class="dd-note">' + SN_STRAT_PROMISE_NOTE + '</div></div>' +
+
+    '<div class="ov-sec"><div class="ov-sec-h">The two principles that carry the financials</div>' +
+      '<div class="dd-callout">' + SN_STRAT_GM + '</div>' +
+      '<div class="dd-callout">' + SN_STRAT_DIVERSIFY + '</div></div>' +
+
+    '<div class="ov-sec"><div class="ov-sec-h">Initiatives in flight — and how to check each one</div>' +
+      '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
+        '<th>Initiative</th><th>What it is</th><th>Status</th><th>What to check</th>' +
+      '</tr></thead><tbody>' + inits + '</tbody></table></div></div>' +
+
+    '<div class="dd-callout">' + SN_STRAT_AUDIT + '</div>' +
+    '<div class="dd-note">' + esc(SN_STRAT_SOURCES) + '</div>';
+}
+
+// ── Evolution ▸ Timeline ──────────────────────────────────────────────────────
+// The PUBLIC-COMPANY record only. The 1994–2023 corporate genesis stays in the Overview
+// so there is one home for it. Tag filter chips narrow the list.
+function qTimeline(){
+  var chips = '<div class="guid-years"><button type="button" class="guid-year active" data-sntl="all">All</button>' +
+    SN_TL_TAGS.map(function(t){
+      return '<button type="button" class="guid-year" data-sntl="' + esc(t) + '">' + esc(t) + '</button>';
+    }).join('') + '</div>';
+
+  var items = '<div class="ov-timeline">' + SN_EXEC_TIMELINE.map(function(e){
+    return '<div class="ov-tl-item" data-sntlitem="' + esc(e[1]) + '"><div class="ov-tl-dot"></div>' +
+      '<div class="ov-tl-yr">' + esc(e[0]) + '</div>' +
+      '<div class="ov-tl-body"><span class="ov-tag">' + esc(e[1]) + '</span><br>' +
+        '<b>' + e[2] + '</b><br>' + e[3] + '</div></div>';
+  }).join('') + '</div>';
+
+  var cadence = SN_IR_CADENCE.rows.map(function(r){
+    return '<tr><td class="ov-td-name">' + r[0] + '</td><td style="font-weight:600">' + esc(r[1]) + '</td><td>' + r[2] + '</td></tr>';
+  }).join('');
+
+  return '<div class="dd-h">Timeline</div>' +
+    '<div class="dd-sub">' + SN_TL_LEDE + '</div>' +
+    chips + items +
+    '<div class="ov-sec" style="margin-top:26px"><div class="ov-sec-h">Where management speaks — the IR cadence</div>' +
+      '<div class="dd-sub">' + esc(SN_IR_CADENCE.lede) + '</div>' +
+      '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
+        '<th>Venue</th><th>Appearances</th><th>Detail</th></tr></thead><tbody>' + cadence + '</tbody></table></div>' +
+      '<div class="dd-note">' + SN_IR_CADENCE.note + '</div></div>' +
+    '<div class="dd-note">' + SN_TL_SOURCES + '</div>';
+}
+
 // Miscellaneous ▸ Other Analysis — appended under the existing tax / marketing / debt content.
 // Genre match: each of these changes what a reported number MEANS without anything changing
 // in the business.
@@ -623,9 +702,13 @@ function deepDiveHtml(c){
     '<div class="ovt-subtabs">'+
       '<button type="button" class="ovt-subtab active" data-ovst="results">Results</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="results">'+resultsHtml('SN')+'</div>'+
     '<div class="ovt-subpane" data-ovst="guidance" hidden>'+qGuidance()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="strategy" hidden>'+qStrategy()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="timeline" hidden>'+qTimeline()+'</div>'+
   '</div>';
   h += '<div class="dd-pane" data-dd="management" hidden>'+
     '<div class="ovt-subtabs">'+
@@ -692,6 +775,16 @@ function deepDiveInit(c){
       var fy = btn.getAttribute('data-snguide');
       root.querySelectorAll('[data-snguide]').forEach(function(b){ b.classList.toggle('active', b===btn); });
       root.querySelectorAll('[data-snguidepane]').forEach(function(p){ p.hidden = p.getAttribute('data-snguidepane')!==fy; });
+    });
+  });
+  // Evolution ▸ Timeline — tag filter chips.
+  root.querySelectorAll('[data-sntl]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var tag = btn.getAttribute('data-sntl');
+      root.querySelectorAll('[data-sntl]').forEach(function(b){ b.classList.toggle('active', b===btn); });
+      root.querySelectorAll('[data-sntlitem]').forEach(function(it){
+        it.hidden = (tag !== 'all' && it.getAttribute('data-sntlitem') !== tag);
+      });
     });
   });
   root.querySelectorAll('[data-mtlrm]').forEach(function(btn){

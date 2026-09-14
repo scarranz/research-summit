@@ -134,6 +134,107 @@ export var SN_GUIDE_PATTERN = 'Across the two years that are reconstructible, Sh
 export var SN_GUIDE_SOURCES_NOTE = 'Every figure is from the company\'s own "Fiscal 20XX Outlook" block in the quarterly earnings release (8-K exhibit), retrieved through Quartr and frozen here. Actuals are from the Q4/FY2025 release and the FY2025 10-K. <b>n/r = not recoverable</b> (the FY2024 and Feb-2025 release PDFs carry no extractable text layer on Quartr, so the initial FY2025 guide survives only through the restatement in the 1Q25 release, which listed the three headline metrics only); <b>n/c = not compiled</b> this pass. FY2024\'s guidance walk is not recoverable for the same reason. Nothing here is fetched at runtime.';
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// STRATEGY — Evolution ▸ Strategy
+//
+// The three-pillar GROWTH decomposition is not here — it lives in the segments dataset
+// and renders under Top Line ▸ Segments ▸ Revenue interactions. This pane is the other
+// half: the OPERATING model the company says produces that growth, and the live
+// initiatives you can actually audit against a future print.
+// Sources: the Aug 2026 investor presentation (p.7-13, 22, 25) and the 2Q26 call.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export var SN_STRAT_LEDE = 'SharkNinja describes its strategy in two layers that are easy to confuse. The <b>growth</b> layer — where the incremental dollars come from — is the three-pillar decomposition under <b>Top Line &#9656; Segments</b>. This pane is the <b>operating</b> layer: the four capabilities management claims compound into a moat, what it promises the consumer, and the initiatives currently in flight. The useful question for each is not "is it a nice slide" but <b>what would show up in the numbers if it were true</b>.';
+
+// [title, what the company says it is, what it should show up as]
+export var SN_STRAT_MOAT = [
+  ['Disruptive innovation', '1,000+ cross-functional engineers and designers across the US, UK and China on a 24/7 cycle; 5,500+ patents in force; a target of 25 new products a year, 20 of them into existing categories.', 'R&amp;D held near <b>5.8-6.2% of net sales</b> while sales compounded — the spend scales with the business rather than spiking. The test is sub-category count still rising (38 &#8594; 40 &#8594; 41) without R&amp;D intensity rising with it.'],
+  ['Global, agile supply chain', 'Third-party suppliers manufacture <b>100%</b> of products across six countries — China, Vietnam, Malaysia, Thailand, Indonesia, Cambodia — with dual-sourcing on key products.', 'Capex at <b>2.3% of net sales</b> (FY2025) because it owns no factories, and a tariff exposure spread across six jurisdictions rather than one. The 2026 assumption set (10% on three countries, 12.5% on three others) is the live test.'],
+  ['Always-on 360° marketing', 'Marketing is built into product development rather than bolted on — "marketing-first products," influencer and press seeding, rapid content off consumer reviews.', 'S&amp;M rising as a share of sales (<b>16.7% &#8594; 22.8%</b> FY2022-FY2025) is the cost of this, and the offsetting claim is category expansion. The test is whether S&amp;M finally levers now that opex has levered five quarters running.'],
+  ['Omni-channel distribution', 'No retailer exclusivity, ever — mass, specialty, pure players, own DTC and social commerce. 180+ retail partners globally, 36 in the US.', 'Three customers each above 10% of net sales is the counter-fact: the channel is broad but the <b>customer</b> base is concentrated (45.7% in three). Watch whether DTC and social commerce dilute that.'],
+];
+
+// [point, what it means]
+export var SN_STRAT_PROMISE = [
+  ['Speed', 'First-to-market disruptive innovation'],
+  ['Performance', 'Products that exceed expectations'],
+  ['Quality', 'A 5-star product experience'],
+  ['Value', 'Accessible prices'],
+];
+export var SN_STRAT_PROMISE_NOTE = 'The four consumer value points the company says every product must hit (deck p.7). Worth holding onto when reading the margin story: <b>Value</b> — accessible pricing — is an explicit constraint management has put on itself, which is why the gross-margin expansion argument runs through product cost and mix rather than through price.';
+
+export var SN_STRAT_GM = 'The deck is unusually direct about the profit engine: the 2026 roadmap names <b>"Ruthless focus on Product Cost and Avg Sell Price: Gross Margin Rate expansion is our Growth Catalyst"</b> as a top-line principle. The stated drivers are the scaled manufacturing and supply chain, data-driven inventory management, and mix. Two independent tailwinds sit underneath it that the deck does not spell out: <b>channel mix</b> (DTC and social commerce carry a structurally higher gross margin, per the CFO) and the <b>end of the JS Global sourcing service fee</b> on Jul 31, 2025. The offsetting headwind is tariffs.';
+
+export var SN_STRAT_DIVERSIFY = 'The roadmap\'s other financially load-bearing principle is <b>"The Power of Diversification: allows winning categories to help newer or declining categories develop or resurge."</b> That is the same claim the quarterly category table tests directly — and it holds up: Food Preparation swung from +52.8% to &minus;3.3% and back to +13.3% across four quarters while total net sales never dropped below double-digit growth.';
+
+// [initiative, what it is, status, what to check]
+export var SN_STRAT_INITIATIVES = [
+  ['Social commerce (TikTok Shop)', 'A discovery channel for the oldest categories, not just viral launches — Ninja NeverDull cutlery, a five-year-old category, became top-three in the channel in the US.', 'Scaling', 'Live in 7 countries at end-2Q26 vs zero a year earlier; management targets more than double by holiday 2026 and referenced 13 for Q4. Count the countries on the 3Q26 call.'],
+  ['DTC re-platforming (Salesforce)', 'One consolidated storefront replacing the legacy sites, with CRM and promotion tooling behind it.', 'Complete', 'Rollout finished across the major international markets in 2Q26; live in 14 European countries by Q4. Management says the benefit is not yet in the numbers and should appear in Q4 2026 and accelerate in 2027 — so this is a dated, falsifiable claim.'],
+  ['Distributor → direct conversions', 'Taking markets off distributors and onto SharkNinja\'s own operation, the model the UK proved in 2014.', 'Complete', 'Italy and Spain were the last; management said it is "now done for the foreseeable future." Mexico converted a year earlier. The drag on reported international growth should now be gone.'],
+  ['AI — "Jailbreak SharkNinja"', 'A company-wide programme: 8 big-bet and 20 quick-win projects, every one on a two-week review cycle, with resources reallocated if progress stalls.', 'Building', 'Named partners: <b>Palantir</b> on promotions and pricing (phase two, a four-month build, benefits expected in Q4 for US/UK/Germany/France) and <b>AWS</b> on media optimization (live end-September, scaling 2027).'],
+  ['AI in product development', 'Compressing the "fuzzy front end" — concepting a product\'s form and style — from months to weeks.', 'Building', 'The claim to audit is a stronger pipeline into the core, not more splashy launches. Management also says AI lifted organic social-content capture from under 20% (hashtag-only) to 60%+.'],
+  ['Share repurchase', 'The first capital-return programme as an independent company — $750M authorized Feb 11, 2026.', 'Live', '1,008,368 shares bought in 1H26 for $119.7M at an average $118.71; ~$100M of that in 2Q26 alone. Guided diluted share count has stepped down ~143.5M &#8594; ~142.5M across the year.'],
+];
+
+export var SN_STRAT_AUDIT = 'Three things this strategy has promised on a date, which makes them testable rather than rhetorical: (1) <b>DTC benefit appears in Q4 2026</b> and accelerates in 2027 — management explicitly said it is not in the numbers yet; (2) <b>opex leverage from AI in 2027</b>, on "roughly flat headcount," with no large reductions; (3) <b>TikTok Shop above 13 countries</b> by holiday 2026. None of the three needs a model to check — only the next two prints.';
+
+export var SN_STRAT_SOURCES = 'Sources: SharkNinja investor presentation, August 2026 (p.7-13 the operating model, p.22 the 2026 roadmap, p.25 the growth and gross-margin drivers) and the Q2 2026 earnings call (Aug 5, 2026). Retrieved through Quartr and frozen. Status labels are this desk\'s reading of management\'s own description, not a company classification.';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TIMELINE — Evolution ▸ Timeline
+//
+// NOT the corporate-genesis timeline — that is 1994-2023 and already lives in the
+// Overview (SN_TIMELINE in sharkninja-data.js). This is the PUBLIC-COMPANY execution
+// record: what happened, print by print, since the Jul 2023 spin-off. Dates are from
+// the Quartr event list (every call, deck, conference and filing) cross-checked against
+// the releases the facts come from.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export var SN_TL_LEDE = 'The Overview\'s timeline covers how SharkNinja <i>became</i> SharkNinja, 1994 to the spin-off. This is the record since: <b>what the company has actually done as an independent public company</b>, print by print. Thirteen earnings calls in, the pattern is visible — guide low, raise, launch into the core, and take the catalogue abroad.';
+
+// [date, tag, headline, detail]
+// tag ∈ Listing · Print · Guidance · Product · Channel · Capital · People · Policy
+export var SN_EXEC_TIMELINE = [
+  ['Jul 31, 2023', 'Listing', 'Independent trading begins on the NYSE', 'The spin-off from JS Global completes via a pro-rata share distribution — not an IPO and not a cash sale. JS Global keeps Joyoung and SharkNinja\'s APAC operations. Mark Barrocas, President since 2008, becomes CEO.'],
+  ['Aug 24, 2023', 'Print', 'First earnings call as a public company', 'Q2 2023. The start of the record below — thirteen calls to date.'],
+  ['2024', 'Product', 'Ninja Crispi launches', 'The first portable glass air fryer. It becomes a platform rather than a product — Crispi Pro, DualZone Crispi and eventually the Crispi Microwave all build off it, which is the clearest single example of the "new category matures into core" claim.'],
+  ['2025', 'Product', 'Three launches that reshaped the mix', 'Ninja <b>SLUSHi</b> (frozen drinks), Shark <b>CryoGlow</b> face masks — the company\'s first skincare entry — and the Ninja <b>Luxe Café</b> espresso machine. Beauty &amp; Home Environment grew 45.3% for the year and Food Preparation 31.6%, both led by these.'],
+  ['Jul 31, 2025', 'Policy', 'The JS Global sourcing service fee ends', 'A contractual fee paid to the former parent for supply-chain services terminates, and the company names it as a gross-margin tailwind in every subsequent release. A quiet, dated structural improvement rather than an operating one.'],
+  ['Sep 5 – Nov 6, 2025', 'People', 'Second CFO transition in about a year', 'Patraic Reagan resigns Sep 5, 2025; Adam Quigley is named permanent CFO Nov 6, 2025. Paul Carbone had held the role from 2022. Worth watching as a churn signal two years into independent public life.'],
+  ['Nov 6, 2025', 'Guidance', 'FY2025 guide raised for the fourth time', 'Net sales to +15.0-15.5%, from +10-12% at the start of the year. The reported year then came in above even this — see Evolution ▸ Guidance.'],
+  ['Feb 11, 2026', 'Capital', 'First capital-return programme — $750M buyback', 'Authorized alongside the FY2025 results, on record cash. The company states it does not expect to incur debt to fund it.'],
+  ['Feb 11, 2026', 'Guidance', 'FY2026 opens conservatively at +10.0-11.0%', 'The same opening posture as FY2025, which started at +10-12% and finished at +15.7%.'],
+  ['2Q26 (quarter ended Jun 30, 2026)', 'Channel', 'The international go-to-market transition completes', 'Italy and Spain finish converting from distributor-led to direct — the last of them — and the Salesforce DTC platform finishes rolling out across the major international markets. Management: "now done for the foreseeable future with these distributor conversions."'],
+  ['2Q26', 'Channel', 'TikTok Shop live in seven countries, from zero a year earlier', 'Germany reached in weeks the volume that took months in the US and UK. Goal of more than doubling the country count by holiday 2026.'],
+  ['Jul 2026', 'Policy', '$247.1M of tariff refund claims accepted by US CBP', 'To be recognized in 3Q26 as a reduction of cost of sales. Roughly half relates to duties expensed in FY2025 and is excluded from the adjusted metrics — so GAAP 3Q26 will carry about twice the benefit the adjusted numbers do.'],
+  ['Jul 2026', 'Product', 'Ninja Crispi Microwave — the 40th sub-category', 'Entry into a multi-billion-dollar category the company had never touched, built on the Crispi platform. A 41st sub-category was flagged for late 3Q26.'],
+  ['Jul 10, 2026', 'Capital', 'Controlling shareholder sells $401.2M of stock', 'JS&amp;W Group Holdings LP, controlled by Chairperson CJ Xuning Wang, sells 2,668,200 shares at $150.36 — near the 52-week high, with the stock up roughly 36% year-to-date. It retained 50,639,560 shares.'],
+  ['Aug 5, 2026', 'Print', '2Q26 — the fastest growth since 4Q24', 'Net sales +22.2% to $1,765.5M, the 13th consecutive quarter of double-digit growth. International +36.6%. All four categories grew; Beauty &amp; Home Environment +65.3%.'],
+  ['Aug 5, 2026', 'Guidance', 'FY2026 guide raised to +16.0-17.0%', 'The second raise of the year. The top-line raise carries no tariff-refund component — it is operating performance.'],
+  ['Nov 5, 2026', 'Print', 'Q3 2026 results — next scheduled print', 'The print that tests the DTC-benefit claim (management said Q4 2026), the TikTok Shop country count, and whether the FY2026 ratchet holds. It also carries the $247.1M refund.'],
+];
+
+export var SN_TL_TAGS = ['Listing', 'Print', 'Guidance', 'Product', 'Channel', 'Capital', 'People', 'Policy'];
+
+// The IR cadence — where management speaks, from the Quartr event record.
+export var SN_IR_CADENCE = {
+  lede: 'Beyond the quarterly calls, SharkNinja works a consistent conference circuit — which is where the non-scripted commentary tends to come from.',
+  rows: [
+    ['Earnings calls', '13 held', 'Q2 2023 (Aug 24, 2023) through Q2 2026 (Aug 5, 2026); Q3 2026 scheduled Nov 5, 2026.'],
+    ['ICR Conference', '2024, 2026', 'January — the consumer/retail season opener.'],
+    ['Goldman Sachs Retailing', '2023, 2024, 2025', 'September. A fourth appearance, at GS Global Consumer &amp; Retail, was scheduled for Sep 15, 2026.'],
+    ['William Blair Growth Stock', '2024, 2026', 'June.'],
+    ['Canaccord Genuity Growth', '2025, 2026', 'August, days after the Q2 print each year.'],
+    ['Morgan Stanley Consumer &amp; Retail', '2024, 2025', 'December.'],
+    ['BofA Consumer &amp; Retail', '2025', 'March.'],
+    ['Investor presentation', 'refreshed ~quarterly', 'Published alongside most prints; the Aug 2026 edition added two new slides specifically to answer the growth-durability question.'],
+  ],
+  note: 'Compiled from the Quartr event record (Jun 2023 &ndash; Nov 2026) and frozen. Conference appearances are listed by the year the company attended; transcripts for them were not mined in this pass — only the Q2 2026 earnings call was, which is the gap noted on the theme record.',
+};
+
+export var SN_TL_SOURCES = 'Sources: the Quartr event record for dates and the IR cadence; SharkNinja quarterly earnings releases (8-K), the FY2025 10-K, the FY2026 proxy and the Q2 2026 call for what each entry says. Retrieved through Quartr and frozen — nothing here is fetched at runtime. The corporate history before the Jul 2023 spin-off is deliberately not repeated here; it is in the Overview\'s timeline.';
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // TARIFFS & CAPITAL STRUCTURE — Miscellaneous ▸ Other Analysis
 // Both belong to that pane's genre: things that move reported profit, or the reading of
 // the balance sheet, without anything changing in the business.

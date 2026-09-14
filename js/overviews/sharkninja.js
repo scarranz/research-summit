@@ -13,7 +13,7 @@
 // Data lives in sharkninja-data.js. No data here.
 
 import { liveQuote } from '../api.js';
-import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
+import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo, registerResultsData } from '../results.js';
 import {
   SN_BRAND, SN_BRAND_SOFT, C_MU2,
   SN_FACTS, SN_LEDE, SN_QUAD,
@@ -21,8 +21,10 @@ import {
   SN_PRODUCTS, SN_PEERS, SN_PEERS_NOTE, SN_PEERS_QUAL, SN_TIMELINE,
   SN_OV_SOURCES,
   SN_DD_INTRO, SN_TL_RD, SN_TL_INTL, SN_DD_SOURCES,
-  SN_BL_MARGIN_KPIS, SN_BL_MARGIN_STORY, SN_BL_COST_TABLE, SN_BL_COST_NOTE,
-  SN_BL_BS_KPIS, SN_BL_BS_TABLE, SN_BL_BS_NOTE, SN_BL_DEBT_FLAG, SN_BL_SOURCES,
+  // The old flat cost-structure and balance-sheet TABLES are gone — their numbers are now read
+  // through from js/results-data/sn.js and sharkninja-bottomline.js so Bottom Line cannot drift
+  // from Results. Only the KPI strips and the debt flag survive from the first pass.
+  SN_BL_MARGIN_KPIS, SN_BL_BS_KPIS, SN_BL_DEBT_FLAG, SN_BL_SOURCES,
   SN_MGMT_EXECS, SN_MGMT_EXECS_NOTE, SN_MGMT_BOARD, SN_MGMT_BOARD_NOTE, SN_MGMT_OWNERSHIP,
   SN_MGMT_SBC, SN_MGMT_GOV_NOTE, SN_MGMT_RELATED_PARTY, SN_MGMT_TRACK, SN_MGMT_TRACK_NOTE,
   SN_MISC_CAPEX_KPIS, SN_MISC_CAPEX_TREND, SN_MISC_CAPEX_NOTE, SN_MISC_CAPEX_CALLOUT,
@@ -54,6 +56,15 @@ import {
   SN_SETUP_HEADLINE, SN_SETUP_CUSTOM, SN_SETUP_SYNTH, SN_SETUP_DEBATE_NOTE,
   SN_FROZEN, SN_RESULTS, SN_CALL, SN_WL_ROWS, SN_WL_NOTE, SN_EARN_SOURCES,
 } from './sharkninja-earnings.js';
+// Bottom Line (docs/PANE_CATALOG.md §2). No snBBG exists — SN is not in BBG_CONSENSUS.txt, so
+// bbg_extract.py cannot run; every P&L series is read through from js/results-data/sn.js instead.
+import {
+  SN_BL_YEARS, blSeries, SN_BL_EXTRA, SN_BL_VIEWS, SN_BL_LEDE, SN_BL_MARGIN_STORY_V2,
+  SN_BL_BRIDGE_NOTE, SN_BL_BRIDGE_READ, SN_BL_NET_NOTE, SN_BL_NET_READ, SN_BL_SBC_NOTE,
+  SN_BL_EXPENSE_LINES, SN_BL_EXPENSE_NOTE, SN_SC_DIVERGENCE, SN_SC_KPIS, SN_SC_TENK,
+  SN_SC_TENK_WHERE, SN_SC_TARIFFS, SN_SC_TARIFF_NOTE, SN_SC_MARGIN_LINK, SN_BL_SOURCES_V2,
+} from './sharkninja-bottomline.js';
+import { snResults } from '../results-data/sn.js';
 
 // esc: escapes <>" but leaves & literal (per contract — never double-encode).
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -371,27 +382,255 @@ function ddKpis(items){
 // the `geography` cut, the customer concentration as the `customers` block. What the engine has
 // no slot for (R&D narrative, footprint, sub-category roster) is in toplineGeneralExtras().
 
-function bottomLineGeneral(){
-  var rows = SN_BL_COST_TABLE.map(function(r){
-    return '<tr><td class="ov-td-name">FY'+esc(r[0])+'</td><td>'+r[1]+'%</td><td>'+r[2]+'%</td><td>'+r[3]+'%</td><td>'+r[4]+'%</td><td>'+r[5]+'%</td></tr>';
-  }).join('');
-  return '<div class="dd-h">Bottom Line</div>'+
-    '<div class="dd-sub">Where SharkNinja’s revenue stops being revenue — the annual cost-structure walk. The full quarterly trend, with Street consensus, is under Evolution ▸ Results ▸ Margins &amp; Profitability.</div>'+
-    ddKpis(SN_BL_MARGIN_KPIS)+
-    '<div class="dd-callout">'+esc(SN_BL_MARGIN_STORY)+'</div>'+
-    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Fiscal year</th><th>Gross margin</th><th>S&amp;M % of sales</th><th>G&amp;A % of sales</th><th>R&amp;D % of sales</th><th>Operating margin</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
-    '<div class="dd-note">'+esc(SN_BL_COST_NOTE)+'</div>';
+// ═══════════════════════════════════════════════════════════════════════════════
+// BOTTOM LINE — docs/PANE_CATALOG.md §2.
+//
+// Sub-tabs: General · Supply Chain. **Segments is deliberately absent**: SharkNinja
+// aggregates Domestic and International into ONE reportable segment, so there is no
+// segment operating income, margin, capex or D&A to compare. The blueprint is explicit
+// that sub-tabs are EARNED — shipping one whose body apologises for being empty is the
+// thing it warns against.
+//
+// General follows AMZN's shape: a picker over nested views (.gen-sec panes) plus the
+// expense-line collapsible. AMZN runs four views; SN gets five, because AMZN's balance
+// sheet lives on its Supply Chain tab and SN has no SPLC export to host one.
+//
+// CHARTS: the Profitability view is the shared Results ENGINE, registered at load with a
+// composed dataset — so it gets drag-zoom on both axes, series hiding that propagates to
+// the table, the collapsible table and the range slider for free, instead of a bespoke
+// canvas owing all of CHART_ENGINE_REFERENCE §0.2 by hand. The remaining views are CSS
+// bars and tables, which state a four-year decomposition exactly and need no canvas.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Registered at module load so resultsHtml('SN_BL') resolves on the first render pass.
+var _blReady = false;
+function blEnsure(){ if(!_blReady){ blRegisterMargins(); _blReady = true; } }
+
+var BL_COLORS = ['#1E293B', SN_BRAND, '#4C9AA3', C_MU2, '#A3AEBC'];
+
+function blFmtM(v){
+  if (v == null) return '—';
+  var s = Math.abs(v) >= 1000 ? (v / 1000).toFixed(2) + 'B' : v.toFixed(1) + 'M';
+  return (v < 0 ? '−$' : '$') + s.replace('-', '');
+}
+function blPct(v){ return v == null ? '—' : v.toFixed(1) + '%'; }
+
+// ── the composed Results dataset for the Profitability view ─────────────────────────
+// Built from snResults' own annual metrics plus the extras this tab declares, so nothing
+// is duplicated and the engine's margin mode gets a real denominator.
+function blRegisterMargins(){
+  var y = snResults.views.y, per = SN_BL_YEARS;
+  function pick(key){
+    var m = y.metrics[key]; if (!m) return null;
+    var o = { label: m.label, short: m.short || m.label, group: m.group, unit: m.unit,
+              periods: per.slice(), act: blSeries(key, 'act'),
+              cons: per.map(function(){ return null; }),
+              summit: per.map(function(){ return null; }),
+              guideLo: per.map(function(){ return null; }),
+              guideHi: per.map(function(){ return null; }), note: m.note };
+    if (m.marginOf){ o.marginOf = m.marginOf; o.marginLabel = m.marginLabel; }
+    return o;
+  }
+  var mets = {};
+  ['rev','grossProfit','opIncome','ebitdaAdj','niGaap','sm','ga','rd','da'].forEach(function(k){
+    var p = pick(k); if (p) mets[k] = p;
+  });
+  // free cash flow is not in snResults — declare it here, with its margin against revenue
+  mets.fcf = { label: 'Free cash flow', short: 'Free cash flow', group: 'Cash', unit: 'usdM',
+    marginOf: 'rev', marginLabel: 'FCF margin', periods: per.slice(),
+    act: SN_BL_EXTRA.fcf.v.slice(),
+    cons: per.map(function(){ return null; }), summit: per.map(function(){ return null; }),
+    guideLo: per.map(function(){ return null; }), guideHi: per.map(function(){ return null; }),
+    note: SN_BL_EXTRA.fcf.src };
+  mets.capex = { label: 'Capital expenditures', short: 'Capex', group: 'Cash', unit: 'usdM',
+    marginOf: 'rev', marginLabel: 'Capex % of sales', periods: per.slice(),
+    act: SN_BL_EXTRA.capex.v.slice(),
+    cons: per.map(function(){ return null; }), summit: per.map(function(){ return null; }),
+    guideLo: per.map(function(){ return null; }), guideHi: per.map(function(){ return null; }),
+    note: SN_BL_EXTRA.capex.src };
+
+  registerResultsData('SN_BL', {
+    updated: snResults.updated,
+    intro: 'Reported annual actuals only — no Street or Summit line on this view. The forward columns you see on the Results tab are deliberately not carried here: this view is about what the business has actually done to a dollar of revenue, four years running. Switch to <b>Margin</b> to read any line as a percentage of net sales.',
+    source: SN_BL_SOURCES_V2,
+    surprise: false,
+    views: { y: { label: 'Annual', note: 'FY2022–FY2025 reported. Free cash flow and capex are declared in sharkninja-bottomline.js; every other line is read through from js/results-data/sn.js.',
+      metrics: mets,
+      sections: [{ key: 'bl', label: 'Profitability & margins', defaultMetric: 'grossProfit', groups: [
+        { label: 'Profit', keys: ['rev','grossProfit','opIncome','ebitdaAdj','niGaap'] },
+        { label: 'Cost structure', keys: ['sm','ga','rd','da'] },
+        { label: 'Cash', keys: ['fcf','capex'] },
+      ] }] } }
+  });
 }
 
-function bottomLineBS(){
-  var rows = SN_BL_BS_TABLE.map(function(r){
-    return '<tr><td class="ov-td-name">FY'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+esc(r[3])+'</td><td>'+esc(r[4])+'</td><td>'+esc(r[5])+'</td></tr>';
+function blMarginsView(){
+  blEnsure();
+  return '<div class="dd-callout">' + SN_BL_MARGIN_STORY_V2 + '</div>' +
+    ddKpis(SN_BL_MARGIN_KPIS) +
+    '<div data-snblchart>' + (resultsHtml('SN_BL') || '') + '</div>';
+}
+
+// ── the cost walk: revenue → operating income ───────────────────────────────────────
+function blBridgeView(){
+  var rev = blSeries('rev', 'act'), gp = blSeries('grossProfit', 'act');
+  var sm = blSeries('sm', 'act'), ga = blSeries('ga', 'act'), rd = blSeries('rd', 'act');
+  var oi = blSeries('opIncome', 'act');
+
+  var bars = SN_BL_YEARS.map(function(fy, i){
+    var r = rev[i]; if (!r) return '';
+    var cogs = (gp[i] == null) ? null : r - gp[i];
+    var parts = [
+      ['Cost of sales', cogs], ['Selling & Marketing', sm[i]],
+      ['G&amp;A', ga[i]], ['R&amp;D', rd[i]], ['Operating income', oi[i]],
+    ];
+    var segs = parts.map(function(p, j){
+      if (p[1] == null) return '';
+      return '<div style="width:' + (p[1] / r * 100).toFixed(2) + '%;background:' + BL_COLORS[j] + '"></div>';
+    }).join('');
+    var lab = parts.map(function(p, j){
+      if (p[1] == null) return '';
+      return '<span style="color:' + BL_COLORS[j] + ';font-weight:700">' + p[0] + ' ' + (p[1] / r * 100).toFixed(1) + '%</span>';
+    }).join(' · ');
+    return '<div class="geo-bar"><div class="geo-bar-h"><span class="geo-bar-n">FY' + esc(fy) + '</span>' +
+      '<span class="geo-bar-v">' + blFmtM(r) + ' net sales</span></div>' +
+      '<div class="geo-bar-t" style="display:flex">' + segs + '</div>' +
+      '<div class="dd-note" style="margin:4px 0 0">' + lab + '</div></div>';
   }).join('');
-  return '<div class="dd-h">Balance Sheet &amp; Cash Flow</div>'+
-    ddKpis(SN_BL_BS_KPIS)+
-    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Fiscal year</th><th>Cash</th><th>Inventories</th><th>Capex</th><th>FCF</th><th>Net debt (BBG)</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
-    '<div class="dd-note">'+esc(SN_BL_BS_NOTE)+'</div>'+
-    '<div class="dd-callout">'+esc(SN_BL_DEBT_FLAG)+'</div>';
+
+  var rows = SN_BL_YEARS.map(function(fy, i){
+    var r = rev[i], cogs = (gp[i] == null || r == null) ? null : r - gp[i];
+    function c(v){ return '<td>' + blFmtM(v) + '<br><span class="ov-stat-mut">' + (v == null || !r ? '—' : blPct(v / r * 100)) + '</span></td>'; }
+    return '<tr><td class="ov-td-name">FY' + esc(fy) + '</td>' + c(r) + c(cogs) + c(sm[i]) + c(ga[i]) + c(rd[i]) +
+      '<td style="font-weight:700">' + blFmtM(oi[i]) + '<br><span class="ov-stat-mut">' + (oi[i] == null || !r ? '—' : blPct(oi[i] / r * 100)) + '</span></td></tr>';
+  }).join('');
+
+  return '<div class="dd-sub">' + SN_BL_BRIDGE_NOTE + '</div>' + bars +
+    '<div class="ov-table-wrap" style="overflow-x:auto;margin-top:14px"><table class="ov-table"><thead><tr>' +
+      '<th>Fiscal year</th><th>Net sales</th><th>Cost of sales</th><th>S&amp;M</th><th>G&amp;A</th><th>R&amp;D</th><th>Operating income</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="dd-note">Each cell shows the dollar amount and, below it, the share of that year\'s net sales.</div>' +
+    '<div class="dd-callout">' + SN_BL_BRIDGE_READ + '</div>';
+}
+
+// ── operating income → net income ──────────────────────────────────────────────────
+function blNetView(){
+  var oi = blSeries('opIncome', 'act'), ni = blSeries('niGaap', 'act'), tr = blSeries('taxRate', 'act');
+  var rows = SN_BL_YEARS.map(function(fy, i){
+    var pretax = (ni[i] == null || tr[i] == null || tr[i] >= 100) ? null : ni[i] / (1 - tr[i] / 100);
+    var resid = (pretax == null || oi[i] == null) ? null : pretax - oi[i];
+    var tax = (pretax == null || ni[i] == null) ? null : pretax - ni[i];
+    return '<tr><td class="ov-td-name">FY' + esc(fy) + '</td>' +
+      '<td>' + blFmtM(oi[i]) + '</td>' +
+      '<td style="color:' + (resid != null && resid < 0 ? '#DC2626' : 'inherit') + '">' + blFmtM(resid) + '</td>' +
+      '<td>' + blFmtM(pretax) + '</td>' +
+      '<td>' + blFmtM(tax == null ? null : -tax) + '<br><span class="ov-stat-mut">' + blPct(tr[i]) + '</span></td>' +
+      '<td style="font-weight:700">' + blFmtM(ni[i]) + '</td></tr>';
+  }).join('');
+  return '<div class="dd-sub">' + SN_BL_NET_NOTE + '</div>' +
+    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
+      '<th>Fiscal year</th><th>Operating income</th><th>Non-operating (residual)</th><th>Pre-tax income</th><th>Tax</th><th>GAAP net income</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="dd-note">Pre-tax income and the non-operating residual are <b>derived</b>, not reported: pre-tax = net income ÷ (1 − effective tax rate); residual = pre-tax − operating income.</div>' +
+    '<div class="dd-callout">' + SN_BL_NET_READ + '</div>';
+}
+
+// ── SBC ────────────────────────────────────────────────────────────────────────────
+function blSbcView(){
+  var v = SN_BL_EXTRA.sbc.v, rev = blSeries('rev', 'act');
+  var have = SN_BL_YEARS.map(function(fy, i){ return v[i] == null ? null : [fy, v[i], rev[i]]; }).filter(Boolean);
+  var max = Math.max.apply(null, have.map(function(h){ return h[1]; }));
+  var bars = have.map(function(h){
+    return '<div class="ov-mbar"><div class="ov-mbar-l">FY' + esc(h[0]) + '</div>' +
+      '<div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:' + (h[1] / max * 100).toFixed(1) + '%;background:' + SN_BRAND + '"></div></div>' +
+      '<div class="ov-mbar-v">' + blFmtM(h[1]) + ' · ' + (h[2] ? (h[1] / h[2] * 100).toFixed(2) + '% of sales' : '—') + '</div></div>';
+  }).join('');
+  return '<div class="dd-sub">Stock-based compensation, the years on file.</div>' + bars +
+    '<div class="dd-note">' + SN_BL_EXTRA.sbc.src + '</div>' +
+    '<div class="dd-callout">' + SN_BL_SBC_NOTE + '</div>';
+}
+
+// ── balance sheet & cash flow ──────────────────────────────────────────────────────
+function blBsView(){
+  var keys = ['cash', 'inventories', 'totalDebt', 'cfo', 'capex', 'fcf'];
+  var rows = SN_BL_YEARS.map(function(fy, i){
+    return '<tr><td class="ov-td-name">FY' + esc(fy) + '</td>' + keys.map(function(k){
+      var e = SN_BL_EXTRA[k], d = e.derived && e.derived[i];
+      return '<td>' + blFmtM(e.v[i]) + (d ? '<br><span class="ov-stat-mut">derived</span>' : '') + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+  return '<div class="dd-sub">The balance sheet and the cash it throws off. AMZN keeps this on its Supply Chain sub-tab; SN has no SPLC export, so it lives here.</div>' +
+    ddKpis(SN_BL_BS_KPIS) +
+    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Fiscal year</th>' +
+      keys.map(function(k){ return '<th>' + esc(SN_BL_EXTRA[k].label) + '</th>'; }).join('') +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="dd-note">' + keys.map(function(k){ return '<b>' + esc(SN_BL_EXTRA[k].label) + '</b> — ' + SN_BL_EXTRA[k].src; }).join('<br>') + '</div>' +
+    '<div class="dd-callout">' + SN_BL_DEBT_FLAG + '</div>';
+}
+
+// ── the expense-line collapsible ───────────────────────────────────────────────────
+function blExpenseLines(){
+  var rev = blSeries('rev', 'act');
+  var tabs = SN_BL_EXPENSE_LINES.map(function(e, i){
+    return '<button type="button" class="ovt-subtab' + (i === 0 ? ' active' : '') + '" data-snexp="' + e.k + '">' + e.label + '</button>';
+  }).join('');
+  var panes = SN_BL_EXPENSE_LINES.map(function(e, i){
+    var s = blSeries(e.metric, 'act');
+    var trend = SN_BL_YEARS.map(function(fy, j){
+      return '<tr><td class="ov-td-name">FY' + esc(fy) + '</td><td>' + blFmtM(s[j]) + '</td><td>' +
+        (s[j] == null || !rev[j] ? '—' : blPct(s[j] / rev[j] * 100)) + '</td></tr>';
+    }).join('');
+    return '<div data-snexppane="' + e.k + '"' + (i === 0 ? '' : ' hidden') + '>' +
+      '<div class="dd-sub">' + e.what + '</div>' +
+      '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
+        '<th>Fiscal year</th><th>Amount</th><th>% of net sales</th></tr></thead><tbody>' + trend + '</tbody></table></div>' +
+      '<div class="dd-h" style="margin-top:16px;font-size:12.5px">What is in it</div>' +
+      '<p style="font-size:12px;line-height:1.6;color:var(--navy);margin:0">' + e.composition + '</p>' +
+      '<div class="dd-h" style="margin-top:14px;font-size:12.5px">What moves it</div>' +
+      '<p style="font-size:12px;line-height:1.6;color:var(--navy);margin:0">' + e.drivers + '</p>' +
+      '<div class="dd-callout">' + e.watch + '</div></div>';
+  }).join('');
+  return '<div class="ovt-subtabs" data-snexpbar>' + tabs + '</div>' + panes +
+    '<div class="dd-note">' + SN_BL_EXPENSE_NOTE + '</div>';
+}
+
+function bottomLineGeneral(){
+  var picker = '<div class="ov-sec" style="padding-bottom:10px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
+    '<span style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)">Chart</span>' +
+    '<select class="gen-chart" data-snblsel style="font-size:13px;font-weight:700;color:var(--navy);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px;background:#fff">' +
+    SN_BL_VIEWS.map(function(o, i){
+      return '<option value="' + o[0] + '"' + (i === 0 ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
+    }).join('') + '</select>' +
+    '<span style="font-size:11px;color:var(--mu)">Pick one — the rest stay tucked away.</span>' +
+    '</div></div>';
+
+  var bodies = { margins: blMarginsView(), bridge: blBridgeView(), net: blNetView(),
+                 sbc: blSbcView(), bs: blBsView() };
+
+  return '<div class="dd-h">Bottom Line</div>' +
+    '<div class="dd-sub">' + esc(SN_BL_LEDE) + '</div>' + picker +
+    SN_BL_VIEWS.map(function(o, i){
+      return '<div class="gen-sec" data-gsec="' + o[0] + '"' + (i === 0 ? '' : ' hidden') + '>' + bodies[o[0]] + '</div>';
+    }).join('') +
+    collapsible('Expense lines — the three functional dives (composition, drivers, what to watch)', blExpenseLines()) +
+    '<div class="ov-foot">' + esc(SN_BL_SOURCES_V2) + '</div>';
+}
+
+// ── Supply Chain ───────────────────────────────────────────────────────────────────
+function bottomLineSupplyChain(){
+  var rows = SN_SC_TARIFFS.map(function(t){
+    return '<tr><td class="ov-td-name">' + esc(t[0]) + '</td><td style="font-weight:700">' + esc(t[1]) + '</td><td>' + esc(t[2]) + '</td></tr>';
+  }).join('');
+  return '<div class="dd-h">Supply Chain</div>' +
+    '<div class="sg-needs">⚑ <b>This is not AMZN\'s Supply Chain pane, and that is deliberate.</b><br><br>' + SN_SC_DIVERGENCE + '</div>' +
+    ddKpis(SN_SC_KPIS) +
+    '<div class="dd-callout">&ldquo;' + esc(SN_SC_TENK) + '&rdquo;<div class="dd-note" style="margin-top:6px">— ' + esc(SN_SC_TENK_WHERE) + '</div></div>' +
+    '<div class="dd-h" style="margin-top:22px;font-size:12.5px">Tariff exposure by manufacturing country</div>' +
+    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
+      '<th>Country</th><th>Assumed 2026 rate</th><th>Note</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="dd-note">' + SN_SC_TARIFF_NOTE + '</div>' +
+    '<div class="dd-h" style="margin-top:22px;font-size:12.5px">Why it lands on this tab</div>' +
+    '<div class="dd-callout">' + SN_SC_MARGIN_LINK + '</div>';
 }
 
 function mgmtExecsBoard(){
@@ -993,10 +1232,10 @@ function deepDiveHtml(c){
   h += '<div class="dd-pane" data-dd="bottomline" hidden>'+
     '<div class="ovt-subtabs">'+
       '<button type="button" class="ovt-subtab active" data-ovst="blgeneral">General</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="blbs">Balance Sheet &amp; Cash Flow</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="blsupply">Supply Chain</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="blgeneral">'+bottomLineGeneral()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="blbs" hidden>'+bottomLineBS()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="blsupply" hidden>'+bottomLineSupplyChain()+'</div>'+
   '</div>';
   h += '<div class="dd-pane" data-dd="evolution" hidden>'+
     '<div class="ovt-subtabs">'+
@@ -1055,6 +1294,11 @@ function ddBuildVisible(root){
   var sub = pane.querySelector('.ovt-subpane:not([hidden])'); if(!sub) return;
   var key = sub.getAttribute('data-ovst');
   if(key==='results'){ requestAnimationFrame(function(){ initResults(null, 'SN'); }); return; }
+  if(key==='blgeneral'){
+    var bh = sub.querySelector('.gen-sec[data-gsec="margins"]:not([hidden]) [data-snblchart]');
+    if(bh) requestAnimationFrame(function(){ initResults(bh, 'SN_BL'); });
+    return;
+  }
   // Earnings ▸ Setup hosts the Results engine on the SN_SETUP dataset — only build it when
   // the Setup phase is the visible one (Chart.js needs a non-null offsetParent).
   if(key==='earnings'){
@@ -1084,6 +1328,26 @@ function deepDiveInit(c){
       ddBuildVisible(root);
     });
   });
+  // Bottom Line ▸ General — the nested-view picker and the expense-line tab strip.
+  function blBuildChart(){
+    var host = root.querySelector('.gen-sec[data-gsec="margins"]:not([hidden]) [data-snblchart]');
+    if(host) requestAnimationFrame(function(){ initResults(host, 'SN_BL'); });
+  }
+  root.querySelectorAll('[data-snblsel]').forEach(function(sel){
+    sel.addEventListener('change', function(){
+      var k = sel.value;
+      root.querySelectorAll('.gen-sec').forEach(function(s){ s.hidden = s.getAttribute('data-gsec')!==k; });
+      if(k==='margins') blBuildChart();
+    });
+  });
+  root.querySelectorAll('[data-snexpbar] [data-snexp]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var k = btn.getAttribute('data-snexp');
+      root.querySelectorAll('[data-snexpbar] [data-snexp]').forEach(function(b){ b.classList.toggle('active', b===btn); });
+      root.querySelectorAll('[data-snexppane]').forEach(function(p){ p.hidden = p.getAttribute('data-snexppane')!==k; });
+    });
+  });
+
   // Evolution ▸ Guidance — fiscal-year pills.
   root.querySelectorAll('[data-snguide]').forEach(function(btn){
     btn.addEventListener('click', function(){

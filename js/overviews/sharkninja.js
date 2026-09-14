@@ -41,8 +41,11 @@ import {
   SN_Q_INTRO, SN_CAT_CORRECTION, SN_CAT_CORRECTION_LIMIT, SN_CAT_SOURCES,
   SN_SUBCATS, SN_SUBCATS_NOTE,
   SN_GUIDE_LEDE, SN_GUIDE_YEARS, SN_GUIDE_PATTERN, SN_GUIDE_SOURCES_NOTE,
-  SN_IR_URL, SN_EDGAR_URL, SN_EARN_LEDE, SN_EARN_PENDING, SN_NEXT_PRINT, SN_LAST_PRINT,
-  SN_EST_PENDING,
+  // SN_IR_URL / SN_EDGAR_URL are intentionally NOT imported: amzn.js line 5209 records that the
+  // IR + EDGAR cards "moved to the Company Profile header (Dani, Aug 2026)", so they do not belong
+  // in the Earnings pane even though EARNINGS_CONVENTIONS §6 still calls them its first element.
+  // They stay exported (with SN's real CIK 0001957132) for whoever wires SN's profile header.
+  SN_EARN_LEDE, SN_EARN_PENDING, SN_EST_PENDING,
   SN_STRAT_LEDE, SN_STRAT_MOAT, SN_STRAT_PROMISE, SN_STRAT_PROMISE_NOTE, SN_STRAT_GM,
   SN_STRAT_DIVERSIFY, SN_STRAT_INITIATIVES, SN_STRAT_AUDIT, SN_STRAT_SOURCES,
   SN_TL_LEDE, SN_EXEC_TIMELINE, SN_TL_TAGS, SN_IR_CADENCE, SN_TL_SOURCES,
@@ -52,9 +55,8 @@ import {
 // The Earnings record (docs/EARNINGS_CONVENTIONS.md §7). Street values are DERIVED from
 // js/results-data/sn.js at render time via snCell(), never copied.
 import {
-  snCell, SN_CE_SOURCE, SN_CE_ASOF, SN_CE_QUARTERS,
-  SN_SETUP_HEADLINE, SN_SETUP_CUSTOM, SN_SETUP_SYNTH, SN_SETUP_DEBATE_NOTE,
-  SN_FROZEN, SN_RESULTS, SN_CALL, SN_WL_ROWS, SN_WL_NOTE, SN_EARN_SOURCES,
+  snCell, SN_CE_QUARTERS, SN_SETUP_SYNTH, SN_SETUP_DEBATE_NOTE,
+  SN_FROZEN, SN_RESULTS, SN_CALL, SN_WL_ROWS, SN_WL_NOTE, SN_EARN_SOURCES, SN_CE_NOTES,
 } from './sharkninja-earnings.js';
 // Bottom Line (docs/PANE_CATALOG.md §2). No snBBG exists — SN is not in BBG_CONSENSUS.txt, so
 // bbg_extract.py cannot run; every P&L series is read through from js/results-data/sn.js instead.
@@ -822,32 +824,50 @@ function pendingBlock(p){
 }
 
 // ── Evolution ▸ Earnings ──────────────────────────────────────────────────────
-// Structure per EARNINGS_CONVENTIONS §6, matching AMZN/GOOGL exactly:
-//   the IR + EDGAR banner cards (mandatory, FIRST element)
-//   → the quarter selector (.ce-qpills, newest/upcoming first)
-//   → three phase tabs (.ce-phtabs): Setup · Watch List · Post-Results
-//   → per-quarter blocks (.ce-qblock[data-ceq]) inside each phase, one visible at a time.
-// The quarter pills are hidden on the Watch List phase (it is a flat cross-quarter table, §6f).
+// REBUILT against AMZN's RENDERED tab, not against the document. The first pass followed
+// EARNINGS_CONVENTIONS §6 as written and came out looking nothing like Amazon's, because
+// the doc and the code have drifted in several places. What AMZN actually ships:
 //
-// CSS comes from css/earnings.css — the .ce-* machinery extracted from amzn.js and scoped to
-// .ov-sn. No inline <style> here (blueprint §3.3).
+//   .ovt-subpane[data-ovst="earnings"]
+//     .ce-phtabs          ← phase tabs FIRST:  Setup · Post-Results · Notes
+//     .ce-qpills          ← quarter pills SECOND
+//     .ce-phpane × 3      ← each holding .ce-qblock[data-ceq] per quarter
+//
+// Three corrections to the first pass, each verified in the browser against amzn.js:
+//   1. NO IR/EDGAR cards inside this pane. §6 calls them "mandatory, first element"; AMZN's
+//      Earnings pane does not contain them at all. They moved to the profile header.
+//   2. Phase tabs come BEFORE the quarter pills, and the third phase is "Notes" (the theme
+//      record), not §6's "Watch List".
+//   3. The Setup grid is .ce-evwrap > .ce-row-cap + .ce-mgrid > .ce-mcell, where each cell is
+//      a 3-column mini-table (.ce-mtbl: row label · Street · Summit) carrying YoY and QoQ
+//      growth chips that the toggle bar shows and hides. The first pass invented .ce-grid4 /
+//      .ce-cell, which exist for something else.
+//
+// Every class used here is already in css/earnings.css — nothing new was needed, the first
+// pass simply picked the wrong ones.
 
-var SN_CE_LOGO = 'https://assets.parqet.com/logos/symbol/SN';
-var SN_CE_SEAL = 'img/sec-seal.png';
+// AMZN's headline block is nine slots, captioned "every company, always" — so the slots are
+// fixed and a company that cannot fill one shows it empty rather than dropping it.
+var SN_CE_HEADLINE9 = [
+  { k: 'Revenue',              key: 'rev',        u: 'usdM' },
+  { k: 'Gross profit',         key: 'grossProfit', u: 'usdM' },
+  { k: 'Operating income',     key: 'opIncome',   u: 'usdM' },
+  { k: 'EBITDA',               key: 'ebitdaAdj',  u: 'usdM' },
+  { k: 'EPS (diluted)',        key: 'epsAdj',     u: 'eps' },
+  { k: 'D&A',                  key: 'da',         u: 'usdM' },
+  { k: 'Operating cash flow',  key: null,         u: 'usdM', absent: 'Not carried quarterly in the SN export — the annual series is on Bottom Line.' },
+  { k: 'Capex',                key: null,         u: 'usdM', absent: 'Not carried quarterly in the SN export — the annual series is on Bottom Line.' },
+  { k: 'Diluted shares',       key: null,         u: 'sh',   absent: 'Not carried quarterly. The company guides a full-year diluted average (~142.5M for FY2026).' },
+];
 
-// The two loud source cards. Identity, not decoration: the company's real mark and the SEC seal,
-// no emoji — the CSS gives each the glowing ring and the corner watermark.
-function ceHeaderSources(){
-  return '<div class="cohd-src">' +
-    '<a href="' + esc(SN_IR_URL) + '" target="_blank" rel="noopener" ' +
-      'title="SharkNinja Investor Relations" aria-label="SharkNinja Investor Relations">' +
-      '<img src="' + SN_CE_LOGO + '" alt="SharkNinja logo" onerror="this.style.display=\'none\'">' +
-    '</a>' +
-    '<a class="edgar" href="' + esc(SN_EDGAR_URL) + '" target="_blank" rel="noopener" ' +
-      'title="SharkNinja on SEC EDGAR" aria-label="SharkNinja on SEC EDGAR">' +
-      '<img src="' + SN_CE_SEAL + '" alt="SEC seal" onerror="this.style.display=\'none\'">' +
-    '</a></div>';
-}
+var SN_CE_CUSTOM6 = [
+  { k: 'Cleaning',                  key: 'segCleaning',   u: 'usdM' },
+  { k: 'Cooking & Beverage',        key: 'segCookBev',    u: 'usdM' },
+  { k: 'Food Preparation',          key: 'segFoodPrep',   u: 'usdM' },
+  { k: 'Beauty & Home Environment', key: 'segBeautyHome', u: 'usdM' },
+  { k: 'Domestic net sales',        key: 'regionNA',      u: 'usdM' },
+  { k: 'International net sales',   key: 'regionIntl',    u: 'usdM' },
+];
 
 function ceQkey(q){ return String(q).replace(/\s+/g, '-').toLowerCase(); }
 function ceQPhases(q){
@@ -863,151 +883,98 @@ function ceQPills(){
   }).join('') + '</div>';
 }
 
-// ── Setup ────────────────────────────────────────────────────────────────────
-function ceFmt(v, unit){
+function ceVal(v, u){
   if (v == null) return '—';
-  if (unit === 'eps') return '$' + (+v).toFixed(2);
-  return '$' + (+v).toFixed(1).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + 'M';
+  if (u === 'eps') return '$' + (+v).toFixed(2);
+  if (u === 'sh')  return (+v).toFixed(1) + 'M';
+  return '$' + (Math.abs(v) >= 1000 ? (v / 1000).toFixed(2) + 'B' : (+v).toFixed(0) + 'M');
 }
-function ceYoY(y){
-  if (y == null) return '';
-  var p = (y * 100).toFixed(1);
-  return '<span class="ce-val-lab" style="color:' + (y < 0 ? '#EA4335' : '#2E8B57') + '">' +
-    (y > 0 ? '+' : '') + p + '% YoY</span>';
+function ceChip(x){
+  if (x == null) return '';
+  var p = (x * 100), s = (p > 0 ? '+' : '') + p.toFixed(0) + '%';
+  return '<span class="ce-gchip" style="color:' + (p < 0 ? '#EA4335' : '#2E8B57') + '">' + s + '</span>';
 }
-// One Setup cell: Street on top, Summit below. Summit is EMPTY for SN and says so — never a
-// fabricated second opinion (§5 rule 3).
-function ceCell(spec, period, prior, custom){
-  var c = snCell(spec.key, period, prior, spec.unit);
-  return '<div class="ce-cell' + (custom ? ' ce-cell-custom' : '') + '">' +
-    '<div class="ce-cell-k">' + esc(spec.k) +
-      (spec.note ? ' <button type="button" class="ce-q" data-snq="' + esc(spec.k) + '" ' +
-        'aria-label="Caveat">?</button>' : '') + '</div>' +
-    '<div class="ce-val ce-val-cons" data-snest="cons">' +
-      '<span class="ce-cell-v">' + (c ? ceFmt(c.v, spec.unit) : '—') + '</span> ' +
-      (c ? ceYoY(c.yoy) : '') +
-      '<div class="ce-val-lab">Street · Bloomberg</div></div>' +
-    '<div class="ce-val ce-val-us" data-snest="us" hidden>' +
-      '<span class="ce-cell-v">—</span>' +
-      '<div class="ce-val-lab">Summit · no model for SN</div></div>' +
-    (spec.note ? '<div class="ce-note-row" data-snqbody="' + esc(spec.k) + '" hidden>' + spec.note + '</div>' : '') +
+
+// One Setup cell — AMZN's exact shape: a 3-column mini-table, Street and Summit side by side,
+// each carrying a YoY and a QoQ chip. SN's Summit column is empty everywhere and says so,
+// because no DCF model exists (§5 rule 3 — estimates are never invented).
+function ceMCell(spec, q){
+  var street = null, yoy = null, qoq = null;
+  if (spec.key){
+    var c = snCell(spec.key, q.period, q.prior, spec.u);
+    if (c){ street = c.v; yoy = c.yoy; }
+    var pq = snCell(spec.key, q.period, q.prevQ, spec.u);
+    if (pq) qoq = pq.yoy;
+  }
+  var info = '<span class="ce-info ov-clickable" data-snq="' + esc(spec.k) + '">?</span>';
+  return '<div class="ce-mcell">' +
+    '<div class="ce-mcell-k">' + esc(spec.k) + info + '</div>' +
+    '<div class="ce-mtbl">' +
+      '<span class="ce-mrl"></span>' +
+      '<span class="ce-mh ce-mcol-cons">Street</span>' +
+      '<span class="ce-mh ce-mcol-us">Summit</span>' +
+      '<span class="ce-mrl">est</span>' +
+      '<span class="ce-mv ce-mcol-cons">' + ceVal(street, spec.u) +
+        '<span class="ce-gy">' + ceChip(yoy) + '</span>' +
+        '<span class="ce-gq">' + ceChip(qoq) + '</span></span>' +
+      '<span class="ce-mv ce-mcol-us">—</span>' +
+    '</div>' +
+    '<div class="ce-note-row" data-snqbody="' + esc(spec.k) + '" hidden>' +
+      (spec.absent ? spec.absent : (SN_CE_NOTES[spec.k] || 'No caveat recorded for this line.')) +
+      '<br><b>Summit column:</b> empty for every line — there is no Summit DCF model for SN, so there is no second estimate. Never a fabricated one.</div>' +
     '</div>';
 }
 
 function ceSetupUpcoming(q){
-  var head = SN_SETUP_HEADLINE.map(function(s){ return ceCell(s, q.period, q.prior, false); }).join('');
-  var cust = SN_SETUP_CUSTOM.map(function(s){ return ceCell(s, q.period, q.prior, true); }).join('');
-  return '<div class="ce-phase">' + esc(q.q) + ' · ' + esc(q.date) + '</div>' +
-    '<div class="ce-pill" style="margin-bottom:12px">Consensus ⇄ Summit</div>' +
-    '<div class="ce-legend">' +
-      '<span class="ce-legend-i"><b>Street</b> — Bloomberg consensus, ' + esc(SN_CE_ASOF) + ' snapshot</span>' +
-      '<span class="ce-legend-i"><b>Summit</b> — empty: no DCF model exists for SN</span>' +
-      '<span class="ce-legend-i">? — a caveat worth reading before quoting the cell</span>' +
+  var bar = '<div class="ov-diagram-cap" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 14px">' +
+    '<b>Estimates</b>' +
+    '<span class="mg-seg" style="display:inline-flex;gap:4px">' +
+      '<button type="button" class="ce-ev-pill active" data-snest-sel="cons">Consensus</button>' +
+      '<button type="button" class="ce-ev-pill" data-snest-sel="us">Summit</button>' +
+      '<button type="button" class="ce-ev-pill" data-snest-sel="both">Both</button>' +
+    '</span>' +
+    '<span class="ce-gseg">' +
+      '<button type="button" class="active" data-sngrow="yoy">YoY</button>' +
+      '<button type="button" data-sngrow="qoq">QoQ</button>' +
+      '<button type="button" data-sngrow="off">Off</button>' +
+    '</span></div>';
+
+  return '<div class="ce-phase">① Pre-Call</div>' + bar +
+    '<div class="ce-evwrap" data-ev="cons" data-g="yoy">' +
+      '<div class="ce-row-cap">Headline — every company, always</div>' +
+      '<div class="ce-mgrid">' + SN_CE_HEADLINE9.map(function(s){ return ceMCell(s, q); }).join('') + '</div>' +
+      '<div class="ce-row-cap">Custom KPIs — SN</div>' +
+      '<div class="ce-mgrid">' + SN_CE_CUSTOM6.map(function(s){ return ceMCell(s, q); }).join('') + '</div>' +
     '</div>' +
-    '<div class="ce-pill" data-snestbar style="display:inline-flex;gap:4px;margin:10px 0 14px">' +
-      '<button type="button" class="ce-phtab active" data-snest-sel="cons">Consensus</button>' +
-      '<button type="button" class="ce-phtab" data-snest-sel="us">Summit</button>' +
-      '<button type="button" class="ce-phtab" data-snest-sel="both">Both</button>' +
-    '</div>' +
-    '<div class="ce-grid4">' + head + '</div>' +
-    '<div class="ce-phase" style="margin-top:18px">The four that decide the quarter</div>' +
-    '<div class="ce-grid4">' + cust + '</div>' +
-    '<div class="ce-phase" style="margin-top:20px">The debate — what it establishes going in</div>' +
-    '<div class="ce-note">' + SN_SETUP_DEBATE_NOTE + '</div>' +
     '<div class="ce-synth">' + SN_SETUP_SYNTH + '</div>' +
-    '<div class="ce-note">Street figures derived at render time from js/results-data/sn.js — ' +
-      esc(SN_CE_SOURCE) + '.</div>' +
-    '<div class="ce-phase" style="margin-top:22px">The setup picture — reported actuals vs. Street</div>' +
-    '<div data-snsetupchart>' + (resultsHtml('SN_SETUP') || '') + '</div>';
+    '<div class="ce-note">' + SN_SETUP_DEBATE_NOTE + '</div>';
 }
 
 function ceSetupFrozen(q){
   var f = SN_FROZEN[q.q];
-  if (!f) return '<div class="ce-empty">No frozen pre-call view was recorded for this quarter.</div>';
-  return '<div class="ce-phase">' + esc(q.q) + ' · the frozen pre-call view</div>' +
-    '<div class="ce-frozen">' +
-      '<div class="ce-band-t">What was priced in</div>' +
+  if (!f) return '<div class="ce-phase">' + esc(q.q) + '</div><div class="ce-note">No frozen pre-call view was recorded for this quarter.</div>';
+  return '<div class="ce-phase">① Pre-Call — frozen</div>' +
+    '<p class="ov-lede"><b>' + esc(q.q) + '</b> — what was on the record going in, kept beside the print.</p>' +
+    '<div class="ce-frozen"><div class="ce-band-t">What was priced in</div>' +
       '<div class="ce-band-i">' + f.pricedIn + '</div>' +
       '<div class="ce-band-t" style="margin-top:11px">The one-liner going in</div>' +
-      '<div class="ce-band-i">' + f.oneLiner + '</div>' +
-    '</div>';
+      '<div class="ce-band-i">' + f.oneLiner + '</div></div>';
 }
 
 function ceSetupBody(){
   return SN_CE_QUARTERS.map(function(q, i){
     return '<div class="ce-qblock" data-ceq="' + esc(ceQkey(q.q)) + '"' + (i === 0 ? '' : ' hidden') + '>' +
       (q.status === 'upcoming' ? ceSetupUpcoming(q) : ceSetupFrozen(q)) + '</div>';
-  }).join('');
+  }).join('') +
+  '<div class="ce-row-cap" style="margin-top:20px">The setup picture — reported vs Street (Summit pending): pick any line, window the period with the lever</div>' +
+  '<div data-snsetupchart>' + (resultsHtml('SN_SETUP') || '') + '</div>' +
+  pendingBlock(SN_EARN_PENDING);
 }
 
-// ── Watch List (§6f) — ours, flat, cross-quarter ─────────────────────────────
-function ceWatchBody(){
-  var tags = [];
-  SN_WL_ROWS.forEach(function(r){ r.tags.forEach(function(t){ if (tags.indexOf(t) < 0) tags.push(t); }); });
-
-  var tagbar = '<div class="ce-wl-tagbar">' +
-    '<button type="button" class="ce-wl-tag active" data-snwltag="all">All</button>' +
-    tags.map(function(t){
-      return '<button type="button" class="ce-wl-tag" data-snwltag="' + esc(t) + '">' + esc(t) + '</button>';
-    }).join('') + '</div>';
-
-  var win = '<div class="ce-wl-win">' +
-    ['all', 'open', 'closed'].map(function(k, i){
-      var lab = k === 'all' ? 'All' : (k === 'open' ? 'Open hooks' : 'Closed');
-      return '<button type="button" class="ce-phtab' + (i === 0 ? ' active' : '') + '" data-snwlwin="' + k + '">' + lab + '</button>';
-    }).join('') + '</div>';
-
-  var cards = SN_WL_ROWS.slice().sort(function(a, b){ return a.rank - b.rank; }).map(function(r){
-    var open = !r.trackUntil;
-    return '<div class="ce-wl-frow" data-snwlrow="' + esc(r.id) + '" data-snwltags="' + esc(r.tags.join(' ')) +
-        '" data-snwlopen="' + (open ? '1' : '0') + '">' +
-      '<div class="ce-wl-fh">' +
-        '<span class="ce-wl-fh-t">' + esc(r.theme) + '</span>' +
-        '<span class="ce-wl-fh-s">' + esc(r.q) + '</span>' +
-      '</div>' +
-      '<div class="ce-wl-lb">' + r.definition + '</div>' +
-      '<div class="ce-wl-hint">' +
-        r.tags.map(function(t){ return '<span class="ce-hl-tag">' + esc(t) + '</span>'; }).join(' ') +
-        ' · <b>' + (open ? 'open' : 'closed ' + esc(r.trackUntil)) + '</b>' +
-        (r.trackSince ? ' · since ' + esc(r.trackSince) : '') +
-        (r.seededBy ? ' · <span class="ce-seed">' + (r.seededBy.tripped
-            ? '⚑ thesis line broke in ' + esc(r.seededBy.q)
-            : 'left open by ' + esc(r.seededBy.q)) + '</span>' : '') +
-      '</div>' +
-      (r.src ? '<div class="ce-note-row">' + r.src + '</div>' : '') +
-    '</div>';
-  }).join('');
-
-  // The storage view — the table, with a live counter and the copy actions (§6f).
-  var tbl = '<div class="ce-wl-tbl-wrap"><table class="ce-wl-tbl"><thead><tr>' +
-    '<th>theme</th><th>tags</th><th>trackSince</th><th>trackUntil</th></tr></thead><tbody>' +
-    SN_WL_ROWS.map(function(r){
-      return '<tr><td class="ce-wl-tbl-t">' + esc(r.theme) + '</td><td>' + esc(r.tags.join(' ')) +
-        '</td><td>' + esc(r.trackSince || '') + '</td><td>' + esc(r.trackUntil || '—') + '</td></tr>';
-    }).join('') + '</tbody></table></div>';
-
-  return '<div class="ce-phase">The hunt list — ' + SN_WL_ROWS.length + ' themes, ' +
-      SN_WL_ROWS.filter(function(r){ return !r.trackUntil; }).length + ' open</div>' +
-    '<div class="ce-note">' + SN_WL_NOTE + '</div>' +
-    tagbar + win +
-    '<div class="ce-wl-all">' + cards + '</div>' +
-    '<div class="ce-phase" style="margin-top:20px">The table — the storage view</div>' + tbl +
-    '<div class="ce-note">Rows live in <code>SN_WL_ROWS</code> (js/overviews/sharkninja-earnings.js). ' +
-      'The add / edit / delete composer that AMZN ships is not wired here — SN\'s list is edited in the ' +
-      'file, and pretending otherwise would put a control on screen that writes nowhere.</div>' +
-    '<div class="ce-phase" style="margin-top:24px">The theme record</div>' +
-    '<div class="ce-note">The full commentary compendium — themes, status and age — is rendered by the ' +
-      'shared engine under <b>Top Line &#9656; Segments &#9656; What management has said</b>, which is where ' +
-      '<code>SN_THEMES</code> already lives. One home, not two.</div>';
-}
-
-// ── Post-Results — the red-line check FIRST, then the scorecard ──────────────
+// ── Post-Results ─────────────────────────────────────────────────────────────
 var CE_RES = {
-  beat:   ['beat', '#2E8B57'],
-  miss:   ['miss', '#EA4335'],
-  inline: ['in line', '#9AA4B0'],
-  nodisc: ['not disclosed', '#B7791F'],
-  nocons: ['no Street estimate', '#9AA4B0'],
+  beat:   ['beat', '#2E8B57'], miss: ['miss', '#EA4335'], inline: ['in line', '#9AA4B0'],
+  nodisc: ['not disclosed', '#B7791F'], nocons: ['no Street estimate', '#9AA4B0'],
 };
 function ceSurpWord(n){
   if (n >= 70) return ['big surprise', 'hi'];
@@ -1017,19 +984,19 @@ function ceSurpWord(n){
 
 function ceResultsQ(q){
   var r = SN_RESULTS[q.q];
-  if (!r) return '<div class="ce-empty">This quarter has not reported.</div>';
+  if (!r) return '<div class="ce-phase">② Post-Results</div>' +
+    '<p class="ov-lede"><b>' + esc(q.q) + '</b> — the numbers vs. the frozen expectation above.</p>' +
+    '<div class="ce-note">Empty until the print lands (' + esc(q.date) + ').</div>';
 
   var tripped = r.thesisCheck.filter(function(t){ return t.tripped; }).length;
   var lines = r.thesisCheck.slice().sort(function(a, b){ return (b.tripped ? 1 : 0) - (a.tripped ? 1 : 0); });
   var thesis = '<div class="ce-thesis">' +
     '<div class="ce-thesis-h"><span class="ce-thesis-t">The red lines — what would change the thesis</span>' +
-      '<span class="ce-thesis-c ' + (tripped ? 'trip' : 'ok') + '">' +
-        (tripped ? '⚑ ' + tripped + ' tripped' : '✓ all held') + '</span></div>' +
+      '<span class="ce-thesis-c ' + (tripped ? 'trip' : 'ok') + '">' + (tripped ? '⚑ ' + tripped + ' tripped' : '✓ all held') + '</span></div>' +
     lines.map(function(t){
       return '<div class="ce-thesis-r' + (t.tripped ? ' trip' : '') + '">' +
         '<div class="ce-thesis-ic">' + (t.tripped ? '⚑' : '✓') + '</div>' +
-        '<div><div class="ce-thesis-l">' + esc(t.line) + '</div>' +
-        '<div class="ce-thesis-n">' + t.note + '</div></div></div>';
+        '<div><div class="ce-thesis-l">' + esc(t.line) + '</div><div class="ce-thesis-n">' + t.note + '</div></div></div>';
     }).join('') + '</div>';
 
   var rows = r.scorecard.slice().sort(function(a, b){ return b.surprise - a.surprise; }).map(function(s){
@@ -1047,58 +1014,90 @@ function ceResultsQ(q){
   var bands = ['context', 'logged'].map(function(b){
     var items = hl ? hl.highlights.filter(function(x){ return x.band === b; }) : [];
     if (!items.length) return '';
-    return '<div class="ce-suppl-band"><div class="ce-suppl-band-h">' +
-      (b === 'context' ? 'Context' : 'Logged') + '</div>' +
+    return '<div class="ce-suppl-band"><div class="ce-suppl-band-h">' + (b === 'context' ? 'Context' : 'Logged') + '</div>' +
       items.map(function(x){
-        return '<div class="ce-suppl-i"><b>' + x.t + '</b>' +
-          (x.open ? '<span class="ce-suppl-open">open</span>' : '') + ' — ' + x.d + '</div>';
+        return '<div class="ce-suppl-i"><b>' + x.t + '</b>' + (x.open ? '<span class="ce-suppl-open">open</span>' : '') + ' — ' + x.d + '</div>';
       }).join('') + '</div>';
   }).join('');
 
-  return '<div class="ce-phase">' + esc(q.q) + ' · reported ' + esc(r.date) + '</div>' +
+  return '<div class="ce-phase">② Post-Results</div>' +
+    '<p class="ov-lede"><b>' + esc(q.q) + '</b> — reported ' + esc(r.date) + '. The red lines first, then the scorecard.</p>' +
     thesis +
     '<div class="ce-legend">' +
       '<span class="ce-legend-i"><b>Ordered by surprise</b>, never by release order</span>' +
-      '<span class="ce-legend-i">Surprise is <b>editorial</b> — it renders as a word, never a bar or a percentage</span>' +
-      '<span class="ce-legend-i"><b>no Street estimate</b> — §7b <code>nocons</code>: an unmodelled line, not a failure</span>' +
+      '<span class="ce-legend-i">Surprise is <b>editorial</b> — a word, never a bar or a percentage</span>' +
+      '<span class="ce-legend-i"><b>no Street estimate</b> — §7b <code>nocons</code>: unmodelled, not a failure</span>' +
     '</div>' +
     '<div class="ce-sc">' + rows + '</div>' +
-    '<div class="ce-note"><b>Why every row says "no Street estimate":</b> our only Bloomberg file for SN is a ' +
-      'Sep-2026 snapshot taken <i>after</i> this print, so there is no frozen pre-print column to score ' +
-      'against. Scoring beat/miss off a post-print snapshot would be look-ahead. §7b exists for exactly ' +
-      'this case, and is explicit that it is never a comment on our coverage.</div>' +
-    '<div class="ce-phase" style="margin-top:18px">What the numbers tee up for the call</div>' +
+    '<div class="ce-note"><b>Why every row says "no Street estimate":</b> our only Bloomberg file for SN is a Sep-2026 snapshot taken <i>after</i> this print, so there is no frozen pre-print column. Scoring beat/miss off a post-print snapshot would be look-ahead.</div>' +
+    '<div class="ce-row-cap" style="margin-top:16px">What the numbers tee up for the call</div>' +
     '<ul class="ce-diverge">' + r.intoCall.map(function(x){ return '<li>' + x + '</li>'; }).join('') + '</ul>' +
-    '<div class="ce-suppl"><div class="ce-suppl-h">' +
-      '<span class="ce-suppl-t">Also on the call</span>' +
+    '<div class="ce-suppl"><div class="ce-suppl-h"><span class="ce-suppl-t">Also on the call</span>' +
       '<span class="ce-suppl-pill">supplemental</span></div>' +
-      '<div class="ce-note-row">Call colour that would never earn a Watch slot but is still worth saying. ' +
-        'Thesis-movers are deliberately NOT here — they are routed to the Watch List, which is the ' +
-        'tracking layer.</div>' + bands + '</div>' +
-    '<div class="ce-note">Price reaction: ' + esc(r.priceReaction) + '</div>';
+      '<div class="ce-note-row">Call colour that would never earn a Notes slot but is still worth saying. Thesis-movers are routed to Notes instead.</div>' +
+      bands + '</div>';
 }
 
 function ceResultsBody(){
   return SN_CE_QUARTERS.map(function(q, i){
-    return '<div class="ce-qblock" data-ceq="' + esc(ceQkey(q.q)) + '"' + (i === 0 ? '' : ' hidden') + '>' +
-      ceResultsQ(q) + '</div>';
+    return '<div class="ce-qblock" data-ceq="' + esc(ceQkey(q.q)) + '"' + (i === 0 ? '' : ' hidden') + '>' + ceResultsQ(q) + '</div>';
   }).join('');
 }
 
-function qEarnings(){
-  return ceHeaderSources() +
-    '<div class="dd-sub">' + SN_EARN_LEDE + '</div>' +
-    ceQPills() +
-    '<div class="ce-phtabs">' +
-      '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>' +
-      '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>' +
-      '<button type="button" class="ce-phtab" data-cep="results">Post-Results</button>' +
+// ── Notes — AMZN's third phase: the theme record, plus our own hunt list ─────
+function ceNotesBody(){
+  var tags = [];
+  SN_WL_ROWS.forEach(function(r){ r.tags.forEach(function(t){ if (tags.indexOf(t) < 0) tags.push(t); }); });
+  var open = SN_WL_ROWS.filter(function(r){ return !r.trackUntil; }).length;
+
+  var cards = SN_WL_ROWS.slice().sort(function(a, b){ return a.rank - b.rank; }).map(function(r){
+    var isOpen = !r.trackUntil;
+    return '<div class="ce-wl-frow" data-snwlrow="' + esc(r.id) + '" data-snwltags="' + esc(r.tags.join(' ')) +
+        '" data-snwlopen="' + (isOpen ? '1' : '0') + '">' +
+      '<div class="ce-wl-fh"><span class="ce-wl-fh-t">' + esc(r.theme) + '</span>' +
+        '<span class="ce-wl-fh-s">' + esc(r.q) + '</span></div>' +
+      '<div class="ce-wl-lb">' + r.definition + '</div>' +
+      '<div class="ce-wl-hint">' + r.tags.map(function(t){ return '<span class="ce-hl-tag">' + esc(t) + '</span>'; }).join(' ') +
+        ' · <b>' + (isOpen ? 'open' : 'closed ' + esc(r.trackUntil)) + '</b>' +
+        (r.trackSince ? ' · since ' + esc(r.trackSince) : '') +
+        (r.seededBy ? ' · <span class="ce-seed">' + (r.seededBy.tripped
+          ? '⚑ thesis line broke in ' + esc(r.seededBy.q) : 'left open by ' + esc(r.seededBy.q)) + '</span>' : '') +
+      '</div>' + (r.src ? '<div class="ce-note-row">' + r.src + '</div>' : '') + '</div>';
+  }).join('');
+
+  return '<div class="ce-band"><span class="ce-band-i">▤</span>' +
+      '<span class="ce-band-t">The theme record — every thread, across quarters</span>' +
+      '<span class="ce-band-s">the multi-year backbone behind the prints</span></div>' +
+    '<div class="ce-note">SharkNinja\'s theme record is rendered by the shared segments engine under ' +
+      '<b>Top Line &#9656; Segments &#9656; What management has said</b>, where <code>SN_THEMES</code> lives — ' +
+      'seven themes with status chips and the By theme &#8646; By quarter toggle. One home, not two copies.</div>' +
+
+    '<div class="ce-band" style="margin-top:22px"><span class="ce-band-i">◎</span>' +
+      '<span class="ce-band-t">The hunt list — ' + SN_WL_ROWS.length + ' themes, ' + open + ' open</span>' +
+      '<span class="ce-band-s">ours, not a model output</span></div>' +
+    '<div class="ce-note">' + SN_WL_NOTE + '</div>' +
+    '<div class="ce-wl-tagbar"><button type="button" class="ce-wl-tag active" data-snwltag="all">All</button>' +
+      tags.map(function(t){ return '<button type="button" class="ce-wl-tag" data-snwltag="' + esc(t) + '">' + esc(t) + '</button>'; }).join('') +
     '</div>' +
+    '<div class="ce-wl-win">' + ['all', 'open', 'closed'].map(function(k, i){
+      var lab = k === 'all' ? 'All' : (k === 'open' ? 'Open hooks' : 'Closed');
+      return '<button type="button" class="ce-ev-pill' + (i === 0 ? ' active' : '') + '" data-snwlwin="' + k + '">' + lab + '</button>';
+    }).join('') + '</div>' +
+    '<div class="ce-wl-all">' + cards + '</div>' +
+    '<div class="ce-note">Rows live in <code>SN_WL_ROWS</code> (js/overviews/sharkninja-earnings.js). The add / edit / delete composer AMZN ships is not wired here — SN\'s list is edited in the file, and a control that writes nowhere is worse than no control.</div>';
+}
+
+function qEarnings(){
+  return '<div class="ce-phtabs">' +
+      '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>' +
+      '<button type="button" class="ce-phtab" data-cep="results">Post-Results</button>' +
+      '<button type="button" class="ce-phtab" data-cep="watch">Notes</button>' +
+    '</div>' +
+    ceQPills() +
     '<div class="ce-phpane" data-cep="setup">' + ceSetupBody() + '</div>' +
-    '<div class="ce-phpane" data-cep="watch" hidden>' + ceWatchBody() + '</div>' +
     '<div class="ce-phpane" data-cep="results" hidden>' + ceResultsBody() + '</div>' +
-    '<div class="ce-note">' + esc(SN_EARN_SOURCES) + '</div>' +
-    pendingBlock(SN_EARN_PENDING);
+    '<div class="ce-phpane" data-cep="watch" hidden>' + ceNotesBody() + '</div>' +
+    '<div class="ce-note">' + esc(SN_EARN_SOURCES) + '</div>';
 }
 
 function qEstimates(){
@@ -1537,16 +1536,27 @@ function deepDiveInit(c){
         ceBuildSetupChart();
       });
     });
-    // Consensus ⇄ Summit ⇄ Both. Summit is empty for SN, so "Summit" and "Both" are honest
-    // about that rather than hiding the control.
+    // Consensus ⇄ Summit ⇄ Both and YoY ⇄ QoQ ⇄ Off. Both drive DATA ATTRIBUTES on
+    // .ce-evwrap — data-ev and data-g — which is how the .ce-* stylesheet switches the
+    // mini-table between 2 and 3 columns and shows the right growth chip. Setting
+    // `hidden` on the cells instead (the first pass) left the grid at 2 columns with 6
+    // items in it, which is what made the whole grid wrap into a mess.
+    function ceSetEv(v){
+      earnPane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-ev', v); });
+    }
+    function ceSetG(v){
+      earnPane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-g', v); });
+    }
     earnPane.querySelectorAll('[data-snest-sel]').forEach(function(btn){
       btn.addEventListener('click', function(){
-        var k = btn.getAttribute('data-snest-sel');
         earnPane.querySelectorAll('[data-snest-sel]').forEach(function(b){ b.classList.toggle('active', b===btn); });
-        earnPane.querySelectorAll('[data-snest]').forEach(function(v){
-          var kind = v.getAttribute('data-snest');
-          v.hidden = (k==='both') ? false : (kind !== k);
-        });
+        ceSetEv(btn.getAttribute('data-snest-sel'));
+      });
+    });
+    earnPane.querySelectorAll('[data-sngrow]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        earnPane.querySelectorAll('[data-sngrow]').forEach(function(b){ b.classList.toggle('active', b===btn); });
+        ceSetG(btn.getAttribute('data-sngrow'));
       });
     });
     // ceQ caveat pop-ups on the cells that carry a trap.

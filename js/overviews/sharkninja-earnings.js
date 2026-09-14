@@ -232,7 +232,25 @@ export var SN_EARN_SOURCES = 'Sources: SharkNinja Q2 2026 earnings release and c
 // through, never copied. A quarter with no SN_RESULTS entry simply has no Post-Results phase —
 // the pill carries `data-ceqhas` and the phase machinery hides it there.
 export var SN_CE_QUARTERS = [
-  { q: 'Q3 2026', status: 'upcoming', date: 'Nov 5, 2026', period: '3Q26', prior: '3Q25' },
-  { q: 'Q2 2026', status: 'reported', date: 'Aug 5, 2026', period: '2Q26', prior: '2Q25' },
-  { q: 'Q1 2026', status: 'reported', date: 'May 6, 2026', period: '1Q26', prior: '1Q25' },
+  { q: 'Q3 2026', status: 'upcoming', date: 'Nov 5, 2026', period: '3Q26', prior: '3Q25', prevQ: '2Q26' },
+  { q: 'Q2 2026', status: 'reported', date: 'Aug 5, 2026', period: '2Q26', prior: '2Q25', prevQ: '1Q26' },
+  { q: 'Q1 2026', status: 'reported', date: 'May 6, 2026', period: '1Q26', prior: '1Q25', prevQ: '4Q25' },
 ];
+
+// ── per-metric caveats, keyed by the label shown on the cell ─────────────────────────────────
+// Rendered behind the `?` on each Setup cell (§6's ceQ pop-ups). A cell without an entry says so
+// rather than showing an empty popover.
+export var SN_CE_NOTES = {
+  'Revenue': 'Total net sales. SharkNinja does <b>not guide by quarter</b> — the FY2026 guide of +16.0-17.0% is the only company number in play and it is annual. See Evolution &#9656; Guidance.',
+  'Gross profit': 'GAAP gross profit. The adjusted figure differs by the Product Procurement Adjustment and, through Jul 2025, the JS Global sourcing service fee.',
+  'Operating income': 'GAAP operating income. The Street implies a large YoY step; 3Q25 carried no tariff annualization, so the base is not clean.',
+  'EBITDA': '<b>Adjusted</b> EBITDA — the line the company guides. Its stated goal is full-year Adj. EBITDA growing FASTER than net sales; 2Q26 ran against that (+18.6% vs +22.2%) on tariff annualization.',
+  'EPS (diluted)': '<b>Adjusted</b> diluted EPS, the basis SharkNinja guides and headlines. GAAP diluted EPS is a separate line and the two diverge on share-based comp and FX. Note the Street models FY2026 at $6.59, ABOVE the company\'s guided $6.45-6.55.',
+  'D&A': 'Depreciation and amortization. Low relative to revenue because the company owns no factories — see Bottom Line &#9656; Supply Chain.',
+  'Cleaning': 'The largest category and the slowest-growing: +4.1% in 2Q26 and +3.4% in 4Q25. The diversification argument rests on this being "growing, not flat".',
+  'Cooking & Beverage': 'Luxe Cafe espresso and the Crispi franchise. The Crispi Microwave launched Jul 2026 and lands in this line from 3Q26.',
+  'Food Preparation': 'The lumpiest line in the business — +52.8% in 2Q25, -3.3% in 1Q26, +13.3% in 2Q26. Frozen drinks (SLUSHi) drive the swing.',
+  'Beauty & Home Environment': 'Fastest grower for four straight quarters (+65.3% in 2Q26) and the most seasonal — fans peak in Q2/Q3, which is why the Street models a step DOWN from 2Q26.',
+  'Domestic net sales': 'Includes Canada, which fell 17% in 2Q26 on the remaining transition while the US grew 18%. The segment total understates the US.',
+  'International net sales': 'The distributor-to-direct conversions finished in 2Q26, so 3Q26 is the first quarter with no conversion drag in the base.',
+};

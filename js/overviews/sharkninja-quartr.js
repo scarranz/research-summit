@@ -56,23 +56,82 @@ export var SN_SUBCATS = {
 export var SN_SUBCATS_NOTE = 'As of Dec 31, 2025, per the investor presentation (p.17) — 38 in total, rising to 40 with the Ninja Crispi Microwave (Jul 2026) and a 41st flagged by management for late 3Q26. The rosters show how little the two brands overlap: Shark is the home and personal-care side, Ninja is everything that sits near food. Note the drift beyond appliances — Ninja now sells Drinkware, Coolers, Cutlery, Cookware and Bakeware, none of which are motorized, which the 10-K\'s "small household appliances" description does not capture.';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// FY2026 GUIDANCE WALK — Management ▸ Track Record
-// The record of what management told the market and how it changed.
+// GUIDANCE — Evolution ▸ Guidance
+//
+// SharkNinja guides the FISCAL YEAR, never the quarter (confirmed across every release
+// read: each carries a "Fiscal 20XX Outlook" block and no quarterly outlook at all). So
+// the unit of analysis is a FY guide and how it moved print by print — a ratchet, not a
+// per-quarter beat/miss. Each release also restates the guide it replaced ("above the
+// prior expectation of …"), which is what makes the walk reconstructible.
+//
+// SOURCED PER ISSUE DATE from the release itself. A cell reading 'n/r' means NOT
+// RECOVERABLE, never "not given": the FY2024 and early-FY2025 release PDFs on Quartr
+// carry no extractable text layer (they return heading fragments only), so the Feb 2025
+// initial guide survives only through the restatement in the 1Q25 release, which listed
+// the three headline metrics and not the rest. FY2024's walk is not recoverable at all.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// [metric, priorGuide, updatedGuide, note]
-export var SN_GUIDE_WALK_2026 = [
-  ['Net sales growth', '+11.5% to +12.5%', '+16.0% to +17.0%', 'Raised ~4.5pp — no tariff-refund component at all; this is operating performance.'],
-  ['Adjusted EPS', '$6.00 – $6.10', '$6.45 – $6.55', 'Of the $0.45 increase, ~$0.15 is the expected net tariff-refund benefit — so ~$0.30 is operational.'],
-  ['Adjusted EBITDA', '$1,290M – $1,300M', '$1,357M – $1,369M', 'Of the $67–69M increase, ~$30M is the tariff refund — so roughly half to two-thirds is operational.'],
-  ['GAAP effective tax rate', '~22.0% to ~23.0%', '~22.0% to ~23.0%', 'Unchanged.'],
-  ['Diluted weighted avg. shares', '~143.0M', '~142.5M', 'Slightly lower on buyback activity.'],
-  ['Capital expenditures', '$190M – $210M', '$190M – $210M', 'Range unchanged, but now "tracking toward the high end."'],
+export var SN_GUIDE_LEDE = 'SharkNinja guides the <b>fiscal year</b> and never the quarter — so the question is not "did it beat the quarter" but <b>how the year\'s guide moved across the four prints, and where it landed</b>. Every release restates the guide it replaced, which makes the whole ratchet reconstructible from primary sources.';
+
+// verdict: 'above' | 'below' | 'inside' | null (year still open)
+export var SN_GUIDE_YEARS = [
+  {
+    fy: 'FY2026',
+    status: 'in flight',
+    // [shortLabel, date, what happened]
+    issues: [
+      ['Initial', 'Feb 11, 2026', 'issued with the FY2025 results'],
+      ['After 1Q26', 'May 6, 2026', 'raised'],
+      ['After 2Q26', 'Aug 5, 2026', 'raised again — the current guide'],
+    ],
+    hasActual: false,
+    metrics: [
+      { m: 'Net sales growth', vals: ['+10.0% to +11.0%', '+11.5% to +12.5%', '+16.0% to +17.0%'], act: null, verdict: null,
+        note: 'Raised twice, and the second raise carries <b>no</b> tariff-refund component — the whole ~4.5pp step is operating performance.' },
+      { m: 'Adj. net income per diluted share', vals: ['$5.90 – $6.00', '$6.00 – $6.10', '$6.45 – $6.55'], act: null, verdict: null,
+        note: 'Of the $0.45 raise at 2Q26, ~$0.15 is the expected net tariff refund — so ~$0.30 is operational.' },
+      { m: 'Adj. EBITDA', vals: ['$1,270M – $1,280M', '$1,290M – $1,300M', '$1,357M – $1,369M'], act: null, verdict: null,
+        note: 'Of the $67–69M raise at 2Q26, ~$30M is the tariff refund — roughly half to two-thirds is operational.' },
+      { m: 'GAAP effective tax rate', vals: ['~22.0% to 23.0%', '~22.0% to 23.0%', '~22.0% to 23.0%'], act: null, verdict: null,
+        note: 'Held flat all year.' },
+      { m: 'Diluted weighted avg. shares', vals: ['~143.5M', '~143.0M', '~142.5M'], act: null, verdict: null,
+        note: 'Grinding down as the $750M repurchase program runs — 1,008,368 shares bought back in 1H26 at an average $118.71.' },
+      { m: 'Capital expenditures', vals: ['$190M – $210M', '$190M – $210M', '$190M – $210M'], act: null, verdict: null,
+        note: 'Range never moved, but at 2Q26 it is "tracking toward the high end" — the opposite of FY2025, which tracked to the low end and then undershot badly.' },
+    ],
+    story: 'FY2026 is running the same play as FY2025. The year opened at <b>+10.0–11.0%</b> net sales growth and is now guided to <b>+16.0–17.0%</b> — two raises in two prints, and the top-line raise contains no tariff-refund benefit at all. If the FY2025 pattern repeats, the final guide is still the floor rather than the ceiling.',
+  },
+  {
+    fy: 'FY2025',
+    status: 'closed',
+    issues: [
+      ['Initial', 'Feb 13, 2025', 'issued with the FY2024 results'],
+      ['After 1Q25', 'May 8, 2025', 'raised'],
+      ['After 2Q25', 'Aug 7, 2025', 'raised'],
+      ['After 3Q25', 'Nov 6, 2025', 'raised — the final guide'],
+    ],
+    hasActual: true,
+    metrics: [
+      { m: 'Net sales growth', vals: ['+10% to +12%', '+11% to +13%', '+13% to +15%', '+15.0% to +15.5%'], act: '+15.7%', verdict: 'above',
+        note: 'Raised at every single print, and the reported year still came in <b>above the final raised guide</b>.' },
+      { m: 'Adj. net income per diluted share', vals: ['$4.80 – $4.90', '$4.90 – $5.00', '$5.00 – $5.10', '$5.05 – $5.15'], act: '$5.28', verdict: 'above',
+        note: 'Landed <b>$0.13 above the top</b> of the final range, and ~$0.40 above where the year started.' },
+      { m: 'Adj. EBITDA', vals: ['$1,070M – $1,090M', '$1,090M – $1,110M', '$1,100M – $1,120M', '$1,115M – $1,125M'], act: '$1,135.5M', verdict: 'above',
+        note: 'Above the top of the final range by $10.5M, and ~$55M above the initial guide\'s midpoint.' },
+      { m: 'GAAP effective tax rate', vals: ['n/r', '~24% to 25%', '~24% to 25%', '~23.0% to 24.0%'], act: '22.1%', verdict: 'below',
+        note: 'Below the guided range — <b>favourable</b> here, since a lower tax rate flatters EPS. The company attributes it to "one-time benefits recorded in the fourth quarter of 2025"; the amount and nature were not disclosed.' },
+      { m: 'Diluted weighted avg. shares', vals: ['n/r', '~142.5M', '~143M', '~142.5M'], act: 'n/c', verdict: null,
+        note: 'Guided consistently around 142.5–143M. The reported full-year diluted share count was not compiled in this pass.' },
+      { m: 'Capital expenditures', vals: ['n/r', '$180M – $200M', '$180M – $200M', '$180M – $200M'], act: '$146.1M', verdict: 'below',
+        note: '⚑ <b>The one real planning miss.</b> Guided $180–200M all year and flagged as "tracking toward the lower end" at 3Q25, yet the 10-K cash-flow statement shows <b>$146.1M</b> — roughly $34M below even the bottom of the range. Caveat before calling it a miss: the guided "capital expenditures" may be defined more broadly than the cash-flow line (capitalised software is the usual difference), and the company did not reconcile the two. Shown as reported, not forced to agree.' },
+    ],
+    story: 'FY2025 is the cleanest read on management\'s own conservatism: <b>the guide went up at every one of the four prints</b> — net sales from +10–12% to +15.0–15.5% — and the reported year then came in <b>above the final raised guide on all three headline lines</b>. Tax also came in below the guided range, which helped EPS. The exception is capex, which undershot its own range by a wide margin.',
+  },
 ];
 
-export var SN_GUIDE_WALK_READ = 'Read the top line first: the <b>net sales</b> raise carries <b>no</b> refund component, so the ~4.5pp increase is pure operating momentum. On the earnings lines the refund does real work — roughly a third of the EPS raise and around 45% of the EBITDA raise — and management said it intends to <b>reinvest a portion</b> of the benefit into retail activation, media, AI capability and tariff/input-cost mitigation rather than let it all drop through. 2Q26 itself was the <b>13th consecutive quarter</b> of double-digit net sales growth and the fastest since 4Q24.';
+export var SN_GUIDE_PATTERN = 'Across the two years that are reconstructible, SharkNinja has <b>never once cut a guide</b> — seven revisions, all upward. That is a real, testable pattern, and it cuts two ways: management has been reliably conservative at the start of a year, which also means the <b>initial</b> guide should not be read as a genuine expectation. The check to run on the next print is whether the FY2026 ratchet holds, and whether capex finally lands inside its range.';
 
-export var SN_GUIDE_WALK_NOTE = 'FY2026 outlook as of the Q2 2026 release (Aug 5, 2026), against the outlook it replaced. The company separates the tariff-refund benefit from underlying performance in its own disclosure — worth crediting, since that is the difference between a guidance raise and a one-off.';
+export var SN_GUIDE_SOURCES_NOTE = 'Every figure is from the company\'s own "Fiscal 20XX Outlook" block in the quarterly earnings release (8-K exhibit), retrieved through Quartr and frozen here. Actuals are from the Q4/FY2025 release and the FY2025 10-K. <b>n/r = not recoverable</b> (the FY2024 and Feb-2025 release PDFs carry no extractable text layer on Quartr, so the initial FY2025 guide survives only through the restatement in the 1Q25 release, which listed the three headline metrics only); <b>n/c = not compiled</b> this pass. FY2024\'s guidance walk is not recoverable for the same reason. Nothing here is fetched at runtime.';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TARIFFS & CAPITAL STRUCTURE — Miscellaneous ▸ Other Analysis

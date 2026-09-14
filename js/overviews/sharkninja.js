@@ -38,7 +38,7 @@ import { segmentsHtml, initSegments, segmentsOverviewHtml, initSegmentsOverview,
 import {
   SN_Q_INTRO, SN_CAT_CORRECTION, SN_CAT_CORRECTION_LIMIT, SN_CAT_SOURCES,
   SN_SUBCATS, SN_SUBCATS_NOTE,
-  SN_GUIDE_WALK_2026, SN_GUIDE_WALK_READ, SN_GUIDE_WALK_NOTE,
+  SN_GUIDE_LEDE, SN_GUIDE_YEARS, SN_GUIDE_PATTERN, SN_GUIDE_SOURCES_NOTE,
   SN_TARIFF_KPIS, SN_TARIFF_LEDE, SN_TARIFF_REFUND, SN_TARIFF_TREATMENT,
   SN_TARIFF_MARGIN, SN_TARIFF_NOTE, SN_CAPSTRUCT, SN_QUARTR_SOURCES,
 } from './sharkninja-quartr.js';
@@ -493,18 +493,68 @@ function toplineGeneralExtras(){
       '<div class="dd-note">' + SN_SUBCATS_NOTE + '</div>');
 }
 
-// Management ▸ Track Record — appended under the existing timeline.
-function qGuidanceWalk(){
-  var rows = SN_GUIDE_WALK_2026.map(function(r){
-    return '<tr><td class="ov-td-name">' + esc(r[0]) + '</td><td class="ov-stat-mut">' + esc(r[1]) + '</td>' +
-      '<td style="font-weight:600">' + esc(r[2]) + '</td><td>' + esc(r[3]) + '</td></tr>';
+// ── Evolution ▸ Guidance ──────────────────────────────────────────────────────
+// SN guides the FISCAL YEAR, never the quarter, so this is a ratchet table — one column
+// per issue date — not a per-quarter beat/miss chart. Deliberately NO canvas: with three
+// to four issue dates of RANGES per year, a table states it exactly and a chart would
+// only approximate it (CHART_ENGINE_REFERENCE §0.1 — a chart is not owed here, and a
+// bespoke canvas would owe the full §0.2 contract for no gain). Reuses the .guid-* CSS
+// the LYFT guidance pane already established.
+
+var GUIDE_VERDICT = {
+  above:  ['guid-up', '▲ above the final guide'],
+  below:  ['guid-dn', '▼ below the final guide'],
+  inside: ['guid-mut', '● inside the guided range'],
+};
+
+function guideCell(v){
+  if (v === 'n/r') return '<td class="guid-mut" title="Not recoverable — the source PDF has no extractable text layer">n/r</td>';
+  if (v === 'n/c') return '<td class="guid-mut" title="Not compiled in this pass">n/c</td>';
+  return '<td>' + esc(v) + '</td>';
+}
+
+function guideYearTable(y){
+  var head = '<tr><th>Metric</th>' + y.issues.map(function(i){
+    return '<th>' + esc(i[0]) + '<br><span style="font-weight:400;font-size:10.5px">' + esc(i[1]) + '</span></th>';
+  }).join('') + (y.hasActual ? '<th>Reported</th><th>vs. final guide</th>' : '') + '</tr>';
+
+  var body = y.metrics.map(function(m){
+    var cells = m.vals.map(guideCell).join('');
+    var tail = '';
+    if (y.hasActual){
+      var isNum = m.act && m.act !== 'n/c';
+      tail = (isNum ? '<td style="font-weight:700">' + esc(m.act) + '</td>' : guideCell(m.act || 'n/c'));
+      var vd = GUIDE_VERDICT[m.verdict];
+      tail += vd ? '<td class="' + vd[0] + '">' + vd[1] + '</td>' : '<td class="guid-mut">—</td>';
+    }
+    return '<tr><td>' + esc(m.m) + '</td>' + cells + tail + '</tr>' +
+      '<tr><td colspan="' + (1 + m.vals.length + (y.hasActual ? 2 : 0)) + '" ' +
+        'style="padding-top:0;border-bottom:1px solid var(--bdr);font-size:11.5px;color:var(--mu);text-align:left;white-space:normal;line-height:1.5">' +
+        m.note + '</td></tr>';
   }).join('');
-  return '<div class="dd-h" style="margin-top:26px;font-size:12.5px">FY2026 guidance — the walk, and what is refund vs. operations</div>' +
-    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
-      '<th>Metric</th><th>Prior outlook</th><th>Updated (Aug 5, 2026)</th><th>Read</th>' +
-    '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
-    '<div class="dd-callout">' + SN_GUIDE_WALK_READ + '</div>' +
-    '<div class="dd-note">' + esc(SN_GUIDE_WALK_NOTE) + '</div>';
+
+  var issueNote = y.issues.map(function(i){ return '<b>' + esc(i[0]) + '</b> (' + esc(i[1]) + ') — ' + esc(i[2]); }).join(' · ');
+
+  return '<div class="guid-sub">' + esc(y.fy) + ' · ' + esc(y.status) + '</div>' +
+    '<div class="dd-callout">' + y.story + '</div>' +
+    '<div class="guid-tbl-wrap"><table class="guid-tbl"><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div>' +
+    '<div class="dd-note">' + issueNote + '</div>';
+}
+
+function qGuidance(){
+  var pills = SN_GUIDE_YEARS.map(function(y, i){
+    return '<button type="button" class="guid-year' + (i === 0 ? ' active' : '') + '" data-snguide="' + esc(y.fy) + '">' +
+      esc(y.fy) + '</button>';
+  }).join('');
+  var panes = SN_GUIDE_YEARS.map(function(y, i){
+    return '<div data-snguidepane="' + esc(y.fy) + '"' + (i === 0 ? '' : ' hidden') + '>' + guideYearTable(y) + '</div>';
+  }).join('');
+  return '<div class="dd-h">Guidance</div>' +
+    '<div class="dd-sub">' + SN_GUIDE_LEDE + '</div>' +
+    '<div class="guid-years">' + pills + '</div>' +
+    panes +
+    '<div class="dd-callout" style="margin-top:18px">' + SN_GUIDE_PATTERN + '</div>' +
+    '<div class="dd-note">' + SN_GUIDE_SOURCES_NOTE + '</div>';
 }
 
 // Miscellaneous ▸ Other Analysis — appended under the existing tax / marketing / debt content.
@@ -572,8 +622,10 @@ function deepDiveHtml(c){
   h += '<div class="dd-pane" data-dd="evolution" hidden>'+
     '<div class="ovt-subtabs">'+
       '<button type="button" class="ovt-subtab active" data-ovst="results">Results</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="results">'+resultsHtml('SN')+'</div>'+
+    '<div class="ovt-subpane" data-ovst="guidance" hidden>'+qGuidance()+'</div>'+
   '</div>';
   h += '<div class="dd-pane" data-dd="management" hidden>'+
     '<div class="ovt-subtabs">'+
@@ -585,7 +637,7 @@ function deepDiveHtml(c){
     '<div class="ovt-subpane" data-ovst="execboard">'+mgmtExecsBoard()+'</div>'+
     '<div class="ovt-subpane" data-ovst="ownership" hidden>'+mgmtOwnership()+'</div>'+
     '<div class="ovt-subpane" data-ovst="govsbc" hidden>'+mgmtGovSbc()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="track" hidden>'+mgmtTrack()+qGuidanceWalk()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="track" hidden>'+mgmtTrack()+'</div>'+
   '</div>';
   h += '<div class="dd-pane" data-dd="misc" hidden>'+
     '<div class="ovt-subtabs">'+
@@ -632,6 +684,14 @@ function deepDiveInit(c){
       root.querySelectorAll('.dd-tab').forEach(function(b){ b.classList.toggle('active', b===btn); });
       root.querySelectorAll('.dd-pane').forEach(function(p){ p.hidden = p.getAttribute('data-dd')!==k; });
       ddBuildVisible(root);
+    });
+  });
+  // Evolution ▸ Guidance — fiscal-year pills.
+  root.querySelectorAll('[data-snguide]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var fy = btn.getAttribute('data-snguide');
+      root.querySelectorAll('[data-snguide]').forEach(function(b){ b.classList.toggle('active', b===btn); });
+      root.querySelectorAll('[data-snguidepane]').forEach(function(p){ p.hidden = p.getAttribute('data-snguidepane')!==fy; });
     });
   });
   root.querySelectorAll('[data-mtlrm]').forEach(function(btn){

@@ -33,18 +33,34 @@
 
 import { amznSegments } from './segments-data/amzn.js';
 import { amznResults } from './results-data/amzn.js';
+import { snSegments } from './segments-data/sn.js';
+import { snResults } from './results-data/sn.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
+import { SN_THEMES } from './themes-data/sn.js';
 
 // The Notes taxonomy names segments in prose; the datasets key them. One map, stated once.
-var THEME_SEG = { AMZN: { 'Amazon US': 'na', 'Amazon International': 'intl', 'AWS': 'aws' } };
-var THEME_SRC = { AMZN: AMZN_THEMES };
+var THEME_SEG = {
+  AMZN: { 'Amazon US': 'na', 'Amazon International': 'intl', 'AWS': 'aws' },
+  SN: { 'SharkNinja': 'sn' },
+};
+var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES };
 
 var SEGMENTS_DATA = {
-  AMZN: { seg: amznSegments, res: amznResults }
+  AMZN: { seg: amznSegments, res: amznResults },
+  // SN has ONE reportable segment (Domestic + International aggregated), so its Segments tab
+  // carries the consolidated company; the revenue analysis lives in Top Line ▸ Other, which is
+  // what `other` (alternative cuts of the same total) is for. See segments-data/sn.js.
+  SN: { seg: snSegments, res: snResults },
 };
 
 export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }
+
+// The Customers pane talks ABOUT the company in prose ("what its customers filed about X"), so
+// it needs a display name, not a ticker. Added when SN became the second adopter and every one
+// of those sentences still said "Amazon".
+var CO_NAME = { AMZN: 'Amazon', SN: 'SharkNinja' };
+function coName(){ return CO_NAME[_sg.ticker] || _sg.ticker || 'the company'; }
 
 // ─── copied verbatim from js/results.js (§0.7: the engine exports no helpers) ─────────────────
 var RS_ACT  = 'rgba(30,39,51,0.92)';
@@ -1356,7 +1372,9 @@ export function initSegmentsOverview(root, ticker){
 //   and the COUNTERPARTY census from Bloomberg SPLC — somebody else's disclosure about this
 //   company, which is the only source that does not depend on the company choosing to speak.
 // For Amazon the headline is an absence: the filing discloses no customer concentration at all,
-// so nothing on this tab can be read as "the biggest clients". The tab leads with that.
+// so nothing on this tab can be read as "the biggest clients". The tab leads with that. For SN it
+// is the opposite — three customers each above 10% of net sales — and the same section carries it.
+// Prose that names the company goes through coName(), never a literal.
 function custData(){ var d = sgData(); return (d && d.seg.customers) || null; }
 
 // Every customer the company has named on a call, pulled out of the product lines, newest first.
@@ -1377,16 +1395,16 @@ function custNamed(d){
 function custSplcSection(c, n){
   var sp = c.splc;
   if (!sp || !sp.customers || !sp.customers.length){
-    return sec(n, 'Who has said they buy from Amazon', 'Bloomberg SPLC · not loaded yet',
+    return sec(n, 'Who has said they buy from ' + coName(), 'Bloomberg SPLC · not loaded yet',
       '<p class="sg-lede">' + tierTag('COUNTERPARTY') +
-      'The other side of the transaction: not what Amazon says about its customers, but what its ' +
-      'customers filed about Amazon.</p>' +
+      'The other side of the transaction: not what ' + coName() + ' says about its customers, but ' +
+      'what its customers filed about ' + coName() + '.</p>' +
       drill('splc', 'Why this is empty, and what fills it',
         '<p>Bloomberg\'s Supply Chain Analysis assembles counterparty disclosures into a customer ' +
-        'census — the only customer list here that does not depend on Amazon choosing to speak. ' +
+        'census — the only customer list here that does not depend on ' + coName() + ' choosing to speak. ' +
         'SPLC is a terminal screen, not a BQL function on our tier, so it has to come in as an ' +
         'export:</p>' +
-        '<code class="sg-empty-c">py scripts/segments/load_splc.py AMZN &lt;export.csv&gt;</code>' +
+        '<code class="sg-empty-c">py scripts/segments/load_splc.py ' + _sg.ticker + ' &lt;export.csv&gt;</code>' +
         '<p class="sg-cite">The loader normalises the columns, prints the mapping so it can be ' +
         'checked, and computes the one number that decides how this may be drawn: what share of ' +
         'revenue the named customers account for between them. Under ~10% it renders as a list of ' +
@@ -1397,10 +1415,10 @@ function custSplcSection(c, n){
     ? 'They account for <b>' + pctStr(sp.sumPct / 100) + '</b> of revenue between them; the other ' +
       pctStr(1 - sp.sumPct / 100) + ' is not attributed to anyone here.'
     : 'None of them carries a size, so they can be listed but not ranked.';
-  return sec(n, 'Who has said they buy from Amazon', sp.named + ' named · ' + sp.sized + ' sized',
+  return sec(n, 'Who has said they buy from ' + coName(), sp.named + ' named · ' + sp.sized + ' sized',
     '<p class="sg-lede">' + tierTag('COUNTERPARTY') +
-      'Assembled by Bloomberg from what these companies filed about Amazon, not from what Amazon ' +
-      'filed about them. ' + cov + '</p>' +
+      'Assembled by Bloomberg from what these companies filed about ' + coName() + ', not from what ' +
+      coName() + ' filed about them. ' + cov + '</p>' +
     '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
       '<th class="rs-ft-h">Customer</th><th>Ticker</th><th>Relationship</th>' +
       '<th>% of revenue</th><th>Basis</th><th>As of</th></tr></thead><tbody>' +
@@ -1465,13 +1483,13 @@ export function segmentsCustomersHtml(ticker){
       (c.classes || []).length + ' classes · verbatim', mdHtml('cclass', null)) +
     sec(3, 'Named on the record', named.length + ' named',
       (named.length
-        ? '<p class="sg-lede">' + tierTag('CALL') + 'Every customer Amazon has named out loud. A ' +
+        ? '<p class="sg-lede">' + tierTag('CALL') + 'Every customer ' + coName() + ' has named out loud. A ' +
           'short and self-selected list — read it as what management is proud of, not as a ranking.</p>' +
           mdHtml('cname', null)
         : '<div class="sg-needs">⚑ No customer has been named on a call for this company yet.</div>')) +
     custSplcSection(c, 4) +
     '<div class="ov-fynote sg-src">Three registers, kept apart on purpose: what the filing says, ' +
-    'what management said on a call, and what somebody else disclosed about Amazon. None of them ' +
+    'what management said on a call, and what somebody else disclosed about ' + coName() + '. None of them ' +
     'is a revenue ranking, and the tab never presents one.</div></div>';
 }
 export function initSegmentsCustomers(root, ticker){

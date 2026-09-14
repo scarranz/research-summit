@@ -18,10 +18,23 @@
 // FY2023 for those specific lines — every other FY2022 figure below (segments, opex, margins,
 // balance sheet, cash flow) is Bloomberg-sourced like the rest of the file.
 //
-// Segment (product-category), regional and brand (Shark/Ninja) revenue are Bloomberg's OWN
-// tracking, not a company disclosure — the 10-K names the four category groups but discloses
-// no dollar or percent split by category, region (beyond Domestic/International) or brand.
-// Label these as Bloomberg estimates/tracking, never as "the company reports."
+// PROVENANCE, corrected Sep 2026 (Quartr pass — see js/overviews/sharkninja-quartr.js):
+// this file previously labeled the category and brand splits as "Bloomberg's own tracking,
+// not a company disclosure." That was wrong, and it mattered: it made quotable reported
+// figures look like third-party estimates.
+//   • CATEGORY (segCleaning/segCookBev/segFoodPrep/segBeautyHome) — the 10-K discloses no
+//     dollar split, but EVERY QUARTERLY EARNINGS RELEASE does. The values here match those
+//     releases to the cent for 1Q24-2Q26 and FY2024-FY2025, and each quarter's four
+//     categories sum to reported total net sales. Treat as company-reported for those
+//     periods. FY2022-FY2023 and 3Q23-4Q23 remain Bloomberg-sourced and UNVERIFIED (the
+//     FY2024 release's category paragraphs did not extract cleanly from the PDF).
+//   • BRAND (brandShark/brandNinja) — FY2025 sums exactly to reported net sales and rounds
+//     to the $3.0Bn / $3.4Bn the company discloses on p.5 of its Aug 2026 investor deck, so
+//     the annual split is a company disclosure. The quarterly and pre-FY2025 splits are
+//     Bloomberg's own allocation and were not verified.
+//   • REGION — beyond Domestic/International the company discloses nothing; those lines
+//     stay Bloomberg tracking, as labeled on each metric.
+// Forward (cons) values on every line above are Bloomberg Street consensus throughout.
 export var snResults = {
   updated: 'Sep 2026',
   intro: 'SharkNinja reported actuals plus Bloomberg (BST) Street consensus for forward periods — no Summit DCF model exists for SN yet, so the Summit line stays empty throughout.',
@@ -43,19 +56,19 @@ export var snResults = {
           act:    [449.32, 541.48, 421.92, 466.12, 527.45, 648.03, 441.42, 501.48, 592.92, 669.93, 516.55, 522.05, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, 637.8, 729.68],
           summit: [null,null,null,null,null,null,null,null,null,null,null,null,null,null], guideLo: [null,null,null,null,null,null,null,null,null,null,null,null,null,null], guideHi: [null,null,null,null,null,null,null,null,null,null,null,null,null,null],
-          note: 'Bloomberg\'s own category tracking, not a company-disclosed dollar breakdown.' },
+          note: 'Company-disclosed: every quarterly earnings release states category net sales in dollars. Verified against the releases for 1Q24-2Q26 and FY2024-FY2025; FY2022-FY2023 and 3Q23-4Q23 are Bloomberg-sourced and unverified. Forward periods are Bloomberg Street consensus.' },
         segCookBev: { label: 'Cooking & Beverage appliances revenue', short: 'Cooking & Beverage', group: 'Revenue', unit: 'usdM',
           periods: ['3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26'],
           act:    [339.33, 502.57, 329.64, 379.28, 411.45, 597.28, 345.94, 365.72, 437.44, 667.25, 414.59, 499.03, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, 507.4, 760.15],
           summit: [null,null,null,null,null,null,null,null,null,null,null,null,null,null], guideLo: [null,null,null,null,null,null,null,null,null,null,null,null,null,null], guideHi: [null,null,null,null,null,null,null,null,null,null,null,null,null,null],
-          note: 'Bloomberg\'s own category tracking, not a company-disclosed dollar breakdown.' },
+          note: 'Company-disclosed: every quarterly earnings release states category net sales in dollars. Verified against the releases for 1Q24-2Q26 and FY2024-FY2025; FY2022-FY2023 and 3Q23-4Q23 are Bloomberg-sourced and unverified. Forward periods are Bloomberg Street consensus.' },
         segFoodPrep: { label: 'Food Preparation appliances revenue', short: 'Food Preparation', group: 'Revenue', unit: 'usdM',
           periods: ['3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26'],
           act:    [211.46, 180.93, 205.04, 264.91, 366.83, 341.95, 297.39, 404.79, 410.54, 438.02, 287.53, 458.61, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, 457.53, 483.73],
           summit: [null,null,null,null,null,null,null,null,null,null,null,null,null,null], guideLo: [null,null,null,null,null,null,null,null,null,null,null,null,null,null], guideHi: [null,null,null,null,null,null,null,null,null,null,null,null,null,null],
-          note: 'Bloomberg\'s own category tracking, not a company-disclosed dollar breakdown.' },
+          note: 'Company-disclosed: every quarterly earnings release states category net sales in dollars. Verified against the releases for 1Q24-2Q26 and FY2024-FY2025; FY2022-FY2023 and 3Q23-4Q23 are Bloomberg-sourced and unverified. Forward periods are Bloomberg Street consensus.' },
         segBeautyHome: { label: 'Beauty & Home Environment appliances revenue', short: 'Beauty & Home Env.', group: 'Revenue', unit: 'usdM',
           periods: ['3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26'],
           act:    [70.51, 152.52, 109.63, 138.35, 120.83, 199.93, 137.88, 172.89, 189.34, 326.22, 194.13, 285.78, null, null],
@@ -194,25 +207,25 @@ export var snResults = {
           act:    [1931.73, 1819.46, 2063.51, 2205.76, null, null, null, null],
           cons:   [null, null, null, null, 2406.05, 2594.37, 2699.14, 3201.9],
           summit: [null,null,null,null,null,null,null,null], guideLo: [null,null,null,null,null,null,null,null], guideHi: [null,null,null,null,null,null,null,null],
-          note: 'Bloomberg\'s own category tracking, not a company-disclosed dollar breakdown.' },
+          note: 'Company-disclosed: every quarterly earnings release states category net sales in dollars. Verified against the releases for 1Q24-2Q26 and FY2024-FY2025; FY2022-FY2023 and 3Q23-4Q23 are Bloomberg-sourced and unverified. Forward periods are Bloomberg Street consensus.' },
         segCookBev: { label: 'Cooking & Beverage appliances revenue', short: 'Cooking & Beverage', group: 'Revenue', unit: 'usdM',
           periods: ['2022','2023','2024','2025','2026','2027','2028','2029'],
           act:    [1078.61, 1441.63, 1717.65, 1816.35, null, null, null, null],
           cons:   [null, null, null, null, 2181.2, 2387.21, 2543.12, 2953.4],
           summit: [null,null,null,null,null,null,null,null], guideLo: [null,null,null,null,null,null,null,null], guideHi: [null,null,null,null,null,null,null,null],
-          note: 'Bloomberg\'s own category tracking, not a company-disclosed dollar breakdown.' },
+          note: 'Company-disclosed: every quarterly earnings release states category net sales in dollars. Verified against the releases for 1Q24-2Q26 and FY2024-FY2025; FY2022-FY2023 and 3Q23-4Q23 are Bloomberg-sourced and unverified. Forward periods are Bloomberg Street consensus.' },
         segFoodPrep: { label: 'Food Preparation appliances revenue', short: 'Food Preparation', group: 'Revenue', unit: 'usdM',
           periods: ['2022','2023','2024','2025','2026','2027','2028','2029'],
           act:    [590.44, 653.62, 1178.73, 1550.74, null, null, null, null],
           cons:   [null, null, null, null, 1687.41, 1877.5, 2151.71, 2215.2],
           summit: [null,null,null,null,null,null,null,null], guideLo: [null,null,null,null,null,null,null,null], guideHi: [null,null,null,null,null,null,null,null],
-          note: 'Bloomberg\'s own category tracking, not a company-disclosed dollar breakdown.' },
+          note: 'Company-disclosed: every quarterly earnings release states category net sales in dollars. Verified against the releases for 1Q24-2Q26 and FY2024-FY2025; FY2022-FY2023 and 3Q23-4Q23 are Bloomberg-sourced and unverified. Forward periods are Bloomberg Street consensus.' },
         segBeautyHome: { label: 'Beauty & Home Environment appliances revenue', short: 'Beauty & Home Env.', group: 'Revenue', unit: 'usdM',
           periods: ['2022','2023','2024','2025','2026','2027','2028','2029'],
           act:    [116.59, 339, 568.74, 826.34, null, null, null, null],
           cons:   [null, null, null, null, 1177.29, 1482.08, 1775.83, 1516.9],
           summit: [null,null,null,null,null,null,null,null], guideLo: [null,null,null,null,null,null,null,null], guideHi: [null,null,null,null,null,null,null,null],
-          note: 'Bloomberg\'s own category tracking, not a company-disclosed dollar breakdown. Bloomberg shows this category\'s growth decelerating sharply after 2028 — flagged, not smoothed.' },
+          note: 'Company-disclosed: every quarterly earnings release states category net sales in dollars. Verified against the releases for 1Q24-2Q26 and FY2024-FY2025; FY2022-FY2023 and 3Q23-4Q23 are Bloomberg-sourced and unverified. Forward periods are Bloomberg Street consensus, which shows this category\'s growth decelerating sharply after 2028 — flagged, not smoothed.' },
         regionNA: { label: 'North America revenue', short: 'North America', group: 'Region', unit: 'usdM',
           periods: ['2022','2023','2024','2025','2026','2027','2028','2029'],
           act:    [2922.68, 3018.04, 3795.71, 4306.64, null, null, null, null],
@@ -230,13 +243,13 @@ export var snResults = {
           act:    [2047.97, 2158.46, 2632.25, 3032.09, null, null, null, null],
           cons:   [null, null, null, null, 3582.23, 4110.62, 4641.25, 4718.87],
           summit: [null,null,null,null,null,null,null,null], guideLo: [null,null,null,null,null,null,null,null], guideHi: [null,null,null,null,null,null,null,null],
-          note: 'Bloomberg\'s own brand-level tracking, not a company disclosure.' },
+          note: 'Brand-level revenue. The FY2025 values ($3,032.1M Shark / $3,367.1M Ninja) sum exactly to reported net sales and round to the $3.0Bn / $3.4Bn the company itself discloses on p.5 of its Aug 2026 investor presentation — so this is a company disclosure, not third-party tracking. Quarterly and pre-FY2025 splits are Bloomberg\'s allocation and were not verified; forward periods are Street consensus.' },
         brandNinja: { label: 'Ninja brand revenue', short: 'Ninja', group: 'Brand', unit: 'usdM',
           periods: ['2022','2023','2024','2025','2026','2027','2028','2029'],
           act:    [1669.39, 2095.25, 2896.39, 3367.09, null, null, null, null],
           cons:   [null, null, null, null, 3899.11, 4316.99, 4678.81, 5168.53],
           summit: [null,null,null,null,null,null,null,null], guideLo: [null,null,null,null,null,null,null,null], guideHi: [null,null,null,null,null,null,null,null],
-          note: 'Bloomberg\'s own brand-level tracking, not a company disclosure.' },
+          note: 'Brand-level revenue. The FY2025 values ($3,032.1M Shark / $3,367.1M Ninja) sum exactly to reported net sales and round to the $3.0Bn / $3.4Bn the company itself discloses on p.5 of its Aug 2026 investor presentation — so this is a company disclosure, not third-party tracking. Quarterly and pre-FY2025 splits are Bloomberg\'s allocation and were not verified; forward periods are Street consensus.' },
         grossProfit: { label: 'Gross profit', short: 'Gross profit', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'Gross margin',
           periods: ['2022','2023','2024','2025','2026','2027','2028','2029'],
           act:    [1410.19, 1907.85, 2661.99, 3136.49, null, null, null, null],

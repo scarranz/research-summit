@@ -30,6 +30,21 @@ import {
   SN_MISC_CAPEX_KPIS, SN_MISC_CAPEX_TREND, SN_MISC_CAPEX_NOTE, SN_MISC_CAPEX_CALLOUT,
   SN_MISC_MNA, SN_MISC_TAX_NOTE, SN_MISC_MARKETING_NOTE, SN_MISC_DEBT, SN_MISC_SOURCES,
 } from './sharkninja-data.js';
+// The Quartr pass (Sep 2026) — static, frozen data. See sharkninja-quartr.js for why
+// nothing here is fetched at runtime.
+import {
+  SN_Q_INTRO,
+  SN_CAT_QTR, SN_CAT_FY, SN_CAT_FY_MIX, SN_CAT_STORY, SN_CAT_RECON, SN_CAT_CORRECTION,
+  SN_CAT_SOURCES,
+  SN_BRAND_SPLIT, SN_SUBCATS, SN_SUBCATS_NOTE,
+  SN_GROWTH_PILLARS, SN_GROWTH_MATH, SN_SCALE_ARC, SN_TAM, SN_INNOV_CADENCE,
+  SN_INTL_KPIS, SN_INTL_DIRECT, SN_INTL_STORY, SN_INTL_NOTE, SN_CHANNEL,
+  SN_GUIDE_WALK_2026, SN_GUIDE_WALK_READ, SN_GUIDE_WALK_NOTE,
+  SN_TARIFF_KPIS, SN_TARIFF_LEDE, SN_TARIFF_REFUND, SN_TARIFF_TREATMENT,
+  SN_TARIFF_MARGIN, SN_TARIFF_NOTE,
+  SN_CAPSTRUCT, SN_MKTSHARE, SN_MKTSHARE_SRC,
+  SN_QUOTES, SN_QUOTES_NOTE, SN_QUARTR_SOURCES,
+} from './sharkninja-quartr.js';
 
 // esc: escapes <>" but leaves & literal (per contract — never double-encode).
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -462,9 +477,212 @@ function miscOther(){
     '<div class="dd-note">'+esc(SN_MISC_DEBT.note)+'</div>';
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// QUARTR PASS PANES — all static. Data lives in sharkninja-quartr.js; nothing here
+// makes a runtime call. Tables and CSS-bar visuals only: the quarterly category
+// series is already plotted by the shared Results engine under Evolution ▸ Results
+// ▸ Top Line (metric group "Revenue"), so this pane deliberately does NOT draw a
+// second chart of the same numbers — see docs/CHART_ENGINE_REFERENCE.md §0.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Four category colors, brand-led, reused by the mix bars and the table header rule.
+var SN_CAT_COLORS = [SN_BRAND, '#4C9AA3', C_MU2, '#A3AEBC'];
+var SN_CAT_NAMES = ['Cleaning', 'Cooking &amp; Beverage', 'Food Preparation', 'Beauty &amp; Home Env.'];
+
+function pct1(n){ return (n == null) ? '—' : (n > 0 ? '+' : '') + n.toFixed(1) + '%'; }
+function usdM(n){
+  if(n == null) return '—';
+  return '$' + n.toFixed(1).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + 'M';
+}
+function yoyCell(n){
+  if(n == null) return '<td class="ov-stat-mut">—</td>';
+  return '<td style="color:' + (n < 0 ? '#DC2626' : '#16A34A') + ';font-weight:600">' + pct1(n) + '</td>';
+}
+
+function srcList(items){
+  return '<ul class="ov-bullets">' + items.map(function(s){
+    return '<li>' + esc(s.doc) + ' · <a href="' + esc(s.q) + '" target="_blank" rel="noopener">open in Quartr ↗</a></li>';
+  }).join('') + '</ul>';
+}
+
+// A 4-segment stacked mix bar per fiscal year, same markup family as .geo-bar.
+function catMixBar(fy, vals, total){
+  var segs = vals.map(function(v, i){
+    return '<div style="width:' + (v / total * 100).toFixed(2) + '%;background:' + SN_CAT_COLORS[i] + '"></div>';
+  }).join('');
+  var label = vals.map(function(v, i){
+    return SN_CAT_NAMES[i] + ' ' + (v / total * 100).toFixed(1) + '%';
+  }).join(' · ');
+  return '<div class="geo-bar"><div class="geo-bar-h"><span class="geo-bar-n">FY' + esc(fy) + '</span>' +
+    '<span class="geo-bar-v">' + label + '</span></div>' +
+    '<div class="geo-bar-t" style="display:flex">' + segs + '</div></div>';
+}
+
+function qCategories(){
+  var qRows = SN_CAT_QTR.map(function(r){
+    return '<tr><td class="ov-td-name">' + esc(r[0]) + '</td>' +
+      '<td>' + usdM(r[1]) + '</td>' + yoyCell(r[6]) +
+      '<td>' + usdM(r[2]) + '</td>' + yoyCell(r[7]) +
+      '<td>' + usdM(r[3]) + '</td>' + yoyCell(r[8]) +
+      '<td>' + usdM(r[4]) + '</td>' + yoyCell(r[9]) +
+      '<td style="font-weight:600">' + usdM(r[5]) + '</td>' + yoyCell(r[10]) + '</tr>';
+  }).join('');
+
+  var mixRows = SN_CAT_FY_MIX.map(function(r, i){
+    return '<tr><td class="ov-td-name"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' +
+      SN_CAT_COLORS[i] + ';margin-right:7px"></span>' + r[0] + '</td>' +
+      '<td>' + r[1].toFixed(1) + '%</td><td>' + r[2].toFixed(1) + '%</td>' + yoyCell(r[3]) + '</tr>';
+  }).join('');
+
+  var bars = SN_CAT_FY.map(function(r){
+    return catMixBar(r[0], [r[1], r[2], r[3], r[4]], r[5]);
+  }).join('');
+
+  var legend = '<div class="ov-legend">' + SN_CAT_NAMES.map(function(n, i){
+    return '<span class="ov-legend-i"><span class="ov-legend-dot" style="background:' + SN_CAT_COLORS[i] + '"></span>' + n + '</span>';
+  }).join('') + '</div>';
+
+  return '<div class="dd-h">Product categories</div>' +
+    '<div class="dd-sub">SharkNinja reports as one segment, so the 10-K carries no category dollars. Every quarterly earnings release does — this is that disclosure, assembled into a series.</div>' +
+    '<div class="dd-callout">' + SN_CAT_STORY + '</div>' +
+    legend + bars +
+    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
+      '<th>Category</th><th>FY2024 mix</th><th>FY2025 mix</th><th>FY2025 YoY</th>' +
+    '</tr></thead><tbody>' + mixRows + '</tbody></table></div>' +
+    '<div class="dd-h" style="margin-top:22px;font-size:12.5px">Quarterly net sales by category</div>' +
+    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
+      '<th>Quarter</th><th>Cleaning</th><th>YoY</th><th>Cooking &amp; Bev.</th><th>YoY</th>' +
+      '<th>Food Prep</th><th>YoY</th><th>Beauty &amp; Home</th><th>YoY</th><th>Total</th><th>YoY</th>' +
+    '</tr></thead><tbody>' + qRows + '</tbody></table></div>' +
+    '<div class="dd-note">' + SN_CAT_RECON + '</div>' +
+    '<div class="dd-callout">' + SN_CAT_CORRECTION + '</div>' +
+    '<div class="dd-note">The same series is plotted, with Street consensus for forward quarters, under <b>Evolution &#9656; Results &#9656; Top Line</b> — this pane is the disclosure and its provenance, not a second copy of that chart.</div>' +
+    collapsible('Sources — the six earnings releases behind this table', srcList(SN_CAT_SOURCES));
+}
+
+function qBrandsGrowth(){
+  var brandRows = SN_BRAND_SPLIT.rows.map(function(r){
+    return '<tr><td class="ov-td-name">' + esc(r[0]) + '</td><td style="font-weight:600">' + esc(r[1]) + '</td>' +
+      '<td>' + r[2] + '</td><td>' + r[3] + '</td><td>' + esc(r[4]) + '</td></tr>';
+  }).join('');
+
+  var pillarBars = SN_GROWTH_PILLARS.rows.map(function(r, i){
+    return '<div class="ov-mbar"><div class="ov-mbar-l">' + r[0] + '</div>' +
+      '<div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:' + r[1] + '%;background:' + SN_CAT_COLORS[i] + '"></div></div>' +
+      '<div class="ov-mbar-v">~' + r[1] + '%</div></div>' +
+      '<div class="dd-note" style="margin:-4px 0 10px">' + r[2] + '</div>';
+  }).join('');
+
+  var arc = SN_SCALE_ARC.points.map(function(p){
+    return '<div class="ov-snap-cell"><div class="ov-snap-k">' + esc(p[0]) + '</div>' +
+      '<div class="ov-snap-v">' + esc(p[1]) + '</div>' +
+      '<div class="dd-note" style="margin-top:4px">' + esc(p[2]) + '</div></div>';
+  }).join('');
+
+  var subShark = SN_SUBCATS.Shark.map(function(s){ return '<span class="ov-chip">' + esc(s) + '</span>'; }).join('');
+  var subNinja = SN_SUBCATS.Ninja.map(function(s){ return '<span class="ov-chip">' + esc(s) + '</span>'; }).join('');
+
+  return '<div class="dd-h">Growth engine</div>' +
+    '<div class="dd-sub">' + SN_GROWTH_PILLARS.lede + '</div>' +
+    pillarBars +
+    '<div class="dd-callout">' + SN_GROWTH_PILLARS.punch + '</div>' +
+    '<div class="dd-note">' + SN_GROWTH_PILLARS.note + ' <a href="' + esc(SN_GROWTH_PILLARS.src) + '" target="_blank" rel="noopener">open the slide ↗</a></div>' +
+    '<div class="dd-callout">' + SN_GROWTH_MATH + '</div>' +
+
+    '<div class="dd-h" style="margin-top:22px;font-size:12.5px">The long arc</div>' +
+    '<div class="ov-snap">' + arc + '</div>' +
+    '<div class="dd-note">' + SN_SCALE_ARC.cagrs.join(' · ') + '. ' + SN_SCALE_ARC.note + '</div>' +
+
+    '<div class="dd-h" style="margin-top:22px;font-size:12.5px">Two brands, sized</div>' +
+    '<div class="dd-sub">' + esc(SN_BRAND_SPLIT.lede) + '</div>' +
+    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
+      '<th>Brand</th><th>FY2025 net sales</th><th>Sub-categories</th><th>New in last 3 yrs</th><th>Which ones</th>' +
+    '</tr></thead><tbody>' + brandRows + '</tbody></table></div>' +
+    '<div class="dd-callout">' + SN_BRAND_SPLIT.punch + '</div>' +
+    '<div class="dd-note">' + SN_BRAND_SPLIT.note + ' <a href="' + esc(SN_BRAND_SPLIT.src) + '" target="_blank" rel="noopener">open the slide ↗</a></div>' +
+
+    collapsible('The full sub-category roster (38, as of Dec 31 2025)',
+      '<div class="dd-h" style="font-size:12px;margin-top:4px">Shark — ' + SN_SUBCATS.Shark.length + '</div>' +
+      '<div class="ov-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">' + subShark + '</div>' +
+      '<div class="dd-h" style="font-size:12px">Ninja — ' + SN_SUBCATS.Ninja.length + '</div>' +
+      '<div class="ov-chips" style="display:flex;flex-wrap:wrap;gap:6px">' + subNinja + '</div>' +
+      '<div class="dd-note">' + SN_SUBCATS_NOTE + '</div>') +
+
+    '<div class="dd-h" style="margin-top:22px;font-size:12.5px">TAM, and the cadence against it</div>' +
+    '<div class="dd-callout">' + SN_TAM + '</div>' +
+    '<div class="dd-callout">' + SN_INNOV_CADENCE + '</div>' +
+
+    '<div class="dd-h" style="margin-top:22px;font-size:12.5px">Market share — the evidence, and why it is not tabulated here</div>' +
+    '<div class="dd-note">' + SN_MKTSHARE + ' <a href="' + esc(SN_MKTSHARE_SRC) + '" target="_blank" rel="noopener">open the slide ↗</a></div>';
+}
+
+function qInternational(){
+  var rows = SN_INTL_DIRECT.map(function(r){
+    return '<tr><td class="ov-td-name">' + esc(r[0]) + '</td><td style="font-weight:600">' + esc(r[1]) + '</td><td>' + esc(r[2]) + '</td></tr>';
+  }).join('');
+  return '<div class="dd-h">International &amp; channel</div>' +
+    '<div class="dd-sub">The pillar that contributes ~40% of growth, and the channel shift running underneath it.</div>' +
+    ddKpis(SN_INTL_KPIS) +
+    '<div class="dd-callout">' + SN_INTL_STORY + '</div>' +
+    '<div class="dd-h" style="margin-top:22px;font-size:12.5px">Markets run directly, and when they converted</div>' +
+    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
+      '<th>Market</th><th>Direct since</th><th>Detail</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="dd-note">' + SN_INTL_NOTE + '</div>' +
+    '<div class="dd-h" style="margin-top:22px;font-size:12.5px">Channel — what is disclosed, and what is not</div>' +
+    '<div class="dd-callout">' + SN_CHANNEL + '</div>';
+}
+
+function qGuidanceWalk(){
+  var rows = SN_GUIDE_WALK_2026.map(function(r){
+    return '<tr><td class="ov-td-name">' + esc(r[0]) + '</td><td class="ov-stat-mut">' + esc(r[1]) + '</td>' +
+      '<td style="font-weight:600">' + esc(r[2]) + '</td><td>' + esc(r[3]) + '</td></tr>';
+  }).join('');
+  return '<div class="dd-h" style="margin-top:26px;font-size:12.5px">FY2026 guidance — the walk, and what is refund vs. operations</div>' +
+    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
+      '<th>Metric</th><th>Prior outlook</th><th>Updated (Aug 5, 2026)</th><th>Read</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="dd-callout">' + SN_GUIDE_WALK_READ + '</div>' +
+    '<div class="dd-note">' + esc(SN_GUIDE_WALK_NOTE) + '</div>';
+}
+
+function qQuotes(){
+  var cards = SN_QUOTES.map(function(q){
+    return '<figure class="r40-q">' +
+      '<div class="dd-note" style="margin:0 0 7px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:10px">' + esc(q[0]) + '</div>' +
+      '<div class="r40-q-t">&ldquo;' + esc(q[1]) + '&rdquo;</div>' +
+      '<figcaption class="r40-q-c">' + esc(q[2]) + ', ' + esc(q[3]) + ' · Q2 2026 call, Aug 5 2026 · ' +
+      '<a href="' + esc(q[4]) + '" target="_blank" rel="noopener">listen ↗</a></figcaption></figure>';
+  }).join('');
+  return '<div class="dd-h">In their own words</div>' +
+    '<div class="dd-sub">Management\'s framing of its own business, recorded verbatim so it can be tested against the numbers rather than paraphrased.</div>' +
+    '<div class="r40-quotes">' + cards + '</div>' +
+    '<div class="dd-note">' + esc(SN_QUOTES_NOTE) + '</div>';
+}
+
+function qTariffs(){
+  var capRows = SN_CAPSTRUCT.rows.map(function(r){
+    return '<tr><td class="ov-td-name">' + esc(r[0]) + '</td><td style="font-weight:600">' + esc(r[1]) + '</td></tr>';
+  }).join('');
+  return '<div class="dd-h">Tariffs &amp; capital structure</div>' +
+    '<div class="dd-sub">' + esc(SN_TARIFF_LEDE) + '</div>' +
+    ddKpis(SN_TARIFF_KPIS) +
+    '<div class="dd-callout">' + SN_TARIFF_REFUND + '</div>' +
+    '<div class="dd-callout">' + SN_TARIFF_TREATMENT + '</div>' +
+    '<div class="dd-h" style="margin-top:22px;font-size:12.5px">What it did to the margin</div>' +
+    '<p style="font-size:12px;line-height:1.6;color:var(--navy);margin:0">' + SN_TARIFF_MARGIN + '</p>' +
+    '<div class="dd-note">' + esc(SN_TARIFF_NOTE) + '</div>' +
+    '<div class="dd-h" style="margin-top:26px;font-size:12.5px">Capital structure at Jun 30, 2026</div>' +
+    '<div class="dd-sub">' + esc(SN_CAPSTRUCT.lede) + '</div>' +
+    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
+      '<th>Line</th><th>Amount</th></tr></thead><tbody>' + capRows + '</tbody></table></div>' +
+    '<div class="dd-note">' + SN_CAPSTRUCT.note + ' <a href="' + esc(SN_CAPSTRUCT.src) + '" target="_blank" rel="noopener">open the slide ↗</a></div>' +
+    '<div class="dd-callout">' + SN_CAPSTRUCT.resolves + '</div>';
+}
+
 function deepDiveHtml(c){
   var h = '<div class="ov ov-sn ov-sn-dd" data-brand="SN" style="--brand:'+SN_BRAND+';--brand-soft:'+SN_BRAND_SOFT+'">';
   h += '<div class="dd-callout" style="margin-top:0">'+esc(SN_DD_INTRO)+'</div>';
+  h += '<div class="dd-callout">'+SN_Q_INTRO+'</div>';
   h += '<div class="dd-tabs">'+
     '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
     '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
@@ -475,9 +693,15 @@ function deepDiveHtml(c){
   h += '<div class="dd-pane" data-dd="topline">'+
     '<div class="ovt-subtabs">'+
       '<button type="button" class="ovt-subtab active" data-ovst="general">General</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="categories">Categories</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="growth">Growth Engine</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="intl">International &amp; Channel</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="customers">Customers</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="general">'+toplineGeneral()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="categories" hidden>'+qCategories()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="growth" hidden>'+qBrandsGrowth()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="intl" hidden>'+qInternational()+'</div>'+
     '<div class="ovt-subpane" data-ovst="customers" hidden>'+toplineCustomers()+'</div>'+
   '</div>';
   h += '<div class="dd-pane" data-dd="bottomline" hidden>'+
@@ -500,23 +724,27 @@ function deepDiveHtml(c){
       '<button type="button" class="ovt-subtab" data-ovst="ownership">Ownership</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="govsbc">Governance &amp; SBC</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="track">Track Record</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="words">In Their Own Words</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="execboard">'+mgmtExecsBoard()+'</div>'+
     '<div class="ovt-subpane" data-ovst="ownership" hidden>'+mgmtOwnership()+'</div>'+
     '<div class="ovt-subpane" data-ovst="govsbc" hidden>'+mgmtGovSbc()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="track" hidden>'+mgmtTrack()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="track" hidden>'+mgmtTrack()+qGuidanceWalk()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="words" hidden>'+qQuotes()+'</div>'+
   '</div>';
   h += '<div class="dd-pane" data-dd="misc" hidden>'+
     '<div class="ovt-subtabs">'+
       '<button type="button" class="ovt-subtab active" data-ovst="capex">Capex &amp; Depreciation</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="mna">M&amp;A</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="tariffs">Tariffs &amp; Capital Structure</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="other">Other Analysis</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="capex">'+miscCapex()+'</div>'+
     '<div class="ovt-subpane" data-ovst="mna" hidden>'+miscMna()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="tariffs" hidden>'+qTariffs()+'</div>'+
     '<div class="ovt-subpane" data-ovst="other" hidden>'+miscOther()+'</div>'+
   '</div>';
-  h += '<div class="ov-foot">'+esc(SN_DD_SOURCES)+' '+esc(SN_BL_SOURCES)+' '+esc(SN_MISC_SOURCES)+'</div>';
+  h += '<div class="ov-foot">'+esc(SN_DD_SOURCES)+' '+esc(SN_BL_SOURCES)+' '+esc(SN_MISC_SOURCES)+' '+esc(SN_QUARTR_SOURCES)+'</div>';
   h += '</div>';
   return h;
 }

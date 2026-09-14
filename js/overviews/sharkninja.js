@@ -13,7 +13,7 @@
 // Data lives in sharkninja-data.js. No data here.
 
 import { liveQuote } from '../api.js';
-import { resultsHtml, initResults } from '../results.js';
+import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import {
   SN_BRAND, SN_BRAND_SOFT, C_MU2,
   SN_FACTS, SN_LEDE, SN_QUAD,
@@ -39,6 +39,8 @@ import {
   SN_Q_INTRO, SN_CAT_CORRECTION, SN_CAT_CORRECTION_LIMIT, SN_CAT_SOURCES,
   SN_SUBCATS, SN_SUBCATS_NOTE,
   SN_GUIDE_LEDE, SN_GUIDE_YEARS, SN_GUIDE_PATTERN, SN_GUIDE_SOURCES_NOTE,
+  SN_IR_URL, SN_EDGAR_URL, SN_EARN_LEDE, SN_EARN_PENDING, SN_NEXT_PRINT, SN_LAST_PRINT,
+  SN_EST_PENDING,
   SN_STRAT_LEDE, SN_STRAT_MOAT, SN_STRAT_PROMISE, SN_STRAT_PROMISE_NOTE, SN_STRAT_GM,
   SN_STRAT_DIVERSIFY, SN_STRAT_INITIATIVES, SN_STRAT_AUDIT, SN_STRAT_SOURCES,
   SN_TL_LEDE, SN_EXEC_TIMELINE, SN_TL_TAGS, SN_IR_CADENCE, SN_TL_SOURCES,
@@ -560,6 +562,72 @@ function qGuidance(){
     '<div class="dd-note">' + SN_GUIDE_SOURCES_NOTE + '</div>';
 }
 
+// ── Evolution ▸ Earnings ──────────────────────────────────────────────────────
+// Canonical components only — deliberately NOT the .ce-* machinery, which six overviews
+// each carry as an inline <style> block (blueprint §3.3 anti-pattern; css/earnings.css
+// exists but is not wired up yet). A pending block is rendered with .sg-needs, the
+// engine's own amber "needs" badge, so an absence reads as an absence and never as a
+// blank frame (CHART_ENGINE_REFERENCE §0.2 rule 6).
+
+function pendingBlock(p){
+  return '<div class="sg-needs">⚑ <b>' + esc(p.title) + '</b><br><br>' + p.body + '</div>';
+}
+
+function srcButtons(){
+  return '<div class="guid-years" style="margin-bottom:16px">' +
+    '<a class="guid-year" href="' + esc(SN_IR_URL) + '" target="_blank" rel="noopener" ' +
+      'style="text-decoration:none">SharkNinja IR ↗</a>' +
+    '<a class="guid-year" href="' + esc(SN_EDGAR_URL) + '" target="_blank" rel="noopener" ' +
+      'style="text-decoration:none">SEC EDGAR ↗</a></div>';
+}
+
+function earnSetupPhase(){
+  var watch = SN_NEXT_PRINT.watch.map(function(w){
+    return '<tr><td class="ov-td-name">' + w[0] + '</td><td>' + w[1] + '</td></tr>';
+  }).join('');
+  return '<div class="ov-sec"><div class="ov-sec-h">' + esc(SN_NEXT_PRINT.label) + ' — ' +
+      esc(SN_NEXT_PRINT.date) + ' · ' + esc(SN_NEXT_PRINT.status) + '</div>' +
+    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
+      '<th>What the print answers</th><th>Why it matters</th></tr></thead><tbody>' + watch + '</tbody></table></div>' +
+    '<div class="dd-note">' + esc(SN_NEXT_PRINT.note) + '</div></div>' +
+    '<div class="ov-sec"><div class="ov-sec-h">The setup picture — reported actuals vs. Street</div>' +
+      (resultsHtml('SN_SETUP') || '<div class="sg-needs">⚑ The Setup dataset is not registered.</div>') +
+    '</div>' +
+    pendingBlock(SN_EARN_PENDING);
+}
+
+function earnResultsPhase(){
+  var rows = SN_LAST_PRINT.rows.map(function(r){
+    return '<tr><td class="ov-td-name">' + r[0] + '</td><td style="font-weight:600">' + esc(r[1]) + '</td>' +
+      '<td>' + esc(r[2]) + '</td><td>' + r[3] + '</td></tr>';
+  }).join('');
+  return '<div class="ov-sec"><div class="ov-sec-h">' + esc(SN_LAST_PRINT.label) + ' — ' + esc(SN_LAST_PRINT.date) + '</div>' +
+    ddKpis(SN_LAST_PRINT.kpis) +
+    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
+      '<th>Line</th><th>Reported</th><th>YoY</th><th>Read</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="dd-callout">' + SN_LAST_PRINT.verdict + '</div></div>';
+}
+
+function qEarnings(){
+  return '<div class="dd-h">Earnings</div>' +
+    srcButtons() +
+    '<div class="dd-sub">' + SN_EARN_LEDE + '</div>' +
+    '<div class="guid-years">' +
+      '<button type="button" class="guid-year active" data-snph="setup">Setup — ' + esc(SN_NEXT_PRINT.label) + '</button>' +
+      '<button type="button" class="guid-year" data-snph="results">Post-Results — ' + esc(SN_LAST_PRINT.label) + '</button>' +
+    '</div>' +
+    '<div data-snphpane="setup">' + earnSetupPhase() + '</div>' +
+    '<div data-snphpane="results" hidden>' + earnResultsPhase() + '</div>';
+}
+
+// ── Evolution ▸ Estimates ─────────────────────────────────────────────────────
+// resultsEvoHtml returns '' until the dataset carries `evolution`. Mounted now so the
+// day the generator runs, this pane fills itself with no code change here.
+function qEstimates(){
+  return '<div class="dd-h">Estimates</div>' +
+    (resultsEvoHtml('SN') || pendingBlock(SN_EST_PENDING));
+}
+
 // ── Evolution ▸ Strategy ──────────────────────────────────────────────────────
 // Canonical components only — no inline <style> (blueprint §3.3). The grid override
 // below is a style ATTRIBUTE on one element, the precedented way to get four columns
@@ -700,12 +768,16 @@ function deepDiveHtml(c){
   '</div>';
   h += '<div class="dd-pane" data-dd="evolution" hidden>'+
     '<div class="ovt-subtabs">'+
-      '<button type="button" class="ovt-subtab active" data-ovst="results">Results</button>'+
+      '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
     '</div>'+
-    '<div class="ovt-subpane" data-ovst="results">'+resultsHtml('SN')+'</div>'+
+    '<div class="ovt-subpane" data-ovst="earnings">'+qEarnings()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="results" hidden>'+resultsHtml('SN')+'</div>'+
+    '<div class="ovt-subpane" data-ovst="estevo" hidden>'+qEstimates()+'</div>'+
     '<div class="ovt-subpane" data-ovst="guidance" hidden>'+qGuidance()+'</div>'+
     '<div class="ovt-subpane" data-ovst="strategy" hidden>'+qStrategy()+'</div>'+
     '<div class="ovt-subpane" data-ovst="timeline" hidden>'+qTimeline()+'</div>'+
@@ -751,6 +823,16 @@ function ddBuildVisible(root){
   var sub = pane.querySelector('.ovt-subpane:not([hidden])'); if(!sub) return;
   var key = sub.getAttribute('data-ovst');
   if(key==='results'){ requestAnimationFrame(function(){ initResults(null, 'SN'); }); return; }
+  // Earnings ▸ Setup hosts the Results engine on the SN_SETUP dataset — only build it when
+  // the Setup phase is the visible one (Chart.js needs a non-null offsetParent).
+  if(key==='earnings'){
+    var ph = sub.querySelector('[data-snphpane="setup"]');
+    if(ph && !ph.hidden) requestAnimationFrame(function(){ initResults(ph, 'SN_SETUP'); });
+    return;
+  }
+  // Estimates fills itself once the dataset carries `evolution`; until then the pane is the
+  // pending notice and there is nothing to wire.
+  if(key==='estevo'){ requestAnimationFrame(function(){ try{ initResultsEvo('SN'); }catch(e){} }); return; }
   var fn = SEG_INIT[key];
   if(fn) requestAnimationFrame(function(){ fn(sub, 'SN'); });
 }
@@ -775,6 +857,18 @@ function deepDiveInit(c){
       var fy = btn.getAttribute('data-snguide');
       root.querySelectorAll('[data-snguide]').forEach(function(b){ b.classList.toggle('active', b===btn); });
       root.querySelectorAll('[data-snguidepane]').forEach(function(p){ p.hidden = p.getAttribute('data-snguidepane')!==fy; });
+    });
+  });
+  // Evolution ▸ Earnings — phase pills (Setup / Post-Results).
+  root.querySelectorAll('[data-snph]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var k = btn.getAttribute('data-snph');
+      root.querySelectorAll('[data-snph]').forEach(function(b){ b.classList.toggle('active', b===btn); });
+      root.querySelectorAll('[data-snphpane]').forEach(function(p){ p.hidden = p.getAttribute('data-snphpane')!==k; });
+      if(k==='setup'){
+        var ph = root.querySelector('[data-snphpane="setup"]');
+        if(ph) requestAnimationFrame(function(){ initResults(ph, 'SN_SETUP'); });
+      }
     });
   });
   // Evolution ▸ Timeline — tag filter chips.

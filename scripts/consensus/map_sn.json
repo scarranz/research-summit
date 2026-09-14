@@ -1,0 +1,122 @@
+{
+  "_README": [
+    "map_sn.json — the emit_matrix.py config for SharkNinja (NYSE: SN).",
+    "",
+    "STATUS: UNVERIFIED TEMPLATE. SN is NOT yet in BBG_CONSENSUS.txt (as of Sep 2026 that file",
+    "carries eight tickers: AMZN, GOOGL, LYFT, META, NVDA, SPOT, TBBB, UBER). Adding it is a",
+    "Bloomberg-terminal job for San or Oscar - nothing in this repo can work around it.",
+    "",
+    "The `codes` below are the Bloomberg field names this desk EXPECTS SharkNinja to use, written",
+    "from the metric set already in js/results-data/sn.js. They are a starting point, NOT verified",
+    "against an export. Codes differ per ticker (AMZN's operating income is IS_COMPARABLE_EBIT,",
+    "LYFT's is IS_EBIT_AS_REPORTED), so they MUST be checked before the first real run.",
+    "",
+    "THE ORDER OF WORK once SN's row exists in the txt:",
+    "  1. py inspect_matrix.py SN",
+    "       Prints every slot with its code, segment, scale and populated horizons. Correct the",
+    "       `code` values below off its CODE column, and DELETE any metric it does not carry.",
+    "       A wrong code yields an almost-empty matrix rather than an error - that is why step 1",
+    "       is not optional.",
+    "  2. Read the `scale` column while you are there. A blank scale on a money row means WHOLE",
+    "       UNITS, not millions. Declare the target unit here and the generator normalizes.",
+    "  3. SUMMIT_DOCS=\"G:/My Drive/Summit/Docs/0\" py emit_matrix.py SN map_sn.json",
+    "       Check the resolution report (every metric must bind to a slot, none UNRESOLVED) and",
+    "       the frozen-series check (a real consensus never reprints a value to four decimals;",
+    "       anything flagged goes in `drop` until Bloomberg fixes the cell).",
+    "  4. py verify_preprint.py SN",
+    "       The acceptance test. `blanked` must be 0 - the matrix ADDS to the dataset and must",
+    "       never silently subtract from it.",
+    "  5. py apply_matrix.py SN",
+    "       Splices estMatrix into js/results-data/sn.js. Idempotent; re-running replaces the",
+    "       block wholesale and touches nothing hand-written.",
+    "",
+    "WHAT THIS UNLOCKS, automatically, with no further code:",
+    "  - Evolution > Estimates renders (the engine gates that pane on `estMatrix`/`evolution`).",
+    "  - The vintage picker and the as-of axis appear on Results.",
+    "  - Evolution > Earnings swaps its pending notice for the real Setup grid and scorecard.",
+    "",
+    "STILL NOT UNLOCKED by this file: the Summit half of estMatrix and the `evolution` block both",
+    "come from Summit MCP snapshots (emit_summit_matrix.py / emit_evolution.py), and there is no",
+    "Summit DCF model for SN. Until one exists the Summit line stays null and no surprise",
+    "scorecard against the model is possible. See docs/RESULTS_CONVENTIONS.md section 8.3.",
+    "",
+    "KPI AUTHORIZATION: whatever the txt turns out to carry for SN is THE valid set for the Setup",
+    "grid and the charts (EARNINGS_CONVENTIONS section 5 rule 6). js/results-data/sn-setup.js",
+    "currently exposes every line in snResults because there is no authorized set to gate against",
+    "yet - re-check it against metric1..9 + metric_kpi1..N here and drop anything unauthorized."
+  ],
+
+  "ticker": "SN",
+  "bbg_ticker": "SN US EQUITY",
+  "verified": false,
+
+  "metrics": {
+    "rev": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "label": "Net sales",
+      "_note": "Total reported net sales. Highest-confidence guess - this code is near-universal."
+    },
+    "grossProfit": {
+      "code": "GROSS_PROFIT",
+      "unit": "usdM",
+      "label": "Gross profit"
+    },
+    "opIncome": {
+      "code": "IS_OPER_INC",
+      "unit": "usdM",
+      "label": "Operating income",
+      "_note": "VERIFY FIRST - this is the code that differs most between tickers."
+    },
+    "ebitdaAdj": {
+      "code": "ADJUSTED_EBITDA",
+      "unit": "usdM",
+      "label": "Adjusted EBITDA",
+      "_note": "The line SharkNinja itself guides. If the txt carries only a GAAP EBITDA, map that to ebitdaGaap instead and leave this unresolved rather than substituting."
+    },
+    "ebitdaGaap": {
+      "code": "EBITDA",
+      "unit": "usdM",
+      "label": "EBITDA (GAAP)"
+    },
+    "niGaap": {
+      "code": "NET_INCOME",
+      "unit": "usdM",
+      "label": "GAAP net income"
+    },
+    "niAdj": {
+      "code": "ADJUSTED_NET_INCOME",
+      "unit": "usdM",
+      "label": "Adjusted net income"
+    },
+    "epsGaap": {
+      "code": "IS_EPS",
+      "unit": "eps",
+      "label": "GAAP diluted EPS"
+    },
+    "epsAdj": {
+      "code": "IS_ADJUSTED_EPS",
+      "unit": "eps",
+      "label": "Adjusted diluted EPS",
+      "_note": "The headline line for SN - its FY guidance is given as Adjusted Net Income per diluted share."
+    },
+    "sm": { "code": "IS_SGA_EXPENSE", "unit": "usdM", "label": "Selling & Marketing expense",
+      "_note": "SN splits S&M and G&A; Bloomberg may carry only a combined SG&A. If so, drop both rather than mapping a combined figure onto one of them." },
+    "rd": { "code": "IS_RD_EXPEND", "unit": "usdM", "label": "Research & Development expense" },
+    "taxRate": { "code": "EFF_TAX_RATE", "unit": "pct", "label": "Effective tax rate" }
+  },
+
+  "segments": {
+    "_note": [
+      "SN reports ONE segment, so there are no segment-level consensus lines to expect.",
+      "Bloomberg may still carry its own category or brand estimates. If inspect_matrix.py shows",
+      "them, map them to the EXISTING dataset keys so the Results tab does not grow a parallel",
+      "set: segCleaning, segCookBev, segFoodPrep, segBeautyHome, regionNA, regionIntl,",
+      "brandShark, brandNinja. Do not invent new keys."
+    ]
+  },
+
+  "drop": [],
+
+  "_drop_note": "Series the frozen-series check flags go here, with a one-line reason and the date, until the Bloomberg cell is fixed. A frozen series reads as a beautifully smooth estimate and is entirely fictional - see the README."
+}

@@ -134,6 +134,87 @@ export var SN_GUIDE_PATTERN = 'Across the two years that are reconstructible, Sh
 export var SN_GUIDE_SOURCES_NOTE = 'Every figure is from the company\'s own "Fiscal 20XX Outlook" block in the quarterly earnings release (8-K exhibit), retrieved through Quartr and frozen here. Actuals are from the Q4/FY2025 release and the FY2025 10-K. <b>n/r = not recoverable</b> (the FY2024 and Feb-2025 release PDFs carry no extractable text layer on Quartr, so the initial FY2025 guide survives only through the restatement in the 1Q25 release, which listed the three headline metrics only); <b>n/c = not compiled</b> this pass. FY2024\'s guidance walk is not recoverable for the same reason. Nothing here is fetched at runtime.';
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// EARNINGS — Evolution ▸ Earnings
+//
+// SCAFFOLD + WHAT IS REAL. Built so the consensus-dependent half fills in by itself the
+// day SN lands in BBG_CONSENSUS.txt — see scripts/consensus/map_sn.json for the exact
+// five-step path. NOTHING below is invented: where a number needs Street consensus and
+// none exists, the pane renders an explicit pending badge instead of a placeholder
+// figure. EARNINGS_CONVENTIONS §5 rule 3 — "estimates are never invented, absent →
+// to fill" — and rule 1 — "consensus = Bloomberg ONLY" — are the reason.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export var SN_IR_URL = 'https://ir.sharkninja.com';
+export var SN_EDGAR_URL = 'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&ticker=SN&type=10-K&dateb=&owner=include&count=40';
+
+export var SN_EARN_LEDE = 'Two phases, one per print: the <b>Setup</b> for the quarter that has not happened, and <b>Post-Results</b> for the one that just did. The chart in Setup is the shared Results engine on a rolling window — real reported actuals against Bloomberg Street consensus. What is <b>not</b> here yet is the consensus <b>grid</b> and the surprise scorecard, and the reason is structural rather than effort: the Setup grid is gated on SN appearing in <code>BBG_CONSENSUS.txt</code>, and there is no Summit DCF model to score against either.';
+
+export var SN_EARN_PENDING = {
+  title: 'The Setup grid and the surprise scorecard are not built — here is exactly why, and what fills them',
+  body: 'Two independent inputs are missing, and neither is available from Quartr (which carries primary filings and transcripts, <b>never analyst estimates</b>):<br><br>' +
+    '<b>1 · Street consensus.</b> The vintage machinery reads snapshots keyed by <code>data_as_of</code> out of <code>BBG_CONSENSUS.txt</code>. That file carries eight tickers — AMZN, GOOGL, LYFT, META, NVDA, SPOT, TBBB, UBER — and SN is not one. Adding it is a Bloomberg-terminal job. It also decides the <b>authorized KPI set</b>: per EARNINGS_CONVENTIONS §5 rule 6, the metrics allowed in the Setup grid and the charts are exactly the ones the txt authorizes, and nothing else qualifies a line.<br><br>' +
+    '<b>2 · The Summit model.</b> No DCF model exists for SN, so there is no Summit estimate to put beside the Street\'s and no model-vs-reality back-test.<br><br>' +
+    'The plumbing for both is already in place: <code>scripts/consensus/map_sn.json</code> carries the generator config and the five-step run order, and <code>js/results-data/sn-setup.js</code> already feeds the chart above. Dropping SN\'s row into the archive and running the generator fills the grid, the scorecard, the vintage picker on Results and the whole Estimates pane — with no further code.',
+};
+
+// The next print. Everything here is sourced, and every item is a question the print answers.
+export var SN_NEXT_PRINT = {
+  label: 'Q3 2026',
+  date: 'Nov 5, 2026',
+  status: 'scheduled',
+  watch: [
+    ['The $247.1M tariff refund lands', 'Recognized in 3Q26 as a reduction of cost of sales. Roughly half relates to duties expensed in FY2025 and is <b>excluded</b> from the adjusted metrics — so GAAP will carry about twice the benefit the adjusted numbers do. A GAAP quarter that looks like a blowout and is not.'],
+    ['Does the FY2026 ratchet hold?', 'The guide has gone up at every print for two years — seven revisions, never a cut. It currently sits at +16.0–17.0% net sales. A fourth raise would confirm the pattern; a hold would be the first break in it.'],
+    ['The DTC claim comes due', 'Management said plainly that the Salesforce re-platform benefit is <b>not in the numbers yet</b> and should appear in <b>Q4 2026</b>, accelerating into 2027. This is the print where that stops being a promise.'],
+    ['TikTok Shop country count', 'Seven at the end of 2Q26, with a stated goal of more than doubling by holiday and 13 referenced for Q4. A countable, falsifiable number.'],
+    ['Does capex finally land in its range?', 'FY2025 guided $180–200M and reported $146.1M. FY2026 guides $190–210M and is "tracking toward the high end" — the opposite direction. Worth watching whether the guide or the outturn moves.'],
+    ['Cleaning\'s growth rate', 'The largest category grew just +4.1% in 2Q26 and +3.4% in 4Q25, against +17.0% in 1Q26. The diversification argument depends on the core being "growing, not flat" — this is the line that tests it.'],
+  ],
+  note: 'Compiled from the Q2 2026 release and call (Aug 5, 2026) and the FY2025 10-K. The event date is from the Quartr event record. No consensus expectation is shown for any of these because none is available — see the notice above.',
+};
+
+// The last print — scored against what IS available: the prior year and the company's own
+// FY guide. NOT against Street consensus, which does not exist for SN.
+export var SN_LAST_PRINT = {
+  label: 'Q2 2026',
+  date: 'reported Aug 5, 2026',
+  kpis: [
+    { v: '$1,765.5M', l: 'Net sales', s: '+22.2% YoY — fastest since 4Q24' },
+    { v: '$264.9M', l: 'Adj. EBITDA', s: '+18.6% YoY · 15.0% margin' },
+    { v: '$1.26', l: 'Adj. diluted EPS', s: '+29.9% YoY' },
+    { v: '48.7%', l: 'Adj. gross margin', s: '−70bp YoY on tariffs' },
+  ],
+  // [line, reported, YoY, read]
+  rows: [
+    ['Net sales', '$1,765.5M', '+22.2%', '13th consecutive quarter of double-digit growth. Domestic +15.5%, International +36.6%.'],
+    ['Cleaning', '$522.0M', '+4.1%', 'The largest category and the slowest — carpet extractors and cordless vacuums carried it.'],
+    ['Cooking &amp; Beverage', '$499.0M', '+36.5%', 'Ninja Luxe Café espresso and the Crispi franchise.'],
+    ['Food Preparation', '$458.6M', '+13.3%', 'Blending was the standout; frozen treats grew too.'],
+    ['Beauty &amp; Home Environment', '$285.8M', '+65.3%', 'Skincare and fans. The fastest-growing category for the fourth straight quarter.'],
+    ['Adj. gross margin', '48.7%', '−70bp', 'Tariff annualization, FX and retailer activations, partly offset by cost optimization, mix and the end of the JS Global sourcing fee.'],
+    ['Adj. operating expenses', '35.6% of sales', '−40bp', 'Fifth consecutive quarter of opex leverage.'],
+    ['Adj. EBITDA', '$264.9M', '+18.6%', '⚑ Grew SLOWER than net sales (+22.2%) — the stated goal is EBITDA ahead of sales for the full year, so this quarter ran against it on tariff annualization.'],
+    ['Adj. diluted EPS', '$1.26', '+29.9%', 'Growth above 23% in 11 of the last 12 quarters.'],
+  ],
+  verdict: 'Scored against the only yardsticks available for SN — the prior year and the company\'s own FY guide — 2Q26 was unambiguously strong: growth accelerated, every category grew, opex levered for a fifth quarter, and management raised the FY guide by ~4.5pp with <b>no</b> tariff-refund component in the top-line raise. The one line that ran against plan is <b>Adjusted EBITDA growing slower than net sales</b>, which management attributed to the annualization of 2025 tariffs while reaffirming EBITDA ahead of sales for the full year. <b>What cannot be said</b> is whether any of it beat the Street: no consensus exists for SN in our archive, so no beat/miss verdict is possible, and none is implied here.',
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ESTIMATES — Evolution ▸ Estimates
+// The engine renders this pane only when the dataset carries `estMatrix`/`evolution`.
+// SN has neither, so resultsEvoHtml('SN') returns '' and this notice renders instead.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export var SN_EST_PENDING = {
+  title: 'Estimates — the vintage axis — is wired but empty',
+  body: 'This pane answers a different question from Results: not "what did it earn against expectations" but <b>"how did the expectation itself move"</b> — the same forecast read at successive snapshot dates, so you can see the Street revise. It needs two generated blocks in <code>js/results-data/sn.js</code>, and SN has neither:<br><br>' +
+    '<b><code>estMatrix.cons</code></b> — consensus vintages, generated from <code>BBG_CONSENSUS.txt</code> deduped by <code>data_as_of</code>. SN is not among the eight tickers in that file.<br>' +
+    '<b><code>estMatrix.summit</code></b> and <b><code>evolution</code></b> — both generated from Summit MCP snapshots, one pull per model save. No Summit DCF model exists for SN.<br><br>' +
+    'The pane is already mounted and the generator config is written (<code>scripts/consensus/map_sn.json</code>), so this fills itself once the data lands — <code>emit_matrix.py</code> → <code>verify_preprint.py</code> → <code>apply_matrix.py</code>, with no code change here. Until then it shows this rather than an empty frame, because a blank pane reads as a bug and this is a sourcing gap.<br><br>' +
+    '<b>What stands in for it today:</b> <b>Evolution ▸ Guidance</b> does the same job on the company\'s own numbers — SharkNinja\'s FY outlook read at each of the four prints that issued it, which is a genuine revision history, just management\'s rather than the Street\'s.',
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // STRATEGY — Evolution ▸ Strategy
 //
 // The three-pillar GROWTH decomposition is not here — it lives in the segments dataset

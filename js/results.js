@@ -35,6 +35,7 @@ import { lyftSetup } from './results-data/lyft-setup.js';
 import { tbbbResults } from './results-data/tbbb.js';
 import { tbbbSetup } from './results-data/tbbb-setup.js';
 import { snResults } from './results-data/sn.js';
+import { snSetup } from './results-data/sn-setup.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
@@ -53,7 +54,8 @@ var RESULTS_DATA = {
   LYFT_SETUP: lyftSetup,
   TBBB: tbbbResults,
   TBBB_SETUP: tbbbSetup,
-  SN: snResults
+  SN: snResults,
+  SN_SETUP: snSetup
 };
 
 // Register a dataset at runtime, so a caller can compose one and get the whole engine — every

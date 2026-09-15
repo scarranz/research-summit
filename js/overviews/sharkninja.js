@@ -20,7 +20,7 @@ import {
   SN_ONE_SEGMENT, SN_GEO, SN_GEO_CAPTION, SN_PROD_DEFS,
   SN_PRODUCTS, SN_PEERS, SN_PEERS_NOTE, SN_PEERS_QUAL, SN_TIMELINE,
   SN_OV_SOURCES,
-  SN_DD_INTRO, SN_TL_RD, SN_TL_INTL, SN_DD_SOURCES,
+  SN_TL_RD, SN_TL_INTL, SN_DD_SOURCES,
   // The old flat cost-structure and balance-sheet TABLES are gone — their numbers are now read
   // through from js/results-data/sn.js and sharkninja-bottomline.js so Bottom Line cannot drift
   // from Results. Only the KPI strips and the debt flag survive from the first pass.
@@ -61,16 +61,16 @@ import {
   SN_BL_EXPENSE_LINES, SN_BL_EXPENSE_NOTE, SN_SC_DIVERGENCE, SN_SC_KPIS, SN_SC_TENK,
   SN_SC_TENK_WHERE, SN_SC_TARIFFS, SN_SC_TARIFF_NOTE, SN_SC_MARGIN_LINK, SN_BL_SOURCES_V2,
 } from './sharkninja-bottomline.js';
-// Valuation (docs/PANE_CATALOG.md §4). Two of the four panes are blocked on a Summit DCF
-// model that does not exist for SN; the file header says which and why.
-import {
-  SN_VAL_LEDE, SN_VAL_HIST_BLOCKED, SN_VAL_YEARS, valRow, SN_VAL_FALLBACK,
-  SN_VAL_HIST_READ, SN_VAL_HIST_SOURCES, SN_VAL_PEERS_DIVERGENCE, SN_VAL_PEERS_READ,
-  SN_VAL_PEERS_CAVEAT, SN_VAL_SOURCES,
-} from './sharkninja-valuation.js';
+// The Valuation source line for the Deep Dive footer (the panes themselves are Amazon's modules, above).
+import { SN_VAL_SOURCES } from './sharkninja-valuation.js';
 import { snResults } from '../results-data/sn.js';
 // Evolution ▸ Earnings runs on AMAZON'S machinery, copied verbatim — see sharkninja-ce.js for why.
 import { snCeHtml, snCeWire, snCeBuild, snCePop } from './sharkninja-ce.js';
+// Valuation runs on Amazon's four modules, copied — see each file's header.
+import { snHistMult } from './sharkninja-histmult.js';
+import { snPeersBody, snPeersInit } from './sharkninja-peers.js';
+import { snTargetMult } from './sharkninja-target-multiple.js';
+import { snSens } from './sharkninja-sensitivity.js';
 
 // esc: escapes <>" but leaves & literal (per contract — never double-encode).
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -930,122 +930,10 @@ function qOtherAnalysisExtras(){
 }
 
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// VALUATION — docs/PANE_CATALOG.md §4.
-// Sub-tabs: Historic Multiple · Peers. Target Multiple / PEG and Sensitivity Analysis
-// are NOT shipped — both are hand-transcribed from Summit DCF snapshots and no model
-// exists for SN. Stated once in the lede; never shipped as empty placeholders.
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function valFmtX(v){ return (v == null || !isFinite(v)) ? '—' : v.toFixed(1) + 'x'; }
-
-// The current-multiple grid. Cells needing a live price render a placeholder and are filled
-// by fillValuation() once the quote resolves — the pattern the Overview's market-cap cell uses.
-function valHistBody(){
-  var rev = valRow('rev'), eb = valRow('ebitdaAdj'), eps = valRow('epsAdj');
-  var head = SN_VAL_YEARS.map(function(y){
-    var e = (eps[y] && eps[y].est);
-    return '<th>FY' + esc(y) + (e ? ' <span class="ov-stat-mut">E</span>' : '') + '</th>';
-  }).join('');
-  function money(v){ return v == null ? '—' : '$' + (v / 1000).toFixed(2) + 'B'; }
-  function dol(v){ return v == null ? '—' : '$' + v.toFixed(2); }
-  function row(label, obj, fmt, attr){
-    return '<tr><td class="ov-td-name">' + label + '</td>' + SN_VAL_YEARS.map(function(y){
-      var c = obj[y];
-      if(attr) return '<td data-snval="' + attr + '" data-snvaly="' + y + '"><span class="ov-stat-mut">…</span></td>';
-      return '<td>' + (c ? fmt(c.v) : '—') + '</td>';
-    }).join('') + '</tr>';
-  }
-  return '<div class="dd-h">Historic Multiple</div>' +
-    pendingBlock(SN_VAL_HIST_BLOCKED) +
-    '<div class="dd-h" style="margin-top:22px;font-size:12.5px">What is computable — the current point on that series</div>' +
-    '<div class="ov-live" style="margin-bottom:12px">' +
-      '<span class="ov-live-tk">SN</span>' +
-      '<span class="ov-live-px" data-snvalpx>fetching…</span>' +
-      '<span class="ov-live-ch" data-snvalch></span>' +
-      '<span class="ov-live-kv">Market cap <b data-snvalmc>—</b></span>' +
-      '<span class="ov-live-kv">Net debt <b data-snvalnd>—</b></span>' +
-      '<span class="ov-live-ts" data-snvalts></span>' +
-    '</div>' +
-    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
-      '<th>Basis</th>' + head + '</tr></thead><tbody>' +
-      row('Net sales', rev, money, null) +
-      row('Adj. EBITDA', eb, money, null) +
-      row('Adj. diluted EPS', eps, dol, null) +
-      row('P/E', eps, null, 'pe') +
-      row('EV / Adj. EBITDA', eb, null, 'ev') +
-      row('EV / Net sales', rev, null, 'evs') +
-    '</tbody></table></div>' +
-    '<div class="dd-note">FY2025 is reported; FY2026 onward are Bloomberg Street consensus, marked <b>E</b>. The three multiple rows recompute in the browser against the live quote, so they move with the tape rather than being a stored number.</div>' +
-    '<div class="dd-callout">' + SN_VAL_HIST_READ + '</div>' +
-    '<div class="dd-note">' + esc(SN_VAL_HIST_SOURCES) + '</div>';
-}
-
-// Fills every [data-snval] cell once the quote resolves. Degrades to the company's own
-// disclosed share count and net cash if the quote fails, and says which it used.
-function fillValuation(root){
-  if(!root || !root.querySelector('[data-snvalpx]')) return;
-  var rev = valRow('rev'), eb = valRow('ebitdaAdj'), eps = valRow('epsAdj');
-  function paint(price, mc, nd, live){
-    var el;
-    if((el = root.querySelector('[data-snvalpx]'))) el.textContent = price == null ? 'n/a' : '$' + price.toFixed(2);
-    if((el = root.querySelector('[data-snvalmc]'))) el.textContent = mc == null ? '—' : '$' + (mc / 1e9).toFixed(1) + 'B';
-    if((el = root.querySelector('[data-snvalnd]'))) el.textContent = nd == null ? '—'
-      : (nd < 0 ? '−$' + Math.abs(nd / 1e6).toFixed(0) + 'M (net cash)' : '$' + (nd / 1e6).toFixed(0) + 'M');
-    if((el = root.querySelector('[data-snvalts]'))) el.textContent = live ? 'live' : 'quote unavailable — disclosed inputs';
-    var ev = (mc == null || nd == null) ? null : mc + nd;
-    root.querySelectorAll('[data-snval]').forEach(function(td){
-      var kind = td.getAttribute('data-snval'), y = td.getAttribute('data-snvaly'), out = '—';
-      if(kind === 'pe' && price != null && eps[y] && eps[y].v) out = valFmtX(price / eps[y].v);
-      if(kind === 'ev' && ev != null && eb[y] && eb[y].v) out = valFmtX(ev / (eb[y].v * 1e6));
-      if(kind === 'evs' && ev != null && rev[y] && rev[y].v) out = valFmtX(ev / (rev[y].v * 1e6));
-      td.innerHTML = out;
-    });
-  }
-  var fbNd = SN_VAL_FALLBACK.netDebt * 1e6;
-  function degrade(){ paint(null, null, fbNd, false); }
-  try{
-    var r = liveQuote('SN');
-    if(r && typeof r.then === 'function'){
-      r.then(function(res){
-        var q = res && (res.data || res);
-        if(q && q.price != null){
-          var mc = q.marketCap != null ? q.marketCap : q.price * SN_VAL_FALLBACK.shares * 1e6;
-          var nd = q.netDebt != null ? q.netDebt : fbNd;
-          paint(q.price, mc, nd, true);
-        } else degrade();
-      }).catch(degrade);
-    } else degrade();
-  }catch(e){ degrade(); }
-}
-
-function valPeersBody(){
-  var rows = SN_PEERS.map(function(p){
-    function x(v){ return v == null ? '—' : v.toFixed(1) + 'x'; }
-    function g(v){ return v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(1) + '%'; }
-    return '<tr' + (p.self ? ' class="guid-row-on"' : '') + '>' +
-      '<td class="ov-td-name">' + esc(p.tk) + (p.self ? ' <span class="ov-tag">this company</span>' : '') + '</td>' +
-      '<td>' + esc(p.name) + '</td>' +
-      '<td>' + x(p.pe) + '</td><td>' + x(p.peF) + '</td>' +
-      '<td>' + x(p.ev) + '</td><td>' + x(p.evF) + '</td>' +
-      '<td>' + g(p.g) + '</td><td>' + g(p.gF) + '</td>' +
-      '<td><span class="ov-stat-mut">' + (p.named ? 'named in the 10-K' : 'analyst-selected') + '</span></td></tr>';
-  }).join('');
-  return '<div class="dd-h">Peers</div>' +
-    '<div class="sg-needs">⚑ <b>The scatter is in the Overview, on purpose.</b><br><br>' + SN_VAL_PEERS_DIVERGENCE + '</div>' +
-    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
-      '<th>Ticker</th><th>Company</th><th>P/E (T)</th><th>P/E (F)</th>' +
-      '<th>EV/EBITDA (T)</th><th>EV/EBITDA (F)</th><th>Rev growth (T)</th><th>Rev growth (F)</th><th>Basis</th>' +
-    '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
-    '<div class="dd-note">' + SN_VAL_PEERS_CAVEAT + '</div>' +
-    '<div class="dd-callout">' + SN_VAL_PEERS_READ + '</div>' +
-    '<div class="dd-note">' + SN_PEERS_QUAL + '</div>';
-}
-
 function deepDiveHtml(c){
-  var h = '<div class="ov ov-sn ov-sn-dd" data-brand="SN" style="--brand:'+SN_BRAND+';--brand-soft:'+SN_BRAND_SOFT+'">';
-  h += '<div class="dd-callout" style="margin-top:0">'+esc(SN_DD_INTRO)+'</div>';
-  h += '<div class="dd-callout">'+SN_Q_INTRO+'</div>';
+  // Same root as amzn.js deepDiveHtml: portal tokens, not the company's brand (the brand lives in
+  // the logo — COMPANY_PROFILE_BLUEPRINT palette rule), so the tabs and toggles read like Amazon's.
+  var h = '<div class="ov ov-sn ov-sn-dd" data-brand="SN" style="--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">';
   h += '<div class="dd-tabs">'+
     '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
     '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
@@ -1093,14 +981,19 @@ function deepDiveHtml(c){
     '<div class="ovt-subpane" data-ovst="strategy" hidden>'+qStrategy()+'</div>'+
     '<div class="ovt-subpane" data-ovst="timeline" hidden>'+qTimeline()+'</div>'+
   '</div>';
+  // Valuation — Amazon's four sub-tabs on Amazon's own code (sharkninja-histmult / -peers /
+  // -target-multiple / -sensitivity), fed Bloomberg Street consensus because SN has no Summit DCF.
   h += '<div class="dd-pane" data-dd="valuation" hidden>'+
-    '<div class="dd-sub">'+SN_VAL_LEDE+'</div>'+
     '<div class="ovt-subtabs">'+
       '<button type="button" class="ovt-subtab active" data-ovst="histmult">Historic Multiple</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="targetmult">Target Multiple / PEG</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="sensitivity">Sensitivity Analysis</button>'+
     '</div>'+
-    '<div class="ovt-subpane" data-ovst="histmult">'+valHistBody()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="peers" hidden>'+valPeersBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="histmult">'+snHistMult.body()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="peers" hidden>'+snPeersBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="targetmult" hidden>'+snTargetMult.body()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="sensitivity" hidden>'+snSens.body()+'</div>'+
   '</div>';
   h += '<div class="dd-pane" data-dd="management" hidden>'+
     '<div class="ovt-subtabs">'+
@@ -1124,7 +1017,9 @@ function deepDiveHtml(c){
     '<div class="ovt-subpane" data-ovst="mna" hidden>'+miscMna()+'</div>'+
     '<div class="ovt-subpane" data-ovst="other" hidden>'+miscOther()+qOtherAnalysisExtras()+'</div>'+
   '</div>';
-  h += '<div class="ov-foot">'+esc(SN_DD_SOURCES)+' '+esc(SN_BL_SOURCES)+' '+esc(SN_MISC_SOURCES)+' '+esc(SN_VAL_SOURCES)+' '+esc(SN_QUARTR_SOURCES)+'</div>';
+  // The two intro callouts that sat above the tabs are gone (Amazon's Deep Dive opens straight on its tabs). The
+  // Quartr note is still true, so it moves down here with the sources; the data-status callout (SN_DD_INTRO) was out of date.
+  h += '<div class="ov-foot">'+esc(SN_DD_SOURCES)+' '+esc(SN_BL_SOURCES)+' '+esc(SN_MISC_SOURCES)+' '+esc(SN_VAL_SOURCES)+' '+esc(SN_QUARTR_SOURCES)+' '+SN_Q_INTRO+'</div>';
   h += '</div>';
   return h;
 }
@@ -1143,7 +1038,11 @@ function ddBuildVisible(root){
   var sub = pane.querySelector('.ovt-subpane:not([hidden])'); if(!sub) return;
   var key = sub.getAttribute('data-ovst');
   if(key==='results'){ requestAnimationFrame(function(){ initResults(null, 'SN'); }); return; }
-  if(key==='histmult'){ requestAnimationFrame(function(){ fillValuation(sub); }); return; }
+  // amzn.js aBuildSub('valuation', …), verbatim.
+  if(key==='histmult'){ requestAnimationFrame(function(){ snHistMult.init(root); }); return; }
+  if(key==='sensitivity'){ requestAnimationFrame(function(){ snSens.init(root); }); return; }
+  if(key==='targetmult'){ requestAnimationFrame(function(){ snTargetMult.init(root); }); return; }
+  if(key==='peers'){ requestAnimationFrame(function(){ snPeersInit(root); }); return; }
   if(key==='blgeneral'){
     var bh = sub.querySelector('.gen-sec[data-gsec="margins"]:not([hidden]) [data-snblchart]');
     if(bh) requestAnimationFrame(function(){ initResults(bh, 'SN_BL'); });

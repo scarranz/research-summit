@@ -1177,7 +1177,12 @@ function secManagement(s){
     themes.forEach(function(t){ (t.updates || []).forEach(function(u){
       if (!map[u.q]){ map[u.q] = []; qs.push(u.q); }
       map[u.q].push({ theme: t.theme, items: u.items }); }); });
-    qs.reverse();
+    // Newest first, by the label itself — encounter order breaks as soon as a theme opens later
+    // than the one listed above it. Labels that are not 'Q# YYYY' keep their relative order.
+    var qKey = function(q){ var m = /^Q([1-4]) (\d{4})$/.exec(q); return m ? +m[2] * 10 + +m[1] : null; };
+    qs = qs.map(function(q, i){ return { q: q, i: i, k: qKey(q) }; })
+      .sort(function(a, b){ return (a.k != null && b.k != null) ? b.k - a.k : b.i - a.i; })
+      .map(function(e){ return e.q; });
     body = qs.map(function(q){
       var n = map[q].reduce(function(a, e){ return a + e.items.length; }, 0);
       return group('q-' + slug(q), q, map[q].map(function(e){ return e.theme; }).join(' · '), n,

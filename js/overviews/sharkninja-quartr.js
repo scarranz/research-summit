@@ -310,7 +310,7 @@ export var SN_IR_CADENCE = {
     ['BofA Consumer &amp; Retail', '2025', 'March.'],
     ['Investor presentation', 'refreshed ~quarterly', 'Published alongside most prints; the Aug 2026 edition added two new slides specifically to answer the growth-durability question.'],
   ],
-  note: 'Compiled from the Quartr event record (Jun 2023 &ndash; Nov 2026) and frozen. Conference appearances are listed by the year the company attended; transcripts for them were not mined in this pass — only the Q2 2026 earnings call was, which is the gap noted on the theme record.',
+  note: 'Compiled from the Quartr event record (Jun 2023 &ndash; Nov 2026) and frozen. Conference appearances are listed by the year the company attended; transcripts for them were not mined — only the earnings calls were (Q2 2023 through Q2 2026), into the theme record.',
 };
 
 export var SN_TL_SOURCES = 'Sources: the Quartr event record for dates and the IR cadence; SharkNinja quarterly earnings releases (8-K), the FY2025 10-K, the FY2026 proxy and the Q2 2026 call for what each entry says. Retrieved through Quartr and frozen — nothing here is fetched at runtime. The corporate history before the Jul 2023 spin-off is deliberately not repeated here; it is in the Overview\'s timeline.';

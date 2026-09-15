@@ -1701,7 +1701,7 @@ function modelBody(c){
   h+='<div class="ov-chart-wrap ovt-vs-wrap"><canvas id="ubAveChart"></canvas></div>';
   h+=rangeSlider('ave', 1, '', '');
   h+='<div class="ave-subh-note" id="ubAveNote" style="margin:6px 2px 16px"></div>';
-  h+='<div class="ov-kpis" id="ubAveStats" style="grid-template-columns:repeat(4,1fr)"></div>';
+  h+='<div class="ov-kpis" id="ubAveStats"></div>';
   h+='<div class="ov-foot">Estimates are the model\'s projection_history; actuals are reported. Free Cash Flow starts 2Q24 (where the model carries a stable forecast). Snapshot 2026-05-07.</div>';
 
   // ── Management's own guidance vs. reality (chart: guided band · actual · model) ──

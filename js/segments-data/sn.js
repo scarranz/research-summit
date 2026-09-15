@@ -20,6 +20,7 @@
 // js/overviews/sharkninja-quartr.js for the retrieval pass and its sources.
 
 export var snSegments = {
+  company: 'SharkNinja',
   updated: 'Sep 2026',
   source: 'Product-category and brand net sales are company disclosures — categories from each quarterly earnings release (8-K), the brand split from p.5 of the August 2026 investor presentation; both verified to reconcile to reported total net sales for 1Q24-2Q26 and FY2024-FY2025, with 3Q23-4Q23 and FY2022-FY2023 carried from the Bloomberg (BST) export and unverified against a primary release. Geography (Domestic / International) is the one split the 10-K itself discloses. Customer concentration is from the FY2025 Form 10-K. All series are read through from js/results-data/sn.js; Street consensus for forward periods is not shown on this tab — it lives in Evolution ▸ Results.',
 

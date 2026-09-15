@@ -1636,7 +1636,7 @@ function modelBody(c){
   h += '<div class="ov-chart-wrap ovt-vs-wrap"><canvas id="lyAveChart"></canvas></div>';
   h += rangeSlider('ave', 1, '', '');
   h += '<div class="ave-subh-note" id="lyAveNote" style="margin:6px 2px 16px"></div>';
-  h += '<div class="ov-kpis" id="lyAveStats" style="grid-template-columns:repeat(4,1fr)"></div>';
+  h += '<div class="ov-kpis" id="lyAveStats"></div>';
   h += '<div class="ov-foot">Estimates are the model\'s quarterly projection_history; actuals are reported. Adj. EBITDA and Free Cash Flow windows start where the model carries a stable forecast (the 2023 quarters sit on a near-zero / negative base and are excluded). Snapshot 2026-05-13.</div>';
 
   // ── Management's own guidance vs. reality (chart: guided band · actual · model) ──

@@ -33,9 +33,12 @@ import { spotSetup } from './results-data/spot-setup.js';
 import { lyftResults } from './results-data/lyft.js';
 import { lyftSetup } from './results-data/lyft-setup.js';
 import { tbbbResults } from './results-data/tbbb.js';
+import { dhrResults } from './results-data/dhr.js';
+import { dhrSetup } from './results-data/dhr-setup.js';
 import { tbbbSetup } from './results-data/tbbb-setup.js';
 import { snResults } from './results-data/sn.js';
 import { snSetup } from './results-data/sn-setup.js';
+import { SUMMIT_MUTE } from './viz-palette.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
@@ -54,6 +57,8 @@ var RESULTS_DATA = {
   LYFT_SETUP: lyftSetup,
   TBBB: tbbbResults,
   TBBB_SETUP: tbbbSetup,
+  DHR: dhrResults,
+  DHR_SETUP: dhrSetup,
   SN: snResults,
   SN_SETUP: snSetup
 };
@@ -210,8 +215,17 @@ var rsFwdZone = {
 var RS_GREEN  = '#1E9E62', RS_RED = '#C0392B';
 // Evolution block: one line per fiscal year — an ordered (ordinal) ramp of the
 // portal blue, darkest = nearest year. Validated with the dataviz palette
-// checker (monotone L, visible step gaps, light end ≥2:1 on white).
-var EVO_RAMP = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0'];
+// checker (monotone L, visible step gaps). Sized to 5 (Uber's raw `years` is
+// already ['2025'..'2029']; rsTrimData's forward-horizon rule keeps it at 4
+// today, but that headroom closes as the current FY rolls forward) with a SAFE
+// fallback past that — indexed directly (`[yi]`, never `% length`), same rule
+// as the categorical palette's own fix (Sep 1, 2026): a ramp that cycles
+// silently gives a later year the same colour as an earlier one. The 5th step
+// is lighter than the light-end contrast floor the first four hold to, which
+// is fine ONLY because every Evolution chart ships its own table underneath
+// (the same relief the low-contrast categorical
+// slots rely on) — do not add a 6th step without checking that still holds.
+var EVO_RAMP = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0', '#C8D7F4'];
 
 // Global: dataset + view. Per-section (keyed by section key): metric, window,
 // hidden series, chart instance. `evo` is the vintage-evolution block's state.
@@ -585,10 +599,29 @@ function rsApplyVintage(){
 // What each source actually resolved to — stated on screen, because one date means
 // different things for a model refreshed weekly and a consensus file refreshed quarterly,
 // and because a source with no matrix yet is still showing its pre-print series.
+// Does the dataset carry ANY value for this source, in any view, in any metric — flat array or
+// vintage matrix? A ticker we have no model for (DHR) or no Summit line for yet (GOOGL) ships
+// `summit: []` on every metric, and without this guard the note underneath the picker still
+// announced "Summit: no vintage matrix yet — showing the estimate that stood before each print",
+// which reads as a promise that a Summit series is on the chart. It is not; say nothing about it.
+function rsSrcInData(src){
+  var d = _rs.data; if (!d) return false;
+  if (rsMatrix(src)) return true;
+  var vs = d.views || {};
+  for (var vn in vs){
+    var ms = vs[vn].metrics || {};
+    for (var mk in ms){
+      var a = ms[mk][src] || ms[mk]['_flat_' + src];
+      if (a && a.some(function(v){ return v != null; })) return true;
+    }
+  }
+  return false;
+}
 function rsVintNote(){
   var mode = _rs.vint || 'preprint';
   var names = { summit: 'Summit', cons: 'Consensus' }, asof = mode.indexOf('asof:') === 0, out = [];
   ['summit', 'cons'].forEach(function(src){
+    if (!rsSrcInData(src)) return;                 // the source is absent, not merely un-versioned
     var mx = rsMatrix(src);
     if (!mx){ out.push(names[src] + ': no vintage matrix yet — showing the estimate that stood before each print'); return; }
     if (mode === 'preprint'){ out.push(names[src] + ': ' + (mx.vintages || []).length + ' snapshots, each period taken from the last one before its print'); return; }
@@ -1830,7 +1863,7 @@ function rsEvoLegendHtml(k, m){
   var h = ev.years.map(function(y, i){
     var off = st.hidden['y' + y];
     return '<button type="button" class="rs-leg' + (off ? ' off' : '') + '" data-rsevleg="y' + y + '" title="Show / hide">' +
-      '<span class="ave-leg-act" style="background:' + EVO_RAMP[i % EVO_RAMP.length] + '"></span>FY' + esc(y) + '</button>';
+      '<span class="ave-leg-act" style="background:' + (EVO_RAMP[i] || SUMMIT_MUTE) + '"></span>FY' + esc(y) + '</button>';
   }).join('');
   h += '<button type="button" class="rs-leg' + (st.hidden.summit ? ' off' : '') + '" data-rsevleg="summit" title="Show / hide">' +
     '<span class="rs-leg-line" style="background:var(--navy)"></span>Summit (solid)</button>';
@@ -1925,7 +1958,7 @@ function rsBuildEvo(k){
   var datasets = [];
   ev.years.forEach(function(y, yi){
     if (st.hidden['y' + y]) return;
-    var color = EVO_RAMP[yi % EVO_RAMP.length];
+    var color = EVO_RAMP[yi] || SUMMIT_MUTE;
     var s = !st.hidden.summit ? series('summit', yi) : null;
     if (s && s.some(function(v){ return v != null; })){
       datasets.push({ label: 'FY' + y + ' · Summit', data: s,
@@ -1949,7 +1982,7 @@ function rsBuildEvo(k){
                        : scale(rsEvoActual(st.metric, m, y));
       if (av == null) return;
       datasets.push({ label: 'FY' + y + ' · reported', data: ev.vintages.map(function(){ return av; }),
-        borderColor: EVO_RAMP[yi % EVO_RAMP.length], borderWidth: 1.5, borderDash: [2, 3],
+        borderColor: EVO_RAMP[yi] || SUMMIT_MUTE, borderWidth: 1.5, borderDash: [2, 3],
         pointRadius: 0, pointHitRadius: 6, tension: 0, fill: false, _src: 'act', _yi: yi, order: 99 });
     });
   }
@@ -2156,10 +2189,20 @@ function rsSrcArr(m, key, mkey){
   return m[key] || null;
 }
 function rsSrcHas(m, key, mkey){ var a = rsSrcArr(m, key, mkey); return !!a && a.some(function(v){ return v != null; }); }
+// A pair is offerable only where the two series overlap ON A REPORTED PERIOD. The block is
+// "Actuals vs Estimates" and its base defaults to the actual, so an overlap that exists only in
+// the forward horizon — a consensus and a company guide for the same future quarter, say — is not
+// a surprise anyone can score, and offering it puts a metric in the dropdown that draws an empty
+// chart. DHR is the dataset that surfaced this: it guides 3Q26 core growth and carries a Street
+// number for the same quarter, and nothing else pairs anywhere, so the whole block rendered with
+// one option and no data. Requiring an actual also makes `rsSurpGroups()` return empty for a
+// ticker with no scoreable history at all, which drops the block entirely (rule 6 — show nothing
+// rather than something broken) instead of shipping a blank canvas.
 function rsSurpPairOk(m, a, b, mkey){
   var A = rsSrcArr(m, a, mkey), B = rsSrcArr(m, b, mkey);
   if (!A || !B) return false;
-  return m.periods.some(function(_, i){ return A[i] != null && B[i] != null; });
+  var act = m.act || [];
+  return m.periods.some(function(_, i){ return A[i] != null && B[i] != null && act[i] != null; });
 }
 // A metric qualifies when ANY two of its series overlap — not just actual-vs-Summit.
 // Deliberately independent of the current base/comparator choice, so changing the
@@ -3255,7 +3298,10 @@ function wireResults(pane){
     if (stb){
       var sst2 = rsSurpSt();
       sst2.tbl = sst2.tbl === false;
-      var sbody = document.getElementById('rsSurpTableBody');
+      // Scope to the collapsible that was actually clicked. The engine renders up to THREE times on
+      // one profile (Earnings Setup · Results · Estimates), so these ids are not unique in the
+      // document and getElementById would toggle the first instance — i.e. a different tab's table.
+      var sbody = (stb.closest('.rs-collap') || document).querySelector('#rsSurpTableBody');
       if (sbody) sbody.hidden = sst2.tbl === false;
       stb.innerHTML = rsSurpTableHeadHtml();
       return;
@@ -3264,7 +3310,7 @@ function wireResults(pane){
     if (tb){
       var tk = tb.getAttribute('data-rstblb'), tst = rsSt(tk);
       tst.tbl = tst.tbl === false;
-      var tbody = document.getElementById('rsTableBody-' + tk);
+      var tbody = (tb.closest('.rs-collap') || document).querySelector('#rsTableBody-' + tk);   // same three-instance caveat as above
       if (tbody) tbody.hidden = tst.tbl === false;
       tb.innerHTML = rsTableHeadHtml(tk, rsMetric(tk));
       return;

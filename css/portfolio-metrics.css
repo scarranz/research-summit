@@ -1,0 +1,320 @@
+/* Portfolio Metrics tab — all rules scoped under #pm-root so they never touch
+   the rest of the portal. Palette vars are redefined on #pm-root for isolation. */
+#pm-root{
+  --navy:#1E2733; --blue:#2C3E54; --steel:#3E5A82; --mid:#7C8694;
+  --ice:#EEF1F5; --pale:#F4F6F9; --w:#FFFFFF; --text:#1E2733; --mu:#8A93A0;
+  --bdr:#E7EAEE; --pos:#16A34A; --neg:#DC2626; --accent:#2563EB; --warn:#B45309;
+  color:var(--text); font-variant-numeric:tabular-nums;
+}
+#pm-root .pm-wrap{max-width:1480px;margin:0 auto;}
+#pm-root .topbar{display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap;}
+#pm-root .topbar h2{font-size:18px;font-weight:700;color:var(--text);text-transform:none;letter-spacing:-.01em;}
+#pm-root .sub{color:var(--mu);font-size:13px;margin-bottom:18px;}
+
+#pm-root .card{background:var(--w);border:1px solid var(--bdr);border-radius:14px;padding:6px 6px 14px;overflow-x:auto;}
+#pm-root table{width:100%;border-collapse:collapse;font-size:13px;}
+#pm-root th,#pm-root td{padding:8px 12px;border-bottom:1px solid var(--bdr);white-space:nowrap;text-align:right;}
+#pm-root th{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.03em;font-weight:600;background:var(--w);}
+#pm-root th:first-child,#pm-root td:first-child{text-align:left;}
+#pm-root td.tk{font-weight:700;}
+#pm-root tbody tr:hover{background:var(--pale);}
+
+/* Group header rows (Passive / Single Stock) */
+#pm-root tr.grp td{
+  font-size:10px;color:var(--steel);font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;background:var(--pale);padding:7px 12px;text-align:left;
+}
+#pm-root td.num{font-variant-numeric:tabular-nums;}
+#pm-root td.muted{color:var(--mu);}
+
+/* Sub-tabs (Portfolio / Paper) — underline style */
+#pm-root .pm-subnav{display:flex;gap:0;border-bottom:1px solid var(--bdr);margin-bottom:20px;}
+#pm-root .pm-pill{border:none;border-bottom:2px solid transparent;background:transparent;
+  font:500 13.5px 'Inter',sans-serif;color:var(--mu);padding:0 2px 10px;margin-right:28px;
+  margin-bottom:-1px;cursor:pointer;transition:color .15s,border-color .15s;}
+#pm-root .pm-pill:hover{color:var(--text);}
+#pm-root .pm-pill.active{color:var(--navy);font-weight:600;border-bottom-color:var(--navy);}
+#pm-root .pm-sub{display:none;}
+#pm-root .pm-sub.active{display:block;}
+
+/* Analysis tabs (PEG / Beta / Correlations) inside the Metrics subtab — rounded
+   chips, deliberately distinct from the underline subtabs above and the segmented
+   metric bar below, so the three levels never read as the same control. */
+#pm-root .pm-anav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+#pm-root .pm-atab{border:1px solid var(--bdr);background:var(--w);color:var(--steel);
+  border-radius:999px;padding:6px 16px;font:600 12.5px 'Inter',sans-serif;cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s;}
+#pm-root .pm-atab:hover{background:var(--pale);color:var(--navy);}
+#pm-root .pm-atab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+#pm-root .pm-apane{display:none;}
+#pm-root .pm-apane.active{display:block;}
+#pm-root .pm-ph{color:var(--mu);font-size:13px;font-style:italic;padding:44px 24px;
+  text-align:center;border:1px dashed var(--bdr);border-radius:14px;background:var(--pale);}
+
+/* Blended subtab — Before → After comparison tiles + a compact holdings table. */
+#pm-root .pm-cmp-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;margin-bottom:20px;}
+#pm-root .pm-tile{border:1px solid var(--bdr);border-radius:12px;background:var(--w);padding:12px 14px;}
+#pm-root .pm-tile-h{font-size:10px;color:var(--mu);font-weight:700;text-transform:uppercase;
+  letter-spacing:.04em;margin-bottom:10px;}
+#pm-root .pm-tile-vals{display:flex;align-items:baseline;gap:10px;}
+#pm-root .pm-tile-col{display:flex;flex-direction:column;gap:2px;}
+#pm-root .pm-tile-col span{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.03em;}
+#pm-root .pm-tile-col b{font-size:18px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;}
+#pm-root .pm-tile-arw{color:var(--mu);font-size:15px;align-self:center;}
+#pm-root .pm-tile-d{margin-top:8px;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--mu);}
+#pm-root .pm-tile-d.up{color:var(--pos);} #pm-root .pm-tile-d.dn{color:var(--neg);}
+#pm-root .pm-tile-pend{background:var(--pale);border-style:dashed;}
+#pm-root .pm-tile-pend .pm-pend-txt{font-size:14px;font-style:italic;color:var(--mu);}
+
+/* Row tags — a name entering (Nueva) or leaving (Sale) the book between sides. */
+#pm-root .pm-tag{display:inline-block;margin-left:8px;font-size:9px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;padding:1px 6px;border-radius:5px;vertical-align:1px;}
+#pm-root .pm-tag.new{background:rgba(22,163,74,.12);color:var(--pos);}
+#pm-root .pm-tag.out{background:rgba(220,38,38,.10);color:var(--neg);}
+
+/* Beta analysis — parameter bar (frequency · window · presets) + beta cells. */
+#pm-root .pm-betabar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+#pm-root .pm-betabar .lbl{font-size:10px;color:var(--mu);font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;}
+#pm-root input.pm-binp{width:56px;font-family:inherit;font-size:12.5px;border:1px solid var(--bdr);
+  border-radius:7px;padding:6px 9px;background:var(--w);color:var(--text);text-align:right;}
+#pm-root input.pm-binp:focus{outline:none;border-color:var(--accent);}
+#pm-root td.pm-beta{font-weight:700;font-variant-numeric:tabular-nums;}
+#pm-root td.pm-beta.hi{color:var(--neg);}   /* β ≥ 1 — more volatile than the market */
+#pm-root td.pm-beta.lo{color:var(--steel);} /* β < 1 — less volatile */
+/* Clickable beta → opens the historical chart. Dotted underline signals it. */
+#pm-root td.pm-beta-cell{cursor:pointer;text-decoration:underline dotted rgba(37,99,235,.5);
+  text-underline-offset:3px;}
+#pm-root td.pm-beta-cell:hover{background:rgba(37,99,235,.06);}
+
+/* Beta history modal — wider than the shared default, with a fixed-height chart. */
+#pm-root .pm-beta-card{max-width:680px;}
+#pm-root .pm-bm-sub{font-size:12px;color:var(--mu);margin-top:4px;}
+#pm-root .pm-bm-body{padding:16px 24px 24px;height:340px;position:relative;}
+
+/* Paper subtab — editable inputs, add / remove controls */
+#pm-root input.pm-inp{font-family:inherit;font-size:13px;border:1px solid var(--bdr);
+  border-radius:6px;padding:4px 8px;background:var(--w);color:var(--text);text-align:right;}
+#pm-root input.pm-tk{width:120px;text-align:left;font-weight:700;}
+#pm-root input.pm-wt{width:72px;}
+#pm-root input.pm-inp:focus{outline:none;border-color:var(--accent);}
+#pm-root .pm-add{font-family:inherit;font-size:12px;font-weight:600;color:var(--steel);
+  background:var(--w);border:1px dashed var(--bdr);border-radius:7px;padding:5px 12px;
+  cursor:pointer;margin:8px 0 4px 12px;}
+#pm-root .pm-add:hover{border-color:var(--steel);color:var(--navy);background:var(--pale);}
+#pm-root .pm-del{border:none;background:transparent;color:var(--mu);cursor:pointer;
+  font-size:15px;line-height:1;padding:0 4px;}
+#pm-root .pm-del:hover{color:var(--neg);}
+#pm-root td.pm-actions{width:32px;text-align:center;padding:8px 4px;}
+#pm-root .pm-empty{color:var(--mu);font-size:12px;font-style:italic;}
+
+/* Metric selector (EBITDA / Earnings / CFO / FCF) — segmented control */
+#pm-root .pm-metricbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+#pm-root .pm-metricbar .lbl{font-size:10px;color:var(--mu);font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;}
+#pm-root .pm-seg{display:inline-flex;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;}
+#pm-root .pm-seg button{border:none;border-radius:0;background:var(--w);color:var(--steel);
+  padding:7px 14px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
+#pm-root .pm-seg button+button{border-left:1px solid var(--bdr);}
+#pm-root .pm-seg button.on{background:var(--navy);color:#fff;}
+#pm-root .pm-seg button:not(.on):hover{background:var(--pale);}
+
+/* Metric value inputs + computed cells */
+#pm-root input.pm-minp{width:64px;font-family:inherit;font-size:12.5px;border:1px solid var(--bdr);
+  border-radius:6px;padding:4px 7px;background:var(--w);color:var(--text);text-align:right;}
+#pm-root input.pm-minp:focus{outline:none;border-color:var(--accent);}
+#pm-root th.msep,#pm-root td.msep{border-left:1px solid var(--bdr);}
+#pm-root td.pm-growth,#pm-root td.pm-peg{font-weight:600;}
+#pm-root td.pm-growth.up{color:var(--pos);} #pm-root td.pm-growth.dn{color:var(--neg);}
+#pm-root td.pm-sv{font-variant-numeric:tabular-nums;}
+#pm-root .pm-note{font-size:11px;color:var(--mu);margin-top:10px;line-height:1.5;}
+
+/* Benchmark card (SPY) — its own box below the book, tinted so it doesn't read
+   as another holding. Columns mirror the table above (shared headRow). */
+#pm-root .pm-bmk-h{font-size:10px;color:var(--steel);font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;margin:26px 0 8px;}
+#pm-root .card.pm-bmk{background:var(--pale);border-color:var(--bdr);border-left:3px solid var(--steel);}
+#pm-root .card.pm-bmk th{background:transparent;}
+#pm-root .card.pm-bmk tbody tr:hover{background:transparent;}
+#pm-root .card.pm-bmk td{border-bottom:none;}
+#pm-root .card.pm-bmk td.tk span.muted{font-weight:500;color:var(--mu);font-size:12px;margin-left:6px;}
+
+/* Earnings basis sub-toggle — indented under the metric bar so it reads as a
+   sub-control of Earnings rather than a third top-level selector. */
+#pm-root .pm-basisbar{margin:-4px 0 14px 14px;padding-left:12px;border-left:2px solid var(--bdr);}
+
+/* Source toggle — Consensus lights up amber rather than navy, so a table built on
+   street numbers instead of our own model is never mistaken for the default. */
+#pm-root .pm-seg button[data-source="consensus"].on{background:var(--warn);}
+
+/* Derived values (consensus CFO/FCF) — dotted underline in the warn colour, so a
+   modelled figure never passes for a sourced one. Hover gives the derivation. */
+#pm-root td.pm-derived{
+  text-decoration:underline dotted var(--warn); text-underline-offset:3px; cursor:help;
+}
+
+/* Calendar year riding under a relative period label (FY 0 / FY+1 / FY+2), in the
+   header cells and on the year selector. Deliberately quiet — the relative label
+   is what you read, the calendar year is what you check. */
+#pm-root .pm-cy{display:block;font-size:9px;font-weight:500;letter-spacing:.02em;
+  color:var(--mu);text-transform:none;margin-top:1px;}
+#pm-root .pm-seg button .pm-cy{color:inherit;opacity:.6;}
+
+/* Off-calendar fiscal year (NVDA): badge on the ticker, and the calendarised
+   cells carry a hover naming the fiscal year the number actually came from. */
+#pm-root .pm-fy{font-size:9px;font-weight:700;letter-spacing:.03em;color:var(--warn);
+  border:1px solid var(--warn);border-radius:4px;padding:0 3px;vertical-align:1px;cursor:help;}
+#pm-root td.pm-offcal{cursor:help;}
+
+/* Unit suffix sitting beside an editable field (Paper weight %, typed multiple x). */
+#pm-root td > span.muted{font-size:11.5px;color:var(--mu);}
+
+/* Footer: cash line, then the weighted average. Separated from the holdings by a
+   heavier rule so it reads as a total, not another row. */
+#pm-root tfoot tr.pm-cash td{border-top:2px solid var(--bdr);color:var(--mu);}
+#pm-root tfoot tr.pm-cash td.tk{color:var(--mu);font-weight:600;}
+#pm-root tfoot tr.pm-wavg td{background:var(--pale);font-weight:700;border-bottom:none;}
+#pm-root tfoot tr.pm-wavg td.tk{color:var(--navy);letter-spacing:.01em;}
+#pm-root tfoot tr:hover{background:transparent;}
+#pm-root tfoot td.neg{color:var(--neg);cursor:help;}
+#pm-root tfoot td[title]{cursor:help;}
+
+/* Per-name beta method — the default bar reads as the default, and each row shows
+   its own method as a compact tag; clicking it expands an inline control strip
+   (accordion, one open at a time), so methodology is per name without a bank of
+   always-on controls cluttering the table. */
+#pm-root .pm-betabar-h{color:var(--navy);font-weight:700;}
+#pm-root .pm-daily-loading{font-size:11px;color:var(--mu);font-style:italic;margin:-8px 0 12px;}
+
+#pm-root td.pm-method{text-align:right;padding:6px 12px;}
+#pm-root .pm-mtag{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--bdr);
+  background:var(--w);color:var(--steel);border-radius:999px;padding:3px 10px;
+  font:600 11px 'Inter',sans-serif;font-variant-numeric:tabular-nums;cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s;}
+#pm-root .pm-mtag:hover{background:var(--pale);color:var(--navy);border-color:var(--steel);}
+#pm-root .pm-mtag.ov{border-color:var(--accent);color:var(--accent);background:rgba(37,99,235,.06);}
+#pm-root .pm-mtag.open{background:var(--navy);color:#fff;border-color:var(--navy);}
+#pm-root .pm-mchev{font-size:9px;opacity:.75;}
+#pm-root .pm-ovdot{display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:var(--accent);margin-left:7px;vertical-align:2px;}
+
+/* Inline control strip revealed under an expanded row. */
+#pm-root tr.pm-brow.open td{border-bottom-color:transparent;}
+#pm-root tr.pm-bctl td{background:var(--pale);padding:10px 14px;}
+#pm-root tr.pm-bctl:hover td{background:var(--pale);}
+#pm-root .pm-mstrip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+#pm-root .pm-mstrip .lbl{font-size:10px;color:var(--mu);font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;}
+#pm-root .pm-seg.pm-seg-sm button{padding:4px 10px;font-size:11.5px;}
+#pm-root input.pm-mwin{width:48px;font-family:inherit;font-size:11.5px;border:1px solid var(--bdr);
+  border-radius:6px;padding:4px 7px;background:var(--w);color:var(--text);text-align:right;}
+#pm-root input.pm-mwin:focus{outline:none;border-color:var(--accent);}
+#pm-root .pm-mn{font-size:10.5px;color:var(--mu);font-variant-numeric:tabular-nums;}
+#pm-root .pm-mreset{border:none;background:transparent;color:var(--steel);cursor:pointer;
+  font:600 11px 'Inter',sans-serif;padding:4px 7px;border-radius:6px;}
+#pm-root .pm-mreset:hover{background:var(--ice);color:var(--navy);}
+#pm-root .pm-mdef{font-size:10.5px;color:var(--mu);font-style:italic;}
+
+/* Paper header bar — prefill selector (Summit / teammate / superinvestor), the
+   loaded source, a name field, and Submit. Sits above the Paper analysis tabs. */
+#pm-root .pm-paperbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;
+  padding-bottom:14px;border-bottom:1px solid var(--bdr);}
+#pm-root .pm-paperbar .lbl{font-size:10px;color:var(--mu);font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;}
+#pm-root .pm-pf{border:1px solid var(--bdr);background:var(--w);color:var(--steel);
+  border-radius:999px;padding:5px 14px;font:600 12px 'Inter',sans-serif;cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s;}
+#pm-root .pm-pf:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+#pm-root .pm-pf.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+#pm-root select.pm-pf-sel{font-family:inherit;font-size:12px;font-weight:600;color:var(--steel);
+  border:1px solid var(--bdr);border-radius:999px;padding:5px 12px;background:var(--w);cursor:pointer;
+  max-width:240px;}
+#pm-root select.pm-pf-sel:hover{border-color:var(--steel);color:var(--navy);}
+#pm-root select.pm-pf-sel:focus{outline:none;border-color:var(--accent);}
+#pm-root select.pm-pf-sel.on{border-color:var(--accent);color:var(--accent);}
+#pm-root .pm-loaded{font-size:11.5px;color:var(--mu);}
+#pm-root .pm-loaded b{color:var(--navy);font-weight:700;}
+#pm-root .pm-paperbar-gap{flex:1 1 12px;}
+#pm-root input.pm-subname{font-family:inherit;font-size:12.5px;border:1px solid var(--bdr);
+  border-radius:7px;padding:6px 10px;background:var(--w);color:var(--text);width:170px;}
+#pm-root input.pm-subname:focus{outline:none;border-color:var(--accent);}
+#pm-root .pm-submit{border:1px solid var(--pos);background:var(--pos);color:#fff;border-radius:8px;
+  padding:6px 16px;font:700 12.5px 'Inter',sans-serif;cursor:pointer;transition:filter .15s;}
+#pm-root .pm-submit:hover{filter:brightness(.92);}
+#pm-root .pm-subcount{font-size:11px;color:var(--pos);font-weight:700;}
+/* Comparison — current book highlighted, submitted rows carry a remove × on the name. */
+#pm-root tr.pm-cmp-cur td{background:var(--pale);}
+#pm-root tr.pm-cmp-cur td.tk{color:var(--navy);font-weight:700;}
+#pm-root .pm-subdel{border:none;background:transparent;color:var(--mu);cursor:pointer;
+  font-size:15px;line-height:1;padding:0 4px;margin-left:8px;}
+#pm-root .pm-subdel:hover{color:var(--neg);}
+/* Comparison view toggle (Resumen / Detalle) */
+#pm-root .pm-cmpview{margin-bottom:14px;}
+/* Per-holding detail: header names can wrap; current book column reads as the anchor. */
+#pm-root table.pm-cmpdetail th.num{text-align:right;white-space:nowrap;}
+#pm-root table.pm-cmpdetail tfoot tr.pm-cash td{border-top:2px solid var(--bdr);color:var(--mu);font-weight:600;}
+
+/* Correlations — nested subtabs (Matrix / …) under the analysis pill row. Underline
+   style so they read as a level below the navy analysis pills. */
+#pm-root .pm-cnav{display:flex;gap:22px;border-bottom:1px solid var(--bdr);margin-bottom:18px;}
+#pm-root .pm-ctab{border:none;border-bottom:2px solid transparent;background:transparent;color:var(--mu);
+  font:600 12.5px 'Inter',sans-serif;padding:0 2px 9px;margin-bottom:-1px;cursor:pointer;
+  transition:color .15s,border-color .15s;}
+#pm-root .pm-ctab:hover{color:var(--text);}
+#pm-root .pm-ctab.active{color:var(--navy);border-bottom-color:var(--navy);}
+
+/* Matrix window field (matrix-level, mirrors the beta window input). */
+#pm-root input.pm-cwin{width:56px;font-family:inherit;font-size:12.5px;border:1px solid var(--bdr);
+  border-radius:7px;padding:6px 9px;background:var(--w);color:var(--text);text-align:right;}
+#pm-root input.pm-cwin:focus{outline:none;border-color:var(--accent);}
+
+/* Average-correlation stat above the matrix. */
+#pm-root .pm-cstat{font-size:12.5px;color:var(--text);margin-bottom:12px;}
+#pm-root .pm-cstat b{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;}
+
+/* Correlation heatmap. Cells are centred and bordered; the first column sticks so
+   row labels stay visible while the matrix scrolls horizontally. */
+#pm-root table.pm-cmatrix{width:auto;min-width:100%;border-collapse:collapse;font-size:12px;}
+#pm-root table.pm-cmatrix th.pm-cxh{text-align:center;font-size:10px;color:var(--mu);font-weight:700;
+  text-transform:none;letter-spacing:0;padding:6px 9px;background:var(--w);border-bottom:1px solid var(--bdr);white-space:nowrap;}
+#pm-root table.pm-cmatrix td{text-align:center;padding:6px 9px;border:1px solid var(--bdr);
+  font-variant-numeric:tabular-nums;white-space:nowrap;}
+#pm-root table.pm-cmatrix td.pm-cyh{text-align:left;font-weight:700;position:sticky;left:0;z-index:1;
+  background:var(--w);border-right:1px solid var(--bdr);}
+#pm-root table.pm-cmatrix td.pm-cdiag{background:var(--ice);color:var(--mu);font-weight:600;}
+#pm-root table.pm-cmatrix td.pm-ccell{font-weight:600;cursor:pointer;}
+#pm-root table.pm-cmatrix td.pm-ccell.muted{color:var(--mu);}
+#pm-root table.pm-cmatrix th.pm-cxh,#pm-root table.pm-cmatrix td.pm-cyh{cursor:pointer;}
+#pm-root table.pm-cmatrix tbody tr:hover{background:transparent;}
+/* Selected cross — the clicked cell's whole row and column. Placed after the base
+   cell rules (equal specificity) so it wins; strongest on the header labels. */
+#pm-root table.pm-cmatrix td.sel{background:rgba(37,99,235,.13);}
+#pm-root table.pm-cmatrix td.pm-cyh.sel{background:var(--navy);color:#fff;}
+#pm-root table.pm-cmatrix th.pm-cxh.sel{background:var(--navy);color:#fff;}
+
+/* Benchmarks subtab — holdings correlated against SPY (fixed) plus 4 tickers typed
+   into the editable column headers on the right. */
+#pm-root table.pm-benchtable th.pm-bh{text-align:right;white-space:nowrap;}
+#pm-root table.pm-benchtable th.pm-slh{padding:5px 8px;}
+#pm-root input.pm-slotinp{width:74px;font-family:inherit;font-size:11.5px;font-weight:700;
+  text-transform:uppercase;text-align:right;border:1px solid var(--bdr);border-radius:6px;
+  padding:4px 7px;background:var(--w);color:var(--text);}
+#pm-root input.pm-slotinp::placeholder{text-transform:none;font-weight:500;color:var(--mu);}
+#pm-root input.pm-slotinp:focus{outline:none;border-color:var(--accent);}
+
+/* Paper matrix name editor — removable chips + an add field, above the matrix. */
+#pm-root .pm-cnames{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+#pm-root .pm-cnames .lbl{font-size:10px;color:var(--mu);font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;}
+#pm-root .pm-chip{display:inline-flex;align-items:center;gap:3px;border:1px solid var(--bdr);
+  background:var(--w);color:var(--navy);border-radius:999px;padding:3px 5px 3px 11px;
+  font:700 11.5px 'Inter',sans-serif;font-variant-numeric:tabular-nums;}
+#pm-root .pm-chipx{border:none;background:transparent;color:var(--mu);cursor:pointer;
+  font-size:14px;line-height:1;padding:0 3px;}
+#pm-root .pm-chipx:hover{color:var(--neg);}
+#pm-root input.pm-cnameinp{width:96px;font-family:inherit;font-size:11.5px;font-weight:700;
+  text-transform:uppercase;border:1px solid var(--bdr);border-radius:999px;padding:4px 11px;
+  background:var(--w);color:var(--text);}
+#pm-root input.pm-cnameinp::placeholder{text-transform:none;font-weight:500;color:var(--mu);}
+#pm-root input.pm-cnameinp:focus{outline:none;border-color:var(--accent);}

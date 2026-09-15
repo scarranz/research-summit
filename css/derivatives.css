@@ -1,0 +1,216 @@
+/* Derivatives tab — the sub-nav that holds the four strategies, plus the analyzer
+   chrome the three ladder panes (Protective Put, Buy Calls, Short Puts) share.
+   Covered Calls keeps its own sheet (css/covered-calls.css, scoped to #cc-root):
+   it is a book of nine positions rather than a ladder on one name, so it has its
+   own table shape. Everything here is scoped to #tp-der or .der-an and never
+   leaks into the rest of the portal. */
+
+/* ─── Sub-nav — the underline tabs used by the Research hub ─── */
+#tp-der .der-subnav {
+  display: flex;
+  border-bottom: 1px solid var(--bdr, #dfe4ea);
+  margin-bottom: 20px;
+}
+#tp-der .der-pill {
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font: 500 13.5px 'Inter', sans-serif;
+  color: var(--mu, #8a93a0);
+  padding: 0 2px 10px;
+  margin-right: 28px;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+#tp-der .der-pill:hover { color: var(--text, #1E2733); }
+#tp-der .der-pill.active {
+  color: var(--navy, #1E2733);
+  font-weight: 600;
+  border-bottom-color: var(--navy, #1E2733);
+}
+#tp-der .der-sub { display: none; }
+#tp-der .der-sub.active { display: block; }
+#tp-der .der-err { color: #DC2626; font-size: 13px; font-weight: 600; padding: 20px 0; }
+
+/* ─── The shared analyzer: ticker + expiry + a hand-picked strike ladder ─── */
+.der-an {
+  --navy:#1E2733; --blue:#2C3E54; --steel:#3E5A82; --mid:#7C8694;
+  --ice:#EEF1F5; --pale:#F4F6F9; --w:#FFFFFF; --text:#1E2733; --mu:#8A93A0;
+  --bdr:#E7EAEE; --pos:#16A34A; --neg:#DC2626; --accent:#2563EB; --warn:#B45309;
+  color:var(--text); font-variant-numeric:tabular-nums;
+}
+.der-an .an-wrap{max-width:1620px;margin:0 auto;}
+.der-an .der-head{display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap;}
+.der-an .der-head h2{font-size:18px;font-weight:700;color:var(--text);text-transform:none;letter-spacing:-.01em;}
+.der-an .sub{color:var(--mu);font-size:13px;margin-bottom:12px;max-width:900px;}
+.der-an .controls{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin:0 0 14px;}
+.der-an .ctl{display:flex;flex-direction:column;gap:4px;}
+.der-an .ctl label{font-size:10px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.der-an input,.der-an select,.der-an button{font-family:inherit;font-size:13px;border:1px solid var(--bdr);border-radius:7px;padding:7px 10px;background:var(--w);color:var(--text);}
+.der-an input[type=number]{width:110px;}
+.der-an button{background:var(--navy);color:#fff;border-color:var(--navy);cursor:pointer;font-weight:600;}
+.der-an button.ghost{background:var(--w);color:var(--steel);border-color:var(--bdr);font-weight:500;}
+.der-an button:hover{opacity:.92;}
+.der-an button.sm{padding:4px 8px;font-size:12px;}
+.der-an .seg{display:inline-flex;border:1px solid var(--bdr);border-radius:7px;overflow:hidden;}
+.der-an .seg button{border:none;border-radius:0;background:var(--w);color:var(--steel);padding:7px 11px;font-weight:600;white-space:nowrap;}
+.der-an .seg button.on{background:var(--navy);color:#fff;}
+.der-an .seg button+button{border-left:1px solid var(--bdr);}
+
+/* Ticker chips — the names we hold estimates for */
+.der-an .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.der-an .chip{font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:var(--w);color:var(--steel);border:1px solid var(--bdr);cursor:pointer;}
+.der-an .chip.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+.der-an .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;}
+.der-an .kpis.six{grid-template-columns:repeat(6,1fr);}
+.der-an .kpi{background:var(--w);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;}
+.der-an .kpi .l{font-size:9.5px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.der-an .kpi .v{font-size:20px;font-weight:700;margin-top:4px;}
+.der-an .kpi .s{font-size:10.5px;color:var(--mu);margin-top:2px;}
+
+/* Strike picker — the ladder is hand-picked, so this is how rows get added */
+.der-an .picker{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;background:var(--w);border:1px solid var(--bdr);border-radius:12px;padding:12px 16px;margin:-6px 0 18px;}
+.der-an .picker .divider{width:1px;align-self:stretch;background:var(--bdr);margin:0 2px;}
+.der-an .picker input[type=number]{width:88px;}
+.der-an .picker .muted{margin-left:auto;font-size:11px;}
+
+.der-an .card{background:var(--w);border:1px solid var(--bdr);border-radius:14px;padding:6px 6px 12px;overflow-x:auto;margin-bottom:18px;}
+.der-an table.an-tbl{width:100%;border-collapse:collapse;font-size:12.5px;}
+.der-an .an-tbl th,.der-an .an-tbl td{padding:7px 8px;border-bottom:1px solid var(--bdr);white-space:nowrap;text-align:center;}
+.der-an .an-tbl th{font-size:9.5px;color:var(--mu);text-transform:uppercase;letter-spacing:.03em;font-weight:600;position:sticky;top:0;background:var(--w);z-index:1;}
+.der-an .an-tbl th.grp{font-size:9px;color:var(--steel);font-weight:700;letter-spacing:.06em;border-bottom:none;padding-bottom:2px;}
+.der-an .an-tbl th.lft,.der-an .an-tbl td.lft{text-align:left;width:34px;}
+.der-an .an-tbl .sep{border-left:1px solid var(--bdr);}
+.der-an .an-tbl td.tk{font-weight:700;text-align:left;}
+.der-an .an-tbl tbody tr{cursor:pointer;}
+.der-an .an-tbl tbody tr:hover{background:var(--pale);}
+.der-an .an-tbl tbody tr.sel{background:#EAF0FB;box-shadow:inset 3px 0 0 var(--accent);}
+.der-an .tag{font-size:8.5px;font-weight:700;color:var(--steel);background:var(--ice);padding:1px 4px;border-radius:5px;letter-spacing:.02em;}
+/* Controls that live INSIDE the table header: the one sizing input each strategy
+   needs, and the +/- that opens IV and delta. The estimate year is not here — it
+   sits in the pane's own control row, next to its expiry. */
+.der-an .an-tbl th .hnum{width:44px;font-size:10px;font-weight:700;color:var(--steel);padding:1px 4px;border-radius:5px;border:1px solid var(--bdr);text-align:center;}
+.der-an .an-tbl th .hnum.wide{width:78px;}
+.der-an .an-tbl th .xp{background:var(--w);color:var(--steel);border:1px solid var(--bdr);border-radius:4px;padding:0 5px;font-size:11px;line-height:14px;font-weight:700;margin-left:5px;cursor:pointer;}
+.der-an .an-tbl th .xp:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+.der-an .an-tbl .x{color:var(--mu);cursor:pointer;font-weight:700;border:none;background:none;font-size:13px;padding:2px 6px;}
+.der-an .an-tbl .x:hover{color:var(--neg);}
+/* The sub-header row wraps — a two-line label keeps a long name from stretching
+   its whole column. Body cells stay nowrap. */
+.der-an .an-tbl thead tr:last-child th{white-space:normal;line-height:1.3;vertical-align:bottom;}
+.der-an .an-tbl thead tr:last-child th .hnum{margin-top:2px;}
+
+.der-an .big{font-weight:700;}
+.der-an .cheap{color:var(--pos);} .der-an .rich{color:var(--neg);}
+.der-an .up{color:var(--pos);} .der-an .dn{color:var(--neg);}
+.der-an .muted{color:var(--mu);font-size:12px;}
+.der-an .err{color:var(--neg);font-weight:600;}
+.der-an .pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;background:var(--ice);color:var(--steel);}
+.der-an .spin{color:var(--mu);font-size:13px;padding:22px 0;}
+.der-an .ttip{display:inline-block;width:13px;height:13px;line-height:13px;margin-left:5px;text-align:center;font-size:9px;font-weight:700;font-style:italic;color:var(--steel);background:var(--ice);border-radius:50%;cursor:help;vertical-align:middle;}
+.der-an .ttip:hover{background:var(--steel);color:#fff;}
+
+/* EBITDA & Net Income block — one ticker, borrowing the .rs-ft* sheet styles from
+   css/results.css, which is global. */
+.der-an .block{background:var(--w);border:1px solid var(--bdr);border-radius:14px;padding:14px 16px 16px;margin-bottom:18px;}
+.der-an .block-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
+.der-an .block-h{font-size:13px;font-weight:700;color:var(--text);}
+.der-an .block-top .muted{margin-left:auto;font-size:11px;}
+.der-an .an-fundtbl .sep{border-left:1px solid var(--bdr);}
+.der-an .foot{margin-top:12px;font-size:11px;color:var(--mu);line-height:1.65;}
+
+/* Sensitivity — the revenue-growth inputs and the trail they leave. Anything the
+   override moved is drawn in the accent colour so consensus and custom are never
+   confused for each other. */
+.der-an .senshint{font-size:11.5px;color:var(--steel);background:#F2F6FD;border:1px solid #DCE6F8;border-radius:9px;padding:8px 12px;margin-bottom:10px;line-height:1.55;}
+.der-an .an-fundtbl td.gcell{padding:2px 4px;}
+.der-an .an-fundtbl .gin{width:62px;padding:3px 5px;font-size:11.5px;font-weight:700;text-align:center;color:var(--accent);border:1px solid var(--accent);border-radius:6px;background:var(--w);}
+.der-an .an-fundtbl td.flexed{color:var(--accent);font-weight:600;}
+.der-an .block-top button.ghost.on{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:600;}
+.der-an .pill.flex{background:#EAF0FB;color:var(--accent);}
+
+/* Cursor-following tooltip — one element for the whole tab (top level, fixed) */
+#der-tip{position:fixed;z-index:50;background:#1E2733;color:#fff;font-size:11px;font-weight:500;padding:7px 10px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .1s;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.2);}
+#der-tip.on{opacity:1;}
+#der-tip b{color:#9DB4D4;font-weight:600;}
+
+@media (max-width:1200px){
+  .der-an .kpis,.der-an .kpis.six{grid-template-columns:repeat(3,1fr);}
+}
+@media (max-width:760px){
+  .der-an .kpis,.der-an .kpis.six{grid-template-columns:repeat(2,1fr);}
+  #tp-der .der-pill{margin-right:18px;font-size:12.5px;}
+}
+
+/* Estimates source — Summit vs the Street. A source a name does not have is drawn
+   disabled rather than hidden: "there is no Street number for TBBB" is the answer,
+   not a gap. The comparison lines under each level use the same up/down colours as
+   growth, and the gap line restates it for the year the multiples are on. */
+.der-an .seg button:disabled{color:#C3C9D2;cursor:not-allowed;background:var(--pale);}
+.der-an .seg button:disabled:hover{opacity:1;}
+.der-an .block-h .srcname{color:var(--steel);font-weight:600;}
+.der-an .gapline{font-size:11px;color:var(--mid);}
+.der-an .gapline b{font-weight:700;}
+.der-an .gapline b.up{color:var(--pos);} .der-an .gapline b.dn{color:var(--neg);}
+.der-an .an-fundtbl tr.vsrow td{font-size:10.5px;}
+.der-an .an-fundtbl tr.vsrow .rs-ft-h{color:var(--steel);font-style:italic;}
+
+/* ── Estimate vintage badge ───────────────────────────────────────────────────
+   How old the numbers behind every multiple are. Three states that are three
+   different claims, so they must not look alike:
+     .observed  a dated Bloomberg pull — steel, unremarkable, it is fine.
+     .inherited a workbook save date standing in for a pull date. Same weight,
+                but prefixed with ~ by the renderer: an upper bound, not a fact.
+     .stale     past a full quarter, so it has lived through an earnings season
+                it knows nothing about. Amber, because that is when old becomes
+                wrong and the reader needs to notice before trusting a multiple. */
+.vintage {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-left: 8px; padding: 2px 7px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .01em;
+  border-radius: 999px; white-space: nowrap; cursor: help;
+  border: 1px solid transparent;
+}
+.vintage.observed  { color: #56637A; background: #EEF1F5; border-color: #DFE4EC; }
+.vintage.inherited { color: #56637A; background: #EEF1F5; border-color: #DFE4EC; }
+.vintage.stale     { color: #8A5A00; background: #FFF4DE; border-color: #F3DFB4; }
+.vintage.unknown   { color: #8A5A00; background: #FFF4DE; border-color: #F3DFB4; }
+/* The dot carries the state for anyone reading shape rather than colour. */
+.vintage::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .7; }
+.vintwrap { display: inline-flex; align-items: center; }
+/* It rides on the control's label, which is uppercase and tracked out; the badge
+   is a date and must not be either. */
+.ctl label .vintage { text-transform: none; letter-spacing: 0; margin-left: 6px; vertical-align: middle; }
+
+/* ── Selection → Instruments ──────────────────────────────────────────────────
+   Bottom right of every pane. Derivatives is where contracts get found; sizing
+   and exposure happen elsewhere, so this is the hand-off. Right-aligned and quiet
+   until something is ticked — it is the end of the workflow, not the start. */
+.instbar { margin: 10px 0 2px; }
+.instrow { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+.instbtn {
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  padding: 7px 14px; border-radius: 7px;
+  background: var(--w); color: var(--steel); border: 1px solid var(--bdr);
+}
+.instbtn.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+.instbtn:disabled { opacity: .5; cursor: default; }
+.instpanel {
+  margin-top: 8px; margin-left: auto; max-width: 520px;
+  background: var(--w); border: 1px solid var(--bdr); border-radius: 10px; padding: 10px 12px;
+}
+.insthd { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--mu); margin-bottom: 6px; }
+.instta {
+  width: 100%; box-sizing: border-box; resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px; line-height: 1.55; color: var(--text);
+  border: 1px solid var(--bdr); border-radius: 7px; padding: 7px 9px; background: #FBFCFD;
+}
+.instfoot { margin-top: 6px; font-size: 11px; color: var(--mu); line-height: 1.5; }
+/* the per-row tick */
+#cc-root td .pick, .der-an td .pick { width: 14px; height: 14px; cursor: pointer; accent-color: var(--navy); }
+/* Min. portfolio: informative, so it reads a shade quieter than the live numbers */
+#cc-root td.minp { color: var(--steel); font-variant-numeric: tabular-nums; }
+#cc-root th.minp { cursor: help; }

@@ -7,8 +7,8 @@
   color:var(--text); font-variant-numeric:tabular-nums;
 }
 #cc-root .cc-wrap{max-width:1480px;margin:0 auto;}
-#cc-root .topbar{display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap;}
-#cc-root .topbar h2{font-size:18px;font-weight:700;color:var(--text);text-transform:none;letter-spacing:-.01em;}
+#cc-root .der-head{display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap;}
+#cc-root .der-head h2{font-size:18px;font-weight:700;color:var(--text);text-transform:none;letter-spacing:-.01em;}
 #cc-root .sub{color:var(--mu);font-size:13px;margin-bottom:18px;}
 #cc-root .controls{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-left:auto;}
 #cc-root .ctl{display:flex;flex-direction:column;gap:4px;}
@@ -43,6 +43,10 @@
 #cc-root .sep{border-left:1px solid var(--bdr);}
 #cc-root td.edit input{width:62px;text-align:center;padding:4px 6px;font-size:12px;font-weight:600;}
 #cc-root td.edit input.ovr{color:var(--accent);border-color:var(--accent);}
+/* A strike the tab resolved because the book names none — same accent as a manual
+   premium override, dashed so the two are still told apart. */
+#cc-root td.edit input.auto{color:var(--accent);border-color:var(--accent);border-style:dashed;}
+#cc-root .autoink{color:var(--accent);font-weight:600;}
 #cc-root td[data-tip]{cursor:help;}
 #cc-root .ttip{display:inline-block;width:14px;height:14px;line-height:14px;margin-left:5px;text-align:center;font-size:9px;font-weight:700;font-style:italic;color:var(--steel);background:var(--ice);border-radius:50%;cursor:help;vertical-align:middle;}
 #cc-root .ttip:hover{background:var(--steel);color:#fff;}
@@ -69,3 +73,118 @@
 #cc-tip{position:fixed;z-index:50;background:#1E2733;color:#fff;font-size:11px;font-weight:500;padding:7px 10px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .1s;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.2);}
 #cc-tip.on{opacity:1;}
 #cc-tip b{color:#9DB4D4;font-weight:600;}
+/* Estimates source segments, matching the Multiple basis control beside them. */
+#cc-root .seg button:disabled{color:#C3C9D2;cursor:not-allowed;background:var(--pale);}
+#cc-root .seg button:disabled:hover{opacity:1;}
+
+/* Estimate marker on a fundamentals cell. It sits on the CELL rather than the
+   column header because whether a fiscal year is still a forecast is a fact about
+   the company, not about the table: NVIDIA's FY2026 closed in January and is
+   reported while every other name in the book is still forecasting it. */
+#cc-root td.fund .fv .estm { font-size: 9px; font-weight: 600; color: var(--steel, #7A879B); margin-left: 1px; vertical-align: super; line-height: 0; }
+
+/* The Target multiple cells are inputs: you type the multiple you would accept
+   being called away at and the strike follows. They must read as NUMBERS first
+   and inputs second — the row is scanned far more often than it is edited — so
+   they inherit the cell's colour (red/green for richer/cheaper than spot) and
+   only show a border on hover or focus. */
+#cc-root td.mcell { text-align: center; }
+#cc-root td.mcell input.mx {
+  width: 100%; max-width: 62px; padding: 1px 2px;
+  border: 1px solid transparent; border-radius: 5px; background: transparent;
+  font: inherit; font-weight: 700; font-size: 13px; color: inherit; text-align: center;
+}
+#cc-root td.mcell input.mx:hover:not(:disabled) { border-color: var(--bdr); background: var(--w); }
+#cc-root td.mcell input.mx:focus { border-color: var(--navy); background: var(--w); outline: none; }
+#cc-root td.mcell input.mx:disabled { color: var(--mu); opacity: .55; }
+/* the spinner arrows steal width the number needs */
+#cc-root td.mcell input.mx::-webkit-outer-spin-button,
+#cc-root td.mcell input.mx::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+#cc-root td.mcell input.mx { -moz-appearance: textfield; }
+/* The multiple's unit. It sits outside the input because a number field cannot
+   carry a suffix, and a multiple without its "x" is just a number. */
+#cc-root td.mcell { white-space: nowrap; }
+#cc-root td.mcell input.mx { width: auto; max-width: 46px; }
+#cc-root td.mcell .mxu { font-weight: 700; font-size: 13px; color: inherit; margin-left: -1px; }
+#cc-root td.mcell input.mx:disabled + .mxu { display: none; }
+
+/* ── Ticker + Current pinned to the left ──────────────────────────────────────
+   The table runs ~1,800px and the card is ~1,220, so the Economics end is only
+   reachable by scrolling — and every number out there is read against the name
+   and the price it trades at. Those four columns stay. The `left` offsets are
+   measured and written by pinColumns(); everything structural is here.
+   Backgrounds are mandatory, not decoration: a transparent sticky cell lets the
+   scrolling columns slide visibly underneath it. */
+#cc-root [data-pin] { position: sticky; background: var(--w); }
+#cc-root tbody [data-pin] { z-index: 2; }
+/* the header is already sticky vertically; pinned header cells are sticky in both
+   axes and must sit above both the body pins and the rest of the header row */
+#cc-root thead th { z-index: 3; }
+#cc-root thead th[data-pin] { z-index: 4; }
+/* hover paints the whole row, so the pinned cells have to follow it */
+#cc-root tbody tr:hover [data-pin] { background: var(--pale); }
+/* the seam: a soft shadow off the last pinned column, so the split reads as a
+   pinned edge rather than a stray border */
+#cc-root [data-pin="3"] { box-shadow: 6px 0 7px -5px rgba(16, 24, 40, .13); }
+/* The card's horizontal padding has to go. A sticky cell anchors to the scroll
+   container's PADDING edge, so those 6px sat OUTSIDE the pinned column and the
+   scrolling columns were visible sliding through them — a sliver of moving numbers
+   down the left of the ticker. The cells carry 9px of their own padding, so nothing
+   ends up touching the border; only the gutter disappears. */
+#cc-root .card { padding-left: 0; padding-right: 0; }
+
+/* ── Wide bid/ask on the Premium cell ─────────────────────────────────────────
+   The column quotes the MID and a covered call is sold on the BID, so a wide
+   spread is money already gone from the yield printed two cells to the right.
+   Shading the CELL rather than the number, because the point is not that the
+   premium is wrong — it is right, as a midpoint — but that it is not what you
+   will be paid. Same amber as the stale-vintage badge: this is the palette this
+   tab uses for "true, but read it with care", distinct from the red/green that
+   means expensive/cheap. */
+#cc-root td.edit.spw { background: #FFF8EB; box-shadow: inset 2px 0 0 #E9B764; }
+#cc-root td.edit.spx { background: #FFEFD6; box-shadow: inset 2px 0 0 #C98A1E; }
+#cc-root td.edit.spw input, #cc-root td.edit.spx input { background: transparent; }
+/* hover paints the row; the flagged cell has to stay legible over it */
+#cc-root tbody tr:hover td.edit.spw { background: #FDF2DF; }
+#cc-root tbody tr:hover td.edit.spx { background: #FBE7C9; }
+/* the footnote's colour key */
+#cc-root .spwk, #cc-root .spxk { padding: 0 5px; border-radius: 4px; font-weight: 700; }
+#cc-root .spwk { background: #FFF8EB; color: #8A5A00; }
+#cc-root .spxk { background: #FFEFD6; color: #7A4A00; }
+
+/* ── Exclude a row from the totals ────────────────────────────────────────────
+   A filled dot counts, a hollow one does not. It sits beside the ✕ because they
+   are the two ways of saying "not this one" and the softer one should be found
+   first — you almost always want to set a position aside, not delete it. */
+/* One tick, two jobs — counted in the totals, and handed to Instruments. The two
+   action columns are named (Add / Remove) rather than sitting under a blank
+   header, because an unlabelled checkbox beside an unlabelled ✕ is a guess. */
+#cc-root td.nowrap { white-space: nowrap; }
+/* An excluded row stays fully readable — it is still real, it is just not in the
+   sum — so this dims rather than strikes through, and the pinned identity columns
+   dim with it or half the row would look active.
+   ⚠ On a PINNED cell the opacity goes on the CONTENT, never on the cell. `opacity`
+   fades the background too, and a semi-transparent sticky cell stops hiding what
+   scrolls underneath it — the columns showed through the frozen ones instead of
+   disappearing behind them. The cell keeps its solid background; only what is
+   inside it dims. */
+#cc-root tr.excl td:not([data-pin]) { opacity: .42; }
+#cc-root tr.excl td[data-pin] > *, #cc-root tr.excl td[data-pin] .fv, #cc-root tr.excl td[data-pin] .fg { opacity: .42; }
+#cc-root tr.excl td[data-pin] { background: var(--w); }
+#cc-root tr.excl td .pick { opacity: 1; }
+#cc-root tr.excl:hover td:not([data-pin]) { opacity: .72; }
+#cc-root tr.excl:hover td[data-pin] > *, #cc-root tr.excl:hover td[data-pin] .fv, #cc-root tr.excl:hover td[data-pin] .fg { opacity: .72; }
+#cc-root tr.excl:hover td[data-pin] { background: var(--pale); }
+
+/* Source fallback tag. The row's multiples are not on the selected source because
+   that name has no model there. Deliberately the quietest chip in the table — the
+   number IS usable, it just is not ours, and that is a footnote to the row rather
+   than a warning about it. Hollow where the currency chips are filled. */
+#cc-root td.tk .fb, #cc-root .fbk {
+  font-size: 8.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--mu); border: 1px solid var(--bdr); border-radius: 3px;
+  padding: 0 3px; margin-left: 3px; vertical-align: 1px; cursor: help;
+}
+/* The two action columns read as controls, not data: centred, quiet headers. */
+#cc-root th[title*="ticked rows count"], #cc-root th[title*="drop the position"] { font-size: 9px; }
+#cc-root td .pick { width: 15px; height: 15px; cursor: pointer; accent-color: var(--navy); vertical-align: middle; }

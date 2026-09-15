@@ -34,6 +34,13 @@ js/companies.js         — Companies tab (grid, detail view, four-pillar analys
 js/market-analysis.js   — Market Analysis tab (sector bars, filters, scatter, tables)
 js/hedge-funds.js       — Hedge Funds tab (alpha chart, benchmark, investor cards)
 js/team.js              — Team tab (Investment Portfolio + Investment Ideas)
+js/derivatives.js       — Derivatives tab shell (sub-tabs, lazy-loads the four strategies)
+js/options-core.js      — Shared options engine (Massive proxy, estimates + sensitivity, multiples, income-statement block)
+js/options-data.js      — Forward estimates for the Derivatives tabs (APP consensus + the Summit DCF snapshots)
+js/covered-calls.js     — Derivatives ▸ Covered Calls (the live book of sold calls)
+js/protective-put.js    — Derivatives ▸ Protective Put (downside insurance on stock we own)
+js/buy-calls.js         — Derivatives ▸ Buy Calls (long-call analyzer)
+js/short-puts.js        — Derivatives ▸ Short Puts (cash-secured puts)
 css/base.css            — CSS variables and reset
 css/layout.css          — Loading overlay styles
 css/shared.css          — Cards, sections, tables, filters, modals (shared components)
@@ -43,6 +50,8 @@ css/companies.css       — Company grid, detail view, four-pillar analysis
 css/market-analysis.css — Sector bars, chips, scatter plot styles
 css/hedge-funds.css     — Investor cards, benchmark bar, holdings table
 css/team.css            — Investment Ideas cards, voting UI, portfolio table
+css/covered-calls.css   — Covered Calls book table (scoped to #cc-root)
+css/derivatives.css     — Derivatives sub-nav + the shared ladder analyzer chrome (.der-an)
 css/responsive.css      — Mobile breakpoints
 sql/schema.sql          — Database schema (run in Supabase SQL Editor)
 netlify.toml            — Netlify build + routing config
@@ -126,6 +135,7 @@ supabase functions deploy <function-name> --project-ref bvflqjndivouhgwqfbrq
 | `get-margins` | Massive `/stocks/financials/v1/income-statements` + `/cash-flow-statements` | Historical profitability & cash margins (gross/op/net/EBITDA/CFO/FCF) for the Overview Margins box — computed server-side, no DB write |
 | `get-transcript` | Fiscal.ai `/v1/company/ir-events` + `/ir-events/transcript/{eventKey}` | Earnings-call events list + structured transcripts for Earnings — generic for any ticker on our Fiscal.ai tier, no DB write. `unavailable: true` = company not on current plan |
 | `generate-investment-writeup` | Anthropic Messages API (`claude-opus-4-8` + `web_search` tool) | "Research & write with AI" button in the Investment tab's Add modal — researches a company via web search and drafts its Overview/Moat/Opportunity text in Summit's house tone. Requires a separate `ANTHROPIC_API_KEY` secret. |
+| `get-market-history` | Massive `/v2/aggs/ticker/.../range/...` (daily prices) + `/stocks/financials/v1/ratios` (quarterly, for market_cap/enterprise_value/price) | Daily closes + quarterly shares/net-debt for the AMZN Historic Multiple chart (`js/overviews/amzn-histmult.js`) — computed client-side from the raw passthrough, no DB write. **NEW on feat/amzn-polish, not yet deployed** — smoke-test after deploying (see that file's header for exact field-name assumptions to verify). |
 
 **Security:** All edge functions restrict CORS to `research-summit.netlify.app` and `localhost:8000`. Ticker and companyId inputs are validated.
 
@@ -153,7 +163,7 @@ Most team members using this portal are **not developers**. When they ask Claude
 - Each dashboard tab is a `<div class="tp" id="tp-{tab}">` inside `index.html`
 - Page data loaders are registered in `index.html` via `registerPageLoader(name, loaderFn)`
 - Navigation items are `.ntb.nav-item[data-page][data-tab]` buttons in the sidebar
-- Tab IDs map: companies→co, market-analysis→rot, hedge-funds→inv, team→team (defined in js/nav.js)
+- Tab IDs map: research→res, market-analysis→rot, hedge-funds→inv, team→team, fund-returns→ret, derivatives→der (defined in js/nav.js)
 - Role access is controlled in `js/auth.js` ROLE_CONFIG — add new roles there
 - CSS variables are defined in `css/base.css` (:root)
 
@@ -252,6 +262,20 @@ If a PR has merge conflicts:
 
 The Companies tab is the core of the portal. Each company has a profile that is **designed and built individually with Claude's help**.
 
+### Building or extending a company profile (start here)
+
+Before touching a company's Deep Dive, read **`docs/COMPANY_PROFILE_BLUEPRINT.md`**. **Amazon is the
+reference implementation** and that file is the map from it to any other ticker: the six-section tab
+spine (Top Line · Bottom Line · Evolution · Valuation · Management · Miscellaneous), the list of
+**shared engines you feed with a data file instead of writing a pane** (`results.js`, `segments.js`,
+`consensus-evolution.js`, `watchlist.js`, `management.js`), the canonical design components and the
+rule that a new profile adds **no inline `<style>`**, the palette rule (**Summit tokens everywhere;
+the company's brand only in its logo**), where every number comes from, the interaction contract, the
+build order, how to audit it in a harness, and a pre-ship checklist. The `/build-profile <TICKER>`
+command runs it end-to-end. Key invariants: **prefer an engine over a bespoke pane**; **never delete
+existing content**; **no sub-tab that is a placeholder**; **every pane ends with a source footer**;
+produce a **draft for review** — don't commit/push/PR automatically.
+
 ### Adding a chart (anywhere in the portal)
 
 Before writing a new chart, read **`docs/CHART_ENGINE_REFERENCE.md` §0 — the standard**. It is the
@@ -314,6 +338,58 @@ Every company has three tabs: **Overview**, **Pillars**, and **Resources**.
 - Resources are managed through the portal UI (add/edit/delete)
 - Overview is custom-designed per company with Claude's help
 - Claude handles all the technical work — the user just describes what they want to see
+
+## Derivatives tab — how it works
+
+One sidebar item, four strategies as sub-tabs. They are two questions crossed — is
+this stock one we **own** or one we **want**, and are we being **paid** the premium or
+**paying** it:
+
+|  | paid the premium | paying the premium |
+|---|---|---|
+| **stock you own** | Covered Calls | Protective Put |
+| **stock you want** | Short Puts | Buy Calls |
+
+Every pane answers the same underlying question — *what price am I agreeing to, and
+what valuation is that?* — so a strike, a breakeven, a floor and a cost basis are all
+priced back into an implied **P/E and EV/EBITDA** on an estimate year picked in the
+table header. That is the point of the tab; the option chain alone shows none of it.
+
+### Files
+
+| File | What it owns |
+|---|---|
+| `js/derivatives.js` | The shell: sub-tab pills, the quadrant map, lazy-loading each pane on first open |
+| `js/options-core.js` | Everything shared: the Massive proxy, expiries/underlying/chain fetches, the estimate layer + revenue-growth sensitivity, `multiplesAt()`, the income-statement block, the strike-band helpers, the cursor tooltip |
+| `js/options-data.js` | `OPT_ESTIMATES` — forward revenue/EBITDA/net income/EPS/shares/net debt per ticker. APP from `js/overviews/app-model.js` (Bloomberg consensus), everything else from `js/covered-calls-summit.js` (Summit DCF snapshots). Nothing is retyped, so nothing drifts. |
+| `js/covered-calls.js` | The book of sold calls (nine positions, all in %) — its own table shape and its own sheet, `css/covered-calls.css` |
+| `js/protective-put.js` · `js/buy-calls.js` · `js/short-puts.js` | One hand-picked strike ladder each, all on the shared `.der-an` chrome in `css/derivatives.css` |
+
+### Adding or changing a strategy pane
+
+The three ladder panes are the same skeleton: state → `loadTicker` → `loadChain` →
+`render` (KPIs, ladder, picker, income statement, footnote). To add one, copy
+`short-puts.js`, change the ladder columns and the footnote, register it in the
+`PANES` array in `derivatives.js`, and add its `<div class="der-sub">` in
+`index.html`. Do **not** re-implement fetching, multiples or the income statement —
+they live in `options-core.js` so a multiple means the same thing in all four panes.
+
+### Data and deployment
+
+- Price, premium, IV, greeks and open interest are live from Massive through the
+  **existing** `covered-calls-massive` edge function. It already forwards
+  `contract_type`, so **puts need no new function and no deploy**. Its `expirations`
+  route asks for calls, which is fine — listed equity options carry the same
+  expiration series on both sides.
+- Forward estimates are the Summit DCF snapshots (plus Bloomberg consensus for APP,
+  which is not in the Summit universe). Non-USD reporters (SPOT in EUR, TBBB in MXN)
+  deliberately show option economics but **no** multiples.
+- Nothing is stored. Every input on every pane is in-memory and resets on reload.
+- The tab is admin-only (`derivatives` in `ROLE_CONFIG.allowedPages`).
+- `harness-derivatives.html` (local-only — `harness-*.html` is gitignored) renders all
+  four panes against a synthetic option chain by stubbing `supabase.functions`, so the
+  layout and the maths can be checked on localhost without logging in or spending
+  Massive calls. Ask Claude to regenerate it if it is missing.
 
 ## Team tab — how it works
 

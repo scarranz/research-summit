@@ -2705,7 +2705,7 @@ function buildSub(root, group, key){
     // (beside the Setup chart) re-establishes its dataset and wires the right wrap.
     else if(key==='results') requestAnimationFrame(function(){
       initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'GOOGL'); });
-    else if(key==='estevo') requestAnimationFrame(initResultsEvo);
+    else if(key==='estevo') requestAnimationFrame(function(){ initResultsEvo('GOOGL'); });
   }
 }
 // Tab switches hide a tall pane and show a shorter one, so the browser clamps scrollTop and the

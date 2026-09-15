@@ -24,6 +24,8 @@
 // NOT applied here. Separately, CORP_OTHER_EBITDA is unpopulated in 2029 and TAX_RATE stops
 // after 2028 — both hold the 2028 value, marked ⚠ in the UI. Flagged for the model owner.
 
+import { SUMMIT_CAT } from '../viz-palette.js';
+
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 var SNAP = '2026-08-04';
@@ -41,10 +43,12 @@ var M = {
 };
 var OP_INCOME_2025 = 79975;               // model consolidated, for the reconciliation note
 
+// Fixed portal categorical slots, not hand-picked hues — was '#FF9900'/'#146EB4'/'#2E8B57', the
+// first of which was Amazon's own old smile-orange brand.
 var SEGS = [
-  { k:'aws',  n:'AWS',           c:'#FF9900' },
-  { k:'na',   n:'North America', c:'#146EB4' },
-  { k:'intl', n:'International', c:'#2E8B57' },
+  { k:'aws',  n:'AWS',           c:SUMMIT_CAT[0] },
+  { k:'na',   n:'North America', c:SUMMIT_CAT[1] },
+  { k:'intl', n:'International', c:SUMMIT_CAT[2] },
 ];
 
 // Axis drivers. `step` is the default grid increment; the user can override start and step.

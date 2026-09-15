@@ -4334,3 +4334,8 @@
 
 .ov-sn .cohd-src a { border-color: color-mix(in srgb, var(--brand) 34%, transparent); }
 .ov-sn .cohd-src a.edgar { border-color: rgba(183,121,31,.40); }
+
+/* Merged from main's unscoped seed (Sep 2026): the "carried forward" badge on a watch-list theme,
+ * the one rule set main's copy had that this one did not. Scoped like everything else here. */
+.ov-sn .ce-w-fwd{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--brand);background:rgba(26,115,232,0.10);border:1px solid rgba(26,115,232,0.30);border-radius:20px;padding:2px 8px;flex:none}
+.ov-sn .ce-w-chip.fwd{color:var(--brand);border-color:rgba(26,115,232,0.30);background:rgba(26,115,232,0.06)}

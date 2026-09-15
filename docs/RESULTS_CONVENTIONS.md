@@ -97,11 +97,17 @@ evolution: {
   metrics: { <key>: { label, unit:'usdM',
     summit: [[v per vintage] per year],       // rows parallel to years
     cons:   [[...]] | null,                   // BBG stored IN the model at each snapshot
-    prior:  { summit:[...], cons:[...] },     // Top Line only: the fiscal year BEFORE
-                                              // years[0], per vintage, for implied-growth —
+    prior:  { summit:[...], cons:[...] },     // needed by ANY metric with a Growth mode (not
+                                              // Top-Line-only — added to Profitability's capex/
+                                              // ebitda/earnings Sep 8, 2026): the fiscal year
+                                              // BEFORE years[0], per vintage, for implied-growth —
                                               // ALWAYS the value stored in that vintage block
                                               // (frozen projection for segments), never the
-                                              // reported actual (provenance rule, §3.6a)
+                                              // reported actual (provenance rule, §3.6a). `cons`
+                                              // is commonly partial/absent: Bloomberg's own
+                                              // estimate for a closed year disappears from the
+                                              // model once the print lands, so only the vintage(s)
+                                              // before that print carry a value.
     marginOf, marginLabel,                    // Profitability only: margin denominator key
     note } }
 }
@@ -165,7 +171,16 @@ evolution: {
    fetched through the Summit connection (Summit DB → API/edge function), replacing the
    hand-built arrays; the dataset shape in §2 is the contract that connection must fill. Colors are an ordered
    one-hue ramp of the portal blue (`EVO_RAMP` in results.js, darkest = nearest year; validated
-   with the dataviz palette checker). Solid = Summit, dashed = the BBG consensus stored in the
+   with the dataviz palette checker). **Sized to 5** and indexed directly (`EVO_RAMP[yi] ||
+   SUMMIT_MUTE`, never `% length`) — fixed Sep 8, 2026 after finding this was the SAME cycling bug
+   `SG_RAMP` had before its Sep 1 fix. Not yet visibly wrong for anyone: `rsTrimData`'s
+   forward-horizon rule (§7 item 8, `keepY`) caps what actually renders at the current fiscal
+   year + 2, and Uber — the widest raw `years` today, `['2025'..'2029']`, 5 elements — is trimmed
+   to 4 (`2025-2028`) as of Sep 2026, which the OLD 4-slot ramp still covered. But that trim margin
+   closes as the current FY rolls forward: once `fy` reaches 2027 the same dataset keeps all 5
+   years and the old ramp WOULD have silently repainted FY2029 the same colour as FY2025 — this
+   was fixed before that became visible, not after. Adding a 6th year needs a new step, not a
+   bigger modulo. Solid = Summit, dashed = the BBG consensus stored in the
    model at the same snapshot (so both columns are as-of the same date). Each block has a
    **US$B / % display toggle**: Top Line's % = the IMPLIED YoY GROWTH each snapshot carries
    (first year chains to `prior` — own estimate while the year was open, reported actual once
@@ -252,6 +267,35 @@ trusting rounded output (the BBG margin rows carry full precision).
 
 ## 7. Open items / next iterations (as of Jul 28, 2026)
 
+- **✓ RESOLVED (Sep 8, 2026) — the current fiscal year showed no growth in the Estimates
+  (Evolution) view.** Root cause was NOT the growth formula (`rsRefGrowthPct` in the Results table
+  is unaffected; the Evolution chart's own `rsEvoPctAt` was never touching `.act`, per its own
+  design). It was a documented but stale data-schema rule: §2 said `prior` — the FY-before-`years[0]`
+  base every first-tracked-year growth chains to — was "Top Line only," so AMZN's Profitability
+  metrics (`capex` — the section's DEFAULT metric — plus `ebitda`, `earnings`) never got one, and a
+  metric with no `prior` "simply has no growth for its first year" (§3.6a, by design). Verified
+  against the live Summit MCP snapshots (not guessed): pulled FY2025 `CAPEX`/`EBITDA`/`EARNINGS`
+  facts from all 7 AMZN vintages (`projection_history` sheet, `DEFAULT`/`BBG` sources) and confirmed
+  the same pattern already used for `rev`/`aws`/`intrev`: Summit's own frozen figure persists at
+  every vintage after the print (and can itself later be re-cut — EBITDA's frozen FY2025 jumped
+  168,024→185,600 at the May-13 save), while Bloomberg's `*_BBG_EST` fact zeroes out (→ `null`) the
+  moment the year closes, so a Street base only survives on the one pre-print vintage. Added
+  `prior` to all three metrics in `js/results-data/amzn.js` with those verified values.
+  **Follow-up (Sep 8, 2026, same day):** closed the remaining gap — segment op. income
+  (`naopinc`/`intopinc`/`awsopinc`) and `fcf`/`opinc` (Total, derived) now have `prior` too.
+  The DCF fact labels don't self-evidently map to segments, so this was verified, not guessed:
+  `OPINC`/`OPINC2`/`OPINC3` were confirmed to be NA/Intl/AWS GAAP op. income respectively by
+  cross-checking `EBITDA − D&A` per segment (`AWS_EBITDA − AWS_DNA` = `OPINC3` to the dollar at
+  every snapshot checked) and by matching FY2026 vintage-0 values against the metric's own
+  `summit[0][0]` already in the dataset. `opinc` (Total)'s `prior` is the sum of the three
+  segment priors, consistent with how its own `summit`/`cons` arrays are already built. None of
+  the five had a `*_BBG_EST` fact in the model, so all five stay Summit-only — no consensus row.
+  **FCF's caveat:** FY26 growth swings sign (−3.0% Dec → −219.0% Feb → −87.5% Aug 4) because FY26
+  FCF itself crosses zero across vintages — read that one in $ amount mode, not percent, per the
+  existing sign-flip convention. **Rule going forward:** `prior` is not Top-Line-only — any metric
+  with a `mode:'grow'` toggle needs one to show current-FY growth; §2 below is corrected
+  accordingly.
+
 - **GOOGL (Jul 29):** the Evolution **Results + Estimates sub-tabs are wired** in `js/overviews/googl.js`
   (row: `Earnings · Results · Estimates · Guidance · Strategy · Timeline`) and **`GOOGL` is registered
   in `RESULTS_DATA`**. The dataset `js/results-data/googl.js` was **reconstructed from the rolling
@@ -295,6 +339,48 @@ ticker, with Summit/guidance filled in later.
   needs consistent definitions first.
 - AMZN Overview/Deep Dive: Deep Dive sections still scaffolded (fill via the Call Prep flow /
   by hand); Call Prep phases pending "arma el Call Prep de AMZN".
+
+### DHR (Aug 31, 2026) — the first ticker with NO Summit model and NO consensus archive
+
+Danaher is on the engine: `DHR` is registered in `RESULTS_DATA`, `js/results-data/dhr.js` carries
+both views, and Evolution's three panes (Earnings · Results · Estimates) are wired in
+`js/overviews/dhr.js`. It is worth reading as the **floor case** of the rollout — what the contract
+still delivers when neither of the two normal sources exists:
+
+* **No Summit model.** `search_ticker('Danaher')` → `no_matches`. `summit` is `[]` on every metric
+  and nothing is invented. The Setup grid's second column is the **company's own guide** instead,
+  which is a better comparator than a blank one.
+* **No consensus archive.** DHR is not in `BBG_CONSENSUS.txt` / `Consensus_Portal.xlsm`. The only
+  snapshot is a single Bloomberg export, archived at `danaher-research/bbg/BBG_DHR_2026-08-31.xlsx`
+  (gitignored — a Bloomberg export never goes in a public repo). One snapshot is a reading, not an
+  axis, so there is **no `estMatrix` and no `evolution` block**, and the Estimates pane falls back
+  to a note naming the blocker. It switches itself on when a second vintage lands.
+* **Two sources that replaced them.** Reported adjusted figures, core growth and *all* guidance
+  come from the 15 quarterly **8-K EX-99.1 releases** (1Q23→2Q26) — that is where adjusted EPS,
+  which Bloomberg only carries for five quarters, is complete. Pre-print consensus for **1Q25–2Q26
+  only** comes from earnings-day coverage, which is what lights up the surprise block.
+
+**Three traps this ticker documents, all live in the dataset header:**
+1. **Bloomberg mixes bases inside one annual row.** Veralto separated in Sept 2023 and Danaher
+   restated only the income statement, back to FY2021. Bloomberg keeps the as-filed figure
+   everywhere else, so FY21/FY22 total revenue arrives with Veralto in it while the segment rows
+   do not. Check any annual row against the segment sum before trusting it.
+2. **Guidance in words is not a band.** Danaher guides core revenue growth, and until the 2Q26
+   release it guided it qualitatively. `guideLo/Hi` is populated on four cells only; the wording
+   for every other period is recorded in prose. Do not translate "mid-single digits" into numbers.
+3. **A percentage metric's surprise is in POINTS, not a ratio.** +3.0% against +2.0% is not "50%".
+
+**Two engine fixes DHR surfaced** (both in `js/results.js`, both verified no-change on AMZN):
+`rsSurpPairOk` now requires a pair to overlap on a **reported** period — a forward-only overlap
+(a Street number and a company guide for the same future quarter) was putting a metric in the
+"Actuals vs Estimates" dropdown that drew an empty chart. `rsVintNote` no longer names a source
+the dataset has no values for — DHR and GOOGL ship `summit: []` and the note still announced a
+Summit series that was not there.
+
+**Also worth knowing:** panes that read their period axis *through* a Results dataset must cut it
+at the last period with an actual. Adding DHR's forward horizon grew phantom FY26–FY29 buttons on
+the Bottom Line segment bridge and made "the latest quarter" resolve to 3Q27. Fixed in
+`dhr-bl-segments.js` / `dhr-misc-other.js`; check the same thing on the next ticker.
 
 ---
 

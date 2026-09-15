@@ -265,6 +265,32 @@ export async function fetchMargins(ticker) {
   return ok(rows);
 }
 
+// ─── Market History (Massive proxy: daily prices + quarterly ratios) ────────
+// Two routes on the `get-market-history` edge function, key injected server-side, no DB write —
+// see that function's header for the exact Massive shapes. Used by Historic Multiple charts
+// (price for the numerator; market_cap/enterprise_value per quarter to derive diluted shares and
+// net debt). Deploy-gated on get-market-history existing.
+
+export async function fetchPriceHistory(ticker, from, to) {
+  var { data, error } = await supabase.functions.invoke('get-market-history', {
+    body: { resource: 'prices', ticker: ticker, from: from, to: to },
+  });
+  if (error) return fail(error.message);
+  var results = (data && Array.isArray(data.results)) ? data.results : [];
+  if (!results.length) return fail('no price data');
+  return ok(results.map(function (r) { return { t: r.t, c: r.c }; }));
+}
+
+export async function fetchRatiosHistory(ticker, limit) {
+  var { data, error } = await supabase.functions.invoke('get-market-history', {
+    body: { resource: 'ratios', ticker: ticker, limit: limit || 20 },
+  });
+  if (error) return fail(error.message);
+  var results = (data && Array.isArray(data.results)) ? data.results : [];
+  if (!results.length) return fail('no ratios data');
+  return ok(results);
+}
+
 // ─── Company Resources ──────────────────────────────────────
 
 export async function fetchResources(companyId) {

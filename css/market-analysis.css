@@ -1,4 +1,4 @@
-/* ─── Market Analysis: sector bars, divergent bars, scatter ─── */
+/* ─── Market Analysis: sector bars, divergent bars ─── */
 
 /* Sector bars */
 .sbl {
@@ -377,83 +377,3 @@
   border-radius: 2px;
 }
 
-/* Scatter */
-.scrl {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 9px;
-  font-size: 11px;
-  color: var(--mu);
-  flex-wrap: wrap;
-}
-
-.scrli {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.scline {
-  width: 17px;
-  height: 0;
-  border-top: 2px dashed;
-}
-
-.scleg {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 11px;
-}
-
-.scli {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  color: var(--mu);
-}
-
-.scdt {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.qcounts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin-bottom: 10px;
-}
-
-.qc {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 11px;
-  border-radius: 10px;
-  font-family: 'Inter', monospace;
-  font-size: 11px;
-  background: rgba(74, 127, 181, .07);
-  border: 1px solid var(--bdr);
-  color: var(--mu);
-}
-
-.qc strong { color: var(--text); }
-
-.qc.q1 {
-  background: rgba(23, 122, 78, .07);
-  border-color: #B3D9C3;
-  color: var(--pos);
-}
-
-.qc.q1 strong { color: var(--pos); }
-
-.qc.q3 {
-  background: rgba(155, 42, 32, .07);
-  border-color: #E8C0BC;
-}
-
-.qc.q3 strong { color: var(--neg); }

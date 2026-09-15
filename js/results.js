@@ -248,7 +248,12 @@ function rsView(k){
 }
 function rsViewName(k){ return (k != null && _rs.sec[k] && _rs.sec[k].view) || _rs.view; }
 // Default view: quarterly when present, else annual (datasets like TBBB carry annual only).
-function rsDefaultView(data){ return (data && data.views && data.views.q) ? 'q' : 'y'; }
+// A dataset may override with `defaultView: 'y'` when its annual view is the primary read (SN_MKT:
+// advertising is an annual disclosure). Absent → unchanged behaviour for every existing dataset.
+function rsDefaultView(data){
+  if (data && data.defaultView && data.views && data.views[data.defaultView]) return data.defaultView;
+  return (data && data.views && data.views.q) ? 'q' : 'y';
+}
 function rsSecCfg(k){ return rsView(k).sections.filter(function(s){ return s.key === k; })[0]; }
 // Sections declare their metrics in labeled groups (Totals / Segments / …);
 // flatten for validation and default handling.

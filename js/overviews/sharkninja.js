@@ -71,6 +71,8 @@ import { snHistMult } from './sharkninja-histmult.js';
 import { snPeersBody, snPeersInit } from './sharkninja-peers.js';
 import { snTargetMult } from './sharkninja-target-multiple.js';
 import { snSens } from './sharkninja-sensitivity.js';
+// Miscellaneous ▸ Marketing Strategy · TAM (frozen data in sharkninja-mkt-data.js / sharkninja-tam-data.js).
+import { snMktBody, snTamBody, snMktInit, snTamInit } from './sharkninja-mkt-tam.js';
 
 // esc: escapes <>" but leaves & literal (per contract — never double-encode).
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1012,10 +1014,15 @@ function deepDiveHtml(c){
       '<button type="button" class="ovt-subtab active" data-ovst="capex">Capex &amp; Depreciation</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="mna">M&amp;A</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="other">Other Analysis</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="snmkt">Marketing Strategy</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="sntam">TAM</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="capex">'+miscCapex()+'</div>'+
     '<div class="ovt-subpane" data-ovst="mna" hidden>'+miscMna()+'</div>'+
     '<div class="ovt-subpane" data-ovst="other" hidden>'+miscOther()+qOtherAnalysisExtras()+'</div>'+
+    // Marketing Strategy + TAM (Sep 2026, SAB) — an explicit addition to the Misc spine; see sharkninja-mkt-tam.js.
+    '<div class="ovt-subpane" data-ovst="snmkt" hidden>'+snMktBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="sntam" hidden>'+snTamBody()+'</div>'+
   '</div>';
   // The two intro callouts that sat above the tabs are gone (Amazon's Deep Dive opens straight on its tabs). The
   // Quartr note is still true, so it moves down here with the sources; the data-status callout (SN_DD_INTRO) was out of date.
@@ -1051,6 +1058,8 @@ function ddBuildVisible(root){
   // Earnings ▸ Setup hosts the Results engine on the SN_SETUP dataset — only build it when
   // the Setup phase is the visible one (Chart.js needs a non-null offsetParent).
   if(key==='earnings'){ snCeBuild(root); return; }
+  if(key==='snmkt'){ requestAnimationFrame(function(){ snMktInit(sub); }); return; }
+  if(key==='sntam'){ requestAnimationFrame(function(){ snTamInit(sub); }); return; }
   // Estimates fills itself once the dataset carries `evolution`; until then the pane is the
   // pending notice and there is nothing to wire.
   if(key==='estevo'){ requestAnimationFrame(function(){ try{ initResultsEvo('SN'); }catch(e){} }); return; }

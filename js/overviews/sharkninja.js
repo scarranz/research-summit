@@ -25,8 +25,6 @@ import {
   // through from js/results-data/sn.js and sharkninja-bottomline.js so Bottom Line cannot drift
   // from Results. Only the KPI strips and the debt flag survive from the first pass.
   SN_BL_MARGIN_KPIS, SN_BL_BS_KPIS, SN_BL_DEBT_FLAG, SN_BL_SOURCES,
-  SN_MGMT_EXECS, SN_MGMT_EXECS_NOTE, SN_MGMT_BOARD, SN_MGMT_BOARD_NOTE, SN_MGMT_OWNERSHIP,
-  SN_MGMT_SBC, SN_MGMT_GOV_NOTE, SN_MGMT_RELATED_PARTY, SN_MGMT_TRACK, SN_MGMT_TRACK_NOTE,
   SN_MISC_CAPEX_KPIS, SN_MISC_CAPEX_TREND, SN_MISC_CAPEX_NOTE, SN_MISC_CAPEX_CALLOUT,
   SN_MISC_MNA, SN_MISC_TAX_NOTE, SN_MISC_MARKETING_NOTE, SN_MISC_DEBT, SN_MISC_SOURCES,
 } from './sharkninja-data.js';
@@ -41,11 +39,8 @@ import {
   SN_Q_INTRO, SN_CAT_CORRECTION, SN_CAT_CORRECTION_LIMIT, SN_CAT_SOURCES,
   SN_SUBCATS, SN_SUBCATS_NOTE,
   SN_GUIDE_LEDE, SN_GUIDE_YEARS, SN_GUIDE_PATTERN, SN_GUIDE_SOURCES_NOTE,
-  // SN_IR_URL / SN_EDGAR_URL are intentionally NOT imported: amzn.js line 5209 records that the
-  // IR + EDGAR cards "moved to the Company Profile header (Dani, Aug 2026)", so they do not belong
-  // in the Earnings pane even though EARNINGS_CONVENTIONS §6 still calls them its first element.
-  // They stay exported (with SN's real CIK 0001957132) for whoever wires SN's profile header.
-  SN_EST_PENDING,
+  // SN_IR_URL / SN_EDGAR_URL feed the profile-header source buttons (snHeaderSources, as amzn.js ceHeaderSources).
+  SN_IR_URL, SN_EDGAR_URL, SN_EST_PENDING,
   SN_STRAT_LEDE, SN_STRAT_MOAT, SN_STRAT_PROMISE, SN_STRAT_PROMISE_NOTE, SN_STRAT_GM,
   SN_STRAT_DIVERSIFY, SN_STRAT_INITIATIVES, SN_STRAT_AUDIT, SN_STRAT_SOURCES,
   SN_TL_LEDE, SN_EXEC_TIMELINE, SN_TL_TAGS, SN_IR_CADENCE, SN_TL_SOURCES,
@@ -73,6 +68,8 @@ import { snTargetMult } from './sharkninja-target-multiple.js';
 import { snSens } from './sharkninja-sensitivity.js';
 // Miscellaneous ▸ Marketing Strategy · TAM (frozen data in sharkninja-mkt-data.js / sharkninja-tam-data.js).
 import { snMktBody, snTamBody, snMktInit, snTamInit } from './sharkninja-mkt-tam.js';
+// Management runs on Amazon's four bodies (shared makeManagement mold) — see sharkninja-mgmt.js.
+import { SN_MGMT, snOwnBody, snGovBody, snTrackBody, snTrackPop } from './sharkninja-mgmt.js';
 
 // esc: escapes <>" but leaves & literal (per contract — never double-encode).
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -641,50 +638,6 @@ function bottomLineSupplyChain(){
     '<div class="dd-callout">' + SN_SC_MARGIN_LINK + '</div>';
 }
 
-function mgmtExecsBoard(){
-  var execRows = SN_MGMT_EXECS.map(function(e){
-    return '<tr><td class="ov-td-name">'+esc(e[0])+'</td><td>'+esc(e[1])+'</td><td>'+esc(e[2])+'</td></tr>';
-  }).join('');
-  var boardRows = SN_MGMT_BOARD.map(function(b){
-    return '<tr><td class="ov-td-name">'+esc(b[0])+'</td><td>'+esc(b[1])+'</td><td>'+esc(b[2])+'</td><td>'+esc(b[3])+'</td></tr>';
-  }).join('');
-  return '<div class="dd-h">Executives</div>'+
-    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Name</th><th>Title</th><th>Background</th></tr></thead><tbody>'+execRows+'</tbody></table></div>'+
-    '<div class="dd-note">'+esc(SN_MGMT_EXECS_NOTE)+'</div>'+
-    '<div class="dd-h" style="margin-top:22px;font-size:12.5px">Board of Directors</div>'+
-    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Name</th><th>Independent</th><th>Role / committees</th><th>Background</th></tr></thead><tbody>'+boardRows+'</tbody></table></div>'+
-    '<div class="dd-note">'+esc(SN_MGMT_BOARD_NOTE)+'</div>';
-}
-
-function mgmtOwnership(){
-  var o = SN_MGMT_OWNERSHIP;
-  var rows = o.rows.map(function(r){
-    return '<tr><td class="ov-td-name">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+esc(r[3])+'</td></tr>';
-  }).join('');
-  return '<div class="dd-h">Ownership</div>'+
-    '<div class="dd-sub">'+esc(o.structure)+' '+esc(o.totalShares)+'</div>'+
-    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Holder</th><th>Shares</th><th>% of shares</th><th>Detail</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
-    '<div class="dd-note">'+esc(o.note)+'</div>'+
-    '<div class="dd-callout">'+esc(o.reconcileFlag)+'</div>';
-}
-
-function mgmtGovSbc(){
-  return '<div class="dd-h">Governance &amp; Stock-Based Compensation</div>'+
-    ddKpis(SN_MGMT_SBC)+
-    '<div class="dd-note">'+esc(SN_MGMT_GOV_NOTE)+'</div>'+
-    '<div class="dd-h" style="margin-top:22px;font-size:12.5px">Related-party transactions with JS Global</div>'+
-    '<div class="dd-callout">'+esc(SN_MGMT_RELATED_PARTY)+'</div>';
-}
-
-function mgmtTrack(){
-  return '<div class="dd-h">Track Record</div>'+
-    '<div class="tl">'+SN_MGMT_TRACK.map(function(t,i){
-      var rm = t[2] ? '<button type="button" class="tl-more" data-mtlrm="'+i+'">Read more ›</button><ul class="tl-rm" data-mtlbody="'+i+'" hidden>'+t[2].map(function(b){ return '<li>'+esc(b)+'</li>'; }).join('')+'</ul>' : '';
-      return '<div class="tl-i"><div class="tl-y">'+esc(t[0])+'</div><div class="tl-t">'+esc(t[1])+'</div>'+rm+'</div>';
-    }).join('')+'</div>'+
-    '<div class="dd-note">'+esc(SN_MGMT_TRACK_NOTE)+'</div>';
-}
-
 function miscCapex(){
   var rows = SN_MISC_CAPEX_TREND.map(function(r){
     return '<tr><td class="ov-td-name">FY'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>';
@@ -1004,10 +957,10 @@ function deepDiveHtml(c){
       '<button type="button" class="ovt-subtab" data-ovst="govsbc">Governance &amp; SBC</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="track">Track Record</button>'+
     '</div>'+
-    '<div class="ovt-subpane" data-ovst="execboard">'+mgmtExecsBoard()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="ownership" hidden>'+mgmtOwnership()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="govsbc" hidden>'+mgmtGovSbc()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="track" hidden>'+mgmtTrack()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="execboard">'+SN_MGMT.body()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="ownership" hidden>'+snOwnBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="govsbc" hidden>'+snGovBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="track" hidden>'+snTrackBody()+'</div>'+
   '</div>';
   h += '<div class="dd-pane" data-dd="misc" hidden>'+
     '<div class="ovt-subtabs">'+
@@ -1113,12 +1066,14 @@ function deepDiveInit(c){
   // pills · estimate / growth / margin toggles · The print's filters · Call Summary · Propose Notes ·
   // the theme record with its ✎ editor. The "?" caveats open in the profile modal.
   snCeWire(root);
+  SN_MGMT.init(root);   // the Executives & Board CV modal (makeManagement), as amzn.js deepDiveInit does
   if(!root._cePopWired){
     root._cePopWired = true;
     root.addEventListener('click', function(e){
-      var el = e.target.closest ? e.target.closest('[data-detail^="ce:"]') : null;
+      var el = e.target.closest ? e.target.closest('[data-detail^="ce:"], [data-detail^="exec:"]') : null;
       if(!el || !root.contains(el)) return;
-      var d = snCePop(el.getAttribute('data-detail').slice(3));
+      var key = el.getAttribute('data-detail');
+      var d = key.indexOf('exec:') === 0 ? snTrackPop(key.slice(5)) : snCePop(key.slice(3));
       if(d) openModal(String(d.t||'').replace(/<[^>]+>/g,''), d.h||'');
     });
   }  // Evolution ▸ Timeline — tag filter chips.
@@ -1151,4 +1106,30 @@ function deepDiveInit(c){
   ddBuildVisible(root);
 }
 
-export var sharkninjaOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };
+// Source buttons in the Company Profile header — amzn.js ceHeaderSources(), verbatim markup and tile
+// styling (dark square, logo-only, hover lift); the glow uses SN's colour where Amazon's used orange.
+// Rendered by companies.js openCo() into #co-srcbtns via overview.headerSources().
+function snHeaderSources(){
+  var CE_LOGO_URL = 'https://assets.parqet.com/logos/symbol/SN', CE_SEC_SEAL = 'img/sec-seal.png';
+  return '<style>'+
+    '.cohd-src{display:inline-flex;gap:8px;align-items:center}'+
+    '.cohd-src a{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;'+
+      'text-decoration:none;position:relative;overflow:hidden;transition:.16s;'+
+      'background:linear-gradient(135deg,#0B0703 0%,#1C1206 60%,#0B0703 100%);border:1px solid rgba(14,124,134,.40);box-shadow:0 3px 12px rgba(0,0,0,.32)}'+
+    '.cohd-src a:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(14,124,134,.30);border-color:rgba(14,124,134,.80)}'+
+    '.cohd-src a img{width:26px;height:26px;object-fit:contain;display:block;border-radius:6px}'+
+    '.cohd-src a.edgar{background:linear-gradient(135deg,#070502 0%,#171106 60%,#070502 100%);border-color:rgba(197,164,90,.35)}'+
+    '.cohd-src a.edgar:hover{box-shadow:0 8px 20px rgba(197,164,90,.30);border-color:rgba(227,200,120,.78)}'+
+    '.cohd-src a.edgar img{border-radius:0}'+
+  '</style>'+
+  '<div class="cohd-src">'+
+  '<a href="'+SN_IR_URL+'" target="_blank" rel="noopener" title="SharkNinja Investor Relations" aria-label="SharkNinja Investor Relations">'+
+    '<img src="'+CE_LOGO_URL+'" alt="SharkNinja logo" onerror="this.style.display=\'none\'">'+
+  '</a>'+
+  '<a class="edgar" href="'+esc(SN_EDGAR_URL)+'" target="_blank" rel="noopener" title="SharkNinja on SEC EDGAR" aria-label="SharkNinja on SEC EDGAR">'+
+    '<img src="'+CE_SEC_SEAL+'" alt="SEC seal" onerror="this.style.display=\'none\'">'+
+  '</a>'+
+  '</div>';
+}
+
+export var sharkninjaOverview = { html: html, init: init, headerSources: snHeaderSources, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

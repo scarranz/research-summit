@@ -14,7 +14,7 @@
 
 import {
   esc, fmtB, fmtPct, num, FREQS, lookTag, methodTag, monthsOf,
-  loadEmbedded, embeddedTickers, getSeries, alignedReturns, windowReturns, regress, blume,
+  getSeries, alignedReturns, windowReturns, regress, blume,
   rollingBeta, describe, historyFor, addHistory, onHistoryChange, attachBrush,
 } from './betas-core.js';
 import { getCurrentUser } from './auth.js';
@@ -24,17 +24,16 @@ const C_ADJ = '#2563EB';                 // blue — the adjusted / derived seri
 const C_SEL = '#1E9E62';                 // green — the beta selected for submission
 const C_MKT = '#8A93A0';                 // grey — the market (β = 1)
 
-const LOOKS = [[6, 'm'], [1, 'y'], [2, 'y'], [3, 'y'], [5, 'y']];
+const LOOKS = [[6, 'm'], [1, 'y'], [2, 'y'], [3, 'y'], [5, 'y'], [10, 'y']];
 const INDEXES = ['SPY', 'QQQ', 'RSP', 'XLG'];
-const SOURCE_LABEL = { massive: 'Massive · live', portal: 'Portal · IBKR adjusted', mixed: 'Portal + Massive' };
 
 const st = {
-  ticker: 'AMZN', index: 'SPY', source: 'portal',
+  ticker: 'AMZN', index: 'SPY',
   freq: 'monthly', amt: 5, unit: 'y', end: '',
   rollAmt: 2, rollUnit: 'y', alpha: 0.67, anchor: 1,
   pick: 'raw', manual: '', note: '',
-  loading: false, err: '', info: '', flash: '',
-  data: null,              // { stock, index, src, key }
+  loading: false, err: '', flash: '',
+  data: null,              // { stock, index, key } — daily closes from Massive
   roll: { win: null, yr: null, hidden: {}, tbl: false },
   sc: { xr: null, yr: null, hidden: {}, tbl: false },
 };
@@ -47,23 +46,14 @@ let _alignCache = { key: '', byFreq: {} };
 async function loadData() {
   const T = st.ticker.trim().toUpperCase(), I = st.index.trim().toUpperCase();
   st.ticker = T; st.index = I;
-  const key = `${T}|${I}|${st.source}`;
+  const key = `${T}|${I}`;
   if (st.data && st.data.key === key) return render();
-  st.loading = true; st.err = ''; st.info = '';
+  st.loading = true; st.err = '';
   render();
   try {
-    // Portal first, name by name: a series the embed doesn't have comes from Massive,
-    // so an uncovered stock can still be measured against the embedded SPY.
-    const one = async (x) => {
-      if (st.source !== 'portal') return getSeries(x, 'massive');
-      try { return await getSeries(x, 'portal'); } catch (e) { return getSeries(x, 'massive'); }
-    };
-    const [s, m] = await Promise.all([one(T), one(I)]);
-    const src = s.source === m.source ? s.source : 'mixed';
-    const viaLive = [st.source === 'portal' && s.source === 'massive' ? T : null,
-      st.source === 'portal' && m.source === 'massive' ? I : null].filter(Boolean);
-    if (viaLive.length) st.info = `${viaLive.join(' and ')} is not in the portal's price history; fetched from Massive.`;
-    st.data = { stock: s.series, index: m.series, src, key };
+    const [s, m] = await Promise.all([getSeries(T), getSeries(I)]);
+    if (st.ticker !== T || st.index !== I) return;   // superseded by a newer request
+    st.data = { stock: s, index: m, key };
     _alignCache = { key: '', byFreq: {} };
     resetZoom();
   } catch (e) {
@@ -129,16 +119,14 @@ const seg = (attr, cur, opts) => `<div class="bt-seg">${opts.map(([k, l]) =>
   `<button type="button" data-${attr}="${esc(k)}" class="${String(cur) === String(k) ? 'on' : ''}">${l}</button>`).join('')}</div>`;
 
 function controls(c) {
-  const tickers = embeddedTickers();
   return `
   <div class="bt-card bt-ctl">
     <div class="bt-row">
       <label class="bt-f"><span>Ticker</span>
-        <input class="bt-in bt-tk" data-in="ticker" value="${esc(st.ticker)}" list="bt-tickers" spellcheck="false" autocomplete="off"></label>
+        <input class="bt-in bt-tk" data-in="ticker" value="${esc(st.ticker)}" spellcheck="false" autocomplete="off"></label>
       <label class="bt-f"><span>Index</span>
         <input class="bt-in bt-tk" data-in="index" value="${esc(st.index)}" list="bt-indexes" spellcheck="false" autocomplete="off"></label>
-      <div class="bt-f"><span>Price source</span>${seg('src', st.source, [['portal', 'Portal (IBKR)'], ['massive', 'Massive']])}</div>
-      <datalist id="bt-tickers">${tickers.map((t) => `<option value="${esc(t)}">`).join('')}</datalist>
+      <div class="bt-f"><span>Prices</span><span class="bt-srcfix">Massive · daily, split-adjusted</span></div>
       <datalist id="bt-indexes">${INDEXES.map((t) => `<option value="${t}">`).join('')}</datalist>
     </div>
     <div class="bt-row">
@@ -170,13 +158,11 @@ function controls(c) {
 
 function statusLine(c) {
   const bits = [];
-  if (st.data) bits.push(`<span class="bt-badge">${SOURCE_LABEL[st.data.src]}</span>`);
   if (c && !c.empty) {
     bits.push(`<span>Common history ${esc(c.first)} → ${esc(c.last)}</span>`);
     bits.push(`<span>Window ${esc(c.w.start)} → ${esc(c.end)} · <b>n = ${c.reg.n}</b> ${FREQS[st.freq].adj} returns</span>`);
   }
   const warns = [];
-  if (st.info) warns.push(st.info);
   if (c && !c.empty && c.clipped) warns.push(`The window starts ${c.w.start} but the history only starts ${c.first}: the beta uses what is available.`);
   if (c && !c.empty && c.reg.beta != null && c.reg.n < 24) warns.push(`Only ${c.reg.n} observations — the standard error is high; consider another frequency.`);
   return `<div class="bt-status">${bits.join('<span class="bt-dot">·</span>')}</div>
@@ -342,7 +328,7 @@ function render() {
     <p class="bt-note">β = cov(name returns, index returns) / var(index returns), using simple returns over the same
     periods. Weekly and monthly use the last close of each week or month (the current period counts even if it is
     incomplete). Adjusted = α × β + (1 − α) × anchor (Blume; Bloomberg uses 0.67 and 1.0). 95% CI = β ± 1.96 standard
-    errors. Prices adjusted for splits and dividends.</p>`;
+    errors. Daily closes from Massive, adjusted for splits (not dividends).</p>`;
   const seq = ++_seq;
   if (c && !c.empty && c.reg.beta != null && !st.loading && !st.err) requestAnimationFrame(() => { if (seq === _seq) buildCharts(c); });
 }
@@ -431,7 +417,7 @@ function onChange(e) {
   if (k === 'ticker' || k === 'index') {
     if (!v.trim()) return;
     st[k] = v.trim().toUpperCase();
-    if (k === 'ticker') { st.source = 'portal'; st.note = ''; }   // prefer the embed when it has the name
+    if (k === 'ticker') st.note = '';
     return loadData();
   }
   if (k === 'amt' || k === 'rollAmt') { const n = Math.round(num(v)); if (n > 0) st[k] = n; resetZoom(); }
@@ -450,7 +436,6 @@ function onClick(e) {
   const d = b.dataset;
   if (d.act === 'submit') return submit();
   st.flash = '';
-  if (d.src) { if (d.src !== st.source) { st.source = d.src; loadData(); } return; }
   if (d.freq) { st.freq = d.freq; resetZoom(); return render(); }
   if (d.unit) { st.unit = d.unit; resetZoom(); return render(); }
   if (d.runit) { st.rollUnit = d.runit; resetZoom(); return render(); }
@@ -490,7 +475,7 @@ function submit() {
     rolling_amount: st.rollAmt, rolling_unit: st.rollUnit === 'y' ? 'years' : 'months',
     rolling_last: r6(s && s.last), rolling_avg: r6(s && s.avg), rolling_median: r6(s && s.median),
     rolling_min: r6(s && s.min), rolling_max: r6(s && s.max),
-    price_source: st.data.src, data_as_of: c.last, note: st.note.trim() || null,
+    price_source: 'massive', data_as_of: c.last, note: st.note.trim() || null,
   });
   st.note = '';
   st.flash = `Submitted ${st.ticker} β ${fmtB(c.pick.v, 3)}`;
@@ -505,7 +490,7 @@ export function openTicker(t, rec) {
     Object.assign(st, {
       index: rec.index_ticker || st.index, freq: rec.frequency || st.freq,
       amt: rec.window_amount || st.amt, unit: rec.window_unit === 'months' ? 'm' : 'y',
-      end: rec.end_date || '', source: rec.price_source === 'massive' ? 'massive' : 'portal',
+      end: rec.end_date || '',
       rollAmt: rec.rolling_amount || st.rollAmt, rollUnit: rec.rolling_unit === 'months' ? 'm' : 'y',
       alpha: rec.blume_alpha != null ? rec.blume_alpha : st.alpha, anchor: rec.blume_anchor != null ? rec.blume_anchor : st.anchor,
       pick: rec.beta_type || 'raw', manual: rec.beta_type === 'manual' ? String(rec.beta) : st.manual,
@@ -530,6 +515,5 @@ export async function loadBetasCalc(el, gotoPane) {
     onHistoryChange(() => render());
   }
   render();
-  await loadEmbedded().catch(() => {});
   loadData();
 }

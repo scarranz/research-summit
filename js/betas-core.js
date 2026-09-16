@@ -1,9 +1,8 @@
 // Tools ▸ Betas — the shared engine behind the Calculator, History and Portfolio sub-tabs.
 //
-//   • Prices   — daily closes, from the portal's embedded IBKR history
-//                (portfolio-metrics-prices-daily.js, ~5 years, loaded on first use) or
-//                live from Massive through the get-market-history edge function
-//                (api.fetchPriceHistory) for names or windows the embed doesn't cover.
+//   • Prices   — daily closes from Massive, through the get-market-history edge
+//                function (api.fetchPriceHistory): split-adjusted, 15 years back,
+//                fetched once per ticker per session.
 //   • Maths    — resample to daily / weekly / monthly, align stock and index on the
 //                same periods, and regress: β = cov(stock, index) / var(index),
 //                plus α, correlation, R², the standard error of β, annualised vols,
@@ -45,62 +44,41 @@ export const methodTag = (m) => `${lookTag(m.amt, m.unit)}·${FREQS[m.freq].shor
 export const monthsOf = (amt, unit) => (unit === 'y' ? Number(amt) * 12 : Number(amt));
 
 // ── Prices ───────────────────────────────────────────────────────────────────
-let _embed = null;          // { asOf, series: { T: [[date, close], …] } }
-let _embedP = null;
-export function loadEmbedded() {
-  if (_embed) return Promise.resolve(_embed);
-  if (!_embedP) {
-    _embedP = import('./portfolio-metrics-prices-daily.js').then((m) => {
-      _embed = m.PRICES_DAILY;
-      return _embed;
-    });
-  }
-  return _embedP;
-}
-export const embeddedNow = () => _embed;
-export function embeddedTickers() {
-  return _embed ? Object.keys(_embed.series).sort() : [];
-}
-// The embed keys a few names by their app label (TSMC); Massive wants the listing.
-const EMBED_ALIAS = { TSM: 'TSMC', TSMC: 'TSM' };
-function embeddedSeries(t) {
-  if (!_embed) return null;
-  const s = _embed.series[t] || _embed.series[EMBED_ALIAS[t]];
-  return Array.isArray(s) && s.length ? s : null;
-}
-
+// Daily closes from Massive only, through the get-market-history edge function
+// (key injected server-side). Massive's `adjusted=true` adjusts for splits, not
+// dividends. One fetch per ticker per session, 15 years back; every window and
+// frequency is cut from that series in the browser.
+const HISTORY_YEARS = 15;
 const _live = new Map();   // ticker → Promise<[[date, close]]>
 function isoDay(d) { return d.toISOString().slice(0, 10); }
-function liveSeries(t) {
-  if (!_live.has(t)) {
-    const to = new Date();
-    const from = new Date(Date.UTC(to.getUTCFullYear() - 15, to.getUTCMonth(), to.getUTCDate()));
-    const p = fetchPriceHistory(EMBED_ALIAS[t] === 'TSM' ? 'TSM' : t, isoDay(from), isoDay(to)).then((r) => {
-      if (!r.success) throw new Error(typeof r.error === 'string' ? r.error : (r.error && r.error.message) || 'no data');
-      return r.data.filter((x) => x.c > 0).map((x) => [isoDay(new Date(x.t)), x.c]);
-    });
-    p.catch(() => _live.delete(t));   // let a later attempt retry
-    _live.set(t, p);
+
+// Readable reason for a failed call. A function that isn't deployed answers 404
+// without CORS headers, which the browser reports as a failed request.
+function priceError(T, msg) {
+  const m = String(msg || '');
+  if (/not found|failed to send|non-2xx|404/i.test(m)) {
+    return 'Could not load prices: the price-history service (get-market-history edge function) ' +
+      'is not deployed yet. San or Oscar need to deploy it before betas can be calculated.';
   }
-  return _live.get(t);
+  if (/no price data/i.test(m)) return `Massive returned no price history for ${T}. Check the ticker.`;
+  return `Could not load prices for ${T} from Massive (${m}).`;
 }
 
-// source: 'portal' | 'massive'. Resolves { series, source } or throws a readable error.
-export async function getSeries(t, source) {
+// Resolves [[date, close], …] ascending, or throws a readable error.
+export function getSeries(t) {
   const T = String(t || '').trim().toUpperCase();
-  if (!T) throw new Error('Enter a ticker');
-  if (source === 'massive') {
-    try {
-      return { series: await liveSeries(T), source: 'massive' };
-    } catch (e) {
-      throw new Error(`Massive returned no price history for ${T} (${e.message}). ` +
-        'This needs the get-market-history edge function deployed.');
-    }
+  if (!T) return Promise.reject(new Error('Enter a ticker'));
+  if (!_live.has(T)) {
+    const to = new Date();
+    const from = new Date(Date.UTC(to.getUTCFullYear() - HISTORY_YEARS, to.getUTCMonth(), to.getUTCDate()));
+    const p = fetchPriceHistory(T, isoDay(from), isoDay(to)).then((r) => {
+      if (!r.success) throw new Error(priceError(T, typeof r.error === 'string' ? r.error : r.error && r.error.message));
+      return r.data.filter((x) => x.c > 0).map((x) => [isoDay(new Date(x.t)), x.c]);
+    }, (e) => { throw new Error(priceError(T, e && e.message)); });
+    p.catch(() => _live.delete(T));   // let a later attempt retry
+    _live.set(T, p);
   }
-  await loadEmbedded();
-  const s = embeddedSeries(T);
-  if (!s) throw new Error(`${T} is not in the portal's price history. Switch the source to Massive.`);
-  return { series: s, source: 'portal' };
+  return _live.get(T);
 }
 
 // ── Resampling & alignment ───────────────────────────────────────────────────

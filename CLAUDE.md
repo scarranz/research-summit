@@ -42,7 +42,7 @@ js/protective-put.js    — Derivatives ▸ Protective Put (downside insurance o
 js/buy-calls.js         — Derivatives ▸ Buy Calls (long-call analyzer)
 js/short-puts.js        — Derivatives ▸ Short Puts (cash-secured puts)
 js/betas.js             — Tools ▸ Betas shell (Calculator · History · Portfolio sub-tabs)
-js/betas-core.js        — Betas engine: prices (embed/Massive), regression, rolling β, beta history store
+js/betas-core.js        — Betas engine: prices (Massive), regression, rolling β, beta history store
 js/betas-calc.js        — Betas ▸ Calculator (beta of any name, every variable, Submit)
 js/betas-history.js     — Betas ▸ History (every submitted beta, filter, reopen, CSV export)
 js/betas-portfolio.js   — Betas ▸ Portfolio (portfolio beta from manual weights)
@@ -406,7 +406,7 @@ Calculator exposes every variable and each submission records the method it used
 | File | What it owns |
 |---|---|
 | `js/betas.js` | Shell: Calculator · History · Portfolio pills, lazy-loads each pane, cross-pane jumps |
-| `js/betas-core.js` | Prices (embedded IBKR daily history from `portfolio-metrics-prices-daily.js`, or Massive via `api.fetchPriceHistory` → `get-market-history`), resampling D/W/M, regression (β, α, corr, R², SE, vols), Blume adjustment, rolling β, the **beta history store**, `attachBrush` |
+| `js/betas-core.js` | Prices (**Massive only**, daily split-adjusted closes, 15 years, via `api.fetchPriceHistory` → `get-market-history`), resampling D/W/M, regression (β, α, corr, R², SE, vols), Blume adjustment, rolling β, the **beta history store**, `attachBrush` |
 | `js/betas-calc.js` | **Calculator** — any ticker vs any index; frequency, time window, end date, rolling window, α/anchor; KPI tiles, method matrix (click to apply), rolling-β and returns-scatter charts; **Submit** (with an optional note) appends a record to the history |
 | `js/betas-history.js` | **History** — every submission, newest first; filter by ticker (with a submitted-beta-over-time chart), expand for full stats, reopen in the Calculator with the exact method, delete, export CSV |
 | `js/betas-portfolio.js` | **Portfolio** — manually typed weights (stock/ETF % of NAV, or a derivative's signed delta-adjusted exposure); beta = the ticker's latest submission or manual; contribution chart |
@@ -415,7 +415,7 @@ Calculator exposes every variable and each submission records the method it used
 
 - **Storage today:** the history (`betas-history-v1`) and the portfolio weights (`betas-portfolio-v1`) live in the browser's `localStorage` — per user and per browser, not shared. Moving to Supabase = San/Oscar run the SQL draft, then only the store functions in `betas-core.js` change (through `api.js`).
 - **Derivative beta** = delta-adjusted exposure × the underlying's beta (delta converts to equivalent shares; beta converts shares to market exposure).
-- The embedded history is ~5 years; names outside it or longer windows need `get-market-history` deployed (it was not, as of Sep 16 2026).
+- **Prices come only from Massive** (SAB, Sep 16 2026 — not the embedded IBKR snapshot in `portfolio-metrics-prices-daily.js`, which is frozen at 2026-09-10). ⚠ `get-market-history` was **not deployed** as of Sep 16 2026 (Supabase answers 404), so the Calculator shows a "not deployed" message until San/Oscar run `supabase functions deploy get-market-history --project-ref bvflqjndivouhgwqfbrq`.
 - Working material (Frank's original marimo notebook + SPEC, the one-off SMGS review) is in `betas/`, excluded from git locally.
 
 ## Team tab — how it works

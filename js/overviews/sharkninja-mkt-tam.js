@@ -10,32 +10,29 @@
 // sub-tabs are an explicit, SAB-approved addition to it (flag in the PR for San/Oscar).
 //
 // DATA lives in ./sharkninja-mkt-data.js (SN_MKT) and ./sharkninja-tam-data.js (SN_TAM), frozen from
-// Quartr + SEC filings. This file only draws. Charts are the shared Results ENGINE (registered
-// datasets), so they carry the six non-negotiables of CHART_ENGINE_REFERENCE §0.2 for free; every
-// other block uses the canonical Deep Dive components (dd-*, ov-sec, ov-table, ov-timeline,
-// guid-year pills, ov-collap) — no inline <style>.
+// Quartr + SEC filings, plus ./sharkninja-deck-data.js (SN_DECK) — numbers read off the rendered
+// investor-deck slides. This file only draws. Time-series charts are the shared Results ENGINE
+// (registered datasets); the deck snapshots are drawn with ./sharkninja-misc-kit.js, which meets
+// CHART_ENGINE_REFERENCE §0.2 by the §0.7 route. Since Sep 16 2026 (SAB: "mucho más visual, mucho
+// menos texto") the panes lead with visuals and every earlier paragraph and table sits inside a fold.
 
 import { registerResultsData, resultsHtml, initResults } from '../results.js';
 import { snResults } from '../results-data/sn.js';
 import { SN_MKT } from './sharkninja-mkt-data.js';
 import { SN_TAM } from './sharkninja-tam-data.js';
+import { SN_DECK } from './sharkninja-deck-data.js';
+import { snvChart, snvInit, fold, tiles, head, YEAR_RAMP, SUMMIT_CAT, SUMMIT_INK } from './sharkninja-misc-kit.js';
 
 // Escapes, but never double-encodes an entity the data file already wrote (e.g. "Hair dryers &amp; stylers").
 function esc(s){ if(s==null) return ''; return String(s).replace(/&(?!#?\w+;)/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function arr(a){ return Array.isArray(a) ? a : []; }
 function nulls(n){ var o = []; for (var i = 0; i < n; i++) o.push(null); return o; }
 
-function kpis(items){
-  return '<div class="dd-kpis">' + arr(items).map(function(k){
-    return '<div class="dd-kpi"><div class="dd-kpi-v">' + esc(k.v) + '</div><div class="dd-kpi-k">' + esc(k.k) + '</div><div class="dd-kpi-s">' + esc(k.s) + '</div></div>';
-  }).join('') + '</div>';
-}
 function collapsible(title, inner){
   return '<div class="ov-collap">' +
     '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">▸</span>' + esc(title) + '</button>' +
     '<div class="ov-collap-b" hidden>' + inner + '</div></div>';
 }
-function sec(title, inner){ return '<div class="ov-sec"><div class="ov-sec-h">' + esc(title) + '</div>' + inner + '</div>'; }
 function link(url){ return url ? ' <a href="' + esc(url) + '" target="_blank" rel="noopener">Quartr ↗</a>' : ''; }
 function srcLine(src, url){ return '<span class="ov-stat-mut">' + esc(src || '') + '</span>' + link(url); }
 function table(head, rows){
@@ -217,33 +214,6 @@ function quoteBlock(qs){
   }).join('');
 }
 
-function mktSpend(){
-  var sp = SN_MKT.spend || {};
-  var said = arr(sp.said).map(function(s){
-    return '<tr><td class="ov-td-name">' + fmtDate(s.d) + '</td><td>' + esc(s.src) + '</td><td>' + esc(s.who || '') + '</td>' +
-      '<td style="font-weight:600">' + esc(s.said) + '</td><td>' + esc(s.reported || '—') + '</td><td>' + link(s.url) + '</td></tr>';
-  }).join('');
-  return '<div data-snmktchart>' + (resultsHtml('SN_MKT') || '') + '</div>' +
-    (sp.read ? '<div class="dd-callout">' + sp.read + '</div>' : '') +
-    (said ? collapsible('Said vs reported — every spoken spend figure, ' + arr(sp.said).length + ' statements',
-      table(['Date', 'Where', 'Who', 'What was said', 'What the filings show', ''], said)) : '');
-}
-
-function mktEras(){
-  var eras = arr(SN_MKT.eras); if (!eras.length) return '';
-  var pills = '<div class="guid-years">' + eras.map(function(e, i){
-    return '<button type="button" class="guid-year' + (i === eras.length - 1 ? ' active' : '') + '" data-snera="' + esc(e.id) + '">' + esc(e.label) + '</button>';
-  }).join('') + '</div>';
-  var panes = eras.map(function(e, i){
-    return '<div data-snerapane="' + esc(e.id) + '"' + (i === eras.length - 1 ? '' : ' hidden') + '>' +
-      '<div class="dd-h" style="font-size:13px;margin-top:4px">' + esc(e.title) + ' <span class="ov-stat-mut" style="font-weight:600">' + esc(e.period || '') + '</span></div>' +
-      '<div class="dd-sub">' + (e.summary || '') + '</div>' +
-      '<ul class="ov-bullets">' + arr(e.points).map(function(p){ return '<li>' + p + '</li>'; }).join('') + '</ul>' +
-      quoteBlock(e.quotes) + '</div>';
-  }).join('');
-  return pills + panes;
-}
-
 function mktSocial(){
   var s = SN_MKT.social || {};
   var ms = arr(s.milestones).slice().sort(function(a, b){ return a.d < b.d ? -1 : 1; });
@@ -283,33 +253,101 @@ function mktPlaybooks(){
   }).join('');
 }
 
+// ── Visual layer (Sep 16 2026, SAB: "mucho más visual, mucho menos texto, sacar partes de sus
+// presentaciones"). The pane now leads with the decks' own diagrams and numbers, redrawn in Summit
+// tokens; every paragraph and table that was here before is still one click away, inside a fold.
+
+function mktFunnel(){
+  var f = SN_DECK.funnel, cols = [SUMMIT_CAT[1], SUMMIT_CAT[0], SUMMIT_CAT[6]];
+  return '<div class="snv-flow">' + f.steps.map(function(s, i){
+    return '<div class="snv-step"><div class="snv-step-stage">' + esc(s.stage) + '</div>' +
+      '<div class="snv-step-card" style="background:' + cols[i] + '"><div class="snv-step-t">' + esc(s.t) + '</div><div class="snv-step-d">' + esc(s.d) + '</div></div></div>';
+  }).join('') + '</div>';
+}
+function chips(list, cls){ return '<div class="snv-chips">' + list.map(function(x){ return '<span class="snv-chip' + (cls ? ' ' + cls : '') + '">' + esc(x) + '</span>'; }).join('') + '</div>'; }
+function mktDemand(){
+  var d = SN_DECK.demand;
+  return '<div class="snv-demand">' +
+    '<div class="snv-demand-col"><div class="snv-demand-t">Creating demand</div>' + chips(d.create) + '</div>' +
+    '<div class="snv-hub"><b>SharkNinja</b>available everywhere</div>' +
+    '<div class="snv-demand-col"><div class="snv-demand-t">Fulfilling demand</div>' + chips(d.fulfil) + '</div>' +
+  '</div><div class="snv-sub" style="margin-top:8px;text-align:center"><b>' + esc(d.rule) + '</b> — the brand goes wherever the consumer shops.</div>';
+}
+function mktStory(){
+  var s = SN_DECK.storytelling;
+  function card(t, sub, items, color){
+    return '<div class="snv-card" style="border-top:4px solid ' + color + '"><div class="snv-card-t">' + esc(t) + '</div><div class="snv-card-m">' + esc(sub) + '</div>' +
+      '<ul class="snv-list">' + items.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+  }
+  return '<div class="snv-grid2">' + card('Long-form storytelling', 'the infomercial heritage', s.long, SUMMIT_CAT[0]) +
+    card('Short-form storytelling', 'where the growth is now', s.short, SUMMIT_CAT[1]) + '</div>' +
+    '<div class="dd-note">' + esc(s.base) + '</div>';
+}
+function mktErasVisual(){
+  var eras = arr(SN_MKT.eras); if (!eras.length) return '';
+  var last = eras.length - 1;
+  var cards = '<div class="snv-eras">' + eras.map(function(e, i){
+    return '<button type="button" class="snv-era' + (i === last ? ' active' : '') + '" data-snera="' + esc(e.id) + '"><div class="snv-era-p">' + esc(e.period || e.label) + '</div><div class="snv-era-t">' + esc(e.title) + '</div></button>';
+  }).join('') + '</div>';
+  var panes = eras.map(function(e, i){
+    return '<div data-snerapane="' + esc(e.id) + '"' + (i === last ? '' : ' hidden') + '>' +
+      '<div class="dd-callout" style="margin-top:10px">' + (e.summary || '') + '</div>' +
+      fold('What changed in ' + esc(e.label) + ' — ' + arr(e.points).length + ' points, ' + arr(e.quotes).length + ' quotes',
+        '<ul class="ov-bullets" style="margin:0">' + arr(e.points).map(function(p){ return '<li>' + p + '</li>'; }).join('') + '</ul>' + quoteBlock(e.quotes)) +
+    '</div>';
+  }).join('');
+  return cards + panes;
+}
+function mktTikTok(){
+  var c = arr((SN_MKT.social || {}).countries).slice().sort(function(a, b){ return pKey(a.period) - pKey(b.period); });
+  if (!c.length) return '';
+  var firstPlan = -1; c.forEach(function(x, i){ if (x.plan && firstPlan < 0) firstPlan = i; });
+  return snvChart('sn-tiktok', {
+    unit: 'n', unitLabel: 'Countries live on TikTok Shop', labelsOn: true, height: 200, estFrom: firstPlan >= 0 ? firstPlan : null,
+    labels: c.map(function(x){ return x.period + (x.plan ? ' (target)' : ''); }),
+    series: [{ k: 'n', label: 'Countries live', color: SUMMIT_CAT[0], data: c.map(function(x){ return x.n; }) }],
+    note: 'Countries with a live TikTok Shop, as stated on calls and at conferences. The last bar is the target for holiday 2026 ("12 or 13").',
+    tableHead: 'Countries by quarter',
+  });
+}
+
 export function snMktBody(){
   register();
-  return '<div class="dd-h">Marketing Strategy</div>' +
-    (SN_MKT.lede ? '<div class="dd-sub">' + SN_MKT.lede + '</div>' : '') +
-    kpis(SN_MKT.kpis) +
-    sec('What they spend — and what they say they spend', mktSpend()) +
-    sec('How the marketing model changed', mktEras()) +
-    sec('Social media and social commerce', mktSocial()) +
-    sec('The playbooks — launching a product, entering a country', mktPlaybooks()) +
-    sec('The record — every statement, filterable', collapsible('Open the record — ' + arr(SN_MKT.log).length + ' statements, filter by topic, source and year', logBody('mkt', SN_MKT.log))) +
-    (SN_MKT.sources ? '<div class="dd-note">' + SN_MKT.sources + '</div>' : '');
+  var d = SN_DECK;
+  return '<div class="snv">' +
+    tiles(arr(SN_MKT.kpis).slice(0, 4).map(function(k){ return { v: k.v, l: k.k, s: String(k.s || '').split(' · ')[0] }; })) +
+    fold('The thesis in one paragraph', SN_MKT.lede || '') +
+
+    head('What they spend') +
+    '<div data-snmktchart>' + (resultsHtml('SN_MKT') || '') + '</div>' +
+    fold('What they say vs what the filings show', (SN_MKT.spend && SN_MKT.spend.read ? '<p style="margin:0 0 10px">' + SN_MKT.spend.read + '</p>' : '') + mktSpendTable()) +
+
+    head('How a product gets marketed', d.funnel.link, esc(d.funnel.lede)) + mktFunnel() +
+    head('Create demand everywhere, sell it everywhere', d.demand.link) + mktDemand() +
+    head('Long-form vs short-form', d.storytelling.link) + mktStory() +
+    head('Engagement at the IPO', d.engagement.link, 'The proof points the Jul 2023 deck chose to lead with.') + tiles(d.engagement.tiles, 4) +
+
+    head('How the model changed, 2023 → 2026', null, 'Pick a period.') + mktErasVisual() +
+
+    head('Social commerce — TikTok Shop') + mktTikTok() +
+    fold('Milestones and social proof points', mktSocial()) +
+
+    head('The playbooks — then vs now') + mktPlaybooks() +
+
+    fold('The record — every statement, filterable (' + arr(SN_MKT.log).length + ')', logBody('mkt', SN_MKT.log)) +
+    (SN_MKT.sources ? '<div class="dd-note">' + SN_MKT.sources + ' Diagrams redrawn from the SharkNinja investor decks of Jul 2023, Mar 2025 and Aug 2026 (slide links on each heading).</div>' : '') +
+  '</div>';
+}
+function mktSpendTable(){
+  var sp = SN_MKT.spend || {};
+  var said = arr(sp.said).map(function(s){
+    return '<tr><td class="ov-td-name">' + fmtDate(s.d) + '</td><td>' + esc(s.src) + '</td><td>' + esc(s.who || '') + '</td>' +
+      '<td style="font-weight:600">' + esc(s.said) + '</td><td>' + esc(s.reported || '—') + '</td><td>' + link(s.url) + '</td></tr>';
+  }).join('');
+  return said ? table(['Date', 'Where', 'Who', 'What was said', 'What the filings show', ''], said) : '';
 }
 
 // ═══ TAM ════════════════════════════════════════════════════════════════════════════════════════
-
-function tamMarket(){
-  var t = SN_TAM.tam || {};
-  var rows = arr(t.points).slice().sort(function(a, b){ return a.d < b.d ? -1 : 1; }).map(function(p){
-    var v = (p.lo != null && p.hi != null) ? ('$' + (p.lo / 1000) + '–' + (p.hi / 1000) + 'B') : (p.v != null ? '$' + (p.v / 1000) + 'B' : '—');
-    return '<tr><td class="ov-td-name">' + fmtDate(p.d) + '</td><td style="font-weight:700">' + esc(v) + (p.qual ? ' <span class="ov-stat-mut">(' + esc(p.qual) + ')</span>' : '') + '</td>' +
-      '<td>' + esc(p.who || '') + (p.analyst ? ' <span class="ov-tag">analyst</span>' : '') + (p.plan ? ' <span class="ov-tag">projection</span>' : '') + '</td>' +
-      '<td>' + srcLine(p.src, p.url) + '</td></tr>';
-  }).join('');
-  return '<div data-sntamchart>' + (resultsHtml('SN_TAMQ') || '') + '</div>' +
-    (t.read ? '<div class="dd-callout">' + t.read + '</div>' : '') +
-    (rows ? collapsible('Every TAM statement — ' + arr(t.points).length + ', incl. analyst-quoted', table(['Date', 'Stated', 'Who', 'Source'], rows)) : '');
-}
 
 function tamSubcats(){
   var s = SN_TAM.subcats || {};
@@ -337,25 +375,6 @@ function tamLedger(){
   return rows ? table(['Category', 'Brand', 'Entered', 'TAM as sized', 'What it did', 'Source'], rows) : '';
 }
 
-function tamAlgorithm(){
-  var a = SN_TAM.algorithm || {}, dk = a.deck;
-  var bar = '';
-  if (dk && dk.existing != null){
-    var parts = [['Existing categories', dk.existing, 'var(--navy)'], ['International', dk.international, 'var(--steel)'], ['New categories', dk.newCats, '#A3AEBC']];
-    bar = '<div class="dd-h" style="font-size:12.5px;margin-top:4px">What the Aug 2026 deck says growth actually came from</div>' +
-      '<div style="display:flex;height:26px;border-radius:7px;overflow:hidden;border:1px solid var(--bdr)">' +
-      parts.map(function(p){ return '<div style="width:' + (+p[1]) + '%;background:' + p[2] + ';color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center" title="' + esc(p[0]) + '">≈' + esc(p[1]) + '%</div>'; }).join('') +
-      '</div>' +
-      '<div class="dd-note">' + parts.map(function(p){ return '<b>' + esc(p[0]) + '</b> ≈' + esc(p[1]) + '%'; }).join(' · ') +
-        (dk.launchYear != null ? ' · new categories in their launch year ≈' + esc(dk.launchYear) + '%' : '') + '. ' + (dk.note || '') + ' ' + srcLine(dk.src, dk.url) + '</div>';
-  }
-  var said = arr(a.said).slice().sort(function(x, y){ return x.d < y.d ? -1 : 1; }).map(function(s){
-    return '<tr><td class="ov-td-name">' + fmtDate(s.d) + '</td><td>' + s.claim + (s.q ? '<br><i>"' + esc(s.q) + '"</i>' : '') + '</td><td>' + srcLine(s.src, s.url) + '</td></tr>';
-  }).join('');
-  return bar + (a.read ? '<div class="dd-callout">' + a.read + '</div>' : '') +
-    (said ? collapsible('How management has described the formula — ' + arr(a.said).length + ' statements', table(['Date', 'What they said', 'Source'], said)) : '');
-}
-
 function tamInternational(){
   var i = SN_TAM.international || {};
   var opp = arr(i.opportunities).map(function(o){
@@ -380,18 +399,158 @@ function tamShare(){
   return rows ? collapsible('Share and rank claims — ' + arr(SN_TAM.share).length, table(['Date', 'Scope', 'Claim', 'Source'], rows)) : '';
 }
 
+// ── Visual layer (Sep 16 2026) — see the note above snMktBody. ──
+
+function tamScale(){
+  var s = SN_DECK.scale, last = s.labels.length - 1;
+  return '<div class="snv-scale">' + s.tiles.map(function(t){
+    var max = Math.max.apply(null, t.v), first = t.v[0], end = t.v[last];
+    var val = t.fmt ? t.fmt(end) : end.toLocaleString('en-US') + (t.plus ? '+' : '');
+    var mult = end / first;
+    var delta = t.unit === '$B' ? '+' + Math.round((mult - 1) * 100) + '% since Dec 2022' : '+' + (end - first).toLocaleString('en-US') + ' since Dec 2022';
+    return '<div class="snv-sc"><div class="snv-sc-l">' + esc(t.label) + '</div><div class="snv-sc-v">' + esc(val) + '</div><div class="snv-sc-d">' + esc(delta) + '</div>' +
+      '<div class="snv-sc-bars">' + t.v.map(function(x, i){
+        var lbl = (t.fmt ? t.fmt(x) : x.toLocaleString('en-US') + (t.plus ? '+' : '')) + ' · ' + s.labels[i];
+        return '<div class="snv-sc-bar" title="' + esc(lbl) + '" style="height:' + Math.max(8, Math.round(x / max * 100)) + '%;background:' + YEAR_RAMP[i] + '"></div>';
+      }).join('') + '</div>' +
+      '<div class="snv-sc-yr">' + s.labels.map(function(l){ return '<span>' + esc('’' + l.slice(-2)) + '</span>'; }).join('') + '</div></div>';
+  }).join('') + '</div>';
+}
+function tamScaleTable(){
+  var s = SN_DECK.scale;
+  var rows = s.tiles.map(function(t){
+    return '<tr><td class="ov-td-name">' + esc(t.label) + '</td>' + t.v.map(function(x){ return '<td>' + esc(t.fmt ? t.fmt(x) : x.toLocaleString('en-US') + (t.plus ? '+' : '')) + '</td>'; }).join('') + '</tr>';
+  }).join('');
+  var src = '<tr><td class="ov-td-name">Deck</td>' + s.decks.map(function(d, i){ return '<td><a href="' + esc(s.links[i]) + '" target="_blank" rel="noopener">' + esc(d) + ' ↗</a></td>'; }).join('') + '</tr>';
+  return table(['As of'].concat(s.labels), rows + src) + '<div class="dd-note">' + esc(s.note) + '</div>';
+}
+function shareViews(sh, prefix){
+  return sh.views.map(function(v){
+    var ramp = v.years.length === 2 ? [YEAR_RAMP[0], YEAR_RAMP[3]] : YEAR_RAMP;
+    return { id: v.id, label: v.label, labels: v.cats, note: v.note,
+      series: v.years.map(function(y, i){ return { k: prefix + y, label: y, color: ramp[i], data: v.data[i] }; }) };
+  });
+}
+function tamShare2(){
+  var us = snvChart('sn-share-us', { unit: '%', unitLabel: 'US market share, % of dollar sales', height: 250, views: shareViews(SN_DECK.shareUS, 'us'), tableHead: 'US share by category' });
+  var uk = snvChart('sn-share-uk', { unit: '%', unitLabel: 'UK market share, %', height: 250, labelsOn: true, views: shareViews(SN_DECK.shareUK, 'uk'), tableHead: 'UK share by category' });
+  return us + '<div class="snv-sub" style="margin:14px 0 0"><b>United Kingdom</b> — each deck measured it differently, so each is its own view.</div>' + uk;
+}
+function tamBrands(){
+  var b = SN_DECK.brands, sc = arr((SN_TAM.subcats || {}).byBrand).filter(function(r){ return r.d !== '2023-12-18' && r.d !== '2026-02-11'; });
+  var sales = snvChart('sn-brand-sales', { title: 'Net sales by brand', unit: '$B', unitLabel: 'Net sales, $B', stacked: true, labelsOn: true, height: 220, labels: b.labels,
+    series: [{ k: 'shark', label: 'Shark', color: SUMMIT_CAT[0], data: b.shark }, { k: 'ninja', label: 'Ninja', color: SUMMIT_CAT[1], data: b.ninja }],
+    note: b.note, tableHead: 'Net sales by brand' });
+  var subs = sc.length ? snvChart('sn-brand-subcats', { title: 'Sub-categories by brand', unit: 'n', unitLabel: 'Sub-categories at year end', stacked: true, labelsOn: true, height: 220,
+    labels: sc.map(function(r){ return 'Dec ' + String(r.asOf).slice(0, 4); }),
+    series: [{ k: 'shark', label: 'Shark', color: SUMMIT_CAT[0], data: sc.map(function(r){ return r.shark; }) }, { k: 'ninja', label: 'Ninja', color: SUMMIT_CAT[1], data: sc.map(function(r){ return r.ninja; }) }],
+    note: 'Deck year-end counts. Spoken counts run ahead: 41 by Sep 15 2026.', tableHead: 'Sub-categories by brand' }) : '';
+  var nw = b.newSubcats;
+  var newChips = '<div class="snv-grid2" style="margin-top:12px">' +
+    '<div class="snv-card"><div class="snv-card-top"><span class="snv-card-t">Shark — entered in the last 3 years</span><span class="snv-pill" style="background:' + SUMMIT_CAT[0] + '">' + nw.Shark.length + '</span></div>' + chips(nw.Shark, 'is-new') + '</div>' +
+    '<div class="snv-card"><div class="snv-card-top"><span class="snv-card-t">Ninja — entered in the last 3 years</span><span class="snv-pill" style="background:' + SUMMIT_CAT[1] + '">' + nw.Ninja.length + '</span></div>' + chips(nw.Ninja, 'is-new') + '</div>' +
+  '</div><div class="dd-note">' + esc(nw.note) + '</div>';
+  return '<div class="snv-grid2">' + sales + subs + '</div>' + newChips;
+}
+function tamPillars(){
+  var p = SN_DECK.pillars, cols = [SUMMIT_CAT[0], SUMMIT_CAT[2], SUMMIT_CAT[1]];
+  var ly = ((SN_TAM.algorithm || {}).deck || {}).launchYear;
+  return '<div class="snv-grid2"><div>' +
+      '<div class="snv-pillars">' + p.map(function(x, i){ return '<div class="snv-pillar"><div class="snv-pillar-bar" style="height:' + (x.v * 2.2) + '%;background:' + cols[i] + '">~' + x.v + '%</div></div>'; }).join('') + '</div>' +
+      '<div class="snv-pillar-l">' + p.map(function(x){ return '<div>' + esc(x.label) + '<small>' + esc(x.def) + '</small></div>'; }).join('') + '</div>' +
+      '<div class="dd-note">Share of net sales growth, 3-year average 2023–2025, approximate. <a href="' + esc(SN_DECK.pillarsLink) + '" target="_blank" rel="noopener">slide 20 ↗</a></div>' +
+    '</div><div>' +
+      '<div class="snv-sub" style="margin:4px 0 8px"><b>In the year a category launches</b>, it adds only a sliver of growth — the core carries the top line, and new categories mature into it.</div>' +
+      (ly != null ? '<div class="snv-split"><div style="flex:' + (100 - ly) + ';background:' + SUMMIT_CAT[0] + '">~' + (100 - ly) + '%</div><div style="flex:' + ly + ';background:' + SUMMIT_CAT[1] + '">~' + ly + '%</div></div>' +
+        '<div class="snv-split-leg"><span><i style="background:' + SUMMIT_CAT[0] + '"></i>Existing categories</span><span><i style="background:' + SUMMIT_CAT[1] + '"></i>New categories launched in-year</span></div>' +
+        '<div class="dd-note">Contribution to net sales growth within the launch year, 2023–2025 average. <a href="' + esc(SN_DECK.launchYearLink) + '" target="_blank" rel="noopener">slide 21 ↗</a></div>' : '') +
+    '</div></div>';
+}
+function tamLedgerCards(){
+  var cats = arr(SN_TAM.categories); if (!cats.length) return '';
+  return '<div class="snv-cards">' + cats.map(function(c){
+    var col = /Shark/i.test(c.brand || '') ? SUMMIT_CAT[0] : SUMMIT_CAT[1];
+    var name = String(c.name || '').replace(/\s*\(.*\)\s*$/, '');
+    var prod = (/\((.*)\)/.exec(c.name || '') || [])[1] || '';
+    return '<div class="snv-card" style="border-top:4px solid ' + col + '"><div class="snv-card-top"><span class="snv-card-yr">' + esc(c.entered || '') + '</span><span class="snv-pill" style="background:' + col + '">' + esc(c.brand || '') + '</span></div>' +
+      '<div class="snv-card-t">' + name + '</div>' + (prod ? '<div class="snv-card-m">' + prod + '</div>' : '') +
+      '<div class="snv-card-d"><b>TAM:</b> ' + esc(String(c.tam || '—').replace(/&amp;/g, '&')) + '</div></div>';
+  }).join('') + '</div>';
+}
+function tamIntl(){
+  var t = SN_DECK.intl;
+  var chart = snvChart('sn-intl', { title: 'International net sales (outside North America)', unit: '$M', unitLabel: 'Net sales outside North America, $M', labelsOn: true, height: 220, labels: t.labels,
+    series: [{ k: 'intl', label: 'International net sales', color: SUMMIT_CAT[0], data: t.sales }],
+    note: t.cagr.map(function(c, i){ return t.labels[i] + ': ' + c; }).join(' · '), tableHead: 'International net sales and markets',
+    extraRows: [{ label: 'Net sales CAGR from 2020', cells: t.cagr.map(function(c){ return c.split(' CAGR')[0]; }) },
+                { label: 'Markets at year end', cells: t.markets.map(String) }] });
+  // North America is the reference mass, so it takes ink; the three smaller regions take identity hues.
+  var r = SN_DECK.regions, cols = [SUMMIT_INK, SUMMIT_CAT[0], SUMMIT_CAT[2], SUMMIT_CAT[3]];
+  var split = r.labels.map(function(y, j){
+    return '<div style="display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:center;margin-top:8px"><b style="font-size:12px;color:var(--navy)">' + esc(y) + '</b><div class="snv-split">' +
+      r.series.map(function(s, i){ return '<div title="' + esc(s.label + ' ' + s.v[j] + '%') + '" style="flex:' + s.v[j] + ';background:' + cols[i] + '">' + (s.v[j] >= 8 ? s.v[j] + '%' : '') + '</div>'; }).join('') + '</div></div>';
+  }).join('') + '<div class="snv-split-leg">' + r.series.map(function(s, i){ return '<span><i style="background:' + cols[i] + '"></i>' + esc(s.label) + '</span>'; }).join('') + '</div>' +
+    '<div class="dd-note">' + esc(r.note) + ' <a href="' + esc(r.links[1]) + '" target="_blank" rel="noopener">slide ↗</a></div>';
+  var direct = '<div class="snv-cards" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">' + t.direct.map(function(m){
+    var home = m.y === 'home';
+    return '<div class="snv-card" style="padding:9px 11px"><div class="snv-card-yr" style="font-size:' + (home || m.y.length > 4 ? '12px' : '18px') + '">' + esc(home ? 'Home market' : m.y) + '</div><div class="snv-card-t">' + esc(m.c) + '</div></div>';
+  }).join('') + '</div>';
+  return '<div class="snv-grid2"><div>' + chart + '</div><div>' +
+      '<div class="snv-chart"><div class="snv-chart-h">Where net sales came from</div>' + split + '</div>' +
+      '<div class="snv-chart"><div class="snv-chart-h">Direct SharkNinja operations</div><div class="snv-card-m">Markets served: ' + t.markets.join(' → ') + ' (Dec 2022 → Dec 2025)</div>' + direct + '</div>' +
+    '</div></div>' +
+    '<div class="dd-note">' + esc(t.note) + '</div>';
+}
+
 export function snTamBody(){
   register();
-  return '<div class="dd-h">TAM</div>' +
-    (SN_TAM.lede ? '<div class="dd-sub">' + SN_TAM.lede + '</div>' : '') +
-    kpis(SN_TAM.kpis) +
-    sec('The addressable market, as management has sized it', tamMarket()) +
-    sec('Sub-categories — the portfolio that expands it', tamSubcats()) +
-    sec('The category ledger — what was entered, what it was worth, what it did', tamLedger()) +
-    sec('The growth algorithm — said vs shown', tamAlgorithm()) +
-    sec('International — the same categories, more markets', tamInternational() + tamShare()) +
-    sec('The record — every statement, filterable', collapsible('Open the record — ' + arr(SN_TAM.log).length + ' statements, filter by topic, source and year', logBody('tam', SN_TAM.log))) +
-    (SN_TAM.sources ? '<div class="dd-note">' + SN_TAM.sources + '</div>' : '');
+  var d = SN_DECK;
+  return '<div class="snv">' +
+    tiles(arr(SN_TAM.kpis).slice(0, 4).map(function(k){ return { v: k.v, l: k.k, s: String(k.s || '').split(' · ')[0] }; })) +
+    fold('The thesis in one paragraph', SN_TAM.lede || '') +
+
+    head('The scale, deck by deck', d.scale.links[3], 'The same "Who We Are" tiles, four decks in a row.') + tamScale() +
+    fold('The numbers behind the tiles', tamScaleTable()) +
+
+    head('The addressable market, as management has sized it') +
+    '<div data-sntamchart>' + (resultsHtml('SN_TAMQ') || '') + '</div>' +
+    fold('What the TAM claims do and do not say — ' + arr((SN_TAM.tam || {}).points).length + ' statements', ((SN_TAM.tam || {}).read ? '<p style="margin:0 0 10px">' + SN_TAM.tam.read + '</p>' : '') + tamMarketTable()) +
+
+    head('Share in the categories it already sells', d.shareUS.views[0].links[3], esc(d.shareUK.read)) + tamShare2() +
+
+    head('Two brands, more sub-categories', d.brands.links[3]) + tamBrands() +
+    fold('How many categories a year, and the count noise', tamSubcats()) +
+
+    head('Where growth came from, 2023–2025', d.pillarsLink) + tamPillars() +
+    fold('Said vs shown — how management describes the formula', tamAlgorithmText()) +
+
+    head('The categories it entered, and what they were worth') + tamLedgerCards() +
+    fold('What each category did — the full ledger', tamLedger()) +
+
+    head('International — the same categories, more markets', d.intl.links[3]) + tamIntl() +
+    fold('Market sizes, categories per market, penetration and share claims', tamInternational() + tamShare()) +
+
+    fold('The record — every statement, filterable (' + arr(SN_TAM.log).length + ')', logBody('tam', SN_TAM.log)) +
+    (SN_TAM.sources ? '<div class="dd-note">' + SN_TAM.sources + ' Charts redrawn from the SharkNinja investor decks of Jul 2023, Mar 2024, Mar 2025 and Aug 2026 (slide links on each heading).</div>' : '') +
+  '</div>';
+}
+function tamMarketTable(){
+  var t = SN_TAM.tam || {};
+  var rows = arr(t.points).slice().sort(function(a, b){ return a.d < b.d ? -1 : 1; }).map(function(p){
+    var v = (p.lo != null && p.hi != null) ? ('$' + (p.lo / 1000) + '–' + (p.hi / 1000) + 'B') : (p.v != null ? '$' + (p.v / 1000) + 'B' : '—');
+    return '<tr><td class="ov-td-name">' + fmtDate(p.d) + '</td><td style="font-weight:700">' + esc(v) + (p.qual ? ' <span class="ov-stat-mut">(' + esc(p.qual) + ')</span>' : '') + '</td>' +
+      '<td>' + esc(p.who || '') + (p.analyst ? ' <span class="ov-tag">analyst</span>' : '') + (p.plan ? ' <span class="ov-tag">projection</span>' : '') + '</td>' +
+      '<td>' + srcLine(p.src, p.url) + '</td></tr>';
+  }).join('');
+  return rows ? table(['Date', 'Stated', 'Who', 'Source'], rows) : '';
+}
+function tamAlgorithmText(){
+  var a = SN_TAM.algorithm || {};
+  var said = arr(a.said).slice().sort(function(x, y){ return x.d < y.d ? -1 : 1; }).map(function(s){
+    return '<tr><td class="ov-td-name">' + fmtDate(s.d) + '</td><td>' + s.claim + (s.q ? '<br><i>"' + esc(s.q) + '"</i>' : '') + '</td><td>' + srcLine(s.src, s.url) + '</td></tr>';
+  }).join('');
+  return (a.read ? '<p style="margin:0 0 10px">' + a.read + '</p>' : '') + (a.deck && a.deck.note ? '<div class="dd-note" style="margin-bottom:10px">' + a.deck.note + '</div>' : '') +
+    (said ? table(['Date', 'What they said', 'Source'], said) : '');
 }
 
 // ═══ Wiring ═════════════════════════════════════════════════════════════════════════════════════
@@ -424,10 +583,12 @@ export function snMktInit(pane){
     wireCollapsibles(pane);
     wireLog(pane);
   }
+  snvInit(pane);
 }
 export function snTamInit(pane){
   if (!pane) return;
   var host = pane.querySelector('[data-sntamchart]');
   if (host && host.querySelector('.rs-wrap, [class^="rs-"]')) initResults(host, 'SN_TAMQ');
   if (!pane._snWired){ pane._snWired = true; wireCollapsibles(pane); wireLog(pane); }
+  snvInit(pane);
 }

@@ -488,5 +488,5 @@ export var SN_TAM = {
   ],
 
   sources: 'Read in full through Quartr, retrieved Sep 15 2026: 13 SharkNinja earnings calls (Q2 2023 to Q2 2026); 13 conference transcripts (Goldman Sachs Sep 2023, Sep 2024, Sep 2025 and Sep 15 2026; ICR Jan 2024 and Jan 2026; William Blair Jun 2024 and Jun 2026; Morgan Stanley Dec 2024 and Dec 2025; BofA Mar 2025; Canaccord Aug 2025 and Aug 2026); 14 investor decks (Jul 2023 IPO to Aug 2026) plus the ICR Jan 2024 deck; and the F-1 (Jun 2023), 20-F FY2023 and FY2024 and 10-K FY2025. ' +
-    'Quotes are verbatim from the transcripts (deck quotes normalized only for extraction spacing). Share charts in the decks could not be paired to categories reliably and are not used. Analyst-stated numbers are flagged, and no figure is converted or re-derived.'
+    'Quotes are verbatim from the transcripts (deck quotes normalized only for extraction spacing). The deck share charts did not pair to categories from the text layer alone; they were later read off the rendered slides (Sep 16 2026) into sharkninja-deck-data.js and are charted from there. Analyst-stated numbers are flagged, and no figure is converted or re-derived.'
 };

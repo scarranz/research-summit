@@ -72,6 +72,9 @@ import { snMktBody, snTamBody, snMktInit, snTamInit } from './sharkninja-mkt-tam
 import { SN_MGMT, snOwnBody, snGovBody, snTrackBody, snTrackPop } from './sharkninja-mgmt.js';
 // Bottom Line ▸ General runs on Amazon's code (picker · margins · bridge · net walk · SBC · expense explorer) — see sharkninja-bl.js.
 import { snBlGeneralBody, snBlGeneralBuild } from './sharkninja-bl.js';
+// Miscellaneous visual layer — deck numbers + the small chart/infographic kit.
+import { SN_DECK } from './sharkninja-deck-data.js';
+import { snvChart, snvInit, tiles as snvTiles, head as snvHead, fold as snvFold, SUMMIT_CAT } from './sharkninja-misc-kit.js';
 
 // esc: escapes <>" but leaves & literal (per contract — never double-encode).
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -445,32 +448,90 @@ function bottomLineSupplyChain(){
     '<div class="dd-callout">' + SN_SC_MARGIN_LINK + '</div>';
 }
 
+// ── Miscellaneous ▸ Capex · M&A · Other Analysis — the visual layer (Sep 16 2026, SAB: "mucho más
+// visual, mucho menos texto", using the investor decks). Numbers from sharkninja-deck-data.js and the
+// existing 10-K data; every paragraph that was here is still one click away inside a fold.
+
 function miscCapex(){
-  var rows = SN_MISC_CAPEX_TREND.map(function(r){
-    return '<tr><td class="ov-td-name">FY'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>';
-  }).join('');
-  return '<div class="dd-h">Capex &amp; Depreciation</div>'+
-    ddKpis(SN_MISC_CAPEX_KPIS)+
-    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Fiscal year</th><th>Capex</th><th>D&amp;A</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
-    '<div class="dd-note">'+esc(SN_MISC_CAPEX_NOTE)+'</div>'+
-    '<div class="dd-callout">'+SN_MISC_CAPEX_CALLOUT+'</div>';
+  var yrs = SN_MISC_CAPEX_TREND.map(function(r){ return 'FY' + r[0]; }).concat(['FY2026E']);
+  function num(s){ return s == null ? null : parseFloat(String(s).replace(/[$M,]/g, '')); }
+  var capex = SN_MISC_CAPEX_TREND.map(function(r){ return num(r[1]); }).concat([200]);
+  var da = SN_MISC_CAPEX_TREND.map(function(r){ return num(r[2]); }).concat([null]);
+  var sales = { FY2022: 3717.4, FY2023: 4253.71, FY2024: 5528.64, FY2025: 6399.19 };   // js/results-data/sn.js annual net sales
+  var pct = yrs.map(function(y, i){ return sales[y] ? (capex[i] / sales[y] * 100).toFixed(1) + '%' : '—'; });
+  var sp = SN_DECK.supply;
+  function countries(list, other){
+    return '<div class="snv-chips">' + list.map(function(c){
+      var cls = other.indexOf(c) < 0 ? (list === sp.now.countries ? ' is-new' : ' is-out') : '';
+      return '<span class="snv-chip' + cls + '">' + esc(c) + '</span>';
+    }).join('') + '</div>';
+  }
+  return '<div class="snv">' +
+    snvTiles(SN_MISC_CAPEX_KPIS.map(function(k){ return { v: k.v, l: k.l, s: k.s }; })) +
+    snvHead('Capex vs depreciation — an asset-light business') +
+    snvChart('sn-capex', { unit: '$M', unitLabel: '$M, fiscal years', labelsOn: true, height: 230, estFrom: 4, labels: yrs,
+      series: [{ k: 'capex', label: 'Capex', color: SUMMIT_CAT[0], data: capex }, { k: 'da', label: 'Depreciation & amortization', color: SUMMIT_CAT[1], data: da }],
+      extraRows: [{ label: 'Capex % of net sales', cells: pct }],
+      note: 'FY2026 = midpoint of the $190–210M capex guide, "tracking to the high end" (Aug 5 2026). ' + esc(SN_MISC_CAPEX_NOTE), tableHead: 'Capex and D&A by year' }) +
+    snvHead('Who actually builds the products', sp.now.link, 'Nothing is made in-house — the decks map the supplier countries instead of factories.') +
+    snvTiles(sp.facts, 3) +
+    '<div class="snv-grid2" style="margin-top:10px">' +
+      '<div class="snv-card"><div class="snv-card-top"><span class="snv-card-t">Supplier countries · ' + esc(sp.then.label) + '</span><a class="snv-src" href="' + esc(sp.then.link) + '" target="_blank" rel="noopener">slide ↗</a></div>' + countries(sp.then.countries, sp.now.countries) + '</div>' +
+      '<div class="snv-card"><div class="snv-card-top"><span class="snv-card-t">Supplier countries · ' + esc(sp.now.label) + '</span><a class="snv-src" href="' + esc(sp.now.link) + '" target="_blank" rel="noopener">slide ↗</a></div>' + countries(sp.now.countries, sp.then.countries) + '</div>' +
+    '</div><div class="dd-note">Between the two decks Singapore drops off the map and Cambodia comes on. The 2026 slide frames the spread as letting the company "nimbly adapt to policy changes, such as tariff changes"; the decks give no country volumes.</div>' +
+    snvFold('Why capex stays low — the 10-K', SN_MISC_CAPEX_CALLOUT) +
+  '</div>';
 }
 
 function miscMna(){
-  return '<div class="dd-h">M&amp;A</div>'+
-    '<div class="dd-callout">'+esc(SN_MISC_MNA)+'</div>';
+  var js = SN_DECK.jsGlobal, cap = SN_DECK.capital;
+  var cards = '<div class="snv-cards" style="grid-template-columns:repeat(auto-fill,minmax(230px,1fr))">' + js.cards.map(function(c, i){
+    return '<div class="snv-card" style="border-top:4px solid ' + SUMMIT_CAT[i] + '"><div class="snv-card-t">' + esc(c.t) + '</div>' +
+      '<ul class="snv-list">' + c.items.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' +
+      (c.end ? '<div class="snv-card-m" style="margin-top:auto"><b>' + esc(c.end) + '</b></div>' : '') + '</div>';
+  }).join('') + '</div>';
+  return '<div class="snv">' +
+    snvTiles([
+      { v: '0', l: 'Acquisitions', s: 'since the Jul 2023 spin-off, or before it' },
+      { v: '$750M', l: 'Buyback authorized', s: 'Feb 11 2026 — the first capital return' },
+      { v: '$119.7M', l: 'Shares bought back, 1H26', s: '1,008,368 shares at an average $118.71' },
+      { v: cap.lev[0] + ' → ' + cap.lev[3], l: 'Net leverage', s: 'spin-off pro forma → Jun 2026' },
+    ]) +
+    snvHead('Growth is built, not bought', null, 'No acquisitions were found: the franchises this profile tracks — CREAMi, Woodfire, FlexStyle, SLUSHi, CryoGlow — were launched in-house. The cash went to paying down the spin-off debt, building a cash balance and, from 2026, buying back stock.') +
+    snvChart('sn-cashdebt', { unit: '$M', unitLabel: '$M, from each deck\'s capital structure slide', labelsOn: true, height: 220, labels: cap.labels,
+      series: [{ k: 'cash', label: 'Cash', color: SUMMIT_CAT[0], data: cap.cash }, { k: 'debt', label: 'Total debt', color: SUMMIT_CAT[1], data: cap.debt }],
+      extraRows: [{ label: 'Net debt', cells: cap.netDebt.map(function(x){ return x < 0 ? '($' + (-x) + 'M) net cash' : '$' + x + 'M'; }) },
+                  { label: 'LTM adj. EBITDA', cells: cap.ebitda.map(function(x){ return '$' + x.toLocaleString('en-US') + 'M'; }) },
+                  { label: 'Net leverage', cells: cap.lev }],
+      note: esc(cap.note), tableHead: 'Capital structure by deck' }) +
+    snvHead('What replaced the parent — the JS Global agreements', js.links[0], 'SharkNinja was carved out of JS Global, not merged into anything. Three agreements kept the link after the spin.') +
+    cards +
+    snvFold('The finding, in full', esc(SN_MISC_MNA)) +
+  '</div>';
 }
 
 function miscOther(){
   var debtRows = SN_MISC_DEBT.rows.map(function(r){
     return '<tr><td class="ov-td-name">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>';
   }).join('');
-  return '<div class="dd-h">Other Analysis</div>'+
-    '<div class="dd-callout">'+SN_MISC_TAX_NOTE+'</div>'+
-    '<div class="dd-callout">'+SN_MISC_MARKETING_NOTE+'</div>'+
-    '<div class="dd-h" style="margin-top:22px;font-size:12.5px">'+esc(SN_MISC_DEBT.lede)+'</div>'+
-    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Period</th><th>Total debt</th></tr></thead><tbody>'+debtRows+'</tbody></table></div>'+
-    '<div class="dd-note">'+esc(SN_MISC_DEBT.note)+'</div>';
+  var cap = SN_DECK.capital;
+  return '<div class="snv">' +
+    snvTiles([
+      { v: '22.1%', l: 'Effective tax rate FY2025', s: 'from 23.4% in FY2024, one-time Q4 benefits' },
+      { v: '$109.0M', l: 'Marketing commitments', s: 'endorsements through 2030, cash + shares' },
+      { v: cap.lev[3], l: 'Net leverage, Jun 2026', s: 'from ' + cap.lev[0] + ' after the spin-off' },
+    ], 3) +
+    snvHead('Net debt since the spin-off', cap.links[0], esc(SN_MISC_DEBT.lede) + ' Three years later it is net cash.') +
+    snvChart('sn-netdebt', { unit: '$M', unitLabel: 'Net debt, $M (negative = net cash)', labelsOn: true, height: 210, labels: cap.labels,
+      series: [{ k: 'nd', label: 'Net debt', color: SUMMIT_CAT[1], data: cap.netDebt }],
+      extraRows: [{ label: 'Net leverage', cells: cap.lev }, { label: 'LTM adj. EBITDA', cells: cap.ebitda.map(function(x){ return '$' + x.toLocaleString('en-US') + 'M'; }) }],
+      note: 'Net leverage at each point: ' + cap.labels.map(function(l, i){ return l + ' ' + cap.lev[i]; }).join(' · ') + '.', tableHead: 'Net debt and leverage' }) +
+    snvFold('Total debt by year, and the notes on tax and marketing commitments',
+      '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Period</th><th>Total debt</th></tr></thead><tbody>'+debtRows+'</tbody></table></div>'+
+      '<div class="dd-note">'+esc(SN_MISC_DEBT.note)+'</div>'+
+      '<div class="dd-callout">'+SN_MISC_TAX_NOTE+'</div>'+
+      '<div class="dd-callout">'+SN_MISC_MARKETING_NOTE+'</div>') +
+  '</div>';
 }
 
 
@@ -670,25 +731,35 @@ function qOtherAnalysisExtras(){
   var capRows = SN_CAPSTRUCT.rows.map(function(r){
     return '<tr><td class="ov-td-name">' + esc(r[0]) + '</td><td style="font-weight:600">' + esc(r[1]) + '</td></tr>';
   }).join('');
-  return '<div class="dd-h" style="margin-top:26px;font-size:12.5px">Tariffs — the pressure, and the refund</div>' +
-    '<div class="dd-sub">' + esc(SN_TARIFF_LEDE) + '</div>' +
-    ddKpis(SN_TARIFF_KPIS) +
-    '<div class="dd-callout">' + SN_TARIFF_REFUND + '</div>' +
-    '<div class="dd-callout">' + SN_TARIFF_TREATMENT + '</div>' +
-    '<p style="font-size:12px;line-height:1.6;color:var(--navy);margin:10px 0 0">' + SN_TARIFF_MARGIN + '</p>' +
-    '<div class="dd-note">' + esc(SN_TARIFF_NOTE) + '</div>' +
-
-    '<div class="dd-h" style="margin-top:26px;font-size:12.5px">Capital structure at Jun 30, 2026 — and the net debt flag, resolved</div>' +
-    '<div class="dd-sub">' + esc(SN_CAPSTRUCT.lede) + '</div>' +
-    '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr>' +
-      '<th>Line</th><th>Amount</th></tr></thead><tbody>' + capRows + '</tbody></table></div>' +
-    '<div class="dd-note">' + SN_CAPSTRUCT.note + ' <a href="' + esc(SN_CAPSTRUCT.src) + '" target="_blank" rel="noopener">open the slide ↗</a></div>' +
-    '<div class="dd-callout">' + SN_CAPSTRUCT.resolves + '</div>' +
-
-    '<div class="dd-h" style="margin-top:26px;font-size:12.5px">Provenance — a series that was mislabelled as an estimate</div>' +
-    '<div class="dd-callout">' + SN_CAT_CORRECTION + '</div>' +
-    '<div class="dd-note">' + SN_CAT_CORRECTION_LIMIT + '</div>' +
-    collapsible('The six earnings releases behind the category series', srcList(SN_CAT_SOURCES));
+  var ol = SN_DECK.outlook;
+  // Only the RAISE is drawn (prior midpoint → new midpoint), split into operations vs the tariff refund,
+  // so the refund's share is legible; the full levels sit in the right-hand column.
+  var bridge = '<div class="snv-bridge">' + ol.rows.map(function(r){
+    var pm = (r.prior[0] + r.prior[1]) / 2, nm = (r.now[0] + r.now[1]) / 2, raise = nm - pm, op = raise - r.tariff;
+    var opPct = Math.round(op / raise * 100), tPct = 100 - opPct;
+    return '<div><b>' + esc(r.label) + '</b><br><span style="color:var(--mu)">raise +' + esc(r.fmt(raise)) + '</span></div>' +
+      '<div class="snv-split" title="' + esc('Operations ' + r.fmt(op) + ' · tariff refund ~' + r.fmt(r.tariff)) + '">' +
+        '<div style="flex:' + opPct + ';background:' + SUMMIT_CAT[0] + '">' + opPct + '%</div><div style="flex:' + tPct + ';background:' + SUMMIT_CAT[1] + '">' + tPct + '%</div></div>' +
+      '<div class="snv-bridge-v">' + esc(r.fmt(pm)) + ' → ' + esc(r.fmt(nm)) + '</div>';
+  }).join('') + '</div>' +
+    '<div class="snv-split-leg"><span><i style="background:' + SUMMIT_CAT[0] + '"></i>Raise from operations</span><span><i style="background:' + SUMMIT_CAT[1] + '"></i>Raise from the tariff refund</span></div>';
+  var refundSplit = '<div class="snv-split" style="margin-top:6px"><div style="flex:1;background:' + SUMMIT_CAT[1] + '">Duties expensed in FY2025 · excluded from adjusted</div><div style="flex:1;background:' + SUMMIT_CAT[0] + '">Duties from 1H26 · included in adjusted</div></div>' +
+    '<div class="dd-note">The $247.1M refund splits roughly evenly — so GAAP 3Q26 carries about <b>twice</b> the benefit the adjusted figures do.</div>';
+  var capTbl = '<div class="ov-table-wrap" style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Line</th><th>Amount</th></tr></thead><tbody>' + capRows + '</tbody></table></div>' +
+    '<div class="dd-note">' + SN_CAPSTRUCT.note + ' <a href="' + esc(SN_CAPSTRUCT.src) + '" target="_blank" rel="noopener">open the slide ↗</a></div>';
+  return '<div class="snv">' +
+    snvHead('Tariffs — the pressure, and the refund', null, esc(SN_TARIFF_LEDE)) +
+    snvTiles(SN_TARIFF_KPIS.map(function(k){ return { v: k.v, l: k.l, s: k.s }; }), 3) +
+    refundSplit +
+    snvHead('The FY2026 raise — how much is the refund', ol.link, 'Net sales guide raised from <b>' + esc(ol.sales.prior) + '</b> to <b>' + esc(ol.sales.now) + '</b>, with no refund in it. The profit lines are different:') +
+    bridge + '<div class="dd-note">' + esc(ol.note) + '</div>' +
+    snvFold('The refund, the accounting treatment and the margin — in full',
+      '<div class="dd-callout">' + SN_TARIFF_REFUND + '</div><div class="dd-callout">' + SN_TARIFF_TREATMENT + '</div>' +
+      '<p style="margin:10px 0 0">' + SN_TARIFF_MARGIN + '</p><div class="dd-note">' + esc(SN_TARIFF_NOTE) + '</div>') +
+    snvFold('Capital structure at Jun 30, 2026 — and the net-debt flag, resolved', '<div class="dd-sub">' + esc(SN_CAPSTRUCT.lede) + '</div>' + capTbl + '<div class="dd-callout">' + SN_CAPSTRUCT.resolves + '</div>') +
+    snvFold('Provenance — a series that was mislabelled as an estimate',
+      '<div class="dd-callout">' + SN_CAT_CORRECTION + '</div><div class="dd-note">' + SN_CAT_CORRECTION_LIMIT + '</div>' + srcList(SN_CAT_SOURCES)) +
+  '</div>';
 }
 
 
@@ -814,6 +885,7 @@ function ddBuildVisible(root){
   if(key==='earnings'){ snCeBuild(root); return; }
   if(key==='snmkt'){ requestAnimationFrame(function(){ snMktInit(sub); }); return; }
   if(key==='sntam'){ requestAnimationFrame(function(){ snTamInit(sub); }); return; }
+  if(key==='capex' || key==='mna' || key==='other'){ requestAnimationFrame(function(){ snvInit(sub); }); return; }
   // Estimates fills itself once the dataset carries `evolution`; until then the pane is the
   // pending notice and there is nothing to wire.
   if(key==='estevo'){ requestAnimationFrame(function(){ try{ initResultsEvo('SN'); }catch(e){} }); return; }

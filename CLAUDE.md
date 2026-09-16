@@ -41,6 +41,10 @@ js/covered-calls.js     — Derivatives ▸ Covered Calls (the live book of sold
 js/protective-put.js    — Derivatives ▸ Protective Put (downside insurance on stock we own)
 js/buy-calls.js         — Derivatives ▸ Buy Calls (long-call analyzer)
 js/short-puts.js        — Derivatives ▸ Short Puts (cash-secured puts)
+js/betas.js             — Tools ▸ Betas shell (Calculadora + Portafolio sub-tabs)
+js/betas-core.js        — Betas engine: prices (embed/Massive), regression, rolling β, saved-beta store
+js/betas-calc.js        — Betas ▸ Calculadora (beta of any name, every variable)
+js/betas-portfolio.js   — Betas ▸ Portafolio (CSV export sandbox: allocations, option exposure, beta sources)
 css/base.css            — CSS variables and reset
 css/layout.css          — Loading overlay styles
 css/shared.css          — Cards, sections, tables, filters, modals (shared components)
@@ -52,6 +56,7 @@ css/hedge-funds.css     — Investor cards, benchmark bar, holdings table
 css/team.css            — Investment Ideas cards, voting UI, portfolio table
 css/covered-calls.css   — Covered Calls book table (scoped to #cc-root)
 css/derivatives.css     — Derivatives sub-nav + the shared ladder analyzer chrome (.der-an)
+css/betas.css           — Tools ▸ Betas (scoped to #tp-betas)
 css/responsive.css      — Mobile breakpoints
 sql/schema.sql          — Database schema (run in Supabase SQL Editor)
 netlify.toml            — Netlify build + routing config
@@ -390,6 +395,25 @@ they live in `options-core.js` so a multiple means the same thing in all four pa
   four panes against a synthetic option chain by stubbing `supabase.functions`, so the
   layout and the maths can be checked on localhost without logging in or spending
   Massive calls. Ask Claude to regenerate it if it is missing.
+
+## Betas tab — how it works
+
+Tools ▸ Betas, two sub-tabs (admin-only, `betas` in `ROLE_CONFIG`). **There is no house
+method** — which beta is right is decided per company, so the Calculadora exposes every
+variable and the chosen number is saved per name.
+
+| File | What it owns |
+|---|---|
+| `js/betas.js` | Shell: sub-tab pills, lazy-loads each pane, lets the Portafolio open a name in the Calculadora |
+| `js/betas-core.js` | Prices (embedded IBKR daily history from `portfolio-metrics-prices-daily.js`, or Massive via `api.fetchPriceHistory` → `get-market-history`), resampling D/S/M, regression (β, α, corr, R², SE, vols), Blume adjustment, rolling β, the saved-beta store, `attachBrush` |
+| `js/betas-calc.js` | **Calculadora** — any name vs any index; frequency, window, end date, rolling window, α/anchor; KPI tiles, method matrix (freq × window, click to apply), rolling-β and returns-scatter charts; "Usar en el portafolio" saves the chosen beta + its method |
+| `js/betas-portfolio.js` | **Portafolio** — loads a `beta_contribution` CSV export in the browser (never uploaded), then edit allocation %, option contracts / delta / spot / exposure %, and each name's beta source (Calculadora · Archivo · Manual); Base vs Escenario vs the file's own number, and a contribution chart |
+| `css/betas.css` | Scoped to `#tp-betas`; chart chrome comes from the global `css/results.css` |
+
+- **Option exposure** = delta × contracts × 100 × **spot** ÷ NAV (toggle to strike to reproduce the export, which prices at strike).
+- **Saved betas** live in `localStorage` (`betas-selected-v1`), per browser — not in the database yet. The loaded portfolio is in memory only.
+- The embedded history is ~5 years; names outside it or longer windows need `get-market-history` deployed.
+- Working material (the SMGS export, Frank's original marimo notebook + SPEC, review notes) is in `betas/`, excluded from git locally because it holds real positions.
 
 ## Team tab — how it works
 

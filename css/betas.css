@@ -1,4 +1,4 @@
-/* Tools ▸ Betas — Calculadora + Portafolio. Scoped to #tp-betas.
+/* Tools ▸ Betas — Calculator · History · Portfolio. Scoped to #tp-betas.
    Chart chrome (legend chips, collapsible tables, zoom brush) comes from css/results.css,
    which is global (CHART_ENGINE_REFERENCE §0.7). */
 #tp-betas{ --pos:#16A34A; --neg:#DC2626; --accent:#2563EB; --steel:#3E5A82; --pale:#F4F6F9; --warn:#B45309;
@@ -12,7 +12,6 @@
 #tp-betas .bt-pill.active{color:var(--navy);font-weight:600;border-bottom-color:var(--navy);}
 #tp-betas .bt-sub{display:none;}
 #tp-betas .bt-sub.active{display:block;}
-#tp-betas .bt-intro{font-size:13px;color:var(--mu);margin:-6px 0 16px;max-width:900px;line-height:1.5;}
 
 /* Cards */
 #tp-betas .bt-card{background:#fff;border:1px solid var(--bdr);border-radius:14px;padding:14px 16px;margin-bottom:14px;}
@@ -33,7 +32,6 @@
 #tp-betas .bt-in:focus{outline:none;border-color:var(--accent);}
 #tp-betas .bt-tk{width:96px;font-weight:700;text-transform:uppercase;}
 #tp-betas .bt-num{width:64px;text-align:right;}
-#tp-betas .bt-nav{width:120px;text-align:right;}
 #tp-betas .bt-sel{max-width:360px;}
 #tp-betas .bt-seg{display:inline-flex;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;}
 #tp-betas .bt-seg button{border:none;background:#fff;color:var(--steel);padding:6px 11px;font:600 12px 'Inter',sans-serif;cursor:pointer;}
@@ -68,23 +66,13 @@
 #tp-betas .bt-muted{color:var(--mu);}
 #tp-betas .bt-pad{padding:6px 2px;font-size:12.5px;}
 #tp-betas .bt-note{font-size:11px;color:var(--mu);line-height:1.55;margin:6px 2px 12px;max-width:1100px;}
-#tp-betas .bt-note-top{margin-top:-4px;}
 
 /* KPI tiles */
 #tp-betas .bt-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:14px;}
 #tp-betas .bt-tile{background:#fff;border:1px solid var(--bdr);border-radius:12px;padding:11px 14px;}
-#tp-betas .bt-tile-file{background:var(--pale);border-left:3px solid var(--steel);}
 #tp-betas .bt-tile-h{font-size:10px;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
 #tp-betas .bt-tile-v{font-size:22px;font-weight:700;color:var(--navy);}
 #tp-betas .bt-tile-s{font-size:11px;color:var(--mu);margin-top:3px;line-height:1.4;}
-#tp-betas .bt-tile-pair{display:flex;align-items:flex-end;gap:10px;}
-#tp-betas .bt-tile-pair span{display:flex;flex-direction:column;font-size:14px;color:var(--mu);font-weight:600;}
-#tp-betas .bt-tile-pair small{font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;font-weight:600;}
-#tp-betas .bt-tile-pair b{font-size:20px;color:var(--navy);}
-#tp-betas .bt-tile-pair i{font-style:normal;color:var(--mu);padding-bottom:3px;}
-#tp-betas .bt-d{display:block;font-size:12px;font-weight:600;color:var(--mu);margin-top:4px;}
-#tp-betas .bt-d.up{color:var(--neg);}  /* more beta = more market risk */
-#tp-betas .bt-d.dn{color:var(--pos);}
 
 /* The pick bar */
 #tp-betas .bt-pick{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px 20px;}
@@ -103,8 +91,6 @@
 #tp-betas .bt-t td small{display:block;font-size:10.5px;color:var(--mu);font-weight:500;}
 #tp-betas .bt-t tbody tr:hover{background:var(--pale);}
 #tp-betas .bt-t tfoot td{border-top:2px solid var(--bdr);color:var(--mu);font-weight:600;}
-#tp-betas .bt-t tr.bt-grp td{font-size:10px;color:var(--steel);font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  background:var(--pale);text-align:left;padding:6px 10px;}
 #tp-betas .bt-edit td{padding:5px 8px;}
 #tp-betas .bt-u{font-size:11px;color:var(--mu);margin-left:3px;}
 #tp-betas .bt-src{padding:4px 6px;font-size:11.5px;}
@@ -128,3 +114,24 @@
   #tp-betas .bt-pill{margin-right:18px;font-size:12.5px;}
   #tp-betas .bt-row{gap:10px 14px;}
 }
+
+/* Submit bar */
+#tp-betas .bt-noteinp{width:260px;}
+#tp-betas .bt-flash{font-size:12px;font-weight:600;color:#1E9E62;}
+#tp-betas .bt-link.bt-danger{color:var(--neg);}
+#tp-betas .bt-actions{margin-top:10px;gap:10px;}
+#tp-betas .bt-actions .bt-add{margin-top:0;}
+
+/* History */
+#tp-betas .bt-hist tr.bt-hrow{cursor:pointer;}
+#tp-betas .bt-hist tr.bt-hrow.open{background:var(--pale);}
+#tp-betas .bt-hist td.bt-notecell{max-width:260px;overflow:hidden;text-overflow:ellipsis;color:var(--mu);}
+#tp-betas .bt-mtag{display:inline-block;border:1px solid var(--bdr);border-radius:999px;padding:1px 8px;font-size:11px;font-weight:600;color:var(--steel);}
+#tp-betas tr.bt-hdetail td{background:var(--pale);white-space:normal;text-align:left;padding:10px 14px 14px;}
+#tp-betas .bt-kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px 18px;}
+#tp-betas .bt-kv div{display:flex;flex-direction:column;gap:2px;font-size:12px;}
+#tp-betas .bt-kv span{font-size:10px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
+#tp-betas .bt-kv b{font-weight:600;color:var(--navy);}
+
+/* Portfolio totals */
+#tp-betas .bt-t tfoot tr.bt-total td{border-top:1px solid var(--bdr);color:var(--navy);background:var(--pale);}

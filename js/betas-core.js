@@ -1,4 +1,4 @@
-// Tools ▸ Betas — the shared engine behind both sub-tabs.
+// Tools ▸ Betas — the shared engine behind the Calculator, History and Portfolio sub-tabs.
 //
 //   • Prices   — daily closes, from the portal's embedded IBKR history
 //                (portfolio-metrics-prices-daily.js, ~5 years, loaded on first use) or
@@ -8,10 +8,10 @@
 //                same periods, and regress: β = cov(stock, index) / var(index),
 //                plus α, correlation, R², the standard error of β, annualised vols,
 //                the Blume (Bloomberg) adjustment and a rolling series.
-//   • Selection store — the beta chosen for each name in the Calculadora, with the
-//                method that produced it. The Portafolio tab reads from it. Kept in
-//                localStorage (per device), because the method is chosen per company
-//                and should survive a reload; nothing is written to the database.
+//   • Beta history — every submitted calculation (beta + method + stats), newest
+//                first. The Portfolio tab uses each name's latest submission. Kept in
+//                localStorage for now (per browser), in the shape of the future
+//                beta_history table (sql/024_beta_history.sql).
 //
 // Also carries the two chart helpers every canvas in the portal copies from
 // js/results.js (esc, rsAttachBrush), per docs/CHART_ENGINE_REFERENCE.md §0.7.
@@ -35,12 +35,12 @@ export function num(v) {
 
 // ── Frequencies ──────────────────────────────────────────────────────────────
 export const FREQS = {
-  daily:   { label: 'Diaria',  short: 'D', ppy: 252, noun: 'días' },
-  weekly:  { label: 'Semanal', short: 'S', ppy: 52,  noun: 'semanas' },
-  monthly: { label: 'Mensual', short: 'M', ppy: 12,  noun: 'meses' },
+  daily:   { label: 'Daily',   short: 'D', ppy: 252, noun: 'days',   adj: 'daily' },
+  weekly:  { label: 'Weekly',  short: 'W', ppy: 52,  noun: 'weeks',  adj: 'weekly' },
+  monthly: { label: 'Monthly', short: 'M', ppy: 12,  noun: 'months', adj: 'monthly' },
 };
-// "5A·M", "18M·S" — the compact method tag used across both tabs.
-export const lookTag = (amt, unit) => `${amt}${unit === 'y' ? 'A' : 'M'}`;
+// "5Y·M", "18M·W" — the compact method tag used across the tabs.
+export const lookTag = (amt, unit) => `${amt}${unit === 'y' ? 'Y' : 'M'}`;
 export const methodTag = (m) => `${lookTag(m.amt, m.unit)}·${FREQS[m.freq].short}`;
 export const monthsOf = (amt, unit) => (unit === 'y' ? Number(amt) * 12 : Number(amt));
 
@@ -76,7 +76,7 @@ function liveSeries(t) {
     const to = new Date();
     const from = new Date(Date.UTC(to.getUTCFullYear() - 15, to.getUTCMonth(), to.getUTCDate()));
     const p = fetchPriceHistory(EMBED_ALIAS[t] === 'TSM' ? 'TSM' : t, isoDay(from), isoDay(to)).then((r) => {
-      if (!r.success) throw new Error(typeof r.error === 'string' ? r.error : (r.error && r.error.message) || 'sin datos');
+      if (!r.success) throw new Error(typeof r.error === 'string' ? r.error : (r.error && r.error.message) || 'no data');
       return r.data.filter((x) => x.c > 0).map((x) => [isoDay(new Date(x.t)), x.c]);
     });
     p.catch(() => _live.delete(t));   // let a later attempt retry
@@ -88,18 +88,18 @@ function liveSeries(t) {
 // source: 'portal' | 'massive'. Resolves { series, source } or throws a readable error.
 export async function getSeries(t, source) {
   const T = String(t || '').trim().toUpperCase();
-  if (!T) throw new Error('Escribe un ticker');
+  if (!T) throw new Error('Enter a ticker');
   if (source === 'massive') {
     try {
       return { series: await liveSeries(T), source: 'massive' };
     } catch (e) {
-      throw new Error(`Massive no devolvió historial para ${T} (${e.message}). ` +
-        'Requiere la función get-market-history desplegada.');
+      throw new Error(`Massive returned no price history for ${T} (${e.message}). ` +
+        'This needs the get-market-history edge function deployed.');
     }
   }
   await loadEmbedded();
   const s = embeddedSeries(T);
-  if (!s) throw new Error(`${T} no está en el historial del portal. Cambia la fuente a Massive.`);
+  if (!s) throw new Error(`${T} is not in the portal's price history. Switch the source to Massive.`);
   return { series: s, source: 'portal' };
 }
 
@@ -205,26 +205,54 @@ export function describe(vals) {
   };
 }
 
-// ── Selection store (Calculadora → Portafolio) ───────────────────────────────
-const STORE_KEY = 'betas-selected-v1';
-let _sel = (() => {
-  try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}') || {}; } catch (e) { return {}; }
+// ── Beta history — every submitted calculation, one record each ──────────────
+// A submit never overwrites: the history is the record of which beta was chosen
+// for a name, when, by whom and with which method, so the choice can be revisited
+// as time passes. For now it lives in this browser (localStorage); the record shape
+// matches sql/024_beta_history.sql so it can move to Supabase without changing
+// any consumer — only these functions.
+const HIST_KEY = 'betas-history-v1';
+let _hist = (() => {
+  try {
+    const v = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+    return Array.isArray(v) ? v : [];
+  } catch (e) { return []; }
 })();
 const _subs = new Set();
 function persist() {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(_sel)); } catch (e) { /* private mode */ }
+  try { localStorage.setItem(HIST_KEY, JSON.stringify(_hist)); } catch (e) { /* private mode */ }
   _subs.forEach((fn) => { try { fn(); } catch (e) { console.error('[Betas]', e); } });
 }
-export const getSelected = (t) => _sel[String(t || '').toUpperCase()] || null;
-export const allSelected = () => Object.keys(_sel).sort().map((t) => ({ ticker: t, ..._sel[t] }));
-export function setSelected(t, rec) { _sel[String(t).toUpperCase()] = rec; persist(); }
-export function removeSelected(t) { delete _sel[String(t).toUpperCase()]; persist(); }
-export function onSelectedChange(fn) { _subs.add(fn); return () => _subs.delete(fn); }
+const newId = () => (crypto.randomUUID ? crypto.randomUUID() : 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
 
-// Cross-tab navigation: the Portafolio tab can open a name in the Calculadora.
+// Newest first.
+export const listHistory = () => [..._hist].sort((a, b) => (a.submitted_at < b.submitted_at ? 1 : -1));
+export const historyFor = (t) => listHistory().filter((r) => r.ticker === String(t || '').toUpperCase());
+export const latestFor = (t) => historyFor(t)[0] || null;
+export const historyTickers = () => [...new Set(_hist.map((r) => r.ticker))].sort();
+export function addHistory(rec) {
+  const r = { id: newId(), submitted_at: new Date().toISOString(), ...rec };
+  _hist.push(r);
+  persist();
+  return r;
+}
+export function removeHistory(id) { _hist = _hist.filter((r) => r.id !== id); persist(); }
+export function onHistoryChange(fn) { _subs.add(fn); return () => _subs.delete(fn); }
+
+// Export columns — the same names as the future table.
+export const HISTORY_COLUMNS = [
+  'submitted_at', 'submitted_by', 'ticker', 'index_ticker', 'frequency', 'window_amount', 'window_unit',
+  'window_start', 'end_date', 'observations', 'beta_type', 'beta', 'raw_beta', 'adjusted_beta',
+  'blume_alpha', 'blume_anchor', 'std_error', 'ci_low', 'ci_high', 'correlation', 'r_squared',
+  'alpha_annual_pct', 'stock_vol_pct', 'index_vol_pct', 'rolling_amount', 'rolling_unit',
+  'rolling_last', 'rolling_avg', 'rolling_median', 'rolling_min', 'rolling_max',
+  'price_source', 'data_as_of', 'note', 'id',
+];
+
+// Cross-tab navigation: History and Portfolio can open a record in the Calculator.
 let _openCalc = null;
 export function registerCalcOpener(fn) { _openCalc = fn; }
-export function openInCalc(t) { if (_openCalc) _openCalc(t); }
+export function openInCalc(t, rec) { if (_openCalc) _openCalc(t, rec); }
 
 // ── Chart helper: drag-to-zoom on both axes, double-click resets ─────────────
 // Copied from js/results.js rsAttachBrush (CHART_ENGINE_REFERENCE §0.7). One change:

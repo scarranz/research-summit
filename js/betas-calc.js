@@ -1,11 +1,12 @@
-// Tools ▸ Betas ▸ Calculadora — the beta of ANY name, with every variable exposed.
+// Tools ▸ Betas ▸ Calculator — the beta of ANY name, with every variable exposed.
 //
 // There is no house default: the right method depends on the company (a recent IPO
 // has no five years of monthly returns; a name that re-rated wants a shorter window),
 // so the pane lays the choices side by side — the regression for the chosen method,
 // a method matrix (frequency × window) to see how much the answer moves, the rolling
-// beta to see how stable it has been, and the scatter behind the slope — and then
-// asks which number to carry into the portfolio ("Usar en el portafolio").
+// beta to see how stable it has been, and the scatter behind the slope. "Submit"
+// then records the chosen beta with its full method and statistics in the beta
+// history (js/betas-core.js) — a new record every time, never an overwrite.
 //
 // Charts follow docs/CHART_ENGINE_REFERENCE.md §0: drag to zoom on both axes with
 // double-click reset, legend chips that hide a series from the chart AND its table,
@@ -14,29 +15,31 @@
 import {
   esc, fmtB, fmtPct, num, FREQS, lookTag, methodTag, monthsOf,
   loadEmbedded, embeddedTickers, getSeries, alignedReturns, windowReturns, regress, blume,
-  rollingBeta, describe, getSelected, setSelected, removeSelected, allSelected,
-  onSelectedChange, attachBrush,
+  rollingBeta, describe, historyFor, addHistory, onHistoryChange, attachBrush,
 } from './betas-core.js';
+import { getCurrentUser } from './auth.js';
 
 const C_ACT = 'rgba(30,39,51,0.92)';     // navy — the measured series
 const C_ADJ = '#2563EB';                 // blue — the adjusted / derived series
-const C_SEL = '#1E9E62';                 // green — the beta chosen for the portfolio
+const C_SEL = '#1E9E62';                 // green — the beta selected for submission
 const C_MKT = '#8A93A0';                 // grey — the market (β = 1)
 
 const LOOKS = [[6, 'm'], [1, 'y'], [2, 'y'], [3, 'y'], [5, 'y']];
 const INDEXES = ['SPY', 'QQQ', 'RSP', 'XLG'];
+const SOURCE_LABEL = { massive: 'Massive · live', portal: 'Portal · IBKR adjusted', mixed: 'Portal + Massive' };
 
 const st = {
   ticker: 'AMZN', index: 'SPY', source: 'portal',
   freq: 'monthly', amt: 5, unit: 'y', end: '',
   rollAmt: 2, rollUnit: 'y', alpha: 0.67, anchor: 1,
-  pick: 'raw', manual: '',
-  loading: false, err: '', note: '',
+  pick: 'raw', manual: '', note: '',
+  loading: false, err: '', info: '', flash: '',
   data: null,              // { stock, index, src, key }
   roll: { win: null, yr: null, hidden: {}, tbl: false },
   sc: { xr: null, yr: null, hidden: {}, tbl: false },
 };
 let root = null;
+let _seq = 0;   // a render supersedes any chart build still queued from an earlier one
 let charts = [];
 let _alignCache = { key: '', byFreq: {} };
 
@@ -46,7 +49,7 @@ async function loadData() {
   st.ticker = T; st.index = I;
   const key = `${T}|${I}|${st.source}`;
   if (st.data && st.data.key === key) return render();
-  st.loading = true; st.err = ''; st.note = '';
+  st.loading = true; st.err = ''; st.info = '';
   render();
   try {
     // Portal first, name by name: a series the embed doesn't have comes from Massive,
@@ -57,11 +60,12 @@ async function loadData() {
     };
     const [s, m] = await Promise.all([one(T), one(I)]);
     const src = s.source === m.source ? s.source : 'mixed';
-    const viaLive = [s.source === 'massive' && st.source === 'portal' ? T : null, m.source === 'massive' && st.source === 'portal' ? I : null].filter(Boolean);
-    if (viaLive.length) st.note = `${viaLive.join(' y ')} no está en el historial del portal; se trajo de Massive.`;
+    const viaLive = [st.source === 'portal' && s.source === 'massive' ? T : null,
+      st.source === 'portal' && m.source === 'massive' ? I : null].filter(Boolean);
+    if (viaLive.length) st.info = `${viaLive.join(' and ')} is not in the portal's price history; fetched from Massive.`;
     st.data = { stock: s.series, index: m.series, src, key };
     _alignCache = { key: '', byFreq: {} };
-    st.roll.win = null; st.roll.yr = null; st.sc.xr = null; st.sc.yr = null;
+    resetZoom();
   } catch (e) {
     st.data = null;
     st.err = e.message || String(e);
@@ -109,11 +113,11 @@ function compute() {
   }));
 
   const picks = [
-    { key: 'raw',  label: `Beta de la ventana (${methodTag(st)})`, v: reg.beta },
-    { key: 'adj',  label: `Beta ajustada (α ${st.alpha}, ancla ${st.anchor})`, v: adj },
-    { key: 'rlast', label: 'Beta móvil — última', v: stats && stats.last },
-    { key: 'ravg',  label: 'Beta móvil — promedio en la ventana', v: stats && stats.avg },
-    { key: 'rmed',  label: 'Beta móvil — mediana en la ventana', v: stats && stats.median },
+    { key: 'raw',    label: `Window beta (${methodTag(st)})`, v: reg.beta },
+    { key: 'adj',    label: `Adjusted beta (α ${st.alpha}, anchor ${st.anchor})`, v: adj },
+    { key: 'rlast',  label: 'Rolling beta — last', v: stats && stats.last },
+    { key: 'ravg',   label: 'Rolling beta — average over the window', v: stats && stats.avg },
+    { key: 'rmed',   label: 'Rolling beta — median over the window', v: stats && stats.median },
     { key: 'manual', label: 'Manual', v: num(st.manual) },
   ];
   const pick = picks.find((p) => p.key === st.pick) || picks[0];
@@ -129,36 +133,36 @@ function controls(c) {
   return `
   <div class="bt-card bt-ctl">
     <div class="bt-row">
-      <label class="bt-f"><span>Nombre</span>
+      <label class="bt-f"><span>Ticker</span>
         <input class="bt-in bt-tk" data-in="ticker" value="${esc(st.ticker)}" list="bt-tickers" spellcheck="false" autocomplete="off"></label>
-      <label class="bt-f"><span>Índice</span>
+      <label class="bt-f"><span>Index</span>
         <input class="bt-in bt-tk" data-in="index" value="${esc(st.index)}" list="bt-indexes" spellcheck="false" autocomplete="off"></label>
-      <div class="bt-f"><span>Fuente de precios</span>${seg('src', st.source, [['portal', 'Portal (IBKR)'], ['massive', 'Massive']])}</div>
+      <div class="bt-f"><span>Price source</span>${seg('src', st.source, [['portal', 'Portal (IBKR)'], ['massive', 'Massive']])}</div>
       <datalist id="bt-tickers">${tickers.map((t) => `<option value="${esc(t)}">`).join('')}</datalist>
       <datalist id="bt-indexes">${INDEXES.map((t) => `<option value="${t}">`).join('')}</datalist>
     </div>
     <div class="bt-row">
-      <div class="bt-f"><span>Frecuencia</span>${seg('freq', st.freq, Object.entries(FREQS).map(([k, f]) => [k, f.label]))}</div>
-      <div class="bt-f"><span>Ventana</span>
+      <div class="bt-f"><span>Frequency</span>${seg('freq', st.freq, Object.entries(FREQS).map(([k, f]) => [k, f.label]))}</div>
+      <div class="bt-f"><span>Time window</span>
         <div class="bt-inline">
           <input class="bt-in bt-num" data-in="amt" value="${esc(st.amt)}" inputmode="numeric">
-          ${seg('unit', st.unit, [['m', 'Meses'], ['y', 'Años']])}
+          ${seg('unit', st.unit, [['m', 'Months'], ['y', 'Years']])}
           ${seg('look', `${st.amt}${st.unit}`, LOOKS.map(([a, u]) => [`${a}${u}`, lookTag(a, u)]))}
         </div></div>
-      <label class="bt-f"><span>Fecha final</span>
+      <label class="bt-f"><span>End date</span>
         <input class="bt-in" type="date" data-in="end" value="${esc(c && !c.empty ? c.end : st.end)}"
           ${c && !c.empty ? `min="${c.first}" max="${c.last}"` : ''}></label>
     </div>
     <div class="bt-row">
-      <div class="bt-f"><span>Ventana de la beta móvil</span>
+      <div class="bt-f"><span>Rolling beta window</span>
         <div class="bt-inline">
           <input class="bt-in bt-num" data-in="rollAmt" value="${esc(st.rollAmt)}" inputmode="numeric">
-          ${seg('runit', st.rollUnit, [['m', 'Meses'], ['y', 'Años']])}
+          ${seg('runit', st.rollUnit, [['m', 'Months'], ['y', 'Years']])}
         </div></div>
-      <div class="bt-f"><span>Ajuste Blume / Bloomberg</span>
+      <div class="bt-f"><span>Blume / Bloomberg adjustment</span>
         <div class="bt-inline">
           <span class="bt-mini">α</span><input class="bt-in bt-num" data-in="alpha" value="${esc(st.alpha)}" inputmode="decimal">
-          <span class="bt-mini">ancla</span><input class="bt-in bt-num" data-in="anchor" value="${esc(st.anchor)}" inputmode="decimal">
+          <span class="bt-mini">anchor</span><input class="bt-in bt-num" data-in="anchor" value="${esc(st.anchor)}" inputmode="decimal">
         </div></div>
     </div>
   </div>`;
@@ -166,17 +170,15 @@ function controls(c) {
 
 function statusLine(c) {
   const bits = [];
-  if (st.data) {
-    bits.push(`<span class="bt-badge">${{ massive: 'Massive · en vivo', portal: 'Portal · IBKR ajustado', mixed: 'Portal + Massive' }[st.data.src]}</span>`);
-  }
+  if (st.data) bits.push(`<span class="bt-badge">${SOURCE_LABEL[st.data.src]}</span>`);
   if (c && !c.empty) {
-    bits.push(`<span>Historial común ${esc(c.first)} → ${esc(c.last)}</span>`);
-    bits.push(`<span>Ventana ${esc(c.w.start)} → ${esc(c.end)} · <b>n = ${c.reg.n}</b> retornos ${FREQS[st.freq].noun === 'días' ? 'diarios' : FREQS[st.freq].label.toLowerCase() + 'es'}</span>`);
+    bits.push(`<span>Common history ${esc(c.first)} → ${esc(c.last)}</span>`);
+    bits.push(`<span>Window ${esc(c.w.start)} → ${esc(c.end)} · <b>n = ${c.reg.n}</b> ${FREQS[st.freq].adj} returns</span>`);
   }
   const warns = [];
-  if (st.note) warns.push(st.note);
-  if (c && !c.empty && c.clipped) warns.push(`La ventana pide desde ${c.w.start} pero el historial empieza en ${c.first}: la beta usa solo lo disponible.`);
-  if (c && !c.empty && c.reg.beta != null && c.reg.n < 24) warns.push(`Solo ${c.reg.n} observaciones — el error estándar es alto; considera otra frecuencia.`);
+  if (st.info) warns.push(st.info);
+  if (c && !c.empty && c.clipped) warns.push(`The window starts ${c.w.start} but the history only starts ${c.first}: the beta uses what is available.`);
+  if (c && !c.empty && c.reg.beta != null && c.reg.n < 24) warns.push(`Only ${c.reg.n} observations — the standard error is high; consider another frequency.`);
   return `<div class="bt-status">${bits.join('<span class="bt-dot">·</span>')}</div>
     ${warns.map((w) => `<div class="bt-warn">⚑ ${esc(w)}</div>`).join('')}`;
 }
@@ -186,31 +188,34 @@ function kpis(c) {
   const tile = (h, v, sub) => `<div class="bt-tile"><div class="bt-tile-h">${h}</div><div class="bt-tile-v">${v}</div><div class="bt-tile-s">${sub}</div></div>`;
   return `<div class="bt-tiles">
     ${tile(`Beta · ${esc(methodTag(st))} vs ${esc(st.index)}`, fmtB(r.beta, 3),
-      r.se == null ? '&nbsp;' : `± ${fmtB(r.se, 3)} error est. · IC 95% ${fmtB(r.lo)} a ${fmtB(r.hi)}`)}
-    ${tile('Beta ajustada', fmtB(c.adj, 3), `${st.alpha} × beta + ${fmtB(1 - st.alpha)} × ${st.anchor}`)}
-    ${tile('Correlación', fmtB(r.corr, 3), `R² ${fmtPct(r.r2 == null ? null : r.r2 * 100, 1)} explicado por el índice`)}
-    ${tile('Volatilidad anual', `${fmtPct(r.volS, 1)}`, `${esc(st.ticker)} · ${esc(st.index)} ${fmtPct(r.volM, 1)}`)}
-    ${tile('Alfa anualizada', fmtPct(r.alphaAnn, 1), 'intercepto de la regresión × períodos/año')}
-    ${c.stats ? tile(`Beta móvil · ${c.rollN} ${FREQS[st.freq].noun}`, fmtB(c.stats.last, 3),
-      `prom ${fmtB(c.stats.avg)} · med ${fmtB(c.stats.median)} · ${fmtB(c.stats.min)} a ${fmtB(c.stats.max)}`)
-      : tile('Beta móvil', '—', 'historial insuficiente para la ventana móvil')}
+      r.se == null ? '&nbsp;' : `± ${fmtB(r.se, 3)} std. error · 95% CI ${fmtB(r.lo)} to ${fmtB(r.hi)}`)}
+    ${tile('Adjusted beta', fmtB(c.adj, 3), `${st.alpha} × beta + ${fmtB(1 - st.alpha)} × ${st.anchor}`)}
+    ${tile('Correlation', fmtB(r.corr, 3), `R² ${fmtPct(r.r2 == null ? null : r.r2 * 100, 1)} explained by the index`)}
+    ${tile('Annualized volatility', fmtPct(r.volS, 1), `${esc(st.ticker)} · ${esc(st.index)} ${fmtPct(r.volM, 1)}`)}
+    ${tile('Annualized alpha', fmtPct(r.alphaAnn, 1), 'regression intercept × periods per year')}
+    ${c.stats ? tile(`Rolling beta · ${c.rollN} ${FREQS[st.freq].noun}`, fmtB(c.stats.last, 3),
+      `avg ${fmtB(c.stats.avg)} · med ${fmtB(c.stats.median)} · ${fmtB(c.stats.min)} to ${fmtB(c.stats.max)}`)
+      : tile('Rolling beta', '—', 'not enough history for the rolling window')}
   </div>`;
 }
 
-function pickBar(c) {
-  const saved = getSelected(st.ticker);
+function submitBar(c) {
+  const prev = historyFor(st.ticker);
+  const last = prev[0];
   return `<div class="bt-card bt-pick">
     <div class="bt-pick-l">
-      <span class="bt-lbl">Beta a usar para ${esc(st.ticker)}</span>
+      <span class="bt-lbl">Beta to submit for ${esc(st.ticker)}</span>
       <select class="bt-in bt-sel" data-in="pick">${c.picks.map((p) =>
         `<option value="${p.key}"${p.key === c.pick.key ? ' selected' : ''}>${esc(p.label)}${p.key === 'manual' ? '' : ` — ${fmtB(p.v, 3)}`}</option>`).join('')}</select>
       ${st.pick === 'manual' ? `<input class="bt-in bt-num" data-in="manual" value="${esc(st.manual)}" placeholder="1.20" inputmode="decimal">` : ''}
       <b class="bt-pick-v">${fmtB(c.pick.v, 3)}</b>
-      <button type="button" class="bt-btn" data-act="save"${c.pick.v == null ? ' disabled' : ''}>Usar en el portafolio</button>
+      <input class="bt-in bt-noteinp" data-in="note" value="${esc(st.note)}" placeholder="Note (optional) — why this method" maxlength="240">
+      <button type="button" class="bt-btn" data-act="submit"${c.pick.v == null ? ' disabled' : ''}>Submit</button>
+      ${st.flash ? `<span class="bt-flash">${esc(st.flash)}</span>` : ''}
     </div>
-    <div class="bt-pick-r">${saved
-      ? `Guardada: <b>${fmtB(saved.beta, 3)}</b> · ${esc(saved.label)} · ${esc(saved.savedAt)}`
-      : '<span class="bt-muted">Sin beta guardada para este nombre</span>'}</div>
+    <div class="bt-pick-r">${last
+      ? `Last submitted: <b>${fmtB(last.beta, 3)}</b> · ${esc(last.beta_type_label || last.beta_type)} · ${esc(last.submitted_at.slice(0, 10))} · ${prev.length} submission${prev.length === 1 ? '' : 's'} in <button type="button" class="bt-link" data-goto="history">History</button>`
+      : '<span class="bt-muted">No beta submitted for this name yet</span>'}</div>
   </div>`;
 }
 
@@ -219,12 +224,12 @@ function matrixCard(c) {
   const rows = c.matrix.map((row) => `<tr><td class="bt-h">${FREQS[row.freq].label}</td>${row.cells.map((x) => {
     const on = cur === `${row.freq}|${x.amt}${x.unit}`;
     return `<td class="bt-mx${on ? ' on' : ''}${x.beta == null ? ' nil' : ''}" data-mx="${row.freq}|${x.amt}|${x.unit}"
-      title="${x.beta == null ? 'Menos de 6 observaciones' : `n = ${x.n}`} · clic para usar este método">${fmtB(x.beta)}<small>n ${x.n}</small></td>`;
+      title="${x.beta == null ? 'Fewer than 6 observations' : `n = ${x.n}`} · click to use this method">${fmtB(x.beta)}<small>n ${x.n}</small></td>`;
   }).join('')}</tr>`).join('');
   return `<div class="bt-card">
-    <div class="bt-block-h">Beta por método <span>vs ${esc(st.index)} al ${esc(c.end)} · sin ajustar · clic en una celda para usar ese método</span></div>
+    <div class="bt-block-h">Beta by method <span>vs ${esc(st.index)} as of ${esc(c.end)} · unadjusted · click a cell to use that method</span></div>
     <div class="bt-scroll"><table class="bt-t bt-matrix">
-      <thead><tr><th class="bt-h">Frecuencia</th>${LOOKS.map(([a, u]) => `<th>${lookTag(a, u)}</th>`).join('')}</tr></thead>
+      <thead><tr><th class="bt-h">Frequency</th>${LOOKS.map(([a, u]) => `<th>${lookTag(a, u)}</th>`).join('')}</tr></thead>
       <tbody>${rows}</tbody></table></div>
   </div>`;
 }
@@ -233,10 +238,10 @@ const chip = (group, k, label, color, on, dashed) => `<button type="button" clas
   <span class="${dashed ? 'rs-leg-dash' : 'rs-leg-line'}" style="${dashed ? 'color' : 'background'}:${color}"></span>${esc(label)}</button>`;
 
 const ROLL_SER = [
-  { k: 'raw', label: 'Beta móvil', color: C_ACT },
-  { k: 'adj', label: 'Beta móvil ajustada', color: C_ADJ, dashed: true },
-  { k: 'sel', label: 'Beta a usar', color: C_SEL, dashed: true },
-  { k: 'one', label: 'Mercado (β = 1)', color: C_MKT, dashed: true },
+  { k: 'raw', label: 'Rolling beta', color: C_ACT },
+  { k: 'adj', label: 'Adjusted rolling beta', color: C_ADJ, dashed: true },
+  { k: 'sel', label: 'Selected beta', color: C_SEL, dashed: true },
+  { k: 'one', label: 'Market (β = 1)', color: C_MKT, dashed: true },
 ];
 const rollVis = (k) => !st.roll.hidden[k];
 
@@ -248,14 +253,14 @@ function rollRange(c) {
 function rollHead(c) {
   const open = st.roll.tbl === true;
   const [a, b] = rollRange(c);
-  return `<span class="rs-collap-ic">${open ? '▾' : '▸'}</span>Detalle de la beta móvil
-    <span class="rs-collap-sub">${open ? 'ocultar' : 'mostrar'} · ${b - a + 1} puntos en el rango</span>`;
+  return `<span class="rs-collap-ic">${open ? '▾' : '▸'}</span>Rolling beta detail
+    <span class="rs-collap-sub">${open ? 'hide' : 'show'} · ${b - a + 1} points in range</span>`;
 }
 function rollTable(c) {
   const [a, b] = rollRange(c);
   const cols = ROLL_SER.filter((s) => rollVis(s.k) && s.k !== 'one');
-  let h = `<div class="rs-ft-cap">Beta (sin unidades) · ventana móvil de ${c.rollN} ${FREQS[st.freq].noun} · mercado = 1.00</div>
-    <div class="bt-tscroll"><table class="bt-t"><thead><tr><th class="bt-h">Fecha</th>${cols.map((s) => `<th>${esc(s.label)}</th>`).join('')}</tr></thead><tbody>`;
+  let h = `<div class="rs-ft-cap">Beta (unitless) · rolling window of ${c.rollN} ${FREQS[st.freq].noun} · market = 1.00</div>
+    <div class="bt-tscroll"><table class="bt-t"><thead><tr><th class="bt-h">Date</th>${cols.map((s) => `<th>${esc(s.label)}</th>`).join('')}</tr></thead><tbody>`;
   for (let i = b; i >= a; i--) {
     h += `<tr><td class="bt-h">${esc(c.roll[i].date)}</td>${cols.map((s) =>
       `<td>${fmtB(s.k === 'raw' ? c.roll[i].beta : s.k === 'adj' ? c.rollAdj[i].beta : c.pick.v, 3)}</td>`).join('')}</tr>`;
@@ -264,8 +269,8 @@ function rollTable(c) {
 }
 
 const SC_SER = [
-  { k: 'obs', label: 'Retornos del período', color: C_ACT },
-  { k: 'fit', label: 'Regresión (pendiente = beta)', color: C_ADJ },
+  { k: 'obs', label: 'Period returns', color: C_ACT },
+  { k: 'fit', label: 'Regression (slope = beta)', color: C_ADJ },
 ];
 const scVis = (k) => !st.sc.hidden[k];
 function scRows(c) {
@@ -276,14 +281,14 @@ function scRows(c) {
 }
 function scHead(c) {
   const open = st.sc.tbl === true;
-  return `<span class="rs-collap-ic">${open ? '▾' : '▸'}</span>Detalle de retornos
-    <span class="rs-collap-sub">${open ? 'ocultar' : 'mostrar'} · ${scVis('obs') ? scRows(c).length + ' observaciones en el rango' : 'solo la regresión'}</span>`;
+  return `<span class="rs-collap-ic">${open ? '▾' : '▸'}</span>Returns detail
+    <span class="rs-collap-sub">${open ? 'hide' : 'show'} · ${scVis('obs') ? scRows(c).length + ' observations in range' : 'regression only'}</span>`;
 }
 function scTable(c) {
   const r = c.reg;
-  let h = `<div class="rs-ft-cap">Retornos en % por período · ${scVis('fit') ? `ajuste: ${esc(st.ticker)} % = ${fmtB(r.alpha * 100, 3)} + ${fmtB(r.beta, 3)} × ${esc(st.index)} %` : 'regresión oculta'}</div>`;
+  let h = `<div class="rs-ft-cap">Returns in % per period · ${scVis('fit') ? `fit: ${esc(st.ticker)} % = ${fmtB(r.alpha * 100, 3)} + ${fmtB(r.beta, 3)} × ${esc(st.index)} %` : 'regression hidden'}</div>`;
   if (!scVis('obs')) return h;
-  h += `<div class="bt-tscroll"><table class="bt-t"><thead><tr><th class="bt-h">Período al</th><th>${esc(st.index)}</th><th>${esc(st.ticker)}</th>${scVis('fit') ? '<th>Ajuste</th><th>Residuo</th>' : ''}</tr></thead><tbody>`;
+  h += `<div class="bt-tscroll"><table class="bt-t"><thead><tr><th class="bt-h">Period ending</th><th>${esc(st.index)}</th><th>${esc(st.ticker)}</th>${scVis('fit') ? '<th>Fitted</th><th>Residual</th>' : ''}</tr></thead><tbody>`;
   const rows = scRows(c);
   for (let i = rows.length - 1; i >= 0; i--) {
     const x = rows[i], fit = (r.alpha + r.beta * x.m) * 100;
@@ -293,20 +298,21 @@ function scTable(c) {
 }
 
 function chartBlocks(c) {
+  const unitNoun = FREQS[st.freq].noun.replace(/s$/, '');
   const roll = c.roll.length ? `
   <div class="bt-card">
-    <div class="bt-block-h">Beta móvil <span>ventana de ${c.rollN} ${FREQS[st.freq].noun} vs ${esc(st.index)} · arrastra para acercar, doble clic restablece</span></div>
-    <div class="bt-legend" id="bt-roll-leg">${ROLL_SER.map((s) => chip('roll', s.k, s.label, s.color, rollVis(s.k), s.dashed)).join('')}</div>
+    <div class="bt-block-h">Rolling beta <span>${c.rollN}-${unitNoun} window vs ${esc(st.index)} · drag to zoom, double-click to reset</span></div>
+    <div class="bt-legend">${ROLL_SER.map((s) => chip('roll', s.k, s.label, s.color, rollVis(s.k), s.dashed)).join('')}</div>
     <div class="bt-cv"><canvas id="bt-roll-cv"></canvas></div>
     <div class="rs-collap">
       <button type="button" class="rs-collap-h" data-tbl="roll">${rollHead(c)}</button>
       <div class="rs-collap-b"${st.roll.tbl === true ? '' : ' hidden'}><div class="rs-tablewrap">${rollTable(c)}</div></div>
     </div>
-  </div>` : `<div class="bt-card"><span class="rs-noguide">⚑ Historial insuficiente para una beta móvil de ${c.rollN} ${FREQS[st.freq].noun}</span></div>`;
+  </div>` : `<div class="bt-card"><span class="rs-noguide">⚑ Not enough history for a ${c.rollN}-${unitNoun} rolling beta</span></div>`;
 
   const scatter = c.reg.beta != null ? `
   <div class="bt-card">
-    <div class="bt-block-h">Dispersión de retornos <span>${esc(st.ticker)} contra ${esc(st.index)} en la ventana · la pendiente de la recta es la beta</span></div>
+    <div class="bt-block-h">Returns scatter <span>${esc(st.ticker)} against ${esc(st.index)} over the window · the slope of the line is the beta</span></div>
     <div class="bt-legend">${SC_SER.map((s) => chip('sc', s.k, s.label, s.color, scVis(s.k))).join('')}</div>
     <div class="bt-cv bt-cv-sq"><canvas id="bt-sc-cv"></canvas></div>
     <div class="rs-collap">
@@ -317,24 +323,6 @@ function chartBlocks(c) {
   return `<div class="bt-charts">${roll}${scatter}</div>`;
 }
 
-function savedCard() {
-  const list = allSelected();
-  if (!list.length) return '';
-  return `<div class="bt-card">
-    <div class="bt-block-h">Betas guardadas para el portafolio <span>en este navegador · el tab Portafolio las usa cuando la fuente del nombre es "Calculadora"</span></div>
-    <div class="bt-scroll"><table class="bt-t">
-      <thead><tr><th class="bt-h">Nombre</th><th>Beta</th><th class="bt-l">Cuál</th><th class="bt-l">Método</th><th>Guardada</th><th></th></tr></thead>
-      <tbody>${list.map((s) => `<tr>
-        <td class="bt-h"><b>${esc(s.ticker)}</b></td><td><b>${fmtB(s.beta, 3)}</b></td>
-        <td class="bt-l">${esc(s.label)}</td>
-        <td class="bt-l">${esc(`${lookTag(s.amt, s.unit)}·${FREQS[s.freq] ? FREQS[s.freq].short : '?'} vs ${s.index} al ${s.end} · ${s.source === 'massive' ? 'Massive' : 'Portal'}`)}</td>
-        <td>${esc(s.savedAt)}</td>
-        <td class="bt-acts"><button type="button" class="bt-link" data-open="${esc(s.ticker)}">Abrir</button>
-          <button type="button" class="bt-x" data-del="${esc(s.ticker)}" title="Quitar">×</button></td></tr>`).join('')}</tbody>
-    </table></div>
-  </div>`;
-}
-
 // ── Render ───────────────────────────────────────────────────────────────────
 function destroyCharts() { charts.forEach((ch) => ch.destroy()); charts = []; }
 
@@ -343,19 +331,20 @@ function render() {
   destroyCharts();
   const c = compute();
   let body;
-  if (st.loading) body = '<div class="bt-empty">Cargando precios…</div>';
+  if (st.loading) body = '<div class="bt-empty">Loading prices…</div>';
   else if (st.err) body = `<div class="bt-err">${esc(st.err)}</div>`;
   else if (!c) body = '';
-  else if (c.empty) body = `<div class="bt-err">No hay suficientes períodos en común entre ${esc(st.ticker)} y ${esc(st.index)} a frecuencia ${FREQS[st.freq].label.toLowerCase()}.</div>`;
-  else if (c.reg.beta == null) body = `${statusLine(c)}<div class="bt-err">Menos de 6 observaciones en la ventana — amplía la ventana o sube la frecuencia.</div>${matrixCard(c)}`;
-  else body = `${statusLine(c)}${kpis(c)}${pickBar(c)}${matrixCard(c)}${chartBlocks(c)}`;
+  else if (c.empty) body = `<div class="bt-err">Not enough common periods between ${esc(st.ticker)} and ${esc(st.index)} at ${FREQS[st.freq].adj} frequency.</div>`;
+  else if (c.reg.beta == null) body = `${statusLine(c)}<div class="bt-err">Fewer than 6 observations in the window — widen the window or raise the frequency.</div>${matrixCard(c)}`;
+  else body = `${statusLine(c)}${kpis(c)}${submitBar(c)}${matrixCard(c)}${chartBlocks(c)}`;
 
-  root.innerHTML = `${controls(c)}${body}${savedCard()}
-    <p class="bt-note">β = cov(retornos del nombre, retornos del índice) / var(retornos del índice), con retornos simples
-    en los mismos períodos. Semanal y mensual toman el último cierre de cada semana o mes (el período en curso cuenta
-    aunque esté incompleto). Ajustada = α × β + (1 − α) × ancla (Blume; Bloomberg usa 0.67 y 1.0). IC 95% = β ± 1.96
-    errores estándar. Precios ajustados por splits y dividendos.</p>`;
-  if (c && !c.empty && c.reg.beta != null && !st.loading && !st.err) requestAnimationFrame(() => buildCharts(c));
+  root.innerHTML = `${controls(c)}${body}
+    <p class="bt-note">β = cov(name returns, index returns) / var(index returns), using simple returns over the same
+    periods. Weekly and monthly use the last close of each week or month (the current period counts even if it is
+    incomplete). Adjusted = α × β + (1 − α) × anchor (Blume; Bloomberg uses 0.67 and 1.0). 95% CI = β ± 1.96 standard
+    errors. Prices adjusted for splits and dividends.</p>`;
+  const seq = ++_seq;
+  if (c && !c.empty && c.reg.beta != null && !st.loading && !st.err) requestAnimationFrame(() => { if (seq === _seq) buildCharts(c); });
 }
 
 function buildCharts(c) {
@@ -365,10 +354,10 @@ function buildCharts(c) {
     const [a, b] = rollRange(c);
     const labels = c.roll.slice(a, b + 1).map((p) => p.date);
     const ds = [];
-    if (rollVis('raw')) ds.push({ label: 'Beta móvil', data: c.roll.slice(a, b + 1).map((p) => p.beta), borderColor: C_ACT, borderWidth: 2, pointRadius: 0, tension: 0.2 });
-    if (rollVis('adj')) ds.push({ label: 'Ajustada', data: c.rollAdj.slice(a, b + 1).map((p) => p.beta), borderColor: C_ADJ, borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0, tension: 0.2 });
-    if (rollVis('sel') && c.pick.v != null) ds.push({ label: 'Beta a usar', data: labels.map(() => c.pick.v), borderColor: C_SEL, borderWidth: 1.5, borderDash: [6, 3], pointRadius: 0 });
-    if (rollVis('one')) ds.push({ label: 'Mercado', data: labels.map(() => 1), borderColor: C_MKT, borderWidth: 1, borderDash: [2, 3], pointRadius: 0 });
+    if (rollVis('raw')) ds.push({ label: 'Rolling beta', data: c.roll.slice(a, b + 1).map((p) => p.beta), borderColor: C_ACT, borderWidth: 2, pointRadius: 0, tension: 0.2 });
+    if (rollVis('adj')) ds.push({ label: 'Adjusted', data: c.rollAdj.slice(a, b + 1).map((p) => p.beta), borderColor: C_ADJ, borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0, tension: 0.2 });
+    if (rollVis('sel') && c.pick.v != null) ds.push({ label: 'Selected beta', data: labels.map(() => c.pick.v), borderColor: C_SEL, borderWidth: 1.5, borderDash: [6, 3], pointRadius: 0 });
+    if (rollVis('one')) ds.push({ label: 'Market', data: labels.map(() => 1), borderColor: C_MKT, borderWidth: 1, borderDash: [2, 3], pointRadius: 0 });
     const ch = new Chart(rcv.getContext('2d'), {
       type: 'line',
       data: { labels, datasets: ds },
@@ -397,8 +386,8 @@ function buildCharts(c) {
     const xs = pts.map((p) => p.x);
     const x0 = st.sc.xr ? st.sc.xr[0] : Math.min(...xs), x1 = st.sc.xr ? st.sc.xr[1] : Math.max(...xs);
     const ds = [];
-    if (scVis('obs')) ds.push({ type: 'scatter', label: 'Retornos', data: pts, backgroundColor: 'rgba(30,39,51,0.55)', pointRadius: pts.length > 300 ? 1.8 : 3 });
-    if (scVis('fit')) ds.push({ type: 'line', label: 'Regresión', data: [{ x: x0, y: (r.alpha * 100) + r.beta * x0 }, { x: x1, y: (r.alpha * 100) + r.beta * x1 }], borderColor: C_ADJ, borderWidth: 2, pointRadius: 0 });
+    if (scVis('obs')) ds.push({ type: 'scatter', label: 'Returns', data: pts, backgroundColor: 'rgba(30,39,51,0.55)', pointRadius: pts.length > 300 ? 1.8 : 3 });
+    if (scVis('fit')) ds.push({ type: 'line', label: 'Regression', data: [{ x: x0, y: (r.alpha * 100) + r.beta * x0 }, { x: x1, y: (r.alpha * 100) + r.beta * x1 }], borderColor: C_ADJ, borderWidth: 2, pointRadius: 0 });
     const ch = new Chart(scv.getContext('2d'), {
       type: 'scatter',
       data: { datasets: ds },
@@ -408,10 +397,10 @@ function buildCharts(c) {
           legend: { display: false },
           tooltip: { callbacks: { label: (x) => x.raw.d
             ? `${x.raw.d}: ${st.index} ${fmtPct(x.raw.x)} · ${st.ticker} ${fmtPct(x.raw.y)}`
-            : `Regresión: ${st.ticker} ${fmtPct(x.raw.y)} con ${st.index} ${fmtPct(x.raw.x)}` } },
+            : `Regression: ${st.ticker} ${fmtPct(x.raw.y)} at ${st.index} ${fmtPct(x.raw.x)}` } },
         },
         scales: {
-          x: { type: 'linear', title: { display: true, text: `${st.index} — retorno por período (%)`, font: { size: 11 } },
+          x: { type: 'linear', title: { display: true, text: `${st.index} — return per period (%)`, font: { size: 11 } },
             grid: { color: (t) => (t.tick.value === 0 ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.04)') },
             ticks: { font: { size: 10 }, callback: (v) => v + '%' },
             min: st.sc.xr ? st.sc.xr[0] : undefined, max: st.sc.xr ? st.sc.xr[1] : undefined },
@@ -437,10 +426,12 @@ function onChange(e) {
   const el = e.target.closest('[data-in]');
   if (!el) return;
   const k = el.dataset.in, v = el.value;
+  if (k === 'note') { st.note = v; return; }   // no re-render: keeps the focus where the user is
+  st.flash = '';
   if (k === 'ticker' || k === 'index') {
     if (!v.trim()) return;
     st[k] = v.trim().toUpperCase();
-    if (st.source === 'massive' && k === 'ticker') st.source = 'portal';   // prefer the embed when it has the name
+    if (k === 'ticker') { st.source = 'portal'; st.note = ''; }   // prefer the embed when it has the name
     return loadData();
   }
   if (k === 'amt' || k === 'rollAmt') { const n = Math.round(num(v)); if (n > 0) st[k] = n; resetZoom(); }
@@ -452,10 +443,13 @@ function onChange(e) {
   render();
 }
 
+let _goto = null;
 function onClick(e) {
   const b = e.target.closest('button, td[data-mx]');
   if (!b) return;
   const d = b.dataset;
+  if (d.act === 'submit') return submit();
+  st.flash = '';
   if (d.src) { if (d.src !== st.source) { st.source = d.src; loadData(); } return; }
   if (d.freq) { st.freq = d.freq; resetZoom(); return render(); }
   if (d.unit) { st.unit = d.unit; resetZoom(); return render(); }
@@ -473,33 +467,48 @@ function onClick(e) {
     s.tbl = s.tbl !== true;
     return render();
   }
-  if (d.act === 'save') return save();
-  if (d.open) return openTicker(d.open, true);
-  if (d.del) { removeSelected(d.del); return render(); }
+  if (d.goto && _goto) return _goto(d.goto, st.ticker);
 }
 
-function save() {
+function submit() {
   const c = compute();
   if (!c || c.empty || c.pick.v == null) return;
-  setSelected(st.ticker, {
-    beta: c.pick.v, key: c.pick.key, label: c.pick.label,
-    index: st.index, freq: st.freq, amt: st.amt, unit: st.unit, end: c.end,
-    rollAmt: st.rollAmt, rollUnit: st.rollUnit, alpha: st.alpha, anchor: st.anchor,
-    source: st.source, n: c.reg.n, savedAt: new Date().toISOString().slice(0, 10),
+  const noteEl = root.querySelector('[data-in="note"]');
+  if (noteEl) st.note = noteEl.value;
+  const r = c.reg, s = c.stats, user = getCurrentUser();
+  const r6 = (v) => (v == null || !isFinite(v) ? null : Math.round(v * 1e6) / 1e6);
+  addHistory({
+    submitted_by: user ? user.email : null,
+    ticker: st.ticker, index_ticker: st.index,
+    frequency: st.freq, window_amount: st.amt, window_unit: st.unit === 'y' ? 'years' : 'months',
+    window_start: c.w.start, end_date: c.end, observations: r.n,
+    beta_type: c.pick.key, beta_type_label: c.pick.label, beta: r6(c.pick.v),
+    raw_beta: r6(r.beta), adjusted_beta: r6(c.adj), blume_alpha: st.alpha, blume_anchor: st.anchor,
+    std_error: r6(r.se), ci_low: r6(r.lo), ci_high: r6(r.hi),
+    correlation: r6(r.corr), r_squared: r6(r.r2), alpha_annual_pct: r6(r.alphaAnn),
+    stock_vol_pct: r6(r.volS), index_vol_pct: r6(r.volM),
+    rolling_amount: st.rollAmt, rolling_unit: st.rollUnit === 'y' ? 'years' : 'months',
+    rolling_last: r6(s && s.last), rolling_avg: r6(s && s.avg), rolling_median: r6(s && s.median),
+    rolling_min: r6(s && s.min), rolling_max: r6(s && s.max),
+    price_source: st.data.src, data_as_of: c.last, note: st.note.trim() || null,
   });
+  st.note = '';
+  st.flash = `Submitted ${st.ticker} β ${fmtB(c.pick.v, 3)}`;
+  render();
 }
 
-// Open a name — restoring the method it was saved with, if any.
-export function openTicker(t, restore = true) {
-  const T = String(t || '').toUpperCase();
-  const s = restore ? getSelected(T) : null;
-  st.ticker = T;
-  if (s) {
+// Open a name in the Calculator — restoring a history record's method when given one.
+export function openTicker(t, rec) {
+  st.ticker = String(t || '').toUpperCase();
+  st.flash = '';
+  if (rec) {
     Object.assign(st, {
-      index: s.index, freq: s.freq, amt: s.amt, unit: s.unit, end: s.end, source: s.source || 'portal',
-      rollAmt: s.rollAmt || st.rollAmt, rollUnit: s.rollUnit || st.rollUnit,
-      alpha: s.alpha != null ? s.alpha : st.alpha, anchor: s.anchor != null ? s.anchor : st.anchor,
-      pick: s.key || 'raw', manual: s.key === 'manual' ? String(s.beta) : st.manual,
+      index: rec.index_ticker || st.index, freq: rec.frequency || st.freq,
+      amt: rec.window_amount || st.amt, unit: rec.window_unit === 'months' ? 'm' : 'y',
+      end: rec.end_date || '', source: rec.price_source === 'massive' ? 'massive' : 'portal',
+      rollAmt: rec.rolling_amount || st.rollAmt, rollUnit: rec.rolling_unit === 'months' ? 'm' : 'y',
+      alpha: rec.blume_alpha != null ? rec.blume_alpha : st.alpha, anchor: rec.blume_anchor != null ? rec.blume_anchor : st.anchor,
+      pick: rec.beta_type || 'raw', manual: rec.beta_type === 'manual' ? String(rec.beta) : st.manual,
     });
   }
   resetZoom();
@@ -507,14 +516,18 @@ export function openTicker(t, restore = true) {
 }
 
 let _wired = false;
-export async function loadBetasCalc(el) {
+export async function loadBetasCalc(el, gotoPane) {
   root = el;
+  _goto = gotoPane || null;
   if (!_wired) {
     _wired = true;
     root.addEventListener('change', onChange);
     root.addEventListener('click', onClick);
-    root.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('input[data-in]')) e.target.blur(); });
-    onSelectedChange(() => render());
+    root.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || !e.target.matches('input[data-in]')) return;
+      if (e.target.dataset.in === 'note') { st.note = e.target.value; submit(); } else e.target.blur();
+    });
+    onHistoryChange(() => render());
   }
   render();
   await loadEmbedded().catch(() => {});

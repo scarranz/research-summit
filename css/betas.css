@@ -136,3 +136,4 @@
 
 /* Portfolio totals */
 #tp-betas .bt-t tfoot tr.bt-total td{border-top:1px solid var(--bdr);color:var(--navy);background:var(--pale);}
+#tp-betas .bt-mtag.nil{color:var(--mu);border-style:dashed;font-weight:500;}

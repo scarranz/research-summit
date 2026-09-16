@@ -8,16 +8,17 @@
 // filtered, a chart shows how its submitted beta has moved over time.
 
 import {
-  esc, fmtB, fmtPct, FREQS, lookTag, listHistory, historyTickers, removeHistory,
+  esc, fmtB, fmtPct, recordMethod, listHistory, historyTickers, removeHistory,
   onHistoryChange, openInCalc, HISTORY_COLUMNS, attachBrush,
 } from './betas-core.js';
 
 const hs = { ticker: '', open: null, confirm: null, ch: { hidden: {}, yr: null, win: null, tbl: false } };
 let root = null, chart = null, _seq = 0;
 
-const unitShort = (u) => (u === 'months' ? 'm' : 'y');
-const methodOf = (r) => `${lookTag(r.window_amount, unitShort(r.window_unit))}·${FREQS[r.frequency] ? FREQS[r.frequency].short : '?'}`;
-const TYPE_SHORT = { raw: 'Window', adj: 'Adjusted', rlast: 'Rolling last', ravg: 'Rolling avg', rmed: 'Rolling median', manual: 'Manual' };
+// Imported records (betas that pre-date the tool) carry no method: say so, never "undefined".
+const methodOf = (r) => recordMethod(r) || 'not recorded';
+const dash = (v) => (v == null || v === '' ? '—' : esc(v));
+const TYPE_SHORT = { raw: 'Window', adj: 'Adjusted', rlast: 'Rolling last', ravg: 'Rolling avg', rmed: 'Rolling median', manual: 'Manual', imported: 'Imported' };
 
 function rows() {
   const all = listHistory();
@@ -44,18 +45,28 @@ function download(list) {
 
 function detail(r) {
   const kv = (k, v) => `<div><span>${k}</span><b>${v}</b></div>`;
+  const submitted = kv(r.beta_type === 'imported' ? 'Created' : 'Submitted',
+    `${esc(r.submitted_at.replace('T', ' ').slice(0, r.beta_type === 'imported' ? 10 : 16))}${r.beta_type === 'imported' ? '' : ' UTC'}${r.submitted_by ? ' · ' + esc(r.submitted_by) : ''}`);
+  if (!recordMethod(r)) {
+    return `<tr class="bt-hdetail"><td colspan="10"><div class="bt-kv">
+      ${kv('Beta', fmtB(r.beta, 3))}
+      ${kv('Method', 'Not recorded — frequency, window and index are unknown')}
+      ${submitted}
+      ${r.note ? kv('Note', esc(r.note)) : ''}
+    </div></td></tr>`;
+  }
   return `<tr class="bt-hdetail"><td colspan="10"><div class="bt-kv">
-    ${kv('Window', `${esc(r.window_start)} → ${esc(r.end_date)}`)}
-    ${kv('Observations', r.observations)}
+    ${kv('Window', `${dash(r.window_start)} → ${dash(r.end_date)}`)}
+    ${kv('Observations', dash(r.observations))}
     ${kv('Raw beta', fmtB(r.raw_beta, 3))}
-    ${kv('Adjusted beta', `${fmtB(r.adjusted_beta, 3)} (α ${r.blume_alpha}, anchor ${r.blume_anchor})`)}
+    ${kv('Adjusted beta', `${fmtB(r.adjusted_beta, 3)} (α ${dash(r.blume_alpha)}, anchor ${dash(r.blume_anchor)})`)}
     ${kv('Std. error', `${fmtB(r.std_error, 3)} · 95% CI ${fmtB(r.ci_low)} to ${fmtB(r.ci_high)}`)}
     ${kv('Correlation', `${fmtB(r.correlation, 3)} · R² ${fmtPct(r.r_squared == null ? null : r.r_squared * 100, 1)}`)}
-    ${kv('Annualized vol', `${esc(r.ticker)} ${fmtPct(r.stock_vol_pct, 1)} · ${esc(r.index_ticker)} ${fmtPct(r.index_vol_pct, 1)}`)}
+    ${kv('Annualized vol', `${esc(r.ticker)} ${fmtPct(r.stock_vol_pct, 1)} · ${dash(r.index_ticker)} ${fmtPct(r.index_vol_pct, 1)}`)}
     ${kv('Annualized alpha', fmtPct(r.alpha_annual_pct, 1))}
-    ${kv(`Rolling (${r.rolling_amount} ${esc(r.rolling_unit)})`, `last ${fmtB(r.rolling_last)} · avg ${fmtB(r.rolling_avg)} · med ${fmtB(r.rolling_median)} · ${fmtB(r.rolling_min)} to ${fmtB(r.rolling_max)}`)}
-    ${kv('Prices', `${esc(r.price_source)} · data as of ${esc(r.data_as_of)}`)}
-    ${kv('Submitted', `${esc(r.submitted_at.replace('T', ' ').slice(0, 16))} UTC${r.submitted_by ? ' · ' + esc(r.submitted_by) : ''}`)}
+    ${kv(`Rolling (${dash(r.rolling_amount)} ${dash(r.rolling_unit)})`, `last ${fmtB(r.rolling_last)} · avg ${fmtB(r.rolling_avg)} · med ${fmtB(r.rolling_median)} · ${fmtB(r.rolling_min)} to ${fmtB(r.rolling_max)}`)}
+    ${kv('Prices', `${dash(r.price_source)} · data as of ${dash(r.data_as_of)}`)}
+    ${submitted}
     ${r.note ? kv('Note', esc(r.note)) : ''}
   </div></td></tr>`;
 }
@@ -66,17 +77,17 @@ function table(list) {
       <th class="bt-l">Method</th><th class="bt-l">Index</th><th>End date</th><th>n</th><th class="bt-l">Note</th><th></th></tr></thead>
     <tbody>${list.map((r) => `
       <tr class="bt-hrow${hs.open === r.id ? ' open' : ''}" data-row="${esc(r.id)}">
-        <td class="bt-h">${esc(r.submitted_at.slice(0, 10))}<small>${esc(r.submitted_at.slice(11, 16))} UTC</small></td>
+        <td class="bt-h">${esc(r.submitted_at.slice(0, 10))}<small>${r.beta_type === 'imported' ? 'creation date' : esc(r.submitted_at.slice(11, 16)) + ' UTC'}</small></td>
         <td class="bt-l"><b>${esc(r.ticker)}</b></td>
         <td><b>${fmtB(r.beta, 3)}</b></td>
         <td class="bt-l">${esc(TYPE_SHORT[r.beta_type] || r.beta_type)}</td>
-        <td class="bt-l"><span class="bt-mtag">${esc(methodOf(r))}</span></td>
-        <td class="bt-l">${esc(r.index_ticker)}</td>
-        <td>${esc(r.end_date)}</td>
-        <td>${r.observations}</td>
+        <td class="bt-l"><span class="bt-mtag${recordMethod(r) ? '' : ' nil'}">${esc(methodOf(r))}</span></td>
+        <td class="bt-l">${dash(r.index_ticker)}</td>
+        <td>${dash(r.end_date)}</td>
+        <td>${dash(r.observations)}</td>
         <td class="bt-l bt-notecell" title="${esc(r.note || '')}">${esc(r.note || '')}</td>
         <td class="bt-acts">
-          <button type="button" class="bt-link" data-load="${esc(r.id)}" title="Open in the Calculator with this method">Open</button>
+          <button type="button" class="bt-link" data-load="${esc(r.id)}" title="${recordMethod(r) ? 'Open in the Calculator with this method' : 'Open this ticker in the Calculator'}">Open</button>
           ${hs.confirm === r.id
             ? `<button type="button" class="bt-link bt-danger" data-delyes="${esc(r.id)}">Delete?</button><button type="button" class="bt-link" data-delno="1">Cancel</button>`
             : `<button type="button" class="bt-x" data-del="${esc(r.id)}" title="Delete this record">×</button>`}
@@ -145,7 +156,7 @@ function buildChart(list) {
       plugins: {
         legend: { display: false },
         tooltip: { callbacks: {
-          title: (x) => { const r = sl[x[0].dataIndex]; return `${r.submitted_at.slice(0, 16).replace('T', ' ')} · ${methodOf(r)} vs ${r.index_ticker}`; },
+          title: (x) => { const r = sl[x[0].dataIndex]; return `${r.submitted_at.slice(0, 16).replace('T', ' ')} · ${methodOf(r)}${r.index_ticker ? ' vs ' + r.index_ticker : ''}`; },
           label: (x) => `${x.dataset.label}: ${fmtB(x.parsed.y, 3)}`,
         } },
       },

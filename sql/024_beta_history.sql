@@ -9,14 +9,14 @@
 create table beta_history (
   id                uuid primary key default gen_random_uuid(),
   ticker            text not null,
-  index_ticker      text not null,
-  frequency         text not null check (frequency in ('daily', 'weekly', 'monthly')),
-  window_amount     int  not null,
-  window_unit       text not null check (window_unit in ('months', 'years')),
-  window_start      date not null,
-  end_date          date not null,
-  observations      int  not null,
-  beta_type         text not null check (beta_type in ('raw', 'adj', 'rlast', 'ravg', 'rmed', 'manual')),
+  index_ticker      text,                      -- null on imported rows (method unknown)
+  frequency         text check (frequency in ('daily', 'weekly', 'monthly')),
+  window_amount     int,
+  window_unit       text check (window_unit in ('months', 'years')),
+  window_start      date,
+  end_date          date,
+  observations      int,
+  beta_type         text not null check (beta_type in ('raw', 'adj', 'rlast', 'ravg', 'rmed', 'manual', 'imported')),
   beta_type_label   text,
   beta              numeric not null,          -- the submitted number
   raw_beta          numeric,
@@ -38,7 +38,7 @@ create table beta_history (
   rolling_median    numeric,
   rolling_min       numeric,
   rolling_max       numeric,
-  price_source      text,                      -- massive
+  price_source      text,                      -- massive | file (imported)
   data_as_of        date,
   note              text,
   submitted_by      text,                      -- email

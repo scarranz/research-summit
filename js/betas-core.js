@@ -42,6 +42,12 @@ export const FREQS = {
 export const lookTag = (amt, unit) => `${amt}${unit === 'y' ? 'Y' : 'M'}`;
 export const methodTag = (m) => `${lookTag(m.amt, m.unit)}·${FREQS[m.freq].short}`;
 export const monthsOf = (amt, unit) => (unit === 'y' ? Number(amt) * 12 : Number(amt));
+// Method tag for a history record, or null when the record carries no method (an
+// imported beta whose calculation is unknown).
+export function recordMethod(r) {
+  if (!r || !r.frequency || !r.window_amount) return null;
+  return `${lookTag(r.window_amount, r.window_unit === 'months' ? 'm' : 'y')}·${FREQS[r.frequency] ? FREQS[r.frequency].short : '?'}`;
+}
 
 // ── Prices ───────────────────────────────────────────────────────────────────
 // Daily closes from Massive only, through the get-market-history edge function

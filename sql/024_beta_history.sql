@@ -38,7 +38,7 @@ create table beta_history (
   rolling_median    numeric,
   rolling_min       numeric,
   rolling_max       numeric,
-  price_source      text,                      -- massive | file (imported)
+  price_source      text,                      -- massive | previous values
   data_as_of        date,
   note              text,
   submitted_by      text,                      -- email

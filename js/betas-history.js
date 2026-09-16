@@ -15,10 +15,11 @@ import {
 const hs = { ticker: '', open: null, confirm: null, ch: { hidden: {}, yr: null, win: null, tbl: false } };
 let root = null, chart = null, _seq = 0;
 
-// Imported records (betas that pre-date the tool) carry no method: say so, never "undefined".
+// Previous values (betas that pre-date the tool, beta_type 'imported') carry no method:
+// say so, never "undefined" — and offer no Open, there is no method to reopen.
 const methodOf = (r) => recordMethod(r) || 'not recorded';
 const dash = (v) => (v == null || v === '' ? '—' : esc(v));
-const TYPE_SHORT = { raw: 'Window', adj: 'Adjusted', rlast: 'Rolling last', ravg: 'Rolling avg', rmed: 'Rolling median', manual: 'Manual', imported: 'Imported' };
+const TYPE_SHORT = { raw: 'Window', adj: 'Adjusted', rlast: 'Rolling last', ravg: 'Rolling avg', rmed: 'Rolling median', manual: 'Manual', imported: 'Previous values' };
 
 function rows() {
   const all = listHistory();
@@ -87,7 +88,7 @@ function table(list) {
         <td>${dash(r.observations)}</td>
         <td class="bt-l bt-notecell" title="${esc(r.note || '')}">${esc(r.note || '')}</td>
         <td class="bt-acts">
-          <button type="button" class="bt-link" data-load="${esc(r.id)}" title="${recordMethod(r) ? 'Open in the Calculator with this method' : 'Open this ticker in the Calculator'}">Open</button>
+          ${recordMethod(r) ? `<button type="button" class="bt-link" data-load="${esc(r.id)}" title="Open in the Calculator with this method">Open</button>` : ''}
           ${hs.confirm === r.id
             ? `<button type="button" class="bt-link bt-danger" data-delyes="${esc(r.id)}">Delete?</button><button type="button" class="bt-link" data-delno="1">Cancel</button>`
             : `<button type="button" class="bt-x" data-del="${esc(r.id)}" title="Delete this record">×</button>`}

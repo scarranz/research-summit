@@ -74,7 +74,7 @@ function betaCell(x) {
     val = `<input class="bt-in bt-num" data-row="${esc(r.id)}" data-f="manual" value="${esc(r.manual == null ? '' : r.manual)}" placeholder="β" inputmode="decimal">`;
   } else if (x.rec) {
     const m = x.rec;
-    val = `<b>${fmtB(m.beta, 3)}</b><small>${esc(`${recordMethod(m) ? `${recordMethod(m)} vs ${m.index_ticker}` : 'imported, method not recorded'} · ${m.submitted_at.slice(0, 10)}`)}</small>`;
+    val = `<b>${fmtB(m.beta, 3)}</b><small>${esc(`${recordMethod(m) ? `${recordMethod(m)} vs ${m.index_ticker}` : 'previous value'} · ${m.submitted_at.slice(0, 10)}`)}</small>`;
   } else {
     val = r.ticker ? '<span class="rs-noguide">no beta</span>' : '<span class="bt-muted">—</span>';
   }

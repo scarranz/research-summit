@@ -65,7 +65,7 @@ var yIdx = annualIdx(snResults.views.y);
 
 export var snSetup = {
   updated: snResults.updated,
-  intro: 'The Setup chart — the same actuals-vs-estimates chart and table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips and the guidance band on the annual lines SharkNinja actually guides. Two things to hold onto. There is <b>no Summit line</b> — no DCF model exists for SN — so the comparison is reported vs. Street only. And SharkNinja <b>guides the fiscal year, never the quarter</b>, so the guidance band appears on the annual view and not the quarterly one; the full guidance walk is under Evolution ▸ Guidance. The quarterly window is rolling — the last 8 reported quarters plus the one next forecast quarter — so it advances by itself as prints land.',
+  intro: 'The Setup chart — the same actuals-vs-estimates chart and table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips and the guidance band on the annual lines SharkNinja actually guides. Two things to hold onto. There is <b>no Summit line</b> — no DCF model exists for SN — so the comparison is reported vs. Street only. And SharkNinja <b>guides the fiscal year, never the quarter</b>, so the guidance band appears on the annual view and not the quarterly one; the full guidance walk is under Management ▸ Track Record. The quarterly window is rolling — the last 8 reported quarters plus the one next forecast quarter — so it advances by itself as prints land.',
   source: snResults.source,
   surprise: false,
   views: {
@@ -73,7 +73,7 @@ export var snSetup = {
          note: 'Rolling — the last 8 reported quarters plus the one next (forecast) quarter. SharkNinja does not guide by quarter, so no guidance band renders here. ' + snResults.views.q.note,
          metrics: sliceMetrics(snResults.views.q, qIdx), sections: mergedSection(snResults.views.q) },
     y: { label: 'Annual',
-         note: 'Reported years plus the one next forecast year. The guidance band on this view is the company\'s own FY outlook — see Evolution ▸ Guidance for how it moved print by print. ' + snResults.views.y.note,
+         note: 'Reported years plus the one next forecast year. The guidance band on this view is the company\'s own FY outlook — see Management ▸ Track Record for how it moved print by print. ' + snResults.views.y.note,
          metrics: sliceMetrics(snResults.views.y, yIdx), sections: mergedSection(snResults.views.y) }
   }
 };

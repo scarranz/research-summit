@@ -512,7 +512,7 @@ function toplineGeneralExtras(){
       '<div class="dd-note">' + SN_SUBCATS_NOTE + '</div>');
 }
 
-// ── Evolution ▸ Guidance ──────────────────────────────────────────────────────
+// ── Management ▸ Track Record ▸ Guidance (was Evolution ▸ Guidance) ──────────────────────────────────────────────────────
 // SN guides the FISCAL YEAR, never the quarter, so this is a ratchet table — one column
 // per issue date — not a per-quarter beat/miss chart. Deliberately NO canvas: with three
 // to four issue dates of RANGES per year, a table states it exactly and a chart would
@@ -568,7 +568,7 @@ function qGuidance(){
   var panes = SN_GUIDE_YEARS.map(function(y, i){
     return '<div data-snguidepane="' + esc(y.fy) + '"' + (i === 0 ? '' : ' hidden') + '>' + guideYearTable(y) + '</div>';
   }).join('');
-  return '<div class="dd-h">Guidance</div>' +
+  return '<div class="dd-h" style="margin-top:28px">Guidance — what management promised, print by print</div>' +
     '<div class="dd-sub">' + SN_GUIDE_LEDE + '</div>' +
     '<div class="guid-years">' + pills + '</div>' +
     panes +
@@ -587,7 +587,7 @@ function qEstimates(){
     (resultsEvoHtml('SN') || pendingBlock(SN_EST_PENDING));
 }
 
-// ── Evolution ▸ Strategy ──────────────────────────────────────────────────────
+// ── Top Line ▸ Segments ▸ Strategy (was Evolution ▸ Strategy) ──────────────────────────────────────────────────────
 // Canonical components only — no inline <style> (blueprint §3.3). The grid override
 // below is a style ATTRIBUTE on one element, the precedented way to get four columns
 // out of .ov-drivers' fixed three.
@@ -610,7 +610,7 @@ function qStrategy(){
       '<td><span class="ov-tag">' + esc(i[2]) + '</span></td><td>' + i[3] + '</td></tr>';
   }).join('');
 
-  return '<div class="dd-h">Strategy</div>' +
+  return '<div class="dd-h" style="margin-top:28px">Strategy — the operating model behind the growth</div>' +
     '<div class="dd-sub">' + SN_STRAT_LEDE + '</div>' +
 
     '<div class="ov-sec"><div class="ov-sec-h">The operating model — four capabilities, and what each should show up as</div>' +
@@ -632,7 +632,7 @@ function qStrategy(){
     '<div class="dd-note">' + esc(SN_STRAT_SOURCES) + '</div>';
 }
 
-// ── Evolution ▸ Timeline ──────────────────────────────────────────────────────
+// ── Management ▸ Track Record ▸ the public-company record (was Evolution ▸ Timeline) ──────────────────────────────────────────────────────
 // The PUBLIC-COMPANY record only. The 1994–2023 corporate genesis stays in the Overview
 // so there is one home for it. Tag filter chips narrow the list.
 function qTimeline(){
@@ -652,7 +652,7 @@ function qTimeline(){
     return '<tr><td class="ov-td-name">' + r[0] + '</td><td style="font-weight:600">' + esc(r[1]) + '</td><td>' + r[2] + '</td></tr>';
   }).join('');
 
-  return '<div class="dd-h">Timeline</div>' +
+  return '<div class="dd-h" style="margin-top:28px">The public-company record, since Jul 2023</div>' +
     '<div class="dd-sub">' + SN_TL_LEDE + '</div>' +
     chips + items +
     '<div class="ov-sec" style="margin-top:26px"><div class="ov-sec-h">Where management speaks — the IR cadence</div>' +
@@ -715,7 +715,9 @@ function deepDiveHtml(c){
       '<button type="button" class="ovt-subtab" data-ovst="segcus">Customers</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="segov">'+(segmentsOverviewHtml('SN')||'')+toplineGeneralExtras()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="segdrv" hidden>'+(segmentsHtml('SN')||'')+'</div>'+
+    // Strategy sits under the engine (Sep 2026): the engine is the GROWTH layer, Strategy the OPERATING
+    // layer behind it. It renders outside #sgWrap, so the engine's rebuilds never touch it.
+    '<div class="ovt-subpane" data-ovst="segdrv" hidden>'+(segmentsHtml('SN')||'')+qStrategy()+'</div>'+
     '<div class="ovt-subpane" data-ovst="segoth" hidden>'+(segmentsOtherHtml('SN')||'')+'</div>'+
     '<div class="ovt-subpane" data-ovst="segcus" hidden>'+(segmentsCustomersHtml('SN')||'')+'</div>'+
   '</div>';
@@ -732,16 +734,10 @@ function deepDiveHtml(c){
       '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="earnings">'+snCeHtml(c)+'</div>'+
     '<div class="ovt-subpane" data-ovst="results" hidden>'+resultsHtml('SN')+'</div>'+
     '<div class="ovt-subpane" data-ovst="estevo" hidden>'+qEstimates()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="guidance" hidden>'+qGuidance()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="strategy" hidden>'+qStrategy()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="timeline" hidden>'+qTimeline()+'</div>'+
   '</div>';
   // Valuation — Amazon's four sub-tabs on Amazon's own code (sharkninja-histmult / -peers /
   // -target-multiple / -sensitivity), fed Bloomberg Street consensus because SN has no Summit DCF.
@@ -767,7 +763,9 @@ function deepDiveHtml(c){
     '<div class="ovt-subpane" data-ovst="execboard">'+SN_MGMT.body()+'</div>'+
     '<div class="ovt-subpane" data-ovst="ownership" hidden>'+snOwnBody()+'</div>'+
     '<div class="ovt-subpane" data-ovst="govsbc" hidden>'+snGovBody()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="track" hidden>'+snTrackBody()+'</div>'+
+    // Evolution is Amazon's three (Earnings · Results · Estimates); SN's Guidance walk and the print-by-print
+    // record moved here in Sep 2026 — both are a record of what management promised and did.
+    '<div class="ovt-subpane" data-ovst="track" hidden>'+snTrackBody()+qGuidance()+qTimeline()+'</div>'+
   '</div>';
   h += '<div class="dd-pane" data-dd="misc" hidden>'+
     '<div class="ovt-subtabs">'+
@@ -845,7 +843,7 @@ function deepDiveInit(c){
     blPane.addEventListener('click', function(e){ var h=e.target.closest?e.target.closest('.rs-collap-h'):null; if(!h||!blPane.contains(h)) return;
       var b=h.nextElementSibling; if(!b||!b.classList.contains('rs-collap-b')) return; var open=b.hidden; b.hidden=!open;
       var ic=h.querySelector('.rs-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }); }
-  // Evolution ▸ Guidance — fiscal-year pills.
+  // Management ▸ Track Record ▸ Guidance — fiscal-year pills.
   root.querySelectorAll('[data-snguide]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var fy = btn.getAttribute('data-snguide');
@@ -867,7 +865,7 @@ function deepDiveInit(c){
       var d = key.indexOf('exec:') === 0 ? snTrackPop(key.slice(5)) : snCePop(key.slice(3));
       if(d) openModal(String(d.t||'').replace(/<[^>]+>/g,''), d.h||'');
     });
-  }  // Evolution ▸ Timeline — tag filter chips.
+  }  // Management ▸ Track Record ▸ the public-company record — tag filter chips.
   root.querySelectorAll('[data-sntl]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var tag = btn.getAttribute('data-sntl');

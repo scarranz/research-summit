@@ -7,8 +7,9 @@
 //     js/results-data/sn.js rather than hand-typed, so the Earnings tab and the Results tab can
 //     never disagree. `qr[i][3]` is the Street number for quarter i, `qa` the reported actual,
 //     `qy`/`qq` the year-ago and prior-quarter actuals the growth chips divide by.
-//     Only the 1q-out column exists: SN is not in BBG_CONSENSUS.txt, so there is no revision
-//     history, and the 4q/3q/2q columns stay null — the same situation amzn.js documents for itself.
+//     Only the 1q-out column exists: when this was built SN was not in BBG_CONSENSUS.txt, so the
+//     4q/3q/2q columns stay null. ⚠ SN joined the archive on Sep 17 2026 (estMatrix.cons in sn.js,
+//     10 snapshots) — those revision columns can now be filled from it; not done yet.
 //
 //   SN_CALL_EARNINGS — per quarter: setup notes, results notes, and the call (prepared remarks,
 //     every analyst question, highlights, proposed notes). From SharkNinja's releases and call

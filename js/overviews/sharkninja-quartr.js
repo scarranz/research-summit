@@ -136,9 +136,9 @@ export var SN_GUIDE_SOURCES_NOTE = 'Every figure is from the company\'s own "Fis
 // ═══════════════════════════════════════════════════════════════════════════════
 // EARNINGS — Evolution ▸ Earnings
 //
-// SCAFFOLD + WHAT IS REAL. Built so the consensus-dependent half fills in by itself the
-// day SN lands in BBG_CONSENSUS.txt — see scripts/consensus/map_sn.json for the exact
-// five-step path. NOTHING below is invented: where a number needs Street consensus and
+// SCAFFOLD + WHAT IS REAL. SN landed in BBG_CONSENSUS.txt on Sep 17 2026 (10 snapshots,
+// estMatrix.cons generated via scripts/consensus/map_sn.json). SN_EARN_LEDE / SN_EARN_PENDING
+// below predate that and are no longer rendered anywhere; kept only as history. NOTHING below is invented: where a number needs Street consensus and
 // none exists, the pane renders an explicit pending badge instead of a placeholder
 // figure. EARNINGS_CONVENTIONS §5 rule 3 — "estimates are never invented, absent →
 // to fill" — and rule 1 — "consensus = Bloomberg ONLY" — are the reason.
@@ -206,12 +206,11 @@ export var SN_LAST_PRINT = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export var SN_EST_PENDING = {
-  title: 'Estimates — the vintage axis — is wired but empty',
-  body: 'This pane answers a different question from Results: not "what did it earn against expectations" but <b>"how did the expectation itself move"</b> — the same forecast read at successive snapshot dates, so you can see the Street revise. It needs two generated blocks in <code>js/results-data/sn.js</code>, and SN has neither:<br><br>' +
-    '<b><code>estMatrix.cons</code></b> — consensus vintages, generated from <code>BBG_CONSENSUS.txt</code> deduped by <code>data_as_of</code>. SN is not among the eight tickers in that file.<br>' +
-    '<b><code>estMatrix.summit</code></b> and <b><code>evolution</code></b> — both generated from Summit MCP snapshots, one pull per model save. No Summit DCF model exists for SN.<br><br>' +
-    'The pane is already mounted and the generator config is written (<code>scripts/consensus/map_sn.json</code>), so this fills itself once the data lands — <code>emit_matrix.py</code> → <code>verify_preprint.py</code> → <code>apply_matrix.py</code>, with no code change here. Until then it shows this rather than an empty frame, because a blank pane reads as a bug and this is a sourcing gap.<br><br>' +
-    '<b>What stands in for it today:</b> the guidance walk under <b>Management ▸ Track Record</b> does the same job on the company\'s own numbers — SharkNinja\'s FY outlook read at each of the four prints that issued it, which is a genuine revision history, just management\'s rather than the Street\'s.',
+  title: 'Estimates — the Street half is loaded; the pane still needs a Summit model',
+  body: 'This pane answers a different question from Results: not "what did it earn against expectations" but <b>"how did the expectation itself move"</b> — the same forecast read at successive snapshot dates, so you can see the Street revise.<br><br>' +
+    '<b>Street consensus is now in.</b> SN joined <code>BBG_CONSENSUS.txt</code> on Sep 17, 2026 with <b>10 Bloomberg snapshots</b> (May 14, 2024 → Aug 10, 2026), generated into <code>estMatrix.cons</code>. That already powers the <b>"Estimates as of"</b> picker on <b>Evolution ▸ Results</b>: pick any snapshot and every chart and table re-reads the consensus that stood on that date.<br><br>' +
+    '<b>What this pane still lacks is its own block, <code>evolution</code>.</b> The portal generates it from Summit DCF model saves (<code>emit_evolution.py</code>), and <b>no Summit DCF model exists for SN</b>, so it renders this notice rather than an empty frame. The same holds for GOOGL.<br><br>' +
+    '<b>What stands in for it today:</b> the vintage picker on Results (the Street\'s revisions) and the guidance walk under <b>Management ▸ Track Record</b> (management\'s own FY outlook, print by print).',
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════

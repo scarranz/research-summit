@@ -2,9 +2,9 @@
 //
 // ── WHY THERE IS NO js/overviews/sn-bbg.js ───────────────────────────────────────────────────
 // docs/PANE_CATALOG.md §2 says Bottom Line's data file is GENERATED: run
-// `scripts/bbg_extract.py` against BBG_CONSENSUS.txt for the ticker. SN is not in that archive
-// (eight tickers, checked Sep 2026), so the generator cannot run and there is no `snBBG` to port
-// `aMarginsBody`/`aBridgeBody` against.
+// `scripts/bbg_extract.py` against BBG_CONSENSUS.txt for the ticker. When this file was written SN
+// was not in that archive, so there was no `snBBG` to port `aMarginsBody`/`aBridgeBody` against.
+// ⚠ SN JOINED THE ARCHIVE ON SEP 17 2026 (10 snapshots) — bbg_extract.py can now run; not done yet.
 //
 // What SN has instead is the Bloomberg FA_SN company-financials export, already parsed into
 // js/results-data/sn.js. So every P&L series on this tab is READ THROUGH from snResults at render

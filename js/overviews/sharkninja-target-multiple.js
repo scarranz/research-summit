@@ -211,15 +211,17 @@ function isRevision(i){ var k=kindOf(i); return k.rev || k.prof; }
 // Illustrative only — NOT data. SN has no DCF workbook, so no multiple was ever recorded; the one
 // stand-in per snapshot equals the Live defaults below so the placeholder mode shows its layout
 // without implying a different, invented view.
-var MOCK_EV = [14.0];
-var MOCK_PE = [32];
+var MOCK_EV = [12.0];
+var MOCK_PE = [19];
 
 // ── State ────────────────────────────────────────────────────────────────────────
 // _mode is the MULTIPLE SOURCE (recorded vs your own input); st.mode is the chart's reading
 // (level vs change). Two different questions, deliberately two different controls.
+// Defaults (SAB, Sep 17 2026): SN's own history, not Amazon's 14×/32× — the average Bloomberg NTM
+// multiple since Sep 2023 (sharkninja-bbg-multiples.js), rounded: P/E 18.6× → 19×, EV/EBITDA 12.4× → 12×.
 var _mode = 'preview';    // 'preview' = Recorded multiple · 'live' = your own multiples
-var _mEv  = 14;
-var _mPe  = 32;
+var _mEv  = 12;
+var _mPe  = 19;
 var _netDebt = -61;       // $M — net CASH of $61M at Jun 30, 2026 (Aug 2026 investor deck)
 var _ndSrc = 'deck';      // where _netDebt came from: 'deck' · 'live' (quote) · 'input' (typed)
 var _px = null;

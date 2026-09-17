@@ -99,8 +99,18 @@
 // SHARES or NET DEBT look wrong, log one raw `ratios` row and check the field names above.
 
 import { snResults } from '../results-data/sn.js';
-import { fetchPriceHistory, fetchRatiosHistory } from '../api.js';
+import { fetchRatiosHistory } from '../api.js';
 import { SUMMIT_CAT, fade } from '../viz-palette.js';
+// Sep 17 2026 — the FORWARD lines and the price now come from Bloomberg's own daily multiples, frozen in
+// sharkninja-bbg-multiples.js (SAB's BQL pull). Why: the copy below priced forward lines off ONE Sep 2026
+// consensus snapshot, so every forward line began on Sep 1 2026, and its price came from get-market-history,
+// which is still undeployed — the pane showed nothing. Bloomberg's PE_RATIO / HEADLINE_EV_TO_EBITDA series
+// are the market's multiple on each day against the consensus that stood that day, which is exactly what
+// this chart plots, for three bases: NTM (1GBF), FY+1 (2GY) and FY+2 (3GY). Current FY and FY+3 are not in
+// the pull and are disabled with the reason. Trailing P/E is still computed here (Bloomberg price ÷ reported
+// adjusted EPS); trailing EV/EBITDA still needs share count and net debt from get-market-history's ratios,
+// so it stays a gap until that function is deployed.
+import { SN_BBG_MULT } from './sharkninja-bbg-multiples.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function num(v){ return (typeof v==='number' && isFinite(v)) ? v : null; }
@@ -267,12 +277,15 @@ function buildActFyFromAnnual(key){
   m.periods.forEach(function(y,i){ if(m.act[i]!=null) out[y]=m.act[i]; });
   return out;
 }
-// The daily price series, from get-market-history's `prices` rows ({t: ms epoch, c: close}).
-function buildPxFromHistory(rows){
-  return rows.map(function(r){ return { d: Math.floor(r.t/DAY), px: num(r.c) }; })
-    .filter(function(p){ return p.px!=null; })
-    .sort(function(a,b){ return a.d-b.d; });
+// The daily price series, from the frozen Bloomberg pull. `i` keeps each point's index into
+// SN_BBG_MULT so buildSeries can read the same day's Bloomberg multiple without a date lookup.
+function buildPxFromBbg(){
+  var B=SN_BBG_MULT, out=[];
+  B.d.forEach(function(ds, i){ var px=num(B.px[i]); if(px!=null) out.push({ d:dnum(ds), px:px, i:i }); });
+  return out;
 }
+// Bloomberg's field for each forward basis; Current FY and FY+3 are not in the pull.
+var BBG_KEY = { pe:{ ntm:'pe1', fy1:'pe2', fy2:'pe3' }, evebitda:{ ntm:'ev1', fy1:'ev2', fy2:'ev3' } };
 // A quarter label out of a `ratios` row's own fiscal fields — tolerant of 'Q2', 2, '2026-Q2'…
 function parseQNum(fp){
   if(fp==null) return null;
@@ -307,13 +320,11 @@ function hmLoad(){
   if(hmData.loaded || hmData.loading) return Promise.resolve();
   hmData.loading=true;
   return Promise.all([
-    fetchPriceHistory('SN', START, TODAY).catch(function(e){ return { success:false, error:{message:(e&&e.message)||'price fetch failed'} }; }),
     fetchRatiosHistory('SN', 20).catch(function(e){ return { success:false, error:{message:(e&&e.message)||'ratios fetch failed'} }; }),
   ]).then(function(res){
-    var priceRes=res[0], ratiosRes=res[1];
-    var priceRows=(priceRes && priceRes.success && Array.isArray(priceRes.data)) ? priceRes.data : [];
+    var ratiosRes=res[0];
     var ratiosRows=(ratiosRes && ratiosRes.success && Array.isArray(ratiosRes.data)) ? ratiosRes.data : [];
-    PX = buildPxFromHistory(priceRows);
+    PX = buildPxFromBbg();
     var sn = buildSharesNetDebt(ratiosRows);
     SHARES = sn.shares; NETDEBT = sn.netDebt;
     EST.ebitda = buildEstFromSnapshot('ebitdaAdj');
@@ -324,17 +335,17 @@ function hmLoad(){
     ACT_FY_V.ebitda = buildActFyFromAnnual('ebitdaAdj');
     ACT_FY_V.eps = buildActFyFromAnnual('epsAdj');
     hmData.loading=false; hmData.loaded=true;
-    hmData.error = PX.length ? null : ((priceRes && priceRes.error && priceRes.error.message) || 'no price data');
+    hmData.error = PX.length ? null : 'no price data';
   });
 }
 
 // ── The denominator, which is the whole chart ────────────────────────────────────
 var HORIZONS = {
-  ntm:   { dir:'fwd',   label:'NTM',        title:'Next twelve months — FY0 and FY1 blended by the days left in FY0, so it slides instead of stepping' },
-  fy0:   { dir:'fwd',   label:'Current FY', title:'The fiscal year each date sits inside — this is the one that rolls every January' },
-  fy1:   { dir:'fwd',   label:'FY+1',       title:'One fiscal year past the one each date sits in' },
-  fy2:   { dir:'fwd',   label:'FY+2',       title:'Two fiscal years out' },
-  fy3:   { dir:'fwd',   label:'FY+3',       title:'Three fiscal years out — thin early in the window, where nobody had published one yet' },
+  ntm:   { dir:'fwd',   label:'NTM',        title:'Next twelve months — Bloomberg\'s blended forward (1GBF), so it slides instead of stepping' },
+  fy0:   { dir:'fwd',   label:'Current FY', title:'Not in the Bloomberg pull (it carries NTM, 2GY and 3GY only)', off:true },
+  fy1:   { dir:'fwd',   label:'FY+1',       title:'Bloomberg\'s second generic fiscal year (2GY): one year past the first year not yet reported — it rolls at the FY print, not on Jan 1' },
+  fy2:   { dir:'fwd',   label:'FY+2',       title:'Bloomberg\'s third generic fiscal year (3GY) — rolls at the FY print' },
+  fy3:   { dir:'fwd',   label:'FY+3',       title:'Not in the Bloomberg pull (it carries NTM, 2GY and 3GY only)', off:true },
   ltm:   { dir:'trail', label:'LTM',        title:'The last twelve reported months, stepping at each print' },
   lastfy:{ dir:'trail', label:'Last FY',    title:'The last fiscal year fully reported' },
 };
@@ -381,6 +392,16 @@ var METRICS = {
 // every table cell can show its own arithmetic instead of asking the reader to trust the ratio.
 function buildSeries(mk, hz){
   var m=METRICS[mk], out=[];
+  if(HORIZONS[hz].dir==='fwd'){
+    // Forward: Bloomberg's own daily multiple. P/E's denominator is implied (price ÷ multiple) so the
+    // tooltip can still show its arithmetic; EV/EBITDA's is not recoverable without the day's EV.
+    var bk=BBG_KEY[mk][hz], arr=bk ? SN_BBG_MULT[bk] : null;
+    PX.forEach(function(p){
+      var v=arr ? num(arr[p.i]) : null;
+      out.push({ d:p.d, px:p.px, den:(v!=null && mk==='pe') ? p.px/v : null, v:v });
+    });
+    return out;
+  }
   PX.forEach(function(p){
     var den=denomAt(m.metric, hz, p.d);
     var num=numerAt(m.metric, p.d, p.px);
@@ -572,7 +593,7 @@ function modesHtml(){
   };
   var fwdOff = !(vis('pe_f')||vis('ev_f')), trailOff = !(vis('pe_t')||vis('ev_t'));
   var h='<div class="rs-views" title="'+(fwdOff?'Both forward lines are hidden':'The period the forward estimates are FOR')+'">'+
-    FWD_H.map(function(k){ return b('hmhzf',k,st.hzF===k,HORIZONS[k].label,HORIZONS[k].title,fwdOff); }).join('')+'</div>';
+    FWD_H.map(function(k){ return b('hmhzf',k,st.hzF===k,HORIZONS[k].label,HORIZONS[k].title,fwdOff||HORIZONS[k].off); }).join('')+'</div>';
   h+='<div class="rs-views" title="'+(trailOff?'Both trailing lines are hidden':'What the company had already reported')+'">'+
     TRAIL_H.map(function(k){ return b('hmhzt',k,st.hzT===k,HORIZONS[k].label,HORIZONS[k].title,trailOff); }).join('')+'</div>';
   h+='<div class="rs-views">'+
@@ -728,8 +749,13 @@ function buildChart(scope, data){
   // where the forward denominator rolls, for the marker plugin
   var rolls=[];
   if(vis('roll') && st.hzF!=='ntm' && (vis('pe_f')||vis('ev_f'))){
-    var off = st.hzF==='fy1'?1 : st.hzF==='fy2'?2 : st.hzF==='fy3'?3 : 0;
-    for(var i=1;i<ref.length;i++) if(dYear(ref[i-1].d)!==dYear(ref[i].d)) rolls.push({ i:i, fy:dYear(ref[i].d)+off });
+    // Bloomberg's generic years roll when the fiscal year is REPORTED (the 4Q print), not on Jan 1:
+    // at FY2025's print (Feb 11 2026) 2GY moves from FY2026 to FY2027.
+    var off = st.hzF==='fy1'?2 : st.hzF==='fy2'?3 : 1;
+    Object.keys(SN_FY_KNOWN).forEach(function(y){
+      var kd=dnum(SN_FY_KNOWN[y]); if(SN_FY_KNOWN[y]===START) return;
+      for(var i=1;i<ref.length;i++) if(ref[i-1].d<kd && ref[i].d>=kd){ rolls.push({ i:i, fy:(+y)+off }); break; }
+    });
   }
 
   var everyN=Math.max(1, Math.round(ref.length/8));
@@ -761,7 +787,7 @@ function buildChart(scope, data){
               if(!p || p.v==null) return labelOf(s)+': no estimate on this date';
               // every tooltip shows its own arithmetic — the price ÷ the number that stood that day
               return labelOf(s)+': '+fmtX(p.v)+'  ·  '+fmtPxv(p.px)+
-                '  ÷  '+METRICS[s.metric].denomName+' '+METRICS[s.metric].denomFmt(p.den);
+                (p.den!=null ? '  ÷  '+(s.dir==='fwd'?'implied ':'')+METRICS[s.metric].denomName+' '+METRICS[s.metric].denomFmt(p.den) : '  (Bloomberg)');
             } } } },
       scales:{
         x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:10 }, maxRotation:0, autoSkip:false,
@@ -793,7 +819,7 @@ function renderRange(scope, data){
   var h='<span class="hm-range-l">Range</span>'+vs.map(function(s){
     var sm=data[s.k].sm;
     if(!sm) return '<span class="hm-range-i"><span class="hm-sw" style="background:'+s.color+'"></span>'+
-      esc(s.short)+' <b>—</b> <span>no estimate this far back</span></span>';
+      esc(s.short)+' <b>—</b> <span>'+(s.k==='ev_t' ? 'needs share count and net debt (get-market-history, not deployed)' : 'no data in this range')+'</span></span>';
     return '<span class="hm-range-i"><span class="hm-sw" style="background:'+s.color+'"></span>'+
       esc(s.short)+' <b>'+fmtX(sm.min)+' – '+fmtX(sm.max)+'</b>'+
       '<span>now '+fmtX(sm.last)+'</span></span>';
@@ -847,16 +873,17 @@ function footHtml(){
     'EV/EBITDA, so one shared scale would flatten EV/EBITDA into a line along the floor. '+
     'Quarterly and annual points are the <b>average</b> over the period. The range readout follows the <b>selected range</b>, so it moves with '+
     'the slider. '+
-    '<b>Sourcing.</b> Price is Massive\'s daily close. Diluted shares and net debt are derived each quarter from the same feed\'s ratios '+
-    '(market cap ÷ price, and enterprise value − market cap). EPS is <b>adjusted diluted EPS</b> and EBITDA is <b>adjusted EBITDA</b> — the '+
-    'bases SharkNinja headlines and guides. <b>Forward lines exist only from Sep 1, 2026.</b> The Street numbers are Bloomberg (BST) '+
-    'consensus from a <b>single Sep 2026 snapshot</b> — SN has no archive of past estimates, so that one snapshot is dated Sep 1, 2026 and is '+
-    'deliberately <b>not</b> carried back across history (that would price 2024 against a 2026 estimate). Before it, every forward line is '+
-    'blank rather than guessed. Trailing lines are reported actuals: <b>LTM</b> is the sum of the last four reported quarters of adjusted EPS '+
-    'and — unlike Amazon — adjusted EBITDA, which SN reports quarterly, so <b>LTM EV/EBITDA is available</b>; the quarterly record starts '+
-    'at 3Q23, so LTM begins at the 2Q24 print (Aug 8, 2024) and <b>Last FY</b> covers the stretch before it. Print dates for stepping are a '+
-    'hand-kept calendar of SN\'s earnings-release dates (Quartr event record), since there is no estimate archive to read them from. '+
-    'Price history starts at SN\'s NYSE listing (Jul 31, 2023).';
+    '<b>Sourcing.</b> <b>Forward lines are Bloomberg\'s own daily multiples</b> — <code>PE_RATIO</code> and <code>HEADLINE_EV_TO_EBITDA</code> '+
+    'against the BEst consensus that stood on each day, pulled on the Terminal on '+esc(SN_BBG_MULT.asOf)+' and frozen into the repo: '+
+    '<b>NTM</b> is Bloomberg\'s blended forward (1GBF), <b>FY+1</b> and <b>FY+2</b> are its second and third generic fiscal years (2GY, 3GY), which '+
+    '<b>roll at the fiscal-year print</b>, not on Jan 1 — that is where the dashed roll markers sit. Current FY and FY+3 are not in the pull. '+
+    'Bloomberg\'s multiples start Sep 11, 2023; price is Bloomberg\'s daily close from SN\'s NYSE listing (Jul 31, 2023), so the first weeks show '+
+    'a price and no multiple. The line ends on the pull date and is refreshed by re-running the Terminal template. '+
+    'Trailing lines are computed here from reported actuals: <b>LTM</b> P/E is the price ÷ the last four reported quarters of <b>adjusted diluted EPS</b> '+
+    '(the quarterly record starts at 3Q23, so LTM begins at the 2Q24 print, Aug 8, 2024, and <b>Last FY</b> covers the stretch before it). '+
+    '<b>Trailing EV/EBITDA needs the share count and net debt on each date</b>, which come from the <code>get-market-history</code> ratios feed; '+
+    'until that function is deployed those two lines stay blank rather than guessed. Print dates for stepping are a hand-kept calendar of SN\'s '+
+    'earnings-release dates (Quartr event record).';
 }
 
 // ── Render ───────────────────────────────────────────────────────────────────────

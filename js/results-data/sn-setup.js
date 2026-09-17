@@ -8,13 +8,11 @@
 // nothing. So the chart it feeds is real today: reported actuals through 2Q26, and Bloomberg
 // Street consensus on 3Q26/4Q26 from the FA_SN company-financials export.
 //
-// ⚠ THE KPI SET IS PROVISIONAL. EARNINGS_CONVENTIONS §5 rule 6 says the metrics allowed in the
+// ⚠ THE KPI SET IS GATED (Sep 17 2026). EARNINGS_CONVENTIONS §5 rule 6 says the metrics allowed in the
 // Setup grid and charts are EXACTLY the ones BBG_CONSENSUS.txt authorizes for the ticker —
 // "a metric existing in the Summit DCF, in the company's disclosure, or already drawn in the
-// Overview does NOT make it a valid Setup/chart KPI." SN is not yet one of the eight tickers in
-// that file, so there is no authorized set to gate against and the lines below are simply
-// everything snResults carries. When SN is added to the workbook, re-check this file against the
-// txt's metric1..9 + metric_kpi1..N for SN and DROP anything it does not authorize.
+// Overview does NOT make it a valid Setup/chart KPI." SN landed in that file on Sep 17 2026; the
+// AUTHORIZED list below is its code set. If the workbook adds a line, add its key here too.
 //
 // ⚠ NO SUMMIT LINE. There is no Summit DCF model for SN, so `summit` is null throughout and the
 // engine draws actual vs Street only. That is a real gap, not a rendering bug.
@@ -55,9 +53,23 @@ function annualIdx(view){
   return idx;
 }
 
+// EARNINGS_CONVENTIONS §5 rule 6 — the Setup grid and charts carry EXACTLY the lines
+// BBG_CONSENSUS.txt authorizes for SN (verified Sep 17 2026, see scripts/consensus/map_sn.json).
+// The txt has no adjusted EPS, adjusted net income, GAAP EBITDA, region split, D&A or tax rate,
+// so those stay on Results but never enter the Setup.
+var AUTHORIZED = ['rev','segCleaning','segCookBev','segFoodPrep','segBeautyHome','brandShark','brandNinja',
+  'grossProfit','opIncome','ebitdaAdj','niGaap','epsGaap','sm','ga','rd'];
+
 function mergedSection(view){
-  var groups = view.sections.reduce(function(a, s){ return a.concat(s.groups); }, []);
+  var groups = view.sections.reduce(function(a, s){ return a.concat(s.groups); }, [])
+    .map(function(g){ return { label: g.label, keys: g.keys.filter(function(k){ return AUTHORIZED.indexOf(k) >= 0; }) }; })
+    .filter(function(g){ return g.keys.length; });
   return [{ key: 'setup', label: 'All tracked lines', defaultMetric: 'rev', groups: groups }];
+}
+function authorizedOnly(metrics){
+  var out = {};
+  AUTHORIZED.forEach(function(k){ if (metrics[k]) out[k] = metrics[k]; });
+  return out;
 }
 
 var qIdx = quarterlyIdx(snResults.views.q);
@@ -71,9 +83,9 @@ export var snSetup = {
   views: {
     q: { label: 'Quarterly',
          note: 'Rolling — the last 8 reported quarters plus the one next (forecast) quarter. SharkNinja does not guide by quarter, so no guidance band renders here. ' + snResults.views.q.note,
-         metrics: sliceMetrics(snResults.views.q, qIdx), sections: mergedSection(snResults.views.q) },
+         metrics: authorizedOnly(sliceMetrics(snResults.views.q, qIdx)), sections: mergedSection(snResults.views.q) },
     y: { label: 'Annual',
          note: 'Reported years plus the one next forecast year. The guidance band on this view is the company\'s own FY outlook — see Management ▸ Track Record for how it moved print by print. ' + snResults.views.y.note,
-         metrics: sliceMetrics(snResults.views.y, yIdx), sections: mergedSection(snResults.views.y) }
+         metrics: authorizedOnly(sliceMetrics(snResults.views.y, yIdx)), sections: mergedSection(snResults.views.y) }
   }
 };

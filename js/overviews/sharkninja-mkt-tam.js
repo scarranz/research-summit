@@ -452,19 +452,91 @@ function tamBrands(){
   '</div><div class="dd-note">' + esc(nw.note) + '</div>';
   return '<div class="snv-grid2">' + sales + subs + '</div>' + newChips;
 }
+// Where growth comes from — one 100%-stacked chart instead of two hand-drawn bar strips (Sep 17 2026).
+// Same two deck numbers, now a real chart: chips hide a pillar from the bars AND the table, the table
+// carries every value drawn, and both readings sit on one axis so they can be compared at a glance.
 function tamPillars(){
-  var p = SN_DECK.pillars, cols = [SUMMIT_CAT[0], SUMMIT_CAT[2], SUMMIT_CAT[1]];
-  var ly = ((SN_TAM.algorithm || {}).deck || {}).launchYear;
-  return '<div class="snv-grid2"><div>' +
-      '<div class="snv-pillars">' + p.map(function(x, i){ return '<div class="snv-pillar"><div class="snv-pillar-bar" style="height:' + (x.v * 2.2) + '%;background:' + cols[i] + '">~' + x.v + '%</div></div>'; }).join('') + '</div>' +
-      '<div class="snv-pillar-l">' + p.map(function(x){ return '<div>' + esc(x.label) + '<small>' + esc(x.def) + '</small></div>'; }).join('') + '</div>' +
-      '<div class="dd-note">Share of net sales growth, 3-year average 2023–2025, approximate. <a href="' + esc(SN_DECK.pillarsLink) + '" target="_blank" rel="noopener">slide 20 ↗</a></div>' +
+  var p = SN_DECK.pillars, ly = ((SN_TAM.algorithm || {}).deck || {}).launchYear;
+  var COL = { existing: SUMMIT_CAT[0], intl: SUMMIT_CAT[2], newcats: SUMMIT_CAT[1] };
+  var by = {}; p.forEach(function(x){ by[x.k] = x; });
+  var labels = ['3-year average 2023–25'], twoBars = ly != null;
+  if (twoBars) labels.push('Within the launch year');
+  // Order bottom-up: the mature base, then international, then the new categories on top — so the
+  // slice the tab is about sits at the top of both bars and is read against the same 100%.
+  var series = ['existing', 'intl', 'newcats'].filter(function(k){ return by[k]; }).map(function(k){
+    var v = [by[k].v];
+    if (twoBars) v.push(k === 'existing' ? (100 - ly) : (k === 'newcats' ? ly : null));
+    return { k: k, label: by[k].label, color: COL[k], data: v };
+  });
+  var chart = snvChart('sn-pillars', {
+    title: 'Share of net sales growth', unit: '%', unitLabel: 'Share of net sales growth, %', stacked: true,
+    height: 250, yMax: 100, labels: labels, series: series, tableHead: 'Growth contribution by pillar',
+    note: 'Deck figures, approximate and rounded to tens. The launch-year bar splits the same growth into what came from ' +
+      'categories already selling (international included) and what came from categories launched that same year — so ' +
+      'International is blank there by construction, not missing.',
+  });
+  return '<div class="snv-grid2"><div>' + chart +
+      '<div class="dd-note"><a href="' + esc(SN_DECK.pillarsLink) + '" target="_blank" rel="noopener">slide 20 ↗</a>' +
+      (twoBars ? ' · <a href="' + esc(SN_DECK.launchYearLink) + '" target="_blank" rel="noopener">slide 21 ↗</a>' : '') + '</div>' +
     '</div><div>' +
-      '<div class="snv-sub" style="margin:4px 0 8px"><b>In the year a category launches</b>, it adds only a sliver of growth — the core carries the top line, and new categories mature into it.</div>' +
-      (ly != null ? '<div class="snv-split"><div style="flex:' + (100 - ly) + ';background:' + SUMMIT_CAT[0] + '">~' + (100 - ly) + '%</div><div style="flex:' + ly + ';background:' + SUMMIT_CAT[1] + '">~' + ly + '%</div></div>' +
-        '<div class="snv-split-leg"><span><i style="background:' + SUMMIT_CAT[0] + '"></i>Existing categories</span><span><i style="background:' + SUMMIT_CAT[1] + '"></i>New categories launched in-year</span></div>' +
-        '<div class="dd-note">Contribution to net sales growth within the launch year, 2023–2025 average. <a href="' + esc(SN_DECK.launchYearLink) + '" target="_blank" rel="noopener">slide 21 ↗</a></div>' : '') +
+      '<div class="snv-sub" style="margin:4px 0 10px"><b>In the year a category launches</b> it adds only a sliver of growth — ' +
+      (twoBars ? '~' + ly + '% of it — ' : '') + 'the core carries the top line, and new categories mature into it. That is the ' +
+      'case for reading the two bars together: ~' + (by.newcats ? by.newcats.v : '—') + '% of growth comes from categories launched ' +
+      'in the last two years, but only ~' + (twoBars ? ly : '—') + '% from the ones launched this year.</div>' +
+      '<div class="snv-defs">' + p.map(function(x){
+        return '<div class="snv-def"><span class="snv-def-sw" style="background:' + COL[x.k] + '"></span>' +
+          '<div><b>' + esc(x.label) + '</b><small>' + esc(x.def) + '</small></div></div>';
+      }).join('') + '</div>' +
     '</div></div>';
+}
+
+// The entries themselves, as a year-by-year timeline (Sep 17 2026). The ledger cards below stay —
+// this is the same list read as a cadence: how many categories a year, by which brand, and which ones.
+function tamTimeline(){
+  var cats = arr(SN_TAM.categories); if (!cats.length) return '';
+  var years = [], byYear = {};
+  cats.forEach(function(c){
+    var y = String(c.entered || '').trim(); if (!y) return;
+    if (!byYear[y]){ byYear[y] = []; years.push(y); }
+    byYear[y].push(c);
+  });
+  years.sort();
+  var planned = function(y){ return /plan/i.test(y); };
+  var chartLabels = years.map(function(y){ return planned(y) ? y.replace(/\s*\(planned\)/i, ' P') : y; });
+  var countBy = function(brand){
+    return years.map(function(y){
+      return byYear[y].filter(function(c){ return new RegExp(brand, 'i').test(c.brand || ''); }).length;
+    });
+  };
+  var firstPlanned = -1; years.forEach(function(y, i){ if (firstPlanned < 0 && planned(y)) firstPlanned = i; });
+  var chart = snvChart('sn-newcats-cadence', {
+    title: 'Categories entered per year', unit: 'n', unitLabel: 'Category entries, count', stacked: true, labelsOn: true,
+    height: 230, labels: chartLabels, estFrom: firstPlanned,
+    series: [{ k: 'shark', label: 'Shark', color: SUMMIT_CAT[0], data: countBy('Shark') },
+             { k: 'ninja', label: 'Ninja', color: SUMMIT_CAT[1], data: countBy('Ninja') }],
+    tableHead: 'Category entries per year, by brand',
+    note: 'Counted off the ledger below — the categories SharkNinja itself has called an entry, not the deck\'s sub-category count ' +
+      '(which also moves with re-definitions). 2021–2022 predate the listing. The last column is the one category management has ' +
+      'named but not yet entered.',
+  });
+  var lanes = years.map(function(y){
+    var list = byYear[y], pl = planned(y);
+    return '<div class="snv-tl-row' + (pl ? ' is-plan' : '') + '">' +
+      '<div class="snv-tl-yr">' + esc(pl ? y.replace(/\s*\(planned\)/i, '') : y) + '<small>' + list.length + (pl ? ' planned' : (list.length === 1 ? ' entry' : ' entries')) + '</small></div>' +
+      '<div class="snv-tl-items">' + list.map(function(c){
+        var col = /Shark/i.test(c.brand || '') ? SUMMIT_CAT[0] : SUMMIT_CAT[1];
+        var name = String(c.name || '').replace(/\s*—.*$/, '');
+        var prod = (/\((.*?)\)/.exec(name) || [])[1] || '';
+        var plain = name.replace(/\s*\(.*\)\s*$/, '');
+        var tam = String(c.tam || '').replace(/&amp;/g, '&');
+        return '<div class="snv-tl-item" style="border-left-color:' + col + '" title="' + esc(tam) + '">' +
+          '<b>' + plain + '</b>' + (prod ? '<span>' + esc(prod) + '</span>' : '') + '</div>';
+      }).join('') + '</div></div>';
+  }).join('');
+  return '<div class="snv-grid2"><div>' + chart + '</div><div><div class="snv-chart"><div class="snv-chart-h">Which categories, and when</div>' +
+    '<div class="snv-tl">' + lanes + '</div>' +
+    '<div class="dd-note">Blue = Shark, orange = Ninja. Hover a category for the market size as management sized it; the full ledger, with what each one did, is under the cards below.</div>' +
+    '</div></div></div>';
 }
 function tamLedgerCards(){
   var cats = arr(SN_TAM.categories); if (!cats.length) return '';
@@ -523,6 +595,9 @@ export function snTamBody(){
 
     head('Where growth came from, 2023–2025', d.pillarsLink) + tamPillars() +
     fold('Said vs shown — how management describes the formula', tamAlgorithmText()) +
+
+    head('The cadence of new categories', ((SN_TAM.subcats || {}).byBrand && SN_TAM.subcats.byBrand.length ? SN_TAM.subcats.byBrand[SN_TAM.subcats.byBrand.length - 1].url : ''),
+      'How many categories a year, which brand opened them, and what each one is.') + tamTimeline() +
 
     head('The categories it entered, and what they were worth') + tamLedgerCards() +
     fold('What each category did — the full ledger', tamLedger()) +

@@ -3137,6 +3137,18 @@ img.org-photo { object-fit: cover; }
 .snv-chip { font-size: 11.5px; font-weight: 600; color: var(--navy); background: #F2F5F8; border: 1px solid var(--bdr); border-radius: 14px; padding: 4px 10px; }
 .snv-chip.is-new { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.35); color: #1B3F94; }
 .snv-chip.is-out { text-decoration: line-through; opacity: .55; }
+.snv-chip-up { background: rgba(22,163,74,.09); border-color: rgba(22,163,74,.32); color: #0F7A46; }
+.snv-chip-dn { background: rgba(220,38,38,.08); border-color: rgba(220,38,38,.3); color: #B0322F; }
+
+/* Gross Margin: one card per call — the drivers it named and the quote */
+.snv-gm-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; margin-top: 8px; }
+.snv-gm-card { border: 1px solid var(--bdr); border-left: 4px solid var(--navy); border-radius: 12px; padding: 12px 14px; background: var(--w); }
+.snv-gm-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13px; color: var(--navy); }
+.snv-gm-num { font-size: 15px; font-weight: 800; color: var(--navy); text-align: right; white-space: nowrap; }
+.snv-gm-num small { display: block; font-size: 10.5px; font-weight: 600; color: var(--mu); }
+.snv-gm-q { margin: 9px 0 0; padding: 9px 11px; background: var(--pale, #F4F6F9); border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--navy); }
+.snv-gm-q cite { display: block; font-style: normal; font-size: 10.5px; color: var(--mu); margin-top: 5px; }
+.snv-gm-note { font-size: 11px; color: var(--mu); line-height: 1.45; margin-top: 8px; padding-top: 7px; border-top: 1px dashed var(--bdr); }
 .snv-hub { width: 118px; height: 118px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 11px; line-height: 1.3; padding: 10px; box-sizing: border-box; }
 .snv-hub b { font-size: 13px; }
 @media (max-width: 720px) { .snv-demand { grid-template-columns: 1fr; } .snv-hub { margin: 0 auto; } }
@@ -3163,8 +3175,45 @@ img.org-photo { object-fit: cover; }
 .snv-card-t { font-size: 12.5px; font-weight: 800; color: var(--navy); line-height: 1.3; }
 .snv-card-d { font-size: 11.5px; color: var(--navy); line-height: 1.45; }
 .snv-card-m { font-size: 10.5px; color: var(--mu); line-height: 1.4; }
+
+/* Growth pillars: the definition list beside the chart */
+.snv-defs { display: grid; gap: 8px; margin-top: 4px; }
+.snv-def { display: grid; grid-template-columns: 12px 1fr; gap: 9px; align-items: start; font-size: 12px; color: var(--navy); }
+.snv-def-sw { width: 12px; height: 12px; border-radius: 3px; margin-top: 2px; }
+.snv-def small { display: block; font-weight: 500; color: var(--mu); font-size: 10.5px; line-height: 1.4; margin-top: 2px; }
+
+/* New-category timeline: one lane per year of entries */
+.snv-tl { display: grid; gap: 7px; margin-top: 4px; }
+.snv-tl-row { display: grid; grid-template-columns: 58px 1fr; gap: 10px; align-items: start; }
+.snv-tl-yr { font-size: 15px; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; line-height: 1.15; }
+.snv-tl-yr small { display: block; font-size: 10px; font-weight: 600; color: var(--mu); }
+.snv-tl-items { display: flex; flex-wrap: wrap; gap: 6px; }
+.snv-tl-item { border: 1px solid var(--bdr); border-left: 4px solid var(--navy); border-radius: 8px; padding: 5px 9px; background: var(--w); max-width: 240px; }
+.snv-tl-item b { display: block; font-size: 11.5px; font-weight: 700; color: var(--navy); line-height: 1.25; }
+.snv-tl-item span { display: block; font-size: 10px; color: var(--mu); line-height: 1.3; margin-top: 1px; }
+.snv-tl-txt { font-size: 11.5px; font-weight: 600; color: var(--navy); line-height: 1.45; }
+.snv-tl-txt b { display: inline; font-weight: 800; }
+
+/* Consensus table (sharkninja-growth.js): estimate columns shaded, the reference column muted. */
+.cons-tbl tr.cons-sub td { font-size: 10.5px; color: var(--mu); font-weight: 600; padding-top: 0; }
+.cons-tbl tr.cons-sub td.ov-td-name { font-weight: 500; padding-left: 22px; }
+.cons-tbl th.cons-ref, .cons-tbl td.cons-ref { background: #F7F9FC; }
+.cons-tbl .ov-stat-mut { font-size: 10px; }
+.cons-tbl tr.cons-head td { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--steel); background: #F7F9FB; padding: 7px 16px; }
+.cons-tbl tr.cons-in td.ov-td-name { padding-left: 22px; font-weight: 500; }
+.snv-tl-row.is-plan .snv-tl-item { border-style: dashed; background: #FBFCFE; }
+.snv-tl-row.is-plan .snv-tl-yr { color: var(--mu); }
+@media (max-width: 720px) { .snv-tl-row { grid-template-columns: 1fr; gap: 4px; } }
 .snv-pill { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; border-radius: 10px; padding: 2px 8px; color: #fff; white-space: nowrap; }
 .snv-list { margin: 2px 0 0; padding-left: 16px; font-size: 11.5px; color: var(--navy); line-height: 1.5; }
+
+/* The Deep Dive's sourcing paragraphs, collapsed (sharkninja.js) — a summary bar, not a wall. */
+.ov-foot-d { margin-top: 18px; border-top: 1px solid var(--bdr); padding-top: 10px; }
+.ov-foot-d > summary { cursor: pointer; font-size: 11.5px; font-weight: 700; color: var(--steel); list-style: none; }
+.ov-foot-d > summary::-webkit-details-marker { display: none; }
+.ov-foot-d > summary::before { content: 'B8'; display: inline-block; margin-right: 6px; color: var(--mu); font-size: 9px; }
+.ov-foot-d[open] > summary::before { content: 'BE'; }
+.ov-foot-d > summary:hover { color: var(--navy); }
 
 /* Era timeline (marketing) */
 .snv-eras { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }

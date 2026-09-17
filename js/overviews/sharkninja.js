@@ -48,7 +48,7 @@ import {
   SN_TARIFF_MARGIN, SN_TARIFF_NOTE, SN_CAPSTRUCT, SN_QUARTR_SOURCES,
 } from './sharkninja-quartr.js';
 
-// Bottom Line (docs/PANE_CATALOG.md §2). No snBBG exists — SN is not in BBG_CONSENSUS.txt, so
+// Bottom Line (docs/PANE_CATALOG.md §2). No snBBG exists — SN was not in BBG_CONSENSUS.txt when this was built (it is since Sep 17 2026), so
 // bbg_extract.py cannot run; every P&L series is read through from js/results-data/sn.js instead.
 import {
   SN_BL_YEARS, blSeries, SN_BL_EXTRA, SN_BL_VIEWS, SN_BL_LEDE, SN_BL_MARGIN_STORY_V2,
@@ -68,6 +68,8 @@ import { snTargetMult } from './sharkninja-target-multiple.js';
 import { snSens } from './sharkninja-sensitivity.js';
 // Miscellaneous ▸ Marketing Strategy · TAM (frozen data in sharkninja-mkt-data.js / sharkninja-tam-data.js).
 import { snMktBody, snTamBody, snMktInit, snTamInit } from './sharkninja-mkt-tam.js';
+import { snGmBody, snGmInit } from './sharkninja-gm.js';
+import { snGrowthBody, snGrowthInit } from './sharkninja-growth.js';
 // Management runs on Amazon's four bodies (shared makeManagement mold) — see sharkninja-mgmt.js.
 import { SN_MGMT, snOwnBody, snGovBody, snTrackBody, snTrackPop } from './sharkninja-mgmt.js';
 // Bottom Line ▸ General runs on Amazon's code (picker · margins · bridge · net walk · SBC · expense explorer) — see sharkninja-bl.js.
@@ -839,23 +841,33 @@ function deepDiveHtml(c){
     '<div class="ovt-subpane" data-ovst="track" hidden>'+snTrackBody()+qGuidance()+qTimeline()+'</div>'+
   '</div>';
   h += '<div class="dd-pane" data-dd="misc" hidden>'+
+    // Sep 17 2026 (SAB): Capex & Depreciation, M&A and Other Analysis RETIRED from the tab bar.
+    // Their builders (miscCapex / miscMna / miscOther / qOtherAnalysisExtras) and every data file
+    // behind them are untouched below, so any of the three can be put back by restoring one line
+    // each. The tariff / refund / FY2026-raise block that lived inside Other Analysis was MOVED into
+    // the new Gross Margin pane (sharkninja-gm.js) rather than dropped — it is the explanation of
+    // the gross-margin line. Still out of view: the capex trend, the JS Global separation and M&A
+    // record, and Other Analysis's tax, debt, capital-structure and provenance blocks.
     '<div class="ovt-subtabs">'+
-      '<button type="button" class="ovt-subtab active" data-ovst="capex">Capex &amp; Depreciation</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="mna">M&amp;A</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="other">Other Analysis</button>'+
+      '<button type="button" class="ovt-subtab active" data-ovst="sngm">Gross Margin</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="sngrow">Units vs Price</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="snmkt">Marketing Strategy</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="sntam">TAM</button>'+
     '</div>'+
-    '<div class="ovt-subpane" data-ovst="capex">'+miscCapex()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="mna" hidden>'+miscMna()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="other" hidden>'+miscOther()+qOtherAnalysisExtras()+'</div>'+
+    // Gross Margin (Sep 2026, SAB) — why the line rose, what management named each quarter, and the outlook.
+    '<div class="ovt-subpane" data-ovst="sngm">'+snGmBody()+'</div>'+
     // Marketing Strategy + TAM (Sep 2026, SAB) — an explicit addition to the Misc spine; see sharkninja-mkt-tam.js.
+    // Units vs Price (Sep 2026, SAB) — what can and cannot be decomposed; see sharkninja-growth.js.
+    '<div class="ovt-subpane" data-ovst="sngrow" hidden>'+snGrowthBody()+'</div>'+
     '<div class="ovt-subpane" data-ovst="snmkt" hidden>'+snMktBody()+'</div>'+
     '<div class="ovt-subpane" data-ovst="sntam" hidden>'+snTamBody()+'</div>'+
   '</div>';
   // The two intro callouts that sat above the tabs are gone (Amazon's Deep Dive opens straight on its tabs). The
   // Quartr note is still true, so it moves down here with the sources; the data-status callout (SN_DD_INTRO) was out of date.
-  h += '<div class="ov-foot">'+esc(SN_DD_SOURCES)+' '+esc(SN_BL_SOURCES)+' '+esc(SN_MISC_SOURCES)+' '+esc(SN_VAL_SOURCES)+' '+esc(SN_QUARTR_SOURCES)+' '+SN_Q_INTRO+'</div>';
+  // Sep 17 2026 (SAB): the five sourcing paragraphs were a wall of text under every Deep Dive tab, so
+  // they now sit behind a native <details> — collapsed by default, nothing lost, no JS to wire.
+  h += '<details class="ov-foot-d"><summary>Sources, and what is flagged for review</summary>'+
+    '<div class="ov-foot" style="border:0;margin-top:0">'+esc(SN_DD_SOURCES)+' '+esc(SN_BL_SOURCES)+' '+esc(SN_MISC_SOURCES)+' '+esc(SN_VAL_SOURCES)+' '+esc(SN_QUARTR_SOURCES)+' '+SN_Q_INTRO+'</div></details>';
   h += '</div>';
   return h;
 }
@@ -873,7 +885,13 @@ function ddBuildVisible(root){
   var pane = root.querySelector('.dd-pane:not([hidden])'); if(!pane) return;
   var sub = pane.querySelector('.ovt-subpane:not([hidden])'); if(!sub) return;
   var key = sub.getAttribute('data-ovst');
-  if(key==='results'){ requestAnimationFrame(function(){ initResults(null, 'SN'); }); return; }
+  // Pass THIS pane's own .rs-wrap, exactly as amzn.js:5557 does. With `null` the engine falls back
+  // to `document.querySelector('.rs-wrap:not(#rsEvoWrap)')`, which since the Marketing Strategy and
+  // TAM panes landed (they host their own engine instances) is a DIFFERENT wrap earlier in the DOM —
+  // so the metric dropdowns and range pills on Results were wired to a pane nobody was looking at
+  // and the charts never rebuilt (SAB, Sep 17 2026).
+  if(key==='results'){ requestAnimationFrame(function(){
+    initResults(sub.querySelector('.rs-wrap:not(#rsEvoWrap)'), 'SN'); }); return; }
   // amzn.js aBuildSub('valuation', …), verbatim.
   if(key==='histmult'){ requestAnimationFrame(function(){ snHistMult.init(root); }); return; }
   if(key==='sensitivity'){ requestAnimationFrame(function(){ snSens.init(root); }); return; }
@@ -883,8 +901,11 @@ function ddBuildVisible(root){
   // Earnings ▸ Setup hosts the Results engine on the SN_SETUP dataset — only build it when
   // the Setup phase is the visible one (Chart.js needs a non-null offsetParent).
   if(key==='earnings'){ snCeBuild(root); return; }
+  if(key==='sngm'){ requestAnimationFrame(function(){ snGmInit(sub); }); return; }
+  if(key==='sngrow'){ requestAnimationFrame(function(){ snGrowthInit(sub); }); return; }
   if(key==='snmkt'){ requestAnimationFrame(function(){ snMktInit(sub); }); return; }
   if(key==='sntam'){ requestAnimationFrame(function(){ snTamInit(sub); }); return; }
+  // capex/mna/other: sub-tabs retired Sep 17 2026; the branch stays so restoring a tab needs no wiring change.
   if(key==='capex' || key==='mna' || key==='other'){ requestAnimationFrame(function(){ snvInit(sub); }); return; }
   // Estimates fills itself once the dataset carries `evolution`; until then the pane is the
   // pending notice and there is nothing to wire.

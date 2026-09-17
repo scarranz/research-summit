@@ -25,6 +25,7 @@
 <link rel="stylesheet" href="css/covered-calls.css">
 <link rel="stylesheet" href="css/portfolio-metrics.css">
 <link rel="stylesheet" href="css/derivatives.css">
+<link rel="stylesheet" href="css/betas.css">
 <link rel="stylesheet" href="css/industry.css">
 <link rel="stylesheet" href="css/spectrum.css">
 <link rel="stylesheet" href="css/results.css">
@@ -704,7 +705,7 @@ Each tile is a GICS sector, colored by the average YTD return of the companies t
         <span class="tcard-ic"><svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><circle cx="9" cy="13" r="1.6"/><circle cx="14" cy="9" r="1.6"/><circle cx="18" cy="11" r="1.6"/></svg></span>
         <span class="tcard-title">Betas</span>
       </div>
-      <div class="tcard-desc">Levered and unlevered equity betas</div>
+      <div class="tcard-desc">Calculate, submit and track equity betas; portfolio beta from weights</div>
     </button>
   </div>
 </div>
@@ -714,9 +715,16 @@ Each tile is a GICS sector, colored by the average YTD return of the companies t
   <div class="tab-empty">DCF Models</div>
 </div>
 
-<!-- TOOLS · BETAS TAB (empty — to be built) -->
+<!-- TOOLS · BETAS TAB — Calculator · History · Portfolio. js/betas*.js -->
 <div id="tp-betas" class="tp">
-  <div class="tab-empty">Betas</div>
+  <div class="bt-subnav">
+    <button class="bt-pill active" data-sub="calc">Calculator</button>
+    <button class="bt-pill" data-sub="history">History</button>
+    <button class="bt-pill" data-sub="portfolio">Portfolio</button>
+  </div>
+  <div id="bt-calc" class="bt-sub active"></div>
+  <div id="bt-history" class="bt-sub"></div>
+  <div id="bt-portfolio" class="bt-sub"></div>
 </div>
 
 <!-- BUY CALLS TAB -->
@@ -757,6 +765,7 @@ import { loadTeamPage } from './js/team.js';
 import { loadFundReturnsPage } from './js/fund-returns.js';
 import { loadPortfolioMetricsPage } from './js/portfolio-metrics.js';
 import { loadDerivativesPage } from './js/derivatives.js';
+import { loadBetasPage } from './js/betas.js';
 import { loadIndustryPage } from './js/industry.js';
 
 const statusEl = document.getElementById('status');
@@ -809,6 +818,7 @@ async function boot() {
       registerPageLoader('fund-returns', loadFundReturnsPage);
       registerPageLoader('portfolio', loadPortfolioMetricsPage);
       registerPageLoader('derivatives', loadDerivativesPage);
+      registerPageLoader('betas', loadBetasPage);
 
       // Update user display
       const user = getCurrentUser();

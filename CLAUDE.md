@@ -41,6 +41,11 @@ js/covered-calls.js     — Derivatives ▸ Covered Calls (the live book of sold
 js/protective-put.js    — Derivatives ▸ Protective Put (downside insurance on stock we own)
 js/buy-calls.js         — Derivatives ▸ Buy Calls (long-call analyzer)
 js/short-puts.js        — Derivatives ▸ Short Puts (cash-secured puts)
+js/betas.js             — Tools ▸ Betas shell (Calculator · History · Portfolio sub-tabs)
+js/betas-core.js        — Betas engine: prices (Massive), regression, rolling β, beta history store
+js/betas-calc.js        — Betas ▸ Calculator (beta of any name, every variable, Submit)
+js/betas-history.js     — Betas ▸ History (every submitted beta, filter, reopen, CSV export)
+js/betas-portfolio.js   — Betas ▸ Portfolio (portfolio beta from manual weights)
 css/base.css            — CSS variables and reset
 css/layout.css          — Loading overlay styles
 css/shared.css          — Cards, sections, tables, filters, modals (shared components)
@@ -52,6 +57,7 @@ css/hedge-funds.css     — Investor cards, benchmark bar, holdings table
 css/team.css            — Investment Ideas cards, voting UI, portfolio table
 css/covered-calls.css   — Covered Calls book table (scoped to #cc-root)
 css/derivatives.css     — Derivatives sub-nav + the shared ladder analyzer chrome (.der-an)
+css/betas.css           — Tools ▸ Betas (scoped to #tp-betas)
 css/responsive.css      — Mobile breakpoints
 sql/schema.sql          — Database schema (run in Supabase SQL Editor)
 netlify.toml            — Netlify build + routing config
@@ -390,6 +396,27 @@ they live in `options-core.js` so a multiple means the same thing in all four pa
   four panes against a synthetic option chain by stubbing `supabase.functions`, so the
   layout and the maths can be checked on localhost without logging in or spending
   Massive calls. Ask Claude to regenerate it if it is missing.
+
+## Betas tab — how it works
+
+Tools ▸ Betas, three sub-tabs (admin-only, `betas` in `ROLE_CONFIG`), all UI in English.
+**There is no house method** — which beta is right is decided per company, so the
+Calculator exposes every variable and each submission records the method it used.
+
+| File | What it owns |
+|---|---|
+| `js/betas.js` | Shell: Calculator · History · Portfolio pills, lazy-loads each pane, cross-pane jumps |
+| `js/betas-core.js` | Prices (**Massive only**, daily split-adjusted closes, 15 years, via `api.fetchPriceHistory` → `get-market-history`), resampling D/W/M, regression (β, α, corr, R², SE, vols), Blume adjustment, rolling β, the **beta history store**, `attachBrush` |
+| `js/betas-calc.js` | **Calculator** — any ticker vs any index; frequency, time window, end date, rolling window, α/anchor; KPI tiles, method matrix (click to apply), rolling-β and returns-scatter charts; **Submit** (with an optional note) appends a record to the history |
+| `js/betas-history.js` | **History** — every submission, newest first; filter by ticker (with a submitted-beta-over-time chart), expand for full stats, reopen in the Calculator with the exact method, delete, export CSV |
+| `js/betas-portfolio.js` | **Portfolio** — manually typed weights (stock/ETF % of NAV, or a derivative's signed delta-adjusted exposure); beta = the ticker's latest submission or manual; contribution chart |
+| `css/betas.css` | Scoped to `#tp-betas`; chart chrome comes from the global `css/results.css` |
+| `sql/024_beta_history.sql` | **Draft, not run** — the table the history will move to; same column names as the local records |
+
+- **Storage today:** the history (`betas-history-v1`) and the portfolio weights (`betas-portfolio-v1`) live in the browser's `localStorage` — per user and per browser, not shared. Moving to Supabase = San/Oscar run the SQL draft, then only the store functions in `betas-core.js` change (through `api.js`).
+- **Derivative beta** = delta-adjusted exposure × the underlying's beta (delta converts to equivalent shares; beta converts shares to market exposure).
+- **Prices come only from Massive** (SAB, Sep 16 2026 — not the embedded IBKR snapshot in `portfolio-metrics-prices-daily.js`, which is frozen at 2026-09-10). ⚠ `get-market-history` was **not deployed** as of Sep 16 2026 (Supabase answers 404), so the Calculator shows a "not deployed" message until San/Oscar run `supabase functions deploy get-market-history --project-ref bvflqjndivouhgwqfbrq`.
+- Working material (Frank's original marimo notebook + SPEC, the one-off SMGS review) is in `betas/`, excluded from git locally.
 
 ## Team tab — how it works
 

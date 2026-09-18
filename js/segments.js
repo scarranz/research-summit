@@ -35,16 +35,26 @@ import { amznSegments } from './segments-data/amzn.js';
 import { dhrSegments } from './segments-data/dhr.js';
 import { amznResults } from './results-data/amzn.js';
 import { dhrResults } from './results-data/dhr.js';
+import { snSegments } from './segments-data/sn.js';
+import { snResults } from './results-data/sn.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
+import { SN_THEMES } from './themes-data/sn.js';
 import { SUMMIT_CAT, SUMMIT_MUTE } from './viz-palette.js';   // the portal's fixed categorical palette
 
 // The Notes taxonomy names segments in prose; the datasets key them. One map, stated once.
-var THEME_SEG = { AMZN: { 'Amazon US': 'na', 'Amazon International': 'intl', 'AWS': 'aws' } };
-var THEME_SRC = { AMZN: AMZN_THEMES };
+var THEME_SEG = {
+  AMZN: { 'Amazon US': 'na', 'Amazon International': 'intl', 'AWS': 'aws' },
+  SN: { 'SharkNinja': 'sn' },
+};
+var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES };
 var SEGMENTS_DATA = {
   AMZN: { seg: amznSegments, res: amznResults },
-  DHR:  { seg: dhrSegments,  res: dhrResults  }
+  DHR:  { seg: dhrSegments,  res: dhrResults  },
+  // SN has ONE reportable segment (Domestic + International aggregated), so its Segments tab
+  // carries the consolidated company; the revenue analysis lives in Top Line ▸ Other, which is
+  // what `other` (alternative cuts of the same total) is for. See segments-data/sn.js.
+  SN:   { seg: snSegments,  res: snResults  }
 };
 
 export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }
@@ -1167,7 +1177,12 @@ function secManagement(s){
     themes.forEach(function(t){ (t.updates || []).forEach(function(u){
       if (!map[u.q]){ map[u.q] = []; qs.push(u.q); }
       map[u.q].push({ theme: t.theme, items: u.items }); }); });
-    qs.reverse();
+    // Newest first, by the label itself — encounter order breaks as soon as a theme opens later
+    // than the one listed above it. Labels that are not 'Q# YYYY' keep their relative order.
+    var qKey = function(q){ var m = /^Q([1-4]) (\d{4})$/.exec(q); return m ? +m[2] * 10 + +m[1] : null; };
+    qs = qs.map(function(q, i){ return { q: q, i: i, k: qKey(q) }; })
+      .sort(function(a, b){ return (a.k != null && b.k != null) ? b.k - a.k : b.i - a.i; })
+      .map(function(e){ return e.q; });
     body = qs.map(function(q){
       var n = map[q].reduce(function(a, e){ return a + e.items.length; }, 0);
       return group('q-' + slug(q), q, map[q].map(function(e){ return e.theme; }).join(' · '), n,
@@ -1374,7 +1389,9 @@ export function initSegmentsOverview(root, ticker){
 //   and the COUNTERPARTY census from Bloomberg SPLC — somebody else's disclosure about this
 //   company, which is the only source that does not depend on the company choosing to speak.
 // For Amazon and for Danaher the headline is an absence: the filing discloses no customer concentration at all,
-// so nothing on this tab can be read as "the biggest clients". The tab leads with that.
+// so nothing on this tab can be read as "the biggest clients". The tab leads with that. For SN it
+// is the opposite — three customers each above 10% of net sales — and the same section carries it.
+// Prose that names the company goes through coName(), never a literal.
 function custData(){ var d = sgData(); return (d && d.seg.customers) || null; }
 
 // Every customer the company has named on a call, pulled out of the product lines, newest first.

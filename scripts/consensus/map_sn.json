@@ -1,0 +1,47 @@
+{
+  "_doc": "SN metric map for emit_matrix.py (schema v2 — address by Bloomberg CODE + segment, never by slot number). VERIFIED Sep 17 2026 against `py inspect_matrix.py SN` (10 snapshots, 5/14/2024 .. 8/10/2026, slot layout stable) and by tying the 8/10/2026 snapshot's reported FY2025 (fy0) to js/results-data/sn.js actuals: net sales 5,535 · gross profit 3,136.49 · operating income 920.28 (IS_EBIT_AS_REPORTED) · EBITDA 1,135.52 = the ADJUSTED EBITDA line (GAAP EBITDA is 1,088.51) · diluted EPS 4.94 = GAAP (adjusted is 5.28) · net income 701.37 GAAP · Shark 3,032.09. Segment ids read off segment_kpiN: Cleaning SEG2666106279, Cooking & Beverage SEG6555008931, Food Prep SEG1443911590, Beauty & Home SEG5332814242, Shark SEG0001537480, Ninja SEG0001537481. NOT carried by the txt, so left unmapped on purpose: ebitdaGaap, niAdj, epsAdj (the headline guided line), regionNA/regionIntl, da (only separate depreciation/amortization rows), taxRate. EARNINGS_CONVENTIONS §5 rule 6: the authorized Setup set is exactly the keys below.",
+  "segments": {
+    "cleaning":  "SEG2666106279",
+    "cookbev":   "SEG6555008931",
+    "foodprep":  "SEG1443911590",
+    "beauty":    "SEG5332814242",
+    "shark":     "SEG0001537480",
+    "ninja":     "SEG0001537481"
+  },
+  "q": {
+    "rev":           { "code": "SALES_REV_TURN",               "unit": "usdM" },
+    "segCleaning":   { "code": "SALES_REV_TURN",               "unit": "usdM", "segment": "cleaning" },
+    "segCookBev":    { "code": "SALES_REV_TURN",               "unit": "usdM", "segment": "cookbev" },
+    "segFoodPrep":   { "code": "SALES_REV_TURN",               "unit": "usdM", "segment": "foodprep" },
+    "segBeautyHome": { "code": "SALES_REV_TURN",               "unit": "usdM", "segment": "beauty" },
+    "brandShark":    { "code": "SALES_REV_TURN",               "unit": "usdM", "segment": "shark" },
+    "brandNinja":    { "code": "SALES_REV_TURN",               "unit": "usdM", "segment": "ninja" },
+    "grossProfit":   { "code": "CB_IS_GROSS_PROFIT",           "unit": "usdM" },
+    "opIncome":      { "code": "IS_EBIT_AS_REPORTED",          "unit": "usdM" },
+    "ebitdaAdj":     { "code": "IS_COMPARABLE_EBITDA",         "unit": "usdM" },
+    "niGaap":        { "code": "IS_COMP_NET_INCOME_GAAP",      "unit": "usdM" },
+    "epsGaap":       { "code": "IS_COMP_EPS_GAAP",             "unit": "eps" },
+    "sm":            { "code": "IS_SELLING_EXPENSES",          "unit": "usdM" },
+    "ga":            { "code": "IS_GENERAL_AND_ADMIN_GAAP",    "unit": "usdM" },
+    "rd":            { "code": "IS_OPEX_R_AND_D_GAAP",         "unit": "usdM" }
+  },
+  "y": {
+    "rev":           { "code": "SALES_REV_TURN",               "unit": "usdM" },
+    "segCleaning":   { "code": "SALES_REV_TURN",               "unit": "usdM", "segment": "cleaning" },
+    "segCookBev":    { "code": "SALES_REV_TURN",               "unit": "usdM", "segment": "cookbev" },
+    "segFoodPrep":   { "code": "SALES_REV_TURN",               "unit": "usdM", "segment": "foodprep" },
+    "segBeautyHome": { "code": "SALES_REV_TURN",               "unit": "usdM", "segment": "beauty" },
+    "brandShark":    { "code": "SALES_REV_TURN",               "unit": "usdM", "segment": "shark" },
+    "brandNinja":    { "code": "SALES_REV_TURN",               "unit": "usdM", "segment": "ninja" },
+    "grossProfit":   { "code": "CB_IS_GROSS_PROFIT",           "unit": "usdM" },
+    "opIncome":      { "code": "IS_EBIT_AS_REPORTED",          "unit": "usdM" },
+    "ebitdaAdj":     { "code": "IS_COMPARABLE_EBITDA",         "unit": "usdM" },
+    "niGaap":        { "code": "IS_COMP_NET_INCOME_GAAP",      "unit": "usdM" },
+    "epsGaap":       { "code": "IS_COMP_EPS_GAAP",             "unit": "eps" },
+    "sm":            { "code": "IS_SELLING_EXPENSES",          "unit": "usdM" },
+    "ga":            { "code": "IS_GENERAL_AND_ADMIN_GAAP",    "unit": "usdM" },
+    "rd":            { "code": "IS_OPEX_R_AND_D_GAAP",         "unit": "usdM" }
+  },
+  "_drop_note": "Series the frozen-series check flags go here, with a one-line reason and the date, until the Bloomberg cell is fixed.",
+  "drop": {}
+}

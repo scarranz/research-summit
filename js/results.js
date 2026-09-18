@@ -36,6 +36,8 @@ import { tbbbResults } from './results-data/tbbb.js';
 import { dhrResults } from './results-data/dhr.js';
 import { dhrSetup } from './results-data/dhr-setup.js';
 import { tbbbSetup } from './results-data/tbbb-setup.js';
+import { snResults } from './results-data/sn.js';
+import { snSetup } from './results-data/sn-setup.js';
 import { SUMMIT_MUTE } from './viz-palette.js';
 
 var RESULTS_DATA = {
@@ -56,7 +58,9 @@ var RESULTS_DATA = {
   TBBB: tbbbResults,
   TBBB_SETUP: tbbbSetup,
   DHR: dhrResults,
-  DHR_SETUP: dhrSetup
+  DHR_SETUP: dhrSetup,
+  SN: snResults,
+  SN_SETUP: snSetup
 };
 
 // Register a dataset at runtime, so a caller can compose one and get the whole engine — every
@@ -244,7 +248,12 @@ function rsView(k){
 }
 function rsViewName(k){ return (k != null && _rs.sec[k] && _rs.sec[k].view) || _rs.view; }
 // Default view: quarterly when present, else annual (datasets like TBBB carry annual only).
-function rsDefaultView(data){ return (data && data.views && data.views.q) ? 'q' : 'y'; }
+// A dataset may override with `defaultView: 'y'` when its annual view is the primary read (SN_MKT:
+// advertising is an annual disclosure). Absent → unchanged behaviour for every existing dataset.
+function rsDefaultView(data){
+  if (data && data.defaultView && data.views && data.views[data.defaultView]) return data.defaultView;
+  return (data && data.views && data.views.q) ? 'q' : 'y';
+}
 function rsSecCfg(k){ return rsView(k).sections.filter(function(s){ return s.key === k; })[0]; }
 // Sections declare their metrics in labeled groups (Totals / Segments / …);
 // flatten for validation and default handling.
@@ -1067,7 +1076,7 @@ function rsLegendHtml(k, m){
   else h += '<span class="rs-noguide" title="This company issued no numeric guidance for this line/period — so there is no guidance band to score against (only Street and Summit).">⚑ No company guidance</span>';
   // The margin LINE chip only exists in level mode — in margin mode the margin IS the chart,
   // and in growth mode it is suppressed (two unrelated percentages on one axis).
-  if (!isTop && !marg && !rsIsGrow(k) && rsHasMargin(k, m)) h += chip('margin', RS_ACT, esc(m.marginLabel || 'margin') + ' %', true);
+  if (!isTop && !marg && !rsIsGrow(k) && rsHasMargin(k, m)) h += chip('margin', RS_ACT, (m.marginLabel || 'margin') + ' %', true);
   h += '<span class="tech-leg-i" style="margin-left:auto">▲ beat · ▼ miss · click a chip to hide it</span>';
   return h;
 }

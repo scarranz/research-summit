@@ -1,0 +1,1091 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Broadcom (AVGO) — Balance Sheet, M&A & Multiple</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1E2733; --blue:#2C3E54; --steel:#3E5A82; --mid:#7C8694;
+  --ice:#EEF1F5; --pale:#F4F6F9; --surface:#F6F7F9; --w:#FFFFFF;
+  --text:#1E2733; --mu:#8A93A0; --bdr:#E7EAEE;
+  --pos:#16A34A; --neg:#DC2626; --accent:#2563EB; --warn:#D97706;
+  --posbg:#E6F3EC; --negbg:#FAEEEE; --accbg:#EAF0FE; --warnbg:#FEF1E6;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--surface);color:var(--text);
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em;line-height:1.55}
+
+/* ── Top bar ── */
+.topbar{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:12px 26px}
+.brand{display:flex;align-items:center;gap:11px}
+.brand-mk{width:30px;height:30px;border-radius:8px;background:var(--navy);display:flex;align-items:center;
+  justify-content:center;font-size:15px;color:#fff;font-weight:600;letter-spacing:-.02em}
+.brand-t{font-size:14px;font-weight:600;letter-spacing:-0.01em}
+.brand-s{font-size:11px;color:var(--mu)}
+.badge-local{font-size:10px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;
+  color:var(--steel);background:var(--ice);padding:4px 10px;border-radius:20px}
+
+.wrap{max-width:1120px;margin:0 auto;padding:26px 26px 60px}
+
+/* ── Banner ── */
+.bnr{background:var(--navy);border-radius:16px;padding:26px 32px;margin-bottom:22px;position:relative;overflow:hidden}
+.bnr::before{content:'';position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:rgba(46,95,147,.25)}
+.bnr::after{content:'';position:absolute;right:80px;bottom:-90px;width:200px;height:200px;border-radius:50%;background:rgba(37,99,235,.14)}
+.bnr-in{position:relative;z-index:1}
+.bnt{font-size:22px;font-weight:600;color:#fff;margin-bottom:9px;letter-spacing:-0.01em}
+.bnb{font-size:13px;color:var(--ice);line-height:1.7;max-width:790px}
+.bnb strong{color:#fff;font-weight:500}
+.bnr-meta{display:flex;gap:22px;margin-top:16px;flex-wrap:wrap}
+.bnr-meta div{font-size:11px;color:var(--mid)}
+.bnr-meta b{display:block;color:#fff;font-size:13px;font-weight:600;margin-top:2px}
+
+/* ── Tabs ── */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.tab{display:flex;align-items:center;gap:8px;padding:9px 15px;border:1.5px solid var(--bdr);border-radius:22px;
+  background:var(--w);cursor:pointer;font-size:12.5px;color:var(--mid);font-weight:500;transition:all .15s;user-select:none}
+.tab:hover{border-color:var(--mid);color:var(--blue)}
+.tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tab .tn{font-size:11px;opacity:.6;font-weight:700}
+.tab.active .tn{opacity:.85}
+.tab .dot{width:6px;height:6px;border-radius:50%;background:var(--pos)}
+.tab .dot.open{background:var(--warn)}
+.pane{display:none;animation:fade .25s ease}
+.pane.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Section primitives ── */
+.sec{margin-bottom:24px}
+.sechdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:13px;padding-bottom:8px;border-bottom:1px solid var(--bdr)}
+.sect{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--steel);font-weight:600}
+.secn{font-size:11px;color:var(--mu)}
+.card{background:var(--w);border:1px solid var(--bdr);border-radius:14px;padding:20px}
+.card + .card{margin-top:14px}
+p.tx{font-size:13px;color:var(--blue);line-height:1.68;margin-bottom:11px}
+p.tx:last-child{margin-bottom:0}
+p.tx b{color:var(--navy);font-weight:600}
+
+/* ── Pane header ── */
+.ph{display:flex;gap:18px;align-items:flex-start;margin-bottom:20px}
+.ph-num{flex:none;width:54px;height:54px;border-radius:14px;background:var(--navy);display:flex;align-items:center;
+  justify-content:center;font-size:19px;color:#fff;font-weight:600}
+.ph-txt h2{font-size:21px;font-weight:600;letter-spacing:-0.02em;margin-bottom:4px}
+.ph-txt .ph-sub{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--steel);font-weight:600;margin-bottom:7px}
+.ph-txt p{font-size:13.5px;color:var(--blue);max-width:820px;line-height:1.65}
+
+/* ── Stat tiles ── */
+.srow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.srow.c3{grid-template-columns:repeat(3,1fr)}
+.srow.c5{grid-template-columns:repeat(5,1fr)}
+.sc{background:var(--w);border:1px solid var(--bdr);border-radius:12px;padding:15px 16px}
+.sl{font-size:10px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;margin-bottom:6px;font-weight:500}
+.sv{font-size:23px;font-weight:600;line-height:1.05;letter-spacing:-0.02em}
+.sv.pos{color:var(--pos)} .sv.neg{color:var(--neg)} .sv.acc{color:var(--accent)}
+.ss{font-size:11px;color:var(--mu);margin-top:4px;line-height:1.4}
+
+/* ── Tables ── */
+.twrap{overflow-x:auto;border-radius:10px;border:1px solid var(--bdr);background:var(--w)}
+table.cmp{width:100%;border-collapse:collapse;font-size:12px;min-width:620px}
+.cmp th{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--mu);padding:10px 12px;
+  background:#F7FAFD;border-bottom:1px solid var(--bdr);text-align:left;font-weight:600}
+.cmp th.r,.cmp td.r{text-align:right}
+.cmp td{padding:9px 12px;border-bottom:.5px solid #F0F4F8;vertical-align:top}
+.cmp tr:last-child td{border-bottom:none}
+.cmp tr:hover td{background:#FafBfD}
+.cmp td.name{font-weight:600;color:var(--navy);white-space:nowrap}
+.cmp td.num{font-weight:500;white-space:nowrap}
+.cmp tr.hl td{background:#FBFCFE;font-weight:600}
+.cmp tr.hl:hover td{background:#F6F9FD}
+.cmp .up{color:var(--pos);font-weight:600}
+.cmp .dn{color:var(--neg);font-weight:600}
+.cmp .dim{color:var(--mu)}
+
+/* ── Provenance tag ── */
+.evsrc{font-size:8.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:2px 7px;border-radius:20px;
+  background:var(--ice);color:var(--steel);vertical-align:middle;margin-left:4px}
+.evsrc.p{background:var(--posbg);color:var(--pos)}
+.evsrc.c{background:var(--accbg);color:var(--accent)}
+.evsrc.s{background:var(--warnbg);color:#C2410C}
+
+/* ── Pills ── */
+.pill{font-size:9.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:2px 9px;border-radius:20px;white-space:nowrap}
+.pill.done{background:var(--posbg);color:var(--pos)}
+.pill.open{background:var(--warnbg);color:#C2410C}
+.pill.blocked{background:var(--negbg);color:var(--neg)}
+.pill.hi{background:var(--accbg);color:var(--accent)}
+.pill.neu{background:var(--ice);color:var(--steel)}
+
+/* ── Chips ── */
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{background:var(--surface);border:1px solid var(--bdr);border-radius:8px;padding:6px 11px;font-size:11.5px;color:var(--blue)}
+.chip b{color:var(--navy)}
+
+/* ── Callout / debate ── */
+.callout{background:linear-gradient(180deg,#FdfBf7,#fff);border:1px solid #F0E2CE;border-left:4px solid var(--warn);
+  border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.callout .dh{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#B45309;font-weight:700;margin-bottom:9px}
+.callout p{font-size:13px;color:var(--blue);line-height:1.65;margin-bottom:8px}
+.callout p:last-child{margin-bottom:0}
+.callout b{color:var(--navy)}
+.callout.acc{background:linear-gradient(180deg,#F7FAFF,#fff);border-color:#D9E4F8;border-left-color:var(--accent)}
+.callout.acc .dh{color:var(--accent)}
+
+/* ── Finding box (navy) ── */
+.invest{background:var(--navy);border-radius:14px;padding:20px 22px;color:#fff}
+.invest .ih{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8FA6C4;font-weight:700;margin-bottom:11px}
+.invest ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.invest li{display:block;position:relative;padding-left:21px;font-size:13px;color:var(--ice);line-height:1.62}
+.invest li::before{content:'→';position:absolute;left:0;top:0;color:var(--accent);font-weight:700}
+.invest li b{color:#fff;font-weight:600}
+
+/* ── Charts ── */
+.chartbox{background:var(--w);border:1px solid var(--bdr);border-radius:14px;padding:18px 18px 12px}
+.chartbox + .chartbox{margin-top:14px}
+.ch-t{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:2px}
+.ch-s{font-size:11.5px;color:var(--mu);margin-bottom:12px}
+.ch svg{width:100%;height:auto;display:block}
+.ch-lg{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;padding-top:10px;border-top:1px solid var(--bdr)}
+.ch-lg span{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mid)}
+.ch-lg i{width:14px;height:3px;border-radius:2px;display:block}
+.gl{stroke:#EDF1F5;stroke-width:1}
+.gt{font-size:9.5px;fill:#A8B0BC;font-family:Inter,sans-serif}
+.mk{font-size:9.5px;fill:var(--steel);font-weight:600;font-family:Inter,sans-serif}
+
+/* ── Expand ── */
+.more-btn{margin-top:12px;font-size:11px;font-weight:600;color:var(--steel);background:var(--surface);
+  border:1px solid var(--bdr);border-radius:8px;padding:6px 12px;cursor:pointer;transition:all .14s;
+  display:inline-flex;align-items:center;gap:7px}
+.more-btn:hover{background:var(--ice);color:var(--navy)}
+.more-btn .caret{transition:transform .2s;font-size:9px}
+.more-btn.open .caret{transform:rotate(180deg)}
+.detail{display:none;margin-top:13px}
+.detail.open{display:block;animation:fade .2s ease}
+
+/* ── Progress strip ── */
+.prog{display:flex;flex-direction:column;gap:2px}
+.prow{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:9px 4px;border-bottom:.5px solid #F0F4F8;cursor:pointer;transition:background .14s}
+.prow:last-child{border-bottom:none}
+.prow:hover{background:#FafBfD}
+.prow .pn{width:26px;height:26px;border-radius:8px;background:var(--ice);color:var(--steel);font-size:11px;
+  font-weight:700;display:flex;align-items:center;justify-content:center}
+.prow.done .pn{background:var(--navy);color:#fff}
+.prow .pt b{font-size:13px;color:var(--navy);display:block;font-weight:600}
+.prow .pt span{font-size:11.5px;color:var(--mid)}
+
+/* ── Source footer ── */
+.srcfoot{margin-top:14px;padding-top:12px;border-top:1px solid var(--bdr);font-size:11px;color:var(--mu);line-height:1.6}
+.srcfoot b{color:var(--steel);text-transform:uppercase;font-size:9.5px;letter-spacing:.06em}
+
+/* ── Flow diagram ── */
+.flow svg{width:100%;height:auto;display:block}
+.fbox{fill:#fff;stroke:var(--bdr);stroke-width:1.2;rx:9}
+.fbox.navy{fill:var(--navy);stroke:var(--navy)}
+.fbox.acc{fill:var(--accbg);stroke:#C7D7F5}
+.fbox.warn{fill:var(--warnbg);stroke:#F0DCC2}
+.ft{font-size:11px;fill:var(--navy);font-weight:600;font-family:Inter,sans-serif}
+.ft.w{fill:#fff}
+.fs{font-size:9.5px;fill:var(--mid);font-family:Inter,sans-serif}
+.fs.w{fill:#9FB2CC}
+.farr{stroke:var(--mid);stroke-width:1.4;fill:none}
+.farr.red{stroke:var(--neg);stroke-width:1.8;stroke-dasharray:4 3}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.foot{border-top:1px solid var(--bdr);margin-top:34px;padding-top:20px}
+.foot .fh{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--steel);font-weight:600;margin-bottom:10px}
+.foot p{font-size:11.5px;color:var(--mid);line-height:1.6;margin-bottom:6px}
+.foot code{background:var(--ice);padding:1px 6px;border-radius:5px;font-size:11px;color:var(--steel)}
+
+@media(max-width:900px){ .srow,.srow.c5{grid-template-columns:repeat(2,1fr)} .two{grid-template-columns:1fr} }
+@media(max-width:560px){ .srow,.srow.c3,.srow.c5{grid-template-columns:1fr} .wrap{padding:18px 14px 44px} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mk">S</div>
+    <div>
+      <div class="brand-t">Summit Research</div>
+      <div class="brand-s">Broadcom · working note</div>
+    </div>
+  </div>
+  <div class="badge-local">Local draft · not in portal</div>
+</div>
+
+<div class="wrap">
+
+<div class="bnr"><div class="bnr-in">
+  <div class="bnt">Broadcom (AVGO) — balance sheet, M&amp;A capacity, AI financing &amp; the multiple</div>
+  <div class="bnb">Broadcom went from <strong>"de-lever after VMware to fund the next big deal"</strong> to <strong>"lend its A-rated balance sheet so its two largest 2027–28 customers can buy its chips."</strong> Corporate leverage is the lowest in twelve years; the risk moved off balance sheet. Meanwhile the multiple stopped tracking growth in 2026 for the first time in five years — and the M&amp;A machine that defined the company has been idle since 2023.</div>
+  <div class="bnr-meta">
+    <div>Sessions<b>14 &amp; 21 Sep 2026</b></div>
+    <div>Sections complete<b>7 of 7</b></div>
+    <div>Scope<b>Chat-only · no portal changes</b></div>
+    <div>Source doc<b>avgo-context/…_research.md</b></div>
+  </div>
+</div></div>
+
+<div class="tabs" id="tabs">
+  <div class="tab active" data-p="over"><span class="tn">00</span> Overview</div>
+  <div class="tab" data-p="bs"><span class="dot"></span> Balance sheet</div>
+  <div class="tab" data-p="cap"><span class="dot"></span> Capital allocation</div>
+  <div class="tab" data-p="xpv"><span class="dot"></span> XPV financing</div>
+  <div class="tab" data-p="mult"><span class="dot"></span> The multiple</div>
+  <div class="tab" data-p="mna"><span class="dot"></span> M&amp;A record</div>
+  <div class="tab" data-p="capa"><span class="dot"></span> M&amp;A capacity</div>
+  <div class="tab" data-p="next"><span class="dot open"></span> Open &amp; next</div>
+</div>
+
+<!-- ═══════════ OVERVIEW ═══════════ -->
+<div class="pane active" data-pane="over">
+
+  <div class="srow">
+    <div class="sc"><div class="sl">Fwd P/E (blended)</div><div class="sv">20.4<span style="font-size:15px">x</span></div><div class="ss">Sep 2 2026 · peak 42.1x Dec 10 2025</div></div>
+    <div class="sc"><div class="sl">Net leverage</div><div class="sv pos">0.72<span style="font-size:15px">x</span></div><div class="ss">lowest since before LSI (2014)</div></div>
+    <div class="sc"><div class="sl">FY26E adj. EBITDA</div><div class="sv">~$70<span style="font-size:15px">B</span></div><div class="ss">on revenue of $105.9B</div></div>
+    <div class="sc"><div class="sl">Off-B/S backstop</div><div class="sv neg">$29<span style="font-size:15px">B</span></div><div class="ss">85% of lease, Apollo/Blackstone</div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">The three findings</span><span class="secn">each links to its section</span></div>
+    <div class="invest">
+      <div class="ih">What the work has established</div>
+      <ul>
+        <li><b>Broadcom is an estimate story, not a multiple story.</b> Over five years the stock is up 647% and the multiple contributed 25 points of it — <b>89% of the move is forward EPS</b>. But in 2026 the link snapped: EPS +69% YTD, multiple 42.1x → 20.4x, and the correlation with expected growth flipped from <b>+0.73 to −0.79</b>.</li>
+        <li><b>The M&amp;A machine has no failures in it.</b> Seven deals, twenty years, no impairment. Every deal collapses ROIC to 6–9% in the close year and earns it back past the prior peak within two to four years. The multiple paid is never the multiple underwritten — <b>13x–42x headline against 8–10x post-synergy</b>.</li>
+        <li><b>Leverage is not the constraint and has not been since FY24.</b> In the harshest reading of the rating math the balance sheet still funds an <b>$82B all-cash deal</b>; with stock in the mix it stops binding entirely. What has run out is not the capacity but the shopping list.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Where we are</span><span class="secn">click a row to open that section</span></div>
+    <div class="card">
+      <div class="prog">
+        <div class="prow done" data-goto="bs"><div class="pn">1</div><div class="pt"><b>Balance sheet, debt detail &amp; remaining amortization</b><span>Trajectory Q4 FY23 → Q3 FY26 · $61.1B principal, 100% fixed · intangibles run off to $3.5B by FY30</span></div><span class="pill done">Done</span></div>
+        <div class="prow done" data-goto="cap"><div class="pn">2</div><div class="pt"><b>Target ratios &amp; capital allocation</b><span>No stated leverage target · A−/A3 both positive · December board decides</span></div><span class="pill done">Done</span></div>
+        <div class="prow done" data-goto="cap"><div class="pn">3</div><div class="pt"><b>Pending M&amp;A</b><span>None. Goodwill flat at $97.8B since Q1 FY24</span></div><span class="pill done">Done</span></div>
+        <div class="prow done" data-goto="xpv"><div class="pn">4</div><div class="pt"><b>The XPV platform — off-balance-sheet exposure</b><span>$29B backstop + up to $42B convertible notes · the inconsistencies</span></div><span class="pill done">Done</span></div>
+        <div class="prow done" data-goto="mult"><div class="pn">5</div><div class="pt"><b>The valuation multiple, decomposed 2021–2026</b><span>Price vs multiple vs estimates · growth correlation · peers</span></div><span class="pill done">Done</span></div>
+        <div class="prow done" data-goto="mna"><div class="pn">6</div><div class="pt"><b>The M&amp;A track record, deal by deal</b><span>Price, multiple paid, debt at close, quarters to de-lever, ROIC</span></div><span class="pill done">Done</span></div>
+        <div class="prow done" data-goto="capa"><div class="pn">7</div><div class="pt"><b>M&amp;A capacity model</b><span>Rating thresholds, the capacity grid, where the backstop bites</span></div><span class="pill done">Done</span></div>
+        <div class="prow" data-goto="next"><div class="pn">8</div><div class="pt"><b>Why the multiple flipped sign in 2026</b><span>The open question §5 leaves — three candidates, none tested</span></div><span class="pill open">Open</span></div>
+        <div class="prow" data-goto="next"><div class="pn">9</div><div class="pt"><b>The target screen</b><span>Who actually fits: $15B+ revenue, switching costs, 3–5x EV/revenue</span></div><span class="pill open">Open</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Method · how to read the tags</span></div>
+    <div class="card">
+      <div class="chips">
+        <div class="chip"><span class="evsrc p">P</span> &nbsp;primary — 10-K/10-Q, transcripts, company press releases</div>
+        <div class="chip"><span class="evsrc">N/S</span> &nbsp;press or a site relaying it — verify before relying</div>
+        <div class="chip"><span class="evsrc c">C</span> &nbsp;computed here</div>
+      </div>
+      <p class="tx" style="margin-top:13px">Every number below is either from a filing, from Bloomberg via Dani's pull, or computed in-session from those two. Where a figure comes from a secondary source it carries the tag and the doc says what would confirm it. <b>Nothing here is a connector call at runtime</b> — the underlying data is frozen and the scripts that rebuild it are named in each section footer.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════ BALANCE SHEET ═══════════ -->
+<div class="pane" data-pane="bs">
+  <div class="ph"><div class="ph-num">01</div><div class="ph-txt">
+    <div class="ph-sub">Sections 1–3</div>
+    <h2>Balance sheet, debt and the amortization run-off</h2>
+    <p>Corporate leverage looks healthy and is still falling. The interesting part is not the level but the <b>shape of the run-off</b>: absent a new deal, the gap between GAAP and non-GAAP earnings closes mechanically over the next four years.</p>
+  </div></div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Trajectory<span class="evsrc p">Quartr standardized</span></span><span class="secn">US$ B · fiscal quarters</span></div>
+    <div class="twrap"><table class="cmp">
+      <tr><th>Quarter</th><th class="r">Cash</th><th class="r">Total debt</th><th class="r">Net debt</th><th class="r">Goodwill</th><th class="r">Intangibles</th><th class="r">Equity</th></tr>
+      <tr><td class="name">Q4 FY23 <span class="dim">pre-VMware</span></td><td class="r num">14.2</td><td class="r num">39.2</td><td class="r num">25.0</td><td class="r num">43.7</td><td class="r num">3.9</td><td class="r num">24.0</td></tr>
+      <tr><td class="name">Q1 FY24 <span class="dim">post-VMware peak</span></td><td class="r num">11.9</td><td class="r num">75.9</td><td class="r num"><b>64.0</b></td><td class="r num">97.6</td><td class="r num">42.3</td><td class="r num">70.3</td></tr>
+      <tr><td class="name">Q4 FY24</td><td class="r num">9.3</td><td class="r num">67.6</td><td class="r num">58.2</td><td class="r num">97.9</td><td class="r num">40.6</td><td class="r num">67.7</td></tr>
+      <tr><td class="name">Q4 FY25</td><td class="r num">16.2</td><td class="r num">65.1</td><td class="r num">49.0</td><td class="r num">97.8</td><td class="r num">32.3</td><td class="r num">81.3</td></tr>
+      <tr><td class="name">Q2 FY26</td><td class="r num">19.6</td><td class="r num">64.9</td><td class="r num">45.3</td><td class="r num">97.8</td><td class="r num">28.3</td><td class="r num">87.7</td></tr>
+      <tr class="hl"><td class="name">Q3 FY26 <span class="dim">Aug 2 2026</span></td><td class="r num">24.0</td><td class="r num">59.4</td><td class="r num">35.4</td><td class="r num">97.8</td><td class="r num">26.3</td><td class="r num">99.7</td></tr>
+    </table></div>
+    <div class="chips" style="margin-top:12px">
+      <div class="chip">Goodwill flat at <b>$97.8B</b> since VMware → no material acquisition in ~3 years</div>
+      <div class="chip">Q3 FY26 CFO <b>$14.2B</b> · FCF record <b>$13.7B</b> (46% of revenue)</div>
+      <div class="chip">Dividends <b>$3.1B</b> · notes retired <b>$5.6B</b> · cash still <b>+$4.3B</b></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Debt detail<span class="evsrc p">Q3 FY26 10-Q p.17–20</span></span></div>
+    <div class="card">
+      <div class="chips">
+        <div class="chip">Principal <b>$61,079M</b>, <b>100% fixed</b></div>
+        <div class="chip">Carrying <b>$59,419M</b> (ST 2,252 + LT 57,167)</div>
+        <div class="chip">Weighted coupon <b>4%</b> · <b>7.4 yrs</b></div>
+        <div class="chip">Revolver <b>$7.5B</b> undrawn to Jan-2030</div>
+        <div class="chip">CP program <b>$4.0B</b>, nothing outstanding</div>
+        <div class="chip">Interest expense Q3 <b>$778M</b> · FY25 $3,210M</div>
+      </div>
+      <div class="sechdr" style="margin-top:18px;margin-bottom:10px"><span class="sect" style="letter-spacing:1px">Maturity ladder · US$ M</span></div>
+      <div class="twrap"><table class="cmp" style="min-width:520px">
+        <tr><th>rest FY26</th><th>FY27</th><th>FY28</th><th>FY29</th><th>FY30</th><th>after</th></tr>
+        <tr><td class="num">2,252</td><td class="num">0</td><td class="num">5,127</td><td class="num">2,405</td><td class="num">6,406</td><td class="num"><b>44,889</b></td></tr>
+      </table></div>
+      <p class="tx" style="margin-top:13px"><b>FY26 activity:</b> Q1 issued $4.5B and retired $3.65B; Q2 retired $1.25B; Q3 retired <b>$5.64B</b> via tenders and redemptions. Nine months: issued 4.5, retired 10.5, extinguishment loss $161M.</p>
+      <div class="callout" style="margin-top:14px;margin-bottom:0">
+        <div class="dh">Tension worth keeping</div>
+        <p>Hock Tan told the Goldman conference (Sep 8) there is no reason to prepay "low cost" debt — yet Q3 tendered the <b>2037/2038 notes at ~4.9%</b>, the highest coupons in the stack. The action and the words point different ways.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Intangibles &amp; remaining amortization<span class="evsrc p">10-Q p.15</span></span><span class="secn">US$ M</span></div>
+    <div class="two">
+      <div class="twrap"><table class="cmp" style="min-width:0">
+        <tr><th>Type · Q3 FY26</th><th class="r">Net</th><th class="r">Life</th></tr>
+        <tr><td class="name">Purchased technology</td><td class="r num">14,780</td><td class="r num">5 yrs</td></tr>
+        <tr><td class="name">Customer contracts</td><td class="r num">10,351</td><td class="r num">5 yrs</td></tr>
+        <tr><td class="name">Trade names</td><td class="r num">1,130</td><td class="r num">11 yrs</td></tr>
+        <tr><td class="name">Other</td><td class="r num">64</td><td class="r num">10 yrs</td></tr>
+        <tr class="hl"><td class="name">Total</td><td class="r num">26,325</td><td class="r"></td></tr>
+      </table></div>
+      <div class="twrap"><table class="cmp" style="min-width:0">
+        <tr><th>Expected amortization</th><th class="r">US$ M</th></tr>
+        <tr><td class="name">rest FY26</td><td class="r num">2,008</td></tr>
+        <tr><td class="name">FY27</td><td class="r num">6,980</td></tr>
+        <tr><td class="name">FY28</td><td class="r num">5,833</td></tr>
+        <tr><td class="name">FY29</td><td class="r num">4,686</td></tr>
+        <tr><td class="name">FY30</td><td class="r num">3,479</td></tr>
+        <tr><td class="name">after</td><td class="r num">3,339</td></tr>
+      </table></div>
+    </div>
+    <div class="callout acc" style="margin-top:14px;margin-bottom:0">
+      <div class="dh">What this means <span class="evsrc c">computed</span></div>
+      <p>Absent a new deal the amortization gap between GAAP and non-GAAP shrinks from <b>~$8B/yr to ~$3.5B by FY30</b>. SBC (~$2B/qtr) is the other big gap and it does <b>not</b> run off. The schedule <em>rose</em> in Q3 only because IPR&amp;D was reclassified into purchased technology.</p>
+      <p><b>VMware purchase accounting</b> (FY24): consideration $86.3B → goodwill $54.2B, intangibles $45.6B (dev tech $24.2B/8y, customer $15.2B/8y, trade name $1.2B/14y, IPR&amp;D $4.7B); assumed $8.25B of VMware notes. EUC sold to KKR Jul-2024 for $3.5B.</p>
+    </div>
+    <div class="srcfoot"><b>Sources</b> · Q3 FY26 10-Q (Quartr doc 3694626) pp.15, 17–20 · FY25 10-K · Q3 FY26 earnings call. Balance-sheet trajectory from Quartr standardized data; everything else read from the filing.</div>
+  </div>
+</div>
+
+<!-- ═══════════ CAPITAL ALLOCATION ═══════════ -->
+<div class="pane" data-pane="cap">
+  <div class="ph"><div class="ph-num">02</div><div class="ph-txt">
+    <div class="ph-sub">Sections 4–5</div>
+    <h2>Target ratios, ratings and what is pending</h2>
+    <p>There is <b>no stated leverage target and no rating disclosure</b> in any FY26 call, the Goldman conference or the 10-Qs. The implied target is simply to keep the A-range ratings — which is why §7's capacity work has to reconstruct the constraint from the agencies rather than from the company.</p>
+  </div></div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Where the ratings sit<span class="evsrc s">press relays</span></span></div>
+    <div class="srow c3">
+      <div class="sc"><div class="sl">Moody's</div><div class="sv">A3</div><div class="ss">positive · upgraded Sep 2025</div></div>
+      <div class="sc"><div class="sl">S&amp;P</div><div class="sv">A−</div><div class="ss">positive · upgraded Sep 17 2025</div></div>
+      <div class="sc"><div class="sl">Fitch</div><div class="sv">BBB+</div><div class="ss">—</div></div>
+    </div>
+    <div class="callout">
+      <div class="dh">The one thing S&amp;P said about the backstop</div>
+      <p>On <b>Jun 11 2026</b> S&amp;P called the first XPV tranche <b>"credit negative"</b> — with no rating action. Per BofA, S&amp;P leans to treat the guarantee <b>as debt</b>. That characterisation is second-hand and finding the primary text is still open.</p>
+      <p>Broadcom's own 10-Q added a new risk factor (p.51): downgrade risk <b>"including due to backstops or guarantees and other financing arrangements."</b></p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Capital allocation<span class="evsrc p">calls + GS conference Sep 8</span></span></div>
+    <div class="card">
+      <div class="chips">
+        <div class="chip">Dividend <b>$0.65/qtr</b> ($2.60 FY26, <b>+10%</b>)</div>
+        <div class="chip">Buybacks Q1 <b>$7.85B</b> · Q2 $0.6B · Q3 <b>$0</b></div>
+        <div class="chip"><b>$10.1B</b> authorization left, to Dec 31 2026</div>
+        <div class="chip">Leverage ~<b>1.0x gross / 0.6x net</b> adj. EBITDA</div>
+        <div class="chip">CFO change: Kirsten Spears → <b>Amie Thuener</b> (Jun 12 2026)</div>
+      </div>
+      <p class="tx" style="margin-top:14px"><b>Hock Tan, Goldman Sachs, Sep 8:</b> capital allocation is decided at the <b>December board</b>; a "record amount of cash" by end FY26; the options are raise the dividend or buy back; paying down debt "doesn't make sense". <b>No mention of M&amp;A.</b></p>
+      <p class="tx">The "50% of prior-year FCF" dividend wording that used to be quoted was <b>not found</b> in any FY26 source.</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Pending M&amp;A<span class="evsrc p">10-Q liquidity section</span></span></div>
+    <div class="card">
+      <p class="tx"><b>None disclosed.</b> The liquidity section keeps generic "potential acquisitions" language. The last moves in either direction were the <b>VMware EUC sale</b> ($3.5B, 2024) and the <b>Seagate SoC purchase</b> ($600M, 2024).</p>
+      <p class="tx">Goodwill has been flat at <b>$97.8B since Q1 FY24</b> — the longest pause in the company's history as a serial acquirer. Against that, Q3 FY26 cash is $24B and net leverage 0.72x. <b>The capacity has never been larger and the pipeline has never been emptier</b> — which is what the M&amp;A capacity section exists to price.</p>
+      <button class="more-btn" data-goto="capa">Open the capacity model <span class="caret">▾</span></button>
+    </div>
+    <div class="srcfoot"><b>Sources</b> · FY26 earnings calls, Goldman Sachs Communacopia Sep 8 2026 (Quartr doc 4137698), Q3 FY26 10-Q p.51. Rating actions relayed by the financial press — primary agency texts are paywalled and remain an open item.</div>
+  </div>
+</div>
+
+<!-- ═══════════ XPV ═══════════ -->
+<div class="pane" data-pane="xpv">
+  <div class="ph"><div class="ph-num">03</div><div class="ph-txt">
+    <div class="ph-sub">Section 6</div>
+    <h2>The AI XPV platform — off-balance-sheet exposure</h2>
+    <p>Announced <b>Jun 9 2026</b> with Apollo and Blackstone: more than <b>20 GW</b> of XPU compute through 2028, <b>only for Anthropic and OpenAI</b>. This is the structure that moved Broadcom's risk off its own balance sheet.</p>
+  </div></div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">How tranche 1 is put together<span class="evsrc p">10-Q p.23 + Q3 call</span></span><span class="secn">$35B, Apollo-led · Anthropic's 1 GW of Ironwood racks at Fluidstack sites</span></div>
+    <div class="card flow">
+      <svg viewBox="0 0 980 230" role="img" aria-label="XPV structure">
+        <rect class="fbox navy" x="10" y="80" width="150" height="62"></rect>
+        <text class="ft w" x="85" y="106" text-anchor="middle">Broadcom</text>
+        <text class="fs w" x="85" y="123" text-anchor="middle">builds the XPU racks</text>
+
+        <path class="farr" d="M165 111 H245" marker-end="url(#ar)"></path>
+        <text class="fs" x="205" y="103" text-anchor="middle">sells racks</text>
+
+        <rect class="fbox acc" x="250" y="66" width="185" height="90"></rect>
+        <text class="ft" x="342" y="94" text-anchor="middle">Apollo / Blackstone</text>
+        <text class="fs" x="342" y="111" text-anchor="middle">financial partner — $35B</text>
+        <text class="fs" x="342" y="127" text-anchor="middle">takes over the purchase</text>
+        <text class="fs" x="342" y="143" text-anchor="middle">agreements + the leases</text>
+
+        <path class="farr" d="M440 111 H520" marker-end="url(#ar)"></path>
+        <text class="fs" x="480" y="103" text-anchor="middle">5-yr lease</text>
+
+        <rect class="fbox" x="525" y="80" width="165" height="62"></rect>
+        <text class="ft" x="607" y="106" text-anchor="middle">Anthropic</text>
+        <text class="fs" x="607" y="123" text-anchor="middle">1 GW, then 5 GW in 2027</text>
+
+        <path class="farr red" d="M607 145 V195 H85 V148" marker-end="url(#arr)"></path>
+        <rect class="fbox warn" x="250" y="176" width="300" height="40"></rect>
+        <text class="ft" x="400" y="194" text-anchor="middle" style="fill:#B45309">BACKSTOP — if the customer defaults</text>
+        <text class="fs" x="400" y="209" text-anchor="middle">Broadcom owes 85% of the outstanding lease less rack value · max ~$29B</text>
+
+        <rect class="fbox" x="715" y="66" width="255" height="90"></rect>
+        <text class="ft" x="842" y="92" text-anchor="middle">Convertible notes — up to $42B</text>
+        <text class="fs" x="842" y="110" text-anchor="middle">"our customer may, if needed, issue to us</text>
+        <text class="fs" x="842" y="126" text-anchor="middle">convertible promissory notes" · none issued</text>
+        <text class="fs" x="842" y="145" text-anchor="middle" style="fill:#C2410C">first appears in the Q3 10-Q · never on a call</text>
+
+        <defs>
+          <marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#7C8694"></path></marker>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#DC2626"></path></marker>
+        </defs>
+      </svg>
+      <div class="chips" style="margin-top:14px">
+        <div class="chip">Signed <b>Jun 8 2026</b> — a Q2 subsequent event</div>
+        <div class="chip">Fair value "not material" · nothing paid</div>
+        <div class="chip">Purchase commitments <b>$126.8B</b> vs $132M at FY25</div>
+        <div class="chip">RPO <b>$179.2B</b> vs $33.3B at FY25</div>
+        <div class="chip">One distributor = <b>50%</b> of Q3 revenue</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">What management says vs what worries</span></div>
+    <div class="two">
+      <div class="card">
+        <div class="sect" style="margin-bottom:10px">Management <span class="evsrc p">P</span></div>
+        <p class="tx">CFO: partners "independently underwrite and capitalize the assets… we may provide <b>modest residual value guarantees</b>… low risk." Future tranches are "deal-by-deal", "nothing to announce."</p>
+        <p class="tx">Hock Tan (GS): "<b>This is not circular financing.</b>" The economics: 1 GW → ~$30B of ARR for the lab against ~$10B/yr to run it.</p>
+        <p class="tx">Roadmap: <b>Anthropic</b> 1 GW 2026 → +5 GW 2027 → +10 GW 2028, the largest XPU customer from 2027. <b>OpenAI</b> 1.3 GW 2027 → &gt;5 GW 2028. Meta 3 GW through 2028.</p>
+        <p class="tx">AI revenue guide: <b>FY26 $58B · FY27 ~$115B · FY28 ~$230B</b>; "on target to exceed <b>$30 EPS in FY28</b>."</p>
+      </div>
+      <div class="card" style="border-color:#F0E2CE">
+        <div class="sect" style="margin-bottom:10px;color:#B45309">Concerns <span class="evsrc c">C</span></div>
+        <p class="tx"><b>1.</b> The two customers that needed financing are the <b>two largest of 2027–28</b>. Much of the FY27/FY28 guide rests on weak-balance-sheet counterparties.</p>
+        <p class="tx"><b>2.</b> The label undersells it. It is a guarantee of <b>85% of lease payments</b> collateralised by racks — with <b>wrong-way risk</b>: if Anthropic defaults, AI compute is likely in glut and rack values fall.</p>
+        <p class="tx"><b>3.</b> On the <b>Q2 call (Jun 3)</b> Tan said of a backstop "it wasn't backstop in that sense", and on racks "No rack. It's all chips." <b>Five days later</b> they signed a backstop on AI racks.</p>
+        <p class="tx"><b>4.</b> Broadcom books revenue on chips funded by a third party under Broadcom's guarantee — an accounting sale, economically close to vendor financing.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Credit market reaction<span class="evsrc">N/S</span></span></div>
+    <div class="card">
+      <div class="chips">
+        <div class="chip">Tranche split: senior A1 ~$6B + A2 ~$24B <b>backed</b> · B ~$4.5B unbacked</div>
+        <div class="chip">Backed piece <b>~5.75%</b> vs unbacked <b>8–9%</b></div>
+        <div class="chip">≈ <b>$0.7B/yr</b> of value handed to Anthropic <span class="evsrc c">C</span></div>
+      </div>
+      <p class="tx" style="margin-top:13px"><b>Follow-on vehicle in talks:</b> $60–100B (Bloomberg Aug 20) / $70–80B (CNBC Aug 21), part guaranteed by Broadcom; not closed as of late August.</p>
+      <p class="tx"><b>BofA credit, Aug 11:</b> bonds cut to Marketweight. Tranche-1 peak exposure ~$26B (Sep 2027), modelled loss ~$2.9B. <b>Full 20 GW platform: exposure up to $370B by mid-2029</b>; loss ~$10.5B at a 25% default rate, ~$42B if all default. Bonds 30–45bp wider than A-rated non-AI peers, +20–30bp since June.</p>
+      <p class="tx"><b>Anthropic:</b> Series H $65B at $965B post (May 28 2026); run-rate &gt;$47B in May, &gt;$65B end-July; draft S-1 and IPO prep; ~$517B of total compute commitments, mostly ~10-year.</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Stock moves and the stated cause<span class="evsrc">N/S</span></span></div>
+    <div class="twrap"><table class="cmp">
+      <tr><th>Date</th><th>Move</th><th>Stated cause</th></tr>
+      <tr><td class="name">Dec 12 2025</td><td class="num dn">−11% <span class="dim">(−17% over 3 days)</span></td><td>AI angst (Oracle/Nvidia); gross-margin dilution from system sales</td></tr>
+      <tr><td class="name">Jun 3–4 2026</td><td class="num dn">sharp drop <span class="dim">(sources disagree)</span></td><td>Q3 AI guide below whisper; Google share loss to MediaTek</td></tr>
+      <tr class="hl"><td class="name">Aug 14 2026</td><td class="num dn">−5.9%</td><td><b>The BofA $370B guarantee note</b> (+ VMware vCenter flaw)</td></tr>
+      <tr><td class="name">Aug 19 2026</td><td class="num dn">−4.6%</td><td>Marvell–Google AI chip deal</td></tr>
+      <tr><td class="name">Sep 3 2026</td><td class="num dn">−2.7% <span class="evsrc c">corrected</span></td><td>Q4 guide slightly light; gross margin down on XPU mix</td></tr>
+    </table></div>
+    <div class="srcfoot"><b>Note</b> · the Sep 3 move was originally logged as −6.3% from a secondary source; the price series says <b>−2.7%</b> ($367.24 → $357.16), with Sep 4 at +0.2%. Corrected here and in the doc. <br><b>Sources</b> · Q2/Q3 FY26 10-Qs and calls, Goldman conference, Bloomberg, CNBC, BofA credit research as relayed.</div>
+  </div>
+</div>
+
+<!-- ═══════════ THE MULTIPLE ═══════════ -->
+<div class="pane" data-pane="mult">
+  <div class="ph"><div class="ph-num">04</div><div class="ph-txt">
+    <div class="ph-sub">Section 7</div>
+    <h2>The multiple, decomposed 2021–2026</h2>
+    <p>Bloomberg's daily forward multiples joined to a split-adjusted daily price to back out <b>implied forward EPS</b>, then every period split into price vs multiple vs estimates. 1,255 trading days.</p>
+  </div></div>
+
+  <div class="srow">
+    <div class="sc"><div class="sl">5-year price move</div><div class="sv pos">+647%</div><div class="ss">Sep 2021 → Sep 2026</div></div>
+    <div class="sc"><div class="sl">…from the multiple</div><div class="sv">+25%</div><div class="ss">11% of the log move</div></div>
+    <div class="sc"><div class="sl">…from forward EPS</div><div class="sv acc">+497%</div><div class="ss"><b>89% of the log move</b></div></div>
+    <div class="sc"><div class="sl">2026 correlation flip</div><div class="sv neg">−0.79</div><div class="ss">from +0.73 in 2021–25</div></div>
+  </div>
+
+  <div class="sec">
+    <div class="chartbox">
+      <div class="ch-t">Forward P/E (12-month blended) · Sep 2021 → Sep 2026</div>
+      <div class="ch-s">Weekly. Low 10.6x Oct 14 2022 · high 42.1x Dec 10 2025 · 20.4x at the cut-off</div>
+      <div class="ch">
+        <svg viewBox="0 0 980 250" role="img" aria-label="Forward P/E history">
+          <line class="gl" x1="46" y1="224.0" x2="968" y2="224.0"></line><text class="gt" x="40" y="227" text-anchor="end">0</text>
+          <line class="gl" x1="46" y1="154.0" x2="968" y2="154.0"></line><text class="gt" x="40" y="157" text-anchor="end">15x</text>
+          <line class="gl" x1="46" y1="84.0" x2="968" y2="84.0"></line><text class="gt" x="40" y="87" text-anchor="end">30x</text>
+          <line class="gl" x1="46" y1="14.0" x2="968" y2="14.0"></line><text class="gt" x="40" y="17" text-anchor="end">45x</text>
+          <text class="gt" x="108.7" y="240" text-anchor="middle">2022</text>
+          <text class="gt" x="293.1" y="240" text-anchor="middle">2023</text>
+          <text class="gt" x="477.5" y="240" text-anchor="middle">2024</text>
+          <text class="gt" x="665.6" y="240" text-anchor="middle">2025</text>
+          <text class="gt" x="850.0" y="240" text-anchor="middle">2026</text>
+          <polyline fill="none" stroke="#3E5A82" stroke-width="2" stroke-linejoin="round" points="46.0,147.8 49.7,148.0 53.4,146.9 57.1,147.3 60.8,150.1 64.4,149.5 68.1,148.1 71.8,146.4 75.5,144.1 79.2,140.2 82.9,139.7 86.6,139.0 90.3,139.8 93.9,140.0 97.6,136.7 101.3,133.9 105.0,130.8 108.7,130.6 112.4,137.6 116.1,145.9 119.8,146.9 123.4,140.7 127.1,139.8 130.8,141.8 134.5,144.4 138.2,147.4 141.9,149.4 145.6,147.8 149.3,144.9 153.0,144.7 156.6,148.1 160.3,151.9 164.0,150.5 167.7,154.7 171.4,151.6 175.1,150.7 178.8,156.4 182.5,153.9 186.1,156.7 189.8,162.2 193.5,163.9 197.2,164.6 200.9,166.7 204.6,166.8 208.3,163.3 212.0,161.5 215.6,159.4 219.3,159.0 223.0,160.5 226.7,161.6 230.4,165.3 234.1,164.6 237.8,166.0 241.5,168.7 245.2,171.9 248.8,168.6 252.5,173.5 256.2,174.5 259.9,171.6 263.6,172.9 267.3,165.8 271.0,165.2 274.7,163.2 278.3,162.0 282.0,161.8 285.7,160.8 289.4,161.3 293.1,161.3 296.8,158.9 300.5,159.0 304.2,157.7 307.8,155.9 311.5,156.0 315.2,155.3 318.9,158.1 322.6,156.9 326.3,155.0 330.0,153.7 333.7,153.6 337.4,154.2 341.0,155.5 344.7,155.8 348.4,154.4 352.1,155.2 355.8,154.7 359.5,154.7 363.2,149.1 366.9,134.7 370.5,137.8 374.2,132.4 377.9,131.2 381.6,133.4 385.3,132.1 389.0,129.2 392.7,128.3 396.4,129.3 400.0,129.4 403.7,134.0 407.4,136.0 411.1,131.5 414.8,129.9 418.5,135.0 422.2,133.6 425.9,140.3 429.6,138.0 433.2,139.1 436.9,131.0 440.6,135.0 444.3,139.3 448.0,135.9 451.7,131.0 455.4,126.4 459.1,125.1 462.7,130.5 466.4,130.6 470.1,112.9 473.8,113.9 477.5,118.1 481.2,118.6 484.9,116.8 488.6,102.9 492.2,110.4 495.9,103.4 499.6,103.4 503.3,99.9 507.0,100.6 510.7,90.7 514.4,106.8 518.1,99.2 521.8,102.0 525.4,101.1 529.1,101.3 532.8,115.0 536.5,102.9 540.2,109.4 543.9,105.1 547.6,100.3 551.3,99.7 554.9,108.1 558.6,98.7 562.3,70.6 566.0,92.4 569.7,87.1 573.4,81.4 577.1,96.5 580.8,100.9 584.4,94.0 588.1,114.4 591.8,97.8 595.5,92.0 599.2,98.8 602.9,104.5 606.6,96.7 610.3,95.1 614.0,87.5 617.6,92.9 621.3,83.1 625.0,86.9 628.7,95.2 632.4,97.0 636.1,87.0 639.8,97.0 643.5,102.1 647.1,103.8 650.8,91.1 654.5,60.3 658.2,66.0 661.9,56.4 665.6,62.1 669.3,63.6 673.0,55.7 676.6,73.6 680.3,62.1 684.0,59.7 687.7,72.3 691.4,85.9 695.1,93.5 698.8,95.2 702.5,98.2 706.2,113.4 709.8,128.6 713.5,105.8 717.2,116.5 720.9,99.3 724.6,94.3 728.3,81.3 732.0,76.0 735.7,74.2 739.3,61.6 743.0,73.1 746.7,71.5 750.4,63.5 754.1,61.0 757.8,58.7 761.5,52.7 765.2,52.2 768.8,50.2 772.5,45.0 776.2,41.0 779.9,54.3 783.6,44.3 787.3,45.6 791.0,35.0 794.7,44.0 798.4,52.4 802.0,51.4 805.7,59.2 809.4,48.6 813.1,47.2 816.8,40.5 820.5,51.3 824.2,56.0 827.9,58.2 831.5,39.2 835.2,32.8 838.9,73.5 842.6,74.1 846.3,71.0 850.0,75.5 853.7,79.9 857.4,88.0 861.0,86.7 864.7,95.4 868.4,88.0 872.1,89.1 875.8,95.5 879.5,105.3 883.2,110.3 886.9,116.3 890.6,121.2 894.2,119.6 897.9,99.6 901.6,94.4 905.3,89.6 909.0,91.3 912.7,88.6 916.4,92.6 920.1,93.0 923.7,76.1 927.4,111.4 931.1,116.8 934.8,116.2 938.5,120.9 942.2,113.1 945.9,121.5 949.6,117.6 953.2,119.7 956.9,111.9 960.6,113.7 964.3,128.5 968.0,127.4"></polyline>
+          <circle cx="252.6" cy="174.8" r="4" fill="#16A34A"></circle><text class="mk" x="252.6" y="192" text-anchor="middle">10.6x trough</text>
+          <circle cx="464.4" cy="132.0" r="4" fill="#2563EB"></circle><text class="mk" x="464.4" y="150" text-anchor="middle">VMware FY23 print</text>
+          <circle cx="834.2" cy="27.6" r="4" fill="#DC2626"></circle><text class="mk" x="820" y="22" text-anchor="end">42.1x peak · Dec 10 2025</text>
+          <circle cx="924.6" cy="111.4" r="4" fill="#D97706"></circle><text class="mk" x="924.6" y="129" text-anchor="end">XPV</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="chartbox">
+      <div class="ch-t">Price vs blended-forward EPS · both indexed to 100, log scale</div>
+      <div class="ch-s">The two lines are the whole story: where they diverge, the multiple is doing the work; where they converge, estimates are</div>
+      <div class="ch">
+        <svg viewBox="0 0 980 250" role="img" aria-label="Price vs forward EPS indexed">
+          <line class="gl" x1="46" y1="206.1" x2="968" y2="206.1"></line><text class="gt" x="40" y="209" text-anchor="end">100</text>
+          <line class="gl" x1="46" y1="21.6" x2="968" y2="21.6"></line><text class="gt" x="40" y="25" text-anchor="end">1000</text>
+          <text class="gt" x="108.7" y="240" text-anchor="middle">2022</text>
+          <text class="gt" x="293.1" y="240" text-anchor="middle">2023</text>
+          <text class="gt" x="477.5" y="240" text-anchor="middle">2024</text>
+          <text class="gt" x="665.6" y="240" text-anchor="middle">2025</text>
+          <text class="gt" x="850.0" y="240" text-anchor="middle">2026</text>
+          <polyline fill="none" stroke="#1E2733" stroke-width="2" stroke-linejoin="round" points="46.0,206.1 49.7,205.1 53.4,203.9 57.1,204.0 60.8,206.9 64.4,206.0 68.1,204.3 71.8,202.4 75.5,199.9 79.2,195.9 82.9,195.3 86.6,194.5 90.3,195.1 93.9,195.0 97.6,187.4 101.3,184.4 105.0,181.5 108.7,181.3 112.4,187.3 116.1,195.2 119.8,196.1 123.4,189.7 127.1,188.7 130.8,190.6 134.5,192.9 138.2,193.1 141.9,191.9 145.6,189.8 149.3,186.8 153.0,186.3 156.6,189.8 160.3,193.8 164.0,192.0 167.7,196.5 171.4,192.9 175.1,191.8 178.8,198.2 182.5,192.5 186.1,195.6 189.8,202.0 193.5,204.2 197.2,205.1 200.9,207.6 204.6,207.8 208.3,202.9 212.0,200.5 215.6,197.7 219.3,197.1 223.0,198.9 226.7,200.0 230.4,205.0 234.1,202.9 237.8,204.8 241.5,208.5 245.2,213.2 248.8,208.2 252.5,215.4 256.2,216.8 259.9,212.3 263.6,214.3 267.3,203.8 271.0,202.9 274.7,200.2 278.3,198.5 282.0,197.9 285.7,196.3 289.4,196.8 293.1,196.7 296.8,193.6 300.5,193.7 304.2,192.1 307.8,189.8 311.5,190.0 315.2,189.2 318.9,192.4 322.6,190.4 326.3,187.3 330.0,185.5 333.7,185.1 337.4,185.8 341.0,187.2 344.7,187.6 348.4,185.9 352.1,186.7 355.8,186.3 359.5,186.1 363.2,179.9 366.9,165.9 370.5,166.9 374.2,161.8 377.9,160.6 381.6,162.4 385.3,161.2 389.0,158.6 392.7,157.6 396.4,158.3 400.0,158.4 403.7,162.2 407.4,163.9 411.1,159.8 414.8,158.4 418.5,161.6 422.2,160.3 425.9,166.3 429.6,164.0 433.2,164.8 436.9,157.2 440.6,160.6 444.3,164.5 448.0,160.3 451.7,156.7 455.4,152.6 459.1,151.0 462.7,155.1 466.4,153.9 470.1,139.5 473.8,140.1 477.5,142.7 481.2,142.9 484.9,141.4 488.6,131.2 492.2,136.0 495.9,130.9 499.6,130.6 503.3,128.0 507.0,128.2 510.7,121.9 514.4,130.6 518.1,125.4 521.8,126.7 525.4,125.9 529.1,125.6 532.8,134.4 536.5,125.6 540.2,129.6 543.9,126.3 547.6,122.6 551.3,121.9 554.9,126.9 558.6,120.0 562.3,100.9 566.0,112.6 569.7,108.8 573.4,104.7 577.1,113.7 580.8,116.1 584.4,111.3 588.1,124.5 591.8,112.8 595.5,108.8 599.2,112.5 602.9,115.3 606.6,109.4 610.3,108.0 614.0,103.0 617.6,105.9 621.3,99.7 625.0,101.5 628.7,106.1 632.4,106.9 636.1,100.5 639.8,106.6 643.5,109.7 647.1,110.6 650.8,102.4 654.5,84.4 658.2,85.8 661.9,80.6 665.6,83.0 669.3,83.2 673.0,79.0 676.6,87.7 680.3,82.1 684.0,80.5 687.7,86.6 691.4,94.0 695.1,95.8 698.8,95.5 702.5,97.2 706.2,107.2 709.8,118.8 713.5,101.3 717.2,108.6 720.9,96.8 724.6,93.5 728.3,85.5 732.0,82.3 735.7,80.6 739.3,73.7 743.0,77.6 746.7,76.1 750.4,71.3 754.1,69.7 757.8,68.1 761.5,65.0 765.2,64.3 768.8,63.0 772.5,60.3 776.2,58.3 779.9,64.1 783.6,59.0 787.3,52.4 791.0,46.7 794.7,50.1 798.4,52.5 802.0,51.6 805.7,54.9 809.4,49.1 813.1,48.0 816.8,44.5 820.5,49.0 824.2,50.6 827.9,51.2 831.5,41.0 835.2,38.0 838.9,51.3 842.6,50.9 846.3,48.9 850.0,50.4 853.7,51.3 857.4,54.7 861.0,53.4 864.7,58.5 868.4,53.3 872.1,53.0 875.8,56.2 879.5,53.5 883.2,55.5 886.9,58.5 890.6,61.1 894.2,57.5 897.9,42.4 901.6,38.3 905.3,34.6 909.0,35.0 912.7,32.7 916.4,34.2 920.1,33.9 923.7,23.3 927.4,39.8 931.1,43.0 934.8,41.9 938.5,44.6 942.2,38.0 945.9,43.5 949.6,39.7 953.2,40.7 956.9,34.2 960.6,34.7 964.3,45.8 968.0,44.1"></polyline>
+          <polyline fill="none" stroke="#2563EB" stroke-width="2" stroke-linejoin="round" points="46.0,206.1 49.7,204.9 53.4,204.8 57.1,204.5 60.8,204.4 64.4,204.2 68.1,204.0 71.8,203.9 75.5,203.7 79.2,203.6 82.9,203.4 86.6,203.3 90.3,203.2 93.9,202.9 97.6,198.3 101.3,197.8 105.0,197.7 108.7,197.6 112.4,197.4 116.1,197.2 119.8,197.1 123.4,196.9 127.1,196.8 130.8,196.6 134.5,196.5 138.2,193.6 141.9,190.2 145.6,189.9 149.3,189.7 153.0,189.6 156.6,189.5 160.3,189.4 164.0,189.1 167.7,188.9 171.4,188.8 175.1,188.7 178.8,188.6 182.5,185.9 186.1,185.6 189.8,185.3 193.5,185.2 197.2,185.1 200.9,184.9 204.6,184.8 208.3,184.7 212.0,184.7 215.6,184.5 219.3,184.4 223.0,184.2 226.7,184.1 230.4,184.0 234.1,183.0 237.8,183.0 241.5,182.9 245.2,182.7 248.8,182.6 252.5,182.5 256.2,182.4 259.9,182.3 263.6,182.3 267.3,182.2 271.0,182.2 274.7,182.1 278.3,182.1 282.0,181.7 285.7,181.4 289.4,181.3 293.1,181.1 296.8,181.1 300.5,181.0 304.2,181.0 307.8,180.9 311.5,180.9 315.2,180.9 318.9,180.8 322.6,180.2 326.3,179.3 330.0,179.0 333.7,178.9 337.4,178.8 341.0,178.7 344.7,178.8 348.4,178.7 352.1,178.6 355.8,178.7 359.5,178.6 363.2,178.6 366.9,178.6 370.5,176.8 374.2,176.6 377.9,176.4 381.6,176.3 385.3,176.2 389.0,176.1 392.7,175.9 396.4,175.8 400.0,175.7 403.7,175.6 407.4,175.5 411.1,175.4 414.8,175.3 418.5,174.1 422.2,174.0 425.9,173.9 429.6,173.8 433.2,173.5 436.9,173.2 440.6,173.1 444.3,173.0 448.0,171.9 451.7,172.7 455.4,172.4 459.1,171.9 462.7,171.6 466.4,170.2 470.1,169.7 473.8,169.6 477.5,169.1 481.2,168.9 484.9,168.8 488.6,168.3 492.2,168.0 495.9,167.8 499.6,167.4 503.3,167.1 507.0,166.9 510.7,166.8 514.4,165.2 518.1,164.9 521.8,164.5 525.4,164.2 529.1,163.8 532.8,163.0 536.5,162.7 540.2,162.4 543.9,161.9 547.6,161.5 551.3,161.1 554.9,160.6 558.6,159.9 562.3,157.0 566.0,156.4 569.7,155.7 573.4,154.9 577.1,154.9 580.8,154.5 584.4,154.1 588.1,153.6 591.8,153.2 595.5,152.8 599.2,152.4 602.9,151.4 606.6,150.5 610.3,150.1 614.0,149.7 617.6,149.4 621.3,149.0 625.0,148.6 628.7,148.2 632.4,147.8 636.1,147.5 639.8,147.6 643.5,147.4 647.1,147.1 650.8,147.0 654.5,145.7 658.2,144.3 661.9,143.8 665.6,143.4 669.3,142.9 673.0,142.5 676.6,142.2 680.3,142.5 684.0,142.1 687.7,141.8 691.4,141.6 695.1,138.9 698.8,137.7 702.5,137.3 706.2,137.1 709.8,136.8 713.5,136.5 717.2,136.1 720.9,136.3 724.6,136.1 728.3,135.8 732.0,135.6 735.7,134.8 739.3,134.3 743.0,132.4 746.7,131.7 750.4,131.0 754.1,130.7 757.8,130.2 761.5,129.9 765.2,129.5 768.8,129.1 772.5,128.7 776.2,128.6 779.9,128.2 783.6,127.7 787.3,120.6 791.0,119.5 794.7,119.0 798.4,117.6 802.0,117.1 805.7,116.8 809.4,115.9 813.1,115.4 816.8,115.0 820.5,114.6 824.2,114.0 827.9,113.5 831.5,112.1 835.2,111.7 838.9,105.8 842.6,105.1 846.3,104.8 850.0,103.9 853.7,102.3 857.4,101.2 861.0,100.7 864.7,100.5 868.4,99.8 872.1,98.7 875.8,98.1 879.5,89.1 883.2,87.6 886.9,86.2 890.6,85.1 894.2,82.8 897.9,81.7 901.6,80.8 905.3,80.2 909.0,79.5 912.7,78.8 916.4,77.9 920.1,77.3 923.7,76.5 927.4,71.1 931.1,70.4 934.8,69.7 938.5,68.9 942.2,68.1 945.9,67.3 949.6,66.5 953.2,65.8 956.9,65.2 960.6,64.4 964.3,63.9 968.0,63.2"></polyline>
+        </svg>
+      </div>
+      <div class="ch-lg">
+        <span><i style="background:#1E2733"></i> Price (×7.5 over 5 years)</span>
+        <span><i style="background:#2563EB"></i> Blended-forward EPS ($3.01 → $18.00)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">The decomposition<span class="evsrc c">C</span></span><span class="secn">exact in logs: Δln(price) = Δln(P/E) + Δln(EPS)</span></div>
+    <div class="twrap"><table class="cmp">
+      <tr><th>Period</th><th>End</th><th class="r">P/E</th><th class="r">EPS(bf)</th><th class="r">Δ%Px</th><th class="r">Δ%P/E</th><th class="r">Δ%EPS</th><th>Driver</th></tr>
+      <tr><td class="name">Rate shock</td><td class="dim">Oct 14 2022</td><td class="r num">10.6</td><td class="r num">4.05</td><td class="r dn">−13%</td><td class="r dn">−35%</td><td class="r up">+34%</td><td>multiple — estimates kept rising</td></tr>
+      <tr><td class="name">Recovery + VMware</td><td class="dim">Dec 7 2023</td><td class="r num">19.7</td><td class="r num">4.68</td><td class="r up">+116%</td><td class="r up">+87%</td><td class="r up">+16%</td><td><b>multiple — 81% of the move</b></td></tr>
+      <tr><td class="name">First AI year</td><td class="dim">Dec 12 2024</td><td class="r num">28.3</td><td class="r num">6.38</td><td class="r up">+96%</td><td class="r up">+44%</td><td class="r up">+36%</td><td>half and half</td></tr>
+      <tr><td class="name">To the multiple peak</td><td class="dim">Dec 10 2025</td><td class="r num">42.1</td><td class="r num">9.81</td><td class="r up">+129%</td><td class="r up">+49%</td><td class="r up">+54%</td><td>half and half</td></tr>
+      <tr><td class="name">Peak → price ATH</td><td class="dim">Jun 2 2026</td><td class="r num">31.7</td><td class="r num">15.20</td><td class="r up">+17%</td><td class="r dn">−25%</td><td class="r up">+55%</td><td><b>EPS alone; multiple already falling</b></td></tr>
+      <tr><td class="name">XPV de-rating</td><td class="dim">Sep 2 2026</td><td class="r num">20.4</td><td class="r num">18.00</td><td class="r dn">−24%</td><td class="r dn">−36%</td><td class="r up">+19%</td><td>multiple</td></tr>
+      <tr class="hl"><td class="name">Full 5 years</td><td class="dim">Sep 2 2026</td><td class="r num">20.4</td><td class="r num">18.00</td><td class="r up">+647%</td><td class="r up">+25%</td><td class="r up">+497%</td><td><b>EPS = 89% of the log move</b></td></tr>
+      <tr class="hl"><td class="name">2026 YTD</td><td class="dim">Sep 2 2026</td><td class="r num">20.4</td><td class="r num">18.00</td><td class="r up">+6%</td><td class="r dn">−37%</td><td class="r up">+69%</td><td>the two cancel out</td></tr>
+    </table></div>
+    <div class="callout acc" style="margin-top:14px">
+      <div class="dh">2026 is a refusal year</div>
+      <p>Blended-forward EPS is up <b>69% year-to-date</b> and the stock is up <b>6%</b>. The multiple has absorbed the entire beat: <b>42.1x → 20.4x, −52% from the peak while estimates rose 84%</b> over the same stretch. The market is being handed the numbers and declining to pay for them.</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Is the multiple correlated to growth?</span><span class="secn">g = EPS(FY+2)/EPS(FY+1) − 1, same vintage</span></div>
+    <div class="twrap"><table class="cmp">
+      <tr><th>Year</th><th class="r">n</th><th class="r">Median P/E</th><th class="r">Median g</th><th class="r">corr(P/E, g)</th><th class="r">Median PEG</th></tr>
+      <tr><td class="name">2021</td><td class="r num">84</td><td class="r num">17.2</td><td class="r num">6.2%</td><td class="r num dim">−0.19</td><td class="r num">2.76</td></tr>
+      <tr><td class="name">2022</td><td class="r num">251</td><td class="r num">13.6</td><td class="r num">5.4%</td><td class="r num dim">−0.21</td><td class="r num">2.53</td></tr>
+      <tr><td class="name">2023</td><td class="r num">250</td><td class="r num">18.7</td><td class="r num">5.8%</td><td class="r num up">+0.73</td><td class="r num">3.23</td></tr>
+      <tr><td class="name">2024</td><td class="r num">252</td><td class="r num">26.6</td><td class="r num">13.4%</td><td class="r num up">+0.57</td><td class="r num">1.98</td></tr>
+      <tr><td class="name">2025</td><td class="r num">250</td><td class="r num">35.1</td><td class="r num">21.0%</td><td class="r num up">+0.73</td><td class="r num">1.68</td></tr>
+      <tr class="hl"><td class="name">2026</td><td class="r num">168</td><td class="r num">25.5</td><td class="r num"><b>27.3%</b></td><td class="r num dn"><b>−0.79</b></td><td class="r num"><b>0.94</b></td></tr>
+      <tr><td class="name">Full sample</td><td class="r num">1,255</td><td class="r num">22.9</td><td class="r"></td><td class="r num up">+0.73</td><td class="r"></td></tr>
+    </table></div>
+    <p class="tx" style="margin-top:13px"><b>Yes — until 2026.</b> Across five years the correlation is +0.73 and PEG compressed steadily from ~2.5–3.2x to ~1.7x as growth accelerated into the price. <b>2026 breaks it, hard.</b> Expected growth is the highest of the whole sample and the multiple is going the other way; PEG at 0.94 is the lowest reading in five years by a wide margin.</p>
+    <p class="tx"><b>That sign flip is the whole question for the name</b> — the market stopped paying for Broadcom's growth at exactly the moment the growth is largest. The XPV section is the leading candidate for why.</p>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Not M&amp;A, and not the sector either</span></div>
+    <div class="two">
+      <div class="card">
+        <div class="sect" style="margin-bottom:10px">M&amp;A moved nothing</div>
+        <div class="twrap"><table class="cmp" style="min-width:0">
+          <tr><th>Event</th><th class="r">P/E before → day of</th></tr>
+          <tr><td class="name">VMware announced <span class="dim">May 26 2022</span></td><td class="r num">14.16 → 14.31</td></tr>
+          <tr><td class="name">VMware closed <span class="dim">Nov 22 2023</span></td><td class="r num">21.35 → 21.06</td></tr>
+        </table></div>
+        <p class="tx" style="margin-top:12px">Neither the largest acquisition in the company's history nor its closing moved the multiple, and the added leverage never showed up in P/E ÷ EV/EBITDA (a stable <b>1.14–1.29</b> band the whole period). The 2023 re-rating was the AI narrative, arriving three quarters <em>after</em> VMware closed.</p>
+      </div>
+      <div class="card">
+        <div class="sect" style="margin-bottom:10px">AVGO vs peers · forward P/E</div>
+        <div class="twrap"><table class="cmp" style="min-width:0">
+          <tr><th></th><th class="r">AVGO</th><th class="r">NVDA</th><th class="r">TSMC</th><th class="r">vs NVDA</th></tr>
+          <tr><td class="name">Sep 2021</td><td class="r num">15.8</td><td class="r num">46.4</td><td class="r num">22.7</td><td class="r num dn">−66%</td></tr>
+          <tr><td class="name">Sep 2022</td><td class="r num">11.0</td><td class="r num">28.5</td><td class="r num">11.3</td><td class="r num dn">−61%</td></tr>
+          <tr><td class="name">Dec 2023</td><td class="r num">23.4</td><td class="r num">25.5</td><td class="r num">15.7</td><td class="r num dn">−8%</td></tr>
+          <tr><td class="name">Dec 2024</td><td class="r num">35.3</td><td class="r num">31.1</td><td class="r num">18.4</td><td class="r num up">+13%</td></tr>
+          <tr class="hl"><td class="name">Dec 2025</td><td class="r num">32.4</td><td class="r num">25.3</td><td class="r num">20.0</td><td class="r num up"><b>+28%</b></td></tr>
+          <tr><td class="name">Sep 2026</td><td class="r num">20.4</td><td class="r num">17.7</td><td class="r num">18.4</td><td class="r num up">+15%</td></tr>
+        </table></div>
+        <p class="tx" style="margin-top:12px">Broadcom spent 2021–22 at a <b>60–70% discount to Nvidia</b> and crossed into a <b>premium</b> at end-2024, peaking at +28%. The re-rating is AVGO-specific: <b>TSMC never left an 11–22x band</b>. Of the 2026 de-rating, roughly two-thirds is the AI complex (NVDA −30%, META −20%) and a third is AVGO's own premium being handed back.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Where it sits now</span></div>
+    <div class="card">
+      <div class="chips">
+        <div class="chip"><b>20.4x</b> = 44th percentile of the last five years</div>
+        <div class="chip">…but the <b>1st percentile</b> of the 2024–26 AI era (median 28.1x)</div>
+        <div class="chip">Price $367.24 (Sep 2) → <b>$357.61</b> (Sep 18) → roughly <b>19–20x</b> today</div>
+      </div>
+      <p class="tx" style="margin-top:13px"><b>Past the cut-off:</b> the BBG pull stops Sep 2; the Q3 FY26 print landed Sep 3–4 (revenue $29.59B, AI semis $16.7B +221% y/y, Q4 guide $34.8B vs ~$35.0B expected).</p>
+    </div>
+    <div class="srcfoot"><b>Sources</b> · Daily BBG forward multiples (PE_RATIO, HEADLINE_EV_TO_EBITDA, PX_TO_FCF; 1GBF/2GY/3GY) from <code>BBG PORTFOLIO BENCH/multiples/</code> · peer multiples from the same pull · daily split-adjusted price from Yahoo (the BBG pull has no PX_LAST). <b>Horizons identified in-session</b>, not labelled by BBG: 1GBF = 12-month blended forward, 2GY = FY+1, 3GY = FY+2; only 1GBF is roll-free and usable for time series. Rebuilt by <code>xlsx2csv.ps1 → merge.ps1 → decomp.awk</code>.</div>
+  </div>
+</div>
+
+<!-- ═══════════ M&A RECORD ═══════════ -->
+<div class="pane" data-pane="mna">
+  <div class="ph"><div class="ph-num">05</div><div class="ph-txt">
+    <div class="ph-sub">Section 8</div>
+    <h2>The M&amp;A track record, deal by deal</h2>
+    <p>The playbook with the numbers attached. Built from <b>SEC XBRL stitched across the three registrants</b> the company has used — Avago Technologies Ltd → Broadcom Ltd → Broadcom Inc — plus each target's own 10-K.</p>
+  </div></div>
+
+  <div class="srow">
+    <div class="sc"><div class="sl">Deals in 20 years</div><div class="sv">7</div><div class="ss">+ one blocked bid (Qualcomm)</div></div>
+    <div class="sc"><div class="sl">Impairments</div><div class="sv pos">0</div><div class="ss">goodwill never reversed</div></div>
+    <div class="sc"><div class="sl">Headline vs underwritten</div><div class="sv">13–42x <span style="font-size:14px;color:var(--mu)">/</span> 8–10x</div><div class="ss">the gap is the thesis</div></div>
+    <div class="sc"><div class="sl">Quarters to de-lever</div><div class="sv">2–7</div><div class="ss">except CA+Symantec, 11</div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">What was paid, and with what<span class="evsrc p">press releases + XBRL</span></span></div>
+    <div class="twrap"><table class="cmp" style="min-width:820px">
+      <tr><th>Deal</th><th>Closed</th><th class="r">Value</th><th class="r">Cash</th><th class="r">Stock</th><th class="r">Goodwill added</th><th class="r">Debt before → after</th></tr>
+      <tr class="hl"><td class="name">LSI</td><td class="dim">May 6 2014 · Q3 FY14</td><td class="r num">$6.6B</td><td class="r num">all</td><td class="r dim">—</td><td class="r num">+$1.2B</td><td class="r num">$0 → $5.5B</td></tr>
+      <tr><td class="name">Emulex</td><td class="dim">May 5 2015</td><td class="r num">$0.61B</td><td class="r num">all</td><td class="r dim">—</td><td class="r num">+$0.1B</td><td class="r dim">—</td></tr>
+      <tr class="hl"><td class="name">Broadcom Corp</td><td class="dim">Feb 1 2016 · Q2 FY16</td><td class="r num">$37.0B</td><td class="r num">$17.0B</td><td class="r num">$20.0B</td><td class="r num">+$23.1B</td><td class="r num">$3.9B → $15.0B</td></tr>
+      <tr><td class="name">Brocade</td><td class="dim">Nov 17 2017 · Q1 FY18</td><td class="r num">$5.9B</td><td class="r num">all</td><td class="r dim">—</td><td class="r num">+$2.2B</td><td class="r num dim">pre-funded</td></tr>
+      <tr class="hl"><td class="name">CA Technologies</td><td class="dim"><b>Nov 5 2018</b> · Q1 FY19</td><td class="r num">$18.9B</td><td class="r num">100% debt</td><td class="r dim">—</td><td class="r num">+$9.7B</td><td class="r num">$17.6B → $37.9B</td></tr>
+      <tr><td class="name">Symantec <span class="dim">(enterprise)</span></td><td class="dim"><b>Nov 4 2019</b> · Q1 FY20</td><td class="r num">$10.7B</td><td class="r num">all</td><td class="r dim">—</td><td class="r num">+$6.8B</td><td class="r num">$33.1B → $45.0B</td></tr>
+      <tr class="hl"><td class="name">VMware</td><td class="dim">Nov 22 2023 · Q1 FY24</td><td class="r num">$86.3B</td><td class="r num">$30.8B</td><td class="r num"><b>$53.4B</b></td><td class="r num">+$53.9B</td><td class="r num">$39.2B → $75.9B</td></tr>
+      <tr><td class="name"><em>Qualcomm</em></td><td class="dim">blocked Mar 2018</td><td class="r num">$117B bid</td><td class="r dim">—</td><td class="r dim">—</td><td class="r dim">—</td><td class="r dim">—</td></tr>
+    </table></div>
+    <div class="two" style="margin-top:14px">
+      <div class="callout acc" style="margin-bottom:0">
+        <div class="dh">The Q1 timing is tighter than claimed</div>
+        <p><b>CA closed Nov 5 2018; FY18 ended Nov 4 2018.</b> <b>Symantec closed Nov 4 2019; FY19 ended Nov 3 2019.</b> Both closed <em>the day after</em> the fiscal year ended. Every integration charge lands in Q1 of a fresh year and no year-over-year comparison is ever split by a deal.</p>
+      </div>
+      <div class="callout acc" style="margin-bottom:0">
+        <div class="dh">Goodwill is the deal ledger</div>
+        <p>$391M (FY13) → $1.6B → $24.7B → $26.9B → $36.7B → $43.5B → <b>$97.8B</b>, flat since Q1 FY24. Seven steps, seven deals, <b>no impairment in twenty years</b>.</p>
+      </div>
+    </div>
+    <button class="more-btn" data-more="divest">Price net of what was sold straight back <span class="caret">▾</span></button>
+    <div class="detail" data-detail="divest">
+      <div class="twrap"><table class="cmp">
+        <tr><th>Deal</th><th class="r">Headline</th><th>Sold off</th><th class="r">Effective</th></tr>
+        <tr><td class="name">LSI</td><td class="r num">$6.6B</td><td>Axxia networking → Intel <b>$650M</b> (Aug 2014); Flash Components + Accelerated Solutions → Seagate <b>$450M</b> (Sep 2 2014)</td><td class="r num"><b>~$5.5B</b></td></tr>
+        <tr><td class="name">Brocade</td><td class="r num">$5.9B</td><td>Ruckus Wireless + ICX switching → Arris <b>$800M</b> (Dec 1 2017); data-center networking → Extreme Networks</td><td class="r num"><b>~$5.0B</b></td></tr>
+        <tr><td class="name">VMware</td><td class="r num">$86.3B</td><td>End-User Computing → KKR <b>$3.5B</b> (Jul 2024)</td><td class="r num"><b>~$82.8B</b></td></tr>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">The multiple paid — headline vs underwritten<span class="evsrc c">computed from targets' 10-Ks</span></span></div>
+    <div class="twrap"><table class="cmp" style="min-width:760px">
+      <tr><th>Deal</th><th>Target FY used</th><th class="r">Revenue</th><th class="r">GAAP EBITDA</th><th class="r">EV/Rev</th><th class="r">EV/EBITDA reported</th><th class="r">EV/EBITDA underwritten</th></tr>
+      <tr><td class="name">LSI</td><td class="dim">FY13</td><td class="r num">$2,370M</td><td class="r num">$305M</td><td class="r num">2.8x</td><td class="r num dn">21.6x</td><td class="r dim">not disclosed</td></tr>
+      <tr><td class="name">Emulex</td><td class="dim">FY14</td><td class="r num">$447M</td><td class="r num">−$1M</td><td class="r num">1.4x</td><td class="r dim">n/m</td><td class="r dim">not disclosed</td></tr>
+      <tr><td class="name">Broadcom Corp</td><td class="dim">FY14</td><td class="r num">$8,428M</td><td class="r num">$872M</td><td class="r num">4.4x</td><td class="r num dn"><b>42.4x</b></td><td class="r dim">not disclosed</td></tr>
+      <tr><td class="name">Brocade</td><td class="dim">FY16</td><td class="r num">$2,346M</td><td class="r num">$431M</td><td class="r num">2.5x</td><td class="r num dn">13.7x</td><td class="r dim">not disclosed</td></tr>
+      <tr><td class="name">CA</td><td class="dim">FY18</td><td class="r num">$4,235M</td><td class="r num">$1,497M</td><td class="r num">4.5x</td><td class="r num dn">12.6x</td><td class="r dim">combined LTM adj. EBITDA guided ~$11.6B</td></tr>
+      <tr class="hl"><td class="name">Symantec <span class="dim">(ent.)</span></td><td class="dim">carve-out</td><td class="r num">~$2.3B</td><td class="r dim">n/a</td><td class="r num">~4.6x</td><td class="r dim">n/a</td><td class="r num up"><b>8.2x</b> <span class="dim">($1.3B pro-forma)</span></td></tr>
+      <tr class="hl"><td class="name">VMware</td><td class="dim">FY22</td><td class="r num">$12,851M</td><td class="r num">$3,497M</td><td class="r num">5.4x</td><td class="r num dn"><b>19.7x</b> <span class="dim">on $69B</span></td><td class="r num up"><b>8.1x</b> <span class="dim">($8.5B target)</span></td></tr>
+      <tr><td class="name">VMware <span class="dim">at close</span></td><td class="dim">FY23</td><td class="r num">$13,350M</td><td class="r num">$3,256M</td><td class="r num">6.5x</td><td class="r num dn">26.5x <span class="dim">on $86.3B</span></td><td class="r num up">10.2x</td></tr>
+    </table></div>
+    <div class="invest" style="margin-top:14px">
+      <div class="ih">This table is the playbook in one line</div>
+      <ul>
+        <li>On the numbers the <b>seller reported</b>, Broadcom paid <b>13x to 42x EBITDA</b> — multiples that look indefensible for a company that has never once been accused of overpaying.</li>
+        <li>The deals are underwritten on a <b>different EBITDA</b>: the one that exists after 30–50% of the cost base is removed and the non-franchise revenue is sold. Where Broadcom disclosed that number, the underwritten multiple is <b>8–10x</b>.</li>
+        <li>The gap between the two columns is not financial engineering. It is the entire thesis — and it is why the deals only work for an operator who will actually cut.</li>
+      </ul>
+    </div>
+    <p class="tx" style="margin-top:13px"><span class="pill open">Caveat</span> &nbsp;The "as reported" column is deliberately unflattering: GAAP EBITDA at Broadcom Corp (2014) and LSI (2013) was depressed by restructuring and impairments, so 42x and 21.6x overstate a normalised multiple. Read the column as <em>the multiple a passive buyer would have been paying</em>.</p>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">What it cost the balance sheet, and how fast it came back<span class="evsrc c">C</span></span><span class="secn">net debt ÷ LTM GAAP EBITDA, quarterly from XBRL</span></div>
+    <div class="chartbox">
+      <div class="ch-t">Leverage path, FY14 → FY26 · every deal is a spike</div>
+      <div class="ch-s">Dashed line = 2.0x, the threshold used for "quarters to de-lever"</div>
+      <div class="ch">
+        <svg viewBox="0 0 980 200" role="img" aria-label="Leverage path with deal markers">
+          <line class="gl" x1="40" y1="174.0" x2="968" y2="174.0"></line><text class="gt" x="34" y="177" text-anchor="end">0</text>
+          <line class="gl" x1="40" y1="141.6" x2="968" y2="141.6"></line><text class="gt" x="34" y="145" text-anchor="end">1x</text>
+          <line x1="40" y1="109.2" x2="968" y2="109.2" stroke="#D97706" stroke-width="1" stroke-dasharray="5 4"></line><text class="gt" x="34" y="112" text-anchor="end" style="fill:#D97706">2x</text>
+          <line class="gl" x1="40" y1="76.8" x2="968" y2="76.8"></line><text class="gt" x="34" y="80" text-anchor="end">3x</text>
+          <line class="gl" x1="40" y1="44.4" x2="968" y2="44.4"></line><text class="gt" x="34" y="48" text-anchor="end">4x</text>
+          <line class="gl" x1="40" y1="12.0" x2="968" y2="12.0"></line><text class="gt" x="34" y="16" text-anchor="end">5x</text>
+          <polyline fill="none" stroke="#3E5A82" stroke-width="2" stroke-linejoin="round" points="40.0,26.6 60.6,83.0 81.2,134.9 101.9,149.3 122.5,138.5 143.1,148.4 163.7,161.9 184.4,47.8 205.0,36.3 225.6,44.2 246.2,99.5 266.8,122.3 287.5,134.0 308.1,145.1 328.7,124.6 349.3,133.5 370.0,121.1 390.6,127.2 411.2,73.4 431.8,71.9 452.4,67.4 473.1,75.9 493.7,38.5 514.3,41.3 534.9,48.0 555.6,60.1 576.2,78.0 596.8,89.8 617.4,100.6 638.0,112.3 658.7,109.4 679.3,112.7 699.9,120.0 720.5,128.1 741.2,128.5 761.8,128.1 782.4,129.1 803.0,133.3 823.6,87.7 844.3,83.6 864.9,89.2 885.5,90.0 906.1,100.7 926.8,107.4 947.4,116.4 968.0,125.6"></polyline>
+          <circle cx="40.0" cy="26.6" r="4" fill="#DC2626"></circle><text class="mk" x="46" y="22">LSI 4.55x</text>
+          <circle cx="184.4" cy="47.8" r="4" fill="#DC2626"></circle><text class="mk" x="190" y="44">Broadcom Corp</text>
+          <circle cx="328.7" cy="124.6" r="4" fill="#16A34A"></circle><text class="mk" x="334" y="121">Brocade 1.52x</text>
+          <circle cx="411.2" cy="73.4" r="4" fill="#DC2626"></circle><text class="mk" x="417" y="70">CA</text>
+          <circle cx="493.7" cy="38.5" r="4" fill="#DC2626"></circle><text class="mk" x="499" y="35">Symantec 4.18x</text>
+          <circle cx="823.6" cy="87.7" r="4" fill="#2563EB"></circle><text class="mk" x="818" y="84" text-anchor="end">VMware 2.66x</text>
+          <text class="gt" x="60.6" y="192" text-anchor="middle">FY14</text>
+          <text class="gt" x="225.6" y="192" text-anchor="middle">FY16</text>
+          <text class="gt" x="390.6" y="192" text-anchor="middle">FY18</text>
+          <text class="gt" x="555.6" y="192" text-anchor="middle">FY20</text>
+          <text class="gt" x="720.5" y="192" text-anchor="middle">FY22</text>
+          <text class="gt" x="885.5" y="192" text-anchor="middle">FY24</text>
+        </svg>
+      </div>
+    </div>
+    <div class="twrap" style="margin-top:14px"><table class="cmp">
+      <tr><th>Deal</th><th>Close quarter</th><th class="r">At close</th><th class="r">Peak</th><th>Back under 2.0x</th><th class="r">Quarters</th></tr>
+      <tr><td class="name">LSI</td><td class="dim">Q3 FY14</td><td class="r num">4.55x</td><td class="r num dn">4.55x</td><td class="dim">Q1 FY15 (1.21x)</td><td class="r num"><b>2</b></td></tr>
+      <tr><td class="name">Broadcom Corp</td><td class="dim">Q2 FY16</td><td class="r num">3.90x</td><td class="r num dn">4.25x</td><td class="dim">Q2 FY17 (1.60x)</td><td class="r num"><b>4</b></td></tr>
+      <tr><td class="name">Brocade</td><td class="dim">Q1 FY18</td><td class="r num">1.52x</td><td class="r num">1.63x</td><td class="dim">never breached</td><td class="r num"><b>0</b></td></tr>
+      <tr><td class="name">CA</td><td class="dim">Q1 FY19</td><td class="r num">3.10x</td><td class="r num dn">3.29x</td><td class="dim">Q4 FY21 (1.90x)</td><td class="r num"><b>11</b> <span class="pill open">⚠</span></td></tr>
+      <tr><td class="name">Symantec</td><td class="dim">Q1 FY20</td><td class="r num">4.18x</td><td class="r num dn">4.18x</td><td class="dim">Q4 FY21 (1.90x)</td><td class="r num"><b>7</b></td></tr>
+      <tr class="hl"><td class="name">VMware</td><td class="dim">Q1 FY24</td><td class="r num">2.66x</td><td class="r num">2.79x</td><td class="dim">Q3 FY25 (1.78x)</td><td class="r num"><b>6</b></td></tr>
+    </table></div>
+    <div class="callout" style="margin-top:14px">
+      <div class="dh">The counter-intuitive result</div>
+      <p><b>VMware, the largest deal in software history, was the second-easiest to digest.</b> It peaked at <b>2.79x</b> — below LSI (4.55x, on a $6.6B deal), below Broadcom Corp (4.25x) and well below Symantec (4.18x). Two reasons, both in the tables above: <b>62% of the consideration was stock</b>, and the EBITDA base absorbing the debt was already $20B. The company that bought VMware was not the company that bought CA.</p>
+      <p><b>CA's count is contaminated:</b> Symantec closed twelve months later, before CA had de-levered. Read them as a single $29.6B software campaign that took <b>11 quarters</b> — by far the slowest stretch, and the only time Tan went to the well twice before finishing.</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Did the capital earn a return?<span class="evsrc c">C</span></span><span class="secn">NOPAT at a flat 14% tax ÷ (debt + equity − cash)</span></div>
+    <div class="chartbox">
+      <div class="ch-t">ROIC by fiscal year · the roll-up signature</div>
+      <div class="ch-s">Red = a deal closed that year. The shape repeats five times without exception</div>
+      <div class="ch">
+        <svg viewBox="0 0 980 190" role="img" aria-label="ROIC by fiscal year">
+          <line class="gl" x1="40" y1="147.1" x2="968" y2="147.1"></line><text class="gt" x="34" y="150" text-anchor="end">0%</text>
+          <line class="gl" x1="40" y1="94.2" x2="968" y2="94.2"></line><text class="gt" x="34" y="97" text-anchor="end">10%</text>
+          <line class="gl" x1="40" y1="41.4" x2="968" y2="41.4"></line><text class="gt" x="34" y="45" text-anchor="end">20%</text>
+          <rect x="53.6" y="41.7" width="44.3" height="105.4" rx="3" fill="#3E5A82"></rect><text class="gt" x="75.7" y="36" text-anchor="middle">25.0</text><text class="gt" x="75.7" y="182" text-anchor="middle">13</text>
+          <rect x="124.9" y="121.6" width="44.3" height="25.5" rx="3" fill="#DC2626"></rect><text class="gt" x="147.1" y="116" text-anchor="middle">6.0</text><text class="gt" x="147.1" y="182" text-anchor="middle">14</text>
+          <rect x="196.3" y="59.5" width="44.3" height="87.6" rx="3" fill="#3E5A82"></rect><text class="gt" x="218.5" y="54" text-anchor="middle">20.7</text><text class="gt" x="218.5" y="182" text-anchor="middle">15</text>
+          <rect x="267.7" y="147.1" width="44.3" height="5.0" rx="3" fill="#DC2626"></rect><text class="gt" x="289.9" y="166" text-anchor="middle">−1.2</text><text class="gt" x="289.9" y="182" text-anchor="middle">16</text>
+          <rect x="339.1" y="114.8" width="44.3" height="32.3" rx="3" fill="#3E5A82"></rect><text class="gt" x="361.3" y="109" text-anchor="middle">7.7</text><text class="gt" x="361.3" y="182" text-anchor="middle">17</text>
+          <rect x="410.5" y="100.5" width="44.3" height="46.6" rx="3" fill="#3E5A82"></rect><text class="gt" x="432.7" y="95" text-anchor="middle">11.0</text><text class="gt" x="432.7" y="182" text-anchor="middle">18</text>
+          <rect x="481.9" y="123.5" width="44.3" height="23.6" rx="3" fill="#DC2626"></rect><text class="gt" x="504.1" y="118" text-anchor="middle">5.6</text><text class="gt" x="504.1" y="182" text-anchor="middle">19</text>
+          <rect x="553.3" y="121.9" width="44.3" height="25.2" rx="3" fill="#DC2626"></rect><text class="gt" x="575.5" y="116" text-anchor="middle">6.0</text><text class="gt" x="575.5" y="182" text-anchor="middle">20</text>
+          <rect x="624.6" y="88.2" width="44.3" height="58.9" rx="3" fill="#3E5A82"></rect><text class="gt" x="646.8" y="83" text-anchor="middle">13.9</text><text class="gt" x="646.8" y="182" text-anchor="middle">21</text>
+          <rect x="696.0" y="43.4" width="44.3" height="103.7" rx="3" fill="#3E5A82"></rect><text class="gt" x="718.2" y="38" text-anchor="middle">24.6</text><text class="gt" x="718.2" y="182" text-anchor="middle">22</text>
+          <rect x="767.4" y="27.1" width="44.3" height="120.0" rx="3" fill="#16A34A"></rect><text class="gt" x="789.6" y="22" text-anchor="middle">28.4</text><text class="gt" x="789.6" y="182" text-anchor="middle">23</text>
+          <rect x="838.8" y="109.0" width="44.3" height="38.1" rx="3" fill="#DC2626"></rect><text class="gt" x="861.0" y="103" text-anchor="middle">9.0</text><text class="gt" x="861.0" y="182" text-anchor="middle">24</text>
+          <rect x="910.2" y="77.1" width="44.3" height="70.0" rx="3" fill="#3E5A82"></rect><text class="gt" x="932.4" y="72" text-anchor="middle">16.6</text><text class="gt" x="932.4" y="182" text-anchor="middle">25</text>
+        </svg>
+      </div>
+      <div class="ch-lg">
+        <span><i style="background:#DC2626"></i> deal closed that fiscal year</span>
+        <span><i style="background:#16A34A"></i> pre-VMware peak</span>
+        <span><i style="background:#3E5A82"></i> recovery years</span>
+        <span style="margin-left:auto;color:var(--navy);font-weight:600">LTM Q3 FY26 · 26.9%</span>
+      </div>
+    </div>
+    <p class="tx" style="margin-top:13px"><b>A deal collapses ROIC to 6–9% in the close year, then it climbs back past the prior peak within two to four years.</b> That is the machine working — capital deployed at a low initial return, earned back through cost removal and pricing, not through growth. The two breaks in the pattern are informative: FY16 went <em>negative</em> (Broadcom Corp was the only deal large enough to push GAAP operating income below zero), and FY19–FY20 stalled because CA and Symantec were stacked.</p>
+
+    <button class="more-btn" data-more="yield">EBITDA yield on capital deployed, era by era <span class="caret">▾</span></button>
+    <div class="detail" data-detail="yield">
+      <div class="twrap"><table class="cmp">
+        <tr><th>Era</th><th class="r">Capital deployed</th><th class="r">EBITDA before → after</th><th class="r">Δ</th><th class="r">Yield</th></tr>
+        <tr><td class="name">LSI + Emulex <span class="dim">FY13→15</span></td><td class="r num">$7.2B</td><td class="r num">$739M → $2,594M</td><td class="r num">+$1,855M</td><td class="r num up"><b>26%</b></td></tr>
+        <tr><td class="name">Broadcom Corp <span class="dim">FY15→17</span></td><td class="r num">$37.0B</td><td class="r num">$2,594M → $7,120M</td><td class="r num">+$4,526M</td><td class="r num up"><b>12%</b></td></tr>
+        <tr><td class="name">Brocade <span class="dim">FY17→18</span></td><td class="r num">$5.9B</td><td class="r num">$7,120M → $9,216M</td><td class="r num">+$2,096M</td><td class="r num">35% <span class="dim">(1 yr)</span></td></tr>
+        <tr><td class="name">CA + Symantec <span class="dim">FY18→21</span></td><td class="r num">$29.6B</td><td class="r num">$9,216M → $14,476M</td><td class="r num">+$5,260M</td><td class="r num up"><b>18%</b></td></tr>
+        <tr><td class="name">VMware <span class="dim">FY23→25</span></td><td class="r num">$86.3B</td><td class="r num">$19,956M → $34,120M</td><td class="r num">+$14,164M</td><td class="r num">16% <span class="pill open">AI</span></td></tr>
+      </table></div>
+      <p class="tx" style="margin-top:11px">Includes organic growth, so read as an upper bound — especially VMware, where the AI ramp contaminates it. Which is why VMware needs isolating:</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">VMware on its own — the only deal that can be isolated</span><span class="secn">it sits almost entirely inside the Infrastructure Software segment</span></div>
+    <div class="two">
+      <div class="twrap"><table class="cmp" style="min-width:0">
+        <tr><th></th><th class="r">FY23 <span class="dim">pre-VMware</span></th><th class="r">FY25</th><th class="r">Δ</th></tr>
+        <tr><td class="name">Software revenue</td><td class="r num">$7,637M</td><td class="r num">~$27,000M</td><td class="r num up"><b>+$19.4B</b></td></tr>
+        <tr class="hl"><td class="name">Segment operating income</td><td class="r num">$5,639M</td><td class="r num">$20,765M</td><td class="r num up"><b>+$15.1B</b></td></tr>
+        <tr><td class="name">Segment operating margin</td><td class="r num">73.8%</td><td class="r num">76.9%</td><td class="r num up">+3.1 pts</td></tr>
+      </table></div>
+      <div class="invest">
+        <div class="ih">The best deal, not merely the biggest</div>
+        <ul>
+          <li><b>+$15.1B of segment operating income on $86.3B paid</b> — a 17.5% pre-tax yield in year two.</li>
+          <li>Against a promise of <b>$8.5B of EBITDA within three years</b>. Segment operating income is struck before acquisition-intangible amortization and SBC, so it is the right like-for-like.</li>
+          <li>VMware is running at roughly <b>1.8× what was underwritten, a year early</b>.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="srcfoot"><b>Sources</b> · SEC XBRL <code>companyconcept</code> across CIK 1441634 / 1649338 / 1730168, and each target's own 10-K (LSI 703360, Broadcom Corp 1054374, Emulex 350917, Brocade 1009626, CA 356028, Symantec 849399, VMware 1124610). Deal terms from Broadcom/Avago and counterparty press releases. <b>Note</b> <code>DebtLongtermAndShorttermCombinedAmount</code> is principal, not carrying. EBITDA is GAAP throughout (operating income + D&amp;A) for consistency across twenty years and three registrants; FY20–22 amortization comes from the expected-amortization schedule, validated on FY23 (schedule 3,255 vs actual 3,247). Rebuilt by <code>xbrl2.ps1 / xbrl2_fy.ps1 / targets.ps1 / levcsv.awk</code>.</div>
+  </div>
+</div>
+
+<!-- ═══════════ CAPACITY ═══════════ -->
+<div class="pane" data-pane="capa">
+  <div class="ph"><div class="ph-num">06</div><div class="ph-txt">
+    <div class="ph-sub">Section 9</div>
+    <h2>M&amp;A capacity — how big a deal could Tan do today?</h2>
+    <p>The answer is uncomfortable for the way the question is usually posed. <b>Leverage is not the binding constraint and has not been for two years.</b></p>
+  </div></div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">What the agencies have tolerated, rung by rung<span class="evsrc s">press relays</span></span></div>
+    <div class="twrap"><table class="cmp" style="min-width:720px">
+      <tr><th>Date</th><th>S&amp;P</th><th>Moody's</th><th>Leverage at the time</th><th>Event</th></tr>
+      <tr><td class="name">Nov 2018</td><td>BBB−</td><td>Baa3</td><td class="num">Moody's saw 2.0x → <b>3.7x</b></td><td class="dim">CA closes</td></tr>
+      <tr><td class="name">FY2020</td><td>BBB−</td><td>Baa3</td><td class="num">adjusted <b>~3.7x</b></td><td class="dim">post-Symantec</td></tr>
+      <tr><td class="name">Nov 28 2023</td><td class="up">BBB− → BBB</td><td>Baa3 → positive</td><td class="dim">—</td><td class="dim">VMware closes</td></tr>
+      <tr><td class="name">Oct 29 2024</td><td>BBB</td><td class="up"><b>Baa3 → Baa1</b></td><td class="num">FY24 adjusted 2.0x</td><td class="dim">de-levering</td></tr>
+      <tr><td class="name">Jan 13 2025</td><td class="up">BBB → BBB+</td><td>Baa1</td><td class="num">FY25 1.2x</td><td class="dim"></td></tr>
+      <tr class="hl"><td class="name">Sep 17 2025</td><td class="up"><b>BBB+ → A−</b>, positive</td><td class="up"><b>Baa1 → A3</b>, positive</td><td class="num">FY26E ~0.8x</td><td class="dim">AI momentum</td></tr>
+      <tr class="hl"><td class="name">Today · Q3 FY26</td><td>A− positive</td><td>A3 positive</td><td class="num"><b>0.72x net / 1.19x gross</b> <span class="evsrc c">C</span></td><td class="dim"></td></tr>
+    </table></div>
+    <div class="callout acc" style="margin-top:14px">
+      <div class="dh">The one explicit threshold on the record</div>
+      <p>In its September 17 2025 upgrade to A−, S&amp;P said it would consider a <em>further</em> upgrade if Broadcom "consistently outgrows the overall IT industry <b>and maintains net leverage below 2.5x through acquisitions and shareholder returns</b>."</p>
+      <p>Note what that is <em>not</em>: it is <b>not a downgrade trigger</b>. It is the level at which S&amp;P would still go <b>up</b>. The downgrade tolerance sits above it, and the record says where — <b>Broadcom carried 3.7x at BBB−/Baa3</b>, the bottom rung of investment grade.</p>
+    </div>
+    <div class="twrap" style="margin-top:14px"><table class="cmp" style="min-width:0">
+      <tr><th>Net leverage</th><th>What it implies</th></tr>
+      <tr><td class="name">≤ 2.5x</td><td>compatible with an <b>upgrade to A</b> — S&amp;P's own words</td></tr>
+      <tr><td class="name">~3.0x</td><td>the A−/A3 rung holds; the upgrade path is parked</td></tr>
+      <tr><td class="name">~3.7x</td><td><b>BBB−/Baa3</b> — three to four notches down, the 2018–2020 experience</td></tr>
+    </table></div>
+    <p class="tx" style="margin-top:13px">A deal that takes leverage to 3.7x is not "still investment grade". It is <b>handing back five years of ratings work</b> — which, with a $29B guarantee outstanding and a new risk factor about downgrades "including due to backstops or guarantees", is a different decision than it was in 2018.</p>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">The base — what EBITDA is being levered<span class="evsrc c">C</span></span></div>
+    <div class="two">
+      <div class="twrap"><table class="cmp" style="min-width:0">
+        <tr><th></th><th class="r">FY26E</th><th class="r">FY27E <span class="dim">consensus</span></th></tr>
+        <tr><td class="name">Revenue</td><td class="r num"><b>$105.9B</b></td><td class="r num">$173.3B</td></tr>
+        <tr><td class="name">GAAP operating income</td><td class="r num">~$54.1B</td><td class="r dim">—</td></tr>
+        <tr><td class="name">+ D&amp;A</td><td class="r num">~$8.5B</td><td class="r dim">—</td></tr>
+        <tr><td class="name">GAAP EBITDA</td><td class="r num">~$62.5B</td><td class="r dim">—</td></tr>
+        <tr><td class="name">+ SBC</td><td class="r num">~$8B</td><td class="r dim">—</td></tr>
+        <tr class="hl"><td class="name">Adjusted EBITDA</td><td class="r num"><b>~$70B</b></td><td class="r num"><b>~$116B</b></td></tr>
+      </table></div>
+      <div class="callout" style="margin-bottom:0">
+        <div class="dh">FY27 is the fork</div>
+        <p>Cross-check: the BBG margin ladder puts EBITDA margin at ~67%, and 67% × $105.9B = <b>$70.9B</b>. Two routes agree, so <b>~$70B is solid for FY26</b>.</p>
+        <p>But $116B of FY27 EBITDA is <b>consensus</b> — and the multiple section's finding is that <b>the market is currently declining to pay for exactly that number</b>. Using it to size debt capacity would assume away the live debate. Everything below is run on both bases; <b>FY26 is the one to believe</b>.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">The capacity grid<span class="evsrc c">C</span></span><span class="secn">maximum all-cash deal price, target priced at the 9x underwritten multiple</span></div>
+    <div class="twrap"><table class="cmp" style="min-width:640px">
+      <tr><th>Base / backstop treatment</th><th class="r">L = 2.5x</th><th class="r">L = 3.0x</th><th class="r">L = 3.7x</th></tr>
+      <tr><td class="name">FY26E $70B · backstop excluded</td><td class="r num"><b>$191B</b></td><td class="r num">$259B</td><td class="r num">$377B</td></tr>
+      <tr><td class="name">FY26E $70B · backstop $29B as debt</td><td class="r num"><b>$151B</b></td><td class="r num">$216B</td><td class="r num">$328B</td></tr>
+      <tr class="hl"><td class="name">FY26E $70B · + follow-on ~$79B</td><td class="r num"><b>$82B</b></td><td class="r num">$141B</td><td class="r num">$243B</td></tr>
+      <tr><td class="name">FY27E $116B · backstop excluded</td><td class="r num">$350B</td><td class="r num">$466B</td><td class="r num">$666B</td></tr>
+      <tr><td class="name">FY27E $116B · + follow-on ~$79B</td><td class="r num">$241B</td><td class="r num">$348B</td><td class="r num">$532B</td></tr>
+    </table></div>
+    <div class="invest" style="margin-top:14px">
+      <div class="ih">Read the most punitive cell first</div>
+      <ul>
+        <li>FY26 EBITDA only, the backstop <em>and</em> a follow-on guarantee both counted as debt, held to the leverage S&amp;P says is compatible with an <b>upgrade</b>: Broadcom can still write an <b>$82B all-cash cheque</b>. A second VMware, in cash, in the worst corner of the grid.</li>
+        <li><b>And that is before stock.</b> VMware was 62% stock. Re-run the 2.5x constraint with that mix and leverage stops binding at any deal size that exists — the cash portion grows more slowly than the acquired EBITDA.</li>
+        <li><b>Interest coverage doesn't bind either.</b> $100B of new debt at ~5.5% is $5.5B against ~$70B of EBITDA; coverage stays above 10x.</li>
+        <li><b>And it doesn't need to borrow to accumulate.</b> At Q3's 46% FCF margin, FY26 free cash flow is ~<b>$47B</b> against a <b>$12.7B</b> dividend — <b>~$34B of surplus a year. Three years of retained FCF alone funds a $100B deal with no new debt.</b></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">The binding constraint is the target list</span></div>
+    <div class="two">
+      <div class="card">
+        <p class="tx">At the 9x underwritten multiple, a $150B deal needs a target capable of <b>~$17B of post-synergy EBITDA</b>. At the ~77% segment operating margin Broadcom has achieved in software, that is a target with roughly <b>$20–25B of revenue</b>.</p>
+        <p class="tx">The problem is not the cheque. It is <b>what Tan pays on revenue</b> — and he has never once bought a high-multiple growth asset.</p>
+        <p class="tx">The list of enterprise-software franchises with $20B+ of revenue, genuine switching costs, an under-priced renewal base <b>and</b> a 3–5x revenue multiple is close to empty in 2026. <b>The same AI re-rating that took Broadcom from 16x to 42x and back also took every plausible target out of Tan's historical range.</b></p>
+      </div>
+      <div class="twrap"><table class="cmp" style="min-width:0">
+        <tr><th>Deal</th><th class="r">EV / Revenue paid</th></tr>
+        <tr><td class="name">Emulex</td><td class="r num">1.4x</td></tr>
+        <tr><td class="name">Brocade</td><td class="r num">2.5x</td></tr>
+        <tr><td class="name">LSI</td><td class="r num">2.8x</td></tr>
+        <tr><td class="name">Broadcom Corp</td><td class="r num">4.4x</td></tr>
+        <tr><td class="name">CA</td><td class="r num">4.5x</td></tr>
+        <tr class="hl"><td class="name">VMware</td><td class="r num"><b>5.4x</b> — the highest ever</td></tr>
+      </table>
+      </div>
+    </div>
+    <p class="tx" style="margin-top:13px"><b>Median ~3.6x revenue, never above 5.4x in twenty years.</b> Every target was an unloved asset: a mainframe business growing at 0%, a storage-networking business in structural decline, a virtualization franchise the market had written off as ex-growth. <b>The capacity is unprecedented and the shopping list is shorter than it has ever been</b> — the most likely explanation for goodwill sitting flat since Q1 FY24.</p>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Revealed preference — what Tan has been willing to do</span><span class="secn">market cap today: 4,887M shares × $357.61 = $1.75T</span></div>
+    <div class="twrap"><table class="cmp" style="min-width:640px">
+      <tr><th>Deal</th><th class="r">÷ own EBITDA then</th><th class="r">÷ own market cap</th><th class="r">Equivalent today</th></tr>
+      <tr><td class="name">Brocade <span class="dim">2016</span></td><td class="r num">0.83x</td><td class="r num">8%</td><td class="r num">$58B / $140B</td></tr>
+      <tr><td class="name">Symantec <span class="dim">2019</span></td><td class="r num">1.16x</td><td class="r num">10%</td><td class="r num">$81B / $175B</td></tr>
+      <tr><td class="name">CA <span class="dim">2018</span></td><td class="r num">2.05x</td><td class="r num">17%</td><td class="r num">$144B / $297B</td></tr>
+      <tr class="hl"><td class="name">VMware <span class="dim">2022</span></td><td class="r num">3.46x</td><td class="r num">29%</td><td class="r num">$242B / $507B</td></tr>
+      <tr><td class="name">LSI <span class="dim">2013</span></td><td class="r num">8.9x</td><td class="r num">51%</td><td class="r num">$623B / $892B</td></tr>
+      <tr><td class="name">Broadcom Corp <span class="dim">2015</span></td><td class="r num">14.3x</td><td class="r num"><b>97%</b></td><td class="r num">$1.0T / $1.7T</td></tr>
+    </table></div>
+    <p class="tx" style="margin-top:13px">Tan has bought a company <b>larger than himself</b> once, and one half his size once. The median deal is ~2.8x his own EBITDA, which today is <b>~$196B</b>. Nothing in the pattern suggests $82B — the worst cell in the grid — is a ceiling he would feel.</p>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Where the backstop actually bites</span></div>
+    <div class="card">
+      <p class="tx">The $29B backstop is close to irrelevant on its own: it moves net debt from $37.1B to $66.1B, which on FY26E EBITDA is <b>0.94x</b> instead of 0.72x. <b>EBITDA would have to fall to $26.4B</b> for net debt plus the backstop to reach 2.5x — it was $34.1B in FY25 and is tracking ~$62.5B in FY26. The backstop alone cannot threaten the rating.</p>
+      <p class="tx">The full platform is a different question. Taking BofA's <b>$370B</b> peak-exposure estimate for all 20 GW by mid-2029:</p>
+      <div class="twrap" style="margin-top:8px"><table class="cmp" style="min-width:0">
+        <tr><th>To stay under 2.5x requires</th><th class="r">vs consensus</th></tr>
+        <tr><td class="name">$162.8B of EBITDA</td><td class="r num dn">FY28E ~$152B → <b>2.68x, above the line</b></td></tr>
+        <tr><td class="name"></td><td class="r num up">FY29E ~$210B → <b>1.94x, back under</b></td></tr>
+      </table></div>
+      <div class="callout acc" style="margin-top:14px;margin-bottom:0">
+        <div class="dh">Which is the same uncertainty, twice</div>
+        <p>If the entire 20 GW platform is built <em>and</em> the agencies treat all of it as debt, Broadcom crosses 2.5x on FY28 numbers and comes back under on FY29. Both halves of that sentence are load-bearing — neither the full platform nor the full consensus is committed.</p>
+        <p>And notice what it means: <b>the backstop is only a rating problem if the FY27–28 AI revenue doesn't arrive.</b> If it arrives, the guarantee is comfortably carried. If it doesn't, it is being called at the same moment the EBITDA is missing. <b>The backstop and the multiple are pricing the same uncertainty.</b></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="invest">
+      <div class="ih">The conclusion</div>
+      <ul>
+        <li><b>Leverage is not the constraint</b> and has not been since FY24. In the harshest corner of the grid Broadcom can still buy an <b>$82B</b> target for cash; with stock the constraint disappears.</li>
+        <li><b>Retained cash flow alone is a ~$100B deal in three years</b>, with zero incremental debt.</li>
+        <li><b>The $29B backstop costs ~0.2x of leverage.</b> A rounding error against the capacity. The follow-on vehicle is what matters, and only at full 20 GW scale, and only if the EBITDA misses.</li>
+        <li><b>The binding constraint is the target list, not the balance sheet.</b> Never more than 5.4x revenue, never a growth asset. Very little at $20B+ of revenue is available in that range in 2026.</li>
+        <li><b>Which reframes the multiple question.</b> If "serial acquirer" optionality was part of what the market paid for, the balance sheet is not what took it away — it has never been more capable. <b>Price did.</b> That is a different, and more durable, reason for a lower multiple than a financing scare.</li>
+      </ul>
+    </div>
+    <div class="srcfoot"><b>Sources</b> · rating actions and the S&amp;P upgrade language relayed by the financial press — the primary agency texts are paywalled and remain the weakest input here, since the whole grid keys off them. FY26 revenue from reported quarters plus the Q4 guide; EBITDA margin cross-checked against the BBG ladder. Capacity grid computed in-session from the XBRL series.</div>
+  </div>
+</div>
+
+<!-- ═══════════ OPEN & NEXT ═══════════ -->
+<div class="pane" data-pane="next">
+  <div class="ph"><div class="ph-num">07</div><div class="ph-txt">
+    <div class="ph-sub">Sections 10–11</div>
+    <h2>Open questions and what we build next</h2>
+    <p>What the work has <em>not</em> settled, and the order it makes sense to attack it in.</p>
+  </div></div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Open questions · for IR or the next session</span></div>
+    <div class="card">
+      <div class="prog">
+        <div class="prow"><div class="pn">1</div><div class="pt"><b>The $42B convertible notes</b><span>Issuer, what they convert into, the trigger, and the relation to the $29B backstop</span></div><span class="pill open">Open</span></div>
+        <div class="prow"><div class="pn">2</div><div class="pt"><b>Who is "the seller" in the fixed-price rack buy-back remedy?</b><span>Could it be Broadcom itself?</span></div><span class="pill open">Open</span></div>
+        <div class="prow"><div class="pn">3</div><div class="pt"><b>Will the follow-on $60–100B vehicle carry a Broadcom guarantee?</b><span>And how much of it</span></div><span class="pill open">Open</span></div>
+        <div class="prow"><div class="pn">4</div><div class="pt"><b>How S&amp;P and Moody's actually adjust leverage for the backstop</b><span>The primary agency text — the weakest input in the capacity grid</span></div><span class="pill blocked">Blocking</span></div>
+        <div class="prow"><div class="pn">5</div><div class="pt"><b>December board capital allocation</b><span>Dividend step-up vs buyback vs any M&amp;A. Given the capacity, the silence on M&amp;A is information</span></div><span class="pill open">Open</span></div>
+        <div class="prow"><div class="pn">6</div><div class="pt"><b>Confirm the Jun 4 2026 move size</b><span>Sources still disagree: −4% close vs −16% intraday</span></div><span class="pill open">Open</span></div>
+        <div class="prow done"><div class="pn">7</div><div class="pt"><b>The Dec-2025 vs Jun-2026 peaks</b><span>Multiple peak 42.1x Dec 10 2025; price ATH $481.57 Jun 2 2026. The Sep 3 move was −2.7%, not −6.3%</span></div><span class="pill done">Settled</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Next steps</span><span class="secn">in the order that makes sense</span></div>
+    <div class="card">
+      <div class="prog">
+        <div class="prow done" data-goto="mult"><div class="pn">1</div><div class="pt"><b>Decompose the multiple 2021–2026</b><span>89% of the five-year move is forward EPS · correlation +0.73 → −0.79 · M&amp;A never moved it · AVGO-specific, not sector</span></div><span class="pill done">Done</span></div>
+        <div class="prow done" data-goto="mna"><div class="pn">2</div><div class="pt"><b>M&amp;A track record with numbers per deal</b><span>Price, multiple paid, debt at close, quarters to de-lever, ROIC — all seven deals from XBRL</span></div><span class="pill done">Done</span></div>
+        <div class="prow done" data-goto="capa"><div class="pn">3</div><div class="pt"><b>M&amp;A capacity model</b><span>Leverage is not the constraint; the target list is</span></div><span class="pill done">Done</span></div>
+        <div class="prow"><div class="pn">4</div><div class="pt"><b>Why the 2026 sign flip</b><span>Three candidates: (a) the market discounting FY27–28 because Anthropic/OpenAI need the balance sheet, (b) gross-margin mix from XPU/systems, (c) customer concentration and the Google–MediaTek share loss. A per-quarter attribution of estimate revisions against the multiple would separate them</span></div><span class="pill open">Next</span></div>
+        <div class="prow"><div class="pn">5</div><div class="pt"><b>The target screen</b><span>Who actually fits: $15B+ revenue, mission-critical with switching costs, under-priced renewal base, 3–5x EV/revenue. Run as a screen rather than a guess and "why has Tan not bought anything since 2023" becomes testable</span></div><span class="pill open">Open</span></div>
+        <div class="prow"><div class="pn">6</div><div class="pt"><b>Price the optionality</b><span>How much of the multiple was ever "next deal" optionality, and is its disappearance part of the 2026 de-rating? A cross-section of serial acquirers that stopped acquiring would frame it</span></div><span class="pill open">Open</span></div>
+        <div class="prow"><div class="pn">7</div><div class="pt"><b>Request the 2014+ BBG pull</b><span>To cover LSI (2014), Broadcom Corp (2016), CA (2018), the Qualcomm block (2018), Symantec (2019) — then re-run the decomposition over that window, where "does M&amp;A move the multiple" can be tested on more than VMware</span></div><span class="pill open">Dani</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Known gaps in what is already built</span></div>
+    <div class="card">
+      <p class="tx"><b>CA's underwritten multiple</b> — Broadcom never disclosed a standalone CA EBITDA or synergy target, only the ~$11.6B <em>combined</em> LTM adjusted EBITDA. Backing out Broadcom's own standalone figure from the Q3 FY18 non-GAAP reconciliation would close it.</p>
+      <p class="tx"><b>Pre-2014 deals</b> — the Agilent carve-out (2005, $2.65B) and the KKR/Silver Lake era predate XBRL and predate the multiple history.</p>
+      <p class="tx"><b>Cash returned per deal</b> — the divestiture table is what could be verified; smaller disposals (Symantec's consumer piece staying with NortonLifeLock, VMware's Carbon Black) are not in it.</p>
+      <p class="tx"><b>An IRR per deal</b> would need the acquired business's cash flows separated out, which Broadcom only makes possible for VMware, and only at segment level.</p>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  <div class="fh">About this page</div>
+  <p>Working note built from <code>avgo-context/AVGO_balance_sheet_financing_research.md</code> on branch <code>feat/avgo-balance-sheet-research</code>. Sessions of <b>14 Sep 2026</b> (balance sheet, debt, amortization, capital allocation, XPV) and <b>21 Sep 2026</b> (the multiple, the M&amp;A record, the capacity model).</p>
+  <p>Built with the Summit portal design system so it can move into the portal without a reskin. <b>No external dependencies</b> beyond the Inter webfont — every chart is inline SVG, no chart library, no runtime data calls. If this becomes a portal tab, the charts get rebuilt on the shared engine so they inherit drag-zoom, series toggling and the data tables underneath.</p>
+  <p>Complements <code>avgo-context/AVGO_PE_strategy.md</code> (the qualitative playbook) and the live AVGO profile in the portal.</p>
+</div>
+
+</div>
+
+<script>
+(function(){
+  var tabs = document.querySelectorAll('#tabs .tab');
+  var panes = document.querySelectorAll('.pane');
+  function show(p){
+    tabs.forEach(function(t){ t.classList.toggle('active', t.dataset.p===p); });
+    panes.forEach(function(pn){ pn.classList.toggle('active', pn.dataset.pane===p); });
+    window.scrollTo({top:0, behavior:'smooth'});
+    try{ history.replaceState(null,'','#'+p); }catch(e){}
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ show(t.dataset.p); }); });
+  document.querySelectorAll('[data-goto]').forEach(function(el){
+    el.addEventListener('click', function(){ show(el.dataset.goto); });
+  });
+  document.querySelectorAll('[data-more]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var d = document.querySelector('[data-detail="'+b.dataset.more+'"]');
+      if(!d) return;
+      b.classList.toggle('open'); d.classList.toggle('open');
+    });
+  });
+  function fromHash(){
+    var h = (location.hash||'').replace('#','');
+    if(h && document.querySelector('.pane[data-pane="'+h+'"]')) show(h);
+  }
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
+})();
+</script>
+
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Broadcom (AVGO) — Balance Sheet, M&A Capacity, AI Financing (XPV) & Multiple
 
-Research notes, session of **2026-09-14**. Chat-only research, **no portal changes yet**. This is the base for
+Research notes, sessions of **2026-09-14** (§1–§6) and **2026-09-21** (§7). Chat-only research, **no portal changes yet**. This is the base for
 continuing: (1) M&A / balance sheet / ratios / amortization, (2) the XPV financing platform,
 (3) the valuation multiple over time. Complements `AVGO_PE_strategy.md` (the historical playbook).
 
@@ -21,6 +21,11 @@ Broadcom went from **"de-lever after VMware to fund the next big deal"** to **"l
 sheet so its two largest 2027–28 customers (Anthropic, OpenAI) can buy its chips."** Corporate leverage
 looks healthy (~1x); the risk moved **off balance sheet** (Backstop + convertible notes), rating agencies
 and bond spreads are already pricing it, and the odds of another mega-acquisition went down.
+
+And the market has noticed. Over five years **89% of the stock's move came from forward EPS, not from the
+multiple** — but in 2026 that link snapped: blended-forward EPS is **+69% year-to-date** while the multiple
+went **42.1x → 20.4x**, and the correlation between the multiple and expected growth flipped from **+0.73**
+(2021–25) to **−0.79** (2026). Broadcom is being handed the numbers and is not being paid for them (§7).
 
 ---
 
@@ -146,15 +151,30 @@ US$ B. Quarter label = fiscal quarter.
 
 ---
 
-## 7. Valuation multiple — data & first read
+## 7. Valuation multiple — decomposition 2021–2026
 
 ### Data sources
 - **Daily BBG forward multiples, Sep 2 2021 → Sep 2 2026:**
   `G:\My Drive\Summit\Docs\Extras\Team\DAA\Ad hoc info search\BBG PORTFOLIO BENCH\multiples\AVGO 1GBF.xlsx` (+ `AVGO 2GY.xlsx`, `AVGO 3GY.xlsx`).
   Fields: PE_RATIO, HEADLINE_EV_TO_EBITDA, PX_TO_FCF (1,255 trading days). Start looks like a 5-yr pull limit.
+- **Peer multiples, same pull, same dates:** `PE 1GBF.xlsx` in that folder — 18 tickers including NVDA, 2330 TT (TSMC), META, GOOGL, AMZN.
+- **Daily price** (the BBG pull has no PX_LAST): Yahoo Finance chart API, split-adjusted closes, Aug 2021 → Sep 18 2026.
+  The only split in the window is **10:1 on Jul 15 2024**; BBG's PE_RATIO is split-invariant, so the implied EPS below is consistently split-adjusted.
 - **Pre-2021:** nothing clean. Ask Dani for the same BBG pull back to **2014-01-01** (monthly OK) + PX_LAST, CUR_MKT_CAP.
 - `avgo-context/AVGO_BBG.xlsx` and `FA_AVGO_US.xlsx` = annual only (no history). `DCF AVGO.xlsm` "Ratios Year" multiples use next-year *actual* GAAP → hindsight, don't use as consensus.
 - AVGO is **not** in `BBG_CONSENSUS.txt` nor in the Summit DCF MCP.
+
+### What the three BBG horizons actually are [C — identified, not labelled in the pull]
+
+Implied EPS = price ÷ multiple, matched against known anchors:
+
+| Series | Meaning | Check |
+|---|---|---|
+| **1GBF** | 12-month **blended forward**: FY1 and FY2 weighted by months left in FY1 | Sep 2 2026: (2/12)×FY26 + (10/12)×FY27 = (2/12)×12.1 + (10/12)×19.2 = **18.0** = observed ✓ |
+| **2GY** | **next fiscal year** (FY+1) | Sep 2 2026 implied EPS **$19.20** vs the $19.39 FY27 consensus already cited in §6 ✓ |
+| **3GY** | **FY+2** | Sep 2 2026 implied EPS **$27.07**; management's "exceed $30 in FY28" sits above it ✓ |
+
+2GY and 3GY step up discontinuously at each **December FY print** (the roll); 1GBF is continuous. **1GBF is therefore the only series usable for time-series work** — its change is not contaminated by the roll.
 
 ### Forward P/E / forward EV/EBITDA at quarter-end (1GBF)
 
@@ -167,11 +187,85 @@ US$ B. Quarter label = fiscal quarter.
 | 2025 | 23.4 / 19.1 | 35.7 / 28.8 | 36.1 / 28.7 | 32.4 / 25.2 |
 | 2026 | 22.6 / 17.8 | 22.6 / 18.1 | 20.4 / 16.2 (Sep 2) | |
 
-Low 10.6x / 9.3x (Oct 14 2022). High 42.1x / 33.6x (Dec 10 2025).
+Low **10.6x / 9.3x** (Oct 14 2022). High **42.1x / 33.6x** (Dec 10 2025). Price ATH **$481.57 on Jun 2 2026**.
 
-**First read:**
-- VMware (closed Nov 2023) did **not** compress the multiple; it kept rising through 2024 → the AI narrative dominated.
-- The 2026 de-rating needs splitting into price vs forward-EPS change.
+P/E ÷ EV/EBITDA stayed inside a **1.14–1.29** band the whole period, drifting up only mildly as VMware was paid down.
+→ Leverage never distorted the read: **both multiples tell the same story**, so the P/E work below carries over to EV/EBITDA.
+
+### The decomposition — price = multiple × blended-forward EPS
+
+Exact in logs: `Δln(price) = Δln(P/E) + Δln(EPS)`.
+
+| Period | End | Px | P/E | EPS(bf) | Δ%Px | Δ%P/E | Δ%EPS | Driver |
+|---|---|---|---|---|---|---|---|---|
+| Rate shock | Oct 14 2022 | 42.71 | 10.6 | 4.05 | −13% | **−35%** | +34% | multiple (estimates kept rising) |
+| Recovery + VMware | Dec 7 2023 | 92.23 | 19.7 | 4.68 | +116% | **+87%** | +16% | **multiple — 81% of the move** |
+| First AI year | Dec 12 2024 | 180.66 | 28.3 | 6.38 | +96% | +44% | +36% | **half and half** |
+| To the multiple peak | Dec 10 2025 | 412.97 | 42.1 | 9.81 | +129% | +49% | +54% | **half and half** |
+| Peak multiple → price ATH | Jun 2 2026 | 481.57 | 31.7 | 15.20 | +17% | −25% | **+55%** | **EPS alone; the multiple was already falling** |
+| XPV de-rating | Sep 2 2026 | 367.24 | 20.4 | 18.00 | −24% | **−36%** | +19% | multiple |
+| **Full 5 years** | Sep 2 2026 | 367.24 | 20.4 | 18.00 | **+647%** | **+25%** | **+497%** | **EPS = 89% of the log move** |
+| 2026 YTD | Sep 2 2026 | 367.24 | 20.4 | 18.00 | +6% | **−37%** | **+69%** | the two cancel |
+
+**Read:**
+1. **Over five years the re-rating is almost irrelevant.** The stock is up 647% and the multiple contributed **25 points of it** — 89% of the log move is forward EPS, which went from $3.01 to $18.00. Broadcom is not a multiple story; it is an estimate story.
+2. **2022 was rates, not the company.** Forward EPS rose 34% *while* the stock fell 13%: the multiple did all the damage.
+3. **2023 was the mirror image** — the multiple did all the work (87% of a +116% move) on +16% EPS. That is the re-rating from "levered roll-up" to "AI name", and it happened *before* the earnings showed up.
+4. **2024–2025 were balanced** — the only stretch where price, estimates and multiple moved together. That is what a healthy AI re-rating looks like.
+5. **2026 is a refusal year.** Blended-forward EPS is up **69% year-to-date** and the stock is up **6%**. The multiple has absorbed the entire beat: 42.1x → 20.4x, **−52% from the peak while estimates rose 84%** over the same stretch. The market is being handed the numbers and declining to pay for them.
+
+### Is the multiple correlated to growth?
+
+Expected growth, measured same-vintage so the roll cannot contaminate it: **g = EPS(3GY)/EPS(2GY) − 1** (FY+2 over FY+1).
+
+| Year | n | Median P/E | Median g | corr(P/E, g) | Median PEG |
+|---|---|---|---|---|---|
+| 2021 | 84 | 17.2 | 6.2% | −0.19 | 2.76 |
+| 2022 | 251 | 13.6 | 5.4% | −0.21 | 2.53 |
+| 2023 | 250 | 18.7 | 5.8% | **+0.73** | 3.23 |
+| 2024 | 252 | 26.6 | 13.4% | +0.57 | 1.98 |
+| 2025 | 250 | 35.1 | 21.0% | **+0.73** | 1.68 |
+| 2026 | 168 | 25.5 | **27.3%** | **−0.79** | **0.94** |
+| **Full sample** | 1,255 | 22.9 | | **+0.73** | |
+
+- **Yes — until 2026.** Across the five years the correlation is **+0.73**: the multiple tracked expected growth, and PEG compressed steadily from ~2.5–3.2x to ~1.7x as growth accelerated into the price.
+- **2026 breaks it, hard: −0.79.** Expected growth is the highest of the whole sample (27%) and the multiple is going the other way. PEG has fallen to **0.94**, the lowest reading in five years by a wide margin.
+- That sign flip is the whole question for the name: **the market has stopped paying for Broadcom's growth at exactly the moment the growth is largest.** §6 is the leading candidate for why — the growth being refused is the FY27–FY28 AI ramp, and the two customers behind it (Anthropic, OpenAI) are the two Broadcom had to finance.
+
+### Was it M&A? No.
+
+| Event | Date | P/E day before → day of | 1-day price |
+|---|---|---|---|
+| VMware announced | May 26 2022 | 14.16 → 14.31 | +3.6% |
+| VMware closed | Nov 22 2023 | 21.35 → 21.06 | −0.9% |
+
+Neither the largest acquisition in the company's history nor its closing moved the multiple, and the added leverage never showed up in the P/E ÷ EV/EBITDA ratio. **M&A is not a multiple driver for AVGO.** What re-rated the stock in 2023 was the AI narrative, arriving a full three quarters after the VMware deal closed. The relevant caveat runs the other way: the M&A that matters for the multiple is the one that **stopped** — goodwill flat since 2023 (§1) means the "serial acquirer" framing no longer earns anything.
+
+### It is not a sector re-rating either — AVGO vs peers (P/E 1GBF, quarter-end)
+
+| | AVGO | NVDA | TSMC | META | AVGO vs NVDA |
+|---|---|---|---|---|---|
+| Sep 2021 | 15.8 | 46.4 | 22.7 | 19.4 | **−66%** |
+| Sep 2022 | 11.0 | 28.5 | 11.3 | 10.3 | −61% |
+| Sep 2023 | 18.4 | 29.2 | – | 18.5 | −37% |
+| Dec 2023 | 23.4 | 25.5 | 15.7 | 19.5 | −8% |
+| Dec 2024 | 35.3 | 31.1 | 18.4 | 22.0 | **+13%** |
+| Dec 2025 | 32.4 | 25.3 | 20.0 | 19.9 | **+28%** |
+| Jun 2026 | 22.6 | 19.2 | 21.4 | 14.1 | +18% |
+| Sep 2026 | 20.4 | 17.7 | 18.4 | 16.0 | +15% |
+
+- Broadcom spent 2021–2022 at a **60–70% discount to Nvidia**, crossed into a **premium** at the end of 2024 and peaked at **+28%** in Dec 2025. The re-rating is Broadcom-specific: **TSMC never left an 11–22x band** over the same five years.
+- The 2026 de-rating is **partly complex-wide, partly AVGO's own**: Dec 2025 → Sep 2026, NVDA −30%, META −20%, TSMC −8%, **AVGO −37%** (−52% from its Dec 10 peak). Roughly two-thirds of AVGO's de-rating is the AI complex; the remaining third is the premium it built in 2025 being handed back.
+
+### Where the multiple sits now
+
+- **20.4x** blended forward (Sep 2 2026) = the **44th percentile** of the last five years, but the **1st percentile** of the 2024–2026 AI era (median 28.1x).
+- Past the BBG cut-off: the pull stops Sep 2; the Q3 FY26 print landed **Sep 3–4 2026** (revenue $29.59B, AI semis $16.7B +221% y/y, Q4 guide $34.8B vs ~$35.0B expected). Price Sep 2 $367.24 → **$357.61 on Sep 18**, so the multiple today is roughly **19–20x**, marginally lower.
+- ⚠️ **Correction to §6:** the "Sep 3 2026 −6.3%" row in the stock-move table does not survive the price series. Sep 3 was **−2.7%** ($367.24 → $357.16) and Sep 4 was +0.2%. That figure was [S] — drop it or re-source it.
+
+### Working files [local only, not committed]
+
+`avgo_merged.csv` (date, price, the three P/E, EV/EBITDA and P/FCF horizons, implied EPS for each) and `peers_pe.csv`, rebuilt by the scratchpad scripts `xlsx2csv.ps1` → `merge.ps1` → `decomp.awk`. Regenerate rather than store — the BBG source is Dani's folder and it moves.
 
 ---
 
@@ -182,11 +276,13 @@ Low 10.6x / 9.3x (Oct 14 2022). High 42.1x / 33.6x (Dec 10 2025).
 3. Will the follow-on $60–100B vehicle carry a Broadcom guarantee, and how much?
 4. How S&P / Moody's actually adjust leverage for the Backstop (find the primary S&P text).
 5. December board capital allocation: dividend step-up vs buyback vs any M&A.
-6. Confirm the Jun 4 2026 move size and the Dec-2025 vs Jun-2026 price/multiple peaks against BBG PX_LAST.
+6. Confirm the Jun 4 2026 move size (sources still disagree: −4% close vs −16% intraday).
+7. ~~Confirm the Dec-2025 vs Jun-2026 price/multiple peaks~~ — **done in §7**: multiple peak 42.1x on Dec 10 2025, price ATH $481.57 on Jun 2 2026. Jun 4 2026 still unconfirmed; the Sep 3 move was −2.7%, not −6.3%.
 
-## 9. Next steps (agreed direction, not started)
+## 9. Next steps
 
-1. **Decompose the multiple 2021–2026** with the DAA 1GBF file: implied forward EPS = price / P/E; split each period into Δprice vs ΔEPS; overlay events (VMware close, Dec-25 print, Jun-26 XPV, Aug-14 BofA, Sep-3 print).
-2. Request the 2014+ BBG pull to cover LSI (2014), Broadcom Corp (2016), CA (2018), Qualcomm block (2018), Symantec (2019).
-3. M&A track record with numbers per deal: price, multiple paid, debt at close, quarters to de-lever, ROIC.
-4. M&A capacity model: debt headroom at A-/A3 with and without the Backstop treated as debt.
+1. ~~**Decompose the multiple 2021–2026**~~ — **DONE (Sep 21 2026), §7.** Answer: 89% of the five-year move is forward EPS, not the multiple; the growth↔multiple correlation is +0.73 until 2026 and **−0.79 in 2026**; M&A never moved it; TSMC never re-rated, so it is AVGO-specific.
+2. **Why the 2026 sign flip** — the open question §7 leaves. Candidates to test: (a) the market discounting the FY27–28 AI ramp because Anthropic/OpenAI need Broadcom's balance sheet (§6), (b) gross-margin mix from XPU/system sales, (c) customer concentration / Google-MediaTek share loss. A per-quarter attribution of the estimate revisions (AI vs non-AI vs software) against the multiple would separate them.
+3. Request the 2014+ BBG pull to cover LSI (2014), Broadcom Corp (2016), CA (2018), Qualcomm block (2018), Symantec (2019) — and re-run §7 over that window, where the M&A question can actually be tested.
+4. M&A track record with numbers per deal: price, multiple paid, debt at close, quarters to de-lever, ROIC.
+5. M&A capacity model: debt headroom at A-/A3 with and without the Backstop treated as debt.

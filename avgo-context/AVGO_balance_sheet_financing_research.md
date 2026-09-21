@@ -1,6 +1,6 @@
 # Broadcom (AVGO) — Balance Sheet, M&A Capacity, AI Financing (XPV) & Multiple
 
-Research notes, sessions of **2026-09-14** (§1–§6) and **2026-09-21** (§7). Chat-only research, **no portal changes yet**. This is the base for
+Research notes, sessions of **2026-09-14** (§1–§6) and **2026-09-21** (§7 the multiple, §8 the M&A record). Chat-only research, **no portal changes yet**. This is the base for
 continuing: (1) M&A / balance sheet / ratios / amortization, (2) the XPV financing platform,
 (3) the valuation multiple over time. Complements `AVGO_PE_strategy.md` (the historical playbook).
 
@@ -26,6 +26,13 @@ And the market has noticed. Over five years **89% of the stock's move came from 
 multiple** — but in 2026 that link snapped: blended-forward EPS is **+69% year-to-date** while the multiple
 went **42.1x → 20.4x**, and the correlation between the multiple and expected growth flipped from **+0.73**
 (2021–25) to **−0.79** (2026). Broadcom is being handed the numbers and is not being paid for them (§7).
+
+That matters more because of what it is being traded against. **Seven acquisitions in twenty years, no
+impairment, no failed integration** — and a record in which every deal collapses ROIC to 6–9% in the
+close year and earns it back past the prior peak within two to four years (§8). Broadcom is at
+**~0.7x net leverage with $24B of cash**, the most capacity it has ever had, and **goodwill has been
+flat since Q1 FY24** — the longest pause in its history as a serial acquirer. The capacity is now
+pointed at the XPV backstop, not at a target.
 
 ---
 
@@ -96,7 +103,7 @@ US$ B. Quarter label = fiscal quarter.
 
 ## 5. Pending M&A [P]
 
-- **None** disclosed. Liquidity section keeps generic "potential acquisitions" language. Last moves: VMware EUC sale ($3.5B, 2024), Seagate SoC purchase ($600M, 2024).
+- **None** disclosed (see **§8** for the full deal-by-deal record). Liquidity section keeps generic "potential acquisitions" language. Last moves: VMware EUC sale ($3.5B, 2024), Seagate SoC purchase ($600M, 2024).
 
 ## 6. The AI XPV platform (off-balance-sheet exposure)
 
@@ -269,7 +276,211 @@ Neither the largest acquisition in the company's history nor its closing moved t
 
 ---
 
-## 8. Open questions (for IR / next session)
+## 8. The M&A track record, deal by deal
+
+`AVGO_PE_strategy.md` describes the playbook. This is the same ladder with the numbers attached:
+what was paid, at what multiple, what it did to the balance sheet, how long the de-levering took,
+and whether the capital earned a return.
+
+### Method and sources [P unless noted]
+
+- **Broadcom's own financials** — SEC XBRL company facts, quarterly, stitched across the three
+  registrants the company has used: Avago Technologies Ltd (CIK 1441634) → Broadcom Ltd (1649338) →
+  Broadcom Inc (1730168). Tags: `DebtLongtermAndShorttermCombinedAmount` (this is **principal**, which
+  is why it reads $61,079M at Q3 FY26 against $59,419M carrying in §2), `Goodwill`,
+  `CashAndCashEquivalentsAtCarryingValue`, `OperatingIncomeLoss`, `StockholdersEquity`, and D&A.
+- **Target financials** — each target's own 10-K via XBRL (LSI 703360, Broadcom Corp 1054374,
+  Emulex 350917, Brocade 1009626, CA 356028, Symantec 849399, VMware 1124610). The FY used is the
+  last one ending before the deal closed; it is named in the table so the staleness is visible.
+- **Deal terms** — Broadcom/Avago press releases and the counterparties' own announcements.
+- **EBITDA is GAAP throughout** (operating income + D&A) so the series is consistent across twenty
+  years and three registrants. It is *not* the adjusted EBITDA Broadcom quotes, and the difference is
+  the point of the third table. FY20–FY22 amortization comes from the expected-amortization schedule
+  (the cash-flow tag is missing those years); the proxy checks out on FY23 — schedule said 3,255,
+  actual was 3,247. [C]
+
+### 8.1 What was paid, and with what
+
+| Deal | Announced | Closed | Transaction value | Cash | Stock | Goodwill added | Debt before → after |
+|---|---|---|---|---|---|---|---|
+| **LSI** | Dec 16 2013 | May 6 2014 (Q3 FY14) | **$6.6B** | all | — | +$1.2B | $0 → **$5.5B** |
+| Emulex | Feb 25 2015 | May 5 2015 (Q3 FY15) | $0.61B | all | — | +$0.1B | — |
+| **Broadcom Corp** | May 28 2015 | Feb 1 2016 (Q2 FY16) | **$37.0B** | $17.0B | $20.0B (140M sh) | **+$23.1B** | $3.9B → **$15.0B** |
+| Brocade | Nov 2 2016 | Nov 17 2017 (Q1 FY18) | $5.9B ($5.5B + $0.4B net debt) | all | — | +$2.2B | $17.5B → $17.6B (pre-funded) |
+| **CA Technologies** | Jul 11 2018 | **Nov 5 2018** (Q1 FY19) | **$18.9B** equity | all | — | +$9.7B | $17.6B → **$37.9B** |
+| Symantec (enterprise) | Aug 8 2019 | **Nov 4 2019** (Q1 FY20) | **$10.7B** | all | — | +$6.8B | $33.1B → **$45.0B** |
+| **VMware** | May 26 2022 | Nov 22 2023 (Q1 FY24) | ~$69B announced → **$86.3B** at close | $30.8B | $53.4B | **+$53.9B** | $39.2B → **$75.9B** |
+| *Qualcomm* | Nov 2017 | **blocked** Mar 2018 | $117B bid | — | — | — | — |
+
+Two things the XBRL confirms that the narrative only asserted:
+
+- **The Q1 timing is real, and tighter than "Q1".** CA closed **Nov 5 2018**; FY18 ended **Nov 4 2018**.
+  Symantec closed **Nov 4 2019**; FY19 ended **Nov 3 2019**. Both closed *the day after* the fiscal year
+  ended. Every integration charge lands in Q1 of a fresh year, and the year-over-year comparison is
+  never split by a deal.
+- **Goodwill is the deal ledger and it never reverses.** $391M (FY13) → $1.6B → $24.7B → $26.9B →
+  $36.7B → $43.5B → **$97.8B**, flat since Q1 FY24. Seven steps, seven deals, no impairment in twenty
+  years.
+
+**Price net of what was immediately sold back.** Tan underwrites the *franchise*, not the company, and
+the non-franchise parts are sold within months — which lowers the effective price:
+
+| Deal | Headline | Sold off | Effective |
+|---|---|---|---|
+| LSI | $6.6B | Axxia networking → Intel **$650M** (Aug 2014); Flash Components + Accelerated Solutions → Seagate **$450M** (closed Sep 2 2014) | **~$5.5B** |
+| Brocade | $5.9B | Ruckus Wireless + ICX switching → Arris **$800M** (Dec 1 2017); data-center networking → Extreme Networks | **~$5.0B** |
+| VMware | $86.3B | End-User Computing → KKR **$3.5B** (Jul 2024) | **~$82.8B** |
+
+### 8.2 The multiple paid — headline versus underwritten
+
+| Deal | Target FY used | Target revenue | Target GAAP EBITDA | EV/Rev | **EV/EBITDA as reported** | **EV/EBITDA as underwritten** |
+|---|---|---|---|---|---|---|
+| LSI | FY13 (Dec 2013) | $2,370M | $305M | 2.8x | **21.6x** | not disclosed |
+| Emulex | FY14 (Jun 2014) | $447M | −$1M | 1.4x | n/m | not disclosed |
+| Broadcom Corp | FY14 (Dec 2014) | $8,428M | $872M | 4.4x | **42.4x** | not disclosed |
+| Brocade | FY16 (Oct 2016) | $2,346M | $431M | 2.5x | **13.7x** | not disclosed |
+| CA | FY18 (Mar 2018) | $4,235M | $1,497M | 4.5x | **12.6x** | combined LTM adj. EBITDA guided to ~$11.6B |
+| Symantec (ent.) | carve-out, n/a | ~$2.3B stated | n/a | ~4.6x | n/a | **8.2x** ($10.7B ÷ $1.3B pro-forma EBITDA incl. synergies) |
+| VMware | FY22 (Jan 2022) | $12,851M | $3,497M | 5.4x | **19.7x** (on the $69B announced) | **8.1x** ($69B ÷ the $8.5B three-year EBITDA target) |
+| VMware at close | FY23 (Feb 2023) | $13,350M | $3,256M | 6.5x | **26.5x** (on $86.3B) | **10.2x** |
+
+**This table is the playbook in one line.** On the numbers the seller reported, Broadcom paid 13x to
+42x EBITDA — multiples that look indefensible for a company that has never once been accused of
+overpaying. The deals are underwritten on a *different* EBITDA: the one that exists after 30–50% of
+the cost base is removed and the non-franchise revenue is sold. Where Broadcom disclosed that number
+(Symantec, VMware) the underwritten multiple is **8–10x**. The gap between the two columns is not
+financial engineering — it is the entire thesis, and it is why the deals only work for an operator
+who will actually cut.
+
+⚠️ The "as reported" column is deliberately unflattering: GAAP EBITDA at Broadcom Corp (2014) and LSI
+(2013) was depressed by restructuring and impairments, so 42x and 21.6x overstate what a normalised
+multiple would be. Read the column as *the multiple a passive buyer would have been paying*, which is
+the relevant comparison.
+
+### 8.3 What it cost the balance sheet, and how fast it came back
+
+Net debt ÷ LTM GAAP EBITDA, computed quarterly from XBRL. "Quarters to de-lever" = from the quarter
+the deal closed in to the first quarter back under **2.0x**.
+
+| Deal | Close quarter | Leverage at close | **Peak** | Peak quarter | Back under 2.0x | **Quarters** |
+|---|---|---|---|---|---|---|
+| LSI | Q3 FY14 | 4.55x | **4.55x** | Q3 FY14 | Q1 FY15 (1.21x) | **2** |
+| Broadcom Corp | Q2 FY16 | 3.90x | **4.25x** | Q3 FY16 | Q2 FY17 (1.60x) | **4** |
+| Brocade | Q1 FY18 | 1.52x | 1.63x | Q3 FY18 | never breached | **0** |
+| CA | Q1 FY19 | 3.10x | **3.29x** | Q3 FY19 | Q4 FY21 (1.90x) | **11** ⚠ |
+| Symantec | Q1 FY20 | **4.18x** | **4.18x** | Q1 FY20 | Q4 FY21 (1.90x) | **7** |
+| VMware | Q1 FY24 | 2.66x | **2.79x** | Q2 FY24 | Q3 FY25 (1.78x) | **6** |
+
+⚠ CA's count is contaminated: Symantec closed twelve months later, before CA had de-levered. The two
+should be read as a single $29.6B software campaign that took **11 quarters** from first close to
+under 2.0x — by far the slowest stretch in the record, and the only time Broadcom went to the well
+twice before finishing.
+
+**The counter-intuitive result: VMware, the largest deal in the company's history and the largest in
+software history, was the second-easiest to digest.** It peaked at **2.79x** — below LSI (4.55x, a
+$6.6B deal), below Broadcom Corp (4.25x) and well below Symantec (4.18x). Two reasons, both in the
+tables above: **62% of the consideration was stock** ($53.4B of $86.3B — only $30.8B was cash), and the EBITDA base absorbing
+the debt was already $20B. The company that bought VMware was not the company that bought CA.
+
+Where it stands now: Q3 FY26 net debt **$37.1B**, and on the FY26 amortization schedule leverage is
+roughly **0.7x net** — the lowest since before LSI. §4 is right that there is no stated target; the
+balance sheet is simply the most unencumbered it has been in twelve years.
+
+### 8.4 Did the capital earn a return?
+
+**(a) ROIC — the roll-up signature.** NOPAT at a flat 14% tax (so the series is comparable across
+registrants and across Broadcom's very noisy effective rate) ÷ (debt + equity − cash). [C]
+
+| FY | ROIC | | FY | ROIC | |
+|---|---|---|---|---|---|
+| 2013 | **25.0%** | pre-LSI | 2020 | 6.0% | ← Symantec |
+| 2014 | **6.0%** | ← LSI | 2021 | 13.9% | |
+| 2015 | 20.7% | | 2022 | 24.6% | |
+| 2016 | **−1.2%** | ← Broadcom Corp | 2023 | **28.4%** | pre-VMware peak |
+| 2017 | 7.7% | | 2024 | **9.0%** | ← VMware |
+| 2018 | 11.0% | | 2025 | 16.6% | |
+| 2019 | **5.6%** | ← CA | LTM Q3 FY26 | **26.9%** | |
+
+The shape repeats five times without exception: **a deal collapses ROIC to 6–9% in the close year,
+then it climbs back past the prior peak within two to four years.** That is the machine working —
+capital deployed at a low initial return that gets earned back through cost removal and pricing, not
+through growth. The two failures of the pattern are informative: FY16 went *negative* (Broadcom Corp
+was the only deal large enough to push GAAP operating income below zero), and FY19–FY20 stalled at
+5.6% / 6.0% because CA and Symantec were stacked on top of each other.
+
+**(b) EBITDA yield on capital deployed.** ΔGAAP EBITDA over the era ÷ price paid. Includes organic
+growth, so read it as an upper bound. [C]
+
+| Era | Capital deployed | EBITDA before → after | Δ | **Yield** |
+|---|---|---|---|---|
+| LSI + Emulex (FY13 → FY15) | $7.2B | $739M → $2,594M | +$1,855M | **26%** |
+| Broadcom Corp (FY15 → FY17) | $37.0B | $2,594M → $7,120M | +$4,526M | **12%** |
+| Brocade (FY17 → FY18) | $5.9B | $7,120M → $9,216M | +$2,096M | 35% (one year) |
+| CA + Symantec (FY18 → FY21) | $29.6B | $9,216M → $14,476M | +$5,260M | **18%** |
+| VMware (FY23 → FY25) | $86.3B | $19,956M → $34,120M | +$14,164M | 16% ⚠ AI |
+
+**(c) VMware on its own — the only deal that can be isolated**, because it sits almost entirely inside
+the Infrastructure Software segment, which Broadcom reports separately:
+
+| | FY23 (pre-VMware) | FY25 | Δ |
+|---|---|---|---|
+| Infrastructure software revenue | $7,637M | ~$27,000M | **+$19.4B** |
+| Segment operating income | $5,639M | $20,765M | **+$15.1B** |
+| Segment operating margin | 73.8% | 76.9% | +3.1 pts |
+
+**+$15.1B of segment operating income on $86.3B paid = a 17.5% pre-tax yield in year two**, against a
+promise of **$8.5B of EBITDA within three years**. Segment operating income is struck before
+acquisition-intangible amortization and SBC, so it is the right like-for-like against that promise —
+and VMware is running at roughly **1.8× what was underwritten**, a year early. On the record available,
+VMware is the best deal Broadcom has done, not merely the biggest.
+
+### 8.5 What the record says
+
+1. **Seven deals, twenty years, no impairment, no failed integration, one blocked bid.** There is no
+   bad deal in the record to point at. That is rare enough to be the base case for judging the next one.
+2. **The multiple paid is never the multiple underwritten**, and the gap is 2–4x. Anyone valuing
+   Broadcom's M&A on reported target EBITDA will conclude it overpays every time, and will be wrong
+   every time.
+3. **De-levering is fast and getting faster relative to size** — 2 to 7 quarters, except the one
+   stretch (CA + Symantec, 11 quarters) when Tan stacked two deals. VMware, 13x the size of LSI,
+   peaked at lower leverage than LSI did.
+4. **Stock as currency changed the risk profile.** Two deals used it — Broadcom Corp (54%) and VMware
+   (62%) — and they are the two largest. It is the mechanism that let the largest deal ever carry the
+   lowest peak leverage.
+5. **The cadence has broken.** Goodwill has been flat at $97.8B since Q1 FY24 — the longest gap without
+   a deal in the company's history as a serial acquirer. §5 confirms nothing is pending, and §4 has Tan
+   discussing December capital allocation in terms of dividend versus buyback, **with no mention of
+   M&A**. Meanwhile leverage is ~0.7x net and cash is $24B: the capacity has never been larger and the
+   pipeline has never been emptier.
+6. **§7 prices exactly that.** The multiple stopped tracking growth in 2026, and one candidate reading
+   is that the market is no longer paying for the optionality of the next deal — the "serial acquirer"
+   premium — at the same time it declines to pay for the AI ramp. The balance-sheet capacity is now
+   pointed at the XPV backstop (§6) rather than at an acquisition, and that is a different, worse-paid
+   use of the same A-rated credit.
+
+### 8.6 What is still missing
+
+- **CA's underwritten multiple.** Broadcom never disclosed a standalone CA EBITDA or synergy target —
+  only the ~$11.6B *combined* LTM adjusted EBITDA. Backing out Broadcom's own standalone figure from
+  the Q3 FY18 non-GAAP reconciliation would close this.
+- **Pre-2014 deals** — the Agilent carve-out (2005, $2.65B) and the KKR/Silver Lake era predate XBRL
+  and predate the multiple history in §7. Worth having if the 2014+ BBG pull (§10.3) arrives.
+- **Cash returned per deal.** The divestiture column is what I could verify; there were smaller
+  disposals (Symantec's consumer piece stayed with NortonLifeLock, VMware's Carbon Black) that are not
+  in it.
+- **An IRR per deal** would need the acquired business's cash flows separated out, which Broadcom only
+  makes possible for VMware (and only at the segment level).
+
+### Working files [local only, not committed]
+
+`avgo_fin.csv` (quarterly) and `avgo_fin_fy.csv` (fiscal year) are built from the EDGAR XBRL
+`companyconcept` endpoint by `xbrl2.ps1` / `xbrl2_fy.ps1`; `targets.ps1` does the same for each target
+at announcement and `targets_close.ps1` at close; `lev.awk` produces the quarterly leverage path.
+Regenerate rather than store.
+
+---
+
+## 9. Open questions (for IR / next session)
 
 1. $42B convertible notes: issuer, what they convert into, trigger, relation to the $29B Backstop.
 2. Who is "the seller" in the fixed-price rack buy-back remedy? Could it be Broadcom?
@@ -279,10 +490,10 @@ Neither the largest acquisition in the company's history nor its closing moved t
 6. Confirm the Jun 4 2026 move size (sources still disagree: −4% close vs −16% intraday).
 7. ~~Confirm the Dec-2025 vs Jun-2026 price/multiple peaks~~ — **done in §7**: multiple peak 42.1x on Dec 10 2025, price ATH $481.57 on Jun 2 2026. Jun 4 2026 still unconfirmed; the Sep 3 move was −2.7%, not −6.3%.
 
-## 9. Next steps
+## 10. Next steps
 
 1. ~~**Decompose the multiple 2021–2026**~~ — **DONE (Sep 21 2026), §7.** Answer: 89% of the five-year move is forward EPS, not the multiple; the growth↔multiple correlation is +0.73 until 2026 and **−0.79 in 2026**; M&A never moved it; TSMC never re-rated, so it is AVGO-specific.
 2. **Why the 2026 sign flip** — the open question §7 leaves. Candidates to test: (a) the market discounting the FY27–28 AI ramp because Anthropic/OpenAI need Broadcom's balance sheet (§6), (b) gross-margin mix from XPU/system sales, (c) customer concentration / Google-MediaTek share loss. A per-quarter attribution of the estimate revisions (AI vs non-AI vs software) against the multiple would separate them.
-3. Request the 2014+ BBG pull to cover LSI (2014), Broadcom Corp (2016), CA (2018), Qualcomm block (2018), Symantec (2019) — and re-run §7 over that window, where the M&A question can actually be tested.
-4. M&A track record with numbers per deal: price, multiple paid, debt at close, quarters to de-lever, ROIC.
-5. M&A capacity model: debt headroom at A-/A3 with and without the Backstop treated as debt.
+3. Request the 2014+ BBG pull to cover LSI (2014), Broadcom Corp (2016), CA (2018), Qualcomm block (2018), Symantec (2019) — and re-run §7 over that window. §8 now has the deal-by-deal numbers to overlay on it, which is where the "does M&A move the multiple" question can finally be tested on more than VMware.
+4. ~~**M&A track record with numbers per deal**~~ — **DONE (Sep 21 2026), §8.** Price, multiple paid (headline vs underwritten), debt at close, quarters to de-lever and ROIC for all seven deals, from EDGAR XBRL. Open ends listed in §8.6.
+5. **M&A capacity model** — the natural next build, and §8 gives it its inputs: debt headroom at A-/A3 with and without the Backstop treated as debt, benchmarked against the peak leverage Broadcom has actually carried (4.55x at LSI, 4.18x at Symantec, 2.79x at VMware). The question that matters: at 0.7x net and $24B of cash, how large a deal could Tan do *today* without losing the rating — and how does the $29B Backstop change that number?

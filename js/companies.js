@@ -1521,6 +1521,14 @@ export async function loadCompaniesPage() {
         group_name: 'Advertising Technology', sector: 'Technology', logo_domain: 'applovin.com',
         mono: 'AP', status: 'active', price: null });
     }
+    // Local-dev only: surface the in-development MAR (Marriott) overview in the grid without a DB
+    // write, so it previews inside the real portal chrome. Gated to localhost — never affects
+    // production. Remove once MAR is added for real via the companies table.
+    if (location.hostname === 'localhost' && !_companies.find(function(c){ return c.ticker === 'MAR'; })) {
+      _companies.push({ id: 'mar-local', ticker: 'MAR', name: 'Marriott International, Inc.',
+        group_name: 'Hotels & Leisure', sector: 'Consumer Discretionary', logo_domain: 'marriott.com',
+        mono: 'MR', status: 'active', price: null });
+    }
     initCoControls();
     renderCoGrid();
     initAddModal();

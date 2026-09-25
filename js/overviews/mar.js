@@ -24,6 +24,7 @@
 
 import { MAR_BBG } from './mar-bbg.js';
 import { SUMMIT_CAT, SUMMIT_INK, fade } from '../viz-palette.js';
+import { makeManagement } from './management.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&(?![a-zA-Z#0-9]+;)/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -471,6 +472,69 @@ function pendingBody(key){
     '<div class="mar-pend-need"><div class="mar-pend-k">Still to pull</div><ul>'+p.need.map(function(x){ return '<li>'+x+'</li>'; }).join('')+'</ul></div></div></div>';
 }
 
+// ═══ Management — the shared engine (js/overviews/management.js), same mold as AMZN/UBER/DHR.
+// Roster from Marriott's 2026 DEF 14A proxy and official leadership releases; governance facts from
+// the 2026/2025 proxies and the FY2025 10-K. Bios are public-source and neutral (no ownership counts
+// or insider trades — those live in the Pillars ▸ Management pillar). ⚠ The CFO changed in early
+// 2026: Leeny Oberg retired (Mar 31, 2026) and Jen Mason became CFO — the 2Q26 call confirms "Jen"
+// as CFO. Some join-years are approximate and flagged in the footer.
+var MAR_MGMT = makeManagement({
+  brand: BRAND,
+  lede: 'Marriott is <b>chaired by a member of the founding family</b> (David S. Marriott) but run by long-tenured professional managers &mdash; CEO <b>Anthony Capuano</b> joined in 1995, CFO <b>Jen Mason</b> in 1992. The board is <b>annually elected and majority-independent</b>; the only insiders are the CEO and two Marriott-family directors. Marriott has a <b>single class of stock</b> (one share, one vote).',
+  execs: [
+    { id:'capuano', lead:true, name:'Anthony G. Capuano', title:'President & Chief Executive Officer', since:'CEO since 2021 · at Marriott since 1995',
+      line:'A Marriott lifer who spent his career in hotel development before taking the top job; also a director.',
+      bio:'Anthony Capuano joined Marriott in 1995 on the development team and rose to lead Global Development. He became CEO in February 2021 following the death of Arne Sorenson, and added the President title in February 2023 when the prior president departed. He also serves on the board of directors.' },
+    { id:'mason', name:'Jennifer (Jen) Mason', title:'EVP & Chief Financial Officer', since:'CFO since 2026 · at Marriott since 1992',
+      line:'33-year Marriott veteran; became CFO in early 2026, succeeding Leeny Oberg.',
+      bio:'Jennifer Mason joined Marriott in 1992 and became EVP & Chief Financial Officer in early 2026, succeeding Kathleen "Leeny" Oberg, who retired after 26 years. She was previously Global Officer of Treasury and Risk Management, and earlier CFO of the U.S. & Canada division, with prior roles across internal audit, corporate FP&A and IT.' },
+    { id:'hill', name:'Shawn Hill', title:'EVP & Chief Development Officer', since:'CDO since 2026 · at Marriott since 1997',
+      line:'Runs global development — the pipeline engine behind unit growth.',
+      bio:'Shawn Hill joined Marriott in 1997 and became Chief Development Officer in early 2026, taking over the development remit that had been paired with the CFO role. He was long based in Hong Kong leading development for Asia Pacific excluding China.' },
+    { id:'roe', name:'Peggy Fang Roe', title:'EVP & Chief Customer Officer', since:'Chief Customer Officer since 2023',
+      line:'Owns the brand portfolio, the Marriott Bonvoy loyalty program and customer experience.',
+      bio:'Peggy Fang Roe leads global consumer strategy — the brand portfolio, the Marriott Bonvoy loyalty program and end-to-end customer experience. A roughly 20-year Marriott veteran, she was named to the role in the February 2023 reorganization after senior customer and operations roles, including in Asia Pacific.' },
+    { id:'pinto', name:'Drew Pinto', title:'EVP & Chief Revenue & Technology Officer', since:'since 2023',
+      line:'Leads sales, revenue management, distribution, digital and IT — including the multi-year tech transformation.',
+      bio:'Drew Pinto leads revenue and technology — sales, revenue management, distribution channels, digital and information technology, including Marriott’s multi-year technology transformation. He was named to the role in the February 2023 reorganization.' },
+    { id:'breland', name:'Benjamin (Ty) Breland', title:'EVP & Chief Human Resources Officer', since:'CHRO since 2021 · at Marriott since 2004',
+      line:'Leads human capital across ~414,000 managed associates; remit broadened into global operations services.',
+      bio:'Ty Breland joined Marriott in 2004 and became EVP & Chief Human Resources Officer in 2021. He served as Marriott’s global HR integration officer during the 2016 Starwood acquisition, and his remit has since broadened to include global operations services.' },
+    { id:'reiss', name:'Rena H. Reiss', title:'EVP & General Counsel', since:'General Counsel since ~2017',
+      line:'Chief legal officer.',
+      bio:'Rena Reiss serves as Executive Vice President and General Counsel. Before Marriott she was General Counsel of Marsh & McLennan, and earlier held senior legal roles including at Time Warner Cable.' },
+    { id:'alexander', name:'Erika Alexander', title:'Chief Global Officer, Global Operations',
+      line:'Senior-most global operations officer — oversees continent operations leadership.',
+      bio:'Erika Alexander is Chief Global Officer for Global Operations, overseeing Marriott’s continent operations leadership. A longtime Marriott operations executive, she was elevated in the 2023 leadership structure.' },
+  ],
+  board: [
+    { name:'David S. Marriott', chair:true, independent:false, role:'Chairman of the Board · Marriott family' },
+    { name:'Anthony G. Capuano', dual:true, independent:false, role:'President & CEO' },
+    { name:'Deborah Marriott Harrison', independent:false, role:'Global Cultural Ambassador Emeritus · Marriott family' },
+    { name:'Frederick A. Henderson', independent:true, role:'Lead Independent Director · former Chairman & CEO, SunCoke Energy; ex-CEO, General Motors' },
+    { name:'Isabella D. Goren', independent:true, role:'Former CFO, American Airlines (AMR)' },
+    { name:'Lauren R. Hobart', independent:true, role:'President & CEO, DICK’S Sporting Goods' },
+    { name:'Aylwin B. Lewis', independent:true, role:'Former Chairman, CEO & President, Potbelly' },
+    { name:'Margaret M. McCarthy', independent:true, role:'Former EVP, CVS Health' },
+    { name:'Grant F. Reid', independent:true, role:'Former President & CEO, Mars, Incorporated' },
+    { name:'Horacio D. Rozanski', independent:true, role:'Chairman, CEO & President, Booz Allen Hamilton' },
+    { name:'Susan C. Schwab', independent:true, role:'Former U.S. Trade Representative; Professor Emerita, U. of Maryland' },
+    { name:'Sean C. Tresvant', independent:true, role:'CEO, Taco Bell (Yum! Brands); director since 2025' },
+  ],
+  boardNote: '12 directors · 9 independent · annually elected',
+  gov: [
+    { k:'Share structure', v:'One share, one vote', d:'Single class of common stock (no dual class); ~265M shares, Nasdaq: MAR' },
+    { k:'Board', v:'9 of 12 independent', d:'Chair David Marriott (family); Lead Independent Director Fred Henderson; annually elected' },
+    { k:'Committees', v:'Audit · HR/Comp · Nom/Gov · Tech-InfoSec', d:'Plus Inclusion &amp; Social Impact and Executive committees' },
+    { k:'Say-on-pay', v:'~92.5% for', d:'2025 annual meeting, on FY2024 pay (~96% the prior year)' },
+    { k:'CEO pay', v:'$21.9M', d:'Anthony Capuano total comp, FY2024 (2025 proxy); ~$23M FY2025' },
+    { k:'Auditor', v:'Ernst &amp; Young', d:'Marriott auditor since 2002' },
+    { k:'Capital return', v:'$3.3B buyback + dividend', d:'2025: 12.1M shares repurchased; quarterly dividend $0.63 &rarr; $0.67' },
+  ],
+  foot: 'Sources — Marriott 2026 DEF 14A proxy (director slate, independence, committees, say-on-pay) and 2025 DEF 14A (FY2024 CEO pay); FY2025 Form 10-K (single share class, auditor tenure, buybacks and dividends); and Marriott’s official leadership / appointment releases (executive roster and tenures). Roster is current as of the 2026 proxy: the CFO transitioned from Leeny Oberg (retired Mar 31, 2026) to Jen Mason in early 2026, and Shawn Hill became Chief Development Officer. A few executive join-years are approximate. Ownership counts and insider trades are not shown here — they sync live in the Pillars ▸ Management pillar.',
+});
+function managementBody(){ return MAR_MGMT.body(); }
+
 // ─── Top Line ▸ Segments — by who OWNS the hotel and who OPERATES it. All figures YE2025.
 // Rooms by model (10-K Item 1 property tables + Bloomberg model): total system 1,779,936 rooms.
 var TL_ROOMS=[
@@ -882,6 +946,77 @@ function blMarginsPane(){
   h+='<div class="ov-foot">Source &mdash; income-statement lines (revenue, cost reimbursement, operating expense detail, operating income, interest, tax) from the Bloomberg model (<code>mar-bbg.js</code>), FY2016&ndash;2030 (FY2026+ are BST estimates). &ldquo;Economic revenue&rdquo; = total revenue &minus; cost reimbursement. Margins and the P&amp;L walk are computed from the reported dollar lines; the walk ties to reported operating income and net income.</div>';
   return h;
 }
+// ── Non-RevPAR evolution data — sourced from the 1Q25–2Q26 earnings calls (member counts, card
+// footprint, the new-deal build) and the FY2025 10-K (loyalty deferred revenue, breakage). These
+// series are NOT in the Bloomberg model, so they live here with their provenance in the footer.
+var BONVOY={ labels:['1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
+  members:[237,248,260,271,283,295],          // millions, end of quarter (calls)
+  yoy:[null,null,18,19,19,19],                 // %; 3Q25 disclosed +18%, others derived/disclosed
+  cards:[null,null,32,34,37,37],               // co-branded cards live
+  countries:[null,null,11,11,13,13] };
+function bonvoyChart(){
+  var n=BONVOY.labels.length;
+  return lineChart({ labels:BONVOY.labels, estFrom:n, height:210,
+    fmtY:function(v){ return Math.round(v)+'M'; },
+    note:'Members more than doubled from 110M in 2017 to 271M at year-end 2025; 43M joined in 2025 alone. Penetration of global room nights rose from 58% (2019) to ~69%.',
+    series:[ { name:'Bonvoy members', short:'Members', color:SUMMIT_INK, data:BONVOY.members, fmt:function(v){ return v+'M'; } } ] });
+}
+// Derived monetization-per-member proxy: trailing-12-month gross fee revenue ÷ members. Marriott
+// does NOT disclose cardholder spend per member, so this is the honest best proxy (gross fee spans
+// all hotel guests, but members drive ~68% of room nights). LTM from the quarterly Bloomberg fees.
+function feePerMemberLTM(){
+  var Q=MAR_BBG.quarterly, gf=function(i){ return Q.baseFee[i]+Q.franchiseFee[i]+Q.incentiveFee[i]; };
+  return BONVOY.labels.map(function(lb,k){
+    var qi=Q.labels.indexOf(lb); if(qi<3) return null;
+    var ltm=0; for(var j=qi-3;j<=qi;j++) ltm+=gf(j);
+    return ltm/BONVOY.members[k]; // $M ÷ M members = $ per member
+  });
+}
+function bonvoyTable(){
+  var nil='<span class="rs-ft-nil">&ndash;</span>';
+  var c=function(arr,suf){ return arr.map(function(v){ return v==null?nil:(v+(suf||'')); }); };
+  var fpm=feePerMemberLTM();
+  var rows=[
+    {h:'Members (M)', cls:'rs-ft-nb', cells:BONVOY.members.map(function(v){ return '<b>'+v+'</b>'; })},
+    {h:'YoY', cls:'rs-ft-sub', cells:BONVOY.yoy.map(function(v){ return v==null?nil:('+'+v+'%'); })},
+    {h:'Fees / member (LTM)¹', cls:'rs-ft-nb', cells:fpm.map(function(v){ return v==null?nil:('$'+v.toFixed(1)); })},
+    {h:'Co-branded cards', cells:c(BONVOY.cards)},
+    {h:'Countries', cls:'rs-ft-sub', cells:c(BONVOY.countries)},
+  ];
+  return rsFt(BONVOY.labels, BONVOY.labels.map(function(){ return false; }), rows, 'End of quarter');
+}
+// Monetization-per-member framing — answers "spending per member?" honestly.
+function perMemberBlock(){
+  var fpm=feePerMemberLTM(), first=fpm[0], last=fpm[fpm.length-1];
+  var mFirst=BONVOY.members[0], mLast=BONVOY.members[BONVOY.members.length-1];
+  var memGro=Math.round((mLast/mFirst-1)*100), feeGro=Math.round((last*mLast)/(first*mFirst)*100-100);
+  var tiles=[
+    ['$'+last.toFixed(1),'fees per member · LTM (derived proxy)'],
+    ['+146%','members since 2017 (110M &rarr; 271M)'],
+    ['+80%','co-branded card spend since 2017'],
+  ];
+  return '<div class="mar-stats mar-stats3">'+tiles.map(function(t){ return '<div class="mar-stat"><div class="mar-stat-v">'+t[0]+'</div><div class="mar-stat-l">'+t[1]+'</div></div>'; }).join('')+'</div>'+
+    '<div class="ave-subh-note" style="margin-top:6px"><sup>1</sup><b>Marriott does not disclose cardholder spend per member</b>, so &ldquo;fees per member&rdquo; is a <b>derived proxy</b> &mdash; trailing-12-month gross fee revenue &divide; members. It has eased from ~$'+first.toFixed(0)+' to ~$'+last.toFixed(0)+' as enrollment (+'+memGro+'% over these six quarters) outpaces fee growth (+'+feeGro+'%): the marginal new member monetizes less. Since 2017 members are up <b>~146%</b> while co-branded card accounts and spend are each up <b>~80%</b> and the system ~50% &mdash; so per-member card spend has diluted as the base broadened. The per-member <b>uplift</b> Marriott is engineering (the 2025 royalty-rate increase and the new U.S. card deals) shows up in the 2026&ndash;2028 build above, not yet in this trailing ratio.</div>';
+}
+// FY2026 guidance / cadence per non-RevPAR stream — consolidates the qualitative cards into one
+// scannable evolution table. Sources: FY2026 outlook on the 1Q25–2Q26 calls + the 10-K.
+function nonRevparGuidanceTable(){
+  var rows=[
+    {h:'Co-branded card fees', cells:['~high-30%s YoY','Structural &middot; recurring','&rarr; $100&ndash;125M by 2028']},
+    {h:'Residential branding', cells:['+55&ndash;65%','Lumpy &middot; unit-timing','One-time fee / unit']},
+    {h:'Timeshare license (MVW)', cells:['~$110&ndash;115M','Contractual + volume','~flat vs 2025']},
+    {h:'Marriott Media Network', cells:['Early-stage','New &middot; optional','Card-scale upside']},
+    {h:'Loyalty breakage', cells:['~$50M / 1pt','Near-pure margin','Of the liability']},
+  ];
+  return rsFt(['FY2026 guidance','Pattern','2028 / scale'], [false,false,false], rows, 'Stream')+
+    '<div class="ave-subh-note" style="margin-top:6px">Mechanics for each stream are in the cards above. Card fees are booked inside the Franchise-fees line; the ~$30M 2026 uplift from the new U.S. deals (Chase &amp; Amex) builds to <b>$100&ndash;125M by 2028</b> at the ~26% royalty.</div>';
+}
+function loyaltyDeferred(){
+  var tiles=[['$7.99B','guest-loyalty deferred revenue · YE2025'],['$3.16B','previously-deferred revenue recognized in 2025'],['~$50M','liability swing per 1pt of breakage']];
+  return '<div class="mar-stats mar-stats3">'+tiles.map(function(c){ return '<div class="mar-stat"><div class="mar-stat-v">'+c[0]+'</div><div class="mar-stat-l">'+c[1]+'</div></div>'; }).join('')+'</div>'+
+    '<div class="ave-subh-note" style="margin-top:6px">Points sold (mostly to card issuers) sit as a <b>deferred-revenue liability</b> and only become revenue when redeemed &mdash; or expire (<b>breakage</b>), which is near-pure margin. The liability has more than doubled since Bonvoy launched, tracking membership and card funding. Source: FY2025 10-K (Loyalty Program critical estimate &amp; Note 2).</div>';
+}
+
 // Bottom Line ▸ Non-RevPAR economics — the streams that don't move with RevPAR: the Bonvoy loyalty
 // program, co-branded credit cards, residential branding, timeshare licensing and the new media
 // network. Near-pure-margin, recurring, faster-growing and less cyclical than room-fee income.
@@ -891,16 +1026,21 @@ function blNonRevparPane(){
   h+='<div class="mar-stats">'+tiles.map(function(c){ return '<div class="mar-stat"><div class="mar-stat-v">'+c[0]+'</div><div class="mar-stat-l">'+c[1]+'</div></div>'; }).join('')+'</div>';
   h+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>The Bonvoy flywheel</b> &mdash; scale &rarr; direct demand &rarr; data &rarr; card economics.</div>';
   h+=tlFlow(['295M members','Direct bookings (skip OTA fees)','Card spend + first-party data','Marriott sells Bonvoy points to issuers','~26% royalty + breakage'], BRAND);
+  // Bonvoy scale over time — the engine behind every non-RevPAR stream.
+  h+='<div class="ov-diagram-cap" style="margin:18px 0 4px"><b>Bonvoy membership over time</b> &mdash; end of quarter, 1Q25&ndash;2Q26.</div>'+bonvoyChart()+bonvoyTable();
+  h+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>Monetization per member</b> &mdash; can we see spending per member?</div>'+perMemberBlock();
   // The two big engines.
   h+='<div class="ov-diagram-cap" style="margin:18px 0 6px"><b>The two engines</b></div>';
   h+='<div class="mar-fee" style="border-top-color:'+BRAND2+';margin-bottom:12px"><div class="mar-fee-h">Marriott Bonvoy &mdash; the demand &amp; data machine</div><div class="mar-fee-s">295M+ members · 69% of global / 74% of U.S. room nights (record, 2Q26)</div>'+
     '<ul class="ov-bullets"><li>Members grew <b>~19% YoY</b> (248M Jun-2025 &rarr; 295M+ Jun-2026). Every enrolled guest who books direct <b>skips the 15&ndash;25% OTA commission</b> and hands Marriott first-party data.</li>'+
-    '<li>Points are a <b>deferred-revenue engine</b>: points sold (mostly to card issuers) sit as a <b>guest-loyalty liability (~$3.5B, 2025)</b> and only become revenue when redeemed &mdash; or <b>expire (breakage), which is near-pure margin</b>.</li>'+
+    '<li>Points are a <b>deferred-revenue engine</b>: points sold (mostly to card issuers) sit as <b>guest-loyalty deferred revenue ($7.99B at YE2025, 10-K)</b> and only become revenue when redeemed &mdash; or <b>expire (breakage), which is near-pure margin</b>.</li>'+
     '<li>New in 2025: the <b>Marriott Media Network</b> &mdash; retail-media/ads built on Bonvoy data, the app and in-room TVs; management frames it as a potential card-scale profit stream at maturity.</li></ul></div>';
   h+='<div class="mar-fee" style="border-top-color:'+BRAND+'"><div class="mar-fee-h">Co-branded credit cards &mdash; the highest-return adjacency</div><div class="mar-fee-s">37 cards in 13 countries · JPMorgan Chase &amp; American Express (new U.S. deals 2026); Visa in talks</div>'+
     '<ul class="ov-bullets"><li><b>How it works:</b> issuers pay Marriott &ldquo;credit-card funding&rdquo; to buy Bonvoy points for cardholders. Marriott takes a <b>~26% royalty</b> on that funding for licensing its brand &amp; Bonvoy IP &mdash; booked <b>inside the Franchise fees line</b>.</li>'+
     '<li><b>The kicker:</b> Marriott earns on <b>all</b> cardholder spend &mdash; gas, groceries, everything &mdash; not just hotel stays. A &ldquo;significant funding source.&rdquo;</li>'+
     '<li><b>The build:</b> card fees rose <b>+37%</b> in 1Q26 and are guided to the <b>high-30%s</b> for FY2026. The new U.S. deals add ~<b>$30M</b> in 2026, building to <b>$100&ndash;125M by FY2028</b> at the current 26% royalty.</li></ul></div>';
+  // The loyalty liability — the deferred-revenue engine behind the points economy.
+  h+='<div class="ov-diagram-cap" style="margin:18px 0 6px"><b>The loyalty liability</b> &mdash; points sold today, revenue (or breakage) tomorrow.</div>'+loyaltyDeferred();
   // Smaller brand-rent streams.
   h+='<div class="ov-diagram-cap" style="margin:18px 0 6px"><b>The other brand-rent streams</b></div>';
   h+='<div class="mar-fee3">'+
@@ -908,10 +1048,12 @@ function blNonRevparPane(){
     '<div class="mar-fee" style="border-top-color:'+LIC+'"><div class="mar-fee-h">Timeshare license</div><div class="mar-fee-s">Via Marriott Vacations Worldwide</div><div class="famd">A <b>fixed annual fee</b> (inflation-indexed) plus variable fees on MVW&#39;s sales volumes. Steady at <b>~$110&ndash;115M</b> in FY2026.</div></div>'+
     '<div class="mar-fee" style="border-top-color:'+LIC+'"><div class="mar-fee-h">Marriott Media Network</div><div class="mar-fee-s">Launched 2025 · retail media</div><div class="famd">Ads monetizing Bonvoy&#39;s data, the app and in-room TVs. Early-stage; the upside case is a <b>new high-margin, RevPAR-independent</b> profit line.</div></div>'+
     '</div>';
+  // Consolidated FY2026 guidance / cadence per non-RevPAR stream.
+  h+='<div class="ov-diagram-cap" style="margin:18px 0 6px"><b>Non-RevPAR streams &mdash; FY2026 guidance &amp; cadence</b></div>'+nonRevparGuidanceTable();
   // Quotes for authority.
   h+='<div class="mar-quote" style="margin-top:18px">&ldquo;Co-branded credit cards &hellip; a very high-return adjacency that &hellip; extends beyond just earning on travel expenses but on the ability for people to be buying gas, and we ultimately earn brand fees.&rdquo;<cite>Marriott management &mdash; Q2 2025 earnings call</cite></div>';
   h+='<div class="mar-quote">&ldquo;By full-year 2028, the impact on Marriott&#39;s co-brand card fees from these new deals could be somewhere between $100 million and $125 million at our current royalty rate of 26%.&rdquo;<cite>CFO &mdash; Q2 2026 earnings call</cite></div>';
-  h+='<div class="ov-foot">Sources &mdash; Marriott FY2025 10-K, Item 1 (&ldquo;Loyalty and Credit Card Programs&rdquo;); the FY2026 outlook and prepared remarks on the 1Q25&ndash;2Q26 earnings calls (member counts and penetration, the ~26% card royalty and $30M&rarr;$100&ndash;125M build, residential/timeshare guidance, the Media Network); the guest-loyalty liability (~$3.5B, 2025) from the Bloomberg model (<code>mar-bbg.js</code>). Member counts are as reported on each quarter&#39;s call.</div>';
+  h+='<div class="ov-foot">Sources &mdash; Marriott FY2025 10-K: Item 1 (&ldquo;Loyalty and Credit Card Programs&rdquo;), the Loyalty Program critical accounting estimate and Note 2 for the <b>$7,992M guest-loyalty deferred revenue</b> at YE2025, the $3,160M recognized in 2025 and the ~$50M-per-1pt breakage sensitivity. Member counts, penetration, card footprint (32&rarr;37 cards, 11&rarr;13 countries), the ~26% royalty and the $30M&rarr;$100&ndash;125M new-deal build, and the residential/timeshare/Media-Network guidance are as reported on the <b>1Q25&ndash;2Q26 earnings calls</b> and FY2026 outlook. Members: 110M (2017) &rarr; 271M (YE2025), 43M added in 2025.</div>';
   return h;
 }
 var BL_SUBTABS=[ ['nonrevpar','Non-RevPAR economics', blNonRevparPane], ['margins','Margins', blMarginsPane] ];
@@ -980,7 +1122,8 @@ function ddStyle(){
     '.seg-leg-i i{width:11px;height:11px;border-radius:3px;margin-right:6px}'+
     '@media(max-width:600px){.seg-leg{padding-left:0}.seg-sb-l{width:88px}}'+
     '.mar-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0 2px}'+
-    '@media(max-width:640px){.mar-stats{grid-template-columns:repeat(2,1fr)}}'+
+    '.mar-stats.mar-stats3{grid-template-columns:repeat(3,1fr)}'+
+    '@media(max-width:640px){.mar-stats{grid-template-columns:repeat(2,1fr)}.mar-stats.mar-stats3{grid-template-columns:1fr}}'+
     '.mar-stat{border:1px solid var(--bdr);border-top:2px solid '+BRAND2+';border-radius:10px;padding:11px 13px;background:var(--w)}'+
     '.mar-stat-v{font-size:18px;font-weight:800;color:var(--navy);letter-spacing:-.02em;line-height:1.1}'+
     '.mar-stat-l{font-size:10.5px;color:var(--mu);line-height:1.35;margin-top:4px}'+
@@ -1027,7 +1170,7 @@ function ddHtml(c){
   h+=ddStyle();
   h+='<div class="dd-tabs">'+DD_SECTIONS.map(function(s,i){ return '<button type="button" class="dd-tab'+(i===0?' active':'')+'" data-dd="'+s[0]+'">'+s[1]+'</button>'; }).join('')+'</div>';
   DD_SECTIONS.forEach(function(s,i){
-    var body=(s[0]==='topline')?toplineBody():(s[0]==='bottomline')?bottomlineBody():(s[0]==='evolution')?evolutionBody():pendingBody(s[0]);
+    var body=(s[0]==='topline')?toplineBody():(s[0]==='bottomline')?bottomlineBody():(s[0]==='evolution')?evolutionBody():(s[0]==='management')?managementBody():pendingBody(s[0]);
     h+='<div class="dd-pane" data-dd="'+s[0]+'"'+(i===0?'':' hidden')+'>'+body+'</div>';
   });
   h+='</div>';
@@ -1036,6 +1179,8 @@ function ddHtml(c){
 function ddInit(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
   var dd=root.querySelector('.ov-mar-dd'); if(!dd) return;
+  // Management — wire the shared engine's exec-bio modal (scopes to the mgmt pane / dd root).
+  try { MAR_MGMT.init(dd); } catch(e){}
   // Collapsibles inside the deep dive (e.g. KPIs ▸ trend / regions). onclick overwrites, so this is
   // safe even if the Overview's wireCommon also reached them through the shared #co-detailview root.
   dd.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var cc=btn.parentElement; var open=cc.classList.toggle('open'); var b=cc.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.innerHTML=open?'&#9662;':'&#9656;'; }; });

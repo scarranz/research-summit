@@ -34,8 +34,11 @@ SUMMIT_DOCS="G:/My Drive/Summit/Docs/0" py emit_matrix.py AMZN map_amzn.json
 ⚠ **Read the union of both.** `emit_matrix.py` does, and prints which snapshots came from only
 one of them. Export the `.txt` before each refresh or a sheet-only row is lost.
 
-⚠ **Coverage is the binding constraint, not the tooling.** As of Aug 2026 both sources carry
-**four tickers — AMZN, GOOGL, LYFT, UBER.** An earlier note claimed 32; that is no longer true.
+⚠ **Coverage is the binding constraint, not the tooling.** Re-counted Sep 2026 from the archive
+itself: `BBG_CONSENSUS.txt` carries **eight tickers — AMZN, GOOGL, LYFT, META, NVDA, SPOT, TBBB,
+UBER.** **SN is not among them** — see "Standing SN up" at the foot of this file. An earlier note
+claimed four, and one before that claimed 32; both were stale, so re-count rather than trust the
+prose.
 `inspect_matrix.py <TK>` on anything else exits telling you what is actually there. Adding a
 ticker to the workbook is a Bloomberg-terminal job for San/Oscar, and nothing here can work
 around it.
@@ -168,3 +171,40 @@ pre-print saves; 2026-08-04 is the re-cut that ingested it.
 
 `emit_evolution.py` carries existing prose across a refresh and then tells you to re-read it —
 a note written against three snapshots is wrong the moment there is a fourth.
+
+---
+
+## Standing SN up when its row lands (Sep 2026)
+
+SharkNinja's profile is **already fully wired** for the vintage axis — the only thing missing is
+the data. Nothing in `js/` needs to change when it arrives.
+
+What is already in place:
+
+| Piece | Where | State |
+|---|---|---|
+| Generator config | `scripts/consensus/map_sn.json` | Written, **codes UNVERIFIED** — step 1 below is not optional |
+| Setup dataset | `js/results-data/sn-setup.js` | Live — derived from `snResults`, already feeding the Earnings ▸ Setup chart |
+| Engine registration | `js/results.js` → `SN`, `SN_SETUP` | Done |
+| Estimates pane | Evolution ▸ Estimates | Mounted; renders a pending notice while `resultsEvoHtml('SN')` returns `''` |
+| Earnings pane | Evolution ▸ Earnings | Built; the consensus grid and scorecard render a pending notice |
+
+The run, once San or Oscar has added `SN US EQUITY` to the workbook and re-exported the `.txt`:
+
+```bash
+py inspect_matrix.py SN                                            # 1. fix the codes in map_sn.json
+SUMMIT_DOCS="G:/My Drive/Summit/Docs/0" py emit_matrix.py SN map_sn.json   # 2. resolution + frozen check
+py verify_preprint.py SN                                           # 3. blanked must be 0
+py apply_matrix.py SN                                              # 4. splice estMatrix into sn.js
+```
+
+Then re-check `js/results-data/sn-setup.js` against the txt's authorized KPI set
+(`metric1..9` + `metric_kpi1..N`) and drop any line it does not authorize —
+EARNINGS_CONVENTIONS §5 rule 6. That file currently exposes every line in `snResults` because
+there is no authorized set to gate against yet.
+
+**Two things this does NOT unlock.** `estMatrix.summit` and the `evolution` block both come from
+Summit MCP snapshots, and **there is no Summit DCF model for SN**. Until one exists the Summit
+line stays null, no model-vs-reality back-test is possible, and the Estimates pane will carry the
+Street half only. The pending notices in the profile say so explicitly rather than rendering an
+empty frame.

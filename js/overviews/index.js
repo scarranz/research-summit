@@ -23,6 +23,7 @@ import { amznOverview } from './amzn.js';
 import { disOverview } from './dis.js';
 import { appOverview } from './app.js';
 import { dhrOverview } from './dhr.js';
+import { marOverview } from './mar.js';
 
 var OVERVIEWS = {
   RELY: remitlyOverview,
@@ -47,6 +48,7 @@ var OVERVIEWS = {
   DIS: disOverview,
   APP: appOverview,
   DHR: dhrOverview,
+  MAR: marOverview,
 };
 
 // Returns the overview module for a ticker, or null if none is built yet.

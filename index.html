@@ -28,6 +28,7 @@
 <link rel="stylesheet" href="css/betas.css">
 <link rel="stylesheet" href="css/industry.css">
 <link rel="stylesheet" href="css/spectrum.css">
+<link rel="stylesheet" href="css/ndx-attribution.css">
 <link rel="stylesheet" href="css/results.css">
 <link rel="stylesheet" href="css/payments.css">
   <link rel="stylesheet" href="css/hyperscalers.css">
@@ -190,6 +191,13 @@
     <div class="sc" style="border-top-color:#177A4E"><div class="sl">Positive YTD 2026</div><div class="sv" id="ma-positive-ytd" style="color:#177A4E">&mdash;</div><div class="ss" id="ma-positive-ytd-sub">&nbsp;</div></div>
     <div class="sc" style="border-top-color:#1E3A5F"><div class="sl">Beating S&amp;P 500</div><div class="sv" id="ma-beating-sp500">&mdash;</div><div class="ss" id="ma-beating-sp500-sub">&nbsp;</div></div>
   </div>
+  <div class="ma-subnav" id="ma-subnav">
+    <button class="ma-pill active" data-mpanel="sectors" onclick="switchMAPanel('sectors')">Sector Alpha</button>
+    <button class="ma-pill" data-mpanel="sp500" onclick="switchMAPanel('sp500')">S&amp;P 500 Explorer</button>
+    <button class="ma-pill" data-mpanel="ndx" onclick="switchMAPanel('ndx')">NDX Attribution</button>
+    <button class="ma-pill" data-mpanel="spy" disabled style="opacity:.5;cursor:default">SPY Attribution &nbsp;<span style="font-size:10px;font-weight:400">coming soon</span></button>
+  </div>
+  <div id="ma-panel-sectors" class="ma-panel">
   <div class="sec">
     <div class="sechdr"><span class="sect">Sector Alpha &mdash; Avg Annual Return by Sector</span><span class="secn">SPDR sector ETFs &middot; the current year is always YTD-through-today &middot; mix any years and any elapsed months in the same view</span></div>
     <div class="card">
@@ -245,6 +253,8 @@
       </tr></thead><tbody id="sec-summary-body"></tbody></table>
     </div>
   </div>
+  </div><!-- /ma-panel-sectors -->
+  <div id="ma-panel-sp500" class="ma-panel" style="display:none">
   <div class="sec">
     <div class="sechdr"><span class="sect">S&amp;P 500 Companies Explorer</span><span class="secn">2026 YTD updated to August 21, 2026 close</span></div>
     <div class="card">
@@ -284,6 +294,8 @@
       </table></div>
     </div>
   </div>
+  </div><!-- /ma-panel-sp500 -->
+  <div id="ma-panel-ndx" class="ma-panel" style="display:none"></div>
 </div>
 
 <!-- HEDGE FUNDS TAB -->

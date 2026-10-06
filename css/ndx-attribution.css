@@ -1,0 +1,126 @@
+/* ── NDX Attribution — scoped component styles ── */
+
+/* Chips (mirroring .sb-secchip) */
+.ndx-chip {
+  display: inline-block;
+  padding: 4px 11px;
+  border: 1.5px solid var(--bdr);
+  border-radius: 14px;
+  background: var(--w);
+  cursor: pointer;
+  font-size: 10.5px;
+  font-family: 'Inter', sans-serif;
+  color: var(--mu);
+  transition: all .15s;
+  user-select: none;
+  font-weight: 500;
+}
+
+.ndx-chip:hover {
+  border-color: var(--mid);
+  color: var(--navy);
+}
+
+.ndx-chip.active {
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+}
+
+/* Smaller variant for Industry Group chips */
+.ndx-chip-sm {
+  padding: 3px 8px;
+  font-size: 10.5px;
+  border-radius: 11px;
+}
+
+/* IG group container */
+.ndx-ig-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  padding: 6px 0 6px 0;
+  border-top: .5px solid var(--bdr);
+  margin-top: 2px;
+}
+
+/* Sector label inside each IG group */
+.ndx-ig-sector-lbl {
+  font-size: 9px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--mu);
+  font-weight: 700;
+  min-width: 72px;
+  padding-right: 6px;
+}
+
+/* Simulation result row */
+.ndx-sim-result {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: var(--text);
+}
+
+/* Sector header rows in IG table */
+.ndx-ig-secrow:hover td {
+  background: #F3F7FB;
+}
+
+/* Right-aligned number cells */
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sub-nav pill bar */
+.ma-subnav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 10px 0 14px;
+  border-bottom: 1.5px solid var(--bdr);
+  margin-bottom: 24px;
+}
+
+.ma-pill {
+  padding: 6px 16px;
+  border: 1.5px solid var(--bdr);
+  border-radius: 18px;
+  background: var(--w);
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--mu);
+  cursor: pointer;
+  transition: all .15s;
+  letter-spacing: .01em;
+}
+
+.ma-pill:hover:not([disabled]) {
+  border-color: var(--navy);
+  color: var(--navy);
+}
+
+.ma-pill.active {
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+}
+
+.ma-pill[disabled] {
+  cursor: default;
+}
+
+.ma-panel {
+  min-height: 0;
+}

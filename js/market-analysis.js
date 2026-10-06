@@ -1,5 +1,6 @@
 // market-analysis.js — extracted from summit-research-portal.html
 import { ALL_STOCKS, SP500_TODAY26, SP500_B25, SP500_B24, SP500_BMK, SCOLS, SDATA, COMPANY_NAMES, QQQ_TODAY26 } from './portal-data.js';
+import { loadNdxAttribution } from './ndx-attribution.js';
 
 // ─── Market snapshot — single seam for "live" data ─────────────
 // Everything the top stat row needs funnels through this one function
@@ -449,6 +450,22 @@ function renderSBMonthChips(){
   }).join('');
 }
 
+// ── Sub-nav panel switcher ────────────────────────────────────
+var _ndxLoaded = false;
+function switchMAPanel(panel) {
+  document.querySelectorAll('#ma-subnav .ma-pill').forEach(function(p) {
+    p.classList.toggle('active', p.dataset.mpanel === panel);
+  });
+  document.querySelectorAll('.ma-panel').forEach(function(p) { p.style.display = 'none'; });
+  var el = document.getElementById('ma-panel-' + panel);
+  if (el) el.style.display = '';
+  if (panel === 'ndx' && !_ndxLoaded) {
+    _ndxLoaded = true;
+    loadNdxAttribution(el);
+  }
+}
+window.switchMAPanel = switchMAPanel;
+
 // Expose to window for inline onclick handlers
 window.setSBMode = setSBMode;
 window.toggleYear = toggleYear;
@@ -514,4 +531,5 @@ export function loadMarketAnalysisPage() {
   renderSectorBars();
   renderTbl();
   renderTbl2();
+  switchMAPanel('sectors');
 }

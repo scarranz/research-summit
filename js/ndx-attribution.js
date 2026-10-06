@@ -1,8 +1,9 @@
 // ndx-attribution.js — NDX 100 Return Attribution (Carino linking)
 import { NDX_DATA } from './ndx-attribution-data.js';
 
-const CASH       = 'Cash, Derivatives and Other Securities'; // data key — do not change
-const CASH_LABEL = 'Cash & Futures';                        // display label
+const CASH       = 'Cash, Derivatives and Other Securities';
+const CASH_LABEL = 'Cash & Futures';
+const NS         = 'http://www.w3.org/2000/svg';
 
 var sectors     = [];
 var igBySec     = {};
@@ -11,7 +12,7 @@ var exclSecs    = new Set();
 var exclIGs     = new Set();
 var baseR       = null;
 var _chart      = null;
-var _chartFull  = [];  // full names for chart tooltip (parallel to chart data)
+var _chartFull  = [];
 var attrTab     = 'sector';
 var attrMode    = 'chart';
 var _snap0      = {};
@@ -24,10 +25,10 @@ var _fromHoc    = 7;
 var _toHoc      = 19;
 var _activeHocs = [];
 
+// ── Helpers ────────────────────────────────────────────────────────────────
 function getActiveHocs() {
   return NDX_DATA.hocs.filter(function(h) { return h.n >= _fromHoc && h.n <= _toHoc; });
 }
-
 function normalize() {
   NDX_DATA.hocs.forEach(function(hoc) {
     hoc.sec.forEach(function(s) {
@@ -38,7 +39,6 @@ function normalize() {
     });
   });
 }
-
 function buildHierarchy(init) {
   var secSet = new Set(), igMap = {};
   _activeHocs.forEach(function(hoc) {
@@ -71,7 +71,6 @@ function buildHierarchy(init) {
     });
   });
 }
-
 function lockAxes(res) {
   function rng(vals) {
     var mn = Math.min.apply(null, vals.concat(0));
@@ -87,7 +86,7 @@ function lockAxes(res) {
   _axisIGMin = ir.min; _axisIGMax = ir.max;
 }
 
-// Carino-linked attribution: contributions sum exactly to total R
+// Carino-linked attribution
 function computeCore(exS, exG) {
   var hocSecC = [], hocIGC = [], ktArr = [], logSum = 0, hocResults = [];
   _activeHocs.forEach(function(hoc) {
@@ -127,13 +126,11 @@ function computeCore(exS, exG) {
   });
   bySec[CASH] = ytd - Object.keys(bySec).reduce(function(a, s) { return a + bySec[s]; }, 0);
   byIG[CASH]  = ytd - Object.keys(byIG ).reduce(function(a, g) { return a + byIG[g];  }, 0);
-  return { bySec: bySec, byIG: byIG, ytd: ytd, hocResults: hocResults };
+  return { bySec: bySec, byIG: byIG, ytd: ytd, hocResults: hocResults, hocSecC: hocSecC };
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
 function dispSec(s) { return s === CASH ? CASH_LABEL : s; }
 function dispIG(g)  { return g === CASH ? CASH_LABEL : g; }
-
 function fmtC(v) {
   if (v == null || isNaN(v)) return '<span style="color:var(--mu)">—</span>';
   return '<span style="color:' + (v >= 0 ? 'var(--pos)' : 'var(--neg)') + ';font-weight:600">' +
@@ -143,11 +140,42 @@ function fmtYTD(v) { return v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(
 function colr(v)   { return v >= 0 ? 'var(--pos)' : 'var(--neg)'; }
 function esc(s)    { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function trunc(s, n) { return s.length > n ? s.slice(0, n-1) + '…' : s; }
-
-// chart axis label: truncated to single line
 function chartLbl(s, isIG) {
   var d = isIG ? dispIG(s) : dispSec(s);
   return trunc(d, isIG ? 36 : 28);
+}
+// SVG element helper
+function se(tag, attrs) {
+  var e = document.createElementNS(NS, tag);
+  Object.keys(attrs).forEach(function(k) { e.setAttribute(k, attrs[k]); });
+  return e;
+}
+// Wrap long name into lines for SVG text
+function wrapWords(text, maxW, fontSize) {
+  var cw = fontSize * 0.58, maxC = Math.floor(maxW / cw);
+  if (text.length <= maxC) return [text];
+  var words = text.split(' '), lines = [], cur = '';
+  words.forEach(function(w) {
+    var test = cur ? cur + ' ' + w : w;
+    if (test.length <= maxC) { cur = test; }
+    else { if (cur) lines.push(cur); cur = w.length > maxC ? w.slice(0, maxC) : w; }
+  });
+  if (cur) lines.push(cur);
+  return lines.slice(0, 3);
+}
+// Tooltip bind
+function bindTip(el, html) {
+  var tip = document.getElementById('ndx-tip');
+  if (!tip) return;
+  el.addEventListener('pointerenter', function() { tip.innerHTML = html; tip.style.opacity = '1'; });
+  el.addEventListener('pointermove',  function(e) {
+    var x = e.clientX + 14, y = e.clientY + 14;
+    var r = tip.getBoundingClientRect();
+    if (x + r.width  > window.innerWidth  - 8) x = e.clientX - r.width  - 14;
+    if (y + r.height > window.innerHeight - 8) y = e.clientY - r.height - 14;
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  });
+  el.addEventListener('pointerleave', function() { tip.style.opacity = '0'; });
 }
 
 // ── KPI tile ──────────────────────────────────────────────────────────────
@@ -184,7 +212,6 @@ function renderAttrChart(res) {
     });
   }
   _chartFull = items.map(function(x) { return x.full; });
-
   var labels = items.map(function(x) { return x.label; });
   var data   = items.map(function(x) { return parseFloat(x.val.toFixed(6)); });
   var bg = items.map(function(x) {
@@ -195,15 +222,12 @@ function renderAttrChart(res) {
     if (x.excl) return 'rgba(150,150,150,.4)';
     return x.val >= 0 ? '#177A4E' : '#9B2A20';
   });
-
   var rowH = isIG ? 26 : 30;
   var h = Math.max(340, items.length * rowH + 60);
   var box = document.getElementById('ndx-attr-chart-box');
   if (box) box.style.height = h + 'px';
-
   var xMin = isIG ? _axisIGMin : _axisSecMin;
   var xMax = isIG ? _axisIGMax : _axisSecMax;
-
   if (_chart) {
     _chart.data.labels = labels;
     _chart.data.datasets[0].data = data;
@@ -223,7 +247,6 @@ function renderAttrChart(res) {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            // Full name in tooltip — never truncated
             title: function(ctx) { return _chartFull[ctx[0].dataIndex] || ctx[0].label; },
             label: function(ctx) { var v = ctx.raw; return ' ' + (v >= 0 ? '+' : '') + v.toFixed(4) + '%'; }
           }
@@ -240,146 +263,240 @@ function renderAttrChart(res) {
   });
 }
 
-// ── Squarified treemap ────────────────────────────────────────────────────
-// Recursive squarify: items sorted desc by area, each gets rx/ry/rw/rh
+// ── Squarified treemap algorithm ──────────────────────────────────────────
 function squarify(items, x, y, W, H) {
   if (!items.length || W <= 0 || H <= 0) return;
   if (items.length === 1) {
-    items[0].rx = x; items[0].ry = y; items[0].rw = W; items[0].rh = H;
-    return;
+    items[0].rx = x; items[0].ry = y; items[0].rw = W; items[0].rh = H; return;
   }
-  var isH = W >= H;
-  var fixD = isH ? H : W;
-  var split = 1, prevAR = Infinity;
-  var rowA = 0;
+  var isH = W >= H, fixD = isH ? H : W;
+  var split = 1, prevAR = Infinity, rowA = 0;
   for (var i = 0; i < items.length; i++) {
     rowA += items[i].area;
-    var sw = rowA / fixD;
-    var ar = 0;
-    for (var j = 0; j <= i; j++) {
-      var cd = items[j].area / sw;
-      ar = Math.max(ar, Math.max(sw / cd, cd / sw));
-    }
+    var sw = rowA / fixD, ar = 0;
+    for (var j = 0; j <= i; j++) { var cd = items[j].area / sw; ar = Math.max(ar, Math.max(sw/cd, cd/sw)); }
     if (ar > prevAR && i > 0) break;
     prevAR = ar; split = i + 1;
   }
   var strip = items.slice(0, split), rest = items.slice(split);
   rowA = strip.reduce(function(a, it) { return a + it.area; }, 0);
-  var sw = rowA / fixD, pos = isH ? y : x;
-  for (var i = 0; i < strip.length; i++) {
-    var cd = strip[i].area / sw;
-    if (isH) { strip[i].rx = x;   strip[i].ry = pos; strip[i].rw = sw; strip[i].rh = cd; }
-    else      { strip[i].rx = pos; strip[i].ry = y;   strip[i].rw = cd; strip[i].rh = sw; }
-    pos += cd;
+  var sw2 = rowA / fixD, pos = isH ? y : x;
+  for (var k = 0; k < strip.length; k++) {
+    var cd2 = strip[k].area / sw2;
+    if (isH) { strip[k].rx = x;    strip[k].ry = pos; strip[k].rw = sw2; strip[k].rh = cd2; }
+    else      { strip[k].rx = pos;  strip[k].ry = y;   strip[k].rw = cd2; strip[k].rh = sw2; }
+    pos += cd2;
   }
   if (rest.length) {
-    if (isH) squarify(rest, x + sw, y, W - sw, H);
-    else     squarify(rest, x, y + sw, W, H - sw);
+    if (isH) squarify(rest, x + sw2, y, W - sw2, H);
+    else     squarify(rest, x, y + sw2, W, H - sw2);
   }
 }
 
-function tmColor(c, excl, maxC, minC) {
-  if (excl) return '#C8D6E0';
-  if (Math.abs(c) < 0.002) return '#B8C8D4';
-  if (c > 0) {
-    var t = maxC > 0 ? Math.min(1, c / maxC) : 0;
-    return 'hsl(145,' + Math.round(42 + t*50) + '%,' + Math.round(80 - t*48) + '%)';
-  }
-  var t = minC < 0 ? Math.min(1, Math.abs(c) / Math.abs(minC)) : 0;
-  return 'hsl(4,' + Math.round(42 + t*50) + '%,' + Math.round(80 - t*40) + '%)';
-}
-
+// ── SVG Treemap (monochromatic — area = weight) ───────────────────────────
+// Following the approved spec: area encodes magnitude; labels carry identity.
+// Color = contribution belongs to the bar chart; the treemap stays monochromatic.
 function renderTreemap(res) {
   var box = document.getElementById('ndx-treemap-box');
   if (!box) return;
-  var isIG = attrTab === 'ig';
-  var TM_W = box.offsetWidth || 860;
-  var TM_H = 400;
-
+  var VW = 900, VH = 370;
   var items = [];
-  if (!isIG) {
-    sectors.forEach(function(s) {
-      var w = (_snapN[s]||{w:0}).w;
-      if (w <= 0) return; // skip zero-weight sectors (Real Estate gone)
-      items.push({ key: s, label: dispSec(s), w: w, c: res.bySec[s]||0,
-        excl: exclSecs.has(s), fn: 'ndxToggleSec' });
-    });
-  } else {
-    sectors.forEach(function(s) {
-      (igBySec[s]||[]).forEach(function(g) {
-        var w = (_snapN['ig:'+g]||{w:0}).w;
-        if (w <= 0) return;
-        items.push({ key: g, label: dispIG(g), w: w, c: res.byIG[g]||0,
-          excl: exclSecs.has(s)||exclIGs.has(g), fn: 'ndxToggleIG' });
-      });
-    });
-  }
-
-  // Sort by weight desc (squarify works best this way)
+  sectors.forEach(function(s) {
+    var w = (_snapN[s]||{w:0}).w;
+    if (w < 0.001) return;
+    items.push({ key: s, label: dispSec(s), w: w, c: res.bySec[s]||0, excl: exclSecs.has(s) });
+  });
   items.sort(function(a, b) {
     if (a.key === CASH) return 1; if (b.key === CASH) return -1;
     return b.w - a.w;
   });
-
   var totalW = items.reduce(function(s, x) { return s + x.w; }, 0) || 100;
-  var maxC = Math.max.apply(null, items.map(function(x) { return x.c; }).concat(0));
-  var minC = Math.min.apply(null, items.map(function(x) { return x.c; }).concat(0));
+  items.forEach(function(it) { it.area = (it.w / totalW) * VW * VH; });
+  squarify(items, 0, 0, VW, VH);
 
-  // Assign pixel area proportional to weight
-  items.forEach(function(it) { it.area = (it.w / totalW) * TM_W * TM_H; });
+  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, role: 'img',
+    style: 'width:100%;height:auto;display:block;overflow:visible' });
 
-  // Run squarify to get rx/ry/rw/rh for each item
-  squarify(items, 0, 0, TM_W, TM_H);
-
-  var html = '<div style="position:relative;width:' + TM_W + 'px;height:' + TM_H + 'px">';
   items.forEach(function(item) {
     if (!item.rw || !item.rh) return;
-    var bg  = tmColor(item.c, item.excl, maxC, minC);
-    var isDark = !item.excl && (item.c > maxC * 0.35 || (minC < 0 && item.c < minC * 0.35));
-    var tc = isDark ? '#fff' : '#1E2D3D';
-    var ts = isDark ? '0 1px 2px rgba(0,0,0,.5)' : 'none';
+    var rx = item.rx + 1, ry = item.ry + 1,
+        rw = Math.max(0, item.rw - 2), rh = Math.max(0, item.rh - 2);
+    var g = se('g', { class: 'mk', style: 'cursor:pointer' });
+    var alpha = item.excl ? 0.35 : 1;
 
-    var rw = Math.max(2, item.rw - 2), rh = Math.max(2, item.rh - 2);
-    var showName = rw > 42 && rh > 26;
-    var showVal  = rw > 38 && rh > 46;
-    var nameFs = Math.min(16, Math.max(9, Math.min(rw, rh) / 5.5));
-    var valFs  = Math.min(13, Math.max(8,  Math.min(rw, rh) / 7));
+    // Monochromatic: fill opacity encodes nothing extra — area already does
+    var rect = se('rect', { x: rx, y: ry, width: rw, height: rh, rx: 4,
+      fill: '#2A78D6', 'fill-opacity': item.excl ? 0.06 : 0.14,
+      stroke: '#2A78D6', 'stroke-opacity': item.excl ? 0.2 : 0.48,
+      'stroke-width': 1, opacity: alpha });
+    g.appendChild(rect);
 
-    // Label: truncate to fit estimated single line
-    var maxChars = Math.floor(rw / (nameFs * 0.58));
-    var label = item.label.length > maxChars ? item.label.slice(0, maxChars - 1) + '…' : item.label;
+    if (rw > 50 && rh > 28) {
+      var fs = Math.min(14, Math.max(9, Math.min(rw, rh) / 6));
+      var lines = wrapWords(item.label, rw - 14, fs);
+      var lineH = fs * 1.3;
+      var totalH = lines.length * lineH;
+      var startY = ry + rh / 2 - totalH / 2 + fs * 0.82;
+      // Show contribution in small text below label if there's room
+      var showC = rh > totalH + fs * 2.2;
+      if (showC) startY = ry + rh / 2 - (totalH + fs * 1.6) / 2 + fs * 0.82;
 
-    html += '<div onclick="' + item.fn + '(\'' + esc(item.key) + '\')" ' +
-      'title="' + dispSec(item.key) + ': ' + (item.c>=0?'+':'') + item.c.toFixed(4) + '% contribution · ' + item.w.toFixed(2) + '% weight" ' +
-      'style="position:absolute;left:' + Math.round(item.rx) + 'px;top:' + Math.round(item.ry) + 'px;' +
-      'width:' + Math.round(rw) + 'px;height:' + Math.round(rh) + 'px;background:' + bg + ';' +
-      'border-radius:2px;cursor:pointer;overflow:hidden;display:flex;flex-direction:column;' +
-      'align-items:center;justify-content:center;' +
-      'border:1.5px solid rgba(255,255,255,.55);opacity:' + (item.excl ? '.38' : '1') + ';' +
-      'box-sizing:border-box">';
-    if (showName) {
-      html += '<span style="color:' + tc + ';font-size:' + nameFs.toFixed(1) + 'px;font-weight:700;' +
-        'text-align:center;padding:0 4px;line-height:1.2;max-width:100%;overflow:hidden;' +
-        'text-overflow:ellipsis;white-space:nowrap;text-shadow:' + ts + '">' + label + '</span>';
+      lines.forEach(function(line, li) {
+        var t = se('text', { x: rx + rw / 2, y: startY + li * lineH,
+          'text-anchor': 'middle', 'font-family': 'Inter,sans-serif',
+          'font-size': fs, 'font-weight': '700',
+          fill: '#1E2D3D', opacity: item.excl ? 0.45 : 1 });
+        t.textContent = line;
+        g.appendChild(t);
+      });
+      if (showC) {
+        var cfs = Math.max(8, fs - 2);
+        var ct = se('text', { x: rx + rw / 2, y: startY + lines.length * lineH + cfs * 0.9,
+          'text-anchor': 'middle', 'font-family': 'Inter,sans-serif',
+          'font-size': cfs, fill: item.c >= 0 ? '#177A4E' : '#9B2A20',
+          opacity: item.excl ? 0.45 : 0.9 });
+        ct.textContent = (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%';
+        g.appendChild(ct);
+      }
     }
-    if (showVal) {
-      html += '<span style="color:' + tc + ';font-size:' + valFs.toFixed(1) + 'px;opacity:.9;' +
-        'margin-top:2px;text-shadow:' + ts + '">' + (item.c>=0?'+':'') + item.c.toFixed(2) + '%</span>';
+
+    var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(4) + '%';
+    bindTip(g,
+      '<b style="font-size:13px">' + item.label + '</b>' +
+      '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
+      'Weight: ' + item.w.toFixed(3) + '%' +
+      '<br>Contribution: ' + tipC +
+      '<br><em style="color:#898781">Click to see industry groups</em></span>');
+
+    if (item.key !== CASH) {
+      g.setAttribute('onclick', 'ndxShowIGModal(\'' + esc(item.key) + '\')');
     }
-    html += '</div>';
+    svg.appendChild(g);
   });
 
-  html += '</div>' +
-    '<div style="font-size:10px;color:var(--mu);margin-top:5px;padding:0 1px">' +
-    'Size = index weight &nbsp;·  ' +
-    '<span style="color:hsl(145,65%,38%);font-weight:600">■</span> positive &nbsp;' +
-    '<span style="color:hsl(4,65%,48%);font-weight:600">■</span> negative contribution &nbsp;·  Click to toggle' +
-    '</div>';
+  var legend = document.createElement('div');
+  legend.style.cssText = 'font-size:11px;color:var(--mu);margin-top:5px;padding:0 1px';
+  legend.innerHTML = 'Area = index weight at close &nbsp;·&nbsp; Contribution shown inside tiles &nbsp;·&nbsp; Click any sector to see its industry groups';
 
-  box.innerHTML = html;
+  box.innerHTML = '';
+  box.appendChild(svg);
+  box.appendChild(legend);
 }
 
-// Scaled display weights from the last active HOC under current exclusions
+// ── IG drill-down popup modal ─────────────────────────────────────────────
+function getOrCreateModal() {
+  var m = document.getElementById('ndx-ig-modal');
+  if (m) return m;
+  m = document.createElement('div');
+  m.id = 'ndx-ig-modal';
+  m.style.cssText = 'display:none;position:fixed;inset:0;z-index:2000;background:rgba(15,25,38,.55);' +
+    'align-items:center;justify-content:center;backdrop-filter:blur(2px)';
+  m.innerHTML =
+    '<div style="background:var(--w,#fff);border-radius:14px;padding:28px 28px 22px;' +
+    'max-width:780px;width:92%;max-height:85vh;overflow-y:auto;position:relative;' +
+    'box-shadow:0 16px 48px rgba(0,0,0,.22)">' +
+    '<button onclick="ndxCloseIGModal()" style="position:absolute;top:14px;right:16px;' +
+    'font-size:22px;line-height:1;background:none;border:none;cursor:pointer;' +
+    'color:var(--mu,#777);padding:0 4px">&times;</button>' +
+    '<div id="ndx-ig-modal-title" style="font-size:15px;font-weight:700;color:var(--navy,#1E2D3D);' +
+    'margin-bottom:16px"></div>' +
+    '<div id="ndx-ig-modal-body"></div>' +
+    '</div>';
+  m.addEventListener('click', function(e) { if (e.target === m) ndxCloseIGModal(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') ndxCloseIGModal(); });
+  document.body.appendChild(m);
+  return m;
+}
+
+window.ndxShowIGModal = function(sector) {
+  var isBase = exclSecs.size === 0 && exclIGs.size === 0;
+  var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
+  var igs = (igBySec[sector] || []).filter(function(g) { return g !== CASH; });
+  if (!igs.length) return;
+
+  var m = getOrCreateModal();
+  document.getElementById('ndx-ig-modal-title').textContent =
+    dispSec(sector) + '  —  Industry Groups';
+  var body = document.getElementById('ndx-ig-modal-body');
+  body.innerHTML = '';
+
+  var VW = 720, VH = Math.max(160, Math.min(340, igs.length * 40 + 40));
+  var items = igs.map(function(g) {
+    return { key: g, label: g, w: (_snapN['ig:'+g]||{w:0}).w, c: res.byIG[g]||0 };
+  });
+  items.sort(function(a, b) { return b.w - a.w; });
+  var totalW = items.reduce(function(s, x) { return s + x.w; }, 0) || 1;
+  items.forEach(function(it) { it.area = (it.w / totalW) * VW * VH; });
+  squarify(items, 0, 0, VW, VH);
+
+  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH,
+    style: 'width:100%;height:auto;display:block;overflow:visible' });
+
+  items.forEach(function(item) {
+    if (!item.rw || !item.rh) return;
+    var rx = item.rx + 1, ry = item.ry + 1,
+        rw = Math.max(0, item.rw - 2), rh = Math.max(0, item.rh - 2);
+    var g = se('g', { class: 'mk', style: 'cursor:default' });
+    g.appendChild(se('rect', { x: rx, y: ry, width: rw, height: rh, rx: 3,
+      fill: '#2A78D6', 'fill-opacity': 0.12,
+      stroke: '#2A78D6', 'stroke-opacity': 0.45, 'stroke-width': 1 }));
+
+    if (rw > 40 && rh > 26) {
+      var fs = Math.min(13, Math.max(9, Math.min(rw, rh) / 5));
+      var lines = wrapWords(item.label, rw - 12, fs);
+      var lineH = fs * 1.25;
+      var totalLH = lines.length * lineH;
+      var showC = rh > totalLH + fs * 2;
+      var startY = ry + rh / 2 - (totalLH + (showC ? fs * 1.5 : 0)) / 2 + fs * 0.82;
+
+      lines.forEach(function(line, li) {
+        var t = se('text', { x: rx + rw / 2, y: startY + li * lineH,
+          'text-anchor': 'middle', 'font-family': 'Inter,sans-serif',
+          'font-size': fs, 'font-weight': '700', fill: '#1E2D3D' });
+        t.textContent = line;
+        g.appendChild(t);
+      });
+      if (showC) {
+        var cfs = Math.max(8, fs - 2);
+        var ct = se('text', { x: rx + rw / 2, y: startY + lines.length * lineH + cfs,
+          'text-anchor': 'middle', 'font-family': 'Inter,sans-serif',
+          'font-size': cfs, fill: item.c >= 0 ? '#177A4E' : '#9B2A20', opacity: '0.9' });
+        ct.textContent = (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%';
+        g.appendChild(ct);
+      }
+    }
+    var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(4) + '%';
+    bindTip(g,
+      '<b style="font-size:13px">' + item.label + '</b>' +
+      '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
+      'Weight: ' + item.w.toFixed(3) + '%<br>Contribution: ' + tipC + '</span>');
+    svg.appendChild(g);
+  });
+  body.appendChild(svg);
+
+  // Table below treemap
+  var thtml = '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:14px;font-variant-numeric:tabular-nums">' +
+    '<thead><tr><th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--bdr,#ddd);color:var(--mu)">Industry Group</th>' +
+    '<th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--bdr,#ddd);color:var(--mu)">Weight (close) %</th>' +
+    '<th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--bdr,#ddd);color:var(--mu)">Contribution %</th></tr></thead><tbody>';
+  items.slice().sort(function(a, b) { return b.c - a.c; }).forEach(function(item) {
+    thtml += '<tr><td style="text-align:left;padding:4px 8px;border-bottom:1px solid #f0f0f0">' + item.label + '</td>' +
+      '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0">' + item.w.toFixed(3) + '%</td>' +
+      '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0;color:' +
+      (item.c >= 0 ? '#177A4E' : '#9B2A20') + ';font-weight:600">' +
+      (item.c >= 0 ? '+' : '') + item.c.toFixed(4) + '%</td></tr>';
+  });
+  thtml += '</tbody></table>';
+  body.insertAdjacentHTML('beforeend', thtml);
+
+  m.style.display = 'flex';
+};
+window.ndxCloseIGModal = function() {
+  var m = document.getElementById('ndx-ig-modal');
+  if (m) m.style.display = 'none';
+};
+
+// ── Attribution table ─────────────────────────────────────────────────────
 function computeDisplayWeights(exS, exG) {
   var lastHoc = _activeHocs[_activeHocs.length - 1];
   if (!lastHoc) return { sec: {}, ig: {} };
@@ -397,22 +514,17 @@ function computeDisplayWeights(exS, exG) {
   });
   return { sec: secW, ig: igW };
 }
-
-// ── Attribution + Simulation table ────────────────────────────────────────
 function dot(on, sz) {
   sz = sz || 16;
   return on
     ? '<span style="display:inline-block;width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;background:var(--navy);border:2px solid var(--navy);vertical-align:middle"></span>'
     : '<span style="display:inline-block;width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;background:transparent;border:2px solid #9AAAB8;vertical-align:middle"></span>';
 }
-
 function renderAttrTable(res) {
   var tbody = document.getElementById('ndx-attr-tbody');
   if (!tbody) return;
   var isIG = attrTab === 'ig';
   var html = '';
-
-  // Sort always by BASE contributions so toggling on/off doesn't shuffle rows
   function cmpSec(a, b) {
     if (a === CASH) return 1; if (b === CASH) return -1;
     if (_sortKey === 'name')   return _sortDir * a.localeCompare(b);
@@ -425,15 +537,12 @@ function renderAttrTable(res) {
     if (_sortKey === 'weight') return _sortDir * ((_snapN['ig:'+b]||{w:0}).w - (_snapN['ig:'+a]||{w:0}).w);
     return _sortDir * ((baseR.byIG[b]||0) - (baseR.byIG[a]||0));
   }
-
   var sortedSecs = sectors.slice().sort(cmpSec);
   var dw = computeDisplayWeights(exclSecs, exclIGs);
-
   function fmtW(w, excl) {
     if (excl) return '<span style="color:var(--mu)">—</span>';
     return (w || 0).toFixed(2) + '%';
   }
-
   if (!isIG) {
     sortedSecs.forEach(function(s) {
       var excl = exclSecs.has(s);
@@ -470,15 +579,12 @@ function renderAttrTable(res) {
       });
     });
   }
-
   html += '<tr style="border-top:2px solid var(--navy);font-weight:700">' +
     '<td></td><td colspan="3" style="color:var(--navy)">Total</td>' +
     '<td class="num" style="color:' + colr(res.ytd) + ';font-weight:700">' + fmtYTD(res.ytd) + '</td></tr>';
-
   tbody.innerHTML = html;
   updateArrows();
 }
-
 function updateArrows() {
   ['name','weight','contrib'].forEach(function(k) {
     var el = document.getElementById('ndx-sort-' + k);
@@ -496,8 +602,197 @@ function renderHOC(res) {
       '<td>' + h.eff + '</td>' +
       '<td>' + (h.close || '<em style="color:var(--mu)">Open</em>') + '</td>' +
       '<td class="num">' + h.count + '</td>' +
-      '<td class="num" style="color:' + colr(h.ret) + ';font-weight:600">' + (h.ret>=0?'+':'') + h.ret.toFixed(4) + '%</td></tr>';
+      '<td class="num" style="color:' + colr(h.ret) + ';font-weight:600">' +
+      (h.ret>=0?'+':'') + h.ret.toFixed(4) + '%</td></tr>';
   }).join('');
+}
+
+// ── Dot Plot — IG contributions ───────────────────────────────────────────
+function renderDotPlotIG(res) {
+  var box = document.getElementById('ndx-dotplot-box');
+  if (!box) return;
+  var rows = [];
+  sectors.forEach(function(s) {
+    (igBySec[s]||[]).forEach(function(g) {
+      if (g === CASH) return;
+      rows.push({ name: dispIG(g), sector: dispSec(s), c: res.byIG[g]||0,
+        w0: (_snap0['ig:'+g]||{w:0}).w, w1: (_snapN['ig:'+g]||{w:0}).w });
+    });
+  });
+  rows.sort(function(a, b) { return b.c - a.c; });
+
+  var rowH = 20, P = { t: 28, r: 90, b: 30, l: 210 }, VW = 900;
+  var VH = P.t + rows.length * rowH + P.b;
+  var lo = Math.min(-0.5, Math.min.apply(null, rows.map(function(r) { return r.c; })));
+  var hi = Math.max.apply(null, rows.map(function(r) { return r.c; })) * 1.05;
+  var xa0 = P.l, xa1 = VW - P.r - 60;
+  function X(v) { return xa0 + (v - lo) / (hi - lo) * (xa1 - xa0); }
+
+  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
+
+  // Gridlines and x-axis ticks
+  var step = hi > 8 ? 5 : hi > 2 ? 2.5 : 1;
+  for (var t = 0; t <= hi + step; t += step) {
+    if (t > hi + 0.01) break;
+    svg.appendChild(se('line', { x1: X(t), x2: X(t), y1: P.t - 8, y2: VH - P.b + 2,
+      stroke: '#E5E8EC', 'stroke-width': 1 }));
+    var tx = se('text', { x: X(t), y: P.t - 14, 'text-anchor': 'middle',
+      'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0' });
+    tx.textContent = (t > 0 ? '+' : '') + t.toFixed(1) + '%'; svg.appendChild(tx);
+  }
+  svg.appendChild(se('line', { x1: X(0), x2: X(0), y1: P.t - 8, y2: VH - P.b + 2,
+    stroke: '#9AAAB8', 'stroke-width': 1 }));
+
+  rows.forEach(function(r, i) {
+    var y = P.t + i * rowH + rowH / 2;
+    var g = se('g', { class: 'mk' });
+    var nm = se('text', { x: P.l - 12, y: y + 4, 'text-anchor': 'end',
+      'font-family': 'Inter,sans-serif', 'font-size': 11.5, fill: '#2B3B4E' });
+    nm.textContent = trunc(r.name, 28);
+    g.appendChild(nm);
+    var cx = X(r.c), col = r.c >= 0 ? '#177A4E' : '#9B2A20';
+    g.appendChild(se('line', { x1: X(0), x2: cx, y1: y, y2: y,
+      stroke: col, 'stroke-opacity': 0.3, 'stroke-width': 2 }));
+    var circle = se('circle', { cx: cx, cy: y, r: 5, fill: col, stroke: '#fff', 'stroke-width': 2 });
+    g.appendChild(circle);
+    var vt = se('text', { x: VW - P.r + 55, y: y + 4, 'text-anchor': 'end',
+      'font-family': 'Inter,sans-serif', 'font-size': 11, fill: col, 'font-weight': '600',
+      'font-variant-numeric': 'tabular-nums' });
+    vt.textContent = (r.c >= 0 ? '+' : '') + r.c.toFixed(4) + '%'; g.appendChild(vt);
+    bindTip(g, '<b style="font-size:13px">' + r.name + '</b>' +
+      '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
+      r.sector + '<br>Contribution: ' + (r.c >= 0 ? '+' : '') + r.c.toFixed(4) + '%' +
+      '<br>Weight: ' + r.w0.toFixed(2) + '% → ' + r.w1.toFixed(2) + '%</span>');
+    svg.appendChild(g);
+  });
+
+  box.innerHTML = '';
+  box.appendChild(svg);
+}
+
+// ── Heatmap — sector × HOC window ─────────────────────────────────────────
+function renderHeatmap() {
+  var box = document.getElementById('ndx-heatmap-box');
+  if (!box || !baseR) return;
+  var hocSecC = baseR.hocSecC;
+  var hocResults = baseR.hocResults;
+  if (!hocSecC || !hocSecC.length) { box.innerHTML = '<em style="color:var(--mu)">No data</em>'; return; }
+
+  var secs = sectors.filter(function(s) { return s !== CASH; });
+  var VW = 900, cellW = (VW - 230) / hocResults.length, cellH = 28;
+  var P = { t: 60, l: 215 };
+  var VH = P.t + secs.length * cellH + 30;
+
+  // Find max abs value for color scaling
+  var mx = 0;
+  hocSecC.forEach(function(sc) {
+    secs.forEach(function(s) { mx = Math.max(mx, Math.abs(sc[s] || 0)); });
+  });
+  function ramp(v) {
+    if (Math.abs(v) < 1e-9) return '#EDECEA';
+    var t = Math.min(1, Math.sqrt(Math.abs(v) / mx));
+    var idx = Math.min(4, Math.floor(t * 5));
+    var posC = ['#D4E9FB','#9EC5F4','#5598E7','#2A78D6','#184F95'];
+    var negC = ['#FAD9D9','#F3A9A9','#E34948','#B02E2D','#7A1F1E'];
+    return v > 0 ? posC[idx] : negC[idx];
+  }
+
+  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
+
+  // Column headers (HOC dates)
+  hocResults.forEach(function(h, j) {
+    var lbl = se('text', { x: 0, y: 0, 'text-anchor': 'start',
+      'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0',
+      transform: 'translate(' + (P.l + j * cellW + cellW / 2) + ',' + (P.t - 10) + ') rotate(-50)' });
+    lbl.textContent = h.eff.slice(5); svg.appendChild(lbl);
+  });
+
+  secs.forEach(function(s, i) {
+    var y = P.t + i * cellH;
+    var nm = se('text', { x: P.l - 12, y: y + cellH / 2 + 4, 'text-anchor': 'end',
+      'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#2B3B4E' });
+    nm.textContent = trunc(dispSec(s), 26); svg.appendChild(nm);
+    hocResults.forEach(function(h, j) {
+      var v = hocSecC[j][s] || 0;
+      var g = se('g', { class: 'mk' });
+      g.appendChild(se('rect', { x: P.l + j * cellW + 1, y: y + 1, width: cellW - 2, height: cellH - 2, rx: 3, fill: ramp(v) }));
+      bindTip(g, '<b style="font-size:13px">' + dispSec(s) + ' · HOC ' + h.n + ' (' + h.eff + ')</b>' +
+        '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
+        'Contribution: ' + (v >= 0 ? '+' : '') + v.toFixed(4) + '%' +
+        '<br>Window return: ' + (h.ret >= 0 ? '+' : '') + h.ret.toFixed(4) + '%</span>');
+      svg.appendChild(g);
+    });
+  });
+
+  var legend = document.createElement('div');
+  legend.style.cssText = 'display:flex;gap:16px;font-size:11px;color:var(--mu);margin-top:8px;flex-wrap:wrap;align-items:center';
+  legend.innerHTML =
+    '<span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#B02E2D;margin-right:5px;vertical-align:-1px"></span>Negative</span>' +
+    '<span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#EDECEA;margin-right:5px;vertical-align:-1px"></span>Zero</span>' +
+    '<span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#184F95;margin-right:5px;vertical-align:-1px"></span>Positive</span>' +
+    '<span style="color:var(--mu)">Intensity ∝ √|contribution|</span>';
+  box.innerHTML = '';
+  box.appendChild(svg);
+  box.appendChild(legend);
+}
+
+// ── Dumbbell — weight composition open vs close ───────────────────────────
+function renderDumbbell() {
+  var box = document.getElementById('ndx-dumbbell-box');
+  if (!box) return;
+  var rows = sectors.filter(function(s) { return s !== CASH; }).map(function(s) {
+    return { name: dispSec(s), w0: (_snap0[s]||{w:0}).w, w1: (_snapN[s]||{w:0}).w };
+  }).sort(function(a, b) { return b.w0 - a.w0; });
+
+  var VW = 900, rowH = 30, P = { t: 40, r: 160, b: 26, l: 200 };
+  var VH = P.t + rows.length * rowH + P.b;
+  var hi = Math.max.apply(null, rows.map(function(r) { return Math.max(r.w0, r.w1); })) * 1.04;
+  function X(v) { return P.l + v / hi * (VW - P.l - P.r); }
+
+  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
+
+  for (var t = 0; t <= hi; t += 10) {
+    svg.appendChild(se('line', { x1: X(t), x2: X(t), y1: P.t - 10, y2: VH - P.b, stroke: '#E5E8EC', 'stroke-width': 1 }));
+    var ax = se('text', { x: X(t), y: P.t - 18, 'text-anchor': 'middle',
+      'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0' });
+    ax.textContent = t + '%'; svg.appendChild(ax);
+  }
+  svg.appendChild(se('line', { x1: X(0), x2: X(0), y1: P.t - 10, y2: VH - P.b, stroke: '#9AAAB8', 'stroke-width': 1 }));
+
+  rows.forEach(function(r, i) {
+    var y = P.t + i * rowH + rowH / 2;
+    var up = r.w1 >= r.w0;
+    var col = up ? '#2A78D6' : '#E34948';
+    var g = se('g', { class: 'mk' });
+    var nm = se('text', { x: P.l - 14, y: y + 4, 'text-anchor': 'end',
+      'font-family': 'Inter,sans-serif', 'font-size': 11.5, fill: '#2B3B4E' });
+    nm.textContent = r.name; g.appendChild(nm);
+    g.appendChild(se('line', { x1: X(Math.min(r.w0, r.w1)), x2: X(Math.max(r.w0, r.w1)),
+      y1: y, y2: y, stroke: col, 'stroke-width': 3, 'stroke-opacity': 0.45, 'stroke-linecap': 'round' }));
+    g.appendChild(se('circle', { cx: X(r.w0), cy: y, r: 5.5, fill: '#fff', stroke: col, 'stroke-width': 2 }));
+    g.appendChild(se('circle', { cx: X(r.w1), cy: y, r: 5.5, fill: col, stroke: '#fff', 'stroke-width': 2 }));
+    var diff = r.w1 - r.w0;
+    var vt = se('text', { x: VW - P.r + 16, y: y + 4,
+      'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#2B3B4E', 'font-variant-numeric': 'tabular-nums' });
+    vt.textContent = r.w0.toFixed(1) + ' → ' + r.w1.toFixed(1) + '   ' + (diff >= 0 ? '+' : '') + diff.toFixed(2);
+    g.appendChild(vt);
+    bindTip(g, '<b style="font-size:13px">' + r.name + '</b>' +
+      '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
+      'Open weight: ' + r.w0.toFixed(3) + '%' +
+      '<br>Close weight: ' + r.w1.toFixed(3) + '%' +
+      '<br>Change: ' + (diff >= 0 ? '+' : '') + diff.toFixed(3) + ' pp</span>');
+    svg.appendChild(g);
+  });
+
+  var legend = document.createElement('div');
+  legend.style.cssText = 'display:flex;gap:16px;font-size:11px;color:var(--mu);margin-top:8px;flex-wrap:wrap';
+  legend.innerHTML =
+    '<span><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:transparent;border:2px solid #2A78D6;box-sizing:border-box;margin-right:5px;vertical-align:-1px"></span>Open weight</span>' +
+    '<span><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#2A78D6;margin-right:5px;vertical-align:-1px"></span>Close weight</span>' +
+    '<span style="color:#2A78D6;font-weight:600">▬</span> gained &nbsp; <span style="color:#E34948;font-weight:600">▬</span> lost weight';
+  box.innerHTML = '';
+  box.appendChild(svg);
+  box.appendChild(legend);
 }
 
 // ── Master refresh ────────────────────────────────────────────────────────
@@ -508,6 +803,8 @@ function refresh() {
   if (attrMode === 'chart') renderAttrChart(res); else renderTreemap(res);
   renderAttrTable(res);
   renderHOC(res);
+  renderDotPlotIG(res);
+  // Heatmap always uses base case (it has its own data)
 }
 
 function reloadSnapshot() {
@@ -520,6 +817,8 @@ function reloadSnapshot() {
   buildHierarchy(baseR);
   lockAxes(baseR);
   refresh();
+  renderHeatmap();
+  renderDumbbell();
   var last = _activeHocs[_activeHocs.length - 1], first = _activeHocs[0];
   var endLabel = last.close || last.eff + ' (Open)';
   var el;
@@ -537,7 +836,6 @@ window.ndxToggleSec = function(sec) {
   else { exclSecs.add(sec); (igBySec[sec]||[]).forEach(function(g){ exclIGs.add(g); }); }
   refresh();
 };
-
 window.ndxToggleIG = function(ig) {
   var sec = igToSec[ig];
   if (exclIGs.has(ig)) {
@@ -549,9 +847,7 @@ window.ndxToggleIG = function(ig) {
   }
   refresh();
 };
-
 window.ndxResetSim = function() { exclSecs.clear(); exclIGs.clear(); refresh(); };
-
 window.ndxSetAttrTab = function(tab) {
   attrTab = tab;
   if (_chart) { _chart.destroy(); _chart = null; }
@@ -561,7 +857,6 @@ window.ndxSetAttrTab = function(tab) {
   if (attrMode === 'chart') renderAttrChart(res); else renderTreemap(res);
   renderAttrTable(res);
 };
-
 window.ndxSetAttrMode = function(mode) {
   attrMode = mode;
   document.querySelectorAll('#ndx-attr-mode-btns .ndx-tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.mode === mode); });
@@ -572,27 +867,23 @@ window.ndxSetAttrMode = function(mode) {
   var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
   if (mode === 'chart') renderAttrChart(res); else renderTreemap(res);
 };
-
 window.ndxSort = function(key) {
   if (_sortKey === key) { _sortDir = -_sortDir; }
   else { _sortKey = key; _sortDir = key === 'name' ? 1 : -1; }
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   renderAttrTable(isBase ? baseR : computeCore(exclSecs, exclIGs));
 };
-
 window.ndxSetYTD2026 = function() {
   _fromHoc = 7; _toHoc = 19;
   var fs = document.getElementById('ndx-from-sel'), ts = document.getElementById('ndx-to-sel');
   if (fs) fs.value = '7'; if (ts) ts.value = '19';
   reloadSnapshot();
 };
-
 window.ndxSetFrom = function(n) {
   _fromHoc = parseInt(n, 10);
   if (_toHoc < _fromHoc) { _toHoc = _fromHoc; var ts = document.getElementById('ndx-to-sel'); if (ts) ts.value = n; }
   reloadSnapshot();
 };
-
 window.ndxSetTo = function(n) {
   _toHoc = parseInt(n, 10);
   if (_fromHoc > _toHoc) { _fromHoc = _toHoc; var fs = document.getElementById('ndx-from-sel'); if (fs) fs.value = n; }
@@ -615,11 +906,17 @@ function buildSkeleton() {
   var ss = 'font-family:\'Inter\',sans-serif;font-size:11px;font-weight:600;border:1.5px solid var(--bdr);border-radius:10px;padding:4px 9px;background:var(--w);color:var(--navy);cursor:pointer;outline:none;min-width:230px';
 
   return (
+  // ── Tooltip element ──
+  '<div id="ndx-tip" style="position:fixed;pointer-events:none;opacity:0;transition:opacity .09s;' +
+  'background:var(--w,#fff);border:1px solid rgba(0,0,0,.1);border-radius:9px;' +
+  'padding:8px 12px;font-size:12px;box-shadow:0 5px 18px rgba(0,0,0,.14);z-index:1999;max-width:260px;font-family:Inter,sans-serif"></div>' +
+
+  // ── Header ──
   '<div class="sec" style="padding-bottom:0">' +
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;padding-bottom:14px">' +
       '<div>' +
         '<div class="sect" style="font-size:17px;font-weight:700;color:var(--navy)">NDX 100 — Return Attribution</div>' +
-        '<div style="font-size:11px;color:var(--mu);margin-top:3px">NDX Price Return &middot; Source: Summit NDX NonBBG</div>' +
+        '<div style="font-size:11px;color:var(--mu);margin-top:3px">NDX Price Return · Source: Summit NDX NonBBG</div>' +
       '</div>' +
       '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">' +
         '<button class="ndx-tab-btn active" onclick="ndxSetYTD2026()">YTD 2026</button>' +
@@ -658,6 +955,7 @@ function buildSkeleton() {
     '</div>' +
   '</div>' +
 
+  // ── Attribution chart / treemap ──
   '<div class="sec">' +
     '<div class="sechdr"><span class="sect">Attribution by Sector / Industry Group</span></div>' +
     '<div class="card">' +
@@ -676,12 +974,13 @@ function buildSkeleton() {
     '</div>' +
   '</div>' +
 
+  // ── Attribution table ──
   '<div class="sec">' +
     '<div class="sechdr">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">' +
         '<div>' +
           '<span class="sect">Attribution Detail &amp; Simulation</span>' +
-          '<span class="secn" style="display:block;margin-top:2px">Click any row to include / exclude &middot; weights rescale to 100% within each HOC &middot; YTD updates in real time</span>' +
+          '<span class="secn" style="display:block;margin-top:2px">Click any row to include / exclude · weights rescale to 100% within each HOC · YTD updates in real time</span>' +
         '</div>' +
         '<button class="sb-tbtn" onclick="ndxResetSim()">Reset</button>' +
       '</div>' +
@@ -700,6 +999,34 @@ function buildSkeleton() {
     '</div>' +
   '</div>' +
 
+  // ── Dot plot — IG contributions ──
+  '<div class="sec">' +
+    '<div class="sechdr">' +
+      '<span class="sect">Industry Group Contributions</span>' +
+      '<span class="secn">All industry groups ranked by Carino-linked contribution. Single linear scale — no breaks.</span>' +
+    '</div>' +
+    '<div class="card"><div id="ndx-dotplot-box"></div></div>' +
+  '</div>' +
+
+  // ── Heatmap ──
+  '<div class="sec">' +
+    '<div class="sechdr">' +
+      '<span class="sect">Sector × HOC Window Heatmap</span>' +
+      '<span class="secn">Contribution of each sector in each HOC window. Reveals which sectors drove specific windows.</span>' +
+    '</div>' +
+    '<div class="card"><div id="ndx-heatmap-box"></div></div>' +
+  '</div>' +
+
+  // ── Dumbbell ──
+  '<div class="sec">' +
+    '<div class="sechdr">' +
+      '<span class="sect">Index Composition — Weight Change</span>' +
+      '<span class="secn">Open weight (hollow) vs. close weight (solid) by sector. Ordered by opening weight.</span>' +
+    '</div>' +
+    '<div class="card"><div id="ndx-dumbbell-box"></div></div>' +
+  '</div>' +
+
+  // ── HOC Timeline ──
   '<div class="sec">' +
     '<div class="sechdr">' +
       '<span class="sect">HOC Timeline</span>' +
@@ -725,7 +1052,7 @@ export function loadNdxAttribution(container) {
   exclSecs = new Set(); exclIGs = new Set();
   attrTab = 'sector'; attrMode = 'chart';
   _sortKey = 'contrib'; _sortDir = -1;
-  _fromHoc = 7; _toHoc = NDX_DATA.hocs[NDX_DATA.hocs.length - 1].n;
+  _fromHoc = 7; _toHoc = 19;
   if (_chart) { _chart.destroy(); _chart = null; }
 
   normalize();
@@ -739,4 +1066,7 @@ export function loadNdxAttribution(container) {
   renderAttrChart(baseR);
   renderAttrTable(baseR);
   renderHOC(baseR);
+  renderDotPlotIG(baseR);
+  renderHeatmap();
+  renderDumbbell();
 }

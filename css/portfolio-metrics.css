@@ -48,6 +48,7 @@
 #pm-root .pm-atab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
 #pm-root .pm-apane{display:none;}
 #pm-root .pm-apane.active{display:block;}
+
 #pm-root .pm-ph{color:var(--mu);font-size:13px;font-style:italic;padding:44px 24px;
   text-align:center;border:1px dashed var(--bdr);border-radius:14px;background:var(--pale);}
 
@@ -88,15 +89,25 @@
   text-underline-offset:3px;}
 #pm-root td.pm-beta-cell:hover{background:rgba(37,99,235,.06);}
 
-/* Beta history modal — wider than the shared default, with a fixed-height chart. */
+/* Beta detail modal — wider than the shared default: method controls, a
+   fixed-height history chart, and the formula + explanation below it. */
 #pm-root .pm-beta-card{max-width:680px;}
 #pm-root .pm-bm-sub{font-size:12px;color:var(--mu);margin-top:4px;}
-#pm-root .pm-bm-body{padding:16px 24px 24px;height:340px;position:relative;}
+#pm-root .pm-bm-controls{padding:12px 24px 0;}
+#pm-root .pm-bm-body{padding:16px 24px 8px;height:300px;position:relative;}
+#pm-root .pm-bm-calc{padding:8px 24px 22px;}
+#pm-root .pm-bm-formula{font-size:13.5px;color:var(--navy);font-weight:600;
+  background:var(--pale);border:1px solid var(--bdr);border-radius:8px;
+  padding:9px 12px;margin-bottom:10px;text-align:center;letter-spacing:.01em;}
+#pm-root .pm-bm-formula sub{font-size:9px;}
+#pm-root .pm-bm-expl{font-size:12.5px;line-height:1.55;color:var(--text);margin:0 0 8px;}
+#pm-root .pm-bm-expl.pm-bm-muted{color:var(--mu);font-size:12px;margin-bottom:0;}
 
 /* Paper subtab — editable inputs, add / remove controls */
 #pm-root input.pm-inp{font-family:inherit;font-size:13px;border:1px solid var(--bdr);
   border-radius:6px;padding:4px 8px;background:var(--w);color:var(--text);text-align:right;}
-#pm-root input.pm-tk{width:120px;text-align:left;font-weight:700;}
+#pm-root input.pm-tk{width:120px;text-align:left;font-weight:700;text-transform:uppercase;}
+#pm-root input.pm-tk::placeholder{text-transform:none;}
 #pm-root input.pm-wt{width:72px;}
 #pm-root input.pm-inp:focus{outline:none;border-color:var(--accent);}
 #pm-root .pm-add{font-family:inherit;font-size:12px;font-weight:600;color:var(--steel);
@@ -110,15 +121,31 @@
 #pm-root .pm-empty{color:var(--mu);font-size:12px;font-style:italic;}
 
 /* Metric selector (EBITDA / Earnings / CFO / FCF) — segmented control */
-#pm-root .pm-metricbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+#pm-root .pm-metricbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
 #pm-root .pm-metricbar .lbl{font-size:10px;color:var(--mu);font-weight:600;
   text-transform:uppercase;letter-spacing:.04em;}
-#pm-root .pm-seg{display:inline-flex;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;}
+#pm-root .pm-seg{display:inline-flex;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;flex:none;}
 #pm-root .pm-seg button{border:none;border-radius:0;background:var(--w);color:var(--steel);
   padding:7px 14px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
 #pm-root .pm-seg button+button{border-left:1px solid var(--bdr);}
 #pm-root .pm-seg button.on{background:var(--navy);color:#fff;}
-#pm-root .pm-seg button:not(.on):hover{background:var(--pale);}
+#pm-root .pm-seg button:not(.on):not(:disabled):hover{background:var(--pale);}
+#pm-root .pm-seg button:disabled{color:var(--mu);background:var(--pale);cursor:not-allowed;opacity:.55;}
+/* Growth window dropdown — matches the segmented controls' height and weight. */
+#pm-root .pm-select{border:1px solid var(--bdr);border-radius:8px;background:var(--w);
+  color:var(--navy);font:600 12.5px 'Inter',sans-serif;padding:7px 28px 7px 12px;cursor:pointer;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237C8694' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;}
+#pm-root .pm-select:focus{outline:none;border-color:var(--accent);}
+/* Subtle show/hide for the Price + Market Cap columns, right-aligned above the table. */
+#pm-root .pm-qtoggle{display:flex;justify-content:flex-end;margin:0 2px 7px;}
+#pm-root .pm-qbtn{display:inline-flex;align-items:center;gap:6px;border:none;background:none;
+  color:var(--mu);font:500 11.5px 'Inter',sans-serif;cursor:pointer;padding:3px 7px;border-radius:6px;
+  transition:color .15s,background .15s;}
+#pm-root .pm-qbtn svg{opacity:.8;}
+#pm-root .pm-qbtn:hover{color:var(--navy);background:var(--pale);}
+#pm-root .pm-qbtn.on{color:var(--steel);}
 
 /* Metric value inputs + computed cells */
 #pm-root input.pm-minp{width:64px;font-family:inherit;font-size:12.5px;border:1px solid var(--bdr);

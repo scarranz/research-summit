@@ -31,7 +31,7 @@ function getActiveHocs() {
 function normalize() {
   NDX_DATA.hocs.forEach(function(hoc) {
     hoc.sec.forEach(function(s) {
-      var bad = function(v) { return !v || !v.trim() || /^[#]?n\/?a$/i.test(v.trim()); };
+      var bad = function(v) { return !v || !v.trim() || /^[#]?n\/?a(\s|$)/i.test(v.trim()); };
       if (bad(s.s)) s.s = CASH;
       if (bad(s.g)) s.g = CASH;
       if (s.s === CASH) s.g = CASH;

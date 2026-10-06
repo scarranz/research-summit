@@ -379,6 +379,25 @@ function renderTreemap(res) {
   box.innerHTML = html;
 }
 
+// Scaled display weights from the last active HOC under current exclusions
+function computeDisplayWeights(exS, exG) {
+  var lastHoc = _activeHocs[_activeHocs.length - 1];
+  if (!lastHoc) return { sec: {}, ig: {} };
+  var exclW = 0;
+  lastHoc.sec.forEach(function(s) {
+    if (exS.has(s.s) || exG.has(s.g)) exclW += (s.w || 0);
+  });
+  var scale = exclW < 99.99 ? 100 / (100 - exclW) : 1;
+  var secW = {}, igW = {};
+  lastHoc.sec.forEach(function(s) {
+    if (exS.has(s.s) || exG.has(s.g)) return;
+    var ew = (s.w || 0) * scale;
+    secW[s.s] = (secW[s.s] || 0) + ew;
+    igW[s.g]  = (igW[s.g]  || 0) + ew;
+  });
+  return { sec: secW, ig: igW };
+}
+
 // ── Attribution + Simulation table ────────────────────────────────────────
 function dot(on, sz) {
   sz = sz || 16;
@@ -408,6 +427,12 @@ function renderAttrTable(res) {
   }
 
   var sortedSecs = sectors.slice().sort(cmpSec);
+  var dw = computeDisplayWeights(exclSecs, exclIGs);
+
+  function fmtW(w, excl) {
+    if (excl) return '<span style="color:var(--mu)">—</span>';
+    return (w || 0).toFixed(2) + '%';
+  }
 
   if (!isIG) {
     sortedSecs.forEach(function(s) {
@@ -417,7 +442,7 @@ function renderAttrTable(res) {
         '<td style="width:28px;text-align:center;padding:6px 4px">' + dot(!excl, 16) + '</td>' +
         '<td style="font-weight:600">' + dispSec(s) + '</td>' +
         '<td class="num">' + o.count + ' → ' + n.count + '</td>' +
-        '<td class="num">' + n.w.toFixed(2) + '%</td>' +
+        '<td class="num">' + fmtW(dw.sec[s], excl) + '</td>' +
         '<td class="num">' + fmtC(res.bySec[s]||0) + '</td></tr>';
     });
   } else {
@@ -430,16 +455,17 @@ function renderAttrTable(res) {
         '<td style="width:28px;text-align:center;padding:6px 4px">' + dot(!secExcl, 16) + '</td>' +
         '<td style="font-weight:700;color:var(--navy)">' + dispSec(s) + '</td>' +
         '<td class="num" style="color:var(--mu);font-size:11px">' + so.count + ' → ' + sn.count + '</td>' +
-        '<td class="num" style="color:var(--mu);font-size:11px">' + sn.w.toFixed(2) + '%</td>' +
+        '<td class="num" style="color:var(--mu);font-size:11px">' + fmtW(dw.sec[s], secExcl) + '</td>' +
         '<td class="num" style="font-weight:700">' + fmtC(res.bySec[s]||0) + '</td></tr>';
       igs.forEach(function(g) {
         var igExcl = exclIGs.has(g);
+        var anyExcl = secExcl || igExcl;
         var gn = _snapN['ig:'+g]||{count:0,w:0}, go = _snap0['ig:'+g]||{count:0,w:0};
-        html += '<tr style="' + ((secExcl||igExcl)?'opacity:.38;':'') + 'cursor:pointer" onclick="event.stopPropagation();ndxToggleIG(\'' + esc(g) + '\')">' +
-          '<td style="width:28px;text-align:center;padding:5px 4px 5px 10px">' + dot(!(secExcl||igExcl), 13) + '</td>' +
+        html += '<tr style="' + (anyExcl?'opacity:.38;':'') + 'cursor:pointer" onclick="event.stopPropagation();ndxToggleIG(\'' + esc(g) + '\')">' +
+          '<td style="width:28px;text-align:center;padding:5px 4px 5px 10px">' + dot(!anyExcl, 13) + '</td>' +
           '<td style="padding-left:20px;font-size:12px">' + dispIG(g) + '</td>' +
           '<td class="num" style="font-size:11.5px">' + go.count + ' → ' + gn.count + '</td>' +
-          '<td class="num" style="font-size:11.5px">' + gn.w.toFixed(2) + '%</td>' +
+          '<td class="num" style="font-size:11.5px">' + fmtW(dw.ig[g], anyExcl) + '</td>' +
           '<td class="num">' + fmtC(res.byIG[g]||0) + '</td></tr>';
       });
     });

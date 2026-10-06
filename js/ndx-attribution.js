@@ -1,7 +1,8 @@
 // ndx-attribution.js — NDX 100 Return Attribution (Carino linking)
 import { NDX_DATA } from './ndx-attribution-data.js';
 
-const CASH = 'Cash, Derivatives and Other Securities';
+const CASH       = 'Cash, Derivatives and Other Securities'; // data key — do not change
+const CASH_LABEL = 'Cash & Futures';                        // display label
 
 var sectors     = [];
 var igBySec     = {};
@@ -10,6 +11,7 @@ var exclSecs    = new Set();
 var exclIGs     = new Set();
 var baseR       = null;
 var _chart      = null;
+var _chartFull  = [];  // full names for chart tooltip (parallel to chart data)
 var attrTab     = 'sector';
 var attrMode    = 'chart';
 var _snap0      = {};
@@ -86,10 +88,8 @@ function lockAxes(res) {
 }
 
 // Carino-linked attribution: contributions sum exactly to total R
-// Cash sector = R - sum(named sectors), computed by difference (Paso 6)
 function computeCore(exS, exG) {
   var hocSecC = [], hocIGC = [], ktArr = [], logSum = 0, hocResults = [];
-
   _activeHocs.forEach(function(hoc) {
     var exclW = 0;
     hoc.sec.forEach(function(s) { if (exS.has(s.s) || exG.has(s.g)) exclW += (s.w || 0); });
@@ -108,53 +108,46 @@ function computeCore(exS, exG) {
     ktArr.push(kt); hocSecC.push(sc); hocIGC.push(gc);
     hocResults.push({ n: hoc.n, eff: hoc.eff, close: hoc.close, ret: hocRet, count: count });
   });
-
   var ytd = (Math.exp(logSum) - 1) * 100;
   var R = ytd / 100;
   var k = Math.abs(R) > 1e-10 ? Math.log(1 + R) / R : 1.0;
-
   var allSecs = new Set(), allIGs = new Set();
   hocSecC.forEach(function(m) { Object.keys(m).forEach(function(s) { allSecs.add(s); }); });
   hocIGC.forEach(function(m)  { Object.keys(m).forEach(function(g) { allIGs.add(g); }); });
-
   var bySec = {}, byIG = {};
   allSecs.forEach(function(s) {
     if (s === CASH) return;
-    var sum = 0;
-    hocResults.forEach(function(_, t) { sum += ktArr[t] * (hocSecC[t][s] || 0); });
+    var sum = 0; hocResults.forEach(function(_, t) { sum += ktArr[t] * (hocSecC[t][s] || 0); });
     bySec[s] = sum / k;
   });
   allIGs.forEach(function(g) {
     if (g === CASH) return;
-    var sum = 0;
-    hocResults.forEach(function(_, t) { sum += ktArr[t] * (hocIGC[t][g] || 0); });
+    var sum = 0; hocResults.forEach(function(_, t) { sum += ktArr[t] * (hocIGC[t][g] || 0); });
     byIG[g] = sum / k;
   });
-
-  // Cash by difference — the residual bucket
   bySec[CASH] = ytd - Object.keys(bySec).reduce(function(a, s) { return a + bySec[s]; }, 0);
   byIG[CASH]  = ytd - Object.keys(byIG ).reduce(function(a, g) { return a + byIG[g];  }, 0);
-
   return { bySec: bySec, byIG: byIG, ytd: ytd, hocResults: hocResults };
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
+function dispSec(s) { return s === CASH ? CASH_LABEL : s; }
+function dispIG(g)  { return g === CASH ? CASH_LABEL : g; }
+
 function fmtC(v) {
   if (v == null || isNaN(v)) return '<span style="color:var(--mu)">—</span>';
   return '<span style="color:' + (v >= 0 ? 'var(--pos)' : 'var(--neg)') + ';font-weight:600">' +
     (v >= 0 ? '+' : '') + v.toFixed(4) + '%</span>';
 }
-function fmtYTD(v) {
-  return v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(4) + '%';
-}
-function colr(v) { return v >= 0 ? 'var(--pos)' : 'var(--neg)'; }
-function esc(s)  { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function fmtYTD(v) { return v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(4) + '%'; }
+function colr(v)   { return v >= 0 ? 'var(--pos)' : 'var(--neg)'; }
+function esc(s)    { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function trunc(s, n) { return s.length > n ? s.slice(0, n-1) + '…' : s; }
 
-// Chart label: single line, truncated
+// chart axis label: truncated to single line
 function chartLbl(s, isIG) {
-  if (s === CASH) return 'Cash & Other';
-  return isIG ? trunc(s, 36) : trunc(s, 28);
+  var d = isIG ? dispIG(s) : dispSec(s);
+  return trunc(d, isIG ? 36 : 28);
 }
 
 // ── KPI tile ──────────────────────────────────────────────────────────────
@@ -178,19 +171,19 @@ function renderAttrChart(res) {
   var canvas = document.getElementById('ndx-attr-canvas');
   if (!canvas || typeof Chart === 'undefined') return;
   var isIG = attrTab === 'ig';
-
   var items = [];
   if (isIG) {
     sectors.forEach(function(s) {
       (igBySec[s]||[]).forEach(function(g) {
-        items.push({ label: chartLbl(g, true), val: res.byIG[g]||0, excl: exclSecs.has(s)||exclIGs.has(g) });
+        items.push({ label: chartLbl(g, true), full: dispIG(g), val: res.byIG[g]||0, excl: exclSecs.has(s)||exclIGs.has(g) });
       });
     });
   } else {
     sectors.forEach(function(s) {
-      items.push({ label: chartLbl(s, false), val: res.bySec[s]||0, excl: exclSecs.has(s) });
+      items.push({ label: chartLbl(s, false), full: dispSec(s), val: res.bySec[s]||0, excl: exclSecs.has(s) });
     });
   }
+  _chartFull = items.map(function(x) { return x.full; });
 
   var labels = items.map(function(x) { return x.label; });
   var data   = items.map(function(x) { return parseFloat(x.val.toFixed(6)); });
@@ -204,7 +197,7 @@ function renderAttrChart(res) {
   });
 
   var rowH = isIG ? 26 : 30;
-  var h = Math.max(320, items.length * rowH + 60);
+  var h = Math.max(340, items.length * rowH + 60);
   var box = document.getElementById('ndx-attr-chart-box');
   if (box) box.style.height = h + 'px';
 
@@ -228,7 +221,13 @@ function renderAttrChart(res) {
       indexAxis: 'y', responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: function(ctx) { var v = ctx.raw; return ' '+(v>=0?'+':'')+v.toFixed(4)+'%'; } } }
+        tooltip: {
+          callbacks: {
+            // Full name in tooltip — never truncated
+            title: function(ctx) { return _chartFull[ctx[0].dataIndex] || ctx[0].label; },
+            label: function(ctx) { var v = ctx.raw; return ' ' + (v >= 0 ? '+' : '') + v.toFixed(4) + '%'; }
+          }
+        }
       },
       scales: {
         x: { min: xMin, max: xMax, grid: { color: 'rgba(0,0,0,.05)' }, border: { display: false },
@@ -241,27 +240,82 @@ function renderAttrChart(res) {
   });
 }
 
-// ── Treemap ───────────────────────────────────────────────────────────────
+// ── Squarified treemap ────────────────────────────────────────────────────
+// Recursive squarify: items sorted desc by area, each gets rx/ry/rw/rh
+function squarify(items, x, y, W, H) {
+  if (!items.length || W <= 0 || H <= 0) return;
+  if (items.length === 1) {
+    items[0].rx = x; items[0].ry = y; items[0].rw = W; items[0].rh = H;
+    return;
+  }
+  var isH = W >= H;
+  var fixD = isH ? H : W;
+  var split = 1, prevAR = Infinity;
+  var rowA = 0;
+  for (var i = 0; i < items.length; i++) {
+    rowA += items[i].area;
+    var sw = rowA / fixD;
+    var ar = 0;
+    for (var j = 0; j <= i; j++) {
+      var cd = items[j].area / sw;
+      ar = Math.max(ar, Math.max(sw / cd, cd / sw));
+    }
+    if (ar > prevAR && i > 0) break;
+    prevAR = ar; split = i + 1;
+  }
+  var strip = items.slice(0, split), rest = items.slice(split);
+  rowA = strip.reduce(function(a, it) { return a + it.area; }, 0);
+  var sw = rowA / fixD, pos = isH ? y : x;
+  for (var i = 0; i < strip.length; i++) {
+    var cd = strip[i].area / sw;
+    if (isH) { strip[i].rx = x;   strip[i].ry = pos; strip[i].rw = sw; strip[i].rh = cd; }
+    else      { strip[i].rx = pos; strip[i].ry = y;   strip[i].rw = cd; strip[i].rh = sw; }
+    pos += cd;
+  }
+  if (rest.length) {
+    if (isH) squarify(rest, x + sw, y, W - sw, H);
+    else     squarify(rest, x, y + sw, W, H - sw);
+  }
+}
+
+function tmColor(c, excl, maxC, minC) {
+  if (excl) return '#C8D6E0';
+  if (Math.abs(c) < 0.002) return '#B8C8D4';
+  if (c > 0) {
+    var t = maxC > 0 ? Math.min(1, c / maxC) : 0;
+    return 'hsl(145,' + Math.round(42 + t*50) + '%,' + Math.round(80 - t*48) + '%)';
+  }
+  var t = minC < 0 ? Math.min(1, Math.abs(c) / Math.abs(minC)) : 0;
+  return 'hsl(4,' + Math.round(42 + t*50) + '%,' + Math.round(80 - t*40) + '%)';
+}
+
 function renderTreemap(res) {
   var box = document.getElementById('ndx-treemap-box');
   if (!box) return;
   var isIG = attrTab === 'ig';
+  var TM_W = box.offsetWidth || 860;
+  var TM_H = 400;
 
   var items = [];
   if (!isIG) {
     sectors.forEach(function(s) {
-      items.push({ key: s, label: chartLbl(s, false), w: (_snapN[s]||{w:0}).w,
-        c: res.bySec[s]||0, excl: exclSecs.has(s), fn: 'ndxToggleSec' });
+      var w = (_snapN[s]||{w:0}).w;
+      if (w <= 0) return; // skip zero-weight sectors (Real Estate gone)
+      items.push({ key: s, label: dispSec(s), w: w, c: res.bySec[s]||0,
+        excl: exclSecs.has(s), fn: 'ndxToggleSec' });
     });
   } else {
     sectors.forEach(function(s) {
       (igBySec[s]||[]).forEach(function(g) {
-        items.push({ key: g, label: chartLbl(g, true), w: (_snapN['ig:'+g]||{w:0}).w,
-          c: res.byIG[g]||0, excl: exclSecs.has(s)||exclIGs.has(g), fn: 'ndxToggleIG' });
+        var w = (_snapN['ig:'+g]||{w:0}).w;
+        if (w <= 0) return;
+        items.push({ key: g, label: dispIG(g), w: w, c: res.byIG[g]||0,
+          excl: exclSecs.has(s)||exclIGs.has(g), fn: 'ndxToggleIG' });
       });
     });
   }
 
+  // Sort by weight desc (squarify works best this way)
   items.sort(function(a, b) {
     if (a.key === CASH) return 1; if (b.key === CASH) return -1;
     return b.w - a.w;
@@ -271,47 +325,55 @@ function renderTreemap(res) {
   var maxC = Math.max.apply(null, items.map(function(x) { return x.c; }).concat(0));
   var minC = Math.min.apply(null, items.map(function(x) { return x.c; }).concat(0));
 
-  function tmColor(c, excl) {
-    if (excl) return '#C8D6E0';
-    if (Math.abs(c) < 0.005) return '#B8C8D4';
-    if (c > 0) {
-      var t = maxC > 0 ? Math.min(1, c / maxC) : 0;
-      return 'hsl(145,' + Math.round(40 + t*52) + '%,' + Math.round(82 - t*50) + '%)';
-    }
-    var t = minC < 0 ? Math.min(1, Math.abs(c) / Math.abs(minC)) : 0;
-    return 'hsl(4,' + Math.round(40 + t*52) + '%,' + Math.round(82 - t*42) + '%)';
-  }
+  // Assign pixel area proportional to weight
+  items.forEach(function(it) { it.area = (it.w / totalW) * TM_W * TM_H; });
 
-  var html = '<div style="display:flex;height:250px;gap:2px;width:100%">';
+  // Run squarify to get rx/ry/rw/rh for each item
+  squarify(items, 0, 0, TM_W, TM_H);
+
+  var html = '<div style="position:relative;width:' + TM_W + 'px;height:' + TM_H + 'px">';
   items.forEach(function(item) {
-    var pct = item.w / totalW;
-    var bg  = tmColor(item.c, item.excl);
-    var darkBg = !item.excl && (item.c > maxC * 0.4 || (minC < 0 && item.c < minC * 0.4));
-    var tc = darkBg ? '#fff' : '#2B3B4E';
-    var ts = darkBg ? '0 1px 2px rgba(0,0,0,.45)' : 'none';
-    var show = pct > 0.022;
-    var fs = Math.min(11, Math.max(7.5, pct * 230));
+    if (!item.rw || !item.rh) return;
+    var bg  = tmColor(item.c, item.excl, maxC, minC);
+    var isDark = !item.excl && (item.c > maxC * 0.35 || (minC < 0 && item.c < minC * 0.35));
+    var tc = isDark ? '#fff' : '#1E2D3D';
+    var ts = isDark ? '0 1px 2px rgba(0,0,0,.5)' : 'none';
+
+    var rw = Math.max(2, item.rw - 2), rh = Math.max(2, item.rh - 2);
+    var showName = rw > 42 && rh > 26;
+    var showVal  = rw > 38 && rh > 46;
+    var nameFs = Math.min(16, Math.max(9, Math.min(rw, rh) / 5.5));
+    var valFs  = Math.min(13, Math.max(8,  Math.min(rw, rh) / 7));
+
+    // Label: truncate to fit estimated single line
+    var maxChars = Math.floor(rw / (nameFs * 0.58));
+    var label = item.label.length > maxChars ? item.label.slice(0, maxChars - 1) + '…' : item.label;
 
     html += '<div onclick="' + item.fn + '(\'' + esc(item.key) + '\')" ' +
-      'title="' + item.key + ': ' + (item.c>=0?'+':'') + item.c.toFixed(4) + '% · ' + item.w.toFixed(2) + '% weight" ' +
-      'style="flex:' + pct.toFixed(5) + ';height:100%;background:' + bg + ';border-radius:3px;' +
-      'cursor:pointer;min-width:0;overflow:hidden;display:flex;flex-direction:column;' +
-      'align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,.45);' +
-      'opacity:' + (item.excl ? '.4' : '1') + '">';
-    if (show) {
-      html += '<span style="color:' + tc + ';font-size:' + fs + 'px;font-weight:700;' +
-        'text-align:center;padding:0 3px;line-height:1.2;max-width:100%;overflow:hidden;' +
-        'text-overflow:ellipsis;white-space:nowrap;text-shadow:' + ts + '">' + item.label + '</span>' +
-        '<span style="color:' + tc + ';font-size:' + (fs - 1) + 'px;opacity:.88;margin-top:1px;text-shadow:' + ts + '">' +
-        (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%</span>';
+      'title="' + dispSec(item.key) + ': ' + (item.c>=0?'+':'') + item.c.toFixed(4) + '% contribution · ' + item.w.toFixed(2) + '% weight" ' +
+      'style="position:absolute;left:' + Math.round(item.rx) + 'px;top:' + Math.round(item.ry) + 'px;' +
+      'width:' + Math.round(rw) + 'px;height:' + Math.round(rh) + 'px;background:' + bg + ';' +
+      'border-radius:2px;cursor:pointer;overflow:hidden;display:flex;flex-direction:column;' +
+      'align-items:center;justify-content:center;' +
+      'border:1.5px solid rgba(255,255,255,.55);opacity:' + (item.excl ? '.38' : '1') + ';' +
+      'box-sizing:border-box">';
+    if (showName) {
+      html += '<span style="color:' + tc + ';font-size:' + nameFs.toFixed(1) + 'px;font-weight:700;' +
+        'text-align:center;padding:0 4px;line-height:1.2;max-width:100%;overflow:hidden;' +
+        'text-overflow:ellipsis;white-space:nowrap;text-shadow:' + ts + '">' + label + '</span>';
+    }
+    if (showVal) {
+      html += '<span style="color:' + tc + ';font-size:' + valFs.toFixed(1) + 'px;opacity:.9;' +
+        'margin-top:2px;text-shadow:' + ts + '">' + (item.c>=0?'+':'') + item.c.toFixed(2) + '%</span>';
     }
     html += '</div>';
   });
+
   html += '</div>' +
-    '<div style="font-size:10px;color:var(--mu);margin-top:5px;padding:0 2px">' +
-    'Width = current index weight &nbsp;&middot;&nbsp; Color: ' +
-    '<span style="color:hsl(145,70%,38%);font-weight:600">■</span> positive &nbsp;' +
-    '<span style="color:hsl(4,70%,50%);font-weight:600">■</span> negative contribution &nbsp;&middot;&nbsp; Click to toggle' +
+    '<div style="font-size:10px;color:var(--mu);margin-top:5px;padding:0 1px">' +
+    'Size = index weight &nbsp;·  ' +
+    '<span style="color:hsl(145,65%,38%);font-weight:600">■</span> positive &nbsp;' +
+    '<span style="color:hsl(4,65%,48%);font-weight:600">■</span> negative contribution &nbsp;·  Click to toggle' +
     '</div>';
 
   box.innerHTML = html;
@@ -331,17 +393,18 @@ function renderAttrTable(res) {
   var isIG = attrTab === 'ig';
   var html = '';
 
+  // Sort always by BASE contributions so toggling on/off doesn't shuffle rows
   function cmpSec(a, b) {
     if (a === CASH) return 1; if (b === CASH) return -1;
     if (_sortKey === 'name')   return _sortDir * a.localeCompare(b);
     if (_sortKey === 'weight') return _sortDir * ((_snapN[b]||{w:0}).w - (_snapN[a]||{w:0}).w);
-    return _sortDir * ((res.bySec[b]||0) - (res.bySec[a]||0));
+    return _sortDir * ((baseR.bySec[b]||0) - (baseR.bySec[a]||0));
   }
   function cmpIG(a, b) {
     if (a === CASH) return 1; if (b === CASH) return -1;
     if (_sortKey === 'name')   return _sortDir * a.localeCompare(b);
     if (_sortKey === 'weight') return _sortDir * ((_snapN['ig:'+b]||{w:0}).w - (_snapN['ig:'+a]||{w:0}).w);
-    return _sortDir * ((res.byIG[b]||0) - (res.byIG[a]||0));
+    return _sortDir * ((baseR.byIG[b]||0) - (baseR.byIG[a]||0));
   }
 
   var sortedSecs = sectors.slice().sort(cmpSec);
@@ -352,7 +415,7 @@ function renderAttrTable(res) {
       var n = _snapN[s]||{count:0,w:0}, o = _snap0[s]||{count:0,w:0};
       html += '<tr style="' + (excl ? 'opacity:.42;' : '') + 'cursor:pointer" onclick="ndxToggleSec(\'' + esc(s) + '\')">' +
         '<td style="width:28px;text-align:center;padding:6px 4px">' + dot(!excl, 16) + '</td>' +
-        '<td style="font-weight:600">' + s + '</td>' +
+        '<td style="font-weight:600">' + dispSec(s) + '</td>' +
         '<td class="num">' + o.count + ' → ' + n.count + '</td>' +
         '<td class="num">' + n.w.toFixed(2) + '%</td>' +
         '<td class="num">' + fmtC(res.bySec[s]||0) + '</td></tr>';
@@ -365,7 +428,7 @@ function renderAttrTable(res) {
       var sn = _snapN[s]||{count:0,w:0}, so = _snap0[s]||{count:0,w:0};
       html += '<tr style="background:var(--surface);' + (secExcl?'opacity:.42;':'') + 'cursor:pointer" onclick="ndxToggleSec(\'' + esc(s) + '\')">' +
         '<td style="width:28px;text-align:center;padding:6px 4px">' + dot(!secExcl, 16) + '</td>' +
-        '<td style="font-weight:700;color:var(--navy)">' + s + '</td>' +
+        '<td style="font-weight:700;color:var(--navy)">' + dispSec(s) + '</td>' +
         '<td class="num" style="color:var(--mu);font-size:11px">' + so.count + ' → ' + sn.count + '</td>' +
         '<td class="num" style="color:var(--mu);font-size:11px">' + sn.w.toFixed(2) + '%</td>' +
         '<td class="num" style="font-weight:700">' + fmtC(res.bySec[s]||0) + '</td></tr>';
@@ -374,7 +437,7 @@ function renderAttrTable(res) {
         var gn = _snapN['ig:'+g]||{count:0,w:0}, go = _snap0['ig:'+g]||{count:0,w:0};
         html += '<tr style="' + ((secExcl||igExcl)?'opacity:.38;':'') + 'cursor:pointer" onclick="event.stopPropagation();ndxToggleIG(\'' + esc(g) + '\')">' +
           '<td style="width:28px;text-align:center;padding:5px 4px 5px 10px">' + dot(!(secExcl||igExcl), 13) + '</td>' +
-          '<td style="padding-left:20px;font-size:12px">' + g + '</td>' +
+          '<td style="padding-left:20px;font-size:12px">' + dispIG(g) + '</td>' +
           '<td class="num" style="font-size:11.5px">' + go.count + ' → ' + gn.count + '</td>' +
           '<td class="num" style="font-size:11.5px">' + gn.w.toFixed(2) + '%</td>' +
           '<td class="num">' + fmtC(res.byIG[g]||0) + '</td></tr>';
@@ -431,7 +494,6 @@ function reloadSnapshot() {
   buildHierarchy(baseR);
   lockAxes(baseR);
   refresh();
-  // Update header meta
   var last = _activeHocs[_activeHocs.length - 1], first = _activeHocs[0];
   var endLabel = last.close || last.eff + ' (Open)';
   var el;
@@ -531,7 +593,7 @@ function buildSkeleton() {
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;padding-bottom:14px">' +
       '<div>' +
         '<div class="sect" style="font-size:17px;font-weight:700;color:var(--navy)">NDX 100 — Return Attribution</div>' +
-        '<div style="font-size:11px;color:var(--mu);margin-top:3px">NDX Price Return &middot; Carino multi-period linking &middot; Source: Summit NDX NonBBG</div>' +
+        '<div style="font-size:11px;color:var(--mu);margin-top:3px">NDX Price Return &middot; Source: Summit NDX NonBBG</div>' +
       '</div>' +
       '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">' +
         '<button class="ndx-tab-btn active" onclick="ndxSetYTD2026()">YTD 2026</button>' +

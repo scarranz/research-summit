@@ -1,0 +1,176 @@
+/* ── NDX Attribution — scoped component styles ── */
+
+/* ── Hero row ────────────────────────────────── */
+.ndx-hero-row {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 20px 0 24px;
+  flex-wrap: wrap;
+}
+
+.ndx-hero-main {
+  min-width: 160px;
+}
+.ndx-hero-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--mu);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.ndx-hero-val {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--navy);
+}
+
+.ndx-hero-meta {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  padding-left: 24px;
+  border-left: 1.5px solid var(--bdr);
+}
+.ndx-meta-block { min-width: 130px; }
+.ndx-meta-lbl {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--mu);
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.ndx-meta-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.2;
+}
+.ndx-meta-sub {
+  font-size: 10.5px;
+  color: var(--mu);
+  margin-top: 1px;
+}
+
+/* ── Attribution toolbar ─────────────────────── */
+.ndx-attr-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ── Tab / mode buttons ──────────────────────── */
+.ndx-tab-btn {
+  padding: 5px 13px;
+  border: 1.5px solid var(--bdr);
+  border-radius: 14px;
+  background: var(--w);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mu);
+  cursor: pointer;
+  transition: all .13s;
+  letter-spacing: .01em;
+}
+.ndx-tab-btn:hover { border-color: var(--navy); color: var(--navy); }
+.ndx-tab-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+/* ── Chips ───────────────────────────────────── */
+.ndx-chip {
+  display: inline-block;
+  padding: 4px 11px;
+  border: 1.5px solid var(--bdr);
+  border-radius: 14px;
+  background: var(--w);
+  cursor: pointer;
+  font-size: 10.5px;
+  font-family: 'Inter', sans-serif;
+  color: var(--mu);
+  transition: all .13s;
+  user-select: none;
+  font-weight: 500;
+}
+.ndx-chip:hover { border-color: var(--mid); color: var(--navy); }
+.ndx-chip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+/* Smaller variant for Industry Group chips */
+.ndx-chip-sm { padding: 3px 8px; font-size: 10px; border-radius: 11px; }
+
+.ndx-chip-lbl {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--mu);
+  font-weight: 700;
+  margin-bottom: 7px;
+}
+
+/* ── IG group container ──────────────────────── */
+.ndx-ig-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 0;
+  border-top: .5px solid var(--bdr);
+}
+.ndx-ig-sector-lbl {
+  font-size: 9px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--mu);
+  font-weight: 700;
+  min-width: 90px;
+  max-width: 90px;
+  padding-top: 4px;
+  flex-shrink: 0;
+}
+
+/* ── Simulation badge ────────────────────────── */
+.ndx-reset-link {
+  text-decoration: underline;
+  cursor: pointer;
+  color: #7A5A00;
+}
+.ndx-reset-link:hover { opacity: .7; }
+
+/* ── Sub-nav pill bar ────────────────────────── */
+.ma-subnav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 10px 0 14px;
+  border-bottom: 1.5px solid var(--bdr);
+  margin-bottom: 24px;
+}
+.ma-pill {
+  padding: 6px 16px;
+  border: 1.5px solid var(--bdr);
+  border-radius: 18px;
+  background: var(--w);
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--mu);
+  cursor: pointer;
+  transition: all .15s;
+  letter-spacing: .01em;
+}
+.ma-pill:hover:not([disabled]) { border-color: var(--navy); color: var(--navy); }
+.ma-pill.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.ma-pill[disabled] { cursor: default; }
+
+.ma-panel { min-height: 0; }
+
+/* ── Table utilities ─────────────────────────── */
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

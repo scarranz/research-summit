@@ -25,11 +25,25 @@ var _axisSecMin = 0, _axisSecMax = 0;
 var _axisIGMin  = 0, _axisIGMax  = 0;
 var _sortKey    = 'contrib';
 var _sortDir    = -1;
-var _fromHoc    = 7;
-var _toHoc      = 19;
+var _fromHoc    = 12;
+var _toHoc      = 24;
 var _activeHocs = [];
 var _securities = [];
 var _beeswarmFilter = 0;
+var treemapSubMode = 'flat';
+var _scatterHocIdx = -1;
+var _beeswarmHocIdx = -1;
+var _secSnapshots  = [];
+var _expandedSecs  = new Set();
+var _scatterXLo = null, _scatterXHi = null, _scatterYHi = null;
+var _beeswarmSector = '';
+var _activeYear  = 'ytd2026';
+var _paretoN     = 10;
+var YEAR_HOCS    = { ytd2026: [12, 24], y2025: [1, 11] };
+var _colorMode   = 'orig';   // 'orig' | 'A' | 'B' | 'C'
+var _colorMaxPos = 0, _colorMaxNeg = 0;
+var _rebalTab    = 'A';
+var _wlTab       = 'C';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function getActiveHocs() {
@@ -136,9 +150,10 @@ function computeCore(exS, exG) {
 }
 
 // Per-security Carino-linked attribution (for scatter + beeswarm)
-function computeSecurities(exS, exG) {
+function computeSecurities(exS, exG, hocList) {
+  var hocs = hocList !== undefined ? hocList : _activeHocs;
   var hocMeta = [], logSumTotal = 0;
-  _activeHocs.forEach(function(hoc) {
+  hocs.forEach(function(hoc) {
     var exclW = 0;
     hoc.sec.forEach(function(s) { if (exS.has(s.s) || exG.has(s.g)) exclW += (s.w || 0); });
     var scale = exclW < 99.99 ? 100 / (100 - exclW) : 1;
@@ -156,8 +171,8 @@ function computeSecurities(exS, exG) {
   var R = ytd / 100;
   var k = Math.abs(R) > 1e-10 ? Math.log(1 + R) / R : 1.0;
 
-  // Build closing-weight lookup from last active HOC
-  var lastHoc = _activeHocs[_activeHocs.length - 1];
+  // Build closing-weight lookup from last HOC in this window
+  var lastHoc = hocs[hocs.length - 1];
   var closeW = {};
   lastHoc.sec.forEach(function(s) {
     if (exS.has(s.s) || exG.has(s.g)) return;
@@ -206,15 +221,37 @@ function chartLbl(s, isIG) {
 }
 
 // Contribution-based color from the shared ramps (√ compression)
-function contribColor(v, maxAbs) {
+function contribColor(v, maxAbs, localMax) {
   if (!maxAbs || maxAbs < 1e-9) return '#EDECEA';
-  var t = Math.min(1, Math.sqrt(Math.abs(v) / maxAbs));
+  var t;
+  if (_colorMode === 'A') {
+    var ref = v >= 0 ? (_colorMaxPos || maxAbs) : (_colorMaxNeg || maxAbs);
+    t = ref > 0 ? Math.min(1, Math.sqrt(Math.abs(v) / ref)) : 0;
+  } else if (_colorMode === 'B') {
+    var lm = localMax != null ? localMax : maxAbs;
+    t = lm > 0 ? Math.min(1, Math.sqrt(Math.abs(v) / lm)) : 0;
+  } else if (_colorMode === 'C') {
+    t = Math.min(1, Math.pow(Math.abs(v) / maxAbs, 0.65));
+  } else {
+    t = Math.min(1, Math.sqrt(Math.abs(v) / maxAbs));
+  }
   var idx = Math.min(4, Math.floor(t * 5));
   return v >= 0 ? POS_RAMP[idx] : NEG_RAMP[idx];
 }
-function contribFg(v, maxAbs) {
+function contribFg(v, maxAbs, localMax) {
   if (!maxAbs || maxAbs < 1e-9) return '#1E2D3D';
-  var t = Math.min(1, Math.sqrt(Math.abs(v) / maxAbs));
+  var t;
+  if (_colorMode === 'A') {
+    var ref = v >= 0 ? (_colorMaxPos || maxAbs) : (_colorMaxNeg || maxAbs);
+    t = ref > 0 ? Math.min(1, Math.sqrt(Math.abs(v) / ref)) : 0;
+  } else if (_colorMode === 'B') {
+    var lm = localMax != null ? localMax : maxAbs;
+    t = lm > 0 ? Math.min(1, Math.sqrt(Math.abs(v) / lm)) : 0;
+  } else if (_colorMode === 'C') {
+    t = Math.min(1, Math.pow(Math.abs(v) / maxAbs, 0.65));
+  } else {
+    t = Math.min(1, Math.sqrt(Math.abs(v) / maxAbs));
+  }
   return t > 0.52 ? '#FFFFFF' : '#1E2D3D';
 }
 
@@ -257,7 +294,9 @@ function renderKPI(res) {
   var el = document.getElementById('ndx-ytd-val');
   if (!el) return;
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
-  el.innerHTML = '<span style="color:' + colr(res.ytd) + '">' + fmtYTD(res.ytd) + '</span>';
+  // Always show base return — never distort the price return with simulation weights
+  var displayYtd = baseR ? baseR.ytd : res.ytd;
+  el.innerHTML = '<span style="color:' + colr(displayYtd) + '">' + fmtYTD(displayYtd) + '</span>';
   var tag = document.getElementById('ndx-sim-badge');
   if (!tag) return;
   if (isBase) { tag.style.display = 'none'; return; }
@@ -367,11 +406,33 @@ function squarify(items, x, y, W, H) {
   }
 }
 
-// ── SVG Treemap (color by contribution) ──────────────────────────────────
-function renderTreemap(res) {
-  var box = document.getElementById('ndx-treemap-box');
-  if (!box) return;
-  var VW = 900, VH = 370;
+// ── Helpers shared by treemap variants ───────────────────────────────────
+function treemapTileLabel(svg, rx, ry, rw, rh, label, contribStr, fillC, fgC) {
+  if (rw < 50 || rh < 28) return;
+  var fs = Math.min(14, Math.max(9, Math.min(rw, rh) / 6));
+  var lines = wrapWords(label, rw - 14, fs);
+  var lineH = fs * 1.3, totalH = lines.length * lineH;
+  var showC = rh > totalH + fs * 2.2;
+  var startY = showC
+    ? ry + rh / 2 - (totalH + fs * 1.6) / 2 + fs * 0.82
+    : ry + rh / 2 - totalH / 2 + fs * 0.82;
+  lines.forEach(function(line, li) {
+    var t = se('text', { x: rx + rw / 2, y: startY + li * lineH,
+      'text-anchor': 'middle', 'font-family': 'Inter,sans-serif',
+      'font-size': fs, 'font-weight': '700', fill: fgC });
+    t.textContent = line; svg.appendChild(t);
+  });
+  if (showC && contribStr) {
+    var cfs = Math.max(8, fs - 2);
+    var ct = se('text', { x: rx + rw / 2, y: startY + lines.length * lineH + cfs * 0.9,
+      'text-anchor': 'middle', 'font-family': 'Inter,sans-serif',
+      'font-size': cfs, fill: fgC, opacity: '0.88' });
+    ct.textContent = contribStr; svg.appendChild(ct);
+  }
+}
+
+// ── Sector flat treemap ───────────────────────────────────────────────────
+function renderSectorFlatTreemap(res, box, VW, VH) {
   var items = [];
   sectors.forEach(function(s) {
     var w = (_snapN[s]||{w:0}).w;
@@ -379,85 +440,193 @@ function renderTreemap(res) {
     items.push({ key: s, label: dispSec(s), w: w, c: res.bySec[s]||0, excl: exclSecs.has(s) });
   });
   items.sort(function(a, b) {
-    if (a.key === CASH) return 1; if (b.key === CASH) return -1;
-    return b.w - a.w;
+    if (a.key === CASH) return 1; if (b.key === CASH) return -1; return b.w - a.w;
   });
   var totalW = items.reduce(function(s, x) { return s + x.w; }, 0) || 100;
   items.forEach(function(it) { it.area = (it.w / totalW) * VW * VH; });
   squarify(items, 0, 0, VW, VH);
-
-  // max abs contribution for color scaling (exclude Cash)
-  var maxAbsC = Math.max.apply(null, items.filter(function(it) { return it.key !== CASH; }).map(function(it) { return Math.abs(it.c); })) || 1;
+  var nonCashItems = items.filter(function(it) { return it.key !== CASH; });
+  var maxAbsC = Math.max.apply(null, nonCashItems.map(function(it) { return Math.abs(it.c); })) || 1;
+  _colorMaxPos = Math.max.apply(null, nonCashItems.map(function(it) { return it.c > 0 ? it.c : 0; })) || maxAbsC;
+  _colorMaxNeg = Math.max.apply(null, nonCashItems.map(function(it) { return it.c < 0 ? Math.abs(it.c) : 0; })) || maxAbsC;
 
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, role: 'img',
     style: 'width:100%;height:auto;display:block;overflow:visible' });
-
   items.forEach(function(item) {
     if (!item.rw || !item.rh) return;
     var rx = item.rx + 1, ry = item.ry + 1,
         rw = Math.max(0, item.rw - 2), rh = Math.max(0, item.rh - 2);
     var g = se('g', { class: 'mk', style: 'cursor:pointer' });
-    var alpha = item.excl ? 0.35 : 1;
-
-    var fillC  = item.excl ? '#D0D4D8' : contribColor(item.c, maxAbsC);
-    var fgC    = item.excl ? '#6A7888' : contribFg(item.c, maxAbsC);
-    // Stroke = slightly darker than fill (derived from ramp direction)
+    var fillC  = item.excl ? '#D0D4D8' : contribColor(item.c, maxAbsC, maxAbsC);
+    var fgC    = item.excl ? '#6A7888' : contribFg(item.c, maxAbsC, maxAbsC);
     var strokeC = item.excl ? '#9AAAB8' : (item.c >= 0 ? '#177A4E' : '#9B2A20');
-
     g.appendChild(se('rect', { x: rx, y: ry, width: rw, height: rh, rx: 4,
       fill: fillC, stroke: strokeC, 'stroke-opacity': item.excl ? 0.25 : 0.55,
-      'stroke-width': 1, opacity: alpha }));
-
-    if (rw > 50 && rh > 28) {
-      var fs = Math.min(14, Math.max(9, Math.min(rw, rh) / 6));
-      var lines = wrapWords(item.label, rw - 14, fs);
-      var lineH = fs * 1.3;
-      var totalH = lines.length * lineH;
-      var showC = rh > totalH + fs * 2.2;
-      var startY = showC
-        ? ry + rh / 2 - (totalH + fs * 1.6) / 2 + fs * 0.82
-        : ry + rh / 2 - totalH / 2 + fs * 0.82;
-
-      lines.forEach(function(line, li) {
-        var t = se('text', { x: rx + rw / 2, y: startY + li * lineH,
-          'text-anchor': 'middle', 'font-family': 'Inter,sans-serif',
-          'font-size': fs, 'font-weight': '700', fill: fgC });
-        t.textContent = line;
-        g.appendChild(t);
-      });
-      if (showC) {
-        var cfs = Math.max(8, fs - 2);
-        var ct = se('text', { x: rx + rw / 2, y: startY + lines.length * lineH + cfs * 0.9,
-          'text-anchor': 'middle', 'font-family': 'Inter,sans-serif',
-          'font-size': cfs, fill: fgC, opacity: '0.88' });
-        ct.textContent = (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%';
-        g.appendChild(ct);
-      }
-    }
-
+      'stroke-width': 1, opacity: item.excl ? 0.35 : 1 }));
+    treemapTileLabel(g, rx, ry, rw, rh, item.label,
+      (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%', fillC, fgC);
     var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(4) + '%';
-    bindTip(g,
-      '<b style="font-size:13px">' + item.label + '</b>' +
+    bindTip(g, '<b style="font-size:13px">' + item.label + '</b>' +
       '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
-      'Weight: ' + item.w.toFixed(3) + '%' +
-      '<br>Contribution: ' + tipC +
+      'Weight: ' + item.w.toFixed(3) + '%<br>Contribution: ' + tipC +
       '<br><em style="color:#898781">Click to see industry groups</em></span>');
-
-    if (item.key !== CASH) {
-      g.setAttribute('onclick', 'ndxShowIGModal(\'' + esc(item.key) + '\')');
-    }
+    if (item.key !== CASH) g.setAttribute('onclick', 'ndxShowIGModal(\'' + esc(item.key) + '\')');
     svg.appendChild(g);
   });
+  box.appendChild(svg);
+}
+
+// ── IG flat treemap ───────────────────────────────────────────────────────
+function renderIGFlatTreemap(res, box, VW, VH) {
+  var items = [];
+  sectors.forEach(function(s) {
+    (igBySec[s]||[]).forEach(function(g) {
+      if (g === CASH) return;
+      var w = (_snapN['ig:'+g]||{w:0}).w;
+      if (w < 0.001) return;
+      items.push({ key: g, sect: s, label: g, w: w, c: res.byIG[g]||0 });
+    });
+  });
+  items.sort(function(a, b) { return b.w - a.w; });
+  var totalW = items.reduce(function(acc, x) { return acc + x.w; }, 0) || 100;
+  items.forEach(function(it) { it.area = (it.w / totalW) * VW * VH; });
+  squarify(items, 0, 0, VW, VH);
+  var maxAbsC = Math.max.apply(null, items.map(function(it) { return Math.abs(it.c); })) || 1;
+
+  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, role: 'img',
+    style: 'width:100%;height:auto;display:block;overflow:visible' });
+  items.forEach(function(item) {
+    if (!item.rw || !item.rh) return;
+    var rx = item.rx + 1, ry = item.ry + 1,
+        rw = Math.max(0, item.rw - 2), rh = Math.max(0, item.rh - 2);
+    var g = se('g', { class: 'mk', style: 'cursor:pointer' });
+    var fillC  = contribColor(item.c, maxAbsC);
+    var fgC    = contribFg(item.c, maxAbsC);
+    var strokeC = item.c >= 0 ? '#177A4E' : '#9B2A20';
+    g.appendChild(se('rect', { x: rx, y: ry, width: rw, height: rh, rx: 3,
+      fill: fillC, stroke: strokeC, 'stroke-opacity': 0.55, 'stroke-width': 1 }));
+    treemapTileLabel(g, rx, ry, rw, rh, item.label,
+      (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%', fillC, fgC);
+    var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(4) + '%';
+    bindTip(g, '<b style="font-size:13px">' + item.label + '</b>' +
+      '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
+      dispSec(item.sect) + '<br>Weight: ' + item.w.toFixed(3) + '%<br>Contribution: ' + tipC +
+      '<br><em style="color:#898781">Click to see securities</em></span>');
+    g.setAttribute('onclick', 'ndxShowSecuritiesModal(\'' + esc(item.key) + '\')');
+    svg.appendChild(g);
+  });
+  box.appendChild(svg);
+}
+
+// ── Nested IG treemap (sectors as containers, IGs as inner tiles) ─────────
+function renderNestedIGTreemap(res, box, VW, VH) {
+  var secItems = [];
+  sectors.forEach(function(s) {
+    if (s === CASH) return;
+    var w = (_snapN[s]||{w:0}).w;
+    if (w < 0.001) return;
+    secItems.push({ key: s, label: dispSec(s), w: w, c: res.bySec[s]||0 });
+  });
+  secItems.sort(function(a, b) { return b.w - a.w; });
+  var totalW = secItems.reduce(function(acc, x) { return acc + x.w; }, 0) || 100;
+  secItems.forEach(function(it) { it.area = (it.w / totalW) * VW * VH; });
+  squarify(secItems, 0, 0, VW, VH);
+
+  var maxAbsC = 0;
+  sectors.forEach(function(s) {
+    (igBySec[s]||[]).forEach(function(g) {
+      if (g !== CASH) maxAbsC = Math.max(maxAbsC, Math.abs(res.byIG[g]||0));
+    });
+  });
+  maxAbsC = maxAbsC || 1;
+
+  var HPAD = 18; // header reserved for sector name
+  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, role: 'img',
+    style: 'width:100%;height:auto;display:block;overflow:visible' });
+
+  secItems.forEach(function(sec) {
+    if (!sec.rw || !sec.rh) return;
+    var sx = sec.rx, sy = sec.ry, sw = sec.rw, sh = sec.rh;
+    var innerX = sx + 3, innerY = sy + HPAD, innerW = sw - 6, innerH = sh - HPAD - 3;
+
+    // Sector container border
+    var secStroke = sec.c >= 0 ? '#177A4E' : '#9B2A20';
+    svg.appendChild(se('rect', { x: sx, y: sy, width: sw, height: sh, rx: 5,
+      fill: 'none', stroke: secStroke, 'stroke-opacity': 0.4, 'stroke-width': 2.5 }));
+
+    // Sector name header
+    var hdr = se('text', { x: sx + 7, y: sy + HPAD - 4, 'font-family': 'Inter,sans-serif',
+      'font-size': Math.min(12, Math.max(9, sw / 18)), 'font-weight': '700', fill: '#1E2D3D' });
+    hdr.textContent = trunc(sec.label, Math.floor(sw / 7));
+    svg.appendChild(hdr);
+
+    if (innerW < 10 || innerH < 10) return;
+
+    // IG tiles within this sector
+    var igItems = (igBySec[sec.key]||[]).filter(function(g) { return g !== CASH; }).map(function(g) {
+      return { key: g, label: g, w: (_snapN['ig:'+g]||{w:0}).w, c: res.byIG[g]||0, sect: sec.key };
+    }).filter(function(it) { return it.w > 0.001; });
+    if (!igItems.length) return;
+    var igTotalW = igItems.reduce(function(acc, x) { return acc + x.w; }, 0) || 1;
+    igItems.forEach(function(it) { it.area = (it.w / igTotalW) * innerW * innerH; });
+    squarify(igItems, innerX, innerY, innerW, innerH);
+
+    igItems.forEach(function(item) {
+      if (!item.rw || !item.rh) return;
+      var rx = item.rx + 1, ry = item.ry + 1,
+          rw = Math.max(0, item.rw - 2), rh = Math.max(0, item.rh - 2);
+      var g = se('g', { class: 'mk', style: 'cursor:pointer' });
+      var fillC  = contribColor(item.c, maxAbsC);
+      var fgC    = contribFg(item.c, maxAbsC);
+      var strokeC = item.c >= 0 ? '#177A4E' : '#9B2A20';
+      g.appendChild(se('rect', { x: rx, y: ry, width: rw, height: rh, rx: 2,
+        fill: fillC, stroke: strokeC, 'stroke-opacity': 0.5, 'stroke-width': 0.8 }));
+      treemapTileLabel(g, rx, ry, rw, rh, item.label,
+        (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%', fillC, fgC);
+      var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(4) + '%';
+      bindTip(g, '<b style="font-size:13px">' + item.label + '</b>' +
+        '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
+        dispSec(item.sect) + '<br>Weight: ' + item.w.toFixed(3) + '%<br>Contribution: ' + tipC +
+        '<br><em style="color:#898781">Click to see securities</em></span>');
+      g.setAttribute('onclick', 'ndxShowSecuritiesModal(\'' + esc(item.key) + '\')');
+      svg.appendChild(g);
+    });
+  });
+  box.appendChild(svg);
+}
+
+// ── Treemap dispatcher ────────────────────────────────────────────────────
+function renderTreemap(res) {
+  var box = document.getElementById('ndx-treemap-box');
+  if (!box) return;
+  var VW = 900, VH = 370;
+
+  var expandBtn = '<button onclick="ndxTreemapExpand()" style="position:absolute;top:4px;right:4px;' +
+    'font-size:11px;font-weight:600;background:rgba(255,255,255,.8);border:1px solid var(--bdr);' +
+    'border-radius:6px;padding:3px 9px;cursor:pointer;color:var(--navy);z-index:2">⤢ Expand</button>';
+
+  var inner = document.createElement('div');
+  inner.style.cssText = 'position:relative;padding:4px 0';
+  inner.innerHTML = expandBtn;
+  box.innerHTML = '';
+  box.appendChild(inner);
+
+  if (attrTab === 'ig') {
+    renderIGFlatTreemap(res, inner, VW, VH);
+  } else if (treemapSubMode === 'nested') {
+    renderNestedIGTreemap(res, inner, VW, VH);
+  } else {
+    renderSectorFlatTreemap(res, inner, VW, VH);
+  }
 
   var legend = document.createElement('div');
   legend.style.cssText = 'display:flex;gap:16px;font-size:11px;color:var(--mu);margin-top:5px;flex-wrap:wrap';
+  var clickNote = (attrTab === 'ig' || treemapSubMode === 'nested')
+    ? 'Click tile for securities' : 'Click sector for industry groups';
   legend.innerHTML =
     '<span>Area = index weight at close</span>' +
     '<span style="color:#177A4E;font-weight:600">█</span> Positive contribution &nbsp;' +
-    '<span style="color:#9B2A20;font-weight:600">█</span> Negative &nbsp;' +
-    'Intensity ∝ √|contribution| &nbsp;&middot;&nbsp; Click sector for industry group detail';
-  box.innerHTML = '';
-  box.appendChild(svg);
+    '<span style="color:#9B2A20;font-weight:600">█</span> Negative &nbsp;&middot;&nbsp; ' + clickNote;
   box.appendChild(legend);
 }
 
@@ -572,6 +741,85 @@ window.ndxCloseIGModal = function() {
   if (m) m.style.display = 'none';
 };
 
+// ── Securities popup — click IG in nested/flat-IG treemap ─────────────────
+window.ndxShowSecuritiesModal = function(ig) {
+  var secs = _securities.filter(function(d) { return d.grp === ig; });
+  if (!secs.length) return;
+  var m = getOrCreateModal();
+  document.getElementById('ndx-ig-modal-title').textContent = ig + '  —  Securities';
+  var body = document.getElementById('ndx-ig-modal-body');
+  body.innerHTML = '';
+
+  secs.sort(function(a, b) { return b.contrib - a.contrib; });
+  var thtml = '<table style="width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums">' +
+    '<thead><tr>' +
+    '<th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--bdr,#ddd);color:var(--mu)">Ticker</th>' +
+    '<th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--bdr,#ddd);color:var(--mu)">Company</th>' +
+    '<th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--bdr,#ddd);color:var(--mu)">Return %</th>' +
+    '<th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--bdr,#ddd);color:var(--mu)">Close Wt %</th>' +
+    '<th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--bdr,#ddd);color:var(--mu)">Contrib %</th>' +
+    '</tr></thead><tbody>';
+  secs.forEach(function(d) {
+    var rc = d.ret >= 0 ? '#177A4E' : '#9B2A20';
+    var cc = d.contrib >= 0 ? '#177A4E' : '#9B2A20';
+    thtml += '<tr>' +
+      '<td style="padding:4px 8px;border-bottom:1px solid #f0f0f0;font-weight:700">' + d.name + '</td>' +
+      '<td style="padding:4px 8px;border-bottom:1px solid #f0f0f0;color:#52514e">' + (d.co && d.co !== d.name ? d.co : '—') + '</td>' +
+      '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0;color:' + rc + ';font-weight:600">' + (d.ret >= 0 ? '+' : '') + d.ret.toFixed(2) + '%</td>' +
+      '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0">' + d.w1.toFixed(3) + '%</td>' +
+      '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0;color:' + cc + ';font-weight:600">' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(4) + '%</td>' +
+      '</tr>';
+  });
+  thtml += '</tbody></table>';
+  body.insertAdjacentHTML('beforeend', thtml);
+  m.style.display = 'flex';
+};
+
+// ── Treemap fullscreen expand ─────────────────────────────────────────────
+window.ndxTreemapExpand = function() {
+  var isBase = exclSecs.size === 0 && exclIGs.size === 0;
+  var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
+  var m = document.getElementById('ndx-treemap-full-modal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'ndx-treemap-full-modal';
+    m.style.cssText = 'display:none;position:fixed;inset:0;z-index:2000;background:rgba(15,25,38,.6);' +
+      'align-items:center;justify-content:center;backdrop-filter:blur(2px)';
+    m.innerHTML = '<div style="background:var(--w,#fff);border-radius:14px;padding:22px 22px 18px;' +
+      'width:94vw;max-width:1200px;max-height:90vh;overflow-y:auto;position:relative;' +
+      'box-shadow:0 16px 48px rgba(0,0,0,.22)">' +
+      '<button onclick="document.getElementById(\'ndx-treemap-full-modal\').style.display=\'none\'" ' +
+      'style="position:absolute;top:12px;right:14px;font-size:22px;line-height:1;background:none;' +
+      'border:none;cursor:pointer;color:var(--mu,#777);padding:0 4px">&times;</button>' +
+      '<div id="ndx-treemap-full-inner" style="padding-top:8px"></div></div>';
+    m.addEventListener('click', function(e) { if (e.target === m) m.style.display = 'none'; });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') { var fm = document.getElementById('ndx-treemap-full-modal'); if (fm) fm.style.display = 'none'; }
+    });
+    document.body.appendChild(m);
+  }
+  var inner = document.getElementById('ndx-treemap-full-inner');
+  inner.innerHTML = '';
+  if (attrTab === 'ig') renderIGFlatTreemap(res, inner, 1100, 520);
+  else if (treemapSubMode === 'nested') renderNestedIGTreemap(res, inner, 1100, 520);
+  else renderSectorFlatTreemap(res, inner, 1100, 520);
+  m.style.display = 'flex';
+};
+
+window.ndxSetTreemapSubMode = function(mode) {
+  treemapSubMode = mode;
+  document.querySelectorAll('.ndx-tmsub-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.sub === mode);
+  });
+  var isBase = exclSecs.size === 0 && exclIGs.size === 0;
+  renderTreemap(isBase ? baseR : computeCore(exclSecs, exclIGs));
+};
+
+window.ndxSetBeeswarmSector = function(sec) {
+  _beeswarmSector = sec;
+  renderBeeswarm(_securities, _beeswarmFilter);
+};
+
 // ── Attribution table ─────────────────────────────────────────────────────
 function computeDisplayWeights(exS, exG) {
   var lastHoc = _activeHocs[_activeHocs.length - 1];
@@ -595,6 +843,25 @@ function dot(on, sz) {
   return on
     ? '<span style="display:inline-block;width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;background:var(--navy);border:2px solid var(--navy);vertical-align:middle"></span>'
     : '<span style="display:inline-block;width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;background:transparent;border:2px solid #9AAAB8;vertical-align:middle"></span>';
+}
+function selDot(sec, sz) {
+  sz = sz || 16;
+  var r = sz / 2 - 1.5;
+  var cx = sz / 2, cy = sz / 2;
+  var fullyExcl = exclSecs.has(sec);
+  var igs = igBySec[sec] || [];
+  var someExcl = !fullyExcl && igs.some(function(g) { return exclIGs.has(g); });
+  var pfx = '<svg width="' + sz + '" height="' + sz + '" viewBox="0 0 ' + sz + ' ' + sz + '" style="vertical-align:middle;flex-shrink:0;overflow:visible">';
+  if (fullyExcl) {
+    return pfx + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#9AAAB8" stroke-width="2"/></svg>';
+  } else if (someExcl) {
+    return pfx +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="var(--navy)" stroke-width="1.5"/>' +
+      '<path d="M ' + cx + ' ' + (cy - r) + ' A ' + r + ' ' + r + ' 0 0 0 ' + cx + ' ' + (cy + r) + ' Z" fill="var(--navy)"/>' +
+      '</svg>';
+  } else {
+    return pfx + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="var(--navy)" stroke="var(--navy)" stroke-width="1.5"/></svg>';
+  }
 }
 function renderAttrTable(res) {
   var tbody = document.getElementById('ndx-attr-tbody');
@@ -636,28 +903,39 @@ function renderAttrTable(res) {
       if (!igs.length) return;
       var secExcl = exclSecs.has(s);
       var sn = _snapN[s]||{count:0,w:0}, so = _snap0[s]||{count:0,w:0};
-      html += '<tr style="background:var(--surface);' + (secExcl?'opacity:.42;':'') + 'cursor:pointer" onclick="ndxToggleSec(\'' + esc(s) + '\')">' +
-        '<td style="width:28px;text-align:center;padding:6px 4px">' + dot(!secExcl, 16) + '</td>' +
-        '<td style="font-weight:700;color:var(--navy)">' + dispSec(s) + '</td>' +
+      var expanded = _expandedSecs.has(s);
+      var arrow = '<span style="font-size:10px;margin-left:6px;color:var(--mu)">' + (expanded ? '▲' : '▼') + '</span>';
+      html += '<tr style="background:var(--surface);' + (secExcl?'opacity:.42;':'') + 'cursor:pointer" ' +
+        'onclick="event.stopPropagation();ndxToggleSec(\'' + esc(s) + '\')">' +
+        '<td style="width:28px;text-align:center;padding:6px 4px">' + selDot(s, 16) + '</td>' +
+        '<td style="font-weight:700;color:var(--navy)">' +
+          '<span style="display:flex;align-items:center;justify-content:space-between">' +
+            '<span>' + dispSec(s) + '</span>' +
+            '<span onclick="event.stopPropagation();ndxToggleSecExpand(\'' + esc(s) + '\')" ' +
+              'style="padding:2px 8px;cursor:pointer;user-select:none;color:var(--mu)">' + arrow + '</span>' +
+          '</span>' +
+        '</td>' +
         '<td class="num" style="color:var(--mu);font-size:11px">' + so.count + ' → ' + sn.count + '</td>' +
         '<td class="num" style="color:var(--mu);font-size:11px">' + fmtW(dw.sec[s], secExcl) + '</td>' +
         '<td class="num" style="font-weight:700">' + fmtC(res.bySec[s]||0) + '</td></tr>';
-      igs.forEach(function(g) {
-        var igExcl = exclIGs.has(g);
-        var anyExcl = secExcl || igExcl;
-        var gn = _snapN['ig:'+g]||{count:0,w:0}, go = _snap0['ig:'+g]||{count:0,w:0};
-        html += '<tr style="' + (anyExcl?'opacity:.38;':'') + 'cursor:pointer" onclick="event.stopPropagation();ndxToggleIG(\'' + esc(g) + '\')">' +
-          '<td style="width:28px;text-align:center;padding:5px 4px 5px 10px">' + dot(!anyExcl, 13) + '</td>' +
-          '<td style="padding-left:20px;font-size:12px">' + dispIG(g) + '</td>' +
-          '<td class="num" style="font-size:11.5px">' + go.count + ' → ' + gn.count + '</td>' +
-          '<td class="num" style="font-size:11.5px">' + fmtW(dw.ig[g], anyExcl) + '</td>' +
-          '<td class="num">' + fmtC(res.byIG[g]||0) + '</td></tr>';
-      });
+      if (expanded) {
+        igs.forEach(function(g) {
+          var igExcl = exclIGs.has(g);
+          var anyExcl = secExcl || igExcl;
+          var gn = _snapN['ig:'+g]||{count:0,w:0}, go = _snap0['ig:'+g]||{count:0,w:0};
+          html += '<tr style="' + (anyExcl?'opacity:.38;':'') + 'cursor:pointer" onclick="event.stopPropagation();ndxToggleIG(\'' + esc(g) + '\')">' +
+            '<td style="width:28px;text-align:center;padding:5px 4px 5px 10px">' + dot(!anyExcl, 13) + '</td>' +
+            '<td style="padding-left:20px;font-size:12px">' + dispIG(g) + '</td>' +
+            '<td class="num" style="font-size:11.5px">' + go.count + ' → ' + gn.count + '</td>' +
+            '<td class="num" style="font-size:11.5px">' + fmtW(dw.ig[g], anyExcl) + '</td>' +
+            '<td class="num">' + fmtC(res.byIG[g]||0) + '</td></tr>';
+        });
+      }
     });
   }
   html += '<tr style="border-top:2px solid var(--navy);font-weight:700">' +
     '<td></td><td colspan="3" style="color:var(--navy)">Total</td>' +
-    '<td class="num" style="color:' + colr(res.ytd) + ';font-weight:700">' + fmtYTD(res.ytd) + '</td></tr>';
+    '<td class="num" style="color:' + colr(baseR.ytd) + ';font-weight:700">' + fmtYTD(baseR.ytd) + '</td></tr>';
   tbody.innerHTML = html;
   updateArrows();
 }
@@ -725,7 +1003,7 @@ function renderDotPlotIG(res) {
     var circle = se('circle', { cx: X(r.c), cy: y, r: 5, fill: col, stroke: '#fff', 'stroke-width': 2 });
     g.appendChild(circle);
     var vt = se('text', { x: VW - P.r + 55, y: y + 4, 'text-anchor': 'end', 'font-family': 'Inter,sans-serif', 'font-size': 11, fill: col, 'font-weight': '600', 'font-variant-numeric': 'tabular-nums' });
-    vt.textContent = (r.c >= 0 ? '+' : '') + r.c.toFixed(4) + '%'; g.appendChild(vt);
+    vt.textContent = (r.c >= 0 ? '+' : '') + r.c.toFixed(2) + '%'; g.appendChild(vt);
     bindTip(g, '<b style="font-size:13px">' + r.name + '</b>' +
       '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
       r.sector + '<br>Contribution: ' + (r.c >= 0 ? '+' : '') + r.c.toFixed(4) + '%' +
@@ -795,8 +1073,7 @@ function renderHeatmap() {
   legend.innerHTML =
     '<span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:' + NEG_RAMP[3] + ';margin-right:5px;vertical-align:-1px"></span>Negative</span>' +
     '<span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#EDECEA;margin-right:5px;vertical-align:-1px"></span>Zero</span>' +
-    '<span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:' + POS_RAMP[3] + ';margin-right:5px;vertical-align:-1px"></span>Positive</span>' +
-    '<span style="color:var(--mu)">Intensity ∝ √|contribution|</span>';
+    '<span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:' + POS_RAMP[3] + ';margin-right:5px;vertical-align:-1px"></span>Positive</span>';
   box.innerHTML = ''; box.appendChild(svg); box.appendChild(legend);
 }
 
@@ -832,9 +1109,12 @@ function renderDumbbell() {
     g.appendChild(se('circle', { cx: X(r.w0), cy: y, r: 5.5, fill: '#fff', stroke: col, 'stroke-width': 2 }));
     g.appendChild(se('circle', { cx: X(r.w1), cy: y, r: 5.5, fill: col, stroke: '#fff', 'stroke-width': 2 }));
     var diff = r.w1 - r.w0;
-    var vt = se('text', { x: VW - P.r + 16, y: y + 4, 'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#2B3B4E', 'font-variant-numeric': 'tabular-nums' });
-    vt.textContent = r.w0.toFixed(1) + ' → ' + r.w1.toFixed(1) + '   ' + (diff >= 0 ? '+' : '') + diff.toFixed(2);
-    g.appendChild(vt);
+    var vt1 = se('text', { x: VW - P.r + 12, y: y + 4, 'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#2B3B4E', 'font-variant-numeric': 'tabular-nums' });
+    vt1.textContent = r.w0.toFixed(1) + ' → ' + r.w1.toFixed(1) + '%';
+    g.appendChild(vt1);
+    var vt2 = se('text', { x: VW - 6, y: y + 4, 'text-anchor': 'end', 'font-family': 'Inter,sans-serif', 'font-size': 11, fill: diff >= 0 ? '#177A4E' : '#9B2A20', 'font-weight': '600', 'font-variant-numeric': 'tabular-nums' });
+    vt2.textContent = (diff >= 0 ? '+' : '') + diff.toFixed(2) + 'pp';
+    g.appendChild(vt2);
     bindTip(g, '<b style="font-size:13px">' + r.name + '</b>' +
       '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
       'Open weight: ' + r.w0.toFixed(3) + '%' +
@@ -863,10 +1143,9 @@ function renderScatter(securities) {
 
   var xs = dots.map(function(d) { return d.ret; });
   var ys = dots.map(function(d) { return d.w1; });
-  var xLo = Math.min.apply(null, xs), xHi = Math.max.apply(null, xs);
-  var yHi = Math.max.apply(null, ys) * 1.06;
-  var xPad = (xHi - xLo) * 0.04;
-  xLo -= xPad; xHi += xPad;
+  var xLo = _scatterXLo != null ? _scatterXLo : Math.min.apply(null, xs) - (Math.max.apply(null, xs) - Math.min.apply(null, xs)) * 0.05;
+  var xHi = _scatterXHi != null ? _scatterXHi : Math.max.apply(null, xs) + (Math.max.apply(null, xs) - Math.min.apply(null, xs)) * 0.05;
+  var yHi = _scatterYHi != null ? _scatterYHi : Math.max.apply(null, ys) * 1.06;
 
   var cw = VW - P.l - P.r, ch = VH - P.t - P.b;
   function X(v) { return P.l + (v - xLo) / (xHi - xLo) * cw; }
@@ -987,7 +1266,9 @@ function renderBeeswarm(securities, threshold) {
 
   var filtered = securities.filter(function(d) { return Math.abs(d.contrib) > threshold && d.sect !== CASH; });
 
-  var secList = sectors.filter(function(s) { return s !== CASH; });
+  var secList = _beeswarmSector
+    ? [_beeswarmSector]
+    : sectors.filter(function(s) { return s !== CASH; });
   var dotR = 4.5;
   var laneH = 60;
   var P = { t: 36, b: 36, l: 200, r: 20 };
@@ -1057,6 +1338,361 @@ function renderBeeswarm(securities, threshold) {
   box.innerHTML = ''; box.appendChild(svg);
 }
 
+// ── Pareto / Top Contributors ────────────────────────────────────────────
+function renderPareto(securities) {
+  var box = document.getElementById('ndx-pareto-box');
+  if (!box || !securities || !securities.length) return;
+
+  var nonCash = securities.filter(function(d) { return d.sect !== CASH; });
+  var byAbs = nonCash.slice().sort(function(a, b) { return Math.abs(b.contrib) - Math.abs(a.contrib); });
+
+  var showAll = _paretoN === 0;
+  var topN = showAll ? byAbs : byAbs.slice(0, _paretoN);
+  var topSum = topN.reduce(function(s, d) { return s + d.contrib; }, 0);
+  var totalYtd = baseR ? baseR.ytd : 0;
+  var pctExplained = totalYtd !== 0 ? Math.abs(topSum / totalYtd * 100).toFixed(1) : '--';
+
+  // Display sorted: positive desc first, negative asc after
+  var pos = topN.filter(function(d) { return d.contrib >= 0; }).sort(function(a, b) { return b.contrib - a.contrib; });
+  var neg = topN.filter(function(d) { return d.contrib < 0; }).sort(function(a, b) { return a.contrib - b.contrib; });
+  var rows = pos.concat(neg);
+  var maxAbs = Math.max.apply(null, topN.map(function(d) { return Math.abs(d.contrib); })) || 1;
+
+  var totalStr = totalYtd !== 0 ? (totalYtd >= 0 ? '+' : '') + totalYtd.toFixed(2) + '%' : '--';
+  var topSumStr = (topSum >= 0 ? '+' : '') + topSum.toFixed(2) + '%';
+  var nlbl = showAll ? ('All ' + topN.length) : ('Top ' + _paretoN);
+
+  var html = '<div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap">' +
+    [5, 10, 20, 0].map(function(nv) {
+      var lbl = nv === 0 ? 'All' : nv;
+      var act = _paretoN === nv;
+      return '<button class="ndx-pareto-n-btn ndx-tab-btn' + (act ? ' active' : '') + '" data-n="' + nv + '" onclick="ndxSetParetoN(' + nv + ')">' + lbl + '</button>';
+    }).join('') +
+    '<span style="margin-left:auto;font-size:12px;color:var(--mu)">' +
+      nlbl + ' names: <b style="color:' + colr(topSum) + '">' + topSumStr + '</b>' +
+      ' &middot; <b style="color:var(--navy)">' + pctExplained + '%</b> of <b style="color:' + colr(totalYtd) + '">' + totalStr + '</b> YTD' +
+    '</span>' +
+  '</div>' +
+  '<div style="display:flex;flex-direction:column;gap:3px">';
+
+  rows.forEach(function(d) {
+    var BAR_MAX = 300;
+    var barW = Math.round(Math.abs(d.contrib) / maxAbs * BAR_MAX);
+    var col = d.contrib >= 0 ? '#177A4E' : '#9B2A20';
+    var val = (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(3) + '%';
+    html +=
+      '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:.5px solid #F0F4F8">' +
+        '<span style="min-width:52px;font-size:11.5px;font-weight:700;color:var(--navy);text-align:right;font-variant-numeric:tabular-nums">' + d.name + '</span>' +
+        '<div style="position:relative;width:' + BAR_MAX + 'px;height:16px;background:var(--surface);border-radius:3px;flex-shrink:0">' +
+          '<div style="position:absolute;top:2px;bottom:2px;left:0;width:' + barW + 'px;background:' + col + ';opacity:.7;border-radius:2px"></div>' +
+        '</div>' +
+        '<span style="min-width:62px;font-size:11.5px;color:' + col + ';font-weight:600;font-variant-numeric:tabular-nums">' + val + '</span>' +
+        '<span style="font-size:11px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px">' + trunc(d.grp, 34) + '</span>' +
+      '</div>';
+  });
+
+  html += '</div>';
+  box.innerHTML = html;
+}
+
+// ── PROPUESTA helpers ─────────────────────────────────────────────────────
+var PROP_BADGE = '<span style="font-size:9px;background:rgba(200,140,0,.12);color:#8A5A00;' +
+  'border:1px solid rgba(200,140,0,.4);border-radius:4px;padding:2px 7px;font-weight:700;' +
+  'letter-spacing:.06em;text-transform:uppercase;margin-left:8px">PROPUESTA</span>';
+
+function propTabBar(tabs, active, handler) {
+  return '<div style="display:flex;gap:4px;margin-bottom:12px">' +
+    tabs.map(function(t) {
+      return '<button class="ndx-tab-btn' + (t.k === active ? ' active' : '') + '" ' +
+        'onclick="' + handler + '(\'' + t.k + '\')">' + t.lbl + '</button>';
+    }).join('') +
+  '</div>';
+}
+
+// ── Rebalance Impact — Proposal A: per-HOC events table ──────────────────
+function renderRebalA() {
+  var box = document.getElementById('ndx-rebal-box');
+  if (!box || !_activeHocs.length) return;
+  var rows = _activeHocs.map(function(hoc, i) {
+    var curr = {}; hoc.sec.forEach(function(s) { curr[s.t||s.co] = s.w||0; });
+    var added = [], removed = [], displaced = 0;
+    if (i > 0) {
+      var prev = {}; _activeHocs[i-1].sec.forEach(function(s) { prev[s.t||s.co] = s.w||0; });
+      Object.keys(curr).forEach(function(k) { if (!(k in prev)) added.push(k); });
+      Object.keys(prev).forEach(function(k) { if (!(k in curr)) removed.push(k); });
+      var allK = new Set(Object.keys(curr).concat(Object.keys(prev)));
+      allK.forEach(function(k) { displaced += Math.abs((curr[k]||0) - (prev[k]||0)); });
+      displaced /= 2;
+    }
+    var period = hoc.eff + (hoc.close ? ' → ' + hoc.close : ' (open)');
+    return '<tr>' +
+      '<td style="font-weight:700;color:var(--navy);text-align:center">' + hoc.n + '</td>' +
+      '<td style="font-size:11px">' + period + '</td>' +
+      '<td class="num" style="color:var(--pos);font-weight:600">' + (added.length||'—') + '</td>' +
+      '<td class="num" style="color:var(--neg);font-weight:600">' + (removed.length||'—') + '</td>' +
+      '<td class="num">' + hoc.sec.length + '</td>' +
+      '<td class="num" style="font-weight:600">' + (displaced > 0 ? displaced.toFixed(1) + '%' : '—') + '</td>' +
+    '</tr>';
+  }).join('');
+  box.innerHTML = '<div class="twrap"><table class="rt">' +
+    '<thead><tr><th style="text-align:center">HOC</th><th>Period</th>' +
+    '<th class="num" style="color:var(--pos)">Added</th>' +
+    '<th class="num" style="color:var(--neg)">Removed</th>' +
+    '<th class="num">Count</th><th class="num">Weight Displaced</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table></div>';
+}
+
+// ── Rebalance Impact — Proposal B: buy-and-hold counterfactual ───────────
+function renderRebalB() {
+  var box = document.getElementById('ndx-rebal-box');
+  if (!box || !_activeHocs.length || !baseR) return;
+  var firstHoc = _activeHocs[0];
+  var initW = {}, compR = {};
+  firstHoc.sec.forEach(function(s) {
+    var key = s.t||s.co; initW[key] = (s.w||0)/100; compR[key] = 1;
+  });
+  _activeHocs.forEach(function(hoc) {
+    hoc.sec.forEach(function(s) {
+      var key = s.t||s.co;
+      if (compR[key] !== undefined) compR[key] *= (1 + s.r/100);
+    });
+  });
+  var bhRet = 0;
+  Object.keys(initW).forEach(function(key) { bhRet += initW[key] * (compR[key] - 1); });
+  bhRet *= 100;
+  var real = baseR.ytd;
+  var diff = real - bhRet;
+
+  var maxAbs = Math.max(Math.abs(real), Math.abs(bhRet)) || 1;
+  function barW(v) { return Math.round(Math.abs(v) / maxAbs * 280); }
+  function bar(v, lbl) {
+    var col = v >= 0 ? '#177A4E' : '#9B2A20';
+    var str = (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:.5px solid #F0F4F8">' +
+      '<span style="min-width:160px;font-size:12px;color:var(--mu)">' + lbl + '</span>' +
+      '<div style="position:relative;width:280px;height:22px;background:var(--surface);border-radius:4px">' +
+        '<div style="position:absolute;top:3px;bottom:3px;left:0;width:' + barW(v) + 'px;background:' + col + ';opacity:.75;border-radius:3px"></div>' +
+      '</div>' +
+      '<b style="font-size:14px;color:' + col + ';min-width:72px;font-variant-numeric:tabular-nums">' + str + '</b>' +
+    '</div>';
+  }
+  var diffCol = diff >= 0 ? 'var(--pos)' : 'var(--neg)';
+  box.innerHTML =
+    '<p style="font-size:12px;color:var(--mu);margin:0 0 14px">Si no hubiera habido rebalanceos, ¿cuánto habría rendido el portafolio inicial del período?</p>' +
+    bar(real, 'NDX real (con rebalanceos)') +
+    bar(bhRet, 'Buy-and-hold sin rebalancear') +
+    '<div style="padding:12px 0;font-size:13px">' +
+      'Impacto del rebalanceo: <b style="color:' + diffCol + '">' + (diff>=0?'+':'') + diff.toFixed(2) + '% ' + (diff>=0?'tailwind':'drag') + '</b>' +
+    '</div>';
+}
+
+// ── Rebalance Impact — Proposal C: Herfindahl concentration line ─────────
+function renderRebalC() {
+  var box = document.getElementById('ndx-rebal-box');
+  if (!box || !_activeHocs.length) return;
+  var pts = _activeHocs.map(function(hoc) {
+    var total = hoc.sec.reduce(function(s, d) { return s + Math.max(d.w||0, 0); }, 0) || 100;
+    var hhi = hoc.sec.reduce(function(s, d) { var w = (d.w||0)/total; return s + w*w; }, 0) * 100;
+    return { n: hoc.n, date: hoc.close||hoc.eff, hhi: hhi, count: hoc.sec.length };
+  });
+  var VW = 860, VH = 200, P = {t:24, r:60, b:40, l:50};
+  var cw = VW - P.l - P.r, ch = VH - P.t - P.b;
+  var hhiMin = Math.min.apply(null, pts.map(function(p){return p.hhi;}));
+  var hhiMax = Math.max.apply(null, pts.map(function(p){return p.hhi;}));
+  var hhiRange = (hhiMax - hhiMin) || 1;
+  function X(i) { return P.l + (pts.length < 2 ? cw/2 : i / (pts.length-1) * cw); }
+  function Y(v) { return P.t + ch - (v - hhiMin) / hhiRange * ch; }
+  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
+  // Grid lines
+  for (var g = 0; g <= 4; g++) {
+    var yv = hhiMin + g/4 * hhiRange;
+    var yp = Y(yv);
+    svg.appendChild(se('line', { x1: P.l, x2: VW-P.r, y1: yp, y2: yp, stroke:'#EAEDEF', 'stroke-width':1 }));
+    var yt = se('text', { x: P.l-6, y: yp+4, 'text-anchor':'end', 'font-family':'Inter,sans-serif', 'font-size':10, fill:'#8A93A0' });
+    yt.textContent = yv.toFixed(2); svg.appendChild(yt);
+  }
+  // Line path
+  var pathD = pts.map(function(p, i) { return (i===0?'M':'L') + X(i).toFixed(1) + ' ' + Y(p.hhi).toFixed(1); }).join(' ');
+  svg.appendChild(se('path', { d: pathD, fill:'none', stroke:'var(--navy)', 'stroke-width':2 }));
+  // Dots
+  pts.forEach(function(p, i) {
+    var cx = X(i), cy = Y(p.hhi);
+    var dot = se('circle', { cx: cx, cy: cy, r: 4, fill:'var(--navy)', stroke:'#fff', 'stroke-width':1.5 });
+    svg.appendChild(dot);
+    bindTip(dot, 'HOC ' + p.n + ' · ' + p.date + '<br>HHI = ' + p.hhi.toFixed(3) + ' · ' + p.count + ' constituyentes');
+  });
+  // X labels (abbreviated dates)
+  pts.forEach(function(p, i) {
+    if (i % Math.ceil(pts.length/6) !== 0 && i !== pts.length-1) return;
+    var xt = se('text', { x: X(i), y: VH-4, 'text-anchor':'middle', 'font-family':'Inter,sans-serif', 'font-size':9, fill:'#8A93A0' });
+    xt.textContent = p.date.slice(2); svg.appendChild(xt);
+  });
+  var note = se('text', { x: VW-P.r+4, y: P.t+12, 'font-family':'Inter,sans-serif', 'font-size':10, fill:'#8A93A0' });
+  note.textContent = 'HHI'; svg.appendChild(note);
+  box.innerHTML = '';
+  var intro = document.createElement('p');
+  intro.style.cssText = 'font-size:12px;color:var(--mu);margin:0 0 10px';
+  intro.textContent = 'Herfindahl-Hirschman Index (suma de pesos²) — mayor = más concentrado en pocos nombres.';
+  box.appendChild(intro);
+  box.appendChild(svg);
+}
+
+function renderRebalSection() {
+  var box = document.getElementById('ndx-rebal-box');
+  if (!box) return;
+  if (_rebalTab === 'A') renderRebalA();
+  else if (_rebalTab === 'B') renderRebalB();
+  else renderRebalC();
+}
+
+// ── Winners vs Losers — Proposal A: sector matrix table ──────────────────
+function renderWLA() {
+  var box = document.getElementById('ndx-wl-box');
+  if (!box || !_securities.length) return;
+  var nonCash = _securities.filter(function(d) { return d.sect !== CASH; });
+  var secs = sectors.filter(function(s) { return s !== CASH; });
+  var rows = secs.map(function(sec) {
+    var arr = nonCash.filter(function(d) { return d.sect === sec; });
+    if (!arr.length) return null;
+    var contrib = arr.reduce(function(s,d) { return s+d.contrib; }, 0);
+    var avgRet  = arr.reduce(function(s,d) { return s+d.ret; }, 0) / arr.length;
+    var wn = arr.filter(function(d) { return d.contrib>0; }).length;
+    var ln = arr.filter(function(d) { return d.contrib<0; }).length;
+    var wChg = arr.reduce(function(s,d) { return s+(d.w1-d.w0); }, 0);
+    return { sec: sec, contrib: contrib, avgRet: avgRet, wn: wn, ln: ln, wChg: wChg, n: arr.length };
+  }).filter(Boolean);
+  rows.sort(function(a,b) { return b.contrib - a.contrib; });
+  var html = '<div class="twrap"><table class="rt">' +
+    '<thead><tr>' +
+    '<th>Sector</th><th class="num">Contribución</th><th class="num">Ret Promedio</th>' +
+    '<th class="num" style="color:var(--pos)">Winners</th><th class="num" style="color:var(--neg)">Losers</th>' +
+    '<th class="num">Δ Peso</th></tr></thead><tbody>';
+  rows.forEach(function(r) {
+    var cStr = (r.contrib>=0?'+':'')+r.contrib.toFixed(3)+'%';
+    var rStr = (r.avgRet>=0?'+':'')+r.avgRet.toFixed(1)+'%';
+    var wStr = (r.wChg>=0?'+':'')+r.wChg.toFixed(2)+'%';
+    html += '<tr>' +
+      '<td style="font-weight:600;font-size:12px">' + dispSec(r.sec) + '</td>' +
+      '<td class="num" style="color:' + colr(r.contrib) + ';font-weight:700">' + cStr + '</td>' +
+      '<td class="num" style="color:' + colr(r.avgRet) + '">' + rStr + '</td>' +
+      '<td class="num" style="color:var(--pos);font-weight:600">' + r.wn + '/' + r.n + '</td>' +
+      '<td class="num" style="color:var(--neg);font-weight:600">' + r.ln + '/' + r.n + '</td>' +
+      '<td class="num" style="color:' + colr(r.wChg) + '">' + wStr + '</td>' +
+    '</tr>';
+  });
+  box.innerHTML = html + '</tbody></table></div>';
+}
+
+// ── Winners vs Losers — Proposal B: return distribution histogram ─────────
+function renderWLB() {
+  var box = document.getElementById('ndx-wl-box');
+  if (!box || !_securities.length) return;
+  var nonCash = _securities.filter(function(d) { return d.sect !== CASH; });
+  var bins = [[-1e9,-20],[-20,-10],[-10,-5],[-5,0],[0,5],[5,10],[10,20],[20,1e9]];
+  var lbls = ['< -20%','-20 a -10%','-10 a -5%','-5 a 0%','0 a 5%','5 a 10%','10 a 20%','> 20%'];
+  var counts = bins.map(function() { return { n:0, contrib:0 }; });
+  nonCash.forEach(function(d) {
+    for (var i=0; i<bins.length; i++) {
+      if (d.ret >= bins[i][0] && d.ret < bins[i][1]) { counts[i].n++; counts[i].contrib += d.contrib; break; }
+    }
+  });
+  var maxN = Math.max.apply(null, counts.map(function(c){return c.n;})) || 1;
+  var VW = 860, VH = 220, P = {t:20,r:20,b:60,l:44};
+  var binW = (VW-P.l-P.r)/bins.length - 2;
+  var svg = se('svg', { viewBox:'0 0 '+VW+' '+VH, style:'width:100%;height:auto;display:block' });
+  counts.forEach(function(c, i) {
+    var barH = Math.round(c.n / maxN * (VH-P.t-P.b));
+    var x = P.l + i * ((VW-P.l-P.r)/bins.length) + 1;
+    var y = VH-P.b-barH;
+    var col = i < 4 ? '#9B2A20' : '#177A4E';
+    var rect = se('rect', { x:x, y:y, width:binW, height:barH, rx:3, fill:col, opacity:'.75' });
+    svg.appendChild(rect);
+    bindTip(rect, lbls[i] + '<br>' + c.n + ' constituyentes<br>' +
+      'Contribución total: ' + (c.contrib>=0?'+':'') + c.contrib.toFixed(3) + '%');
+    // Count label
+    if (c.n > 0) {
+      var nt = se('text', {x:x+binW/2, y:y-4, 'text-anchor':'middle', 'font-family':'Inter,sans-serif', 'font-size':11, fill:'#2B3B4E', 'font-weight':'600'});
+      nt.textContent = c.n; svg.appendChild(nt);
+    }
+    // X label
+    var xt = se('text', {x:x+binW/2, y:VH-P.b+14, 'text-anchor':'middle', 'font-family':'Inter,sans-serif', 'font-size':9.5, fill:'#8A93A0'});
+    xt.textContent = lbls[i]; svg.appendChild(xt);
+    // Rotate long labels
+    xt.setAttribute('transform', 'rotate(-35,' + (x+binW/2) + ',' + (VH-P.b+14) + ')');
+    xt.setAttribute('text-anchor', 'end');
+  });
+  // Y axis ticks
+  for (var g=0; g<=4; g++) {
+    var yv = Math.round(g/4 * maxN);
+    var yp = VH-P.b - Math.round(g/4*(VH-P.t-P.b));
+    var yt = se('text', {x:P.l-4, y:yp+4, 'text-anchor':'end', 'font-family':'Inter,sans-serif', 'font-size':10, fill:'#8A93A0'});
+    yt.textContent = yv; svg.appendChild(yt);
+  }
+  box.innerHTML = '';
+  box.appendChild(svg);
+  var leg = document.createElement('div');
+  leg.style.cssText = 'font-size:11px;color:var(--mu);margin-top:6px';
+  leg.textContent = 'Cada barra = número de constituyentes con retorno en ese rango. Hover para ver contribución total del grupo.';
+  box.appendChild(leg);
+}
+
+// ── Winners vs Losers — Proposal C: top / bottom per sector ──────────────
+function renderWLC() {
+  var box = document.getElementById('ndx-wl-box');
+  if (!box || !_securities.length) return;
+  var nonCash = _securities.filter(function(d) { return d.sect !== CASH; });
+  var secs = sectors.filter(function(s) { return s !== CASH; });
+  var maxAbsC = Math.max.apply(null, nonCash.map(function(d){return Math.abs(d.contrib);})) || 1;
+
+  function miniBars(pos, neg) {
+    var col = pos >= 0 ? '#177A4E' : '#9B2A20';
+    var nCol = neg <= 0 ? '#9B2A20' : '#177A4E';
+    var pW = Math.round(Math.abs(pos)/maxAbsC*80);
+    var nW = Math.round(Math.abs(neg)/maxAbsC*80);
+    return '<div style="display:flex;flex-direction:column;gap:2px">' +
+      '<div style="height:6px;width:'+pW+'px;background:'+col+';border-radius:2px;opacity:.8"></div>' +
+      '<div style="height:6px;width:'+nW+'px;background:'+nCol+';border-radius:2px;opacity:.8"></div>' +
+    '</div>';
+  }
+
+  var html = '<div class="twrap"><table class="rt">' +
+    '<thead><tr>' +
+    '<th>Sector</th>' +
+    '<th>Mejor nombre</th><th class="num">Contribución</th>' +
+    '<th>Peor nombre</th><th class="num">Contribución</th>' +
+    '</tr></thead><tbody>';
+  secs.forEach(function(sec) {
+    var arr = nonCash.filter(function(d){return d.sect===sec;});
+    if (!arr.length) return;
+    var sorted = arr.slice().sort(function(a,b){return b.contrib-a.contrib;});
+    var best = sorted[0], worst = sorted[sorted.length-1];
+    var bc = (best.contrib>=0?'+':'')+best.contrib.toFixed(3)+'%';
+    var wc = (worst.contrib>=0?'+':'')+worst.contrib.toFixed(3)+'%';
+    html += '<tr>' +
+      '<td style="font-weight:600;font-size:12px;color:var(--navy)">' + dispSec(sec) + '</td>' +
+      '<td style="font-size:12px">' +
+        '<b style="color:var(--navy)">' + best.name + '</b>' +
+        '<span style="font-size:10px;color:var(--mu);margin-left:4px">' + trunc(best.co||'',22) + '</span>' +
+      '</td>' +
+      '<td class="num" style="color:var(--pos);font-weight:700">' + bc + '</td>' +
+      '<td style="font-size:12px">' +
+        '<b style="color:var(--navy)">' + worst.name + '</b>' +
+        '<span style="font-size:10px;color:var(--mu);margin-left:4px">' + trunc(worst.co||'',22) + '</span>' +
+      '</td>' +
+      '<td class="num" style="color:var(--neg);font-weight:700">' + wc + '</td>' +
+    '</tr>';
+  });
+  box.innerHTML = html + '</tbody></table></div>';
+}
+
+function renderWLSection() {
+  var box = document.getElementById('ndx-wl-box');
+  if (!box) return;
+  if (_wlTab === 'A') renderWLA();
+  else if (_wlTab === 'B') renderWLB();
+  else renderWLC();
+}
+
 // ── Master refresh ────────────────────────────────────────────────────────
 function refresh() {
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
@@ -1064,9 +1700,9 @@ function refresh() {
   renderKPI(res);
   if (attrMode === 'chart') renderAttrChart(res); else renderTreemap(res);
   renderAttrTable(res);
-  renderHOC(res);
-  renderDotPlotIG(res);
   _securities = computeSecurities(exclSecs, exclIGs);
+  renderPareto(_securities);
+  renderWLSection();
   renderScatter(_securities);
   renderBeeswarm(_securities, _beeswarmFilter);
 }
@@ -1080,9 +1716,35 @@ function reloadSnapshot() {
   baseR = computeCore(new Set(), new Set());
   buildHierarchy(baseR);
   lockAxes(baseR);
+  // Rebuild beeswarm sector select for the new year
+  var beeSel = document.getElementById('ndx-bee-sec');
+  if (beeSel) {
+    beeSel.innerHTML = '<option value="">All</option>' +
+      sectors.filter(function(s) { return s !== CASH; }).map(function(s) {
+        return '<option value="' + esc(s) + '">' + dispSec(s) + '</option>';
+      }).join('');
+    beeSel.value = _beeswarmSector;
+  }
   _securities = computeSecurities(new Set(), new Set());
+  _secSnapshots = _activeHocs.map(function(_, i) {
+    return computeSecurities(new Set(), new Set(), _activeHocs.slice(0, i + 1));
+  });
+  _scatterHocIdx  = _activeHocs.length - 1;
+  _beeswarmHocIdx = _activeHocs.length - 1;
+
+  // Precompute fixed scatter axes across all snapshots
+  var allRets = [], allWts = [];
+  _secSnapshots.forEach(function(snap) {
+    snap.forEach(function(d) { if (d.w1 > 0 || d.w0 > 0) { allRets.push(d.ret); allWts.push(d.w1); } });
+  });
+  if (allRets.length) {
+    var rng = Math.max.apply(null, allRets) - Math.min.apply(null, allRets);
+    _scatterXLo = Math.min.apply(null, allRets) - rng * 0.05;
+    _scatterXHi = Math.max.apply(null, allRets) + rng * 0.05;
+    _scatterYHi = Math.max.apply(null, allWts) * 1.08;
+  }
+
   refresh();
-  renderHeatmap();
   renderDumbbell();
   var last = _activeHocs[_activeHocs.length - 1], first = _activeHocs[0];
   var endLabel = last.close || last.eff + ' (Open)';
@@ -1113,10 +1775,27 @@ window.ndxToggleIG = function(ig) {
   refresh();
 };
 window.ndxResetSim = function() { exclSecs.clear(); exclIGs.clear(); refresh(); };
+window.ndxToggleSecExpand = function(sec) {
+  if (_expandedSecs.has(sec)) _expandedSecs.delete(sec); else _expandedSecs.add(sec);
+  var isBase = exclSecs.size === 0 && exclIGs.size === 0;
+  renderAttrTable(isBase ? baseR : computeCore(exclSecs, exclIGs));
+};
+window.ndxExpandAll = function() {
+  sectors.forEach(function(s) { _expandedSecs.add(s); });
+  var isBase = exclSecs.size === 0 && exclIGs.size === 0;
+  renderAttrTable(isBase ? baseR : computeCore(exclSecs, exclIGs));
+};
+window.ndxCollapseAll = function() {
+  _expandedSecs.clear();
+  var isBase = exclSecs.size === 0 && exclIGs.size === 0;
+  renderAttrTable(isBase ? baseR : computeCore(exclSecs, exclIGs));
+};
 window.ndxSetAttrTab = function(tab) {
   attrTab = tab;
   if (_chart) { _chart.destroy(); _chart = null; }
   document.querySelectorAll('#ndx-attr-tabs .ndx-tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
+  var sb = document.getElementById('ndx-treemap-sub-row');
+  if (sb) sb.style.display = (attrMode === 'treemap' && tab === 'sector') ? '' : 'none';
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
   if (attrMode === 'chart') renderAttrChart(res); else renderTreemap(res);
@@ -1126,8 +1805,12 @@ window.ndxSetAttrMode = function(mode) {
   attrMode = mode;
   document.querySelectorAll('#ndx-attr-mode-btns .ndx-tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.mode === mode); });
   var cb = document.getElementById('ndx-attr-chart-box'), tb = document.getElementById('ndx-treemap-box');
+  var sb = document.getElementById('ndx-treemap-sub-row');
   if (cb) cb.style.display = mode === 'chart'   ? '' : 'none';
   if (tb) tb.style.display = mode === 'treemap' ? '' : 'none';
+  if (sb) sb.style.display = (mode === 'treemap' && attrTab === 'sector') ? '' : 'none';
+  var cr = document.getElementById('ndx-color-row');
+  if (cr) cr.style.display = mode === 'treemap' ? 'flex' : 'none';
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
   if (mode === 'chart') renderAttrChart(res); else renderTreemap(res);
@@ -1138,11 +1821,52 @@ window.ndxSort = function(key) {
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   renderAttrTable(isBase ? baseR : computeCore(exclSecs, exclIGs));
 };
-window.ndxSetYTD2026 = function() {
-  _fromHoc = 7; _toHoc = 19;
-  var fs = document.getElementById('ndx-from-sel'), ts = document.getElementById('ndx-to-sel');
-  if (fs) fs.value = '7'; if (ts) ts.value = '19';
+window.ndxSetYear = function(yr) {
+  var range = YEAR_HOCS[yr];
+  if (!range) return;
+  _activeYear = yr;
+  _fromHoc = range[0]; _toHoc = range[1];
+  _beeswarmSector = '';
+  _scatterXLo = null; _scatterXHi = null; _scatterYHi = null;
+  document.querySelectorAll('.ndx-yr-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.yr === yr);
+  });
   reloadSnapshot();
+};
+
+window.ndxSetColorMode = function(m) {
+  _colorMode = m;
+  document.querySelectorAll('.ndx-color-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.mode === m);
+  });
+  var isBase = exclSecs.size === 0 && exclIGs.size === 0;
+  var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
+  if (attrMode === 'treemap') renderTreemap(res);
+  renderBeeswarm(_securities, _beeswarmFilter);
+};
+
+window.ndxSetRebalTab = function(t) {
+  _rebalTab = t;
+  document.querySelectorAll('.ndx-rebal-tab').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.tab === t);
+  });
+  renderRebalSection();
+};
+
+window.ndxSetWLTab = function(t) {
+  _wlTab = t;
+  document.querySelectorAll('.ndx-wl-tab').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.tab === t);
+  });
+  renderWLSection();
+};
+
+window.ndxSetParetoN = function(n) {
+  _paretoN = parseInt(n, 10);
+  document.querySelectorAll('.ndx-pareto-n-btn').forEach(function(b) {
+    b.classList.toggle('active', parseInt(b.dataset.n, 10) === _paretoN);
+  });
+  renderPareto(_securities);
 };
 window.ndxSetFrom = function(n) {
   _fromHoc = parseInt(n, 10);
@@ -1163,23 +1887,10 @@ function hocOpts(sel) {
   }).join('');
 }
 
-function beeswarmFilterBar() {
-  var thrs = [0, 0.02, 0.05, 0.1];
-  var lbls = ['Show all', '|±0.02%|', '|±0.05%|', '|±0.1%|'];
-  return '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">' +
-    thrs.map(function(t, i) {
-      return '<button class="ndx-bee-btn ndx-tab-btn' + (t === 0 ? ' active' : '') + '" ' +
-        'data-thr="' + t + '" onclick="ndxSetBeeswarmFilter(' + t + ')">' + lbls[i] + '</button>';
-    }).join('') +
-    '</div>';
-}
 
 function buildSkeleton() {
   var last  = _activeHocs[_activeHocs.length - 1];
   var first = _activeHocs[0];
-  var nHocs = _activeHocs.length;
-  var endLabel = last.close || last.eff + ' (Open)';
-  var ss = 'font-family:\'Inter\',sans-serif;font-size:11px;font-weight:600;border:1.5px solid var(--bdr);border-radius:10px;padding:4px 9px;background:var(--w);color:var(--navy);cursor:pointer;outline:none;min-width:230px';
 
   return (
   '<div id="ndx-tip" style="position:fixed;pointer-events:none;opacity:0;transition:opacity .09s;' +
@@ -1187,45 +1898,23 @@ function buildSkeleton() {
   'padding:8px 12px;font-size:12px;box-shadow:0 5px 18px rgba(0,0,0,.14);z-index:1999;max-width:260px;font-family:Inter,sans-serif"></div>' +
 
   '<div class="sec" style="padding-bottom:0">' +
-    '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;padding-bottom:14px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-bottom:14px">' +
       '<div>' +
-        '<div class="sect" style="font-size:17px;font-weight:700;color:var(--navy)">NDX 100 — Return Attribution</div>' +
-        '<div style="font-size:11px;color:var(--mu);margin-top:3px">NDX Price Return · Source: Summit NDX NonBBG</div>' +
+        '<div class="sect" style="font-size:17px;font-weight:700;color:var(--navy)">Nasdaq-100 — Return Attribution</div>' +
+        '<div style="font-size:11px;color:var(--mu);margin-top:3px">NDX Price Return &middot; Source: Summit NDX NonBBG</div>' +
       '</div>' +
-      '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">' +
-        '<button class="ndx-tab-btn active" onclick="ndxSetYTD2026()">YTD 2026</button>' +
-        '<div style="display:flex;align-items:center;gap:5px">' +
-          '<span style="font-size:11px;color:var(--mu);font-weight:600">From</span>' +
-          '<select id="ndx-from-sel" onchange="ndxSetFrom(this.value)" style="' + ss + '">' + hocOpts(_fromHoc) + '</select>' +
-        '</div>' +
-        '<div style="display:flex;align-items:center;gap:5px">' +
-          '<span style="font-size:11px;color:var(--mu);font-weight:600">To</span>' +
-          '<select id="ndx-to-sel" onchange="ndxSetTo(this.value)" style="' + ss + '">' + hocOpts(_toHoc) + '</select>' +
-        '</div>' +
+      '<div style="display:flex;gap:4px;flex-wrap:wrap">' +
+        '<button class="ndx-yr-btn ndx-tab-btn active" data-yr="ytd2026" onclick="ndxSetYear(\'ytd2026\')">YTD 2026</button>' +
+        '<button class="ndx-yr-btn ndx-tab-btn" data-yr="y2025" onclick="ndxSetYear(\'y2025\')">2025</button>' +
+        '<button class="ndx-tab-btn" disabled style="opacity:.45;cursor:default">2024</button>' +
       '</div>' +
     '</div>' +
-    '<div class="ndx-hero-row">' +
-      '<div class="ndx-hero-main">' +
-        '<div class="ndx-hero-label">NDX Price Return</div>' +
+    '<div style="display:flex;align-items:center;gap:24px;padding-bottom:14px;flex-wrap:wrap">' +
+      '<div>' +
+        '<div style="font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">NDX Price Return</div>' +
         '<div class="ndx-hero-val" id="ndx-ytd-val">&mdash;</div>' +
-        '<div id="ndx-sim-badge" style="display:none;margin-top:6px;font-size:11px;background:rgba(255,180,0,.1);border:1px solid rgba(200,160,0,.35);border-radius:20px;padding:3px 10px;color:#7A5A00"></div>' +
       '</div>' +
-      '<div class="ndx-hero-meta">' +
-        '<div class="ndx-meta-block">' +
-          '<div class="ndx-meta-lbl">Period</div>' +
-          '<div class="ndx-meta-val" id="ndx-meta-period" style="font-size:13px">HOC ' + first.n + ' → HOC ' + last.n + ' (' + endLabel + ')</div>' +
-        '</div>' +
-        '<div class="ndx-meta-block">' +
-          '<div class="ndx-meta-lbl">HOCs</div>' +
-          '<div class="ndx-meta-val" id="ndx-meta-nhocs">' + nHocs + '</div>' +
-          '<div class="ndx-meta-sub">Rebalances &amp; index events</div>' +
-        '</div>' +
-        '<div class="ndx-meta-block">' +
-          '<div class="ndx-meta-lbl">Constituents</div>' +
-          '<div class="ndx-meta-val" id="ndx-meta-const">' + first.sec.length + ' → ' + last.sec.length + '</div>' +
-          '<div class="ndx-meta-sub">Open → Close snapshot</div>' +
-        '</div>' +
-      '</div>' +
+      '<div id="ndx-sim-badge" style="display:none;font-size:11px;background:rgba(255,180,0,.1);border:1px solid rgba(200,160,0,.35);border-radius:20px;padding:4px 12px;color:#7A5A00"></div>' +
     '</div>' +
   '</div>' +
 
@@ -1242,6 +1931,19 @@ function buildSkeleton() {
           '<button class="ndx-tab-btn" data-mode="treemap" onclick="ndxSetAttrMode(\'treemap\')">Treemap</button>' +
         '</div>' +
       '</div>' +
+      '<div id="ndx-treemap-sub-row" style="display:none;margin:6px 0 2px">' +
+        '<div style="display:flex;gap:3px">' +
+          '<button class="ndx-tmsub-btn ndx-tab-btn active" data-sub="flat" onclick="ndxSetTreemapSubMode(\'flat\')">Flat Sectors</button>' +
+          '<button class="ndx-tmsub-btn ndx-tab-btn" data-sub="nested" onclick="ndxSetTreemapSubMode(\'nested\')">Nested IGs</button>' +
+        '</div>' +
+      '</div>' +
+      '<div id="ndx-color-row" style="display:none;align-items:center;gap:8px;margin:6px 0 2px;padding:7px 10px;background:rgba(200,140,0,.06);border:1px solid rgba(200,140,0,.3);border-radius:8px">' +
+        '<span style="font-size:10px;color:#8A5A00;font-weight:700;letter-spacing:.05em">PROPUESTA — COLOR:</span>' +
+        '<button class="ndx-color-btn ndx-tab-btn active" data-mode="orig" onclick="ndxSetColorMode(\'orig\')">Original (√ global)</button>' +
+        '<button class="ndx-color-btn ndx-tab-btn" data-mode="A" onclick="ndxSetColorMode(\'A\')">A — Escalas pos/neg separadas</button>' +
+        '<button class="ndx-color-btn ndx-tab-btn" data-mode="B" onclick="ndxSetColorMode(\'B\')">B — Normalización local</button>' +
+        '<button class="ndx-color-btn ndx-tab-btn" data-mode="C" onclick="ndxSetColorMode(\'C\')">C — Gradiente 0.65</button>' +
+      '</div>' +
       '<div id="ndx-attr-chart-box" style="position:relative;height:420px"><canvas id="ndx-attr-canvas"></canvas></div>' +
       '<div id="ndx-treemap-box" style="display:none;padding:4px 0"></div>' +
     '</div>' +
@@ -1252,9 +1954,13 @@ function buildSkeleton() {
       '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">' +
         '<div>' +
           '<span class="sect">Attribution Detail &amp; Simulation</span>' +
-          '<span class="secn" style="display:block;margin-top:2px">Click any row to include / exclude · weights rescale to 100% within each HOC · YTD updates in real time</span>' +
+          '<span class="secn" style="display:block;margin-top:2px">Click any row to include / exclude &middot; weights rescale to 100% within each HOC &middot; YTD updates in real time</span>' +
         '</div>' +
-        '<button class="sb-tbtn" onclick="ndxResetSim()">Reset</button>' +
+        '<div style="display:flex;gap:5px;align-items:center">' +
+          '<button class="ndx-tab-btn" onclick="ndxExpandAll()">Expand All</button>' +
+          '<button class="ndx-tab-btn" onclick="ndxCollapseAll()">Collapse All</button>' +
+          '<button class="sb-tbtn" onclick="ndxResetSim()">Reset</button>' +
+        '</div>' +
       '</div>' +
     '</div>' +
     '<div class="card">' +
@@ -1273,26 +1979,48 @@ function buildSkeleton() {
 
   '<div class="sec">' +
     '<div class="sechdr">' +
-      '<span class="sect">Industry Group Contributions</span>' +
-      '<span class="secn">All industry groups ranked by Carino-linked contribution.</span>' +
-    '</div>' +
-    '<div class="card"><div id="ndx-dotplot-box"></div></div>' +
-  '</div>' +
-
-  '<div class="sec">' +
-    '<div class="sechdr">' +
-      '<span class="sect">Sector × HOC Window Heatmap</span>' +
-      '<span class="secn">Contribution per sector per HOC window. Base case only — reveals which sectors drove each window.</span>' +
-    '</div>' +
-    '<div class="card"><div id="ndx-heatmap-box"></div></div>' +
-  '</div>' +
-
-  '<div class="sec">' +
-    '<div class="sechdr">' +
       '<span class="sect">Index Composition — Weight Change</span>' +
       '<span class="secn">Open weight (hollow) vs. close weight (solid) by sector. Ordered by opening weight.</span>' +
     '</div>' +
     '<div class="card"><div id="ndx-dumbbell-box"></div></div>' +
+  '</div>' +
+
+  '<div class="sec" style="border:1.5px dashed rgba(200,140,0,.4);border-radius:12px;padding:16px">' +
+    '<div class="sechdr" style="padding-top:0">' +
+      '<span class="sect">Rebalance Impact</span>' + PROP_BADGE +
+      '<span class="secn" style="display:block;margin-top:3px">Tres vistas del efecto de los rebalanceos. Elige la que más info aporte.</span>' +
+    '</div>' +
+    '<div class="card">' +
+      '<div style="display:flex;gap:4px;margin-bottom:12px">' +
+        '<button class="ndx-rebal-tab ndx-tab-btn active" data-tab="A" onclick="ndxSetRebalTab(\'A\')">A — Eventos por HOC</button>' +
+        '<button class="ndx-rebal-tab ndx-tab-btn" data-tab="B" onclick="ndxSetRebalTab(\'B\')">B — Buy-and-hold vs. real</button>' +
+        '<button class="ndx-rebal-tab ndx-tab-btn" data-tab="C" onclick="ndxSetRebalTab(\'C\')">C — Concentración HHI</button>' +
+      '</div>' +
+      '<div id="ndx-rebal-box"></div>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="sec">' +
+    '<div class="sechdr">' +
+      '<span class="sect">Top Contributors</span>' +
+      '<span class="secn">Securities ranked by |contribution|. Bars sized by absolute contribution.</span>' +
+    '</div>' +
+    '<div class="card"><div id="ndx-pareto-box"></div></div>' +
+  '</div>' +
+
+  '<div class="sec" style="border:1.5px dashed rgba(200,140,0,.4);border-radius:12px;padding:16px">' +
+    '<div class="sechdr" style="padding-top:0">' +
+      '<span class="sect">Winners vs Losers</span>' + PROP_BADGE +
+      '<span class="secn" style="display:block;margin-top:3px">Tres vistas del breakdown de performance. Elige la que más info aporte.</span>' +
+    '</div>' +
+    '<div class="card">' +
+      '<div style="display:flex;gap:4px;margin-bottom:12px">' +
+        '<button class="ndx-wl-tab ndx-tab-btn" data-tab="A" onclick="ndxSetWLTab(\'A\')">A — Matriz sectorial</button>' +
+        '<button class="ndx-wl-tab ndx-tab-btn" data-tab="B" onclick="ndxSetWLTab(\'B\')">B — Histograma de retornos</button>' +
+        '<button class="ndx-wl-tab ndx-tab-btn active" data-tab="C" onclick="ndxSetWLTab(\'C\')">C — Top/Bottom por sector</button>' +
+      '</div>' +
+      '<div id="ndx-wl-box"></div>' +
+    '</div>' +
   '</div>' +
 
   '<div class="sec">' +
@@ -1306,27 +2034,21 @@ function buildSkeleton() {
   '<div class="sec">' +
     '<div class="sechdr">' +
       '<span class="sect">Security Contributions — Beeswarm by Sector</span>' +
-      '<span class="secn">One dot per constituent. X = Carino-linked contribution. Lane = sector. Noise filter hides small contributors.</span>' +
+      '<span class="secn">One dot per constituent. X = Carino-linked contribution. Lane = sector.</span>' +
     '</div>' +
     '<div class="card">' +
-      beeswarmFilterBar() +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">' +
+        '<div style="display:flex;align-items:center;gap:6px">' +
+          '<span style="font-size:11px;color:var(--mu);font-weight:600">Sector</span>' +
+          '<select id="ndx-bee-sec" onchange="ndxSetBeeswarmSector(this.value)" style="font-family:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:5px 10px;background:var(--w);color:var(--text);cursor:pointer">' +
+            '<option value="">All</option>' +
+            sectors.filter(function(s) { return s !== CASH; }).map(function(s) {
+              return '<option value="' + esc(s) + '">' + dispSec(s) + '</option>';
+            }).join('') +
+          '</select>' +
+        '</div>' +
+      '</div>' +
       '<div id="ndx-beeswarm-box"></div>' +
-    '</div>' +
-  '</div>' +
-
-  '<div class="sec">' +
-    '<div class="sechdr">' +
-      '<span class="sect">HOC Timeline</span>' +
-      '<span class="secn">Each HOC: start date, end date, constituent count and period return</span>' +
-    '</div>' +
-    '<div class="card">' +
-      '<div class="twrap"><table class="rt">' +
-        '<thead><tr>' +
-          '<th style="text-align:center">HOC</th><th>Start Date</th><th>End Date</th>' +
-          '<th class="num">Constituents</th><th class="num">Period Return</th>' +
-        '</tr></thead>' +
-        '<tbody id="ndx-hoc-tbody"></tbody>' +
-      '</table></div>' +
     '</div>' +
   '</div>'
   );
@@ -1339,8 +2061,18 @@ export function loadNdxAttribution(container) {
   exclSecs = new Set(); exclIGs = new Set();
   attrTab = 'sector'; attrMode = 'chart';
   _sortKey = 'contrib'; _sortDir = -1;
-  _fromHoc = 7; _toHoc = 19;
+  _fromHoc = 12; _toHoc = 24;
   _beeswarmFilter = 0; _securities = [];
+  treemapSubMode = 'flat';
+  _scatterHocIdx = -1; _beeswarmHocIdx = -1; _secSnapshots = [];
+  _expandedSecs = new Set();
+  _scatterXLo = null; _scatterXHi = null; _scatterYHi = null;
+  _beeswarmSector = '';
+  _activeYear = 'ytd2026';
+  _paretoN = 10;
+  _colorMode = 'orig';
+  _colorMaxPos = 0; _colorMaxNeg = 0;
+  _rebalTab = 'A'; _wlTab = 'C';
   if (_chart) { _chart.destroy(); _chart = null; }
 
   normalize();
@@ -1349,15 +2081,32 @@ export function loadNdxAttribution(container) {
   buildHierarchy(baseR);
   lockAxes(baseR);
   _securities = computeSecurities(new Set(), new Set());
+  _secSnapshots = _activeHocs.map(function(_, i) {
+    return computeSecurities(new Set(), new Set(), _activeHocs.slice(0, i + 1));
+  });
+  _scatterHocIdx  = _activeHocs.length - 1;
+  _beeswarmHocIdx = _activeHocs.length - 1;
+
+  // Fixed scatter axes across all snapshots
+  var allRets2 = [], allWts2 = [];
+  _secSnapshots.forEach(function(snap) {
+    snap.forEach(function(d) { if (d.w1 > 0 || d.w0 > 0) { allRets2.push(d.ret); allWts2.push(d.w1); } });
+  });
+  if (allRets2.length) {
+    var rng2 = Math.max.apply(null, allRets2) - Math.min.apply(null, allRets2);
+    _scatterXLo = Math.min.apply(null, allRets2) - rng2 * 0.05;
+    _scatterXHi = Math.max.apply(null, allRets2) + rng2 * 0.05;
+    _scatterYHi = Math.max.apply(null, allWts2) * 1.08;
+  }
 
   container.innerHTML = buildSkeleton();
   renderKPI(baseR);
   renderAttrChart(baseR);
   renderAttrTable(baseR);
-  renderHOC(baseR);
-  renderDotPlotIG(baseR);
-  renderHeatmap();
   renderDumbbell();
+  renderRebalSection();
+  renderPareto(_securities);
+  renderWLSection();
   renderScatter(_securities);
   renderBeeswarm(_securities, 0);
 }

@@ -60,16 +60,30 @@ const METRICS = {
   cfo:      { label: 'CFO',      mult: 'P/CFO fwd' },
   fcf:      { label: 'FCF',      mult: 'P/FCF fwd' },
 };
-// Year selector: NTM + current calendar year + next two.
+// Period options for the growth window (From → To): last actual (FY−1) through the
+// third forward year, plus NTM (disabled until it has a real feed). The two chosen
+// periods are the two value columns shown, the growth endpoints, and the year the
+// forward multiple prices off (the "To" end).
 const CY = new Date().getFullYear();
-const YEARS = ['NTM', String(CY), String(CY + 1), String(CY + 2)];
+// The forward multiple prices off one period: NTM (disabled until it has a real
+// feed), FY0, FY+1, FY+2.
+const MULT_PERIODS = ['NTM', String(CY), String(CY + 1), String(CY + 2)];
+// Growth has three fixed windows. FY0→FY2 spans two years and is annualized (CAGR).
+const GROWTH_OPTS = {
+  'fy0-fy1': { from: String(CY),     to: String(CY + 1), label: 'FY0 → FY+1' },
+  'fy0-fy2': { from: String(CY),     to: String(CY + 2), label: 'FY0 → FY+2 (anualizado)' },
+  'fy1-fy2': { from: String(CY + 1), to: String(CY + 2), label: 'FY+1 → FY+2' },
+};
 // Massive symbol overrides for the live quote (label ticker → quote ticker).
 const QUOTE_TICKER = { TSMC: 'TSM' };
 
-let metricSel = 'ebitda';             // active metric — always one, never off
+let metricSel = 'earnings';           // active metric — always one, never off. Defaults to
+                                      // P/E so the tab opens on Market Cap only; EBITDA (EV/EBITDA)
+                                      // is the one metric that also shows Net Debt + EV.
 let earnBasis = 'earnings';           // 'earnings' | 'eps' — only read when metricSel === 'earnings'
 let source = 'summit';                // 'summit' | 'consensus' — which estimate set feeds the table
-let yearSel = String(CY + 1);         // selected "last" period; default = current+1
+let multSel = String(CY + 1);         // period the forward multiple prices off (default FY+1)
+let growthSel = 'fy0-fy1';            // active growth window key (see GROWTH_OPTS)
 const quotes = {};                    // ticker → { price, marketCap, ev, netDebt } | null (flows in millions)
 
 // The fixed per-name beta default: the market standard, 5 years monthly. There is
@@ -104,14 +118,18 @@ const isRel = (k) => k !== 'NTM' && k !== 'LTM';
 // Heading for one period: relative label over its calendar year.
 const periodHead = (k) => isRel(k) ? `${relLabel(k)}<span class="pm-cy">${k}</span>` : k;
 
+// The two value columns are the growth window's endpoints (From → To). Growth runs
+// between them; the multiple prices off its own period (multSel), set separately.
+const growthWin = () => GROWTH_OPTS[growthSel] || GROWTH_OPTS['fy0-fy1'];
 function periodInfo() {
-  if (yearSel === 'NTM') return { prevKey: 'LTM', prevLabel: 'LTM', currKey: 'NTM', currLabel: 'NTM' };
-  const y = parseInt(yearSel, 10);
+  const g = growthWin();
   return {
-    prevKey: String(y - 1), prevLabel: relLabel(y - 1),
-    currKey: String(y),     currLabel: relLabel(y),
+    prevKey: g.from, prevLabel: relLabel(g.from),
+    currKey: g.to,   currLabel: relLabel(g.to),
   };
 }
+// Span of the growth window in years; > 1 (i.e. FY0→FY2) means growth is annualized.
+const growthSpan = () => { const g = growthWin(); return Number(g.to) - Number(g.from); };
 
 // ── State (manual entries, for names Summit doesn't cover + manual multiples) ─
 const METRIC_KEY = 'pm-metric-v2';
@@ -122,6 +140,11 @@ const CORR_SLOTS_KEY = 'pm-corr-slots-v1';
 const CORR_MNAMES_KEY = 'pm-corr-matrix-names-v1';
 const PAPER_SRC_KEY = 'pm-paper-source-v1';
 const SUBMITS_KEY = 'pm-submits-v1';
+const QUOTE_COLS_KEY = 'pm-show-quote-v1';
+const BOOK_EXTRA_KEY = 'pm-book-extra-v1';
+// Collapsed state of the Summit book: when true the holding rows are hidden and only
+// the weighted-average summary shows under the portfolio name. Persists per browser.
+const BOOK_COLLAPSE_KEY = 'pm-book-collapsed-v1';
 
 function loadJSON(key, fallback) {
   try { const raw = localStorage.getItem(key); if (raw) return JSON.parse(raw); }
@@ -136,11 +159,31 @@ let metricData = loadJSON(METRIC_KEY, {});
 // Book weights, ticker → typed percent. The fixed book has no weights of its own,
 // and without them there is nothing for the footer average to weight by.
 let portWeights = loadJSON(PWEIGHT_KEY, {});
+// Tickers the user added to the book with + Add — each { ticker, weight }. The seeded
+// names live in BOOK_SEED; these are appended after them in one flat list.
+let bookExtra = (() => { const a = loadJSON(BOOK_EXTRA_KEY, []); return Array.isArray(a) ? a : []; })();
+const saveBookExtra = () => saveJSON(BOOK_EXTRA_KEY, bookExtra);
 let paper = (() => { const p = loadJSON(PAPER_KEY, {}); return { passive: p.passive || [], single: p.single || [] }; })();
+// User-built portfolios, each a segment under Summit: { id, name, collapsed, holdings:
+// [{ ticker, weight }] }. Created blank or prefilled from a predefined source (the
+// same books the Paper prefill offers). Persist per browser.
+const PORTFOLIOS_KEY = 'pm-portfolios-v1';
+let portfolios = (() => { const a = loadJSON(PORTFOLIOS_KEY, []); return Array.isArray(a) ? a : []; })();
+const savePortfolios = () => saveJSON(PORTFOLIOS_KEY, portfolios);
+let newPfOpen = false;   // is the "+ New portfolio" source chooser expanded?
 // Per-name beta method overrides, ticker → { freq, amt, unit }. Names without one
 // use the global default (betaFreq/betaAmt/betaUnit) — see betaMethod().
 let betaOverrides = loadJSON(BETA_METHOD_KEY, {});
 let betaOpen = null;   // ticker whose inline method strip is expanded (accordion)
+// Summit book collapsed? (holdings hidden, only the weighted-average row shown)
+let bookCollapsed = loadJSON(BOOK_COLLAPSE_KEY, false);
+// Show/hide the Price + Market Cap columns together. They're mostly visual noise
+// next to the multiples, so they default to hidden and the choice persists. Net
+// Debt + EV stay governed separately by the metric (showEvCols → EBITDA only).
+// One toggle for the optional columns: Price, Market Cap and the two metric value
+// columns (e.g. Earnings FY0 / FY+1). Defaults to shown so the values are visible on
+// load; hiding them leaves a compact multiple / growth / PEG / Beta view.
+let showQuote = loadJSON(QUOTE_COLS_KEY, true);
 // Extra instruments (4 editable columns) the Benchmarks subtab correlates against,
 // to the right of the fixed SPY column. Empty slots render an empty input header.
 let corrSlots = (() => {
@@ -216,6 +259,9 @@ function isCovered(t) {
 // is the same number either way — Market Cap ÷ Earnings = Price ÷ EPS — so it is
 // deliberately left on the absolute figure and doesn't move with the toggle.
 const isEps = () => metricSel === 'earnings' && earnBasis === 'eps';
+// CFO and FCF are grouped under one "Cash" metric button; which of the two is live
+// is picked in the Basis sub-toggle. This says we're on either of them.
+const isCashMetric = () => metricSel === 'cfo' || metricSel === 'fcf';
 const metricLabel = () => (isEps() ? 'EPS' : METRICS[metricSel].label);
 // Hand-typed values are keyed by basis — EPS and absolute earnings are different
 // units and must not share a slot. The multiple stays keyed by the metric itself.
@@ -290,12 +336,13 @@ const evOf        = (t) => (quotes[t] ? quotes[t].ev : null);
 const netDebtOf   = (t) => (quotes[t] ? quotes[t].netDebt : null);
 
 // Live forward multiple for USD Summit names: EV/EBITDA = EV ÷ EBITDA, the rest
-// = Market Cap ÷ metric. SPOT/TBBB are skipped (metric in EUR/MXN vs USD quote).
+// = Market Cap ÷ metric, priced off the chosen multiple period (multSel — independent
+// of the growth window). SPOT/TBBB are skipped (metric in EUR/MXN vs USD quote).
 function autoMultFor(t) {
   if (!metricSel) return null;
   const rec = fundOf(t);
   if (!rec || rec.currency !== 'USD') return null;
-  const mv = num(modelVal(t, metricSel, periodInfo().currKey));
+  const mv = num(modelVal(t, metricSel, multSel));
   if (mv === null || mv <= 0) return null;
   const numer = metricSel === 'ebitda' ? evOf(t) : marketCapOf(t);
   if (numer === null) return null;
@@ -305,11 +352,18 @@ function multFor(t) {
   const a = autoMultFor(t);
   return a !== null ? a : num(multRec(t).mult);
 }
+// Growth over the chosen window. One year → simple period-over-period change. More
+// than one → annualized (CAGR), which only reads cleanly when both ends are positive
+// (a sign change can't be annualized, so it returns null rather than a bogus rate).
 function growthFor(t) {
   const p = periodInfo();
   const a = valueFor(t, p.prevKey), b = valueFor(t, p.currKey);
   if (a === null || b === null || a === 0) return null;
-  return ((b - a) / Math.abs(a)) * 100;
+  const n = Number(p.currKey) - Number(p.prevKey);
+  if (!Number.isFinite(n) || n <= 0) return null;        // To must be after From
+  if (n === 1) return ((b - a) / Math.abs(a)) * 100;
+  if (a <= 0 || b <= 0) return null;                     // can't annualize across a sign change
+  return (Math.pow(b / a, 1 / n) - 1) * 100;
 }
 function pegFor(t, g) {
   const m = multFor(t);
@@ -360,53 +414,113 @@ function weightedStats(items) {
   };
 }
 
-const portItems = () => [...PORTFOLIO.passive, ...PORTFOLIO.single]
-  .map(x => ({ ticker: x.ticker, weight: portWeights[x.ticker] }));
+// The Summit book as one flat list: the seeded names first, then any added via + Add.
+const BOOK_SEED = [...PORTFOLIO.passive, ...PORTFOLIO.single];
+const portItems = () => [
+  ...BOOK_SEED.map(x => ({ ticker: x.ticker, weight: portWeights[x.ticker] })),
+  ...bookExtra.map(x => ({ ticker: paperTicker(x), weight: x.weight })),
+];
 const paperItems = () => [...paper.passive, ...paper.single]
   .map(x => ({ ticker: paperTicker(x), weight: x.weight }));
+// Book names that actually carry weight — the Correlation tab only looks at these.
+const weightedBook = () => portItems().filter((it) => { const w = num(it.weight); return w != null && w > 0; });
+
+// Weighted-average market cap: Σ(w·mc) / Σw over names that carry a market cap —
+// the average size of a position in the book, by weight.
+function wavgMarketCap(items) {
+  let wSum = 0, mcSum = 0;
+  items.forEach((it) => {
+    const w = num(it.weight);
+    if (w === null || w <= 0) return;
+    const mc = marketCapOf(it.ticker);
+    if (mc === null) return;
+    wSum += w; mcSum += w * mc;
+  });
+  return wSum > 0 ? mcSum / wSum : null;
+}
+
+// The on-screen quote columns for the weighted-average row. Market Cap shows the
+// weighted average; Price and Net Debt / EV carry no meaningful average, so dash.
+function wavgQuoteCells(items) {
+  let out = '';
+  if (showQuote) {
+    out += DASH;
+    const wmc = wavgMarketCap(items);
+    out += `<td class="num pm-sv">${wmc != null ? fmtUSDmm(wmc) : '&mdash;'}</td>`;
+  }
+  if (showEvCols()) out += DASH + DASH;
+  return out;
+}
 
 // Cash line + weighted-average line, sized to whichever table asks for them.
-function footRows(items, extra) {
-  const s = weightedStats(items);
+// The weighted-average cells — everything to the right of the first (label/name)
+// column: Weight, the quote columns, multiple, the two value pads, growth, PEG and
+// Beta. Shared by the footer (Paper) and the Summit summary row so the two can
+// never drift apart.
+function wavgCells(s, pb, items) {
   const pad = (n) => DASH.repeat(n);
-  const tail = extra ? '<td class="pm-actions"></td>' : '';
   const over = s.cash < 0;
-  const cashTd = over
-    ? `<td class="num neg" title="Typed weights add to ${s.wTyped.toFixed(1)}% — over 100%. The average treats cash as 0%.">${s.cash.toFixed(1)}%</td>`
-    : `<td class="num">${s.cash.toFixed(1)}%</td>`;
-
   const note = (label, uncovered) => uncovered > 0.05
     ? ` title="${esc(`${(100 - uncovered).toFixed(1)}% of the book priced; ${uncovered.toFixed(1)}% carries a weight but no ${label}, and is excluded.`)}"`
     : '';
   const gCls = s.growth === null ? '' : (s.growth >= 0 ? 'up' : 'dn');
-
   return `
-    <tr class="pm-cash">
-      <td class="tk">Cash</td>${cashTd}${pad(4)}${pad(5)}${tail}
-    </tr>
-    <tr class="pm-wavg">
-      <td class="tk">Weighted avg</td>
       <td class="num">${(over ? s.wTyped : 100).toFixed(1)}%</td>
-      ${pad(4)}
+      ${wavgQuoteCells(items)}
       <td class="msep pm-sv"${note('multiple', s.uncoveredMult)}>${s.mult === null ? '&mdash;' : fmtMult(s.mult)}</td>
-      ${pad(2)}
+      ${showQuote ? pad(2) : ''}
       <td class="pm-growth ${gCls}"${note('growth', s.uncoveredG)}>${s.growth === null ? '&mdash;' : s.growth.toFixed(1) + '%'}</td>
       <td class="pm-peg">${s.peg === null ? '&mdash;' : s.peg.toFixed(2)}</td>
-      ${tail}
-    </tr>`;
+      <td class="num pm-beta" title="β del portafolio = promedio ponderado por peso de las betas; el cash cuenta como β 0 y los nombres sin historial suficiente se excluyen (no cuentan como 0).">${pb.beta != null ? pb.beta.toFixed(2) : '&mdash;'}</td>`;
+}
+
+// The Cash residual row (100% − typed weights; negative when weights overshoot).
+function cashRow(s, q, tail) {
+  const pad = (n) => DASH.repeat(n);
+  const over = s.cash < 0;
+  const cashTd = over
+    ? `<td class="num neg" title="Typed weights add to ${s.wTyped.toFixed(1)}% — over 100%. The average treats cash as 0%.">${s.cash.toFixed(1)}%</td>`
+    : `<td class="num">${s.cash.toFixed(1)}%</td>`;
+  return `<tr class="pm-cash"><td class="tk">Cash</td>${cashTd}${pad(q)}${pad(metricCols())}${tail}</tr>`;
+}
+
+// Cash + Weighted-avg as a <tfoot> pair — used by Paper (the Summit book renders its
+// weighted-avg at the top instead; see bookSummaryRow).
+function footRows(items, extra) {
+  const s = weightedStats(items);
+  const pb = portBeta(items);     // weight-weighted portfolio β (cash counts as β 0)
+  const q = quoteCount();         // live-quote columns in play (Price/MC and/or Net Debt/EV)
+  const tail = extra ? '<td class="pm-actions"></td>' : '';
+  return cashRow(s, q, tail)
+    + `<tr class="pm-wavg"><td class="tk">Weighted avg</td>${wavgCells(s, pb, items)}${tail}</tr>`;
 }
 
 // ── Portfolio rendering ──────────────────────────────────────────────────────
-// Live quote columns: Price and Market Cap, plus Net Debt + EV in the base view.
-// A fund has no balance sheet of its own, so those two are dashed for it rather
-// than derived from an enterprise value that doesn't apply.
+// Net Debt + EV only matter when the multiple runs off enterprise value — i.e.
+// EV/EBITDA. Every other metric (Earnings, CFO, FCF) prices off Market Cap, so
+// those two columns are hidden and only Market Cap is shown. One switch drives the
+// header, the body cells, the column span and the footer padding together.
+const showEvCols = () => metricSel === 'ebitda';
+// How many live-quote columns are on screen: Price + Market Cap (the showQuote
+// toggle) and/or Net Debt + EV (EBITDA only). Header, body, span and footer all
+// read this so they can never drift out of alignment.
+const quoteCount = () => (showQuote ? 2 : 0) + (showEvCols() ? 2 : 0);
+
+// Live quote columns: Price + Market Cap when showQuote is on; Net Debt + EV only
+// under EBITDA. A fund has no balance sheet of its own, so Net Debt / EV are dashed
+// for it rather than derived from an enterprise value that doesn't apply.
 function quoteCells(t, fund) {
-  const price = priceOf(t);
-  const priceTd = `<td class="num">${price != null ? '$' + price.toFixed(2) : '&mdash;'}</td>`;
-  const mcTd = `<td class="num pm-sv">${fmtUSDmm(marketCapOf(t))}</td>`;
-  const tail = fund ? DASH + DASH :
-    `<td class="num pm-sv">${fmtUSDmm(netDebtOf(t))}</td><td class="num pm-sv">${fmtUSDmm(evOf(t))}</td>`;
-  return priceTd + mcTd + tail;
+  let out = '';
+  if (showQuote) {
+    const price = priceOf(t);
+    out += `<td class="num">${price != null ? '$' + price.toFixed(2) : '&mdash;'}</td>`;
+    out += `<td class="num pm-sv">${fmtUSDmm(marketCapOf(t))}</td>`;
+  }
+  if (showEvCols()) {
+    out += fund ? DASH + DASH
+      : `<td class="num pm-sv">${fmtUSDmm(netDebtOf(t))}</td><td class="num pm-sv">${fmtUSDmm(evOf(t))}</td>`;
+  }
+  return out;
 }
 
 // Book weights are typed and saved locally, the same way Paper's are. The
@@ -458,10 +572,24 @@ function metricCells(ticker) {
   }
   return `
     ${multTd}
-    ${prevTd}
-    ${currTd}
+    ${showQuote ? prevTd + currTd : ''}
     <td class="pm-growth ${gCls}">${g === null ? '&mdash;' : g.toFixed(1) + '%'}</td>
-    <td class="pm-peg">${peg === null ? '&mdash;' : peg.toFixed(2)}</td>`;
+    <td class="pm-peg">${peg === null ? '&mdash;' : peg.toFixed(2)}</td>
+    ${betaTd(ticker)}`;
+}
+
+// The Beta column cell: the name's β at its own method, clickable to open the
+// detail modal (the formula, the rolling history, and the controls to change the
+// method). Names with too little history dash; a daily method still loading its
+// price file shows "···" until it arrives.
+function betaTd(t) {
+  const r = betaOf(t);
+  const pending = r.method.freq === 'daily' && dailyState !== 'ready';
+  if (r.beta == null) {
+    return `<td class="num pm-beta muted"${pending ? ' title="Cargando historial diario…"' : ''}>${pending ? '&middot;&middot;&middot;' : '&mdash;'}</td>`;
+  }
+  return `<td class="num pm-beta pm-beta-cell ${r.beta >= 1 ? 'hi' : 'lo'}" data-bt="${esc(t)}" `
+    + `title="β ${r.beta.toFixed(2)} · ${methodTag(r.method)} · n=${r.n} — clic para ver cómo se calcula">${r.beta.toFixed(2)}</td>`;
 }
 
 // A name whose fiscal year doesn't close in December gets a marker next to its
@@ -477,15 +605,174 @@ function fyBadge(t) {
 
 function portRow(item) {
   return `<tr data-ticker="${item.ticker}">
-    <td class="tk">${item.label}${fyBadge(item.ticker)}</td>
+    <td class="tk">${labelOf(item.ticker)}${fyBadge(item.ticker)}</td>
     ${baseCells(item)}
     ${metricCells(item.ticker)}
+    <td class="pm-actions"></td>
   </tr>`;
 }
 
-function portGroup(label, items, span) {
-  return `<tr class="grp"><td colspan="${span}">${label}</td></tr>` +
-    items.map(portRow).join('');
+// A user-added book row: like a seeded row but with an editable ticker and a × to
+// remove it, same mechanics as a Paper row (the ticker drives everything to its right).
+function bookExtraRow(item, idx) {
+  const t = paperTicker(item);
+  const tkTd = `<td><input class="pm-inp pm-tk" data-field="ticker" value="${esc(item.ticker)}" placeholder="Ticker">${fyBadge(t)}</td>`;
+  const wtTd = `<td><input class="pm-inp pm-wt" data-field="weight" value="${esc(item.weight)}" placeholder="0.0"> <span class="muted">%</span></td>`;
+  const rest = t ? quoteCells(t) + metricCells(t) : DASH.repeat(colSpan() - 2);
+  return `<tr data-group="book" data-idx="${idx}" data-ticker="${t}">
+    ${tkTd}${wtTd}${rest}
+    <td class="pm-actions"><button class="pm-del" title="Remove">&times;</button></td>
+  </tr>`;
+}
+
+// Book body = seeded rows + added rows + the "+ Add" button. Repainted in place on
+// add/remove so the rest of the PEG pane and the metric bar survive.
+function bookBody() {
+  const span = colSpan(1);
+  return BOOK_SEED.map(portRow).join('') +
+    bookExtra.map(bookExtraRow).join('') +
+    `<tr><td colspan="${span}"><button class="pm-add" data-book-add>+ Add</button></td></tr>`;
+}
+function renderBookBody() {
+  const body = document.getElementById('pm-book-body');
+  if (body) body.innerHTML = bookBody();
+}
+
+// Summit book stats, computed once for the summary row and the cash row.
+function bookStats() {
+  const items = portItems();
+  return { items, s: weightedStats(items), pb: portBeta(items), q: quoteCount() };
+}
+
+// The always-visible top row: the portfolio name (with the collapse toggle) on the
+// left, then the book's weighted-average cells. Stays put whether or not the
+// holdings are collapsed.
+function bookSummaryRow() {
+  const { items, s, pb } = bookStats();
+  const toggle = `<button class="pm-seg-toggle" data-book-collapse aria-expanded="${!bookCollapsed}" title="${bookCollapsed ? 'Expand holdings' : 'Collapse to weighted average'}"><span class="pm-seg-caret">&#9662;</span><span class="pm-seg-name">Summit</span></button>`;
+  return `<tr class="pm-wavg pm-seg-summary" id="pm-book-summary"><td class="tk pm-seg-name-cell">${toggle}</td>${wavgCells(s, pb, items)}<td class="pm-actions"></td></tr>`;
+}
+
+// The Summit <tfoot> now carries only the Cash residual — the weighted average moved
+// to the top summary row.
+function bookCashRow() {
+  const { s, q } = bookStats();
+  return cashRow(s, q, '<td class="pm-actions"></td>');
+}
+
+function renderBookSummary() {
+  const el = document.getElementById('pm-book-summary');
+  if (el) el.outerHTML = bookSummaryRow();
+}
+function refreshBookFoot() {
+  const foot = document.getElementById('pm-book-foot');
+  if (foot) foot.innerHTML = bookCashRow();
+}
+
+// ── User-built portfolios (segments under Summit) ────────────────────────────
+// Each is its own editable book, rendered as a collapsible segment exactly like the
+// Summit one: a top summary row (name + weighted average) and the holdings beneath.
+const pfFind = (id) => portfolios.find((p) => p.id === id);
+const pfItems = (p) => (p.holdings || []).map((h) => ({ ticker: paperTicker(h), weight: h.weight }));
+const pfNewId = () => 'pf-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+// An editable holding row inside a portfolio — ticker drives everything to its right.
+function pfRow(pid, h, idx) {
+  const t = paperTicker(h);
+  const tkTd = `<td><input class="pm-inp pm-tk" data-field="ticker" value="${esc(h.ticker)}" placeholder="Ticker">${fyBadge(t)}</td>`;
+  const wtTd = `<td><input class="pm-inp pm-wt" data-field="weight" value="${esc(h.weight)}" placeholder="0.0"> <span class="muted">%</span></td>`;
+  const rest = t ? quoteCells(t) + metricCells(t) : DASH.repeat(colSpan() - 2);
+  return `<tr data-pf="${pid}" data-idx="${idx}" data-ticker="${t}">
+    ${tkTd}${wtTd}${rest}
+    <td class="pm-actions"><button class="pm-del" title="Remove">&times;</button></td>
+  </tr>`;
+}
+
+// The always-visible top row: collapse caret + editable name on the left, then the
+// portfolio's weighted-average cells, and a × to delete the whole portfolio.
+function pfSummaryRow(p, s, pb, items) {
+  const caret = `<button class="pm-seg-toggle no-label" data-pf-collapse="${p.id}" aria-expanded="${!p.collapsed}" title="${p.collapsed ? 'Expand holdings' : 'Collapse to weighted average'}"><span class="pm-seg-caret">&#9662;</span></button>`;
+  const name = `<input class="pm-seg-nameinp" data-pf-name="${p.id}" value="${esc(p.name)}" aria-label="portfolio name">`;
+  return `<tr class="pm-wavg pm-seg-summary" id="pf-sum-${p.id}"><td class="tk pm-seg-name-cell">${caret}${name}</td>${wavgCells(s, pb, items)}<td class="pm-actions"><button class="pm-segdel" data-pf-del="${p.id}" title="Delete portfolio">&times;</button></td></tr>`;
+}
+
+function pfBody(p) {
+  const span = colSpan(1);
+  return (p.holdings || []).map((h, i) => pfRow(p.id, h, i)).join('') +
+    `<tr><td colspan="${span}"><button class="pm-add" data-pf-add="${p.id}">+ Add</button></td></tr>`;
+}
+
+function portfolioSegment(p) {
+  const items = pfItems(p);
+  const s = weightedStats(items), pb = portBeta(items), q = quoteCount();
+  return `
+    <div class="card pm-seg${p.collapsed ? ' is-collapsed' : ''}" data-seg="pf">
+      <table class="pm-fixed" data-side="pf" data-pf="${p.id}">
+        ${colGroup()}
+        <thead>${headRow('<th></th>')}${pfSummaryRow(p, s, pb, items)}</thead>
+        <tbody id="pf-body-${p.id}">${pfBody(p)}</tbody>
+        <tfoot id="pf-foot-${p.id}">${cashRow(s, q, '<td class="pm-actions"></td>')}</tfoot>
+      </table>
+    </div>`;
+}
+
+const customPortfolios = () => portfolios.map(portfolioSegment).join('');
+
+// The "+ New portfolio" control: a button that reveals a source chooser — start
+// blank, or prefill from the predefined books (Summit, the team books, or a
+// superinvestor). Picking a source creates the portfolio and closes the chooser.
+function newPortfolioBar() {
+  const invs = (INVESTORS || []).filter((x) => x.key !== 'summit' && x.holdings && x.holdings.length);
+  const menu = !newPfOpen ? '' : `
+    <div class="pm-newpf-menu">
+      <span class="lbl">Start from</span>
+      <button class="pm-pf" data-newpf="blank" title="Empezar con 0 posiciones">Blank</button>
+      <button class="pm-pf" data-newpf="summit">Summit</button>
+      ${Object.keys(TEAM_BOOKS).map((k) => `<button class="pm-pf" data-newpf="${esc(k)}">${esc(TEAM_BOOKS[k].label)}</button>`).join('')}
+      <select class="pm-pf-sel" data-newpf-inv aria-label="Prefill from a superinvestor">
+        <option value="">Superinvestor&hellip;</option>
+        ${invs.map((x) => `<option value="${esc(x.key)}">${esc(x.name)}${x.fund ? ' · ' + esc(x.fund) : ''}</option>`).join('')}
+      </select>
+    </div>`;
+  return `<div class="pm-newpf">
+    ${menu}
+    <button class="pm-newpf-btn${newPfOpen ? ' open' : ''}" data-newpf-toggle>+ New portfolio</button>
+  </div>`;
+}
+
+// Resolve a chooser key to { name, holdings }. Mirrors the Paper prefill sources.
+function pfSourceBook(key) {
+  if (key === 'summit') { const b = summitBook(); return { name: 'Summit (copy)', holdings: [...b.passive, ...b.single] }; }
+  if (TEAM_BOOKS[key])  { const b = teamBook(key); return { name: TEAM_BOOKS[key].label, holdings: [...b.passive, ...b.single] }; }
+  if (key && key !== 'blank') { const b = investorBook(key); return { name: b.label, holdings: [...b.passive, ...b.single] }; }
+  return { name: 'Portfolio ' + (portfolios.length + 1), holdings: [] };   // blank
+}
+
+function addPortfolio(key) {
+  const src = pfSourceBook(key);
+  portfolios.push({ id: pfNewId(), name: src.name, collapsed: false, holdings: pfRows(src.holdings) });
+  savePortfolios();
+  newPfOpen = false;
+  renderPortfolio();          // repaint the Summit pane (which now includes this segment)
+  pfItems({ holdings: src.holdings }).forEach((it) => it.ticker && ensureQuote(it.ticker));
+  renderBeta(); renderBlended();
+}
+
+function renderPfBody(id) {
+  const p = pfFind(id), el = document.getElementById('pf-body-' + id);
+  if (p && el) el.innerHTML = pfBody(p);
+}
+
+// Repaint a portfolio's summary (weighted avg) + cash rows after an edit. The focused
+// input lives in the tbody, so replacing the thead/tfoot rows keeps the cursor put.
+function refreshPfFooter(id) {
+  const p = pfFind(id);
+  if (!p) return;
+  const items = pfItems(p), s = weightedStats(items), pb = portBeta(items), q = quoteCount();
+  const sum = document.getElementById('pf-sum-' + id);
+  if (sum) sum.outerHTML = pfSummaryRow(p, s, pb, items);
+  const foot = document.getElementById('pf-foot-' + id);
+  if (foot) foot.innerHTML = cashRow(s, q, '<td class="pm-actions"></td>');
 }
 
 function metricNote() {
@@ -507,38 +794,73 @@ function metricNote() {
   return '';
 }
 
-// Earnings-only sub-toggle, sitting under the metric bar: read the metric as the
-// absolute figure or per share. Hidden for every other metric.
+// Sub-toggle under the metric bar. For Earnings it reads the metric as the absolute
+// figure or per share; for Cash it picks which cash metric — CFO or FCF — is live.
+// Hidden for EBITDA, which has no sub-choice.
 function basisBar() {
-  if (metricSel !== 'earnings') return '';
-  const opt = (k, label) =>
-    `<button data-basis="${k}" class="${earnBasis === k ? 'on' : ''}">${label}</button>`;
-  return `
+  if (metricSel === 'earnings') {
+    const opt = (k, label) =>
+      `<button data-basis="${k}" class="${earnBasis === k ? 'on' : ''}">${label}</button>`;
+    return `
     <div class="pm-metricbar pm-basisbar">
       <span class="lbl">Basis</span>
       <div class="pm-seg">${opt('earnings', 'Earnings')}${opt('eps', 'EPS')}</div>
     </div>`;
+  }
+  if (isCashMetric()) {
+    const opt = (k, label) =>
+      `<button data-cash="${k}" class="${metricSel === k ? 'on' : ''}">${label}</button>`;
+    return `
+    <div class="pm-metricbar pm-basisbar">
+      <span class="lbl">Basis</span>
+      <div class="pm-seg">${opt('cfo', 'CFO')}${opt('fcf', 'FCF')}</div>
+    </div>`;
+  }
+  return '';
 }
 
 // Shared header row — the benchmark card reuses it so its columns stay aligned
 // with the book above as the metric/year selectors change.
 // Column count, so group/empty rows span the table as the selectors change.
-// Ticker + Weight + quote columns (2 with a metric active, 4 without) + metric
-// columns (5 or 0), and Paper adds a trailing actions column.
-const colSpan = (extra) => 2 + 4 + 5 + (extra || 0);
+// The metric block: multiple + growth + PEG + Beta (4), plus the two value columns
+// when showQuote is on (6). The value columns ride the same toggle as Price/MktCap.
+const metricCols = () => (showQuote ? 6 : 4);
+
+// Ticker + Weight + the live-quote columns on screen (quoteCount: Price + Market
+// Cap and/or Net Debt + EV) + the metric columns (metricCols), and Paper adds a
+// trailing actions column.
+const colSpan = (extra) => 2 + quoteCount() + metricCols() + (extra || 0);
+
+// A <colgroup> so the book, every portfolio and the benchmark — each its own table —
+// share identical column widths and line up vertically, even though their cells mix
+// text, numbers and typed inputs (plain auto-layout sizes each table to its own
+// content, so they drift). Mirrors headRow's column set exactly, under the same
+// showQuote / showEvCols gating; the name column is left flexible to absorb the
+// leftover width, and the trailing actions column closes every one of these tables.
+function colGroup() {
+  let c = '<col class="pm-c-name"><col class="pm-c-wt">';
+  if (showQuote) c += '<col class="pm-c-q"><col class="pm-c-mc">';
+  if (showEvCols()) c += '<col class="pm-c-q"><col class="pm-c-q">';
+  c += '<col class="pm-c-m">';
+  if (showQuote) c += '<col class="pm-c-v"><col class="pm-c-v">';
+  c += '<col class="pm-c-g"><col class="pm-c-peg"><col class="pm-c-beta"><col class="pm-c-act">';
+  return `<colgroup>${c}</colgroup>`;
+}
 
 function headRow(trailing) {
   const p = periodInfo();
   const m = METRICS[metricSel];
   return `<tr>
-            <th>Ticker</th><th>Weight %</th><th>Price</th><th>Market Cap</th>
-            <th>Net Debt</th><th>EV</th>
-            <th class="msep">${m.mult}</th>
-            <th>${metricLabel()} ${periodHead(p.prevKey)}</th>
-            <th>${metricLabel()} ${periodHead(p.currKey)}</th>
-            <th>Growth ${p.prevLabel}&rarr;${p.currLabel}${
-              isRel(p.currKey) ? `<span class="pm-cy">${p.prevKey}&rarr;${p.currKey}</span>` : ''}</th>
+            <th>Ticker</th><th>Weight %</th>
+            ${showQuote ? '<th>Price</th><th>Market Cap</th>' : ''}
+            ${showEvCols() ? '<th>Net Debt</th><th>EV</th>' : ''}
+            <th class="msep">${m.mult} <span class="pm-cy">${multSel === 'NTM' ? 'NTM' : relLabel(multSel)}</span></th>
+            ${showQuote ? `<th>${metricLabel()} ${periodHead(p.prevKey)}</th>
+            <th>${metricLabel()} ${periodHead(p.currKey)}</th>` : ''}
+            <th>Growth${growthSpan() > 1 ? ' ann.' : ''} ${p.prevLabel}&rarr;${p.currLabel}${
+              isRel(p.currKey) ? `<span class="pm-cy">${p.prevKey}&rarr;${p.currKey}${growthSpan() > 1 ? ` · ${growthSpan()}y CAGR` : ''}</span>` : ''}</th>
             <th>PEG</th>
+            <th>Beta</th>
             ${trailing || ''}
           </tr>`;
 }
@@ -549,13 +871,15 @@ function benchmarkTable() {
   return `
     <h3 class="pm-bmk-h">Benchmark</h3>
     <div class="card pm-bmk">
-      <table>
-        <thead>${headRow()}</thead>
+      <table class="pm-fixed">
+        ${colGroup()}
+        <thead>${headRow('<th></th>')}</thead>
         <tbody>
           <tr data-ticker="${b.ticker}">
             <td class="tk">${b.label}${fyBadge(b.ticker)} <span class="muted">${b.name}</span></td>
             ${baseCells(b)}
             ${metricCells(b.ticker)}
+            <td class="pm-actions"></td>
           </tr>
         </tbody>
       </table>
@@ -568,17 +892,34 @@ function benchmarkTable() {
     </p>`;
 }
 
-// Metric + Year selectors, with the Earnings basis sub-toggle under them. Both
-// subtabs render this bar and share the same state, so the two tables always
-// describe the same metric and period.
+// Metric / Source / Multiple-period selectors + the Growth dropdown, with the metric
+// basis sub-toggle under them. Both subtabs render this bar and share the same state.
+// The multiple-period segment: NTM (disabled until it has a real feed), FY0, FY+1, FY+2.
+function multButtons() {
+  return MULT_PERIODS.map(y => {
+    const dis = y === 'NTM';
+    const attrs = dis
+      ? ' disabled title="NTM no disponible aún — el modelo solo trae años fiscales. Próximamente conectaremos un NTM con dato real."'
+      : '';
+    return `<button data-mult="${y}" class="${multSel === y ? 'on' : ''}"${attrs}>${periodHead(y)}</button>`;
+  }).join('');
+}
+// The growth dropdown: three fixed windows (FY0→FY2 annualized).
+function growthSelect() {
+  return `<select class="pm-select" data-growth>${
+    Object.keys(GROWTH_OPTS).map(k =>
+      `<option value="${k}"${growthSel === k ? ' selected' : ''}>${GROWTH_OPTS[k].label}</option>`
+    ).join('')}</select>`;
+}
+
 function metricBar() {
   return `
     <div class="pm-metricbar">
       <span class="lbl">Metric</span>
       <div class="pm-seg">
-        ${Object.keys(METRICS).map(k =>
-          `<button data-metric="${k}" class="${metricSel === k ? 'on' : ''}">${METRICS[k].label}</button>`
-        ).join('')}
+        <button data-metric="ebitda" class="${metricSel === 'ebitda' ? 'on' : ''}">EBITDA</button>
+        <button data-metric="earnings" class="${metricSel === 'earnings' ? 'on' : ''}">Earnings</button>
+        <button data-metric="cash" class="${isCashMetric() ? 'on' : ''}" title="CFO o FCF — elige cuál en Basis">Cash</button>
       </div>
       <span class="lbl" style="margin-left:8px">Source</span>
       <div class="pm-seg">
@@ -586,41 +927,74 @@ function metricBar() {
           `<button data-source="${k}" class="${source === k ? 'on' : ''}">${SOURCES[k].label}</button>`
         ).join('')}
       </div>
-      <span class="lbl" style="margin-left:8px">Year</span>
-      <div class="pm-seg">
-        ${YEARS.map(y =>
-          `<button data-year="${y}" class="${yearSel === y ? 'on' : ''}">${periodHead(y)}</button>`
-        ).join('')}
+      <div class="pm-mg" style="margin-left:8px">
+        <div class="pm-mg-line">
+          <span class="lbl">Multiple</span>
+          <div class="pm-seg">${multButtons()}</div>
+        </div>
+        <div class="pm-mg-line">
+          <span class="lbl">Growth</span>
+          ${growthSelect()}
+        </div>
       </div>
     </div>
     ${basisBar()}`;
 }
 
-const quoteNote = () =>
-  `<p class="pm-note">Price · Market Cap · Net Debt · EV = live via Massive (api.liveQuote). Net Debt = EV − Market Cap (negative = net cash).</p>`;
+// Subtle show/hide control for the Price + Market Cap columns, parked at the top-right
+// just above the table (rather than taking a slot in the metric bar).
+function quoteToggle() {
+  const eye = showQuote
+    ? '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.9 17.9A10.7 10.7 0 0 1 12 19C5 19 1 12 1 12a19.8 19.8 0 0 1 5.1-5.9m3.3-1.5A10.7 10.7 0 0 1 12 5c7 0 11 7 11 7a19.8 19.8 0 0 1-2.3 3.3M1 1l22 22"/></svg>'
+    : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+  return `<div class="pm-qtoggle">
+    <button data-togglequote class="pm-qbtn${showQuote ? ' on' : ''}" title="Mostrar u ocultar Price, Market Cap y las columnas de ${metricLabel()}">
+      ${eye}<span>Price · Market Cap · ${metricLabel()}</span>
+    </button>
+  </div>`;
+}
+
+const quoteNote = () => {
+  const parts = [];
+  if (showQuote) parts.push('Price · Market Cap');
+  if (showEvCols()) parts.push('Net Debt · EV');
+  const nd = showEvCols() ? ' Net Debt = EV − Market Cap (negative = net cash).' : '';
+  const live = parts.length
+    ? `<p class="pm-note">${parts.join(' · ')} = live via Massive (api.liveQuote).${nd}</p>`
+    : '';
+  const hint = showEvCols()
+    ? ''
+    : `<p class="pm-note">Net Debt y EV aparecen solo con EBITDA (para EV/EBITDA); las demás métricas valúan sobre Market Cap.</p>`;
+  return live + hint;
+};
 
 function portfolioTable() {
-  const span = colSpan();
+  // The book is a named, collapsible segment: collapsed hides the holdings and the
+  // Cash row, leaving the column headers + the weighted-average row under the name.
+  // (First of what will become one segment per portfolio.)
   return `
     ${metricBar()}
-    <div class="card">
-      <table data-side="portfolio">
-        <thead>${headRow()}</thead>
-        <tbody>
-          ${portGroup('Passive', PORTFOLIO.passive, span)}
-          ${portGroup('Single Stock', PORTFOLIO.single, span)}
-        </tbody>
-        <tfoot>${footRows(portItems(), 0)}</tfoot>
+    <div class="pm-toprow">
+      ${quoteToggle()}
+      ${newPortfolioBar()}
+    </div>
+    <div class="card pm-seg${bookCollapsed ? ' is-collapsed' : ''}" data-seg="summit">
+      <table class="pm-fixed" data-side="portfolio">
+        ${colGroup()}
+        <thead>${headRow('<th></th>')}${bookSummaryRow()}</thead>
+        <tbody id="pm-book-body">${bookBody()}</tbody>
+        <tfoot id="pm-book-foot">${bookCashRow()}</tfoot>
       </table>
     </div>
+    ${customPortfolios()}
     ${quoteNote()}
     ${metricNote()}
     ${benchmarkTable()}`;
 }
 
 function renderPortfolio() {
-  // Repaint only the PEG pane — the nested analysis tabs (Beta / Correlations)
-  // and the tab bar live in #pm-sub-portfolio around it and must survive.
+  // Repaint only the PEG table — the Correlations pane and the tab bar live in
+  // #pm-sub-portfolio around it and must survive. The Beta column repaints with it.
   const el = document.getElementById('pm-an-peg');
   if (el) el.innerHTML = portfolioTable();
 }
@@ -751,18 +1125,24 @@ function betaOf(t) {
   return { beta: varm > 0 ? cov / varm : null, n, method: m };
 }
 
-// Portfolio β = Σ (weight_i × β_i) ÷ 100, each name at its own method. Cash and
-// names with no price data contribute 0, so they drag β toward 0.
+// Portfolio β = weighted average of the per-name betas (each at its own method),
+// normalised over covered weight + cash — exactly how weightedStats handles growth.
+// Cash is a β-0 holding (it drags β down to the extent the book isn't invested); a
+// name with a weight but no usable beta (too little price history) drops out of BOTH
+// sides, so it is excluded rather than counted as 0. Dividing by a flat 100 instead
+// would wrongly pull β toward 0 for every uncovered name.
 function portBeta(items) {
-  let bSum = 0, wCov = 0;
+  let wTyped = 0, bSum = 0, wCov = 0;
   items.forEach((it) => {
     const w = num(it.weight);
     if (w === null || w <= 0) return;
+    wTyped += w;
     const r = betaOf(it.ticker);
-    if (!r || r.beta === null) return;
+    if (!r || r.beta === null) return;     // no usable beta → excluded, not counted as 0
     bSum += w * r.beta; wCov += w;
   });
-  return { beta: wCov > 0 ? bSum / 100 : null, covered: wCov };
+  const cash = Math.max(0, 100 - wTyped);  // uninvested remainder, β 0
+  return { beta: wCov > 0 ? bSum / (wCov + cash) : null, covered: wCov };
 }
 
 // The per-name control strip, revealed under a row when its method tag is clicked.
@@ -787,75 +1167,14 @@ function methodStrip(t, m, n) {
     </div>`;
 }
 
-function betaBlock(side) {
-  const items = side === 'paper' ? paperItems() : portItems();
-  const pb = portBeta(items);
-  // Whatever the weights leave short of 100% is cash — it carries no beta, so it
-  // counts as β 0 in the weighted average (same treatment as the metric tables).
-  const sumW = items.reduce((a, it) => { const w = num(it.weight); return a + (w && w > 0 ? w : 0); }, 0);
-  const cash = 100 - sumW;
-
-  const rows = items.map((it) => {
-    const t = it.ticker;
-    const r = betaOf(t);
-    const m = r.method;
-    const w = num(it.weight);
-    const has = r.beta != null;
-    const pending = m.freq === 'daily' && dailyState !== 'ready';
-    const open = betaOpen === t;
-
-    const betaCell = has
-      ? `<td class="num pm-beta pm-beta-cell ${r.beta >= 1 ? 'hi' : 'lo'}" data-bt="${esc(t)}" title="Ver beta histórica &middot; n=${r.n}">${r.beta.toFixed(2)}</td>`
-      : `<td class="num pm-beta muted"${pending ? ' title="Cargando historial diario…"' : ''}>${pending ? '&middot;&middot;&middot;' : '&mdash;'}</td>`;
-    const methodCell = `<td class="pm-method">
-        <button class="pm-mtag${m.override ? ' ov' : ''}${open ? ' open' : ''}" data-bopen="${esc(t)}"
-          title="${m.override ? 'Método propio' : 'Método por defecto'} — clic para ajustar">
-          ${methodTag(m)}<span class="pm-mchev">${open ? '&#9662;' : '&#9656;'}</span></button>
-      </td>`;
-
-    const rowTr = `<tr class="pm-brow${open ? ' open' : ''}">
-        <td class="tk">${labelOf(t)}${m.override ? '<span class="pm-ovdot" title="Método propio"></span>' : ''}</td>
-        <td class="num">${w === null ? '&mdash;' : w.toFixed(1) + '%'}</td>
-        ${betaCell}${methodCell}
-      </tr>`;
-    const ctlTr = open ? `<tr class="pm-bctl"><td colspan="4">${methodStrip(t, m, r.n)}</td></tr>` : '';
-    return rowTr + ctlTr;
-  }).join('');
-
-  return `
-    ${dailyState === 'loading' ? '<div class="pm-daily-loading">Cargando historial de precios diario&hellip;</div>' : ''}
-    <div class="card">
-      <table>
-        <thead><tr><th>Name</th><th>Weight</th><th>Beta</th><th>M&eacute;todo</th></tr></thead>
-        <tbody>${rows}</tbody>
-        <tfoot>
-          ${cash > 0.05 ? `<tr class="pm-cash">
-            <td class="tk">Cash</td>
-            <td class="num">${cash.toFixed(1)}%</td>
-            <td class="num muted" title="El cash no tiene beta — cuenta como β 0 en el promedio.">&beta; 0.00</td>
-            <td></td>
-          </tr>` : ''}
-          <tr class="pm-wavg">
-            <td class="tk">Portfolio &beta;</td>
-            <td class="num" title="${pb.covered.toFixed(1)}% del libro tiene beta calculable${cash > 0.05 ? ` · ${cash.toFixed(1)}% es cash (β 0)` : ''}${sumW > 100 ? ` · pesos suman ${sumW.toFixed(1)}% (sobre 100%)` : ''}.">${(sumW > 100 ? sumW : 100).toFixed(1)}%</td>
-            <td class="num pm-beta">${pb.beta != null ? pb.beta.toFixed(2) : '&mdash;'}</td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-    <p class="pm-note">&beta; vs <b>${betaMarket()}</b>. Por defecto cada nombre usa <b>5 a&ntilde;os &middot; mensual</b>; clic en su
-      etiqueta de <b>M&eacute;todo</b> para cambiar frecuencia y ventana <b>solo en esa acci&oacute;n</b> (las ajustadas se marcan
-      con &bull;). &beta; = cov(activo, mercado) / var(mercado), ambos a la misma frecuencia y ventana; el &beta; del portafolio
-      es el promedio ponderado por peso &mdash; efectivo y nombres sin historial cuentan como &beta; 0.</p>`;
-}
-
+// Beta now lives as a column inside the PEG tables (see betaTd / footRows), so a
+// beta recompute just repaints those tables and re-syncs the detail modal if open.
 function renderBeta() {
   maybeLoadDaily();
-  const a = document.getElementById('pm-an-beta');
-  if (a) a.innerHTML = betaBlock('metrics');
-  const b = document.getElementById('pm-an-beta-paper');
-  if (b) b.innerHTML = betaBlock('paper');
+  renderPortfolio();                                   // Summit PEG table (Beta column)
+  const p = document.getElementById('pm-an-peg-paper');
+  if (p) p.innerHTML = paperTable();                   // Paper PEG table (Beta column)
+  refreshBetaModal();                                  // keep an open detail modal in sync
 }
 
 // Rolling beta over ALL available history at a given frequency: at each period
@@ -887,7 +1206,9 @@ function rollingBeta(t, win, freq) {
   return out;
 }
 
-// The single reusable modal that holds the beta chart.
+// The single reusable modal behind the Beta column: the formula, the per-name
+// method controls, and the rolling-beta history chart. One modal, re-pointed at
+// whichever name was clicked.
 function betaModal() {
   return `
     <div class="modal-overlay pm-beta-ov" id="pm-beta-modal">
@@ -899,16 +1220,56 @@ function betaModal() {
           </div>
           <button class="modal-close" data-bm-close aria-label="Cerrar">&times;</button>
         </div>
+        <div class="pm-bm-controls" id="pm-bm-controls"></div>
         <div class="pm-bm-body"><canvas id="pm-bm-canvas"></canvas></div>
+        <div class="pm-bm-calc" id="pm-bm-calc"></div>
       </div>
     </div>`;
 }
 
-let _betaChart = null;
+// How the number is built, in plain Spanish, with this name's actual inputs. Shown
+// under the chart so the modal both explains the method and lets you change it.
+function betaCalcHtml(t, m, cur) {
+  const noun = FREQ_NOUN[m.freq];
+  const win = m.unit === 'y'
+    ? `${m.amt} año${m.amt > 1 ? 's' : ''}`
+    : `${m.amt} mes${m.amt > 1 ? 'es' : ''}`;
+  const b = cur.beta != null ? cur.beta.toFixed(2) : '—';
+  const reads = cur.beta != null
+    ? `En promedio la acción se movió <b>${b}%</b> por cada <b>1%</b> del mercado sobre esa ventana.`
+    : `Aún no hay suficientes períodos en común (n = ${cur.n || 0}, se necesitan ≥6) para un número confiable.`;
+  return `
+    <div class="pm-bm-formula">&beta; = cov(r<sub>activo</sub>, r<sub>mercado</sub>) &divide; var(r<sub>mercado</sub>)</div>
+    <p class="pm-bm-expl">
+      Se toman los rendimientos <b>${noun.adj}</b> de <b>${labelOf(t)}</b> y de <b>${betaMarket()}</b> (el mercado)
+      sobre los últimos <b>${win}</b>, se alinean en sus períodos en común (<b>n = ${cur.n || '—'}</b>) y se divide la
+      covarianza del activo con el mercado entre la varianza del mercado. ${reads}
+    </p>
+    <p class="pm-bm-expl pm-bm-muted">
+      Cambia frecuencia y ventana arriba para recalcular &mdash; el ajuste se guarda <b>solo para ${labelOf(t)}</b> y se
+      refleja en la columna Beta de la tabla. La &beta; del portafolio es el promedio de estas betas ponderado por peso.
+    </p>`;
+}
 
+let _betaChart = null;
+let _betaModalTicker = null;    // the name the modal is currently showing, for live refresh
+
+// Open (or re-point) the modal on a name. Draws title, controls, formula and chart.
 function openBetaChart(ticker) {
   const overlay = document.getElementById('pm-beta-modal');
   if (!overlay || typeof Chart === 'undefined') return;
+  _betaModalTicker = ticker;
+  overlay.classList.add('open');
+  drawBetaModal(ticker);
+}
+
+// Re-render the open modal in place after its method changed (called from renderBeta).
+function refreshBetaModal() {
+  const overlay = document.getElementById('pm-beta-modal');
+  if (_betaModalTicker && overlay && overlay.classList.contains('open')) drawBetaModal(_betaModalTicker);
+}
+
+function drawBetaModal(ticker) {
   const m = betaMethod(ticker);                          // the name's own method
   const noun = FREQ_NOUN[m.freq];
   const avail = (betaSeries(ticker, m.freq) || []).length - 1;   // return-periods available
@@ -918,16 +1279,16 @@ function openBetaChart(ticker) {
   const win = Math.max(floor, Math.min(target, avail - 6));
   const series = rollingBeta(ticker, win, m.freq);
 
-  document.getElementById('pm-bm-title').textContent = `${labelOf(ticker)} — Beta histórica`;
   const cur = betaOf(ticker);
+  document.getElementById('pm-bm-title').textContent = `${labelOf(ticker)} — Beta`;
   document.getElementById('pm-bm-sub').innerHTML =
     `Beta móvil de ${win} ${noun.many} vs ${betaMarket()} (${noun.label})` +
     (cur && cur.beta != null
       ? ` &middot; β actual (${methodTag(m)}) = <b>${cur.beta.toFixed(2)}</b>` : '');
+  document.getElementById('pm-bm-controls').innerHTML = methodStrip(ticker, m, cur.n);
+  document.getElementById('pm-bm-calc').innerHTML = betaCalcHtml(ticker, m, cur);
 
-  overlay.classList.add('open');
   if (_betaChart) { _betaChart.destroy(); _betaChart = null; }
-
   if (!series.length) return;   // nothing to plot (too little history)
   const ctx = document.getElementById('pm-bm-canvas').getContext('2d');
   _betaChart = new Chart(ctx, {
@@ -966,6 +1327,7 @@ function closeBetaChart() {
   const overlay = document.getElementById('pm-beta-modal');
   if (overlay) overlay.classList.remove('open');
   if (_betaChart) { _betaChart.destroy(); _betaChart = null; }
+  _betaModalTicker = null;
 }
 // ── Correlations ──────────────────────────────────────────────────────────────
 // Pearson correlation of two return series (Map period→return), aligned on their
@@ -1072,7 +1434,7 @@ function corrMatrix(side) {
   const editor = side === 'paper' ? corrNamesEditor() : '';
   const tks = side === 'paper'
     ? [...new Set(paperMatrixNames().map((t) => (t || '').toUpperCase()).filter(Boolean))]
-    : [...new Set(portItems().map((it) => (it.ticker || '').toUpperCase()).filter(Boolean))];
+    : [...new Set(weightedBook().map((it) => (it.ticker || '').toUpperCase()).filter(Boolean))];
   const m = { freq: corrFreq, amt: Number(corrAmt), unit: corrUnit };
 
   if (corrFreq === 'daily' && dailyState !== 'ready') {
@@ -1081,7 +1443,7 @@ function corrMatrix(side) {
       : 'Cargando el historial de precios diario&hellip;'}</div>`;
   }
   if (tks.length < 2) return corrControls() + editor
-    + `<div class="pm-ph">${side === 'paper' ? 'Agrega al menos 2 nombres a la matriz.' : 'Se necesitan al menos 2 posiciones con ticker.'}</div>`;
+    + `<div class="pm-ph">${side === 'paper' ? 'Agrega al menos 2 nombres a la matriz.' : 'Se necesitan al menos 2 posiciones con peso &gt; 0%.'}</div>`;
 
   const R = tks.map((a) => tks.map((b) => (a === b ? { r: 1, n: null } : pearson(a, b, m))));
   let sum = 0, cnt = 0;
@@ -1115,7 +1477,7 @@ function corrMatrix(side) {
 // to 4 tickers you type into the editable column headers on the right. A weighted
 // "Portafolio (pond.)" row gives the book's own return series vs each instrument.
 function benchTable(side) {
-  const items = side === 'paper' ? paperItems() : portItems();
+  const items = side === 'paper' ? paperItems() : weightedBook();
   const m = { freq: corrFreq, amt: Number(corrAmt), unit: corrUnit };
   const cols = ['SPY', ...corrSlots.map((s) => (s || '').toUpperCase())];   // '' = empty slot
 
@@ -1157,7 +1519,7 @@ function benchTable(side) {
   return `${corrControls()}
     <div class="card"><table class="pm-benchtable">
       <thead>${thead}</thead>
-      <tbody>${rowsHtml || `<tr><td colspan="7" class="pm-empty">Sin posiciones.</td></tr>`}</tbody>
+      <tbody>${rowsHtml || `<tr><td colspan="7" class="pm-empty">Sin posiciones con peso &gt; 0%.</td></tr>`}</tbody>
       <tfoot><tr class="pm-wavg"><td class="tk">Portafolio (pond.)</td><td class="num"></td>${footCells}</tr></tfoot>
     </table></div>
     <p class="pm-note">Correlaci&oacute;n de Pearson de cada posici&oacute;n vs <b>SPY</b> y hasta <b>4 tickers</b> que escribas en los
@@ -1200,7 +1562,8 @@ function setBenchSlot(input) {
 // Beta and Correlations join once those analyses exist.
 const LABEL_OF = {};
 [...PORTFOLIO.passive, ...PORTFOLIO.single].forEach(x => { LABEL_OF[x.ticker] = x.label; });
-const labelOf = (t) => LABEL_OF[t] || t;
+// Tickers always display in upper case, whatever the stored label's casing.
+const labelOf = (t) => (LABEL_OF[t] || t || '').toUpperCase();
 
 // The portfolios shown in Comparison: the current book (Summit) plus every
 // portfolio submitted from Paper.
@@ -1325,10 +1688,16 @@ function renderAll() {
 // The benchmark card has no footer, so the guard covers it.
 function refreshFooter(tr) {
   const table = tr.closest('table');
-  const foot = table && table.querySelector('tfoot');
-  if (!foot) return;
-  const paperSide = table.dataset.side === 'paper';
-  foot.innerHTML = footRows(paperSide ? paperItems() : portItems(), paperSide ? 1 : 0);
+  if (!table) return;
+  if (table.dataset.side === 'paper') {
+    const foot = table.querySelector('tfoot');
+    if (foot) foot.innerHTML = footRows(paperItems(), 1);   // Paper keeps cash + wavg in the foot
+    return;
+  }
+  if (table.dataset.side === 'pf') { refreshPfFooter(table.dataset.pf); return; }
+  // Summit: the weighted average lives in the top summary row, cash in the foot.
+  renderBookSummary();
+  refreshBookFoot();
 }
 
 // Recompute the growth + PEG cells of one row in place (keeps input focus).
@@ -1394,8 +1763,10 @@ function ensureQuote(t) {
 }
 
 function fetchQuotes() {
-  [...PORTFOLIO.passive, ...PORTFOLIO.single, BENCHMARK].forEach(x => ensureQuote(x.ticker));
+  [...BOOK_SEED, BENCHMARK].forEach(x => ensureQuote(x.ticker));
+  bookExtra.map(paperTicker).filter(Boolean).forEach(ensureQuote);
   paperTickers().forEach(ensureQuote);
+  portfolios.forEach((p) => pfItems(p).forEach((it) => it.ticker && ensureQuote(it.ticker)));
 }
 
 // Paper tickers are typed, so quotes are fetched on a debounce rather than per
@@ -1406,6 +1777,24 @@ function schedulePaperQuotes() {
   _paperQuoteTimer = setTimeout(() => {
     _paperQuoteTimer = null;
     paperTickers().forEach(ensureQuote);
+  }, 600);
+}
+// Same debounce for book tickers added via + Add.
+let _bookQuoteTimer = null;
+function scheduleBookQuotes() {
+  if (_bookQuoteTimer) clearTimeout(_bookQuoteTimer);
+  _bookQuoteTimer = setTimeout(() => {
+    _bookQuoteTimer = null;
+    bookExtra.map(paperTicker).filter(Boolean).forEach(ensureQuote);
+  }, 600);
+}
+// Same debounce for tickers typed into any user-built portfolio.
+let _pfQuoteTimer = null;
+function schedulePfQuotes() {
+  if (_pfQuoteTimer) clearTimeout(_pfQuoteTimer);
+  _pfQuoteTimer = setTimeout(() => {
+    _pfQuoteTimer = null;
+    portfolios.forEach((p) => pfItems(p).forEach((it) => it.ticker && ensureQuote(it.ticker)));
   }, 600);
 }
 
@@ -1579,8 +1968,10 @@ function paperGroup(label, group) {
 function paperTable() {
   return `
     ${metricBar()}
+    ${quoteToggle()}
     <div class="card">
-      <table data-side="paper">
+      <table class="pm-fixed" data-side="paper">
+        ${colGroup()}
         <thead>${headRow('<th></th>')}</thead>
         <tbody id="pm-paper-body">
           ${paperGroup('Passive', 'passive')}
@@ -1619,30 +2010,20 @@ export function loadPortfolioMetricsPage() {
       <button class="pm-pill active" data-sub="portfolio">Summit</button>
       <button class="pm-pill" data-sub="paper">Paper</button>
       <button class="pm-pill" data-sub="blended">Comparison</button>
+      <button class="pm-pill" data-sub="corr">Correlation</button>
     </div>
 
     <div class="pm-sub active" id="pm-sub-portfolio">
-      <div class="pm-anav">
-        <button class="pm-atab active" data-an="peg">PEG</button>
-        <button class="pm-atab" data-an="beta">Beta</button>
-        <button class="pm-atab" data-an="corr">Correlations</button>
-      </div>
-      <div class="pm-apane active" data-an="peg" id="pm-an-peg">${portfolioTable()}</div>
-      <div class="pm-apane" data-an="beta" id="pm-an-beta">${betaBlock('metrics')}</div>
-      <div class="pm-apane" data-an="corr" id="pm-an-corr">${corrBlock('metrics')}</div>
+      <div id="pm-an-peg">${portfolioTable()}</div>
     </div>
     <div class="pm-sub" id="pm-sub-paper">
       <div id="pm-paper-header">${paperHeader()}</div>
-      <div class="pm-anav">
-        <button class="pm-atab active" data-an="peg">PEG</button>
-        <button class="pm-atab" data-an="beta">Beta</button>
-        <button class="pm-atab" data-an="corr">Correlations</button>
-      </div>
-      <div class="pm-apane active" data-an="peg" id="pm-an-peg-paper">${paperTable()}</div>
-      <div class="pm-apane" data-an="beta" id="pm-an-beta-paper">${betaBlock('paper')}</div>
-      <div class="pm-apane" data-an="corr" id="pm-an-corr-paper">${corrBlock('paper')}</div>
+      <div id="pm-an-peg-paper">${paperTable()}</div>
     </div>
     <div class="pm-sub" id="pm-sub-blended">${blendedBody()}</div>
+    <div class="pm-sub" id="pm-sub-corr">
+      <div id="pm-an-corr">${corrBlock('metrics')}</div>
+    </div>
   </div>
   ${betaModal()}`;
 
@@ -1658,26 +2039,26 @@ export function loadPortfolioMetricsPage() {
 
 function wire(root) {
   root.addEventListener('click', (e) => {
-    // Sub-tab switch (Portfolio / Paper)
+    // Top-tab switch (Summit / Paper / Comparison / Correlation)
     const pill = e.target.closest('.pm-pill');
     if (pill) {
       const sub = pill.dataset.sub;
       root.querySelectorAll('.pm-pill').forEach(p => p.classList.toggle('active', p === pill));
       root.querySelectorAll('.pm-sub').forEach(s => s.classList.toggle('active', s.id === 'pm-sub-' + sub));
+      // Refresh Correlation on open so the matrix reflects the current book / weights.
+      if (sub === 'corr') renderCorr();
       return;
     }
-    // Analysis tab switch (PEG / Beta / Correlations) inside the Metrics subtab
-    const atab = e.target.closest('.pm-atab');
-    if (atab) {
-      const an = atab.dataset.an;
-      // Scope to this subtab's group so Metrics and Paper switch independently
-      // (both carry the same PEG / Beta / Correlations tabs).
-      const group = atab.closest('.pm-sub');
-      group.querySelectorAll('.pm-atab').forEach(b => b.classList.toggle('active', b === atab));
-      group.querySelectorAll('.pm-apane').forEach(p => p.classList.toggle('active', p.dataset.an === an));
-      // Refresh Correlations on open so the Paper matrix reflects the current book
-      // when it's mirroring it (no per-keystroke cost while editing the book).
-      if (an === 'corr') renderCorr();
+    // Summit segment header → collapse/expand the holdings (only the weighted-average
+    // row survives when collapsed). Toggle a class rather than repaint the table.
+    const bc = e.target.closest('[data-book-collapse]');
+    if (bc) {
+      bookCollapsed = !bookCollapsed;
+      saveJSON(BOOK_COLLAPSE_KEY, bookCollapsed);
+      const seg = bc.closest('.pm-seg');
+      if (seg) seg.classList.toggle('is-collapsed', bookCollapsed);
+      bc.setAttribute('aria-expanded', String(!bookCollapsed));
+      bc.title = bookCollapsed ? 'Expand holdings' : 'Collapse to weighted average';
       return;
     }
     // Beta cell → open the historical (rolling) beta chart for that name
@@ -1778,7 +2159,17 @@ function wire(root) {
     if (mbtn) {
       // A metric is always on — clicking the active one again is a no-op, not an
       // "off". The tables never sit in a state with no metric to read.
-      metricSel = mbtn.dataset.metric;
+      const m = mbtn.dataset.metric;
+      // "Cash" is a group of CFO/FCF — land on the one already chosen, else CFO by
+      // default; the Basis sub-toggle then switches between them.
+      metricSel = (m === 'cash') ? (isCashMetric() ? metricSel : 'cfo') : m;
+      renderAll();
+      return;
+    }
+    // Cash basis sub-toggle (CFO vs FCF) — each is a real metric under the hood
+    const cbtn = e.target.closest('.pm-seg button[data-cash]');
+    if (cbtn) {
+      metricSel = cbtn.dataset.cash;
       renderAll();
       return;
     }
@@ -1796,10 +2187,19 @@ function wire(root) {
       renderAll();
       return;
     }
-    // Year selector
-    const ybtn = e.target.closest('.pm-seg button[data-year]');
-    if (ybtn) {
-      yearSel = ybtn.dataset.year;
+    // Multiple period (the forward multiple's denominator)
+    const multBtn = e.target.closest('.pm-seg button[data-mult]');
+    if (multBtn) {
+      if (multBtn.disabled) return;        // NTM is disabled until it has a real feed
+      multSel = multBtn.dataset.mult;
+      renderAll();
+      return;
+    }
+    // Columns toggle — show / hide the Price + Market Cap columns (persisted)
+    const qbtn = e.target.closest('[data-togglequote]');
+    if (qbtn) {
+      showQuote = !showQuote;
+      saveJSON(QUOTE_COLS_KEY, showQuote);
       renderAll();
       return;
     }
@@ -1820,6 +2220,76 @@ function wire(root) {
     // Comparison: switch between summary and per-holding detail
     const cv = e.target.closest('[data-cmpview]');
     if (cv) { cmpView = cv.dataset.cmpview; renderBlended(); return; }
+    // New portfolio: toggle the source chooser open/closed.
+    const npt = e.target.closest('[data-newpf-toggle]');
+    if (npt) { newPfOpen = !newPfOpen; renderPortfolio(); return; }
+    // New portfolio: create one from a chosen source (blank / Summit / a team book).
+    const npf = e.target.closest('[data-newpf]');
+    if (npf) { addPortfolio(npf.dataset.newpf); return; }
+    // Portfolio: collapse / expand its holdings (summary row stays visible).
+    const pfc = e.target.closest('[data-pf-collapse]');
+    if (pfc) {
+      const p = pfFind(pfc.dataset.pfCollapse);
+      if (p) {
+        p.collapsed = !p.collapsed;
+        savePortfolios();
+        const seg = pfc.closest('.pm-seg');
+        if (seg) seg.classList.toggle('is-collapsed', p.collapsed);
+        pfc.setAttribute('aria-expanded', String(!p.collapsed));
+      }
+      return;
+    }
+    // Portfolio: delete the whole portfolio (its × sits in the summary row).
+    const pfd = e.target.closest('[data-pf-del]');
+    if (pfd) {
+      const p = pfFind(pfd.dataset.pfDel);
+      if (p && confirm(`¿Eliminar el portafolio "${p.name}"?`)) {
+        portfolios = portfolios.filter((x) => x.id !== p.id);
+        savePortfolios();
+        renderPortfolio(); renderBeta(); renderBlended();
+      }
+      return;
+    }
+    // Portfolio: add a holding row.
+    const pfa = e.target.closest('[data-pf-add]');
+    if (pfa) {
+      const p = pfFind(pfa.dataset.pfAdd);
+      if (p) { (p.holdings ||= []).push({ ticker: '', weight: '' }); savePortfolios(); renderPfBody(p.id); refreshPfFooter(p.id); }
+      return;
+    }
+    // Portfolio: remove a holding row (its × lives on a data-pf row).
+    const pfRowDel = e.target.closest('.pm-del');
+    if (pfRowDel && pfRowDel.closest('tr') && pfRowDel.closest('tr').dataset.pf !== undefined) {
+      const tr = pfRowDel.closest('tr'), p = pfFind(tr.dataset.pf);
+      if (p) {
+        p.holdings.splice(Number(tr.dataset.idx), 1);
+        savePortfolios();
+        renderPfBody(p.id); refreshPfFooter(p.id);
+        renderBlended(); renderBeta();
+      }
+      return;
+    }
+    // Book: add a ticker row to the Summit book
+    const bookAdd = e.target.closest('[data-book-add]');
+    if (bookAdd) {
+      bookExtra.push({ ticker: '', weight: '' });
+      saveBookExtra();
+      renderBookBody();
+      renderBookSummary();
+      refreshBookFoot();
+      return;
+    }
+    // Book: remove an added ticker row
+    const bookDel = e.target.closest('.pm-del');
+    if (bookDel && bookDel.closest('tr') && bookDel.closest('tr').dataset.group === 'book') {
+      bookExtra.splice(Number(bookDel.closest('tr').dataset.idx), 1);
+      saveBookExtra();
+      renderBookBody();
+      renderBookSummary();
+      refreshBookFoot();
+      renderBlended(); renderBeta();
+      return;
+    }
     // Paper: add row
     const add = e.target.closest('.pm-add');
     if (add) {
@@ -1859,6 +2329,13 @@ function wire(root) {
       if (Number.isFinite(v) && v > 0) corrAmt = v;
       return;
     }
+    // Renaming a user-built portfolio (its name field lives in the summary row).
+    const pfName = e.target.closest('[data-pf-name]');
+    if (pfName) {
+      const p = pfFind(pfName.dataset.pfName);
+      if (p) { p.name = pfName.value; savePortfolios(); }
+      return;
+    }
     // Portfolio metric inputs (manual value or manual multiple) → save + recompute
     const minp = e.target.closest('.pm-minp');
     if (minp) {
@@ -1885,11 +2362,37 @@ function wire(root) {
     const inp = e.target.closest('.pm-inp');
     if (!inp) return;
     const tr = inp.closest('tr');
+    // User-built portfolio row (data-pf) — stored inline in that portfolio's holdings.
+    // Checked before the group tests, since these rows carry no data-group.
+    if (tr.dataset.pf !== undefined) {
+      const p = pfFind(tr.dataset.pf);
+      if (!p) return;
+      const h = p.holdings[Number(tr.dataset.idx)];
+      if (!h) return;
+      h[inp.dataset.field] = inp.value;
+      savePortfolios();
+      if (inp.dataset.field === 'ticker') { tr.dataset.ticker = paperTicker(h); schedulePfQuotes(); }
+      refreshFooter(tr);
+      renderBlended();
+      return;
+    }
     if (tr.dataset.group === undefined) {
       portWeights[tr.dataset.ticker] = inp.value;
       saveJSON(PWEIGHT_KEY, portWeights);
       refreshFooter(tr);
-      renderBlended(); renderBeta();       // portfolio β + Before/After follow weights
+      renderBlended();       // Comparison follows weights; the footer β updates via refreshFooter
+      return;
+    }
+    // User-added book row (data-group="book") — stored inline in bookExtra, same
+    // mechanics as Paper: a typed ticker drives the rest of the row.
+    if (tr.dataset.group === 'book') {
+      const bitem = bookExtra[Number(tr.dataset.idx)];
+      if (!bitem) return;
+      bitem[inp.dataset.field] = inp.value;
+      saveBookExtra();
+      if (inp.dataset.field === 'ticker') { tr.dataset.ticker = paperTicker(bitem); scheduleBookQuotes(); }
+      refreshFooter(tr);
+      renderBlended();
       return;
     }
     const item = paper[tr.dataset.group][Number(tr.dataset.idx)];
@@ -1904,11 +2407,21 @@ function wire(root) {
       schedulePaperQuotes();
     }
     refreshFooter(tr);
-    renderBlended(); renderBeta();          // After-side β + Before/After follow weights
+    renderBlended();          // Comparison follows weights; the footer β updates via refreshFooter
   });
 
   // Commit the beta lookback field on blur / Enter, then repaint the beta panes.
   root.addEventListener('change', (e) => {
+    // Growth window dropdown (FY0→FY1 · FY0→FY2 ann. · FY+1→FY2)
+    const gsel = e.target.closest('[data-growth]');
+    if (gsel) { growthSel = gsel.value; renderAll(); return; }
+    // New portfolio prefilled from a superinvestor picked in the chooser dropdown.
+    const npinv = e.target.closest('[data-newpf-inv]');
+    if (npinv) {
+      const key = npinv.value; npinv.value = '';   // reset so the same pick can re-fire
+      if (key) addPortfolio(key);
+      return;
+    }
     // Paper: prefill from a superinvestor picked in the dropdown
     const pinv = e.target.closest('[data-prefill-inv]');
     if (pinv) {

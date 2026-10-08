@@ -26,7 +26,7 @@ var _axisIGMin  = 0, _axisIGMax  = 0;
 var _sortKey    = 'contrib';
 var _sortDir    = -1;
 var _fromHoc    = 12;
-var _toHoc      = 24;
+var _toHoc      = 25;
 var _activeHocs = [];
 var _securities = [];
 var _beeswarmFilter = 0;
@@ -39,7 +39,7 @@ var _scatterXLo = null, _scatterXHi = null, _scatterYHi = null;
 var _beeswarmSector = '';
 var _activeYear  = 'ytd2026';
 var _paretoN     = 10;
-var YEAR_HOCS    = { ytd2026: [12, 24], y2025: [1, 11] };
+var YEAR_HOCS    = { ytd2026: [12, 25], y2025: [1, 11] };
 var _colorMode   = 'orig';   // 'orig' | 'A' | 'B' | 'C'
 var _colorMaxPos = 0, _colorMaxNeg = 0;
 var _rebalTab    = 'A';
@@ -2061,7 +2061,7 @@ export function loadNdxAttribution(container) {
   exclSecs = new Set(); exclIGs = new Set();
   attrTab = 'sector'; attrMode = 'chart';
   _sortKey = 'contrib'; _sortDir = -1;
-  _fromHoc = 12; _toHoc = 24;
+  _fromHoc = 12; _toHoc = 25;
   _beeswarmFilter = 0; _securities = [];
   treemapSubMode = 'flat';
   _scatterHocIdx = -1; _beeswarmHocIdx = -1; _secSnapshots = [];

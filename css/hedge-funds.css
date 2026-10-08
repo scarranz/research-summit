@@ -1562,3 +1562,20 @@
 .hf-slk-note { margin: 14px 2px 0; font-size: 11.5px; line-height: 1.55; color: var(--mu); }
 .hf-slk-note b { color: var(--navy); font-weight: 600; }
 .hf-stocklookup-empty { color: var(--mu); font-size: 13px; padding: 24px; text-align: center; }
+
+/* ─── Resources "By fund": one collapsed line per fund ─── */
+.hf-res-grp { border: 1px solid var(--bdr); border-radius: 10px; margin-bottom: 8px; background: #fff; }
+.hf-res-grp-hd { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 14px; background: none; border: 0; cursor: pointer; font: inherit; text-align: left; }
+.hf-res-grp-hd:hover { background: var(--surface); border-radius: 10px; }
+.hf-res-grp-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--navy); }
+.hf-res-grp-name .hf-res-fundsub { display: block; margin: 1px 0 0; }
+.hf-res-grp-n { font-size: 11.5px; color: var(--mu); }
+.hf-res-grp-chev { font-size: 11px; color: var(--mu); transition: transform .15s; }
+.hf-res-grp.open .hf-res-grp-chev { transform: rotate(180deg); }
+.hf-res-grp-body { display: none; padding: 0 14px 10px; }
+.hf-res-grp.open .hf-res-grp-body { display: block; }
+.hf-res-men { display: inline-flex; align-items: center; gap: 4px; margin: 0 8px; padding: 2px 7px 2px 4px; border-radius: 9px; background: var(--surface); border: 1px solid var(--bdr); font-size: 10.5px; font-weight: 600; color: var(--navy); white-space: nowrap; }
+.hf-res-men img { width: 15px; height: 15px; }
+.hf-prof-tbl td { font-variant-numeric: tabular-nums; }
+.hf-prof-tag { margin-left: 4px; padding: 1px 6px; border-radius: 8px; background: var(--surface); border: 1px solid var(--bdr); font-size: 10px; font-weight: 600; color: var(--mu); }
+.hf-prof-mu { color: var(--mu); font-size: 11.5px; }

@@ -3,6 +3,7 @@ import { INVESTORS, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS 
 import { fetchInvestorReturns, fetchInvestorHoldings, fetchHoldingsByTicker, fetchInvestorLetters, fetchAllInvestorLetters, insertInvestorLetter, fetchInvestorMeta, insertInvestorMeta, replaceInvestorHoldings, syncLatest13F, getFileUrl, uploadFile } from './api.js';
 import { LOCAL_INVESTOR_RETURNS, LOCAL_INVESTOR_HOLDINGS, LOCAL_INVESTOR_LETTERS, NO_PUBLIC_LETTERS_NOTE } from './investor-local-seed.js';
 import { parse13FFile } from './investor-13f-parser.js';
+import { HF_LETTER_MENTIONS } from './hf-letter-mentions.js';
 
 let alphaChart = null, ALPHA_MODE = 'cum', HF_SEL = {}, HF_START = '2015';
 
@@ -673,6 +674,163 @@ function renderStockLookupTable(ticker, rows, px) {
   body.innerHTML = html;
 }
 
+// ─── Superinvestor Profiles (Overall sub-tab) ──────────────────
+// One row per fund, every number computed from its own 13F sequence, so
+// funds are compared on the same yardstick rather than by reputation:
+//  - Effective names = 1 / sum(w^2): how many equal-weight positions the
+//    book behaves like (conviction), whatever the nominal count.
+//  - Effective sectors = the same on GICS sector weights: low = specialist,
+//    high = generalist. Can disagree with names (few names spread across
+//    sectors = concentrated generalist).
+//  - Turnover = (buys + sells) / 2 / average book, with each trade valued
+//    as the change in value the price move doesn't explain
+//    (V1 - V0 x P1/P0). It's turnover of the disclosed long-equity sleeve,
+//    not of the fund.
+
+var HF_PROFILE_ROWS = null;
+
+function periodsOf(rows) {
+  var seen = {}, out = [];
+  rows.forEach(function(r) {
+    if (r.quarter == null) return;
+    var k = r.year * 10 + r.quarter;
+    if (!seen[k]) { seen[k] = true; out.push({ year: r.year, quarter: r.quarter }); }
+  });
+  return out.sort(function(a, b) { return periodSortKey(a) - periodSortKey(b); });
+}
+
+// value_usd per position for one quarter, in dollars (books filed in
+// $ thousands are scaled: no 13F filer is under $100M).
+function bookOf(rows, p) {
+  var pos = rows.filter(function(r) { return r.year === p.year && r.quarter === p.quarter; });
+  var total = pos.reduce(function(s, r) { return s + (r.value_usd || 0); }, 0);
+  var scale = total > 0 && total < 1e8 ? 1000 : 1;
+  var byKey = {};
+  pos.forEach(function(r) { var k = rowKey(r); byKey[k] = { r: r, v: (r.value_usd || 0) * scale }; });
+  return { byKey: byKey, total: total * scale, pos: pos };
+}
+
+function concentration(pos) {
+  var wsum = pos.reduce(function(s, r) { return s + (r.weight_pct || 0); }, 0) || 1;
+  var ws = pos.map(function(r) { return (r.weight_pct || 0) / wsum; }).sort(function(a, b) { return b - a; });
+  var hhi = ws.reduce(function(s, w) { return s + w * w; }, 0);
+  var top10 = ws.slice(0, 10).reduce(function(s, w) { return s + w; }, 0);
+  var sec = {}, classified = 0;
+  pos.forEach(function(r) {
+    var s = tickerSector(r.ticker), w = (r.weight_pct || 0) / wsum;
+    if (!s) return;
+    sec[s] = (sec[s] || 0) + w; classified += w;
+  });
+  var secHhi = 0, topSec = null;
+  Object.keys(sec).forEach(function(s) {
+    var w = sec[s] / (classified || 1);
+    secHhi += w * w;
+    if (!topSec || w > topSec.w) topSec = { name: s, w: w };
+  });
+  return {
+    n: pos.length,
+    effN: hhi > 0 ? 1 / hhi : null,
+    top10: top10,
+    effSec: secHhi > 0 ? 1 / secHhi : null,
+    topSec: topSec,
+    classified: classified,
+  };
+}
+
+function quarterTurnover(rows, p0, p1, px) {
+  var b0 = bookOf(rows, p0), b1 = bookOf(rows, p1);
+  if (!b0.total || !b1.total) return null;
+  var buys = 0, sells = 0, priced = 0, all = 0;
+  var keys = {};
+  Object.keys(b0.byKey).concat(Object.keys(b1.byKey)).forEach(function(k) { keys[k] = true; });
+  Object.keys(keys).forEach(function(k) {
+    var a = b0.byKey[k], b = b1.byKey[k];
+    var t = (b || a).r.ticker;
+    var s = px && t ? px[t] : null;
+    var r0 = s ? s[quarterEndMonth(p0)] : null, r1 = s ? s[quarterEndMonth(p1)] : null;
+    var v0 = a ? a.v : 0, v1 = b ? b.v : 0;
+    all += v0 + v1;
+    // No price for the name: only a full entry or exit can be valued.
+    if (!(r0 && r1) && v0 && v1) return;
+    priced += v0 + v1;
+    var trade = v1 - v0 * (r0 && r1 ? r1 / r0 : 1);
+    if (trade > 0) buys += trade; else sells -= trade;
+  });
+  return { turnover: (buys + sells) / 2 / ((b0.total + b1.total) / 2), coverage: all ? priced / all : 0 };
+}
+
+async function renderHfProfiles() {
+  var body = document.getElementById('hf-profiles-body');
+  if (!body) return;
+  body.innerHTML = '<div class="hf-stocklookup-empty">Loading&hellip;</div>';
+  var invs = INVESTORS.filter(function(i) { return i.key !== 'summit'; });
+  var loaded = await Promise.all([Promise.all(invs.map(function(i) { return fetchInvestorHoldings(i.key); })), hfLoadPrices()]);
+  var series = loaded[1], px = {};
+  Object.keys(series).forEach(function(t) { px[t] = monthlyCloseMap(series, t); });
+
+  HF_PROFILE_ROWS = invs.map(function(inv, idx) {
+    var res = loaded[0][idx];
+    var rows = res.success ? res.data : [];
+    if (location.hostname === 'localhost' && !rows.length) rows = LOCAL_INVESTOR_HOLDINGS.filter(function(r) { return r.investor_key === inv.key; });
+    var periods = periodsOf(rows);
+    if (!periods.length) return { inv: inv };
+    var last = periods[periods.length - 1];
+    var c = concentration(bookOf(rows, last).pos);
+    var turns = [];
+    for (var i = periods.length - 1; i > 0 && turns.length < 4; i--) {
+      var a = periods[i - 1], b = periods[i];
+      if (periodSortKey(b) - periodSortKey(a) !== 1 && !(b.quarter === 1 && a.quarter === 4 && b.year === a.year + 1)) break;
+      var t = quarterTurnover(rows, a, b, px);
+      if (t) turns.push(t);
+    }
+    // Sector specialisation over the last 8 quarters: is the top sector a
+    // habit or a one-quarter bet?
+    var recent = periods.slice(-8), secHits = {};
+    recent.forEach(function(p) {
+      var cc = concentration(bookOf(rows, p).pos);
+      if (cc.topSec) secHits[cc.topSec.name] = (secHits[cc.topSec.name] || 0) + 1;
+    });
+    return {
+      inv: inv, last: last, c: c,
+      turnLast: turns.length ? turns[0] : null,
+      turnAvg: turns.length ? turns.reduce(function(s, t) { return s + t.turnover; }, 0) / turns.length : null,
+      turnN: turns.length,
+      topSecPersist: c.topSec ? (secHits[c.topSec.name] || 0) + '/' + recent.length : null,
+    };
+  });
+  drawHfProfiles();
+}
+
+function drawHfProfiles() {
+  var body = document.getElementById('hf-profiles-body');
+  if (!body || !HF_PROFILE_ROWS) return;
+  function pct(x, d) { return x == null ? '&mdash;' : (x * 100).toFixed(d == null ? 0 : d) + '%'; }
+  function num(x) { return x == null ? '&mdash;' : x.toFixed(1); }
+  var rows = HF_PROFILE_ROWS.slice().sort(function(a, b) { return (a.c ? a.c.effN : 1e9) - (b.c ? b.c.effN : 1e9); });
+  var html = '<div class="hf-heat-wrap"><table class="hf-stocklookup-tbl hf-prof-tbl"><thead><tr>' +
+    '<th>Superinvestor</th><th class="nr">Latest 13F</th><th class="nr">Positions</th>' +
+    '<th class="nr" title="1 / sum of squared weights">Effective names</th><th class="nr">Top 10</th>' +
+    '<th class="nr" title="1 / sum of squared GICS sector weights">Effective sectors</th><th>Top sector</th>' +
+    '<th class="nr" title="Quarters (of the last 8) where this was the top sector">Top sector, last 8Q</th>' +
+    '<th class="nr">Turnover last Q</th><th class="nr">Turnover avg</th>' +
+    '</tr></thead><tbody>';
+  rows.forEach(function(p) {
+    html += '<tr><td><div class="hf-stocklookup-inv">' + hfResAvatar(p.inv) + '<span>' + esc(p.inv.name) + '<span class="hf-stocklookup-fund">' + esc(p.inv.fund) + '</span></span></div></td>';
+    if (!p.c) { html += '<td class="nr" colspan="9" style="color:var(--mu)">No 13F on file</td></tr>'; return; }
+    var c = p.c, style = c.effSec == null ? '' : c.effSec < 2.5 ? 'Specialist' : c.effSec < 4.5 ? 'Focused' : 'Generalist';
+    html += '<td class="nr">' + esc(periodLabel(p.last)) + '</td>' +
+      '<td class="nr">' + c.n + '</td>' +
+      '<td class="nr"><b>' + num(c.effN) + '</b></td>' +
+      '<td class="nr">' + pct(c.top10) + '</td>' +
+      '<td class="nr" title="' + pct(c.classified) + ' of the book has a GICS sector on file"><b>' + num(c.effSec) + '</b> <span class="hf-prof-tag">' + style + '</span></td>' +
+      '<td>' + (c.topSec ? esc(c.topSec.name) + ' <span class="hf-prof-mu">' + pct(c.topSec.w) + '</span>' : '&mdash;') + '</td>' +
+      '<td class="nr">' + (p.topSecPersist || '&mdash;') + '</td>' +
+      '<td class="nr" title="' + (p.turnLast ? pct(p.turnLast.coverage) + ' of the book could be priced' : '') + '">' + (p.turnLast ? pct(p.turnLast.turnover) : '&mdash;') + '</td>' +
+      '<td class="nr" title="Average of the last ' + p.turnN + ' quarter(s)">' + pct(p.turnAvg) + '</td></tr>';
+  });
+  body.innerHTML = html + '</tbody></table></div>';
+}
+
 // ─── Overall / Superinvestors sub-tabs ─────────────────────────
 
 function hfMainTab(pane) {
@@ -848,6 +1006,14 @@ function renderInvLetters(id, letters, key) {
 var HF_RES_MODE = 'fund'; // 'date' | 'fund'
 var HF_RES_FILTER_KEY = null; // investor_key to narrow to, or null for every fund
 var HF_RES_LETTERS = null; // null until first load completes
+var HF_RES_OPEN = {}; // investor_key -> true once expanded in "By fund"
+
+function hfResAvatar(inv) {
+  var photo = inv.photo ? (IMGS[inv.photo] || '') : '';
+  return photo
+    ? '<img class="hf-stocklookup-logo" src="' + esc(photo) + '" alt="" onerror="this.style.opacity=0.3">'
+    : '<span class="hf-stocklookup-logo hf-stocklookup-ini">' + esc(inv.name.split(' ').slice(0, 2).map(function(n) { return n[0]; }).join('')) + '</span>';
+}
 
 // Funds with resources on file but no Superinvestor card (no AUM, 13F
 // holdings, or return series tracked for them — just letters). Kept
@@ -957,7 +1123,11 @@ function hfResLetterRow(l, showFund) {
   var isFile = l.type === 'file';
   var inv = showFund ? resFundList().filter(function(i) { return i.key === l.investor_key; })[0] : null;
   var fundTag = inv ? '<span class="im-let-fund">' + esc(inv.name) + '</span>' : '';
-  var inner = fundTag + '<span class="im-let-title">' + esc(l.title) + '</span>' +
+  // Summit mark = the letter names a stock this fund has held in a 13F
+  // on file (precomputed in js/hf-letter-mentions.js).
+  var men = HF_LETTER_MENTIONS[l.url];
+  var badge = men ? '<span class="hf-res-men" title="Mentions holdings: ' + esc(men.join(', ')) + '"><img src="img/summit-mark.png" alt="">' + esc(men.slice(0, 4).join(' · ') + (men.length > 4 ? ' +' + (men.length - 4) : '')) + '</span>' : '';
+  var inner = fundTag + '<span class="im-let-title">' + esc(l.title) + '</span>' + badge +
     (l.date ? '<span class="im-let-date">' + esc(l.date) + '</span>' : '') +
     '<span class="im-let-go">' + (isFile ? 'Download' : 'Open ↗') + '</span>';
   return isFile
@@ -989,14 +1159,29 @@ function renderHfResources() {
     if (!groups.length) {
       html = '<div class="im-empty">No resources' + (HF_RES_FILTER_KEY ? ' for this fund.' : ' on file yet.') + '</div>';
     } else {
+      // Collapsed to one line per fund (photo, name, fund, count); click
+      // to open its resources. A fund picked in the search opens itself.
       groups.forEach(function(g) {
-        html += '<div class="im-let-group"><div class="im-let-cat">' + esc(g.inv.name) + ' <span class="hf-res-fundsub">' + esc(g.inv.fund) + '</span></div>';
-        g.items.forEach(function(l) { html += hfResLetterRow(l, false); });
-        html += '</div>';
+        var open = HF_RES_FILTER_KEY === g.inv.key || !!HF_RES_OPEN[g.inv.key];
+        html += '<div class="hf-res-grp' + (open ? ' open' : '') + '">' +
+          '<button type="button" class="hf-res-grp-hd" data-key="' + esc(g.inv.key) + '">' + hfResAvatar(g.inv) +
+            '<span class="hf-res-grp-name">' + esc(g.inv.name) + '<span class="hf-res-fundsub">' + esc(g.inv.fund) + '</span></span>' +
+            '<span class="hf-res-grp-n">' + g.items.length + ' resource' + (g.items.length === 1 ? '' : 's') + '</span>' +
+            '<span class="hf-res-grp-chev">&#9662;</span>' +
+          '</button>' +
+          '<div class="hf-res-grp-body">' + g.items.map(function(l) { return hfResLetterRow(l, false); }).join('') + '</div>' +
+        '</div>';
       });
     }
   }
   body.innerHTML = html || '<div class="im-empty">No resources on file yet.</div>';
+  body.querySelectorAll('.hf-res-grp-hd').forEach(function(hd) {
+    hd.addEventListener('click', function() {
+      var key = hd.getAttribute('data-key');
+      HF_RES_OPEN[key] = !hd.parentNode.classList.contains('open');
+      hd.parentNode.classList.toggle('open', HF_RES_OPEN[key]);
+    });
+  });
   body.querySelectorAll('.im-let-file').forEach(function(btn) {
     btn.addEventListener('click', async function() {
       var result = await getFileUrl(btn.getAttribute('data-path'));
@@ -2601,6 +2786,7 @@ window.hideInvestor = hideInvestor;
 window.showAllInvestors = showAllInvestors;
 window.hfMainTab = hfMainTab;
 window.hfStockLookupSelect = hfStockLookupSelect;
+window.renderHfProfiles = renderHfProfiles;
 window.hfSectorClick = hfSectorClick;
 window.hfHeatmapTogglePerf = hfHeatmapTogglePerf;
 window.hfTickerClick = hfTickerClick;
@@ -2616,5 +2802,6 @@ export function loadHedgeFundsPage() {
   renderInvGrid();
   renderSectorHeatmap();
   populateStockLookupSelect();
+  renderHfProfiles();
   loadHfResources();
 }

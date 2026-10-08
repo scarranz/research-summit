@@ -479,15 +479,11 @@ export async function fetchInvestorReturns(investorKey) {
   return ok(data || []);
 }
 
+// Paged: a fund's full history (every position, every quarter) passes
+// PostgREST's 1000-row cap, and oldest-first ordering meant the cap cut
+// the most recent quarters.
 export async function fetchInvestorHoldings(investorKey) {
-  var { data, error } = await supabase
-    .from('investor_yearly_holdings')
-    .select('*')
-    .eq('investor_key', investorKey)
-    .order('year')
-    .order('rank');
-  if (error) return fail(error.message);
-  return ok(data || []);
+  return fetchAllRows('investor_yearly_holdings', q => q.eq('investor_key', investorKey).order('year').order('quarter').order('rank').order('id'));
 }
 
 // Cross-investor lookup for one ticker — "who owns this, and how has their

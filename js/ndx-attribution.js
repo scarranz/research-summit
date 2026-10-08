@@ -51,7 +51,7 @@ var _beeswarmActiveSector = 'Information Technology';
 var _beeswarmSecAll = [];
 var _paretoN       = 5;
 var _paretoYears   = new Set(['ytd2026']);
-var _paretoSide    = 'pos';          // 'pos' | 'neg' | 'both'
+var _paretoSide    = 'pos';          // 'pos' = top N | 'neg' = bottom N | 'both'
 var _paretoInfo    = 'sector';       // '' | 'sector' | 'ig' — one descriptor column at most
 var _paretoView    = 'table';
 var _paretoCols    = new Set(['ret']);
@@ -427,6 +427,24 @@ function renderKPI(res) {
 //   opts.isIG     — industry groups instead of sectors
 //   opts.keys     — explicit row keys (default: every key in res, minus Cash)
 //   opts.label    — dataset label for the tooltip
+// Min/max contribution across ALL years in YEAR_HOCS (sectors or IGs, Cash excluded).
+// Both attribution charts use it, so switching years never rescales the axis.
+var _attrAxisCache = {};
+function attrAxis(isIG) {
+  var k = isIG ? 'ig' : 'sec';
+  if (_attrAxisCache[k]) return _attrAxisCache[k];
+  var mn = 0, mx = 0;
+  yearKeys().forEach(function(yr) {
+    var r = computeCore(new Set(), new Set(), hocsForYear(yr));
+    var m = isIG ? r.byIG : r.bySec;
+    Object.keys(m).forEach(function(key) {
+      if (key === CASH) return;
+      mn = Math.min(mn, m[key]); mx = Math.max(mx, m[key]);
+    });
+  });
+  return (_attrAxisCache[k] = { min: mn, max: mx });
+}
+
 function renderAttrChart(canvasId, boxId, opts) {
   var canvas = document.getElementById(canvasId);
   if (!canvas || typeof Chart === 'undefined') return null;
@@ -441,8 +459,13 @@ function renderAttrChart(canvasId, boxId, opts) {
   var labels = keys.map(function(k) { return chartLbl(k, isIG); });
   var data   = keys.map(function(k) { return parseFloat((vals[k] || 0).toFixed(6)); });
 
-  var mn = Math.min.apply(null, data.concat(0)), mx = Math.max.apply(null, data.concat(0));
-  var pad = Math.max((mx - mn) * 0.12, 0.1);
+  // Fixed axis shared by every year (see attrAxis) so bar lengths compare across years;
+  // it only widens if a simulation pushes a value past it
+  var ax = attrAxis(isIG);
+  var mn = Math.min.apply(null, data.concat(ax.min)), mx = Math.max.apply(null, data.concat(ax.max));
+  // Round the ends out to a clean step so the ticks read 0 / 5 / 10 …
+  var span = mx - mn, step = span > 12 ? 5 : span > 5 ? 1 : span > 2 ? 0.5 : 0.25;
+  var xLo = Math.floor((mn - span * 0.02) / step) * step, xHi = Math.ceil((mx + span * 0.02) / step) * step;
   var box = document.getElementById(boxId);
   if (box) box.style.height = Math.max(260, keys.length * (isIG ? 26 : 30) + 50) + 'px';
 
@@ -465,8 +488,8 @@ function renderAttrChart(canvasId, boxId, opts) {
         } }
       },
       scales: {
-        x: { min: mn - pad, max: mx + pad, grid: { color: 'rgba(0,0,0,.05)' }, border: { display: false },
-          ticks: { font: { size: 10, family: 'Inter,sans-serif' }, color: '#8A93A0',
+        x: { min: xLo, max: xHi, grid: { color: function(c) { return c.tick.value === 0 ? 'rgba(0,0,0,.25)' : 'rgba(0,0,0,.05)'; } }, border: { display: false },
+          ticks: { stepSize: step, font: { size: 10, family: 'Inter,sans-serif' }, color: '#8A93A0',
             callback: function(v) { return (v >= 0 ? '+' : '') + v.toFixed(1) + '%'; } } },
         y: { grid: { display: false }, border: { display: false },
           ticks: { font: { size: isIG ? 9.5 : 11, family: 'Inter,sans-serif' }, color: '#2B3B4E' } }
@@ -546,12 +569,49 @@ function squarify(items, x, y, W, H) {
 }
 
 // ── Helpers shared by treemap variants ───────────────────────────────────
+// Treemap color scale. Positives and negatives are shaded on SEPARATE scales, each
+// blending the tile's rank within its sign with √(|v| / largest |v| of that sign).
+// One shared scale let IT's +23.7% wash every other tile out to the palest step.
+function treemapScale(values) {
+  var pos = values.filter(function(v) { return v > 0; }).sort(function(a, b) { return a - b; });
+  var neg = values.filter(function(v) { return v < 0; }).map(Math.abs).sort(function(a, b) { return a - b; });
+  function t(v) {
+    var arr = v > 0 ? pos : neg, a = Math.abs(v);
+    if (!arr.length || a < 1e-9) return 0;
+    var below = arr.filter(function(x) { return x < a; }).length;
+    var rank = arr.length === 1 ? 1 : Math.min(1, below / (arr.length - 1));
+    return 0.5 * rank + 0.5 * Math.min(1, Math.sqrt(a / arr[arr.length - 1]));
+  }
+  return {
+    fill: function(v) { if (Math.abs(v) < 1e-9) return '#EDECEA'; var i = Math.min(4, Math.floor(t(v) * 5)); return v > 0 ? POS_RAMP[i] : NEG_RAMP[i]; },
+    fg:   function(v) { return t(v) >= 0.6 ? '#FFFFFF' : '#1E2D3D'; }
+  };
+}
+
+// Wrap without ever cutting a word; null if it cannot fit
+function fitLines(text, maxW, fs) {
+  var cw = fs * 0.6, maxC = Math.floor(maxW / cw);
+  var words = text.split(' '), lines = [], cur = '';
+  for (var i = 0; i < words.length; i++) {
+    if (words[i].length > maxC) return null;
+    var test = cur ? cur + ' ' + words[i] : words[i];
+    if (test.length <= maxC) cur = test; else { lines.push(cur); cur = words[i]; }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+// Label at the largest font (14 → 9 px) where the whole name fits; nothing if it never fits
+// (the tooltip still has it). Real pixels: treemaps are drawn at the card's width.
 function treemapTileLabel(svg, rx, ry, rw, rh, label, contribStr, fillC, fgC) {
-  if (rw < 50 || rh < 28) return;
-  var fs = Math.min(14, Math.max(9, Math.min(rw, rh) / 6));
-  var lines = wrapWords(label, rw - 14, fs);
-  var lineH = fs * 1.3, totalH = lines.length * lineH;
-  var showC = rh > totalH + fs * 2.2;
+  var fs, lines = null;
+  for (fs = 14; fs >= 9; fs -= 0.5) {
+    lines = fitLines(label, rw - 10, fs);
+    if (lines && lines.length * fs * 1.25 <= rh - 6) break;
+    lines = null;
+  }
+  if (!lines) return;
+  var lineH = fs * 1.25, totalH = lines.length * lineH;
+  var showC = rh > totalH + fs * 1.9;
   var startY = showC
     ? ry + rh / 2 - (totalH + fs * 1.6) / 2 + fs * 0.82
     : ry + rh / 2 - totalH / 2 + fs * 0.82;
@@ -584,10 +644,7 @@ function renderSectorFlatTreemap(res, box, VW, VH) {
   var totalW = items.reduce(function(s, x) { return s + x.w; }, 0) || 100;
   items.forEach(function(it) { it.area = (it.w / totalW) * VW * VH; });
   squarify(items, 0, 0, VW, VH);
-  var nonCashItems = items.filter(function(it) { return it.key !== CASH; });
-  var maxAbsC = Math.max.apply(null, nonCashItems.map(function(it) { return Math.abs(it.c); })) || 1;
-  _colorMaxPos = Math.max.apply(null, nonCashItems.map(function(it) { return it.c > 0 ? it.c : 0; })) || maxAbsC;
-  _colorMaxNeg = Math.max.apply(null, nonCashItems.map(function(it) { return it.c < 0 ? Math.abs(it.c) : 0; })) || maxAbsC;
+  var sc = treemapScale(items.filter(function(it) { return it.key !== CASH; }).map(function(it) { return it.c; }));
 
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, role: 'img',
     style: 'width:100%;height:auto;display:block;overflow:visible' });
@@ -596,9 +653,10 @@ function renderSectorFlatTreemap(res, box, VW, VH) {
     var rx = item.rx + 1, ry = item.ry + 1,
         rw = Math.max(0, item.rw - 2), rh = Math.max(0, item.rh - 2);
     var g = se('g', { class: 'mk', style: 'cursor:pointer' });
-    var fillC  = item.excl ? '#D0D4D8' : contribColor(item.c, maxAbsC, maxAbsC);
-    var fgC    = item.excl ? '#6A7888' : contribFg(item.c, maxAbsC, maxAbsC);
-    var strokeC = item.excl ? '#9AAAB8' : (item.c >= 0 ? '#177A4E' : '#9B2A20');
+    var cash   = item.key === CASH;
+    var fillC  = item.excl ? '#D0D4D8' : cash ? '#E4E7EB' : sc.fill(item.c);
+    var fgC    = item.excl ? '#6A7888' : cash ? '#52606D' : sc.fg(item.c);
+    var strokeC = item.excl || cash ? '#9AAAB8' : (item.c >= 0 ? '#177A4E' : '#9B2A20');
     g.appendChild(se('rect', { x: rx, y: ry, width: rw, height: rh, rx: 4,
       fill: fillC, stroke: strokeC, 'stroke-opacity': item.excl ? 0.25 : 0.55,
       'stroke-width': 1, opacity: item.excl ? 0.35 : 1 }));
@@ -630,7 +688,7 @@ function renderIGFlatTreemap(res, box, VW, VH) {
   var totalW = items.reduce(function(acc, x) { return acc + x.w; }, 0) || 100;
   items.forEach(function(it) { it.area = (it.w / totalW) * VW * VH; });
   squarify(items, 0, 0, VW, VH);
-  var maxAbsC = Math.max.apply(null, items.map(function(it) { return Math.abs(it.c); })) || 1;
+  var sc = treemapScale(items.map(function(it) { return it.c; }));
 
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, role: 'img',
     style: 'width:100%;height:auto;display:block;overflow:visible' });
@@ -639,8 +697,8 @@ function renderIGFlatTreemap(res, box, VW, VH) {
     var rx = item.rx + 1, ry = item.ry + 1,
         rw = Math.max(0, item.rw - 2), rh = Math.max(0, item.rh - 2);
     var g = se('g', { class: 'mk', style: 'cursor:pointer' });
-    var fillC  = contribColor(item.c, maxAbsC);
-    var fgC    = contribFg(item.c, maxAbsC);
+    var fillC  = sc.fill(item.c);
+    var fgC    = sc.fg(item.c);
     var strokeC = item.c >= 0 ? '#177A4E' : '#9B2A20';
     g.appendChild(se('rect', { x: rx, y: ry, width: rw, height: rh, rx: 3,
       fill: fillC, stroke: strokeC, 'stroke-opacity': 0.55, 'stroke-width': 1 }));
@@ -671,15 +729,13 @@ function renderNestedIGTreemap(res, box, VW, VH) {
   secItems.forEach(function(it) { it.area = (it.w / totalW) * VW * VH; });
   squarify(secItems, 0, 0, VW, VH);
 
-  var maxAbsC = 0;
+  var igVals = [];
   sectors.forEach(function(s) {
-    (igBySec[s]||[]).forEach(function(g) {
-      if (g !== CASH) maxAbsC = Math.max(maxAbsC, Math.abs(res.byIG[g]||0));
-    });
+    (igBySec[s]||[]).forEach(function(g) { if (g !== CASH) igVals.push(res.byIG[g]||0); });
   });
-  maxAbsC = maxAbsC || 1;
+  var sc = treemapScale(igVals);
 
-  var HPAD = 18; // header reserved for sector name
+  var HPAD = 22; // header reserved for sector name
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, role: 'img',
     style: 'width:100%;height:auto;display:block;overflow:visible' });
 
@@ -694,9 +750,14 @@ function renderNestedIGTreemap(res, box, VW, VH) {
       fill: 'none', stroke: secStroke, 'stroke-opacity': 0.4, 'stroke-width': 2.5 }));
 
     // Sector name header
-    var hdr = se('text', { x: sx + 7, y: sy + HPAD - 4, 'font-family': 'Inter,sans-serif',
-      'font-size': Math.min(12, Math.max(9, sw / 18)), 'font-weight': '700', fill: '#1E2D3D' });
-    hdr.textContent = trunc(sec.label, Math.floor(sw / 7));
+    var hfs = 12, htxt = sec.label + '  ' + (sec.c >= 0 ? '+' : '') + sec.c.toFixed(2) + '%';
+    if (htxt.length * hfs * 0.6 > sw - 12) htxt = sec.label;
+    while (hfs > 9 && htxt.length * hfs * 0.6 > sw - 12) hfs -= 0.5;
+    var hdr = se('text', { x: sx + 7, y: sy + HPAD - 6, 'font-family': 'Inter,sans-serif',
+      'font-size': hfs, 'font-weight': '700', fill: '#1E2D3D' });
+    hdr.textContent = htxt.length * hfs * 0.6 > sw - 12 ? trunc(htxt, Math.max(3, Math.floor((sw - 12) / (hfs * 0.6)))) : htxt;
+    bindTip(hdr, '<b style="font-size:13px">' + sec.label + '</b><span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
+      'Weight: ' + sec.w.toFixed(3) + '%<br>Contribution: ' + (sec.c >= 0 ? '+' : '') + sec.c.toFixed(4) + '%</span>');
     svg.appendChild(hdr);
 
     if (innerW < 10 || innerH < 10) return;
@@ -715,8 +776,8 @@ function renderNestedIGTreemap(res, box, VW, VH) {
       var rx = item.rx + 1, ry = item.ry + 1,
           rw = Math.max(0, item.rw - 2), rh = Math.max(0, item.rh - 2);
       var g = se('g', { class: 'mk', style: 'cursor:pointer' });
-      var fillC  = contribColor(item.c, maxAbsC);
-      var fgC    = contribFg(item.c, maxAbsC);
+      var fillC  = sc.fill(item.c);
+      var fgC    = sc.fg(item.c);
       var strokeC = item.c >= 0 ? '#177A4E' : '#9B2A20';
       g.appendChild(se('rect', { x: rx, y: ry, width: rw, height: rh, rx: 2,
         fill: fillC, stroke: strokeC, 'stroke-opacity': 0.5, 'stroke-width': 0.8 }));
@@ -738,11 +799,12 @@ function renderNestedIGTreemap(res, box, VW, VH) {
 function renderTreemap(res) {
   var box = document.getElementById('ndx-treemap-box');
   if (!box) return;
-  var VW = 900, VH = 370;
+  // Drawn at the card's real width so font sizes are real pixels
+  var VW = Math.max(760, Math.round(box.clientWidth || 1100)), VH = Math.round(VW * 0.55);
 
-  var expandBtn = '<button onclick="ndxTreemapExpand()" style="position:absolute;top:4px;right:4px;' +
-    'font-size:11px;font-weight:600;background:rgba(255,255,255,.8);border:1px solid var(--bdr);' +
-    'border-radius:6px;padding:3px 9px;cursor:pointer;color:var(--navy);z-index:2">⤢ Expand</button>';
+  var expandBtn = '<div style="display:flex;justify-content:flex-end;margin-bottom:6px">' +
+    '<button onclick="ndxTreemapExpand()" style="font-size:11px;font-weight:600;background:var(--w,#fff);border:1px solid var(--bdr);' +
+    'border-radius:6px;padding:3px 9px;cursor:pointer;color:var(--navy)">⤢ Expand</button></div>';
 
   var inner = document.createElement('div');
   inner.style.cssText = 'position:relative;padding:4px 0';
@@ -750,22 +812,17 @@ function renderTreemap(res) {
   box.innerHTML = '';
   box.appendChild(inner);
 
-  if (attrTab === 'ig') {
-    renderIGFlatTreemap(res, inner, VW, VH);
-  } else if (treemapSubMode === 'nested') {
-    renderNestedIGTreemap(res, inner, VW, VH);
-  } else {
-    renderSectorFlatTreemap(res, inner, VW, VH);
-  }
+  if (attrTab === 'ig') renderNestedIGTreemap(res, inner, VW, VH);
+  else                   renderSectorFlatTreemap(res, inner, VW, VH);
 
   var legend = document.createElement('div');
   legend.style.cssText = 'display:flex;gap:16px;font-size:11px;color:var(--mu);margin-top:5px;flex-wrap:wrap';
-  var clickNote = (attrTab === 'ig' || treemapSubMode === 'nested')
-    ? 'Click tile for securities' : 'Click sector for industry groups';
+  var clickNote = attrTab === 'ig' ? 'Industry groups nested in their sector · click tile for securities' : 'Click sector for industry groups';
   legend.innerHTML =
     '<span>Area = index weight at close</span>' +
     '<span style="color:#177A4E;font-weight:600">█</span> Positive contribution &nbsp;' +
-    '<span style="color:#9B2A20;font-weight:600">█</span> Negative &nbsp;&middot;&nbsp; ' + clickNote;
+    '<span style="color:#9B2A20;font-weight:600">█</span> Negative &nbsp;&middot;&nbsp; ' +
+    'Shade = size within its own sign (positives and negatives on separate scales) &nbsp;&middot;&nbsp; ' + clickNote;
   box.appendChild(legend);
 }
 
@@ -815,7 +872,7 @@ window.ndxShowIGModal = function(sector) {
   items.forEach(function(it) { it.area = (it.w / totalW) * VW * VH; });
   squarify(items, 0, 0, VW, VH);
 
-  var maxAbsC = Math.max.apply(null, items.map(function(it) { return Math.abs(it.c); })) || 1;
+  var sc = treemapScale(items.map(function(it) { return it.c; }));
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH,
     style: 'width:100%;height:auto;display:block;overflow:visible' });
 
@@ -824,8 +881,8 @@ window.ndxShowIGModal = function(sector) {
     var rx = item.rx + 1, ry = item.ry + 1,
         rw = Math.max(0, item.rw - 2), rh = Math.max(0, item.rh - 2);
     var g = se('g', { class: 'mk', style: 'cursor:default' });
-    var fillC   = contribColor(item.c, maxAbsC);
-    var fgC     = contribFg(item.c, maxAbsC);
+    var fillC   = sc.fill(item.c);
+    var fgC     = sc.fg(item.c);
     var strokeC = item.c >= 0 ? '#177A4E' : '#9B2A20';
     g.appendChild(se('rect', { x: rx, y: ry, width: rw, height: rh, rx: 3,
       fill: fillC, stroke: strokeC, 'stroke-opacity': 0.5, 'stroke-width': 1 }));
@@ -940,9 +997,9 @@ window.ndxTreemapExpand = function() {
   }
   var inner = document.getElementById('ndx-treemap-full-inner');
   inner.innerHTML = '';
-  if (attrTab === 'ig') renderIGFlatTreemap(res, inner, 1100, 520);
-  else if (treemapSubMode === 'nested') renderNestedIGTreemap(res, inner, 1100, 520);
-  else renderSectorFlatTreemap(res, inner, 1100, 520);
+  var EW = Math.min(1600, Math.round(window.innerWidth * 0.9)), EH = Math.round(EW * 0.55);
+  if (attrTab === 'ig') renderNestedIGTreemap(res, inner, EW, EH);
+  else                  renderSectorFlatTreemap(res, inner, EW, EH);
   m.style.display = 'flex';
 };
 
@@ -1006,8 +1063,9 @@ function renderAttrTable(res) {
   var tbody = document.getElementById('ndx-attr-tbody');
   if (!tbody) return;
   lastBaseR = res;
-  var isIG = attrTab === 'ig';
   var html = '';
+  // The table ignores the Sector / Industry Group toggle (that is for Chart and Treemap):
+  // it always lists sectors, and each arrow expands that sector's industry groups in place.
   // Row order always comes from the base case (no exclusions) so rows never jump
   // around while simulating — only the numbers change.
   function cmpSec(a, b) {
@@ -1035,14 +1093,10 @@ function renderAttrTable(res) {
     var secExcl = exclSecs.has(s);
     var sn = _snapN[s]||{count:0,w:0}, so = _snap0[s]||{count:0,w:0};
     var hasIGs = s !== CASH && igs.some(function(g) { return g !== CASH; });
-    var expanded = isIG && _expandedSecs.has(s);
-    // By Sector: the arrow opens the industry-group popup. By Industry Group: it nests the groups in place.
-    var arrow = !hasIGs ? '' : isIG
-      ? '<span onclick="event.stopPropagation();ndxToggleSecExpand(\'' + esc(s) + '\')" title="' + (expanded ? 'Collapse' : 'Expand') + ' industry groups" ' +
-          'style="display:inline-block;width:100%;cursor:pointer;user-select:none;color:var(--mu);font-size:10px">' + (expanded ? '▲' : '▼') + '</span>'
-      : '<span onclick="event.stopPropagation();ndxShowIGModal(\'' + esc(s) + '\')" title="Industry groups in ' + dispSec(s).replace(/"/g, '&quot;') + '" ' +
-          'style="display:inline-block;width:100%;cursor:pointer;user-select:none;color:var(--mu);font-size:11px">&#9656;</span>';
-    html += '<tr style="' + (isIG ? 'background:var(--surface);' : '') + (secExcl?'opacity:.42;':'') + 'cursor:pointer" ' +
+    var expanded = _expandedSecs.has(s);
+    var arrow = !hasIGs ? '' : '<span onclick="event.stopPropagation();ndxToggleSecExpand(\'' + esc(s) + '\')" title="' + (expanded ? 'Collapse' : 'Expand') + ' industry groups" ' +
+          'style="display:inline-block;width:100%;cursor:pointer;user-select:none;color:var(--mu);font-size:10px">' + (expanded ? '▲' : '▼') + '</span>';
+    html += '<tr style="background:var(--surface);' + (secExcl?'opacity:.42;':'') + 'cursor:pointer" ' +
       'onclick="event.stopPropagation();ndxToggleSec(\'' + esc(s) + '\')">' +
       '<td style="text-align:center;padding:6px 4px">' + selDot(s, 16) + '</td>' +
       '<td style="text-align:center;padding:6px 0">' + arrow + '</td>' +
@@ -1069,8 +1123,6 @@ function renderAttrTable(res) {
     '<td></td><td></td><td colspan="3" style="color:var(--navy)">Total</td>' +
     '<td class="num" style="color:' + colr(res.ytd) + ';font-weight:700">' + fmtYTD(res.ytd) + '</td></tr>';
   tbody.innerHTML = html;
-  var eb = document.getElementById('ndx-expand-btns');
-  if (eb) eb.style.display = isIG ? 'flex' : 'none';
   updateArrows();
 }
 function updateArrows() {
@@ -1728,9 +1780,12 @@ function renderPareto() {
       .filter(function(d) { return !isCash(d.name) && (d.w0 > 0 || d.w1 > 0) && d.sect !== CASH; })
       .sort(function(a, b) { return b.contrib - a.contrib; });
     ranked.forEach(function(d, i) { d.rank = i + 1; });
-    var pos = ranked.filter(function(d) { return d.contrib >= 0; });
-    var neg = ranked.filter(function(d) { return d.contrib < 0; }).reverse();   // most negative first
-    if (!showAll) { pos = pos.slice(0, N); neg = neg.slice(0, N); }
+    // Top N = the first N of the ranking, Bottom N = the last N (worst first), whatever
+    // their sign — a bottom is a bottom even if it was flat or slightly positive.
+    // In Both they never overlap; All = the whole ranking.
+    var n = showAll ? ranked.length : Math.min(N, ranked.length);
+    var pos = ranked.slice(0, n);
+    var neg = ranked.slice(_paretoSide === 'both' ? Math.max(n, ranked.length - n) : ranked.length - n).reverse();
     [pos, neg].forEach(function(list) { var c = 0; list.forEach(function(d) { c += d.contrib; d.cum = c; }); });
     // Index return on the same basis as the contributions (respects simulation exclusions)
     var total = computeCore(exclSecs, exclIGs, hocsForYear(yr)).ytd;
@@ -1750,7 +1805,7 @@ function renderPareto() {
   var customInp = '<input type="number" min="1" max="200" placeholder="Custom" value="' + (_paretoCustomN > 0 ? _paretoCustomN : '') + '" ' +
     'style="width:70px;font-size:11px;padding:3px 6px;border:1px solid var(--rule);border-radius:4px;' +
     'background:var(--surface);color:var(--navy)" onchange="ndxSetParetoCustomN(+this.value)">';
-  var sideBtns = [['pos', 'Positive'], ['neg', 'Negative'], ['both', 'Both']].map(function(o) {
+  var sideBtns = [['pos', 'Top'], ['neg', 'Bottom'], ['both', 'Both']].map(function(o) {
     return '<button class="ndx-tab-btn' + (_paretoSide === o[0] ? ' active' : '') + '" onclick="ndxSetParetoSide(\'' + o[0] + '\')">' + o[1] + '</button>';
   }).join('');
   var infoBtns = [['', 'None'], ['sector', 'Sector'], ['ig', 'Industry Group']].map(function(o) {
@@ -1762,8 +1817,8 @@ function renderPareto() {
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">' +
       '<div style="display:flex;gap:4px">' + yrPills + '</div>' + SEP +
       '<div style="display:flex;gap:4px">' + nBtns + '</div>' + customInp + SEP +
-      LBL('Contributors') + '<div style="display:flex;gap:4px">' + sideBtns + '</div>' + SEP +
-      LBL('Show') + '<div style="display:flex;gap:4px">' + infoBtns + '</div>' +
+      LBL('Show') + '<div style="display:flex;gap:4px">' + sideBtns + '</div>' + SEP +
+      LBL('Column') + '<div style="display:flex;gap:4px">' + infoBtns + '</div>' +
       '<button class="ndx-tab-btn' + (_paretoCols.has('ret') ? ' active' : '') + '" onclick="ndxToggleParetoCol(\'ret\')">Ret%</button>' + SEP +
       '<button class="ndx-tab-btn" onclick="ndxToggleParetoView()">' + (_paretoView === 'table' ? 'Chart view' : 'Table view') + '</button>' +
     '</div>';
@@ -1794,7 +1849,7 @@ function renderPareto() {
     if (info) thead += '<th style="text-align:left;' + TH + '">' + (info === 'ig' ? 'Industry Group' : 'Sector') + '</th>';
     thead += '<th style="text-align:right;' + TH + '">Contrib</th>';
     thead += '<th style="text-align:right;' + TH + '">Cum.</th>';
-    if (showRet) thead += '<th style="text-align:right;' + TH + '">Ret%</th>';
+    if (showRet) thead += '<th style="text-align:right;' + TH + '" title="Compounded price return of the security while in the index during that year">Ret%</th>';
   });
   thead += '</tr></thead>';
 
@@ -1824,8 +1879,8 @@ function renderPareto() {
     return out;
   }
   var tbody = '<tbody>' +
-    (showPos ? block('pos', 'Largest positive contributors') : '') +
-    (showNeg ? block('neg', 'Largest negative contributors') : '') +
+    (showPos ? block('pos', showAll ? 'All constituents, top to bottom' : 'Top ' + N + ' contributors') : '') +
+    (showNeg && !(showAll && showPos) ? block('neg', showAll ? 'All constituents, bottom to top' : 'Bottom ' + N + ' contributors') : '') +
     '</tbody>';
 
   // Footer: what the listed names add up to vs the index return of each year
@@ -1841,8 +1896,16 @@ function renderPareto() {
   });
   foot += '</tr></tfoot>';
 
-  html += '<div style="overflow-x:auto"><table style="width:auto;min-width:' + (years.length > 1 ? '100%' : '60%') + ';border-collapse:collapse;font-size:12px">' +
-    thead + tbody + foot + '</table></div>';
+  // Sized to its columns: each selected year appends a column group on the right
+  html += '<div style="overflow-x:auto"><table style="width:auto;border-collapse:collapse;font-size:12px">' +
+    thead + tbody + foot + '</table></div>' +
+    '<div style="font-size:11px;color:var(--mu);margin-top:8px;line-height:1.5">' +
+      '<b>Contrib</b> = Carino-linked contribution to the NDX price return of that year. ' +
+      '<b>Cum.</b> = running total down the list. ' +
+      (showRet ? '<b>Ret%</b> = each security\'s own compounded price return while it was in the index during that year ' +
+        '(full year for names held all year; only the time in the index for names that joined or left). ' : '') +
+      '<b>Rank</b> = position among all constituents of that year, 1 = largest contributor.' +
+    '</div>';
   box.innerHTML = html;
 }
 
@@ -2108,7 +2171,6 @@ function reloadSnapshot() {
   sectors = []; igBySec = {}; igToSec = {};
   baseR = computeCore(new Set(), new Set());
   buildHierarchy(baseR);
-  if (attrTab === 'ig') sectors.forEach(function(s) { _expandedSecs.add(s); });
   lockAxes(baseR);
   _securities = computeSecurities(new Set(), new Set());
   rebuildScatterSnapshots(_scatterYear);
@@ -2168,8 +2230,7 @@ window.ndxSetDecimals = function(n) {
 };
 window.ndxSetAttrTab = function(tab) {
   attrTab = tab;
-  // By Industry Group = the nested view, opened up by default
-  if (tab === 'ig') { treemapSubMode = 'nested'; sectors.forEach(function(s) { _expandedSecs.add(s); }); }
+
   document.querySelectorAll('#ndx-attr-tabs .ndx-tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
@@ -2184,6 +2245,10 @@ window.ndxSetAttrMode = function(mode) {
   if (cb) cb.style.display = mode === 'chart'   ? '' : 'none';
   if (tb) tb.style.display = mode === 'treemap' ? '' : 'none';
   if (tw) tw.style.display = mode === 'table'   ? '' : 'none';
+  // Sector / Industry Group applies to Chart and Treemap only; Expand / Collapse to the table only
+  var tabs = document.getElementById('ndx-attr-tabs'), eb = document.getElementById('ndx-expand-btns');
+  if (tabs) tabs.style.display = mode === 'table' ? 'none' : 'flex';
+  if (eb)   eb.style.display   = mode === 'table' ? 'flex' : 'none';
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
   if (mode === 'chart') {
@@ -2441,7 +2506,7 @@ function buildSkeleton() {
           '<div style="display:flex;gap:3px;margin-right:4px">' +
             yrBtns('ndx-attr-det-yr-btn', 'ndxSetAttrDetailYear', _attrDetailYear) +
           '</div>' +
-          '<div id="ndx-attr-tabs" style="display:flex;gap:3px">' +
+          '<div id="ndx-attr-tabs" style="display:none;gap:3px">' +
             '<button class="ndx-tab-btn active" data-tab="sector" onclick="ndxSetAttrTab(\'sector\')">By Sector</button>' +
             '<button class="ndx-tab-btn" data-tab="ig" onclick="ndxSetAttrTab(\'ig\')">By Industry Group</button>' +
           '</div>' +
@@ -2450,7 +2515,7 @@ function buildSkeleton() {
             '<button class="ndx-tab-btn" data-mode="treemap" onclick="ndxSetAttrMode(\'treemap\')">Treemap</button>' +
             '<button class="ndx-tab-btn active" data-mode="table" onclick="ndxSetAttrMode(\'table\')">Table</button>' +
           '</div>' +
-          '<span id="ndx-expand-btns" style="display:none;gap:3px">' +
+          '<span id="ndx-expand-btns" style="display:flex;gap:3px">' +
             '<button class="ndx-tab-btn" onclick="ndxExpandAll()">Expand All</button>' +
             '<button class="ndx-tab-btn" onclick="ndxCollapseAll()">Collapse All</button>' +
           '</span>' +

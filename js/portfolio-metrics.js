@@ -140,7 +140,7 @@ const CORR_SLOTS_KEY = 'pm-corr-slots-v1';
 const CORR_MNAMES_KEY = 'pm-corr-matrix-names-v1';
 const PAPER_SRC_KEY = 'pm-paper-source-v1';
 const SUBMITS_KEY = 'pm-submits-v1';
-const QUOTE_COLS_KEY = 'pm-show-quote-v1';
+const QUOTE_COLS_KEY = 'pm-show-quote-v2';   // v2: default flipped to hidden
 const BOOK_EXTRA_KEY = 'pm-book-extra-v1';
 // Collapsed state of the Summit book: when true the holding rows are hidden and only
 // the weighted-average summary shows under the portfolio name. Persists per browser.
@@ -181,9 +181,9 @@ let bookCollapsed = loadJSON(BOOK_COLLAPSE_KEY, false);
 // next to the multiples, so they default to hidden and the choice persists. Net
 // Debt + EV stay governed separately by the metric (showEvCols → EBITDA only).
 // One toggle for the optional columns: Price, Market Cap and the two metric value
-// columns (e.g. Earnings FY0 / FY+1). Defaults to shown so the values are visible on
-// load; hiding them leaves a compact multiple / growth / PEG / Beta view.
-let showQuote = loadJSON(QUOTE_COLS_KEY, true);
+// columns (e.g. Earnings FY0 / FY+1). Defaults to hidden, leaving a compact
+// multiple / growth / PEG / Beta view; turn it on to bring the values in.
+let showQuote = loadJSON(QUOTE_COLS_KEY, false);
 // Extra instruments (4 editable columns) the Benchmarks subtab correlates against,
 // to the right of the fixed SPY column. Empty slots render an empty input header.
 let corrSlots = (() => {
@@ -797,26 +797,30 @@ function metricNote() {
 // Sub-toggle under the metric bar. For Earnings it reads the metric as the absolute
 // figure or per share; for Cash it picks which cash metric — CFO or FCF — is live.
 // Hidden for EBITDA, which has no sub-choice.
+// The Basis cell — row 2, column 1 of the control grid, sitting under Metric (Earnings
+// → Earnings/EPS, Cash → CFO/FCF). Growth is its mirror in column 3 under Multiple.
+// Returns an empty grid cell when the current metric has no basis, so the grid keeps
+// its shape and Growth stays put in column 3.
 function basisBar() {
   if (metricSel === 'earnings') {
     const opt = (k, label) =>
       `<button data-basis="${k}" class="${earnBasis === k ? 'on' : ''}">${label}</button>`;
     return `
-    <div class="pm-metricbar pm-basisbar">
-      <span class="lbl">Basis</span>
-      <div class="pm-seg">${opt('earnings', 'Earnings')}${opt('eps', 'EPS')}</div>
-    </div>`;
+      <div class="pm-cell pm-csub">
+        <span class="lbl">Basis</span>
+        <div class="pm-seg">${opt('earnings', 'Earnings')}${opt('eps', 'EPS')}</div>
+      </div>`;
   }
   if (isCashMetric()) {
     const opt = (k, label) =>
       `<button data-cash="${k}" class="${metricSel === k ? 'on' : ''}">${label}</button>`;
     return `
-    <div class="pm-metricbar pm-basisbar">
-      <span class="lbl">Basis</span>
-      <div class="pm-seg">${opt('cfo', 'CFO')}${opt('fcf', 'FCF')}</div>
-    </div>`;
+      <div class="pm-cell pm-csub">
+        <span class="lbl">Basis</span>
+        <div class="pm-seg">${opt('cfo', 'CFO')}${opt('fcf', 'FCF')}</div>
+      </div>`;
   }
-  return '';
+  return '<div></div>';
 }
 
 // Shared header row — the benchmark card reuses it so its columns stay aligned
@@ -845,6 +849,20 @@ function colGroup() {
   if (showQuote) c += '<col class="pm-c-v"><col class="pm-c-v">';
   c += '<col class="pm-c-g"><col class="pm-c-peg"><col class="pm-c-beta"><col class="pm-c-act">';
   return `<colgroup>${c}</colgroup>`;
+}
+
+// The on-screen width of a pm-fixed table = the sum of its visible columns. MUST stay
+// in step with the .pm-c-* widths in the CSS. Used to size the Summit pane's stack so
+// it packs left to exactly the table width (and the + New-portfolio row lines up with
+// the Beta column) without depending on fit-content, which long note text would inflate.
+function tableWidthPx() {
+  let w = 190 + 92;                 // name + weight
+  if (showQuote) w += 88 + 112;     // price + market cap
+  if (showEvCols()) w += 88 + 88;   // net debt + EV
+  w += 106;                         // multiple
+  if (showQuote) w += 104 + 104;    // metric prev + current
+  w += 150 + 66 + 76 + 32;          // growth + PEG + beta + actions
+  return w;
 }
 
 function headRow(trailing) {
@@ -912,33 +930,41 @@ function growthSelect() {
     ).join('')}</select>`;
 }
 
+// A 3-column control grid, two rows. Row 1: Metric · Source · Multiple, all vertically
+// centred on the same line (the grid shares each row's height across its columns, so
+// Multiple's taller two-line buttons don't throw the others off). Row 2: Basis under
+// Metric and Growth under Multiple — each an indented sub-control, the one mirroring the
+// other, with nothing under Source.
 function metricBar() {
   return `
-    <div class="pm-metricbar">
-      <span class="lbl">Metric</span>
-      <div class="pm-seg">
-        <button data-metric="ebitda" class="${metricSel === 'ebitda' ? 'on' : ''}">EBITDA</button>
-        <button data-metric="earnings" class="${metricSel === 'earnings' ? 'on' : ''}">Earnings</button>
-        <button data-metric="cash" class="${isCashMetric() ? 'on' : ''}" title="CFO o FCF — elige cuál en Basis">Cash</button>
-      </div>
-      <span class="lbl" style="margin-left:8px">Source</span>
-      <div class="pm-seg">
-        ${Object.keys(SOURCES).map(k =>
-          `<button data-source="${k}" class="${source === k ? 'on' : ''}">${SOURCES[k].label}</button>`
-        ).join('')}
-      </div>
-      <div class="pm-mg" style="margin-left:8px">
-        <div class="pm-mg-line">
-          <span class="lbl">Multiple</span>
-          <div class="pm-seg">${multButtons()}</div>
-        </div>
-        <div class="pm-mg-line">
-          <span class="lbl">Growth</span>
-          ${growthSelect()}
+    <div class="pm-ctrls">
+      <div class="pm-cell">
+        <span class="lbl">Metric</span>
+        <div class="pm-seg">
+          <button data-metric="ebitda" class="${metricSel === 'ebitda' ? 'on' : ''}">EBITDA</button>
+          <button data-metric="earnings" class="${metricSel === 'earnings' ? 'on' : ''}">Earnings</button>
+          <button data-metric="cash" class="${isCashMetric() ? 'on' : ''}" title="CFO o FCF — elige cuál en Basis">Cash</button>
         </div>
       </div>
-    </div>
-    ${basisBar()}`;
+      <div class="pm-cell">
+        <span class="lbl">Source</span>
+        <div class="pm-seg">
+          ${Object.keys(SOURCES).map(k =>
+            `<button data-source="${k}" class="${source === k ? 'on' : ''}">${SOURCES[k].label}</button>`
+          ).join('')}
+        </div>
+      </div>
+      <div class="pm-cell">
+        <span class="lbl">Multiple</span>
+        <div class="pm-seg">${multButtons()}</div>
+      </div>
+      ${basisBar()}
+      <div></div>
+      <div class="pm-cell pm-csub">
+        <span class="lbl">Growth</span>
+        ${growthSelect()}
+      </div>
+    </div>`;
 }
 
 // Subtle show/hide control for the Price + Market Cap columns, parked at the top-right
@@ -972,24 +998,30 @@ function portfolioTable() {
   // The book is a named, collapsible segment: collapsed hides the holdings and the
   // Cash row, leaving the column headers + the weighted-average row under the name.
   // (First of what will become one segment per portfolio.)
+  // Everything below the controls lives in a fit-content stack so the whole pane packs
+  // to the left (and the cards and + New-portfolio row stay the same width and lined
+  // up) instead of stretching across the card when the optional columns are hidden.
   return `
     ${metricBar()}
-    <div class="pm-toprow">
-      ${quoteToggle()}
-      ${newPortfolioBar()}
-    </div>
-    <div class="card pm-seg${bookCollapsed ? ' is-collapsed' : ''}" data-seg="summit">
-      <table class="pm-fixed" data-side="portfolio">
-        ${colGroup()}
-        <thead>${headRow('<th></th>')}${bookSummaryRow()}</thead>
-        <tbody id="pm-book-body">${bookBody()}</tbody>
-        <tfoot id="pm-book-foot">${bookCashRow()}</tfoot>
-      </table>
-    </div>
-    ${customPortfolios()}
-    ${quoteNote()}
-    ${metricNote()}
-    ${benchmarkTable()}`;
+    <div class="pm-stack" style="width:${tableWidthPx() + 14}px">
+      <div id="pm-summary">${summaryBlock()}</div>
+      <div class="pm-toprow">
+        ${quoteToggle()}
+        ${newPortfolioBar()}
+      </div>
+      <div class="card pm-seg${bookCollapsed ? ' is-collapsed' : ''}" data-seg="summit">
+        <table class="pm-fixed" data-side="portfolio">
+          ${colGroup()}
+          <thead>${headRow('<th></th>')}${bookSummaryRow()}</thead>
+          <tbody id="pm-book-body">${bookBody()}</tbody>
+          <tfoot id="pm-book-foot">${bookCashRow()}</tfoot>
+        </table>
+      </div>
+      ${customPortfolios()}
+      ${quoteNote()}
+      ${metricNote()}
+      ${benchmarkTable()}
+    </div>`;
 }
 
 function renderPortfolio() {
@@ -1172,8 +1204,6 @@ function methodStrip(t, m, n) {
 function renderBeta() {
   maybeLoadDaily();
   renderPortfolio();                                   // Summit PEG table (Beta column)
-  const p = document.getElementById('pm-an-peg-paper');
-  if (p) p.innerHTML = paperTable();                   // Paper PEG table (Beta column)
   refreshBetaModal();                                  // keep an open detail modal in sync
 }
 
@@ -1565,26 +1595,28 @@ const LABEL_OF = {};
 // Tickers always display in upper case, whatever the stored label's casing.
 const labelOf = (t) => (LABEL_OF[t] || t || '').toUpperCase();
 
-// The portfolios shown in Comparison: the current book (Summit) plus every
-// portfolio submitted from Paper.
+// The rows in the Summary: the Summit book, every user-built portfolio, and SPY as the
+// S&P 500 benchmark reference (a one-name "book" at 100%, so its weighted stats are just
+// SPY's own — hand-typed in the Benchmark card below).
 function comparePortfolios() {
   return [
     { label: 'Summit (actual)', items: portItems(), fixed: true },
-    ...submits.map((s) => ({ label: s.label, items: [...s.passive, ...s.single], id: s.id })),
+    ...portfolios.map((p) => ({ label: p.name, items: pfItems(p), id: p.id })),
+    { label: 'SPY (S&P 500)', items: [{ ticker: BENCHMARK.ticker, weight: 100 }], bench: true },
   ];
 }
-const subDel = (p) => (p.fixed ? ''
-  : `<button class="pm-subdel" data-submit-del="${esc(p.id)}" title="Quitar de la comparación" aria-label="Quitar">&times;</button>`);
 
-// Portfolio-level summary: one row per portfolio, weighted PEG / growth / multiple
-// / beta / avg corr.
+// Portfolio-level summary ("Resumen"): one row per portfolio — the Summit book plus
+// each user-built portfolio — with weighted PEG / growth / multiple / beta / avg corr.
+// Lives at the bottom of the Summit tab. m is the fixed method for the corr column.
 function cmpSummary(portfolios, m) {
   const f2 = (v) => (v == null ? '&mdash;' : v.toFixed(2));
   const f1 = (v, u = '') => (v == null ? '&mdash;' : v.toFixed(1) + u);
   const rows = portfolios.map((p) => {
     const st = weightedStats(p.items);
-    return `<tr class="${p.fixed ? 'pm-cmp-cur' : ''}">
-        <td class="tk">${esc(p.label)}${subDel(p)}</td>
+    const cls = [p.fixed ? 'pm-cmp-cur' : '', p.bench ? 'pm-cmp-bench' : ''].filter(Boolean).join(' ');
+    return `<tr class="${cls}">
+        <td class="tk">${esc(p.label)}</td>
         <td class="num pm-peg">${f2(st.peg)}</td>
         <td class="num">${f1(st.growth, '%')}</td>
         <td class="num">${f1(st.mult, 'x')}</td>
@@ -1592,95 +1624,36 @@ function cmpSummary(portfolios, m) {
         <td class="num">${f2(avgCorr(p.items, m))}</td>
       </tr>`;
   }).join('');
-  return `<div class="card"><table>
+  return `<h3 class="pm-bmk-h">Summary</h3>
+    <div class="card"><table>
       <thead><tr>
         <th>Portafolio</th><th>Weighted PEG</th><th>Growth</th><th>Fwd Multiple</th><th>Beta</th><th>Corr prom.</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
-    <p class="pm-note"><b>Summit (actual)</b> es el libro actual; las dem&aacute;s filas son los portafolios que enviaste con
-      <b>Submit</b> desde el subtab <b>Paper</b> (&times; para quitar). PEG / crecimiento / m&uacute;ltiplo usan la m&eacute;trica
-      y a&ntilde;o de arriba; <b>Beta</b> = promedio ponderado (cash y nombres sin historial cuentan &beta; 0); <b>Corr prom.</b>
-      = correlaci&oacute;n promedio entre pares (retornos mensuales, ventana 5A).</p>`;
+    <p class="pm-note"><b>Summit (actual)</b> es el libro, las filas intermedias son tus portafolios
+      (<b>+ New portfolio</b>) y <b>SPY (S&amp;P 500)</b> es el benchmark (sus valores se tipean en la tarjeta
+      Benchmark abajo). PEG / crecimiento / m&uacute;ltiplo usan la m&eacute;trica y a&ntilde;o de arriba; <b>Beta</b> =
+      promedio ponderado (cash y nombres sin historial cuentan &beta; 0); <b>Corr prom.</b> = correlaci&oacute;n
+      promedio entre pares (retornos mensuales, ventana 5A).</p>`;
 }
 
-// Per-holding detail: rows = every name across the compared portfolios. Left block
-// = each portfolio's weight for the name (— where absent, so the differences are
-// explicit); right block = the name's own metrics (β, PEG, growth, fwd multiple),
-// which are stock-level so they're shown once. A Cash footer shows what each book
-// leaves short of 100%.
-function cmpDetail(portfolios) {
-  // weight map + typed-weight sum per portfolio
-  portfolios.forEach((p) => {
-    p.w = {}; p.sum = 0;
-    p.items.forEach((it) => {
-      const t = (it.ticker || '').toUpperCase(); const w = num(it.weight);
-      if (!t) return; p.w[t] = w; if (w && w > 0) p.sum += w;
-    });
-  });
-  // name order: Summit's names first, then any submit-only names as they appear
-  const order = [], seen = new Set();
-  portfolios.forEach((p) => p.items.forEach((it) => {
-    const t = (it.ticker || '').toUpperCase();
-    if (t && !seen.has(t)) { seen.add(t); order.push(t); }
-  }));
-
-  const f2 = (v) => (v == null ? '&mdash;' : v.toFixed(2));
-  const f1 = (v, u = '') => (v == null ? '&mdash;' : v.toFixed(1) + u);
-  const head = `<tr>
-      <th>Name</th>
-      ${portfolios.map((p) => `<th class="num">${esc(p.label)}${subDel(p)}</th>`).join('')}
-      <th class="num msep">Beta</th><th class="num">PEG</th><th class="num">Growth</th><th class="num">Fwd Mult</th>
-    </tr>`;
-  const body = order.map((t) => {
-    const g = growthFor(t);
-    const gCls = g == null ? '' : (g >= 0 ? 'up' : 'dn');
-    return `<tr>
-      <td class="tk">${esc(labelOf(t) || t)}</td>
-      ${portfolios.map((p) => { const w = p.w[t]; return `<td class="num${w == null ? ' muted' : ''}">${w == null ? '&mdash;' : w.toFixed(1) + '%'}</td>`; }).join('')}
-      <td class="num msep">${f2(betaOf(t).beta)}</td>
-      <td class="num pm-peg">${f2(pegFor(t, g))}</td>
-      <td class="num pm-growth ${gCls}">${f1(g, '%')}</td>
-      <td class="num">${f1(multFor(t), 'x')}</td>
-    </tr>`;
-  }).join('');
-  const cashRow = `<tr class="pm-cash"><td class="tk">Cash</td>${portfolios.map((p) =>
-    `<td class="num">${(100 - p.sum).toFixed(1)}%</td>`).join('')}<td class="msep"></td><td></td><td></td><td></td></tr>`;
-
-  return `<div class="card"><table class="pm-cmpdetail">
-      <thead>${head}</thead>
-      <tbody>${body || `<tr><td colspan="${portfolios.length + 5}" class="pm-empty">Sin posiciones.</td></tr>`}</tbody>
-      <tfoot>${cashRow}</tfoot>
-    </table></div>
-    <p class="pm-note">Columnas de peso: cuánto tiene cada portafolio de ese nombre (<b>&mdash;</b> = no lo tiene). A la derecha,
-      métricas de la acción (iguales en todos): <b>Beta</b> (con la metodología de cada nombre del tab Beta), <b>PEG</b> /
-      <b>Growth</b> / <b>Fwd Mult</b> según la métrica y año elegidos arriba. <b>Cash</b> = lo que falta para 100%.</p>`;
+// The Summary block for the Summit tab, with the fixed monthly/5y method for corr.
+function summaryBlock() {
+  return cmpSummary(comparePortfolios(), { freq: 'monthly', amt: 5, unit: 'y' });
 }
 
-function blendedBody() {
-  const m = { freq: 'monthly', amt: 5, unit: 'y' };   // fixed method for the corr summary
-  const ps = comparePortfolios();
-  return `
-    ${metricBar()}
-    <div class="pm-cmpview"><div class="pm-seg">
-      <button data-cmpview="summary" class="${cmpView === 'summary' ? 'on' : ''}">Resumen</button>
-      <button data-cmpview="detail" class="${cmpView === 'detail' ? 'on' : ''}">Detalle por holding</button>
-    </div></div>
-    ${cmpView === 'detail' ? cmpDetail(ps) : cmpSummary(ps, m)}`;
-}
-
+// Repaint the Summit-tab Resumen in place after a weight / metric change. Light enough
+// to run on every keystroke (the segment summary rows refresh separately).
 function renderBlended() {
-  const el = document.getElementById('pm-sub-blended');
-  if (el) el.innerHTML = blendedBody();
+  const el = document.getElementById('pm-summary');
+  if (el) el.innerHTML = summaryBlock();
 }
 
-// Both subtabs read the same metric/year/basis state, so a change to any of them
-// has to repaint both — the hidden one included, or it comes back stale.
+// A metric/source/year change repaints the whole Summit pane (metric bar, tables and
+// the Resumen with it).
 function renderAll() {
-  renderPortfolio();
-  const el = document.getElementById('pm-an-peg-paper');
-  if (el) el.innerHTML = paperTable();
-  renderBlended();
+  renderPortfolio();   // includes the Resumen (summaryBlock)
 }
 
 // Recompute the footer of whichever table the row belongs to, in place — typing a
@@ -1689,11 +1662,6 @@ function renderAll() {
 function refreshFooter(tr) {
   const table = tr.closest('table');
   if (!table) return;
-  if (table.dataset.side === 'paper') {
-    const foot = table.querySelector('tfoot');
-    if (foot) foot.innerHTML = footRows(paperItems(), 1);   // Paper keeps cash + wavg in the foot
-    return;
-  }
   if (table.dataset.side === 'pf') { refreshPfFooter(table.dataset.pf); return; }
   // Summit: the weighted average lives in the top summary row, cash in the foot.
   renderBookSummary();
@@ -2008,19 +1976,12 @@ export function loadPortfolioMetricsPage() {
 
     <div class="pm-subnav">
       <button class="pm-pill active" data-sub="portfolio">Summit</button>
-      <button class="pm-pill" data-sub="paper">Paper</button>
-      <button class="pm-pill" data-sub="blended">Comparison</button>
       <button class="pm-pill" data-sub="corr">Correlation</button>
     </div>
 
     <div class="pm-sub active" id="pm-sub-portfolio">
       <div id="pm-an-peg">${portfolioTable()}</div>
     </div>
-    <div class="pm-sub" id="pm-sub-paper">
-      <div id="pm-paper-header">${paperHeader()}</div>
-      <div id="pm-an-peg-paper">${paperTable()}</div>
-    </div>
-    <div class="pm-sub" id="pm-sub-blended">${blendedBody()}</div>
     <div class="pm-sub" id="pm-sub-corr">
       <div id="pm-an-corr">${corrBlock('metrics')}</div>
     </div>

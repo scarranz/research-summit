@@ -32,7 +32,19 @@
    number or a typed input (auto-layout would size each table to its own content and
    let them drift). The name column carries no width and soaks up the remaining
    space; the long Growth header is allowed to wrap rather than overflow its cell. */
-#pm-root table.pm-fixed{table-layout:fixed;min-width:960px;}
+/* Size to the sum of the columns (not 100% of the card) and sit left, so hiding the
+   optional columns shrinks the table leftward instead of stretching the survivors
+   across empty space. Every pm-fixed table shares the same colgroup, so they stay the
+   same width and lined up; the card scrolls if the columns outgrow it. */
+#pm-root table.pm-fixed{table-layout:fixed;width:auto;}
+
+/* The Summit pane packs to the left: the stack is sized (inline, from tableWidthPx())
+   to exactly the table width, so the cards, the + New-portfolio row and the benchmark
+   all share that width and line up, with slack falling on the right instead of
+   stretching the columns. The width is explicit rather than fit-content so a long note
+   sentence can't blow the stack out past the tables; notes just fill and wrap. */
+#pm-root .pm-stack{max-width:100%;}
+#pm-root .pm-stack > .pm-note{width:100%;}
 #pm-root table.pm-fixed th{white-space:normal;}
 #pm-root .pm-c-name{width:190px;}
 #pm-root .pm-c-wt{width:92px;}
@@ -139,9 +151,17 @@
 #pm-root .pm-empty{color:var(--mu);font-size:12px;font-style:italic;}
 
 /* Metric selector (EBITDA / Earnings / CFO / FCF) — segmented control */
-#pm-root .pm-metricbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
-#pm-root .pm-metricbar .lbl{font-size:10px;color:var(--mu);font-weight:600;
+/* A 3-column control grid: row 1 is Metric · Source · Multiple, row 2 is Basis · (empty)
+   · Growth. The grid shares each row's height across columns and centres every cell, so
+   the three primaries line up on one row even though Multiple's buttons are taller, and
+   Basis/Growth line up on the row below. Basis sits under Metric, Growth under Multiple —
+   each indented with a left border so it reads as a sub-control of the one above it. */
+#pm-root .pm-ctrls{display:grid;grid-template-columns:repeat(3, max-content);
+  column-gap:28px;row-gap:8px;align-items:center;margin-bottom:14px;}
+#pm-root .pm-cell{display:flex;align-items:center;gap:12px;}
+#pm-root .pm-cell .lbl{font-size:10px;color:var(--mu);font-weight:600;
   text-transform:uppercase;letter-spacing:.04em;}
+#pm-root .pm-csub{margin-left:14px;padding-left:12px;border-left:2px solid var(--bdr);}
 #pm-root .pm-seg{display:inline-flex;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;flex:none;}
 #pm-root .pm-seg button{border:none;border-radius:0;background:var(--w);color:var(--steel);
   padding:7px 14px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
@@ -186,10 +206,6 @@
 #pm-root .card.pm-bmk tbody tr:hover{background:transparent;}
 #pm-root .card.pm-bmk td{border-bottom:none;}
 #pm-root .card.pm-bmk td.tk span.muted{font-weight:500;color:var(--mu);font-size:12px;margin-left:6px;}
-
-/* Earnings basis sub-toggle — indented under the metric bar so it reads as a
-   sub-control of Earnings rather than a third top-level selector. */
-#pm-root .pm-basisbar{margin:-4px 0 14px 14px;padding-left:12px;border-left:2px solid var(--bdr);}
 
 /* Source toggle — Consensus lights up amber rather than navy, so a table built on
    street numbers instead of our own model is never mistaken for the default. */
@@ -290,9 +306,12 @@
   padding:6px 16px;font:700 12.5px 'Inter',sans-serif;cursor:pointer;transition:filter .15s;}
 #pm-root .pm-submit:hover{filter:brightness(.92);}
 #pm-root .pm-subcount{font-size:11px;color:var(--pos);font-weight:700;}
-/* Comparison — current book highlighted, submitted rows carry a remove × on the name. */
+/* Summary — the Summit book highlighted; the SPY benchmark set off by a top border and
+   steel label so it reads as a reference line rather than one of the portfolios. */
 #pm-root tr.pm-cmp-cur td{background:var(--pale);}
 #pm-root tr.pm-cmp-cur td.tk{color:var(--navy);font-weight:700;}
+#pm-root tr.pm-cmp-bench td{border-top:2px solid var(--bdr);}
+#pm-root tr.pm-cmp-bench td.tk{color:var(--steel);}
 #pm-root .pm-subdel{border:none;background:transparent;color:var(--mu);cursor:pointer;
   font-size:15px;line-height:1;padding:0 4px;margin-left:8px;}
 #pm-root .pm-subdel:hover{color:var(--neg);}
@@ -382,11 +401,6 @@
 #pm-root .pm-seg.is-collapsed tbody,
 #pm-root .pm-seg.is-collapsed tfoot{display:none;}
 
-/* Multiple + Growth stacked vertically: the Growth dropdown sits directly beneath
-   the Multiple segment, their labels sharing a width so the controls left-align. */
-#pm-root .pm-mg{display:flex;flex-direction:column;gap:6px;}
-#pm-root .pm-mg-line{display:flex;align-items:center;gap:10px;}
-#pm-root .pm-mg-line .lbl{min-width:54px;}
 
 /* User-built portfolio segments: the toggle holds only the caret (no fixed label),
    with an editable name beside it. A × on the right deletes the whole portfolio. */

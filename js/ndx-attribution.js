@@ -42,7 +42,10 @@ var _scatterYrAxes = { xLo: null, xHi: null, yHi: null };
 var _beeswarmYear = 'ytd2026';
 var _beeswarmSectors = new Set();
 var _beeswarmSecAll = [];
-var _paretoN     = 10;
+var _paretoN       = 10;
+var _paretoYear    = 'ytd2026';
+var _paretoCols    = new Set(['cumPct', 'weight', 'sector']);
+var _paretoCustomN = 0;
 var YEAR_HOCS    = { ytd2026: [12, 25], y2025: [2, 11] };
 var _colorMode   = 'orig';   // 'orig' | 'A' | 'B' | 'C'
 var _colorMaxPos = 0, _colorMaxNeg = 0;
@@ -54,6 +57,11 @@ var lastBaseR    = null;
 // ── Helpers ────────────────────────────────────────────────────────────────
 function getActiveHocs() {
   return NDX_DATA.hocs.filter(function(h) { return h.n >= _fromHoc && h.n <= _toHoc; });
+}
+function hocsForYear(yr) {
+  var rng = YEAR_HOCS[yr];
+  if (!rng) return _activeHocs;
+  return NDX_DATA.hocs.filter(function(h) { return h.n >= rng[0] && h.n <= rng[1]; });
 }
 function normalize() {
   NDX_DATA.hocs.forEach(function(hoc) {
@@ -1393,59 +1401,144 @@ function renderBeeswarm(securities, threshold) {
 }
 
 // ── Pareto / Top Contributors ────────────────────────────────────────────
-function renderPareto(securities) {
+function renderPareto() {
   var box = document.getElementById('ndx-pareto-box');
-  if (!box || !securities || !securities.length) return;
+  if (!box) return;
 
-  var nonCash = securities.filter(function(d) { return d.sect !== CASH; });
+  var yrHocs = hocsForYear(_paretoYear);
+  if (!yrHocs.length) return;
+
+  var allSec = computeSecurities(new Set(), new Set(), yrHocs);
+  var nonCash = allSec.filter(function(d) { return !isCash(d.name) && d.sect !== CASH; });
   var byAbs = nonCash.slice().sort(function(a, b) { return Math.abs(b.contrib) - Math.abs(a.contrib); });
 
-  var showAll = _paretoN === 0;
-  var topN = showAll ? byAbs : byAbs.slice(0, _paretoN);
-  var topSum = topN.reduce(function(s, d) { return s + d.contrib; }, 0);
-  var totalYtd = baseR ? baseR.ytd : 0;
-  var pctExplained = totalYtd !== 0 ? Math.abs(topSum / totalYtd * 100).toFixed(1) : '--';
+  var N = _paretoCustomN > 0 ? _paretoCustomN : _paretoN;
+  var showAll = N === 0;
+  var topN = showAll ? byAbs : byAbs.slice(0, N);
 
-  // Display sorted: positive desc first, negative asc after
-  var pos = topN.filter(function(d) { return d.contrib >= 0; }).sort(function(a, b) { return b.contrib - a.contrib; });
-  var neg = topN.filter(function(d) { return d.contrib < 0; }).sort(function(a, b) { return a.contrib - b.contrib; });
+  // Index total return for the year
+  var logSum = 0;
+  yrHocs.forEach(function(hoc) {
+    var hocRet = 0;
+    hoc.sec.forEach(function(s) { hocRet += (s.w || 0) * s.r; });
+    logSum += Math.log(1 + hocRet / 100);
+  });
+  var totalRet = (Math.exp(logSum) - 1) * 100;
+
+  var topContrib = topN.reduce(function(s, d) { return s + d.contrib; }, 0);
+  var nlbl = showAll ? 'All ' + topN.length : String(N);
+  var totalStr = (totalRet >= 0 ? '+' : '') + totalRet.toFixed(2) + '%';
+  var topStr   = (topContrib >= 0 ? '+' : '') + topContrib.toFixed(2) + '%';
+  var pctExp   = totalRet !== 0 ? (Math.abs(topContrib / totalRet) * 100).toFixed(1) + '%' : '';
+
+  // Sort: pos desc, then neg asc
+  var pos  = topN.filter(function(d) { return d.contrib >= 0; }).sort(function(a, b) { return b.contrib - a.contrib; });
+  var neg  = topN.filter(function(d) { return d.contrib < 0;  }).sort(function(a, b) { return a.contrib - b.contrib; });
   var rows = pos.concat(neg);
-  var maxAbs = Math.max.apply(null, topN.map(function(d) { return Math.abs(d.contrib); })) || 1;
 
-  var totalStr = totalYtd !== 0 ? (totalYtd >= 0 ? '+' : '') + totalYtd.toFixed(2) + '%' : '--';
-  var topSumStr = (topSum >= 0 ? '+' : '') + topSum.toFixed(2) + '%';
-  var nlbl = showAll ? ('All ' + topN.length) : ('Top ' + _paretoN);
+  var COL_OPTS = [
+    { k: 'ret',    lbl: 'Ret%'   },
+    { k: 'weight', lbl: 'Weight' },
+    { k: 'sector', lbl: 'Sector' },
+    { k: 'ig',     lbl: 'IG'     },
+  ];
 
-  var html = '<div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap">' +
-    [5, 10, 20, 0].map(function(nv) {
-      var lbl = nv === 0 ? 'All' : nv;
-      var act = _paretoN === nv;
-      return '<button class="ndx-pareto-n-btn ndx-tab-btn' + (act ? ' active' : '') + '" data-n="' + nv + '" onclick="ndxSetParetoN(' + nv + ')">' + lbl + '</button>';
-    }).join('') +
-    '<span style="margin-left:auto;font-size:12px;color:var(--mu)">' +
-      nlbl + ' names: <b style="color:' + colr(topSum) + '">' + topSumStr + '</b>' +
-      ' &middot; <b style="color:var(--navy)">' + pctExplained + '%</b> of <b style="color:' + colr(totalYtd) + '">' + totalStr + '</b> YTD' +
-    '</span>' +
-  '</div>' +
-  '<div style="display:flex;flex-direction:column;gap:3px">';
+  var yrBtns = [
+    { k: 'ytd2026', lbl: 'YTD 2026' },
+    { k: 'y2025',   lbl: '2025'     },
+  ].map(function(y) {
+    var act = _paretoYear === y.k;
+    return '<button class="ndx-tab-btn ndx-par-yr-btn' + (act ? ' active' : '') +
+      '" data-yr="' + y.k + '" onclick="ndxSetParetoYear(\'' + y.k + '\')">' + y.lbl + '</button>';
+  }).join('');
 
-  rows.forEach(function(d) {
-    var BAR_MAX = 300;
-    var barW = Math.round(Math.abs(d.contrib) / maxAbs * BAR_MAX);
-    var col = d.contrib >= 0 ? '#177A4E' : '#9B2A20';
-    var val = (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(3) + '%';
+  var nBtns = [5, 10, 20, 0].map(function(nv) {
+    var lbl = nv === 0 ? 'All' : String(nv);
+    var act = _paretoCustomN === 0 && _paretoN === nv;
+    return '<button class="ndx-tab-btn ndx-pareto-n-btn' + (act ? ' active' : '') +
+      '" data-n="' + nv + '" onclick="ndxSetParetoN(' + nv + ')">' + lbl + '</button>';
+  }).join('');
+
+  var customVal = _paretoCustomN > 0 ? String(_paretoCustomN) : '';
+  var customInp = '<input type="number" min="1" max="200" placeholder="Custom N" value="' + customVal + '" ' +
+    'style="width:76px;font-size:11px;padding:3px 6px;border:1px solid var(--rule);border-radius:4px;' +
+    'background:var(--surface);color:var(--navy)" ' +
+    'onchange="ndxSetParetoCustomN(+this.value)">';
+
+  var colBtns = COL_OPTS.map(function(c) {
+    var act = _paretoCols.has(c.k);
+    return '<button class="ndx-tab-btn ndx-par-col-btn' + (act ? ' active' : '') +
+      '" data-col="' + c.k + '" onclick="ndxToggleParetoCol(\'' + c.k + '\')">' + c.lbl + '</button>';
+  }).join('');
+
+  var html =
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">' +
+      '<div style="display:flex;gap:4px">' + yrBtns + '</div>' +
+      '<div style="width:1px;height:16px;background:var(--rule);flex-shrink:0"></div>' +
+      '<div style="display:flex;gap:4px">' + nBtns + '</div>' +
+      customInp +
+      '<div style="width:1px;height:16px;background:var(--rule);flex-shrink:0"></div>' +
+      '<div style="display:flex;gap:4px">' + colBtns + '</div>' +
+      '<span style="margin-left:auto;font-size:11.5px;color:var(--mu);white-space:nowrap">' +
+        nlbl + ' names: <b style="color:' + colr(topContrib) + '">' + topStr + '</b>' +
+        (pctExp ? ' · <b style="color:var(--navy)">' + pctExp + '</b> of ' +
+          '<b style="color:' + colr(totalRet) + '">' + totalStr + '</b>' : '') +
+      '</span>' +
+    '</div>';
+
+  var showRet    = _paretoCols.has('ret');
+  var showWeight = _paretoCols.has('weight');
+  var showSector = _paretoCols.has('sector');
+  var showIG     = _paretoCols.has('ig');
+
+  html +=
+    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
+    '<thead><tr style="border-bottom:1.5px solid var(--rule)">' +
+      '<th style="width:26px;text-align:right;padding:4px 6px;color:var(--mu);font-weight:500">#</th>' +
+      '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500">Ticker</th>' +
+      '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Contrib</th>' +
+      '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Cum%</th>' +
+      (showRet    ? '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Ret%</th>'    : '') +
+      (showWeight ? '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Wt%</th>'     : '') +
+      (showSector ? '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500">Sector</th>'  : '') +
+      (showIG     ? '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500">IG</th>'       : '') +
+    '</tr></thead><tbody>';
+
+  var cum = 0;
+  rows.forEach(function(d, i) {
+    cum += d.contrib;
+    var cumPct   = totalRet !== 0 ? cum / totalRet * 100 : 0;
+    var cv       = d.contrib;
+    var contribStr = (cv >= 0 ? '+' : '') + cv.toFixed(3) + '%';
+    var contribCol = cv >= 0 ? 'var(--pos)' : 'var(--neg)';
+    var cumStr   = (cumPct >= 0 ? '+' : '') + cumPct.toFixed(1) + '%';
+    var retStr   = (d.ret >= 0 ? '+' : '') + d.ret.toFixed(1) + '%';
+    var retCol   = d.ret >= 0 ? 'var(--pos)' : 'var(--neg)';
+    var wtPct    = (d.w1 > 0 ? d.w1 : d.w0).toFixed(2) + '%';
+    var rowBg    = i % 2 === 1 ? 'background:var(--surface)' : '';
+    var coTitle  = (d.co || d.name).replace(/"/g, '&quot;');
+
     html +=
-      '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:.5px solid #F0F4F8">' +
-        '<span style="min-width:52px;font-size:11.5px;font-weight:700;color:var(--navy);text-align:right;font-variant-numeric:tabular-nums">' + d.name + '</span>' +
-        '<div style="position:relative;width:' + BAR_MAX + 'px;height:16px;background:var(--surface);border-radius:3px;flex-shrink:0">' +
-          '<div style="position:absolute;top:2px;bottom:2px;left:0;width:' + barW + 'px;background:' + col + ';opacity:.7;border-radius:2px"></div>' +
-        '</div>' +
-        '<span style="min-width:62px;font-size:11.5px;color:' + col + ';font-weight:600;font-variant-numeric:tabular-nums">' + val + '</span>' +
-        '<span style="font-size:11px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px">' + trunc(d.grp, 34) + '</span>' +
-      '</div>';
+      '<tr style="border-bottom:.5px solid var(--rule);' + rowBg + '">' +
+        '<td style="text-align:right;padding:4px 6px;color:var(--mu);font-size:11px">' + (i + 1) + '</td>' +
+        '<td style="text-align:left;padding:4px 8px;font-weight:700;color:var(--navy);' +
+          'font-variant-numeric:tabular-nums" title="' + coTitle + '">' + d.name + '</td>' +
+        '<td style="text-align:right;padding:4px 8px;color:' + contribCol + ';font-weight:600;' +
+          'font-variant-numeric:tabular-nums">' + contribStr + '</td>' +
+        '<td style="text-align:right;padding:4px 8px;color:var(--mu);font-size:11.5px;' +
+          'font-variant-numeric:tabular-nums">' + cumStr + '</td>' +
+        (showRet    ? '<td style="text-align:right;padding:4px 8px;color:' + retCol + ';font-size:11.5px;' +
+          'font-variant-numeric:tabular-nums">' + retStr + '</td>' : '') +
+        (showWeight ? '<td style="text-align:right;padding:4px 8px;color:var(--mu);font-size:11.5px;' +
+          'font-variant-numeric:tabular-nums">' + wtPct + '</td>' : '') +
+        (showSector ? '<td style="text-align:left;padding:4px 8px;font-size:11px;color:var(--mu)">' +
+          trunc(dispSec(d.sect), 32) + '</td>' : '') +
+        (showIG     ? '<td style="text-align:left;padding:4px 8px;font-size:11px;color:var(--mu)">' +
+          trunc(dispIG(d.grp), 36) + '</td>' : '') +
+      '</tr>';
   });
 
-  html += '</div>';
+  html += '</tbody></table></div>';
   box.innerHTML = html;
 }
 
@@ -1755,7 +1848,7 @@ function refresh() {
   if (attrMode === 'chart') renderAttrChart(res); else renderTreemap(res);
   renderAttrTable(res);
   _securities = computeSecurities(exclSecs, exclIGs);
-  renderPareto(_securities);
+  renderPareto();
   renderWLSection();
   _updateScatterSlider();
   renderBeeswarm(_beeswarmSecAll, _beeswarmFilter);
@@ -1944,10 +2037,32 @@ window.ndxSetWLTab = function(t) {
 
 window.ndxSetParetoN = function(n) {
   _paretoN = parseInt(n, 10);
+  _paretoCustomN = 0;
   document.querySelectorAll('.ndx-pareto-n-btn').forEach(function(b) {
     b.classList.toggle('active', parseInt(b.dataset.n, 10) === _paretoN);
   });
-  renderPareto(_securities);
+  renderPareto();
+};
+window.ndxSetParetoYear = function(yr) {
+  _paretoYear = yr;
+  document.querySelectorAll('.ndx-par-yr-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.yr === yr);
+  });
+  renderPareto();
+};
+window.ndxSetParetoCustomN = function(n) {
+  _paretoCustomN = (n && n > 0) ? Math.floor(n) : 0;
+  if (_paretoCustomN > 0) {
+    document.querySelectorAll('.ndx-pareto-n-btn').forEach(function(b) { b.classList.remove('active'); });
+  }
+  renderPareto();
+};
+window.ndxToggleParetoCol = function(col) {
+  if (_paretoCols.has(col)) _paretoCols.delete(col); else _paretoCols.add(col);
+  document.querySelectorAll('.ndx-par-col-btn').forEach(function(b) {
+    b.classList.toggle('active', _paretoCols.has(b.dataset.col));
+  });
+  renderPareto();
 };
 window.ndxSetFrom = function(n) {
   _fromHoc = parseInt(n, 10);
@@ -2091,7 +2206,7 @@ function buildSkeleton() {
   '<div class="sec">' +
     '<div class="sechdr">' +
       '<span class="sect">Top Contributors</span>' +
-      '<span class="secn">Securities ranked by |contribution|. Bars sized by absolute contribution.</span>' +
+      '<span class="secn">Securities ranked by absolute contribution to index return.</span>' +
     '</div>' +
     '<div class="card"><div id="ndx-pareto-box"></div></div>' +
   '</div>' +
@@ -2170,7 +2285,7 @@ export function loadNdxAttribution(container) {
   _scatterYear = 'ytd2026'; _scatterSecSnapshots = []; _scatterYrAxes = { xLo: null, xHi: null, yHi: null };
   _beeswarmYear = 'ytd2026'; _beeswarmSectors = new Set(); _beeswarmSecAll = [];
   _activeYear = 'ytd2026';
-  _paretoN = 10;
+  _paretoN = 10; _paretoYear = 'ytd2026'; _paretoCustomN = 0;
   _colorMode = 'orig';
   _colorMaxPos = 0; _colorMaxNeg = 0;
   _rebalTab = 'A'; _wlTab = 'C';
@@ -2193,7 +2308,7 @@ export function loadNdxAttribution(container) {
   renderAttrTable(baseR);
   renderDumbbell();
   renderRebalSection();
-  renderPareto(_securities);
+  renderPareto();
   renderWLSection();
   _updateScatterSlider();
   renderBeeswarm(_beeswarmSecAll, 0);

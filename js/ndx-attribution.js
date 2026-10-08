@@ -25,7 +25,8 @@ var _snapN      = {};
 var _axisSecMin = 0, _axisSecMax = 0;
 var _axisIGMin  = 0, _axisIGMax  = 0;
 var _sortKey    = 'contrib';
-var _sortDir    = -1;
+var _sortDir    = 1;
+var _attrDetailYear = 'ytd2026';
 var _fromHoc    = 12;
 var _toHoc      = 25;
 var _activeHocs = [];
@@ -2349,6 +2350,16 @@ window.ndxSort = function(key) {
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   renderAttrTable(isBase ? baseR : computeCore(exclSecs, exclIGs));
 };
+window.ndxSetAttrDetailYear = function(yr) {
+  _attrDetailYear = yr;
+  var range = YEAR_HOCS[yr];
+  if (!range) return;
+  _fromHoc = range[0]; _toHoc = range[1];
+  document.querySelectorAll('.ndx-attr-det-yr-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.yr === yr);
+  });
+  reloadSnapshot();
+};
 window.ndxSetYear = function(yr) {
   var range = YEAR_HOCS[yr];
   if (!range) return;
@@ -2586,6 +2597,10 @@ function buildSkeleton() {
           '<span class="secn" style="display:block;margin-top:2px">Click any row to include / exclude · weights rescale to 100% within each HOC · YTD updates in real time</span>' +
         '</div>' +
         '<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">' +
+          '<div style="display:flex;gap:3px;margin-right:4px">' +
+            '<button class="ndx-attr-det-yr-btn ndx-tab-btn active" data-yr="ytd2026" onclick="ndxSetAttrDetailYear(\'ytd2026\')">YTD 2026</button>' +
+            '<button class="ndx-attr-det-yr-btn ndx-tab-btn" data-yr="y2025" onclick="ndxSetAttrDetailYear(\'y2025\')">2025</button>' +
+          '</div>' +
           '<div id="ndx-attr-tabs" style="display:flex;gap:3px">' +
             '<button class="ndx-tab-btn active" data-tab="sector" onclick="ndxSetAttrTab(\'sector\')">By Sector</button>' +
             '<button class="ndx-tab-btn" data-tab="ig" onclick="ndxSetAttrTab(\'ig\')">By Industry Group</button>' +
@@ -2729,7 +2744,8 @@ export function loadNdxAttribution(container) {
   _snap0 = {}; _snapN = {};
   exclSecs = new Set(); exclIGs = new Set();
   attrTab = 'sector'; attrMode = 'table';
-  _sortKey = 'contrib'; _sortDir = -1;
+  _sortKey = 'contrib'; _sortDir = 1;
+  _attrDetailYear = 'ytd2026';
   _fromHoc = 12; _toHoc = 25;
   _beeswarmFilter = 0; _securities = [];
   treemapSubMode = 'flat';

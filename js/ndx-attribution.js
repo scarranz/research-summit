@@ -2453,8 +2453,6 @@ window.ndxSetColorMode = function(m) {
 };
 
 window.ndxSetCompYear = function(yr) { ndxSetCompYear(yr); };
-window.ndxSetAttrChartTab = function(tab) { ndxSetAttrChartTab(tab); };
-window.ndxToggleAttrChartSector = function(s) { ndxToggleAttrChartSector(s); };
 
 window.ndxToggleAttrChartYear = function(yr) {
   if (!YEAR_HOCS[yr]) return;

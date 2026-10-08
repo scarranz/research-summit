@@ -345,3 +345,59 @@
   background:var(--w);color:var(--text);}
 #pm-root input.pm-cnameinp::placeholder{text-transform:none;font-weight:500;color:var(--mu);}
 #pm-root input.pm-cnameinp:focus{outline:none;border-color:var(--accent);}
+
+/* Portfolio segment — a named, collapsible book. The weighted-average row sits at
+   the top (in the thead) with the portfolio name on its left, always visible;
+   collapsing hides the holdings and the Cash row beneath it. */
+#pm-root .pm-seg thead tr.pm-seg-summary td{background:var(--pale);font-weight:700;
+  border-top:1px solid var(--bdr);border-bottom:2px solid var(--bdr);}
+#pm-root .pm-seg td.pm-seg-name-cell{padding:0;}
+#pm-root .pm-seg-toggle{display:inline-flex;align-items:center;gap:8px;border:none;
+  background:transparent;cursor:pointer;padding:8px 12px;width:100%;color:var(--navy);text-align:left;}
+#pm-root .pm-seg-toggle:hover{background:var(--ice);}
+#pm-root .pm-seg-name{font-size:13px;font-weight:700;letter-spacing:-.01em;color:var(--navy);}
+#pm-root .pm-seg-caret{font-size:11px;color:var(--mid);transition:transform .15s ease;}
+#pm-root .pm-seg.is-collapsed .pm-seg-caret{transform:rotate(-90deg);}
+/* Collapsed: drop the holdings (tbody) and the Cash row (tfoot); keep the summary. */
+#pm-root .pm-seg.is-collapsed tbody,
+#pm-root .pm-seg.is-collapsed tfoot{display:none;}
+
+/* Multiple + Growth stacked vertically: the Growth dropdown sits directly beneath
+   the Multiple segment, their labels sharing a width so the controls left-align. */
+#pm-root .pm-mg{display:flex;flex-direction:column;gap:6px;}
+#pm-root .pm-mg-line{display:flex;align-items:center;gap:10px;}
+#pm-root .pm-mg-line .lbl{min-width:54px;}
+
+/* User-built portfolio segments: the toggle holds only the caret (no fixed label),
+   with an editable name beside it. A × on the right deletes the whole portfolio. */
+#pm-root .pm-seg-toggle.no-label{width:auto;padding:8px 4px 8px 8px;vertical-align:middle;}
+#pm-root input.pm-seg-nameinp{border:1px solid transparent;border-radius:7px;background:transparent;
+  font:700 13px 'Inter',sans-serif;color:var(--navy);letter-spacing:-.01em;padding:6px 8px;width:150px;
+  vertical-align:middle;}
+#pm-root input.pm-seg-nameinp:hover{border-color:var(--bdr);}
+#pm-root input.pm-seg-nameinp:focus{outline:none;border-color:var(--accent);background:var(--w);}
+#pm-root .pm-segdel{border:none;background:transparent;color:var(--mu);cursor:pointer;
+  font-size:16px;line-height:1;padding:2px 6px;border-radius:6px;}
+#pm-root .pm-segdel:hover{color:var(--neg);background:var(--pale);}
+
+/* Top-right control row: the column toggle on the left, the + New portfolio control
+   on the right. Lives above the segments so it stays put no matter how many there are. */
+#pm-root .pm-toprow{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;margin:0 2px 7px;}
+#pm-root .pm-toprow .pm-qtoggle{margin:0;}
+
+/* "+ New portfolio" control + its source chooser (right-aligned; the button stays
+   rightmost and the chooser opens to its left). */
+#pm-root .pm-newpf{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin:0;}
+#pm-root .pm-newpf-btn{border:1px dashed var(--bdr);background:var(--w);color:var(--steel);
+  font:600 12.5px 'Inter',sans-serif;border-radius:9px;padding:9px 16px;cursor:pointer;}
+#pm-root .pm-newpf-btn:hover{border-color:var(--steel);color:var(--navy);background:var(--pale);}
+#pm-root .pm-newpf-btn.open{border-style:solid;border-color:var(--navy);color:var(--navy);}
+#pm-root .pm-newpf-menu{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+#pm-root .pm-newpf-menu .lbl{font-size:10px;color:var(--mu);font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;}
+#pm-root .pm-newpf-menu .pm-pf{border:1px solid var(--bdr);background:var(--w);color:var(--steel);
+  font:600 12px 'Inter',sans-serif;border-radius:8px;padding:7px 13px;cursor:pointer;}
+#pm-root .pm-newpf-menu .pm-pf:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+#pm-root .pm-newpf-menu .pm-pf-sel{border:1px solid var(--bdr);border-radius:8px;background:var(--w);
+  color:var(--text);font:500 12px 'Inter',sans-serif;padding:7px 10px;}

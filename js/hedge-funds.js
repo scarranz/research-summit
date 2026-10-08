@@ -484,8 +484,6 @@ var HF_STOCKLOOKUP_TICKERS = [
 
 var HF_LATEST_PERIOD = { year: 2026, quarter: 2 };
 var HF_STOCKLOOKUP_PERIODS = lastNPeriods(HF_LATEST_PERIOD, 12);
-var _hfStockLookupShowPerf = true;
-
 function lastNPeriods(latest, n) {
   var periods = [], y = latest.year, q = latest.quarter;
   for (var i = 0; i < n; i++) {
@@ -495,6 +493,31 @@ function lastNPeriods(latest, n) {
   return periods;
 }
 
+// Quarter-end closes for the stock-return row and the implied-share
+// Activity column -- the same monthly IBKR series Portfolio Metrics
+// uses (split/dividend-adjusted, so implied shares stay in post-split
+// units across a split). Loaded on first use, not at page load.
+var _hfPricesPromise = null;
+function hfLoadPrices() {
+  if (!_hfPricesPromise) {
+    _hfPricesPromise = import('./portfolio-metrics-prices.js')
+      .then(function(m) { return m.PRICES.series || {}; })
+      .catch(function() { return {}; });
+  }
+  return _hfPricesPromise;
+}
+
+function quarterEndMonth(p) { return p.year + '-' + String(p.quarter * 3).padStart(2, '0'); }
+
+// { 'YYYY-MM': close } for one ticker, or null if we have no series.
+function monthlyCloseMap(series, ticker) {
+  var s = series[ticker];
+  if (!s) return null;
+  var map = {};
+  s.forEach(function(pt) { map[String(pt[0]).slice(0, 7)] = pt[1]; });
+  return map;
+}
+
 function populateStockLookupSelect() {
   var sel = document.getElementById('hf-stocklookup-sel');
   if (!sel) return;
@@ -502,26 +525,41 @@ function populateStockLookupSelect() {
   hfStockLookupSelect(sel.value);
 }
 
-function hfStockLookupTogglePerf(checked) {
-  _hfStockLookupShowPerf = checked;
-  var wrap = document.getElementById('hf-stocklookup-body');
-  if (wrap) wrap.classList.toggle('hf-stocklookup-noperf', !checked);
-}
-
 async function hfStockLookupSelect(ticker) {
   var body = document.getElementById('hf-stocklookup-body');
   if (!body) return;
   if (!ticker) { body.innerHTML = ''; return; }
   body.innerHTML = '<div class="hf-stocklookup-empty">Loading&hellip;</div>';
-  var result = await fetchHoldingsByTicker(ticker);
+  var loaded = await Promise.all([fetchHoldingsByTicker(ticker), hfLoadPrices()]);
+  var result = loaded[0];
   var rows = result.success ? result.data : [];
   if (location.hostname === 'localhost' && !rows.length) {
     rows = LOCAL_INVESTOR_HOLDINGS.filter(function(r) { return r.ticker === ticker; });
   }
-  renderStockLookupTable(ticker, rows);
+  renderStockLookupTable(ticker, rows, monthlyCloseMap(loaded[1], ticker));
 }
 
-function renderStockLookupTable(ticker, rows) {
+// Last-quarter move from implied shares (13F value / quarter-end close),
+// so a weight that only moved with the price reads as Hold, not a trim.
+// Hold band is +/-2%: the adjusted series drifts a little with dividends.
+function slkActivity(prevVal, curVal, prevPx, curPx) {
+  var had = prevVal != null && prevVal > 0, has = curVal != null && curVal > 0;
+  if (!had && !has) return null;
+  if (!had) return { cls: 'new', label: 'New' };
+  if (!has) return { cls: 'exit', label: 'Exit' };
+  if (!prevPx || !curPx) return { cls: 'na', label: 'n/a' };
+  // value_usd is stored as filed, and some quarters are in $ thousands
+  // (Duquesne 2023Q1-2026Q1, Altimeter 2022Q4), so a ~1000x jump between
+  // two quarters is a units change, not a trade.
+  var ratio = (curVal / curPx) / (prevVal / prevPx);
+  if (ratio > 300) ratio /= 1000; else if (ratio < 1 / 300) ratio *= 1000;
+  var chg = ratio - 1;
+  if (Math.abs(chg) < 0.02) return { cls: 'hold', label: 'Hold' };
+  var pct = (chg > 0 ? '+' : '') + (chg * 100).toFixed(0) + '%';
+  return chg > 0 ? { cls: 'add', label: 'Add ' + pct } : { cls: 'trim', label: 'Trim ' + pct };
+}
+
+function renderStockLookupTable(ticker, rows, px) {
   var body = document.getElementById('hf-stocklookup-body');
   if (!body) return;
   rows = rows.filter(function(r) { return r.investor_key !== 'summit'; });
@@ -529,21 +567,31 @@ function renderStockLookupTable(ticker, rows) {
   var periods = HF_STOCKLOOKUP_PERIODS;
   var periodKeys = periods.map(periodOptionValue);
   var latestKey = periodKeys[periodKeys.length - 1];
+  var prevKey = periodKeys[periodKeys.length - 2];
+  var curLabel = periodLabel(periods[periods.length - 1]);
+
+  // Close at each quarter end, plus the one before the window so the
+  // first column gets a return too.
+  var closes = periods.map(function(p) { return px ? (px[quarterEndMonth(p)] || null) : null; });
+  var first = periods[0];
+  var beforeFirst = first.quarter === 1 ? { year: first.year - 1, quarter: 4 } : { year: first.year, quarter: first.quarter - 1 };
+  var closeBefore = px ? (px[quarterEndMonth(beforeFirst)] || null) : null;
 
   var byInv = {};
   rows.forEach(function(r) {
     var pk = periodOptionValue({ year: r.year, quarter: r.quarter });
     if (periodKeys.indexOf(pk) === -1) return;
     byInv[r.investor_key] = byInv[r.investor_key] || {};
-    byInv[r.investor_key][pk] = r.weight_pct;
+    byInv[r.investor_key][pk] = { w: r.weight_pct, v: r.value_usd };
   });
   // Rows are every tracked superinvestor, always, not just the ones with
   // a position on file -- someone with no position on this ticker still
   // shows up, just blank across the row, so the list never reflows as
   // you switch tickers.
   var invKeys = INVESTORS.filter(function(i) { return i.key !== 'summit'; }).map(function(i) { return i.key; });
+  function latestW(k) { return byInv[k] && byInv[k][latestKey] ? byInv[k][latestKey].w : null; }
   invKeys.sort(function(a, b) {
-    var wa = byInv[a] ? byInv[a][latestKey] : null, wb = byInv[b] ? byInv[b][latestKey] : null;
+    var wa = latestW(a), wb = latestW(b);
     if (wa == null && wb == null) return 0;
     if (wa == null) return 1;
     if (wb == null) return -1;
@@ -555,7 +603,20 @@ function renderStockLookupTable(ticker, rows) {
     var isCur = i === periods.length - 1;
     html += '<th class="nr' + (isCur ? ' ivd-cmp-current' : '') + '">' + esc(periodLabel(p)) + (isCur ? ' <span class="ivd-cmp-current-tag">Current</span>' : '') + '</th>';
   });
+  html += '<th class="hf-slk-actcol" title="Buying or selling in ' + esc(curLabel) + ', from implied shares (13F value / quarter-end price)">Activity ' + esc(curLabel) + '</th>';
   html += '</tr></thead><tbody>';
+
+  // The stock's own price return in each quarter, so a weight arrow can
+  // be read against what the stock did that quarter.
+  html += '<tr class="hf-slk-retrow"><td><span class="hf-slk-retlbl">' + esc(ticker) + ' return in the quarter</span></td>';
+  closes.forEach(function(c, i) {
+    var prior = i === 0 ? closeBefore : closes[i - 1];
+    var r = c && prior ? (c / prior - 1) * 100 : null;
+    var cls = r == null ? '' : r >= 0 ? ' hf-slk-pos' : ' hf-slk-neg';
+    html += '<td class="nr' + cls + (i === closes.length - 1 ? ' ivd-cmp-current' : '') + '">' + (r == null ? '<span class="hf-stocklookup-dash">&mdash;</span>' : (r >= 0 ? '+' : '') + r.toFixed(1) + '%') + '</td>';
+  });
+  html += '<td class="hf-slk-actcol"></td></tr>';
+
   invKeys.forEach(function(key) {
     var inv = INVESTORS.filter(function(i) { return i.key === key; })[0];
     var photo = inv && inv.photo ? (IMGS[inv.photo] || '') : '';
@@ -564,27 +625,28 @@ function renderStockLookupTable(ticker, rows) {
       : '<div class="hf-stocklookup-logo hf-stocklookup-ini">' + esc((inv ? inv.name : key).split(' ').slice(0, 2).map(function(n) { return n[0]; }).join('')) + '</div>';
     html += '<tr><td><div class="hf-stocklookup-inv">' + avatar + '<span>' + esc(inv ? inv.name : key) + '<span class="hf-stocklookup-fund">' + esc(inv ? inv.fund : '') + '</span></span></div></td>';
     var invData = byInv[key] || {};
-    // Performance color only marks the CURRENT quarter (up/down/new vs.
-    // whatever the last non-null quarter before it was) -- earlier
-    // quarters show as plain numbers, since coloring every column at once
-    // read as "how did the stock do that quarter," which isn't what this
-    // signals (it's whether the fund's position grew or shrank).
-    var lastNonNull = null;
     periodKeys.forEach(function(pk, i) {
-      var w = invData[pk];
+      var cell = invData[pk], w = cell ? cell.w : null;
       var isCur = i === periodKeys.length - 1;
-      var moveCls = '';
-      if (isCur && w != null) {
-        moveCls = lastNonNull == null ? 'hf-slk-new' : w > lastNonNull ? 'hf-slk-up' : w < lastNonNull ? 'hf-slk-down' : 'hf-slk-flat';
+      // Arrow = weight up/down vs. the quarter right before. Neutral on
+      // purpose: a weight moves with the price too, so it's read against
+      // the return row above, not as a buy/sell signal.
+      var prevCell = i > 0 ? invData[periodKeys[i - 1]] : null;
+      var arrow = '<span class="hf-slk-arw"></span>';
+      if (w != null && prevCell && prevCell.w != null && w !== prevCell.w) {
+        arrow = w > prevCell.w
+          ? '<span class="hf-slk-arw" title="Weight up vs. prior quarter">&#9650;</span>'
+          : '<span class="hf-slk-arw" title="Weight down vs. prior quarter">&#9660;</span>';
       }
-      if (w != null) lastNonNull = w;
-      html += '<td class="nr hf-stocklookup-w ' + moveCls + (isCur ? ' ivd-cmp-current' : '') + '">' + (w != null ? w.toFixed(2) + '%' : '<span class="hf-stocklookup-dash">&mdash;</span>') + '</td>';
+      html += '<td class="nr hf-stocklookup-w' + (isCur ? ' ivd-cmp-current' : '') + '">' + (w != null ? w.toFixed(2) + '%' + arrow : '<span class="hf-stocklookup-dash">&mdash;</span>') + '</td>';
     });
+    var cur = invData[latestKey], prev = invData[prevKey];
+    var act = slkActivity(prev ? prev.v : null, cur ? cur.v : null, closes[closes.length - 2], closes[closes.length - 1]);
+    html += '<td class="hf-slk-actcol">' + (act ? '<span class="hf-slk-act hf-slk-act-' + act.cls + '">' + esc(act.label) + '</span>' : '') + '</td>';
     html += '</tr>';
   });
   html += '</tbody></table></div>';
   body.innerHTML = html;
-  body.classList.toggle('hf-stocklookup-noperf', !_hfStockLookupShowPerf);
 }
 
 // ─── Overall / Superinvestors sub-tabs ─────────────────────────
@@ -782,8 +844,13 @@ var RES_ONLY_FUNDS = [
 // loadHfResources() on load.
 var HF_RES_META = [];
 
+// First entry per key wins: a fund can be in RES_ONLY_FUNDS and also
+// have an investor_meta row (sql/023 inserts 'marks' into both), which
+// otherwise renders its whole resource group twice.
 function resFundList() {
-  return INVESTORS.filter(function(inv) { return inv.key !== 'summit'; }).concat(RES_ONLY_FUNDS).concat(HF_RES_META);
+  var seen = {};
+  return INVESTORS.filter(function(inv) { return inv.key !== 'summit'; }).concat(RES_ONLY_FUNDS).concat(HF_RES_META)
+    .filter(function(inv) { if (seen[inv.key]) return false; seen[inv.key] = true; return true; });
 }
 
 // Search-as-you-type over the fixed, local investor list (only ~10
@@ -2505,7 +2572,6 @@ window.hideInvestor = hideInvestor;
 window.showAllInvestors = showAllInvestors;
 window.hfMainTab = hfMainTab;
 window.hfStockLookupSelect = hfStockLookupSelect;
-window.hfStockLookupTogglePerf = hfStockLookupTogglePerf;
 window.hfSectorClick = hfSectorClick;
 window.hfHeatmapTogglePerf = hfHeatmapTogglePerf;
 window.hfTickerClick = hfTickerClick;

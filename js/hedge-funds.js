@@ -2256,10 +2256,15 @@ function closeInvestorDetail() {
 // an editable preview (which rows to keep, ticker overrides), and only
 // writes to Supabase once the user hits Apply.
 
-function u13fPreviewHtml(format, rows) {
+function u13fPreviewHtml(format, rows, options) {
   var note = format === 'sec_xml'
-    ? 'Parsed ' + rows.length + ' positions from the SEC information table. Top 15 by value are pre-selected — fill in any missing tickers below.'
-    : 'Parsed ' + rows.length + ' positions from the CSV. Top 15 by weight are pre-selected.';
+    ? 'Parsed ' + rows.length + ' positions from the SEC information table. Every position is selected (the full book feeds concentration and turnover). Missing tickers are optional; the CUSIP is kept either way.'
+    : 'Parsed ' + rows.length + ' positions from the CSV. Every position is selected.';
+  if (options && options.length) {
+    note += ' ' + options.length + ' option position' + (options.length > 1 ? 's' : '') + ' left out of the equity book (notional, not a long): ' +
+      options.slice(0, 6).map(function(o) { return (o.ticker || o.companyName) + ' ' + o.putCall + ' ' + o.pctOfBook.toFixed(1) + '%'; }).join(', ') +
+      (options.length > 6 ? ', …' : '') + '.';
+  }
   var html = '<div class="im-empty" style="margin:10px 0">' + esc(note) + '</div>' +
     '<div class="u13f-preview-wrap"><table class="icard-tbl u13f-tbl"><thead><tr><th></th><th>Ticker</th><th>Company</th><th class="nr">% Port</th></tr></thead><tbody>';
   rows.forEach(function(r, i) {
@@ -2340,8 +2345,8 @@ function openUpload13FPanel(investorKey, defaultYear, onSaved) {
       try {
         var result = parse13FFile(file.name, String(reader.result));
         parsedFormat = result.format;
-        parsedRows = result.rows.map(function(r, i) { return { ticker: r.ticker || '', companyName: r.companyName, cusip: r.cusip || '', valueUsd: r.valueUsd || 0, weightPct: r.weightPct, include: i < 15 }; });
-        previewEl.innerHTML = u13fPreviewHtml(parsedFormat, parsedRows);
+        parsedRows = result.rows.map(function(r, i) { return { ticker: r.ticker || '', companyName: r.companyName, cusip: r.cusip || '', valueUsd: r.valueUsd || 0, weightPct: r.weightPct, include: true }; });
+        previewEl.innerHTML = u13fPreviewHtml(parsedFormat, parsedRows, result.options);
         wireU13fPreview(id + '_preview', parsedRows);
         actionsEl.style.display = 'flex';
       } catch (err) {
@@ -2359,13 +2364,12 @@ function openUpload13FPanel(investorKey, defaultYear, onSaved) {
     var quarter = parseInt(document.getElementById(id + '_q').value, 10);
     var included = parsedRows.filter(function(r){ return r.include; });
     if (!included.length) { alert('Select at least one holding to save.'); return; }
-    if (included.some(function(r){ return !r.ticker; })) { alert('Fill in the ticker for every selected row before applying.'); return; }
     var btn = document.getElementById(id + '_apply');
     btn.disabled = true; btn.textContent = 'Saving…';
     var rows = included.map(function(r, i) {
       return {
         investor_key: investorKey, year: year, quarter: quarter,
-        ticker: r.ticker, company_name: r.companyName, cusip: r.cusip || null,
+        ticker: r.ticker || null, company_name: r.companyName, cusip: r.cusip || null,
         value_usd: r.valueUsd || null, weight_pct: r.weightPct, rank: i + 1,
         source_type: parsedFormat,
       };
@@ -2427,7 +2431,7 @@ function openSync13FPanel(investorKey, cik, onSaved) {
     try {
       var parsed = parse13FFile('sec-edgar-sync.xml', data.xml);
       parsedFormat = parsed.format;
-      parsedRows = parsed.rows.map(function(r, i) { return { ticker: r.ticker || '', companyName: r.companyName, cusip: r.cusip || '', valueUsd: r.valueUsd || 0, weightPct: r.weightPct, include: i < 15 }; });
+      parsedRows = parsed.rows.map(function(r, i) { return { ticker: r.ticker || '', companyName: r.companyName, cusip: r.cusip || '', valueUsd: r.valueUsd || 0, weightPct: r.weightPct, include: true }; });
       filingYear = data.year; filingQuarter = data.quarter;
     } catch (err) {
       msgEl.textContent = err.message || 'Could not parse the filing SEC returned.';
@@ -2436,7 +2440,7 @@ function openSync13FPanel(investorKey, cik, onSaved) {
     }
     msgEl.textContent = 'Fetched Q' + filingQuarter + ' ' + filingYear + ' — filed ' + data.filedDate + ' (accession ' + data.accessionNumber + '). Review below, then Apply to save.';
     msgEl.className = 'modal-msg';
-    document.getElementById(id + '_preview').innerHTML = u13fPreviewHtml(parsedFormat, parsedRows);
+    document.getElementById(id + '_preview').innerHTML = u13fPreviewHtml(parsedFormat, parsedRows, parsed.options);
     wireU13fPreview(id + '_preview', parsedRows);
     document.getElementById(id + '_actions').style.display = 'flex';
   });
@@ -2445,13 +2449,12 @@ function openSync13FPanel(investorKey, cik, onSaved) {
     if (!parsedRows) return;
     var included = parsedRows.filter(function(r){ return r.include; });
     if (!included.length) { alert('Select at least one holding to save.'); return; }
-    if (included.some(function(r){ return !r.ticker; })) { alert('Fill in the ticker for every selected row before applying.'); return; }
     var btn = document.getElementById(id + '_apply');
     btn.disabled = true; btn.textContent = 'Saving…';
     var rows = included.map(function(r, i) {
       return {
         investor_key: investorKey, year: filingYear, quarter: filingQuarter,
-        ticker: r.ticker, company_name: r.companyName, cusip: r.cusip || null,
+        ticker: r.ticker || null, company_name: r.companyName, cusip: r.cusip || null,
         value_usd: r.valueUsd || null, weight_pct: r.weightPct, rank: i + 1,
         source_type: parsedFormat,
       };
@@ -2561,11 +2564,13 @@ async function openCheck13FPanel() {
       var rowEl = overlay.querySelector('tr[data-key="' + row.key + '"]');
       try {
         var parsed = parse13FFile('sec-edgar-sync.xml', row.xml);
-        var included = parsed.rows.slice(0, 15).filter(function(r){ return r.ticker; });
+        // The whole book, not a top-N: concentration and turnover need
+        // every position. Rows with no ticker match keep their CUSIP.
+        var included = parsed.rows;
         var dbRows = included.map(function(r, j) {
           return {
             investor_key: row.key, year: row.secPeriod.year, quarter: row.secPeriod.quarter,
-            ticker: r.ticker, company_name: r.companyName, cusip: r.cusip || null,
+            ticker: r.ticker || null, company_name: r.companyName, cusip: r.cusip || null,
             value_usd: r.valueUsd || null, weight_pct: r.weightPct, rank: j + 1,
             source_type: parsed.format,
           };

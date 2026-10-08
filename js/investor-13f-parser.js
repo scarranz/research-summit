@@ -8,6 +8,7 @@
 // left blank for the user to fill in in the upload preview. Aggregator
 // CSVs already carry a resolved ticker, so no guessing is needed there.
 import { ALL_STOCKS } from './portal-data.js';
+import { LOCAL_INVESTOR_HOLDINGS } from './investor-local-seed.js';
 
 function normalizeName(s) {
   return String(s || '')
@@ -18,14 +19,33 @@ function normalizeName(s) {
     .trim();
 }
 
-function guessTicker(companyName) {
+// CUSIP -> ticker from every holding already on file (the backfills were
+// ticker-checked), which beats any name match.
+var CUSIP_TICKER = null;
+function cusipTicker(cusip) {
+  if (!CUSIP_TICKER) {
+    CUSIP_TICKER = {};
+    LOCAL_INVESTOR_HOLDINGS.forEach(function(h) { if (h.cusip && h.ticker) CUSIP_TICKER[h.cusip] = h.ticker; });
+  }
+  return cusip ? (CUSIP_TICKER[cusip] || '') : '';
+}
+
+// Name match against ALL_STOCKS, compared without spaces so "Amazon Com
+// Inc" meets "Amazon.com Inc". A prefix match needs at least 5 letters and
+// a word boundary: many ALL_STOCKS names are bare tickers ("A", "APP"),
+// which used to prefix-match half the filing ("Amazon Com" -> A).
+function guessTicker(companyName, cusip) {
+  var byCusip = cusipTicker(cusip);
+  if (byCusip) return byCusip;
   var norm = normalizeName(companyName);
   if (!norm) return '';
-  var hit = ALL_STOCKS.find(function(s) { return normalizeName(s.n) === norm; });
+  var flat = norm.replace(/ /g, '');
+  var hit = ALL_STOCKS.find(function(s) { return normalizeName(s.n).replace(/ /g, '') === flat; });
   if (hit) return hit.t;
   hit = ALL_STOCKS.find(function(s) {
     var sn = normalizeName(s.n);
-    return sn && (norm.indexOf(sn) === 0 || sn.indexOf(norm) === 0);
+    if (sn.length < 5) return false;
+    return (norm + ' ').indexOf(sn + ' ') === 0 || (sn + ' ').indexOf(norm + ' ') === 0;
   });
   return hit ? hit.t : '';
 }
@@ -59,25 +79,53 @@ export function parseSec13FXml(text) {
     return found ? found.textContent.trim() : '';
   }
 
-  var byCusip = {};
+  // Option rows (<putCall>Put/Call</putCall>) share the underlying's CUSIP
+  // and report the underlying's notional, so summing them into the stock
+  // line counts a put as a long. They're kept apart as optionality
+  // exposure and left out of the equity book and its weights.
+  var byCusip = {}, byOption = {};
   infoTables.forEach(function(el) {
     var name = fieldText(el, 'nameOfIssuer');
     var cusip = fieldText(el, 'cusip');
     var value = parseFloat(fieldText(el, 'value').replace(/,/g, '')) || 0;
     var shares = parseFloat(fieldText(el, 'sshPrnamt').replace(/,/g, '')) || 0;
+    var putCall = fieldText(el, 'putCall');
     var key = cusip || name;
     if (!key) return;
+    if (putCall) {
+      var okey = key + '|' + putCall;
+      if (!byOption[okey]) byOption[okey] = { companyName: name, cusip: cusip, putCall: putCall, valueUsd: 0, shares: 0 };
+      byOption[okey].valueUsd += value;
+      byOption[okey].shares += shares;
+      return;
+    }
     if (!byCusip[key]) byCusip[key] = { companyName: name, cusip: cusip, valueUsd: 0, shares: 0 };
     byCusip[key].valueUsd += value;
     byCusip[key].shares += shares;
   });
 
   var rows = Object.keys(byCusip).map(function(k) { return byCusip[k]; });
+  var options = Object.keys(byOption).map(function(k) { return byOption[k]; });
+
+  // Some filers still report <value> in $ thousands after the 2023 switch
+  // to whole dollars. A median implied price under $1 can only be that.
+  var px = rows.filter(function(r) { return r.shares > 0 && r.valueUsd > 0; })
+    .map(function(r) { return r.valueUsd / r.shares; }).sort(function(a, b) { return a - b; });
+  if (px.length && px[Math.floor(px.length / 2)] < 1) {
+    rows.concat(options).forEach(function(r) { r.valueUsd *= 1000; });
+  }
+
   var total = rows.reduce(function(s, r) { return s + r.valueUsd; }, 0) || 1;
   rows.forEach(function(r) {
     r.weightPct = +(r.valueUsd / total * 100).toFixed(2);
-    r.ticker = guessTicker(r.companyName);
+    r.ticker = guessTicker(r.companyName, r.cusip);
   });
+  options.forEach(function(o) {
+    o.pctOfBook = +(o.valueUsd / total * 100).toFixed(2);
+    o.ticker = guessTicker(o.companyName, o.cusip);
+  });
+  options.sort(function(a, b) { return b.valueUsd - a.valueUsd; });
+  rows.options = options;
   rows.sort(function(a, b) { return b.valueUsd - a.valueUsd; });
   return rows;
 }
@@ -149,5 +197,5 @@ export function parseAggregatorCsv(text) {
 export function parse13FFile(filename, text) {
   var format = detectFormat(filename, text);
   var rows = format === 'sec_xml' ? parseSec13FXml(text) : parseAggregatorCsv(text);
-  return { format: format, rows: rows };
+  return { format: format, rows: rows, options: rows.options || [] };
 }

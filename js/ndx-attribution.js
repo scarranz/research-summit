@@ -42,6 +42,8 @@ var _scatterYrAxes = { xLo: null, xHi: null, yHi: null };
 var _globalScatterAxes = { xLo: null, xHi: null, yHi: null };
 var _globalBeeAxes     = { contribHi: null, xLo: null, xHi: null };
 var _beeswarmYear = 'ytd2026';
+var _beeswarmYears = new Set(['ytd2026']);
+var _beeswarmProgress = 100;
 var _beeswarmSectors = new Set();
 var _beeswarmSecAll = [];
 var _paretoN       = 10;
@@ -1293,6 +1295,15 @@ function rebuildBeeswarmSecurities(yr) {
   _beeswarmSecAll = computeSecurities(new Set(), new Set(), yrHocs);
 }
 
+function beeProgressToHocIdx(yr, progress) {
+  var range = YEAR_HOCS[yr];
+  if (!range) return 0;
+  var yrHocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
+  if (!yrHocs.length) return 0;
+  var totalSnaps = yrHocs.length + 1; // 0=zero snap, 1..N=HOC snapshots
+  return Math.round(progress / 100 * (totalSnaps - 1));
+}
+
 function buildBeeswarmSectorPills() {
   var container = document.getElementById('ndx-bee-pills');
   if (!container) return;
@@ -1412,7 +1423,7 @@ window.ndxSetBeeswarmFilter = function(threshold) {
   document.querySelectorAll('.ndx-bee-btn').forEach(function(b) {
     b.classList.toggle('active', parseFloat(b.dataset.thr) === threshold);
   });
-  renderBeeswarm(_beeswarmSecAll, threshold);
+  renderBeeswarm();
 };
 
 function beeswarmLayout(dots, X, r) {
@@ -1437,39 +1448,54 @@ function beeswarmLayout(dots, X, r) {
   });
 }
 
-function renderBeeswarm(securities, threshold) {
-  var box = document.getElementById('ndx-beeswarm-box');
-  if (!box || !securities.length) return;
+function _beeSvgForYear(yr, xLo, xHi, maxAbsC, multiYear) {
+  var snapIdx = beeProgressToHocIdx(yr, _beeswarmProgress);
+  var range = YEAR_HOCS[yr];
+  var yrHocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
+  var secs;
+  if (snapIdx === 0) {
+    var firstHoc = yrHocs[0];
+    secs = [];
+    if (firstHoc) {
+      firstHoc.sec.forEach(function(s) {
+        if (!isCash(s.t) && (s.w || 0) > 0) {
+          secs.push({ name: s.t, co: s.co, sect: s.s, grp: s.g,
+                       ret: 0, w0: s.w || 0, w1: s.w || 0, contrib: 0 });
+        }
+      });
+    }
+  } else {
+    secs = computeSecurities(new Set(), new Set(), yrHocs.slice(0, snapIdx));
+  }
 
-  var filtered = securities.filter(function(d) { return Math.abs(d.contrib) > threshold && d.sect !== CASH && (d.w0 > 0 || d.w1 > 0); });
+  var filtered = secs.filter(function(d) {
+    return Math.abs(d.contrib) > _beeswarmFilter && d.sect !== CASH && !isCash(d.name) && (d.w0 > 0 || d.w1 > 0);
+  });
 
   var secList = _beeswarmSectors.size > 0
     ? sectors.filter(function(s) { return _beeswarmSectors.has(s); })
     : sectors.filter(function(s) { return s !== CASH; });
+
   var dotR = 4.5;
   var laneH = 60;
-  var P = { t: 36, b: 36, l: 200, r: 20 };
+  var P = { t: multiYear ? 20 : 36, b: 20, l: 200, r: 20 };
   var VW = 900;
   var VH = P.t + secList.length * laneH + P.b;
-
-  // Global X scale across all sectors and all years
-  var allC = filtered.map(function(d) { return d.contrib; });
-  var xLo, xHi;
-  if (_globalBeeAxes.xLo != null) {
-    xLo = _globalBeeAxes.xLo;
-    xHi = _globalBeeAxes.xHi;
-  } else {
-    var xPad = Math.max((Math.max.apply(null, allC) - Math.min.apply(null, allC)) * 0.04, 0.05);
-    xLo = (allC.length ? Math.min.apply(null, allC) : -1) - xPad;
-    xHi = (allC.length ? Math.max.apply(null, allC) : 1) + xPad;
-  }
   var cw = VW - P.l - P.r;
   function X(v) { return P.l + (v - xLo) / (xHi - xLo) * cw; }
 
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
 
+  // Year label for multi-year mode
+  if (multiYear) {
+    var ylbl = se('text', { x: P.l + cw / 2, y: 14, 'text-anchor': 'middle',
+      'font-family': 'Inter,sans-serif', 'font-size': 12, fill: '#2B3B4E', 'font-weight': '700' });
+    ylbl.textContent = YR_LABEL[yr]; svg.appendChild(ylbl);
+  }
+
   // X-axis ticks (top)
-  var xStep = (xHi - xLo) > 8 ? 2 : (xHi - xLo) > 3 ? 1 : 0.5;
+  var xRange = xHi - xLo;
+  var xStep = xRange > 8 ? 2 : xRange > 3 ? 1 : 0.5;
   var xStart = Math.ceil(xLo / xStep) * xStep;
   for (var xv = xStart; xv <= xHi + xStep * 0.5; xv += xStep) {
     svg.appendChild(se('line', { x1: X(xv), x2: X(xv), y1: P.t, y2: VH - P.b, stroke: '#EAEDEF', 'stroke-width': 1 }));
@@ -1480,34 +1506,24 @@ function renderBeeswarm(securities, threshold) {
     svg.appendChild(se('line', { x1: X(0), x2: X(0), y1: P.t, y2: VH - P.b, stroke: '#C0C8D0', 'stroke-width': 1.5 }));
   }
 
-  var maxAbsC = (_globalBeeAxes.contribHi != null
-    ? _globalBeeAxes.contribHi
-    : (Math.max.apply(null, filtered.map(function(d) { return Math.abs(d.contrib); })) || 1));
-
   secList.forEach(function(sec, si) {
     var laneY = P.t + si * laneH + laneH / 2;
-    // Lane stripe
     if (si % 2 === 1) {
       svg.appendChild(se('rect', { x: P.l, y: P.t + si * laneH, width: cw, height: laneH, fill: '#F7F8FA', opacity: '0.6' }));
     }
-    // Sector label
     var lbl = se('text', { x: P.l - 14, y: laneY + 4, 'text-anchor': 'end', 'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#2B3B4E', 'font-weight': '600' });
     lbl.textContent = trunc(dispSec(sec), 24); svg.appendChild(lbl);
 
     var laneDots = filtered.filter(function(d) { return d.sect === sec; });
     if (!laneDots.length) return;
-
     beeswarmLayout(laneDots, X, dotR);
 
     laneDots.forEach(function(d) {
       var fillC = contribColor(d.contrib, maxAbsC);
       var strokeC = d.contrib >= 0 ? '#177A4E' : '#9B2A20';
-      var gy = laneY + d.by;
-      // Clamp to lane bounds
-      gy = Math.max(P.t + si * laneH + dotR + 1, Math.min(P.t + (si + 1) * laneH - dotR - 1, gy));
+      var gy = Math.max(P.t + si * laneH + dotR + 1, Math.min(P.t + (si + 1) * laneH - dotR - 1, laneY + d.by));
       var g = se('g', { class: 'mk' });
-      g.appendChild(se('circle', { cx: d.bx, cy: gy, r: dotR, fill: fillC, 'fill-opacity': 0.85,
-        stroke: strokeC, 'stroke-width': 1.2 }));
+      g.appendChild(se('circle', { cx: d.bx, cy: gy, r: dotR, fill: fillC, 'fill-opacity': 0.85, stroke: strokeC, 'stroke-width': 1.2 }));
       bindTip(g,
         '<b style="font-size:13px">' + d.name + '</b>' +
         '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
@@ -1518,8 +1534,54 @@ function renderBeeswarm(securities, threshold) {
       svg.appendChild(g);
     });
   });
+  return svg;
+}
 
-  box.innerHTML = ''; box.appendChild(svg);
+function renderBeeswarm() {
+  var box = document.getElementById('ndx-beeswarm-box');
+  if (!box) return;
+
+  var activeYrs = Array.from(_beeswarmYears);
+  if (!activeYrs.length) return;
+
+  // Global X axis bounds (consistent across all years)
+  var xLo = _globalBeeAxes.xLo != null ? _globalBeeAxes.xLo : -3;
+  var xHi = _globalBeeAxes.xHi != null ? _globalBeeAxes.xHi : 3;
+  var maxAbsC = _globalBeeAxes.contribHi != null ? _globalBeeAxes.contribHi : 1;
+
+  box.innerHTML = '';
+
+  // Progress label (show HOC detail for each active year)
+  if (activeYrs.length > 1) {
+    var progLbl = document.createElement('div');
+    progLbl.style.cssText = 'font-size:11px;color:var(--navy);margin-bottom:4px;font-weight:600';
+    var parts = activeYrs.map(function(yr) {
+      var snapIdx = beeProgressToHocIdx(yr, _beeswarmProgress);
+      if (snapIdx === 0) return YR_LABEL[yr] + ': start of year';
+      var range = YEAR_HOCS[yr];
+      var yrHocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
+      var hoc = yrHocs[snapIdx - 1];
+      return YR_LABEL[yr] + ': HOC ' + hoc.n + ' · ' + (hoc.close || hoc.eff);
+    });
+    progLbl.textContent = parts.join('  |  ');
+    box.appendChild(progLbl);
+  }
+
+  var multiYear = activeYrs.length > 1;
+  activeYrs.forEach(function(yr) {
+    var svg = _beeSvgForYear(yr, xLo, xHi, maxAbsC, multiYear);
+    box.appendChild(svg);
+  });
+
+  if (!multiYear) {
+    var legend = document.createElement('div');
+    legend.style.cssText = 'display:flex;gap:16px;font-size:11px;color:var(--mu);margin-top:8px;flex-wrap:wrap';
+    legend.innerHTML =
+      'Bubble area ∝ √|contribution| &nbsp;·&nbsp; ' +
+      '<span style="color:#177A4E;font-weight:600">●</span> Positive contribution &nbsp; ' +
+      '<span style="color:#9B2A20;font-weight:600">●</span> Negative &nbsp;·&nbsp; Top 10 by |contribution| labeled';
+    box.appendChild(legend);
+  }
 }
 
 // ── Pareto / Top Contributors ────────────────────────────────────────────
@@ -1851,8 +1913,9 @@ function renderWLA() {
   var html = '<div class="twrap"><table class="rt">' +
     '<thead><tr>' +
     '<th>Sector</th><th class="num">Contribution</th><th class="num">Avg Return (wtd)</th>' +
-    '<th class="num" style="color:var(--pos)">Winners</th><th class="num" style="color:var(--neg)">Losers</th>' +
-    '<th class="num">Wt Δ</th></tr></thead><tbody>';
+    '<th class="num" style="color:var(--pos)" title="Count of constituents with positive contribution">Winners</th>' +
+    '<th class="num" style="color:var(--neg)" title="Count of constituents with negative contribution">Losers</th>' +
+    '<th class="num" title="Change in sector portfolio weight from start to end of period">Wt Δ</th></tr></thead><tbody>';
   rows.forEach(function(r) {
     var cStr = (r.contrib>=0?'+':'')+r.contrib.toFixed(3)+'%';
     var rStr = (r.avgRet>=0?'+':'')+r.avgRet.toFixed(1)+'%';
@@ -1878,10 +1941,12 @@ function renderWLB() {
   var nonCash = secs.filter(function(d) { return !isCash(d.name) && d.sect !== CASH && (d.w0 > 0 || d.w1 > 0); });
   var bins = [[-1e9,-20],[-20,-10],[-10,-5],[-5,0],[0,5],[5,10],[10,20],[20,1e9]];
   var lbls = ['< -20%','-20 to -10%','-10 to -5%','-5 to 0%','0 to 5%','5 to 10%','10 to 20%','> 20%'];
-  var counts = bins.map(function() { return { n:0, contrib:0 }; });
+  var counts = bins.map(function() { return { n:0, contrib:0, names:[] }; });
   nonCash.forEach(function(d) {
     for (var i=0; i<bins.length; i++) {
-      if (d.ret >= bins[i][0] && d.ret < bins[i][1]) { counts[i].n++; counts[i].contrib += d.contrib; break; }
+      if (d.ret >= bins[i][0] && d.ret < bins[i][1]) {
+        counts[i].n++; counts[i].contrib += d.contrib; counts[i].names.push(d.name); break;
+      }
     }
   });
   var maxN = Math.max.apply(null, counts.map(function(c){return c.n;})) || 1;
@@ -1895,8 +1960,10 @@ function renderWLB() {
     var col = i < 4 ? '#9B2A20' : '#177A4E';
     var rect = se('rect', { x:x, y:y, width:binW, height:barH, rx:3, fill:col, opacity:'.75' });
     svg.appendChild(rect);
-    bindTip(rect, lbls[i] + '<br>' + c.n + ' constituents<br>' +
-      'Total contribution: ' + (c.contrib>=0?'+':'') + c.contrib.toFixed(3) + '%');
+    var tipNames = c.names && c.names.length <= 5
+      ? '<br><span style="font-size:10px">' + c.names.join(', ') + '</span>'
+      : '';
+    bindTip(rect, lbls[i] + '<br>' + c.n + ' constituent' + (c.n !== 1 ? 's' : '') + tipNames);
     if (c.n > 0) {
       var nt = se('text', {x:x+binW/2, y:y-4, 'text-anchor':'middle', 'font-family':'Inter,sans-serif', 'font-size':11, fill:'#2B3B4E', 'font-weight':'600'});
       nt.textContent = c.n; svg.appendChild(nt);
@@ -1912,11 +1979,17 @@ function renderWLB() {
     var yt = se('text', {x:P.l-4, y:yp+4, 'text-anchor':'end', 'font-family':'Inter,sans-serif', 'font-size':10, fill:'#8A93A0'});
     yt.textContent = yv; svg.appendChild(yt);
   }
+  // X axis title
+  var xTitle = se('text', { x: P.l + (VW-P.l-P.r)/2, y: VH - 4, 'text-anchor': 'middle',
+    'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0', 'font-style': 'italic' });
+  xTitle.textContent = 'Security Return while in index (%)';
+  svg.appendChild(xTitle);
+
   box.innerHTML = '';
   box.appendChild(svg);
   var leg = document.createElement('div');
   leg.style.cssText = 'font-size:11px;color:var(--mu);margin-top:6px';
-  leg.textContent = 'Each bar = number of constituents with return in that range. Hover to see total contribution for the group.';
+  leg.textContent = 'Each bar = number of constituents with return in that range. Hover to see names (≤5 per bin). Return = Carino-linked cumulative return for each security during the period it was active in the index.';
   box.appendChild(leg);
 }
 
@@ -1932,8 +2005,10 @@ function renderWLC() {
   var html = '<div class="twrap"><table class="rt">' +
     '<thead><tr>' +
     '<th>Sector</th>' +
-    '<th>Top Name</th><th class="num">Contribution</th>' +
-    '<th>Bottom Name</th><th class="num">Contribution</th>' +
+    '<th title="Highest contribution (weight × return) in sector">Top Name</th>' +
+    '<th class="num">Contribution</th>' +
+    '<th title="Lowest contribution in sector">Bottom Name</th>' +
+    '<th class="num">Contribution</th>' +
     '</tr></thead><tbody>';
   secList.forEach(function(sec) {
     var arr = nonCash.filter(function(d){return d.sect===sec;});
@@ -1990,7 +2065,7 @@ function refresh() {
   renderPareto();
   renderWLSection();
   _updateScatterSlider();
-  renderBeeswarm(_beeswarmSecAll, _beeswarmFilter);
+  renderBeeswarm();
 }
 
 function reloadSnapshot() {
@@ -2095,7 +2170,7 @@ window.ndxSetYear = function(yr) {
   _activeYear = yr;
   _fromHoc = range[0]; _toHoc = range[1];
   _beeswarmSectors = new Set();
-  _scatterYear = yr; _beeswarmYear = yr;
+  _scatterYear = yr; _beeswarmYear = yr; _beeswarmYears = new Set([yr]);
   document.querySelectorAll('.ndx-yr-btn').forEach(function(b) {
     b.classList.toggle('active', b.dataset.yr === yr);
   });
@@ -2103,7 +2178,7 @@ window.ndxSetYear = function(yr) {
     b.classList.toggle('active', b.dataset.yr === yr);
   });
   document.querySelectorAll('.ndx-bee-yr-btn').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.yr === yr);
+    b.classList.toggle('active', _beeswarmYears.has(b.dataset.yr));
   });
   reloadSnapshot();
 };
@@ -2126,13 +2201,34 @@ window.ndxSetScatterHoc = function(idx) {
 window.ndxSetBeeswarmYear = function(yr) {
   if (!YEAR_HOCS[yr]) return;
   _beeswarmYear = yr;
+  _beeswarmYears = new Set([yr]);
   _beeswarmSectors = new Set();
   document.querySelectorAll('.ndx-bee-yr-btn').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.yr === yr);
+    b.classList.toggle('active', _beeswarmYears.has(b.dataset.yr));
   });
   rebuildBeeswarmSecurities(yr);
   buildBeeswarmSectorPills();
-  renderBeeswarm(_beeswarmSecAll, _beeswarmFilter);
+  renderBeeswarm();
+};
+
+window.ndxToggleBeeYear = function(yr) {
+  if (!YEAR_HOCS[yr]) return;
+  if (_beeswarmYears.has(yr)) {
+    if (_beeswarmYears.size > 1) _beeswarmYears.delete(yr);
+  } else {
+    _beeswarmYears.add(yr);
+  }
+  document.querySelectorAll('.ndx-bee-yr-btn').forEach(function(b) {
+    b.classList.toggle('active', _beeswarmYears.has(b.dataset.yr));
+  });
+  renderBeeswarm();
+};
+
+window.ndxSetBeeProgress = function(pct) {
+  _beeswarmProgress = pct;
+  var lbl = document.getElementById('ndx-bee-progress-lbl');
+  if (lbl) lbl.textContent = pct + '%';
+  renderBeeswarm();
 };
 
 window.ndxToggleBeeswarmSector = function(sec) {
@@ -2144,7 +2240,7 @@ window.ndxToggleBeeswarmSector = function(sec) {
     _beeswarmSectors.add(sec);
   }
   buildBeeswarmSectorPills();
-  renderBeeswarm(_beeswarmSecAll, _beeswarmFilter);
+  renderBeeswarm();
 };
 
 window.ndxSetColorMode = function(m) {
@@ -2155,7 +2251,7 @@ window.ndxSetColorMode = function(m) {
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
   if (attrMode === 'treemap') renderTreemap(res);
-  renderBeeswarm(_beeswarmSecAll, _beeswarmFilter);
+  renderBeeswarm();
 };
 
 window.ndxToggleAttrChartYear = function(yr) {
@@ -2407,13 +2503,19 @@ function buildSkeleton() {
   '<div class="sec">' +
     '<div class="sechdr">' +
       '<span class="sect">Security Contributions — Beeswarm by Sector</span>' +
-      '<span class="secn">One dot per constituent. X = Carino-linked contribution. Lane = sector.</span>' +
+      '<span class="secn">One dot per constituent. X = Carino-linked contribution. Lane = sector. Select multiple years to compare side by side.</span>' +
     '</div>' +
     '<div class="card">' +
       '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">' +
         '<div style="display:flex;gap:4px">' +
-          '<button class="ndx-tab-btn ndx-bee-yr-btn active" data-yr="ytd2026" onclick="ndxSetBeeswarmYear(\'ytd2026\')">YTD 2026</button>' +
-          '<button class="ndx-tab-btn ndx-bee-yr-btn" data-yr="y2025" onclick="ndxSetBeeswarmYear(\'y2025\')">2025</button>' +
+          '<button class="ndx-tab-btn ndx-bee-yr-btn active" data-yr="ytd2026" onclick="ndxToggleBeeYear(\'ytd2026\')">YTD 2026</button>' +
+          '<button class="ndx-tab-btn ndx-bee-yr-btn" data-yr="y2025" onclick="ndxToggleBeeYear(\'y2025\')">2025</button>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:6px">' +
+          '<span style="font-size:11px;color:var(--mu)">Progress:</span>' +
+          '<input type="range" id="ndx-bee-progress-sl" min="0" max="100" value="100" step="1" ' +
+            'style="width:120px;accent-color:var(--navy)" oninput="ndxSetBeeProgress(+this.value)">' +
+          '<span id="ndx-bee-progress-lbl" style="font-size:11px;color:var(--navy);min-width:36px">100%</span>' +
         '</div>' +
         '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' +
           '<span style="font-size:11px;color:var(--mu);font-weight:600">Sector:</span>' +
@@ -2442,7 +2544,8 @@ export function loadNdxAttribution(container) {
   _scatterYear = 'ytd2026'; _scatterSecSnapshots = []; _scatterYrAxes = { xLo: null, xHi: null, yHi: null };
   _globalScatterAxes = { xLo: null, xHi: null, yHi: null };
   _globalBeeAxes = { contribHi: null, xLo: null, xHi: null };
-  _beeswarmYear = 'ytd2026'; _beeswarmSectors = new Set(); _beeswarmSecAll = [];
+  _beeswarmYear = 'ytd2026'; _beeswarmYears = new Set(['ytd2026']); _beeswarmProgress = 100;
+  _beeswarmSectors = new Set(); _beeswarmSecAll = [];
   _activeYear = 'ytd2026';
   _paretoN = 10; _paretoYears = new Set(['ytd2026']); _paretoView = 'table'; _paretoCustomN = 0;
   _wlYear = 'ytd2026'; _wlTab = 'C';
@@ -2472,5 +2575,5 @@ export function loadNdxAttribution(container) {
   renderPareto();
   renderWLSection();
   _updateScatterSlider();
-  renderBeeswarm(_beeswarmSecAll, 0);
+  renderBeeswarm();
 }

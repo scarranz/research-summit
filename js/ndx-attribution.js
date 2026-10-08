@@ -32,12 +32,16 @@ var _securities = [];
 var _beeswarmFilter = 0;
 var treemapSubMode = 'flat';
 var _scatterHocIdx = -1;
-var _beeswarmHocIdx = -1;
 var _secSnapshots  = [];
 var _expandedSecs  = new Set();
 var _scatterXLo = null, _scatterXHi = null, _scatterYHi = null;
-var _beeswarmSector = '';
 var _activeYear  = 'ytd2026';
+var _scatterYear = 'ytd2026';
+var _scatterSecSnapshots = [];
+var _scatterYrAxes = { xLo: null, xHi: null, yHi: null };
+var _beeswarmYear = 'ytd2026';
+var _beeswarmSectors = new Set();
+var _beeswarmSecAll = [];
 var _paretoN     = 10;
 var YEAR_HOCS    = { ytd2026: [12, 25], y2025: [2, 11] };
 var _colorMode   = 'orig';   // 'orig' | 'A' | 'B' | 'C'
@@ -820,10 +824,7 @@ window.ndxSetTreemapSubMode = function(mode) {
   renderTreemap(isBase ? baseR : computeCore(exclSecs, exclIGs));
 };
 
-window.ndxSetBeeswarmSector = function(sec) {
-  _beeswarmSector = sec;
-  renderBeeswarm(_securities, _beeswarmFilter);
-};
+// Replaced by ndxToggleBeeswarmSector (multi-select pills)
 
 // ── Attribution table ─────────────────────────────────────────────────────
 function computeDisplayWeights(exS, exG) {
@@ -1126,6 +1127,65 @@ function renderDumbbell() {
   box.innerHTML = ''; box.appendChild(svg); box.appendChild(legend);
 }
 
+// ── Scatter helpers ───────────────────────────────────────────────────────
+function rebuildScatterSnapshots(yr) {
+  var range = YEAR_HOCS[yr];
+  if (!range) return;
+  var yrHocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
+  _scatterSecSnapshots = yrHocs.map(function(_, i) {
+    return computeSecurities(new Set(), new Set(), yrHocs.slice(0, i + 1));
+  });
+  _scatterHocIdx = _scatterSecSnapshots.length - 1;
+  var allRets = [], allWts = [];
+  _scatterSecSnapshots.forEach(function(snap) {
+    snap.forEach(function(d) { if (d.w1 > 0 || d.w0 > 0) { allRets.push(d.ret); allWts.push(d.w1); } });
+  });
+  if (allRets.length) {
+    var rng = Math.max.apply(null, allRets) - Math.min.apply(null, allRets);
+    _scatterYrAxes.xLo = Math.min.apply(null, allRets) - rng * 0.05;
+    _scatterYrAxes.xHi = Math.max.apply(null, allRets) + rng * 0.05;
+    _scatterYrAxes.yHi = Math.max.apply(null, allWts) * 1.08;
+  }
+}
+
+function _updateScatterSlider() {
+  var sl = document.getElementById('ndx-scatter-hoc-slider');
+  var lbl = document.getElementById('ndx-scatter-hoc-label');
+  var range = YEAR_HOCS[_scatterYear];
+  if (!range) return;
+  var yrHocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
+  if (sl) { sl.max = String(_scatterSecSnapshots.length - 1); sl.value = String(_scatterHocIdx); }
+  var hoc = yrHocs[_scatterHocIdx];
+  if (lbl && hoc) {
+    lbl.textContent = 'HOC ' + hoc.n + ' · ' + (hoc.close || hoc.eff + ' (Open)');
+  }
+  if (_scatterSecSnapshots[_scatterHocIdx]) renderScatter(_scatterSecSnapshots[_scatterHocIdx]);
+}
+
+// ── Beeswarm helpers ──────────────────────────────────────────────────────
+function rebuildBeeswarmSecurities(yr) {
+  var range = YEAR_HOCS[yr];
+  if (!range) return;
+  var yrHocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
+  _beeswarmSecAll = computeSecurities(new Set(), new Set(), yrHocs);
+}
+
+function buildBeeswarmSectorPills() {
+  var container = document.getElementById('ndx-bee-pills');
+  if (!container) return;
+  var allSecsForBee = sectors.filter(function(s) { return s !== CASH; });
+  var allActive = _beeswarmSectors.size === 0;
+  var html = '<button class="ndx-tab-btn ndx-bee-pill' + (allActive ? ' active' : '') + '" ' +
+    'onclick="ndxToggleBeeswarmSector(\'\')" style="font-size:11px;padding:3px 9px">All</button>';
+  allSecsForBee.forEach(function(s) {
+    var act = _beeswarmSectors.has(s);
+    html += '<button class="ndx-tab-btn ndx-bee-pill' + (act ? ' active' : '') + '" ' +
+      'onclick="ndxToggleBeeswarmSector(\'' + esc(s) + '\')" style="font-size:11px;padding:3px 9px">' +
+      dispSec(s) + '</button>';
+  });
+  container.innerHTML = html;
+}
+
 // ── Scatter — weight × return per security ────────────────────────────────
 function renderScatter(securities) {
   var box = document.getElementById('ndx-scatter-box');
@@ -1137,9 +1197,9 @@ function renderScatter(securities) {
 
   var xs = dots.map(function(d) { return d.ret; });
   var ys = dots.map(function(d) { return d.w1; });
-  var xLo = _scatterXLo != null ? _scatterXLo : Math.min.apply(null, xs) - (Math.max.apply(null, xs) - Math.min.apply(null, xs)) * 0.05;
-  var xHi = _scatterXHi != null ? _scatterXHi : Math.max.apply(null, xs) + (Math.max.apply(null, xs) - Math.min.apply(null, xs)) * 0.05;
-  var yHi = _scatterYHi != null ? _scatterYHi : Math.max.apply(null, ys) * 1.06;
+  var xLo = _scatterYrAxes.xLo != null ? _scatterYrAxes.xLo : Math.min.apply(null, xs) - (Math.max.apply(null, xs) - Math.min.apply(null, xs)) * 0.05;
+  var xHi = _scatterYrAxes.xHi != null ? _scatterYrAxes.xHi : Math.max.apply(null, xs) + (Math.max.apply(null, xs) - Math.min.apply(null, xs)) * 0.05;
+  var yHi = _scatterYrAxes.yHi != null ? _scatterYrAxes.yHi : Math.max.apply(null, ys) * 1.06;
 
   var cw = VW - P.l - P.r, ch = VH - P.t - P.b;
   function X(v) { return P.l + (v - xLo) / (xHi - xLo) * cw; }
@@ -1229,7 +1289,7 @@ window.ndxSetBeeswarmFilter = function(threshold) {
   document.querySelectorAll('.ndx-bee-btn').forEach(function(b) {
     b.classList.toggle('active', parseFloat(b.dataset.thr) === threshold);
   });
-  renderBeeswarm(_securities, threshold);
+  renderBeeswarm(_beeswarmSecAll, threshold);
 };
 
 function beeswarmLayout(dots, X, r) {
@@ -1260,8 +1320,8 @@ function renderBeeswarm(securities, threshold) {
 
   var filtered = securities.filter(function(d) { return Math.abs(d.contrib) > threshold && d.sect !== CASH; });
 
-  var secList = _beeswarmSector
-    ? [_beeswarmSector]
+  var secList = _beeswarmSectors.size > 0
+    ? sectors.filter(function(s) { return _beeswarmSectors.has(s); })
     : sectors.filter(function(s) { return s !== CASH; });
   var dotR = 4.5;
   var laneH = 60;
@@ -1697,8 +1757,8 @@ function refresh() {
   _securities = computeSecurities(exclSecs, exclIGs);
   renderPareto(_securities);
   renderWLSection();
-  renderScatter(_securities);
-  renderBeeswarm(_securities, _beeswarmFilter);
+  _updateScatterSlider();
+  renderBeeswarm(_beeswarmSecAll, _beeswarmFilter);
 }
 
 function reloadSnapshot() {
@@ -1710,33 +1770,11 @@ function reloadSnapshot() {
   baseR = computeCore(new Set(), new Set());
   buildHierarchy(baseR);
   lockAxes(baseR);
-  // Rebuild beeswarm sector select for the new year
-  var beeSel = document.getElementById('ndx-bee-sec');
-  if (beeSel) {
-    beeSel.innerHTML = '<option value="">All</option>' +
-      sectors.filter(function(s) { return s !== CASH; }).map(function(s) {
-        return '<option value="' + esc(s) + '">' + dispSec(s) + '</option>';
-      }).join('');
-    beeSel.value = _beeswarmSector;
-  }
   _securities = computeSecurities(new Set(), new Set());
-  _secSnapshots = _activeHocs.map(function(_, i) {
-    return computeSecurities(new Set(), new Set(), _activeHocs.slice(0, i + 1));
-  });
-  _scatterHocIdx  = _activeHocs.length - 1;
-  _beeswarmHocIdx = _activeHocs.length - 1;
-
-  // Precompute fixed scatter axes across all snapshots
-  var allRets = [], allWts = [];
-  _secSnapshots.forEach(function(snap) {
-    snap.forEach(function(d) { if (d.w1 > 0 || d.w0 > 0) { allRets.push(d.ret); allWts.push(d.w1); } });
-  });
-  if (allRets.length) {
-    var rng = Math.max.apply(null, allRets) - Math.min.apply(null, allRets);
-    _scatterXLo = Math.min.apply(null, allRets) - rng * 0.05;
-    _scatterXHi = Math.max.apply(null, allRets) + rng * 0.05;
-    _scatterYHi = Math.max.apply(null, allWts) * 1.08;
-  }
+  rebuildScatterSnapshots(_scatterYear);
+  rebuildBeeswarmSecurities(_beeswarmYear);
+  // rebuild pills for the new sector list
+  buildBeeswarmSectorPills();
 
   refresh();
   renderDumbbell();
@@ -1824,12 +1862,57 @@ window.ndxSetYear = function(yr) {
   if (!range) return;
   _activeYear = yr;
   _fromHoc = range[0]; _toHoc = range[1];
-  _beeswarmSector = '';
-  _scatterXLo = null; _scatterXHi = null; _scatterYHi = null;
+  _beeswarmSectors = new Set();
+  _scatterYear = yr; _beeswarmYear = yr;
   document.querySelectorAll('.ndx-yr-btn').forEach(function(b) {
     b.classList.toggle('active', b.dataset.yr === yr);
   });
+  document.querySelectorAll('.ndx-scat-yr-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.yr === yr);
+  });
+  document.querySelectorAll('.ndx-bee-yr-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.yr === yr);
+  });
   reloadSnapshot();
+};
+
+window.ndxSetScatterYear = function(yr) {
+  if (!YEAR_HOCS[yr]) return;
+  _scatterYear = yr;
+  document.querySelectorAll('.ndx-scat-yr-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.yr === yr);
+  });
+  rebuildScatterSnapshots(yr);
+  _updateScatterSlider();
+};
+
+window.ndxSetScatterHoc = function(idx) {
+  _scatterHocIdx = Math.max(0, Math.min(_scatterSecSnapshots.length - 1, idx));
+  _updateScatterSlider();
+};
+
+window.ndxSetBeeswarmYear = function(yr) {
+  if (!YEAR_HOCS[yr]) return;
+  _beeswarmYear = yr;
+  _beeswarmSectors = new Set();
+  document.querySelectorAll('.ndx-bee-yr-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.yr === yr);
+  });
+  rebuildBeeswarmSecurities(yr);
+  buildBeeswarmSectorPills();
+  renderBeeswarm(_beeswarmSecAll, _beeswarmFilter);
+};
+
+window.ndxToggleBeeswarmSector = function(sec) {
+  if (!sec) {
+    _beeswarmSectors = new Set();
+  } else if (_beeswarmSectors.has(sec)) {
+    _beeswarmSectors.delete(sec);
+  } else {
+    _beeswarmSectors.add(sec);
+  }
+  buildBeeswarmSectorPills();
+  renderBeeswarm(_beeswarmSecAll, _beeswarmFilter);
 };
 
 window.ndxSetColorMode = function(m) {
@@ -1840,7 +1923,7 @@ window.ndxSetColorMode = function(m) {
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
   if (attrMode === 'treemap') renderTreemap(res);
-  renderBeeswarm(_securities, _beeswarmFilter);
+  renderBeeswarm(_beeswarmSecAll, _beeswarmFilter);
 };
 
 window.ndxSetRebalTab = function(t) {
@@ -2033,7 +2116,20 @@ function buildSkeleton() {
       '<span class="sect">Security Return vs. Weight Scatter</span>' +
       '<span class="secn">Each dot = one constituent. X = compounded return, Y = closing weight, bubble area ∝ √|contribution|. Top 10 labeled.</span>' +
     '</div>' +
-    '<div class="card"><div id="ndx-scatter-box"></div></div>' +
+    '<div class="card">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">' +
+        '<div style="display:flex;gap:4px">' +
+          '<button class="ndx-tab-btn ndx-scat-yr-btn active" data-yr="ytd2026" onclick="ndxSetScatterYear(\'ytd2026\')">YTD 2026</button>' +
+          '<button class="ndx-tab-btn ndx-scat-yr-btn" data-yr="y2025" onclick="ndxSetScatterYear(\'y2025\')">2025</button>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-left:auto">' +
+          '<span style="font-size:11px;color:var(--mu)">HOC evolution:</span>' +
+          '<input type="range" id="ndx-scatter-hoc-slider" min="0" max="13" value="13" style="width:140px;accent-color:var(--navy)" oninput="ndxSetScatterHoc(+this.value)">' +
+          '<span id="ndx-scatter-hoc-label" style="font-size:11px;color:var(--navy);min-width:90px;white-space:nowrap"></span>' +
+        '</div>' +
+      '</div>' +
+      '<div id="ndx-scatter-box"></div>' +
+    '</div>' +
   '</div>' +
 
   '<div class="sec">' +
@@ -2043,14 +2139,13 @@ function buildSkeleton() {
     '</div>' +
     '<div class="card">' +
       '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">' +
-        '<div style="display:flex;align-items:center;gap:6px">' +
-          '<span style="font-size:11px;color:var(--mu);font-weight:600">Sector</span>' +
-          '<select id="ndx-bee-sec" onchange="ndxSetBeeswarmSector(this.value)" style="font-family:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:5px 10px;background:var(--w);color:var(--text);cursor:pointer">' +
-            '<option value="">All</option>' +
-            sectors.filter(function(s) { return s !== CASH; }).map(function(s) {
-              return '<option value="' + esc(s) + '">' + dispSec(s) + '</option>';
-            }).join('') +
-          '</select>' +
+        '<div style="display:flex;gap:4px">' +
+          '<button class="ndx-tab-btn ndx-bee-yr-btn active" data-yr="ytd2026" onclick="ndxSetBeeswarmYear(\'ytd2026\')">YTD 2026</button>' +
+          '<button class="ndx-tab-btn ndx-bee-yr-btn" data-yr="y2025" onclick="ndxSetBeeswarmYear(\'y2025\')">2025</button>' +
+        '</div>' +
+        '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' +
+          '<span style="font-size:11px;color:var(--mu);font-weight:600">Sector:</span>' +
+          '<div id="ndx-bee-pills" style="display:flex;gap:4px;flex-wrap:wrap"></div>' +
         '</div>' +
       '</div>' +
       '<div id="ndx-beeswarm-box"></div>' +
@@ -2069,10 +2164,11 @@ export function loadNdxAttribution(container) {
   _fromHoc = 12; _toHoc = 25;
   _beeswarmFilter = 0; _securities = [];
   treemapSubMode = 'flat';
-  _scatterHocIdx = -1; _beeswarmHocIdx = -1; _secSnapshots = [];
+  _scatterHocIdx = -1; _secSnapshots = [];
   _expandedSecs = new Set();
   _scatterXLo = null; _scatterXHi = null; _scatterYHi = null;
-  _beeswarmSector = '';
+  _scatterYear = 'ytd2026'; _scatterSecSnapshots = []; _scatterYrAxes = { xLo: null, xHi: null, yHi: null };
+  _beeswarmYear = 'ytd2026'; _beeswarmSectors = new Set(); _beeswarmSecAll = [];
   _activeYear = 'ytd2026';
   _paretoN = 10;
   _colorMode = 'orig';
@@ -2087,25 +2183,11 @@ export function loadNdxAttribution(container) {
   buildHierarchy(baseR);
   lockAxes(baseR);
   _securities = computeSecurities(new Set(), new Set());
-  _secSnapshots = _activeHocs.map(function(_, i) {
-    return computeSecurities(new Set(), new Set(), _activeHocs.slice(0, i + 1));
-  });
-  _scatterHocIdx  = _activeHocs.length - 1;
-  _beeswarmHocIdx = _activeHocs.length - 1;
-
-  // Fixed scatter axes across all snapshots
-  var allRets2 = [], allWts2 = [];
-  _secSnapshots.forEach(function(snap) {
-    snap.forEach(function(d) { if (d.w1 > 0 || d.w0 > 0) { allRets2.push(d.ret); allWts2.push(d.w1); } });
-  });
-  if (allRets2.length) {
-    var rng2 = Math.max.apply(null, allRets2) - Math.min.apply(null, allRets2);
-    _scatterXLo = Math.min.apply(null, allRets2) - rng2 * 0.05;
-    _scatterXHi = Math.max.apply(null, allRets2) + rng2 * 0.05;
-    _scatterYHi = Math.max.apply(null, allWts2) * 1.08;
-  }
+  rebuildScatterSnapshots(_scatterYear);
+  rebuildBeeswarmSecurities(_beeswarmYear);
 
   container.innerHTML = buildSkeleton();
+  buildBeeswarmSectorPills();
   renderKPI(baseR);
   renderAttrChart(baseR);
   renderAttrTable(baseR);
@@ -2113,6 +2195,6 @@ export function loadNdxAttribution(container) {
   renderRebalSection();
   renderPareto(_securities);
   renderWLSection();
-  renderScatter(_securities);
-  renderBeeswarm(_securities, 0);
+  _updateScatterSlider();
+  renderBeeswarm(_beeswarmSecAll, 0);
 }

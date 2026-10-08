@@ -1126,6 +1126,7 @@ function hfResLetterRow(l, showFund) {
   // Summit mark = the letter names a stock this fund has held in a 13F
   // on file (precomputed in js/hf-letter-mentions.js).
   var men = HF_LETTER_MENTIONS[l.url];
+  if (men && men.indexOf('GOOGL') !== -1) men = men.filter(function(t) { return t !== 'GOOG'; });
   var badge = men ? '<span class="hf-res-men" title="Mentions holdings: ' + esc(men.join(', ')) + '"><img src="img/summit-mark.png" alt="">' + esc(men.slice(0, 4).join(' · ') + (men.length > 4 ? ' +' + (men.length - 4) : '')) + '</span>' : '';
   var inner = fundTag + '<span class="im-let-title">' + esc(l.title) + '</span>' + badge +
     (l.date ? '<span class="im-let-date">' + esc(l.date) + '</span>' : '') +
@@ -2787,6 +2788,7 @@ window.showAllInvestors = showAllInvestors;
 window.hfMainTab = hfMainTab;
 window.hfStockLookupSelect = hfStockLookupSelect;
 window.renderHfProfiles = renderHfProfiles;
+window.loadHfResources = loadHfResources;
 window.hfSectorClick = hfSectorClick;
 window.hfHeatmapTogglePerf = hfHeatmapTogglePerf;
 window.hfTickerClick = hfTickerClick;

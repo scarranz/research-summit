@@ -49,8 +49,9 @@ var _paretoCustomN = 0;
 var YEAR_HOCS    = { ytd2026: [12, 25], y2025: [2, 11] };
 var _colorMode   = 'orig';   // 'orig' | 'A' | 'B' | 'C'
 var _colorMaxPos = 0, _colorMaxNeg = 0;
-var _wlTab       = 'C';
-var _wlYear      = 'ytd2026';
+var _wlTab        = 'C';
+var _wlYear       = 'ytd2026';
+var _attrChartYear = 'ytd2026';
 var _attrDecimals = 2;
 var lastBaseR    = null;
 
@@ -123,9 +124,10 @@ function lockAxes(res) {
 }
 
 // Carino-linked attribution
-function computeCore(exS, exG) {
+function computeCore(exS, exG, hocList) {
   var hocSecC = [], hocIGC = [], ktArr = [], logSum = 0, hocResults = [];
-  _activeHocs.forEach(function(hoc) {
+  var _hocs = hocList !== undefined ? hocList : _activeHocs;
+  _hocs.forEach(function(hoc) {
     var exclW = 0;
     hoc.sec.forEach(function(s) { if (exS.has(s.s) || exG.has(s.g)) exclW += (s.w || 0); });
     var scale = exclW < 99.99 ? 100 / (100 - exclW) : 1;
@@ -360,39 +362,52 @@ function renderKPI(res) {
 }
 
 // ── Bar chart ─────────────────────────────────────────────────────────────
-function renderAttrChart(res) {
+function renderAttrChart() {
   var canvas = document.getElementById('ndx-attr-canvas');
   if (!canvas || typeof Chart === 'undefined') return;
+  // compute attribution for the chart's own year (unfiltered — full landscape view)
+  var chartHocs = hocsForYear(_attrChartYear);
+  var res = computeCore(new Set(), new Set(), chartHocs);
   var isIG = attrTab === 'ig';
   var items = [];
   if (isIG) {
     sectors.forEach(function(s) {
       (igBySec[s]||[]).forEach(function(g) {
-        items.push({ label: chartLbl(g, true), full: dispIG(g), val: res.byIG[g]||0, excl: exclSecs.has(s)||exclIGs.has(g) });
+        items.push({ label: chartLbl(g, true), full: dispIG(g), val: res.byIG[g]||0 });
       });
     });
   } else {
     sectors.forEach(function(s) {
-      items.push({ label: chartLbl(s, false), full: dispSec(s), val: res.bySec[s]||0, excl: exclSecs.has(s) });
+      items.push({ label: chartLbl(s, false), full: dispSec(s), val: res.bySec[s]||0 });
     });
   }
   _chartFull = items.map(function(x) { return x.full; });
   var labels = items.map(function(x) { return x.label; });
   var data   = items.map(function(x) { return parseFloat(x.val.toFixed(6)); });
   var bg = items.map(function(x) {
-    if (x.excl) return 'rgba(150,150,150,.22)';
     return x.val >= 0 ? 'rgba(23,122,78,.72)' : 'rgba(155,42,32,.72)';
   });
   var bd = items.map(function(x) {
-    if (x.excl) return 'rgba(150,150,150,.4)';
     return x.val >= 0 ? '#177A4E' : '#9B2A20';
   });
+  // compute local axes for this year's data
+  function axisRng(vals) {
+    var mn = Math.min.apply(null, vals.concat(0));
+    var mx = Math.max.apply(null, vals.concat(0));
+    var pad = Math.max(Math.abs(mx - mn) * 0.12, 0.1);
+    return { min: mn - pad, max: mx + pad };
+  }
+  var secVals = sectors.map(function(s) { return res.bySec[s] || 0; });
+  var igValsLocal = [];
+  sectors.forEach(function(s) { (igBySec[s]||[]).forEach(function(g) { igValsLocal.push(res.byIG[g]||0); }); });
+  var sr = axisRng(secVals);
+  var ir = axisRng(igValsLocal.length ? igValsLocal : [0]);
+  var xMin = isIG ? ir.min : sr.min;
+  var xMax = isIG ? ir.max : sr.max;
   var rowH = isIG ? 26 : 30;
   var h = Math.max(340, items.length * rowH + 60);
   var box = document.getElementById('ndx-attr-chart-box');
   if (box) box.style.height = h + 'px';
-  var xMin = isIG ? _axisIGMin : _axisSecMin;
-  var xMax = isIG ? _axisIGMax : _axisSecMax;
   if (_chart) {
     _chart.data.labels = labels;
     _chart.data.datasets[0].data = data;
@@ -1750,7 +1765,7 @@ function refresh() {
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
   renderKPI(res);
-  if (attrMode === 'chart') renderAttrChart(res); else renderTreemap(res);
+  if (attrMode === 'chart') renderAttrChart(); else renderTreemap(res);
   renderAttrTable(res);
   _securities = computeSecurities(exclSecs, exclIGs);
   renderPareto();
@@ -1832,7 +1847,7 @@ window.ndxSetAttrTab = function(tab) {
   if (sb) sb.style.display = (attrMode === 'treemap' && tab === 'sector') ? '' : 'none';
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
-  if (attrMode === 'chart') renderAttrChart(res); else renderTreemap(res);
+  if (attrMode === 'chart') renderAttrChart(); else renderTreemap(res);
   renderAttrTable(res);
 };
 window.ndxSetAttrMode = function(mode) {
@@ -1847,7 +1862,7 @@ window.ndxSetAttrMode = function(mode) {
   if (cr) cr.style.display = mode === 'treemap' ? 'flex' : 'none';
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
-  if (mode === 'chart') renderAttrChart(res); else renderTreemap(res);
+  if (mode === 'chart') renderAttrChart(); else renderTreemap(res);
 };
 window.ndxSort = function(key) {
   if (_sortKey === key) { _sortDir = -_sortDir; }
@@ -1922,6 +1937,16 @@ window.ndxSetColorMode = function(m) {
   var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
   if (attrMode === 'treemap') renderTreemap(res);
   renderBeeswarm(_beeswarmSecAll, _beeswarmFilter);
+};
+
+window.ndxSetAttrChartYear = function(yr) {
+  if (!YEAR_HOCS[yr]) return;
+  _attrChartYear = yr;
+  document.querySelectorAll('.ndx-attr-yr-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.yr === yr);
+  });
+  if (_chart) { _chart.destroy(); _chart = null; }
+  renderAttrChart();
 };
 
 window.ndxSetWLTab = function(t) {
@@ -2025,6 +2050,10 @@ function buildSkeleton() {
     '<div class="sechdr"><span class="sect">Attribution by Sector / Industry Group</span></div>' +
     '<div class="card">' +
       '<div class="ndx-attr-toolbar">' +
+        '<div style="display:flex;gap:4px;margin-right:8px">' +
+          '<button class="ndx-attr-yr-btn ndx-tab-btn active" data-yr="ytd2026" onclick="ndxSetAttrChartYear(\'ytd2026\')">YTD 2026</button>' +
+          '<button class="ndx-attr-yr-btn ndx-tab-btn" data-yr="y2025" onclick="ndxSetAttrChartYear(\'y2025\')">2025</button>' +
+        '</div>' +
         '<div id="ndx-attr-tabs" style="display:flex;gap:3px">' +
           '<button class="ndx-tab-btn active" data-tab="sector" onclick="ndxSetAttrTab(\'sector\')">By Sector</button>' +
           '<button class="ndx-tab-btn" data-tab="ig" onclick="ndxSetAttrTab(\'ig\')">By Industry Group</button>' +
@@ -2185,6 +2214,7 @@ export function loadNdxAttribution(container) {
   _activeYear = 'ytd2026';
   _paretoN = 10; _paretoYear = 'ytd2026'; _paretoCustomN = 0;
   _wlYear = 'ytd2026'; _wlTab = 'C';
+  _attrChartYear = 'ytd2026';
   _colorMode = 'orig';
   _colorMaxPos = 0; _colorMaxNeg = 0;
   _wlTab = 'C';
@@ -2203,7 +2233,7 @@ export function loadNdxAttribution(container) {
   container.innerHTML = buildSkeleton();
   buildBeeswarmSectorPills();
   renderKPI(baseR);
-  renderAttrChart(baseR);
+  renderAttrChart();
   renderAttrTable(baseR);
   renderDumbbell();
   renderPareto();

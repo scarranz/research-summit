@@ -39,11 +39,13 @@ var _scatterXLo = null, _scatterXHi = null, _scatterYHi = null;
 var _beeswarmSector = '';
 var _activeYear  = 'ytd2026';
 var _paretoN     = 10;
-var YEAR_HOCS    = { ytd2026: [12, 25], y2025: [1, 11] };
+var YEAR_HOCS    = { ytd2026: [12, 25], y2025: [2, 11] };
 var _colorMode   = 'orig';   // 'orig' | 'A' | 'B' | 'C'
 var _colorMaxPos = 0, _colorMaxNeg = 0;
 var _rebalTab    = 'A';
 var _wlTab       = 'C';
+var _attrDecimals = 2;
+var lastBaseR    = null;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function getActiveHocs() {
@@ -86,8 +88,10 @@ function buildHierarchy(init) {
     hoc.sec.forEach(function(s) {
       if (!snap[s.s]) snap[s.s] = { count: 0, w: 0 };
       if (!snap['ig:'+s.g]) snap['ig:'+s.g] = { count: 0, w: 0 };
-      snap[s.s].count++; snap[s.s].w += (s.w || 0);
-      snap['ig:'+s.g].count++; snap['ig:'+s.g].w += (s.w || 0);
+      var countable = !isCash(s.t) && (s.w || 0) > 0;
+      if (countable) { snap[s.s].count++; snap['ig:'+s.g].count++; }
+      snap[s.s].w += (s.w || 0);
+      snap['ig:'+s.g].w += (s.w || 0);
     });
   });
 }
@@ -206,12 +210,13 @@ function computeSecurities(exS, exG, hocList) {
 
 function dispSec(s) { return s === CASH ? CASH_LABEL : s; }
 function dispIG(g)  { return g === CASH ? CASH_LABEL : g; }
+function isCash(t) { return t && t.charAt(0) === '$'; }
 function fmtC(v) {
   if (v == null || isNaN(v)) return '<span style="color:var(--mu)">—</span>';
   return '<span style="color:' + (v >= 0 ? 'var(--pos)' : 'var(--neg)') + ';font-weight:600">' +
-    (v >= 0 ? '+' : '') + v.toFixed(4) + '%</span>';
+    (v >= 0 ? '+' : '') + v.toFixed(_attrDecimals) + '%</span>';
 }
-function fmtYTD(v) { return v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(4) + '%'; }
+function fmtYTD(v) { return v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(_attrDecimals) + '%'; }
 function colr(v)   { return v >= 0 ? 'var(--pos)' : 'var(--neg)'; }
 function esc(s)    { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function trunc(s, n) { return s.length > n ? s.slice(0, n-1) + '…' : s; }
@@ -824,17 +829,19 @@ window.ndxSetBeeswarmSector = function(sec) {
 function computeDisplayWeights(exS, exG) {
   var lastHoc = _activeHocs[_activeHocs.length - 1];
   if (!lastHoc) return { sec: {}, ig: {} };
-  var exclW = 0;
+  // Adjusted weights: w_adj(i) = w_i*(1+r_i) / Σ_j[w_j*(1+r_j)] from last active HOC
+  var denom = 0;
   lastHoc.sec.forEach(function(s) {
-    if (exS.has(s.s) || exG.has(s.g)) exclW += (s.w || 0);
+    if (exS.has(s.s) || exG.has(s.g)) return;
+    denom += (s.w || 0) * (1 + s.r / 100);
   });
-  var scale = exclW < 99.99 ? 100 / (100 - exclW) : 1;
+  if (!denom) denom = 1;
   var secW = {}, igW = {};
   lastHoc.sec.forEach(function(s) {
     if (exS.has(s.s) || exG.has(s.g)) return;
-    var ew = (s.w || 0) * scale;
-    secW[s.s] = (secW[s.s] || 0) + ew;
-    igW[s.g]  = (igW[s.g]  || 0) + ew;
+    var aw = (s.w || 0) * (1 + s.r / 100) / denom * 100;
+    secW[s.s] = (secW[s.s] || 0) + aw;
+    igW[s.g]  = (igW[s.g]  || 0) + aw;
   });
   return { sec: secW, ig: igW };
 }
@@ -866,7 +873,7 @@ function selDot(sec, sz) {
 function renderAttrTable(res) {
   var tbody = document.getElementById('ndx-attr-tbody');
   if (!tbody) return;
-  var isIG = attrTab === 'ig';
+  lastBaseR = res;
   var html = '';
   function cmpSec(a, b) {
     if (a === CASH) return 1; if (b === CASH) return -1;
@@ -886,19 +893,7 @@ function renderAttrTable(res) {
     if (excl) return '<span style="color:var(--mu)">—</span>';
     return (w || 0).toFixed(2) + '%';
   }
-  if (!isIG) {
-    sortedSecs.forEach(function(s) {
-      var excl = exclSecs.has(s);
-      var n = _snapN[s]||{count:0,w:0}, o = _snap0[s]||{count:0,w:0};
-      html += '<tr style="' + (excl ? 'opacity:.42;' : '') + 'cursor:pointer" onclick="ndxToggleSec(\'' + esc(s) + '\')">' +
-        '<td style="width:28px;text-align:center;padding:6px 4px">' + dot(!excl, 16) + '</td>' +
-        '<td style="font-weight:600">' + dispSec(s) + '</td>' +
-        '<td class="num">' + o.count + ' → ' + n.count + '</td>' +
-        '<td class="num">' + fmtW(dw.sec[s], excl) + '</td>' +
-        '<td class="num">' + fmtC(res.bySec[s]||0) + '</td></tr>';
-    });
-  } else {
-    sortedSecs.forEach(function(s) {
+  sortedSecs.forEach(function(s) {
       var igs = (igBySec[s]||[]).slice().sort(cmpIG);
       if (!igs.length) return;
       var secExcl = exclSecs.has(s);
@@ -932,7 +927,6 @@ function renderAttrTable(res) {
         });
       }
     });
-  }
   html += '<tr style="border-top:2px solid var(--navy);font-weight:700">' +
     '<td></td><td colspan="3" style="color:var(--navy)">Total</td>' +
     '<td class="num" style="color:' + colr(baseR.ytd) + ';font-weight:700">' + fmtYTD(baseR.ytd) + '</td></tr>';
@@ -1790,6 +1784,10 @@ window.ndxCollapseAll = function() {
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   renderAttrTable(isBase ? baseR : computeCore(exclSecs, exclIGs));
 };
+window.ndxSetDecimals = function(n) {
+  _attrDecimals = Math.max(1, Math.min(4, n || 2));
+  if (lastBaseR) renderAttrTable(lastBaseR);
+};
 window.ndxSetAttrTab = function(tab) {
   attrTab = tab;
   if (_chart) { _chart.destroy(); _chart = null; }
@@ -1960,6 +1958,13 @@ function buildSkeleton() {
           '<button class="ndx-tab-btn" onclick="ndxExpandAll()">Expand All</button>' +
           '<button class="ndx-tab-btn" onclick="ndxCollapseAll()">Collapse All</button>' +
           '<button class="sb-tbtn" onclick="ndxResetSim()">Reset</button>' +
+          '<span style="font-size:11px;color:var(--mu);margin-left:4px">Decimals</span>' +
+          '<select id="ndx-decimals-sel" onchange="ndxSetDecimals(+this.value)" style="font-family:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:6px;padding:3px 6px;background:var(--w);color:var(--text)">' +
+            '<option value="1">1</option>' +
+            '<option value="2" selected>2</option>' +
+            '<option value="3">3</option>' +
+            '<option value="4">4</option>' +
+          '</select>' +
         '</div>' +
       '</div>' +
     '</div>' +
@@ -2073,6 +2078,7 @@ export function loadNdxAttribution(container) {
   _colorMode = 'orig';
   _colorMaxPos = 0; _colorMaxNeg = 0;
   _rebalTab = 'A'; _wlTab = 'C';
+  _attrDecimals = 2; lastBaseR = null;
   if (_chart) { _chart.destroy(); _chart = null; }
 
   normalize();

@@ -1508,7 +1508,9 @@
 /* ─── Stock lookup: which superinvestors hold ticker X, by quarter ─── */
 
 .hf-heat-wrap { overflow-x: auto; }
-.hf-stocklookup-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+/* Grows past the card instead of squeezing cells; .hf-heat-wrap scrolls. */
+.hf-stocklookup-tbl { width: 100%; min-width: max-content; border-collapse: collapse; font-size: 12.5px; }
+.hf-stocklookup-tbl th, .hf-stocklookup-tbl td { white-space: nowrap; }
 .hf-stocklookup-tbl th { font-size: 10px; font-weight: 600; color: var(--mu); text-transform: uppercase; letter-spacing: .03em; text-align: left; padding: 0 10px 8px; border-bottom: 1px solid var(--bdr); }
 .hf-stocklookup-tbl th.nr, .hf-stocklookup-tbl td.nr { text-align: right; }
 .hf-stocklookup-tbl td { padding: 9px 10px; border-bottom: 1px solid var(--bdr); }
@@ -1539,7 +1541,7 @@
 
 /* Weight arrows are neutral (a weight moves with price too); color is
    reserved for the stock's return row and the Activity column. */
-.hf-slk-arw { display: inline-block; width: 12px; margin-left: 3px; font-size: 8px; color: var(--mu); text-align: center; vertical-align: 1px; }
+.hf-slk-arw { display: inline-block; width: 10px; margin-left: 4px; font-size: 8px; color: var(--mu); text-align: center; vertical-align: 1px; }
 .hf-slk-retrow td { background: var(--surface); font-size: 11.5px; font-variant-numeric: tabular-nums; padding-top: 6px; padding-bottom: 6px; }
 .hf-slk-retlbl { font-size: 11px; font-weight: 600; color: var(--mu); text-transform: uppercase; letter-spacing: .03em; }
 .hf-slk-pos { color: var(--pos); font-weight: 600; }
@@ -1551,6 +1553,12 @@
 .hf-slk-act-new { background: rgba(22, 163, 74, .22); color: var(--pos); }
 .hf-slk-act-exit { background: rgba(220, 38, 38, .20); color: var(--neg); }
 .hf-slk-act-hold, .hf-slk-act-na { background: var(--surface); color: var(--mu); font-weight: 600; }
+.hf-slk-brcol { text-align: left !important; }
+.hf-slk-br { display: inline-flex; align-items: flex-end; gap: 6px; font-size: 11.5px; font-variant-numeric: tabular-nums; color: var(--navy); }
+.hf-slk-br-part { display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
+.hf-slk-br-lbl { font-size: 9px; font-weight: 600; color: var(--mu); text-transform: uppercase; letter-spacing: .03em; }
+.hf-slk-br-w { font-weight: 700; }
+.hf-slk-br-op { color: var(--mu); padding-bottom: 1px; }
 .hf-slk-note { margin: 14px 2px 0; font-size: 11.5px; line-height: 1.55; color: var(--mu); }
 .hf-slk-note b { color: var(--navy); font-weight: 600; }
 .hf-stocklookup-empty { color: var(--mu); font-size: 13px; padding: 24px; text-align: center; }

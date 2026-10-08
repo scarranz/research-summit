@@ -539,24 +539,46 @@ async function hfStockLookupSelect(ticker) {
   renderStockLookupTable(ticker, rows, monthlyCloseMap(loaded[1], ticker));
 }
 
-// Last-quarter move from implied shares (13F value / quarter-end close),
-// so a weight that only moved with the price reads as Hold, not a trim.
-// Hold band is +/-2%: the adjusted series drifts a little with dividends.
-function slkActivity(prevVal, curVal, prevPx, curPx) {
-  var had = prevVal != null && prevVal > 0, has = curVal != null && curVal > 0;
+// value_usd is stored as filed, and some quarters are in $ thousands
+// (Duquesne 2023Q1-2026Q1, Altimeter 2022Q4), so a ~1000x jump between
+// two quarters is a units change, not a trade.
+function unitFix(ratio) { return ratio > 300 ? ratio / 1000 : ratio < 1 / 300 ? ratio * 1000 : ratio; }
+
+// Last-quarter move, split into what the fund did and what the market
+// did. With V = 13F value of the position, w = its weight, P = price:
+//   shares ratio = (V1/P1) / (V0/P0)   -- implied shares, so price drift
+//                                         isn't read as a trade
+//   book ratio   = (V1/w1) / (V0/w0)   -- the fund's whole 13F book
+//   w1/w0 = (P1/P0) x shares ratio / book ratio   (reconciles exactly)
+// Hold band is +/-2%: the adjusted price series drifts with dividends.
+function slkActivity(prev, cur, prevPx, curPx) {
+  var had = prev && prev.v > 0, has = cur && cur.v > 0;
   if (!had && !has) return null;
   if (!had) return { cls: 'new', label: 'New' };
   if (!has) return { cls: 'exit', label: 'Exit' };
   if (!prevPx || !curPx) return { cls: 'na', label: 'n/a' };
-  // value_usd is stored as filed, and some quarters are in $ thousands
-  // (Duquesne 2023Q1-2026Q1, Altimeter 2022Q4), so a ~1000x jump between
-  // two quarters is a units change, not a trade.
-  var ratio = (curVal / curPx) / (prevVal / prevPx);
-  if (ratio > 300) ratio /= 1000; else if (ratio < 1 / 300) ratio *= 1000;
-  var chg = ratio - 1;
-  if (Math.abs(chg) < 0.02) return { cls: 'hold', label: 'Hold' };
-  var pct = (chg > 0 ? '+' : '') + (chg * 100).toFixed(0) + '%';
-  return chg > 0 ? { cls: 'add', label: 'Add ' + pct } : { cls: 'trim', label: 'Trim ' + pct };
+  var sh = unitFix((cur.v / curPx) / (prev.v / prevPx)) - 1;
+  var out = Math.abs(sh) < 0.02 ? { cls: 'hold', label: 'Hold' }
+    : sh > 0 ? { cls: 'add', label: 'Add ' + slkPct(sh) } : { cls: 'trim', label: 'Trim ' + slkPct(sh) };
+  out.bridge = {
+    weight: cur.w / prev.w - 1,
+    price: curPx / prevPx - 1,
+    shares: sh,
+    book: prev.w > 0 && cur.w > 0 ? unitFix((cur.v / cur.w) / (prev.v / prev.w)) - 1 : null,
+  };
+  return out;
+}
+
+function slkPct(x) { return (x >= 0 ? '+' : '') + (x * 100).toFixed(0) + '%'; }
+
+function slkBridgeHtml(b) {
+  if (!b) return '';
+  function part(lbl, x, cls) { return '<span class="hf-slk-br-part"><span class="hf-slk-br-lbl">' + lbl + '</span><span class="' + (cls || '') + '">' + (x == null ? 'n/a' : slkPct(x)) + '</span></span>'; }
+  return '<span class="hf-slk-br" title="Weight change = (1 + stock return) &times; (1 + change in shares) &divide; (1 + change in the fund&rsquo;s total 13F book) &minus; 1">' +
+    part('Weight', b.weight, 'hf-slk-br-w') + '<span class="hf-slk-br-op">=</span>' +
+    part('Stock', b.price) + '<span class="hf-slk-br-op">&times;</span>' +
+    part('Shares', b.shares) + '<span class="hf-slk-br-op">&divide;</span>' +
+    part('Book', b.book) + '</span>';
 }
 
 function renderStockLookupTable(ticker, rows, px) {
@@ -604,6 +626,7 @@ function renderStockLookupTable(ticker, rows, px) {
     html += '<th class="nr' + (isCur ? ' ivd-cmp-current' : '') + '">' + esc(periodLabel(p)) + (isCur ? ' <span class="ivd-cmp-current-tag">Current</span>' : '') + '</th>';
   });
   html += '<th class="hf-slk-actcol" title="Buying or selling in ' + esc(curLabel) + ', from implied shares (13F value / quarter-end price)">Activity ' + esc(curLabel) + '</th>';
+  html += '<th class="hf-slk-brcol">Why the weight moved in ' + esc(curLabel) + '</th>';
   html += '</tr></thead><tbody>';
 
   // The stock's own price return in each quarter, so a weight arrow can
@@ -615,7 +638,7 @@ function renderStockLookupTable(ticker, rows, px) {
     var cls = r == null ? '' : r >= 0 ? ' hf-slk-pos' : ' hf-slk-neg';
     html += '<td class="nr' + cls + (i === closes.length - 1 ? ' ivd-cmp-current' : '') + '">' + (r == null ? '<span class="hf-stocklookup-dash">&mdash;</span>' : (r >= 0 ? '+' : '') + r.toFixed(1) + '%') + '</td>';
   });
-  html += '<td class="hf-slk-actcol"></td></tr>';
+  html += '<td class="hf-slk-actcol"></td><td class="hf-slk-brcol"></td></tr>';
 
   invKeys.forEach(function(key) {
     var inv = INVESTORS.filter(function(i) { return i.key === key; })[0];
@@ -641,8 +664,9 @@ function renderStockLookupTable(ticker, rows, px) {
       html += '<td class="nr hf-stocklookup-w' + (isCur ? ' ivd-cmp-current' : '') + '">' + (w != null ? w.toFixed(2) + '%' + arrow : '<span class="hf-stocklookup-dash">&mdash;</span>') + '</td>';
     });
     var cur = invData[latestKey], prev = invData[prevKey];
-    var act = slkActivity(prev ? prev.v : null, cur ? cur.v : null, closes[closes.length - 2], closes[closes.length - 1]);
+    var act = slkActivity(prev, cur, closes[closes.length - 2], closes[closes.length - 1]);
     html += '<td class="hf-slk-actcol">' + (act ? '<span class="hf-slk-act hf-slk-act-' + act.cls + '">' + esc(act.label) + '</span>' : '') + '</td>';
+    html += '<td class="hf-slk-brcol">' + (act ? slkBridgeHtml(act.bridge) : '') + '</td>';
     html += '</tr>';
   });
   html += '</tbody></table></div>';

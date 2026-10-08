@@ -27,6 +27,24 @@
 #pm-root td.num{font-variant-numeric:tabular-nums;}
 #pm-root td.muted{color:var(--mu);}
 
+/* Fixed column widths, shared via colGroup() by the book, every portfolio and the
+   benchmark so they line up vertically regardless of whether a cell holds text, a
+   number or a typed input (auto-layout would size each table to its own content and
+   let them drift). The name column carries no width and soaks up the remaining
+   space; the long Growth header is allowed to wrap rather than overflow its cell. */
+#pm-root table.pm-fixed{table-layout:fixed;min-width:960px;}
+#pm-root table.pm-fixed th{white-space:normal;}
+#pm-root .pm-c-name{width:190px;}
+#pm-root .pm-c-wt{width:92px;}
+#pm-root .pm-c-q{width:88px;}
+#pm-root .pm-c-mc{width:112px;}
+#pm-root .pm-c-m{width:106px;}
+#pm-root .pm-c-v{width:104px;}
+#pm-root .pm-c-g{width:150px;}
+#pm-root .pm-c-peg{width:66px;}
+#pm-root .pm-c-beta{width:76px;}
+#pm-root .pm-c-act{width:32px;}
+
 /* Sub-tabs (Portfolio / Paper) — underline style */
 #pm-root .pm-subnav{display:flex;gap:0;border-bottom:1px solid var(--bdr);margin-bottom:20px;}
 #pm-root .pm-pill{border:none;border-bottom:2px solid transparent;background:transparent;
@@ -110,9 +128,9 @@
 #pm-root input.pm-tk::placeholder{text-transform:none;}
 #pm-root input.pm-wt{width:72px;}
 #pm-root input.pm-inp:focus{outline:none;border-color:var(--accent);}
-#pm-root .pm-add{font-family:inherit;font-size:12px;font-weight:600;color:var(--steel);
-  background:var(--w);border:1px dashed var(--bdr);border-radius:7px;padding:5px 12px;
-  cursor:pointer;margin:8px 0 4px 12px;}
+#pm-root .pm-add{font-family:inherit;font-size:11px;font-weight:600;color:var(--steel);
+  background:var(--w);border:1px dashed var(--bdr);border-radius:6px;padding:3px 10px;
+  line-height:1.4;cursor:pointer;margin:5px 0 1px 12px;}
 #pm-root .pm-add:hover{border-color:var(--steel);color:var(--navy);background:var(--pale);}
 #pm-root .pm-del{border:none;background:transparent;color:var(--mu);cursor:pointer;
   font-size:15px;line-height:1;padding:0 4px;}
@@ -161,7 +179,9 @@
    as another holding. Columns mirror the table above (shared headRow). */
 #pm-root .pm-bmk-h{font-size:10px;color:var(--steel);font-weight:700;letter-spacing:.08em;
   text-transform:uppercase;margin:26px 0 8px;}
-#pm-root .card.pm-bmk{background:var(--pale);border-color:var(--bdr);border-left:3px solid var(--steel);}
+/* Thicker steel left border marks it as the benchmark; drop 2px of left padding to
+   keep the content box (and so every column) aligned with the book card's 1px border. */
+#pm-root .card.pm-bmk{background:var(--pale);border-color:var(--bdr);border-left:3px solid var(--steel);padding-left:4px;}
 #pm-root .card.pm-bmk th{background:transparent;}
 #pm-root .card.pm-bmk tbody tr:hover{background:transparent;}
 #pm-root .card.pm-bmk td{border-bottom:none;}

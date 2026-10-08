@@ -707,7 +707,8 @@ function portfolioSegment(p) {
   const s = weightedStats(items), pb = portBeta(items), q = quoteCount();
   return `
     <div class="card pm-seg${p.collapsed ? ' is-collapsed' : ''}" data-seg="pf">
-      <table data-side="pf" data-pf="${p.id}">
+      <table class="pm-fixed" data-side="pf" data-pf="${p.id}">
+        ${colGroup()}
         <thead>${headRow('<th></th>')}${pfSummaryRow(p, s, pb, items)}</thead>
         <tbody id="pf-body-${p.id}">${pfBody(p)}</tbody>
         <tfoot id="pf-foot-${p.id}">${cashRow(s, q, '<td class="pm-actions"></td>')}</tfoot>
@@ -830,6 +831,22 @@ const metricCols = () => (showQuote ? 6 : 4);
 // trailing actions column.
 const colSpan = (extra) => 2 + quoteCount() + metricCols() + (extra || 0);
 
+// A <colgroup> so the book, every portfolio and the benchmark — each its own table —
+// share identical column widths and line up vertically, even though their cells mix
+// text, numbers and typed inputs (plain auto-layout sizes each table to its own
+// content, so they drift). Mirrors headRow's column set exactly, under the same
+// showQuote / showEvCols gating; the name column is left flexible to absorb the
+// leftover width, and the trailing actions column closes every one of these tables.
+function colGroup() {
+  let c = '<col class="pm-c-name"><col class="pm-c-wt">';
+  if (showQuote) c += '<col class="pm-c-q"><col class="pm-c-mc">';
+  if (showEvCols()) c += '<col class="pm-c-q"><col class="pm-c-q">';
+  c += '<col class="pm-c-m">';
+  if (showQuote) c += '<col class="pm-c-v"><col class="pm-c-v">';
+  c += '<col class="pm-c-g"><col class="pm-c-peg"><col class="pm-c-beta"><col class="pm-c-act">';
+  return `<colgroup>${c}</colgroup>`;
+}
+
 function headRow(trailing) {
   const p = periodInfo();
   const m = METRICS[metricSel];
@@ -854,7 +871,8 @@ function benchmarkTable() {
   return `
     <h3 class="pm-bmk-h">Benchmark</h3>
     <div class="card pm-bmk">
-      <table>
+      <table class="pm-fixed">
+        ${colGroup()}
         <thead>${headRow('<th></th>')}</thead>
         <tbody>
           <tr data-ticker="${b.ticker}">
@@ -961,7 +979,8 @@ function portfolioTable() {
       ${newPortfolioBar()}
     </div>
     <div class="card pm-seg${bookCollapsed ? ' is-collapsed' : ''}" data-seg="summit">
-      <table data-side="portfolio">
+      <table class="pm-fixed" data-side="portfolio">
+        ${colGroup()}
         <thead>${headRow('<th></th>')}${bookSummaryRow()}</thead>
         <tbody id="pm-book-body">${bookBody()}</tbody>
         <tfoot id="pm-book-foot">${bookCashRow()}</tfoot>
@@ -1951,7 +1970,8 @@ function paperTable() {
     ${metricBar()}
     ${quoteToggle()}
     <div class="card">
-      <table data-side="paper">
+      <table class="pm-fixed" data-side="paper">
+        ${colGroup()}
         <thead>${headRow('<th></th>')}</thead>
         <tbody id="pm-paper-body">
           ${paperGroup('Passive', 'passive')}

@@ -16,6 +16,7 @@ var exclSecs    = new Set();
 var exclIGs     = new Set();
 var baseR       = null;
 var _chart      = null;
+var _chartSim   = null;
 var _chartFull  = [];
 var attrTab     = 'sector';
 var attrMode    = 'chart';
@@ -55,7 +56,7 @@ var _paretoCustomN = 0;
 var YEAR_HOCS    = { ytd2026: [12, 25], y2025: [2, 11] };
 var _colorMode   = 'orig';   // 'orig' | 'A' | 'B' | 'C'
 var _colorMaxPos = 0, _colorMaxNeg = 0;
-var _wlTab        = 'C';
+var _wlTab        = 'A';
 var _wlYear       = 'ytd2026';
 var _attrChartYears = new Set(['ytd2026']);
 var _attrChartSectors = new Set();  // empty = all sectors
@@ -64,9 +65,7 @@ var _attrTableChartView = false;    // table section chart toggle
 var _compYear = 'ytd2026';          // Index Composition year
 var _attrDecimals = 2;
 var lastBaseR    = null;
-var _scatterZoom = 1.0;
-var _scatterPanX = 0;
-var _scatterPanY = 0;
+var _scatterViewport  = null;   // { xLo, xHi, yLo, yHi } — null = use global axes
 var _scatterDragState = null;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -412,31 +411,41 @@ function buildAttrChartSectorPills() {
   var box = document.getElementById('ndx-attr-chart-sector-pills');
   if (!box) return;
   var secList = sectors.filter(function(s) { return s !== CASH; });
-  box.innerHTML = secList.map(function(s) {
+  var allActive = _attrChartSectors.size === 0;
+  var allBtn = '<button class="ndx-tab-btn' + (allActive ? ' active' : '') + '" ' +
+    'onclick="ndxClearAttrChartSectors()">All Sectors</button>';
+  var pills = secList.map(function(s) {
     var active = _attrChartSectors.has(s);
-    return '<button class="ndx-pill' + (active ? ' active' : '') + '" ' +
-      'onclick="ndxToggleAttrChartSector(\'' + s.replace(/'/g, "\\'") + '\')" ' +
-      'style="font-size:10px;padding:2px 8px">' + dispSec(s) + '</button>';
+    return '<button class="ndx-tab-btn' + (active ? ' active' : '') + '" ' +
+      'onclick="ndxToggleAttrChartSector(\'' + s.replace(/'/g, "\\'") + '\')">' + dispSec(s) + '</button>';
   }).join('');
+  box.innerHTML = allBtn + pills;
 }
 
-function ndxToggleAttrChartSector(s) {
+window.ndxClearAttrChartSectors = function() {
+  _attrChartSectors.clear();
+  buildAttrChartSectorPills();
+  renderAttrChart();
+};
+
+window.ndxToggleAttrChartSector = function(s) {
   if (_attrChartSectors.has(s)) _attrChartSectors.delete(s);
   else _attrChartSectors.add(s);
   buildAttrChartSectorPills();
   renderAttrChart();
-}
+};
 
-function ndxSetAttrChartTab(tab) {
+window.ndxSetAttrChartTab = function(tab) {
   _attrChartTab = tab;
   document.querySelectorAll('[data-attr-chart-tab]').forEach(function(b) {
     b.classList.toggle('active', b.dataset.attrChartTab === tab);
   });
   renderAttrChart();
-}
+};
 
-function renderAttrChart() {
-  var canvas = document.getElementById('ndx-attr-canvas');
+function renderAttrChart(canvasId) {
+  var isSim = !!canvasId;
+  var canvas = document.getElementById(canvasId || 'ndx-attr-canvas');
   if (!canvas || typeof Chart === 'undefined') return;
 
   var years = Array.from(_attrChartYears);
@@ -495,8 +504,13 @@ function renderAttrChart() {
   var xMin = axr.min, xMax = axr.max;
   var rowH = isIG ? 26 : 30;
   var h    = Math.max(260, items.length * rowH + 60);
-  var box  = document.getElementById('ndx-chart-section-box');
-  if (box) box.style.height = h + 'px';
+  if (isSim) {
+    var box = document.getElementById('ndx-attr-chart-box');
+    if (box) box.style.height = h + 'px';
+  } else {
+    var box = document.getElementById('ndx-chart-section-box');
+    if (box) box.style.height = h + 'px';
+  }
 
   var datasets = years.map(function(yr) {
     var data = items.map(function(it) {
@@ -508,9 +522,10 @@ function renderAttrChart() {
   });
 
   var showLegend = years.length > 1;
-  if (_chart) { _chart.destroy(); _chart = null; }
+  if (isSim) { if (_chartSim) { _chartSim.destroy(); _chartSim = null; } }
+  else        { if (_chart)   { _chart.destroy();   _chart    = null; } }
 
-  _chart = new Chart(canvas, {
+  var _newc = new Chart(canvas, {
     type: 'bar',
     data: { labels: labels, datasets: datasets },
     options: {
@@ -536,6 +551,7 @@ function renderAttrChart() {
       }
     }
   });
+  if (isSim) { _chartSim = _newc; } else { _chart = _newc; }
 }
 
 // ── Squarified treemap algorithm ──────────────────────────────────────────
@@ -798,7 +814,7 @@ function getOrCreateModal() {
   if (m) return m;
   m = document.createElement('div');
   m.id = 'ndx-ig-modal';
-  m.style.cssText = 'display:none;position:fixed;inset:0;z-index:2000;background:rgba(15,25,38,.55);' +
+  m.style.cssText = 'display:none;position:fixed;inset:0;z-index:2100;background:rgba(15,25,38,.55);' +
     'align-items:center;justify-content:center;backdrop-filter:blur(2px)';
   m.innerHTML =
     '<div style="background:var(--w,#fff);border-radius:14px;padding:28px 28px 22px;' +
@@ -1033,13 +1049,13 @@ function renderAttrTable(res) {
     if (a === CASH) return 1; if (b === CASH) return -1;
     if (_sortKey === 'name')   return _sortDir * a.localeCompare(b);
     if (_sortKey === 'weight') return _sortDir * ((_snapN[b]||{w:0}).w - (_snapN[a]||{w:0}).w);
-    return _sortDir * ((baseR.bySec[b]||0) - (baseR.bySec[a]||0));
+    return _sortDir * ((res.bySec[b]||0) - (res.bySec[a]||0));
   }
   function cmpIG(a, b) {
     if (a === CASH) return 1; if (b === CASH) return -1;
     if (_sortKey === 'name')   return _sortDir * a.localeCompare(b);
     if (_sortKey === 'weight') return _sortDir * ((_snapN['ig:'+b]||{w:0}).w - (_snapN['ig:'+a]||{w:0}).w);
-    return _sortDir * ((baseR.byIG[b]||0) - (baseR.byIG[a]||0));
+    return _sortDir * ((res.byIG[b]||0) - (res.byIG[a]||0));
   }
   var sortedSecs = sectors.slice().sort(cmpSec);
   var dw = computeDisplayWeights(exclSecs, exclIGs);
@@ -1083,7 +1099,7 @@ function renderAttrTable(res) {
     });
   html += '<tr style="border-top:2px solid var(--navy);font-weight:700">' +
     '<td></td><td colspan="3" style="color:var(--navy)">Total</td>' +
-    '<td class="num" style="color:' + colr(baseR.ytd) + ';font-weight:700">' + fmtYTD(baseR.ytd) + '</td></tr>';
+    '<td class="num" style="color:' + colr(res.ytd) + ';font-weight:700">' + fmtYTD(res.ytd) + '</td></tr>';
   tbody.innerHTML = html;
   updateArrows();
 }
@@ -1248,17 +1264,17 @@ function renderDumbbell() {
     [compHocs[0], compHocs[compHocs.length - 1]].forEach(function(hoc, idx) {
       var snap = idx === 0 ? compSnap0 : compSnapN;
       hoc.sec.forEach(function(s) {
+        if (isCash(s.t)) return;
         if (!snap[s.s]) snap[s.s] = { count: 0, w: 0 };
-        var countable = !isCash(s.t) && (s.w || 0) > 0;
-        if (countable) snap[s.s].count++;
+        if ((s.w || 0) > 0) snap[s.s].count++;
         snap[s.s].w += (s.w || 0);
       });
     });
   }
 
   var rows = sectors.filter(function(s) { return s !== CASH; }).map(function(s) {
-    return { name: dispSec(s), w0: (compSnap0[s]||{w:0}).w, w1: (compSnapN[s]||{w:0}).w };
-  }).sort(function(a, b) { return b.w0 - a.w0; });
+    return { sec: s, name: dispSec(s), w0: (compSnap0[s]||{w:0}).w, w1: (compSnapN[s]||{w:0}).w };
+  }).sort(function(a, b) { return (_snap0[b.sec]||{w:0}).w - (_snap0[a.sec]||{w:0}).w; });
 
   var VW = 900, rowH = 30, P = { t: 40, r: 160, b: 26, l: 200 };
   var VH = P.t + rows.length * rowH + P.b;
@@ -1393,70 +1409,74 @@ function renderScatter(securities) {
   var dots = securities.filter(function(d) { return d.w1 > 0 || d.w0 > 0; });
   var VW = 900, P = { t: 40, r: 30, b: 50, l: 60 };
   var VH = 480;
-
-  var xs = dots.map(function(d) { return d.ret; });
-  var ys = dots.map(function(d) { return d.w1; });
-  var xLo = _globalScatterAxes.xLo != null ? _globalScatterAxes.xLo : Math.min.apply(null, xs) - (Math.max.apply(null, xs) - Math.min.apply(null, xs)) * 0.05;
-  var xHi = _globalScatterAxes.xHi != null ? _globalScatterAxes.xHi : Math.max.apply(null, xs) + (Math.max.apply(null, xs) - Math.min.apply(null, xs)) * 0.05;
-  var yHi = _globalScatterAxes.yHi != null ? _globalScatterAxes.yHi : Math.max.apply(null, ys) * 1.06;
-
   var cw = VW - P.l - P.r, ch = VH - P.t - P.b;
+
+  // Viewport-based axes — zoom/pan changes these ranges, not the dot positions
+  var axes = _scatterViewport || _globalScatterAxes;
+  var xLo = axes.xLo != null ? axes.xLo : -5;
+  var xHi = axes.xHi != null ? axes.xHi :  5;
+  var yLo = axes.yLo || 0;
+  var yHi = axes.yHi != null ? axes.yHi : 10;
+
   function X(v) { return P.l + (v - xLo) / (xHi - xLo) * cw; }
-  function Y(v) { return P.t + ch - v / yHi * ch; }
+  function Y(v) { return P.t + ch - (v - yLo) / (yHi - yLo) * ch; }
 
   var maxAbsC = Math.max.apply(null, dots.map(function(d) { return Math.abs(d.contrib); })) || 1;
 
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH,
-    style: 'width:100%;height:auto;display:block;cursor:' + (_scatterZoom > 1 ? 'grab' : 'default') });
+    style: 'width:100%;height:auto;display:block;cursor:crosshair' });
 
-  // Fixed axes / gridlines — NOT in the zoom group so they stay stable
-  var xStep = (xHi - xLo) > 60 ? 20 : (xHi - xLo) > 30 ? 10 : 5;
+  // Axes & gridlines — drawn directly on SVG (no group transform, always correct)
+  var xRange = xHi - xLo;
+  var xStep = xRange > 60 ? 20 : xRange > 30 ? 10 : xRange > 10 ? 5 : xRange > 4 ? 2 : 1;
   var xStart = Math.ceil(xLo / xStep) * xStep;
-  for (var xv = xStart; xv <= xHi + xStep * 0.5; xv += xStep) {
+  for (var xv = xStart; xv <= xHi + xStep * 0.01; xv += xStep) {
     svg.appendChild(se('line', { x1: X(xv), x2: X(xv), y1: P.t, y2: VH - P.b, stroke: '#E5E8EC', 'stroke-width': 1 }));
-    var xt = se('text', { x: X(xv), y: VH - P.b + 14, 'text-anchor': 'middle', 'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0' });
-    xt.textContent = (xv > 0 ? '+' : '') + xv.toFixed(0) + '%'; svg.appendChild(xt);
+    var xt = se('text', { x: X(xv), y: VH - P.b + 14, 'text-anchor': 'middle',
+      'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0' });
+    xt.textContent = (xv > 0 ? '+' : '') + xv.toFixed(xStep < 1 ? 1 : 0) + '%';
+    svg.appendChild(xt);
   }
   if (xLo < 0 && xHi > 0) {
-    svg.appendChild(se('line', { x1: X(0), x2: X(0), y1: P.t, y2: VH - P.b, stroke: '#C0C8D0', 'stroke-width': 1.5 }));
+    svg.appendChild(se('line', { x1: X(0), x2: X(0), y1: P.t, y2: VH - P.b,
+      stroke: '#C0C8D0', 'stroke-width': 1.5 }));
   }
-  var yStep = yHi > 40 ? 10 : yHi > 15 ? 5 : 2;
-  for (var yv = 0; yv <= yHi; yv += yStep) {
-    svg.appendChild(se('line', { x1: P.l, x2: VW - P.r, y1: Y(yv), y2: Y(yv), stroke: '#E5E8EC', 'stroke-width': 1 }));
-    var ytxt = se('text', { x: P.l - 6, y: Y(yv) + 4, 'text-anchor': 'end', 'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0' });
+  var yRange = yHi - yLo;
+  var yStep = yRange > 40 ? 10 : yRange > 15 ? 5 : yRange > 6 ? 2 : 1;
+  var yvStart = Math.ceil(yLo / yStep) * yStep;
+  for (var yv = yvStart; yv <= yHi + yStep * 0.01; yv += yStep) {
+    svg.appendChild(se('line', { x1: P.l, x2: VW - P.r, y1: Y(yv), y2: Y(yv),
+      stroke: '#E5E8EC', 'stroke-width': 1 }));
+    var ytxt = se('text', { x: P.l - 6, y: Y(yv) + 4, 'text-anchor': 'end',
+      'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0' });
     ytxt.textContent = yv + '%'; svg.appendChild(ytxt);
   }
-  var xal = se('text', { x: P.l + cw / 2, y: VH - 8, 'text-anchor': 'middle', 'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#8A93A0' });
+  var xal = se('text', { x: P.l + cw / 2, y: VH - 8, 'text-anchor': 'middle',
+    'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#8A93A0' });
   xal.textContent = 'Security return (%, compounded)'; svg.appendChild(xal);
-  var yal = se('text', { x: 0, y: 0, 'text-anchor': 'middle', 'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#8A93A0',
+  var yal = se('text', { x: 0, y: 0, 'text-anchor': 'middle',
+    'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#8A93A0',
     transform: 'translate(12,' + (P.t + ch / 2) + ') rotate(-90)' });
   yal.textContent = 'Closing weight (%)'; svg.appendChild(yal);
 
-  // Clip region for dots
-  var clipId = 'ndx-scatter-clip';
-  var defs = se('defs', {});
-  var clip = se('clipPath', { id: clipId });
-  clip.appendChild(se('rect', { x: P.l, y: P.t, width: cw, height: ch }));
-  defs.appendChild(clip); svg.appendChild(defs);
+  // Top 10 contributors by |contrib| from FINAL snapshot of this year (always labeled)
+  var finalSnap = computeSecurities(new Set(), new Set(), hocsForYear(_scatterYear))
+    .filter(function(d) { return !isCash(d.name) && (d.w0 > 0 || d.w1 > 0); });
+  finalSnap.sort(function(a, b) { return Math.abs(b.contrib) - Math.abs(a.contrib); });
+  var top10Names = new Set(finalSnap.slice(0, 10).map(function(d) { return d.name; }));
 
-  // Zoomable content group
-  var content = se('g', { id: 'ndx-scatter-content', 'clip-path': 'url(#' + clipId + ')' });
-  content.setAttribute('transform',
-    'translate(' + _scatterPanX + ',' + _scatterPanY + ') scale(' + _scatterZoom + ')');
-  svg.appendChild(content);
-
-  // Identify top 10 by |contrib| for labeling
-  var sorted = dots.slice().sort(function(a, b) { return Math.abs(b.contrib) - Math.abs(a.contrib); });
-  var top10 = new Set(sorted.slice(0, 10).map(function(d) { return d.name; }));
-
+  // Draw dots — directly on SVG, no group transform
   var labelItems = [];
   dots.forEach(function(d) {
     var cx = X(d.ret), cy = Y(d.w1);
+    // Skip dots outside viewport (they'd be drawn outside the chart area)
+    if (cx < P.l - 2 || cx > VW - P.r + 2 || cy < P.t - 2 || cy > VH - P.b + 2) return;
     var r = Math.max(3, Math.min(14, Math.sqrt(Math.abs(d.contrib)) * 4));
     var fillC = contribColor(d.contrib, maxAbsC);
     var strokeC = d.contrib >= 0 ? '#177A4E' : '#9B2A20';
     var g = se('g', { class: 'mk' });
-    g.appendChild(se('circle', { cx: cx, cy: cy, r: r, fill: fillC, 'fill-opacity': 0.82, stroke: strokeC, 'stroke-width': 1.2 }));
+    g.appendChild(se('circle', { cx: cx, cy: cy, r: r, fill: fillC, 'fill-opacity': 0.82,
+      stroke: strokeC, 'stroke-width': 1.2 }));
     bindTip(g,
       '<b style="font-size:13px">' + d.name + (d.co && d.co !== d.name ? ' — ' + d.co : '') + '</b>' +
       '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
@@ -1464,19 +1484,11 @@ function renderScatter(securities) {
       '<br>Return: ' + (d.ret >= 0 ? '+' : '') + d.ret.toFixed(2) + '%' +
       '<br>Close weight: ' + d.w1.toFixed(3) + '%' +
       '<br>Contribution: ' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(4) + '%</span>');
-    content.appendChild(g);
-    if (top10.has(d.name)) labelItems.push({ name: d.name, cx: cx, cy: cy, r: r });
-
-    // All-ticker labels — hidden until zoom ≥ 1.5
-    var lbl = se('text', { x: cx, y: cy + r + 9, 'text-anchor': 'middle',
-      'font-family': 'Inter,sans-serif', 'font-size': 7, fill: '#1E2D3D', 'pointer-events': 'none',
-      class: 'ndx-scatter-lbl' });
-    lbl.style.display = _scatterZoom >= 1.5 ? '' : 'none';
-    lbl.textContent = d.name;
-    content.appendChild(lbl);
+    svg.appendChild(g);
+    if (top10Names.has(d.name)) labelItems.push({ name: d.name, cx: cx, cy: cy, r: r });
   });
 
-  // Top-10 labels (always visible, larger)
+  // Top-10 labels (always visible regardless of zoom level)
   var placed = [];
   labelItems.sort(function(a, b) { return b.cy - a.cy; });
   labelItems.forEach(function(item) {
@@ -1486,77 +1498,83 @@ function renderScatter(securities) {
       if (Math.abs(lx - p.lx) < 50 && Math.abs(ly - p.ly) < lh + 1) ly = p.ly - lh - 2;
     });
     ly = Math.max(P.t + fs, Math.min(VH - P.b - 2, ly));
-    var t = se('text', { x: lx, y: ly, 'font-family': 'Inter,sans-serif', 'font-size': fs, 'font-weight': '700', fill: '#1E2D3D' });
-    t.textContent = item.name; content.appendChild(t);
+    var t = se('text', { x: lx, y: ly, 'font-family': 'Inter,sans-serif',
+      'font-size': fs, 'font-weight': '700', fill: '#1E2D3D', 'pointer-events': 'none' });
+    t.textContent = item.name; svg.appendChild(t);
     placed.push({ lx: lx, ly: ly });
   });
 
-  // Wheel zoom
+  // Wheel zoom — viewport-based (axes re-computed, entire chart re-renders)
   svg.addEventListener('wheel', function(e) {
     e.preventDefault();
-    var factor = e.deltaY < 0 ? 1.2 : 1 / 1.2;
-    var newZoom = Math.min(8, Math.max(0.5, _scatterZoom * factor));
+    var factor = e.deltaY < 0 ? 1.3 : 1 / 1.3;
     var rect = svg.getBoundingClientRect();
-    var scaleX = VW / rect.width, scaleY = VH / rect.height;
-    var mx = (e.clientX - rect.left) * scaleX;
-    var my = (e.clientY - rect.top) * scaleY;
-    _scatterPanX = mx - (mx - _scatterPanX) * (newZoom / _scatterZoom);
-    _scatterPanY = my - (my - _scatterPanY) * (newZoom / _scatterZoom);
-    _scatterZoom = newZoom;
-    svg.style.cursor = _scatterZoom > 1 ? 'grab' : 'default';
-    _applyScatterTransform();
+    var cxPx = Math.min(1, Math.max(0, ((e.clientX - rect.left) * (VW / rect.width) - P.l) / cw));
+    var cyFrac = 1 - Math.min(1, Math.max(0, ((e.clientY - rect.top) * (VH / rect.height) - P.t) / ch));
+    _scatterZoomViewport(factor, cxPx, cyFrac);
   }, { passive: false });
 
-  // Drag to pan
+  // Drag to pan — viewport-based
   svg.addEventListener('mousedown', function(e) {
-    if (_scatterZoom <= 1) return;
-    _scatterDragState = { startX: e.clientX, startY: e.clientY, panX0: _scatterPanX, panY0: _scatterPanY };
+    _scatterDragState = {
+      startX: e.clientX, startY: e.clientY,
+      vp: JSON.parse(JSON.stringify(_scatterViewport || _globalScatterAxes))
+    };
     svg.style.cursor = 'grabbing';
     e.preventDefault();
   });
   svg.addEventListener('mousemove', function(e) {
     if (!_scatterDragState) return;
     var rect = svg.getBoundingClientRect();
-    var scaleX = VW / rect.width, scaleY = VH / rect.height;
-    _scatterPanX = _scatterDragState.panX0 + (e.clientX - _scatterDragState.startX) * scaleX;
-    _scatterPanY = _scatterDragState.panY0 + (e.clientY - _scatterDragState.startY) * scaleY;
-    _applyScatterTransform();
+    var dxPx = (e.clientX - _scatterDragState.startX) * (VW / rect.width);
+    var dyPx = (e.clientY - _scatterDragState.startY) * (VH / rect.height);
+    var vp = _scatterDragState.vp;
+    var xRng = vp.xHi - vp.xLo, yRng = (vp.yHi - (vp.yLo || 0));
+    var dxData = -dxPx / cw * xRng;
+    var dyData =  dyPx / ch * yRng;
+    var g = _globalScatterAxes;
+    var nxLo = Math.max(g.xLo, Math.min(g.xHi - xRng, vp.xLo + dxData));
+    var nyLo = Math.max(0,     Math.min(g.yHi - yRng, (vp.yLo || 0) + dyData));
+    _scatterViewport = { xLo: nxLo, xHi: nxLo + xRng, yLo: nyLo, yHi: nyLo + yRng };
+    if (_scatterSecSnapshots[_scatterHocIdx]) renderScatter(_scatterSecSnapshots[_scatterHocIdx]);
   });
-  svg.addEventListener('mouseup', function() { _scatterDragState = null; svg.style.cursor = _scatterZoom > 1 ? 'grab' : 'default'; });
+  svg.addEventListener('mouseup',    function() { _scatterDragState = null; svg.style.cursor = 'crosshair'; });
   svg.addEventListener('mouseleave', function() { _scatterDragState = null; });
 
   var legend = document.createElement('div');
   legend.style.cssText = 'display:flex;gap:16px;font-size:11px;color:var(--mu);margin-top:8px;flex-wrap:wrap';
   legend.innerHTML =
     'Bubble area ∝ √|contribution| &nbsp;·&nbsp; ' +
-    '<span style="color:#177A4E;font-weight:600">●</span> Positive contribution &nbsp; ' +
-    '<span style="color:#9B2A20;font-weight:600">●</span> Negative &nbsp;·&nbsp; Top 10 labeled · scroll or +/− to zoom, drag to pan';
+    '<span style="color:#177A4E;font-weight:600">●</span> Positive &nbsp; ' +
+    '<span style="color:#9B2A20;font-weight:600">●</span> Negative &nbsp;·&nbsp; ' +
+    'Top 10 labeled &nbsp;·&nbsp; Scroll or +/− to zoom · drag to pan · ⟳ to reset';
   box.innerHTML = ''; box.appendChild(svg); box.appendChild(legend);
 }
 
-// ── Scatter zoom/pan ──────────────────────────────────────────────────────
-function _applyScatterTransform() {
-  var g = document.getElementById('ndx-scatter-content');
-  if (!g) return;
-  g.setAttribute('transform',
-    'translate(' + _scatterPanX + ',' + _scatterPanY + ') scale(' + _scatterZoom + ')');
-  var lbls = g.querySelectorAll('.ndx-scatter-lbl');
-  lbls.forEach(function(el) { el.style.display = _scatterZoom >= 1.5 ? '' : 'none'; });
+// ── Scatter zoom/pan — viewport-based ─────────────────────────────────────
+function _scatterZoomViewport(factor, cxFrac, cyFrac) {
+  cxFrac = cxFrac != null ? cxFrac : 0.5;
+  cyFrac = cyFrac != null ? cyFrac : 0.5;
+  var axes = _scatterViewport || _globalScatterAxes;
+  var xRng = axes.xHi - axes.xLo;
+  var yRng = axes.yHi - (axes.yLo || 0);
+  var pivX = axes.xLo + xRng * cxFrac;
+  var pivY = (axes.yLo || 0) + yRng * (1 - cyFrac);
+  var nxRng = xRng / factor, nyRng = yRng / factor;
+  var g = _globalScatterAxes;
+  var nxLo = Math.max(g.xLo, Math.min(g.xHi - nxRng, pivX - nxRng * cxFrac));
+  var nxHi = Math.min(g.xHi, nxLo + nxRng);
+  var nyLo = Math.max(0,     Math.min(g.yHi - nyRng, pivY - nyRng * (1 - cyFrac)));
+  var nyHi = Math.min(g.yHi, nyLo + nyRng);
+  _scatterViewport = { xLo: nxLo, xHi: nxHi, yLo: nyLo, yHi: nyHi };
+  if (_scatterSecSnapshots[_scatterHocIdx]) renderScatter(_scatterSecSnapshots[_scatterHocIdx]);
 }
 
-window.ndxScatterZoom = function(factor) {
-  var VW = 900, VH = 480;
-  var newZoom = Math.min(8, Math.max(0.5, _scatterZoom * factor));
-  var cx = VW / 2, cy = VH / 2;
-  _scatterPanX = cx - (cx - _scatterPanX) * (newZoom / _scatterZoom);
-  _scatterPanY = cy - (cy - _scatterPanY) * (newZoom / _scatterZoom);
-  _scatterZoom = newZoom;
-  _applyScatterTransform();
-};
+window.ndxScatterZoom = function(factor) { _scatterZoomViewport(factor); };
 
 window.ndxScatterReset = function() {
-  _scatterZoom = 1.0; _scatterPanX = 0; _scatterPanY = 0;
-  _applyScatterTransform();
+  _scatterViewport = null; _scatterDragState = null;
+  if (_scatterSecSnapshots[_scatterHocIdx]) renderScatter(_scatterSecSnapshots[_scatterHocIdx]);
 };
 
 // ── Beeswarm — contributions per security, lane per sector ────────────────
@@ -1618,7 +1636,7 @@ function _beeSvgForYear(yr, xLo, xHi, maxAbsC, multiYear) {
 
   var dotR = 5;
   var laneH = 72;
-  var P = { t: multiYear ? 20 : 36, b: 30, l: 20, r: 20 };
+  var P = { t: multiYear ? 52 : 38, b: 12, l: 20, r: 20 };
   var VW = 900;
   var VH = P.t + secList.length * laneH + P.b;
   var cw = VW - P.l - P.r;
@@ -1626,30 +1644,30 @@ function _beeSvgForYear(yr, xLo, xHi, maxAbsC, multiYear) {
 
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
 
-  // Year label for multi-year mode
+  // "Contribution (%)" label — top, bold
+  var axLbl = se('text', { x: P.l + cw / 2, y: 12, 'text-anchor': 'middle',
+    'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#2B3B4E', 'font-weight': '700' });
+  axLbl.textContent = 'Contribution (%)'; svg.appendChild(axLbl);
+
+  // Year label for multi-year mode (below the axis label)
   if (multiYear) {
-    var ylbl = se('text', { x: P.l + cw / 2, y: 14, 'text-anchor': 'middle',
-      'font-family': 'Inter,sans-serif', 'font-size': 12, fill: '#2B3B4E', 'font-weight': '700' });
+    var ylbl = se('text', { x: P.l + cw / 2, y: 28, 'text-anchor': 'middle',
+      'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#2B3B4E', 'font-weight': '600' });
     ylbl.textContent = YR_LABEL[yr]; svg.appendChild(ylbl);
   }
 
-  // X-axis ticks (top)
+  // X-axis ticks (top, below both labels)
   var xRange = xHi - xLo;
   var xStep = xRange > 8 ? 2 : xRange > 3 ? 1 : 0.5;
   var xStart = Math.ceil(xLo / xStep) * xStep;
   for (var xv = xStart; xv <= xHi + xStep * 0.5; xv += xStep) {
     svg.appendChild(se('line', { x1: X(xv), x2: X(xv), y1: P.t, y2: VH - P.b, stroke: '#EAEDEF', 'stroke-width': 1 }));
-    var xt = se('text', { x: X(xv), y: P.t - 8, 'text-anchor': 'middle', 'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0' });
+    var xt = se('text', { x: X(xv), y: P.t - 6, 'text-anchor': 'middle', 'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0' });
     xt.textContent = (xv > 0 ? '+' : '') + xv.toFixed(1) + '%'; svg.appendChild(xt);
   }
   if (xLo < 0 && xHi > 0) {
     svg.appendChild(se('line', { x1: X(0), x2: X(0), y1: P.t, y2: VH - P.b, stroke: '#C0C8D0', 'stroke-width': 1.5 }));
   }
-
-  // X axis bottom label
-  var axLbl = se('text', { x: P.l + cw / 2, y: VH - 2, 'text-anchor': 'middle',
-    'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0' });
-  axLbl.textContent = 'Contribution (%)'; svg.appendChild(axLbl);
 
   secList.forEach(function(sec, si) {
     var laneY = P.t + si * laneH + laneH / 2;
@@ -1739,47 +1757,41 @@ function renderPareto() {
 
   var years = Array.from(_paretoYears);
   var primaryYr = _paretoYears.has('ytd2026') ? 'ytd2026' : years[0];
-
-  var secsByYr = {}, totalRetByYr = {};
-  years.forEach(function(yr) {
-    var secs = getSecuritiesForYear(yr)
-      .filter(function(d) { return !isCash(d.name) && (d.w0 > 0 || d.w1 > 0) && d.sect !== CASH; });
-    secsByYr[yr] = secs;
-    totalRetByYr[yr] = _yearTotalRet(yr);
-  });
-
   var N = _paretoCustomN > 0 ? _paretoCustomN : _paretoN;
   var showAll = N === 0;
 
-  // Build row map: union of top-N pos + bottom-N neg from each active year
-  var rowMap = {};
+  // ── Per-year parallel rankings ──────────────────────────────────────────────
+  var yrData = {};
   years.forEach(function(yr) {
-    var secs = secsByYr[yr];
-    var pos = secs.filter(function(d) { return d.contrib >= 0; }).sort(function(a,b) { return b.contrib - a.contrib; });
-    var neg = secs.filter(function(d) { return d.contrib < 0;  }).sort(function(a,b) { return a.contrib - b.contrib; });
-    var selected = showAll ? secs : pos.slice(0, N).concat(neg.slice(0, N));
-    selected.forEach(function(d) {
-      if (!rowMap[d.name]) rowMap[d.name] = { name: d.name, co: d.co };
-      rowMap[d.name][yr] = { contrib: d.contrib, ret: d.ret, w1: d.w1, sect: d.sect, grp: d.grp };
-    });
+    var secs = getSecuritiesForYear(yr)
+      .filter(function(d) { return !isCash(d.name) && (d.w0 > 0 || d.w1 > 0) && d.sect !== CASH; });
+    var sorted = secs.slice().sort(function(a,b) { return b.contrib - a.contrib; });
+    var pos = sorted.filter(function(d) { return d.contrib >= 0; });
+    var neg = sorted.filter(function(d) { return d.contrib < 0; }).reverse();
+    if (!showAll) { pos = pos.slice(0, N); neg = neg.slice(0, N); }
+    // cumulative running sum for each list independently
+    var cumP = 0;
+    pos.forEach(function(d) { cumP += d.contrib; d.cum = cumP; });
+    var cumN = 0;
+    neg.forEach(function(d) { cumN += d.contrib; d.cum = cumN; });
+    yrData[yr] = {
+      pos: pos, neg: neg,
+      totalPos: pos.reduce(function(s,d){return s+d.contrib;},0),
+      totalNeg: neg.reduce(function(s,d){return s+d.contrib;},0)
+    };
   });
 
-  // Helper: best available contrib for a row (primaryYr first, then any other year)
-  function primaryContrib(r) {
-    if (r[primaryYr]) return r[primaryYr].contrib;
-    var yrs = Array.from(_paretoYears);
-    for (var i = 0; i < yrs.length; i++) { if (r[yrs[i]]) return r[yrs[i]].contrib; }
-    return 0;
-  }
-  var allRows = Object.keys(rowMap).map(function(k) { return rowMap[k]; });
-  var posRows = allRows.filter(function(r) { return primaryContrib(r) >= 0; })
-    .sort(function(a,b) { return primaryContrib(b) - primaryContrib(a); });
-  var negRows = allRows.filter(function(r) { return primaryContrib(r) < 0; })
-    .sort(function(a,b) { return primaryContrib(a) - primaryContrib(b); });
-  var rows = posRows.concat(negRows);
-  var sepIdx = posRows.length;
+  // For chart view: keep single-year row list for _renderParetoChartSVG
+  var chartSecs = getSecuritiesForYear(primaryYr)
+    .filter(function(d) { return !isCash(d.name) && (d.w0 > 0 || d.w1 > 0) && d.sect !== CASH; });
+  var chartPos = chartSecs.filter(function(d){return d.contrib>=0;}).sort(function(a,b){return b.contrib-a.contrib;});
+  var chartNeg = chartSecs.filter(function(d){return d.contrib<0;}).sort(function(a,b){return a.contrib-b.contrib;});
+  var chartRows = (showAll ? chartPos : chartPos.slice(0,N)).concat(showAll ? chartNeg : chartNeg.slice(0,N));
+  var chartSepIdx = showAll ? chartPos.length : Math.min(chartPos.length, N);
+  var totalRetByYr = {};
+  years.forEach(function(yr) { totalRetByYr[yr] = _yearTotalRet(yr); });
 
-  // Toolbar
+  // ── Toolbar ─────────────────────────────────────────────────────────────────
   var yrBtns = [
     { k: 'ytd2026', lbl: 'YTD 2026' },
     { k: 'y2025',   lbl: '2025'     },
@@ -1825,92 +1837,128 @@ function renderPareto() {
     '</div>';
 
   if (_paretoView === 'chart') {
-    html += _renderParetoChartSVG(rows, totalRetByYr, primaryYr, years, N, sepIdx);
+    html += _renderParetoChartSVG(chartRows, totalRetByYr, primaryYr, [primaryYr], N, chartSepIdx);
     box.innerHTML = html;
     return;
   }
 
-  // TABLE view
+  // ── TABLE VIEW — parallel rankings ─────────────────────────────────────────
   var showRet    = _paretoCols.has('ret');
   var showSector = _paretoCols.has('sector');
   var showIG     = _paretoCols.has('ig');
 
-  var thCols =
-    '<th style="width:26px;text-align:right;padding:4px 6px;color:var(--mu);font-weight:500">#</th>' +
-    '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500">Ticker</th>';
+  // Each year contributes: Ticker | Contrib | Cum% [+ Ret%]
+  var colsPerYr = 3 + (showRet ? 1 : 0);
+  var totalCols = 1 + years.length * colsPerYr + (showSector ? 1 : 0) + (showIG ? 1 : 0);
+
+  // Build header — one rank col, then per-year groups
+  var thead = '<thead><tr style="border-bottom:1.5px solid var(--rule)">';
+  thead += '<th style="width:26px;text-align:right;padding:4px 6px;color:var(--mu);font-weight:500">#</th>';
+  if (showSector) thead += '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500">Sector</th>';
+  if (showIG)     thead += '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500">IG</th>';
   years.forEach(function(yr) {
     var lbl = YR_LABEL[yr] || yr;
-    thCols += '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Contrib ' + lbl + '</th>';
-    thCols += '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Cum% ' + lbl + '</th>';
-    if (showRet) thCols += '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Ret% ' + lbl + '</th>';
+    thead += '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500" title="Company name on hover">Ticker · ' + lbl + '</th>';
+    thead += '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Contrib</th>';
+    thead += '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Cum%</th>';
+    if (showRet) thead += '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Ret%</th>';
   });
-  if (showSector) thCols += '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500">Sector</th>';
-  if (showIG)     thCols += '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500">IG</th>';
+  thead += '</tr></thead>';
 
-  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
-    '<thead><tr style="border-bottom:1.5px solid var(--rule)">' + thCols + '</tr></thead><tbody>';
-
-  var cums = {};
-  years.forEach(function(yr) { cums[yr] = 0; });
-  var posCount = 0, negCount = 0;
-  var totalCols = 2 + years.length * (2 + (showRet ? 1 : 0)) + (showSector ? 1 : 0) + (showIG ? 1 : 0);
-
-  rows.forEach(function(d, i) {
-    var isPrimPos = primaryContrib(d) >= 0;
-    var rank = isPrimPos ? (++posCount) : (++negCount);
-    var rowBg = i % 2 === 1 ? 'background:var(--surface)' : '';
-    var coTitle = (d.co || d.name).replace(/"/g, '&quot;');
-
-    var sep = '';
-    if (i === sepIdx && negRows.length > 0 && posRows.length > 0) {
-      sep = '<tr><td colspan="' + totalCols + '" style="height:4px;background:linear-gradient(90deg,transparent,var(--rule),transparent)"></td></tr>';
+  // Helper: render one year's cells for a given ranked entry (or blank if rank doesn't exist)
+  function yrCells(d) {
+    if (!d) {
+      var empty = '<td style="padding:4px 8px;color:var(--mu)">—</td>' +
+                  '<td style="padding:4px 8px"></td><td style="padding:4px 8px"></td>';
+      return empty + (showRet ? '<td style="padding:4px 8px"></td>' : '');
     }
+    var co = (d.co || d.name).replace(/"/g, '&quot;');
+    var tickerCell = '<td style="padding:4px 8px;white-space:nowrap" title="' + co + '">' +
+      '<b style="font-size:12px;color:var(--navy)">' + d.name + '</b></td>';
+    var contribCell = '<td style="text-align:right;padding:4px 8px;font-weight:600;font-variant-numeric:tabular-nums;color:' +
+      colr(d.contrib) + '">' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(3) + '%</td>';
+    var cumCell = '<td style="text-align:right;padding:4px 8px;color:var(--mu);font-size:11px;font-variant-numeric:tabular-nums">' +
+      (d.cum >= 0 ? '+' : '') + d.cum.toFixed(2) + '%</td>';
+    var retCell = showRet
+      ? '<td style="text-align:right;padding:4px 8px;font-size:11px;font-variant-numeric:tabular-nums;color:' +
+          colr(d.ret) + '">' + (d.ret >= 0 ? '+' : '') + d.ret.toFixed(1) + '%</td>'
+      : '';
+    return tickerCell + contribCell + cumCell + retCell;
+  }
 
-    var tds = '';
-    years.forEach(function(yr) {
-      var ydata = d[yr];
-      if (!ydata) {
-        tds += '<td style="text-align:right;padding:4px 8px;color:var(--mu);font-size:11px">—</td>';
-        tds += '<td style="text-align:right;padding:4px 8px;color:var(--mu);font-size:11px">—</td>';
-        if (showRet) tds += '<td style="text-align:right;padding:4px 8px;color:var(--mu);font-size:11px">—</td>';
-        return;
+  var maxPos = Math.max.apply(null, years.map(function(yr){return yrData[yr].pos.length;}));
+  var maxNeg = Math.max.apply(null, years.map(function(yr){return yrData[yr].neg.length;}));
+
+  var tbody = '<tbody>';
+  // Positives
+  for (var i = 0; i < maxPos; i++) {
+    var rowBg = i % 2 === 1 ? 'background:var(--surface)' : '';
+    tbody += '<tr style="border-bottom:.5px solid var(--rule);' + rowBg + '">';
+    tbody += '<td style="text-align:right;padding:4px 6px;color:var(--mu);font-size:11px">' + (i+1) + '</td>';
+    if (showSector) {
+      var sec = '';
+      for (var si = 0; si < years.length && !sec; si++) {
+        var e = yrData[years[si]].pos[i];
+        if (e && e.sect) sec = dispSec(e.sect);
       }
-      cums[yr] += ydata.contrib;
-      var cumPct = totalRetByYr[yr] !== 0 ? cums[yr] / totalRetByYr[yr] * 100 : 0;
-      tds += '<td style="text-align:right;padding:4px 8px;color:' + colr(ydata.contrib) + ';font-weight:600;font-variant-numeric:tabular-nums">' +
-               (ydata.contrib >= 0 ? '+' : '') + ydata.contrib.toFixed(3) + '%</td>';
-      tds += '<td style="text-align:right;padding:4px 8px;color:var(--mu);font-size:11.5px;font-variant-numeric:tabular-nums">' +
-               (cumPct >= 0 ? '+' : '') + cumPct.toFixed(1) + '%</td>';
-      if (showRet) {
-        tds += '<td style="text-align:right;padding:4px 8px;color:' + colr(ydata.ret) + ';font-size:11.5px;font-variant-numeric:tabular-nums">' +
-                 (ydata.ret >= 0 ? '+' : '') + ydata.ret.toFixed(1) + '%</td>';
+      tbody += '<td style="padding:4px 8px;font-size:11px;color:var(--mu)">' + trunc(sec, 22) + '</td>';
+    }
+    if (showIG) {
+      var ig = '';
+      for (var gi = 0; gi < years.length && !ig; gi++) {
+        var eg = yrData[years[gi]].pos[i];
+        if (eg && eg.grp) ig = dispIG(eg.grp);
       }
-    });
+      tbody += '<td style="padding:4px 8px;font-size:11px;color:var(--mu)">' + trunc(ig, 26) + '</td>';
+    }
+    years.forEach(function(yr) { tbody += yrCells(yrData[yr].pos[i]); });
+    tbody += '</tr>';
+  }
+  // Separator between positives and negatives
+  if (maxPos > 0 && maxNeg > 0) {
+    tbody += '<tr><td colspan="' + totalCols + '" style="height:4px;background:linear-gradient(90deg,transparent,var(--rule),transparent)"></td></tr>';
+  }
+  // Negatives
+  for (var j = 0; j < maxNeg; j++) {
+    var rowBg2 = j % 2 === 1 ? 'background:var(--surface)' : '';
+    tbody += '<tr style="border-bottom:.5px solid var(--rule);' + rowBg2 + '">';
+    tbody += '<td style="text-align:right;padding:4px 6px;color:var(--mu);font-size:11px">' + (j+1) + '</td>';
+    if (showSector) {
+      var sec3 = '';
+      for (var sj = 0; sj < years.length && !sec3; sj++) {
+        var ej = yrData[years[sj]].neg[j];
+        if (ej && ej.sect) sec3 = dispSec(ej.sect);
+      }
+      tbody += '<td style="padding:4px 8px;font-size:11px;color:var(--mu)">' + trunc(sec3, 22) + '</td>';
+    }
+    if (showIG) {
+      var ig2 = '';
+      for (var gj = 0; gj < years.length && !ig2; gj++) {
+        var egj = yrData[years[gj]].neg[j];
+        if (egj && egj.grp) ig2 = dispIG(egj.grp);
+      }
+      tbody += '<td style="padding:4px 8px;font-size:11px;color:var(--mu)">' + trunc(ig2, 26) + '</td>';
+    }
+    years.forEach(function(yr) { tbody += yrCells(yrData[yr].neg[j]); });
+    tbody += '</tr>';
+  }
+  tbody += '</tbody>';
 
-    var refData = d[primaryYr] || d[years[0]] || {};
-    var sectTd = showSector ? '<td style="text-align:left;padding:4px 8px;font-size:11px;color:var(--mu)">' + trunc(dispSec(refData.sect || ''), 32) + '</td>' : '';
-    var igTd   = showIG     ? '<td style="text-align:left;padding:4px 8px;font-size:11px;color:var(--mu)">' + trunc(dispIG(refData.grp  || ''), 36) + '</td>' : '';
-
-    html += sep +
-      '<tr style="border-bottom:.5px solid var(--rule);' + rowBg + '">' +
-        '<td style="text-align:right;padding:4px 6px;color:var(--mu);font-size:11px">' + rank + '</td>' +
-        '<td style="text-align:left;padding:4px 8px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums" title="' + coTitle + '">' + d.name + '</td>' +
-        tds + sectTd + igTd +
-      '</tr>';
-  });
-
-  // Footer totals
-  var footTds = '<td colspan="2" style="font-size:11px;font-weight:600;padding:6px 8px;color:var(--navy)">Shown total</td>';
+  // Footer: total of shown rows per year
+  var footTds = '<td colspan="' + (1 + (showSector?1:0) + (showIG?1:0)) +
+    '" style="font-size:11px;font-weight:600;padding:6px 8px;color:var(--navy)">Shown total</td>';
   years.forEach(function(yr) {
-    var tot = rows.reduce(function(s, r) { return s + (r[yr] ? r[yr].contrib : 0); }, 0);
-    footTds += '<td style="text-align:right;padding:6px 8px;font-weight:700;color:' + colr(tot) + ';font-size:11.5px;font-variant-numeric:tabular-nums">' + (tot >= 0 ? '+' : '') + tot.toFixed(3) + '%</td>';
+    var tot = yrData[yr].totalPos + yrData[yr].totalNeg;
+    footTds += '<td style="padding:6px 8px;color:var(--mu)"></td>';  // ticker blank
+    footTds += '<td style="text-align:right;padding:6px 8px;font-weight:700;font-variant-numeric:tabular-nums;color:' +
+      colr(tot) + ';font-size:11.5px">' + (tot>=0?'+':'') + tot.toFixed(3) + '%</td>';
     footTds += '<td></td>';
     if (showRet) footTds += '<td></td>';
   });
-  if (showSector) footTds += '<td></td>';
-  if (showIG)     footTds += '<td></td>';
 
-  html += '</tbody><tfoot><tr style="border-top:2px solid var(--navy)">' + footTds + '</tr></tfoot></table></div>';
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
+    thead + tbody +
+    '<tfoot><tr style="border-top:2px solid var(--navy)">' + footTds + '</tr></tfoot></table></div>';
   box.innerHTML = html;
 }
 
@@ -2166,14 +2214,14 @@ function renderWLC() {
       var wc = (worst.contrib>=0?'+':'')+worst.contrib.toFixed(3)+'%';
       html += '<tr>' +
         '<td style="font-weight:600;font-size:12px;color:var(--navy)">' + dispSec(sec) + '</td>' +
-        '<td style="font-size:12px" title="' + (best.co||'') + '">' +
+        '<td style="font-size:12px">' +
           '<b style="color:var(--navy)">' + best.name + '</b>' +
-          '<span style="font-size:10px;color:var(--mu);margin-left:4px">' + trunc(best.co||'',22) + '</span>' +
+          '<span style="font-size:10px;color:var(--mu);margin-left:4px">' + (best.co||'') + '</span>' +
         '</td>' +
         '<td class="num" style="color:' + colr(best.contrib) + ';font-weight:700">' + bc + '</td>' +
-        '<td style="font-size:12px" title="' + (worst.co||'') + '">' +
+        '<td style="font-size:12px">' +
           '<b style="color:var(--navy)">' + worst.name + '</b>' +
-          '<span style="font-size:10px;color:var(--mu);margin-left:4px">' + trunc(worst.co||'',22) + '</span>' +
+          '<span style="font-size:10px;color:var(--mu);margin-left:4px">' + (worst.co||'') + '</span>' +
         '</td>' +
         '<td class="num" style="color:' + colr(worst.contrib) + ';font-weight:700">' + wc + '</td>' +
       '</tr>';
@@ -2195,7 +2243,7 @@ function refresh() {
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
   renderKPI(res);
-  if (attrMode === 'chart') renderAttrChart(); else renderTreemap(res);
+  if (attrMode === 'chart') renderAttrChart('ndx-attr-sim-canvas'); else renderTreemap(res);
   renderAttrTable(res);
   _securities = computeSecurities(exclSecs, exclIGs);
   renderPareto();
@@ -2271,13 +2319,11 @@ window.ndxSetDecimals = function(n) {
 };
 window.ndxSetAttrTab = function(tab) {
   attrTab = tab;
-  if (_chart) { _chart.destroy(); _chart = null; }
+  if (tab === 'ig') treemapSubMode = 'nested';
   document.querySelectorAll('#ndx-attr-tabs .ndx-tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
-  var sb = document.getElementById('ndx-treemap-sub-row');
-  if (sb) sb.style.display = (attrMode === 'treemap' && tab === 'sector') ? '' : 'none';
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
-  if (attrMode === 'chart') renderAttrChart(); else renderTreemap(res);
+  if (attrMode === 'chart') renderAttrChart('ndx-attr-sim-canvas'); else renderTreemap(res);
   renderAttrTable(res);
 };
 window.ndxSetAttrMode = function(mode) {
@@ -2285,16 +2331,17 @@ window.ndxSetAttrMode = function(mode) {
   document.querySelectorAll('#ndx-attr-mode-btns .ndx-tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.mode === mode); });
   var cb = document.getElementById('ndx-attr-chart-box'), tb = document.getElementById('ndx-treemap-box');
   var tw = document.getElementById('ndx-attr-table-wrap');
-  var sb = document.getElementById('ndx-treemap-sub-row');
-  var cr = document.getElementById('ndx-color-row');
   if (cb) cb.style.display = mode === 'chart'   ? '' : 'none';
   if (tb) tb.style.display = mode === 'treemap' ? '' : 'none';
   if (tw) tw.style.display = mode === 'table'   ? '' : 'none';
-  if (sb) sb.style.display = (mode === 'treemap' && attrTab === 'sector') ? '' : 'none';
-  if (cr) cr.style.display = mode === 'treemap' ? 'flex' : 'none';
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
   var res = isBase ? baseR : computeCore(exclSecs, exclIGs);
-  if (mode === 'chart') renderAttrChart(); else if (mode === 'treemap') renderTreemap(res);
+  if (mode === 'chart') {
+    renderAttrChart('ndx-attr-sim-canvas');
+  } else {
+    if (_chartSim) { _chartSim.destroy(); _chartSim = null; }
+    if (mode === 'treemap') renderTreemap(res);
+  }
 };
 window.ndxSort = function(key) {
   if (_sortKey === key) { _sortDir = -_sortDir; }
@@ -2324,7 +2371,7 @@ window.ndxSetYear = function(yr) {
 window.ndxSetScatterYear = function(yr) {
   if (!YEAR_HOCS[yr]) return;
   _scatterYear = yr;
-  _scatterZoom = 1.0; _scatterPanX = 0; _scatterPanY = 0;
+  _scatterViewport = null; _scatterDragState = null;
   document.querySelectorAll('.ndx-scat-yr-btn').forEach(function(b) {
     b.classList.toggle('active', b.dataset.yr === yr);
   });
@@ -2334,6 +2381,7 @@ window.ndxSetScatterYear = function(yr) {
 
 window.ndxSetScatterHoc = function(idx) {
   _scatterHocIdx = Math.max(0, Math.min(_scatterSecSnapshots.length - 1, idx));
+  _scatterViewport = null;  // reset zoom on HOC change
   _updateScatterSlider();
 };
 
@@ -2499,11 +2547,6 @@ function buildSkeleton() {
         '<div class="sect" style="font-size:17px;font-weight:700;color:var(--navy)">Nasdaq-100 — Return Attribution</div>' +
         '<div style="font-size:11px;color:var(--mu);margin-top:3px">NDX Price Return &middot; Source: Summit NDX NonBBG</div>' +
       '</div>' +
-      '<div style="display:flex;gap:4px;flex-wrap:wrap">' +
-        '<button class="ndx-yr-btn ndx-tab-btn active" data-yr="ytd2026" onclick="ndxSetYear(\'ytd2026\')">YTD 2026</button>' +
-        '<button class="ndx-yr-btn ndx-tab-btn" data-yr="y2025" onclick="ndxSetYear(\'y2025\')">2025</button>' +
-        '<button class="ndx-tab-btn" disabled style="opacity:.45;cursor:default">2024</button>' +
-      '</div>' +
     '</div>' +
     '<div style="display:flex;align-items:center;gap:24px;padding-bottom:14px;flex-wrap:wrap">' +
       '<div>' +
@@ -2527,7 +2570,7 @@ function buildSkeleton() {
         '</div>' +
         '<div style="display:flex;gap:3px">' +
           '<button class="ndx-tab-btn active" data-attr-chart-tab="sector" onclick="ndxSetAttrChartTab(\'sector\')">By Sector</button>' +
-          '<button class="ndx-tab-btn" data-attr-chart-tab="ig" onclick="ndxSetAttrChartTab(\'ig\')">By IG</button>' +
+          '<button class="ndx-tab-btn" data-attr-chart-tab="ig" onclick="ndxSetAttrChartTab(\'ig\')">By Industry Group</button>' +
         '</div>' +
       '</div>' +
       '<div id="ndx-attr-chart-sector-pills" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px"></div>' +
@@ -2545,14 +2588,14 @@ function buildSkeleton() {
         '<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">' +
           '<div id="ndx-attr-tabs" style="display:flex;gap:3px">' +
             '<button class="ndx-tab-btn active" data-tab="sector" onclick="ndxSetAttrTab(\'sector\')">By Sector</button>' +
-            '<button class="ndx-tab-btn" data-tab="ig" onclick="ndxSetAttrTab(\'ig\')">By IG</button>' +
+            '<button class="ndx-tab-btn" data-tab="ig" onclick="ndxSetAttrTab(\'ig\')">By Industry Group</button>' +
           '</div>' +
           '<div id="ndx-attr-mode-btns" style="display:flex;gap:3px">' +
             '<button class="ndx-tab-btn" data-mode="chart" onclick="ndxSetAttrMode(\'chart\')">&#9646; Chart</button>' +
             '<button class="ndx-tab-btn" data-mode="treemap" onclick="ndxSetAttrMode(\'treemap\')">Treemap</button>' +
             '<button class="ndx-tab-btn active" data-mode="table" onclick="ndxSetAttrMode(\'table\')">Table</button>' +
           '</div>' +
-          '<button class="ndx-tab-btn" onclick="ndxExpandAll()">Expand All</button>' +
+          '<button class="ndx-tab-btn" onclick="ndxExpandAll()" style="background:var(--navy);color:#fff;border-color:var(--navy)">Expand All</button>' +
           '<button class="ndx-tab-btn" onclick="ndxCollapseAll()">Collapse All</button>' +
           '<button class="sb-tbtn" onclick="ndxResetSim()">Reset</button>' +
           '<span style="font-size:11px;color:var(--mu);margin-left:4px">Decimals</span>' +
@@ -2566,19 +2609,6 @@ function buildSkeleton() {
       '</div>' +
     '</div>' +
     '<div class="card">' +
-      '<div id="ndx-treemap-sub-row" style="display:none;margin:0 0 6px">' +
-        '<div style="display:flex;gap:3px">' +
-          '<button class="ndx-tmsub-btn ndx-tab-btn active" data-sub="flat" onclick="ndxSetTreemapSubMode(\'flat\')">Flat Sectors</button>' +
-          '<button class="ndx-tmsub-btn ndx-tab-btn" data-sub="nested" onclick="ndxSetTreemapSubMode(\'nested\')">Nested IGs</button>' +
-        '</div>' +
-      '</div>' +
-      '<div id="ndx-color-row" style="display:none;align-items:center;gap:8px;margin:0 0 6px;padding:7px 10px;background:rgba(200,140,0,.06);border:1px solid rgba(200,140,0,.3);border-radius:8px">' +
-        '<span style="font-size:10px;color:#8A5A00;font-weight:700;letter-spacing:.05em">COLOR MODE:</span>' +
-        '<button class="ndx-color-btn ndx-tab-btn active" data-mode="orig" onclick="ndxSetColorMode(\'orig\')">Original</button>' +
-        '<button class="ndx-color-btn ndx-tab-btn" data-mode="A" onclick="ndxSetColorMode(\'A\')">A</button>' +
-        '<button class="ndx-color-btn ndx-tab-btn" data-mode="B" onclick="ndxSetColorMode(\'B\')">B</button>' +
-        '<button class="ndx-color-btn ndx-tab-btn" data-mode="C" onclick="ndxSetColorMode(\'C\')">C</button>' +
-      '</div>' +
       '<div id="ndx-attr-chart-box" style="position:relative;height:340px;display:none"><canvas id="ndx-attr-sim-canvas"></canvas></div>' +
       '<div id="ndx-treemap-box" style="display:none;padding:4px 0"></div>' +
       '<table id="ndx-attr-table-wrap" class="rt" style="width:100%">' +
@@ -2630,9 +2660,9 @@ function buildSkeleton() {
           '<button class="ndx-wl-yr-btn ndx-tab-btn" data-yr="y2025" onclick="ndxSetWLYear(\'y2025\')">2025</button>' +
         '</div>' +
         '<div style="display:flex;gap:4px;margin-left:8px">' +
-          '<button class="ndx-wl-tab ndx-tab-btn" data-tab="A" onclick="ndxSetWLTab(\'A\')">Sector Matrix</button>' +
+          '<button class="ndx-wl-tab ndx-tab-btn active" data-tab="A" onclick="ndxSetWLTab(\'A\')">Sector Matrix</button>' +
           '<button class="ndx-wl-tab ndx-tab-btn" data-tab="B" onclick="ndxSetWLTab(\'B\')">Return Distribution</button>' +
-          '<button class="ndx-wl-tab ndx-tab-btn active" data-tab="C" onclick="ndxSetWLTab(\'C\')">Top/Bottom by Sector</button>' +
+          '<button class="ndx-wl-tab ndx-tab-btn" data-tab="C" onclick="ndxSetWLTab(\'C\')">Top/Bottom by Sector</button>' +
         '</div>' +
       '</div>' +
       '<div id="ndx-wl-box"></div>' +
@@ -2707,14 +2737,14 @@ export function loadNdxAttribution(container) {
   _expandedSecs = new Set();
   _scatterXLo = null; _scatterXHi = null; _scatterYHi = null;
   _scatterYear = 'ytd2026'; _scatterSecSnapshots = []; _scatterYrAxes = { xLo: null, xHi: null, yHi: null };
-  _scatterZoom = 1.0; _scatterPanX = 0; _scatterPanY = 0; _scatterDragState = null;
+  _scatterViewport = null; _scatterDragState = null;
   _globalScatterAxes = { xLo: null, xHi: null, yHi: null };
   _globalBeeAxes = { contribHi: null, xLo: null, xHi: null };
   _beeswarmYear = 'ytd2026'; _beeswarmYears = new Set(['ytd2026']); _beeswarmProgress = 100;
   _beeswarmSectors = new Set(); _beeswarmSecAll = []; _beeswarmActiveSector = 'Information Technology';
   _activeYear = 'ytd2026';
   _paretoN = 10; _paretoYears = new Set(['ytd2026']); _paretoView = 'table'; _paretoCustomN = 0;
-  _wlYear = 'ytd2026'; _wlTab = 'C';
+  _wlYear = 'ytd2026'; _wlTab = 'A';
   _attrChartYears = new Set(['ytd2026']);
   _attrChartSectors = new Set();
   _attrChartTab = 'sector';
@@ -2722,7 +2752,7 @@ export function loadNdxAttribution(container) {
   _compYear = 'ytd2026';
   _colorMode = 'orig';
   _colorMaxPos = 0; _colorMaxNeg = 0;
-  _wlTab = 'C';
+  _wlTab = 'A';
   _attrDecimals = 2; lastBaseR = null;
   if (_chart) { _chart.destroy(); _chart = null; }
 

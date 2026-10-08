@@ -49,8 +49,8 @@ var _paretoCustomN = 0;
 var YEAR_HOCS    = { ytd2026: [12, 25], y2025: [2, 11] };
 var _colorMode   = 'orig';   // 'orig' | 'A' | 'B' | 'C'
 var _colorMaxPos = 0, _colorMaxNeg = 0;
-var _rebalTab    = 'A';
 var _wlTab       = 'C';
+var _wlYear      = 'ytd2026';
 var _attrDecimals = 2;
 var lastBaseR    = null;
 
@@ -307,6 +307,20 @@ function bindTip(el, html) {
 }
 
 // ── KPI tile ──────────────────────────────────────────────────────────────
+function computeYearReturn(yearKey) {
+  var range = YEAR_HOCS[yearKey];
+  if (!range) return null;
+  var hocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
+  if (!hocs.length) return null;
+  var logSum = 0;
+  hocs.forEach(function(hoc) {
+    var hocRet = 0;
+    hoc.sec.forEach(function(s) { hocRet += (s.w || 0) * s.r; });
+    logSum += Math.log(1 + hocRet / 100);
+  });
+  return (Math.exp(logSum) - 1) * 100;
+}
+
 function renderKPI(res) {
   var el = document.getElementById('ndx-ytd-val');
   if (!el) return;
@@ -314,6 +328,27 @@ function renderKPI(res) {
   // Always show base return — never distort the price return with simulation weights
   var displayYtd = baseR ? baseR.ytd : res.ytd;
   el.innerHTML = '<span style="color:' + colr(displayYtd) + '">' + fmtYTD(displayYtd) + '</span>';
+
+  // Year context row — show other years alongside the main KPI
+  var ctxEl = document.getElementById('ndx-ytd-ctx');
+  if (ctxEl) {
+    var yearOrder = [
+      { label: 'YTD 2026', key: 'ytd2026' },
+      { label: '2025',     key: 'y2025'   },
+    ];
+    var others = yearOrder.filter(function(y) { return y.key !== _activeYear; });
+    if (others.length) {
+      ctxEl.innerHTML = others.map(function(y) {
+        var v = computeYearReturn(y.key);
+        if (v == null) return '';
+        return '<span style="font-size:11px;color:var(--mu)">' + y.label + ': ' +
+          '<b style="color:' + colr(v) + '">' + (v >= 0 ? '+' : '') + v.toFixed(2) + '%</b></span>';
+      }).join('<span style="color:var(--mu);margin:0 4px">·</span>');
+    } else {
+      ctxEl.innerHTML = '';
+    }
+  }
+
   var tag = document.getElementById('ndx-sim-badge');
   if (!tag) return;
   if (isBase) { tag.style.display = 'none'; return; }
@@ -1542,11 +1577,6 @@ function renderPareto() {
   box.innerHTML = html;
 }
 
-// ── PROPUESTA helpers ─────────────────────────────────────────────────────
-var PROP_BADGE = '<span style="font-size:9px;background:rgba(200,140,0,.12);color:#8A5A00;' +
-  'border:1px solid rgba(200,140,0,.4);border-radius:4px;padding:2px 7px;font-weight:700;' +
-  'letter-spacing:.06em;text-transform:uppercase;margin-left:8px">PROPUESTA</span>';
-
 function propTabBar(tabs, active, handler) {
   return '<div style="display:flex;gap:4px;margin-bottom:12px">' +
     tabs.map(function(t) {
@@ -1556,153 +1586,28 @@ function propTabBar(tabs, active, handler) {
   '</div>';
 }
 
-// ── Rebalance Impact — Proposal A: per-HOC events table ──────────────────
-function renderRebalA() {
-  var box = document.getElementById('ndx-rebal-box');
-  if (!box || !_activeHocs.length) return;
-  var rows = _activeHocs.map(function(hoc, i) {
-    var curr = {}; hoc.sec.forEach(function(s) { curr[s.t||s.co] = s.w||0; });
-    var added = [], removed = [], displaced = 0;
-    if (i > 0) {
-      var prev = {}; _activeHocs[i-1].sec.forEach(function(s) { prev[s.t||s.co] = s.w||0; });
-      Object.keys(curr).forEach(function(k) { if (!(k in prev)) added.push(k); });
-      Object.keys(prev).forEach(function(k) { if (!(k in curr)) removed.push(k); });
-      var allK = new Set(Object.keys(curr).concat(Object.keys(prev)));
-      allK.forEach(function(k) { displaced += Math.abs((curr[k]||0) - (prev[k]||0)); });
-      displaced /= 2;
-    }
-    var period = hoc.eff + (hoc.close ? ' → ' + hoc.close : ' (open)');
-    return '<tr>' +
-      '<td style="font-weight:700;color:var(--navy);text-align:center">' + hoc.n + '</td>' +
-      '<td style="font-size:11px">' + period + '</td>' +
-      '<td class="num" style="color:var(--pos);font-weight:600">' + (added.length||'—') + '</td>' +
-      '<td class="num" style="color:var(--neg);font-weight:600">' + (removed.length||'—') + '</td>' +
-      '<td class="num">' + hoc.sec.length + '</td>' +
-      '<td class="num" style="font-weight:600">' + (displaced > 0 ? displaced.toFixed(1) + '%' : '—') + '</td>' +
-    '</tr>';
-  }).join('');
-  box.innerHTML = '<div class="twrap"><table class="rt">' +
-    '<thead><tr><th style="text-align:center">HOC</th><th>Period</th>' +
-    '<th class="num" style="color:var(--pos)">Added</th>' +
-    '<th class="num" style="color:var(--neg)">Removed</th>' +
-    '<th class="num">Count</th><th class="num">Weight Displaced</th></tr></thead>' +
-    '<tbody>' + rows + '</tbody></table></div>';
-}
-
-// ── Rebalance Impact — Proposal B: buy-and-hold counterfactual ───────────
-function renderRebalB() {
-  var box = document.getElementById('ndx-rebal-box');
-  if (!box || !_activeHocs.length || !baseR) return;
-  var firstHoc = _activeHocs[0];
-  var initW = {}, compR = {};
-  firstHoc.sec.forEach(function(s) {
-    var key = s.t||s.co; initW[key] = (s.w||0)/100; compR[key] = 1;
-  });
-  _activeHocs.forEach(function(hoc) {
-    hoc.sec.forEach(function(s) {
-      var key = s.t||s.co;
-      if (compR[key] !== undefined) compR[key] *= (1 + s.r/100);
-    });
-  });
-  var bhRet = 0;
-  Object.keys(initW).forEach(function(key) { bhRet += initW[key] * (compR[key] - 1); });
-  bhRet *= 100;
-  var real = baseR.ytd;
-  var diff = real - bhRet;
-
-  var maxAbs = Math.max(Math.abs(real), Math.abs(bhRet)) || 1;
-  function barW(v) { return Math.round(Math.abs(v) / maxAbs * 280); }
-  function bar(v, lbl) {
-    var col = v >= 0 ? '#177A4E' : '#9B2A20';
-    var str = (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
-    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:.5px solid #F0F4F8">' +
-      '<span style="min-width:160px;font-size:12px;color:var(--mu)">' + lbl + '</span>' +
-      '<div style="position:relative;width:280px;height:22px;background:var(--surface);border-radius:4px">' +
-        '<div style="position:absolute;top:3px;bottom:3px;left:0;width:' + barW(v) + 'px;background:' + col + ';opacity:.75;border-radius:3px"></div>' +
-      '</div>' +
-      '<b style="font-size:14px;color:' + col + ';min-width:72px;font-variant-numeric:tabular-nums">' + str + '</b>' +
-    '</div>';
-  }
-  var diffCol = diff >= 0 ? 'var(--pos)' : 'var(--neg)';
-  box.innerHTML =
-    '<p style="font-size:12px;color:var(--mu);margin:0 0 14px">Si no hubiera habido rebalanceos, ¿cuánto habría rendido el portafolio inicial del período?</p>' +
-    bar(real, 'NDX real (con rebalanceos)') +
-    bar(bhRet, 'Buy-and-hold sin rebalancear') +
-    '<div style="padding:12px 0;font-size:13px">' +
-      'Impacto del rebalanceo: <b style="color:' + diffCol + '">' + (diff>=0?'+':'') + diff.toFixed(2) + '% ' + (diff>=0?'tailwind':'drag') + '</b>' +
-    '</div>';
-}
-
-// ── Rebalance Impact — Proposal C: Herfindahl concentration line ─────────
-function renderRebalC() {
-  var box = document.getElementById('ndx-rebal-box');
-  if (!box || !_activeHocs.length) return;
-  var pts = _activeHocs.map(function(hoc) {
-    var total = hoc.sec.reduce(function(s, d) { return s + Math.max(d.w||0, 0); }, 0) || 100;
-    var hhi = hoc.sec.reduce(function(s, d) { var w = (d.w||0)/total; return s + w*w; }, 0) * 100;
-    return { n: hoc.n, date: hoc.close||hoc.eff, hhi: hhi, count: hoc.sec.length };
-  });
-  var VW = 860, VH = 200, P = {t:24, r:60, b:40, l:50};
-  var cw = VW - P.l - P.r, ch = VH - P.t - P.b;
-  var hhiMin = Math.min.apply(null, pts.map(function(p){return p.hhi;}));
-  var hhiMax = Math.max.apply(null, pts.map(function(p){return p.hhi;}));
-  var hhiRange = (hhiMax - hhiMin) || 1;
-  function X(i) { return P.l + (pts.length < 2 ? cw/2 : i / (pts.length-1) * cw); }
-  function Y(v) { return P.t + ch - (v - hhiMin) / hhiRange * ch; }
-  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
-  // Grid lines
-  for (var g = 0; g <= 4; g++) {
-    var yv = hhiMin + g/4 * hhiRange;
-    var yp = Y(yv);
-    svg.appendChild(se('line', { x1: P.l, x2: VW-P.r, y1: yp, y2: yp, stroke:'#EAEDEF', 'stroke-width':1 }));
-    var yt = se('text', { x: P.l-6, y: yp+4, 'text-anchor':'end', 'font-family':'Inter,sans-serif', 'font-size':10, fill:'#8A93A0' });
-    yt.textContent = yv.toFixed(2); svg.appendChild(yt);
-  }
-  // Line path
-  var pathD = pts.map(function(p, i) { return (i===0?'M':'L') + X(i).toFixed(1) + ' ' + Y(p.hhi).toFixed(1); }).join(' ');
-  svg.appendChild(se('path', { d: pathD, fill:'none', stroke:'var(--navy)', 'stroke-width':2 }));
-  // Dots
-  pts.forEach(function(p, i) {
-    var cx = X(i), cy = Y(p.hhi);
-    var dot = se('circle', { cx: cx, cy: cy, r: 4, fill:'var(--navy)', stroke:'#fff', 'stroke-width':1.5 });
-    svg.appendChild(dot);
-    bindTip(dot, 'HOC ' + p.n + ' · ' + p.date + '<br>HHI = ' + p.hhi.toFixed(3) + ' · ' + p.count + ' constituyentes');
-  });
-  // X labels (abbreviated dates)
-  pts.forEach(function(p, i) {
-    if (i % Math.ceil(pts.length/6) !== 0 && i !== pts.length-1) return;
-    var xt = se('text', { x: X(i), y: VH-4, 'text-anchor':'middle', 'font-family':'Inter,sans-serif', 'font-size':9, fill:'#8A93A0' });
-    xt.textContent = p.date.slice(2); svg.appendChild(xt);
-  });
-  var note = se('text', { x: VW-P.r+4, y: P.t+12, 'font-family':'Inter,sans-serif', 'font-size':10, fill:'#8A93A0' });
-  note.textContent = 'HHI'; svg.appendChild(note);
-  box.innerHTML = '';
-  var intro = document.createElement('p');
-  intro.style.cssText = 'font-size:12px;color:var(--mu);margin:0 0 10px';
-  intro.textContent = 'Herfindahl-Hirschman Index (suma de pesos²) — mayor = más concentrado en pocos nombres.';
-  box.appendChild(intro);
-  box.appendChild(svg);
-}
-
-function renderRebalSection() {
-  var box = document.getElementById('ndx-rebal-box');
-  if (!box) return;
-  if (_rebalTab === 'A') renderRebalA();
-  else if (_rebalTab === 'B') renderRebalB();
-  else renderRebalC();
+// ── Winners vs Losers helpers ────────────────────────────────────────────
+function getWLSecurities() {
+  var range = YEAR_HOCS[_wlYear];
+  if (!range) return _securities;
+  var hocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
+  return computeSecurities(exclSecs, exclIGs, hocs);
 }
 
 // ── Winners vs Losers — Proposal A: sector matrix table ──────────────────
 function renderWLA() {
   var box = document.getElementById('ndx-wl-box');
-  if (!box || !_securities.length) return;
-  var nonCash = _securities.filter(function(d) { return d.sect !== CASH; });
-  var secs = sectors.filter(function(s) { return s !== CASH; });
-  var rows = secs.map(function(sec) {
+  if (!box) return;
+  var secs = getWLSecurities();
+  if (!secs.length) return;
+  var nonCash = secs.filter(function(d) { return !isCash(d.name) && d.sect !== CASH; });
+  var secList = sectors.filter(function(s) { return s !== CASH; });
+  var rows = secList.map(function(sec) {
     var arr = nonCash.filter(function(d) { return d.sect === sec; });
     if (!arr.length) return null;
     var contrib = arr.reduce(function(s,d) { return s+d.contrib; }, 0);
-    var avgRet  = arr.reduce(function(s,d) { return s+d.ret; }, 0) / arr.length;
+    var wSum = arr.reduce(function(s,d) { return s+d.w0; }, 0);
+    var avgRet = wSum > 0 ? arr.reduce(function(s,d) { return s+d.ret*d.w0; }, 0) / wSum : 0;
     var wn = arr.filter(function(d) { return d.contrib>0; }).length;
     var ln = arr.filter(function(d) { return d.contrib<0; }).length;
     var wChg = arr.reduce(function(s,d) { return s+(d.w1-d.w0); }, 0);
@@ -1711,9 +1616,9 @@ function renderWLA() {
   rows.sort(function(a,b) { return b.contrib - a.contrib; });
   var html = '<div class="twrap"><table class="rt">' +
     '<thead><tr>' +
-    '<th>Sector</th><th class="num">Contribución</th><th class="num">Ret Promedio</th>' +
+    '<th>Sector</th><th class="num">Contribution</th><th class="num">Avg Return (wtd)</th>' +
     '<th class="num" style="color:var(--pos)">Winners</th><th class="num" style="color:var(--neg)">Losers</th>' +
-    '<th class="num">Δ Peso</th></tr></thead><tbody>';
+    '<th class="num">Wt Δ</th></tr></thead><tbody>';
   rows.forEach(function(r) {
     var cStr = (r.contrib>=0?'+':'')+r.contrib.toFixed(3)+'%';
     var rStr = (r.avgRet>=0?'+':'')+r.avgRet.toFixed(1)+'%';
@@ -1733,10 +1638,12 @@ function renderWLA() {
 // ── Winners vs Losers — Proposal B: return distribution histogram ─────────
 function renderWLB() {
   var box = document.getElementById('ndx-wl-box');
-  if (!box || !_securities.length) return;
-  var nonCash = _securities.filter(function(d) { return d.sect !== CASH; });
+  if (!box) return;
+  var secs = getWLSecurities();
+  if (!secs.length) return;
+  var nonCash = secs.filter(function(d) { return !isCash(d.name) && d.sect !== CASH; });
   var bins = [[-1e9,-20],[-20,-10],[-10,-5],[-5,0],[0,5],[5,10],[10,20],[20,1e9]];
-  var lbls = ['< -20%','-20 a -10%','-10 a -5%','-5 a 0%','0 a 5%','5 a 10%','10 a 20%','> 20%'];
+  var lbls = ['< -20%','-20 to -10%','-10 to -5%','-5 to 0%','0 to 5%','5 to 10%','10 to 20%','> 20%'];
   var counts = bins.map(function() { return { n:0, contrib:0 }; });
   nonCash.forEach(function(d) {
     for (var i=0; i<bins.length; i++) {
@@ -1754,21 +1661,17 @@ function renderWLB() {
     var col = i < 4 ? '#9B2A20' : '#177A4E';
     var rect = se('rect', { x:x, y:y, width:binW, height:barH, rx:3, fill:col, opacity:'.75' });
     svg.appendChild(rect);
-    bindTip(rect, lbls[i] + '<br>' + c.n + ' constituyentes<br>' +
-      'Contribución total: ' + (c.contrib>=0?'+':'') + c.contrib.toFixed(3) + '%');
-    // Count label
+    bindTip(rect, lbls[i] + '<br>' + c.n + ' constituents<br>' +
+      'Total contribution: ' + (c.contrib>=0?'+':'') + c.contrib.toFixed(3) + '%');
     if (c.n > 0) {
       var nt = se('text', {x:x+binW/2, y:y-4, 'text-anchor':'middle', 'font-family':'Inter,sans-serif', 'font-size':11, fill:'#2B3B4E', 'font-weight':'600'});
       nt.textContent = c.n; svg.appendChild(nt);
     }
-    // X label
     var xt = se('text', {x:x+binW/2, y:VH-P.b+14, 'text-anchor':'middle', 'font-family':'Inter,sans-serif', 'font-size':9.5, fill:'#8A93A0'});
     xt.textContent = lbls[i]; svg.appendChild(xt);
-    // Rotate long labels
     xt.setAttribute('transform', 'rotate(-35,' + (x+binW/2) + ',' + (VH-P.b+14) + ')');
     xt.setAttribute('text-anchor', 'end');
   });
-  // Y axis ticks
   for (var g=0; g<=4; g++) {
     var yv = Math.round(g/4 * maxN);
     var yp = VH-P.b - Math.round(g/4*(VH-P.t-P.b));
@@ -1779,55 +1682,57 @@ function renderWLB() {
   box.appendChild(svg);
   var leg = document.createElement('div');
   leg.style.cssText = 'font-size:11px;color:var(--mu);margin-top:6px';
-  leg.textContent = 'Cada barra = número de constituyentes con retorno en ese rango. Hover para ver contribución total del grupo.';
+  leg.textContent = 'Each bar = number of constituents with return in that range. Hover to see total contribution for the group.';
   box.appendChild(leg);
 }
 
 // ── Winners vs Losers — Proposal C: top / bottom per sector ──────────────
 function renderWLC() {
   var box = document.getElementById('ndx-wl-box');
-  if (!box || !_securities.length) return;
-  var nonCash = _securities.filter(function(d) { return d.sect !== CASH; });
-  var secs = sectors.filter(function(s) { return s !== CASH; });
-  var maxAbsC = Math.max.apply(null, nonCash.map(function(d){return Math.abs(d.contrib);})) || 1;
-
-  function miniBars(pos, neg) {
-    var col = pos >= 0 ? '#177A4E' : '#9B2A20';
-    var nCol = neg <= 0 ? '#9B2A20' : '#177A4E';
-    var pW = Math.round(Math.abs(pos)/maxAbsC*80);
-    var nW = Math.round(Math.abs(neg)/maxAbsC*80);
-    return '<div style="display:flex;flex-direction:column;gap:2px">' +
-      '<div style="height:6px;width:'+pW+'px;background:'+col+';border-radius:2px;opacity:.8"></div>' +
-      '<div style="height:6px;width:'+nW+'px;background:'+nCol+';border-radius:2px;opacity:.8"></div>' +
-    '</div>';
-  }
+  if (!box) return;
+  var wlSecs = getWLSecurities();
+  if (!wlSecs.length) return;
+  var nonCash = wlSecs.filter(function(d) { return !isCash(d.name) && d.sect !== CASH; });
+  var secList = sectors.filter(function(s) { return s !== CASH; });
 
   var html = '<div class="twrap"><table class="rt">' +
     '<thead><tr>' +
     '<th>Sector</th>' +
-    '<th>Mejor nombre</th><th class="num">Contribución</th>' +
-    '<th>Peor nombre</th><th class="num">Contribución</th>' +
+    '<th>Top Name</th><th class="num">Contribution</th>' +
+    '<th>Bottom Name</th><th class="num">Contribution</th>' +
     '</tr></thead><tbody>';
-  secs.forEach(function(sec) {
+  secList.forEach(function(sec) {
     var arr = nonCash.filter(function(d){return d.sect===sec;});
     if (!arr.length) return;
     var sorted = arr.slice().sort(function(a,b){return b.contrib-a.contrib;});
-    var best = sorted[0], worst = sorted[sorted.length-1];
-    var bc = (best.contrib>=0?'+':'')+best.contrib.toFixed(3)+'%';
-    var wc = (worst.contrib>=0?'+':'')+worst.contrib.toFixed(3)+'%';
-    html += '<tr>' +
-      '<td style="font-weight:600;font-size:12px;color:var(--navy)">' + dispSec(sec) + '</td>' +
-      '<td style="font-size:12px">' +
-        '<b style="color:var(--navy)">' + best.name + '</b>' +
-        '<span style="font-size:10px;color:var(--mu);margin-left:4px">' + trunc(best.co||'',22) + '</span>' +
-      '</td>' +
-      '<td class="num" style="color:var(--pos);font-weight:700">' + bc + '</td>' +
-      '<td style="font-size:12px">' +
-        '<b style="color:var(--navy)">' + worst.name + '</b>' +
-        '<span style="font-size:10px;color:var(--mu);margin-left:4px">' + trunc(worst.co||'',22) + '</span>' +
-      '</td>' +
-      '<td class="num" style="color:var(--neg);font-weight:700">' + wc + '</td>' +
-    '</tr>';
+    if (arr.length === 1) {
+      var only = sorted[0];
+      var oc = (only.contrib>=0?'+':'')+only.contrib.toFixed(3)+'%';
+      html += '<tr>' +
+        '<td style="font-weight:600;font-size:12px;color:var(--navy)">' + dispSec(sec) + '</td>' +
+        '<td colspan="4" style="font-size:12px;color:var(--mu);font-style:italic">' +
+          '<b style="color:var(--navy)" title="' + (only.co||'') + '">' + only.name + '</b>' +
+          ' — only constituent, contrib: <b style="color:' + colr(only.contrib) + '">' + oc + '</b>' +
+        '</td>' +
+      '</tr>';
+    } else {
+      var best = sorted[0], worst = sorted[sorted.length-1];
+      var bc = (best.contrib>=0?'+':'')+best.contrib.toFixed(3)+'%';
+      var wc = (worst.contrib>=0?'+':'')+worst.contrib.toFixed(3)+'%';
+      html += '<tr>' +
+        '<td style="font-weight:600;font-size:12px;color:var(--navy)">' + dispSec(sec) + '</td>' +
+        '<td style="font-size:12px" title="' + (best.co||'') + '">' +
+          '<b style="color:var(--navy)">' + best.name + '</b>' +
+          '<span style="font-size:10px;color:var(--mu);margin-left:4px">' + trunc(best.co||'',22) + '</span>' +
+        '</td>' +
+        '<td class="num" style="color:' + colr(best.contrib) + ';font-weight:700">' + bc + '</td>' +
+        '<td style="font-size:12px" title="' + (worst.co||'') + '">' +
+          '<b style="color:var(--navy)">' + worst.name + '</b>' +
+          '<span style="font-size:10px;color:var(--mu);margin-left:4px">' + trunc(worst.co||'',22) + '</span>' +
+        '</td>' +
+        '<td class="num" style="color:' + colr(worst.contrib) + ';font-weight:700">' + wc + '</td>' +
+      '</tr>';
+    }
   });
   box.innerHTML = html + '</tbody></table></div>';
 }
@@ -2019,18 +1924,19 @@ window.ndxSetColorMode = function(m) {
   renderBeeswarm(_beeswarmSecAll, _beeswarmFilter);
 };
 
-window.ndxSetRebalTab = function(t) {
-  _rebalTab = t;
-  document.querySelectorAll('.ndx-rebal-tab').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.tab === t);
-  });
-  renderRebalSection();
-};
-
 window.ndxSetWLTab = function(t) {
   _wlTab = t;
   document.querySelectorAll('.ndx-wl-tab').forEach(function(b) {
     b.classList.toggle('active', b.dataset.tab === t);
+  });
+  renderWLSection();
+};
+
+window.ndxSetWLYear = function(yr) {
+  if (!YEAR_HOCS[yr]) return;
+  _wlYear = yr;
+  document.querySelectorAll('.ndx-wl-yr-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.yr === yr);
   });
   renderWLSection();
 };
@@ -2109,6 +2015,7 @@ function buildSkeleton() {
       '<div>' +
         '<div style="font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">NDX Price Return</div>' +
         '<div class="ndx-hero-val" id="ndx-ytd-val">&mdash;</div>' +
+        '<div id="ndx-ytd-ctx" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:5px"></div>' +
       '</div>' +
       '<div id="ndx-sim-badge" style="display:none;font-size:11px;background:rgba(255,180,0,.1);border:1px solid rgba(200,160,0,.35);border-radius:20px;padding:4px 12px;color:#7A5A00"></div>' +
     '</div>' +
@@ -2134,11 +2041,11 @@ function buildSkeleton() {
         '</div>' +
       '</div>' +
       '<div id="ndx-color-row" style="display:none;align-items:center;gap:8px;margin:6px 0 2px;padding:7px 10px;background:rgba(200,140,0,.06);border:1px solid rgba(200,140,0,.3);border-radius:8px">' +
-        '<span style="font-size:10px;color:#8A5A00;font-weight:700;letter-spacing:.05em">PROPUESTA — COLOR:</span>' +
+        '<span style="font-size:10px;color:#8A5A00;font-weight:700;letter-spacing:.05em">COLOR MODE:</span>' +
         '<button class="ndx-color-btn ndx-tab-btn active" data-mode="orig" onclick="ndxSetColorMode(\'orig\')">Original (√ global)</button>' +
-        '<button class="ndx-color-btn ndx-tab-btn" data-mode="A" onclick="ndxSetColorMode(\'A\')">A — Escalas pos/neg separadas</button>' +
-        '<button class="ndx-color-btn ndx-tab-btn" data-mode="B" onclick="ndxSetColorMode(\'B\')">B — Normalización local</button>' +
-        '<button class="ndx-color-btn ndx-tab-btn" data-mode="C" onclick="ndxSetColorMode(\'C\')">C — Gradiente 0.65</button>' +
+        '<button class="ndx-color-btn ndx-tab-btn" data-mode="A" onclick="ndxSetColorMode(\'A\')">A — Separate pos/neg scales</button>' +
+        '<button class="ndx-color-btn ndx-tab-btn" data-mode="B" onclick="ndxSetColorMode(\'B\')">B — Local normalization</button>' +
+        '<button class="ndx-color-btn ndx-tab-btn" data-mode="C" onclick="ndxSetColorMode(\'C\')">C — Gradient 0.65</button>' +
       '</div>' +
       '<div id="ndx-attr-chart-box" style="position:relative;height:420px"><canvas id="ndx-attr-canvas"></canvas></div>' +
       '<div id="ndx-treemap-box" style="display:none;padding:4px 0"></div>' +
@@ -2188,21 +2095,6 @@ function buildSkeleton() {
     '<div class="card"><div id="ndx-dumbbell-box"></div></div>' +
   '</div>' +
 
-  '<div class="sec" style="border:1.5px dashed rgba(200,140,0,.4);border-radius:12px;padding:16px">' +
-    '<div class="sechdr" style="padding-top:0">' +
-      '<span class="sect">Rebalance Impact</span>' + PROP_BADGE +
-      '<span class="secn" style="display:block;margin-top:3px">Tres vistas del efecto de los rebalanceos. Elige la que más info aporte.</span>' +
-    '</div>' +
-    '<div class="card">' +
-      '<div style="display:flex;gap:4px;margin-bottom:12px">' +
-        '<button class="ndx-rebal-tab ndx-tab-btn active" data-tab="A" onclick="ndxSetRebalTab(\'A\')">A — Eventos por HOC</button>' +
-        '<button class="ndx-rebal-tab ndx-tab-btn" data-tab="B" onclick="ndxSetRebalTab(\'B\')">B — Buy-and-hold vs. real</button>' +
-        '<button class="ndx-rebal-tab ndx-tab-btn" data-tab="C" onclick="ndxSetRebalTab(\'C\')">C — Concentración HHI</button>' +
-      '</div>' +
-      '<div id="ndx-rebal-box"></div>' +
-    '</div>' +
-  '</div>' +
-
   '<div class="sec">' +
     '<div class="sechdr">' +
       '<span class="sect">Top Contributors</span>' +
@@ -2211,16 +2103,22 @@ function buildSkeleton() {
     '<div class="card"><div id="ndx-pareto-box"></div></div>' +
   '</div>' +
 
-  '<div class="sec" style="border:1.5px dashed rgba(200,140,0,.4);border-radius:12px;padding:16px">' +
+  '<div class="sec">' +
     '<div class="sechdr" style="padding-top:0">' +
-      '<span class="sect">Winners vs Losers</span>' + PROP_BADGE +
-      '<span class="secn" style="display:block;margin-top:3px">Tres vistas del breakdown de performance. Elige la que más info aporte.</span>' +
+      '<span class="sect">Winners vs Losers</span>' +
+      '<span class="secn" style="display:block;margin-top:3px">Three views of performance breakdown by sector and constituent.</span>' +
     '</div>' +
     '<div class="card">' +
-      '<div style="display:flex;gap:4px;margin-bottom:12px">' +
-        '<button class="ndx-wl-tab ndx-tab-btn" data-tab="A" onclick="ndxSetWLTab(\'A\')">A — Matriz sectorial</button>' +
-        '<button class="ndx-wl-tab ndx-tab-btn" data-tab="B" onclick="ndxSetWLTab(\'B\')">B — Histograma de retornos</button>' +
-        '<button class="ndx-wl-tab ndx-tab-btn active" data-tab="C" onclick="ndxSetWLTab(\'C\')">C — Top/Bottom por sector</button>' +
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
+        '<div style="display:flex;gap:4px">' +
+          '<button class="ndx-wl-yr-btn ndx-tab-btn active" data-yr="ytd2026" onclick="ndxSetWLYear(\'ytd2026\')">YTD 2026</button>' +
+          '<button class="ndx-wl-yr-btn ndx-tab-btn" data-yr="y2025" onclick="ndxSetWLYear(\'y2025\')">2025</button>' +
+        '</div>' +
+        '<div style="display:flex;gap:4px;margin-left:8px">' +
+          '<button class="ndx-wl-tab ndx-tab-btn" data-tab="A" onclick="ndxSetWLTab(\'A\')">Sector Matrix</button>' +
+          '<button class="ndx-wl-tab ndx-tab-btn" data-tab="B" onclick="ndxSetWLTab(\'B\')">Return Distribution</button>' +
+          '<button class="ndx-wl-tab ndx-tab-btn active" data-tab="C" onclick="ndxSetWLTab(\'C\')">Top/Bottom by Sector</button>' +
+        '</div>' +
       '</div>' +
       '<div id="ndx-wl-box"></div>' +
     '</div>' +
@@ -2286,9 +2184,10 @@ export function loadNdxAttribution(container) {
   _beeswarmYear = 'ytd2026'; _beeswarmSectors = new Set(); _beeswarmSecAll = [];
   _activeYear = 'ytd2026';
   _paretoN = 10; _paretoYear = 'ytd2026'; _paretoCustomN = 0;
+  _wlYear = 'ytd2026'; _wlTab = 'C';
   _colorMode = 'orig';
   _colorMaxPos = 0; _colorMaxNeg = 0;
-  _rebalTab = 'A'; _wlTab = 'C';
+  _wlTab = 'C';
   _attrDecimals = 2; lastBaseR = null;
   if (_chart) { _chart.destroy(); _chart = null; }
 
@@ -2307,7 +2206,6 @@ export function loadNdxAttribution(container) {
   renderAttrChart(baseR);
   renderAttrTable(baseR);
   renderDumbbell();
-  renderRebalSection();
   renderPareto();
   renderWLSection();
   _updateScatterSlider();

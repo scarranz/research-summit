@@ -39,19 +39,22 @@ var _activeYear  = 'ytd2026';
 var _scatterYear = 'ytd2026';
 var _scatterSecSnapshots = [];
 var _scatterYrAxes = { xLo: null, xHi: null, yHi: null };
+var _globalScatterAxes = { xLo: null, xHi: null, yHi: null };
+var _globalBeeAxes     = { contribHi: null, xLo: null, xHi: null };
 var _beeswarmYear = 'ytd2026';
 var _beeswarmSectors = new Set();
 var _beeswarmSecAll = [];
 var _paretoN       = 10;
-var _paretoYear    = 'ytd2026';
-var _paretoCols    = new Set(['cumPct', 'weight', 'sector']);
+var _paretoYears   = new Set(['ytd2026']);
+var _paretoView    = 'table';
+var _paretoCols    = new Set(['ret', 'sector']);
 var _paretoCustomN = 0;
 var YEAR_HOCS    = { ytd2026: [12, 25], y2025: [2, 11] };
 var _colorMode   = 'orig';   // 'orig' | 'A' | 'B' | 'C'
 var _colorMaxPos = 0, _colorMaxNeg = 0;
 var _wlTab        = 'C';
 var _wlYear       = 'ytd2026';
-var _attrChartYear = 'ytd2026';
+var _attrChartYears = new Set(['ytd2026']);
 var _attrDecimals = 2;
 var lastBaseR    = null;
 
@@ -309,6 +312,39 @@ function bindTip(el, html) {
 }
 
 // ── KPI tile ──────────────────────────────────────────────────────────────
+function computeGlobalAxes() {
+  var allRets = [], allWts = [], allContribs = [];
+  Object.keys(YEAR_HOCS).forEach(function(yr) {
+    var range = YEAR_HOCS[yr];
+    var yrHocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
+    var snaps = yrHocs.map(function(_, i) {
+      return computeSecurities(new Set(), new Set(), yrHocs.slice(0, i + 1));
+    });
+    snaps.forEach(function(snap) {
+      snap.forEach(function(d) {
+        if (!isCash(d.name) && (d.w1 > 0 || d.w0 > 0)) {
+          allRets.push(d.ret);
+          allWts.push(d.w1);
+          allContribs.push(d.contrib);
+        }
+      });
+    });
+  });
+  if (allRets.length) {
+    var rng = Math.max.apply(null, allRets) - Math.min.apply(null, allRets);
+    _globalScatterAxes.xLo = Math.min.apply(null, allRets) - rng * 0.05;
+    _globalScatterAxes.xHi = Math.max.apply(null, allRets) + rng * 0.05;
+    _globalScatterAxes.yHi = Math.max.apply(null, allWts) * 1.08;
+  }
+  if (allContribs.length) {
+    var absMax = Math.max.apply(null, allContribs.map(function(c) { return Math.abs(c); }));
+    var cPad = absMax * 0.06;
+    _globalBeeAxes.contribHi = absMax * 1.1;
+    _globalBeeAxes.xLo = Math.min.apply(null, allContribs) - cPad;
+    _globalBeeAxes.xHi = Math.max.apply(null, allContribs) + cPad;
+  }
+}
+
 function computeYearReturn(yearKey) {
   var range = YEAR_HOCS[yearKey];
   if (!range) return null;
@@ -327,28 +363,25 @@ function renderKPI(res) {
   var el = document.getElementById('ndx-ytd-val');
   if (!el) return;
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
-  // Always show base return — never distort the price return with simulation weights
-  var displayYtd = baseR ? baseR.ytd : res.ytd;
+
+  // Big number: always YTD 2026 base return (never year-specific or simulation-distorted)
+  var ytd2026 = computeYearReturn('ytd2026');
+  var displayYtd = ytd2026 != null ? ytd2026 : (baseR ? baseR.ytd : res.ytd);
   el.innerHTML = '<span style="color:' + colr(displayYtd) + '">' + fmtYTD(displayYtd) + '</span>';
 
-  // Year context row — show other years alongside the main KPI
+  // Context row: always show ALL years with clear labels
   var ctxEl = document.getElementById('ndx-ytd-ctx');
   if (ctxEl) {
     var yearOrder = [
       { label: 'YTD 2026', key: 'ytd2026' },
       { label: '2025',     key: 'y2025'   },
     ];
-    var others = yearOrder.filter(function(y) { return y.key !== _activeYear; });
-    if (others.length) {
-      ctxEl.innerHTML = others.map(function(y) {
-        var v = computeYearReturn(y.key);
-        if (v == null) return '';
-        return '<span style="font-size:11px;color:var(--mu)">' + y.label + ': ' +
-          '<b style="color:' + colr(v) + '">' + (v >= 0 ? '+' : '') + v.toFixed(2) + '%</b></span>';
-      }).join('<span style="color:var(--mu);margin:0 4px">·</span>');
-    } else {
-      ctxEl.innerHTML = '';
-    }
+    ctxEl.innerHTML = yearOrder.map(function(y) {
+      var v = computeYearReturn(y.key);
+      if (v == null) return '';
+      return '<span style="font-size:11px;color:var(--mu)">' + y.label + ': ' +
+        '<b style="color:' + colr(v) + '">' + (v >= 0 ? '+' : '') + v.toFixed(2) + '%</b></span>';
+    }).filter(Boolean).join('<span style="color:var(--mu);margin:0 4px">·</span>');
   }
 
   var tag = document.getElementById('ndx-sim-badge');
@@ -362,73 +395,94 @@ function renderKPI(res) {
 }
 
 // ── Bar chart ─────────────────────────────────────────────────────────────
+var _ATTR_YR_POS = { ytd2026: 'rgba(23,122,78,.72)',  y2025: 'rgba(46,109,164,.72)'  };
+var _ATTR_YR_NEG = { ytd2026: 'rgba(155,42,32,.72)',  y2025: 'rgba(160,64,64,.72)'   };
+var _ATTR_YR_BDP = { ytd2026: '#177A4E',              y2025: '#2E6DA4'               };
+var _ATTR_YR_BDN = { ytd2026: '#9B2A20',              y2025: '#A04040'               };
+
 function renderAttrChart() {
   var canvas = document.getElementById('ndx-attr-canvas');
   if (!canvas || typeof Chart === 'undefined') return;
-  // compute attribution for the chart's own year (unfiltered — full landscape view)
-  var chartHocs = hocsForYear(_attrChartYear);
-  var res = computeCore(new Set(), new Set(), chartHocs);
-  var isIG = attrTab === 'ig';
-  var items = [];
-  if (isIG) {
-    sectors.forEach(function(s) {
-      (igBySec[s]||[]).forEach(function(g) {
-        items.push({ label: chartLbl(g, true), full: dispIG(g), val: res.byIG[g]||0 });
-      });
-    });
-  } else {
-    sectors.forEach(function(s) {
-      items.push({ label: chartLbl(s, false), full: dispSec(s), val: res.bySec[s]||0 });
-    });
-  }
-  _chartFull = items.map(function(x) { return x.full; });
-  var labels = items.map(function(x) { return x.label; });
-  var data   = items.map(function(x) { return parseFloat(x.val.toFixed(6)); });
-  var bg = items.map(function(x) {
-    return x.val >= 0 ? 'rgba(23,122,78,.72)' : 'rgba(155,42,32,.72)';
-  });
-  var bd = items.map(function(x) {
-    return x.val >= 0 ? '#177A4E' : '#9B2A20';
-  });
-  // compute local axes for this year's data
+
+  var years  = Array.from(_attrChartYears);
+  var isIG   = attrTab === 'ig';
+
   function axisRng(vals) {
     var mn = Math.min.apply(null, vals.concat(0));
     var mx = Math.max.apply(null, vals.concat(0));
     var pad = Math.max(Math.abs(mx - mn) * 0.12, 0.1);
     return { min: mn - pad, max: mx + pad };
   }
-  var secVals = sectors.map(function(s) { return res.bySec[s] || 0; });
-  var igValsLocal = [];
-  sectors.forEach(function(s) { (igBySec[s]||[]).forEach(function(g) { igValsLocal.push(res.byIG[g]||0); }); });
-  var sr = axisRng(secVals);
-  var ir = axisRng(igValsLocal.length ? igValsLocal : [0]);
-  var xMin = isIG ? ir.min : sr.min;
-  var xMax = isIG ? ir.max : sr.max;
-  var rowH = isIG ? 26 : 30;
-  var h = Math.max(340, items.length * rowH + 60);
-  var box = document.getElementById('ndx-attr-chart-box');
-  if (box) box.style.height = h + 'px';
-  if (_chart) {
-    _chart.data.labels = labels;
-    _chart.data.datasets[0].data = data;
-    _chart.data.datasets[0].backgroundColor = bg;
-    _chart.data.datasets[0].borderColor = bd;
-    _chart.options.scales.x.min = xMin;
-    _chart.options.scales.x.max = xMax;
-    _chart.update('none');
-    return;
+
+  // Compute result per year and build items with combined axis
+  var resByYr = {};
+  years.forEach(function(yr) {
+    resByYr[yr] = computeCore(new Set(), new Set(), hocsForYear(yr));
+  });
+
+  // Labels come from primary year (or ytd2026 if active)
+  var primaryYr = _attrChartYears.has('ytd2026') ? 'ytd2026' : years[0];
+  var primaryRes = resByYr[primaryYr];
+
+  var items = [];
+  if (isIG) {
+    sectors.forEach(function(s) {
+      (igBySec[s]||[]).forEach(function(g) {
+        items.push({ label: chartLbl(g, true), full: dispIG(g), key: g, isIG: true });
+      });
+    });
+  } else {
+    sectors.forEach(function(s) {
+      items.push({ label: chartLbl(s, false), full: dispSec(s), key: s, isIG: false });
+    });
   }
+  _chartFull = items.map(function(x) { return x.full; });
+  var labels = items.map(function(x) { return x.label; });
+
+  // Combined axis across all years
+  var allVals = [];
+  items.forEach(function(it) {
+    years.forEach(function(yr) {
+      var v = isIG ? (resByYr[yr].byIG[it.key] || 0) : (resByYr[yr].bySec[it.key] || 0);
+      allVals.push(v);
+    });
+  });
+  var axr  = axisRng(allVals.length ? allVals : [0]);
+  var xMin = axr.min, xMax = axr.max;
+  var rowH = isIG ? 26 : 30;
+  var h    = Math.max(340, items.length * rowH + 60);
+  var box  = document.getElementById('ndx-attr-chart-box');
+  if (box) box.style.height = h + 'px';
+
+  // Build one dataset per year
+  var datasets = years.map(function(yr) {
+    var data = items.map(function(it) {
+      return parseFloat((isIG ? (resByYr[yr].byIG[it.key] || 0) : (resByYr[yr].bySec[it.key] || 0)).toFixed(6));
+    });
+    var bg = data.map(function(v) { return v >= 0 ? (_ATTR_YR_POS[yr] || 'rgba(23,122,78,.72)') : (_ATTR_YR_NEG[yr] || 'rgba(155,42,32,.72)'); });
+    var bd = data.map(function(v) { return v >= 0 ? (_ATTR_YR_BDP[yr] || '#177A4E') : (_ATTR_YR_BDN[yr] || '#9B2A20'); });
+    return { label: YR_LABEL[yr] || yr, data: data, backgroundColor: bg, borderColor: bd, borderWidth: 1, borderRadius: 3, barPercentage: years.length > 1 ? 0.42 : 0.75 };
+  });
+
+  var showLegend = years.length > 1;
+
+  if (_chart) { _chart.destroy(); _chart = null; }
+
   _chart = new Chart(canvas, {
     type: 'bar',
-    data: { labels: labels, datasets: [{ data: data, backgroundColor: bg, borderColor: bd, borderWidth: 1, borderRadius: 3 }] },
+    data: { labels: labels, datasets: datasets },
     options: {
       indexAxis: 'y', responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { display: false },
+        legend: {
+          display: showLegend,
+          position: 'top',
+          labels: { font: { size: 11, family: 'Inter,sans-serif' }, color: '#2B3B4E', boxWidth: 12, padding: 10 }
+        },
         tooltip: {
           callbacks: {
             title: function(ctx) { return _chartFull[ctx[0].dataIndex] || ctx[0].label; },
-            label: function(ctx) { var v = ctx.raw; return ' ' + (v >= 0 ? '+' : '') + v.toFixed(4) + '%'; }
+            label: function(ctx) { var v = ctx.raw; return ' ' + ctx.dataset.label + ': ' + (v >= 0 ? '+' : '') + v.toFixed(4) + '%'; }
           }
         }
       },
@@ -1190,20 +1244,27 @@ function rebuildScatterSnapshots(yr) {
   var range = YEAR_HOCS[yr];
   if (!range) return;
   var yrHocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
-  _scatterSecSnapshots = yrHocs.map(function(_, i) {
+
+  // Snapshot zero: start of year — all returns = 0, use opening weights
+  var zeroSnap = [];
+  var firstHoc = yrHocs[0];
+  if (firstHoc) {
+    firstHoc.sec.forEach(function(s) {
+      if (!isCash(s.t) && (s.w || 0) > 0) {
+        zeroSnap.push({ name: s.t, co: s.co, sect: s.s, grp: s.g,
+                         ret: 0, w0: s.w || 0, w1: s.w || 0, contrib: 0 });
+      }
+    });
+  }
+
+  // Normal snapshots: cumulative return through HOC i+1
+  var normalSnaps = yrHocs.map(function(_, i) {
     return computeSecurities(new Set(), new Set(), yrHocs.slice(0, i + 1));
   });
+
+  _scatterSecSnapshots = [zeroSnap].concat(normalSnaps);
   _scatterHocIdx = _scatterSecSnapshots.length - 1;
-  var allRets = [], allWts = [];
-  _scatterSecSnapshots.forEach(function(snap) {
-    snap.forEach(function(d) { if (d.w1 > 0 || d.w0 > 0) { allRets.push(d.ret); allWts.push(d.w1); } });
-  });
-  if (allRets.length) {
-    var rng = Math.max.apply(null, allRets) - Math.min.apply(null, allRets);
-    _scatterYrAxes.xLo = Math.min.apply(null, allRets) - rng * 0.05;
-    _scatterYrAxes.xHi = Math.max.apply(null, allRets) + rng * 0.05;
-    _scatterYrAxes.yHi = Math.max.apply(null, allWts) * 1.08;
-  }
+  // Axes are global — computed once in computeGlobalAxes()
 }
 
 function _updateScatterSlider() {
@@ -1213,9 +1274,13 @@ function _updateScatterSlider() {
   if (!range) return;
   var yrHocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
   if (sl) { sl.max = String(_scatterSecSnapshots.length - 1); sl.value = String(_scatterHocIdx); }
-  var hoc = yrHocs[_scatterHocIdx];
-  if (lbl && hoc) {
-    lbl.textContent = 'HOC ' + hoc.n + ' · ' + (hoc.close || hoc.eff + ' (Open)');
+  if (lbl) {
+    if (_scatterHocIdx === 0) {
+      lbl.textContent = 'Start of ' + (_scatterYear === 'ytd2026' ? '2026' : '2025');
+    } else {
+      var hoc = yrHocs[_scatterHocIdx - 1];  // -1: index 0 is the zero snap
+      lbl.textContent = hoc ? ('HOC ' + hoc.n + ' · ' + (hoc.close || hoc.eff + ' (Open)')) : '';
+    }
   }
   if (_scatterSecSnapshots[_scatterHocIdx]) renderScatter(_scatterSecSnapshots[_scatterHocIdx]);
 }
@@ -1255,9 +1320,9 @@ function renderScatter(securities) {
 
   var xs = dots.map(function(d) { return d.ret; });
   var ys = dots.map(function(d) { return d.w1; });
-  var xLo = _scatterYrAxes.xLo != null ? _scatterYrAxes.xLo : Math.min.apply(null, xs) - (Math.max.apply(null, xs) - Math.min.apply(null, xs)) * 0.05;
-  var xHi = _scatterYrAxes.xHi != null ? _scatterYrAxes.xHi : Math.max.apply(null, xs) + (Math.max.apply(null, xs) - Math.min.apply(null, xs)) * 0.05;
-  var yHi = _scatterYrAxes.yHi != null ? _scatterYrAxes.yHi : Math.max.apply(null, ys) * 1.06;
+  var xLo = _globalScatterAxes.xLo != null ? _globalScatterAxes.xLo : Math.min.apply(null, xs) - (Math.max.apply(null, xs) - Math.min.apply(null, xs)) * 0.05;
+  var xHi = _globalScatterAxes.xHi != null ? _globalScatterAxes.xHi : Math.max.apply(null, xs) + (Math.max.apply(null, xs) - Math.min.apply(null, xs)) * 0.05;
+  var yHi = _globalScatterAxes.yHi != null ? _globalScatterAxes.yHi : Math.max.apply(null, ys) * 1.06;
 
   var cw = VW - P.l - P.r, ch = VH - P.t - P.b;
   function X(v) { return P.l + (v - xLo) / (xHi - xLo) * cw; }
@@ -1376,7 +1441,7 @@ function renderBeeswarm(securities, threshold) {
   var box = document.getElementById('ndx-beeswarm-box');
   if (!box || !securities.length) return;
 
-  var filtered = securities.filter(function(d) { return Math.abs(d.contrib) > threshold && d.sect !== CASH; });
+  var filtered = securities.filter(function(d) { return Math.abs(d.contrib) > threshold && d.sect !== CASH && (d.w0 > 0 || d.w1 > 0); });
 
   var secList = _beeswarmSectors.size > 0
     ? sectors.filter(function(s) { return _beeswarmSectors.has(s); })
@@ -1387,12 +1452,17 @@ function renderBeeswarm(securities, threshold) {
   var VW = 900;
   var VH = P.t + secList.length * laneH + P.b;
 
-  // Global X scale across all sectors
+  // Global X scale across all sectors and all years
   var allC = filtered.map(function(d) { return d.contrib; });
-  var xLo = allC.length ? Math.min.apply(null, allC) : -1;
-  var xHi = allC.length ? Math.max.apply(null, allC) : 1;
-  var xPad = Math.max((xHi - xLo) * 0.04, 0.05);
-  xLo -= xPad; xHi += xPad;
+  var xLo, xHi;
+  if (_globalBeeAxes.xLo != null) {
+    xLo = _globalBeeAxes.xLo;
+    xHi = _globalBeeAxes.xHi;
+  } else {
+    var xPad = Math.max((Math.max.apply(null, allC) - Math.min.apply(null, allC)) * 0.04, 0.05);
+    xLo = (allC.length ? Math.min.apply(null, allC) : -1) - xPad;
+    xHi = (allC.length ? Math.max.apply(null, allC) : 1) + xPad;
+  }
   var cw = VW - P.l - P.r;
   function X(v) { return P.l + (v - xLo) / (xHi - xLo) * cw; }
 
@@ -1410,7 +1480,9 @@ function renderBeeswarm(securities, threshold) {
     svg.appendChild(se('line', { x1: X(0), x2: X(0), y1: P.t, y2: VH - P.b, stroke: '#C0C8D0', 'stroke-width': 1.5 }));
   }
 
-  var maxAbsC = Math.max.apply(null, filtered.map(function(d) { return Math.abs(d.contrib); })) || 1;
+  var maxAbsC = (_globalBeeAxes.contribHi != null
+    ? _globalBeeAxes.contribHi
+    : (Math.max.apply(null, filtered.map(function(d) { return Math.abs(d.contrib); })) || 1));
 
   secList.forEach(function(sec, si) {
     var laneY = P.t + si * laneH + laneH / 2;
@@ -1451,55 +1523,73 @@ function renderBeeswarm(securities, threshold) {
 }
 
 // ── Pareto / Top Contributors ────────────────────────────────────────────
-function renderPareto() {
-  var box = document.getElementById('ndx-pareto-box');
-  if (!box) return;
+var YR_LABEL  = { ytd2026: 'YTD 2026', y2025: '2025' };
+var YR_COLORS = {
+  ytd2026: { pos: '#177A4E', neg: '#9B2A20' },
+  y2025:   { pos: '#2E6DA4', neg: '#A04040' },
+};
 
-  var yrHocs = hocsForYear(_paretoYear);
-  if (!yrHocs.length) return;
-
-  var allSec = computeSecurities(new Set(), new Set(), yrHocs);
-  var nonCash = allSec.filter(function(d) { return !isCash(d.name) && d.sect !== CASH; });
-  var byAbs = nonCash.slice().sort(function(a, b) { return Math.abs(b.contrib) - Math.abs(a.contrib); });
-
-  var N = _paretoCustomN > 0 ? _paretoCustomN : _paretoN;
-  var showAll = N === 0;
-  var topN = showAll ? byAbs : byAbs.slice(0, N);
-
-  // Index total return for the year
+function _yearTotalRet(yr) {
+  var range = YEAR_HOCS[yr];
+  if (!range) return 0;
+  var hocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
   var logSum = 0;
-  yrHocs.forEach(function(hoc) {
+  hocs.forEach(function(hoc) {
     var hocRet = 0;
     hoc.sec.forEach(function(s) { hocRet += (s.w || 0) * s.r; });
     logSum += Math.log(1 + hocRet / 100);
   });
-  var totalRet = (Math.exp(logSum) - 1) * 100;
+  return (Math.exp(logSum) - 1) * 100;
+}
 
-  var topContrib = topN.reduce(function(s, d) { return s + d.contrib; }, 0);
-  var nlbl = showAll ? 'All ' + topN.length : String(N);
-  var totalStr = (totalRet >= 0 ? '+' : '') + totalRet.toFixed(2) + '%';
-  var topStr   = (topContrib >= 0 ? '+' : '') + topContrib.toFixed(2) + '%';
-  var pctExp   = totalRet !== 0 ? (Math.abs(topContrib / totalRet) * 100).toFixed(1) + '%' : '';
+function renderPareto() {
+  var box = document.getElementById('ndx-pareto-box');
+  if (!box) return;
 
-  // Sort: pos desc, then neg asc
-  var pos  = topN.filter(function(d) { return d.contrib >= 0; }).sort(function(a, b) { return b.contrib - a.contrib; });
-  var neg  = topN.filter(function(d) { return d.contrib < 0;  }).sort(function(a, b) { return a.contrib - b.contrib; });
-  var rows = pos.concat(neg);
+  var years = Array.from(_paretoYears);
+  var primaryYr = _paretoYears.has('ytd2026') ? 'ytd2026' : years[0];
 
-  var COL_OPTS = [
-    { k: 'ret',    lbl: 'Ret%'   },
-    { k: 'weight', lbl: 'Weight' },
-    { k: 'sector', lbl: 'Sector' },
-    { k: 'ig',     lbl: 'IG'     },
-  ];
+  var secsByYr = {}, totalRetByYr = {};
+  years.forEach(function(yr) {
+    var secs = getSecuritiesForYear(yr)
+      .filter(function(d) { return !isCash(d.name) && (d.w0 > 0 || d.w1 > 0) && d.sect !== CASH; });
+    secsByYr[yr] = secs;
+    totalRetByYr[yr] = _yearTotalRet(yr);
+  });
 
+  var N = _paretoCustomN > 0 ? _paretoCustomN : _paretoN;
+  var showAll = N === 0;
+
+  // Build row map: union of top-N pos + bottom-N neg from each active year
+  var rowMap = {};
+  years.forEach(function(yr) {
+    var secs = secsByYr[yr];
+    var pos = secs.filter(function(d) { return d.contrib >= 0; }).sort(function(a,b) { return b.contrib - a.contrib; });
+    var neg = secs.filter(function(d) { return d.contrib < 0;  }).sort(function(a,b) { return a.contrib - b.contrib; });
+    var selected = showAll ? secs : pos.slice(0, N).concat(neg.slice(0, N));
+    selected.forEach(function(d) {
+      if (!rowMap[d.name]) rowMap[d.name] = { name: d.name, co: d.co };
+      rowMap[d.name][yr] = { contrib: d.contrib, ret: d.ret, w1: d.w1, sect: d.sect, grp: d.grp };
+    });
+  });
+
+  var allRows = Object.keys(rowMap).map(function(k) { return rowMap[k]; });
+  var primaryPos = allRows.filter(function(r) { return r[primaryYr] && r[primaryYr].contrib >= 0; })
+    .sort(function(a,b) { return b[primaryYr].contrib - a[primaryYr].contrib; });
+  var primaryNeg = allRows.filter(function(r) { return r[primaryYr] && r[primaryYr].contrib < 0; })
+    .sort(function(a,b) { return a[primaryYr].contrib - b[primaryYr].contrib; });
+  var secondOnly  = allRows.filter(function(r) { return !r[primaryYr]; });
+  var rows = primaryPos.concat(primaryNeg).concat(secondOnly);
+  var sepIdx = primaryPos.length;
+
+  // Toolbar
   var yrBtns = [
     { k: 'ytd2026', lbl: 'YTD 2026' },
     { k: 'y2025',   lbl: '2025'     },
   ].map(function(y) {
-    var act = _paretoYear === y.k;
+    var act = _paretoYears.has(y.k);
     return '<button class="ndx-tab-btn ndx-par-yr-btn' + (act ? ' active' : '') +
-      '" data-yr="' + y.k + '" onclick="ndxSetParetoYear(\'' + y.k + '\')">' + y.lbl + '</button>';
+      '" data-yr="' + y.k + '" onclick="ndxToggleParetoYear(\'' + y.k + '\')">' + y.lbl + '</button>';
   }).join('');
 
   var nBtns = [5, 10, 20, 0].map(function(nv) {
@@ -1512,84 +1602,206 @@ function renderPareto() {
   var customVal = _paretoCustomN > 0 ? String(_paretoCustomN) : '';
   var customInp = '<input type="number" min="1" max="200" placeholder="Custom N" value="' + customVal + '" ' +
     'style="width:76px;font-size:11px;padding:3px 6px;border:1px solid var(--rule);border-radius:4px;' +
-    'background:var(--surface);color:var(--navy)" ' +
-    'onchange="ndxSetParetoCustomN(+this.value)">';
+    'background:var(--surface);color:var(--navy)" onchange="ndxSetParetoCustomN(+this.value)">';
 
+  var COL_OPTS = [
+    { k: 'ret',    lbl: 'Ret%'   },
+    { k: 'sector', lbl: 'Sector' },
+    { k: 'ig',     lbl: 'IG'     },
+  ];
   var colBtns = COL_OPTS.map(function(c) {
     var act = _paretoCols.has(c.k);
     return '<button class="ndx-tab-btn ndx-par-col-btn' + (act ? ' active' : '') +
       '" data-col="' + c.k + '" onclick="ndxToggleParetoCol(\'' + c.k + '\')">' + c.lbl + '</button>';
   }).join('');
 
+  var viewLbl = _paretoView === 'table' ? 'Table' : 'Chart';
   var html =
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">' +
       '<div style="display:flex;gap:4px">' + yrBtns + '</div>' +
       '<div style="width:1px;height:16px;background:var(--rule);flex-shrink:0"></div>' +
-      '<div style="display:flex;gap:4px">' + nBtns + '</div>' +
-      customInp +
+      '<div style="display:flex;gap:4px">' + nBtns + '</div>' + customInp +
       '<div style="width:1px;height:16px;background:var(--rule);flex-shrink:0"></div>' +
       '<div style="display:flex;gap:4px">' + colBtns + '</div>' +
-      '<span style="margin-left:auto;font-size:11.5px;color:var(--mu);white-space:nowrap">' +
-        nlbl + ' names: <b style="color:' + colr(topContrib) + '">' + topStr + '</b>' +
-        (pctExp ? ' · <b style="color:var(--navy)">' + pctExp + '</b> of ' +
-          '<b style="color:' + colr(totalRet) + '">' + totalStr + '</b>' : '') +
-      '</span>' +
+      '<div style="width:1px;height:16px;background:var(--rule);flex-shrink:0"></div>' +
+      '<button id="ndx-par-view-btn" class="ndx-tab-btn" onclick="ndxToggleParetoView()" title="Toggle table / chart">' + viewLbl + '</button>' +
     '</div>';
 
+  if (_paretoView === 'chart') {
+    html += _renderParetoChartSVG(rows, totalRetByYr, primaryYr, years, N, sepIdx);
+    box.innerHTML = html;
+    return;
+  }
+
+  // TABLE view
   var showRet    = _paretoCols.has('ret');
-  var showWeight = _paretoCols.has('weight');
   var showSector = _paretoCols.has('sector');
   var showIG     = _paretoCols.has('ig');
 
-  html +=
-    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
-    '<thead><tr style="border-bottom:1.5px solid var(--rule)">' +
-      '<th style="width:26px;text-align:right;padding:4px 6px;color:var(--mu);font-weight:500">#</th>' +
-      '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500">Ticker</th>' +
-      '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Contrib</th>' +
-      '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Cum%</th>' +
-      (showRet    ? '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Ret%</th>'    : '') +
-      (showWeight ? '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Wt%</th>'     : '') +
-      (showSector ? '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500">Sector</th>'  : '') +
-      (showIG     ? '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500">IG</th>'       : '') +
-    '</tr></thead><tbody>';
+  var thCols =
+    '<th style="width:26px;text-align:right;padding:4px 6px;color:var(--mu);font-weight:500">#</th>' +
+    '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500">Ticker</th>';
+  years.forEach(function(yr) {
+    var lbl = YR_LABEL[yr] || yr;
+    thCols += '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Contrib ' + lbl + '</th>';
+    thCols += '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Cum% ' + lbl + '</th>';
+    if (showRet) thCols += '<th style="text-align:right;padding:4px 8px;color:var(--mu);font-weight:500">Ret% ' + lbl + '</th>';
+  });
+  if (showSector) thCols += '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500">Sector</th>';
+  if (showIG)     thCols += '<th style="text-align:left;padding:4px 8px;color:var(--mu);font-weight:500">IG</th>';
 
-  var cum = 0;
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
+    '<thead><tr style="border-bottom:1.5px solid var(--rule)">' + thCols + '</tr></thead><tbody>';
+
+  var cums = {};
+  years.forEach(function(yr) { cums[yr] = 0; });
+  var posCount = 0, negCount = 0;
+  var totalCols = 2 + years.length * (2 + (showRet ? 1 : 0)) + (showSector ? 1 : 0) + (showIG ? 1 : 0);
+
   rows.forEach(function(d, i) {
-    cum += d.contrib;
-    var cumPct   = totalRet !== 0 ? cum / totalRet * 100 : 0;
-    var cv       = d.contrib;
-    var contribStr = (cv >= 0 ? '+' : '') + cv.toFixed(3) + '%';
-    var contribCol = cv >= 0 ? 'var(--pos)' : 'var(--neg)';
-    var cumStr   = (cumPct >= 0 ? '+' : '') + cumPct.toFixed(1) + '%';
-    var retStr   = (d.ret >= 0 ? '+' : '') + d.ret.toFixed(1) + '%';
-    var retCol   = d.ret >= 0 ? 'var(--pos)' : 'var(--neg)';
-    var wtPct    = (d.w1 > 0 ? d.w1 : d.w0).toFixed(2) + '%';
-    var rowBg    = i % 2 === 1 ? 'background:var(--surface)' : '';
-    var coTitle  = (d.co || d.name).replace(/"/g, '&quot;');
+    var isPrimPos = d[primaryYr] ? d[primaryYr].contrib >= 0 : true;
+    var rank = isPrimPos ? (++posCount) : (++negCount);
+    var rowBg = i % 2 === 1 ? 'background:var(--surface)' : '';
+    var coTitle = (d.co || d.name).replace(/"/g, '&quot;');
 
-    html +=
+    var sep = '';
+    if (i === sepIdx && primaryNeg.length > 0 && primaryPos.length > 0) {
+      sep = '<tr><td colspan="' + totalCols + '" style="height:4px;background:linear-gradient(90deg,transparent,var(--rule),transparent)"></td></tr>';
+    }
+
+    var tds = '';
+    years.forEach(function(yr) {
+      var ydata = d[yr];
+      if (!ydata) {
+        tds += '<td style="text-align:right;padding:4px 8px;color:var(--mu);font-size:11px">—</td>';
+        tds += '<td style="text-align:right;padding:4px 8px;color:var(--mu);font-size:11px">—</td>';
+        if (showRet) tds += '<td style="text-align:right;padding:4px 8px;color:var(--mu);font-size:11px">—</td>';
+        return;
+      }
+      cums[yr] += ydata.contrib;
+      var cumPct = totalRetByYr[yr] !== 0 ? cums[yr] / totalRetByYr[yr] * 100 : 0;
+      tds += '<td style="text-align:right;padding:4px 8px;color:' + colr(ydata.contrib) + ';font-weight:600;font-variant-numeric:tabular-nums">' +
+               (ydata.contrib >= 0 ? '+' : '') + ydata.contrib.toFixed(3) + '%</td>';
+      tds += '<td style="text-align:right;padding:4px 8px;color:var(--mu);font-size:11.5px;font-variant-numeric:tabular-nums">' +
+               (cumPct >= 0 ? '+' : '') + cumPct.toFixed(1) + '%</td>';
+      if (showRet) {
+        tds += '<td style="text-align:right;padding:4px 8px;color:' + colr(ydata.ret) + ';font-size:11.5px;font-variant-numeric:tabular-nums">' +
+                 (ydata.ret >= 0 ? '+' : '') + ydata.ret.toFixed(1) + '%</td>';
+      }
+    });
+
+    var refData = d[primaryYr] || d[years[0]] || {};
+    var sectTd = showSector ? '<td style="text-align:left;padding:4px 8px;font-size:11px;color:var(--mu)">' + trunc(dispSec(refData.sect || ''), 32) + '</td>' : '';
+    var igTd   = showIG     ? '<td style="text-align:left;padding:4px 8px;font-size:11px;color:var(--mu)">' + trunc(dispIG(refData.grp  || ''), 36) + '</td>' : '';
+
+    html += sep +
       '<tr style="border-bottom:.5px solid var(--rule);' + rowBg + '">' +
-        '<td style="text-align:right;padding:4px 6px;color:var(--mu);font-size:11px">' + (i + 1) + '</td>' +
-        '<td style="text-align:left;padding:4px 8px;font-weight:700;color:var(--navy);' +
-          'font-variant-numeric:tabular-nums" title="' + coTitle + '">' + d.name + '</td>' +
-        '<td style="text-align:right;padding:4px 8px;color:' + contribCol + ';font-weight:600;' +
-          'font-variant-numeric:tabular-nums">' + contribStr + '</td>' +
-        '<td style="text-align:right;padding:4px 8px;color:var(--mu);font-size:11.5px;' +
-          'font-variant-numeric:tabular-nums">' + cumStr + '</td>' +
-        (showRet    ? '<td style="text-align:right;padding:4px 8px;color:' + retCol + ';font-size:11.5px;' +
-          'font-variant-numeric:tabular-nums">' + retStr + '</td>' : '') +
-        (showWeight ? '<td style="text-align:right;padding:4px 8px;color:var(--mu);font-size:11.5px;' +
-          'font-variant-numeric:tabular-nums">' + wtPct + '</td>' : '') +
-        (showSector ? '<td style="text-align:left;padding:4px 8px;font-size:11px;color:var(--mu)">' +
-          trunc(dispSec(d.sect), 32) + '</td>' : '') +
-        (showIG     ? '<td style="text-align:left;padding:4px 8px;font-size:11px;color:var(--mu)">' +
-          trunc(dispIG(d.grp), 36) + '</td>' : '') +
+        '<td style="text-align:right;padding:4px 6px;color:var(--mu);font-size:11px">' + rank + '</td>' +
+        '<td style="text-align:left;padding:4px 8px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums" title="' + coTitle + '">' + d.name + '</td>' +
+        tds + sectTd + igTd +
       '</tr>';
   });
 
-  html += '</tbody></table></div>';
+  // Footer totals
+  var footTds = '<td colspan="2" style="font-size:11px;font-weight:600;padding:6px 8px;color:var(--navy)">Shown total</td>';
+  years.forEach(function(yr) {
+    var tot = rows.reduce(function(s, r) { return s + (r[yr] ? r[yr].contrib : 0); }, 0);
+    footTds += '<td style="text-align:right;padding:6px 8px;font-weight:700;color:' + colr(tot) + ';font-size:11.5px;font-variant-numeric:tabular-nums">' + (tot >= 0 ? '+' : '') + tot.toFixed(3) + '%</td>';
+    footTds += '<td></td>';
+    if (showRet) footTds += '<td></td>';
+  });
+  if (showSector) footTds += '<td></td>';
+  if (showIG)     footTds += '<td></td>';
+
+  html += '</tbody><tfoot><tr style="border-top:2px solid var(--navy)">' + footTds + '</tr></tfoot></table></div>';
   box.innerHTML = html;
+}
+
+function _renderParetoChartSVG(rows, totalRetByYr, primaryYr, years, N, sepIdx) {
+  if (!rows.length) return '<div style="color:var(--mu);padding:20px">No data</div>';
+  var VW = 900, VH = 380, P = { t: 50, r: 70, b: 72, l: 50 };
+  var cw = VW - P.l - P.r, ch = VH - P.t - P.b;
+
+  // Use primary year rows for x ordering; limit to N pos + N neg
+  var posRows = rows.slice(0, sepIdx);
+  var negRows = rows.slice(sepIdx, sepIdx + (rows.length - sepIdx));
+  var limitN = N === 0 ? rows.length : N;
+  var chartRows = posRows.slice(0, limitN).concat(negRows.slice(0, limitN));
+
+  var allVals = [];
+  chartRows.forEach(function(r) { years.forEach(function(yr) { if (r[yr]) allVals.push(r[yr].contrib); }); });
+  if (!allVals.length) return '<div style="color:var(--mu);padding:20px">No data</div>';
+
+  var yMax = Math.max.apply(null, allVals.concat([0]));
+  var yMin = Math.min.apply(null, allVals.concat([0]));
+  var pad  = Math.max((yMax - yMin) * 0.12, 0.05);
+  yMax += pad; yMin -= pad;
+
+  function Y(v) { return P.t + ch - (v - yMin) / (yMax - yMin) * ch; }
+  var y0   = Y(0);
+  var slotW = cw / Math.max(chartRows.length, 1);
+  var nYr   = years.length;
+  var barW  = nYr === 1 ? slotW * 0.6 : slotW * 0.38;
+
+  var svgBars = '', svgCum = '';
+  var cumAcc = 0, cumPts = [];
+
+  chartRows.forEach(function(r, i) {
+    var cx = P.l + i * slotW + slotW / 2;
+    years.forEach(function(yr, yi) {
+      var ydata = r[yr];
+      if (!ydata) return;
+      var xOff = nYr === 1 ? 0 : (yi === 0 ? -(barW / 2 + 1) : (barW / 2 + 1));
+      var bx   = cx + xOff - barW / 2;
+      var v    = ydata.contrib;
+      var yt   = Y(Math.max(v, 0)), yb = Y(Math.min(v, 0));
+      var col  = YR_COLORS[yr] ? (v >= 0 ? YR_COLORS[yr].pos : YR_COLORS[yr].neg) : (v >= 0 ? '#177A4E' : '#9B2A20');
+      svgBars += '<rect x="' + bx.toFixed(1) + '" y="' + yt.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + Math.max(Math.abs(yb - yt), 1).toFixed(1) + '" fill="' + col + '" opacity=".82" rx="2"/>';
+    });
+    if (r[primaryYr]) { cumAcc += r[primaryYr].contrib; cumPts.push({ x: cx, v: cumAcc }); }
+  });
+
+  var pts = cumPts.map(function(p) { return p.x.toFixed(1) + ',' + Y(p.v).toFixed(1); });
+  if (pts.length > 1) {
+    svgCum = '<polyline points="' + pts.join(' ') + '" fill="none" stroke="var(--navy)" stroke-width="1.5" stroke-dasharray="4 2" opacity=".7"/>';
+    cumPts.forEach(function(p) { svgCum += '<circle cx="' + p.x.toFixed(1) + '" cy="' + Y(p.v).toFixed(1) + '" r="2.5" fill="var(--navy)" opacity=".7"/>'; });
+  }
+
+  var totalRet = totalRetByYr[primaryYr] || 0;
+  var yTR = Y(totalRet);
+  var svgRef = '';
+  if (yTR > P.t - 2 && yTR < P.t + ch + 2) {
+    svgRef = '<line x1="' + P.l + '" y1="' + yTR.toFixed(1) + '" x2="' + (P.l + cw) + '" y2="' + yTR.toFixed(1) + '" stroke="#8A93A0" stroke-width="1" stroke-dasharray="5 3"/>';
+    svgRef += '<text x="' + (P.l + cw + 3) + '" y="' + (yTR + 3).toFixed(1) + '" font-size="9" fill="#8A93A0" font-family="Inter,sans-serif">Index</text>';
+  }
+
+  var svgAxis = '';
+  for (var ti = 0; ti <= 4; ti++) {
+    var tv = yMin + (yMax - yMin) * ti / 4;
+    var ty = Y(tv);
+    svgAxis += '<text x="' + (P.l - 4) + '" y="' + (ty + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#8A93A0" font-family="Inter,sans-serif">' + (tv >= 0 ? '+' : '') + tv.toFixed(1) + '%</text>';
+    svgAxis += '<line x1="' + P.l + '" y1="' + ty.toFixed(1) + '" x2="' + (P.l + cw) + '" y2="' + ty.toFixed(1) + '" stroke="rgba(0,0,0,.05)"/>';
+  }
+  svgAxis += '<line x1="' + P.l + '" y1="' + y0.toFixed(1) + '" x2="' + (P.l + cw) + '" y2="' + y0.toFixed(1) + '" stroke="rgba(0,0,0,.2)"/>';
+
+  var svgXLbl = '';
+  chartRows.forEach(function(r, i) {
+    var cx = P.l + i * slotW + slotW / 2;
+    svgXLbl += '<text x="' + cx.toFixed(1) + '" y="' + (P.t + ch + 14) + '" text-anchor="middle" font-size="9" fill="#2B3B4E" font-family="Inter,sans-serif">' + r.name + '</text>';
+  });
+
+  var svgLegend = '', lx = P.l;
+  years.forEach(function(yr) {
+    var col = YR_COLORS[yr] ? YR_COLORS[yr].pos : '#177A4E';
+    svgLegend += '<rect x="' + lx + '" y="' + (P.t - 22) + '" width="11" height="11" fill="' + col + '" rx="2" opacity=".82"/>';
+    svgLegend += '<text x="' + (lx + 15) + '" y="' + (P.t - 12) + '" font-size="11" fill="var(--navy)" font-family="Inter,sans-serif">' + (YR_LABEL[yr] || yr) + '</text>';
+    lx += 80;
+  });
+  svgLegend += '<line x1="' + lx + '" y1="' + (P.t - 16) + '" x2="' + (lx + 18) + '" y2="' + (P.t - 16) + '" stroke="var(--navy)" stroke-width="1.5" stroke-dasharray="4 2" opacity=".7"/>';
+  svgLegend += '<text x="' + (lx + 22) + '" y="' + (P.t - 12) + '" font-size="11" fill="var(--navy)" font-family="Inter,sans-serif">Cum% (' + (YR_LABEL[primaryYr] || primaryYr) + ')</text>';
+
+  return '<svg viewBox="0 0 ' + VW + ' ' + VH + '" style="width:100%;height:auto;overflow:visible">' +
+    svgAxis + svgRef + svgBars + svgCum + svgXLbl + svgLegend + '</svg>';
 }
 
 function propTabBar(tabs, active, handler) {
@@ -1599,6 +1811,13 @@ function propTabBar(tabs, active, handler) {
         'onclick="' + handler + '(\'' + t.k + '\')">' + t.lbl + '</button>';
     }).join('') +
   '</div>';
+}
+
+function getSecuritiesForYear(yr) {
+  var range = YEAR_HOCS[yr];
+  if (!range) return [];
+  var hocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
+  return computeSecurities(exclSecs, exclIGs, hocs);
 }
 
 // ── Winners vs Losers helpers ────────────────────────────────────────────
@@ -1615,7 +1834,7 @@ function renderWLA() {
   if (!box) return;
   var secs = getWLSecurities();
   if (!secs.length) return;
-  var nonCash = secs.filter(function(d) { return !isCash(d.name) && d.sect !== CASH; });
+  var nonCash = secs.filter(function(d) { return !isCash(d.name) && d.sect !== CASH && (d.w0 > 0 || d.w1 > 0); });
   var secList = sectors.filter(function(s) { return s !== CASH; });
   var rows = secList.map(function(sec) {
     var arr = nonCash.filter(function(d) { return d.sect === sec; });
@@ -1656,7 +1875,7 @@ function renderWLB() {
   if (!box) return;
   var secs = getWLSecurities();
   if (!secs.length) return;
-  var nonCash = secs.filter(function(d) { return !isCash(d.name) && d.sect !== CASH; });
+  var nonCash = secs.filter(function(d) { return !isCash(d.name) && d.sect !== CASH && (d.w0 > 0 || d.w1 > 0); });
   var bins = [[-1e9,-20],[-20,-10],[-10,-5],[-5,0],[0,5],[5,10],[10,20],[20,1e9]];
   var lbls = ['< -20%','-20 to -10%','-10 to -5%','-5 to 0%','0 to 5%','5 to 10%','10 to 20%','> 20%'];
   var counts = bins.map(function() { return { n:0, contrib:0 }; });
@@ -1707,7 +1926,7 @@ function renderWLC() {
   if (!box) return;
   var wlSecs = getWLSecurities();
   if (!wlSecs.length) return;
-  var nonCash = wlSecs.filter(function(d) { return !isCash(d.name) && d.sect !== CASH; });
+  var nonCash = wlSecs.filter(function(d) { return !isCash(d.name) && d.sect !== CASH && (d.w0 > 0 || d.w1 > 0); });
   var secList = sectors.filter(function(s) { return s !== CASH; });
 
   var html = '<div class="twrap"><table class="rt">' +
@@ -1939,13 +2158,16 @@ window.ndxSetColorMode = function(m) {
   renderBeeswarm(_beeswarmSecAll, _beeswarmFilter);
 };
 
-window.ndxSetAttrChartYear = function(yr) {
+window.ndxToggleAttrChartYear = function(yr) {
   if (!YEAR_HOCS[yr]) return;
-  _attrChartYear = yr;
+  if (_attrChartYears.has(yr)) {
+    if (_attrChartYears.size > 1) _attrChartYears.delete(yr);
+  } else {
+    _attrChartYears.add(yr);
+  }
   document.querySelectorAll('.ndx-attr-yr-btn').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.yr === yr);
+    b.classList.toggle('active', _attrChartYears.has(b.dataset.yr));
   });
-  if (_chart) { _chart.destroy(); _chart = null; }
   renderAttrChart();
 };
 
@@ -1974,11 +2196,19 @@ window.ndxSetParetoN = function(n) {
   });
   renderPareto();
 };
-window.ndxSetParetoYear = function(yr) {
-  _paretoYear = yr;
+window.ndxToggleParetoYear = function(yr) {
+  if (_paretoYears.has(yr)) {
+    if (_paretoYears.size > 1) _paretoYears.delete(yr);
+  } else {
+    _paretoYears.add(yr);
+  }
   document.querySelectorAll('.ndx-par-yr-btn').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.yr === yr);
+    b.classList.toggle('active', _paretoYears.has(b.dataset.yr));
   });
+  renderPareto();
+};
+window.ndxToggleParetoView = function() {
+  _paretoView = _paretoView === 'table' ? 'chart' : 'table';
   renderPareto();
 };
 window.ndxSetParetoCustomN = function(n) {
@@ -2051,8 +2281,8 @@ function buildSkeleton() {
     '<div class="card">' +
       '<div class="ndx-attr-toolbar">' +
         '<div style="display:flex;gap:4px;margin-right:8px">' +
-          '<button class="ndx-attr-yr-btn ndx-tab-btn active" data-yr="ytd2026" onclick="ndxSetAttrChartYear(\'ytd2026\')">YTD 2026</button>' +
-          '<button class="ndx-attr-yr-btn ndx-tab-btn" data-yr="y2025" onclick="ndxSetAttrChartYear(\'y2025\')">2025</button>' +
+          '<button class="ndx-attr-yr-btn ndx-tab-btn active" data-yr="ytd2026" onclick="ndxToggleAttrChartYear(\'ytd2026\')">YTD 2026</button>' +
+          '<button class="ndx-attr-yr-btn ndx-tab-btn" data-yr="y2025" onclick="ndxToggleAttrChartYear(\'y2025\')">2025</button>' +
         '</div>' +
         '<div id="ndx-attr-tabs" style="display:flex;gap:3px">' +
           '<button class="ndx-tab-btn active" data-tab="sector" onclick="ndxSetAttrTab(\'sector\')">By Sector</button>' +
@@ -2210,11 +2440,13 @@ export function loadNdxAttribution(container) {
   _expandedSecs = new Set();
   _scatterXLo = null; _scatterXHi = null; _scatterYHi = null;
   _scatterYear = 'ytd2026'; _scatterSecSnapshots = []; _scatterYrAxes = { xLo: null, xHi: null, yHi: null };
+  _globalScatterAxes = { xLo: null, xHi: null, yHi: null };
+  _globalBeeAxes = { contribHi: null, xLo: null, xHi: null };
   _beeswarmYear = 'ytd2026'; _beeswarmSectors = new Set(); _beeswarmSecAll = [];
   _activeYear = 'ytd2026';
-  _paretoN = 10; _paretoYear = 'ytd2026'; _paretoCustomN = 0;
+  _paretoN = 10; _paretoYears = new Set(['ytd2026']); _paretoView = 'table'; _paretoCustomN = 0;
   _wlYear = 'ytd2026'; _wlTab = 'C';
-  _attrChartYear = 'ytd2026';
+  _attrChartYears = new Set(['ytd2026']);
   _colorMode = 'orig';
   _colorMaxPos = 0; _colorMaxNeg = 0;
   _wlTab = 'C';
@@ -2222,6 +2454,7 @@ export function loadNdxAttribution(container) {
   if (_chart) { _chart.destroy(); _chart = null; }
 
   normalize();
+  computeGlobalAxes();
   _activeHocs = getActiveHocs();
   baseR = computeCore(new Set(), new Set());
   buildHierarchy(baseR);

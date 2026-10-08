@@ -64,6 +64,10 @@ var _attrTableChartView = false;    // table section chart toggle
 var _compYear = 'ytd2026';          // Index Composition year
 var _attrDecimals = 2;
 var lastBaseR    = null;
+var _scatterZoom = 1.0;
+var _scatterPanX = 0;
+var _scatterPanY = 0;
+var _scatterDragState = null;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function getActiveHocs() {
@@ -1402,9 +1406,10 @@ function renderScatter(securities) {
 
   var maxAbsC = Math.max.apply(null, dots.map(function(d) { return Math.abs(d.contrib); })) || 1;
 
-  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
+  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH,
+    style: 'width:100%;height:auto;display:block;cursor:' + (_scatterZoom > 1 ? 'grab' : 'default') });
 
-  // Gridlines
+  // Fixed axes / gridlines — NOT in the zoom group so they stay stable
   var xStep = (xHi - xLo) > 60 ? 20 : (xHi - xLo) > 30 ? 10 : 5;
   var xStart = Math.ceil(xLo / xStep) * xStep;
   for (var xv = xStart; xv <= xHi + xStep * 0.5; xv += xStep) {
@@ -1412,7 +1417,6 @@ function renderScatter(securities) {
     var xt = se('text', { x: X(xv), y: VH - P.b + 14, 'text-anchor': 'middle', 'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0' });
     xt.textContent = (xv > 0 ? '+' : '') + xv.toFixed(0) + '%'; svg.appendChild(xt);
   }
-  // Zero line
   if (xLo < 0 && xHi > 0) {
     svg.appendChild(se('line', { x1: X(0), x2: X(0), y1: P.t, y2: VH - P.b, stroke: '#C0C8D0', 'stroke-width': 1.5 }));
   }
@@ -1422,18 +1426,29 @@ function renderScatter(securities) {
     var ytxt = se('text', { x: P.l - 6, y: Y(yv) + 4, 'text-anchor': 'end', 'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0' });
     ytxt.textContent = yv + '%'; svg.appendChild(ytxt);
   }
-  // Axis labels
   var xal = se('text', { x: P.l + cw / 2, y: VH - 8, 'text-anchor': 'middle', 'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#8A93A0' });
   xal.textContent = 'Security return (%, compounded)'; svg.appendChild(xal);
   var yal = se('text', { x: 0, y: 0, 'text-anchor': 'middle', 'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#8A93A0',
     transform: 'translate(12,' + (P.t + ch / 2) + ') rotate(-90)' });
   yal.textContent = 'Closing weight (%)'; svg.appendChild(yal);
 
+  // Clip region for dots
+  var clipId = 'ndx-scatter-clip';
+  var defs = se('defs', {});
+  var clip = se('clipPath', { id: clipId });
+  clip.appendChild(se('rect', { x: P.l, y: P.t, width: cw, height: ch }));
+  defs.appendChild(clip); svg.appendChild(defs);
+
+  // Zoomable content group
+  var content = se('g', { id: 'ndx-scatter-content', 'clip-path': 'url(#' + clipId + ')' });
+  content.setAttribute('transform',
+    'translate(' + _scatterPanX + ',' + _scatterPanY + ') scale(' + _scatterZoom + ')');
+  svg.appendChild(content);
+
   // Identify top 10 by |contrib| for labeling
   var sorted = dots.slice().sort(function(a, b) { return Math.abs(b.contrib) - Math.abs(a.contrib); });
   var top10 = new Set(sorted.slice(0, 10).map(function(d) { return d.name; }));
 
-  // Place dots (circles first, labels after so they render on top)
   var labelItems = [];
   dots.forEach(function(d) {
     var cx = X(d.ret), cy = Y(d.w1);
@@ -1449,34 +1464,100 @@ function renderScatter(securities) {
       '<br>Return: ' + (d.ret >= 0 ? '+' : '') + d.ret.toFixed(2) + '%' +
       '<br>Close weight: ' + d.w1.toFixed(3) + '%' +
       '<br>Contribution: ' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(4) + '%</span>');
-    svg.appendChild(g);
+    content.appendChild(g);
     if (top10.has(d.name)) labelItems.push({ name: d.name, cx: cx, cy: cy, r: r });
+
+    // All-ticker labels — hidden until zoom ≥ 1.5
+    var lbl = se('text', { x: cx, y: cy + r + 9, 'text-anchor': 'middle',
+      'font-family': 'Inter,sans-serif', 'font-size': 7, fill: '#1E2D3D', 'pointer-events': 'none',
+      class: 'ndx-scatter-lbl' });
+    lbl.style.display = _scatterZoom >= 1.5 ? '' : 'none';
+    lbl.textContent = d.name;
+    content.appendChild(lbl);
   });
 
-  // Simple label placement: offset above/right with minimal collision check
+  // Top-10 labels (always visible, larger)
   var placed = [];
-  labelItems.sort(function(a, b) { return b.cy - a.cy; }); // top-to-bottom
+  labelItems.sort(function(a, b) { return b.cy - a.cy; });
   labelItems.forEach(function(item) {
     var fs = 10, lh = fs + 2;
     var lx = item.cx + item.r + 3, ly = item.cy - 3;
-    // Nudge Y to avoid placed labels (simple: check ±1 label height)
     placed.forEach(function(p) {
       if (Math.abs(lx - p.lx) < 50 && Math.abs(ly - p.ly) < lh + 1) ly = p.ly - lh - 2;
     });
     ly = Math.max(P.t + fs, Math.min(VH - P.b - 2, ly));
     var t = se('text', { x: lx, y: ly, 'font-family': 'Inter,sans-serif', 'font-size': fs, 'font-weight': '700', fill: '#1E2D3D' });
-    t.textContent = item.name; svg.appendChild(t);
+    t.textContent = item.name; content.appendChild(t);
     placed.push({ lx: lx, ly: ly });
   });
+
+  // Wheel zoom
+  svg.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    var factor = e.deltaY < 0 ? 1.2 : 1 / 1.2;
+    var newZoom = Math.min(8, Math.max(0.5, _scatterZoom * factor));
+    var rect = svg.getBoundingClientRect();
+    var scaleX = VW / rect.width, scaleY = VH / rect.height;
+    var mx = (e.clientX - rect.left) * scaleX;
+    var my = (e.clientY - rect.top) * scaleY;
+    _scatterPanX = mx - (mx - _scatterPanX) * (newZoom / _scatterZoom);
+    _scatterPanY = my - (my - _scatterPanY) * (newZoom / _scatterZoom);
+    _scatterZoom = newZoom;
+    svg.style.cursor = _scatterZoom > 1 ? 'grab' : 'default';
+    _applyScatterTransform();
+  }, { passive: false });
+
+  // Drag to pan
+  svg.addEventListener('mousedown', function(e) {
+    if (_scatterZoom <= 1) return;
+    _scatterDragState = { startX: e.clientX, startY: e.clientY, panX0: _scatterPanX, panY0: _scatterPanY };
+    svg.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  svg.addEventListener('mousemove', function(e) {
+    if (!_scatterDragState) return;
+    var rect = svg.getBoundingClientRect();
+    var scaleX = VW / rect.width, scaleY = VH / rect.height;
+    _scatterPanX = _scatterDragState.panX0 + (e.clientX - _scatterDragState.startX) * scaleX;
+    _scatterPanY = _scatterDragState.panY0 + (e.clientY - _scatterDragState.startY) * scaleY;
+    _applyScatterTransform();
+  });
+  svg.addEventListener('mouseup', function() { _scatterDragState = null; svg.style.cursor = _scatterZoom > 1 ? 'grab' : 'default'; });
+  svg.addEventListener('mouseleave', function() { _scatterDragState = null; });
 
   var legend = document.createElement('div');
   legend.style.cssText = 'display:flex;gap:16px;font-size:11px;color:var(--mu);margin-top:8px;flex-wrap:wrap';
   legend.innerHTML =
     'Bubble area ∝ √|contribution| &nbsp;·&nbsp; ' +
     '<span style="color:#177A4E;font-weight:600">●</span> Positive contribution &nbsp; ' +
-    '<span style="color:#9B2A20;font-weight:600">●</span> Negative &nbsp;·&nbsp; Top 10 by |contribution| labeled';
+    '<span style="color:#9B2A20;font-weight:600">●</span> Negative &nbsp;·&nbsp; Top 10 labeled · scroll or +/− to zoom, drag to pan';
   box.innerHTML = ''; box.appendChild(svg); box.appendChild(legend);
 }
+
+// ── Scatter zoom/pan ──────────────────────────────────────────────────────
+function _applyScatterTransform() {
+  var g = document.getElementById('ndx-scatter-content');
+  if (!g) return;
+  g.setAttribute('transform',
+    'translate(' + _scatterPanX + ',' + _scatterPanY + ') scale(' + _scatterZoom + ')');
+  var lbls = g.querySelectorAll('.ndx-scatter-lbl');
+  lbls.forEach(function(el) { el.style.display = _scatterZoom >= 1.5 ? '' : 'none'; });
+}
+
+window.ndxScatterZoom = function(factor) {
+  var VW = 900, VH = 480;
+  var newZoom = Math.min(8, Math.max(0.5, _scatterZoom * factor));
+  var cx = VW / 2, cy = VH / 2;
+  _scatterPanX = cx - (cx - _scatterPanX) * (newZoom / _scatterZoom);
+  _scatterPanY = cy - (cy - _scatterPanY) * (newZoom / _scatterZoom);
+  _scatterZoom = newZoom;
+  _applyScatterTransform();
+};
+
+window.ndxScatterReset = function() {
+  _scatterZoom = 1.0; _scatterPanX = 0; _scatterPanY = 0;
+  _applyScatterTransform();
+};
 
 // ── Beeswarm — contributions per security, lane per sector ────────────────
 window.ndxSetBeeswarmFilter = function(threshold) {
@@ -2243,6 +2324,7 @@ window.ndxSetYear = function(yr) {
 window.ndxSetScatterYear = function(yr) {
   if (!YEAR_HOCS[yr]) return;
   _scatterYear = yr;
+  _scatterZoom = 1.0; _scatterPanX = 0; _scatterPanY = 0;
   document.querySelectorAll('.ndx-scat-yr-btn').forEach(function(b) {
     b.classList.toggle('active', b.dataset.yr === yr);
   });
@@ -2572,6 +2654,11 @@ function buildSkeleton() {
           '<span style="font-size:11px;color:var(--mu)">HOC evolution:</span>' +
           '<input type="range" id="ndx-scatter-hoc-slider" min="0" max="13" value="13" style="width:140px;accent-color:var(--navy)" oninput="ndxSetScatterHoc(+this.value)">' +
           '<span id="ndx-scatter-hoc-label" style="font-size:11px;color:var(--navy);min-width:180px;width:180px;display:inline-block;white-space:nowrap;overflow:hidden"></span>' +
+          '<div style="display:flex;gap:3px;margin-left:6px">' +
+            '<button class="ndx-tab-btn" onclick="ndxScatterZoom(1.5)" style="font-size:12px;padding:2px 7px;line-height:1" title="Zoom in">+</button>' +
+            '<button class="ndx-tab-btn" onclick="ndxScatterZoom(1/1.5)" style="font-size:12px;padding:2px 7px;line-height:1" title="Zoom out">−</button>' +
+            '<button class="ndx-tab-btn" onclick="ndxScatterReset()" style="font-size:11px;padding:2px 7px;line-height:1" title="Reset zoom">⟳</button>' +
+          '</div>' +
         '</div>' +
       '</div>' +
       '<div id="ndx-scatter-box"></div>' +
@@ -2620,6 +2707,7 @@ export function loadNdxAttribution(container) {
   _expandedSecs = new Set();
   _scatterXLo = null; _scatterXHi = null; _scatterYHi = null;
   _scatterYear = 'ytd2026'; _scatterSecSnapshots = []; _scatterYrAxes = { xLo: null, xHi: null, yHi: null };
+  _scatterZoom = 1.0; _scatterPanX = 0; _scatterPanY = 0; _scatterDragState = null;
   _globalScatterAxes = { xLo: null, xHi: null, yHi: null };
   _globalBeeAxes = { contribHi: null, xLo: null, xHi: null };
   _beeswarmYear = 'ytd2026'; _beeswarmYears = new Set(['ytd2026']); _beeswarmProgress = 100;

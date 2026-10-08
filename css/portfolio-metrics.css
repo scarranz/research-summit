@@ -387,8 +387,11 @@
 #pm-root .pm-toprow .pm-qtoggle{margin:0;}
 
 /* "+ New portfolio" control + its source chooser (right-aligned; the button stays
-   rightmost and the chooser opens to its left). */
-#pm-root .pm-newpf{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin:0;}
+   rightmost and the chooser opens to its left). The right margin lands the button
+   over the Beta column rather than the trailing actions column: 32px actions width
+   + the 5px by which the table's content box (card padding 6px + 1px border) sits
+   inside the toprow's 2px inset. */
+#pm-root .pm-newpf{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin:0 37px 0 0;}
 #pm-root .pm-newpf-btn{border:1px dashed var(--bdr);background:var(--w);color:var(--steel);
   font:600 12.5px 'Inter',sans-serif;border-radius:9px;padding:9px 16px;cursor:pointer;}
 #pm-root .pm-newpf-btn:hover{border-color:var(--steel);color:var(--navy);background:var(--pale);}

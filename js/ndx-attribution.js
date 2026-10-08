@@ -423,7 +423,7 @@ function renderKPI(res) {
 // red = negative. Callers pass exactly what to draw, so the top section and
 // the Detail section never read each other's state.
 //   opts.res      — computeCore result whose values are drawn
-//   opts.order    — computeCore result that fixes the row order (default: res)
+//   (row order always follows the latest year — see attrOrder)
 //   opts.isIG     — industry groups instead of sectors
 //   opts.keys     — explicit row keys (default: every key in res, minus Cash)
 //   opts.label    — dataset label for the tooltip
@@ -445,15 +445,35 @@ function attrAxis(isIG) {
   return (_attrAxisCache[k] = { min: mn, max: mx });
 }
 
+// Position of each sector / IG in the latest year, largest contribution first
+var _attrOrderCache = {};
+function attrOrder(isIG) {
+  var k = isIG ? 'ig' : 'sec';
+  if (_attrOrderCache[k]) return _attrOrderCache[k];
+  var r = computeCore(new Set(), new Set(), hocsForYear(yearKeys()[0]));
+  var m = isIG ? r.byIG : r.bySec, pos = {};
+  Object.keys(m).filter(function(x) { return x !== CASH; })
+    .sort(function(a, b) { return m[b] - m[a]; })
+    .forEach(function(x, i) { pos[x] = i; });
+  return (_attrOrderCache[k] = pos);
+}
+
 function renderAttrChart(canvasId, boxId, opts) {
   var canvas = document.getElementById(canvasId);
   if (!canvas || typeof Chart === 'undefined') return null;
   var isIG  = !!opts.isIG;
   var vals  = isIG ? opts.res.byIG : opts.res.bySec;
-  var ord   = isIG ? (opts.order || opts.res).byIG : (opts.order || opts.res).bySec;
+  // Row order is anchored to the latest year (YTD 2026) for EVERY year, so names keep
+  // their position when switching years; a name absent from that year goes after,
+  // ordered by its own value. Chart.js draws the first label at the top.
+  var anchor = attrOrder(isIG);
   var keys  = (opts.keys || Object.keys(vals)).filter(function(k) { return k !== CASH; });
-  // Largest contribution first — Chart.js draws the first label at the top
-  keys.sort(function(a, b) { return (ord[b] || 0) - (ord[a] || 0); });
+  keys.sort(function(a, b) {
+    var ia = anchor.hasOwnProperty(a), ib = anchor.hasOwnProperty(b);
+    if (ia && ib) return anchor[a] - anchor[b];
+    if (ia !== ib) return ia ? -1 : 1;
+    return (vals[b] || 0) - (vals[a] || 0);
+  });
 
   var full   = keys.map(function(k) { return isIG ? dispIG(k) : dispSec(k); });
   var labels = keys.map(function(k) { return chartLbl(k, isIG); });
@@ -534,7 +554,7 @@ function renderDetailChart(res) {
     else keys.push(s);
   });
   _chartSim = renderAttrChart('ndx-attr-sim-canvas', 'ndx-attr-chart-box', {
-    res: res, order: baseR, isIG: isIG, keys: keys, label: YR_LABEL[_attrDetailYear] || _attrDetailYear
+    res: res, isIG: isIG, keys: keys, label: YR_LABEL[_attrDetailYear] || _attrDetailYear
   });
 }
 

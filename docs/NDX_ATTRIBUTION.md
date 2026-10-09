@@ -17,8 +17,9 @@ the `ndx-attribution` edge function or `js/ndx-attribution.js`. It records what 
 
 ## 1. Source: the `NDX nonBBG` sheet
 
-Each row is one security inside one **HOC** (see §2). Rows start at **row 79**; the sheet is read
-with cached values, so **the workbook must be saved after the Bloomberg refresh**.
+Each row is one security inside one **HOC** (see §2). The extractor finds the header row by its
+`Rebalance Effective Date` cell (row 122 as of Oct 2026) and reads every row below it; the sheet is
+read with cached values, so **the workbook must be saved after the Bloomberg refresh**.
 
 | Col | Field | Notes |
 |---|---|---|
@@ -34,6 +35,7 @@ with cached values, so **the workbook must be saved after the Bloomberg refresh*
 | R | Snapshot return | `r` = Q / P − 1 (decimal) |
 | U | Industry sector (GICS 1) | `s` |
 | V | Industry group (GICS 2) | `g`, normalised (§5.3) |
+| any free column, header **`HOC Type`** | Year marker | `yf`: **1** = the year's opening HOC, **0** = internal, **2** = the year's closing HOC — the same value on every row of a HOC (§2) |
 
 Weights come from Bloomberg's QQQ holdings (`holdings('QQQ US Equity', dates=…)`) and sum to 100 in
 every HOC (cash / futures included).
@@ -44,7 +46,17 @@ A **HOC** is a holdings period between two rebalances: constituents and opening 
 `eff`; the return runs from `prev` (prev close) to `close`. The last HOC is **open** (`close` empty)
 until the next rebalance.
 
-**Year rule** (implemented in `deriveYears()`; no dates are hard-coded):
+**Year markers — the rule that wins.** The analyst marks every HOC in the `HOC Type` column:
+`1` opens a year, `0` is internal, `2` closes it. A year runs from each `1` to its `2`; with no `2`
+yet it is **YTD**; anything outside a `1…2` run (the Dec-2019 stub) is left out. The year number is
+the year of the opening HOC's effective date + 7 days (an opening HOC dated Dec 29-31 belongs to the
+next year). No weekend / holiday logic is needed. When a new year starts, mark the previous year's
+last HOC `2` and the new open HOC `1`, upload, and every year control updates itself.
+The markers are used only when **every** HOC has one; otherwise the date rule below applies, and the
+extractor prints which HOCs are missing. When both exist and disagree, the extractor says so (the
+markers win). Implemented in `deriveYearsFromMarkers()` (page) and `years_by_markers()` (extractor).
+
+**Fallback year rule** (no complete markers; `deriveYears()`; no dates are hard-coded):
 
 - A HOC belongs to the year of its `close`. The open HOC belongs to the year of its `prev` — or the
   next year if it starts from that year-end close (opened Dec 31, or Fri Dec 29 2028 when Dec 31 is

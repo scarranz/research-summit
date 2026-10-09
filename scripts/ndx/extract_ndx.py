@@ -95,12 +95,28 @@ def num(v, n=6):
     except (TypeError, ValueError):
         return None
 
+# Header of the year-marker column (any column; found by name in the header row):
+#   1 = the year's OPENING HOC · 0 = internal · 2 = the year's CLOSING HOC
+HOC_TYPE_HEADERS = ('hoc type', 'hoc flag', 'tipo hoc', 'hoc tipo', 'year flag')
+
+def find_header(ws):
+    """Row holding 'Rebalance Effective Date' (col H) and the column index of 'HOC Type', if any."""
+    for r, row in enumerate(ws.iter_rows(min_row=1, max_row=600, values_only=True), start=1):
+        if len(row) > 7 and isinstance(row[7], str) and 'rebalance effective' in row[7].lower():
+            col = next((i for i, v in enumerate(row) if isinstance(v, str) and v.strip().lower() in HOC_TYPE_HEADERS), None)
+            return r, col
+    return FIRST_ROW - 1, None
+
 def read_blocks(xlsx):
     print(f'Reading {xlsx}')
     wb = openpyxl.load_workbook(xlsx, data_only=True, read_only=True)
     ws = wb[SHEET]
-    blocks = OrderedDict()
-    for row in ws.iter_rows(min_row=FIRST_ROW, max_col=22, values_only=True):
+    hdr, type_col = find_header(ws)
+    print(f'  header row {hdr}; ' + (f'"HOC Type" in column {openpyxl.utils.get_column_letter(type_col + 1)}' if type_col is not None
+                                     else 'no "HOC Type" column — years come from the date rule'))
+    blocks, types = OrderedDict(), {}
+    max_col = max(22, (type_col or 0) + 1)
+    for row in ws.iter_rows(min_row=hdr + 1, max_col=max_col, values_only=True):
         h, i, j, k, l, _m, n, o, p, q, r = row[7:18]
         u, v = row[20], row[21]
         eff = day(h)
@@ -113,7 +129,15 @@ def read_blocks(xlsx):
             's': str(u or '').strip(), 'g': norm_ig(v),
             'p0': num(p, 4), 'p1': num(q, 4),
         })
-    return blocks
+        if type_col is not None and row[type_col] is not None and str(row[type_col]).strip() != '':
+            types.setdefault(key, set()).add(str(row[type_col]).strip().split('.')[0])
+    # One value per HOC; a HOC with mixed values is an Excel error
+    out = {}
+    for key, vals in types.items():
+        if len(vals) > 1 or not vals <= {'0', '1', '2'}:
+            sys.exit(f'ERROR: HOC eff={key[0]} has HOC Type values {sorted(vals)} — use one of 0 / 1 / 2 on every row of a HOC')
+        out[key] = int(next(iter(vals)))
+    return blocks, out
 
 # ── Bloomberg dummy lines (see docs/NDX_ATTRIBUTION.md §5) ─────────────────────
 # After a spin-off / merger / ADR-ratio change Bloomberg moves a security's old history to a
@@ -159,18 +183,34 @@ def extract(paths):
     # file is taken from the LAST file given.
     if isinstance(paths, str):
         paths = [paths]
-    blocks = {}
+    blocks, types = {}, {}
     for path in paths:
-        for key, secs in read_blocks(path).items():
+        b, t = read_blocks(path)
+        for key, secs in b.items():
             if key in blocks:
                 print(f'  · HOC eff={key[0]} also in {os.path.basename(path)} — using that copy')
             blocks[key] = secs
+            if key in t:
+                types[key] = t[key]
+            else:
+                types.pop(key, None)
     hocs = []
     for (eff, prev, close), secs in sorted(blocks.items(), key=lambda kv: (kv[0][0], kv[0][2] or '9999')):
         if len(secs) < MIN_SECS:
             print(f'  ! skipped block eff={eff} close={close}: only {len(secs)} rows')
             continue
-        hocs.append({'n': len(hocs) + 1, 'eff': eff, 'prev': prev, 'close': close, 'sec': secs})
+        hoc = {'n': len(hocs) + 1, 'eff': eff, 'prev': prev, 'close': close}
+        if (eff, prev, close) in types:
+            hoc['yf'] = types[(eff, prev, close)]      # year marker: 1 opening / 0 internal / 2 closing
+        hoc['sec'] = secs
+        hocs.append(hoc)
+    # The markers are used only when EVERY HOC has one; otherwise the date rule applies
+    marked = sum(1 for h in hocs if 'yf' in h)
+    if 0 < marked < len(hocs):
+        print(f'  ! "HOC Type" filled on {marked} of {len(hocs)} HOCs — ignored until every HOC has one '
+              f'(missing: {", ".join(str(h["n"]) for h in hocs if "yf" not in h)})')
+        for h in hocs:
+            h.pop('yf', None)
     for h in hocs:
         resolve_dummies(h)
     opens = [h for h in hocs if not h['close']]
@@ -196,9 +236,39 @@ def year_end_close(y):
         d -= datetime.timedelta(days=1)
     return d.isoformat()
 
-def print_years(hocs):
-    """The year table the page will build (same rule as deriveYears()), printed before any upload
-    so a wrong year boundary is caught here, not on the portal."""
+def years_by_markers(hocs):
+    """Years from the "HOC Type" markers (same rule as deriveYears() in js/ndx-attribution.js):
+    a year starts at each 1 and ends at its 2; still open (no 2 yet) = YTD. Anything outside a
+    1…2 run (e.g. the Dec-2019 stub) is left out. The year number comes from the opening HOC:
+    the year of its effective date + 7 days (an opening HOC dated Dec 29-31 is next year's)."""
+    years, cur, issues = [], None, []
+    for h in hocs:
+        f = h['yf']
+        if f == 1:
+            if cur:
+                issues.append(f"HOC {h['n']} opens a year but HOC {cur['first']['n']}'s year never closed (no 2)")
+                years.append(cur)
+            y = (datetime.date.fromisoformat(h['eff']) + datetime.timedelta(days=7)).year
+            cur = {'y': y, 'first': h, 'last': h, 'closed': False}
+            if f == 2:
+                pass
+        elif cur:
+            cur['last'] = h
+        else:
+            issues.append(f"HOC {h['n']} ({h['eff']}) is outside any year (no opening 1 before it) — left out")
+            continue
+        if f == 2 and cur:
+            cur['closed'] = True
+            years.append(cur)
+            cur = None
+    if cur:
+        years.append(cur)
+    for y in years[:-1]:
+        if not y['closed']:
+            issues.append(f"{y['y']} has no closing HOC (2) but is not the last year")
+    return years, issues
+
+def years_by_dates(hocs):
     by = OrderedDict()
     for h in hocs:
         if h['close']:
@@ -208,16 +278,40 @@ def print_years(hocs):
             if h['prev'] >= year_end_close(y):
                 y += 1
         by.setdefault(y, []).append(h)
-    print('Years the page will show:')
+    years = []
     for y, hs in by.items():
-        first, last = hs[0], hs[-1]
-        if first['prev'] != year_end_close(y - 1):
-            print(f"  {y}: LEFT OUT — first HOC {first['n']} starts {first['prev']}, not at the {y-1} year-end close {year_end_close(y-1)}"
-                  + ('' if y == min(by) else '   ! CHECK: only the first, partial year should be left out'))
+        if hs[0]['prev'] != year_end_close(y - 1):
             continue
-        ytd = not last['close'] or last['close'] < year_end_close(y)
-        print(f"  {('YTD ' if ytd else '') + str(y):<9} HOC {first['n']}-{last['n']}  ({len(hs)} HOCs)  {first['prev']} → {last['close'] or 'open'}"
-              + ('   ! CHECK: not the last year but still YTD — its last HOC should close on ' + year_end_close(y) if ytd and y != max(by) else ''))
+        last = hs[-1]
+        years.append({'y': y, 'first': hs[0], 'last': last,
+                      'closed': bool(last['close']) and last['close'] >= year_end_close(y)})
+    return years
+
+def print_years(hocs):
+    """The year table the page will build, printed before any upload so a wrong year boundary is
+    caught here, not on the portal."""
+    by_dates = years_by_dates(hocs)
+    if all('yf' in h for h in hocs):
+        years, issues = years_by_markers(hocs)
+        source = 'from the "HOC Type" column'
+    else:
+        years, issues = by_dates, []
+        source = 'from the date rule (no complete "HOC Type" column)'
+    print(f'Years the page will show ({source}):')
+    for y in years:
+        first, last = y['first'], y['last']
+        n = sum(1 for h in hocs if first['n'] <= h['n'] <= last['n'])
+        print(f"  {('YTD ' if not y['closed'] else '') + str(y['y']):<9} HOC {first['n']}-{last['n']}  ({n} HOCs)  "
+              f"{first['prev']} → {last['close'] or 'open'}")
+    for msg in issues:
+        print(f'  ! CHECK: {msg}')
+    if years is not by_dates:
+        a = [(y['y'], y['first']['n'], y['last']['n'], y['closed']) for y in years]
+        b = [(y['y'], y['first']['n'], y['last']['n'], y['closed']) for y in by_dates]
+        if a != b:
+            print('  ! NOTE: the "HOC Type" years differ from the date rule '
+                  f'(date rule would give {", ".join(("YTD " if not c else "") + str(y) + f" HOC {f}-{l}" for y, f, l, c in b)}) — '
+                  'the markers win; check they are what you meant')
 
 def write_js(hocs):
     def sec(s):
@@ -230,7 +324,8 @@ def write_js(hocs):
              '  hocs: [']
     for h in hocs:
         close = f'"{h["close"]}"' if h['close'] else 'null'
-        lines.append(f'    {{ n: {h["n"]}, eff: "{h["eff"]}", prev: "{h["prev"]}", close: {close}, sec: [')
+        yf = f', yf: {h["yf"]}' if 'yf' in h else ''
+        lines.append(f'    {{ n: {h["n"]}, eff: "{h["eff"]}", prev: "{h["prev"]}", close: {close}{yf}, sec: [')
         lines.extend(f'      {sec(s)},' for s in h['sec'])
         lines.append('    ] },')
     lines += ['  ]', '};', '']

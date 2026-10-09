@@ -90,7 +90,39 @@ function yearEndClose(y) {
   while (d.getUTCDay() === 0 || d.getUTCDay() === 6) d.setUTCDate(d.getUTCDate() - 1);
   return d.toISOString().slice(0, 10);
 }
+// Years from the analyst's "HOC Type" markers (h.yf: 1 = opening HOC of a year, 0 = internal,
+// 2 = closing HOC). A year runs from each 1 to its 2; no 2 yet = YTD; HOCs outside a 1…2 run
+// (the Dec-2019 stub) are left out. Year number = year of the opening HOC's effective date
+// + 7 days (an opening HOC dated Dec 29-31 belongs to the next year). Same rule as the
+// extractor's years_by_markers(). Used only when every HOC carries a marker.
+function deriveYearsFromMarkers(hocs) {
+  YEAR_HOCS = {}; YR_LABEL = {};
+  var runs = [], cur = null;
+  hocs.forEach(function(h) {
+    if (h.yf === 1) {
+      if (cur) runs.push(cur);
+      var y = new Date(Date.parse(h.eff + 'T00:00:00Z') + 7 * 864e5).getUTCFullYear();
+      cur = { y: y, first: h.n, last: h.n, closed: false };
+    } else if (cur) {
+      cur.last = h.n;
+    } else {
+      return;                                   // outside any year
+    }
+    if (h.yf === 2) { cur.closed = true; runs.push(cur); cur = null; }
+  });
+  if (cur) runs.push(cur);
+  runs.forEach(function(r, i) {
+    var ytd = !r.closed && i === runs.length - 1;
+    var key = (ytd ? 'ytd' : 'y') + r.y;
+    YEAR_HOCS[key] = [r.first, r.last];
+    YR_LABEL[key]  = (ytd ? 'YTD ' : '') + r.y;
+  });
+}
+
 function deriveYears(hocs) {
+  if (hocs.length && hocs.every(function(h) { return h.yf === 0 || h.yf === 1 || h.yf === 2; }))
+    return deriveYearsFromMarkers(hocs);
+  // Fallback when the data has no complete "HOC Type" column: the date rule below
   var byYear = {};
   hocs.forEach(function(h) {
     // A HOC measures (prev close, close]: it belongs to the year of its close. The open HOC

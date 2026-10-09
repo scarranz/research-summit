@@ -349,7 +349,7 @@ Each tile is a GICS sector, colored by the average YTD return of the companies t
         <div style="display:flex;align-items:center;gap:9px"><span style="font-size:12px;color:var(--mu)">Stock</span><select class="fsel" id="hf-stocklookup-sel" onchange="hfStockLookupSelect(this.value)"></select></div>
       </div>
       <div id="hf-stocklookup-body"></div>
-      <p class="hf-slk-note"><b>How to read this:</b> each cell is the stock&rsquo;s <b>weight in that fund&rsquo;s 13F</b> at quarter end (% of the fund&rsquo;s disclosed long US equities, not of total AUM). &#9650;/&#9660; = weight up or down vs. the prior quarter. A weight also moves when the stock or the rest of the book moves, so read the arrows against the <b>return in the quarter</b> row.</p>
+      <p class="hf-slk-note"><b>How to read this:</b> each cell is the stock&rsquo;s <b>weight in that fund&rsquo;s 13F</b> at quarter end (% of the fund&rsquo;s disclosed long US equities, not of total AUM). &#9650;/&#9660; = weight up or down vs. the prior quarter. A weight also moves when the stock or the rest of the book moves, so read the arrows against the <b>return in the quarter</b> row. <b>Hover a weight</b> to see how much of its change came from the fund buying or selling shares, from the stock&rsquo;s price, and from the rest of the fund&rsquo;s 13F book.</p>
     </div>
     <div class="sechdr" style="margin-bottom:18px">
       <span class="sect">Superinvestor Profiles</span>
@@ -357,7 +357,7 @@ Each tile is a GICS sector, colored by the average YTD return of the companies t
     </div>
     <div class="card" style="margin-bottom:30px">
       <div id="hf-profiles-body"></div>
-      <p class="hf-slk-note"><b>Effective names</b> = 1 &divide; the sum of squared weights: how many equal-sized positions the book behaves like (lower = more conviction). <b>Effective sectors</b> is the same on GICS sectors: under 2.5 reads as a specialist, over 4.5 as a generalist. <b>Top sector, last 8Q</b> counts how often that sector led the book, so a habit is told apart from a one-quarter bet. <b>Turnover</b> = (buys + sells) &divide; 2 &divide; average book, valuing each trade as the change in value the stock&rsquo;s price move doesn&rsquo;t explain. All of it covers only the long US equities a 13F discloses (no cash, shorts, bonds or private positions), so for a macro fund like Duquesne it describes a slice of the book, not the fund.</p>
+      <p class="hf-slk-note"><b>Effective names</b> = 1 &divide; the sum of squared weights: how many equal-sized positions the book behaves like (lower = more conviction). <b>Effective sectors</b> is the same on GICS sectors: under 2.5 reads as a specialist, over 4.5 as a generalist. <b>Top sector, last 8Q</b> counts how often that sector led the book, so a habit is told apart from a one-quarter bet. <b>Turnover</b> = (buys + sells) &divide; 2 &divide; average book, valuing each trade as the change in value the stock&rsquo;s price move doesn&rsquo;t explain. All of it covers only the long US equities a 13F discloses (no cash, shorts, bonds or private positions), so for a macro fund like Duquesne it describes a slice of the book, not the fund.<br><b>Sources:</b> holdings and weights from each fund&rsquo;s SEC 13F filings (EDGAR), as stored in the portal; GICS sectors from the portal&rsquo;s stock list (names outside it are left out of the sector figures; hover a sector count to see how much of the book is classified); month-end prices from IBKR (the same series Portfolio Metrics uses). Specialist / Focused / Generalist cut-offs (2.5 and 4.5 effective sectors) are a house convention, not an industry standard.</p>
     </div>
   </div>
 
@@ -389,8 +389,9 @@ Each tile is a GICS sector, colored by the average YTD return of the companies t
       <div style="display:flex;align-items:center;gap:14px">
         <span class="secn">Letters, reports &amp; commentary from every tracked fund</span>
         <div class="sb-toggle" id="hf-res-mode-toggle">
-          <button type="button" class="sb-tbtn" data-mode="date" onclick="hfResSetMode('date')">By Date</button>
           <button type="button" class="sb-tbtn active" data-mode="fund" onclick="hfResSetMode('fund')">By Fund</button>
+          <button type="button" class="sb-tbtn" data-mode="year" onclick="hfResSetMode('year')">By Year</button>
+          <button type="button" class="sb-tbtn" data-mode="month" onclick="hfResSetMode('month')">By Month</button>
         </div>
         <button type="button" class="hf-res-cta-btn" style="padding:7px 14px;font-size:11px" onclick="openHfAddResourcesModal()">+ Add Resources</button>
       </div>

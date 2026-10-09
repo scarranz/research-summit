@@ -540,6 +540,81 @@ async function hfStockLookupSelect(ticker) {
   renderStockLookupTable(ticker, rows, monthlyCloseMap(loaded[1], ticker));
 }
 
+// What moved a weight between two quarters, in percentage points.
+// A weight is V / (V + R): the position's 13F value over itself plus the
+// rest of the book. V moves with the shares held and the price; R with
+// everything else the fund owns. Each of the three gets its Shapley share
+// of the change (its marginal effect averaged over every order of
+// applying them), so the parts always add up to the total and don't blow
+// up when they pull in opposite directions.
+//   shares = (V1/P1) / (V0/P0)   implied shares, 13F value / quarter-end close
+//   price  = P1 / P0
+//   rest   = R1 / R0             R = V/w - V, the rest of the 13F book
+// value_usd is stored as filed and some quarters are in $ thousands
+// (Duquesne 2023Q1-2026Q1, Altimeter 2022Q4): a ~1000x ratio is a units
+// change, not a trade.
+function unitFix(ratio) { return ratio > 300 ? ratio / 1000 : ratio < 1 / 300 ? ratio * 1000 : ratio; }
+
+function weightAttribution(prev, cur, p0, p1) {
+  if (!prev || !cur || !(prev.v > 0) || !(cur.v > 0) || !(prev.w > 0) || !(cur.w > 0) || !p0 || !p1) return null;
+  var w0 = prev.w / 100, w1 = cur.w / 100;
+  if (w0 >= 1 || w1 >= 1) return null;
+  var sh = unitFix((cur.v / p1) / (prev.v / p0)), px = p1 / p0;
+  var rest = unitFix((cur.v / w1 - cur.v) / (prev.v / w0 - prev.v));
+  function f(a, b, c) { var v = w0 * a * b, r = (1 - w0) * c; return v / (v + r); }
+  var x = [sh, px, rest];
+  function at(mask) { return f(mask & 1 ? x[0] : 1, mask & 2 ? x[1] : 1, mask & 4 ? x[2] : 1); }
+  // Shapley weights for 3 factors by size of the set already applied:
+  // 0 -> 1/3, 1 -> 1/6, 2 -> 1/3
+  var wt = [1 / 3, 1 / 6, 1 / 3], contrib = [0, 0, 0];
+  for (var k = 0; k < 3; k++) {
+    for (var m = 0; m < 8; m++) {
+      if (m & (1 << k)) continue;
+      var size = (m & 1) + ((m >> 1) & 1) + ((m >> 2) & 1);
+      contrib[k] += wt[size] * (at(m | (1 << k)) - at(m));
+    }
+  }
+  return {
+    w0: prev.w, w1: cur.w,
+    shares: sh - 1, price: px - 1, rest: rest - 1,
+    ppShares: contrib[0] * 100, ppPrice: contrib[1] * 100, ppRest: contrib[2] * 100,
+  };
+}
+
+function slkPP(x) { return (x >= 0 ? '+' : '') + x.toFixed(2) + ' pp'; }
+function slkPct(x) { return (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%'; }
+
+function slkAttrHtml(a, label, prevLabel, inv) {
+  var d = a.w1 - a.w0;
+  function line(txt, pp) { return '<div class="hf-slk-tip-row"><span>' + txt + '</span><b class="' + (pp >= 0 ? 'hf-slk-pos' : 'hf-slk-neg') + '">' + slkPP(pp) + '</b></div>'; }
+  var did = Math.abs(a.shares) < 0.02 ? ' (unchanged)' : a.shares > 0 ? ' (bought)' : ' (sold)';
+  return '<div class="hf-slk-tip-hd">' + esc(inv) + ' &middot; ' + esc(prevLabel) + ' &rarr; ' + esc(label) + '</div>' +
+    '<div class="hf-slk-tip-tot"><span>Weight ' + a.w0.toFixed(2) + '% &rarr; ' + a.w1.toFixed(2) + '%</span><b>' + slkPP(d) + '</b></div>' +
+    line('Shares held ' + slkPct(a.shares) + did, a.ppShares) +
+    line('Stock price ' + slkPct(a.price), a.ppPrice) +
+    line('Rest of the 13F book ' + slkPct(a.rest), a.ppRest) +
+    '<div class="hf-slk-tip-ft">Estimate from 13F values and quarter-end prices. Shares are implied (value &divide; price), so options filed under the same stock can distort it.</div>';
+}
+
+// One floating tooltip on <body> (the table's scroll wrapper would clip
+// an in-cell popover).
+function hfSlkWireTips(body, tips) {
+  var tip = document.getElementById('hf-slk-tip');
+  if (!tip) { tip = document.createElement('div'); tip.id = 'hf-slk-tip'; tip.className = 'hf-slk-tip'; document.body.appendChild(tip); }
+  body.querySelectorAll('.hf-slk-has-tip').forEach(function(td) {
+    td.addEventListener('mouseenter', function() {
+      tip.innerHTML = tips[parseInt(td.getAttribute('data-tip'), 10)];
+      tip.style.display = 'block';
+      var r = td.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
+      var left = Math.min(Math.max(8, r.left + r.width / 2 - tw / 2), window.innerWidth - tw - 8);
+      var top = r.bottom + 6 + th > window.innerHeight ? r.top - th - 6 : r.bottom + 6;
+      tip.style.left = left + 'px';
+      tip.style.top = top + 'px';
+    });
+    td.addEventListener('mouseleave', function() { tip.style.display = 'none'; });
+  });
+}
+
 function renderStockLookupTable(ticker, rows, px) {
   var body = document.getElementById('hf-stocklookup-body');
   if (!body) return;
@@ -577,6 +652,7 @@ function renderStockLookupTable(ticker, rows, px) {
     return wb - wa;
   });
 
+  var tips = [];
   var html = '<div class="hf-heat-wrap"><table class="hf-stocklookup-tbl"><thead><tr><th>Superinvestor</th>';
   periods.forEach(function(p, i) {
     var isCur = i === periods.length - 1;
@@ -616,12 +692,16 @@ function renderStockLookupTable(ticker, rows, px) {
           ? '<span class="hf-slk-arw" title="Weight up vs. prior quarter">&#9650;</span>'
           : '<span class="hf-slk-arw" title="Weight down vs. prior quarter">&#9660;</span>';
       }
-      html += '<td class="nr hf-stocklookup-w' + (isCur ? ' ivd-cmp-current' : '') + '">' + (w != null ? w.toFixed(2) + '%' + arrow : '<span class="hf-stocklookup-dash">&mdash;</span>') + '</td>';
+      var attr = i > 0 ? weightAttribution(prevCell, cell, closes[i - 1], closes[i]) : null;
+      var tipAttr = '';
+      if (attr) { tipAttr = ' data-tip="' + tips.length + '"'; tips.push(slkAttrHtml(attr, periodLabel(periods[i]), periodLabel(periods[i - 1]), inv ? inv.name : key)); }
+      html += '<td class="nr hf-stocklookup-w' + (isCur ? ' ivd-cmp-current' : '') + (attr ? ' hf-slk-has-tip' : '') + '"' + tipAttr + '>' + (w != null ? w.toFixed(2) + '%' + arrow : '<span class="hf-stocklookup-dash">&mdash;</span>') + '</td>';
     });
     html += '</tr>';
   });
   html += '</tbody></table></div>';
   body.innerHTML = html;
+  hfSlkWireTips(body, tips);
 }
 
 // ─── Superinvestor Profiles (Overall sub-tab) ──────────────────
@@ -953,7 +1033,7 @@ function renderInvLetters(id, letters, key) {
 // Summit is excluded (this is about the tracked superinvestors, not
 // our own book), same as the sector mosaic.
 
-var HF_RES_MODE = 'fund'; // 'date' | 'fund'
+var HF_RES_MODE = 'fund'; // 'fund' | 'year' | 'month'
 var HF_RES_FILTER_KEY = null; // investor_key to narrow to, or null for every fund
 var HF_RES_LETTERS = null; // null until first load completes
 var HF_RES_OPEN = {}; // investor_key -> true once expanded in "By fund"
@@ -1095,9 +1175,22 @@ function renderHfResources() {
   var filtered = HF_RES_LETTERS.filter(function(l) { return !HF_RES_FILTER_KEY || l.investor_key === HF_RES_FILTER_KEY; });
 
   var html = '';
-  if (HF_RES_MODE === 'date') {
-    var sorted = filtered.slice().sort(byDateDesc);
-    html = sorted.length ? sorted.map(function(l) { return hfResLetterRow(l, true); }).join('') : '<div class="im-empty">No resources' + (HF_RES_FILTER_KEY ? ' for this fund.' : ' on file yet.') + '</div>';
+  if (HF_RES_MODE === 'year' || HF_RES_MODE === 'month') {
+    // Newest first under a year ("2026") or month ("Apr 2026") heading;
+    // undated resources go last.
+    var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var sorted = filtered.slice().sort(byDateDesc), lastHd = null;
+    sorted.forEach(function(l) {
+      var d = l.date || '';
+      var hd = !d ? 'Undated' : HF_RES_MODE === 'year' ? d.slice(0, 4) : MON[parseInt(d.slice(5, 7), 10) - 1] + ' ' + d.slice(0, 4);
+      if (hd !== lastHd) {
+        var n = sorted.filter(function(x) { var dx = x.date || ''; return (!dx ? 'Undated' : HF_RES_MODE === 'year' ? dx.slice(0, 4) : MON[parseInt(dx.slice(5, 7), 10) - 1] + ' ' + dx.slice(0, 4)) === hd; }).length;
+        html += '<div class="hf-res-period">' + esc(hd) + '<span>' + n + '</span></div>';
+        lastHd = hd;
+      }
+      html += hfResLetterRow(l, true);
+    });
+    if (!sorted.length) html = '<div class="im-empty">No resources' + (HF_RES_FILTER_KEY ? ' for this fund.' : ' on file yet.') + '</div>';
   } else {
     // Only funds with at least one resource on file get a group — a
     // superinvestor with nothing yet (or a confirmed "no public

@@ -540,48 +540,6 @@ async function hfStockLookupSelect(ticker) {
   renderStockLookupTable(ticker, rows, monthlyCloseMap(loaded[1], ticker));
 }
 
-// value_usd is stored as filed, and some quarters are in $ thousands
-// (Duquesne 2023Q1-2026Q1, Altimeter 2022Q4), so a ~1000x jump between
-// two quarters is a units change, not a trade.
-function unitFix(ratio) { return ratio > 300 ? ratio / 1000 : ratio < 1 / 300 ? ratio * 1000 : ratio; }
-
-// Last-quarter move, split into what the fund did and what the market
-// did. With V = 13F value of the position, w = its weight, P = price:
-//   shares ratio = (V1/P1) / (V0/P0)   -- implied shares, so price drift
-//                                         isn't read as a trade
-//   book ratio   = (V1/w1) / (V0/w0)   -- the fund's whole 13F book
-//   w1/w0 = (P1/P0) x shares ratio / book ratio   (reconciles exactly)
-// Hold band is +/-2%: the adjusted price series drifts with dividends.
-function slkActivity(prev, cur, prevPx, curPx) {
-  var had = prev && prev.v > 0, has = cur && cur.v > 0;
-  if (!had && !has) return null;
-  if (!had) return { cls: 'new', label: 'New' };
-  if (!has) return { cls: 'exit', label: 'Exit' };
-  if (!prevPx || !curPx) return { cls: 'na', label: 'n/a' };
-  var sh = unitFix((cur.v / curPx) / (prev.v / prevPx)) - 1;
-  var out = Math.abs(sh) < 0.02 ? { cls: 'hold', label: 'Hold' }
-    : sh > 0 ? { cls: 'add', label: 'Add ' + slkPct(sh) } : { cls: 'trim', label: 'Trim ' + slkPct(sh) };
-  out.bridge = {
-    weight: cur.w / prev.w - 1,
-    price: curPx / prevPx - 1,
-    shares: sh,
-    book: prev.w > 0 && cur.w > 0 ? unitFix((cur.v / cur.w) / (prev.v / prev.w)) - 1 : null,
-  };
-  return out;
-}
-
-function slkPct(x) { return (x >= 0 ? '+' : '') + (x * 100).toFixed(0) + '%'; }
-
-function slkBridgeHtml(b) {
-  if (!b) return '';
-  function part(lbl, x, cls) { return '<span class="hf-slk-br-part"><span class="hf-slk-br-lbl">' + lbl + '</span><span class="' + (cls || '') + '">' + (x == null ? 'n/a' : slkPct(x)) + '</span></span>'; }
-  return '<span class="hf-slk-br" title="Weight change = (1 + stock return) &times; (1 + change in shares) &divide; (1 + change in the fund&rsquo;s total 13F book) &minus; 1">' +
-    part('Weight', b.weight, 'hf-slk-br-w') + '<span class="hf-slk-br-op">=</span>' +
-    part('Stock', b.price) + '<span class="hf-slk-br-op">&times;</span>' +
-    part('Shares', b.shares) + '<span class="hf-slk-br-op">&divide;</span>' +
-    part('Book', b.book) + '</span>';
-}
-
 function renderStockLookupTable(ticker, rows, px) {
   var body = document.getElementById('hf-stocklookup-body');
   if (!body) return;
@@ -590,8 +548,6 @@ function renderStockLookupTable(ticker, rows, px) {
   var periods = HF_STOCKLOOKUP_PERIODS;
   var periodKeys = periods.map(periodOptionValue);
   var latestKey = periodKeys[periodKeys.length - 1];
-  var prevKey = periodKeys[periodKeys.length - 2];
-  var curLabel = periodLabel(periods[periods.length - 1]);
 
   // Close at each quarter end, plus the one before the window so the
   // first column gets a return too.
@@ -626,8 +582,6 @@ function renderStockLookupTable(ticker, rows, px) {
     var isCur = i === periods.length - 1;
     html += '<th class="nr' + (isCur ? ' ivd-cmp-current' : '') + '">' + esc(periodLabel(p)) + (isCur ? ' <span class="ivd-cmp-current-tag">Current</span>' : '') + '</th>';
   });
-  html += '<th class="hf-slk-actcol" title="Buying or selling in ' + esc(curLabel) + ', from implied shares (13F value / quarter-end price)">Activity ' + esc(curLabel) + '</th>';
-  html += '<th class="hf-slk-brcol">Why the weight moved in ' + esc(curLabel) + '</th>';
   html += '</tr></thead><tbody>';
 
   // The stock's own price return in each quarter, so a weight arrow can
@@ -639,7 +593,7 @@ function renderStockLookupTable(ticker, rows, px) {
     var cls = r == null ? '' : r >= 0 ? ' hf-slk-pos' : ' hf-slk-neg';
     html += '<td class="nr' + cls + (i === closes.length - 1 ? ' ivd-cmp-current' : '') + '">' + (r == null ? '<span class="hf-stocklookup-dash">&mdash;</span>' : (r >= 0 ? '+' : '') + r.toFixed(1) + '%') + '</td>';
   });
-  html += '<td class="hf-slk-actcol"></td><td class="hf-slk-brcol"></td></tr>';
+  html += '</tr>';
 
   invKeys.forEach(function(key) {
     var inv = INVESTORS.filter(function(i) { return i.key === key; })[0];
@@ -664,10 +618,6 @@ function renderStockLookupTable(ticker, rows, px) {
       }
       html += '<td class="nr hf-stocklookup-w' + (isCur ? ' ivd-cmp-current' : '') + '">' + (w != null ? w.toFixed(2) + '%' + arrow : '<span class="hf-stocklookup-dash">&mdash;</span>') + '</td>';
     });
-    var cur = invData[latestKey], prev = invData[prevKey];
-    var act = slkActivity(prev, cur, closes[closes.length - 2], closes[closes.length - 1]);
-    html += '<td class="hf-slk-actcol">' + (act ? '<span class="hf-slk-act hf-slk-act-' + act.cls + '">' + esc(act.label) + '</span>' : '') + '</td>';
-    html += '<td class="hf-slk-brcol">' + (act ? slkBridgeHtml(act.bridge) : '') + '</td>';
     html += '</tr>';
   });
   html += '</tbody></table></div>';
@@ -1009,7 +959,7 @@ var HF_RES_LETTERS = null; // null until first load completes
 var HF_RES_OPEN = {}; // investor_key -> true once expanded in "By fund"
 
 function hfResAvatar(inv) {
-  var photo = inv.photo ? (IMGS[inv.photo] || '') : '';
+  var photo = inv.img || (inv.photo ? (IMGS[inv.photo] || '') : '');
   return photo
     ? '<img class="hf-stocklookup-logo" src="' + esc(photo) + '" alt="" onerror="this.style.opacity=0.3">'
     : '<span class="hf-stocklookup-logo hf-stocklookup-ini">' + esc(inv.name.split(' ').slice(0, 2).map(function(n) { return n[0]; }).join('')) + '</span>';
@@ -1023,8 +973,8 @@ function hfResAvatar(inv) {
 // comes in for a fund that isn't already a superinvestor card.
 var RES_ONLY_FUNDS = [
   { key: 'abrams', name: 'Gavin M. Abrams', fund: 'Abrams Bison Investments' },
-  { key: 'bristlemoon', name: 'Bristlemoon Capital', fund: 'Bristlemoon Global Fund' },
-  { key: 'marks', name: 'Howard Marks', fund: 'Oaktree Capital Management' },
+  { key: 'bristlemoon', name: 'Bristlemoon Capital', fund: 'Bristlemoon Global Fund', img: 'img/investors/bristlemoon.png' }, // logo from bristlemoon.substack.com
+  { key: 'marks', name: 'Howard Marks', fund: 'Oaktree Capital Management', img: 'img/investors/marks.jpg' }, // headshot from oaktreecapital.com/about/leadership
 ];
 
 // Same idea as RES_ONLY_FUNDS above, but populated at runtime from the
@@ -1123,11 +1073,11 @@ function hfResLetterRow(l, showFund) {
   var isFile = l.type === 'file';
   var inv = showFund ? resFundList().filter(function(i) { return i.key === l.investor_key; })[0] : null;
   var fundTag = inv ? '<span class="im-let-fund">' + esc(inv.name) + '</span>' : '';
-  // Summit mark = the letter names a stock this fund has held in a 13F
-  // on file (precomputed in js/hf-letter-mentions.js).
+  // Summit mark = the letter names a stock on Summit's watchlist
+  // (precomputed in js/hf-letter-mentions.js).
   var men = HF_LETTER_MENTIONS[l.url];
   if (men && men.indexOf('GOOGL') !== -1) men = men.filter(function(t) { return t !== 'GOOG'; });
-  var badge = men ? '<span class="hf-res-men" title="Mentions holdings: ' + esc(men.join(', ')) + '"><img src="img/summit-mark.png" alt="">' + esc(men.slice(0, 4).join(' · ') + (men.length > 4 ? ' +' + (men.length - 4) : '')) + '</span>' : '';
+  var badge = men ? '<span class="hf-res-men" title="Mentions Summit watchlist names: ' + esc(men.join(', ')) + '"><img src="img/summit-mark.png" alt="">' + esc(men.slice(0, 4).join(' · ') + (men.length > 4 ? ' +' + (men.length - 4) : '')) + '</span>' : '';
   var inner = fundTag + '<span class="im-let-title">' + esc(l.title) + '</span>' + badge +
     (l.date ? '<span class="im-let-date">' + esc(l.date) + '</span>' : '') +
     '<span class="im-let-go">' + (isFile ? 'Download' : 'Open ↗') + '</span>';

@@ -186,7 +186,38 @@ def extract(paths):
         print(f"  ! HOC {a['n']} closes {a['close']} but HOC {b['n']} starts from {b['prev']}")
     if breaks:
         sys.exit('ERROR: the HOC chain has gaps/overlaps (above) — fix the Excel before uploading')
+    print_years(hocs)
     return hocs
+
+def year_end_close(y):
+    """Last weekday of December — same rule as yearEndClose() in js/ndx-attribution.js."""
+    d = datetime.date(y, 12, 31)
+    while d.weekday() >= 5:
+        d -= datetime.timedelta(days=1)
+    return d.isoformat()
+
+def print_years(hocs):
+    """The year table the page will build (same rule as deriveYears()), printed before any upload
+    so a wrong year boundary is caught here, not on the portal."""
+    by = OrderedDict()
+    for h in hocs:
+        if h['close']:
+            y = int(h['close'][:4])
+        else:   # open HOC: its prev-close year, or the next one if it starts from that year-end close
+            y = int(h['prev'][:4])
+            if h['prev'] >= year_end_close(y):
+                y += 1
+        by.setdefault(y, []).append(h)
+    print('Years the page will show:')
+    for y, hs in by.items():
+        first, last = hs[0], hs[-1]
+        if first['prev'] != year_end_close(y - 1):
+            print(f"  {y}: LEFT OUT — first HOC {first['n']} starts {first['prev']}, not at the {y-1} year-end close {year_end_close(y-1)}"
+                  + ('' if y == min(by) else '   ! CHECK: only the first, partial year should be left out'))
+            continue
+        ytd = not last['close'] or last['close'] < year_end_close(y)
+        print(f"  {('YTD ' if ytd else '') + str(y):<9} HOC {first['n']}-{last['n']}  ({len(hs)} HOCs)  {first['prev']} → {last['close'] or 'open'}"
+              + ('   ! CHECK: not the last year but still YTD — its last HOC should close on ' + year_end_close(y) if ytd and y != max(by) else ''))
 
 def write_js(hocs):
     def sec(s):

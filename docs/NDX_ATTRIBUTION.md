@@ -46,8 +46,9 @@ until the next rebalance.
 
 **Year rule** (implemented in `deriveYears()`; no dates are hard-coded):
 
-- A HOC belongs to the year of its `close`; the open HOC to the year of the day after its `prev`
-  (a HOC opened on Dec 31 belongs to the new year).
+- A HOC belongs to the year of its `close`. The open HOC belongs to the year of its `prev` — or the
+  next year if it starts from that year-end close (opened Dec 31, or Fri Dec 29 2028 when Dec 31 is
+  a Sunday).
 - Year **Y starts** with the HOC whose `prev` is the **year-end close of Y−1** = the last weekday of
   December (Dec 31 unless it falls on a weekend — 2022 closed Dec 30, 2023 closed Dec 29).
 - Year **Y ends** with the HOC that closes on Y's year-end close. Until then it is **YTD**.
@@ -65,6 +66,11 @@ Resulting boundaries (as the analyst defined them, by HOC effective date):
 | 2024 | 2023-12-29 → 2024-12-23 | 38–44 |
 | 2025 | 2024-12-31 → 2025-12-22 | 45–54 |
 | YTD 2026 | 2025-12-31 → open HOC (eff 2026-10-06) | 55–68 |
+
+More or fewer HOCs per year make no difference (nothing counts them). Every dry run / upload of
+the extractor prints the year table the page will build and flags a year that would be skipped or
+left as YTD by mistake (e.g. a year-end HOC closing on Dec 30 when Dec 31 is a trading day) — read
+it before uploading.
 
 **2027 needs no code change**: when a HOC closes on the 2026 year-end close and a new one opens from
 it, the next upload makes "2026" a closed year and adds "YTD 2027" to every year selector, the

@@ -93,10 +93,12 @@ function yearEndClose(y) {
 function deriveYears(hocs) {
   var byYear = {};
   hocs.forEach(function(h) {
-    // A HOC measures (prev close, close]: it belongs to the year of its close, and the
-    // open HOC to the year of the day after its prev close (one opened on Dec 31 is next year's)
-    var d = h.close || new Date(Date.parse(h.prev + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10);
-    var y = +d.slice(0, 4);
+    // A HOC measures (prev close, close]: it belongs to the year of its close. The open HOC
+    // belongs to the year its prev close is in — or the next one if it starts from that
+    // year's year-end close (opened Dec 31, or Fri Dec 29 2028 when Dec 31 is a Sunday)
+    var y;
+    if (h.close) y = +h.close.slice(0, 4);
+    else { y = +h.prev.slice(0, 4); if (h.prev >= yearEndClose(y)) y += 1; }
     (byYear[y] = byYear[y] || []).push(h);
   });
   YEAR_HOCS = {}; YR_LABEL = {};

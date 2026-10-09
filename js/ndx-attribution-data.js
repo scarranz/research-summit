@@ -5,7 +5,7 @@
 export const NDX_DATA = {
   meta: { latestDate: "2026-10-06", totalHocs: 68, extractedAt: "2026-10-09" },
   hocs: [
-    { n: 1, eff: "2019-12-23", prev: "2019-12-20", close: "2019-12-31", sec: [
+    { n: 1, eff: "2019-12-23", prev: "2019-12-20", close: "2019-12-31", yf: 2, sec: [
       {"t":"LBTYA","co":"Liberty Global Ltd","w":0.052971,"wi":0.052971,"r":0.004861,"s":"Communication Services","g":"Telecommunication Services","p0":22.63,"p1":22.74},
       {"t":"LBTYK","co":"Liberty Global Ltd","w":0.126509,"wi":0.126509,"r":0.006233,"s":"Communication Services","g":"Telecommunication Services","p0":21.66,"p1":21.795},
       {"t":"ORLY","co":"O'Reilly Automotive Inc","w":0.379985,"wi":0.379985,"r":-0.006596,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":29.411,"p1":29.217},
@@ -111,7 +111,7 @@ export const NDX_DATA = {
       {"t":"ATVI","co":"Activision Blizzard Inc","w":0.518006,"wi":0.518006,"r":0.003377,"s":"Communication Services","g":"Media and Entertainment","p0":59.22,"p1":59.42},
       {"t":"BIIB","co":"Biogen Inc","w":0.618481,"wi":0.618481,"r":-0.01435,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":301.05,"p1":296.73},
     ] },
-    { n: 2, eff: "2019-12-31", prev: "2019-12-31", close: "2020-03-20", sec: [
+    { n: 2, eff: "2019-12-31", prev: "2019-12-31", close: "2020-03-20", yf: 1, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":1.62363,"wi":1.62363,"r":-0.219106,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":241.07,"p1":188.25},
       {"t":"TMUS","co":"T-Mobile US Inc","w":0.760512,"wi":0.760512,"r":-0.049349,"s":"Communication Services","g":"Telecommunication Services","p0":78.275,"p1":74.4122},
       {"t":"SPLK","co":"Splunk Inc","w":0.256939,"wi":0.256939,"r":-0.263537,"s":"Information Technology","g":"Software and Services","p0":149.77,"p1":110.3},
@@ -217,7 +217,7 @@ export const NDX_DATA = {
       {"t":"ATVI","co":"Activision Blizzard Inc","w":0.517445,"wi":0.517445,"r":-0.124032,"s":"Communication Services","g":"Media and Entertainment","p0":59.42,"p1":52.05},
       {"t":"BIIB","co":"Biogen Inc","w":0.6069,"wi":0.6069,"r":-0.060526,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":296.73,"p1":278.77},
     ] },
-    { n: 3, eff: "2020-03-23", prev: "2020-03-20", close: "2020-04-17", sec: [
+    { n: 3, eff: "2020-03-23", prev: "2020-03-20", close: "2020-04-17", yf: 0, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":1.57938,"wi":1.57938,"r":0.248181,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":188.25,"p1":234.97},
       {"t":"TMUS","co":"T-Mobile US Inc","w":0.90061,"wi":0.90061,"r":0.220523,"s":"Communication Services","g":"Telecommunication Services","p0":74.4122,"p1":90.8218},
       {"t":"SPLK","co":"Splunk Inc","w":0.235715,"wi":0.235715,"r":0.225295,"s":"Information Technology","g":"Software and Services","p0":110.3,"p1":135.15},
@@ -323,7 +323,7 @@ export const NDX_DATA = {
       {"t":"ATVI","co":"Activision Blizzard Inc","w":0.564623,"wi":0.564623,"r":0.284918,"s":"Communication Services","g":"Media and Entertainment","p0":52.05,"p1":66.88},
       {"t":"GILD","co":"Gilead Sciences Inc","w":1.308693,"wi":1.308693,"r":0.146465,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":73.26,"p1":83.99},
     ] },
-    { n: 4, eff: "2020-04-20", prev: "2020-04-17", close: "2020-04-29", sec: [
+    { n: 4, eff: "2020-04-20", prev: "2020-04-17", close: "2020-04-29", yf: 0, sec: [
       {"t":"TXN","co":"Texas Instruments Inc","w":1.18355,"wi":1.18355,"r":0.051519,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":113.55,"p1":119.4},
       {"t":"IDXX","co":"IDEXX Laboratories Inc","w":0.253626,"wi":0.253626,"r":0.028587,"s":"Health Care","g":"Health Care Equipment and Services","p0":265.16,"p1":272.74},
       {"t":"EA","co":"Electronic Arts Inc","w":0.374891,"wi":0.374891,"r":-0.020582,"s":"Communication Services","g":"Media and Entertainment","p0":115.15,"p1":112.78},
@@ -429,7 +429,7 @@ export const NDX_DATA = {
       {"t":"BIIB","co":"Biogen Inc","w":0.68921,"wi":0.68921,"r":-0.110466,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":342.55,"p1":304.71},
       {"t":"GILD","co":"Gilead Sciences Inc","w":1.184843,"wi":1.184843,"r":-0.01012,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":83.99,"p1":83.14},
     ] },
-    { n: 5, eff: "2020-04-30", prev: "2020-04-29", close: "2020-06-19", sec: [
+    { n: 5, eff: "2020-04-30", prev: "2020-04-29", close: "2020-06-19", yf: 0, sec: [
       {"t":"IDXX","co":"IDEXX Laboratories Inc","w":0.25653,"wi":0.25653,"r":0.153736,"s":"Health Care","g":"Health Care Equipment and Services","p0":272.74,"p1":314.67},
       {"t":"TXN","co":"Texas Instruments Inc","w":1.229218,"wi":1.229218,"r":0.045938,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":119.4,"p1":124.885},
       {"t":"EA","co":"Electronic Arts Inc","w":0.360106,"wi":0.360106,"r":0.154371,"s":"Communication Services","g":"Media and Entertainment","p0":112.78,"p1":130.19},
@@ -535,7 +535,7 @@ export const NDX_DATA = {
       {"t":"ZM","co":"Zoom Communications Inc","w":0.180504,"wi":0.180504,"r":0.662206,"s":"Information Technology","g":"Software and Services","p0":146.48,"p1":243.48},
       {"t":"GILD","co":"Gilead Sciences Inc","w":1.158033,"wi":1.158033,"r":-0.068198,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":83.14,"p1":77.47},
     ] },
-    { n: 6, eff: "2020-06-22", prev: "2020-06-19", close: "2020-07-17", sec: [
+    { n: 6, eff: "2020-06-22", prev: "2020-06-19", close: "2020-07-17", yf: 0, sec: [
       {"t":"ULTA","co":"Ulta Beauty Inc","w":0.117742,"wi":0.117742,"r":-0.04331,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":212.19,"p1":203.0},
       {"t":"IDXX","co":"IDEXX Laboratories Inc","w":0.263364,"wi":0.263364,"r":0.1118,"s":"Health Care","g":"Health Care Equipment and Services","p0":314.67,"p1":349.85},
       {"t":"TXN","co":"Texas Instruments Inc","w":1.129421,"wi":1.129421,"r":0.072106,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":124.885,"p1":133.89},
@@ -641,7 +641,7 @@ export const NDX_DATA = {
       {"t":"ATVI","co":"Activision Blizzard Inc","w":0.581422,"wi":0.581422,"r":0.0269,"s":"Communication Services","g":"Media and Entertainment","p0":76.58,"p1":78.64},
       {"t":"BIIB","co":"Biogen Inc","w":0.435777,"wi":0.435777,"r":0.040148,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":271.0,"p1":281.88},
     ] },
-    { n: 7, eff: "2020-07-20", prev: "2020-07-17", close: "2020-08-21", sec: [
+    { n: 7, eff: "2020-07-20", prev: "2020-07-17", close: "2020-08-21", yf: 0, sec: [
       {"t":"ULTA","co":"Ulta Beauty Inc","w":0.105805,"wi":0.105805,"r":0.054187,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":203.0,"p1":214.0},
       {"t":"AMGN","co":"Amgen Inc","w":1.405643,"wi":1.405643,"r":-0.080554,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":258.46,"p1":237.64},
       {"t":"TMUS","co":"T-Mobile US Inc","w":1.20298,"wi":1.20298,"r":0.091694,"s":"Communication Services","g":"Telecommunication Services","p0":105.35,"p1":115.01},
@@ -747,7 +747,7 @@ export const NDX_DATA = {
       {"t":"ATVI","co":"Activision Blizzard Inc","w":0.56085,"wi":0.56085,"r":0.058113,"s":"Communication Services","g":"Media and Entertainment","p0":78.64,"p1":83.21},
       {"t":"BIIB","co":"Biogen Inc","w":0.425794,"wi":0.425794,"r":-0.017064,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":281.88,"p1":277.07},
     ] },
-    { n: 8, eff: "2020-08-24", prev: "2020-08-21", close: "2020-09-18", sec: [
+    { n: 8, eff: "2020-08-24", prev: "2020-08-21", close: "2020-09-18", yf: 0, sec: [
       {"t":"MNST","co":"Monster Beverage Corp","w":0.371306,"wi":0.371306,"r":-0.045206,"s":"Consumer Staples","g":"Food, Beverage and Tobacco","p0":20.683,"p1":19.748},
       {"t":"CMCSA","co":"Comcast Corp","w":1.672066,"wi":1.672066,"r":0.050848,"s":"Communication Services","g":"Telecommunication Services","p0":40.3493,"p1":42.401},
       {"t":"ULTA","co":"Ulta Beauty Inc","w":0.102713,"wi":0.102713,"r":0.082897,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":214.0,"p1":231.74},
@@ -853,7 +853,7 @@ export const NDX_DATA = {
       {"t":"ATVI","co":"Activision Blizzard Inc","w":0.54646,"wi":0.54646,"r":-0.037495,"s":"Communication Services","g":"Media and Entertainment","p0":83.21,"p1":80.09},
       {"t":"BIIB","co":"Biogen Inc","w":0.385385,"wi":0.385385,"r":-0.009348,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":277.07,"p1":274.48},
     ] },
-    { n: 9, eff: "2020-09-21", prev: "2020-09-18", close: "2020-10-16", sec: [
+    { n: 9, eff: "2020-09-21", prev: "2020-09-18", close: "2020-10-16", yf: 0, sec: [
       {"t":"MNST","co":"Monster Beverage Corp","w":0.375139,"wi":0.375139,"r":0.022382,"s":"Consumer Staples","g":"Food, Beverage and Tobacco","p0":19.748,"p1":20.19},
       {"t":"CMCSA","co":"Comcast Corp","w":1.857913,"wi":1.857913,"r":0.006627,"s":"Communication Services","g":"Telecommunication Services","p0":42.401,"p1":42.682},
       {"t":"ULTA","co":"Ulta Beauty Inc","w":0.117524,"wi":0.117524,"r":0.044274,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":231.74,"p1":242.0},
@@ -959,7 +959,7 @@ export const NDX_DATA = {
       {"t":"ATVI","co":"Activision Blizzard Inc","w":0.556673,"wi":0.556673,"r":0.006618,"s":"Communication Services","g":"Media and Entertainment","p0":80.09,"p1":80.62},
       {"t":"BIIB","co":"Biogen Inc","w":0.391269,"wi":0.391269,"r":0.020147,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":274.48,"p1":280.01},
     ] },
-    { n: 10, eff: "2020-10-19", prev: "2020-10-16", close: "2020-12-18", sec: [
+    { n: 10, eff: "2020-10-19", prev: "2020-10-16", close: "2020-12-18", yf: 0, sec: [
       {"t":"MNST","co":"Monster Beverage Corp","w":0.352959,"wi":0.352959,"r":0.116048,"s":"Consumer Staples","g":"Food, Beverage and Tobacco","p0":20.19,"p1":22.533},
       {"t":"CMCSA","co":"Comcast Corp","w":1.721155,"wi":1.721155,"r":0.117209,"s":"Communication Services","g":"Telecommunication Services","p0":42.682,"p1":47.6847},
       {"t":"ULTA","co":"Ulta Beauty Inc","w":0.112948,"wi":0.112948,"r":0.109215,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":242.0,"p1":268.43},
@@ -1065,7 +1065,7 @@ export const NDX_DATA = {
       {"t":"ATVI","co":"Activision Blizzard Inc","w":0.515687,"wi":0.515687,"r":0.120938,"s":"Communication Services","g":"Media and Entertainment","p0":80.62,"p1":90.37},
       {"t":"BIIB","co":"Biogen Inc","w":0.367357,"wi":0.367357,"r":-0.108532,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":280.01,"p1":249.62},
     ] },
-    { n: 11, eff: "2020-12-21", prev: "2020-12-18", close: "2020-12-31", sec: [
+    { n: 11, eff: "2020-12-21", prev: "2020-12-18", close: "2020-12-31", yf: 2, sec: [
       {"t":"ORLY","co":"O'Reilly Automotive Inc","w":0.272549,"wi":0.272549,"r":0.003125,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":30.077,"p1":30.171},
       {"t":"AMD","co":"Advanced Micro Devices Inc","w":0.961988,"wi":0.961988,"r":-0.043891,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":95.92,"p1":91.71},
       {"t":"BIDU","co":"Baidu Inc","w":0.443743,"wi":0.443743,"r":0.122217,"s":"Communication Services","g":"Media and Entertainment","p0":192.69,"p1":216.24},
@@ -1172,7 +1172,7 @@ export const NDX_DATA = {
       {"t":"CSCO","co":"Cisco Systems Inc","w":1.601095,"wi":1.601095,"r":-0.015185,"s":"Information Technology","g":"Technology Hardware and Equipment","p0":45.44,"p1":44.75},
       {"t":"MSFT","co":"Microsoft Corp","w":9.056185,"wi":9.056185,"r":0.017521,"s":"Information Technology","g":"Software and Services","p0":218.59,"p1":222.42},
     ] },
-    { n: 12, eff: "2020-12-31", prev: "2020-12-31", close: "2021-03-19", sec: [
+    { n: 12, eff: "2020-12-31", prev: "2020-12-31", close: "2021-03-19", yf: 1, sec: [
       {"t":"TEAM","co":"Atlassian Corp","w":0.255193,"wi":0.255193,"r":-0.063198,"s":"Information Technology","g":"Software and Services","p0":233.87,"p1":219.09},
       {"t":"MNST","co":"Monster Beverage Corp","w":0.40309,"wi":0.40309,"r":-0.049308,"s":"Consumer Staples","g":"Food, Beverage and Tobacco","p0":23.12,"p1":21.98},
       {"t":"FOX","co":"Fox Corp","w":0.061478,"wi":0.061478,"r":0.397161,"s":"Communication Services","g":"Media and Entertainment","p0":28.88,"p1":40.35},
@@ -1279,7 +1279,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.975351,"wi":1.975351,"r":0.058397,"s":"Communication Services","g":"Telecommunication Services","p0":49.0899,"p1":51.9566},
       {"t":"MSFT","co":"Microsoft Corp","w":9.123851,"wi":9.123851,"r":0.035653,"s":"Information Technology","g":"Software and Services","p0":222.42,"p1":230.35},
     ] },
-    { n: 13, eff: "2021-03-22", prev: "2021-03-19", close: "2021-06-18", sec: [
+    { n: 13, eff: "2021-03-22", prev: "2021-03-19", close: "2021-06-18", yf: 0, sec: [
       {"t":"AVGO","co":"Broadcom Inc","w":1.602293,"wi":1.602293,"r":-0.0231,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":47.446,"p1":46.35},
       {"t":"WDAY","co":"Workday Inc","w":0.374099,"wi":0.374099,"r":-0.058671,"s":"Information Technology","g":"Software and Services","p0":251.23,"p1":236.49},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.464755,"wi":0.464755,"r":-0.130767,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":216.11,"p1":187.85},
@@ -1384,7 +1384,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":2.097265,"wi":2.097265,"r":0.02254,"s":"Communication Services","g":"Telecommunication Services","p0":51.9566,"p1":53.1277},
       {"t":"MSFT","co":"Microsoft Corp","w":9.44486,"wi":9.44486,"r":0.126243,"s":"Information Technology","g":"Software and Services","p0":230.35,"p1":259.43},
     ] },
-    { n: 14, eff: "2021-06-21", prev: "2021-06-18", close: "2021-07-20", sec: [
+    { n: 14, eff: "2021-06-21", prev: "2021-06-18", close: "2021-07-20", yf: 0, sec: [
       {"t":"AVGO","co":"Broadcom Inc","w":1.432916,"wi":1.432916,"r":0.010982,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":46.35,"p1":46.859},
       {"t":"WDAY","co":"Workday Inc","w":0.338425,"wi":0.338425,"r":-0.023933,"s":"Information Technology","g":"Software and Services","p0":236.49,"p1":230.83},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.368195,"wi":0.368195,"r":0.046314,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":187.85,"p1":196.55},
@@ -1489,7 +1489,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.968678,"wi":1.968678,"r":0.006524,"s":"Communication Services","g":"Telecommunication Services","p0":53.1277,"p1":53.4743},
       {"t":"MSFT","co":"Microsoft Corp","w":9.722136,"wi":9.722136,"r":0.076668,"s":"Information Technology","g":"Software and Services","p0":259.43,"p1":279.32},
     ] },
-    { n: 15, eff: "2021-07-21", prev: "2021-07-20", close: "2021-08-25", sec: [
+    { n: 15, eff: "2021-07-21", prev: "2021-07-20", close: "2021-08-25", yf: 0, sec: [
       {"t":"TEAM","co":"Atlassian Corp","w":0.259182,"wi":0.259182,"r":0.320566,"s":"Information Technology","g":"Software and Services","p0":267.62,"p1":353.41},
       {"t":"MNST","co":"Monster Beverage Corp","w":0.354587,"wi":0.354587,"r":0.036495,"s":"Consumer Staples","g":"Food, Beverage and Tobacco","p0":23.428,"p1":24.283},
       {"t":"FOX","co":"Fox Corp","w":0.059596,"wi":0.059596,"r":0.0432,"s":"Communication Services","g":"Media and Entertainment","p0":32.87,"p1":34.29},
@@ -1594,7 +1594,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.873473,"wi":1.873473,"r":0.042046,"s":"Communication Services","g":"Telecommunication Services","p0":53.4743,"p1":55.7227},
       {"t":"MSFT","co":"Microsoft Corp","w":9.896739,"wi":9.896739,"r":0.081233,"s":"Information Technology","g":"Software and Services","p0":279.32,"p1":302.01},
     ] },
-    { n: 16, eff: "2021-08-26", prev: "2021-08-25", close: "2021-09-17", sec: [
+    { n: 16, eff: "2021-08-26", prev: "2021-08-25", close: "2021-09-17", yf: 0, sec: [
       {"t":"FOX","co":"Fox Corp","w":0.059537,"wi":0.059537,"r":0.023622,"s":"Communication Services","g":"Media and Entertainment","p0":34.29,"p1":35.1},
       {"t":"ADSK","co":"Autodesk Inc","w":0.516363,"wi":0.516363,"r":-0.158121,"s":"Information Technology","g":"Software and Services","p0":342.27,"p1":288.15},
       {"t":"SNPS","co":"Synopsys Inc","w":0.339953,"wi":0.339953,"r":0.001631,"s":"Information Technology","g":"Software and Services","p0":325.01,"p1":325.54},
@@ -1699,7 +1699,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.869541,"wi":1.869541,"r":-0.039846,"s":"Communication Services","g":"Telecommunication Services","p0":55.7227,"p1":53.5024},
       {"t":"MSFT","co":"Microsoft Corp","w":10.247349,"wi":10.247349,"r":-0.007086,"s":"Information Technology","g":"Software and Services","p0":302.01,"p1":299.87},
     ] },
-    { n: 17, eff: "2021-09-20", prev: "2021-09-17", close: "2021-12-17", sec: [
+    { n: 17, eff: "2021-09-20", prev: "2021-09-17", close: "2021-12-17", yf: 0, sec: [
       {"t":"TEAM","co":"Atlassian Corp","w":0.380792,"wi":0.380792,"r":-0.132575,"s":"Information Technology","g":"Software and Services","p0":404.6,"p1":350.96},
       {"t":"MNST","co":"Monster Beverage Corp","w":0.343074,"wi":0.343074,"r":-0.03191,"s":"Consumer Staples","g":"Food, Beverage and Tobacco","p0":23.66,"p1":22.905},
       {"t":"FOX","co":"Fox Corp","w":0.060478,"wi":0.060478,"r":-0.025071,"s":"Communication Services","g":"Media and Entertainment","p0":35.1,"p1":34.22},
@@ -1804,7 +1804,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.792947,"wi":1.792947,"r":-0.146384,"s":"Communication Services","g":"Telecommunication Services","p0":53.5024,"p1":45.6705},
       {"t":"MSFT","co":"Microsoft Corp","w":10.150413,"wi":10.150413,"r":0.079801,"s":"Information Technology","g":"Software and Services","p0":299.87,"p1":323.8},
     ] },
-    { n: 18, eff: "2021-12-20", prev: "2021-12-17", close: "2021-12-31", sec: [
+    { n: 18, eff: "2021-12-20", prev: "2021-12-17", close: "2021-12-31", yf: 2, sec: [
       {"t":"PDD","co":"PDD Holdings Inc","w":0.165068,"wi":0.165068,"r":0.004134,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":58.06,"p1":58.3},
       {"t":"SNPS","co":"Synopsys Inc","w":0.362955,"wi":0.362955,"r":0.058786,"s":"Information Technology","g":"Software and Services","p0":348.04,"p1":368.5},
       {"t":"DXCM","co":"Dexcom Inc","w":0.368075,"wi":0.368075,"r":-0.033115,"s":"Health Care","g":"Health Care Equipment and Services","p0":138.835,"p1":134.2375},
@@ -1908,7 +1908,7 @@ export const NDX_DATA = {
       {"t":"CSCO","co":"Cisco Systems Inc","w":1.743764,"wi":1.743764,"r":0.048131,"s":"Information Technology","g":"Technology Hardware and Equipment","p0":60.46,"p1":63.37},
       {"t":"CMCSA","co":"Comcast Corp","w":1.520001,"wi":1.520001,"r":0.03241,"s":"Communication Services","g":"Telecommunication Services","p0":45.6705,"p1":47.1507},
     ] },
-    { n: 19, eff: "2021-12-31", prev: "2021-12-31", close: "2022-01-21", sec: [
+    { n: 19, eff: "2021-12-31", prev: "2021-12-31", close: "2022-01-21", yf: 1, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":0.839952,"wi":0.839952,"r":0.012224,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":224.97,"p1":227.72},
       {"t":"TMUS","co":"T-Mobile US Inc","w":0.960242,"wi":0.960242,"r":-0.123814,"s":"Communication Services","g":"Telecommunication Services","p0":115.98,"p1":101.62},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.160663,"wi":0.160663,"r":0.070497,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":58.3,"p1":62.41},
@@ -2012,7 +2012,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.521104,"wi":1.521104,"r":-0.011921,"s":"Communication Services","g":"Telecommunication Services","p0":47.1507,"p1":46.5886},
       {"t":"MSFT","co":"Microsoft Corp","w":10.088526,"wi":10.088526,"r":-0.119797,"s":"Information Technology","g":"Software and Services","p0":336.32,"p1":296.03},
     ] },
-    { n: 20, eff: "2022-01-24", prev: "2022-01-21", close: "2022-02-01", sec: [
+    { n: 20, eff: "2022-01-24", prev: "2022-01-21", close: "2022-02-01", yf: 0, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":0.958788,"wi":0.958788,"r":0.004216,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":227.72,"p1":228.68},
       {"t":"TMUS","co":"T-Mobile US Inc","w":0.948785,"wi":0.948785,"r":0.078036,"s":"Communication Services","g":"Telecommunication Services","p0":101.62,"p1":109.55},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.193951,"wi":0.193951,"r":-0.045025,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":62.41,"p1":59.6},
@@ -2116,7 +2116,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.694891,"wi":1.694891,"r":0.004222,"s":"Communication Services","g":"Telecommunication Services","p0":46.5886,"p1":46.7853},
       {"t":"MSFT","co":"Microsoft Corp","w":10.01387,"wi":10.01387,"r":0.043002,"s":"Information Technology","g":"Software and Services","p0":296.03,"p1":308.76},
     ] },
-    { n: 21, eff: "2022-02-02", prev: "2022-02-01", close: "2022-02-11", sec: [
+    { n: 21, eff: "2022-02-02", prev: "2022-02-01", close: "2022-02-11", yf: 0, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":0.925425,"wi":0.925425,"r":-0.002099,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":228.68,"p1":228.2},
       {"t":"TMUS","co":"T-Mobile US Inc","w":0.983091,"wi":0.983091,"r":0.136285,"s":"Communication Services","g":"Telecommunication Services","p0":109.55,"p1":124.48},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.178023,"wi":0.178023,"r":0.006711,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":59.6,"p1":60.0},
@@ -2221,7 +2221,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.635917,"wi":1.635917,"r":-0.046455,"s":"Communication Services","g":"Telecommunication Services","p0":46.7853,"p1":44.6119},
       {"t":"MSFT","co":"Microsoft Corp","w":10.0387,"wi":10.0387,"r":-0.044436,"s":"Information Technology","g":"Software and Services","p0":308.76,"p1":295.04},
     ] },
-    { n: 22, eff: "2022-02-14", prev: "2022-02-11", close: "2022-02-18", sec: [
+    { n: 22, eff: "2022-02-14", prev: "2022-02-11", close: "2022-02-18", yf: 0, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":0.976454,"wi":0.976454,"r":-0.032559,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":228.2,"p1":220.77},
       {"t":"TMUS","co":"T-Mobile US Inc","w":1.181152,"wi":1.181152,"r":-0.004017,"s":"Communication Services","g":"Telecommunication Services","p0":124.48,"p1":123.98},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.189498,"wi":0.189498,"r":-0.066167,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":60.0,"p1":56.03},
@@ -2325,7 +2325,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.649406,"wi":1.649406,"r":-0.02058,"s":"Communication Services","g":"Telecommunication Services","p0":44.6119,"p1":43.6938},
       {"t":"MSFT","co":"Microsoft Corp","w":10.142922,"wi":10.142922,"r":-0.024098,"s":"Information Technology","g":"Software and Services","p0":295.04,"p1":287.93},
     ] },
-    { n: 23, eff: "2022-02-22", prev: "2022-02-18", close: "2022-03-18", sec: [
+    { n: 23, eff: "2022-02-22", prev: "2022-02-18", close: "2022-03-18", yf: 0, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":0.955542,"wi":0.955542,"r":0.070118,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":220.77,"p1":236.25},
       {"t":"TMUS","co":"T-Mobile US Inc","w":1.189957,"wi":1.189957,"r":0.025811,"s":"Communication Services","g":"Telecommunication Services","p0":123.98,"p1":127.18},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.178998,"wi":0.178998,"r":-0.239693,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":56.03,"p1":42.6},
@@ -2430,7 +2430,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.634077,"wi":1.634077,"r":0.005788,"s":"Communication Services","g":"Telecommunication Services","p0":43.6938,"p1":43.9467},
       {"t":"MSFT","co":"Microsoft Corp","w":10.012529,"wi":10.012529,"r":0.043413,"s":"Information Technology","g":"Software and Services","p0":287.93,"p1":300.43},
     ] },
-    { n: 24, eff: "2022-03-21", prev: "2022-03-18", close: "2022-06-17", sec: [
+    { n: 24, eff: "2022-03-21", prev: "2022-03-18", close: "2022-06-17", yf: 0, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":0.984532,"wi":0.984532,"r":-0.006476,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":236.25,"p1":234.72},
       {"t":"TMUS","co":"T-Mobile US Inc","w":1.188672,"wi":1.188672,"r":0.003224,"s":"Communication Services","g":"Telecommunication Services","p0":127.18,"p1":127.59},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.141032,"wi":0.141032,"r":0.384977,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":42.6,"p1":59.0},
@@ -2535,7 +2535,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.58762,"wi":1.58762,"r":-0.174803,"s":"Communication Services","g":"Telecommunication Services","p0":43.9467,"p1":36.2647},
       {"t":"MSFT","co":"Microsoft Corp","w":10.156351,"wi":10.156351,"r":-0.175682,"s":"Information Technology","g":"Software and Services","p0":300.43,"p1":247.65},
     ] },
-    { n: 25, eff: "2022-06-21", prev: "2022-06-17", close: "2022-09-16", sec: [
+    { n: 25, eff: "2022-06-21", prev: "2022-06-17", close: "2022-09-16", yf: 0, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":1.204676,"wi":1.204676,"r":-0.015252,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":234.72,"p1":231.14},
       {"t":"TMUS","co":"T-Mobile US Inc","w":1.536689,"wi":1.536689,"r":0.096873,"s":"Communication Services","g":"Telecommunication Services","p0":127.59,"p1":139.95},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.251237,"wi":0.251237,"r":0.113051,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":59.0,"p1":65.67},
@@ -2640,7 +2640,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.662652,"wi":1.662652,"r":-0.10824,"s":"Communication Services","g":"Telecommunication Services","p0":36.2647,"p1":32.3394},
       {"t":"MSFT","co":"Microsoft Corp","w":10.725931,"wi":10.725931,"r":-0.01175,"s":"Information Technology","g":"Software and Services","p0":247.65,"p1":244.74},
     ] },
-    { n: 26, eff: "2022-09-19", prev: "2022-09-16", close: "2022-11-18", sec: [
+    { n: 26, eff: "2022-09-19", prev: "2022-09-16", close: "2022-11-18", yf: 0, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":1.133686,"wi":1.133686,"r":0.242926,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":231.14,"p1":287.29},
       {"t":"TMUS","co":"T-Mobile US Inc","w":1.609178,"wi":1.609178,"r":0.063451,"s":"Communication Services","g":"Telecommunication Services","p0":139.95,"p1":148.83},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.281842,"wi":0.281842,"r":0.06822,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":65.67,"p1":70.15},
@@ -2745,7 +2745,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.393853,"wi":1.393853,"r":-0.000578,"s":"Communication Services","g":"Telecommunication Services","p0":32.3394,"p1":32.3207},
       {"t":"MSFT","co":"Microsoft Corp","w":10.087315,"wi":10.087315,"r":-0.014383,"s":"Information Technology","g":"Software and Services","p0":244.74,"p1":241.22},
     ] },
-    { n: 27, eff: "2022-11-21", prev: "2022-11-18", close: "2022-12-16", sec: [
+    { n: 27, eff: "2022-11-21", prev: "2022-11-18", close: "2022-12-16", yf: 0, sec: [
       {"t":"WDAY","co":"Workday Inc","w":0.27521,"wi":0.27521,"r":0.194085,"s":"Information Technology","g":"Software and Services","p0":146.74,"p1":175.22},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.75291,"wi":0.75291,"r":-0.031243,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":314.63,"p1":304.8},
       {"t":"AMGN","co":"Amgen Inc","w":1.433975,"wi":1.433975,"r":-0.069198,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":287.29,"p1":267.41},
@@ -2850,7 +2850,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.417654,"wi":1.417654,"r":-0.000291,"s":"Communication Services","g":"Telecommunication Services","p0":32.3207,"p1":32.3113},
       {"t":"MSFT","co":"Microsoft Corp","w":10.117843,"wi":10.117843,"r":0.014385,"s":"Information Technology","g":"Software and Services","p0":241.22,"p1":244.69},
     ] },
-    { n: 28, eff: "2022-12-19", prev: "2022-12-16", close: "2022-12-30", sec: [
+    { n: 28, eff: "2022-12-19", prev: "2022-12-16", close: "2022-12-30", yf: 2, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":1.270516,"wi":1.270516,"r":-0.017838,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":267.41,"p1":262.64},
       {"t":"TMUS","co":"T-Mobile US Inc","w":1.577118,"wi":1.577118,"r":-0.016578,"s":"Communication Services","g":"Telecommunication Services","p0":142.36,"p1":140.0},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.362738,"wi":0.362738,"r":-0.062967,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":87.03,"p1":81.55},
@@ -2954,7 +2954,7 @@ export const NDX_DATA = {
       {"t":"CSCO","co":"Cisco Systems Inc","w":1.74889,"wi":1.74889,"r":-0.003556,"s":"Information Technology","g":"Technology Hardware and Equipment","p0":47.81,"p1":47.64},
       {"t":"CMCSA","co":"Comcast Corp","w":1.324867,"wi":1.324867,"r":0.013918,"s":"Communication Services","g":"Telecommunication Services","p0":32.3113,"p1":32.761},
     ] },
-    { n: 29, eff: "2022-12-30", prev: "2022-12-30", close: "2023-03-17", sec: [
+    { n: 29, eff: "2022-12-30", prev: "2022-12-30", close: "2023-03-17", yf: 1, sec: [
       {"t":"WDAY","co":"Workday Inc","w":0.309962,"wi":0.309962,"r":0.12813,"s":"Information Technology","g":"Software and Services","p0":167.33,"p1":188.77},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.67977,"wi":0.67977,"r":0.024205,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":288.78,"p1":295.77},
       {"t":"AMGN","co":"Amgen Inc","w":1.285116,"wi":1.285116,"r":-0.125076,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":262.64,"p1":229.79},
@@ -3058,7 +3058,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.38342,"wi":1.38342,"r":0.03031,"s":"Communication Services","g":"Telecommunication Services","p0":32.761,"p1":33.754},
       {"t":"MSFT","co":"Microsoft Corp","w":12.584445,"wi":12.584445,"r":0.165166,"s":"Information Technology","g":"Software and Services","p0":239.82,"p1":279.43},
     ] },
-    { n: 30, eff: "2023-03-20", prev: "2023-03-17", close: "2023-06-06", sec: [
+    { n: 30, eff: "2023-03-20", prev: "2023-03-17", close: "2023-06-06", yf: 0, sec: [
       {"t":"WDAY","co":"Workday Inc","w":0.308638,"wi":0.308638,"r":0.138952,"s":"Information Technology","g":"Software and Services","p0":188.77,"p1":215.0},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.609436,"wi":0.609436,"r":0.117118,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":295.77,"p1":330.41},
       {"t":"AMGN","co":"Amgen Inc","w":0.983421,"wi":0.983421,"r":-0.037295,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":229.79,"p1":221.22},
@@ -3162,7 +3162,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.214738,"wi":1.214738,"r":0.095201,"s":"Communication Services","g":"Telecommunication Services","p0":33.754,"p1":36.9674},
       {"t":"MSFT","co":"Microsoft Corp","w":12.796915,"wi":12.796915,"r":0.194145,"s":"Information Technology","g":"Software and Services","p0":279.43,"p1":333.68},
     ] },
-    { n: 31, eff: "2023-06-07", prev: "2023-06-06", close: "2023-06-16", sec: [
+    { n: 31, eff: "2023-06-07", prev: "2023-06-06", close: "2023-06-16", yf: 0, sec: [
       {"t":"WDAY","co":"Workday Inc","w":0.303357,"wi":0.303357,"r":0.034419,"s":"Information Technology","g":"Software and Services","p0":215.0,"p1":222.4},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.587526,"wi":0.587526,"r":0.052904,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":330.41,"p1":347.89},
       {"t":"AMGN","co":"Amgen Inc","w":0.81702,"wi":0.81702,"r":0.038152,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":221.22,"p1":229.66},
@@ -3266,7 +3266,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.148092,"wi":1.148092,"r":0.044093,"s":"Communication Services","g":"Telecommunication Services","p0":36.9674,"p1":38.5974},
       {"t":"MSFT","co":"Microsoft Corp","w":13.187485,"wi":13.187485,"r":0.025923,"s":"Information Technology","g":"Software and Services","p0":333.68,"p1":342.33},
     ] },
-    { n: 32, eff: "2023-06-20", prev: "2023-06-16", close: "2023-07-14", sec: [
+    { n: 32, eff: "2023-06-20", prev: "2023-06-16", close: "2023-07-14", yf: 0, sec: [
       {"t":"WDAY","co":"Workday Inc","w":0.30643,"wi":0.30643,"r":0.00679,"s":"Information Technology","g":"Software and Services","p0":222.4,"p1":223.91},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.599267,"wi":0.599267,"r":0.013941,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":347.89,"p1":352.74},
       {"t":"AMGN","co":"Amgen Inc","w":0.820754,"wi":0.820754,"r":-0.00971,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":229.66,"p1":227.43},
@@ -3370,7 +3370,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.146162,"wi":1.146162,"r":0.019662,"s":"Communication Services","g":"Telecommunication Services","p0":38.5974,"p1":39.3563},
       {"t":"MSFT","co":"Microsoft Corp","w":13.068518,"wi":13.068518,"r":0.008501,"s":"Information Technology","g":"Software and Services","p0":342.33,"p1":345.24},
     ] },
-    { n: 33, eff: "2023-07-17", prev: "2023-07-14", close: "2023-07-21", sec: [
+    { n: 33, eff: "2023-07-17", prev: "2023-07-14", close: "2023-07-21", yf: 0, sec: [
       {"t":"WDAY","co":"Workday Inc","w":0.29955,"wi":0.29955,"r":0.005091,"s":"Information Technology","g":"Software and Services","p0":223.91,"p1":225.05},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.589987,"wi":0.589987,"r":0.027556,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":352.74,"p1":362.46},
       {"t":"AMGN","co":"Amgen Inc","w":0.789186,"wi":0.789186,"r":0.032494,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":227.43,"p1":234.82},
@@ -3474,7 +3474,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.134765,"wi":1.134765,"r":0.020947,"s":"Communication Services","g":"Telecommunication Services","p0":39.3563,"p1":40.1807},
       {"t":"MSFT","co":"Microsoft Corp","w":12.796913,"wi":12.796913,"r":-0.004258,"s":"Information Technology","g":"Software and Services","p0":345.24,"p1":343.77},
     ] },
-    { n: 34, eff: "2023-07-24", prev: "2023-07-21", close: "2023-09-15", sec: [
+    { n: 34, eff: "2023-07-24", prev: "2023-07-21", close: "2023-09-15", yf: 0, sec: [
       {"t":"WDAY","co":"Workday Inc","w":0.382593,"wi":0.382593,"r":0.070251,"s":"Information Technology","g":"Software and Services","p0":225.05,"p1":240.86},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.770397,"wi":0.770397,"r":-0.037411,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":362.46,"p1":348.9},
       {"t":"AMGN","co":"Amgen Inc","w":1.035457,"wi":1.035457,"r":0.110297,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":234.82,"p1":260.72},
@@ -3578,7 +3578,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.472229,"wi":1.472229,"r":0.057122,"s":"Communication Services","g":"Telecommunication Services","p0":40.1807,"p1":42.4759},
       {"t":"MSFT","co":"Microsoft Corp","w":9.835987,"wi":9.835987,"r":-0.039416,"s":"Information Technology","g":"Software and Services","p0":343.77,"p1":330.22},
     ] },
-    { n: 35, eff: "2023-09-18", prev: "2023-09-15", close: "2023-12-13", sec: [
+    { n: 35, eff: "2023-09-18", prev: "2023-09-15", close: "2023-12-13", yf: 0, sec: [
       {"t":"WDAY","co":"Workday Inc","w":0.418313,"wi":0.418313,"r":0.157021,"s":"Information Technology","g":"Software and Services","p0":240.86,"p1":278.68},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.755533,"wi":0.755533,"r":0.160992,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":348.9,"p1":405.07},
       {"t":"AMGN","co":"Amgen Inc","w":1.170079,"wi":1.170079,"r":0.080163,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":260.72,"p1":281.62},
@@ -3682,7 +3682,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.565644,"wi":1.565644,"r":-0.036833,"s":"Communication Services","g":"Telecommunication Services","p0":42.4759,"p1":40.9114},
       {"t":"MSFT","co":"Microsoft Corp","w":9.598369,"wi":9.598369,"r":0.133699,"s":"Information Technology","g":"Software and Services","p0":330.22,"p1":374.37},
     ] },
-    { n: 36, eff: "2023-12-14", prev: "2023-12-13", close: "2023-12-15", sec: [
+    { n: 36, eff: "2023-12-14", prev: "2023-12-13", close: "2023-12-15", yf: 0, sec: [
       {"t":"WDAY","co":"Workday Inc","w":0.445837,"wi":0.445837,"r":-0.021458,"s":"Information Technology","g":"Software and Services","p0":278.68,"p1":272.7},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.808055,"wi":0.808055,"r":0.013849,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":405.07,"p1":410.68},
       {"t":"AMGN","co":"Amgen Inc","w":1.164325,"wi":1.164325,"r":-0.021909,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":281.62,"p1":275.45},
@@ -3785,7 +3785,7 @@ export const NDX_DATA = {
       {"t":"CMCSA","co":"Comcast Corp","w":1.389144,"wi":1.389144,"r":0.018547,"s":"Communication Services","g":"Telecommunication Services","p0":40.9114,"p1":41.6702},
       {"t":"MSFT","co":"Microsoft Corp","w":10.024134,"wi":10.024134,"r":-0.009723,"s":"Information Technology","g":"Software and Services","p0":374.37,"p1":370.73},
     ] },
-    { n: 37, eff: "2023-12-18", prev: "2023-12-15", close: "2023-12-29", sec: [
+    { n: 37, eff: "2023-12-18", prev: "2023-12-15", close: "2023-12-29", yf: 2, sec: [
       {"t":"DXCM","co":"Dexcom Inc","w":0.381051,"wi":0.381051,"r":0.012236,"s":"Health Care","g":"Health Care Equipment and Services","p0":122.59,"p1":124.09},
       {"t":"GFS","co":"GLOBALFOUNDRIES Inc","w":0.25889,"wi":0.25889,"r":0.031489,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":58.75,"p1":60.6},
       {"t":"DLTR","co":"Dollar Tree Inc","w":0.229282,"wi":0.229282,"r":0.085926,"s":"Consumer Staples","g":"Consumer Staples Distribution and Retail","p0":130.81,"p1":142.05},
@@ -3889,7 +3889,7 @@ export const NDX_DATA = {
       {"t":"ADBE","co":"Adobe Inc","w":2.141547,"wi":2.141547,"r":0.020387,"s":"Information Technology","g":"Software and Services","p0":584.68,"p1":596.6},
       {"t":"CTAS","co":"Cintas Corp","w":0.457816,"wi":0.457816,"r":0.078659,"s":"Industrials","g":"Commercial and Professional Services","p0":139.678,"p1":150.665},
     ] },
-    { n: 38, eff: "2023-12-29", prev: "2023-12-29", close: "2024-03-15", sec: [
+    { n: 38, eff: "2023-12-29", prev: "2023-12-29", close: "2024-03-15", yf: 1, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":1.22593,"wi":1.22593,"r":-0.066488,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":288.02,"p1":268.87},
       {"t":"TMUS","co":"T-Mobile US Inc","w":1.474684,"wi":1.474684,"r":0.009231,"s":"Communication Services","g":"Telecommunication Services","p0":160.33,"p1":161.81},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.777231,"wi":0.777231,"r":-0.154261,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":146.31,"p1":123.74},
@@ -3993,7 +3993,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.48821,"wi":0.48821,"r":0.041018,"s":"Industrials","g":"Commercial and Professional Services","p0":150.665,"p1":156.845},
       {"t":"CMCSA","co":"Comcast Corp","w":1.400461,"wi":1.400461,"r":-0.024628,"s":"Communication Services","g":"Telecommunication Services","p0":41.08,"p1":40.0683},
     ] },
-    { n: 39, eff: "2024-03-18", prev: "2024-03-15", close: "2024-06-21", sec: [
+    { n: 39, eff: "2024-03-18", prev: "2024-03-15", close: "2024-06-21", yf: 0, sec: [
       {"t":"PDD","co":"PDD Holdings Inc","w":0.612722,"wi":0.612722,"r":0.162599,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":123.74,"p1":143.86},
       {"t":"SNPS","co":"Synopsys Inc","w":0.622017,"wi":0.622017,"r":0.100904,"s":"Information Technology","g":"Software and Services","p0":550.03,"p1":605.53},
       {"t":"DXCM","co":"Dexcom Inc","w":0.372858,"wi":0.372858,"r":-0.105933,"s":"Health Care","g":"Health Care Equipment and Services","p0":130.46,"p1":116.64},
@@ -4097,7 +4097,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.471488,"wi":0.471488,"r":0.129319,"s":"Industrials","g":"Commercial and Professional Services","p0":156.845,"p1":177.128},
       {"t":"CMCSA","co":"Comcast Corp","w":1.256386,"wi":1.256386,"r":-0.100304,"s":"Communication Services","g":"Telecommunication Services","p0":40.0683,"p1":36.0493},
     ] },
-    { n: 40, eff: "2024-06-24", prev: "2024-06-21", close: "2024-07-19", sec: [
+    { n: 40, eff: "2024-06-24", prev: "2024-06-21", close: "2024-07-19", yf: 0, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":1.10716,"wi":1.10716,"r":0.075058,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":308.16,"p1":331.29},
       {"t":"TMUS","co":"T-Mobile US Inc","w":1.387072,"wi":1.387072,"r":0.030102,"s":"Communication Services","g":"Telecommunication Services","p0":176.73,"p1":182.05},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.643554,"wi":0.643554,"r":-0.075212,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":143.86,"p1":133.04},
@@ -4202,7 +4202,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.481449,"wi":0.481449,"r":0.070638,"s":"Industrials","g":"Commercial and Professional Services","p0":177.128,"p1":189.64},
       {"t":"CMCSA","co":"Comcast Corp","w":1.008766,"wi":1.008766,"r":0.041579,"s":"Communication Services","g":"Telecommunication Services","p0":36.0493,"p1":37.5482},
     ] },
-    { n: 41, eff: "2024-07-22", prev: "2024-07-19", close: "2024-09-20", sec: [
+    { n: 41, eff: "2024-07-22", prev: "2024-07-19", close: "2024-09-20", yf: 0, sec: [
       {"t":"TMUS","co":"T-Mobile US Inc","w":1.437479,"wi":1.437479,"r":0.095523,"s":"Communication Services","g":"Telecommunication Services","p0":182.05,"p1":199.44},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.598755,"wi":0.598755,"r":-0.249098,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":133.04,"p1":99.9},
       {"t":"SNPS","co":"Synopsys Inc","w":0.581355,"wi":0.581355,"r":-0.100281,"s":"Information Technology","g":"Software and Services","p0":563.12,"p1":506.65},
@@ -4307,7 +4307,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.518598,"wi":0.518598,"r":0.076566,"s":"Industrials","g":"Commercial and Professional Services","p0":189.64,"p1":204.16},
       {"t":"CMCSA","co":"Comcast Corp","w":1.057074,"wi":1.057074,"r":0.000748,"s":"Communication Services","g":"Telecommunication Services","p0":37.5482,"p1":37.5763},
     ] },
-    { n: 42, eff: "2024-09-23", prev: "2024-09-20", close: "2024-11-15", sec: [
+    { n: 42, eff: "2024-09-23", prev: "2024-09-20", close: "2024-11-15", yf: 0, sec: [
       {"t":"TMUS","co":"T-Mobile US Inc","w":1.550694,"wi":1.550694,"r":0.181358,"s":"Communication Services","g":"Telecommunication Services","p0":199.44,"p1":235.61},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.44465,"wi":0.44465,"r":0.141141,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":99.9,"p1":114.0},
       {"t":"SNPS","co":"Synopsys Inc","w":0.518633,"wi":0.518633,"r":0.02783,"s":"Information Technology","g":"Software and Services","p0":506.65,"p1":520.75},
@@ -4412,7 +4412,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.548379,"wi":0.548379,"r":0.054075,"s":"Industrials","g":"Commercial and Professional Services","p0":204.16,"p1":215.2},
       {"t":"CMCSA","co":"Comcast Corp","w":1.032542,"wi":1.032542,"r":0.069059,"s":"Communication Services","g":"Telecommunication Services","p0":37.5763,"p1":40.1713},
     ] },
-    { n: 43, eff: "2024-11-18", prev: "2024-11-15", close: "2024-12-20", sec: [
+    { n: 43, eff: "2024-11-18", prev: "2024-11-15", close: "2024-12-20", yf: 0, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":0.980715,"wi":0.980715,"r":-0.07133,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":283.61,"p1":263.38},
       {"t":"TMUS","co":"T-Mobile US Inc","w":1.769141,"wi":1.769141,"r":-0.064938,"s":"Communication Services","g":"Telecommunication Services","p0":235.61,"p1":220.31},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.49002,"wi":0.49002,"r":-0.127105,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":114.0,"p1":99.51},
@@ -4516,7 +4516,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.558218,"wi":0.558218,"r":-0.13132,"s":"Industrials","g":"Commercial and Professional Services","p0":215.2,"p1":186.94},
       {"t":"CMCSA","co":"Comcast Corp","w":1.066018,"wi":1.066018,"r":-0.108675,"s":"Communication Services","g":"Telecommunication Services","p0":40.1713,"p1":35.8057},
     ] },
-    { n: 44, eff: "2024-12-23", prev: "2024-12-20", close: "2024-12-31", sec: [
+    { n: 44, eff: "2024-12-23", prev: "2024-12-20", close: "2024-12-31", yf: 2, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":0.889292,"wi":0.889292,"r":-0.010403,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":263.38,"p1":260.64},
       {"t":"TMUS","co":"T-Mobile US Inc","w":1.605946,"wi":1.605946,"r":0.001906,"s":"Communication Services","g":"Telecommunication Services","p0":220.31,"p1":220.73},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.417496,"wi":0.417496,"r":-0.025324,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":99.51,"p1":96.99},
@@ -4620,7 +4620,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.473572,"wi":0.473572,"r":-0.022681,"s":"Industrials","g":"Commercial and Professional Services","p0":186.94,"p1":182.7},
       {"t":"CMCSA","co":"Comcast Corp","w":0.916391,"wi":0.916391,"r":-0.018053,"s":"Communication Services","g":"Telecommunication Services","p0":35.8057,"p1":35.1593},
     ] },
-    { n: 45, eff: "2024-12-31", prev: "2024-12-31", close: "2025-03-21", sec: [
+    { n: 45, eff: "2024-12-31", prev: "2024-12-31", close: "2025-03-21", yf: 1, sec: [
       {"t":"CHTR","co":"Charter Communications Inc","w":0.309956,"wi":0.309956,"r":0.061382,"s":"Communication Services","g":"Media and Entertainment","p0":342.77,"p1":363.81},
       {"t":"MRVL","co":"Marvell Technology Inc","w":0.608403,"wi":0.608403,"r":-0.362698,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":110.45,"p1":70.39},
       {"t":"LULU","co":"Lululemon Athletica Inc","w":0.28613,"wi":0.28613,"r":-0.156351,"s":"Consumer Discretionary","g":"Consumer Durables and Apparel","p0":382.41,"p1":322.62},
@@ -4724,7 +4724,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.46857,"wi":0.46857,"r":0.04636,"s":"Industrials","g":"Commercial and Professional Services","p0":182.7,"p1":191.17},
       {"t":"CMCSA","co":"Comcast Corp","w":0.911002,"wi":0.911002,"r":-0.020785,"s":"Communication Services","g":"Telecommunication Services","p0":35.1593,"p1":34.4285},
     ] },
-    { n: 46, eff: "2025-03-24", prev: "2025-03-21", close: "2025-05-16", sec: [
+    { n: 46, eff: "2025-03-24", prev: "2025-03-21", close: "2025-05-16", yf: 0, sec: [
       {"t":"CHTR","co":"Charter Communications Inc","w":0.34905,"wi":0.34905,"r":0.174377,"s":"Communication Services","g":"Media and Entertainment","p0":363.81,"p1":427.25},
       {"t":"MRVL","co":"Marvell Technology Inc","w":0.411397,"wi":0.411397,"r":-0.09419,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":70.39,"p1":63.76},
       {"t":"LULU","co":"Lululemon Athletica Inc","w":0.253267,"wi":0.253267,"r":-0.003658,"s":"Consumer Discretionary","g":"Consumer Durables and Apparel","p0":322.62,"p1":321.44},
@@ -4828,7 +4828,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.520817,"wi":0.520817,"r":0.155254,"s":"Industrials","g":"Commercial and Professional Services","p0":191.17,"p1":220.85},
       {"t":"CMCSA","co":"Comcast Corp","w":0.93574,"wi":0.93574,"r":-0.034556,"s":"Communication Services","g":"Telecommunication Services","p0":34.4285,"p1":33.2388},
     ] },
-    { n: 47, eff: "2025-05-19", prev: "2025-05-16", close: "2025-06-20", sec: [
+    { n: 47, eff: "2025-05-19", prev: "2025-05-16", close: "2025-06-20", yf: 0, sec: [
       {"t":"CHTR","co":"Charter Communications Inc","w":0.375024,"wi":0.375024,"r":-0.095682,"s":"Communication Services","g":"Media and Entertainment","p0":427.25,"p1":386.37},
       {"t":"MRVL","co":"Marvell Technology Inc","w":0.341163,"wi":0.341163,"r":0.152917,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":63.76,"p1":73.51},
       {"t":"LULU","co":"Lululemon Athletica Inc","w":0.231128,"wi":0.231128,"r":-0.292341,"s":"Consumer Discretionary","g":"Consumer Durables and Apparel","p0":321.44,"p1":227.47},
@@ -4932,7 +4932,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.551107,"wi":0.551107,"r":-0.009962,"s":"Industrials","g":"Commercial and Professional Services","p0":220.85,"p1":218.65},
       {"t":"CMCSA","co":"Comcast Corp","w":0.827475,"wi":0.827475,"r":-0.026776,"s":"Communication Services","g":"Telecommunication Services","p0":33.2388,"p1":32.3488},
     ] },
-    { n: 48, eff: "2025-06-23", prev: "2025-06-20", close: "2025-07-16", sec: [
+    { n: 48, eff: "2025-06-23", prev: "2025-06-20", close: "2025-07-16", yf: 0, sec: [
       {"t":"META","co":"Meta Platforms Inc","w":3.690129,"wi":3.690129,"r":0.030131,"s":"Communication Services","g":"Media and Entertainment","p0":682.35,"p1":702.91},
       {"t":"CHTR","co":"Charter Communications Inc","w":0.332341,"wi":0.332341,"r":-0.01747,"s":"Communication Services","g":"Media and Entertainment","p0":386.37,"p1":379.62},
       {"t":"MRVL","co":"Marvell Technology Inc","w":0.388401,"wi":0.388401,"r":-0.036186,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":73.51,"p1":70.85},
@@ -5036,7 +5036,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.541036,"wi":0.541036,"r":-0.021175,"s":"Industrials","g":"Commercial and Professional Services","p0":218.65,"p1":214.02},
       {"t":"CMCSA","co":"Comcast Corp","w":0.788065,"wi":0.788065,"r":-0.003765,"s":"Communication Services","g":"Telecommunication Services","p0":32.3488,"p1":32.227},
     ] },
-    { n: 49, eff: "2025-07-17", prev: "2025-07-16", close: "2025-07-25", sec: [
+    { n: 49, eff: "2025-07-17", prev: "2025-07-16", close: "2025-07-25", yf: 0, sec: [
       {"t":"META","co":"Meta Platforms Inc","w":3.593822,"wi":3.593822,"r":0.013899,"s":"Communication Services","g":"Media and Entertainment","p0":702.91,"p1":712.68},
       {"t":"CHTR","co":"Charter Communications Inc","w":0.308712,"wi":0.308712,"r":-0.184052,"s":"Communication Services","g":"Media and Entertainment","p0":379.62,"p1":309.75},
       {"t":"MRVL","co":"Marvell Technology Inc","w":0.353913,"wi":0.353913,"r":0.047424,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":70.85,"p1":74.21},
@@ -5139,7 +5139,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.500672,"wi":0.500672,"r":0.044575,"s":"Industrials","g":"Commercial and Professional Services","p0":214.02,"p1":223.56},
       {"t":"CMCSA","co":"Comcast Corp","w":0.742245,"wi":0.742245,"r":-0.02093,"s":"Communication Services","g":"Telecommunication Services","p0":32.227,"p1":31.5525},
     ] },
-    { n: 50, eff: "2025-07-28", prev: "2025-07-25", close: "2025-09-19", sec: [
+    { n: 50, eff: "2025-07-28", prev: "2025-07-25", close: "2025-09-19", yf: 0, sec: [
       {"t":"META","co":"Meta Platforms Inc","w":3.564173,"wi":3.564173,"r":0.092187,"s":"Communication Services","g":"Media and Entertainment","p0":712.68,"p1":778.38},
       {"t":"CHTR","co":"Charter Communications Inc","w":0.24639,"wi":0.24639,"r":-0.152381,"s":"Communication Services","g":"Media and Entertainment","p0":309.75,"p1":262.55},
       {"t":"MRVL","co":"Marvell Technology Inc","w":0.362598,"wi":0.362598,"r":0.000674,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":74.21,"p1":74.26},
@@ -5243,7 +5243,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.511566,"wi":0.511566,"r":-0.104804,"s":"Industrials","g":"Commercial and Professional Services","p0":223.56,"p1":200.13},
       {"t":"CMCSA","co":"Comcast Corp","w":0.710834,"wi":0.710834,"r":-0.062055,"s":"Communication Services","g":"Telecommunication Services","p0":31.5525,"p1":29.5945},
     ] },
-    { n: 51, eff: "2025-09-22", prev: "2025-09-19", close: "2025-10-29", sec: [
+    { n: 51, eff: "2025-09-22", prev: "2025-09-19", close: "2025-10-29", yf: 0, sec: [
       {"t":"META","co":"Meta Platforms Inc","w":3.683083,"wi":3.683083,"r":-0.034315,"s":"Communication Services","g":"Media and Entertainment","p0":778.38,"p1":751.67},
       {"t":"CHTR","co":"Charter Communications Inc","w":0.192477,"wi":0.192477,"r":-0.079947,"s":"Communication Services","g":"Media and Entertainment","p0":262.55,"p1":241.56},
       {"t":"MRVL","co":"Marvell Technology Inc","w":0.343607,"wi":0.343607,"r":0.213978,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":74.26,"p1":90.15},
@@ -5347,7 +5347,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.432857,"wi":0.432857,"r":-0.081097,"s":"Industrials","g":"Commercial and Professional Services","p0":200.13,"p1":183.9},
       {"t":"CMCSA","co":"Comcast Corp","w":0.624413,"wi":0.624413,"r":-0.096866,"s":"Communication Services","g":"Telecommunication Services","p0":29.5945,"p1":26.7278},
     ] },
-    { n: 52, eff: "2025-10-30", prev: "2025-10-29", close: "2025-11-05", sec: [
+    { n: 52, eff: "2025-10-30", prev: "2025-10-29", close: "2025-11-05", yf: 0, sec: [
       {"t":"SOLS","co":"Solstice Advanced Materials Inc","w":0.03954,"wi":0.03954,"r":-0.01868,"s":"Materials","g":"Materials","p0":49.25,"p1":48.33},
       {"t":"MRVL","co":"Marvell Technology Inc","w":0.393107,"wi":0.393107,"r":0.030505,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":90.15,"p1":92.9},
       {"t":"LULU","co":"Lululemon Athletica Inc","w":0.09883,"wi":0.09883,"r":-0.015913,"s":"Consumer Discretionary","g":"Consumer Durables and Apparel","p0":170.3,"p1":167.59},
@@ -5452,7 +5452,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.374847,"wi":0.374847,"r":0.010386,"s":"Industrials","g":"Commercial and Professional Services","p0":183.9,"p1":185.81},
       {"t":"CMCSA","co":"Comcast Corp","w":0.531449,"wi":0.531449,"r":-0.020679,"s":"Communication Services","g":"Telecommunication Services","p0":26.7278,"p1":26.1751},
     ] },
-    { n: 53, eff: "2025-11-06", prev: "2025-11-05", close: "2025-12-19", sec: [
+    { n: 53, eff: "2025-11-06", prev: "2025-11-05", close: "2025-12-19", yf: 0, sec: [
       {"t":"SOLS","co":"Solstice Advanced Materials Inc","w":0.039602,"wi":0.039602,"r":0.041796,"s":"Materials","g":"Materials","p0":48.33,"p1":50.35},
       {"t":"MRVL","co":"Marvell Technology Inc","w":0.41346,"wi":0.41346,"r":-0.094833,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":92.9,"p1":84.09},
       {"t":"LULU","co":"Lululemon Athletica Inc","w":0.099266,"wi":0.099266,"r":0.249776,"s":"Consumer Discretionary","g":"Consumer Durables and Apparel","p0":167.59,"p1":209.45},
@@ -5557,7 +5557,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.386558,"wi":0.386558,"r":0.009472,"s":"Industrials","g":"Commercial and Professional Services","p0":185.81,"p1":187.57},
       {"t":"CMCSA","co":"Comcast Corp","w":0.5312,"wi":0.5312,"r":0.058338,"s":"Communication Services","g":"Telecommunication Services","p0":26.1751,"p1":27.7021},
     ] },
-    { n: 54, eff: "2025-12-22", prev: "2025-12-19", close: "2025-12-31", sec: [
+    { n: 54, eff: "2025-12-22", prev: "2025-12-19", close: "2025-12-31", yf: 2, sec: [
       {"t":"AMGN","co":"Amgen Inc","w":0.966334,"wi":0.966334,"r":-0.000214,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":327.38,"p1":327.31},
       {"t":"TMUS","co":"T-Mobile US Inc","w":1.206184,"wi":1.206184,"r":0.032074,"s":"Communication Services","g":"Telecommunication Services","p0":196.73,"p1":203.04},
       {"t":"ZS","co":"Zscaler Inc","w":0.203285,"wi":0.203285,"r":-0.03281,"s":"Information Technology","g":"Software and Services","p0":232.55,"p1":224.92},
@@ -5661,7 +5661,7 @@ export const NDX_DATA = {
       {"t":"WDC","co":"Western Digital Corp","w":0.33937,"wi":0.33937,"r":-0.048653,"s":"Information Technology","g":"Technology Hardware and Equipment","p0":181.08,"p1":172.27},
       {"t":"ADBE","co":"Adobe Inc","w":0.816551,"wi":0.816551,"r":-0.016495,"s":"Information Technology","g":"Software and Services","p0":355.86,"p1":349.99},
     ] },
-    { n: 55, eff: "2025-12-31", prev: "2025-12-31", close: "2026-01-02", sec: [
+    { n: 55, eff: "2025-12-31", prev: "2025-12-31", close: "2026-01-02", yf: 1, sec: [
       {"t":"FTNT","co":"Fortinet Inc","w":0.325294,"wi":0.325294,"r":-0.019267,"s":"Information Technology","g":"Software and Services","p0":79.41,"p1":77.88},
       {"t":"ALNY","co":"Alnylam Pharmaceuticals Inc","w":0.289393,"wi":0.289393,"r":0.006337,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":397.65,"p1":400.17},
       {"t":"WDAY","co":"Workday Inc","w":0.252002,"wi":0.252002,"r":-0.041857,"s":"Information Technology","g":"Software and Services","p0":214.78,"p1":205.79},
@@ -5765,7 +5765,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.416328,"wi":0.416328,"r":-0.016962,"s":"Industrials","g":"Commercial and Professional Services","p0":188.07,"p1":184.88},
       {"t":"CMCSA","co":"Comcast Corp","w":0.59841,"wi":0.59841,"r":-0.01171,"s":"Communication Services","g":"Telecommunication Services","p0":28.0019,"p1":27.674},
     ] },
-    { n: 56, eff: "2026-01-05", prev: "2026-01-02", close: "2026-01-08", sec: [
+    { n: 56, eff: "2026-01-05", prev: "2026-01-02", close: "2026-01-08", yf: 0, sec: [
       {"t":"WDAY","co":"Workday Inc","w":0.241853,"wi":0.241853,"r":0.019437,"s":"Information Technology","g":"Software and Services","p0":205.79,"p1":209.79},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.632942,"wi":0.632942,"r":0.038816,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":452.13,"p1":469.68},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.426578,"wi":0.426578,"r":0.05054,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":115.75,"p1":121.6},
@@ -5870,7 +5870,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.40994,"wi":0.40994,"r":0.0291,"s":"Industrials","g":"Commercial and Professional Services","p0":184.88,"p1":190.26},
       {"t":"CMCSA","co":"Comcast Corp","w":0.554957,"wi":0.554957,"r":0.019368,"s":"Communication Services","g":"Telecommunication Services","p0":27.674,"p1":28.21},
     ] },
-    { n: 57, eff: "2026-01-09", prev: "2026-01-08", close: "2026-01-16", sec: [
+    { n: 57, eff: "2026-01-09", prev: "2026-01-08", close: "2026-01-16", yf: 0, sec: [
       {"t":"WDAY","co":"Workday Inc","w":0.243655,"wi":0.243655,"r":-0.1093,"s":"Information Technology","g":"Software and Services","p0":209.79,"p1":186.86},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.649778,"wi":0.649778,"r":-0.060296,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":469.68,"p1":441.36},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.442867,"wi":0.442867,"r":-0.122039,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":121.6,"p1":106.76},
@@ -5975,7 +5975,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.416908,"wi":0.416908,"r":0.027121,"s":"Industrials","g":"Commercial and Professional Services","p0":190.26,"p1":195.42},
       {"t":"CMCSA","co":"Comcast Corp","w":0.559052,"wi":0.559052,"r":-0.013825,"s":"Communication Services","g":"Telecommunication Services","p0":28.21,"p1":27.82},
     ] },
-    { n: 58, eff: "2026-01-20", prev: "2026-01-16", close: "2026-03-20", sec: [
+    { n: 58, eff: "2026-01-20", prev: "2026-01-16", close: "2026-03-20", yf: 0, sec: [
       {"t":"PDD","co":"PDD Holdings Inc","w":0.377799,"wi":0.377799,"r":-0.099007,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":106.76,"p1":96.19},
       {"t":"SNPS","co":"Synopsys Inc","w":0.508111,"wi":0.508111,"r":-0.185915,"s":"Information Technology","g":"Software and Services","p0":516.31,"p1":420.32},
       {"t":"AMGN","co":"Amgen Inc","w":0.942642,"wi":0.942642,"r":0.052632,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":330.41,"p1":347.8},
@@ -6080,7 +6080,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.416078,"wi":0.416078,"r":-0.082284,"s":"Industrials","g":"Commercial and Professional Services","p0":195.42,"p1":179.34},
       {"t":"CMCSA","co":"Comcast Corp","w":0.535697,"wi":0.535697,"r":0.043134,"s":"Communication Services","g":"Telecommunication Services","p0":27.82,"p1":29.02},
     ] },
-    { n: 59, eff: "2026-03-23", prev: "2026-03-20", close: "2026-04-17", sec: [
+    { n: 59, eff: "2026-03-23", prev: "2026-03-20", close: "2026-04-17", yf: 0, sec: [
       {"t":"PDD","co":"PDD Holdings Inc","w":0.36019,"wi":0.36019,"r":0.089406,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":96.19,"p1":104.79},
       {"t":"SNPS","co":"Synopsys Inc","w":0.451401,"wi":0.451401,"r":0.069614,"s":"Information Technology","g":"Software and Services","p0":420.32,"p1":449.58},
       {"t":"AMGN","co":"Amgen Inc","w":1.051104,"wi":1.051104,"r":0.021564,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":347.8,"p1":355.3},
@@ -6185,7 +6185,7 @@ export const NDX_DATA = {
       {"t":"CTAS","co":"Cintas Corp","w":0.402059,"wi":0.402059,"r":-0.000948,"s":"Industrials","g":"Commercial and Professional Services","p0":179.34,"p1":179.17},
       {"t":"CMCSA","co":"Comcast Corp","w":0.58381,"wi":0.58381,"r":0.02102,"s":"Communication Services","g":"Telecommunication Services","p0":29.02,"p1":29.63},
     ] },
-    { n: 60, eff: "2026-04-20", prev: "2026-04-17", close: "2026-05-15", sec: [
+    { n: 60, eff: "2026-04-20", prev: "2026-04-17", close: "2026-05-15", yf: 0, sec: [
       {"t":"WDAY","co":"Workday Inc","w":0.131863,"wi":0.131863,"r":0.009529,"s":"Information Technology","g":"Software and Services","p0":123.83,"p1":125.01},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.560329,"wi":0.560329,"r":-0.009633,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":441.2,"p1":436.95},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.349917,"wi":0.349917,"r":-0.085504,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":104.79,"p1":95.83},
@@ -6290,7 +6290,7 @@ export const NDX_DATA = {
       {"t":"ADBE","co":"Adobe Inc","w":0.498172,"wi":0.498172,"r":0.012886,"s":"Information Technology","g":"Software and Services","p0":244.45,"p1":247.6},
       {"t":"CTAS","co":"Cintas Corp","w":0.358196,"wi":0.358196,"r":-0.060613,"s":"Industrials","g":"Commercial and Professional Services","p0":179.17,"p1":168.31},
     ] },
-    { n: 61, eff: "2026-05-18", prev: "2026-05-15", close: "2026-06-18", sec: [
+    { n: 61, eff: "2026-05-18", prev: "2026-05-15", close: "2026-06-18", yf: 0, sec: [
       {"t":"WDAY","co":"Workday Inc","w":0.121897,"wi":0.121897,"r":-0.064635,"s":"Information Technology","g":"Software and Services","p0":125.01,"p1":116.93},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.506923,"wi":0.506923,"r":0.033597,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":436.95,"p1":451.63},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.292313,"wi":0.292313,"r":-0.16978,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":95.83,"p1":79.56},
@@ -6395,7 +6395,7 @@ export const NDX_DATA = {
       {"t":"ADBE","co":"Adobe Inc","w":0.460937,"wi":0.460937,"r":-0.211793,"s":"Information Technology","g":"Software and Services","p0":247.6,"p1":195.16},
       {"t":"CTAS","co":"Cintas Corp","w":0.307374,"wi":0.307374,"r":0.015091,"s":"Industrials","g":"Commercial and Professional Services","p0":168.31,"p1":170.85},
     ] },
-    { n: 62, eff: "2026-06-22", prev: "2026-06-18", close: "2026-06-26", sec: [
+    { n: 62, eff: "2026-06-22", prev: "2026-06-18", close: "2026-06-26", yf: 0, sec: [
       {"t":"PDD","co":"PDD Holdings Inc","w":0.228862,"wi":0.228862,"r":-0.037833,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":79.56,"p1":76.55},
       {"t":"SNPS","co":"Synopsys Inc","w":0.375638,"wi":0.375638,"r":-0.002569,"s":"Information Technology","g":"Software and Services","p0":455.51,"p1":454.34},
       {"t":"PAYX","co":"Paychex Inc","w":0.151591,"wi":0.151591,"r":0.016897,"s":"Industrials","g":"Commercial and Professional Services","p0":98.24,"p1":99.9},
@@ -6500,7 +6500,7 @@ export const NDX_DATA = {
       {"t":"WDC","co":"Western Digital Corp","w":1.107749,"wi":1.107749,"r":-0.214116,"s":"Information Technology","g":"Technology Hardware and Equipment","p0":746.23,"p1":586.45},
       {"t":"ADBE","co":"Adobe Inc","w":0.339732,"wi":0.339732,"r":0.038789,"s":"Information Technology","g":"Software and Services","p0":195.16,"p1":202.73},
     ] },
-    { n: 63, eff: "2026-06-29", prev: "2026-06-26", close: "2026-07-06", sec: [
+    { n: 63, eff: "2026-06-29", prev: "2026-06-26", close: "2026-07-06", yf: 0, sec: [
       {"t":"FTNT","co":"Fortinet Inc","w":0.498525,"wi":0.498525,"r":0.072679,"s":"Information Technology","g":"Software and Services","p0":151.35,"p1":162.35},
       {"t":"ALNY","co":"Alnylam Pharmaceuticals Inc","w":0.174895,"wi":0.174895,"r":0.074373,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":291.37,"p1":313.04},
       {"t":"ARM","co":"ARM Holdings PLC","w":0.637206,"wi":0.637206,"r":-0.035989,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":334.27,"p1":322.24},
@@ -6606,7 +6606,7 @@ export const NDX_DATA = {
       {"t":"WDC","co":"Western Digital Corp","w":0.908785,"wi":0.908785,"r":-0.01533,"s":"Information Technology","g":"Technology Hardware and Equipment","p0":586.45,"p1":577.46},
       {"t":"ADBE","co":"Adobe Inc","w":0.368405,"wi":0.368405,"r":0.075667,"s":"Information Technology","g":"Software and Services","p0":202.73,"p1":218.07},
     ] },
-    { n: 64, eff: "2026-07-07", prev: "2026-07-06", close: "2026-08-04", sec: [
+    { n: 64, eff: "2026-07-07", prev: "2026-07-06", close: "2026-08-04", yf: 0, sec: [
       {"t":"ARM","co":"ARM Holdings PLC","w":0.593556,"wi":0.593556,"r":-0.129345,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":322.24,"p1":280.56},
       {"t":"WDAY","co":"Workday Inc","w":0.120489,"wi":0.120489,"r":0.241249,"s":"Information Technology","g":"Software and Services","p0":137.99,"p1":171.28},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.583913,"wi":0.583913,"r":-0.096084,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":529.59,"p1":478.705},
@@ -6713,7 +6713,7 @@ export const NDX_DATA = {
       {"t":"WDC","co":"Western Digital Corp","w":0.864668,"wi":0.864668,"r":-0.050047,"s":"Information Technology","g":"Technology Hardware and Equipment","p0":577.46,"p1":548.56},
       {"t":"ADBE","co":"Adobe Inc","w":0.382913,"wi":0.382913,"r":0.180768,"s":"Information Technology","g":"Software and Services","p0":218.07,"p1":257.49},
     ] },
-    { n: 65, eff: "2026-08-05", prev: "2026-08-04", close: "2026-09-11", sec: [
+    { n: 65, eff: "2026-08-05", prev: "2026-08-04", close: "2026-09-11", yf: 0, sec: [
       {"t":"ARM","co":"ARM Holdings PLC","w":0.517981,"wi":0.517981,"r":-0.056209,"s":"Information Technology","g":"Semiconductors and Semiconductor Equipment","p0":280.56,"p1":264.79},
       {"t":"WDAY","co":"Workday Inc","w":0.149905,"wi":0.149905,"r":0.08419,"s":"Information Technology","g":"Software and Services","p0":171.28,"p1":185.7},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.529036,"wi":0.529036,"r":0.076738,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":478.705,"p1":515.44},
@@ -6819,7 +6819,7 @@ export const NDX_DATA = {
       {"t":"WDC","co":"Western Digital Corp","w":0.823299,"wi":0.823299,"r":-0.184811,"s":"Information Technology","g":"Technology Hardware and Equipment","p0":548.56,"p1":447.18},
       {"t":"ADBE","co":"Adobe Inc","w":0.453181,"wi":0.453181,"r":-0.020428,"s":"Information Technology","g":"Software and Services","p0":257.49,"p1":252.23},
     ] },
-    { n: 66, eff: "2026-09-14", prev: "2026-09-11", close: "2026-09-21", sec: [
+    { n: 66, eff: "2026-09-14", prev: "2026-09-11", close: "2026-09-21", yf: 0, sec: [
       {"t":"WDAY","co":"Workday Inc","w":0.164452,"wi":0.164452,"r":0.033495,"s":"Information Technology","g":"Software and Services","p0":185.7,"p1":191.92},
       {"t":"VRTX","co":"Vertex Pharmaceuticals Inc","w":0.577132,"wi":0.577132,"r":-0.009157,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":515.44,"p1":510.72},
       {"t":"PDD","co":"PDD Holdings Inc","w":0.229277,"wi":0.229277,"r":0.019085,"s":"Consumer Discretionary","g":"Consumer Discretionary Distribution and Retail","p0":77.81,"p1":79.295},
@@ -6924,7 +6924,7 @@ export const NDX_DATA = {
       {"t":"WDC","co":"Western Digital Corp","w":0.67998,"wi":0.67998,"r":0.002214,"s":"Information Technology","g":"Technology Hardware and Equipment","p0":447.18,"p1":448.17},
       {"t":"ADBE","co":"Adobe Inc","w":0.449768,"wi":0.449768,"r":-0.010744,"s":"Information Technology","g":"Software and Services","p0":252.23,"p1":249.52},
     ] },
-    { n: 67, eff: "2026-09-22", prev: "2026-09-21", close: "2026-10-05", sec: [
+    { n: 67, eff: "2026-09-22", prev: "2026-09-21", close: "2026-10-05", yf: 0, sec: [
       {"t":"META","co":"Meta Platforms Inc","w":3.327983,"wi":3.327983,"r":0.000884,"s":"Communication Services","g":"Media and Entertainment","p0":741.245,"p1":741.9},
       {"t":"FTNT","co":"Fortinet Inc","w":0.535912,"wi":0.535912,"r":0.05079,"s":"Information Technology","g":"Software and Services","p0":175.23,"p1":184.13},
       {"t":"ALNY","co":"Alnylam Pharmaceuticals Inc","w":0.136229,"wi":0.136229,"r":-0.099992,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":244.32,"p1":219.89},
@@ -7029,7 +7029,7 @@ export const NDX_DATA = {
       {"t":"WDC","co":"Western Digital Corp","w":0.673529,"wi":0.673529,"r":-0.01457,"s":"Information Technology","g":"Technology Hardware and Equipment","p0":448.17,"p1":441.64},
       {"t":"ADBE","co":"Adobe Inc","w":0.41343,"wi":0.41343,"r":-0.043023,"s":"Information Technology","g":"Software and Services","p0":249.52,"p1":238.785},
     ] },
-    { n: 68, eff: "2026-10-06", prev: "2026-10-05", close: null, sec: [
+    { n: 68, eff: "2026-10-06", prev: "2026-10-05", close: null, yf: 0, sec: [
       {"t":"META","co":"Meta Platforms Inc","w":3.276293,"wi":3.276293,"r":-0.031163,"s":"Communication Services","g":"Media and Entertainment","p0":741.9,"p1":718.78},
       {"t":"FTNT","co":"Fortinet Inc","w":0.553895,"wi":0.553895,"r":0.056699,"s":"Information Technology","g":"Software and Services","p0":184.13,"p1":194.57},
       {"t":"ALNY","co":"Alnylam Pharmaceuticals Inc","w":0.120596,"wi":0.120596,"r":0.050298,"s":"Health Care","g":"Pharmaceuticals, Biotechnology and Life Sciences","p0":219.89,"p1":230.95},

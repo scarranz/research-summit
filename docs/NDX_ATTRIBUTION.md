@@ -35,7 +35,7 @@ read with cached values, so **the workbook must be saved after the Bloomberg ref
 | R | Snapshot return | `r` = Q / P − 1 (decimal) |
 | U | Industry sector (GICS 1) | `s` |
 | V | Industry group (GICS 2) | `g`, normalised (§5.3) |
-| any free column, header **`HOC Type`** | Year marker | `yf`: **1** = the year's opening HOC, **0** = internal, **2** = the year's closing HOC — the same value on every row of a HOC (§2) |
+| G (header `0 = Internal 1 = Open 2 = Close`; `HOC Type` also accepted, any column) | Year marker | `yf`: **1** = the year's opening HOC, **0** = internal, **2** = the year's closing HOC — the same value on every row of a HOC (§2) |
 
 Weights come from Bloomberg's QQQ holdings (`holdings('QQQ US Equity', dates=…)`) and sum to 100 in
 every HOC (cash / futures included).
@@ -52,6 +52,12 @@ yet it is **YTD**; anything outside a `1…2` run (the Dec-2019 stub) is left ou
 the year of the opening HOC's effective date + 7 days (an opening HOC dated Dec 29-31 belongs to the
 next year). No weekend / holiday logic is needed. When a new year starts, mark the previous year's
 last HOC `2` and the new open HOC `1`, upload, and every year control updates itself.
+As marked today: every year from 2020 to 2025 has its `1` (opening) and `2` (closing). **2026 has a
+`1` and no `2`, so it is "YTD 2026"**; when its closing HOC is marked `2` in December it becomes a
+regular year, and **2027 appears only once there is data for it** — an opening HOC marked `1`. The
+Dec-2019 stub is marked `2`: it would be 2019's closing HOC, but 2019's opening HOC is not in the
+data, so 2019 is left out (the extractor notes it; if 2019 is ever added with its `1`, it appears).
+
 The markers are used only when **every** HOC has one; otherwise the date rule below applies, and the
 extractor prints which HOCs are missing. When both exist and disagree, the extractor says so (the
 markers win). Implemented in `deriveYearsFromMarkers()` (page) and `years_by_markers()` (extractor).

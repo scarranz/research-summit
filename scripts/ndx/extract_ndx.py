@@ -103,7 +103,12 @@ def find_header(ws):
     """Row holding 'Rebalance Effective Date' (col H) and the column index of 'HOC Type', if any."""
     for r, row in enumerate(ws.iter_rows(min_row=1, max_row=600, values_only=True), start=1):
         if len(row) > 7 and isinstance(row[7], str) and 'rebalance effective' in row[7].lower():
-            col = next((i for i, v in enumerate(row) if isinstance(v, str) and v.strip().lower() in HOC_TYPE_HEADERS), None)
+            def is_type(v):
+                # 'HOC Type' (or a variant) — or a header that spells the legend out, as the
+                # analyst's sheet does in column G: '0 = Internal 1 = Open 2 = Close'
+                t = v.strip().lower() if isinstance(v, str) else ''
+                return t in HOC_TYPE_HEADERS or all(x in t for x in ('0 =', '1 =', '2 ='))
+            col = next((i for i, v in enumerate(row) if is_type(v)), None)
             return r, col
     return FIRST_ROW - 1, None
 
@@ -241,7 +246,7 @@ def years_by_markers(hocs):
     a year starts at each 1 and ends at its 2; still open (no 2 yet) = YTD. Anything outside a
     1…2 run (e.g. the Dec-2019 stub) is left out. The year number comes from the opening HOC:
     the year of its effective date + 7 days (an opening HOC dated Dec 29-31 is next year's)."""
-    years, cur, issues = [], None, []
+    years, cur, issues, notes = [], None, [], []
     for h in hocs:
         f = h['yf']
         if f == 1:
@@ -250,10 +255,11 @@ def years_by_markers(hocs):
                 years.append(cur)
             y = (datetime.date.fromisoformat(h['eff']) + datetime.timedelta(days=7)).year
             cur = {'y': y, 'first': h, 'last': h, 'closed': False}
-            if f == 2:
-                pass
         elif cur:
             cur['last'] = h
+        elif f == 2:
+            notes.append(f"HOC {h['n']} ({h['eff']}) closes a year whose opening HOC is not in the data — left out (expected for the Dec-2019 stub)")
+            continue
         else:
             issues.append(f"HOC {h['n']} ({h['eff']}) is outside any year (no opening 1 before it) — left out")
             continue
@@ -266,7 +272,7 @@ def years_by_markers(hocs):
     for y in years[:-1]:
         if not y['closed']:
             issues.append(f"{y['y']} has no closing HOC (2) but is not the last year")
-    return years, issues
+    return years, issues, notes
 
 def years_by_dates(hocs):
     by = OrderedDict()
@@ -292,10 +298,10 @@ def print_years(hocs):
     caught here, not on the portal."""
     by_dates = years_by_dates(hocs)
     if all('yf' in h for h in hocs):
-        years, issues = years_by_markers(hocs)
+        years, issues, notes = years_by_markers(hocs)
         source = 'from the "HOC Type" column'
     else:
-        years, issues = by_dates, []
+        years, issues, notes = by_dates, [], []
         source = 'from the date rule (no complete "HOC Type" column)'
     print(f'Years the page will show ({source}):')
     for y in years:
@@ -303,6 +309,8 @@ def print_years(hocs):
         n = sum(1 for h in hocs if first['n'] <= h['n'] <= last['n'])
         print(f"  {('YTD ' if not y['closed'] else '') + str(y['y']):<9} HOC {first['n']}-{last['n']}  ({n} HOCs)  "
               f"{first['prev']} → {last['close'] or 'open'}")
+    for msg in notes:
+        print(f'  · {msg}')
     for msg in issues:
         print(f'  ! CHECK: {msg}')
     if years is not by_dates:

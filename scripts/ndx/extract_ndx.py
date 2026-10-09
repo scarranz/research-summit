@@ -115,6 +115,45 @@ def read_blocks(xlsx):
         })
     return blocks
 
+# ── Bloomberg dummy lines (see docs/NDX_ATTRIBUTION.md §5) ─────────────────────
+# After a spin-off / merger / ADR-ratio change Bloomberg moves a security's old history to a
+# dummy line '<7 digits><letter> US Equity' and gives the live ticker a re-adjusted history.
+# Historical QQQ holdings can then list BOTH lines in the same HOC — the same stock counted
+# twice (identical returns, different price basis). Rule: keep the dummy row (per Bloomberg,
+# the line that was actually trading then), drop the live duplicate, re-normalise the HOC
+# weights to 100, and show the dummy under its real ticker so the name reads continuously
+# across HOCs. Effect: 2020 47.24% → 47.37% and 2023 53.73% → 53.75% (official 47.58 / 53.81).
+DUMMY_TICKERS = {
+    '9990294D': ('LBTYA', 'Liberty Global Ltd'),      # Liberty Global class A (pre-2024 restructuring line)
+    '9999794D': ('LBTYK', 'Liberty Global Ltd'),      # Liberty Global class C
+    '9210611D': ('SIRI',  'Sirius XM Holdings Inc'),  # Sirius XM before the 2024 Liberty Media merger / 1:10 reverse split
+    '9996651D': ('AZN',   'AstraZeneca PLC'),         # AstraZeneca ADR line around the 2023 ADR-ratio change
+}
+_DUMMY_RE = re.compile(r'^\d{6,}[A-Z]$')
+
+def resolve_dummies(hoc):
+    rows = hoc['sec']
+    unknown = sorted({s['t'] for s in rows if _DUMMY_RE.match(s['t']) and s['t'] not in DUMMY_TICKERS})
+    if unknown:
+        print(f"  ! HOC {hoc['n']}: unmapped Bloomberg dummy ticker(s) {', '.join(unknown)} — add them to DUMMY_TICKERS")
+    dummies = [s for s in rows if s['t'] in DUMMY_TICKERS]
+    if not dummies:
+        return
+    live = {DUMMY_TICKERS[s['t']][0] for s in dummies}
+    dropped = [s for s in rows if s['t'] in live]
+    if dropped:
+        rows[:] = [s for s in rows if s['t'] not in live]
+        tot_w = sum(s['w'] for s in rows) or 100
+        tot_wi = sum(s['wi'] for s in rows) or 100
+        for s in rows:
+            s['w'] = round(s['w'] * 100 / tot_w, 6)
+            s['wi'] = round(s['wi'] * 100 / tot_wi, 6)
+        print(f"  · HOC {hoc['n']}: dropped live duplicate(s) {', '.join(s['t'] for s in dropped)} (kept the dummy line); weights re-normalised")
+    for s in dummies:
+        tick, co = DUMMY_TICKERS[s['t']]
+        print(f"  · HOC {hoc['n']}: {s['t']} → {tick}")
+        s['t'], s['co'] = tick, co
+
 def extract(paths):
     # Several workbooks (e.g. one per year) are merged; a HOC present in more than one
     # file is taken from the LAST file given.
@@ -132,6 +171,8 @@ def extract(paths):
             print(f'  ! skipped block eff={eff} close={close}: only {len(secs)} rows')
             continue
         hocs.append({'n': len(hocs) + 1, 'eff': eff, 'prev': prev, 'close': close, 'sec': secs})
+    for h in hocs:
+        resolve_dummies(h)
     opens = [h for h in hocs if not h['close']]
     if len(opens) > 1 or (opens and opens[0] is not hocs[-1]):
         sys.exit('ERROR: expected at most one open HOC, and it must be the last one')
@@ -199,6 +240,7 @@ def call(payload):
         print(f"  ! no Massive price (kept Excel return): {', '.join(m['priceMissing'])}")
 
 def main():
+    sys.stdout.reconfigure(encoding='utf-8')   # Windows consoles default to cp1252
     ap = argparse.ArgumentParser()
     ap.add_argument('--xlsx', action='append', help='repeat for several workbooks (e.g. one per year); default = the 2026 file')
     ap.add_argument('--upload', action='store_true')

@@ -346,6 +346,10 @@ Every company has three tabs: **Overview**, **Pillars**, and **Resources**.
 - Overview is custom-designed per company with Claude's help
 - Claude handles all the technical work — the user just describes what they want to see
 
+## NDX 100 Return Attribution — read docs/NDX_ATTRIBUTION.md first
+
+Market Analysis ▸ Nasdaq-100 Analysis (`js/ndx-attribution.js`). **Before changing its data, the extractor (`scripts/ndx/extract_ndx.py`), the `ndx-attribution` edge function or the page, read `docs/NDX_ATTRIBUTION.md`**: source sheet and columns, HOC / year rules (no hard-coded dates; a new year needs no code change), Carino math, drifted close weights, Bloomberg dummy tickers (`9990294D` → LBTYA, `9999794D` → LBTYK, `9210611D` → SIRI, `9996651D` → AZN — never show the dummy code), the Supabase refresh routine, and the page conventions agreed with the analyst.
+
 ## Derivatives tab — how it works
 
 One sidebar item, four strategies as sub-tabs. They are two questions crossed — is

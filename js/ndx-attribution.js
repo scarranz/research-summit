@@ -330,6 +330,8 @@ function fmtC(v) {
   return '<span style="color:' + (v >= 0 ? 'var(--pos)' : 'var(--neg)') + ';font-weight:600">' +
     (v >= 0 ? '+' : '') + v.toFixed(_attrDecimals) + '%</span>';
 }
+// Signed 2-decimal number; anything that rounds to zero prints +0.00 (never -0.00)
+function sgn2(v) { v = Math.abs(v) < 0.005 ? 0 : v; return (v >= 0 ? '+' : '') + v.toFixed(2); }
 function fmtYTD(v) { return v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(_attrDecimals) + '%'; }
 function colr(v)   { return v >= 0 ? 'var(--pos)' : 'var(--neg)'; }
 function esc(s)    { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
@@ -784,8 +786,8 @@ function renderSectorFlatTreemap(res, box, VW, VH) {
       fill: fillC, stroke: strokeC, 'stroke-opacity': item.excl ? 0.25 : 0.55,
       'stroke-width': 1, opacity: item.excl ? 0.35 : 1 }));
     treemapTileLabel(g, rx, ry, rw, rh, item.label,
-      (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%', fillC, fgC);
-    var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%';
+      sgn2(item.c) + '%', fillC, fgC);
+    var tipC = sgn2(item.c) + '%';
     bindTip(g, '<b style="font-size:13px">' + item.label + '</b>' +
       '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
       'Weight: ' + item.w.toFixed(3) + '%<br>Contribution: ' + tipC +
@@ -826,8 +828,8 @@ function renderIGFlatTreemap(res, box, VW, VH) {
     g.appendChild(se('rect', { x: rx, y: ry, width: rw, height: rh, rx: 3,
       fill: fillC, stroke: strokeC, 'stroke-opacity': 0.55, 'stroke-width': 1 }));
     treemapTileLabel(g, rx, ry, rw, rh, item.label,
-      (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%', fillC, fgC);
-    var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%';
+      sgn2(item.c) + '%', fillC, fgC);
+    var tipC = sgn2(item.c) + '%';
     bindTip(g, '<b style="font-size:13px">' + item.label + '</b>' +
       '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
       dispSec(item.sect) + '<br>Weight: ' + item.w.toFixed(3) + '%<br>Contribution: ' + tipC +
@@ -916,8 +918,8 @@ function renderNestedIGTreemap(res, box, VW, VH) {
       g.appendChild(se('rect', { x: rx, y: ry, width: rw, height: rh, rx: 2,
         fill: fillC, stroke: strokeC, 'stroke-opacity': 0.5, 'stroke-width': 0.8 }));
       treemapTileLabel(g, rx, ry, rw, rh, item.label,
-        (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%', fillC, fgC);
-      var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%';
+        sgn2(item.c) + '%', fillC, fgC);
+      var tipC = sgn2(item.c) + '%';
       bindTip(g, '<b style="font-size:13px">' + item.label + '</b>' +
         '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
         dispSec(item.sect) + '<br>Weight: ' + item.w.toFixed(3) + '%<br>Contribution: ' + tipC +
@@ -1039,11 +1041,11 @@ window.ndxShowIGModal = function(sector) {
         var ct = se('text', { x: rx + rw / 2, y: startY + lines.length * lineH + cfs,
           'text-anchor': 'middle', 'font-family': 'Inter,sans-serif',
           'font-size': cfs, fill: fgC, opacity: '0.88' });
-        ct.textContent = (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%';
+        ct.textContent = sgn2(item.c) + '%';
         g.appendChild(ct);
       }
     }
-    var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%';
+    var tipC = sgn2(item.c) + '%';
     bindTip(g, '<b style="font-size:13px">' + item.label + '</b>' +
       '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
       'Weight: ' + item.w.toFixed(3) + '%<br>Contribution: ' + tipC + '</span>');
@@ -1061,7 +1063,7 @@ window.ndxShowIGModal = function(sector) {
       '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0">' + item.w.toFixed(3) + '%</td>' +
       '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0;color:' +
       (item.c >= 0 ? '#177A4E' : '#9B2A20') + ';font-weight:600">' +
-      (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%</td></tr>';
+      sgn2(item.c) + '%</td></tr>';
   });
   thtml += '</tbody></table>';
   body.insertAdjacentHTML('beforeend', thtml);
@@ -1098,7 +1100,7 @@ window.ndxShowSecuritiesModal = function(ig) {
       '<td style="padding:4px 8px;border-bottom:1px solid #f0f0f0;color:#52514e">' + (d.co && d.co !== d.name ? d.co : '—') + '</td>' +
       '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0;color:' + rc + ';font-weight:600">' + (d.ret >= 0 ? '+' : '') + d.ret.toFixed(2) + '%</td>' +
       '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0">' + d.w1.toFixed(3) + '%</td>' +
-      '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0;color:' + cc + ';font-weight:600">' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(2) + '%</td>' +
+      '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0;color:' + cc + ';font-weight:600">' + sgn2(d.contrib) + '%</td>' +
       '</tr>';
   });
   thtml += '</tbody></table>';
@@ -1657,7 +1659,7 @@ function renderScatter(securities) {
       dispSec(d.sect) + ' / ' + d.grp +
       '<br>Return: ' + (d.ret >= 0 ? '+' : '') + d.ret.toFixed(2) + '%' +
       '<br>Close weight: ' + d.w1.toFixed(3) + '%' +
-      '<br>Contribution: ' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(2) + '%</span>');
+      '<br>Contribution: ' + sgn2(d.contrib) + '%</span>');
     svg.appendChild(g);
     if (top10Names.has(d.name)) labelItems.push({ name: d.name, cx: cx, cy: cy, r: r });
   });
@@ -1861,7 +1863,7 @@ function _beeSvgForYear(yr, xLo, xHi, maxAbsC, multiYear, showTitle) {
       var g = se('g', { class: 'mk' });
       g.appendChild(se('circle', { cx: d.bx, cy: gy, r: dotR, fill: fillC, 'fill-opacity': 0.85, stroke: strokeC, 'stroke-width': 1.2 }));
       var tipRet = (d.ret >= 0 ? '+' : '') + d.ret.toFixed(2) + '%';
-      var tipCon = (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(2) + '%';
+      var tipCon = sgn2(d.contrib) + '%';
       g.setAttribute('title', d.name + ': contrib ' + tipCon + ', return ' + tipRet);
       bindTip(g,
         '<b style="font-size:13px">' + d.name + '</b>' +
@@ -2020,8 +2022,8 @@ function renderPareto() {
     return '<td style="' + first + NUM + ';color:var(--mu);font-size:11px">' + d.rank + '</td>' +
       '<td style="padding:4px 8px;white-space:nowrap" title="' + co + '"><b style="font-size:12px;color:var(--navy)">' + d.name + '</b></td>' +
       (info ? '<td style="padding:4px 8px;font-size:11px;color:var(--mu);white-space:nowrap" title="' + cat.replace(/"/g, '&quot;') + '">' + trunc(cat, info === 'ig' ? 30 : 22) + '</td>' : '') +
-      '<td style="' + NUM + ';font-weight:600;color:' + colr(d.contrib) + '">' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(2) + '%</td>' +
-      '<td style="' + NUM + ';color:var(--mu);font-size:11px">' + (d.cum >= 0 ? '+' : '') + d.cum.toFixed(2) + '%</td>' +
+      '<td style="' + NUM + ';font-weight:600;color:' + colr(d.contrib) + '">' + sgn2(d.contrib) + '%</td>' +
+      '<td style="' + NUM + ';color:var(--mu);font-size:11px">' + sgn2(d.cum) + '%</td>' +
       (showRet ? '<td style="' + NUM + ';font-size:11px;color:' + colr(d.ret) + '">' + (d.ret >= 0 ? '+' : '') + d.ret.toFixed(1) + '%</td>' : '');
   }
   function block(key, title) {
@@ -2094,7 +2096,7 @@ function _renderParetoChartSVG(pos, neg, totalRet, yrLabel) {
     var cx = P.l + i * slotW + slotW / 2;
     var yt = Y(Math.max(d.contrib, 0)), yb = Y(Math.min(d.contrib, 0));
     out += '<rect x="' + (cx - barW / 2).toFixed(1) + '" y="' + yt.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + Math.max(yb - yt, 1).toFixed(1) +
-      '" fill="' + (d.contrib >= 0 ? '#177A4E' : '#9B2A20') + '" opacity=".82" rx="2"><title>' + d.name + ' ' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(2) + '%</title></rect>';
+      '" fill="' + (d.contrib >= 0 ? '#177A4E' : '#9B2A20') + '" opacity=".82" rx="2"><title>' + d.name + ' ' + sgn2(d.contrib) + '%</title></rect>';
     if (rows.length <= 60) out += '<text x="' + cx.toFixed(1) + '" y="' + (P.t + ch + 12) + '" text-anchor="end" font-size="9" fill="#2B3B4E" font-family="Inter,sans-serif" transform="rotate(-45,' + cx.toFixed(1) + ',' + (P.t + ch + 12) + ')">' + d.name + '</text>';
     pts.push(cx.toFixed(1) + ',' + Y(cumPts[i]).toFixed(1));
   });
@@ -2164,7 +2166,7 @@ function renderWLA() {
     '<th class="num" style="color:var(--neg)" title="Count of constituents with return < sector weighted-average return">Losers</th>' +
     '<th class="num" title="Sector weight at the last HOC minus the first HOC of the year (same as Index Composition, includes names that joined or left the index)">Wt Δ</th></tr></thead><tbody>';
   rows.forEach(function(r) {
-    var cStr = (r.contrib>=0?'+':'')+r.contrib.toFixed(2)+'%';
+    var cStr = sgn2(r.contrib)+'%';
     var rStr = (r.avgRet>=0?'+':'')+r.avgRet.toFixed(1)+'%';
     var wStr = (r.wChg>=0?'+':'')+r.wChg.toFixed(2)+'pp';
     html += '<tr>' +
@@ -2270,7 +2272,7 @@ function renderWLC() {
     var sorted = arr.slice().sort(function(a,b){return b.contrib-a.contrib;});
     if (arr.length === 1) {
       var only = sorted[0];
-      var oc = (only.contrib>=0?'+':'')+only.contrib.toFixed(2)+'%';
+      var oc = sgn2(only.contrib)+'%';
       html += '<tr>' +
         '<td style="font-weight:600;font-size:12px;color:var(--navy)">' + dispSec(sec) + '</td>' +
         '<td colspan="4" style="font-size:12px;color:var(--mu);font-style:italic">' +
@@ -2280,8 +2282,8 @@ function renderWLC() {
       '</tr>';
     } else {
       var best = sorted[0], worst = sorted[sorted.length-1];
-      var bc = (best.contrib>=0?'+':'')+best.contrib.toFixed(2)+'%';
-      var wc = (worst.contrib>=0?'+':'')+worst.contrib.toFixed(2)+'%';
+      var bc = sgn2(best.contrib)+'%';
+      var wc = sgn2(worst.contrib)+'%';
       html += '<tr>' +
         '<td style="font-weight:600;font-size:12px;color:var(--navy)">' + dispSec(sec) + '</td>' +
         '<td style="font-size:12px">' +

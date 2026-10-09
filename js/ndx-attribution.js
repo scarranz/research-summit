@@ -53,6 +53,7 @@ var _beeswarmYears = new Set(['ytd2026']);
 var _beeswarmProgress = 100;
 var _beeswarmSectors = new Set();   // legacy — no longer used for filtering
 var _beeswarmActiveSector = 'Information Technology';
+var _beeswarmActiveIG = null;     // set → the beeswarm shows this industry group instead of a sector
 var _beeswarmSecAll = [];
 var _paretoN       = 5;
 var _paretoYears   = new Set(['ytd2026']);
@@ -126,11 +127,16 @@ function yearKeys() {
 function sectorWeightSnaps(yr) {
   var hocs = hocsForYear(yr), o = {}, c = {};
   if (!hocs.length) return { open: o, close: c };
-  [[hocs[0], o], [hocs[hocs.length - 1], c]].forEach(function(p) {
-    p[0].sec.forEach(function(s) {
-      if (isCash(s.t) || s.s === CASH) return;
-      p[1][s.s] = (p[1][s.s] || 0) + (s.w || 0);
-    });
+  // Open = weights at the start of the year's first HOC; close = the last HOC drifted to its
+  // close (for the open YTD HOC: drifted to the latest prices)
+  var closeW = driftedWeights(hocs[hocs.length - 1]);
+  hocs[0].sec.forEach(function(s) {
+    if (isCash(s.t) || s.s === CASH) return;
+    o[s.s] = (o[s.s] || 0) + (s.w || 0);
+  });
+  hocs[hocs.length - 1].sec.forEach(function(s) {
+    if (isCash(s.t) || s.s === CASH) return;
+    c[s.s] = (c[s.s] || 0) + (closeW[s.t || s.co] || 0);
   });
   return { open: o, close: c };
 }
@@ -149,37 +155,58 @@ function normalize() {
     });
   });
 }
-function buildHierarchy(init) {
-  var secSet = new Set(), igMap = {};
-  _activeHocs.forEach(function(hoc) {
-    hoc.sec.forEach(function(s) {
-      secSet.add(s.s);
-      igToSec[s.g] = s.s;
-      if (!igMap[s.s]) igMap[s.s] = new Set();
-      igMap[s.s].add(s.g);
+// Weights at the CLOSE of a HOC: the HOC's opening weights drifted by each name's return
+// over the HOC, w·(1+r) / Σ w·(1+r). The raw `w` is the weight at the START of the HOC,
+// so using it as a year-end weight left the year's close visibly off the next year's open.
+// Drifted, the 2020 close ≈ the 2021 open (IT 44.05% vs 44.03%).
+function driftedWeights(hoc) {
+  var tot = 0, out = {};
+  hoc.sec.forEach(function(s) { tot += (s.w || 0) * (1 + s.r); });
+  if (!tot) tot = 1;
+  hoc.sec.forEach(function(s) { out[s.t || s.co] = (s.w || 0) * (1 + s.r) / tot * 100; });
+  return out;
+}
+
+// Every sector / industry group that appears in ANY year, so tables and charts keep the
+// same rows when switching years (a name absent in a year shows 0)
+var _universe = null;
+var _anchorSnapN = null;   // latest-year weights (table "Weight" sort)
+function universe() {
+  if (_universe) return _universe;
+  var secs = new Set(), igs = new Set(), igSec = {};
+  yearKeys().slice().reverse().forEach(function(yr) {          // oldest → newest: latest sector mapping wins
+    hocsForYear(yr).forEach(function(hoc) {
+      hoc.sec.forEach(function(s) { secs.add(s.s); igs.add(s.g); igSec[s.g] = s.s; });
     });
   });
-  sectors = Array.from(secSet).sort(function(a, b) {
-    if (a === CASH) return 1; if (b === CASH) return -1;
-    return (init.bySec[b] || 0) - (init.bySec[a] || 0);
-  });
-  sectors.forEach(function(s) {
-    igBySec[s] = Array.from(igMap[s] || []).sort(function(a, b) {
-      if (a === CASH) return 1; if (b === CASH) return -1;
-      return (init.byIG[b] || 0) - (init.byIG[a] || 0);
-    });
-  });
+  return (_universe = { secs: Array.from(secs), igs: Array.from(igs), igSec: igSec });
+}
+
+function buildHierarchy() {
+  // Rows = the full universe in the latest year's order (attrOrder), for every year
+  var u = universe(), secPos = attrOrder(false), igPos = attrOrder(true);
+  function bySecPos(a, b) { if (a === CASH) return 1; if (b === CASH) return -1; return secPos[a] - secPos[b]; }
+  function byIGPos(a, b)  { if (a === CASH) return 1; if (b === CASH) return -1; return igPos[a] - igPos[b]; }
+  sectors = u.secs.slice().sort(bySecPos);
+  igBySec = {}; igToSec = {};
+  sectors.forEach(function(s) { igBySec[s] = []; });
+  u.igs.forEach(function(g) { var s = u.igSec[g]; igToSec[g] = s; (igBySec[s] = igBySec[s] || []).push(g); });
+  sectors.forEach(function(s) { igBySec[s].sort(byIGPos); });
+
+  // Open = weights at the start of the period's first HOC; close = drifted weights of its last HOC
   var first = _activeHocs[0], last = _activeHocs[_activeHocs.length - 1];
+  var closeW = driftedWeights(last);
   _snap0 = {}; _snapN = {};
-  [first, last].forEach(function(hoc, idx) {
-    var snap = idx === 0 ? _snap0 : _snapN;
+  [[first, _snap0, null], [last, _snapN, closeW]].forEach(function(p) {
+    var hoc = p[0], snap = p[1], dw = p[2];
     hoc.sec.forEach(function(s) {
+      var w = dw ? dw[s.t || s.co] : (s.w || 0);
       if (!snap[s.s]) snap[s.s] = { count: 0, w: 0 };
       if (!snap['ig:'+s.g]) snap['ig:'+s.g] = { count: 0, w: 0 };
       var countable = !isCash(s.t) && (s.w || 0) > 0;
       if (countable) { snap[s.s].count++; snap['ig:'+s.g].count++; }
-      snap[s.s].w += (s.w || 0);
-      snap['ig:'+s.g].w += (s.w || 0);
+      snap[s.s].w += w;
+      snap['ig:'+s.g].w += w;
     });
   });
 }
@@ -264,13 +291,10 @@ function computeSecurities(exS, exG, hocList) {
   var R = ytd / 100;
   var k = Math.abs(R) > 1e-10 ? Math.log(1 + R) / R : 1.0;
 
-  // Build closing-weight lookup from last HOC in this window
+  // Closing weights = the last HOC's weights drifted to its close (see driftedWeights)
   var lastHoc = hocs[hocs.length - 1];
-  var closeW = {};
-  lastHoc.sec.forEach(function(s) {
-    if (exS.has(s.s) || exG.has(s.g)) return;
-    closeW[s.t || s.co] = s.w || 0;
-  });
+  var closeW = driftedWeights(lastHoc);
+  lastHoc.sec.forEach(function(s) { if (exS.has(s.s) || exG.has(s.g)) delete closeW[s.t || s.co]; });
 
   var tickers = {};
   hocMeta.forEach(function(h) {
@@ -302,6 +326,7 @@ function dispIG(g)  { return g === CASH ? CASH_LABEL : g; }
 function isCash(t) { return t && t.charAt(0) === '$'; }
 function fmtC(v) {
   if (v == null || isNaN(v)) return '<span style="color:var(--mu)">—</span>';
+  if (Math.abs(v) < 0.005) v = 0;   // shows +0.00%, never -0.00%
   return '<span style="color:' + (v >= 0 ? 'var(--pos)' : 'var(--neg)') + ';font-weight:600">' +
     (v >= 0 ? '+' : '') + v.toFixed(_attrDecimals) + '%</span>';
 }
@@ -434,22 +459,47 @@ function computeYearReturn(yearKey) {
 }
 
 function renderKPI(res) {
-  var tbody = document.getElementById('ndx-kpi-rows');
   var isBase = exclSecs.size === 0 && exclIGs.size === 0;
+  // Every year in the data (a new year adds a column / bar on its own)
+  var yrs = yearKeys().filter(function(k) { return computeYearReturn(k) != null; });
+  var rets = {};
+  yrs.forEach(function(k) { rets[k] = computeYearReturn(k); });
+  function pct(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
 
-  // One column per year (newest first) — a new key in YEAR_HOCS adds a column automatically
-  var head = document.getElementById('ndx-kpi-head');
-  if (tbody && head) {
-    var yrs = yearKeys().filter(function(k) { return computeYearReturn(k) != null; });
-    head.innerHTML = yrs.map(function(k) {
-      return '<th style="padding:2px 0 4px 22px;font-size:11px;color:var(--mu);font-weight:600;text-align:right;' +
-        'border-bottom:1px solid var(--bdr);white-space:nowrap">' + (YR_LABEL[k] || k) + '</th>';
-    }).join('');
-    tbody.innerHTML = '<tr>' + yrs.map(function(k) {
-      var v = computeYearReturn(k);
-      return '<td style="padding:5px 0 5px 22px;text-align:right;font-weight:700;font-size:15px;' +
-        'color:' + colr(v) + ';font-variant-numeric:tabular-nums">' + (v >= 0 ? '+' : '') + v.toFixed(2) + '%</td>';
-    }).join('') + '</tr>';
+  // Table: one column per year, newest first; year cells shaded, full grid
+  var tb = document.getElementById('ndx-kpi-table');
+  if (tb) {
+    var CELL = 'border:1px solid var(--bdr,#D9DEE4);padding:6px 14px;text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums';
+    tb.innerHTML = '<table style="border-collapse:collapse;font-size:13px">' +
+      '<tr>' + yrs.map(function(k) {
+        return '<th style="' + CELL + ';background:#EEF1F4;color:var(--navy);font-weight:700;font-size:12px">' + (YR_LABEL[k] || k) + '</th>';
+      }).join('') + '</tr>' +
+      '<tr>' + yrs.map(function(k) {
+        return '<td style="' + CELL + ';font-weight:700;font-size:14px;color:' + colr(rets[k]) + '">' + pct(rets[k]) + '</td>';
+      }).join('') + '</tr></table>';
+  }
+
+  // Bars: chronological, oldest at the top, latest (YTD) at the bottom
+  var cb = document.getElementById('ndx-kpi-chart');
+  if (cb) {
+    var chron = yrs.slice().reverse();
+    var vals = chron.map(function(k) { return rets[k]; });
+    var mn = Math.min(0, Math.min.apply(null, vals)), mx = Math.max(0, Math.max.apply(null, vals));
+    var lo = Math.floor(mn / 10) * 10, hi = Math.ceil(mx / 10) * 10;
+    var VW = 620, rowH = 24, P = { t: 18, r: 64, b: 6, l: 70 }, VH = P.t + chron.length * rowH + P.b;
+    function X(v) { return P.l + (v - lo) / (hi - lo || 1) * (VW - P.l - P.r); }
+    var h = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" style="width:100%;height:auto;display:block;font-family:Inter,sans-serif">';
+    for (var t = lo; t <= hi; t += 10) {
+      h += '<line x1="' + X(t) + '" x2="' + X(t) + '" y1="' + (P.t - 4) + '" y2="' + (VH - P.b) + '" stroke="' + (t === 0 ? '#9AAAB8' : '#EEF0F3') + '"/>' +
+        '<text x="' + X(t) + '" y="' + (P.t - 7) + '" text-anchor="middle" font-size="9.5" fill="#8A93A0">' + t + '%</text>';
+    }
+    chron.forEach(function(k, i) {
+      var v = rets[k], y = P.t + i * rowH, x0 = X(Math.min(0, v)), x1 = X(Math.max(0, v));
+      h += '<text x="' + (P.l - 8) + '" y="' + (y + rowH / 2 + 4) + '" text-anchor="end" font-size="11" fill="#2B3B4E" font-weight="600">' + (YR_LABEL[k] || k) + '</text>' +
+        '<rect x="' + x0 + '" y="' + (y + 4) + '" width="' + Math.max(1, x1 - x0) + '" height="' + (rowH - 8) + '" rx="3" fill="' + (v >= 0 ? '#177A4E' : '#9B2A20') + '" opacity=".8"/>' +
+        '<text x="' + (v >= 0 ? x1 + 5 : X(0) + 5) + '" y="' + (y + rowH / 2 + 4) + '" text-anchor="start" font-size="10.5" font-weight="700" fill="' + (v >= 0 ? '#177A4E' : '#9B2A20') + '">' + pct(v) + '</text>';
+    });
+    cb.innerHTML = h + '</svg>';
   }
 
   var tag = document.getElementById('ndx-sim-badge');
@@ -458,7 +508,7 @@ function renderKPI(res) {
   var diff = res.ytd - baseR.ytd;
   tag.style.display = 'inline-block';
   tag.innerHTML = 'Simulation active&nbsp;&nbsp;<span style="color:' + colr(diff) + ';font-weight:600">' +
-    (diff >= 0 ? '+' : '') + diff.toFixed(4) + '% vs base</span>' +
+    (diff >= 0 ? '+' : '') + diff.toFixed(2) + '% vs base</span>' +
     '&nbsp;&nbsp;<span class="ndx-reset-link" onclick="ndxResetSim()">reset</span>';
 }
 
@@ -473,20 +523,22 @@ function renderKPI(res) {
 //   opts.label    — dataset label for the tooltip
 // Min/max contribution across ALL years in YEAR_HOCS (sectors or IGs, Cash excluded).
 // Both attribution charts use it, so switching years never rescales the axis.
+// One axis for sectors AND industry groups, across every year, so switching tab or year
+// never rescales the bars
 var _attrAxisCache = {};
-function attrAxis(isIG) {
-  var k = isIG ? 'ig' : 'sec';
-  if (_attrAxisCache[k]) return _attrAxisCache[k];
+function attrAxis() {
+  if (_attrAxisCache.all) return _attrAxisCache.all;
   var mn = 0, mx = 0;
   yearKeys().forEach(function(yr) {
     var r = computeCore(new Set(), new Set(), hocsForYear(yr));
-    var m = isIG ? r.byIG : r.bySec;
-    Object.keys(m).forEach(function(key) {
-      if (key === CASH) return;
-      mn = Math.min(mn, m[key]); mx = Math.max(mx, m[key]);
+    [r.bySec, r.byIG].forEach(function(m) {
+      Object.keys(m).forEach(function(key) {
+        if (key === CASH) return;
+        mn = Math.min(mn, m[key]); mx = Math.max(mx, m[key]);
+      });
     });
   });
-  return (_attrAxisCache[k] = { min: mn, max: mx });
+  return (_attrAxisCache.all = { min: mn, max: mx });
 }
 
 // Position of each sector / IG in the latest year, largest contribution first
@@ -494,11 +546,19 @@ var _attrOrderCache = {};
 function attrOrder(isIG) {
   var k = isIG ? 'ig' : 'sec';
   if (_attrOrderCache[k]) return _attrOrderCache[k];
-  var r = computeCore(new Set(), new Set(), hocsForYear(yearKeys()[0]));
-  var m = isIG ? r.byIG : r.bySec, pos = {};
-  Object.keys(m).filter(function(x) { return x !== CASH; })
-    .sort(function(a, b) { return m[b] - m[a]; })
-    .forEach(function(x, i) { pos[x] = i; });
+  // Latest year, largest contribution first; names that are not in the latest year follow,
+  // newest year they appear in first, then by their contribution in that year
+  var ord = [], seen = new Set();
+  yearKeys().forEach(function(yr) {
+    var r = computeCore(new Set(), new Set(), hocsForYear(yr));
+    var m = isIG ? r.byIG : r.bySec;
+    Object.keys(m).filter(function(x) { return x !== CASH && !seen.has(x); })
+      .sort(function(a, b) { return m[b] - m[a]; })
+      .forEach(function(x) { seen.add(x); ord.push(x); });
+  });
+  var pos = {};
+  ord.forEach(function(x, i) { pos[x] = i; });
+  pos[CASH] = ord.length;
   return (_attrOrderCache[k] = pos);
 }
 
@@ -510,14 +570,9 @@ function renderAttrChart(canvasId, boxId, opts) {
   // Row order is anchored to the latest year (YTD 2026) for EVERY year, so names keep
   // their position when switching years; a name absent from that year goes after,
   // ordered by its own value. Chart.js draws the first label at the top.
-  var anchor = attrOrder(isIG);
-  var keys  = (opts.keys || Object.keys(vals)).filter(function(k) { return k !== CASH; });
-  keys.sort(function(a, b) {
-    var ia = anchor.hasOwnProperty(a), ib = anchor.hasOwnProperty(b);
-    if (ia && ib) return anchor[a] - anchor[b];
-    if (ia !== ib) return ia ? -1 : 1;
-    return (vals[b] || 0) - (vals[a] || 0);
-  });
+  var anchor = attrOrder(isIG), u = universe();
+  var keys  = (opts.keys || (isIG ? u.igs : u.secs)).filter(function(k) { return k !== CASH; });
+  keys.sort(function(a, b) { return anchor[a] - anchor[b]; });
 
   var full   = keys.map(function(k) { return isIG ? dispIG(k) : dispSec(k); });
   var labels = keys.map(function(k) { return chartLbl(k, isIG); });
@@ -525,7 +580,7 @@ function renderAttrChart(canvasId, boxId, opts) {
 
   // Fixed axis shared by every year (see attrAxis) so bar lengths compare across years;
   // it only widens if a simulation pushes a value past it
-  var ax = attrAxis(isIG);
+  var ax = attrAxis();
   var mn = Math.min.apply(null, data.concat(ax.min)), mx = Math.max.apply(null, data.concat(ax.max));
   // Round the ends out to a clean step so the ticks read 0 / 5 / 10 …
   var span = mx - mn, step = span > 12 ? 5 : span > 5 ? 1 : span > 2 ? 0.5 : 0.25;
@@ -548,7 +603,7 @@ function renderAttrChart(canvasId, boxId, opts) {
         legend: { display: false },
         tooltip: { callbacks: {
           title: function(ctx) { return full[ctx[0].dataIndex] || ctx[0].label; },
-          label: function(ctx) { var v = ctx.raw; return ' ' + ctx.dataset.label + ': ' + (v >= 0 ? '+' : '') + v.toFixed(4) + '%'; }
+          label: function(ctx) { var v = ctx.raw; return ' ' + ctx.dataset.label + ': ' + (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
         } }
       },
       scales: {
@@ -705,8 +760,12 @@ function renderSectorFlatTreemap(res, box, VW, VH) {
   items.sort(function(a, b) {
     if (a.key === CASH) return 1; if (b.key === CASH) return -1; return b.w - a.w;
   });
+  // Tiles are sized by weight, but never below TM_MIN of the map so every sector can be
+  // read and clicked (tooltips keep the true weight)
   var totalW = items.reduce(function(s, x) { return s + x.w; }, 0) || 100;
-  items.forEach(function(it) { it.area = (it.w / totalW) * VW * VH; });
+  items.forEach(function(it) { it.dw = Math.max(it.w, TM_MIN_SEC * totalW); });
+  var totalD = items.reduce(function(s, x) { return s + x.dw; }, 0);
+  items.forEach(function(it) { it.area = (it.dw / totalD) * VW * VH; });
   squarify(items, 0, 0, VW, VH);
   var sc = treemapScale(items.filter(function(it) { return it.key !== CASH; }).map(function(it) { return it.c; }));
 
@@ -726,7 +785,7 @@ function renderSectorFlatTreemap(res, box, VW, VH) {
       'stroke-width': 1, opacity: item.excl ? 0.35 : 1 }));
     treemapTileLabel(g, rx, ry, rw, rh, item.label,
       (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%', fillC, fgC);
-    var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(4) + '%';
+    var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%';
     bindTip(g, '<b style="font-size:13px">' + item.label + '</b>' +
       '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
       'Weight: ' + item.w.toFixed(3) + '%<br>Contribution: ' + tipC +
@@ -768,7 +827,7 @@ function renderIGFlatTreemap(res, box, VW, VH) {
       fill: fillC, stroke: strokeC, 'stroke-opacity': 0.55, 'stroke-width': 1 }));
     treemapTileLabel(g, rx, ry, rw, rh, item.label,
       (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%', fillC, fgC);
-    var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(4) + '%';
+    var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%';
     bindTip(g, '<b style="font-size:13px">' + item.label + '</b>' +
       '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
       dispSec(item.sect) + '<br>Weight: ' + item.w.toFixed(3) + '%<br>Contribution: ' + tipC +
@@ -778,6 +837,9 @@ function renderIGFlatTreemap(res, box, VW, VH) {
   });
   box.appendChild(svg);
 }
+
+// Minimum tile sizes (share of the whole map)
+var TM_MIN_SEC = 0.012, TM_MIN_IG = 0.012, TM_MIN_SEC_NESTED = 0.03;
 
 // ── Nested IG treemap (sectors as containers, IGs as inner tiles) ─────────
 function renderNestedIGTreemap(res, box, VW, VH) {
@@ -789,8 +851,18 @@ function renderNestedIGTreemap(res, box, VW, VH) {
     secItems.push({ key: s, label: dispSec(s), w: w, c: res.bySec[s]||0 });
   });
   secItems.sort(function(a, b) { return b.w - a.w; });
+  // Minimum sizes so every group can be read and clicked: each IG gets at least TM_MIN_IG of
+  // the map, each sector at least TM_MIN_SEC_NESTED (room for its header + a tile)
   var totalW = secItems.reduce(function(acc, x) { return acc + x.w; }, 0) || 100;
-  secItems.forEach(function(it) { it.area = (it.w / totalW) * VW * VH; });
+  secItems.forEach(function(it) {
+    it.igs = (igBySec[it.key]||[]).filter(function(g) { return g !== CASH; }).map(function(g) {
+      var w = (_snapN['ig:'+g]||{w:0}).w;
+      return { key: g, label: g, w: w, dw: Math.max(w, TM_MIN_IG * totalW), c: res.byIG[g]||0, sect: it.key };
+    }).filter(function(x) { return x.w > 0.001; });
+    it.dw = Math.max(it.igs.reduce(function(a, x) { return a + x.dw; }, 0), TM_MIN_SEC_NESTED * totalW);
+  });
+  var totalD = secItems.reduce(function(acc, x) { return acc + x.dw; }, 0);
+  secItems.forEach(function(it) { it.area = (it.dw / totalD) * VW * VH; });
   squarify(secItems, 0, 0, VW, VH);
 
   var igVals = [];
@@ -821,18 +893,16 @@ function renderNestedIGTreemap(res, box, VW, VH) {
       'font-size': hfs, 'font-weight': '700', fill: '#1E2D3D' });
     hdr.textContent = htxt.length * hfs * 0.6 > sw - 12 ? trunc(htxt, Math.max(3, Math.floor((sw - 12) / (hfs * 0.6)))) : htxt;
     bindTip(hdr, '<b style="font-size:13px">' + sec.label + '</b><span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
-      'Weight: ' + sec.w.toFixed(3) + '%<br>Contribution: ' + (sec.c >= 0 ? '+' : '') + sec.c.toFixed(4) + '%</span>');
+      'Weight: ' + sec.w.toFixed(3) + '%<br>Contribution: ' + (sec.c >= 0 ? '+' : '') + sec.c.toFixed(2) + '%</span>');
     svg.appendChild(hdr);
 
     if (innerW < 10 || innerH < 10) return;
 
     // IG tiles within this sector
-    var igItems = (igBySec[sec.key]||[]).filter(function(g) { return g !== CASH; }).map(function(g) {
-      return { key: g, label: g, w: (_snapN['ig:'+g]||{w:0}).w, c: res.byIG[g]||0, sect: sec.key };
-    }).filter(function(it) { return it.w > 0.001; });
+    var igItems = sec.igs;
     if (!igItems.length) return;
-    var igTotalW = igItems.reduce(function(acc, x) { return acc + x.w; }, 0) || 1;
-    igItems.forEach(function(it) { it.area = (it.w / igTotalW) * innerW * innerH; });
+    var igTotalW = igItems.reduce(function(acc, x) { return acc + x.dw; }, 0) || 1;
+    igItems.forEach(function(it) { it.area = (it.dw / igTotalW) * innerW * innerH; });
     squarify(igItems, innerX, innerY, innerW, innerH);
 
     igItems.forEach(function(item) {
@@ -847,7 +917,7 @@ function renderNestedIGTreemap(res, box, VW, VH) {
         fill: fillC, stroke: strokeC, 'stroke-opacity': 0.5, 'stroke-width': 0.8 }));
       treemapTileLabel(g, rx, ry, rw, rh, item.label,
         (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%', fillC, fgC);
-      var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(4) + '%';
+      var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%';
       bindTip(g, '<b style="font-size:13px">' + item.label + '</b>' +
         '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
         dispSec(item.sect) + '<br>Weight: ' + item.w.toFixed(3) + '%<br>Contribution: ' + tipC +
@@ -883,7 +953,7 @@ function renderTreemap(res) {
   legend.style.cssText = 'display:flex;gap:16px;font-size:11px;color:var(--mu);margin-top:5px;flex-wrap:wrap';
   var clickNote = attrTab === 'ig' ? 'Industry groups nested in their sector · click tile for securities' : 'Click sector for industry groups';
   legend.innerHTML =
-    '<span>Area = index weight at close</span>' +
+    '<span>Area = index weight at close (very small weights drawn at a minimum size so they can be opened; hover shows the true weight)</span>' +
     '<span style="color:#177A4E;font-weight:600">█</span> Positive contribution &nbsp;' +
     '<span style="color:#9B2A20;font-weight:600">█</span> Negative &nbsp;&middot;&nbsp; ' +
     'Shade = size within its own sign (positives and negatives on separate scales) &nbsp;&middot;&nbsp; ' + clickNote;
@@ -973,7 +1043,7 @@ window.ndxShowIGModal = function(sector) {
         g.appendChild(ct);
       }
     }
-    var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(4) + '%';
+    var tipC = (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%';
     bindTip(g, '<b style="font-size:13px">' + item.label + '</b>' +
       '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
       'Weight: ' + item.w.toFixed(3) + '%<br>Contribution: ' + tipC + '</span>');
@@ -991,7 +1061,7 @@ window.ndxShowIGModal = function(sector) {
       '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0">' + item.w.toFixed(3) + '%</td>' +
       '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0;color:' +
       (item.c >= 0 ? '#177A4E' : '#9B2A20') + ';font-weight:600">' +
-      (item.c >= 0 ? '+' : '') + item.c.toFixed(4) + '%</td></tr>';
+      (item.c >= 0 ? '+' : '') + item.c.toFixed(2) + '%</td></tr>';
   });
   thtml += '</tbody></table>';
   body.insertAdjacentHTML('beforeend', thtml);
@@ -1028,7 +1098,7 @@ window.ndxShowSecuritiesModal = function(ig) {
       '<td style="padding:4px 8px;border-bottom:1px solid #f0f0f0;color:#52514e">' + (d.co && d.co !== d.name ? d.co : '—') + '</td>' +
       '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0;color:' + rc + ';font-weight:600">' + (d.ret >= 0 ? '+' : '') + d.ret.toFixed(2) + '%</td>' +
       '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0">' + d.w1.toFixed(3) + '%</td>' +
-      '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0;color:' + cc + ';font-weight:600">' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(4) + '%</td>' +
+      '<td style="text-align:right;padding:4px 8px;border-bottom:1px solid #f0f0f0;color:' + cc + ';font-weight:600">' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(2) + '%</td>' +
       '</tr>';
   });
   thtml += '</tbody></table>';
@@ -1132,17 +1202,20 @@ function renderAttrTable(res) {
   // it always lists sectors, and each arrow expands that sector's industry groups in place.
   // Row order always comes from the base case (no exclusions) so rows never jump
   // around while simulating — only the numbers change.
+  // Sort keys always come from the LATEST year (contribution order = attrOrder, weight =
+  // latest close weight), so rows stay put when switching years; absent names show 0
+  var secPos = attrOrder(false), igPos = attrOrder(true), aw = _anchorSnapN || _snapN;
   function cmpSec(a, b) {
     if (a === CASH) return 1; if (b === CASH) return -1;
     if (_sortKey === 'name')   return _sortDir * dispSec(a).localeCompare(dispSec(b));
-    if (_sortKey === 'weight') return _sortDir * ((_snapN[b]||{w:0}).w - (_snapN[a]||{w:0}).w);
-    return _sortDir * ((baseR.bySec[b]||0) - (baseR.bySec[a]||0));
+    if (_sortKey === 'weight') return _sortDir * ((aw[b]||{w:0}).w - (aw[a]||{w:0}).w);
+    return _sortDir * -(secPos[b] - secPos[a]);
   }
   function cmpIG(a, b) {
     if (a === CASH) return 1; if (b === CASH) return -1;
     if (_sortKey === 'name')   return _sortDir * dispIG(a).localeCompare(dispIG(b));
-    if (_sortKey === 'weight') return _sortDir * ((_snapN['ig:'+b]||{w:0}).w - (_snapN['ig:'+a]||{w:0}).w);
-    return _sortDir * ((baseR.byIG[b]||0) - (baseR.byIG[a]||0));
+    if (_sortKey === 'weight') return _sortDir * ((aw['ig:'+b]||{w:0}).w - (aw['ig:'+a]||{w:0}).w);
+    return _sortDir * -(igPos[b] - igPos[a]);
   }
   var sortedSecs = sectors.slice().sort(cmpSec);
   var dw = computeDisplayWeights(exclSecs, exclIGs);
@@ -1207,7 +1280,7 @@ function renderHOC(res) {
       '<td>' + (h.close || '<em style="color:var(--mu)">Open</em>') + '</td>' +
       '<td class="num">' + h.count + '</td>' +
       '<td class="num" style="color:' + colr(h.ret) + ';font-weight:600">' +
-      (h.ret>=0?'+':'') + h.ret.toFixed(4) + '%</td></tr>';
+      (h.ret>=0?'+':'') + h.ret.toFixed(2) + '%</td></tr>';
   }).join('');
 }
 
@@ -1256,7 +1329,7 @@ function renderDotPlotIG(res) {
     vt.textContent = (r.c >= 0 ? '+' : '') + r.c.toFixed(2) + '%'; g.appendChild(vt);
     bindTip(g, '<b style="font-size:13px">' + r.name + '</b>' +
       '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
-      r.sector + '<br>Contribution: ' + (r.c >= 0 ? '+' : '') + r.c.toFixed(4) + '%' +
+      r.sector + '<br>Contribution: ' + (r.c >= 0 ? '+' : '') + r.c.toFixed(2) + '%' +
       '<br>Weight: ' + r.w0.toFixed(2) + '% → ' + r.w1.toFixed(2) + '%</span>');
     svg.appendChild(g);
   });
@@ -1312,8 +1385,8 @@ function renderHeatmap() {
       }
       bindTip(g, '<b style="font-size:13px">' + dispSec(s) + ' · HOC ' + h.n + ' (' + h.eff + ')</b>' +
         '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
-        'Contribution: ' + (v >= 0 ? '+' : '') + v.toFixed(4) + '%' +
-        '<br>Window return: ' + (h.ret >= 0 ? '+' : '') + h.ret.toFixed(4) + '%</span>');
+        'Contribution: ' + (v >= 0 ? '+' : '') + v.toFixed(2) + '%' +
+        '<br>Window return: ' + (h.ret >= 0 ? '+' : '') + h.ret.toFixed(2) + '%</span>');
       svg.appendChild(g);
     });
   });
@@ -1342,10 +1415,13 @@ function renderDumbbell() {
 
   // Own snapshots for _compYear (independent of the simulation and of every other section)
   var snaps = sectorWeightSnaps(_compYear);
-  var secKeys = Object.keys(Object.assign({}, snaps.open, snaps.close));
-  var rows = secKeys.map(function(s) {
-    return { sec: s, name: dispSec(s), w0: snaps.open[s] || 0, w1: snaps.close[s] || 0 };
-  }).sort(function(a, b) { return b.w0 - a.w0; });
+  // Same rows in the same order for every year: all sectors of any year, ordered by the
+  // LATEST year's opening weight (a sector absent in a year shows 0 → 0)
+  var anchor = sectorWeightSnaps(yearKeys()[0]).open;
+  var ytd = _compYear.indexOf('ytd') === 0;
+  var rows = universe().secs.filter(function(s) { return s !== CASH; }).map(function(s) {
+    return { sec: s, name: dispSec(s), w0: snaps.open[s] || 0, w1: snaps.close[s] || 0, a: anchor[s] || 0 };
+  }).sort(function(a, b) { return b.a - a.a; });
 
   // One axis for every year: the largest sector weight seen in ANY year (open or
   // close), rounded up to the next 10%. Adding a year to YEAR_HOCS updates it.
@@ -1357,7 +1433,7 @@ function renderDumbbell() {
     });
   });
 
-  var VW = 900, rowH = 30, P = { t: 40, r: 160, b: 26, l: 200 };
+  var VW = 900, rowH = 30, P = { t: 56, r: 190, b: 26, l: 200 };
   var VH = P.t + rows.length * rowH + P.b;
   function X(v) { return P.l + v / hi * (VW - P.l - P.r); }
 
@@ -1368,6 +1444,12 @@ function renderDumbbell() {
     ax.textContent = t + '%'; svg.appendChild(ax);
   }
   svg.appendChild(se('line', { x1: X(0), x2: X(0), y1: P.t - 10, y2: VH - P.b, stroke: '#9AAAB8', 'stroke-width': 1 }));
+  // Column titles for the numbers on the right
+  var closeLbl = ytd ? 'Latest' : 'Close';
+  [[VW - P.r + 12, 'start', 'Index weight: open → ' + closeLbl.toLowerCase()], [VW - 6, 'end', 'Change']].forEach(function(h) {
+    var ht = se('text', { x: h[0], y: 12, 'text-anchor': h[1], 'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0', 'font-weight': '600' });
+    ht.textContent = h[2]; svg.appendChild(ht);
+  });
 
   rows.forEach(function(r, i) {
     var y = P.t + i * rowH + rowH / 2;
@@ -1381,16 +1463,16 @@ function renderDumbbell() {
     g.appendChild(se('circle', { cx: X(r.w1), cy: y, r: 5.5, fill: col, stroke: '#fff', 'stroke-width': 2 }));
     var diff = r.w1 - r.w0;
     var vt1 = se('text', { x: VW - P.r + 12, y: y + 4, 'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#2B3B4E', 'font-variant-numeric': 'tabular-nums' });
-    vt1.textContent = r.w0.toFixed(1) + ' → ' + r.w1.toFixed(1) + '%';
+    vt1.textContent = r.w0.toFixed(1) + '% → ' + r.w1.toFixed(1) + '%';
     g.appendChild(vt1);
     var vt2 = se('text', { x: VW - 6, y: y + 4, 'text-anchor': 'end', 'font-family': 'Inter,sans-serif', 'font-size': 11, fill: diff >= 0 ? '#177A4E' : '#9B2A20', 'font-weight': '600', 'font-variant-numeric': 'tabular-nums' });
-    vt2.textContent = (diff >= 0 ? '+' : '') + diff.toFixed(2) + 'pp';
+    vt2.textContent = (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' pp';
     g.appendChild(vt2);
     bindTip(g, '<b style="font-size:13px">' + r.name + '</b>' +
       '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
-      'Open weight: ' + r.w0.toFixed(3) + '%' +
-      '<br>Close weight: ' + r.w1.toFixed(3) + '%' +
-      '<br>Change: ' + (diff >= 0 ? '+' : '') + diff.toFixed(3) + ' pp</span>');
+      'Share of the index at the start of ' + (YR_LABEL[_compYear] || _compYear) + ': ' + r.w0.toFixed(2) + '%' +
+      '<br>' + closeLbl + ': ' + r.w1.toFixed(2) + '%' +
+      '<br>Change: ' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' percentage points</span>');
     svg.appendChild(g);
   });
 
@@ -1399,7 +1481,11 @@ function renderDumbbell() {
   legend.innerHTML =
     '<span><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:transparent;border:2px solid #177A4E;box-sizing:border-box;margin-right:5px;vertical-align:-1px"></span>Open weight</span>' +
     '<span><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#177A4E;margin-right:5px;vertical-align:-1px"></span>Close weight</span>' +
-    '<span style="color:#177A4E;font-weight:600">▬</span> gained &nbsp; <span style="color:#9B2A20;font-weight:600">▬</span> lost weight';
+    '<span style="color:#177A4E;font-weight:600">▬</span> gained &nbsp; <span style="color:#9B2A20;font-weight:600">▬</span> lost weight' +
+    '<div style="flex-basis:100%;line-height:1.5">Each sector\'s share of the index. <b>Open</b> = weights at the start of the year (the year-end close of the year before); ' +
+    '<b>' + closeLbl + '</b> = ' + (ytd ? 'today, with the open HOC drifted to the latest prices' : 'at the year-end close') +
+    ' (the last HOC\'s weights moved by each stock\'s return to that date). <b>Change</b> is in percentage points of index weight: ' +
+    '48.0% → 47.4% = −0.6 pp. Rows keep the order of ' + (YR_LABEL[yearKeys()[0]] || '') + ' opening weights in every year.</div>';
   box.innerHTML = ''; box.appendChild(svg); box.appendChild(legend);
 }
 
@@ -1468,17 +1554,20 @@ function beeProgressToHocIdx(yr, progress) {
 
 function buildBeeswarmSectorPills() {
   var container = document.getElementById('ndx-bee-pills');
+  var igBox = document.getElementById('ndx-bee-ig-pills');
   if (!container) return;
-  var allSecsForBee = sectors.filter(function(s) { return s !== CASH; });
-  var html = '';
-  allSecsForBee.forEach(function(s) {
-    var act = s === _beeswarmActiveSector;
-    html += '<button class="ndx-tab-btn ndx-bee-pill' + (act ? ' active' : '') + '" ' +
-      'data-sec="' + esc(s) + '" ' +
-      'onclick="ndxSetBeeswarmSector(\'' + esc(s) + '\')" style="font-size:11px;padding:3px 9px">' +
-      dispSec(s) + '</button>';
-  });
-  container.innerHTML = html;
+  var secPos = attrOrder(false), igPos = attrOrder(true), u = universe();
+  function pill(kind, key, label, act) {
+    return '<button class="ndx-tab-btn ndx-bee-pill' + (act ? ' active' : '') + '" data-kind="' + kind + '" data-key="' + esc(key) + '" ' +
+      'onclick="' + (kind === 'ig' ? 'ndxSetBeeswarmIG' : 'ndxSetBeeswarmSector') + '(\'' + esc(key) + '\')" style="font-size:11px;padding:3px 9px">' +
+      label + '</button>';
+  }
+  container.innerHTML = u.secs.filter(function(s) { return s !== CASH; })
+    .sort(function(a, b) { return secPos[a] - secPos[b]; })
+    .map(function(s) { return pill('sec', s, dispSec(s), !_beeswarmActiveIG && s === _beeswarmActiveSector); }).join('');
+  if (igBox) igBox.innerHTML = u.igs.filter(function(g) { return g !== CASH; })
+    .sort(function(a, b) { return igPos[a] - igPos[b]; })
+    .map(function(g) { return pill('ig', g, dispIG(g), g === _beeswarmActiveIG); }).join('');
 }
 
 // ── Scatter — weight × return per security ────────────────────────────────
@@ -1507,14 +1596,19 @@ function renderScatter(securities) {
     style: 'width:100%;height:auto;display:block;cursor:crosshair' });
 
   // Axes & gridlines — drawn directly on SVG (no group transform, always correct)
+  // ~8 readable ticks whatever the zoom: step = 1 / 2 / 2.5 / 5 × 10^k
+  function niceStep(range, target) {
+    var raw = range / target, mag = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / mag;
+    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * mag;
+  }
   var xRange = xHi - xLo;
-  var xStep = xRange > 60 ? 20 : xRange > 30 ? 10 : xRange > 10 ? 5 : xRange > 4 ? 2 : 1;
+  var xStep = niceStep(xRange, 8);
   var xStart = Math.ceil(xLo / xStep) * xStep;
   for (var xv = xStart; xv <= xHi + xStep * 0.01; xv += xStep) {
     svg.appendChild(se('line', { x1: X(xv), x2: X(xv), y1: P.t, y2: VH - P.b, stroke: '#E5E8EC', 'stroke-width': 1 }));
     var xt = se('text', { x: X(xv), y: VH - P.b + 14, 'text-anchor': 'middle',
       'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0' });
-    xt.textContent = (xv > 0 ? '+' : '') + xv.toFixed(xStep < 1 ? 1 : 0) + '%';
+    xt.textContent = (xv > 0 ? '+' : '') + (+xv.toFixed(2)) + '%';
     svg.appendChild(xt);
   }
   if (xLo < 0 && xHi > 0) {
@@ -1522,14 +1616,14 @@ function renderScatter(securities) {
       stroke: '#C0C8D0', 'stroke-width': 1.5 }));
   }
   var yRange = yHi - yLo;
-  var yStep = yRange > 40 ? 10 : yRange > 15 ? 5 : yRange > 6 ? 2 : 1;
+  var yStep = niceStep(yRange, 6);
   var yvStart = Math.ceil(yLo / yStep) * yStep;
   for (var yv = yvStart; yv <= yHi + yStep * 0.01; yv += yStep) {
     svg.appendChild(se('line', { x1: P.l, x2: VW - P.r, y1: Y(yv), y2: Y(yv),
       stroke: '#E5E8EC', 'stroke-width': 1 }));
     var ytxt = se('text', { x: P.l - 6, y: Y(yv) + 4, 'text-anchor': 'end',
       'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0' });
-    ytxt.textContent = yv + '%'; svg.appendChild(ytxt);
+    ytxt.textContent = (+yv.toFixed(2)) + '%'; svg.appendChild(ytxt);
   }
   var xal = se('text', { x: P.l + cw / 2, y: VH - 8, 'text-anchor': 'middle',
     'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#8A93A0' });
@@ -1563,7 +1657,7 @@ function renderScatter(securities) {
       dispSec(d.sect) + ' / ' + d.grp +
       '<br>Return: ' + (d.ret >= 0 ? '+' : '') + d.ret.toFixed(2) + '%' +
       '<br>Close weight: ' + d.w1.toFixed(3) + '%' +
-      '<br>Contribution: ' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(4) + '%</span>');
+      '<br>Contribution: ' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(2) + '%</span>');
     svg.appendChild(g);
     if (top10Names.has(d.name)) labelItems.push({ name: d.name, cx: cx, cy: cy, r: r });
   });
@@ -1688,7 +1782,7 @@ function beeswarmLayout(dots, X, r) {
   });
 }
 
-function _beeSvgForYear(yr, xLo, xHi, maxAbsC, multiYear) {
+function _beeSvgForYear(yr, xLo, xHi, maxAbsC, multiYear, showTitle) {
   var snapIdx = beeProgressToHocIdx(yr, _beeswarmProgress);
   var range = YEAR_HOCS[yr];
   var yrHocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
@@ -1709,14 +1803,15 @@ function _beeSvgForYear(yr, xLo, xHi, maxAbsC, multiYear) {
   }
 
   var filtered = secs.filter(function(d) {
-    return Math.abs(d.contrib) > _beeswarmFilter && !isCash(d.name) && (d.w0 > 0 || d.w1 > 0) && d.sect === _beeswarmActiveSector;
+    return Math.abs(d.contrib) > _beeswarmFilter && !isCash(d.name) && (d.w0 > 0 || d.w1 > 0) &&
+      (_beeswarmActiveIG ? d.grp === _beeswarmActiveIG : d.sect === _beeswarmActiveSector);
   });
 
   var secList = [_beeswarmActiveSector];
 
   var dotR = 5;
   var laneH = 72;
-  var P = { t: multiYear ? 52 : 38, b: 12, l: 20, r: 20 };
+  var P = { t: (showTitle ? 18 : 0) + (multiYear ? 34 : 20), b: 12, l: 20, r: 20 };
   var VW = 900;
   var VH = P.t + secList.length * laneH + P.b;
   var cw = VW - P.l - P.r;
@@ -1724,14 +1819,16 @@ function _beeSvgForYear(yr, xLo, xHi, maxAbsC, multiYear) {
 
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
 
-  // "Contribution (%)" label — top, bold
-  var axLbl = se('text', { x: P.l + cw / 2, y: 12, 'text-anchor': 'middle',
-    'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#2B3B4E', 'font-weight': '700' });
-  axLbl.textContent = 'Contribution (%)'; svg.appendChild(axLbl);
+  // "Contribution (%)" — once, on the first chart of the stack
+  if (showTitle) {
+    var axLbl = se('text', { x: P.l + cw / 2, y: 12, 'text-anchor': 'middle',
+      'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#2B3B4E', 'font-weight': '700' });
+    axLbl.textContent = 'Contribution to the index return (%)'; svg.appendChild(axLbl);
+  }
 
-  // Year label for multi-year mode (below the axis label)
+  // Year label for multi-year mode
   if (multiYear) {
-    var ylbl = se('text', { x: P.l + cw / 2, y: 28, 'text-anchor': 'middle',
+    var ylbl = se('text', { x: P.l + cw / 2, y: (showTitle ? 18 : 0) + 14, 'text-anchor': 'middle',
       'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#2B3B4E', 'font-weight': '600' });
     ylbl.textContent = YR_LABEL[yr]; svg.appendChild(ylbl);
   }
@@ -1753,7 +1850,7 @@ function _beeSvgForYear(yr, xLo, xHi, maxAbsC, multiYear) {
     var laneY = P.t + si * laneH + laneH / 2;
     svg.appendChild(se('rect', { x: P.l, y: P.t + si * laneH, width: cw, height: laneH, fill: si % 2 === 1 ? '#F7F8FA' : 'none', opacity: '0.6' }));
 
-    var laneDots = filtered.filter(function(d) { return d.sect === sec; });
+    var laneDots = filtered;
     if (!laneDots.length) return;
     beeswarmLayout(laneDots, X, dotR);
 
@@ -1764,7 +1861,7 @@ function _beeSvgForYear(yr, xLo, xHi, maxAbsC, multiYear) {
       var g = se('g', { class: 'mk' });
       g.appendChild(se('circle', { cx: d.bx, cy: gy, r: dotR, fill: fillC, 'fill-opacity': 0.85, stroke: strokeC, 'stroke-width': 1.2 }));
       var tipRet = (d.ret >= 0 ? '+' : '') + d.ret.toFixed(2) + '%';
-      var tipCon = (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(4) + '%';
+      var tipCon = (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(2) + '%';
       g.setAttribute('title', d.name + ': contrib ' + tipCon + ', return ' + tipRet);
       bindTip(g,
         '<b style="font-size:13px">' + d.name + '</b>' +
@@ -1783,7 +1880,7 @@ function renderBeeswarm() {
   var box = document.getElementById('ndx-beeswarm-box');
   if (!box) return;
 
-  var activeYrs = Array.from(_beeswarmYears);
+  var activeYrs = yearKeys().filter(function(k) { return _beeswarmYears.has(k); });   // newest first
   if (!activeYrs.length) return;
 
   // Global X axis bounds (consistent across all years)
@@ -1794,19 +1891,16 @@ function renderBeeswarm() {
   box.innerHTML = '';
 
   var multiYear = activeYrs.length > 1;
-  activeYrs.forEach(function(yr) {
-    var svg = _beeSvgForYear(yr, xLo, xHi, maxAbsC, multiYear);
-    box.appendChild(svg);
+  activeYrs.forEach(function(yr, i) {
+    box.appendChild(_beeSvgForYear(yr, xLo, xHi, maxAbsC, multiYear, i === 0));
   });
 
   var legend = document.createElement('div');
   legend.style.cssText = 'display:flex;gap:16px;font-size:11px;color:var(--mu);margin-top:6px;flex-wrap:wrap;align-items:center';
   var legendHtml = '<span style="color:#177A4E;font-weight:600">●</span> Positive contribution &nbsp; ' +
     '<span style="color:#9B2A20;font-weight:600">●</span> Negative';
-  if (multiYear) {
-    legendHtml = '<b style="color:var(--navy)">' + YR_LABEL[activeYrs[0]] + '</b> &nbsp;·&nbsp; ' +
-      '<b style="color:#2E6DA4">' + YR_LABEL[activeYrs[1]] + '</b> &nbsp;·&nbsp; ' + legendHtml;
-  }
+  legendHtml = '<b style="color:var(--navy)">' + (_beeswarmActiveIG ? dispIG(_beeswarmActiveIG) : dispSec(_beeswarmActiveSector)) +
+    '</b> &nbsp;·&nbsp; ' + legendHtml + ' &nbsp;·&nbsp; same axis for every year';
   legend.innerHTML = legendHtml;
   box.appendChild(legend);
 }
@@ -1926,7 +2020,7 @@ function renderPareto() {
     return '<td style="' + first + NUM + ';color:var(--mu);font-size:11px">' + d.rank + '</td>' +
       '<td style="padding:4px 8px;white-space:nowrap" title="' + co + '"><b style="font-size:12px;color:var(--navy)">' + d.name + '</b></td>' +
       (info ? '<td style="padding:4px 8px;font-size:11px;color:var(--mu);white-space:nowrap" title="' + cat.replace(/"/g, '&quot;') + '">' + trunc(cat, info === 'ig' ? 30 : 22) + '</td>' : '') +
-      '<td style="' + NUM + ';font-weight:600;color:' + colr(d.contrib) + '">' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(3) + '%</td>' +
+      '<td style="' + NUM + ';font-weight:600;color:' + colr(d.contrib) + '">' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(2) + '%</td>' +
       '<td style="' + NUM + ';color:var(--mu);font-size:11px">' + (d.cum >= 0 ? '+' : '') + d.cum.toFixed(2) + '%</td>' +
       (showRet ? '<td style="' + NUM + ';font-size:11px;color:' + colr(d.ret) + '">' + (d.ret >= 0 ? '+' : '') + d.ret.toFixed(1) + '%</td>' : '');
   }
@@ -2000,7 +2094,7 @@ function _renderParetoChartSVG(pos, neg, totalRet, yrLabel) {
     var cx = P.l + i * slotW + slotW / 2;
     var yt = Y(Math.max(d.contrib, 0)), yb = Y(Math.min(d.contrib, 0));
     out += '<rect x="' + (cx - barW / 2).toFixed(1) + '" y="' + yt.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + Math.max(yb - yt, 1).toFixed(1) +
-      '" fill="' + (d.contrib >= 0 ? '#177A4E' : '#9B2A20') + '" opacity=".82" rx="2"><title>' + d.name + ' ' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(3) + '%</title></rect>';
+      '" fill="' + (d.contrib >= 0 ? '#177A4E' : '#9B2A20') + '" opacity=".82" rx="2"><title>' + d.name + ' ' + (d.contrib >= 0 ? '+' : '') + d.contrib.toFixed(2) + '%</title></rect>';
     if (rows.length <= 60) out += '<text x="' + cx.toFixed(1) + '" y="' + (P.t + ch + 12) + '" text-anchor="end" font-size="9" fill="#2B3B4E" font-family="Inter,sans-serif" transform="rotate(-45,' + cx.toFixed(1) + ',' + (P.t + ch + 12) + ')">' + d.name + '</text>';
     pts.push(cx.toFixed(1) + ',' + Y(cumPts[i]).toFixed(1));
   });
@@ -2070,7 +2164,7 @@ function renderWLA() {
     '<th class="num" style="color:var(--neg)" title="Count of constituents with return < sector weighted-average return">Losers</th>' +
     '<th class="num" title="Sector weight at the last HOC minus the first HOC of the year (same as Index Composition, includes names that joined or left the index)">Wt Δ</th></tr></thead><tbody>';
   rows.forEach(function(r) {
-    var cStr = (r.contrib>=0?'+':'')+r.contrib.toFixed(3)+'%';
+    var cStr = (r.contrib>=0?'+':'')+r.contrib.toFixed(2)+'%';
     var rStr = (r.avgRet>=0?'+':'')+r.avgRet.toFixed(1)+'%';
     var wStr = (r.wChg>=0?'+':'')+r.wChg.toFixed(2)+'pp';
     html += '<tr>' +
@@ -2176,7 +2270,7 @@ function renderWLC() {
     var sorted = arr.slice().sort(function(a,b){return b.contrib-a.contrib;});
     if (arr.length === 1) {
       var only = sorted[0];
-      var oc = (only.contrib>=0?'+':'')+only.contrib.toFixed(3)+'%';
+      var oc = (only.contrib>=0?'+':'')+only.contrib.toFixed(2)+'%';
       html += '<tr>' +
         '<td style="font-weight:600;font-size:12px;color:var(--navy)">' + dispSec(sec) + '</td>' +
         '<td colspan="4" style="font-size:12px;color:var(--mu);font-style:italic">' +
@@ -2186,8 +2280,8 @@ function renderWLC() {
       '</tr>';
     } else {
       var best = sorted[0], worst = sorted[sorted.length-1];
-      var bc = (best.contrib>=0?'+':'')+best.contrib.toFixed(3)+'%';
-      var wc = (worst.contrib>=0?'+':'')+worst.contrib.toFixed(3)+'%';
+      var bc = (best.contrib>=0?'+':'')+best.contrib.toFixed(2)+'%';
+      var wc = (worst.contrib>=0?'+':'')+worst.contrib.toFixed(2)+'%';
       html += '<tr>' +
         '<td style="font-weight:600;font-size:12px;color:var(--navy)">' + dispSec(sec) + '</td>' +
         '<td style="font-size:12px">' +
@@ -2231,10 +2325,11 @@ function refresh() {
 function reloadSnapshot() {
   _activeHocs = getActiveHocs();
   if (!_activeHocs.length) return;
-  exclSecs.clear(); exclIGs.clear();
+  // The include / exclude selection is kept on purpose: moving across years with the same
+  // names excluded shows how the index would have looked without them in each period
   sectors = []; igBySec = {}; igToSec = {};
   baseR = computeCore(new Set(), new Set());
-  buildHierarchy(baseR);
+  buildHierarchy();
   lockAxes(baseR);
   _securities = computeSecurities(new Set(), new Set());
   rebuildScatterSnapshots(_scatterYear);
@@ -2412,10 +2507,13 @@ window.ndxToggleBeeswarmSector = function(sec) {
   if (sec) ndxSetBeeswarmSector(sec);
 };
 window.ndxSetBeeswarmSector = function(sec) {
-  _beeswarmActiveSector = sec;
-  document.querySelectorAll('.ndx-bee-pill').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.sec === sec);
-  });
+  _beeswarmActiveSector = sec; _beeswarmActiveIG = null;     // one filter at a time
+  buildBeeswarmSectorPills();
+  renderBeeswarm();
+};
+window.ndxSetBeeswarmIG = function(ig) {
+  _beeswarmActiveIG = ig;
+  buildBeeswarmSectorPills();
   renderBeeswarm();
 };
 
@@ -2544,13 +2642,10 @@ function buildSkeleton() {
         '<div style="font-size:11px;color:var(--mu);margin-top:3px">NDX Price Return &middot; Source: Summit NDX NonBBG &middot; ' + sourceLine() + '</div>' +
       '</div>' +
     '</div>' +
-    '<div style="display:flex;align-items:center;gap:24px;padding-bottom:14px;flex-wrap:wrap">' +
-      '<div>' +
-        '<div style="font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">NDX Price Return</div>' +
-        '<table style="border-collapse:collapse;margin-left:-22px"><thead>' +
-          '<tr id="ndx-kpi-head"></tr>' +
-        '</thead><tbody id="ndx-kpi-rows"></tbody></table>' +
-      '</div>' +
+    '<div style="font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px">NDX Price Return</div>' +
+    '<div style="display:flex;align-items:flex-start;gap:28px;padding-bottom:14px;flex-wrap:wrap">' +
+      '<div id="ndx-kpi-table"></div>' +
+      '<div id="ndx-kpi-chart" style="flex:1 1 420px;max-width:640px;min-width:300px"></div>' +
       '<div id="ndx-sim-badge" style="display:none;font-size:11px;background:rgba(255,180,0,.1);border:1px solid rgba(200,160,0,.35);border-radius:20px;padding:4px 12px;color:#7A5A00"></div>' +
     '</div>' +
   '</div>' +
@@ -2596,13 +2691,6 @@ function buildSkeleton() {
             '<button class="ndx-tab-btn" onclick="ndxCollapseAll()">Collapse All</button>' +
           '</span>' +
           '<button class="sb-tbtn" onclick="ndxResetSim()">Reset</button>' +
-          '<span style="font-size:11px;color:var(--mu);margin-left:4px">Decimals</span>' +
-          '<select id="ndx-decimals-sel" onchange="ndxSetDecimals(+this.value)" style="font-family:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:6px;padding:3px 6px;background:var(--w);color:var(--text)">' +
-            '<option value="1">1</option>' +
-            '<option value="2" selected>2</option>' +
-            '<option value="3">3</option>' +
-            '<option value="4">4</option>' +
-          '</select>' +
         '</div>' +
       '</div>' +
     '</div>' +
@@ -2711,6 +2799,10 @@ function buildSkeleton() {
           '<span style="font-size:11px;color:var(--mu);font-weight:600">Sector:</span>' +
           '<div id="ndx-bee-pills" style="display:flex;gap:4px;flex-wrap:wrap"></div>' +
         '</div>' +
+        '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex-basis:100%">' +
+          '<span style="font-size:11px;color:var(--mu);font-weight:600">or Industry Group:</span>' +
+          '<div id="ndx-bee-ig-pills" style="display:flex;gap:4px;flex-wrap:wrap"></div>' +
+        '</div>' +
       '</div>' +
       '<div id="ndx-beeswarm-box"></div>' +
     '</div>' +
@@ -2730,7 +2822,7 @@ export async function loadNdxAttribution(container) {
     _dataSource = { kind: 'static', meta: NDX_DATA.meta || {} };
   }
   deriveYears(NDX_DATA.hocs);
-  _attrAxisCache = {}; _attrOrderCache = {};
+  _attrAxisCache = {}; _attrOrderCache = {}; _universe = null; _anchorSnapN = null;
   var LATEST = yearKeys()[0];
 
   sectors = []; igBySec = {}; igToSec = {};
@@ -2750,7 +2842,7 @@ export async function loadNdxAttribution(container) {
   _globalScatterAxes = { xLo: null, xHi: null, yHi: null };
   _globalBeeAxes = { contribHi: null, xLo: null, xHi: null };
   _beeswarmYear = LATEST; _beeswarmYears = new Set([LATEST]); _beeswarmProgress = 100;
-  _beeswarmSectors = new Set(); _beeswarmSecAll = []; _beeswarmActiveSector = 'Information Technology';
+  _beeswarmSectors = new Set(); _beeswarmSecAll = []; _beeswarmActiveSector = 'Information Technology'; _beeswarmActiveIG = null;
   _activeYear = LATEST;
   _paretoN = 5; _paretoYears = new Set([LATEST]); _paretoView = 'table'; _paretoCustomN = 0;
   _paretoSide = 'pos'; _paretoInfo = 'sector'; _paretoCols = new Set(['ret']);
@@ -2768,7 +2860,8 @@ export async function loadNdxAttribution(container) {
   computeGlobalAxes();
   _activeHocs = getActiveHocs();
   baseR = computeCore(new Set(), new Set());
-  buildHierarchy(baseR);
+  buildHierarchy();
+  _anchorSnapN = _snapN;   // the load starts on the latest year: its weights fix the "Weight" sort
   lockAxes(baseR);
   _securities = computeSecurities(new Set(), new Set());
   rebuildScatterSnapshots(_scatterYear);

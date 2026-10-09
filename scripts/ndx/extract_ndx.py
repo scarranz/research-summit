@@ -10,7 +10,7 @@ workbook after the Bloomberg refresh) and turns it into the HOC list the portal 
   python scripts/ndx/extract_ndx.py --refresh-prices   # no Excel: only re-price the open HOC of the newest snapshot
   python scripts/ndx/extract_ndx.py --write-js         # also rewrite js/ndx-attribution-data.js (the bundled fallback)
 
-Options: --xlsx PATH (or env NDX_XLSX) · --note "text" (stored with the snapshot).
+Options: --xlsx PATH, repeatable to merge several workbooks (or env NDX_XLSX) · --note "text" (stored with the snapshot).
 Upload needs the ingest key: env NDX_INGEST_KEY or the gitignored file scripts/ndx/.ingest-key
 (San / Oscar set the same value as the NDX_INGEST_KEY secret). URL + anon key come from env.js.
 
@@ -95,7 +95,7 @@ def num(v, n=6):
     except (TypeError, ValueError):
         return None
 
-def extract(xlsx):
+def read_blocks(xlsx):
     print(f'Reading {xlsx}')
     wb = openpyxl.load_workbook(xlsx, data_only=True, read_only=True)
     ws = wb[SHEET]
@@ -113,8 +113,21 @@ def extract(xlsx):
             's': str(u or '').strip(), 'g': norm_ig(v),
             'p0': num(p, 4), 'p1': num(q, 4),
         })
+    return blocks
+
+def extract(paths):
+    # Several workbooks (e.g. one per year) are merged; a HOC present in more than one
+    # file is taken from the LAST file given.
+    if isinstance(paths, str):
+        paths = [paths]
+    blocks = {}
+    for path in paths:
+        for key, secs in read_blocks(path).items():
+            if key in blocks:
+                print(f'  · HOC eff={key[0]} also in {os.path.basename(path)} — using that copy')
+            blocks[key] = secs
     hocs = []
-    for (eff, prev, close), secs in blocks.items():
+    for (eff, prev, close), secs in sorted(blocks.items(), key=lambda kv: (kv[0][0], kv[0][2] or '9999')):
         if len(secs) < MIN_SECS:
             print(f'  ! skipped block eff={eff} close={close}: only {len(secs)} rows')
             continue
@@ -125,6 +138,13 @@ def extract(xlsx):
     print(f'{len(hocs)} HOCs')
     for h in hocs:
         print(f"  HOC {h['n']:>2}  eff {h['eff']}  prev {h['prev']}  close {h['close'] or '(open)':<10}  {len(h['sec'])} rows")
+    # The chain must be continuous: each HOC starts at the close the previous one ended on.
+    # A gap or overlap would silently distort the compounded year return, so stop.
+    breaks = [(a, b) for a, b in zip(hocs, hocs[1:]) if b['prev'] != a['close']]
+    for a, b in breaks:
+        print(f"  ! HOC {a['n']} closes {a['close']} but HOC {b['n']} starts from {b['prev']}")
+    if breaks:
+        sys.exit('ERROR: the HOC chain has gaps/overlaps (above) — fix the Excel before uploading')
     return hocs
 
 def write_js(hocs):
@@ -180,7 +200,7 @@ def call(payload):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--xlsx', default=os.environ.get('NDX_XLSX', DEFAULT_XLSX))
+    ap.add_argument('--xlsx', action='append', help='repeat for several workbooks (e.g. one per year); default = the 2026 file')
     ap.add_argument('--upload', action='store_true')
     ap.add_argument('--refresh-prices', action='store_true')
     ap.add_argument('--write-js', action='store_true')
@@ -188,12 +208,13 @@ def main():
     a = ap.parse_args()
     if a.refresh_prices:
         return call({'action': 'refresh-prices', 'note': a.note})
-    hocs = extract(a.xlsx)
+    paths = a.xlsx or [os.environ.get('NDX_XLSX', DEFAULT_XLSX)]
+    hocs = extract(paths)
     if a.write_js:
         write_js(hocs)
     if a.upload:
         call({'action': 'ingest', 'hocs': hocs, 'note': a.note,
-              'extractedAt': datetime.date.today().isoformat(), 'sourceFile': os.path.basename(a.xlsx)})
+              'extractedAt': datetime.date.today().isoformat(), 'sourceFile': ', '.join(os.path.basename(x) for x in paths)})
 
 if __name__ == '__main__':
     main()

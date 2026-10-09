@@ -83,17 +83,33 @@ function getActiveHocs() {
 // HOC to the year it started). A year is kept only if it is complete at the start:
 // its first HOC must begin at the previous year-end (that drops the 8-day Dec-2024
 // stub). The last year is "YTD" until a HOC closes on Dec 31.
+// Year-end close = the last weekday of December (Dec 31 unless it falls on a weekend)
+function yearEndClose(y) {
+  var d = new Date(Date.UTC(y, 11, 31));
+  while (d.getUTCDay() === 0 || d.getUTCDay() === 6) d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
 function deriveYears(hocs) {
   var byYear = {};
   hocs.forEach(function(h) {
-    var y = +(h.close || h.eff).slice(0, 4);
+    // A HOC measures (prev close, close]: it belongs to the year of its close, and the
+    // open HOC to the year of the day after its prev close (one opened on Dec 31 is next year's)
+    var d = h.close || new Date(Date.parse(h.prev + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10);
+    var y = +d.slice(0, 4);
     (byYear[y] = byYear[y] || []).push(h);
   });
   YEAR_HOCS = {}; YR_LABEL = {};
   Object.keys(byYear).map(Number).sort().forEach(function(y) {
     var list = byYear[y], first = list[0], last = list[list.length - 1];
-    if (+first.eff.slice(0, 4) !== y - 1) return;            // partial first year
-    var ytd = !last.close || last.close < y + '-12-31';
+    // Year Y starts with the HOC whose prev close is the year-end close of Y-1
+    // (2025 → HOC 2, prev 2024-12-31; 2026 → HOC 12, prev 2025-12-31). Anything
+    // else is a partial year (the 8-day Dec-2024 stub) and is left out.
+    if (first.prev !== yearEndClose(y - 1)) {
+      console.warn('ndx-attribution: ' + y + ' skipped — first HOC ' + first.n + ' starts ' + first.prev + ', not at the ' + (y - 1) + ' year-end close');
+      return;
+    }
+    // …and is complete once a HOC closes on its own year-end close; until then it is YTD
+    var ytd = !last.close || last.close < yearEndClose(y);
     var key = (ytd ? 'ytd' : 'y') + y;
     YEAR_HOCS[key] = [first.n, last.n];
     YR_LABEL[key]  = (ytd ? 'YTD ' : '') + y;

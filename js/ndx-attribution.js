@@ -460,49 +460,194 @@ function computeYearReturn(yearKey) {
   return (Math.exp(logSum) - 1) * 100;
 }
 
-function renderKPI(res) {
-  var isBase = exclSecs.size === 0 && exclIGs.size === 0;
-  // Every year in the data (a new year adds a column / bar on its own)
-  var yrs = yearKeys().filter(function(k) { return computeYearReturn(k) != null; });
+// ── Hero: NDX Price Return — growth of $100, annual bars, table ───────────
+// One control drives the whole block: "Invest $100 at the start of <year>". Everything is
+// computed from the HOC returns (Σ w·r per HOC, compounded), so it is measured at each
+// rebalance close — there is no intra-HOC price path. The open HOC ends at the latest prices.
+var _heroStart = null;     // year key the $100 is invested at (default: the oldest year)
+
+function chronoYears() { return yearKeys().slice().reverse(); }
+function hocReturn(h) { var r = 0; h.sec.forEach(function(s) { r += (s.w || 0) * s.r; }); return r; }
+function latestDate() {
+  var m = (_dataSource && _dataSource.meta) || {};
+  var last = NDX_DATA.hocs[NDX_DATA.hocs.length - 1];
+  return last.close || m.pricesAsOf || m.extractedAt || last.eff;
+}
+function dayNum(d) { return Date.parse(d + 'T00:00:00Z') / 864e5; }
+function fmtDate(d) {
+  var M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return M[+d.slice(5, 7) - 1] + ' ' + (+d.slice(8, 10)) + ', ' + d.slice(0, 4);
+}
+function money(v) { return '$' + (v >= 1000 ? v.toLocaleString('en-US', { maximumFractionDigits: 0 }) : v.toFixed(2)); }
+
+// $100 path from the start of `key` to the latest close: [{ d, v, r, n }]
+function growthPath(key) {
+  var first = YEAR_HOCS[key][0], last = YEAR_HOCS[yearKeys()[0]][1];
+  var hocs = NDX_DATA.hocs.filter(function(h) { return h.n >= first && h.n <= last; });
+  var v = 100, pts = [{ d: hocs[0].prev, v: 100, r: null, n: null }];
+  hocs.forEach(function(h) {
+    var r = hocReturn(h);
+    v *= 1 + r / 100;
+    pts.push({ d: h.close || latestDate(), v: v, r: r, n: h.n, open: !h.close });
+  });
+  return pts;
+}
+
+window.ndxSetHeroStart = function(key) {
+  if (!YEAR_HOCS[key]) return;
+  _heroStart = key;
+  renderHero();
+};
+
+function renderHero() {
+  var yrs = chronoYears();
+  if (!_heroStart || !YEAR_HOCS[_heroStart]) _heroStart = yrs[0];
+  var start = _heroStart, startIdx = yrs.indexOf(start);
+  var pts = growthPath(start), end = pts[pts.length - 1];
   var rets = {};
   yrs.forEach(function(k) { rets[k] = computeYearReturn(k); });
-  function pct(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
+  function pct(v, dec) { v = Math.abs(v) < 0.005 ? 0 : v; return (v >= 0 ? '+' : '') + v.toFixed(dec == null ? 2 : dec) + '%'; }
 
-  // Table: one column per year, newest first; year cells shaded, full grid
+  // Start-year pills (chronological, like everything in this block)
+  var pills = document.getElementById('ndx-hero-pills');
+  if (pills) pills.innerHTML = yrs.map(function(k) {
+    return '<button class="ndx-tab-btn' + (k === start ? ' active' : '') + '" onclick="ndxSetHeroStart(\'' + k + '\')">' + (YR_LABEL[k] || k) + '</button>';
+  }).join('');
+
+  // KPI tiles
+  var years = (dayNum(end.d) - dayNum(pts[0].d)) / 365.25;
+  var total = end.v - 100;
+  var cagr = years >= 1 ? (Math.pow(end.v / 100, 1 / years) - 1) * 100 : null;
+  var peak = pts[0], dd = 0, ddPeak = null, ddTrough = null;
+  pts.forEach(function(p) {
+    if (p.v > peak.v) peak = p;
+    var x = (p.v / peak.v - 1) * 100;
+    if (x < dd) { dd = x; ddPeak = peak; ddTrough = p; }
+  });
+  var inRange = yrs.slice(startIdx).filter(function(k) { return k.indexOf('ytd') !== 0; });
+  var best = inRange.slice().sort(function(a, b) { return rets[b] - rets[a]; })[0];
+  var worst = inRange.slice().sort(function(a, b) { return rets[a] - rets[b]; })[0];
+  function tile(label, value, sub, color) {
+    return '<div class="sc" style="padding:13px 15px"><div class="sl">' + label + '</div>' +
+      '<div class="sv" style="font-size:22px;' + (color ? 'color:' + color : '') + '">' + value + '</div>' +
+      '<div class="ss">' + sub + '</div></div>';
+  }
+  var kp = document.getElementById('ndx-hero-kpis');
+  if (kp) kp.innerHTML =
+    tile('$100 invested ' + fmtDate(pts[0].d), money(end.v), 'worth today (' + fmtDate(end.d) + ')', colr(total)) +
+    tile('Total return', pct(total, 1), 'price return, ' + years.toFixed(1) + ' years', colr(total)) +
+    tile('Annualized', cagr == null ? '—' : pct(cagr, 1), cagr == null ? 'less than a year invested' : 'compound annual growth rate', cagr == null ? '' : colr(cagr)) +
+    tile('Worst drawdown', dd < 0 ? pct(dd, 1) : '0.0%', dd < 0 ? fmtDate(ddPeak.d) + ' → ' + fmtDate(ddTrough.d) : 'never below its peak', dd < 0 ? 'var(--neg)' : '') +
+    tile('Best / worst year', best ? pct(rets[best], 1) + ' / ' + pct(rets[worst], 1) : '—',
+      best ? (YR_LABEL[best] || best) + ' / ' + (YR_LABEL[worst] || worst) : 'no full year in range');
+
+  renderGrowthChart(pts, start);
+  renderAnnualBars(yrs, rets, startIdx, pct);
+  renderHeroTable(yrs, rets, pct);
+}
+
+// Growth of $100 — x is real time, one point per HOC close, a band per calendar year
+function renderGrowthChart(pts, start) {
+  var box = document.getElementById('ndx-hero-growth');
+  if (!box) return;
+  var VW = Math.max(520, Math.round(box.clientWidth || 820)), VH = 300, P = { t: 26, r: 64, b: 26, l: 56 };
+  var x0 = dayNum(pts[0].d), x1 = dayNum(pts[pts.length - 1].d);
+  var vals = pts.map(function(p) { return p.v; });
+  var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+  var step = hi - lo > 400 ? 100 : hi - lo > 150 ? 50 : hi - lo > 60 ? 20 : 10;
+  lo = Math.floor(Math.min(lo, 100) / step) * step; hi = Math.ceil(hi / step) * step;
+  function X(d) { return P.l + (dayNum(d) - x0) / (x1 - x0 || 1) * (VW - P.l - P.r); }
+  function Y(v) { return P.t + (hi - v) / (hi - lo || 1) * (VH - P.t - P.b); }
+  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block;font-family:Inter,sans-serif' });
+
+  // Year bands + labels
+  var firstY = +pts[0].d.slice(0, 4) + 1, lastY = +pts[pts.length - 1].d.slice(0, 4);
+  for (var y = firstY; y <= lastY; y++) {
+    var a = Math.max(x0, dayNum((y - 1) + '-12-31')), b = Math.min(x1, dayNum(y + '-12-31'));
+    var xa = P.l + (a - x0) / (x1 - x0 || 1) * (VW - P.l - P.r), xb = P.l + (b - x0) / (x1 - x0 || 1) * (VW - P.l - P.r);
+    if (y % 2 === 0) svg.appendChild(se('rect', { x: xa, y: P.t, width: Math.max(0, xb - xa), height: VH - P.t - P.b, fill: '#F5F7F9' }));
+    var yl = se('text', { x: (xa + xb) / 2, y: P.t - 9, 'text-anchor': 'middle', 'font-size': 10.5, 'font-weight': 600, fill: '#6B7785' });
+    yl.textContent = y; svg.appendChild(yl);
+  }
+  // $ grid
+  for (var v = lo; v <= hi + 1e-9; v += step) {
+    svg.appendChild(se('line', { x1: P.l, x2: VW - P.r, y1: Y(v), y2: Y(v), stroke: v === 100 ? '#9AAAB8' : '#E8ECF0', 'stroke-dasharray': v === 100 ? '4 3' : '' }));
+    var t = se('text', { x: P.l - 6, y: Y(v) + 3.5, 'text-anchor': 'end', 'font-size': 10, fill: '#8A93A0' });
+    t.textContent = '$' + v; svg.appendChild(t);
+  }
+  // Area + line
+  var line = pts.map(function(p, i) { return (i ? 'L' : 'M') + X(p.d).toFixed(1) + ' ' + Y(p.v).toFixed(1); }).join(' ');
+  var up = pts[pts.length - 1].v >= 100;
+  svg.appendChild(se('path', { d: line + ' L' + X(pts[pts.length - 1].d).toFixed(1) + ' ' + Y(lo) + ' L' + X(pts[0].d).toFixed(1) + ' ' + Y(lo) + ' Z',
+    fill: up ? 'rgba(23,122,78,.08)' : 'rgba(155,42,32,.08)' }));
+  svg.appendChild(se('path', { d: line, fill: 'none', stroke: up ? '#177A4E' : '#9B2A20', 'stroke-width': 2.2, 'stroke-linejoin': 'round' }));
+  // Points with hover
+  pts.forEach(function(p, i) {
+    var g = se('g', { class: 'mk', style: 'cursor:default' });
+    g.appendChild(se('circle', { cx: X(p.d), cy: Y(p.v), r: 8, fill: 'transparent' }));
+    g.appendChild(se('circle', { cx: X(p.d), cy: Y(p.v), r: i === pts.length - 1 ? 4 : 2.4, fill: '#fff', stroke: up ? '#177A4E' : '#9B2A20', 'stroke-width': 1.6 }));
+    var since = p.v - 100;
+    bindTip(g, '<b style="font-size:13px">' + money(p.v) + '</b> <span style="color:#6B7785">on ' + fmtDate(p.d) + (p.open ? ' (latest)' : '') + '</span>' +
+      '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
+      (i === 0 ? 'Starting point: $100 invested at the ' + (+p.d.slice(0, 4)) + ' year-end close'
+        : 'Since start: <b style="color:' + colr(since) + '">' + (since >= 0 ? '+' : '') + since.toFixed(1) + '%</b>' +
+          '<br>HOC ' + p.n + ' return: <span style="color:' + colr(p.r) + '">' + (p.r >= 0 ? '+' : '') + p.r.toFixed(2) + '%</span>') +
+      '</span>');
+    svg.appendChild(g);
+  });
+  // End label
+  var e = pts[pts.length - 1], el = se('text', { x: X(e.d) + 7, y: Y(e.v) + 4, 'font-size': 12, 'font-weight': 700, fill: up ? '#177A4E' : '#9B2A20' });
+  el.textContent = money(e.v); svg.appendChild(el);
+  box.innerHTML = ''; box.appendChild(svg);
+}
+
+// Annual returns — chronological; years before the start are faded; click a bar to start there
+function renderAnnualBars(yrs, rets, startIdx, pct) {
+  var box = document.getElementById('ndx-hero-bars');
+  if (!box) return;
+  var VW = Math.max(260, Math.round(box.clientWidth || 380)), VH = 300, P = { t: 26, r: 8, b: 26, l: 8 };   // real px, same height as the growth chart
+  var vals = yrs.map(function(k) { return rets[k]; });
+  var lo = Math.floor(Math.min(0, Math.min.apply(null, vals)) / 10) * 10, hi = Math.ceil(Math.max(0, Math.max.apply(null, vals)) / 10) * 10;
+  function Y(v) { return P.t + (hi - v) / (hi - lo || 1) * (VH - P.t - P.b); }
+  var slot = (VW - P.l - P.r) / yrs.length, bw = slot * 0.62;
+  var h = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" style="width:100%;height:auto;display:block;font-family:Inter,sans-serif">';
+  h += '<line x1="' + P.l + '" x2="' + (VW - P.r) + '" y1="' + Y(0) + '" y2="' + Y(0) + '" stroke="#9AAAB8"/>';
+  yrs.forEach(function(k, i) {
+    var v = rets[k], cx = P.l + slot * i + slot / 2, y0 = Y(Math.max(0, v)), y1 = Y(Math.min(0, v));
+    var on = i >= startIdx, col = v >= 0 ? '#177A4E' : '#9B2A20';
+    h += '<g style="cursor:pointer" onclick="ndxSetHeroStart(\'' + k + '\')"><title>' + (YR_LABEL[k] || k) + ': ' + pct(v) + ' — click to invest $100 from here</title>' +
+      '<rect x="' + (cx - slot / 2) + '" y="' + P.t + '" width="' + slot + '" height="' + (VH - P.t - P.b) + '" fill="transparent"/>' +
+      '<rect x="' + (cx - bw / 2) + '" y="' + y0 + '" width="' + bw + '" height="' + Math.max(1, y1 - y0) + '" rx="3" fill="' + col + '" opacity="' + (on ? 0.85 : 0.22) + '"/>' +
+      '<text x="' + cx + '" y="' + (v >= 0 ? y0 - 5 : y1 + 12) + '" text-anchor="middle" font-size="10" font-weight="700" fill="' + col + '" opacity="' + (on ? 1 : 0.45) + '">' + pct(v, 1) + '</text>' +
+      '<text x="' + cx + '" y="' + (VH - 8) + '" text-anchor="middle" font-size="10" font-weight="' + (i === startIdx ? 700 : 500) + '" fill="' + (on ? '#2B3B4E' : '#A5AEB8') + '">' + (YR_LABEL[k] || k).replace('YTD ', 'YTD ') + '</text></g>';
+  });
+  box.innerHTML = h + '</svg>';
+}
+
+// Table: years as columns (chronological), return + what $100 at the start of that year is worth today
+function renderHeroTable(yrs, rets, pct) {
   var tb = document.getElementById('ndx-kpi-table');
-  if (tb) {
-    var CELL = 'border:1px solid var(--bdr,#D9DEE4);padding:6px 14px;text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums';
-    tb.innerHTML = '<table style="border-collapse:collapse;font-size:13px">' +
-      '<tr>' + yrs.map(function(k) {
-        return '<th style="' + CELL + ';background:#EEF1F4;color:var(--navy);font-weight:700;font-size:12px">' + (YR_LABEL[k] || k) + '</th>';
-      }).join('') + '</tr>' +
-      '<tr>' + yrs.map(function(k) {
-        return '<td style="' + CELL + ';font-weight:700;font-size:14px;color:' + colr(rets[k]) + '">' + pct(rets[k]) + '</td>';
-      }).join('') + '</tr></table>';
-  }
+  if (!tb) return;
+  var CELL = 'border:1px solid var(--bdr,#D9DEE4);padding:6px 12px;text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums';
+  var HEAD = CELL + ';background:#EEF1F4;color:var(--navy);font-weight:700;font-size:12px';
+  var LBL = CELL + ';background:#EEF1F4;color:var(--mu);font-weight:600;font-size:11px;text-align:left';
+  var worth = {};
+  yrs.forEach(function(k) { var p = growthPath(k); worth[k] = p[p.length - 1].v; });
+  tb.innerHTML = '<table style="border-collapse:collapse;font-size:13px;width:100%">' +
+    '<tr><th style="' + LBL + '">Year</th>' + yrs.map(function(k) {
+      return '<th style="' + HEAD + (k === _heroStart ? ';box-shadow:inset 0 -3px 0 var(--navy)' : '') + '">' + (YR_LABEL[k] || k) + '</th>';
+    }).join('') + '</tr>' +
+    '<tr><td style="' + LBL + '">Price return</td>' + yrs.map(function(k) {
+      return '<td style="' + CELL + ';font-weight:700;font-size:14px;color:' + colr(rets[k]) + '">' + pct(rets[k]) + '</td>';
+    }).join('') + '</tr>' +
+    '<tr><td style="' + LBL + '">$100 at the start of the year → today</td>' + yrs.map(function(k) {
+      return '<td style="' + CELL + ';cursor:pointer;color:' + colr(worth[k] - 100) + '" onclick="ndxSetHeroStart(\'' + k + '\')" title="Show this in the chart">' + money(worth[k]) + '</td>';
+    }).join('') + '</tr></table>';
+}
 
-  // Bars: chronological, oldest at the top, latest (YTD) at the bottom
-  var cb = document.getElementById('ndx-kpi-chart');
-  if (cb) {
-    var chron = yrs.slice().reverse();
-    var vals = chron.map(function(k) { return rets[k]; });
-    var mn = Math.min(0, Math.min.apply(null, vals)), mx = Math.max(0, Math.max.apply(null, vals));
-    var lo = Math.floor(mn / 10) * 10, hi = Math.ceil(mx / 10) * 10;
-    var VW = 620, rowH = 24, P = { t: 18, r: 64, b: 6, l: 70 }, VH = P.t + chron.length * rowH + P.b;
-    function X(v) { return P.l + (v - lo) / (hi - lo || 1) * (VW - P.l - P.r); }
-    var h = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" style="width:100%;height:auto;display:block;font-family:Inter,sans-serif">';
-    for (var t = lo; t <= hi; t += 10) {
-      h += '<line x1="' + X(t) + '" x2="' + X(t) + '" y1="' + (P.t - 4) + '" y2="' + (VH - P.b) + '" stroke="' + (t === 0 ? '#9AAAB8' : '#EEF0F3') + '"/>' +
-        '<text x="' + X(t) + '" y="' + (P.t - 7) + '" text-anchor="middle" font-size="9.5" fill="#8A93A0">' + t + '%</text>';
-    }
-    chron.forEach(function(k, i) {
-      var v = rets[k], y = P.t + i * rowH, x0 = X(Math.min(0, v)), x1 = X(Math.max(0, v));
-      h += '<text x="' + (P.l - 8) + '" y="' + (y + rowH / 2 + 4) + '" text-anchor="end" font-size="11" fill="#2B3B4E" font-weight="600">' + (YR_LABEL[k] || k) + '</text>' +
-        '<rect x="' + x0 + '" y="' + (y + 4) + '" width="' + Math.max(1, x1 - x0) + '" height="' + (rowH - 8) + '" rx="3" fill="' + (v >= 0 ? '#177A4E' : '#9B2A20') + '" opacity=".8"/>' +
-        '<text x="' + (v >= 0 ? x1 + 5 : X(0) + 5) + '" y="' + (y + rowH / 2 + 4) + '" text-anchor="start" font-size="10.5" font-weight="700" fill="' + (v >= 0 ? '#177A4E' : '#9B2A20') + '">' + pct(v) + '</text>';
-    });
-    cb.innerHTML = h + '</svg>';
-  }
+function renderKPI(res) {
+  var isBase = exclSecs.size === 0 && exclIGs.size === 0;
+  renderHero();
 
   var tag = document.getElementById('ndx-sim-badge');
   if (!tag) return;
@@ -2644,11 +2789,31 @@ function buildSkeleton() {
         '<div style="font-size:11px;color:var(--mu);margin-top:3px">NDX Price Return &middot; Source: Summit NDX NonBBG &middot; ' + sourceLine() + '</div>' +
       '</div>' +
     '</div>' +
-    '<div style="font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px">NDX Price Return</div>' +
-    '<div style="display:flex;align-items:flex-start;gap:28px;padding-bottom:14px;flex-wrap:wrap">' +
-      '<div id="ndx-kpi-table"></div>' +
-      '<div id="ndx-kpi-chart" style="flex:1 1 420px;max-width:640px;min-width:300px"></div>' +
-      '<div id="ndx-sim-badge" style="display:none;font-size:11px;background:rgba(255,180,0,.1);border:1px solid rgba(200,160,0,.35);border-radius:20px;padding:4px 12px;color:#7A5A00"></div>' +
+  '</div>' +
+
+  '<div class="sec">' +
+    '<div class="sechdr"><span class="sect">NDX Price Return</span>' +
+      '<span class="secn">Growth of $100 and yearly returns, measured at each rebalance (HOC) close</span></div>' +
+    '<div class="card">' +
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
+        '<span style="font-size:12px;color:var(--navy);font-weight:600">Invest $100 at the start of</span>' +
+        '<div id="ndx-hero-pills" style="display:flex;gap:4px;flex-wrap:wrap"></div>' +
+        '<div id="ndx-sim-badge" style="display:none;margin-left:auto;font-size:11px;background:rgba(255,180,0,.1);border:1px solid rgba(200,160,0,.35);border-radius:20px;padding:4px 12px;color:#7A5A00"></div>' +
+      '</div>' +
+      '<div id="ndx-hero-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px"></div>' +
+      '<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">' +
+        '<div style="flex:2 1 520px;min-width:300px">' +
+          '<div style="font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Growth of $100</div>' +
+          '<div id="ndx-hero-growth"></div>' +
+        '</div>' +
+        '<div style="flex:1 1 300px;min-width:260px">' +
+          '<div style="font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Return by year <span style="text-transform:none;letter-spacing:0;font-weight:400">· click a year to start there</span></div>' +
+          '<div id="ndx-hero-bars"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div id="ndx-kpi-table" style="margin-top:14px;overflow-x:auto"></div>' +
+      '<div style="font-size:11px;color:var(--mu);margin-top:8px;line-height:1.5">NDX price return (no dividends), compounded HOC by HOC from the Summit NDX NonBBG holdings; the open HOC is valued at the latest prices. ' +
+        'Drawdown is measured at HOC closes, so intra-period dips are not captured.</div>' +
     '</div>' +
   '</div>' +
 
@@ -2855,7 +3020,7 @@ export async function loadNdxAttribution(container) {
   _colorMode = 'orig';
   _colorMaxPos = 0; _colorMaxNeg = 0;
   _wlTab = 'A';
-  _attrDecimals = 2; lastBaseR = null;
+  _attrDecimals = 2; lastBaseR = null; _heroStart = null;
   if (_chart) { _chart.destroy(); _chart = null; }
 
   normalize();

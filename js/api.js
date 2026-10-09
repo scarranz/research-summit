@@ -291,6 +291,17 @@ export async function fetchRatiosHistory(ticker, limit) {
   return ok(results);
 }
 
+// ─── NDX 100 Return Attribution ─────────────────────────────
+// Latest snapshot from the `ndx-attribution` edge function: { meta, hocs } in the same
+// shape as js/ndx-attribution-data.js, with the open HOC re-priced from Massive at the
+// last refresh. Fails (caller falls back to the bundled file) until the function is deployed.
+export async function fetchNdxAttribution() {
+  var { data, error } = await supabase.functions.invoke('ndx-attribution', { body: { action: 'get' } });
+  if (error) return fail(error.message);
+  if (!data || !Array.isArray(data.hocs) || !data.hocs.length) return fail('no NDX snapshot');
+  return ok(data);
+}
+
 // ─── Company Resources ──────────────────────────────────────
 
 export async function fetchResources(companyId) {

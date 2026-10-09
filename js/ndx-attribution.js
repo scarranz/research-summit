@@ -1,5 +1,10 @@
 // ndx-attribution.js — NDX 100 Return Attribution (Carino linking)
-import { NDX_DATA } from './ndx-attribution-data.js';
+import { fetchNdxAttribution } from './api.js';
+
+// Filled by loadNdxAttribution(): the latest snapshot from the ndx-attribution edge
+// function (Supabase), or the bundled static file if the function is unavailable.
+var NDX_DATA = null;
+var _dataSource = null;   // { kind: 'supabase' | 'static', meta }
 
 const CASH       = 'Cash, Derivatives and Other Securities';
 const CASH_LABEL = 'Cash & Futures';
@@ -56,7 +61,7 @@ var _paretoInfo    = 'sector';       // '' | 'sector' | 'ig' — one descriptor 
 var _paretoView    = 'table';
 var _paretoCols    = new Set(['ret']);
 var _paretoCustomN = 0;
-var YEAR_HOCS    = { ytd2026: [12, 25], y2025: [2, 11] };
+var YEAR_HOCS    = {};   // derived from the HOC dates in deriveYears(); e.g. { ytd2026: [12, 25], y2025: [2, 11] }
 var _colorMode   = 'orig';   // 'orig' | 'A' | 'B' | 'C'
 var _colorMaxPos = 0, _colorMaxNeg = 0;
 var _wlTab        = 'A';
@@ -73,6 +78,29 @@ var _scatterDragState = null;
 function getActiveHocs() {
   return NDX_DATA.hocs.filter(function(h) { return h.n >= _fromHoc && h.n <= _toHoc; });
 }
+// Group HOCs into calendar years from their dates, so a new year in the data shows
+// up everywhere on its own. A HOC belongs to the year of its close date (the open
+// HOC to the year it started). A year is kept only if it is complete at the start:
+// its first HOC must begin at the previous year-end (that drops the 8-day Dec-2024
+// stub). The last year is "YTD" until a HOC closes on Dec 31.
+function deriveYears(hocs) {
+  var byYear = {};
+  hocs.forEach(function(h) {
+    var y = +(h.close || h.eff).slice(0, 4);
+    (byYear[y] = byYear[y] || []).push(h);
+  });
+  YEAR_HOCS = {}; YR_LABEL = {};
+  Object.keys(byYear).map(Number).sort().forEach(function(y) {
+    var list = byYear[y], first = list[0], last = list[list.length - 1];
+    if (+first.eff.slice(0, 4) !== y - 1) return;            // partial first year
+    var ytd = !last.close || last.close < y + '-12-31';
+    var key = (ytd ? 'ytd' : 'y') + y;
+    YEAR_HOCS[key] = [first.n, last.n];
+    YR_LABEL[key]  = (ytd ? 'YTD ' : '') + y;
+  });
+}
+function yearOf(key) { return key.replace(/\D/g, ''); }
+
 // Year keys newest first (ytd2026, y2025, …) — every per-year control iterates this
 function yearKeys() {
   return Object.keys(YEAR_HOCS).sort(function(a, b) { return YEAR_HOCS[b][0] - YEAR_HOCS[a][0]; });
@@ -1396,7 +1424,7 @@ function _updateScatterSlider() {
   if (sl) { sl.max = String(_scatterSecSnapshots.length - 1); sl.value = String(_scatterHocIdx); }
   if (lbl) {
     if (_scatterHocIdx === 0) {
-      lbl.textContent = 'Start of ' + (_scatterYear === 'ytd2026' ? '2026' : '2025');
+      lbl.textContent = 'Start of ' + yearOf(_scatterYear);
     } else {
       var hoc = yrHocs[_scatterHocIdx - 1];  // -1: index 0 is the zero snap
       lbl.textContent = hoc ? ('HOC ' + hoc.n + ' · ' + (hoc.close || hoc.eff + ' (Open)')) : '';
@@ -1768,7 +1796,7 @@ function renderBeeswarm() {
 }
 
 // ── Pareto / Top Contributors ────────────────────────────────────────────
-var YR_LABEL  = { ytd2026: 'YTD 2026', y2025: '2025' };
+var YR_LABEL  = {};     // filled by deriveYears(): { ytd2026: 'YTD 2026', y2025: '2025' }
 
 function _yearTotalRet(yr) {
   var range = YEAR_HOCS[yr];
@@ -2472,6 +2500,18 @@ function hocOpts(sel) {
 }
 
 
+// "Data as of …" line under the title
+function sourceLine() {
+  var m = (_dataSource && _dataSource.meta) || {};
+  var parts = [];
+  if (m.extractedAt) parts.push('Excel extract ' + m.extractedAt);
+  if (m.pricesAsOf)  parts.push('open HOC priced ' + m.pricesAsOf + (m.priceSource ? ' (' + m.priceSource + ')' : ''));
+  if (!parts.length && NDX_DATA && NDX_DATA.meta && NDX_DATA.meta.latestDate) parts.push('latest HOC ' + NDX_DATA.meta.latestDate);
+  if (_dataSource && _dataSource.kind === 'static')
+    parts.push('<span title="The ndx-attribution function did not answer; showing the copy bundled with the site">bundled copy</span>');
+  return parts.join(' &middot; ');
+}
+
 function buildSkeleton() {
   var last  = _activeHocs[_activeHocs.length - 1];
   var first = _activeHocs[0];
@@ -2485,7 +2525,7 @@ function buildSkeleton() {
     '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-bottom:14px">' +
       '<div>' +
         '<div class="sect" style="font-size:17px;font-weight:700;color:var(--navy)">Nasdaq-100 — Return Attribution</div>' +
-        '<div style="font-size:11px;color:var(--mu);margin-top:3px">NDX Price Return &middot; Source: Summit NDX NonBBG</div>' +
+        '<div style="font-size:11px;color:var(--mu);margin-top:3px">NDX Price Return &middot; Source: Summit NDX NonBBG &middot; ' + sourceLine() + '</div>' +
       '</div>' +
     '</div>' +
     '<div style="display:flex;align-items:center;gap:24px;padding-bottom:14px;flex-wrap:wrap">' +
@@ -2598,8 +2638,7 @@ function buildSkeleton() {
     '<div class="card">' +
       '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
         '<div style="display:flex;gap:4px">' +
-          '<button class="ndx-wl-yr-btn ndx-tab-btn active" data-yr="ytd2026" onclick="ndxSetWLYear(\'ytd2026\')">YTD 2026</button>' +
-          '<button class="ndx-wl-yr-btn ndx-tab-btn" data-yr="y2025" onclick="ndxSetWLYear(\'y2025\')">2025</button>' +
+          yrBtns('ndx-wl-yr-btn', 'ndxSetWLYear', _wlYear) +
         '</div>' +
         '<div style="display:flex;gap:4px;margin-left:8px">' +
           '<button class="ndx-wl-tab ndx-tab-btn active" data-tab="A" onclick="ndxSetWLTab(\'A\')">Sector Matrix</button>' +
@@ -2619,8 +2658,7 @@ function buildSkeleton() {
     '<div class="card">' +
       '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">' +
         '<div style="display:flex;gap:4px">' +
-          '<button class="ndx-tab-btn ndx-scat-yr-btn active" data-yr="ytd2026" onclick="ndxSetScatterYear(\'ytd2026\')">YTD 2026</button>' +
-          '<button class="ndx-tab-btn ndx-scat-yr-btn" data-yr="y2025" onclick="ndxSetScatterYear(\'y2025\')">2025</button>' +
+          yrBtns('ndx-scat-yr-btn', 'ndxSetScatterYear', _scatterYear) +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:8px;margin-left:auto">' +
           '<span style="font-size:11px;color:var(--mu)">HOC evolution:</span>' +
@@ -2645,8 +2683,7 @@ function buildSkeleton() {
     '<div class="card">' +
       '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">' +
         '<div style="display:flex;gap:4px">' +
-          '<button class="ndx-tab-btn ndx-bee-yr-btn active" data-yr="ytd2026" onclick="ndxToggleBeeYear(\'ytd2026\')">YTD 2026</button>' +
-          '<button class="ndx-tab-btn ndx-bee-yr-btn" data-yr="y2025" onclick="ndxToggleBeeYear(\'y2025\')">2025</button>' +
+          yrBtns('ndx-bee-yr-btn', 'ndxToggleBeeYear', _beeswarmYear) +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:6px">' +
           '<span style="font-size:11px;color:var(--mu)">Progress:</span>' +
@@ -2666,32 +2703,45 @@ function buildSkeleton() {
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────
-export function loadNdxAttribution(container) {
+export async function loadNdxAttribution(container) {
+  container.innerHTML = '<div style="padding:40px;color:var(--mu);font-size:13px">Loading Nasdaq-100 attribution…</div>';
+  var res = await fetchNdxAttribution();
+  if (res.success && res.data && res.data.hocs && res.data.hocs.length) {
+    NDX_DATA = res.data; _dataSource = { kind: 'supabase', meta: res.data.meta || {} };
+  } else {
+    if (!res.success) console.warn('ndx-attribution: falling back to bundled data —', res.error);
+    NDX_DATA = (await import('./ndx-attribution-data.js')).NDX_DATA;
+    _dataSource = { kind: 'static', meta: NDX_DATA.meta || {} };
+  }
+  deriveYears(NDX_DATA.hocs);
+  _attrAxisCache = {}; _attrOrderCache = {};
+  var LATEST = yearKeys()[0];
+
   sectors = []; igBySec = {}; igToSec = {};
   _snap0 = {}; _snapN = {};
   exclSecs = new Set(); exclIGs = new Set();
   attrTab = 'sector'; attrMode = 'table';
   _sortKey = 'contrib'; _sortDir = 1;
-  _attrDetailYear = 'ytd2026';
-  _fromHoc = 12; _toHoc = 25;
+  _attrDetailYear = LATEST;
+  _fromHoc = YEAR_HOCS[LATEST][0]; _toHoc = YEAR_HOCS[LATEST][1];
   _beeswarmFilter = 0; _securities = [];
   treemapSubMode = 'flat';
   _scatterHocIdx = -1; _secSnapshots = [];
   _expandedSecs = new Set();
   _scatterXLo = null; _scatterXHi = null; _scatterYHi = null;
-  _scatterYear = 'ytd2026'; _scatterSecSnapshots = []; _scatterYrAxes = { xLo: null, xHi: null, yHi: null };
+  _scatterYear = LATEST; _scatterSecSnapshots = []; _scatterYrAxes = { xLo: null, xHi: null, yHi: null };
   _scatterViewport = null; _scatterDragState = null;
   _globalScatterAxes = { xLo: null, xHi: null, yHi: null };
   _globalBeeAxes = { contribHi: null, xLo: null, xHi: null };
-  _beeswarmYear = 'ytd2026'; _beeswarmYears = new Set(['ytd2026']); _beeswarmProgress = 100;
+  _beeswarmYear = LATEST; _beeswarmYears = new Set([LATEST]); _beeswarmProgress = 100;
   _beeswarmSectors = new Set(); _beeswarmSecAll = []; _beeswarmActiveSector = 'Information Technology';
-  _activeYear = 'ytd2026';
-  _paretoN = 5; _paretoYears = new Set(['ytd2026']); _paretoView = 'table'; _paretoCustomN = 0;
+  _activeYear = LATEST;
+  _paretoN = 5; _paretoYears = new Set([LATEST]); _paretoView = 'table'; _paretoCustomN = 0;
   _paretoSide = 'pos'; _paretoInfo = 'sector'; _paretoCols = new Set(['ret']);
-  _wlYear = 'ytd2026'; _wlTab = 'A';
-  _attrChartYear = 'ytd2026';
+  _wlYear = LATEST; _wlTab = 'A';
+  _attrChartYear = LATEST;
   _attrChartTab = 'sector';
-  _compYear = 'ytd2026';
+  _compYear = LATEST;
   _colorMode = 'orig';
   _colorMaxPos = 0; _colorMaxNeg = 0;
   _wlTab = 'A';

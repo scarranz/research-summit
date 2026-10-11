@@ -142,6 +142,7 @@ supabase functions deploy <function-name> --project-ref bvflqjndivouhgwqfbrq
 | `get-transcript` | Fiscal.ai `/v1/company/ir-events` + `/ir-events/transcript/{eventKey}` | Earnings-call events list + structured transcripts for Earnings — generic for any ticker on our Fiscal.ai tier, no DB write. `unavailable: true` = company not on current plan |
 | `generate-investment-writeup` | Anthropic Messages API (`claude-opus-4-8` + `web_search` tool) | "Research & write with AI" button in the Investment tab's Add modal — researches a company via web search and drafts its Overview/Moat/Opportunity text in Summit's house tone. Requires a separate `ANTHROPIC_API_KEY` secret. |
 | `get-market-history` | Massive `/v2/aggs/ticker/.../range/...` (daily prices) + `/stocks/financials/v1/ratios` (quarterly, for market_cap/enterprise_value/price) | Daily closes + quarterly shares/net-debt for the AMZN Historic Multiple chart (`js/overviews/amzn-histmult.js`) — computed client-side from the raw passthrough, no DB write. **NEW on feat/amzn-polish, not yet deployed** — smoke-test after deploying (see that file's header for exact field-name assumptions to verify). |
+| `ndx-attribution` | Massive `/v2/aggs/grouped/locale/us/market/stocks/{date}` (2 calls per refresh) + table `ndx_snapshots` | Data for Market Analysis ▸ Nasdaq-100 Analysis. `get` = newest snapshot (any signed-in user). `ingest` / `refresh-prices` (header `x-ndx-ingest-key` = secret `NDX_INGEST_KEY`) save a new snapshot: the analyst's Excel via `python scripts/ndx/extract_ndx.py --upload`, or only the open HOC re-priced via `--refresh-prices`. Closed HOCs keep the Excel returns; the open HOC is re-priced from Massive closes. The page falls back to `js/ndx-attribution-data.js` if the function fails. **NEW on feat/ndx-attribution-v2, not yet deployed** — needs `sql/025_ndx_attribution.sql` run and the `NDX_INGEST_KEY` secret set first. |
 
 **Security:** All edge functions restrict CORS to `research-summit.netlify.app` and `localhost:8000`. Ticker and companyId inputs are validated.
 
@@ -344,6 +345,10 @@ Every company has three tabs: **Overview**, **Pillars**, and **Resources**.
 - Resources are managed through the portal UI (add/edit/delete)
 - Overview is custom-designed per company with Claude's help
 - Claude handles all the technical work — the user just describes what they want to see
+
+## NDX 100 Return Attribution — read docs/NDX_ATTRIBUTION.md first
+
+Market Analysis ▸ Nasdaq-100 Analysis (`js/ndx-attribution.js`). **Before changing its data, the extractor (`scripts/ndx/extract_ndx.py`), the `ndx-attribution` edge function or the page, read `docs/NDX_ATTRIBUTION.md`**: source sheet and columns, HOC / year rules (no hard-coded dates; a new year needs no code change), Carino math, drifted close weights, Bloomberg dummy tickers (`9990294D` → LBTYA, `9999794D` → LBTYK, `9210611D` → SIRI, `9996651D` → AZN — never show the dummy code), the Supabase refresh routine, and the page conventions agreed with the analyst.
 
 ## Derivatives tab — how it works
 

@@ -57,3 +57,6 @@ _validate_palette.js
 #   git show 37ed3b8:js/covered-calls.js > js/_legacy-cc.js
 # then append a __parity export mirroring the one in covered-calls.js.
 js/_legacy-cc.js
+
+# NDX extractor upload key (matches the NDX_INGEST_KEY Supabase secret)
+scripts/ndx/.ingest-key

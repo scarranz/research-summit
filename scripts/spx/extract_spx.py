@@ -210,6 +210,40 @@ def read_levels(rows):
     return dates, series
 
 
+def read_weights(rows, level_dates):
+    """SECTORS_WEIGHTS: Bloomberg's month-end weight (%) of each S5 sector in the SPX, plus
+    'Residual' (names Bloomberg could not classify). These are Bloomberg ESTIMATES built with
+    TODAY's GICS, so they only match the S&P sector levels after the last GICS change (the
+    page starts the attribution there, see ATTR_FROM in js/spx-attribution.js)."""
+    hr, c_dates = find_cell(rows, lambda s: s == "DATES")
+    if hr is None:
+        sys.exit("SECTORS_WEIGHTS: no 'DATES' marker")
+    tick_row = rows[hr - 1]
+    cols, c_res = {}, None
+    for c in range(c_dates + 1, len(tick_row)):
+        h = tick_row[c]
+        if not isinstance(h, str) or not h.strip():
+            continue
+        key = re.sub(r"\s+Index$", "", h.strip(), flags=re.I).upper()
+        if key in SECTOR_INDEX:
+            cols[SECTOR_INDEX[key]] = c
+        elif key == "RESIDUAL":
+            c_res = c
+    missing = [m for m in SECTOR_INDEX.values() if m not in cols]
+    if missing:
+        sys.exit(f"SECTORS_WEIGHTS: missing sectors {missing}")
+    by_date = {}
+    for row in rows[hr + 1:]:
+        d = iso(row[c_dates]) if c_dates < len(row) else None
+        if d:
+            by_date[d] = row
+    if sorted(by_date) != level_dates:
+        sys.exit("SECTORS_WEIGHTS dates differ from SECTORS dates")
+    series = {k: [num(by_date[d][c]) for d in level_dates] for k, c in cols.items()}
+    resid = [num(by_date[d][c_res]) if c_res is not None else None for d in level_dates]
+    return {"dates": level_dates, "series": series, "residual": resid}
+
+
 def annual(dates, vals):
     """Calendar-year price returns from month-end levels; the last year is YTD."""
     by_year_end = {}
@@ -233,6 +267,9 @@ def main():
     members, pdates, formula = read_members(sheet(wb, "SPX_MEMBERS"))
     lists, idmap = read_membership(sheet(wb, "MEMBERSHIP"))
     dates, series = read_levels(sheet(wb, "SECTORS"))
+    weights = read_weights(sheet(wb, "SECTORS_WEIGHTS"), dates) if "SECTORS_WEIGHTS" in wb.sheetnames else None
+    if weights is None:
+        warn("no SECTORS_WEIGHTS sheet: the sector attribution sections will not show")
 
     if "today(" in formula:
         warn(f"member prices end at today(): {formula}")
@@ -312,6 +349,7 @@ def main():
         "priceFormula": formula,
         "years": years[1:],
         "levels": {"dates": dates, "series": series},
+        "weights": weights,
         "annual": ann,
         "members": members,
     }

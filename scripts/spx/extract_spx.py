@@ -173,26 +173,47 @@ def read_membership(rows):
     return lists, idmap
 
 
-def read_levels(rows):
-    hr, c_dates = find_cell(rows, lambda s: s == "DATES")
-    if hr is None:
-        sys.exit("SECTORS: no 'DATES' marker")
+# SPDR Select Sector ETFs -> GICS sector; SPY is the ETF-side benchmark
+SECTOR_ETF = {
+    "XLE": "Energy",
+    "XLB": "Materials",
+    "XLI": "Industrials",
+    "XLY": "Consumer Discretionary",
+    "XLP": "Consumer Staples",
+    "XLV": "Health Care",
+    "XLF": "Financials",
+    "XLK": "Information Technology",
+    "XLC": "Communication Services",
+    "XLU": "Utilities",
+    "XLRE": "Real Estate",
+}
+
+
+def read_block(rows, hr, c_dates):
+    """One DATES block of the SECTORS sheet: tickers in the row above, month-end prices below.
+    Returns (kind, bench, dates, series) with kind 'index' (SPX + S5) or 'etf' (SPY + XL*)."""
     tick_row = rows[hr - 1]
-    cols = {}
+    cols, kinds = {}, set()
     for c in range(c_dates + 1, len(tick_row)):
         h = tick_row[c]
         if not isinstance(h, str) or not h.strip():
             break
-        key = re.sub(r"\s+Index$", "", h.strip(), flags=re.I).upper()
-        if key == "SPX":
-            cols["SPX"] = c
+        key = re.sub(r"\s+(US\s+Equity|Index)$", "", h.strip(), flags=re.I).upper()
+        if key in ("SPX", "SPY"):
+            cols[key] = c; kinds.add("index" if key == "SPX" else "etf")
         elif key in SECTOR_INDEX:
-            cols[SECTOR_INDEX[key]] = c
+            cols[SECTOR_INDEX[key]] = c; kinds.add("index")
+        elif key in SECTOR_ETF:
+            cols[SECTOR_ETF[key]] = c; kinds.add("etf")
         else:
             warn(f"SECTORS: unknown series {h!r} ignored")
-    missing = [m for m in ["SPX"] + list(SECTOR_INDEX.values()) if m not in cols]
+    if len(kinds) != 1:
+        sys.exit(f"SECTORS: a DATES block mixes or lacks index/ETF tickers ({kinds})")
+    kind = kinds.pop()
+    bench = "SPX" if kind == "index" else "SPY"
+    missing = [m for m in [bench] + list(SECTOR_INDEX.values()) if m not in cols]
     if missing:
-        sys.exit(f"SECTORS: missing series {missing}")
+        sys.exit(f"SECTORS ({kind}): missing series {missing}")
     dates, series = [], {k: [] for k in cols}
     for row in rows[hr + 1:]:
         d = iso(row[c_dates]) if c_dates < len(row) else None
@@ -200,14 +221,30 @@ def read_levels(rows):
             continue
         dates.append(d)
         for k, c in cols.items():
-            series[k].append(num(row[c]))
+            series[k].append(num(row[c] if c < len(row) else None))
     for k, vals in series.items():
-        gaps = [dates[i] for i, v in enumerate(vals) if v is None]
+        first = next((i for i, v in enumerate(vals) if v is not None), len(vals))
+        gaps = [dates[i] for i in range(first, len(vals)) if vals[i] is None]
         if gaps:
-            warn(f"{k}: {len(gaps)} missing level(s), first {gaps[0]}")
+            warn(f"SECTORS ({kind}) {k}: {len(gaps)} missing level(s), first {gaps[0]}")
+        if first:
+            print(f"note: SECTORS ({kind}) {k} starts {dates[first]} (no price before; that is n/a, not 0)")
     if dates != sorted(dates):
-        sys.exit("SECTORS: dates are not ascending")
-    return dates, series
+        sys.exit(f"SECTORS ({kind}): dates are not ascending")
+    return kind, bench, dates, series
+
+
+def read_levels(rows):
+    """Both tables of the SECTORS sheet: S&P 500 sector indices and SPDR sector ETFs."""
+    blocks = {}
+    for r, row in enumerate(rows[:8]):
+        for c, v in enumerate(row):
+            if isinstance(v, str) and v.strip() == "DATES":
+                kind, bench, dates, series = read_block(rows, r, c)
+                blocks[kind] = {"bench": bench, "dates": dates, "series": series}
+    if "index" not in blocks:
+        sys.exit("SECTORS: no S&P 500 sector index table (SPX + S5xxxx)")
+    return blocks
 
 
 def annual(dates, vals):
@@ -232,7 +269,11 @@ def main():
     wb = openpyxl.load_workbook(a.xlsx, read_only=True, data_only=True)
     members, pdates, formula = read_members(sheet(wb, "SPX_MEMBERS"))
     lists, idmap = read_membership(sheet(wb, "MEMBERSHIP"))
-    dates, series = read_levels(sheet(wb, "SECTORS"))
+    blocks = read_levels(sheet(wb, "SECTORS"))
+    dates, series = blocks["index"]["dates"], blocks["index"]["series"]
+    etf = blocks.get("etf")
+    if etf is None:
+        warn("SECTORS has no SPDR ETF table: the page shows the sector indices only")
 
     if "today(" in formula:
         warn(f"member prices end at today(): {formula}")
@@ -284,6 +325,7 @@ def main():
         warn(f"MEMBERSHIP has no list for year-end(s) {missing_years}")
 
     ann = {k: annual(dates, v) for k, v in series.items()}
+    etf_ann = {k: annual(etf["dates"], v) for k, v in etf["series"].items()} if etf else None
     # Cross-check: SPX YTD from the levels vs the sector indices' own YTD.
     print(f"workbook   {os.path.basename(a.xlsx)}")
     print(f"members    {len(members)}  (GICS resolved: {sum(1 for m in members if m['s'])})")
@@ -313,6 +355,8 @@ def main():
         "years": years[1:],
         "levels": {"dates": dates, "series": series},
         "annual": ann,
+        # SPDR sector ETFs (same shape; benchmark SPY) for the Index / ETF toggle
+        "etf": {"levels": {"dates": etf["dates"], "series": etf["series"]}, "annual": etf_ann} if etf else None,
         "members": members,
     }
     with open(a.out, "w", encoding="utf-8", newline="\n") as f:

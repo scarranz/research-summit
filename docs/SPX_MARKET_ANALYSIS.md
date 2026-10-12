@@ -17,6 +17,7 @@ or the page. It records what the analyst (Dani) and Claude agreed in Oct 2026.
 | `SPX_MEMBERS` | Current SPX members: `id().value`, `name().value`, `classification_name(gics,1)` / `(gics,2)`, and under a `DATES` header one price per year-end + the cut-off: `px_last(dates=range(2016-12-31,<cut-off>,frq=y),ca_adj=SPLITS,currency=USD,fill=prev)` on the **`US Equity`** (composite) ticker. `#N/A` = the security did not trade yet. |
 | `MEMBERSHIP` | SPX members at each year-end (`members('SPX Index', dates=…)`) as **`composite_id_bb_global()`**, one column per year, plus a `TICKER` (`id().value`) · `BBG_ID` (composite) map of today's members. |
 | `SECTORS` | `DATES` · `SPX Index` · the 11 S&P 500 GICS sector indices (`S5INFT`, `S5TELS`, `S5FINL`, `S5COND`, `S5INDU`, `S5HLTH`, `S5UTIL`, `S5CONS`, `S5RLST`, `S5ENRS`, `S5MATR`), `px_last(..., frq=cm)` month-ends; last row = cut-off. |
+| `SECTORS` (second table) | A second `DATES` block on the same sheet: `SPY US Equity` + the 11 SPDR sector ETFs (`XLK`, `XLC`, `XLF`, `XLY`, `XLI`, `XLV`, `XLU`, `XLP`, `XLRE`, `XLE`, `XLB` `US Equity`), `px_last(..., frq=cm, ca_adj=SPLITS)`. XLC starts Jun 2018 (blank before = n/a). |
 
 Lessons that cost a day:
 - **Composite, never venue.** `UN`/`UW` tickers and the venue-level `id_bb_global` break when a stock
@@ -34,8 +35,11 @@ Lessons that cost a day:
 ## Rules
 
 - **Every return is price return**, computed by the extractor from prices/levels.
-- **Sectors = S&P 500 GICS sector indices**, not SPDR ETFs (the ETFs cap single-name weights:
-  XLK 2024 +21.8% vs S5INFT +35.7%).
+- **Sectors: toggle ETF / index** (top of the panel; default ETF). It drives Sector Alpha, Sector
+  Performance and the Sector Summary return column; stocks are always measured against the SPX.
+  ETF mode = XL* funds vs **SPY** (fund vs fund); index mode = S5 indices vs **SPX**. They differ where
+  the ETFs cap their largest holdings (XLK, XLC, XLY): e.g. 2026 YTD to Oct 12, XLC −5.3% vs S5TELS
+  +5.6% (GOOGL/META ~+12% dominate the index, XLC caps them). Not a calculation error.
 - **Full-year rule.** A stock's return for year Y counts in the Positive / Beat filters, the sector
   counts, the scatter and Rotation Winners only if it was in the SPX at the end of Y−1 **and** at the
   end of Y (current year: end of Y−1 and today), matched on the composite ID. The return is still

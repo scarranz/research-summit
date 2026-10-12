@@ -1,7 +1,7 @@
 // market-analysis.js — extracted from summit-research-portal.html
 import { ALL_STOCKS, SP500_TODAY26, SP500_B25, SP500_B24, SP500_BMK, SCOLS, COMPANY_NAMES } from './portal-data.js';
 import { loadNdxAttribution } from './ndx-attribution.js';
-import { initSectorPerfChart } from './spx-sector-chart.js';
+import { initSectorPerfChart, setSectorPerfSource } from './spx-sector-chart.js';
 
 // ─── Data source ───────────────────────────────────────────────
 // js/spx-data.js is generated from the analyst's Bloomberg workbook by
@@ -29,6 +29,53 @@ function asOfTxt(iso){
   return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()]+' '+d.getUTCDate()+', '+d.getUTCFullYear();
 }
 
+// ─── Sector source: S&P 500 sector indices or SPDR sector ETFs ──
+// Only the SECTOR views follow this toggle (Sector Alpha, Sector Performance,
+// the Sector Summary return column). Stocks are always compared with the SPX.
+// Index mode: S5 indices vs SPX. ETF mode: XL* funds vs SPY (fund vs fund).
+var SEC_SRC = 'etf';
+function src(){
+  if (SPX && SEC_SRC === 'etf' && SPX.etf)
+    return { kind:'etf', levels:SPX.etf.levels, annual:SPX.etf.annual, bench:'SPY', benchLabel:'SPY', label:'SPDR sector ETFs' };
+  return { kind:'index', levels:SPX?SPX.levels:null, annual:SPX?SPX.annual:null, bench:'SPX', benchLabel:'S&P 500', label:'S&P 500 GICS sector indices' };
+}
+// Benchmark return for a Sector Alpha year ('2024' … or 'ytd') in the current source
+function secBench(key){
+  if (!SPX) return key==='ytd' ? BMK.ytd : BMK[key];
+  var a = src().annual[src().bench] || {};
+  return a[key==='ytd' ? String(SPX.year) : key];
+}
+function buildSectorRets(){
+  var a = src().annual;
+  SECTOR_RETS = {};
+  Object.keys(a).forEach(function(sec){
+    if (sec === 'SPX' || sec === 'SPY') return;
+    var o = {}; Object.keys(a[sec]).forEach(function(y){ o['r' + y.slice(2)] = a[sec][y]; });
+    SECTOR_RETS[sec] = o;
+  });
+}
+function setSecSrc(k){
+  if (!SPX || (k === 'etf' && !SPX.etf)) return;
+  SEC_SRC = k;
+  buildSectorRets();
+  renderSecSrcToggle();
+  renderAsOf();
+  renderSectorBars();
+  renderTbl();
+  setSectorPerfSource(src().levels, src().bench, src().benchLabel, src().label);
+}
+window.setSecSrc = setSecSrc;
+function renderSecSrcToggle(){
+  var el = document.getElementById('spx-src-toggle'); if (!el) return;
+  if (!SPX || !SPX.etf){ el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML = '<span class="sb-secrow-lbl" style="margin-right:8px">Sectors measured with</span>' +
+    '<span class="sb-toggle" style="display:inline-flex">' +
+    '<button class="sb-tbtn' + (SEC_SRC==='etf'?' active':'') + '" onclick="setSecSrc(\'etf\')">SPDR sector ETFs (XLK, XLF…) vs SPY</button>' +
+    '<button class="sb-tbtn' + (SEC_SRC==='index'?' active':'') + '" onclick="setSecSrc(\'index\')">S&amp;P 500 sector indices vs S&amp;P 500</button></span>' +
+    '<span style="font-size:11px;color:var(--mu);margin-left:10px">ETFs cap their largest holdings, so XLK, XLC and XLY can differ a lot from their sector index</span>';
+}
+
 function setupData(D) {
   SPX = D && D.members && D.members.length ? D : null;
   var k;
@@ -49,13 +96,13 @@ function setupData(D) {
 // 'YYYY-MM'..'YYYY-MM' runs from the level at the end of the month BEFORE
 // `from` to the level at the end of `to`, so one month = that month's return.
 function levelIdx(ym){
-  var D=SPX.levels.dates;
+  var D=src().levels.dates;
   for(var i=0;i<D.length;i++){ if(D[i].slice(0,7)===ym) return i; }
   return -1;
 }
 function windowRet(key, from, to){
-  if(!SPX||!SPX.levels.series[key])return null;
-  var C=SPX.levels.series[key], i0=levelIdx(from)-1, i1=levelIdx(to);
+  if(!SPX||!src().levels.series[key])return null;
+  var C=src().levels.series[key], i0=levelIdx(from)-1, i1=levelIdx(to);
   if(i0<0||i1<0||i1<=i0||C[i0]==null||C[i1]==null)return null;
   return (C[i1]/C[i0]-1)*100;
 }
@@ -73,10 +120,10 @@ function getSectorYtd(sector) {
 function renderAsOf() {
   if (!SPX) return;
   function set(id, text) { var el = document.getElementById(id); if (el) el.textContent = text; }
-  set('ma-sb-asof', 'S&P 500 GICS sector indices · price return through ' + asOfTxt(SPX.asOf) + ' · mix any years, months and a date range in the same view');
+  set('ma-sb-asof', src().label + ' · price return through ' + asOfTxt(SPX.asOf) + ' · relative = vs ' + src().benchLabel + ' · mix any years, months and a date range in the same view');
   set('ma-exp-asof', SPX.year + ' YTD through ' + asOfTxt(SPX.asOf) + ' · price return · GICS sector & industry group');
   set('ma-exp-ind', 'Industry Group');
-  set('ma-sp-asof', 'S&P 500 GICS sector indices · price return through ' + asOfTxt(SPX.asOf));
+  set('ma-sp-asof', src().label + ' · price return through ' + asOfTxt(SPX.asOf));
 }
 
 let scatChart = null, tblData = [], tblData2 = [], sortCol = 5, sortAsc = false, IMAP = {}, SB_MODE = 'abs', SECTOR_RETS = {};
@@ -380,7 +427,7 @@ function renderTbl(){
   html+='<td style="text-align:right;font-weight:700;font-size:14px;color:var(--navy)">'+totMatch+'</td>';
   html+='<td style="text-align:right;font-weight:700;color:var(--navy)">'+totPct.toFixed(0)+'%</td>';
   html+='<td style="text-align:right;color:var(--mu);font-weight:600">'+totSec+'</td>';
-  html+='<td style="text-align:right">'+fmtRet(BMK.ytd)+'</td>';
+  html+='<td style="text-align:right" title="'+(SPX?src().benchLabel:'S&amp;P 500')+' YTD">'+fmtRet(SPX?secBench('ytd'):BMK.ytd)+'</td>';
   html+='</tr>';
   body.innerHTML=html;
 }
@@ -640,14 +687,14 @@ function sbPeriodVal(sector,p){
   if(p.type==='year'){
     var rr = p.key==='ytd' ? getSectorYtd(sector) : SECTOR_RETS[sector]['r'+p.key.slice(2)];
     if(rr==null)return null;
-    var bench = p.key==='ytd' ? BMK.ytd : BMK[p.key];
+    var bench = secBench(p.key);
     if(SB_MODE==='rel'&&bench==null)return null;
     return SB_MODE==='abs'?rr:(rr-bench);
   }
   var from=p.type==='range'?SB_RANGE.from:p.key, to=p.type==='range'?SB_RANGE.to:p.key;
   var w=windowRet(sector,from,to);
   if(w==null||SB_MODE==='abs')return w;
-  var wb=windowRet('SPX',from,to);
+  var wb=windowRet(src().bench,from,to);
   return wb==null?null:w-wb;
 }
 
@@ -824,13 +871,7 @@ function initMarketAnalysis(D) {
   // Sector returns from the S&P 500 sector indices' month-end levels in
   // spx-data.js (r17..r25 = calendar years, r26 = YTD), else the legacy figures below.
   if (SPX) {
-    SECTOR_RETS = {};
-    Object.keys(SPX.annual).forEach(function(sec) {
-      if (sec === 'SPX') return;
-      var a = SPX.annual[sec], o = {};
-      Object.keys(a).forEach(function(y) { o['r' + y.slice(2)] = a[y]; });
-      SECTOR_RETS[sec] = o;
-    });
+    buildSectorRets();
     var ms = dataMonths();
     SB_RANGE = {on:false, from:SPX.year + '-01', to:ms[ms.length-1]};
   } else {
@@ -859,11 +900,13 @@ function initMarketAnalysis(D) {
   // rather than seeing every year at once.
 
   renderAsOf();
+  renderSecSrcToggle();
   renderSBSecChips();
   renderSSExclChips();
   renderSBMonthChips();
   renderSectorBars();
   initSectorPerfChart(document.getElementById('sp-chart'), SPX, secColor);
+  if (SPX) setSectorPerfSource(src().levels, src().bench, src().benchLabel, src().label);
   renderTbl();
   renderTbl2();
   renderRotTbl();

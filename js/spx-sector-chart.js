@@ -89,6 +89,7 @@ var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','De
 var SPX_COLOR = 'rgba(30,39,51,0.92)';   // navy — the index, as "actual" everywhere in the portal
 
 var D = null, colorOf = null, root = null;
+var BENCH = 'SPX', BENCH_LABEL = 'S&P 500', SRC_LABEL = 'S&P 500 GICS sector indices';
 var st = { from: null, to: null, mode: 'abs', hidden: {}, yr: null, tbl: false, chart: null };
 
 function ymLabel(ym){ return MON[+ym.slice(5, 7) - 1] + " '" + ym.slice(2, 4); }
@@ -98,7 +99,7 @@ function addMonths(ym, n){
   return y + '-' + (m < 9 ? '0' : '') + (m + 1);
 }
 function months(){ return D.levels.dates.map(function(d){ return d.slice(0, 7); }); }
-function sectors(){ return Object.keys(D.levels.series).filter(function(k){ return k !== 'SPX'; }); }
+function sectors(){ return Object.keys(D.levels.series).filter(function(k){ return k !== 'SPX' && k !== 'SPY'; }); }
 function vis(k){ return !st.hidden[k]; }                      // rule 2 — the ONE predicate
 function isRel(){ return st.mode === 'rel'; }
 
@@ -109,7 +110,7 @@ function windowIdx(){
   return [i0, i1 < 0 ? ms.length - 1 : i1];
 }
 function cumSeries(k){
-  var w = windowIdx(), L = D.levels.series[k], S = D.levels.series.SPX, out = [];
+  var w = windowIdx(), L = D.levels.series[k], S = D.levels.series[BENCH], out = [];
   var b = L[w[0]], bs = S[w[0]];
   for (var i = w[0]; i <= w[1]; i++){
     if (b == null || L[i] == null){ out.push(null); continue; }
@@ -133,7 +134,7 @@ function tone(v){ return v == null || Math.abs(v) < 0.05 ? 'var(--mu)' : v > 0 ?
 function seriesList(){
   var list = sectors().map(function(k){ var c = cumSeries(k); return { k: k, label: k, color: colorOf(k), data: c, end: lastVal(c) }; });
   list.sort(function(a, b){ return (b.end == null ? -1e9 : b.end) - (a.end == null ? -1e9 : a.end); });
-  if (!isRel()){ var s = cumSeries('SPX'); list.unshift({ k: 'SPX', label: 'S&P 500', color: SPX_COLOR, data: s, end: lastVal(s), spx: true }); }
+  if (!isRel()){ var s = cumSeries(BENCH); list.unshift({ k: BENCH, label: BENCH_LABEL, color: SPX_COLOR, data: s, end: lastVal(s), spx: true }); }
   return list;
 }
 
@@ -172,7 +173,7 @@ function controlsHtml(){
   var presets = [['ytd', 'YTD'], [1, '1Y'], [3, '3Y'], [5, '5Y'], ['all', 'All']];
   return '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">' +
     '<span class="rs-views"><button type="button" class="rs-view' + (isRel() ? '' : ' active') + '" data-spm="abs">Absolute</button>' +
-    '<button type="button" class="rs-view' + (isRel() ? ' active' : '') + '" data-spm="rel">Relative to S&amp;P 500</button></span>' +
+    '<button type="button" class="rs-view' + (isRel() ? ' active' : '') + '" data-spm="rel">Relative to ' + esc(BENCH_LABEL) + '</button></span>' +
     '<span class="rs-quick"><span class="rs-quick-l">Range</span>' +
     presets.map(function(p){ return '<button type="button" class="rs-preset" data-spp="' + p[0] + '"' + (presetActive(p[0]) ? ' style="color:#fff;background:var(--navy);border-color:var(--navy)"' : '') + '>' + p[1] + '</button>'; }).join('') +
     ymPicker('from', st.from, first, last, inp) +
@@ -191,14 +192,14 @@ function legendHtml(list){
 function tableHead(list, labels){
   var open = st.tbl === true, n = list.filter(function(s){ return vis(s.k); }).length;
   return '<span class="rs-collap-ic">' + (open ? '▾' : '▸') + '</span>Month-end detail' +
-    '<span class="rs-collap-sub">' + (open ? 'hide' : 'show') + ' · cumulative ' + (isRel() ? 'pp vs S&amp;P 500' : 'price return %') + ', ' +
+    '<span class="rs-collap-sub">' + (open ? 'hide' : 'show') + ' · cumulative ' + (isRel() ? 'pp vs ' + esc(BENCH_LABEL) : 'price return %') + ', ' +
     n + ' series, ' + (labels.length - 1) + ' months</span>';
 }
 
 function tableHtml(list, labels){
   var rows = list.filter(function(s){ return vis(s.k); });
-  var h = '<div class="rs-ft-cap">Cumulative ' + (isRel() ? 'return minus the S&amp;P 500, percentage points' : 'price return, %') +
-    ' from the ' + ymLabel(labels[0]) + ' month-end · source: S&amp;P 500 GICS sector indices</div>' +
+  var h = '<div class="rs-ft-cap">Cumulative ' + (isRel() ? 'return minus ' + esc(BENCH_LABEL) + ', percentage points' : 'price return, %') +
+    ' from the ' + ymLabel(labels[0]) + ' month-end · source: ' + esc(SRC_LABEL) + '</div>' +
     '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">Series</th>';
   labels.slice(1).forEach(function(l){ h += '<th>' + esc(ymLabel(l)) + '</th>'; });
   h += '<th class="rs-ft-s">Window</th></tr></thead><tbody>';
@@ -272,6 +273,16 @@ function wire(){
     if (months().indexOf(addMonths(st.from, -1)) < 0) st.from = months()[1];
     st.yr = null; render();
   });
+}
+
+// Switch between the S&P 500 sector indices (bench SPX) and the SPDR ETFs (bench SPY).
+// Months, window and hidden series are kept; the value-axis zoom is dropped.
+export function setSectorPerfSource(levels, bench, benchLabel, srcLabel){
+  if (!D || !levels) return;
+  D = { levels: levels, year: D.year };
+  BENCH = bench; BENCH_LABEL = benchLabel; SRC_LABEL = srcLabel || SRC_LABEL;
+  st.yr = null;
+  render();
 }
 
 // host: the section's container. data: SPX_DATA (or null → the section stays empty).

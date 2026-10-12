@@ -23,7 +23,8 @@ Rules:
     Positive / Beat filters, the sector counts, the scatter) only if it was in the SPX at
     the end of Y-1 AND at the end of Y (the current year: end of Y-1, it is a member today).
     Matched on the COMPOSITE Bloomberg ID, never ticker (an old ticker can belong to another company).
-    The return is still stored; the page shows it as not eligible.
+    The return is still stored; the page shows it as not eligible. m<yy> records the
+    membership that year: 2 = whole year, 1 = part of it, 0 = not in the index.
   - GICS names are checked against gics.py: a truncated or unknown name is reported.
   - Sector levels come from the S&P 500 GICS sector indices, mapped by TICKER below.
 
@@ -256,6 +257,8 @@ def main():
             in_start = bid in lists.get(str(int(y) - 1), set())
             in_end = True if int(y) == year else bid in lists.get(y, set())
             m["e" + y[2:]] = 1 if (r is not None and bid and in_start and in_end) else 0
+            # membership that year: 2 = whole year, 1 = part of it (joined or left), 0 = not in the index
+            m["m" + y[2:]] = 2 if (bid and in_start and in_end) else 1 if (bid and (in_start or in_end)) else 0
         if bid and str(year - 1) in lists and bid not in lists[str(year - 1)]:
             not_now.append(m["t"])
         m["c3"] = None

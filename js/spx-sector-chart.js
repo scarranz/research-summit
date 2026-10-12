@@ -156,6 +156,16 @@ function presetActive(p){
   return st.from === addMonths(last, -(12 * p) + 1);
 }
 
+// Month + year as two short dropdowns instead of the native month calendar.
+function ymPicker(which, val, first, last, style){
+  var y0 = +first.slice(0, 4), y1 = +last.slice(0, 4), h = '<span style="display:inline-flex;gap:4px">';
+  h += '<select data-spf="' + which + '" data-part="m" style="' + style + '">' + MON.map(function(n, i){
+    var mm = (i < 9 ? '0' : '') + (i + 1); return '<option value="' + mm + '"' + (val.slice(5, 7) === mm ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select>';
+  h += '<select data-spf="' + which + '" data-part="y" style="' + style + '">';
+  for (var y = y1; y >= y0; y--) h += '<option' + (String(y) === val.slice(0, 4) ? ' selected' : '') + '>' + y + '</option>';
+  return h + '</select></span>';
+}
+
 function controlsHtml(){
   var ms = months(), first = ms[1], last = ms[ms.length - 1];
   var inp = 'padding:3px 6px;border:1px solid var(--bdr);border-radius:6px;font:inherit;font-size:11px;color:var(--text);background:var(--w)';
@@ -165,9 +175,9 @@ function controlsHtml(){
     '<button type="button" class="rs-view' + (isRel() ? ' active' : '') + '" data-spm="rel">Relative to S&amp;P 500</button></span>' +
     '<span class="rs-quick"><span class="rs-quick-l">Range</span>' +
     presets.map(function(p){ return '<button type="button" class="rs-preset" data-spp="' + p[0] + '"' + (presetActive(p[0]) ? ' style="color:#fff;background:var(--navy);border-color:var(--navy)"' : '') + '>' + p[1] + '</button>'; }).join('') +
-    '<input type="month" data-spf="from" min="' + first + '" max="' + last + '" value="' + st.from + '" style="' + inp + '">' +
+    ymPicker('from', st.from, first, last, inp) +
     '<span style="font-size:11px;color:var(--mu)">to</span>' +
-    '<input type="month" data-spf="to" min="' + first + '" max="' + last + '" value="' + st.to + '" style="' + inp + '"></span></div>';
+    ymPicker('to', st.to, first, last, inp) + '</span></div>';
 }
 
 function legendHtml(list){
@@ -255,7 +265,9 @@ function wire(){
   });
   root.addEventListener('change', function(e){
     var t = e.target; if (!t.dataset || !t.dataset.spf || !t.value) return;
-    st[t.dataset.spf] = t.value;
+    var cur = st[t.dataset.spf], ms = months(), first = ms[1], last = ms[ms.length - 1];
+    var v = t.dataset.part === 'y' ? t.value + cur.slice(4) : cur.slice(0, 5) + t.value;
+    st[t.dataset.spf] = v < first ? first : v > last ? last : v;
     if (st.from > st.to){ var x = st.from; st.from = st.to; st.to = x; }
     if (months().indexOf(addMonths(st.from, -1)) < 0) st.from = months()[1];
     st.yr = null; render();

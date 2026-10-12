@@ -79,7 +79,7 @@ function renderAsOf() {
   set('ma-sp-asof', 'S&P 500 GICS sector indices · price return through ' + asOfTxt(SPX.asOf));
 }
 
-let scatChart = null, tblData = [], tblData2 = [], sortCol = 5, sortAsc = false, sortCol2 = 7, sortAsc2 = false, IMAP = {}, SB_MODE = 'abs', SECTOR_RETS = {};
+let scatChart = null, tblData = [], tblData2 = [], sortCol = 5, sortAsc = false, IMAP = {}, SB_MODE = 'abs', SECTOR_RETS = {};
 
 // Sector Alpha's current-year slot is always YTD-through-today now (no more
 // "last meeting" vs "today" split) — 'ytd' reads SECTOR_RETS[s].r26, the
@@ -185,6 +185,13 @@ function fmt(v){return v==null?'&mdash;':(v>0?'+':'')+v.toFixed(1)+'%';}
 // shown, greyed. Without spx-data.js there is no membership: everything counts.
 function elig(s,yy){ return !SPX || s['e'+yy]===1; }
 var NOT_FULL_YEAR='Not in the S&P 500 for the whole year: shown, but left out of filters and counts';
+var NOT_IN_INDEX='Not in the S&P 500 that year: shown, but left out of filters and counts';
+// m<yy> from the extractor: 2 = whole year, 1 = part of the year, 0 = not in the index
+function memberNote(s,yy){ return s['m'+yy]===0?NOT_IN_INDEX:NOT_FULL_YEAR; }
+// 3yr cumulative (2024 x 2025 x YTD) follows the same rule: all three years in full
+function c3ok(s){ return elig(s,'24')&&elig(s,'25')&&elig(s,'26'); }
+var C3_NOTE='Not in the S&P 500 for all of the last three years: shown, but not compared with the index';
+function memberShort(s,yy){ return s['m'+yy]===0?'not in the index':'not in the index all year'; }
 var ACTIVE_YRS=[];
 
 function cls(r,b){return r==null?'neu':r>b?'pos':r>0?'neu':'neg';}
@@ -289,7 +296,31 @@ function renderTbl(){
     html+='<td style="text-align:right;color:var(--mu)">'+r.tot+'</td>';
     html+='<td style="text-align:right">'+fmtRet(secRet)+'</td>';
     html+='</tr>';
-    if(window.SEC_EXPANDED&&window.SEC_EXPANDED[r.sec]){
+    if(window.SEC_EXPANDED&&window.SEC_EXPANDED[r.sec]&&SPX){
+      // Sector → industry group → companies. A sector with a single industry
+      // group (Energy, Materials, Utilities) opens straight onto its companies.
+      var igMap={};
+      r.all.forEach(function(s){ var g=s.i||'Unclassified'; if(!igMap[g])igMap[g]={all:[],matched:[]}; igMap[g].all.push(s); if(matchSet[s.t])igMap[g].matched.push(s); });
+      var igs=Object.keys(igMap);
+      if(igs.length<2){
+        html+=companiesBlock(r.matched,32);
+      } else {
+        igs.map(function(g){ var d=igMap[g]; return {g:g,m:d.matched.length,tot:d.all.length,pct:d.all.length?d.matched.length/d.all.length*100:0,matched:d.matched}; })
+          .sort(function(a,b){ return b.m-a.m || b.tot-a.tot; })
+          .forEach(function(ir){
+            var key=r.sec+'|'+ir.g, open=window.IG_EXPANDED&&window.IG_EXPANDED[key];
+            var ipctClr=ir.pct>=70?'var(--pos)':ir.pct>=40?'var(--text)':'var(--mu)';
+            html+='<tr class="ig-row" onclick="toggleIgExp(\''+key.replace(/\'/g,"\\'")+'\')" style="cursor:pointer;background:#FAFCFE">';
+            html+='<td style="padding-left:32px"><span style="display:inline-block;width:13px;color:var(--mu);font-size:9px">'+(open?'&#x25BC;':'&#x25B6;')+'</span><span style="color:var(--text);font-weight:500;margin-left:4px">'+ir.g+'</span></td>';
+            html+='<td style="text-align:right;font-weight:600;color:var(--navy)">'+ir.m+'</td>';
+            html+='<td style="text-align:right;font-weight:500;color:'+ipctClr+'">'+ir.pct.toFixed(0)+'%</td>';
+            html+='<td style="text-align:right;color:var(--mu)">'+ir.tot+'</td>';
+            html+='<td style="text-align:right"><span style="color:var(--mu)" title="No S&amp;P 500 industry-group index in this update">&mdash;</span></td>';
+            html+='</tr>';
+            if(open) html+=companiesBlock(ir.matched,58);
+          });
+      }
+    } else if(window.SEC_EXPANDED&&window.SEC_EXPANDED[r.sec]){
       var isTech=(r.sec===IT);
       if(isTech){
         // Tech: keep the 3-subsector breakdown
@@ -354,6 +385,34 @@ function renderTbl(){
   body.innerHTML=html;
 }
 
+// Matched companies of a sector or industry group, under its row. Returns of
+// years the stock was not in the index the whole year are greyed, as in the Explorer.
+function companiesBlock(list, indent){
+  var matched=list.slice().sort(function(a,b){return (b.r26!=null?b.r26:-999)-(a.r26!=null?a.r26:-999);});
+  var th='padding:4px 8px;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--mu);font-weight:500';
+  var h='<tr><td colspan="5" style="padding:0;background:#FAFCFE"><div style="padding:8px 14px 12px '+indent+'px"><div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--mu);font-weight:600;margin-bottom:6px">Matched Companies ('+matched.length+')</div>';
+  if(!matched.length) return h+'<div style="font-size:11px;color:var(--mu);font-style:italic;padding:4px 0">No companies match the current filters.</div></div></td></tr>';
+  h+='<table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="border-bottom:1px solid var(--bdr)"><th style="text-align:left;'+th+'">Ticker</th><th style="text-align:left;'+th+'">Company</th><th style="text-align:right;'+th+'">2024</th><th style="text-align:right;'+th+'">2025</th><th style="text-align:right;'+th+'">'+SPX.year+' YTD</th></tr></thead>';
+  function rc(co,yy){
+    var v=co['r'+yy];
+    if(v==null)return '<td style="padding:5px 8px;text-align:right;color:var(--mu)">&mdash;</td>';
+    if(!elig(co,yy))return '<td style="padding:5px 8px;text-align:right;color:var(--mu);font-style:italic;opacity:.6" title="'+memberNote(co,yy)+'">'+(v>=0?'+':'')+v.toFixed(1)+'%</td>';
+    return '<td style="padding:5px 8px;text-align:right"><span style="color:'+(v>=0?'var(--pos)':'var(--neg)')+';font-weight:600">'+(v>=0?'+':'')+v.toFixed(1)+'%</span></td>';
+  }
+  matched.forEach(function(co){
+    h+='<tr style="border-bottom:.5px solid #EEF2F7"><td style="padding:5px 8px;font-weight:600;color:var(--navy);font-family:Inter,monospace;font-size:11px">'+co.t+'</td>';
+    h+='<td style="padding:5px 8px;color:var(--text)">'+co.n+'</td>'+rc(co,'24')+rc(co,'25')+rc(co,'26')+'</tr>';
+  });
+  return h+'</table></div></td></tr>';
+}
+
+function toggleIgExp(key){
+  if(!window.IG_EXPANDED)window.IG_EXPANDED={};
+  window.IG_EXPANDED[key]=!window.IG_EXPANDED[key];
+  renderTbl();
+}
+window.toggleIgExp = toggleIgExp;
+
 function toggleSecExp(sec){
   if(!window.SEC_EXPANDED)window.SEC_EXPANDED={};
   window.SEC_EXPANDED[sec]=!window.SEC_EXPANDED[sec];
@@ -366,44 +425,62 @@ function applyFilters2(){
   var data = filterStocks(STOCKS.slice(), filters);
   if(sec) data=data.filter(function(s){return s.s===sec;});
   if(ind) data=data.filter(function(s){return s.i===ind;});
-  tblData2=data;renderTbl2();
+  tblData2=data;sortRows2();renderTbl2();
 }
 
 function clearFilters2(){
   document.querySelectorAll('#fc2-p26 input, #fc2-b26 input, #fc2-p25 input, #fc2-b25 input, #fc2-p24 input, #fc2-b24 input').forEach(function(c){c.checked=false;c.parentElement.classList.remove('active');});
   var sf=document.getElementById('sec-flt2');if(sf)sf.value='';
   fillInd('ind-flt2','');
-  tblData2=STOCKS.slice();renderTbl2();
+  tblData2=STOCKS.slice();sortRows2();renderTbl2();
 }
 
-function sortTbl2(col){
-  if(sortCol2===col){sortAsc2=!sortAsc2;}else{sortCol2=col;sortAsc2=(col<=2);}
-  document.querySelectorAll('#main-tbl2 th').forEach(function(th,i){th.classList.toggle('srt',i===col);var a=th.querySelector('.sa');if(a)a.innerHTML=i===col?(sortAsc2?'&#x25B2;':'&#x25BC;'):'&#x25BC;';});
-  tblData2=tblData2.slice().sort(function(a,b){
-    var va,vb;
-    if(col===0){va=a.t;vb=b.t;}else if(col===1){va=a.s||'';vb=b.s||'';}else if(col===2){va=a.i||'';vb=b.i||'';}
-    else if(col===3){va=a.r22!=null?a.r22:-999;vb=b.r22!=null?b.r22:-999;}
-    else if(col===4){va=a.r23!=null?a.r23:-999;vb=b.r23!=null?b.r23:-999;}
-    else if(col===5){va=a.r24!=null?a.r24:-999;vb=b.r24!=null?b.r24:-999;}
-    else if(col===6){va=a.r25!=null?a.r25:-999;vb=b.r25!=null?b.r25:-999;}
-    else if(col===7){va=a.r26!=null?a.r26:-999;vb=b.r26!=null?b.r26:-999;}
-    else{va=a.c3!=null?a.c3:-999;vb=b.c3!=null?b.c3:-999;}
-    if(typeof va==='string') return sortAsc2?va.localeCompare(vb):vb.localeCompare(va);
-    return sortAsc2?va-vb:vb-va;
-  });
+// Explorer columns. 2022 onward by default; "Show 2017–2021" adds the older
+// years (spx-data.js only — the legacy constants stop at 2022).
+var EXP_HIST=false, HIST_YRS=['17','18','19','20','21'], BASE_YRS=['22','23','24','25','26'];
+function expYears(){ return (EXP_HIST&&SPX?HIST_YRS:[]).concat(BASE_YRS); }
+function yrLabel(yy){ return yy===String(SPX?SPX.year:2026).slice(2)?'20'+yy+' YTD':'20'+yy; }
+function benchFor(yy){ return yy===String(SPX?SPX.year:2026).slice(2)?BMK.ytd:BMK['20'+yy]; }
+function expCols(){
+  return [{k:'t',l:'Ticker'},{k:'s',l:'Sector'},{k:'i',l:SPX?'Industry Group':'Industry'}]
+    .concat(expYears().map(function(yy){ return {k:'r'+yy,l:yrLabel(yy)}; }))
+    .concat([{k:'c3',l:'3yr Cumul.'}]);
+}
+function renderTbl2Head(){
+  var h=document.getElementById('tbl2-head');if(!h)return;
+  h.innerHTML='<tr>'+expCols().map(function(c){
+    var on=c.k===SORT2.k;
+    return '<th class="'+(on?'srt':'')+'" onclick="sortTbl2(\''+c.k+'\')" style="white-space:nowrap">'+c.l+'<span class="sa">'+(on&&SORT2.asc?'&#x25B2;':'&#x25BC;')+'</span></th>';
+  }).join('')+'</tr>';
+}
+var SORT2={k:'r26',asc:false};
+function sortTbl2(k){
+  if(SORT2.k===k)SORT2.asc=!SORT2.asc; else {SORT2.k=k; SORT2.asc=(k==='t'||k==='s'||k==='i');}
+  sortRows2();
   renderTbl2();
 }
+function sortRows2(){
+  var k=SORT2.k, asc=SORT2.asc, txt=(k==='t'||k==='s'||k==='i');
+  tblData2=tblData2.slice().sort(function(a,b){
+    if(txt){ var va=a[k]||'', vb=b[k]||''; return asc?va.localeCompare(vb):vb.localeCompare(va); }
+    var x=a[k]!=null?a[k]:-999, y=b[k]!=null?b[k]:-999; return asc?x-y:y-x;
+  });
+}
+function toggleExpHist(){ EXP_HIST=!EXP_HIST; renderTbl2(); }
+window.toggleExpHist = toggleExpHist;
 
 function renderTbl2(){
   var body=document.getElementById('tbl-body2'),cnt=document.getElementById('tbl-cnt2');if(!body)return;
-  if(cnt)cnt.innerHTML='<strong>'+tblData2.length+'</strong> <span>companies shown</span>'+(SPX?'<span style="margin-left:12px;font-style:italic;opacity:.7">grey italic = not in the S&amp;P 500 the whole year (left out of filters and counts)</span>':'');
+  renderTbl2Head();
+  if(cnt)cnt.innerHTML='<strong>'+tblData2.length+'</strong> <span>companies shown</span>'+
+    (SPX?'<button class="sb-secchip-all" style="margin-left:12px" onclick="toggleExpHist()">'+(EXP_HIST?'Hide 2017–2021':'Show 2017–2021')+'</button>':'')+(SPX?'<span style="margin-left:12px;font-style:italic;opacity:.7">grey italic = not in the S&amp;P 500 that year, or not for all of it (left out of filters and counts)</span>':'');
   var shown=tblData2.slice(0,250),rows='';
   for(var i=0;i<shown.length;i++){
     var s=shown[i],cc=secColor(s.s);
     // a return from a year the stock was not in the index all year: grey, no beat dot
     function yc(yy,bench){
       var r=s['r'+yy];
-      if(r!=null&&!elig(s,yy)) return '<td class="neu" style="font-style:italic;opacity:.55" title="'+NOT_FULL_YEAR+'">'+fmt(r)+'</td>';
+      if(r!=null&&!elig(s,yy)) return '<td class="neu" style="font-style:italic;opacity:.55" title="'+memberNote(s,yy)+'">'+fmt(r)+'</td>';
       return '<td class="'+cls(r,bench)+'">'+fmt(r)+(r!=null&&r>bench?'<span class="bdt"></span>':'')+'</td>';
     }
     var tipName=(s.n&&s.n!==s.t)?s.n:(s.i||s.t);
@@ -412,11 +489,11 @@ function renderTbl2(){
     rows+='<td><span class="tkr" title="'+tipName+'">'+s.t+'</span></td>';
     rows+='<td><span class="sch" style="background:'+cc+'22;color:'+cc+'">'+s.s+'</span></td>';
     rows+='<td style="font-size:11px;color:var(--mu);min-width:180px" title="'+s.i+'">'+s.i+'</td>';
-    rows+=yc('22',BMK['2022'])+yc('23',BMK['2023'])+yc('24',BMK['2024'])+yc('25',BMK['2025'])+yc('26',BMK.ytd);
-    rows+='<td class="'+cumCls+'" style="font-weight:600">'+fmt(s.c3)+'</td>';
+    rows+=expYears().map(function(yy){ return yc(yy,benchFor(yy)); }).join('');
+    rows+=(s.c3!=null&&!c3ok(s))?'<td class="neu" style="font-style:italic;opacity:.55" title="'+C3_NOTE+'">'+fmt(s.c3)+'</td>':'<td class="'+cumCls+'" style="font-weight:600">'+fmt(s.c3)+'</td>';
     rows+='</tr>';
   }
-  if(tblData2.length>250)rows+='<tr><td colspan="9" style="text-align:center;padding:11px;color:var(--mu);font-size:11px">First 250 of '+tblData2.length+'. Apply filters to narrow.</td></tr>';
+  if(tblData2.length>250)rows+='<tr><td colspan="'+expCols().length+'" style="text-align:center;padding:11px;color:var(--mu);font-size:11px">First 250 of '+tblData2.length+'. Apply filters to narrow.</td></tr>';
   body.innerHTML=rows;
 }
 
@@ -475,17 +552,27 @@ function doSearch(val){
 
 function closeSrch(){var r=document.getElementById('sr-res');if(r)r.style.display='none';}
 
+var LK_HIST=false, LK_TICKER=null;
+function toggleLkHist(){ LK_HIST=!LK_HIST; if(LK_TICKER)showDetail(LK_TICKER); }
+window.toggleLkHist = toggleLkHist;
+
 function showDetail(ticker){
   closeSrch();var inp=document.getElementById('sr-inp');if(inp)inp.value=ticker;
   var s=STOCKS.find(function(x){return x.t===ticker;});if(!s)return;
-  var cum=s.c3;var cb=cum!=null&&cum>CUM3;
+  LK_TICKER=ticker;
+  var cum=s.c3, c3in=c3ok(s);var cb=c3in&&cum!=null&&cum>CUM3;
   function bs(r,b){return r!=null&&r>b?'<span style="color:var(--pos);font-weight:600">&#x2705; Beat</span>':'<span style="color:var(--mu)">&#x274C;</span>';}
-  function cd(yr,r,bench){var yy=yr.slice(2,4),ok=elig(s,yy),c=r==null||!ok?'var(--mu)':r>0?'var(--pos)':'var(--neg)';return '<div style="background:var(--w);border:.5px solid var(--bdr);border-radius:8px;padding:10px;text-align:center"'+(ok?'':' title="'+NOT_FULL_YEAR+'"')+'><div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">'+yr+'</div><div style="font-size:16px;font-weight:600;color:'+c+(ok?'':';font-style:italic')+'">'+fmt(r)+'</div><div style="font-size:10px;margin-top:3px">'+(ok||r==null?bs(r,bench):'<span style="color:var(--mu)">not in index all year</span>')+'</div></div>';}
+  function cd(yy){
+    var r=s['r'+yy], bench=benchFor(yy), ok=elig(s,yy), c=r==null||!ok?'var(--mu)':r>0?'var(--pos)':'var(--neg)';
+    var foot=r==null?'<span style="color:var(--mu)">&nbsp;</span>':ok?bs(r,bench):'<span style="color:var(--mu)">'+memberShort(s,yy)+'</span>';
+    return '<div style="background:var(--w);border:.5px solid var(--bdr);border-radius:8px;padding:10px;text-align:center"'+(ok||r==null?'':' title="'+memberNote(s,yy)+'"')+'><div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">'+yrLabel(yy)+'</div><div style="font-size:16px;font-weight:600;color:'+c+(ok?'':';font-style:italic')+'">'+fmt(r)+'</div><div style="font-size:10px;margin-top:3px">'+foot+'</div></div>';
+  }
   var cumBg=cb?'#E6F3EC':'var(--w)',cumBrd=cb?'1px solid #B3D9C3':'.5px solid var(--bdr)';
-  var html='<div style="display:flex;align-items:center;gap:10px;margin-bottom:11px"><span style="font-family:Inter,serif;font-size:21px;font-weight:600;color:var(--navy)">'+s.t+'</span><span style="font-size:11px;color:var(--mu)">'+(s.n||s.t)+' &middot; '+s.s+'</span></div>';
+  var html='<div style="display:flex;align-items:center;gap:10px;margin-bottom:11px"><span style="font-family:Inter,serif;font-size:21px;font-weight:600;color:var(--navy)">'+s.t+'</span><span style="font-size:11px;color:var(--mu)">'+(s.n||s.t)+' &middot; '+s.s+'</span>'+
+    (SPX?'<button class="sb-secchip-all" style="margin-left:auto" onclick="toggleLkHist()">'+(LK_HIST?'Hide 2017–2021':'Show 2017–2021')+'</button>':'')+'</div>';
   html+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:9px">';
-  html+=cd('2022',s.r22,BMK['2022'])+cd('2023',s.r23,BMK['2023'])+cd('2024',s.r24,BMK['2024'])+cd('2025',s.r25,BMK['2025'])+cd('2026 YTD',s.r26,BMK.ytd);
-  html+='<div style="background:'+cumBg+';border:'+cumBrd+';border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">3yr Cumul.</div><div style="font-size:16px;font-weight:600;color:'+(cum==null?'var(--mu)':cum>0?'var(--pos)':'var(--neg)')+'">'+fmt(cum)+'</div><div style="font-size:10px;margin-top:3px;color:'+(cb?'var(--pos)':'var(--mu)')+'">'+( cum!=null?(cb?'&#x2705; Beats S&P':'vs S&P'):'N/A')+'</div></div>';
+  html+=((LK_HIST&&SPX?HIST_YRS:[]).concat(BASE_YRS)).map(cd).join('');
+  html+='<div style="background:'+cumBg+';border:'+cumBrd+';border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">3yr Cumul.</div><div style="font-size:16px;font-weight:600;color:'+(cum==null||!c3in?'var(--mu)':cum>0?'var(--pos)':'var(--neg)')+(c3in?'':';font-style:italic')+'"'+(c3in||cum==null?'':' title="'+C3_NOTE+'"')+'>'+fmt(cum)+'</div><div style="font-size:10px;margin-top:3px;color:'+(cb?'var(--pos)':'var(--mu)')+'">'+( cum==null?'N/A':!c3in?'not in the index all 3 years':cb?'&#x2705; Beats S&P':'vs S&P')+'</div></div>';
   html+='</div>';
   var det=document.getElementById('sr-det-c');if(det)det.innerHTML=html;
   var sd=document.getElementById('sr-det');if(sd)sd.style.display='block';
@@ -498,8 +585,9 @@ function renderRotTbl(){
   var html='';
   rows.forEach(function(d){var cb=d.c3!=null&&d.c3>CUM3;var cc=secColor(d.s);
     html+='<tr><td><span class="tkr" title="'+(d.n||d.t)+'">'+d.t+'</span></td><td><span class="sch" style="background:'+cc+'22;color:'+cc+'">'+d.s+'</span></td>';
-    html+='<td class="'+(d.r22!=null?(d.r22>0?'pos':'neg'):'neu')+'">'+fmt(d.r22)+'</td><td class="'+(d.r23!=null?(d.r23>0?'pos':'neg'):'neu')+'">'+fmt(d.r23)+'</td>';
-    html+='<td class="'+(d.r24!=null?(d.r24>0?'pos':'neg'):'neu')+'">'+fmt(d.r24)+'</td><td class="neg">'+d.r25.toFixed(1)+'%</td><td class="pos">+'+d.r26.toFixed(1)+'%</td>';
+    function rc(yy){ var v=d['r'+yy]; if(v!=null&&!elig(d,yy))return '<td class="neu" style="font-style:italic;opacity:.55" title="'+memberNote(d,yy)+'">'+fmt(v)+'</td>'; return '<td class="'+(v!=null?(v>0?'pos':'neg'):'neu')+'">'+fmt(v)+'</td>'; }
+    html+=rc('22')+rc('23');
+    html+=rc('24')+'<td class="neg">'+d.r25.toFixed(1)+'%</td><td class="pos">+'+d.r26.toFixed(1)+'%</td>';
     html+='<td>'+(d.c3!=null?'<span class="'+(d.c3>0?'cpos':'cneg')+'">'+fmt(d.c3)+'</span>':'&mdash;')+'</td><td>'+(d.c3!=null?(cb?'<span class="bful">&#x2705; Beats S&P</span>':'<span class="nbt">Lags S&P</span>'):'&mdash;')+'</td></tr>';
   });
   body.innerHTML=html;
@@ -630,9 +718,9 @@ function renderSBMonthChips(){
   var first=ms[0], last=ms[ms.length-1];
   html+='<span style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">'+
     '<span class="sb-secrow-lbl">Range</span>'+
-    '<input type="month" id="sb-range-from" min="'+first+'" max="'+last+'" value="'+SB_RANGE.from+'" onchange="setSBRange()" style="'+sel+'">'+
+    ymPicker('sb-range-from',SB_RANGE.from,first,last,sel)+
     '<span style="font-size:11px;color:var(--mu)">to</span>'+
-    '<input type="month" id="sb-range-to" min="'+first+'" max="'+last+'" value="'+SB_RANGE.to+'" onchange="setSBRange()" style="'+sel+'">'+
+    ymPicker('sb-range-to',SB_RANGE.to,first,last,sel)+
     '<span class="sb-secchip'+(SB_RANGE.on?' active':'')+'" onclick="toggleSBRange()">'+(SB_RANGE.on?'Shown':'Show')+'</span></span>';
   row.innerHTML=html;
 }
@@ -643,8 +731,23 @@ function toggleSBRange(){
   renderSectorBars();
 }
 
+// Month + year as two short dropdowns (the native month calendar makes you
+// scroll through years). Value 'YYYY-MM', clamped to the data's first/last month.
+function ymPicker(id, val, first, last, style){
+  var y0=+first.slice(0,4), y1=+last.slice(0,4), html='<span style="display:inline-flex;gap:4px">';
+  html+='<select id="'+id+'-m" onchange="setSBRange()" style="'+style+'">'+CUR_MONTH_NAMES.map(function(n,i){ var mm=(i<9?'0':'')+(i+1); return '<option value="'+mm+'"'+(val.slice(5,7)===mm?' selected':'')+'>'+n+'</option>'; }).join('')+'</select>';
+  html+='<select id="'+id+'-y" onchange="setSBRange()" style="'+style+'">';
+  for(var y=y1;y>=y0;y--) html+='<option'+(String(y)===val.slice(0,4)?' selected':'')+'>'+y+'</option>';
+  return html+'</select></span>';
+}
+function ymRead(id, first, last){
+  var v=safeVal(id+'-y')+'-'+safeVal(id+'-m');
+  return v<first?first:v>last?last:v;
+}
+
 function setSBRange(){
-  var f=safeVal('sb-range-from'), t=safeVal('sb-range-to');
+  var ms=dataMonths(), first=ms[0], last=ms[ms.length-1];
+  var f=ymRead('sb-range-from',first,last), t=ymRead('sb-range-to',first,last);
   if(f&&t&&f>t){var x=f;f=t;t=x;}
   if(f)SB_RANGE.from=f;
   if(t)SB_RANGE.to=t;
@@ -707,8 +810,8 @@ function initMarketAnalysis(D) {
     return;
   }
   tblData = STOCKS.slice();
-  // Explorer opens ranked by YTD (sortCol2 = the 2026 YTD column, descending)
-  tblData2 = STOCKS.slice().sort(function(a,b){ return (b.r26!=null?b.r26:-999)-(a.r26!=null?a.r26:-999); });
+  // Explorer opens ranked by YTD (SORT2 = r26, descending)
+  tblData2 = STOCKS.slice(); sortRows2();
 
   // Build industry map
   IMAP = {};

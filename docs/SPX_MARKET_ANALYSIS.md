@@ -39,7 +39,11 @@ Lessons that cost a day:
 - **Full-year rule.** A stock's return for year Y counts in the Positive / Beat filters, the sector
   counts, the scatter and Rotation Winners only if it was in the SPX at the end of Y−1 **and** at the
   end of Y (current year: end of Y−1 and today), matched on the composite ID. The return is still
-  shown, grey italic. Former members are not in the data (accepted: current members only).
+  shown, grey italic, and labelled "not in the index" (not a member at either year-end, `m<yy>` = 0)
+  or "not in the index all year" (joined or left, `m<yy>` = 1). The 3yr cumulative needs all three
+  years in full. Former members are not in the data (accepted: current members only).
+- Sector Summary drills sector → industry group → companies; a sector with a single industry group
+  (Energy, Materials, Utilities) opens straight onto its companies.
 - GICS: the current classification only (Bloomberg has no history without an S&P licence); full
   official names, never truncated.
 

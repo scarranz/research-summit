@@ -2106,8 +2106,8 @@ function renderPareto() {
   var box = document.getElementById('ndx-pareto-box');
   if (!box) return;
 
-  // Selected years, newest first — each one is a column group, left to right
-  var years = yearKeys().filter(function(k) { return _paretoYears.has(k); });
+  // Selected years, oldest → newest — each one is a column group, left to right
+  var years = chronoYears().filter(function(k) { return _paretoYears.has(k); });
   var N = _paretoCustomN > 0 ? _paretoCustomN : _paretoN;
   var showAll = N === 0;
   var showPos = _paretoSide !== 'neg', showNeg = _paretoSide !== 'pos';
@@ -2931,7 +2931,7 @@ function buildSkeleton() {
   '<div class="sec">' +
     '<div class="sechdr">' +
       '<span class="sect">Top Contributors</span>' +
-      '<span class="secn">Constituents ranked by contribution to the index return. Extra years add columns to the right.</span>' +
+      '<span class="secn">Constituents ranked by contribution to the index return. Pick several years to compare them side by side, oldest to newest.</span>' +
     '</div>' +
     '<div class="card"><div id="ndx-pareto-box"></div></div>' +
   '</div>' +

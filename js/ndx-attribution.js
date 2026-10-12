@@ -2132,7 +2132,7 @@ function renderPareto() {
   });
 
   // ── Toolbar ─────────────────────────────────────────────────────────────────
-  var yrPills = yearKeys().map(function(k) {
+  var yrPills = chronoYears().map(function(k) {
     return '<button class="ndx-tab-btn ndx-par-yr-btn' + (_paretoYears.has(k) ? ' active' : '') +
       '" data-yr="' + k + '" onclick="ndxToggleParetoYear(\'' + k + '\')">' + (YR_LABEL[k] || k) + '</button>';
   }).join('');
@@ -2778,9 +2778,10 @@ window.ndxSetTo = function(n) {
   reloadSnapshot();
 };
 
-// Single-select year pills, one per YEAR_HOCS key (newest first)
+// Single-select year pills, one per YEAR_HOCS key, oldest → newest (2020 … YTD) like
+// every year row in the portal; the default selection is still the latest year
 function yrBtns(cls, handler, active) {
-  return yearKeys().map(function(k) {
+  return chronoYears().map(function(k) {
     return '<button class="' + cls + ' ndx-tab-btn' + (k === active ? ' active' : '') + '" data-yr="' + k + '" ' +
       'onclick="' + handler + '(\'' + k + '\')">' + (YR_LABEL[k] || k) + '</button>';
   }).join('');

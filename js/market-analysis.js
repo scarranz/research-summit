@@ -473,7 +473,7 @@ function renderTbl2(){
   var body=document.getElementById('tbl-body2'),cnt=document.getElementById('tbl-cnt2');if(!body)return;
   renderTbl2Head();
   if(cnt)cnt.innerHTML='<strong>'+tblData2.length+'</strong> <span>companies shown</span>'+
-    (SPX?'<button class="sb-secchip-all" style="margin-left:12px" onclick="toggleExpHist()">'+(EXP_HIST?'Hide 2017–2021':'Show 2017–2021')+'</button>':'')+(SPX?'<span style="margin-left:12px;font-style:italic;opacity:.7">grey italic = not in the S&amp;P 500 that year, or not for all of it (left out of filters and counts)</span>':'');
+    (SPX?'<button class="sb-secchip-all" style="margin-left:12px" onclick="toggleExpHist()">'+(EXP_HIST?'Hide 2017–2021':'Show 2017–2021')+'</button>':'')+(SPX?'<span style="margin-left:12px;font-style:italic;opacity:.7">Grey numbers: the company was not in the S&amp;P 500 for that whole year, so it is not counted in the filters or totals</span>':'');
   var shown=tblData2.slice(0,250),rows='';
   for(var i=0;i<shown.length;i++){
     var s=shown[i],cc=secColor(s.s);

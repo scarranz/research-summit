@@ -225,7 +225,8 @@ A new dummy code makes the extractor print `unmapped Bloomberg dummy ticker(s)` 
 **General**
 - Positive = green, negative = red, everywhere; no other colours for years.
 - Contributions are always shown with **2 decimals**; never "−0.00%".
-- Year selectors list every year in the data, **newest first**; a new year appears on its own.
+- Year selector buttons list every year in the data **oldest → newest** (2020 … YTD), with the
+  latest year selected by default; a new year appears on its own.
 - Sections are independent: each has its own year selector and nothing in one changes another
   (only the Detail simulation also feeds Top Contributors, Winners vs Losers, Scatter, Beeswarm).
 

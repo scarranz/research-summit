@@ -89,7 +89,7 @@ var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','De
 var SPX_COLOR = 'rgba(30,39,51,0.92)';   // navy — the index, as "actual" everywhere in the portal
 
 var D = null, colorOf = null, root = null;
-var BENCH = 'SPX', BENCH_LABEL = 'S&P 500', SRC_LABEL = 'S&P 500 GICS sector indices';
+var BENCH = 'SPX', BENCH_LABEL = 'S&P 500', SRC_LABEL = 'S&P 500 GICS sector indices', TICKERS = {};
 var st = { from: null, to: null, mode: 'abs', hidden: {}, yr: null, tbl: false, chart: null };
 
 function ymLabel(ym){ return MON[+ym.slice(5, 7) - 1] + " '" + ym.slice(2, 4); }
@@ -132,7 +132,7 @@ function tone(v){ return v == null || Math.abs(v) < 0.05 ? 'var(--mu)' : v > 0 ?
 // Every series drawn: S&P 500 first (absolute only — relative makes it the
 // zero line), then the sectors ranked by their return over the window.
 function seriesList(){
-  var list = sectors().map(function(k){ var c = cumSeries(k); return { k: k, label: k, color: colorOf(k), data: c, end: lastVal(c) }; });
+  var list = sectors().map(function(k){ var c = cumSeries(k); return { k: k, label: TICKERS[k] ? k + ' (' + TICKERS[k] + ')' : k, color: colorOf(k), data: c, end: lastVal(c) }; });
   list.sort(function(a, b){ return (b.end == null ? -1e9 : b.end) - (a.end == null ? -1e9 : a.end); });
   if (!isRel()){ var s = cumSeries(BENCH); list.unshift({ k: BENCH, label: BENCH_LABEL, color: SPX_COLOR, data: s, end: lastVal(s), spx: true }); }
   return list;
@@ -277,10 +277,10 @@ function wire(){
 
 // Switch between the S&P 500 sector indices (bench SPX) and the SPDR ETFs (bench SPY).
 // Months, window and hidden series are kept; the value-axis zoom is dropped.
-export function setSectorPerfSource(levels, bench, benchLabel, srcLabel){
+export function setSectorPerfSource(levels, bench, benchLabel, srcLabel, tickers){
   if (!D || !levels) return;
   D = { levels: levels, year: D.year };
-  BENCH = bench; BENCH_LABEL = benchLabel; SRC_LABEL = srcLabel || SRC_LABEL;
+  BENCH = bench; BENCH_LABEL = benchLabel; SRC_LABEL = srcLabel || SRC_LABEL; TICKERS = tickers || {};
   st.yr = null;
   render();
 }

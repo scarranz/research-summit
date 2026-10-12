@@ -45,6 +45,15 @@ function secBench(key){
   var a = src().annual[src().bench] || {};
   return a[key==='ytd' ? String(SPX.year) : key];
 }
+// Ticker shown after each sector name, so every number can be checked against
+// its Bloomberg line: the SPDR ETF in ETF mode, the S5 index in index mode.
+var SEC_TICKER = {
+  etf:   {'Information Technology':'XLK','Communication Services':'XLC','Financials':'XLF','Consumer Discretionary':'XLY','Industrials':'XLI','Health Care':'XLV','Utilities':'XLU','Consumer Staples':'XLP','Real Estate':'XLRE','Energy':'XLE','Materials':'XLB'},
+  index: {'Information Technology':'S5INFT','Communication Services':'S5TELS','Financials':'S5FINL','Consumer Discretionary':'S5COND','Industrials':'S5INDU','Health Care':'S5HLTH','Utilities':'S5UTIL','Consumer Staples':'S5CONS','Real Estate':'S5RLST','Energy':'S5ENRS','Materials':'S5MATR'}
+};
+function secTicker(s){ return SPX ? (SEC_TICKER[src().kind]||{})[s] : null; }
+function secLabel(s){ var t=secTicker(s); return t ? s+' ('+t+')' : s; }
+
 function buildSectorRets(){
   var a = src().annual;
   SECTOR_RETS = {};
@@ -61,8 +70,9 @@ function setSecSrc(k){
   renderSecSrcToggle();
   renderAsOf();
   renderSectorBars();
+  renderSBSecChips();
   renderTbl();
-  setSectorPerfSource(src().levels, src().bench, src().benchLabel, src().label);
+  setSectorPerfSource(src().levels, src().bench, src().benchLabel, src().label, SEC_TICKER[src().kind]);
 }
 window.setSecSrc = setSecSrc;
 function renderSecSrcToggle(){
@@ -172,7 +182,7 @@ function renderSBSecChips(){
   var row=document.getElementById('sb-secrow');if(!row)return;
   var html='<span class="sb-secrow-lbl">Sectors:</span>';
   Object.keys(SB_SECTORS).forEach(function(sec){
-    html+='<span class="sb-secchip'+(SB_SECTORS[sec]?' active':'')+'" onclick="toggleSBSec(\''+sec+'\')">'+sec+'</span>';
+    html+='<span class="sb-secchip'+(SB_SECTORS[sec]?' active':'')+'" onclick="toggleSBSec(\''+sec+'\')">'+secLabel(sec)+'</span>';
   });
   html+='<button class="sb-secchip-all" onclick="sbSecAll(true)">All</button>';
   html+='<button class="sb-secchip-all" onclick="sbSecAll(false)" style="margin-left:0">None</button>';
@@ -337,7 +347,7 @@ function renderTbl(){
     var caret=window.SEC_EXPANDED&&window.SEC_EXPANDED[r.sec]?'&#x25BC;':'&#x25B6;';
     var secRet=getSectorYtd(r.sec);
     html+='<tr class="sec-row" data-sec="'+r.sec+'" onclick="toggleSecExp(\''+r.sec.replace(/\'/g,"\\'")+'\')" style="cursor:pointer">';
-    html+='<td><span style="display:inline-block;width:13px;color:var(--mu);font-size:9px">'+caret+'</span><span class="sch" style="background:'+cc+'22;color:'+cc+';font-weight:600;margin-left:4px">'+r.sec+'</span></td>';
+    html+='<td><span style="display:inline-block;width:13px;color:var(--mu);font-size:9px">'+caret+'</span><span class="sch" style="background:'+cc+'22;color:'+cc+';font-weight:600;margin-left:4px">'+secLabel(r.sec)+'</span></td>';
     html+='<td style="text-align:right;font-weight:700;font-size:14px;color:var(--navy)">'+r.m+'</td>';
     html+='<td style="text-align:right;font-weight:600;color:'+pctClr+'">'+r.pct.toFixed(0)+'%</td>';
     html+='<td style="text-align:right;color:var(--mu)">'+r.tot+'</td>';
@@ -714,7 +724,7 @@ function renderSectorBars(){
   maxV=Math.max(maxV, SB_MODE==='abs'?30:15);
   var html='';
   sectors.forEach(function(s){
-    html+='<div class="sbr"><span class="sbn">'+s+'</span><div class="sbbs">';
+    html+='<div class="sbr"><span class="sbn">'+secLabel(s)+'</span><div class="sbbs">';
     periods.forEach(function(p){
       var v=sbPeriodVal(s,p);
       var isCur=(p.key==='ytd'||p.key===lastMonth||p.key==='range');
@@ -906,7 +916,7 @@ function initMarketAnalysis(D) {
   renderSBMonthChips();
   renderSectorBars();
   initSectorPerfChart(document.getElementById('sp-chart'), SPX, secColor);
-  if (SPX) setSectorPerfSource(src().levels, src().bench, src().benchLabel, src().label);
+  if (SPX) setSectorPerfSource(src().levels, src().bench, src().benchLabel, src().label, SEC_TICKER[src().kind]);
   renderTbl();
   renderTbl2();
   renderRotTbl();

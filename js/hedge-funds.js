@@ -20,7 +20,10 @@ function holdingYtdNote(t) {
 INVESTORS.forEach(function(inv) {
   (inv.holdings || []).forEach(function(h) {
     var it = HF_HOLDINGS_YTD.items[h.t];
-    h.ytd = it ? it.ytd : null;
+    // A 2026 IPO has no YTD: its since-IPO return is shown on the card only, labelled
+    h.ytd = it && !it.sinceIpo ? it.ytd : null;
+    h.ipoRet = it && it.sinceIpo ? it.ytd : null;
+    h.ipoDate = it && it.sinceIpo ? it.sinceIpo : null;
   });
 });
 function asOfShort(iso) {
@@ -222,8 +225,9 @@ function renderInvGrid(){
     // (Q2 2026) — the toggle above the grid controls the concentration
     // stat above, not how many rows this table lists.
     html+='<table class="icard-tbl"><thead><tr><th>Ticker</th><th>Company</th><th class="nr">% Port</th><th class="nr" title="Stock price return, Dec 31 → '+asOfShort(HOLDING_YTD_ASOF)+' close">YTD</th></tr></thead><tbody>';
-    allHoldings.forEach(function(h){var pc=h.ytd>=0?'rp':'rn';var ys=h.ytd==null?null:(h.ytd>=0?'+':'')+h.ytd.toFixed(2)+'%';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';
-      html+='<tr><td><span class="iticker">'+h.t+'</span></td><td><span class="ico">'+h.co+'</span>'+nb+'</td><td class="nr" style="color:var(--mu)">'+h.w.toFixed(2)+'%</td><td class="nr">'+(ys==null?'<span style="color:var(--mu);font-size:11px" title="'+holdingYtdNote(h.t)+'">n/a</span>':'<span class="rpill '+pc+'">'+ys+'</span>')+'</td></tr>';});
+    allHoldings.forEach(function(h){var rv=h.ytd!=null?h.ytd:h.ipoRet;var pc=rv>=0?'rp':'rn';var ys=rv==null?null:(rv>=0?'+':'')+rv.toFixed(2)+'%';
+      var ipoTag=h.ipoDate?'<span title="Listed '+h.ipoDate+': return since the first-day open, not YTD" style="font-size:8px;font-weight:700;letter-spacing:.4px;color:var(--mu);border:1px solid var(--bdr);border-radius:3px;padding:0 3px;margin-right:4px;vertical-align:middle">SINCE IPO</span>':'';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';
+      html+='<tr><td><span class="iticker">'+h.t+'</span></td><td><span class="ico">'+h.co+'</span>'+nb+'</td><td class="nr" style="color:var(--mu)">'+h.w.toFixed(2)+'%</td><td class="nr">'+(ys==null?'<span style="color:var(--mu);font-size:11px" title="'+holdingYtdNote(h.t)+'">n/a</span>':ipoTag+'<span class="rpill '+pc+'">'+ys+'</span>')+'</td></tr>';});
     html+='</tbody></table>';
     html+='<div style="font-size:9.5px;color:var(--mu);margin-top:4px;text-align:right">Holding YTD: price return to '+asOfShort(HOLDING_YTD_ASOF)+' close</div>';
     if(inv.est)html+='<div class="est-note">&#x26A0; Annual returns estimated from portfolio data.</div>';
@@ -1277,7 +1281,7 @@ function tickerYtdMap() {
   // S&P 500 members from the Bloomberg extract, then the card holdings' YTD map
   var yy = 'r' + String(SPX_DATA.year).slice(2);
   SPX_DATA.members.forEach(function(m) { if (m[yy] != null) map[m.t] = m[yy]; });
-  Object.keys(HF_HOLDINGS_YTD.items).forEach(function(t) { var v = HF_HOLDINGS_YTD.items[t].ytd; if (v != null && map[t] == null) map[t] = v; });
+  Object.keys(HF_HOLDINGS_YTD.items).forEach(function(t) { var it = HF_HOLDINGS_YTD.items[t]; if (it.ytd != null && !it.sinceIpo && map[t] == null) map[t] = it.ytd; });
   TICKER_YTD_MAP = map;
   return map;
 }

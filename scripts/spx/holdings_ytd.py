@@ -6,8 +6,12 @@ Hedge Funds ▸ Superinvestors cards, written to js/hf-holdings-ytd.js.
 Same cut-off and definition as the S&P 500 panel: price return (no dividends) from
 the last close of the previous year to the cut-off of js/spx-data.js.
   - S&P 500 members: taken from js/spx-data.js (the analyst's Bloomberg extract).
-  - Everything else (ADRs, foreign listings, ETFs, recent IPOs): Yahoo Finance daily
-    "close" (split-adjusted, not dividend-adjusted, i.e. NOT "adj close").
+  - Everything else (ADRs, foreign listings, ETFs, recent IPOs): the analyst's Bloomberg
+    closes in scripts/spx/hf_bbg_prices.json when they cover the same dates; otherwise
+    Yahoo Finance daily "close" (split-adjusted, NOT "adj close"). Yahoo matched
+    Bloomberg to the cent except TEVA (Dec 31: 31.21 vs 28.61) and WBD (no Dec 31).
+  - A 2026 IPO listed in the json's "ipo" block: return from the first-day open,
+    flagged sinceIpo so the page labels it (it is not a YTD).
   - No price at the previous year-end (e.g. a 2026 IPO) or none at the cut-off
     (delisted / acquired): stored as null with a note; the page shows n/a.
 
@@ -65,12 +69,30 @@ def main():
     base_day = f"{year - 1}-12-31"
     members = {m["t"]: m for m in spx["members"]}
 
+    bbg = json.load(open(os.path.join(os.path.dirname(__file__), "hf_bbg_prices.json"), encoding="utf-8"))
+    bbg_ok = bbg.get("base") == base_day and bbg.get("asOf") == as_of
+    if not bbg_ok:
+        print(f"note: hf_bbg_prices.json is for {bbg.get('base')} -> {bbg.get('asOf')}, not {base_day} -> {as_of}: Yahoo only")
+
     items, rows = {}, []
     for t, co in sorted(holdings_tickers().items()):
         if t in members:
             v = members[t].get("r" + str(year)[2:])
             items[t] = {"ytd": v, "src": "Bloomberg"}
             rows.append((t, co, v, "Bloomberg (S&P 500 extract)", ""))
+            continue
+        if bbg_ok and t in bbg["prices"]:
+            p0, p1 = bbg["prices"][t]
+            v = round((p1 / p0 - 1) * 100, 2)
+            items[t] = {"ytd": v, "src": "Bloomberg", "p0": p0, "p1": p1}
+            rows.append((t, co, v, "Bloomberg (analyst check)", ""))
+            continue
+        if bbg_ok and t in bbg.get("ipo", {}):
+            ipo = bbg["ipo"][t]
+            v = round((ipo["last"] / ipo["open"] - 1) * 100, 2)
+            items[t] = {"ytd": v, "src": "Bloomberg", "sinceIpo": ipo["date"], "p0": ipo["open"], "p1": ipo["last"],
+                        "note": f"listed {ipo['date']}: return since the first-day open, not YTD"}
+            rows.append((t, co, v, "Bloomberg (since IPO)", items[t]["note"]))
             continue
         note = ""
         try:

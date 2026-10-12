@@ -340,7 +340,7 @@ function renderTbl(){
   });
   rows.sort(function(a,b){return b.m-a.m;});
   // Helper for return formatting + color
-  function fmtRet(v){if(v==null||isNaN(v))return '<span style="color:var(--mu)">&mdash;</span>';var c=v>=0?'var(--pos)':'var(--neg)';var sign=v>=0?'+':'';return '<span style="color:'+c+';font-weight:600">'+sign+v.toFixed(1)+'%</span>';}
+  function fmtRet(v){if(v==null||isNaN(v))return '<span style="color:var(--mu)">&mdash;</span>';var c=v>=0?'var(--pos)':'var(--neg)';var sign=v>=0?'+':'';return '<span style="color:'+c+';font-weight:600">'+sign+v.toFixed(2)+'%</span>';}
   var html='';
   rows.forEach(function(r){var cc=secColor(r.sec);
     var pctClr=r.pct>=70?'var(--pos)':r.pct>=40?'var(--text)':'var(--mu)';
@@ -653,7 +653,7 @@ function renderRotTbl(){
 function sbBar(label,v,maxV,hlClass,keyClass){
   if(v==null)return '<div class="sby'+hlClass+'"><span class="sbyl">'+label+'</span><div class="sbtr-div"></div><span class="sbi" style="color:var(--mu);font-weight:600">n/a</span></div>';
   var pct=Math.min(Math.abs(v)/maxV*50,50);var sign=v>=0?'+':'';var color=v>=0?'#1E3A5F':'#9B2A20';var left=v>=0?50:50-pct;
-  return '<div class="sby'+hlClass+'"><span class="sbyl">'+label+'</span><div class="sbtr-div"><div class="sbfl-div" style="left:'+left+'%;width:'+pct+'%;background:'+color+'"></div></div><span class="sbi'+keyClass+'" style="color:'+(v>=0?'var(--pos)':'var(--neg)')+';font-weight:600">'+sign+v.toFixed(1)+'%</span></div>';
+  return '<div class="sby'+hlClass+'"><span class="sbyl">'+label+'</span><div class="sbtr-div"><div class="sbfl-div" style="left:'+left+'%;width:'+pct+'%;background:'+color+'"></div></div><span class="sbi'+keyClass+'" style="color:'+(v>=0?'var(--pos)':'var(--neg)')+';font-weight:600">'+sign+v.toFixed(2)+'%</span></div>';
 }
 
 // Years, months and a date range are independent filters that render

@@ -124,10 +124,10 @@ function lastVal(a){ for (var i = a.length - 1; i >= 0; i--) if (a[i] != null) r
 function unit(){ return isRel() ? 'pp' : '%'; }
 function fmt(v){
   if (v == null) return '—';
-  if (Math.abs(v) < 0.05) v = 0;
-  return (v > 0 ? '+' : '') + v.toFixed(1) + (isRel() ? ' pp' : '%');
+  if (Math.abs(v) < 0.005) v = 0;
+  return (v > 0 ? '+' : '') + v.toFixed(2) + (isRel() ? ' pp' : '%');
 }
-function tone(v){ return v == null || Math.abs(v) < 0.05 ? 'var(--mu)' : v > 0 ? 'var(--pos)' : 'var(--neg)'; }
+function tone(v){ return v == null || Math.abs(v) < 0.005 ? 'var(--mu)' : v > 0 ? 'var(--pos)' : 'var(--neg)'; }
 
 // Every series drawn: S&P 500 first (absolute only — relative makes it the
 // zero line), then the sectors ranked by their return over the window.

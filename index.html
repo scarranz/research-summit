@@ -185,12 +185,6 @@
 
 <!-- MARKET ANALYSIS TAB -->
 <div id="tp-rot" class="tp">
-  <div class="srow" id="ma-srow">
-    <div class="sc" style="border-top-color:#177A4E"><div class="sl">S&amp;P 500 YTD</div><div class="sv" id="ma-spy-ytd" style="color:#177A4E;font-size:20px">&mdash;</div><div class="ss">Live once connected</div></div>
-    <div class="sc" style="border-top-color:#177A4E"><div class="sl">QQQ YTD</div><div class="sv" id="ma-qqq-ytd" style="color:#177A4E;font-size:20px">&mdash;</div><div class="ss">Live once connected</div></div>
-    <div class="sc" style="border-top-color:#177A4E"><div class="sl">Positive YTD 2026</div><div class="sv" id="ma-positive-ytd" style="color:#177A4E">&mdash;</div><div class="ss" id="ma-positive-ytd-sub">&nbsp;</div></div>
-    <div class="sc" style="border-top-color:#1E3A5F"><div class="sl">Beating S&amp;P 500</div><div class="sv" id="ma-beating-sp500">&mdash;</div><div class="ss" id="ma-beating-sp500-sub">&nbsp;</div></div>
-  </div>
   <div class="ma-subnav" id="ma-subnav">
     <button class="ma-pill active" data-mpanel="sp500" onclick="switchMAPanel('sp500')">S&amp;P 500</button>
     <button class="ma-pill" data-mpanel="ndx" onclick="switchMAPanel('ndx')">Nasdaq-100 Analysis</button>
@@ -198,7 +192,7 @@
   </div>
   <div id="ma-panel-sp500" class="ma-panel">
   <div class="sec">
-    <div class="sechdr"><span class="sect">Sector Alpha &mdash; Avg Annual Return by Sector</span><span class="secn">SPDR sector ETFs &middot; the current year is always YTD-through-today &middot; mix any years and any elapsed months in the same view</span></div>
+    <div class="sechdr"><span class="sect">Sector Alpha &mdash; Avg Annual Return by Sector</span><span class="secn" id="ma-sb-asof">SPDR sector ETFs &middot; the current year is always YTD-through-today &middot; mix any years and any elapsed months in the same view</span></div>
     <div class="card">
       <div class="sb-secrow" id="sb-secrow"></div>
       <div class="sbl">
@@ -224,6 +218,10 @@
       </div>
     </div>
     <div class="sbrs" id="sb-wrap"></div></div>
+  </div>
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Sector Performance &mdash; Cumulative Return</span><span class="secn" id="ma-sp-asof">S&amp;P 500 GICS sector indices &middot; price return</span></div>
+    <div class="card"><div id="sp-chart"></div></div>
   </div>
   <div class="sec">
     <div class="sechdr"><span class="sect">Sector Summary &mdash; Market Beaters</span><span class="secn">Stock counts update with filters above</span></div>
@@ -253,7 +251,7 @@
     </div>
   </div>
   <div class="sec">
-    <div class="sechdr"><span class="sect">S&amp;P 500 Companies Explorer</span><span class="secn">2026 YTD updated to August 21, 2026 close</span></div>
+    <div class="sechdr"><span class="sect">S&amp;P 500 Companies Explorer</span><span class="secn" id="ma-exp-asof">2026 YTD updated to August 21, 2026 close</span></div>
     <div class="card">
       <div class="fbar">
         <span class="flm">Filters:</span>
@@ -269,7 +267,7 @@
         <span class="flm">Sector:</span>
         <select class="fsel" id="sec-flt2" onchange="onSecChange('tbl2')">
           <option value="">All Sectors</option>
-          <option>Communication Services</option><option>Consumer Discretionary</option><option>Consumer Staples</option><option>Energy</option><option>Financials</option><option>Health Care</option><option>Industrials</option><option>Materials</option><option>Real Estate</option><option>Technology</option><option>Utilities</option>
+          <option>Communication Services</option><option>Consumer Discretionary</option><option>Consumer Staples</option><option>Energy</option><option>Financials</option><option>Health Care</option><option>Industrials</option><option>Materials</option><option>Real Estate</option><option>Information Technology</option><option>Utilities</option>
         </select>
         <span class="flm">Subsector:</span>
         <select class="fsel" id="ind-flt2" onchange="applyFilters2()" style="max-width:240px"><option value="">All Subsectors</option></select>
@@ -279,7 +277,7 @@
         <thead><tr>
           <th onclick="sortTbl2(0)">Ticker<span class="sa">&#x25BC;</span></th>
           <th onclick="sortTbl2(1)">Sector<span class="sa">&#x25BC;</span></th>
-          <th onclick="sortTbl2(2)">Industry<span class="sa">&#x25BC;</span></th>
+          <th onclick="sortTbl2(2)"><span id="ma-exp-ind">Industry</span><span class="sa">&#x25BC;</span></th>
           <th onclick="sortTbl2(3)">2022<span class="sa">&#x25BC;</span></th>
           <th onclick="sortTbl2(4)">2023<span class="sa">&#x25BC;</span></th>
           <th onclick="sortTbl2(5)">2024<span class="sa">&#x25BC;</span></th>
@@ -298,15 +296,15 @@
         <span class="flm">Sector:</span>
         <select class="fsel" id="scat-sec" onchange="onSecChange('scat')">
           <option value="">All Sectors</option>
-          <option>Communication Services</option><option>Consumer Discretionary</option><option>Consumer Staples</option><option>Energy</option><option>Financials</option><option>Health Care</option><option>Industrials</option><option>Materials</option><option>Real Estate</option><option>Technology</option><option>Utilities</option>
+          <option>Communication Services</option><option>Consumer Discretionary</option><option>Consumer Staples</option><option>Energy</option><option>Financials</option><option>Health Care</option><option>Industrials</option><option>Materials</option><option>Real Estate</option><option>Information Technology</option><option>Utilities</option>
         </select>
         <span class="flm">Subsector:</span>
         <select class="fsel" id="scat-ind" onchange="renderScatter()" style="max-width:240px"><option value="">All Subsectors</option></select>
       </div>
       <div class="qcounts" id="quad-counts"></div>
       <div class="scrl">
-        <span class="scrli"><span class="scline" style="border-color:#4A7FB5"></span>S&amp;P 2025 (+15.7%)</span>
-        <span class="scrli"><span class="scline" style="border-color:#177A4E"></span>S&amp;P 2026 (+12.3%)</span>
+        <span class="scrli"><span class="scline" style="border-color:#4A7FB5"></span><span id="scl-25">S&amp;P 2025</span></span>
+        <span class="scrli"><span class="scline" style="border-color:#177A4E"></span><span id="scl-26">S&amp;P 2026 YTD</span></span>
         <span class="scrli"><span style="width:12px;height:12px;background:rgba(180,30,30,.1);border:1px solid rgba(180,30,30,.25);display:inline-block;border-radius:2px"></span>Lag both years</span>
       </div>
       <div style="position:relative;height:390px"><canvas id="scat-c"></canvas></div>

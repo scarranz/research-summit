@@ -17,7 +17,6 @@ or the page. It records what the analyst (Dani) and Claude agreed in Oct 2026.
 | `SPX_MEMBERS` | Current SPX members: `id().value`, `name().value`, `classification_name(gics,1)` / `(gics,2)`, and under a `DATES` header one price per year-end + the cut-off: `px_last(dates=range(2016-12-31,<cut-off>,frq=y),ca_adj=SPLITS,currency=USD,fill=prev)` on the **`US Equity`** (composite) ticker. `#N/A` = the security did not trade yet. |
 | `MEMBERSHIP` | SPX members at each year-end (`members('SPX Index', dates=…)`) as **`composite_id_bb_global()`**, one column per year, plus a `TICKER` (`id().value`) · `BBG_ID` (composite) map of today's members. |
 | `SECTORS` | `DATES` · `SPX Index` · the 11 S&P 500 GICS sector indices (`S5INFT`, `S5TELS`, `S5FINL`, `S5COND`, `S5INDU`, `S5HLTH`, `S5UTIL`, `S5CONS`, `S5RLST`, `S5ENRS`, `S5MATR`), `px_last(..., frq=cm)` month-ends; last row = cut-off. |
-| `SECTORS_WEIGHTS` | Same `DATES` rows; Bloomberg's month-end weight (%) of each S5 sector in the SPX, plus a `Residual` column (names Bloomberg left unclassified). |
 
 Lessons that cost a day:
 - **Composite, never venue.** `UN`/`UW` tickers and the venue-level `id_bb_global` break when a stock
@@ -45,16 +44,10 @@ Lessons that cost a day:
   years in full. Former members are not in the data (accepted: current members only).
 - Sector Summary drills sector → industry group → companies; a sector with a single industry group
   (Energy, Materials, Utilities) opens straight onto its companies.
-- **Sector attribution** (`js/spx-attribution.js`, sections *Attribution by Sector* and *Attribution
-  Detail & Simulation*): monthly contribution = prior month-end weight (renormalised over the 11
-  sectors) × S5 sector return; years linked with Carino; **Residual** = official SPX return − sum
-  of sectors, so sectors + residual = the official return exactly. Simulation drops sectors and
-  rescales the remaining weights to 100% every month (residual not assignable, so left out).
-- **Complete years only, from 2024** (`FIRST_YEAR`), plus the current YTD. Bloomberg's weights are
-  estimates built with *today's* GICS while S5 levels carry the GICS *of the time*; they only line up
-  after the last GICS restructuring (Mar 17, 2023: V/MA/PYPL IT → Financials; before Sep 2018
-  Communication Services was the old Telecom sector). Monthly residual ≈ 1.5 bp from Apr 2023 vs
-  40–130 bp before. Move `FIRST_YEAR` only after checking the residual if GICS changes again.
+- **No sector attribution on the S&P panel** (decided Oct 2026). Bloomberg's sector weights are
+  estimates built with *today's* GICS while the S5 levels carry the GICS *of the time*, so weight ×
+  return only adds up after the March 2023 GICS change; rebuilding sector returns from Bloomberg's own
+  index (B500) was rejected because it shares only ~86% of the S&P 500's constituents.
 - GICS: the current classification only (Bloomberg has no history without an S&P licence); full
   official names, never truncated.
 

@@ -2,7 +2,6 @@
 import { ALL_STOCKS, SP500_TODAY26, SP500_B25, SP500_B24, SP500_BMK, SCOLS, COMPANY_NAMES } from './portal-data.js';
 import { loadNdxAttribution } from './ndx-attribution.js';
 import { initSectorPerfChart } from './spx-sector-chart.js';
-import { initSpxAttribution } from './spx-attribution.js';
 
 // ─── Data source ───────────────────────────────────────────────
 // js/spx-data.js is generated from the analyst's Bloomberg workbook by
@@ -865,7 +864,6 @@ function initMarketAnalysis(D) {
   renderSBMonthChips();
   renderSectorBars();
   initSectorPerfChart(document.getElementById('sp-chart'), SPX, secColor);
-  initSpxAttribution(document.getElementById('spx-attr-host'), SPX);
   renderTbl();
   renderTbl2();
   renderRotTbl();

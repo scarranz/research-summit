@@ -283,9 +283,11 @@ function sensBody(){
        '<div class="sens-ctrl"><span class="sens-ctrl-l">Assumptions</span><div class="sens-years">'+
          '<button type="button" class="sens-year'+(_base==='summit'?' active':'')+'" data-asbase="summit"'+
            ' title="Every driver off the axes held at the Summit model">Summit model</button>'+
+         // Street consensus is offered ONLY once real Street figures are wired (CONS.src set) — the
+         // placeholder numbers are never shown as an option (SAB, Oct 13 2026).
+         (consPlaceholder() ? '' :
          '<button type="button" class="sens-year'+(_base==='cons'?' active':'')+'" data-asbase="cons"'+
-           ' title="Every driver off the axes held at consensus'+(consPlaceholder()?' — placeholder numbers until the workbook is wired':'')+'">'+
-           'Street consensus'+(consPlaceholder()?' ⚑':'')+'</button>'+
+           ' title="Every driver off the axes held at consensus">Street consensus</button>')+
        '</div></div>'+
        '<div class="sens-ctrl"><span class="sens-ctrl-l">Exit multiple on</span><div class="sens-years">'+
          '<button type="button" class="sens-year'+(_basis==='ev'?' active':'')+'" data-asbasis="ev">EV/EBITDA</button>'+
@@ -391,6 +393,12 @@ function renderCons(scope, aX, aY, cell){
   var el=scope.querySelector('#asCons'); if(!el) return;
   var year=_year, r=altCalc(year), live=_px;
   var isCons=(altBase()==='cons');
+  if(isCons && consPlaceholder()){   // blocked, not faked: no invented Street numbers on screen
+    el.innerHTML='<div class="as-cons-h">What consensus assumes</div>'+
+      '<div class="rs-noguide" style="margin-top:6px">⚑ Live Street figures pending — the comparison appears once the '+
+      'Street\'s segment growth and margins are wired. Nothing here is estimated in the meantime.</div>';
+    return;
+  }
   var h='<div class="as-cons-h">What '+(isCons?'consensus':'the Summit model')+' assumes'+
         (isCons && consPlaceholder()?'<span class="as-cons-ph">placeholder</span>':'')+'</div>'+
     '<div class="as-cons-src">'+esc(isCons?consSrcLabel():('Summit DCF model · '+SNAP))+' · '+year+
@@ -445,7 +453,7 @@ function renderMatrix(scope){
   }
   var cxi = drv(_x).kind==='x' ? -1 : nearest(aX.vals, altValue(_x,year), aX.step);
   var cyi = drv(_y).kind==='x' ? -1 : nearest(rowsY,   altValue(_y,year), aY.step);
-  var consCell = (cxi>=0 && cyi>=0) ? { x:cxi, y:cyi } : null;
+  var consCell = (cxi>=0 && cyi>=0 && !(altBase()==='cons' && consPlaceholder())) ? { x:cxi, y:cyi } : null;   // never ring a cell off placeholder numbers
   var grid = rowsY.map(function(vy){
     return aX.vals.map(function(vx){
       var over={}; over[_x]=vx; over[_y]=vy;
@@ -511,8 +519,7 @@ function renderMatrix(scope){
     'on the grid. The card beside the grid always shows <b>the other side</b> — consensus while you read the model, the model while you read consensus — '+
     'with the two axis drivers substituted and everything else left at the current base, so its price is directly comparable to a cell. '+
     (consPlaceholder()
-      ? '<b>⚑ The consensus figures are a layout placeholder: invented, not Street data, badged amber wherever they appear until the consensus '+
-        'workbook is wired.</b> '
+      ? '<b>⚑ Street consensus is not wired yet, so the Street option and its comparison are withheld rather than estimated.</b> '
       : '<b>Consensus read from '+esc(consSrcLabel())+'.</b> ')+
     'Data sourced from Summit DCF models.';
 }
@@ -555,8 +562,6 @@ function initSens(root){
     }; });
 
     var sx=scope.querySelector('#asX'), sy=scope.querySelector('#asY');
-    sx.onchange=function(){ _x=sx.value; _rx={start:null,step:null}; render(scope); };
-    sy.onchange=function(){ _y=sy.value; _ry={start:null,step:null}; render(scope); };
 
     var mi=scope.querySelector('#asMult');
     mi.oninput=function(){ var v=parseFloat(mi.value); if(!isFinite(v)||v<=0) return;
@@ -564,15 +569,23 @@ function initSens(root){
       if(drv(_x).kind==='x' && _rx.start==null) {} // auto axes follow the new centre
       render(scope); };
 
-    function bindRange(inpId, kind, getK, st){
+    // The axis-range object is looked up on EVERY input, not captured once: each reset / year / base /
+    // axis change replaces _rx/_ry with a new object, and a captured one went stale after the first reset.
+    function bindRange(inpId, kind, getK, axis){
       var el=scope.querySelector('#'+inpId);
       el.oninput=function(){ var v=parseFloat(el.value); if(!isFinite(v)) return;
-        st[kind] = fromInp(getK(), v); render(scope); };
+        (axis==='x' ? _rx : _ry)[kind] = fromInp(getK(), v); render(scope); };
     }
-    bindRange('asXs','start',function(){ return _x; }, _rx);
-    bindRange('asXd','step', function(){ return _x; }, _rx);
-    bindRange('asYs','start',function(){ return _y; }, _ry);
-    bindRange('asYd','step', function(){ return _y; }, _ry);
+    bindRange('asXs','start',function(){ return _x; }, 'x');
+    bindRange('asXd','step', function(){ return _x; }, 'x');
+    bindRange('asYs','start',function(){ return _y; }, 'y');
+    bindRange('asYd','step', function(){ return _y; }, 'y');
+    // One driver cannot be both axes — the grid collapses to a diagonal. Keep X and Y distinct.
+    function keepDistinct(changed){ if(_x!==_y) return; var other=changed==='x'?sy:sx;
+      var alt=[].slice.call(other.options).filter(function(o){ return o.value!==_x; })[0]; if(!alt) return;
+      other.value=alt.value; if(changed==='x'){ _y=alt.value; _ry={start:null,step:null}; } else { _x=alt.value; _rx={start:null,step:null}; } }
+    sx.onchange=function(){ _x=sx.value; _rx={start:null,step:null}; keepDistinct('x'); render(scope); };
+    sy.onchange=function(){ _y=sy.value; _ry={start:null,step:null}; keepDistinct('y'); render(scope); };
     scope.querySelector('#asXr').onclick=function(){ _rx={start:null,step:null}; render(scope); };
     scope.querySelector('#asYr').onclick=function(){ _ry={start:null,step:null}; render(scope); };
 

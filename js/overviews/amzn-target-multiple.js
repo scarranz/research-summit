@@ -452,7 +452,25 @@ function pegAt(i){
 }
 
 // ── Body ─────────────────────────────────────────────────────────────────────────
+// ── BLOCKED until the target multiples come from the DCF submits (SAB, Oct 13 2026) ──────────────
+// The target multiple, price target and every underlying figure must come from Summit's DCF SUBMITS,
+// read live through the Summit Financial Data store — not from numbers typed into this file and not
+// from illustrative multiples. As of Oct 13 2026 that store ingests only Projection History + Actuals
+// History; the price target / target multiple live in each workbook's Output ▸ VALUATION block, which
+// it does not read yet. Until San adds that ingest (and a live path from the portal to the store), the
+// pane renders a clear notice instead of figures. The machinery below is kept intact for that day:
+// flip TM_LIVE_READY once the live source exists and wire SNAP_DATA / the recorded multiples to it.
+var TM_LIVE_READY = false;
+function tmBlockedBody(){
+  return '<div class="ov-sec"><div class="rs-block-top"><div class="rs-block-h">Target Multiple — revision log &amp; PEG</div></div>'+
+    '<div class="rs-noguide" style="margin:10px 0">⚑ Live data pending. This pane reads the target multiple and price target of every '+
+    'Summit DCF submit, and the figures each one was built on. Those come from the DCF submits through the Summit data store, '+
+    'which does not carry the valuation block yet. Nothing is shown until it does — no multiple is estimated or typed in meanwhile.</div>'+
+    '<div class="ov-foot">Source when live: Summit DCF models — each submit\'s Output ▸ VALUATION block (EV/EBITDA and P/E 1-yr price target) '+
+    'and its Projection History. Pending: ingest of that block into the Summit data store, and a live read from the portal.</div></div>';
+}
 function tmBody(){
+  if(!TM_LIVE_READY) return tmBlockedBody();
   if(!SNAPS || !SNAPS.length) return '';        // §0.2 rule 6 — nothing, never broken
 
   var h = '';
@@ -471,7 +489,7 @@ function tmBody(){
     '.tm-tbl th,.tm-tbl td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}'+
     '.tm-tbl th:first-child,.tm-tbl td:first-child{text-align:left}'+
     '.tm-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}'+
-    '.tm-tbl tbody tr.tm-last{background:rgba(255,153,0,.07)}'+
+    '.tm-tbl tbody tr.tm-last{background:var(--brand-soft)}'+
     '.tm-tbl tbody tr.tm-rep{background:#FAFBFC;color:var(--mu)}'+
     // The two bands: the group header takes the leg's colour from the chart, and a rule runs down
     // the left edge of each band so the split is visible in the body rows, not only in the header.

@@ -3994,6 +3994,7 @@ function aBuildLeases(){   // lease-cost chart + Leases-explorer tab wiring (Mis
     }; }); }
 }
 function aBuildExpenses(){
+  var gp=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(gp) aBridgeSync(gp);   // all four charts are on screen now: sync the bridge controls before its first build
   aBuildBridge();
   aBuildNetBridge();
   aBuildSbc();
@@ -4220,10 +4221,11 @@ function segmentsBody(){
       var head='<div class="seg-chips" style="margin-bottom:8px">'+s.chips.map(function(c){ return '<span class="seg-chip">'+c+'</span>'; }).join('')+'</div><div class="seg-off" style="margin-bottom:12px">'+s.off+'</div>';
       return '<div class="segx-panel segx-panel-card" data-segpanel="'+s.key+'"'+(i>0?' hidden':'')+'>'+head+(SEG_WORLD[s.key]?SEG_WORLD[s.key].h:'')+'</div>';
     }).join('')+'</div></div>';
-  h+=aSegPicker();
+  // Segments = the three charts stacked top to bottom, all visible (SAB, Oct 13 2026 — same as General;
+  // replaces the "pick one" dropdown, aSegPicker is no longer mounted).
   h+='<div class="seg-gsec" data-sgsec="oimargin">'+aSegFcBody()+'</div>';
-  h+='<div class="seg-gsec" data-sgsec="mix" hidden>'+aSegOiBody()+'</div>';
-  h+='<div class="seg-gsec" data-sgsec="bridge" hidden>'+aSegBridgeBody()+'</div>';
+  h+='<div class="seg-gsec" data-sgsec="mix" style="margin-top:26px">'+aSegOiBody()+'</div>';
+  h+='<div class="seg-gsec" data-sgsec="bridge" style="margin-top:26px">'+aSegBridgeBody()+'</div>';
   h+=aCollap('Segment deep dives — the full read per segment (drivers, unit economics, cost structure, calls)', segExp, false);
   h+=aBlFootSegments();
   return h;
@@ -5482,11 +5484,13 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="margins">'+aGeneralPicker()+
+      // General = the four charts stacked top to bottom, all visible (SAB, Oct 13 2026 — replaces the
+      // "pick one" dropdown; aGeneralPicker is no longer mounted).
+      '<div class="ovt-subpane" data-ovst="margins">'+
         '<div class="gen-sec" data-gsec="margins">'+aMarginsBody()+'</div>'+
-        '<div class="gen-sec" data-gsec="bridge" hidden>'+aBridgeBody()+'</div>'+
-        '<div class="gen-sec" data-gsec="net" hidden>'+aNetBridgeBody()+'</div>'+
-        '<div class="gen-sec" data-gsec="sbc" hidden>'+aSbcBody()+'</div>'+
+        '<div class="gen-sec" data-gsec="bridge" style="margin-top:26px">'+aBridgeBody()+'</div>'+
+        '<div class="gen-sec" data-gsec="net" style="margin-top:26px">'+aNetBridgeBody()+'</div>'+
+        '<div class="gen-sec" data-gsec="sbc" style="margin-top:26px">'+aSbcBody()+'</div>'+
         aCollap('Expense lines — the six functional deep dives (unit economics, drivers, calls)', expenseTabsBody(), false)+aBlFootGeneral()+'</div>'+
       '<div class="ovt-subpane" data-ovst="segments" hidden>'+segmentsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+aSplcBody(c)+'</div>'+

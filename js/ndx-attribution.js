@@ -498,7 +498,7 @@ function computeYearReturn(yearKey) {
 // One control drives the whole block: "Invest $100 at the start of <year>". Everything is
 // computed from the HOC returns (Σ w·r per HOC, compounded), so it is measured at each
 // rebalance close — there is no intra-HOC price path. The open HOC ends at the latest prices.
-var _heroStart = null;     // year key the $100 is invested at (default: the oldest year)
+var _heroStart = null;     // year key the $100 is invested at (default: the latest year, i.e. YTD)
 
 function chronoYears() { return yearKeys().slice().reverse(); }
 function hocReturn(h) { var r = 0; h.sec.forEach(function(s) { r += (s.w || 0) * s.r; }); return r; }
@@ -535,7 +535,7 @@ window.ndxSetHeroStart = function(key) {
 
 function renderHero() {
   var yrs = chronoYears();
-  if (!_heroStart || !YEAR_HOCS[_heroStart]) _heroStart = yrs[0];
+  if (!_heroStart || !YEAR_HOCS[_heroStart]) _heroStart = yrs[yrs.length - 1];
   var start = _heroStart, startIdx = yrs.indexOf(start);
   var pts = growthPath(start), end = pts[pts.length - 1];
   var rets = {};

@@ -115,6 +115,10 @@ function yrBtns(cls, handler, active){
 function barChart(canvas, box, r, label){
   var keys = order().filter(function(s){ return r.bySec[s] != null; });
   var data = keys.map(function(s){ return +r.bySec[s].toFixed(6); });
+  // The residual is drawn as its own grey bar (last), so the bars add up to SPY's
+  // return exactly; a simulation has no residual (sectors only).
+  var isRes = keys.map(function(){ return false; });
+  if (!r.sim){ keys.push('Residual (cash & other)'); data.push(+r.residual.toFixed(6)); isRes.push(true); }
   var ax = axis();
   var mn = Math.min.apply(null, data.concat(ax.min)), mx = Math.max.apply(null, data.concat(ax.max));
   var span = mx - mn, step = span > 12 ? 5 : span > 5 ? 1 : span > 2 ? 0.5 : 0.25;
@@ -123,8 +127,8 @@ function barChart(canvas, box, r, label){
   return new Chart(canvas, {
     type: 'bar',
     data: { labels: keys, datasets: [{ label: label, data: data,
-      backgroundColor: data.map(function(v){ return v >= 0 ? 'rgba(23,122,78,.72)' : 'rgba(155,42,32,.72)'; }),
-      borderColor: data.map(function(v){ return v >= 0 ? '#177A4E' : '#9B2A20'; }),
+      backgroundColor: data.map(function(v, i){ return isRes[i] ? 'rgba(124,134,148,.55)' : v >= 0 ? 'rgba(23,122,78,.72)' : 'rgba(155,42,32,.72)'; }),
+      borderColor: data.map(function(v, i){ return isRes[i] ? '#7C8694' : v >= 0 ? '#177A4E' : '#9B2A20'; }),
       borderWidth: 1, borderRadius: 3, barPercentage: 0.75 }] },
     options: {
       indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: false,
@@ -142,7 +146,7 @@ function barChart(canvas, box, r, label){
 
 function reconcileLine(r, yr){
   var sum = 0; SECS.forEach(function(s){ if (r.bySec[s] != null) sum += r.bySec[s]; });
-  return 'Sectors ' + sgn(sum, 2) + '% + residual ' + sgn(r.residual * 100, 0) + ' bp = SPY ' + sgn(r.total, 2) + '% (' + yr.label + ', price return). ' +
+  return '<b style="color:var(--text)">Sum of the bars = SPY ' + sgn(r.total, 2) + '% (' + yr.label + ', price return)</b>: sectors ' + sgn(sum, 2) + '% + residual ' + sgn(r.residual, 2) + '%. ' +
     'Each month: SPY\'s weight in the sector at the previous month-end (SPY holdings by GICS sector) × the S&amp;P 500 sector index return; months linked with Carino. Residual = what the sector weights do not explain: SPY\'s cash, intra-month changes and fund vs index differences.';
 }
 

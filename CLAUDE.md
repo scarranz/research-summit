@@ -271,6 +271,15 @@ The Companies tab is the core of the portal. Each company has a profile that is 
 
 ### Building or extending a company profile (start here)
 
+**To add a new company or restructure an existing one, follow `docs/PROFILE_PLAYBOOK.md`** (in
+Spanish) — the step-by-step, interactive guide: one unit at a time (each Overview block, each Deep Dive
+sub-tab, each Earnings phase), each one proposed → built → shown on localhost → self-audited → **approved
+by the analyst** → logged in the company's build log `docs/profiles/<TICKER>.md` (template:
+`docs/profiles/_TEMPLATE.md`). It fixes the order, the content of every unit, chart/table formats,
+where text goes and where it doesn't, the source of every number, the Notes rules, and lists the AMZN
+defects **not** to copy (Annex A). Where it disagrees with the docs below, the playbook wins. The
+`/build-profile <TICKER>` command runs it.
+
 Before touching a company's Deep Dive, read **`docs/COMPANY_PROFILE_BLUEPRINT.md`**. **Amazon is the
 reference implementation** and that file is the map from it to any other ticker: the six-section tab
 spine (Top Line · Bottom Line · Evolution · Valuation · Management · Miscellaneous), the list of

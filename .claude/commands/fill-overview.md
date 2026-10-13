@@ -7,6 +7,10 @@ You are filling the **Overview** tab for the company with ticker: **$ARGUMENTS**
 
 Follow this procedure exactly. Do not improvise the structure — the conventions decide it.
 
+**If this Overview is part of building a full profile, use `/build-profile <TICKER>` instead** — it
+runs the Overview as seven approval-gated units (OV-1 … OV-7, `docs/PROFILE_PLAYBOOK.md` §8) and logs
+each approval. Where `OVERVIEW_CONVENTIONS.md` and the playbook §8 disagree, the playbook wins.
+
 ## Step 1 — Load the contract (mandatory)
 Read `docs/OVERVIEW_CONVENTIONS.md` in full. It is the single source of truth for the
 Overview structure, the Key Facts set, the source hierarchy, the anti-wall/pop-up rules,

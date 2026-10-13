@@ -1,5 +1,12 @@
 # The company profile blueprint — how to build the next one
 
+> **Process lives in `docs/PROFILE_PLAYBOOK.md` now** (Oct 2026): the gated, step-by-step build with
+> the analyst, the per-unit content rules, and the list of AMZN defects not to copy. It was verified
+> against the code on Oct 13 2026 and **wins where this file disagrees** — several statements below
+> have drifted (e.g. `.ov-kpis` is already auto-fit, `.ov-collap` has a stylesheet entry, `segments.js`
+> has three adopters, AMZN's Notes uses `company_theme_record`, not `watchlist.js`). Keep this file
+> as the system-level background.
+
 **Amazon is the reference implementation.** This file is the map from that profile to any other
 ticker: the tab spine, the design system, where every number comes from, the interaction contract
 every pane owes the reader, and the order to build it in.

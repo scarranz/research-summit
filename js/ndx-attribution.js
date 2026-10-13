@@ -548,32 +548,15 @@ function renderHero() {
     return '<button class="ndx-tab-btn' + (k === start ? ' active' : '') + '" onclick="ndxSetHeroStart(\'' + k + '\')">' + (YR_LABEL[k] || k) + '</button>';
   }).join('');
 
-  // KPI tiles
-  var years = (dayNum(end.d) - dayNum(pts[0].d)) / 365.25;
+  // One tile: what $100 invested at the start of the chosen year is worth now. Drawdown,
+  // annualised and best/worst-year tiles were dropped (Oct 2026): HOC-close snapshots
+  // understate drawdowns, and the others repeated the yearly table less clearly.
   var total = end.v - 100;
-  var cagr = years >= 1 ? (Math.pow(end.v / 100, 1 / years) - 1) * 100 : null;
-  var peak = pts[0], dd = 0, ddPeak = null, ddTrough = null;
-  pts.forEach(function(p) {
-    if (p.v > peak.v) peak = p;
-    var x = (p.v / peak.v - 1) * 100;
-    if (x < dd) { dd = x; ddPeak = peak; ddTrough = p; }
-  });
-  var inRange = yrs.slice(startIdx).filter(function(k) { return k.indexOf('ytd') !== 0; });
-  var best = inRange.slice().sort(function(a, b) { return rets[b] - rets[a]; })[0];
-  var worst = inRange.slice().sort(function(a, b) { return rets[a] - rets[b]; })[0];
-  function tile(label, value, sub, color) {
-    return '<div class="sc" style="padding:13px 15px"><div class="sl">' + label + '</div>' +
-      '<div class="sv" style="font-size:22px;' + (color ? 'color:' + color : '') + '">' + value + '</div>' +
-      '<div class="ss">' + sub + '</div></div>';
-  }
   var kp = document.getElementById('ndx-hero-kpis');
   if (kp) kp.innerHTML =
-    tile('$100 invested ' + fmtDate(pts[0].d), money(end.v), 'worth today (' + fmtDate(end.d) + ')', colr(total)) +
-    tile('Total return', pct(total, 1), 'price return, ' + years.toFixed(1) + ' years', colr(total)) +
-    tile('Annualized', cagr == null ? '—' : pct(cagr, 1), cagr == null ? 'less than a year invested' : 'compound annual growth rate', cagr == null ? '' : colr(cagr)) +
-    tile('Worst drawdown', dd < 0 ? pct(dd, 1) : '0.0%', dd < 0 ? fmtDate(ddPeak.d) + ' → ' + fmtDate(ddTrough.d) : 'never below its peak', dd < 0 ? 'var(--neg)' : '') +
-    tile('Best / worst year', best ? pct(rets[best], 1) + ' / ' + pct(rets[worst], 1) : '—',
-      best ? (YR_LABEL[best] || best) + ' / ' + (YR_LABEL[worst] || worst) : 'no full year in range');
+    '<div class="sc" style="padding:13px 15px"><div class="sl">$100 invested ' + fmtDate(pts[0].d) + '</div>' +
+      '<div class="sv" style="font-size:22px;color:' + colr(total) + '">' + money(end.v) + '</div>' +
+      '<div class="ss">worth at the latest prices (' + fmtDate(end.d) + ') · ' + pct(total, 1) + '</div></div>';
 
   renderGrowthChart(pts, start);
   renderAnnualBars(yrs, rets, startIdx, pct);
@@ -2159,7 +2142,7 @@ function renderPareto() {
       LBL('Show') + '<div style="display:flex;gap:4px">' + sideBtns + '</div>' + SEP +
       LBL('Column') + '<div style="display:flex;gap:4px">' + infoBtns + '</div>' +
       '<button class="ndx-tab-btn' + (_paretoCols.has('ret') ? ' active' : '') + '" onclick="ndxToggleParetoCol(\'ret\')">Ret%</button>' + SEP +
-      '<button class="ndx-tab-btn" onclick="ndxToggleParetoView()">' + (_paretoView === 'table' ? 'Chart view' : 'Table view') + '</button>' +
+
     '</div>';
 
   if (_paretoView === 'chart') {
@@ -2798,14 +2781,13 @@ function hocOpts(sel) {
 
 // "Data as of …" line under the title
 function sourceLine() {
+  // One date only: the prices the numbers are valued at. (The extract date and the
+  // "bundled copy" fallback note read as a data mismatch to users; the data source is
+  // still logged to the console.)
   var m = (_dataSource && _dataSource.meta) || {};
-  var parts = [];
-  if (m.extractedAt) parts.push('Excel extract ' + m.extractedAt);
-  if (m.pricesAsOf)  parts.push('open HOC priced ' + m.pricesAsOf + (m.priceSource ? ' (' + m.priceSource + ')' : ''));
-  if (!parts.length && NDX_DATA && NDX_DATA.meta && NDX_DATA.meta.latestDate) parts.push('latest HOC ' + NDX_DATA.meta.latestDate);
-  if (_dataSource && _dataSource.kind === 'static')
-    parts.push('<span title="The ndx-attribution function did not answer; showing the copy bundled with the site">bundled copy</span>');
-  return parts.join(' &middot; ');
+  var d = m.pricesAsOf || m.extractedAt || (NDX_DATA && NDX_DATA.meta && NDX_DATA.meta.latestDate);
+  if (_dataSource) console.info('[ndx] data:', _dataSource.kind, m);
+  return d ? 'Prices through ' + fmtDate(d) : '';
 }
 
 function buildSkeleton() {
@@ -2821,7 +2803,7 @@ function buildSkeleton() {
     '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-bottom:14px">' +
       '<div>' +
         '<div class="sect" style="font-size:17px;font-weight:700;color:var(--navy)">Nasdaq-100 — Return Attribution</div>' +
-        '<div style="font-size:11px;color:var(--mu);margin-top:3px">NDX Price Return &middot; Source: Summit NDX NonBBG &middot; ' + sourceLine() + '</div>' +
+        '<div style="font-size:11px;color:var(--mu);margin-top:3px">NDX price return &middot; ' + sourceLine() + '</div>' +
       '</div>' +
     '</div>' +
   '</div>' +
@@ -2835,7 +2817,7 @@ function buildSkeleton() {
         '<div id="ndx-hero-pills" style="display:flex;gap:4px;flex-wrap:wrap"></div>' +
         '<div id="ndx-sim-badge" style="display:none;margin-left:auto;font-size:11px;background:rgba(255,180,0,.1);border:1px solid rgba(200,160,0,.35);border-radius:20px;padding:4px 12px;color:#7A5A00"></div>' +
       '</div>' +
-      '<div id="ndx-hero-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px"></div>' +
+      '<div id="ndx-hero-kpis" style="max-width:320px;margin-bottom:14px"></div>' +
       '<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">' +
         '<div style="flex:2 1 520px;min-width:300px">' +
           '<div style="font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Growth of $100</div>' +
@@ -2847,8 +2829,7 @@ function buildSkeleton() {
         '</div>' +
       '</div>' +
       '<div id="ndx-kpi-table" style="margin-top:14px;overflow-x:auto"></div>' +
-      '<div style="font-size:11px;color:var(--mu);margin-top:8px;line-height:1.5">NDX price return (no dividends), compounded HOC by HOC from the Summit NDX NonBBG holdings; the open HOC is valued at the latest prices. ' +
-        'Drawdown is measured at HOC closes, so intra-period dips are not captured.</div>' +
+      '<div style="font-size:11px;color:var(--mu);margin-top:8px;line-height:1.5">Price return, like the official Nasdaq-100 index (NDX): in each rebalance period every stock\'s price change is weighted by its index weight (weights from QQQ\'s holdings), and the periods are compounded. Dividends are not included. The current period is valued at the latest prices.</div>' +
     '</div>' +
   '</div>' +
 

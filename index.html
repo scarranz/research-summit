@@ -242,6 +242,11 @@
         <button onclick="clearFilters()" style="padding:5px 11px;border:1px solid var(--bdr);border-radius:7px;background:var(--w);cursor:pointer;font-size:11px;color:var(--mu)">Clear</button>
       </div>
       <div class="sb-secrow" id="sec-excl-row"></div>
+      <div style="font-size:11px;color:var(--mu);line-height:1.55;margin:6px 2px 4px">
+        <b style="color:var(--text)">How the filters work.</b> <i>Positive</i> = the stock's price return that year was above 0%. <i>Beat Market</i> = it was above the S&amp;P 500's price return that year. Picking several filters keeps only the companies that pass <b>all</b> of them.
+        A year only counts for a company that was <b>in the S&amp;P 500 for that whole year</b> (a member at the start and at the end of it); otherwise it is left out of that year's filters and of the sector totals, however well it did.
+        Example: Interactive Brokers (IBKR) rose +113% in 2024 and +46% in 2025, but it joined the index in 2025, so it does not appear with the 2024 or 2025 filters on. The companies list is today's S&amp;P 500 members.
+      </div>
       <table class="rt" id="sec-summary-tbl" style="margin-top:6px"><thead><tr>
         <th>Sector</th>
         <th style="text-align:right">Stocks Matching</th>

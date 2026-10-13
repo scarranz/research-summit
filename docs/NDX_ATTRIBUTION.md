@@ -143,8 +143,10 @@ Excel (analyst) ──► scripts/ndx/extract_ndx.py --upload ──► ndx-attr
   Names Massive does not return keep their Excel return and are listed in `meta.priceMissing`.
 - **Nothing changes until someone refreshes.** Older rows in `ndx_snapshots` are the history;
   rollback = delete the newer rows.
-- **Fallback**: if the function fails, the page imports `js/ndx-attribution-data.js` and shows
-  "bundled copy" under the title.
+- **Fallback**: if the function fails, the page imports `js/ndx-attribution-data.js` (the copy
+  written by `extract_ndx.py --write-js`); the title only says "Prices through <date>" and the
+  source is logged to the console. Until the function is deployed, **the NDX only moves when the
+  analyst refreshes the Excel and Claude reruns the extractor with `--write-js`.**
 - **One-time setup (San / Oscar)**: run `sql/025_ndx_attribution.sql`; set the secret
   `supabase secrets set NDX_INGEST_KEY=<value> --project-ref bvflqjndivouhgwqfbrq` (same value as
   the analyst's gitignored `scripts/ndx/.ingest-key`); `supabase functions deploy ndx-attribution
@@ -231,7 +233,12 @@ A new dummy code makes the extractor print `unmapped Bloomberg dummy ticker(s)` 
   (only the Detail simulation also feeds Top Contributors, Winners vs Losers, Scatter, Beeswarm).
 
 **NDX Price Return** — a bordered table (year cells shaded), one column per year oldest → newest (2020 … YTD), plus
-a bar chart of every year in chronological order (2020 at the top, YTD at the bottom).
+a bar chart of every year in chronological order (2020 at the top, YTD at the bottom). One tile only:
+"$100 invested … worth at the latest prices". Drawdown, annualised and best/worst-year tiles were
+removed (Oct 2026): drawdown at HOC closes understates the real one (needs daily data), and the
+others restated the table less clearly. Price return = constituent price changes weighted by
+QQQ-derived weights, no dividends, like the official NDX (a price index). Top Contributors is
+table-only (the chart view was dropped).
 
 **Attribution by Sector / Industry Group** (chart) — one year at a time; By Sector or By Industry
 Group; **one x-axis for sectors and industry groups across all years**; rows = every sector / group

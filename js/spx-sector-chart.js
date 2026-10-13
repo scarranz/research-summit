@@ -109,17 +109,22 @@ function windowIdx(){
   if (i0 < 0) i0 = 0;
   return [i0, i1 < 0 ? ms.length - 1 : i1];
 }
+// Cumulative return over the window. A series with no level at the window start
+// (XLC before its June 2018 launch) starts at its first available month-end, at 0%,
+// and the benchmark is rebased to that same month for the relative view.
 function cumSeries(k){
   var w = windowIdx(), L = D.levels.series[k], S = D.levels.series[BENCH], out = [];
-  var b = L[w[0]], bs = S[w[0]];
+  var j0 = -1;
+  for (var j = w[0]; j <= w[1]; j++){ if (L[j] != null && (!isRel() || S[j] != null)){ j0 = j; break; } }
   for (var i = w[0]; i <= w[1]; i++){
-    if (b == null || L[i] == null){ out.push(null); continue; }
-    var v = (L[i] / b - 1) * 100;
-    if (isRel()){ if (bs == null || S[i] == null){ out.push(null); continue; } v -= (S[i] / bs - 1) * 100; }
+    if (j0 < 0 || i < j0 || L[i] == null){ out.push(null); continue; }
+    var v = (L[i] / L[j0] - 1) * 100;
+    if (isRel()){ if (S[i] == null){ out.push(null); continue; } v -= (S[i] / S[j0] - 1) * 100; }
     out.push(v);
   }
   return out;
 }
+function firstIdx(a){ for (var i = 0; i < a.length; i++) if (a[i] != null) return i; return -1; }
 function lastVal(a){ for (var i = a.length - 1; i >= 0; i--) if (a[i] != null) return a[i]; return null; }
 function unit(){ return isRel() ? 'pp' : '%'; }
 function fmt(v){
@@ -132,7 +137,12 @@ function tone(v){ return v == null || Math.abs(v) < 0.005 ? 'var(--mu)' : v > 0 
 // Every series drawn: S&P 500 first (absolute only — relative makes it the
 // zero line), then the sectors ranked by their return over the window.
 function seriesList(){
-  var list = sectors().map(function(k){ var c = cumSeries(k); return { k: k, label: TICKERS[k] ? k + ' (' + TICKERS[k] + ')' : k, color: colorOf(k), data: c, end: lastVal(c) }; });
+  var w0 = windowIdx()[0], ms = months();
+  var list = sectors().map(function(k){
+    var c = cumSeries(k), f = firstIdx(c);
+    var since = f > 0 ? ' · since ' + ymLabel(ms[w0 + f]) : '';   // started after the window opened
+    return { k: k, label: (TICKERS[k] ? k + ' (' + TICKERS[k] + ')' : k) + since, color: colorOf(k), data: c, end: lastVal(c) };
+  });
   list.sort(function(a, b){ return (b.end == null ? -1e9 : b.end) - (a.end == null ? -1e9 : a.end); });
   if (!isRel()){ var s = cumSeries(BENCH); list.unshift({ k: BENCH, label: BENCH_LABEL, color: SPX_COLOR, data: s, end: lastVal(s), spx: true }); }
   return list;

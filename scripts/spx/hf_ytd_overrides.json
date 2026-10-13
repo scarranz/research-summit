@@ -1,0 +1,8 @@
+{
+  "_note": "Manual YTD overrides for the Hedge Funds > Superinvestors holding cards, applied by holdings_ytd.py AFTER the Bloomberg/Yahoo computation so an analyst hand-correction survives regeneration. Keyed by ticker; the value is the YTD % shown on the cards. Cards only -- the Market Analysis > S&P 500 Explorer reads js/spx-data.js and is NOT affected. Only applied when base/asOf match the current cut-off. Remove an entry to return to the computed figure.",
+  "base": "2025-12-31",
+  "asOf": "2026-10-12",
+  "ytd": {
+    "GE": -0.2
+  }
+}

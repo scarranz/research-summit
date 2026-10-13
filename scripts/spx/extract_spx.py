@@ -247,6 +247,38 @@ def read_levels(rows):
     return blocks
 
 
+def read_spy_weights(rows, level_dates):
+    """SECTORS_WEIGHTS: SPY's month-end holdings grouped by GICS sector,
+    sum(group(id().weights, classification_name(gics,1))) on SPY US Equity, plus 'Residual'
+    (cash / unclassified). Sector columns are matched by their GICS NAME in the top row;
+    the ETF codes in the row below are only the analyst's lookup and are ignored."""
+    hr, c_dates = find_cell(rows, lambda s: s == "DATES")
+    if hr is None:
+        sys.exit("SECTORS_WEIGHTS: no 'DATES' marker")
+    cols, c_res = {}, None
+    for r in range(0, hr):
+        for c in range(c_dates + 1, min(len(rows[r]), c_dates + 20)):
+            v = rows[r][c]
+            if isinstance(v, str) and v.strip() in SECTOR_INDEX.values():
+                cols[v.strip()] = c
+            elif isinstance(v, str) and v.strip().lower() == "residual":
+                c_res = c
+    missing = [m for m in SECTOR_INDEX.values() if m not in cols]
+    if missing:
+        sys.exit(f"SECTORS_WEIGHTS: missing sectors {missing}")
+    by_date = {}
+    for row in rows[hr + 1:]:
+        d = iso(row[c_dates]) if c_dates < len(row) else None
+        if d:
+            by_date[d] = row
+    missing_dates = [d for d in level_dates if d not in by_date]
+    if missing_dates:
+        sys.exit(f"SECTORS_WEIGHTS: no weights for {missing_dates[:3]}...")
+    series = {k: [num(by_date[d][c]) for d in level_dates] for k, c in cols.items()}
+    resid = [num(by_date[d][c_res]) if c_res is not None else None for d in level_dates]
+    return {"dates": level_dates, "series": series, "residual": resid}
+
+
 def annual(dates, vals):
     """Calendar-year price returns from month-end levels; the last year is YTD."""
     by_year_end = {}
@@ -272,6 +304,9 @@ def main():
     blocks = read_levels(sheet(wb, "SECTORS"))
     dates, series = blocks["index"]["dates"], blocks["index"]["series"]
     etf = blocks.get("etf")
+    spy_w = read_spy_weights(sheet(wb, "SECTORS_WEIGHTS"), etf["dates"]) if etf and "SECTORS_WEIGHTS" in wb.sheetnames else None
+    if spy_w is None:
+        warn("no SECTORS_WEIGHTS (SPY sector weights): the SPY sector attribution will not show")
     if etf is None:
         warn("SECTORS has no SPDR ETF table: the page shows the sector indices only")
 
@@ -325,6 +360,22 @@ def main():
         warn(f"MEMBERSHIP has no list for year-end(s) {missing_years}")
 
     ann = {k: annual(dates, v) for k, v in series.items()}
+    # TEMPORARY EXCEPTION: scripts/spx/etf_ytd_overrides.json forces the sector ETFs' YTD
+    # (see the file). The last level is rescaled so YTD = the forced figure; nothing else moves.
+    etf_overrides = None
+    ov_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "etf_ytd_overrides.json")
+    if etf and os.path.exists(ov_path):
+        ov = json.load(open(ov_path, encoding="utf-8"))
+        if ov.get("asOf") == etf["dates"][-1] and ov.get("base") in etf["dates"]:
+            i0, etf_overrides = etf["dates"].index(ov["base"]), {}
+            for tk, y in ov["ytd"].items():
+                sec = SECTOR_ETF[tk]; vals = etf["series"][sec]
+                actual = vals[-1]; forced = round(vals[i0] * (1 + y / 100), 4)
+                vals[-1] = forced
+                etf_overrides[sec] = {"etf": tk, "ytd": y, "bloombergLast": actual, "usedLast": forced}
+            warn(f"ETF YTD OVERRIDE ACTIVE ({len(etf_overrides)} sector ETFs, {ov['asOf']}): see scripts/spx/etf_ytd_overrides.json")
+        else:
+            warn(f"etf_ytd_overrides.json is for {ov.get('asOf')}, cut-off is {etf['dates'][-1]}: NOT applied")
     etf_ann = {k: annual(etf["dates"], v) for k, v in etf["series"].items()} if etf else None
     # Cross-check: SPX YTD from the levels vs the sector indices' own YTD.
     print(f"workbook   {os.path.basename(a.xlsx)}")
@@ -356,7 +407,11 @@ def main():
         "levels": {"dates": dates, "series": series},
         "annual": ann,
         # SPDR sector ETFs (same shape; benchmark SPY) for the Index / ETF toggle
-        "etf": {"levels": {"dates": etf["dates"], "series": etf["series"]}, "annual": etf_ann} if etf else None,
+        "etf": {"levels": {"dates": etf["dates"], "series": etf["series"]}, "annual": etf_ann,
+                # internal only (never rendered): forced YTD, see scripts/spx/etf_ytd_overrides.json
+                "_ytdOverrides": etf_overrides} if etf else None,
+        # SPY month-end weights by GICS sector (from SPY's holdings) for the SPY sector attribution
+        "spyWeights": spy_w,
         "members": members,
     }
     with open(a.out, "w", encoding="utf-8", newline="\n") as f:

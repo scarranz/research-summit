@@ -88,9 +88,9 @@ function rsAttachBrush(el, chart, onX, onY, onReset){
 var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 var SPX_COLOR = 'rgba(30,39,51,0.92)';   // navy — the index, as "actual" everywhere in the portal
 
-var D = null, colorOf = null, root = null;
+var D = null, colorOf = null, root = null, SOURCES = null;
 var BENCH = 'SPX', BENCH_LABEL = 'S&P 500', SRC_LABEL = 'S&P 500 GICS sector indices', TICKERS = {};
-var st = { from: null, to: null, mode: 'abs', hidden: {}, yr: null, tbl: false, chart: null };
+var st = { from: null, to: null, mode: 'abs', hidden: {}, yr: null, tbl: false, chart: null, src: 'etf' };
 
 function ymLabel(ym){ return MON[+ym.slice(5, 7) - 1] + " '" + ym.slice(2, 4); }
 function addMonths(ym, n){
@@ -177,11 +177,28 @@ function ymPicker(which, val, first, last, style){
   return h + '</select></span>';
 }
 
+// This chart's own source toggle (independent of Sector Alpha's)
+function srcToggleHtml(){
+  if (!SOURCES || !SOURCES.etf) return '';
+  return '<span class="rs-views">' +
+    '<button type="button" class="rs-view' + (st.src === 'etf' ? ' active' : '') + '" data-spsrc="etf">SPDR sector ETFs vs SPY</button>' +
+    '<button type="button" class="rs-view' + (st.src === 'index' ? ' active' : '') + '" data-spsrc="index">S&amp;P 500 sector indices vs S&amp;P 500</button></span>';
+}
+function useSource(k){
+  var c = SOURCES && SOURCES[k]; if (!c) return;
+  st.src = k;
+  D = { levels: c.levels, year: D.year };
+  BENCH = c.bench; BENCH_LABEL = c.benchLabel; SRC_LABEL = c.label; TICKERS = c.tickers || {};
+  st.yr = null;
+  var note = document.getElementById('ma-sp-asof');
+  if (note && root.dataset.asof) note.textContent = c.label + ' · price return through ' + root.dataset.asof;
+}
+
 function controlsHtml(){
   var ms = months(), first = ms[1], last = ms[ms.length - 1];
   var inp = 'padding:3px 6px;border:1px solid var(--bdr);border-radius:6px;font:inherit;font-size:11px;color:var(--text);background:var(--w)';
   var presets = [['ytd', 'YTD'], [1, '1Y'], [3, '3Y'], [5, '5Y'], ['all', 'All']];
-  return '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">' +
+  return '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">' + srcToggleHtml() +
     '<span class="rs-views"><button type="button" class="rs-view' + (isRel() ? '' : ' active') + '" data-spm="abs">Absolute</button>' +
     '<button type="button" class="rs-view' + (isRel() ? ' active' : '') + '" data-spm="rel">Relative to ' + esc(BENCH_LABEL) + '</button></span>' +
     '<span class="rs-quick"><span class="rs-quick-l">Range</span>' +
@@ -267,9 +284,10 @@ function render(){
 
 function wire(){
   root.addEventListener('click', function(e){
-    var t = e.target.closest('[data-spm],[data-spp],[data-spl],[data-sptb]');
+    var t = e.target.closest('[data-spm],[data-spp],[data-spl],[data-sptb],[data-spsrc]');
     if (!t || !root.contains(t)) return;
-    if (t.dataset.spm){ st.mode = t.dataset.spm; st.yr = null; render(); }
+    if (t.dataset.spsrc){ useSource(t.dataset.spsrc); render(); }
+    else if (t.dataset.spm){ st.mode = t.dataset.spm; st.yr = null; render(); }
     else if (t.dataset.spp){ var p = t.dataset.spp; setPreset(p === 'ytd' || p === 'all' ? p : +p); }
     else if (t.dataset.spl){ st.hidden[t.dataset.spl] = !st.hidden[t.dataset.spl]; render(); }
     else if (t.dataset.sptb){ st.tbl = st.tbl !== true; render(); }
@@ -296,14 +314,17 @@ export function setSectorPerfSource(levels, bench, benchLabel, srcLabel, tickers
 }
 
 // host: the section's container. data: SPX_DATA (or null → the section stays empty).
-export function initSectorPerfChart(host, data, sectorColor){
+// sources: { etf: {levels, bench, benchLabel, label, tickers} | null, index: {...} }
+export function initSectorPerfChart(host, data, sectorColor, sources){
   root = host;
   if (!root) return;
   if (!data || !data.levels || typeof Chart === 'undefined'){
     var sec = root.closest('.sec'); if (sec) sec.style.display = 'none';
     return;
   }
-  D = data; colorOf = sectorColor;
+  D = data; colorOf = sectorColor; SOURCES = sources || null;
+  if (data.asOf){ var d = new Date(data.asOf + 'T12:00:00Z'); root.dataset.asof = MON[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear(); }
+  if (SOURCES) useSource(SOURCES.etf ? 'etf' : 'index');
   var ms = months();
   st.from = D.year + '-01'; st.to = ms[ms.length - 1];
   wire();

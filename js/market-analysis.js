@@ -1,7 +1,8 @@
 // market-analysis.js — extracted from summit-research-portal.html
 import { ALL_STOCKS, SP500_TODAY26, SP500_B25, SP500_B24, SP500_BMK, SCOLS, COMPANY_NAMES } from './portal-data.js';
 import { loadNdxAttribution } from './ndx-attribution.js';
-import { initSectorPerfChart, setSectorPerfSource } from './spx-sector-chart.js';
+import { initSectorPerfChart } from './spx-sector-chart.js';
+import { initSpxAttribution } from './spx-attribution.js';
 
 // ─── Data source ───────────────────────────────────────────────
 // js/spx-data.js is generated from the analyst's Bloomberg workbook by
@@ -30,8 +31,10 @@ function asOfTxt(iso){
 }
 
 // ─── Sector source: S&P 500 sector indices or SPDR sector ETFs ──
-// Only the SECTOR views follow this toggle (Sector Alpha, Sector Performance,
-// the Sector Summary return column). Stocks are always compared with the SPX.
+// This toggle drives SECTOR ALPHA only. Sector Performance has its own toggle
+// (inside js/spx-sector-chart.js), the Sector Summary return column is always the
+// S&P 500 sector index (its rows are S&P 500 members), and the SPY attribution is
+// SPY-only. Stocks are always compared with the SPX.
 // Index mode: S5 indices vs SPX. ETF mode: XL* funds vs SPY (fund vs fund).
 var SEC_SRC = 'etf';
 function src(){
@@ -63,6 +66,13 @@ function buildSectorRets(){
     SECTOR_RETS[sec] = o;
   });
 }
+// Sector Summary's return column: always the S&P 500 sector index (whatever the
+// Sector Alpha toggle shows), because the rows are S&P 500 members.
+function idxSectorYtd(sec){
+  if (!SPX) return getSectorYtd(sec);
+  var a = SPX.annual[sec]; return a ? a[String(SPX.year)] : null;
+}
+
 function setSecSrc(k){
   if (!SPX || (k === 'etf' && !SPX.etf)) return;
   SEC_SRC = k;
@@ -71,8 +81,6 @@ function setSecSrc(k){
   renderAsOf();
   renderSectorBars();
   renderSBSecChips();
-  renderTbl();
-  setSectorPerfSource(src().levels, src().bench, src().benchLabel, src().label, SEC_TICKER[src().kind]);
 }
 window.setSecSrc = setSecSrc;
 function renderSecSrcToggle(){
@@ -133,7 +141,6 @@ function renderAsOf() {
   set('ma-sb-asof', src().label + ' · price return through ' + asOfTxt(SPX.asOf) + ' · relative = vs ' + src().benchLabel + ' · mix any years, months and a date range in the same view');
   set('ma-exp-asof', SPX.year + ' YTD through ' + asOfTxt(SPX.asOf) + ' · price return · GICS sector & industry group');
   set('ma-exp-ind', 'Industry Group');
-  set('ma-sp-asof', src().label + ' · price return through ' + asOfTxt(SPX.asOf));
 }
 
 let scatChart = null, tblData = [], tblData2 = [], sortCol = 5, sortAsc = false, IMAP = {}, SB_MODE = 'abs', SECTOR_RETS = {};
@@ -345,9 +352,9 @@ function renderTbl(){
   rows.forEach(function(r){var cc=secColor(r.sec);
     var pctClr=r.pct>=70?'var(--pos)':r.pct>=40?'var(--text)':'var(--mu)';
     var caret=window.SEC_EXPANDED&&window.SEC_EXPANDED[r.sec]?'&#x25BC;':'&#x25B6;';
-    var secRet=getSectorYtd(r.sec);
+    var secRet=idxSectorYtd(r.sec);
     html+='<tr class="sec-row" data-sec="'+r.sec+'" onclick="toggleSecExp(\''+r.sec.replace(/\'/g,"\\'")+'\')" style="cursor:pointer">';
-    html+='<td><span style="display:inline-block;width:13px;color:var(--mu);font-size:9px">'+caret+'</span><span class="sch" style="background:'+cc+'22;color:'+cc+';font-weight:600;margin-left:4px">'+secLabel(r.sec)+'</span></td>';
+    html+='<td><span style="display:inline-block;width:13px;color:var(--mu);font-size:9px">'+caret+'</span><span class="sch" style="background:'+cc+'22;color:'+cc+';font-weight:600;margin-left:4px">'+r.sec+'</span></td>';
     html+='<td style="text-align:right;font-weight:700;font-size:14px;color:var(--navy)">'+r.m+'</td>';
     html+='<td style="text-align:right;font-weight:600;color:'+pctClr+'">'+r.pct.toFixed(0)+'%</td>';
     html+='<td style="text-align:right;color:var(--mu)">'+r.tot+'</td>';
@@ -437,7 +444,7 @@ function renderTbl(){
   html+='<td style="text-align:right;font-weight:700;font-size:14px;color:var(--navy)">'+totMatch+'</td>';
   html+='<td style="text-align:right;font-weight:700;color:var(--navy)">'+totPct.toFixed(0)+'%</td>';
   html+='<td style="text-align:right;color:var(--mu);font-weight:600">'+totSec+'</td>';
-  html+='<td style="text-align:right" title="'+(SPX?src().benchLabel:'S&amp;P 500')+' YTD">'+fmtRet(SPX?secBench('ytd'):BMK.ytd)+'</td>';
+  html+='<td style="text-align:right" title="S&amp;P 500 YTD">'+fmtRet(BMK.ytd)+'</td>';
   html+='</tr>';
   body.innerHTML=html;
 }
@@ -915,8 +922,11 @@ function initMarketAnalysis(D) {
   renderSSExclChips();
   renderSBMonthChips();
   renderSectorBars();
-  initSectorPerfChart(document.getElementById('sp-chart'), SPX, secColor);
-  if (SPX) setSectorPerfSource(src().levels, src().bench, src().benchLabel, src().label, SEC_TICKER[src().kind]);
+  initSectorPerfChart(document.getElementById('sp-chart'), SPX, secColor, SPX ? {
+    etf:   SPX.etf ? { levels:SPX.etf.levels, bench:'SPY', benchLabel:'SPY', label:'SPDR sector ETFs', tickers:SEC_TICKER.etf } : null,
+    index: { levels:SPX.levels, bench:'SPX', benchLabel:'S&P 500', label:'S&P 500 GICS sector indices', tickers:SEC_TICKER.index }
+  } : null);
+  initSpxAttribution(document.getElementById('spx-attr-host'), SPX);
   renderTbl();
   renderTbl2();
   renderRotTbl();

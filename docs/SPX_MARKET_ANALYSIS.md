@@ -18,6 +18,7 @@ or the page. It records what the analyst (Dani) and Claude agreed in Oct 2026.
 | `MEMBERSHIP` | SPX members at each year-end (`members('SPX Index', dates=…)`) as **`composite_id_bb_global()`**, one column per year, plus a `TICKER` (`id().value`) · `BBG_ID` (composite) map of today's members. |
 | `SECTORS` | `DATES` · `SPX Index` · the 11 S&P 500 GICS sector indices (`S5INFT`, `S5TELS`, `S5FINL`, `S5COND`, `S5INDU`, `S5HLTH`, `S5UTIL`, `S5CONS`, `S5RLST`, `S5ENRS`, `S5MATR`), `px_last(..., frq=cm)` month-ends; last row = cut-off. |
 | `SECTORS` (second table) | A second `DATES` block on the same sheet: `SPY US Equity` + the 11 SPDR sector ETFs (`XLK`, `XLC`, `XLF`, `XLY`, `XLI`, `XLV`, `XLU`, `XLP`, `XLRE`, `XLE`, `XLB` `US Equity`), `px_last(..., frq=cm, ca_adj=SPLITS)`. XLC starts Jun 2018 (blank before = n/a). |
+| `SECTORS_WEIGHTS` | SPY's month-end holdings grouped by GICS sector: `sum(group(id().weights, classification_name(gics,1)))` on `SPY US Equity`, one column per sector (matched by the GICS **name** in the top row; the ETF codes under it are only the analyst's lookup) + `Residual`. Feeds the SPY attribution only. |
 
 Lessons that cost a day:
 - **Composite, never venue.** `UN`/`UW` tickers and the venue-level `id_bb_global` break when a stock
@@ -48,10 +49,26 @@ Lessons that cost a day:
   years in full. Former members are not in the data (accepted: current members only).
 - Sector Summary drills sector → industry group → companies; a sector with a single industry group
   (Energy, Materials, Utilities) opens straight onto its companies.
-- **No sector attribution on the S&P panel** (decided Oct 2026). Bloomberg's sector weights are
-  estimates built with *today's* GICS while the S5 levels carry the GICS *of the time*, so weight ×
-  return only adds up after the March 2023 GICS change; rebuilding sector returns from Bloomberg's own
-  index (B500) was rejected because it shares only ~86% of the S&P 500's constituents.
+- **Toggles.** "Sectors measured with" (ETF vs SPY / S5 index vs SPX) drives **Sector Alpha only**.
+  Sector Performance has its own ETF / index toggle. The Sector Summary return column is always the
+  S5 sector index (its rows are S&P 500 members).
+- **SPY Attribution by Sector / Detail & Simulation** (`js/spx-attribution.js`): the **SPY fund**, not
+  the index. Monthly contribution = SPY's sector weight at the prior month-end (from SPY's holdings)
+  × the S5 sector index return; years Carino-linked; Residual = SPY's own price return − sum of
+  sectors (cash, timing), so sectors + residual = SPY exactly. Simulation rescales the remaining
+  weights monthly. **Complete years from 2024 only** (`FIRST_YEAR`): the weights use today's GICS and
+  the S5 levels the GICS of the time, so before the March 2023 GICS change they do not add up
+  (residual 2017 +331 bp, 2020 +199, 2023 +104; 2024 −1, 2025 −5, 2026 YTD +4). SPDR ETF returns
+  were tested and rejected (2024 residual +530 bp: the ETFs cap weights). Bloomberg's SPX sector
+  weight estimates and a B500 rebuild (86% overlap) were rejected earlier.
+- **⚠ INTERNAL — temporary ETF YTD override (Oct 13, 2026).** The 2026 YTD of the 11 SPDR sector
+  ETFs is forced to the figures of the Summit portal list (`scripts/spx/etf_ytd_overrides.json`),
+  which measures YTD from a different base than the Dec 31 close (Bloomberg/Yahoo agree with each
+  other; e.g. XLK +36.39% on closes vs +34.78% forced). The extractor rescales each ETF's last level,
+  so Sector Alpha (ETF mode), Sector Performance (ETF mode) and their months/ranges agree; years
+  before 2026 are untouched; SPY is not overridden. **Nothing on the page says so, on purpose.** The
+  extractor prints "ETF YTD OVERRIDE ACTIVE" on every run and stores the real Bloomberg last levels
+  in `SPX_DATA.etf._ytdOverrides`. To undo: delete the json (or let the cut-off move past its asOf).
 - GICS: the current classification only (Bloomberg has no history without an S&P licence); full
   official names, never truncated.
 

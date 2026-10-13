@@ -223,6 +223,9 @@ export function initSpxAttribution(host, data){
     '<div class="sec">' +
       '<div class="sechdr"><span class="sect">SPY Attribution by Sector</span><span class="secn">Contribution of each GICS sector to the SPY fund\'s price return · weights from SPY\'s holdings, sector returns from the S&amp;P 500 sector indices · full years from ' + FIRST_YEAR + '</span></div>' +
       '<div class="card">' +
+        '<div style="font-size:11px;color:var(--mu);line-height:1.5;background:var(--surface);border:1px solid var(--bdr);border-radius:8px;padding:8px 12px;margin-bottom:10px">' +
+        '<b style="color:var(--text)">This is the SPY fund, built from the stocks it holds.</b> Each sector\'s contribution comes from SPY\'s own holdings in that sector (weights from SPY\'s holdings, returns from the S&amp;P 500 sector indices). ' +
+        'It is not the return of the SPDR sector ETFs (XLK, XLF, XLC…): those funds cap their largest holdings, so their returns can differ a lot from the same sector inside SPY. Owning SPY is not the same as owning the sector ETFs.</div>' +
         '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">' + yrBtns('spx-attr-yr-btn', 'spxAttrChartYear', st.chartYear) + '</div>' +
         '<div id="spx-attr-box" style="position:relative;height:340px"><canvas id="spx-attr-canvas"></canvas></div>' +
         '<div id="spx-attr-note" style="font-size:11px;color:var(--mu);margin-top:8px;line-height:1.5"></div>' +
@@ -231,7 +234,7 @@ export function initSpxAttribution(host, data){
     '<div class="sec">' +
       '<div class="sechdr"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">' +
         '<div><span class="sect">SPY Attribution Detail &amp; Simulation</span>' +
-          '<span class="secn" style="display:block;margin-top:2px">Click a sector to include / exclude · SPY\'s sector weights rescale to 100% every month · the fund return updates in real time</span></div>' +
+          '<span class="secn" style="display:block;margin-top:2px">SPY fund, from its holdings (not the sector ETFs) · click a sector to include / exclude · SPY\'s sector weights rescale to 100% every month · the fund return updates in real time</span></div>' +
         '<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">' +
           '<div style="display:flex;gap:3px;margin-right:4px">' + yrBtns('spx-det-yr-btn', 'spxAttrDetYear', st.detYear) + '</div>' +
           '<button class="ndx-tab-btn" data-spxmode="chart" onclick="spxAttrMode(\'chart\')">&#9646; Chart</button>' +

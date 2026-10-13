@@ -1278,9 +1278,13 @@ var TICKER_YTD_MAP = null;
 function tickerYtdMap() {
   if (TICKER_YTD_MAP) return TICKER_YTD_MAP;
   var map = {};
-  // S&P 500 members from the Bloomberg extract, then the card holdings' YTD map
-  var yy = 'r' + String(SPX_DATA.year).slice(2);
-  SPX_DATA.members.forEach(function(m) { if (m[yy] != null) map[m.t] = m[yy]; });
+  // S&P 500 members from the Bloomberg extract, then the card holdings' YTD map.
+  // Guard the same way market-analysis.js does: if js/spx-data.js is missing or
+  // empty, skip the member map rather than throw — the card holdings' YTD still works.
+  if (SPX_DATA && SPX_DATA.members && SPX_DATA.year != null) {
+    var yy = 'r' + String(SPX_DATA.year).slice(2);
+    SPX_DATA.members.forEach(function(m) { if (m[yy] != null) map[m.t] = m[yy]; });
+  }
   Object.keys(HF_HOLDINGS_YTD.items).forEach(function(t) { var it = HF_HOLDINGS_YTD.items[t]; if (it.ytd != null && !it.sinceIpo && map[t] == null) map[t] = it.ytd; });
   TICKER_YTD_MAP = map;
   return map;

@@ -3,6 +3,33 @@ import { INVESTORS, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS 
 import { fetchInvestorReturns, fetchInvestorHoldings, fetchHoldingsByTicker, fetchInvestorLetters, fetchAllInvestorLetters, insertInvestorLetter, fetchInvestorMeta, insertInvestorMeta, replaceInvestorHoldings, syncLatest13F, getFileUrl, uploadFile } from './api.js';
 import { LOCAL_INVESTOR_RETURNS, LOCAL_INVESTOR_HOLDINGS, LOCAL_INVESTOR_LETTERS, NO_PUBLIC_LETTERS_NOTE } from './investor-local-seed.js';
 import { parse13FFile } from './investor-13f-parser.js';
+import { HF_HOLDINGS_YTD } from './hf-holdings-ytd.js';
+import { SPX_DATA } from './spx-data.js';
+
+// ─── Holding YTD returns ────────────────────────────────────────
+// The YTD on each card's holdings used to be typed into portal-data.js and went
+// stale. It now comes from js/hf-holdings-ytd.js (scripts/spx/holdings_ytd.py):
+// price return from the previous year-end to the S&P 500 panel's cut-off —
+// Bloomberg for S&P 500 members, Yahoo closes for the rest. No price at either
+// end (a 2026 IPO, a delisting) = null, shown as n/a, never the old number.
+var HOLDING_YTD_ASOF = HF_HOLDINGS_YTD.asOf;
+function holdingYtdNote(t) {
+  var it = HF_HOLDINGS_YTD.items[t];
+  return it && it.note ? it.note : 'no price on file';
+}
+INVESTORS.forEach(function(inv) {
+  (inv.holdings || []).forEach(function(h) {
+    var it = HF_HOLDINGS_YTD.items[h.t];
+    // A 2026 IPO has no YTD: its since-IPO return is shown on the card only, labelled
+    h.ytd = it && !it.sinceIpo ? it.ytd : null;
+    h.ipoRet = it && it.sinceIpo ? it.ytd : null;
+    h.ipoDate = it && it.sinceIpo ? it.sinceIpo : null;
+  });
+});
+function asOfShort(iso) {
+  var d = new Date(iso + 'T12:00:00Z');
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear();
+}
 
 let alphaChart = null, ALPHA_MODE = 'cum', HF_SEL = {}, HF_START = '2015';
 
@@ -197,10 +224,12 @@ function renderInvGrid(){
     // Holdings: every disclosed position from the latest 13F on file
     // (Q2 2026) — the toggle above the grid controls the concentration
     // stat above, not how many rows this table lists.
-    html+='<table class="icard-tbl"><thead><tr><th>Ticker</th><th>Company</th><th class="nr">% Port</th><th class="nr">YTD</th></tr></thead><tbody>';
-    allHoldings.forEach(function(h){var pc=h.ytd>=0?'rp':'rn';var ys=(h.ytd>=0?'+':'')+h.ytd.toFixed(2)+'%';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';
-      html+='<tr><td><span class="iticker">'+h.t+'</span></td><td><span class="ico">'+h.co+'</span>'+nb+'</td><td class="nr" style="color:var(--mu)">'+h.w.toFixed(2)+'%</td><td class="nr"><span class="rpill '+pc+'">'+ys+'</span></td></tr>';});
+    html+='<table class="icard-tbl"><thead><tr><th>Ticker</th><th>Company</th><th class="nr">% Port</th><th class="nr" title="Stock price return, Dec 31 → '+asOfShort(HOLDING_YTD_ASOF)+' close">YTD</th></tr></thead><tbody>';
+    allHoldings.forEach(function(h){var rv=h.ytd!=null?h.ytd:h.ipoRet;var pc=rv>=0?'rp':'rn';var ys=rv==null?null:(rv>=0?'+':'')+rv.toFixed(2)+'%';
+      var ipoTag=h.ipoDate?'<span title="Listed '+h.ipoDate+': return since the first-day open, not YTD" style="font-size:8px;font-weight:700;letter-spacing:.4px;color:var(--mu);border:1px solid var(--bdr);border-radius:3px;padding:0 3px;margin-right:4px;vertical-align:middle">SINCE IPO</span>':'';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';
+      html+='<tr><td><span class="iticker">'+h.t+'</span></td><td><span class="ico">'+h.co+'</span>'+nb+'</td><td class="nr" style="color:var(--mu)">'+h.w.toFixed(2)+'%</td><td class="nr">'+(ys==null?'<span style="color:var(--mu);font-size:11px" title="'+holdingYtdNote(h.t)+'">n/a</span>':ipoTag+'<span class="rpill '+pc+'">'+ys+'</span>')+'</td></tr>';});
     html+='</tbody></table>';
+    html+='<div style="font-size:9.5px;color:var(--mu);margin-top:4px;text-align:right">Holding YTD: price return to '+asOfShort(HOLDING_YTD_ASOF)+' close</div>';
     if(inv.est)html+='<div class="est-note">&#x26A0; Annual returns estimated from portfolio data.</div>';
     html+='</div>';
   });
@@ -1241,17 +1270,22 @@ function weightCellHtml(w, isCur) {
   return '<td class="nr' + (isCur ? ' ivd-cmp-current' : '') + '">' + (w == null ? '—' : w.toFixed(2) + '%') + '</td>';
 }
 
-// Ticker → current-year YTD stock return, for the YTD column. Sourced
-// from ALL_STOCKS (r26) first, falling back to any investor card's
-// hardcoded holding YTD (covers a few tickers, like BN, not in
-// ALL_STOCKS). Historical/delisted tickers with neither on file show n/a
+// Ticker → current-year YTD stock return, for the YTD column: S&P 500 members
+// from js/spx-data.js (Bloomberg), then js/hf-holdings-ytd.js (covers the card
+// holdings outside the index, like BN or TSM). Tickers with neither show n/a
 // rather than a guessed number.
 var TICKER_YTD_MAP = null;
 function tickerYtdMap() {
   if (TICKER_YTD_MAP) return TICKER_YTD_MAP;
   var map = {};
-  ALL_STOCKS.forEach(function(s) { if (s.r26 != null) map[s.t] = s.r26; });
-  INVESTORS.forEach(function(inv) { (inv.holdings || []).forEach(function(h) { if (h.ytd != null && map[h.t] == null) map[h.t] = h.ytd; }); });
+  // S&P 500 members from the Bloomberg extract, then the card holdings' YTD map.
+  // Guard the same way market-analysis.js does: if js/spx-data.js is missing or
+  // empty, skip the member map rather than throw — the card holdings' YTD still works.
+  if (SPX_DATA && SPX_DATA.members && SPX_DATA.year != null) {
+    var yy = 'r' + String(SPX_DATA.year).slice(2);
+    SPX_DATA.members.forEach(function(m) { if (m[yy] != null) map[m.t] = m[yy]; });
+  }
+  Object.keys(HF_HOLDINGS_YTD.items).forEach(function(t) { var it = HF_HOLDINGS_YTD.items[t]; if (it.ytd != null && !it.sinceIpo && map[t] == null) map[t] = it.ytd; });
   TICKER_YTD_MAP = map;
   return map;
 }

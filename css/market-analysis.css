@@ -166,7 +166,10 @@
 .sbyl {
   font-size: 9px;
   color: var(--mu);
-  min-width: 24px;
+  /* fixed width so year, month and range labels keep every track aligned */
+  width: 78px;
+  flex-shrink: 0;
+  white-space: nowrap;
   text-align: right;
 }
 

@@ -3229,3 +3229,21 @@ img.org-photo { object-fit: cover; }
 .snv-bridge-track > div { height: 100%; }
 .snv-bridge-v { font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
 .snv + .snv > .snv-h:first-child { margin-top: 26px; }
+
+/* ── Deep Dive shared pieces that used to exist ONLY as inline <style> injected by another tab ──
+   `.ew-two/.ew-box*` (the icon boxes Management ▸ Ownership / Governance use) were defined only in
+   amzn.js's EW_CSS, emitted from Bottom Line; `.acx-tog/.mch-ctl` (the pill toggles every Bottom Line
+   chart uses) only by Miscellaneous ▸ Capex. A pane opened before those tabs rendered unstyled.
+   Same rules, now in a stylesheet (the inline copies are identical and harmless). */
+.ew-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.ew-two{grid-template-columns:1fr}}
+.ew-box{border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;background:var(--card,#fff)}
+.ew-box-h{font-size:13px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.ew-box-i{font-size:18px}
+.ew-box-t{font-size:11.5px;color:var(--navy);line-height:1.5}
+.acx-tog{display:inline-flex;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.acx-tog button{appearance:none;border:0;border-right:1px solid var(--bdr);background:#fff;font:600 12px Inter,sans-serif;color:var(--mu);padding:7px 16px;cursor:pointer}
+.acx-tog button:last-child{border-right:0}
+.acx-tog button:hover{color:var(--navy)}
+.acx-tog button.active{background:var(--navy);color:#fff}
+.mch-ctl{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin:8px 0 4px}

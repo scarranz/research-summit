@@ -357,7 +357,7 @@ analista** · **Si falta el dato** · **No copiar de AMZN** · **Verificación**
 | 7 | ¿Hay transcripciones de llamadas? ¿Cuáles trimestres? | `docs/calls/<TICKER>*.md`; MCP Quartr (`list_events`, `read_transcript`) |
 | 8 | ¿Está en el plan de Fiscal.ai (tabla de ejecutivos e insiders)? | Pillars ▸ Management de la empresa en el portal |
 | 9 | ¿Massive devuelve precio y market cap? | `liveQuote(ticker)` en la vista previa |
-| 9b | ¿Ya existe el camino en vivo de Summit? ¿El MCP ya trae la valuación del modelo (múltiplo objetivo, precio objetivo)? | **Al 14 oct 2026 no existe** en `main`: ni la función `get-summit-data` ni `fetchSummit*` en `api.js` (están en el PR #142, abierto), ni `js/summit-map/`, ni la lectura Summit en los motores. Anotar "no" sin probar. Cuando exista: `fetchSummitSnapshots('<T>')` en la consola del portal. Valuación: **ya está en el MCP** (`get_valuation_history`, §6.3; Claude la puede revisar hoy); en el portal llega con `fetchSummitValuation` cuando se despliegue. Consecuencia en §20b |
+| 9b | ¿Ya existe el camino en vivo de Summit? ¿El MCP ya trae la valuación del modelo (múltiplo objetivo, precio objetivo)? | El código de `get-summit-data` y `fetchSummit*` está en el repo, pero **al 14 oct 2026 la función no está desplegada**; tampoco existen `js/summit-map/` ni la lectura Summit en los motores. Prueba: `fetchSummitModels()` en la consola del portal con sesión (falla = no desplegada). Valuación: **ya está en el MCP** (`get_valuation_history`, §6.3; Claude la puede revisar hoy); en el portal llega con `fetchSummitValuation` cuando se despliegue. Consecuencia en §20b |
 | 10 | ¿Hay fotos de ejecutivos e imágenes de productos? | `img/leadership/`, `img/products/` (opcional; si no, iniciales / emoji) |
 | 11 | Año fiscal: ¿cierra en diciembre? Moneda de reporte | 10-K. **Si no es calendario o no es USD, se anota**: varios componentes asumen año calendario (§14) y USD |
 | 12 | Modo B: ¿qué contenido existe hoy? | §4.2 B1 |
@@ -1586,8 +1586,8 @@ que ya existía**, no el modelo para una empresa nueva (regla 5).
   snapshots; el año forward de trabajo = `target_year`. Un método con `quality_flags` se dibuja con la
   advertencia, nunca como dato limpio.
 - **Estado al 14 oct 2026 → ⛔, no se publica.** La valuación **ya está en el MCP** (Oscar, 14 oct),
-  pero el portal todavía no la puede leer: `get-summit-data` y `fetchSummitValuation` están en el PR
-  #142 (abierto, sin desplegar). Toda la unidad (bloque A y PEG) depende de eso: queda ⛔ en la bitácora
+  pero el portal todavía no la puede leer: `get-summit-data` (con `fetchSummitValuation`) no está
+  desplegada. Toda la unidad (bloque A y PEG) depende de eso: queda ⛔ en la bitácora
   con "espera despliegue de get-summit-data + PR del portal", sin botón ni panel. Mientras tanto, en
   F0-SM ya se revisa la calidad de la valuación de la empresa.
 - **Regla clave:** **nunca un múltiplo ilustrativo ni elegido a mano.** AMZN conserva detrás de su
@@ -1915,12 +1915,15 @@ conectar.
    y quién lo destraba, y se construye cuando exista. Los paneles de pendiente que AMZN muestra hoy en
    Target Multiple y Sensitivity son la excepción de un perfil que ya existía, no el modelo.
 
-**Estado al 14 oct 2026:** funciona `liveQuote` (vía `covered-calls-massive`, ya desplegada). **No
-existen en `main`:** `get-summit-data` y los `fetchSummit*` de `api.js` (PR #142, abierto; luego San la
-despliega con sus secrets), la carpeta `js/summit-map/` (la crea la primera empresa; nadie la importa
-todavía), y la lectura de Summit en `results.js` / `segments.js` (PR del portal, después del
-despliegue). Sin desplegar: `get-market-history` y `get-quote` (San). La valuación del modelo **ya está
-en el MCP** (`get_valuation_history`, 14 oct 2026); el PR #142 ya trae su ruta (`fetchSummitValuation`).
+**Estado al 14 oct 2026:** funciona `liveQuote` (vía `covered-calls-massive`, ya desplegada). El código
+de `get-summit-data` y los `fetchSummit*` de `api.js` (incluido `fetchSummitValuation`) entran con esta
+guía (PR #142), pero **la función no está desplegada**: San la despliega con sus secrets
+(`SUMMIT_MCP_URL`, `SUMMIT_MCP_TOKEN`); hasta entonces cualquier `fetchSummit*` falla. Tampoco existen
+la carpeta `js/summit-map/` (la crea la primera empresa; nadie la importa todavía) ni la lectura de
+Summit en `results.js` / `segments.js` (PR del portal, después del despliegue). Sin desplegar:
+`get-market-history` y `get-quote` (San). La valuación del modelo **ya está en el MCP**
+(`get_valuation_history`, 14 oct 2026). Para saber si ya se desplegó: `fetchSummitModels()` en la
+consola del portal con sesión (éxito = sí).
 
 ## §21 Color
 

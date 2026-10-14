@@ -14,6 +14,9 @@ the last close of the previous year to the cut-off of js/spx-data.js.
     flagged sinceIpo so the page labels it (it is not a YTD).
   - No price at the previous year-end (e.g. a 2026 IPO) or none at the cut-off
     (delisted / acquired): stored as null with a note; the page shows n/a.
+  - Manual analyst overrides in scripts/spx/hf_ytd_overrides.json are applied LAST,
+    replacing the computed YTD for a ticker (e.g. a hand-correction the Bloomberg/Yahoo
+    close does not reflect). Cards only; the S&P 500 Explorer reads js/spx-data.js.
 
 Run after scripts/spx/extract_spx.py, whenever the cut-off moves:
   python scripts/spx/holdings_ytd.py            # dry run
@@ -118,6 +121,24 @@ def main():
     print(f"cut-off {as_of} · base {base_day} · {len(rows)} tickers")
     for t, co, v, s, note in rows:
         print(f"  {t:<6} {co[:28]:<28} {'n/a' if v is None else f'{v:+.2f}%':>9}  {s}{'  ! ' + note if note else ''}")
+
+    # Manual analyst overrides, applied last so a hand-correction survives regeneration.
+    # Cards only — the Market Analysis ▸ S&P 500 Explorer reads js/spx-data.js and is unaffected.
+    ovf = os.path.join(os.path.dirname(__file__), "hf_ytd_overrides.json")
+    if os.path.exists(ovf):
+        ov = json.load(open(ovf, encoding="utf-8"))
+        if ov.get("base") == base_day and ov.get("asOf") == as_of:
+            for t, v in ov.get("ytd", {}).items():
+                if t not in items:
+                    print(f"  override {t}: not a current holding, ignored")
+                    continue
+                items[t] = {"ytd": v, "src": "override",
+                            "note": "manual analyst override (hf_ytd_overrides.json)"}
+                print(f"  override {t:<6} -> {v:+.2f}%")
+        else:
+            print(f"note: hf_ytd_overrides.json is for {ov.get('base')} -> {ov.get('asOf')}, "
+                  f"not {base_day} -> {as_of}: ignored")
+
     if not a.write:
         print("\n(dry run, nothing written: add --write)")
         return

@@ -461,3 +461,30 @@
 
 .qc.q3 strong { color: var(--neg); }
 
+/* Companies Explorer: positive return that lagged the S&P 500 (grey is reserved for membership) */
+.lag { color: var(--text); }
+
+/* ── Market Analysis: one list of functions, each with its own index toggle ── */
+.sec[data-ma] > .sechdr { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ma-idx { margin-left: auto; display: inline-flex; }
+.ma-pane[hidden] { display: none; }
+/* Attribution Detail with both indices: side by side (stacked on narrow screens) */
+.ma-panes-row { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.ma-panes-row.both { grid-template-columns: 1fr 1fr; }
+@media (max-width: 1100px) { .ma-panes-row.both { grid-template-columns: 1fr; } }
+.ma-panes-row > .ma-pane > .sec { margin: 0; }
+.ma-pending { font-size: 12px; color: var(--mu); padding: 22px; text-align: center; }
+.ma-pane-ttl { font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--navy); margin: 0 0 6px 2px; }
+
+/* Stock Lookup: one card per year — the return, and beat / lagged / not in each index */
+.sri-item { padding: 8px 14px; cursor: pointer; font-size: 12px; border-bottom: 1px solid var(--bdr); }
+.sri-item:hover { background: var(--surface); }
+.lk-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.lk-card { border: 1px solid var(--bdr); border-radius: 10px; padding: 10px 12px; background: var(--w); }
+.lk-y { font-size: 11px; font-weight: 700; color: var(--mu); letter-spacing: .4px; }
+.lk-r { font-size: 20px; font-weight: 700; margin: 2px 0 8px; font-variant-numeric: tabular-nums; }
+.lk-b { font-size: 10.5px; border-radius: 6px; padding: 3px 7px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lk-b span { float: right; opacity: .75; font-variant-numeric: tabular-nums; }
+.lk-win { background: rgba(23,122,78,.1); color: var(--pos); font-weight: 600; }
+.lk-lose { background: rgba(155,42,32,.08); color: var(--neg); font-weight: 600; }
+.lk-out { background: var(--surface); color: var(--mu); font-style: italic; }

@@ -12,9 +12,9 @@ before changing the data, `scripts/spx/extract_spx.py` or the page.
 | Attribution Detail & Simulation | ONE table: S&P, Nasdaq or both side by side | | `js/ma-detail.js` (engines: `spx-attribution.js` · `ndx-attribution.js`) |
 | Sector Summary — Market Beaters | one or the other (same table) | | `js/market-analysis.js` |
 | Index Composition — Weight Change | one or the other, sectors | | `js/market-analysis.js` · `js/ndx-attribution.js` |
-| Top Contributors | Nasdaq-100 only, no toggle (S&P needs company weights) | ✓ | `js/ndx-attribution.js` |
+| Top Contributors | one or the other | | `js/spx-securities.js` · `js/ndx-attribution.js` |
 | Winners vs Losers (return distribution, click a bar for the names) | one or the other | | `js/ma-charts.js` |
-| Security Return vs Weight (one year, one sector or group) | Nasdaq-100 only, no toggle (same reason) | ✓ | `js/ndx-attribution.js` |
+| Security Return vs Weight (one year, one sector or group) | one or the other | | `js/spx-securities.js` · `js/ndx-attribution.js` |
 | Stock Lookup (one card per year: return, beat S&P? beat Nasdaq?) | both | | `js/market-analysis.js` |
 
 Agreed details (Oct 14, 2026): one year selector and one Sector / Industry Group column in the
@@ -63,6 +63,22 @@ close**: on Oct 14 the groups ran to Oct 14 and SPY to Oct 12, and the 2026 resi
 With the groups, the S&P attribution is computed per industry group (a sector = the sum of its
 groups), Sector Return / Contribution and Sector Summary have industry-group returns, and the
 detail table opens each sector onto its groups.
+
+**S&P company weights (`scripts/spx/extract_spx_holdings.py` → `js/spx-holdings-data.js`).** From the
+analyst's `SP 500 2026 RETURNS.xlsx` ▸ `SPX nonBBG` (the Nasdaq layout, ONE snapshot per year: SPY's
+year-end holdings and weights, each name's price at that year-end and the next). A year is a
+buy-and-hold of its opening holdings: contribution = weight × return; the rest vs SPY is the residual
+(joiners, delisted names without a price, cash). No intra-year snapshots: Bloomberg query limits.
+Cleaning the extractor does (and prints): 2020 had a second snapshot (the Dec 2020 weights) pasted
+under the same date → the first block is kept; isolated duplicate rows (NEM, BAC in 2025) → first
+kept; 2024 closed Dec 23 → re-priced to Dec 31 with 2025's opening prices; the "MMED / MiniMed Group"
+rows before MiniMed existed are Medtronic (MDT never appears) → MDT and its member returns; truncated
+industry groups expanded; GICS of former members from other years, the Nasdaq data, or by hand in
+`scripts/spx/former_members_gics.json` (to check). Checks (Oct 14 data): Σ weight × return vs SPY
+2021 +15 bp, 2022 −36, 2023 +15, 2024 +34, 2025 −16, 2026 −3; sector weights vs the SECTORS tab ≤0.23 pp
+from 2022 (0.6–0.8 pp 2020-21); sector contributions vs the SPY attribution ≤0.21 pp; returns vs
+`SP500 Update` differ only for special-dividend payers (PGR, PCAR, TDG, WRB, CME, COST…): the sheet
+adjusts abnormal cash dividends (`CshAdjAbnormal = Y`), as the index does.
 
 Lessons that cost a day:
 - **Composite, never venue.** `UN`/`UW` tickers and the venue-level `id_bb_global` break when a stock

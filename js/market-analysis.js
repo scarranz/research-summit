@@ -6,9 +6,9 @@
 //   Attribution Detail & Simulation S&P | Nasdaq | Both     js/ma-detail.js (one table) · engines in spx-/ndx-attribution.js
 //   Sector Summary — Market Beaters S&P | Nasdaq            this file (one table, two datasets)
 //   Index Composition               S&P | Nasdaq            this file · js/ndx-attribution.js
-//   Top Contributors                Nasdaq-100 only (S&P needs company weights)  js/ndx-attribution.js
+//   Top Contributors                S&P | Nasdaq            js/spx-securities.js · js/ndx-attribution.js
 //   Winners vs Losers               S&P | Nasdaq            this file · js/ndx-attribution.js
-//   Security Return vs Weight       Nasdaq-100 only (same reason)               js/ndx-attribution.js
+//   Security Return vs Weight       S&P | Nasdaq            js/spx-securities.js · js/ndx-attribution.js
 //   Stock Lookup                    both                    this file
 //
 // S&P data: js/spx-data.js (scripts/spx/extract_spx.py — docs/SPX_MARKET_ANALYSIS.md).
@@ -21,6 +21,7 @@ import { spyAttributionYears, spyWeightSnaps } from './spx-attribution.js';
 import { initSpxSectorAlpha } from './spx-sector-alpha.js';
 import { initPriceReturn } from './ma-price.js';
 import { dumbbell, distribution } from './ma-charts.js';
+import { initSpxSecurities } from './spx-securities.js';
 
 var SPX = null;          // SPX_DATA (js/spx-data.js)
 var SPX_STOCKS = [];     // its members with the industry group as `i` (as the Nasdaq-100 stocks carry it)
@@ -51,10 +52,12 @@ var MA_OPTS = {
   detail:  [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100'], ['both', 'Both']],
   summary: [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']],
   comp:    [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']],
-  wl:      [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']]
+  wl:      [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']],
+  top:     [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']],
+  scatter: [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']]
 };
 // S&P 500 first and selected by default in every section
-var MA_IDX = { sector: 'spx', detail: 'spx', summary: 'spx', comp: 'spx', wl: 'spx' };
+var MA_IDX = { sector: 'spx', detail: 'spx', summary: 'spx', comp: 'spx', wl: 'spx', top: 'spx', scatter: 'spx' };
 function maSec(k){ return document.querySelector('.sec[data-ma="' + k + '"]'); }
 function renderToggle(k){
   var t = maSec(k) && maSec(k).querySelector('.ma-idx'); if (!t) return;
@@ -318,6 +321,9 @@ function initMarketAnalysis(D) {
   initDetail(document.getElementById('ma-detail'), SPX);
   renderFilterBar(); applyFilters(); renderSSExclChips();
   renderSpxComp(); renderSpxWL();
+  // S&P company weights (one SPY holdings snapshot per year): Top Contributors + Security Return vs Weight
+  import('./spx-holdings-data.js').then(function(m){ initSpxSecurities(document.getElementById('ma-spx-top'), document.getElementById('ma-spx-scatter'), m.SPX_HOLDINGS); },
+    function(){ ['ma-spx-top', 'ma-spx-scatter'].forEach(function(id){ var e = document.getElementById(id); if (e) e.innerHTML = '<div class="ma-pending">S&amp;P 500 company weights are not in the data.</div>'; }); });
   buildLookup();
   var si = document.getElementById('sr-inp');
   if (si){

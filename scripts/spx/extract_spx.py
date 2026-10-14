@@ -279,6 +279,93 @@ def read_spy_weights(rows, level_dates):
     return {"dates": level_dates, "series": series, "residual": resid}
 
 
+# GICS industry group -> sector (names as the members carry them, GICS 2023)
+IG_SECTOR = {
+    "Energy": "Energy", "Materials": "Materials",
+    "Capital Goods": "Industrials", "Commercial & Professional Services": "Industrials", "Transportation": "Industrials",
+    "Automobiles & Components": "Consumer Discretionary", "Consumer Durables & Apparel": "Consumer Discretionary",
+    "Consumer Services": "Consumer Discretionary", "Consumer Discretionary Distribution & Retail": "Consumer Discretionary",
+    "Consumer Staples Distribution & Retail": "Consumer Staples", "Food, Beverage & Tobacco": "Consumer Staples",
+    "Household & Personal Products": "Consumer Staples",
+    "Health Care Equipment & Services": "Health Care", "Pharmaceuticals, Biotechnology & Life Sciences": "Health Care",
+    "Banks": "Financials", "Financial Services": "Financials", "Insurance": "Financials",
+    "Software & Services": "Information Technology", "Technology Hardware & Equipment": "Information Technology",
+    "Semiconductors & Semiconductor Equipment": "Information Technology",
+    "Media & Entertainment": "Communication Services", "Telecommunication Services": "Communication Services",
+    "Utilities": "Utilities",
+    "Equity Real Estate Investment Trusts (REITs)": "Real Estate", "Real Estate Management & Development": "Real Estate",
+}
+def ig_key(s):
+    return re.sub(r"[^a-z&()]", "", str(s).lower())
+IG_BY_KEY = {ig_key(k): k for k in IG_SECTOR}
+
+
+def read_groups(path, level_dates):
+    """SECTORS tab of the analyst's 'Equity Universe Consensus' workbook: month-end levels of
+    the 25 S&P 500 GICS industry-group indices (S5xxxx) and SPY's month-end weights by
+    industry group (SPY's holdings grouped by GICS level 2, so they are the index's own
+    constituents at each date). Four DATES blocks side by side; the IG level columns carry
+    Bloomberg codes, mapped to names through the analyst's name | code table on the right.
+    Rows are aligned to the panel's month-ends by month (the last month = its latest row)."""
+    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    rows = sheet(wb, "SECTORS")
+    hr = next((r for r in range(len(rows)) if sum(1 for v in rows[r] if isinstance(v, str) and v.strip() == "DATES") >= 2), None)
+    if hr is None:
+        sys.exit("groups SECTORS: no DATES row")
+    code_name = {}
+    for row in rows:
+        for c in range(len(row) - 1):
+            a, b = row[c], row[c + 1]
+            if isinstance(a, str) and isinstance(b, str) and ig_key(a) in IG_BY_KEY and re.fullmatch(r"S5[A-Z]+", b.strip()):
+                code_name[b.strip()] = IG_BY_KEY[ig_key(a)]
+    levels, weights, wdates = {}, {}, None
+    for c, v in enumerate(rows[hr]):
+        if not (isinstance(v, str) and v.strip() == "DATES"):
+            continue
+        tick, names = rows[hr - 1], rows[hr - 2]
+        # A weights block: its first column is SPY's total (≈ 100) = the sum of the group columns
+        # (its header text is not reliable: the IG weights block is titled "...Levels")
+        first = rows[hr + 1]
+        tot = num(first[c + 1]) if c + 1 < len(first) else None
+        rest = sum(num(first[j]) or 0 for j in range(c + 2, min(len(first), c + 30)) if isinstance(first[j], (int, float)))
+        is_w = tot is not None and 90 < tot <= 101 and abs(rest - tot) < 1
+        cols = {}
+        for j in range(c + 1, len(tick)):
+            t = tick[j]
+            if j > c + 1 and (t is None or (isinstance(t, str) and (t.strip() in ("", "DATES")))) and not (isinstance(names[j], str) and names[j].strip()):
+                break
+            if is_w:
+                nm = names[j]
+                if isinstance(nm, str) and ig_key(nm) in IG_BY_KEY:
+                    cols[IG_BY_KEY[ig_key(nm)]] = j
+            elif isinstance(t, str):
+                code = re.sub(r"\s+Index$", "", t.strip())
+                if code in code_name:
+                    cols[code_name[code]] = j
+        # sector blocks also match "Energy", "Materials", "Utilities" (one-group sectors): keep the
+        # block with the most industry groups of each kind
+        if len(cols) < 20:
+            continue
+        by_month = {}
+        for row in rows[hr + 1:]:
+            d = iso(row[c]) if c < len(row) else None
+            if d:
+                by_month[d[:7]] = (d, row)
+        out = {k: [num(by_month[d[:7]][1][j]) if d[:7] in by_month else None for d in level_dates] for k, j in cols.items()}
+        if is_w:
+            weights, wdates = out, [by_month[d[:7]][0] if d[:7] in by_month else None for d in level_dates]
+        else:
+            levels = out
+            last = by_month.get(level_dates[-1][:7])
+            if last and last[0] != level_dates[-1]:
+                warn(f"industry-group levels end {last[0]} but the panel's cut-off is {level_dates[-1]}: refresh both workbooks to the same close")
+    miss = [k for k in IG_SECTOR if k not in levels or k not in weights]
+    if miss:
+        sys.exit(f"groups SECTORS: industry groups missing {miss}")
+    return {"dates": level_dates, "levels": levels, "weights": weights, "sectorOf": IG_SECTOR,
+            "weightDates": wdates, "source": os.path.basename(path)}
+
+
 def annual(dates, vals):
     """Calendar-year price returns from month-end levels; the last year is YTD."""
     by_year_end = {}
@@ -296,6 +383,7 @@ def main():
     ap.add_argument("xlsx")
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--out", default=DEFAULT_OUT)
+    ap.add_argument("--groups", help="the analyst's Equity Universe Consensus.xlsx (SECTORS tab): industry-group levels + SPY weights")
     a = ap.parse_args()
 
     wb = openpyxl.load_workbook(a.xlsx, read_only=True, data_only=True)
@@ -360,6 +448,11 @@ def main():
         warn(f"MEMBERSHIP has no list for year-end(s) {missing_years}")
 
     ann = {k: annual(dates, v) for k, v in series.items()}
+    groups = read_groups(a.groups, dates) if a.groups else None
+    if groups:
+        groups["annual"] = {k: annual(dates, v) for k, v in groups["levels"].items()}
+    else:
+        warn("no --groups workbook: industry-group returns / weights are not in the output")
     # TEMPORARY EXCEPTION: scripts/spx/etf_ytd_overrides.json forces the sector ETFs' YTD
     # (see the file). The last level is rescaled so YTD = the forced figure; nothing else moves.
     etf_overrides = None
@@ -390,6 +483,9 @@ def main():
         withr = sum(1 for m in members if m.get("r" + k) is not None)
         el = sum(1 for m in members if m.get("e" + k))
         print(f"  {y}: {el} / {withr}")
+    if groups:
+        print(f"groups     {len(groups['levels'])} industry groups · weights to {groups['weightDates'][-1]} · {year} YTD: " +
+              ", ".join(f"{k[:14]} {groups['annual'][k].get(str(year), 0):+.1f}" for k in list(groups["levels"])[:4]) + " …")
     print(f"joined during {year} (not eligible for {year}): {len(not_now)}  {', '.join(sorted(not_now))}")
     print(f"\n{len(warnings)} warning(s)")
     for w in warnings:
@@ -412,6 +508,8 @@ def main():
                 "_ytdOverrides": etf_overrides} if etf else None,
         # SPY month-end weights by GICS sector (from SPY's holdings) for the SPY sector attribution
         "spyWeights": spy_w,
+        # S&P 500 GICS industry-group index levels + SPY weights by industry group (--groups)
+        "groups": groups,
         "members": members,
     }
     with open(a.out, "w", encoding="utf-8", newline="\n") as f:

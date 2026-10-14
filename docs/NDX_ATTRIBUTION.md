@@ -11,7 +11,7 @@ the `ndx-attribution` edge function or `js/ndx-attribution.js`. It records what 
 | Stored data | Supabase table `ndx_snapshots` (`sql/025_ndx_attribution.sql`) |
 | Edge function | `supabase/functions/ndx-attribution` |
 | Bundled fallback | `js/ndx-attribution-data.js` (generated — never edit by hand) |
-| Page | `js/ndx-attribution.js` (+ `css/ndx-attribution.css`), loaded by `js/market-analysis.js` |
+| Page | `js/ndx-attribution.js` (+ `css/ndx-attribution.css`, Sector Returns in `js/ndx-sector-returns.js`), loaded by `js/market-analysis.js` |
 
 ---
 
@@ -224,6 +224,17 @@ A new dummy code makes the extractor print `unmapped Bloomberg dummy ticker(s)` 
 
 ## 7. Page conventions (agreed with the analyst — keep them)
 
+**Oct 14, 2026 — one page for both indices.** The Nasdaq-100 sections are now panes of the unified
+Market Analysis page (map in `docs/SPX_MARKET_ANALYSIS.md`): `loadNdxAttribution(hosts)` fills the
+Sector, Detail, Composition, Top Contributors, Winners vs Losers and Scatter panes; `ndxPriceData()`
+feeds the joint Index Price Return (`js/ma-price.js`, the old NDX hero is no longer drawn) and
+`ndxStocks()` the Nasdaq side of Sector Summary and Stock Lookup (every company of every year, with
+the whole-year flag e<yy> = in every HOC of the year). Years are labelled by their number (2026, not
+"YTD 2026"). Removed: the Detail Chart / Treemap views, the Winners vs Losers Sector Matrix and
+Top/Bottom by Sector, and the Beeswarm (merged into the scatter: one year, Sector **or** Industry
+Group, **one** of them at a time, axes fitted to that group over the year). Winners vs Losers counts
+only names in the index the whole year.
+
 **General**
 - Positive = green, negative = red, everywhere; no other colours for years.
 - Contributions are always shown with **2 decimals**; never "−0.00%".
@@ -240,10 +251,27 @@ others restated the table less clearly. Price return = constituent price changes
 QQQ-derived weights, no dividends, like the official NDX (a price index). Top Contributors is
 table-only (the chart view was dropped).
 
-**Attribution by Sector / Industry Group** (chart) — one year at a time; By Sector or By Industry
-Group; **one x-axis for sectors and industry groups across all years**; rows = every sector / group
-that exists in any year (0 when absent), always in the **latest year's order (largest contribution
-first)**, so names never move when switching year or tab.
+**Sector Returns & Attribution** (`js/ndx-sector-returns.js`, Oct 2026) — the Nasdaq-100
+counterpart of the S&P panel's Sector Alpha, used as questions: 1 · Level (Sectors / Industry
+Groups, one at a time) → 2 · How many (One / Multiple) → 3 · Show (Returns / Attribution to index)
+→ years (at least one on, latest by default, labelled by number). Yearly only (HOC data). It
+replaced the "Attribution by Sector / Industry Group" chart.
+- **Returns**: no NDX sector index or ETF exists, so a sector's return = its QQQ holdings with the
+  weights rescaled to 100% within the sector, per HOC, compounded over the year (Σ wᵢrᵢ / Σ wᵢ);
+  same for industry groups. This is exactly the Detail simulation with every other sector excluded
+  — checked: 77 of 77 sector-years match to 0.01 pp. Index row = the Nasdaq-100 price return from
+  the same data (2026 YTD 21.45% = the hero). Absolute / Relative (pp vs the Nasdaq-100).
+- **Attribution**: computeCore's Carino contributions; index row on top, a Cash & futures row when
+  every name is on, so the bars add up to the index. No Absolute / Relative.
+- **No full-year membership rule**: unlike the S&P panel (today's members extrapolated back), the
+  HOCs hold each period's actual members, entries and exits included (e.g. Real Estate 2026 =
+  CoStar, −51.4%, until it left the index). Cash & futures are not a sector in Returns. Hovering a
+  bar lists its companies.
+
+**Attribution by Sector / Industry Group** (chart) — removed Oct 14, 2026: its content is now
+Sector Returns & Attribution ▸ Attribution. The rule it set still holds for the Detail chart: **one
+x-axis across all years**, rows = every sector / group that exists in any year (0 when absent), in
+the **latest year's order (largest contribution first)**.
 
 **Attribution Detail & Simulation**
 - **Table** has no Sector / IG toggle: it lists sectors, and each arrow expands that sector's

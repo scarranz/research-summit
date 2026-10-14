@@ -183,142 +183,81 @@
   <div id="pm-root"></div>
 </div>
 
-<!-- MARKET ANALYSIS TAB -->
+<!-- MARKET ANALYSIS TAB — one list of functions; each section picks its own index
+     (S&P 500 · Nasdaq-100 · or both where that makes sense). The index toggles are
+     filled by market-analysis.js (MA_SECTIONS); the Nasdaq panes by ndx-attribution.js. -->
 <div id="tp-rot" class="tp">
-  <div class="ma-subnav" id="ma-subnav">
-    <button class="ma-pill active" data-mpanel="sp500" onclick="switchMAPanel('sp500')">S&amp;P 500</button>
-    <button class="ma-pill" data-mpanel="ndx" onclick="switchMAPanel('ndx')">Nasdaq-100 Analysis</button>
-    <button class="ma-pill" data-mpanel="spy" disabled style="opacity:.5;cursor:default">SPY Attribution &nbsp;<span style="font-size:10px;font-weight:400">coming soon</span></button>
+  <div id="ndx-tip" style="position:fixed;pointer-events:none;opacity:0;transition:opacity .09s;background:var(--w,#fff);border:1px solid rgba(0,0,0,.1);border-radius:9px;padding:8px 12px;font-size:12px;box-shadow:0 5px 18px rgba(0,0,0,.14);z-index:1999;max-width:260px;font-family:Inter,sans-serif"></div>
+
+  <div class="sec" data-ma="price">
+    <div class="sechdr"><span class="sect">Index Price Return</span><span class="secn" id="ma-price-asof"></span></div>
+    <div class="card" id="ma-price"></div>
   </div>
-  <div id="ma-panel-sp500" class="ma-panel">
-  <div id="spx-src-toggle" class="sb-secrow" style="display:none;align-items:center;margin-bottom:14px"></div>
-  <div class="sec">
-    <div class="sechdr"><span class="sect">Sector Alpha &mdash; Avg Annual Return by Sector</span><span class="secn" id="ma-sb-asof">SPDR sector ETFs &middot; the current year is always YTD-through-today &middot; mix any years and any elapsed months in the same view</span></div>
-    <div class="card">
-      <div class="sb-secrow" id="sb-secrow"></div>
-      <div class="sbl">
-      <div class="sb-secrow" id="sb-yearfilter">
-        <span class="sb-secrow-lbl">Years</span>
-        <span class="sb-secchip" data-yr="2017" onclick="toggleYear('2017')">2017</span>
-        <span class="sb-secchip" data-yr="2018" onclick="toggleYear('2018')">2018</span>
-        <span class="sb-secchip" data-yr="2019" onclick="toggleYear('2019')">2019</span>
-        <span class="sb-secchip" data-yr="2020" onclick="toggleYear('2020')">2020</span>
-        <span class="sb-secchip" data-yr="2021" onclick="toggleYear('2021')">2021</span>
-        <span class="sb-secchip active" data-yr="2022" onclick="toggleYear('2022')">2022</span>
-        <span class="sb-secchip active" data-yr="2023" onclick="toggleYear('2023')">2023</span>
-        <span class="sb-secchip active" data-yr="2024" onclick="toggleYear('2024')">2024</span>
-        <span class="sb-secchip active" data-yr="2025" onclick="toggleYear('2025')">2025</span>
-        <span class="sb-secchip active" data-yr="ytd" onclick="toggleYear('ytd')">YTD</span>
-      </div>
-      <div class="sb-secrow" id="sb-monthfilter">
-        <span class="sb-secrow-lbl">Months</span>
-      </div>
-      <div class="sb-toggle">
-        <button class="sb-tbtn active" id="sb-abs" onclick="setSBMode('abs')">Absolute</button>
-        <button class="sb-tbtn" id="sb-rel" onclick="setSBMode('rel')">Relative</button>
+
+  <div class="sec" data-ma="sector">
+    <div class="sechdr"><span class="sect">Sector Return / Contribution</span><span class="ma-idx"></span></div>
+    <div class="ma-pane" data-idx="spx">
+      <div class="card">
+        <div class="sb-secrow" id="sb-qbar"></div>
+        <div class="sb-secrow" id="sb-secrow"></div>
+        <div class="sb-secrow" id="sb-dates" style="flex-direction:column;align-items:stretch;gap:10px"></div>
+        <div class="sbrs" id="sb-wrap"></div>
+        <div id="sb-note" style="font-size:11px;color:var(--mu);margin-top:12px;line-height:1.5"></div>
       </div>
     </div>
-    <div class="sbrs" id="sb-wrap"></div></div>
+    <div class="ma-pane" data-idx="ndx"><div class="card" id="ndx-sector-returns"></div></div>
   </div>
-  <div class="sec">
-    <div class="sechdr"><span class="sect">Sector Performance &mdash; Cumulative Return</span><span class="secn" id="ma-sp-asof">S&amp;P 500 GICS sector indices &middot; price return</span></div>
-    <div class="card"><div id="sp-chart"></div></div>
+
+  <div class="sec" data-ma="detail">
+    <div class="sechdr"><span class="sect">Attribution Detail &amp; Simulation</span><span class="ma-idx"></span></div>
+    <div class="card" id="ma-detail"></div>
   </div>
-  <div id="spx-attr-host"></div>
-  <div class="sec">
-    <div class="sechdr"><span class="sect">Sector Summary &mdash; Market Beaters</span><span class="secn">Stock counts update with filters above</span></div>
+
+  <div class="sec" data-ma="summary">
+    <div class="sechdr"><span class="sect">Sector Summary &mdash; Market Beaters</span><span class="ma-idx"></span></div>
     <div class="card">
-      <div class="fbar">
-        <span class="flm">Filters:</span>
-        <label class="fc" id="fc-p26"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2026</label>
-        <label class="fc" id="fc-b26"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2026</label>
-        <label class="fc" id="fc-p25"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2025</label>
-        <label class="fc" id="fc-b25"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2025</label>
-        <label class="fc" id="fc-p24"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2024</label>
-        <label class="fc" id="fc-b24"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2024</label>
-        <label class="fc" id="fc-p23"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2023</label>
-        <label class="fc" id="fc-b23"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2023</label>
-        <label class="fc" id="fc-p22"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2022</label>
-        <label class="fc" id="fc-b22"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2022</label>
-        <button onclick="clearFilters()" style="padding:5px 11px;border:1px solid var(--bdr);border-radius:7px;background:var(--w);cursor:pointer;font-size:11px;color:var(--mu)">Clear</button>
-      </div>
+      <div class="fbar" id="fc-bar"></div>
       <div class="sb-secrow" id="sec-excl-row"></div>
-      <div style="font-size:11px;color:var(--mu);line-height:1.55;margin:6px 2px 4px">
-        <b style="color:var(--text)">How the filters work.</b> <i>Positive</i> = the stock's price return that year was above 0%. <i>Beat Market</i> = it was above the S&amp;P 500's price return that year. Picking several filters keeps only the companies that pass <b>all</b> of them.
-        A year only counts for a company that was <b>in the S&amp;P 500 for that whole year</b> (a member at the start and at the end of it); otherwise it is left out of that year's filters and of the sector totals, however well it did.
-        Example: Interactive Brokers (IBKR) rose +113% in 2024 and +46% in 2025, but it joined the index in 2025, so it does not appear with the 2024 or 2025 filters on. The companies list is today's S&amp;P 500 members.
-      </div>
+      <div id="sec-summary-note" style="font-size:11px;color:var(--mu);line-height:1.55;margin:6px 2px 4px"></div>
       <table class="rt" id="sec-summary-tbl" style="margin-top:6px"><thead><tr>
         <th>Sector</th>
         <th style="text-align:right">Stocks Matching</th>
         <th style="text-align:right">% of Sector</th>
         <th style="text-align:right">Total in Sector</th>
-        <th style="text-align:right" title="S&amp;P 500 sector index">2026 YTD (sector index)</th>
+        <th style="text-align:right" id="sec-summary-ytd-h">2026 YTD</th>
       </tr></thead><tbody id="sec-summary-body"></tbody></table>
     </div>
   </div>
-  <div class="sec">
-    <div class="sechdr"><span class="sect">S&amp;P 500 Companies Explorer</span><span class="secn" id="ma-exp-asof">2026 YTD updated to August 21, 2026 close</span></div>
+
+  <div class="sec" data-ma="comp">
+    <div class="sechdr"><span class="sect">Index Composition &mdash; Weight Change</span><span class="ma-idx"></span></div>
+    <div class="ma-pane" data-idx="spx"><div class="card" id="ma-spx-comp"></div></div>
+    <div class="ma-pane" data-idx="ndx" id="ma-ndx-comp"></div>
+  </div>
+
+  <div class="sec" data-ma="top">
+    <div class="sechdr"><span class="sect">Top Contributors</span><span class="secn" style="margin-left:auto">Nasdaq-100 only, for now</span></div>
+    <div id="ma-ndx-top"></div>
+  </div>
+
+  <div class="sec" data-ma="wl">
+    <div class="sechdr"><span class="sect">Winners vs Losers</span><span class="ma-idx"></span></div>
+    <div class="ma-pane" data-idx="spx"><div class="card" id="ma-spx-wl"></div></div>
+    <div class="ma-pane" data-idx="ndx" id="ma-ndx-wl"></div>
+  </div>
+
+  <div class="sec" data-ma="scatter">
+    <div class="sechdr"><span class="sect">Security Return vs Weight</span><span class="secn" style="margin-left:auto">Nasdaq-100 only, for now</span></div>
+    <div id="ma-ndx-scatter"></div>
+  </div>
+
+  <div class="sec" data-ma="lookup">
+    <div class="sechdr"><span class="sect">Stock Lookup</span></div>
     <div class="card">
-      <div class="fbar">
-        <span class="flm">Filters:</span>
-        <label class="fc" id="fc2-p26"><input type="checkbox" onchange="applyFilters2()"> &#x2713; Positive 2026</label>
-        <label class="fc" id="fc2-b26"><input type="checkbox" onchange="applyFilters2()"> &#x2191; Beat Market 2026</label>
-        <label class="fc" id="fc2-p25"><input type="checkbox" onchange="applyFilters2()"> &#x2713; Positive 2025</label>
-        <label class="fc" id="fc2-b25"><input type="checkbox" onchange="applyFilters2()"> &#x2191; Beat Market 2025</label>
-        <label class="fc" id="fc2-p24"><input type="checkbox" onchange="applyFilters2()"> &#x2713; Positive 2024</label>
-        <label class="fc" id="fc2-b24"><input type="checkbox" onchange="applyFilters2()"> &#x2191; Beat Market 2024</label>
-        <button onclick="clearFilters2()" style="padding:5px 11px;border:1px solid var(--bdr);border-radius:7px;background:var(--w);cursor:pointer;font-size:11px;color:var(--mu)">Clear</button>
-      </div>
-      <div class="fbar2">
-        <span class="flm">Sector:</span>
-        <select class="fsel" id="sec-flt2" onchange="onSecChange('tbl2')">
-          <option value="">All Sectors</option>
-          <option>Communication Services</option><option>Consumer Discretionary</option><option>Consumer Staples</option><option>Energy</option><option>Financials</option><option>Health Care</option><option>Industrials</option><option>Materials</option><option>Real Estate</option><option>Information Technology</option><option>Utilities</option>
-        </select>
-        <span class="flm">Subsector:</span>
-        <select class="fsel" id="ind-flt2" onchange="applyFilters2()" style="max-width:240px"><option value="">All Subsectors</option></select>
-      </div>
-      <div class="tcnt" id="tbl-cnt2">503 <span>companies shown</span></div>
-      <div class="twrap"><table class="dt" id="main-tbl2">
-        <thead id="tbl2-head"></thead>
-        <tbody id="tbl-body2"></tbody>
-      </table></div>
+      <div class="srw"><span class="sric">&#x1F50D;</span><input type="text" class="sri" id="sr-inp" placeholder="Search a ticker or company in the S&amp;P 500 or the Nasdaq-100 (AAPL, XOM, PDD...)" autocomplete="off"><div class="srres" id="sr-res"></div></div>
+      <div id="sr-det" style="display:none"></div>
     </div>
   </div>
-  <div class="sec">
-    <div class="sechdr"><span class="sect">Return Scatter &mdash; 2025 vs 2026 YTD</span><span class="secn">Quadrant counts update with filters</span></div>
-    <div class="card">
-      <div class="fbar2" style="margin-bottom:10px">
-        <span class="flm">Sector:</span>
-        <select class="fsel" id="scat-sec" onchange="onSecChange('scat')">
-          <option value="">All Sectors</option>
-          <option>Communication Services</option><option>Consumer Discretionary</option><option>Consumer Staples</option><option>Energy</option><option>Financials</option><option>Health Care</option><option>Industrials</option><option>Materials</option><option>Real Estate</option><option>Information Technology</option><option>Utilities</option>
-        </select>
-        <span class="flm">Subsector:</span>
-        <select class="fsel" id="scat-ind" onchange="renderScatter()" style="max-width:240px"><option value="">All Subsectors</option></select>
-      </div>
-      <div class="qcounts" id="quad-counts"></div>
-      <div class="scrl">
-        <span class="scrli"><span class="scline" style="border-color:#4A7FB5"></span><span id="scl-25">S&amp;P 2025</span></span>
-        <span class="scrli"><span class="scline" style="border-color:#177A4E"></span><span id="scl-26">S&amp;P 2026 YTD</span></span>
-        <span class="scrli"><span style="width:12px;height:12px;background:rgba(180,30,30,.1);border:1px solid rgba(180,30,30,.25);display:inline-block;border-radius:2px"></span>Lag both years</span>
-      </div>
-      <div style="position:relative;height:390px"><canvas id="scat-c"></canvas></div>
-      <div class="scleg" id="scleg"></div>
-    </div>
-  </div>
-  <div class="sec">
-    <div class="sechdr"><span class="sect">Stock Lookup &amp; Rotation Winners</span></div>
-    <div class="card">
-      <div class="srw"><span class="sric">&#x1F50D;</span><input type="text" class="sri" id="sr-inp" placeholder="Search any S&amp;P 500 ticker (AAPL, XOM, DVN...)" autocomplete="off"><div class="srres" id="sr-res"></div></div>
-      <div id="sr-det" style="display:none;margin-bottom:16px"><div style="background:var(--surface);border-radius:10px;padding:14px 17px;border:1px solid var(--bdr)"><div id="sr-det-c"></div></div></div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:9px;letter-spacing:.5px">NEGATIVE 2025 &rarr; BEATING MARKET 2026</div>
-      <table class="rt"><thead><tr><th>Ticker</th><th>Sector</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026 YTD</th><th>3yr Cumulative</th><th>vs S&amp;P 3yr</th></tr></thead><tbody id="rot-body"></tbody></table>
-    </div>
-  </div>
-  </div><!-- /ma-panel-sp500 -->
-  <div id="ma-panel-ndx" class="ma-panel" style="display:none"></div>
 </div>
 
 <!-- HEDGE FUNDS TAB -->

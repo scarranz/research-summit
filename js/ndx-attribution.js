@@ -1,5 +1,7 @@
 // ndx-attribution.js — NDX 100 Return Attribution (Carino linking)
 import { fetchNdxAttribution } from './api.js';
+import { initNdxSectorReturns } from './ndx-sector-returns.js';
+import { dumbbell, distribution } from './ma-charts.js';
 
 // Filled by loadNdxAttribution(): the latest snapshot from the ndx-attribution edge
 // function (Supabase), or the bundled static file if the function is unavailable.
@@ -67,8 +69,6 @@ var _colorMode   = 'orig';   // 'orig' | 'A' | 'B' | 'C'
 var _colorMaxPos = 0, _colorMaxNeg = 0;
 var _wlTab        = 'A';
 var _wlYear       = 'ytd2026';
-var _attrChartYear = 'ytd2026';     // top chart: one year at a time
-var _attrChartTab = 'sector';       // independent from attrTab (table)
 var _compYear = 'ytd2026';          // Index Composition year
 var _attrDecimals = 2;
 var lastBaseR    = null;
@@ -115,7 +115,7 @@ function deriveYearsFromMarkers(hocs) {
     var ytd = !r.closed && i === runs.length - 1;
     var key = (ytd ? 'ytd' : 'y') + r.y;
     YEAR_HOCS[key] = [r.first, r.last];
-    YR_LABEL[key]  = (ytd ? 'YTD ' : '') + r.y;
+    YR_LABEL[key]  = String(r.y);
   });
 }
 
@@ -147,7 +147,7 @@ function deriveYears(hocs) {
     var ytd = !last.close || last.close < yearEndClose(y);
     var key = (ytd ? 'ytd' : 'y') + y;
     YEAR_HOCS[key] = [first.n, last.n];
-    YR_LABEL[key]  = (ytd ? 'YTD ' : '') + y;
+    YR_LABEL[key]  = String(y);   // the current year is labelled by its number (it is year to date)
   });
 }
 function yearOf(key) { return key.replace(/\D/g, ''); }
@@ -158,15 +158,27 @@ function yearKeys() {
 }
 // Sector weights (non-cash) at the first and last HOC of a year — shared by
 // Index Composition and Winners vs Losers so both report the same weight change
+// A year OPENS where the previous one CLOSED: the open = the previous year's last HOC drifted
+// to its close (the same numbers its "close" shows), so year-end weights never jump. Only the
+// first year in the data opens on its first HOC's own weights. Per security: { name: { w, hoc } }.
+function openWeightsOf(yr) {
+  var keys = chronoYears(), i = keys.indexOf(yr), out = {};
+  if (i > 0) {
+    var ph = hocsForYear(keys[i - 1]), last = ph[ph.length - 1], dw = driftedWeights(last);
+    last.sec.forEach(function(x) { out[x.t || x.co] = { w: dw[x.t || x.co] || 0, x: x }; });
+    return out;
+  }
+  hocsForYear(yr)[0].sec.forEach(function(x) { out[x.t || x.co] = { w: x.w || 0, x: x }; });
+  return out;
+}
 function sectorWeightSnaps(yr) {
   var hocs = hocsForYear(yr), o = {}, c = {};
   if (!hocs.length) return { open: o, close: c };
-  // Open = weights at the start of the year's first HOC; close = the last HOC drifted to its
-  // close (for the open YTD HOC: drifted to the latest prices)
-  var closeW = driftedWeights(hocs[hocs.length - 1]);
-  hocs[0].sec.forEach(function(s) {
-    if (isCash(s.t) || s.s === CASH) return;
-    o[s.s] = (o[s.s] || 0) + (s.w || 0);
+  // Close = the last HOC drifted to its close (the open YTD HOC: to the latest prices)
+  var closeW = driftedWeights(hocs[hocs.length - 1]), ow = openWeightsOf(yr);
+  Object.keys(ow).forEach(function(k) {
+    var x = ow[k].x; if (isCash(x.t) || x.s === CASH) return;
+    o[x.s] = (o[x.s] || 0) + ow[k].w;
   });
   hocs[hocs.length - 1].sec.forEach(function(s) {
     if (isCash(s.t) || s.s === CASH) return;
@@ -534,6 +546,7 @@ window.ndxSetHeroStart = function(key) {
 };
 
 function renderHero() {
+  if (!document.getElementById('ndx-hero-growth')) return;   // the price block now lives in js/ma-price.js
   var yrs = chronoYears();
   if (!_heroStart || !YEAR_HOCS[_heroStart]) _heroStart = yrs[yrs.length - 1];
   var start = _heroStart, startIdx = yrs.indexOf(start);
@@ -780,32 +793,6 @@ function renderAttrChart(canvasId, boxId, opts) {
     }
   });
 }
-
-// Top section — "Attribution by Sector / Industry Group": its own year + tab, no simulation
-function renderTopAttrChart() {
-  if (_chart) { _chart.destroy(); _chart = null; }
-  var res = computeCore(new Set(), new Set(), hocsForYear(_attrChartYear));
-  _chart = renderAttrChart('ndx-attr-canvas', 'ndx-chart-section-box', {
-    res: res, isIG: _attrChartTab === 'ig', label: YR_LABEL[_attrChartYear] || _attrChartYear
-  });
-}
-
-window.ndxSetAttrChartYear = function(yr) {
-  if (!YEAR_HOCS[yr]) return;
-  _attrChartYear = yr;
-  document.querySelectorAll('.ndx-attr-yr-btn').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.yr === yr);
-  });
-  renderTopAttrChart();
-};
-
-window.ndxSetAttrChartTab = function(tab) {
-  _attrChartTab = tab;
-  document.querySelectorAll('[data-attr-chart-tab]').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.attrChartTab === tab);
-  });
-  renderTopAttrChart();
-};
 
 // Detail section chart mode — the Detail year only, simulation values, rows ordered by the base case
 function renderDetailChart(res) {
@@ -1564,93 +1551,32 @@ function renderHeatmap() {
   box.innerHTML = ''; box.appendChild(svg); box.appendChild(legend);
 }
 
-function ndxSetCompYear(yr) {
+function ndxSetCompYear(yr, quiet) {
   _compYear = yr;
   document.querySelectorAll('.ndx-comp-yr-btn').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.yr === yr);
+    b.classList.toggle('active', b.dataset.yr === yr); if (b.disabled) b.style.opacity = '.35';
   });
   renderDumbbell();
+  if (!quiet && _onYear) _onYear('comp', +yearOf(yr));
 }
 
 // ── Dumbbell — weight composition open vs close ───────────────────────────
 function renderDumbbell() {
   var box = document.getElementById('ndx-dumbbell-box');
   if (!box) return;
-
-  // Own snapshots for _compYear (independent of the simulation and of every other section)
+  // Own snapshots for _compYear; same rows in the same order every year (latest year's
+  // opening weights), one axis for every year (largest weight seen, rounded up to 10%)
   var snaps = sectorWeightSnaps(_compYear);
-  // Same rows in the same order for every year: all sectors of any year, ordered by the
-  // LATEST year's opening weight (a sector absent in a year shows 0 → 0)
   var anchor = sectorWeightSnaps(yearKeys()[0]).open;
-  var ytd = _compYear.indexOf('ytd') === 0;
   var rows = universe().secs.filter(function(s) { return s !== CASH; }).map(function(s) {
-    return { sec: s, name: dispSec(s), w0: snaps.open[s] || 0, w1: snaps.close[s] || 0, a: anchor[s] || 0 };
+    return { name: dispSec(s), w0: snaps.open[s] || 0, w1: snaps.close[s] || 0, a: anchor[s] || 0 };
   }).sort(function(a, b) { return b.a - a.a; });
-
-  // One axis for every year: the largest sector weight seen in ANY year (open or
-  // close), rounded up to the next 10%. Adding a year to YEAR_HOCS updates it.
   var hi = 10;
   yearKeys().forEach(function(k) {
     var sn = sectorWeightSnaps(k);
-    [sn.open, sn.close].forEach(function(m) {
-      Object.keys(m).forEach(function(s) { hi = Math.max(hi, Math.ceil(m[s] / 10) * 10); });
-    });
+    [sn.open, sn.close].forEach(function(m) { Object.keys(m).forEach(function(s) { hi = Math.max(hi, Math.ceil(m[s] / 10) * 10); }); });
   });
-
-  var VW = 900, rowH = 30, P = { t: 56, r: 190, b: 26, l: 200 };
-  var VH = P.t + rows.length * rowH + P.b;
-  function X(v) { return P.l + v / hi * (VW - P.l - P.r); }
-
-  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
-  for (var t = 0; t <= hi; t += 10) {
-    svg.appendChild(se('line', { x1: X(t), x2: X(t), y1: P.t - 10, y2: VH - P.b, stroke: '#E5E8EC', 'stroke-width': 1 }));
-    var ax = se('text', { x: X(t), y: P.t - 18, 'text-anchor': 'middle', 'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0' });
-    ax.textContent = t + '%'; svg.appendChild(ax);
-  }
-  svg.appendChild(se('line', { x1: X(0), x2: X(0), y1: P.t - 10, y2: VH - P.b, stroke: '#9AAAB8', 'stroke-width': 1 }));
-  // Column titles for the numbers on the right
-  var closeLbl = ytd ? 'Latest' : 'Close';
-  [[VW - P.r + 12, 'start', 'Index weight: open → ' + closeLbl.toLowerCase()], [VW - 6, 'end', 'Change']].forEach(function(h) {
-    var ht = se('text', { x: h[0], y: 12, 'text-anchor': h[1], 'font-family': 'Inter,sans-serif', 'font-size': 10, fill: '#8A93A0', 'font-weight': '600' });
-    ht.textContent = h[2]; svg.appendChild(ht);
-  });
-
-  rows.forEach(function(r, i) {
-    var y = P.t + i * rowH + rowH / 2;
-    var up = r.w1 >= r.w0;
-    var col = up ? '#177A4E' : '#9B2A20';
-    var g = se('g', { class: 'mk' });
-    var nm = se('text', { x: P.l - 14, y: y + 4, 'text-anchor': 'end', 'font-family': 'Inter,sans-serif', 'font-size': 11.5, fill: '#2B3B4E' });
-    nm.textContent = r.name; g.appendChild(nm);
-    g.appendChild(se('line', { x1: X(Math.min(r.w0, r.w1)), x2: X(Math.max(r.w0, r.w1)), y1: y, y2: y, stroke: col, 'stroke-width': 3, 'stroke-opacity': 0.45, 'stroke-linecap': 'round' }));
-    g.appendChild(se('circle', { cx: X(r.w0), cy: y, r: 5.5, fill: '#fff', stroke: col, 'stroke-width': 2 }));
-    g.appendChild(se('circle', { cx: X(r.w1), cy: y, r: 5.5, fill: col, stroke: '#fff', 'stroke-width': 2 }));
-    var diff = r.w1 - r.w0;
-    var vt1 = se('text', { x: VW - P.r + 12, y: y + 4, 'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#2B3B4E', 'font-variant-numeric': 'tabular-nums' });
-    vt1.textContent = r.w0.toFixed(1) + '% → ' + r.w1.toFixed(1) + '%';
-    g.appendChild(vt1);
-    var vt2 = se('text', { x: VW - 6, y: y + 4, 'text-anchor': 'end', 'font-family': 'Inter,sans-serif', 'font-size': 11, fill: diff >= 0 ? '#177A4E' : '#9B2A20', 'font-weight': '600', 'font-variant-numeric': 'tabular-nums' });
-    vt2.textContent = (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' pp';
-    g.appendChild(vt2);
-    bindTip(g, '<b style="font-size:13px">' + r.name + '</b>' +
-      '<span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
-      'Share of the index at the start of ' + (YR_LABEL[_compYear] || _compYear) + ': ' + r.w0.toFixed(2) + '%' +
-      '<br>' + closeLbl + ': ' + r.w1.toFixed(2) + '%' +
-      '<br>Change: ' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' percentage points</span>');
-    svg.appendChild(g);
-  });
-
-  var legend = document.createElement('div');
-  legend.style.cssText = 'display:flex;gap:16px;font-size:11px;color:var(--mu);margin-top:8px;flex-wrap:wrap';
-  legend.innerHTML =
-    '<span><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:transparent;border:2px solid #177A4E;box-sizing:border-box;margin-right:5px;vertical-align:-1px"></span>Open weight</span>' +
-    '<span><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#177A4E;margin-right:5px;vertical-align:-1px"></span>Close weight</span>' +
-    '<span style="color:#177A4E;font-weight:600">▬</span> gained &nbsp; <span style="color:#9B2A20;font-weight:600">▬</span> lost weight' +
-    '<div style="flex-basis:100%;line-height:1.5">Each sector\'s share of the index. <b>Open</b> = weights at the start of the year (the year-end close of the year before); ' +
-    '<b>' + closeLbl + '</b> = ' + (ytd ? 'today, with the open HOC drifted to the latest prices' : 'at the year-end close') +
-    ' (the last HOC\'s weights moved by each stock\'s return to that date). <b>Change</b> is in percentage points of index weight: ' +
-    '48.0% → 47.4% = −0.6 pp. Rows keep the order of ' + (YR_LABEL[yearKeys()[0]] || '') + ' opening weights in every year.</div>';
-  box.innerHTML = ''; box.appendChild(svg); box.appendChild(legend);
+  dumbbell(box, rows, hi, _compYear.indexOf('ytd') === 0 ? 'Latest' : 'Close', YR_LABEL[_compYear] || _compYear);
 }
 
 // ── Scatter helpers ───────────────────────────────────────────────────────
@@ -1735,17 +1661,70 @@ function buildBeeswarmSectorPills() {
 }
 
 // ── Scatter — weight × return per security ────────────────────────────────
+var _scatLevel = 'sec', _scatPick = null, _scatSelAxes = null, _scatX = 'ret';
+function scatX(d) { return _scatX === 'contrib' ? d.contrib : d.ret; }
+// Sectors / groups listed by their weight in the index (latest snapshot), largest first;
+// the default pick is the first of the list
+function scatList() {
+  var last = NDX_DATA.hocs[NDX_DATA.hocs.length - 1], w = {};
+  last.sec.forEach(function(x) { if (isCash(x.t) || x.s === CASH) return; var k = _scatLevel === 'ig' ? x.g : x.s; w[k] = (w[k] || 0) + (x.w || 0); });
+  var u = universe();
+  return (_scatLevel === 'ig' ? u.igs : u.secs).filter(function(x) { return x !== CASH; })
+    .sort(function(a, b) { return (w[b] || 0) - (w[a] || 0) || (a < b ? -1 : 1); });
+}
+function scatInPick(d) { return _scatLevel === 'ig' ? d.grp === _scatPick : d.sect === _scatPick; }
+// Axes fitted to the picked sector / group over the whole year (every HOC snapshot), so the
+// slider never rescales and a small group is not squeezed into a corner
+function scatFitAxes() {
+  var xs = [], wts = [];
+  _scatterSecSnapshots.forEach(function(snap) { snap.forEach(function(d) {
+    if (!isCash(d.name) && d.sect !== CASH && (d.w1 > 0 || d.w0 > 0)) { xs.push(scatX(d)); wts.push(d.w1); }
+  }); });
+  if (!xs.length) { _scatSelAxes = null; return; }
+  var lo = Math.min.apply(null, xs.concat(0)), hi = Math.max.apply(null, xs.concat(0)), pad = (hi - lo) * 0.05 || 1;
+  _scatSelAxes = { xLo: lo - pad, xHi: hi + pad, yHi: Math.max.apply(null, wts) * 1.08 || 1 };
+}
+function scatPillsHtml() {
+  var list = scatList();
+  if (list.indexOf(_scatPick) < 0) _scatPick = list[0];
+  return '<span class="sb-toggle" style="margin-left:0">' +
+      '<button class="sb-tbtn' + (_scatX === 'ret' ? ' active' : '') + '" onclick="ndxScatX(\'ret\')">Return</button>' +
+      '<button class="sb-tbtn' + (_scatX === 'contrib' ? ' active' : '') + '" onclick="ndxScatX(\'contrib\')">Contribution</button></span>' +
+    '<span class="sb-toggle" style="margin-left:0">' +
+      '<button class="sb-tbtn' + (_scatLevel === 'sec' ? ' active' : '') + '" onclick="ndxScatLevel(\'sec\')">Sector</button>' +
+      '<button class="sb-tbtn' + (_scatLevel === 'ig' ? ' active' : '') + '" onclick="ndxScatLevel(\'ig\')">Industry Group</button></span>' +
+    '<div style="display:flex;gap:4px;flex-wrap:wrap;flex-basis:100%;margin-top:6px">' + list.map(function(x) {
+      return '<button class="ndx-tab-btn' + (x === _scatPick ? ' active' : '') + '" style="font-size:11px;padding:3px 9px" onclick="ndxScatPick(\'' + esc(x) + '\')">' + x + '</button>';
+    }).join('') + '</div>';
+}
+window.ndxScatX = function(x) {
+  _scatX = x;
+  var pb = document.getElementById('ndx-scat-pills'); if (pb) pb.innerHTML = scatPillsHtml();
+  _scatterViewport = null; scatFitAxes(); _updateScatterSlider();
+};
+window.ndxScatLevel = function(l) {
+  _scatLevel = l; _scatPick = null;       // the largest of the new level
+  var pb = document.getElementById('ndx-scat-pills'); if (pb) pb.innerHTML = scatPillsHtml();
+  _scatterViewport = null; scatFitAxes(); _updateScatterSlider();
+};
+window.ndxScatPick = function(x) {
+  _scatPick = x;
+  var pb = document.getElementById('ndx-scat-pills'); if (pb) pb.innerHTML = scatPillsHtml();
+  _scatterViewport = null; scatFitAxes(); _updateScatterSlider();
+};
+
 function renderScatter(securities) {
   var box = document.getElementById('ndx-scatter-box');
   if (!box || !securities.length) return;
 
-  var dots = securities.filter(function(d) { return d.w1 > 0 || d.w0 > 0; });
+  var dots = securities.filter(function(d) { return (d.w1 > 0 || d.w0 > 0) && scatInPick(d); });
+  if (!dots.length) { box.innerHTML = '<div class="ma-pending">No constituents of ' + _scatPick + ' at this point of the year.</div>'; return; }
   var VW = 900, P = { t: 40, r: 30, b: 50, l: 60 };
   var VH = 480;
   var cw = VW - P.l - P.r, ch = VH - P.t - P.b;
 
   // Viewport-based axes — zoom/pan changes these ranges, not the dot positions
-  var axes = _scatterViewport || _globalScatterAxes;
+  var axes = _scatterViewport || _scatSelAxes || _globalScatterAxes;
   var xLo = axes.xLo != null ? axes.xLo : -5;
   var xHi = axes.xHi != null ? axes.xHi :  5;
   var yLo = axes.yLo || 0;
@@ -1791,7 +1770,7 @@ function renderScatter(securities) {
   }
   var xal = se('text', { x: P.l + cw / 2, y: VH - 8, 'text-anchor': 'middle',
     'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#8A93A0' });
-  xal.textContent = 'Security return (%, compounded)'; svg.appendChild(xal);
+  xal.textContent = _scatX === 'contrib' ? 'Contribution to the index return (pp)' : 'Security return (%, compounded)'; svg.appendChild(xal);
   var yal = se('text', { x: 0, y: 0, 'text-anchor': 'middle',
     'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#8A93A0',
     transform: 'translate(12,' + (P.t + ch / 2) + ') rotate(-90)' });
@@ -1806,7 +1785,7 @@ function renderScatter(securities) {
   // Draw dots — directly on SVG, no group transform
   var labelItems = [];
   dots.forEach(function(d) {
-    var cx = X(d.ret), cy = Y(d.w1);
+    var cx = X(scatX(d)), cy = Y(d.w1);
     // Skip dots outside viewport (they'd be drawn outside the chart area)
     if (cx < P.l - 2 || cx > VW - P.r + 2 || cy < P.t - 2 || cy > VH - P.b + 2) return;
     var r = Math.max(3, Math.min(14, Math.sqrt(Math.abs(d.contrib)) * 4));
@@ -1893,7 +1872,7 @@ function renderScatter(securities) {
 function _scatterZoomViewport(factor, cxFrac, cyFrac) {
   cxFrac = cxFrac != null ? cxFrac : 0.5;
   cyFrac = cyFrac != null ? cyFrac : 0.5;
-  var axes = _scatterViewport || _globalScatterAxes;
+  var axes = _scatterViewport || _scatSelAxes || _globalScatterAxes;
   var xRng = axes.xHi - axes.xLo;
   var yRng = axes.yHi - (axes.yLo || 0);
   var pivX = axes.xLo + xRng * cxFrac;
@@ -2464,12 +2443,23 @@ function renderWLC() {
   box.innerHTML = html + '</tbody></table></div>';
 }
 
+var _wlState = { bin: null };
 function renderWLSection() {
   var box = document.getElementById('ndx-wl-box');
   if (!box) return;
-  if (_wlTab === 'A') renderWLA();
-  else if (_wlTab === 'B') renderWLB();
-  else renderWLC();
+  var range = YEAR_HOCS[_wlYear]; if (!range) return;
+  var hocs = NDX_DATA.hocs.filter(function(h) { return h.n >= range[0] && h.n <= range[1]; });
+  // a name counts only if it is in every HOC of the year (in the index the whole year)
+  var inAll = {};
+  hocs.forEach(function(h, i) {
+    var here = {};
+    h.sec.forEach(function(x) { if (!isCash(x.t) && x.s !== CASH && (x.w || 0) > 0) here[x.t || x.co] = 1; });
+    Object.keys(here).forEach(function(k) { inAll[k] = (inAll[k] || 0) + 1; });
+  });
+  var items = computeSecurities(new Set(), new Set(), hocs)
+    .filter(function(d) { return inAll[d.name] === hocs.length; })
+    .map(function(d) { return { name: d.name, co: d.co, ret: d.ret }; });
+  distribution(box, items, _wlState);
 }
 
 // ── Master refresh ────────────────────────────────────────────────────────
@@ -2496,7 +2486,7 @@ function reloadSnapshot() {
   buildHierarchy();
   lockAxes(baseR);
   _securities = computeSecurities(new Set(), new Set());
-  rebuildScatterSnapshots(_scatterYear);
+  rebuildScatterSnapshots(_scatterYear); scatFitAxes();
   rebuildBeeswarmSecurities(_beeswarmYear);
   // rebuild pills for the new sector list
   buildBeeswarmSectorPills();
@@ -2624,6 +2614,7 @@ window.ndxSetScatterYear = function(yr) {
     b.classList.toggle('active', b.dataset.yr === yr);
   });
   rebuildScatterSnapshots(yr);
+  scatFitAxes();
   _updateScatterSlider();
 };
 
@@ -2702,13 +2693,14 @@ window.ndxSetWLTab = function(t) {
   renderWLSection();
 };
 
-window.ndxSetWLYear = function(yr) {
+window.ndxSetWLYear = function(yr, quiet) {
   if (!YEAR_HOCS[yr]) return;
-  _wlYear = yr;
+  _wlYear = yr; _wlState.bin = null;
   document.querySelectorAll('.ndx-wl-yr-btn').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.yr === yr);
+    b.classList.toggle('active', b.dataset.yr === yr); if (b.disabled) b.style.opacity = '.35';
   });
   renderWLSection();
+  if (!quiet && _onYear) _onYear('wl', +yearOf(yr));
 };
 
 window.ndxSetParetoN = function(n) {
@@ -2790,212 +2782,153 @@ function sourceLine() {
   return d ? 'Prices through ' + fmtDate(d) : '';
 }
 
-function buildSkeleton() {
-  var last  = _activeHocs[_activeHocs.length - 1];
-  var first = _activeHocs[0];
-
-  return (
-  '<div id="ndx-tip" style="position:fixed;pointer-events:none;opacity:0;transition:opacity .09s;' +
-  'background:var(--w,#fff);border:1px solid rgba(0,0,0,.1);border-radius:9px;' +
-  'padding:8px 12px;font-size:12px;box-shadow:0 5px 18px rgba(0,0,0,.14);z-index:1999;max-width:260px;font-family:Inter,sans-serif"></div>' +
-
-  '<div class="sec" style="padding-bottom:0">' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-bottom:14px">' +
-      '<div>' +
-        '<div class="sect" style="font-size:17px;font-weight:700;color:var(--navy)">Nasdaq-100 — Return Attribution</div>' +
-        '<div style="font-size:11px;color:var(--mu);margin-top:3px">NDX price return &middot; ' + sourceLine() + '</div>' +
-      '</div>' +
-    '</div>' +
-  '</div>' +
-
-  '<div class="sec">' +
-    '<div class="sechdr"><span class="sect">NDX Price Return</span>' +
-      '<span class="secn">Growth of $100 and yearly returns, measured at each rebalance (HOC) close</span></div>' +
-    '<div class="card">' +
-      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
-        '<span style="font-size:12px;color:var(--navy);font-weight:600">Invest $100 at the start of</span>' +
-        '<div id="ndx-hero-pills" style="display:flex;gap:4px;flex-wrap:wrap"></div>' +
-        '<div id="ndx-sim-badge" style="display:none;margin-left:auto;font-size:11px;background:rgba(255,180,0,.1);border:1px solid rgba(200,160,0,.35);border-radius:20px;padding:4px 12px;color:#7A5A00"></div>' +
-      '</div>' +
-      '<div id="ndx-hero-kpis" style="max-width:320px;margin-bottom:14px"></div>' +
-      '<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">' +
-        '<div style="flex:2 1 520px;min-width:300px">' +
-          '<div style="font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Growth of $100</div>' +
-          '<div id="ndx-hero-growth"></div>' +
-        '</div>' +
-        '<div style="flex:1 1 300px;min-width:260px">' +
-          '<div style="font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Return by year <span style="text-transform:none;letter-spacing:0;font-weight:400">· click a year to start there</span></div>' +
-          '<div id="ndx-hero-bars"></div>' +
-        '</div>' +
-      '</div>' +
-      '<div id="ndx-kpi-table" style="margin-top:14px;overflow-x:auto"></div>' +
-      '<div style="font-size:11px;color:var(--mu);margin-top:8px;line-height:1.5">Price return, like the official Nasdaq-100 index (NDX): in each rebalance period every stock\'s price change is weighted by its index weight (weights from QQQ\'s holdings), and the periods are compounded. Dividends are not included. The current period is valued at the latest prices.</div>' +
-    '</div>' +
-  '</div>' +
-
-  '<div class="sec">' +
-    '<div class="sechdr"><span class="sect">Attribution by Sector / Industry Group</span></div>' +
-    '<div class="card">' +
-      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
-        '<div style="display:flex;gap:4px">' +
-          yrBtns('ndx-attr-yr-btn', 'ndxSetAttrChartYear', _attrChartYear) +
-        '</div>' +
-        '<div style="display:flex;gap:3px">' +
-          '<button class="ndx-tab-btn active" data-attr-chart-tab="sector" onclick="ndxSetAttrChartTab(\'sector\')">By Sector</button>' +
-          '<button class="ndx-tab-btn" data-attr-chart-tab="ig" onclick="ndxSetAttrChartTab(\'ig\')">By Industry Group</button>' +
-        '</div>' +
-      '</div>' +
-      '<div id="ndx-chart-section-box" style="position:relative;height:340px"><canvas id="ndx-attr-canvas"></canvas></div>' +
-    '</div>' +
-  '</div>' +
-
-  '<div class="sec">' +
-    '<div class="sechdr">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">' +
-        '<div>' +
-          '<span class="sect">Attribution Detail &amp; Simulation</span>' +
-          '<span class="secn" style="display:block;margin-top:2px">Click any row to include / exclude · weights rescale to 100% within each HOC · YTD updates in real time</span>' +
-        '</div>' +
-        '<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">' +
-          '<div style="display:flex;gap:3px;margin-right:4px">' +
-            yrBtns('ndx-attr-det-yr-btn', 'ndxSetAttrDetailYear', _attrDetailYear) +
-          '</div>' +
-          '<div id="ndx-attr-tabs" style="display:none;gap:3px">' +
-            '<button class="ndx-tab-btn active" data-tab="sector" onclick="ndxSetAttrTab(\'sector\')">By Sector</button>' +
-            '<button class="ndx-tab-btn" data-tab="ig" onclick="ndxSetAttrTab(\'ig\')">By Industry Group</button>' +
-          '</div>' +
-          '<div id="ndx-attr-mode-btns" style="display:flex;gap:3px">' +
-            '<button class="ndx-tab-btn" data-mode="chart" onclick="ndxSetAttrMode(\'chart\')">&#9646; Chart</button>' +
-            '<button class="ndx-tab-btn" data-mode="treemap" onclick="ndxSetAttrMode(\'treemap\')">Treemap</button>' +
-            '<button class="ndx-tab-btn active" data-mode="table" onclick="ndxSetAttrMode(\'table\')">Table</button>' +
-          '</div>' +
-          '<span id="ndx-expand-btns" style="display:flex;gap:3px">' +
+// Years the S&P 500 has and the Nasdaq-100 data does not (2017-2019): drawn as disabled
+// buttons, so switching index does not move the year buttons around
+var _padYears = [], _onYear = null;
+function padBtns(cls) {
+  return _padYears.map(function(y) {
+    return '<button class="ndx-tab-btn ' + cls + '" data-yr="pad' + y + '" disabled style="opacity:.35;cursor:default" title="No Nasdaq-100 data for ' + y + '">' + y + '</button>';
+  }).join('');
+}
+// The page keeps ONE year per section across both indices: show it here (a year the Nasdaq-100
+// data does not have stays selected, with a note, instead of jumping to another year)
+export function ndxShowYear(section, year) {
+  var key = chronoYears().filter(function(k) { return +yearOf(k) === +year; })[0];
+  var cls = section === 'comp' ? 'ndx-comp-yr-btn' : 'ndx-wl-yr-btn', box = document.getElementById(section === 'comp' ? 'ndx-dumbbell-box' : 'ndx-wl-box');
+  if (key) { if (section === 'comp') ndxSetCompYear(key, true); else window.ndxSetWLYear(key, true); return; }
+  document.querySelectorAll('.' + cls).forEach(function(b) { var on = b.dataset.yr === 'pad' + year; b.classList.toggle('active', on); b.style.opacity = on ? '1' : (b.disabled ? '.35' : ''); });
+  if (box) box.innerHTML = '<div class="ma-pending">No Nasdaq-100 data for ' + year + ' (it starts in ' + yearOf(chronoYears()[0]) + ').</div>';
+}
+function buildPanes() {
+  return {
+    detail:
+      '<div class="ma-pane-ttl">Nasdaq-100</div>' +
+      '<div class="card">' +
+        '<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:10px">' +
+          '<div style="display:flex;gap:3px;flex-wrap:wrap">' + yrBtns('ndx-attr-det-yr-btn', 'ndxSetAttrDetailYear', _attrDetailYear) + '</div>' +
+          '<span style="margin-left:auto;display:flex;gap:3px">' +
             '<button class="ndx-tab-btn" onclick="ndxExpandAll()">Expand All</button>' +
             '<button class="ndx-tab-btn" onclick="ndxCollapseAll()">Collapse All</button>' +
-          '</span>' +
-          '<button class="sb-tbtn" onclick="ndxResetSim()">Reset</button>' +
+            '<button class="sb-tbtn" onclick="ndxResetSim()">Reset</button></span>' +
         '</div>' +
-      '</div>' +
-    '</div>' +
-    '<div class="card">' +
-      '<div id="ndx-attr-chart-box" style="position:relative;height:340px;display:none"><canvas id="ndx-attr-sim-canvas"></canvas></div>' +
-      '<div id="ndx-treemap-box" style="display:none;padding:4px 0"></div>' +
-      '<table id="ndx-attr-table-wrap" class="rt" style="width:100%;table-layout:fixed">' +
-        '<colgroup><col style="width:32px"><col style="width:26px"><col><col style="width:110px"><col style="width:110px"><col style="width:130px"></colgroup>' +
-        '<thead><tr>' +
-          '<th></th><th></th>' +
-          '<th onclick="ndxSort(\'name\')" style="cursor:pointer;user-select:none">Sector / Industry Group<span id="ndx-sort-name" style="color:var(--mu)"></span></th>' +
-          '<th class="num">Stocks</th>' +
-          '<th class="num" onclick="ndxSort(\'weight\')" style="cursor:pointer;user-select:none">Weight<span id="ndx-sort-weight" style="color:var(--mu)"></span></th>' +
-          '<th class="num" onclick="ndxSort(\'contrib\')" style="cursor:pointer;user-select:none">Contribution<span id="ndx-sort-contrib" style="color:var(--mu)"> ▼</span></th>' +
-        '</tr></thead>' +
-        '<tbody id="ndx-attr-tbody"></tbody>' +
-      '</table>' +
-    '</div>' +
-  '</div>' +
-
-  '<div class="sec">' +
-    '<div class="sechdr">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">' +
-        '<div>' +
-          '<span class="sect">Index Composition — Weight Change</span>' +
-          '<span class="secn" style="display:block;margin-top:2px">Open weight (hollow) vs. close weight (solid) by sector. Ordered by opening weight.</span>' +
-        '</div>' +
-        '<div style="display:flex;gap:4px">' +
-          yrBtns('ndx-comp-yr-btn', 'ndxSetCompYear', _compYear) +
-        '</div>' +
-      '</div>' +
-    '</div>' +
-    '<div class="card"><div id="ndx-dumbbell-box"></div></div>' +
-  '</div>' +
-
-  '<div class="sec">' +
-    '<div class="sechdr">' +
-      '<span class="sect">Top Contributors</span>' +
-      '<span class="secn">Constituents ranked by contribution to the index return. Pick several years to compare them side by side, oldest to newest.</span>' +
-    '</div>' +
-    '<div class="card"><div id="ndx-pareto-box"></div></div>' +
-  '</div>' +
-
-  '<div class="sec">' +
-    '<div class="sechdr" style="padding-top:0">' +
-      '<span class="sect">Winners vs Losers</span>' +
-      '<span class="secn" style="display:block;margin-top:3px">Three views of performance breakdown by sector and constituent.</span>' +
-    '</div>' +
-    '<div class="card">' +
-      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
-        '<div style="display:flex;gap:4px">' +
-          yrBtns('ndx-wl-yr-btn', 'ndxSetWLYear', _wlYear) +
-        '</div>' +
-        '<div style="display:flex;gap:4px;margin-left:8px">' +
-          '<button class="ndx-wl-tab ndx-tab-btn active" data-tab="A" onclick="ndxSetWLTab(\'A\')">Sector Matrix</button>' +
-          '<button class="ndx-wl-tab ndx-tab-btn" data-tab="B" onclick="ndxSetWLTab(\'B\')">Return Distribution</button>' +
-          '<button class="ndx-wl-tab ndx-tab-btn" data-tab="C" onclick="ndxSetWLTab(\'C\')">Top/Bottom by Sector</button>' +
-        '</div>' +
-      '</div>' +
-      '<div id="ndx-wl-box"></div>' +
-    '</div>' +
-  '</div>' +
-
-  '<div class="sec">' +
-    '<div class="sechdr">' +
-      '<span class="sect">Security Return vs. Weight Scatter</span>' +
-      '<span class="secn">Each dot = one constituent. X = compounded return, Y = closing weight, bubble area ∝ √|contribution|. Top 10 labeled.</span>' +
-    '</div>' +
-    '<div class="card">' +
-      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">' +
-        '<div style="display:flex;gap:4px">' +
-          yrBtns('ndx-scat-yr-btn', 'ndxSetScatterYear', _scatterYear) +
-        '</div>' +
-        '<div style="display:flex;align-items:center;gap:8px;margin-left:auto">' +
-          '<span style="font-size:11px;color:var(--mu)">HOC evolution:</span>' +
-          '<input type="range" id="ndx-scatter-hoc-slider" min="0" max="13" value="13" style="width:140px;accent-color:var(--navy)" oninput="ndxSetScatterHoc(+this.value)">' +
-          '<span id="ndx-scatter-hoc-label" style="font-size:11px;color:var(--navy);min-width:180px;width:180px;display:inline-block;white-space:nowrap;overflow:hidden"></span>' +
-          '<div style="display:flex;gap:3px;margin-left:6px">' +
+        '<div id="ndx-sim-badge" style="display:none;margin-bottom:8px;font-size:11px;background:rgba(255,180,0,.1);border:1px solid rgba(200,160,0,.35);border-radius:20px;padding:4px 12px;color:#7A5A00"></div>' +
+        '<table id="ndx-attr-table-wrap" class="rt" style="width:100%;table-layout:fixed">' +
+          '<colgroup><col style="width:32px"><col style="width:26px"><col><col style="width:90px"><col style="width:100px"><col style="width:110px"></colgroup>' +
+          '<thead><tr><th></th><th></th>' +
+            '<th onclick="ndxSort(\'name\')" style="cursor:pointer;user-select:none">Sector / Industry Group<span id="ndx-sort-name" style="color:var(--mu)"></span></th>' +
+            '<th class="num">Stocks</th>' +
+            '<th class="num" onclick="ndxSort(\'weight\')" style="cursor:pointer;user-select:none">Weight<span id="ndx-sort-weight" style="color:var(--mu)"></span></th>' +
+            '<th class="num" onclick="ndxSort(\'contrib\')" style="cursor:pointer;user-select:none">Contribution<span id="ndx-sort-contrib" style="color:var(--mu)"> ▼</span></th>' +
+          '</tr></thead><tbody id="ndx-attr-tbody"></tbody></table>' +
+      '</div>',
+    comp:
+      '<div class="card"><div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">' + padBtns('ndx-comp-yr-btn') + yrBtns('ndx-comp-yr-btn', 'ndxSetCompYear', _compYear) + '</div>' +
+      '<div id="ndx-dumbbell-box"></div></div>',
+    top:
+      '<div class="card"><div id="ndx-pareto-box"></div></div>',
+    wl:
+      '<div class="card"><div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">' + padBtns('ndx-wl-yr-btn') + yrBtns('ndx-wl-yr-btn', 'ndxSetWLYear', _wlYear) + '</div>' +
+      '<div id="ndx-wl-box"></div></div>',
+    scatter:
+      '<div class="card">' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">' +
+          '<div style="display:flex;gap:4px;flex-wrap:wrap">' + yrBtns('ndx-scat-yr-btn', 'ndxSetScatterYear', _scatterYear) + '</div>' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-left:auto">' +
+            '<input type="range" id="ndx-scatter-hoc-slider" min="0" max="13" value="13" style="width:140px;accent-color:var(--navy)" oninput="ndxSetScatterHoc(+this.value)">' +
+            '<span id="ndx-scatter-hoc-label" style="font-size:11px;color:var(--navy);min-width:180px;width:180px;display:inline-block;white-space:nowrap;overflow:hidden"></span>' +
             '<button class="ndx-tab-btn" onclick="ndxScatterZoom(1.5)" style="font-size:12px;padding:2px 7px;line-height:1" title="Zoom in">+</button>' +
             '<button class="ndx-tab-btn" onclick="ndxScatterZoom(1/1.5)" style="font-size:12px;padding:2px 7px;line-height:1" title="Zoom out">−</button>' +
             '<button class="ndx-tab-btn" onclick="ndxScatterReset()" style="font-size:11px;padding:2px 7px;line-height:1" title="Reset zoom">⟳</button>' +
           '</div>' +
+          '<div id="ndx-scat-pills" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-basis:100%">' + scatPillsHtml() + '</div>' +
         '</div>' +
-      '</div>' +
-      '<div id="ndx-scatter-box"></div>' +
-    '</div>' +
-  '</div>' +
+        '<div id="ndx-scatter-box"></div>' +
+        '<div style="font-size:11px;color:var(--mu);margin-top:6px">One dot per company: return or contribution (across) vs weight in the index (up); bubble size = contribution. Same axes for every sector or group within a year.</div>' +
+      '</div>'
+  };
+}
 
-  '<div class="sec">' +
-    '<div class="sechdr">' +
-      '<span class="sect">Security Contributions — Beeswarm by Sector</span>' +
-      '<span class="secn">One dot per constituent. X = Carino-linked contribution. Lane = sector. Select multiple years to compare side by side.</span>' +
-    '</div>' +
-    '<div class="card">' +
-      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">' +
-        '<div style="display:flex;gap:4px">' +
-          yrBtns('ndx-bee-yr-btn', 'ndxToggleBeeYear', _beeswarmYear) +
-        '</div>' +
-        '<div style="display:flex;align-items:center;gap:6px">' +
-          '<span style="font-size:11px;color:var(--mu)">Progress:</span>' +
-          '<input type="range" id="ndx-bee-progress-sl" min="0" max="100" value="100" step="1" ' +
-            'style="width:120px;accent-color:var(--navy)" oninput="ndxSetBeeProgress(+this.value)">' +
-          '<span id="ndx-bee-progress-lbl" style="font-size:11px;color:var(--navy);min-width:36px">100%</span>' +
-        '</div>' +
-        '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' +
-          '<span style="font-size:11px;color:var(--mu);font-weight:600">Sector:</span>' +
-          '<div id="ndx-bee-pills" style="display:flex;gap:4px;flex-wrap:wrap"></div>' +
-        '</div>' +
-        '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex-basis:100%">' +
-          '<span style="font-size:11px;color:var(--mu);font-weight:600">or Industry Group:</span>' +
-          '<div id="ndx-bee-ig-pills" style="display:flex;gap:4px;flex-wrap:wrap"></div>' +
-        '</div>' +
-      '</div>' +
-      '<div id="ndx-beeswarm-box"></div>' +
-    '</div>' +
-  '</div>'
-  );
+// Attribution Detail & Simulation (one table for both indices, js/ma-detail.js): the year's
+// Carino attribution with the excluded sectors / groups removed (weights rescaled to 100% within
+// each HOC), plus open → close weights. year = 2025, 2026 … · names in this file's own spelling.
+export function ndxIGs() { return universe().igs.filter(function(g) { return g !== CASH; }); }
+export function ndxDetailYears() { return chronoYears().map(function(k) { return +yearOf(k); }); }
+export function ndxDetail(year, exSecs, exIGs) {
+  var key = chronoYears().filter(function(k) { return +yearOf(k) === year; })[0];
+  if (!key) return null;
+  var hocs = hocsForYear(key), exS = new Set(exSecs || []), exG = new Set(exIGs || []);
+  var res = computeCore(exS, exG, hocs);
+  function weights(hoc, drift) {
+    var tot = 0, sec = {}, ig = {};
+    hoc.sec.forEach(function(x) { if (!exS.has(x.s) && !exG.has(x.g)) tot += (x.w || 0) * (drift ? 1 + x.r : 1); });
+    hoc.sec.forEach(function(x) {
+      if (exS.has(x.s) || exG.has(x.g)) return;
+      var w = (x.w || 0) * (drift ? 1 + x.r : 1) / (tot || 1) * 100;
+      sec[x.s] = (sec[x.s] || 0) + w; ig[x.g] = (ig[x.g] || 0) + w;
+    });
+    return { sec: sec, ig: ig };
+  }
+  var c = weights(hocs[hocs.length - 1], true);
+  // open = the previous year's close (openWeightsOf), as in Index Composition
+  var ow = openWeightsOf(key), ot = 0, o = { sec: {}, ig: {} };
+  Object.keys(ow).forEach(function(k) { var x = ow[k].x; if (!exS.has(x.s) && !exG.has(x.g)) ot += ow[k].w; });
+  Object.keys(ow).forEach(function(k) {
+    var x = ow[k].x; if (exS.has(x.s) || exG.has(x.g)) return;
+    var w = ow[k].w / (ot || 1) * 100; o.sec[x.s] = (o.sec[x.s] || 0) + w; o.ig[x.g] = (o.ig[x.g] || 0) + w;
+  });
+  return { bySec: res.bySec, byIG: res.byIG, total: res.ytd, cash: res.bySec[CASH], cashW: [o.sec[CASH] || 0, c.sec[CASH] || 0],
+    wOpen: o.sec, wClose: c.sec, wOpenIG: o.ig, wCloseIG: c.ig, ytd: key.indexOf('ytd') === 0, CASH: CASH };
+}
+// The Detail table's exclusions also drive Top Contributors (simulation), as before
+export function ndxSetSim(exSecs, exIGs) {
+  exclSecs = new Set(exSecs || []); exclIGs = new Set(exIGs || []);
+  refresh();
+}
+
+// For the joint sections (js/ma-price.js, the Nasdaq-100 side of Sector Summary and Stock Lookup)
+// Year returns + a growth path of the index from the start of the first year (HOC closes).
+export function ndxPriceData() {
+  var yrs = chronoYears();
+  var path = growthPath(yrs[0]);
+  return {
+    years: yrs.map(function(k) { return { key: k, year: +yearOf(k), ytd: k.indexOf('ytd') === 0, ret: computeYearReturn(k) }; }),
+    points: path.map(function(p) { return { d: p.d, v: p.v }; }),
+    asOf: latestDate()
+  };
+}
+// Every security that was in the index in any year: its return in each year (compounded over
+// the HOCs it was in) and whether it was in for the whole year (every HOC of that year).
+export function ndxStocks() {
+  var out = {}, yrs = chronoYears();
+  yrs.forEach(function(k) {
+    var y = String(yearOf(k)).slice(2), hocs = hocsForYear(k), n = hocs.length, cnt = {};
+    computeSecurities(new Set(), new Set(), hocs).forEach(function(d) {
+      if (isCash(d.name) || d.sect === CASH) return;
+      var o = out[d.name] || (out[d.name] = { t: d.name, n: d.co, s: d.sect, i: d.grp });
+      o.s = d.sect; o.i = d.grp; o.n = d.co;
+      o['r' + y] = Math.round(d.ret * 100) / 100;
+    });
+    hocs.forEach(function(h) { h.sec.forEach(function(x) { if ((x.w || 0) > 0) cnt[x.t || x.co] = (cnt[x.t || x.co] || 0) + 1; }); });
+    Object.keys(out).forEach(function(t) {
+      var c = cnt[t] || 0;
+      out[t]['m' + y] = c === n ? 2 : c > 0 ? 1 : 0;
+      out[t]['e' + y] = c === n && out[t]['r' + y] != null ? 1 : 0;
+    });
+  });
+  var current = {};
+  var last = NDX_DATA.hocs[NDX_DATA.hocs.length - 1];
+  last.sec.forEach(function(x) { if ((x.w || 0) > 0) current[x.t || x.co] = 1; });
+  return {
+    stocks: Object.keys(out).map(function(t) { var o = out[t]; o.now = !!current[t]; return o; }),
+    years: yrs.map(function(k) { return { yy: String(yearOf(k)).slice(2), year: +yearOf(k), ytd: k.indexOf('ytd') === 0, ret: computeYearReturn(k) }; })
+  };
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────
-export async function loadNdxAttribution(container) {
-  container.innerHTML = '<div style="padding:40px;color:var(--mu);font-size:13px">Loading Nasdaq-100 attribution…</div>';
+// hosts: { sector, detail, comp, top, wl, scatter } — elements of the unified Market Analysis page
+export async function loadNdxAttribution(hosts) {
+  var _allYears = hosts.allYears || [];
+  _onYear = hosts.onYear || null;
   var res = await fetchNdxAttribution();
   if (res.success && res.data && res.data.hocs && res.data.hocs.length) {
     NDX_DATA = res.data; _dataSource = { kind: 'supabase', meta: res.data.meta || {} };
@@ -3030,8 +2963,6 @@ export async function loadNdxAttribution(container) {
   _paretoN = 5; _paretoYears = new Set([LATEST]); _paretoView = 'table'; _paretoCustomN = 0;
   _paretoSide = 'pos'; _paretoInfo = 'sector'; _paretoCols = new Set(['ret']);
   _wlYear = LATEST; _wlTab = 'A';
-  _attrChartYear = LATEST;
-  _attrChartTab = 'sector';
   _compYear = LATEST;
   _colorMode = 'orig';
   _colorMaxPos = 0; _colorMaxNeg = 0;
@@ -3047,13 +2978,18 @@ export async function loadNdxAttribution(container) {
   _anchorSnapN = _snapN;   // the load starts on the latest year: its weights fix the "Weight" sort
   lockAxes(baseR);
   _securities = computeSecurities(new Set(), new Set());
-  rebuildScatterSnapshots(_scatterYear);
+  rebuildScatterSnapshots(_scatterYear); scatFitAxes();
   rebuildBeeswarmSecurities(_beeswarmYear);
 
-  container.innerHTML = buildSkeleton();
+  var firstY = +yearOf(chronoYears()[0]);
+  _padYears = _allYears.filter(function(y) { return +y < firstY; });
+  var panes = buildPanes();
+  ['comp', 'top', 'wl', 'scatter'].forEach(function(k) { if (hosts[k]) hosts[k].innerHTML = panes[k]; });
+  initNdxSectorReturns(hosts.sector, chronoYears().map(function(k) {
+    return { key: k, label: yearOf(k), ytd: k.indexOf('ytd') === 0, hocs: hocsForYear(k) };
+  }), CASH, function(k) { return computeCore(new Set(), new Set(), hocsForYear(k)); });
   buildBeeswarmSectorPills();
   renderKPI(baseR);
-  renderTopAttrChart();
   renderAttrTable(baseR);
   renderDumbbell();
   renderPareto();

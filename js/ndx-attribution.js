@@ -2843,7 +2843,7 @@ function buildPanes() {
           '<div id="ndx-scat-pills" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-basis:100%">' + scatPillsHtml() + '</div>' +
         '</div>' +
         '<div id="ndx-scatter-box"></div>' +
-        '<div style="font-size:11px;color:var(--mu);margin-top:6px">One dot per company: return or contribution (across) vs weight in the index (up); bubble size = contribution. Same axes for every sector or group within a year.</div>' +
+        '<div style="font-size:11px;color:var(--mu);margin-top:6px">One dot per company: return or contribution (across) vs weight in the index (up); bubble size = contribution. Same axes for every sector or group within a year. Return = only the time the company has been in the Nasdaq-100 (from its entry date if it joined during the year), so it can differ from the S&amp;P 500 view, which takes the whole year for the companies in the index at the start of it.</div>' +
       '</div>'
   };
 }

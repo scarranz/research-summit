@@ -137,10 +137,11 @@ function renderScatter(){
   xl.textContent = S.x === 'contrib' ? 'Contribution to SPY\'s return (pp)' : 'Security return (%)'; svg.appendChild(xl);
   var yl = se('text', { x: 0, y: 0, 'text-anchor': 'middle', 'font-family': 'Inter,sans-serif', 'font-size': 11, fill: '#8A93A0', transform: 'translate(12,' + (M.t + ch / 2) + ') rotate(-90)' });
   yl.textContent = 'Closing weight (%)'; svg.appendChild(yl);
-  var maxC = Math.max.apply(null, dots.map(function(d){ return Math.abs(d.contrib); }).concat(1e-9));
   var top = dots.slice().sort(function(a, b){ return Math.abs(b.contrib) - Math.abs(a.contrib); }).slice(0, 10).map(function(d){ return d.name; });
   dots.slice().sort(function(a, b){ return Math.abs(a.contrib) - Math.abs(b.contrib); }).forEach(function(d){
-    var r = 4 + 14 * Math.sqrt(Math.abs(d.contrib) / maxC), col = d.ret >= 0 ? '#177A4E' : '#9B2A20';
+    // the Nasdaq-100 scatter's bubble scale (absolute, not relative to the largest dot), so the
+    // two indices' bubbles are comparable
+    var r = Math.max(3, Math.min(14, Math.sqrt(Math.abs(d.contrib)) * 4)), col = d.ret >= 0 ? '#177A4E' : '#9B2A20';
     var c = se('circle', { cx: X(xv(d)), cy: Y(d.w1), r: r, fill: col, 'fill-opacity': .55, stroke: col, 'stroke-width': 1.2 });
     bindTip(c, '<b>' + d.name + '</b> · ' + esc(d.co) + '<br>Return: ' + (d.ret >= 0 ? '+' : '') + d.ret.toFixed(2) + '%<br>Weight: ' + d.w0.toFixed(2) + '% → ' + d.w1.toFixed(2) + '%<br>Contribution: ' + sgn2(d.contrib) + ' pp');
     svg.appendChild(c);
@@ -148,7 +149,8 @@ function renderScatter(){
   });
   scatRoot.innerHTML = head; var box = document.createElement('div'); box.appendChild(svg); scatRoot.appendChild(box);
   var note = document.createElement('div'); note.style.cssText = 'font-size:11px;color:var(--mu);margin-top:6px';
-  note.textContent = 'One dot per company: return or contribution (across) vs weight in SPY at the end of the year (up); bubble size = contribution. Same axes for every sector or group within a year.';
+  note.textContent = 'One dot per company: return or contribution (across) vs weight in SPY at the end of the year (up); bubble size = contribution. Same axes for every sector or group within a year. ' +
+    'Return = the whole year, for the companies in SPY at the start of it (one snapshot per year). A company in both indices can show a different return in the Nasdaq-100 view, which counts only the time it has been in that index (e.g. one that joined the Nasdaq-100 during the year).';
   scatRoot.appendChild(note);
 }
 window.spxScatYear = function(y){ S.year = y; renderScatter(); };

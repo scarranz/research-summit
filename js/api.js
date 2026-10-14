@@ -247,6 +247,17 @@ export async function liveQuote(ticker) {
   return ok({ price: price, changePct: tk ? num(tk.todaysChangePerc) : null, marketCap: marketCap, ev: ev, netDebt: netDebt, shares: shares });
 }
 
+// Yahoo price via the `get-quote` edge function — the live-price banner of the IBKR, LYFT, SOFI
+// and UBER overviews. Goes through supabase.functions.invoke so the signed-in user's token is
+// sent: get-quote verifies the user, and the overviews used to send the anon key instead (→ 401).
+// data = { ticker, price, previousClose, change, changePct, … } as get-quote returns it.
+export async function fetchYahooQuote(ticker) {
+  var { data, error } = await supabase.functions.invoke('get-quote', { body: { ticker: ticker } });
+  if (error) return fail(error.message);
+  if (!data || typeof data.price !== 'number') return fail((data && data.error) || 'no price');
+  return ok(data);
+}
+
 // Historical margins for a ticker via the `get-margins` edge function (which pulls
 // Massive's income + cash-flow statements server-side and computes the ratios).
 // Returns { success, data } where data is an ascending-by-year array of

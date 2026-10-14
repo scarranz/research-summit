@@ -1,5 +1,12 @@
 # The company profile blueprint — how to build the next one
 
+> **Process lives in `docs/PROFILE_PLAYBOOK.md` now** (Oct 2026): the gated, step-by-step build with
+> the analyst, the per-unit content rules, and the list of AMZN defects not to copy. It was verified
+> against the code on Oct 13 2026 and **wins where this file disagrees** — several statements below
+> have drifted (e.g. `.ov-kpis` is already auto-fit, `.ov-collap` has a stylesheet entry, `segments.js`
+> has three adopters, AMZN's Notes uses `company_theme_record`, not `watchlist.js`). Keep this file
+> as the system-level background.
+
 **Amazon is the reference implementation.** This file is the map from that profile to any other
 ticker: the tab spine, the design system, where every number comes from, the interaction contract
 every pane owes the reader, and the order to build it in.
@@ -261,13 +268,13 @@ source you have *verified*, not the first that returns a number.
 | Top Line ▸ Customers, the counterparty register | Bloomberg **SPLC** export | `js/segments-data/<ticker>.js` (`customers.splc`) |
 | Bottom Line, profitability & segments | Bloomberg income-statement export (actuals + forecast) | `js/overviews/<ticker>-bbg.js` |
 | Bottom Line ▸ Supply Chain | Bloomberg SPLC, supplier side | in the overview module |
-| Evolution ▸ Results / Estimates | Summit DCF (MCP) + Street consensus | `js/results-data/<ticker>.js` |
+| Evolution ▸ Results / Estimates | Street consensus (file) + Summit DCF **read live** via `get-summit-data` (Oct 2026: never copied — `PROFILE_PLAYBOOK.md` §20b) | `js/results-data/<ticker>.js` |
 | Evolution ▸ Earnings Setup | the same, one quarter forward | `js/results-data/<ticker>-setup.js` |
 | Evolution ▸ Earnings, the call record | transcripts, hand-authored | `CALL_EARNINGS` / `js/themes-data/<ticker>.js` |
 | Evolution ▸ Earnings, Watch List | Supabase (`company_themes`) | **no seed-from-code path** — authored in-portal |
 | Consensus Evolution | BBG snapshots by vintage | `js/consensus-evolution-data.js` |
 | Valuation ▸ Peers, market caps | Massive, live (`api.liveQuote`) | live |
-| Valuation ▸ Peers, multiples | seeded and **labelled as seeded** | in the module |
+| Valuation ▸ Peers, multiples | **never seeded** (Oct 2026): live price ÷ dated filing/BBG denominators — `PROFILE_PLAYBOOK.md` OV-6, §20b | in the module (denominators only) |
 | Management ▸ Executives, Ownership | proxy (DEF 14A) + IR leadership page | in the overview module |
 | Miscellaneous ▸ Capex, M&A, Other Analysis | 10-K notes, by hand | in the overview module |
 

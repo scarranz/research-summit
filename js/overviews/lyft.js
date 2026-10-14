@@ -4322,12 +4322,9 @@ function wireModal(root){
 
 // ── Live price (via the shared get-quote edge function; informational banner) ──
 function fetchQuote(ticker){
-  var env=(typeof window!=='undefined')&&window.ENV;
-  if(!env||!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY) return Promise.reject(new Error('no-env'));
-  var base=String(env.SUPABASE_URL).replace(/\/+$/,'');
-  return fetch(base+'/functions/v1/get-quote?ticker='+ticker,{ headers:{ apikey:env.SUPABASE_ANON_KEY, Authorization:'Bearer '+env.SUPABASE_ANON_KEY } })
-    .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
-    .then(function(j){ if(j&&typeof j.price==='number') return j; throw new Error('bad payload'); });
+  // via api.js so the signed-in user's token is sent (get-quote rejects the anon key)
+  return import('../api.js').then(function(m){ return m.fetchYahooQuote(ticker); })
+    .then(function(r){ if(r&&r.success) return r.data; throw new Error((r&&r.error&&r.error.message)||'no price'); });
 }
 function renderLive(root){
   var el=root.querySelector('#lyLive'); if(!el) return;

@@ -139,10 +139,12 @@ supabase functions deploy <function-name> --project-ref bvflqjndivouhgwqfbrq
 | `sync-management` | Fiscal.ai `/v1/company/ownership/insider/*` | Pull executives + insider transactions |
 | `sync-ratings` | Massive `/benzinga/v1/ratings` | Pull analyst ratings + price targets |
 | `get-margins` | Massive `/stocks/financials/v1/income-statements` + `/cash-flow-statements` | Historical profitability & cash margins (gross/op/net/EBITDA/CFO/FCF) for the Overview Margins box — computed server-side, no DB write |
+| `get-quote` | Yahoo Finance `/v8/finance/chart/{ticker}` (no key) | Live-price banner of the IBKR, LYFT, SOFI and UBER overviews — called through `api.js fetchYahooQuote()` so the user's session token is sent (the function verifies the user; sending the anon key gets a 401). No DB write. **Not yet deployed.** |
 | `get-transcript` | Fiscal.ai `/v1/company/ir-events` + `/ir-events/transcript/{eventKey}` | Earnings-call events list + structured transcripts for Earnings — generic for any ticker on our Fiscal.ai tier, no DB write. `unavailable: true` = company not on current plan |
 | `generate-investment-writeup` | Anthropic Messages API (`claude-opus-4-8` + `web_search` tool) | "Research & write with AI" button in the Investment tab's Add modal — researches a company via web search and drafts its Overview/Moat/Opportunity text in Summit's house tone. Requires a separate `ANTHROPIC_API_KEY` secret. |
 | `get-market-history` | Massive `/v2/aggs/ticker/.../range/...` (daily prices) + `/stocks/financials/v1/ratios` (quarterly, for market_cap/enterprise_value/price) | Daily closes + quarterly shares/net-debt for the AMZN Historic Multiple chart (`js/overviews/amzn-histmult.js`) — computed client-side from the raw passthrough, no DB write. **NEW on feat/amzn-polish, not yet deployed** — smoke-test after deploying (see that file's header for exact field-name assumptions to verify). |
 | `ndx-attribution` | Massive `/v2/aggs/grouped/locale/us/market/stocks/{date}` (2 calls per refresh) + table `ndx_snapshots` | Data for Market Analysis ▸ Nasdaq-100 Analysis. `get` = newest snapshot (any signed-in user). `ingest` / `refresh-prices` (header `x-ndx-ingest-key` = secret `NDX_INGEST_KEY`) save a new snapshot: the analyst's Excel via `python scripts/ndx/extract_ndx.py --upload`, or only the open HOC re-priced via `--refresh-prices`. Closed HOCs keep the Excel returns; the open HOC is re-priced from Massive closes. The page falls back to `js/ndx-attribution-data.js` if the function fails. **NEW on feat/ndx-attribution-v2, not yet deployed** — needs `sql/025_ndx_attribution.sql` run and the `NDX_INGEST_KEY` secret set first. |
+| `get-summit-data` | Summit Financial Data MCP server over HTTP (JSON-RPC `tools/call`: `list_dcf_models`, `list_snapshots`, `list_metrics`, `get_snapshot`, `get_fundamentals`, `get_metric_snapshot_series`, `get_valuation_history`) | Live, read-only access to the Summit DCF models (snapshots, facts, metric catalog, and each snapshot's valuation: multiple, price target, fair value per method, WACC) so model numbers are never copied into `js/`. No AI involved — the function is a plain MCP client; no DB write. `api.js`: `fetchSummitModels/Snapshots/Metrics/Snapshot/Fundamentals/Series/Valuation`. A valuation block with `quality_flags` is unreliable (show it with a caveat). What each label means comes from `js/summit-map/<ticker>.js` (one per company, `docs/PROFILE_PLAYBOOK.md` §6.3). **NEW on feat/get-summit-data, not yet deployed** — needs secrets `SUMMIT_MCP_URL` + `SUMMIT_MCP_TOKEN` (read-only); if the MCP can't take a service token, swap `callSummit()` for a direct read of its database, nothing else changes. |
 
 **Security:** All edge functions restrict CORS to `research-summit.netlify.app` and `localhost:8000`. Ticker and companyId inputs are validated.
 
@@ -271,15 +273,25 @@ The Companies tab is the core of the portal. Each company has a profile that is 
 
 ### Building or extending a company profile (start here)
 
-Before touching a company's Deep Dive, read **`docs/COMPANY_PROFILE_BLUEPRINT.md`**. **Amazon is the
-reference implementation** and that file is the map from it to any other ticker: the six-section tab
+**To add a new company or restructure an existing one, follow `docs/PROFILE_PLAYBOOK.md`** (in
+Spanish) — the step-by-step, interactive guide: one unit at a time (each Overview block, each Deep Dive
+sub-tab, each Earnings phase), each one proposed → built → shown on localhost → self-audited → **approved
+by the analyst** → logged in the company's build log `docs/profiles/<TICKER>.md` (template:
+`docs/profiles/_TEMPLATE.md`). It fixes the order, the content of every unit, chart/table formats,
+where text goes and where it doesn't, the source of every number, the Notes rules, and lists the AMZN
+defects **not** to copy (Annex A). Where it disagrees with the docs below, the playbook wins. The
+`/build-profile <TICKER>` command runs it.
+
+For a **new** company, the playbook is the only process: do not start from the blueprint, `/fill-overview`
+or OVERVIEW_CONVENTIONS. The blueprint below is **background reference** (useful to understand an existing
+profile); where it differs from the playbook, the playbook wins. **Amazon is the reference
+implementation**; `docs/COMPANY_PROFILE_BLUEPRINT.md` is the older map from it to any other ticker: the six-section tab
 spine (Top Line · Bottom Line · Evolution · Valuation · Management · Miscellaneous), the list of
 **shared engines you feed with a data file instead of writing a pane** (`results.js`, `segments.js`,
 `consensus-evolution.js`, `watchlist.js`, `management.js`), the canonical design components and the
 rule that a new profile adds **no inline `<style>`**, the palette rule (**Summit tokens everywhere;
 the company's brand only in its logo**), where every number comes from, the interaction contract, the
-build order, how to audit it in a harness, and a pre-ship checklist. The `/build-profile <TICKER>`
-command runs it end-to-end. Key invariants: **prefer an engine over a bespoke pane**; **never delete
+build order, how to audit it in a harness, and a pre-ship checklist. Key invariants: **prefer an engine over a bespoke pane**; **never delete
 existing content**; **no sub-tab that is a placeholder**; **every pane ends with a source footer**;
 produce a **draft for review** — don't commit/push/PR automatically.
 
@@ -305,7 +317,7 @@ scatter, a bridge), you write the canvas yourself — but §0 still applies.
 
 ### Filling a company Overview (standardized)
 
-When asked to **fill, create, or refresh a company's Overview** (e.g. "llena el overview de Broadcom", "fill AVGO"), you **must** follow `docs/OVERVIEW_CONVENTIONS.md` — it defines the fixed Overview structure, the Key Facts set, the official-first source hierarchy, the anti-wall/pop-up rules, the competitor scatter spec, and a self-audit checklist. The `/fill-overview <TICKER>` command runs this end-to-end. Key invariants: **never delete existing content — move non-conforming Overview content into the most relevant Deep Dive section**; **sources decide (company IR/filings first, never a forum as authority)**; **no walls of text, no fake precision**; produce a **draft for review**, don't commit/push/PR automatically.
+**For a company that has no profile yet, use `/build-profile <TICKER>` instead** — the Overview is units OV-1…OV-7 of `docs/PROFILE_PLAYBOOK.md` §8, built and approved one at a time. What follows is for touching up the Overview of an **existing** profile. When asked to **fill or refresh an existing company's Overview** (e.g. "llena el overview de Broadcom", "fill AVGO"), you **must** follow `docs/OVERVIEW_CONVENTIONS.md` — it defines the fixed Overview structure, the Key Facts set, the official-first source hierarchy, the anti-wall/pop-up rules, the competitor scatter spec, and a self-audit checklist. The `/fill-overview <TICKER>` command runs this end-to-end. Key invariants: **never delete existing content — move non-conforming Overview content into the most relevant Deep Dive section**; **sources decide (company IR/filings first, never a forum as authority)**; **no walls of text, no fake precision**; produce a **draft for review**, don't commit/push/PR automatically.
 
 ### Adding a company
 
@@ -317,9 +329,9 @@ When asked to **fill, create, or refresh a company's Overview** (e.g. "llena el 
 
 ### Company profile tabs
 
-Every company has three tabs: **Overview**, **Pillars**, and **Resources**.
+Every company has **Overview**, **Pillars** and **Resources**, plus **Deep Dive** once its first sub-tab is approved.
 
-**Overview** — empty by default. The user works with Claude to build custom content for each company (charts, metrics, notes). Each company can look different.
+**Overview / Deep Dive** — empty until the company's profile module exists. New profiles follow the **Amazon structure** (7 Overview blocks; Deep Dive: Top Line · Bottom Line · Evolution · Valuation · Management · Miscellaneous), built with `/build-profile` per `docs/PROFILE_PLAYBOOK.md`. Company-specific content that fits no other tab goes to Miscellaneous.
 
 **Pillars** — standardized across all companies. Four pillars with a toggle filter:
 - **Business** — competitive moat, market structure, unit economics, pricing power

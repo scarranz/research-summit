@@ -247,6 +247,17 @@ export async function liveQuote(ticker) {
   return ok({ price: price, changePct: tk ? num(tk.todaysChangePerc) : null, marketCap: marketCap, ev: ev, netDebt: netDebt, shares: shares });
 }
 
+// Yahoo price via the `get-quote` edge function — the live-price banner of the IBKR, LYFT, SOFI
+// and UBER overviews. Goes through supabase.functions.invoke so the signed-in user's token is
+// sent: get-quote verifies the user, and the overviews used to send the anon key instead (→ 401).
+// data = { ticker, price, previousClose, change, changePct, … } as get-quote returns it.
+export async function fetchYahooQuote(ticker) {
+  var { data, error } = await supabase.functions.invoke('get-quote', { body: { ticker: ticker } });
+  if (error) return fail(error.message);
+  if (!data || typeof data.price !== 'number') return fail((data && data.error) || 'no price');
+  return ok(data);
+}
+
 // Historical margins for a ticker via the `get-margins` edge function (which pulls
 // Massive's income + cash-flow statements server-side and computes the ratios).
 // Returns { success, data } where data is an ascending-by-year array of
@@ -289,6 +300,68 @@ export async function fetchRatiosHistory(ticker, limit) {
   var results = (data && Array.isArray(data.results)) ? data.results : [];
   if (!results.length) return fail('no ratios data');
   return ok(results);
+}
+
+// ─── Summit DCF models (live) ───────────────────────────────
+// Read the Summit Financial Data base through the `get-summit-data` edge function, so model
+// numbers are never copied into the repo. The fetchSummit* helpers return the tool's row array;
+// summitRaw returns the whole { data, metadata, warnings } body. What each label MEANS (role,
+// GAAP vs adjusted, real unit) comes from js/summit-map/<ticker>.js, not from here.
+// Deploy-gated on get-summit-data existing.
+
+async function summitCall(body) {
+  var { data, error } = await supabase.functions.invoke('get-summit-data', { body: body });
+  if (error) return fail(error.message);
+  if (!data || data.error) return fail((data && data.error) || 'no summit data');
+  return ok(data);
+}
+
+export function summitRaw(body) { return summitCall(body); }
+
+async function summitRows(body, empty) {
+  var r = await summitCall(body);
+  if (!r.success) return r;
+  var rows = Array.isArray(r.data.data) ? r.data.data : [];
+  if (!rows.length) return fail(empty);
+  return ok(rows);
+}
+
+// Every company with a DCF model: instrument_id, currency, snapshot_count, last_snapshot_date…
+export function fetchSummitModels() { return summitRows({ resource: 'models' }, 'no summit models'); }
+
+// Snapshots of one model, newest first: snapshot_date, snapshot_id, fact_count…
+export function fetchSummitSnapshots(ticker) { return summitRows({ resource: 'snapshots', ticker: ticker }, 'no snapshots'); }
+
+// The model's metric catalog: label ↔ metric_id (ids are what fundamentals/series take).
+export function fetchSummitMetrics(ticker) { return summitRows({ resource: 'metrics', ticker: ticker }, 'no metrics'); }
+
+// Every fact of one snapshot (heavy: ~8.5K rows for AMZN). Prefer fetchSummitFundamentals.
+export function fetchSummitSnapshot(ticker, date) {
+  return summitRows({ resource: 'snapshot', ticker: ticker, date: date }, 'empty snapshot');
+}
+
+// Filtered facts. opts = { date?, metricIds?, periodKeys?, sheets? } — at least one of
+// date / metricIds / periodKeys. Omit date for the latest snapshot. ⚠ actuals_history carries
+// future periods as 0: pass sheets:['projection_history'] for estimates.
+export function fetchSummitFundamentals(ticker, opts) {
+  opts = opts || {};
+  return summitRows({
+    resource: 'fundamentals', ticker: ticker, date: opts.date,
+    metric_ids: opts.metricIds, period_keys: opts.periodKeys, sheet_sources: opts.sheets,
+  }, 'no facts');
+}
+
+// One cell (metric × period) across every snapshot — the model's revision history.
+export function fetchSummitSeries(metricId, periodKey) {
+  return summitRows({ resource: 'series', metric_id: metricId, period_key: periodKey }, 'no series');
+}
+
+// The model's valuation per snapshot, newest first: current_price, wacc…, and valuations[] =
+// one block per method (multiple, target_year, multiple_basis, price_target, fair_value,
+// upside_pct, quality_flags). method is optional ('EV / EBITDA', 'P / E'). A block with
+// quality_flags is unreliable — show it with the caveat, never as a clean number.
+export function fetchSummitValuation(ticker, method) {
+  return summitRows({ resource: 'valuation', ticker: ticker, method: method }, 'no valuations');
 }
 
 // ─── NDX 100 Return Attribution ─────────────────────────────

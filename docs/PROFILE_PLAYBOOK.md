@@ -16,12 +16,10 @@ cubre esta guía son **Overview** y, dentro de **Deep Dive**: **Top Line · Bott
 Valuation · Management**, más **Miscellaneous** como lugar de lo propio de la empresa que no cabe en
 ninguna otra pestaña (§15b).
 
-> **Verificado contra el código el 13 oct 2026** (main @ `afabbc9`), sección por sección, leyendo
-> `js/overviews/amzn.js` y sus motores — no contra los docs anteriores, que se han desviado del código.
-> Donde esta guía cita `archivo:línea`, es de esa versión.
-> **Después de esa fecha** entraron a `main` los PRs #140 y #141 (14 oct 2026), que arreglaron casi todo
-> el Anexo A; los números de línea de `amzn.js` se movieron unas decenas de líneas. Buscar por nombre de
-> función, no por número.
+> **Verificado contra el código el 14 oct 2026** (main @ `3667342`, ya con los PRs #140 y #141),
+> sección por sección, leyendo `js/overviews/amzn.js` y sus motores — no contra los docs anteriores, que
+> se han desviado del código. La guía cita **nombres de función**, no números de línea (se mueven con
+> cada PR); donde aparece un número, va con `~` y es solo orientativo.
 
 ---
 
@@ -102,8 +100,10 @@ Estas diez reglas no se rompen nunca. Si una tarea parece exigir romper una, se 
       el mapa F0-SM).
     - **Pueden ir en archivos de datos, con fuente y fecha:** lo de los filings (10-K/10-Q/8-K/proxy) y
       lo de Bloomberg (`BBG_CONSENSUS.txt`, exports SPLC), porque no hay conexión directa.
-    - **Si el camino en vivo todavía no existe:** el bloque se construye y muestra el aviso
-      **"Live data pending"** con qué falta; **no** se copian números "mientras tanto".
+    - **Si el camino en vivo todavía no existe:** **no** se copian números "mientras tanto". Si la
+      unidad tiene contenido útil sin ese dato, se construye y la parte que falta muestra el aviso
+      **"⚑ Live data pending — <qué falta>"**; si la unidad depende por completo de ese dato, queda ⛔ y
+      no se publica (regla 5). Detalle en §20b.
     (Decisión SAB, 2026-10-13.)
 
 ## §1 Qué documento manda cuando dos se contradicen
@@ -322,10 +322,10 @@ de `mgmt` — no repetirlo.)
 | 2 | Overview (§8) | No depende de nada; es la cara del perfil |
 | 3 | Evolution ▸ Results — **el dataset** (§9) | Top Line, Estimates, Earnings Setup y Historic Multiple leen de aquí |
 | 4 | Top Line (§10) | Sus series de segmentos apuntan al dataset de Results |
-| 5 | Evolution ▸ Estimates (§11) | Mismo archivo de datos que Results, bloque `evolution` |
+| 5 | Evolution ▸ Estimates (§11) | Mismo archivo de datos que Results, bloque `evolution`. **Hoy ⛔** para una empresa nueva (necesita Summit en vivo) |
 | 6 | Evolution ▸ Earnings (§12) | Necesita el consenso por trimestre y las transcripciones |
 | 7 | Bottom Line (§13) | Necesita el export de Bloomberg |
-| 8 | Valuation (§14) | Necesita el dataset de Results/consenso y los peers |
+| 8 | Valuation (§14) | Necesita el dataset de Results/consenso y los peers. **Hoy:** Historic Multiple y Peers sí; Target Multiple y Sensitivity ⛔ |
 | 9 | Management (§15) | Independiente; puede adelantarse si el analista quiere |
 | 9b | Miscellaneous (§15b) | Solo si quedó algo propio de la empresa sin lugar; al final, cuando ya se sabe qué sobra |
 | 10 | Cierre (§16) | Auditoría completa + conciliación (modo B) + entrega |
@@ -351,13 +351,13 @@ analista** · **Si falta el dato** · **No copiar de AMZN** · **Verificación**
 | 1 | ¿La empresa existe en la tabla `companies`? | Abrir el portal → Companies. Si no, el analista la agrega con "Add Company" (no Claude por SQL) |
 | 2 | ¿Qué forma presenta: 10-K o 20-F? Último número de acceso | EDGAR (no se infiere del país) |
 | 3 | ¿Existe modelo Summit DCF? ¿Cuántos snapshots? **¿Último periodo real de cada uno?** Si existe → unidad F0-SM (§6.3) | MCP Summit: `search_ticker`, `list_dcf_models`, `list_snapshots`; el nombre del snapshot no dice qué trae |
-| 4 | ¿Está el ticker en `BBG_CONSENSUS.txt`? ¿Cuántos snapshots y de qué fecha el último? | `G:\My Drive\Summit\Docs\0\BBG_CONSENSUS.txt` (fuera del repo). Al 17 sep 2026: AMZN, GOOGL, LYFT, META, NVDA, UBER (30 c/u), SN, SPOT, TBBB (10 c/u) |
+| 4 | ¿Está el ticker en el consenso de Bloomberg? ¿Cuántos snapshots y de qué fecha el último? | `<letra>:\My Drive\Summit\Docs\0\BBG_CONSENSUS.txt` (archivo) + `Consensus_Portal.xlsm` (hoja `CONSENSUS`, la viva) — fuera del repo; es la unidad de Drive del equipo, la letra cambia por máquina. `py scripts/consensus/inspect_matrix.py <TK>` lo lista (§9.1). Al 17 sep 2026: AMZN, GOOGL, LYFT, META, NVDA, UBER (30 c/u), SN, SPOT, TBBB (10 c/u). **Si no está** (caso DHR), no hay consenso, ni `estMatrix`, ni export de Bottom Line: anotarlo y pedirle al analista que lo agregue al workbook antes de EV-RES-DATA |
 | 5 | ¿Hay historia de precio, acciones y deuda en vivo? (Historic Multiple, §14) | `get-market-history` desplegada (hoy da 404 si no). Los múltiplos congelados de BBG que usó SN **ya no se aceptan** (regla 10) |
 | 6 | ¿La empresa es "sujeto" en un export SPLC (clientes / proveedores)? | `nvidia-map-reference/`, `robotics-research/`, exports en Drive |
 | 7 | ¿Hay transcripciones de llamadas? ¿Cuáles trimestres? | `docs/calls/<TICKER>*.md`; MCP Quartr (`list_events`, `read_transcript`) |
 | 8 | ¿Está en el plan de Fiscal.ai (tabla de ejecutivos e insiders)? | Pillars ▸ Management de la empresa en el portal |
 | 9 | ¿Massive devuelve precio y market cap? | `liveQuote(ticker)` en la vista previa |
-| 9b | ¿Ya está desplegada `get-summit-data`? ¿El MCP ya trae la valuación del modelo (múltiplo objetivo, precio objetivo)? | `fetchSummitSnapshots('<T>')` en la consola del portal; `list_metrics` con rol `valuation` (§6.3). Si no, los bloques Summit van con "Live data pending" (§20b) |
+| 9b | ¿Ya existe el camino en vivo de Summit? ¿El MCP ya trae la valuación del modelo (múltiplo objetivo, precio objetivo)? | **Al 14 oct 2026 no existe** en `main`: ni la función `get-summit-data` ni `fetchSummit*` en `api.js` (están en el PR #142, abierto), ni `js/summit-map/`, ni la lectura Summit en los motores. Anotar "no" sin probar. Cuando exista: `fetchSummitSnapshots('<T>')` en la consola del portal. Valuación: **ya está en el MCP** (`get_valuation_history`, §6.3; Claude la puede revisar hoy); en el portal llega con `fetchSummitValuation` cuando se despliegue. Consecuencia en §20b |
 | 10 | ¿Hay fotos de ejecutivos e imágenes de productos? | `img/leadership/`, `img/products/` (opcional; si no, iniciales / emoji) |
 | 11 | Año fiscal: ¿cierra en diciembre? Moneda de reporte | 10-K. **Si no es calendario o no es USD, se anota**: varios componentes asumen año calendario (§14) y USD |
 | 12 | Modo B: ¿qué contenido existe hoy? | §4.2 B1 |
@@ -367,7 +367,7 @@ analista** · **Si falta el dato** · **No copiar de AMZN** · **Verificación**
 | Fuente | ¿Existe? | Detalle (fechas, cobertura) | Qué habilita | Qué queda fuera sin ella |
 |---|---|---|---|---|
 | Filing anual | 10-K FY2025, acc. … | | Overview, Top Line, textos verbatim | todo |
-| Summit DCF | sí, 7 snapshots, último real 2Q26 | | serie Summit en Results/Estimates/Bottom Line; Target Multiple; Sensitivity | Estimates, Target Multiple real, Sensitivity |
+| Summit DCF | sí, 7 snapshots, último real 2Q26 | | el mapa F0-SM; y, cuando el portal lo lea en vivo, la serie Summit en Results/Top Line/Bottom Line/Setup, Estimates, Target Multiple y Sensitivity | Estimates, Target Multiple, Sensitivity (⏭️) |
 | BBG_CONSENSUS | sí, 10 snapshots | | consenso en Results, Earnings Setup, Bottom Line, Historic Multiple | Bottom Line forward, Setup grid |
 | … | | | | |
 
@@ -417,25 +417,31 @@ EV-EST, EV-SET, Bottom Line, VA-TM, VA-SENS). No depende de F1.
 | `kpi` | Métrica operativa propia de la empresa | UBER `ORDERS`, `USERS`; SOFI `MEMB` |
 | `guidance` | Guía de la empresa (bajo / alto) | UBER `EBITDA_LOW_GUIDANCE` / `_HIGH_` |
 | `consensus` | Consenso de Bloomberg que trae el modelo | `REV_BBG_EST`, `EBITDA_BBG_EST` |
-| `valuation` | La valuación del submit: múltiplo objetivo, precio objetivo y los supuestos con que se calcularon (hoja Output del modelo) | múltiplo objetivo EV/EBITDA y P/E, precio objetivo, WACC, crecimiento terminal, deuda neta usada (nombres reales: cuando Oscar los suba) |
 | `ignore` | Auxiliar del modelo, no se muestra | se dice por qué |
 
-**El rol `valuation` tiene reglas propias**, porque no es una serie por año como las demás:
-- **Es una foto del submit.** El valor que importa es el de cada snapshot (qué múltiplo y qué precio
-  objetivo tenía el modelo ese día); su historia se lee snapshot por snapshot (`series`), y eso es lo
-  que dibuja el bloque A de Target Multiple.
-- **Siempre con su horizonte.** Un múltiplo o precio objetivo sin año no se puede usar: hay que saber
-  si es "a 1 año", "sobre FY+1" o "año fiscal 2027". En el mapa va en la columna Periodos (p. ej.
-  `periodo = año sobre el que se aplica el múltiplo`). Si el MCP no lo dice, la etiqueta queda ❓.
-- **Unidad:** `x` (múltiplos), `$/acción` (precio objetivo, en la moneda del modelo), `%` (WACC,
-  crecimiento). **Agregación:** `ninguna` — nunca se suma ni se promedia entre periodos.
-- **Mismo nombre en todos los modelos.** A diferencia de las demás etiquetas, aquí sí se le pidió a
-  Oscar un nombre común (todos los DCF tienen la misma hoja Output), así que esta parte del mapa debería
-  salir igual en cada empresa. Si un modelo usa otro nombre, se anota como diferencia en "Dudas".
-- **Estado al 14 oct 2026:** ningún modelo la trae todavía (AMZN: 41 etiquetas, ninguna de
-  valuación). Mientras no exista, el mapa deja `valuation: {}` y VA-TM / VA-SENS muestran "Live data
-  pending" (§20b). Cuando aparezca, entra por el mantenimiento de abajo (etiqueta nueva → se clasifica
-  y se pregunta).
+**La valuación del modelo no es una etiqueta: viene aparte, con campos fijos.** Desde el 14 oct 2026
+el MCP la sirve con su propia herramienta, `get_valuation_history(ticker, method?)` (en el portal:
+`fetchSummitValuation`, ruta `valuation` de `get-summit-data`). No aparece en `list_metrics`, así que
+**no se mapea**: los campos son los mismos en todos los modelos. Por cada snapshot, más nuevo primero:
+- del snapshot: `snapshot_date`, `after_quarter` ("Q2 - 2026"), `current_price` (precio ese día),
+  `wacc`, `coe`, `cod`, `beta`, `rfr`, `avg_market_return`, `equity_to_total_capital`;
+- `valuations[]`, **un bloque por método**: `method` (texto del workbook: "EV / EBITDA", "P / E"),
+  `case` ("Base"), `multiple`, `target_year` (año al que se aplica el múltiplo, p. ej. 2027),
+  `multiple_basis` ("Forward"/"Trailing"), `price_target`, `fair_value`, `upside_pct`
+  (= `fair_value` ÷ `current_price` − 1, ya calculado: no recalcular) y `quality_flags`.
+
+Reglas: los números llegan como texto y las tasas como decimales (0.155 = 15.5 %); la moneda es la del
+modelo (`list_dcf_models`); los nombres de `method` y `case` se muestran tal cual; **un bloque con
+`quality_flags` no vacío no es confiable** (p. ej. un método copiado del otro) y solo se muestra con la
+advertencia. Lo único que se revisa por empresa en F0-SM es la **calidad** (va a "Dudas"):
+
+```
+❓ <TICKER> · valuación — <qué falla> (p. ej. LYFT: P/E idéntico a EV/EBITDA, quality_flags)
+   Mientras tanto: <qué no se muestra>   ·   Quién responde: autor del modelo / Oscar
+```
+
+Estado al 14 oct 2026 (Oscar): con valuación AMZN, CART, NVDA, SPOT, UBER; TBBB solo P/E confiable
+(EV/EBITDA mezcla Bull y Base); LYFT no confiable (P/E copia EV/EBITDA); sin valuación MA, META, SOFI.
 
 5. **Verificación contra el filing:** para cada `core` y cada `segment`, el valor real de **un**
    periodo cerrado contra el 10-K/10-Q, con diferencia. Si no cuadra, la etiqueta queda ❓.
@@ -474,20 +480,21 @@ export var summitMap = {
       capex: 'AWS_CAPEX', dna: 'AWS_DNA' }
   ],
   kpis: [], guidance: [], consensus: { rev: 'REV_BBG_EST', ebitda: 'EBITDA_BBG_EST' },
-  // Claves fijas del portal, iguales en todas las empresas; `mcp` = el nombre real en el modelo.
-  // Vacío ({}) mientras el MCP no traiga la valuación: VA-TM / VA-SENS muestran "Live data pending".
-  valuation: {
-    // target_ev_ebitda: { mcp: '<nombre>', unit: 'x',         horizon: 'FY+1' },
-    // target_pe:        { mcp: '<nombre>', unit: 'x',         horizon: 'FY+1' },
-    // price_target:     { mcp: '<nombre>', unit: 'per_share', horizon: '1y'   }
-  },
+  // La valuación no se mapea (campos fijos, get_valuation_history). Solo se anota qué métodos
+  // no son confiables para esta empresa, para que el portal los muestre con la advertencia.
+  valuationUnreliable: [],                       // p. ej. LYFT: ['P / E']
   ignore: []
 };
 ```
 
-Reglas del archivo: las claves de `core` y de `valuation` son **las mismas en todas las empresas** (si una no existe en
+Reglas del archivo: las claves de `core` son **las mismas en todas las empresas** (si una no existe en
 el modelo, no se pone, y el componente que la necesita se deshabilita con la razón); `label` va en
 inglés, como el resto del portal; **ningún valor numérico**.
+
+**Hoy (14 oct 2026) ese archivo no lo lee nadie.** La carpeta `js/summit-map/` no existe en `main`: la
+primera empresa la crea. El archivo **no se importa ni se registra** en ningún lado; es el contrato que
+usará el PR del portal que conecte Summit en vivo. Se escribe igual en F0-SM para que, el día que ese
+PR entre, la empresa ya esté lista.
 
 **Dudas — la parte que no se salta.** Toda etiqueta ❓ va a la sección "Dudas" de la bitácora con
 este formato, y **se resuelve antes de usarla**:
@@ -507,8 +514,8 @@ el documento; **si se muestra o no** → el analista.
 **③④ Mostrar y autoauditar:** la tabla completa, el conteo (`N etiquetas: x core · y segment · z kpi
 · … · d dudas`), los cuadres, y el archivo `summit-map/<ticker>.js`. Autoauditoría: toda etiqueta
 de `list_metrics` aparece en el mapa (también las `ignore`) · cada `core` y `segment` tiene cuadre o
-razón · ninguna unidad copiada del MCP sin revisar · toda etiqueta `valuation` con horizonte · ningún número
-en el archivo.
+razón · ninguna unidad copiada del MCP sin revisar · valuación revisada (métodos, `target_year`,
+`quality_flags`) · ningún número en el archivo.
 
 **⑤ Compuerta F0-SM:** el analista aprueba el mapa. Una etiqueta ❓ puede quedar abierta solo si
 ninguna unidad la usa todavía; se anota en "Bloqueos".
@@ -522,38 +529,89 @@ El cambio entra al mapa con su fecha; no se edita en silencio.
 
 ### 7.1 Rama y archivos
 
+0. **Qué manda.** Para una empresa nueva manda esta guía. Si `CLAUDE.md`, el comentario de
+   `js/overviews/index.js` o un doc viejo dicen otra cosa, se sigue la guía y se anota la diferencia en
+   la bitácora. **No usar `/fill-overview`** para una empresa nueva: su contenido ya está en §8.
 1. `git checkout main && git pull origin main && git checkout -b feat/<ticker>-profile`
    (modo B: `feat/<ticker>-restructure`).
 2. Copiar `docs/profiles/_TEMPLATE.md` → `docs/profiles/<TICKER>.md` y llenar cabecera + inventario.
-3. Crear `js/overviews/<ticker>.js` (o, en modo B, trabajar sobre el existente) exportando:
+3. Crear `js/overviews/<ticker en minúsculas>.js` (o, en modo B, trabajar sobre el existente). Se arma
+   **copiando `amzn.js`** y quitando lo que todavía no se construye. Exporta:
    ```js
+   export var <t>Overview = { html, init, headerSources };          // al principio
+   // y, desde que la primera sub-tab del Deep Dive está aprobada:
    export var <t>Overview = { html, init, headerSources, deepDive: { html: deepDiveHtml, init: deepDiveInit } };
    ```
-   - `headerSources` (opcional) pinta los botones de IR y EDGAR en la cabecera del perfil.
+   - **`deepDive` no se exporta** hasta que exista la primera sub-tab aprobada: sin él, el portal no
+     muestra la pestaña Deep Dive (regla 5: nada vacío a la vista).
+   - `headerSources` pinta los botones de IR y EDGAR en la cabecera del perfil (AMZN: `ceHeaderSources`).
    - `absorbsPillars: true` (opcional) oculta la pestaña Pillars. **AMZN no lo usa** (Pillars queda
      visible); seguir a AMZN salvo que el analista decida otra cosa.
-4. Registrar en `js/overviews/index.js` (import + entrada en `OVERVIEWS`).
+4. Registrar en `js/overviews/index.js`: `import { <t>Overview } from './<t>.js';` + `<TICKER>:
+   <t>Overview` en `OVERVIEWS`.
+5. **Los demás registros** se hacen cuando llega su unidad (no antes), y están en cada ficha:
 
-### 7.2 El armazón del Deep Dive
+| Archivo | Qué se registra | Unidad |
+|---|---|---|
+| `js/results.js` | `import` de `<t>Results` y `<T>_SETUP` + entradas `<T>` y `<T>_SETUP` en `RESULTS_DATA` | EV-RES-DATA · EV-SET |
+| `js/segments.js` | `import` de `<t>Segments` + entrada en `SEGMENTS_DATA`; `import` de `themes-data/<t>.js` + entradas en `THEME_SRC` y `THEME_SEG` | TL-GEN · EV-NOTES |
+| `<t>.js` `deepDiveHtml` | botón `.dd-tab` / `.ovt-subtab` + su `.ovt-subpane` | cada sub-tab |
+| `<t>.js` `aBuildSub` | la rama `dd==='…' / key==='…'` que construye la gráfica | cada sub-tab con gráfica |
+| `<t>.js` `deepDiveInit` | el atributo del encabezado colapsable en la lista `SELF`, si el módulo nuevo maneja su propio colapsable (§23) | la que lo traiga |
+| `<t>.js` `wireModal` → `resolve()` | la rama del tipo `data-detail="<tipo>:<id>"` (p. ej. `exec:` de Track Record) | la que use modal |
 
-Copiar de `amzn.js` (`deepDiveHtml` ~5390, `wireDD` ~5574, `aBuildSub` ~5524, `deepDiveInit` ~5887):
+### 7.2 El armazón — `html()`, `init()` y el Deep Dive
+
+**Overview (`html` / `init`).** Copiar de `amzn.js`:
+- `html(c)` = `<div class="ov ov-<t>" data-brand="<T>" style="--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">`
+  + `stdOverviewBody(c)` + el modal (`#<t>ModalBack`, `#<t>ModalX`, `#<t>ModalT`, `#<t>ModalB`).
+  Las dos variables `--brand-2` y `--brand-soft` **se copian tal cual**: son tokens neutros de Summit,
+  no el color de la empresa (§21).
+- `init(c)`, en este orden: `wireModal(root)` → manejador de `.ov-collap-h` → manejador de `.acc-h`
+  → pastillas `[data-gmm]` → `wireScatters(root)` → `aLiveOne(root,'<T>')` → subir el modal a
+  `#co-detailview`.
+
+**Deep Dive.** Copiar `deepDiveHtml`, `wireDD`, `aBuildSub` y `deepDiveInit`:
 - la barra de secciones `.dd-tabs > button.dd-tab[data-dd=…]` y los paneles `.dd-pane[data-dd=…]`;
 - dentro de cada panel, `.ovt-subtabs > button.ovt-subtab[data-ovst=…]` y `.ovt-subpane[data-ovst=…]`;
 - el despachador perezoso `aBuildSub(root, dd, key)` que construye cada gráfica **solo cuando su
   sub-tab se vuelve visible**, dentro de `requestAnimationFrame`;
-- el cambio de sub-tab **acotado al panel** (`:scope >`), nunca con `document.querySelector`.
+- `deepDiveInit`: `wireDD` → `wireModal` → `<T>_MGMT.init(root)` (cuando exista Management) → el
+  manejador global de `.rs-collap-h` con su lista `SELF` → construir la sub-tab visible.
 
-En la Fase 1 las sub-tabs **no se publican vacías**: el armazón existe en la rama, pero cada sub-tab
-solo se agrega al HTML cuando su unidad se construye (regla de oro 5). Mientras tanto, la vista previa
-muestra solo las sub-tabs ya hechas.
+**Al copiar, cambiar siempre:**
+- la clase raíz `.ov-amzn-dd` → `.ov-<t>-dd` (la usan `wireDD` y `ceEqualizeTabBars` como selector);
+- **no copiar `ceResultsPending`** ni el patrón `segmentsHtml('AMZN')||ceResultsPending(…)`: si no hay
+  dato, la sub-tab no se agrega (regla 5);
+- todo `document.querySelector` → `root.querySelector` (AMZN aún lo usa en algunos builders de
+  Bottom Line y Misc);
+- los nombres fijos de Amazon — si se quedan, cosas dejan de pintarse sin error: `#amznMc` (celda de
+  market cap), `tk==='AMZN'` dentro de `aLiveOne`, las clases `.amzn-sc*` del mapa de peers,
+  `amznModalBack/X/T/B`, `root._amznCloseModal`, `_amznDetailWired`, `_amznReady`, `_amznSaveT`, el
+  texto "ex-AMZN" de `aScTableOne`, `data-brand="AMZN"`, `AMZN_LEDE`, `AMZN_MGMT`, y cada `'AMZN'`
+  literal que se pasa a un motor (`initSegments(root,'AMZN')`, `resultsHtml('AMZN')`…).
+
+En la Fase 1 las sub-tabs **no se publican vacías**: cada botón y su panel se agregan al HTML cuando su
+unidad se construye (regla de oro 5).
 
 ### 7.3 La vista previa local (cómo se le muestra al analista)
 
-- Servidor: `powershell -File serve.ps1` → `http://localhost:8000/` (no usar `python`: es un alias roto; para scripts, `py`).
-- Harness: copiar `harness-amzn.html` → `harness-<ticker>.html` (queda fuera de git, `.gitignore`),
-  cambiar el import y el ticker. Monta Overview y Deep Dive **sin login**.
-- Para revisar Historic Multiple antes de que exista el dato en vivo: `?mockmarket=1` (ver el bloque
-  en `harness-amzn.html`).
+- **Servidor:** `powershell -File serve.ps1` (puerto 8000), **en segundo plano y una sola vez** por
+  sesión; si el puerto está ocupado, `powershell -File serve.ps1 -Port 8001`. No usar `python` (es un
+  alias roto); para scripts, `py`.
+- **Harness:** copiar `harness-amzn.html` → `harness-<ticker>.html` (queda fuera de git por
+  `.gitignore`; solo el de AMZN está en el repo). Cambiar estas seis cosas:
+  1. el `<title>` y la etiqueta de la barra (`<strong>AMZN harness</strong>`);
+  2. el `import('./js/overviews/amzn.js')` → `<t>.js`;
+  3. `m.amznOverview` → `m.<t>Overview`;
+  4. el objeto `c` = `{ id:'harness-<t>', ticker:'<T>', name:'<nombre legal>' }`;
+  5. el mensaje de consola `amzn mounted`;
+  6. en el bloque `?mockmarket=1`: las acciones (`shares = 10450…`, millones de AMZN) y el precio
+     inicial (`price = 102`) a la escala de la empresa, o las líneas salen absurdas.
+  Si `ov.deepDive` no existe todavía, el harness muestra "no deepDive": es lo esperado.
+- Monta Overview y Deep Dive **sin login**. `c.id` no es un id real de `companies`, así que **Notes no
+  guarda en el harness**; eso se prueba en el portal real (§16).
+- `?mockmarket=1` simula `get-market-history` para ver Historic Multiple antes de que se despliegue.
 - Lo que el harness **no** trae: la cabecera del perfil, el precio en vivo de cabecera y la tabla de
   Fiscal.ai (necesitan `companies.js` y sesión). Esas tres cosas se revisan en el portal real
   (localhost con sesión iniciada) en §16.
@@ -562,8 +620,31 @@ muestra solo las sub-tabs ya hechas.
   `window.requestAnimationFrame = fn => setTimeout(() => fn(performance.now()), 0)`.
 - Auditar a zoom 100 % (el `zoom` de CSS deforma las gráficas de Chart.js).
 
-**Compuerta F1:** el analista abre el harness, ve la cabecera de pestañas (aunque estén casi vacías) y
-confirma que la vista previa le funciona. Desde aquí, cada unidad se muestra así.
+**Compuerta F1:** el analista abre `http://localhost:8000/harness-<t>.html`, ve el Overview montado
+(todavía vacío o con lo que haya) y confirma que la vista previa le funciona. El Deep Dive aparece
+cuando su primera sub-tab esté aprobada. Desde aquí, cada unidad se muestra así.
+
+### 7.4 De qué código se copia cada unidad
+
+**Base: AMZN, siempre.** Las copias de SN (SharkNinja) son más viejas y algunas rompen la regla 10
+(múltiplos congelados, `MOCK_*`). De SN solo se toman las cuatro piezas marcadas.
+
+| Unidad | Copiar de | Tomar de SN además |
+|---|---|---|
+| OV-1 … OV-7, OV-F | `amzn.js`: datos `STD_FACTS, AMZN_LEDE, STD_BIZ, GMM_SEG, GMM_GEO, REV_DEFS, A_PRODUCTS, TIMELINE, A_PEERS, OV_SOURCES`; render `stdKeyFacts, stdFourQuad, stdMoneyMap, gmmBars, stdProducts, stdPeerScatter, stdTimeline, stdOverviewBody`; cableado `html, init, wireModal, wireScatters, aLiveOne` | — |
+| EV-RES-DATA / EV-RES / EV-EST | motor `results.js` (archivo de datos, no código) | — |
+| TL-* | motor `segments.js` (archivo de datos) | — |
+| EV-SET / EV-POST / EV-NOTES | `amzn.js`, bloque `ce*`, **re-extraído por símbolo** siguiendo la lista de cambios del encabezado de `sharkninja-ce.js` | `CE_CONS` armado al cargar desde `<t>Results` (`sharkninja-ce-data.js`) |
+| BL-* | `amzn.js` (`aMarginsBody`, `aBridgeBody`, `aNetBridgeBody`, `aSbcBody`, `expenseTabsBody`, `segmentsBody`, `aSplcBody` y sus builders) | — |
+| VA-HIST | `amzn-histmult.js` | horizontes deshabilitados con su razón (`sharkninja-histmult.js`) |
+| VA-PEERS | `valuationPeersBody` + el mapa de `amzn.js` | — |
+| VA-TM | `amzn-target-multiple.js` | rastreo de la fuente de la deuda neta (`_ndSrc`, `sharkninja-target-multiple.js`) |
+| VA-SENS | `amzn-sensitivity.js` | — |
+| MG-* | motor `management.js` + `AMZN_MGMT`, `amznOwnBody`, `amznGovBody`, `amznTrackBody` | datos separados del código (`sharkninja-mgmt-data.js`) |
+| MISC | `amzn.js` panel `misc` | — |
+
+"Copiar" = traer el código y cambiar los datos y los nombres de §7.2, **corrigiendo en la copia lo que
+siga abierto del Anexo A**. Nunca reimplementar a partir de un doc.
 
 ---
 
@@ -571,9 +652,18 @@ confirma que la vista previa le funciona. Desde aquí, cada unidad se muestra as
 
 **Responde:** *¿qué es esta empresa, en un minuto?* Es el gancho, no el reporte.
 
-**Referencia AMZN:** `amzn.js` 149–597 (datos + render), `html()` 5084, `init()` 5864.
-**Tipo:** datos (copiar las funciones `std*` de AMZN y cambiar las constantes). Sin Chart.js: todo es
-HTML/CSS e SVG.
+**Referencia AMZN (`amzn.js`):** datos `STD_FACTS, AMZN_LEDE, STD_BIZ, GMM_SEG, GMM_GEO, REV_DEFS,
+A_PRODUCTS, TIMELINE, A_PEERS, OV_SOURCES`; render `stdKeyFacts, stdFourQuad, stdMoneyMap, gmmBars,
+stdProducts, stdPeerScatter, stdTimeline, stdOverviewBody`; cableado `html, init, wireModal,
+wireScatters, aLiveOne` (orden en §7.2). **Tipo:** datos (copiar las funciones `std*` de AMZN y cambiar
+las constantes). Sin Chart.js: todo es HTML/CSS e SVG.
+
+**Antes de copiar (A1, abierto):** `stdOverviewBody` y `stdPeerScatter` traen un `<style>` en línea.
+Lo del Overview (`.stdkf`, `.q2`, `.stdp`, `.acc`, `.ov-collap`) ya está en `css/overview.css`: en la
+copia se borra. Pero las clases del mapa de peers (`.mg-tog`, `.mg-seg`, `.mg-pill`, `.asc-*`, `.mg-tip`)
+**solo existen en ese `<style>`**: se suben a `css/overview.css` (y se dice en el PR) antes de borrarlo.
+Ojo: la hoja de estilos tiene `.ov-foot` a 10.5px y `.ov-lede` en `--blue`; el `<style>` en línea los
+pisa (10px, `--navy`). Manda la hoja.
 
 **Estructura fija, de arriba a abajo (exactamente esto, nada más):**
 
@@ -590,7 +680,7 @@ HTML/CSS e SVG.
 
 Prohibido agregar un 8.º bloque: ni tira de precio, ni segundo recuadro de KPIs, ni firma de autor.
 Los bloques 1–3 no llevan título encima. Los 4–7 usan el colapsable `collapsible(title, inner, false)`
-(`amzn.js:158`), con el título exacto de la tabla (cambiando el nombre de la empresa).
+de `amzn.js`, con el título exacto de la tabla (cambiando el nombre de la empresa).
 
 ### OV-1 Key Facts
 
@@ -610,13 +700,15 @@ Los bloques 1–3 no llevan título encima. Los 4–7 usan el colapsable `collap
 | 7 | CEO | `Nombre · joined AAAA · CEO since Mmm AAAA` (las dos fechas si existen; al menos una) | IR / proxy |
 | 8 | Employees | `~1,576,000 · Dec 2025` (con fecha) | 10-K Item 1 |
 | 9 | Dividend | `Payer` / `Non-payer · never paid one` — **sin yield** | 10-K Item 5 |
-| 10 | Market cap | en vivo: `$2.45T · live`; si falla: `live quote unavailable` (sin semilla, regla 10) | `liveQuote` (Massive) |
+| 10 | Market cap | mientras carga: `loading live quote…`; en vivo: `$2.45T · live, Oct 14, 2026`; si falla: `live quote unavailable` (sin semilla, regla 10) | `liveQuote` (Massive), vía `aLiveOne` |
 
+- **Datos:** `STD_FACTS = [[etiqueta, valor], …]` (10 pares); la celda de market cap lleva el valor
+  `'loading live quote…'` y el `id` que `aLiveOne` rellena (`#<t>Mc`).
 - **Si falta un dato:** se sustituye por el siguiente hecho más relevante (p. ej. estructura de
   acciones si es dual-class), nunca una celda vacía ni "N/A". La sustitución es decisión del analista.
 - **Qué decide el analista:** la celda sustituta, si hace falta.
-- **No copiar de AMZN:** la línea de acento con hex fijo (`#2a78d6`); nada en esta celda (desde el
-  PR #140 AMZN ya hace lo correcto: "loading live quote…" y, si falla, "live quote unavailable").
+- **Copiar tal cual de AMZN:** la línea de acento (ya usa `var(--brand-2, var(--brand))`) y el manejo
+  de market cap (sin semilla). Solo renombrar `#amznMc` y `tk==='AMZN'` (§7.2).
 - **Verificación:** 10 celdas · CEO con antigüedad · market cap con estado (live o "unavailable") · filer
   verificado en EDGAR · sin celdas vacías.
 
@@ -649,10 +741,13 @@ Los bloques 1–3 no llevan título encima. Los 4–7 usan el colapsable `collap
 
 - **Contenido, de arriba a abajo:**
   1. Leyenda de una línea (`.ov-diagram-cap`) con el total y su crecimiento:
-     "FY2025 net sales **$716.9B (+12%)** — the same total, two ways: by segment or by geography."
-  2. Pastillas `Segments` (activa) · `Geography`.
-  3. Barras horizontales de CSS (`.ov-mbars`): etiqueta · barra con el $ dentro · % a la derecha.
-     Segmentos en orden del 10-K; geografía de mayor a menor, con "Rest of world" al final.
+     "FY2025 net sales **$716.9B (+12%)** — the same total, two ways: by segment or by geography. Both
+     reconcile to the reported figure."
+  2. Pastillas con el prefijo "View:" — `Segments` (activa) · `Geography` (`data-gmm="seg|geo"`).
+  3. Barras horizontales de CSS (`gmmBars`): etiqueta · barra con el $ dentro · % a la derecha.
+     Segmentos en orden del 10-K; geografía de mayor a menor, con "Rest of world" al final (AMZN lo
+     pone en 2.º lugar — no copiar). Colores: `SUMMIT_CAT` en orden (§21), no los hex `GREEN`/`GRAY` de
+     AMZN.
   4. Acordeones de definición, uno por segmento (`.acc`), título = nombre del segmento + paréntesis
      corto que diga qué es ("AWS (most of the profit)"):
      - cuerpo: **qué es, qué hace y cómo cobra**, cualitativo, ~40–60 palabras, **sin números**;
@@ -660,24 +755,34 @@ Los bloques 1–3 no llevan título encima. Los 4–7 usan el colapsable `collap
        utilidad operativa, margen, y un hecho de contexto. Aquí **sí** van números;
      - subsegmentos (si existen): otro nivel anidado dentro del segmento, con números.
   5. Un acordeón final opcional **"The revenue lines"** si el 10-K desagrega ingresos por producto
-     (AMZN: 7 líneas con $ · % · crecimiento).
-  6. Leyenda de cierre con utilidad operativa y neta del año + la frase que cambia la lectura.
+     (AMZN: 7 líneas con $ · % · crecimiento), con `econNote` debajo de las filas (p. ej. "the split
+     is company-wide, not per segment").
+  6. Leyenda de cierre con utilidad operativa y neta del año + la frase que cambia la lectura + la
+     fuente ("Source: <filing> (Note N)").
+- **Datos:** `GMM_SEG` / `GMM_GEO` = `[[etiqueta, % numérico, '$x.xB', 'x%', color], …]`;
+  `REV_DEFS` = `[{ seg:'Nombre (paréntesis corto)', desc:'<html cualitativo>', econ:[[clave, valor], …],
+  econNote? }, …]`. `desc` admite `<b>`, nunca cifras.
 - **Regla de las ≥ 2 rebanadas:** si hay un solo segmento o una sola geografía, no se dibuja una barra
   única — se dice en una línea ("single reportable segment") y se muestra solo la vista que califica.
 - **Cuadre obligatorio:** suma de segmentos = suma de geografías = ventas totales reportadas
   (tolerancia: redondeo declarado). Claude lo verifica con números y lo reporta en ④. Si no cuadra, es
   un error de datos y no se muestra.
 - **Fuente:** 10-K, nota de segmentos y desagregación de ingresos (AMZN: Nota 10).
-- **No copiar de AMZN:** prosa con números dentro de "The revenue lines" (los números van en filas).
+- **No copiar de AMZN:** prosa con números dentro del `desc` de "The revenue lines" ("+22%", "+20%":
+  los números van en filas); "Rest of world" fuera de su lugar; hex sueltos en las barras; estilos en
+  línea en las pastillas (que `init` cambia a mano).
 
 ### OV-5 Products & platforms
 
 - **Contenido:** leyenda "**Tap any family** for the specific products inside it." + rejilla de
   tarjetas, **una por familia de producto** (AMZN: 7 familias, 25 productos).
-- **Tarjeta:** icono (emoji, o foto `img/products/<ticker>-*.jpg` si existe — si falla, se oculta) ·
-  nombre de familia · una línea de ≤ 6 palabras · "See products ›".
-- **Al hacer clic (modal):** título = icono + familia; la línea; luego la lista de productos
-  específicos, cada uno **nombre en negrita + 1–3 líneas** de qué hace y para qué sirve.
+- **Tarjeta:** icono (emoji) · nombre de familia · una línea de ≤ 6 palabras · "See products ›".
+  (`stdProducts` de AMZN solo maneja emoji; una foto por familia requiere código nuevo — preguntarlo
+  antes, no es parte del estándar.)
+- **Al hacer clic (modal, `data-detail="prod:<i>"`):** título = icono + familia; la línea `d` en gris;
+  luego la lista de productos específicos, cada uno **nombre en negrita + 1–3 líneas** de qué hace y
+  para qué sirve.
+- **Datos:** `A_PRODUCTS = [{ ic:'🛒', fam:'Nombre', d:'≤ 6 palabras', items:[[nombre, html], …] }, …]`.
 - **Regla de dos niveles:** nunca todos los productos a la vista; se entra por familia. Si una familia
   tiene más de ~6 productos, la lista del modal va en acordeones (OVERVIEW_CONVENTIONS §4.5); AMZN los
   muestra planos porque tiene ≤ 4 por familia.
@@ -693,29 +798,43 @@ Los bloques 1–3 no llevan título encima. Los 4–7 usan el colapsable `collap
      (por defecto) · `Trailing` (aplica a ambos ejes).
   3. Dispersión SVG: eje X "← cheaper (lower multiple)" … "more expensive →" con etiqueta central
      ("P/E · forward"); eje Y "slow" … "fast growth". Burbuja = logo de la empresa dentro de un
-     círculo; tamaño = market cap en vivo. La empresa del perfil con borde grueso.
+     círculo (`logo` opcional por peer; si no, el logo de parqet), con el nombre debajo; tamaño =
+     market cap en vivo. La empresa del perfil con borde grueso. Tooltip: logo + nombre + `why`
+     (1–2 oraciones).
   4. Fila de chips: un chip por peer con **×** que lo **elimina** (no lo tacha); campo "+ TICKER" y
      botón Add. Re-agregar un peer conocido restaura sus datos de archivo.
   5. Leyenda: "Remove a peer with the × on its chip, or add one by ticker. Only **listed** peers with a
      public multiple plot here — <rivales privados con nombre> have no market multiple." + nota:
      "Multiples = live price ÷ <reported (filings, as of …) | Bloomberg consensus (as of …)>; market
      caps are live."
-- **Datos (regla 10):** el archivo **no guarda múltiplos**, guarda sus **denominadores**, que sí pueden
-  ir en archivo porque vienen de filings o Bloomberg: arreglo `A_PEERS` = `{tk, n, epsT, epsF, ebitdaT,
-  ebitdaF, gt, gf, asOf, src, hl, why}` (§14 VA-PEERS). El múltiplo se calcula en el navegador con
-  `liveQuote` (que ya trae precio, market cap y EV): P/E = precio ÷ EPS; EV/EBITDA = EV ÷ EBITDA. Trailing = último
-  año/LTM reportado (filing); forward = consenso BBG (`BBG_CONSENSUS.txt`) si el peer está en el
-  archivo — si no está, ese peer no tiene forward y se dice en su chip. **El mismo arreglo y el mismo
-  estado** alimentan el mapa del Overview y Valuation ▸ Peers. La tabla de números solo aparece en
-  Valuation ▸ Peers. Sin precio en vivo, la burbuja no se dibuja ("Live data pending").
+- **Datos (regla 10):** el archivo **no guarda múltiplos ni market cap**, guarda los
+  **denominadores**, que sí pueden ir en archivo porque vienen de filings o Bloomberg: arreglo
+  `A_PEERS` = `{tk, n, epsT, epsF, ebitdaT, ebitdaF, gt, gf, asOf, src, hl, why, logo?}` (§14
+  VA-PEERS). El múltiplo y el tamaño se calculan en el navegador con `liveQuote(tk)` (`js/api.js`, ya
+  devuelve `{price, marketCap, ev, netDebt, shares}`): **P/E = price ÷ EPS; EV/EBITDA = ev ÷ EBITDA**.
+  - **Trailing** = último año/LTM reportado, del filing **del propio peer** (10-K / 20-F).
+  - **Forward** = consenso BBG solo si el peer está en `BBG_CONSENSUS.txt` / `Consensus_Portal.xlsm`;
+    si no, ese peer va solo con trailing y su chip lo dice ("trailing only — no Street file").
+  - **Moneda:** si el peer reporta en otra moneda que la de su cotización (BABA, MELI…), solo entra si
+    el denominador se convierte con un tipo de cambio declarado en `src`; si no, se excluye con nota.
+  - **Sin precio en vivo**, la burbuja no se dibuja (no hay `mc` de respaldo).
+  - **Ejes:** los topes se derivan del dato (máximo de los peers visibles + margen), no fijos.
+  - Un ticker agregado a mano que no está en `A_PEERS` entra solo con market cap y no se dibuja hasta
+    tener denominadores (el `why` que le pone el Add de `wireScatters` lo dice).
+  - **No hay código de referencia todavía:** AMZN sigue con múltiplos sembrados (A3). La primera
+    empresa escribe este cálculo en `aScMult` (hoy lee `peT/peF/evT/evF`), `aScMax` y `aScRenderOne`, y
+    se vuelve la referencia; decirlo en el PR.
+  **El mismo arreglo y el mismo estado (`A_SC`, global)** alimentan el mapa del Overview y Valuation ▸
+  Peers: quitar un peer en uno lo quita en el otro. La tabla de números solo aparece en Valuation ▸
+  Peers.
 - **Fuente:** denominadores y crecimiento con fuente y fecha (nombrada en el pie, no solo en un
   comentario de código); precio y market cap en vivo (Massive).
 - **Qué decide el analista:** el conjunto de peers (normalmente 5–8 cotizados + la empresa) y la frase
   `why` de cada uno.
-- **No copiar de AMZN:** colores naranjas sobrantes (`#FFB84D`, `#C7761A`); los topes fijos de los
-  ejes (45× / 30× / 25 %) si los peers los rebasan — ajustar los topes para que nadie quede pegado al
-  borde; los múltiplos sembrados (`peT/peF/evT/evF`, de stockanalysis.com, Jul 2026) — AMZN todavía
-  los tiene y hay que migrarlo al esquema de denominadores.
+- **No copiar de AMZN:** los múltiplos y el `mc` sembrados en `A_PEERS` (`peT/peF/evT/evF/mc`,
+  stockanalysis.com, Jul 2026; y AMZN con `peT = peF = 27.8`) — A3; los topes fijos de los ejes (X
+  45×/30× en `aScMax`, Y 25 % en `aScRenderOne`: MELI y COST quedan pegados al borde); la leyenda que
+  dice "seeded approximations"; el `<style>` en línea de `stdPeerScatter` (A1).
 - **Verificación:** P/E y EV/EBITDA cambian el eje · Forward/Trailing cambian ambos ejes · × elimina ·
   Add funciona · ningún peer pegado al borde sin aviso · ningún múltiplo escrito en el archivo · el
   pie dice la fecha de los denominadores.
@@ -737,8 +856,11 @@ Los bloques 1–3 no llevan título encima. Los 4–7 usan el colapsable `collap
   retrasos de filings.
 - **Génesis primero:** antes de escribir, establecer cómo nació la empresa en su forma actual
   (spin-off, SPAC, fusión, roll-up…) y contarlo sin cabos sueltos.
+- **Datos:** `TIMELINE = [{ y:'1994–97', t:'<html, una línea>', d?:'<ul class="ov-bullets"><li>…</li></ul>' }, …]`.
+  Sin `d` no hay "Read more"; el título del modal es solo `y`.
 - **Fuente:** IR, 10-K, prospecto, comunicados oficiales.
-- **No copiar de AMZN:** el hito de $2T (Jun 2024) va después de uno de 2023–26: respetar el orden.
+- **No copiar de AMZN:** su `TIMELINE` está fuera de orden ("2023–25", "2023–26" y luego "Jun 2024"):
+  respetar el orden cronológico estricto.
 
 ### OV-F Pie del Overview
 
@@ -746,7 +868,10 @@ Un `.ov-foot` al final, con este formato:
 "Sources — <filing> (SEC EDGAR) for <qué cifras>; <IR / comunicados> for qualitative content and
 history; <otros>. Market cap and peer multiples are live (Massive price ÷ reported or Bloomberg
 consensus figures as of <Mmm AAAA>). Forward figures are estimates, not company guidance."
-Sin firma de autor. El Deep Dive tiene sus propios pies (uno por panel).
+Va en `OV_SOURCES` (texto plano, pasa por `esc()`). **Es el único pie del Overview**: los colapsables
+4–7 no llevan pie propio (§22). Sin firma de autor. El Deep Dive tiene sus propios pies (uno por
+panel). **No copiar de AMZN:** su `OV_SOURCES` cita "Summit DCF model (snapshot 2026-05-13)" y "peer
+multiples … seeded" — en una empresa nueva, ni Summit copiado ni múltiplos sembrados.
 
 ---
 
@@ -776,10 +901,14 @@ export var <t>Results = {
                     { key:'margins', label:'Margins & Profitability', defaultMetric:'opinc', groups:[…] } ] },
     y: { … periods:['2023',…] … }
   },
-  estMatrix?: { … },   // GENERADO por scripts/consensus/ — no se edita a mano
+  estMatrix?: { … },   // GENERADO por scripts/consensus/ — no se edita a mano (receta abajo)
   evolution?: { … }    // §11
 };
 ```
+
+Campos opcionales que AMZN usa y conviene conocer: `marginLabel` (nombre del margen en chips y eje),
+`currency` / `currencyName` (empresa que no reporta en USD), `surprise:false` (métrica sin tarjeta de
+sorpresas), `conv:false`; en `evolution`, `actKey`.
 
 - **Métricas mínimas** (lo que AMZN tiene; adaptar nombres al 10-K):
   - Trimestral — Top Line: `rev` (Totals) · un key por segmento (Segments) · líneas de ingreso si el
@@ -788,22 +917,45 @@ export var <t>Results = {
   - Anual — Top Line: `rev` + segmentos. Margins & Profitability: `ebitda` (por defecto), `earnings`,
     `capex` + **utilidad operativa por segmento también en anual** (AMZN no la tiene en anual y por eso
     Top Line ▸ Segments pierde esa métrica al cambiar a Annual — no repetirlo).
-- **`act`** = lo reportado (8-K Ex. 99.1 / 10-Q). **`summit`** = la proyección del modelo antes de
-  cada print — **no se escribe en el archivo** (regla 10): el motor la pedirá en vivo a `get-summit-data`
-  usando el mapa `js/summit-map/<ticker>.js` (**hoy `results.js` todavía no sabe hacerlo**: lo agrega el
-  PR del portal que sigue al despliegue de `get-summit-data`). Mientras ese camino no exista, el archivo va sin
-  `summit` y el chip Summit muestra "Live data pending" (§20b). **`cons`** = consenso de la calle (BBG). **`guideLo/guideHi`** = guía de la
-  empresa (del 8-K anterior). Un periodo futuro **es** `act: null` — no existe otra bandera.
+- **`act`** = lo reportado (8-K Ex. 99.1 / 10-Q). **`cons`** = consenso de la calle (BBG).
+  **`guideLo/guideHi`** = guía de la empresa (del 8-K anterior). Un periodo futuro **es** `act: null` —
+  no existe otra bandera.
+- **`summit`** = la proyección del modelo antes de cada print — **no se escribe en el archivo**
+  (regla 10). El motor la pedirá en vivo a `get-summit-data` con el mapa `js/summit-map/<ticker>.js`,
+  pero **hoy `results.js` no sabe hacerlo** (lo agrega el PR del portal) y **tampoco sabe mostrar un
+  aviso**: sin `summit`, el chip Summit simplemente no aparece. Por eso, mientras tanto:
+  - el archivo va **sin** `summit` y **no se toca el motor** en el PR de la empresa;
+  - el `source` del dataset termina con "Summit model series: live data pending — Summit model feed
+    not connected yet.";
+  - se anota en **Conexiones pendientes** de la bitácora (EV-RES y Top Line).
+- **Consenso de periodos ya reportados (el "pre-print"):** sale de `estMatrix.cons` (el snapshot de BBG
+  anterior a cada print). Si el archivo de BBG no llega tan atrás, esos periodos van **sin** `cons` y
+  se dice en la `note` — **nunca** de un agregador (CNBC/Refinitiv, Zacks/Yahoo: AMZN y SN lo hicieron;
+  regla 3).
 - **Margen:** numerador y denominador de la **misma** serie, siempre.
 - **Etiquetas de periodo:** `nQyy` (`3Q26`) trimestral, `yyyy` anual. (Earnings usa `Q3 2026`; no
   mezclar formatos dentro de un mismo archivo.)
 - **Comillas:** delimitadores de string con comillas rectas. Una comilla tipográfica como delimitador
   rompe `results.js` **para todas las empresas** (ya pasó).
-- **Registro:** importar y agregar `<T>: <t>Results` en `RESULTS_DATA` (`results.js` ~22–63).
-- **Fuentes:** actuals del 8-K/10-Q; Summit en vivo (`get-summit-data` → `get_fundamentals`,
-  `projection_history`; Claude puede usar el MCP para **verificar**, nunca para copiar); consenso
-  de `BBG_CONSENSUS.txt`, y si el ticker no está, compilado a mano por print en
-  `docs/calls/<TICKER>.md` (diciendo el piso de ruido).
+- **Registro:** en `js/results.js`, `import { <t>Results } from './results-data/<t>.js';` y la entrada
+  `<T>: <t>Results` en `RESULTS_DATA`. (El dataset de Setup, `<T>_SETUP`, se registra igual en EV-SET.)
+- **Fuentes:** actuals del 8-K/10-Q; consenso de `BBG_CONSENSUS.txt` + `Consensus_Portal.xlsm` (vía
+  `estMatrix`); Summit en vivo cuando exista (Claude usa el MCP para **verificar**, nunca para copiar).
+  Si el ticker no está en el consenso de BBG: Results va solo con `act` (+ guía), y el analista decide
+  si lo agrega al workbook.
+
+**Receta de `estMatrix` (la parte de consenso).** Con `py`, desde `scripts/consensus/`, y la carpeta
+de Drive del equipo en `SUMMIT_DOCS` (la letra cambia por máquina):
+1. `SUMMIT_DOCS="<letra>:/My Drive/Summit/Docs/0" py inspect_matrix.py <TK>` — lista cada métrica del
+   export con su **código de Bloomberg** (p. ej. `IS_COMPARABLE_EBIT`), segmento, escala y snapshots.
+2. Escribir `map_<tk>.json` a partir de la columna CODE (nunca del número de slot: cambia por ticker).
+3. `py emit_matrix.py <TK> map_<tk>.json [valid_<tk>.json]` → `out/estmatrix_<tk>.js` (une el `.txt`
+   archivado y la hoja viva `CONSENSUS` del `.xlsm`; necesita `openpyxl`, que ya está).
+4. `py apply_matrix.py <TK> --dry` y luego sin `--dry` — empalma el bloque en el dataset.
+5. `py verify_preprint.py <TK> cons` — la prueba de aceptación; cada diferencia se clasifica
+   (redondeo / actualización real / error) antes de seguir.
+**Nunca correr `emit_summit_matrix.py`** (copia números Summit al repo, regla 10); `apply_matrix`
+funciona solo con la mitad `cons`.
 
 **Compuerta EV-RES-DATA:** Claude muestra una tabla de cuadre: para 3 periodos al azar, el valor del
 archivo vs el documento fuente, métrica por métrica. El analista aprueba los números antes de ver
@@ -812,8 +964,9 @@ ninguna gráfica.
 ### 9.2 La pestaña Results — qué se ve (de arriba a abajo)
 
 1. **Selector "Estimates as of"** — solo si hay `estMatrix`. Modos: *Latest file before each print*
-   (por defecto) · *As of a date* · *One Summit model file* · *One Street (Bloomberg) file*; y una nota
-   de vintage ("Summit: 7 snapshots…").
+   (por defecto) · *As of a date* · *One Summit model file* · *One Street (Bloomberg) file*, con un
+   segundo selector "which file" en los modos de un archivo; y una nota de vintage. (Sin la mitad
+   Summit de `estMatrix`, el motor no ofrece el modo *One Summit model file* — es lo esperado.)
 2. **Un bloque por sección** (`top`, `margins`), cada uno con:
    - **Fila 1:** nombre + desplegable de métricas **agrupado por familia** (`<optgroup>`: Totals ·
      Segments · Revenue lines · Company…). Cada opción con su nombre completo.
@@ -821,21 +974,23 @@ ninguna gráfica.
      YoY | QoQ (en Growth trimestral) · % | Amount (en Growth) · Values On | Off (Off) — y a la
      derecha, rangos: Last 4Q · Last 8Q · Reported · Forward · All (anual: Last 3Y · Last 5Y · …).
    - **Leyenda (chips que ocultan la serie en la gráfica Y en la tabla):** Actual (navy) · Summit model
-     (azul) · Consensus (gris) · Guidance (banda o marca) · línea de margen; banderas ámbar
-     "⚑ No company guidance" cuando aplica; pista "▲ beat · ▼ miss · click a chip to hide it".
+     (azul, solo si hay serie Summit) · Consensus (gris) · "Guidance range" o "Guidance (single number)"
+     · línea de margen (solo fuera de la sección `top`); banderas ámbar "⚑ No company guidance" y, en
+     modo margen, "⚑ Guidance is not a margin"; pista "▲ beat · ▼ miss · click a chip to hide it".
    - **Gráfica:** barras; zona sombreada "FORECAST" en periodos futuros con etiquetas en burbuja;
      margen en el eje derecho exterior; arrastrar para hacer zoom en **ambos ejes**, doble clic
      restablece; slider de periodos debajo.
-   - **Tabla "Period detail"** (colapsada por defecto — `tbl: false` en `results.js:272`): periodos en
+   - **Tabla "Period detail"** (colapsada por defecto — `tbl: false` en el estado inicial de `results.js`): periodos en
      columnas (E en estimados), filas Actual / crecimiento / margen, y por cada fuente valor /
      crecimiento / sorpresa / margen; columna fija "Range record" (CAGR, ▲/▼, desviación media,
      aciertos de guía).
    - Pie del bloque: la `note` de la métrica.
 3. **"Actuals vs Estimates"** (tarjeta de sorpresas) — aparece sola si dos series se traslapan en
-   periodos reportados: comparar contra Summit ✓ / Consensus ✓ / Guidance ✗; modo Surprise % | Amount;
-   barras divergentes; tabla colapsada.
+   periodos reportados: Quarterly | Annual propio · "Compare [Actual ▾] against…" · Summit ✓ /
+   Consensus ✓ / Guidance ✗ (con Low / Mid / High) · modo Surprise % | Amount (en EPS dice
+   "per-share") · el "Estimates as of" repetido · barras divergentes; tabla colapsada.
 4. **"Road to the print"** — aparece sola si hay `estMatrix`: cómo llegó el pronóstico de un periodo,
-   snapshot por snapshot.
+   snapshot por snapshot; selector de periodo y modo Level | Distance.
 5. **Pie:** nota de la vista + `source` del dataset.
 
 - **Texto:** ninguna introducción sobre las gráficas (el campo `intro` no se muestra). Lo explicativo
@@ -851,10 +1006,11 @@ ninguna gráfica.
 | Con esto | Se obtiene |
 |---|---|
 | `views` + `act` | Results: barras, tabla, "⚑ No company guidance" |
-| + `cons` (archivo) / Summit (en vivo) | chips, filas de sorpresa, Range record, tarjeta Actuals vs Estimates |
+| + `cons` (archivo) | chip Consensus, filas de sorpresa, Range record, tarjeta Actuals vs Estimates |
+| + Summit (en vivo, cuando exista el PR del portal) | chip Summit y sus sorpresas. Hoy: ausente, con la frase en `source` (§9.1) |
 | + `guideLo/guideHi` | banda de guía, filas de guía, Low/Mid/High |
-| + `estMatrix` (generado) | selector de vintage **y** Road to the print, automáticamente. Las filas Summit de `estMatrix` siguen la regla 10: en vivo, o el modo "One Summit model file" queda con "Live data pending" |
-| + `evolution` | la pestaña Estimates (§11) |
+| + `estMatrix.cons` (generado) | selector de vintage **y** Road to the print, automáticamente (solo modos de consenso) |
+| + `evolution` | la pestaña Estimates (§11) — necesita Summit en vivo |
 | + `<ticker>-setup.js` | la gráfica de Earnings ▸ Setup (§12) |
 
 ---
@@ -863,19 +1019,42 @@ ninguna gráfica.
 
 **Responde:** *¿de dónde viene el ingreso y qué lo mueve?*
 
-**Referencia AMZN:** motor `js/segments.js`, datos `js/segments-data/amzn.js`, montaje
-`amzn.js:5402-5414` y `aBuildSub` 5525–5532. **Tipo:** motor — se escribe
-`js/segments-data/<ticker>.js` y se registra en `SEGMENTS_DATA` (`segments.js` ~34–58) junto con
-`THEME_SEG` / `THEME_SRC` si hay Notes. Ya lo usan AMZN, DHR y SN.
+**Referencia AMZN:** motor `js/segments.js`, datos `js/segments-data/amzn.js`, montaje en
+`deepDiveHtml` (panel `topline`) y en la rama `topline` de `aBuildSub`. **Tipo:** motor — se escribe
+`js/segments-data/<ticker>.js`. Ya lo usan AMZN, DHR y SN.
+
+**Registro (en `js/segments.js`):**
+1. `import { <t>Segments } from './segments-data/<t>.js';` y `import { <t>Results } from './results-data/<t>.js';`
+2. En `SEGMENTS_DATA`: `<T>: { seg: <t>Segments, res: <t>Results }`.
+3. Cuando exista la semilla de Notes (EV-NOTES): `import { <T>_THEMES } from './themes-data/<t>.js';`,
+   la entrada en `THEME_SRC` y el mapa nombre-de-tema → `key` de segmento en `THEME_SEG`. Sin esto, el
+   bloque 5 de TL-SEG dice "nothing on record" (le pasa a DHR).
+4. En `<t>.js`: los botones y paneles en `deepDiveHtml`
+   (`segmentsOverviewHtml/segmentsHtml/segmentsOtherHtml/segmentsCustomersHtml('<T>')`) y las ramas
+   `initSegments*(root,'<T>')` en `aBuildSub`. Omitir Other = quitar su botón, su panel y su rama.
 
 **Requisito:** `EV-RES-DATA` aprobado. Cada `drivers.rev` / `drivers.opinc` de un segmento es un
-**puntero** `{from:'results:<key>'}` a una métrica que debe existir en el dataset de Results; si no
-existe, la serie desaparece sin avisar.
+**puntero** `{from:'results:<key>'}` (o `shared:<key>`) a una métrica que debe existir; si no existe, la
+serie desaparece sin avisar.
 
-El archivo dice que se genera con `scripts/segments/emit_segments.py` (insumos
-`scripts/segments/*_<ticker>.json`) y se verifica con `node scripts/segments/verify_segments.mjs <TK>`.
-Si se edita el `.js` a mano, la edición se pierde en la siguiente regeneración: decidir en F0 si se
-usará el generador o la edición manual, y anotarlo en la bitácora.
+**Cómo se arma el archivo (empresa nueva): a mano**, como DHR y SN. El generador
+`scripts/segments/emit_segments.py` está cableado a Amazon (pide un volcado del MCP de Summit, que la
+regla 10 prohíbe copiar), `verify_segments.mjs` necesita `node` (no está instalado) y el doc que cita,
+`SEGMENTS_CONVENTIONS.md`, no existe. Sí sirven `extract_10k.py` / `extract_geo.py` como ayuda para
+sacar texto y geografía del 10-K, y `load_splc.py` para Customers.
+
+**Contrato del archivo** (`export var <t>Segments = {…}`):
+- **Raíz:** `company, updated, source, axis{q,y}, shared, derived{num,den,unit,annualiseDen}, overview{tenK|lede}, segments[], other[], customers`.
+- **Por segmento:** `key, label, tenK{text,where,cite,url,needs}, summary, brief, sells[{name,what}],
+  products[{name,what,tenK,customers{archetype,named[{name,q,what}],note,concentration},management,needs}],
+  drivers{rev,opinc}, kpis[{name,definition,source,periodicity,series,unit,filing,filingWhere,needs}],
+  kpiNote, interactions[{name,relation,lines,why,data,bridge}], bridges[{key,target,terms,view,kind,note}], highlights`.
+- **Por corte de Other:** `key, label, sub, lede, series, views, axis, note, tenK, cite, spans, caveat`.
+- **Summit:** `summit:{}` vacío (regla 10). El motor no tiene camino en vivo ni aviso, así que la zona
+  FORECAST no aparece hasta el PR del portal; el `source` lo dice ("Summit model series: live data
+  pending — …") y va a **Conexiones pendientes**.
+- **FILING:** un texto sin `filingWhere` sale con chip OURS, no FILING (así quedó arreglado A15). Lo que
+  lleve `filingWhere` tiene que ser **verbatim**.
 
 ### Comportamiento común de las gráficas de Top Line
 
@@ -884,7 +1063,8 @@ Controles (fila etiquetada): **Period** Quarterly | Annual · **Show** $B | Shar
 $B) · **Values** On | Off (Off). Leyenda en chips (ocultar quita la serie de gráfica, tabla y conteos).
 Zoom en ambos ejes, doble clic restablece. Slider de dos manijas. Tabla colapsada:
 "<título> · show · N series over M periods". Estimados = solo Summit (Top Line no lee consenso),
-sombreados con "FORECAST" y marcados E. Colores: `SUMMIT_CAT` en orden fijo.
+sombreados con "FORECAST" y marcados E — **hoy no hay estimados** en una empresa nueva (`summit:{}`,
+ver arriba). Colores: `SUMMIT_CAT` en orden fijo, el color sigue a la entidad (A13 ya arreglado).
 
 ### TL-GEN General (`segov`, activa por defecto)
 
@@ -896,11 +1076,15 @@ sombreados con "FORECAST" y marcados E. Colores: `SUMMIT_CAT` en orden fijo.
      "% of group revenue". Al abrir: `brief` (3–4 oraciones en lenguaje simple) + lista `sells`
      (3–5 viñetas "**nombre** — qué es").
 2. **"How revenue divides"** — gráfica de barras apiladas por segmento, trimestral por defecto, con
-   total arriba de cada columna; tabla "Revenue detail".
+   total arriba de cada columna; nota fija debajo de la gráfica; tabla "Revenue detail".
 3. Pie `.ov-fynote.sg-src` = `source` del archivo.
 
+- Las tarjetas usan siempre el último trimestre; el crecimiento sigue la unidad de la gráfica.
 - **Texto:** la cita del 10-K + `brief` en cada tarjeta. Nada más.
-- **No copiar de AMZN:** `overview.interactions` (dato muerto, no se muestra — no escribirlo).
+- **No copiar de AMZN:** `overview.interactions` (dato muerto, no se muestra — no escribirlo). Ojo: el
+  motor escribe fijo "net sales" (`ovCards`) y "consolidated net sales" (pie de Other) — si la empresa
+  dice "revenue", anotarlo en la bitácora para generalizar el motor en un PR aparte (no en el de la
+  empresa).
 
 ### TL-SEG Segments (`segdrv`)
 
@@ -928,18 +1112,20 @@ Pastillas de segmento arriba (primer segmento por defecto). Por segmento, de arr
    los términos, **Chart** con la identidad, un sello `DECOMPOSITION` (un término sale del otro) o
    `INDEPENDENT` (fuentes separadas — usar solo cuando es verdad) y la gráfica puente.
    Las relaciones sin datos se listan igual, con `bridge:null` y `data` que diga "NOT CHARTED".
-5. **"What management has said"** — viene de la herramienta de Notes (§24), filtrada por segmento;
-   orden por Quarter | Theme. Si no hay notas: "⚑ The theme record carries no entries for this
-   segment yet."
+5. **"What management has said"** — lee la **semilla estática** de Notes (`THEME_SRC` →
+   `themes-data/<t>.js`, vía `themesFor`), filtrada por segmento con `THEME_SEG`; **no** lee lo que se
+   edita en Notes (Supabase). Orden por Quarter (por defecto) | Theme. Si no hay semilla: "⚑ The theme
+   record carries no entries for this segment yet." Por eso depende de EV-NOTES: mientras no exista,
+   este bloque muestra esa bandera y TL-SEG se aprueba así.
 6. Pie = `source`.
 
 - **Qué decide el analista:** qué KPIs (solo los que la empresa **publica**), qué identidades de
   ingreso, el `summary` de cada segmento, qué productos listar.
-- **Reglas de texto:** "FILING" = verbatim y con ubicación; "CALL" = de una transcripción con
-  trimestre; "OURS" = nuestra lectura, corta. Nunca se mezcla: una paráfrasis no lleva chip FILING
-  (AMZN lo hace en algunos KPIs — no copiar).
+- **Reglas de texto:** "FILING" = verbatim y con ubicación (`filingWhere`); "CALL" = de una
+  transcripción con trimestre; "OURS" = nuestra lectura, corta. Nunca se mezcla.
 - **No copiar de AMZN:** `adjacencies` (no se muestra); un término repetido en `highlights`; la falta
-  de utilidad operativa anual por segmento (§9.1).
+  de utilidad operativa anual por segmento (A16, §9.1); los bloques `summit:{2026…}` de
+  `segments-data/amzn.js` (regla 10).
 
 ### TL-OTH Other (`segoth`)
 
@@ -963,13 +1149,16 @@ Sin gráfica. Cuatro secciones:
 3. **"Named on the record"** — clientes nombrados en llamadas (se juntan solos desde
    `products[].customers.named`).
 4. **"Who has said they buy from <Empresa>"** — tabla SPLC (cliente · ticker · relación · tamaño ·
-   % de su costo · base), solo si hay export SPLC con la empresa como sujeto
-   (`py scripts/segments/load_splc.py <TK> <export.csv>`). **Primero la limitación** (cuánto del
-   ingreso cubre), después la tabla.
+   % de su costo · base), solo si hay export SPLC con la empresa como sujeto. **Primero la
+   limitación** (cuánto del ingreso cubre), después la tabla.
 
-- **No copiar de AMZN:** la frase de cobertura en el motor está escrita para Amazon ("consumers do
-  not file") — revisar que tenga sentido para la empresa o pedir que se generalice; el orden de
-  "Named on the record" es alfabético-lexical, no cronológico.
+- **Cómo se carga SPLC:** `py scripts/segments/load_splc.py <TK> <export.csv>` escribe
+  `scripts/segments/splc_<tk>.json`; ese contenido se pega en `customers.splc = {customers[], named,
+  sized, sizedSumM, revBaseM, revBaseLabel, coverageWhy, source, file}`. `coverageWhy` es la frase de
+  cobertura propia de la empresa (el motor ya la usa, con el nombre de la empresa).
+- **Concentración:** si `concentration.disclosed` no es `false`, la `note` se pinta como cita FILING:
+  tiene que ser verbatim.
+- "Named on the record" ya ordena del trimestre más nuevo al más viejo (arreglado).
 
 ---
 
@@ -977,11 +1166,14 @@ Sin gráfica. Cuatro secciones:
 
 **Responde:** *¿cómo se movió nuestra visión (y la de la calle) sobre FY26, FY27, FY28?*
 
-**Referencia AMZN:** `resultsEvoHtml('AMZN')` / `initResultsEvo('AMZN')`, bloque `evolution` de
-`results-data/amzn.js` (~944–1028). **Tipo:** motor.
+**Referencia AMZN:** `resultsEvoHtml('AMZN')` / `initResultsEvo('AMZN')`, bloque `evolution:` de
+`results-data/amzn.js`. **Tipo:** motor.
 
-**Requisito:** modelo Summit con **≥ 2 snapshots**. Sin eso, la sub-tab **no existe** (⏭️ con razón),
-no se fabrica.
+**Requisito:** modelo Summit con **≥ 2 snapshots** **y Summit en vivo**. El eje X de esta pestaña son
+los snapshots del modelo; sin leerlos en vivo no hay eje. Por eso, **para una empresa nueva hoy
+(14 oct 2026) EV-EST queda ⛔ completa y no se publica** (regla 5): ni botón ni panel. Se anota en
+Bloqueos ("espera get-summit-data + el PR del portal") y se retoma cuando exista. Sin modelo Summit,
+⏭️ con razón. No existe un generador "solo consenso".
 
 **Contenido, por sección** (`top` "Top Line" con `rev` por defecto; `prof` "Profitability" con
 `capex` por defecto — AMZN; para otra empresa el analista elige el default):
@@ -991,17 +1183,19 @@ no se fabrica.
 - Gráfica de líneas: eje X = snapshots con etiqueta de evento ("Dec 18 2025 · post-3Q"), una línea
   por año × fuente; tooltip con la revisión contra el snapshot anterior.
 - Tablas "Revision record" y "Snapshot by snapshot" (colapsadas).
-- Bloque **"Projection by snapshot"**: la curva de un snapshot (el más nuevo), con "⇄ Compare" contra
-  el anterior.
+- Bloque **"Projection by snapshot"** (requiere ≥ 2 snapshots): la curva de un snapshot, con selector
+  de archivo (más nuevo primero) y "⇄ Compare" contra el anterior; tabla "Projection detail".
+- Con "Reported" encendido aparece "⚑ FY… still open" para años sin cerrar; si ningún año cerró, el
+  botón sale deshabilitado ("Reported ✕").
 - Pie: `evolution.note`.
 
-**Datos:** `evolution = { note, vintages:[{label,event}], years, sections, metrics:{ k:{ label, unit,
-marginOf?, note, summit:[[…]], cons?:[[…]], prior:{summit:[…], cons?:[…]} } } }`. Hoy se genera con
-`scripts/consensus/emit_evolution.py` desde el MCP Summit (`projection_history`) — **eso copia números
-Summit al repo y ya no se acepta** (regla 10). Para una empresa nueva: la parte de consenso (`cons`)
-sí va en archivo; la parte Summit se lee en vivo con `get-summit-data` (`series` por métrica y año).
-Mientras el motor no lea en vivo, la unidad queda ⛔ "Live data pending" (no se publica con números
-copiados).
+**Datos (cuando se pueda construir):** `evolution = { note, vintages:[{label,event}], years, sections,
+metrics:{ k:{ label, unit, marginOf?, note, summit:[[…]], cons?:[[…]], prior:{summit:[…], cons?:[…]} } },
+actKey? }`. AMZN lo generó con `scripts/consensus/emit_evolution.py` desde el MCP Summit — **eso copia
+números Summit al repo y ya no se acepta** (regla 10). Además ese script exige que el dataset ya traiga
+`estMatrix` con `cons` **y** `summit` y un bloque `evolution:`, y escribe `out/evolution_<tk>.js` para
+pegar a mano. Con Summit en vivo, la parte `summit` la pedirá el motor (`series` por métrica y año);
+la parte `cons` sí va en archivo.
 - **`prior` es obligatorio para toda métrica con modo Growth** (el año fiscal previo al primer año
   seguido), o el primer año no tiene crecimiento.
 - **El montaje debe pasar el ticker:** `requestAnimationFrame(function(){ initResultsEvo('<T>'); })`.
@@ -1014,25 +1208,43 @@ copiados).
 **Responde:** *¿qué espera la calle de este trimestre, qué pasó, y qué hilos seguimos llamada a
 llamada?*
 
-**Referencia AMZN:** maquinaria `ce*` en `amzn.js` (`ceSetupBody` 1715, `ceResultsBody` 2396,
-`ceWatchBody` 1789, `wireDD` 5574). La copia de referencia para otra empresa es
-`js/overviews/sharkninja-ce.js` (extracción mecánica del bloque de AMZN con los datos cambiados).
-**Tipo:** a medida (se copia el bloque completo **por símbolo**, no por rango de líneas, y se cambian
-los datos).
+**Referencia AMZN:** maquinaria `ce*` en `amzn.js` (`ceQPills`, `ceSetupBody`, `ceResultsBody`,
+`ceWatchBody`, `ceAnnualBody`, `gBuildCeAnnual`, `wireCallEarnings`, `wireCeTrack`, `wireThemeRecord`,
+el editor ✎ y la persistencia del theme record; montaje en `deepDiveHtml` y `wireDD`). **Tipo:** a
+medida: se **re-extrae de `amzn.js` por símbolo** (la cerradura de dependencias de esas funciones),
+no por rango de líneas, y se cambian los datos.
+
+**No copiar `sharkninja-ce.js` tal cual:** está desactualizado (no trae `amznSyncSegOrder` y conserva
+"(Summit pending)"). Usar **su encabezado como la lista de cambios** a aplicar sobre la extracción
+fresca: datos en `./<t>-ce-data.js` (`CE_CONS`, `CALL_EARNINGS`); `AMZN_THEMES` → `<T>_THEMES`;
+`CE_MARGIN_DEN` / `CE_STMT_ORDER` / `CE_TOPLINE` con las líneas de la empresa; `ceGuessTarget` con sus
+temas; `ceFmtV` / `ceTkFmt` con la unidad de la empresa ($M o $B); dataset `AMZN_SETUP` → `<T>_SETUP`;
+cada `'AMZN'` → `'<T>'` y los helpers `amzn*` → `<t>*`; el texto "Custom KPIs — <T>".
+
+**Orden en pantalla:** Evolution abre en **Earnings** (activa) · Results · Estimates.
 
 Arriba de las tres fases: pestañas de fase `Setup` (activa) · `Post-Results` · `Notes`, y pastillas de
 trimestre (más nuevo primero; Post-Results solo muestra trimestres ya reportados; Notes oculta las
 pastillas porque no es por trimestre).
 
 **Datos que alimentan Earnings:**
-- `CE_CONS` — consenso por trimestre desde `BBG_CONSENSUS.txt`: `asOf[]`, `q[]` ("Q4 2022"…),
-  `nHead` (= 9 métricas de encabezado), `m[]` (15 métricas en AMZN: 9 de encabezado + 6 propias de la
-  empresa). **Hoy no hay generador en el repo** — anotarlo en F0 como bloqueo a resolver.
-- `CALL_EARNINGS = { ticker, quarters:[ {q:'Q3 2026', status:'upcoming'|'reported', date,
-  setup:{us, notes}, results:null|{…}, call:null|{prepared, qanda, highlights, newQuestions}} ] }`,
-  más nuevo primero.
+- `CE_CONS = { src, asOf[], q[] ("Q4 2022"…), hz:['4q out','3q out','2q out','1q out'], nHead (= 9
+  métricas de encabezado), m:[{ k, u, t, qr:[[4q,3q,2q,1q]…], qa, qy, qq }] }` (`qa` = el real). **No
+  hay generador en el repo.** Patrón a seguir (el de SN, `sharkninja-ce-data.js`): **armarlo al cargar**
+  desde `<t>Results` con una lista `LINES` + una función `series()`, sin teclear números. Hoy eso llena
+  solo la columna "1q out"; las columnas de revisión (2q–4q out) saldrían de `estMatrix.cons` (nadie lo
+  hace todavía: si se necesita, es código nuevo y se dice en el PR).
+- `CALL_EARNINGS = { ticker, quarters:[ { q:'Q3 2026', status:'upcoming'|'reported', date,
+  setup:{ us, notes, source, asOf }, results:null|{…}, call:null|{ prepared:[{topic, body}],
+  qanda:[{analyst:'Nombre · Banco', q, qFull, a}], highlights, newQuestions } } ] }`, más nuevo primero.
+  `setup.us` son los números Summit del trimestre → regla 10: **no se teclean** (§EV-SET).
 - `js/results-data/<ticker>-setup.js` — copia de `amzn-setup.js` con **una sola sección de clave
-  única** (`'setup'`, nunca `top`/`margins`, que chocarían con Results).
+  única** (`'setup'`, etiqueta "All tracked lines", todos los periodos; nunca `top`/`margins`, que
+  chocarían con Results). Se registra como `<T>_SETUP` en `RESULTS_DATA` (`results.js`).
+
+**Mecánica de trimestres (no evidente):** la rejilla de Setup solo aparece si `CE_CONS.q` contiene el
+trimestre; Post-Results muestra un trimestre solo si `results` no es `null` (no basta `status:'reported'`);
+el trimestre "upcoming" nuevo se agrega cuando el Post-Results anterior ya está lleno.
 
 ### EV-SET Setup (antes del print)
 
@@ -1044,18 +1256,24 @@ pastillas porque no es por trimestre).
    "Custom KPIs — <TICKER>" (las propias: ventas y utilidad por segmento, o los KPIs de la empresa).
    Cada celda: mini-tabla Street | Summit, chips de crecimiento, fila de margen (si aplica) y un `?`
    con la advertencia de esa métrica (`setup.notes[métrica] = {t, h}`).
-4. **"The Setup picture — reported vs Street"** — segunda instancia del motor de Results con el
-   dataset `<T>_SETUP`.
+4. **"The Setup picture — reported vs Summit vs Street: pick any line, window the period with the
+   lever, toggle margins"** (`ceAnnualBody`) — segunda instancia del motor de Results con el dataset
+   `<T>_SETUP`.
 5. **Consensus Evolution** — revisiones de la calle por snapshot de BBG (`consensus-evolution.js`,
-   datos en `consensus-evolution-data.js`). Opcional: solo si hay al menos ~6 snapshots de BBG.
+   datos en `consensus-evolution-data.js`). **No montarlo** si `CONSENSUS_EVO['<T>']` no existe: el
+   archivo dice "GENERATED" pero no hay script, solo trae AMZN, y `GROUPS`/`SEG` del módulo tienen las
+   claves de Amazon (SN lo monta y sale vacío — no repetirlo). Agregarlo para otra empresa es un
+   generador nuevo (pendiente, PR aparte).
 
-- **Fuentes:** Street = BBG (archivo); Summit = snapshot más reciente del modelo, **en vivo** vía
-  `get-summit-data` con su fecha a la vista (regla 10; sin camino en vivo, la columna Summit dice "Live
-  data pending"); `?` = 8-K de guía + la llamada anterior.
+- **Fuentes:** Street = BBG (archivo, vía `CE_CONS`); Summit = snapshot más reciente del modelo, **en
+  vivo** cuando exista. Hoy: la columna Summit de cada celda queda vacía, la barra "Estimates" se deja
+  en Consensus, y la `source` del trimestre dice "Summit: live data pending — …" (va a Conexiones
+  pendientes). `?` = 8-K de guía + la llamada anterior.
 - **Regla:** las claves de `setup.notes` son **exactamente** los nombres de `CE_CONS.m[].k`; una nota
-  con una clave que no existe no se ve (AMZN tiene "Advertising" huérfana).
-- **No copiar de AMZN:** el título "(Summit pending)"; números Summit de un snapshot viejo cuando hay
-  uno más nuevo; el texto "Custom KPIs — AMZN" y `consensusEvo.html('AMZN',…)` fijos.
+  con una clave que no existe no se ve.
+- **No copiar de AMZN:** `setup.us` tecleado (números Summit, y además de un snapshot viejo — A17); la
+  clave huérfana "Advertising" en `setup.notes`; el texto "Custom KPIs — AMZN" y
+  `consensusEvo.html('AMZN',…)` fijos.
 
 ### EV-POST Post-Results (después del print)
 
@@ -1065,7 +1283,8 @@ Por trimestre reportado:
    (Cards) · Basis vs Street | vs Summit | Both (vs Street) · filtro All | Beats | Misses | In line ·
    orden Statement order | By surprise · Lines All | Top line | Bottom line · Margin · Growth. Cada
    tarjeta: métrica + veredicto (**|sorpresa| < 2 % = in line**), tabla Street | Summit | Actual con
-   valor / crecimiento / margen. En Chart: barras divergentes de sorpresa en un solo eje %.
+   valor / crecimiento / margen. Solo en Cards: Margin | Hide mgn (Margin) y YoY | QoQ | Off (YoY).
+   En Chart: barras divergentes de sorpresa en un solo eje %.
 3. **"Call Summary"** (plegado) — *By Prepared Remarks* (tema + cuerpo) | *By Analyst Question*
    (pregunta; al abrir: 🏦 banco + analista, **Q** completa, **A** con la voz directa de management,
    partes clave en negrita). Cada punto con "＋ add note".
@@ -1073,7 +1292,8 @@ Por trimestre reportado:
    (`call.newQuestions`), cada una con Theme / Sub-theme sugeridos y texto editable; ✓ Accept / ✕
    Reject; **"Publish to Notes →"** las archiva en Notes.
 5. **"Also on the call"** (plegado) — los demás puntos (`call.highlights` que no sean `band:'lead'`),
-   cada uno con "Still open" y "＋ add note".
+   cada uno con "＋ add note"; "Still open" es el campo `open` del punto (se muestra en el detalle),
+   no un control.
 
 - **Fuentes:** actuals del 8-K; Street/Summit como en Setup; Call Summary de la **transcripción**
   (`docs/calls/<TICKER>-latest.md`, o Quartr). Las respuestas de management son **citas directas**,
@@ -1086,7 +1306,10 @@ Por trimestre reportado:
 ### EV-NOTES Notes — ver §24 para las reglas de uso
 
 Lo que se construye en esta unidad: el registro de temas de la empresa (`js/themes-data/<ticker>.js`,
-semilla), el orden de temas (`<T>_SEG_ORDER`), y el montaje de `ceWatchBody`. Contenido:
+semilla), el orden de temas (`<T>_SEG_ORDER`), el montaje de `ceWatchBody`, y el **registro de la
+semilla en `js/segments.js`** (`THEME_SRC` + `THEME_SEG`, §10) para que Top Line ▸ Segments la lea.
+Contrato de la semilla: `export var <T>_THEMES = [{ seg:'<tema>', theme:'<sub-tema>', st:{ k:'trend'|'promise'|'watch',
+since, last }, why, updates:[{ q:'Q2 2026', items:[…] }] }, …]`. Contenido:
 1. Banda "▤ The theme record — every thread, across all calls".
 2. Vista **By theme** (por defecto) | **By quarter**; filtro "Since"; filtro de ganchos All | Open
    hooks | Closed.
@@ -1103,10 +1326,12 @@ semilla), el orden de temas (`<T>_SEG_ORDER`), y el montaje de `ceWatchBody`. Co
 
 ### Rutina por cada print (después de entregado el perfil)
 
-1. **Antes:** trimestre nuevo al **frente** de `CALL_EARNINGS.quarters` con `setup`; `CE_CONS` con el
-   snapshot nuevo; guía (`guideLo/Hi`) del último 8-K; regenerar `estMatrix`.
+1. **Antes:** trimestre nuevo al **frente** de `CALL_EARNINGS.quarters` con `setup`; guía
+   (`guideLo/Hi`) del último 8-K; regenerar `estMatrix.cons` (receta §9.1) — `CE_CONS` se rearma solo
+   al cargar.
 2. **Print + llamada:** `act` en Results; marcar el trimestre `reported` + `results:{}` + `call:{…}`;
-   snapshot post-print en `estMatrix`/`evolution`; rotar `docs/calls/<T>-latest.md` a `<T>.md`.
+   regenerar `estMatrix.cons` con el snapshot post-print; revisar el mapa F0-SM si hubo submit nuevo;
+   rotar `docs/calls/<T>-latest.md` a `<T>.md`.
 3. **Notas:** se archivan en el portal (Propose Notes / ＋ add note), no editando la semilla.
 
 ---
@@ -1115,38 +1340,62 @@ semilla), el orden de temas (`<T>_SEG_ORDER`), y el montaje de `ceWatchBody`. Co
 
 **Responde:** *¿dónde deja el ingreso de ser ingreso?*
 
-**Referencia AMZN:** `amzn.js` (`aGeneralPicker` 3525, `aMarginsBody` 3561, `aBridgeBody` 3260,
-`aNetBridgeBody` 3422, `aSbcBody` 3468, `expenseTabsBody` 3829, `segmentsBody` 4131, `aSplcBody` 5141)
-y los datos `js/overviews/amzn-bbg.js`. **Tipo:** datos generados + vistas a medida (se copian; no hay
-motor compartido). **Preferir `js/overviews/dhr-chartkit.js`**, que ya extrajo el andamiaje, la
-cascada, las tablas y el selector — no hacer una tercera copia.
+**Referencia AMZN (`amzn.js`):** `aMarginsBody`, `aBridgeBody`, `aNetBridgeBody`, `aSbcBody`,
+`expenseTabsBody`, `aBlFootGeneral` (General); `segmentsBody`, `aBlFootSegments` (Segments);
+`aSplcBody` (Supply Chain); sus builders en la rama `bottomline` de `aBuildSub` (`aBuildMargins`,
+`aBuildExpenses`, `aBuildSegments`, `aBuildSplc`); datos `js/overviews/amzn-bbg.js`. **Tipo:** datos
+generados + vistas a medida (se copian de AMZN; no hay motor compartido). `dhr-chartkit.js` extrajo
+parte del andamiaje, pero trae el selector viejo (`dPicker`) y colores fijos (`D_SEG`): **no usarlo
+como base**; se copia de AMZN.
 
-**Datos:** `js/overviews/<ticker>-bbg.js`, **generado** por `scripts/bbg_extract.py <TICKER>` desde
-`BBG_CONSENSUS.txt` (no se edita a mano). Antes de correrlo (bloqueos a anotar en F0):
-- la ruta `SRC` del script dice `G:\Mi unidad\…`; en esta máquina es `G:\My Drive\…`;
-- el script necesita Python: `python` aquí es un alias roto de la Microsoft Store, pero **`py`** sí
-  funciona (Python 3.14, verificado el 14 oct 2026) → `py scripts/bbg_extract.py <TICKER>`. Que el
-  script corra completo con 3.14 no se ha probado;
-- agregar los ids de segmento de la empresa en `SEGNAMES` y **revisar el mapa `CODE`** contra las
-  etiquetas `metricN` de la empresa (está pensado para Amazon: `CB_IS_OTHER_OPEX → fulfillment`…);
-- el archivo de BBG cambia: el AMZN commiteado es del 8/4/2026 y ese snapshot ya no está — fijar y
-  anotar el `asOf` usado.
+**Datos de Bloomberg:** `js/overviews/<ticker>-bbg.js`, **generado** por `scripts/bbg_extract.py`
+desde `BBG_CONSENSUS.txt` (no se edita a mano). Cómo correrlo:
+- **Requisito:** la empresa tiene que estar en `BBG_CONSENSUS.txt`. Si no está (caso DHR), no hay
+  export: Bottom Line se arma con lo reportado (`results-data` + filings), sin forward de consenso, y
+  se dice en el pie (precedente: `dhr.js`).
+- `SRC` está **fijo en el código** (`G:\Mi unidad\…`, sin argumento ni variable de entorno): cambiarlo
+  a la ruta de esta máquina (`<letra>:\My Drive\…`) — es un cambio al script, se menciona en el PR.
+- `py scripts/bbg_extract.py <TICKER>` (`python` es un alias roto; el docstring dice `python`). Solo
+  usa librería estándar; con Python 3.14 no se ha corrido completo. **Ojo:** escribe
+  `js/overviews/<ticker>-bbg.js` y sobrescribe si ya existe.
+- **`SEGNAMES`** usa los ids numéricos de segmento de Bloomberg: correrlo una vez, leer los `seg<id>`
+  que imprime, y mapearlos (`'<T>': {'227465':'aws', …}`).
+- **`CODE`** mapea el **código de campo de Bloomberg** (`codeN`, p. ej. `CB_IS_OTHER_OPEX`), no la
+  etiqueta `metricN`; lo que no esté en `CODE` sale con el nombre de la etiqueta. Revisarlo contra
+  la empresa (está pensado para Amazon).
+- La fila se busca con `startswith(ticker)`: un ticker corto puede chocar con uno largo (SN / SNOW).
+  Verificar que tomó la fila correcta.
+- Los trimestres se etiquetan por calendario: si el año fiscal no cierra en diciembre, salen mal
+  etiquetados — anotarlo en F0 y corregir en la vista.
+- El export cambia con cada snapshot: anotar el `asOf` usado.
+- **Contrato:** `export var <tk>BBG = { asOf:'M/D/YYYY', yearsA[3], yearsF[3], qtrs[9], segIds,
+  is:{ k:{ a, f, qA, qF, q } }, seg:{ … } }`. Solo trae 3 años reales + 3 estimados.
 
-Además: notas del 10-K a mano, con fuente (`A_TENK`: capex y PP&E por segmento, SBC por función;
-gastos funcionales reportados). **Lo que viene del modelo Summit** (gastos funcionales proyectados, como
-`A_OPEX`/`A_OPEXQ` de AMZN, y las acciones diluidas del modelo) **no se copia** (regla 10): se lee en
-vivo con el mapa F0-SM, o la serie Summit muestra "Live data pending". AMZN todavía los tiene copiados;
-eso está en la lista de migración.
+**Datos de filings, a mano y con fuente** (permitidos por la regla 10): las líneas de gasto funcional
+**históricas reportadas** y ventas/utilidad por segmento (como `A_OPEX` anual FY18–25 y `A_OPEXQ`
+trimestral de AMZN — son cifras reportadas, aunque AMZN las tomó de la hoja de su DCF: en la empresa
+nueva se toman del 10-K/10-Q y se cita el filing); notas del 10-K (`A_TENK`: capex y PP&E por
+segmento, SBC por función). Las mini-barras de ~8 años de Expense lines salen de aquí (BBG no llega
+tan atrás).
+
+**Lo que sí viene del modelo Summit y no se copia** (regla 10): las acciones diluidas del modelo
+(`A_SUMMIT_SHARES` en AMZN) y las series `summit` que AMZN lee de `results-data` (`aSummitAnnual`,
+`aSegSummitAnnual`, `aBuildSegFc`). En la empresa nueva esas series quedan ausentes, con
+`<div class="rs-noguide">⚑ Live data pending — Summit model feed not connected yet</div>` sobre la
+gráfica que las usaría, y van a Conexiones pendientes.
 
 ### BL-GEN General (`margins`, activa por defecto)
 
-Arriba: selector "CHART" con 4 vistas — *Profitability & margins* (por defecto) · *The bridge —
-revenue → operating income* · *Operating income → net income* · *Stock-based compensation*; pista
-"Pick one — the rest stay tucked away."
+**Las vistas van apiladas y visibles, sin selector** (SAB, 13 oct 2026; `aGeneralPicker` quedó en el
+archivo pero ya no se monta): *Profitability & margins* → *The bridge — revenue → operating income* →
+*Operating income → net income* → *Stock-based compensation* → el colapsable "Expense lines — the N
+functional deep dives (unit economics, drivers, calls)" → el pie del panel (`aBlFootGeneral`).
 
 **BL-GEN-1 Profitability & margins**
 - Desplegable: Gross profit · **Operating income (GAAP)** (por defecto) · EBITDA · Net income (GAAP) ·
-  Free cash flow — **agrupado** en optgroups (AMZN no lo agrupa; regla §17).
+  Free cash flow — agrupado en optgroups (Profit / Cash), como ya lo hace AMZN.
+- En trimestral, Operating income sale de `results-data` (Actual / Summit / Consensus); las demás
+  métricas trimestrales salen del export de BBG (sin Summit).
 - Modos: Period Annual (por defecto) | Quarterly · Net Reported | Normalized (**solo visible cuando la
   métrica es Net income y el periodo anual**) · rangos All · Reported · Forward · Last 5.
 - Leyenda: un chip por fuente (Actual · Summit · Consensus) que oculta barra **y** línea de margen.
@@ -1156,10 +1405,11 @@ revenue → operating income* · *Operating income → net income* · *Stock-bas
 - **Normalized:** resta la ganancia no operativa después de impuestos, a la tasa efectiva del
   periodo. ⚠ En el export de BBG `otherNonOp` está con signo de **gasto**: una ganancia viene negativa
   (`G = −otherNonOp`). Si no se invierte, una ganancia de $53B se dibuja como pérdida.
-- **Regla:** cada serie con su definición — no se grafica la "earnings" ajustada del modelo Summit con
-  la etiqueta "Net income (GAAP)" (AMZN lo hace — no copiar). Si la base difiere, la etiqueta lo dice.
-- **No copiar de AMZN:** consenso que repite el último real; arrastre vertical que truena
-  (`onY = null`); años fijos en el código (`'FY23'…`) — derivarlos del dato.
+- **Regla:** cada serie con su definición; si la base difiere, la etiqueta lo dice (AMZN ya etiqueta
+  "Model earnings (adj.)").
+- **No copiar de AMZN:** años y etiquetas tecleados (A12, en parte abierto: `'$356B · 49.7%'` en las
+  pestañas de gasto, `EW_LABS` ’18–’25, chips del explorador de segmentos, años en `aBlFootGeneral`) —
+  derivarlos del dato; el pie que cita "DCF AMZN.xlsm".
 
 **BL-GEN-2 The bridge** (`.ov-sec-h` "The bridge — how revenue becomes operating income")
 - Modos: **Build-up ($B)** (por defecto) · Margin change (bps) · Forward (expenses).
@@ -1173,13 +1423,15 @@ revenue → operating income* · *Operating income → net income* · *Stock-bas
 
 **BL-GEN-3 Operating income → net income** — cascada Op. income → interés neto → ganancias de
 inversiones (ámbar) → impuestos → otros → Net income; toggle Reported | Normalized; año (estimado más
-cercano por defecto); leyenda dinámica de ~2–3 oraciones con margen neto reportado vs normalizado y la
-fuente al final.
+cercano por defecto); leyenda dinámica de **≤ 3 oraciones** con margen neto reportado vs normalizado y
+la fuente al final, sin fechas fijas (la de AMZN pasa de 3 oraciones, habla de Anthropic y trae "as of
+Aug 2026" tecleado — no copiar).
 
 **BL-GEN-4 Stock-based compensation** — vista Dilution (por defecto: barras SBC + líneas de acciones
-diluidas Summit vs consenso) | SBC by line (apiladas por función); unidad $B | % (de ingreso en
-Dilution; del SBC total en By line). **Leyenda clicable en ambas vistas** (AMZN no la tiene en
-Dilution — no copiar). Rango del eje de acciones derivado del dato, no fijo.
+diluidas — hoy solo consenso; la línea Summit queda pendiente, ver arriba) | SBC by line (apiladas por
+función); unidad $B | % (de ingreso en Dilution; del SBC total en By line). Leyenda clicable en ambas
+vistas y rango del eje derivado del dato (AMZN ya lo hace). **No copiar:** el eje de acciones a la
+**izquierda** (va a la derecha, §17.3).
 
 **BL-GEN-5 Expense lines** (colapsable al final, cerrado: "Expense lines — the N functional deep dives")
 - Explorador con una pestaña por línea de gasto (color · nombre · `$X · Y% of revenue` calculado del
@@ -1195,26 +1447,29 @@ Dilution — no copiar). Rango del eje de acciones derivado del dato, no fijo.
   9. Pie `.ov-foot`.
 - **Qué decide el analista:** cuáles son las líneas, qué entra en unit economics y drivers.
 
-**Pie del panel General:** AMZN no tiene uno a nivel de panel (solo dentro de los colapsables); una
-empresa nueva **sí** lo lleva: "Sources — Bloomberg consensus export (as of <fecha>); <filing> MD&A;
-Summit DCF (snapshot <fecha>)".
+**Pie del panel General** (`aBlFootGeneral`, ya existe en AMZN): "Sources — Bloomberg consensus export
+(as of <fecha>); <filing> MD&A and notes. Summit model series: live data pending." — con años
+derivados del dato.
 
 ### BL-SEG Segments (`segments`)
 
-Selector "CHART": *Operating income & margin by segment* (por defecto) · *Revenue vs profit — common
-size* · *The segment bridge*; más el colapsable "Segment deep dives…".
+**Apilado, sin selector:** *Operating income & margin by segment* → *Revenue vs profit — common size* →
+*The segment bridge* → el colapsable "Segment deep dives — …" → el pie (`aBlFootSegments`).
 1. **Profit by segment — Actual vs Summit vs Consensus:** métrica Operating income | EBITDA; pastillas
    de segmento (el más relevante por defecto) + Consolidated; Annual | Quarterly. Barras $ + línea de
-   margen. **Trimestral + EBITDA debe dibujar trimestral** (AMZN cae al anual — no copiar).
+   margen. Trimestral + EBITDA dibuja trimestral (AMZN ya lo arregló). Hoy, sin la serie Summit.
 2. **Revenue vs profit — common size:** métrica Revenue | Operating income | EBITDA; Basis · Show $B |
    Share | Growth · Layout · Period · Compare · Growth in (los controles que no aplican se ocultan).
+   Basis = Summit obliga a anual y esconde Period; EBITDA esconde Basis. Mientras no haya Summit en
+   vivo, Basis = Summit no se ofrece.
 3. **The segment bridge:** Historical (utilidad del año "From" → Δ por segmento → año "to") | Forward
-   (vs Consensus | vs Summit, con sliders por segmento). Si una base cae a la otra por falta de dato,
-   la nota lo dice (AMZN lo hace en silencio — no copiar).
+   (vs Consensus | vs Summit, con sliders por segmento; AMZN: ±30 %, AWS ±40 %).
+   Hoy solo "vs Consensus". Si una base cae a la otra por falta de dato, **la nota lo dice** (AMZN cae
+   de Summit a BBG en silencio — no copiar).
 4. **Segment deep dives** (colapsable): pestaña por segmento con KPIs, "The business", margen en el
    tiempo, "What moves it", la definición verbatim de la nota de segmentos, estructura de costos
    ("what the company breaks out — and doesn't"), citas de llamadas y pie.
-- **Pie del panel:** obligatorio (AMZN no lo tiene a nivel de panel).
+- **No copiar de AMZN:** los desplegables de segfc/segoi sin `<optgroup>` (§17.2 #4).
 
 ### BL-SPLC Supply Chain (`supplychain`)
 
@@ -1222,12 +1477,15 @@ Solo si la empresa es sujeto en un export SPLC de proveedores; si no, ⏭️ (no
 1. KPIs (5): proveedores rastreados · instalaciones · % en EE. UU. · % en China · relación más grande.
 2. **Cadena 1** (la más estratégica): tarjetas por proveedor con barra de tamaño relativo, % del costo,
    dependencia; clic → modal con la lectura.
-3. **Cadena 2:** tabla Supplier | Relationship | <T> cost % | Their exposure | Category.
+3. **Cadena 2:** tabla Supplier | Relationship | <T> cost % | Their exposure | Category (con el
+   componente de tablas `.rs-ft` de §18 — AMZN usa `.ce-tbl`, no copiar).
 4. **"Who needs whom"** — barras de dependencia de ingreso del proveedor respecto a la empresa.
 5. Geografía: barras horizontales por país (% de instalaciones), con tabla.
 6. Pie: "Source: Bloomberg Supply Chain Analysis (SPLC), <TICKER> US Equity, as of <fecha>.
    Relationship sizes are Bloomberg estimates; directional, not audited."
 - **Primero la limitación**, si la cobertura es baja.
+- **Datos:** el lado de proveedores **no tiene cargador** (`load_splc.py` solo hace clientes): los
+  arreglos `A_SPLC_*` se compilan a mano desde el export, con `as of`.
 
 ---
 
@@ -1235,38 +1493,62 @@ Solo si la empresa es sujeto en un export SPLC de proveedores; si no, ⏭️ (no
 
 **Responde:** *¿cuánto vale, y contra qué?*
 
-**Referencia AMZN:** `amzn-histmult.js`, `valuationPeersBody` (`amzn.js` 4881), `amzn-target-multiple.js`,
-`amzn-sensitivity.js`. **Copias de referencia para otra empresa:** `sharkninja-histmult.js`,
-`sharkninja-peers.js`, `sharkninja-target-multiple.js`, `sharkninja-sensitivity.js` (SN ya resolvió
-varios defectos de AMZN). **Tipo:** a medida (copiar el módulo y cambiar datos).
+**Referencia AMZN:** `amzn-histmult.js` (montado por `valuationHistBody`), `valuationPeersBody` (en
+`amzn.js`), `amzn-target-multiple.js`, `amzn-sensitivity.js`. **Tipo:** a medida (copiar el módulo de
+AMZN y cambiar datos). **Base: AMZN, no SN** — los módulos de SN rompen la regla 10 (múltiplos BBG
+congelados en `sharkninja-histmult.js`, `MOCK_*` en `sharkninja-target-multiple.js`, múltiplos
+sembrados en `sharkninja-peers.js`). De SN solo se toman las dos piezas de la tabla §7.4.
+
+**Registro de un módulo nuevo** (en `<t>.js`): el `import`, el `<div class="ovt-subpane">` en
+`deepDiveHtml` y la rama en `aBuildSub` (`<t>HistMult.init(root)`, etc.).
+
+**Qué se publica hoy (14 oct 2026), para una empresa nueva:**
+
+| Unidad | Hoy | Por qué |
+|---|---|---|
+| VA-HIST | se construye y se aprueba con el aviso | tiene estructura útil y se revisa con `?mockmarket=1`; solo falta desplegar `get-market-history` |
+| VA-PEERS | se construye completa | `liveQuote` ya funciona |
+| VA-TM | **⛔, no se publica** | todo el panel depende de Summit en vivo (la valuación ya está en el MCP; falta que el portal la lea) |
+| VA-SENS | **⛔, no se publica** | depende de un snapshot Summit en vivo |
+
+AMZN muestra hoy VA-TM y VA-SENS con avisos de pendiente (el interruptor `TM_LIVE_READY = false` de
+`amzn-target-multiple.js` cambia todo el panel por `tmBlockedBody()`): es una **excepción de un perfil
+que ya existía**, no el modelo para una empresa nueva (regla 5).
 
 ### VA-HIST Historic Multiple (`histmult`, activa por defecto)
 
 - **Contenido:** título "Historic Multiple" + pista "P/E and EV/EBITDA, forward and trailing — click a
   chip to drop one" · base Forward NTM (por defecto) · Current FY · FY+1 · FY+2 · FY+3 · base Trailing
   LTM (por defecto) · Last FY · densidad Daily (por defecto) · Quarterly · Annual · rangos 1Y 2Y 3Y 5Y
-  All · slider de fechas · chips P/E fwd · P/E trail · EV/EBITDA fwd · EV/EBITDA trail (+ "Average over
-  the range" cuando hay una sola línea; + "Fiscal-year rolls") · gráfica de líneas (P/E eje derecho
-  interior, EV/EBITDA exterior; insignias con el valor actual) · lectura de rango (mín–máx, actual) ·
-  tabla "Detail" (colapsada, trimestral/anual, más nuevo primero) · pie con cómo se construye cada
-  línea y de dónde sale cada dato.
-- **Camino de datos — en tiempo real (decisión SAB, 2026-10-13):** precio diario, acciones y deuda
-  **en vivo** vía la función `get-market-history` (Massive); el denominador sale de archivos permitidos
-  por la regla 10: reportado (filings) para trailing y consenso BBG (`BBG_CONSENSUS.txt`) para forward.
-  Es el camino de AMZN.
-  - Mientras `get-market-history` no esté desplegada (solo San/Oscar pueden), la sub-tab se construye
-    y muestra **"Live data pending"** con qué falta. Para revisarla en local: `?mockmarket=1` (§7.3).
+  All · slider de fechas (arriba de los chips) · chips P/E fwd · P/E trail · EV/EBITDA fwd · EV/EBITDA
+  trail (+ "Average over the range" cuando hay una sola línea; + "Fiscal-year rolls") · botón "↕ Full
+  scale — reframe" (cuando se recortan picos) · gráfica de líneas (P/E eje derecho interior, EV/EBITDA
+  exterior; insignias con el valor actual) · lectura de rango (mín–máx, actual) · tabla "Detail"
+  (colapsada, trimestral/anual, más nuevo primero) · pie con cómo se construye cada línea y de dónde
+  sale cada dato. Estado inicial: NTM · LTM · Daily · All · tabla cerrada.
+- **Camino de datos — en tiempo real (decisión SAB, 2026-10-13), el de AMZN:**
+  - **En vivo** vía `get-market-history` (Massive), con `fetchPriceHistory(t, from, to)` y
+    `fetchRatiosHistory(t, 20)` de `api.js`: precio diario; por trimestre, acciones = `market_cap ÷
+    price` y deuda neta = `EV − market_cap`.
+  - **Denominadores** (archivo, permitidos): de `results-data/<t>.js` — EBITDA y EPS reales
+    (`views.y.metrics.ebitda.act`, `views.q.metrics.eps.act`) para trailing; consenso
+    `estMatrix.cons` para forward; fechas de reporte de `estMatrix.vintages[].lastActual`.
+  - **Regla:** el P/E forward necesita **EPS anual por snapshot** (`estMatrix.cons.y.eps`). AMZN lo
+    arma sumando 4 trimestres de un mismo snapshot y por eso su NTM sale vacío — no copiar eso.
   - **Rechazado:** el camino de SN (múltiplos diarios **congelados** de Bloomberg,
     `<ticker>-bbg-multiples.js`). Son números de mercado escritos en el código.
-  - **Regla:** el P/E forward necesita una fila de EPS **anual** por snapshot de BBG. Con los datos de
-    AMZN el P/E forward NTM queda vacío porque el EPS anual se arma sumando 4 trimestres de un mismo
-    snapshot, y eso casi nunca existe.
+- **Mientras `get-market-history` no esté desplegada** (solo San/Oscar pueden): la sub-tab se construye
+  y se aprueba revisándola con `?mockmarket=1` (§7.3); en el portal real muestra
+  `<div class="rs-noguide">⚑ Live data pending — price history service not deployed yet</div>`. Va a
+  Conexiones pendientes. **Un aviso por fuente que falte y con la razón real** (AMZN usa una clase gris
+  propia `.hm-notice`, dice siempre "not deployed yet" ante cualquier error, y si solo fallan los
+  `ratios` las líneas de EV/EBITDA desaparecen sin aviso — no copiar).
 - **Qué decide el analista:** base GAAP vs ajustada; qué horizontes tienen sentido (los que no tienen
-  dato se deshabilitan con la razón, como SN).
-- **Si falta el dato:** las líneas sin denominador no se dibujan; nunca un 0× inventado (agregar la
-  guarda de SN en `numerAt`).
-- **No copiar de AMZN:** año fiscal = calendario fijo en el código (si la empresa no cierra en
-  diciembre, cambiarlo); zoom vertical solo en el eje de P/E; tooltip de EV/EBITDA que dice "price ÷".
+  dato se deshabilitan con la razón — la pieza que se toma de `sharkninja-histmult.js`).
+- **Si falta el dato:** las líneas sin denominador no se dibujan; nunca un 0× inventado (AMZN ya trae
+  la guarda en `numerAt`).
+- **Al copiar, cambiar:** `'AMZN'` y `START` fijos; `fyEndDay` (asume año calendario — si la empresa no
+  cierra en diciembre, cambiarlo); el `<style>` en línea y los hex (`#8A93A0`, `#C0392B`) → tokens.
 
 ### VA-PEERS Peers (`peers`)
 
@@ -1279,9 +1561,8 @@ varios defectos de AMZN). **Tipo:** a medida (copiar el módulo y cambiar datos)
   de esos datos · `hl: true` solo para la empresa · `why` una oración para el tooltip. Los múltiplos,
   el market cap y el EV salen de `liveQuote` en vivo (OV-6).
 - **Excepción aceptada:** sin zoom ni ocultar-por-leyenda (los chips × cumplen esa función).
-- **Pie:** `.ov-foot` con la fuente y fecha de los denominadores y "price live" (AMZN solo tiene una
-  nota — usar pie).
-- **No copiar de AMZN:** el tinte naranja en la fila de la empresa.
+- **Pie:** `.ov-foot` con la fuente y fecha de los denominadores y "price live" (AMZN ya tiene pie).
+- **No copiar de AMZN:** el lede que dice "seeded approximations… not live"; los ejes fijos (OV-6).
 
 ### VA-TM Target Multiple / PEG (`targetmult`)
 
@@ -1298,26 +1579,37 @@ varios defectos de AMZN). **Tipo:** a medida (copiar el módulo y cambiar datos)
 - **Datos — todo del modelo Summit, en vivo (decisión SAB, 2026-10-13):** por año forward, una fila por
   snapshot con `rev`, `ebitda`, `earn`, `sh` (más el año previo para el PEG) **y la valuación de ese
   submit**: múltiplo objetivo (EV/EBITDA y P/E), precio objetivo y sus supuestos, tal como estaban en la
-  hoja Output del modelo en esa fecha. Se lee con `get-summit-data`, usando las etiquetas con rol
-  `valuation` del mapa F0-SM (§6.3). Ningún número va en el archivo.
-- **Estado al 14 oct 2026:** el MCP **todavía no trae** la valuación (Oscar está agregando esa tabla,
-  que en el Excel tiene otro formato). Mientras no llegue, el bloque A se construye con las filas del
-  modelo que sí existen (ingreso, EBITDA, utilidad, acciones) y la parte del múltiplo y del precio
-  objetivo muestra **"Live data pending — target multiple not yet in the Summit data feed"**.
-- **Regla clave:** **nunca un múltiplo ilustrativo ni elegido a mano.** En AMZN "Recorded multiple"
-  usaba múltiplos inventados (`MOCK_EV/MOCK_PE`); ya muestra el aviso de pendiente. El modo "Live" que
-  recalcula con el precio en vivo se mantiene como lectura secundaria, no como sustituto del múltiplo
-  del modelo.
+  hoja Output del modelo en esa fecha. La valuación sale de `fetchSummitValuation('<T>')` (campos fijos:
+  `method`, `multiple`, `target_year`, `multiple_basis`, `price_target`, `fair_value`, `upside_pct`,
+  `quality_flags`, más `current_price` y `wacc` por snapshot — §6.3); las filas del modelo, de
+  `fetchSummitFundamentals` con el mapa F0-SM. Ningún número va en el archivo. El eje X son los
+  snapshots; el año forward de trabajo = `target_year`. Un método con `quality_flags` se dibuja con la
+  advertencia, nunca como dato limpio.
+- **Estado al 14 oct 2026 → ⛔, no se publica.** La valuación **ya está en el MCP** (Oscar, 14 oct),
+  pero el portal todavía no la puede leer: `get-summit-data` y `fetchSummitValuation` están en el PR
+  #142 (abierto, sin desplegar). Toda la unidad (bloque A y PEG) depende de eso: queda ⛔ en la bitácora
+  con "espera despliegue de get-summit-data + PR del portal", sin botón ni panel. Mientras tanto, en
+  F0-SM ya se revisa la calidad de la valuación de la empresa.
+- **Regla clave:** **nunca un múltiplo ilustrativo ni elegido a mano.** AMZN conserva detrás de su
+  compuerta `SNAP_DATA`, `SNAP_2026`, `MOCK_*`, `REALIZED` (14.8× / 26.5×, ilustrativos) y múltiplos
+  Live por defecto 14 / 32 — nada de eso se copia. El modo "Live" que recalcula con el precio en vivo
+  se mantiene como lectura secundaria, no como sustituto del múltiplo del modelo.
 - **Qué decide el analista:** el año forward de trabajo (ciclo de escritorio 1 nov → 31 oct) y si un
   cambio de definición rompe la comparación. **Los múltiplos objetivo no los decide el analista aquí:**
   son los del modelo.
 - **Sin modelo Summit:** ⏭️ (no hay de dónde sacar el múltiplo objetivo).
-- **No copiar de AMZN:** el pie que dice "net debt from the live quote" aunque la llamada haya fallado
-  (SN rastrea la fuente real).
+- **Cuando se construya:** rastrear de dónde salió la deuda neta (`_ndSrc` de
+  `sharkninja-target-multiple.js`: deck · live · input) para que el pie nunca diga "from the live quote"
+  si la llamada falló (A23).
 
 ### VA-SENS Sensitivity Analysis (`sensitivity`)
 
-- **Contenido:** año de valuación (último año forward por defecto) · Assumptions: Summit model |
+- **Estado al 14 oct 2026 → ⛔, no se publica** (mismo motivo que VA-TM: depende de un snapshot Summit
+  en vivo). AMZN tiene hoy el modelo (`M`, `SHARES`) y los múltiplos de salida (12 / 30) escritos en el
+  código, sin aviso, y su pie dice "The exit multiple is your input" — lo contrario de esta ficha. La
+  ficha describe cómo se construye cuando exista el camino en vivo.
+- **Contenido:** año de valuación (el año forward que decida el analista; AMZN arranca en 2028 con
+  años 2026–2029) · Assumptions: Summit model |
   Street consensus · Exit multiple on EV/EBITDA | P/E · valor del múltiplo · ejes X e Y: cada uno elige
   un driver (crecimiento o margen de un segmento, o el múltiplo), "starts at", "step", reset · franja
   "Held at …" con todo lo que queda fijo · **rejilla 5×5** de precio implícito con ±% vs precio en vivo
@@ -1326,19 +1618,21 @@ varios defectos de AMZN). **Tipo:** a medida (copiar el módulo y cambiar datos)
   4 años · nota · pie.
 - **Datos:** de **un** snapshot Summit, **en vivo** (`get-summit-data` + mapa F0-SM): por año (base + 4)
   y por segmento `rev`, `op`, `eb`; más `corp`, `earn`, `tax`; acciones; el múltiplo de salida por
-  defecto = el múltiplo objetivo del modelo (rol `valuation`). Los drivers y su paso son configuración
-  de la vista (no datos) y sí van en el código. D&A por segmento = `eb − op`, fija. Sin camino en vivo:
-  "Live data pending".
-- **Regla clave:** el consenso (`CONS`) **no puede ser marcador**. En AMZN es inventado (⚑
-  "placeholder"); en una empresa nueva se conecta al export de BBG por segmento, o la opción Street
-  consensus no se muestra.
-- **Si la empresa no reporta utilidad por segmento:** camino SN (drivers de crecimiento por categoría
+  defecto = el múltiplo objetivo del modelo (`fetchSummitValuation`, §6.3). Los drivers y su paso son configuración
+  de la vista (no datos) y sí van en el código. D&A por segmento = `eb − op`, fija.
+- **Regla clave:** el consenso (`CONS`) **no puede ser marcador**. AMZN ya oculta el botón Street
+  (`consPlaceholder()`) y muestra "⚑ Live Street figures pending", pero `CONS.v` con números inventados
+  sigue en el código (A24, en parte): no copiarlo. En una empresa nueva se conecta al export de BBG por
+  segmento, o la opción Street consensus no existe.
+- **Pie:** "Live price and net debt via Massive" solo si la llamada respondió (A23); el múltiplo de
+  salida se describe como el del modelo.
+- **Si la empresa no reporta utilidad por segmento:** la estructura de `sharkninja-sensitivity.js`, sin sus datos (drivers de crecimiento por categoría
   + un margen consolidado).
 - **Qué decide el analista:** drivers, pasos y ejes por defecto. El múltiplo de salida arranca en el
   del modelo; el lector lo puede mover en la vista.
-- **No copiar de AMZN:** los inputs "starts at/step" que dejan de funcionar tras un reset; que el
-  EBITDA de Sensitivity (suma de segmentos) no cuadre con el de Target Multiple (consolidado) sin
-  decirlo — si difieren, el pie lo explica; X e Y con el mismo driver (bloquearlo).
+- **No copiar de AMZN:** que el EBITDA de Sensitivity (suma de segmentos) no cuadre con el de Target
+  Multiple (consolidado) sin decirlo — si difieren, el pie lo explica (A26). (Los inputs tras un reset y
+  el bloqueo de X = Y — `keepDistinct` — ya están arreglados en AMZN.)
 
 ---
 
@@ -1346,9 +1640,15 @@ varios defectos de AMZN). **Tipo:** a medida (copiar el módulo y cambiar datos)
 
 **Responde:** *¿quién la dirige y qué ha hecho?*
 
-**Referencia AMZN:** `AMZN_MGMT = makeManagement({...})` (`amzn.js` 4923), `amznOwnBody` 4987,
-`amznGovBody` 5002, `amznTrackBody` 5015; motor `js/overviews/management.js`. **Tipo:** motor
-(Executives & Board) + datos (los otros tres). Ninguna gráfica.
+**Referencia AMZN (`amzn.js`):** `AMZN_MGMT = makeManagement({...})`, `amznOwnBody`, `amznGovBody`,
+`amznTrackBody`; motor `js/overviews/management.js`. **Tipo:** motor (Executives & Board) + datos (los
+otros tres). Ninguna gráfica. Los datos van separados del código, como `sharkninja-mgmt-data.js`.
+
+**Cableado (fácil de olvidar):**
+- `deepDiveInit` llama `<T>_MGMT.init(root)` (sin eso, el modal de la bio no abre);
+- el modal de Track Record usa `data-detail="exec:<id>"`: agregar la rama `exec:` en `resolve()` de
+  `wireModal`;
+- la clave de la sub-tab es **`team`** (como AMZN), no `execboard` (SN) — §5.
 
 ### MG-TEAM Executives & Board (`team`, activa por defecto)
 
@@ -1357,17 +1657,17 @@ varios defectos de AMZN). **Tipo:** a medida (copiar el módulo y cambiar datos)
   · "Full bio ›"; el CEO con `lead:true`, ancho completo) · modal con la bio completa · franja "Board
   of Directors — <boardNote>" (nombre · Independent/Insider · rol; presidente con franja; quien también
   es ejecutivo atenuado "also management") · rejilla "Governance & compensation" (3 celdas) · pie.
-- **Datos:** `execs[{id, name, title, since?, line, bio?, lead?, img?}]` (`bio` es **texto plano** —
-  el HTML se ve literal) · `board[{name, independent, role, chair?, dual?}]` · `boardNote` · `gov[{k, v,
-  d?}]` · `foot` · `brand: SUMMIT_CAT[0]` (token Summit, no color de la empresa).
+- **Datos:** `execs[{id, name, title, since?, line, bio?, lead?, img?}]` (`bio` y `line` son **texto
+  plano** — pasan por `mEsc` y el HTML se vería literal) · `board[{name, independent, role, chair?,
+  dual?}]` · `boardNote` · `gov[{k, v, d?}]` · `foot` · `brand: SUMMIT_CAT[0]` (token Summit, no color
+  de la empresa).
 - **Fuentes:** página oficial de liderazgo (ejecutivos), proxy DEF 14A (consejo, comités). Fotos
   `img/leadership/<ticker>-<nombre>.jpg` si existen.
 - **Qué decide el analista:** qué ejecutivos (AMZN: los 27 del S-team + fundador; para otra empresa,
   el equipo que la empresa publica) y si el consejo va completo o un subconjunto (si es subconjunto,
   decirlo correctamente).
-- **No copiar de AMZN:** "full roster in Pillars ▸ Management" (falso: Pillars muestra tenedores, no
-  el consejo); el modal de bio que no se cierra al cambiar de sub-tab (pedir el arreglo en
-  `management.js` o anotarlo como excepción).
+- (Ya arreglados en AMZN, se copian bien: el `boardNote` correcto y el cierre del modal al cambiar de
+  sub-tab.)
 
 ### MG-OWN Ownership (`ownership`)
 
@@ -1376,21 +1676,22 @@ varios defectos de AMZN). **Tipo:** a medida (copiar el módulo y cambiar datos)
   fundador/insiders, institucionales) · "Capital returned to shareholders" (nota) · "Executives &
   insider activity — live from Fiscal.ai" + el hueco `<div id="dd-mgmt-slot">` (se llena solo) · pie.
 - **Fuentes:** proxy (beneficial ownership), 10-K (SBC, recompras), Fiscal.ai (tabla en vivo). **Cada
-  cifra con su documento y fecha en el pie** (AMZN solo dice "approximate" — no copiar).
+  cifra con su documento y fecha en el pie.**
 - **Si la empresa no está en el plan de Fiscal.ai:** el hueco dice "not available on the current
-  Fiscal.ai plan" — correcto, se deja.
-- **Conocido:** la primera sincronización de una empresa nueva puede quedarse en "Pulling management
-  data…" hasta recargar (defecto de `companies.js`) — revisarlo en §16 y anotarlo.
+  Fiscal.ai plan" — correcto, se deja. (La primera sincronización que se quedaba en "Pulling…" ya está
+  arreglada en `companies.js`; igual se revisa en §16.)
 
 ### MG-GOV Governance & SBC (`governance`)
 
 - **Contenido:** lede (~1–2 oraciones) · KPIs (4: estructura de voto, independencia del consejo,
-  SBC $ y % de ingreso, recompras/dividendo) · `.ov-sec-h` (AMZN no lo tiene) + 4 cajas (clase de
-  acciones, independencia, comités, SBC vs recompras) · nota que apunta a Bottom Line ▸ General ▸ SBC
-  para la gráfica (**aquí no se re-grafica**) · pie.
-- **Regla:** no repetir KPIs de Ownership. Si una cifra aparece en ambos, va en uno solo.
-- **Estilo:** las cajas (`ewBoxes`) dependen de CSS que AMZN inyecta en otra pestaña; en una empresa
-  nueva usar `.sg-cards` o pedir que el estilo pase a la hoja de estilos.
+  SBC $ y % de ingreso, recompras/dividendo) · `.ov-sec-h` "How <Empresa> is governed" + 4 cajas
+  (clase de acciones, independencia, comités, SBC vs recompras) · nota que apunta a Bottom Line ▸
+  General ▸ SBC para la gráfica (**aquí no se re-grafica**) · pie.
+- **Regla:** no repetir KPIs de Ownership. Si una cifra aparece en ambos, va en uno solo (AMZN repite 3
+  de 4 — no copiar).
+- **Estilo (A29, abierto):** las cajas (`ewBoxes`, clase `.ew-box`) dependen del CSS de `EW_CSS`, que
+  AMZN solo inyecta en Bottom Line y Leases; en una empresa nueva usar `.sg-cards` o subir ese estilo a
+  la hoja de estilos (y decirlo en el PR).
 
 ### MG-TRACK Track Record (`track`)
 
@@ -1399,10 +1700,9 @@ varios defectos de AMZN). **Tipo:** a medida (copiar el módulo y cambiar datos)
   <Empresa> since <año de ingreso>" · "**At <Empresa>:** qué construyó" · "**Context:** trayectoria" ·
   "Full track record ›" → modal con el detalle y "Net read" · recuadro "The bench, in one line" · pie.
 - **Escala:** `green` "Value creator" · `amber` "Mixed / unproven" (y un `red` si el analista lo
-  quiere). Colores con los tokens semánticos (`SUMMIT_POS`…), no hex sueltos.
-- **Regla:** `since` = **año de ingreso a la empresa** (AMZN mezcla ingreso y año en el cargo — no
-  copiar). El campo que el código lee se llama como la empresa (`m.amzn`): renombrarlo junto con su
-  etiqueta.
+  quiere). Colores con los tokens semánticos (`SUMMIT_POS`…), no los hex de AMZN (`#06965A`, `#B7791F`).
+- **Regla:** `since` = **año de ingreso a la empresa** (AMZN ya lo corrigió). El campo que el código lee
+  se llama como la empresa (`m.amzn`, A28 en parte): renombrarlo junto con su etiqueta.
 - **Qué decide el analista (todo):** qué líderes, la calificación de cada uno, el "Net read" y la frase
   del recuadro. **Claude propone, el analista califica.** El pie lo dice: "Ratings are an editorial
   read, not a Summit output."
@@ -1414,7 +1714,7 @@ varios defectos de AMZN). **Tipo:** a medida (copiar el módulo y cambiar datos)
 **Responde:** *¿qué de esta empresa importa y no cabe en ninguna otra pestaña?* (Decisión SAB,
 2026-10-13: Misc entra al alcance como **el lugar** de lo específico de cada empresa.)
 
-**Referencia AMZN:** panel `data-dd="misc"` (`amzn.js` ~5547) con 3 sub-tabs: *Capex & Depreciation*
+**Referencia AMZN:** panel `data-dd="misc"` de `deepDiveHtml` con 3 sub-tabs: *Capex & Depreciation*
 (`capex`) · *M&A* (`manda`) · *Other Analysis* (`other`). Montaje perezoso en `aBuildSub` (`dd==='misc'`).
 **Tipo:** a medida.
 
@@ -1428,10 +1728,15 @@ varios defectos de AMZN). **Tipo:** a medida (copiar el módulo y cambiar datos)
   su propia unidad** (`MISC-<clave>`, p. ej. `MISC-capex`), con su ficha escrita en la bitácora antes de
   construirla (Responde · Contenido · Fuentes · Verificación). Si la empresa no tiene nada que poner aquí,
   la sección no se crea y `MISC` queda ⏭️ con razón.
-- **Reglas:** todas las de la Parte III (gráficas, tablas, pie, regla 10).
+- **Reglas:** todas las de la Parte III (gráficas, tablas, **un pie por sub-tab**, regla 10).
+- **Montaje:** como cualquier sub-tab (§7.1): botón + panel en `deepDiveHtml` y, si tiene gráficas,
+  su rama en `aBuildSub` (`dd==='misc'`). En AMZN solo `capex` construye gráficas al entrar
+  (`aBuildCapex`, `aBuildSegCapDa`, `aBuildLeases`); `manda` y `other` son HTML estático.
 - **Qué decide el analista:** si la sección existe, qué sub-tabs tiene y en qué orden.
-- **No copiar de AMZN:** el estilo de pastillas `.acx-tog` vive aquí y Bottom Line depende de él
-  (A10): el estilo va a la hoja de estilos.
+- **No copiar de AMZN:** la sub-tab de capex se arma con `bottomlineCapexBody()+segCapDaBody()+aLeasesBody()`
+  y solo Leases tiene `.ov-foot`; `bottomlineCapexBody` cita "DCF datacenter build assumptions"
+  (números Summit en código, regla 10). El estilo `.acx-tog` ya está en `css/overview.css`: borrar la
+  copia en línea, no traerla.
 
 ## §16 Cierre — auditoría final y entrega (`F-FINAL`)
 
@@ -1442,7 +1747,8 @@ varios defectos de AMZN). **Tipo:** a medida (copiar el módulo y cambiar datos)
    - gráficas sin tabla; colores con `NaN`; paneles sin pie; paneles casi vacíos (< 400 caracteres);
    - `<style>` en línea nuevos (meta: ninguno nuevo; los que traiga el código copiado se listan).
 2. **Portal real** (localhost con sesión): cabecera, precio en vivo, botones IR/EDGAR, tabla de
-   Fiscal.ai, Notes guardando en Supabase. Consola sin errores.
+   Fiscal.ai, Notes guardando en Supabase. Consola sin errores. Cada aviso "⚑ Live data pending" que
+   se vea tiene su fila en Conexiones pendientes, y viceversa.
 3. **Lista de §17.4 por cada gráfica**, PASS/FAIL.
 4. **Modo B:** conciliación del mapa de reubicación (§4.2 B3).
 5. **Bitácora:** todas las unidades en ✅ / ⏭️ / ⛔ con razón; excepciones listadas; resumen final.
@@ -1460,8 +1766,9 @@ varios defectos de AMZN). **Tipo:** a medida (copiar el módulo y cambiar datos)
 
 1. ¿Es una métrica en el tiempo contra expectativas? → **motor de Results** (dataset, no canvas).
 2. ¿Es la sección Top Line? → **motor de segmentos**.
-3. ¿Ya existe en AMZN (o en SN/DHR, que la extrajeron)? → **copiar ese código** y cambiar los datos;
-   "igual que Amazon" significa extraer el código de Amazon, no reimplementarlo.
+3. ¿Ya existe en AMZN? → **copiar ese código** (tabla §7.4) y cambiar los datos; "igual que Amazon"
+   significa extraer el código de Amazon, no reimplementarlo. Las copias de SN/DHR son más viejas: no
+   se usan como base.
 4. Solo si es otra cosa (cascada, mapa, matriz, red) se escribe un canvas, y aun así cumple 17.2.
 
 ### 17.2 Las seis obligatorias (toda gráfica del Deep Dive)
@@ -1527,7 +1834,7 @@ significado de un número van a la izquierda; los que cambian qué números se v
 | Overview ▸ Key Facts | No | solo valores |
 | Overview ▸ Descripción | **Sí** | 2–4 oraciones, ~50–80 palabras |
 | Overview ▸ Cuadrante | Sí, mínima | ≤ 30 palabras por celda |
-| Overview ▸ colapsables (4–7) | No hay párrafo de introducción | una leyenda de una línea |
+| Overview ▸ colapsables (4–7) | No hay párrafo de introducción | una leyenda de una línea arriba + a lo sumo una de cierre (OV-4 y OV-6 llevan las dos) |
 | Overview ▸ definición de segmento | Sí | ~40–60 palabras, cualitativo, **sin números** (los números en "The numbers") |
 | Overview ▸ producto | Sí, mínima | familia ≤ 6 palabras; producto 1–3 líneas |
 | Overview ▸ Timeline | Sí, mínima | una línea visible; profundidad en viñetas dentro de "Read more" |
@@ -1585,25 +1892,41 @@ Regla de oro 10, en detalle (decisión SAB, 2026-10-13).
 autoauditoría), **nunca para copiar** sus números a un archivo del repo. El navegador tampoco llama al
 MCP: lo hace `get-summit-data` del lado del servidor.
 
-**Cuando el camino en vivo todavía no existe** (función sin desplegar, o el MCP sin ese dato):
-- La unidad **se construye igual**, con todo lo que no depende de ese dato.
-- La parte que falta muestra la bandera ámbar de §17.2 #6 con este texto, en inglés:
-  **"⚑ Live data pending — <qué falta>"** (p. ej. "— Summit model feed not connected yet",
-  "— price history service not deployed", "— target multiple not yet in the Summit data feed").
-- **No se copian números "mientras tanto"**: no hay nada que migrar después, solo conectar.
-- La unidad se aprueba con esa parte en pendiente; en la bitácora queda ✅ con la nota "pendiente en
-  vivo: <qué>" y una fila en **Conexiones pendientes** (sección de la bitácora), que dice qué bloque, qué
-  función o dato falta y quién lo destraba (San: desplegar; Oscar: datos en el MCP).
-- Cuando se destraba, se conecta, se vuelve a mostrar (👀) y se cierra la fila.
+**Cuando el camino en vivo todavía no existe** (función sin desplegar, o el MCP sin ese dato), hay
+dos casos. **No se copian números "mientras tanto"** en ninguno: no hay nada que migrar después, solo
+conectar.
 
-**Estado al 14 oct 2026:** funciona `liveQuote` (vía `covered-calls-massive`, ya desplegada). Pendientes:
-`get-market-history` y `get-quote` (desplegar, San), `get-summit-data` (PR #142, San), la valuación del
-modelo en el MCP (Oscar), y el PR del portal que hace que los motores lean Summit en vivo.
+1. **La unidad tiene contenido útil sin ese dato** (p. ej. Results sin la serie Summit, Historic
+   Multiple antes del despliegue, Bottom Line sin acciones del modelo) → **se construye y se aprueba**:
+   - en un **panel propio** (código de la empresa), la parte que falta muestra
+     `<div class="rs-noguide">⚑ Live data pending — <qué falta></div>` — la clase `.rs-noguide` ya
+     existe (`css/results.css`, pastilla ámbar); frase corta en la pastilla, la explicación va al pie.
+     Ejemplos de texto: "— Summit model feed not connected yet", "— price history service not
+     deployed yet", "— target multiple not yet in the Summit data feed";
+   - en un **motor compartido** (`results.js`, `segments.js`) **no se toca el motor** en el PR de la
+     empresa: hoy esos motores no saben mostrar el aviso, así que la serie simplemente no aparece y el
+     pie (`source`) termina con "Summit model series: live data pending — <qué falta>.";
+   - en la bitácora queda ✅ con la nota "pendiente en vivo: <qué>" y una fila en **Conexiones
+     pendientes**, que dice qué bloque, qué función o dato falta y quién lo destraba (San: desplegar;
+     Oscar: datos en el MCP; el PR del portal: que los motores lean Summit).
+   - Cuando se destraba, se conecta, se vuelve a mostrar (👀) y se cierra la fila.
+2. **La unidad depende por completo de ese dato** (para una empresa nueva hoy: **EV-EST, VA-TM,
+   VA-SENS**) → **⛔ y no se publica** (ni botón ni panel; regla 5). Se anota en Bloqueos con qué falta
+   y quién lo destraba, y se construye cuando exista. Los paneles de pendiente que AMZN muestra hoy en
+   Target Multiple y Sensitivity son la excepción de un perfil que ya existía, no el modelo.
+
+**Estado al 14 oct 2026:** funciona `liveQuote` (vía `covered-calls-massive`, ya desplegada). **No
+existen en `main`:** `get-summit-data` y los `fetchSummit*` de `api.js` (PR #142, abierto; luego San la
+despliega con sus secrets), la carpeta `js/summit-map/` (la crea la primera empresa; nadie la importa
+todavía), y la lectura de Summit en `results.js` / `segments.js` (PR del portal, después del
+despliegue). Sin desplegar: `get-market-history` y `get-quote` (San). La valuación del modelo **ya está
+en el MCP** (`get_valuation_history`, 14 oct 2026); el PR #142 ya trae su ruta (`fetchSummitValuation`).
 
 ## §21 Color
 
-- **El perfil no elige colores.** No se define `--brand` en la raíz del perfil; el color de la empresa
-  aparece **solo en su logo**.
+- **El perfil no elige colores.** No se define `--brand` con el color de la empresa; el color de la
+  empresa aparece **solo en su logo**. Lo que AMZN pone en su raíz (`--brand-2:var(--steel)`,
+  `--brand-soft:rgba(37,99,235,0.08)`) son tokens neutros de Summit y **se copian tal cual**.
 - **Series:** `SUMMIT_CAT` de `js/viz-palette.js`, en orden fijo, sin ciclar; el color sigue a la
   entidad (ocultar una serie no repinta las demás); más de 8 → "Other".
 - **Fuentes de dato:** Actual = navy · Summit = azul · Consensus = gris — siempre las mismas.
@@ -1612,12 +1935,13 @@ modelo en el MCP (Oscar), y el PR del portal que hace que los motores lean Summi
 - Los slots 3–5 tienen poco contraste: la gráfica que los use necesita etiquetas o tabla (todas la
   tienen por §17.2).
 - Dispersiones y mapas: máximo 3 slots (`SUMMIT_CAT3`).
-- **Nada de hex sueltos** en código nuevo. Los restos naranjas de Amazon (`#FF9900`, `#FFB84D`,
-  `#C7761A`, `rgba(255,153,0,…)`) no se copian.
+- **Nada de hex sueltos** en código nuevo. AMZN todavía trae algunos (`GREEN`/`GRAY` del Overview, la
+  escala de Track Record, los de `amzn-histmult.js`): en la copia se cambian por tokens.
 
 ## §22 Pie de fuentes
 
-Cada panel (cada sub-tab, y cada colapsable con contenido propio) termina con un `.ov-foot`:
+Cada panel del Deep Dive (cada sub-tab, y cada colapsable con contenido propio dentro de ella) termina
+con un `.ov-foot`. **El Overview lleva un solo pie** (OV-F); sus colapsables 4–7 no llevan pie propio.
 
 ```
 Sources — <documento> (<nota / sección>, <fecha o accession>); <documento 2> (…);
@@ -1631,14 +1955,18 @@ Sources — <documento> (<nota / sección>, <fecha o accession>); <documento 2> 
 ## §23 Modales, colapsables y pestañas
 
 - Modal: uno por perfil, **subido a `#co-detailview`** (un panel oculto se tragaría un modal anidado);
-  se cierra con ×, clic fuera, Esc **y al cambiar de pestaña o sub-tab**.
-- Disparador: `.ov-clickable[data-detail="<tipo>:<id>"]` + `resolve()` en `wireModal`.
+  se cierra con ×, clic fuera, Esc **y al cambiar de pestaña o sub-tab**. Excepción conocida: el modal
+  de bio de `management.js` (`.mg2-modal`) es propio del motor y no se sube; se deja así.
+- Disparador: `.ov-clickable[data-detail="<tipo>:<id>"]` + `resolve()` en `wireModal` (cada tipo nuevo
+  — `prod:`, `hist:`, `exec:`… — necesita su rama en `resolve()`).
 - Colapsables: `.ov-collap` en el Overview; `.rs-collap` en el Deep Dive. Una gráfica dentro de un
   colapsable se construye **al abrirlo** (Chart.js no dibuja oculto).
-- ⚠ En AMZN un manejador global de `.rs-collap-h` choca con los manejadores propios de algunos
-  paneles (clic que abre y cierra a la vez). En código nuevo, usar la marca `data-selfwired` de DHR
-  (`dhr.js` ~873) para excluir los colapsables que se manejan solos.
-- Pestañas: el cambio se acota al panel (`:scope >`); el estado (sub-tab activa) se conserva al volver.
+- ⚠ `deepDiveInit` tiene un manejador global de `.rs-collap-h`. Los encabezados que se abren solos
+  (motores y módulos de Valuation) se excluyen con la lista `SELF` (`[data-selfwired], [data-hmtblb],
+  [data-tmtblb], …`); si no, el clic abre y cierra a la vez. **Todo módulo nuevo con su propio
+  colapsable** pone `data-selfwired="1"` en el encabezado, o agrega su atributo a `SELF`.
+- Pestañas: el cambio se acota al panel (`:scope >`) y a la raíz `.ov-<t>-dd`; nunca
+  `document.querySelector`. El estado (sub-tab activa) se conserva al volver.
 - Sin `<style>` en línea nuevo; si falta un estilo, va a una hoja de estilos y se dice en el PR.
 - `esc()` de `amzn.js` **no** escapa `&`; el `mEsc` de `management.js` sí. Saber qué función recibe
   cada texto para no ver `&amp;` en pantalla.
@@ -1647,7 +1975,7 @@ Sources — <documento> (<nota / sección>, <fecha o accession>); <documento 2> 
 
 **Qué es.** El registro vivo de los **hilos** que el equipo sigue llamada a llamada: tendencias
 confirmadas, promesas de management por reconciliar y cosas a vigilar. Vive en Evolution ▸ Earnings ▸
-Notes y también alimenta Top Line ▸ Segments ▸ "What management has said".
+Notes; su **semilla** también alimenta Top Line ▸ Segments ▸ "What management has said".
 
 **Cómo se organiza.**
 ```
@@ -1675,14 +2003,17 @@ no cambia nada.
 - Sin opinión de inversión: Notes registra lo que se dijo y lo que pasó, no lo que pensamos.
 - **Promise — reconcile** se usa cuando management prometió algo con fecha o cifra; cuando se cumple o
   falla, se agrega la nota que lo reconcilia y se cierra la ventana ("until").
-- No duplicar: si ya existe la misma nota en ese sub-tema y trimestre, no se agrega (el portal avisa,
-  salvo en el editor en línea — revisar a mano ahí).
+- No duplicar: si ya existe la misma nota en ese sub-tema y trimestre, el portal la bloquea y avisa
+  (también en el editor en línea, `ceNoteDup`).
 - Borrar una nota es **inmediato y sin confirmación**: hacerlo solo si está mal.
 
 **Limitaciones conocidas (hasta que se arreglen):**
-- Un **tema nuevo** creado desde el portal no queda guardado en el orden de temas y puede no verse
-  tras recargar. **Regla:** los temas (nivel superior) se definen en la semilla durante la unidad
-  `EV-NOTES`; en el portal solo se crean sub-temas y notas.
+- Un **tema nuevo sin sub-temas** creado desde el portal no se guarda (un tema reaparece tras recargar
+  solo si tiene al menos un sub-tema — `amznSyncSegOrder`, que la copia debe traer). **Regla:** los
+  temas (nivel superior) se definen en la semilla durante la unidad `EV-NOTES`; en el portal, crear un
+  tema solo junto con su primer sub-tema.
+- Top Line ▸ Segments ▸ "What management has said" lee la **semilla**, no lo guardado en Supabase:
+  lo que se agrega en Notes no aparece ahí (§10).
 - El estado del sub-tema (`trend/promise/watch`) y el `why` no se editan desde la interfaz: se definen
   en la semilla antes del primer guardado (después, pedirlo a San/Oscar).
 - Último en guardar gana: si dos personas editan a la vez, uno pisa al otro. Coordinar.
@@ -1699,51 +2030,48 @@ siembra un marcador).
 
 ## Anexo A — Defectos conocidos de AMZN: no copiar
 
-Encontrados en la auditoría del 13 oct 2026. Al copiar código de AMZN, **corregir en la copia**; el
-arreglo en AMZN mismo va en su propio PR, no en el de la empresa nueva.
+Encontrados en la auditoría del 13 oct 2026; estado verificado contra `main` @ `3667342` (14 oct 2026,
+después de los PRs #140 y #141). Al copiar código de AMZN, **corregir en la copia lo que siga abierto**;
+el arreglo en AMZN mismo va en su propio PR, no en el de la empresa nueva.
 
-**Estado al 14 oct 2026** (según lo que hicieron los PRs; no se volvió a auditar línea por línea):
-- **Ya arreglados en `main`** — copiar de AMZN ya trae el arreglo: A2, A4–A15, A17, A19, A21, A22
-  (ahora muestra el aviso de pendiente), A24 (el consenso inventado se retiró), A25, A27–A33. A1 en parte.
-- **Siguen abiertos** — corregir en la copia: A1 (resto de `<style>` en línea), A3, A16, A18, A20, A23,
-  A26, A34. La mayoría se cierra con el PR del portal que conecte Valuation y Summit en vivo.
+Estado: ✅ arreglado en `main` (copiar de AMZN ya lo trae) · ◐ en parte · ❌ abierto (corregir en la copia).
 
-| # | Dónde (AMZN) | Defecto | En la copia |
-|---|---|---|---|
-| A1 | Overview `stdOverviewBody` 552–585 | `<style>` en línea que pisa la hoja de estilos (acento hex, `.ov-foot` a 10px) | usar las clases de `css/overview.css` |
-| A2 | Overview Key Facts 506 | market cap sin fecha; si falla dice "live" | semilla fechada como respaldo |
-| A3 | Overview peers 288 | múltiplos sembrados (y AMZN con P/E trailing = forward, 27.8) | denominadores + precio en vivo (OV-6) |
-| A4 | Overview/Peers 327, 337, 393 | naranjas de Amazon | tokens Summit |
-| A5 | Bottom Line `aStd*` 3110 / 2987 | arrastre vertical truena (`onY=null`) | pasar el callback de Y |
-| A6 | Bottom Line margins 3615 | consenso repite el último real | consenso desde el primer estimado |
-| A7 | Bottom Line margins | "Net income — Summit" = earnings ajustado | etiquetar la base real |
-| A8 | Bottom Line segfc 4270 | trimestral + EBITDA dibuja anual | rama trimestral propia |
-| A9 | Bottom Line SBC 3499 | leyenda no clicable; eje de acciones fijo | leyenda clicable; rango del dato |
-| A10 | Bottom Line `.acx-tog` 4580 | estilo de pastillas inyectado desde Misc ▸ Capex | traer el estilo (como `dhr-chartkit.js`) |
-| A11 | Bottom Line General/Segments | sin pie a nivel de panel | pie obligatorio |
-| A12 | Bottom Line | años fijos en el código (`'FY23'…`, `i<3`) | derivar del dato |
-| A13 | Top Line | colores se re-asignan al ocultar una serie | color por entidad |
-| A14 | Top Line / varios `.rs-collap-h` 5892 | doble manejador: el clic abre y cierra | `data-selfwired` |
-| A15 | Top Line KPIs | paráfrasis con chip FILING | FILING solo verbatim |
-| A16 | Results anual | sin utilidad operativa por segmento | agregarla en `y` |
-| A17 | Earnings Setup | "(Summit pending)", Summit de snapshot viejo, "AMZN" fijo | textos y datos de la empresa |
-| A18 | Earnings `ceGuessTarget` 2542 | regex de Amazon | reescribir |
-| A19 | Notes | tema nuevo no persiste; editor en línea sin chequeo de duplicados | temas en semilla; §24 |
-| A20 | Historic Multiple | P/E forward vacío (EPS anual armado de trimestres); `get-market-history` sin desplegar | fila de EPS anual por snapshot; en vivo o "Live data pending" (nunca BBG congelado) |
-| A21 | Historic Multiple 363 | 0× inventado si falta deuda/acciones | guarda de SN |
-| A22 | Target Multiple | modo por defecto con múltiplos inventados (`MOCK_*`) | múltiplo del modelo en vivo o "Live data pending" |
-| A23 | Target Multiple 797 | pie afirma deuda "from the live quote" aunque falle | rastrear la fuente |
-| A24 | Sensitivity | consenso inventado (`CONS` placeholder) | BBG por segmento o no mostrar |
-| A25 | Sensitivity 568 | inputs de rango dejan de funcionar tras un reset | re-enlazar tras reset |
-| A26 | Sensitivity vs Target Multiple | EBITDA distinto (segmentos vs consolidado) sin decirlo | conciliar o explicar en el pie |
-| A27 | Management `management.js` | modal no se cierra al cambiar de sub-tab; escuchas que se acumulan | arreglar en el motor (PR aparte) o excepción |
-| A28 | Management Track Record | `since` mezcla ingreso y cargo; campo `amzn` | año de ingreso; renombrar |
-| A29 | Management `ewBoxes` | estilo solo existe en otra pestaña | `.sg-cards` o hoja de estilos |
-| A30 | Management boardNote | "full roster in Pillars" (falso) | texto correcto |
-| A31 | Ownership | cifras "approximate" sin documento | fuente y fecha |
-| A32 | Peers | sin `.ov-foot` | pie |
-| A33 | `companies.js` 228/306 | primera sincronización de Fiscal.ai se queda "Pulling…" | revisar en §16; arreglo en PR aparte |
-| A34 | Results, Estimates, Bottom Line, Setup, Target Multiple, Sensitivity | números Summit copiados al repo (`summit:[]`, `evolution`, `A_OPEX`, `A_SUMMIT_SHARES`…) | en vivo con `get-summit-data` (regla 10) |
+| # | Dónde (AMZN) | Defecto | Estado | En la copia |
+|---|---|---|---|---|
+| A1 | Overview `stdOverviewBody`, `stdPeerScatter` | `<style>` en línea que pisa la hoja de estilos | ❌ | borrar; subir antes a `css/overview.css` las clases del mapa de peers (§8) |
+| A2 | Overview `aLiveOne` / `aMcCell` | market cap sin fecha; si falla dice "live" | ✅ | sin semilla: "loading live quote…" / "live quote unavailable" |
+| A3 | Overview `A_PEERS` | múltiplos y `mc` sembrados (y AMZN con P/E trailing = forward, 27.8) | ❌ | denominadores + `liveQuote` (OV-6) |
+| A4 | Overview / Peers | naranjas de Amazon | ✅ | — |
+| A5 | Bottom Line `aStd*` | arrastre vertical truena (`onY=null`) | ✅ | — |
+| A6 | Bottom Line margins | consenso repite el último real | ✅ | — |
+| A7 | Bottom Line margins | "Net income — Summit" = earnings ajustado | ✅ | — ("Model earnings (adj.)") |
+| A8 | Bottom Line segfc | trimestral + EBITDA dibuja anual | ✅ | — |
+| A9 | Bottom Line SBC | leyenda no clicable; eje de acciones fijo | ✅ | (sigue: eje a la izquierda — ponerlo a la derecha) |
+| A10 | `.acx-tog` | estilo de pastillas inyectado desde Misc | ✅ | ya está en `css/overview.css`; borrar la copia en línea de `bottomlineCapexBody` |
+| A11 | Bottom Line General/Segments | sin pie a nivel de panel | ✅ | — (`aBlFootGeneral`, `aBlFootSegments`) |
+| A12 | Bottom Line | años y etiquetas tecleados | ◐ | derivar del dato (`'$356B · 49.7%'`, `EW_LABS`, chips, años del pie) |
+| A13 | Top Line | colores se re-asignan al ocultar una serie | ✅ | — |
+| A14 | `.rs-collap-h` | doble manejador: el clic abre y cierra | ✅ | lista `SELF` / `data-selfwired` (§23) |
+| A15 | Top Line KPIs | paráfrasis con chip FILING | ✅ | FILING solo con `filingWhere` y verbatim |
+| A16 | Results anual | sin utilidad operativa por segmento | ❌ | agregarla en `y` |
+| A17 | Earnings Setup | "(Summit pending)" · Summit de snapshot viejo · "AMZN" fijo · clave huérfana "Advertising" | ◐ | quitado el título; lo demás sigue — Summit no se teclea (§12) |
+| A18 | Earnings `ceGuessTarget` | regex de Amazon | ❌ | reescribir |
+| A19 | Notes | tema nuevo no persiste; sin chequeo de duplicados | ✅ | traer `amznSyncSegOrder` y `ceNoteDup` (la copia de SN no los tiene) |
+| A20 | Historic Multiple | P/E forward vacío (EPS anual armado de trimestres); sin desplegar | ❌ | EPS anual por snapshot; en vivo o aviso (§14) |
+| A21 | Historic Multiple `numerAt` | 0× inventado si falta deuda/acciones | ✅ | — |
+| A22 | Target Multiple | múltiplos inventados por defecto | ✅ (compuerta `TM_LIVE_READY`) | empresa nueva: ⛔ hasta tener Summit en vivo |
+| A23 | Target Multiple / Sensitivity | pie afirma deuda "from the live quote / via Massive" aunque falle | ❌ | rastrear la fuente (`_ndSrc` de SN) |
+| A24 | Sensitivity | consenso inventado (`CONS`) | ◐ | ya no se muestra, pero `CONS.v` sigue en el código: no copiarlo |
+| A25 | Sensitivity | inputs de rango dejan de funcionar tras un reset | ✅ | — |
+| A26 | Sensitivity vs Target Multiple | EBITDA distinto (segmentos vs consolidado) sin decirlo | ❌ | conciliar o explicar en el pie |
+| A27 | `management.js` | modal no se cierra al cambiar de sub-tab | ✅ | — |
+| A28 | Track Record | `since` mezcla ingreso y cargo; campo `amzn` | ◐ | `since` ya es ingreso; renombrar el campo |
+| A29 | Management `ewBoxes` | el CSS `.ew-box` solo vive en `EW_CSS` (Bottom Line / Leases) | ❌ | `.sg-cards` o subir el estilo |
+| A30 | Management boardNote | "full roster in Pillars" (falso) | ✅ | — |
+| A31 | Ownership | cifras "approximate" sin documento | ✅ | — |
+| A32 | Peers | sin `.ov-foot` | ✅ | — |
+| A33 | `companies.js` | primera sincronización de Fiscal.ai se queda "Pulling…" | ✅ | — |
+| A34 | Results, Top Line, Estimates, Setup, Bottom Line, Target Multiple, Sensitivity, Misc | números Summit copiados al repo (`summit:[]`, `estMatrix.summit`, `evolution`, `setup.us`, `segments-data summit:{}`, `A_SUMMIT_SHARES`, `SNAP_DATA`, `M`, "DCF datacenter") | ❌ | en vivo con `get-summit-data` o ausente con aviso (regla 10, §20b) |
 
 ## Anexo B — Matriz de fuentes por pieza
 
@@ -1754,13 +2082,13 @@ arreglo en AMZN mismo va en su propio PR, no en el de la empresa nueva.
 | How it makes money | 10-K nota de segmentos + desagregación de ingresos + geografía | módulo |
 | Peers (Overview y Valuation) | denominadores de filings/BBG (fuente y fecha en el pie); precio, market cap y EV en vivo (Massive) | módulo (`A_PEERS`, sin múltiplos) |
 | Mapa Summit | MCP Summit (`list_metrics`, `get_fundamentals`) + autor del modelo + cuadre vs filing | `js/summit-map/<t>.js` + bitácora "Mapa Summit" |
-| Results / Estimates | 8-K/10-Q (actuals); BBG_CONSENSUS (cons, estMatrix); 8-K (guía) — en archivo. Summit **en vivo** (`get-summit-data`) | `results-data/<t>.js` (sin números Summit) |
-| Top Line | 10-K (verbatim), llamadas (named, management), BBG kpi, Summit, SPLC | `segments-data/<t>.js` |
-| Earnings Setup / Post-Results | BBG_CONSENSUS (`CE_CONS`), 8-K, transcripciones; Summit snapshot en vivo | módulo + `docs/calls/<T>*.md` |
-| Notes | llamadas (en el portal) | Supabase `company_theme_record` (+ semilla `themes-data/<t>.js`) |
-| Bottom Line | BBG export generado; 10-K MD&A y notas; SPLC — en archivo. Summit (gastos funcionales, acciones) en vivo | `<t>-bbg.js` + módulo |
-| Historic Multiple | precio, acciones y deuda en vivo (`get-market-history`); EPS/EBITDA de filings y BBG | módulo `<t>-histmult.js` (sin múltiplos) |
-| Target Multiple / Sensitivity | Summit DCF en vivo (`get-summit-data`: snapshots + valuación del modelo); BBG por segmento | módulos `<t>-target-multiple.js`, `<t>-sensitivity.js` (sin números Summit) |
+| Results / Estimates | 8-K/10-Q (actuals); `BBG_CONSENSUS.txt` + `Consensus_Portal.xlsm` (cons, `estMatrix.cons`); 8-K (guía) — en archivo. Summit **en vivo** cuando exista; hoy ausente con nota en `source` | `results-data/<t>.js` (sin números Summit) |
+| Top Line | 10-K (verbatim), llamadas (named), semilla de Notes (management), BBG kpi, SPLC — Summit en vivo cuando exista (`summit:{}` vacío) | `segments-data/<t>.js` (a mano) |
+| Earnings Setup / Post-Results | `CE_CONS` armado al cargar desde `results-data`; 8-K, transcripciones; Summit en vivo cuando exista (`setup.us` nunca tecleado) | `<t>-ce-data.js` + `results-data/<t>-setup.js` + `docs/calls/<T>*.md` |
+| Notes | llamadas (en el portal) | Supabase `company_theme_record` (+ semilla `themes-data/<t>.js`, registrada en `segments.js`) |
+| Bottom Line | export BBG generado (`bbg_extract.py`); 10-K/10-Q (gastos funcionales y segmentos históricos), MD&A y notas; SPLC — en archivo. Summit (acciones del modelo, series `summit`) en vivo cuando exista | `<t>-bbg.js` + módulo |
+| Historic Multiple | precio, acciones y deuda en vivo (`get-market-history`); EPS/EBITDA de `results-data` (`act` y `estMatrix.cons`) | módulo `<t>-histmult.js` (sin datos propios) |
+| Target Multiple / Sensitivity | Summit DCF en vivo (`get-summit-data`: snapshots + valuación del modelo); BBG por segmento. **Hoy ⛔ para empresa nueva** | módulos `<t>-target-multiple.js`, `<t>-sensitivity.js` (sin números Summit) |
 | Miscellaneous | según la sub-tab (ficha en la bitácora) | módulo |
 | Management | página de liderazgo, DEF 14A, 10-K (SBC), Fiscal.ai (en vivo) | módulo + `img/leadership/` |
 
@@ -1770,33 +2098,39 @@ nunca llama al MCP: lo hace la función `get-summit-data`.
 
 ## Anexo C — Unidades y dependencias
 
-| ID | Unidad | Depende de |
-|---|---|---|
-| F0 | Inventario de datos | — |
-| F0-SM | Mapa de métricas Summit | F0 (solo si hay modelo Summit) |
-| F1 | Esqueleto + vista previa | F0 |
-| B1 / B2 | (modo B) Inventario de contenido existente · mapa de reubicación | F0 |
-| OV-1 … OV-7, OV-F | Overview: Key Facts · Descripción · Cuadrante · Makes money · Products · Peers · Timeline · Pie | F1 (OV-6 comparte `A_PEERS` con VA-PEERS) |
-| EV-RES-DATA | Dataset de Results (números) | F0 + F0-SM |
-| EV-RES | Pestaña Results | EV-RES-DATA |
-| TL-GEN · TL-SEG · TL-OTH · TL-CUS | Top Line | EV-RES-DATA |
-| EV-EST | Estimates | EV-RES-DATA + F0-SM + Summit ≥ 2 snapshots |
-| EV-SET | Earnings ▸ Setup | EV-RES-DATA + `CE_CONS` |
-| EV-POST | Earnings ▸ Post-Results | EV-SET + transcripción |
-| EV-NOTES | Earnings ▸ Notes (semilla) | EV-POST (para los temas) |
-| BL-GEN-1 … BL-GEN-5 | Bottom Line ▸ General (4 vistas + Expense lines) | export BBG |
-| BL-SEG | Bottom Line ▸ Segments | export BBG |
-| BL-SPLC | Bottom Line ▸ Supply Chain | export SPLC |
-| VA-HIST | Historic Multiple | EV-RES-DATA (EPS/EBITDA anual por snapshot de BBG) · en vivo: `get-market-history` |
-| VA-PEERS | Peers | OV-6 |
-| VA-TM | Target Multiple / PEG | F0-SM + Summit snapshots · en vivo: `get-summit-data` + valuación del modelo en el MCP |
-| VA-SENS | Sensitivity | F0-SM (segmentos) + Summit snapshot + BBG por segmento · en vivo: `get-summit-data` |
-| MG-TEAM · MG-OWN · MG-GOV · MG-TRACK | Management | F1 |
-| MISC (y `MISC-<clave>` por sub-tab) | Miscellaneous | F1; al final, cuando ya se sabe qué no cupo en otra pestaña |
+| ID | Unidad | Depende de | Hoy (14 oct 2026), empresa nueva |
+|---|---|---|---|
+| F0 | Inventario de datos | — | se hace |
+| F0-SM | Mapa de métricas Summit | F0 (solo si hay modelo Summit; si no, ⏭️) | se hace (el archivo no lo lee nadie todavía) |
+| F1 | Esqueleto + vista previa | F0 | se hace |
+| B1 / B2 | (modo B) Inventario de contenido existente · mapa de reubicación | F0 | — |
+| OV-1 … OV-7, OV-F | Overview: Key Facts · Descripción · Cuadrante · Makes money · Products · Peers · Timeline · Pie | F1 (OV-6 comparte `A_PEERS` con VA-PEERS) | se hace |
+| EV-RES-DATA | Dataset de Results (números) | F0 + F0-SM | se hace, sin `summit` |
+| EV-RES | Pestaña Results | EV-RES-DATA | se hace; Summit → Conexiones pendientes |
+| TL-GEN · TL-SEG · TL-OTH · TL-CUS | Top Line | EV-RES-DATA; el bloque 5 de TL-SEG lee la semilla de EV-NOTES (mientras no exista, muestra su bandera ⚑) | se hace; Summit → Conexiones pendientes |
+| EV-EST | Estimates | EV-RES-DATA + F0-SM + Summit ≥ 2 snapshots **en vivo** (el eje son los snapshots) | **⛔, no se publica** |
+| EV-SET | Earnings ▸ Setup | EV-RES-DATA + `CE_CONS` (armado al cargar desde EV-RES-DATA) | se hace; columna Summit → Conexiones pendientes |
+| EV-POST | Earnings ▸ Post-Results | EV-SET + transcripción | se hace |
+| EV-NOTES | Earnings ▸ Notes (semilla) | EV-POST (para los temas) | se hace |
+| BL-GEN-1 … BL-GEN-5 | Bottom Line ▸ General (4 vistas apiladas + Expense lines) | export BBG (o, sin él, lo reportado — precedente DHR) | se hace; series Summit → Conexiones pendientes |
+| BL-SEG | Bottom Line ▸ Segments | export BBG | se hace; Summit → Conexiones pendientes |
+| BL-SPLC | Bottom Line ▸ Supply Chain | export SPLC (si no hay, ⏭️) | se hace o ⏭️ |
+| VA-HIST | Historic Multiple | EV-RES-DATA (`act` + `estMatrix.cons`, EPS anual por snapshot) · en vivo: `get-market-history` | se hace; se revisa con `?mockmarket=1` |
+| VA-PEERS | Peers | OV-6 | se hace |
+| VA-TM | Target Multiple / PEG | F0-SM + `get-summit-data` desplegada (con `fetchSummitValuation`) + PR del portal | **⛔, no se publica** |
+| VA-SENS | Sensitivity | F0-SM (segmentos) + snapshot Summit en vivo + BBG por segmento | **⛔, no se publica** |
+| MG-TEAM · MG-OWN · MG-GOV · MG-TRACK | Management | F1 | se hace |
+| MISC (y `MISC-<clave>` por sub-tab) | Miscellaneous | F1; al final, cuando ya se sabe qué no cupo en otra pestaña | se hace o ⏭️ |
+| F-FINAL | Cierre | todas | se hace |
 
-"En vivo: …" = lo que hace falta para quitar el aviso "Live data pending" (§20b). Sin eso, la unidad
-se construye y se aprueba igual, con la parte en vivo pendiente.
-| F-FINAL | Cierre | todas |
+**Reglas de la tabla:**
+- Una dependencia en **⏭️ cuenta como cumplida** (p. ej. sin modelo Summit, F0-SM ⏭️ no detiene
+  EV-RES-DATA).
+- "en vivo: …" = lo que hace falta para quitar el aviso "Live data pending" (§20b, caso 1). Las filas
+  **⛔** son el caso 2 de §20b: no se publican hasta que exista ese camino.
+- **Contador "N de M"** de la bitácora: **M = filas del tablero menos las ⏭️ de alcance** fijadas en F0.
+  En modo B se suman B1 y B2. Cada `MISC-<clave>` aprobada **reemplaza** la fila `MISC` (si hay dos
+  sub-tabs en Misc, M sube en uno). Las ⛔ siguen contando en M: son trabajo pendiente, no descartado.
 
 ## Anexo D — Guiones de pregunta para cada compuerta
 
@@ -1822,17 +2156,17 @@ Lo que NO incluí y por qué: …
 
 | Unidad | Pregunta |
 |---|---|
-| F0 | "Este es el inventario. Con esto se pueden hacer X de 38 unidades; quedan fuera A, B porque … ¿Confirmas el alcance?" |
-| F0-SM | "El modelo trae N etiquetas: x core, y de segmento, z KPIs, v de valuación (o: todavía no trae la valuación). Quedan d dudas: … ¿Apruebas el mapa? ¿Alguna etiqueta que yo marqué `ignore` sí quieres verla?" |
+| F0 | "Esto es lo que hay de la empresa (reportes, modelo Summit, datos de Bloomberg, llamadas). Con eso podemos armar X de las 38 piezas; A y B no, porque … Y C, D quedan en espera hasta que el portal lea el modelo Summit en vivo. ¿Confirmas el alcance?" |
+| F0-SM | "El modelo de <empresa> trae N datos: x son los básicos (ventas, EBITDA, utilidad…), y son por segmento, z son indicadores propios; la valuación del modelo trae estos métodos: … (y estos no son confiables: …). Tengo d dudas para el autor del modelo: … ¿Apruebas la lista? ¿Hay alguno que marqué 'no mostrar' y sí quieres ver?" |
 | OV-1 | "No encontré <dato> para la celda <n>. ¿La sustituyo por <propuesta>?" |
 | OV-3 | "Propongo esta frase para 'The edge': … ¿Te sirve?" |
 | OV-6 / VA-PEERS | "Propongo estos peers: … (y descarto … porque no cotiza). ¿Agregas o quitas alguno?" |
-| EV-RES-DATA | "¿Base GAAP o ajustada para EPS/EBITDA?" · "¿Agrego estas métricas además de las mínimas?" |
-| TL-SEG | "La empresa publica estos KPIs: … ¿Cuáles entran?" · "Estas identidades de ingreso tienen datos: … ¿Las incluimos?" |
-| EV-NOTES | "Propongo estos temas y sub-temas para seguir: … ¿Cuáles siembro y con qué estado?" |
+| EV-RES-DATA | "¿La utilidad por acción y el EBITDA los mostramos como los reporta la empresa (GAAP) o ajustados?" · "Además de las básicas, ¿agrego estas métricas: …?" |
+| TL-SEG | "La empresa publica estos indicadores: … ¿Cuáles entran?" · "Estas fórmulas del ingreso (p. ej. usuarios × gasto por usuario) tienen datos: … ¿Las incluimos?" |
+| EV-NOTES | "Propongo seguir estos temas, llamada a llamada: … (cada uno como tendencia, promesa o vigilar). ¿Cuáles dejamos y cómo los marcamos?" |
 | BL-GEN-5 | "Las líneas de gasto del MD&A son: … ¿Hago una pestaña por cada una?" |
-| VA-TM | "¿Con qué año forward trabajamos? (El múltiplo objetivo es el del modelo; hoy el MCP aún no lo trae y va con 'Live data pending'.)" |
-| VA-SENS | "¿Qué drivers en los ejes por defecto, y qué múltiplo de salida?" |
+| VA-TM | Hoy no se pregunta: queda en espera (⛔). Cuando se pueda: "¿Con qué año hacia adelante trabajamos? (El múltiplo objetivo es el del modelo.)" |
+| VA-SENS | Hoy no se pregunta: queda en espera (⛔). Cuando se pueda: "¿Qué dos supuestos movemos en la tabla (p. ej. crecimiento de un segmento y su margen)?" |
 | MG-TEAM | "¿Equipo completo que publica la empresa, o solo el C-suite?" |
 | MG-TRACK | "Propongo estas calificaciones: … ¿Las ajustas?" |
 | MISC | "No cupieron en otra pestaña: … Propongo estas sub-tabs: … ¿Las creamos, o no hace falta Miscellaneous?" |

@@ -30,11 +30,14 @@ For each unit, in the build order of playbook §5:
 1. **PROPONER** — what the unit will contain (from its spec card), where each number will come from,
    what the analyst must decide (with your recommendation), and what will be left out and why. Wait
    for the analyst's decisions before building when the unit has any.
-2. **CONSTRUIR** — follow the spec card. Copy AMZN's code (or SN/DHR's already-fixed extraction)
-   instead of reimplementing; prefer an engine + data file over a bespoke pane; **do not copy the
-   defects in playbook Annex A**.
-3. **MOSTRAR** — serve with `serve.ps1` (localhost:8000), point to `harness-<ticker>.html` with the
-   exact click path, attach a screenshot when you can.
+2. **CONSTRUIR** — follow the spec card. Copy **AMZN's** code (playbook §7.4 says what to copy for
+   each unit; SN/DHR copies are older and are not a base) instead of reimplementing; prefer an engine
+   + data file over a bespoke pane; rename the AMZN-specific names listed in §7.2; **fix in the copy
+   every Annex A defect still marked open**. Do not modify shared engines (`results.js`,
+   `segments.js`) in a company PR.
+3. **MOSTRAR** — run `serve.ps1` once in the background (localhost:8000; `-Port 8001` if busy), point
+   to `harness-<ticker>.html` (set up per playbook §7.3) with the exact click path, attach a
+   screenshot when you can.
 4. **AUTOAUDITAR** — the unit's checks + §17.4 for every chart + §19–§22; PASS/FAIL per line.
 5. **PREGUNTAR** — AskUserQuestion with the four options of playbook Annex D
    (Aprobado · Aprobado con ajustes menores · Cambios · Omitir / dejar pendiente). One unit per
@@ -60,9 +63,12 @@ the relocation map, every unit ✅ / ⏭️ / ⛔ with a reason. Then ask for th
 - **No market or Summit-model numbers in code** (golden rule 10, playbook §20b): price, market cap, EV,
   multiples and every Summit model figure are read live (`liveQuote`, `get-market-history`,
   `get-summit-data` + `js/summit-map/<ticker>.js`). Filings and Bloomberg data may live in data files
-  with source + date. If the live path does not exist yet, build the block with "⚑ Live data pending —
-  <what>" and log it under "Conexiones pendientes" — never copy numbers in the meantime. Use the
-  Summit MCP to understand and verify, never to copy values into the repo.
+  with source + date. If the live path does not exist yet, never copy numbers in the meantime: a unit
+  with useful content is built with `<div class="rs-noguide">⚑ Live data pending — <what></div>` (or,
+  inside a shared engine, the series is just absent and the footer says so) and logged under
+  "Conexiones pendientes"; a unit that depends entirely on it (today: EV-EST, VA-TM, VA-SENS) is ⛔ and
+  not published. Use the Summit MCP to understand and verify, never to copy values into the repo.
+- For a new company, this playbook wins over `CLAUDE.md`, `/fill-overview` and the older docs.
 - Speak to the analyst in plain language — they are usually not a developer.
 - Commit/push only when asked. **Do not open a PR until the analyst has reviewed locally and asks.**
   One company per PR. Only San or Oscar merge.

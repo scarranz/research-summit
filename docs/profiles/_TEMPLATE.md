@@ -12,7 +12,7 @@
 | Rama | `feat/<ticker>-profile` |
 | Analista responsable | |
 | Inicio | AAAA-MM-DD |
-| Avance | 0 de 38 unidades aprobadas · 0 omitidas · 0 bloqueadas |
+| Avance | 0 de M unidades aprobadas · 0 omitidas · 0 bloqueadas (M = filas del tablero − ⏭️ de alcance; Anexo C) |
 
 ## 1. Inventario de datos (F0)
 
@@ -22,9 +22,9 @@
 | Filing anual (10-K / 20-F) | | forma, FY, accession | Overview, Top Line, textos verbatim | |
 | Año fiscal / moneda | | cierre, moneda | | |
 | Summit DCF | | # snapshots, último periodo real de cada uno | Summit en Results/Estimates; Target Multiple; Sensitivity | |
-| BBG_CONSENSUS.txt | | # snapshots, último `data_as_of` | consenso, Setup, Bottom Line forward | |
+| Consenso BBG (`BBG_CONSENSUS.txt` + `Consensus_Portal.xlsm`) | | # snapshots, último `data_as_of` | `estMatrix.cons`, Setup, export de Bottom Line | sin consenso ni export (caso DHR) |
 | `get-market-history` (Massive) | | desplegada sí/no | Historic Multiple en vivo | Historic Multiple con "Live data pending" |
-| `get-summit-data` + valuación en el MCP | | desplegada sí/no · ¿trae múltiplo/precio objetivo? | Summit en vivo en todo el perfil | bloques Summit con "Live data pending" |
+| `get-summit-data` (+ valuación, `get_valuation_history`) + PR del portal | | ¿existe en main / desplegada? · ¿la valuación del modelo es confiable (quality_flags)? | Summit en vivo en todo el perfil | series Summit ausentes (Conexiones pendientes); EV-EST, VA-TM, VA-SENS ⛔ |
 | SPLC (clientes / proveedores) | | archivo, fecha | TL-CUS tabla, BL-SPLC | |
 | Transcripciones | | trimestres disponibles | EV-POST, EV-NOTES, citas | |
 | Fiscal.ai (plan) | | | tabla en vivo de Management | |
@@ -38,7 +38,7 @@
 > Reglas: `docs/PROFILE_PLAYBOOK.md` §6.3. Una fila por **cada** etiqueta de `list_metrics`, incluidas las `ignore`.
 > Archivo que lee el portal: `js/summit-map/<ticker>.js` (sin números).
 
-Modelo: `<ruta del .xlsm>` · moneda · escala · N snapshots (primero → último) · N etiquetas: x core · y segment · z kpi · g guidance · c consensus · v valuation · i ignore
+Modelo: `<ruta del .xlsm>` · moneda · escala · N snapshots (primero → último) · N etiquetas: x core · y segment · z kpi · g guidance · c consensus · i ignore · valuación: métodos y quality_flags
 
 | Etiqueta MCP | Rol | Clave portal | Qué es, en una línea | Base | Unidad real | Agregación | Periodos | Cuadre vs filing | Confianza |
 |---|---|---|---|---|---|---|---|---|---|
@@ -104,6 +104,9 @@ Modelo: `<ruta del .xlsm>` · moneda · escala · N snapshots (primero → últi
 | F-FINAL | Cierre y entrega | ⬜ | | | | |
 
 (Modo B: agregar B1 — inventario de contenido existente y B2 — mapa de reubicación después de F0.)
+
+> Al 14 oct 2026, para una empresa nueva, **EV-EST, VA-TM y VA-SENS arrancan en ⛔** (necesitan Summit
+> en vivo; playbook §20b caso 2) y se anotan en Bloqueos. Cada `MISC-<clave>` aprobada reemplaza la fila MISC.
 
 ## 3. Decisiones del analista
 

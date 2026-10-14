@@ -112,6 +112,7 @@ export var amznSegments = {
     // goes to Amazon. It is the informative column — Appian at 29.8% is a company that runs on AWS.
     splc: {
       revBaseM: 716924, revBaseLabel: 'FY2025 net sales',
+      coverageWhy: "Amazon's customers are consumers and small sellers, and consumers do not file.",   // why the register is thin — company-specific, so it lives here, not in the engine
       named: 20, sized: 15, sizedSumM: 992.3,
       source: 'Bloomberg Supply Chain Analysis (SPLC) — counterparty disclosures, not Amazon filings',
       file: 'nvidia-map-reference/SPLC_BBG.xlsx (AMZN block, customer side)',

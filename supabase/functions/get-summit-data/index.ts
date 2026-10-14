@@ -28,6 +28,14 @@ const SUMMIT_MCP_TOKEN = Deno.env.get("SUMMIT_MCP_TOKEN") || "";
 //   fundamentals {ticker, date?, metric_ids?, period_keys?, sheet_sources?}
 //                                                     → get_fundamentals       (≥ 1 filter required)
 //   series       {metric_id, period_key}              → get_metric_snapshot_series (one cell's revisions)
+//   valuation    {ticker, method?}                    → get_valuation_history  (newest first)
+//
+// `valuation` is the model's own valuation per snapshot: current_price, wacc/coe/cod/beta/rfr, and
+// `valuations[]` = one block per method ('EV / EBITDA', 'P / E', the workbook's text) with multiple,
+// target_year, multiple_basis (Forward/Trailing), case, price_target, fair_value, upside_pct
+// (fair_value ÷ price − 1, pre-computed) and quality_flags. A block with non-empty quality_flags is
+// not reliable (e.g. one method copied into the other) — the portal must show it with that caveat.
+// All numbers come back as strings; rates as decimals; currency is the model's (list_dcf_models).
 //
 // Gotcha for callers: every metric comes once per sheet. `actuals_history` carries FUTURE periods
 // as 0 (not null) — always filter by `sheet_source` (projection_history for estimates).
@@ -48,6 +56,7 @@ const TICKER_RE = /^[A-Z0-9.\-]{1,10}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const PERIOD_RE = /^\d{4}(Q[1-4])?$/;
+const METHOD_RE = /^[A-Za-z0-9 /&()\-.]{1,40}$/;   // the workbook's method label, e.g. 'EV / EBITDA'
 const SHEETS = ["projection_history", "actuals_history"];
 const MAX_LIST = 200;
 
@@ -157,6 +166,17 @@ function route(body: any): { tool: string; args: Record<string, unknown> } | { e
     if (!UUID_RE.test(metricId)) return { error: "invalid metric_id" };
     if (!PERIOD_RE.test(periodKey)) return { error: "invalid period_key (YYYY or YYYYQn)" };
     return { tool: "get_metric_snapshot_series", args: { metric_id: metricId, period_key: periodKey } };
+  }
+
+  if (resource === "valuation") {
+    if (!needTicker()) return { error: "invalid ticker" };
+    const args: Record<string, unknown> = { ticker };
+    if (body.method != null) {
+      const method = String(body.method);
+      if (!METHOD_RE.test(method)) return { error: "invalid method (e.g. 'EV / EBITDA', 'P / E')" };
+      args.method = method;
+    }
+    return { tool: "get_valuation_history", args };
   }
 
   return { error: `resource not allowed: ${resource}` };

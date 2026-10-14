@@ -356,6 +356,14 @@ export function fetchSummitSeries(metricId, periodKey) {
   return summitRows({ resource: 'series', metric_id: metricId, period_key: periodKey }, 'no series');
 }
 
+// The model's valuation per snapshot, newest first: current_price, wacc…, and valuations[] =
+// one block per method (multiple, target_year, multiple_basis, price_target, fair_value,
+// upside_pct, quality_flags). method is optional ('EV / EBITDA', 'P / E'). A block with
+// quality_flags is unreliable — show it with the caveat, never as a clean number.
+export function fetchSummitValuation(ticker, method) {
+  return summitRows({ resource: 'valuation', ticker: ticker, method: method }, 'no valuations');
+}
+
 // ─── NDX 100 Return Attribution ─────────────────────────────
 // Latest snapshot from the `ndx-attribution` edge function: { meta, hocs } in the same
 // shape as js/ndx-attribution-data.js, with the open HOC re-priced from Massive at the

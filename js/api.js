@@ -291,6 +291,60 @@ export async function fetchRatiosHistory(ticker, limit) {
   return ok(results);
 }
 
+// ─── Summit DCF models (live) ───────────────────────────────
+// Read the Summit Financial Data base through the `get-summit-data` edge function, so model
+// numbers are never copied into the repo. The fetchSummit* helpers return the tool's row array;
+// summitRaw returns the whole { data, metadata, warnings } body. What each label MEANS (role,
+// GAAP vs adjusted, real unit) comes from js/summit-map/<ticker>.js, not from here.
+// Deploy-gated on get-summit-data existing.
+
+async function summitCall(body) {
+  var { data, error } = await supabase.functions.invoke('get-summit-data', { body: body });
+  if (error) return fail(error.message);
+  if (!data || data.error) return fail((data && data.error) || 'no summit data');
+  return ok(data);
+}
+
+export function summitRaw(body) { return summitCall(body); }
+
+async function summitRows(body, empty) {
+  var r = await summitCall(body);
+  if (!r.success) return r;
+  var rows = Array.isArray(r.data.data) ? r.data.data : [];
+  if (!rows.length) return fail(empty);
+  return ok(rows);
+}
+
+// Every company with a DCF model: instrument_id, currency, snapshot_count, last_snapshot_date…
+export function fetchSummitModels() { return summitRows({ resource: 'models' }, 'no summit models'); }
+
+// Snapshots of one model, newest first: snapshot_date, snapshot_id, fact_count…
+export function fetchSummitSnapshots(ticker) { return summitRows({ resource: 'snapshots', ticker: ticker }, 'no snapshots'); }
+
+// The model's metric catalog: label ↔ metric_id (ids are what fundamentals/series take).
+export function fetchSummitMetrics(ticker) { return summitRows({ resource: 'metrics', ticker: ticker }, 'no metrics'); }
+
+// Every fact of one snapshot (heavy: ~8.5K rows for AMZN). Prefer fetchSummitFundamentals.
+export function fetchSummitSnapshot(ticker, date) {
+  return summitRows({ resource: 'snapshot', ticker: ticker, date: date }, 'empty snapshot');
+}
+
+// Filtered facts. opts = { date?, metricIds?, periodKeys?, sheets? } — at least one of
+// date / metricIds / periodKeys. Omit date for the latest snapshot. ⚠ actuals_history carries
+// future periods as 0: pass sheets:['projection_history'] for estimates.
+export function fetchSummitFundamentals(ticker, opts) {
+  opts = opts || {};
+  return summitRows({
+    resource: 'fundamentals', ticker: ticker, date: opts.date,
+    metric_ids: opts.metricIds, period_keys: opts.periodKeys, sheet_sources: opts.sheets,
+  }, 'no facts');
+}
+
+// One cell (metric × period) across every snapshot — the model's revision history.
+export function fetchSummitSeries(metricId, periodKey) {
+  return summitRows({ resource: 'series', metric_id: metricId, period_key: periodKey }, 'no series');
+}
+
 // ─── NDX 100 Return Attribution ─────────────────────────────
 // Latest snapshot from the `ndx-attribution` edge function: { meta, hocs } in the same
 // shape as js/ndx-attribution-data.js, with the open HOC re-priced from Massive at the

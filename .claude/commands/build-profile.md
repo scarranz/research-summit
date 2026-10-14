@@ -56,6 +56,13 @@ the relocation map, every unit ✅ / ⏭️ / ⛔ with a reason. Then ask for th
 - Sources decide; every pane ends with a source footer naming the primary document and date.
 - No placeholder sub-tabs, no invented sub-tabs, no fake precision, no invented data.
 - Summit palette only; the company's brand lives only in its logo; no new inline `<style>`.
+- Everything shown in the portal is in English (golden rule 9); talk to the analyst in Spanish.
+- **No market or Summit-model numbers in code** (golden rule 10, playbook §20b): price, market cap, EV,
+  multiples and every Summit model figure are read live (`liveQuote`, `get-market-history`,
+  `get-summit-data` + `js/summit-map/<ticker>.js`). Filings and Bloomberg data may live in data files
+  with source + date. If the live path does not exist yet, build the block with "⚑ Live data pending —
+  <what>" and log it under "Conexiones pendientes" — never copy numbers in the meantime. Use the
+  Summit MCP to understand and verify, never to copy values into the repo.
 - Speak to the analyst in plain language — they are usually not a developer.
 - Commit/push only when asked. **Do not open a PR until the analyst has reviewed locally and asks.**
   One company per PR. Only San or Oscar merge.

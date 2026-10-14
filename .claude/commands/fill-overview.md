@@ -63,7 +63,7 @@ Step 5), rendering the 7 blocks in order per §4 of the conventions:
   toggles (default Forward); bubble = USD market cap; legend; detail in pop-up; no-multiple/
   unlisted peers drop out (say where they appear instead). **Peers add/removable by ticker** —
   the chip **×** deletes a peer immediately (no strike-through toggle); re-adding a known ticker
-  restores its seeded multiples.
+  restores its file data (EPS/EBITDA denominators — multiples are computed live, playbook OV-6).
 - **Timeline** — follow the §4.7 **relevance rubric**: establish the company's genesis/lineage
   (spin-off / merger / SPAC / reverse-merger / OTC uplisting / roll-up) with **no loose ends**;
   include only genuinely relevant events (first-ever dividend, material/failed M&A, spin-offs,
@@ -87,7 +87,7 @@ disclosure** where numbers belong. Watch the **`&amp;` double-encode bug** (raw 
 fields; `&amp;` only in raw HTML).
 **Live data:** market cap/EV and the peer-scatter bubbles come from `api.liveQuote(ticker)`
 (Massive), and the scatter's peers are **add/removable by ticker**; multiples are
-live-where-confirmed else **seeded & labeled**; segments stay **manual from the 10-K** (no Fiscal
+**never seeded**: live price ÷ dated filing/Bloomberg denominators (playbook OV-6, golden rule 10); segments stay **manual from the 10-K** (no Fiscal
 yet); **no margins block**.
 
 If the company is new, register its ticker in `js/overviews/index.js`.

@@ -12,7 +12,7 @@
 | Rama | `feat/<ticker>-profile` |
 | Analista responsable | |
 | Inicio | AAAA-MM-DD |
-| Avance | 0 de 36 unidades aprobadas · 0 omitidas · 0 bloqueadas |
+| Avance | 0 de 38 unidades aprobadas · 0 omitidas · 0 bloqueadas |
 
 ## 1. Inventario de datos (F0)
 
@@ -23,7 +23,8 @@
 | Año fiscal / moneda | | cierre, moneda | | |
 | Summit DCF | | # snapshots, último periodo real de cada uno | Summit en Results/Estimates; Target Multiple; Sensitivity | |
 | BBG_CONSENSUS.txt | | # snapshots, último `data_as_of` | consenso, Setup, Bottom Line forward | |
-| Múltiplos BBG diarios (BQL) | | asOf | Historic Multiple | |
+| `get-market-history` (Massive) | | desplegada sí/no | Historic Multiple en vivo | Historic Multiple con "Live data pending" |
+| `get-summit-data` + valuación en el MCP | | desplegada sí/no · ¿trae múltiplo/precio objetivo? | Summit en vivo en todo el perfil | bloques Summit con "Live data pending" |
 | SPLC (clientes / proveedores) | | archivo, fecha | TL-CUS tabla, BL-SPLC | |
 | Transcripciones | | trimestres disponibles | EV-POST, EV-NOTES, citas | |
 | Fiscal.ai (plan) | | | tabla en vivo de Management | |
@@ -32,11 +33,39 @@
 
 **Alcance acordado:** (qué unidades quedan ⏭️ desde el inicio y por qué)
 
+## 1b. Mapa Summit (F0-SM)
+
+> Reglas: `docs/PROFILE_PLAYBOOK.md` §6.3. Una fila por **cada** etiqueta de `list_metrics`, incluidas las `ignore`.
+> Archivo que lee el portal: `js/summit-map/<ticker>.js` (sin números).
+
+Modelo: `<ruta del .xlsm>` · moneda · escala · N snapshots (primero → último) · N etiquetas: x core · y segment · z kpi · g guidance · c consensus · v valuation · i ignore
+
+| Etiqueta MCP | Rol | Clave portal | Qué es, en una línea | Base | Unidad real | Agregación | Periodos | Cuadre vs filing | Confianza |
+|---|---|---|---|---|---|---|---|---|---|
+| | | | | | | | | | |
+
+### Dudas
+
+<!-- Una por etiqueta ❓. Se resuelve antes de que una unidad la use. -->
+```
+❓ <TICKER> · <ETIQUETA> — <pregunta>
+   Lo que se ve: …
+   Quién responde: autor del modelo / Claude con el filing / analista
+   Mientras tanto: <qué no se usa>
+   Respuesta (AAAA-MM-DD): …
+```
+
+### Cambios del mapa
+
+<!-- Solo se agrega: snapshot nuevo → etiqueta nueva, desaparecida o con salto de escala/signo. -->
+- AAAA-MM-DD · snapshot AAAA-MM-DD · <qué cambió> — <qué se hizo>
+
 ## 2. Tablero de unidades
 
 | ID | Unidad | Estado | Fecha | Aprobó | Commit | Nota |
 |---|---|---|---|---|---|---|
 | F0 | Inventario de datos | ⬜ | | | | |
+| F0-SM | Mapa de métricas Summit | ⬜ | | | | |
 | F1 | Esqueleto + vista previa | ⬜ | | | | |
 | OV-1 | Overview ▸ Key Facts | ⬜ | | | | |
 | OV-2 | Overview ▸ Descripción | ⬜ | | | | |
@@ -71,6 +100,7 @@
 | MG-OWN | Management ▸ Ownership | ⬜ | | | | |
 | MG-GOV | Management ▸ Governance & SBC | ⬜ | | | | |
 | MG-TRACK | Management ▸ Track Record | ⬜ | | | | |
+| MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab aprobada) | ⬜ | | | | |
 | F-FINAL | Cierre y entrega | ⬜ | | | | |
 
 (Modo B: agregar B1 — inventario de contenido existente y B2 — mapa de reubicación después de F0.)
@@ -96,6 +126,14 @@ Conteo de control (piezas originales): **N**
 ## 6. Bloqueos y preguntas abiertas
 
 | Desde | Unidad | Qué falta | Quién lo consigue | Estado |
+|---|---|---|---|---|
+
+## 6b. Conexiones pendientes ("Live data pending")
+
+> `docs/PROFILE_PLAYBOOK.md` §20b. Bloques aprobados que hoy muestran el aviso porque falta el camino
+> en vivo. No hay números copiados que migrar: al destrabarse, se conecta, se vuelve a mostrar y se cierra.
+
+| Desde | Unidad ▸ bloque | Qué falta (función / dato) | Quién lo destraba | Estado |
 |---|---|---|---|---|
 
 ## 7. Historial de aprobaciones

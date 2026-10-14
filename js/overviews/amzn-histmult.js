@@ -128,8 +128,10 @@ function rsAttachBrush(el, chart, onX, onY, onReset){
       if (vertical == null) return;
       if (vertical){
         if (Math.abs(e2.clientY - startY) < 8) return;
-        var v1 = chart.scales.y.getValueForPixel(Math.min(startY, e2.clientY) - r0.top);
-        var v2 = chart.scales.y.getValueForPixel(Math.max(startY, e2.clientY) - r0.top);
+        // Read the drag off whichever value axis is on screen (EV/EBITDA alone has no P/E axis).
+        var bAx = (chart.scales.y && chart.options.scales.y.display !== false) ? chart.scales.y : (chart.scales.y2 || chart.scales.y);
+        var v1 = bAx.getValueForPixel(Math.min(startY, e2.clientY) - r0.top);
+        var v2 = bAx.getValueForPixel(Math.max(startY, e2.clientY) - r0.top);
         onY(Math.min(v1, v2), Math.max(v1, v2));
       } else {
         if (Math.abs(e2.clientX - startX) < 8) return;
@@ -362,7 +364,9 @@ function denomAt(metric, hz, d){
 // shares and net debt — which is why the two metrics cannot share one series.
 function numerAt(metric, d, px){
   if(metric==='eps') return px;
-  return (px * stepAt(SHARES, d)) + stepAt(NETDEBT, d);          // $M: EV
+  var sh=stepAt(SHARES, d), nd=stepAt(NETDEBT, d);
+  if(sh==null || nd==null) return null;                           // a gap, never px × null + null = a fabricated 0×
+  return (px * sh) + nd;                                          // $M: EV
 }
 
 // The two metrics, and how each one's denominator is written down. `metric` is the key into EST /
@@ -382,7 +386,7 @@ function buildSeries(mk, hz){
   PX.forEach(function(p){
     var den=denomAt(m.metric, hz, p.d);
     var num=numerAt(m.metric, p.d, p.px);
-    out.push({ d:p.d, px:p.px, den:den, v:(den==null || den<=0)?null:(num/den) });
+    out.push({ d:p.d, px:p.px, num:num, den:den, v:(num==null || den==null || den<=0)?null:(num/den) });
   });
   return out;
 }
@@ -523,9 +527,9 @@ function hmBody(){
     '.hm-range-i{display:inline-flex;align-items:baseline;gap:6px;color:var(--mu)}'+
     '.hm-range-i b{font-size:12.5px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}'+
     '.hm-sw{width:9px;height:9px;border-radius:2px;display:inline-block;align-self:center}'+
-    '.hm-full{appearance:none;border:1px solid rgba(178,106,0,.4);background:rgba(255,153,0,.08);color:#B26A00;'+
+    '.hm-full{appearance:none;border:1px solid rgba(183,121,31,.4);background:rgba(183,121,31,.08);color:#B7791F;'+
       'font:700 10.5px Inter,sans-serif;padding:3px 9px;border-radius:999px;cursor:pointer}'+
-    '.hm-full:hover{background:rgba(255,153,0,.16)}'+
+    '.hm-full:hover{background:rgba(183,121,31,.16)}'+
     '</style>';
 
   h+='<div class="rs-block hm-blk" id="hmBlock">';
@@ -758,14 +762,16 @@ function buildChart(scope, data){
               var s=serOf(c.dataset._k), p=data[s.k].pts[c.dataIndex];
               if(!p || p.v==null) return labelOf(s)+': no estimate on this date';
               // every tooltip shows its own arithmetic — the price ÷ the number that stood that day
-              return labelOf(s)+': '+fmtX(p.v)+'  ·  '+fmtPxv(p.px)+
+              // P/E: price ÷ EPS. EV/EBITDA: EV (price × shares + net debt) ÷ EBITDA — never "price ÷ EBITDA".
+              var numTxt = s.metric==='eps' ? fmtPxv(p.px) : (p.num!=null ? 'EV $'+(p.num/1000).toFixed(0)+'B' : 'EV');
+              return labelOf(s)+': '+fmtX(p.v)+'  ·  '+numTxt+
                 '  ÷  '+METRICS[s.metric].denomName+' '+METRICS[s.metric].denomFmt(p.den);
             } } } },
       scales:{
         x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:10 }, maxRotation:0, autoSkip:false,
             callback:function(v,i){ return i%everyN===0 ? labels[i] : ''; } } },
-        y:  axisOpts('y',  anyOnAxis('y'),  C_PE_F, true),
-        y2: axisOpts('y2', anyOnAxis('y2'), C_EV_F, false) } },
+        y:  axisOpts('y',  anyOnAxis('y'),  C_PE_F, anyOnAxis('y')),
+        y2: axisOpts('y2', anyOnAxis('y2'), C_EV_F, !anyOnAxis('y')) } },   // the zoom lands on the axis it was read from
     plugins:[hmTags, hmRolls]
   });
 
@@ -860,7 +866,9 @@ function render(scope){
     var lg0=scope.querySelector('#hmLeg'); if(lg0) lg0.innerHTML='';
     var cw=scope.querySelector('.hm-chartwrap');
     if(cw) cw.innerHTML='<div class="hm-notice">'+
-      (hmData.error ? '⚑ Live data unavailable ('+esc(hmData.error)+') — this pane needs the <code>get-market-history</code> edge function deployed.'
+      (hmData.error ? '⚑ Live data pending. This chart reads daily prices, shares and net debt live from Massive (through the '+
+                      '<code>get-market-history</code> function, not deployed yet). Nothing is estimated or frozen in the meantime. '+
+                      '<span style="opacity:.7">('+esc(hmData.error)+')</span>'
                     : 'Loading price history…')+
       '</div>';
     var rg0=scope.querySelector('#hmRange'); if(rg0) rg0.innerHTML='';

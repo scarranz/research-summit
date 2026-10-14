@@ -200,8 +200,13 @@ async function renderPillarContent() {
   }
 }
 
-async function loadManagementData(companyId) {
-  var slot = document.getElementById(_mgmtSlotId);
+// slotId is captured per call and carried through the auto-sync and the Sync button. Reading the shared
+// _mgmtSlotId again later was the bug: the Deep Dive slot is pointed to only for the duration of the
+// first call, so the re-render after a first-ever sync landed in the (closed) Pillars slot and the
+// Deep Dive stayed on "Pulling management data…" until a reload.
+async function loadManagementData(companyId, slotId) {
+  slotId = slotId || _mgmtSlotId;
+  var slot = document.getElementById(slotId);
   if (!slot) return;
   if (companyId !== _currentCompanyId) return;
 
@@ -216,7 +221,7 @@ async function loadManagementData(companyId) {
 
   var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-top:16px;border-top:1px solid var(--bdr)">' +
     '<div class="mgmt-section-title" style="margin:0">Management</div>' +
-    '<button class="ii-btn-sm" id="mgmt-sync-btn" title="Sync from Fiscal.ai">Sync ↻</button>' +
+    '<button class="ii-btn-sm mgmt-sync-btn" title="Sync from Fiscal.ai">Sync ↻</button>' +
   '</div>';
 
   if (!execs.length && !txns.length) {
@@ -225,16 +230,16 @@ async function loadManagementData(companyId) {
     slot.innerHTML = html;
     var autoResult = await syncManagement(_currentTicker, companyId);
     if (autoResult.success && autoResult.data && !autoResult.data.unavailable && (autoResult.data.executives > 0 || autoResult.data.transactions > 0)) {
-      loadManagementData(companyId);
+      loadManagementData(companyId, slotId);
     } else {
       var msg = (autoResult.success && autoResult.data && autoResult.data.unavailable)
         ? 'This company is not available on the current Fiscal.ai plan.'
         : 'No management data found.';
       slot.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-top:16px;border-top:1px solid var(--bdr)">' +
         '<div class="mgmt-section-title" style="margin:0">Management</div>' +
-        '<button class="ii-btn-sm" id="mgmt-sync-btn" title="Sync from Fiscal.ai">Sync ↻</button></div>' +
+        '<button class="ii-btn-sm mgmt-sync-btn" title="Sync from Fiscal.ai">Sync ↻</button></div>' +
         '<div class="mgmt-empty">' + esc(msg) + '</div>';
-      document.getElementById('mgmt-sync-btn').addEventListener('click', handleMgmtSync);
+      wireMgmtSync(slot, slotId);
     }
     return;
   }
@@ -283,11 +288,17 @@ async function loadManagementData(companyId) {
   }
 
   slot.innerHTML = html;
-  document.getElementById('mgmt-sync-btn').addEventListener('click', handleMgmtSync);
+  wireMgmtSync(slot, slotId);
 }
 
-async function handleMgmtSync() {
-  var btn = document.getElementById('mgmt-sync-btn');
+// The Sync button lives inside its slot (Pillars and a Deep Dive can both show one), so it is found
+// through the slot and refreshes THAT slot — never a document-wide id that two slots would share.
+function wireMgmtSync(slot, slotId) {
+  var btn = slot.querySelector('.mgmt-sync-btn');
+  if (btn) btn.addEventListener('click', function(){ handleMgmtSync(btn, slotId); });
+}
+
+async function handleMgmtSync(btn, slotId) {
   if (!btn || !_currentTicker || !_currentCompanyId) return;
   btn.disabled = true;
   btn.textContent = 'Syncing...';
@@ -302,8 +313,8 @@ async function handleMgmtSync() {
     return;
   }
 
-  // Reload management data
-  loadManagementData(_currentCompanyId);
+  // Reload management data — into the slot whose button was pressed
+  loadManagementData(_currentCompanyId, slotId);
 }
 
 // ─── Valuation Pillar: Analyst Ratings ────────────────────────
@@ -449,12 +460,9 @@ function renderCoAnalysis(companyId, ticker) {
 
   // A Deep Dive can mirror the live Management (ownership + insider) table WITHOUT absorbing Pillars
   // (keeps the Pillars tab and does not touch Valuation): if it exposes #dd-mgmt-slot, fill it too.
-  // loadManagementData captures its slot synchronously, so we can point it there and restore.
+  // The slot id is passed explicitly, so the auto-sync and the Sync button keep refreshing this slot.
   if (document.getElementById('dd-mgmt-slot')) {
-    var _keep = _mgmtSlotId;
-    _mgmtSlotId = 'dd-mgmt-slot';
-    loadManagementData(companyId);
-    _mgmtSlotId = _keep;
+    loadManagementData(companyId, 'dd-mgmt-slot');
   }
 }
 

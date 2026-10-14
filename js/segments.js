@@ -528,7 +528,11 @@ function buildChartBlock(id, list, view, opts){
   if (live){ live.destroy(); st.chart = null; }
   var ps = winPeriods(id, list, view);
   if (!ps.length) return;
-  var ser = blockSeries(list, view).filter(function(x){ return vis(id, x.key); });
+  // Colour follows the ENTITY, not its rank among the visible series: the slot is the series' index
+  // in the full list — the same index its legend chip uses — so hiding one never repaints the rest.
+  var allSer = blockSeries(list, view), slotOf = {};
+  allSer.forEach(function(x, i){ slotOf[x.key] = i; });
+  var ser = allSer.filter(function(x){ return vis(id, x.key); });
   function money(u){ return u === 'usdM' || u === 'eps'; }
   var mode = st.mode || 'amt';
   var allPs = blockPeriods(id, list, view);
@@ -551,8 +555,8 @@ function buildChartBlock(id, list, view, opts){
       if (mode === 'growth') return growAmt ? v / 1000 : v * 100;
       return (x.d.unit === 'usdM') ? v / 1000 : (x.d.unit === 'pct' ? v * 100 : v);
     });
-    var isTarget = opts.firstIsTarget && i === 0;
-    var color = !m ? RS_CONS : (isTarget ? RS_ACT : (SG_RAMP[i] || SUMMIT_MUTE));
+    var isTarget = opts.firstIsTarget && slotOf[x.key] === 0;
+    var color = !m ? RS_CONS : (isTarget ? RS_ACT : (SG_RAMP[slotOf[x.key]] || SUMMIT_MUTE));
     datasets.push((m && opts.bars && !isTarget)
       ? { label: x.label || x.d.short, data: data, type: 'bar', backgroundColor: color,
           maxBarThickness: 34, order: 3, yAxisID: 'y' }
@@ -1023,8 +1027,12 @@ SG_MD.kpi = function(s, view){
         ' · reported ' + esc(k.periodicity || '—') + '</p>') +
         (k.series ? '' : '<div class="sg-needs">⚑ No series is loaded for this KPI, so there is ' +
           'nothing to chart. The chart below has fallen back to the first KPI that does have one.</div>') }];
+    // FILING is reserved for the filing's OWN words. A `filing` string only counts as a quote when the
+    // dataset says where it was quoted from (`filingWhere`); otherwise it is our description of what the
+    // filing discloses, and it is labelled OURS — a paraphrase never wears the FILING chip.
     if (k.filing) tabs.push({ label: 'In the filing',
-      body: sgTB('FILING', sgQuote(k.filing, k.filingWhere || '')) });
+      body: k.filingWhere ? sgTB('FILING', sgQuote(k.filing, k.filingWhere))
+                          : sgTB('OURS', '<p>' + esc(k.filing) + '</p>') });
     return {
       name: k.name, foot: k.needs, tabs: tabs, mute: g.v == null,
       html: '<span class="sg-card-n">' + esc(k.name) + '</span>' +
@@ -1404,7 +1412,10 @@ function custNamed(d){
       });
     });
   });
-  return out.sort(function(a, b){ return String(b.q).localeCompare(String(a.q)); });
+  // Newest first by the quarter itself, not by the string ('Q4 2025' must sort BELOW 'Q1 2026'). A
+  // range label ('Q4 2025 → Q2 2026') sorts by its latest quarter.
+  function qOrd(q){ var m = String(q || '').match(/Q([1-4])\s*(\d{4})(?!.*Q[1-4]\s*\d{4})/); return m ? (+m[2]) * 10 + (+m[1]) : 0; }
+  return out.sort(function(a, b){ return qOrd(b.q) - qOrd(a.q); });
 }
 
 // The SPLC census, or the shape of its absence. Short either way — the long version is one click
@@ -1435,8 +1446,7 @@ function custSplcSection(c, n){
     ? 'The ' + sp.sized + ' sized relationships add to about <b>$' + (sp.sizedSumM / 1000).toFixed(1) +
       'B</b> as filed — under <b>' + (covPct < 0.2 ? '0.2' : covPct.toFixed(1)) + '%</b> of ' +
       esc(sp.revBaseLabel || 'revenue') + '. Read that as the reach of the register, not as ' +
-      'concentration: this company\'s customers are consumers and small sellers, and consumers do ' +
-      'not file.'
+      'concentration' + (sp.coverageWhy ? ': ' + esc(sp.coverageWhy) : '.')   // the "why" is the company's, from its dataset
     : 'None of them carries a size, so they can be listed but not ranked.';
   return sec(n, 'Who has said they buy from ' + coName(), sp.named + ' named · ' + sp.sized + ' sized',
     '<p class="sg-lede">' + tierTag('COUNTERPARTY') +

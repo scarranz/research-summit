@@ -206,6 +206,7 @@ function renderInvGrid(){
     var ytdIsEst=inv.ytdNow!=null?inv.ytdNowEst:inv.ytdEst;
     var estTag=' <span style="font-size:9px;color:var(--mu)">est</span>';
     var ytdVal=ytd!=null?((ytd>=0?'+':'')+ytd.toFixed(1)+'%'+(ytdIsEst?estTag:'')):'n/a';
+    var ytdColor=(ytd!=null&&ytd<0)?' style="color:var(--neg)"':'';
     html+='<div class="icard-mets">';
     html+='<div class="icard-mets-row">';
     html+='<div class="icard-met"><div class="icard-ml">'+cumLbl+'</div><div class="icard-mv">'+(hasPerf?((inv.cum>0?'+':'')+inv.cum.toFixed(1)+'%'+(inv.est?' <span style="font-size:9px;color:var(--mu)">est</span>':'')):'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
@@ -217,7 +218,7 @@ function renderInvGrid(){
     var allHoldings=inv.holdings||[];
     var conc=allHoldings.slice(0,HF_TOPN).reduce(function(s,h){return s+(h.w||0);},0);
     html+='<div class="icard-mets-row">';
-    html+='<div class="icard-met"><div class="icard-ml">2026 YTD</div><div class="icard-mv">'+ytdVal+'</div></div>';
+    html+='<div class="icard-met"><div class="icard-ml">2026 YTD</div><div class="icard-mv"'+ytdColor+'>'+ytdVal+'</div></div>';
     html+='<div class="icard-met"><div class="icard-ml">Top '+HF_TOPN+' Concentration</div><div class="icard-mv">'+(allHoldings.length?conc.toFixed(1)+'%':'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
     html+='</div>';
     html+='</div>';

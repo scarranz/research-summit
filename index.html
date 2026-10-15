@@ -26,6 +26,7 @@
 <link rel="stylesheet" href="css/portfolio-metrics.css">
 <link rel="stylesheet" href="css/derivatives.css">
 <link rel="stylesheet" href="css/betas.css">
+<link rel="stylesheet" href="css/market-history.css">
 <link rel="stylesheet" href="css/industry.css">
 <link rel="stylesheet" href="css/spectrum.css">
 <link rel="stylesheet" href="css/ndx-attribution.css">
@@ -187,6 +188,9 @@
      (S&P 500 · Nasdaq-100 · or both where that makes sense). The index toggles are
      filled by market-analysis.js (MA_SECTIONS); the Nasdaq panes by ndx-attribution.js. -->
 <div id="tp-rot" class="tp">
+  <div class="ma-tabs"><button class="ma-tab active" data-matab="index">Index Analysis</button><button class="ma-tab" data-matab="history">Market History 1995-2005</button></div>
+  <!-- Market History tab: js/market-history.js · data js/market-history-data.js (scripts/market-history/extract_history.py) · docs/MARKET_HISTORY.md -->
+  <div id="mh-root"></div>
   <div id="ndx-tip" style="position:fixed;pointer-events:none;opacity:0;transition:opacity .09s;background:var(--w,#fff);border:1px solid rgba(0,0,0,.1);border-radius:9px;padding:8px 12px;font-size:12px;box-shadow:0 5px 18px rgba(0,0,0,.14);z-index:1999;max-width:260px;font-family:Inter,sans-serif"></div>
 
   <div class="sec" data-ma="price">
@@ -736,6 +740,7 @@ import { loadInvestmentPage } from './js/investment.js';
 import { loadThesisPage } from './js/thesis.js';
 import { loadSpectrumPage } from './js/spectrum.js';
 import { loadMarketAnalysisPage } from './js/market-analysis.js';
+import { initMarketHistoryTabs } from './js/market-history.js';
 import { loadHedgeFundsPage } from './js/hedge-funds.js';
 import { loadTeamPage } from './js/team.js';
 import { loadFundReturnsPage } from './js/fund-returns.js';
@@ -788,7 +793,7 @@ async function boot() {
 
       // Register page loaders
       registerPageLoader('research', () => switchResearchTab('companies'));
-      registerPageLoader('market-analysis', loadMarketAnalysisPage);
+      registerPageLoader('market-analysis', () => { loadMarketAnalysisPage(); initMarketHistoryTabs(); });
       registerPageLoader('hedge-funds', loadHedgeFundsPage);
       registerPageLoader('team', loadTeamPage);
       registerPageLoader('fund-returns', loadFundReturnsPage);

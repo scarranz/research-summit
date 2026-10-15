@@ -193,13 +193,15 @@ Most team members using this portal are **not developers**. When they ask Claude
 |---|---|---|---|---|
 | **San** (Santiago Carranza) | `scarranz` | Yes | Yes | Yes |
 | **Oscar** (Oscar Cordova) | `ocordova` | Yes | Yes | Yes |
-| SAB (Santiago Alvarez) | `salvarez-summit` | No — open PRs only | No | No |
+| SAB (Santiago Alvarez) | `salvarez-summit` | Yes — approve & merge | No | No |
 | Deborah | `posterdeb` | No — open PRs only | No | No |
 | Pablo (Pablo Valles) | `pvalles96` | No — open PRs only | No | No |
 | Dani (Daniel Alvarez) | `DOAA351` | No — open PRs only | No | No |
 
+**San, Oscar and SAB** can:
+- Approve and merge pull requests (SAB is a CODEOWNER)
+
 **Only San and Oscar** can:
-- Approve and merge pull requests
 - Run SQL in the Supabase SQL Editor
 - Deploy edge functions (`supabase functions deploy`)
 - Manage Supabase secrets (`supabase secrets set`)
@@ -207,7 +209,7 @@ Most team members using this portal are **not developers**. When they ask Claude
 
 **All other team members** work through Claude:
 - They describe what they want → Claude creates a branch, writes code, opens a PR
-- San or Oscar reviews and merges the PR
+- San, Oscar or SAB reviews and merges the PR
 - They should **never** run SQL, deploy functions, or touch the database directly
 
 ### Adding a new team member
@@ -241,7 +243,7 @@ Before making ANY code changes, Claude MUST:
 4. **Make changes**, commit with clear messages
 5. **Push the branch:** `git push -u origin <branch-name>`
 6. **Open a PR** using `gh pr create` — include a clear summary of what changed and why
-7. **Never merge the PR** — leave it for San or Oscar to review and merge
+7. **Never merge the PR** — leave it for San, Oscar or SAB to review and merge
 8. **If the user asks to work on something new**, go back to step 1 (new branch from main)
 
 ### For team members
@@ -249,7 +251,7 @@ Before making ANY code changes, Claude MUST:
 Most team members are non-technical. Claude handles all git operations for them. Team members just need to:
 
 - **Describe what they want** — Claude creates the branch, writes code, and opens the PR
-- **Review PRs on GitHub** — only San and Oscar can approve and merge
+- **Review PRs on GitHub** — San, Oscar and SAB can approve and merge
 - **Never edit files on `main` directly** — always ask Claude to make changes
 - **Never run SQL or deploy functions** — only San and Oscar handle database and infrastructure
 

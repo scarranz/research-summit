@@ -480,47 +480,36 @@ function bar(v, mx, goodPos) {
   return '<div class="mh-div"><span style="' + (pos ? 'left:50%;' : 'right:50%;') + 'width:' + w + '%;background:' + (pos ? '#177A4E' : '#9B2A20') + '"></span></div>';
 }
 function bottomLine() {
-  var f = facts(), b99 = f.b[4], b00 = f.b[5], c0 = D.fate[0].t;
-  return '<div class="mh-bl"><div class="mh-blh">The short version</div><ol>' +
-    '<li><b>The 1990s rally narrowed before it broke.</b> Through 1997 about four in five S&amp;P 500 names rose each year. In 1999 the index gained ' + pc(b99.cap, 0) + ' while the median stock was ' + pc(b99.med, 0) + ' and only ' + n1(b99.beat, 0) + '% of names beat the index.</li>' +
-    '<li><b>The break began as a reversal of the leaders, not a market crash.</b> In 2000 the index fell ' + pc(b00.cap, 0) + ' while the average stock rose ' + pc(b00.ew, 0) + '; it became a general bear market only in 2001-02.</li>' +
-    '<li><b>The reversal was long, not a bounce.</b> The 1995-99 winners lost ground to the 1995-99 laggards through 2005; the loss sat in Technology and Communications.</li>' +
-    '<li><b>Leaders survive as companies and still lose as stocks.</b> ' + f.top10Spx + ' of the ten largest names of Dec 1999 are in the S&amp;P 500 today, with a median 2000-05 return of ' + pc(f.top10Med, 0) + '; of the 500 names of Dec 1994 only ' + c0.SPX[0] + ' remain, mostly because the rest were acquired.</li>' +
-    '<li><b>Today shows the same breadth signature as 1998-99, on the same measures,</b> with the largest ten names at ' + n1(f.now[f.now.length - 1].top10w, 0) + '% of the index versus ' + n1(D.conc[K0].top10, 0) + '% then. This data cannot say whether the rest of the pattern follows.</li></ol></div>';
+  var f = facts(), b = f.b, nb = f.now[f.now.length - 1];
+  return '<div class="mh-bl"><ol>' +
+    '<li>1998-99: the index rose ' + pc(b[3].cap, 0) + ' and ' + pc(b[4].cap, 0) + '. The median stock: ' + pc(b[3].med, 0) + ' and ' + pc(b[4].med, 0) + '.</li>' +
+    '<li>2000: the index fell ' + dn(b[5].cap) + '. The average stock rose ' + pc(b[5].ew, 0) + '. The leaders fell first.</li>' +
+    '<li>1995-99 winners vs laggards, 2000-05 (median): ' + pc(f.q5med, 0) + ' vs ' + pc(f.q1med, 0) + '.</li>' +
+    '<li>' + f.top10Spx + ' of the 10 largest of Dec 1999 are still in the S&amp;P 500. They lost ' + dn(f.top10Med) + ' (median).</li>' +
+    '<li>2023-25 shows the same narrow breadth. Top 10 = ' + n1(nb.top10w, 0) + '% of the index vs ' + n1(D.conc[K0].top10, 0) + '% in 1999.</li></ol></div>';
 }
 function findingsHtml() {
-  var f = facts(), b = f.b, o = '';
-  // 1 ─ narrow
-  o += finding(1, 'Until 1997 the rally was broad. In 1998-99 it narrowed to a minority of stocks.',
-    'In 1995-97 about ' + n1(mean([b[0].up, b[1].up, b[2].up]), 0) + '% of names rose each year and the median stock (' + n1(mean([b[0].med, b[1].med, b[2].med]), 0) + '% a year) kept up with the index. By 1999 the index gained ' + pc(b[4].cap, 0) + ' while the median stock returned ' + pc(b[4].med, 0) + ': only ' + n1(b[4].up, 0) + '% of names rose and ' + n1(b[4].beat, 0) + '% beat the index. The best tenth of stocks gained ' + pc(b[4].topDec, 0) + ' and the worst tenth lost ' + dn(b[4].botDec) + ': the dispersion between names was the widest in the file (σ ' + n1(b[4].sd, 0) + ' points). The index return of 1998-99 was a minority\'s return.',
+  var f = facts(), b = f.b, o = '', p = f.paths, g = function (sc, i) { return (p[sc][i] / p[sc][0] - 1) * 100; };
+  o += finding(1, 'Until 1997 the rally was broad. In 1998-99 a minority carried it.',
+    '1995-97: ' + n1(mean([b[0].up, b[1].up, b[2].up]), 0) + '% of names rose each year. 1999: index ' + pc(b[4].cap, 0) + ', median stock ' + pc(b[4].med, 0) + ', only ' + n1(b[4].beat, 0) + '% of names beat the index.',
     '<div class="mh-two"><div id="mh-f1a"></div><div id="mh-f1b"></div></div>');
-  // 2 ─ leaders reversed
-  var p = f.paths, g = function (sc, i) { return (p[sc][i] / p[sc][0] - 1) * 100; };
-  var sw = f.igRows.filter(function (r) { return r.g === 'Software & Tech Services'; })[0], hw = f.igRows.filter(function (r) { return r.g === 'Tech Hardware & Semiconductors'; })[0], tl = f.igRows.filter(function (r) { return r.g === 'Telecommunications'; })[0], md = f.igRows.filter(function (r) { return r.g === 'Media'; })[0];
-  o += finding(2, 'The break began as a reversal of the leaders, not a crash: in 2000 the average stock rose.',
-    'In 2000 the fixed basket fell ' + dn1(b[5].cap) + ' while the equal-weighted average gained ' + pc(b[5].ew, 1) + ' and the median stock ' + pc(b[5].med, 1) + '; ' + n1(b[5].up, 0) + '% of names rose. The sectors the market had ignored were the ones that rose: Utilities ' + pc(g('Utilities', 1), 0) + ', Health Care ' + pc(g('Health Care', 1), 0) + ', Financials ' + pc(g('Financials', 1), 0) + ', Energy ' + pc(g('Energy', 1), 0) + '; Technology ' + pc(g('Technology', 1), 0) + ' and Communications ' + pc(g('Communications', 1), 0) + '. It became general only in 2001-02 (' + n1(b[6].up, 0) + '% and ' + n1(b[7].up, 0) + '% of names up). Even then the ignored sectors fell far less: from Dec 1999 to Dec 2002 Technology lost ' + dn(g('Technology', 3)) + ' and Communications ' + dn(g('Communications', 3)) + ', Financials ' + pc(g('Financials', 3), 0) + ', Utilities ' + pc(g('Utilities', 3), 0) + ', Health Care ' + pc(g('Health Care', 3), 0) + '. ' +
-    'Inside tech the damage was not equal: from Dec 1999 to Dec 2002 Tech Hardware &amp; Semiconductors ' + pc(hw.p02, 0) + ', Software &amp; Tech Services ' + pc(sw.p02, 0) + ', Telecommunications ' + pc(tl.p02, 0) + ', Media ' + pc(md.p02, 0) + ' (hardware and telecom, the physical build-out, took the largest hit; software fell by less but fell).',
+  o += finding(2, 'The break started with the leaders. In 2000 the average stock rose.',
+    '2000: index ' + pc(b[5].cap, 0) + ', average stock ' + pc(b[5].ew, 0) + '. Utilities ' + pc(g('Utilities', 1), 0) + ', Health Care ' + pc(g('Health Care', 1), 0) + ', Technology ' + pc(g('Technology', 1), 0) + '. Dec 1999 to Dec 2002: Technology ' + pc(g('Technology', 3), 0) + ', Utilities ' + pc(g('Utilities', 3), 0) + '.',
     '<div id="mh-f2"></div>' + igTable());
-  // 3 ─ winners vs laggards
-  var qe = function (q) { return f.q[q][6] - 100; };
-  o += finding(3, 'The winners of 1995-99 lost and the laggards won, for six years rather than one — and the loss sits in the technology and communications winners.',
-    'Ranking the 500 names of Dec 1999 by their 1995-99 return (nothing after that date is used), the top fifth (Q5) held ' + n1(f.q5w, 0) + '% of the index. Weighted by what was still in the index each year, Q5 went from 100 to ' + n1(f.q[5][6], 0) + ' by Dec 2005, the bottom fifth (Q1) to ' + n1(f.q[1][6], 0) + ' and all of the Dec-1999 names to ' + n1(f.all[6], 0) + '. The median Q5 name returned ' + pc(f.q5med, 0) + ' over 2000-05 and the median Q1 name ' + pc(f.q1med, 0) + '. The group is not one population: technology and communications winners (' + n1(f.q5tcShare, 0) + '% of Q5\'s weight) fell ' + dn(f.q5tcMed) + ' (median) while the other winners were about flat (' + pc(f.q5otMed, 0) + ') — yet still well behind the non-tech laggards (' + pc(f.q1otMed, 0) + '). Winners had kept winning through 1998; the sign flipped from 1999 (next-year gap between prior winners and prior losers below).',
+  o += finding(3, 'The 1995-99 winners trailed the laggards for six years. The loss is in tech and communications.',
+    'Dec 1999 = 100, Dec 2005: winners ' + n1(f.q[5][6], 0) + ', laggards ' + n1(f.q[1][6], 0) + '. Median 2000-05: tech/comm winners ' + pc(f.q5tcMed, 0) + ', other winners ' + pc(f.q5otMed, 0) + '.',
     '<div id="mh-f3"></div>' + quintileTable() + spreadsHtml());
-  // 5 ─ survivors
-  var c0 = D.fate[0].t, c5 = D.fate[K0].t;
-  o += finding(4, 'The leaders of 1999 survived as companies and lost as stocks; the index renews itself mostly by acquisition.',
-    f.top10Spx + ' of the ten largest names at Dec 1999 are still in the S&amp;P 500; their median 2000-05 return was ' + pc(f.top10Med, 0) + '. Of the 500 names in the index at Dec 1994, ' + c0.SPX[0] + ' are in it today, ' + c0.ACQ[0] + ' were acquired and ' + c0.BK[0] + ' went bankrupt (' + n1(c0.BK[0] / 5, 0) + '%); at Dec 1999 the figures are ' + c5.SPX[0] + ', ' + c5.ACQ[0] + ' and ' + c5.BK[0] + '. Most names that disappeared did so through a merger, not a failure: an index of the largest companies is replaced by takeovers and by new entrants far more than by bankruptcies.',
+  var c0 = D.fate[0].t;
+  o += finding(4, 'Leaders survive as companies and lose as stocks.',
+    f.top10Spx + ' of the 10 largest of Dec 1999 are still in the S&amp;P 500; median 2000-05 ' + pc(f.top10Med, 0) + '. Of the 500 of Dec 1994: ' + c0.SPX[0] + ' remain, ' + c0.ACQ[0] + ' acquired, ' + c0.BK[0] + ' bankrupt.',
     '<div class="mh-two"><div>' + top10Table() + '</div><div id="mh-f5"></div></div>');
-  // 6 ─ rotation
   var s0 = D.sectors[0].d, s5 = D.sectors[K0].d, s10 = D.sectors[10].d, tcw = function (s) { return s.Technology.w + s.Communications.w; };
-  o += finding(5, 'The weight left Technology and Communications and went mostly to Financials.',
-    'Technology plus Communications went from ' + n1(tcw(s0), 0) + '% of the index (Dec 1994) to ' + n1(tcw(s5), 0) + '% (Dec 1999) and back to ' + n1(tcw(s10), 0) + '% (Dec 2004). Financials went from ' + n1(s0.Financials.w, 0) + '% to ' + n1(s5.Financials.w, 0) + '% to ' + n1(s10.Financials.w, 0) + '%, the largest sector weight in the file; Health Care and Energy also gained. The file ends in 2005 and cannot say how that rotation ended. The lesson it does carry is the second half of the first: what the market stopped paying for in 2000 was not automatically safe afterwards.',
+  o += finding(5, 'The weight left tech and communications and went to financials.',
+    'Tech + Comm: ' + n1(tcw(s0), 0) + '% → ' + n1(tcw(s5), 0) + '% → ' + n1(tcw(s10), 0) + '% (Dec 1994, 1999, 2004). Financials: ' + n1(s0.Financials.w, 0) + '% → ' + n1(s5.Financials.w, 0) + '% → ' + n1(s10.Financials.w, 0) + '%.',
     '<div id="mh-f6"></div>');
-  // 7 ─ today
   var nb = f.now[f.now.length - 1];
-  o += finding(6, 'The same breadth signature is back, on the same measures.',
-    'Index return against the equal-weighted average: 1998 ' + pc(b[3].cap, 0) + ' vs ' + pc(b[3].ew, 0) + ', 1999 ' + pc(b[4].cap, 0) + ' vs ' + pc(b[4].ew, 0) + '; ' + f.now.slice(3).map(function (x) { return x.label + ' ' + pc(x.cap, 0) + ' vs ' + pc(x.ew, 0); }).join(', ') + '. The share of names beating the index was ' + n1(b[3].beat, 0) + '% and ' + n1(b[4].beat, 0) + '% then, and is ' + f.now.slice(3).map(function (x) { return n1(x.beat, 0) + '%'; }).join(', ') + ' now. The ten largest names are ' + n1(nb.top10w, 0) + '% of the index against ' + n1(D.conc[K0].top10, 0) + '% at the end of 1999. ' +
-    'What this shows: today\'s index return is as dependent on a minority as the 1998-99 return was, and the narrowness has lasted longer (three full years against two). What it does not show: that the 2000 reversal follows. In 1998-99 the signature was visible for two years before the break, so breadth is a condition to watch, not a timing signal. Differences to keep in view: SPY weights are float-adjusted and the 1990s ones are full market cap; 2026 is year to date.',
+  o += finding(6, 'Today shows the same narrow breadth.',
+    'Index vs equal-weighted: 1998 ' + pc(b[3].cap, 0) + ' / ' + pc(b[3].ew, 0) + ', 1999 ' + pc(b[4].cap, 0) + ' / ' + pc(b[4].ew, 0) + '; ' + f.now.slice(3, 6).map(function (x) { return x.label + ' ' + pc(x.cap, 0) + ' / ' + pc(x.ew, 0); }).join(', ') + '. Top 10: ' + n1(nb.top10w, 0) + '% of the index vs ' + n1(D.conc[K0].top10, 0) + '%. A condition, not a timing signal.',
     '<div class="mh-two"><div id="mh-f7a"></div><div id="mh-f7b"></div></div>' + eraTable());
   return o;
 }
@@ -537,7 +526,7 @@ function quintileTable() {
 function spreadsHtml() {
   var sp = facts().spreads;
   return '<div class="mh-ch" style="margin-top:14px">Did last year\'s winners keep winning? <span class="mh-mu">median return next year, prior-year top fifth minus bottom fifth, in points</span></div><div class="mh-scroll"><table class="mh-tbl"><thead><tr>' + sp.map(function (x) { return '<th class="r">' + x.lbl + '</th>'; }).join('') + '</tr></thead><tbody><tr>' +
-    sp.map(function (x) { var d = x.hi - x.lo; return '<td class="r ' + cls(d) + '"><b>' + (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(0) + '</b></td>'; }).join('') + '</tr></tbody></table></div><div class="mh-note">Positive = momentum (winners kept winning). Positive every year to 1998, sharply negative into 2000 and 2001, positive in 2002 (the 2001 laggards kept falling), negative again in 2003 (the sharpest laggard rebound).</div>';
+    sp.map(function (x) { var d = x.hi - x.lo; return '<td class="r ' + cls(d) + '"><b>' + (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(0) + '</b></td>'; }).join('') + '</tr></tbody></table></div><div class="mh-note">Positive = winners kept winning.</div</div>';
 }
 function top10Table() {
   var f = facts();
@@ -556,8 +545,7 @@ function mountFindings() {
   var f = facts(), yl = D.years.map(String);
   var pcf = function (v) { return pc(v, 1); };
   mountLine(document.getElementById('mh-f1a'), { x: yl, ordinal: true, half: true, title: 'Return of the index vs the average and the median stock', unit: '% per year', yFmt: function (v) { return v + '%'; },
-    series: [{ key: 'cap', label: 'Index (cap-weighted)', color: '#1E2733', vals: f.b.map(function (x) { return x.cap; }), fmt: pcf }, { key: 'ew', label: 'Equal-weighted', color: '#185FA5', vals: f.b.map(function (x) { return x.ew; }), fmt: pcf }, { key: 'med', label: 'Median stock', color: '#B45309', vals: f.b.map(function (x) { return x.med; }), fmt: pcf }],
-    note: 'Fixed basket of the opening members, price return. The gap between the black line and the other two is how much of the index return came from the largest names.' });
+    series: [{ key: 'cap', label: 'Index (cap-weighted)', color: '#1E2733', vals: f.b.map(function (x) { return x.cap; }), fmt: pcf }, { key: 'ew', label: 'Equal-weighted', color: '#185FA5', vals: f.b.map(function (x) { return x.ew; }), fmt: pcf }, { key: 'med', label: 'Median stock', color: '#B45309', vals: f.b.map(function (x) { return x.med; }), fmt: pcf }] });
   mountLine(document.getElementById('mh-f1b'), { x: yl, ordinal: true, half: true, title: 'How many names took part', unit: '% of the 500', yMin: 0, yFmt: function (v) { return v + '%'; },
     series: [{ key: 'up', label: 'Names that rose', color: '#177A4E', vals: f.b.map(function (x) { return x.up; }), fmt: function (v) { return n1(v, 0) + '%'; } }, { key: 'beat', label: 'Names that beat the index', color: '#9B2A20', vals: f.b.map(function (x) { return x.beat; }), fmt: function (v) { return n1(v, 0) + '%'; } }] });
   var lb = endLbls(), sec = ['Technology', 'Communications', 'Utilities', 'Health Care', 'Financials', 'Energy', 'Consumer Staples', 'Industrials', 'Consumer Discretionary', 'Materials'];
@@ -565,8 +553,7 @@ function mountFindings() {
     series: sec.filter(function (sc) { return f.paths[sc]; }).map(function (sc) { return { key: sc, label: sc, color: SEC_COL[sc], vals: f.paths[sc], fmt: function (v) { return n1(v, 0); } }; }) });
   mountLine(document.getElementById('mh-f3'), { x: lb, ordinal: true, title: 'Winners and laggards of 1995-99 after the peak, Dec 1999 = 100', unit: 'cap-weighted, members still in the index each year', yFmt: function (v) { return v; },
     series: [{ key: 'q5tc', label: 'Q5 winners · Technology & Communications', color: '#185FA5', vals: f.q5tc, fmt: function (v) { return n1(v, 0); } }, { key: 'q5ot', label: 'Q5 winners · all other sectors', color: '#1E2733', vals: f.q5ot, fmt: function (v) { return n1(v, 0); } },
-      { key: 'all', label: 'All Dec-1999 members', color: '#8A93A0', vals: f.all, fmt: function (v) { return n1(v, 0); }, dash: true }, { key: 'q1', label: 'Q1 laggards', color: '#B45309', vals: f.q[1], fmt: function (v) { return n1(v, 0); } }, { key: 'q1ot', label: 'Q1 laggards · non-tech', color: '#D9A15B', vals: f.q1ot, fmt: function (v) { return n1(v, 0); }, dash: true }],
-    note: 'Names that left the index (mostly acquired) drop out of the following years, so a path is the return of what stayed. The ranking is fixed at the Dec-1999 close.' });
+      { key: 'all', label: 'All Dec-1999 members', color: '#8A93A0', vals: f.all, fmt: function (v) { return n1(v, 0); }, dash: true }, { key: 'q1', label: 'Q1 laggards', color: '#B45309', vals: f.q[1], fmt: function (v) { return n1(v, 0); } }, { key: 'q1ot', label: 'Q1 laggards · non-tech', color: '#D9A15B', vals: f.q1ot, fmt: function (v) { return n1(v, 0); }, dash: true }] });
   mountStack(document.getElementById('mh-f5'), { cats: D.bases.map(function (b, k) { return snapLbl(k); }), unit: '%', max: 100, title: 'Where the names of each snapshot are today', unitLabel: 'weight at the snapshot', fmt: function (v) { return v.toFixed(1) + '%'; },
     series: D.meta.states.map(function (c) { return { key: c, label: FATE_SHORT[c], color: FATE_COL[c], vals: D.fate.map(function (x) { return x.t[c][1]; }) }; }) });
   mountStack(document.getElementById('mh-f6'), { cats: D.bases.map(function (b, k) { return snapLbl(k); }), unit: '%', max: 100, title: 'Sector weights at each year-end', fmt: function (v) { return v.toFixed(1) + '%'; },
@@ -579,19 +566,16 @@ function mountFindings() {
 
 // ─── the take-away ──────────────────────────────────────
 function takeaway() {
-  var f = facts(), nb = f.now[f.now.length - 1];
   var li = function (t) { return '<li>' + t + '</li>'; };
-  return '<div class="mh-two"><div class="mh-box"><div class="mh-ch">What this data supports</div><ul class="mh-ul">' +
-    li('A rally can be carried by a minority of stocks for years before it reverses: the 1998-99 signature lasted two years, and the median stock was flat while the index rose.') +
-    li('When the leaders reversed, the average stock did not fall first. The first year of the reversal (2000) was a leaders\' problem; it became a market problem when the decline widened in 2001-02.') +
-    li('Owning the winning companies at the 1999 price lost money for years even when the company did well: the top ten of 1999 mostly survive, and lost a median of ' + dn(f.top10Med) + ' by 2005. ') +
-    li('The laggards of the first half were ahead of the winners through 2005, and the weight they received (Financials, Health Care, Energy) became the new concentration.') +
-    li('Today\'s index return is as dependent on a minority as 1998-99\'s, with higher concentration (top 10 at ' + n1(nb.top10w, 0) + '% vs ' + n1(D.conc[K0].top10, 0) + '%).') +
-    '</ul></div><div class="mh-box"><div class="mh-ch">What it does not support</div><ul class="mh-ul">' +
-    li('That today is 1999 or that a reversal is due: the data has weights, returns and prices, and the breadth signature is a condition, not a timing signal.') +
-    li('Anything about profitability, revenue or valuation of the winners, then or now: the file has prices, weights and returns only.') +
-    li('A conclusion about the sequel to the 2000-05 rotation into Financials: the file ends in 2005.') +
-    li('A forecast for any name.') +
+  return '<div class="mh-two"><div class="mh-box"><div class="mh-ch">Supports</div><ul class="mh-ul">' +
+    li('A minority can carry an index for years before it reverses (1998-99: two years).') +
+    li('The leaders reversed first; the average stock held until 2001.') +
+    li('Owning the 1999 winners at 1999 prices lost money for years, even when the company survived.') +
+    li('Today\'s index return depends on a minority as much as 1998-99\'s.') +
+    '</ul></div><div class="mh-box"><div class="mh-ch">Does not support</div><ul class="mh-ul">' +
+    li('That today is 1999, or that a reversal is due.') +
+    li('Anything on profits, revenue or valuation.') +
+    li('What happened after 2005, or any forecast for a name.') +
     '</ul></div></div>';
 }
 function backdrop() {
@@ -612,8 +596,8 @@ function backdrop() {
     ['Unemployment rate', 'low of ' + n1(M.unrate[up], 1) + '% (' + mo[up] + ')', 'A tight labour market at the top.'],
     ['Federal budget', n1(D.macro.a.fiscal['2000'], 1) + '% of GDP surplus (FY2000)', 'A surplus year.']
   ];
-  return '<div class="mh-scroll"><table class="mh-tbl"><thead><tr><th>Backdrop</th><th>Value</th><th>Reading</th></tr></thead><tbody>' + rows.map(function (r) { return '<tr><td><b>' + r[0] + '</b></td><td>' + r[1] + '</td><td class="mh-mu">' + r[2] + '</td></tr>'; }).join('') + '</tbody></table></div>' +
-    '<div class="mh-note">Public series (FRED, FINRA), 1994-2006. Context for the story above, not an explanation of it: the file has no company fundamentals. The market high and low dates marked on the charts are from memory and still to verify.</div>';
+  return '<div class="mh-scroll"><table class="mh-tbl"><tbody>' + rows.map(function (r) { return '<tr><td><b>' + r[0] + '</b></td><td>' + r[1] + '</td></tr>'; }).join('') + '</tbody></table></div>' +
+    '<div class="mh-note">FRED, FINRA. Context only.</div>';
 }
 
 // ─── page ──────────────────────────────────────────────────
@@ -622,13 +606,11 @@ function sec(title, sub, body) { return '<div class="sec"><div class="sechdr"><s
 
 function render() {
   root.innerHTML =
-    '<div class="mh-intro"><div class="mh-h1">Market History · 1995-2005</div><p>What the S&amp;P 500 did over ten years in which a few names carried the index and then reversed: who led, who sat still, how long it lasted, what became of them, and what this says about the market today. ' +
-    'Not an analogy and not about any single sector: it follows the index\'s own members, weights and returns (price returns on a basket fixed at each year-end; market-cap weights until the 2005 float adjustment; names keyed on Bloomberg\'s FIGI).</p>' +
-    '<div class="mh-mu">Source: Bloomberg (analyst workbook), FRED, FINRA · ' + D.meta.built + ' · method and limits: docs/MARKET_HISTORY.md</div></div>' +
-    bottomLine() + sec('The story', 'seven findings, each with the numbers behind it', findingsHtml()) +
-    sec('What to take away', 'for the CIO and for clients', takeaway()) +
-    sec('Backdrop', 'rates, oil, capex, leverage', backdrop()) +
-    sec('Explore the data', 'everything above, by name', det('macro', 'Macro, commodities and policy charts', 'public series, monthly', '<div id="mh-macroc"></div>') +
+    '<div class="mh-intro"><div class="mh-h1">Market History · 1995-2005</div><div class="mh-mu">S&amp;P 500 members, weights and price returns, followed to today · Bloomberg, FRED, FINRA · docs/MARKET_HISTORY.md</div></div>' +
+    bottomLine() + sec('The story', '', findingsHtml()) +
+    sec('Take away', '', takeaway()) +
+    sec('Backdrop', '', backdrop()) +
+    sec('Explore the data', '', det('macro', 'Macro, commodities and policy charts', 'public series, monthly', '<div id="mh-macroc"></div>') +
       det('conc', 'Concentration table', '11 year-end snapshots, plus today', concHtml()) + det('coh', 'Cohort explorer', 'by sector, name by name', '<div id="mh-cohort"></div>') +
       det('year', 'Year by year', 'who moved the index', '<div id="mh-year"></div>') + det('rot', 'Rotation', 'who stayed, left, entered', '<div id="mh-rot"></div>') + det('fate', 'What became of them', 'terminal state, snapshot by snapshot', '<div id="mh-fatec"></div>'));
   mountFindings(); mountConc(); renderCohort(); renderYear(); renderRot(); renderFate(); renderMacro();

@@ -24,7 +24,8 @@ function txt(attrs, s){ var t = se('text', Object.assign({ 'font-family': 'Inter
 
 // rows: [{ name, w0, w1 }] in display order · hi: axis max (%) · closeLbl: 'Close' | 'Latest'
 // period: label of the year shown (tooltips) · note: html under the legend (optional)
-export function dumbbell(box, rows, hi, closeLbl, period, note){
+// openLbl (optional): names the opening point when it is not the start of one year, e.g. 'Dec 1999'
+export function dumbbell(box, rows, hi, closeLbl, period, note, openLbl){
   var VW = 900, rowH = 30, P = { t: 56, r: 190, b: 26, l: 200 };
   var VH = P.t + rows.length * rowH + P.b;
   function X(v){ return P.l + v / hi * (VW - P.l - P.r); }
@@ -34,7 +35,7 @@ export function dumbbell(box, rows, hi, closeLbl, period, note){
     svg.appendChild(se('line', { x1: X(t), x2: X(t), y1: P.t - 10, y2: VH - P.b, stroke: '#E5E8EC', 'stroke-width': 1 }));
     svg.appendChild(txt({ x: X(t), y: P.t - 18, 'text-anchor': 'middle', 'font-size': 10, fill: '#8A93A0' }, t + '%'));
   }
-  svg.appendChild(txt({ x: VW - P.r + 12, y: 12, 'font-size': 10, fill: '#8A93A0', 'font-weight': '600' }, 'Weight: open → ' + closeLbl.toLowerCase()));
+  svg.appendChild(txt({ x: VW - P.r + 12, y: 12, 'font-size': 10, fill: '#8A93A0', 'font-weight': '600' }, openLbl ? 'Weight: ' + openLbl + ' → ' + closeLbl : 'Weight: open → ' + closeLbl.toLowerCase()));
   svg.appendChild(txt({ x: VW - 6, y: 12, 'text-anchor': 'end', 'font-size': 10, fill: '#8A93A0', 'font-weight': '600' }, 'Change'));
   rows.forEach(function(r, i){
     var y = P.t + i * rowH + rowH / 2, diff = r.w1 - r.w0, col = diff >= 0 ? '#177A4E' : '#9B2A20';
@@ -46,13 +47,13 @@ export function dumbbell(box, rows, hi, closeLbl, period, note){
     g.appendChild(txt({ x: VW - P.r + 12, y: y + 4, 'font-size': 11, fill: '#2B3B4E', 'font-variant-numeric': 'tabular-nums' }, r.w0.toFixed(1) + '% → ' + r.w1.toFixed(1) + '%'));
     g.appendChild(txt({ x: VW - 6, y: y + 4, 'text-anchor': 'end', 'font-size': 11, fill: col, 'font-weight': '600', 'font-variant-numeric': 'tabular-nums' }, (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' pp'));
     bindTip(g, '<b style="font-size:13px">' + r.name + '</b><span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
-      'Start of ' + period + ': ' + r.w0.toFixed(2) + '%<br>' + closeLbl + ': ' + r.w1.toFixed(2) + '%<br>Change: ' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' pp</span>');
+      (openLbl ? openLbl : 'Start of ' + period) + ': ' + r.w0.toFixed(2) + '%<br>' + closeLbl + ': ' + r.w1.toFixed(2) + '%<br>Change: ' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' pp</span>');
     svg.appendChild(g);
   });
   var leg = document.createElement('div');
   leg.style.cssText = 'display:flex;gap:16px;font-size:11px;color:var(--mu);margin-top:8px;flex-wrap:wrap';
   leg.innerHTML =
-    '<span><span style="display:inline-block;width:11px;height:11px;border-radius:50%;border:2px solid #177A4E;box-sizing:border-box;margin-right:5px;vertical-align:-1px"></span>Open weight</span>' +
+    '<span><span style="display:inline-block;width:11px;height:11px;border-radius:50%;border:2px solid #177A4E;box-sizing:border-box;margin-right:5px;vertical-align:-1px"></span>' + (openLbl || 'Open') + ' weight</span>' +
     '<span><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#177A4E;margin-right:5px;vertical-align:-1px"></span>' + closeLbl + ' weight</span>' +
     (note ? '<div style="flex-basis:100%;line-height:1.5">' + note + '</div>' : '');
   box.innerHTML = ''; box.appendChild(svg); box.appendChild(leg);

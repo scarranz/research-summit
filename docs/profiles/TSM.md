@@ -12,7 +12,7 @@
 | Rama | `feat/tsm-profile` |
 | Analista responsable | SAB (Santiago Alvarez) |
 | Inicio | 2026-10-15 |
-| Avance | 33 de 38 unidades aprobadas · 2 omitidas · 2 en espera (EV-EST, MISC) |
+| Avance | 35 de 39 unidades aprobadas · 2 omitidas · 1 en espera (EV-EST) |
 
 ## 1. Inventario de datos (F0)
 
@@ -146,7 +146,8 @@ Revisado 2026-10-15.
 | MG-OWN | Management ▸ Ownership | ✅ | 2026-10-16 | SAB | | tabla de insiders (36, 20-F) en formato .rt; toggle "Top holders" pendiente del HDS de Bloomberg |
 | MG-GOV | Management ▸ Governance & SBC | ✅ | 2026-10-16 | SAB | | 4 KPIs + 3 tablas .rt (pago ejecutivos, comités, pool de pago y capital devuelto) + nota |
 | MG-TRACK | Management ▸ Track Record | ✅ | 2026-10-16 | SAB | | 6 líderes, sin calificaciones (SAB); modal exec: |
-| MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab aprobada) | ⛔ | | | | espera el análisis TSMC + ASML que SAB prepara en otro chat |
+| MISC-fabs | Miscellaneous ▸ Fabs & Capacity | ✅ | 2026-10-16 | SAB | | del dashboard TSMC v7 de SAB: mapa estático, directorio (20-F), envíos de wafers, CoWoS (estimado) |
+| MISC-asml | Miscellaneous ▸ TSMC × ASML | ✅ | 2026-10-16 | SAB | | ventas de ASML por cliente, ASML en el capex de TSMC, EUV (clientes, techo, economía por equipo, → capacidad N2); estimados marcados |
 | F-FINAL | Cierre y entrega | ⬜ | | | | |
 
 ## 3. Decisiones del analista
@@ -187,7 +188,6 @@ No aplica (modo A).
 | 2026-10-15 | EV-RES-DATA, EV-SET, BL-*, VA-HIST forward | decisión: agregar TSM a `Consensus_Portal.xlsm` | SAB | abierto |
 | 2026-10-16 | EV-EST | 2º snapshot del modelo Summit (el eje de Estimates son los snapshots; hoy hay 1) | SAB (submit del 4Q26) | abierto |
 | 2026-10-16 | MG-OWN ▸ toggle Top holders | export Bloomberg HDS de 2330 TT Equity (y TSM US Equity), formato NVDA_OWN.xlsx | SAB | abierto |
-| 2026-10-16 | MISC | contenido: el análisis TSMC + ASML que SAB está depurando en otro chat (Claude había propuesto Capex & Capacity y Overseas Fabs & Subsidies) | SAB | abierto |
 
 ## 6b. Conexiones pendientes ("Live data pending")
 
@@ -441,3 +441,19 @@ No aplica (modo A).
 - SAB da el perfil por terminado con 33 de 38 unidades aprobadas y 2 omitidas.
 - Quedan como agregados futuros, no como bloqueos del perfil: EV-EST (con el 2º snapshot Summit), MISC (análisis TSMC + ASML de SAB) y el toggle "Top holders" de Ownership (export HDS de Bloomberg).
 - Fotos: solo C.C. Wei; los otros 5 con iniciales por decisión de SAB (no es pendiente).
+
+### 2026-10-16 · MISC-fabs Miscellaneous ▸ Fabs & Capacity — APROBADA
+- Origen: vistas "Map" y "Capacity" del dashboard independiente de SAB (`tsmc_dashboard_v7.html`, 16-oct); SAB eligió traer solo histórico (los supuestos forward esperan sus decisiones) e incluir estimados de terceros marcados.
+- Qué se mostró: 5 KPIs (16 fabs en operación · 5 países · >17M wafers 2025 · 4.48M wafers 3Q26 · CoWoS ~127K 2026E estimado) · mapa mundial estático (`js/overviews/world-map-data.js`, generado de world-atlas 110m — el CSP bloquea bajarlo en vivo) con un marcador por sitio y zoom World/East Asia/Taiwan/U.S./Europe; modal por sitio (`fab:`) · directorio de 24 fabs (`.twrap/.rt`; año, wafer y nodo del 20-F; capacidad por fab marcada *estimate*) · envíos trimestrales 4Q19–3Q26 + tabla · CoWoS 2022–2026E (estimado) + tabla · pie.
+- Diferencia con el dashboard: Fab 12 — el 20-F da 40 nm como nodo más avanzado en volumen (el dashboard decía N7/N10/N16); se muestra el del 20-F con nota.
+- Fuera (forward/estimado de reparto): capacidad por nodo y región, rampas, línea de tiempo futura.
+- Código: `js/overviews/tsm-fabs.js` + `tsm-fabs-data.js`; sección `misc` nueva en `tsm.js`.
+- Cambios pedidos: ninguno.
+
+### 2026-10-16 · MISC-asml Miscellaneous ▸ TSMC × ASML — APROBADA
+- Origen: vista "ASML" del dashboard v7 de SAB. Primera versión (solo histórico: 5 KPIs + mayor cliente de ASML + ASML en el capex de TSMC + EUV por cliente) — SAB pidió "todo lo necesario" sin relleno.
+- Agregado (SAB eligió las 4 piezas): ventas de ASML por grupo de cliente 2019–2025 (TSMC / Samsung estimado / resto, con el % de TSMC; reemplaza la gráfica del mayor cliente, 2017–18 en nota) · techo EUV de ASML vs entregas vs TSMC 2024–2030 (reportado/guiado sólido, modelo tenue) · economía por equipo (tabla, estimado) · EUV → capacidad N2 2024–2030 (gráfica + tabla; 2026–30 = modelo de SAB, marcado).
+- No se trajo: las notas en prosa del mix de herramientas (repiten las tablas).
+- Fuentes: ASML 20-F/Annual Reports, ASML Q3 2026 (14-oct), TSMC 20-F, ASML Investor Day nov-2024, dashboard de SAB. ASML no nombra a su mayor cliente: identificado como TSMC por cruce con ventas en Taiwán (dicho en el pie).
+- Código: `js/overviews/tsm-asml.js` + `tsm-asml-data.js`.
+- Cambios pedidos: ninguno.

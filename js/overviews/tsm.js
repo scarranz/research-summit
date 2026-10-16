@@ -18,7 +18,9 @@ import { tsmSplcBody, tsmSplcBuild, tsmSplcPop } from './tsm-splc.js';   // Bott
 import { tsmHistMult } from './tsm-histmult.js';   // Valuation ▸ Historic Multiple (copy of amzn-histmult.js)
 import { tsmTargetMult } from './tsm-target-multiple.js';   // Valuation ▸ Target Multiple / PEG (frozen Summit valuation)
 import { tsmSens } from './tsm-sensitivity.js';
-import { TSM_MGMT, tsmOwnBody, tsmOwnInit, tsmGovBody, tsmTrackBody, tsmTrackPop } from './tsm-mgmt.js';   // Management ▸ Executives & Board (shared makeManagement mold)   // Valuation ▸ Sensitivity (frozen Summit snapshot; SN's one-segment structure)
+import { TSM_MGMT, tsmOwnBody, tsmOwnInit, tsmGovBody, tsmTrackBody, tsmTrackPop } from './tsm-mgmt.js';
+import { tsmFabsBody, tsmFabsBuild, tsmFabsPop } from './tsm-fabs.js';
+import { tsmAsmlBody, tsmAsmlBuild } from './tsm-asml.js';   // Miscellaneous ▸ TSMC × ASML (from SAB's TSMC dashboard)   // Miscellaneous ▸ Fabs & Capacity (from SAB's TSMC dashboard)   // Management ▸ Executives & Board (shared makeManagement mold)   // Valuation ▸ Sensitivity (frozen Summit snapshot; SN's one-segment structure)
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/tsm.js)
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -536,6 +538,7 @@ function wireModal(root){
     if(kind==='ce'){ return tsmCePop(id); }   // Evolution ▸ Earnings "?" pop-ups
     if(kind==='splc'){ return tsmSplcPop(id); }   // Bottom Line ▸ Supply Chain cards
     if(kind==='exec'){ return tsmTrackPop(id); }   // Management ▸ Track Record cards
+    if(kind==='fab'){ return tsmFabsPop(id); }   // Miscellaneous ▸ Fabs & Capacity map sites
     if(kind==='prod'){ var f=A_PRODUCTS[+id]; if(!f) return null;
       var body=f.items.map(function(it){ return '<div class="prod-item"><div class="prod-item-n">'+esc(it[0])+'</div><div class="famd">'+it[1]+'</div></div>'; }).join('');
       return {t:f.ic+' '+esc(f.fam),h:'<div class="famd prod-lead">'+esc(f.d)+'</div>'+body}; }
@@ -580,7 +583,8 @@ function init(c){
 // Evolution ▸ Earnings (EV-SET, EV-POST, EV-NOTES); Bottom Line ▸ General (BL-GEN) · Supply Chain (BL-SPLC);
 // Valuation ▸ Historic Multiple (VA-HIST); Peers (VA-PEERS);
 // Target Multiple (VA-TM); Sensitivity (VA-SENS);
-// Management ▸ Executives & Board (MG-TEAM); Ownership (MG-OWN); Governance & SBC (MG-GOV); Track Record (MG-TRACK).
+// Management ▸ Executives & Board (MG-TEAM); Ownership (MG-OWN); Governance & SBC (MG-GOV); Track Record (MG-TRACK);
+// Miscellaneous ▸ Fabs & Capacity (MISC-fabs); TSMC × ASML (MISC-asml).
 function deepDiveHtml(c){
   var h='<div class="ov ov-tsm ov-tsm-dd" data-brand="TSM" style="--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">';
   h+='<div class="dd-tabs">'+
@@ -589,6 +593,7 @@ function deepDiveHtml(c){
       '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
       '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+      '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="topline">'+
       '<div class="ovt-subtabs">'+
@@ -644,6 +649,14 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="governance" hidden>'+tsmGovBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="track" hidden>'+tsmTrackBody()+'</div>'+
     '</div>';
+  h+='<div class="dd-pane" data-dd="misc" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="fabs">Fabs &amp; Capacity</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="asml">TSMC &times; ASML</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="fabs">'+tsmFabsBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="asml" hidden>'+tsmAsmlBody()+'</div>'+
+    '</div>';
   h+='</div>';
   return h;
 }
@@ -658,6 +671,10 @@ function aBuildSub(root, dd, key){
   if(dd==='bottomline'){
     if(key==='supplychain') requestAnimationFrame(tsmSplcBuild);
     else requestAnimationFrame(tsmBlGeneralBuild);
+  }
+  if(dd==='misc'){
+    if(key==='fabs' || key==null) requestAnimationFrame(function(){ tsmFabsBuild(root); });
+    if(key==='asml') requestAnimationFrame(tsmAsmlBuild);
   }
   if(dd==='mgmt'){
     if(key==='ownership') tsmOwnInit(root);

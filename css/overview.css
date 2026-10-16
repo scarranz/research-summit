@@ -3500,3 +3500,23 @@ img.org-photo { object-fit: cover; }
 .ov-tsm-dd .trk-more{margin-top:7px;font-size:10.5px;font-weight:800;color:var(--steel)}
 #co-detailview .trk-pop-r{font-weight:600;color:var(--mu)}
 .ov-tsm-dd .ovt-subpane[data-ovst="track"] .ew-note{margin-top:14px}
+
+/* TSMC ▸ Miscellaneous ▸ Fabs & Capacity (js/overviews/tsm-fabs.js) */
+.ov-tsm-dd .fab-ctl{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:6px 0 8px}
+.ov-tsm-dd .fab-legs{display:flex;gap:12px;flex-wrap:wrap}
+.ov-tsm-dd .fab-leg{font-size:10.5px;font-weight:700;color:var(--mu);display:inline-flex;align-items:center;gap:5px}
+.ov-tsm-dd .fab-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+.ov-tsm-dd .fab-map-wrap{border:1px solid var(--bdr);border-radius:10px;overflow:hidden;background:#EEF3F9}
+.ov-tsm-dd .fab-map{display:block;width:100%;height:auto;aspect-ratio:3/1}
+.ov-tsm-dd .fab-land{fill:#D5DEE9;stroke:#fff;stroke-width:.15}
+.ov-tsm-dd .fab-site{cursor:pointer}
+.ov-tsm-dd .fab-site:hover circle{opacity:.85}
+.ov-tsm-dd .fab-est{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#B7791F;border:1px solid rgba(183,121,31,.45);border-radius:20px;padding:0 6px;margin-left:5px;vertical-align:1px}
+.ov-tsm-dd .fab-tbl td:nth-child(n+3),.ov-tsm-dd .fab-tbl th:nth-child(n+3){text-align:left}
+.ov-tsm-dd .fab-tbl td:first-child,.ov-tsm-dd .fab-tbl td:nth-child(2){text-align:left;white-space:normal}
+.ov-tsm-dd .fab-num td:first-child,.ov-tsm-dd .fab-num th:first-child,.ov-tsm-dd .fab-num td:last-child,.ov-tsm-dd .fab-num th:last-child{text-align:left}
+.ov-tsm-dd .fab-chart{position:relative;height:280px;margin:4px 0}
+.ov-tsm-dd .fab-chart-sm{height:220px}
+.ov-tsm-dd .fab-collap{margin:6px 0 4px}
+#co-detailview .fab-pop-note{font-size:11px;color:var(--mu);white-space:normal}
+.ov-tsm-dd .fab-econ td,.ov-tsm-dd .fab-econ th{text-align:left;white-space:nowrap}

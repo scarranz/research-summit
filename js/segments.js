@@ -37,24 +37,31 @@ import { amznResults } from './results-data/amzn.js';
 import { dhrResults } from './results-data/dhr.js';
 import { snSegments } from './segments-data/sn.js';
 import { snResults } from './results-data/sn.js';
+import { tsmSegments } from './segments-data/tsm.js';
+import { tsmResults } from './results-data/tsm.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
 import { SN_THEMES } from './themes-data/sn.js';
+import { TSM_THEMES } from './themes-data/tsm.js';
 import { SUMMIT_CAT, SUMMIT_MUTE } from './viz-palette.js';   // the portal's fixed categorical palette
 
 // The Notes taxonomy names segments in prose; the datasets key them. One map, stated once.
 var THEME_SEG = {
   AMZN: { 'Amazon US': 'na', 'Amazon International': 'intl', 'AWS': 'aws' },
   SN: { 'SharkNinja': 'sn' },
+  TSM: { 'AI & HPC demand': 'hpc', 'Consumer & smartphone': 'smart' },   // the other TSM themes are company-wide
 };
-var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES };
+var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES };
 var SEGMENTS_DATA = {
   AMZN: { seg: amznSegments, res: amznResults },
   DHR:  { seg: dhrSegments,  res: dhrResults  },
   // SN has ONE reportable segment (Domestic + International aggregated), so its Segments tab
   // carries the consolidated company; the revenue analysis lives in Top Line ▸ Other, which is
   // what `other` (alternative cuts of the same total) is for. See segments-data/sn.js.
-  SN:   { seg: snSegments,  res: snResults  }
+  SN:   { seg: snSegments,  res: snResults  },
+  // TSM has ONE operating segment (foundry); its six PLATFORMS stand in as the segments here (SAB,
+  // Oct 15 2026) and the General tab quotes the 20-F so they are not read as reportable segments.
+  TSM:  { seg: tsmSegments, res: tsmResults }
 };
 
 export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }

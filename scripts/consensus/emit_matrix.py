@@ -211,6 +211,33 @@ if any(dropped.values()):
 still = [f for f in frozen if f.split('.')[1] not in dropped[f.split('.')[0]]]
 if still: print('   !! FROZEN AND STILL BEING SHIPPED: %s — add them to "drop"' % ', '.join(still))
 
+# ── the reprinted-snapshot check ──────────────────────────────────────────────────────────────
+# The other failure mode: a whole OLD row carries a LATER snapshot's numbers verbatim (TSM, Oct
+# 2026: 8–10 of 30 historical snapshots of every platform segment hold the 7/21/2026 values,
+# relabelled onto their own horizons). The series is not frozen, so the check above misses it,
+# but the 'pre-print' consensus it yields for those quarters is a number nobody had at the time.
+# `dropVintages` in the map removes exactly those cells: {"q": {"hpc": ["2023-04-25", ...]}}.
+dropv = {v: {k: set(ids) for k, ids in (MAP.get('dropVintages', {}).get(v, {}) or {}).items()} for v in ('q','y')}
+print('\nreprinted-snapshot check (an old row identical to another snapshot):')
+_any = False
+for view in ('q','y'):
+    for mkey in MAP.get(view, {}):
+        if mkey in dropped[view]: continue
+        sig = {}
+        for s in snaps:
+            d = s['fwd'].get(mkey, {})
+            vals = tuple(round(v[0], 2) for p, v in sorted(d.items(), key=lambda x: ordp(x[0])) if ('Q' in p) == (view == 'q'))
+            if vals: sig.setdefault(vals, []).append(s['asof'])
+        for ids in sig.values():
+            if len(ids) < 2: continue
+            _any = True
+            keep = max(ids); dup = sorted(set(ids) - {keep})
+            left = sorted(set(dup) - dropv[view].get(mkey, set()))
+            print('   %s %s.%-9s %d snapshots repeat %s%s' % ('!!' if left else 'ok', view, mkey, len(dup), keep,
+                  ('   <-- add to dropVintages: %s' % left) if left else '   (dropped by config)'))
+if not _any: print('   none')
+def _vdropped(view, mkey, asof): return asof in dropv[view].get(mkey, set())
+
 def jsnum(v):
     r=round(v,4)
     return str(int(r)) if r==int(r) else repr(r)
@@ -237,6 +264,7 @@ for view, mp in (('q',MAP.get('q',{})), ('y',MAP.get('y',{}))):
         vfrom = (VALID.get(view,{}) or {}).get(mkey)
         cells=[]
         for s in snaps:
+            if _vdropped(view, mkey, s['asof']): continue
             d = s['fwd'].get(mkey, {})
             pers = [p for p in d if ('Q' in p) == (view=='q')]
             if vfrom: pers=[p for p in pers if ordp(p)>=ordp(vfrom)]
@@ -266,6 +294,7 @@ for view in ('q','y'):
         if mkey in dropped[view]: continue
         rows_ = {}
         for s in snaps:
+            if _vdropped(view, mkey, s['asof']): continue
             d = s['fwd'].get(mkey, {})
             cells = {p: round(v[0], 4) for p, v in d.items() if ('Q' in p) == (view=='q')}
             vfrom = (VALID.get(view,{}) or {}).get(mkey)

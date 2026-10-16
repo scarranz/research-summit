@@ -3247,3 +3247,256 @@ img.org-photo { object-fit: cover; }
 .acx-tog button:hover{color:var(--navy)}
 .acx-tog button.active{background:var(--navy);color:#fff}
 .mch-ctl{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
+
+/* Profile-header source buttons (IR + EDGAR), rendered by an overview's headerSources() into
+   #co-srcbtns. Lifted from amzn.js ceHeaderSources' inline <style> so new profiles add none. */
+.cohd-src { display: inline-flex; gap: 8px; align-items: center; }
+.cohd-src a { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; text-decoration: none; position: relative; overflow: hidden; transition: .16s; background: linear-gradient(135deg, var(--navy) 0%, var(--steel) 100%); border: 1px solid rgba(255,255,255,.18); box-shadow: 0 3px 12px rgba(0,0,0,.32); }
+.cohd-src a:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(30,39,51,.30); border-color: rgba(255,255,255,.55); }
+.cohd-src a img { width: 26px; height: 26px; object-fit: contain; display: block; border-radius: 6px; }
+.cohd-src a.edgar img { border-radius: 0; }
+
+/* "View:" pill toggle (money map, peer map). Lifted from amzn.js stdMoneyMap / stdPeerScatter
+   inline styles so new profiles add none; the active pill is a class, not styles set from JS. */
+.mg-tog-row { display: flex; flex-wrap: wrap; gap: 14px; margin: 2px 0 8px; }
+.mg-tog { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--mu); }
+.mg-seg { display: inline-flex; background: #F2F5F8; border: 1px solid var(--bdr); border-radius: 999px; padding: 2px; }
+.mg-pill { border: none; background: transparent; font: inherit; font-size: 10.5px; font-weight: 700; color: var(--mu); padding: 3px 10px; border-radius: 999px; cursor: pointer; }
+.mg-pill.active { background: var(--navy); color: #fff; }
+
+/* Money map spacing (were inline style="margin…" in amzn.js). */
+.ov-diagram-cap.gmm-cap-top { margin: 0 0 8px; }
+.ov-diagram-cap.gmm-cap-end { margin-top: 10px; }
+.mm-defs { margin-top: 12px; }
+.acc .acc { margin-top: 8px; }
+.acc-note { margin-top: 6px; font-size: 11px; }
+/* Short money-map bars: the $ label sits just outside the bar instead of being clipped inside it. */
+.ov-mbar-track.out { display: flex; align-items: center; }
+.ov-mbar-outv { padding-left: 8px; font-size: 11px; font-weight: 600; color: var(--navy); white-space: nowrap; }
+/* Product pop-up items (were inline styles in amzn.js resolve('prod:')). */
+.prod-lead { margin-bottom: 10px; color: var(--mu); }
+.prod-item { margin: 0 0 10px; }
+.prod-item-n { font-size: 12.5px; font-weight: 800; color: var(--navy); }
+
+/* Peer map (Overview ▸ Competitors; Valuation ▸ Peers). Lifted from amzn.js stdPeerScatter's inline
+   <style> so new profiles add none. The tooltip accent is the Summit accent, not a company brand. */
+.mg-node { cursor: pointer; }
+.mg-node text { pointer-events: none; }
+.asc-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 8px 0 2px; }
+.asc-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; border: 1px solid var(--bdr); border-radius: 999px; padding: 3px 9px; background: var(--w); cursor: pointer; color: var(--navy); }
+.asc-chip .x { color: var(--mu); font-weight: 800; }
+.asc-chip .asc-chip-note { font-weight: 600; color: var(--mu); }
+.asc-add { display: inline-flex; gap: 5px; align-items: center; }
+.asc-add input { width: 74px; font: inherit; font-size: 11px; border: 1px solid var(--bdr); border-radius: 7px; padding: 3px 7px; text-transform: uppercase; }
+.asc-add button { font: inherit; font-size: 11px; font-weight: 700; border: 1px solid var(--bdr); border-radius: 7px; padding: 3px 9px; background: #F2F5F8; cursor: pointer; }
+.mg-tip { position: fixed; z-index: 60; max-width: 250px; background: #10141A; color: #fff; border-radius: 9px; padding: 9px 12px; font-size: 11.5px; line-height: 1.5; box-shadow: 0 8px 22px rgba(16,20,26,.28); pointer-events: none; border-top: 3px solid var(--brand); }
+.mg-tip .mgt-h { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; }
+.mg-tip .mgt-h img { width: 18px; height: 18px; border-radius: 4px; background: #fff; object-fit: contain; }
+.mg-tip .mgt-n { font-weight: 800; font-size: 12.5px; color: var(--ice); }
+.mg-tip .mgt-m { margin-top: 4px; color: #C9D2DC; font-size: 11px; }
+.ov-diagram-cap.asc-cap-top { margin: 0 0 6px; }
+.ov-diagram-cap.asc-cap-end { margin-top: 4px; }
+.asc-hint { opacity: .75; }
+
+/* ── TSM Bottom Line ▸ General — bridge sliders, expense explorer and the per-line dives. Copied from the
+   inline <style> blocks in amzn.js (aBridgeBody, EW_CSS, expenseTabsBody) with the brand variables swapped
+   for Summit tokens: --brand → --accent, --brand-2 → --steel, --brand-soft → --ice. ── */
+.ov-tsm-dd .br-sl{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--navy)}
+.ov-tsm-dd .br-sl input{flex:1;max-width:180px;accent-color:var(--accent)}
+.ov-tsm-dd .br-sl-v{width:44px;text-align:right;color:var(--steel);font-variant-numeric:tabular-nums}
+.ov-tsm-dd .br-sl-l{width:120px}
+.ov-tsm-dd .br-fx-reset{cursor:pointer;border:1px solid var(--bdr);background:#fff;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--navy)}
+.ov-tsm-dd .ew-h{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--steel);margin:18px 0 9px;display:flex;align-items:center;gap:8px}
+.ov-tsm-dd .ew-h::after{content:"";flex:1;height:1px;background:var(--bdr)}
+.ov-tsm-dd .ew-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.ov-tsm-dd .ew-two{grid-template-columns:1fr}}
+.ov-tsm-dd .ew-box{border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;background:var(--card,#fff)}
+.ov-tsm-dd .ew-box-h{font-size:13px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.ov-tsm-dd .ew-box-i{font-size:18px}
+.ov-tsm-dd .ew-box-t{font-size:11.5px;color:var(--navy);line-height:1.5}
+.ov-tsm-dd .ew-note{font-size:12px;color:var(--navy);background:rgba(20,110,180,.06);border-radius:8px;padding:9px 12px;margin-top:9px;line-height:1.5}
+.ov-tsm-dd .ew-spark{display:flex;align-items:flex-end;gap:5px;height:96px;margin:4px 0}
+.ov-tsm-dd .ew-sb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px}
+.ov-tsm-dd .ew-sb-v{font-size:9.5px;font-weight:800;color:var(--navy)}
+.ov-tsm-dd .ew-sb-bar{width:100%;border-radius:4px 4px 0 0;background:#B7CBE0}
+.ov-tsm-dd .ew-sb.on .ew-sb-bar{background:var(--steel)}
+.ov-tsm-dd .ew-sb-l{font-size:8.5px;color:var(--mu)}
+.ov-tsm-dd .ew-flow{display:flex;align-items:stretch;flex-wrap:wrap;margin:2px 0}
+.ov-tsm-dd .ew-fn{flex:1;min-width:110px;border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;background:var(--card,#fff);text-align:center}
+.ov-tsm-dd .ew-fn-v{font-size:14px;font-weight:800;color:var(--navy)}
+.ov-tsm-dd .ew-fn-l{font-size:9.5px;color:var(--mu);font-weight:600;margin-top:2px}
+.ov-tsm-dd .ew-far{display:flex;align-items:center;justify-content:center;color:var(--steel);font-size:18px;font-weight:800;padding:0 6px}
+.ov-tsm-dd .ew-q{border-left:3px solid var(--accent);background:rgba(0,0,0,.025);border-radius:0 8px 8px 0;padding:9px 13px;margin:8px 0;font-size:12px;line-height:1.55;color:var(--navy)}
+.ov-tsm-dd .ew-q .ew-att{display:block;margin-top:4px;font-size:10.5px;font-weight:700;color:var(--mu)}
+.ov-tsm-dd .ew-tls{position:relative;margin:8px 0 2px;padding-left:20px}
+.ov-tsm-dd .ew-tls::before{content:"";position:absolute;left:5px;top:5px;bottom:5px;width:2px;background:var(--bdr)}
+.ov-tsm-dd .ew-tli{position:relative;margin-bottom:13px}
+.ov-tsm-dd .ew-tli:last-child{margin-bottom:2px}
+.ov-tsm-dd .ew-tli::before{content:"";position:absolute;left:-18px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--steel);border:2px solid var(--card,#fff);box-shadow:0 0 0 1px var(--bdr)}
+.ov-tsm-dd .ew-tlq{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--steel)}
+.ov-tsm-dd .ew-tlt{font-size:12px;color:var(--navy);line-height:1.5;margin-top:2px}
+.ov-tsm-dd .ew-tlw{font-size:10px;font-weight:700;color:var(--mu);margin-top:3px}
+.ov-tsm-dd .ew-tag{display:inline-block;font-size:8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:1px 6px;border-radius:5px;margin-left:7px;vertical-align:middle;transform:translateY(-1px)}
+.ov-tsm-dd .ew-tag.why{background:rgba(192,80,77,.13);color:#B23A38}
+.ov-tsm-dd .ew-tag.fwd{background:rgba(46,139,87,.15);color:#2E7D51}
+.ov-tsm-dd .ew-tag.ctx{background:rgba(107,118,131,.15);color:#5B6673}
+.ov-tsm-dd .ew-calls{margin-top:14px}
+.ov-tsm-dd .ew-callsum{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--steel);cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:5px 0}
+.ov-tsm-dd .ew-callsum::-webkit-details-marker{display:none}
+.ov-tsm-dd .ew-callsum::before{content:"▸";font-size:11px;transition:transform .15s}
+.ov-tsm-dd .ew-calls[open] .ew-callsum::before{content:"▾"}
+.ov-tsm-dd .ew-callsum::after{content:"";flex:1;height:1px;background:var(--bdr)}
+.ov-tsm-dd .exp-explorer{border:1.5px solid var(--accent);border-radius:14px;padding:14px 16px 16px;background:linear-gradient(180deg,var(--ice),transparent);margin:6px 0 6px}
+.ov-tsm-dd .exp-explorer-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--steel);margin:0 0 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ov-tsm-dd .exp-explorer-h .exp-hint{font-size:9px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--mu);background:#fff;border:1px solid var(--bdr);border-radius:20px;padding:2px 9px}
+.ov-tsm-dd .exp-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.ov-tsm-dd .exp-tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bdr);background:#fff;border-radius:20px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:800;color:var(--navy);transition:.13s}
+.ov-tsm-dd .exp-tab:hover{border-color:var(--accent)}
+.ov-tsm-dd .exp-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.ov-tsm-dd .exp-tab.active .exp-tag{color:rgba(255,255,255,.8)}
+.ov-tsm-dd .exp-tab .exp-dot{width:10px;height:10px;border-radius:3px;flex:none}
+.ov-tsm-dd .exp-tab .exp-tag{font-size:10px;font-weight:800;color:var(--mu)}
+.ov-tsm-dd .exp-panel-card{background:var(--card,#fff);border:1px solid var(--bdr);border-radius:12px;padding:15px 17px}
+
+/* TSMC ▸ Bottom Line ▸ Supply Chain (js/overviews/tsm-splc.js) — scoped, no inline <style> */
+.ov-tsm-dd .tsm-splc-cap{margin:18px 0 6px}
+.ov-tsm-dd .tsm-splc-card{border-left:4px solid var(--steel)}
+.ov-tsm-dd .tsm-splc-more{margin-left:auto;color:var(--steel)}
+.ov-tsm-dd .tsm-splc-bar{margin:4px 0 6px}
+.ov-tsm-dd .tsm-splc-bar .ov-mbar-track{height:8px}
+.ov-tsm-dd .tsm-splc-bar .ov-mbar-fill,.ov-tsm-dd .ov-mbars .ov-mbar-fill{background:var(--navy)}
+.ov-tsm-dd .ov-mbars .ov-mbar-l{width:190px}
+.ov-tsm-dd .tsm-splc-sub,#co-detailview .tsm-splc-sub{color:var(--mu);font-weight:600}
+.ov-tsm-dd .tsm-splc-geo{margin-top:16px}
+.ov-tsm-dd .tsm-splc-geo-c{height:240px}
+.ov-tsm-dd .tsm-splc-geo .rs-collap{margin-top:10px}
+
+/* TSMC ▸ Valuation ▸ Historic Multiple (js/overviews/tsm-histmult.js) — moved from amzn-histmult.js's inline <style> */
+.ov-tsm-dd .hm-notice{padding:14px 2px;color:var(--mu);font:400 12px Inter,sans-serif}
+.ov-tsm-dd .hm-hint{margin-left:6px}
+.ov-tsm-dd .hm-blk .rs-preset.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.ov-tsm-dd .hm-leg{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 6px}
+.ov-tsm-dd .hm-chartwrap{position:relative;height:380px;margin:2px 0 4px}
+.ov-tsm-dd #hmTable{overflow-x:auto}
+.ov-tsm-dd .hm-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}
+.ov-tsm-dd .hm-tbl th,.ov-tsm-dd .hm-tbl td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}
+.ov-tsm-dd .hm-tbl th:first-child,.ov-tsm-dd .hm-tbl td:first-child{text-align:left}
+.ov-tsm-dd .hm-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}
+.ov-tsm-dd .hm-tbl tbody tr:hover td{background:var(--surface)}
+.ov-tsm-dd .hm-tbl td.hm-out{font-weight:800;color:var(--navy)}
+.ov-tsm-dd .hm-slider{margin:10px 2px 2px}
+.ov-tsm-dd .hm-range{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:11px;margin:6px 2px 2px}
+.ov-tsm-dd .hm-range-l{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}
+.ov-tsm-dd .hm-range-i{display:inline-flex;align-items:baseline;gap:6px;color:var(--mu)}
+.ov-tsm-dd .hm-range-i b{font-size:12.5px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}
+.ov-tsm-dd .hm-sw{width:9px;height:9px;border-radius:2px;display:inline-block;align-self:center}
+.ov-tsm-dd .hm-full{appearance:none;border:1px solid rgba(183,121,31,.4);background:rgba(183,121,31,.08);color:#B7791F;font:700 10.5px Inter,sans-serif;padding:3px 9px;border-radius:999px;cursor:pointer}
+.ov-tsm-dd .hm-full:hover{background:rgba(183,121,31,.16)}
+
+/* TSMC ▸ Valuation ▸ Peers — the comps table under the peer map (moved from amzn.js stdPeerScatter's inline <style>) */
+.ov-tsm-dd .asc-tblwrap{overflow-x:auto}
+.ov-tsm-dd .asc-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}
+.ov-tsm-dd .asc-tbl th,.ov-tsm-dd .asc-tbl td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}
+.ov-tsm-dd .asc-tbl th:first-child,.ov-tsm-dd .asc-tbl td:first-child{text-align:left}
+.ov-tsm-dd .asc-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}
+.ov-tsm-dd .asc-tbl td.asc-m{font-weight:800;color:var(--navy)}
+.ov-tsm-dd .asc-tbl tbody tr.asc-hl{background:var(--brand-soft)}
+.ov-tsm-dd .asc-tbl tbody tr.asc-nil td{color:var(--mu)}
+.ov-tsm-dd .asc-tbl tfoot td{border-top:2px solid var(--bdr);border-bottom:none;font-weight:800;color:var(--navy);background:var(--surface)}
+.ov-tsm-dd .asc-tbl tfoot tr.asc-med td{background:var(--surface);font-weight:700;color:var(--mu)}
+.ov-tsm-dd .asc-nm{display:inline-flex;align-items:center;gap:7px}
+.ov-tsm-dd .asc-nm img{width:16px;height:16px;border-radius:4px;background:#fff;object-fit:contain}
+.ov-tsm-dd .asc-tk{color:var(--mu);font-weight:700;font-size:10.5px}
+.ov-tsm-dd .asc-up{color:var(--neg);font-weight:700}
+.ov-tsm-dd .asc-dn{color:var(--pos);font-weight:700}
+.ov-tsm-dd .asc-nilv{color:var(--mu)}
+.ov-tsm-dd .tsm-sc-collap{margin-top:10px}
+
+/* TSMC ▸ Valuation ▸ Target Multiple / PEG (js/overviews/tsm-target-multiple.js) — moved from
+   amzn-target-multiple.js's inline <style>; band colours = SUMMIT_CAT[0] (EV/EBITDA) and [1] (P/E) */
+.ov-tsm-dd .ovt-subpane[data-ovst="targetmult"] .sens-ctrl-l{min-width:0}
+.ov-tsm-dd .ovt-subpane[data-ovst="targetmult"] .sens-ctrl{margin:0;gap:8px}
+.ov-tsm-dd .tm-blk .rs-preset.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.ov-tsm-dd .tm-leg{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 8px}
+.ov-tsm-dd .tm-chartwrap{position:relative;height:340px;margin:2px 0 6px}
+.ov-tsm-dd .tm-chartwrap-peg{height:320px}
+.ov-tsm-dd #tmTable,.ov-tsm-dd #pegTable{overflow-x:auto}
+.ov-tsm-dd .tm-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}
+.ov-tsm-dd .tm-tbl th,.ov-tsm-dd .tm-tbl td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}
+.ov-tsm-dd .tm-tbl th:first-child,.ov-tsm-dd .tm-tbl td:first-child{text-align:left}
+.ov-tsm-dd .tm-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}
+.ov-tsm-dd .tm-tbl tbody tr.tm-last{background:var(--brand-soft)}
+.ov-tsm-dd .tm-tbl tbody tr.tm-rep{background:var(--surface);color:var(--mu)}
+.ov-tsm-dd .tm-tbl thead tr.tm-grp th{padding:5px 10px;text-align:center;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bdr)}
+.ov-tsm-dd .tm-tbl thead tr.tm-grp th.tm-gh-ev{background:#2a78d6;color:#fff}
+.ov-tsm-dd .tm-tbl thead tr.tm-grp th.tm-gh-pe{background:#eb6834;color:#fff}
+.ov-tsm-dd .tm-tbl th.tm-gs,.ov-tsm-dd .tm-tbl td.tm-gs{border-left:2px solid var(--bdr)}
+.ov-tsm-dd .tm-tbl td.tm-flat{color:var(--mu)}
+.ov-tsm-dd .tm-tbl thead tr.tm-grp .tm-gsub{display:block;font-size:9px;font-weight:600;letter-spacing:.02em;text-transform:none;opacity:.92;margin-top:2px}
+.ov-tsm-dd .tm-tbl td.tm-miss-hi{color:var(--neg);font-weight:800}
+.ov-tsm-dd .tm-tbl td.tm-miss-lo{color:var(--pos);font-weight:800}
+.ov-tsm-dd .tm-tbl td.tm-pt{font-weight:800;color:var(--navy)}
+.ov-tsm-dd .tm-tag{display:inline-block;font-size:8.5px;font-weight:800;border-radius:20px;padding:1px 7px;margin-left:6px;vertical-align:1px}
+.ov-tsm-dd .tm-tag-rev{color:var(--pos);border:1px solid var(--pos)}
+.ov-tsm-dd .tm-tag-rep{color:var(--mu);border:1px solid var(--bdr)}
+.ov-tsm-dd .tm-tag-brk{color:var(--neg);border:1px solid var(--neg)}
+.ov-tsm-dd .tm-warn{border:1px solid rgba(220,38,38,.35);border-left:4px solid var(--neg);background:rgba(220,38,38,.05);border-radius:9px;padding:11px 14px;font-size:12px;line-height:1.55;color:var(--navy);margin:12px 0}
+.ov-tsm-dd .tm-tbl th.peg-out,.ov-tsm-dd .tm-tbl td.peg-out{background:var(--surface);font-weight:800}
+
+/* TSMC ▸ Valuation ▸ Sensitivity (js/overviews/tsm-sensitivity.js) — moved from sharkninja-sensitivity.js's inline
+   <style>. The pane-scoped .sens-ctrl fixes neutralise the global slider rule without touching TBBB/SOFI. */
+.ov-tsm-dd .ovt-subpane[data-ovst="sensitivity"] .sens-ctrl-l{min-width:0}
+.ov-tsm-dd .ovt-subpane[data-ovst="sensitivity"] .sens-ctrl{margin:0;gap:8px}
+.ov-tsm-dd .ovt-subpane[data-ovst="sensitivity"] .sens-row-inp{gap:12px 18px}
+.ov-tsm-dd .ovt-subpane[data-ovst="sensitivity"] .as-reset{padding:5px 11px;font-size:11px}
+.ov-tsm-dd .as-mxrow{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin:10px 0 4px}
+.ov-tsm-dd .as-mxrow>.sens-matrix-wrap{flex:1 1 520px;min-width:0;margin:0}
+.ov-tsm-dd .as-cons{flex:0 0 258px;border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.ov-tsm-dd .as-cons-h{font-size:11px;font-weight:800;color:var(--navy);letter-spacing:.02em;margin-bottom:2px}
+.ov-tsm-dd .as-cons-src{font-size:10px;color:var(--mu);margin-bottom:10px}
+.ov-tsm-dd .as-cons-r{padding:8px 0;border-top:1px solid var(--bdr)}
+.ov-tsm-dd .as-cons-k{font-size:10.5px;font-weight:700;color:var(--mu);margin-bottom:3px}
+.ov-tsm-dd .as-cons-v{display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:800;color:var(--navy)}
+.ov-tsm-dd .as-cons-v small{font-size:10px;font-weight:600;color:var(--mu)}
+.ov-tsm-dd .as-cons-d{font-size:10.5px;font-weight:700;margin-top:2px}
+.ov-tsm-dd .as-cons-nil{font-size:10.5px;color:var(--mu);line-height:1.45}
+.ov-tsm-dd .as-cons-px{margin-top:10px;padding-top:10px;border-top:2px solid var(--bdr)}
+.ov-tsm-dd .as-cons-px .v{font-size:20px;font-weight:800;color:var(--navy);line-height:1.1}
+.ov-tsm-dd .as-cons-px .s{font-size:10.5px;color:var(--mu);margin-top:3px;line-height:1.45}
+.ov-tsm-dd .sens-cell.as-cons-cell{outline:2px solid var(--navy);outline-offset:-2px}
+.ov-tsm-dd .as-years-sec{margin-top:16px}
+
+/* TSMC ▸ Management (js/overviews/tsm-mgmt.js) */
+.ov-tsm-dd .mg-sec-gap{margin-top:16px}
+.ov-tsm-dd .ew-two.ew-one{grid-template-columns:1fr}
+/* Ownership tables use the portal's standard .twrap + .rt (css/shared.css); only alignment and the total row here */
+.ov-tsm-dd .own-wrap{max-height:none}
+.ov-tsm-dd .own-ins{max-height:none}
+.ov-tsm-dd .own-tbl td,.ov-tsm-dd .own-tbl th{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.ov-tsm-dd .own-ins td:nth-child(2),.ov-tsm-dd .own-ins th:nth-child(2),.ov-tsm-dd .own-ins td:nth-child(3),.ov-tsm-dd .own-ins th:nth-child(3),
+.ov-tsm-dd .own-ndf td:nth-child(-n+2),.ov-tsm-dd .own-ndf th:nth-child(-n+2){text-align:left}
+.ov-tsm-dd .own-tbl td b{color:var(--navy)}
+.ov-tsm-dd .own-tbl .own-role{white-space:normal;min-width:180px;color:var(--mu);font-size:11px}
+.ov-tsm-dd .own-tbl .own-rk{color:var(--mu);width:28px}
+.ov-tsm-dd .own-note{display:block;font-size:10px;font-weight:600;color:var(--mu)}
+.ov-tsm-dd .own-nil{color:var(--mu)}
+.ov-tsm-dd .own-tbl tr.own-tot td{border-top:1px solid var(--bdr);font-weight:700;background:#F7FAFD}
+.ov-tsm-dd .own-ctl{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:6px 0 8px}
+.ov-tsm-dd .own-px{font-size:11px;font-weight:700;color:var(--mu)}
+.ov-tsm-dd .own-pay td:first-child,.ov-tsm-dd .own-pay th:first-child,.ov-tsm-dd .own-pool td:first-child,.ov-tsm-dd .own-pool th:first-child{text-align:left;white-space:normal}
+.ov-tsm-dd .own-com td,.ov-tsm-dd .own-com th{text-align:left;white-space:normal}
+.ov-tsm-dd .own-com td:last-child,.ov-tsm-dd .own-com th:last-child{text-align:right}
+.ov-tsm-dd .own-pay th,.ov-tsm-dd .own-pool th{white-space:normal;vertical-align:bottom}
+/* TSMC ▸ Management ▸ Track Record — SN/AMZN card layout without rating colours (SAB) */
+.ov-tsm-dd .trk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+@media(max-width:700px){.ov-tsm-dd .trk-grid{grid-template-columns:1fr}}
+.ov-tsm-dd .trk-card{border:1px solid var(--bdr);border-left:4px solid var(--steel);background:var(--w,#fff);border-radius:11px;padding:13px 15px;cursor:pointer;transition:box-shadow .15s,transform .15s}
+.ov-tsm-dd .trk-card:hover{box-shadow:0 3px 14px rgba(0,0,0,.08);transform:translateY(-1px)}
+.ov-tsm-dd .trk-n{font-size:13.5px;font-weight:800;color:var(--navy)}
+.ov-tsm-dd .trk-r{font-size:11px;color:var(--mu);font-weight:600;margin:1px 0 8px}
+.ov-tsm-dd .trk-t{font-size:11.5px;color:var(--navy);line-height:1.5;margin-bottom:6px}
+.ov-tsm-dd .trk-k{color:var(--steel)}
+.ov-tsm-dd .trk-c{color:var(--mu)}
+.ov-tsm-dd .trk-more{margin-top:7px;font-size:10.5px;font-weight:800;color:var(--steel)}
+#co-detailview .trk-pop-r{font-weight:600;color:var(--mu)}
+.ov-tsm-dd .ovt-subpane[data-ovst="track"] .ew-note{margin-top:14px}

@@ -24,7 +24,7 @@
 | Summit DCF | | # snapshots, último periodo real de cada uno | Summit en Results/Estimates; Target Multiple; Sensitivity | |
 | Consenso BBG (`BBG_CONSENSUS.txt` + `Consensus_Portal.xlsm`) | | # snapshots, último `data_as_of` | `estMatrix.cons`, Setup, export de Bottom Line | sin consenso ni export (caso DHR) |
 | `get-market-history` (Massive) | | desplegada sí/no | Historic Multiple en vivo | Historic Multiple con "Live data pending" |
-| `get-summit-data` (+ valuación, `get_valuation_history`) + PR del portal | | ¿existe en main / desplegada? · ¿la valuación del modelo es confiable (quality_flags)? | Summit en vivo en todo el perfil | series Summit ausentes (Conexiones pendientes); EV-EST, VA-TM, VA-SENS ⛔ |
+| Valuación del modelo en el MCP (`get_valuation_history`) | | snapshot más reciente · ¿coincide con la hoja Output del workbook? · ¿confiable (quality_flags)? | Summit congelado en todo el perfil (regla 10): series Summit, EV-EST, VA-TM, VA-SENS | VA-TM sin múltiplo del modelo (⏭️) |
 | SPLC (clientes / proveedores) | | archivo, fecha | TL-CUS tabla, BL-SPLC | |
 | Transcripciones | | trimestres disponibles | EV-POST, EV-NOTES, citas | |
 | Fiscal.ai (plan) | | | tabla en vivo de Management | |

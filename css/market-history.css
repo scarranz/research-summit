@@ -114,3 +114,18 @@
 #mh-root .mh-strip td.mh-cell { font-variant-numeric: tabular-nums; }
 #mh-root .mh-strip .mh-selcol { box-shadow: inset 2px 0 0 var(--navy), inset -2px 0 0 var(--navy); }
 @media (max-width: 760px) { #mh-root .mh-tiles6 { grid-template-columns: repeat(2, 1fr); } }
+
+/* four-stage cards */
+#mh-root .mh-stages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+#mh-root .mh-stage { background: var(--w); border: 1px solid var(--bdr); border-radius: 14px; padding: 14px 16px; position: relative; }
+#mh-root .mh-sn { position: absolute; top: 12px; right: 14px; font-size: 22px; font-weight: 700; color: #D5DBE2; }
+#mh-root .mh-stt { font-size: 14px; font-weight: 700; color: #1E2733; }
+#mh-root .mh-sy { font-size: 11.5px; color: #8A93A0; margin-bottom: 8px; }
+#mh-root .mh-sbig { font-size: 28px; font-weight: 700; line-height: 1.1; }
+#mh-root .mh-scap { font-size: 11.5px; color: #8A93A0; margin-bottom: 10px; }
+#mh-root .mh-sr { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; padding: 4px 0; border-top: 1px solid #EEF1F4; color: #4A5666; }
+#mh-root .mh-sr b { color: #1E2733; white-space: nowrap; }
+#mh-root .mh-evl { margin: 6px 0 0; padding-left: 16px; font-size: 11.5px; }
+#mh-root .mh-sepl { border-left: 2px solid #C0C8D0; }
+@media (max-width: 1100px) { #mh-root .mh-stages { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { #mh-root .mh-stages { grid-template-columns: 1fr; } }

@@ -17,7 +17,7 @@ var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct',
 var K0 = D.bases.indexOf('1999-12-31');            // the cohort snapshot
 var NK = D.bases.length;
 
-var st = { fn: { y: 1999, side: 'top', n: 10 }, sc: [0, K0, 8], wc: [0, K0] };
+var st = { fn: { y: 1999, side: 'top', n: 10 }, sc: [0, K0, 8], scm: { side: 'both', n: 20 }, wc: [0, K0] };
 var root = null, tip = null;
 
 // ─── helpers ───────────────────────────────────────────────
@@ -282,38 +282,47 @@ function scT(r) { return Math.log(Math.max(1 + r / 100, 0.05)); }
 function scOpts(cur, lo, hi) { var o = ''; for (var k = lo; k <= hi; k++) o += '<option value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + snapLbl(k) + '</option>'; return o; }
 function renderSC() {
   var box = document.getElementById('mh-sc'); if (!box) return;
-  var a = st.sc[0], b = st.sc[1], c = st.sc[2];
-  var pts = D.secs.filter(function (s) { return s.w[b] != null && lvl(s, a) != null && s.p[a] != null && lvl(s, b) != null && lvl(s, c) != null; }).map(function (s) {
-    return { s: s, x: (lvl(s, b) / lvl(s, a) - 1) * 100, y: (lvl(s, c) / lvl(s, b) - 1) * 100, w: s.w[b] };
+  var a = st.sc[0], b = st.sc[1], c = st.sc[2], m = st.scm;
+  // every name with a price at both the start and the pivot, in the index or not; a name that stops trading stays at its last close
+  var pts = D.secs.filter(function (s) { return s.p[a] != null && s.p[b] != null && lvl(s, c) != null; }).map(function (s) {
+    return { s: s, x: (s.p[b] / s.p[a] - 1) * 100, y: (lvl(s, c) / s.p[b] - 1) * 100, w: s.w[b] };
   });
-  var excl = D.secs.filter(function (s) { return s.w[b] != null; }).length - pts.length;
+  var rk = pts.slice().sort(function (p1, p2) { return p2.x - p1.x; }), N = Math.min(m.n, Math.floor(pts.length / 2)), pick = {};
+  if (m.side !== 'bot') rk.slice(0, N).forEach(function (d) { pick[d.s.f] = 'top'; });
+  if (m.side !== 'top') rk.slice(-N).forEach(function (d) { pick[d.s.f] = 'bot'; });
   var VW = 900, VH = 520, M = { t: 16, r: 20, b: 48, l: 58 }, cw = VW - M.l - M.r, ch = VH - M.t - M.b;
   var tx = pts.map(function (d) { return scT(d.x); }), ty = pts.map(function (d) { return scT(d.y); });
   var x0 = Math.min.apply(null, tx.concat(0)) - .1, x1 = Math.max.apply(null, tx.concat(0)) + .1, y0 = Math.min.apply(null, ty.concat(0)) - .1, y1 = Math.max.apply(null, ty.concat(0)) + .1;
   var X = function (r) { return M.l + (scT(r) - x0) / (x1 - x0) * cw; }, Y = function (r) { return M.t + ch - (scT(r) - y0) / (y1 - y0) * ch; };
-  var g = '';
+  var g = '', lab = function (t) { return (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) + '%'; };
   SC_TICKS.forEach(function (t) {
-    if (scT(t) >= x0 && scT(t) <= x1) g += '<line x1="' + X(t) + '" x2="' + X(t) + '" y1="' + M.t + '" y2="' + (VH - M.b) + '" stroke="' + (t === 0 ? '#9AA3AF' : '#EEF1F4') + '" stroke-width="' + (t === 0 ? 1.5 : 1) + '"/><text x="' + X(t) + '" y="' + (VH - M.b + 15) + '" text-anchor="middle" font-size="11" fill="#8A93A0">' + (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) + '%</text>';
-    if (scT(t) >= y0 && scT(t) <= y1) g += '<line x1="' + M.l + '" x2="' + (VW - M.r) + '" y1="' + Y(t) + '" y2="' + Y(t) + '" stroke="' + (t === 0 ? '#9AA3AF' : '#EEF1F4') + '" stroke-width="' + (t === 0 ? 1.5 : 1) + '"/><text x="' + (M.l - 7) + '" y="' + (Y(t) + 4) + '" text-anchor="end" font-size="11" fill="#8A93A0">' + (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) + '%</text>';
+    var col = t === 0 ? '#9AA3AF' : '#EEF1F4', sw = t === 0 ? 1.5 : 1;
+    if (scT(t) >= x0 && scT(t) <= x1) g += '<line x1="' + X(t) + '" x2="' + X(t) + '" y1="' + M.t + '" y2="' + (VH - M.b) + '" stroke="' + col + '" stroke-width="' + sw + '"/><text x="' + X(t) + '" y="' + (VH - M.b + 15) + '" text-anchor="middle" font-size="11" fill="#8A93A0">' + lab(t) + '</text>';
+    if (scT(t) >= y0 && scT(t) <= y1) g += '<line x1="' + M.l + '" x2="' + (VW - M.r) + '" y1="' + Y(t) + '" y2="' + Y(t) + '" stroke="' + col + '" stroke-width="' + sw + '"/><text x="' + (M.l - 7) + '" y="' + (Y(t) + 4) + '" text-anchor="end" font-size="11" fill="#8A93A0">' + lab(t) + '</text>';
   });
   g += '<text x="' + (M.l + cw / 2) + '" y="' + (VH - 8) + '" text-anchor="middle" font-size="11" fill="#4A5666">Where they came from: price change ' + snapLbl(a) + ' → ' + snapLbl(b) + '</text>' +
     '<text transform="translate(14,' + (M.t + ch / 2) + ') rotate(-90)" text-anchor="middle" font-size="11" fill="#4A5666">Where they went: price change ' + snapLbl(b) + ' → ' + snapLbl(c) + '</text>';
   var q = { ur: 0, ul: 0, lr: 0, ll: 0 }; pts.forEach(function (d) { q[(d.y >= 0 ? 'u' : 'l') + (d.x >= 0 ? 'r' : 'l')]++; });
   var cap = function (x, y, anchor, t, n) { return '<text x="' + x + '" y="' + y + '" text-anchor="' + anchor + '" font-size="11" font-weight="600" fill="#6B7684" stroke="#fff" stroke-width="3" paint-order="stroke">' + t + ': ' + n + ' names (' + n1(n / pts.length * 100, 0) + '%)</text>'; };
   g += cap(M.l + 8, M.t + 14, 'start', 'Fell before, rose after', q.ul) + cap(VW - M.r - 8, M.t + 14, 'end', 'Rose before, rose after', q.ur) + cap(M.l + 8, VH - M.b - 8, 'start', 'Fell before, fell after', q.ll) + cap(VW - M.r - 8, VH - M.b - 8, 'end', 'Rose before, fell after', q.lr);
-  var big = pts.slice().sort(function (p1, p2) { return p2.w - p1.w; }).slice(0, 10), isBig = {}; big.forEach(function (d) { isBig[d.s.f] = 1; });
-  pts.slice().sort(function (p1, p2) { return p2.w - p1.w; }).forEach(function (d, i) {
-    g += '<circle class="mh-hit" data-i="' + pts.indexOf(d) + '" cx="' + X(d.x) + '" cy="' + Y(d.y) + '" r="' + (2.5 + Math.sqrt(d.w) * 4).toFixed(1) + '" fill="' + SEC_COL[d.s.s] + '" fill-opacity=".55" stroke="#fff" stroke-width="1"/>';
+  var COL = { top: '#0E7A45', bot: '#B3261E' };
+  pts.slice().sort(function (p1, p2) { return (pick[p1.s.f] ? 1 : 0) - (pick[p2.s.f] ? 1 : 0); }).forEach(function (d) {
+    var k = pick[d.s.f];
+    g += '<circle class="mh-hit" data-i="' + pts.indexOf(d) + '" cx="' + X(d.x) + '" cy="' + Y(d.y) + '" r="' + (k ? 5.5 : 3.2) + '" fill="' + (k ? COL[k] : '#8A93A0') + '" fill-opacity="' + (k ? 0.9 : 0.16) + '" stroke="' + (k ? '#fff' : 'none') + '" stroke-width="1"/>';
   });
-  big.forEach(function (d) { g += '<text x="' + (X(d.x) + 9) + '" y="' + (Y(d.y) + 4) + '" font-size="11" font-weight="700" fill="#1E2733">' + esc(d.s.t || d.s.n.split(' ')[0]) + '</text>'; });
-  var secs = D.meta.sectors.filter(function (sc) { return pts.some(function (d) { return d.s.s === sc; }); });
-  box.innerHTML = '<div class="mh-row"><label class="mh-lbl">Came from</label><select id="mh-sca" class="mh-sel">' + scOpts(a, 0, NK - 3) + '</select><label class="mh-lbl">Pivot</label><select id="mh-scb" class="mh-sel">' + scOpts(b, 1, NK - 2) + '</select><label class="mh-lbl">Went to</label><select id="mh-scc" class="mh-sel">' + scOpts(c, 2, NK) + '</select></div>' +
-    '<div class="mh-read">' + pts.length + ' members of the index at ' + snapLbl(b) + ' with a price at ' + snapLbl(a) + '. One dot per name: size = weight in the index at ' + snapLbl(b) + ', colour = sector, the ten biggest are labelled. The scale is a ratio (+100% = doubled, −50% = halved). A name that left the index is carried at its last close.</div>' +
-    '<svg viewBox="0 0 ' + VW + ' ' + VH + '" class="mh-svg">' + g + '</svg><div class="mh-key">' + secs.map(function (sc) { return '<span><i class="mh-dot" style="background:' + SEC_COL[sc] + '"></i>' + sc + '</span>'; }).join('') + '</div>' +
-    '<div class="mh-note">' + (excl ? excl + ' names are left out because they joined the index after ' + snapLbl(a) + ': the data has no price for them before they joined. ' : '') + 'The right edge is where the euphoria sits; the lower-right corner holds the names that rose before and fell after.</div>';
+  if (N <= 10) pts.filter(function (d) { return pick[d.s.f]; }).forEach(function (d) { g += '<text x="' + (X(d.x) + 8) + '" y="' + (Y(d.y) + 4) + '" font-size="11" font-weight="700" fill="#1E2733" stroke="#fff" stroke-width="3" paint-order="stroke">' + esc(d.s.t || d.s.n.split(' ')[0]) + '</text>'; });
+  var sel = pts.filter(function (d) { return pick[d.s.f]; }), medY = function (k) { return med(sel.filter(function (d) { return pick[d.s.f] === k; }).map(function (d) { return d.y; })); };
+  var endY = c >= NK ? D.years[NK - 1] : +D.bases[c].slice(0, 4);
+  var gone = function (k) { return sel.filter(function (d) { return pick[d.s.f] === k && exitYear(d.s) && exitYear(d.s) <= endY; }).length; };
+  var summ = (m.side !== 'bot' ? 'The ' + N + ' best: median ' + pc(medY('top'), 0) + ' afterwards (' + gone('top') + ' stopped trading by ' + snapLbl(c) + '). ' : '') + (m.side !== 'top' ? 'The ' + N + ' worst: median ' + pc(medY('bot'), 0) + ' afterwards (' + gone('bot') + ' stopped trading). ' : '') + 'All ' + pts.length + ' names: median ' + pc(med(pts.map(function (d) { return d.y; })), 0) + '.';
+  box.innerHTML = '<div class="mh-row"><label class="mh-lbl">Came from</label><select id="mh-sca" class="mh-sel">' + scOpts(a, 0, NK - 3) + '</select><label class="mh-lbl">Pivot</label><select id="mh-scb" class="mh-sel">' + scOpts(b, 1, NK - 2) + '</select><label class="mh-lbl">Went to</label><select id="mh-scc" class="mh-sel">' + scOpts(c, 2, NK) + '</select>' +
+    '<label class="mh-lbl" style="margin-left:10px">Highlight</label>' + secBtn('scs', [['top', 'Best'], ['bot', 'Worst'], ['both', 'Both']], m.side) + '<label class="mh-lbl" style="margin-left:10px">How many</label>' + secBtn('scn', [[10, '10'], [20, '20'], [50, '50']], m.n) + '</div>' +
+    '<div class="mh-read">' + summ + ' Best / worst = the biggest gains and losses from ' + snapLbl(a) + ' to ' + snapLbl(b) + ', chosen among every name with a price at both dates, in the S&amp;P 500 or not.</div>' +
+    '<svg viewBox="0 0 ' + VW + ' ' + VH + '" class="mh-svg">' + g + '</svg><div class="mh-key"><span><i class="mh-dot" style="background:' + COL.top + '"></i>Best ' + N + '</span><span><i class="mh-dot" style="background:' + COL.bot + '"></i>Worst ' + N + '</span><span><i class="mh-dot" style="background:#8A93A0;opacity:.35"></i>Everyone else</span></div>' +
+    '<div class="mh-note">One dot per name. The scale is a ratio (+100% = doubled, −50% = halved). A name that stops trading stays at its last close. Names with no price at ' + snapLbl(a) + ' or ' + snapLbl(b) + ' are not shown: the data holds prices for index members only, so names before they joined and after they left are missing until they are added from Bloomberg.</div>';
   box.querySelectorAll('.mh-hit').forEach(function (e) {
     e.addEventListener('mousemove', function (ev) { var d = pts[+e.getAttribute('data-i')], s = d.s;
-      showTip('<b>' + esc(s.n) + '</b>' + (s.t ? ' ' + esc(s.t) : '') + '<div>' + s.s + ' · weight ' + n1(d.w, 2) + '%</div><div>Before: <b>' + pc(d.x, 0) + '</b> · After: <b>' + pc(d.y, 0) + '</b></div><div>Today: ' + { SPX: 'in the S&P 500', LIVE: 'listed, not in the S&P 500', ACQ: 'acquired / merged', BK: 'bankrupt', OTH: 'delisted' }[s.st] + (exitYear(s) ? ' (' + exitYear(s) + ')' : '') + '</div>', ev); });
+      showTip('<b>' + esc(s.n) + '</b>' + (s.t ? ' ' + esc(s.t) : '') + '<div>' + s.s + (d.w != null ? ' · weight ' + n1(d.w, 2) + '% at ' + snapLbl(b) : ' · not in the index at ' + snapLbl(b)) + '</div><div>Before: <b>' + pc(d.x, 0) + '</b> · After: <b>' + pc(d.y, 0) + '</b></div><div>Today: ' + { SPX: 'in the S&P 500', LIVE: 'listed, not in the S&P 500', ACQ: 'acquired / merged', BK: 'bankrupt', OTH: 'delisted' }[s.st] + (exitYear(s) ? ' (' + exitYear(s) + ')' : '') + '</div>', ev); });
     e.addEventListener('mouseleave', hideTip);
   });
 }
@@ -400,7 +409,7 @@ function render() {
     sec('The decade in four stages', 'what the market did, who carried it, what the backdrop was', stageCards() + '<div class="mh-two" style="margin-top:14px"><div id="mh-t1"></div><div id="mh-t2"></div></div>') +
     sec('What happened when', 'each event, what it is, and what the S&P 500 did next', eventsTable()) +
     sec('Who led, and what became of them', 'pick a year', '<div id="mh-fn"></div>') +
-    sec('Where they came from, where they went', 'every name at a pivot year', '<div id="mh-sc"></div>') +
+    sec('Where they came from, where they went', 'best and worst of the run-up, and what came next', '<div id="mh-sc"></div>') +
     sec('Where the index\'s weight sat', 'by sector, pick the dates', '<div id="mh-wc"></div>') +
     sec('Names added to the index', 'did the new members do better?', newNames()) +
     sec('Then and now', 'same measures, two eras', thenNow()) +
@@ -419,6 +428,8 @@ function build() {
     if (a === 'fny') { st.fn.y = +v; renderFN(); }
     else if (a === 'fns') { st.fn.side = v; renderFN(); }
     else if (a === 'fnn') { st.fn.n = +v; renderFN(); }
+    else if (a === 'scs') { st.scm.side = v; renderSC(); }
+    else if (a === 'scn') { st.scm.n = +v; renderSC(); }
   });
   root.addEventListener('change', function (e) {
     var id = e.target.id, ge = function (x) { return +document.getElementById(x).value; };

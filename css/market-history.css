@@ -133,3 +133,4 @@
 #mh-root .mh-grp td { background: var(--pale); font-weight: 700; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--mu); }
 #mh-root .mh-evd { max-width: 560px; white-space: normal; line-height: 1.45; margin-top: 2px; }
 #mh-root .mh-strip td, #mh-root .mh-strip th { padding-left: 5px; padding-right: 5px; }
+#mh-root .mh-strip td.mh-ext { font-style: italic; color: #4A5666; }

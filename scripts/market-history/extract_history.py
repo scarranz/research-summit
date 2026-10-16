@@ -81,6 +81,29 @@ def state_of(figi, m, cur):
     return 'OTH'
 
 
+OUTSIDE = {}
+
+
+def read_outside(path):
+    """Prices pulled from Bloomberg for dates a name was NOT an S&P 500 member (before it joined, after it left while still trading).
+    Sheet 'Prices needed': one block of 6 columns per year-end (BBG ticker, name, why, close, FIGI, spacer); header row 6 holds the date, FIGI is column 5 of the block.
+    Returns {figi: [12 closes or None]} aligned with the 12 snapshots Dec 1994 .. Dec 2005 (2005-12-30 = last trading day). '#N/A N/A' = no price (not listed yet / already delisted)."""
+    if not os.path.exists(path):
+        print('no outside-prices file:', path)
+        return {}
+    ws = openpyxl.load_workbook(path, read_only=True, data_only=True).active
+    rows = list(ws.iter_rows(min_row=1, values_only=True))
+    out = {}
+    for i in range(12):
+        c0 = i * 6
+        for r in rows[6:]:
+            if len(r) <= c0 + 4 or r[c0] is None or r[c0 + 4] is None:
+                continue
+            v = r[c0 + 3]
+            out.setdefault(str(r[c0 + 4]), [None] * 12)[i] = float(v) if isinstance(v, (int, float)) else None
+    return out
+
+
 def short_ticker(t):
     t = t.replace(' US Equity', '').strip()
     return '' if (not t or t[0].isdigit()) else t        # dummy codes (0111145D...) are never shown
@@ -280,6 +303,8 @@ def analyse(pub, snaps, mem, cur, names):
         rec = dict(f=o['f'], n=o['n'], t=o['t'], s=o['s'], g=o['g'], st=o['st'],
                    w=[None if v is None else round(v * 100, 3) for v in o['w']],
                    r=[pct(v, 1) for v in o['r']], p=[None if v is None else round(v, 3) for v in o['p']])
+        if o['f'] in OUTSIDE and any(v is not None for v in OUTSIDE[o['f']]):
+            rec['pe'] = [None if v is None else round(v, 3) for v in OUTSIDE[o['f']]]
         if o['bn'] != o['n']:
             rec['bn'] = o['bn']
         if o['x']:
@@ -401,6 +426,8 @@ def main():
         sys.exit(__doc__)
     names = {k: v for k, v in json.load(open(os.path.join(HERE, 'names.json'), encoding='utf-8')).items() if not k.startswith('_')}
     pub, snaps, mem, cur = read_workbook(args[0])
+    global OUTSIDE
+    OUTSIDE = read_outside(os.path.join(os.path.dirname(os.path.abspath(args[0])), 'outside snapshots dot com analysis', 'bloomberg_prices_needed_by_date.xlsx'))
     data = analyse(pub, snaps, mem, cur, names)
     macro = read_macro()
     print('snapshots', len(data['bases']), 'securities', len(data['secs']), "| in today's S&P 500:", sum(1 for s in data['secs'] if s['st'] == 'SPX'))

@@ -149,7 +149,8 @@ function nowBreadth() {
     var b = breadth((y.holdings || []).filter(function (h) { return h.w > 0 && h.r != null; }).map(function (h) { return { w: h.w, r: h.r }; }));
     b.label = String(y.year) + (y.year === +SPX_HOLDINGS.asOf.slice(0, 4) ? ' YTD' : ''); return b; });
 }
-function lvl(s, i) { for (var j = i; j >= 0; j--) if (s.p[j] != null) return s.p[j]; return null; }   // price at snapshot i; a name that left stays at its last close
+function px(s, i) { var v = s.p[i]; return v != null ? v : (s.pe ? s.pe[i] : null); }   // member price, else the Bloomberg price outside membership (before joining / after leaving)
+function lvl(s, i) { for (var j = i; j >= 0; j--) { var v = px(s, j); if (v != null) return v; } return null; }   // price at snapshot i; a name that stopped trading stays at its last close
 function exitYear(s) { return s.x ? +s.x.slice(0, 4) : null; }
 var B = null;
 function breadths() { return B || (B = D.years.map(function (y, k) { return histBreadth(k); })); }
@@ -247,7 +248,8 @@ function fnTable(side) {
     var s = d.s, lastI = -1; s.r.forEach(function (v, j) { if (v != null) lastI = j; });
     return '<tr><td class="mh-mu">' + (i + 1) + '</td><td>' + nameCell(s) + '</td><td><i class="mh-dot" style="background:' + SEC_COL[s.s] + '"></i>' + s.s + '</td><td class="r">' + n1(s.w[k], 1) + '%</td>' +
       D.years.map(function (y, j) {
-        var v = s.r[j], sel = j === k ? ' mh-selcol' : '';
+        var v = s.r[j], sel = j === k ? ' mh-selcol' : '', e = (v == null && px(s, j) != null && px(s, j + 1) != null) ? (px(s, j + 1) / px(s, j) - 1) * 100 : null;
+        if (e != null) return '<td class="r mh-cell mh-ext' + sel + '" style="' + fnHeat(e) + '" title="' + esc(s.n) + ' ' + y + ': ' + pc(e, 1) + ' (not in the S&amp;P 500 that year; Bloomberg price)">' + pc(e, 0) + '</td>';
         if (v != null) return '<td class="r mh-cell' + sel + '" style="' + fnHeat(v) + '" title="' + esc(s.n) + ' ' + y + ': ' + pc(v, 1) + '">' + pc(v, 0) + '</td>';
         if (j === lastI + 1 && lastI < NK - 1) return '<td class="r mh-mu' + sel + '" title="Left the S&amp;P 500 after ' + D.years[lastI] + '. Carried at its last close.">out</td>';
         return '<td class="' + sel + '"></td>';
@@ -267,7 +269,7 @@ function renderFN() {
   box.innerHTML = '<div class="mh-row"><label class="mh-lbl">Year</label><span class="sb-toggle mh-seg">' + yrs.map(function (y) { return '<button class="sb-tbtn' + (y === st.fn.y ? ' active' : '') + '" data-act="fny" data-v="' + y + '">' + y + '</button>'; }).join('') + '</span>' +
     '<label class="mh-lbl" style="margin-left:10px">Show</label>' + secBtn('fns', [['top', 'Best'], ['bot', 'Worst']], st.fn.side) +
     '<label class="mh-lbl" style="margin-left:10px">How many</label>' + secBtn('fnn', [[5, '5'], [10, '10'], [20, '20']], st.fn.n) + '</div>' +
-    fnTable(st.fn.side) + '<div class="mh-note">Members of the index at the previous year-end, ranked by weight × return in the framed year. A name that leaves the index is carried at its last close and nothing replaces it ("out"). Years in grey are after the study window (2005).</div>' + exitTiming();
+    fnTable(st.fn.side) + '<div class="mh-note">Members of the index at the previous year-end, ranked by weight × return in the framed year. Italic cells = the name was not in the S&amp;P 500 that year (before it joined, or after it left and kept trading): price return from Bloomberg. "out" = left the index and no price after. Years in grey in the last column are after the study window (2005).</div>' + exitTiming();
 }
 function exitTiming() {
   var rows = ['ACQ', 'BK', 'OTH'].map(function (c) {
@@ -284,8 +286,8 @@ function renderSC() {
   var box = document.getElementById('mh-sc'); if (!box) return;
   var a = st.sc[0], b = st.sc[1], c = st.sc[2], m = st.scm;
   // every name with a price at both the start and the pivot, in the index or not; a name that stops trading stays at its last close
-  var pts = D.secs.filter(function (s) { return s.p[a] != null && s.p[b] != null && lvl(s, c) != null; }).map(function (s) {
-    return { s: s, x: (s.p[b] / s.p[a] - 1) * 100, y: (lvl(s, c) / s.p[b] - 1) * 100, w: s.w[b] };
+  var pts = D.secs.filter(function (s) { return px(s, a) != null && px(s, b) != null && lvl(s, c) != null; }).map(function (s) {
+    return { s: s, x: (px(s, b) / px(s, a) - 1) * 100, y: (lvl(s, c) / px(s, b) - 1) * 100, w: s.w[b] };
   });
   var rk = pts.slice().sort(function (p1, p2) { return p2.x - p1.x; }), N = Math.min(m.n, Math.floor(pts.length / 2)), pick = {};
   if (m.side !== 'bot') rk.slice(0, N).forEach(function (d) { pick[d.s.f] = 'top'; });
@@ -319,7 +321,7 @@ function renderSC() {
     '<label class="mh-lbl" style="margin-left:10px">Highlight</label>' + secBtn('scs', [['top', 'Best'], ['bot', 'Worst'], ['both', 'Both']], m.side) + '<label class="mh-lbl" style="margin-left:10px">How many</label>' + secBtn('scn', [[10, '10'], [20, '20'], [50, '50']], m.n) + '</div>' +
     '<div class="mh-read">' + summ + ' Best / worst = the biggest gains and losses from ' + snapLbl(a) + ' to ' + snapLbl(b) + ', chosen among every name with a price at both dates, in the S&amp;P 500 or not.</div>' +
     '<svg viewBox="0 0 ' + VW + ' ' + VH + '" class="mh-svg">' + g + '</svg><div class="mh-key"><span><i class="mh-dot" style="background:' + COL.top + '"></i>Best ' + N + '</span><span><i class="mh-dot" style="background:' + COL.bot + '"></i>Worst ' + N + '</span><span><i class="mh-dot" style="background:#8A93A0;opacity:.35"></i>Everyone else</span></div>' +
-    '<div class="mh-note">One dot per name. The scale is a ratio (+100% = doubled, −50% = halved). A name that stops trading stays at its last close. Names with no price at ' + snapLbl(a) + ' or ' + snapLbl(b) + ' are not shown: the data holds prices for index members only, so names before they joined and after they left are missing until they are added from Bloomberg.</div>';
+    '<div class="mh-note">One dot per name. The scale is a ratio (+100% = doubled, −50% = halved). A name that stops trading stays at its last close. Names with no price at ' + snapLbl(a) + ' or ' + snapLbl(b) + ' are not shown (not listed yet, or already delisted). Prices of names outside the index (before joining, after leaving) are a separate Bloomberg pull; same close as the index members.</div>';
   box.querySelectorAll('.mh-hit').forEach(function (e) {
     e.addEventListener('mousemove', function (ev) { var d = pts[+e.getAttribute('data-i')], s = d.s;
       showTip('<b>' + esc(s.n) + '</b>' + (s.t ? ' ' + esc(s.t) : '') + '<div>' + s.s + (d.w != null ? ' · weight ' + n1(d.w, 2) + '% at ' + snapLbl(b) : ' · not in the index at ' + snapLbl(b)) + '</div><div>Before: <b>' + pc(d.x, 0) + '</b> · After: <b>' + pc(d.y, 0) + '</b></div><div>Today: ' + { SPX: 'in the S&P 500', LIVE: 'listed, not in the S&P 500', ACQ: 'acquired / merged', BK: 'bankrupt', OTH: 'delisted' }[s.st] + (exitYear(s) ? ' (' + exitYear(s) + ')' : '') + '</div>', ev); });

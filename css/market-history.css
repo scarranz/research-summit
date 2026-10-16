@@ -4,7 +4,7 @@
 #mh-root .mh-intro { margin-bottom: 18px; max-width: 980px; }
 #mh-root .mh-h1 { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
 #mh-root .mh-intro p { font-size: 13px; line-height: 1.6; color: #2B3B4E; margin: 0 0 8px; }
-#mh-root .mh-mu { color: var(--mu); font-size: 11.5px; }
+#mh-root .mh-mu { color: var(--mu); font-size: 11px; }
 #mh-root .mh-pos { color: var(--pos); }
 #mh-root .mh-neg { color: var(--neg); }
 
@@ -17,17 +17,17 @@
 
 #mh-root .mh-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 #mh-root .mh-row .sb-toggle { margin-left: 0; flex-wrap: wrap; }
-#mh-root .mh-lbl { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--mu); font-weight: 600; }
+#mh-root .mh-lbl { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--mu); font-weight: 600; }
 #mh-root .mh-sel { font: 12px 'Inter', sans-serif; padding: 5px 8px; border: 1px solid var(--bdr); border-radius: 8px; background: var(--w); color: var(--text); }
 #mh-root .mh-two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 14px; }
 #mh-root .mh-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 #mh-root .mh-mini { border: 1px solid var(--bdr); border-radius: 12px; padding: 10px 12px; min-width: 0; }
-#mh-root .mh-ch { font-size: 12.5px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+#mh-root .mh-ch { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
 #mh-root .mh-ch .mh-mu { font-weight: 500; margin-left: 6px; }
 #mh-root .mh-svg { width: 100%; height: auto; display: block; user-select: none; }
 #mh-root .mh-empty { padding: 30px; text-align: center; color: var(--mu); font-size: 12px; }
 #mh-root .mh-note { font-size: 11px; color: var(--mu); line-height: 1.5; margin-top: 8px; }
-#mh-root .mh-read { font-size: 12.5px; line-height: 1.55; background: var(--pale); border-radius: 10px; padding: 10px 14px; margin: 4px 0 14px; color: #2B3B4E; }
+#mh-root .mh-read { font-size: 12px; line-height: 1.55; background: var(--pale); border-radius: 10px; padding: 10px 14px; margin: 4px 0 14px; color: #2B3B4E; }
 
 #mh-root .mh-legend { display: flex; flex-wrap: wrap; gap: 6px 8px; margin-top: 8px; }
 #mh-root .mh-chip { display: inline-flex; align-items: center; gap: 6px; font: 600 11px 'Inter', sans-serif; padding: 3px 9px; border: 1px solid var(--bdr); border-radius: 14px; background: var(--w); color: var(--text); cursor: pointer; }
@@ -37,10 +37,10 @@
 #mh-root .mh-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: 0; }
 
 #mh-root .mh-det { margin-top: 10px; font-size: 12px; }
-#mh-root .mh-det summary { cursor: pointer; color: var(--steel); font-weight: 600; font-size: 11.5px; }
+#mh-root .mh-det summary { cursor: pointer; color: var(--steel); font-weight: 600; font-size: 11px; }
 #mh-root .mh-scroll { overflow: auto; max-width: 100%; }
 #mh-root .mh-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
-#mh-root .mh-tbl th { font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: var(--mu); font-weight: 600; padding: 7px 9px; border-bottom: 1px solid var(--bdr); text-align: left; position: sticky; top: 0; background: var(--w); vertical-align: bottom; }
+#mh-root .mh-tbl th { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--mu); font-weight: 600; padding: 7px 9px; border-bottom: 1px solid var(--bdr); text-align: left; position: sticky; top: 0; background: var(--w); vertical-align: bottom; }
 #mh-root .mh-tbl td { padding: 7px 9px; border-bottom: .5px solid #F0F4F8; vertical-align: top; }
 #mh-root .mh-tbl .r { text-align: right; white-space: nowrap; }
 #mh-root .mh-tbl tr:hover td { background: #F7FAFD; }
@@ -51,17 +51,17 @@
 #mh-root .mh-tot td { border-top: 1px solid var(--bdr); font-weight: 600; }
 #mh-root .mh-evt { margin-top: 4px; color: var(--steel); font-size: 11px; max-width: 220px; white-space: normal; }
 
-#mh-root .mh-badge { display: inline-block; color: #fff; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 9px; white-space: nowrap; }
-#mh-root .mh-st { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 9px; white-space: nowrap; }
+#mh-root .mh-badge { display: inline-block; color: #fff; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 9px; white-space: nowrap; }
+#mh-root .mh-st { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 9px; white-space: nowrap; }
 #mh-root .mh-st-ok { background: #E3F3EA; color: #177A4E; }
 #mh-root .mh-st-mid { background: #FBF0DC; color: #8A5A07; }
 #mh-root .mh-st-no { background: #ECEFF3; color: #52606F; }
-#mh-root .mh-score td { font-size: 11.5px; line-height: 1.45; }
+#mh-root .mh-score td { font-size: 11px; line-height: 1.45; }
 
 #mh-root .mh-fbar { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
-#mh-root .mh-fl { width: 190px; font-size: 11.5px; font-weight: 600; flex: none; }
+#mh-root .mh-fl { width: 190px; font-size: 11px; font-weight: 600; flex: none; }
 #mh-root .mh-fb { flex: 1; display: flex; height: 22px; border-radius: 6px; overflow: hidden; background: #EEF1F4; }
-#mh-root .mh-fb span { color: #fff; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+#mh-root .mh-fb span { color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 #mh-root .mh-div { position: relative; height: 12px; }
 #mh-root .mh-div::before { content: ''; position: absolute; left: 50%; top: -3px; bottom: -3px; border-left: 1px solid #C9CFD7; }
 #mh-root .mh-div span { position: absolute; top: 1px; height: 10px; border-radius: 2px; }
@@ -90,12 +90,12 @@
 /* The story */
 #mh-root .mh-bl { background: var(--pale); border: 1px solid var(--bdr); border-radius: 14px; padding: 16px 20px; margin-bottom: 26px; }
 #mh-root .mh-blh { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--steel); font-weight: 600; margin-bottom: 8px; }
-#mh-root .mh-bl ol { margin: 0; padding-left: 20px; font-size: 13.5px; line-height: 1.6; color: #2B3B4E; }
+#mh-root .mh-bl ol { margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6; color: #2B3B4E; }
 #mh-root .mh-bl li { margin-bottom: 6px; }
 #mh-root .mh-find { background: var(--w); border: 1px solid var(--bdr); border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; }
 #mh-root .mh-fh { display: flex; gap: 12px; align-items: baseline; margin-bottom: 8px; }
 #mh-root .mh-fn { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--navy); color: #fff; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
-#mh-root .mh-ft { font-size: 15px; font-weight: 700; color: var(--navy); line-height: 1.35; }
+#mh-root .mh-ft { font-size: 13px; font-weight: 700; color: var(--navy); line-height: 1.35; }
 #mh-root .mh-fbody { font-size: 13px; line-height: 1.65; color: #2B3B4E; margin: 0 0 14px 36px; max-width: 1000px; }
 #mh-root .mh-box { border: 1px solid var(--bdr); border-radius: 12px; padding: 14px 16px; }
 #mh-root .mh-more { border: 1px solid var(--bdr); border-radius: 12px; margin-bottom: 10px; background: var(--w); }
@@ -103,7 +103,7 @@
 #mh-root .mh-more > summary .mh-mu { margin-left: 6px; }
 #mh-root .mh-moreb { padding: 4px 16px 16px; }
 #mh-root tr.hl td { background: #FBF6EA; }
-#mh-root .mh-plain { font-size: 12.5px; line-height: 1.55; color: #2B3B4E; margin: 0 0 14px 36px; max-width: 1000px; padding-left: 10px; border-left: 3px solid var(--bdr); }
+#mh-root .mh-plain { font-size: 12px; line-height: 1.55; color: #2B3B4E; margin: 0 0 14px 36px; max-width: 1000px; padding-left: 10px; border-left: 3px solid var(--bdr); }
 #mh-root .mh-howto { border: 1px solid var(--bdr); border-radius: 14px; padding: 14px 20px; margin-bottom: 18px; }
 #mh-root .mh-howto ul { margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6; color: #2B3B4E; }
 #mh-root .mh-howto li { margin-bottom: 4px; }
@@ -118,14 +118,18 @@
 /* four-stage cards */
 #mh-root .mh-stages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 #mh-root .mh-stage { background: var(--w); border: 1px solid var(--bdr); border-radius: 14px; padding: 14px 16px; position: relative; }
-#mh-root .mh-sn { position: absolute; top: 12px; right: 14px; font-size: 22px; font-weight: 700; color: #D5DBE2; }
-#mh-root .mh-stt { font-size: 14px; font-weight: 700; color: #1E2733; }
-#mh-root .mh-sy { font-size: 11.5px; color: #8A93A0; margin-bottom: 8px; }
-#mh-root .mh-sbig { font-size: 28px; font-weight: 700; line-height: 1.1; }
-#mh-root .mh-scap { font-size: 11.5px; color: #8A93A0; margin-bottom: 10px; }
+#mh-root .mh-sn { position: absolute; top: 12px; right: 14px; font-size: 24px; font-weight: 700; color: #D5DBE2; }
+#mh-root .mh-stt { font-size: 13px; font-weight: 700; color: #1E2733; }
+#mh-root .mh-sy { font-size: 11px; color: #8A93A0; margin-bottom: 8px; }
+#mh-root .mh-sbig { font-size: 24px; font-weight: 700; line-height: 1.1; }
+#mh-root .mh-scap { font-size: 11px; color: #8A93A0; margin-bottom: 10px; }
 #mh-root .mh-sr { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; padding: 4px 0; border-top: 1px solid #EEF1F4; color: #4A5666; }
 #mh-root .mh-sr b { color: #1E2733; white-space: nowrap; }
-#mh-root .mh-evl { margin: 6px 0 0; padding-left: 16px; font-size: 11.5px; }
+#mh-root .mh-evl { margin: 6px 0 0; padding-left: 16px; font-size: 11px; }
 #mh-root .mh-sepl { border-left: 2px solid #C0C8D0; }
 @media (max-width: 1100px) { #mh-root .mh-stages { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 600px) { #mh-root .mh-stages { grid-template-columns: 1fr; } }
+
+#mh-root .mh-grp td { background: var(--pale); font-weight: 700; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--mu); }
+#mh-root .mh-evd { max-width: 560px; white-space: normal; line-height: 1.45; margin-top: 2px; }
+#mh-root .mh-strip td, #mh-root .mh-strip th { padding-left: 5px; padding-right: 5px; }

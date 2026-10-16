@@ -35,7 +35,7 @@ export function dumbbell(box, rows, hi, closeLbl, period, note, openLbl){
     svg.appendChild(se('line', { x1: X(t), x2: X(t), y1: P.t - 10, y2: VH - P.b, stroke: '#E5E8EC', 'stroke-width': 1 }));
     svg.appendChild(txt({ x: X(t), y: P.t - 18, 'text-anchor': 'middle', 'font-size': 10, fill: '#8A93A0' }, t + '%'));
   }
-  svg.appendChild(txt({ x: VW - P.r + 12, y: 12, 'font-size': 10, fill: '#8A93A0', 'font-weight': '600' }, openLbl ? 'Weight: ' + openLbl + ' → ' + closeLbl : 'Weight: open → ' + closeLbl.toLowerCase()));
+  svg.appendChild(txt({ x: VW - P.r + 12, y: 12, 'font-size': 10, fill: '#8A93A0', 'font-weight': '600' }, openLbl ? openLbl + ' → ' + closeLbl : 'Weight: open → ' + closeLbl.toLowerCase()));
   svg.appendChild(txt({ x: VW - 6, y: 12, 'text-anchor': 'end', 'font-size': 10, fill: '#8A93A0', 'font-weight': '600' }, 'Change'));
   rows.forEach(function(r, i){
     var y = P.t + i * rowH + rowH / 2, diff = r.w1 - r.w0, col = diff >= 0 ? '#177A4E' : '#9B2A20';

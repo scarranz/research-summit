@@ -36,8 +36,9 @@ For each unit, in the build order of playbook §5:
    every Annex A defect still marked open**. Do not modify shared engines (`results.js`,
    `segments.js`) in a company PR.
 3. **MOSTRAR** — run `serve.ps1` once in the background (localhost:8000; `-Port 8001` if busy), point
-   to `harness-<ticker>.html` (set up per playbook §7.3) with the exact click path, attach a
-   screenshot when you can.
+   to the **real portal on localhost** (`http://localhost:8000/` → the analyst signs in → Companies →
+   the company; playbook §7.3) with the exact click path, attach a screenshot when you can. **Never
+   show the analyst a harness** (SAB, 2026-10-15); a harness is only an internal check for Claude.
 4. **AUTOAUDITAR** — the unit's checks + §17.4 for every chart + §19–§22; PASS/FAIL per line.
 5. **PREGUNTAR** — AskUserQuestion with the four options of playbook Annex D
    (Aprobado · Aprobado con ajustes menores · Cambios · Omitir / dejar pendiente). One unit per
@@ -50,7 +51,7 @@ approved unit sends it back to review.
 
 ## Step 3 — Close (playbook §16)
 
-Full harness sweep (rAF shim, zoom 100%), real-portal check with a session, mode-B reconciliation of
+Full sweep in the real portal on localhost (rAF shim, zoom 100%), mode-B reconciliation of
 the relocation map, every unit ✅ / ⏭️ / ⛔ with a reason. Then ask for the final approval.
 
 ## Hard rules
@@ -60,14 +61,15 @@ the relocation map, every unit ✅ / ⏭️ / ⛔ with a reason. Then ask for th
 - No placeholder sub-tabs, no invented sub-tabs, no fake precision, no invented data.
 - Summit palette only; the company's brand lives only in its logo; no new inline `<style>`.
 - Everything shown in the portal is in English (golden rule 9); talk to the analyst in Spanish.
-- **No market or Summit-model numbers in code** (golden rule 10, playbook §20b): price, market cap, EV,
-  multiples and every Summit model figure are read live (`liveQuote`, `get-market-history`,
-  `get-summit-data` + `js/summit-map/<ticker>.js`). Filings and Bloomberg data may live in data files
-  with source + date. If the live path does not exist yet, never copy numbers in the meantime: a unit
-  with useful content is built with `<div class="rs-noguide">⚑ Live data pending — <what></div>` (or,
-  inside a shared engine, the series is just absent and the footer says so) and logged under
-  "Conexiones pendientes"; a unit that depends entirely on it (today: EV-EST, VA-TM, VA-SENS) is ⛔ and
-  not published. Use the Summit MCP to understand and verify, never to copy values into the repo.
+- **Market data live, Summit model frozen** (golden rule 10, playbook §20b): price, market cap, EV and
+  market multiples are read live (`liveQuote`, `get-market-history`) — never seeded. Every Summit model
+  figure (projections, snapshots, target multiple, price target) is **pulled once from the Summit MCP**
+  with `js/summit-map/<ticker>.js` and **frozen into a data file** whose header names the snapshot date
+  and says "frozen on purpose, not live"; refresh it by re-pulling when a new snapshot is submitted.
+  There is no live Summit feed (SAB, Oct 15 2026) — nothing waits on `get-summit-data`, and EV-EST,
+  VA-TM, VA-SENS are built in full. Filings and Bloomberg data live in data files with source + date.
+  If a live *market* path is not deployed yet, never seed numbers in the meantime: show
+  `<div class="rs-noguide">⚑ Live data pending — <what></div>` and log it under "Conexiones pendientes".
 - For a new company, this playbook wins over `CLAUDE.md`, `/fill-overview` and the older docs.
 - Speak to the analyst in plain language — they are usually not a developer.
 - Commit/push only when asked. **Do not open a PR until the analyst has reviewed locally and asks.**

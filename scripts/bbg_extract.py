@@ -23,7 +23,9 @@ Usage:  python scripts/bbg_extract.py AMZN
 """
 import csv, re, json, sys, os
 
-SRC = r"G:\Mi unidad\Summit\Docs\0\BBG_CONSENSUS.txt"
+# The Drive folder differs per machine (G:\Mi unidad vs G:\My Drive) — same switch as scripts/consensus/:
+#     SUMMIT_DOCS="G:/My Drive/Summit/Docs/0" py scripts/bbg_extract.py TSM
+SRC = os.path.join(os.environ.get('SUMMIT_DOCS', 'G:/My Drive/Summit/Docs/0'), 'BBG_CONSENSUS.txt')
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "js", "overviews")
 
 # Per-ticker segment id -> friendly name (BBG SEG ids are company-specific). Extend per company.

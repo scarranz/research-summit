@@ -326,18 +326,20 @@ function takeaway() {
   var rowsT = todayRows(), tr = {}; rowsT.forEach(function (r) { tr[r.k] = r; });
   var diffL = rowsT.filter(todayBig).map(function (r) { return SHORT[r.k]; }), sameL = rowsT.filter(function (r) { return todayDiff(r) != null && !todayBig(r); }).map(function (r) { return SHORT[r.k]; });
   var lead = '<div class="mh-lead"><b>In one paragraph.</b> In 1998-99 the S&amp;P 500 rose ' + pc(D.index[3].pub, 0) + ' and ' + pc(D.index[4].pub, 0) + ' while the median stock rose ' + pc(b[3].med, 0) + ' and ' + pc(b[4].med, 0) + ', because ten stocks were ' + n1(b[4].top10w, 0) + '% of the index. Those leaders fell first, and a ' + n1(f0 - f1, 1) + '-point fall in the Fed funds rate did not stop the index losing ' + dn((sp(LOW) / sp(PEAK) - 1) * 100) + ' from peak to low. Today the top ten are ' + n1(tr.top10.v[2], 0) + '% of the index (1999: ' + n1(tr.top10.v[0], 0) + '%), and the index-level valuation (CAPE ' + n1(tr.cape.v[2], 1) + ') is close to 1999 (' + n1(tr.cape.v[0], 1) + '), but corporate profits (' + n1(tr.prof.v[2], 1) + '% of GDP against ' + n1(tr.prof.v[0], 1) + '%), government debt (' + n1(tr.fed.v[2], 0) + '% against ' + n1(tr.fed.v[0], 0) + '%) and borrowing to buy stocks (' + n1(tr.margin.v[2], 1) + '% of GDP against ' + n1(tr.margin.v[0], 1) + '%) are on a different footing.</div>';
-  return lead + '<div class="mh-two"><div class="mh-box"><div class="mh-ch">What the data shows</div><ul class="mh-ul">' +
+  return '<details class="mh-more"><summary><b>In one paragraph</b><span class="mh-mu"> the whole story in a few lines</span></summary><div class="mh-moreb">' + lead + '</div></details>' +
+    '<details class="mh-more" style="margin-top:8px"><summary><b>What the data shows</b><span class="mh-mu"> five findings</span></summary><div class="mh-moreb"><ul class="mh-ul">' +
     li('The index hid the market.', 'In 1998-99 the S&amp;P 500 rose ' + pc(D.index[3].pub, 0) + ' and ' + pc(D.index[4].pub, 0) + ' while the median stock rose ' + pc(b[3].med, 0) + ' and ' + pc(b[4].med, 0) + '. A few very large names carried the headline: ten stocks were ' + n1(b[4].top10w, 0) + '% of the index at the start of 1999.') +
     li('The leaders turned first.', 'The Nasdaq peaked ' + days('2000-03-10', PEAK) + ' days before the S&amp;P 500. In 2000 the index fell ' + dn(D.index[5].pub) + ' while the average stock rose ' + pc(b[5].ew, 0) + ': the damage was in the biggest names.') +
     li('Last run\'s winners were the wrong thing to own.', 'The 1995-99 winners returned a median ' + pc(q5m, 0) + ' in 2000-05, the laggards ' + pc(q1m, 0) + '.') +
     li('Size did not protect.', still + ' of the 10 largest names of Dec 1999 are still in the S&amp;P 500; in 2000-05 they lost a median ' + dn(med(top.map(function (s) { return s.r05; }))) + '.') +
     li('Cheap money did not stop the fall.', 'Fed funds went from ' + n1(f0, 2) + '% to ' + n1(f1, 2) + '% (Dec 2000 to Dec 2002) while the index\'s monthly average fell ' + dn((s1 / s0 - 1) * 100) + '.') +
-    '</ul></div><div class="mh-box"><div class="mh-ch">What it does not show</div><ul class="mh-ul">' +
+    '</ul></div></details>' +
+    '<details class="mh-more" style="margin-top:8px"><summary><b>What it does not show</b><span class="mh-mu"> the limits</span></summary><div class="mh-moreb"><ul class="mh-ul">' +
     li('That today is 1999.', 'Different today: ' + diffL.join(', ') + '. Similar to 1999: ' + sameL.join(', ') + '. A list of differences, not a signal that a reversal is due.') +
     li('Why a name rose or fell.', 'There are prices and weights, not revenue, profit or the debt of each company. The index-level valuation is a public series, not a test of the leaders.') +
     li('What an event caused.', 'The events table gives context and a reading; the data cannot separate one cause from the others.') +
     li('What happens after 2005.', 'Fates after 2005 (acquired, delisted, still in the index) are in the tables; there is no forecast.') +
-    '</ul></div></div>';
+    '</ul></div></details>';
 }
 
 // ─── page ──────────────────────────────────────────────────

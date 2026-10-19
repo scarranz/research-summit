@@ -1,13 +1,14 @@
 // eps-charts.js — SVG charts of Market Analysis > EPS Attribution (js/eps-attribution.js).
-//   stepBars()   EPS vs multiple, stacked and diverging, one group per period, total marked
-//   lineChart()  a few series over the five snapshots, filtered series dashed
+//   divStack()   EPS part vs multiple part of a return, diverging stacked bars, net marked
+//   scatter()    every stock: EPS change vs multiple change, sized by weight
+//   lineChart()  a few series over the snapshots
 //   waterfall()  contributors to a total, largest first, "rest of index" closing the bar (Citadel style)
 // Tooltips use the page's #ndx-tip (index.html) through ma-charts.js.
 import { se, bindTip } from './ma-charts.js';
 
 var INK = '#2B3B4E', MUTED = '#8A93A0', GRID = '#E5E8EC';
 function txt(attrs, s) { var t = se('text', Object.assign({ 'font-family': 'Inter,sans-serif', fill: INK }, attrs)); t.textContent = s; return t; }
-export function ppTxt(v, d) { if (v == null || isNaN(v)) return '—'; var x = v * 100; if (Math.abs(x) < 0.05 * Math.pow(10, 1 - (d == null ? 1 : d))) x = 0; return (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(d == null ? 1 : d); }
+export function ppTxt(v, d) { if (v == null || isNaN(v)) return '—'; var x = v * 100; if (Math.abs(x) < 0.5 * Math.pow(10, -(d == null ? 1 : d))) x = 0; return (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(d == null ? 1 : d); }
 function niceStep(range, n) {
   var raw = range / n, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p;
   return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
@@ -25,50 +26,90 @@ export function legendItem(color, label, dashed) {
   return '<span><i style="background:' + (dashed ? 'repeating-linear-gradient(90deg,' + color + ' 0 3px,transparent 3px 5px)' : color) + (dashed ? ';height:2px;vertical-align:3px' : '') + '"></i>' + label + '</span>';
 }
 
-// groups: [{ label, eps, mult, tot, dim, tip }] — values are fractions (0.12 = 12 pp)
-export function stepBars(box, groups, colors) {
-  var VW = 900, VH = 300, P = { t: 18, r: 14, b: 44, l: 44 };
-  var vals = []; groups.forEach(function (g) { vals.push(g.eps, g.mult, g.eps + g.mult, g.tot); });
-  var lo = Math.min.apply(null, vals.concat(0)) * 100, hi = Math.max.apply(null, vals.concat(0)) * 100;
-  var A = axis(lo, hi, 6);
-  function Y(v) { return P.t + (A.hi - v * 100) / (A.hi - A.lo) * (VH - P.t - P.b); }
+// rows: [{ label, a, b, net, bold, tip }] — a = EPS part, b = multiple part, net = their sum (the price part), all fractions.
+// Positives go right, negatives left; a diamond marks the net and its value sits in the right column.
+export function divStack(box, rows, o) {
+  var rowH = 28, maxLab = 0; rows.forEach(function (r) { maxLab = Math.max(maxLab, String(r.label).length); });
+  var VW = 900, P = { t: 30, r: 96, b: 26, l: Math.max(150, Math.round(maxLab * 6.3) + 22) };
+  var vals = []; rows.forEach(function (r) { vals.push(r.a, r.b, r.a + r.b, r.net); });
+  var A = axis(Math.min.apply(null, vals.concat(0)) * 100, Math.max.apply(null, vals.concat(0)) * 100, 6);
+  var VH = P.t + rows.length * rowH + P.b;
+  function X(v) { return P.l + (v * 100 - A.lo) / (A.hi - A.lo) * (VW - P.l - P.r); }
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
   A.ticks.forEach(function (t) {
-    svg.appendChild(se('line', { x1: P.l, x2: VW - P.r, y1: Y(t / 100), y2: Y(t / 100), stroke: t === 0 ? '#9AA3AF' : GRID, 'stroke-width': t === 0 ? 1.2 : 1 }));
-    svg.appendChild(txt({ x: P.l - 8, y: Y(t / 100) + 3.5, 'text-anchor': 'end', 'font-size': 10, fill: MUTED }, (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) + '%'));
+    svg.appendChild(se('line', { x1: X(t / 100), x2: X(t / 100), y1: P.t - 8, y2: VH - P.b, stroke: t === 0 ? '#9AA3AF' : GRID, 'stroke-width': t === 0 ? 1.2 : 1 }));
+    svg.appendChild(txt({ x: X(t / 100), y: VH - P.b + 15, 'text-anchor': 'middle', 'font-size': 10, fill: MUTED }, (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t)));
   });
-  var slot = (VW - P.l - P.r) / groups.length, bw = Math.min(54, slot * 0.34);
-  groups.forEach(function (g, i) {
-    var cx = P.l + slot * (i + 0.5), gEl = se('g', { opacity: g.dim ? 0.42 : 1 });
-    // stack away from zero on each side: positives upward, negatives downward
-    var posTop = 0, negBot = 0;
-    [['eps', colors.eps], ['mult', colors.mult]].forEach(function (s) {
-      var v = g[s[0]]; if (!v) return;
-      var y0, y1;
-      if (v >= 0) { y0 = Y(posTop); posTop += v; y1 = Y(posTop); } else { y0 = Y(negBot); negBot += v; y1 = Y(negBot); }
-      gEl.appendChild(se('rect', { x: cx - bw / 2, width: bw, y: Math.min(y0, y1) + 1, height: Math.max(0.5, Math.abs(y1 - y0) - 2), rx: 3, fill: s[1] }));
+  svg.appendChild(txt({ x: P.l, y: 12, 'font-size': 10, fill: MUTED, 'font-weight': 600 }, o.axisTitle || 'pp of index return'));
+  svg.appendChild(txt({ x: VW - 6, y: 12, 'text-anchor': 'end', 'font-size': 10, fill: MUTED, 'font-weight': 600 }, o.netTitle || 'Net'));
+  rows.forEach(function (r, i) {
+    var y = P.t + i * rowH + 5, h = rowH - 11, g = se('g', {}), pos = 0, neg = 0;
+    g.appendChild(txt({ x: P.l - 12, y: y + h / 2 + 4, 'text-anchor': 'end', 'font-size': 11.5, 'font-weight': r.bold ? 700 : 500 }, r.label));
+    [[r.a, o.colA], [r.b, o.colB]].forEach(function (s) {
+      var v = s[0]; if (!v) return; var x0, x1;
+      if (v >= 0) { x0 = X(pos); pos += v; x1 = X(pos); } else { x1 = X(neg); neg += v; x0 = X(neg); }
+      g.appendChild(se('rect', { x: Math.min(x0, x1) + 0.5, y: y, width: Math.max(1, Math.abs(x1 - x0) - 1), height: h, rx: 2, fill: s[1] }));
     });
-    gEl.appendChild(se('rect', { x: cx - bw / 2 - 8, y: P.t, width: bw + 16, height: VH - P.t - P.b, fill: 'transparent' }));
-    var ty = Y(g.tot);
-    gEl.appendChild(se('rect', { x: cx - 6, y: ty - 6, width: 12, height: 12, fill: colors.tot, stroke: '#fff', 'stroke-width': 2, transform: 'rotate(45 ' + cx + ' ' + ty + ')' }));
-    gEl.appendChild(txt({ x: cx + bw / 2 + 12, y: ty + 4, 'font-size': 11.5, 'font-weight': 600, fill: colors.tot }, ppTxt(g.tot) + '%'));
-    var lines = String(g.label).split('\n');
-    lines.forEach(function (l, j) { gEl.appendChild(txt({ x: cx, y: VH - P.b + 18 + j * 13, 'text-anchor': 'middle', 'font-size': j ? 10 : 11, fill: j ? MUTED : INK, 'font-weight': j ? 400 : 600 }, l)); });
-    bindTip(gEl, g.tip, 250);
-    svg.appendChild(gEl);
+    var nx = X(r.net), nc = r.net >= 0 ? o.pos : o.neg;
+    g.appendChild(se('rect', { x: nx - 5.5, y: y + h / 2 - 5.5, width: 11, height: 11, fill: nc, stroke: '#fff', 'stroke-width': 2, transform: 'rotate(45 ' + nx + ' ' + (y + h / 2) + ')' }));
+    g.appendChild(txt({ x: VW - 6, y: y + h / 2 + 4, 'text-anchor': 'end', 'font-size': 11.5, 'font-weight': 700, fill: nc, 'font-variant-numeric': 'tabular-nums' }, ppTxt(r.net, 2) + ' pp'));
+    g.appendChild(se('rect', { x: 0, y: y - 4, width: VW, height: rowH - 2, fill: 'transparent' }));
+    if (r.tip) bindTip(g, r.tip, 270);
+    svg.appendChild(g);
   });
-  mount(box, svg, legendItem(colors.eps, 'Aggregate EPS revision') + legendItem(colors.mult, 'Multiple (P/E), incl. cross term') +
-    '<span><i style="background:' + colors.tot + ';transform:rotate(45deg);border-radius:0"></i>Index price return</span>');
+  mount(box, svg, legendItem(o.colA, o.labA || 'EPS growth') + legendItem(o.colB, o.labB || 'Multiple change') +
+    '<span><i style="background:' + o.pos + ';transform:rotate(45deg);border-radius:0"></i>Net = price part (green up, red down)</span>');
 }
 
-// series: [{ name, color, vals, dash, w }] — labels: x categories; yfmt(v) -> axis text
+// pts: [{ x, y, r, color, label, tip }] — x = EPS change, y = multiple change (fractions), r = weight.
+// The dashed curve is the "price flat" line, (1+x)(1+y) = 1. Points beyond the axis are pinned to its edge, hollow.
+export function scatter(box, pts, o) {
+  var VW = 900, VH = 520, P = { t: 16, r: 18, b: 44, l: 56 };
+  function pct(a, q) { a = a.slice().sort(function (x, y) { return x - y; }); return a[Math.max(0, Math.min(a.length - 1, Math.round(q * (a.length - 1))))]; }
+  var xs = pts.map(function (p) { return p.x; }), ys = pts.map(function (p) { return p.y; });
+  var Ax = axis(Math.min(pct(xs, 0.02), -0.1) * 100, Math.max(pct(xs, 0.98), 0.1) * 100, 7), Ay = axis(Math.min(pct(ys, 0.02), -0.1) * 100, Math.max(pct(ys, 0.98), 0.1) * 100, 6);
+  function X(v) { return P.l + (v * 100 - Ax.lo) / (Ax.hi - Ax.lo) * (VW - P.l - P.r); }
+  function Y(v) { return P.t + (Ay.hi - v * 100) / (Ay.hi - Ay.lo) * (VH - P.t - P.b); }
+  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
+  function tk(t) { return (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) + '%'; }
+  Ax.ticks.forEach(function (t) {
+    svg.appendChild(se('line', { x1: X(t / 100), x2: X(t / 100), y1: P.t, y2: VH - P.b, stroke: t === 0 ? '#9AA3AF' : GRID, 'stroke-width': t === 0 ? 1.2 : 1 }));
+    svg.appendChild(txt({ x: X(t / 100), y: VH - P.b + 15, 'text-anchor': 'middle', 'font-size': 10, fill: MUTED }, tk(t)));
+  });
+  Ay.ticks.forEach(function (t) {
+    svg.appendChild(se('line', { x1: P.l, x2: VW - P.r, y1: Y(t / 100), y2: Y(t / 100), stroke: t === 0 ? '#9AA3AF' : GRID, 'stroke-width': t === 0 ? 1.2 : 1 }));
+    svg.appendChild(txt({ x: P.l - 8, y: Y(t / 100) + 3.5, 'text-anchor': 'end', 'font-size': 10, fill: MUTED }, tk(t)));
+  });
+  svg.appendChild(txt({ x: (P.l + VW - P.r) / 2, y: VH - 6, 'text-anchor': 'middle', 'font-size': 11, fill: INK, 'font-weight': 600 }, o.xTitle));
+  var cyT = (P.t + VH - P.b) / 2, yt = txt({ x: 14, y: cyT, 'text-anchor': 'middle', 'font-size': 11, fill: INK, 'font-weight': 600 }, o.yTitle);
+  yt.setAttribute('transform', 'rotate(-90 14 ' + cyT + ')'); svg.appendChild(yt);
+  var d = '', pen = false, x0 = Math.max(-0.97, Ax.lo / 100);
+  for (var i = 0; i <= 160; i++) {
+    var x = x0 + (Ax.hi / 100 - x0) * i / 160, y = 1 / (1 + x) - 1;
+    if (y > Ay.hi / 100 || y < Ay.lo / 100) { pen = false; continue; }
+    d += (pen ? 'L' : 'M') + X(x).toFixed(1) + ' ' + Y(y).toFixed(1); pen = true;
+  }
+  svg.appendChild(se('path', { d: d, fill: 'none', stroke: '#6B7686', 'stroke-width': 1.3, 'stroke-dasharray': '5 4' }));
+  svg.appendChild(txt({ x: VW - P.r - 4, y: P.t + 14, 'text-anchor': 'end', 'font-size': 10.5, fill: '#6B7686' }, 'Dashed line = price unchanged · above it the stock is up, below it down'));
+  var maxR = Math.max.apply(null, pts.map(function (p) { return p.r; })) || 1;
+  pts.slice().sort(function (a, b) { return b.r - a.r; }).forEach(function (p) {
+    var cx = Math.max(P.l + 2, Math.min(VW - P.r - 2, X(p.x))), cy = Math.max(P.t + 2, Math.min(VH - P.b - 2, Y(p.y)));
+    var pinned = cx !== X(p.x) || cy !== Y(p.y), rad = 3 + 13 * Math.sqrt(p.r / maxR);
+    var c = se('circle', { cx: cx, cy: cy, r: rad, fill: pinned ? '#fff' : p.color, 'fill-opacity': pinned ? 1 : 0.62, stroke: p.color, 'stroke-width': pinned ? 1.6 : 1 });
+    bindTip(c, p.tip, 260); svg.appendChild(c);
+    if (p.label) svg.appendChild(txt({ x: cx + rad + 3, y: cy + 3.5, 'font-size': 10.5, 'font-weight': 600, fill: INK, 'pointer-events': 'none' }, p.label));
+  });
+  mount(box, svg, o.legend);
+}
+
+// series: [{ name, color, vals, dash }] — labels: x categories; yfmt(v) -> axis text
 export function lineChart(box, labels, series, yfmt, o) {
   o = o || {};
   var VW = 520, VH = o.h || 260, P = { t: 16, r: 62, b: 30, l: 44 };
   var all = []; series.forEach(function (s) { s.vals.forEach(function (v) { if (v != null) all.push(v); }); });
   var A = axis(Math.min.apply(null, all), Math.max.apply(null, all), 5);
   function Y(v) { return P.t + (A.hi - v) / (A.hi - A.lo) * (VH - P.t - P.b); }
-  function X(i) { return P.l + i * (VW - P.l - P.r) / (labels.length - 1); }
+  function X(i) { return P.l + i * (VW - P.l - P.r) / Math.max(1, labels.length - 1); }
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
   A.ticks.forEach(function (t) {
     svg.appendChild(se('line', { x1: P.l, x2: VW - P.r, y1: Y(t), y2: Y(t), stroke: GRID }));
@@ -80,23 +121,21 @@ export function lineChart(box, labels, series, yfmt, o) {
     svg.appendChild(se('path', { d: d, fill: 'none', stroke: s.color, 'stroke-width': 2, 'stroke-dasharray': s.dash ? '5 4' : '', 'stroke-linejoin': 'round' }));
     s.vals.forEach(function (v, i) { if (v != null) svg.appendChild(se('circle', { cx: X(i), cy: Y(v), r: 3.6, fill: s.dash ? '#fff' : s.color, stroke: s.color, 'stroke-width': 1.6 })); });
     var last = s.vals.length - 1;
-    if (s.vals[last] != null && s.endLabel !== false) svg.appendChild(txt({ x: X(last) + 8, y: Y(s.vals[last]) + 4, 'font-size': 11, 'font-weight': 600, fill: s.color }, (o.endFmt || yfmt)(s.vals[last])));
+    if (s.vals[last] != null) svg.appendChild(txt({ x: X(last) + 8, y: Y(s.vals[last]) + 4, 'font-size': 11, 'font-weight': 600, fill: s.color }, (o.endFmt || yfmt)(s.vals[last])));
   });
-  // hover: one column per snapshot
-  var tip = o.tip;
   labels.forEach(function (l, i) {
     var r = se('rect', { x: X(i) - 20, y: P.t, width: 40, height: VH - P.t - P.b, fill: 'transparent' });
     var h = '<b style="font-size:13px">' + l + '</b>' + series.map(function (s) { return '<span style="display:block;font-size:12px;color:#52514e">' + s.name + ': <b>' + (s.vals[i] == null ? '—' : (o.endFmt || yfmt)(s.vals[i])) + '</b></span>'; }).join('');
-    bindTip(r, tip ? tip(i, h) : h, 260); svg.appendChild(r);
+    bindTip(r, o.tip ? o.tip(i, h) : h, 260); svg.appendChild(r);
   });
-  mount(box, svg, series.length > 1 || o.legend ? series.map(function (s) { return legendItem(s.color, s.name, s.dash); }).join('') : '');
+  mount(box, svg, series.length > 1 ? series.map(function (s) { return legendItem(s.color, s.name, s.dash); }).join('') : '');
 }
 
-// rows: [{ label, sub, v, tip, color }] largest first; closes with a grey "rest" bar when o.rest != null.
+// rows: [{ label, v, tip, color }] largest first; closes with a grey "rest" bar when o.rest != null.
 // fmt(v) -> text. The bar for row i spans [cum_i-1, cum_i].
 export function waterfall(box, rows, o) {
   var rowH = 28, VW = 900, P = { t: 30, r: 90, b: 28, l: 190 };
-  var items = rows.slice(); if (o.rest != null) items.push({ label: o.restLabel || 'Rest of index', sub: o.restSub, v: o.rest, rest: true, tip: o.restTip });
+  var items = rows.slice(); if (o.rest != null) items.push({ label: o.restLabel || 'Rest of index', v: o.rest, rest: true, tip: o.restTip });
   var maxLab = 0; items.forEach(function (r) { maxLab = Math.max(maxLab, String(r.label).length); }); P.l = Math.max(190, Math.round(maxLab * 6.4) + 24);
   var cum = 0, bars = items.map(function (r) { var a = cum; cum += r.v; return { r: r, a: a, b: cum }; });
   var lo = Math.min.apply(null, bars.map(function (x) { return Math.min(x.a, x.b); }).concat(0)) * 100;

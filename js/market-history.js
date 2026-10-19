@@ -48,7 +48,7 @@ function stageCards() {
       '<div class="mh-sbig ' + cls(cum - 1) + '">' + pc((cum - 1) * 100, 0) + '</div><div class="mh-scap">S&amp;P 500, ' + yrs + ' years compounded</div>' +
       li('Median stock, average year', pc(med1, 0)) + li('Names that rose, average year', n1(up, 0) + '%') + li('Top 10 weight at start', n1(b[k0].top10w, 0) + '%') +
       li('Fed funds, Dec to Dec', n1(macroAt('ffr', (s.y0 - 1) + '-12'), 1) + '% → ' + n1(macroAt('ffr', s.y1 + '-12'), 1) + '%') + '</div>';
-  }).join('') + '</div><div class="mh-note">The stages are a grouping for reading; every year is in the table below. S&amp;P 500 = published index price return (Bloomberg). Median stock = the median member. Fed funds = FRED, monthly average.</div>';
+  }).join('') + '</div><details class="mh-more" style="margin-top:8px"><summary><b>Notes</b><span class="mh-mu"> sources and definitions</span></summary><div class="mh-moreb"><div class="mh-note" style="margin:0">The stages are a grouping for reading; every year is in the table below. S&amp;P 500 = published index price return (Bloomberg). Median stock = the median member. Fed funds = FRED, monthly average.</div></div></details>';
 }
 function yearTable() {
   var b = breadths(), last = null;
@@ -60,7 +60,7 @@ function yearTable() {
       '<td class="r">' + n1(macroAt('ffr', y + '-12'), 2) + '%</td><td class="r">' + n1(macroAt('y10', y + '-12'), 2) + '%</td><td class="r ' + cls(cv) + '">' + (cv == null ? '—' : (cv >= 0 ? '+' : '−') + Math.abs(cv).toFixed(2)) + '</td></tr>';
   }).join('');
   return '<div class="mh-ch" style="margin-top:18px">Every year <span class="mh-mu">price returns; the stages above just group these rows</span></div><div class="mh-scroll"><table class="mh-tbl mh-fix"><colgroup><col style="width:70px">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(function () { return '<col>'; }).join('') + '</colgroup><thead><tr><th>Year</th><th class="r">S&amp;P 500</th><th class="r" title="Every member counts the same">Average stock</th><th class="r">Median stock</th><th class="r">Names that rose</th><th class="r">Beat the index</th><th class="r" title="At the start of the year">Top 10 weight</th><th class="r" title="How many names make up the first half of the index, at the start of the year">Names for half the index</th><th class="r" title="Last month of the year, monthly average">Fed funds, Dec</th><th class="r">10-yr yield, Dec</th><th class="r" title="10-year minus 2-year Treasury yield; below 0 = inverted">Curve 10y − 2y, Dec</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-    '<div class="mh-note">Average stock = equal-weighted return of the members. "Beat the index" = share of members with a return above the size-weighted return of all members. Members = the names in the index on the first trading day of the year.</div>';
+    '<details class="mh-more" style="margin-top:8px"><summary><b>Notes</b><span class="mh-mu"> sources and definitions</span></summary><div class="mh-moreb"><div class="mh-note" style="margin:0">Average stock = equal-weighted return of the members. "Beat the index" = share of members with a return above the size-weighted return of all members. Members = the names in the index on the first trading day of the year.</div></div></details>';
 }
 function mountTimeline() {
   var cut = Mo.indexOf('2005-12') + 1, xs = Mo.slice(0, cut), recB = runs('rec', function (v) { return v >= 0.5; }, '1994-01', '2005-12').map(function (r) { return { i0: ix(r[0] + '-01'), i1: ix(r[1] + '-01'), color: '#6B7684', op: .16 }; });
@@ -140,7 +140,7 @@ function eventsList() {
     h += '<details class="mh-ev"><summary><span class="mh-evdate">' + e[0] + '</span><b>' + esc(info[0]) + '</b><span class="mh-evtag">' + (EV_TAG[e[2]] || '') + '</span></summary><div class="mh-evb"><div>' + esc(info[1]) + '</div>' +
       (rd ? '<div class="mh-evr"><b>What to take from it</b> <span class="mh-mu">interpretation</span><div>' + rd() + '</div></div>' : '') + '</div></details>';
   });
-  return '<div class="mh-evs">' + h + '</div><div class="mh-note">Click an event to open it. The dates are public record (sources in docs/MARKET_HISTORY.md). The page does not show what the market did after each event: many were expected and other news arrived the same weeks, so the data cannot say what an event caused.</div>';
+  return '<div class="mh-evs">' + h + '</div><details class="mh-more" style="margin-top:8px"><summary><b>Notes</b><span class="mh-mu"> sources and definitions</span></summary><div class="mh-moreb"><div class="mh-note" style="margin:0">Click an event to open it. The dates are public record (sources in docs/MARKET_HISTORY.md). The page does not show what the market did after each event: many were expected and other news arrived the same weeks, so the data cannot say what an event caused.</div></div></details>';
 }
 
 // ─── 3. Index Composition: weight by sector ───────────────
@@ -172,7 +172,7 @@ function weightArrows(box, rows, hi, a, b) {
     g += '<line x1="' + x0 + '" x2="' + x0 + '" y1="' + (y - 9) + '" y2="' + (y + 9) + '" stroke="#4A5666" stroke-width="2"/>' +
       '<text x="' + (VW - R + 36) + '" y="' + (y + 4) + '" font-size="13" fill="#1E2733">' + n1(r.w0, 1) + '% → ' + n1(r.w1, 1) + '%</text><text x="' + (VW - 6) + '" y="' + (y + 4) + '" text-anchor="end" font-size="13" font-weight="700" fill="' + col + '">' + pp(d, 2) + '</text>';
   });
-  box.innerHTML = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" class="mh-svg">' + g + '</svg><div class="mh-note">Share of the S&amp;P 500 by sector at each year-end; the sector order is the same whatever the dates. <b>Reading each row:</b> the dark tick is where the sector stood on ' + snapLbl(a) + ', the arrow points to where it stood on ' + snapLbl(b) + '; green = its share rose, red = it fell. A share falls when the sector\'s stocks fall, or when other stocks rise faster.</div>';
+  box.innerHTML = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" class="mh-svg">' + g + '</svg><details class="mh-more" style="margin-top:8px"><summary><b>Notes</b><span class="mh-mu"> sources and definitions</span></summary><div class="mh-moreb"><div class="mh-note" style="margin:0">Share of the S&amp;P 500 by sector at each year-end; the sector order is the same whatever the dates. <b>Reading each row:</b> the dark tick is where the sector stood on ' + snapLbl(a) + ', the arrow points to where it stood on ' + snapLbl(b) + '; green = its share rose, red = it fell. A share falls when the sector\'s stocks fall, or when other stocks rise faster.</div></div></details>';
 }
 
 // ─── 4. did yesterday's winners stay winners? (scatter) ────
@@ -262,39 +262,6 @@ function cohorts() {
     '<details class="mh-more" style="margin-top:10px"><summary><b>Notes</b><span class="mh-mu"> what this does and does not say</span></summary><div class="mh-moreb"><div class="mh-note" style="margin:0">An outcome and sector split only: profit and revenue of each name at the time are not in this data, so it cannot say whether the survivors were the ones with real earnings. 2000-05 = Dec 1999 to Dec 2005 price return; a name that stopped trading is carried at its last close, so a takeover is counted at its last price. "In S&amp;P 500 today" is the Bloomberg membership list of Oct 2026.</div></div></details>';
 }
 
-// ─── 5. names that joined the index ────────────────────────
-function addedNames() {
-  var rows = [], pb = [], pa = [], po = [], upBefore = 0, nBefore = 0, per = [];
-  for (var k = 1; k < NK; k++) {
-    var ent = D.secs.filter(function (s) { return s.w[k] != null && s.w[k - 1] == null && s.r[k] != null; }), stay = D.secs.filter(function (s) { return s.w[k] != null && s.w[k - 1] != null && s.r[k] != null; });
-    var bef = ent.filter(function (s) { return px(s, k - 1) != null && px(s, k) != null; }).map(function (s) { return (px(s, k) / px(s, k - 1) - 1) * 100; });
-    var aft = ent.map(function (s) { return s.r[k]; }), oth = stay.map(function (s) { return s.r[k]; });
-    pb = pb.concat(bef); pa = pa.concat(aft); po = po.concat(oth); upBefore += bef.filter(function (v) { return v > 0; }).length; nBefore += bef.length;
-    per.push({ k: k, n: ent.length, nb: bef.length, b: med(bef), a: med(aft), o: med(oth) });
-    rows.push('<tr><td><b>' + snapLbl(k) + '</b></td><td class="r">' + ent.length + '</td><td class="r">' + bef.length + '</td><td class="r ' + cls(med(bef)) + '">' + pc(med(bef), 0) + '</td><td class="r ' + cls(med(aft)) + '">' + pc(med(aft), 0) + '</td><td class="r ' + cls(med(oth)) + '">' + pc(med(oth), 0) + '</td><td class="r ' + cls(med(aft) - med(oth)) + '">' + pp(med(aft) - med(oth), 0) + '</td></tr>');
-  }
-  // grouped bars: for each year-end at which names joined, the median return of the additions the year before, the year after, and of the names already in
-  var VW = 900, VH = 300, M = { t: 24, r: 16, b: 44, l: 52 }, cw = VW - M.l - M.r, ch = VH - M.t - M.b, slot = cw / per.length, bw = Math.min(26, (slot - 14) / 3);
-  var all = []; per.forEach(function (p) { [p.b, p.a, p.o].forEach(function (v) { if (v != null) all.push(v); }); });
-  var hi = Math.ceil(Math.max.apply(null, all.concat(10)) / 10) * 10, lo = Math.floor(Math.min.apply(null, all.concat(-10)) / 10) * 10, stp = (hi - lo) > 80 ? 20 : 10;
-  var Y = function (v) { return M.t + (hi - v) / (hi - lo) * ch; }, COLS = { b: '#9FB3CC', a: '#1E3A5F', o: '#C6CCD4' }, g = '';
-  for (var t = Math.ceil(lo / stp) * stp; t <= hi; t += stp) g += '<line x1="' + M.l + '" x2="' + (VW - M.r) + '" y1="' + Y(t) + '" y2="' + Y(t) + '" stroke="' + (t === 0 ? '#9AA3AF' : '#EEF1F4') + '" stroke-width="' + (t === 0 ? 1.4 : 1) + '"/><text x="' + (M.l - 7) + '" y="' + (Y(t) + 4) + '" text-anchor="end" font-size="11" fill="#8A93A0">' + (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) + '%</text>';
-  per.forEach(function (p, i) {
-    var x0 = M.l + i * slot + (slot - bw * 3 - 4) / 2;
-    [['b', p.b], ['a', p.a], ['o', p.o]].forEach(function (e, j) {
-      if (e[1] == null) return;
-      var y0 = Y(Math.max(e[1], 0)), y1 = Y(Math.min(e[1], 0)), x = x0 + j * (bw + 2);
-      g += '<rect x="' + x + '" y="' + y0 + '" width="' + bw + '" height="' + Math.max(1, y1 - y0) + '" fill="' + COLS[e[0]] + '" rx="2"><title>' + snapLbl(p.k) + ' · ' + { b: 'additions, year before joining', a: 'additions, year after joining', o: 'names already in the index' }[e[0]] + ': ' + pc(e[1], 0) + '</title></rect>';
-    });
-    g += '<text x="' + (M.l + i * slot + slot / 2) + '" y="' + (VH - M.b + 16) + '" text-anchor="middle" font-size="11" fill="#4A5666">' + snapLbl(p.k).replace('Dec ', '') + '</text><text x="' + (M.l + i * slot + slot / 2) + '" y="' + (VH - M.b + 31) + '" text-anchor="middle" font-size="10" fill="#8A93A0">' + p.n + ' added</text>';
-  });
-  var key = function (c, t) { return '<span class="mh-key"><i class="mh-dot" style="background:' + c + '"></i>' + t + '</span>'; };
-  return '<div class="mh-read">' + n1(upBefore / nBefore * 100, 0) + '% of the names that joined had risen in the year before (median ' + pc(med(pb), 0) + '); in the year after, their median was ' + pc(med(pa), 0) + ' against ' + pc(med(po), 0) + ' for the names already in. All years pooled, ' + nBefore + ' additions with a price a year earlier.</div>' +
-    '<svg viewBox="0 0 ' + VW + ' ' + VH + '" class="mh-svg">' + g + '</svg><div style="display:flex;flex-wrap:wrap;gap:4px 14px;margin:4px 0">' + key(COLS.b, 'Additions, year before joining') + key(COLS.a, 'Additions, year after joining') + key(COLS.o, 'Names already in the index, same year') + '</div>' +
-    '<details class="mh-more" style="margin-top:10px"><summary><b>The numbers</b><span class="mh-mu"> table and definitions</span></summary><div class="mh-moreb"><div class="mh-scroll"><table class="mh-tbl mh-fix"><colgroup><col style="width:110px"><col><col><col><col><col><col></colgroup><thead><tr><th>Added at</th><th class="r">Names added</th><th class="r">With a price a year earlier</th><th class="r">Median, year before</th><th class="r">Median, year after</th><th class="r">Already in, same year</th><th class="r">Added minus already in</th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>' +
-    '<div class="mh-note">Added at = the first year-end the name appears among the members. "Year before" uses the Bloomberg price a year earlier, when the name was outside the index (names not yet listed then are left out of that column). "Year after" = the year starting at the year-end it joined. Medians of price returns.</div></div></details>';
-}
-
 // ─── 6. where today differs ────────────────────────────────
 var TOL = { ffr: 2, y10: 2, curve: 1, base: 5, corp: 5, fed: 20, margin: 1.5, prof: 3, cape: 8, ey: 1.5, cpi: 1.5, un: 1.5, baa: 1, top10: 5, n50: 10 };
 var QROW = { corp: 1, fed: 1, prof: 1 };
@@ -327,7 +294,7 @@ function todayTable() {
   }).join('');
   return '<div class="mh-scroll"><table class="mh-tbl mh-fix"><colgroup><col><col style="width:110px"><col style="width:110px"><col style="width:110px"><col style="width:110px"><col style="width:96px"></colgroup><thead><tr><th>Measure</th><th class="r">Dec 1999</th><th class="r">Mar 2000<div class="mh-mu" style="text-transform:none;letter-spacing:0">S&amp;P peak</div></th><th class="r mh-sepl">Latest</th><th class="r" title="Latest minus Dec 1999">Change</th><th>Versus 1999</th></tr></thead><tbody>' + body + '</tbody></table></div>' +
     '<div class="mh-read" style="margin-top:12px"><b>Different today:</b> ' + verdicts.diff.join('; ') + '.<br><b>Similar to 1999:</b> ' + verdicts.close.join('; ') + '.</div>' +
-    '<div class="mh-note">"Different" = moved by at least these margins (a fixed rule per measure, not a judgement of risk): ' + Object.keys(TOL).map(function (k) { return SHORT[k] + ' ' + TOL[k] + (k === 'cape' ? ' turns' : k === 'n50' ? ' names' : ' pp'); }).join(', ') + '. Rates, debt, inflation, unemployment: FRED (St. Louis Fed), FINRA for margin debt. Valuation and earnings yield: Robert Shiller\'s S&amp;P 500 data (index level: trailing earnings, not forward). Debt ratios use nominal GDP; the latest GDP and debt quarters are the latest published. Concentration today is from SPY holdings (float-adjusted weights, which count only shares available to trade), so it is not exactly comparable with the 1999 weights. Nothing here says what happens next, and the profits or debt of the individual leaders are not in this data.</div>';
+    '<details class="mh-more" style="margin-top:8px"><summary><b>Notes</b><span class="mh-mu"> sources and definitions</span></summary><div class="mh-moreb"><div class="mh-note" style="margin:0">"Different" = moved by at least these margins (a fixed rule per measure, not a judgement of risk): ' + Object.keys(TOL).map(function (k) { return SHORT[k] + ' ' + TOL[k] + (k === 'cape' ? ' turns' : k === 'n50' ? ' names' : ' pp'); }).join(', ') + '. Rates, debt, inflation, unemployment: FRED (St. Louis Fed), FINRA for margin debt. Valuation and earnings yield: Robert Shiller\'s S&amp;P 500 data (index level: trailing earnings, not forward). Debt ratios use nominal GDP; the latest GDP and debt quarters are the latest published. Concentration today is from SPY holdings (float-adjusted weights, which count only shares available to trade), so it is not exactly comparable with the 1999 weights. Nothing here says what happens next, and the profits or debt of the individual leaders are not in this data.</div></div></details>';
 }
 
 // ─── the story ──────────────────────────────────────────────
@@ -355,8 +322,6 @@ function takeaway() {
   var q5m = med(cohort.filter(function (s) { return s.q === 5; }).map(function (s) { return s.r05; })), q1m = med(cohort.filter(function (s) { return s.q === 1; }).map(function (s) { return s.r05; }));
   var top = D.secs.filter(function (s) { return s.w[K0] != null; }).sort(function (a, c) { return c.w[K0] - a.w[K0]; }).slice(0, 10), still = top.filter(function (s) { return s.st === 'SPX'; }).length;
   var f0 = macroAt('ffr', '2000-12'), f1 = macroAt('ffr', '2002-12'), s0 = macroAt('sp', '2000-12'), s1 = macroAt('sp', '2002-12');
-  var pb = [], pa = [];
-  for (var k = 1; k < NK; k++) D.secs.forEach(function (s) { if (s.w[k] != null && s.w[k - 1] == null) { if (px(s, k - 1) != null) pb.push((px(s, k) / px(s, k - 1) - 1) * 100); if (s.r[k] != null) pa.push(s.r[k]); } });
   var li = function (h, t) { return '<li><b>' + h + '</b> ' + t + '</li>'; };
   var rowsT = todayRows(), tr = {}; rowsT.forEach(function (r) { tr[r.k] = r; });
   var diffL = rowsT.filter(todayBig).map(function (r) { return SHORT[r.k]; }), sameL = rowsT.filter(function (r) { return todayDiff(r) != null && !todayBig(r); }).map(function (r) { return SHORT[r.k]; });
@@ -367,7 +332,6 @@ function takeaway() {
     li('Last run\'s winners were the wrong thing to own.', 'The 1995-99 winners returned a median ' + pc(q5m, 0) + ' in 2000-05, the laggards ' + pc(q1m, 0) + '.') +
     li('Size did not protect.', still + ' of the 10 largest names of Dec 1999 are still in the S&amp;P 500; in 2000-05 they lost a median ' + dn(med(top.map(function (s) { return s.r05; }))) + '.') +
     li('Cheap money did not stop the fall.', 'Fed funds went from ' + n1(f0, 2) + '% to ' + n1(f1, 2) + '% (Dec 2000 to Dec 2002) while the index\'s monthly average fell ' + dn((s1 / s0 - 1) * 100) + '.') +
-    li('Index additions followed strength.', 'Names added to the index had a median ' + pc(med(pb), 0) + ' in the year before joining and ' + pc(med(pa), 0) + ' in the year after.') +
     '</ul></div><div class="mh-box"><div class="mh-ch">What it does not show</div><ul class="mh-ul">' +
     li('That today is 1999.', 'Different today: ' + diffL.join(', ') + '. Similar to 1999: ' + sameL.join(', ') + '. A list of differences, not a signal that a reversal is due.') +
     li('Why a name rose or fell.', 'There are prices and weights, not revenue, profit or the debt of each company. The index-level valuation is a public series, not a test of the leaders.') +
@@ -384,7 +348,7 @@ function render() {
     '<div class="mh-intro"><div class="mh-h1">Market History · 1995-2005</div><div class="mh-mu">S&amp;P 500 members, weights and price returns, followed to today · Bloomberg, FRED, FINRA, R. Shiller · docs/MARKET_HISTORY.md</div></div>' +
     bottomLine() + howTo() +
     sec('The decade in four stages', 'what the market did, who carried it, what the backdrop was', stageCards() + yearTable() + '<div class="mh-two" style="margin-top:18px"><div id="mh-t1"></div><div id="mh-t2"></div><div id="mh-t3"></div>' + chartReading() + '</div>' +
-      '<div class="mh-note">Shaded red: the S&amp;P 500 from its peak (24 Mar 2000) to its low (9 Oct 2002). Shaded grey: recession months (NBER dating, FRED USREC). The S&amp;P line is the monthly average of daily closes (R. Shiller\'s series; it agrees with daily closes to within ' + '0.3% in every month, so the peak close of 1,527 shows as a monthly average of 1,442). Rates and curve: FRED.</div>') +
+      '<details class="mh-more" style="margin-top:8px"><summary><b>Notes</b><span class="mh-mu"> sources and definitions</span></summary><div class="mh-moreb"><div class="mh-note" style="margin:0">Shaded red: the S&amp;P 500 from its peak (24 Mar 2000) to its low (9 Oct 2002). Shaded grey: recession months (NBER dating, FRED USREC). The S&amp;P line is the monthly average of daily closes (R. Shiller\'s series; it agrees with daily closes to within ' + '0.3% in every month, so the peak close of 1,527 shows as a monthly average of 1,442). Rates and curve: FRED.</div></div></details>') +
     sec('What happened when', 'each event, what it is, and what to take from it', eventsList()) +
     sec('Sector Return / Contribution', 'Index Analysis format · 1995-2005', '<div class="card" id="mh-ia-sector"></div>') +
     sec('Attribution Detail &amp; Simulation', 'Index Analysis format · click a row to exclude it', '<div class="card" id="mh-ia-detail"></div>') +
@@ -394,7 +358,6 @@ function render() {
     sec('Winners vs Losers', 'Index Analysis format', '<div class="card" id="mh-ia-wl"></div>') +
     sec('Did yesterday\'s winners stay winners?', 'every stock: what it did before a date, and after', '<div id="mh-sc"></div>') +
     sec('The euphoria\'s winners and laggards: what happened next', 'who kept winning, who collapsed, who recovered', cohorts()) +
-    sec('Names added to the index', 'were they already rising when they joined?', addedNames()) +
     sec('Where today differs', 'the same public measures, then and now', todayTable()) +
     sec('Take away', '', takeaway()) +
     '<div class="mh-note" style="margin-top:6px">Basket vs published: the members\' size-weighted return differs from the published index by up to ' + n1(Math.max.apply(null, gaps), 1) + ' pp in a year (names without a market value in the workbook, and names that joined or left during the year).</div>';

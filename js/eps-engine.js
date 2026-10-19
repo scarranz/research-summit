@@ -106,10 +106,11 @@ export function makeEngine(D) {
   }
 
   // Concentration of the (filtered) index at one snapshot: by weight, and by earnings on the forward year.
-  function concentration(ix, k, base, ex) {
+  function concentration(ix, k, base, ex, N) {
+    N = N || 10;
     var a = members(ix, k, ex).sort(function (x, y) { return y.w - x.w; });
     var top5 = 0, top10 = 0;
-    a.forEach(function (m, i) { if (i < 5) top5 += m.w; if (i < 10) top10 += m.w; });
+    a.forEach(function (m, i) { if (i < 5) top5 += m.w; if (i < N) top10 += m.w; });
     var cov = a.filter(function (m) { return m.px > 0 && epsOf([0, 0, 0, 0, m.e26, m.e27], base, k) != null; }), E = 0;
     cov.forEach(function (m) { m.q = m.w / m.px; m.e = m.q * epsOf([0, 0, 0, 0, m.e26, m.e27], base, k); E += m.e; });
     var byW = cov.slice().sort(function (x, y) { return y.w - x.w; }), byE = cov.slice().sort(function (x, y) { return y.e - x.e; });
@@ -117,7 +118,7 @@ export function makeEngine(D) {
     var covW = cov.reduce(function (s, m) { return s + m.w; }, 0);
     function wsh(list, n) { var s = 0; list.slice(0, n).forEach(function (m) { s += m.w; }); return covW ? s / covW : null; }
     return { top5: top5, top10: top10, n: a.length,
-      e10byW: sh(byW, 10), e10byE: sh(byE, 10), w10byE: wsh(byE, 10), w10byW: wsh(byW, 10) };
+      e10byW: sh(byW, N), e10byE: sh(byE, N), w10byE: wsh(byE, N), w10byW: wsh(byW, N) };
   }
 
   // Cumulative path from k0 to every later snapshot, on the basket held at k0: price, aggregate EPS, forward P/E.

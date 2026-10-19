@@ -29,7 +29,7 @@ import openpyxl
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 OUT = os.path.join(ROOT, 'js', 'eps-attribution-data.js')
-DROP_EXACT = {'USD Curncy', 'MMED US Equity'}
+DROP_EXACT = {'USD Curncy', 'MMED US Equity', 'FDX US Equity', 'MBGL US Equity'}   # analyst's exclusions
 NEEDED = ['as_of_date', 'security_ticker', 'company_name', 'spx_weight', 'ndx_weight', 'latest_price',
           'financials_currency', 'eps_2026', 'eps_2027', 'sector', 'industry_group', 'industry']
 
@@ -90,9 +90,13 @@ def build(rows):
             continue
         e26, e27 = num(r['eps_2026']), num(r['eps_2027'])
         note = None
-        if t == 'GOOG US Equity':
+        if t == 'GOOG US Equity' and e26 is None and e27 is None:
             e26, e27 = googl.get(d, (None, None))
             note = 'EPS per share taken from GOOGL'
+        if t == 'BRK/B US Equity' and e26 is not None and e26 > 5000:
+            # Bloomberg returns Class A per-share EPS for BRK/B; a Class B share is 1/1500 of a Class A share
+            e26 = e26 / 1500.0; e27 = None if e27 is None else e27 / 1500.0
+            warn.append('BRK/B EPS divided by 1500 (file has Class A EPS): %s' % d)
         cur = str(r['financials_currency']).strip()
         if t not in sec_ix:
             sec_ix[t] = len(secs)
@@ -101,6 +105,24 @@ def build(rows):
                 secs[-1]['c'] = cur          # EPS currency as the file labels it; no FX applied
         snaps[d].append([sec_ix[t], round(ws, 6), round(wn, 6), round(px, 4),
                          None if e26 is None else round(e26, 4), None if e27 is None else round(e27, 4)])
+    # a missing estimate takes the first one available LATER in time (analyst's rule): flat, not guessed
+    ids = {}
+    for di, d in enumerate(dates):
+        for row in snaps[d]:
+            ids.setdefault(row[0], {})[di] = row
+    nfill = 0
+    for sid, byd in ids.items():
+        for col in (4, 5):
+            nxt = None
+            for di in range(len(dates) - 1, -1, -1):
+                row = byd.get(di)
+                if row is None:
+                    continue
+                if row[col] is not None:
+                    nxt = row[col]
+                elif nxt is not None:
+                    row[col] = nxt; nfill += 1
+    warn.append('back-filled %d missing EPS cells with the next available estimate' % nfill)
     for s in secs:
         for k in ('s', 'g', 'i'):
             if not s[k] or str(s[k]).startswith('#'):

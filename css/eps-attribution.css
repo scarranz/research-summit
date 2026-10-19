@@ -86,3 +86,7 @@
 }
 
 #eps-root .eps-three { font-size: 12px; line-height: 1.6; margin-top: 12px; padding: 9px 13px; background: var(--surface); border-radius: 9px; }
+
+#eps-root .tp { display: block; font-size: 12px; line-height: 1.55; color: #52514e; margin-top: 4px; }
+#eps-root .eps-ctl input[type=number] { width: 78px; font: 500 11px Inter, sans-serif; padding: 4px 6px; border: 1.5px solid var(--bdr); border-radius: 14px; color: var(--navy); margin-left: 4px; }
+#eps-root .eps-pl { display: inline-flex; gap: 4px; flex-wrap: wrap; }

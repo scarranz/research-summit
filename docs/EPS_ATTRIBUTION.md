@@ -28,3 +28,8 @@ The first section shows both indices (no toggle); the others have an S&P / Nasda
 ## Open items
 - GAAP consensus (IS_COMP_EPS_GAAP): GOOGL, AMZN carry investment marks. Adjusted EPS (BEST_EPS) pull is a decision.
 - Merge note: Market History branch also adds the `.ma-tabs` bar in index.html; keep one bar with three buttons.
+
+## Data rules (v5)
+- Removed by decision: FDX, MBGL (Mobility Global), MMED. A missing estimate takes the first one available LATER in time (flat, not guessed).
+- BRK/B: the file carries Class A EPS; divided by 1,500 in the extractor. GOOG uses its own EPS (GOOGL only as fallback).
+- Detail table order is fixed by the whole index at the latest date; exclusions never reorder rows. Total contribution = weight x price return; From EPS = share of the change in index earnings; From multiple = Total - From EPS.

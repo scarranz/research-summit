@@ -12,9 +12,8 @@ export var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
 export var K0 = D.bases.indexOf('1999-12-31');            // the cohort snapshot
 export var NK = D.bases.length;
 
-// Page state. yr = the year being drilled into; sm = sector table metric; ex = names excluded in the simulation;
-// sx = sectors opened in the simulation table; fn = best / worst list; sc = scatter dates; scm = scatter highlight; wc = weight dates
-export var st = { yr: 1999, sm: 'ret', ex: {}, sx: {}, bin: null, fn: { side: 'top', n: 10 }, sc: { p: 0, d: [0, K0, 8] }, scm: { side: 'both', n: 20 }, wc: [0, K0] };
+// Page state (the Index Analysis sections keep their own in mh-ia.js). fn = follow-the-names list; sc = scatter dates [start, split, end]; scm = scatter highlight; wc = weight dates
+export var st = { fn: { y: 1999, side: 'top', n: 10 }, sc: { d: [0, K0, 8] }, scm: { side: 'both', n: 20 }, wc: [K0 - 1, K0] };
 
 // ─── helpers ───────────────────────────────────────────────
 export function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }

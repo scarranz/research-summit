@@ -2,10 +2,9 @@
 // so the numbers can be checked in node (tests/eps-engine.test.mjs).
 // Method and every decision: docs/EPS_ATTRIBUTION.md.
 //
-// Forward multiple = price / forward-year EPS. The forward year ROLLS: from October 1 it is next year
-// (Jan 2 2026 -> CY2026, Oct 16 2026 -> CY2027), so a YTD move is
-//     (1 + R) = (1 + g) x (1 + m)        R price return, g forward-EPS growth, m forward P/E change
-// where g compares CY2027 EPS today with CY2026 EPS at the start. Fixed CY2026 / CY2027 stay available.
+// Forward multiple = price / EPS of one fixed fiscal year (CY2026 or CY2027, Bloomberg consensus calendarised to
+// December). No rolling or NTM: the file has annual estimates only, so a year is never blended or split into quarters.
+//     1 + R = (1 + g)(1 + m)      R price return, g aggregate EPS growth of that year's estimate, m forward P/E change
 //
 // Index earnings per unit of index = sum( q_i x EPS_i ), with q_i = weight_i / price_i = implied index
 // shares of the start-of-period basket (held fixed; the index-size constant cancels in every ratio).
@@ -15,18 +14,14 @@
 // Weights are the index weights of the file (float-adjusted), never prices.
 
 var COL = { cy26: 4, cy27: 5 };           // EPS column of a snapshot row: [id, spx_w, ndx_w, price, eps26, eps27]
-export var BASES = [['fwd', 'Forward year (rolls)'], ['cy26', 'CY2026'], ['cy27', 'CY2027']];
+export var BASES = [['cy26', 'CY2026'], ['cy27', 'CY2027']];
 
 export function makeEngine(D) {
   var secs = D.secs, snaps = D.snaps, dates = D.dates, byId = [];
 
-  // forward year of a snapshot on a basis
-  function fy(base, k) {
-    if (base === 'cy26') return 2026; if (base === 'cy27') return 2027;
-    return +dates[k].slice(0, 4) + (+dates[k].slice(5, 7) >= 10 ? 1 : 0);
-  }
-  function epsOf(r, base, k) { return fy(base, k) >= 2027 ? r[5] : r[4]; }
-  function fyLabel(base, k) { return 'CY' + fy(base, k); }
+  function fy(base) { return base === 'cy27' ? 2027 : 2026; }
+  function epsOf(r, base) { return base === 'cy27' ? r[5] : r[4]; }
+  function fyLabel(base) { return 'CY' + fy(base); }
   function rowsAt(k) {                    // every security with a price at snapshot k, member or not
     if (!byId[k]) { var m = {}; snaps[k].forEach(function (r) { m[r[0]] = r; }); byId[k] = m; }
     return byId[k];
@@ -43,8 +38,6 @@ export function makeEngine(D) {
     return out;
   }
 
-  // per-stock growth is capped at +-100% inside the weighted average: a name whose EPS goes from ~0 would otherwise decide it
-  function clip(g) { return Math.max(-1, Math.min(1, g)); }
   function median(a) { if (!a.length) return null; a = a.slice().sort(function (x, y) { return x - y; }); var h = a.length >> 1; return a.length % 2 ? a[h] : (a[h - 1] + a[h]) / 2; }
 
   // Change between two snapshots. The basket is the one held at k0; every name is followed to k1 whether or not
@@ -59,7 +52,7 @@ export function makeEngine(D) {
       if (!n || !(n[3] > 0)) why = 'no price at the end date';
       else if (e0 == null) why = 'no EPS estimate at the start';
       else if (e1 == null) why = 'no EPS estimate at the end';
-      if (why) { skipped.push({ id: m.id, w0: m.w, why: why }); return; }
+      if (why) { skipped.push({ id: m.id, w0: m.w, why: why, ret: n && n[3] > 0 ? n[3] / m.px - 1 : null }); return; }
       covW0 += m.w;
       var q = m.w / m.px;
       rows.push({ id: m.id, w0: m.w, w1: endW[m.id] || 0, px0: m.px, px1: n[3], e0: e0, e1: e1, q: q, x0: m.e27,
@@ -77,13 +70,16 @@ export function makeEngine(D) {
       r.m = r.pe0 && r.pe1 ? r.pe1 / r.pe0 - 1 : null;
       r.esh = r.qe0 / E0;                       // share of aggregate start-of-period earnings
       r.wn = r.w0 / covW0;                      // weight among the names in the bridge
-      if (r.g != null) { gs.push(r.g); wg += r.wn * clip(r.g); wgW += r.wn; eq += clip(r.g); }
+      if (r.g != null) { gs.push(r.g); wg += r.wn * r.g; wgW += r.wn; eq += r.g; }
     });
+    // price return of every start-basket name that has an end price, with or without an EPS estimate
+    var fw = 0, fr = 0; rows.forEach(function (r) { fw += r.w0; fr += r.w0 * (r.px1 / r.px0 - 1); });
+    skipped.forEach(function (x) { if (x.ret != null) { fw += x.w0; fr += x.w0 * x.ret; } });
     var R = I1 / I0 - 1, g = E1 / E0 - 1, m = (I1 / E1) / (I0 / E0) - 1;
     var allW0 = a.reduce(function (s, x) { return s + x.w; }, 0), left = 0, entered = { n: 0, w: 0 };
     var startIds = {}; a.forEach(function (x) { startIds[x.id] = 1; });
     Object.keys(endW).forEach(function (id) { if (!startIds[id]) { entered.n++; entered.w += endW[id]; } });
-    return { k0: k0, k1: k1, base: base, rows: rows, skipped: skipped, endW: endW, R: R, g: g, m: m, mCross: g * m,
+    return { k0: k0, k1: k1, base: base, Rfull: fw ? fr / fw : null, rows: rows, skipped: skipped, endW: endW, R: R, g: g, m: m, mCross: g * m,
       pe0: I0 / E0, pe1: I1 / E1, n: rows.length, nStart: a.length, cov: allW0 ? covW0 / allW0 : 0, entered: entered,
       y0: fyLabel(base, k0), y1: fyLabel(base, k1),
       wAvgG: wgW ? wg / wgW : null, eqG: gs.length ? eq / gs.length : null, medG: median(gs) };
@@ -103,7 +99,7 @@ export function makeEngine(D) {
     rows.forEach(function (r) {
       r.cE = r.q * (r.e1 - r.e0) / E26; r.esh = r.q * r.e0 / E26; r.wn = r.w0 / cov;
       r.g = r.e0 > 0 ? r.e1 / r.e0 - 1 : null;
-      if (r.g != null) { gs.push(r.g); wg += r.wn * clip(r.g); wgW += r.wn; }
+      if (r.g != null) { gs.push(r.g); wg += r.wn * r.g; wgW += r.wn; }
     });
     return { k: k, rows: rows, g: E27 / E26 - 1, pe26: I / E26, pe27: I / E27, cov: all ? cov / all : 0, n: rows.length, nAll: a.length,
       wAvgG: wgW ? wg / wgW : null, medG: median(gs) };

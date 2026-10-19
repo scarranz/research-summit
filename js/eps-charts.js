@@ -1,5 +1,5 @@
 // eps-charts.js — SVG charts of Market Analysis > EPS Attribution (js/eps-attribution.js).
-//   divStack()   EPS part vs multiple part of a return, diverging stacked bars, net marked
+//   triBars()    total contribution, EPS part and multiple part of a return, three bars per row
 //   scatter()    every stock: EPS change vs multiple change, sized by weight
 //   lineChart()  a few series over the snapshots
 //   waterfall()  contributors to a total, largest first, "rest of index" closing the bar (Citadel style)
@@ -26,14 +26,15 @@ export function legendItem(color, label, dashed) {
   return '<span><i style="background:' + (dashed ? 'repeating-linear-gradient(90deg,' + color + ' 0 3px,transparent 3px 5px)' : color) + (dashed ? ';height:2px;vertical-align:3px' : '') + '"></i>' + label + '</span>';
 }
 
-// rows: [{ label, a, b, net, bold, tip }] — a = EPS part, b = multiple part, net = their sum (the price part), all fractions.
-// Positives go right, negatives left; a diamond marks the net and its value sits in the right column.
-export function divStack(box, rows, o) {
-  var rowH = 28, maxLab = 0; rows.forEach(function (r) { maxLab = Math.max(maxLab, String(r.label).length); });
-  var VW = 900, P = { t: 30, r: 96, b: 26, l: Math.max(150, Math.round(maxLab * 6.3) + 22) };
-  var vals = []; rows.forEach(function (r) { vals.push(r.a, r.b, r.a + r.b, r.net); });
-  var A = axis(Math.min.apply(null, vals.concat(0)) * 100, Math.max.apply(null, vals.concat(0)) * 100, 6);
-  var VH = P.t + rows.length * rowH + P.b;
+// rows: [{ label, a, b, net, bold, tip }] — a = EPS part, b = multiple part, net = their sum (the price part), fractions.
+// Each row = three bars on one shared axis: the total (thick, green up / red down), then EPS and multiple (thin).
+// o.domain = [lo, hi] fixes the axis (fractions) so bars keep their length when a toggle changes.
+export function triBars(box, rows, o) {
+  var rowH = 50, maxLab = 0; rows.forEach(function (r) { maxLab = Math.max(maxLab, String(r.label).length); });
+  var VW = 900, P = { t: 28, r: 74, b: 26, l: Math.max(150, Math.round(maxLab * 6.3) + 22) };
+  var lo = 0, hi = 0; rows.forEach(function (r) { lo = Math.min(lo, r.a, r.b, r.net); hi = Math.max(hi, r.a, r.b, r.net); });
+  if (o.domain) { lo = Math.min(lo, o.domain[0]); hi = Math.max(hi, o.domain[1]); }
+  var A = axis(lo * 100, hi * 100, 7), VH = P.t + rows.length * rowH + P.b;
   function X(v) { return P.l + (v * 100 - A.lo) / (A.hi - A.lo) * (VW - P.l - P.r); }
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
   A.ticks.forEach(function (t) {
@@ -41,24 +42,23 @@ export function divStack(box, rows, o) {
     svg.appendChild(txt({ x: X(t / 100), y: VH - P.b + 15, 'text-anchor': 'middle', 'font-size': 10, fill: MUTED }, (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t)));
   });
   svg.appendChild(txt({ x: P.l, y: 12, 'font-size': 10, fill: MUTED, 'font-weight': 600 }, o.axisTitle || 'pp of index return'));
-  svg.appendChild(txt({ x: VW - 6, y: 12, 'text-anchor': 'end', 'font-size': 10, fill: MUTED, 'font-weight': 600 }, o.netTitle || 'Net'));
+  function bar(g, v, y, h, color, bold) {
+    var x0 = X(Math.min(0, v)), x1 = X(Math.max(0, v));
+    g.appendChild(se('rect', { x: x0, y: y, width: Math.max(1.5, x1 - x0), height: h, rx: 2, fill: color }));
+    g.appendChild(txt({ x: v >= 0 ? x1 + 6 : x0 - 6, y: y + h / 2 + 3.5, 'text-anchor': v >= 0 ? 'start' : 'end', 'font-size': bold ? 11.5 : 10.5, 'font-weight': bold ? 700 : 500, fill: bold ? color : MUTED, 'font-variant-numeric': 'tabular-nums' }, ppTxt(v, bold ? 2 : 1) + ' pp'));
+  }
   rows.forEach(function (r, i) {
-    var y = P.t + i * rowH + 5, h = rowH - 11, g = se('g', {}), pos = 0, neg = 0;
-    g.appendChild(txt({ x: P.l - 12, y: y + h / 2 + 4, 'text-anchor': 'end', 'font-size': 11.5, 'font-weight': r.bold ? 700 : 500 }, r.label));
-    [[r.a, o.colA], [r.b, o.colB]].forEach(function (s) {
-      var v = s[0]; if (!v) return; var x0, x1;
-      if (v >= 0) { x0 = X(pos); pos += v; x1 = X(pos); } else { x1 = X(neg); neg += v; x0 = X(neg); }
-      g.appendChild(se('rect', { x: Math.min(x0, x1) + 0.5, y: y, width: Math.max(1, Math.abs(x1 - x0) - 1), height: h, rx: 2, fill: s[1] }));
-    });
-    var nx = X(r.net), nc = r.net >= 0 ? o.pos : o.neg;
-    g.appendChild(se('rect', { x: nx - 5.5, y: y + h / 2 - 5.5, width: 11, height: 11, fill: nc, stroke: '#fff', 'stroke-width': 2, transform: 'rotate(45 ' + nx + ' ' + (y + h / 2) + ')' }));
-    g.appendChild(txt({ x: VW - 6, y: y + h / 2 + 4, 'text-anchor': 'end', 'font-size': 11.5, 'font-weight': 700, fill: nc, 'font-variant-numeric': 'tabular-nums' }, ppTxt(r.net, 2) + ' pp'));
-    g.appendChild(se('rect', { x: 0, y: y - 4, width: VW, height: rowH - 2, fill: 'transparent' }));
-    if (r.tip) bindTip(g, r.tip, 270);
+    var y = P.t + i * rowH + 4, g = se('g', {});
+    if (i > 0) g.appendChild(se('line', { x1: 8, x2: VW - 8, y1: y - 4, y2: y - 4, stroke: '#EEF1F4' }));
+    g.appendChild(txt({ x: P.l - 12, y: y + 20, 'text-anchor': 'end', 'font-size': 12, 'font-weight': r.bold ? 700 : 600 }, r.label));
+    bar(g, r.net, y, 14, r.net >= 0 ? o.pos : o.neg, true);
+    bar(g, r.a, y + 17, 9, o.colA, false);
+    bar(g, r.b, y + 28, 9, o.colB, false);
+    g.appendChild(se('rect', { x: 0, y: y - 3, width: VW, height: rowH - 2, fill: 'transparent' }));
+    if (r.tip) bindTip(g, r.tip, 280);
     svg.appendChild(g);
   });
-  mount(box, svg, legendItem(o.colA, o.labA || 'EPS growth') + legendItem(o.colB, o.labB || 'Multiple change') +
-    '<span><i style="background:' + o.pos + ';transform:rotate(45deg);border-radius:0"></i>Net = price part (green up, red down)</span>');
+  mount(box, svg, '<span><i style="background:' + o.pos + '"></i>Total contribution <span style="opacity:.7">(green up · red down)</span></span>' + legendItem(o.colA, o.labA || 'from EPS growth') + legendItem(o.colB, o.labB || 'from multiple change'));
 }
 
 // pts: [{ x, y, r, color, label, tip }] — x = EPS change, y = multiple change (fractions), r = weight.
@@ -67,7 +67,7 @@ export function scatter(box, pts, o) {
   var VW = 900, VH = 520, P = { t: 16, r: 18, b: 44, l: 56 };
   function pct(a, q) { a = a.slice().sort(function (x, y) { return x - y; }); return a[Math.max(0, Math.min(a.length - 1, Math.round(q * (a.length - 1))))]; }
   var xs = pts.map(function (p) { return p.x; }), ys = pts.map(function (p) { return p.y; });
-  var Ax = axis(Math.min(pct(xs, 0.02), -0.1) * 100, Math.max(pct(xs, 0.98), 0.1) * 100, 7), Ay = axis(Math.min(pct(ys, 0.02), -0.1) * 100, Math.max(pct(ys, 0.98), 0.1) * 100, 6);
+  var Ax = axis(Math.max(-1, Math.min.apply(null, xs.concat(-0.1))) * 100, Math.min(4, Math.max.apply(null, xs.concat(0.1))) * 100, 7), Ay = axis(Math.max(-1, Math.min.apply(null, ys.concat(-0.1))) * 100, Math.min(4, Math.max.apply(null, ys.concat(0.1))) * 100, 6);
   function X(v) { return P.l + (v * 100 - Ax.lo) / (Ax.hi - Ax.lo) * (VW - P.l - P.r); }
   function Y(v) { return P.t + (Ay.hi - v * 100) / (Ay.hi - Ay.lo) * (VH - P.t - P.b); }
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
@@ -140,6 +140,7 @@ export function waterfall(box, rows, o) {
   var cum = 0, bars = items.map(function (r) { var a = cum; cum += r.v; return { r: r, a: a, b: cum }; });
   var lo = Math.min.apply(null, bars.map(function (x) { return Math.min(x.a, x.b); }).concat(0)) * 100;
   var hi = Math.max.apply(null, bars.map(function (x) { return Math.max(x.a, x.b); }).concat(0)) * 100;
+  if (o.domain) { lo = Math.min(lo, o.domain[0] * 100); hi = Math.max(hi, o.domain[1] * 100); }
   var A = axis(lo, hi, 6), VH = P.t + (bars.length + 1) * rowH + P.b;
   function X(v) { return P.l + (v * 100 - A.lo) / (A.hi - A.lo) * (VW - P.l - P.r); }
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });

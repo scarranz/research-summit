@@ -14,8 +14,8 @@ Cleaning rules (docs/EPS_ATTRIBUTION.md section 3):
   - MMED US Equity: dropped from every snapshot (agreed with the analyst, spec section 2).
   - Names with no price (e.g. 2602335D US Equity): dropped.
   - GOOG has no per-share consensus; it takes GOOGL's (same company, same EPS per share).
-  - Financials not in USD (PDD, CCEP, FER, ASML) are reported in local currency against a USD price:
-    their EPS is nulled (kept in the index for weights/concentration, out of the EPS maths).
+  - Financials not in USD (PDD CNY, CCEP/FER EUR) keep their EPS as the file gives it (flagged 'c' in the data, no FX
+    applied; growth is currency-neutral). ASML and BRK/B have no estimate in the file at all.
   - Aggregate earnings use EPS x implied index shares (weight/price). The spec's total-$ earnings x
     (weight/price) mixes company scales and is not used; earnings in $ are not shipped.
 
@@ -93,13 +93,12 @@ def build(rows):
         if t == 'GOOG US Equity':
             e26, e27 = googl.get(d, (None, None))
             note = 'EPS per share taken from GOOGL'
-        if str(r['financials_currency']).strip() != 'USD':
-            if e26 is not None or e27 is not None:
-                warn.append('non-USD EPS nulled: %s (%s)' % (t, r['financials_currency']))
-            e26 = e27 = None
+        cur = str(r['financials_currency']).strip()
         if t not in sec_ix:
             sec_ix[t] = len(secs)
             secs.append({'t': short(t), 'n': r['company_name'], 's': r['sector'], 'g': r['industry_group'], 'i': r['industry']})
+            if cur not in ('USD', '#N/A', 'None'):
+                secs[-1]['c'] = cur          # EPS currency as the file labels it; no FX applied
         snaps[d].append([sec_ix[t], round(ws, 6), round(wn, 6), round(px, 4),
                          None if e26 is None else round(e26, 4), None if e27 is None else round(e27, 4)])
     for s in secs:
@@ -114,7 +113,7 @@ def main():
     ap.add_argument('xlsx'); ap.add_argument('--write', action='store_true')
     a = ap.parse_args()
     data, warn = build(read(a.xlsx))
-    data['source'] = os.path.basename(a.xlsx)
+    data['source'] = 'Index EPS Contribution Analysis.xlsx'
     data['cols'] = ['id', 'spx_w', 'ndx_w', 'price', 'eps_cy26', 'eps_cy27']
     print('snapshots:', data['dates'])
     print('securities:', len(data['secs']), '| rows per snapshot:', [len(s) for s in data['snaps']])

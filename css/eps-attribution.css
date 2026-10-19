@@ -14,24 +14,23 @@
 
 #eps-root .secn { font-size: 11px; color: var(--mu); margin-left: 12px; }
 
-/* controls */
-#eps-root .eps-ctl { display: flex; flex-wrap: wrap; gap: 12px 26px; align-items: flex-end; margin-bottom: 22px; padding: 14px 16px; }
-#eps-root .eps-ctl > div { display: flex; flex-direction: column; gap: 6px; }
-#eps-root .eps-lbl { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mu); }
-#eps-root select { font: 500 12.5px 'Inter', sans-serif; color: var(--navy); border: 1.5px solid var(--bdr); border-radius: 8px; padding: 5px 8px; background: #fff; }
-#eps-root .eps-ctl-r { margin-left: auto; flex-direction: row !important; gap: 4px !important; }
-#eps-root .eps-ctl-n { flex-basis: 100%; font-size: 11.5px; color: var(--mu); line-height: 1.6; border-top: 1px solid var(--bdr); padding-top: 9px; }
-#eps-root .eps-ctl-n b { color: var(--navy); }
-#eps-root .eps-chips { margin-left: 6px; }
+/* per-section controls: one row above each card, like Index Analysis */
+#eps-root .eps-ctl { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: flex-end; margin-bottom: 10px; }
+#eps-root .eps-ctl > div { display: flex; flex-direction: column; gap: 5px; }
+#eps-root .eps-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mu); }
+#eps-root select { font: 500 12.5px 'Inter', sans-serif; color: var(--navy); border: 1.5px solid var(--bdr); border-radius: 8px; padding: 4px 8px; background: #fff; }
+#eps-root .eps-chips { display: inline-block; margin-top: 6px; }
 #eps-root .eps-x { opacity: .7; margin-left: 3px; }
-#eps-root .ndx-chip { margin-left: 4px; }
+#eps-root .ndx-chip { margin: 0 4px 4px 0; }
+#eps-root .eps-eqrow { margin-bottom: 6px; }
+#eps-root .eps-eqn { font-size: 12px; font-weight: 700; color: var(--navy); margin: 8px 0 2px 2px; }
 
 /* hero: return = EPS × multiple */
 #eps-root .eps-eq { display: flex; align-items: stretch; gap: 14px; flex-wrap: wrap; padding: 6px 0 4px; }
 #eps-root .eps-eqt { flex: 1 1 200px; border: 1.5px solid var(--bdr); border-radius: 12px; padding: 14px 18px; background: #fff; }
 #eps-root .eps-eqt.tot { background: var(--surface); border-color: var(--navy); }
 #eps-root .eps-eqt .k { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mu); }
-#eps-root .eps-eqt .v { font-size: 34px; font-weight: 700; line-height: 1.15; margin: 5px 0 3px; font-variant-numeric: tabular-nums; }
+#eps-root .eps-eqt .v { font-size: 30px; font-weight: 700; line-height: 1.15; margin: 5px 0 3px; font-variant-numeric: tabular-nums; }
 #eps-root .eps-eqt .s { font-size: 11px; color: var(--mu); font-variant-numeric: tabular-nums; }
 #eps-root .eps-eq .op { align-self: center; font-size: 26px; color: var(--mu); font-weight: 300; }
 #eps-root .eps-split { font-size: 12px; line-height: 1.6; color: var(--text); margin: 10px 2px 0; padding: 9px 13px; background: var(--surface); border-radius: 9px; }

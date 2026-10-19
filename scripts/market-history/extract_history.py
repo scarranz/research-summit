@@ -8,6 +8,7 @@ Macro: scripts/market-history/macro/ (run fetch_macro.py first).  Method and cav
 
 Usage:  python scripts/market-history/extract_history.py "<dot com analysis.xlsx>"          (dry run: prints the checks)
         python scripts/market-history/extract_history.py "<dot com analysis.xlsx>" --write  (js/market-history-data.js)
+        python scripts/market-history/extract_history.py --macro-only   (only the public series: FRED, Shiller, FINRA; the member data stays as it is)
 """
 import sys, os, re, json, datetime as dt
 from statistics import median
@@ -391,11 +392,76 @@ def read_macro():
                        commAll=rnd(monthly('PALLFNFINDEXM'), 1), commEnergy=rnd(monthly('PNRGINDEXM'), 1), commMetals=rnd(monthly('PMETAINDEXM'), 1),
                        usd=rnd(monthly('TWEXBMTH'), 2), unrate=rnd(monthly('UNRATE'), 1), payYoy=rnd(pay_y), cpiYoy=rnd(cpi_y), coreYoy=rnd(core_y),
                        tcu=rnd(monthly('TCU'), 1), housing=rnd(monthly('HOUST'), 0), semiPpi=rnd(monthly('PCU334413334413'), 1),
-                       margin=rnd(margin, 1), baaSpread=rnd(monthly('BAA10Y'), 2), aaaSpread=rnd(monthly('AAA10Y'), 2)),
+                       margin=rnd(margin, 1), baaSpread=rnd(monthly('BAA10Y'), 2), aaaSpread=rnd(monthly('AAA10Y'), 2), rec=rnd(monthly('USREC'), 0)),
                 q=dict(itInv=rnd(quarterly('A679RC1Q027SBEA'), 1), compInv=rnd(quarterly('B935RC1Q027SBEA'), 1),
                        ipEquip=rnd(quarterly('Y034RC1Q027SBEA'), 1), prod=rnd(quarterly('OPHNFB'), 2),
                        gdpGrowth=rnd(quarterly('A191RL1Q225SBEA'), 1), sloos=rnd(quarterly('DRTSCILM'), 1)),
                 a=dict(fiscal={d[:4]: round(v, 2) for d, v in fiscal if 1993 <= int(d[:4]) <= 2006}))
+
+
+# ───────────── "where today differs": the same public series, Dec 1999 / Mar 2000 / latest ─────────────
+NOW = os.path.join(MACRO, 'now')
+
+
+def now_series(name):
+    out = {}
+    for line in open(os.path.join(NOW, name + '.csv'), encoding='utf-8').read().splitlines()[1:]:
+        d, _, v = line.partition(',')
+        v = f(v)
+        if v is not None:
+            out[d] = v
+    return out
+
+
+def month_avg(d):
+    b = {}
+    for k, v in d.items():
+        b.setdefault(k[:7], []).append(v)
+    return {k: sum(v) / len(v) for k, v in b.items()}
+
+
+def prev_year(ym):
+    return '%d-%s' % (int(ym[:4]) - 1, ym[5:])
+
+
+def read_now():
+    ffr = month_avg(now_series('FEDFUNDS'))
+    lm = max(ffr)                                           # latest complete month of the policy rate
+    y10, curve, baa = (month_avg(now_series(x)) for x in ('DGS10', 'T10Y2Y', 'BAA10Y'))
+    un, cpi, base = now_series('UNRATE'), now_series('CPIAUCSL'), now_series('BOGMBASE')
+    un, cpi, base = ({k[:7]: v for k, v in d.items()} for d in (un, cpi, base))
+    gdp, corp, fed = now_series('GDP'), now_series('BCNSDODNS'), now_series('GFDEGDQ188S')
+    prof = now_series('CP')
+    qlast = max(k for k in gdp if k in corp)                # latest quarter with GDP and corporate debt
+    qof = lambda ym: '%s-%02d-01' % (ym[:4], (int(ym[5:]) - 1) // 3 * 3 + 1)
+    wb = openpyxl.load_workbook(os.path.join(MACRO, 'finra_margin.xlsx'), data_only=True)
+    mg = {str(r[0]): r[1] for r in wb.active.iter_rows(min_row=2, values_only=True) if r[0]}
+    mlast = max(k for k in mg if mg[k] is not None)
+    sh = json.load(open(os.path.join(MACRO, 'shiller.json')))
+    shm = max(k for k in sh if sh[k][2] is not None and k <= lm)      # last complete month, as the other rows
+    elast = max(k for k in sh if sh[k][1] is not None)
+    cols = ['1999-12', '2000-03', lm]
+    qcols = [qof(c) for c in cols[:2]] + [qlast]
+
+    def row(k, group, label, unit, src, vals, dates, dp=1, note=''):
+        return dict(k=k, group=group, label=label, unit=unit, src=src, v=[None if v is None else round(v, dp) for v in vals], d=dates, note=note)
+    rows = [
+        row('ffr', 'Money and rates', 'Fed funds rate', '%', 'FRED FEDFUNDS, monthly average', [ffr[c] for c in cols], cols, 2),
+        row('y10', 'Money and rates', '10-year Treasury yield', '%', 'FRED DGS10, monthly average', [y10[c] for c in cols], cols, 2),
+        row('curve', 'Money and rates', 'Yield curve: 10-year minus 2-year', 'pp', 'FRED T10Y2Y, monthly average; below 0 = inverted', [curve[c] for c in cols], cols, 2),
+        row('base', 'Money and rates', 'Monetary base (money the Fed creates), % of GDP', '%', 'FRED BOGMBASE / GDP', [base[cols[0]] / gdp[qcols[0]] * 100, base[cols[1]] / gdp[qcols[1]] * 100, base[max(base)] / gdp[qlast] * 100],
+            [cols[0], cols[1], max(base)], 1, 'GDP of the quarter the month falls in; latest = last month of the base over the last GDP quarter'),
+        row('corp', 'Debt', 'Company debt (non-financial), % of GDP', '%', 'FRED BCNSDODNS / GDP', [corp[q] / (gdp[q] * 1000) * 100 for q in qcols], [q[:7] for q in qcols], 1, 'Debt securities and loans; quarterly'),
+        row('fed', 'Debt', 'Federal government debt, % of GDP', '%', 'FRED GFDEGDQ188S', [fed.get(q) for q in qcols[:2]] + [fed[max(fed)]], [qcols[0][:7], qcols[1][:7], max(fed)[:7]], 0),
+        row('margin', 'Debt', 'Margin debt (borrowed to buy stocks), % of GDP', '%', 'FINRA debit balances / GDP',
+            [mg[cols[0]] / 1e3 / gdp[qcols[0]] * 100, mg[cols[1]] / 1e3 / gdp[qcols[1]] * 100, mg[mlast] / 1e3 / gdp[qlast] * 100], [cols[0], cols[1], mlast], 1, 'FINRA reports $ millions; GDP of the latest quarter for the latest month'),
+        row('cape', 'Valuation of the index', 'Cyclically adjusted P/E (Shiller CAPE)', 'x', 'R. Shiller, shillerdata.com: S&P 500 price over 10-year average real earnings', [sh[cols[0]][2], sh[cols[1]][2], sh[shm][2]], [cols[0], cols[1], shm], 1),
+        row('ey', 'Valuation of the index', 'Earnings yield (trailing earnings / price)', '%', 'R. Shiller: S&P 500 trailing earnings over price', [sh[cols[0]][1] / sh[cols[0]][0] * 100, sh[cols[1]][1] / sh[cols[1]][0] * 100, sh[elast][1] / sh[elast][0] * 100], [cols[0], cols[1], elast], 1),
+        row('cpi', 'The economy', 'Inflation (consumer prices, 12 months)', '%', 'FRED CPIAUCSL', [(cpi[c] / cpi[prev_year(c)] - 1) * 100 for c in cols], cols, 1),
+        row('prof', 'The economy', 'Corporate profits after tax, % of GDP', '%', 'FRED CP / GDP', [prof[q] / gdp[q] * 100 for q in qcols], [q[:7] for q in qcols], 1, 'all US companies, quarterly, annualised'),
+        row('un', 'The economy', 'Unemployment rate', '%', 'FRED UNRATE', [un[c] for c in cols], cols, 1),
+        row('baa', 'The economy', 'Credit spread: Baa corporate yield minus 10-year Treasury', 'pp', 'FRED BAA10Y, monthly average', [baa[c] for c in cols], cols, 2)]
+    return dict(asOf=lm, cols=cols, rows=rows)
 
 
 # Dates are public record; the market-level ones are from memory and still to verify (docs/MARKET_HISTORY.md section 10)
@@ -422,6 +488,15 @@ EVENTS = [
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    if '--macro-only' in sys.argv:                          # refresh the public series (FRED, Shiller, FINRA) without reading the workbook
+        blob = json.loads(open(OUT, encoding='utf-8').read().split('=', 1)[1].strip().rstrip(';'))
+        blob['meta']['built'] = dt.date.today().isoformat()
+        blob['macro'], blob['now'], blob['events'] = read_macro(), read_now(), EVENTS
+        with open(OUT, 'w', encoding='utf-8') as fh:
+            fh.write('// Generated by scripts/market-history/extract_history.py -- do not edit by hand. Method: docs/MARKET_HISTORY.md\n')
+            fh.write('export const MHIST = ' + json.dumps(blob, separators=(',', ':'), ensure_ascii=False) + ';\n')
+        print('macro-only refresh written to', OUT)
+        return
     if not args:
         sys.exit(__doc__)
     names = {k: v for k, v in json.load(open(os.path.join(HERE, 'names.json'), encoding='utf-8')).items() if not k.startswith('_')}
@@ -430,6 +505,7 @@ def main():
     OUTSIDE = read_outside(os.path.join(os.path.dirname(os.path.abspath(args[0])), 'outside snapshots dot com analysis', 'bloomberg_prices_needed_by_date.xlsx'))
     data = analyse(pub, snaps, mem, cur, names)
     macro = read_macro()
+    now = read_now()
     print('snapshots', len(data['bases']), 'securities', len(data['secs']), "| in today's S&P 500:", sum(1 for s in data['secs'] if s['st'] == 'SPX'))
     print('\nyear  basket  published  gap(pp)  names w/o mcap  their weight %')
     for r in data['index']:
@@ -460,7 +536,7 @@ def main():
     if '--write' not in sys.argv:
         return
     blob = dict(meta=dict(source='dot com analysis.xlsx (Bloomberg BQL) + FRED, R. Shiller, FINRA', built=dt.date.today().isoformat(),
-                          stateLabel=STATE_LABEL, states=STATES, sectors=SECTORS), **data, macro=macro, events=EVENTS)
+                          stateLabel=STATE_LABEL, states=STATES, sectors=SECTORS), **data, macro=macro, now=now, events=EVENTS)
     with open(OUT, 'w', encoding='utf-8') as fh:
         fh.write('// Generated by scripts/market-history/extract_history.py -- do not edit by hand. Method: docs/MARKET_HISTORY.md\n')
         fh.write('export const MHIST = ' + json.dumps(blob, separators=(',', ':'), ensure_ascii=False) + ';\n')

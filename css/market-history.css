@@ -134,3 +134,40 @@
 #mh-root .mh-evd { max-width: 560px; white-space: normal; line-height: 1.45; margin-top: 2px; }
 #mh-root .mh-strip td, #mh-root .mh-strip th { padding-left: 5px; padding-right: 5px; }
 #mh-root .mh-strip td.mh-ext { font-style: italic; color: #4A5666; }
+
+/* tables whose columns must not move when the data changes */
+#mh-root .mh-fix { table-layout: fixed; }
+#mh-root .mh-fix td, #mh-root .mh-fix th { overflow: hidden; }
+#mh-root .mh-fix th, #mh-root .mh-tbl.mh-fix th.r { white-space: normal; vertical-align: bottom; line-height: 1.3; }
+#mh-root .mh-ell { white-space: nowrap; text-overflow: ellipsis; }
+#mh-root .mh-yh { cursor: pointer; }
+#mh-root .mh-yh:hover { color: var(--navy); }
+#mh-root .mh-btn { font: 600 11px 'Inter', sans-serif; padding: 4px 10px; border: 1px solid var(--bdr); border-radius: 8px; background: var(--w); color: var(--text); cursor: pointer; }
+#mh-root .mh-btn:hover { border-color: var(--navy); }
+#mh-root .mh-sh { font-size: 13px; font-weight: 700; color: var(--navy); margin: 28px 0 8px; padding-top: 16px; border-top: 1px solid var(--bdr); }
+#mh-root .mh-yrbody > .mh-sh:first-child { margin-top: 14px; }
+#mh-root .mh-sh .mh-mu { font-weight: 500; margin-left: 6px; }
+#mh-root .mh-sechd td { background: #FAFBFC; border-top: 1px solid var(--bdr); }
+#mh-root .mh-tg { cursor: pointer; }
+#mh-root .mh-car { display: inline-block; width: 12px; color: var(--mu); }
+#mh-root .mh-ind { padding-left: 26px; }
+#mh-root .mh-nm.ex td { background: #FBF6EA; color: var(--mu); }
+#mh-root .mh-binl { margin-top: 10px; border-top: 1px solid var(--bdr); padding-top: 8px; }
+#mh-root .mh-bing { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 2px 16px; font-size: 12px; }
+#mh-root .mh-chartread .mh-ul { margin-top: 2px; }
+#mh-root .mh-tiles3 .mh-big { font-size: 24px; }
+
+/* events: one line each, open for the explanation and what to take from it */
+#mh-root .mh-evs { display: flex; flex-direction: column; gap: 6px; }
+#mh-root .mh-grp2 { background: var(--pale); font-weight: 700; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--mu); padding: 7px 12px; border-radius: 8px; margin-top: 8px; }
+#mh-root .mh-ev { border: 1px solid var(--bdr); border-radius: 10px; background: var(--w); }
+#mh-root .mh-ev > summary { display: flex; align-items: baseline; gap: 12px; padding: 9px 14px; cursor: pointer; font-size: 13px; list-style: none; color: var(--navy); }
+#mh-root .mh-ev > summary::-webkit-details-marker { display: none; }
+#mh-root .mh-ev > summary::before { content: '▸'; color: var(--mu); font-size: 11px; width: 10px; flex: none; }
+#mh-root .mh-ev[open] > summary::before { content: '▾'; }
+#mh-root .mh-evdate { color: var(--mu); font-size: 12px; width: 84px; flex: none; font-weight: 400; }
+#mh-root .mh-evtag { margin-left: auto; font-size: 11px; color: var(--mu); border: 1px solid var(--bdr); border-radius: 9px; padding: 1px 8px; white-space: nowrap; }
+#mh-root .mh-evb { padding: 2px 14px 14px 36px; font-size: 12px; line-height: 1.6; color: #2B3B4E; max-width: 900px; }
+#mh-root .mh-evr { margin-top: 10px; padding: 10px 12px; background: var(--pale); border-radius: 8px; }
+#mh-root .mh-evr > div { margin-top: 3px; }
+#mh-root .mh-lead { font-size: 13px; line-height: 1.65; color: #1E2733; background: var(--pale); border-left: 3px solid var(--navy); border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 4px 0 14px; max-width: 1100px; }

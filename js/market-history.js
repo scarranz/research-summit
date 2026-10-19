@@ -1,161 +1,33 @@
 // market-history.js — Market History (1995-2005): what happened to the S&P 500's leaders, laggards and everyone else,
-// and which of the conditions of that cycle are (not) present today.
+// and which conditions of that cycle are (not) present today.
 //
-// Data: js/market-history-data.js (scripts/market-history/extract_history.py: the analyst's Bloomberg workbook + FRED, R. Shiller (S&P 500 monthly level), FINRA).
+// Data: js/market-history-data.js (scripts/market-history/extract_history.py: the analyst's Bloomberg workbook + FRED, R. Shiller, FINRA).
 // Method, caveats and what is still missing: docs/MARKET_HISTORY.md.
-// Prices, weights and returns of the index members only: no multiples, no fundamentals.
-import { MHIST as D } from './market-history-data.js';
+// Member data = prices, weights and returns of the S&P 500's members (+ Bloomberg prices of the same names outside the index).
+// Macro series are public context only: no multiples or fundamentals of the members.
+// Page modules: mh-util.js (shared), mh-attrib.js (sector table, year drill-down), this file (the story).
 import { SPX_HOLDINGS } from './spx-holdings-data.js';
 import { dumbbell } from './ma-charts.js';
 import { MHSP } from './market-history-sp.js';
+import { D, K0, NK, st, SEC_COL, esc, n1, sg, nf, pc, pp, cls, dn, mean, med, snapLbl, ymLbl, secBtn, showTip, hideTip, mountLine, breadth, breadths, px, lvl, exitYear, Mo, MM, macroAt, FATE_TXT } from './mh-util.js';
+import { renderSector, renderYear, attribAct } from './mh-attrib.js';
 
-var SEC_COL = { 'Technology': '#185FA5', 'Communications': '#0F6E56', 'Health Care': '#D85A30', 'Financials': '#7F77DD',
-  'Consumer Discretionary': '#BA7517', 'Consumer Staples': '#3B6D11', 'Industrials': '#5A6E83', 'Energy': '#C0392B',
-  'Materials': '#0B9D7A', 'Utilities': '#7C3AED', 'Real Estate': '#993556' };
-var FATE_COL = { SPX: '#177A4E', LIVE: '#3E5A82', ACQ: '#9AA3AF', BK: '#9B2A20', OTH: '#C79A2B' };
-var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-var K0 = D.bases.indexOf('1999-12-31');            // the cohort snapshot
-var NK = D.bases.length;
+var root = null;
 
-var st = { fn: { y: 1999, side: 'top', n: 10 }, sc: [0, K0, 8], scm: { side: 'both', n: 20 }, wc: [0, K0] };
-var root = null, tip = null;
-
-// ─── helpers ───────────────────────────────────────────────
-function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
-function n1(v, d) { return v == null ? '—' : v.toFixed(d == null ? 1 : d); }
-function pc(v, d) { if (v == null) return '—'; d = d == null ? 1 : d; if (Math.abs(v) < Math.pow(10, -d) / 2) v = 0; return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(d) + '%'; }
-function pp(v, d) { if (v == null) return '—'; d = d == null ? 2 : d; return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(d) + ' pp'; }
-function cls(v) { return v == null ? '' : v >= 0 ? 'mh-pos' : 'mh-neg'; }
-function med(a) { a = a.filter(function (x) { return x != null; }).sort(function (x, y) { return x - y; }); if (!a.length) return null; var m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; }
-function snapLbl(k) { if (k >= D.bases.length) return 'Dec ' + D.years[D.years.length - 1]; var d = D.bases[k]; return MON[+d.slice(5, 7) - 1] + ' ' + d.slice(0, 4); }
-function secBtn(act, opts, cur) {
-  return '<span class="sb-toggle mh-seg">' + opts.map(function (o) {
-    return '<button class="sb-tbtn' + (String(o[0]) === String(cur) ? ' active' : '') + '" data-act="' + act + '" data-v="' + esc(o[0]) + '">' + o[1] + '</button>'; }).join('') + '</span>';
-}
-function nameCell(s) {
-  var t = (s.bn ? 'Bloomberg name: ' + s.bn : '') + (s.t ? (s.bn ? ' · ' : '') + s.t : '') + (s.x ? ' · delisted ' + s.x : '');
-  return '<span title="' + esc(t) + '">' + esc(s.n) + '</span>' + (s.t ? ' <span class="mh-mu">' + esc(s.t) + '</span>' : '');
-}
-function showTip(html, e) {
-  if (!tip) { tip = document.createElement('div'); tip.id = 'mh-tip'; document.body.appendChild(tip); }
-  tip.innerHTML = html; tip.style.opacity = 1;
-  var w = tip.offsetWidth, x = e.clientX + 14; if (x + w > window.innerWidth - 8) x = e.clientX - w - 14;
-  tip.style.left = x + 'px'; tip.style.top = (e.clientY + 14) + 'px';
-}
-function hideTip() { if (tip) tip.style.opacity = 0; }
-
-// ─── generic line chart ─────────────────────────────────────
-// cfg: { x:[labels], series:[{key,label,color,vals,fmt,dash}], unit, title, bands:[{i0,i1}], events:[{i,label}],
-//        compact, yMin, ordinal, note } — legend chips hide a series (and its table column); drag = zoom, dblclick = reset.
-var chartSeq = 0;
-function mountLine(box, cfg) {
-  var id = 'dcl' + (++chartSeq), hidden = {}, win = [0, cfg.x.length - 1];
-  var H = cfg.compact ? 190 : cfg.half ? 260 : 300, VW = cfg.compact || cfg.half ? 640 : 900, P = { l: 46, r: 26, t: 12, b: cfg.ordinal ? 30 : 24 };
-  function niceTicks(lo, hi) {
-    if (lo === hi) { hi = lo + 1; }
-    var step = Math.pow(10, Math.floor(Math.log10((hi - lo) / 4))), m = (hi - lo) / 4 / step;
-    step *= m > 5 ? 10 : m > 2 ? 5 : m > 1 ? 2 : 1;
-    var t = [], v = Math.ceil(lo / step) * step; for (; v <= hi + 1e-9; v += step) t.push(+v.toFixed(6)); return { t: t, step: step };
+// ─── facts computed from the data (nothing typed in) ───────
+function sp(iso) { var i = MHSP.d.indexOf(iso); return i < 0 ? null : MHSP.c[i]; }
+function days(a, b) { return Math.round((new Date(b) - new Date(a)) / 864e5); }
+function ix(iso) { return (+iso.slice(0, 4) - 1994) * 12 + (+iso.slice(5, 7) - 1); }       // month index in D.macro
+function runs(key, test, from, to) {   // contiguous month ranges [first, last] where test(value) holds
+  var out = [], cur = null;
+  for (var i = ix(from); i <= ix(to); i++) {
+    var v = MM[key][i];
+    if (v != null && test(v)) { if (!cur) cur = [Mo[i], Mo[i]]; else cur[1] = Mo[i]; } else if (cur) { out.push(cur); cur = null; }
   }
-  function draw() {
-    var vis = cfg.series.filter(function (s) { return !hidden[s.key]; });
-    var i0 = win[0], i1 = win[1], lo = Infinity, hi = -Infinity;
-    vis.forEach(function (s) { for (var i = i0; i <= i1; i++) { var v = s.vals[i]; if (v != null) { if (v < lo) lo = v; if (v > hi) hi = v; } } });
-    if (cfg.yMin != null && lo > cfg.yMin) lo = cfg.yMin;
-    if (lo === Infinity) { box.innerHTML = '<div class="mh-empty">Nothing to draw.</div>'; return; }
-    var pad = (hi - lo) * .06 || 1; if (cfg.yMin == null || lo < cfg.yMin) lo -= pad; hi += pad;
-    var tk = niceTicks(lo, hi), plotW = VW - P.l - P.r, plotH = H - P.t - P.b, span = Math.max(1, i1 - i0);
-    function X(i) { return P.l + (i - i0) / span * plotW; }
-    function Y(v) { return P.t + (1 - (v - lo) / (hi - lo)) * plotH; }
-    var g = '';
-    (cfg.bands || []).forEach(function (b) {
-      var a = Math.max(b.i0, i0), z = Math.min(b.i1, i1); if (z <= a) return;
-      g += '<rect x="' + X(a) + '" y="' + P.t + '" width="' + (X(z) - X(a)) + '" height="' + plotH + '" fill="#9B2A20" opacity=".06"/>';
-    });
-    tk.t.forEach(function (v) { g += '<line x1="' + P.l + '" x2="' + (VW - P.r) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#EEF1F4"/><text x="' + (P.l - 6) + '" y="' + (Y(v) + 3.5) + '" text-anchor="end" font-size="10" fill="#8A93A0">' + (cfg.yFmt ? cfg.yFmt(v) : v) + '</text>'; });
-    if (lo < 0 && hi > 0) g += '<line x1="' + P.l + '" x2="' + (VW - P.r) + '" y1="' + Y(0) + '" y2="' + Y(0) + '" stroke="#C9CFD7"/>';
-    // x labels: every January for monthly axes, every category for ordinal ones
-    var lastLbl = -99;
-    for (var i = i0; i <= i1; i++) {
-      var lab = cfg.x[i], show = cfg.ordinal ? (i1 - i0 < 14 || (i - i0) % 2 === 0) : (/-01$/.test(lab) && (span < 80 || lab.slice(2, 4) % 2 === 0));
-      if (show && X(i) - lastLbl > 28) {
-        lastLbl = X(i);
-        g += '<text x="' + X(i) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" fill="#8A93A0">' + (cfg.ordinal ? lab : lab.slice(0, 4)) + '</text>';
-        if (!cfg.ordinal) g += '<line x1="' + X(i) + '" x2="' + X(i) + '" y1="' + P.t + '" y2="' + (H - P.b) + '" stroke="#F3F5F7"/>';
-      }
-    }
-    (cfg.events || []).forEach(function (e) { if (e.i >= i0 && e.i <= i1) g += '<line x1="' + X(e.i) + '" x2="' + X(e.i) + '" y1="' + P.t + '" y2="' + (H - P.b) + '" stroke="#3E5A82" stroke-dasharray="2 3" opacity=".55"/>'; });
-    vis.forEach(function (s) {
-      var d = '', pen = false;
-      for (var i = i0; i <= i1; i++) { var v = s.vals[i]; if (v == null) { pen = false; continue; } d += (pen ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1); pen = true; }
-      g += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="' + (cfg.compact ? 1.6 : 2) + '"' + (s.dash ? ' stroke-dasharray="5 4"' : '') + ' stroke-linejoin="round"/>';
-      if (span < 16) for (var j = i0; j <= i1; j++) if (s.vals[j] != null) g += '<circle cx="' + X(j) + '" cy="' + Y(s.vals[j]) + '" r="3" fill="' + s.color + '"/>';
-    });
-    g += '<line id="' + id + 'x" y1="' + P.t + '" y2="' + (H - P.b) + '" stroke="#1E2733" opacity="0" />';
-    g += '<rect id="' + id + 'o" x="' + P.l + '" y="' + P.t + '" width="' + plotW + '" height="' + plotH + '" fill="transparent" style="cursor:crosshair"/>';
-    g += '<rect id="' + id + 'z" y="' + P.t + '" height="' + plotH + '" fill="#2563EB" opacity="0"/>';
-    var chips = cfg.series.length > 1 || cfg.alwaysLegend ? '<div class="mh-legend">' + cfg.series.map(function (s) {
-      return '<button class="mh-chip' + (hidden[s.key] ? ' off' : '') + '" data-k="' + s.key + '"><i style="background:' + s.color + '"></i>' + esc(s.label) + '</button>'; }).join('') + '</div>' : '';
-    var tbl = '';
-    if (!cfg.compact) {
-      tbl = '<details class="mh-det"><summary>Data (' + vis.map(function (s) { return esc(s.label); }).join(' · ') + ')</summary><div class="mh-scroll"><table class="mh-tbl"><thead><tr><th></th>' +
-        vis.map(function (s) { return '<th class="r">' + esc(s.label) + '</th>'; }).join('') + '</tr></thead><tbody>';
-      for (var r = i0; r <= i1; r++) tbl += '<tr><td>' + esc(cfg.x[r]) + '</td>' + vis.map(function (s) { return '<td class="r">' + (s.vals[r] == null ? '—' : (s.fmt ? s.fmt(s.vals[r]) : s.vals[r])) + '</td>'; }).join('') + '</tr>';
-      tbl += '</tbody></table></div></details>';
-    }
-    box.innerHTML = (cfg.title ? '<div class="mh-ch">' + esc(cfg.title) + (cfg.unit ? ' <span class="mh-mu">' + esc(cfg.unit) + '</span>' : '') + '</div>' : '') +
-      '<svg viewBox="0 0 ' + VW + ' ' + H + '" class="mh-svg">' + g + '</svg>' + chips +
-      (cfg.note ? '<div class="mh-note">' + cfg.note + '</div>' : '') + tbl + (win[0] > 0 || win[1] < cfg.x.length - 1 ? '<div class="mh-note">Zoomed — double-click the chart to reset.</div>' : '');
-    var o = box.querySelector('#' + id + 'o'), ln = box.querySelector('#' + id + 'x'), zr = box.querySelector('#' + id + 'z'), svg = box.querySelector('svg');
-    function idxAt(e) { var r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * VW; return Math.max(i0, Math.min(i1, Math.round(i0 + (px - P.l) / plotW * span))); }
-    var down = null;
-    o.addEventListener('mousedown', function (e) { down = idxAt(e); });
-    o.addEventListener('mousemove', function (e) {
-      var i = idxAt(e); ln.setAttribute('x1', X(i)); ln.setAttribute('x2', X(i)); ln.setAttribute('opacity', '.35');
-      if (down != null) { var a = Math.min(down, i), z = Math.max(down, i); zr.setAttribute('x', X(a)); zr.setAttribute('width', X(z) - X(a)); zr.setAttribute('opacity', '.12'); }
-      var ev = (cfg.events || []).filter(function (q) { return q.i === i; });
-      showTip('<b>' + esc(cfg.x[i]) + '</b>' + vis.map(function (s) { return '<div><i class="mh-dot" style="background:' + s.color + '"></i>' + esc(s.label) + ': <b>' + (s.vals[i] == null ? '—' : (s.fmt ? s.fmt(s.vals[i]) : s.vals[i])) + '</b></div>'; }).join('') +
-        ev.map(function (q) { return '<div class="mh-evt">' + esc(q.label) + '</div>'; }).join(''), e);
-    });
-    o.addEventListener('mouseleave', function () { ln.setAttribute('opacity', '0'); hideTip(); if (down != null) { down = null; zr.setAttribute('opacity', '0'); } });
-    o.addEventListener('mouseup', function (e) {
-      if (down == null) return; var a = Math.min(down, idxAt(e)), z = Math.max(down, idxAt(e)); down = null;
-      if (z - a >= 2) { win = [a, z]; hideTip(); draw(); } else zr.setAttribute('opacity', '0');
-    });
-    o.addEventListener('dblclick', function () { win = [0, cfg.x.length - 1]; draw(); });
-    box.querySelectorAll('.mh-chip').forEach(function (b) {
-      b.addEventListener('click', function () {
-        var k = b.getAttribute('data-k'); var left = cfg.series.filter(function (s) { return !hidden[s.key] && s.key !== k; }).length;
-        if (!hidden[k] && !left) return; hidden[k] = !hidden[k]; draw(); });
-    });
-  }
-  draw();
+  if (cur) out.push(cur); return out;
 }
-
-// ─── helpers for the numbers ───────────────────────────────
-function dn(v) { return n1(Math.abs(v), 0) + '%'; }
-function mean(a) { return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : null; }
-// items: [{ w, r }] — w any positive weight, r % return of the window
-function breadth(items) {
-  var tw = items.reduce(function (a, x) { return a + x.w; }, 0), r = items.map(function (x) { return x.r; });
-  var cap = items.reduce(function (a, x) { return a + x.w * x.r; }, 0) / tw;
-  var ws = items.map(function (x) { return x.w / tw * 100; }).sort(function (a, b) { return b - a; });
-  return { n: items.length, cap: cap, ew: mean(r), med: med(r), up: r.filter(function (v) { return v > 0; }).length / r.length * 100, beat: r.filter(function (v) { return v > cap; }).length / r.length * 100,
-    top10w: ws.slice(0, 10).reduce(function (a, b) { return a + b; }, 0) };
-}
-function histBreadth(k) { return breadth(D.secs.filter(function (s) { return s.w[k] != null && s.r[k] != null; }).map(function (s) { return { w: s.w[k], r: s.r[k] }; })); }
-function nowBreadth() {
-  return (SPX_HOLDINGS.years || []).map(function (y) {
-    var b = breadth((y.holdings || []).filter(function (h) { return h.w > 0 && h.r != null; }).map(function (h) { return { w: h.w, r: h.r }; }));
-    b.label = String(y.year) + (y.year === +SPX_HOLDINGS.asOf.slice(0, 4) ? ' YTD' : ''); return b; });
-}
-function px(s, i) { var v = s.p[i]; return v != null ? v : (s.pe ? s.pe[i] : null); }   // member price, else the Bloomberg price outside membership (before joining / after leaving)
-function lvl(s, i) { for (var j = i; j >= 0; j--) { var v = px(s, j); if (v != null) return v; } return null; }   // price at snapshot i; a name that stopped trading stays at its last close
-function exitYear(s) { return s.x ? +s.x.slice(0, 4) : null; }
-var B = null;
-function breadths() { return B || (B = D.years.map(function (y, k) { return histBreadth(k); })); }
-var Mo = D.macro.months, MM = D.macro.m;
-function macroAt(key, ym) { var i = Mo.indexOf(ym); return i < 0 ? null : MM[key][i]; }
+var PEAK = '2000-03-24', LOW = '2002-10-09';
+function secByName(re) { return D.secs.filter(function (s) { return re.test(s.n); }); }
 
 // ─── 1. the decade in four stages ───────────────────────────
 var STAGES = [
@@ -164,6 +36,7 @@ var STAGES = [
   { name: 'The break', y0: 2000, y1: 2002 },
   { name: 'Recovery', y0: 2003, y1: 2005 }
 ];
+function stageOf(y) { return STAGES.filter(function (x) { return y >= x.y0 && y <= x.y1; })[0]; }
 function stageCards() {
   var b = breadths();
   return '<div class="mh-stages">' + STAGES.map(function (s, n) {
@@ -172,33 +45,58 @@ function stageCards() {
     var yrs = s.y1 - s.y0 + 1, med1 = mean(ks.map(function (k) { return b[k].med; })), up = mean(ks.map(function (k) { return b[k].up; }));
     var li = function (a, v) { return '<div class="mh-sr"><span>' + a + '</span><b>' + v + '</b></div>'; };
     return '<div class="mh-stage"><div class="mh-sn">' + (n + 1) + '</div><div class="mh-stt">' + s.name + '</div><div class="mh-sy">' + s.y0 + '–' + s.y1 + '</div>' +
-      '<div class="mh-sbig ' + cls(cum - 1) + '">' + pc((cum - 1) * 100, 0) + '</div><div class="mh-scap">S&amp;P 500, ' + yrs + ' years</div>' +
-      li('Typical stock, per year', pc(med1, 0)) + li('Names that rose, per year', n1(up, 0) + '%') + li('Top 10 weight at start', n1(D.conc[k0].top10, 0) + '%') +
+      '<div class="mh-sbig ' + cls(cum - 1) + '">' + pc((cum - 1) * 100, 0) + '</div><div class="mh-scap">S&amp;P 500, ' + yrs + ' years compounded</div>' +
+      li('Median stock, average year', pc(med1, 0)) + li('Names that rose, average year', n1(up, 0) + '%') + li('Top 10 weight at start', n1(b[k0].top10w, 0) + '%') +
       li('Fed funds, Dec to Dec', n1(macroAt('ffr', (s.y0 - 1) + '-12'), 1) + '% → ' + n1(macroAt('ffr', s.y1 + '-12'), 1) + '%') + '</div>';
-  }).join('') + '</div><div class="mh-note">S&amp;P 500 = published index return (Bloomberg), compounded. Typical stock = the median member. Fed funds = FRED monthly average.</div>';
+  }).join('') + '</div><div class="mh-note">The stages are a grouping for reading; every year is in the table below. S&amp;P 500 = published index price return (Bloomberg). Median stock = the median member. Fed funds = FRED, monthly average.</div>';
+}
+function yearTable() {
+  var b = breadths(), last = null;
+  var rows = D.years.map(function (y, k) {
+    var s = stageOf(y), h = '', c = function (v, d) { return '<td class="r ' + cls(v) + '">' + pc(v, d == null ? 1 : d) + '</td>'; };
+    if (s !== last) { last = s; h = '<tr class="mh-grp"><td colspan="11">' + (STAGES.indexOf(s) + 1) + ' · ' + s.name + ' ' + s.y0 + '–' + s.y1 + '</td></tr>'; }
+    var cv = macroAt('curve', y + '-12');
+    return h + '<tr><td><b>' + y + '</b></td>' + c(D.index[k].pub) + c(b[k].ew) + c(b[k].med) + '<td class="r">' + n1(b[k].up, 0) + '%</td><td class="r">' + n1(b[k].beat, 0) + '%</td><td class="r">' + n1(b[k].top10w, 0) + '%</td><td class="r">' + b[k].n50 + '</td>' +
+      '<td class="r">' + n1(macroAt('ffr', y + '-12'), 2) + '%</td><td class="r">' + n1(macroAt('y10', y + '-12'), 2) + '%</td><td class="r ' + cls(cv) + '">' + (cv == null ? '—' : (cv >= 0 ? '+' : '−') + Math.abs(cv).toFixed(2)) + '</td></tr>';
+  }).join('');
+  return '<div class="mh-ch" style="margin-top:18px">Every year <span class="mh-mu">price returns; the stages above just group these rows</span></div><div class="mh-scroll"><table class="mh-tbl mh-fix"><colgroup><col style="width:70px">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(function () { return '<col>'; }).join('') + '</colgroup><thead><tr><th>Year</th><th class="r">S&amp;P 500</th><th class="r" title="Every member counts the same">Average stock</th><th class="r">Median stock</th><th class="r">Names that rose</th><th class="r">Beat the index</th><th class="r" title="At the start of the year">Top 10 weight</th><th class="r" title="How many names make up the first half of the index, at the start of the year">Names for half the index</th><th class="r" title="Last month of the year, monthly average">Fed funds, Dec</th><th class="r">10-yr yield, Dec</th><th class="r" title="10-year minus 2-year Treasury yield; below 0 = inverted">Curve 10y − 2y, Dec</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="mh-note">Average stock = equal-weighted return of the members. "Beat the index" = share of members with a return above the size-weighted return of all members. Members = the names in the index on the first trading day of the year.</div>';
 }
 function mountTimeline() {
-  var ix = function (iso) { return (+iso.slice(0, 4) - 1994) * 12 + (+iso.slice(5, 7) - 1); };
+  var cut = Mo.indexOf('2005-12') + 1, xs = Mo.slice(0, cut), recB = runs('rec', function (v) { return v >= 0.5; }, '1994-01', '2005-12').map(function (r) { return { i0: ix(r[0] + '-01'), i1: ix(r[1] + '-01'), color: '#6B7684', op: .16 }; });
+  var bear = { i0: ix(PEAK), i1: ix(LOW), color: '#9B2A20', op: .07 };
   var events = D.events.map(function (e) { return { i: ix(e[0]), label: e[0] + ' · ' + e[1] }; });
-  var bands = [{ i0: ix('2000-03-24'), i1: ix('2002-10-09') }];
-  var cut = Mo.indexOf('2005-12') + 1, xs = Mo.slice(0, cut);
-  mountLine(document.getElementById('mh-t1'), { x: xs, compact: true, title: 'S&P 500, monthly', unit: 'index level; shaded = peak (Mar 2000) to low (Oct 2002); dashed = events in the table below', series: [{ key: 'sp', label: 'S&P 500', color: '#1E2733', vals: MM.sp.slice(0, cut), fmt: function (v) { return n1(v, 0); } }], bands: bands, events: events });
+  mountLine(document.getElementById('mh-t1'), { x: xs, compact: true, title: 'S&P 500', unit: 'index level, monthly average of daily closes', series: [{ key: 'sp', label: 'S&P 500', color: '#1E2733', vals: MM.sp.slice(0, cut), fmt: function (v) { return n1(v, 0); } }], bands: [bear].concat(recB), events: events });
   mountLine(document.getElementById('mh-t2'), { x: xs, compact: true, title: 'Interest rates', unit: '%, monthly average', alwaysLegend: true, series: [
     { key: 'ffr', label: 'Fed funds', color: '#B45309', vals: MM.ffr.slice(0, cut), fmt: function (v) { return n1(v, 2) + '%'; } },
-    { key: 'y10', label: '10-year Treasury', color: '#185FA5', vals: MM.y10.slice(0, cut), fmt: function (v) { return n1(v, 2) + '%'; } }], bands: bands, events: events });
+    { key: 'y10', label: '10-year Treasury', color: '#185FA5', vals: MM.y10.slice(0, cut), fmt: function (v) { return n1(v, 2) + '%'; } }], bands: [bear].concat(recB) });
+  mountLine(document.getElementById('mh-t3'), { x: xs, compact: true, title: 'Yield curve: 10-year minus 2-year', unit: 'percentage points, monthly average; below 0 = inverted', series: [
+    { key: 'cv', label: '10-year minus 2-year', color: '#0F6E56', vals: MM.curve.slice(0, cut), fmt: function (v) { return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2) + ' pp'; } }], bands: [bear].concat(recB) });
+}
+function chartReading() {
+  var pk = sp(PEAK), lo = sp(LOW), dd = days(PEAK, LOW), f0 = macroAt('ffr', '2000-12'), f1 = macroAt('ffr', '2002-12'), s0 = macroAt('sp', '2000-12'), s1 = macroAt('sp', '2002-12');
+  var inv = runs('curve', function (v) { return v < 0; }, '1999-01', '2001-12')[0], rec = runs('rec', function (v) { return v >= 0.5; }, '2000-01', '2002-12')[0];
+  var li = function (t) { return '<li>' + t + '</li>'; };
+  return '<div class="mh-box mh-chartread"><div class="mh-ch">What the three charts show</div><ul class="mh-ul">' +
+    li('<b>The fall.</b> From the S&amp;P 500\'s close of ' + nf(pk, 2) + ' (24 Mar 2000) to ' + nf(lo, 2) + ' (9 Oct 2002): ' + pc((lo / pk - 1) * 100, 1) + ' in ' + dd + ' days (shaded red).') +
+    li('<b>Rates fell the whole way.</b> The Fed funds rate went from ' + n1(f0, 2) + '% (Dec 2000) to ' + n1(f1, 2) + '% (Dec 2002), ' + n1(f0 - f1, 1) + ' points, while the index\'s monthly average fell ' + dn((s1 / s0 - 1) * 100) + '. The 10-year yield fell too, less: from ' + n1(macroAt('y10', '2000-12'), 2) + '% to ' + n1(macroAt('y10', '2002-12'), 2) + '%.') +
+    li('<b>The curve.</b> The 10-year yield was below the 2-year in every month from ' + ymLbl(inv[0]) + ' to ' + ymLbl(inv[1]) + ': the market peak (Mar 2000) came inside that inversion. It turned positive in ' + ymLbl(runs('curve', function (v) { return v > 0; }, inv[1].slice(0, 4) + '-' + inv[1].slice(5, 7), '2001-12')[0][0]) + ', when short rates were falling faster than long ones.') +
+    li('<b>The economy.</b> The recession months of the NBER dating (grey) are ' + ymLbl(rec[0]) + ' to ' + ymLbl(rec[1]) + ': the index had already been falling for ' + (ix(rec[0] + '-01') - ix(PEAK)) + ' months when they began.') + '</ul>' +
+    '<div class="mh-ch" style="margin-top:12px">How to read it <span class="mh-mu">interpretation, not tested by this data</span></div><div class="mh-plain" style="margin:0">An inverted curve means investors expected short rates to fall, which usually happens when growth is expected to slow; here a recession followed and the Fed cut. The cuts came <i>because</i> things were weakening, so cheaper money did not stop the fall: the market had been priced for earnings that were not arriving, and a lower rate does not change that.</div></div>';
 }
 
-// What each event is (plain words) — every date and fact checked against the sources listed in docs/MARKET_HISTORY.md
+// What each event is (plain words), what to take from it, and how it is typed. Every date and fact was checked against the sources in docs/MARKET_HISTORY.md;
+// the "take from it" lines are interpretation and say so; numbers inside them are computed from the data.
 var EVT = {
   '1996-02-08': ['Telecommunications Act', 'Federal law that rewrote the rules for phone, cable and broadcasting and opened local phone markets to new competitors.'],
   '1997-08-05': ['Tax cut on capital gains', 'Taxpayer Relief Act: the top tax rate on long-term capital gains went from 28% to 20% (assets held more than 18 months).'],
-  '1998-09-29': ['Fed cuts after the LTCM rescue', 'The hedge fund LTCM was rescued by 13 banks, organised by the New York Fed (Sep 23); the Fed then cut three times (Sep 29, Oct 15, Nov 17) to 4.75%. Day 0 = first cut.'],
+  '1998-09-29': ['Fed cuts after the LTCM rescue', 'The hedge fund LTCM was rescued by 13 banks, organised by the New York Fed (Sep 23); the Fed then cut three times (Sep 29, Oct 15, Nov 17) to 4.75%.'],
   '1999-03-24': ['NATO bombing over Kosovo', 'NATO air campaign against Yugoslavia over Kosovo, 24 Mar to 10 Jun 1999 (78 days). The US took part. A regional conflict, not a US-soil event.'],
   '1999-11-12': ['Banks allowed to merge with insurers and brokers', 'Gramm-Leach-Bliley Act: lets banks, securities firms and insurers belong to the same group; repeals parts of the Glass-Steagall Act.'],
   '2000-03-10': ['Nasdaq peak', 'The Nasdaq Composite closed at 5,048.62, its high of the cycle.'],
   '2000-03-24': ['S&P 500 peak', 'The S&P 500 closed at 1,527.46, its high of the cycle.'],
   '2000-05-16': ['Fed funds to 6.50%', 'The Fed raised its target rate to 6.50%, the top of the period.'],
-  '2001-09-11': ['September 11 attacks', 'Attacks in New York and Washington. US stock exchanges stayed closed until Mon Sep 17; the move shown is that first day against the close of Sep 10.'],
+  '2001-09-11': ['September 11 attacks', 'Attacks in New York and Washington. US stock exchanges stayed closed until Monday 17 September.'],
   '2001-10-07': ['Afghanistan', 'US military operations in Afghanistan begin (air strikes on Kabul and Kandahar).'],
   '2001-12-02': ['Enron bankruptcy', 'Energy company Enron files for bankruptcy after its accounting scandal.'],
   '2002-07-21': ['WorldCom bankruptcy', 'Telecom company WorldCom files for bankruptcy.'],
@@ -208,84 +106,66 @@ var EVT = {
   '2003-06-25': ['Fed funds to 1.00%', 'The Fed cut its target rate to 1.00%.'],
   '2005-03-18': ['Index method change', 'S&P starts moving index weights from total market value to float-adjusted market value (finished Sep 2005).']
 };
-function evReact(iso) {   // S&P 500 vs the close before the event: day, 1 week (5 trading days), 1 month (21), 3 months (63)
-  var d = MHSP.d, c = MHSP.c, i = d.findIndex(function (x) { return x >= iso; }); if (i < 1) return null;
-  var g = function (o) { return c[i + o] != null ? (c[i + o] / c[i - 1] - 1) * 100 : null; };
-  return { day: d[i], d0: g(0), w1: g(5), m1: g(21), m3: g(63) };
+var EV_TAG = { policy: 'Policy', fed: 'Fed', war: 'Conflict', mkt: 'Market', shock: 'Shock', method: 'Index method' };
+function memberLine(re, label) {   // "X was in this data: weight at Dec 20xx, return in the next year"
+  var s = secByName(re)[0]; if (!s) return '';
+  var kmax = 0; s.w.forEach(function (w, k) { if (w != null && w >= (s.w[kmax] || 0)) kmax = k; });
+  var lastK = -1; s.r.forEach(function (v, k) { if (v != null) lastK = k; });
+  return label + ' was a member: ' + n1(s.w[kmax], 2) + '% of the index at ' + snapLbl(kmax) + ' (its largest weight), and it returned ' + pc(s.r[lastK], 0) + ' in ' + D.years[lastK] + ', its last year in the index. ';
 }
-function eventsTable() {
-  var cell = function (v) { return '<td class="r ' + cls(v) + '">' + pc(v, 1) + '</td>'; }, last = null;
-  var rows = D.events.map(function (e) {
-    var y = +e[0].slice(0, 4), s = STAGES.filter(function (x) { return y >= x.y0 && y <= x.y1; })[0], h = '', r = evReact(e[0]), info = EVT[e[0]] || [e[1], ''];
-    if (s !== last) { last = s; h = '<tr class="mh-grp"><td colspan="7">' + (STAGES.indexOf(s) + 1) + ' · ' + s.name + ' ' + s.y0 + '–' + s.y1 + '</td></tr>'; }
-    return h + '<tr><td>' + e[0] + (r.day !== e[0] ? '<div class="mh-mu">trading day ' + r.day + '</div>' : '') + '</td><td><b>' + esc(info[0]) + '</b><div class="mh-mu mh-evd">' + esc(info[1]) + '</div></td>' + cell(r.d0) + cell(r.w1) + cell(r.m1) + cell(r.m3) + '</tr>';
-  }).join('');
-  return '<div class="mh-scroll"><table class="mh-tbl"><thead><tr><th>Date</th><th>Event</th><th class="r">That day</th><th class="r">1 week</th><th class="r">1 month</th><th class="r">3 months</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-    '<div class="mh-note">S&amp;P 500 price change from the close before the event (daily closes, Yahoo Finance, checked against the S&amp;P DJI closes of 24 Mar 2000 and 9 Oct 2002). It shows what the index did next, not that the event caused it: many events were expected, and other news arrived the same weeks.</div>';
-}
-
-// ─── 2. who led, and what became of them ───────────────────
-var FN_SIDE = { top: ['#1E2733', 'Best'], bot: ['#B45309', 'Worst'] };
-function fnPool(side) {
-  var k = D.years.indexOf(st.fn.y);
-  var pool = D.secs.filter(function (s) { return s.w[k] != null && s.r[k] != null; }).map(function (s) { return { s: s, ret: s.r[k], contrib: s.w[k] * s.r[k] / 100 }; });
-  pool.sort(function (a, b) { return b.contrib - a.contrib; });
-  return { k: k, list: side === 'top' ? pool.slice(0, st.fn.n) : pool.slice(-st.fn.n).reverse() };
-}
-function fnHeat(v) {
-  if (v == null) return '';
-  var a = Math.min(.5, .06 + Math.abs(v) / 100 * .34);
-  return 'background:' + (v >= 0 ? 'rgba(23,122,78,' + a + ')' : 'rgba(155,42,32,' + a + ')');
-}
-function fate(s) {
-  var y = exitYear(s), txt = { SPX: 'In the S&amp;P 500 today', LIVE: 'Listed, not in the S&amp;P 500', ACQ: 'Acquired / merged', BK: 'Bankrupt', OTH: 'Delisted' }[s.st];
-  return '<span class="mh-badge" style="background:' + FATE_COL[s.st] + '">' + txt + '</span>' + (y ? ' <span class="' + (y > 2005 ? 'mh-mu' : '') + '">' + y + '</span>' : '');
-}
-function fnTable(side) {
-  var p = fnPool(side), k = p.k, yr = D.years[k], f = st.fn, b = breadths();
-  var head = D.years.map(function (y, i) { return '<th class="r' + (i === k ? ' mh-selcol' : '') + '">' + y + '</th>'; }).join('');
-  var rows = p.list.map(function (d, i) {
-    var s = d.s, lastI = -1; s.r.forEach(function (v, j) { if (v != null) lastI = j; });
-    return '<tr><td class="mh-mu">' + (i + 1) + '</td><td>' + nameCell(s) + '</td><td><i class="mh-dot" style="background:' + SEC_COL[s.s] + '"></i>' + s.s + '</td><td class="r">' + n1(s.w[k], 1) + '%</td>' +
-      D.years.map(function (y, j) {
-        var v = s.r[j], sel = j === k ? ' mh-selcol' : '', e = (v == null && px(s, j) != null && px(s, j + 1) != null) ? (px(s, j + 1) / px(s, j) - 1) * 100 : null;
-        if (e != null) return '<td class="r mh-cell mh-ext' + sel + '" style="' + fnHeat(e) + '" title="' + esc(s.n) + ' ' + y + ': ' + pc(e, 1) + ' (not in the S&amp;P 500 that year; Bloomberg price)">' + pc(e, 0) + '</td>';
-        if (v != null) return '<td class="r mh-cell' + sel + '" style="' + fnHeat(v) + '" title="' + esc(s.n) + ' ' + y + ': ' + pc(v, 1) + '">' + pc(v, 0) + '</td>';
-        if (j === lastI + 1 && lastI < NK - 1) return '<td class="r mh-mu' + sel + '" title="Left the S&amp;P 500 after ' + D.years[lastI] + '. Carried at its last close.">out</td>';
-        return '<td class="' + sel + '"></td>';
-      }).join('') + '<td>' + fate(s) + '</td></tr>';
-  }).join('');
-  var ref = function (lab, vals) { return '<tr class="mh-tot"><td></td><td colspan="3">' + lab + '</td>' + vals.map(function (v, j) { return '<td class="r ' + cls(v) + (j === k ? ' mh-selcol' : '') + '">' + pc(v, 0) + '</td>'; }).join('') + '<td></td></tr>'; };
-  var cnt = function (fn) { return p.list.filter(function (d) { return fn(d.s); }).length; };
-  var gone = cnt(function (s) { var y = exitYear(s); return y && y <= 2005; });
-  return '<div class="mh-ch" style="margin-top:14px"><i class="mh-dot" style="background:' + FN_SIDE[side][0] + '"></i>' + FN_SIDE[side][1] + ' ' + f.n + ' of ' + yr + ', by what they added to (or took from) the index <span class="mh-mu">price return of each year; the framed column is ' + yr + '</span></div>' +
-    '<div class="mh-read">Today: ' + cnt(function (s) { return s.st === 'SPX'; }) + ' in the S&amp;P 500, ' + cnt(function (s) { return s.st === 'ACQ' || s.st === 'OTH'; }) + ' acquired or delisted, ' + cnt(function (s) { return s.st === 'BK'; }) + ' bankrupt, ' + cnt(function (s) { return s.st === 'LIVE'; }) + ' listed outside the index. Only ' + gone + ' had left the index by Dec 2005.</div>' +
-    '<div class="mh-scroll"><table class="mh-tbl mh-strip"><thead><tr><th>#</th><th>Name</th><th>Sector</th><th class="r">Weight, start of ' + yr + '</th>' + head + '<th>Today (year it left)</th></tr></thead><tbody>' + rows +
-    ref('Median of these ' + f.n, D.years.map(function (y, j) { return med(p.list.map(function (d) { return d.s.r[j]; })); })) + ref('Typical stock (median member)', b.map(function (x) { return x.med; })) + ref('S&amp;P 500, published', D.index.map(function (x) { return x.pub; })) + '</tbody></table></div>';
-}
-function renderFN() {
-  var box = document.getElementById('mh-fn'); if (!box) return;
-  var yrs = D.years.slice(0, NK - 1);
-  box.innerHTML = '<div class="mh-row"><label class="mh-lbl">Year</label><span class="sb-toggle mh-seg">' + yrs.map(function (y) { return '<button class="sb-tbtn' + (y === st.fn.y ? ' active' : '') + '" data-act="fny" data-v="' + y + '">' + y + '</button>'; }).join('') + '</span>' +
-    '<label class="mh-lbl" style="margin-left:10px">Show</label>' + secBtn('fns', [['top', 'Best'], ['bot', 'Worst']], st.fn.side) +
-    '<label class="mh-lbl" style="margin-left:10px">How many</label>' + secBtn('fnn', [[5, '5'], [10, '10'], [20, '20']], st.fn.n) + '</div>' +
-    fnTable(st.fn.side) + '<div class="mh-note">Members of the index at the previous year-end, ranked by weight × return in the framed year. Italic cells = the name was not in the S&amp;P 500 that year (before it joined, or after it left and kept trading): price return from Bloomberg. "out" = left the index and no price after. Years in grey in the last column are after the study window (2005).</div>' + exitTiming();
-}
-function exitTiming() {
-  var rows = ['ACQ', 'BK', 'OTH'].map(function (c) {
-    var L = D.secs.filter(function (s) { return s.st === c; }), by = L.filter(function (s) { return exitYear(s) && exitYear(s) <= 2005; }).length, af = L.filter(function (s) { return exitYear(s) && exitYear(s) > 2005; }).length;
-    return '<tr><td><b>' + { ACQ: 'Acquired / merged', BK: 'Bankrupt', OTH: 'Delisted, other' }[c] + '</b></td><td class="r">' + L.length + '</td><td class="r">' + by + '</td><td class="r">' + af + '</td><td class="r">' + (L.length - by - af) + '</td></tr>'; }).join('');
-  return '<details class="mh-more" style="margin-top:14px"><summary><b>When did the names actually leave?</b><span class="mh-mu"> most acquisitions came after the study window</span></summary><div class="mh-moreb"><div class="mh-scroll"><table class="mh-tbl"><thead><tr><th>Fate today</th><th class="r">Names</th><th class="r">Left by Dec 2005</th><th class="r">Left after 2005</th><th class="r">No date in Bloomberg</th></tr></thead><tbody>' + rows + '</tbody></table></div><div class="mh-note">All ' + D.secs.length + ' names that were members at any year-end from Dec 1994 to Dec 2004. From the delisting date in the Bloomberg workbook. "Acquired" in the table above can mean a deal 5 or 15 years after the window.</div></div></details>';
+var READ = {
+  '1996-02-08': function () { return 'A change in the rules, not a market event: it opened phone and cable to competition, so the economics of one sector were being rewritten. Whether it helped cause the telecom collapse of 2000-02 (see WorldCom) is an interpretation this data does not test.'; },
+  '1997-08-05': function () { return 'A permanent change in what investors keep from a long-term gain. It explains no single year\'s return; read it as part of the backdrop of the period, not as a cause.'; },
+  '1998-09-29': function () { return 'A funding scare at one highly leveraged fund reached the Fed within a week of the rescue. It shows how much borrowed money sat under the market in 1998. The cuts eased conditions; whether they helped fuel the 1999 rally is a question this data cannot answer.'; },
+  '1999-03-24': function () { return 'A foreign conflict with US participation and no direct effect on the operations of US companies. It is listed because it was in the 1999 headlines; it is not a market-structure event and nothing in this data links it to the S&amp;P 500.'; },
+  '1999-11-12': function () { return 'A structural change for Financials: banks, insurers and brokers could now sit in one group. Its effects play out over many years, past the end of this window.'; },
+  '2000-03-10': function () { return 'The technology-heavy Nasdaq peaked ' + days('2000-03-10', PEAK) + ' days before the S&amp;P 500. The leaders turned before the broad index did.'; },
+  '2000-03-24': function () { return 'The S&amp;P 500 did not get back to this level inside the window: its last close of 2005 (' + nf(MHSP.c[MHSP.c.length - 1], 2) + ') was ' + dn((MHSP.c[MHSP.c.length - 1] / sp(PEAK) - 1) * 100) + ' below it.'; },
+  '2000-05-16': function () { var inv = runs('curve', function (v) { return v < 0; }, '1999-01', '2001-12')[0]; return 'The top of a tightening cycle: the Fed funds rate had gone from 4.75% (Nov 1998) to 6.50%, and the yield curve (10-year minus 2-year) had been inverted since ' + ymLbl(inv[0]) + ', meaning short rates sat above long rates.'; },
+  '2001-09-11': function () { var rec = runs('rec', function (v) { return v >= 0.5; }, '2000-01', '2002-12')[0]; return 'An outside shock that arrived when the index had already been falling for more than ' + Math.floor(days(PEAK, '2001-09-10') / 30.44) + ' months and the economy was in recession (NBER months ' + ymLbl(rec[0]) + ' to ' + ymLbl(rec[1]) + '). It is part of this bear market, not its start.'; },
+  '2001-10-07': function () { return 'A military operation abroad, weeks after 9/11. It belongs to the backdrop of the period; this data holds no company-level exposure to it.'; },
+  '2001-12-02': function () { return memberLine(/enron/i, 'Enron') + 'The market had rated it highly and its accounts could not be relied on. It is the first of two such failures that led to Sarbanes-Oxley: the lesson was about trust in reported numbers, not about one sector.'; },
+  '2002-07-21': function () { return memberLine(/worldcom/i, 'WorldCom') + 'A second failure of trust inside a year, ' + Math.round(days('2002-07-21', LOW) / 7) + ' weeks before the S&amp;P 500\'s low.'; },
+  '2002-07-30': function () { return 'The rules answer to Enron and WorldCom: executives certify the accounts and an oversight board checks the auditors. It came ' + days('2002-07-30', LOW) + ' days before the S&amp;P 500\'s closing low.'; },
+  '2002-10-09': function () { return 'The index closed ' + dn((sp(LOW) / sp(PEAK) - 1) * 100) + ' below its peak, ' + days(PEAK, LOW) + ' days after it. This is where the break ends and the recovery stage begins.'; },
+  '2003-03-20': function () { return 'The invasion came ' + Math.round(days(LOW, '2003-03-20') / 30.4) + ' months after the market\'s low (Oct 2002): it did not mark the bottom of the market.'; },
+  '2003-06-25': function () { return 'The lowest Fed funds rate of the period: from 6.50% (May 2000) to 1.00%. The monthly average was still ' + n1(macroAt('ffr', '2004-06'), 2) + '% in Jun 2004 and ' + n1(macroAt('ffr', '2005-12'), 2) + '% by Dec 2005, so the recovery stage ran from the bottom of the rate cycle to a rising one.'; },
+  '2005-03-18': function () { return 'From here the index counts only shares available to trade (float). Weights after 2005 are not directly comparable with the ones in this study, which matters when today is compared with the 1990s below.'; }
+};
+function eventsList() {
+  var last = null, h = '';
+  D.events.forEach(function (e) {
+    var y = +e[0].slice(0, 4), s = stageOf(y), info = EVT[e[0]] || [e[1], ''], rd = READ[e[0]];
+    if (s !== last) { last = s; h += '<div class="mh-grp mh-grp2">' + (STAGES.indexOf(s) + 1) + ' · ' + s.name + ' ' + s.y0 + '–' + s.y1 + '</div>'; }
+    h += '<details class="mh-ev"><summary><span class="mh-evdate">' + e[0] + '</span><b>' + esc(info[0]) + '</b><span class="mh-evtag">' + (EV_TAG[e[2]] || '') + '</span></summary><div class="mh-evb"><div>' + esc(info[1]) + '</div>' +
+      (rd ? '<div class="mh-evr"><b>What to take from it</b> <span class="mh-mu">interpretation</span><div>' + rd() + '</div></div>' : '') + '</div></details>';
+  });
+  return '<div class="mh-evs">' + h + '</div><div class="mh-note">Click an event to open it. The dates are public record (sources in docs/MARKET_HISTORY.md). The page does not show what the market did after each event: many were expected and other news arrived the same weeks, so the data cannot say what an event caused.</div>';
 }
 
-// ─── 3. where they came from, where they went (scatter) ────
+// ─── 3. weight by sector ───────────────────────────────────
+function scOpts(cur, lo, hi) { var o = ''; for (var k = lo; k <= hi; k++) o += '<option value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + snapLbl(k) + '</option>'; return o; }
+function renderWC() {
+  var box = document.getElementById('mh-wc'); if (!box) return;
+  box.innerHTML = '<div class="mh-row"><label class="mh-lbl">From</label><select id="mh-wcf" class="mh-sel">' + scOpts(st.wc[0], 0, NK - 2) + '</select><label class="mh-lbl">to</label><select id="mh-wct" class="mh-sel">' + scOpts(st.wc[1], 1, NK - 1) + '</select></div><div id="mh-wcbox"></div>';
+  var a = st.wc[0], b = st.wc[1], hi = 10;
+  D.sectors.forEach(function (y) { D.meta.sectors.forEach(function (sc) { hi = Math.max(hi, Math.ceil(y.d[sc].w / 10) * 10); }); });
+  var rows = D.meta.sectors.map(function (sc) { return { name: sc, w0: D.sectors[a].d[sc].w, w1: D.sectors[b].d[sc].w }; });
+  dumbbell(document.getElementById('mh-wcbox'), rows, hi, snapLbl(b), snapLbl(a) + ' → ' + snapLbl(b), 'Share of the S&amp;P 500 by sector at each year-end; sectors stay in the same order whatever the dates. A sector\'s share falls when its stocks fall, or when other stocks rise faster.', snapLbl(a));
+}
+
+// ─── 4. did yesterday's winners stay winners? (scatter) ────
+var PRESETS = [
+  { name: 'The run-up, then the break', d: [0, K0, 8] },
+  { name: 'The break, then the recovery', d: [K0, 8, NK] },
+  { name: 'The last year of the run-up', d: [4, K0, 6] }
+];
 var SC_TICKS = [-90, -75, -50, -25, 0, 50, 100, 200, 400, 900];
 function scT(r) { return Math.log(Math.max(1 + r / 100, 0.05)); }
-function scOpts(cur, lo, hi) { var o = ''; for (var k = lo; k <= hi; k++) o += '<option value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + snapLbl(k) + '</option>'; return o; }
 function renderSC() {
   var box = document.getElementById('mh-sc'); if (!box) return;
-  var a = st.sc[0], b = st.sc[1], c = st.sc[2], m = st.scm;
-  // every name with a price at both the start and the pivot, in the index or not; a name that stops trading stays at its last close
+  var a = st.sc.d[0], b = st.sc.d[1], c = st.sc.d[2], m = st.scm;
+  // every name with a price at both the start and the split date, in the index or not; a name that stops trading stays at its last close
   var pts = D.secs.filter(function (s) { return px(s, a) != null && px(s, b) != null && lvl(s, c) != null; }).map(function (s) {
     return { s: s, x: (px(s, b) / px(s, a) - 1) * 100, y: (lvl(s, c) / px(s, b) - 1) * 100, w: s.w[b] };
   });
@@ -297,13 +177,14 @@ function renderSC() {
   var x0 = Math.min.apply(null, tx.concat(0)) - .1, x1 = Math.max.apply(null, tx.concat(0)) + .1, y0 = Math.min.apply(null, ty.concat(0)) - .1, y1 = Math.max.apply(null, ty.concat(0)) + .1;
   var X = function (r) { return M.l + (scT(r) - x0) / (x1 - x0) * cw; }, Y = function (r) { return M.t + ch - (scT(r) - y0) / (y1 - y0) * ch; };
   var g = '', lab = function (t) { return (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) + '%'; };
+  var lx = -99, ly = 1e9;   // a label is drawn only if it clears the previous one
   SC_TICKS.forEach(function (t) {
     var col = t === 0 ? '#9AA3AF' : '#EEF1F4', sw = t === 0 ? 1.5 : 1;
-    if (scT(t) >= x0 && scT(t) <= x1) g += '<line x1="' + X(t) + '" x2="' + X(t) + '" y1="' + M.t + '" y2="' + (VH - M.b) + '" stroke="' + col + '" stroke-width="' + sw + '"/><text x="' + X(t) + '" y="' + (VH - M.b + 15) + '" text-anchor="middle" font-size="11" fill="#8A93A0">' + lab(t) + '</text>';
-    if (scT(t) >= y0 && scT(t) <= y1) g += '<line x1="' + M.l + '" x2="' + (VW - M.r) + '" y1="' + Y(t) + '" y2="' + Y(t) + '" stroke="' + col + '" stroke-width="' + sw + '"/><text x="' + (M.l - 7) + '" y="' + (Y(t) + 4) + '" text-anchor="end" font-size="11" fill="#8A93A0">' + lab(t) + '</text>';
+    if (scT(t) >= x0 && scT(t) <= x1) { g += '<line x1="' + X(t) + '" x2="' + X(t) + '" y1="' + M.t + '" y2="' + (VH - M.b) + '" stroke="' + col + '" stroke-width="' + sw + '"/>'; if (X(t) - lx >= 44) { lx = X(t); g += '<text x="' + X(t) + '" y="' + (VH - M.b + 15) + '" text-anchor="middle" font-size="11" fill="#8A93A0">' + lab(t) + '</text>'; } }
+    if (scT(t) >= y0 && scT(t) <= y1) { g += '<line x1="' + M.l + '" x2="' + (VW - M.r) + '" y1="' + Y(t) + '" y2="' + Y(t) + '" stroke="' + col + '" stroke-width="' + sw + '"/>'; if (ly - Y(t) >= 16) { ly = Y(t); g += '<text x="' + (M.l - 7) + '" y="' + (Y(t) + 4) + '" text-anchor="end" font-size="11" fill="#8A93A0">' + lab(t) + '</text>'; } }
   });
-  g += '<text x="' + (M.l + cw / 2) + '" y="' + (VH - 8) + '" text-anchor="middle" font-size="11" fill="#4A5666">Where they came from: price change ' + snapLbl(a) + ' → ' + snapLbl(b) + '</text>' +
-    '<text transform="translate(14,' + (M.t + ch / 2) + ') rotate(-90)" text-anchor="middle" font-size="11" fill="#4A5666">Where they went: price change ' + snapLbl(b) + ' → ' + snapLbl(c) + '</text>';
+  g += '<text x="' + (M.l + cw / 2) + '" y="' + (VH - 8) + '" text-anchor="middle" font-size="11" fill="#4A5666">BEFORE: price change ' + snapLbl(a) + ' → ' + snapLbl(b) + '</text>' +
+    '<text transform="translate(14,' + (M.t + ch / 2) + ') rotate(-90)" text-anchor="middle" font-size="11" fill="#4A5666">AFTER: price change ' + snapLbl(b) + ' → ' + snapLbl(c) + '</text>';
   var q = { ur: 0, ul: 0, lr: 0, ll: 0 }; pts.forEach(function (d) { q[(d.y >= 0 ? 'u' : 'l') + (d.x >= 0 ? 'r' : 'l')]++; });
   var cap = function (x, y, anchor, t, n) { return '<text x="' + x + '" y="' + y + '" text-anchor="' + anchor + '" font-size="11" font-weight="600" fill="#6B7684" stroke="#fff" stroke-width="3" paint-order="stroke">' + t + ': ' + n + ' names (' + n1(n / pts.length * 100, 0) + '%)</text>'; };
   g += cap(M.l + 8, M.t + 14, 'start', 'Fell before, rose after', q.ul) + cap(VW - M.r - 8, M.t + 14, 'end', 'Rose before, rose after', q.ur) + cap(M.l + 8, VH - M.b - 8, 'start', 'Fell before, fell after', q.ll) + cap(VW - M.r - 8, VH - M.b - 8, 'end', 'Rose before, fell after', q.lr);
@@ -316,56 +197,68 @@ function renderSC() {
   var sel = pts.filter(function (d) { return pick[d.s.f]; }), medY = function (k) { return med(sel.filter(function (d) { return pick[d.s.f] === k; }).map(function (d) { return d.y; })); };
   var endY = c >= NK ? D.years[NK - 1] : +D.bases[c].slice(0, 4);
   var gone = function (k) { return sel.filter(function (d) { return pick[d.s.f] === k && exitYear(d.s) && exitYear(d.s) <= endY; }).length; };
-  var summ = (m.side !== 'bot' ? 'The ' + N + ' best: median ' + pc(medY('top'), 0) + ' afterwards (' + gone('top') + ' stopped trading by ' + snapLbl(c) + '). ' : '') + (m.side !== 'top' ? 'The ' + N + ' worst: median ' + pc(medY('bot'), 0) + ' afterwards (' + gone('bot') + ' stopped trading). ' : '') + 'All ' + pts.length + ' names: median ' + pc(med(pts.map(function (d) { return d.y; })), 0) + '.';
-  box.innerHTML = '<div class="mh-row"><label class="mh-lbl">Came from</label><select id="mh-sca" class="mh-sel">' + scOpts(a, 0, NK - 3) + '</select><label class="mh-lbl">Pivot</label><select id="mh-scb" class="mh-sel">' + scOpts(b, 1, NK - 2) + '</select><label class="mh-lbl">Went to</label><select id="mh-scc" class="mh-sel">' + scOpts(c, 2, NK) + '</select>' +
-    '<label class="mh-lbl" style="margin-left:10px">Highlight</label>' + secBtn('scs', [['top', 'Best'], ['bot', 'Worst'], ['both', 'Both']], m.side) + '<label class="mh-lbl" style="margin-left:10px">How many</label>' + secBtn('scn', [[10, '10'], [20, '20'], [50, '50']], m.n) + '</div>' +
-    '<div class="mh-read">' + summ + ' Best / worst = the biggest gains and losses from ' + snapLbl(a) + ' to ' + snapLbl(b) + ', chosen among every name with a price at both dates, in the S&amp;P 500 or not.</div>' +
-    '<svg viewBox="0 0 ' + VW + ' ' + VH + '" class="mh-svg">' + g + '</svg><div class="mh-key"><span><i class="mh-dot" style="background:' + COL.top + '"></i>Best ' + N + '</span><span><i class="mh-dot" style="background:' + COL.bot + '"></i>Worst ' + N + '</span><span><i class="mh-dot" style="background:#8A93A0;opacity:.35"></i>Everyone else</span></div>' +
-    '<div class="mh-note">One dot per name. The scale is a ratio (+100% = doubled, −50% = halved). A name that stops trading stays at its last close. Names with no price at ' + snapLbl(a) + ' or ' + snapLbl(b) + ' are not shown (not listed yet, or already delisted). Prices of names outside the index (before joining, after leaving) are a separate Bloomberg pull; same close as the index members.</div>';
+  var summ = (m.side !== 'bot' ? 'The ' + N + ' best before ' + snapLbl(b) + ' returned a median ' + pc(medY('top'), 0) + ' afterwards (' + gone('top') + ' stopped trading by ' + snapLbl(c) + '). ' : '') + (m.side !== 'top' ? 'The ' + N + ' worst returned a median ' + pc(medY('bot'), 0) + ' afterwards (' + gone('bot') + ' stopped trading). ' : '') + 'All ' + pts.length + ' names: median ' + pc(med(pts.map(function (d) { return d.y; })), 0) + ' afterwards.';
+  var presets = '<div class="mh-row"><label class="mh-lbl">Period</label><span class="sb-toggle mh-seg">' + PRESETS.map(function (p, i) { return '<button class="sb-tbtn' + (st.sc.p === i ? ' active' : '') + '" data-act="scp" data-v="' + i + '">' + p.name + '</button>'; }).join('') + '</span>' +
+    '<label class="mh-lbl" style="margin-left:10px">Highlight</label>' + secBtn('scs', [['top', 'Best'], ['bot', 'Worst'], ['both', 'Both']], m.side) + '<label class="mh-lbl" style="margin-left:10px">How many</label>' + secBtn('scn', [[10, '10'], [20, '20'], [50, '50']], m.n) + '</div>';
+  var custom = '<details class="mh-det"><summary>Pick other dates</summary><div class="mh-row" style="margin-top:8px"><label class="mh-lbl">Start</label><select id="mh-sca" class="mh-sel">' + scOpts(a, 0, NK - 3) + '</select><label class="mh-lbl">Split date</label><select id="mh-scb" class="mh-sel">' + scOpts(b, 1, NK - 2) + '</select><label class="mh-lbl">End</label><select id="mh-scc" class="mh-sel">' + scOpts(c, 2, NK) + '</select></div></details>';
+  box.innerHTML = '<div class="mh-read">Each dot is one stock. <b>Left to right</b> = what it did <i>before</i> the split date (' + snapLbl(b) + '); <b>bottom to top</b> = what it did <i>after</i>. A dot at the bottom right was a winner that then lost money; a dot at the top left was a laggard that then recovered. ' + summ + '</div>' + presets + custom +
+    '<svg viewBox="0 0 ' + VW + ' ' + VH + '" class="mh-svg">' + g + '</svg><div class="mh-key"><span><i class="mh-dot" style="background:' + COL.top + '"></i>Best ' + N + ' before ' + snapLbl(b) + '</span><span><i class="mh-dot" style="background:' + COL.bot + '"></i>Worst ' + N + '</span><span><i class="mh-dot" style="background:#8A93A0;opacity:.35"></i>Everyone else</span></div>' +
+    '<div class="mh-note">Best / worst = the biggest gains and losses between ' + snapLbl(a) + ' and ' + snapLbl(b) + ', chosen among every name with a price at both dates, in the S&amp;P 500 or not. The scale is a ratio (+100% = doubled, −50% = halved). A name that stops trading stays at its last close. Names with no price at ' + snapLbl(a) + ' or ' + snapLbl(b) + ' are not shown (not listed yet, or already delisted).</div>';
   box.querySelectorAll('.mh-hit').forEach(function (e) {
     e.addEventListener('mousemove', function (ev) { var d = pts[+e.getAttribute('data-i')], s = d.s;
-      showTip('<b>' + esc(s.n) + '</b>' + (s.t ? ' ' + esc(s.t) : '') + '<div>' + s.s + (d.w != null ? ' · weight ' + n1(d.w, 2) + '% at ' + snapLbl(b) : ' · not in the index at ' + snapLbl(b)) + '</div><div>Before: <b>' + pc(d.x, 0) + '</b> · After: <b>' + pc(d.y, 0) + '</b></div><div>Today: ' + { SPX: 'in the S&P 500', LIVE: 'listed, not in the S&P 500', ACQ: 'acquired / merged', BK: 'bankrupt', OTH: 'delisted' }[s.st] + (exitYear(s) ? ' (' + exitYear(s) + ')' : '') + '</div>', ev); });
+      showTip('<b>' + esc(s.n) + '</b>' + (s.t ? ' ' + esc(s.t) : '') + '<div>' + s.s + (d.w != null ? ' · weight ' + n1(d.w, 2) + '% at ' + snapLbl(b) : ' · not in the index at ' + snapLbl(b)) + '</div><div>Before: <b>' + pc(d.x, 0) + '</b> · After: <b>' + pc(d.y, 0) + '</b></div><div>Today: ' + FATE_TXT[s.st] + (exitYear(s) ? ' (' + exitYear(s) + ')' : '') + '</div>', ev); });
     e.addEventListener('mouseleave', hideTip);
   });
 }
 
-// ─── 4. where the weight went ──────────────────────────────
-function renderWC() {
-  var box = document.getElementById('mh-wc'); if (!box) return;
-  box.innerHTML = '<div class="mh-row"><label class="mh-lbl">From</label><select id="mh-wcf" class="mh-sel">' + scOpts(st.wc[0], 0, NK - 2) + '</select><label class="mh-lbl">to</label><select id="mh-wct" class="mh-sel">' + scOpts(st.wc[1], 1, NK - 1) + '</select></div><div id="mh-wcbox"></div>';
-  var a = st.wc[0], b = st.wc[1], hi = 10;
-  D.sectors.forEach(function (y) { D.meta.sectors.forEach(function (sc) { hi = Math.max(hi, Math.ceil(y.d[sc].w / 10) * 10); }); });
-  var rows = D.meta.sectors.map(function (sc) { return { name: sc, w0: D.sectors[a].d[sc].w, w1: D.sectors[b].d[sc].w }; });
-  dumbbell(document.getElementById('mh-wcbox'), rows, hi, snapLbl(b), snapLbl(a) + ' → ' + snapLbl(b), 'Share of the S&amp;P 500 by sector at each year-end; sectors stay in the same order whatever the dates. A sector\'s share falls when its stocks fall, or when other stocks rise faster.', snapLbl(a));
-}
-
-// ─── 4. names that joined the index ─────────────────────────
-function newNames() {
-  var rows = [], wins = 0, losers = [];
+// ─── 5. names that joined the index ────────────────────────
+function addedNames() {
+  var rows = [], pb = [], pa = [], po = [], upBefore = 0, nBefore = 0;
   for (var k = 1; k < NK; k++) {
-    var ok = function (s) { return s.r[k] != null; };
-    var ent = D.secs.filter(function (s) { return s.w[k] != null && s.w[k - 1] == null && ok(s); }), stay = D.secs.filter(function (s) { return s.w[k] != null && s.w[k - 1] != null && ok(s); });
-    var a = med(ent.map(function (s) { return s.r[k]; })), b = med(stay.map(function (s) { return s.r[k]; }));
-    var nx = function (L) { return k + 1 < NK ? med(L.filter(function (s) { return s.r[k + 1] != null; }).map(function (s) { return s.r[k + 1]; })) : null; };
-    var n1x = nx(ent), n2x = nx(stay);
-    if (a > b) wins++;
-    rows.push('<tr><td><b>' + D.years[k] + '</b></td><td class="r">' + ent.length + '</td><td class="r ' + cls(a) + '">' + pc(a, 0) + '</td><td class="r ' + cls(b) + '">' + pc(b, 0) + '</td><td class="r ' + cls(a - b) + '"><b>' + (a - b >= 0 ? '+' : '−') + Math.abs(a - b).toFixed(0) + '</b></td><td class="r ' + cls(n1x) + '">' + pc(n1x, 0) + '</td><td class="r ' + cls(n2x) + '">' + pc(n2x, 0) + '</td></tr>');
+    var ent = D.secs.filter(function (s) { return s.w[k] != null && s.w[k - 1] == null && s.r[k] != null; }), stay = D.secs.filter(function (s) { return s.w[k] != null && s.w[k - 1] != null && s.r[k] != null; });
+    var bef = ent.filter(function (s) { return px(s, k - 1) != null && px(s, k) != null; }).map(function (s) { return (px(s, k) / px(s, k - 1) - 1) * 100; });
+    var aft = ent.map(function (s) { return s.r[k]; }), oth = stay.map(function (s) { return s.r[k]; });
+    pb = pb.concat(bef); pa = pa.concat(aft); po = po.concat(oth); upBefore += bef.filter(function (v) { return v > 0; }).length; nBefore += bef.length;
+    rows.push('<tr><td><b>' + snapLbl(k) + '</b></td><td class="r">' + ent.length + '</td><td class="r">' + bef.length + '</td><td class="r ' + cls(med(bef)) + '">' + pc(med(bef), 0) + '</td><td class="r ' + cls(med(aft)) + '">' + pc(med(aft), 0) + '</td><td class="r ' + cls(med(oth)) + '">' + pc(med(oth), 0) + '</td><td class="r ' + cls(med(aft) - med(oth)) + '">' + pp(med(aft) - med(oth), 0) + '</td></tr>');
   }
-  return '<div class="mh-read">Names added at a year-end beat the ones already in the index in ' + wins + ' of ' + rows.length + ' years. The gap has no steady sign: see the table.</div>' +
-    '<div class="mh-scroll"><table class="mh-tbl"><thead><tr><th>Year</th><th class="r">Names added at the previous year-end</th><th class="r">Their median return</th><th class="r">Others in the index</th><th class="r">Gap (pp)</th><th class="r">Added names, next year</th><th class="r">Others, next year</th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>' +
-    '<div class="mh-note">"Added" = a member at the start of the year that was not a member one year-end earlier. The data starts when a company joins: returns before joining are not in it, so this cannot show whether a name was already rising when it was picked. Only index members are in the sample.</div>';
+  return '<div class="mh-read">Names that joined the index had already risen in the year before they joined: ' + n1(upBefore / nBefore * 100, 0) + '% of them were up, median ' + pc(med(pb), 0) + ' (' + nBefore + ' additions with a price a year earlier). In the year after joining their median return was ' + pc(med(pa), 0) + ', against ' + pc(med(po), 0) + ' for the names already in the index (all years pooled).</div>' +
+    '<div class="mh-scroll"><table class="mh-tbl mh-fix"><colgroup><col style="width:110px"><col><col><col><col><col><col></colgroup><thead><tr><th>Added at</th><th class="r">Names added</th><th class="r">With a price a year earlier</th><th class="r">Median return, year before joining</th><th class="r">Median return, year after joining</th><th class="r">Names already in, same year</th><th class="r">Added minus already in</th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>' +
+    '<div class="mh-note">Added at = the first year-end the name appears among the members; "year before" uses the Bloomberg price a year earlier, when the name was outside the index (names not yet listed then are left out of that column). "Year after" = the year starting at the year-end it joined. Medians of price returns.</div>';
 }
 
-// ─── 5. then vs now ─────────────────────────────────────────
-function thenNow() {
-  var b = breadths(), now = nowBreadth().slice(-3), cols = [['1998', b[3]], ['1999', b[4]], ['2000', b[5]]].concat(now.map(function (x) { return [x.label, x]; }));
-  var row = function (lab, sub, fn, pct) {
-    return '<tr><td><b>' + lab + '</b><div class="mh-mu">' + sub + '</div></td>' + cols.map(function (c, i) { var v = fn(c[1]); return '<td class="r' + (i === 3 ? ' mh-sepl' : '') + (pct ? '' : ' ' + cls(v)) + '">' + (pct ? n1(v, 0) + '%' : pc(v, 0)) + '</td>'; }).join('') + '</tr>';
-  };
-  return '<div class="mh-scroll"><table class="mh-tbl"><thead><tr><th></th>' + cols.map(function (c, i) { return '<th class="r' + (i === 3 ? ' mh-sepl' : '') + '">' + c[0] + '</th>'; }).join('') + '</tr></thead><tbody>' +
-    row('The index', 'size-weighted return', function (x) { return x.cap; }) + row('The average stock', 'equal-weighted return', function (x) { return x.ew; }) + row('The typical stock', 'median return', function (x) { return x.med; }) +
-    row('Names that beat the index', 'share of members', function (x) { return x.beat; }, true) + row('Top 10 weight', 'share of the index at the start', function (x) { return x.top10w; }, true) + '</tbody></table></div>' +
-    '<div class="mh-note">Left of the line: this study (published index weights). Right: SPY holdings already in the portal (float-adjusted weights), price returns, 2026 to ' + SPX_HOLDINGS.asOf + '. The two weighting methods differ slightly (docs).</div>';
+// ─── 6. where today differs ────────────────────────────────
+var TOL = { ffr: 2, y10: 2, curve: 1, base: 5, corp: 5, fed: 20, margin: 1.5, prof: 3, cape: 8, ey: 1.5, cpi: 1.5, un: 1.5, baa: 1, top10: 5, n50: 10 };
+var QROW = { corp: 1, fed: 1, prof: 1 };
+var SHORT = { ffr: 'Fed funds', y10: '10-year yield', curve: 'yield curve (10y − 2y)', base: 'monetary base / GDP', corp: 'company debt / GDP', fed: 'federal debt / GDP', margin: 'margin debt / GDP', prof: 'corporate profits / GDP', cape: 'CAPE', ey: 'earnings yield', cpi: 'inflation', un: 'unemployment', baa: 'credit spread', top10: 'top-10 weight', n50: 'stocks for half the index' };
+function nowHoldings() {
+  var ys = SPX_HOLDINGS.years || [], y = ys[ys.length - 1];
+  var items = (y.holdings || []).filter(function (h) { return h.w > 0 && h.r != null; }).map(function (h) { return { w: h.w, r: h.r }; });
+  return breadth(items);
+}
+function todayRows() {
+  var N = D.now, b = breadths()[K0], nb = nowHoldings(), asOf = SPX_HOLDINGS.asOf, rows = N.rows.slice();
+  rows.push({ k: 'top10', group: 'Who carries the index', label: 'Top 10 stocks, share of the index', unit: '%', v: [b.top10w, null, nb.top10w], d: ['1999-12', null, asOf.slice(0, 7)], src: 'Study data (Dec 1999) · SPY holdings in the portal (float-adjusted weights)' });
+  rows.push({ k: 'n50', group: 'Who carries the index', label: 'Stocks that make up the first half of the index', unit: 'n', v: [b.n50, null, nb.n50], d: ['1999-12', null, asOf.slice(0, 7)], src: 'Study data · SPY holdings' });
+  return rows;
+}
+function todayDiff(r) { return r.v[2] == null || r.v[0] == null ? null : r.v[2] - r.v[0]; }
+function todayBig(r) { var dv = todayDiff(r); return dv != null && Math.abs(dv) >= TOL[r.k]; }
+function todayTable() {
+  var fm = function (r, v) { return v == null ? '—' : r.unit === 'n' ? String(Math.round(v)) : r.unit === '%' ? n1(v, r.k === 'ffr' || r.k === 'y10' ? 2 : 1) + '%' : r.unit === 'pp' ? sg(v, 2) + ' pp' : sg(v, 1); };
+  var dl = function (r, i) { var d = r.d[i]; if (!d) return ''; if (QROW[r.k]) return 'Q' + (Math.floor((+d.slice(5, 7) - 1) / 3) + 1) + ' ' + d.slice(0, 4); return ymLbl(d); };
+  var rows = todayRows();
+  var last = null, verdicts = { diff: [], close: [] };
+  var body = rows.map(function (r) {
+    var h = '', dv = todayDiff(r), big = todayBig(r);
+    if (r.group !== last) { last = r.group; h = '<tr class="mh-grp"><td colspan="6">' + r.group + '</td></tr>'; }
+    if (dv != null) (big ? verdicts.diff : verdicts.close).push(SHORT[r.k] + ' ' + fm(r, r.v[0]) + ' → ' + fm(r, r.v[2]));
+    var cell = function (i) { return '<td class="r' + (i === 2 ? ' mh-sepl' : '') + '">' + (r.v[i] == null ? '<span class="mh-mu">—</span>' : fm(r, r.v[i])) + (r.v[i] != null ? '<div class="mh-mu">' + dl(r, i) + '</div>' : '') + '</td>'; };
+    var dtxt = dv == null ? '—' : r.unit === '%' || r.unit === 'pp' ? (dv >= 0 ? '+' : '−') + Math.abs(dv).toFixed(r.k === 'ffr' || r.k === 'y10' || r.unit === 'pp' ? 2 : 1) + ' pp' : r.unit === 'n' ? (dv >= 0 ? '+' : '−') + Math.abs(dv).toFixed(0) : (dv >= 0 ? '+' : '−') + Math.abs(dv).toFixed(1);
+    return h + '<tr><td><b>' + esc(r.label) + '</b><div class="mh-mu">' + esc(r.src) + (r.note ? ' · ' + esc(r.note) : '') + '</div></td>' + cell(0) + cell(1) + cell(2) + '<td class="r">' + dtxt + '</td><td>' + (dv == null ? '' : '<span class="mh-st ' + (big ? 'mh-st-mid' : 'mh-st-no') + '" title="Different = moved by at least ' + TOL[r.k] + (r.unit === 'n' ? '' : ' ' + (r.unit === 'x' ? 'turns' : 'pp')) + '">' + (big ? 'Different' : 'Similar') + '</span>') + '</td></tr>';
+  }).join('');
+  return '<div class="mh-scroll"><table class="mh-tbl mh-fix"><colgroup><col><col style="width:110px"><col style="width:110px"><col style="width:110px"><col style="width:110px"><col style="width:96px"></colgroup><thead><tr><th>Measure</th><th class="r">Dec 1999</th><th class="r">Mar 2000<div class="mh-mu" style="text-transform:none;letter-spacing:0">S&amp;P peak</div></th><th class="r mh-sepl">Latest</th><th class="r" title="Latest minus Dec 1999">Change</th><th>Versus 1999</th></tr></thead><tbody>' + body + '</tbody></table></div>' +
+    '<div class="mh-read" style="margin-top:12px"><b>Different today:</b> ' + verdicts.diff.join('; ') + '.<br><b>Similar to 1999:</b> ' + verdicts.close.join('; ') + '.</div>' +
+    '<div class="mh-note">"Different" = moved by at least these margins (a fixed rule per measure, not a judgement of risk): ' + Object.keys(TOL).map(function (k) { return SHORT[k] + ' ' + TOL[k] + (k === 'cape' ? ' turns' : k === 'n50' ? ' names' : ' pp'); }).join(', ') + '. Rates, debt, inflation, unemployment: FRED (St. Louis Fed), FINRA for margin debt. Valuation and earnings yield: Robert Shiller\'s S&amp;P 500 data (index level: trailing earnings, not forward). Debt ratios use nominal GDP; the latest GDP and debt quarters are the latest published. Concentration today is from SPY holdings (float-adjusted weights, which count only shares available to trade), so it is not exactly comparable with the 1999 weights. Nothing here says what happens next, and the profits or debt of the individual leaders are not in this data.</div>';
 }
 
 // ─── the story ──────────────────────────────────────────────
@@ -373,50 +266,66 @@ function bottomLine() {
   var b = breadths(), cohort = D.secs.filter(function (s) { return s.q != null; });
   var q5m = med(cohort.filter(function (s) { return s.q === 5; }).map(function (s) { return s.r05; })), q1m = med(cohort.filter(function (s) { return s.q === 1; }).map(function (s) { return s.r05; }));
   var top = D.secs.filter(function (s) { return s.w[K0] != null; }).sort(function (a, c) { return c.w[K0] - a.w[K0]; }).slice(0, 10);
-  var nb = nowBreadth(); nb = nb[nb.length - 1];
-  return '<div class="mh-bl"><ol>' +
-    '<li>1998-99: the index rose ' + pc(b[3].cap, 0) + ' and ' + pc(b[4].cap, 0) + '. The typical stock: ' + pc(b[3].med, 0) + ' and ' + pc(b[4].med, 0) + '.</li>' +
-    '<li>2000: the index fell ' + dn(b[5].cap) + ' while the average stock rose ' + pc(b[5].ew, 0) + '. The leaders fell first.</li>' +
+  var nb = nowHoldings();
+  return '<div class="mh-bl"><div class="mh-blh">The short version</div><ol>' +
+    '<li>1998-99: the S&amp;P 500 rose ' + pc(D.index[3].pub, 0) + ' and ' + pc(D.index[4].pub, 0) + '. The median stock: ' + pc(b[3].med, 0) + ' and ' + pc(b[4].med, 0) + '.</li>' +
+    '<li>2000: the index fell ' + dn(D.index[5].pub) + ' while the average stock rose ' + pc(b[5].ew, 0) + '. The leaders fell first.</li>' +
     '<li>The 1995-99 winners returned ' + pc(q5m, 0) + ' (median) in 2000-05; the laggards ' + pc(q1m, 0) + '.</li>' +
     '<li>' + top.filter(function (s) { return s.st === 'SPX'; }).length + ' of the 10 largest of Dec 1999 are still in the S&amp;P 500. In 2000-05 they lost ' + dn(med(top.map(function (s) { return s.r05; }))) + ' (median).</li>' +
-    '<li>Today: top 10 = ' + n1(nb.top10w, 0) + '% of the index vs ' + n1(D.conc[K0].top10, 0) + '% in 1999.</li></ol></div>';
+    '<li>Today the top 10 are ' + n1(nb.top10w, 0) + '% of the index, against ' + n1(b[K0].top10w, 0) + '% in 1999.</li></ol></div>';
 }
 function howTo() {
   return '<details class="mh-more"><summary><b>How to read this page</b><span class="mh-mu"> data, terms, limits</span></summary><div class="mh-moreb"><ul class="mh-ul">' +
-    '<li><b>Data.</b> Every member of the S&amp;P 500 at the last trading day of each year, Dec 1994 to Dec 2004: its weight and its price return over the next year. A name that leaves is followed to its last close and not replaced.</li>' +
-    '<li><b>Index</b> = size-weighted, as the S&amp;P 500. <b>Average stock</b> = equal-weighted. <b>Typical stock</b> = the median member. <b>Weight</b> = share of the index. <b>Contribution</b> = weight × return.</li>' +
-    '<li><b>Limits.</b> Prices and weights only: no revenue, profit or valuation. It shows what happened, not why, and not what comes next.</li></ul></div></details>';
+    '<li><b>Data.</b> Every member of the S&amp;P 500 on the last trading day of each year, Dec 1994 to Dec 2004: its weight and its price return over the next year. A name that leaves the index is followed to its last close and not replaced. For the same names, Bloomberg prices from before they joined and after they left (where they kept trading) feed the scatter and the italic cells.</li>' +
+    '<li><b>Index</b> = size-weighted, as the S&amp;P 500. <b>Average stock</b> = equal-weighted. <b>Median stock</b> = the member in the middle. <b>Weight</b> = share of the index. <b>Contribution</b> = weight × return, in percentage points.</li>' +
+    '<li><b>Public context.</b> Rates, the yield curve, recessions, debt, inflation, unemployment and the index-level valuation come from public series (FRED, FINRA, R. Shiller). They are background: nothing in the member data (prices and weights) can test them.</li>' +
+    '<li><b>Limits.</b> Prices and weights only: no revenue, profit or valuation of the members. It shows what happened, not why, and not what comes next.</li></ul></div></details>';
 }
 function takeaway() {
-  var li = function (t) { return '<li>' + t + '</li>'; };
-  return '<div class="mh-two"><div class="mh-box"><div class="mh-ch">Supports</div><ul class="mh-ul">' +
-    li('A minority can carry an index for years before it reverses (1998-99: two years).') +
-    li('The leaders reversed first; the average stock held until 2001.') +
-    li('Owning the 1999 winners at 1999 prices lost money for years, even when the company survived.') +
-    li('Today\'s index return depends on a minority as much as 1998-99\'s.') +
-    '</ul></div><div class="mh-box"><div class="mh-ch">Does not support</div><ul class="mh-ul">' +
-    li('That today is 1999, or that a reversal is due.') +
-    li('Anything on profits, revenue or valuation.') +
-    li('What happened after 2005, or any forecast for a name.') +
-    '</ul></div></div>' +
-    '<details class="mh-more" style="margin-top:14px"><summary><b>Where today differs</b><span class="mh-mu"> analyst view, not tested by this data</span></summary><div class="mh-moreb">In 1999 many leaders were promises of revenue and profit that arrived late or never. Today several leaders report growing revenue and profit (AWS inside Amazon, Meta, Alphabet) and a record contracted backlog, so "no business behind the price" does not fit them. The risk is a different one: growth below what the price assumes, or efficiency in using AI (smaller models for routine work) that lowers demand for tokens, unless cheaper tokens bring more usage. This page holds no revenue or profit data and cannot test any of it.</div></details>';
+  var b = breadths(), cohort = D.secs.filter(function (s) { return s.q != null; }), nb = nowHoldings();
+  var q5m = med(cohort.filter(function (s) { return s.q === 5; }).map(function (s) { return s.r05; })), q1m = med(cohort.filter(function (s) { return s.q === 1; }).map(function (s) { return s.r05; }));
+  var top = D.secs.filter(function (s) { return s.w[K0] != null; }).sort(function (a, c) { return c.w[K0] - a.w[K0]; }).slice(0, 10), still = top.filter(function (s) { return s.st === 'SPX'; }).length;
+  var f0 = macroAt('ffr', '2000-12'), f1 = macroAt('ffr', '2002-12'), s0 = macroAt('sp', '2000-12'), s1 = macroAt('sp', '2002-12');
+  var pb = [], pa = [];
+  for (var k = 1; k < NK; k++) D.secs.forEach(function (s) { if (s.w[k] != null && s.w[k - 1] == null) { if (px(s, k - 1) != null) pb.push((px(s, k) / px(s, k - 1) - 1) * 100); if (s.r[k] != null) pa.push(s.r[k]); } });
+  var li = function (h, t) { return '<li><b>' + h + '</b> ' + t + '</li>'; };
+  var rowsT = todayRows(), tr = {}; rowsT.forEach(function (r) { tr[r.k] = r; });
+  var diffL = rowsT.filter(todayBig).map(function (r) { return SHORT[r.k]; }), sameL = rowsT.filter(function (r) { return todayDiff(r) != null && !todayBig(r); }).map(function (r) { return SHORT[r.k]; });
+  var lead = '<div class="mh-lead"><b>In one paragraph.</b> In 1998-99 the S&amp;P 500 rose ' + pc(D.index[3].pub, 0) + ' and ' + pc(D.index[4].pub, 0) + ' while the median stock rose ' + pc(b[3].med, 0) + ' and ' + pc(b[4].med, 0) + ', because ten stocks were ' + n1(b[4].top10w, 0) + '% of the index. Those leaders fell first, and a ' + n1(f0 - f1, 1) + '-point fall in the Fed funds rate did not stop the index losing ' + dn((sp(LOW) / sp(PEAK) - 1) * 100) + ' from peak to low. Today the top ten are ' + n1(tr.top10.v[2], 0) + '% of the index (1999: ' + n1(tr.top10.v[0], 0) + '%), and the index-level valuation (CAPE ' + n1(tr.cape.v[2], 1) + ') is close to 1999 (' + n1(tr.cape.v[0], 1) + '), but corporate profits (' + n1(tr.prof.v[2], 1) + '% of GDP against ' + n1(tr.prof.v[0], 1) + '%), government debt (' + n1(tr.fed.v[2], 0) + '% against ' + n1(tr.fed.v[0], 0) + '%) and borrowing to buy stocks (' + n1(tr.margin.v[2], 1) + '% of GDP against ' + n1(tr.margin.v[0], 1) + '%) are on a different footing.</div>';
+  return lead + '<div class="mh-two"><div class="mh-box"><div class="mh-ch">What the data shows</div><ul class="mh-ul">' +
+    li('The index hid the market.', 'In 1998-99 the S&amp;P 500 rose ' + pc(D.index[3].pub, 0) + ' and ' + pc(D.index[4].pub, 0) + ' while the median stock rose ' + pc(b[3].med, 0) + ' and ' + pc(b[4].med, 0) + '. A few very large names carried the headline: ten stocks were ' + n1(b[4].top10w, 0) + '% of the index at the start of 1999.') +
+    li('The leaders turned first.', 'The Nasdaq peaked ' + days('2000-03-10', PEAK) + ' days before the S&amp;P 500. In 2000 the index fell ' + dn(D.index[5].pub) + ' while the average stock rose ' + pc(b[5].ew, 0) + ': the damage was in the biggest names.') +
+    li('Last run\'s winners were the wrong thing to own.', 'The 1995-99 winners returned a median ' + pc(q5m, 0) + ' in 2000-05, the laggards ' + pc(q1m, 0) + '.') +
+    li('Size did not protect.', still + ' of the 10 largest names of Dec 1999 are still in the S&amp;P 500; in 2000-05 they lost a median ' + dn(med(top.map(function (s) { return s.r05; }))) + '.') +
+    li('Cheap money did not stop the fall.', 'Fed funds went from ' + n1(f0, 2) + '% to ' + n1(f1, 2) + '% (Dec 2000 to Dec 2002) while the index\'s monthly average fell ' + dn((s1 / s0 - 1) * 100) + '.') +
+    li('Index additions followed strength.', 'Names added to the index had a median ' + pc(med(pb), 0) + ' in the year before joining and ' + pc(med(pa), 0) + ' in the year after.') +
+    '</ul></div><div class="mh-box"><div class="mh-ch">What it does not show</div><ul class="mh-ul">' +
+    li('That today is 1999.', 'Different today: ' + diffL.join(', ') + '. Similar to 1999: ' + sameL.join(', ') + '. A list of differences, not a signal that a reversal is due.') +
+    li('Why a name rose or fell.', 'There are prices and weights, not revenue, profit or the debt of each company. The index-level valuation is a public series, not a test of the leaders.') +
+    li('What an event caused.', 'The events table gives context and a reading; the data cannot separate one cause from the others.') +
+    li('What happens after 2005.', 'Fates after 2005 (acquired, delisted, still in the index) are in the tables; there is no forecast.') +
+    '</ul></div></div>';
 }
 
 // ─── page ──────────────────────────────────────────────────
 function sec(title, sub, body) { return '<div class="sec"><div class="sechdr"><span class="sect">' + title + '</span><span class="secn">' + (sub || '') + '</span></div>' + body + '</div>'; }
 function render() {
+  var gaps = D.index.map(function (x) { return Math.abs(x.gap); });
   root.innerHTML =
-    '<div class="mh-intro"><div class="mh-h1">Market History · 1995-2005</div><div class="mh-mu">S&amp;P 500 members, weights and price returns, followed to today · Bloomberg, FRED, FINRA · docs/MARKET_HISTORY.md</div></div>' +
+    '<div class="mh-intro"><div class="mh-h1">Market History · 1995-2005</div><div class="mh-mu">S&amp;P 500 members, weights and price returns, followed to today · Bloomberg, FRED, FINRA, R. Shiller · docs/MARKET_HISTORY.md</div></div>' +
     bottomLine() + howTo() +
-    sec('The decade in four stages', 'what the market did, who carried it, what the backdrop was', stageCards() + '<div class="mh-two" style="margin-top:14px"><div id="mh-t1"></div><div id="mh-t2"></div></div>') +
-    sec('What happened when', 'each event, what it is, and what the S&P 500 did next', eventsTable()) +
-    sec('Who led, and what became of them', 'pick a year', '<div id="mh-fn"></div>') +
-    sec('Where they came from, where they went', 'best and worst of the run-up, and what came next', '<div id="mh-sc"></div>') +
+    sec('The decade in four stages', 'what the market did, who carried it, what the backdrop was', stageCards() + yearTable() + '<div class="mh-two" style="margin-top:18px"><div id="mh-t1"></div><div id="mh-t2"></div><div id="mh-t3"></div>' + chartReading() + '</div>' +
+      '<div class="mh-note">Shaded red: the S&amp;P 500 from its peak (24 Mar 2000) to its low (9 Oct 2002). Shaded grey: recession months (NBER dating, FRED USREC). The S&amp;P line is the monthly average of daily closes (R. Shiller\'s series; it agrees with daily closes to within ' + '0.3% in every month, so the peak close of 1,527 shows as a monthly average of 1,442). Rates and curve: FRED.</div>') +
+    sec('What happened when', 'each event, what it is, and what to take from it', eventsList()) +
+    sec('Sector return and contribution', 'every year side by side; click a year to open it below', '<div id="mh-sec"></div>') +
+    sec('Inside a year', 'what moved the index, who led, and how the returns were spread', '<div id="mh-yr"></div>') +
     sec('Where the index\'s weight sat', 'by sector, pick the dates', '<div id="mh-wc"></div>') +
-    sec('Names added to the index', 'did the new members do better?', newNames()) +
-    sec('Then and now', 'same measures, two eras', thenNow()) +
-    sec('Take away', '', takeaway());
-  mountTimeline(); renderFN(); renderSC(); renderWC();
+    sec('Did yesterday\'s winners stay winners?', 'every stock: what it did before a date, and after', '<div id="mh-sc"></div>') +
+    sec('Names added to the index', 'were they already rising when they joined?', addedNames()) +
+    sec('Where today differs', 'the same public measures, then and now', todayTable()) +
+    sec('Take away', '', takeaway()) +
+    '<div class="mh-note" style="margin-top:6px">Basket vs published: the members\' size-weighted return differs from the published index by up to ' + n1(Math.max.apply(null, gaps), 1) + ' pp in a year (names without a market value in the workbook, and names that joined or left during the year).</div>';
+  mountTimeline(); renderSector(); renderYear(); renderWC(); renderSC();
 }
 
 var wired = false, built = false;
@@ -427,11 +336,10 @@ function build() {
   root.addEventListener('click', function (e) {
     var t = e.target.closest('[data-act]'); if (!t) return;
     var a = t.getAttribute('data-act'), v = t.getAttribute('data-v');
-    if (a === 'fny') { st.fn.y = +v; renderFN(); }
-    else if (a === 'fns') { st.fn.side = v; renderFN(); }
-    else if (a === 'fnn') { st.fn.n = +v; renderFN(); }
-    else if (a === 'scs') { st.scm.side = v; renderSC(); }
+    if (attribAct(a, v, t)) return;
+    if (a === 'scs') { st.scm.side = v; renderSC(); }
     else if (a === 'scn') { st.scm.n = +v; renderSC(); }
+    else if (a === 'scp') { st.sc = { p: +v, d: PRESETS[+v].d.slice() }; renderSC(); }
   });
   root.addEventListener('change', function (e) {
     var id = e.target.id, ge = function (x) { return +document.getElementById(x).value; };
@@ -441,7 +349,7 @@ function build() {
     } else if (id === 'mh-sca' || id === 'mh-scb' || id === 'mh-scc') {
       var x = ge('mh-sca'), y = ge('mh-scb'), z = ge('mh-scc');
       if (id === 'mh-sca' && x >= y) y = x + 1; if (id === 'mh-scb') { if (y <= x) x = y - 1; if (y >= z) z = y + 1; } if (id === 'mh-scc' && z <= y) y = z - 1;
-      if (x >= y) x = y - 1; if (y >= z) z = y + 1; st.sc = [x, y, z]; renderSC();
+      if (x >= y) x = y - 1; if (y >= z) z = y + 1; st.sc = { p: -1, d: [x, y, z] }; renderSC();
     }
   });
 }

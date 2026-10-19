@@ -24,7 +24,8 @@ function txt(attrs, s){ var t = se('text', Object.assign({ 'font-family': 'Inter
 
 // rows: [{ name, w0, w1 }] in display order · hi: axis max (%) · closeLbl: 'Close' | 'Latest'
 // period: label of the year shown (tooltips) · note: html under the legend (optional)
-export function dumbbell(box, rows, hi, closeLbl, period, note){
+// openLbl (optional): names the opening point when it is not the start of one year, e.g. 'Dec 1999'
+export function dumbbell(box, rows, hi, closeLbl, period, note, openLbl){
   var VW = 900, rowH = 30, P = { t: 56, r: 190, b: 26, l: 200 };
   var VH = P.t + rows.length * rowH + P.b;
   function X(v){ return P.l + v / hi * (VW - P.l - P.r); }
@@ -34,7 +35,7 @@ export function dumbbell(box, rows, hi, closeLbl, period, note){
     svg.appendChild(se('line', { x1: X(t), x2: X(t), y1: P.t - 10, y2: VH - P.b, stroke: '#E5E8EC', 'stroke-width': 1 }));
     svg.appendChild(txt({ x: X(t), y: P.t - 18, 'text-anchor': 'middle', 'font-size': 10, fill: '#8A93A0' }, t + '%'));
   }
-  svg.appendChild(txt({ x: VW - P.r + 12, y: 12, 'font-size': 10, fill: '#8A93A0', 'font-weight': '600' }, 'Weight: open → ' + closeLbl.toLowerCase()));
+  svg.appendChild(txt({ x: VW - P.r + 12, y: 12, 'font-size': 10, fill: '#8A93A0', 'font-weight': '600' }, openLbl ? openLbl + ' → ' + closeLbl : 'Weight: open → ' + closeLbl.toLowerCase()));
   svg.appendChild(txt({ x: VW - 6, y: 12, 'text-anchor': 'end', 'font-size': 10, fill: '#8A93A0', 'font-weight': '600' }, 'Change'));
   rows.forEach(function(r, i){
     var y = P.t + i * rowH + rowH / 2, diff = r.w1 - r.w0, col = diff >= 0 ? '#177A4E' : '#9B2A20';
@@ -46,13 +47,13 @@ export function dumbbell(box, rows, hi, closeLbl, period, note){
     g.appendChild(txt({ x: VW - P.r + 12, y: y + 4, 'font-size': 11, fill: '#2B3B4E', 'font-variant-numeric': 'tabular-nums' }, r.w0.toFixed(1) + '% → ' + r.w1.toFixed(1) + '%'));
     g.appendChild(txt({ x: VW - 6, y: y + 4, 'text-anchor': 'end', 'font-size': 11, fill: col, 'font-weight': '600', 'font-variant-numeric': 'tabular-nums' }, (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' pp'));
     bindTip(g, '<b style="font-size:13px">' + r.name + '</b><span style="display:block;color:#52514e;font-size:12px;margin-top:3px">' +
-      'Start of ' + period + ': ' + r.w0.toFixed(2) + '%<br>' + closeLbl + ': ' + r.w1.toFixed(2) + '%<br>Change: ' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' pp</span>');
+      (openLbl ? openLbl : 'Start of ' + period) + ': ' + r.w0.toFixed(2) + '%<br>' + closeLbl + ': ' + r.w1.toFixed(2) + '%<br>Change: ' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' pp</span>');
     svg.appendChild(g);
   });
   var leg = document.createElement('div');
   leg.style.cssText = 'display:flex;gap:16px;font-size:11px;color:var(--mu);margin-top:8px;flex-wrap:wrap';
   leg.innerHTML =
-    '<span><span style="display:inline-block;width:11px;height:11px;border-radius:50%;border:2px solid #177A4E;box-sizing:border-box;margin-right:5px;vertical-align:-1px"></span>Open weight</span>' +
+    '<span><span style="display:inline-block;width:11px;height:11px;border-radius:50%;border:2px solid #177A4E;box-sizing:border-box;margin-right:5px;vertical-align:-1px"></span>' + (openLbl || 'Open') + ' weight</span>' +
     '<span><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#177A4E;margin-right:5px;vertical-align:-1px"></span>' + closeLbl + ' weight</span>' +
     (note ? '<div style="flex-basis:100%;line-height:1.5">' + note + '</div>' : '');
   box.innerHTML = ''; box.appendChild(svg); box.appendChild(leg);
@@ -62,11 +63,13 @@ export function dumbbell(box, rows, hi, closeLbl, period, note){
 // Clicking a bar lists its names (best first) under the chart; clicking it again closes it.
 var BINS = [[-1e9, -20], [-20, -10], [-10, -5], [-5, 0], [0, 5], [5, 10], [10, 20], [20, 1e9]];
 var LBLS = ['< −20%', '−20 to −10%', '−10 to −5%', '−5 to 0%', '0 to 5%', '5 to 10%', '10 to 20%', '> 20%'];
-export function distribution(box, items, state){
-  var counts = BINS.map(function(){ return []; });
-  items.forEach(function(d){ for (var i = 0; i < BINS.length; i++) if (d.ret >= BINS[i][0] && d.ret < BINS[i][1]){ counts[i].push(d); break; } });
+// opt (optional): { bins: [[lo, hi, label], …] in ascending order, split: how many bins are losses } for returns spread wider than one year of an index (Market History)
+export function distribution(box, items, state, opt){
+  var bins = opt ? opt.bins.map(function(b){ return [b[0], b[1]]; }) : BINS, lbls = opt ? opt.bins.map(function(b){ return b[2]; }) : LBLS, split = opt ? opt.split : 4;
+  var counts = bins.map(function(){ return []; });
+  items.forEach(function(d){ for (var i = 0; i < bins.length; i++) if (d.ret >= bins[i][0] && d.ret < bins[i][1]){ counts[i].push(d); break; } });
   var maxN = Math.max.apply(null, counts.map(function(c){ return c.length; })) || 1;
-  var VW = 860, VH = 230, P = { t: 20, r: 20, b: 62, l: 44 }, slot = (VW - P.l - P.r) / BINS.length, bw = slot - 6;
+  var VW = 860, VH = 230, P = { t: 20, r: 20, b: 62, l: 44 }, slot = (VW - P.l - P.r) / bins.length, bw = slot - 6;
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
   // whole-number ticks (1, 2, 5, 10, 20, 50 … apart), the axis topped at the next tick
   var stp = [1, 2, 5, 10, 20, 25, 50, 100, 200].filter(function(v){ return maxN / v <= 5; })[0] || 500;
@@ -79,13 +82,13 @@ export function distribution(box, items, state){
   counts.forEach(function(c, i){
     var h = Math.round(c.length / maxN * (VH - P.t - P.b)), x = P.l + i * slot + 3, y = VH - P.b - h;
     var sel = state.bin === i;
-    svg.appendChild(se('rect', { x: x, y: y, width: bw, height: h, rx: 3, fill: i < 4 ? '#9B2A20' : '#177A4E', opacity: sel ? '1' : '.72' }));
+    svg.appendChild(se('rect', { x: x, y: y, width: bw, height: h, rx: 3, fill: i < split ? '#9B2A20' : '#177A4E', opacity: sel ? '1' : '.72' }));
     if (c.length) svg.appendChild(txt({ x: x + bw / 2, y: y - 5, 'text-anchor': 'middle', 'font-size': 11, fill: '#2B3B4E', 'font-weight': '600' }, String(c.length)));
-    var xl = txt({ x: x + bw / 2, y: VH - P.b + 14, 'text-anchor': 'end', 'font-size': 9.5, fill: sel ? '#1E2733' : '#8A93A0' }, LBLS[i]);
+    var xl = txt({ x: x + bw / 2, y: VH - P.b + 14, 'text-anchor': 'end', 'font-size': 9.5, fill: sel ? '#1E2733' : '#8A93A0' }, lbls[i]);
     xl.setAttribute('transform', 'rotate(-30,' + (x + bw / 2) + ',' + (VH - P.b + 14) + ')'); svg.appendChild(xl);
     var hit = se('rect', { x: x, y: P.t, width: bw, height: VH - P.b - P.t, fill: 'transparent', style: 'cursor:pointer' });
-    hit.addEventListener('click', function(){ state.bin = state.bin === i ? null : i; distribution(box, items, state); });
-    bindTip(hit, '<b>' + LBLS[i] + '</b> · ' + c.length + ' compan' + (c.length === 1 ? 'y' : 'ies') + '<br><span style="color:#8A93A0">click to list them</span>');
+    hit.addEventListener('click', function(){ state.bin = state.bin === i ? null : i; distribution(box, items, state, opt); });
+    bindTip(hit, '<b>' + lbls[i] + '</b> · ' + c.length + ' compan' + (c.length === 1 ? 'y' : 'ies') + '<br><span style="color:#8A93A0">click to list them</span>');
     svg.appendChild(hit);
   });
   var up = items.filter(function(d){ return d.ret >= 0; }).length;
@@ -93,7 +96,7 @@ export function distribution(box, items, state){
   var list = '';
   if (state.bin != null){
     var c = counts[state.bin].slice().sort(function(a, b){ return b.ret - a.ret; });
-    list = '<div style="margin-top:10px;border-top:1px solid var(--bdr);padding-top:8px"><div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px">' + LBLS[state.bin] + ' · ' + c.length + '</div>' +
+    list = '<div style="margin-top:10px;border-top:1px solid var(--bdr);padding-top:8px"><div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px">' + lbls[state.bin] + ' · ' + c.length + '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 16px;font-size:11.5px;font-variant-numeric:tabular-nums">' +
       c.map(function(d){ return '<span title="' + (d.co || '') + '"><b style="color:var(--navy)">' + d.name + '</b> <span style="color:var(--mu)">' + (d.co || '').slice(0, 22) + '</span> <span style="color:' + (d.ret >= 0 ? 'var(--pos)' : 'var(--neg)') + ';font-weight:600;float:right">' + (d.ret >= 0 ? '+' : '') + d.ret.toFixed(1) + '%</span></span>'; }).join('') +
       '</div></div>';

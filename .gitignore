@@ -60,3 +60,6 @@ js/_legacy-cc.js
 
 # NDX extractor upload key (matches the NDX_INGEST_KEY Supabase secret)
 scripts/ndx/.ingest-key
+
+# Dot-com study: raw Shiller workbook (1.6 MB) is re-downloadable with scripts/market-history/fetch_macro.py
+scripts/market-history/macro/shiller_ie_data.xls

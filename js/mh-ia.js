@@ -283,13 +283,17 @@ function renderTop() {
 }
 
 // ═══ Winners vs Losers ══════════════════════════════════════════════
-var WL_BINS = { split: 3, bins: [[-1e9, -50, '< −50%'], [-50, -25, '−50 to −25%'], [-25, 0, '−25 to 0%'], [0, 25, '0 to +25%'], [25, 50, '+25 to +50%'], [50, 100, '+50 to +100%'], [100, 1e9, '> +100%']] };
+var WL_BINS = { split: 6, bins: [[-1e9, -75, '< −75%'], [-75, -50, '−75 to −50%'], [-50, -40, '−50 to −40%'], [-40, -30, '−40 to −30%'], [-30, -20, '−30 to −20%'], [-20, -10, '−20 to −10%'], [-10, 0, '−10 to 0%'], [0, 10, '0 to 10%'], [10, 20, '10 to 20%'], [20, 30, '20 to 30%'], [30, 40, '30 to 40%'], [40, 50, '40 to 50%'], [50, 75, '50 to 75%'], [75, 100, '75 to 100%'], [100, 150, '100 to 150%'], [150, 200, '150 to 200%'], [200, 1e9, '> 200%']] };   // 10-point bins through the middle, then wider ones: the 1990s tails need room
 function renderWL() {
   var host = el('mh-ia-wl'); if (!host) return;
   var W = S.wl, k = YS.indexOf(W.year);
   host.innerHTML = '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">' + YS.map(function (y) { return tab('iaWlYear', y === W.year, y, y); }).join('') + '</div><div id="mh-ia-wl-box"></div>' +
-    '<div style="font-size:11px;color:var(--mu);margin-top:6px">Members of the S&amp;P 500 at the start of ' + W.year + ', price return over the year; a name that stopped trading is carried at its last close. The bins are wider than in Index Analysis because 1990s returns were more spread out.</div>' + wlTable(k);
+    '<div style="font-size:11.5px;color:var(--text);margin-top:6px">' + tailTxt(k) + '</div><div style="font-size:11px;color:var(--mu);margin-top:4px">S&amp;P 500 members at the start of ' + W.year + ', price return over the year (a name that stopped trading is carried at its last close). Click a bar to list its names.</div>' + wlTable(k);
   distribution(el('mh-ia-wl-box'), MEM[k].map(function (s) { return { name: tk(s), co: s.n, ret: s.r[k] }; }), W, WL_BINS);
+}
+function tailTxt(k) {
+  var r = MEM[k].map(function (s) { return s.r[k]; }), n = r.length, lo = r.filter(function (v) { return v < -50; }).length, hi = r.filter(function (v) { return v > 50; }).length, mid = r.filter(function (v) { return v >= -10 && v < 10; }).length;
+  return '<b>' + n1((lo + hi) / n * 100, 0) + '%</b> of the ' + n + ' members moved more than 50% either way (' + hi + ' up, ' + lo + ' down); only <b>' + n1(mid / n * 100, 0) + '%</b> finished within ±10%.';
 }
 function wlTable(k) {
   var all = MEM[k], base = D.index[k].basket;

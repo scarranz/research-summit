@@ -13,7 +13,7 @@ export var K0 = D.bases.indexOf('1999-12-31');            // the cohort snapshot
 export var NK = D.bases.length;
 
 // Page state (the Index Analysis sections keep their own in mh-ia.js). fn = follow-the-names list; sc = scatter dates [start, split, end]; scm = scatter highlight; wc = weight dates
-export var st = { fn: { y: 1999, side: 'top', n: 10, cn: 0, by: 'con', names: '', mode: 'ret' }, sc: { d: [0, K0, 8] }, scm: { side: 'both', n: 20 }, wc: [K0 - 1, K0], wcx: false, wcy: K0 - 1 };
+export var st = { fn: { y: 1999, side: 'top', n: 10, cn: 0, by: 'con', names: '', mode: 'ret' }, sc: { cut: K0, before: 5, after: 3 }, scm: { side: 'both', n: 20 }, wc: [K0 - 1, K0], wcx: false, wcy: K0 - 1 };
 
 // ─── helpers ───────────────────────────────────────────────
 export function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }

@@ -3,17 +3,30 @@
 import { D, NK, st, SEC_COL, esc, n1, sg, pc, cls, med, secBtn, nameCell, heat, breadths, px, exitYear, fate } from './mh-util.js';
 
 function members(k) { return D.secs.filter(function (s) { return s.w[k] != null && s.r[k] != null; }); }
+function nN() { return st.fn.cn > 0 ? st.fn.cn : st.fn.n; }
+// the names typed in the box: a ticker, or part of a company name; one match per entry (the biggest weight at any year-end)
+function typed() { return String(st.fn.names || '').split(/[,;\n]+/).map(function (x) { return x.trim(); }).filter(Boolean); }
+function findName(q) {
+  var u = q.toUpperCase(), l = q.toLowerCase(), big = function (s) { return Math.max.apply(null, s.w.map(function (v) { return v || 0; })); };
+  var by = function (fn) { return D.secs.filter(fn).sort(function (a, b) { return big(b) - big(a); })[0]; };
+  return by(function (s) { return (s.t || '').toUpperCase() === u; }) || by(function (s) { return s.n.toLowerCase().indexOf(l) === 0; }) || by(function (s) { return s.n.toLowerCase().indexOf(l) >= 0; });
+}
 function fnList(k) {
-  var pool = members(k).map(function (s) { return { s: s, c: s.w[k] * s.r[k] / 100 }; });
-  pool.sort(function (a, b) { return b.c - a.c; });
-  return st.fn.side === 'top' ? pool.slice(0, st.fn.n) : pool.slice(-st.fn.n).reverse();
+  var cn = function (s) { return s.w[k] != null && s.r[k] != null ? s.w[k] * s.r[k] / 100 : null; };
+  if (typed().length) {
+    var seen = {}; return typed().map(findName).filter(function (s) { if (!s || seen[s.f]) return false; seen[s.f] = 1; return true; }).map(function (s) { return { s: s, c: cn(s) }; });
+  }
+  var key = st.fn.by === 'ret' ? function (d) { return d.s.r[k]; } : function (d) { return d.c; };
+  var pool = members(k).map(function (s) { return { s: s, c: cn(s) }; });
+  pool.sort(function (a, b) { return key(b) - key(a); });
+  return st.fn.side === 'top' ? pool.slice(0, nN()) : pool.slice(-nN()).reverse();
 }
 export function renderFollow() {
   var box = document.getElementById('mh-follow'); if (!box) return;
-  var f = st.fn, k = D.years.indexOf(f.y), yr = f.y, list = fnList(k), base = D.index[k].basket, b = breadths(), cum = 0;
+  var f = st.fn, k = D.years.indexOf(f.y), yr = f.y, list = fnList(k), base = D.index[k].basket, b = breadths(), cum = 0, mine = typed().length > 0;
   var rows = list.map(function (d, i) {
-    var s = d.s, lastI = -1; s.r.forEach(function (v, j) { if (v != null) lastI = j; }); cum += d.c;
-    return '<tr><td class="mh-mu">' + (i + 1) + '</td><td class="mh-ell">' + nameCell(s) + '</td><td class="mh-ell"><i class="mh-dot" style="background:' + SEC_COL[s.s] + '"></i>' + s.s + '</td><td class="r">' + n1(s.w[k], 1) + '%</td><td class="r ' + cls(d.c) + '">' + sg(d.c, 2) + '</td><td class="r mh-mu">' + n1(cum / base * 100, 0) + '%</td>' +
+    var s = d.s, lastI = -1; s.r.forEach(function (v, j) { if (v != null) lastI = j; }); if (d.c != null) cum += d.c;
+    return '<tr><td class="mh-mu">' + (i + 1) + '</td><td class="mh-ell">' + nameCell(s) + '</td><td class="mh-ell"><i class="mh-dot" style="background:' + SEC_COL[s.s] + '"></i>' + s.s + '</td><td class="r">' + (s.w[k] != null ? n1(s.w[k], 1) + '%' : '—') + '</td><td class="r ' + cls(d.c) + '">' + sg(d.c, 2) + '</td><td class="r mh-mu">' + (d.c != null ? n1(cum / base * 100, 0) + '%' : '—') + '</td>' +
       D.years.map(function (y, j) {
         var v = s.r[j], sel = j === k ? ' mh-selcol' : '', ct = f.mode === 'con', e = (v == null && px(s, j) != null && px(s, j + 1) != null) ? (px(s, j + 1) / px(s, j) - 1) * 100 : null;
         if (ct && v != null && s.w[j] != null) { var cv = s.w[j] * v / 100; return '<td class="r mh-cell' + sel + '" style="' + heat(cv, 3) + '" title="' + esc(s.n) + ' ' + y + ': ' + sg(cv, 2) + ' pp of the index return (weight ' + n1(s.w[j], 2) + '% x ' + pc(v, 1) + ')">' + sg(cv, 1) + '</td>'; }
@@ -29,12 +42,14 @@ export function renderFollow() {
   var cnt = function (fn) { return list.filter(function (d) { return fn(d.s); }).length; }, gone = cnt(function (s) { var y = exitYear(s); return y && y <= 2005; });
   var tbl = '<div class="mh-scroll"><table class="mh-tbl mh-fix mh-strip"><colgroup><col style="width:28px"><col style="width:176px"><col style="width:128px"><col style="width:54px"><col style="width:58px"><col style="width:58px">' + D.years.map(function () { return '<col style="width:50px">'; }).join('') + '<col style="width:140px"></colgroup>' +
     '<thead><tr><th>#</th><th>Name</th><th>Sector</th><th class="r" title="Weight at the start of the year">Weight</th><th class="r" title="Percentage points added to the index return">Added</th><th class="r" title="Running total of the names above, as a share of the index return">Share</th>' + D.years.map(function (y, j) { return '<th class="r' + (j === k ? ' mh-selcol' : '') + '">' + y + '</th>'; }).join('') + '<th>Today</th></tr></thead><tbody>' + rows +
-    (f.mode === 'con' ? ref('Sum of these ' + f.n + ' (pp)', D.years.map(function (y, j) { return sum(list.map(function (d) { return d.s.w[j] != null && d.s.r[j] != null ? d.s.w[j] * d.s.r[j] / 100 : null; })); }), 1) + ref('S&amp;P 500, published (pp)', D.index.map(function (x) { return x.pub; }), 1)
-      : ref('Median of these ' + f.n, D.years.map(function (y, j) { return med(list.map(function (d) { return d.s.r[j]; })); })) + ref('Median stock (every member)', b.map(function (x) { return x.med; })) + ref('S&amp;P 500, published', D.index.map(function (x) { return x.pub; }))) + '</tbody></table></div>';
+    (f.mode === 'con' ? ref('Sum of these ' + list.length + ' (pp)', D.years.map(function (y, j) { return sum(list.map(function (d) { return d.s.w[j] != null && d.s.r[j] != null ? d.s.w[j] * d.s.r[j] / 100 : null; })); }), 1) + ref('S&amp;P 500, published (pp)', D.index.map(function (x) { return x.pub; }), 1)
+      : ref('Median of these ' + list.length, D.years.map(function (y, j) { return med(list.map(function (d) { return d.s.r[j]; })); })) + ref('Median stock (every member)', b.map(function (x) { return x.med; })) + ref('S&amp;P 500, published', D.index.map(function (x) { return x.pub; }))) + '</tbody></table></div>';
   box.innerHTML = '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">' + D.years.map(function (y) { return '<button class="ndx-tab-btn' + (y === yr ? ' active' : '') + '" data-act="fny" data-v="' + y + '">' + y + '</button>'; }).join('') + '</div>' +
-    '<div class="mh-row"><label class="mh-lbl">Show</label>' + secBtn('fns', [['top', 'Best'], ['bot', 'Worst']], f.side) + '<label class="mh-lbl" style="margin-left:10px">How many</label>' + secBtn('fnn', [[5, '5'], [10, '10'], [20, '20']], f.n) + '<label class="mh-lbl" style="margin-left:10px">Each year show</label>' + secBtn('fnm', [['ret', 'Return'], ['con', 'Contribution']], f.mode) + '</div>' +
-    '<div class="mh-read">The ' + f.n + (f.side === 'top' ? ' biggest contributors' : ' biggest detractors') + ' of ' + yr + ' added ' + n1(cum, 1) + ' pp of the index\'s ' + n1(base, 1) + '%. Today: ' + cnt(function (s) { return s.st === 'SPX'; }) + ' are in the S&amp;P 500, ' + cnt(function (s) { return s.st === 'ACQ' || s.st === 'OTH'; }) + ' were acquired or delisted, ' + cnt(function (s) { return s.st === 'BK'; }) + ' went bankrupt, ' + cnt(function (s) { return s.st === 'LIVE'; }) + ' are listed outside the index. ' + (gone ? 'Only ' + gone + ' had left the index by Dec 2005.' : 'None had left the index by Dec 2005.') + '</div>' + tbl +
-    '<div class="mh-note">Ranked by weight × return in ' + yr + ' (framed column). Every column is that year\'s ' + (f.mode === 'con' ? 'contribution to the index return, in percentage points (weight at the start of the year × price return; a dash = not a member for the whole year)' : 'price return') + '. Italic = the name was not in the S&amp;P 500 that year (before it joined, or after it left and kept trading): price return from Bloomberg. "out" = left the index and no price after.</div>' + exitTiming();
+    '<div class="mh-row" style="' + (mine ? 'opacity:.4;pointer-events:none' : '') + '"><label class="mh-lbl">Show</label>' + secBtn('fns', [['top', 'Best'], ['bot', 'Worst']], f.side) + '<label class="mh-lbl" style="margin-left:10px">Pick by</label>' + secBtn('fnb', [['con', 'Contribution'], ['ret', 'Return']], f.by) +
+    '<label class="mh-lbl" style="margin-left:10px">How many</label>' + secBtn('fnn', [[5, '5'], [10, '10'], [20, '20']], f.cn > 0 ? 0 : f.n) + '<input type="number" min="1" max="200" placeholder="Any" value="' + (f.cn > 0 ? f.cn : '') + '" class="mh-sel" style="width:64px" data-act="fncn"></div>' +
+    '<div class="mh-row"><label class="mh-lbl">Show each year as</label>' + secBtn('fnm', [['ret', 'Return'], ['con', 'Contribution']], f.mode) + '<label class="mh-lbl" style="margin-left:10px">Or follow names you choose</label><input type="text" class="mh-sel" style="width:300px" placeholder="tickers or names: MSFT, Enron, WorldCom" value="' + esc(f.names || '') + '" data-act="fnt">' + (mine ? '<button class="ndx-tab-btn" data-act="fnx" data-v="1">Clear</button>' : '') + '</div>' +
+    '<div class="mh-read">' + (mine ? 'The ' + list.length + ' names you chose' + (typed().length > list.length ? ' (' + (typed().length - list.length) + ' typed but not found: only names that were S&amp;P 500 members at a year-end 1994-2004 are in the data)' : '') + ': in ' + yr + ' they added ' + n1(cum, 1) + ' pp of the index\'s ' + n1(base, 1) + '%. ' : 'The ' + list.length + (f.side === 'top' ? ' best ' : ' worst ') + 'S&amp;P 500 members of ' + yr + ' by ' + (f.by === 'ret' ? 'price return' : 'contribution') + ' added ' + n1(cum, 1) + ' pp of the index\'s ' + n1(base, 1) + '%. ') + 'Today: ' + cnt(function (s) { return s.st === 'SPX'; }) + ' are in the S&amp;P 500, ' + cnt(function (s) { return s.st === 'ACQ' || s.st === 'OTH'; }) + ' were acquired or delisted, ' + cnt(function (s) { return s.st === 'BK'; }) + ' went bankrupt, ' + cnt(function (s) { return s.st === 'LIVE'; }) + ' are listed outside the index. ' + (gone ? 'Only ' + gone + ' had left the index by Dec 2005.' : 'None had left the index by Dec 2005.') + '</div>' + tbl +
+    '<div class="mh-note">' + (mine ? 'Your names, in the order typed' : 'Ranked by ' + (f.by === 'ret' ? 'price return' : 'weight × return') + ' in ' + yr) + ' (framed column). Every column is that year\'s ' + (f.mode === 'con' ? 'contribution to the index return, in percentage points (weight at the start of the year × price return; a dash = not a member for the whole year)' : 'price return') + '. Italic = the name was not in the S&amp;P 500 that year (before it joined, or after it left and kept trading): price return from Bloomberg. "out" = left the index and no price after.</div>' + exitTiming();
 }
 function exitTiming() {
   var rows = ['ACQ', 'BK', 'OTH'].map(function (c) {
@@ -45,7 +60,11 @@ function exitTiming() {
 export function followAct(a, v) {
   if (a === 'fny') { st.fn.y = +v; renderFollow(); return true; }
   if (a === 'fns') { st.fn.side = v; renderFollow(); return true; }
-  if (a === 'fnn') { st.fn.n = +v; renderFollow(); return true; }
+  if (a === 'fnn') { st.fn.n = +v; st.fn.cn = 0; renderFollow(); return true; }
+  if (a === 'fnb') { st.fn.by = v; renderFollow(); return true; }
+  if (a === 'fncn') { st.fn.cn = +v > 0 ? Math.floor(+v) : 0; renderFollow(); return true; }
+  if (a === 'fnt') { st.fn.names = String(v || ''); renderFollow(); return true; }
+  if (a === 'fnx') { st.fn.names = ''; renderFollow(); return true; }
   if (a === 'fnm') { st.fn.mode = v; renderFollow(); return true; }
   return false;
 }

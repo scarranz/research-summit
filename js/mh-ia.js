@@ -30,10 +30,10 @@ function elig(s, k) { return s.w[k] != null && s.r[k] != null && !(s.x && +s.x.s
 function igList() { return Object.keys(GROUPS).sort(function (a, b) { return (GROUPS[a] === GROUPS[b] ? 0 : SECS.indexOf(GROUPS[a]) - SECS.indexOf(GROUPS[b])) || (a < b ? -1 : 1); }); }
 
 var S = {
-  sec: { level: 'sec', one: false, show: 'ret', rel: false, years: {}, secs: {}, igs: {} },
+  sec: { level: 'sec', one: false, show: 'ret', rel: false, cum: false, years: {}, secs: {}, igs: {} },
   det: { year: 1999, excl: {}, open: {} },
   beat: { f: {}, excl: {}, sec: {}, ig: {} },
-  top: { years: { 1999: true }, n: 10, custom: 0, side: 'pos', info: 'sector', ret: true },
+  top: { years: { 1999: true }, n: 10, custom: 0, side: 'pos', info: 'sector', ret: true, by: 'con' },
   wl: { year: 1999, bin: null }
 };
 YS.forEach(function (y) { S.sec.years[y] = y >= 1998 && y <= 2002; });   // opens on the narrow peak and the break; "All years" is one click
@@ -49,10 +49,23 @@ function tab(act, on, v, label, extra) { return '<button class="ndx-tab-btn' + (
 // ═══ Sector Return / Contribution ═══════════════════════════════════
 function secNames() { return S.sec.level === 'ig' ? igList() : SECS; }
 function secPicked() { return S.sec.level === 'ig' ? S.sec.igs : S.sec.secs; }
-function secVal(n, y) {
+function secVal(n, y, abs) {
   var k = YS.indexOf(+y), a = agg(k, S.sec.level)[n]; if (!a) return null;
   if (S.sec.show === 'attr') return a.c;
-  return S.sec.rel ? (a.r == null ? null : a.r - D.index[k].pub) : a.r;
+  return S.sec.rel && !abs ? (a.r == null ? null : a.r - D.index[k].pub) : a.r;
+}
+// Cumulative: the picked years linked in order (Returns: compounded; Contribution: the yearly points added up)
+function cumArr(vals, chain) {
+  var acc = chain ? 1 : 0;
+  return vals.map(function (v) { if (v == null) return null; if (chain) { acc *= 1 + v / 100; return (acc - 1) * 100; } acc += v; return acc; });
+}
+function series(n, ys) {
+  var A = S.sec, attr = A.show === 'attr', base = ys.map(function (y) { return secVal(n, y); });
+  if (!A.cum) return base;
+  if (attr) return cumArr(base, false);
+  if (!A.rel) return cumArr(base, true);
+  var sc = cumArr(ys.map(function (y) { return secVal(n, y, true); }), true), ic = cumArr(ys.map(function (y) { return D.index[YS.indexOf(y)].pub; }), true);
+  return sc.map(function (v, i) { return v == null ? null : v - ic[i]; });
 }
 function onYears() { return YS.filter(function (y) { return S.sec.years[y]; }); }
 function secBar(lbl, v, maxV, hl) {
@@ -72,24 +85,28 @@ function renderSector() {
   var chips = '<span class="sb-secrow-lbl">' + (ig ? 'Industry groups:' : 'Sectors:') + '</span>' + names.map(function (n) { return '<span class="sb-secchip' + (P[n] ? ' active' : '') + '" data-act="iaSecPick" data-v="' + esc(n) + '">' + esc(n) + '</span>'; }).join('') +
     (A.one ? '' : '<span style="margin-left:auto;display:inline-flex;gap:6px"><button class="sb-secchip-all" style="margin-left:0" data-act="iaSecAll" data-v="1">All</button><button class="sb-secchip-all" style="margin-left:0" data-act="iaSecAll" data-v="0">None</button></span>');
   var dates = '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="sb-secrow-lbl">Years</span>' + YS.map(function (y) { return '<span class="sb-secchip' + (A.years[y] ? ' active' : '') + '" data-act="iaSecYear" data-v="' + y + '">' + y + '</span>'; }).join('') +
-    '<span style="margin-left:auto;display:inline-flex;gap:6px"><button class="sb-secchip-all" style="margin-left:0" data-act="iaSecYears" data-v="1">All years</button></span></div>';
+    '<span style="margin-left:auto;display:inline-flex;gap:10px;align-items:center">' + seg('iaSecCum', [['year', 'Each year'], ['cum', 'Cumulative']], A.cum ? 'cum' : 'year') + '<button class="sb-secchip-all" style="margin-left:0" data-act="iaSecYears" data-v="1">All years</button></span></div>';
   var rows = names.filter(function (n) { return P[n]; }), maxV = 0;
-  rows.forEach(function (n) { ys.forEach(function (y) { var v = secVal(n, y); if (v != null && Math.abs(v) > maxV) maxV = Math.abs(v); }); });
+  var SER = {}; rows.forEach(function (n) { SER[n] = series(n, ys); SER[n].forEach(function (v) { if (v != null && Math.abs(v) > maxV) maxV = Math.abs(v); }); });
+  var pubS = ys.map(function (y) { return D.index[YS.indexOf(y)].pub; }); if (A.cum) pubS = cumArr(pubS, !attr);
+  var gapS = ys.map(function (y) { var k = YS.indexOf(y); return D.index[k].pub - D.index[k].basket; }); if (A.cum) gapS = cumArr(gapS, false);
+  if (attr) pubS.concat(gapS).forEach(function (v) { if (v != null && Math.abs(v) > maxV) maxV = Math.abs(v); });
   maxV = Math.max(maxV, attr ? 5 : A.rel ? 15 : 30);
   var NM = 'width:230px;min-width:230px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis', h = '';
   function row(html, vals, style, title) {
     h += '<div class="sbr"><span class="sbn" style="' + NM + (style ? ';' + style : '') + '" title="' + esc(title || '') + '">' + html + '</span><div class="sbbs">' + ys.map(function (y, i) { return secBar(String(y), vals[i], maxV, true); }).join('') + '</div></div>';
   }
-  if (attr) row('S&amp;P 500, published', ys.map(function (y) { return D.index[YS.indexOf(y)].pub; }), 'font-weight:700;color:var(--navy)');
+  if (attr) row('S&amp;P 500, published', pubS, 'font-weight:700;color:var(--navy)');
   rows.forEach(function (n) {
     var dot = '<span style="display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:6px;background:' + SEC_COL[ig ? GROUPS[n] : n] + '"></span>';
-    row(dot + esc(n), ys.map(function (y) { return secVal(n, y); }), '', n + (ig ? ' · ' + GROUPS[n] : ''));
+    row(dot + esc(n), SER[n], '', n + (ig ? ' · ' + GROUPS[n] : ''));
   });
-  if (attr && !A.one && names.every(function (n) { return P[n]; })) row('Not explained (published index minus the members)', ys.map(function (y) { var k = YS.indexOf(y); return D.index[k].pub - D.index[k].basket; }), 'color:var(--mu);font-style:italic');
+  if (attr && !A.one && names.every(function (n) { return P[n]; })) row('Not explained (published index minus the members)', gapS, 'color:var(--mu);font-style:italic');
+  var cumTxt = A.cum ? ' <b>Cumulative</b>: the years switched on, linked in order (' + (attr ? 'the yearly points added up, not compounded' : 'each bar is the compounded return of the sector from the first year switched on up to that year, a chain of the yearly sector returns') + '). A year switched off in the middle is skipped.' : '';
   host.innerHTML = '<div class="sb-secrow" style="gap:16px">' + qs + '</div><div class="sb-secrow">' + chips + '</div><div class="sb-secrow" style="flex-direction:column;align-items:stretch;gap:10px">' + dates + '</div><div class="sbrs">' + h + '</div>' +
     '<div style="font-size:11px;color:var(--mu);margin-top:12px;line-height:1.5">' + (attr
       ? 'Contribution = points of the index return each ' + (ig ? 'industry group' : 'sector') + ' added: its weight at the start of the year × the return of its members. The members\' return differs from the published index by the names without a market value in the workbook and the names that joined during the year.'
-      : 'Price return of the members of each ' + (ig ? 'industry group' : 'sector') + ' in the year, weighted by their size at the start of the year. Relative = minus the published S&amp;P 500, in pp.') + ' Sectors and groups are Bloomberg\'s today, applied to every year.</div>';
+      : 'Price return of the members of each ' + (ig ? 'industry group' : 'sector') + ' in the year, weighted by their size at the start of the year. Relative = minus the published S&amp;P 500, in pp.') + ' Sectors and groups are Bloomberg\'s today, applied to every year.' + cumTxt + '</div>';
 }
 
 // ═══ Attribution Detail & Simulation ════════════════════════════════
@@ -153,11 +170,11 @@ function renderBeaters() {
   var f = S.beat.f, bs = beatState(), kMax = bs.act.length ? Math.max.apply(null, bs.act) : null, match = {};
   bs.match.forEach(function (s) { if (!S.beat.excl[s.s]) match[s.f] = 1; });
   // one row per year, four fixed buttons: the picker never changes size or position
-  var GRID = 'display:grid;grid-template-columns:44px repeat(4,72px);gap:5px;align-items:center', BTN = 'padding:4px 0;font-size:11px;text-align:center';
-  var panel = '<div style="flex:0 0 auto"><div style="' + GRID + ';margin-bottom:6px;font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--mu);font-weight:600"><span>Year</span><span style="text-align:center">Positive</span><span style="text-align:center">Negative</span><span style="text-align:center">Beat</span><span style="text-align:center">Lag</span></div>' +
+  var GRID = 'display:grid;grid-template-columns:56px repeat(4,minmax(0,1fr));gap:6px;align-items:center', BTN = 'padding:4px 0;font-size:11px;text-align:center';
+  var panel = '<div style="max-width:560px"><div style="' + GRID + ';margin-bottom:6px;font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--mu);font-weight:600"><span>Year</span><span style="text-align:center">Positive</span><span style="text-align:center">Beat</span><span style="text-align:center">Negative</span><span style="text-align:center">Lag</span></div>' +
     YS.map(function (y) {
       return '<div style="' + GRID + ';margin-bottom:4px"><b style="color:var(--navy);font-size:12px">' + y + '</b>' +
-        [['p', 'Positive'], ['n', 'Negative'], ['b', 'Beat'], ['l', 'Lag']].map(function (o) { return tab('iaFilt', f[o[0] + y], o[0] + y, o[1], ' style="' + BTN + '"'); }).join('') + '</div>';
+        [['p', 'Positive'], ['b', 'Beat'], ['n', 'Negative'], ['l', 'Lag']].map(function (o) { return tab('iaFilt', f[o[0] + y], o[0] + y, o[1], ' style="' + BTN + '"'); }).join('') + '</div>';
     }).join('') + '<button class="sb-secchip-all" style="margin:6px 0 0 0" data-act="iaFiltClear" data-v="1">Clear</button></div>';
   var exc = '<span class="sb-secrow-lbl">Exclude:</span>' + SECS.map(function (k2) { var x = S.beat.excl[k2]; return '<span class="sb-secchip' + (x ? ' active' : '') + '" style="' + (x ? 'background:#9B2A20;border-color:#9B2A20' : '') + '" data-act="iaBeatExcl" data-v="' + esc(k2) + '">' + k2 + '</span>'; }).join('') + '<button class="sb-secchip-all" data-act="iaBeatExclClear" data-v="1">Clear</button>';
   var pool = bs.pool.filter(function (s) { return !S.beat.excl[s.s]; }), bySec = {};
@@ -188,8 +205,8 @@ function renderBeaters() {
   var yrTxt = bs.act.length ? bs.act.map(function (k) { return YS[k]; }).join(', ') : null;
   var note = '<div style="font-size:11px;color:var(--mu);line-height:1.55;margin:8px 2px 0"><i>Positive</i> / <i>Negative</i> = price return above / below 0% that year · <i>Beat</i> / <i>Lag</i> = above / below the published S&amp;P 500. One of each pair per year, and years combine: Positive 1999 + Negative 2000 = rose in 1999 and fell in 2000. A year counts only for a company that was a member for the <b>whole year</b> (one that stopped trading during it is left out of that year\'s filters). ' +
     (yrTxt ? 'Filtering ' + yrTxt + ': the last two columns follow the matching stocks <b>after ' + YS[kMax] + '</b>: their median price return over the next 3 years (to Dec 2005 at most) and the share still in the S&amp;P 500 today.' : 'Pick years to filter; no filter = every name that was a member.') + '</div>';
-  host.innerHTML = '<div class="sb-secrow">' + exc + '</div><div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">' + panel + '<div style="flex:1 1 520px;min-width:0">' +
-    '<table class="rt"><thead><tr><th>Sector</th><th style="text-align:right">Stocks Matching</th><th style="text-align:right">% of Sector</th><th style="text-align:right">Total in Sector</th><th style="text-align:right" title="Median price return of the matching stocks in the 3 years after the last year filtered">Next 3 yrs, median</th><th style="text-align:right" title="Share of the matching stocks that are in the S&amp;P 500 today">In S&amp;P 500 today</th></tr></thead><tbody>' + html + '</tbody></table>' + note + '</div></div>';
+  host.innerHTML = '<div class="sb-secrow">' + exc + '</div><div style="margin-top:10px">' + panel + '</div><div style="margin-top:16px">' +
+    '<table class="rt"><thead><tr><th>Sector</th><th style="text-align:right">Stocks Matching</th><th style="text-align:right">% of Sector</th><th style="text-align:right">Total in Sector</th><th style="text-align:right" title="Median price return of the matching stocks in the 3 years after the last year filtered">Next 3 yrs, median</th><th style="text-align:right" title="Share of the matching stocks that are in the S&amp;P 500 today">In S&amp;P 500 today</th></tr></thead><tbody>' + html + '</tbody></table>' + note + '</div>';
 }
 function companies(list, indent, kMax) {
   var m = list.slice().sort(function (a, b) { var k = kMax == null ? 4 : kMax; return (b.r[k] != null ? b.r[k] : -999) - (a.r[k] != null ? a.r[k] : -999); });
@@ -219,7 +236,7 @@ function renderTop() {
   var host = el('mh-ia-top'); if (!host) return;
   var P = S.top, years = YS.filter(function (y) { return P.years[y]; }), N = P.custom > 0 ? P.custom : P.n, showAll = N === 0, showPos = P.side !== 'neg', showNeg = P.side !== 'pos', yd = {};
   years.forEach(function (y) {
-    var ranked = topSecs(y).sort(function (a, b) { return b.contrib - a.contrib; });
+    var key = P.by === 'ret' ? 'ret' : 'contrib', ranked = topSecs(y).sort(function (a, b) { return b[key] - a[key]; });
     ranked.forEach(function (d, i) { d.rank = i + 1; });
     var n = showAll ? ranked.length : Math.min(N, ranked.length), pos = ranked.slice(0, n), neg = ranked.slice(P.side === 'both' ? Math.max(n, ranked.length - n) : ranked.length - n).reverse();
     [pos, neg].forEach(function (l) { var c = 0; l.forEach(function (d) { c += d.contrib; d.cum = c; }); });
@@ -229,13 +246,14 @@ function renderTop() {
   var html = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap"><div style="display:flex;gap:4px;flex-wrap:wrap">' + YS.map(function (y) { return tab('iaTopYear', P.years[y], y, y); }).join('') + '</div>' + SEP +
     '<div style="display:flex;gap:4px">' + [5, 10, 20, 0].map(function (nv) { return tab('iaTopN', P.custom === 0 && P.n === nv, nv, nv === 0 ? 'All' : 'Top ' + nv); }).join('') + '</div>' +
     '<input type="number" min="1" max="600" placeholder="Custom" value="' + (P.custom > 0 ? P.custom : '') + '" style="width:70px;font-size:11px;padding:3px 6px;border:1px solid var(--rule);border-radius:4px;background:var(--surface);color:var(--navy)" data-act="iaTopCustom">' + SEP +
+    LBL('Rank by') + '<div style="display:flex;gap:4px">' + [['con', 'Contribution'], ['ret', 'Return']].map(function (o) { return tab('iaTopBy', P.by === o[0], o[0], o[1]); }).join('') + '</div>' + SEP +
     LBL('Show') + '<div style="display:flex;gap:4px">' + [['pos', 'Top'], ['neg', 'Bottom'], ['both', 'Both']].map(function (o) { return tab('iaTopSide', P.side === o[0], o[0], o[1]); }).join('') + '</div>' + SEP +
     LBL('Column') + '<div style="display:flex;gap:4px">' + [['', 'None'], ['sector', 'Sector'], ['ig', 'Industry Group'], ['fate', 'Today']].map(function (o) { return tab('iaTopInfo', P.info === o[0], o[0], o[1]); }).join('') + '</div>' + tab('iaTopRet', P.ret, 1, 'Ret%') + '</div>';
   var info = P.info, showRet = P.ret, cpy = 4 + (info ? 1 : 0) + (showRet ? 1 : 0);
   var TH = 'padding:4px 8px;color:var(--mu);font-weight:500;white-space:nowrap', GAP = 'border-left:12px solid transparent';
   var thead = '<thead><tr>' + years.map(function (y, i) { return '<th colspan="' + cpy + '" style="text-align:left;padding:4px 8px 2px;color:var(--navy);font-weight:700;border-bottom:1px solid var(--rule);' + (i ? GAP : '') + '">' + y + '</th>'; }).join('') +
     '</tr><tr style="border-bottom:1.5px solid var(--rule)">' + years.map(function (y, i) {
-      return '<th style="text-align:right;' + TH + ';' + (i ? GAP : '') + '" title="Rank by contribution among all ' + yd[y].n + ' members of the year">Rank</th><th style="text-align:left;' + TH + '">Ticker</th>' +
+      return '<th style="text-align:right;' + TH + ';' + (i ? GAP : '') + '" title="Rank by ' + (P.by === 'ret' ? 'price return' : 'contribution') + ' among all ' + yd[y].n + ' members of the year">Rank</th><th style="text-align:left;' + TH + '">Ticker</th>' +
         (info ? '<th style="text-align:left;' + TH + '">' + (info === 'ig' ? 'Industry Group' : info === 'fate' ? 'Today' : 'Sector') + '</th>' : '') + '<th style="text-align:right;' + TH + '">Contrib</th><th style="text-align:right;' + TH + '">Cum.</th>' + (showRet ? '<th style="text-align:right;' + TH + '">Ret%</th>' : '');
     }).join('') + '</tr></thead>';
   function cells(d, i) {
@@ -254,14 +272,14 @@ function renderTop() {
     for (var r = 0; r < rows; r++) { out += '<tr style="border-bottom:.5px solid var(--rule);' + (r % 2 ? 'background:var(--surface)' : '') + '">'; years.forEach(function (y, i) { out += cells(yd[y][key][r], i); }); out += '</tr>'; }
     return out;
   }
-  var tbody = '<tbody>' + (showPos ? block('pos', showAll ? 'All members, top to bottom' : 'Top ' + N + ' contributors') : '') + (showNeg && !(showAll && showPos) ? block('neg', showAll ? 'All members, bottom to top' : 'Bottom ' + N + ' contributors') : '') + '</tbody>';
+  var tbody = '<tbody>' + (showPos ? block('pos', showAll ? 'All members, top to bottom' : 'Top ' + N + (P.by === 'ret' ? ' by return' : ' contributors')) : '') + (showNeg && !(showAll && showPos) ? block('neg', showAll ? 'All members, bottom to top' : 'Bottom ' + N + (P.by === 'ret' ? ' by return' : ' contributors')) : '') + '</tbody>';
   var foot = '<tfoot><tr style="border-top:2px solid var(--navy)">' + years.map(function (y, i) {
     var d = yd[y], shown = d.pos.concat(d.neg).reduce(function (s, x) { return s + x.contrib; }, 0), share = Math.abs(d.total) > 1e-9 ? shown / d.total * 100 : 0;
     return '<td colspan="' + cpy + '" style="padding:7px 8px;font-size:11.5px;color:var(--navy);' + (i ? GAP : '') + '">Listed: <b style="color:' + colr(shown) + '">' + sg2(shown) + '%</b> of <b style="color:' + colr(d.total) + '">' + sg2(d.total) + '%</b> S&amp;P 500 return <span style="color:var(--mu)">(' + share.toFixed(0) + '%)</span></td>';
   }).join('') + '</tr></tfoot>';
   host.innerHTML = html + '<div style="overflow-x:auto"><table style="width:auto;border-collapse:collapse;font-size:12px">' + thead + tbody + foot + '</table></div>' +
     '<div style="font-size:11px;color:var(--mu);margin-top:8px;line-height:1.5"><b>Contrib</b> = weight in the S&amp;P 500 at the start of the year × the year\'s return. <b>Cum.</b> = running total down the list. ' + (showRet ? '<b>Ret%</b> = the year\'s price return. ' : '') +
-    '<b>Rank</b> = position among all members of that year, 1 = largest contributor. The share in brackets is the published index return; a name that stopped trading is carried at its last close.</div>';
+    '<b>Rank</b> = position among all members of that year by ' + (P.by === 'ret' ? '<b>price return</b> (1 = the biggest gain, whatever the size of the company; this is where names like the 1990s bubble stocks show up)' : '<b>contribution</b> (1 = the largest contributor; size counts)') + '. The share in brackets is the published index return; a name that stopped trading is carried at its last close.</div>';
 }
 
 // ═══ Winners vs Losers ══════════════════════════════════════════════
@@ -293,6 +311,7 @@ export function iaAct(a, v, t) {
     case 'iaSecShow': A.show = v; return r(renderSector);
     case 'iaSecRel': A.rel = v === 'rel'; return r(renderSector);
     case 'iaSecYear': if (A.years[v] && onYears().length === 1) return true; A.years[v] = !A.years[v]; return r(renderSector);
+    case 'iaSecCum': A.cum = v === 'cum'; return r(renderSector);
     case 'iaSecYears': YS.forEach(function (y) { A.years[y] = true; }); return r(renderSector);
     case 'iaSecPick': var P = secPicked(); if (A.one) { var o = {}; o[v] = true; if (A.level === 'ig') A.igs = o; else A.secs = o; } else { P[v] = !P[v]; if (!Object.keys(P).some(function (k) { return P[k]; })) P[v] = true; } return r(renderSector);
     case 'iaSecAll': var P2 = secPicked(); secNames().forEach(function (n) { P2[n] = v === '1'; }); if (v !== '1') keepOne(); return r(renderSector);
@@ -317,6 +336,7 @@ export function iaAct(a, v, t) {
     case 'iaTopYear': if (S.top.years[v] && Object.keys(S.top.years).filter(function (k) { return S.top.years[k]; }).length === 1) return true; S.top.years[v] = !S.top.years[v]; return r(renderTop);
     case 'iaTopN': S.top.n = +v; S.top.custom = 0; return r(renderTop);
     case 'iaTopCustom': S.top.custom = +t.value > 0 ? Math.floor(+t.value) : 0; return r(renderTop);
+    case 'iaTopBy': S.top.by = v; return r(renderTop);
     case 'iaTopSide': S.top.side = v; return r(renderTop);
     case 'iaTopInfo': S.top.info = v; return r(renderTop);
     case 'iaTopRet': S.top.ret = !S.top.ret; return r(renderTop);

@@ -65,10 +65,10 @@ function secBar(lbl, v, maxV, hl) {
 }
 function renderSector() {
   var host = el('mh-ia-sector'); if (!host) return;
-  var A = S.sec, attr = A.show === 'attr', ig = A.level === 'ig', ys = onYears(), P = secPicked(), lastY = ys[ys.length - 1];
+  var A = S.sec, attr = A.show === 'attr', ig = A.level === 'ig', ys = onYears(), P = secPicked();
   var qs = q('1 · Level', seg('iaSecLevel', [['sec', 'Sectors'], ['ig', 'Industry Groups']], A.level)) + q('2 · How many', seg('iaSecOne', [['one', 'One'], ['multi', 'Multiple']], A.one ? 'one' : 'multi')) +
     q('3 · Show', seg('iaSecShow', [['ret', 'Returns'], ['attr', 'Contribution to the S&amp;P 500']], A.show)) + (attr ? '' : '<span style="margin-left:auto">' + seg('iaSecRel', [['abs', 'Absolute'], ['rel', 'Relative']], A.rel ? 'rel' : 'abs') + '</span>');
-  var names = secNames().slice().sort(function (a, b) { return (secVal(b, lastY) == null ? -1e9 : secVal(b, lastY)) - (secVal(a, lastY) == null ? -1e9 : secVal(a, lastY)); });
+  var names = secNames();   // fixed order: choosing years or toggles never moves a chip or a bar
   var chips = '<span class="sb-secrow-lbl">' + (ig ? 'Industry groups:' : 'Sectors:') + '</span>' + names.map(function (n) { return '<span class="sb-secchip' + (P[n] ? ' active' : '') + '" data-act="iaSecPick" data-v="' + esc(n) + '">' + esc(n) + '</span>'; }).join('') +
     (A.one ? '' : '<span style="margin-left:auto;display:inline-flex;gap:6px"><button class="sb-secchip-all" style="margin-left:0" data-act="iaSecAll" data-v="1">All</button><button class="sb-secchip-all" style="margin-left:0" data-act="iaSecAll" data-v="0">None</button></span>');
   var dates = '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="sb-secrow-lbl">Years</span>' + YS.map(function (y) { return '<span class="sb-secchip' + (A.years[y] ? ' active' : '') + '" data-act="iaSecYear" data-v="' + y + '">' + y + '</span>'; }).join('') +
@@ -126,13 +126,13 @@ function renderDetail() {
         '<td class="num ma-dt-k" style="color:var(--mu);font-size:11px">' + (gx ? '—' : detFmtW(d.wOpenIG[g], d.wCloseIG[g])) + '</td><td class="num" style="font-weight:700">' + (gx ? '<span style="color:var(--mu)">—</span>' : detFmtC(d.byIG[g])) + '</td></tr>';
     });
   });
-  body += '<tr><td></td><td></td><td style="color:var(--mu);font-style:italic" title="Published S&amp;P 500 return minus the members\' return: names without a market value in the workbook, names that joined during the year">Not explained</td><td class="num ma-dt-k" style="color:var(--mu)">—</td><td class="num" style="color:var(--mu)">' + (sim ? '—' : detFmtC(d.residual)) + '</td></tr>';
+  body += '<tr><td></td><td></td><td style="color:var(--mu);font-style:italic" title="Published S&amp;P 500 return minus the members\' return: migrations and rebalancings the data does not capture, names without a market value in the workbook, names that joined during the year">Not explained</td><td class="num ma-dt-k" style="color:var(--mu)">—</td><td class="num" style="color:var(--mu)">' + (sim ? '—' : detFmtC(d.residual)) + '</td></tr>';
   body += '<tr style="border-top:2px solid var(--navy);font-weight:700"><td></td><td></td><td style="color:var(--navy)">Total</td><td class="ma-dt-k"></td><td class="num">' + detFmtC(d.total) + '</td></tr>';
   host.innerHTML = '<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:10px"><div style="display:flex;gap:3px;flex-wrap:wrap">' + YS.map(function (y) { return tab('iaDetYear', y === B.year, y, y); }).join('') + '</div>' +
     '<span style="margin-left:auto;display:flex;gap:3px"><button class="ndx-tab-btn" data-act="iaDetAll" data-v="1">Expand All</button><button class="ndx-tab-btn" data-act="iaDetAll" data-v="0">Collapse All</button><button class="sb-tbtn" data-act="iaDetReset" data-v="1">Reset</button></span></div>' +
     '<table class="rt" style="width:100%;table-layout:fixed"><colgroup><col style="width:32px"><col style="width:26px"><col><col style="width:150px"><col style="width:100px"></colgroup><thead><tr><th></th><th></th><th></th><th colspan="2" class="ma-dt-k" style="text-align:center;color:var(--navy)">S&amp;P 500 · members at the start of ' + B.year + '</th></tr>' +
     '<tr><th></th><th></th><th>Sector / Industry Group</th><th class="num ma-dt-k">Weight: open → close</th><th class="num">Contribution</th></tr></thead><tbody>' + body + '</tbody></table>' +
-    '<div style="font-size:11px;color:var(--mu);margin-top:8px">Click a row to exclude it from the index; the rest rescale to 100%. Weights: the start of the year, and the end of the year after each name\'s return. Contribution = weight × return; a name that stopped trading is carried at its last close. In a simulation "Not explained" disappears: the total is the members\' return without the excluded rows.</div>';
+    '<div style="font-size:11px;color:var(--mu);margin-top:8px">Click a row to exclude it from the index; the rest rescale to 100%. Weights: the start of the year, and the end of the year after each name\'s return. Contribution = weight × return; a name that stopped trading is carried at its last close. "Not explained" is the published index minus the members: migrations and rebalancings the data does not capture. It is largest in 2000 (−2.90 pp) and 1999 (+1.16 pp) and under 1 pp in the other years. In a simulation it disappears: the total is the members\' return without the excluded rows.</div>';
 }
 
 // ═══ Sector Summary — Market Beaters ════════════════════════════════
@@ -143,8 +143,8 @@ function after3(s, kMax) {   // price return over the 3 years after year kMax (t
 }
 function beatState() {
   var f = S.beat.f, act = [];
-  YS.forEach(function (y, k) { if (f['p' + y] || f['b' + y]) act.push(k); });
-  var data = D.secs.filter(function (s) { return act.every(function (k) { var y = YS[k]; return elig(s, k) && (!f['p' + y] || s.r[k] > 0) && (!f['b' + y] || s.r[k] > D.index[k].pub); }); });
+  YS.forEach(function (y, k) { if (f['p' + y] || f['n' + y] || f['b' + y] || f['l' + y]) act.push(k); });
+  var data = D.secs.filter(function (s) { return act.every(function (k) { var y = YS[k], v = s.r[k], ix = D.index[k].pub; return elig(s, k) && (!f['p' + y] || v > 0) && (!f['n' + y] || v < 0) && (!f['b' + y] || v > ix) && (!f['l' + y] || v < ix); }); });
   var pool = D.secs.filter(function (s) { return act.every(function (k) { return elig(s, k); }); });
   return { act: act, match: data, pool: pool };
 }
@@ -152,10 +152,13 @@ function renderBeaters() {
   var host = el('mh-ia-beat'); if (!host) return;
   var f = S.beat.f, bs = beatState(), kMax = bs.act.length ? Math.max.apply(null, bs.act) : null, match = {};
   bs.match.forEach(function (s) { if (!S.beat.excl[s.s]) match[s.f] = 1; });
-  var chips = YS.map(function (y) {
-    return '<label class="fc' + (f['p' + y] ? ' active' : '') + '"><input type="checkbox" data-act="iaFilt" data-v="p' + y + '"' + (f['p' + y] ? ' checked' : '') + '> &#x2713; Positive ' + y + '</label>' +
-      '<label class="fc' + (f['b' + y] ? ' active' : '') + '"><input type="checkbox" data-act="iaFilt" data-v="b' + y + '"' + (f['b' + y] ? ' checked' : '') + '> &#x2191; Beat the S&amp;P 500 ' + y + '</label>';
-  }).join('') + '<button data-act="iaFiltClear" data-v="1" style="padding:5px 11px;border:1px solid var(--bdr);border-radius:7px;background:var(--w);cursor:pointer;font-size:11px;color:var(--mu)">Clear</button>';
+  // one row per year, four fixed buttons: the picker never changes size or position
+  var GRID = 'display:grid;grid-template-columns:44px repeat(4,72px);gap:5px;align-items:center', BTN = 'padding:4px 0;font-size:11px;text-align:center';
+  var panel = '<div style="flex:0 0 auto"><div style="' + GRID + ';margin-bottom:6px;font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--mu);font-weight:600"><span>Year</span><span style="text-align:center">Positive</span><span style="text-align:center">Negative</span><span style="text-align:center">Beat</span><span style="text-align:center">Lag</span></div>' +
+    YS.map(function (y) {
+      return '<div style="' + GRID + ';margin-bottom:4px"><b style="color:var(--navy);font-size:12px">' + y + '</b>' +
+        [['p', 'Positive'], ['n', 'Negative'], ['b', 'Beat'], ['l', 'Lag']].map(function (o) { return tab('iaFilt', f[o[0] + y], o[0] + y, o[1], ' style="' + BTN + '"'); }).join('') + '</div>';
+    }).join('') + '<button class="sb-secchip-all" style="margin:6px 0 0 0" data-act="iaFiltClear" data-v="1">Clear</button></div>';
   var exc = '<span class="sb-secrow-lbl">Exclude:</span>' + SECS.map(function (k2) { var x = S.beat.excl[k2]; return '<span class="sb-secchip' + (x ? ' active' : '') + '" style="' + (x ? 'background:#9B2A20;border-color:#9B2A20' : '') + '" data-act="iaBeatExcl" data-v="' + esc(k2) + '">' + k2 + '</span>'; }).join('') + '<button class="sb-secchip-all" data-act="iaBeatExclClear" data-v="1">Clear</button>';
   var pool = bs.pool.filter(function (s) { return !S.beat.excl[s.s]; }), bySec = {};
   pool.forEach(function (s) { (bySec[s.s] = bySec[s.s] || []).push(s); });
@@ -183,10 +186,10 @@ function renderBeaters() {
   });
   html += '<tr style="border-top:2px solid var(--navy);background:var(--surface)"><td style="font-weight:700;color:var(--navy);text-transform:uppercase;font-size:11px;letter-spacing:.5px;padding-left:25px">Total</td><td style="text-align:right;font-weight:700;font-size:14px;color:var(--navy)">' + totM + '</td><td style="text-align:right;font-weight:700;color:var(--navy)">' + (totS ? (totM / totS * 100).toFixed(0) : 0) + '%</td><td style="text-align:right;color:var(--mu);font-weight:600">' + totS + '</td>' + tail(allM) + '</tr>';
   var yrTxt = bs.act.length ? bs.act.map(function (k) { return YS[k]; }).join(', ') : null;
-  host.innerHTML = '<div class="fbar">' + chips + '</div><div class="sb-secrow">' + exc + '</div>' +
-    '<div style="font-size:11px;color:var(--mu);line-height:1.55;margin:6px 2px 4px"><i>Positive</i> = price return above 0% that year · <i>Beat</i> = above the S&amp;P 500 (published). A year counts only for a company that was a member for the <b>whole year</b> (one that stopped trading during it is left out of that year\'s filters and counts). ' +
-    (yrTxt ? 'Filtering ' + yrTxt + ': the last two columns follow the matching stocks <b>after ' + YS[kMax] + '</b>: their median price return over the next 3 years (to Dec 2005 at most) and the share still in the S&amp;P 500 today.' : 'Pick years to filter; no filter = every name that was a member.') + '</div>' +
-    '<table class="rt" style="margin-top:6px"><thead><tr><th>Sector</th><th style="text-align:right">Stocks Matching</th><th style="text-align:right">% of Sector</th><th style="text-align:right">Total in Sector</th><th style="text-align:right" title="Median price return of the matching stocks in the 3 years after the last year filtered">Next 3 yrs, median</th><th style="text-align:right" title="Share of the matching stocks that are in the S&amp;P 500 today">In S&amp;P 500 today</th></tr></thead><tbody>' + html + '</tbody></table>';
+  var note = '<div style="font-size:11px;color:var(--mu);line-height:1.55;margin:8px 2px 0"><i>Positive</i> / <i>Negative</i> = price return above / below 0% that year · <i>Beat</i> / <i>Lag</i> = above / below the published S&amp;P 500. One of each pair per year, and years combine: Positive 1999 + Negative 2000 = rose in 1999 and fell in 2000. A year counts only for a company that was a member for the <b>whole year</b> (one that stopped trading during it is left out of that year\'s filters). ' +
+    (yrTxt ? 'Filtering ' + yrTxt + ': the last two columns follow the matching stocks <b>after ' + YS[kMax] + '</b>: their median price return over the next 3 years (to Dec 2005 at most) and the share still in the S&amp;P 500 today.' : 'Pick years to filter; no filter = every name that was a member.') + '</div>';
+  host.innerHTML = '<div class="sb-secrow">' + exc + '</div><div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">' + panel + '<div style="flex:1 1 520px;min-width:0">' +
+    '<table class="rt"><thead><tr><th>Sector</th><th style="text-align:right">Stocks Matching</th><th style="text-align:right">% of Sector</th><th style="text-align:right">Total in Sector</th><th style="text-align:right" title="Median price return of the matching stocks in the 3 years after the last year filtered">Next 3 yrs, median</th><th style="text-align:right" title="Share of the matching stocks that are in the S&amp;P 500 today">In S&amp;P 500 today</th></tr></thead><tbody>' + html + '</tbody></table>' + note + '</div></div>';
 }
 function companies(list, indent, kMax) {
   var m = list.slice().sort(function (a, b) { var k = kMax == null ? 4 : kMax; return (b.r[k] != null ? b.r[k] : -999) - (a.r[k] != null ? a.r[k] : -999); });
@@ -302,7 +305,10 @@ export function iaAct(a, v, t) {
       if (v.indexOf('sec:') === 0) igList().filter(function (g) { return GROUPS[g] === v.slice(4); }).forEach(function (g) { delete S.det.excl[g]; });
       if (!SECS.some(function (s) { return !S.det.excl['sec:' + s]; })) S.det.excl[v] = false;
       return r(renderDetail);
-    case 'iaFilt': S.beat.f[v] = t.checked; return r(renderBeaters);
+    case 'iaFilt': {   // one of Positive / Negative and one of Beat / Lag per year; a second click clears it
+      var F = S.beat.f, on = !F[v], opp = { p: 'n', n: 'p', b: 'l', l: 'b' }[v.charAt(0)] + v.slice(1);
+      F[v] = on; if (on) F[opp] = false; return r(renderBeaters);
+    }
     case 'iaFiltClear': S.beat.f = {}; return r(renderBeaters);
     case 'iaBeatExcl': S.beat.excl[v] = !S.beat.excl[v]; return r(renderBeaters);
     case 'iaBeatExclClear': S.beat.excl = {}; return r(renderBeaters);

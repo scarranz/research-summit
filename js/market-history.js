@@ -148,9 +148,11 @@ function eventsList() {
 function scOpts(cur, lo, hi) { var o = ''; for (var k = lo; k <= hi; k++) o += '<option value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + snapLbl(k) + '</option>'; return o; }
 function renderWC() {
   var box = document.getElementById('mh-wc'); if (!box) return;
-  var a = st.wc[0], b = st.wc[1], one = b === a + 1 && b <= NK - 1 ? D.years[a] : null;
-  box.innerHTML = '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">' + D.years.map(function (y, k) { return '<button class="ndx-tab-btn' + (one === y ? ' active' : '') + '" data-act="wcy" data-v="' + k + '">' + y + '</button>'; }).join('') + '</div>' +
-    '<div class="mh-row"><label class="mh-lbl">or any span: from</label><select id="mh-wcf" class="mh-sel">' + scOpts(a, 0, NK - 2) + '</select><label class="mh-lbl">to</label><select id="mh-wct" class="mh-sel">' + scOpts(b, 1, NK - 1) + '</select></div><div id="mh-wcbox"></div>';
+  var a = st.wc[0], b = st.wc[1], cx = st.wcx, dis = function (on) { return on ? ' disabled style="opacity:.4;cursor:not-allowed"' : ''; };
+  // Customize on: the span selects work and the year buttons are off; Customize off: the other way round. Nothing moves.
+  box.innerHTML = '<div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-bottom:10px">' + D.years.slice(0, NK - 1).map(function (y, k) { return '<button class="ndx-tab-btn' + (!cx && k === st.wcy ? ' active' : '') + '" data-act="wcy" data-v="' + k + '"' + dis(cx) + '>' + y + '</button>'; }).join('') +
+    '<span style="width:1px;height:16px;background:var(--rule);margin:0 6px"></span><button class="ndx-tab-btn' + (cx ? ' active' : '') + '" data-act="wcc" data-v="1">Customize</button>' +
+    '<span class="mh-lbl" style="margin-left:8px">From</span><select id="mh-wcf" class="mh-sel"' + (cx ? '' : ' disabled') + '>' + scOpts(a, 0, NK - 2) + '</select><span class="mh-lbl">to</span><select id="mh-wct" class="mh-sel"' + (cx ? '' : ' disabled') + '>' + scOpts(b, 1, NK - 1) + '</select></div><div id="mh-wcbox"></div>';
   var hi = 10;
   D.sectors.forEach(function (y) { D.meta.sectors.forEach(function (sc) { hi = Math.max(hi, Math.ceil(y.d[sc].w / 10) * 10); }); });
   var anchor = D.sectors[NK - 1].d;
@@ -204,7 +206,8 @@ function renderSC() {
   var sel3 = function (id, cur, lo, hi, lblf) { var o = ''; for (var v = lo; v <= hi; v++) o += '<option value="' + v + '"' + (v === cur ? ' selected' : '') + '>' + lblf(v) + '</option>'; return '<select id="' + id + '" class="mh-sel">' + o + '</select>'; };
   var controls = '<div class="mh-row"><label class="mh-lbl">Split date</label>' + sel3('mh-scb', b, 1, NK - 1, snapLbl) + '<label class="mh-lbl">Years before</label>' + sel3('mh-sca', w.before, 1, b, function (v) { return v; }) + '<label class="mh-lbl">Years after</label>' + sel3('mh-scc', w.after, 1, NK - b, function (v) { return v; }) +
     '<label class="mh-lbl" style="margin-left:10px">Highlight</label>' + secBtn('scs', [['top', 'Best'], ['bot', 'Worst'], ['both', 'Both']], m.side) + '<label class="mh-lbl" style="margin-left:10px">How many</label>' + secBtn('scn', [[10, '10'], [20, '20'], [50, '50']], m.n) + '</div>';
-  box.innerHTML = '<div class="mh-read">Each dot is one stock. <b>Left to right</b> = what it did in the ' + yrs(w.before) + ' <i>before</i> ' + snapLbl(b) + '; <b>bottom to top</b> = what it did in the ' + yrs(w.after) + ' <i>after</i>. A dot at the bottom right was a winner that then lost money; a dot at the top left was a laggard that then recovered. ' + summ + '</div>' + controls +
+  box.innerHTML = controls + '<div class="mh-read">Each dot is one stock. <b>Left to right</b> = what it did in the ' + yrs(w.before) + ' <i>before</i> ' + snapLbl(b) + '; <b>bottom to top</b> = what it did in the ' + yrs(w.after) + ' <i>after</i>. A dot at the bottom right was a winner that then lost money; a dot at the top left was a laggard that then recovered. ' + summ + '</div>' +
+    '<div class="mh-note" style="margin:0 0 8px"><b>How this differs from Top Contributors.</b> Top Contributors ranks the S&amp;P 500 members of <i>one year</i> by how many points each added to the index (weight × return, so size counts) and then follows those names year by year. Here every stock with a price counts, in the index or not, the ranking is by price change over <i>several years</i> before the split date with no weighting by size, and the question is what the whole group did next, not the path of each name.</div>' +
     '<svg viewBox="0 0 ' + VW + ' ' + VH + '" class="mh-svg">' + g + '</svg><div class="mh-key"><span><i class="mh-dot" style="background:' + COL.top + '"></i>Best ' + N + ' before ' + snapLbl(b) + '</span><span><i class="mh-dot" style="background:' + COL.bot + '"></i>Worst ' + N + '</span><span><i class="mh-dot" style="background:#8A93A0;opacity:.35"></i>Everyone else</span></div>' +
     '<div class="mh-note">Best / worst = the biggest gains and losses between ' + snapLbl(a) + ' and ' + snapLbl(b) + ', chosen among every name with a price at both dates, in the S&amp;P 500 or not. The axes never change: both run from −95% to +20,000% on a ratio scale (+100% = doubled, −50% = halved)' + (clamped ? '; ' + clamped + ' names beyond a limit sit on the edge' : '') + '. A name that stops trading stays at its last close. Names with no price at ' + snapLbl(a) + ' or ' + snapLbl(b) + ' are not shown (not listed yet, or already delisted).</div>';
   box.querySelectorAll('.mh-hit').forEach(function (e) {
@@ -344,7 +347,7 @@ function render() {
     sec('Sector Return / Contribution', 'Index Analysis format · 1995-2005', '<div class="card" id="mh-ia-sector"></div>') +
     sec('Attribution Detail &amp; Simulation', 'Index Analysis format · click a row to exclude it', '<div class="card" id="mh-ia-detail"></div>') +
     sec('Sector Summary &mdash; Market Beaters', 'Index Analysis format · plus what the beaters did next', '<div class="card" id="mh-ia-beat"></div>') +
-    sec('Index Composition &mdash; Weight Change', 'pick a year or any span', '<div class="card" id="mh-wc"></div>') +
+    sec('Index Composition &mdash; Weight Change', 'pick a year, or switch on Customize for any span', '<div class="card" id="mh-wc"></div>') +
     sec('Top Contributors', 'Index Analysis format · and what became of them', '<div class="card" id="mh-ia-top"></div><div class="card" id="mh-follow" style="margin-top:14px"></div>') +
     sec('Winners vs Losers', 'Index Analysis format', '<div class="card" id="mh-ia-wl"></div>') +
     sec('Did yesterday\'s winners stay winners?', 'every stock: what it did before a date, and after', '<div id="mh-sc"></div>') +
@@ -368,7 +371,8 @@ function build() {
     if (followAct(a, v) || iaAct(a, v, t)) return;
     if (a === 'scs') { st.scm.side = v; renderSC(); }
     else if (a === 'scn') { st.scm.n = +v; renderSC(); }
-    else if (a === 'wcy') { st.wc = [+v, +v + 1]; renderWC(); }
+    else if (a === 'wcy') { st.wcy = +v; st.wc = [+v, +v + 1]; renderWC(); }
+    else if (a === 'wcc') { st.wcx = !st.wcx; if (!st.wcx) st.wc = [st.wcy, st.wcy + 1]; renderWC(); }
   });
   root.addEventListener('change', function (e) {
     var id = e.target.id, ge = function (x) { return +document.getElementById(x).value; };

@@ -84,3 +84,5 @@
   #eps-root .eps-two { grid-template-columns: minmax(0, 1fr); }
   #eps-root .eps-eq .op { display: none; }
 }
+
+#eps-root .eps-three { font-size: 12px; line-height: 1.6; margin-top: 12px; padding: 9px 13px; background: var(--surface); border-radius: 9px; }

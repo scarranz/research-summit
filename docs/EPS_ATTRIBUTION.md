@@ -5,15 +5,13 @@ Code: `js/eps-engine.js` (maths, `node tests/eps-engine.test.mjs`), `js/eps-attr
 Data: `js/eps-attribution-data.js`, from `python scripts/eps-attribution/extract_eps.py "<Index EPS Contribution Analysis.xlsx>" --write`.
 
 ## Identity
-Forward P/E = price / EPS of **one fixed fiscal year** (CY2026 or CY2027, Bloomberg consensus calendarised to December). No rolling / NTM:
-the file only has annual estimates, so a year is never blended or split into quarters.
-`1 + R = (1 + g)(1 + m)` — R price return, g change in the index's aggregate EPS estimate for that year between the two dates, m forward P/E change.
+Forward P/E = price / **CY2027** EPS (Bloomberg consensus calendarised to December). Always CY2027, base date Jan 2 2026 -> each later snapshot. No rolling / NTM: the file only has annual estimates.
+`1 + R = (1 + g)(1 + m)` — R price return, g change in the index's aggregate CY2027 EPS, m forward P/E change. The hero shows these three as returns, no weights.
 
 ## Index earnings, aggregate vs weighted average
 - Index earnings = sum(weight x EPS/price): each stock's earnings yield weighted by its **index weight** (float-adjusted, from the file); price and EPS are taken at the same date, so a split cannot enter within a date.
   Equivalent to EPS x implied shares (weight/price). g = its change between the two dates (start weights held).
-- Weighted average = sum(start weight x stock EPS change). **No cap**: stocks are not trimmed (an earlier version capped at +-100%; removed).
-- Shown side by side with equal-weight and median, whole index vs the selection.
+- Weighted average = sum(start weight x stock EPS change), no cap. Shown as a footer line of the detail table with the aggregate and the median.
 
 ## Contributions
 Per security (pp of the index): price q dP / I0, EPS q dEPS / E0, multiple = price - EPS (holds the interaction). Additive over any group.
@@ -25,7 +23,7 @@ Corporate-action check: names whose weight moved far more than their price (spin
 Exclusions (click rows in the detail table; sector / group / ticker) apply to every section and both indices, the rest rescale to 100%.
 
 ## UI rules
-Every section has its own index / EPS-year / period controls (as Index Analysis); only exclusions are shared. Axes are fixed per level across index, year and period so bars keep their length.
+The first section shows both indices (no toggle); the others have an S&P / Nasdaq toggle and an end date. Only exclusions are shared. Axes are fixed per level so bars keep their length. Who moved the index shows either contribution (pp, weights) or own return (%), never both.
 
 ## Open items
 - GAAP consensus (IS_COMP_EPS_GAAP): GOOGL, AMZN carry investment marks. Adjusted EPS (BEST_EPS) pull is a decision.

@@ -161,21 +161,21 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 | EV-SET | Evolution ▸ Earnings ▸ Setup | ⬜ | | | | |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | ⬜ | | | | |
-| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ⬜ | | | | |
-| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⬜ | | | | |
-| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ⬜ | | | | |
-| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ⬜ | | | | |
-| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ⬜ | | | | |
+| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ✅ | 2026-10-20 | SAB | | márgenes (Actual / Summit congelado / Consensus), EBITDA base reportada, Normalized (OBBBA $15.93B 3Q25; beneficio $8.03B 1Q26) |
+| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ✅ | 2026-10-20 | SAB | | COGS primero + Gross profit; modo nuevo Cost structure (guía R7) |
+| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ✅ | 2026-10-20 | SAB | | OI → net income con el cargo único destacado |
+| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ✅ | 2026-10-20 | SAB | | SBC (dilución + por línea FY23–25), eje de acciones a la derecha |
+| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ✅ | 2026-10-20 | SAB | | 4 líneas, cost of revenue primero; citas verbatim 10-K + llamadas |
 | BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
 | BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
-| VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
+| VA-HIST | Valuation ▸ Historic Multiple | ✅ | 2026-10-20 | SAB | | copia de tsm-histmult.js; denominadores 10-Q/10-K 1Q19–2Q26 (meta-histmult-data.js); precio FB antes del 9 jun 2022 y META después |
 | VA-PEERS | Valuation ▸ Peers | ✅ | 2026-10-20 | SAB | | mismo mapa de OV-6 + tabla de números, en vivo |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
-| VA-SENS | Valuation ▸ Sensitivity Analysis | ⬜ | | | | |
-| MG-TEAM | Management ▸ Executives & Board | ⬜ | | | | |
-| MG-OWN | Management ▸ Ownership | ⬜ | | | | |
-| MG-GOV | Management ▸ Governance & SBC | ⬜ | | | | |
-| MG-TRACK | Management ▸ Track Record | ⬜ | | | | |
+| VA-SENS | Valuation ▸ Sensitivity Analysis | ✅ | 2026-10-20 | SAB | | copia de tsm-sensitivity.js; Summit 2026-08-04 congelado; 3 líneas de ingreso + margen consolidado; múltiplo arranca en el de mercado de hoy (sin valuación del modelo) |
+| MG-TEAM | Management ▸ Executives & Board | ✅ | 2026-10-20 | SAB | | se conserva (management.js, 9 ejecutivos + consejo) |
+| MG-OWN | Management ▸ Ownership | ✅ | 2026-10-20 | SAB | | tabla de insiders del proxy 2026 (Class A/B, % acciones y % votos, valor en vivo) + holders >5% (BlackRock, FMR) + Fiscal.ai |
+| MG-GOV | Management ▸ Governance & SBC | ✅ | 2026-10-20 | SAB | | se conserva + Capital Allocation (B2 #87–89) |
+| MG-TRACK | Management ▸ Track Record | ✅ | 2026-10-20 | SAB | | se conserva; sin "~$1.8T" sembrado |
 | MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab aprobada) | ⬜ | | | | |
 | F-FINAL | Cierre y entrega | ⬜ | | | | |
 
@@ -188,6 +188,7 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 ## 3. Decisiones del analista
 
 <!-- Solo se agrega. Si una decisión cambia, nueva línea que cita la anterior. -->
+- 2026-10-20 · BL-GEN-5 · Expense lines formal: sin emojis, sin título/caja repetidos, una tabla de composición y drivers, comentarios de management en tabla; bordes y barras de realce en `--steel` — SAB. Llevado a la guía (§13 BL-GEN-5, §21, §7.4).
 - 2026-10-20 · OV-2…OV-F · SAB aprobó OV-2 y pidió hacer el resto del Overview de un jalón, aprobándolo por adelantado ("ya te apruebo con todos"); **no cambiar la guía por esto** (excepción solo para META) — SAB
 - 2026-10-20 · OV-6 · Peers = plataformas de anuncios cotizadas: GOOGL, AMZN, APP, RDDT, PINS, TTD, SNAP (TikTok privado; YouTube dentro de Alphabet). Vista por defecto Trailing (solo 3 tienen forward en BBG) — Claude, cubierto por la aprobación previa
 - 2026-10-20 · B2 · Mapa aprobado con las 7 fusiones (#8+#37, #10+#80, #17, #90+#51, #102, #103, #104 FY_NOTE/AS_OF); Pillars vuelve a mostrarse (sin `absorbsPillars`, como AMZN); Misc = **Competitive position · Capex & Depreciation · Strategy · M&A · Capacity → revenue** (SAB pidió dejar Capacity → revenue aunque Claude proponía descartarla; donde la cadena no tenga fuente se dice dónde se corta, §15b) — SAB
@@ -251,9 +252,9 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 | 34 | `industryBody (META_THREATS)` · 6 amenazas con modal | Top Line ▸ Industry | Misc ▸ Competitive position | amenazas → "cuestionamientos" con evidencia a favor y en contra; peers cualitativos → tabla de competidores (TikTok, YouTube, Google Search, Amazon Ads…); cifras desactualizadas se corrigen | ⬜ |
 | 35 | `industryBody` · Bull vs Bear + what to watch (capex desactualizado) | Top Line ▸ Industry | Misc ▸ Competitive position | amenazas → "cuestionamientos" con evidencia a favor y en contra; peers cualitativos → tabla de competidores (TikTok, YouTube, Google Search, Amazon Ads…); cifras desactualizadas se corrigen | ⬜ |
 | 36 | `industryBody (PEERS)` · tabla cualitativa de 4 peers + pie | Top Line ▸ Industry | Misc ▸ Competitive position | amenazas → "cuestionamientos" con evidencia a favor y en contra; peers cualitativos → tabla de competidores (TikTok, YouTube, Google Search, Amazon Ads…); cifras desactualizadas se corrigen | ⬜ |
-| 37 | `unitEconBody` · lede + callout $1.00 | Bottom Line ▸ Unit Economics | Misc ▸ Competitive position ▸ The walled garden | flujo animado + "why margin" se conservan; el callout de $1.00 se **fusiona** con #8 | ⬜ |
-| 38 | `flowHtml/wireFlow (FLOW_*)` · flujo animado de la subasta (Play/Prev/Next) | Bottom Line ▸ Unit Economics | Misc ▸ Competitive position ▸ The walled garden | flujo animado + "why margin" se conservan; el callout de $1.00 se **fusiona** con #8 | ⬜ |
-| 39 | `unitEconBody` · "Why margin" + pie | Bottom Line ▸ Unit Economics | Misc ▸ Competitive position ▸ The walled garden | flujo animado + "why margin" se conservan; el callout de $1.00 se **fusiona** con #8 | ⬜ |
+| 37 | `unitEconBody` · lede + callout $1.00 | Bottom Line ▸ Unit Economics | Misc ▸ Competitive position ▸ The walled garden | flujo animado + "why margin" se conservan; el callout de $1.00 se **fusiona** con #8 | ✅ |
+| 38 | `flowHtml/wireFlow (FLOW_*)` · flujo animado de la subasta (Play/Prev/Next) | Bottom Line ▸ Unit Economics | Misc ▸ Competitive position ▸ The walled garden | flujo animado + "why margin" se conservan; el callout de $1.00 se **fusiona** con #8 | ✅ |
+| 39 | `unitEconBody` · "Why margin" + pie | Bottom Line ▸ Unit Economics | Misc ▸ Competitive position ▸ The walled garden | flujo animado + "why margin" se conservan; el callout de $1.00 se **fusiona** con #8 | ✅ |
 | 40 | `spendBody (SPEND_LEDE)` · lede de la reconstrucción leases/cloud | Bottom Line ▸ Spend Engine | Misc ▸ Capex & Depreciation | como el Misc ▸ Capex de AMZN; capex y D&A con Summit 2026-08-04 congelado; leases/cloud como estimado marcado; se corrige la leyenda de 2028 | ⬜ |
 | 41 | `buildSpend meCapex` · barras capex FY19–2027E | Bottom Line ▸ Spend Engine | Misc ▸ Capex & Depreciation | como el Misc ▸ Capex de AMZN; capex y D&A con Summit 2026-08-04 congelado; leases/cloud como estimado marcado; se corrige la leyenda de 2028 | ⬜ |
 | 42 | `meDa` · barras D&A FY21–2027E | Bottom Line ▸ Spend Engine | Misc ▸ Capex & Depreciation | como el Misc ▸ Capex de AMZN; capex y D&A con Summit 2026-08-04 congelado; leases/cloud como estimado marcado; se corrige la leyenda de 2028 | ⬜ |
@@ -265,8 +266,8 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 | 48 | `scRenderSuppliers (SC_SUPPLIERS)` · ranking 19 proveedores con filtro CAPEX/COGS/SGA y modal | Bottom Line ▸ Suppliers | Bottom Line ▸ Supply Chain | se conserva (SPLC 2026-06-26), en el formato de AMZN | ⬜ |
 | 49 | `mbars` · mix por categoría | Bottom Line ▸ Suppliers | Bottom Line ▸ Supply Chain | se conserva (SPLC 2026-06-26), en el formato de AMZN | ⬜ |
 | 50 | `mbars (SC_GEO)` · geografía 6 países + pie | Bottom Line ▸ Suppliers | Bottom Line ▸ Supply Chain | se conserva (SPLC 2026-06-26), en el formato de AMZN | ⬜ |
-| 51 | `marginsBody/loadMargins (MRG_*)` · líneas de márgenes FY21–26E (vivo vía get-margins) | Bottom Line ▸ Margins | Bottom Line ▸ General ▸ Profitability & margins | reemplazada por la versión AMZN (desplegable de métricas, Actual/Summit/Consensus) | ⬜ |
-| 52 | `MRG_NOTE_*, SRC_FIN` · nota + pie | Bottom Line ▸ Margins | Bottom Line ▸ General ▸ Profitability & margins | reemplazada por la versión AMZN (desplegable de métricas, Actual/Summit/Consensus) | ⬜ |
+| 51 | `marginsBody/loadMargins (MRG_*)` · líneas de márgenes FY21–26E (vivo vía get-margins) | Bottom Line ▸ Margins | Bottom Line ▸ General ▸ Profitability & margins | reemplazada por la versión AMZN (desplegable de métricas, Actual/Summit/Consensus) | ✅ |
+| 52 | `MRG_NOTE_*, SRC_FIN` · nota + pie | Bottom Line ▸ Margins | Bottom Line ▸ General ▸ Profitability & margins | reemplazada por la versión AMZN (desplegable de métricas, Actual/Summit/Consensus) | ✅ |
 | 53 | `ceIRButton` · tarjetas IR y EDGAR | Evolution ▸ Earnings | Evolution ▸ Earnings ▸ Setup | se conserva; Summit congelado del 2026-08-04 y consenso BBG; se re-extrae la maquinaria de AMZN | ⬜ |
 | 54 | `ce-note` · intro de las fases | Evolution ▸ Earnings | Evolution ▸ Earnings ▸ Setup | se conserva; Summit congelado del 2026-08-04 y consenso BBG; se re-extrae la maquinaria de AMZN | ⬜ |
 | 55 | `ce-phtabs + ceQPills` · Setup / Watch List / Post-Results + trimestres | Evolution ▸ Earnings | Evolution ▸ Earnings ▸ Setup | se conserva; Summit congelado del 2026-08-04 y consenso BBG; se re-extrae la maquinaria de AMZN | ⬜ |
@@ -298,22 +299,22 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 | 81 | `META_MNA` · 7 deals de M&A con modal + nota | Evolution ▸ Timeline | Misc ▸ M&A | como el Misc ▸ M&A de AMZN | ⬜ |
 | 82 | `#dd-val-slot` · Pillar de Valuation (ratings Massive) | Valuation ▸ Analyst Ratings | Pillars ▸ Valuation | vuelve a su lugar original: la pestaña Pillars se muestra otra vez, como en AMZN (sin `absorbsPillars`) | ✅ |
 | 83 | `multiplesBody (MULT_ROWS)` · tabla de 5 empresas, múltiplos sembrados | Valuation ▸ Multiples | Valuation ▸ Peers ▸ The numbers behind the map | se rehace en vivo (denominadores + precio vivo); sin múltiplos sembrados | ✅ |
-| 84 | `sensBody (SENS_DRIVERS)` · 4 sliders | Valuation ▸ Sensitivity | Valuation ▸ Sensitivity Analysis | versión AMZN con Summit 2026-08-04; los 4 supuestos (crecimiento de ads, margen, recompra, P/E) como los ejes; sin precio de respaldo $740 | ⬜ |
-| 85 | `sensRender (SENS_BASE)` · tiles implícitos vs precio vivo (fallback $740) | Valuation ▸ Sensitivity | Valuation ▸ Sensitivity Analysis | versión AMZN con Summit 2026-08-04; los 4 supuestos (crecimiento de ads, margen, recompra, P/E) como los ejes; sin precio de respaldo $740 | ⬜ |
-| 86 | `sensBody` · pie | Valuation ▸ Sensitivity | Valuation ▸ Sensitivity Analysis | versión AMZN con Summit 2026-08-04; los 4 supuestos (crecimiento de ads, margen, recompra, P/E) como los ejes; sin precio de respaldo $740 | ⬜ |
-| 87 | `capAllocBody` · 4 tiles de retorno de capital | Valuation ▸ Capital Allocation | Management ▸ Governance & SBC ▸ Capital return | recompras + dividendos vs FCF, junto a la dilución por SBC | ⬜ |
-| 88 | `buildCapital meCap` · recompras + dividendos vs FCF FY21–25 | Valuation ▸ Capital Allocation | Management ▸ Governance & SBC ▸ Capital return | recompras + dividendos vs FCF, junto a la dilución por SBC | ⬜ |
-| 89 | `CAP_*` · tabla + nota + pie | Valuation ▸ Capital Allocation | Management ▸ Governance & SBC ▸ Capital return | recompras + dividendos vs FCF, junto a la dilución por SBC | ⬜ |
-| 90 | `finBody (FIN_SERIES)` · 6 métricas FY19–2027E con slider | Valuation ▸ Financials | Bottom Line ▸ General ▸ Profitability & margins | **fusión** con #51: el desplegable de métricas de BL-GEN-1 ya cubre Rev/OI/NI/EBITDA/FCF/Capex | ⬜ |
-| 91 | `META_MGMT.lede` · lede | Management ▸ Executives & Board | Management ▸ Executives & Board | se conserva (motor management.js) | ⬜ |
-| 92 | `makeManagement execs` · 9 ejecutivos con modal CV | Management ▸ Executives & Board | Management ▸ Executives & Board | se conserva (motor management.js) | ⬜ |
-| 93 | `board` · 12 consejeros + nota | Management ▸ Executives & Board | Management ▸ Executives & Board | se conserva (motor management.js) | ⬜ |
-| 94 | `gov` · 4 tiles de gobierno + pie | Management ▸ Executives & Board | Management ▸ Executives & Board | se conserva (motor management.js) | ⬜ |
-| 95 | `trackBody` · leyenda de ratings | Management ▸ Track Record | Management ▸ Track Record | se conserva; sin "~$1.8T company" | ⬜ |
-| 96 | `META_TRACK` · 9 ejecutivos calificados con modal | Management ▸ Track Record | Management ▸ Track Record | se conserva; sin "~$1.8T company" | ⬜ |
-| 97 | `META_BOARD_TRACK` · 6 consejeros + pie | Management ▸ Track Record | Management ▸ Track Record | se conserva; sin "~$1.8T company" | ⬜ |
-| 98 | `govBody` · lede + callout de control | Management ▸ Governance & SBC | Management ▸ Governance & SBC | se conserva | ⬜ |
-| 99 | `buildSbc meSbc` · SBC vs acciones diluidas FY21–25 + pie | Management ▸ Governance & SBC | Bottom Line ▸ General ▸ Stock-based compensation | la gráfica SBC vs acciones diluidas va a BL-GEN-4 (como AMZN); MG-GOV la cita | ⬜ |
+| 84 | `sensBody (SENS_DRIVERS)` · 4 sliders | Valuation ▸ Sensitivity | Valuation ▸ Sensitivity Analysis | versión AMZN con Summit 2026-08-04; los 4 supuestos (crecimiento de ads, margen, recompra, P/E) como los ejes; sin precio de respaldo $740 | ✅ |
+| 85 | `sensRender (SENS_BASE)` · tiles implícitos vs precio vivo (fallback $740) | Valuation ▸ Sensitivity | Valuation ▸ Sensitivity Analysis | versión AMZN con Summit 2026-08-04; los 4 supuestos (crecimiento de ads, margen, recompra, P/E) como los ejes; sin precio de respaldo $740 | ✅ |
+| 86 | `sensBody` · pie | Valuation ▸ Sensitivity | Valuation ▸ Sensitivity Analysis | versión AMZN con Summit 2026-08-04; los 4 supuestos (crecimiento de ads, margen, recompra, P/E) como los ejes; sin precio de respaldo $740 | ✅ |
+| 87 | `capAllocBody` · 4 tiles de retorno de capital | Valuation ▸ Capital Allocation | Management ▸ Governance & SBC ▸ Capital return | recompras + dividendos vs FCF, junto a la dilución por SBC | ✅ |
+| 88 | `buildCapital meCap` · recompras + dividendos vs FCF FY21–25 | Valuation ▸ Capital Allocation | Management ▸ Governance & SBC ▸ Capital return | recompras + dividendos vs FCF, junto a la dilución por SBC | ✅ |
+| 89 | `CAP_*` · tabla + nota + pie | Valuation ▸ Capital Allocation | Management ▸ Governance & SBC ▸ Capital return | recompras + dividendos vs FCF, junto a la dilución por SBC | ✅ |
+| 90 | `finBody (FIN_SERIES)` · 6 métricas FY19–2027E con slider | Valuation ▸ Financials | Bottom Line ▸ General ▸ Profitability & margins | **fusión** con #51: el desplegable de métricas de BL-GEN-1 ya cubre Rev/OI/NI/EBITDA/FCF/Capex | ✅ |
+| 91 | `META_MGMT.lede` · lede | Management ▸ Executives & Board | Management ▸ Executives & Board | se conserva (motor management.js) | ✅ |
+| 92 | `makeManagement execs` · 9 ejecutivos con modal CV | Management ▸ Executives & Board | Management ▸ Executives & Board | se conserva (motor management.js) | ✅ |
+| 93 | `board` · 12 consejeros + nota | Management ▸ Executives & Board | Management ▸ Executives & Board | se conserva (motor management.js) | ✅ |
+| 94 | `gov` · 4 tiles de gobierno + pie | Management ▸ Executives & Board | Management ▸ Executives & Board | se conserva (motor management.js) | ✅ |
+| 95 | `trackBody` · leyenda de ratings | Management ▸ Track Record | Management ▸ Track Record | se conserva; sin "~$1.8T company" | ✅ |
+| 96 | `META_TRACK` · 9 ejecutivos calificados con modal | Management ▸ Track Record | Management ▸ Track Record | se conserva; sin "~$1.8T company" | ✅ |
+| 97 | `META_BOARD_TRACK` · 6 consejeros + pie | Management ▸ Track Record | Management ▸ Track Record | se conserva; sin "~$1.8T company" | ✅ |
+| 98 | `govBody` · lede + callout de control | Management ▸ Governance & SBC | Management ▸ Governance & SBC | se conserva | ✅ |
+| 99 | `buildSbc meSbc` · SBC vs acciones diluidas FY21–25 + pie | Management ▸ Governance & SBC | Bottom Line ▸ General ▸ Stock-based compensation | la gráfica SBC vs acciones diluidas va a BL-GEN-4 (como AMZN); MG-GOV la cita | ✅ |
 | 100 | `#dd-mgmt-slot` · Pillar de Management (Fiscal.ai; META fuera del plan) | Management ▸ Ownership | Pillars ▸ Management | vuelve a Pillars; Management ▸ Ownership se arma con la tabla de insiders (Form 4 / DEF 14A), como TSM | ✅ |
 | 101 | `SOURCES` · pie maestro | DD ▸ pie general | Un pie por panel (§22) | el pie maestro se reparte en los pies de cada sub-tab | ⬜ |
 | 102 | `modelBody + buildAve* (Q13…OPM_A)` · backtest de sorpresas 1Q23–1Q26 ("kept for salvage") | (sin montar) Model vs Reality | Evolution ▸ Results ▸ surprise scorecard | **fusión**: Results ya muestra la sorpresa por trimestre; los datos (snapshot que ya no existe) no se reusan | ✅ |
@@ -395,3 +396,11 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 - Top Line: motor `segments.js` con `js/segments-data/meta.js` (FoA/RL; KPIs ARPP, impresiones y precio por anuncio desde BBG; precio × volumen con lectura de durabilidad; citas verbatim del 10-K; management verificado en `docs/calls/META.md`; Other = líneas de ingreso + geografía Note 2; Customers = sin cliente ≥10%, 3 clases, SPLC).
 - Arreglo de motor `segments.js` `ovCards`: las tarjetas usan el último periodo REPORTADO (antes tomaban la proyección; afectaba también a TSM).
 - VA-PEERS: estilos de la tabla extendidos de `.ov-tsm-dd` a `.ov-meta-dd`; lede y nota recortados (pedido de SAB: "mucho texto, logos enormes").
+
+### 2026-10-20 · BL-GEN-1…5 + VA-HIST + VA-SENS + MG-TEAM/OWN/GOV/TRACK — APROBADAS (con ajustes)
+- BL-GEN: `meta-bl.js` (copia de tsm-bl.js + SBC de AMZN), `meta-bl-data.js` (EDGAR XBRL; cuadre ingreso − 4 líneas = OI reportado en 8 años y 18 trimestres), `meta-bbg.js` (bbg_extract.py META, 9/8/2026). Normalized: OBBBA $15.93B (3Q25, 10-K Note 14) y beneficio $8.03B (1Q26, 10-Q Note 10). Cost structure (R7). Hecho por un subagente y verificado en el portal real.
+- Ajustes pedidos por SAB y aplicados: Expense lines formal (sin emojis; tabla única de composición y drivers; comentarios en tabla; sin el título/caja duplicados); bordes y barras de realce en `--steel`.
+- VA-HIST: `meta-histmult.js` + `meta-histmult-data.js` (10-Q/10-K 1Q19–2Q26); precio FB hasta el 8 jun 2022 y META después.
+- VA-SENS: `meta-sensitivity.js` + `meta-sensitivity-data.js` (Summit 2026-08-04); múltiplo arranca en el de mercado de hoy.
+- MG-OWN: `meta-own.js` (proxy 2026, Class A/B, % votos, holders >5%). MG-TEAM/GOV/TRACK conservados (sin "~$1.8T").
+- Guía actualizada: BL-GEN-5 formal, colores `--steel` en bordes, sin emojis en el Deep Dive, copiar el CSS de TSM ampliando `:is()`, cambio de ticker en VA-HIST, múltiplo de salida sin valuación del modelo en VA-SENS.

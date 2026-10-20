@@ -650,6 +650,12 @@ aquí, cada unidad se muestra así.
 **Base: AMZN, siempre.** Las copias de SN (SharkNinja) son más viejas y algunas rompen la regla 10
 (múltiplos congelados, `MOCK_*`). De SN solo se toman las cuatro piezas marcadas.
 
+**Al copiar de TSM (la primera empresa hecha con la guía), copiar también su CSS**: buena parte vive en
+`css/overview.css` con alcance `.ov-tsm-dd` (tabla de peers `.asc-*`, Historic Multiple `.hm-*`, Sensitivity
+`.sens-*`/`.as-*`, Ownership `.own-*`, Bottom Line `.ew-*`/`.exp-*`). No se duplica: se amplía el selector a
+`:is(.ov-tsm-dd, .ov-<t>-dd)`. Si no, la pieza sale sin formato (en META la tabla de peers salió con logos a
+tamaño completo y texto enorme — SAB lo marcó, 2026-10-20).
+
 | Unidad | Copiar de | Tomar de SN además |
 |---|---|---|
 | OV-1 … OV-7, OV-F | `amzn.js`: datos `STD_FACTS, AMZN_LEDE, STD_BIZ, GMM_SEG, GMM_GEO, REV_DEFS, A_PRODUCTS, TIMELINE, A_PEERS, OV_SOURCES`; render `stdKeyFacts, stdFourQuad, stdMoneyMap, gmmBars, stdProducts, stdPeerScatter, stdTimeline, stdOverviewBody`; cableado `html, init, wireModal, wireScatters, aLiveOne` | — |
@@ -1537,19 +1543,26 @@ función); unidad $B | % (de ingreso en Dilution; del SBC total en By line). Ley
 vistas y rango del eje derivado del dato (AMZN ya lo hace). **No copiar:** el eje de acciones a la
 **izquierda** (va a la derecha, §17.3).
 
-**BL-GEN-5 Expense lines** (colapsable al final, cerrado: "Expense lines — the N functional deep dives")
-- Explorador con una pestaña por línea de gasto (color · nombre · `$X · Y% of revenue` calculado del
-  dato, no tecleado). **El costo de ventas es la primera pestaña**, separada de los gastos operativos
-  y abierta en sus componentes (mismo criterio que el puente). Por línea, de arriba a abajo:
-  1. KPIs (3–4): monto y % de ingreso · cambio en margen YoY (ppt) · SBC incluido · el dato distintivo.
-  2. **"How the 10-K defines it"** — cita verbatim del MD&A, con fuente.
-  3. **"What sits inside this line"** — 1–2 cajas.
-  4. **"Share of revenue over time"** — mini-barras de los últimos ~8 años.
-  5. **"Unit economics"** — el flujo de costo por unidad **si se divulga**; si no, decirlo ("does not
-     disclose a dollar cost-per-unit") — nunca estimarlo.
-  6. **"Why it matters to the bottom line"** · 7. **"Why it has moved — the drivers"**.
-  8. **"What management has said"** — citas con trimestre, de `docs/calls/`.
-  9. Pie `.ov-foot`.
+**BL-GEN-5 Expense lines** (colapsable al final, cerrado: "Expense lines — the N cost lines of the income
+statement"). **Estructura formal, sin emojis ni íconos y sin repetir títulos** (SAB, 2026-10-20, en META:
+"se ve muy AI generated"; referencia `meta-bl.js` `ewBase`):
+- Debajo del encabezado del colapsable van **directo** las pestañas, una por línea (punto de color · nombre ·
+  `$X · Y% of revenue` calculado del dato, no tecleado). **Sin** un segundo título ("Expense explorer — …") ni
+  una caja enmarcada alrededor: repetían el encabezado.
+- **El costo de ventas es la primera pestaña**, separada de los gastos operativos por un rótulo "Operating
+  expenses", y abierta en sus componentes si el filing los da (mismo criterio que el puente).
+- Cada línea, en un solo recuadro (borde `--steel`), con estas seis secciones y en este orden:
+  1. **Key figures** — 3–4 KPIs: monto y % de ingreso · efecto en el margen operativo YoY (ppt) · SBC dentro
+     de la línea · el dato distintivo.
+  2. **Definition — Form 10-K** — la cita verbatim del MD&A, con fuente (barra izquierda `--steel`).
+  3. **Share of revenue, FY<primero>–FY<último>** — la gráfica de mini-barras (~8 años).
+  4. **Composition and drivers** — **una sola tabla** con dos grupos de filas: "What the line contains" y
+     "What has moved it" (rótulo · descripción con su fuente). Nada de cajas sueltas con íconos.
+  5. **Effect on the operating margin** — un bloque de texto; si no se divulga costo por unidad, una línea
+     debajo que lo dice ("does not disclose a dollar cost per unit") — nunca estimarlo.
+  6. **Management commentary** — tabla Call · Remark · Speaker, del trimestre más viejo al más nuevo, citas
+     verbatim de `docs/calls/` (una transcripción marcada "reconstruida" no entra).
+  Y el pie `.ov-foot`.
 - **Qué decide el analista:** cuáles son las líneas, qué entra en unit economics y drivers.
 
 **Pie del panel General** (`aBlFootGeneral`, ya existe en AMZN): "Sources — Bloomberg consensus export
@@ -1656,6 +1669,14 @@ compuerta**: el panel sale con los datos congelados.
 - **Al copiar, cambiar:** `'AMZN'` y `START` fijos; `fyEndDay` (asume año calendario — si la empresa no
   cierra en diciembre, cambiarlo); el `<style>` en línea y los hex (`#8A93A0`, `#C0392B`) → tokens.
 
+- **Cambio de ticker:** si la empresa cotizó con otro símbolo, la historia de precio se pide por tramos y se
+  une en la fecha del cambio. META cotizó como **FB hasta el 8 jun 2022**, y antes del 9 jun 2022 el símbolo
+  "META" era **otro valor** (un ETF): sin el empalme, 2021 salía con P/E de 1×. Revisar en F0 si hubo cambio de
+  ticker y anotarlo en la bitácora.
+- **Sin `ratios` de Massive** (la ruta falla para todos los tickers hoy): acciones diluidas y deuda neta salen de
+  los 10-Q/10-K (XBRL de EDGAR) en un archivo `<t>-histmult-data.js`, escalonadas en la fecha de cada reporte
+  (referencia: `meta-histmult-data.js`). Q4 de un dato que no se suma (EPS, acciones) = el del 8-K o el anual.
+
 ### VA-PEERS Peers (`peers`)
 
 - **Contenido:** `.ov-lede` (~1–2 oraciones: "The peer map. The same live-cap scatter as the
@@ -1756,6 +1777,11 @@ otros tres). Ninguna gráfica. Los datos van separados del código, como `sharkn
 - el modal de Track Record usa `data-detail="exec:<id>"`: agregar la rama `exec:` en `resolve()` de
   `wireModal`;
 - la clave de la sub-tab es **`team`** (como AMZN), no `execboard` (SN) — §5.
+
+- **Sin valuación del modelo en el MCP** (VA-TM ⛔, caso META): el múltiplo de salida **arranca en el múltiplo
+  de mercado de hoy** sobre los números del modelo del año elegido (precio en vivo ÷ EPS del modelo; market cap
+  en vivo + deuda neta ÷ EBITDA del modelo), de modo que la celda base es el precio de hoy; mientras llega el
+  precio, la cuadrícula muestra "⚑ Live data pending". Nunca un múltiplo tecleado. Referencia: `meta-sensitivity.js`.
 
 ### MG-TEAM Executives & Board (`team`, activa por defecto)
 
@@ -2106,6 +2132,11 @@ se usa: es el diccionario con el que Claude sabe qué etiqueta del MCP es cada l
   abajo (`SUMMIT_CAT`) aplica al Deep Dive.
 - **Acento único en todo el perfil = `--steel`** (el azul Summit que subraya OVERVIEW · DEEP DIVE…):
   líneas de acento, subrayado de pestañas activas, realces. Títulos y rótulos en `--navy`. (SAB 2026-10-20.)
+- **También bordes y barras de realce** (el recuadro de una sección, la barra izquierda de una cita, el borde
+  al pasar el cursor, el `accent-color` de un slider) van en `--steel` — nunca `--accent` (#2563EB), que se
+  colaba desde el código copiado de AMZN/TSM. (SAB 2026-10-20, en Bottom Line ▸ Expense lines.)
+- **Sin emojis ni íconos decorativos en el Deep Dive** (tarjetas, tablas, títulos). OV-5 Products es la única
+  excepción (un emoji por familia de producto).
 - **Series:** `SUMMIT_CAT` de `js/viz-palette.js`, en orden fijo, sin ciclar; el color sigue a la
   entidad (ocultar una serie no repinta las demás); más de 8 → "Other".
 - **Fuentes de dato:** Actual = navy · Summit = azul · Consensus = gris — siempre las mismas.

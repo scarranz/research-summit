@@ -20,6 +20,10 @@
 import { makeManagement } from './management.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { mountWatchList } from '../watchlist.js';
+import { metaHistMult } from './meta-histmult.js';
+import { metaSens } from './meta-sensitivity.js';
+import { metaOwnBody, metaOwnInit } from './meta-own.js';
+import { metaBlGeneralHtml, metaBlGeneralBuild } from './meta-bl.js';   // Bottom Line ▸ General (copy of tsm-bl.js + AMZN SBC)   // Management ▸ Ownership (2026 proxy holder table)   // Valuation ▸ Sensitivity (copy of tsm-sensitivity.js; Summit frozen 2026-08-04)   // Valuation ▸ Historic Multiple (copy of tsm-histmult.js)
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/meta.js)
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -2229,7 +2233,7 @@ var META_MGMT = makeManagement({
 var META_TRACK_RATE={ green:{c:'#0F9D58',bg:'rgba(15,157,88,0.07)',l:'Value creator'}, amber:{c:'#E8A00C',bg:'rgba(232,160,12,0.08)',l:'Mixed / unproven'}, red:{c:'#C0392B',bg:'rgba(192,57,43,0.07)',l:'Value destroyer'} };
 var META_TRACK=[
   { id:'zuck', n:'Mark Zuckerberg', r:'Founder, Chairman & CEO', t:'CEO since 2004', rate:'green',
-    one:'Turned a college network into a ~$1.8T company — and twice re-invented it under fire.',
+    one:'Turned a college network into one of the largest companies in the world — and twice re-invented it under fire.',
     co:['Built the mobile-ad machine, then the AI-ad machine (revenue $70B → $201B, FY19→25)','Called the 2022 bottom: "Year of Efficiency" → margin ~20%→~41%, stock >10× off the low','Voting control lets him make the long-horizon AI/RL bets no hired CEO could'],
     ext:['One of the great capital allocators of the era — Instagram/WhatsApp are landmark deals','The same control that enables the bets removes minority-holder checks (the governance flag)'],
     note:'Elite builder + allocator; the open question is the return on the AI capex he alone is steering. Green.' },
@@ -3615,7 +3619,7 @@ function deepDiveHtml(c){
     { k:'segcus', l:'Customers', body:segmentsCustomersHtml('META') },
   ]);
   h+=subtabs('bottomline',[
-    { k:'margins', l:'General', body:marginsBody()+finBody() },
+    { k:'margins', l:'General', body:metaBlGeneralHtml() },
     { k:'supplychain', l:'Supply Chain', body:suppliersBody() },
   ]);
   h+=subtabs('evolution',[
@@ -3637,11 +3641,13 @@ function deepDiveHtml(c){
     { k:'estevo', l:'Estimates', body:resultsEvoHtml('META') },
   ]);
   h+=subtabs('valuation',[
+    { k:'histmult', l:'Historic Multiple', body:metaHistMult.body() },
     { k:'peers', l:'Peers', body:meValuationPeersBody() },
-    { k:'sensitivity', l:'Sensitivity', body:sensBody() },
+    { k:'sensitivity', l:'Sensitivity', body:metaSens.body() },
   ]);
   h+=subtabs('mgmt',[
     { k:'team', l:'Executives & Board', body:META_MGMT.body() },
+    { k:'ownership', l:'Ownership', body:metaOwnBody() },
     { k:'governance', l:'Governance & SBC', body:govBody()+capAllocBody() },
     { k:'track', l:'Track Record', body:trackBody() },
   ]);
@@ -3691,7 +3697,7 @@ function buildSub(root, group, key){
   }
   if(group==='misc' && key==='capex') buildSpend();
   if(group==='bottomline' && key==='supplychain') scRenderSuppliers();
-  if(group==='bottomline' && key==='margins'){ buildMargins(); loadMargins(); renderFin(); }
+  if(group==='bottomline' && key==='margins') requestAnimationFrame(function(){ metaBlGeneralBuild(root); });
   // Earnings ▸ Setup chart (the Results engine, META_SETUP dataset) — build only when Earnings is
   // the visible subpane AND Setup is the active phase (Chart.js needs a non-null offsetParent).
   if(group==='evolution' && key==='earnings'){
@@ -3703,9 +3709,11 @@ function buildSub(root, group, key){
   if(group==='evolution' && key==='results') requestAnimationFrame(function(){
     initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'META'); });
   if(group==='evolution' && key==='estevo') requestAnimationFrame(function(){ initResultsEvo('META'); });
+  if(group==='valuation' && key==='histmult') requestAnimationFrame(function(){ metaHistMult.init(root); });
   if(group==='valuation' && key==='peers') requestAnimationFrame(function(){ meWireScatters(root); });
-  if(group==='valuation' && key==='sensitivity') sensInit(root);
+  if(group==='valuation' && key==='sensitivity') requestAnimationFrame(function(){ metaSens.init(root); });
   if(group==='mgmt' && key==='team') META_MGMT.init(root);
+  if(group==='mgmt' && key==='ownership') metaOwnInit(root);
   if(group==='mgmt' && key==='governance'){ buildSbc(); buildCapital(); }
 }
 function buildDD(root, group){ var key=activeSubKey(root, group); if(key) buildSub(root, group, key); }

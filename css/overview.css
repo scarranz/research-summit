@@ -3406,24 +3406,25 @@ img.org-photo { object-fit: cover; }
 .ov-tsm-dd .hm-full{appearance:none;border:1px solid rgba(183,121,31,.4);background:rgba(183,121,31,.08);color:#B7791F;font:700 10.5px Inter,sans-serif;padding:3px 9px;border-radius:999px;cursor:pointer}
 .ov-tsm-dd .hm-full:hover{background:rgba(183,121,31,.16)}
 
-/* TSMC ▸ Valuation ▸ Peers — the comps table under the peer map (moved from amzn.js stdPeerScatter's inline <style>) */
-.ov-tsm-dd .asc-tblwrap{overflow-x:auto}
-.ov-tsm-dd .asc-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}
-.ov-tsm-dd .asc-tbl th,.ov-tsm-dd .asc-tbl td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}
-.ov-tsm-dd .asc-tbl th:first-child,.ov-tsm-dd .asc-tbl td:first-child{text-align:left}
-.ov-tsm-dd .asc-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}
-.ov-tsm-dd .asc-tbl td.asc-m{font-weight:800;color:var(--navy)}
-.ov-tsm-dd .asc-tbl tbody tr.asc-hl{background:var(--brand-soft)}
-.ov-tsm-dd .asc-tbl tbody tr.asc-nil td{color:var(--mu)}
-.ov-tsm-dd .asc-tbl tfoot td{border-top:2px solid var(--bdr);border-bottom:none;font-weight:800;color:var(--navy);background:var(--surface)}
-.ov-tsm-dd .asc-tbl tfoot tr.asc-med td{background:var(--surface);font-weight:700;color:var(--mu)}
-.ov-tsm-dd .asc-nm{display:inline-flex;align-items:center;gap:7px}
-.ov-tsm-dd .asc-nm img{width:16px;height:16px;border-radius:4px;background:#fff;object-fit:contain}
-.ov-tsm-dd .asc-tk{color:var(--mu);font-weight:700;font-size:10.5px}
-.ov-tsm-dd .asc-up{color:var(--neg);font-weight:700}
-.ov-tsm-dd .asc-dn{color:var(--pos);font-weight:700}
-.ov-tsm-dd .asc-nilv{color:var(--mu)}
+/* TSMC and META ▸ Valuation ▸ Peers — the comps table under the peer map (moved from amzn.js stdPeerScatter's inline <style>) */
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-tblwrap{overflow-x:auto}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-tbl th,:is(.ov-tsm-dd, .ov-meta-dd) .asc-tbl td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-tbl th:first-child,:is(.ov-tsm-dd, .ov-meta-dd) .asc-tbl td:first-child{text-align:left}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-tbl td.asc-m{font-weight:800;color:var(--navy)}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-tbl tbody tr.asc-hl{background:var(--brand-soft)}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-tbl tbody tr.asc-nil td{color:var(--mu)}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-tbl tfoot td{border-top:2px solid var(--bdr);border-bottom:none;font-weight:800;color:var(--navy);background:var(--surface)}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-tbl tfoot tr.asc-med td{background:var(--surface);font-weight:700;color:var(--mu)}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-nm{display:inline-flex;align-items:center;gap:7px}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-nm img{width:16px;height:16px;border-radius:4px;background:#fff;object-fit:contain}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-tk{color:var(--mu);font-weight:700;font-size:10.5px}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-up{color:var(--neg);font-weight:700}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-dn{color:var(--pos);font-weight:700}
+:is(.ov-tsm-dd, .ov-meta-dd) .asc-nilv{color:var(--mu)}
 .ov-tsm-dd .tsm-sc-collap{margin-top:10px}
+.ov-meta-dd .me-sc-collap{margin-top:10px}
 
 /* TSMC ▸ Valuation ▸ Target Multiple / PEG (js/overviews/tsm-target-multiple.js) — moved from
    amzn-target-multiple.js's inline <style>; band colours = SUMMIT_CAT[0] (EV/EBITDA) and [1] (P/E) */

@@ -39,6 +39,8 @@ import { snSegments } from './segments-data/sn.js';
 import { snResults } from './results-data/sn.js';
 import { tsmSegments } from './segments-data/tsm.js';
 import { tsmResults } from './results-data/tsm.js';
+import { metaSegments } from './segments-data/meta.js';
+import { metaResults } from './results-data/meta.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
 import { SN_THEMES } from './themes-data/sn.js';
@@ -61,7 +63,9 @@ var SEGMENTS_DATA = {
   SN:   { seg: snSegments,  res: snResults  },
   // TSM has ONE operating segment (foundry); its six PLATFORMS stand in as the segments here (SAB,
   // Oct 15 2026) and the General tab quotes the 20-F so they are not read as reportable segments.
-  TSM:  { seg: tsmSegments, res: tsmResults }
+  TSM:  { seg: tsmSegments, res: tsmResults },
+  // META: two reportable segments (Family of Apps, Reality Labs), 10-K Note 15.
+  META: { seg: metaSegments, res: metaResults }
 };
 
 export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }
@@ -1250,7 +1254,9 @@ function ovCards(d, view){
     var dd = spec && spec.from ? sgResolve(spec.from, view) : null;
     var last = null, base = null, lp = null;
     if (dd){
-      var have = ps.filter(function(p){ return dd.act[p] != null || dd.est[p] != null; });
+      // The card is the last REPORTED period (playbook §10 TL-GEN); a forecast only when nothing is reported.
+      var have = ps.filter(function(p){ return dd.act[p] != null; });
+      if (!have.length) have = ps.filter(function(p){ return dd.est[p] != null; });
       lp = have[have.length - 1];
       if (lp){
         var i = ps.indexOf(lp), b = ps[i - PPY[view]];

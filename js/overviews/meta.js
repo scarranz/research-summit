@@ -20,6 +20,7 @@
 import { makeManagement } from './management.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { mountWatchList } from '../watchlist.js';
+import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/meta.js)
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -3265,30 +3266,8 @@ function modelBody(){
 // ═══════════════════════════════════════════════════════════════════════════
 //  SHELL — standardized Overview + Deep Dive spine
 // ═══════════════════════════════════════════════════════════════════════════
-var STD_STYLE='<style>.stdkf{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--bdr);border-top:3px solid '+BRAND+';border-radius:12px;overflow:hidden;background:var(--w);margin:2px 0}'+
-  '.stdkf-cell{padding:11px 13px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
-  '.stdkf-cell:nth-child(5n){border-right:none}.stdkf-cell:nth-child(n+6){border-bottom:none}'+
-  '.stdkf-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:3px}'+
-  '.stdkf-v{font-size:12px;font-weight:700;color:var(--navy);line-height:1.3}'+
-  '@media(max-width:720px){.stdkf{grid-template-columns:repeat(2,1fr)}.stdkf-cell{border-right:none}}'+
-  '.q2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--bdr);border-radius:12px;overflow:hidden;background:var(--w);margin:4px 0}'+
-  '.q2-cell{padding:13px 15px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
-  '.q2-cell:nth-child(2n){border-right:none}.q2-cell:nth-child(n+3){border-bottom:none}'+
-  '.q2-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);margin-bottom:5px}'+
-  '.q2-v{font-size:12px;color:var(--navy);line-height:1.5}.q2-v b{font-weight:800}'+
-  '@media(max-width:600px){.q2{grid-template-columns:1fr}.q2-cell{border-right:none}.q2-cell:nth-child(n+2){border-bottom:1px solid var(--bdr)}.q2-cell:last-child{border-bottom:none}}'+
-  '.stdp-seg{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:12px 0 7px}.stdp-group:first-child .stdp-seg{margin-top:2px}'+
-  '.stdp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}'+
-  '.stdp-card{border:1px solid var(--bdr);border-radius:11px;padding:13px 14px;background:var(--w);transition:.14s}'+
-  '.stdp-card.ov-clickable{cursor:pointer}.stdp-card.ov-clickable:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px);border-color:'+BRAND+'}'+
-  '.stdp-ic{font-size:26px;line-height:1}.stdp-n{font-size:13px;font-weight:800;color:var(--navy);margin:7px 0 3px}'+
-  '.stdp-d{font-size:11px;color:var(--mu);line-height:1.45}.stdp-more{font-size:10px;font-weight:700;color:'+BRAND+';margin-top:6px}'+
-  '.ov-collap{border:1px solid var(--bdr);border-radius:10px;margin:12px 0 0;overflow:hidden}'+
-  '.ov-collap-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12.5px;font-weight:800;color:var(--navy);padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:8px}'+
-  '.ov-collap-h:hover{background:#EEF2F6}.ov-collap-ic{font-size:10px;color:var(--mu)}.ov-collap-b{padding:12px 14px 6px}'+
-  '.dd-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 14px;border-bottom:1px solid var(--bdr);padding-bottom:10px}'+
-  '.dd-tab{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:12px;font-weight:800;color:var(--mu);padding:7px 14px;border-radius:999px;cursor:pointer}'+
-  '.dd-tab.active{background:'+BRAND+';color:#fff;border-color:'+BRAND+'}</style>';
+// (The inline STD_STYLE block was removed in the playbook restructure: every class it defined lives in
+// css/overview.css, and its pill styling of .dd-tab fought css/selectors.css — playbook A1, §21b.)
 // ═══ OV-6 Competitors — the peer map (the same ME_PEERS / ME_SC will feed Valuation ▸ Peers) ═══════════
 // Rule 10: no multiple and no market cap is written here. The file holds the DENOMINATORS, from each peer's
 // FY2025 10-K (SEC EDGAR XBRL); price, market cap and (when Massive has it) EV are live (api.liveQuote) and the
@@ -3364,8 +3343,7 @@ function meStdPeerScatter(sfx){
     '<g class="me-sc-nodes"></g>'+
   '</svg></div>';
   h+='<div class="asc-chips me-sc-chips"></div>';
-  h+='<div class="ov-diagram-cap asc-cap-end">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here — <b>TikTok</b> (ByteDance, private) has no market multiple, and <b>YouTube</b> sits inside Alphabet. '+
-    '<span class="ave-subh-note">Multiples = live price ÷ figures reported in each company’s FY2025 10-K (SEC EDGAR); forward = Bloomberg consensus FY2026 (as of Sep 8–10 2026) for Meta, Alphabet and Amazon — the other peers have no Street file, so they plot on Trailing only. Market caps are live.</span></div>';
+  h+='<div class="ov-diagram-cap asc-cap-end">Remove a peer with the <b>×</b> on its chip, or add one by ticker. TikTok (private) and YouTube (inside Alphabet) have no listed multiple.</div>';
   // Valuation ▸ Peers only: the receipt under the read (chart standard rule 3), OPEN by default — copied from
   // amzn.js meStdPeerScatter('dd').
   if(sfx==='dd') h+='<div class="rs-collap me-sc-collap">'+
@@ -3463,7 +3441,7 @@ function meScTableOne(wrap){
 // Valuation ▸ Peers (VA-PEERS): the same map as Overview ▸ Competitors — same ME_SC state, so removing a
 // peer here removes it there — plus the table. Multiples and caps are live; the file holds denominators.
 function meValuationPeersBody(){
-  return '<p class="ov-lede"><b>The peer map.</b> The same live-cap scatter as the Overview, kept beside the valuation work: X = multiple (P/E ⇄ EV/EBITDA, forward ⇄ trailing), Y = revenue growth, bubble = live market cap. Every multiple is the live price over a reported (or, for forward, Bloomberg) denominator.</p>'+
+  return '<p class="ov-lede">The same peer map as the Overview, with the numbers behind it. Multiples use live prices.</p>'+
     meStdPeerScatter('dd')+
     '<div class="ov-foot">Sources — denominators from each company’s FY2025 10-K on SEC EDGAR; forward = Bloomberg consensus FY2026 (as of Sep 8–10 2026) for Meta, Alphabet and Amazon only. Price, market cap and EV live (Massive). EBITDA = operating income + D&A; net debt = debt ex leases − cash and equivalents.</div>';
 }
@@ -3596,34 +3574,49 @@ function html(c){
   h+='</div>';
   return h;
 }
-// Deep Dive — the 5-tab spine (sibling profile tab). Pillars absorbed via dd-*-slot.
+// Deep Dive — the AMZN spine (playbook §5, F1): Top Line · Bottom Line · Evolution · Valuation · Management ·
+// Miscellaneous. Mode B: each existing pane sits in its B2 destination (docs/profiles/META.md §5) until its unit
+// is rebuilt; sub-tabs with nothing to show yet are not added (rule 5). Pillars is a profile tab again (no
+// absorbsPillars), so Analyst Ratings and the Fiscal.ai table live there, as in AMZN.
 function subtabs(group, subs){
   var bar='<div class="ovt-subtabs">'+subs.map(function(s,i){ return '<button type="button" class="ovt-subtab'+(i===0?' active':'')+'" data-ovst="'+s.k+'">'+esc(s.l)+'</button>'; }).join('')+'</div>';
   var panes=subs.map(function(s,i){ return '<div class="ovt-subpane" data-ovst="'+s.k+'"'+(i===0?'':' hidden')+'>'+s.body+'</div>'; }).join('');
   return '<div class="dd-pane" data-dd="'+group+'"'+(group==='topline'?'':' hidden')+'>'+bar+panes+'</div>';
 }
+// Misc ▸ M&A — the deal cards that used to sit under Evolution ▸ Timeline (B2 #81; the arc itself was a
+// duplicate of the Overview timeline, fused into OV-7, #80).
+function mnaBody(){
+  var t=timelineBody(), i=t.indexOf('<section class="ov-sec"><div class="ov-sec-h">M&A — how');
+  var st=t.slice(0, t.indexOf('</style>')+8);
+  return st+(i>=0?t.slice(i):'');
+}
+// Misc ▸ Competitive position — interim home of the walled-garden, industry and TAM panes (B2 #8, #31–39);
+// rebuilt to the §15b spec as MISC-comp.
+function compBody(){
+  return sec('The walled garden — why Meta keeps the ad dollar', moatBody())+unitEconBody()+industryBody()+tamBody();
+}
 function deepDiveHtml(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring
-  var h='<div class="ov ov-meta ov-meta-dd" data-brand="META">'+STD_STYLE;
+  var h='<div class="ov ov-meta ov-meta-dd" data-brand="META">';
   h+='<div class="dd-tabs">'+
     '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
     '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
     '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
     '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
     '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+    '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
   '</div>';
+  // Top Line — the shared segments engine (TL-GEN · TL-SEG · TL-OTH · TL-CUS). The old segmentsBody /
+  // customersBody panes are retired into it (B2 #14–30); their data constants stay in this file.
   h+=subtabs('topline',[
-    { k:'segments', l:'Segments', body:segmentsBody() },
-    // Family of Apps + Reality Labs folded into Segments ▸ Segment Deep Dive (SAB, Jul 2026).
-    { k:'customers', l:'Customers', body:customersBody() },
-    { k:'tam', l:'TAM', body:tamBody() },
-    { k:'industry', l:'Industry Analysis', body:industryBody() },
+    { k:'segov', l:'General', body:segmentsOverviewHtml('META') },
+    { k:'segdrv', l:'Segments', body:segmentsHtml('META') },
+    { k:'segoth', l:'Other', body:segmentsOtherHtml('META') },
+    { k:'segcus', l:'Customers', body:segmentsCustomersHtml('META') },
   ]);
   h+=subtabs('bottomline',[
-    { k:'unit', l:'Unit Economics', body:unitEconBody() },
-    { k:'spend', l:'Spend Engine', body:spendBody() },
-    { k:'suppliers', l:'Suppliers', body:suppliersBody() },
-    { k:'margins', l:'Margins', body:marginsBody() },
+    { k:'margins', l:'General', body:marginsBody()+finBody() },
+    { k:'supplychain', l:'Supply Chain', body:suppliersBody() },
   ]);
   h+=subtabs('evolution',[
     { k:'earnings', l:'Earnings', body:
@@ -3642,25 +3635,22 @@ function deepDiveHtml(c){
       '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>' },
     { k:'results', l:'Results', body:resultsHtml('META') },
     { k:'estevo', l:'Estimates', body:resultsEvoHtml('META') },
-    // Model vs Reality + Guidance retired from the bar (SAB, Jul 2026) — superseded
-    // by Results/Estimates; modelBody()/guideBody() kept below for salvage.
-    { k:'strategy', l:'Strategy', body:strategyBody() },
-    { k:'timeline', l:'Timeline', body:timelineBody() },
   ]);
   h+=subtabs('valuation',[
-    { k:'ratings', l:'Analyst Ratings', body:'<div id="dd-val-slot"></div>' },
-    { k:'multiples', l:'Multiples', body:multiplesBody() },
+    { k:'peers', l:'Peers', body:meValuationPeersBody() },
     { k:'sensitivity', l:'Sensitivity', body:sensBody() },
-    { k:'capalloc', l:'Capital Allocation', body:capAllocBody() },
-    { k:'balance', l:'Financials', body:finBody() },
   ]);
   h+=subtabs('mgmt',[
     { k:'team', l:'Executives & Board', body:META_MGMT.body() },
+    { k:'governance', l:'Governance & SBC', body:govBody()+capAllocBody() },
     { k:'track', l:'Track Record', body:trackBody() },
-    { k:'gov', l:'Governance & SBC', body:govBody() },
-    { k:'ownership', l:'Ownership', body:'<div id="dd-mgmt-slot"></div>' },
   ]);
-  h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
+  h+=subtabs('misc',[
+    { k:'comp', l:'Competitive Position', body:compBody() },
+    { k:'capex', l:'Capex & Depreciation', body:spendBody() },
+    { k:'strategy', l:'Strategy', body:strategyBody() },
+    { k:'manda', l:'M&A', body:mnaBody() },
+  ]);
   h+='</div>';
   return h;
 }
@@ -3693,10 +3683,15 @@ function metaLiveOne(root,tk){
 function activeDD(root){ var t=root.querySelector('.dd-tab.active'); return t?t.getAttribute('data-dd'):'topline'; }
 function activeSubKey(root, group){ var p=root.querySelector('.dd-pane[data-dd="'+group+'"] .ovt-subtab.active'); return p?p.getAttribute('data-ovst'):null; }
 function buildSub(root, group, key){
-  if(group==='topline' && key==='segments'){ buildSegments(); buildFoa(); wireSegDD(root); }
-  if(group==='bottomline' && key==='spend') buildSpend();
-  if(group==='bottomline' && key==='suppliers') scRenderSuppliers();
-  if(group==='bottomline' && key==='margins'){ buildMargins(); loadMargins(); }
+  if(group==='topline'){
+    if(key==='segdrv') requestAnimationFrame(function(){ initSegments(root, 'META'); });
+    else if(key==='segoth') requestAnimationFrame(function(){ initSegmentsOther(root, 'META'); });
+    else if(key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'META'); });
+    else requestAnimationFrame(function(){ initSegmentsOverview(root, 'META'); });
+  }
+  if(group==='misc' && key==='capex') buildSpend();
+  if(group==='bottomline' && key==='supplychain') scRenderSuppliers();
+  if(group==='bottomline' && key==='margins'){ buildMargins(); loadMargins(); renderFin(); }
   // Earnings ▸ Setup chart (the Results engine, META_SETUP dataset) — build only when Earnings is
   // the visible subpane AND Setup is the active phase (Chart.js needs a non-null offsetParent).
   if(group==='evolution' && key==='earnings'){
@@ -3708,11 +3703,10 @@ function buildSub(root, group, key){
   if(group==='evolution' && key==='results') requestAnimationFrame(function(){
     initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'META'); });
   if(group==='evolution' && key==='estevo') requestAnimationFrame(function(){ initResultsEvo('META'); });
+  if(group==='valuation' && key==='peers') requestAnimationFrame(function(){ meWireScatters(root); });
   if(group==='valuation' && key==='sensitivity') sensInit(root);
-  if(group==='valuation' && key==='capalloc') buildCapital();
-  if(group==='valuation' && key==='balance') renderFin();
   if(group==='mgmt' && key==='team') META_MGMT.init(root);
-  if(group==='mgmt' && key==='gov') buildSbc();
+  if(group==='mgmt' && key==='governance'){ buildSbc(); buildCapital(); }
 }
 function buildDD(root, group){ var key=activeSubKey(root, group); if(key) buildSub(root, group, key); }
 function showSub(root, group, key){
@@ -3841,7 +3835,7 @@ function init(c){
   wireFlow(root);
   // Deep Dive machinery
   wireDD(root);
-  ['topline','bottomline','evolution','valuation','mgmt'].forEach(function(g){ wireSubtabs(root, g); });
+  ['topline','bottomline','evolution','valuation','mgmt','misc'].forEach(function(g){ wireSubtabs(root, g); });
   wireCallEarnings(root);
   wireCeTrack(root);
   // AVE metric pills + Financials metric pills
@@ -3861,4 +3855,4 @@ function deepDiveInit(c){
   var root=document.querySelector('#co-detailview')||document.querySelector('.ov-meta-dd'); if(!root) return;
   var g=activeDD(root); requestAnimationFrame(function(){ buildDD(root, g); });
 }
-export var metaOverview = { html: html, init: init, absorbsPillars: true, deepDive: { html: deepDiveHtml, init: deepDiveInit } };
+export var metaOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

@@ -142,7 +142,7 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 | F0-SM | Mapa de métricas Summit | ✅ | 2026-10-20 | SAB | | dudas explicadas: cambio de forma de proyección en el modelo |
 | B1 | (modo B) Inventario de lo que existe | ✅ | 2026-10-20 | SAB | | 104 piezas (pieza 2 borrada con aprobación) |
 | B2 | (modo B) Mapa de reubicación | ✅ | 2026-10-20 | SAB | | 7 fusiones aprobadas · Misc con 5 sub-tabs |
-| F1 | Esqueleto + vista previa | ⬜ | | | | |
+| F1 | Esqueleto + vista previa | ✅ | 2026-10-20 | SAB | | estructura AMZN (6 secciones), Pillars visible, sin <style> en línea; panes viejos en su destino B2 mientras se rehacen |
 | OV-1 | Overview ▸ Key Facts | ✅ | 2026-10-20 | SAB | 10 celdas del 10-K FY2025 + market cap en vivo |
 | OV-2 | Overview ▸ Descripción | ✅ | 2026-10-20 | SAB (aprobación previa) | | 61 palabras, del 10-K Item 1 |
 | OV-3 | Overview ▸ Cuadrante 2×2 | ✅ | 2026-10-20 | SAB (aprobación previa) | | ≤ 30 palabras por celda; 3.58B DAP, sin cliente ≥ 10% |
@@ -153,10 +153,10 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 | OV-F | Overview ▸ Pie de fuentes | ✅ | 2026-10-20 | SAB (aprobación previa) | | un solo pie |
 | EV-RES-DATA | Dataset de Results (números) | ✅ | 2026-10-20 | SAB | | consenso BBG (220 celdas, verify_preprint 0 cambios/0 borrados) en vez de LSEG; Summit recongelado del 2026-08-04; EBITDA en base reportada (OI + D&A) |
 | EV-RES | Evolution ▸ Results | ✅ | 2026-10-20 | SAB | | mismo motor; ficha Consensus vuelve a aparecer |
-| TL-GEN | Top Line ▸ General | ⬜ | | | | |
-| TL-SEG | Top Line ▸ Segments | ⬜ | | | | |
-| TL-OTH | Top Line ▸ Other | ⬜ | | | | |
-| TL-CUS | Top Line ▸ Customers | ⬜ | | | | |
+| TL-GEN | Top Line ▸ General | ✅ | 2026-10-20 | SAB | | motor segments.js; tarjetas = último trimestre reportado (arreglo de motor) |
+| TL-SEG | Top Line ▸ Segments | ✅ | 2026-10-20 | SAB | | FoA y RL; KPIs ARPP, impresiones y precio por anuncio (BBG); precio × volumen con durabilidad; citas de management verificadas |
+| TL-OTH | Top Line ▸ Other | ✅ | 2026-10-20 | SAB | | Revenue lines (q+y) y Geography (Note 2, anual) |
+| TL-CUS | Top Line ▸ Customers | ✅ | 2026-10-20 | SAB | | 10-K (sin cliente ≥10%), 3 clases con cita, SPLC 5 clientes; sección 5 espera motor |
 | EV-EST | Evolution ▸ Estimates | ✅ | 2026-10-20 | SAB | | 5 snapshots: Dec 15 · Feb 3 · May 5 · Aug 4 (sin el 05-22 que ya no existe) |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | ⬜ | | | | |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
@@ -169,7 +169,7 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 | BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
 | BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
-| VA-PEERS | Valuation ▸ Peers | ⬜ | | | | |
+| VA-PEERS | Valuation ▸ Peers | ✅ | 2026-10-20 | SAB | | mismo mapa de OV-6 + tabla de números, en vivo |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | ⬜ | | | | |
 | MG-TEAM | Management ▸ Executives & Board | ⬜ | | | | |
@@ -220,31 +220,31 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 | 3 | `html (DESC)` · párrafo FoA ~50%+ margen, consolidado ~41%, RL −$19B | Overview ▸ lede | Overview ▸ OV-2 Descripción | se reescribe a 50–80 palabras sin números; las cifras pasan a OV-3/OV-4 "The numbers" | ✅ |
 | 4 | `metaFourQuad (META_BIZ)` · qué vende · quién compra · cómo gana · ventaja | Overview ▸ 2×2 | Overview ▸ OV-3 Cuadrante 2×2 | se conserva, ajustado a ≤ 30 palabras por celda | ✅ |
 | 5 | `moneyMapBody` · barras Ads 98% vs RL+other 2% | Overview ▸ How Meta makes money | Overview ▸ OV-4 How Meta makes money | barras de segmento (FoA vs RL) + vista Geography del 10-K + acordeones por segmento con "The numbers" | ✅ |
-| 6 | `moneyMapBody→chain (AD_FLOW)` · cadena de 5 pasos de la subasta, con modal | Overview ▸ How Meta makes money | Top Line ▸ Segments ▸ FoA ▸ Revenue interactions | la cadena de la subasta se vuelve la explicación de impresiones × precio por anuncio | ⬜ |
+| 6 | `moneyMapBody→chain (AD_FLOW)` · cadena de 5 pasos de la subasta, con modal | Overview ▸ How Meta makes money | Top Line ▸ Segments ▸ FoA ▸ Revenue interactions | la cadena de la subasta se vuelve la explicación de impresiones × precio por anuncio | ✅ |
 | 7 | `productsBody (RL_DETAIL)` · 4 tarjetas FoA + 3 RL con modal | Overview ▸ What it makes | Overview ▸ OV-5 Products & platforms | tarjetas por familia (Facebook, Instagram, WhatsApp, Messenger, Threads, Meta AI, Reality Labs) con modal | ✅ |
 | 8 | `moatBody (ECO_OPEN)` · reparto de $1.00 en el open web | Overview ▸ Walled garden | Misc ▸ Competitive position ▸ The walled garden | **fusión** con #37 (mismo reparto de $1.00) | ⬜ |
 | 9 | `metaScatter (META_PEERS, META_CATS)` · scatter 9 peers, múltiplos sembrados "web-sourced mid-2026" | Overview ▸ Competitors | Overview ▸ OV-6 Competitors | se rehace: denominadores de filings/BBG y múltiplos en vivo (regla 10); sin múltiplos sembrados | ✅ |
 | 10 | `html (TIMELINE)` · 7 hitos con modal | Overview ▸ Timeline | Overview ▸ OV-7 Timeline | se conserva; **fusión** con #80 (mismo arco de hitos) | ✅ |
 | 11 | `OV_SOURCE` · pie (cita snapshot 2026-05-22) | Overview ▸ pie | Overview ▸ OV-F Pie | se reescribe sin el snapshot 2026-05-22 ni "web-sourced multiples" | ✅ |
-| 12 | `wireModal` · modal compartido (11 tipos) | Overview/DD ▸ modal | Overview y Deep Dive ▸ modal | se conserva (infraestructura) | ⬜ |
-| 13 | `deepDiveHtml/subtabs` · 5 secciones + sub-tabs | DD ▸ navegación | Deep Dive ▸ barras de navegación | se rehace con la estructura de AMZN (F1) | ⬜ |
-| 14 | `segmentsBody (RL_CUM)` · lede + 2 tarjetas FoA vs RL | Top Line ▸ Segments | Top Line ▸ General ▸ The segments | el texto pasa a las tarjetas de segmento (`brief`) del motor | ⬜ |
-| 15 | `buildSegments meSegRev` · barras ingreso por segmento FY21–25 | Top Line ▸ Segments | Top Line ▸ General ▸ How revenue divides | reemplazada por el motor (datos de Results); los datos FY21–25 van al archivo de Results | ⬜ |
-| 16 | `meSegOp` · barras utilidad operativa por segmento FY21–25 | Top Line ▸ Segments | Top Line ▸ Segments ▸ top line del segmento | reemplazada por el motor (utilidad operativa por segmento de Results) | ⬜ |
-| 17 | `kpis(KPIS)` · nota + 4 tiles FY25 | Top Line ▸ Segments | Top Line ▸ General ▸ tarjetas de segmento | **fusión** con las tarjetas del motor; la nota de la brecha RL pasa a la `note` del panel | ⬜ |
-| 18 | `SRC_FIN` · pie | Top Line ▸ Segments | Top Line ▸ pie del panel | reemplazado por el pie del motor (`source`) | ⬜ |
-| 19 | `.mseg-tabs` · toggle FoA ⇄ RL | Top Line ▸ Segments | Top Line ▸ Segments ▸ pastillas de segmento | reemplazado por las pastillas del motor | ⬜ |
-| 20 | `foaBody` · ecuación impresiones × precio por anuncio (Q4'25, desactualizada) | Top Line ▸ Segments ▸ FoA | Top Line ▸ Segments ▸ FoA ▸ Revenue interactions | impresiones × precio por anuncio: la identidad obligatoria de precio × volumen (R6), actualizada a 2Q26 | ⬜ |
-| 21 | `buildFoa meFoaRev` · barras apiladas Advertising + Other FY21–25 | Top Line ▸ Segments ▸ FoA | Top Line ▸ Other ▸ Advertising vs Other revenue | corte alternativo del ingreso de FoA (motor) | ⬜ |
-| 22 | `foaBody` · nota DAP/ARPP (~3.5B, desactualizada) | Top Line ▸ Segments ▸ FoA | Top Line ▸ Segments ▸ FoA ▸ KPIs | DAP y ARPP como KPIs publicados (8-K), actualizados | ⬜ |
-| 23 | `foaBody` · "the auction in one line" | Top Line ▸ Segments ▸ FoA | Top Line ▸ Segments ▸ FoA ▸ Revenue interactions | texto "the auction in one line" dentro de What it says | ⬜ |
+| 12 | `wireModal` · modal compartido (11 tipos) | Overview/DD ▸ modal | Overview y Deep Dive ▸ modal | se conserva (infraestructura) | ✅ |
+| 13 | `deepDiveHtml/subtabs` · 5 secciones + sub-tabs | DD ▸ navegación | Deep Dive ▸ barras de navegación | se rehace con la estructura de AMZN (F1) | ✅ |
+| 14 | `segmentsBody (RL_CUM)` · lede + 2 tarjetas FoA vs RL | Top Line ▸ Segments | Top Line ▸ General ▸ The segments | el texto pasa a las tarjetas de segmento (`brief`) del motor | ✅ |
+| 15 | `buildSegments meSegRev` · barras ingreso por segmento FY21–25 | Top Line ▸ Segments | Top Line ▸ General ▸ How revenue divides | reemplazada por el motor (datos de Results); los datos FY21–25 van al archivo de Results | ✅ |
+| 16 | `meSegOp` · barras utilidad operativa por segmento FY21–25 | Top Line ▸ Segments | Top Line ▸ Segments ▸ top line del segmento | reemplazada por el motor (utilidad operativa por segmento de Results) | ✅ |
+| 17 | `kpis(KPIS)` · nota + 4 tiles FY25 | Top Line ▸ Segments | Top Line ▸ General ▸ tarjetas de segmento | **fusión** con las tarjetas del motor; la nota de la brecha RL pasa a la `note` del panel | ✅ |
+| 18 | `SRC_FIN` · pie | Top Line ▸ Segments | Top Line ▸ pie del panel | reemplazado por el pie del motor (`source`) | ✅ |
+| 19 | `.mseg-tabs` · toggle FoA ⇄ RL | Top Line ▸ Segments | Top Line ▸ Segments ▸ pastillas de segmento | reemplazado por las pastillas del motor | ✅ |
+| 20 | `foaBody` · ecuación impresiones × precio por anuncio (Q4'25, desactualizada) | Top Line ▸ Segments ▸ FoA | Top Line ▸ Segments ▸ FoA ▸ Revenue interactions | impresiones × precio por anuncio: la identidad obligatoria de precio × volumen (R6), actualizada a 2Q26 | ✅ |
+| 21 | `buildFoa meFoaRev` · barras apiladas Advertising + Other FY21–25 | Top Line ▸ Segments ▸ FoA | Top Line ▸ Other ▸ Advertising vs Other revenue | corte alternativo del ingreso de FoA (motor) | ✅ |
+| 22 | `foaBody` · nota DAP/ARPP (~3.5B, desactualizada) | Top Line ▸ Segments ▸ FoA | Top Line ▸ Segments ▸ FoA ▸ KPIs | DAP y ARPP como KPIs publicados (8-K), actualizados | ✅ |
+| 23 | `foaBody` · "the auction in one line" | Top Line ▸ Segments ▸ FoA | Top Line ▸ Segments ▸ FoA ▸ Revenue interactions | texto "the auction in one line" dentro de What it says | ✅ |
 | 24 | `foaBody` · GEM antes/después | Top Line ▸ Segments ▸ FoA | Top Line ▸ Segments ▸ FoA ▸ What it sells ▸ Commentary | GEM como cita de management con trimestre | ⬜ |
 | 25 | `foaBody` · 4 tiles de crecimiento (Reels, Threads, WhatsApp) + pie | Top Line ▸ Segments ▸ FoA | Top Line ▸ Segments ▸ FoA ▸ KPIs / What management has said | tiles de crecimiento como KPIs o citas con trimestre | ⬜ |
 | 26 | `rlBody (RL_WHAT, RL_DETAIL)` · lede + Quest/Ray-Ban/Horizon/Orion con modal | Top Line ▸ Segments ▸ RL | Top Line ▸ Segments ▸ RL ▸ What it sells | Quest / Ray-Ban Meta / Horizon / Orion como productos con definición y clientes | ⬜ |
 | 27 | `rlBody (RL_NOTE, RL_READ_DETAIL)` · "How to read RL" 3 tarjetas + pie | Top Line ▸ Segments ▸ RL | Top Line ▸ Segments ▸ RL ▸ Our read on it + Commentary | las 3 tarjetas como lectura propia (OURS) y citas (CALL) | ⬜ |
-| 28 | `customersBody` · hero 0.02% vs 10–20% | Top Line ▸ Customers | Top Line ▸ Customers ▸ What the company discloses | el hallazgo de concentración (no hay cliente material) | ⬜ |
-| 29 | `customersBody (SC_CUST_*)` · tabla SPLC top-5 clientes + 239 más | Top Line ▸ Customers | Top Line ▸ Customers ▸ Who has said they buy from Meta | tabla SPLC; y sección 5 "What each top customer buys" por clase de anunciante (R1) | ⬜ |
-| 30 | `customersBody (SC_NOTE)` · "Why this matters" + pie | Top Line ▸ Customers | Top Line ▸ Customers ▸ nota + pie | texto a la nota de cobertura (`coverageWhy`) | ⬜ |
+| 28 | `customersBody` · hero 0.02% vs 10–20% | Top Line ▸ Customers | Top Line ▸ Customers ▸ What the company discloses | el hallazgo de concentración (no hay cliente material) | ✅ |
+| 29 | `customersBody (SC_CUST_*)` · tabla SPLC top-5 clientes + 239 más | Top Line ▸ Customers | Top Line ▸ Customers ▸ Who has said they buy from Meta | tabla SPLC; y sección 5 "What each top customer buys" por clase de anunciante (R1) | ✅ |
+| 30 | `customersBody (SC_NOTE)` · "Why this matters" + pie | Top Line ▸ Customers | Top Line ▸ Customers ▸ nota + pie | texto a la nota de cobertura (`coverageWhy`) | ✅ |
 | 31 | `tamBody (TAM_BARS)` · barras publicidad global / digital / Meta | Top Line ▸ TAM | Misc ▸ Competitive position ▸ market share | el TAM como denominador de la cuota de mercado; texto de superficies nuevas a la nota | ⬜ |
 | 32 | `tamBody (TAM_NEW, TAM_NOTE)` · superficies nuevas + nota | Top Line ▸ TAM | Misc ▸ Competitive position ▸ market share | el TAM como denominador de la cuota de mercado; texto de superficies nuevas a la nota | ⬜ |
 | 33 | `industryBody` · 4 tiles de la arena | Top Line ▸ Industry | Misc ▸ Competitive position | amenazas → "cuestionamientos" con evidencia a favor y en contra; peers cualitativos → tabla de competidores (TikTok, YouTube, Google Search, Amazon Ads…); cifras desactualizadas se corrigen | ⬜ |
@@ -296,8 +296,8 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 | 79 | `STRAT_DRIVERS, STRAT_NOTE` · cuatro apuestas con modal + pie | Evolution ▸ Strategy | Misc ▸ Strategy | flywheel + cuatro apuestas, como sub-tab propia de Misc | ⬜ |
 | 80 | `timelineBody (TIMELINE)` · arco de 7 hitos (repite el 10) | Evolution ▸ Timeline | Overview ▸ OV-7 Timeline | **fusión** con #10 (duplicado) | ⬜ |
 | 81 | `META_MNA` · 7 deals de M&A con modal + nota | Evolution ▸ Timeline | Misc ▸ M&A | como el Misc ▸ M&A de AMZN | ⬜ |
-| 82 | `#dd-val-slot` · Pillar de Valuation (ratings Massive) | Valuation ▸ Analyst Ratings | Pillars ▸ Valuation | vuelve a su lugar original: la pestaña Pillars se muestra otra vez, como en AMZN (sin `absorbsPillars`) | ⬜ |
-| 83 | `multiplesBody (MULT_ROWS)` · tabla de 5 empresas, múltiplos sembrados | Valuation ▸ Multiples | Valuation ▸ Peers ▸ The numbers behind the map | se rehace en vivo (denominadores + precio vivo); sin múltiplos sembrados | ⬜ |
+| 82 | `#dd-val-slot` · Pillar de Valuation (ratings Massive) | Valuation ▸ Analyst Ratings | Pillars ▸ Valuation | vuelve a su lugar original: la pestaña Pillars se muestra otra vez, como en AMZN (sin `absorbsPillars`) | ✅ |
+| 83 | `multiplesBody (MULT_ROWS)` · tabla de 5 empresas, múltiplos sembrados | Valuation ▸ Multiples | Valuation ▸ Peers ▸ The numbers behind the map | se rehace en vivo (denominadores + precio vivo); sin múltiplos sembrados | ✅ |
 | 84 | `sensBody (SENS_DRIVERS)` · 4 sliders | Valuation ▸ Sensitivity | Valuation ▸ Sensitivity Analysis | versión AMZN con Summit 2026-08-04; los 4 supuestos (crecimiento de ads, margen, recompra, P/E) como los ejes; sin precio de respaldo $740 | ⬜ |
 | 85 | `sensRender (SENS_BASE)` · tiles implícitos vs precio vivo (fallback $740) | Valuation ▸ Sensitivity | Valuation ▸ Sensitivity Analysis | versión AMZN con Summit 2026-08-04; los 4 supuestos (crecimiento de ads, margen, recompra, P/E) como los ejes; sin precio de respaldo $740 | ⬜ |
 | 86 | `sensBody` · pie | Valuation ▸ Sensitivity | Valuation ▸ Sensitivity Analysis | versión AMZN con Summit 2026-08-04; los 4 supuestos (crecimiento de ads, margen, recompra, P/E) como los ejes; sin precio de respaldo $740 | ⬜ |
@@ -314,7 +314,7 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 | 97 | `META_BOARD_TRACK` · 6 consejeros + pie | Management ▸ Track Record | Management ▸ Track Record | se conserva; sin "~$1.8T company" | ⬜ |
 | 98 | `govBody` · lede + callout de control | Management ▸ Governance & SBC | Management ▸ Governance & SBC | se conserva | ⬜ |
 | 99 | `buildSbc meSbc` · SBC vs acciones diluidas FY21–25 + pie | Management ▸ Governance & SBC | Bottom Line ▸ General ▸ Stock-based compensation | la gráfica SBC vs acciones diluidas va a BL-GEN-4 (como AMZN); MG-GOV la cita | ⬜ |
-| 100 | `#dd-mgmt-slot` · Pillar de Management (Fiscal.ai; META fuera del plan) | Management ▸ Ownership | Pillars ▸ Management | vuelve a Pillars; Management ▸ Ownership se arma con la tabla de insiders (Form 4 / DEF 14A), como TSM | ⬜ |
+| 100 | `#dd-mgmt-slot` · Pillar de Management (Fiscal.ai; META fuera del plan) | Management ▸ Ownership | Pillars ▸ Management | vuelve a Pillars; Management ▸ Ownership se arma con la tabla de insiders (Form 4 / DEF 14A), como TSM | ✅ |
 | 101 | `SOURCES` · pie maestro | DD ▸ pie general | Un pie por panel (§22) | el pie maestro se reparte en los pies de cada sub-tab | ⬜ |
 | 102 | `modelBody + buildAve* (Q13…OPM_A)` · backtest de sorpresas 1Q23–1Q26 ("kept for salvage") | (sin montar) Model vs Reality | Evolution ▸ Results ▸ surprise scorecard | **fusión**: Results ya muestra la sorpresa por trimestre; los datos (snapshot que ya no existe) no se reusan | ✅ |
 | 103 | `guideBody (GUIDE, CAPEX_GUIDE)` · guiado vs entregado 1Q24–2Q26 + escalada del capex guide | (sin montar) Guidance | Evolution ▸ Results ▸ bandas de guía + capex guide anual | **fusión**: la guía de ingreso va en guideLo/guideHi; la escalada del capex guide como guía anual de capex | ✅ |
@@ -324,6 +324,8 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 
 | Desde | Unidad | Qué falta | Quién lo consigue | Estado |
 |---|---|---|---|---|
+| 2026-10-20 | TL-SEG / TL-CUS | Motor `segments.js`: unidad "personas" para DAP; texto fijo "net sales" (Meta dice revenue); sección 5 "What each top customer buys" (guía §10) — PR de motor aparte | Claude (PR de motor) | ⬜ |
+| 2026-10-20 | TL-SEG | 3 afirmaciones del perfil viejo sin fuente encontrada (EssilorLuxottica "seller of record", ">7M lentes 2025", "+3.5% clicks GEM") — conservadas en el código, no migradas | SAB (fuente o descartar) | ⬜ |
 | 2026-10-20 | VA-TM | Valuación de META en el MCP. El workbook `DCF META.xlsm` sí la tiene (Output ▸ VALUATION: EV/EBITDA PT 808.91, P/E PT 795.98), pero el último submit (2026-08-04) es anterior a que el MCP la leyera. Arreglo: (1) Oscar carga hacia atrás la valuación de los 5 snapshots, como con AMZN; (2) SAB hace submit nuevo después del 3Q26 | Oscar · SAB | ⬜ |
 | 2026-10-20 | EV-RES-DATA / F0-SM | Summit 2027Q1 proyectado = 643.2 en el snapshot 2026-08-04 (roto) — corregir en el workbook antes del próximo submit | SAB (autor del modelo) | ⬜ |
 | 2026-10-20 | EV-POST 2Q26 | Transcripción verbatim de IR del 2Q26 (hoy reconstruida de prensa) | SAB / Dani | ⬜ |
@@ -387,3 +389,9 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 - Estimates: vintages Dec 15 · Feb 3 · May 5 · Aug 4 (2026-05-22 eliminado); notas reescritas.
 - Arreglo de paso: `inspect_matrix.py` / `emit_matrix.py` leen el archivo BBG con `errors='replace'` (el byte µ los tumbaba para todos los tickers).
 - Piezas B2 cerradas: #74, #75, #76, #102 (sorpresa = Results), #103 (bandas de guía).
+
+### 2026-10-20 · F1 + TL-GEN/SEG/OTH/CUS + VA-PEERS — APROBADAS
+- F1: Deep Dive con la estructura AMZN (Top Line · Bottom Line · Evolution · Valuation · Management · Miscellaneous); Pillars visible otra vez (sin `absorbsPillars`); `<style>` en línea STD_STYLE eliminado; paneles viejos en su destino B2 mientras se rehacen (BL General = márgenes + Financials; Misc = Competitive Position, Capex & Depreciation, Strategy, M&A; Governance & SBC + Capital Allocation).
+- Top Line: motor `segments.js` con `js/segments-data/meta.js` (FoA/RL; KPIs ARPP, impresiones y precio por anuncio desde BBG; precio × volumen con lectura de durabilidad; citas verbatim del 10-K; management verificado en `docs/calls/META.md`; Other = líneas de ingreso + geografía Note 2; Customers = sin cliente ≥10%, 3 clases, SPLC).
+- Arreglo de motor `segments.js` `ovCards`: las tarjetas usan el último periodo REPORTADO (antes tomaban la proyección; afectaba también a TSM).
+- VA-PEERS: estilos de la tabla extendidos de `.ov-tsm-dd` a `.ov-meta-dd`; lede y nota recortados (pedido de SAB: "mucho texto, logos enormes").

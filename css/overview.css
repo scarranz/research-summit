@@ -1038,11 +1038,12 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 }
 .ov-msft .ov-snap { border-top: 3px solid var(--brand-2); }
 
-/* Meta brand accent — Meta blue (#0866FF) + Reality Labs violet (#8B5CF6). */
+/* Meta accent — Summit tokens, not Meta's brand (SAB, Oct 20 2026: every highlight is the Summit blue
+   that underlines the profile tabs). Meta's colour lives only in its logo (playbook §21). */
 .ov-meta {
-  --brand: #0866FF;
-  --brand-soft: #E7F0FF;
-  --brand-2: #8B5CF6;
+  --brand: var(--steel);
+  --brand-soft: rgba(62,90,130,0.08);
+  --brand-2: var(--steel);
 }
 .ov-meta .ov-snap { border-top: 3px solid var(--brand); }
 .ov-meta .ovt-tabs {
@@ -1055,10 +1056,10 @@ img.mgmt-av { border: 1px solid var(--bdr); }
   font-size: 13px; font-weight: 600; color: var(--mu);
   padding: 8px 16px; margin-bottom: 0; transition: background .15s, color .15s;
 }
-.ov-meta .ovt-tab:hover { color: var(--navy); background: rgba(8,102,255,0.06); }
+.ov-meta .ovt-tab:hover { color: var(--navy); background: var(--brand-soft); }
 .ov-meta .ovt-tab.active {
   color: #fff; background: var(--brand); border-bottom: none;
-  box-shadow: 0 1px 3px rgba(8,102,255,0.28);
+  box-shadow: 0 1px 3px rgba(62,90,130,0.28);
 }
 .ov-meta .ovt-tab.active:hover { color: #fff; }
 

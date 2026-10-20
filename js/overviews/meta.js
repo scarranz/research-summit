@@ -28,8 +28,13 @@ function money(m){ if(m==null) return '—'; var neg=m<0,a=Math.abs(m),s;
   if(a>=1000) s='$'+(a/1000).toFixed(a/1000>=100?0:1)+'B'; else s='$'+Math.round(a)+'M'; return (neg?'−':'')+s; }
 function pctStr(p){ return (p>=0?'+':'−')+Math.abs(p).toFixed(0)+'%'; }
 
-// ─── Brand: Meta blue + Reality Labs violet ──────────────────────────────────
-var BRAND='#0866FF', BRAND2='#1877F2', FOA='#0866FF', AD='#0866FF', OTHER='#7AA9FF', RL='#8B5CF6', GRAY='#B8C0CA', NEG='#C0392B', GREEN='#16A34A', FC='#A8C7FF';
+// ─── Accents: Summit tokens, never Meta's brand (SAB, Oct 20 2026; playbook §21) ──────────────
+// BRAND = the Summit blue that underlines the profile tabs (--steel); BRAND2 = Summit navy.
+// Read from the stylesheet so Chart.js gets a real colour; the fallbacks are the same tokens.
+function metaTok(name, fb){ try{ var v=getComputedStyle(document.documentElement).getPropertyValue(name).trim(); return v||fb; }catch(e){ return fb; } }
+var BRAND=metaTok('--steel','#3E5A82'), BRAND2=metaTok('--navy','#1E2733');
+// Series colours below still carry Meta's palette; each Deep Dive unit moves them to SUMMIT_CAT as it is rebuilt.
+var FOA='#0866FF', AD='#0866FF', OTHER='#7AA9FF', RL='#8B5CF6', GRAY='#B8C0CA', NEG='#C0392B', GREEN='#16A34A', FC='#A8C7FF';
 var _co=null;   // open company (id + ticker), captured in html/deepDiveHtml for the shared Watch List engine
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -3193,7 +3198,7 @@ var STD_STYLE='<style>.stdkf{display:grid;grid-template-columns:repeat(5,1fr);bo
   '.q2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--bdr);border-radius:12px;overflow:hidden;background:var(--w);margin:4px 0}'+
   '.q2-cell{padding:13px 15px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
   '.q2-cell:nth-child(2n){border-right:none}.q2-cell:nth-child(n+3){border-bottom:none}'+
-  '.q2-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:'+BRAND+';margin-bottom:5px}'+
+  '.q2-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);margin-bottom:5px}'+
   '.q2-v{font-size:12px;color:var(--navy);line-height:1.5}.q2-v b{font-weight:800}'+
   '@media(max-width:600px){.q2{grid-template-columns:1fr}.q2-cell{border-right:none}.q2-cell:nth-child(n+2){border-bottom:1px solid var(--bdr)}.q2-cell:last-child{border-bottom:none}}'+
   '.stdp-seg{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:12px 0 7px}.stdp-group:first-child .stdp-seg{margin-top:2px}'+
@@ -3212,7 +3217,6 @@ function html(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-meta" data-brand="META">'+STD_STYLE;
   h+=metaKeyFacts();
-  h+='<div class="ov-live" id="meLive" hidden></div>';
   h+='<p class="ov-lede">'+DESC+'</p>';
   h+=metaFourQuad();
   h+=collapsible('How Meta makes money — the ad auction', moneyMapBody());
@@ -3296,27 +3300,17 @@ function deepDiveHtml(c){
   return h;
 }
 
-// ─── Live price + market cap (Massive via api.liveQuote) ─────────────────────
-function meBig(m){ if(m==null) return null; var a=Math.abs(m); if(a>=1e12) return '$'+(a/1e12).toFixed(2)+'T'; if(a>=1e9) return '$'+(a/1e9).toFixed(a/1e9>=100?0:1)+'B'; return '$'+Math.round(a/1e6)+'M'; }
+// ─── Live quote (Massive via api.liveQuote) ──────────────────────────────────
+// No price strip on the Overview (SAB, Oct 20 2026 — the profile header already shows the price):
+// the quote only feeds the Key Facts market cap, the peer map and Sensitivity.
 function renderLive(root){
-  var el=root.querySelector('#meLive'); if(!el) return;
-  el.hidden=false; el.innerHTML='<span class="ov-live-ts">fetching live data…</span>';
   import('../api.js').then(function(api){ return api.liveQuote('META'); }).then(function(res){
     var q=(res && res.success) ? res.data : null;
-    if(!q || q.price==null){ el.hidden=true; el.innerHTML=''; return; }
+    if(!q || q.price==null) return;
     _metaLivePx=q.price; try{ sensRender(root); }catch(e){}
     if(q.marketCap!=null){ var mcEl=root.querySelector('#meMc'); if(mcEl){ var mcB=q.marketCap/1e9; mcEl.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live'; }
       META_SC.peers && META_SC.peers.forEach(function(p){ if(p.tk==='META') p.mc=q.marketCap/1e9; }); metaScRender(root); }
-    var up=(q.changePct==null||q.changePct>=0);
-    var html='<span class="ov-live-dot"></span><span class="ov-live-tk">META</span><span class="ov-live-px">$'+q.price.toFixed(2)+'</span>';
-    if(q.changePct!=null) html+='<span class="ov-live-ch '+(up?'up':'down')+'">'+(up?'▲ +':'▼ −')+Math.abs(q.changePct).toFixed(2)+'%</span>';
-    if(q.marketCap!=null) html+='<span class="ov-live-mc">'+meBig(q.marketCap)+' mkt cap</span>';
-    if(q.ev!=null)        html+='<span class="ov-live-mc">'+meBig(q.ev)+' EV</span>';
-    if(q.netDebt!=null)   html+='<span class="ov-live-mc">'+(q.netDebt<0?'net cash ':'net debt ')+meBig(q.netDebt)+'</span>';
-    if(q.shares!=null)    html+='<span class="ov-live-mc">'+(q.shares/1e9).toFixed(2)+'B sh</span>';
-    html+='<span class="ov-live-ts">live · NASDAQ · Massive</span>';
-    el.innerHTML=html;
-  }).catch(function(){ el.hidden=true; el.innerHTML=''; });
+  }).catch(function(){});
 }
 // Live market caps for peer bubbles.
 function metaLiveOne(root,tk){

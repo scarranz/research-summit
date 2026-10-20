@@ -700,6 +700,11 @@ pisa (10px, `--navy`). Manda la hoja.
 | — | OV-F | Pie de fuentes del Overview | siempre |
 
 Prohibido agregar un 8.º bloque: ni tira de precio, ni segundo recuadro de KPIs, ni firma de autor.
+**La tira de precio en vivo** (ticker · precio · cambio · market cap · EV · deuda neta · acciones) **no
+existe en ningún perfil**: el precio y el cambio ya están en la cabecera del perfil, y el market cap en Key
+Facts. La cotización en vivo (`liveQuote`) se pide igual, pero solo alimenta la celda de market cap, el mapa
+de peers y Sensitivity — sin pintar nada propio (SAB, 2026-10-20, al quitarla de META). En modo B, si el
+perfil la trae, se quita (con su aprobación anotada) y se conserva la llamada.
 Los bloques 1–3 no llevan título encima. Los 4–7 usan el colapsable `collapsible(title, inner, false)`
 de `amzn.js`, con el título exacto de la tabla (cambiando el nombre de la empresa).
 
@@ -712,6 +717,13 @@ acentos `--steel`, divisores y ejes en grises (`SUMMIT_MUTE`). En concreto:
   grueso. Los logos son el único color.
 - **Sin rellenos de color** en tarjetas, pastillas, chips ni encabezados (ni `--brand-soft` de fondo
   en bloques enteros). La pastilla activa se marca con navy, como en el resto del portal.
+- **Títulos de celdas y etiquetas en negro** (`--navy`): "What it sells", "Who buys it", "How it earns",
+  "The edge" del 2×2 y cualquier rótulo equivalente — nunca en azul ni en el color de la empresa
+  (SAB, 2026-10-20).
+- **Un solo color de acento en todo el perfil:** el azul Summit que subraya las pestañas del perfil
+  (OVERVIEW · DEEP DIVE…), `--steel`. Es el de la línea de 3 px de Key Facts, el subrayado de la
+  pestaña activa en cada nivel y cualquier otro realce. En la raíz del perfil: `--brand: var(--steel);
+  --brand-2: var(--steel)` (SAB, 2026-10-20).
 - El color categórico (`SUMMIT_CAT`, §21) **empieza en el Deep Dive**, donde hace falta para separar
   series en una gráfica.
 - **Verificación** (va en la autoauditoría de cada OV): buscar `SUMMIT_CAT` y hex en las constantes y
@@ -720,8 +732,9 @@ acentos `--steel`, divisores y ejes en grises (`SUMMIT_MUTE`). En concreto:
 ### OV-1 Key Facts
 
 - **Forma:** 10 celdas, 5 columnas × 2 filas (2 columnas en móvil). Celdas blancas, divisores finos,
-  sin sombreado gris. Línea de acento de 3 px arriba, con `var(--brand-2, var(--brand))` de la hoja
-  de estilos — **no** un hex fijo.
+  sin sombreado gris. Línea de acento de 3 px arriba en `--steel` (el azul Summit de las pestañas del
+  perfil), vía `var(--brand-2, var(--brand))` de la hoja de estilos con la raíz en `--steel` — **no** un
+  hex fijo ni el color de la empresa.
 - **Las 10 celdas, en este orden** (etiqueta exacta en inglés · formato del valor · fuente):
 
 | # | Etiqueta | Formato | Fuente |
@@ -2087,6 +2100,8 @@ se usa: es el diccionario con el que Claude sabe qué etiqueta del MCP es cada l
   `--brand-soft:rgba(37,99,235,0.08)`) son tokens neutros de Summit y **se copian tal cual**.
 - **El Overview no lleva color categórico** (§8, SAB 2026-10-19): solo navy, steel y grises. Lo de
   abajo (`SUMMIT_CAT`) aplica al Deep Dive.
+- **Acento único en todo el perfil = `--steel`** (el azul Summit que subraya OVERVIEW · DEEP DIVE…):
+  líneas de acento, subrayado de pestañas activas, realces. Títulos y rótulos en `--navy`. (SAB 2026-10-20.)
 - **Series:** `SUMMIT_CAT` de `js/viz-palette.js`, en orden fijo, sin ciclar; el color sigue a la
   entidad (ocultar una serie no repinta las demás); más de 8 → "Other".
 - **Fuentes de dato:** Actual = navy · Summit = azul · Consensus = gris — siempre las mismas.
@@ -2124,8 +2139,9 @@ paso más chico y más callado que el de arriba.
 
 **Reglas:**
 - Tipo oración en todos los niveles bajo el 1 (nada en mayúsculas).
-- El activo siempre en **navy Summit** — nunca `--brand` (por ahí se filtraban el naranja de Amazon y
-  los dos azules) — y sin rellenos.
+- El activo: texto en **navy Summit** y subrayado en el **azul Summit de las pestañas del perfil**
+  (`--steel`, SAB 2026-10-20) — nunca `--brand` de la empresa (por ahí se filtraban el naranja de Amazon
+  y los dos azules) — y sin rellenos.
 - Ningún módulo de empresa define estilos propios para `.dd-tab`, `.ovt-subtab` o `.ce-phtab`, ni
   `<style>` en línea ni estilos puestos desde JS.
 

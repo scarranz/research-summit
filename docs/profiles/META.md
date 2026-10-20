@@ -140,7 +140,7 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 |---|---|---|---|---|---|---|
 | F0 | Inventario de datos | ✅ | 2026-10-20 | SAB | | VA-TM ⛔ hasta valuación de META en el MCP |
 | F0-SM | Mapa de métricas Summit | ✅ | 2026-10-20 | SAB | | dudas explicadas: cambio de forma de proyección en el modelo |
-| B1 | (modo B) Inventario de lo que existe | ⬜ | | | | |
+| B1 | (modo B) Inventario de lo que existe | 👀 | 2026-10-20 | | | 104 piezas |
 | B2 | (modo B) Mapa de reubicación | ⬜ | | | | |
 | F1 | Esqueleto + vista previa | ⬜ | | | | |
 | OV-1 | Overview ▸ Key Facts | ⬜ | | | | |
@@ -188,7 +188,8 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 ## 3. Decisiones del analista
 
 <!-- Solo se agrega. Si una decisión cambia, nueva línea que cita la anterior. -->
-- AAAA-MM-DD · <ID> · <decisión> — <por qué> — <quién>
+- 2026-10-20 · B1 pieza 2 · Quitar por completo la tira de precio en vivo del Overview (precio, cambio, market cap, net debt) — el precio ya está en la cabecera — SAB. Regla llevada a la guía §8.
+- 2026-10-20 · todo el perfil · Títulos del 2×2 (What it sells, Who buys it…) en negro (--navy) y **un solo acento en todo el perfil: el azul Summit que subraya las pestañas del perfil (--steel)** — línea de Key Facts, subrayado de pestañas activas en todos los niveles. Meta entra a css/selectors.css. Aplicado a Meta y escrito en la guía (§8, §21, §21b) — SAB
 
 ## 4. Excepciones aceptadas
 
@@ -197,11 +198,123 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 
 ## 5. Mapa de reubicación (solo modo B)
 
-Conteo de control (piezas originales): **N**
+Conteo de control (piezas originales): **104** — 101 visibles (B1, 2026-10-20: código leído completo +
+recorrido del portal local, 26 sub-tabs, consola sin errores) + 2 paneles sin montar + 1 grupo de constantes con
+texto sin mostrar. El código muerto sin contenido (helpers sin llamar, CSS retirado, `_scBindDetails`
+inexistente) no cuenta: se limpia sin mapa.
 
-| # | Pieza original (archivo:función) | Destino (sección ▸ sub-tab ▸ bloque) | Cómo | Estado |
-|---|---|---|---|---|
-| 1 | | | | ⬜ |
+Hallazgos de B1: 16 `<style>` en línea y ~60 hex (paleta de marca de Meta); "~$1.8T" sembrado en 3 lugares,
+múltiplos de peers sembrados (`META_PEERS`, `MULT_ROWS`) y precio de respaldo $740 (regla 10); Summit del
+snapshot 2026-05-22 (ya no existe) en ~15 constantes; consenso LSEG en Results; cifras viejas (Q4'25) que
+contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" que ya no existe; Timeline y el
+"moat $1.00" repetidos. Todo el texto en pantalla está en inglés.
+
+| # | Pieza original (archivo:función) | Ubicación hoy | Destino (sección ▸ sub-tab ▸ bloque) | Cómo | Estado |
+|---|---|---|---|---|---|
+| 1 | `metaKeyFacts (META_FACTS)` · 10 celdas; market cap en vivo (fallback "~$1.8T · est" sembrado) | Overview ▸ Key Facts | | | ⬜ |
+| 2 | `renderLive (#meLive)` · tira de precio, market cap, EV, deuda neta, acciones (Massive) | Overview ▸ precio en vivo | — (eliminada) | **borrado aprobado por SAB 2026-10-20**: "quítalo por completo"; la cotización en vivo se sigue pidiendo para market cap, peers y Sensitivity | ✅ |
+| 3 | `html (DESC)` · párrafo FoA ~50%+ margen, consolidado ~41%, RL −$19B | Overview ▸ lede | | | ⬜ |
+| 4 | `metaFourQuad (META_BIZ)` · qué vende · quién compra · cómo gana · ventaja | Overview ▸ 2×2 | | | ⬜ |
+| 5 | `moneyMapBody` · barras Ads 98% vs RL+other 2% | Overview ▸ How Meta makes money | | | ⬜ |
+| 6 | `moneyMapBody→chain (AD_FLOW)` · cadena de 5 pasos de la subasta, con modal | Overview ▸ How Meta makes money | | | ⬜ |
+| 7 | `productsBody (RL_DETAIL)` · 4 tarjetas FoA + 3 RL con modal | Overview ▸ What it makes | | | ⬜ |
+| 8 | `moatBody (ECO_OPEN)` · reparto de $1.00 en el open web | Overview ▸ Walled garden | | | ⬜ |
+| 9 | `metaScatter (META_PEERS, META_CATS)` · scatter 9 peers, múltiplos sembrados "web-sourced mid-2026" | Overview ▸ Competitors | | | ⬜ |
+| 10 | `html (TIMELINE)` · 7 hitos con modal | Overview ▸ Timeline | | | ⬜ |
+| 11 | `OV_SOURCE` · pie (cita snapshot 2026-05-22) | Overview ▸ pie | | | ⬜ |
+| 12 | `wireModal` · modal compartido (11 tipos) | Overview/DD ▸ modal | | | ⬜ |
+| 13 | `deepDiveHtml/subtabs` · 5 secciones + sub-tabs | DD ▸ navegación | | | ⬜ |
+| 14 | `segmentsBody (RL_CUM)` · lede + 2 tarjetas FoA vs RL | Top Line ▸ Segments | | | ⬜ |
+| 15 | `buildSegments meSegRev` · barras ingreso por segmento FY21–25 | Top Line ▸ Segments | | | ⬜ |
+| 16 | `meSegOp` · barras utilidad operativa por segmento FY21–25 | Top Line ▸ Segments | | | ⬜ |
+| 17 | `kpis(KPIS)` · nota + 4 tiles FY25 | Top Line ▸ Segments | | | ⬜ |
+| 18 | `SRC_FIN` · pie | Top Line ▸ Segments | | | ⬜ |
+| 19 | `.mseg-tabs` · toggle FoA ⇄ RL | Top Line ▸ Segments | | | ⬜ |
+| 20 | `foaBody` · ecuación impresiones × precio por anuncio (Q4'25, desactualizada) | Top Line ▸ Segments ▸ FoA | | | ⬜ |
+| 21 | `buildFoa meFoaRev` · barras apiladas Advertising + Other FY21–25 | Top Line ▸ Segments ▸ FoA | | | ⬜ |
+| 22 | `foaBody` · nota DAP/ARPP (~3.5B, desactualizada) | Top Line ▸ Segments ▸ FoA | | | ⬜ |
+| 23 | `foaBody` · "the auction in one line" | Top Line ▸ Segments ▸ FoA | | | ⬜ |
+| 24 | `foaBody` · GEM antes/después | Top Line ▸ Segments ▸ FoA | | | ⬜ |
+| 25 | `foaBody` · 4 tiles de crecimiento (Reels, Threads, WhatsApp) + pie | Top Line ▸ Segments ▸ FoA | | | ⬜ |
+| 26 | `rlBody (RL_WHAT, RL_DETAIL)` · lede + Quest/Ray-Ban/Horizon/Orion con modal | Top Line ▸ Segments ▸ RL | | | ⬜ |
+| 27 | `rlBody (RL_NOTE, RL_READ_DETAIL)` · "How to read RL" 3 tarjetas + pie | Top Line ▸ Segments ▸ RL | | | ⬜ |
+| 28 | `customersBody` · hero 0.02% vs 10–20% | Top Line ▸ Customers | | | ⬜ |
+| 29 | `customersBody (SC_CUST_*)` · tabla SPLC top-5 clientes + 239 más | Top Line ▸ Customers | | | ⬜ |
+| 30 | `customersBody (SC_NOTE)` · "Why this matters" + pie | Top Line ▸ Customers | | | ⬜ |
+| 31 | `tamBody (TAM_BARS)` · barras publicidad global / digital / Meta | Top Line ▸ TAM | | | ⬜ |
+| 32 | `tamBody (TAM_NEW, TAM_NOTE)` · superficies nuevas + nota | Top Line ▸ TAM | | | ⬜ |
+| 33 | `industryBody` · 4 tiles de la arena | Top Line ▸ Industry | | | ⬜ |
+| 34 | `industryBody (META_THREATS)` · 6 amenazas con modal | Top Line ▸ Industry | | | ⬜ |
+| 35 | `industryBody` · Bull vs Bear + what to watch (capex desactualizado) | Top Line ▸ Industry | | | ⬜ |
+| 36 | `industryBody (PEERS)` · tabla cualitativa de 4 peers + pie | Top Line ▸ Industry | | | ⬜ |
+| 37 | `unitEconBody` · lede + callout $1.00 | Bottom Line ▸ Unit Economics | | | ⬜ |
+| 38 | `flowHtml/wireFlow (FLOW_*)` · flujo animado de la subasta (Play/Prev/Next) | Bottom Line ▸ Unit Economics | | | ⬜ |
+| 39 | `unitEconBody` · "Why margin" + pie | Bottom Line ▸ Unit Economics | | | ⬜ |
+| 40 | `spendBody (SPEND_LEDE)` · lede de la reconstrucción leases/cloud | Bottom Line ▸ Spend Engine | | | ⬜ |
+| 41 | `buildSpend meCapex` · barras capex FY19–2027E | Bottom Line ▸ Spend Engine | | | ⬜ |
+| 42 | `meDa` · barras D&A FY21–2027E | Bottom Line ▸ Spend Engine | | | ⬜ |
+| 43 | `EST_CAP` · leyenda de estimados (menciona 2028, inconsistente) | Bottom Line ▸ Spend Engine | | | ⬜ |
+| 44 | `spendBody (SPEND_WAYS)` · Owned / Leases / Cloud con modal | Bottom Line ▸ Spend Engine | | | ⬜ |
+| 45 | `SPEND_MIX + SPEND_NOTE` · compromisos cloud 2026 por destino | Bottom Line ▸ Spend Engine | | | ⬜ |
+| 46 | `spendBody (EFFIC)` · eficiencias + pie | Bottom Line ▸ Spend Engine | | | ⬜ |
+| 47 | `suppliersBody` · 4 tiles de asimetría + leyenda | Bottom Line ▸ Suppliers | | | ⬜ |
+| 48 | `scRenderSuppliers (SC_SUPPLIERS)` · ranking 19 proveedores con filtro CAPEX/COGS/SGA y modal | Bottom Line ▸ Suppliers | | | ⬜ |
+| 49 | `mbars` · mix por categoría | Bottom Line ▸ Suppliers | | | ⬜ |
+| 50 | `mbars (SC_GEO)` · geografía 6 países + pie | Bottom Line ▸ Suppliers | | | ⬜ |
+| 51 | `marginsBody/loadMargins (MRG_*)` · líneas de márgenes FY21–26E (vivo vía get-margins) | Bottom Line ▸ Margins | | | ⬜ |
+| 52 | `MRG_NOTE_*, SRC_FIN` · nota + pie | Bottom Line ▸ Margins | | | ⬜ |
+| 53 | `ceIRButton` · tarjetas IR y EDGAR | Evolution ▸ Earnings | | | ⬜ |
+| 54 | `ce-note` · intro de las fases | Evolution ▸ Earnings | | | ⬜ |
+| 55 | `ce-phtabs + ceQPills` · Setup / Watch List / Post-Results + trimestres | Evolution ▸ Earnings | | | ⬜ |
+| 56 | `ceSetupBody` · badge + lede | Earnings ▸ Setup | | | ⬜ |
+| 57 | `ceSetupBody` · barra de controles | Earnings ▸ Setup | | | ⬜ |
+| 58 | `ceGrid('head') (CE_CONS)` · grilla de 9 métricas Street vs Summit | Earnings ▸ Setup | | | ⬜ |
+| 59 | `ceGrid('cust')` · grilla de 4 KPIs propios | Earnings ▸ Setup | | | ⬜ |
+| 60 | `ceSetupBody` · nota de la grilla | Earnings ▸ Setup | | | ⬜ |
+| 61 | `ceSetupBody` · "The debate" Street vs Summit | Earnings ▸ Setup | | | ⬜ |
+| 62 | `setup.debate.synth` · "the one thing to resolve" | Earnings ▸ Setup | | | ⬜ |
+| 63 | `setup.pricedIn / oneLiner` · "What was priced in" | Earnings ▸ Setup | | | ⬜ |
+| 64 | `resultsHtml('META_SETUP')` · gráfica Setup (motor Results) | Earnings ▸ Setup | | | ⬜ |
+| 65 | `mountWatchList` · Watch List (Supabase) | Earnings ▸ Watch List | | | ⬜ |
+| 66 | `callsBody (META_THEMES)` · theme record por tema / por trimestre | Earnings ▸ Watch List | | | ⬜ |
+| 67 | `ceResultsBody` · badge + lede | Earnings ▸ Post-Results | | | ⬜ |
+| 68 | `cePrintBlock` · tiles del print vs Street/Summit | Earnings ▸ Post-Results | | | ⬜ |
+| 69 | `ceSummaryBlock` · call summary (solo Q2'26) | Earnings ▸ Post-Results | | | ⬜ |
+| 70 | `thesisCheck` · red-lines HELD/TRIPPED | Earnings ▸ Post-Results | | | ⬜ |
+| 71 | `intoCall` · "What this tees up" | Earnings ▸ Post-Results | | | ⬜ |
+| 72 | `ceHighlightsBlock` · "Also on the call" | Earnings ▸ Post-Results | | | ⬜ |
+| 73 | `ceResultsBody` · pie | Earnings ▸ Post-Results | | | ⬜ |
+| 74 | `resultsHtml('META') views.q` · trimestral actual vs Summit vs Street vs guía (consenso LSEG) | Evolution ▸ Results | | | ⬜ |
+| 75 | `views.y` · anual | Evolution ▸ Results | | | ⬜ |
+| 76 | `resultsEvoHtml('META')` · cada año a través de 4 vintages | Evolution ▸ Estimates | | | ⬜ |
+| 77 | `strategyBody (STRAT_LOOP)` · flywheel de 4 nodos | Evolution ▸ Strategy | | | ⬜ |
+| 78 | `STRAT_HERO` · 3 tarjetas hero | Evolution ▸ Strategy | | | ⬜ |
+| 79 | `STRAT_DRIVERS, STRAT_NOTE` · cuatro apuestas con modal + pie | Evolution ▸ Strategy | | | ⬜ |
+| 80 | `timelineBody (TIMELINE)` · arco de 7 hitos (repite el 10) | Evolution ▸ Timeline | | | ⬜ |
+| 81 | `META_MNA` · 7 deals de M&A con modal + nota | Evolution ▸ Timeline | | | ⬜ |
+| 82 | `#dd-val-slot` · Pillar de Valuation (ratings Massive) | Valuation ▸ Analyst Ratings | | | ⬜ |
+| 83 | `multiplesBody (MULT_ROWS)` · tabla de 5 empresas, múltiplos sembrados | Valuation ▸ Multiples | | | ⬜ |
+| 84 | `sensBody (SENS_DRIVERS)` · 4 sliders | Valuation ▸ Sensitivity | | | ⬜ |
+| 85 | `sensRender (SENS_BASE)` · tiles implícitos vs precio vivo (fallback $740) | Valuation ▸ Sensitivity | | | ⬜ |
+| 86 | `sensBody` · pie | Valuation ▸ Sensitivity | | | ⬜ |
+| 87 | `capAllocBody` · 4 tiles de retorno de capital | Valuation ▸ Capital Allocation | | | ⬜ |
+| 88 | `buildCapital meCap` · recompras + dividendos vs FCF FY21–25 | Valuation ▸ Capital Allocation | | | ⬜ |
+| 89 | `CAP_*` · tabla + nota + pie | Valuation ▸ Capital Allocation | | | ⬜ |
+| 90 | `finBody (FIN_SERIES)` · 6 métricas FY19–2027E con slider | Valuation ▸ Financials | | | ⬜ |
+| 91 | `META_MGMT.lede` · lede | Management ▸ Executives & Board | | | ⬜ |
+| 92 | `makeManagement execs` · 9 ejecutivos con modal CV | Management ▸ Executives & Board | | | ⬜ |
+| 93 | `board` · 12 consejeros + nota | Management ▸ Executives & Board | | | ⬜ |
+| 94 | `gov` · 4 tiles de gobierno + pie | Management ▸ Executives & Board | | | ⬜ |
+| 95 | `trackBody` · leyenda de ratings | Management ▸ Track Record | | | ⬜ |
+| 96 | `META_TRACK` · 9 ejecutivos calificados con modal | Management ▸ Track Record | | | ⬜ |
+| 97 | `META_BOARD_TRACK` · 6 consejeros + pie | Management ▸ Track Record | | | ⬜ |
+| 98 | `govBody` · lede + callout de control | Management ▸ Governance & SBC | | | ⬜ |
+| 99 | `buildSbc meSbc` · SBC vs acciones diluidas FY21–25 + pie | Management ▸ Governance & SBC | | | ⬜ |
+| 100 | `#dd-mgmt-slot` · Pillar de Management (Fiscal.ai; META fuera del plan) | Management ▸ Ownership | | | ⬜ |
+| 101 | `SOURCES` · pie maestro | DD ▸ pie general | | | ⬜ |
+| 102 | `modelBody + buildAve* (Q13…OPM_A)` · backtest de sorpresas 1Q23–1Q26 ("kept for salvage") | (sin montar) Model vs Reality | | | ⬜ |
+| 103 | `guideBody (GUIDE, CAPEX_GUIDE)` · guiado vs entregado 1Q24–2Q26 + escalada del capex guide | (sin montar) Guidance | | | ⬜ |
+| 104 | `CALLS, CALLS_NOTE, TAILWINDS, HEADWINDS, WALLED, FOA_WINS, GEM_WHAT, GEM_POINTS, FY_NOTE, AS_OF` · texto editorial sin mostrar | (sin montar) constantes con contenido | | | ⬜ |
 
 ## 6. Bloqueos y preguntas abiertas
 

@@ -6,8 +6,9 @@
 // EV/EBITDA or P/E.
 //
 // What changed for Spotify:
-//   • EUR throughout: Spotify reports in euros and the Summit model is built in euros; the grid prices a EUR share.
-//     No FX, no ADR wording, no US$ price. No WACC, no discounting, no 1−g anywhere.
+//   • CURRENCY (corrected Oct 20 2026): the model's lines are EUR; the share trades in US$ and the workbook records its
+//     targets in US$. The implied PRICE PER SHARE is the euro result × the last available ECB rate (./spot-fx-data.js);
+//     EBITDA, EV, equity, EPS and net cash stay in EUR. No WACC, no discounting, no 1−g anywhere.
 //   • BASE = the Summit DCF model, ONE snapshot FROZEN in ./spot-sensitivity-data.js (rule 10: coded directly, not
 //     live). Key 'summit' = the model and 'cons' = Street (Bloomberg), as in AMZN.
 //   • SEGMENTS = Premium and Ad-Supported revenue, which add up to the model's revenue to the euro. Spotify reports
@@ -19,14 +20,14 @@
 //   • D&A bridge = model EBITDA − operating income, held fixed ("D&A + non-operating").
 //   • EXIT MULTIPLE starts at the model's own (./spot-target-multiple-data.js); yours to move.
 //   • SHARES / TAX from the model. NET CASH from ./spot-sensitivity-data.js with its source named.
-//   • NO LIVE PRICE: the grid is read against the base case (the share trades in US$ and the model prices in euros;
-//     nothing is converted).
+//   • NO LIVE PRICE: the grid is read against the base case.
 //   • inline <style> → css/overview.css (.ov-spot-dd); X = Y is blocked (keepDistinct, from AMZN).
 
 import { SUMMIT_CAT, SUMMIT_POS, SUMMIT_NEG } from '../viz-palette.js';
 import { spotResults } from '../results-data/spot.js';
 import { spotBBG } from './spot-bbg.js';
 import { SPOT_SENS, SPOT_NETCASH } from './spot-sensitivity-data.js';
+import { SPOT_FX } from './spot-fx-data.js';
 import { SPOT_TM } from './spot-target-multiple-data.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -206,6 +207,7 @@ function calc(year, over){
   var ev, equity, px;
   if(_basis==='ev'){ ev = ebitda*mult; equity = ev - _netDebt; px = equity/shares; }
   else             { px = (earnings/shares)*mult; equity = px*shares; ev = equity + _netDebt; }
+  px = px * FX;   // per-share value in US$ (the share's trading currency); ev, equity and earnings stay in EUR
   return { parts:parts, rev:revTotal, om:om, dna:dna, opTotal:opTotal, ebitda:ebitda, earnings:earnings,
            mult:mult, ev:ev, equity:equity, px:px, eps:earnings/shares, shares:shares };
 }
@@ -218,7 +220,8 @@ function fmtB(v){
   var b=a/1000;
   return s+'€'+(b<100?b.toFixed(2):Math.round(b))+'B';
 }
-function fmtPx(v){ return '€'+Math.round(v).toLocaleString('en-US'); }
+var FX = SPOT_FX.usdPerEur;   // US$ per EUR
+function fmtPx(v){ return '$'+Math.round(v).toLocaleString('en-US'); }
 function pctLbl(v){ var s=v*100; return (Math.abs(s-Math.round(s))<0.05 ? Math.round(s) : s.toFixed(1))+'%'; }
 function axisLbl(k,v){ return drv(k).kind==='x' ? (v.toFixed(1)+'×') : pctLbl(v); }
 function signPct(p){ return (p>=0?'+':'−')+(Math.abs(p)*100).toFixed(1)+'%'; }
@@ -335,6 +338,7 @@ function renderAssum(scope){
     '<span class="sens-assum-i">D&amp;A + non-operating <b>'+fmtB(dnaFor(year))+'</b> <i>(model EBITDA − op income, held'+(_base==='cons'?' at the model':'')+')</i></span>'+
     '<span class="sens-assum-i">Tax <b>'+pctLbl(taxFor(year))+'</b>'+(M[year].tax==null?' <i>(held at '+lastYearWith('tax',year)+')</i>':(_base==='cons'?' <i>(model)</i>':''))+'</span>'+
     '<span class="sens-assum-i">Shares <b>'+sharesFor(year).toFixed(1)+'M</b> <i>(diluted, model)</i></span>'+
+    '<span class="sens-assum-i">EUR/USD <b>'+FX.toFixed(4)+'</b> <i>('+esc(SPOT_FX.src)+', '+esc(SPOT_FX.date)+'; price per share in US$)</i></span>'+
     '<span class="sens-assum-i">Net cash <b>'+fmtB(-_netDebt)+'</b> <i>('+esc(ND_SRC)+')</i></span>';
 }
 
@@ -456,7 +460,7 @@ function renderMatrix(scope){
   scope.querySelector('#asFoot').innerHTML =
     'Every base figure is the <b>Summit DCF model</b>, snapshot '+esc(SNAP)+' (after '+esc(SPOT_SENS.after)+'), frozen into the portal on '+esc(SPOT_SENS.pulled)+
     ' (not live; a new submit replaces it): revenue by segment (Premium · Ad-Supported, which add up to the model\'s revenue), operating income, EBITDA, net income (the model\'s own definition), '+
-    'tax rate and diluted shares. All figures are in <b>euros</b>, the currency Spotify reports in and the model is built in; nothing is converted and nothing is discounted. '+
+    'tax rate and diluted shares. Model lines are in <b>euros</b> (the currency Spotify reports in); the <b>implied price per share</b> is converted to <b>US$</b>, the share\'s trading currency and the one the workbook records its targets in, at the last available ECB rate ('+FX.toFixed(4)+' US$ per EUR, '+esc(SPOT_FX.date)+'). Nothing is discounted. '+
     'Spotify reports <b>gross profit</b> by segment but no operating income, so growth moves per segment while the margin driver is <b>consolidated</b> operating margin. '+
     'A growth on an axis is a <b>flat rate compounded from Spotify\'s reported '+BASE_YEAR+' segment revenue</b>; a margin is that year\'s. '+
     '<b>D&amp;A + non-operating</b> = model EBITDA − operating income, held fixed (the model\'s EBITDA includes non-operating items). '+

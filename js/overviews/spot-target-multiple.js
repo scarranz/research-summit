@@ -7,10 +7,12 @@
 // What changed for SPOT:
 //   · data — ./spot-target-multiple-data.js, the Summit DCF model's own valuation per submit, FROZEN from the Summit
 //     data store (Oct 20 2026, rule 10). "Recorded multiple" shows the multiple and price target the workbook recorded.
-//   · CURRENCY: everything is EUR — the model's lines and the workbook's price targets alike (SPOT is an ordinary-share
-//     NYSE listing of a foreign private issuer, not an ADR). No FX anywhere. The stored price, fair value, upside and WACC
-//     of each submit stay in the frozen data file as the workbook recorded them but are NOT shown: this portal does not
-//     use WACC or a discounted fair value for Summit estimates, and the NYSE quote is in US$.
+//   · CURRENCY (corrected Oct 20 2026): the model's lines (revenue, EBITDA, earnings, EPS, net cash) are EUR; the
+//     workbook's PRICE TARGETS and the price at each submit are recorded in US$ (the share trades in US$ on the NYSE).
+//     Recorded targets are shown as recorded. Per-share values this pane derives from the EUR model (Live mode) are
+//     multiplied by the last available ECB rate (./spot-fx-data.js) so they read in the same currency as the targets.
+//     Fair value, upside and WACC of each submit stay in the frozen data file but are NOT shown: this portal does not
+//     use WACC or a discounted fair value for Summit estimates.
 //   · net debt for Live = Spotify's cash at 30 Jun 2026 (EUR 9.4B cash and equivalents, no debt other than lease
 //     liabilities — Q2 2026 call, 4 Aug 2026), source named in the footer.
 //   · the targets are the workbook's, never recomputed here; "Live" recomputes from your own multiples as a secondary read.
@@ -19,6 +21,7 @@
 
 import { SUMMIT_CAT, SUMMIT_MUTE, SUMMIT_POS, SUMMIT_NEG } from '../viz-palette.js';
 import { SPOT_TM } from './spot-target-multiple-data.js';
+import { SPOT_FX } from './spot-fx-data.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -161,8 +164,9 @@ var pst = {
 
 // ── Maths ────────────────────────────────────────────────────────────────────────
 function eps(s){ return s.earn / s.sh; }
-function ptEv(s, m){ return (s.ebitda * (m==null?_mEv:m) - _netDebt) / s.sh; }
-function ptPe(s, m){ return eps(s) * (m==null?_mPe:m); }
+var FX = SPOT_FX.usdPerEur;   // US$ per EUR — per-share values derived from the EUR model are shown in US$
+function ptEv(s, m){ return (s.ebitda * (m==null?_mEv:m) - _netDebt) / s.sh * FX; }
+function ptPe(s, m){ return eps(s) * (m==null?_mPe:m) * FX; }
 
 // Recorded = the workbook's own price target for that method at that submit (null if it did not value that
 // year). Live = your multiple applied to the model's line.
@@ -268,9 +272,9 @@ function valAt(k, idx, p){
 
 // ── Formatting — §0.2 rule 5: no bare numbers, ever ──────────────────────────────
 function fmtB(v){ var b=v/1000; return (Math.abs(b)>=1000)?('€'+(b/1000).toFixed(2)+'T'):('€'+Math.round(b*10)/10+'B'); }
-function fmtPx(v){ return '€'+Math.round(v).toLocaleString('en-US'); }
+function fmtPx(v){ return '$'+Math.round(v).toLocaleString('en-US'); }
 // Price targets to the cent, as the workbook carries them.
-function fmtPx2(v){ return '€'+v.toFixed(2); }
+function fmtPx2(v){ return '$'+v.toFixed(2); }
 function signPct(p){ return (p>=0?'+':'−')+(Math.abs(p)*100).toFixed(1)+'%'; }
 function pctCell(p){ return p==null?'<span class="rs-ft-nil">—</span>'
   :'<span style="color:'+(Math.abs(p)<0.0005?'var(--mu)':(p>=0?SUMMIT_POS:SUMMIT_NEG))+'">'+signPct(p)+'</span>'; }
@@ -292,7 +296,7 @@ function fmtChange(v, unit){
   var s=(v===0?'':(v>=0?'+':'−')), a=Math.abs(v);
   if(unit==='pct') return s+a.toFixed(1)+' pp';
   if(st.gunit==='pct') return s+a.toFixed(1)+'%';
-  if(unit==='px')  return s+'€'+a.toFixed(0);
+  if(unit==='px')  return s+'$'+a.toFixed(0);
   if(unit==='eps') return s+'€'+a.toFixed(2);
   return s+fmtB(a);
 }
@@ -300,7 +304,7 @@ function fmtVal(v){ return st.mode==='level' ? fmtLevel(v) : fmtChange(v); }
 // The level button carries the UNIT itself, not the word "Levels" — the block knows its metric.
 function levelLabel(){
   var u=unitOf();
-  return u==='px' ? '€/share' : u==='pct' ? '%' : u==='eps' ? '€/share' : '€B';
+  return u==='px' ? 'US$/share' : u==='pct' ? '%' : u==='eps' ? '€/share' : '€B';
 }
 
 // Under 1.0 reads cheap against its own growth, over 2.0 dear.
@@ -627,13 +631,13 @@ function footHtml(){
   var idx=winIdx(), l=SNAPS[idx[idx.length-1]], ev=l.ev, pe=l.pe;
   var common='FY'+FWD_YEAR+' revenue, EBITDA, net earnings and diluted shares per submit from the Summit DCF model (instrument SPOT, EUR), '+
     'and each submit\'s <b>recorded valuation</b> (multiple and price target) from the workbook\'s Output ▸ VALUATION block — frozen into the portal on '+esc(SPOT_TM.pulled)+' (not live; '+
-    'a new submit adds a row). Everything is in euros. ';
+    'a new submit adds a row). Model lines (revenue, EBITDA, earnings, EPS, net cash) are in <b>euros</b>; price targets are in <b>US$</b>, as the workbook records them. ';
   // What the model's own rows give at the recorded multiples, against the recorded targets — shown, never forced to tie.
   var evCalc=ev?ptEv(l, ev.mult):null, peCalc=pe?ptPe(l, pe.mult):null;
-  var gap=(ev&&pe)?('<b>⚑ Open question for the model author:</b> the rows the store holds for this submit give <b>'+fmtPx2(evCalc)+'</b> on EV/EBITDA (EBITDA × '+ev.mult+' + net cash '+fmtB(-_netDebt)+', ÷ shares) and <b>'+fmtPx2(peCalc)+'</b> on P/E (EARNINGS ÷ SHARES × '+pe.mult+'), against the recorded <b>'+fmtPx2(ev.pt)+'</b> and <b>'+fmtPx2(pe.pt)+'</b> ('+signPct(ev.pt/evCalc-1)+' and '+signPct(pe.pt/peCalc-1)+'). The targets are shown as recorded; which EBITDA, EPS and net-cash base the workbook used is not recoverable from the store. '):'';
+  var gap=(ev&&pe)?('<b>⚑ Open question for the model author:</b> the rows the store holds for this submit give <b>'+fmtPx2(evCalc)+'</b> on EV/EBITDA (EBITDA × '+ev.mult+' + net cash '+fmtB(-_netDebt)+', ÷ shares) and <b>'+fmtPx2(peCalc)+'</b> on P/E (EARNINGS ÷ SHARES × '+pe.mult+'), against the recorded <b>'+fmtPx2(ev.pt)+'</b> and <b>'+fmtPx2(pe.pt)+'</b> ('+signPct(ev.pt/evCalc-1)+' and '+signPct(pe.pt/peCalc-1)+'), converting the euro result at US$ '+FX.toFixed(4)+' per EUR (last available). The targets are shown as recorded; which EBITDA, EPS, net-cash base and exchange rate the workbook used is not recoverable from the store. '):'';
   if(_mode==='live'){
     return common+'<b>Live</b> applies your multiples to the model\'s line: EV/EBITDA target = (EBITDA × multiple − net debt) ÷ shares, P/E target = EPS × multiple, '+
-      'with net debt '+fmtB(_netDebt)+' from the '+esc(_ndSrc)+' (negative = net cash). EPS here is EARNINGS ÷ SHARES, the model\'s definition. '+gap+'Data sourced from Summit DCF models.';
+      'with net debt '+fmtB(_netDebt)+' from the '+esc(_ndSrc)+' (negative = net cash), then converted to US$ at '+FX.toFixed(4)+' per EUR ('+esc(SPOT_FX.src)+', '+esc(SPOT_FX.date)+'). EPS here is EARNINGS ÷ SHARES, the model\'s definition. '+gap+'Data sourced from Summit DCF models.';
   }
   return '<b>Latest submit — '+esc(l.d)+' (after '+esc(l.after)+'):</b> '+
     (ev?'EV/EBITDA <b>'+ev.mult.toFixed(1)+'×</b> FY'+ev.year+' '+esc(ev.basis.toLowerCase())+' → price target <b>'+fmtPx2(ev.pt)+'</b>':'')+

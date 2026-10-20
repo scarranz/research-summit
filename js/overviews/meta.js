@@ -132,9 +132,12 @@ function collapsible(title, inner, open){
     '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+inner+'</div></div>';
 }
 function kpis(arr){ return '<div class="ov-kpis">'+arr.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>'; }).join('')+'</div>'; }
-function mbars(arr){ return '<div class="ov-mbars">'+arr.map(function(r){
+// neutral=true: the Overview money bars — light greys ranked by size, amounts in black (css .gmm-neutral).
+function mbars(arr, neutral){
+  var rk=[]; if(neutral){ arr.map(function(r,i){ return [r[1],i]; }).sort(function(a,b){ return b[0]-a[0]; }).forEach(function(x,j){ rk[x[1]]=Math.min(j+1,6); }); }
+  return '<div class="ov-mbars'+(neutral?' gmm-neutral':'')+'">'+arr.map(function(r,i){
   return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+'</div>'+
-    '<div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+r[1]+'%;background:'+r[3]+';">'+esc(r[2])+'</div></div>'+
+    '<div class="ov-mbar-track"><div class="ov-mbar-fill'+(neutral?' gmm-g'+rk[i]:'')+'" style="width:'+r[1]+'%'+(neutral?'':';background:'+r[3])+'">'+esc(r[2])+'</div></div>'+
     '<div class="ov-mbar-v">'+r[1]+'%</div></div>';
 }).join('')+'</div>'; }
 function chain(arr, key){ return '<div class="ov-chain">'+arr.map(function(s,i){
@@ -2949,7 +2952,7 @@ function moneyMapBody(){
   h+=mbars([
     ['Advertising (Family of Apps)', 98, '~$197B · FY25', BRAND],
     ['Reality Labs + other', 2, '~$4B · FY25', RL],
-  ]);
+  ], true);
   h+='<div class="ov-diagram-cap" style="margin:10px 0 6px">The revenue engine, step by step — <b>tap any step</b> for detail:</div>';
   h+=chain(AD_FLOW,'ad');
   h+='<div class="ov-diagram-cap" style="margin-top:8px">The full economics (why Meta keeps ~the whole ad dollar) are in <b>Deep Dive ▸ Bottom Line ▸ Unit Economics</b>; the ad engine in <b>Top Line ▸ Segments ▸ Segment Deep Dive</b>.</div>';

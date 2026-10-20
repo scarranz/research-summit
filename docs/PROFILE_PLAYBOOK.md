@@ -711,15 +711,19 @@ de `amzn.js`, con el título exacto de la tabla (cambiando el nombre de la empre
 **El Overview va sin color** (review TSM, SAB 2026-10-19: "quitar colores de la parte de Overview para
 que se vea más profesional"). Todo el Overview se pinta con tokens neutros de Summit: texto `--navy`,
 acentos `--steel`, divisores y ejes en grises (`SUMMIT_MUTE`). En concreto:
-- **Barras de OV-4:** una sola tinta para todas (`SUMMIT_INK` / `--navy`); lo que distingue una
-  rebanada es su etiqueta y su %, no su color. Nada de `SUMMIT_CAT` por segmento, plataforma o región.
+- **Barras de OV-4:** solo **grises claros**, y los montos dentro de la barra en **negro** (`--navy`)
+  (SAB, 2026-10-20). El gris lo pone la hoja de estilos: `gmmBars` envuelve en `.ov-mbars.gmm-neutral`,
+  ordena las filas por tamaño y da a cada barra `.gmm-g1` (la más grande, un poco más oscura) … `.gmm-g6`.
+  Nada de `SUMMIT_CAT` ni de color por segmento, plataforma o región; el quinto campo de los datos ya no
+  se usa. Referencia: `gmmBars` de `tsm.js` / `amzn.js`.
 - **Mapa de peers (OV-6):** círculos blancos con borde gris; la empresa del perfil, borde `--navy`
   grueso. Los logos son el único color.
 - **Sin rellenos de color** en tarjetas, pastillas, chips ni encabezados (ni `--brand-soft` de fondo
   en bloques enteros). La pastilla activa se marca con navy, como en el resto del portal.
 - **Títulos de celdas y etiquetas en negro** (`--navy`): "What it sells", "Who buys it", "How it earns",
   "The edge" del 2×2 y cualquier rótulo equivalente — nunca en azul ni en el color de la empresa
-  (SAB, 2026-10-20).
+  (SAB, 2026-10-20). En `css/overview.css` la regla `:is(.ov-amzn, .ov-tsm, .ov-meta) .q2-k`: cada
+  empresa que pasa por la guía agrega su clase raíz ahí.
 - **Un solo color de acento en todo el perfil:** el azul Summit que subraya las pestañas del perfil
   (OVERVIEW · DEEP DIVE…), `--steel`. Es el de la línea de 3 px de Key Facts, el subrayado de la
   pestaña activa en cada nivel y cualquier otro realce. En la raíz del perfil: `--brand: var(--steel);
@@ -794,8 +798,8 @@ acentos `--steel`, divisores y ejes en grises (`SUMMIT_MUTE`). En concreto:
   2. Pastillas con el prefijo "View:" — `Segments` (activa) · `Geography` (`data-gmm="seg|geo"`).
   3. Barras horizontales de CSS (`gmmBars`): etiqueta · barra con el $ dentro · % a la derecha.
      Segmentos en orden del 10-K; geografía de mayor a menor, con "Rest of world" al final (AMZN lo
-     pone en 2.º lugar — no copiar). Color: **una sola tinta neutra** para todas las barras (Overview
-     sin color, arriba), ni `SUMMIT_CAT` ni los hex `GREEN`/`GRAY` de AMZN.
+     pone en 2.º lugar — no copiar). Color: **grises claros por tamaño, montos en negro** (`.gmm-neutral`,
+     arriba), ni `SUMMIT_CAT` ni los hex `GREEN`/`GRAY` de AMZN.
   4. Acordeones de definición, uno por segmento (`.acc`), título = nombre del segmento + paréntesis
      corto que diga qué es ("AWS (most of the profit)"):
      - cuerpo: **qué es, qué hace y cómo cobra**, cualitativo, ~40–60 palabras, **sin números**;
@@ -808,7 +812,7 @@ acentos `--steel`, divisores y ejes en grises (`SUMMIT_MUTE`). En concreto:
   6. Leyenda de cierre con utilidad operativa y neta del año + la frase que cambia la lectura + la
      fuente ("Source: <filing> (Note N)").
 - **Datos:** `GMM_SEG` / `GMM_GEO` = `[[etiqueta, % numérico, '$x.xB', 'x%', color], …]` (el quinto
-  campo es el mismo token neutro en todas las filas);
+  campo ya no se usa: el gris lo da `.gmm-neutral`);
   `REV_DEFS` = `[{ seg:'Nombre (paréntesis corto)', desc:'<html cualitativo>', econ:[[clave, valor], …],
   econNote? }, …]`. `desc` admite `<b>`, nunca cifras.
 - **Regla de las ≥ 2 rebanadas:** si hay un solo segmento o una sola geografía, no se dibuja una barra

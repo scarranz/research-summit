@@ -1939,6 +1939,18 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 .ov-mbar-track { flex: 1; height: 26px; background: var(--surface); border-radius: 6px; overflow: hidden; }
 .ov-mbar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding: 0 10px; font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap; }
 .ov-mbar-v { width: 42px; text-align: right; font-size: 11px; font-weight: 600; color: var(--mu); flex-shrink: 0; }
+/* Overview ▸ "How <Company> makes money" bars — no colour, only light greys, amounts in black
+   (SAB, Oct 20 2026; playbook §8 OV-4). The bigger the slice, the slightly darker the grey:
+   gmmBars() ranks the rows by size and gives each fill .gmm-g1 (largest) … .gmm-g6. */
+.ov-mbars.gmm-neutral .ov-mbar-fill { color: var(--navy); }
+.ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g1 { background: #B4BBC5; }
+.ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g2 { background: #C1C7D0; }
+.ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g3 { background: #CCD2D9; }
+.ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g4 { background: #D6DBE1; }
+.ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g5 { background: #DFE3E8; }
+.ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g6 { background: #E6E9ED; }
+/* 2×2 titles in black for the profiles built with the playbook (SAB, Oct 20 2026; §8). */
+:is(.ov-amzn, .ov-tsm, .ov-meta) .q2-k { color: var(--navy); }
 
 /* Flywheel / driver cards */
 .ov-fly { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }

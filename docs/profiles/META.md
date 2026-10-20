@@ -189,6 +189,7 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 
 <!-- Solo se agrega. Si una decisión cambia, nueva línea que cita la anterior. -->
 - 2026-10-20 · B1 pieza 2 · Quitar por completo la tira de precio en vivo del Overview (precio, cambio, market cap, net debt) — el precio ya está en la cabecera — SAB. Regla llevada a la guía §8.
+- 2026-10-20 · OV-4 (META, AMZN, TSM) · Barras de "How it makes money" en grises claros por tamaño, montos en negro; títulos del 2×2 en negro también en AMZN y TSM — SAB. Guía §8 OV-4.
 - 2026-10-20 · todo el perfil · Títulos del 2×2 (What it sells, Who buys it…) en negro (--navy) y **un solo acento en todo el perfil: el azul Summit que subraya las pestañas del perfil (--steel)** — línea de Key Facts, subrayado de pestañas activas en todos los niveles. Meta entra a css/selectors.css. Aplicado a Meta y escrito en la guía (§8, §21, §21b) — SAB
 
 ## 4. Excepciones aceptadas

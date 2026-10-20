@@ -462,11 +462,15 @@ function stdFourQuad(){
   return '<div class="q2">'+STD_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
 }
 // Bars shorter than ~10% can't hold their $ label (amzn.js clips it): the label moves just outside the bar.
+// Neutral light greys, ranked by size (css/overview.css .gmm-neutral) — the colour field r[4] is ignored.
+function gmmRank(arr){ var o=arr.map(function(r,i){ return [r[1],i]; }).sort(function(a,b){ return b[0]-a[0]; }), rk=[];
+  o.forEach(function(x,j){ rk[x[1]]=Math.min(j+1,6); }); return rk; }
 function gmmBars(arr){
-  return '<div class="ov-mbars">'+arr.map(function(r){
+  var rk=gmmRank(arr);
+  return '<div class="ov-mbars gmm-neutral">'+arr.map(function(r,i){
     var out=r[1]<10;
     return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+'</div>'+
-      '<div class="ov-mbar-track'+(out?' out':'')+'"><div class="ov-mbar-fill" style="width:'+Math.max(r[1],1.2)+'%;background:'+r[4]+';">'+(out?'':esc(r[2]))+'</div>'+(out?'<span class="ov-mbar-outv">'+esc(r[2])+'</span>':'')+'</div>'+
+      '<div class="ov-mbar-track'+(out?' out':'')+'"><div class="ov-mbar-fill gmm-g'+rk[i]+'" style="width:'+Math.max(r[1],1.2)+'%">'+(out?'':esc(r[2]))+'</div>'+(out?'<span class="ov-mbar-outv">'+esc(r[2])+'</span>':'')+'</div>'+
       '<div class="ov-mbar-v">'+esc(r[3])+'</div></div>';
   }).join('')+'</div>';
 }

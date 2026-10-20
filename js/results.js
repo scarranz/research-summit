@@ -1261,7 +1261,7 @@ function rsBuildChart(k){
     x: { grid: { display: false }, ticks: { color: 'rgba(80,90,104,0.9)', font: { size: 11 }, autoSkip: false,
         callback: function(v, i){ return (fwdFrom >= 0 && i >= fwdFrom) ? '' : this.getLabelForValue(v); } } },
     y: { position: 'right', weight: 0, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-      callback: function(v, i, ts){ return pctMode ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, m.cur, ts); } } }
+      callback: function(v, i, ts){ return pctMode ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, rsCur(m), ts); } } }
   };
   if (st.yr){ scales.y.min = st.yr[0]; scales.y.max = st.yr[1]; }
   if (needY2) scales.y2 = { position: 'right', weight: 1, grid: { display: false },
@@ -2050,7 +2050,7 @@ function rsBuildEvo(k){
         // Right-hand axis, like every other chart in Results and Estimates (SAB, Aug 11 2026):
         // the latest snapshot is the right-most point and the scale now sits beside it.
         y: { position: 'right', grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-          callback: function(v, i, ts){ return pct ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, m.cur, ts); } },
+          callback: function(v, i, ts){ return pct ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, rsCur(m), ts); } },
           min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined }
       }
     }
@@ -3133,7 +3133,7 @@ function rsBuildConv(){
           min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined,
           ticks: { font: { size: 11 }, callback: function(v, i, ts){
             if (pct) return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(Math.max(1, rsTickDec(ts))) + '%';
-            return rsTick(v, m.unit, div, m.cur, ts);
+            return rsTick(v, m.unit, div, rsCur(m), ts);
           } } }
       }
     },
@@ -3987,7 +3987,7 @@ function rsBuildCurve(){
           min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined,
           ticks: { font: { size: 11 }, callback: function(v, i, ts){
             if (pct) return (+v.toFixed(rsTickDec(ts))) + '%';
-            return rsTick(v, m.unit, div, m.cur, ts);
+            return rsTick(v, m.unit, div, rsCur(m), ts);
           } } }
       }
     },

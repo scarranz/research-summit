@@ -146,7 +146,7 @@ function aStdRender(id, derive){
   var ds=spec.series.filter(function(s){ return !st.hidden[s.k]; }).map(function(s){
     var t=s.type||spec.type||'line'; if(s.yAxisID==='y2') needY2=true;
     if(t==='bar') return { type:'bar', label:s.label, data:s.data.slice(lo,hi+1), backgroundColor:s.data.slice(lo,hi+1).map(function(_,i){ return (lo+i)>la?aFadeC(s.color,0.5):s.color; }), borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:stk, yAxisID:s.yAxisID||'y', order:s.order||3 };
-    return { type:'line', label:s.label, data:s.data.slice(lo,hi+1), borderColor:s.color, backgroundColor:s.color, borderWidth:2.2, pointRadius:2, tension:0.2, spanGaps:false, yAxisID:s.yAxisID||'y', order:s.order||2,
+    return { type:'line', label:s.label, data:s.data.slice(lo,hi+1), borderColor:s.color, backgroundColor:s.color, borderWidth:2.2, pointRadius:s.pts?6:2, pointStyle:s.pts?'rectRot':'circle', showLine:s.pts?false:true, tension:0.2, spanGaps:false, yAxisID:s.yAxisID||'y', order:s.order||2,
       borderDash:s.dash?[5,4]:undefined, segment: s.fwdDash?{ borderDash:function(ctx){ return (lo+ctx.p1DataIndex)>la?[5,4]:undefined; } }:undefined }; });
   var anyBar=spec.series.some(function(s){ return (s.type||spec.type)==='bar'; }), y2f=spec.y2Fmt||function(v){return v;};
   var scales={ x:{ stacked:anyBar&&spec.stacked, grid:{ display:false }, ticks:{ font:{ size:11 } } },
@@ -527,11 +527,24 @@ function aSumOpAnnual(metricKey){
 function aSummitAnnualRaw(sel){
   var y=spotResults.views&&spotResults.views.y&&spotResults.views.y.metrics;
   var K={gross:'gp', operating:'opinc', ebitda:'ebitda', net:'earnings', fcf:'fcf'}[sel];
-  if(K && y&&y[K]&&y.rev&&y[K].summit&&y.rev.summit) return {num:aYrSlice(y[K].summit,y[K].periods), den:aYrSlice(y.rev.summit,y.rev.periods)};
+  if(K && y&&y[K]&&y.rev&&y[K].summit&&y.rev.summit){
+    var num=aYrSlice(y[K].summit,y[K].periods), den=aYrSlice(y.rev.summit,y.rev.periods);
+    A_YRS.forEach(function(yr,i){ if(num[i]==null) num[i]=aPre('summit','y',K,String(yr)); if(den[i]==null) den[i]=aPre('summit','y','rev',String(yr)); });
+    return {num:num, den:den};
+  }
   return null;
 }
 // A metric with no Summit figure in any year returns null (no empty Summit chip or line).
 function aSummitAnnual(sel){ var r=aSummitAnnualRaw(sel); return (r&&r.num&&r.num.some(function(v){ return v!=null; }))?r:null; }
+// Estimate PRE-PRINT for one period, read from the vintage matrix in ../results-data/spot.js: the latest snapshot whose
+// own last reported period is still BEFORE the period (the Results engine's `preprint` rule). Periods no vintage reaches
+// back to stay null. src = 'cons' (Bloomberg) | 'summit' (the model's frozen snapshots); view = 'q' | 'y'.
+function aOrd(view,p){ if(view==='y') return +p; var m=/^(\d)Q(\d\d)$/.exec(p); return m?(2000+(+m[2]))*4+(+m[1]):null; }
+function aPre(src,view,key,p){
+  var M=spotResults.estMatrix&&spotResults.estMatrix[src]; if(!M||!M[view]||!M[view][key]) return null;
+  var best=null; M.vintages.forEach(function(v){ if(aOrd(view,v.lastActual[view])<aOrd(view,p)) best=v; });
+  var row=best&&M[view][key][best.id]; return (row&&row[p]!=null)?row[p]:null;
+}
 function aMarginsBody(){
   return aStdScaffold({ id:'margins', title:'Profitability & margins', height:360,
     metricSel:[{v:'gross',label:'Gross profit',group:'Profit'},{v:'operating',label:'Operating income (GAAP)',on:true,group:'Profit'},{v:'ebitda',label:'EBITDA',group:'Profit'},{v:'net',label:'Net income (GAAP)',group:'Profit'},{v:'fcf',label:'Free cash flow',group:'Cash'}],
@@ -544,34 +557,60 @@ var MARG_LAB2={gross:'Gross profit',operating:'Op. income',ebitda:'EBITDA',net:'
 // right y2 axis. `numX`/`revX` are the per-source $ series (null outside their window); sm = Summit {num,den}.
 // normSub[i] = the AFTER-TAX one-off to REMOVE from a normalized value (gain × (1 − effective rate)).
 // Subtracting it lowers a gain-flattered net income to its underlying level (see the net bridge).
-function aMargDual(lab, actNum, conNum, rev, la, normOn, normSub, sm){
+function aMargDual(lab, actNum, conNum, rev, la, normOn, normSub, sm, revCon){
   function amt(v,i){ if(v==null) return null; if(normOn&&normSub) v=v-(normSub[i]||0); return Math.round(v/10)/100; }
   function marg(v,i){ if(v==null||!rev[i]) return null; if(normOn&&normSub) v=v-(normSub[i]||0); return Math.round(v/rev[i]*1000)/10; }
+  function margC(v,i){ var r=(revCon&&revCon[i]!=null)?revCon[i]:rev[i]; if(v==null||!r) return null; if(normOn&&normSub) v=v-(normSub[i]||0); return Math.round(v/r*1000)/10; }
   var series=[
     {k:'act$',grp:'act',src:'Actual',label:lab+' — Actual',color:ASTD_ACT,type:'bar',data:actNum.map(amt)},
     {k:'con$',grp:'con',src:'Consensus',label:lab+' — Consensus',color:ASTD_CONS,type:'bar',data:conNum.map(amt)},
     {k:'actM',grp:'act',src:'Actual',label:'Margin — Actual',color:ASTD_ACT,type:'line',yAxisID:'y2',data:actNum.map(marg)},
-    {k:'conM',grp:'con',src:'Consensus',label:'Margin — Consensus',color:ASTD_CONS,type:'line',yAxisID:'y2',dash:true,data:conNum.map(marg)} ];
+    {k:'conM',grp:'con',src:'Consensus',label:'Margin — Consensus',color:ASTD_CONS,type:'line',yAxisID:'y2',dash:true,data:conNum.map(margC)} ];
   if(sm&&!normOn){ series.splice(1,0,{k:'sum$',grp:'sum',src:sm.lab?'Summit · '+sm.lab:'Summit',label:(sm.lab||lab)+' — Summit',color:ASTD_SUMMIT,type:'bar',data:sm.num.map(function(v){ return v==null?null:Math.round(v/10)/100; })});
     series.push({k:'sumM',grp:'sum',src:'Summit',label:'Margin — Summit',color:ASTD_SUMMIT,type:'line',yAxisID:'y2',data:sm.num.map(function(v,i){ return (v==null||!sm.den[i])?null:Math.round(v/sm.den[i]*1000)/10; })}); }
   return series;
+}
+// The Results dataset's quarterly axis, extended with the forward quarters the Bloomberg vintages carry.
+function aQAxis(){
+  var set={}; spotResults.views.q.metrics.rev.periods.forEach(function(p){ set[p]=1; });
+  var C=spotResults.estMatrix&&spotResults.estMatrix.cons&&spotResults.estMatrix.cons.q&&spotResults.estMatrix.cons.q.rev;
+  if(C) Object.keys(C).forEach(function(v){ Object.keys(C[v]).forEach(function(p){ set[p]=1; }); });
+  return Object.keys(set).sort(function(a,b){ return aOrd('q',a)-aOrd('q',b); });
+}
+var A_QKEY={gross:'gp', operating:'opinc', ebitda:'ebitda', net:'netinc', fcf:'fcf'};
+var A_YKEY={gross:'gp', operating:'opinc', ebitda:'ebitda', net:'earnings', fcf:'fcf'};
+// One quarterly metric on `labels`: reported (Results dataset), the Street and Summit as they stood BEFORE each print
+// (and the latest read for forward quarters), and the company's own guide for the quarter.
+function aQSeries(key, labels){
+  var m=spotResults.views.q.metrics[key]; if(!m) return null;
+  var ix=labels.map(function(p){ return m.periods.indexOf(p); });
+  function at(arr,i){ return (arr&&i>=0&&arr[i]!=null)?arr[i]:null; }
+  var gl=ix.map(function(i){ return at(m.guideLo,i); }), gh=ix.map(function(i){ return at(m.guideHi,i); });
+  return { act:ix.map(function(i){ return at(m.act,i); }),
+    cons:labels.map(function(p){ return aPre('cons','q',key,p); }),
+    sum:labels.map(function(p,j){ var v=at(m.summit,ix[j]); return v!=null?v:aPre('summit','q',key,p); }),
+    guide:gl.map(function(v,j){ return (v!=null&&gh[j]!=null)?(v+gh[j])/2:null; }) };
 }
 function aBuildMargins(){
   aStdRender('margins', function(st){
     var gran=st.modes.gran||'y', metric=st.sel||'operating', lab=MARG_LAB2[metric], normOn=false;   // no Normalized mode for Spotify (file header)
     var out={ type:'bar', stacked:false, hideModes:[],
       yFmt:function(x){ return '€'+(x==null?'':x.toFixed(2))+'B'; }, y2Fmt:function(x){ return x+'%'; } };
-    if(gran==='q' && metric==='operating'){   // spotResults native, 22 quarters, all three sources
-      var Q=spotResults.views.q.metrics, oi=Q.opinc, rv=Q.rev, labels=oi.periods.slice(), la=aLastActIdx(oi.act);
-      function amtS(a){ return labels.map(function(_,i){ return a&&a[i]!=null?Math.round(a[i]/10)/100:null; }); }
-      function margS(a,r){ return labels.map(function(_,i){ return (a&&a[i]!=null&&r&&r[i])?Math.round(a[i]/r[i]*1000)/10:null; }); }
+    if(gran==='q' && A_QKEY[metric] && spotResults.views.q.metrics[A_QKEY[metric]]){   // Results dataset + estimate vintages, all four sources
+      var labels=aQAxis(), S=aQSeries(A_QKEY[metric],labels), R=aQSeries('rev',labels), la=aLastActIdx(S.act);
+      function amtS(a){ return a.map(function(v){ return v!=null?Math.round(v/10)/100:null; }); }
+      function margS(a,r){ return a.map(function(v,i){ return (v!=null&&r[i])?Math.round(v/r[i]*1000)/10:null; }); }
+      var gm=spotResults.views.q.metrics.gm, gmG=labels.map(function(p){ var i=gm?gm.periods.indexOf(p):-1; return (i>=0&&gm.guideLo[i]!=null)?gm.guideLo[i]:null; });
+      var guideM=(metric==='gross')?gmG:margS(S.guide,R.guide);   // Spotify guides the gross MARGIN; operating income is guided in euros
       out.labels=labels; out.lastAct=la; out.paired=true; out.series=[
-        {k:'act$',grp:'act',src:'Actual',label:'Op. income — Actual',color:ASTD_ACT,type:'bar',data:amtS(oi.act)},
-        {k:'sum$',grp:'sum',src:'Summit',label:'Op. income — Summit',color:ASTD_SUMMIT,type:'bar',data:amtS(oi.summit)},
-        {k:'con$',grp:'con',src:'Consensus',label:'Op. income — Consensus',color:ASTD_CONS,type:'bar',data:amtS(oi.cons)},
-        {k:'actM',grp:'act',src:'Actual',label:'Margin — Actual',color:ASTD_ACT,type:'line',yAxisID:'y2',data:margS(oi.act,rv.act)},
-        {k:'sumM',grp:'sum',src:'Summit',label:'Margin — Summit',color:ASTD_SUMMIT,type:'line',yAxisID:'y2',data:margS(oi.summit,rv.summit)},
-        {k:'conM',grp:'con',src:'Consensus',label:'Margin — Consensus',color:ASTD_CONS,type:'line',yAxisID:'y2',dash:true,data:margS(oi.cons,rv.cons)} ];
+        {k:'act$',grp:'act',src:'Actual',label:lab+' — Actual',color:ASTD_ACT,type:'bar',data:amtS(S.act)},
+        {k:'sum$',grp:'sum',src:'Summit',label:lab+' — Summit',color:ASTD_SUMMIT,type:'bar',data:amtS(S.sum)},
+        {k:'con$',grp:'con',src:'Consensus',label:lab+' — Consensus',color:ASTD_CONS,type:'bar',data:amtS(S.cons)},
+        {k:'gui$',grp:'gui',src:'Guidance',label:lab+' — Guidance'+(metric==='gross'?' (guided margin × guided revenue)':''),color:'#B8860B',type:'line',pts:true,data:amtS(S.guide)},
+        {k:'actM',grp:'act',src:'Actual',label:'Margin — Actual',color:ASTD_ACT,type:'line',yAxisID:'y2',data:margS(S.act,R.act)},
+        {k:'sumM',grp:'sum',src:'Summit',label:'Margin — Summit',color:ASTD_SUMMIT,type:'line',yAxisID:'y2',data:margS(S.sum,R.sum)},
+        {k:'conM',grp:'con',src:'Consensus',label:'Margin — Consensus',color:ASTD_CONS,type:'line',yAxisID:'y2',dash:true,data:margS(S.cons,R.cons)},
+        {k:'guiM',grp:'gui',src:'Guidance',label:'Margin — Guidance',color:'#B8860B',type:'line',pts:true,yAxisID:'y2',data:guideM} ];
       out.series=out.series.filter(function(x){ return x.data.some(function(v){ return v!=null; }); });   // a series with no value anywhere is not drawn
       return out;
     }
@@ -588,8 +627,11 @@ function aBuildMargins(){
     var ono=spotBBG.is.otherNonOp, taxA=spotBBG.is.tax, preA=spotBBG.is.pretax, normSub=null;
     if(metric==='net' && ono && taxA && preA){ var oaA=ono.a.concat(ono.f), tA=taxA.a.concat(taxA.f), pA=preA.a.concat(preA.f);
       normSub=labels.map(function(_,i){ var G=oaA[i]==null?0:-oaA[i], eff=(pA[i]?tA[i]/pA[i]:0); return G*(1-eff); }); }
-    var actN=labels.map(function(_,i){ return i<=la?na[i]:null; }), conN=labels.map(function(_,i){ return i>la?na[i]:null; });
-    out.labels=labels; out.lastAct=la; out.paired=true; out.series=aMargDual(lab, actN, conN, rv, la, normOn, normSub, aSummitAnnual(metric)); return out;
+    var actN=labels.map(function(_,i){ return i<=la?na[i]:null; });
+    // reported years: the Street as it stood before the print (the last Bloomberg file before it); forward years: the latest read
+    var conN=labels.map(function(_,i){ return i>la?na[i]:aPre('cons','y',A_YKEY[metric],String(A_YRS[i])); });
+    var revCon=labels.map(function(_,i){ return i>la?rv[i]:aPre('cons','y','rev',String(A_YRS[i])); });
+    out.labels=labels; out.lastAct=la; out.paired=true; out.series=aMargDual(lab, actN, conN, rv, la, normOn, normSub, aSummitAnnual(metric), revCon); return out;
   });
 }
 // Expense-line full dives — opened from an Expenses card via data-detail="exp:<key>". VISUAL, not prose.

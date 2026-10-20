@@ -26,7 +26,8 @@
 //             snapshot after the PREVIOUS print (about three months out), shown with its date in the
 //             vintage picker. The hand-compiled 2Q26 FactSet cell (EUR 4,790M) was dropped in favour
 //             of the 2026-05-03 vintage (EUR 4,795M). Users lines (MAU, subscribers, ad-supported MAU,
-//             Premium ARPU) carry actuals from the Bloomberg export; Summit does not model them.
+//             Premium ARPU) carry actuals from the Bloomberg export. Summit forecasts them only in the 2025-12-18 snapshot
+//             (4Q25), the three later snapshots hold the total rows at zero.
 // All monetary values in € millions; EPS in euros. null = not available.
 // Arrays are parallel to `periods`. A period with act:null is an upcoming print.
 //
@@ -34,14 +35,15 @@
 // market open (6-K, accession 0001140361-26-031044). 3Q26 is now the upcoming print and
 // carries the guidance issued in that same deck.
 //
-// ── FOLLOW-UPS STILL OPEN ─────────────────────────────────────────────────────────────
-//  • DONE Oct 2026: MAU, Premium subscribers, ad-supported MAU and Premium ARPU are now lines in
-//    this chart (unit 'count' / 'eps'). Still open: the guided gross-margin PERCENTAGE cannot be
-//    plotted against the gross-profit line (a percent guide on a monetary series), and the Street
-//    has no guide for it. Those stay in the Earnings setup grid.
-//  • Consolidated gross margin IS guided every quarter as a percentage (32.9% for 3Q26)
-//    but the guidance band is a monetary series, so the percentage guide cannot be
-//    plotted against the gross-profit line. Same blocker as above.
+// ── FOLLOW-UPS ──────────────────────────────────────────────────────────────────────
+//  • DONE Oct 2026: MAU, Premium subscribers, ad-supported MAU and Premium ARPU are lines in this chart
+//    (unit 'count' / 'eps'); the guided gross-margin PERCENTAGE is its own metric `gm` (unit 'pct', as TSM's);
+//    the guidance for MAU, subscribers, revenue, gross margin and operating income is filled for EVERY quarter
+//    1Q24–3Q26 from the prior quarter's call (Q4 2023 → Q2 2026 calls). Two guide lines are DERIVED and say so in
+//    their notes: gross profit (guided margin × guided revenue) and ad-supported MAU (guided MAU − guided
+//    subscribers + the overlap between the two definitions, held at the last reported quarter).
+//  • estMatrix.summit is now generated (scripts/consensus/map_summit_spot.json): four Summit snapshots.
+//    Open: the 1Q24 and 2Q24 Street cells, because the oldest Bloomberg file (2024-04-28) already knew 1Q24.
 
 export var spotResults = {
   updated: 'Aug 2026',
@@ -80,11 +82,19 @@ export var spotResults = {
         gp: { label: 'Gross Profit', short: 'Gross profit', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'gross margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [1004, 1112, 1240, 1368, 1326, 1320, 1351, 1499, 1495, 1596, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, 1653.4],
+          summit: [null, null, null, null, null, null, null, 1499.5, 1518.9, 1598.9, 1653.4],
           cons:   [null, null, null, null, null, null, null, null, null, null, null],
-          guideLo:[null, null, null, null, null, null, null, null, null, null, null],
-          guideHi:[null, null, null, null, null, null, null, null, null, null, null],
-          note: 'The margin line is the story: consolidated gross margin climbed 27.6% → 33.4% across these ten quarters, an all-time record set in 2Q26 (+193bps YoY, against a 33.1% guide). Both segments contributed — Premium gross margin 34.9% (+174bps), Ad-Supported 19.1% (+179bps, on favourable podcast and tax impacts). ⚠ Note what the 3Q26 guide does: 32.9%, a 50bp sequential STEP DOWN from the record. Spotify DOES guide gross margin as a percentage every quarter, but the engine’s guidance band is a monetary series, so the percentage guide is not plotted here — switch on the margin line to read the actual and compare it against the guided percentages listed in this note. Summit carries no consolidated gross-profit line; its two segment lines imply ~33.6% for 3Q26, i.e. the model does not believe the guided step-down.' },
+          guideLo:[950.4, 1067.8, 1208, 1303.8, 1323, 1354.5, 1306.2, 1480.5, 1476, 1588.8, 1645],
+          guideHi:[950.4, 1067.8, 1208, 1303.8, 1323, 1354.5, 1306.2, 1480.5, 1476, 1588.8, 1645],
+          note: 'The margin line is the story: consolidated gross margin climbed 27.6% → 33.4% across these ten quarters, an all-time record set in 2Q26 (+193bps YoY, against a 33.1% guide). Both segments contributed — Premium gross margin 34.9% (+174bps), Ad-Supported 19.1% (+179bps, on favourable podcast and tax impacts). ⚠ Note what the 3Q26 guide does: 32.9%, a 50bp sequential STEP DOWN from the record. Spotify guides gross MARGIN (a percentage) every quarter, not gross profit: the guide drawn on this chart is that guided percentage times the guided revenue (derived arithmetic on two of the company’s own numbers, not a figure it states), and the guided percentage itself is plotted under Margins (as Spotify guides them). Summit carries no consolidated gross-profit line; here it is the sum of its two segment lines, held from the snapshot before each print (4Q25 and 1Q26 from Feb 9 2026, 2Q26 from Apr 28 2026, 3Q26 from Aug 5 2026). For 3Q26 that is ~33.1% against the guided 32.9%.' },
+        gm: { label: 'Gross Margin (as guided)', short: 'Gross margin', group: 'Margins', unit: 'pct', surprise: false,
+          periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
+          act:    [27.6, 29.2, 31.1, 32.2, 31.6, 31.5, 31.6, 33.1, 33, 33.4, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null],
+          guideLo:[26.4, 28.1, 30.2, 31.8, 31.5, 31.5, 31.1, 32.9, 32.8, 33.1, 32.9],
+          guideHi:[26.4, 28.1, 30.2, 31.8, 31.5, 31.5, 31.1, 32.9, 32.8, 33.1, 32.9],
+          note: 'Gross profit ÷ revenue (€, exact; matches each deck’s reported margin). Guide: the single percentage Spotify gave on the prior quarter’s call, every quarter from 1Q24 (Q4 2023 call → 1Q24 … Q2 2026 call → 3Q26). The Street margin is on Gross Profit in margin mode; the Summit model has no consolidated margin line.' },
         opinc: { label: 'Operating Income', short: 'Op. income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [168, 266, 454, 477, 509, 406, 582, 701, 715, 655, null],
@@ -120,27 +130,27 @@ export var spotResults = {
         mau: { label: 'Monthly Active Users', short: 'MAU', group: 'Users', unit: 'count', unitLabel: 'millions of users',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [615, 626, 640, 675, 678, 696, 713, 751, 761, 777, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, 761.2, null, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null],
-          guideLo:[null, null, null, null, null, null, null, 745, 759, 778, 788],
-          guideHi:[null, null, null, null, null, null, null, 745, 759, 778, 788],
-          note: 'Total monthly active users (millions, end of quarter). Reported by Spotify; the series matches the Bloomberg export (14 quarters, 1Q23-2Q26, one value per quarter across all 10 snapshots). The guide is a point, held by the Summit model for 4Q25-3Q26 (earlier guides are not in the model). The 3Q26 guide of 788M is 777M plus 11M of net adds.' },
+          guideLo:[618, 631, 639, 665, 678, 689, 710, 745, 759, 778, 788],
+          guideHi:[618, 631, 639, 665, 678, 689, 710, 745, 759, 778, 788],
+          note: 'Total monthly active users (millions, end of quarter). Reported by Spotify; the series matches the Bloomberg export (14 quarters, 1Q23-2Q26, one value per quarter across all 10 snapshots). The guide is the point Spotify gave on the prior quarter’s call, every quarter from 1Q24 (the model holds it only for 4Q25–3Q26; the earlier ones are read from the calls). The 3Q26 guide of 788M is 777M plus 11M of net adds. Summit: only the 2025-12-18 snapshot carries a total-MAU forecast (4Q25 761.2M); in the three later snapshots the row is zero, so there is no Summit line after 4Q25.' },
         subs: { label: 'Premium Subscribers', short: 'Subscribers', group: 'Users', unit: 'count', unitLabel: 'millions of subscribers',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [239, 246, 252, 263, 268, 276, 281, 290, 293, 300, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, 295.1, null, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null],
-          guideLo:[null, null, null, null, null, null, null, null, null, 299, 305],
-          guideHi:[null, null, null, null, null, null, null, null, null, 299, 305],
-          note: 'Premium subscribers (millions, end of quarter). Guide: 2Q26 299M and 3Q26 305M come from the Q1 and Q2 2026 calls; earlier guides are not in the Summit model (its subscriber-guide label is empty) and are left blank rather than reconstructed. Bloomberg labels this series Premium Monthly Active Users.' },
+          guideLo:[230, 245, 251, 260, 265, 273, 281, 289, 293, 299, 305],
+          guideHi:[230, 245, 251, 260, 265, 273, 281, 289, 293, 299, 305],
+          note: 'Premium subscribers (millions, end of quarter). Guide: the point Spotify gave on the prior quarter’s call, every quarter from 1Q24 (read from the calls; the Summit model’s subscriber-guide label is empty). Summit: only the 2025-12-18 snapshot forecasts subscribers (4Q25 295.1M). Bloomberg labels this series Premium Monthly Active Users.' },
         admau: { label: 'Ad-Supported MAU', short: 'Ad-supported MAU', group: 'Users', unit: 'count', unitLabel: 'millions of users',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [388, 393, 402, 425, 423, 433, 446, 476, 483, 494, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, 466.2, null, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null],
-          guideLo:[null, null, null, null, null, null, null, null, null, null, null],
-          guideHi:[null, null, null, null, null, null, null, null, null, null, null],
-          note: 'Ad-supported monthly active users (millions, end of quarter), the audience the advertising business sells. Not guided. Bloomberg export, 14 quarters, one value per quarter across all snapshots.' },
+          guideLo:[401, 398, 401, 419, 426, 429, 442, 470, 481, 494, 500],
+          guideHi:[401, 398, 401, 419, 426, 429, 442, 470, 481, 494, 500],
+          note: 'Ad-supported monthly active users (millions, end of quarter), the audience the advertising business sells. Spotify does not guide it; the line drawn as guidance is DERIVED: guided total MAU minus guided Premium subscribers plus the overlap between the two definitions (subscribers + ad-supported MAU − total MAU, which has run 12–17M: a free user who upgrades can be counted in both, and a lapsed subscriber who stays on the free tier likewise), held at the last reported quarter’s overlap. Summit’s 4Q25 estimate (466.2M) is exactly its total MAU less its subscribers, i.e. the model assumed zero overlap. Bloomberg export, 14 quarters, one value per quarter across all snapshots.' },
         arpu: { label: 'Premium ARPU', short: 'Premium ARPU', group: 'Users', unit: 'eps',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [4.55, 4.62, 4.71, 4.85, 4.73, 4.57, 4.53, 4.70, 4.76, 4.89, null],
@@ -152,7 +162,7 @@ export var spotResults = {
         premgp: { label: 'Premium Gross Profit', short: 'Premium gross profit', group: 'Segments', unit: 'usdM', marginOf: 'premrev', marginLabel: 'Premium gross margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [979, 1051, 1178, 1287, 1262, 1237, 1269, 1398, 1445, 1511, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, 1543.0],
+          summit: [null, null, null, null, null, null, null, 1386.8, 1428.8, 1501.3, 1543],
           cons:   [null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null],
@@ -160,7 +170,7 @@ export var spotResults = {
         adgp: { label: 'Ad-Supported Gross Profit', short: 'Ad-Supported gross profit', group: 'Segments', unit: 'usdM', marginOf: 'adrev', marginLabel: 'Ad-Supported gross margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [25, 61, 62, 81, 64, 83, 82, 101, 50, 85, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, 110.4],
+          summit: [null, null, null, null, null, null, null, 112.8, 90, 97.6, 110.4],
           cons:   [null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null],
@@ -168,7 +178,7 @@ export var spotResults = {
         ebitda: { label: 'EBITDA', short: 'EBITDA', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'EBITDA margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [350, 378.3, 631.7, 657, 580, 505, 681, 783, 797, 770, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, 765.3],
+          summit: [null, null, null, null, null, null, null, 716.8, 892.8, 726.1, 765.3],
           cons:   [null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null],
@@ -218,6 +228,7 @@ export var spotResults = {
         ] },
         { key: 'margins', label: 'Margins & Profitability', defaultMetric: 'opinc', groups: [
           { label: 'Company', keys: ['gp', 'opinc', 'ebitda', 'netinc', 'eps', 'fcf'] },
+          { label: 'Margins (as Spotify guides them)', keys: ['gm'] },
           { label: 'Cash flow', keys: ['ocf', 'capex', 'dna'] },
           { label: 'Per share', keys: ['shares'] }
         ] }
@@ -669,6 +680,144 @@ export var spotResults = {
         '2026-02-15': { '2026': 3584.9537, '2027': 4256.4197, '2028': 5020.6519 },
         '2026-05-03': { '2026': 3494.7864, '2027': 4089.5506, '2028': 4817.3026 },
         '2026-09-09': { '2026': 3379.9872, '2027': 4053.8509, '2028': 4765.4949 },
+      },
+      },
+    },
+    summit: {
+      vintages: [
+        { id: '2025-12-18', label: 'Dec 18, 2025', lastActual: { q: '3Q25', y: '2024' } },
+        { id: '2026-02-09', label: 'Feb 9, 2026', lastActual: { q: '3Q25', y: '2024' } },
+        { id: '2026-04-28', label: 'Apr 28, 2026', lastActual: { q: '1Q26', y: '2025' } },
+        { id: '2026-08-05', label: 'Aug 5, 2026', lastActual: { q: '2Q26', y: '2025' } },
+      ],
+      q: {
+      rev: {
+        '2025-12-18': { '4Q25': 4600.4 },
+        '2026-02-09': { '4Q25': 4539.6, '1Q26': 4663.8, '2Q26': 4893.2, '3Q26': 5083, '4Q26': 5373, '1Q27': 5277.3, '2Q27': 5304 },
+        '2026-04-28': { '2Q26': 4817.3, '3Q26': 5050.5, '4Q26': 5335.7, '1Q27': 5167.4, '2Q27': 5250.3 },
+        '2026-08-05': { '3Q26': 5023.1, '4Q26': 5428.4, '1Q27': 4829.4, '2Q27': 4997.2 },
+      },
+      premrev: {
+        '2025-12-18': { '4Q25': 4017.3 },
+        '2026-02-09': { '4Q25': 4019.6, '1Q26': 4202.5, '2Q26': 4393.7, '3Q26': 4593.6, '4Q26': 4802.6 },
+        '2026-04-28': { '2Q26': 4351.6, '3Q26': 4560.7, '4Q26': 4791.6 },
+        '2026-08-05': { '3Q26': 4511.6, '4Q26': 4838.4, '1Q27': 4444.1, '2Q27': 4550.3 },
+      },
+      adrev: {
+        '2025-12-18': { '4Q25': 583.1 },
+        '2026-02-09': { '4Q25': 520, '1Q26': 461.4, '2Q26': 499.5, '3Q26': 489.3, '4Q26': 570.4, '1Q27': 474.7, '2Q27': 501.3 },
+        '2026-04-28': { '2Q26': 465.7, '3Q26': 489.8, '4Q26': 544.1, '1Q27': 375.8, '2Q27': 458.7 },
+        '2026-08-05': { '3Q26': 511.6, '4Q26': 590, '1Q27': 385.4, '2Q27': 446.9 },
+      },
+      gp: {
+        '2025-12-18': { '4Q25': 1478.9 },
+        '2026-02-09': { '4Q25': 1499.5, '1Q26': 1518.9, '2Q26': 1605.8, '3Q26': 1671.8, '4Q26': 1778.9, '1Q27': 1773.5, '2Q27': 1793.3 },
+        '2026-04-28': { '2Q26': 1598.9, '3Q26': 1694, '4Q26': 1801.2, '1Q27': 1725.9, '2Q27': 1773.2 },
+        '2026-08-05': { '3Q26': 1653.4, '4Q26': 1831.5, '1Q27': 1605.5, '2Q27': 1677.8 },
+      },
+      premgp: {
+        '2025-12-18': { '4Q25': 1386 },
+        '2026-02-09': { '4Q25': 1386.8, '1Q26': 1428.8, '2Q26': 1493.9, '3Q26': 1561.8, '4Q26': 1632.9, '1Q27': 1680.9 },
+        '2026-04-28': { '2Q26': 1501.3, '3Q26': 1591.7, '4Q26': 1677.1 },
+        '2026-08-05': { '3Q26': 1543, '4Q26': 1693.5, '1Q27': 1555.4, '2Q27': 1592.6 },
+      },
+      adgp: {
+        '2025-12-18': { '4Q25': 93 },
+        '2026-02-09': { '4Q25': 112.8, '1Q26': 90, '2Q26': 111.9, '3Q26': 109.9, '4Q26': 146, '1Q27': 92.6, '2Q27': 112.3 },
+        '2026-04-28': { '2Q26': 97.6, '3Q26': 102.3, '4Q26': 124.2, '1Q27': 48.8, '2Q27': 96.1 },
+        '2026-08-05': { '3Q26': 110.4, '4Q26': 138.1, '1Q27': 50, '2Q27': 85.2 },
+      },
+      opinc: {
+        '2025-12-18': { '4Q25': 636.6 },
+        '2026-02-09': { '4Q25': 632.1, '1Q26': 710.9, '2Q26': 729.2, '3Q26': 794.1, '4Q26': 825.3, '1Q27': 915.3, '2Q27': 882.5 },
+        '2026-04-28': { '2Q26': 637.6, '3Q26': 721.7, '4Q26': 848.4, '1Q27': 850, '2Q27': 820.7 },
+        '2026-08-05': { '3Q26': 672.5, '4Q26': 927.2, '1Q27': 718.3, '2Q27': 742.5 },
+      },
+      ebitda: {
+        '2025-12-18': { '4Q25': 727.8 },
+        '2026-02-09': { '4Q25': 716.8, '1Q26': 892.8, '2Q26': 921.2, '3Q26': 990, '4Q26': 1033.1, '1Q27': 1113.5, '2Q27': 1085.4 },
+        '2026-04-28': { '2Q26': 726.1, '3Q26': 810.9, '4Q26': 934.4, '1Q27': 946.1, '2Q27': 922.9 },
+        '2026-08-05': { '3Q26': 765.3, '4Q26': 1013.2, '1Q27': 818.2, '2Q27': 846.4 },
+      },
+      fcf: {
+        '2025-12-18': { '4Q25': 867.3 },
+        '2026-02-09': { '4Q25': 854.2, '1Q26': 797.6, '2Q26': 819, '3Q26': 868, '4Q26': 923.8, '1Q27': 996.1, '2Q27': 966.9 },
+        '2026-04-28': { '2Q26': 716.1, '3Q26': 787.9, '4Q26': 912.4, '1Q27': 838.5, '2Q27': 820.6 },
+        '2026-08-05': { '3Q26': 742.3, '4Q26': 991.2, '1Q27': 723.4, '2Q27': 741.7 },
+      },
+      mau: {
+        '2025-12-18': { '4Q25': 761.2 },
+      },
+      subs: {
+        '2025-12-18': { '4Q25': 295.1 },
+      },
+      admau: {
+        '2025-12-18': { '4Q25': 466.2 },
+      },
+      },
+      y: {
+      rev: {
+        '2025-12-18': { '2025': 17255.4, '2026': 20802.2, '2027': 24836.1, '2028': 29112.1, '2029': 33788.3 },
+        '2026-02-09': { '2025': 17194.6, '2026': 19580.9, '2027': 22197.8, '2028': 24857.8, '2029': 27446.5 },
+        '2026-04-28': { '2026': 19736.5, '2027': 21963.3, '2028': 24854, '2029': 27700.9 },
+        '2026-08-05': { '2026': 19761.5, '2027': 23118.8, '2028': 27097.4, '2029': 31372.9 },
+      },
+      premrev: {
+        '2025-12-18': { '2025': 15354.3, '2026': 18578.7, '2027': 22275.9, '2028': 26218.7, '2029': 30571 },
+        '2026-02-09': { '2025': 15356.6, '2026': 17487.2, '2027': 19814.4, '2028': 22139.7, '2029': 24400.2 },
+        '2026-04-28': { '2026': 17851.9, '2027': 19696.4, '2028': 22326.8, '2029': 24963 },
+        '2026-08-05': { '2026': 17829, '2027': 20884.8, '2028': 24358, '2029': 28068.9 },
+      },
+      adrev: {
+        '2025-12-18': { '2025': 1901.1, '2026': 2223.5, '2027': 2560.2, '2028': 2893.4, '2029': 3217.3 },
+        '2026-02-09': { '2025': 1838, '2026': 2093.6, '2027': 2383.4, '2028': 2718, '2029': 3046.4 },
+        '2026-04-28': { '2026': 1884.6, '2027': 2266.9, '2028': 2527.1, '2029': 2737.9 },
+        '2026-08-05': { '2026': 1932.5, '2027': 2234, '2028': 2739.5, '2029': 3304 },
+      },
+      gp: {
+        '2025-12-18': { '2025': 5475.9, '2026': 6575.7, '2027': 8341.9, '2028': 10189.2, '2029': 11986.8 },
+        '2026-02-09': { '2025': 5496.5, '2026': 6364.4, '2027': 7650.1, '2028': 8700.2, '2029': 9758.6 },
+        '2026-04-28': { '2026': 6589.1, '2027': 7519.6, '2028': 8810.5, '2029': 9957 },
+        '2026-08-05': { '2026': 6575.9, '2027': 7930.8, '2028': 9727.7, '2029': 11707.1 },
+      },
+      premgp: {
+        '2025-12-18': { '2025': 5154, '2026': 6131, '2027': 7573.8, '2028': 9176.5, '2029': 10699.8 },
+        '2026-02-09': { '2025': 5154.8, '2026': 5945.7, '2027': 6935, '2028': 7748.9, '2029': 8540.1 },
+        '2026-04-28': { '2026': 6215, '2027': 6952.8, '2028': 7926, '2029': 8861.9 },
+        '2026-08-05': { '2026': 6192.4, '2027': 7372.3, '2028': 8768.9, '2029': 10385.5 },
+      },
+      adgp: {
+        '2025-12-18': { '2025': 322, '2026': 444.7, '2027': 768.1, '2028': 1012.7, '2029': 1286.9 },
+        '2026-02-09': { '2025': 341.8, '2026': 418.7, '2027': 715, '2028': 951.3, '2029': 1218.6 },
+        '2026-04-28': { '2026': 374, '2027': 566.7, '2028': 884.5, '2029': 1095.2 },
+        '2026-08-05': { '2026': 383.5, '2027': 558.5, '2028': 958.8, '2029': 1321.6 },
+      },
+      opinc: {
+        '2025-12-18': { '2025': 2133.6, '2026': 3204.6, '2027': 4802.3, '2028': 6472.7, '2029': 8084.4 },
+        '2026-02-09': { '2025': 2129.1, '2026': 2852.9, '2027': 3977.6, '2028': 4859, '2029': 5740.6 },
+        '2026-04-28': { '2026': 2922.7, '2027': 3659.5, '2028': 4771, '2029': 5729.3 },
+        '2026-08-05': { '2026': 2969.7, '2027': 3914, '2028': 5259.7, '2029': 6768.7 },
+      },
+      ebitda: {
+        '2025-12-18': { '2025': 2491.8, '2026': 3558.3, '2027': 5174.8, '2028': 6851.1, '2029': 8456.1 },
+        '2026-02-09': { '2025': 2480.8, '2026': 3149.7, '2027': 4256.2, '2028': 5109.2, '2029': 5951.3 },
+        '2026-04-28': { '2026': 3268.4, '2027': 3983.1, '2028': 5024.1, '2029': 5944.1 },
+        '2026-08-05': { '2026': 3345.5, '2027': 4258.2, '2028': 5535.3, '2029': 7007.2 },
+      },
+      fcf: {
+        '2025-12-18': { '2025': 2995.3, '2026': 4314.9, '2027': 5222.1, '2028': 6900.7, '2029': 8508.1 },
+        '2026-02-09': { '2025': 2982.2, '2026': 3824.7, '2027': 4303.5, '2028': 5158.8, '2029': 6003.4 },
+        '2026-04-28': { '2026': 3375.4, '2027': 4054.5, '2028': 5099.1, '2029': 6022.8 },
+        '2026-08-05': { '2026': 3508.5, '2027': 4340.1, '2028': 5621.3, '2029': 7097.5 },
+      },
+      mau: {
+        '2025-12-18': { '2025': 761.2, '2026': 834.1, '2027': 902.1, '2028': 957.7, '2029': 1003.1 },
+      },
+      subs: {
+        '2025-12-18': { '2025': 295.1, '2026': 324.6, '2027': 353.8, '2028': 378.5, '2029': 401.2 },
+      },
+      admau: {
+        '2025-12-18': { '2025': 466.2, '2026': 509.6, '2027': 548.3, '2028': 579.1, '2029': 601.9 },
       },
       },
     },

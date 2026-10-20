@@ -270,3 +270,23 @@ Decisiones DAA (2026-10-20): (1) la "utilidad" del segmento es la **utilidad bru
 ## 15. Corrección de moneda (DAA, 2026-10-20, tarde)
 
 El workbook registra los **price targets y el precio de cada submit en US$** (la acción cotiza en US$ en NYSE); las líneas del modelo (ingreso, EBITDA, utilidad, EPS, caja neta) siguen en EUR. Se corrige lo anterior (§10 y §14 decían "todo en EUR"): los PT se muestran **tal como están registrados, en US$**; los valores por acción que el portal deriva del modelo en EUR (Target Multiple modo *Live* y la rejilla de Sensitivity) se **multiplican por el último EUR/USD disponible**: 1.1215 US$ por EUR (BCE, archivo diario `eurofxref-daily.xml`, 2026-10-20) en `js/overviews/spot-fx-data.js` (constante fechada, se refresca reemplazando el bloque). Con eso Live da ≈ $536 (EV/EBITDA) y ≈ $502 (P/E) contra los PT registrados $561.15 / $517.91 (+4.6 % / +3.1 %); sigue sin coincidir y no se fuerza (el tipo de cambio, el EBITDA/EPS y la caja neta que usó el workbook no son recuperables del store; pregunta abierta para el autor del modelo). Sigue sin WACC, sin valor justo descontado y sin precio en vivo.
+
+## 16. Revisión de Bottom Line / Results (DAA, 2026-10-20, noche)
+
+Observaciones del analista tras ver el portal: consenso ausente en el pasado, guías faltantes (gross margin, MAU, subs), métricas con snapshots de Summit que no aparecían, Road to the print ilegible. Lo encontrado y lo hecho:
+
+| Hallazgo | Causa | Acción |
+|---|---|---|
+| Ejes de Results en **$** con datos en euros | `results.js` pasaba `m.cur` (indefinido en SPOT) en 4 de los 5 sitios que dibujan ticks; el quinto ya usaba `rsCur(m)` | los 4 llaman ahora a `rsCur(m)` (cambio de motor compartido, 4 líneas; datasets sin `currency` siguen en `$`) |
+| Road to the print sin línea Summit, 4 snapshots | `estMatrix.summit` no existía para SPOT | `scripts/consensus/map_summit_spot.json` + 4 volcados del MCP (2025-12-18, 02-09, 04-28, 08-05) → `emit_summit_matrix.py` → `apply_matrix.py`. Ahora 7 puntos en 2Q26 (4 BBG + 3 Summit) |
+| Summit "no modela" MAU/subs | **sí**: solo el snapshot 2025-12-18 trae MAU 761.2 / subs 295.1 / MAU ad-supported 466.2 para 4Q25 (y anuales); los tres posteriores tienen esas filas en cero | 4Q25 cargado como Summit pre-print; sin línea después de 4Q25 (no hay dato) |
+| Snapshot 2025-12-18 y trimestres futuros | los trimestres 2026+ repiten el de 1Q26 (1Q27 = 1Q26) y no cuadran con el anual | `emit_summit_matrix.py` ganó `horizon` y `drop_repeat_quarters` (opcionales, por config): se conserva solo 4Q25 de ese vintage y se descartan celdas Premium repetidas |
+| Guías faltantes | `guideLo/Hi` solo desde 4Q25 (MAU) y 2Q26 (subs) | leídas de las llamadas Q4'23 → Q2'26: MAU, subs, ingreso, GM y utilidad operativa para **cada trimestre 1Q24–3Q26** (los 4 existentes coinciden) |
+| Gross margin "no se puede graficar" | era falso: TSM lo grafica como métrica `pct` | nueva métrica `gm` (Gross Margin as guided) en Margins & Profitability |
+| Gross profit sin guía | Spotify guía margen, no GP | guía GP = margen guiado × ingreso guiado (derivado, así dicho en la nota); GP Summit = suma de los dos segmentos pre-print |
+| MAU ad-supported sin guía | no se guía | guía derivada = MAU guiado − subs guiado + solapamiento (subs + MAU ad − MAU total, 12–17M, mantenido al último trimestre reportado); nota explica por qué no suman y que Summit asumió solapamiento cero |
+| Bottom Line sin consenso ni Summit históricos | el gráfico solo traía BBG para años/trimestres futuros | `spot-bl.js`: consenso y Summit **pre-print** de cada periodo reportado (regla del motor `preprint`) + guía como marcadores; trimestral usa el dataset de Results |
+
+**Límites reales de datos (no son bugs):** (1) el archivo BBG más antiguo es 2024-04-28, ya posterior al print de 1Q24 → no hay consenso pre-print de 1Q24 ni FY2023; (2) Summit solo tiene 4 snapshots → Summit pre-print solo para 4Q25–3Q26 y FY2025; (3) el modelo no tiene EPS ni utilidad neta trimestral. 2Q25–2Q26 vienen del 20-F/6-K, no de snapshots nuevos.
+
+**Pendiente de revisión del analista:** las dos guías derivadas (GP y MAU ad-supported); si prefiere no mostrarlas como "Guidance", se quitan de `guideLo/Hi` y quedan en la nota. Distinto y no tocado: en el motor, las etiquetas de barras negativas chocan con el eje en "Actuals vs Estimates" (2Q25).

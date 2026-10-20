@@ -23,14 +23,14 @@ Revisado 2026-10-20. Estado: 📝 propuesta (pendiente de confirmar con el anali
 | Fila en `companies` | ✔ (se asume) | el perfil ya abre hoy (registrado en `js/overviews/index.js` como `SPOT`) | el perfil abre | — |
 | Filing anual | ◐ por verificar | Spotify es **foreign private issuer** (Luxemburgo): 20-F anual + 6-K trimestral, IFRS. Falta bajar el 20-F FY2025 y anotar fecha/accession | Overview, Top Line, textos verbatim | — |
 | Año fiscal / moneda | ⚠ | cierre 31 dic. **Reporta y guía en EUR** (también el DCF y el consenso). Regla de `results-data/spot.js`: no convertir a USD | — | Múltiplos con el precio en US$ del ADR: hay que convertir con FX declarado (Derivatives ya decidió no mostrar múltiplos para SPOT) |
-| Summit DCF | ✔ | MCP autenticado 2026-10-20. **4 snapshots**: 2025-12-18 · 2026-02-09 · 2026-04-28 · **2026-08-05** (after Q2 - 2026; 13,192 datos; 54 etiquetas). ⚠ El código actual cita **"Aug 4"** y **"May 22"**: ninguno existe ya en el MCP (el de agosto es 08-05; el de 05-22 desapareció, igual que en META). Valuación limpia en los 4 (`quality_flags` vacío): **EV/EBITDA 20.5× y P/E 28×, 2027 Forward**, price target $561.15 / $517.91, fair value $519.87 / $479.40, precio $482.43 (08-05) | F0-SM, serie Summit, Estimates (4 vintages), Target Multiple, Sensitivity | — |
+| Summit DCF | ✔ | MCP autenticado 2026-10-20. **4 snapshots**: 2025-12-18 · 2026-02-09 · 2026-04-28 · **2026-08-05** (after Q2 - 2026; 13,192 datos; 54 etiquetas). ⚠ El código actual cita **"Aug 4"** y **"May 22"**: ninguno existe ya en el MCP (el de agosto es 08-05; el de 05-22 desapareció, igual que en META). Valuación limpia en los 4 (`quality_flags` vacío): **EV/EBITDA 20.5× y P/E 28×, 2027 Forward**, price target €561.15 / €517.91 (en EUR, como el modelo) | F0-SM, serie Summit, Estimates (4 vintages), Target Multiple, Sensitivity | — |
 | Consenso BBG (`BBG_CONSENSUS.txt`) | ✔ **nuevo** | `SPOT US EQUITY`: **10 snapshots** (`data_as_of` 2024-04-28 → **2026-09-09**), EUR, escala M. Headline: Revenue, COGS, Gross Profit, Opex, G&A, S&M, R&D, Operating Income, Adj. EBITDA, interés, pre-tax, tax, Net Income, acciones, Diluted EPS, D&A, SBC, capex, CFO, FCF, recompras. KPIs: MAU total / Premium / Ad-supported, Premium ARPU, ingreso, COGS y GP por segmento (Premium · Ad-Supported), MAU y subs por 4 regiones. Hoy `results-data/spot.js` tiene `cons` casi vacío ("SPOT has no rows in BBG_CONSENSUS") → **quedó stale** | `estMatrix.cons`, Setup, Results con Street, export de Bottom Line | — |
 | Encoding del archivo | ⚠ | `BBG_CONSENSUS.txt` ya no es UTF-8 (byte `0xb5`): `scripts/consensus/*.py` fallan con `UnicodeDecodeError`; se lee como `cp1252` | — | — |
 | `get-market-history` (Massive) | ✘ desplegada | sigue sin desplegar (404, según `CLAUDE.md`) | Historic Multiple en vivo | Historic Multiple con "Live data pending" |
 | SPLC | ❓ | no hay export de SPOT en el repo; Spotify es B2C (sin clientes concentrados); los proveedores son labels/publishers, no cadena de suministro | — | BL-SPLC probablemente ⏭️ |
 | Transcripciones | ✔ | `SPOT CALLS.txt` (626 KB): Q2 2024 → **Q2 2026** + `SPOT Q2 2026.txt` (54 KB, 2026-08-04). Falta el 3Q26 | EV-POST, EV-NOTES, citas, Watch List | — |
 | `docs/calls/SPOT.md` | ✘ | no existe | — | no hace falta si el consenso sale del archivo BBG |
-| Fiscal.ai / Massive | ❓ | verificar en Pillars ▸ Management y `liveQuote` (ADR en US$) | Management en vivo, market cap | — |
+| Fiscal.ai / Massive | ❓ | verificar en Pillars ▸ Management y `liveQuote` (Spotify cotiza en NYSE como acción ordinaria de un emisor extranjero, no ADR; el precio de `liveQuote` viene en US$ y los targets/modelo en EUR, así que no se comparan sin un FX declarado) | Management en vivo, market cap | — |
 
 **Calendario:** el siguiente print es **3Q26** (hoy 2026-10-20; fecha aún no anunciada). Guía 3Q26 (de la call de 2Q26): 305M subs · MAU +11M · op. income €670M · GM 32.9%.
 
@@ -65,13 +65,14 @@ Modo B: antes de F1 van **B1 (inventario de lo que existe)** y **B2 (mapa de reu
 | OV-1…OV-F | Overview (7 bloques + pie) | 👀 | 2026-10-20 | | | sin color (reglas SAB 19–20 oct): barras grises, títulos 2×2 en negro, acento --steel, peers navy; Key Facts: CEO con antigüedad, celda "IPO"; **⚑ OV-6: múltiplos de peers sembrados (stockanalysis 31-jul), contra la regla 10** |
 | EV-RES-DATA | Dataset de Results (números) | ✅ | 2026-10-20 | DAA | | cons BBG (10 vintages, 120 celdas nuevas, blanked 0) · 4 líneas de usuarios · Summit 3Q26 re-congelado (MCP 08-05) |
 | EV-RES | Evolution ▸ Results | 👀 | 2026-10-20 | | | para revisar en el portal local: Companies ▸ SPOT ▸ Deep Dive ▸ Evolution ▸ Results (nuevo grupo Users, picker de vintages BBG) |
-| TL-GEN · TL-SEG · TL-OTH · TL-CUS | Top Line | ⬜ | | | | |
+| TL-GEN · TL-SEG · TL-OTH · TL-CUS | Top Line | ⬜ | | | | los panes viejos se retiraron (§11); se construye con `segments.js` |
 | EV-SET | Evolution ▸ Earnings ▸ Setup (3Q26) | 👀 | 2026-10-20 | | | **rehecho sobre la maquinaria canónica** (`spot-ce.js`): 9 headline + 8 KPIs propios, Street (BBG) · Summit (MCP 08-05) · fila "guide"; gráfica Setup con Street; notas actualizadas |
 | EV-EST | Evolution ▸ Estimates | 👀 | 2026-10-20 | | | 4 vintages reales del MCP (12-18 · 02-09 · 04-28 · 08-05), años 2026–2029; Street = BBG guardado en cada snapshot |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results (2Q26) | 👀 | 2026-10-20 | | | 17 tarjetas vs Street/Summit, Call Summary (7 comentarios + 14 preguntas de la transcripción 4-ago), Propose Notes (6), Also on the call (7) |
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | 👀 | 2026-10-20 | | | 10 temas en 8 grupos; semilla = el registro de temas que vivía en `spot.js` + 2 temas de la call |
 | BL-GEN-1…5 · BL-SEG · BL-SPLC | Bottom Line | ⬜ | | | | BL-SPLC probablemente ⏭️ |
-| VA-HIST · VA-PEERS · VA-TM · VA-SENS | Valuation | ⬜ | | | | |
+| VA-TM | Valuation ▸ Target Multiple / PEG | 👀 | 2026-10-20 | | | 4 snapshots del MCP con la valuación del workbook tal cual (EV/EBITDA 20.5× · P/E 28×, 2027); Live con FX implícito |
+| VA-HIST · VA-PEERS · VA-SENS | Valuation | ⬜ | | | | HIST: `get-market-history` sin desplegar → "Live data pending"; PEERS: esperan denominadores (ver §9); SENS: re-basar del snapshot 05-22 al 08-05 |
 | MG-TEAM · MG-OWN · MG-GOV · MG-TRACK | Management | ⬜ | | | | hoy placeholder |
 | MISC-* | Miscellaneous | ⬜ | | | | candidatos: Investor Day 2026, SAX/Advertising, vs Netflix, $10 flow map |
 | F-FINAL | Cierre y entrega | ⬜ | | | | |
@@ -120,7 +121,7 @@ Modo B: antes de F1 van **B1 (inventario de lo que existe)** y **B2 (mapa de reu
 ❓ SPOT · Resultados "summit" en results-data (3Q26 ingreso 5,035) ≠ MCP 08-05 (5,023): el código se sembró de otro vintage del xlsm. Se re-congela desde el MCP.
 ```
 
-**Valuación (get_valuation_history, 2026-08-05, Base):** EV/EBITDA 20.5× → PT $561.15 / FV $519.87 (+7.8%) · P/E 28× → PT $517.91 / FV $479.40 (−0.6%) · WACC 20.7%, beta 1.56, precio $482.43. Sin `quality_flags` en ninguno de los 4 snapshots. (Historial: 2026-04-28 EV 20.5× PT $537.42 · P/E 28× PT $541.65; 2026-02-09 18× / 20×; 2025-12-18 18× 2029 / 49× 2026.)
+**Valuación (get_valuation_history, 2026-08-05, Base):** EV/EBITDA 20.5× → price target €561.15 · P/E 28× → €517.91, ambos FY2027 Forward, en EUR. Sin `quality_flags` en ninguno de los 4 snapshots. El store también devuelve fair value, upside, precio al snapshot y WACC; **no se usan ni se muestran** (decisión DAA 2026-10-20: el portal no usa WACC ni valor descontado para los estimados de Summit). Historial: 2026-04-28 EV 20.5× €537.42 · P/E 28× €541.65; 2026-02-09 18× €498.84 / 20× €434.04; 2025-12-18 18× FY29 €936.41 / 49× FY26 €817.29.
 
 ## 1c. Consenso BBG listo para EV-RES-DATA
 
@@ -188,3 +189,34 @@ Reglas de SAB (playbook §8 en `feat/meta-profile`, 19–20 oct): sin color cate
 - ⚑ **OV-6 / VA-PEERS** — `S_PEERS` trae múltiplos P/E y EV/EBITDA **sembrados** (stockanalysis.com, leídos el 2026-07-31) y crecimiento; la regla 10 pide guardar denominadores con fuente (EPS/EBITDA de cada peer, del filing o de BBG) y calcular el múltiplo con el precio en vivo. Requiere esos denominadores para NFLX, TME, UMG, WMG, SIRI, DUOL, LYV (+ SPOT). Mientras tanto el mapa sigue como estaba.
 - Los iconos de OV-5 son emoji (permitido por §8); los logos de los peers son el único color del mapa.
 - Deep Dive: Top Line / Bottom Line / Valuation siguen con sus verdes `#1DB954` en gráficas propias; se resuelven al reconstruir cada sección con el motor y `SUMMIT_CAT`.
+
+## 10. Valuation ▸ Target Multiple / PEG (2026-10-20)
+
+Copia de `tsm-target-multiple.js` → `spot-target-multiple.js`; datos congelados en `spot-target-multiple-data.js` (MCP, 4 snapshots; `quality_flags` vacío en todos). Es la primera sub-tab de Valuation; las dos herramientas existentes (Price Sensitivity, 2029 Targets) siguen detrás, sin cambios.
+
+| Snapshot | Después de | EV/EBITDA | P/E | Price target EV · P/E (€) |
+|---|---|---|---|---|
+| 2025-12-18 | 3Q25 | 18× FY29 | 49× FY26 | 936.41 · 817.29 |
+| 2026-02-09 | 3Q25 | 18× FY27 | 20× FY27 | 498.84 · 434.04 |
+| 2026-04-28 | 1Q26 | 20.5× FY27 | 28× FY27 | 537.42 · 541.65 |
+| **2026-08-05** | 2Q26 | **20.5× FY27** | **28× FY27** | **561.15 · 517.91** |
+
+**Corrección (DAA, 2026-10-20):** en la primera versión de este panel yo supuse que los targets estaban en US$ por ADR y agregué un FX "implícito"; era un error mío, sin verificar. Spotify cotiza en NYSE como **acción ordinaria de un emisor extranjero (no ADR)** y los targets del workbook están en **EUR**, consistentes con el modelo. Se quitó todo el FX, el precio en US$ y la comparación contra el precio en vivo.
+
+**Tampoco se muestran WACC, fair value ni upside** (el portal no los usa para Summit): siguen en el archivo de datos congelado tal como los registra el store, y no se leen. El panel muestra múltiplo recorrido, price target registrado (€), el subyacente del modelo (€) y el PEG.
+
+⚑ **Pregunta abierta para el autor del modelo (la muestra el pie del panel):** con las filas que el store guarda para el snapshot 08-05, EV/EBITDA (EBITDA FY27 × 20.5 + caja neta €9.4B, ÷ acciones) da €478 y P/E (EARNINGS ÷ SHARES × 28) da €448, contra los €561.15 y €517.91 registrados (+17% y +16%). Los targets se muestran tal como están; de qué base de EBITDA, EPS y caja neta salen no se puede recuperar del store.
+
+## 11. Panes fuera de la estructura canónica — retirados (DAA, 2026-10-20)
+
+Decisión de DAA: lo que no está en las estructuras de TSMC, META o AMZN y no está autorizado por las reglas de SAB **no va** en el perfil, aunque una versión anterior de SPOT lo tuviera. Esto reemplaza, para estas piezas, la regla de "reubicar sin borrar" del §4.2 del playbook (el analista autoriza el retiro de forma explícita).
+
+| Pane retirado | Dónde estaba | Dónde se puede recuperar |
+|---|---|---|
+| Users · ARPU & Pricing · Advertising (SAX) · vs Netflix | Top Line | commit `f52d20d` (`js/overviews/spot.js`) |
+| Product Mix · FY2025 at a glance | Bottom Line | idem |
+| Investor Day 2026 | Evolution | idem |
+| Price Sensitivity (WACC / g) · 2029 Targets | Valuation | idem |
+| Placeholder "Management" | Deep Dive | — (vuelve al construir MG-*) |
+
+Queda el Deep Dive con **solo lo construido**: Evolution (Earnings ▸ Setup · Post-Results · Notes · Results · Estimates) y Valuation (Target Multiple / PEG). Top Line, Bottom Line, Management y Miscellaneous reaparecen conforme se construyan con los motores (`segments.js`, etc.); ninguna sub-tab es un placeholder. `spot.js` pasó de 2,268 a 644 líneas (de 4,504 al inicio).

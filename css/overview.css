@@ -3534,3 +3534,32 @@ img.org-photo { object-fit: cover; }
 .ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g4 { background: #D6DBE1; }
 .ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g5 { background: #DFE3E8; }
 .ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g6 { background: #E6E9ED; }
+
+/* ── Spotify ▸ Valuation ▸ Target Multiple / PEG — the TSMC rules above, scoped to .ov-spot-dd ── */
+.ov-spot-dd .ovt-subpane[data-ovst="targetmult"] .sens-ctrl-l{min-width:0}
+.ov-spot-dd .ovt-subpane[data-ovst="targetmult"] .sens-ctrl{margin:0;gap:8px}
+.ov-spot-dd .tm-blk .rs-preset.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.ov-spot-dd .tm-leg{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 8px}
+.ov-spot-dd .tm-chartwrap{position:relative;height:340px;margin:2px 0 6px}
+.ov-spot-dd .tm-chartwrap-peg{height:320px}
+.ov-spot-dd .tm-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}
+.ov-spot-dd .tm-tbl th,.ov-spot-dd .tm-tbl td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}
+.ov-spot-dd .tm-tbl th:first-child,.ov-spot-dd .tm-tbl td:first-child{text-align:left}
+.ov-spot-dd .tm-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}
+.ov-spot-dd .tm-tbl tbody tr.tm-last{background:var(--brand-soft)}
+.ov-spot-dd .tm-tbl tbody tr.tm-rep{background:var(--surface);color:var(--mu)}
+.ov-spot-dd .tm-tbl thead tr.tm-grp th{padding:5px 10px;text-align:center;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bdr)}
+.ov-spot-dd .tm-tbl thead tr.tm-grp th.tm-gh-ev{background:#2a78d6;color:#fff}
+.ov-spot-dd .tm-tbl thead tr.tm-grp th.tm-gh-pe{background:#eb6834;color:#fff}
+.ov-spot-dd .tm-tbl th.tm-gs,.ov-spot-dd .tm-tbl td.tm-gs{border-left:2px solid var(--bdr)}
+.ov-spot-dd .tm-tbl td.tm-flat{color:var(--mu)}
+.ov-spot-dd .tm-tbl thead tr.tm-grp .tm-gsub{display:block;font-size:9px;font-weight:600;letter-spacing:.02em;text-transform:none;opacity:.92;margin-top:2px}
+.ov-spot-dd .tm-tbl td.tm-miss-hi{color:var(--neg);font-weight:800}
+.ov-spot-dd .tm-tbl td.tm-miss-lo{color:var(--pos);font-weight:800}
+.ov-spot-dd .tm-tbl td.tm-pt{font-weight:800;color:var(--navy)}
+.ov-spot-dd .tm-tag{display:inline-block;font-size:8.5px;font-weight:800;border-radius:20px;padding:1px 7px;margin-left:6px;vertical-align:1px}
+.ov-spot-dd .tm-tag-rev{color:var(--pos);border:1px solid var(--pos)}
+.ov-spot-dd .tm-tag-rep{color:var(--mu);border:1px solid var(--bdr)}
+.ov-spot-dd .tm-tag-brk{color:var(--neg);border:1px solid var(--neg)}
+.ov-spot-dd .tm-warn{border:1px solid rgba(220,38,38,.35);border-left:4px solid var(--neg);background:rgba(220,38,38,.05);border-radius:9px;padding:11px 14px;font-size:12px;line-height:1.55;color:var(--navy);margin:12px 0}
+.ov-spot-dd .tm-tbl th.peg-out,.ov-spot-dd .tm-tbl td.peg-out{background:var(--surface);font-weight:800}

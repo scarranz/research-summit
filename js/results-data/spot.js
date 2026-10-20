@@ -15,15 +15,18 @@
 //             of this tab.
 //   summit  — Summit DCF model estimate, from the model's frozen per-quarter projections
 //             (Projection History). Reported quarters carry the estimate held on the last
-//             snapshot BEFORE that print; 3Q26 carries the live 2026-08-04 vintage. Gross
-//             profit, net income and EPS are NOT carried as consolidated lines in the
-//             model, so they stay null rather than being derived.
-//   cons    — Street consensus right before the print. SPOT has no rows in the
-//             BBG_CONSENSUS.txt archive (it carries only GOOG/GOOGL/HOOD/KKR/MA/META/UBER),
-//             so this must be compiled BY HAND per print from earnings-day coverage, the
-//             same way AMZN's and LYFT's were. Only 2Q26 revenue is filled so far — see
-//             that metric's note for the source and for why EPS was deliberately left out.
-//
+//             snapshot BEFORE that print; 3Q26 is FROZEN from the Summit MCP snapshot 2026-08-05
+//             (frozen on purpose, not live; the 2026-08-04 vintage this file carried before does
+//             not exist in the MCP). Net income and EPS are NOT carried as
+//             consolidated lines in the model (gross profit carries only the 3Q26 cell, the sum of the two
+//             segment gross profits), so the rest stay null rather than being derived.
+//   cons    — Street consensus from BBG_CONSENSUS.txt: 10 SPOT snapshots (2024-04-28 -> 2026-09-09),
+//             in EUR, loaded into `estMatrix.cons` by scripts/consensus/emit_matrix.py + map_spot.json.
+//             Each snapshot is taken right AFTER a print, so the pre-print Street for a quarter is the
+//             snapshot after the PREVIOUS print (about three months out), shown with its date in the
+//             vintage picker. The hand-compiled 2Q26 FactSet cell (EUR 4,790M) was dropped in favour
+//             of the 2026-05-03 vintage (EUR 4,795M). Users lines (MAU, subscribers, ad-supported MAU,
+//             Premium ARPU) carry actuals from the Bloomberg export; Summit does not model them.
 // All monetary values in € millions; EPS in euros. null = not available.
 // Arrays are parallel to `periods`. A period with act:null is an upcoming print.
 //
@@ -32,10 +35,10 @@
 // carries the guidance issued in that same deck.
 //
 // ── FOLLOW-UPS STILL OPEN ─────────────────────────────────────────────────────────────
-//  • The engine only knows money and EPS. Spotify's MAU, Premium subscribers, ARPU and
-//    its guided gross-margin PERCENTAGE need a count/percent unit before they can be
-//    shown here honestly. Those five guided lines are today only visible in the Earnings
-//    tab's setup grid, not in this chart.
+//  • DONE Oct 2026: MAU, Premium subscribers, ad-supported MAU and Premium ARPU are now lines in
+//    this chart (unit 'count' / 'eps'). Still open: the guided gross-margin PERCENTAGE cannot be
+//    plotted against the gross-profit line (a percent guide on a monetary series), and the Street
+//    has no guide for it. Those stay in the Earnings setup grid.
 //  • Consolidated gross margin IS guided every quarter as a percentage (32.9% for 3Q26)
 //    but the guidance band is a monetary series, so the percentage guide cannot be
 //    plotted against the gross-profit line. Same blocker as above.
@@ -53,15 +56,15 @@ export var spotResults = {
         rev: { label: 'Total Revenue', short: 'Total revenue', group: 'Revenue', unit: 'usdM',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [3636, 3807, 3988, 4242, 4190, 4193, 4272, 4531, 4533, 4777, null],
-          summit: [3561.9, 3771.4, 3899.6, 4193.6, 4166.5, 4318.9, 4229.1, 4539.6, 4663.8, 4817.3, 5035.4],
-          cons:   [null, null, null, null, null, null, null, null, null, 4790, null],
+          summit: [3561.9, 3771.4, 3899.6, 4193.6, 4166.5, 4318.9, 4229.1, 4539.6, 4663.8, 4817.3, 5023.1],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[3600, 3800, 4000, 4100, 4200, 4300, 4200, 4500, 4500, 4800, 5000],
           guideHi:[3600, 3800, 4000, 4100, 4200, 4300, 4200, 4500, 4500, 4800, 5000],
           note: 'Consolidated revenue. The guide is a single point, so “beat/miss” here is against that point. The honest record across the ten reported quarters: <b>six at or above the guided point, four below</b> — but three of the four shortfalls (3Q24 −€12M, 1Q25 −€10M, 2Q26 −€23M) are inside half a percent and read as in-line. The one real miss is 2Q25 (€4,193M against a €4,300M guide) on a ~490bps FX headwind. FX is the recurring swing factor: management states a bps assumption alongside every guide and it flips direction — a ~670bps headwind going into 1Q26, ~70bps of actual headwind in 2Q26, and a <b>~200bps TAILWIND assumed for 3Q26</b> (struck on USD:EUR 0.8756 at the June 30 close). That reversal is doing real work in the €5.0B 3Q26 guide, so read the guided growth as part currency. The single Street cell — <b>€4,790M for 2Q26</b> — is the FactSet consensus reported on the wire the morning of the print; the actual came in €13M (0.3%) under it.' },
         premrev: { label: 'Premium Revenue', short: 'Premium', group: 'Revenue', unit: 'usdM',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [3247, 3351, 3516, 3705, 3771, 3740, 3826, 4013, 4148, 4331, null],
-          summit: [3170.0, 3311.9, 3418.0, 3656.6, 3732.8, 3840.8, 3738.5, 4019.6, 4202.5, 4351.6, 4539.2],
+          summit: [3170.0, 3311.9, 3418.0, 3656.6, 3732.8, 3840.8, 3738.5, 4019.6, 4202.5, 4351.6, 4511.6],
           cons:   [null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null],
@@ -69,7 +72,7 @@ export var spotResults = {
         adrev: { label: 'Ad-Supported Revenue', short: 'Ad-Supported', group: 'Revenue', unit: 'usdM',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [389, 456, 472, 537, 419, 453, 446, 518, 385, 446, null],
-          summit: [391.9, 459.4, 481.6, 537.0, 433.8, 478.2, 490.6, 520.0, 461.4, 465.7, 496.2],
+          summit: [391.9, 459.4, 481.6, 537.0, 433.8, 478.2, 490.6, 520.0, 461.4, 465.7, 511.6],
           cons:   [null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null],
@@ -77,7 +80,7 @@ export var spotResults = {
         gp: { label: 'Gross Profit', short: 'Gross profit', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'gross margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [1004, 1112, 1240, 1368, 1326, 1320, 1351, 1499, 1495, 1596, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, 1653.4],
           cons:   [null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null],
@@ -85,7 +88,7 @@ export var spotResults = {
         opinc: { label: 'Operating Income', short: 'Op. income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [168, 266, 454, 477, 509, 406, 582, 701, 715, 655, null],
-          summit: [-59.9, 62.4, 292.7, 287.0, 553.5, 520.8, 510.4, 632.1, 710.9, 637.6, 698.9],
+          summit: [-59.9, 62.4, 292.7, 287.0, 553.5, 520.8, 510.4, 632.1, 710.9, 637.6, 672.5],
           cons:   [null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[180, 250, 405, 481, 548, 539, 485, 620, 660, 630, 670],
           guideHi:[180, 250, 405, 481, 548, 539, 485, 620, 660, 630, 670],
@@ -109,16 +112,52 @@ export var spotResults = {
         fcf: { label: 'Free Cash Flow', short: 'Free cash flow', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'FCF margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
           act:    [207, 490, 711, 877, 534, 700, 806, 834, 824, 797, null],
-          summit: [108.6, 215.6, 351.2, 391.9, 753.7, 726.4, 706.2, 854.2, 797.6, 716.1, 769.4],
+          summit: [108.6, 215.6, 351.2, 391.9, 753.7, 726.4, 706.2, 854.2, 797.6, 716.1, 742.3],
           cons:   [null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null],
-          note: 'Free cash flow has run consistently ABOVE operating income — the payment timing of royalty accruals plus deferred subscription revenue give Spotify a structurally favourable working-capital cycle. Strongly seasonal (1Q is the trough). 2Q26 printed <b>€797M</b>, a record for a second quarter, on €816M of operating cash flow less €21M of capex, taking LTM free cash flow to <b>€3.3B</b> and the cash pile to €9.4B. It is what funds the buyback: $662M repurchased year-to-date through Aug 3, about 30% ahead of 2025, ~2.2M shares (≈1% of the count) since repurchases resumed. Not guided.' }
+          note: 'Free cash flow has run consistently ABOVE operating income — the payment timing of royalty accruals plus deferred subscription revenue give Spotify a structurally favourable working-capital cycle. Strongly seasonal (1Q is the trough). 2Q26 printed <b>€797M</b>, a record for a second quarter, on €816M of operating cash flow less €21M of capex, taking LTM free cash flow to <b>€3.3B</b> and the cash pile to €9.4B. It is what funds the buyback: $662M repurchased year-to-date through Aug 3, about 30% ahead of 2025, ~2.2M shares (≈1% of the count) since repurchases resumed. Not guided.' },
+        mau: { label: 'Monthly Active Users', short: 'MAU', group: 'Users', unit: 'count', unitLabel: 'millions of users',
+          periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
+          act:    [615, 626, 640, 675, 678, 696, 713, 751, 761, 777, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, 745, 759, 778, 788],
+          guideHi:[null, null, null, null, null, null, null, 745, 759, 778, 788],
+          note: 'Total monthly active users (millions, end of quarter). Reported by Spotify; the series matches the Bloomberg export (14 quarters, 1Q23-2Q26, one value per quarter across all 10 snapshots). The guide is a point, held by the Summit model for 4Q25-3Q26 (earlier guides are not in the model). The 3Q26 guide of 788M is 777M plus 11M of net adds.' },
+        subs: { label: 'Premium Subscribers', short: 'Subscribers', group: 'Users', unit: 'count', unitLabel: 'millions of subscribers',
+          periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
+          act:    [239, 246, 252, 263, 268, 276, 281, 290, 293, 300, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, 299, 305],
+          guideHi:[null, null, null, null, null, null, null, null, null, 299, 305],
+          note: 'Premium subscribers (millions, end of quarter). Guide: 2Q26 299M and 3Q26 305M come from the Q1 and Q2 2026 calls; earlier guides are not in the Summit model (its subscriber-guide label is empty) and are left blank rather than reconstructed. Bloomberg labels this series Premium Monthly Active Users.' },
+        admau: { label: 'Ad-Supported MAU', short: 'Ad-supported MAU', group: 'Users', unit: 'count', unitLabel: 'millions of users',
+          periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
+          act:    [388, 393, 402, 425, 423, 433, 446, 476, 483, 494, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null],
+          note: 'Ad-supported monthly active users (millions, end of quarter), the audience the advertising business sells. Not guided. Bloomberg export, 14 quarters, one value per quarter across all snapshots.' },
+        arpu: { label: 'Premium ARPU', short: 'Premium ARPU', group: 'Users', unit: 'eps',
+          periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26'],
+          act:    [4.55, 4.62, 4.71, 4.85, 4.73, 4.57, 4.53, 4.70, 4.76, 4.89, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null],
+          note: 'Premium average revenue per user, EUR per month, as reported. Not guided. Currency moves it by several percent either way, so read it with the constant-currency figure in the deck; the 2Q25-3Q25 dip is mostly FX.' },
       },
       sections: [
         { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
           { label: 'Totals', keys: ['rev'] },
           { label: 'Segments', keys: ['premrev', 'adrev'] }
+        ] },
+        { key: 'users', label: 'Users', defaultMetric: 'mau', groups: [
+          { label: 'Audience', keys: ['mau', 'subs', 'admau'] },
+          { label: 'Monetization', keys: ['arpu'] }
         ] },
         { key: 'margins', label: 'Margins & Profitability', defaultMetric: 'opinc', groups: [
           { label: 'Company', keys: ['gp', 'opinc', 'netinc', 'eps', 'fcf'] }
@@ -133,6 +172,320 @@ export var spotResults = {
   // FIVE vintages now exist for SPOT; the fifth (2026-08-04) was parsed the morning
   // of the 2Q26 print and DOES contain it.
   //
+  // ── GENERATED BLOCK — do not hand-edit. Rebuilt by scripts/consensus/emit_matrix.py
+  // (see docs/RESULTS_CONVENTIONS.md §8). Source: the UNION of BBG_CONSENSUS.txt (the
+  // exported archive) and Consensus_Portal.xlsm sheet CONSENSUS (the live sheet, which
+  // can overwrite its most recent row), deduped by data_as_of. Only FORWARD horizons
+  // are kept — the (Rep)-marked columns are Bloomberg's own reported figures, not
+  // estimates, and can sit on a different basis than the company's own measure.
+  estMatrix: {
+    cons: {
+      vintages: [
+        { id: '2024-04-28', label: '2024-04-28', lastActual: { q: '1Q24', y: '2023' } },
+        { id: '2024-07-28', label: '2024-07-28', lastActual: { q: '2Q24', y: '2023' } },
+        { id: '2024-11-17', label: '2024-11-17', lastActual: { q: '3Q24', y: '2023' } },
+        { id: '2025-02-09', label: '2025-02-09', lastActual: { q: '4Q24', y: '2024' } },
+        { id: '2025-05-04', label: '2025-05-04', lastActual: { q: '1Q25', y: '2024' } },
+        { id: '2025-08-03', label: '2025-08-03', lastActual: { q: '2Q25', y: '2024' } },
+        { id: '2025-11-09', label: '2025-11-09', lastActual: { q: '3Q25', y: '2024' } },
+        { id: '2026-02-15', label: '2026-02-15', lastActual: { q: '4Q25', y: '2025' } },
+        { id: '2026-05-03', label: '2026-05-03', lastActual: { q: '1Q26', y: '2025' } },
+        { id: '2026-09-09', label: '2026-09-09', lastActual: { q: '2Q26', y: '2025' } },
+      ],
+      q: {
+      rev: {
+        '2024-04-28': { '2Q24': 3794.7778, '3Q24': 3962.1154, '4Q24': 4218.6538, '1Q25': 4210.5833 },
+        '2024-07-28': { '3Q24': 4029.4444, '4Q24': 4266.3704, '1Q25': 4227.2, '2Q25': 4417.8 },
+        '2024-11-17': { '4Q24': 4164.0667, '1Q25': 4172.0435, '2Q25': 4365.1739, '3Q25': 4562.4783 },
+        '2025-02-09': { '1Q25': 4214.6897, '2Q25': 4404, '3Q25': 4619.1429, '4Q25': 4914.4286 },
+        '2025-05-04': { '2Q25': 4304.0938, '3Q25': 4522.6875, '4Q25': 4841.4062, '1Q26': 4794.2 },
+        '2025-08-03': { '3Q25': 4260.4688, '4Q25': 4627.0938, '1Q26': 4681.5294, '2Q26': 4832.1176 },
+        '2025-11-09': { '4Q25': 4530.5938, '1Q26': 4609.2273, '2Q26': 4834.6818, '3Q26': 5020.15 },
+        '2026-02-15': { '1Q26': 4531.2581, '2Q26': 4776.1613, '3Q26': 4946.8065, '4Q26': 5264.3226 },
+        '2026-05-03': { '2Q26': 4794.5882, '3Q26': 4924.7353, '4Q26': 5229.1176, '1Q27': 5191.8824 },
+        '2026-09-09': { '3Q26': 4976.5588, '4Q26': 5244.5, '1Q27': 5239.1765, '2Q27': 5469.2941 },
+      },
+      premrev: {
+        '2024-04-28': { '2Q24': 3325.9749, '3Q24': 3442.5727, '4Q24': 3634.738, '1Q25': 3675.8279 },
+        '2024-07-28': { '3Q24': 3543.8989, '4Q24': 3709.8008, '1Q25': 3785.986, '2Q25': 3895.8086 },
+        '2024-11-17': { '4Q24': 3644.881, '1Q25': 5638.0949, '2Q25': 3874.2116, '3Q25': 4048.3935 },
+        '2025-02-09': { '1Q25': 3796.618, '2Q25': 3907.4218, '3Q25': 4091.1243, '4Q25': 4316.906 },
+        '2025-05-04': { '2Q25': 3822.5576, '3Q25': 4011.6638, '4Q25': 4250.5627, '1Q26': 4306.4495 },
+        '2025-08-03': { '3Q25': 3793.962, '4Q25': 4083.2981, '1Q26': 4235.9637, '2Q26': 4330.7638 },
+        '2025-11-09': { '4Q25': 4002.0605, '1Q26': 4179.2496, '2Q26': 4342.3485, '3Q26': 4492.9065 },
+        '2026-02-15': { '1Q26': 4104.0272, '2Q26': 4293.7928, '3Q26': 4436.9231, '4Q26': 4664.9705 },
+        '2026-05-03': { '2Q26': 4338.6551, '3Q26': 4430.2132, '4Q26': 4660.3226, '1Q27': 4749.8513 },
+        '2026-09-09': { '3Q26': 4482.1411, '4Q26': 4672.4077, '1Q27': 4792.143, '2Q27': 4957.4626 },
+      },
+      adrev: {
+        '2024-04-28': { '2Q24': 474.4105, '3Q24': 522.1229, '4Q24': 591.7698, '1Q25': 472.6465 },
+        '2024-07-28': { '3Q24': 482.9579, '4Q24': 551.7305, '1Q25': 445.7892, '2Q25': 529.8957 },
+        '2024-11-17': { '4Q24': 509.7396, '1Q25': 409.3606, '2Q25': 485.4149, '3Q25': 519.4957 },
+        '2025-02-09': { '1Q25': 421.1745, '2Q25': 496.2829, '3Q25': 528.6679, '4Q25': 603.0464 },
+        '2025-05-04': { '2Q25': 482.0445, '3Q25': 507.7378, '4Q25': 583.9929, '1Q26': 470.3733 },
+        '2025-08-03': { '3Q25': 478.9487, '4Q25': 559.1509, '1Q26': 460.4261, '2Q26': 519.0066 },
+        '2025-11-09': { '4Q25': 527.8747, '1Q26': 428.4916, '2Q26': 487.7477, '3Q26': 513.0262 },
+        '2026-02-15': { '1Q26': 420.382, '2Q26': 480.9523, '3Q26': 505.5668, '4Q26': 596.0883 },
+        '2026-05-03': { '2Q26': 455.5662, '3Q26': 485.3981, '4Q26': 579.5901, '1Q27': 434.4909 },
+        '2026-09-09': { '3Q26': 490.8588, '4Q26': 577.7624, '1Q27': 439.0245, '2Q27': 509.8674 },
+      },
+      gp: {
+        '2024-04-28': { '2Q24': 1058.7667, '3Q24': 1121.4085, '4Q24': 1216.143, '1Q25': 1189.8851 },
+        '2024-07-28': { '3Q24': 1205.895, '4Q24': 1291.6058, '1Q25': 1267.9238, '2Q25': 1351.5832 },
+        '2024-11-17': { '4Q24': 1313.8301, '1Q25': 1300.7107, '2Q25': 1379.3474, '3Q25': 1466.2147 },
+        '2025-02-09': { '1Q25': 1324.0654, '2Q25': 1388.5602, '3Q25': 1466.4977, '4Q25': 1606.3422 },
+        '2025-05-04': { '2Q25': 1357.5727, '3Q25': 1433.0838, '4Q25': 1580.5029, '1Q26': 1553.0359 },
+        '2025-08-03': { '3Q25': 1335.8552, '4Q25': 1510.5701, '1Q26': 1515.4271, '2Q26': 1571.5765 },
+        '2025-11-09': { '4Q25': 1490.447, '1Q26': 1488.8048, '2Q26': 1585.2558, '3Q26': 1647.3117 },
+        '2026-02-15': { '1Q26': 1481.3085, '2Q26': 1581.3338, '3Q26': 1637.0683, '4Q26': 1795.176 },
+        '2026-05-03': { '2Q26': 1587.8117, '3Q26': 1625.969, '4Q26': 1780.2668, '1Q27': 1764.7186 },
+        '2026-09-09': { '3Q26': 1638.6913, '4Q26': 1775.9084, '1Q27': 1777.498, '2Q27': 1870.1364 },
+      },
+      premgp: {
+        '2024-04-28': { '2Q24': 1009.7806, '3Q24': 1050.7967, '4Q24': 1118.8298, '1Q25': 1134.7861 },
+        '2024-07-28': { '3Q24': 1130.6053, '4Q24': 1184.8288, '1Q25': 1193.9678, '2Q25': 1235.3281 },
+        '2024-11-17': { '4Q24': 1802.4664, '1Q25': 2017.6652, '2Q25': 1295.8859, '3Q25': 1371.8514 },
+        '2025-02-09': { '1Q25': 1274.8679, '2Q25': 1307.4371, '3Q25': 1375.9478, '4Q25': 1486.777 },
+        '2025-05-04': { '2Q25': 1281.2402, '3Q25': 1349.903, '4Q25': 1470.111, '1Q26': 1470.2304 },
+        '2025-08-03': { '3Q25': 1254.0641, '4Q25': 1408.4891, '1Q26': 1450.5518, '2Q26': 1480.5001 },
+        '2025-11-09': { '4Q25': 1380.6754, '1Q26': 1414.0878, '2Q26': 1490.2649, '3Q26': 1536.6523 },
+        '2026-02-15': { '1Q26': 1405.3669, '2Q26': 1481.2245, '3Q26': 1529.9793, '4Q26': 1659.049 },
+        '2026-05-03': { '2Q26': 1510.7543, '3Q26': 1534.7247, '4Q26': 1659.5271, '1Q27': 1688.3076 },
+        '2026-09-09': { '3Q26': 1541.0355, '4Q26': 1649.2546, '1Q27': 1703.4716, '2Q27': 1764.0846 },
+      },
+      adgp: {
+        '2024-04-28': { '2Q24': 54.0892, '3Q24': 71.7244, '4Q24': 100.5048, '1Q25': 59.9387 },
+        '2024-07-28': { '3Q24': 74.2086, '4Q24': 98.6432, '1Q25': 54.0751, '2Q25': 92.3298 },
+        '2024-11-17': { '4Q24': 88.8335, '1Q25': 47.9472, '2Q25': 79.9378, '3Q25': 91.2412 },
+        '2025-02-09': { '1Q25': 41.2042, '2Q25': 71.6139, '3Q25': 79.0513, '4Q25': 108.0372 },
+        '2025-05-04': { '2Q25': 74.6297, '3Q25': 79.8074, '4Q25': 106.5205, '1Q26': 79.1365 },
+        '2025-08-03': { '3Q25': 82.1965, '4Q25': 108.1175, '1Q26': 80.497, '2Q26': 107.5804 },
+        '2025-11-09': { '4Q25': 109.4898, '1Q26': 76.5472, '2Q26': 102.9968, '3Q26': 110.2263 },
+        '2026-02-15': { '1Q26': 76.5754, '2Q26': 100.7923, '3Q26': 107.0013, '4Q26': 141.196 },
+        '2026-05-03': { '2Q26': 76.6342, '3Q26': 88.2942, '4Q26': 125.539, '1Q27': 81.1984 },
+        '2026-09-09': { '3Q26': 93.3355, '4Q26': 131.4211, '1Q27': 77.3814, '2Q27': 107.5111 },
+      },
+      opinc: {
+        '2024-04-28': { '2Q24': 228.9231, '3Q24': 275.7826, '4Q24': 307.2174, '1Q25': 329.3333 },
+        '2024-07-28': { '3Q24': 401.2308, '4Q24': 426.52, '1Q25': 396.7692, '2Q25': 444.7857 },
+        '2024-11-17': { '4Q24': 476.3793, '1Q25': 477, '2Q25': 504.2381, '3Q25': 581.3182 },
+        '2025-02-09': { '1Q25': 544.7273, '2Q25': 557.96, '3Q25': 638.2963, '4Q25': 701.7407 },
+        '2025-05-04': { '2Q25': 536.1667, '3Q25': 594.5517, '4Q25': 679.9286, '1Q26': 692.2667 },
+        '2025-08-03': { '3Q25': 504.5714, '4Q25': 622.0357, '1Q26': 660, '2Q26': 657 },
+        '2025-11-09': { '4Q25': 623.4483, '1Q26': 642.5714, '2Q26': 672.1905, '3Q26': 796.5789 },
+        '2026-02-15': { '1Q26': 663.8889, '2Q26': 669.1154, '3Q26': 778.963, '4Q26': 882.5185 },
+        '2026-05-03': { '2Q26': 640.8214, '3Q26': 703.4138, '4Q26': 854.4, '1Q27': 886.6875 },
+        '2026-09-09': { '3Q26': 678.3793, '4Q26': 827.8333, '1Q27': 899.0625, '2Q27': 886.75 },
+      },
+      ebitda: {
+        '2024-04-28': { '2Q24': 276.15, '3Q24': 327.7143, '4Q24': 358.05, '1Q25': 382.2 },
+        '2024-07-28': { '3Q24': 440.2857, '4Q24': 470.1304, '1Q25': 438.8571, '2Q25': 492.1429 },
+        '2024-11-17': { '4Q24': 516.4348, '1Q25': 506.0526, '2Q25': 540.25, '3Q25': 626.3 },
+        '2025-02-09': { '1Q25': 561.1364, '2Q25': 589.5652, '3Q25': 673.6957, '4Q25': 743.9091 },
+        '2025-05-04': { '2Q25': 569.5652, '3Q25': 628.7083, '4Q25': 716.5, '1Q26': 725.5 },
+        '2025-08-03': { '3Q25': 535.9545, '4Q25': 666.1667, '1Q26': 695.6154, '2Q26': 692.8462 },
+        '2025-11-09': { '4Q25': 661.4615, '1Q26': 683.2941, '2Q26': 712.7059, '3Q26': 831.25 },
+        '2026-02-15': { '1Q26': 708.6923, '2Q26': 726.72, '3Q26': 833.24, '4Q26': 938.8333 },
+        '2026-05-03': { '2Q26': 692.2963, '3Q26': 748.4074, '4Q26': 902.5556, '1Q27': 943.3846 },
+        '2026-09-09': { '3Q26': 724.1111, '4Q26': 866.7037, '1Q27': 936.3077, '2Q27': 913.3077 },
+      },
+      netinc: {
+        '2024-04-28': { '2Q24': 223.6048, '3Q24': 277.65, '4Q24': 324.8, '1Q25': 301.4444 },
+        '2024-07-28': { '3Q24': 360.2381, '4Q24': 387.0476, '1Q25': 357.4167, '2Q25': 405.75 },
+        '2024-11-17': { '4Q24': 398.5217, '1Q25': 387.3333, '2Q25': 427.2778, '3Q25': 506.0556 },
+        '2025-02-09': { '1Q25': 449.2917, '2Q25': 480.2917, '3Q25': 551.125, '4Q25': 607.1667 },
+        '2025-05-04': { '2Q25': 436.84, '3Q25': 487.96, '4Q25': 564.76, '1Q26': 573 },
+        '2025-08-03': { '3Q25': 391.3846, '4Q25': 514.6538, '1Q26': 530.4, '2Q26': 514.2667 },
+        '2025-11-09': { '4Q25': 572.6154, '1Q26': 551.3333, '2Q26': 584.1111, '3Q26': 693.7059 },
+        '2026-02-15': { '1Q26': 607.6957, '2Q26': 618.5, '3Q26': 706.375, '4Q26': 793.2917 },
+        '2026-05-03': { '2Q26': 588.1852, '3Q26': 649.8148, '4Q26': 766.5556, '1Q27': 790.9091 },
+        '2026-09-09': { '3Q26': 598.9259, '4Q26': 719.963, '1Q27': 761.7, '2Q27': 761 },
+      },
+      eps: {
+        '2024-04-28': { '2Q24': 1.0071, '3Q24': 1.2604, '4Q24': 1.3992, '1Q25': 1.435 },
+        '2024-07-28': { '3Q24': 1.7285, '4Q24': 1.8596, '1Q25': 1.7338, '2Q25': 1.9029 },
+        '2024-11-17': { '4Q24': 1.9154, '1Q25': 1.8832, '2Q25': 2.0635, '3Q25': 2.3848 },
+        '2025-02-09': { '1Q25': 2.1326, '2Q25': 2.2715, '3Q25': 2.6204, '4Q25': 2.8722 },
+        '2025-05-04': { '2Q25': 2.1713, '3Q25': 2.4113, '4Q25': 2.8227, '1Q26': 2.7654 },
+        '2025-08-03': { '3Q25': 2.0243, '4Q25': 2.5662, '1Q26': 2.69, '2Q26': 2.5094 },
+        '2025-11-09': { '4Q25': 2.5752, '1Q26': 2.6938, '2Q26': 2.79, '3Q26': 3.278 },
+        '2026-02-15': { '1Q26': 2.9003, '2Q26': 2.9163, '3Q26': 3.2852, '4Q26': 3.7068 },
+        '2026-05-03': { '2Q26': 2.7735, '3Q26': 3.0526, '4Q26': 3.6397, '1Q27': 3.7759 },
+        '2026-09-09': { '3Q26': 2.88, '4Q26': 3.4076, '1Q27': 3.7026, '2Q27': 3.6606 },
+      },
+      fcf: {
+        '2024-04-28': { '2Q24': 316.7339, '3Q24': 459.9513, '4Q24': 582.175, '1Q25': 416.2584 },
+        '2024-07-28': { '3Q24': 548.8356, '4Q24': 677.3087, '1Q25': 495.8394, '2Q25': 561.2951 },
+        '2024-11-17': { '4Q24': 688.3751, '1Q25': 533.8979, '2Q25': 665.3047, '3Q25': 732.4653 },
+        '2025-02-09': { '1Q25': 516.9574, '2Q25': 722.2113, '3Q25': 812.4698, '4Q25': 962.1223 },
+        '2025-05-04': { '2Q25': 675.6609, '3Q25': 810.806, '4Q25': 1001.8566, '1Q26': 620.8809 },
+        '2025-08-03': { '3Q25': 690.1333, '4Q25': 962.32, '1Q26': 634.5939, '2Q26': 815.9991 },
+        '2025-11-09': { '4Q25': 935.0815, '1Q26': 659.3918, '2Q26': 871.6106, '3Q26': 962.3689 },
+        '2026-02-15': { '1Q26': 760.5658, '2Q26': 918.118, '3Q26': 994.6742, '4Q26': 996.1769 },
+        '2026-05-03': { '2Q26': 858.385, '3Q26': 896.2226, '4Q26': 942.1267, '1Q27': 916.9679 },
+        '2026-09-09': { '3Q26': 848.8273, '4Q26': 912.9473, '1Q27': 916.12, '2Q27': 943.1951 },
+      },
+      mau: {
+        '2024-04-28': { '2Q24': 632.1229, '3Q24': 651.6254, '4Q24': 677.0369, '1Q25': 688.0892 },
+        '2024-07-28': { '3Q24': 641.4103, '4Q24': 664.3317, '1Q25': 678.8655, '2Q25': 694.9319 },
+        '2024-11-17': { '4Q24': 664.1953, '1Q25': 679.3461, '2Q25': 694.3838, '3Q25': 710.3419 },
+        '2025-02-09': { '1Q25': 678.7476, '2Q25': 694.8973, '3Q25': 711.5549, '4Q25': 739.4801 },
+        '2025-05-04': { '2Q25': 689.7333, '3Q25': 706.5465, '4Q25': 736.2422, '1Q26': 744.8202 },
+        '2025-08-03': { '3Q25': 709.9674, '4Q25': 740.6754, '1Q26': 747.865, '2Q26': 763.2011 },
+        '2025-11-09': { '4Q25': 743.5788, '1Q26': 752.1064, '2Q26': 768.4067, '3Q26': 784.5565 },
+        '2026-02-15': { '1Q26': 758.6711, '2Q26': 774.1057, '3Q26': 790.3443, '4Q26': 821.1584 },
+        '2026-05-03': { '2Q26': 777.6568, '3Q26': 793.4692, '4Q26': 825.6119, '1Q27': 834.6784 },
+        '2026-09-09': { '3Q26': 788.9531, '4Q26': 820.6683, '1Q27': 827.6683, '2Q27': 842.9751 },
+      },
+      subs: {
+        '2024-04-28': { '2Q24': 245.2388, '3Q24': 250.9102, '4Q24': 259.8686, '1Q25': 262.5137 },
+        '2024-07-28': { '3Q24': 251.0729, '4Q24': 259.6215, '1Q25': 262.9301, '2Q25': 269.7103 },
+        '2024-11-17': { '4Q24': 259.9847, '1Q25': 263.3764, '2Q25': 270.1932, '3Q25': 275.8154 },
+        '2025-02-09': { '1Q25': 265.0408, '2Q25': 271.3912, '3Q25': 277.3647, '4Q25': 286.7886 },
+        '2025-05-04': { '2Q25': 272.9425, '3Q25': 278.3346, '4Q25': 287.6878, '1Q26': 291.537 },
+        '2025-08-03': { '3Q25': 280.5636, '4Q25': 289.8034, '1Q26': 293.9119, '2Q26': 299.534 },
+        '2025-11-09': { '4Q25': 289.0015, '1Q26': 293.5869, '2Q26': 299.8603, '3Q26': 305.1074 },
+        '2026-02-15': { '1Q26': 293.2522, '2Q26': 300.7458, '3Q26': 306.525, '4Q26': 315.6361 },
+        '2026-05-03': { '2Q26': 299.0801, '3Q26': 305.3312, '4Q26': 314.9588, '1Q27': 317.9194 },
+        '2026-09-09': { '3Q26': 305.185, '4Q26': 315.1284, '1Q27': 318.2829, '2Q27': 324.9123 },
+      },
+      admau: {
+        '2024-04-28': { '2Q24': 398.7064, '3Q24': 411.9461, '4Q24': 428.6856, '1Q25': 438.5434 },
+        '2024-07-28': { '3Q24': 402.5897, '4Q24': 416.551, '1Q25': 428.3597, '2Q25': 437.5755 },
+        '2024-11-17': { '4Q24': 417.4038, '1Q25': 427.7078, '2Q25': 436.3159, '3Q25': 446.4055 },
+        '2025-02-09': { '1Q25': 426.154, '2Q25': 436.083, '3Q25': 446.5198, '4Q25': 464.4002 },
+        '2025-05-04': { '2Q25': 429.9187, '3Q25': 441.5645, '4Q25': 461.7152, '1Q26': 466.026 },
+        '2025-08-03': { '3Q25': 441.6096, '4Q25': 462.411, '1Q26': 466.0089, '2Q26': 474.3103 },
+        '2025-11-09': { '4Q25': 467.4911, '1Q26': 471.4997, '2Q26': 480.1378, '3Q26': 489.7981 },
+        '2026-02-15': { '1Q26': 478.896, '2Q26': 486.8136, '3Q26': 497.0026, '4Q26': 518.1011 },
+        '2026-05-03': { '2Q26': 491.166, '3Q26': 502.4756, '4Q26': 524.7727, '1Q27': 528.1382 },
+        '2026-09-09': { '3Q26': 499.5311, '4Q26': 520.9444, '1Q27': 523.3263, '2Q27': 532.0546 },
+      },
+      arpu: {
+        '2024-04-28': { '2Q24': 4.5702, '3Q24': 4.6162, '4Q24': 4.7367, '1Q25': 4.6921 },
+        '2024-07-28': { '3Q24': 4.7539, '4Q24': 4.8369, '1Q25': 4.8236, '2Q25': 4.8795 },
+        '2024-11-17': { '4Q24': 4.7533, '1Q25': 4.7746, '2Q25': 4.8364, '3Q25': 4.9304 },
+        '2025-02-09': { '1Q25': 4.7925, '2Q25': 4.8461, '3Q25': 4.9595, '4Q25': 5.0895 },
+        '2025-05-04': { '2Q25': 4.7045, '3Q25': 4.8471, '4Q25': 4.9933, '1Q26': 4.9323 },
+        '2025-08-03': { '3Q25': 4.5453, '4Q25': 4.7633, '1Q26': 4.8337, '2Q26': 4.8312 },
+        '2025-11-09': { '4Q25': 4.6737, '1Q26': 4.7745, '2Q26': 4.8516, '3Q26': 4.9157 },
+        '2026-02-15': { '1Q26': 4.6875, '2Q26': 4.8103, '3Q26': 4.8664, '4Q26': 4.9854 },
+        '2026-05-03': { '2Q26': 4.8843, '3Q26': 4.8892, '4Q26': 5.0007, '1Q27': 4.9628 },
+        '2026-09-09': { '3Q26': 4.9335, '4Q26': 5.018, '1Q27': 5.0497, '2Q27': 5.1539 },
+      },
+      },
+      y: {
+      rev: {
+        '2024-04-28': { '2024': 15611.3226, '2025': 17844.5484, '2026': 19989.6071 },
+        '2024-07-28': { '2024': 15732.1765, '2025': 18116.2059, '2026': 20434.0667 },
+        '2024-11-17': { '2024': 15599.7568, '2025': 17892.8649, '2026': 20201.9688 },
+        '2025-02-09': { '2025': 18146.8286, '2026': 20806.5714, '2027': 23461.25 },
+        '2025-05-04': { '2025': 17892.625, '2026': 20605.6585, '2027': 23285.6765 },
+        '2025-08-03': { '2025': 17340.9767, '2026': 19959.7381, '2027': 22769.7059 },
+        '2025-11-09': { '2025': 17202.65, '2026': 19685.439, '2027': 22399.5429 },
+        '2026-02-15': { '2026': 19560.3556, '2027': 22182.561, '2028': 24925.1935 },
+        '2026-05-03': { '2026': 19496.7209, '2027': 22175.0952, '2028': 24876.4375 },
+        '2026-09-09': { '2026': 19522, '2027': 22305.6667, '2028': 25231.6571 },
+      },
+      premrev: {
+        '2024-04-28': { '2024': 13650.0144, '2025': 15437.5483, '2026': 17192.0986 },
+        '2024-07-28': { '2024': 13846.4028, '2025': 15918.8506, '2026': 17850.8739 },
+        '2024-11-17': { '2024': 13756.3473, '2025': 15819.241, '2026': 17859.8822 },
+        '2025-02-09': { '2025': 16112.0266, '2026': 18415.9679, '2027': 20503.3232 },
+        '2025-05-04': { '2025': 15865.6288, '2026': 18248.4338, '2027': 20501.286 },
+        '2025-08-03': { '2025': 15395.6699, '2026': 17733.7158, '2027': 20157.7735 },
+        '2025-11-09': { '2025': 15332.1532, '2026': 17651.6312, '2027': 20081.4312 },
+        '2026-02-15': { '2026': 17499.6, '2027': 19827.7694, '2028': 22132.852 },
+        '2026-05-03': { '2026': 17577.1938, '2027': 20021.7119, '2028': 22458.5631 },
+        '2026-09-09': { '2026': 17628.842, '2027': 20158.8932, '2028': 22803.9026 },
+      },
+      adrev: {
+        '2024-04-28': { '2024': 1976.5938, '2025': 2375.4128, '2026': 2798.2473 },
+        '2024-07-28': { '2024': 1885.2146, '2025': 2189.6841, '2026': 2546.7651 },
+        '2024-11-17': { '2024': 2485.2716, '2025': 2006.9568, '2026': 2319.4988 },
+        '2025-02-09': { '2025': 2049.0848, '2026': 2393.8947, '2027': 2754.0523 },
+        '2025-05-04': { '2025': 2001.7248, '2026': 2288.2121, '2027': 2630.0122 },
+        '2025-08-03': { '2025': 1915.0992, '2026': 2199.5797, '2027': 2558.005 },
+        '2025-11-09': { '2025': 1850.3159, '2026': 2072.7842, '2027': 2421.5244 },
+        '2026-02-15': { '2026': 2019.2855, '2027': 2334.8336, '2028': 2721.157 },
+        '2026-05-03': { '2026': 1905.5681, '2027': 2212.445, '2028': 2599.6559 },
+        '2026-09-09': { '2026': 1899.4527, '2027': 2188.7167, '2028': 2535.8012 },
+      },
+      gp: {
+        '2024-04-28': { '2024': 4396.2977, '2025': 5192.4079, '2026': 6001.4201 },
+        '2024-07-28': { '2024': 4601.0498, '2025': 5541.1445, '2026': 6388.1151 },
+        '2024-11-17': { '2024': 4659.9637, '2025': 5685.4683, '2026': 6641.0189 },
+        '2025-02-09': { '2025': 5801.238, '2026': 6861.7215, '2027': 7939.6855 },
+        '2025-05-04': { '2025': 5720.7623, '2026': 6821.3821, '2027': 7939.3555 },
+        '2025-08-03': { '2025': 5512.4638, '2026': 6541.8096, '2027': 7743.789 },
+        '2025-11-09': { '2025': 5495.3844, '2026': 6500.4298, '2027': 7666.1876 },
+        '2026-02-15': { '2026': 6483.6936, '2027': 7580.8343, '2028': 8684.3763 },
+        '2026-05-03': { '2026': 6490.2525, '2027': 7620.8945, '2028': 8760.9023 },
+        '2026-09-09': { '2026': 6499.5099, '2027': 7655.6358, '2028': 8905.5199 },
+      },
+      opinc: {
+        '2024-04-28': { '2024': 984.6667, '2025': 1515.7333, '2026': 2008.1923 },
+        '2024-07-28': { '2024': 1256.5, '2025': 1938.3125, '2026': 2485.5714 },
+        '2024-11-17': { '2024': 1357.5, '2025': 2162.2857, '2026': 2790.1667 },
+        '2025-02-09': { '2025': 2413.2353, '2026': 3210.1818, '2027': 4064.6957 },
+        '2025-05-04': { '2025': 2331.6944, '2026': 3176.5, '2027': 4035.129 },
+        '2025-08-03': { '2025': 2088.2857, '2026': 2948.2895, '2027': 3889.0645 },
+        '2025-11-09': { '2025': 2110.9143, '2026': 2937.5946, '2027': 3872.7419 },
+        '2026-02-15': { '2026': 2969.6053, '2027': 3864.1471, '2028': 4765.8889 },
+        '2026-05-03': { '2026': 2915.0286, '2027': 3759.4286, '2028': 4685.5 },
+        '2026-09-09': { '2026': 2873.8611, '2027': 3744.8421, '2028': 4718.4194 },
+      },
+      ebitda: {
+        '2024-04-28': { '2024': 1153.25, '2025': 1728.8, '2026': 2182 },
+        '2024-07-28': { '2024': 1388.6071, '2025': 2057.6552, '2026': 2602.32 },
+        '2024-11-17': { '2024': 1482.3462, '2025': 2285.4483, '2026': 2896.32 },
+        '2025-02-09': { '2025': 2557.9655, '2026': 3338.6071, '2027': 4144.6842 },
+        '2025-05-04': { '2025': 2402.5806, '2026': 3227.125, '2027': 4059.6923 },
+        '2025-08-03': { '2025': 2167.7667, '2026': 3048.7097, '2027': 3996.6154 },
+        '2025-11-09': { '2025': 2206.303, '2026': 3064.8788, '2027': 3985.0333 },
+        '2026-02-15': { '2026': 3114.9189, '2027': 3952.5455, '2028': 4752 },
+        '2026-05-03': { '2026': 3067.7778, '2027': 3887.2432, '2028': 4739.2593 },
+        '2026-09-09': { '2026': 3011.5, '2027': 3887.1212, '2028': 4809.6071 },
+      },
+      earnings: {
+        '2024-04-28': { '2024': 952.1905, '2025': 1351.9524, '2026': 1712.15 },
+        '2024-07-28': { '2024': 1175.6667, '2025': 1719.8148, '2026': 2137.3478 },
+        '2024-11-17': { '2024': 1174.1724, '2025': 1858.3333, '2026': 2335.4615 },
+        '2025-02-09': { '2025': 2102.0333, '2026': 2756.7931, '2027': 3390.75 },
+        '2025-05-04': { '2025': 1830.4412, '2026': 2647.5455, '2027': 3321.12 },
+        '2025-08-03': { '2025': 1182.3611, '2026': 2356.2222, '2027': 3154.8929 },
+        '2025-11-09': { '2025': 1475.3056, '2026': 2504.5278, '2027': 3194.3103 },
+        '2026-02-15': { '2026': 2680.8824, '2027': 3401.0323, '2028': 4096.2083 },
+        '2026-05-03': { '2026': 2705.5, '2027': 3313.7273, '2028': 3980.75 },
+        '2026-09-09': { '2026': 2589.4722, '2027': 3212.4286, '2028': 3947.6429 },
+      },
+      eps: {
+        '2024-04-28': { '2024': 4.4648, '2025': 6.5841, '2026': 8.429 },
+        '2024-07-28': { '2024': 5.8097, '2025': 8.0194, '2026': 10.2291 },
+        '2024-11-17': { '2024': 5.7278, '2025': 8.8153, '2026': 11.1294 },
+        '2025-02-09': { '2025': 9.9276, '2026': 12.7697, '2027': 15.8417 },
+        '2025-05-04': { '2025': 8.7364, '2026': 12.6539, '2027': 15.7047 },
+        '2025-08-03': { '2025': 5.8134, '2026': 11.6505, '2027': 15.3948 },
+        '2025-11-09': { '2025': 6.8122, '2026': 11.9156, '2027': 15.3158 },
+        '2026-02-15': { '2026': 12.7571, '2027': 16.0763, '2028': 19.3887 },
+        '2026-05-03': { '2026': 12.8121, '2027': 15.8656, '2028': 19.1667 },
+        '2026-09-09': { '2026': 12.3765, '2027': 15.6017, '2028': 19.2818 },
+      },
+      fcf: {
+        '2024-04-28': { '2024': 1428.1311, '2025': 2008.6924, '2026': 2490.7397 },
+        '2024-07-28': { '2024': 1775.4858, '2025': 2495.1216, '2026': 2907.5889 },
+        '2024-11-17': { '2024': 2025.3779, '2025': 2758.245, '2026': 3286.5105 },
+        '2025-02-09': { '2025': 2952.9026, '2026': 3692.1758, '2027': 4249.5455 },
+        '2025-05-04': { '2025': 2847.9279, '2026': 3632.464, '2027': 4351.3127 },
+        '2025-08-03': { '2025': 2665.1199, '2026': 3361.2073, '2027': 4245.0881 },
+        '2025-11-09': { '2025': 2723.8604, '2026': 3499.9952, '2027': 4218.6322 },
+        '2026-02-15': { '2026': 3584.9537, '2027': 4256.4197, '2028': 5020.6519 },
+        '2026-05-03': { '2026': 3494.7864, '2027': 4089.5506, '2028': 4817.3026 },
+        '2026-09-09': { '2026': 3379.9872, '2027': 4053.8509, '2028': 4765.4949 },
+      },
+      },
+    },
+  },
   // ⚠ CORRECTION, Aug 2026: this tab previously stated that "no Bloomberg consensus is
   // stored per snapshot for these lines". That was WRONG. Every vintage carries
   // `rev_bbg_est`, `ebitda_bbg_est` and `earnings_bbg_est` alongside the Summit lines,
@@ -141,13 +494,12 @@ export var spotResults = {
   // "the model against the Street, both moving". Operating income and free cash flow
   // have no BBG counterpart in the model, so they keep `cons: null`.
   evolution: {
-    intro: 'How the forecast itself has moved. Each line tracks one fiscal year’s estimate across the model’s five saved snapshots — <b>and, on revenue, EBITDA and earnings, against the Bloomberg consensus stored in the same snapshot</b>. Two things stand out. First, the <b>February 2026 snapshot cut the out-years hard</b> — FY2029 revenue came down 19% and FY2029 EBITDA came down 30% in a single revision; the snapshots since have clawed part of it back. ⚠ Note what that revision was NOT: an update on the 4Q25 print. Its actuals still stop at 3Q25, so it was a re-think of the forward assumptions, not a reaction to reported numbers. Second, and only visible now that the Street line is drawn: <b>the Street barely moved at all</b>. FY2027 consensus revenue has sat in a €22.1–22.4B band across all eight months while Summit travelled from €24.8B down to €22.9B — the model did not lead the Street, it converged on it. The newest vintage (Aug 4, the morning of the 2Q26 print) changed almost nothing at the annual level.',
+    intro: 'How the forecast itself has moved. Each line tracks one fiscal year’s estimate across the model’s <b>four saved snapshots</b> — <b>and, on revenue, EBITDA and earnings, against the Bloomberg consensus stored in the same snapshot</b>. Three things stand out. First, the <b>February 2026 snapshot cut the out-years hard</b> — FY2029 revenue −19%, FY2029 EBITDA −30% in one revision. ⚠ That revision was NOT an update on the 4Q25 print: its actuals still stop at 3Q25, so it was a re-think of the forward assumptions. Second, <b>the latest snapshot (Aug 5, after the 2Q26 print) reverses most of the out-year cut</b>: against April, FY2028 revenue is +9% and FY2029 revenue +13%, and FY2029 EBITDA +18%, while FY2026 barely moves (+0.1% on revenue). Third, because the Street stayed put (FY2029 consensus revenue €27.1–28.2B in every snapshot), <b>the model is again well above it in the out-years</b>: +4% on FY2027 revenue, +11% on FY2029 revenue and +25% on FY2029 EBITDA — a margin call more than a growth call.',
     vintages: [
       { label: 'Dec 18, 2025', event: 'actuals to 3Q25' },
       { label: 'Feb 9, 2026',  event: 'actuals still to 3Q25 — a forward re-think, NOT a post-4Q25 update' },
       { label: 'Apr 28, 2026', event: 'first to carry 4Q25 + 1Q26' },
-      { label: 'May 22, 2026', event: 'post-Investor Day' },
-      { label: 'Aug 4, 2026',  event: 'carries the 2Q26 print — parsed the morning it landed' }
+      { label: 'Aug 5, 2026',  event: 'carries the 2Q26 print' }
     ],
     years: ['2026', '2027', '2028', '2029'],
     sections: [
@@ -160,32 +512,35 @@ export var spotResults = {
     ],
     metrics: {
       rev: { label: 'Total Revenue', unit: 'usdM',
-        summit: [[20802, 19581, 19737, 19775, 19694], [24836, 22198, 21963, 22958, 22895], [29112, 24858, 24854, 26605, 26531], [33788, 27447, 27701, 30489, 30404]],
-        cons:   [[19700, 19646, 19512, 19482, 19485], [22435, 22348, 22142, 22232, 22315], [25186, 25079, 24866, 25119, 25294], [27784, 27516, 27104, 28009, 28343]],
-        // The FY2025 base each vintage's implied FY2026 growth is measured against — ONE ENTRY PER
+        summit: [[20802, 19581, 19737, 19762], [24836, 22198, 21963, 23119], [29112, 24858, 24854, 27097], [33788, 27447, 27701, 31373]],
+        cons:   [[19700, 19646, 19512, 19527], [22435, 22348, 22142, 22316], [25185, 25079, 24866, 25333], [27784, 27516, 27104, 28150]],
+        // The FY2025 base each vintage’s implied FY2026 growth is measured against — ONE ENTRY PER
         // VINTAGE (the engine indexes prior[src][vintageIndex], so a short array silently blanks the
-        // growth for the newest snapshot). FY2025 is a reported actual, so the base is the same €17,186M
-        // in every vintage, and the same base serves the consensus row.
-        prior: { summit: [17186, 17186, 17186, 17186, 17186], cons: [17186, 17186, 17186, 17186, 17186] },
-        note: 'The December 2025 vintage carried FY2026 revenue at €20.8B — about +21% on the FY2025 actual of €17.2B, against a company that has since guided to roughly +10%. February corrected it to €19.6B (on judgement, not on new actuals — that snapshot still ends at 3Q25) and it has barely moved since; the Aug 4 vintage sits at €19.7B, which is simply 1H26 actuals plus the guided 3Q and a modelled 4Q. The out-years took the real damage: FY2029 went €33.8B → €27.4B (−19%) in one revision, recovering to €30.4B. <b>The Street line is the useful comparison</b>: consensus FY2026 revenue has sat at €19.5B the whole time, so December’s €20.8B was the model roughly 6% above the Street, and February closed that gap rather than discovering anything. On FY2029 the model still runs ~7% above consensus, down from ~22% in December.' },
+        // growth for the newest snapshot). FY2025 is a reported actual (€17,186M), the same in every vintage.
+        prior: { summit: [17186, 17186, 17186, 17186], cons: [17186, 17186, 17186, 17186] },
+        note: 'December 2025 carried FY2026 revenue at €20.8B — +21% on the FY2025 actual of €17.2B, against a company that has since guided to roughly +10%. February corrected it to €19.6B (on judgement, not on new actuals) and it has barely moved since: Aug 5 sits at €19.8B, which is 1H26 actuals (€9,310M) plus the guided 3Q (€5.0B) and a modelled 4Q (€5.4B). <b>The out-years are where it moves.</b> FY2029 went €33.8B → €27.4B (−19%) in February, stayed there in April, and came back to €31.4B (+13%) on Aug 5; FY2028 went €24.9B → €27.1B (+9%). <b>Against the Street</b> (consensus FY2029 revenue €27.1–28.2B in all four snapshots), the model was 22% above in December, level in February (−0.3%), 2% above in April, and is 11% above now. FY2026 is within ~1% of consensus.' },
       ebitda: { label: 'EBITDA', unit: 'usdM', marginOf: 'rev', marginLabel: 'EBITDA margin',
-        summit: [[3558, 3150, 3268, 3250, 3271], [5175, 4256, 3983, 4048, 4052], [6851, 5109, 5024, 5171, 5184], [8456, 5951, 5944, 6455, 6476]],
-        cons:   [[3047, 3062, 3172, 3048, 3007], [3943, 3922, 3974, 3877, 3904], [4607, 4606, 4838, 4813, 4854], [5287, 5264, 5267, 5529, 5656]],
-        note: 'The hardest-cut line in the model. FY2029 EBITDA fell €8.5B → €6.0B (−30%) at the February snapshot and is still ~23% below where it started. In the margin view the model now runs a ~21% EBITDA margin by FY2029 against the ~25% it assumed in December. <b>But this is where the model is most differentiated</b>: consensus FY2029 EBITDA is €5.7B against Summit’s €6.5B, so even after the cut the model sits ~15% above the Street — a wider gap than on revenue, which means the difference is a margin call, not a growth call. FY2026 is the exception: the model and the Street are within ~9% and both are near €3.0–3.3B.' },
+        summit: [[3558, 3150, 3268, 3345], [5175, 4256, 3983, 4258], [6851, 5109, 5024, 5535], [8456, 5951, 5944, 7007]],
+        cons:   [[3047, 3062, 3172, 3005], [3943, 3922, 3974, 3889], [4607, 4606, 4838, 4816], [5287, 5264, 5267, 5625]],
+        prior: { summit: [2549, 2549, 2549, 2549], cons: [2549, 2549, 2549, 2549] },
+        note: 'The most volatile line in the model. FY2029 EBITDA fell €8.5B → €6.0B (−30%) in February, sat at €5.9B in April, and is back at €7.0B on Aug 5 (+18% in one snapshot). In the margin view the model now runs a ~22% EBITDA margin by FY2029, against ~25% in December and ~21% in April. <b>This is where the model is most differentiated from the Street</b>: consensus FY2029 EBITDA is €5.6B, so the model sits ~25% above it — a wider gap than on revenue (+11%), which means the difference is a margin call, not a growth call. FY2026 is also above the Street (+11%: €3.35B vs €3.00B), the one year where the print is close enough to test it.' },
       opinc: { label: 'Operating Income', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
-        summit: [[3205, 2853, 2923, 2900, 2888], [4802, 3978, 3659, 3714, 3710], [6473, 4859, 4771, 4907, 4911], [8084, 5741, 5729, 6229, 6241]],
+        summit: [[3205, 2853, 2923, 2970], [4802, 3978, 3659, 3914], [6473, 4859, 4771, 5260], [8084, 5741, 5729, 6769]],
         cons: null,
-        note: 'Cut alongside EBITDA and never restored: FY2027 operating income went €4.8B → €3.7B (−23%) and has held there across the last three vintages. Worth holding next to the Investor Day target of a 20%+ operating margin by 2030 — the model’s own FY2029 margin is ~20.5%, so it sits right AT the promise rather than comfortably through it. No Bloomberg operating-income series is stored in the model, so there is no Street line to compare here; use EBITDA for that.' },
+        prior: { summit: [2198, 2198, 2198, 2198] },
+        note: 'Moves with EBITDA: FY2027 operating income went €4.8B → €3.7B (−24%) by April and is back to €3.9B on Aug 5; FY2029 €8.1B → €5.7B → €6.8B. Held next to the Investor Day target of a 20%+ operating margin by 2030, the model’s FY2029 margin is now ~21.6% (it was ~21% in April), so it sits through the promise rather than at it. No Bloomberg operating-income series is stored in the model, so there is no Street line here; use EBITDA for that.' },
       earnings: { label: 'Earnings (model definition)', unit: 'usdM', marginOf: 'rev', marginLabel: 'net margin (model def.)',
-        summit: [[2884, 2568, 2685, 2760, 2749], [4322, 3580, 3336, 3076, 3074], [5825, 4373, 4658, 4081, 4085], [7276, 5167, 5634, 5182, 5193]],
-        cons:   [[2584, 2535, 2743, 2686, 2671], [3277, 3270, 3406, 3303, 3297], [3928, 3939, 4068, 3992, 4028], [4629, 4621, 4482, 4635, 4691]],
-        note: '⚠ <b>UPDATE — the line that kept falling has stopped.</b> FY2027 earnings were cut at every one of the first four snapshots (€4,322M → €3,580M → €3,336M → €3,076M, a cumulative −29%); the Aug 4 vintage holds it flat at €3,074M. Read together with the Street line, the whole sequence now has a cleaner explanation than "something is wrong with this line": consensus FY2027 earnings has been anchored at €3.3B throughout, so the model started 32% ABOVE the Street and walked down THROUGH it — it now sits ~7% BELOW consensus. The cutting stopped roughly where the Street was, which looks like convergence rather than deterioration. FY2028 and FY2029 tell the same story and are now ~1–11% above consensus.' },
+        summit: [[2884, 2568, 2686, 2822], [4322, 3580, 3336, 3235], [5825, 4373, 4658, 4363], [7276, 5166, 5634, 5619]],
+        cons:   [[2584, 2535, 2743, 2598], [3277, 3270, 3406, 3219], [3928, 3939, 4068, 3973], [4628, 4621, 4482, 4666]],
+        prior: { summit: [2212, 2212, 2212, 2212], cons: [2212, 2212, 2212, 2212] },
+        note: '⚠ <b>The one line that did NOT follow the re-raise.</b> FY2027 earnings were cut at every snapshot — €4,322M → €3,580M → €3,336M → €3,235M, a cumulative −25% — while revenue and EBITDA went back up on Aug 5. Read with the Street line: consensus FY2027 earnings has sat at €3.2–3.4B throughout, so the model started 32% ABOVE the Street, walked down through it, and now sits on it (+0.5%). FY2028 and FY2029 stay above consensus (+10% and +20%), well below the EBITDA gaps: FY2029 EBITDA is +18% against April while FY2029 earnings is −0.3%, so the model’s tax and below-the-line assumptions are the question to put to its author. ‘Earnings’ here is the model’s definition, not IFRS net income.' },
       fcf: { label: 'Free Cash Flow', unit: 'usdM', marginOf: 'rev', marginLabel: 'FCF margin',
-        summit: [[4315, 3825, 3375, 3357, 3434], [5222, 4304, 4055, 4119, 4134], [6901, 5159, 5099, 5246, 5270], [8508, 6003, 6023, 6533, 6566]],
+        summit: [[4315, 3825, 3375, 3508], [5222, 4303, 4055, 4340], [6901, 5159, 5099, 5621], [8508, 6003, 6023, 7097]],
         cons: null,
-        note: 'FY2026 free cash flow was cut from €4.3B to €3.4B (−22%) across the five snapshots — a steady walk down rather than one step, and it has now turned back up slightly. The €3.4B FY2026 figure reconciles well against the €3.3B LTM the company actually reported at 2Q26, so this line has landed somewhere defensible. The out-years follow the same shape as EBITDA. ⚠ One model caveat visible in the extraction: the capex assumption itself was revised upward across vintages (FY2026 €45M → €68M → €78M), which is a small drag but a real one — Spotify’s reported 2Q26 capex was €21M in the quarter, so the model is now assuming a higher run rate than the company is spending. No Bloomberg free-cash-flow series is stored in the model.' }
+        prior: { summit: [2872, 2872, 2872, 2872] },
+        note: 'FY2026 free cash flow was cut from €4.3B to €3.4B (−22%) by April and is back to €3.5B on Aug 5. The €3.5B reconciles with the €3.3B LTM free cash flow the company reported at 2Q26. The out-years follow EBITDA: FY2029 €8.5B → €6.0B → €7.1B. No Bloomberg free-cash-flow series is stored in the model.' }
     },
-    note: 'Single source: the Summit Research database — the model’s saved snapshots as recorded in the DCF’s Projection History, pulled through the Summit MCP on 4 Aug 2026 (sheet source `projection_history`, annual periods). FIVE vintages, dated by what each one actually CONTAINS rather than by what happened near its date: Dec 18 2025 and Feb 9 2026 both carry actuals only to 3Q25; 4Q25 and 1Q26 first appear in the Apr 28 2026 snapshot; May 22 2026 follows the Investor Day; and Aug 4 2026 was parsed the morning of the 2Q26 print and does carry it (the model’s actuals sheet holds revenue €4,777M and operating income €655M for 2026Q2, and FY2026 reconciles exactly to 1H26 actuals plus the two forward quarters). The dashed <b>Consensus</b> series is the Bloomberg estimate stored inside each snapshot (`rev_bbg_est` / `ebitda_bbg_est` / `earnings_bbg_est`) — it exists for revenue, EBITDA and earnings only. ⚠ Two cautions from the extraction audit still stand: Spotify’s fixed HISTORY is restated between snapshots (FY2022 adjusted EBITDA reads differently in each), so never build one time series by mixing vintages — compare the same year across vintages, which is what this tab does; and the model’s consolidated MAU/subscriber/ARPU lines were wiped from the Feb-2026 vintage onward, which is why no user metric appears here. A third was found in this extraction: the model’s `premium_cogs` and `ads_cogs` lines are mirrored to their revenue lines (cost equals revenue exactly), so segment cost of revenue is unusable — the segment GROSS PROFIT lines are sound and were used instead. Figures in € millions. Implied growth chains within Summit’s own data; the FY2025 base is the reported actual of €17,186M. Data sourced from Summit DCF models.'
+    note: 'Single source: the Summit Research database — the model’s saved snapshots as recorded in the DCF’s Projection History, pulled through the Summit MCP on 20 Oct 2026 (sheet source `projection_history`, annual periods 2026–2029). FOUR vintages, dated by what each one actually CONTAINS: Dec 18 2025 and Feb 9 2026 both carry actuals only to 3Q25; 4Q25 and 1Q26 first appear in the Apr 28 2026 snapshot; Aug 5 2026 carries the 2Q26 print (valuation block “after Q2 - 2026”). ⚠ The two vintages this tab carried until Oct 2026 — “May 22, 2026” and “Aug 4, 2026” — are NOT in the MCP (the snapshot list is Dec 18, Feb 9, Apr 28, Aug 5); they were seeded from the DCF workbook and cannot be reproduced, so they were removed. Their last values (rev FY2027 €22,958M / €22,895M, FY2029 €30,489M / €30,404M) are in the profile log (docs/profiles/SPOT.md). The dashed <b>Consensus</b> series is the Bloomberg estimate stored inside each snapshot (`rev_bbg_est` / `ebitda_bbg_est` / `earnings_bbg_est`) — it exists for revenue, EBITDA and earnings only. ⚠ Cautions that still stand: Spotify’s fixed HISTORY is restated between snapshots, so never build one time series by mixing vintages — compare the same year across vintages, which is what this tab does; the model’s consolidated MAU/subscriber/ARPU lines are empty, which is why no user metric appears here; and the annual `premium_cogs` / `ads_cogs` lines are mirrored to their revenue lines, so segment cost of revenue is unusable. Figures in € millions. Implied growth chains within Summit’s own data; the FY2025 bases are the reported actuals (revenue €17,186M, EBITDA €2,549M, operating income €2,198M, net income €2,212M, free cash flow €2,872M). Data sourced from Summit DCF models.'
   },
-  source: 'Sources: Spotify quarterly shareholder decks on investors.spotify.com (actuals, and the guidance issued for the following quarter — each quarter’s figures taken from that quarter’s own deck). The 2Q26 print and the 3Q26 guidance are from the Q2 2026 Update filed with the SEC as Exhibit 99.1 to the Form 6-K of 4 Aug 2026 (accession 0001140361-26-031044, CIK 0001639920). The single Street cell (2Q26 revenue €4,790M) is the FactSet consensus carried on the wire the morning of the print. Values in € millions except EPS (€ per share). The Street column is otherwise empty because Spotify has no rows in our BBG_CONSENSUS.txt archive — see the file header.'
+  source: 'Sources: Spotify quarterly shareholder decks on investors.spotify.com (actuals, and the guidance issued for the following quarter — each quarter’s figures taken from that quarter’s own deck). The 2Q26 print and the 3Q26 guidance are from the Q2 2026 Update filed with the SEC as Exhibit 99.1 to the Form 6-K of 4 Aug 2026 (accession 0001140361-26-031044, CIK 0001639920). Values in € millions except EPS (€ per share). Street consensus is Bloomberg (BBG_CONSENSUS.txt, 10 snapshots to 2026-09-09, EUR). Summit 3Q26 is the model snapshot 2026-08-05, frozen. Users series (MAU, subscribers, ad-supported MAU, ARPU) from the Bloomberg export, matching the decks.'
 };

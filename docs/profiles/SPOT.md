@@ -1,0 +1,153 @@
+# SPOT — bitácora de construcción del perfil
+
+> Reglas: `docs/PROFILE_PLAYBOOK.md` §3.
+> Claude la lee completa al empezar cada sesión y la actualiza en cada aprobación (no al final).
+> Estados: ⬜ pendiente · 📝 propuesta · 🔨 en construcción · 👀 en revisión · 🔁 cambios pedidos ·
+> ✅ aprobada · ⏭️ omitida (con razón) · ⛔ bloqueada (qué falta y quién lo consigue)
+
+| Campo | Valor |
+|---|---|
+| Empresa | Spotify Technology S.A. (NYSE: SPOT) |
+| Modo | B — reordenar existente (hay Overview + Deep Dive de 5 secciones desde jul 2026, PRs #46 · #67 · #76) |
+| Rama | `feat/spot-deep-dive` (desde `origin/main` @ `d1b652d`, 2026-10-20) |
+| Analista responsable | DAA (Daniel Alvarez) |
+| Inicio | 2026-10-20 |
+| Avance | 1 unidad aprobada (EV-RES-DATA) — el tablero se fija después de B1/B2 |
+
+## 1. Inventario de datos (F0)
+
+Revisado 2026-10-20. Estado: 📝 propuesta (pendiente de confirmar con el analista).
+
+| Fuente | ¿Existe? | Detalle (fechas, cobertura) | Qué habilita | Qué queda fuera sin ella |
+|---|---|---|---|---|
+| Fila en `companies` | ✔ (se asume) | el perfil ya abre hoy (registrado en `js/overviews/index.js` como `SPOT`) | el perfil abre | — |
+| Filing anual | ◐ por verificar | Spotify es **foreign private issuer** (Luxemburgo): 20-F anual + 6-K trimestral, IFRS. Falta bajar el 20-F FY2025 y anotar fecha/accession | Overview, Top Line, textos verbatim | — |
+| Año fiscal / moneda | ⚠ | cierre 31 dic. **Reporta y guía en EUR** (también el DCF y el consenso). Regla de `results-data/spot.js`: no convertir a USD | — | Múltiplos con el precio en US$ del ADR: hay que convertir con FX declarado (Derivatives ya decidió no mostrar múltiplos para SPOT) |
+| Summit DCF | ✔ | MCP autenticado 2026-10-20. **4 snapshots**: 2025-12-18 · 2026-02-09 · 2026-04-28 · **2026-08-05** (after Q2 - 2026; 13,192 datos; 54 etiquetas). ⚠ El código actual cita **"Aug 4"** y **"May 22"**: ninguno existe ya en el MCP (el de agosto es 08-05; el de 05-22 desapareció, igual que en META). Valuación limpia en los 4 (`quality_flags` vacío): **EV/EBITDA 20.5× y P/E 28×, 2027 Forward**, price target $561.15 / $517.91, fair value $519.87 / $479.40, precio $482.43 (08-05) | F0-SM, serie Summit, Estimates (4 vintages), Target Multiple, Sensitivity | — |
+| Consenso BBG (`BBG_CONSENSUS.txt`) | ✔ **nuevo** | `SPOT US EQUITY`: **10 snapshots** (`data_as_of` 2024-04-28 → **2026-09-09**), EUR, escala M. Headline: Revenue, COGS, Gross Profit, Opex, G&A, S&M, R&D, Operating Income, Adj. EBITDA, interés, pre-tax, tax, Net Income, acciones, Diluted EPS, D&A, SBC, capex, CFO, FCF, recompras. KPIs: MAU total / Premium / Ad-supported, Premium ARPU, ingreso, COGS y GP por segmento (Premium · Ad-Supported), MAU y subs por 4 regiones. Hoy `results-data/spot.js` tiene `cons` casi vacío ("SPOT has no rows in BBG_CONSENSUS") → **quedó stale** | `estMatrix.cons`, Setup, Results con Street, export de Bottom Line | — |
+| Encoding del archivo | ⚠ | `BBG_CONSENSUS.txt` ya no es UTF-8 (byte `0xb5`): `scripts/consensus/*.py` fallan con `UnicodeDecodeError`; se lee como `cp1252` | — | — |
+| `get-market-history` (Massive) | ✘ desplegada | sigue sin desplegar (404, según `CLAUDE.md`) | Historic Multiple en vivo | Historic Multiple con "Live data pending" |
+| SPLC | ❓ | no hay export de SPOT en el repo; Spotify es B2C (sin clientes concentrados); los proveedores son labels/publishers, no cadena de suministro | — | BL-SPLC probablemente ⏭️ |
+| Transcripciones | ✔ | `SPOT CALLS.txt` (626 KB): Q2 2024 → **Q2 2026** + `SPOT Q2 2026.txt` (54 KB, 2026-08-04). Falta el 3Q26 | EV-POST, EV-NOTES, citas, Watch List | — |
+| `docs/calls/SPOT.md` | ✘ | no existe | — | no hace falta si el consenso sale del archivo BBG |
+| Fiscal.ai / Massive | ❓ | verificar en Pillars ▸ Management y `liveQuote` (ADR en US$) | Management en vivo, market cap | — |
+
+**Calendario:** el siguiente print es **3Q26** (hoy 2026-10-20; fecha aún no anunciada). Guía 3Q26 (de la call de 2Q26): 305M subs · MAU +11M · op. income €670M · GM 32.9%.
+
+## 2. Diagnóstico del perfil actual (lo que está desactualizado)
+
+Resultado de leer `js/overviews/spot.js` (4,504 líneas) y `js/results-data/spot*.js` contra `PROFILE_PLAYBOOK.md` y el perfil de TSM:
+
+| # | Hallazgo | Dónde | Contra el playbook |
+|---|---|---|---|
+| 1 | **Management es un placeholder** ("🚧 In progress — Management is being built") | `deepDiveHtml` → `ddEmpty(...)` | regla 5: no hay sub-tabs placeholder; faltan MG-TEAM/OWN/GOV/TRACK |
+| 2 | **Top Line no usa el motor** `segments.js`: 4 sub-tabs a medida (Users · ARPU & Pricing · Advertising · vs Netflix) | `mauBody` `arpuBody` `advertisingBody` `vsBody` | §10: General · Segments · Other · Customers con `segments-data/spot.js` |
+| 3 | **Bottom Line tiene 1 sub-tab** (Product Mix) | `productMixBody` | §13: General (margins, bridge, op→NI, SBC, expense lines) · Segments · Supply Chain |
+| 4 | **Valuation solo tiene 2 herramientas** (Price Sensitivity, 2029 Targets) | `sensPriceBody` `idtBody` | §14: Historic Multiple · Peers · Target Multiple/PEG · Sensitivity |
+| 5 | **Earnings en formato viejo** (Setup · Watch List · Post-Results, `ceStyle()` inline, `WL_ROWS` en código) e **Investor Day 2026** como 4.ª sub-tab de Evolution | `ceSetupBody` `ceWatchBody` `ceResultsBody` | §12: Setup · Post-Results · Notes; Watch List en Supabase; Investor Day → Miscellaneous |
+| 6 | **Consenso Street vacío** en Results aunque el archivo BBG ya trae 10 snapshots de SPOT | `results-data/spot.js` | §9: `estMatrix.cons` desde BBG |
+| 7 | **Summit congelado al 2026-08-04**, no hay `js/summit-map/spot.js` | `results-data/spot.js` | §6.3 F0-SM |
+| 8 | Inline `<style>` (`ddStyle`, `ceStyle`, `cePhaseStyle`, `ceGridStyle`…) y verde de marca `#1DB954` en las pestañas | `spot.js` | §3.1/3.3: tokens Summit; marca solo en el logo |
+| 9 | Overview con bloques fuera del estándar (`fy25Glance`, scatter propio `spot-sc`) — por auditar contra OV-1…OV-7 | `stdOverviewBody` | §8 |
+| 10 | Datos al 2Q26; el 3Q26 está por reportar | `CALL_EARNINGS` | §12 rutina por print |
+
+## 3. Tablero de unidades
+
+Modo B: antes de F1 van **B1 (inventario de lo que existe)** y **B2 (mapa de reubicación)**; el analista aprueba el mapa antes de mover nada. Las filas de construcción se fijan después.
+
+| ID | Unidad | Estado | Fecha | Aprobó | Commit | Nota |
+|---|---|---|---|---|---|---|
+| F0 | Inventario de datos | 📝 | 2026-10-20 | | | este documento, §1 |
+| F0-SM | Mapa de métricas Summit | 👀 (usado por EV-RES-DATA ✅; falta aprobación explícita del mapa y las 9 dudas) | 2026-10-20 | | | `js/summit-map/spot.js` + §1b; 54 etiquetas, 9 dudas |
+| B1 | Inventario de contenido existente | ⬜ | | | | conteo de control |
+| B2 | Mapa de reubicación | ⬜ | | | | |
+| F1 | Esqueleto + vista previa | ⬜ | | | | |
+| OV-1…OV-F | Overview (7 bloques + pie) | ⬜ | | | | auditar contra §8 |
+| EV-RES-DATA | Dataset de Results (números) | ✅ | 2026-10-20 | DAA | | cons BBG (10 vintages, 120 celdas nuevas, blanked 0) · 4 líneas de usuarios · Summit 3Q26 re-congelado (MCP 08-05) |
+| EV-RES | Evolution ▸ Results | 👀 | 2026-10-20 | | | para revisar en el portal local: Companies ▸ SPOT ▸ Deep Dive ▸ Evolution ▸ Results (nuevo grupo Users, picker de vintages BBG) |
+| TL-GEN · TL-SEG · TL-OTH · TL-CUS | Top Line | ⬜ | | | | |
+| EV-SET | Evolution ▸ Earnings ▸ Setup (3Q26) | 👀 | 2026-10-20 | | | rejilla Guide · **Street (BBG, nueva)** · Summit (MCP 08-05, leído de Results); notas con Summit/Street actualizadas |
+| EV-EST | Evolution ▸ Estimates | 👀 | 2026-10-20 | | | 4 vintages reales del MCP (12-18 · 02-09 · 04-28 · 08-05), años 2026–2029; Street = BBG guardado en cada snapshot |
+| EV-POST · EV-NOTES | Evolution | ⬜ | | | | con las calls |
+| BL-GEN-1…5 · BL-SEG · BL-SPLC | Bottom Line | ⬜ | | | | BL-SPLC probablemente ⏭️ |
+| VA-HIST · VA-PEERS · VA-TM · VA-SENS | Valuation | ⬜ | | | | |
+| MG-TEAM · MG-OWN · MG-GOV · MG-TRACK | Management | ⬜ | | | | hoy placeholder |
+| MISC-* | Miscellaneous | ⬜ | | | | candidatos: Investor Day 2026, SAX/Advertising, vs Netflix, $10 flow map |
+| F-FINAL | Cierre y entrega | ⬜ | | | | |
+
+## 4. Decisiones del analista
+
+- 2026-10-20 · general · Spotify se queda en **EUR** en todo el perfil (consenso, DCF y guía vienen en EUR) — DAA
+- 2026-10-20 · alcance · **Management va hasta el final** (F-FINAL). Prioridad: Overview + lo relevante para la earnings season (Results, Setup, Post-Results, Notes, Estimates, Watch List); después Top Line, Bottom Line y Valuation — DAA
+- 2026-10-20 · EV-RES-DATA · Street = vintage previo con su fecha (el archivo solo guarda el snapshot posterior al print anterior); se quitó el 4,790 de 2Q26 compilado a mano y queda 4,795 (BBG 2026-05-03) — DAA
+- 2026-10-20 · EV-RES-DATA · Se agregan MAU, suscriptores, MAU Ads y ARPU Premium a Results (actuals del export BBG, que coinciden con los decks: 4Q25 751/290/476/4.70; 1Q26 761/293/483/4.76; 2Q26 777/300/494/4.89) — DAA
+- 2026-10-20 · EV-RES-DATA · Summit: se conserva la historia 1Q24–2Q26 (xlsm); 3Q26 se re-congela del MCP 2026-08-05 (rev 5,023.1 · Premium 4,511.6 · Ads 511.6 · op. income 672.5 · FCF 742.3) — DAA
+- 2026-10-20 · orden · Results → Setup 3Q26 → Estimates → Post-Results/Notes 2Q26 → Overview — DAA
+- 2026-10-20 · fuentes · Se parte del MCP de Summit (SPOT sí está, 4 snapshots) + el consenso BBG ya cargado (10 snapshots) — DAA
+
+## 5. Excepciones aceptadas
+
+(ninguna todavía)
+
+## 6. Bloqueos y preguntas abiertas
+
+- ✔ Branch de SAB encontrado 2026-10-20: `origin/feat/meta-profile` (bitácora META + `summit-map/meta.js` + 8 reglas nuevas del review de TSM en el playbook). Aplican a SPOT: Overview sin color · trimestres estimados que suman al año · producto concreto por segmento y precio × volumen (en SPOT: suscriptores × ARPU) · COGS separado de opex · Misc: Competitive position siempre. (Antes: no lo encontraba.) **Pendiente de mergear a main**: se trabaja con esas reglas leídas de la rama.
+- ~~**No encontré el branch de SAB de hoy con META.** En `origin` y `mine` lo más reciente de SAB es el perfil de **TSM** (#146, 2026-10-16, hecho con el playbook) y `chore/company-profile-playbook` (2026-10-14). `feat/meta-restructure` es de julio. Se usa TSM + playbook como referencia de formato. Si el branch de hoy es local o está sin pushear, hay que pasarlo.~~
+- ~~Autenticar el MCP de Summit~~ ✔ 2026-10-20.
+- `BBG_CONSENSUS.txt` en cp1252: los scripts de `scripts/consensus/` necesitan `encoding='cp1252'`.
+
+## 7. Historial de aprobaciones
+
+- 2026-10-20 · F0 · 📝 propuesta (sin aprobación todavía)
+
+## 1b. Mapa Summit (F0-SM)
+
+📝 propuesta 2026-10-20. Archivo: `js/summit-map/spot.js`. Snapshot 2026-08-05, EUR, millones.
+
+**Cuadres hechos:** REV FY25 17,186 = 4,190+4,193+4,272+4,531 (1Q25–4Q25 del dataset de Results) ✔ · 2026 proyectado 4,533+4,777+5,023+5,428 = 19,762 = anual ✔ · Premium+Ads 2026 17,829+1,933 = 19,762 ✔; 2027 20,885+2,234 = 23,119 ✔ · guía 3Q26 (rev 4,990–5,010 · GM 32.7–33.1% · op. income 669–671 · MAU 787–789) = punto de la call de 2Q26 (€5.0B · 32.9% · €670M · 788M) ✔.
+
+**Dudas abiertas (para el autor del modelo):**
+```
+❓ SPOT · PREMIUM_COGS / ADS_COGS anuales — 2025 y 2026 proyectados = el ingreso del segmento (14,093 / 17,829 / 1,768 / 1,933) y 2027 cae a 13,512. Los trimestrales sí cuadran. Mientras tanto: costo anual = ingreso − GP.
+❓ SPOT · EARNINGS FY25 — actual 2,212 (IFRS, = suma de trimestres) vs projection_history 3,234 (definición del modelo). Mientras tanto: actual del actuals_history; proyecciones rotuladas "Model earnings".
+❓ SPOT · Premium/Ads FY25 — actual 15,350/1,836 (base vieja) vs projection_history 14,093/1,768: reclasificación de ene-2026 (nota de results-data). Mientras tanto: no mezclar bases en un mismo año.
+❓ SPOT · CAPEX — signo: actuals negativos, proyecciones positivas. Se normaliza al cargar.
+❓ SPOT · TAX_RATE — FY25 0.5% vs 10%/12%/22% proyectado. ¿Qué pasó en FY25 (beneficio fiscal)? Mientras tanto no se usa.
+❓ SPOT · INT_EXP — proyecciones paran en FY25.
+❓ SPOT · MAU / MAUPS / MAUAD / ARPU_* / COST_* — en cero en todos los periodos; los MAU y subs trimestrales reales vienen solo de EU/NA/LATAM/ROW_MAU(PS), y solo 4Q25–2Q26. Mientras tanto: usuarios y subs salen del dataset de Results (decks) y del consenso BBG.
+❓ SPOT · MAUPS_GUIDANCE_* — vacío aunque Spotify guía suscriptores cada trimestre (3Q26: 305M). La guía de subs sale de la call.
+❓ SPOT · Resultados "summit" en results-data (3Q26 ingreso 5,035) ≠ MCP 08-05 (5,023): el código se sembró de otro vintage del xlsm. Se re-congela desde el MCP.
+```
+
+**Valuación (get_valuation_history, 2026-08-05, Base):** EV/EBITDA 20.5× → PT $561.15 / FV $519.87 (+7.8%) · P/E 28× → PT $517.91 / FV $479.40 (−0.6%) · WACC 20.7%, beta 1.56, precio $482.43. Sin `quality_flags` en ninguno de los 4 snapshots. (Historial: 2026-04-28 EV 20.5× PT $537.42 · P/E 28× PT $541.65; 2026-02-09 18× / 20×; 2025-12-18 18× 2029 / 49× 2026.)
+
+## 1c. Consenso BBG listo para EV-RES-DATA
+
+`scripts/consensus/map_spot.json` (nuevo) corre con `emit_matrix.py` y da **10 vintages** (2024-04-28 → 2026-09-09), 15 métricas trimestrales (ingreso, Premium/Ads, GP, op. income, EBITDA, NI, EPS, FCF, MAU, subs, MAU Ads, ARPU) y 9 anuales; 0 snapshots reimpresos, 0 series congeladas. ⚠ `emit_matrix.py` y `inspect_matrix.py` leen `utf-8-sig` y fallan con el archivo actual (cp1252): se corrió desde una copia parcheada; el parche es de una línea y va en PR propio de herramienta.
+
+## 1d. EV-RES-DATA — cuadre (propuesta 2026-10-20)
+
+**Trimestres ↔ año, FY2026, vintage BBG 2026-09-09** (regla SAB: los estimados suman al año dentro de cada fuente). Reportados 1Q26+2Q26 + estimados 3Q26+4Q26 vs el anual de la misma fuente:
+
+| Métrica (€M) | 1Q26 | 2Q26 | 3Q26e | 4Q26e | Suma | Anual BBG | Dif. |
+|---|---|---|---|---|---|---|---|
+| Ingreso | 4,533 | 4,777 | 4,977 | 5,245 | 19,531 | 19,522 | +9 (0.05%) |
+| Premium | 4,148 | 4,331 | 4,482 | 4,672 | 17,634 | 17,629 | +5 |
+| Ad-Supported | 385 | 446 | 491 | 578 | 1,900 | 1,899 | +0.2 |
+| Gross profit | 1,495 | 1,596 | 1,639 | 1,776 | 6,506 | 6,500 | +6 |
+| Op. income | 715 | 655 | 678 | 828 | 2,876 | 2,874 | +2 |
+| FCF | 824 | 797 | 849 | 913 | 3,383 | 3,380 | +3 |
+| Net income | 721 | 545 | 599 | 720 | 2,585 | 2,589 | −4 |
+
+Todas dentro de 0.05%, de signo mixto: es el redondeo normal de un consenso con distinto número de contribuyentes por trimestre, no un error de carga. Summit (MCP 08-05): ingreso 4,533+4,777+5,023+5,428 = 19,762 = anual ✔.
+
+**Checks:** `verify_preprint.py SPOT` → same 0 · changed 0 · filled 120 · **blanked 0** ✔. Archivo BBG: 10 snapshots, 0 reimpresos, 0 series congeladas. Etiquetas de periodo y `close_*` por snapshot: sin desajustes (emit_matrix valida al cargar). Usuarios: una sola cifra por trimestre en los 10 snapshots y coinciden con los decks.
+
+**Pendiente en esta unidad:** la matriz `summit` por vintage (los 4 snapshots reales) se arma con EV-EST; hoy el picker de Summit usa la serie plana.
+
+- 2026-10-20 · EV-RES-DATA · ✅ aprobada por DAA — cuadre FY26 ≤0.05%, blanked 0, Summit 3Q26 desde MCP 08-05
+
+- 2026-10-20 · EV-SET · 👀 Setup 3Q26: la rejilla pasa de 2 a 3 columnas (Guide · Street BBG · Summit). Street = vintage 2026-09-09 (posterior a la guía), con la diferencia vs guía; Summit se lee de `spotResults` (ya no tecleado). Notas reescritas donde citaban el modelo viejo: Summit pasó de 5,035/699/496/769 a 5,023/672.5/512/742 y de estar 4.3% sobre la guía de op. income a 0.4%; GM implícito 33.6% → 32.9% (el modelo ya carga el cargo regulatorio). Post-Results sigue puntuando contra la guía (EV-POST pendiente).
+
+- 2026-10-20 · EV-EST · 👀 Estimates reconstruido desde el MCP: los vintages "May 22" y "Aug 4" que mostraba la pestaña **no existen en el MCP** (snapshots reales: 12-18, 02-09, 04-28, 08-05), se retiraron. Valores que tenían (se conservan aquí): ingreso FY26 19,775 / 19,694 · FY27 22,958 / 22,895 · FY28 26,605 / 26,531 · FY29 30,489 / 30,404; EBITDA FY27 4,048 / 4,052 · FY29 6,455 / 6,476; op. income FY27 3,714 / 3,710 · FY29 6,229 / 6,241; earnings FY27 3,076 / 3,074 · FY29 5,182 / 5,193; FCF FY27 4,119 / 4,134 · FY29 6,533 / 6,566 (orden: May 22 / Aug 4). Hallazgo: el snapshot del 08-05 revierte buena parte del recorte de out-years (FY29 ingreso +13%, EBITDA +18% vs abril) y el modelo vuelve a estar +11% (ingreso) y +25% (EBITDA) sobre el Street en FY29; la narrativa anterior ("el modelo convergió al Street") ya no vale y las notas se reescribieron.
+- 2026-10-20 · hallazgo (para VA-SENS / VA-TM) · `spot.js` líneas ~1580 y ~1762 (Price Sensitivity y 2029 Targets) siguen basadas en el snapshot **2026-05-22**, que ya no existe en el MCP; hay que re-basarlas en 2026-08-05 cuando se llegue a Valuation. No se tocaron en EV-EST.

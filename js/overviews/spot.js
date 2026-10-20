@@ -12,6 +12,7 @@
 // DCF model (snapshot 2026-05-22). Financial figures reported in EUR.
 
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
+import { spotResults } from '../results-data/spot.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function sec(title,inner){ return '<section class="ov-sec"><div class="ov-sec-h">'+esc(title)+'</div>'+inner+'</section>'; }
@@ -1789,29 +1790,51 @@ var CE_EDGAR_URL='https://www.sec.gov/edgar/browse/?CIK=1639920&owner=exclude';
 var CE_LOGO_URL='https://assets.parqet.com/logos/symbol/SPOT';
 
 // ─── CE_CONS — the expectation grid ─────────────────────────────────────────
-// ⚠ PROVENANCE, AND IT IS NOT THE USUAL ONE. Spotify has NO rows in
-// BBG_CONSENSUS.txt (the archive carries GOOG/GOOGL/HOOD/KKR/MA/META/UBER only),
-// so there is no rolling Street matrix to reconstruct. What Spotify DOES have is
-// the most complete guidance of any name we cover — it guides FIVE metrics every
-// quarter — so the guide is used as the expectation of record here, and the
-// horizon matrix carries a single column ("the guide") rather than 4q/3q/2q/1q.
+// Three columns per cell: GUIDE (the company's own point for the quarter, hand-entered below,
+// from the prior quarter's deck), STREET (Bloomberg consensus, READ from js/results-data/spot.js
+// estMatrix.cons — BBG_CONSENSUS.txt, 10 SPOT snapshots, EUR; nothing typed here) and SUMMIT
+// (setup.us, read from the same dataset's frozen model series). Spotify guides FIVE metrics every
+// quarter, so the guide stays the expectation of record that Post-Results scores against
+// (`qr[i][3]`); the Street sits beside it in `qs`.
 //
-// ⚠ CURRENCY TRAP: Spotify guides in EUR; the syndicated consensus that circulates
-// (revenue ~$5.47–5.60B, EPS ~$3.15–3.29) is in USD and is NOT comparable to the
-// €4.8B guide without an FX assumption. At ~1.15 EUR/USD the guide is ≈$5.5B, i.e.
-// the USD "consensus" sits at or slightly BELOW the company's own number — which is
-// the opposite of how it reads if you put the two figures side by side. The Street
-// column is therefore left empty rather than filled with a mismatched unit.
+// The archive holds one snapshot per print, taken right AFTER it, so the Street for a quarter is
+// the snapshot after the PREVIOUS print — Q3 2026 reads the 2026-09-09 vintage (post-guide), Q2 2026
+// reads 2026-05-03 (about three months out). Each quarter's vintage date is kept in `sAsOf`.
+//
+// ⚠ CURRENCY: everything here is EUR — guide, Street (Bloomberg's SPOT consensus is EUR, scale M)
+// and Summit. The USD figures that circulate on the wires are NOT comparable and are not used.
 var CE_CONS = (function(){
   // Newest quarter FIRST — the quarter pills render in this order and default to index 0.
   var q = ['Q3 2026','Q2 2026'];
+  var SM = spotResults.estMatrix.cons;
+  function qn(p){ return (+p.slice(2))*4 + (+p.charAt(0)); }               // '3Q26' -> 107
+  function sp(label){ return label.charAt(1)+'Q'+label.slice(-2); }       // 'Q3 2026' -> '3Q26'
+  // The latest vintage whose last reported quarter is BEFORE `per` and that carries a number for it.
+  function pre(key, per){
+    var best = null;
+    SM.vintages.forEach(function(v){
+      var row = SM.q[key] && SM.q[key][v.id], x = row ? row[per] : null;
+      if(x != null && qn(v.lastActual.q) < qn(per) && (!best || qn(v.lastActual.q) >= qn(best.last))) best = { id:v.id, last:v.lastActual.q, v:x };
+    });
+    return best;
+  }
+  function round(x, d){ var f = Math.pow(10, d); return Math.round(x*f)/f; }
+  // key: Results metric key; d: decimals. 'gm' is gross profit / revenue from the SAME vintage.
+  function streetCol(key, d){
+    return q.map(function(lab){
+      var per = sp(lab);
+      if(key === 'gm'){ var g = pre('gp', per), r = pre('rev', per); return (g && r && g.id === r.id) ? round(g.v / r.v * 100, 1) : null; }
+      var x = pre(key, per); return x ? round(x.v, d) : null;
+    });
+  }
   // `cols` is one entry per quarter in `q`, in the SAME order:
   //   g  = the company's guided point for that quarter
   //   a  = the reported actual (null while the quarter is still upcoming)
   //   qq = the PRIOR quarter's actual  (drives the QoQ lens)
   //   qy = the YEAR-AGO quarter's actual (drives the YoY lens)
-  function line(k, u, cols){
+  function line(k, u, cols, skey, sd){
     return { k:k, u:u, t:'ok',
+      qs: skey ? streetCol(skey, sd) : q.map(function(){ return null; }),
       // ceGrid reads the 1-quarter-out column (index 3) of the horizon matrix, so the
       // guide sits there even though Spotify has only one expectation horizon.
       qr: cols.map(function(c){ return [null,null,null,(c.g==null?null:c.g)]; }),
@@ -1820,26 +1843,26 @@ var CE_CONS = (function(){
       qq: cols.map(function(c){ return (c.qq==null?null:c.qq); }) };
   }
   return {
-    src:'Spotify\'s OWN guidance — Q3 2026 issued 4 Aug 2026 with the Q2 2026 shareholder deck; Q2 2026 issued 28 Apr 2026 with the Q1 deck. Spotify has no rows in the BBG_CONSENSUS.txt archive, so there is no Street matrix to reconstruct; syndicated USD consensus is noted per metric but not plotted against a EUR guide.',
-    asOf:['2026-08-04 (the guide)','2026-04-28 (the guide)'],
+    src:'Guide: Spotify\'s own point for the quarter — Q3 2026 issued 4 Aug 2026 with the Q2 2026 shareholder deck; Q2 2026 issued 28 Apr 2026 with the Q1 deck. Street: Bloomberg consensus (BBG_CONSENSUS.txt, EUR) read from js/results-data/spot.js — the snapshot after the previous print. Summit: model snapshot 2026-08-05, frozen.',
+    asOf:['guide 2026-08-04 · Street 2026-09-09','guide 2026-04-28 · Street 2026-05-03'],
     q:q, hz:['company guide'], nHead:4,
     m:[
       // Revenue and operating income MUST share a unit — the margin row divides one by
       // the other, and a €B-over-€M mix silently prints a 13,125% margin.
-      line('Revenue','€M',            [{g:5000, qq:4777, qy:4272}, {g:4800, a:4777, qq:4533, qy:4193}]),
-      line('Operating income','€M',   [{g:670,  qq:655,  qy:582 }, {g:630,  a:655,  qq:715,  qy:406 }]),
-      line('Gross margin','%',        [{g:32.9, qq:33.4, qy:31.6}, {g:33.1, a:33.4, qq:33.0, qy:31.5}]),
-      line('Premium subscribers','M', [{g:305,  qq:300,  qy:281 }, {g:299,  a:300,  qq:293,  qy:276 }]),
-      line('Total MAU','M',           [{g:788,  qq:777,  qy:713 }, {g:778,  a:777,  qq:761,  qy:696 }]),
+      line('Revenue','€M',            [{g:5000, qq:4777, qy:4272}, {g:4800, a:4777, qq:4533, qy:4193}], 'rev', 0),
+      line('Operating income','€M',   [{g:670,  qq:655,  qy:582 }, {g:630,  a:655,  qq:715,  qy:406 }], 'opinc', 0),
+      line('Gross margin','%',        [{g:32.9, qq:33.4, qy:31.6}, {g:33.1, a:33.4, qq:33.0, qy:31.5}], 'gm', 1),
+      line('Premium subscribers','M', [{g:305,  qq:300,  qy:281 }, {g:299,  a:300,  qq:293,  qy:276 }], 'subs', 1),
+      line('Total MAU','M',           [{g:788,  qq:777,  qy:713 }, {g:778,  a:777,  qq:761,  qy:696 }], 'mau', 1),
       // ⚠ 3Q25 Premium ARPU is not disclosed in the Q2 2026 deck, so the Q3 YoY base is left
       // null rather than guessed — the chip simply does not render for that cell.
-      line('Premium ARPU','€',        [{        qq:4.89, qy:null}, {        a:4.89, qq:4.76, qy:4.57}]),
+      line('Premium ARPU','€',        [{        qq:4.89, qy:null}, {        a:4.89, qq:4.76, qy:4.57}], 'arpu', 2),
       // ⚠ RESTATED BASIS for the comparatives. The Jan 1 2026 reclassification moved revenue out
       // of Ad-Supported and restated 2023–25, so the YoY/QoQ bases here are the deck's RESTATED
       // figures (2Q25 €440M, 3Q25 €437M), not the €453M/€446M originally reported. Using the
       // as-reported numbers would print a −1.5% decline where the company reports +1% growth.
-      line('Ad-Supported revenue','€M',[{       qq:446,  qy:437 }, {        a:446,  qq:385,  qy:440 }]),
-      line('Free cash flow','€M',     [{        qq:797,  qy:806 }, {        a:797,  qq:824,  qy:700 }])
+      line('Ad-Supported revenue','€M',[{       qq:446,  qy:437 }, {        a:446,  qq:385,  qy:440 }], 'adrev', 0),
+      line('Free cash flow','€M',     [{        qq:797,  qy:806 }, {        a:797,  qq:824,  qy:700 }], 'fcf', 0)
     ]
   };
 })();
@@ -1853,22 +1876,35 @@ var CE_CONS = (function(){
 // morning; we do NOT have that transcript, so `call` is deliberately null and the
 // "Also on the call" aside does not render. Nothing in the summary below is attributed to
 // management speech. A per-call record (docs/calls/SPOT*.md) still has not been written.
+// Summit's own number for a quarter = the `summit` series of js/results-data/spot.js (the DCF model
+// snapshot of 2026-08-05, frozen there — rule 10). Read through, never retyped. Gross margin = the
+// model's two segment gross profits over its revenue. Lines the model does not carry (users, ARPU) stay empty.
+function ceUs(per){
+  var M = spotResults.views.q.metrics, out = {};
+  function at(key){ var m = M[key], i = m ? m.periods.indexOf(per) : -1; return (i < 0 || m.summit[i] == null) ? null : m.summit[i]; }
+  [['Revenue','rev'],['Operating income','opinc'],['Ad-Supported revenue','adrev'],['Free cash flow','fcf']].forEach(function(r){
+    var v = at(r[1]); if(v != null) out[r[0]] = { v: Math.round(v) };
+  });
+  var gp = at('gp'), rv = at('rev');
+  if(gp != null && rv) out['Gross margin'] = { v: Math.round(gp / rv * 1000) / 10 };
+  return out;
+}
 var CALL_EARNINGS = { ticker:'SPOT', quarters:[
   { q:'Q3 2026', status:'upcoming', date:'reports late Oct / early Nov 2026 · exact date not yet announced by IR',
     setup:{
-      source:'Spotify Q3 2026 guidance, issued 4 Aug 2026 with the Q2 2026 shareholder deck', asOf:'2026-08-04',
-      us:{ 'Revenue':{v:5035}, 'Operating income':{v:699}, 'Ad-Supported revenue':{v:496}, 'Free cash flow':{v:769} },
+      source:'Guide: Spotify Q3 2026 guidance, issued 4 Aug 2026 with the Q2 2026 shareholder deck · Street: Bloomberg snapshot of 9 Sep 2026 (after the guide) · Summit: DCF model snapshot of 5 Aug 2026 (frozen, not live)', asOf:'guide 2026-08-04 · Street 2026-09-09 · Summit 2026-08-05',
+      us: ceUs('3Q26'),
       notes:{
-        'Revenue':{ t:'€5.0B guided — above consensus, and the currency has turned', h:'<p>Guided to <b>€5.0B</b>, which is <b>ahead of the ~€4.93B</b> the Street was carrying (LSEG) — the one line on this card guided above expectations. On the reported €4,272M base of 3Q25 that arithmetic is ~17% YoY, and the guide assumes a <b>~200bps FX TAILWIND</b> struck on USD:EUR 0.8756 at the June 30 close — the first tailwind after two years of headwinds (2Q26 carried ~70bps of drag, 1Q26 ~670bps).</p><p>⚠ On the call Luiga characterised the guide as “approximately €5 billion in quarter three <b>or 14% growth</b>”, without stating the basis. That does not tie to ~17% on the reported base even after backing out the FX assumption, so treat 14% as a currency-neutral or otherwise adjusted framing and <b>do not mix it with the reported number</b>. Either way the message is the same: underlying growth is flat-to-slightly-down from Q2\'s +15% cc, and the headline acceleration is currency. <b>Summit sits at €5,035M</b>, essentially on the guide.</p>' },
-        'Operating income':{ t:'⚑ €670M guided — below consensus, and Summit is above the guide', h:'<p>Guided to <b>€670M</b> against the €655M just printed — and against the ~<b>€677.8M</b> the Street was carrying (Visible Alpha). Guiding profit ~1% light while guiding revenue ahead is half of why the shares fell; the MAU line is the other half.</p><p>The guide embeds <b>€9M of social charges</b> struck on a $459.13 quarter-end share price — so if the stock rallies through the quarter this line gets mechanically squeezed, and if it falls it gets a free beat. That is exactly the mechanism that produced most of the Q2 beat, running the other way. Disclosed sensitivity: <b>±€21M for a 10% move</b> in the shares.</p><p>The cost side is now sized: Luiga put the marketing and AI investment at “approximately <b>€200 million in incremental operating expense for the full year</b>”, with personnel flat, and Söderström said the year started with investment and is now “focusing on cost and efficiency” — it is “compute and marketing… within our control, <b>not long-term CapEx</b>”. <b>Summit carries €698.9M, 4.3% ABOVE the guide</b>, the widest disagreement on the card: the model is calling the guide conservative again, as it has been for five straight quarters.</p>' },
-        'Gross margin':{ t:'32.9% — a step down from the record, but an explained one', h:'<p>Guided to <b>32.9%</b> against the <b>33.4% all-time record just printed</b> — a 50bp sequential decline. On the Q2 call Luiga explained it: the outlook “incorporates continued strengthening in our core business, reinvestments into new products, and <b>a typical charge we take in the third quarter to account for our annual exposure to regulatory fees in one of our markets</b>”.</p><p>He also reframed the comparison — <b>~130bp ABOVE the prior year</b>, which is the trend that matters. So this is a recurring Q3 item plus reinvestment, not a break in the path to <b>35–40% by 2030</b>. Summit\'s two segment lines imply ~33.6%, i.e. the model is not carrying the regulatory charge.</p><p>What to verify: that the fee really is annual and Q3-seated, by checking 3Q25 and 3Q24 margins against their own guides.</p>' },
+        'Revenue':{ t:'€5.0B guided — above consensus, and the currency has turned', h:'<p>Guided to <b>€5.0B</b>, which is <b>ahead of the ~€4.93B</b> the Street was carrying (LSEG) — the one line on this card guided above expectations. On the reported €4,272M base of 3Q25 that arithmetic is ~17% YoY, and the guide assumes a <b>~200bps FX TAILWIND</b> struck on USD:EUR 0.8756 at the June 30 close — the first tailwind after two years of headwinds (2Q26 carried ~70bps of drag, 1Q26 ~670bps).</p><p>⚠ On the call Luiga characterised the guide as “approximately €5 billion in quarter three <b>or 14% growth</b>”, without stating the basis. That does not tie to ~17% on the reported base even after backing out the FX assumption, so treat 14% as a currency-neutral or otherwise adjusted framing and <b>do not mix it with the reported number</b>. Either way the message is the same: underlying growth is flat-to-slightly-down from Q2\'s +15% cc, and the headline acceleration is currency. <b>Summit sits at €5,023M</b>, +0.5% above the guide, and the <b>Bloomberg Street of 9 Sep is €4,977M</b>, 0.5% under it: the Street has moved up from the ~€4.93B it carried before the guide but still sits below the company\'s own number.</p>' },
+        'Operating income':{ t:'⚑ €670M guided — below the pre-guide Street; Summit now sits on it', h:'<p>Guided to <b>€670M</b> against the €655M just printed — and against the ~<b>€677.8M</b> the Street was carrying (Visible Alpha). Guiding profit ~1% light while guiding revenue ahead is half of why the shares fell; the MAU line is the other half.</p><p>The guide embeds <b>€9M of social charges</b> struck on a $459.13 quarter-end share price — so if the stock rallies through the quarter this line gets mechanically squeezed, and if it falls it gets a free beat. That is exactly the mechanism that produced most of the Q2 beat, running the other way. Disclosed sensitivity: <b>±€21M for a 10% move</b> in the shares.</p><p>The cost side is now sized: Luiga put the marketing and AI investment at “approximately <b>€200 million in incremental operating expense for the full year</b>”, with personnel flat, and Söderström said the year started with investment and is now “focusing on cost and efficiency” — it is “compute and marketing… within our control, <b>not long-term CapEx</b>”. <b>Summit carries €672.5M, 0.4% above the guide</b> — the model that sat 4.3% above it before the print now sits on it. The <b>Bloomberg Street of 9 Sep is €678.4M</b> (+1.3%), so the Street is still calling the guide mildly conservative, as it has been for five straight quarters.</p>' },
+        'Gross margin':{ t:'32.9% — a step down from the record, but an explained one', h:'<p>Guided to <b>32.9%</b> against the <b>33.4% all-time record just printed</b> — a 50bp sequential decline. On the Q2 call Luiga explained it: the outlook “incorporates continued strengthening in our core business, reinvestments into new products, and <b>a typical charge we take in the third quarter to account for our annual exposure to regulatory fees in one of our markets</b>”.</p><p>He also reframed the comparison — <b>~130bp ABOVE the prior year</b>, which is the trend that matters. So this is a recurring Q3 item plus reinvestment, not a break in the path to <b>35–40% by 2030</b>. Summit\'s two segment gross profits (€1,543M Premium + €110M Ad-Supported) imply <b>32.9%</b> on €5,023M of revenue, i.e. the model now carries the guide, regulatory charge included; the Bloomberg Street implies the same 32.9% (gross profit €1,639M on €4,977M).</p><p>What to verify: that the fee really is annual and Q3-seated, by checking 3Q25 and 3Q24 margins against their own guides.</p>' },
         'Premium subscribers':{ t:'305M guided · +5M net adds, the slowest in a year', h:'<p>Guided to <b>305M</b> from 300M — a <b>5M add against the 7M just delivered</b> and 6M guided a quarter ago. Subscriber adds have been the most reliably-hit of Spotify\'s five guided lines and Q2 beat by 1M, so the deceleration is a choice in the forecast rather than an observed trend.</p><p>Worth noting the Q2 add was flattered by a one-off: the 20th-anniversary in-app experience drove <b>Spotify\'s biggest single day of subscriber intake ever</b>. Some of the Q3 step-down is that promotion not repeating.</p>' },
         'Total MAU':{ t:'⚑ 788M guided · +11M — deliberate, says management; below consensus, says the tape', h:'<p>Guided to <b>788M</b> from 777M, an <b>11M add against 16M delivered</b> in Q2 (itself 1M short of guidance). The Street was carrying ~<b>793.6M</b> (Visible Alpha), so the guide is ~5.6M light — the single biggest gap on the Q3 card and the main reason the shares fell ~4% pre-market.</p><p><b>Management says this is a choice.</b> Norström: “sometimes we pull the growth lever, and sometimes we pull the monetization lever. Here we\'re starting to pull the <b>monetization lever</b>.” The measures are emerging-market specific — tighter sign-up for “higher quality MAU throughput”, deprecating lower-end Android support, and “friction in both <b>ad load</b> and some limitations in our <b>free tier</b>”. Luiga: “growth rates in developed markets remain stable.”</p><p>The falsifiable claim: it “will not affect subs growth in the near term”, and Norström said he is “very confident” in long-term subscriber growth when pressed on labels reporting an industry-wide slowdown. <b>Q3 is the first test.</b> If subs land at 305M with ARPU holding, the story survives; if both slow, it does not.</p>' },
         'Premium ARPU':{ t:'Not guided — the comp gets easier from here', h:'<p>Spotify does not guide ARPU. Q2 printed <b>€4.89, +7% (+7.4% constant-currency)</b> and, critically, held that growth THROUGH the lapping of the July/August 2025 increases — which was the test set a quarter ago, and it passed.</p><p>From here the comp includes the Jan 2026 US move to $12.99, and FX turns from a drag into a tailwind. If ARPU growth does not hold in Q3 it will be for mix reasons (Rest of World and Latin America growing fastest), not pricing.</p>' },
-        'Ad-Supported revenue':{ t:'⚑ Not guided per quarter — but H2 double-digit growth IS now a commitment', h:'<p>Q2 printed <b>€446M, +1% reported and +3% constant-currency</b> — the same +3% cc as Q1, in the quarter that was the clean comp against the April 2025 exchange launch.</p><p>On the call Luiga committed to the recovery: “we continue to expect our ads business to <b>inflect towards double-digit growth in the second half of 2026</b>.” Norström called the rebuild finished — <b>99% of impressions on Spotify\'s own stack</b>, automated channels ~40% of ad revenue (from 30%), <b>33,000 active advertisers, +60% YoY</b>. Luiga on the margin runway: from “the 20% range we have today <b>towards 40% over time</b>”.</p><p><b>Summit carries €496M</b> (~+11%), which is no longer the outlier it looked like against the deck alone — it is roughly what management is guiding. Q3 is the first of the two quarters that have to deliver it, so this is the single most checkable promise on the card.</p>' },
-        'Free cash flow':{ t:'Not guided — funding a buyback that is now running 30% hot', h:'<p>Q2 printed <b>€797M</b>, a record second quarter, taking LTM free cash flow to <b>€3.3B</b> and cash to €9.4B. Summit carries €769M for Q3.</p><p>The use of it is becoming material: <b>$662M repurchased year to date through Aug 3</b>, about 30% ahead of the same point in 2025, ~2.2M shares (≈1% of the count) since buybacks resumed. With the shares down sharply on this print, the pace of Q3 repurchase is itself a signal worth reading.</p>' }
+        'Ad-Supported revenue':{ t:'⚑ Not guided per quarter — but H2 double-digit growth IS now a commitment', h:'<p>Q2 printed <b>€446M, +1% reported and +3% constant-currency</b> — the same +3% cc as Q1, in the quarter that was the clean comp against the April 2025 exchange launch.</p><p>On the call Luiga committed to the recovery: “we continue to expect our ads business to <b>inflect towards double-digit growth in the second half of 2026</b>.” Norström called the rebuild finished — <b>99% of impressions on Spotify\'s own stack</b>, automated channels ~40% of ad revenue (from 30%), <b>33,000 active advertisers, +60% YoY</b>. Luiga on the margin runway: from “the 20% range we have today <b>towards 40% over time</b>”.</p><p><b>Summit carries €512M</b> (~+17% on the restated €437M of 3Q25) and the <b>Bloomberg Street €491M</b> (~+12%). Management\'s wording is “double-digit”, so the Street sits inside the commitment and the model above it. Q3 is the first of the two quarters that have to deliver it, so this is the single most checkable promise on the card.</p>' },
+        'Free cash flow':{ t:'Not guided — funding a buyback that is now running 30% hot', h:'<p>Q2 printed <b>€797M</b>, a record second quarter, taking LTM free cash flow to <b>€3.3B</b> and cash to €9.4B. Summit carries €742M for Q3 and the Bloomberg Street €849M.</p><p>The use of it is becoming material: <b>$662M repurchased year to date through Aug 3</b>, about 30% ahead of the same point in 2025, ~2.2M shares (≈1% of the count) since buybacks resumed. With the shares down sharply on this print, the pace of Q3 repurchase is itself a signal worth reading.</p>' }
       },
-      debate:{ rows:null, synth:'<b>Spotify guided revenue ABOVE consensus and users and profit BELOW it</b> — €5.0B vs ~€4.93B, but 788M MAU vs ~793.6M and €670M of operating income vs ~€677.8M. That mix is why the shares fell ~4% on a quarter that beat. The call then removed two of the three worries: the <b>gross-margin step to 32.9%</b> is “a typical charge we take in the third quarter to account for our annual exposure to regulatory fees”, and is still ~130bp above the prior year; the <b>advertising line</b> got a dated commitment to “inflect towards double-digit growth in the second half of 2026”, which retroactively makes Summit\'s €496M look like guidance rather than a leap. What is left is the one that matters: <b>the 11M MAU guide</b>. Management calls it deliberate — pulling “the monetization lever” via sign-up friction, ad load and free-tier limits in emerging markets — and insists it “will not affect subs growth in the near term”. That is a coherent story and an unfalsifiable one for exactly one quarter. Summit sits <b>4.3% above the operating-income guide</b> with segment lines implying ~33.6% gross margin, i.e. it is not carrying the regulatory charge and is betting on the same conservatism that has produced five straight beats. <b>The quarter resolves to a single test:</b> do subscribers land at 305M with ARPU still compounding while MAU slows? If yes, the funnel is being optimised. If both slow, the lever framing was a description of a problem, not a decision.' }
+      debate:{ rows:null, synth:'<b>Spotify guided revenue ABOVE consensus and users and profit BELOW it</b> — €5.0B vs ~€4.93B, but 788M MAU vs ~793.6M and €670M of operating income vs ~€677.8M. That mix is why the shares fell ~4% on a quarter that beat. The call then removed two of the three worries: the <b>gross-margin step to 32.9%</b> is “a typical charge we take in the third quarter to account for our annual exposure to regulatory fees”, and is still ~130bp above the prior year; the <b>advertising line</b> got a dated commitment to “inflect towards double-digit growth in the second half of 2026”, which puts the Street\'s €491M inside the commitment and Summit\'s €512M above it. What is left is the one that matters: <b>the 11M MAU guide</b>. Management calls it deliberate — pulling “the monetization lever” via sign-up friction, ad load and free-tier limits in emerging markets — and insists it “will not affect subs growth in the near term”. That is a coherent story and an unfalsifiable one for exactly one quarter. Summit now sits <b>0.4% above the operating-income guide</b> with segment lines implying 32.9% gross margin, i.e. it carries the regulatory charge and has stopped betting on conservatism; the Bloomberg Street (9 Sep) is at €678M, 1.3% above the guide. <b>The quarter resolves to a single test:</b> do subscribers land at 305M with ARPU still compounding while MAU slows? If yes, the funnel is being optimised. If both slow, the lever framing was a description of a problem, not a decision.' }
     },
     results:null, call:null },
   { q:'Q2 2026', status:'reported', date:'reported Tue Aug 4, 2026 · BEFORE market open (Q&A 8:00am ET)',
@@ -2602,6 +2638,17 @@ function ceMarginRow(cur, baseYoy, baseQoq){
 
 // Current margin + the margin of the period the growth chip compares against. The base swaps with
 // the lens (YoY → the same quarter a year ago; QoQ → the prior quarter), so with Margin + YoY on
+// The Street column: Bloomberg consensus beside the guide, with the gap to the guide as a muted tag
+// (the Street is what the market already assumes; the guide is what the company committed to).
+function ceStreetCell(m, qi){
+  var sv=(m.qs&&m.qs[qi]!=null)?m.qs[qi]:null; if(sv==null) return '<span class="ce-empty">—</span>';
+  var g=m.qr[qi]?m.qr[qi][3]:null, tag='';
+  if(g!=null){
+    var d = (m.u==='%') ? (Math.round((sv-g)*10)/10)+'pp' : (Math.round((sv/g-1)*1000)/10)+'%';
+    tag='<span class="ce-vsg">'+(parseFloat(d)===0?'= guide':(parseFloat(d)>0?'+':'')+d+' vs guide')+'</span>';
+  }
+  return ceFmtV(m.u,sv)+tag;
+}
 function ceGrid(u,which){
   var qi=CE_CONS.q.indexOf(u.q); if(qi<0) return '';
   var st=u.setup||{}, us=st.us||{}, notes=st.notes||{};
@@ -2628,6 +2675,7 @@ function ceGrid(u,which){
         // Street consensus (Spotify is not in the BBG archive). Calling it "Street"
         // would misstate where the number came from.
         '<div class="ce-val ce-val-cons"><span class="ce-val-lab">Guide</span>'+street+'</div>'+
+        '<div class="ce-val ce-val-str"><span class="ce-val-lab">Street</span>'+ceStreetCell(m, qi)+'</div>'+
         '<div class="ce-val ce-val-us"><span class="ce-val-lab">Summit</span>'+(uv?ceFmtV(m.u,uv.v):'<span class="ce-empty">—</span>')+'</div>'+
         mRow+
       '</div></div>';
@@ -2645,6 +2693,7 @@ function ceGridStyle(){
     '.ce-mcell .ce-val{display:flex;align-items:baseline;gap:5px;font-size:14px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums}'+
     '.ce-mcell .ce-val-lab{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none;width:38px}'+
     '.ce-gchip{font-size:10px;font-weight:800;margin-left:2px}'+
+    '.ce-vsg{font-size:9px;font-weight:700;color:var(--mu);margin-left:4px;white-space:nowrap}'+
     '.ce-mm{display:none}'+'.ce-mm-b{display:none;font-size:9px;font-weight:700;color:var(--mu);white-space:nowrap}'+'.ce-evwrap[data-mm="on"][data-g="yoy"] .ce-mm-b.yoy{display:inline}'+'.ce-evwrap[data-mm="on"][data-g="qoq"] .ce-mm-b.qoq{display:inline}'+'.ce-mrow{display:none;align-items:baseline;gap:5px;margin-top:5px;padding-top:5px;border-top:1px dashed var(--bdr)}'+'.ce-evwrap[data-mm="on"] .ce-mrow{display:flex}'+'.ce-mrow-l{font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none}'+'.ce-mrow-v{font-size:11px;font-weight:900;color:'+PURPLE+';font-variant-numeric:tabular-nums}'+
     '.ce-evwrap[data-mm="on"] .ce-mm{display:inline}'+
     '.ce-nocons{font-size:8.5px;font-weight:800;color:var(--mu);border:1px solid var(--bdr);border-radius:999px;padding:1px 6px;margin-left:6px}'+

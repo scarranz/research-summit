@@ -374,7 +374,7 @@ A tab next to Index Analysis inside Market Analysis (`js/market-history.js`, dat
 
 ## EPS Attribution (Market Analysis tab) — read docs/EPS_ATTRIBUTION.md first
 
-Third tab of Market Analysis (after Index Analysis and Market History) (`js/eps-attribution.js`, engine `js/eps-engine.js`, data `js/eps-attribution-data.js` from `scripts/eps-attribution/extract_eps.py`). Aggregate EPS = `Σ (weight/price)·EPS`, never total net income and never an average of per-share EPS; the doc lists the corrections to the original spec and the GAAP-basis caveat. Check the maths with `node tests/eps-engine.test.mjs`.
+Third tab of Market Analysis (after Index Analysis and Market History) (`js/eps-attribution.js`, engine `js/eps-engine.js`, data `js/eps-attribution-data.js` from `scripts/eps-attribution/extract_eps.py`). Contributions are by index weight (price = w × return, EPS effect = w × own EPS change, multiple = the rest), never by shares × EPS; the index-level aggregate is a memo only. The doc lists the corrections to the original spec and the GAAP-basis caveat. Check the maths with `node tests/eps-engine.test.mjs`.
 
 ## Derivatives tab — how it works
 

@@ -8,19 +8,30 @@ var last = D.dates.length - 1, k0 = D.dates.indexOf('2026-01-02');
 ['spx', 'ndx'].forEach(function (ix) {
   ['cy26', 'cy27'].forEach(function (base) {
     var p = E.period(ix, k0, last, base), sum = function (f) { return p.rows.reduce(function (s, r) { return s + r[f]; }, 0); };
-    near(sum('cP'), p.R, 1e-9, ix + base + ' sum cP = R'); near(sum('cE'), p.g, 1e-9, ix + base + ' sum cE = g');
-    near((1 + p.g) * (1 + p.m), 1 + p.R, 1e-9, ix + base + ' (1+g)(1+m) = 1+R');
-    // sectors add up to the index
-    var gs = E.group(p.rows, function (r) { return D.secs[r.id].s; });
-    near(gs.reduce(function (s, o) { return s + o.cP; }, 0), p.R, 1e-9, ix + base + ' sectors add up');
-    // brute force from raw rows: price return of the start basket
+    near(sum('cP'), p.R, 1e-9, ix + base + ' sum cP = R'); near(sum('cE'), p.G, 1e-9, ix + base + ' sum cE = G');
+    near(sum('cE') + sum('cM'), p.R, 1e-9, ix + base + ' EPS + multiple = price');
+    // sectors and industry groups add up to the index
+    [function (r) { return D.secs[r.id].s; }, function (r) { return D.secs[r.id].g; }].forEach(function (key, i) {
+      var gs = E.group(p.rows, key);
+      near(gs.reduce(function (s, o) { return s + o.cP; }, 0), p.R, 1e-9, ix + base + ' level ' + i + ' adds up to R');
+      near(gs.reduce(function (s, o) { return s + o.cE; }, 0), p.G, 1e-9, ix + base + ' level ' + i + ' adds up to G');
+      gs.forEach(function (o) { if (o.m != null) near((1 + o.g) * (1 + o.m), 1 + o.ret, 1e-9, 'group (1+g)(1+m) = 1+ret'); });
+    });
+    // brute force from the raw rows: weight x return, weights renormalised over the members, names with an end price
     var row1 = {}; D.snaps[last].forEach(function (r) { row1[r[0]] = r; });
-    var I0 = 0, I1 = 0; p.rows.forEach(function (r) { var q = r.w0 / r.px0; I0 += q * r.px0; I1 += q * row1[r.id][3]; });
-    near(I1 / I0 - 1, p.R, 1e-9, ix + base + ' brute-force R');
+    var col = ix === 'spx' ? 1 : 2, tot = 0, R = 0, G = 0;
+    D.snaps[k0].forEach(function (r) { if (r[col] > 0) tot += r[col]; });
+    p.rows.forEach(function (r) {
+      var a = D.snaps[k0].find(function (x) { return x[0] === r.id; }), b = row1[r.id], e0 = base === 'cy27' ? a[5] : a[4], e1 = base === 'cy27' ? b[5] : b[4], w = a[col] / tot;
+      R += w * (b[3] / a[3] - 1); if (e0 > 0) G += w * (e1 / e0 - 1);
+    });
+    near(R, p.R, 1e-9, ix + base + ' brute-force R'); near(G, p.G, 1e-9, ix + base + ' brute-force G');
+    // every start member is either in rows or in skipped
+    near(p.rows.length + p.skipped.length, p.nStart, 0, ix + base + ' rows + skipped = members');
   });
 });
 // excluding everything but one name leaves that name's own numbers
 var one = new Set(); D.secs.forEach(function (s, i) { if (s.t !== 'NVDA') one.add(i); });
-var n = E.period('spx', k0, last, 'cy26', one); ok(n.n === 1, 'single name'); near(n.R, n.rows[0].ret, 1e-12, 'single-name return'); near(n.g, n.rows[0].g, 1e-12, 'single-name EPS growth');
+var n = E.period('spx', k0, last, 'cy26', one); ok(n.n === 1, 'single name'); near(n.R, n.rows[0].ret, 1e-12, 'single-name return'); near(n.G, n.rows[0].g, 1e-12, 'single-name EPS growth');
 console.log(bad ? bad + ' failures' : 'all engine checks pass');
 process.exit(bad ? 1 : 0);

@@ -1,8 +1,8 @@
 // eps-charts.js — SVG charts of Market Analysis > EPS Attribution (js/eps-attribution.js).
 //   divStack()   EPS part + multiple part stacked, diamond = their total
-//   scatter()    every stock: EPS change vs multiple change, sized by weight
+//   barList()    one green/red bar per name, closed by a total row
+//   stackBars()  one 100% bar per date: the part that matters against everyone else
 //   lineChart()  a few series over the snapshots
-//   waterfall()  contributors to a total, largest first, "rest of index" closing the bar (Citadel style)
 // Tooltips use the page's #ndx-tip (index.html) through ma-charts.js.
 import { se, bindTip } from './ma-charts.js';
 
@@ -63,38 +63,6 @@ export function divStack(box, rows, o) {
     '<span><i style="background:' + o.pos + ';transform:rotate(45deg);border-radius:0"></i>' + (o.diaLabel || 'Total') + ' (green up, red down) = the two bars added</span>');
 }
 
-// rows: [{ label, a, b, tip }] — two bars per row on one axis: a = contribution to the price return, b = contribution to the EPS change (fractions → pp).
-// o.domain = [lo, hi] fixes the axis so bars keep their length when a toggle changes.
-export function pairBars(box, rows, o) {
-  var rowH = 40, maxLab = 0; rows.forEach(function (r) { maxLab = Math.max(maxLab, String(r.label).length); });
-  var VW = 900, P = { t: 28, r: 80, b: 26, l: Math.max(150, Math.round(maxLab * 6.3) + 22) };
-  var lo = 0, hi = 0; rows.forEach(function (r) { lo = Math.min(lo, r.a, r.b); hi = Math.max(hi, r.a, r.b); });
-  if (o.domain) { lo = Math.min(lo, o.domain[0]); hi = Math.max(hi, o.domain[1]); }
-  var A = axis(lo * 100, hi * 100, 7), VH = P.t + rows.length * rowH + P.b;
-  function X(v) { return P.l + (v * 100 - A.lo) / (A.hi - A.lo) * (VW - P.l - P.r); }
-  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
-  A.ticks.forEach(function (t) {
-    svg.appendChild(se('line', { x1: X(t / 100), x2: X(t / 100), y1: P.t - 8, y2: VH - P.b, stroke: t === 0 ? '#9AA3AF' : GRID, 'stroke-width': t === 0 ? 1.2 : 1 }));
-    svg.appendChild(txt({ x: X(t / 100), y: VH - P.b + 15, 'text-anchor': 'middle', 'font-size': 10, fill: MUTED }, (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t)));
-  });
-  svg.appendChild(txt({ x: P.l, y: 12, 'font-size': 10, fill: MUTED, 'font-weight': 600 }, o.axisTitle || 'pp'));
-  function bar(g, v, y, color) {
-    var x0 = X(Math.min(0, v)), x1 = X(Math.max(0, v));
-    g.appendChild(se('rect', { x: x0, y: y, width: Math.max(1.5, x1 - x0), height: 12, rx: 2, fill: color }));
-    g.appendChild(txt({ x: v >= 0 ? x1 + 6 : x0 - 6, y: y + 9.5, 'text-anchor': v >= 0 ? 'start' : 'end', 'font-size': 10.5, 'font-weight': 600, fill: INK, 'font-variant-numeric': 'tabular-nums' }, ppTxt(v, 2) + ' pp'));
-  }
-  rows.forEach(function (r, i) {
-    var y = P.t + i * rowH + 3, g = se('g', {});
-    if (i > 0) g.appendChild(se('line', { x1: 8, x2: VW - 8, y1: y - 3, y2: y - 3, stroke: '#EEF1F4' }));
-    g.appendChild(txt({ x: P.l - 12, y: y + 17, 'text-anchor': 'end', 'font-size': 12, 'font-weight': 600 }, r.label));
-    bar(g, r.a, y + 2, o.colA); bar(g, r.b, y + 19, o.colB);
-    g.appendChild(se('rect', { x: 0, y: y - 2, width: VW, height: rowH - 2, fill: 'transparent' }));
-    if (r.tip) bindTip(g, r.tip, 300);
-    svg.appendChild(g);
-  });
-  mount(box, svg, legendItem(o.colA, o.labA) + legendItem(o.colB, o.labB));
-}
-
 // rows: [{ label, v, tip }] — one bar per row, green up / red down, value at the end; o.total = { label, v } closes the list.
 // o.domain = [lo, hi] (fractions) fixes the axis so bars keep their length when a toggle changes.
 export function barList(box, rows, o) {
@@ -102,12 +70,13 @@ export function barList(box, rows, o) {
   var VW = 900, P = { t: 28, r: 84, b: 26, l: Math.max(150, Math.round(maxLab * 6.3) + 22) };
   var lo = 0, hi = 0; all.forEach(function (r) { lo = Math.min(lo, r.v); hi = Math.max(hi, r.v); });
   if (o.domain) { lo = Math.min(lo, o.domain[0]); hi = Math.max(hi, o.domain[1]); }
+  var pct = o.unit === '%', suf = pct ? '%' : ' pp', dec = pct ? 0 : 2;
   var A = axis(lo * 100, hi * 100, 7), VH = P.t + all.length * rowH + P.b + (o.total ? 8 : 0);
   function X(v) { return P.l + (v * 100 - A.lo) / (A.hi - A.lo) * (VW - P.l - P.r); }
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
   A.ticks.forEach(function (t) {
     svg.appendChild(se('line', { x1: X(t / 100), x2: X(t / 100), y1: P.t - 8, y2: VH - P.b, stroke: t === 0 ? '#9AA3AF' : GRID, 'stroke-width': t === 0 ? 1.2 : 1 }));
-    svg.appendChild(txt({ x: X(t / 100), y: VH - P.b + 15, 'text-anchor': 'middle', 'font-size': 10, fill: MUTED }, (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t)));
+    svg.appendChild(txt({ x: X(t / 100), y: VH - P.b + 15, 'text-anchor': 'middle', 'font-size': 10, fill: MUTED }, (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) + (pct ? '%' : '')));
   });
   svg.appendChild(txt({ x: P.l, y: 12, 'font-size': 10, fill: MUTED, 'font-weight': 600 }, o.axisTitle || 'pp'));
   all.forEach(function (r, i) {
@@ -116,7 +85,7 @@ export function barList(box, rows, o) {
     if (isTot) g.appendChild(se('line', { x1: 8, x2: VW - 8, y1: y - 6, y2: y - 6, stroke: '#9AA3AF' }));
     g.appendChild(txt({ x: P.l - 12, y: y + h / 2 + 4, 'text-anchor': 'end', 'font-size': 11.5, 'font-weight': isTot ? 700 : 500 }, r.label));
     g.appendChild(se('rect', { x: x0, y: y, width: Math.max(1.5, x1 - x0), height: h, rx: 2, fill: color }));
-    g.appendChild(txt({ x: r.v >= 0 ? x1 + 7 : x0 - 7, y: y + h / 2 + 4, 'text-anchor': r.v >= 0 ? 'start' : 'end', 'font-size': 11, 'font-weight': 700, fill: isTot ? '#1E2733' : color, 'font-variant-numeric': 'tabular-nums' }, ppTxt(r.v, 2) + ' pp'));
+    g.appendChild(txt({ x: r.v >= 0 ? x1 + 7 : x0 - 7, y: y + h / 2 + 4, 'text-anchor': r.v >= 0 ? 'start' : 'end', 'font-size': 11, 'font-weight': 700, fill: isTot ? '#1E2733' : color, 'font-variant-numeric': 'tabular-nums' }, ppTxt(r.v, dec) + suf));
     g.appendChild(se('rect', { x: 0, y: y - 3, width: VW, height: rowH - 4, fill: 'transparent' }));
     if (r.tip) bindTip(g, r.tip, 300);
     svg.appendChild(g);
@@ -124,45 +93,29 @@ export function barList(box, rows, o) {
   mount(box, svg, '');
 }
 
-// pts: [{ x, y, r, color, label, tip }] — x = EPS change, y = multiple change (fractions), r = weight.
-// The dashed curve is the "price flat" line, (1+x)(1+y) = 1. Points beyond the axis are pinned to its edge, hollow.
-export function scatter(box, pts, o) {
-  var VW = 900, VH = 520, P = { t: 16, r: 18, b: 44, l: 56 };
-  function pct(a, q) { a = a.slice().sort(function (x, y) { return x - y; }); return a[Math.max(0, Math.min(a.length - 1, Math.round(q * (a.length - 1))))]; }
-  var xs = pts.map(function (p) { return p.x; }), ys = pts.map(function (p) { return p.y; });
-  var Ax = axis(Math.max(-1, Math.min.apply(null, xs.concat(-0.1))) * 100, Math.min(4, Math.max.apply(null, xs.concat(0.1))) * 100, 7), Ay = axis(Math.max(-1, Math.min.apply(null, ys.concat(-0.1))) * 100, Math.min(4, Math.max.apply(null, ys.concat(0.1))) * 100, 6);
-  function X(v) { return P.l + (v * 100 - Ax.lo) / (Ax.hi - Ax.lo) * (VW - P.l - P.r); }
-  function Y(v) { return P.t + (Ay.hi - v * 100) / (Ay.hi - Ay.lo) * (VH - P.t - P.b); }
+// rows: [{ label, v, tip }] — v = share (0..1). One bar per row on a fixed 0–100% axis: the dark part is v, the light part the rest.
+// o = { color, rest, restLabel, title }
+export function stackBars(box, rows, o) {
+  var rowH = 34, VW = 900, P = { t: 26, r: 14, b: 8, l: 70 }, VH = P.t + rows.length * rowH + P.b;
+  function X(v) { return P.l + v * (VW - P.l - P.r); }
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
-  function tk(t) { return (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) + '%'; }
-  Ax.ticks.forEach(function (t) {
-    svg.appendChild(se('line', { x1: X(t / 100), x2: X(t / 100), y1: P.t, y2: VH - P.b, stroke: t === 0 ? '#9AA3AF' : GRID, 'stroke-width': t === 0 ? 1.2 : 1 }));
-    svg.appendChild(txt({ x: X(t / 100), y: VH - P.b + 15, 'text-anchor': 'middle', 'font-size': 10, fill: MUTED }, tk(t)));
+  svg.appendChild(txt({ x: P.l, y: 12, 'font-size': 10.5, fill: MUTED, 'font-weight': 600 }, o.title || ''));
+  [0, 0.25, 0.5, 0.75, 1].forEach(function (t) {
+    svg.appendChild(se('line', { x1: X(t), x2: X(t), y1: P.t - 6, y2: VH - P.b, stroke: GRID }));
+    svg.appendChild(txt({ x: X(t), y: P.t - 10, 'text-anchor': t === 0 ? 'start' : t === 1 ? 'end' : 'middle', 'font-size': 9.5, fill: MUTED }, Math.round(t * 100) + '%'));
   });
-  Ay.ticks.forEach(function (t) {
-    svg.appendChild(se('line', { x1: P.l, x2: VW - P.r, y1: Y(t / 100), y2: Y(t / 100), stroke: t === 0 ? '#9AA3AF' : GRID, 'stroke-width': t === 0 ? 1.2 : 1 }));
-    svg.appendChild(txt({ x: P.l - 8, y: Y(t / 100) + 3.5, 'text-anchor': 'end', 'font-size': 10, fill: MUTED }, tk(t)));
+  rows.forEach(function (r, i) {
+    var y = P.t + i * rowH + 3, h = rowH - 10, g = se('g', {}), xm = X(r.v);
+    g.appendChild(txt({ x: P.l - 10, y: y + h / 2 + 4, 'text-anchor': 'end', 'font-size': 11.5, 'font-weight': r.bold ? 700 : 500 }, r.label));
+    g.appendChild(se('rect', { x: P.l, y: y, width: xm - P.l, height: h, rx: 2, fill: o.color }));
+    g.appendChild(se('rect', { x: xm, y: y, width: X(1) - xm, height: h, rx: 2, fill: o.rest || '#E3E8EE' }));
+    g.appendChild(txt({ x: xm - 8, y: y + h / 2 + 4, 'text-anchor': 'end', 'font-size': 12, 'font-weight': 700, fill: '#fff', 'font-variant-numeric': 'tabular-nums' }, (r.v * 100).toFixed(1) + '%'));
+    g.appendChild(txt({ x: X(1) - 8, y: y + h / 2 + 4, 'text-anchor': 'end', 'font-size': 10.5, fill: '#6B7686' }, o.restLabel || 'everyone else'));
+    g.appendChild(se('rect', { x: 0, y: y - 3, width: VW, height: rowH - 4, fill: 'transparent' }));
+    if (r.tip) bindTip(g, r.tip, 290);
+    svg.appendChild(g);
   });
-  svg.appendChild(txt({ x: (P.l + VW - P.r) / 2, y: VH - 6, 'text-anchor': 'middle', 'font-size': 11, fill: INK, 'font-weight': 600 }, o.xTitle));
-  var cyT = (P.t + VH - P.b) / 2, yt = txt({ x: 14, y: cyT, 'text-anchor': 'middle', 'font-size': 11, fill: INK, 'font-weight': 600 }, o.yTitle);
-  yt.setAttribute('transform', 'rotate(-90 14 ' + cyT + ')'); svg.appendChild(yt);
-  var d = '', pen = false, x0 = Math.max(-0.97, Ax.lo / 100);
-  for (var i = 0; i <= 160; i++) {
-    var x = x0 + (Ax.hi / 100 - x0) * i / 160, y = 1 / (1 + x) - 1;
-    if (y > Ay.hi / 100 || y < Ay.lo / 100) { pen = false; continue; }
-    d += (pen ? 'L' : 'M') + X(x).toFixed(1) + ' ' + Y(y).toFixed(1); pen = true;
-  }
-  svg.appendChild(se('path', { d: d, fill: 'none', stroke: '#6B7686', 'stroke-width': 1.3, 'stroke-dasharray': '5 4' }));
-  svg.appendChild(txt({ x: VW - P.r - 4, y: P.t + 14, 'text-anchor': 'end', 'font-size': 10.5, fill: '#6B7686' }, 'Dashed line = price unchanged · above it the stock is up, below it down'));
-  var maxR = Math.max.apply(null, pts.map(function (p) { return p.r; })) || 1;
-  pts.slice().sort(function (a, b) { return b.r - a.r; }).forEach(function (p) {
-    var cx = Math.max(P.l + 2, Math.min(VW - P.r - 2, X(p.x))), cy = Math.max(P.t + 2, Math.min(VH - P.b - 2, Y(p.y)));
-    var pinned = cx !== X(p.x) || cy !== Y(p.y), rad = 3 + 13 * Math.sqrt(p.r / maxR);
-    var c = se('circle', { cx: cx, cy: cy, r: rad, fill: pinned ? '#fff' : p.color, 'fill-opacity': pinned ? 1 : 0.62, stroke: p.color, 'stroke-width': pinned ? 1.6 : 1 });
-    bindTip(c, p.tip, 260); svg.appendChild(c);
-    if (p.label) svg.appendChild(txt({ x: cx + rad + 3, y: cy + 3.5, 'font-size': 10.5, 'font-weight': 600, fill: INK, 'pointer-events': 'none' }, p.label));
-  });
-  mount(box, svg, o.legend);
+  mount(box, svg, '');
 }
 
 // series: [{ name, color, vals, dash }] — labels: x categories; yfmt(v) -> axis text
@@ -194,37 +147,3 @@ export function lineChart(box, labels, series, yfmt, o) {
   mount(box, svg, series.length > 1 ? series.map(function (s) { return legendItem(s.color, s.name, s.dash); }).join('') : '');
 }
 
-// rows: [{ label, v, tip, color }] largest first; closes with a grey "rest" bar when o.rest != null.
-// fmt(v) -> text. The bar for row i spans [cum_i-1, cum_i].
-export function waterfall(box, rows, o) {
-  var rowH = 28, VW = 900, P = { t: 30, r: 90, b: 28, l: 190 };
-  var items = rows.slice(); if (o.rest != null) items.push({ label: o.restLabel || 'Rest of index', v: o.rest, rest: true, tip: o.restTip });
-  var maxLab = 0; items.forEach(function (r) { maxLab = Math.max(maxLab, String(r.label).length); }); maxLab = Math.max(maxLab, String(o.totalLabel || 'Total').length * 1.1); P.l = Math.max(190, Math.round(maxLab * 6.4) + 24);
-  var cum = 0, bars = items.map(function (r) { var a = cum; cum += r.v; return { r: r, a: a, b: cum }; });
-  var lo = Math.min.apply(null, bars.map(function (x) { return Math.min(x.a, x.b); }).concat(0)) * 100;
-  var hi = Math.max.apply(null, bars.map(function (x) { return Math.max(x.a, x.b); }).concat(0)) * 100;
-  if (o.domain) { lo = Math.min(lo, o.domain[0] * 100); hi = Math.max(hi, o.domain[1] * 100); }
-  var A = axis(lo, hi, 6), VH = P.t + (bars.length + 1) * rowH + P.b;
-  function X(v) { return P.l + (v * 100 - A.lo) / (A.hi - A.lo) * (VW - P.l - P.r); }
-  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
-  A.ticks.forEach(function (t) {
-    svg.appendChild(se('line', { x1: X(t / 100), x2: X(t / 100), y1: P.t - 8, y2: VH - P.b, stroke: t === 0 ? '#9AA3AF' : GRID }));
-    svg.appendChild(txt({ x: X(t / 100), y: VH - P.b + 15, 'text-anchor': 'middle', 'font-size': 10, fill: MUTED }, (o.axisFmt || function (x) { return x + '%'; })(t)));
-  });
-  svg.appendChild(txt({ x: P.l, y: 12, 'font-size': 10, fill: MUTED, 'font-weight': 600 }, o.axisTitle || ''));
-  var tot = cum;
-  var all = bars.concat([{ r: { label: o.totalLabel || 'Total', total: true, v: tot, tip: o.totalTip }, a: 0, b: tot }]);
-  all.forEach(function (x, i) {
-    var r = x.r, y = P.t + i * rowH + 4, h = rowH - 10, g = se('g', {});
-    var col = r.total ? '#1E2733' : r.rest ? '#C9CFD8' : (r.color || (r.v >= 0 ? o.pos : o.neg));
-    var x0 = X(Math.min(x.a, x.b)), x1 = X(Math.max(x.a, x.b));
-    g.appendChild(txt({ x: P.l - 12, y: y + h / 2 + 4, 'text-anchor': 'end', 'font-size': 11.5, 'font-weight': r.total ? 700 : 500 }, r.label));
-    if (i > 0 && !r.total) g.appendChild(se('line', { x1: X(x.a), x2: X(x.a), y1: y - 6, y2: y, stroke: '#9AA3AF', 'stroke-width': 1 }));
-    g.appendChild(se('rect', { x: x0, y: y, width: Math.max(1.5, x1 - x0), height: h, rx: 2, fill: col }));
-    g.appendChild(txt({ x: x1 + 7, y: y + h / 2 + 4, 'font-size': 11, 'font-weight': 600, 'font-variant-numeric': 'tabular-nums', fill: r.total ? '#1E2733' : INK }, o.fmt(r.v)));
-    g.appendChild(se('rect', { x: 0, y: y - 3, width: VW - P.r, height: rowH - 4, fill: 'transparent' }));
-    if (r.tip) bindTip(g, r.tip, 270);
-    svg.appendChild(g);
-  });
-  mount(box, svg);
-}

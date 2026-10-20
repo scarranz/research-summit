@@ -6,7 +6,7 @@
 // Maths: js/eps-engine.js · charts: js/eps-charts.js · data: js/eps-attribution-data.js
 // (scripts/eps-attribution/extract_eps.py) · method: docs/EPS_ATTRIBUTION.md.
 import { makeEngine } from './eps-engine.js';
-import { divStack, lineChart, pairBars, ppTxt } from './eps-charts.js';
+import { divStack, lineChart, barList, ppTxt } from './eps-charts.js';
 
 var BASE = 'cy27', Y = 'CY2027';
 var C = { eps: '#3E5A82', mult: '#B7C4D8', pos: '#177A4E', neg: '#9B2A20', price: '#1E2733', earn: '#7C9CC4' };
@@ -34,8 +34,8 @@ function sec(id, title, body) {
 function initialState() {
   var last = E.dates.length - 1;
   return { excl: {}, open: {}, sort: 'cP', dir: -1,
-    detail: { ix: 'spx', k1: last }, who: { ix: 'spx', k1: last, lvl: 'sec', n: 10, side: 'pos', by: 'p' },
-    conc: { ix: 'spx', n: 10 }, data: { ix: 'spx', k1: last } };
+    hero: { k1: last }, detail: { ix: 'spx', k1: last }, who: { ix: 'spx', k1: last, lvl: 'sec', n: 10, side: 'pos', meas: 'p' },
+    conc: { ix: 'spx', n: 10, table: false }, data: { ix: 'spx', k1: last } };
 }
 // exclusions: 'S|Sector' · 'G|Industry group' · 'T|TICKER' — shared by every section and both indices
 function exFrom(excl) {
@@ -62,7 +62,7 @@ function ctl(id, parts) {
     return '<button class="sb-tbtn' + (o[0] === c.ix ? ' active' : '') + '" ' + a('ix') + ' data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</span>');
   if (parts.indexOf('to') >= 0) blk('Period from ' + dShort(E.dates[K0]), pills(a('k1'), endDates(), c.k1));
   if (parts.indexOf('lvl') >= 0) blk('Level', pills(a('lvl'), LV, c.lvl));
-  if (parts.indexOf('by') >= 0) blk('Rank by', pills(a('by'), [['p', 'Price move'], ['e', 'EPS change']], c.by));
+  if (parts.indexOf('meas') >= 0) blk('What to show', pills(a('meas'), [['p', 'Price return'], ['e', 'EPS change']], c.meas));
   if (parts.indexOf('side') >= 0) blk('Show', pills(a('side'), [['pos', 'Top'], ['neg', 'Bottom'], ['both', 'Both']], c.side));
   if (parts.indexOf('n') >= 0) blk('How many', '<span class="eps-pl" style="flex-wrap:nowrap">' + [[5, 'Top 5'], [10, 'Top 10'], [20, 'Top 20'], [0, 'All']].map(function (o) {
     return '<button class="ndx-tab-btn' + (o[0] === c.n ? ' active' : '') + '" ' + a('n') + ' data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') +
@@ -73,13 +73,13 @@ function ctl(id, parts) {
 // ─── fixed axes: a bar keeps its length whatever index, date or level is shown ───
 function domains() {
   if (DOM) return DOM;
-  var z = function () { return { sector: [0, 0], ig: [0, 0], sec: [0, 0] }; }, d = { hero: [0, 0], pair: z() };
+  var z = function () { return { sector: [0, 0], ig: [0, 0], sec: [0, 0] }; }, d = { hero: [0, 0], p: z(), e: z() };
   function ext(a, lo, hi) { a[0] = Math.min(a[0], lo); a[1] = Math.max(a[1], hi); }
   ['spx', 'ndx'].forEach(function (ix) {
     for (var k1 = K0 + 1; k1 < E.dates.length; k1++) {
       var p = E.period(ix, K0, k1, BASE, null);
       ext(d.hero, Math.min(p.g, p.R - p.g, p.R), Math.max(p.g, p.R - p.g, p.R));
-      LV.forEach(function (L) { E.group(p.rows, keyOf(L[0])).forEach(function (g) { ext(d.pair[L[0]], Math.min(g.cE, g.cP), Math.max(g.cE, g.cP)); }); });
+      LV.forEach(function (L) { E.group(p.rows, keyOf(L[0])).forEach(function (g) { ext(d.p[L[0]], g.cP, g.cP); ext(d.e[L[0]], g.cE, g.cE); }); });
     }
   });
   return (DOM = d);
@@ -88,21 +88,24 @@ function domains() {
 function order(ix) { return ORD[ix] || (ORD[ix] = E.period(ix, K0, E.dates.length - 1, BASE, null)); }
 
 // ─── 1 · return = EPS change × multiple change ────────────────────
+// Not linked to the exclusions of the detail table (as in Index Analysis): always the whole index.
+// One block per index: its boxes for the chosen period, then its chart with every period (the chosen one in bold).
 function hero() {
-  var last = E.dates.length - 1, tiles = '', rows = [];
-  ['spx', 'ndx'].forEach(function (ix, i) {
-    var p = per(ix, last);
-    tiles += '<div class="eps-eqrow"><div class="eps-eqn">' + IXN[ix] + '</div><div class="eps-eq">' +
-      '<div class="eps-eqt"><div class="k">' + Y + ' EPS</div><div class="v" style="color:' + col(p.g) + '">' + pc(p.g) + '</div><div class="s">index earnings, ' + dShort(E.dates[K0]) + ' → ' + dShort(E.dates[last]) + '</div></div><div class="op">×</div>' +
+  var kSel = S.hero.k1, out = {};
+  ['spx', 'ndx'].forEach(function (ix) {
+    var p = E.period(ix, K0, kSel, BASE, null), rows = [];
+    var tiles = '<div class="eps-eq">' +
+      '<div class="eps-eqt"><div class="k">' + Y + ' EPS</div><div class="v" style="color:' + col(p.g) + '">' + pc(p.g) + '</div><div class="s">index earnings, ' + dShort(E.dates[K0]) + ' → ' + dShort(E.dates[kSel]) + '</div></div><div class="op">×</div>' +
       '<div class="eps-eqt"><div class="k">Forward P/E</div><div class="v" style="color:' + col(p.m) + '">' + pc(p.m) + '</div><div class="s">' + x1(p.pe0) + ' → ' + x1(p.pe1) + '</div></div><div class="op">=</div>' +
-      '<div class="eps-eqt tot"><div class="k">Price return</div><div class="v" style="color:' + col(p.R) + '">' + pc(p.R) + '</div><div class="s">(1 ' + pc(p.g) + ') × (1 ' + pc(p.m) + ') − 1</div></div></div></div>';
-    for (var k = K0 + 1; k <= last; k++) {
-      var q = per(ix, k);
-      rows.push({ label: IXN[ix] + ' · ' + dShort(E.dates[k]), a: q.g, b: q.R - q.g, net: q.R, bold: k === last, gap: k === K0 + 1 && i > 0,
-        tip: '<b style="font-size:13px">' + IXN[ix] + ' · ' + dShort(E.dates[K0]) + ' → ' + dShort(E.dates[k]) + '</b><span class="tp">' + Y + ' EPS: ' + pc(q.g) + '<br>Forward P/E: ' + x1(q.pe0) + ' → ' + x1(q.pe1) + ' (' + pc(q.m) + ')<br><b>Price: ' + pc(q.R) + '</b> = (1 ' + pc(q.g) + ') × (1 ' + pc(q.m) + ') − 1<br>Bars: EPS part ' + pc(q.g) + ' + multiple part ' + pc(q.R - q.g) + ' (includes the small EPS × P/E interaction)</span>' });
+      '<div class="eps-eqt tot"><div class="k">Price return</div><div class="v" style="color:' + col(p.R) + '">' + pc(p.R) + '</div><div class="s">(1 ' + pc(p.g) + ') × (1 ' + pc(p.m) + ') − 1</div></div></div>';
+    for (var k = K0 + 1; k < E.dates.length; k++) {
+      var q = E.period(ix, K0, k, BASE, null);
+      rows.push({ label: dShort(E.dates[K0]) + ' → ' + dShort(E.dates[k]), a: q.g, b: q.R - q.g, net: q.R, bold: k === kSel,
+        tip: '<b style="font-size:13px">' + IXN[ix] + ' · ' + dShort(E.dates[K0]) + ' → ' + dShort(E.dates[k]) + '</b><span class="tp">' + Y + ' EPS: ' + pc(q.g) + '<br>Forward P/E: ' + x1(q.pe0) + ' → ' + x1(q.pe1) + ' (' + pc(q.m) + ')<br><b>Price: ' + pc(q.R) + '</b> = (1 ' + pc(q.g) + ') × (1 ' + pc(q.m) + ') − 1<br>In the bars, the multiple part is the price return minus the EPS part (' + pc(q.R - q.g) + '), so it includes the small EPS × P/E interaction.</span>' });
     }
+    out[ix] = { tiles: tiles, rows: rows };
   });
-  return { tiles: tiles, rows: rows };
+  return out;
 }
 
 // ─── 2 · detail & simulation table ────────────────────────────────
@@ -170,96 +173,120 @@ function detail() {
     '<div class="eps-note"><b>Aggregate or weighted average?</b> The index EPS change shown, ' + cP(cur.g) + ', is the aggregate: the change in the index\'s total earnings (shares of each company the index holds × its EPS), loss-making companies included at their negative EPS. A weighted average of each stock\'s own EPS change would give ' + cP(cur.wAvgG) + '; it leaves out stocks that start with negative EPS, because a % change from a negative number means nothing. The aggregate is the one that fits the index P/E.</div></div>';
 }
 
-// ─── 3 · who moved the index: price vs earnings, side by side ─────
+// ─── 3 · who moved the index: one measure at a time ───────────────
+// Price return: how many points of the index return each name added (its weight × its own return).
+// EPS change: how many points of the index EPS change each name added (its share of index earnings × its own EPS change).
 function who() {
-  var c = S.who, p = per(c.ix, c.k1), lvl = c.lvl, key = c.by === 'p' ? 'cP' : 'cE', note = '';
+  var c = S.who, p = per(c.ix, c.k1), lvl = c.lvl, price = c.meas === 'p', key = price ? 'cP' : 'cE', total = price ? p.R : p.g, note = '';
   var gs = E.group(p.rows, keyOf(lvl)).sort(function (a, b) { return b[key] - a[key]; });
   var n = c.n === 0 ? gs.length : Math.min(c.n, gs.length), top = gs.slice(0, n), bot = gs.slice(Math.max(n, gs.length - n));
   var pick = c.side === 'pos' ? top : c.side === 'neg' ? gs.slice(gs.length - n).reverse() : top.concat(bot.slice().reverse());
-  var sumP = pick.reduce(function (s, g) { return s + g.cP; }, 0), sumE = pick.reduce(function (s, g) { return s + g.cE; }, 0);
   var rows = pick.map(function (g) {
-    var nm = nameOf(g.key, lvl), shP = Math.abs(p.R) >= 0.05 ? ' (' + (g.cP / p.R * 100).toFixed(0) + '% of the ' + pc(p.R) + ')' : '', shE = Math.abs(p.g) >= 0.05 ? ' (' + (g.cE / p.g * 100).toFixed(0) + '% of the ' + pc(p.g) + ')' : '';
-    return { label: trunc(nm, 42), a: g.cP, b: g.cE,
-      tip: '<b style="font-size:13px">' + esc(nm) + '</b><span class="tp">Weight at the start: ' + (g.w0 * 100).toFixed(2) + '%<br>Its price: ' + pc(g.ret) + ' → <b>moved the index price ' + pp(g.cP, 2) + ' pp</b>' + shP + '<br>Its ' + Y + ' EPS: ' + pc(g.g) + ' → <b>moved the index EPS ' + pp(g.cE, 2) + ' pp</b>' + shE + '<br>Its forward P/E: ' + pc(g.m) + '</span>' };
+    var nm = nameOf(g.key, lvl), share = Math.abs(total) >= 0.05 ? ' (' + (g[key] / total * 100).toFixed(0) + '% of the ' + pc(total) + ')' : '';
+    return { label: trunc(nm, 42), v: g[key],
+      tip: '<b style="font-size:13px">' + esc(nm) + '</b><span class="tp">' + (price
+        ? 'Weight at the start: ' + (g.w0 * 100).toFixed(2) + '%<br>Its price return: ' + pc(g.ret) + '<br><b>Added ' + pp(g.cP, 2) + ' pp to the index return</b>' + share + '<br>= weight × price return'
+        : 'Share of the index\'s earnings at the start: ' + (g.rows.reduce(function (s, r) { return s + (r.esh || 0); }, 0) * 100).toFixed(2) + '%<br>Its ' + Y + ' EPS change: ' + pc(g.g) + '<br><b>Added ' + pp(g.cE, 2) + ' pp to the index EPS change</b>' + share + '<br>= its share of index earnings × its EPS change') + '</span>' };
   });
-  if (n < gs.length) note = 'The ' + rows.length + ' shown add up to ' + pp(sumP, 2) + ' pp of the price move and ' + pp(sumE, 2) + ' pp of the EPS change, out of ' + gs.length + ' ' + (lvl === 'sec' ? 'stocks' : lvl === 'ig' ? 'industry groups' : 'sectors') + '.';
-  return { rows: rows, note: note, p: p, dom: domains().pair[lvl] };
+  var sum = pick.reduce(function (s, g) { return s + g[key]; }, 0);
+  if (n < gs.length) note = 'The ' + rows.length + ' shown add up to ' + pp(sum, 2) + ' pp of the ' + pp(total, 1) + ' total, out of ' + gs.length + ' ' + (lvl === 'sec' ? 'stocks' : lvl === 'ig' ? 'industry groups' : 'sectors') + '.';
+  return { rows: rows, note: note, p: p, price: price, total: total, dom: domains()[price ? 'p' : 'e'][lvl] };
 }
 
 // ─── 5 · concentration ────────────────────────────────────────────
+// Not linked to the exclusions. Two questions, one number each per date:
+//  - size: what share of the index's value (weight) the N largest companies hold;
+//  - earnings: what share of the index's total earnings the N companies that contribute the most earnings hold
+//    (earnings = shares the index holds × EPS, so a company counts by the dollars it earns for the index, not by EPS per share).
 function concBlock() {
-  var c = S.conc, n = c.n === 0 ? 1000 : c.n, N = c.n === 0 ? 'All' : 'Top ' + c.n;
-  var q = E.dates.map(function (d, k) { return E.concentration(c.ix, k, BASE, exNow(), n); });
+  var c = S.conc, n = c.n === 0 ? 1000 : c.n, N = c.n === 0 ? 'All' : c.n, last = E.dates.length - 1;
+  var q = E.dates.map(function (d, k) { return E.concentration(c.ix, k, BASE, null, n); });
   var tb = E.dates.map(function (d, k) {
     return '<tr><td>' + dLong(d) + '</td><td class="num">' + (q[k].w10byW * 100).toFixed(1) + '%</td><td class="num">' + (q[k].e10byE * 100).toFixed(1) + '%</td></tr>'; }).join('');
-  return { N: N, labels: E.dates.map(dShort), series: [
-    { name: N + ' biggest companies: % of the index weight', color: C.price, vals: q.map(function (r) { return r.w10byW * 100; }) },
-    { name: N + ' biggest earners: % of the index earnings', color: C.eps, vals: q.map(function (r) { return r.e10byE * 100; }) }],
-    table: '<div class="eps-tw"><table class="rt eps-t3" style="max-width:640px"><thead><tr><th>' + IXN[c.ix] + '</th><th class="num">' + N + ' biggest companies:<br>% of the index weight</th><th class="num">' + N + ' biggest earners:<br>% of the index earnings</th></tr></thead><tbody>' + tb + '</tbody></table></div>' };
+  var who = c.n === 0 ? 'all companies' : 'the ' + c.n + ' largest companies', earn = c.n === 0 ? 'all companies' : 'the ' + c.n + ' companies that earn the most';
+  return { labels: E.dates.map(dShort),
+    msg: 'On ' + dLong(E.dates[last]) + ', ' + who + ' hold <b>' + (q[last].w10byW * 100).toFixed(1) + '%</b> of the ' + IXN[c.ix] + ' value, and ' + earn + ' produce <b>' + (q[last].e10byE * 100).toFixed(1) + '%</b> of its earnings.',
+    series: [
+      { name: 'Value held by the ' + (c.n === 0 ? 'all' : c.n) + ' largest companies', color: C.price, vals: q.map(function (r) { return r.w10byW * 100; }) },
+      { name: 'Earnings produced by the ' + (c.n === 0 ? 'all' : c.n) + ' biggest earners', color: C.eps, vals: q.map(function (r) { return r.e10byE * 100; }) }],
+    table: c.table ? '<div class="eps-tw"><table class="rt eps-t3" style="max-width:640px"><thead><tr><th>' + IXN[c.ix] + '</th><th class="num">Value held by the ' + N + ' largest</th><th class="num">Earnings of the ' + N + ' biggest earners</th></tr></thead><tbody>' + tb + '</tbody></table></div>' : '' };
 }
 
 // ─── 6 · data & method (short) ────────────────────────────────────
 function buildTable(c) {
-  var LEVEL = 1000, m = E.members(c.ix, K0, exNow()).filter(function (x) { return x.px > 0 && x['e' + (BASE === 'cy27' ? '27' : '26')] != null; }), tw = m.reduce(function (s, x) { return s + x.w; }, 0), rows = [], tot = 0;
+  var LEVEL = 1000, m = E.members(c.ix, K0, null).filter(function (x) { return x.px > 0 && x['e' + (BASE === 'cy27' ? '27' : '26')] != null; }), tw = m.reduce(function (s, x) { return s + x.w; }, 0), rows = [], tot = 0;
   m.forEach(function (x) { var w = x.w / tw, q = LEVEL * w / x.px, e = x.e27; rows.push({ id: x.id, w: w, px: x.px, q: q, eps: e, earn: q * e }); tot += q * e; });
   rows.sort(function (a, b) { return b.w - a.w; });
   var top = rows.slice(0, 6), restE = tot - top.reduce(function (s, r) { return s + r.earn; }, 0), restW = 1 - top.reduce(function (s, r) { return s + r.w; }, 0);
-  return '<div class="eps-h2">How the index earnings are built — ' + IXN[c.ix] + ' on ' + dLong(E.dates[K0]) + ', as an index at 1,000 points</div>' +
+  return '<details class="eps-det"><summary>Worked example: the earnings of the ' + IXN[c.ix] + ' on ' + dLong(E.dates[K0]) + ', as an index of 1,000 points</summary>' +
     '<div class="eps-tw"><table class="rt eps-t3"><thead><tr><th>Company</th><th class="num">Weight</th><th class="num">Price</th><th class="num">Shares the index holds<br>= 1,000 × weight ÷ price</th><th class="num">' + Y + ' EPS</th><th class="num">Earnings it brings<br>= shares × EPS</th></tr></thead><tbody>' +
     top.map(function (r) { var s = E.secs[r.id]; return '<tr><td><b>' + esc(s.t) + '</b> ' + esc(short(s.n)) + '</td><td class="num">' + (r.w * 100).toFixed(2) + '%</td><td class="num">' + r.px.toFixed(2) + '</td><td class="num">' + r.q.toFixed(3) + '</td><td class="num">' + r.eps.toFixed(2) + '</td><td class="num">' + r.earn.toFixed(2) + '</td></tr>'; }).join('') +
     '<tr><td style="color:var(--mu)">All other ' + (rows.length - top.length) + ' companies</td><td class="num">' + (restW * 100).toFixed(2) + '%</td><td></td><td></td><td></td><td class="num">' + restE.toFixed(2) + '</td></tr>' +
     '<tr class="eps-tot"><td class="nm">Index</td><td class="num">100%</td><td class="num">1,000</td><td></td><td></td><td class="num">' + tot.toFixed(2) + '</td></tr></tbody></table></div>' +
-    '<div class="eps-note">Forward P/E of the index = 1,000 ÷ ' + tot.toFixed(2) + ' = ' + (LEVEL / tot).toFixed(1) + 'x. The index EPS change is how much that total earnings number moves between two dates, with the same shares held. Companies with negative EPS subtract.</div>';
+    '<div class="eps-note">Forward P/E of the index = 1,000 ÷ ' + tot.toFixed(2) + ' = ' + (LEVEL / tot).toFixed(1) + 'x. The index EPS change is how much that total earnings number moves between two dates, with the same shares held. Companies with negative EPS subtract.</div></details>';
 }
 function dataBlock() {
-  var c = S.data, p = per(c.ix, c.k1), skW = p.skipped.reduce(function (s, x) { return s + x.w0; }, 0);
+  var c = S.data, p = E.period(c.ix, K0, c.k1, BASE, null), skW = p.skipped.reduce(function (s, x) { return s + x.w0; }, 0), ixn = IXN[c.ix];
   var why = { 'no price at the end date': 'Left the index, no later price', 'no EPS estimate at the start': 'No ' + Y + ' estimate in the file', 'no EPS estimate at the end': 'No ' + Y + ' estimate in the file' };
   var out = p.skipped.slice().sort(function (a, b) { return b.w0 - a.w0; }).map(function (s) {
     var x = E.secs[s.id]; return '<tr><td><b>' + esc(x.t) + '</b></td><td>' + esc(short(x.n)) + '</td><td class="num">' + (s.w0 * 100).toFixed(2) + '%</td><td>' + (why[s.why] || s.why) + '</td></tr>'; }).join('');
   var fx = E.secs.filter(function (s) { return s.c; }).map(function (s) { return s.t + ' (' + s.c + ')'; }).join(', ');
-  var defs = [
-    ['Basket', 'The stocks the index held on ' + dLong(E.dates[K0]) + ', at their weights then, followed to the end date.'],
-    ['Weight', 'Index weight from the file (float-adjusted).'],
-    ['Forward EPS', 'Bloomberg consensus ' + Y + ' EPS, calendarised to December. Always ' + Y + '. A missing estimate takes the first one available later.'],
-    ['Index earnings', 'The shares of each company the index holds (weight ÷ price, scaled) × its EPS, added up. See the table below.'],
-    ['Forward P/E', 'Basket price ÷ index earnings. Price return = (1 + EPS change) × (1 + P/E change) − 1.']
+  // the example that answers "why aggregate and not a weighted average": the name that adds the most EPS
+  var big = p.rows.slice().sort(function (a, b) { return b.cE - a.cE; })[0], bs = E.secs[big.id];
+  var steps = [
+    ['1', 'Basket', 'The stocks the ' + ixn + ' held on ' + dLong(E.dates[K0]) + ', at the weights of that day. They are followed to the end date.'],
+    ['2', 'Index earnings', 'For each company: shares the index holds × its ' + Y + ' EPS. Add them up. That total is what the index earns.'],
+    ['3', 'EPS change', 'The same total on the end date, with the same shares. Its % change is the index EPS change.'],
+    ['4', 'Forward P/E', 'Index price ÷ index earnings. Its % change is the P/E change.'],
+    ['5', 'Return', '(1 + EPS change) × (1 + P/E change) − 1 = the price return.']
   ];
-  return '<table class="rt eps-t3 eps-defs"><tbody>' + defs.map(function (d) { return '<tr><td class="nm">' + d[0] + '</td><td>' + d[1] + '</td></tr>'; }).join('') + '</tbody></table>' + buildTable(c) +
-    '<div class="eps-h2">Not counted — ' + IXN[c.ix] + ' to ' + dShort(E.dates[c.k1]) + '</div>' +
-    '<div class="eps-note" style="margin-top:0;font-size:12px"><b>' + p.n + '</b> of the <b>' + p.nStart + '</b> stocks held on the base date are counted (' + ((1 - skW) * 100).toFixed(1) + '% of the weight). The others:</div>' +
-    '<div class="eps-tw eps-scr"><table class="rt eps-t3"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Weight</th><th>Why</th></tr></thead><tbody>' + (out || '<tr><td colspan="4">None.</td></tr>') + '</tbody></table></div>' +
-    '<ul class="eps-ul"><li>Removed by decision: FDX, MBGL (Mobility Global), MMED.</li>' +
-    '<li>BRK/B: the file carries the Class A EPS, so it is divided by 1,500 (one Class A = 1,500 Class B).</li>' +
-    '<li>GAAP EPS (Bloomberg IS_COMP_EPS_GAAP): GOOGL and AMZN carry investment marks; exclude them in the table to see the effect. No FX is applied to ' + esc(fx) + '.</li>' +
+  return '<div class="eps-h2" style="margin-top:0">What it measures</div>' +
+    '<p class="eps-p">How much of the ' + ixn + ' move since ' + dLong(E.dates[K0]) + ' came from analysts raising or cutting the ' + Y + ' EPS estimates, and how much from the multiple the market pays for them. EPS is Bloomberg consensus, calendarised to December. A missing estimate takes the first one available later.</p>' +
+    '<div class="eps-h2">The calculation</div><table class="rt eps-t3 eps-defs"><tbody>' + steps.map(function (d) { return '<tr><td class="nm">' + d[0] + '. ' + d[1] + '</td><td>' + d[2] + '</td></tr>'; }).join('') + '</tbody></table>' + buildTable(c) +
+    '<div class="eps-h2">Why the aggregate and not an average of growth rates</div>' +
+    '<p class="eps-p">The index price is the price of everything it holds, so it is explained by the total earnings it holds. A company counts by the earnings it brings in, not by its weight: <b>' + esc(bs.t) + '</b> is ' + (big.w0 * 100).toFixed(1) + '% of the ' + ixn + ' by weight but ' + (big.esh * 100).toFixed(1) + '% of its earnings, so a change in its EPS moves the index EPS about ' + (big.esh / big.w0).toFixed(0) + ' times more than its weight suggests. An average of growth rates weighted by index weight would miss that, and it also cannot include companies that start with negative EPS. The aggregate is the only one that multiplies with the P/E to give the price.</p>' +
+    '<div class="eps-h2">What each bar means</div>' +
+    '<p class="eps-p"><b>Price return contribution</b> = weight × the company\'s own price return; all of them add up to the index return. <b>EPS change contribution</b> = its share of the index earnings × its own EPS change; all of them add up to the index EPS change. Both are in percentage points (pp) of that total.</p>' +
+    '<details class="eps-det"><summary>' + p.skipped.length + ' of ' + p.nStart + ' stocks are not counted (' + (skW * 100).toFixed(1) + '% of the weight)</summary><div class="eps-tw eps-scr"><table class="rt eps-t3"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Weight</th><th>Why</th></tr></thead><tbody>' + (out || '<tr><td colspan="4">None.</td></tr>') + '</tbody></table></div></details>' +
+    '<div class="eps-h2">Caveats</div><ul class="eps-ul">' +
+    '<li>Removed by decision: FDX, Mobility Global (MBGL), MMED. BRK/B EPS is divided by 1,500: the file carries the Class A EPS and one Class A is 1,500 Class B.</li>' +
+    '<li>EPS is GAAP (Bloomberg IS_COMP_EPS_GAAP): GOOGL and AMZN carry investment marks. Take them out in the table to see the effect.</li>' +
+    '<li>No currency conversion for ' + esc(fx) + '.</li>' +
     '<li>Source: ' + esc(E.D.source) + '.</li></ul>';
 }
 
 // ─── page ─────────────────────────────────────────────────────────
 function skeleton() {
+  var hb = function (ix) { return '<div class="eps-hb"><div class="eps-eqn">' + IXN[ix] + '</div><div id="eps-h-' + ix + '"></div><div id="eps-hc-' + ix + '"></div></div>'; };
   root.innerHTML =
-    sec('eps-s1', 'Return = EPS change × multiple change', '<div class="card"><div id="eps-h1"></div><div class="eps-h2">Where each price return came from</div><div id="eps-h1c"></div></div>') +
+    sec('eps-s1', 'Return = EPS change × multiple change', '<div id="eps-c1"></div><div class="card">' + hb('spx') + hb('ndx') + '</div>') +
     sec('eps-s2', 'Attribution detail & simulation', '<div id="eps-c2"></div><div id="eps-detail"></div>') +
-    sec('eps-s3', 'Who moved the index: price vs earnings', '<div id="eps-c3"></div><div class="card"><div class="eps-h2" style="margin-top:0" id="eps-t3"></div><div id="eps-who"></div><div class="eps-note" id="eps-who-n"></div></div>') +
-    sec('eps-s5', 'Concentration', '<div id="eps-c5"></div><div class="card"><div id="eps-cc"></div><div id="eps-conc"></div></div>') +
+    sec('eps-s3', 'Who moved the index', '<div id="eps-c3"></div><div class="card"><div class="eps-h2" style="margin-top:0" id="eps-t3"></div><div id="eps-who"></div><div class="eps-note" id="eps-who-n"></div></div>') +
+    sec('eps-s5', 'Concentration', '<div id="eps-c5"></div><div class="card"><div class="eps-msg" id="eps-cm"></div><div id="eps-cc"></div><div style="margin-top:8px"><button class="ndx-tab-btn" data-act="ctable" id="eps-ctb"></button></div><div id="eps-conc"></div></div>') +
     sec('eps-s6', 'Data & method', '<div id="eps-c6"></div><div class="card" id="eps-data"></div>');
 }
 function render() {
   var set = function (id, v) { var e = document.getElementById(id); if (e) e.innerHTML = v; }, d = domains();
   var h = hero();
-  set('eps-s1-n', 'S&P 500 + Nasdaq-100 · from ' + dShort(E.dates[K0]) + ' · ' + Y + ' EPS' + (nExcl() ? ' · ' + nExcl() + ' excluded' : ''));
-  set('eps-h1', h.tiles);
-  divStack(document.getElementById('eps-h1c'), h.rows, { colA: C.eps, colB: C.mult, pos: C.pos, neg: C.neg, domain: d.hero, unit: '%', axisTitle: 'return since ' + dShort(E.dates[K0]), netTitle: 'Price return', labA: Y + ' EPS change', labB: 'Forward P/E change (with the interaction)', diaLabel: 'Price return' });
+  set('eps-c1', ctl('hero', ['to'])); set('eps-s1-n', 'whole index, not affected by the exclusions below · from ' + dShort(E.dates[K0]) + ' · ' + Y + ' EPS');
+  ['spx', 'ndx'].forEach(function (ix) {
+    set('eps-h-' + ix, h[ix].tiles);
+    divStack(document.getElementById('eps-hc-' + ix), h[ix].rows, { colA: C.eps, colB: C.mult, pos: C.pos, neg: C.neg, domain: d.hero, unit: '%', axisTitle: 'return since ' + dShort(E.dates[K0]), netTitle: 'Price return', labA: Y + ' EPS change', labB: 'Forward P/E change (with the interaction)', diaLabel: 'Price return' });
+  });
   set('eps-c2', ctl('detail', ['ix', 'to'])); set('eps-s2-n', ctxLine(IXN[S.detail.ix], S.detail.k1)); set('eps-detail', detail());
-  var cw = S.who; set('eps-c3', ctl('who', ['ix', 'to', 'lvl', 'by', 'side', 'n'])); set('eps-s3-n', ctxLine(IXN[cw.ix], cw.k1));
+  var cw = S.who; set('eps-c3', ctl('who', ['ix', 'to', 'meas', 'lvl', 'side', 'n'])); set('eps-s3-n', ctxLine(IXN[cw.ix], cw.k1));
   var w = who();
-  set('eps-t3', IXN[cw.ix] + ': price return ' + pc(w.p.R) + ' · ' + Y + ' EPS change ' + pc(w.p.g) + '. Each bar is how many points of that total a company, group or sector contributed; all of them together add up to the totals.');
-  pairBars(document.getElementById('eps-who'), w.rows, { colA: C.price, colB: C.earn, domain: w.dom, axisTitle: 'points of the total (pp)', labA: 'Contribution to the price return (adds up to ' + pc(w.p.R) + ')', labB: 'Contribution to the ' + Y + ' EPS change (adds up to ' + pc(w.p.g) + ')' });
+  set('eps-t3', w.price
+    ? 'The ' + IXN[cw.ix] + ' returned ' + pc(w.total) + '. Each bar is how many percentage points of that return a ' + (cw.lvl === 'sec' ? 'stock' : cw.lvl === 'ig' ? 'group' : 'sector') + ' added (its weight × its own return).'
+    : 'The ' + IXN[cw.ix] + '\'s ' + Y + ' EPS rose ' + pc(w.total) + '. Each bar is how many percentage points of that rise a ' + (cw.lvl === 'sec' ? 'stock' : cw.lvl === 'ig' ? 'group' : 'sector') + ' added (its share of the index earnings × its own EPS change).');
+  barList(document.getElementById('eps-who'), w.rows, { pos: C.pos, neg: C.neg, domain: w.dom, axisTitle: 'percentage points of the ' + (w.price ? 'index return' : 'index EPS change'), total: { label: 'Total, all ' + w.p.n + ' stocks', v: w.total } });
   set('eps-who-n', w.note);
-  set('eps-c5', ctl('conc', ['ix', 'n'])); set('eps-s5-n', IXN[S.conc.ix] + ' · all snapshots · ' + Y + ' EPS' + (nExcl() ? ' · ' + nExcl() + ' excluded' : ''));
+  set('eps-c5', ctl('conc', ['ix', 'n'])); set('eps-s5-n', 'whole index, not affected by the exclusions · all snapshots · ' + Y + ' EPS');
   var cb = concBlock();
+  set('eps-cm', cb.msg);
   lineChart(document.getElementById('eps-cc'), cb.labels, cb.series, function (v) { return v.toFixed(0) + '%'; }, { vw: 900, h: 260, dom: [0, 100], ticks: [0, 20, 40, 60, 80, 100], endFmt: function (v) { return v.toFixed(1) + '%'; } });
-  set('eps-conc', cb.table);
-  set('eps-c6', ctl('data', ['ix', 'to'])); set('eps-s6-n', ctxLine(IXN[S.data.ix], S.data.k1)); set('eps-data', dataBlock());
+  set('eps-ctb', S.conc.table ? 'Hide table' : 'Show table'); set('eps-conc', cb.table);
+  set('eps-c6', ctl('data', ['ix', 'to'])); set('eps-s6-n', IXN[S.data.ix] + ' · ' + dShort(E.dates[K0]) + ' → ' + dShort(E.dates[S.data.k1])); set('eps-data', dataBlock());
 }
 
 function toggle(key) {
@@ -278,6 +305,7 @@ function onAct(el) {
   }
   else if (act === 'tog') toggle(v);
   else if (act === 'unex') delete S.excl[v];
+  else if (act === 'ctable') S.conc.table = !S.conc.table;
   else if (act === 'open') S.open[v] = !S.open[v];
   else if (act === 'openall') E.secs.forEach(function (s) { S.open['S|' + s.s] = v === '1'; if (v !== '1') S.open['G|' + s.g] = false; });
   else if (act === 'reset') S.excl = {};

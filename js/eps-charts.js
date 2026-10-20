@@ -95,6 +95,35 @@ export function pairBars(box, rows, o) {
   mount(box, svg, legendItem(o.colA, o.labA) + legendItem(o.colB, o.labB));
 }
 
+// rows: [{ label, v, tip }] — one bar per row, green up / red down, value at the end; o.total = { label, v } closes the list.
+// o.domain = [lo, hi] (fractions) fixes the axis so bars keep their length when a toggle changes.
+export function barList(box, rows, o) {
+  var rowH = 28, maxLab = 0, all = rows.concat(o.total ? [o.total] : []); all.forEach(function (r) { maxLab = Math.max(maxLab, String(r.label).length); });
+  var VW = 900, P = { t: 28, r: 84, b: 26, l: Math.max(150, Math.round(maxLab * 6.3) + 22) };
+  var lo = 0, hi = 0; all.forEach(function (r) { lo = Math.min(lo, r.v); hi = Math.max(hi, r.v); });
+  if (o.domain) { lo = Math.min(lo, o.domain[0]); hi = Math.max(hi, o.domain[1]); }
+  var A = axis(lo * 100, hi * 100, 7), VH = P.t + all.length * rowH + P.b + (o.total ? 8 : 0);
+  function X(v) { return P.l + (v * 100 - A.lo) / (A.hi - A.lo) * (VW - P.l - P.r); }
+  var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
+  A.ticks.forEach(function (t) {
+    svg.appendChild(se('line', { x1: X(t / 100), x2: X(t / 100), y1: P.t - 8, y2: VH - P.b, stroke: t === 0 ? '#9AA3AF' : GRID, 'stroke-width': t === 0 ? 1.2 : 1 }));
+    svg.appendChild(txt({ x: X(t / 100), y: VH - P.b + 15, 'text-anchor': 'middle', 'font-size': 10, fill: MUTED }, (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t)));
+  });
+  svg.appendChild(txt({ x: P.l, y: 12, 'font-size': 10, fill: MUTED, 'font-weight': 600 }, o.axisTitle || 'pp'));
+  all.forEach(function (r, i) {
+    var isTot = o.total && i === all.length - 1, y = P.t + i * rowH + (isTot ? 8 : 0) + 4, h = rowH - 10, g = se('g', {});
+    var x0 = X(Math.min(0, r.v)), x1 = X(Math.max(0, r.v)), color = isTot ? '#1E2733' : r.v >= 0 ? o.pos : o.neg;
+    if (isTot) g.appendChild(se('line', { x1: 8, x2: VW - 8, y1: y - 6, y2: y - 6, stroke: '#9AA3AF' }));
+    g.appendChild(txt({ x: P.l - 12, y: y + h / 2 + 4, 'text-anchor': 'end', 'font-size': 11.5, 'font-weight': isTot ? 700 : 500 }, r.label));
+    g.appendChild(se('rect', { x: x0, y: y, width: Math.max(1.5, x1 - x0), height: h, rx: 2, fill: color }));
+    g.appendChild(txt({ x: r.v >= 0 ? x1 + 7 : x0 - 7, y: y + h / 2 + 4, 'text-anchor': r.v >= 0 ? 'start' : 'end', 'font-size': 11, 'font-weight': 700, fill: isTot ? '#1E2733' : color, 'font-variant-numeric': 'tabular-nums' }, ppTxt(r.v, 2) + ' pp'));
+    g.appendChild(se('rect', { x: 0, y: y - 3, width: VW, height: rowH - 4, fill: 'transparent' }));
+    if (r.tip) bindTip(g, r.tip, 300);
+    svg.appendChild(g);
+  });
+  mount(box, svg, '');
+}
+
 // pts: [{ x, y, r, color, label, tip }] — x = EPS change, y = multiple change (fractions), r = weight.
 // The dashed curve is the "price flat" line, (1+x)(1+y) = 1. Points beyond the axis are pinned to its edge, hollow.
 export function scatter(box, pts, o) {

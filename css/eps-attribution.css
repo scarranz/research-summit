@@ -86,3 +86,11 @@
 #eps-root .tp { display: block; font-size: 12px; line-height: 1.55; color: #52514e; margin-top: 4px; }
 #eps-root .eps-ctl input[type=number] { width: 78px; font: 500 11px Inter, sans-serif; padding: 4px 6px; border: 1.5px solid var(--bdr); border-radius: 14px; color: var(--navy); margin-left: 4px; }
 #eps-root .eps-pl { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+#eps-root .eps-hb + .eps-hb { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--bdr); }
+#eps-root .eps-hb .eps-eqn { margin: 0 0 4px 2px; font-size: 13px; }
+#eps-root .eps-hb .eps-eq { padding-top: 2px; }
+#eps-root .eps-p { font-size: 12.5px; line-height: 1.65; color: #2B3B4E; margin: 4px 0 6px; max-width: 900px; }
+#eps-root .eps-msg { font-size: 14px; line-height: 1.55; color: var(--navy); margin-bottom: 10px; }
+#eps-root details.eps-det { margin-top: 14px; font-size: 12px; }
+#eps-root details.eps-det > summary { cursor: pointer; font-weight: 600; color: var(--steel); padding: 4px 0; }
+#eps-root details.eps-det[open] > summary { margin-bottom: 8px; }

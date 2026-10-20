@@ -20,6 +20,15 @@ ninguna otra pestaña (§15b).
 > sección por sección, leyendo `js/overviews/amzn.js` y sus motores — no contra los docs anteriores, que
 > se han desviado del código. La guía cita **nombres de función**, no números de línea (se mueven con
 > cada PR); donde aparece un número, va con `~` y es solo orientativo.
+>
+> **Actualizada el 20 oct 2026 con el review de TSMC de SAB (2026-10-19)** — lo que pidió para TSM vale
+> para toda empresa: Overview sin color (§8, §21) · trimestres estimados que suman al año (§9.1) · qué
+> vende cada segmento y a quién, y qué le compra cada cliente (TL-SEG, TL-CUS) · precio × volumen y
+> durabilidad del precio (TL-SEG) · COGS separado de gastos operativos (BL-GEN-2, BL-GEN-5) · tres
+> sub-tabs que siempre se proponen en Misc: Competitive position, Capacity → revenue y directorio por
+> país (§15b) · directorios agrupados con subtotales (§18) · review después de entregar (§16 paso 7).
+> TSM es la primera empresa que construye estas piezas (su bitácora §6c, R1–R8); la que venga después
+> copia de TSM.
 
 ---
 
@@ -694,6 +703,20 @@ Prohibido agregar un 8.º bloque: ni tira de precio, ni segundo recuadro de KPIs
 Los bloques 1–3 no llevan título encima. Los 4–7 usan el colapsable `collapsible(title, inner, false)`
 de `amzn.js`, con el título exacto de la tabla (cambiando el nombre de la empresa).
 
+**El Overview va sin color** (review TSM, SAB 2026-10-19: "quitar colores de la parte de Overview para
+que se vea más profesional"). Todo el Overview se pinta con tokens neutros de Summit: texto `--navy`,
+acentos `--steel`, divisores y ejes en grises (`SUMMIT_MUTE`). En concreto:
+- **Barras de OV-4:** una sola tinta para todas (`SUMMIT_INK` / `--navy`); lo que distingue una
+  rebanada es su etiqueta y su %, no su color. Nada de `SUMMIT_CAT` por segmento, plataforma o región.
+- **Mapa de peers (OV-6):** círculos blancos con borde gris; la empresa del perfil, borde `--navy`
+  grueso. Los logos son el único color.
+- **Sin rellenos de color** en tarjetas, pastillas, chips ni encabezados (ni `--brand-soft` de fondo
+  en bloques enteros). La pastilla activa se marca con navy, como en el resto del portal.
+- El color categórico (`SUMMIT_CAT`, §21) **empieza en el Deep Dive**, donde hace falta para separar
+  series en una gráfica.
+- **Verificación** (va en la autoauditoría de cada OV): buscar `SUMMIT_CAT` y hex en las constantes y
+  funciones del Overview — no debe quedar ninguno fuera del logo.
+
 ### OV-1 Key Facts
 
 - **Forma:** 10 celdas, 5 columnas × 2 filas (2 columnas en móvil). Celdas blancas, divisores finos,
@@ -758,8 +781,8 @@ de `amzn.js`, con el título exacto de la tabla (cambiando el nombre de la empre
   2. Pastillas con el prefijo "View:" — `Segments` (activa) · `Geography` (`data-gmm="seg|geo"`).
   3. Barras horizontales de CSS (`gmmBars`): etiqueta · barra con el $ dentro · % a la derecha.
      Segmentos en orden del 10-K; geografía de mayor a menor, con "Rest of world" al final (AMZN lo
-     pone en 2.º lugar — no copiar). Colores: `SUMMIT_CAT` en orden (§21), no los hex `GREEN`/`GRAY` de
-     AMZN.
+     pone en 2.º lugar — no copiar). Color: **una sola tinta neutra** para todas las barras (Overview
+     sin color, arriba), ni `SUMMIT_CAT` ni los hex `GREEN`/`GRAY` de AMZN.
   4. Acordeones de definición, uno por segmento (`.acc`), título = nombre del segmento + paréntesis
      corto que diga qué es ("AWS (most of the profit)"):
      - cuerpo: **qué es, qué hace y cómo cobra**, cualitativo, ~40–60 palabras, **sin números**;
@@ -771,7 +794,8 @@ de `amzn.js`, con el título exacto de la tabla (cambiando el nombre de la empre
      is company-wide, not per segment").
   6. Leyenda de cierre con utilidad operativa y neta del año + la frase que cambia la lectura + la
      fuente ("Source: <filing> (Note N)").
-- **Datos:** `GMM_SEG` / `GMM_GEO` = `[[etiqueta, % numérico, '$x.xB', 'x%', color], …]`;
+- **Datos:** `GMM_SEG` / `GMM_GEO` = `[[etiqueta, % numérico, '$x.xB', 'x%', color], …]` (el quinto
+  campo es el mismo token neutro en todas las filas);
   `REV_DEFS` = `[{ seg:'Nombre (paréntesis corto)', desc:'<html cualitativo>', econ:[[clave, valor], …],
   econNote? }, …]`. `desc` admite `<b>`, nunca cifras.
 - **Regla de las ≥ 2 rebanadas:** si hay un solo segmento o una sola geografía, no se dibuja una barra
@@ -942,6 +966,17 @@ sorpresas), `conv:false`; en `evolution`, `actKey`.
   se dice en la `note` — **nunca** de un agregador (CNBC/Refinitiv, Zacks/Yahoo: AMZN y SN lo hicieron;
   regla 3).
 - **Margen:** numerador y denominador de la **misma** serie, siempre.
+- **Los trimestres estimados suman al año** (review TSM, SAB 2026-10-19: "actualizar los quarters de
+  2027 con los números que tenemos del año"). Para cada año con estimados, y **dentro de cada fuente**
+  por separado (`summit` con `summit`, `cons` con `cons`): en métricas de flujo (ingreso, utilidad,
+  EBITDA, capex) Q1+Q2+Q3+Q4 = el anual de esa misma fuente; en un año a medias, los trimestres
+  reportados (`act`) + los estimados = el anual estimado. EPS no se suma (las acciones cambian): se
+  revisa que el anual ≈ suma con tolerancia declarada. Si la fuente **no trae** trimestres de un año
+  que sí trae en anual, los trimestres van en `null` (regla 7) — **no** se reparte el anual entre cuatro
+  ni se copian los de la otra fuente. Si los trae pero no cuadran (pasó con TSM: Q4 roto en el DEFAULT
+  y `SEGM_REV` anual ≠ suma), es una **duda del mapa** (F0-SM ▸ Dudas) y no se publica hasta que el
+  autor del modelo la resuelva. ❓ Si hubiera que **forzar** el cuadre (p. ej. llevar los trimestres de
+  consenso al anual de Summit), lo decide el analista en la compuerta, y la `note` de la métrica lo dice.
 - **Etiquetas de periodo:** `nQyy` (`3Q26`) trimestral, `yyyy` anual. (Earnings usa `Q3 2026`; no
   mezclar formatos dentro de un mismo archivo.)
 - **Comillas:** delimitadores de string con comillas rectas. Una comilla tipográfica como delimitador
@@ -968,8 +1003,9 @@ de Drive del equipo en `SUMMIT_DOCS` (la letra cambia por máquina):
    `verify_preprint.py <TK> summit`. Si el script está cableado a Amazon, se adapta o se arma a mano.
 
 **Compuerta EV-RES-DATA:** Claude muestra una tabla de cuadre: para 3 periodos al azar, el valor del
-archivo vs el documento fuente, métrica por métrica. El analista aprueba los números antes de ver
-ninguna gráfica.
+archivo vs el documento fuente, métrica por métrica. **Además**, una segunda tabla con el cuadre
+trimestres ↔ año de cada año estimado (por fuente y por métrica de flujo: suma de trimestres · anual ·
+diferencia). El analista aprueba los números antes de ver ninguna gráfica.
 
 ### 9.2 La pestaña Results — qué se ve (de arriba a abajo)
 
@@ -1110,6 +1146,12 @@ Pastillas de segmento arriba (primer segmento por defecto). Por segmento, de arr
    **Definition** (FILING verbatim, si el 10-K define esa línea) · **Who buys it** (FILING: el párrafo
    del Item 1 sobre esa clase de cliente; CALL: clientes nombrados en llamadas con trimestre; OURS:
    nota; ⚑ concentración) · **Commentary** (CALL: citas de management con trimestre).
+   **Cada segmento tiene que contestar "qué vende exactamente y a quién"** (review TSM, SAB
+   2026-10-19: "entender qué chips producen de cada segmento, quiénes son los end clients"). Por eso
+   `products[]` baja al nivel del **producto concreto** que el lector reconoce (en TSM: el chip — Apple
+   A19, NVIDIA Blackwell —, no "HPC"; en Meta: el formato o superficie — Reels ads, WhatsApp Business
+   messaging —, no "Family of Apps"), y `customers.named` dice el **cliente final** de cada uno. Lo que
+   la empresa no nombra y se arma de SPLC o prensa va con chip OURS y la palabra *estimate*, nunca FILING.
 3. **"KPIs the company publishes"** (sub: "N disclosed") — `kpiNote` (qué publica y qué no) ·
    pastillas YoY | QoQ · tarjetas KPI (valor más reciente + ▲ crecimiento; las que no son serie salen
    atenuadas "not a series") · al abrir: **What it is** (definición propia + fuente + periodicidad) e
@@ -1121,6 +1163,16 @@ Pastillas de segmento arriba (primer segmento por defecto). Por segmento, de arr
    los términos, **Chart** con la identidad, un sello `DECOMPOSITION` (un término sale del otro) o
    `INDEPENDENT` (fuentes separadas — usar solo cuando es verdad) y la gráfica puente.
    Las relaciones sin datos se listan igual, con `bridge:null` y `data` que diga "NOT CHARTED".
+   **Precio × volumen es obligatoria** en todo segmento donde la empresa publique (o se pueda sacar del
+   filing) una unidad y su precio: ingreso = unidades × precio por unidad (TSM: obleas × ingreso por
+   oblea; Meta: ad impressions × average price per ad, que Meta da como crecimiento YoY; AMZN AWS no
+   la tiene). Y con ella, la **durabilidad del precio** (review TSM, SAB 2026-10-19: "ver si el pricing
+   increase que vienen teniendo se puede mantener a través del tiempo"): en la pestaña **What it says**,
+   tres cosas con fuente — la serie histórica del precio por unidad, los aumentos anunciados por la
+   empresa (con fecha y alcance), y contra qué se mide su sostenibilidad: el **costo por unidad** si se
+   divulga (Bottom Line ▸ Expense lines ▸ Unit economics, BL-GEN-5) o el costo del insumo clave (en TSM,
+   el precio de las herramientas de ASML, que sube desde 2027). Sin costo por unidad divulgado, se dice
+   y no se estima (regla 7).
 5. **"What management has said"** — lee la **semilla estática** de Notes (`THEME_SRC` →
    `themes-data/<t>.js`, vía `themesFor`), filtrada por segmento con `THEME_SEG`; **no** lee lo que se
    edita en Notes (Supabase). Orden por Quarter (por defecto) | Theme. Si no hay semilla: "⚑ The theme
@@ -1149,7 +1201,7 @@ si aplica (p. ej. "no margin exists for this cut").
 
 ### TL-CUS Customers (`segcus`)
 
-Sin gráfica. Cuatro secciones:
+Sin gráfica. Cinco secciones (la 5.ª, abajo):
 1. **"What the company discloses"** — concentración de clientes: si no se divulga, el recuadro ámbar
    "⚑ No customer concentration is disclosed at all…" + desplegable con la nota y la cita. Eso **es**
    el hallazgo, no un hueco.
@@ -1167,6 +1219,19 @@ Sin gráfica. Cuatro secciones:
   cobertura propia de la empresa (el motor ya la usa, con el nombre de la empresa).
 - **Concentración:** si `concentration.disclosed` no es `false`, la `note` se pinta como cita FILING:
   tiene que ser verbatim.
+- **Sección 5 — "What each top customer buys"** (review TSM, SAB 2026-10-19: "breakdown de los chips
+  de cada cliente, ej. Apple"). Tabla, una fila por cliente principal (los 5–10 más grandes que se
+  puedan sostener con fuente): Customer · ticker · qué le compra (productos concretos) · segmento ·
+  peso estimado en el ingreso (`~x%`, marcado *estimate* salvo que el filing lo dé) · fuente. Si la
+  empresa no tiene clientes grandes (Meta: millones de anunciantes), la fila es la **clase de cliente**
+  que sí divulga o que la llamada cuantifica (p. ej. anunciantes de China, verticales de e-commerce y
+  gaming), con la misma columna de peso; si nada lo cuantifica, la sección dice eso en una línea y no
+  inventa la tabla (regla 7).
+  - **Datos:** `customers.buys = [{name, tk?, what, seg, share?, shareBasis:'filing'|'estimate', src}]`.
+  - **Motor:** `segments.js` **todavía no dibuja esta sección**. La primera empresa que la construya
+    (TSM R1) la agrega al motor en un PR propio de motor y se vuelve la referencia; hasta entonces la
+    unidad TL-CUS se aprueba sin la sección 5 y queda anotada en Bloqueos ("TL-CUS ▸ sección 5 espera el
+    motor").
 - "Named on the record" ya ordena del trimestre más nuevo al más viejo (arreglado).
 
 ---
@@ -1418,7 +1483,8 @@ functional deep dives (unit economics, drivers, calls)" → el pie del panel (`a
   derivarlos del dato; el pie que cita "DCF AMZN.xlsm".
 
 **BL-GEN-2 The bridge** (`.ov-sec-h` "The bridge — how revenue becomes operating income")
-- Modos: **Build-up ($B)** (por defecto) · Margin change (bps) · Forward (expenses).
+- Modos: **Build-up ($B)** (por defecto) · Margin change (bps) · Forward (expenses) · Cost structure
+  (abajo).
 - Build-up: cascada Ingreso → − cada línea de gasto funcional → Utilidad operativa; Annual (año más
   reciente por defecto) | Quarterly (año + trimestre; los no reportados deshabilitados).
 - bps: margen del año "From" → contribución de cada línea en bps (verde/rojo) → margen del año "to".
@@ -1426,6 +1492,21 @@ functional deep dives (unit economics, drivers, calls)" → el pie del panel (`a
   así con todo en 0 cuadra con el consenso; "Reset to consensus".
 - Tabla "The waterfall — every step" (Step | Value | Running), colapsada.
 - **Líneas de gasto:** las del MD&A de la empresa (sus nombres), no las de Amazon.
+- **COGS separado de los gastos operativos** (review TSM, SAB 2026-10-19: "desglosar COGS de los
+  expenses en el portal"). En toda vista del puente, el **costo de ventas** va primero y aparte, con
+  subtotal **Gross profit**, y después los gastos operativos (R&D, S&M, G&A, otros):
+  Ingreso → − costo de ventas (por componente, si el filing lo da) → **Gross profit** → − cada gasto
+  operativo → Utilidad operativa. Los componentes del costo de ventas salen de las notas del 10-K/20-F
+  (TSM: depreciación, materiales, mano de obra, overhead; Meta: el MD&A explica el cost of revenue por
+  infraestructura — depreciación, energía, personal de data centers —, pagos de contenido y de
+  partners); si el filing solo da el total, va una sola barra y la nota lo dice.
+- **Cuarto modo: "Cost structure"** — barras apiladas en % del ingreso a lo largo del tiempo (anual por
+  defecto | trimestral): los componentes del costo de ventas en una familia de tonos y los gastos
+  operativos en otra, con la línea de margen bruto y la de margen operativo encima, y la tabla
+  "Cost structure — every line" (colapsada) con lo que se dibuja. Responde "¿lo que se movió fue el costo
+  de producir o el gasto de operar?". Datos: los mismos de filings (`A_OPEX`/`A_OPEXQ` + las notas).
+  AMZN no tiene este modo: es código nuevo sobre el andamiaje de `aBuildMargins` (TSM R7 lo construye
+  primero y queda de referencia).
 
 **BL-GEN-3 Operating income → net income** — cascada Op. income → interés neto → ganancias de
 inversiones (ámbar) → impuestos → otros → Net income; toggle Reported | Normalized; año (estimado más
@@ -1441,7 +1522,8 @@ vistas y rango del eje derivado del dato (AMZN ya lo hace). **No copiar:** el ej
 
 **BL-GEN-5 Expense lines** (colapsable al final, cerrado: "Expense lines — the N functional deep dives")
 - Explorador con una pestaña por línea de gasto (color · nombre · `$X · Y% of revenue` calculado del
-  dato, no tecleado). Por línea, de arriba a abajo:
+  dato, no tecleado). **El costo de ventas es la primera pestaña**, separada de los gastos operativos
+  y abierta en sus componentes (mismo criterio que el puente). Por línea, de arriba a abajo:
   1. KPIs (3–4): monto y % de ingreso · cambio en margen YoY (ppt) · SBC incluido · el dato distintivo.
   2. **"How the 10-K defines it"** — cita verbatim del MD&A, con fuente.
   3. **"What sits inside this line"** — 1–2 cajas.
@@ -1741,6 +1823,48 @@ otros tres). Ninguna gráfica. Los datos van separados del código, como `sharkn
   su rama en `aBuildSub` (`dd==='misc'`). En AMZN solo `capex` construye gráficas al entrar
   (`aBuildCapex`, `aBuildSegCapDa`, `aBuildLeases`); `manda` y `other` son HTML estático.
 - **Qué decide el analista:** si la sección existe, qué sub-tabs tiene y en qué orden.
+
+**Tres sub-tabs que Claude siempre propone en ① de MISC** (review TSM, SAB 2026-10-19). Se proponen en
+toda empresa; el analista decide cuáles entran (la que no aplica queda en la bitácora como "propuesta,
+descartada" con razón):
+
+1. **`MISC-comp` Competitive position — "quality of the business"** ("entender mejor a los competidores
+   para rebatir el cuestionamiento de las ventajas competitivas"). El mapa de peers (OV-6/VA-PEERS)
+   compara **valuación**; esta sub-tab compara **el negocio**. Responde: *¿por qué no le quitan el
+   lugar?*
+   - Lede de 1–2 oraciones con la tesis del moat (lo que dice "The edge" de OV-3) y, debajo, **los
+     cuestionamientos** más serios, uno por tarjeta, cada uno con la evidencia a favor y en contra.
+   - Tabla de competidores (incluye a los privados y a las divisiones de otras empresas: Samsung
+     Foundry, Intel Foundry, Rapidus en TSM; TikTok, YouTube, Google Search en Meta): por fila, las
+     métricas operativas que deciden la industria — cuota de mercado, escala (ingreso del segmento
+     comparable), margen, inversión (capex o R&D), y 2–4 métricas propias de la industria que el
+     analista elige en ① (TSM: nodo líder y fecha, yield, flota EUV; Meta: usuarios diarios, tiempo de
+     uso, precio por anuncio). Cada celda con fuente; lo que no se sabe va vacío ("—", §18), no estimado.
+   - Gráfica solo si hay una serie comparable en el tiempo (p. ej. cuota de mercado por trimestre).
+   - **Regla:** muestra evidencia, no veredicto (como el Investment Spectrum: nada de puntajes).
+2. **`MISC-capacity` Capacity → revenue** ("conectar la capacidad, las máquinas que le van a llegar,
+   cómo eso se traduce en wafers y a su vez en revenue"). **Solo para empresas cuyo ingreso está
+   limitado por capacidad física** (foundry, data centers, tiendas, aerolíneas, minas); en las demás se
+   descarta en ①. Cadena completa, eslabón por eslabón, cada uno con fuente:
+   insumo (capex, equipos recibidos) → capacidad (obleas/mes, MW, tiendas) → unidades vendidas →
+   × precio por unidad (el mismo de TL-SEG) → ingreso implícito, **contra lo reportado (historia) y el
+   consenso (adelante)**. La brecha entre el ingreso implícito y el consenso es el hallazgo; los
+   supuestos de conversión (utilización, rendimiento) son controles que el lector mueve, con el valor
+   de la fuente por defecto. En Meta la cadena sería capex → capacidad de cómputo → ¿ingreso?: si un
+   eslabón no tiene fuente, la cadena no se dibuja completa y se dice dónde se corta.
+3. **Directorio físico en tabla por país** ("tabla con la lista de fabs por país"). Si la empresa tiene
+   activos físicos que importan (fabs, data centers, tiendas, centros de distribución), la sub-tab que
+   los muestre (puede ser la misma `MISC-capacity`) lleva **una tabla agrupada por país** (o región):
+   fila de grupo con subtotales (número de activos y capacidad), y dentro las filas por activo (nombre ·
+   ubicación · qué produce · capacidad · estado/año). Un mapa o tarjetas pueden acompañarla, nunca
+   reemplazarla. Formato de tabla en §18.
+
+**Datos compartidos entre dos perfiles** (p. ej. ASML ↔ TSM: unidades EUV, precios de herramientas,
+envíos por cliente). Viven en **un solo archivo de datos** del perfil que es la fuente primaria (el
+de ASML), y el otro perfil lo **importa**; nunca se copian los números a un segundo archivo. El pie del
+panel que los usa cita el documento primario (no "el perfil de ASML"), y la bitácora de los dos perfiles
+anota la dependencia (columna "Depende de" en el review, §16).
+
 - **No copiar de AMZN:** la sub-tab de capex se arma con `bottomlineCapexBody()+segCapDaBody()+aLeasesBody()`
   y solo Leases tiene `.ov-foot`; `bottomlineCapexBody` cita "DCF datacenter build assumptions"
   (números Summit en código, regla 10). El estilo `.acx-tog` ya está en `css/overview.css`: borrar la
@@ -1763,6 +1887,12 @@ otros tres). Ninguna gráfica. Los datos van separados del código, como `sharkn
 6. **Compuerta final:** el analista aprueba el perfil completo. Entonces, **si lo pide**: commit + push
    de la rama; y **solo si lo pide**, `gh pr create` con el resumen de la bitácora (qué cambió
    visualmente, excepciones, bloqueos). Nunca merge.
+7. **Review del analista (después de entregado).** Si el analista revisa el perfil ya entregado (como
+   el review de TSM del 2026-10-19), cada pedido se anota en la bitácora §6c como una fila `R<n>`:
+   el pedido **textual**, la unidad que toca, qué hay que construir, de qué depende y el estado. Cada R
+   pasa por la compuerta normal (§2) y, al aprobarse, se registra en §7. Si un pedido vale para
+   **todas** las empresas (no solo para esta), además se propone el cambio a esta guía en su propia
+   rama `chore/…`, para que la siguiente empresa ya lo traiga desde el principio.
 
 ---
 
@@ -1830,8 +1960,13 @@ significado de un número van a la izquierda; los que cambian qué números se v
 - **Tablas de comparación** (peers, proveedores): una fila por entidad, ordenadas por la métrica activa;
   promedio y mediana al final **sin** la empresa del perfil; la empresa resaltada con el tono neutro
   del portal (no su color).
+- **Directorios agrupados** (activos por país, clientes por segmento): fila de grupo en negrita con
+  sus **subtotales** (cuántos y la suma de la columna numérica), las filas del grupo debajo con
+  sangría, grupos ordenados por el subtotal de mayor a menor y una fila **Total** al final que cuadra
+  con la suma de grupos. Cada grupo se puede plegar; arranca abierto. (Review TSM, SAB 2026-10-19:
+  fabs por país.)
 - **Por defecto:** colapsadas, salvo que la tabla sea el contenido principal (Peers, Target Multiple,
-  PEG) — esas abiertas. Las de los motores (Results, Top Line, Estimates) arrancan colapsadas.
+  PEG, directorios) — esas abiertas. Las de los motores (Results, Top Line, Estimates) arrancan colapsadas.
 - Vacío = "—" (`.rs-ft-nil`), nunca 0; "immaterial" solo si la fuente lo dice.
 - Encabezado del colapsable siempre dice qué hay dentro ("Period detail · show · AWS, 14 periods").
 
@@ -1855,6 +1990,8 @@ significado de un número van a la izquierda; los que cambian qué números se v
 | Valuation ▸ Peers | Sí | lede de 1–2 oraciones |
 | Valuation ▸ Historic / Target / Sensitivity | No hay lede | el "cómo se construye" va al pie |
 | Management ▸ cada sub-tab | Sí | lede de 1–3 oraciones; luego KPIs y cajas cortas |
+| Misc ▸ Competitive position | Sí | lede de 1–2 oraciones; cada cuestionamiento en su tarjeta (≤ 3 oraciones a favor, ≤ 3 en contra) |
+| Misc ▸ Capacity → revenue | No hay lede | una línea por eslabón (qué es y de dónde sale); supuestos al pie |
 | Earnings ▸ Setup | No | solo los `?` por métrica (≤ 3 viñetas) |
 | Earnings ▸ Call Summary | Sí, citada | voz directa de management, no resumen de Claude |
 | Notes | Sí | una nota = un hecho o promesa, ≤ 2 líneas, con trimestre |
@@ -1948,6 +2085,8 @@ se usa: es el diccionario con el que Claude sabe qué etiqueta del MCP es cada l
 - **El perfil no elige colores.** No se define `--brand` con el color de la empresa; el color de la
   empresa aparece **solo en su logo**. Lo que AMZN pone en su raíz (`--brand-2:var(--steel)`,
   `--brand-soft:rgba(37,99,235,0.08)`) son tokens neutros de Summit y **se copian tal cual**.
+- **El Overview no lleva color categórico** (§8, SAB 2026-10-19): solo navy, steel y grises. Lo de
+  abajo (`SUMMIT_CAT`) aplica al Deep Dive.
 - **Series:** `SUMMIT_CAT` de `js/viz-palette.js`, en orden fijo, sin ciclar; el color sigue a la
   entidad (ocultar una serie no repinta las demás); más de 8 → "Other".
 - **Fuentes de dato:** Actual = navy · Summit = azul · Consensus = gris — siempre las mismas.
@@ -2147,6 +2286,9 @@ Estado: ✅ arreglado en `main` (copiar de AMZN ya lo trae) · ◐ en parte · �
 | Historic Multiple | precio, acciones y deuda en vivo (`get-market-history`); EPS/EBITDA de `results-data` (`act` y `estMatrix.cons`) | módulo `<t>-histmult.js` (sin datos propios) |
 | Target Multiple / Sensitivity | Summit DCF congelado (snapshots + valuación del modelo, del MCP); BBG por segmento | módulos `<t>-target-multiple.js`, `<t>-sensitivity.js` + sus `-data.js` congelados |
 | Miscellaneous | según la sub-tab (ficha en la bitácora) | módulo |
+| Misc ▸ Competitive position | filings y presentaciones de cada competidor; datos de industria con fuente nombrada (TrendForce, Counterpoint…) | módulo |
+| Misc ▸ Capacity → revenue | filings y presentaciones de la empresa (capacidad, unidades); el perfil del proveedor si existe (archivo compartido, importado); consenso de `results-data` | módulo + archivo compartido del otro perfil |
+| Top Line ▸ Customers ▸ "What each top customer buys" | 10-K (concentración), SPLC, llamadas; prensa solo marcada *estimate* | `segments-data/<t>.js` (`customers.buys`) |
 | Management | página de liderazgo, DEF 14A, 10-K (SBC), Fiscal.ai (en vivo) | módulo + `img/leadership/` |
 
 Regla de oro de datos (regla 10, §20b): **lo de filings y Bloomberg se saca una vez, se guarda en el
@@ -2177,7 +2319,7 @@ snapshot; solo lo de mercado (precio, market cap) se lee en vivo.** El navegador
 | VA-TM | Target Multiple / PEG | F0-SM + valuación del modelo congelada (`get_valuation_history`) | se hace (sin modelo Summit, ⏭️) |
 | VA-SENS | Sensitivity | F0-SM (segmentos) + snapshot Summit congelado + BBG por segmento | se hace (sin modelo Summit, ⏭️) |
 | MG-TEAM · MG-OWN · MG-GOV · MG-TRACK | Management | F1 | se hace |
-| MISC (y `MISC-<clave>` por sub-tab) | Miscellaneous | F1; al final, cuando ya se sabe qué no cupo en otra pestaña | se hace o ⏭️ |
+| MISC (y `MISC-<clave>` por sub-tab) | Miscellaneous — siempre se proponen `MISC-comp` y, si aplica, `MISC-capacity` (§15b) | F1; al final, cuando ya se sabe qué no cupo en otra pestaña. `MISC-capacity` usa el precio por unidad de TL-SEG y el consenso de EV-RES-DATA | se hace o ⏭️ |
 | F-FINAL | Cierre | todas | se hace |
 
 **Reglas de la tabla:**
@@ -2226,5 +2368,7 @@ Lo que NO incluí y por qué: …
 | VA-SENS | Hoy no se pregunta: queda en espera (⛔). Cuando se pueda: "¿Qué dos supuestos movemos en la tabla (p. ej. crecimiento de un segmento y su margen)?" |
 | MG-TEAM | "¿Equipo completo que publica la empresa, o solo el C-suite?" |
 | MG-TRACK | "Propongo estas calificaciones: … ¿Las ajustas?" |
-| MISC | "No cupieron en otra pestaña: … Propongo estas sub-tabs: … ¿Las creamos, o no hace falta Miscellaneous?" |
+| MISC | "No cupieron en otra pestaña: … Propongo estas sub-tabs: … — además de las tres de siempre: Competitive position (con estas métricas de la industria: …), Capacity → revenue (aplica / no aplica porque …) y el directorio físico por país. ¿Cuáles creamos?" |
+| TL-CUS | "Los clientes principales que puedo sostener con fuente son: … (su peso lo marco *estimate* salvo …). ¿Agregas o quitas alguno?" |
+| BL-GEN-2 | "El filing abre el costo de ventas en: … ¿Lo mostramos con esos componentes?" |
 | F-FINAL | "Todo aprobado salvo … ¿Hago commit y push? (El PR solo cuando tú lo pidas.)" |

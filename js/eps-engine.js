@@ -11,7 +11,8 @@
 //     price cP = w x return      EPS cE = w x its own EPS change      multiple cM = cP - cE
 // cM is "the rest": it equals w(1+g)m, the multiple change taken after the EPS change, so the interaction sits there.
 // A name with EPS <= 0 at the start has no % EPS change: cE = 0 and all of its price move is in cM.
-// A name with no price at the end date (it left the index) has no return: listed as n/a, counted as 0.
+// A name with no price at the end date (it left the index) has no return: listed as n/a and left out of the 100%
+// (the other weights are rescaled to the names with data, so weight x change adds up to the index return exactly).
 // All three add up over any group, so securities -> industry groups -> sectors -> index.
 // The index-level numbers of the aggregate view (gAgg = change of sum(shares x EPS), m = change of the index forward P/E)
 // are kept as a memo: they weight each company by the earnings it brings, not by its weight.
@@ -62,6 +63,10 @@ export function makeEngine(D) {
         qp0: q * m.px, qp1: q * n[3], qe0: q * e0, qe1: q * e1 });
       I0 += q * m.px; I1 += q * n[3]; E0 += q * e0; E1 += q * e1;
     });
+    // weights are rescaled to the names that have data, so the rows weigh 100% at the start (and at the end) and
+    // weight x change ties out exactly; the names without figures (skipped) keep their raw weight and are listed n/a
+    var endSum = rows.reduce(function (s, r) { return s + r.w1; }, 0);
+    rows.forEach(function (r) { r.wRaw = r.w0; r.w0 = r.w0 / covW0; r.w1 = endSum ? r.w1 / endSum : 0; });
     var gs = [], wg = 0, wgW = 0, eq = 0;
     rows.forEach(function (r) {
       r.ret = r.px1 / r.px0 - 1;
@@ -74,7 +79,7 @@ export function makeEngine(D) {
       r.pe0 = r.e0 > 0 ? r.px0 / r.e0 : null; r.pe1 = r.e1 > 0 ? r.px1 / r.e1 : null;
       r.m = r.pe0 && r.pe1 ? r.pe1 / r.pe0 - 1 : null;
       r.esh = r.qe0 / E0;                       // share of aggregate start-of-period earnings
-      r.wn = r.w0 / covW0;                      // weight among the names in the bridge
+      r.wn = r.w0;
       if (r.g != null) { gs.push(r.g); wg += r.wn * r.g; wgW += r.wn; eq += r.g; }
     });
     // price return of every start-basket name that has an end price, with or without an EPS estimate
@@ -122,7 +127,7 @@ export function makeEngine(D) {
     function sh(list, n) { var s = 0; list.slice(0, n).forEach(function (m) { s += m.e; }); return E ? s / E : null; }
     var covW = cov.reduce(function (s, m) { return s + m.w; }, 0);
     function wsh(list, n) { var s = 0; list.slice(0, n).forEach(function (m) { s += m.w; }); return covW ? s / covW : null; }
-    return { top5: top5, top10: top10, n: a.length,
+    return { top5: top5, top10: top10, n: a.length, topE: byE.slice(0, N).map(function (m) { return { id: m.id, sh: E ? m.e / E : 0 }; }),
       e10byW: sh(byW, N), e10byE: sh(byE, N), w10byE: wsh(byE, N), w10byW: wsh(byW, N) };
   }
 

@@ -16,7 +16,7 @@ Memo only (Data & method): the index-level forward P/E (index price / earnings o
 Earnings concentration uses a company's earnings inside the index = weight / forward P/E.
 
 ## Coverage: every stock is listed
-The detail table lists every member of the start basket. A name with no price at the end date (left the index) or no CY2027 estimate is shown "n/a, counted as 0 pp", never dropped silently. A name with EPS <= 0 at the start has no % change: EPS effect 0, the whole price move in multiple. Sectors and industry groups: the "Who moved" level defaults to All for them.
+The detail table lists every member of the start basket. A name with no price at the end date (left the index) or no CY2027 estimate is shown "n/a" and left out of the 100%: the other weights are rescaled to the names with data, so weight x change adds up to the index return exactly (S&P 500 +12.1%). Never dropped silently. A name with EPS <= 0 at the start has no % change: EPS effect 0, the whole price move in multiple.
 
 
 ## Basket, coverage, exclusions
@@ -26,7 +26,7 @@ Corporate-action check: names whose weight moved far more than their price (spin
 Exclusions (click rows in the detail table; sector / group / ticker) apply to every section and both indices, the rest rescale to 100%.
 
 ## UI rules
-The first section shows both indices (no toggle); the others have an S&P / Nasdaq toggle and an end date. Only exclusions are shared. Axes are fixed per level so bars keep their length. Who moved the index shows one measure at a time: EPS effect (pp), price return (pp) or the stock's own EPS change (%). A one-stock lookup charts its CY2027 estimate over the 5 snapshots. Concentration = one 100% bar per date.
+The first section shows both indices (no toggle); the others have an S&P / Nasdaq toggle and an end date. Only exclusions are shared. Axes are fixed per level so bars keep their length. Who moved the index: What (EPS estimate | Multiple | Price) x Measured as (contribution in pp | own change in %). One-stock lookup: its CY2027 estimate over the 5 snapshots plus its own EPS x P/E = price and what it added to each index. Concentration: expected CY2027 earnings only (value concentration lives in Index Analysis), pick any dates, hover = the names.
 
 ## Open items
 - GAAP consensus (IS_COMP_EPS_GAAP): GOOGL, AMZN carry investment marks. Adjusted EPS (BEST_EPS) pull is a decision.

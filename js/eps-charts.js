@@ -96,7 +96,7 @@ export function barList(box, rows, o) {
 // rows: [{ label, v, tip }] — v = share (0..1). One bar per row on a fixed 0–100% axis: the dark part is v, the light part the rest.
 // o = { color, rest, restLabel, title }
 export function stackBars(box, rows, o) {
-  var rowH = 34, VW = 900, P = { t: 26, r: 14, b: 8, l: 70 }, VH = P.t + rows.length * rowH + P.b;
+  var rowH = 34, VW = 900, P = { t: 44, r: 14, b: 8, l: 70 }, VH = P.t + rows.length * rowH + P.b;
   function X(v) { return P.l + v * (VW - P.l - P.r); }
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
   svg.appendChild(txt({ x: P.l, y: 12, 'font-size': 10.5, fill: MUTED, 'font-weight': 600 }, o.title || ''));

@@ -8,19 +8,23 @@ var last = D.dates.length - 1, k0 = D.dates.indexOf('2026-01-02');
 ['spx', 'ndx'].forEach(function (ix) {
   ['cy26', 'cy27'].forEach(function (base) {
     var p = E.period(ix, k0, last, base), sum = function (f) { return p.rows.reduce(function (s, r) { return s + r[f]; }, 0); };
+    near(sum('w0'), 1, 1e-9, ix + base + ' weights add to 100%'); near(sum('w1'), 1, 1e-9, ix + base + ' end weights add to 100%');
     near(sum('cP'), p.R, 1e-9, ix + base + ' sum cP = R'); near(sum('cE'), p.G, 1e-9, ix + base + ' sum cE = G');
     near(sum('cE') + sum('cM'), p.R, 1e-9, ix + base + ' EPS + multiple = price');
+    // the price return is the return of the basket with data: index of q x price
+    near(p.R, p.pe1 / p.pe0 * (1 + p.gAgg) - 1, 1e-9, ix + base + ' R = I1/I0 - 1');
     // sectors and industry groups add up to the index
     [function (r) { return D.secs[r.id].s; }, function (r) { return D.secs[r.id].g; }].forEach(function (key, i) {
       var gs = E.group(p.rows, key);
       near(gs.reduce(function (s, o) { return s + o.cP; }, 0), p.R, 1e-9, ix + base + ' level ' + i + ' adds up to R');
       near(gs.reduce(function (s, o) { return s + o.cE; }, 0), p.G, 1e-9, ix + base + ' level ' + i + ' adds up to G');
+      near(gs.reduce(function (s, o) { return s + o.cM; }, 0), p.M, 1e-9, ix + base + ' level ' + i + ' adds up to M');
       gs.forEach(function (o) { if (o.m != null) near((1 + o.g) * (1 + o.m), 1 + o.ret, 1e-9, 'group (1+g)(1+m) = 1+ret'); });
     });
-    // brute force from the raw rows: weight x return, weights renormalised over the members, names with an end price
+    // brute force from the raw rows: weights renormalised over the names with data
     var row1 = {}; D.snaps[last].forEach(function (r) { row1[r[0]] = r; });
     var col = ix === 'spx' ? 1 : 2, tot = 0, R = 0, G = 0;
-    D.snaps[k0].forEach(function (r) { if (r[col] > 0) tot += r[col]; });
+    p.rows.forEach(function (r) { tot += D.snaps[k0].find(function (x) { return x[0] === r.id; })[col]; });
     p.rows.forEach(function (r) {
       var a = D.snaps[k0].find(function (x) { return x[0] === r.id; }), b = row1[r.id], e0 = base === 'cy27' ? a[5] : a[4], e1 = base === 'cy27' ? b[5] : b[4], w = a[col] / tot;
       R += w * (b[3] / a[3] - 1); if (e0 > 0) G += w * (e1 / e0 - 1);

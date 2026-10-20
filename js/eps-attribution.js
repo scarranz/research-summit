@@ -35,7 +35,7 @@ function initialState() {
   var last = E.dates.length - 1;
   return { excl: {}, open: {}, sort: 'cP', dir: -1,
     hero: { k1: last }, detail: { ix: 'spx', k1: last }, who: { ix: 'spx', k1: last, lvl: 'sec', n: 10, side: 'pos', what: 'e', as: 'c' },
-    est: { t: 'MU', k1: last }, conc: { ix: 'spx', n: 10, ks: [K0, last] }, data: { ix: 'spx', k1: last, open: false } };
+    est: { t: 'MU', k1: last }, conc: { ix: 'spx', n: 10, ks: [last], pop: null }, data: { ix: 'spx', k1: last, open: false } };
 }
 // exclusions: 'S|Sector' · 'G|Industry group' · 'T|TICKER' — shared by every section and both indices
 function exFrom(excl) {
@@ -242,12 +242,17 @@ function concBlock() {
     return { label: dShort(E.dates[k]), v: q.e10byE, bold: k === ks[ks.length - 1],
       tip: '<b style="font-size:13px">' + dLong(E.dates[k]) + '</b><span class="tp">The ' + n + ' companies expected to earn the most in ' + Y + ' produce ' + (q.e10byE * 100).toFixed(1) + '% of the expected earnings of the ' + IXN[c.ix] + '; all the others ' + ((1 - q.e10byE) * 100).toFixed(1) + '%.<br><br>Their share each: ' + names + (q.topE.length > 25 ? ' · …' : '') + '</span>' };
   });
-  var pk = ks.indexOf(c.pick) >= 0 ? c.pick : ks[ks.length - 1], q = E.concentration(c.ix, pk, BASE, null, n);
-  rows.forEach(function (r, i) { r.picked = ks[i] === pk; });
-  var panel = '<div class="eps-h2">Who they are · ' + IXN[c.ix] + ' · ' + dLong(E.dates[pk]) + ' <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--mu)">(click a bar to change the date)</span></div>' +
-    '<div class="eps-tw eps-scr" style="max-height:320px"><table class="rt eps-t3"><thead><tr><th>#</th><th>Company</th><th class="num">Share of expected ' + Y + ' earnings</th><th class="num">Weight in the index</th><th class="num">Forward P/E</th></tr></thead><tbody>' +
-    q.topE.map(function (x, i) { var s = E.secs[x.id]; return '<tr><td>' + (i + 1) + '</td><td><b>' + esc(s.t) + '</b> ' + esc(short(s.n)) + '</td><td class="num">' + (x.sh * 100).toFixed(1) + '%</td><td class="num">' + (x.w * 100).toFixed(2) + '%</td><td class="num">' + x1(x.pe) + '</td></tr>'; }).join('') + '</tbody></table></div>' +
-    '<div class="eps-note">Expected earnings of a company inside the index = its weight ÷ its forward P/E, so a company counts by its weight and by how much it is expected to earn per dollar of value; EPS per share on its own does not rank anything.</div>';
+  // click a bar: a popup with the companies behind it (closed with x, Esc or a click outside)
+  var panel = '';
+  if (c.pop != null && ks.indexOf(c.pop) >= 0) {
+    var q = E.concentration(c.ix, c.pop, BASE, null, n);
+    panel = '<div class="eps-pop" data-act="popclose"><div class="eps-popc" data-act="popkeep"><button class="eps-popx" data-act="popclose" aria-label="Close">×</button>' +
+      '<div class="eps-popt">' + IXN[c.ix] + ' · ' + dLong(E.dates[c.pop]) + '</div><div class="eps-popd">The ' + n + ' companies expected to earn the most in ' + Y + ': ' + (q.e10byE * 100).toFixed(1) + '% of the index\'s expected earnings.</div>' +
+      '<div class="eps-tw eps-scr" style="max-height:55vh"><table class="rt eps-t3"><thead><tr><th>#</th><th>Company</th><th class="num">Share of expected earnings</th><th class="num">Weight in the index</th><th class="num">Forward P/E</th></tr></thead><tbody>' +
+      q.topE.map(function (x, i) { var s = E.secs[x.id]; return '<tr><td>' + (i + 1) + '</td><td><b>' + esc(s.t) + '</b> ' + esc(short(s.n)) + '</td><td class="num">' + (x.sh * 100).toFixed(1) + '%</td><td class="num">' + (x.w * 100).toFixed(2) + '%</td><td class="num">' + x1(x.pe) + '</td></tr>'; }).join('') + '</tbody></table></div>' +
+      '<div class="eps-note">Expected earnings of a company inside the index = its weight ÷ its forward P/E.</div></div></div>';
+  }
+  rows.forEach(function (r, i) { r.picked = ks[i] === c.pop; });
   return { n: n, ks: ks, rows: rows, panel: panel, msg: 'On ' + dLong(E.dates[ks[ks.length - 1]]) + ', the ' + n + ' companies expected to earn the most produce <b>' + (rows[rows.length - 1].v * 100).toFixed(1) + '%</b> of the ' + Y + ' earnings expected for the ' + IXN[c.ix] + '. Hover or click a bar to see who they are.' };
 }
 
@@ -334,7 +339,7 @@ function render() {
   var cb = concBlock();
   set('eps-cm', cb.msg);
   set('eps-cp', cb.panel);
-  stackBars(document.getElementById('eps-cc'), cb.rows, { color: C.eps, restLabel: 'all other companies', onPick: function (i) { S.conc.pick = cb.ks[i]; render(); }, title: 'Share of the index\'s expected ' + Y + ' earnings produced by the ' + cb.n + ' companies expected to earn the most' });
+  stackBars(document.getElementById('eps-cc'), cb.rows, { color: C.eps, restLabel: 'all other companies', onPick: function (i) { S.conc.pop = cb.ks[i]; render(); }, title: 'Share of the index\'s expected ' + Y + ' earnings produced by the ' + cb.n + ' companies expected to earn the most' });
   var dOpen = S.data.open, dc = document.getElementById('eps-data');
   set('eps-c6', '<div class="eps-ctl"><div><button class="ndx-tab-btn" data-act="dopen">' + (dOpen ? 'Hide' : 'Show') + ' data &amp; method</button></div></div>' + (dOpen ? ctl('data', ['ix', 'to']) : ''));
   set('eps-s6-n', dOpen ? IXN[S.data.ix] + ' · ' + dShort(E.dates[K0]) + ' → ' + dShort(E.dates[S.data.k1]) : 'hidden · how the numbers are built, coverage and caveats');
@@ -361,6 +366,8 @@ function onAct(el) {
   else if (act === 'tog') toggle(v);
   else if (act === 'unex') delete S.excl[v];
   else if (act === 'dopen') S.data.open = !S.data.open;
+  else if (act === 'popkeep') return;
+  else if (act === 'popclose') S.conc.pop = null;
   else if (act === 'cdate') { var kk = +v, i = S.conc.ks.indexOf(kk); if (i < 0) S.conc.ks.push(kk); else if (S.conc.ks.length > 1) S.conc.ks.splice(i, 1); }
   else if (act === 'open') S.open[v] = !S.open[v];
   else if (act === 'openall') E.secs.forEach(function (s) { S.open['S|' + s.s] = v === '1'; if (v !== '1') S.open['G|' + s.g] = false; });
@@ -378,6 +385,7 @@ function open() {
   import('./eps-attribution-data.js').then(function (m) {
     E = makeEngine(m.EPS_DATA); K0 = Math.max(0, E.dates.indexOf('2026-01-02')); S = initialState(); skeleton();
     root.addEventListener('click', function (e) { var t = e.target.closest('[data-act]'); if (!t || t.tagName === 'INPUT') return; e.preventDefault(); onAct(t); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && S.conc.pop != null) { S.conc.pop = null; render(); } });
     root.addEventListener('change', function (e) { var t = e.target; if (t.tagName === 'INPUT' && t.getAttribute('data-act')) onAct(t); });
     render();
   }, function () { root.innerHTML = '<div class="ma-pending">The EPS data failed to load. Please refresh the page.</div>'; started = false; });

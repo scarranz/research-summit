@@ -3575,3 +3575,61 @@ img.org-photo { object-fit: cover; }
 .ov-tsm-dd .fab-collap{margin:6px 0 4px}
 #co-detailview .fab-pop-note{font-size:11px;color:var(--mu);white-space:normal}
 .ov-tsm-dd .fab-econ td,.ov-tsm-dd .fab-econ th{text-align:left;white-space:nowrap}
+/* META ▸ Miscellaneous — formal tables and the strategy loop (SAB, Oct 20 2026: no emoji, tables over cards) */
+.ov-meta-dd .mx-twrap{margin:0 0 8px}
+.ov-meta-dd .mx-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.ov-meta-dd .mx-tbl td,.ov-meta-dd .mx-tbl th{padding:7px 10px;border-bottom:1px solid var(--bdr);vertical-align:top;text-align:left;line-height:1.5;color:var(--navy)}
+.ov-meta-dd .mx-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}
+.ov-meta-dd .mx-tbl td.mx-k{font-weight:700;white-space:nowrap}
+.ov-meta-dd .mx-chart{margin:0 0 6px}
+.ov-meta-dd .mx-det{margin:6px 0 4px}
+.ov-meta-dd .mx-loop{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 6px}
+@media(max-width:720px){.ov-meta-dd .mx-loop{grid-template-columns:1fr 1fr}}
+.ov-meta-dd .mx-step{border:1px solid var(--bdr);border-top:3px solid var(--steel);border-radius:10px;padding:11px 12px;background:var(--card,#fff)}
+.ov-meta-dd .mx-step-n{font-size:10px;font-weight:800;color:var(--mu)}
+.ov-meta-dd .mx-step-t{font-size:13px;font-weight:800;color:var(--navy);margin:2px 0 4px}
+.ov-meta-dd .mx-step-d{font-size:11.5px;color:var(--mu);line-height:1.45}
+
+/* Meta ▸ Miscellaneous ▸ Competitive Position (js/overviews/meta-comp.js) — tables over cards, accents in --steel. */
+.ov-meta-dd .mcp-wrap{max-height:none;margin:6px 0 4px}
+.ov-meta-dd .mcp-gap{margin-top:12px}
+.ov-meta-dd .mcp-tbl td{vertical-align:top;line-height:1.45;color:var(--navy)}
+.ov-meta-dd .mcp-chal td{min-width:180px}
+.ov-meta-dd .mcp-tbl .mcp-c{font-weight:700;min-width:150px}
+.ov-meta-dd .mcp-tbl .mcp-src{color:var(--mu);font-size:11px;min-width:140px}
+.ov-meta-dd .mcp-peers td{white-space:nowrap}
+.ov-meta-dd .mcp-peers .mcp-rl,.ov-meta-dd .mcp-peers .mcp-vs,.ov-meta-dd .mcp-peers .mcp-src{white-space:normal;min-width:130px}
+.ov-meta-dd .mcp-peers .mcp-rl{color:var(--mu);font-size:11px}
+.ov-meta-dd .mcp-tbl .mcp-num{text-align:right;font-variant-numeric:tabular-nums}
+.ov-meta-dd .mcp-tk{font-size:10px;font-weight:600;color:var(--mu);margin-left:3px}
+.ov-meta-dd .mcp-def{display:block;font-size:10px;color:var(--mu);white-space:normal}
+.ov-meta-dd .mcp-peers tr.mcp-me td{background:var(--pale)}
+.ov-meta-dd .mcp-peers tr.mcp-me td:first-child{box-shadow:inset 2px 0 0 var(--steel)}
+.ov-meta-dd .mcp-peers tr.mcp-sub td.mcp-name{padding-left:24px;color:var(--mu)}
+.ov-meta-dd .mcp-peers tr.mcp-priv td{color:var(--mu)}
+.ov-meta-dd .mcp-peers tr.mcp-stat td{border-top:1px solid var(--bdr);font-size:11px;font-weight:600;color:var(--mu);background:var(--surface)}
+.ov-meta-dd .mcp-loop-tbl tr td{transition:background .2s}
+.ov-meta-dd .mcp-loop-tbl tr.mcp-on td{background:var(--ice)}
+.ov-meta-dd .mcp-loop-tbl tr.mcp-on td:first-child,.ov-meta-dd .mcp-loop-tbl tr.mcp-in-on td.mcp-in{box-shadow:inset 2px 0 0 var(--steel)}
+.ov-meta-dd .mcp-loop-tbl tr.mcp-in-on td.mcp-in{background:var(--ice);font-weight:600}
+.ov-meta-dd .mcp-step{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 2px;font-size:12px;color:var(--navy)}
+.ov-meta-dd .mcp-step-n{font-size:10.5px;font-weight:700;color:var(--steel);white-space:nowrap}
+.ov-meta-dd .mcp-step-cap{flex:1;min-width:220px;line-height:1.45}
+.ov-meta-dd .mcp-step-ctl{display:inline-flex;gap:6px}
+.ov-meta-dd .mcp-btn{font:inherit;font-size:11px;font-weight:600;color:var(--navy);background:var(--w);border:1px solid var(--bdr);border-radius:7px;padding:4px 10px;cursor:pointer}
+.ov-meta-dd .mcp-btn:hover{border-color:var(--steel);color:var(--steel)}
+.ov-meta-dd .mcp-bars{display:flex;flex-direction:column;gap:6px;margin:6px 0 4px}
+.ov-meta-dd .mcp-bar-row{display:grid;grid-template-columns:260px 1fr 70px;gap:10px;align-items:center}
+.ov-meta-dd .mcp-bar-l{font-size:12px;color:var(--navy)}
+.ov-meta-dd .mcp-tag{font-size:9.5px;font-weight:600;color:var(--mu);border:1px solid var(--bdr);border-radius:10px;padding:0 6px;margin-left:4px;white-space:nowrap}
+.ov-meta-dd .mcp-bar-t{height:14px;background:var(--ice);border-radius:4px;overflow:hidden}
+.ov-meta-dd .mcp-bar-f{height:100%;background:var(--mid);border-radius:4px}
+.ov-meta-dd .mcp-bar-f.mcp-bar-src{background:var(--steel)}
+.ov-meta-dd .mcp-bar-v{font-size:12px;font-weight:700;color:var(--navy);text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:640px){.ov-meta-dd .mcp-bar-row{grid-template-columns:1fr 60px}.ov-meta-dd .mcp-bar-t{grid-column:1/-1;order:3}}
+.ov-meta-dd .mx-tbl th.mx-n,.ov-meta-dd .mx-tbl td.mx-n{text-align:right;white-space:nowrap}
+.ov-meta-dd .mx-tbl tr.mx-tot td{font-weight:700;background:var(--surface)}
+.ov-meta-dd .mx-tbl .mx-src{font-size:9px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--mu)}
+.ov-meta-dd .mx-ctl{margin:0 0 8px}
+.ov-meta-dd .mx-collap{margin:6px 0}
+.ov-meta-dd .mx-kpis{margin:4px 0 6px}

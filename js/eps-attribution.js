@@ -35,7 +35,7 @@ function initialState() {
   var last = E.dates.length - 1;
   return { excl: {}, open: {}, sort: 'cP', dir: -1,
     hero: { k1: last }, detail: { ix: 'spx', k1: last }, who: { ix: 'spx', k1: last, lvl: 'sec', n: 10, side: 'pos', what: 'e', as: 'c' },
-    est: { t: 'MU', k1: last }, conc: { ix: 'spx', n: 10, ks: [K0, last] }, data: { ix: 'spx', k1: last } };
+    est: { t: 'MU', k1: last }, conc: { ix: 'spx', n: 10, ks: [K0, last] }, data: { ix: 'spx', k1: last, open: false } };
 }
 // exclusions: 'S|Sector' · 'G|Industry group' · 'T|TICKER' — shared by every section and both indices
 function exFrom(excl) {
@@ -266,7 +266,11 @@ function dataBlock() {
   var c = S.data, p = E.period(c.ix, K0, c.k1, BASE, null), ixn = IXN[c.ix];
   var out = p.skipped.slice().sort(function (a, b) { return b.w0 - a.w0; }).map(function (s) {
     var x = E.secs[s.id]; return '<tr><td><b>' + esc(x.t) + '</b></td><td>' + esc(short(x.n)) + '</td><td class="num">' + (s.w0 * 100).toFixed(2) + '%</td><td>' + whyTxt(s.why) + '</td></tr>'; }).join('');
-  var fx = E.secs.filter(function (s) { return s.c; }).map(function (s) { return s.t + ' (' + s.c + ')'; }).join(', ');
+  // notes only for what applies to this index: names it held at some snapshot in 2026
+  var held = {}; E.universe(c.ix, K0, E.dates.length - 1).forEach(function (m) { held[E.secs[m.id].t] = 1; });
+  var fx = E.secs.filter(function (s) { return s.c && held[s.t]; }).map(function (s) { return s.t + ' (' + s.c + ')'; }).join(', ');
+  var drop = (E.D.dropped || []).filter(function (x) { return x[c.ix]; }).map(function (x) { return short(x.n) + ' (' + x.t + ')'; }).join(', ');
+  var li = function (cond, t) { return cond ? '<li>' + t + '</li>' : ''; };
   var neg = p.rows.filter(function (r) { return r.g == null; }).map(function (r) { return E.secs[r.id].t; });
   var steps = [
     ['1', 'Weights', 'The period is walked one snapshot at a time (Jan 2 → Apr 1 → Jul 1 → Oct 16). In each step, each stock\'s weight is its float-adjusted market-cap weight in the ' + ixn + ' at the start of the step, from the file. A stock counts from the snapshot where it joined until the one where it left. The order is always: EPS and multiple changes move the price, the price moves the weight (the file already holds that weight at the next snapshot), and the weight at the start of a step says how much of the index each change was worth. Within a step the weight never reacts to the EPS change. Prices and share counts are not used for weighting.'],
@@ -282,10 +286,11 @@ function dataBlock() {
     '<p class="eps-p">The ' + ixn + ' held ' + p.nStart + ' stocks on ' + dLong(E.dates[K0]) + '. Over this period ' + p.entered.n + ' joined and ' + p.left.n + ' left; each counts only while it was a member, and all of them are in the detail table. ' + p.skipped.length + ' have no price or estimate in the file for the period (0 pp).' + (neg.length ? ' ' + neg.join(', ') + (neg.length > 1 ? ' have' : ' has') + ' a negative EPS at the start of a step: no % change exists, EPS effect 0, the price move is all multiple.' : '') + '</p>' +
     '<details class="eps-det"><summary>' + p.skipped.length + ' stocks without data in this period</summary><div class="eps-tw eps-scr"><table class="rt eps-t3"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Weight</th><th>Why</th></tr></thead><tbody>' + (out || '<tr><td colspan="4">None.</td></tr>') + '</tbody></table></div></details>' +
     '<div class="eps-h2">Caveats</div><ul class="eps-ul">' +
-    '<li>Removed by decision: FDX, Mobility Global (MBGL), MMED. BRK/B EPS is divided by 1,500: the file carries the Class A EPS and one Class A is 1,500 Class B.</li>' +
-    '<li>EPS is GAAP (Bloomberg IS_COMP_EPS_GAAP): GOOGL and AMZN carry investment marks. Take them out in the table to see the effect.</li>' +
-    '<li>No currency conversion for ' + esc(fx) + '.</li>' +
-    (E.D.notes || []).map(function (n) { return '<li>' + esc(n) + '.</li>'; }).join('') +
+    li(drop, 'Removed by decision: ' + esc(drop) + '.') +
+    li(held['BRK/B'], 'BRK/B EPS is divided by 1,500: the file carries the Class A EPS and one Class A is 1,500 Class B.') +
+    li(held.GOOGL || held.AMZN, 'EPS is GAAP (Bloomberg IS_COMP_EPS_GAAP): ' + [held.GOOGL ? 'GOOGL' : '', held.AMZN ? 'AMZN' : ''].filter(Boolean).join(' and ') + ' carry investment marks. Take them out in the table to see the effect.') +
+    li(fx, 'No currency conversion for ' + esc(fx) + '.') +
+    (E.D.notes || []).filter(function (n) { return held[n.t]; }).map(function (n) { return '<li>' + esc(n.text) + '.</li>'; }).join('') +
     '<li>Memo: the index forward P/E (index price ÷ earnings of everything it holds) went ' + x1(p.pe0) + ' → ' + x1(p.pe1) + ' and those earnings rose ' + pc(p.gAgg) + ': that counts each company by the dollars it earns, not by weight, so it is not the EPS effect above (' + pp(p.G, 1) + ' pp).</li>' +
     '<li>Source: ' + esc(E.D.source) + '.</li></ul>';
 }
@@ -330,7 +335,10 @@ function render() {
   set('eps-cm', cb.msg);
   set('eps-cp', cb.panel);
   stackBars(document.getElementById('eps-cc'), cb.rows, { color: C.eps, restLabel: 'all other companies', onPick: function (i) { S.conc.pick = cb.ks[i]; render(); }, title: 'Share of the index\'s expected ' + Y + ' earnings produced by the ' + cb.n + ' companies expected to earn the most' });
-  set('eps-c6', ctl('data', ['ix', 'to'])); set('eps-s6-n', IXN[S.data.ix] + ' · ' + dShort(E.dates[K0]) + ' → ' + dShort(E.dates[S.data.k1])); set('eps-data', dataBlock());
+  var dOpen = S.data.open, dc = document.getElementById('eps-data');
+  set('eps-c6', '<div class="eps-ctl"><div><button class="ndx-tab-btn" data-act="dopen">' + (dOpen ? 'Hide' : 'Show') + ' data &amp; method</button></div></div>' + (dOpen ? ctl('data', ['ix', 'to']) : ''));
+  set('eps-s6-n', dOpen ? IXN[S.data.ix] + ' · ' + dShort(E.dates[K0]) + ' → ' + dShort(E.dates[S.data.k1]) : 'hidden · how the numbers are built, coverage and caveats');
+  if (dc) { dc.style.display = dOpen ? '' : 'none'; dc.innerHTML = dOpen ? dataBlock() : ''; }
 }
 
 
@@ -352,6 +360,7 @@ function onAct(el) {
   else if (act === 'est') { var t = String(el.value || '').trim().toUpperCase(); if (E.secs.some(function (s) { return s.t === t; })) S.est.t = t; }
   else if (act === 'tog') toggle(v);
   else if (act === 'unex') delete S.excl[v];
+  else if (act === 'dopen') S.data.open = !S.data.open;
   else if (act === 'cdate') { var kk = +v, i = S.conc.ks.indexOf(kk); if (i < 0) S.conc.ks.push(kk); else if (S.conc.ks.length > 1) S.conc.ks.splice(i, 1); }
   else if (act === 'open') S.open[v] = !S.open[v];
   else if (act === 'openall') E.secs.forEach(function (s) { S.open['S|' + s.s] = v === '1'; if (v !== '1') S.open['G|' + s.g] = false; });

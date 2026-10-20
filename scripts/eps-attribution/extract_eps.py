@@ -80,10 +80,14 @@ def build(rows):
     # GOOGL per-share EPS by date, for GOOG
     googl = {r['as_of_date'].strftime('%Y-%m-%d'): (num(r['eps_2026']), num(r['eps_2027']))
              for r in rows if r['security_ticker'] == 'GOOGL US Equity'}
-    sec_ix, secs, snaps = {}, [], {d: [] for d in dates}
+    sec_ix, secs, snaps, dropped = {}, [], {d: [] for d in dates}, {}
     for r in rows:
         t = r['security_ticker']
         if t in DROP_EXACT or t.endswith(' Index'):
+            if t in DROP_EXACT and t != 'USD Curncy':
+                o = dropped.setdefault(short(t), {'t': short(t), 'n': r['company_name'], 'spx': False, 'ndx': False})
+                o['spx'] = o['spx'] or (num(r['spx_weight']) or 0) > 0
+                o['ndx'] = o['ndx'] or (num(r['ndx_weight']) or 0) > 0
             continue
         d = r['as_of_date'].strftime('%Y-%m-%d')
         px = num(r['latest_price'])
@@ -125,7 +129,7 @@ def build(rows):
             elif d in s['px'] and last is not None:
                 snaps[d].append([sid, 0.0, 0.0, s['px'][d], last[4], last[5]]); used.append(d)
         if used:
-            notes.append('%s: no row in the file on %s; close from %s, EPS held at the last estimate in the file' % (short(t), ', '.join(used), s['src']))
+            notes.append({'t': short(t), 'text': '%s: no row in the file on %s; close from %s, EPS held at the last estimate in the file' % (short(t), ', '.join(used), s['src'])})
     # a missing estimate takes the first one available LATER in time (analyst's rule): flat, not guessed
     ids = {}
     for di, d in enumerate(dates):
@@ -148,7 +152,7 @@ def build(rows):
         for k in ('s', 'g', 'i'):
             if not s[k] or str(s[k]).startswith('#'):
                 warn.append('no GICS %s: %s' % (k, s['t']))
-    return {'dates': dates, 'secs': secs, 'snaps': [snaps[d] for d in dates], 'notes': notes}, sorted(set(warn))
+    return {'dates': dates, 'secs': secs, 'snaps': [snaps[d] for d in dates], 'notes': notes, 'dropped': sorted(dropped.values(), key=lambda o: o['t'])}, sorted(set(warn))
 
 
 def main():

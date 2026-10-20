@@ -62,13 +62,14 @@ Modo B: antes de F1 van **B1 (inventario de lo que existe)** y **B2 (mapa de reu
 | B1 | Inventario de contenido existente | ⬜ | | | | conteo de control |
 | B2 | Mapa de reubicación | ⬜ | | | | |
 | F1 | Esqueleto + vista previa | ⬜ | | | | |
-| OV-1…OV-F | Overview (7 bloques + pie) | ⬜ | | | | auditar contra §8 |
+| OV-1…OV-F | Overview (7 bloques + pie) | 👀 | 2026-10-20 | | | sin color (reglas SAB 19–20 oct): barras grises, títulos 2×2 en negro, acento --steel, peers navy; Key Facts: CEO con antigüedad, celda "IPO"; **⚑ OV-6: múltiplos de peers sembrados (stockanalysis 31-jul), contra la regla 10** |
 | EV-RES-DATA | Dataset de Results (números) | ✅ | 2026-10-20 | DAA | | cons BBG (10 vintages, 120 celdas nuevas, blanked 0) · 4 líneas de usuarios · Summit 3Q26 re-congelado (MCP 08-05) |
 | EV-RES | Evolution ▸ Results | 👀 | 2026-10-20 | | | para revisar en el portal local: Companies ▸ SPOT ▸ Deep Dive ▸ Evolution ▸ Results (nuevo grupo Users, picker de vintages BBG) |
 | TL-GEN · TL-SEG · TL-OTH · TL-CUS | Top Line | ⬜ | | | | |
-| EV-SET | Evolution ▸ Earnings ▸ Setup (3Q26) | 👀 | 2026-10-20 | | | rejilla Guide · **Street (BBG, nueva)** · Summit (MCP 08-05, leído de Results); notas con Summit/Street actualizadas |
+| EV-SET | Evolution ▸ Earnings ▸ Setup (3Q26) | 👀 | 2026-10-20 | | | **rehecho sobre la maquinaria canónica** (`spot-ce.js`): 9 headline + 8 KPIs propios, Street (BBG) · Summit (MCP 08-05) · fila "guide"; gráfica Setup con Street; notas actualizadas |
 | EV-EST | Evolution ▸ Estimates | 👀 | 2026-10-20 | | | 4 vintages reales del MCP (12-18 · 02-09 · 04-28 · 08-05), años 2026–2029; Street = BBG guardado en cada snapshot |
-| EV-POST · EV-NOTES | Evolution | ⬜ | | | | con las calls |
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results (2Q26) | 👀 | 2026-10-20 | | | 17 tarjetas vs Street/Summit, Call Summary (7 comentarios + 14 preguntas de la transcripción 4-ago), Propose Notes (6), Also on the call (7) |
+| EV-NOTES | Evolution ▸ Earnings ▸ Notes | 👀 | 2026-10-20 | | | 10 temas en 8 grupos; semilla = el registro de temas que vivía en `spot.js` + 2 temas de la call |
 | BL-GEN-1…5 · BL-SEG · BL-SPLC | Bottom Line | ⬜ | | | | BL-SPLC probablemente ⏭️ |
 | VA-HIST · VA-PEERS · VA-TM · VA-SENS | Valuation | ⬜ | | | | |
 | MG-TEAM · MG-OWN · MG-GOV · MG-TRACK | Management | ⬜ | | | | hoy placeholder |
@@ -151,3 +152,39 @@ Todas dentro de 0.05%, de signo mixto: es el redondeo normal de un consenso con 
 
 - 2026-10-20 · EV-EST · 👀 Estimates reconstruido desde el MCP: los vintages "May 22" y "Aug 4" que mostraba la pestaña **no existen en el MCP** (snapshots reales: 12-18, 02-09, 04-28, 08-05), se retiraron. Valores que tenían (se conservan aquí): ingreso FY26 19,775 / 19,694 · FY27 22,958 / 22,895 · FY28 26,605 / 26,531 · FY29 30,489 / 30,404; EBITDA FY27 4,048 / 4,052 · FY29 6,455 / 6,476; op. income FY27 3,714 / 3,710 · FY29 6,229 / 6,241; earnings FY27 3,076 / 3,074 · FY29 5,182 / 5,193; FCF FY27 4,119 / 4,134 · FY29 6,533 / 6,566 (orden: May 22 / Aug 4). Hallazgo: el snapshot del 08-05 revierte buena parte del recorte de out-years (FY29 ingreso +13%, EBITDA +18% vs abril) y el modelo vuelve a estar +11% (ingreso) y +25% (EBITDA) sobre el Street en FY29; la narrativa anterior ("el modelo convergió al Street") ya no vale y las notas se reescribieron.
 - 2026-10-20 · hallazgo (para VA-SENS / VA-TM) · `spot.js` líneas ~1580 y ~1762 (Price Sensitivity y 2029 Targets) siguen basadas en el snapshot **2026-05-22**, que ya no existe en el MCP; hay que re-basarlas en 2026-08-05 cuando se llegue a Valuation. No se tocaron en EV-EST.
+
+## 8. Earnings sobre la maquinaria canónica (2026-10-20) — qué se movió y dónde quedó cada pieza
+
+Decisión DAA (2026-10-20): portar `tsm-ce.js` → `spot-ce.js` (Watch List en código, sin SQL: los hooks pasan a temas de Notes, que ya persisten en `company_theme_record`).
+
+| Pieza que estaba en `js/overviews/spot.js` | Destino | Nota |
+|---|---|---|
+| `CE_CONS` (rejilla, solo guía) | `spot-ce-data.js` `SPOT_CE_CONS` | ahora se arma al cargar desde `results-data/spot.js`: Street BBG + guía + actuals + bases YoY/QoQ (bases reexpresadas de Premium/Ads tras la reclasificación de ene-2026) |
+| `CALL_EARNINGS` (Q3 upcoming, Q2 reported: setup.notes, debate, results.notes/watch/thesisCheck/intoCall/priceReaction/summary, call.highlights) | `spot-ce-data.js` `SPOT_CALL_EARNINGS` | movido sin cambios; `us` se lee de Results; Q2 ganó `call.take/prepared/qanda/newQuestions` |
+| `WL_ROWS` (11 hooks Q4-23…Q3-26) | `spot-wl-legacy.js` (verbatim) | el Watch List canónico es Notes; los hooks reexpresan los temas del registro, no se fusionaron |
+| `SPOT_THEMES` (8 temas) + `SRC_CALLS` | `themes-data/spot.js` | + `seg` por tema (8 grupos) + 2 temas nuevos de la call (Add-ons ARPU, Reserved) |
+| `ceIRButton` (tarjeta IR/EDGAR) y el párrafo explicativo de dos fases | — | eran decoración copiada de GOOGL (colores de Google); los enlaces (IR e EDGAR CIK 1639920) quedan en el comentario de `spot.js` |
+| ~2,260 líneas de renderizadores `ce*`/`wl*` | `spot-ce.js` (canónico) | `spot.js` pasó de 4,504 a 2,268 líneas |
+
+**Lo que el formato canónico NO dibuja** (queda en los datos, sin perderse): `results.summary` (5 párrafos + notas), `results.thesisCheck`, `results.intoCall`, `results.priceReaction`. ⚑ Decisión pendiente del analista: ¿alguna de esas piezas debe tener lugar en el perfil (p. ej. `thesisCheck` como Notes o `summary` como "Also on the call")?
+
+**Bugs de la copia canónica detectados (avisar a SAB):** `tsm-ce.js` línea ~1021 deja `stmt:ceStmtIdx(m.k)` dentro de un comentario → "Statement order" no ordena nunca (orden por sorpresa/indefinido); y el crecimiento sobre una base cero o negativa imprime absurdos (EPS 2Q25 = −0.42 → "−760%"). Corregido en `spot-ce.js`; no se tocó TSM.
+
+**Otros hallazgos:** las notas de `results-data/spot.js` mostraban `<b>` literal (el motor las pinta como texto) — 46 etiquetas retiradas; el texto de Setup/Results decía "13 preguntas" pero la call tuvo 14 (10 analistas); la transcripción no trae speaker en la mayoría de las respuestas, así que las del Q&A nuevo van como "Management" salvo cuando la propia transcripción los presenta.
+
+**Pendiente en esta tanda:** cierre del precio post-print (`priceReaction.close` sigue en null: no hay precio de cierre en el repo; no se inventa); `consensus-evolution` no se monta (no hay bloque SPOT, §12).
+
+## 9. Overview sin color (2026-10-20) — qué cambió
+
+Reglas de SAB (playbook §8 en `feat/meta-profile`, 19–20 oct): sin color categórico, un solo acento `--steel`, barras de OV-4 en grises claros con los montos en negro, títulos del 2×2 en negro, círculos de peers blancos con borde gris (la empresa, navy), sin tira de precio en vivo.
+
+- `html()`: se quitó el `--brand:#1DB954` de la raíz; `css/overview.css` ahora define `.ov-spot { --brand/--brand-2: var(--steel) }`, `.ov-spot .q2-k` en `--navy` y el bloque `.gmm-neutral` (mismo texto que SAB agregó para META/TSM/AMZN).
+- Se borraron los dos `<style>` en línea del Overview (`stdOverviewBody`, `stdPeerScatter`): todas sus reglas ya vivían en `css/overview.css` (playbook §3.3, A1). El quinto campo (color) de `GMM_SEG/GEO` ya no se lee y se quitó de los datos.
+- `gmmBars` = la de `tsm.js` (ranking por tamaño, monto fuera de la barra si < 10%).
+- Key Facts: celda 6 pasó de "Public since" a **IPO** (`Apr 2018 · NYSE direct listing`); CEO ahora con antigüedad (`Alex Norström (joined 2011) & Gustav Söderström (joined 2009) · co-CEOs since Jan 2026`, de la propia línea de tiempo); `SEC filer` = `Foreign (20-F/6-K)` (la verificación en EDGAR queda en el comentario).
+- Tira de precio en vivo: **SPOT no la tenía** (market cap en Key Facts y `liveQuote` solo alimentan la celda y los peers).
+
+**Excepciones abiertas (no se tocaron, hay que decidir):**
+- ⚑ **OV-6 / VA-PEERS** — `S_PEERS` trae múltiplos P/E y EV/EBITDA **sembrados** (stockanalysis.com, leídos el 2026-07-31) y crecimiento; la regla 10 pide guardar denominadores con fuente (EPS/EBITDA de cada peer, del filing o de BBG) y calcular el múltiplo con el precio en vivo. Requiere esos denominadores para NFLX, TME, UMG, WMG, SIRI, DUOL, LYV (+ SPOT). Mientras tanto el mapa sigue como estaba.
+- Los iconos de OV-5 son emoji (permitido por §8); los logos de los peers son el único color del mapa.
+- Deep Dive: Top Line / Bottom Line / Valuation siguen con sus verdes `#1DB954` en gráficas propias; se resuelven al reconstruir cada sección con el motor y `SUMMIT_CAT`.

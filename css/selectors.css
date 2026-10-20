@@ -24,38 +24,38 @@
    Playbook: docs/PROFILE_PLAYBOOK.md §21b. ═══════════════════════════════════════════════════════ */
 
 /* ── L2 · Section tabs ─────────────────────────────────────────────────────────────────────── */
-:is(.ov-amzn-dd, .ov-tsm-dd) .dd-tabs {
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .dd-tabs {
   display: flex; flex-wrap: wrap; gap: 28px; margin: 0 0 18px; padding: 0;
   border-bottom: 1px solid var(--bdr); background: none;
 }
-:is(.ov-amzn-dd, .ov-tsm-dd) .dd-tab {
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .dd-tab {
   font-family: inherit; font-size: 13.5px; font-weight: 600; letter-spacing: 0; text-transform: none;
   color: var(--mu); background: none; border: none; border-bottom: 2px solid transparent; border-radius: 0;
   padding: 10px 0 9px; margin: 0 0 -1px; cursor: pointer; transition: color .12s, border-color .12s;
 }
-:is(.ov-amzn-dd, .ov-tsm-dd) .dd-tab:hover { color: var(--navy); }
-:is(.ov-amzn-dd, .ov-tsm-dd) .dd-tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .dd-tab:hover { color: var(--navy); }
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .dd-tab.active { color: var(--navy); border-bottom-color: var(--navy); }
 
 /* ── L3 · Sub-tabs, and L3b · nested sub-tabs ──────────────────────────────────────────────── */
-:is(.ov-amzn-dd, .ov-tsm-dd) .ovt-subtabs,
-:is(.ov-amzn-dd, .ov-tsm-dd) .ce-phtabs {
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ovt-subtabs,
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ce-phtabs {
   display: flex; flex-wrap: wrap; gap: 22px; align-items: center;
   width: auto !important; margin: 0 0 18px; padding: 0;
   background: none; border: none; border-radius: 0; box-shadow: none;
 }
-:is(.ov-amzn-dd, .ov-tsm-dd) .ce-evohead { margin-bottom: 4px !important; }
-:is(.ov-amzn-dd, .ov-tsm-dd) .ce-evohead .ovt-subtabs { margin: 0 !important; }
-:is(.ov-amzn-dd, .ov-tsm-dd) .ce-phtabs { margin-top: 8px; padding-top: 10px; border-top: 1px solid #EEF1F5; }
-:is(.ov-amzn-dd, .ov-tsm-dd) .ovt-subtab,
-:is(.ov-amzn-dd, .ov-tsm-dd) .ce-phtab {
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ce-evohead { margin-bottom: 4px !important; }
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ce-evohead .ovt-subtabs { margin: 0 !important; }
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ce-phtabs { margin-top: 8px; padding-top: 10px; border-top: 1px solid #EEF1F5; }
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ovt-subtab,
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ce-phtab {
   font-family: inherit; font-size: 12.5px; font-weight: 500; letter-spacing: 0; text-transform: none;
   color: var(--mu); background: none; border: none; border-bottom: 1.5px solid transparent; border-radius: 0;
   padding: 4px 0 5px; flex: none !important; box-shadow: none;
   cursor: pointer; white-space: nowrap; transition: color .12s, border-color .12s;
 }
-:is(.ov-amzn-dd, .ov-tsm-dd) .ovt-subtab:hover,
-:is(.ov-amzn-dd, .ov-tsm-dd) .ce-phtab:hover { color: var(--navy); }
-:is(.ov-amzn-dd, .ov-tsm-dd) .ovt-subtab.active,
-:is(.ov-amzn-dd, .ov-tsm-dd) .ce-phtab.active {
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ovt-subtab:hover,
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ce-phtab:hover { color: var(--navy); }
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ovt-subtab.active,
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ce-phtab.active {
   color: var(--navy); font-weight: 600; border-bottom-color: var(--navy); background: none;
 }

@@ -50,6 +50,8 @@ export var spotSetup = {
   currencyName: spotResults.currencyName,
   intro: 'The Setup chart — the same actuals-vs-estimates chart and table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, the Summit line, and the guidance line on the two monetary lines Spotify actually guides (total revenue and operating income). Spotify guides a single POINT rather than a range, so the guidance band renders as a line. The window is rolling: the last 8 reported quarters plus the one next forecast quarter, so it advances by itself as new prints land. Sources and every caveat per the dataset header (js/results-data/spot.js) — including the Premium/Ad-Supported basis break at 1Q26, which applies here too.',
   source: spotResults.source,
+  // The Street comes from the Bloomberg vintages (estMatrix.cons), not from flat arrays: carry the matrix across.
+  estMatrix: spotResults.estMatrix,
   views: {
     q: { label: 'Quarterly',
          note: 'Rolling — the last 8 reported quarters plus the one next (forecast) quarter. ' + spotResults.views.q.note,

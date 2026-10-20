@@ -151,13 +151,13 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 | OV-6 | Overview ▸ Competitors (peer map) | ✅ | 2026-10-20 | SAB (aprobación previa) | | 8 peers, denominadores del 10-K; forward BBG solo META/GOOGL/AMZN; Trailing por defecto |
 | OV-7 | Overview ▸ Timeline | ✅ | 2026-10-20 | SAB (aprobación previa) | | 7 hitos en orden, viñetas, sin precios de acción |
 | OV-F | Overview ▸ Pie de fuentes | ✅ | 2026-10-20 | SAB (aprobación previa) | | un solo pie |
-| EV-RES-DATA | Dataset de Results (números) | ⬜ | | | | |
-| EV-RES | Evolution ▸ Results | ⬜ | | | | |
+| EV-RES-DATA | Dataset de Results (números) | ✅ | 2026-10-20 | SAB | | consenso BBG (220 celdas, verify_preprint 0 cambios/0 borrados) en vez de LSEG; Summit recongelado del 2026-08-04; EBITDA en base reportada (OI + D&A) |
+| EV-RES | Evolution ▸ Results | ✅ | 2026-10-20 | SAB | | mismo motor; ficha Consensus vuelve a aparecer |
 | TL-GEN | Top Line ▸ General | ⬜ | | | | |
 | TL-SEG | Top Line ▸ Segments | ⬜ | | | | |
 | TL-OTH | Top Line ▸ Other | ⬜ | | | | |
 | TL-CUS | Top Line ▸ Customers | ⬜ | | | | |
-| EV-EST | Evolution ▸ Estimates | ⬜ | | | | |
+| EV-EST | Evolution ▸ Estimates | ✅ | 2026-10-20 | SAB | | 5 snapshots: Dec 15 · Feb 3 · May 5 · Aug 4 (sin el 05-22 que ya no existe) |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | ⬜ | | | | |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | ⬜ | | | | |
@@ -288,9 +288,9 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 | 71 | `intoCall` · "What this tees up" | Earnings ▸ Post-Results | Evolution ▸ Earnings ▸ Post-Results | se conserva; nota de EPS sin LSEG | ⬜ |
 | 72 | `ceHighlightsBlock` · "Also on the call" | Earnings ▸ Post-Results | Evolution ▸ Earnings ▸ Post-Results | se conserva; nota de EPS sin LSEG | ⬜ |
 | 73 | `ceResultsBody` · pie | Earnings ▸ Post-Results | Evolution ▸ Earnings ▸ Post-Results | se conserva; nota de EPS sin LSEG | ⬜ |
-| 74 | `resultsHtml('META') views.q` · trimestral actual vs Summit vs Street vs guía (consenso LSEG) | Evolution ▸ Results | Evolution ▸ Results | el dataset se rehace: consenso BBG (no LSEG), Summit congelado de los 5 snapshots | ⬜ |
-| 75 | `views.y` · anual | Evolution ▸ Results | Evolution ▸ Results | el dataset se rehace: consenso BBG (no LSEG), Summit congelado de los 5 snapshots | ⬜ |
-| 76 | `resultsEvoHtml('META')` · cada año a través de 4 vintages | Evolution ▸ Estimates | Evolution ▸ Estimates | se rehace con los 5 snapshots del MCP | ⬜ |
+| 74 | `resultsHtml('META') views.q` · trimestral actual vs Summit vs Street vs guía (consenso LSEG) | Evolution ▸ Results | Evolution ▸ Results | el dataset se rehace: consenso BBG (no LSEG), Summit congelado de los 5 snapshots | ✅ |
+| 75 | `views.y` · anual | Evolution ▸ Results | Evolution ▸ Results | el dataset se rehace: consenso BBG (no LSEG), Summit congelado de los 5 snapshots | ✅ |
+| 76 | `resultsEvoHtml('META')` · cada año a través de 4 vintages | Evolution ▸ Estimates | Evolution ▸ Estimates | se rehace con los 5 snapshots del MCP | ✅ |
 | 77 | `strategyBody (STRAT_LOOP)` · flywheel de 4 nodos | Evolution ▸ Strategy | Misc ▸ Strategy | flywheel + cuatro apuestas, como sub-tab propia de Misc | ⬜ |
 | 78 | `STRAT_HERO` · 3 tarjetas hero | Evolution ▸ Strategy | Misc ▸ Strategy | flywheel + cuatro apuestas, como sub-tab propia de Misc | ⬜ |
 | 79 | `STRAT_DRIVERS, STRAT_NOTE` · cuatro apuestas con modal + pie | Evolution ▸ Strategy | Misc ▸ Strategy | flywheel + cuatro apuestas, como sub-tab propia de Misc | ⬜ |
@@ -316,8 +316,8 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 | 99 | `buildSbc meSbc` · SBC vs acciones diluidas FY21–25 + pie | Management ▸ Governance & SBC | Bottom Line ▸ General ▸ Stock-based compensation | la gráfica SBC vs acciones diluidas va a BL-GEN-4 (como AMZN); MG-GOV la cita | ⬜ |
 | 100 | `#dd-mgmt-slot` · Pillar de Management (Fiscal.ai; META fuera del plan) | Management ▸ Ownership | Pillars ▸ Management | vuelve a Pillars; Management ▸ Ownership se arma con la tabla de insiders (Form 4 / DEF 14A), como TSM | ⬜ |
 | 101 | `SOURCES` · pie maestro | DD ▸ pie general | Un pie por panel (§22) | el pie maestro se reparte en los pies de cada sub-tab | ⬜ |
-| 102 | `modelBody + buildAve* (Q13…OPM_A)` · backtest de sorpresas 1Q23–1Q26 ("kept for salvage") | (sin montar) Model vs Reality | Evolution ▸ Results ▸ surprise scorecard | **fusión**: Results ya muestra la sorpresa por trimestre; los datos (snapshot que ya no existe) no se reusan | ⬜ |
-| 103 | `guideBody (GUIDE, CAPEX_GUIDE)` · guiado vs entregado 1Q24–2Q26 + escalada del capex guide | (sin montar) Guidance | Evolution ▸ Results ▸ bandas de guía + capex guide anual | **fusión**: la guía de ingreso va en guideLo/guideHi; la escalada del capex guide como guía anual de capex | ⬜ |
+| 102 | `modelBody + buildAve* (Q13…OPM_A)` · backtest de sorpresas 1Q23–1Q26 ("kept for salvage") | (sin montar) Model vs Reality | Evolution ▸ Results ▸ surprise scorecard | **fusión**: Results ya muestra la sorpresa por trimestre; los datos (snapshot que ya no existe) no se reusan | ✅ |
+| 103 | `guideBody (GUIDE, CAPEX_GUIDE)` · guiado vs entregado 1Q24–2Q26 + escalada del capex guide | (sin montar) Guidance | Evolution ▸ Results ▸ bandas de guía + capex guide anual | **fusión**: la guía de ingreso va en guideLo/guideHi; la escalada del capex guide como guía anual de capex | ✅ |
 | 104 | `CALLS, CALLS_NOTE, TAILWINDS, HEADWINDS, WALLED, FOA_WINS, GEM_WHAT, GEM_POINTS, FY_NOTE, AS_OF` · texto editorial sin mostrar | (sin montar) constantes con contenido | repartidas | TAILWINDS/HEADWINDS → Misc ▸ Competitive position; WALLED/FOA_WINS/GEM_* → Top Line ▸ Segments ▸ FoA; CALLS → Earnings ▸ Notes; FY_NOTE/AS_OF (cifras viejas) → **fusión** con OV-4 "The numbers" | ⬜ |
 
 ## 6. Bloqueos y preguntas abiertas
@@ -379,3 +379,11 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 - Pendientes de su destino (contenido conservado en el código, B2): cadena de la subasta `AD_FLOW` (#6 → TL-SEG) y walled garden `ECO_OPEN` (#8 → MISC-comp).
 - Autoauditoría: ✔ 7 bloques + pie en orden · ✔ 2×2 ≤ 30 palabras · ✔ segmentos = geografía = $200,966M · ✔ barras grises, montos en negro · ✔ sin `<style>` en el Overview · ✔ consola sin errores · ✘ **cotizaciones en vivo**: todas las funciones del portal respondían 401 a la sesión local (también para TSM); el mapa de peers y el market cap muestran "no live price" / "live quote unavailable" hasta volver a iniciar sesión — verificar al reconectar.
 - Ojo para SAB: el consenso BBG FY2026 de GOOGL (archivo 9/8/2026) da ingreso +6.9% y EPS $19.90 (+84%), probablemente con ganancias de inversiones; se muestra tal cual el archivo.
+
+### 2026-10-20 · EV-RES-DATA + EV-RES + EV-EST — APROBADAS
+- Consenso: Bloomberg (`scripts/consensus/map_meta.json` → `emit_matrix.py` → `apply_matrix.py`; 30 snapshots, sin series congeladas ni reimpresas); flat `cons` = preprint del matrix (`verify_preprint.py META cons`: 220 same, 0 changed, 0 blanked). LSEG/Refinitiv eliminado.
+- Summit: recongelado del snapshot 2026-08-04 (Projection History del workbook, Last Submit = 2026-08-04 15:52:20 = snapshot del MCP). Cuadre §9.1: 2026 reportado 1T–2T + estimados 3T–4T = anual (ingreso 256,178; OI 88,738; capex 145,000 en base del modelo). 2027 trimestral roto → null.
+- EBITDA anual en base reportada (OI + D&A) para act, Summit (derivado) y BBG.
+- Estimates: vintages Dec 15 · Feb 3 · May 5 · Aug 4 (2026-05-22 eliminado); notas reescritas.
+- Arreglo de paso: `inspect_matrix.py` / `emit_matrix.py` leen el archivo BBG con `errors='replace'` (el byte µ los tumbaba para todos los tickers).
+- Piezas B2 cerradas: #74, #75, #76, #102 (sorpresa = Results), #103 (bandas de guía).

@@ -1,0 +1,28 @@
+{
+  "_doc": "META metric map for emit_matrix.py (schema v2 — by Bloomberg CODE + segment). Codes read off inspect_matrix.py META (newest snapshot 9/8/2026). Segment ids: FoA SEG0000607716, Advertising SEG0000234478, Other revenue SEG0000611460, Reality Labs SEG0000607718 (kpi slots, SALES_REV_TURN). Capex is HEADLINE_CAPEX (negative in the export, flipped to positive spend). The export carries no segment operating income, so foaop / rlop have no consensus. Replaces the LSEG/Refinitiv figures the dataset used to carry (playbook §9.1: consensus only from Bloomberg).",
+  "segments": { "foa": "SEG0000607716", "adv": "SEG0000234478", "oth": "SEG0000611460", "rl": "SEG0000607718" },
+  "q": {
+    "rev":    { "code": "IS_COMP_SALES", "unit": "usdM" },
+    "foa":    { "code": "SALES_REV_TURN", "unit": "usdM", "segment": "foa" },
+    "adv":    { "code": "SALES_REV_TURN", "unit": "usdM", "segment": "adv" },
+    "oth":    { "code": "SALES_REV_TURN", "unit": "usdM", "segment": "oth" },
+    "rl":     { "code": "SALES_REV_TURN", "unit": "usdM", "segment": "rl" },
+    "opinc":  { "code": "IS_OPER_INC", "unit": "usdM" },
+    "netinc": { "code": "IS_COMP_NET_INCOME_GAAP", "unit": "usdM" },
+    "eps":    { "code": "IS_COMP_EPS_GAAP", "unit": "eps" },
+    "capex":  { "code": "HEADLINE_CAPEX", "unit": "usdM", "sign": -1 }
+  },
+  "y": {
+    "rev":    { "code": "IS_COMP_SALES", "unit": "usdM" },
+    "foa":    { "code": "SALES_REV_TURN", "unit": "usdM", "segment": "foa" },
+    "adv":    { "code": "SALES_REV_TURN", "unit": "usdM", "segment": "adv" },
+    "oth":    { "code": "SALES_REV_TURN", "unit": "usdM", "segment": "oth" },
+    "rl":     { "code": "SALES_REV_TURN", "unit": "usdM", "segment": "rl" },
+    "opinc":  { "code": "IS_OPER_INC", "unit": "usdM" },
+    "netinc": { "code": "IS_COMP_NET_INCOME_GAAP", "unit": "usdM" },
+    "eps":    { "code": "IS_COMP_EPS_GAAP", "unit": "eps" },
+    "ebitda": { "code": "IS_COMPARABLE_EBITDA", "unit": "usdM" },
+    "capex":  { "code": "HEADLINE_CAPEX", "unit": "usdM", "sign": -1 },
+    "fcf":    { "code": "HEADLINE_FCF", "unit": "usdM" }
+  }
+}

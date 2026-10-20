@@ -146,7 +146,7 @@ def read_rows(rows, hdr, origin):
                     'slots':slots})
     return out
 
-rows_txt = list(csv.reader(open(TXT,newline='',encoding='utf-8-sig'),delimiter='\t'))
+rows_txt = list(csv.reader(open(TXT,newline='',encoding='utf-8-sig',errors='replace'),delimiter='\t'))
 snaps = read_rows(rows_txt[1:], [str(v) for v in rows_txt[0]], 'txt')
 
 wbk = openpyxl.load_workbook(WB, read_only=True, data_only=True)

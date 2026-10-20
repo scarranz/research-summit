@@ -12,7 +12,7 @@ var BASE = 'cy27', Y = 'CY2027';
 var C = { eps: '#3E5A82', mult: '#B7C4D8', pos: '#177A4E', neg: '#9B2A20', price: '#1E2733', earn: '#7C9CC4' };
 var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 var IXN = { spx: 'S&P 500', ndx: 'Nasdaq-100' };
-var LV = [['sector', 'Sector'], ['ig', 'Industry group'], ['sec', 'Security']];
+var LV = [['sec', 'Security'], ['sector', 'Sector'], ['ig', 'Industry group']];
 var E = null, root = null, S = null, DOM = null, K0 = 1, ORD = {};
 
 function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -66,7 +66,7 @@ function ctl(id, parts) {
   if (parts.indexOf('as') >= 0) blk('Measured as', pills(a('as'), [['c', 'Contribution to the index (pp)'], ['o', 'Its own change (%)']], c.as));
   if (parts.indexOf('dates') >= 0) blk('Dates (pick any)', '<span class="eps-pl">' + E.dates.map(function (d, k) {
     return '<button class="ndx-tab-btn' + (c.ks.indexOf(k) >= 0 ? ' active' : '') + '" data-act="cdate" data-v="' + k + '">' + dShort(d) + '</button>'; }).join('') + '</span>');
-  if (parts.indexOf('side') >= 0) blk('Show', pills(a('side'), [['pos', 'Top'], ['neg', 'Bottom'], ['both', 'Both']], c.side));
+  if (parts.indexOf('side') >= 0) blk('Show', pills(a('side'), [['pos', 'Top'], ['neg', 'Bottom']], c.side));
   if (parts.indexOf('n') >= 0 || parts.indexOf('n2') >= 0) blk('How many', '<span class="eps-pl" style="flex-wrap:nowrap">' + [[5, 'Top 5'], [10, 'Top 10'], [20, 'Top 20']].concat(parts.indexOf('n') >= 0 ? [[0, 'All']] : []).map(function (o) {
     return '<button class="ndx-tab-btn' + (o[0] === c.n ? ' active' : '') + '" ' + a('n') + ' data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') +
     '<input type="number" min="1" max="500" placeholder="Custom" ' + a('n') + ' value="' + ([5, 10, 20, 0].indexOf(c.n) < 0 ? c.n : '') + '"></span>');
@@ -102,7 +102,7 @@ function hero() {
       '<div class="eps-eqt"><div class="k">EPS effect</div><div class="v" style="color:' + col(p.G) + '">' + pp(p.G, 1) + ' pp</div><div class="s">' + Y + ' EPS estimates</div></div><div class="op">+</div>' +
       '<div class="eps-eqt"><div class="k">Multiple effect</div><div class="v" style="color:' + col(p.M) + '">' + pp(p.M, 1) + ' pp</div><div class="s">forward P/E ' + x1(p.pe0) + ' → ' + x1(p.pe1) + '</div></div><div class="op">=</div>' +
       '<div class="eps-eqt tot"><div class="k">Price return</div><div class="v" style="color:' + col(p.R) + '">' + pc(p.R) + '</div><div class="s">' + span + '</div></div></div>';
-    rows.push({ label: IXN[ix], a: p.G, b: p.M, net: p.R,
+    rows.push({ label: span, a: p.G, b: p.M, net: p.R,
       tip: '<b style="font-size:13px">' + IXN[ix] + ' · ' + span + '</b><span class="tp">EPS effect: ' + pp(p.G, 1) + ' pp (each stock\'s weight × the change of its ' + Y + ' EPS estimate, added up)<br>Multiple effect: ' + pp(p.M, 1) + ' pp (each stock\'s weight × (1 + its EPS change) × its own P/E change, added up)<br><b>Price return: ' + pc(p.R) + '</b></span>' });
   });
   return { tiles: tiles, rows: rows };
@@ -242,7 +242,13 @@ function concBlock() {
     return { label: dShort(E.dates[k]), v: q.e10byE, bold: k === ks[ks.length - 1],
       tip: '<b style="font-size:13px">' + dLong(E.dates[k]) + '</b><span class="tp">The ' + n + ' companies expected to earn the most in ' + Y + ' produce ' + (q.e10byE * 100).toFixed(1) + '% of the expected earnings of the ' + IXN[c.ix] + '; all the others ' + ((1 - q.e10byE) * 100).toFixed(1) + '%.<br><br>Their share each: ' + names + (q.topE.length > 25 ? ' · …' : '') + '</span>' };
   });
-  return { n: n, rows: rows, msg: 'On ' + dLong(E.dates[ks[ks.length - 1]]) + ', the ' + n + ' companies expected to earn the most produce <b>' + (rows[rows.length - 1].v * 100).toFixed(1) + '%</b> of the ' + Y + ' earnings expected for the ' + IXN[c.ix] + '. Hover a bar to see who they are.' };
+  var pk = ks.indexOf(c.pick) >= 0 ? c.pick : ks[ks.length - 1], q = E.concentration(c.ix, pk, BASE, null, n);
+  rows.forEach(function (r, i) { r.picked = ks[i] === pk; });
+  var panel = '<div class="eps-h2">Who they are · ' + IXN[c.ix] + ' · ' + dLong(E.dates[pk]) + ' <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--mu)">(click a bar to change the date)</span></div>' +
+    '<div class="eps-tw eps-scr" style="max-height:320px"><table class="rt eps-t3"><thead><tr><th>#</th><th>Company</th><th class="num">Share of expected ' + Y + ' earnings</th><th class="num">Weight in the index</th><th class="num">Forward P/E</th></tr></thead><tbody>' +
+    q.topE.map(function (x, i) { var s = E.secs[x.id]; return '<tr><td>' + (i + 1) + '</td><td><b>' + esc(s.t) + '</b> ' + esc(short(s.n)) + '</td><td class="num">' + (x.sh * 100).toFixed(1) + '%</td><td class="num">' + (x.w * 100).toFixed(2) + '%</td><td class="num">' + x1(x.pe) + '</td></tr>'; }).join('') + '</tbody></table></div>' +
+    '<div class="eps-note">Expected earnings of a company inside the index = its weight ÷ its forward P/E, so a company counts by its weight and by how much it is expected to earn per dollar of value; EPS per share on its own does not rank anything.</div>';
+  return { n: n, ks: ks, rows: rows, panel: panel, msg: 'On ' + dLong(E.dates[ks[ks.length - 1]]) + ', the ' + n + ' companies expected to earn the most produce <b>' + (rows[rows.length - 1].v * 100).toFixed(1) + '%</b> of the ' + Y + ' earnings expected for the ' + IXN[c.ix] + '. Hover or click a bar to see who they are.' };
 }
 
 
@@ -287,13 +293,13 @@ function dataBlock() {
 
 // ─── page ─────────────────────────────────────────────────────────
 function skeleton() {
-  var hb = function (ix) { return '<div class="eps-hb"><div class="eps-eqn">' + IXN[ix] + '</div><div id="eps-h-' + ix + '"></div></div>'; };
+  var hb = function (ix) { return '<div class="eps-hb"><div class="eps-eqn">' + IXN[ix] + '</div><div id="eps-h-' + ix + '"></div><div id="eps-hc-' + ix + '"></div></div>'; };
   root.innerHTML =
-    sec('eps-s1', 'Return = EPS effect + multiple effect', '<div id="eps-c1"></div><div class="card">' + hb('spx') + hb('ndx') + '<div class="eps-hb" id="eps-hc"></div></div>') +
+    sec('eps-s1', 'Return = EPS effect + multiple effect', '<div id="eps-c1"></div><div class="card">' + hb('spx') + hb('ndx') + '</div>') +
     sec('eps-s2', 'Attribution detail & simulation', '<div id="eps-c2"></div><div id="eps-detail"></div>') +
     sec('eps-s3', 'Who moved the index', '<div id="eps-c3"></div><div class="card"><div class="eps-h2" style="margin-top:0" id="eps-t3"></div><div id="eps-who"></div><div class="eps-note" id="eps-who-n"></div></div>') +
     sec('eps-s4', 'One stock: EPS estimate and what moved its price', '<div id="eps-c4"></div><div class="card"><div class="eps-msg" id="eps-em"></div><div id="eps-et"></div><div id="eps-ex"></div><div id="eps-ec" style="margin-top:14px"></div></div>') +
-    sec('eps-s5', 'Concentration of expected earnings', '<div id="eps-c5"></div><div class="card"><div class="eps-msg" id="eps-cm"></div><div id="eps-cc"></div></div>') +
+    sec('eps-s5', 'Concentration of expected earnings', '<div id="eps-c5"></div><div class="card"><div class="eps-msg" id="eps-cm"></div><div id="eps-cc"></div><div id="eps-cp"></div></div>') +
     sec('eps-s6', 'Data & method', '<div id="eps-c6"></div><div class="card" id="eps-data"></div>');
 }
 function render() {
@@ -301,7 +307,9 @@ function render() {
   var h = hero();
   set('eps-c1', ctl('hero', ['to'])); set('eps-s1-n', 'whole index, not affected by the exclusions below · from ' + dShort(E.dates[K0]) + ' · ' + Y + ' EPS');
   set('eps-h-spx', h.tiles.spx); set('eps-h-ndx', h.tiles.ndx);
-  divStack(document.getElementById('eps-hc'), h.rows, { colA: C.eps, colB: C.mult, pos: C.pos, neg: C.neg, domain: d.hero, unit: '%', axisTitle: 'points of return since ' + dShort(E.dates[K0]), netTitle: 'Price return', labA: 'EPS effect', labB: 'Multiple effect', diaLabel: 'Price return' });
+  ['spx', 'ndx'].forEach(function (ix, i) {
+    divStack(document.getElementById('eps-hc-' + ix), [h.rows[i]], { colA: C.eps, colB: C.mult, pos: C.pos, neg: C.neg, domain: d.hero, unit: '%', axisTitle: 'points of return since ' + dShort(E.dates[K0]), netTitle: 'Price return', labA: 'EPS effect', labB: 'Multiple effect', diaLabel: 'Price return' });
+  });
   set('eps-c2', ctl('detail', ['ix', 'to'])); set('eps-s2-n', ctxLine(IXN[S.detail.ix], S.detail.k1)); set('eps-detail', detail());
   var cw = S.who; set('eps-c3', ctl('who', ['ix', 'to', 'what', 'as', 'lvl', 'side', 'n'])); set('eps-s3-n', ctxLine(IXN[cw.ix], cw.k1));
   var w = who(), unit = cw.lvl === 'sec' ? 'stock' : cw.lvl === 'ig' ? 'group' : 'sector', ixn = IXN[cw.ix];
@@ -320,7 +328,8 @@ function render() {
   set('eps-c5', ctl('conc', ['ix', 'n2', 'dates'])); set('eps-s5-n', 'whole index, not affected by the exclusions · ' + Y + ' EPS expectations');
   var cb = concBlock();
   set('eps-cm', cb.msg);
-  stackBars(document.getElementById('eps-cc'), cb.rows, { color: C.eps, restLabel: 'all other companies', title: 'Share of the index\'s expected ' + Y + ' earnings produced by the ' + cb.n + ' companies expected to earn the most' });
+  set('eps-cp', cb.panel);
+  stackBars(document.getElementById('eps-cc'), cb.rows, { color: C.eps, restLabel: 'all other companies', onPick: function (i) { S.conc.pick = cb.ks[i]; render(); }, title: 'Share of the index\'s expected ' + Y + ' earnings produced by the ' + cb.n + ' companies expected to earn the most' });
   set('eps-c6', ctl('data', ['ix', 'to'])); set('eps-s6-n', IXN[S.data.ix] + ' · ' + dShort(E.dates[K0]) + ' → ' + dShort(E.dates[S.data.k1])); set('eps-data', dataBlock());
 }
 

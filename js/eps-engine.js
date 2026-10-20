@@ -136,7 +136,7 @@ export function makeEngine(D) {
     function sh(list, n) { var s = 0; list.slice(0, n).forEach(function (m) { s += m.e; }); return E ? s / E : null; }
     var covW = cov.reduce(function (s, m) { return s + m.w; }, 0);
     function wsh(list, n) { var s = 0; list.slice(0, n).forEach(function (m) { s += m.w; }); return covW ? s / covW : null; }
-    return { top5: top5, top10: top10, n: a.length, topE: byE.slice(0, N).map(function (m) { return { id: m.id, sh: E ? m.e / E : 0 }; }),
+    return { top5: top5, top10: top10, n: a.length, topE: byE.slice(0, N).map(function (m) { return { id: m.id, sh: E ? m.e / E : 0, w: m.w, pe: m.px / epsOf([0, 0, 0, 0, m.e26, m.e27], base) }; }),
       e10byW: sh(byW, N), e10byE: sh(byE, N), w10byE: wsh(byE, N), w10byW: wsh(byW, N) };
   }
 

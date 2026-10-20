@@ -112,7 +112,9 @@ export function stackBars(box, rows, o) {
     g.appendChild(txt({ x: xm - 8, y: y + h / 2 + 4, 'text-anchor': 'end', 'font-size': 12, 'font-weight': 700, fill: '#fff', 'font-variant-numeric': 'tabular-nums' }, (r.v * 100).toFixed(1) + '%'));
     g.appendChild(txt({ x: X(1) - 8, y: y + h / 2 + 4, 'text-anchor': 'end', 'font-size': 10.5, fill: '#6B7686' }, o.restLabel || 'everyone else'));
     g.appendChild(se('rect', { x: 0, y: y - 3, width: VW, height: rowH - 4, fill: 'transparent' }));
+    if (r.picked) g.appendChild(se('rect', { x: P.l - 1.5, y: y - 1.5, width: X(1) - P.l + 3, height: h + 3, rx: 3, fill: 'none', stroke: '#1E2733', 'stroke-width': 1.5 }));
     if (r.tip) bindTip(g, r.tip, 290);
+    if (o.onPick) { g.style.cursor = 'pointer'; g.addEventListener('click', function () { o.onPick(i); }); }
     svg.appendChild(g);
   });
   mount(box, svg, '');

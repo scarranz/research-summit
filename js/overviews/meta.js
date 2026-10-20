@@ -81,7 +81,11 @@ var OTH_S = [721, 809, 1057, 1722, 2584];
 var RL_CUM = 78781; // cumulative Reality Labs operating loss 2020–2025 (~$78.8B)
 
 // ─── Snapshot & narrative ────────────────────────────────────────────────────
-var DESC='Meta is the world\'s largest social-advertising business. The <b>Family of Apps</b> — Facebook, Instagram, WhatsApp, Messenger and Threads (~3.5B daily people) — is the engine: a walled-garden advertising machine (Meta owns every layer of the ad stack, so it keeps essentially the whole ad dollar) running at a <b>~50%+ segment operating margin</b>. The <b>consolidated</b> company runs <b>~41%</b> — the gap is Reality Labs, the AR/VR + AI-hardware bet that loses ~$19B a year and which the FoA cash funds. Management guides Reality Labs losses to <b>peak in 2026</b>, then gradually narrow. The whole story is how much of the FoA cash gets re-invested into AI capex, and whether it pays off.';
+// OV-2 lede (playbook §8: 2–4 sentences, ~50–80 words, no numbers, neutral). Paraphrased from the
+// FY2025 10-K, Item 1 "Overview".
+var DESC='Meta Platforms builds the apps people use to connect and share — Facebook, Instagram, WhatsApp, Messenger and Threads — and earns its money by selling the advertising shown inside them. It also builds virtual-reality headsets, AI glasses and its own AI models, and it is investing heavily in them as the foundation of what it sees as the next computing platform.';
+// The previous lede, kept until OV-4 absorbs its numbers into "The numbers" (B2 map, piece #3 — never delete).
+var DESC_PREV='Meta is the world\'s largest social-advertising business. The <b>Family of Apps</b> — Facebook, Instagram, WhatsApp, Messenger and Threads (~3.5B daily people) — is the engine: a walled-garden advertising machine (Meta owns every layer of the ad stack, so it keeps essentially the whole ad dollar) running at a <b>~50%+ segment operating margin</b>. The <b>consolidated</b> company runs <b>~41%</b> — the gap is Reality Labs, the AR/VR + AI-hardware bet that loses ~$19B a year and which the FoA cash funds. Management guides Reality Labs losses to <b>peak in 2026</b>, then gradually narrow. The whole story is how much of the FoA cash gets re-invested into AI capex, and whether it pays off.';
 var KPIS=[
   { l:'Revenue',          v:'$201B', d:pctStr((REV[6]/REV[5]-1)*100)+' YoY',  dir:'up' },
   { l:'Operating Income', v:'$83.3B',d:'~41% op margin',                       dir:'up' },
@@ -94,30 +98,94 @@ var FY_NOTE='Two engines, one company. <b>Family of Apps</b> generated ~$199B of
 // ═══════════════════════════════════════════════════════════════════════════
 //  STANDARDIZED OVERVIEW DATA (the 7 blocks)
 // ═══════════════════════════════════════════════════════════════════════════
-// Block 1 — Key Facts (exactly 10, 5×2). Market-cap cell is live (#meMc).
+// Block 1 — Key Facts (OV-1: the 10 standard cells, playbook §8). Source: 10-K FY2025 (cover page,
+// Item 1 "Corporate Information" and "Human Capital"), EDGAR CIK 1326801. Market cap is live (#meMc),
+// never seeded (rule 10). Segments, dual-class control and capital return moved to OV-4 / Management (B2).
 var META_FACTS=[
   ['Listing','NASDAQ: META'],
-  ['HQ','Menlo Park, CA, USA'],
-  ['Founded','2004 — Cambridge, MA'],
-  ['IPO','May 2012 · $38.00'],
-  ['CEO','Mark Zuckerberg · founder, since 2004'],
-  ['Segments','Family of Apps · Reality Labs'],
-  ['Control','Dual-class — founder voting control'],
-  ['Capital return','Dividend (since 2024) + buybacks'],
-  ['Employees','~76,000 · 2025'],
-  ['Market cap','~$1.8T · est'],
+  ['HQ','Menlo Park, California, USA'],
+  ['Incorporated','Delaware, USA'],
+  ['SEC filer','Domestic (10-K/10-Q/8-K)'],
+  ['Founded','2004 (Mark Zuckerberg)'],
+  ['IPO','May 2012 · NASDAQ'],
+  ['CEO','Mark Zuckerberg · founder · CEO since 2004'],
+  ['Employees','78,865 · Dec 2025'],
+  ['Dividend','Payer · quarterly, since 2024'],
+  ['Market cap','loading live quote…'],
 ];
 function metaKeyFacts(){
   return '<div class="stdkf">'+META_FACTS.slice(0,10).map(function(p){
     var v=p[0]==='Market cap' ? '<span id="meMc">'+esc(p[1])+'</span>' : esc(p[1]);
     return '<div class="stdkf-cell"><div class="stdkf-k">'+esc(p[0])+'</div><div class="stdkf-v">'+v+'</div></div>'; }).join('')+'</div>';
 }
-// Block 3 — the 4-quadrant (each cell ≤ ~30 words).
+// OV-3 — the 2×2 (≤ 30 words a cell). Sources: FY2025 10-K — Item 1 (products), MD&A ("Family daily active
+// people (DAP) was 3.58 billion on average for December 2025"; ad impressions +12%, average price per ad +9%),
+// Note 2 (revenue by line), Note 15 (segment operating income), Note 1 ("No customer represented 10% or more
+// of total revenue"). "The edge" is the analyst's read (SAB, 2026-10-20).
 var META_BIZ=[
-  ['What it sells','Attention. Ad space across Facebook, Instagram, WhatsApp, Messenger and Threads, sold by real-time auction; plus a small Reality Labs hardware line (Quest, Ray-Ban / Oakley Meta glasses).'],
-  ['Who buys it','~10M+ advertisers — from global brands to small businesses — bidding for ~3.5B daily people. No single customer is material; the advertiser base is the ultimate diversification.'],
-  ['How it earns','Advertising is ~98% of revenue: impressions × price-per-ad, both AI-driven. FY2025 revenue $201B; Family-of-Apps segment ~50%+ op margin, consolidated ~41% after Reality Labs.'],
-  ['The edge','A walled garden — Meta is the publisher, buy-side, sell-side, exchange and data layer at once, so it keeps ~the whole ad dollar; ~3.5B-user data network + the best direct-response AI.'],
+  ['What it sells','Ad space inside Facebook, Instagram, Messenger, WhatsApp and Threads, sold by real-time auction — plus business messaging, Meta Verified subscriptions and Reality Labs hardware: Quest headsets and AI glasses.'],
+  ['Who buys it','Businesses of every size, from global brands to small merchants, bidding to reach <b>3.58 billion</b> daily people (Dec 2025). No customer is 10% of revenue.'],
+  ['How it earns','FY2025: ~98% advertising, ~1% other app revenue, ~1% Reality Labs; impressions +12%, price per ad +9%. Reality Labs\' <b>$19.2B loss</b> takes the 52% apps margin to 41%.'],
+  ['The edge','Meta owns the apps, the auction and the measurement — a closed loop that keeps nearly the whole ad dollar and ranks ads with AI trained on 3.58B people\'s activity.'],
+];
+
+// OV-4 — How Meta makes money, FY2025. [label, % of total, '$x.xB', 'x%', colour — unused, the bars are grey].
+// Segments: 10-K Note 15. Geography: Note 2, "based on the addresses of our customers" (not user location).
+// Both reconcile to total revenue $200,966M.
+var GMM_SEG=[
+  ['Family of Apps', 98.9, '$198.8B', '99%', null],
+  ['Reality Labs',    1.1, '$2.2B',   '1%',  null],
+];
+var GMM_GEO=[
+  ['US & Canada',   39.2, '$78.9B', '39%', null],
+  ['Asia-Pacific',  26.8, '$53.8B', '27%', null],
+  ['Europe',        23.2, '$46.6B', '23%', null],
+  ['Rest of world', 10.8, '$21.7B', '11%', null],
+];
+// One accordion per segment: what it is (no numbers) + "The numbers". Descriptions paraphrase 10-K Item 1.
+// The old lede's numbers (FoA ~50%+ margin, 41% consolidated, RL −$19B, losses peaking in 2026) live here now.
+var REV_DEFS=[
+  { seg:'Family of Apps (where the money comes from)',
+    desc:'Facebook, Instagram, Messenger, WhatsApp and Threads, plus the <b>Meta AI</b> assistant. Free to use; paid for by businesses that buy the ads shown in feeds, Stories and Reels, priced by auction. A small part comes from paid business messaging on WhatsApp, <b>Meta Verified</b> subscriptions and developer payment fees.',
+    econ:[['FY2025 revenue','$198.8B · 99% of total'],['Growth','+22% (from $162.4B)'],['Operating income','$102.5B · 51.6% margin'],['Advertising','$196.2B (+22%): ad impressions +12%, average price per ad +9%'],['Other revenue','$2.6B (+50%)'],['Daily active people','3.58B on average, Dec 2025 (+7%)']] },
+  { seg:'Reality Labs (the long bet, run at a loss)',
+    desc:'Hardware and research for what Meta sees as the next computing platform: <b>Quest</b> virtual-reality headsets and the Horizon store, <b>Ray-Ban Meta</b> and <b>Oakley Meta</b> AI glasses, <b>Meta Ray-Ban Display</b> with its Neural Band wristband, and long-range augmented-reality research such as the Orion prototype.',
+    econ:[['FY2025 revenue','$2.2B · 1% of total'],['Growth','+3% (from $2.1B)'],['Operating income','−$19.2B (−$17.7B in 2024)'],['2026 spend plan','~70% wearables · ~30% VR and Horizon (10-K)'],['Outlook','2026 losses similar to 2025 and "likely the peak" (Zuckerberg, Q4 2025 call)']] },
+  { seg:'The revenue lines (advertising, other, Reality Labs)',
+    desc:'The 10-K also splits the same total by line: advertising and other revenue inside the Family of Apps, and Reality Labs.',
+    econ:[['Advertising','$196.2B · 97.6% (+22%)'],['Other revenue','$2.6B · 1.3% (+50%)'],['Reality Labs','$2.2B · 1.1% (+3%)']],
+    econNote:'10-K Note 2 (Revenue). Other revenue = WhatsApp paid messaging, Meta Verified subscriptions, developer Payments fees and other sources (MD&A).' },
+];
+
+// OV-5 — Products: family card → pop-up with the products inside (key prod:i). Every line paraphrases the
+// FY2025 10-K Item 1 ("Family of Apps Products", "Reality Labs Products").
+var META_PRODUCTS=[
+  { ic:'👥', fam:'Facebook', d:'Community, feed and Marketplace.', items:[
+    ['Feed, Reels and Stories','Where people share and discover posts, short videos and moments from friends, creators and pages.'],
+    ['Groups','Communities built around shared interests.'],
+    ['Marketplace','Buying and selling between people and businesses.']] },
+  { ic:'📸', fam:'Instagram', d:'Photos, video and creators.', items:[
+    ['Feed, Stories and Reels','Photos and short video from friends, creators and brands.'],
+    ['Live and messaging','Live broadcasts and private messages.'],
+    ['Shopping','Discovering and buying from favorite businesses.']] },
+  { ic:'💬', fam:'Messaging', d:'WhatsApp and Messenger.', items:[
+    ['WhatsApp','Private, secure messaging used by people and businesses to communicate and transact; Channels for one-to-many broadcasts.'],
+    ['WhatsApp business messaging','Paid conversations between businesses and their customers — part of "other revenue".'],
+    ['Messenger','Text, audio and video calls with friends, family, communities and businesses, across devices.']] },
+  { ic:'🧵', fam:'Threads', d:'Text updates and public talk.', items:[
+    ['Threads','Text-based updates and public conversations, where people follow creators and build their own audience.']] },
+  { ic:'🤖', fam:'Meta AI', d:'The assistant, everywhere.', items:[
+    ['Meta AI assistant','Available inside the apps, as a stand-alone app, on the AI glasses and on the web — to learn, get things done, create and connect.'],
+    ['AI behind the apps','The same AI investment ranks content, recommends what to watch and powers the tools advertisers use to reach customers.']] },
+  { ic:'🕶️', fam:'Reality Labs devices', d:'Headsets and AI glasses.', items:[
+    ['Meta Quest','Virtual-reality headsets, with passthrough to see the real world, and content from the Meta Horizon Store.'],
+    ['Ray-Ban Meta · Oakley Meta','AI glasses with Meta AI built in and hands-free use.'],
+    ['Meta Ray-Ban Display + Neural Band','AI glasses with a display in the lens (2025), controlled by a wristband that reads muscle signals.'],
+    ['Orion (prototype)','True augmented-reality glasses unveiled in 2024 — research, not on sale.']] },
+  { ic:'📣', fam:'For businesses', d:'Ads, subscriptions, payments.', items:[
+    ['Ads','Ads placed across the apps and bought by auction; AI tools help advertisers reach customers.'],
+    ['Meta Verified','A paid subscription for verified accounts.'],
+    ['Payments','Infrastructure for developers, on which Meta earns net fees.']] },
 ];
 function metaFourQuad(){
   return '<div class="q2">'+META_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
@@ -251,20 +319,25 @@ var EFFIC=[
 ];
 
 // ─── Timeline / Peers / Winds ────────────────────────────────────────────────
+// OV-7 — strict chronological order, bullets inside "Read more" (playbook §8). Sources: FY2025 10-K Item 1
+// ("incorporated in Delaware in July 2004", IPO May 2012), Item 5 (dividends "beginning in 2024"), Meta
+// newsroom / 8-Ks for the acquisitions, the rename and the Scale AI investment; the FTC ruling (Nov 2025).
+// No stock prices or market-cap milestones here (playbook OV-7 "what doesn't go in").
 var TIMELINE=[
-  { y:'2004', t:'<b>Facebook founded</b> by Mark Zuckerberg at Harvard.' },
-  { y:'2012', t:'<b>IPO</b> on NASDAQ at $38.00; acquires <b>Instagram</b> (~$1B).',
-    d:'Meta (then Facebook) IPO\'d in May 2012 at <b>$38.00</b> — a famously rocky debut that traded down sharply before the mobile-advertising pivot re-rated it. The same year it bought <b>Instagram</b> for ~$1B, one of the best acquisitions in tech history.' },
-  { y:'2014', t:'Acquires <b>WhatsApp</b> (~$19B) and <b>Oculus</b> (~$2B) — messaging scale + the VR seed.',
-    d:'<b>WhatsApp</b> (~$19B) brought global messaging scale (now ~3B users and the base for click-to-message ads); <b>Oculus</b> (~$2B) seeded what became Reality Labs.' },
-  { y:'2021', t:'Rebrands to <b>Meta</b>; carves out <b>Reality Labs</b> as a reported segment.',
-    d:'The October 2021 rebrand to <b>Meta</b> signaled the metaverse pivot and introduced <b>Reality Labs</b> as a separate reporting segment — making its multi-billion-dollar losses visible for the first time.' },
-  { y:'2022', t:'<b>The crash</b> — ad recession, Apple ATT, metaverse spend; stock falls to ~$88.',
-    d:'A brutal year: Apple\'s <b>App Tracking Transparency</b> (ATT) hit ad targeting (~$10B headwind), a macro ad recession, TikTok competition, and surging Reality Labs spend collapsed the stock to ~$88. It set up the turnaround.' },
-  { y:'2023', t:'<b>"Year of Efficiency"</b> — ~21k layoffs; margins and stock recover sharply.',
-    d:'Zuckerberg declared a <b>"Year of Efficiency,"</b> cutting ~21,000 roles, flattening management and refocusing on AI and Reels. Operating margin re-expanded and the stock more than tripled.' },
-  { y:'2024–26', t:'<b>AI re-rate</b> — record profit, the all-in AI push, and the FTC win.',
-    d:'AI-driven ad improvements lifted price and conversion; revenue and profit hit records and Meta paid its <b>first dividend</b> (2024). In 2025 it went all-in: a <b>$14.3B stake in Scale AI</b> bringing <b>Alexandr Wang</b> as Chief AI Officer, the new <b>Superintelligence Labs</b>, a costly talent war, and an open→closed model pivot. It <b>won the FTC antitrust case (Nov 2025)</b> — no Instagram/WhatsApp breakup — and ramped <b>capex toward ~$125–145B</b> (2026 guide) for AI infrastructure.' },
+  { y:'2004', t:'<b>Facebook founded</b> by Mark Zuckerberg at Harvard.',
+    d:'<ul class="ov-bullets"><li>February 2004 — Facebook launches for Harvard students, then opens to other universities and, in 2006, to everyone.</li><li>July 2004 — incorporated in Delaware; Zuckerberg has been CEO since.</li></ul>' },
+  { y:'2012', t:'<b>IPO</b> on NASDAQ (May) and the purchase of <b>Instagram</b>.',
+    d:'<ul class="ov-bullets"><li>May 2012 — traditional IPO on NASDAQ at $38.00 a share.</li><li>2012 — buys Instagram for about $1B; it is now one of Meta\'s two main ad surfaces.</li><li>The same years: the shift of the ad business from desktop to mobile.</li></ul>' },
+  { y:'2014', t:'Buys <b>WhatsApp</b> and <b>Oculus</b> — messaging scale and the seed of Reality Labs.',
+    d:'<ul class="ov-bullets"><li>WhatsApp (~$19B) — global messaging, later the base for business messaging.</li><li>Oculus (~$2B) — virtual reality, the origin of today\'s Reality Labs.</li></ul>' },
+  { y:'2021', t:'Renamed <b>Meta</b>; <b>Reality Labs</b> becomes its own reported segment.',
+    d:'<ul class="ov-bullets"><li>October 2021 — Facebook, Inc. becomes Meta Platforms, Inc.</li><li>Reality Labs is reported separately from the Family of Apps, so its losses are visible for the first time.</li></ul>' },
+  { y:'2022–23', t:'Apple\'s tracking change and the <b>"Year of Efficiency"</b>.',
+    d:'<ul class="ov-bullets"><li>2022 — Apple\'s App Tracking Transparency limits the data Meta uses to target and measure ads; revenue falls for the first time.</li><li>Meta rebuilds targeting and measurement on its own AI.</li><li>2023 — the "Year of Efficiency": about 21,000 roles cut and management layers removed.</li></ul>' },
+  { y:'2024', t:'<b>First dividend</b> in Meta\'s history.',
+    d:'<ul class="ov-bullets"><li>Beginning in 2024, the board declares a quarterly cash dividend on Class A and Class B shares.</li><li>Raised from $0.50 to $0.525 a share in 2025.</li></ul>' },
+  { y:'2025', t:'All-in on AI: <b>Scale AI</b> and <b>Superintelligence Labs</b>; the FTC antitrust case is won.',
+    d:'<ul class="ov-bullets"><li>June 2025 — a $14.3B investment in Scale AI; its founder Alexandr Wang joins as Chief AI Officer to lead the new Meta Superintelligence Labs.</li><li>November 2025 — a federal court rules for Meta in the FTC\'s antitrust case: no forced sale of Instagram or WhatsApp.</li></ul>' },
 ];
 var PEERS=[
   ['Alphabet (Google)', 'The other ad giant — Search + YouTube; also a walled garden.', 'Both re-rating on AI and both keep the ad dollar in-house. Meta owns <b>social/feed</b> attention and the best <b>direct-response</b> engine; Google owns <b>intent</b> (search). Both face the same AI-capex test — but Google has a cloud business to absorb its spend; Meta must monetize internally.'],
@@ -3216,18 +3289,307 @@ var STD_STYLE='<style>.stdkf{display:grid;grid-template-columns:repeat(5,1fr);bo
   '.dd-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 14px;border-bottom:1px solid var(--bdr);padding-bottom:10px}'+
   '.dd-tab{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:12px;font-weight:800;color:var(--mu);padding:7px 14px;border-radius:999px;cursor:pointer}'+
   '.dd-tab.active{background:'+BRAND+';color:#fff;border-color:'+BRAND+'}</style>';
+// ═══ OV-6 Competitors — the peer map (the same ME_PEERS / ME_SC will feed Valuation ▸ Peers) ═══════════
+// Rule 10: no multiple and no market cap is written here. The file holds the DENOMINATORS, from each peer's
+// FY2025 10-K (SEC EDGAR XBRL); price, market cap and (when Massive has it) EV are live (api.liveQuote) and the
+// multiple is computed in the browser: P/E = price ÷ EPS, EV/EBITDA = EV ÷ EBITDA (EV = live EV, else live
+// market cap + net debt below).
+//   epsT/epsF  diluted EPS, US$ (GAAP; forward = Bloomberg consensus "IS_COMP_EPS_GAAP")
+//   ebitdaT    US$ M = operating income + D&A from the 10-K; ebitdaF = Bloomberg comparable EBITDA FY2026
+//   nd         net debt, US$ M = long-term debt (ex leases) − cash & equivalents, Dec 31 2025
+//   gt/gf      revenue growth, % — FY2025 vs FY2024 (10-K) / FY2026 consensus vs FY2025
+// Forward exists only for the names in BBG_CONSENSUS.txt: META (9/8/2026), GOOGL (9/8/2026), AMZN (9/10/2026).
+// Peer set (SAB pre-approved the Overview, 2026-10-20): listed ad platforms. TikTok is private; YouTube is
+// inside Alphabet.
+var ME_PEERS=[
+  { tk:'META', n:'Meta', hl:true, epsT:23.49, epsF:31.61, ebitdaT:101892, ebitdaF:119147, nd:22871, gt:22.2, gf:26.4,
+    src:'10-K FY2025; forward: Bloomberg consensus FY2026, Sep 8 2026',
+    why:'The profile company: ads across Facebook, Instagram, Messenger, WhatsApp and Threads, plus Reality Labs.' },
+  { tk:'GOOGL', n:'Alphabet', epsT:10.81, epsF:19.90, ebitdaT:150175, ebitdaF:226428, nd:18377, gt:15.1, gf:6.9,
+    src:'10-K FY2025; forward: Bloomberg consensus FY2026, Sep 8 2026',
+    why:'Search and YouTube make it the largest seller of digital ads; it also runs Google Cloud.' },
+  { tk:'AMZN', n:'Amazon', epsT:7.17, epsF:12.66, ebitdaT:145731, ebitdaF:220794, nd:-17974, gt:12.4, gf:15.6,
+    src:'10-K FY2025; forward: Bloomberg consensus FY2026, Sep 10 2026',
+    why:'Its retail-media ads business is a large ad platform, but most of Amazon\'s value is retail and AWS.' },
+  { tk:'APP', n:'AppLovin', epsT:9.75, epsF:null, ebitdaT:4347, ebitdaF:null, nd:1026, gt:70.0, gf:null,
+    src:'10-K FY2025 (continuing operations)',
+    why:'An AI ad engine for mobile apps and e-commerce — competes with Meta for performance ad budgets.' },
+  { tk:'RDDT', n:'Reddit', epsT:2.62, epsF:null, ebitdaT:458, ebitdaF:null, nd:-954, gt:69.4, gf:null,
+    src:'10-K FY2025',
+    why:'Community forums turned into an ad platform, growing fast from a small base.' },
+  { tk:'PINS', n:'Pinterest', epsT:0.61, epsF:null, ebitdaT:345, ebitdaF:null, nd:-969, gt:15.8, gf:null,
+    src:'10-K FY2025',
+    why:'Visual discovery and shopping ads — a smaller social ad platform.' },
+  { tk:'TTD', n:'The Trade Desk', epsT:0.90, epsF:null, ebitdaT:705, ebitdaF:null, nd:-658, gt:18.5, gf:null,
+    src:'10-K FY2025',
+    why:'The largest independent buying platform for open-web ads — the model Meta\'s closed loop competes against.' },
+  { tk:'SNAP', n:'Snap', epsT:-0.27, epsF:null, ebitdaT:-369, ebitdaF:null, nd:2506, gt:10.6, gf:null,
+    src:'10-K FY2025',
+    why:'A social app competing for the same young audience and ad budgets. It lost money in FY2025, so it has no P/E or EV/EBITDA to plot.' },
+];
+
+var ME_SC={ metric:'pe', basis:'t', peers:null, _capsFetched:false };   // Trailing by default: only META, GOOGL and AMZN have a Street forward
+function meScReset(){ if(!ME_SC.peers) ME_SC.peers=ME_PEERS.map(function(p){ var o={}; for(var k in p) o[k]=p[k]; o.on=true; return o; }); }
+function meScNum(v){ return v!=null && !isNaN(v); }
+function meScMult(p){
+  if(!meScNum(p.px)) return null;                                     // no live price → no bubble (no seeded fallback)
+  var f=ME_SC.basis==='f';
+  if(ME_SC.metric==='pe'){ var eps=f?p.epsF:p.epsT; return (meScNum(eps)&&eps>0)?p.px/eps:null; }
+  var eb=f?p.ebitdaF:p.ebitdaT; if(!meScNum(eb)||eb<=0) return null;
+  var ev=meScNum(p.ev)?p.ev:(meScNum(p.mc)&&meScNum(p.nd)?p.mc*1000+p.nd:null);   // US$ M
+  return meScNum(ev)?ev/eb:null;
+}
+function meScGrowth(p){ return ME_SC.basis==='f'?p.gf:p.gt; }
+function meScVisible(){ return (ME_SC.peers||[]).filter(function(p){ return p.on && meScNum(meScMult(p)) && meScNum(meScGrowth(p)); }); }
+// Axes come from the data (max of the visible peers + headroom), never fixed caps.
+function meScNice(v){ var step=v<=20?5:(v<=100?10:25); return Math.ceil(v/step)*step; }
+function meScLogoUrl(p){ return p.logo || ('https://assets.parqet.com/logos/symbol/'+p.tk); }
+
+function meStdPeerScatter(sfx){
+  sfx=sfx||'ov';
+  var h='<div class="me-sc" data-sfx="'+sfx+'">';
+  h+='<div class="ov-diagram-cap asc-cap-top">Peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD.</b> <span class="asc-hint">Hover or tap a bubble for the read.</span></div>';
+  h+='<div class="mg-tog-row">'+
+    '<span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgmetric="pe">P/E</button><button type="button" class="mg-pill" data-mgmetric="ev">EV/EBITDA</button></span></span>'+
+    '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill" data-mgbasis="f">Forward</button><button type="button" class="mg-pill active" data-mgbasis="t">Trailing</button></span></span>'+
+  '</div>';
+  h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" class="me-sc-svg" role="img" aria-label="Peer valuation vs growth map">'+
+    '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← cheaper (lower multiple)</text>'+
+    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">more expensive →</text>'+
+    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" class="me-sc-xlab">P/E · trailing</text>'+
+    '<text x="74" y="225" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end" class="me-sc-ylo">slow</text>'+
+    '<text x="74" y="60" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end" class="me-sc-yhi">fast growth</text>'+
+    '<g class="me-sc-nodes"></g>'+
+  '</svg></div>';
+  h+='<div class="asc-chips me-sc-chips"></div>';
+  h+='<div class="ov-diagram-cap asc-cap-end">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here — <b>TikTok</b> (ByteDance, private) has no market multiple, and <b>YouTube</b> sits inside Alphabet. '+
+    '<span class="ave-subh-note">Multiples = live price ÷ figures reported in each company’s FY2025 10-K (SEC EDGAR); forward = Bloomberg consensus FY2026 (as of Sep 8–10 2026) for Meta, Alphabet and Amazon — the other peers have no Street file, so they plot on Trailing only. Market caps are live.</span></div>';
+  // Valuation ▸ Peers only: the receipt under the read (chart standard rule 3), OPEN by default — copied from
+  // amzn.js meStdPeerScatter('dd').
+  if(sfx==='dd') h+='<div class="rs-collap me-sc-collap">'+
+      '<button type="button" class="rs-collap-h me-sc-tblh" data-selfwired="1"></button>'+
+      '<div class="rs-collap-b me-sc-tblb">'+
+        '<div class="rs-tablewrap asc-tblwrap"><div class="me-sc-tbl"></div></div>'+
+      '</div></div>';
+  h+='<div class="mg-tip me-sc-tip" hidden></div>';
+  h+='</div>';
+  return h;
+}
+function meScRenderOne(wrap){
+  var g=wrap.querySelector('.me-sc-nodes'); if(!g||!ME_SC.peers) return;
+  var X0=80, X1=612, Y0=222, Y1=56;   // data area; the axis line sits lower (y 252) so bottom labels clear the axis text
+  var vis=meScVisible();
+  var maxMult=meScNice(Math.max.apply(null, vis.map(meScMult).concat([1]))*1.12);
+  var gs=vis.map(meScGrowth), gMax=meScNice(Math.max.apply(null, gs.concat([1]))*1.12), gMin=Math.min.apply(null, gs.concat([0]));
+  gMin=gMin<0?-meScNice(-gMin*1.5):0;
+  var lab=wrap.querySelector('.me-sc-xlab'); if(lab) lab.textContent=(ME_SC.metric==='pe'?'P/E':'EV/EBITDA')+' · '+(ME_SC.basis==='f'?'forward':'trailing')+' · axis 0–'+maxMult+'×';
+  var yhi=wrap.querySelector('.me-sc-yhi'); if(yhi) yhi.textContent='+'+gMax+'% growth';
+  var ylo=wrap.querySelector('.me-sc-ylo'); if(ylo) ylo.textContent=gMin<0?(gMin+'%'):'0%';
+  wrap.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mgbasis')===ME_SC.basis); });
+  wrap.querySelectorAll('.mg-pill[data-mgmetric]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mgmetric')===ME_SC.metric); });
+  var frag='';
+  vis.forEach(function(p){
+    var m=meScMult(p), growth=meScGrowth(p);
+    var x=X0+Math.max(0,Math.min(1,m/maxMult))*(X1-X0);
+    var y=Y0-Math.max(0,Math.min(1,(growth-gMin)/(gMax-gMin)))*(Y0-Y1);
+    var r=meScNum(p.mc)?Math.max(11,Math.min(27,9+Math.sqrt(Math.max(1,p.mc))*0.32)):11;
+    var logo=meScLogoUrl(p);
+    var read=(ME_SC.metric==='pe'?'P/E ':'EV/EBITDA ')+m.toFixed(1)+'× · revenue growth '+(growth>0?'+':'')+growth.toFixed(1)+'%'+(meScNum(p.mc)?' · market cap $'+(p.mc>=1000?(p.mc/1000).toFixed(2)+'T':Math.round(p.mc)+'B'):'');
+    frag+='<g class="mg-node" data-name="'+esc(p.n)+'" data-tk="'+esc(p.tk)+'" data-logo="'+esc(logo)+'" data-why="'+esc(p.why||'')+'" data-read="'+esc(read)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
+      '<circle r="'+r.toFixed(1)+'" fill="#fff" stroke="'+(p.hl?BRAND2:'#C7CED6')+'" stroke-width="'+(p.hl?3:1.5)+'"></circle>'+
+      '<image href="'+esc(logo)+'" x="'+(-r*0.72).toFixed(1)+'" y="'+(-r*0.72).toFixed(1)+'" width="'+(r*1.44).toFixed(1)+'" height="'+(r*1.44).toFixed(1)+'" preserveAspectRatio="xMidYMid meet" pointer-events="none"></image>'+
+      '<text y="'+(r+12).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?BRAND2:'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
+  });
+  g.innerHTML=frag;
+  meScChipsOne(wrap);
+  meScTableOne(wrap);
+}
+// ─── The comps table under the peer map (Valuation ▸ Peers) — copied from amzn.js meScTableOne ─────────
+// Everything the map draws, as numbers: the metric/basis pills pick the column, removing a chip drops the
+// row. Average and median EXCLUDE Meta (the set it is read against). Premium in red, discount in green.
+function meScFmtMult(v){ return meScNum(v)?v.toFixed(1)+'×':'—'; }
+function meScFmtPct(v){ return meScNum(v)?v.toFixed(1)+'%':'—'; }
+function meScFmtMc(v){ return meScNum(v)?('$'+(v>=1000?(v/1000).toFixed(2)+'T':Math.round(v)+'B')):'—'; }
+function meScMean(a){ if(!a.length) return null; return a.reduce(function(s,v){ return s+v; },0)/a.length; }
+function meScMedian(a){ if(!a.length) return null; var s=a.slice().sort(function(x,y){ return x-y; }), h=Math.floor(s.length/2); return s.length%2?s[h]:(s[h-1]+s[h])/2; }
+function meScVsAvg(m, avg){
+  if(!meScNum(m)||!meScNum(avg)||avg===0) return '<span class="asc-nilv">—</span>';
+  var d=(m/avg-1)*100;
+  return '<span class="'+(d>=0?'asc-up':'asc-dn')+'">'+(d>=0?'+':'')+Math.round(d)+'%</span>';
+}
+function meScTableOne(wrap){
+  var box=wrap.querySelector('.me-sc-tbl'); if(!box||!ME_SC.peers) return;
+  var mLab=(ME_SC.metric==='pe'?'P/E':'EV/EBITDA'), bLab=(ME_SC.basis==='f'?'forward':'trailing');
+  var rows=ME_SC.peers.map(function(p){ return { p:p, m:meScMult(p), g:meScGrowth(p) }; });
+  // Cheapest first on the ACTIVE multiple; a name with no multiple sinks to the bottom (never sorts as zero).
+  rows.sort(function(a,b){
+    var an=meScNum(a.m), bn=meScNum(b.m);
+    if(!an&&!bn) return 0; if(!an) return 1; if(!bn) return -1; return a.m-b.m;
+  });
+  var peers=rows.filter(function(r){ return !r.p.hl; });
+  var avgM=meScMean(peers.filter(function(r){ return meScNum(r.m); }).map(function(r){ return r.m; }));
+  var medM=meScMedian(peers.filter(function(r){ return meScNum(r.m); }).map(function(r){ return r.m; }));
+  var avgG=meScMean(peers.filter(function(r){ return meScNum(r.g); }).map(function(r){ return r.g; }));
+  var medG=meScMedian(peers.filter(function(r){ return meScNum(r.g); }).map(function(r){ return r.g; }));
+  var nM=peers.filter(function(r){ return meScNum(r.m); }).length;
+  var body=rows.map(function(r){
+    var p=r.p, cls=(p.hl?'asc-hl':'')+(meScNum(r.m)?'':' asc-nil'), nt=meScNum(r.m)?'':meScChipNote(p);
+    return '<tr class="'+cls.trim()+'">'+
+      '<td><span class="asc-nm"><img src="'+esc(meScLogoUrl(p))+'" alt="" onerror="this.style.display=\'none\'">'+
+        '<span>'+esc(p.n)+' <span class="asc-tk">'+esc(p.tk)+(nt?' · '+esc(nt):'')+'</span></span></span></td>'+
+      '<td class="asc-m">'+meScFmtMult(r.m)+'</td>'+
+      '<td>'+meScFmtPct(r.g)+'</td>'+
+      '<td>'+meScFmtMc(p.mc)+'</td>'+
+      '<td>'+meScVsAvg(r.m, avgM)+'</td></tr>';
+  }).join('');
+  var foot='<tr class="asc-avg"><td>Peer average <span class="asc-tk">ex-Meta · '+nM+' name'+(nM===1?'':'s')+'</span></td>'+
+      '<td>'+meScFmtMult(avgM)+'</td><td>'+meScFmtPct(avgG)+'</td>'+
+      '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>'+
+    '<tr class="asc-med"><td>Peer median <span class="asc-tk">ex-Meta</span></td>'+
+      '<td>'+meScFmtMult(medM)+'</td><td>'+meScFmtPct(medG)+'</td>'+
+      '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>';
+  box.innerHTML='<table class="asc-tbl"><thead><tr>'+
+      '<th>Peer</th><th>'+esc(mLab)+' · '+esc(bLab)+'</th>'+
+      '<th>Rev growth · '+esc(bLab)+'</th><th>Market cap</th><th>vs peer avg</th></tr></thead>'+
+    '<tbody>'+body+'</tbody><tfoot>'+foot+'</tfoot></table>';
+  var hd=wrap.querySelector('.me-sc-tblh'), bd=wrap.querySelector('.me-sc-tblb');
+  if(hd){ var open=!(bd&&bd.hidden);
+    hd.innerHTML='<span class="rs-collap-ic">'+(open?'▾':'▸')+'</span>The numbers behind the map'+
+      '<span class="rs-collap-sub">'+(open?'hide':'show')+' · '+esc(mLab)+' · '+esc(bLab)+
+      ', '+rows.length+' names</span>'; }
+}
+// Valuation ▸ Peers (VA-PEERS): the same map as Overview ▸ Competitors — same ME_SC state, so removing a
+// peer here removes it there — plus the table. Multiples and caps are live; the file holds denominators.
+function meValuationPeersBody(){
+  return '<p class="ov-lede"><b>The peer map.</b> The same live-cap scatter as the Overview, kept beside the valuation work: X = multiple (P/E ⇄ EV/EBITDA, forward ⇄ trailing), Y = revenue growth, bubble = live market cap. Every multiple is the live price over a reported (or, for forward, Bloomberg) denominator.</p>'+
+    meStdPeerScatter('dd')+
+    '<div class="ov-foot">Sources — denominators from each company’s FY2025 10-K on SEC EDGAR; forward = Bloomberg consensus FY2026 (as of Sep 8–10 2026) for Meta, Alphabet and Amazon only. Price, market cap and EV live (Massive). EBITDA = operating income + D&A; net debt = debt ex leases − cash and equivalents.</div>';
+}
+// A chip says why its peer is missing from the current view (no forward, negative EPS, no live price).
+function meScChipNote(p){
+  if(!meScNum(p.epsT)&&!meScNum(p.ebitdaT)&&!meScNum(p.epsF)&&!meScNum(p.ebitdaF)) return 'no figures on file';
+  if(!meScNum(p.px)) return 'no live price';
+  if(ME_SC.basis==='f' && !meScNum(ME_SC.metric==='pe'?p.epsF:p.ebitdaF)) return 'trailing only — no Street file';
+  if(!meScNum(meScMult(p))) return ME_SC.metric==='pe'?'no P/E — loss':'no EBITDA on file';
+  return '';
+}
+function meScChipsOne(wrap){
+  var box=wrap.querySelector('.me-sc-chips'); if(!box||!ME_SC.peers) return;
+  var keep=box.querySelector('.me-sc-addtk'); var typed=keep?keep.value:'';
+  var h=ME_SC.peers.map(function(p,i){ var nt=meScChipNote(p); return '<span class="asc-chip" data-sci="'+i+'" title="Remove '+esc(p.n)+'">'+esc(p.n)+(nt?' <span class="asc-chip-note">· '+esc(nt)+'</span>':'')+' <span class="x">×</span></span>'; }).join('');
+  h+='<span class="asc-add"><input class="me-sc-addtk" placeholder="+ TICKER" maxlength="6"><button type="button" class="me-sc-addbtn">Add</button></span>';
+  box.innerHTML=h;
+  var inp=box.querySelector('.me-sc-addtk'); if(inp) inp.value=typed;
+}
+function meScRenderAll(root){ root.querySelectorAll('.me-sc').forEach(function(w){ meScRenderOne(w); meWireScChips(root, w); }); }
+function meWireScatters(root){
+  meScReset();
+  root.querySelectorAll('.me-sc').forEach(function(wrap){
+    if(wrap._scWired) return; wrap._scWired=true;
+    var tblH=wrap.querySelector('.me-sc-tblh'), tblB=wrap.querySelector('.me-sc-tblb');
+    if(tblH&&tblB) tblH.onclick=function(){ tblB.hidden=!tblB.hidden; meScTableOne(wrap); };
+    var g=wrap.querySelector('.me-sc-nodes'), tip=wrap.querySelector('.me-sc-tip');
+    wrap.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(btn){ btn.onclick=function(){ ME_SC.basis=btn.getAttribute('data-mgbasis'); meScRenderAll(root); }; });
+    wrap.querySelectorAll('.mg-pill[data-mgmetric]').forEach(function(btn){ btn.onclick=function(){ ME_SC.metric=btn.getAttribute('data-mgmetric'); meScRenderAll(root); }; });
+    if(g&&tip){
+      var svg=wrap.querySelector('.me-sc-svg');
+      function nodeOf(e){ return (e.target&&e.target.closest)?e.target.closest('.mg-node'):null; }
+      function show(node){ tip.innerHTML='<div class="mgt-h"><img src="'+node.getAttribute('data-logo')+'" alt="" onerror="this.style.display=\'none\'"><span class="mgt-n">'+node.getAttribute('data-name')+'</span></div>'+node.getAttribute('data-why')+'<div class="mgt-m">'+node.getAttribute('data-read')+'</div>'; tip.hidden=false; }
+      function move(e){ tip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; tip.style.top=(e.clientY+16)+'px'; }
+      function hide(){ tip.hidden=true; }
+      g.addEventListener('pointerover', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } });
+      g.addEventListener('pointermove', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } else hide(); });
+      g.addEventListener('pointerout', function(e){ if(!nodeOf(e)) return; var rt=e.relatedTarget; if(rt&&rt.closest&&rt.closest('.mg-node')) return; hide(); });
+      if(svg) svg.addEventListener('pointerleave', hide);
+      g.addEventListener('click', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } });
+    }
+  });
+  meScRenderAll(root); meScFetchCaps(root);
+}
+function meWireScChips(root, wrap){
+  wrap.querySelectorAll('.me-sc-chips .asc-chip[data-sci]').forEach(function(ch){ ch.onclick=function(){ var i=+ch.getAttribute('data-sci'); if(ME_SC.peers[i]){ ME_SC.peers.splice(i,1); meScRenderAll(root); } }; });
+  var addBtn=wrap.querySelector('.me-sc-addbtn'), addIn=wrap.querySelector('.me-sc-addtk');
+  if(addBtn&&addIn){
+    addIn.onkeydown=function(e){ if(e.key==='Enter') addBtn.click(); };
+    addBtn.onclick=function(){ var tk=(addIn.value||'').trim().toUpperCase(); if(!tk) return;
+      if(!ME_SC.peers.some(function(p){ return p.tk===tk; })){
+        var seed=ME_PEERS.filter(function(p){ return p.tk===tk; })[0];   // re-adding a known peer restores its file data
+        if(seed){ var o={}; for(var k in seed) o[k]=seed[k]; o.on=true; ME_SC.peers.push(o); }
+        else ME_SC.peers.push({ tk:tk, n:tk, on:true, epsT:null, epsF:null, ebitdaT:null, ebitdaF:null, nd:null, gt:null, gf:null,
+          why:'Added by ticker — live market cap only; no reported figures on file, so it plots once they are added.' });
+      }
+      addIn.value=''; meScRenderAll(root); meLiveOne(root, tk); };
+  }
+}
+function meScFetchCaps(root){ if(ME_SC._capsFetched||!ME_SC.peers) return; ME_SC._capsFetched=true; ME_SC.peers.forEach(function(p){ if(p.tk) meLiveOne(root, p.tk); }); }
+
+// Live market cap (Key Facts cell) via Massive (api.liveQuote). Market data is ALWAYS live — no seeded
+// number is ever shown: until the quote arrives the cell says so, and if it fails it says that.
+// The same quote feeds the peer bubbles: price (P/E), market cap (bubble size) and EV when Massive has one.
+function meLiveOne(root, tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(res){ var q=res&&res.data?res.data:res;
+    if(!q||q.marketCap==null){ if(tk==='META') meMcCell(root,'live quote unavailable'); return; }
+    var mcB=q.marketCap/1e9;
+    (ME_SC.peers||[]).forEach(function(p){ if(p.tk===tk){ p.px=q.price; p.mc=mcB; p.ev=(q.ev!=null?q.ev/1e6:null); } });
+    if(tk==='META') meMcCell(root, '$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}));
+    meScRenderAll(root);
+  }).catch(function(){ if(tk==='META') meMcCell(root,'live quote unavailable'); }); }
+
+
+// ═══ Standardized Overview (OV-1 … OV-7 + OV-F) — copied from tsm.js, the playbook reference ═══════
+// Bars shorter than ~10% can't hold their $ label: the label moves just outside the bar.
+// Neutral light greys, ranked by size (css/overview.css .gmm-neutral) — the colour field r[4] is ignored.
+function gmmRank(arr){ var o=arr.map(function(r,i){ return [r[1],i]; }).sort(function(a,b){ return b[0]-a[0]; }), rk=[];
+  o.forEach(function(x,j){ rk[x[1]]=Math.min(j+1,6); }); return rk; }
+function gmmBars(arr){
+  var rk=gmmRank(arr);
+  return '<div class="ov-mbars gmm-neutral">'+arr.map(function(r,i){
+    var out=r[1]<10;
+    return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+'</div>'+
+      '<div class="ov-mbar-track'+(out?' out':'')+'"><div class="ov-mbar-fill gmm-g'+rk[i]+'" style="width:'+Math.max(r[1],1.2)+'%">'+(out?'':esc(r[2]))+'</div>'+(out?'<span class="ov-mbar-outv">'+esc(r[2])+'</span>':'')+'</div>'+
+      '<div class="ov-mbar-v">'+esc(r[3])+'</div></div>';
+  }).join('')+'</div>';
+}
+function meStdMoneyMap(){
+  var h='<div class="ov-diagram-cap gmm-cap-top">FY2025 revenue <b>$201.0B (+22%)</b> — the same total, two ways: by <b>segment</b> or by <b>geography</b> (where Meta\'s customers are based). Both reconcile to the reported figure.</div>';
+  h+='<div class="mg-tog-row"><span class="mg-tog">View: <span class="mg-seg">'+
+    '<button type="button" class="mg-pill active" data-gmm="seg">Segments</button>'+
+    '<button type="button" class="mg-pill" data-gmm="geo">Geography</button></span></span></div>';
+  h+='<div class="gmm-view" data-gmm="seg">'+gmmBars(GMM_SEG)+'</div>';
+  h+='<div class="gmm-view" data-gmm="geo" hidden>'+gmmBars(GMM_GEO)+'</div>';
+  h+='<div class="mm-defs acc-list">'+REV_DEFS.map(function(s){
+    var econ='<div class="acc"><button type="button" class="acc-h">The numbers <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+(s.econNote?'<div class="ave-subh-note acc-note">'+esc(s.econNote)+'</div>':'')+'</div></div>';
+    return '<div class="acc"><button type="button" class="acc-h">'+esc(s.seg)+'<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+s.desc+'</div>'+econ+'</div></div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-diagram-cap gmm-cap-end">FY2025: operating income <b>$83.3B</b> (41.4% margin) · net income <b>$60.5B</b> (30.1%). The apps earn <b>$102.5B</b>; Reality Labs loses <b>$19.2B</b>. The tax rate was 30% — <b>13% without a one-time charge</b> from the July 2025 US tax law (OBBBA). '+
+    '<span class="ave-subh-note">Source: Meta FY2025 Form 10-K (Note 2 Revenue; Note 15 Segment and Geographical Information; MD&A). Geography is by customer address, as Note 2 reports it — not by where users are.</span></div>';
+  return h;
+}
+function meStdTimeline(){
+  return '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
+}
+function meStdProducts(){
+  return '<div class="ov-diagram-cap gmm-cap-top"><b>Tap any family</b> for the specific products inside it.</div>'+
+    '<div class="stdp">'+META_PRODUCTS.map(function(f,i){
+      return '<div class="stdp-card ov-clickable" data-detail="prod:'+i+'"><div class="stdp-ic">'+f.ic+'</div>'+
+        '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
+    }).join('')+'</div>';
+}
+// OV-F — the Overview's one source footer (the collapsibles carry none of their own).
+var OV_SOURCES='Sources — Meta FY2025 Form 10-K (SEC EDGAR, filed Jan 29 2026) for company facts, headcount, FY2025 revenue by segment, line and customer geography, segment operating income, the tax rate, DAP and ad pricing, products and history; Meta Q4 2025 earnings call (Jan 28 2026) for the Reality Labs outlook; Meta newsroom and 8-Ks for acquisitions, the rename and the Scale AI investment. Peers: each company\'s FY2025 10-K. Market cap and peer multiples are live (Massive price ÷ reported figures as of FY2025; forward ÷ Bloomberg consensus as of Sep 2026 for Meta, Alphabet and Amazon). Forward figures are estimates, not company guidance.';
+
 function html(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring
-  var h='<div class="ov ov-meta" data-brand="META">'+STD_STYLE;
+  var h='<div class="ov ov-meta" data-brand="META">';
   h+=metaKeyFacts();
   h+='<p class="ov-lede">'+DESC+'</p>';
   h+=metaFourQuad();
-  h+=collapsible('How Meta makes money — the ad auction', moneyMapBody());
-  h+=collapsible('What it makes — the products', productsBody());
-  h+=collapsible('The walled garden — Meta\'s moat', moatBody());
-  h+=collapsible('Competitors — valuation vs growth', metaScatter());
-  h+=collapsible('Timeline', '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>');
-  h+='<div class="ov-foot">'+esc(OV_SOURCE)+'</div>';
+  h+=collapsible('How Meta makes money', meStdMoneyMap(), false);
+  h+=collapsible('Products & platforms', meStdProducts(), false);
+  h+=collapsible('Competitors — the peer map', meStdPeerScatter('ov'), false);
+  h+=collapsible('Timeline — how it became today\'s Meta', meStdTimeline(), false);
+  h+='<div class="ov-foot">'+esc(OV_SOURCES)+'</div>';
   h+='<div class="ov-modal-back" id="meModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="meModalX" aria-label="Close">×</button>'+
     '<div class="ov-modal-t" id="meModalT"></div><div class="ov-modal-b" id="meModalB"></div></div></div>';
@@ -3306,14 +3668,16 @@ function deepDiveHtml(c){
 // ─── Live quote (Massive via api.liveQuote) ──────────────────────────────────
 // No price strip on the Overview (SAB, Oct 20 2026 — the profile header already shows the price):
 // the quote only feeds the Key Facts market cap, the peer map and Sensitivity.
+function meMcCell(root, txt){ var el=root.querySelector('#meMc'); if(el) el.textContent=txt; }
 function renderLive(root){
   import('../api.js').then(function(api){ return api.liveQuote('META'); }).then(function(res){
     var q=(res && res.success) ? res.data : null;
+    if(!q || q.marketCap==null){ meMcCell(root,'live quote unavailable'); }
     if(!q || q.price==null) return;
     _metaLivePx=q.price; try{ sensRender(root); }catch(e){}
-    if(q.marketCap!=null){ var mcEl=root.querySelector('#meMc'); if(mcEl){ var mcB=q.marketCap/1e9; mcEl.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live'; }
-      META_SC.peers && META_SC.peers.forEach(function(p){ if(p.tk==='META') p.mc=q.marketCap/1e9; }); metaScRender(root); }
-  }).catch(function(){});
+    if(q.marketCap!=null){ var mcB=q.marketCap/1e9;
+      meMcCell(root, '$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})); }
+  }).catch(function(){ meMcCell(root,'live quote unavailable'); });
 }
 // Live market caps for peer bubbles.
 function metaLiveOne(root,tk){
@@ -3405,7 +3769,10 @@ function wireModal(root){
   root.querySelector('#meModalX').onclick=closeM; back.onclick=function(e){ if(e.target===back) closeM(); };
   function resolve(key){ var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
     if(kind==='ce'){ return CE_POP[id]||null; }
-    if(kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
+    if(kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:esc(t.y),h:t.d}:null; }
+    if(kind==='prod'){ var f=META_PRODUCTS[+id]; if(!f) return null;   // Overview ▸ Products & platforms (OV-5)
+      var pb=f.items.map(function(it){ return '<div class="prod-item"><div class="prod-item-n">'+esc(it[0])+'</div><div class="famd">'+it[1]+'</div></div>'; }).join('');
+      return {t:f.ic+' '+esc(f.fam),h:'<div class="famd prod-lead">'+esc(f.d)+'</div>'+pb}; }
     if(kind==='ad'){ var s=AD_FLOW[+id]; return s?{t:'Step '+(+id+1)+' — '+s.t,h:(s.detail||s.d)}:null; }
     if(kind==='spend'){ var w=SPEND_WAYS.filter(function(x){return x.k===id;})[0]; return w?{t:w.t,h:w.detail}:null; }
     if(kind==='rl'){ var rlD=RL_DETAIL[+id]; return rlD?{t:rlD.t,h:rlD.h}:null; }
@@ -3460,9 +3827,16 @@ function init(c){
   var root=document.querySelector('#co-detailview')||document.querySelector('.ov-meta'); if(!root) return;
   // Overview: collapsibles
   root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var c2=btn.parentElement; var body=c2.querySelector('.ov-collap-b'); var open=c2.classList.toggle('open'); if(body) body.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }; });
+  // Money-map accordions (OV-4) and the Segments ⇄ Geography toggle
+  root.querySelectorAll('.ov-meta .acc-h').forEach(function(btn){ btn.onclick=function(){ var b=btn.nextElementSibling; if(!b) return; var open=b.hidden; b.hidden=!open; var x=btn.querySelector('.acc-x'); if(x) x.textContent=open?'–':'+'; }; });
+  root.querySelectorAll('.ov-meta .mg-pill[data-gmm]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-gmm');
+    root.querySelectorAll('.ov-meta .mg-pill[data-gmm]').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    root.querySelectorAll('.ov-meta .gmm-view').forEach(function(p){ p.hidden=(p.getAttribute('data-gmm')!==v); });
+  }; });
+  // Live quote for Sensitivity; the peer map (OV-6) fetches every peer's quote once, META's included.
   renderLive(root);
-  wireScatter(root);
-  META_PEERS.forEach(function(p){ if(p.tk!=='META') metaLiveOne(root, p.tk); });
+  meWireScatters(root);
   wireModal(root);
   wireFlow(root);
   // Deep Dive machinery

@@ -126,7 +126,7 @@ function rowCells(o, W, key, off) {
     '<td class="num">' + cc(o.cE) + '</td><td class="num">' + cc(o.cM) + '</td><td class="num" style="font-weight:700">' + cc(o.cP) + '</td>';
 }
 function naCells(w0, why) {
-  return '<td class="num" style="color:var(--mu);font-size:11px">' + (w0 * 100).toFixed(2) + '% → —</td><td class="num" colspan="6" style="color:var(--mu);font-size:11px;text-align:center">n/a · ' + why + ' · not in the 100%</td>';
+  return '<td class="num" style="color:var(--mu);font-size:11px">' + (w0 * 100).toFixed(2) + '% → —</td><td class="num" colspan="6" style="color:var(--mu);font-size:11px;text-align:center">n/a · ' + why + ' · 0 pp</td>';
 }
 function whyTxt(w) { return w === 'no price at the end date' ? 'left the index, no end price' : 'no ' + Y + ' estimate in the file'; }
 function detail() {
@@ -139,7 +139,7 @@ function detail() {
   E.group(ord.rows, keyOf('sector')).forEach(function (o) { oS[o.key] = o; });
   E.group(ord.rows, keyOf('ig')).forEach(function (o) { oG[o.key] = o; });
   // every stock the index held at the start is listed, with or without data
-  E.members(c.ix, K0, null).forEach(function (m) { var s = E.secs[m.id]; (igsOf[s.s] = igsOf[s.s] || {})[s.g] = 1; (idsOf[s.g] = idsOf[s.g] || []).push({ id: m.id, w0: m.w }); });
+  E.universe(c.ix, K0, E.dates.length - 1).forEach(function (m) { var s = E.secs[m.id]; (igsOf[s.s] = igsOf[s.s] || {})[s.g] = 1; (idsOf[s.g] = idsOf[s.g] || []).push({ id: m.id, w0: m.w, k: m.k }); });
   var W = null, sk = S.sort, body = '';
   function val(o) { var v = sk === 'w' ? o.w0 : o[sk]; return v == null ? -1e9 : v; }
   function by(a, b) { return S.dir * (val(a) - val(b)); }       // dir -1 = largest first
@@ -156,16 +156,16 @@ function detail() {
       body += '<tr class="eps-r2' + (offG ? ' off' : '') + '" data-act="tog" data-v="G|' + esc(gname) + '"><td class="c" style="padding-left:12px">' + selDot(gstate) + '</td><td class="c"><span class="eps-arr" data-act="open" data-v="G|' + esc(gname) + '">' + (gopen ? '▲' : '▼') + '</span></td>' +
         '<td class="nm" style="padding-left:22px">' + esc(gname) + '</td>' + rowCells(byG[gname], W, gname, offG) + '</tr>';
       if (!gopen) return;
-      idsOf[gname].map(function (x) { return ordT[x.id] || { id: x.id, w0: x.w0 }; }).sort(by).forEach(function (ro) {
-        var s = E.secs[ro.id], offT = offG || !!S.excl['T|' + s.t], o = byT[ro.id];
-        var cells = offT ? rowCells(null, W, ro.id, true) : o ? rowCells(o, W, ro.id, false) : naCells(ro.w0,whyTxt(naT[ro.id] ? naT[ro.id].why : ''));
+      idsOf[gname].map(function (x) { return ordT[x.id] || { id: x.id, w0: x.w0, k: x.k }; }).sort(by).forEach(function (ro) {
+        var s = E.secs[ro.id], offT = offG || !!S.excl['T|' + s.t], o = byT[ro.id], uk = (idsOf[gname].find(function (x) { return x.id === ro.id; }) || {}).k;
+        var cells = offT ? rowCells(null, W, ro.id, true) : o ? rowCells(o, W, ro.id, false) : naCells(ro.w0, naT[ro.id] ? whyTxt(naT[ro.id].why) : uk >= c.k1 ? 'joins the index on ' + dShort(E.dates[uk]) + ' or later' : 'no data in this period');
         body += '<tr class="eps-r3' + (offT ? ' off' : '') + '" data-act="tog" data-v="T|' + esc(s.t) + '"><td class="c" style="padding-left:24px">' + dot(!offT, 12) + '</td><td></td>' +
           '<td class="nm" style="padding-left:38px"><b>' + esc(s.t) + '</b> <span style="color:var(--mu)">' + esc(short(s.n)) + '</span></td>' + cells + '</tr>';
       });
     });
   });
-  var gT = cur.G, rT = cur.R, mT = (1 + rT) / (1 + gT) - 1, skW = cur.skipped.reduce(function (s, x) { return s + x.w0; }, 0);
-  body += '<tr class="eps-tot"><td></td><td></td><td class="nm">Total, ' + cur.nStart + ' stocks</td><td class="num">100.00% → 100.00%</td><td class="num">' + cP(gT) + '</td><td class="num">' + cP(mT) + '</td><td class="num">' + cP(rT) + '</td><td class="num">' + cc(cur.G) + '</td><td class="num">' + cc(cur.M) + '</td><td class="num">' + cc(cur.R) + '</td></tr>';
+  var gT = cur.G, rT = cur.R, mT = (1 + rT) / (1 + gT) - 1;
+  body += '<tr class="eps-tot"><td></td><td></td><td class="nm">Total, ' + cur.n + ' stocks</td><td class="num">100.00% → 100.00%</td><td class="num">' + cP(gT) + '</td><td class="num">' + cP(mT) + '</td><td class="num">' + cP(rT) + '</td><td class="num">' + cc(cur.G) + '</td><td class="num">' + cc(cur.M) + '</td><td class="num">' + cc(cur.R) + '</td></tr>';
   function th(k, label) { return '<th class="num' + (S.sort === k ? ' on' : '') + '" data-act="sort" data-v="' + k + '">' + label + (S.sort === k ? (S.dir < 0 ? ' ▼' : ' ▲') : '') + '</th>'; }
   return '<div class="card"><div class="eps-tbar"><span class="eps-hint">Click a row to take it out of the index (sector, industry group or security). Every section below recalculates and the rest rescale to 100%.' +
     '</span>' +
@@ -174,7 +174,7 @@ function detail() {
     '<tr class="gh"><th></th><th></th><th></th><th></th><th colspan="3" class="grp">Its own change (weighted average for groups)</th><th colspan="3" class="grp">Contribution to the ' + IXN[c.ix] + ' return (pp)</th></tr>' +
     '<tr><th style="width:30px"></th><th style="width:24px"></th><th>Sector / Industry Group</th>' +
     th('w', 'Weight, start → end') + th('g', Y + ' EPS') + th('m', 'Forward P/E') + th('ret', 'Price') + th('cE', 'From EPS') + th('cM', 'From multiple') + th('cP', 'Total') + '</tr></thead><tbody>' + body + '</tbody></table></div>' +
-    '<div class="eps-note"><b>Total</b> = weight × price return. <b>From EPS</b> = weight × EPS change. <b>From multiple</b> = weight × (1 + EPS change) × P/E change, which is Total − From EPS. Groups are the sum of their stocks, and everything adds up to the index return. All ' + cur.nStart + ' stocks of the ' + IXN[c.ix] + ' are listed' + (cur.skipped.length ? '; ' + cur.skipped.length + ' (' + (skW * 100).toFixed(1) + '% of the weight) have no figures on ' + dShort(E.dates[c.k1]) + ' (left the index, or no ' + Y + ' estimate) and are left out of the 100%' : '') + '.</div></div>';
+    '<div class="eps-note"><b>Total</b> = weight × price return. <b>From EPS</b> = weight × EPS change. <b>From multiple</b> = weight × (1 + EPS change) × P/E change, which is Total − From EPS. Groups are the sum of their stocks. The index is followed snapshot to snapshot: a stock counts from the snapshot where it joined and until the one where it left, and the steps are linked so everything adds up to the index return. Every stock the ' + IXN[c.ix] + ' held in 2026 is listed' + (cur.skipped.length ? '; ' + cur.skipped.length + ' have no price or estimate in this period (0 pp)' : '') + '.</div></div>';
 }
 
 // ─── 3 · who moved the index ──────────────────────────────────────
@@ -257,24 +257,24 @@ function exampleTable(p, ixn) {
     '<tr class="eps-tot"><td class="nm">Index</td><td class="num">' + '100.00%</td><td></td><td></td><td></td><td></td><td class="num">' + pp(p.G, 2) + '</td><td class="num">' + pp(p.M, 2) + '</td><td class="num">' + pp(p.R, 2) + '</td></tr></tbody></table></div></details>';
 }
 function dataBlock() {
-  var c = S.data, p = E.period(c.ix, K0, c.k1, BASE, null), skW = p.skipped.reduce(function (s, x) { return s + x.w0; }, 0), ixn = IXN[c.ix];
+  var c = S.data, p = E.period(c.ix, K0, c.k1, BASE, null), ixn = IXN[c.ix];
   var out = p.skipped.slice().sort(function (a, b) { return b.w0 - a.w0; }).map(function (s) {
     var x = E.secs[s.id]; return '<tr><td><b>' + esc(x.t) + '</b></td><td>' + esc(short(x.n)) + '</td><td class="num">' + (s.w0 * 100).toFixed(2) + '%</td><td>' + whyTxt(s.why) + '</td></tr>'; }).join('');
   var fx = E.secs.filter(function (s) { return s.c; }).map(function (s) { return s.t + ' (' + s.c + ')'; }).join(', ');
   var neg = p.rows.filter(function (r) { return r.g == null; }).map(function (r) { return E.secs[r.id].t; });
   var steps = [
-    ['1', 'Weight', 'Each stock\'s weight in the ' + ixn + ' on ' + dLong(E.dates[K0]) + ': its float-adjusted market-cap weight, taken from the file. Prices and share counts are not used for weighting.'],
+    ['1', 'Weights', 'The period is walked one snapshot at a time (Jan 2 → Apr 1 → Jul 1 → Oct 16). In each step, each stock\'s weight is its float-adjusted market-cap weight in the ' + ixn + ' at the start of the step, from the file. A stock counts from the snapshot where it joined until the one where it left. Prices and share counts are not used for weighting.'],
     ['2', 'Own changes', 'Between the two dates: the change of its ' + Y + ' EPS estimate (Bloomberg consensus, calendarised to December), its price return, and its own multiple = price ÷ ' + Y + ' EPS on each date. (1 + EPS change) × (1 + P/E change) = 1 + price return.'],
     ['3', 'Contribution', 'Price = weight × price return. EPS effect = weight × EPS change. Multiple effect = weight × (1 + EPS change) × P/E change: the multiple moves on the new EPS, so the cross term sits here. The two add up to the price.'],
-    ['4', 'Add up', 'Stocks add up to industry groups, groups to sectors, sectors to the index. The index return is the sum of the price contributions.']
+    ['4', 'Add up', 'Each step\'s contributions are scaled by how much the index had grown at the start of the step, then summed over the steps. Stocks add up to industry groups, groups to sectors, sectors to the index, and the index return is the sum of the price contributions.']
   ];
   return '<div class="eps-h2" style="margin-top:0">What it measures</div>' +
     '<p class="eps-p">How much of the ' + ixn + ' move since ' + dLong(E.dates[K0]) + ' came from analysts raising or cutting ' + Y + ' EPS estimates (EPS effect), and how much from the price the market pays per unit of those estimates (multiple effect). Both are in percentage points (pp) of the index return and add up to it. A missing estimate takes the first one available later.</p>' +
     '<div class="eps-h2">The calculation</div><table class="rt eps-t3 eps-defs"><tbody>' + steps.map(function (d) { return '<tr><td class="nm">' + d[0] + '. ' + d[1] + '</td><td>' + d[2] + '</td></tr>'; }).join('') + '</tbody></table>' + exampleTable(p, ixn) +
     '<p class="eps-p">A small weight dilutes any change: a stock at 0.01% of the index whose EPS estimate rises 500% adds 0.01% × 500% = 0.05 pp to the EPS effect.</p>' +
     '<div class="eps-h2">Coverage</div>' +
-    '<p class="eps-p">The ' + ixn + ' held ' + p.nStart + ' stocks on ' + dLong(E.dates[K0]) + '; all are in the detail table. ' + p.skipped.length + ' (' + (skW * 100).toFixed(1) + '% of the weight) have no figures on ' + dLong(E.dates[c.k1]) + ' (most left the index, so there is no end price) and are left out; the other weights are rescaled to 100%.' + (neg.length ? ' ' + neg.join(', ') + (neg.length > 1 ? ' have' : ' has') + ' a negative EPS at the start: no % change exists, EPS effect 0, the price move is all multiple.' : '') + ' Stocks that joined the index later (' + p.entered.n + ') are not in the start basket.</p>' +
-    '<details class="eps-det"><summary>' + p.skipped.length + ' stocks without figures on ' + dShort(E.dates[c.k1]) + '</summary><div class="eps-tw eps-scr"><table class="rt eps-t3"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Weight</th><th>Why</th></tr></thead><tbody>' + (out || '<tr><td colspan="4">None.</td></tr>') + '</tbody></table></div></details>' +
+    '<p class="eps-p">The ' + ixn + ' held ' + p.nStart + ' stocks on ' + dLong(E.dates[K0]) + '. Over this period ' + p.entered.n + ' joined and ' + p.left.n + ' left; each counts only while it was a member, and all of them are in the detail table. ' + p.skipped.length + ' have no price or estimate in the file for the period (0 pp).' + (neg.length ? ' ' + neg.join(', ') + (neg.length > 1 ? ' have' : ' has') + ' a negative EPS at the start of a step: no % change exists, EPS effect 0, the price move is all multiple.' : '') + '</p>' +
+    '<details class="eps-det"><summary>' + p.skipped.length + ' stocks without data in this period</summary><div class="eps-tw eps-scr"><table class="rt eps-t3"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Weight</th><th>Why</th></tr></thead><tbody>' + (out || '<tr><td colspan="4">None.</td></tr>') + '</tbody></table></div></details>' +
     '<div class="eps-h2">Caveats</div><ul class="eps-ul">' +
     '<li>Removed by decision: FDX, Mobility Global (MBGL), MMED. BRK/B EPS is divided by 1,500: the file carries the Class A EPS and one Class A is 1,500 Class B.</li>' +
     '<li>EPS is GAAP (Bloomberg IS_COMP_EPS_GAAP): GOOGL and AMZN carry investment marks. Take them out in the table to see the effect.</li>' +

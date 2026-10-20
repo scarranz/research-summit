@@ -88,10 +88,12 @@ def build(rows):
         d = r['as_of_date'].strftime('%Y-%m-%d')
         px = num(r['latest_price'])
         ws, wn = num(r['spx_weight']) or 0.0, num(r['ndx_weight']) or 0.0
-        if px is None or (ws <= 0 and wn <= 0):
+        if px is None:
             if ws > 0 or wn > 0:
                 warn.append('dropped (no price): %s %s' % (t, d))
             continue
+        # a row with price but weight 0 in both indices is kept: the name left the index (or has not joined yet)
+        # and the engine still needs its price and estimate to follow it for the part of the period it was a member
         e26, e27 = num(r['eps_2026']), num(r['eps_2027'])
         note = None
         if t == 'GOOG US Equity' and e26 is None and e27 is None:

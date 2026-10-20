@@ -279,6 +279,7 @@ function dataBlock() {
     '<li>Removed by decision: FDX, Mobility Global (MBGL), MMED. BRK/B EPS is divided by 1,500: the file carries the Class A EPS and one Class A is 1,500 Class B.</li>' +
     '<li>EPS is GAAP (Bloomberg IS_COMP_EPS_GAAP): GOOGL and AMZN carry investment marks. Take them out in the table to see the effect.</li>' +
     '<li>No currency conversion for ' + esc(fx) + '.</li>' +
+    (E.D.notes || []).map(function (n) { return '<li>' + esc(n) + '.</li>'; }).join('') +
     '<li>Memo: the index forward P/E (index price ÷ earnings of everything it holds) went ' + x1(p.pe0) + ' → ' + x1(p.pe1) + ' and those earnings rose ' + pc(p.gAgg) + ': that counts each company by the dollars it earns, not by weight, so it is not the EPS effect above (' + pp(p.G, 1) + ' pp).</li>' +
     '<li>Source: ' + esc(E.D.source) + '.</li></ul>';
 }

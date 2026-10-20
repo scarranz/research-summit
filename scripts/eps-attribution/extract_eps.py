@@ -34,6 +34,10 @@ NEEDED = ['as_of_date', 'security_ticker', 'company_name', 'spx_weight', 'ndx_we
           'financials_currency', 'eps_2026', 'eps_2027', 'sector', 'industry_group', 'industry']
 
 
+# AZN moved its listing off the Nasdaq after Mar-2026 (still in the global indices, still trading): Yahoo Finance AZN (NYSE, USD) closes
+SUPPLEMENT = {'AZN US Equity': {'src': 'Yahoo Finance AZN (NYSE, USD)', 'px': {'2026-04-01': 200.73, '2026-07-01': 183.86, '2026-10-16': 165.41}}}
+
+
 def num(v):
     if isinstance(v, (int, float)) and not (isinstance(v, float) and math.isnan(v)):
         return float(v)
@@ -105,6 +109,21 @@ def build(rows):
                 secs[-1]['c'] = cur          # EPS currency as the file labels it; no FX applied
         snaps[d].append([sec_ix[t], round(ws, 6), round(wn, 6), round(px, 4),
                          None if e26 is None else round(e26, 4), None if e27 is None else round(e27, 4)])
+    # names that left the Nasdaq-100 but still trade: the file has no row after they left, so the closes come from
+    # Yahoo Finance and the EPS is held at the last estimate in the file (flat). They carry no index weight.
+    notes = []
+    for t, s in SUPPLEMENT.items():
+        if t not in sec_ix:
+            continue
+        sid, last, used = sec_ix[t], None, []
+        for d in dates:
+            row = next((r for r in snaps[d] if r[0] == sid), None)
+            if row:
+                last = row
+            elif d in s['px'] and last is not None:
+                snaps[d].append([sid, 0.0, 0.0, s['px'][d], last[4], last[5]]); used.append(d)
+        if used:
+            notes.append('%s: no row in the file on %s; close from %s, EPS held at the last estimate in the file' % (short(t), ', '.join(used), s['src']))
     # a missing estimate takes the first one available LATER in time (analyst's rule): flat, not guessed
     ids = {}
     for di, d in enumerate(dates):
@@ -127,7 +146,7 @@ def build(rows):
         for k in ('s', 'g', 'i'):
             if not s[k] or str(s[k]).startswith('#'):
                 warn.append('no GICS %s: %s' % (k, s['t']))
-    return {'dates': dates, 'secs': secs, 'snaps': [snaps[d] for d in dates]}, sorted(set(warn))
+    return {'dates': dates, 'secs': secs, 'snaps': [snaps[d] for d in dates], 'notes': notes}, sorted(set(warn))
 
 
 def main():

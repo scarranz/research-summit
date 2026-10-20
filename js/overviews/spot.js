@@ -13,6 +13,7 @@
 
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { spotResults } from '../results-data/spot.js';
+import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line (engine + js/segments-data/spot.js)
 import { spotTargetMult } from './spot-target-multiple.js';   // Valuation ▸ Target Multiple / PEG (frozen Summit valuation)
 import { spotCeHtml, spotCeWire, spotCeBuild, spotCePop } from './spot-ce.js';   // Evolution ▸ Earnings (canonical machinery + ./spot-ce-data.js)
 
@@ -521,11 +522,23 @@ function deepDiveHtml(c){
   // 2029 Targets) are not part of that structure and were removed (Dani, Oct 20 2026) — they live in git history.
   return '<div class="ov ov-spot ov-spot-dd" data-brand="SPOT" style="--brand:var(--steel);--brand-2:var(--steel)">'+
     '<div class="dd-tabs">'+
-      '<button type="button" class="dd-tab active" data-dd="evolution">Evolution</button>'+
+      '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
+      '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
       '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
     '</div>'+
+    // ── TOP LINE — General · Segments · Customers (Other omitted: no revenue cut beyond the two segments is on file) ──
+    '<div class="dd-pane" data-dd="topline">'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="segov">General</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segdrv">Segments</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segcus">Customers</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="segov">'+segmentsOverviewHtml('SPOT')+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segdrv" hidden>'+segmentsHtml('SPOT')+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segcus" hidden>'+segmentsCustomersHtml('SPOT')+'</div>'+
+    '</div>'+
     // ── EVOLUTION — Earnings (Setup · Post-Results · Notes) · Results · Estimates ──
-    '<div class="dd-pane" data-dd="evolution">'+
+    '<div class="dd-pane" data-dd="evolution" hidden>'+
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="track">Results</button>'+
@@ -550,7 +563,7 @@ function deepDiveHtml(c){
 // Top Line, Evolution and Valuation cannot fight over the same selector (the same rule the
 // TBBB profile established). Charts build lazily on the first paint of a visible pane —
 // Chart.js needs a non-null offsetParent.
-function activeDD(root){ var b = root.querySelector('.dd-tab.active'); return b ? b.getAttribute('data-dd') : 'evolution'; }
+function activeDD(root){ var b = root.querySelector('.dd-tab.active'); return b ? b.getAttribute('data-dd') : 'topline'; }
 function activeSub(root, ddKey){
   var pane = root.querySelector('.dd-pane[data-dd="'+ddKey+'"]');
   if (!pane) return null;
@@ -558,7 +571,11 @@ function activeSub(root, ddKey){
   return b ? b.getAttribute('data-ovst') : null;
 }
 function buildSub(root, ddKey, subKey){
-  if (ddKey === 'evolution'){
+  if (ddKey === 'topline'){
+    if (subKey === 'segdrv') initSegments(root, 'SPOT');
+    else if (subKey === 'segcus') initSegmentsCustomers(root, 'SPOT');
+    else initSegmentsOverview(root, 'SPOT');
+  } else if (ddKey === 'evolution'){
     // The Results engine builds its charts on first paint of a VISIBLE pane, so it is init'd here.
     if (subKey === 'track'){
       var w = root.querySelector('.ovt-subpane[data-ovst="track"] .rs-wrap');

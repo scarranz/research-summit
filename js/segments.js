@@ -39,10 +39,13 @@ import { snSegments } from './segments-data/sn.js';
 import { snResults } from './results-data/sn.js';
 import { tsmSegments } from './segments-data/tsm.js';
 import { tsmResults } from './results-data/tsm.js';
+import { spotSegments } from './segments-data/spot.js';
+import { spotResults } from './results-data/spot.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
 import { SN_THEMES } from './themes-data/sn.js';
 import { TSM_THEMES } from './themes-data/tsm.js';
+import { SPOT_THEMES } from './themes-data/spot.js';
 import { SUMMIT_CAT, SUMMIT_MUTE } from './viz-palette.js';   // the portal's fixed categorical palette
 
 // The Notes taxonomy names segments in prose; the datasets key them. One map, stated once.
@@ -50,8 +53,9 @@ var THEME_SEG = {
   AMZN: { 'Amazon US': 'na', 'Amazon International': 'intl', 'AWS': 'aws' },
   SN: { 'SharkNinja': 'sn' },
   TSM: { 'AI & HPC demand': 'hpc', 'Consumer & smartphone': 'smart' },   // the other TSM themes are company-wide
+  SPOT: { 'Pricing & ARPU': 'prem', 'Royalties & legal': 'prem', 'Advertising': 'ads', 'Users & subscribers': 'ads' },   // the free tier is the funnel; the other SPOT themes are company-wide
 };
-var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES };
+var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES };
 var SEGMENTS_DATA = {
   AMZN: { seg: amznSegments, res: amznResults },
   DHR:  { seg: dhrSegments,  res: dhrResults  },
@@ -61,7 +65,9 @@ var SEGMENTS_DATA = {
   SN:   { seg: snSegments,  res: snResults  },
   // TSM has ONE operating segment (foundry); its six PLATFORMS stand in as the segments here (SAB,
   // Oct 15 2026) and the General tab quotes the 20-F so they are not read as reportable segments.
-  TSM:  { seg: tsmSegments, res: tsmResults }
+  TSM:  { seg: tsmSegments, res: tsmResults },
+  // SPOT: two reportable segments (Premium, Ad-Supported); the segment profit line is GROSS profit (no segment operating income).
+  SPOT: { seg: spotSegments, res: spotResults }
 };
 
 export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }
@@ -304,7 +310,7 @@ function sgResolveRef(ref, view){
       if (m.act && m.act[i] != null) act[p] = m.act[i];
       else if (m.summit && m.summit[i] != null) est[p] = m.summit[i];
     });
-    return { unit: m.unit === 'eps' ? 'eps' : 'usdM', label: m.label, short: m.short || m.label,
+    return { unit: m.unit === 'eps' ? 'eps' : (m.unit === 'count' ? 'count' : 'usdM'), label: m.label, short: m.short || m.label,
              act: act, est: est, src: 'Results dataset' };
   }
   if (kind === 'shared'){
@@ -350,14 +356,18 @@ function sgResolve(key, view){
 }
 
 // ─── formatting (rule 5 — never a bare number) ────────────────────────────────────────────────
+// Currency symbol: the Results dataset names its own (`currency: '€'` on SPOT); every other dataset says nothing and
+// keeps the dollar sign. One definition, so a euro company never prints $ on this tab.
+function cur(){ var d = sgData(); return (d && d.res && d.res.currency) || '$'; }
 function fmtVal(v, unit){
   if (v == null) return '—';
   if (unit === 'pct')  return (v * 100).toFixed(1) + '%';
   if (unit === 'x')    return v.toFixed(2) + '×';
   if (unit === 'days') return Math.round(v) + 'd';
-  if (unit === 'eps')  return '$' + v.toFixed(2);
+  if (unit === 'eps')  return cur() + v.toFixed(2);
+  if (unit === 'count') return (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(1)) + 'M';   // users / subscribers, millions
   var a = Math.abs(v);
-  return a >= 1000 ? '$' + (v / 1000).toFixed(1) + 'B' : '$' + Math.round(v) + 'M';
+  return a >= 1000 ? cur() + (v / 1000).toFixed(1) + 'B' : cur() + Math.round(v) + 'M';
 }
 function pctStr(v){ return v == null ? '—' : (v * 100).toFixed(1) + '%'; }
 
@@ -458,7 +468,7 @@ function modesHtml(id, opts){
       return '<button type="button" class="rs-view' + ((st.view || 'q') === v[0] ? ' active' : '') +
         '" data-sgview="' + esc(id) + '|' + v[0] + '">' + v[1] + '</button>'; }).join(''));
   }
-  h += group('Show', [['amt', '$B'], ['share', 'Share'], ['growth', 'Growth']].map(function(m){
+  h += group('Show', [['amt', cur() + 'B'], ['share', 'Share'], ['growth', 'Growth']].map(function(m){
     return '<button type="button" class="rs-view' + (st.mode === m[0] ? ' active' : '') +
       '" data-sgmode="' + esc(id) + '|' + m[0] + '">' + m[1] + '</button>'; }).join(''));
   if (st.mode === 'growth'){
@@ -552,6 +562,7 @@ function buildChartBlock(id, list, view, opts){
   });
   var datasets = [], needY2 = false, y2unit = null;
   var growAmt = mode === 'growth' && st.growUnit === 'amt';
+  var leftUnit = (ser.filter(function(x){ return money(x.d.unit); })[0] || { d: {} }).d.unit;   // unit of the main axis: usdM (billions) or eps (per-unit euros)
   ser.forEach(function(x, i){
     var m = money(x.d.unit) || (mode !== 'amt' && !growAmt) || (growAmt && money(x.d.unit));
     if (!m){ needY2 = true; y2unit = y2unit || x.d.unit; }
@@ -580,18 +591,19 @@ function buildChartBlock(id, list, view, opts){
     y: { position: 'right', grid: { color: 'rgba(0,0,0,0.05)' },
          min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined,
          stacked: mode === 'share' || (opts.stack && mode === 'amt' && st.stack !== false),
-         ticks: { callback: function(v){ return (mode === 'amt' || growAmt) ? '$' + v + 'B' : v.toFixed(0) + '%'; } } }
+         ticks: { callback: function(v){ return (mode === 'amt' || growAmt) ? (leftUnit === 'eps' ? cur() + v.toFixed(2) : cur() + v + 'B') : v.toFixed(0) + '%'; } } }
   };
+  if (!datasets.some(function(d){ return d.yAxisID === 'y'; })) scales.y.display = false;   // only secondary-axis series (users in M): no empty main axis
   if (needY2) scales.y2 = { position: 'right', weight: 1, grid: { display: false },
     ticks: { callback: function(v){
-      return y2unit === 'pct' ? v.toFixed(0) + '%' : y2unit === 'days' ? v.toFixed(0) + 'd' : v.toFixed(2) + '×'; } } };
+      return y2unit === 'pct' ? v.toFixed(0) + '%' : y2unit === 'days' ? v.toFixed(0) + 'd' : y2unit === 'count' ? v.toFixed(0) + 'M' : v.toFixed(2) + '×'; } } };
   st.chart = new Chart(el.getContext('2d'), {
     data: { labels: ps, datasets: datasets },
     options: { responsive: true, maintainAspectRatio: false, animation: false,
       interaction: { mode: 'index', intersect: false },
       plugins: { legend: { display: false }, rsFwdZone: { from: f },
         sgLabels: { on: st.labels === true, fmt: function(v){
-          return (mode === 'amt' || growAmt) ? '$' + fmtNum(v) + 'B'
+          return (mode === 'amt' || growAmt) ? cur() + fmtNum(v) + 'B'
                : mode === 'share' || mode === 'growth' ? fmtNum(v) + '%'
                : fmtNum(v); } },
         sgTotals: (opts.totals && mode === 'amt') ? { vals: ps.map(function(p){
@@ -602,11 +614,11 @@ function buildChartBlock(id, list, view, opts){
               t = (t == null ? 0 : t) + v;
             });
             return t;
-          }), fmt: function(v){ return '$' + (v / 1000).toFixed(0) + 'B'; } } : false,
+          }), fmt: function(v){ return cur() + (v / 1000).toFixed(Math.abs(v) < 20000 ? 1 : 0) + 'B'; } } : false,
         tooltip: { callbacks: { label: function(c){
           var x = ser[c.datasetIndex], p = ps[c.dataIndex], v = vals[c.datasetIndex][p];
           var txt = mode === 'amt' ? fmtVal(v, x.d.unit)
-                  : mode === 'growth' ? (growAmt ? (v >= 0 ? '+' : '') + fmtVal(v, 'usdM') : fmtVal(v, 'pct'))
+                  : mode === 'growth' ? (growAmt ? (v >= 0 ? '+' : '') + fmtVal(v, x.d.unit === 'count' ? 'count' : 'usdM') : fmtVal(v, 'pct'))
                   : (totals[p] ? fmtVal(v / totals[p], 'pct') : '—');
           return (x.label || x.d.short) + ': ' + txt + (x.d.act[p] == null ? '  (est.)' : '');
         } } } },
@@ -750,6 +762,7 @@ function buildSegResults(){
   // has already said what the segment is, and the Results pane says the rest. `source` is dropped
   // rather than copied — the provenance of these series belongs where they are the subject.
   var out = { updated: d.res.updated, intro: '', source: '', surprise: false, conv: false,
+              currency: d.res.currency, currencyName: d.res.currencyName,
               defaultHidden: ['summit', 'cons'], views: {} };
   // Carry the vintage matrix through. These are the same metric keys the Results dataset carries,
   // so the segment's top line gets the "Estimates as of" axis for free — and without it the engine

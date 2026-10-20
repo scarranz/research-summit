@@ -71,9 +71,12 @@ Modo B: antes de F1 van **B1 (inventario de lo que existe)** y **B2 (mapa de reu
 | EV-EST | Evolution ▸ Estimates | 👀 | 2026-10-20 | | | 4 vintages reales del MCP (12-18 · 02-09 · 04-28 · 08-05), años 2026–2029; Street = BBG guardado en cada snapshot |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results (2Q26) | 👀 | 2026-10-20 | | | 17 tarjetas vs Street/Summit, Call Summary (7 comentarios + 14 preguntas de la transcripción 4-ago), Propose Notes (6), Also on the call (7) |
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | 👀 | 2026-10-20 | | | 10 temas en 8 grupos; semilla = el registro de temas que vivía en `spot.js` + 2 temas de la call |
-| BL-GEN-1…5 · BL-SEG · BL-SPLC | Bottom Line | ⬜ | | | | BL-SPLC probablemente ⏭️ |
+| BL-GEN-1…5 | Bottom Line ▸ General | 👀 | 2026-10-20 | | | `spot-bl.js` (copia de `tsm-bl.js`) + `spot-bl-data.js` + `spot-bbg.js`; EUR; ver §13 |
+| BL-SEG | Bottom Line ▸ Segments | ⏭️ | 2026-10-20 | | | la única utilidad por segmento es la bruta y ya está en Top Line ▸ Segments; no hay utilidad operativa por segmento |
+| BL-SPLC | Bottom Line ▸ Supply Chain | ⏭️ | 2026-10-20 | | | no hay export SPLC de SPOT |
 | VA-TM | Valuation ▸ Target Multiple / PEG | 👀 | 2026-10-20 | | | 4 snapshots del MCP con la valuación del workbook tal cual (EV/EBITDA 20.5× · P/E 28×, 2027); Live con FX implícito |
-| VA-HIST · VA-PEERS · VA-SENS | Valuation | ⬜ | | | | HIST: `get-market-history` sin desplegar → "Live data pending"; PEERS: esperan denominadores (ver §9); SENS: re-basar del snapshot 05-22 al 08-05 |
+| VA-HIST · VA-PEERS | Valuation | ⬜ | | | | HIST: `get-market-history` sin desplegar → "Live data pending"; PEERS: esperan denominadores (ver §6) |
+| VA-SENS | Valuation ▸ Sensitivity | 👀 | 2026-10-20 | | | `spot-sensitivity.js` (copia de `tsm-sensitivity.js`) + `spot-sensitivity-data.js`; EUR, sin precio en vivo, sin WACC; ver §14 |
 | MG-TEAM · MG-OWN · MG-GOV · MG-TRACK | Management | ⬜ | | | | hoy placeholder |
 | MISC-* | Miscellaneous | ⬜ | | | | candidatos: Investor Day 2026, SAX/Advertising, vs Netflix, $10 flow map |
 | F-FINAL | Cierre y entrega | ⬜ | | | | |
@@ -235,3 +238,31 @@ Decisiones DAA (2026-10-20): (1) la "utilidad" del segmento es la **utilidad bru
 **⚑ Cambios al motor `segments.js` (compartido — conviene que SAB los revise en un PR de motor):** (a) símbolo de moneda tomado de `res.currency` (antes `$` fijo; sin `currency` sigue `$`); (b) unidad `count` (usuarios, millones) y su eje secundario en M; (c) el eje principal usa euros por unidad cuando la serie es `eps` (ARPU) y se oculta si solo hay series del eje secundario; (d) totales de grupo con un decimal bajo 20B; (e) la gráfica del top line de cada segmento conserva `currency`. Pendiente conocido del motor: escribe fijo "net sales" en las tarjetas y "No customer concentration is disclosed at all… no named customer anywhere in the filing" cuando `disclosed:false`; para SPOT esa frase es más fuerte de lo que verifiqué (leí Items 1–6, no las notas financieras) y la `note` del dato lo dice.
 
 **Lo que no se hizo:** sección 5 de TL-CUS ("what each top customer buys"): el motor todavía no la dibuja y para SPOT nada la cuantifica; tabla SPLC: no hay export de SPOT; la "Bridge" de Premium se verificó en gráfica solo hasta que se abre la tarjeta (no la capturé).
+
+## 13. Bottom Line (2026-10-20)
+
+**Archivos:** `js/overviews/spot-bl.js` (copia adaptada de `tsm-bl.js`, que a su vez copia el cierre de AMZN: `aMarginsBody`, `aBridgeBody`, `aNetBridgeBody`, `aSbcBody`, `expenseTabsBody`, `aBlFootGeneral`) · `js/overviews/spot-bl-data.js` (líneas de gasto + SBC por función + 4 inmersiones) · `js/overviews/spot-bbg.js` (generado: `SUMMIT_DOCS="G:/My Drive/Summit/Docs/0" py scripts/bbg_extract.py SPOT`, asOf 9/9/2026; el parser lee con `errors='replace'`, sirve para cp1252) · CSS `.ov-spot-dd` copiado de `.ov-tsm-dd` al final de `css/overview.css` · pestaña + montaje en `spot.js` (más el toggle genérico de `rs-collap`, que faltaba).
+
+**Vistas (apiladas, sin selector):** Profitability & margins · The bridge (Build-up €B · Margin change bps · Forward con 4 sliders) · Operating income → net income · Stock-based compensation & dilution · colapsable Expense lines (4 pestañas) · pie.
+
+**Datos de las líneas de gasto (histórico):** el export de BBG solo trae 3 años y 5 trimestres reportados, así que se **cosen las columnas reportadas de los 10 snapshots que ya están en `BBG_CONSENSUS.txt`** (el más nuevo gana): FY2021–FY2025 y 1Q23–2Q26, sin ninguna consulta nueva a Bloomberg. Cuadra al 0: ingreso − costo de ingreso − R&D − S&M − G&A = utilidad operativa en cada año y cada trimestre, los 4 trimestres suman el año, y FY2023–FY2025 coinciden con el estado de resultados del 20-F. Spotify no tiene línea "other operating": no hay barra "Other" (solo el residual de redondeo del consenso en el modo Forward, que se dibuja únicamente si es visible).
+
+**Del 20-F FY2025 (acc. 0001628280-26-006874), verbatim:** Item 5 (costo de ingreso Premium / Ad-Supported, R&D, S&M, G&A y sus explicaciones), definiciones de "Components of our Operating Results", nota de SBC por función (€5/138/62/42M en 2025, total 247; 2024: 5/152/61/49; 2023: 5/194/66/56), costo social del SBC (€125M vs €291M, Item 3.D), empleados promedio y severance 2023 (nota de gastos de personal). **De la llamada Q2 2026 (4 ago):** margen bruto, guía de 3T, ~€200M de opex incremental (marketing + IA), headcount plano, "compute y marketing".
+
+**Decisiones propuestas (reversibles):**
+1. **SBC se incluye** (BL-GEN-4): es material en Spotify (~11% de la utilidad operativa FY2025), a diferencia de TSM. Dilution = barras SBC + acciones diluidas del consenso (sin línea Summit: el modelo congelado no trae acciones); SBC by line = solo años reportados (el 20-F da el reparto, el export no).
+2. **Net income walk con una sola barra** "Non-operating, net" (= pretax − op. income): el export no divide ingreso/costo financiero ni cambios de valor razonable. Se puede abrir con el estado de resultados del 20-F (R4) si el analista lo quiere.
+3. **BL-SEG ⏭️**: Spotify solo reporta utilidad **bruta** por segmento y ya vive en Top Line ▸ Segments. **BL-SPLC ⏭️**: sin export SPLC.
+4. Sin modo "Normalized" (no hay ganancia no operativa recurrente identificada en el export).
+
+**Pendiente / no leído:** Item 6.D (headcount a fin de año) y notas de D&A por función no se alcanzaron en la lectura del 20-F (solo promedio de empleados); la comparación 2024 vs 2023 de Item 5 remite al 20-F anterior (solo cifras de la tabla). Summit: líneas anuales de op. income / GP / FCF congeladas en `results-data` (snapshot 2026-08-05); EBITDA y net income no tienen línea Summit.
+
+## 14. Valuation ▸ Sensitivity (2026-10-20)
+
+**Archivos:** `js/overviews/spot-sensitivity.js` (copia adaptada de `tsm-sensitivity.js`) · `js/overviews/spot-sensitivity-data.js` (un snapshot Summit congelado + caja neta) · CSS `.ov-spot-dd` al final de `css/overview.css` · sub-tab en `spot.js`.
+
+**Datos:** snapshot Summit 2026-08-05 (después de 2Q26), jalado del MCP el 2026-10-20 (`projection_history`, EUR M): `PREMIUM_REVENUE` + `ADS_REVENUE` (suman `REV` al euro en 2026–2029), `OP_INCOME`, `EBITDA`, `EARNINGS` (definición del modelo, no IFRS), `TAX_RATE`, `SHARES`. Base 2025 = ingreso reportado por segmento (`results-data/spot.js`). Street = BBG (`spot-bbg.js`, segmentos 454645 Premium / 454644 Ad-Supported, FY2026–28; FY2029 cae al modelo y la franja lo dice). Múltiplo de salida arranca en el del modelo (20.5× EV/EBITDA · 28× P/E, FY2027).
+
+**Decisiones (reversibles):** (1) drivers = crecimiento de Premium, crecimiento de Ad-Supported, margen operativo consolidado, múltiplo (Spotify reporta utilidad *bruta* por segmento, no operativa → un solo margen, estructura de la nota de TSM/SN). (2) **Sin precio en vivo ni ± vs precio**: la rejilla se lee contra el caso base (no hay FX ni se compara contra el precio en US$). (3) **Caja neta €9.4B** de la llamada Q2 2026 ("€9.4 billion cash and cash equivalents and no debt other than lease liabilities"): redondeada, sin arrendamientos ni inversiones de corto plazo; el modelo Summit no trae línea de deuda neta. Si el analista prefiere el balance del 6-K de 2Q26, se reemplaza `SPOT_NETCASH`.
+
+**Cuadre con Target Multiple:** el caso base de la rejilla (FY2027, 20.5×) da ≈ €478 y a P/E ≈ €448; el PT registrado en el workbook es €561.15 / €517.91 y se muestra en Target Multiple. No coinciden y no se fuerza: la rejilla valúa el año a un múltiplo de salida; el PT del workbook es otro objeto (pregunta abierta para el autor del modelo). El pie lo dice.

@@ -3563,3 +3563,82 @@ img.org-photo { object-fit: cover; }
 .ov-spot-dd .tm-tag-brk{color:var(--neg);border:1px solid var(--neg)}
 .ov-spot-dd .tm-warn{border:1px solid rgba(220,38,38,.35);border-left:4px solid var(--neg);background:rgba(220,38,38,.05);border-radius:9px;padding:11px 14px;font-size:12px;line-height:1.55;color:var(--navy);margin:12px 0}
 .ov-spot-dd .tm-tbl th.peg-out,.ov-spot-dd .tm-tbl td.peg-out{background:var(--surface);font-weight:800}
+
+/* ── Spotify ▸ Bottom Line ▸ General — the TSMC bridge / expense-explorer rules above, scoped to .ov-spot-dd ── */
+.ov-spot-dd .br-sl{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--navy)}
+.ov-spot-dd .br-sl input{flex:1;max-width:180px;accent-color:var(--accent)}
+.ov-spot-dd .br-sl-v{width:44px;text-align:right;color:var(--steel);font-variant-numeric:tabular-nums}
+.ov-spot-dd .br-sl-l{width:120px}
+.ov-spot-dd .br-fx-reset{cursor:pointer;border:1px solid var(--bdr);background:#fff;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--navy)}
+.ov-spot-dd .ew-h{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--steel);margin:18px 0 9px;display:flex;align-items:center;gap:8px}
+.ov-spot-dd .ew-h::after{content:"";flex:1;height:1px;background:var(--bdr)}
+.ov-spot-dd .ew-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.ov-spot-dd .ew-two{grid-template-columns:1fr}}
+.ov-spot-dd .ew-box{border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;background:var(--card,#fff)}
+.ov-spot-dd .ew-box-h{font-size:13px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.ov-spot-dd .ew-box-i{font-size:18px}
+.ov-spot-dd .ew-box-t{font-size:11.5px;color:var(--navy);line-height:1.5}
+.ov-spot-dd .ew-note{font-size:12px;color:var(--navy);background:rgba(20,110,180,.06);border-radius:8px;padding:9px 12px;margin-top:9px;line-height:1.5}
+.ov-spot-dd .ew-spark{display:flex;align-items:flex-end;gap:5px;height:96px;margin:4px 0}
+.ov-spot-dd .ew-sb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px}
+.ov-spot-dd .ew-sb-v{font-size:9.5px;font-weight:800;color:var(--navy)}
+.ov-spot-dd .ew-sb-bar{width:100%;border-radius:4px 4px 0 0;background:#B7CBE0}
+.ov-spot-dd .ew-sb.on .ew-sb-bar{background:var(--steel)}
+.ov-spot-dd .ew-sb-l{font-size:8.5px;color:var(--mu)}
+.ov-spot-dd .ew-flow{display:flex;align-items:stretch;flex-wrap:wrap;margin:2px 0}
+.ov-spot-dd .ew-fn{flex:1;min-width:110px;border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;background:var(--card,#fff);text-align:center}
+.ov-spot-dd .ew-fn-v{font-size:14px;font-weight:800;color:var(--navy)}
+.ov-spot-dd .ew-fn-l{font-size:9.5px;color:var(--mu);font-weight:600;margin-top:2px}
+.ov-spot-dd .ew-far{display:flex;align-items:center;justify-content:center;color:var(--steel);font-size:18px;font-weight:800;padding:0 6px}
+.ov-spot-dd .ew-q{border-left:3px solid var(--accent);background:rgba(0,0,0,.025);border-radius:0 8px 8px 0;padding:9px 13px;margin:8px 0;font-size:12px;line-height:1.55;color:var(--navy)}
+.ov-spot-dd .ew-q .ew-att{display:block;margin-top:4px;font-size:10.5px;font-weight:700;color:var(--mu)}
+.ov-spot-dd .ew-tls{position:relative;margin:8px 0 2px;padding-left:20px}
+.ov-spot-dd .ew-tls::before{content:"";position:absolute;left:5px;top:5px;bottom:5px;width:2px;background:var(--bdr)}
+.ov-spot-dd .ew-tli{position:relative;margin-bottom:13px}
+.ov-spot-dd .ew-tli:last-child{margin-bottom:2px}
+.ov-spot-dd .ew-tli::before{content:"";position:absolute;left:-18px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--steel);border:2px solid var(--card,#fff);box-shadow:0 0 0 1px var(--bdr)}
+.ov-spot-dd .ew-tlq{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--steel)}
+.ov-spot-dd .ew-tlt{font-size:12px;color:var(--navy);line-height:1.5;margin-top:2px}
+.ov-spot-dd .ew-tlw{font-size:10px;font-weight:700;color:var(--mu);margin-top:3px}
+.ov-spot-dd .ew-tag{display:inline-block;font-size:8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:1px 6px;border-radius:5px;margin-left:7px;vertical-align:middle;transform:translateY(-1px)}
+.ov-spot-dd .ew-tag.why{background:rgba(192,80,77,.13);color:#B23A38}
+.ov-spot-dd .ew-tag.fwd{background:rgba(46,139,87,.15);color:#2E7D51}
+.ov-spot-dd .ew-tag.ctx{background:rgba(107,118,131,.15);color:#5B6673}
+.ov-spot-dd .ew-calls{margin-top:14px}
+.ov-spot-dd .ew-callsum{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--steel);cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:5px 0}
+.ov-spot-dd .ew-callsum::-webkit-details-marker{display:none}
+.ov-spot-dd .ew-callsum::before{content:"▸";font-size:11px;transition:transform .15s}
+.ov-spot-dd .ew-calls[open] .ew-callsum::before{content:"▾"}
+.ov-spot-dd .ew-callsum::after{content:"";flex:1;height:1px;background:var(--bdr)}
+.ov-spot-dd .exp-explorer{border:1.5px solid var(--accent);border-radius:14px;padding:14px 16px 16px;background:linear-gradient(180deg,var(--ice),transparent);margin:6px 0 6px}
+.ov-spot-dd .exp-explorer-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--steel);margin:0 0 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ov-spot-dd .exp-explorer-h .exp-hint{font-size:9px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--mu);background:#fff;border:1px solid var(--bdr);border-radius:20px;padding:2px 9px}
+.ov-spot-dd .exp-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.ov-spot-dd .exp-tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bdr);background:#fff;border-radius:20px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:800;color:var(--navy);transition:.13s}
+.ov-spot-dd .exp-tab:hover{border-color:var(--accent)}
+.ov-spot-dd .exp-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.ov-spot-dd .exp-tab.active .exp-tag{color:rgba(255,255,255,.8)}
+.ov-spot-dd .exp-tab .exp-dot{width:10px;height:10px;border-radius:3px;flex:none}
+.ov-spot-dd .exp-tab .exp-tag{font-size:10px;font-weight:800;color:var(--mu)}
+.ov-spot-dd .exp-panel-card{background:var(--card,#fff);border:1px solid var(--bdr);border-radius:12px;padding:15px 17px}
+
+/* ── Spotify ▸ Valuation ▸ Sensitivity — the TSMC rules above, scoped to .ov-spot-dd ── */
+.ov-spot-dd .ovt-subpane[data-ovst="sensitivity"] .sens-ctrl-l{min-width:0}
+.ov-spot-dd .ovt-subpane[data-ovst="sensitivity"] .sens-ctrl{margin:0;gap:8px}
+.ov-spot-dd .ovt-subpane[data-ovst="sensitivity"] .sens-row-inp{gap:12px 18px}
+.ov-spot-dd .ovt-subpane[data-ovst="sensitivity"] .as-reset{padding:5px 11px;font-size:11px}
+.ov-spot-dd .as-mxrow{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin:10px 0 4px}
+.ov-spot-dd .as-mxrow>.sens-matrix-wrap{flex:1 1 520px;min-width:0;margin:0}
+.ov-spot-dd .as-cons{flex:0 0 258px;border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.ov-spot-dd .as-cons-h{font-size:11px;font-weight:800;color:var(--navy);letter-spacing:.02em;margin-bottom:2px}
+.ov-spot-dd .as-cons-src{font-size:10px;color:var(--mu);margin-bottom:10px}
+.ov-spot-dd .as-cons-r{padding:8px 0;border-top:1px solid var(--bdr)}
+.ov-spot-dd .as-cons-k{font-size:10.5px;font-weight:700;color:var(--mu);margin-bottom:3px}
+.ov-spot-dd .as-cons-v{display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:800;color:var(--navy)}
+.ov-spot-dd .as-cons-v small{font-size:10px;font-weight:600;color:var(--mu)}
+.ov-spot-dd .as-cons-d{font-size:10.5px;font-weight:700;margin-top:2px}
+.ov-spot-dd .as-cons-nil{font-size:10.5px;color:var(--mu);line-height:1.45}
+.ov-spot-dd .as-cons-px{margin-top:10px;padding-top:10px;border-top:2px solid var(--bdr)}
+.ov-spot-dd .as-cons-px .v{font-size:20px;font-weight:800;color:var(--navy);line-height:1.1}
+.ov-spot-dd .as-cons-px .s{font-size:10.5px;color:var(--mu);margin-top:3px;line-height:1.45}
+.ov-spot-dd .sens-cell.as-cons-cell{outline:2px solid var(--navy);outline-offset:-2px}

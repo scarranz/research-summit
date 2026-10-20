@@ -14,7 +14,9 @@
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { spotResults } from '../results-data/spot.js';
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line (engine + js/segments-data/spot.js)
-import { spotTargetMult } from './spot-target-multiple.js';   // Valuation ▸ Target Multiple / PEG (frozen Summit valuation)
+import { spotBlGeneralHtml, spotBlGeneralBuild } from './spot-bl.js';   // Bottom Line ▸ General (Amazon's views + ./spot-bl-data.js)
+import { spotTargetMult } from './spot-target-multiple.js';
+import { spotSens } from './spot-sensitivity.js';   // Valuation ▸ Sensitivity (frozen Summit snapshot, EUR)   // Valuation ▸ Target Multiple / PEG (frozen Summit valuation)
 import { spotCeHtml, spotCeWire, spotCeBuild, spotCePop } from './spot-ce.js';   // Evolution ▸ Earnings (canonical machinery + ./spot-ce-data.js)
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -523,6 +525,7 @@ function deepDiveHtml(c){
   return '<div class="ov ov-spot ov-spot-dd" data-brand="SPOT" style="--brand:var(--steel);--brand-2:var(--steel)">'+
     '<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
+      '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
       '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
       '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
     '</div>'+
@@ -536,6 +539,14 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="segov">'+segmentsOverviewHtml('SPOT')+'</div>'+
       '<div class="ovt-subpane" data-ovst="segdrv" hidden>'+segmentsHtml('SPOT')+'</div>'+
       '<div class="ovt-subpane" data-ovst="segcus" hidden>'+segmentsCustomersHtml('SPOT')+'</div>'+
+    '</div>'+
+    // ── BOTTOM LINE — General only. Segments does not apply (the only segment profit Spotify reports is GROSS profit,
+    // already on Top Line ▸ Segments; no segment operating income) and Supply Chain does not apply (no SPLC export) — playbook §13 ⏭️ ──
+    '<div class="dd-pane" data-dd="bottomline" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="margins">General</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="margins">'+spotBlGeneralHtml()+'</div>'+
     '</div>'+
     // ── EVOLUTION — Earnings (Setup · Post-Results · Notes) · Results · Estimates ──
     '<div class="dd-pane" data-dd="evolution" hidden>'+
@@ -552,8 +563,10 @@ function deepDiveHtml(c){
     '<div class="dd-pane" data-dd="valuation" hidden>'+
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="targetmult">Target Multiple</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="sensitivity">Sensitivity</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="targetmult">'+spotTargetMult.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="sensitivity" hidden>'+spotSens.body()+'</div>'+
     '</div>'+
   '</div>';
 }
@@ -575,6 +588,8 @@ function buildSub(root, ddKey, subKey){
     if (subKey === 'segdrv') initSegments(root, 'SPOT');
     else if (subKey === 'segcus') initSegmentsCustomers(root, 'SPOT');
     else initSegmentsOverview(root, 'SPOT');
+  } else if (ddKey === 'bottomline'){
+    spotBlGeneralBuild();
   } else if (ddKey === 'evolution'){
     // The Results engine builds its charts on first paint of a VISIBLE pane, so it is init'd here.
     if (subKey === 'track'){
@@ -587,6 +602,7 @@ function buildSub(root, ddKey, subKey){
     }
   } else if (ddKey === 'valuation'){
     if (subKey === 'targetmult') spotTargetMult.init(root);
+    else if (subKey === 'sensitivity') spotSens.init(root);
   }
 }
 function showSub(root, pane, key){
@@ -654,6 +670,19 @@ function deepDiveInit(c){
   if (!root) return;
   wireDD(root);
   spotCeWire(root);   // Earnings: phase tabs · quarter pills · estimate toggles · Notes (theme record + editor)
+  if (!root._rsCollapWired){ root._rsCollapWired = true;   // rule 3: the table dropdown under each Bottom Line chart
+    // Headers that already toggle themselves (the engines) are skipped — toggling them here too would flip the panel twice.
+    var SELF = '[data-selfwired],[data-hmtblb],[data-tmtblb],[data-pegtblb],[data-sgtblb],[data-sgdrill],[data-sgnote],' +
+      '[data-rsevrecb],[data-rsevdetb],[data-rssurptblb],[data-rsconvtblb],[data-rscurvetblb]';
+    root.addEventListener('click', function(e){
+      var h = e.target.closest ? e.target.closest('.rs-collap-h') : null; if (!h || !root.contains(h)) return;
+      if (h.matches(SELF)) return;
+      var b = h.nextElementSibling; if (!b || !b.classList.contains('rs-collap-b')) return;
+      if (/^rsTableBody-/.test(b.id || '')) return;   // results.js owns its own Period-detail tables
+      var open = b.hidden; b.hidden = !open;
+      var ic = h.querySelector('.rs-collap-ic'); if (ic) ic.textContent = open ? '▾' : '▸';
+    });
+  }
   requestAnimationFrame(function(){ buildSub(root, activeDD(root), activeSub(root, activeDD(root))); });
 }
 

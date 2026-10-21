@@ -261,6 +261,45 @@ export var HS_GW_MSFT_FY = {
   note: 'Microsoft’s financial year ends 30 June, so its FY2026 is <b>closed and reported</b> while 2026 is still an estimate for the other three. The Microsoft bar in the 2026 column is the reported year — 3.08 GW off $115.9B of actual capex — not a forecast. The model’s own 2026 projection column (3.26 GW off $122.6B) was superseded by the print and is not used here.',
 };
 
+// ── SpaceX on the capacity charts only ────────────────────────────────────────
+// SpaceX (SPCX, xAI merged in Feb 2026) is the fifth builder of AI capacity, so
+// it sits on the two GW charts — and ONLY there. It is deliberately not in
+// HS_COMPANIES: every other tab iterates that list and SpaceX has no guidance
+// ladder, CSP segment or quote-matrix history in the transcript corpus.
+//
+// Colour: green, slot 6 of the data-viz palette. Validated (Oct 2026) as the
+// fifth slot after the four above: adjacent pairs pass (worst CVD ΔE 9.2, normal
+// 27.6), and all-pairs normal vision passes (worst 15.6, green↔aqua). Red was
+// rejected — 7.1 against Alphabet's orange even with full colour vision.
+//
+// UNLIKE the four, SpaceX is NOT modelled. Its numbers are what the company
+// reports: "Nameplate Compute Draw" = GPUs installed at period end × their
+// all-in power draw, excluding cooling and facility overhead (S-1, Key Business
+// Metrics). That is an IT-load measure, the same basis as the model's GW (chips
+// per GW × kW per chip = 1 GW), so the bars are comparable in kind — but one side
+// is a disclosure and the other a balance-sheet inference.
+//   2023 0 · 2024 0.3 · 2025 0.8      S-1 (May 2026), AI segment table, year-end
+//   2026E 2.75                        3Q26 call (Oct 20 2026), CFO Bret Johnsen:
+//                                     "nameplate compute in the range of 2.5 to
+//                                     3 gigawatts just by the end of this quarter"
+//                                     — midpoint shown, range in the tooltip
+//   2027E 13                          3Q26 call, Musk: "highly confident of 10
+//                                     gigawatts incremental next year, so 13
+//                                     total"; a plan for 20 GW incremental (≈23)
+//                                     is a stretch he called "difficult but not
+//                                     impossible". 13 is HIS floor, not a model.
+//   2028E null                        nothing stated
+// Interim prints for context: 0.6 GW (3Q25), 1.0 (1Q26), 1.4 (2Q26), 1.7 (3Q26).
+export var HS_SPCX = { id: 'spcx', ticker: 'SPCX', name: 'SpaceX', color: '#008300', fy: 'Calendar' };
+
+export var HS_GW_SPCX_TOTAL = [null, null, null, null, null, 0, 0.3, 0.8, 2.75, 13, null];
+
+// Tooltip notes for the SpaceX cells that are not a plain print.
+export var HS_GW_SPCX_NOTES = {
+  '2026E': 'guided 2.5–3 GW by year-end (3Q26 call) — midpoint',
+  '2027E': 'Musk’s floor ("highly confident"); stretch plan ≈23 GW',
+};
+
 // The same GW split by which spend bucket funded it: the shell and everything
 // bolted to it, versus the silicon that goes inside.
 export var HS_GW_SPLIT = {
@@ -383,6 +422,8 @@ export var HS_CAPACITY_QUOTES = [
   { id: 'meta', when: "Jan '25", q: 'Expects to bring <b>almost a gigawatt online in 2025</b>, and is building a 2 GW-plus site “so big it would cover a significant part of Manhattan”.' },
   { id: 'meta', when: "Jul '25", q: 'Prometheus (1 GW+) lands in 2026; <b>Hyperion scales to 5 GW</b> over several years, with more Titan clusters in development.' },
   { id: 'meta', when: "Apr '26", q: 'Rolling out <b>more than 1 GW of its own custom silicon</b> developed with Broadcom, plus significant AMD volume alongside the new NVIDIA systems.' },
+  { id: 'spcx', when: "May '26", q: 'S-1: Colossus and Colossus II “collectively provide approximately <b>1.0 gigawatt</b> of compute power” — up from 0.3 GW at end-2024 and 0.8 GW at end-2025.' },
+  { id: 'spcx', when: "Oct '26", q: '<b>1.7 GW</b> at the end of 3Q, ~2.2 GW by end-October and <b>2.5–3 GW by year-end</b>. Musk: “highly confident of <b>10 gigawatts incremental</b> next year, so 13 total”, with a plan for 20 GW of power and cooling.' },
   { id: 'googl', when: "Oct '24", q: 'The first corporate agreement to buy nuclear power from <b>multiple small modular reactors — up to 500 MW</b> of 24/7 carbon-free power. Google reports the most efficient PUE in the industry but does not disclose GW added.' },
 ];
 

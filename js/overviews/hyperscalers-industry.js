@@ -29,10 +29,13 @@ import {
   HS_DEP_YEARS, HS_DEP_MODEL, HS_DEP_COGS, HS_LIVES, HS_LIVES_FLAG, HS_GW_MSFT_FY,
   HS_CSP_QTRS, HS_CSP_REV, HS_CSP_OI, HS_CSP_NOTES,
   HS_THEME_QTRS, HS_THEMES,
+  HS_SPCX, HS_GW_SPCX_TOTAL, HS_GW_SPCX_NOTES,
 } from './hyperscalers-data.js';
 
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function co(id){ return HS_COMPANIES.filter(function(c){ return c.id === id; })[0]; }
+// SpaceX is resolvable by id (the capacity tab uses it) but is not in
+// HS_COMPANIES, so the tabs that iterate the four never see it.
+function co(id){ return HS_COMPANIES.concat([HS_SPCX]).filter(function(c){ return c.id === id; })[0]; }
 function dot(id){ return '<span class="hs-dot" style="background:' + co(id).color + '"></span>'; }
 var LABELS = HS_VINTAGES.map(function(v){ return v.label; });
 
@@ -1140,15 +1143,39 @@ function cspCharts(){
 // every panel says so. All four names are now modelled (Microsoft was added to
 // the DCF workbook in Aug 2026) — but Microsoft is on a fiscal year, so its 2026
 // bar is a REPORTED year against three estimates. See HS_GW_MSFT_FY.
-function gwChart(id){
+//
+// Two views of the same series, one chart builder so they cannot drift apart:
+//   'add'   — GW added in the year (the model's output; SpaceX = change in its
+//             reported year-end nameplate)
+//   'total' — GW installed at year-end. For the four modelled names that is the
+//             running sum of modelled adds since 2018 — no pre-2018 base, no
+//             retirements — so read it as "AI-era capacity built", not a census
+//             of every data hall. SpaceX's is its own reported nameplate.
+var GW_IDS = ['amzn', 'googl', 'meta', 'msft', 'spcx'];
+
+function gwTotals(cid){
+  if (cid === 'spcx') return HS_GW_SPCX_TOTAL;
+  var run = 0;
+  return HS_GW_ADDS[cid].map(function(v){ run += v; return run; });
+}
+
+function gwAdds(cid){
+  if (cid !== 'spcx') return HS_GW_ADDS[cid];
+  return HS_GW_SPCX_TOTAL.map(function(v, i){
+    return v == null ? null : v - (HS_GW_SPCX_TOTAL[i - 1] || 0);
+  });
+}
+
+function gwChart(id, kind){
   var el = document.getElementById(id);
   if (!el || !el.offsetParent) return;
   if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
   var fwd = HS_GW_YEARS.indexOf('2026E');
+  var total = kind === 'total';
   _charts[id] = new Chart(el.getContext('2d'), {
     type: 'bar',
-    data: { labels: HS_GW_YEARS, datasets: ['amzn', 'googl', 'meta', 'msft'].map(function(cid){
-      return { label: co(cid).ticker, data: HS_GW_ADDS[cid],
+    data: { labels: HS_GW_YEARS, datasets: GW_IDS.map(function(cid){
+      return { label: co(cid).ticker, data: total ? gwTotals(cid) : gwAdds(cid),
                backgroundColor: co(cid).color, borderRadius: { topLeft: 3, topRight: 3 } };
     }) },
     options: {
@@ -1162,12 +1189,19 @@ function gwChart(id){
         tooltip: {
           backgroundColor: '#1E2733', padding: 9, cornerRadius: 6, boxWidth: 8, boxHeight: 8,
           titleFont: { size: 11, family: 'Inter' }, bodyFont: { size: 11, family: 'Inter' },
+          filter: function(c){ return c.raw != null; },
           callbacks: {
             label: function(c){
               var cid = c.dataset.label.toLowerCase();
-              var i = c.dataIndex, s = HS_GW_SPLIT[cid];
-              return c.dataset.label + ': ' + c.raw.toFixed(2) + ' GW' +
-                '  (shell ' + s.infra[i].toFixed(2) + ' / silicon ' + s.chips[i].toFixed(2) + ')';
+              var i = c.dataIndex, yr = HS_GW_YEARS[i];
+              var head = c.dataset.label + ': ' + c.raw.toFixed(2) + ' GW';
+              if (cid === 'spcx'){
+                var n = HS_GW_SPCX_NOTES[yr];
+                return head + (n ? '  (' + n + ')' : '  (reported)');
+              }
+              if (total) return head + '  (+' + HS_GW_ADDS[cid][i].toFixed(2) + ' added)';
+              var s = HS_GW_SPLIT[cid];
+              return head + '  (shell ' + s.infra[i].toFixed(2) + ' / silicon ' + s.chips[i].toFixed(2) + ')';
             },
           },
         },
@@ -1279,7 +1313,8 @@ function capacityBody(){
   });
 
   return '<p class="hs-lede">How much capacity the spend actually buys, and what a gigawatt costs. ' +
-    'This tab is built from the Summit model — the CapEx/D&amp;A tabs inside the live DCFs (<code>CapEx D&amp;A DCFs.xlsx</code>) plus the unit-economics workbook — not from company disclosure. It works backwards from reported PP&amp;E additions to infer the gigawatts behind them. <b>All four are now modelled</b> — Microsoft was added to the workbook in August 2026, so this tab no longer has a hole in it. ⚠ Microsoft reports on a <b>June fiscal year</b>, so its 2026 column is a closed, reported year while the other three are still estimates; every panel that matters says so.</p>' +
+    'This tab is built from the Summit model — the CapEx/D&amp;A tabs inside the live DCFs (<code>CapEx D&amp;A DCFs.xlsx</code>) plus the unit-economics workbook — not from company disclosure. It works backwards from reported PP&amp;E additions to infer the gigawatts behind them. <b>All four are now modelled</b> — Microsoft was added to the workbook in August 2026, so this tab no longer has a hole in it. ⚠ Microsoft reports on a <b>June fiscal year</b>, so its 2026 column is a closed, reported year while the other three are still estimates; every panel that matters says so. ' +
+    '<b>SpaceX (xAI) is on the two GW charts</b> as the fifth builder — but it is <i>not</i> modelled: its bars are the nameplate compute it reports, and its forward years are management’s own targets.</p>' +
 
     sec('Capacity added per year') +
     '<div class="hs-card">' +
@@ -1287,11 +1322,24 @@ function capacityBody(){
         '<span class="hs-chart-u">gigawatts · 2026E–28E modelled</span></div>' +
       '<div class="hs-canvas"><canvas id="hs-gw"></canvas></div>' +
       '<p class="hs-cap">Hover for the shell/silicon split of each year. <b>The model checks out against the tape:</b> it puts Amazon at 3.88 GW added in 2025, and on the 4Q25 call Jassy said 3.99 GW over the trailing twelve months — a 3% gap on a number derived entirely from the balance sheet. ' +
-      'Note the shape: Alphabet was the <i>smallest</i> of the four as recently as 2020 and is modelled to add more than Meta from 2026.</p>' +
+      'Note the shape: Alphabet was the <i>smallest</i> of the four as recently as 2020 and is modelled to add more than Meta from 2026. ' +
+      'SpaceX’s bars are the year-on-year change in its <b>reported</b> nameplate, not a model output — so no shell/silicon split. Its 2027E bar (+10.25 GW, more than anyone) rests entirely on Musk’s “highly confident of 10 gigawatts incremental” from the 3Q26 call.</p>' +
       '<div class="hs-card hs-card--warn" style="margin-top:10px"><div class="hs-lbl">Microsoft’s 2026 bar is not like the others</div>' +
       '<p class="hs-body">' + HS_GW_MSFT_FY.note + '</p></div>' +
       '<div class="hs-inset" style="margin-top:10px"><div class="hs-lbl">Two vintages, one reconciliation to do</div>' +
       '<p class="hs-body">The DCF tabs and the standalone capacity workbook disagree: Amazon 2026 is 6.52 GW here against 6.03 GW there (the DCF carries the raised ~$220B guide, the older file still had $205B), and Meta 2025 is 1.87 GW against 2.05 GW on identical capex — a cost-per-GW difference between the two builds, not a spend one. The DCF numbers are shown because they are the current vintage and the only ones covering Alphabet.</p></div>' +
+    '</div>' +
+
+    sec('Total capacity at year-end') +
+    '<div class="hs-card">' +
+      '<div class="hs-chart-head"><span class="hs-chart-t">Total GW of capacity</span>' +
+        '<span class="hs-chart-u">gigawatts at year-end · 2026E–28E modelled · SpaceX reported</span></div>' +
+      '<div class="hs-canvas"><canvas id="hs-gw-total"></canvas></div>' +
+      '<p class="hs-cap">Hover for what each year added. For the four hyperscalers the total is the <b>running sum of the modelled adds since 2018</b> — it carries no pre-2018 base and retires nothing, so read it as the AI-era capacity each one has built rather than a census of every data hall. ' +
+      '<b>It squares with what Amazon guided:</b> 13.6 GW at end-2025 doubling to 28.3 GW by end-2027 is the “double overall capacity by the end of 2027” Jassy gave in October 2025. Microsoft’s “roughly double the footprint in two years” is more conservative than its model, which goes 5.9 → 14.2 GW (2.4×) from FY25 to FY27. ' +
+      'SpaceX is its own disclosure: 0.3 GW at end-2024, 0.8 GW at end-2025, 2.5–3 GW guided for end-2026 (midpoint shown) and Musk’s 13 GW for end-2027 — which would put it level with Meta (14.5) and Microsoft (14.2) in two years, from a standing start in 2023.</p>' +
+      '<div class="hs-card hs-card--warn" style="margin-top:10px"><div class="hs-lbl">Two kinds of number on one axis</div>' +
+      '<p class="hs-body">Both sides measure IT load — the model sizes a gigawatt as accelerators × their draw, and SpaceX’s “Nameplate Compute Draw” is GPUs installed × all-in draw, excluding cooling and facility overhead (S-1) — so the bars are comparable in kind. They are not comparable in confidence: the hyperscaler bars are inferred from capex, SpaceX’s 2027E is a CEO’s floor (his stretch plan is ≈23 GW), and Microsoft’s columns are fiscal years ending in June. No SpaceX figure is stated for 2028.</p></div>' +
     '</div>' +
 
     sec('What a gigawatt costs') +
@@ -1433,7 +1481,8 @@ function buildFor(key){
     else HS_COMPANIES.forEach(function(c){ yearChart('hs-yr-' + c.id, c.id); });
   }
   if (key === 'cap'){
-    gwChart('hs-gw');
+    gwChart('hs-gw', 'add');
+    gwChart('hs-gw-total', 'total');
   }
 }
 

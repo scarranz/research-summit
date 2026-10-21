@@ -3426,6 +3426,23 @@ img.org-photo { object-fit: cover; }
 .ov-tsm-dd .tsm-splc-geo-c{height:240px}
 .ov-tsm-dd .tsm-splc-geo .rs-collap{margin-top:10px}
 
+/* META ▸ Bottom Line ▸ Supply Chain (js/overviews/meta-splc.js) — formal skin: Summit tokens, running text black */
+.ov-meta-dd .ovt-subpane[data-ovst="supplychain"]{color:#111418}
+.ov-meta-dd .ovt-subpane[data-ovst="supplychain"] .ov-lede{color:#111418}
+.ov-meta-dd .meta-splc-cap{margin:18px 0 6px;color:#111418}
+.ov-meta-dd .meta-splc-card{border-left:4px solid var(--steel)}
+.ov-meta-dd .meta-splc-card .ce-w-metric{color:#111418}
+.ov-meta-dd .meta-splc-chip{background:var(--ice);border:1px solid var(--bdr);color:#111418}
+.ov-meta-dd .meta-splc-more{margin-left:auto;color:var(--steel);background:none;border:none}
+.ov-meta-dd .meta-splc-bar{margin:4px 0 6px}
+.ov-meta-dd .meta-splc-bar .ov-mbar-track{height:8px}
+.ov-meta-dd .meta-splc-bar .ov-mbar-fill,.ov-meta-dd .ovt-subpane[data-ovst="supplychain"] .ov-mbars .ov-mbar-fill{background:var(--navy)}
+.ov-meta-dd .ovt-subpane[data-ovst="supplychain"] .ov-mbars .ov-mbar-l{width:210px;color:#111418}
+.ov-meta-dd .meta-splc-sub,#co-detailview .meta-splc-sub{color:var(--mu);font-weight:600}
+.ov-meta-dd .meta-splc-geo{margin-top:16px}
+.ov-meta-dd .meta-splc-geo-c{height:220px}
+.ov-meta-dd .meta-splc-geo .rs-collap{margin-top:10px}
+
 /* TSMC ▸ Valuation ▸ Historic Multiple (js/overviews/tsm-histmult.js) — moved from amzn-histmult.js's inline <style> */
 :is(.ov-tsm-dd, .ov-meta-dd) .hm-notice{padding:14px 2px;color:var(--mu);font:400 12px Inter,sans-serif}
 :is(.ov-tsm-dd, .ov-meta-dd) .hm-hint{margin-left:6px}

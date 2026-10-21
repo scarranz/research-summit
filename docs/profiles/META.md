@@ -12,7 +12,7 @@
 | Rama | `feat/meta-profile` (en el mismo PR que los cambios de la guía del review de TSM, decisión SAB 2026-10-20) |
 | Analista responsable | SAB |
 | Inicio | 2026-10-20 |
-| Avance | 41 de 44 unidades aprobadas (pendientes: BL-SPLC, F-FINAL; 3Q26 Post-Results tras el print del 21-oct) · 0 omitidas · 1 bloqueada (VA-TM) (M = filas del tablero − ⏭️ de alcance; Anexo C) |
+| Avance | 42 de 44 unidades aprobadas (pendientes: F-FINAL; 3Q26 Post-Results tras el print del 21-oct) · 0 omitidas · 1 bloqueada (VA-TM) (M = filas del tablero − ⏭️ de alcance; Anexo C) |
 
 ## 1. Inventario de datos (F0)
 
@@ -167,7 +167,7 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 | BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ✅ | 2026-10-20 | SAB | | SBC (dilución + por línea FY23–25), eje de acciones a la derecha |
 | BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ✅ | 2026-10-20 | SAB | | 4 líneas, cost of revenue primero; citas verbatim 10-K + llamadas |
 | BL-SEG | Bottom Line ▸ Segments | ✅ | 2026-10-21 | SAB | | Summit de segmentos = "Summit (discontinued)", FY23–24 = suma de trimestres congelados; operating income only (no segment D&A); forward by segment does not exist → bridge = By segment + By cost (revenue · pay · other costs, segment note FY22–25 / 1Q24–2Q26); deep dives FoA/RL |
-| BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
+| BL-SPLC | Bottom Line ▸ Supply Chain | ✅ | 2026-10-21 | SAB | | formato TSM (`meta-splc.js`): 5 KPIs, Cadena 1 capex en tarjetas, Cadena 2 tabla, Who needs whom, geografía por instalaciones con tabla; SPLC 2026-06-26 |
 | VA-HIST | Valuation ▸ Historic Multiple | ✅ | 2026-10-20 | SAB | | copia de tsm-histmult.js; denominadores 10-Q/10-K 1Q19–2Q26 (meta-histmult-data.js); precio FB antes del 9 jun 2022 y META después |
 | VA-PEERS | Valuation ▸ Peers | ✅ | 2026-10-20 | SAB | | mismo mapa de OV-6 + tabla de números, en vivo |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⛔ | 2026-10-21 | | | sin valuación de META en el MCP (revisado 2026-10-21) — §6 |
@@ -204,6 +204,7 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 - 2026-10-21 · EV-SET · El consenso del 3T26 es el snapshot de BBG del 10/21 (agregado a mano por SAB; `bbg_extract.py` ahora toma la fila más reciente por `data_as_of`). Earnings sin las tarjetas grandes de IR/EDGAR ni el párrafo "decision layer".
 - 2026-10-21 · EV-NOTES · El registro de temas sale de las notas a mano de SAB (META.pdf, 4T22–2T26), no de las transcripciones: 14 hilos en Family of Apps · Reality Labs · AI & compute · Costs & capital. Fuera: el recap del modelo (precio objetivo) y la guía del ecosistema de anuncios.
 - 2026-10-21 · EV-POST · Earnings pasa a la maquinaria de la guía (copia de `tsm-ce.js` → `meta-ce.js`, datos en `meta-ce-data.js`): Setup · Post-Results · Notes. Sin nada generado por IA, sin emojis, colores Summit (Watch List con `palette:'summit'`). Se conserva debajo de Notes la Watch List con filas en Supabase.
+- 2026-10-21 · BL-SPLC · Mismo export SPLC (2026-06-26), en el formato de la guía (copia de `tsm-splc.js`). Fuera: frases de opinión, marcas ⚠, colores por categoría y la comparación con el cliente más grande (ya en Top Line ▸ Customers). Hanwha: la lectura dice que el export no especifica qué línea compra Meta (la del perfil viejo no se pudo confirmar).
 
 ## 4. Excepciones aceptadas
 
@@ -434,4 +435,10 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 - Archivos: `meta-ce.js`, `meta-ce-data.js` (nuevos), `themes-data/meta.js` (nuevo), `meta.js` (monta Earnings desde `meta-ce.js`; el código `ce*` viejo queda muerto hasta F-FINAL), `segments.js` (THEME_SRC/THEME_SEG de META), `watchlist.js` (opción `palette:'summit'`), `tsm-ce.js` (bug de `stmt`), `scripts/bbg_extract.py`, `results-data/meta.js` + `meta-bbg.js` (regenerados), guía §12/§21.
 - Autoauditoría: ✔ sin errores de consola · ✔ sin emojis · ✔ Statement order corregido (bug heredado de TSM) · ⚠ atribuciones de algunos oradores en el follow-up del 1T26/4T25 inferidas del contenido (transcripción con etiquetas revueltas).
 - Cambios pedidos por SAB: quitar IR/EDGAR y la intro; notas propias como base del theme record; colores formales; Post-Results homogéneo con la guía; todo el texto corrido en negro (no navy/azul).
+
+### 2026-10-21 · BL-SPLC Bottom Line ▸ Supply Chain — ✅ APROBADA (SAB)
+- Qué se mostró: lede corto (283 proveedores; los 19 mayores suman $34.5B, $26.5B en hardware capitalizado); 5 KPIs (283 · 3,590 instalaciones · 33.0% EE. UU. · 12.8% China · NVIDIA $11.2B, 13.1% del costo); Cadena 1 capex (11 tarjetas con modal); Cadena 2 costo de ingreso + SG&A (tabla `.rs-ft`, 8 proveedores); Who needs whom (top 10 por dependencia); geografía por % de instalaciones (barras navy + tabla); pie estándar.
+- Fuentes: Bloomberg SPLC, META US Equity, export 2026-06-26 (datos movidos de `meta.js` a `meta-splc.js`); lecturas de las tarjetas = Summit.
+- Archivos: `meta-splc.js` (nuevo), `meta.js` (sub-tab + build + modal `splc:`), `css/overview.css` (bloque `.meta-splc-*` con alcance `.ov-meta-dd`, texto en negro).
+- Autoauditoría: ✔ sin errores de consola · ✔ sin emojis · ✔ sin `<style>` en línea · ✔ sumas de cadenas verificadas · ✘→✔ gráfica salía naranja (SUMMIT_CAT[1]) → navy; geografía reordenada por instalaciones.
 

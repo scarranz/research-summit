@@ -28,7 +28,8 @@ import { metaResults } from '../results-data/meta.js';   // Earnings ▸ Setup g
 import { metaBBG } from './meta-bbg.js';
 import { META_THEMES } from '../themes-data/meta.js';
 import { META_CE_CONS as CE_CONS, META_CALL_EARNINGS as CALL_EARNINGS } from './meta-ce-data.js';
-import { metaCeHtml, metaCeWire, metaCeBuild, metaCePop } from './meta-ce.js';   // Evolution ▸ Earnings (Setup · Post-Results · Notes)
+import { metaCeHtml, metaCeWire, metaCeBuild, metaCePop } from './meta-ce.js';
+import { metaSplcBody, metaSplcBuild, metaSplcPop } from './meta-splc.js';   // Bottom Line ▸ Supply Chain (Bloomberg SPLC)   // Evolution ▸ Earnings (Setup · Post-Results · Notes)
 import { metaCompBody, metaCompInit } from './meta-comp.js';   // Misc ▸ Competitive Position (MISC-comp, §15b)
 import { metaCapexBody, metaCapexBuild, metaStrategyBody, metaMnaBody, metaCapacityBody } from './meta-misc.js';   // Misc ▸ Capex, Strategy, M&A, Capacity (formal, §15b)   // Bottom Line ▸ General (copy of tsm-bl.js + AMZN SBC)   // Management ▸ Ownership (2026 proxy holder table)   // Valuation ▸ Sensitivity (copy of tsm-sensitivity.js; Summit frozen 2026-08-04)   // Valuation ▸ Historic Multiple (copy of tsm-histmult.js)
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/meta.js)
@@ -3133,7 +3134,7 @@ function deepDiveHtml(c){
   h+=subtabs('bottomline',[
     { k:'margins', l:'General', body:metaBlGeneralHtml() },
     { k:'segments', l:'Segments', body:metaBlSegmentsHtml() },
-    { k:'supplychain', l:'Supply Chain', body:suppliersBody() },
+    { k:'supplychain', l:'Supply Chain', body:metaSplcBody() },   // ./meta-splc.js (BL-SPLC)
   ]);
   h+=subtabs('evolution',[
     { k:'earnings', l:'Earnings', body:metaCeHtml(c) },   // ./meta-ce.js — Amazon's machinery via the guide-built TSM copy (EV-SET/POST/NOTES)
@@ -3198,7 +3199,7 @@ function buildSub(root, group, key){
   }
   if(group==='misc' && key==='comp') metaCompInit(root);
   if(group==='misc' && key==='capex') requestAnimationFrame(function(){ metaCapexBuild(root); });
-  if(group==='bottomline' && key==='supplychain') scRenderSuppliers();
+  if(group==='bottomline' && key==='supplychain') requestAnimationFrame(metaSplcBuild);
   if(group==='bottomline' && key==='margins') requestAnimationFrame(function(){ metaBlGeneralBuild(root); });
   if(group==='bottomline' && key==='segments') requestAnimationFrame(function(){ metaBlSegmentsBuild(root); });
   // Earnings ▸ Setup chart (the Results engine, META_SETUP dataset) — build only when Earnings is
@@ -3284,6 +3285,7 @@ function wireModal(root){
     if(kind==='strat'){ var st=STRAT_DRIVERS.filter(function(x){return x.k===id;})[0]; return st?{t:st.t,h:st.d}:null; }
     if(kind==='mna'){ var m=META_MNA.filter(function(x){return x.k===id;})[0]; return m?{t:m.n+' · '+m.yr,h:m.h}:null; }
     if(kind==='threat'){ var th=META_THREATS.filter(function(x){return x.k===id;})[0]; return th?{t:th.ic+' '+th.n,h:th.h}:null; }
+    if(kind==='splc'){ return metaSplcPop(id); }   // Bottom Line ▸ Supply Chain cards
     if(kind==='sup'){ var sp=null; SC_SUPPLIERS.forEach(function(x){ if(x.n===id) sp=x; }); if(!sp) return null;
       var catL=sp.cat==='CAPEX'?'CAPEX — capitalized, depreciates over years':(sp.cat==='COGS'?'COGS — hits the P&L now':'SG&A');
       var chip=function(l,v){ return '<span class="mgt-chip"><b>'+v+'</b> '+l+'</span>'; };

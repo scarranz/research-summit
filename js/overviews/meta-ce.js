@@ -14,7 +14,7 @@
 import { resultsHtml, initResults } from '../results.js';
 import { mountWatchList } from '../watchlist.js';
 import { fetchThemeRecord, saveThemeRecord } from '../api.js';   // durable persistence of the META theme record (Notes)
-import { META_THEMES } from '../themes-data/meta.js';
+import { META_THEMES, META_THEMES_V } from '../themes-data/meta.js';
 import { SUMMIT_CAT, SUMMIT_INK } from '../viz-palette.js';
 import { META_CE_CONS as CE_CONS, META_CALL_EARNINGS as CALL_EARNINGS } from './meta-ce-data.js';
 
@@ -262,7 +262,7 @@ function callsBody(){
     if(!group.length) h+='<div class="calls-empty">'+(_recHook==='all'?'— no sub-themes yet. Use Edit below to add one.':'— no sub-themes match this filter.')+'</div>';
     group.forEach(function(ct){
       var sk=(ct.st&&ct.st.k)?ct.st.k:'watch'; var st=CE_THST[sk]||CE_THST.watch;
-      h+='<div class="lpb-acc-item" data-theme="'+esc(ct.theme)+'"><button type="button" class="lpb-acc-h"><span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(ct.theme)+' <span class="calls-st" style="color:'+st.c+';border-color:'+st.c+'">'+st.l+ceStAge(ct.st)+'</span></span><span class="lpb-acc-ic">+</span></button>';
+      h+='<div class="lpb-acc-item" data-theme="'+esc(ct.theme)+'"><button type="button" class="lpb-acc-h"><span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(ct.theme)+' <span class="calls-st" style="color:'+st.c+';border-color:'+st.c+'">'+st.l+ceStAge(ct.st, ct.trackUntil)+'</span></span><span class="lpb-acc-ic">+</span></button>';
       var key=ct.seg+'|'+ct.theme, editing=!!_recEditOpen[key];
       h+='<div class="lpb-acc-body"><p style="font-size:12px;color:var(--mu);margin:0 0 10px;font-style:italic">'+esc(ct.why)+'</p>';
       if(editing){
@@ -813,7 +813,7 @@ function ceWatchBody(c){
   // ── FUSED: the full multi-year theme record (was the standalone Evolution ▸ Earnings Calls tab,
   // dissolved Jul 2026 — no two tabs on the same call highlights). Moved to the TOP of this sub-tab
   // (Aug 2026, AMZN only) — it now leads; the Watch List is folded in below it. ──
-  h+='<div class="ce-band" style="--bc:var(--navy)"><span class="ce-band-t">The theme record — every thread, across all calls</span><span class="ce-band-s">from SAB’s call notes</span><span class="ce-band-l"></span></div>';
+  h+='<div class="ce-band" style="--bc:var(--navy)"><span class="ce-band-t">The theme record — every thread, across all calls</span><span class="ce-band-l"></span></div>';
   // Wrapped so the editor below can re-render it in place when a theme / sub-theme is added.
   h+='<div data-metarec>'+callsBody()+'</div>';
   // ── The editing surface — a Theme → Sub-theme picker (AMZN-only). HIDDEN by default so the record
@@ -1425,6 +1425,7 @@ function ceResultsBody(c){
     // Pass the quarter's FROZEN Summit expectations (setup.us) so the print can be scored against
     // Street OR Summit via the vs-Street ⇄ vs-Summit toggle (§6a-iii).
     b+=cePrintBlock(q.q, r, (q.setup&&q.setup.us)||{});
+    if(r.basisNote) b+='<div class="ov-fynote">'+r.basisNote+'</div>';   // META: one line on the basis of a one-time charge
     // The AI-generated "Call summary — the minute" was REMOVED (Dani, Aug 2026) — no AI-authored section.
     // ② "Points for the call" was REMOVED (Aug 2026) per Dani — the red-line/tee-up cards were noise.
     // 4 · ③ The call, classified — Prepared Remarks ⇄ Q&A toggle, each item tagged to a Watch List
@@ -1629,8 +1630,11 @@ var CE_THST={ trend:{c:BRAND,l:'Confirmed trend'}, promise:{c:BRAND2,l:'Promise 
 // A promise open for one quarter and one open for four look identical without this. Age is the
 // signal: how long has it been unreconciled, or how many quarters has the silence run?
 function ceQnum(q){ var m=String(q||'').match(/Q(\d)\s+(\d{4})/); return m?((+m[2])*4+(+m[1])):null; }
-function ceStAge(st){
+function ceStAge(st, until){
   if(!st||typeof st!=='object'||!st.since) return '';
+  // A closed hook (trackUntil set) is history, not an open count: say when it closed and how long it ran.
+  if(until){ var a0=ceQnum(st.since), b0=ceQnum(until), n0=(a0!=null&&b0!=null)?Math.max(1,b0-a0+1):null;
+    return '<span class="calls-st-age"> · '+((st.k==='promise')?'reconciled ':'closed ')+esc(until)+(n0?' after '+n0+' quarter'+(n0>1?'s':''):'')+'</span>'; }
   var newest=CALL_EARNINGS.quarters.filter(function(q){ return q.status!=='upcoming'; })[0];
   var a=ceQnum(st.since), b=ceQnum(newest?newest.q:null);
   if(a==null||b==null) return '';
@@ -2012,10 +2016,13 @@ function metaHydrateThemes(root){
   if(_metaReady) return;
   if(!_co || !_co.id){ _metaReady=true; return; }
   Promise.resolve(fetchThemeRecord(_co.id)).then(function(res){
-    if(res && res.success && res.data && res.data.length){
+    // A saved record older than the seed's version (META_THEMES_V, stamped on every thread as `v`) is replaced
+    // by the seed: a restructured seed must win over a copy an open tab saved from the previous version.
+    var savedV=0; if(res && res.success && res.data) res.data.forEach(function(t){ if(t && t.v>savedV) savedV=t.v; });
+    if(res && res.success && res.data && res.data.length && savedV>=META_THEMES_V){
       META_THEMES.length=0; Array.prototype.push.apply(META_THEMES, res.data);
       _metaReady=true; metaRerenderRecord(root); metaRenderEditor(root);
-    } else { _metaReady=true; }   // no saved record yet — keep the seed; the first edit will persist it
+    } else { _metaReady=true; if(res && res.success && res.data && res.data.length) metaPersistThemes(); }   // no saved record yet — keep the seed; the first edit will persist it
   }).catch(function(){ _metaReady=true; });
 }
 

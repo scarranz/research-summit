@@ -1424,6 +1424,17 @@ Por trimestre reportado:
 >   propio (precio objetivo, múltiplo — es opinión nuestra) ni material de contexto que no es una llamada. Si
 >   el PDF es de escritura a mano, la capa de texto de iOS sale ilegible en las primeras páginas: renderizar
 >   esas páginas a imagen y leerlas; las cifras dudosas se cotejan con el 8-K o se omiten.
+> - **Historia = ganchos cerrados** (SAB, 2026-10-21): lo que tuvo principio y fin no va dentro de un hilo eterno.
+>   Cada guía anual (capex FY2024, gastos FY2025…), cada promesa con fecha y cada fase (el recorte de 2023, la era
+>   open-source) es su propio sub-tema con `trackUntil` = el trimestre en que se cerró, y su última nota dice cómo
+>   aterrizó ("Reconciled: FY2024 capex $39.2B…", cifra del 10-K vía el dataset de Results). Si no, el filtro
+>   "Closed" sale vacío. La etiqueta de edad de un gancho cerrado dice "reconciled/closed <trimestre> after N
+>   quarters" (`ceStAge(st, trackUntil)`), no "unreconciled".
+> - **Ojo: la copia en Supabase gana.** En cuanto el portal re-renderiza el registro, lo guarda en
+>   `company_theme_record`, y desde ahí la semilla ya no se lee. Si se reestructura la semilla después, hay que
+>   reemplazar el registro guardado (con `saveThemeRecord`, como lo hace el portal), **antes** comprobar que la
+>   copia guardada no trae notas del equipo que la semilla no tenga, y recargar la página enseguida (la pestaña
+>   abierta guarda su copia vieja en el siguiente re-render).
 > - **Temas de primer nivel = ejes del negocio** (los segmentos más los ejes de toda la empresa, p. ej. "AI &
 >   compute", "Costs & capital"); los que son segmento se mapean en `THEME_SEG`.
 > - **Colores:** ver §21 (Watch List con `palette:'summit'`, estados en tokens). La banda del theme record sin

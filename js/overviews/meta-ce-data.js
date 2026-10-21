@@ -140,6 +140,15 @@ export var META_CE_CONS = {
     bq.forEach(function(p,j){ var i=QP.indexOf(p), v=s.q[j]; if(i<0||v==null) return; v=(b[1]===1?v:Math.abs(v)/b[1]);
       if(j<s.qA.length) m.qa[i]=v; else m.qr[i]=[m.qr[i][0],m.qr[i][1],m.qr[i][2],v]; });
     growth(m); });
+  // Reported actuals the Bloomberg export does not carry yet (it is a pre-print snapshot): typed from the 8-K
+  // Ex. 99.1 of the print. Gross profit = revenue − cost of revenue; EBITDA = operating income + D&A (both GAAP,
+  // so they INCLUDE any one-time charge); capex is not here (it comes from Results, Meta-stated basis).
+  var ACT_8K={
+    '3Q26':{ 'Gross profit':51.2, 'EBITDA':20.1, 'Operating cash flow':32.8, 'D&A':7.15, 'Diluted shares':2.57,
+             'Daily Active People (DAP)':3.64, 'Ad impressions growth (YoY)':10, 'Avg price per ad (YoY)':14 }   // 8-K Oct 21 2026
+  };
+  Object.keys(ACT_8K).forEach(function(p){ var i=QP.indexOf(p); if(i<0) return;
+    META_CE_CONS.m.forEach(function(m){ var v=ACT_8K[p][m.k]; if(v==null) return; m.qa[i]=v; growth(m); }); });
   var at=META_CE_CONS.m.map(function(x){ return x.k; }).indexOf('Family of Apps revenue')+1;
   META_CE_CONS.m.splice(at, 0,
     fromResults({ k:'Advertising revenue', u:'$B', t:'ok', code:'SALES_REV_TURN' }, 'adv', 1000),
@@ -166,7 +175,26 @@ export var META_CALL_EARNINGS = { ticker:'META', quarters:[
   // reported quarter is 2Q26, so its fq+1 IS this quarter), read through CE_CONS above. SUMMIT — the
   // 2026-08-04 snapshot, frozen in js/results-data/meta.js (ceSummitUs): it predates the Aug 26 settlement.
   // GUIDANCE — Q2 2026 press release, 8-K Ex. 99.1 (Jul 29, 2026), "CFO Outlook Commentary".
-  { q:'Q3 2026', status:'upcoming', date:'October 21, 2026 · after close (call 4:30pm ET)',
+  // ── UPCOMING: Q4 2026 (quarter ends Dec 31, 2026; Meta reports late January 2027) ──
+  // Street = the Bloomberg snapshot of Oct 21 2026, taken BEFORE the 3Q26 print and the 4Q26 guide (said in the
+  // notes until the next export). Guidance = the 3Q26 release (8-K Ex. 99.1, Oct 21 2026).
+  { q:'Q4 2026', status:'upcoming', date:'reports late January 2027',
+    setup:{
+      source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-10-21 (before the 3Q26 print and the 4Q26 guide) · Summit DCF model — snapshot 2026-08-04, frozen · guidance: 3Q26 press release (8-K Ex. 99.1, Oct 21 2026)', asOf:'2026-10-21',
+      notes:{
+        'Revenue':{ t:'Guided $73–76B; the Street on file predates the guide', h:'<p>Guide: “We expect fourth quarter 2026 total revenue to be in the range of $73-76 billion. Our guidance assumes foreign currency is an approximately 1% headwind to year-over-year total revenue growth.” The Bloomberg snapshot on file ($73.6B) is from before the print, so it sits inside the range by chance, not by revision.</p>' },
+        'Operating income':{ t:'FY26 expenses raised to $175–179B for the $9.9B charge', h:'<p>“We now expect full year 2026 total expenses to be in the range of $175-179 billion.” And: “Excluding the third quarter legal charge, we continue to expect 2026 operating income to be above 2025 operating income.” 2025 operating income was $83.3B; 1Q–3Q26 add up to $54.6B with the charge, $64.5B without it.</p>' },
+        'Capex':{ t:'FY26 narrowed to $135–145B: about $49–59B left for Q4', h:'<p>“We anticipate 2026 capital expenditures, including principal payments on finance leases, to be in the range of $135-145 billion, narrowed from our prior outlook of $130-145 billion.” 1Q–3Q26 were $85.8B on that basis, which leaves about <b>$49–59B</b> for the fourth quarter. The Street line here is purchases of property and equipment only.</p>' },
+        'EPS (diluted)':{ t:'Tax guided 15–17% for Q4', h:'<p>“Absent any changes to our tax landscape, we expect our fourth quarter 2026 tax rate to be between 15-17%.” The new Class C shares are paid as a stock dividend after January 19, 2027, so Q4 per-share figures are on today’s share count.</p>' },
+        'Diluted shares':{ t:'Class C stock dividend in January 2027', h:'<p>The Board declared a one-time dividend of one non-voting Class C share for each Class A and Class B share, effective January 19, 2027; Meta expects the Class A price to “reflect the effect of a two-for-one stock split.” Share counts double from the 1Q27 report on.</p>' },
+        'Reality Labs revenue':{ t:'RL losses guided to $18–19B for 2026, about $15B in 2027', h:'<p>“We now expect Reality Labs losses to decline compared to 2025 to a range of $18-19 billion.” 1Q–3Q26 losses were $12.8B, so Q4 implies $5.2–6.2B. For 2027: losses “to narrow next year to around $15 billion as we reallocate investment toward other priority areas, primarily AI.”</p>' },
+      },
+      us:ceSummitUs('4Q26'),
+      debate:{ rows:null, synth:'' },
+    },
+    results:null, call:null },
+
+  { q:'Q3 2026', status:'reported', date:'October 21, 2026 · after close (call 4:30pm ET)',
     setup:{
       source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-10-21 (the last before the print) · Summit DCF model — snapshot 2026-08-04, frozen (quarterly projections of revenue, operating income, capex and segment revenue) · guidance: Q2 2026 press release, 8-K Ex. 99.1', asOf:'2026-10-21',
       notes:{
@@ -189,7 +217,11 @@ export var META_CALL_EARNINGS = { ticker:'META', quarters:[
       us:ceSummitUs('3Q26'),
       debate:{ rows:null, synth:'The one thing to resolve: <b>what the business earned ex the $10B legal charge</b>, against a consensus that mixes both bases — and whether the 2027 capex number finally arrives as a figure, with the cash flow and the debt to carry it.' }
     },
-    results:null, call:null },
+    // The print (8-K Ex. 99.1, Oct 21 2026). Call Summary fills in once the transcript is out.
+    results:{
+      basisNote:'<b>Basis.</b> Reported figures include the <b>$9.89B</b> charge for the state attorneys general agreement (general and administrative). Without it, operating income was <b>$22.9B</b> and diluted EPS <b>$7.40</b>. The Street’s operating income and EBITDA excluded the charge; its EPS ($3.62) included it.'
+    },
+    call:null },
 
   // ── REPORTED: Q2 2026 (quarter ended Jun 2026; reported Jul 29, 2026 AMC) ──
   //

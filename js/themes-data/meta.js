@@ -1,15 +1,23 @@
-// themes-data/meta.js — Meta's theme record (Evolution ▸ Earnings ▸ Watch List), the static seed.
+// themes-data/meta.js — Meta's theme record (Evolution ▸ Earnings ▸ Notes), the static seed.
 //
-// Contract: docs/PROFILE_PLAYBOOK.md §12 EV-NOTES and §24. Two readers: the theme record under the Watch List
-// (js/overviews/meta.js, callsBody) and Top Line ▸ Segments ▸ "What management has said" (js/segments.js,
-// THEME_SEG maps 'Family of Apps' → foa and 'Reality Labs' → rl; the other themes are company-wide).
+// Contract: docs/PROFILE_PLAYBOOK.md §12 EV-NOTES and §24. Two readers: the theme record in Notes
+// (js/overviews/meta-ce.js) and Top Line ▸ Segments ▸ "What management has said" (js/segments.js, THEME_SEG maps
+// 'Family of Apps' → foa and 'Reality Labs' → rl; the other themes are company-wide). Once the portal saves a
+// record (Supabase, company_theme_record) that copy wins and this seed is no longer read.
 //
-// Source: SAB's handwritten call notes, Q4 2022 → Q2 2026 (META.pdf, 18 pages, Oct 21 2026): 15 earnings calls
-// plus two conferences (GS Communacopia, Sep 2025; Morgan Stanley TMT, Mar 2026), filed under the quarter of the
-// last reported call. The threads are the ones the notes keep returning to. Every note is a paraphrase of what
-// management said on that call (no quotation marks); figures as noted, cross-checked against the 8-K where the
-// handwriting was ambiguous. Not used: the Jan 2025 model recap (our own price target, not management) and the
-// Jul 2025 ad-ecosystem primer (industry background, not a call).
+// Source: SAB's handwritten call notes, Q4 2022 → Q2 2026 (META.pdf, Oct 21 2026): 15 earnings calls plus two
+// conferences (GS Communacopia, Sep 2025; Morgan Stanley TMT, Mar 2026), filed under the quarter of the last call.
+// Every note is a paraphrase of what management said (no quotation marks). Not used: the Jan 2025 model recap
+// (our own price target) and the Jul 2025 ad-ecosystem primer (background, not a call).
+//
+// Open vs closed hooks (SAB, Oct 21 2026: the old notes must show as history, not as one endless thread). A thread
+// that had a beginning and an end — a full-year guide, a dated promise, a phase — is its own sub-theme with
+// `trackUntil` = the quarter it was settled. Its last note says how it landed ("Reconciled: …"); those outcome
+// figures come from the 10-K annuals in js/results-data/meta.js (total expenses = revenue − operating income;
+// D&A = EBITDA − operating income), not from the handwritten notes.
+// Seed version: bump it when the seed is restructured. Every thread carries it as `v`, and the Notes tab replaces
+// a saved record older than this with the seed (a stale open tab cannot bring an old structure back).
+export var META_THEMES_V = 2;
 export var META_THEMES = [
   // ── Family of Apps ────────────────────────────────────────────────────────────────────────────
   { seg:'Family of Apps', theme:'Ad impressions and price per ad', st:{ k:'trend', since:'Q2 2024', last:'Q2 2026' },
@@ -30,20 +38,31 @@ export var META_THEMES = [
       { q:'Q4 2022', items:['AI in the apps drove <b>20% more conversions</b> for advertisers.'] },
       { q:'Q3 2023', items:['Priorities: Reels monetization, business messaging, connecting business data, on-site experiences, and <b>AI across the ad suite</b>.'] },
       { q:'Q4 2023', items:['Raising monetization by adding ads and improving performance: AI, businesses connecting their data, click-to-message.'] },
-      { q:'Q2 2024', items:['Advertisers see higher ROI from gen AI tools; core AI returns in the short term, gen AI <b>not in 2024</b> but accretive over time.'] },
       { q:'Q3 2024', items:['AI lifts conversions while keeping the same number of ads.'] },
       { q:'Q1 2025', items:['First of five opportunities: improved advertising, where the advertiser sets the goal and Meta does the rest.'] },
-      { q:'Q2 2025', items:['Ad roadmap: improve ad systems, build ad-creation tools, optimize the platform for each business objective.', 'Gen AI will <b>not be a strong revenue contributor</b> this year or next.'] },
+      { q:'Q2 2025', items:['Ad roadmap: improve ad systems, build ad-creation tools, optimize the platform for each business objective.'] },
       { q:'Q3 2025', items:['Key metric is <b>weighted conversions</b>, growing faster than impressions; automated-campaign advertisers at a <b>$60B</b> annual run-rate.', 'At GS Communacopia (Sep 2025): next frontier is gen AI for creative in every format, done on the advertiser’s behalf.'] },
       { q:'Q1 2026', items:['At Morgan Stanley TMT (Mar 2026): <b>iREV</b>, the internal measure of ad performance; ranking and recommendations remain the main focus.'] },
       { q:'Q2 2026', items:['Expanded the context used for ad relevance.'] },
     ]},
-  { seg:'Family of Apps', theme:'Engagement and recommendations', st:{ k:'trend', since:'Q3 2023', last:'Q2 2026' },
-    why:'Engagement makes the inventory: Reels, video and AI-recommended content drive time spent and impressions.',
+  { seg:'Family of Apps', theme:'Gen AI as a revenue line', st:{ k:'promise', since:'Q2 2024', last:'Q2 2025' },
+    why:'Management keeps saying generative AI is not yet a revenue driver; reconcile when it is.',
+    updates:[
+      { q:'Q2 2024', items:['Advertisers see higher ROI from gen AI tools; core AI returns in the short term, gen AI <b>not in 2024</b> but accretive over time.'] },
+      { q:'Q4 2024', items:['Meta AI is not focused on monetization yet.'] },
+      { q:'Q2 2025', items:['Gen AI will <b>not be a strong revenue contributor</b> this year or next.'] },
+    ]},
+  { seg:'Family of Apps', theme:'Reels becomes core', st:{ k:'trend', since:'Q3 2023', last:'Q1 2024' }, trackUntil:'Q1 2024',
+    why:'Reels went from a monetization drag to the core of engagement.',
     updates:[
       { q:'Q3 2023', items:['Reels is now a <b>core part of the business</b>, no longer an initiative.'] },
-      { q:'Q4 2023', items:['Stops reporting Family MAP and Facebook DAU; will report <b>Family daily active people</b>.', 'Video time spent <b>+25%</b>; unifying the video experiences.'] },
-      { q:'Q1 2024', items:['<b>30%</b> of Facebook posts are AI-recommended (2x in a year); Reels about <b>50%</b> of Instagram time.'] },
+      { q:'Q4 2023', items:['Video time spent <b>+25%</b>; unifying the video experiences.'] },
+      { q:'Q1 2024', items:['Reconciled: Reels about <b>50%</b> of Instagram time.'] },
+    ]},
+  { seg:'Family of Apps', theme:'Engagement and recommendations', st:{ k:'trend', since:'Q1 2024', last:'Q2 2026' },
+    why:'Engagement makes the inventory: video and AI-recommended content drive time spent and impressions.',
+    updates:[
+      { q:'Q1 2024', items:['<b>30%</b> of Facebook posts are AI-recommended (2x in a year).'] },
       { q:'Q2 2024', items:['Moving to a <b>single unified recommendation system</b>.'] },
       { q:'Q3 2024', items:['DAP <b>+5%</b> YoY.'] },
       { q:'Q4 2024', items:['DAP <b>+5%</b> YoY to <b>3.35B</b>; Threads will carry ads.'] },
@@ -52,6 +71,11 @@ export var META_THEMES = [
       { q:'Q4 2025', items:['<b>2B+</b> daily actives each on Facebook, WhatsApp and Instagram; more immersive media formats.'] },
       { q:'Q1 2026', items:['Ranking improvements lifted Instagram time <b>10%</b>; same-day posts now <b>30%</b> of recommended Reels (2x YoY).', 'DAP hit by Iran and the WhatsApp ban in Russia.'] },
       { q:'Q2 2026', items:['DAP <b>+3%</b> YoY to <b>3.6B</b>; Instagram reached <b>2B</b> daily actives.'] },
+    ]},
+  { seg:'Family of Apps', theme:'Reporting switch to DAP', st:{ k:'trend', since:'Q4 2023', last:'Q4 2023' }, trackUntil:'Q4 2023',
+    why:'The user metric Meta reports changed.',
+    updates:[
+      { q:'Q4 2023', items:['Stops reporting Family MAP and Facebook DAU/MAU; will report only <b>Family daily active people</b>.'] },
     ]},
   { seg:'Family of Apps', theme:'Business messaging and WhatsApp', st:{ k:'trend', since:'Q4 2022', last:'Q2 2026' },
     why:'The second revenue stream inside FoA: click-to-message ads, paid messaging and business agents, now in other revenue.',
@@ -75,21 +99,32 @@ export var META_THEMES = [
       { q:'Q1 2024', items:['Online commerce again the main driver, then gaming.'] },
       { q:'Q2 2024', items:['Q3 guide <b>$38.5–41B</b>; Q3 laps strong growth from Asia-based advertisers.'] },
       { q:'Q4 2024', items:['Q1 2025 guide <b>$39.5–41.8B</b>.'] },
-      { q:'Q1 2025', items:['Revenue <b>+16%</b> (+19% constant currency); Q2 guide <b>$42.5–45.5B</b>, FX 1% tailwind.', 'North America grew fastest; Asia-based e-commerce spending less since April.'] },
+      { q:'Q1 2025', items:['Revenue <b>+16%</b> (+19% constant currency); Q2 guide <b>$42.5–45.5B</b>, FX 1% tailwind; North America grew fastest.'] },
       { q:'Q2 2025', items:['Q3 guide <b>$47.5–50.5B</b> (FX 1% tailwind); Q4 growth to be lower than Q3; online commerce the biggest contributor.'] },
       { q:'Q3 2025', items:['Q4 guide <b>$56–59B</b> (FX 1% tailwind); strong revenue growth expected in 2026.'] },
       { q:'Q4 2025', items:['Q1 2026 guide <b>$53.5–56.5B</b>; FY2026 growth to be lower than Q1.'] },
       { q:'Q1 2026', items:['Revenue <b>+33%</b>, all from FoA; Q2 guide <b>$58–61B</b> (FX 2% tailwind).'] },
       { q:'Q2 2026', items:['Revenue <b>+18%</b> YoY; Q3 guide <b>$61–64B</b> (FX 1% headwind).'] },
     ]},
+  { seg:'Family of Apps', theme:'Asia e-commerce pullback', st:{ k:'watch', since:'Q1 2025', last:'Q2 2025' }, trackUntil:'Q2 2025',
+    why:'Tariffs and the end of the de minimis exemption cut spending by Asia-based e-commerce advertisers.',
+    updates:[
+      { q:'Q1 2025', items:['Asia-based e-commerce advertisers spending less since April.'] },
+      { q:'Q2 2025', items:['Reconciled: online commerce was again the <b>biggest contributor</b> to growth.'] },
+    ]},
   // ── Reality Labs ──────────────────────────────────────────────────────────────────────────────
-  { seg:'Reality Labs', theme:'Reality Labs losses', st:{ k:'promise', since:'Q4 2025', last:'Q2 2026' },
-    why:'The size of the bet: losses guided up for years, then guided flat for 2026.',
+  { seg:'Reality Labs', theme:'RL losses up meaningfully in 2024', st:{ k:'promise', since:'Q3 2023', last:'Q4 2024' }, trackUntil:'Q4 2024',
+    why:'The guide for the 2024 loss, to reconcile against the year.',
     updates:[
       { q:'Q3 2023', items:['RL losses to increase YoY in Q4 and <b>meaningfully</b> in 2024.'] },
       { q:'Q4 2023', items:['RL operating losses to increase meaningfully YoY in 2024.'] },
       { q:'Q1 2024', items:['RL expense stable; RL teams now the main operators of the new AI focus.'] },
-      { q:'Q4 2025', items:['FoA opex will grow; <b>RL losses to stay flat</b> in 2026.'] },
+      { q:'Q4 2024', items:['Reconciled: FY2024 RL loss <b>$17.7B</b> vs $16.1B in 2023 (+10%).'] },
+    ]},
+  { seg:'Reality Labs', theme:'RL losses in 2026', st:{ k:'promise', since:'Q4 2025', last:'Q2 2026' },
+    why:'Guided flat for 2026; reconcile against the year.',
+    updates:[
+      { q:'Q4 2025', items:['FoA opex will grow; <b>RL losses to stay flat</b> in 2026 (FY2025 loss: $19.2B).'] },
       { q:'Q1 2026', items:['RL revenue did not grow: Quest down, AI glasses up.'] },
       { q:'Q2 2026', items:['RL revenue <b>+16%</b> on AI glasses, partly offset by lower Quest sales.'] },
     ]},
@@ -105,22 +140,52 @@ export var META_THEMES = [
       { q:'Q2 2026', items:['New glasses ship with <b>Muse Spark</b> out of the box; Connect on Sep 23.'] },
     ]},
   // ── AI & compute ──────────────────────────────────────────────────────────────────────────────
-  { seg:'AI & compute', theme:'Capex guidance', st:{ k:'watch', since:'Q4 2022', last:'Q2 2026' },
-    why:'The number the notes track on every call: cut in 2023, then raised at almost every call since.',
+  { seg:'AI & compute', theme:'FY2023 capex', st:{ k:'promise', since:'Q4 2022', last:'Q4 2023' }, trackUntil:'Q4 2023',
+    why:'The year capex was cut: the guide and how it landed.',
     updates:[
       { q:'Q4 2022', items:['Q4 capex <b>$9.2B</b> (servers, data centers); FY2023 <b>$30–33B</b>, lower data-center construction.'] },
-      { q:'Q3 2023', items:['FY2023 <b>$27–29B</b>; FY2024 <b>$30–35B</b>, growth in servers (AI and non-AI hardware).'] },
-      { q:'Q4 2023', items:['FY2024 <b>$30–37B</b>; infrastructure investment to keep growing beyond 2024.'] },
+      { q:'Q3 2023', items:['FY2023 lowered to <b>$27–29B</b>.'] },
+      { q:'Q4 2023', items:['Reconciled: FY2023 capex <b>$28.1B</b>, inside the lowered range.'] },
+    ]},
+  { seg:'AI & compute', theme:'FY2024 capex', st:{ k:'promise', since:'Q3 2023', last:'Q4 2024' }, trackUntil:'Q4 2024',
+    why:'The first AI-driven raise: the guide and how it landed.',
+    updates:[
+      { q:'Q3 2023', items:['FY2024 <b>$30–35B</b>, growth in servers (AI and non-AI hardware).'] },
+      { q:'Q4 2023', items:['FY2024 <b>$30–37B</b>; infrastructure investment to keep growing beyond 2024; invest aggressively and design own infrastructure.'] },
       { q:'Q1 2024', items:['FY2024 raised to <b>$35–40B</b> for AI; to increase further in 2025 and beyond.'] },
-      { q:'Q2 2024', items:['FY2024 <b>$37–40B</b>; Q2 capex <b>$8.47B</b>; <b>significant capex growth in 2025</b>; capex kept flexible to market signals.'] },
-      { q:'Q3 2024', items:['Q3 capex <b>$9.2B</b>, affected by the timing of payments; significant growth in FY2025.'] },
-      { q:'Q4 2024', items:['FY2024 <b>$39.23B</b>, FCF <b>$52.1B</b>; FY2025 <b>$60–65B</b>, servers the largest piece.'] },
+      { q:'Q2 2024', items:['FY2024 <b>$37–40B</b>; Q2 capex <b>$8.47B</b>; capex kept flexible to market signals.'] },
+      { q:'Q3 2024', items:['Q3 capex <b>$9.2B</b>, affected by the timing of payments.'] },
+      { q:'Q4 2024', items:['Reconciled: FY2024 capex <b>$39.2B</b>, top half of the range; FCF <b>$52.1B</b>.'] },
+    ]},
+  { seg:'AI & compute', theme:'FY2025 capex', st:{ k:'promise', since:'Q2 2024', last:'Q4 2025' }, trackUntil:'Q4 2025',
+    why:'"Significant growth" in 2025: the guide raised three times, and how it landed.',
+    updates:[
+      { q:'Q2 2024', items:['Expect <b>significant capex growth</b> in 2025.'] },
+      { q:'Q3 2024', items:['Significant growth in FY2025 capex.'] },
+      { q:'Q4 2024', items:['FY2025 <b>$60–65B</b>, servers the largest piece.'] },
       { q:'Q1 2025', items:['FY2025 raised to <b>$64–72B</b>: more AI investment and higher hardware costs; most goes to the core business.'] },
-      { q:'Q2 2025', items:['FY2025 <b>$66–72B</b>; another year of similar dollar growth in 2026.'] },
-      { q:'Q3 2025', items:['FY2025 <b>$70–72B</b>; 2026 dollar growth <b>notably larger</b>; MSL and core AI the main drivers.', '<b>$27B</b> Blue Owl JV: that data center is funded by partners and sits in other investing cash flow, not capex.', 'At GS Communacopia (Sep 2025): <b>$600B</b> US investment envelope through 2028; 20-year useful life for data centers.'] },
+      { q:'Q2 2025', items:['FY2025 <b>$66–72B</b>.'] },
+      { q:'Q3 2025', items:['FY2025 <b>$70–72B</b>.'] },
+      { q:'Q4 2025', items:['Reconciled: FY2025 capex <b>$72.2B</b>, at the top of the range.'] },
+    ]},
+  { seg:'AI & compute', theme:'FY2026 capex', st:{ k:'promise', since:'Q2 2025', last:'Q2 2026' },
+    why:'The current year: the guide and every revision until it lands.',
+    updates:[
+      { q:'Q2 2025', items:['Another year of similar dollar growth in 2026.'] },
+      { q:'Q3 2025', items:['2026 dollar growth <b>notably larger</b>; MSL and core AI the main drivers.'] },
       { q:'Q4 2025', items:['FY2026 <b>$115–135B</b>, driven by Meta Superintelligence Labs.'] },
-      { q:'Q1 2026', items:['FY2026 raised to <b>$125–145B</b>, partly component (memory) inflation; 2027 capex will grow.'] },
+      { q:'Q1 2026', items:['FY2026 raised to <b>$125–145B</b>, partly component (memory) inflation.'] },
       { q:'Q2 2026', items:['Q2 capex <b>$31.08B</b> vs CFO <b>$31.87B</b>: FCF <b>$784M</b>; FY2026 lower end raised to <b>$130–145B</b>.'] },
+    ]},
+  { seg:'AI & compute', theme:'2027 capex', st:{ k:'watch', since:'Q1 2026', last:'Q1 2026' },
+    why:'No number yet; only direction.',
+    updates:[
+      { q:'Q1 2026', items:['2027 capex will grow; Meta keeps underestimating its compute needs.'] },
+    ]},
+  { seg:'AI & compute', theme:'Funding the build', st:{ k:'watch', since:'Q3 2025', last:'Q3 2025' },
+    why:'How the capex is paid for beyond operating cash flow: partners, off-balance vehicles, debt.',
+    updates:[
+      { q:'Q3 2025', items:['<b>$27B</b> Blue Owl JV: that data center is funded by partners and sits in other investing cash flow, not capex.', 'At GS Communacopia (Sep 2025): <b>$600B</b> US investment envelope through 2028; 20-year useful life for data centers.'] },
     ]},
   { seg:'AI & compute', theme:'Compute capacity and custom silicon', st:{ k:'watch', since:'Q4 2024', last:'Q2 2026' },
     why:'Whether Meta can get enough compute, and at what cost: capacity constraints, third-party chips and its own silicon.',
@@ -128,35 +193,66 @@ export var META_THEMES = [
       { q:'Q4 2024', items:['Will keep buying third-party chips; <b>custom silicon</b> for some workloads, mainly ranking and recommendations.'] },
       { q:'Q1 2025', items:['<b>Capacity constrained</b>; bringing capacity on faster; own silicon for unique workloads.'] },
       { q:'Q4 2025', items:['Still capacity constrained, and will be <b>through 2026</b>.'] },
-      { q:'Q1 2026', items:['At Morgan Stanley TMT (Mar 2026): training needs are clear 12–24 months out, inference is harder to predict; custom silicon to lower compute cost over time.', 'Broadcom custom silicon; Meta keeps <b>underestimating its compute needs</b>.'] },
+      { q:'Q1 2026', items:['At Morgan Stanley TMT (Mar 2026): training needs are clear 12–24 months out, inference is harder to predict; custom silicon to lower compute cost over time.', 'Broadcom custom silicon in the mix.'] },
       { q:'Q2 2026', items:['Third-party cloud spend and third-party token costs in the cost base; capacity to stay tight in the market.'] },
     ]},
-  { seg:'AI & compute', theme:'Meta AI and superintelligence', st:{ k:'watch', since:'Q4 2023', last:'Q2 2026' },
-    why:'From open-source Llama to Meta Superintelligence Labs: what the capex is building, and when it earns.',
+  { seg:'AI & compute', theme:'Open-source Llama', st:{ k:'trend', since:'Q4 2023', last:'Q2 2025' }, trackUntil:'Q2 2025',
+    why:'The open-model era, until the pivot to a closed frontier lab.',
     updates:[
-      { q:'Q4 2023', items:['New models more compute-intensive; open-source software infrastructure.'] },
+      { q:'Q4 2023', items:['Open-source software infrastructure; new models more compute-intensive to train.'] },
       { q:'Q2 2024', items:['Llama 4 needs <b>10x</b> the compute of Llama 3.'] },
-      { q:'Q3 2024', items:['Meta AI <b>500M+</b> monthly actives; Llama 4 training on <b>100K+ H100s</b>.'] },
-      { q:'Q4 2024', items:['Meta AI (700M today) to reach <b>1B</b> people; not focused on monetization yet.'] },
+      { q:'Q3 2024', items:['Llama 4 training on <b>100K+ H100s</b>.'] },
+      { q:'Q2 2025', items:['Closed: <b>Meta Superintelligence Labs</b> set up; the focus moves to personal superintelligence.'] },
+    ]},
+  { seg:'AI & compute', theme:'Meta AI and superintelligence', st:{ k:'watch', since:'Q3 2024', last:'Q2 2026' },
+    why:'What the capex is building, and when it earns: Meta AI usage and the superintelligence lab.',
+    updates:[
+      { q:'Q3 2024', items:['Meta AI <b>500M+</b> monthly actives.'] },
+      { q:'Q4 2024', items:['Meta AI (700M today) to reach <b>1B</b> people.'] },
       { q:'Q1 2025', items:['Meta AI almost <b>1B</b> monthly actives; focused on general intelligence; standalone app matters most in the US.'] },
-      { q:'Q2 2025', items:['<b>Meta Superintelligence Labs</b> set up; vision of personal superintelligence; Meta AI above 1B monthly actives.'] },
+      { q:'Q2 2025', items:['Vision of personal superintelligence; Meta AI above 1B monthly actives.'] },
       { q:'Q4 2025', items:['Meta AI actives <b>tripled</b> YoY in Q4.'] },
       { q:'Q1 2026', items:['At Morgan Stanley TMT (Mar 2026): each new model to be decided as open or closed.'] },
       { q:'Q2 2026', items:['Focus: distributing <b>superintelligence for everyone</b>; WhatsApp the leading surface for Meta AI.'] },
     ]},
   // ── Costs & capital ───────────────────────────────────────────────────────────────────────────
-  { seg:'Costs & capital', theme:'Expense guidance and drivers', st:{ k:'watch', since:'Q4 2022', last:'Q2 2026' },
-    why:'The FY expense guide and the same two drivers every year: infrastructure (D&A, cloud) first, technical pay second.',
+  { seg:'Costs & capital', theme:'The 2023 efficiency reset', st:{ k:'trend', since:'Q4 2022', last:'Q4 2023' }, trackUntil:'Q4 2023',
+    why:'Layoffs, fewer data centers and restructuring charges, until margins recovered.',
+    updates:[
+      { q:'Q4 2022', items:['2023 layoffs; fewer data centers; operating more efficiently.'] },
+      { q:'Q3 2023', items:['Highest operating margin in <b>over two years</b>; FY2023 includes <b>$3.5B</b> of restructuring.'] },
+      { q:'Q4 2023', items:['Reconciled: headcount <b>−22%</b> YoY; restructuring costs taper off.'] },
+    ]},
+  { seg:'Costs & capital', theme:'FY2023 expenses', st:{ k:'promise', since:'Q4 2022', last:'Q4 2023' }, trackUntil:'Q4 2023',
+    why:'The full-year expense guide and how it landed.',
     updates:[
       { q:'Q4 2022', items:['FY2023 expenses <b>$89–95B</b>, incl. ~$1B restructuring; COGS up on a data-center write-down.'] },
-      { q:'Q3 2023', items:['FY2023 lowered to <b>$87–89B</b> (incl. $3.5B restructuring); FY2024 <b>$94–99B</b>; D&A to rise much more in 2024.'] },
-      { q:'Q4 2023', items:['FY2024 <b>$94–99B</b>: higher infrastructure costs (D&A) and payroll for higher-cost technical roles.'] },
+      { q:'Q3 2023', items:['Lowered to <b>$87–89B</b> (incl. $3.5B restructuring).'] },
+      { q:'Q4 2023', items:['Reconciled: FY2023 total expenses <b>$88.2B</b>, inside the range.'] },
+    ]},
+  { seg:'Costs & capital', theme:'FY2024 expenses', st:{ k:'promise', since:'Q3 2023', last:'Q4 2024' }, trackUntil:'Q4 2024',
+    why:'The full-year expense guide and how it landed.',
+    updates:[
+      { q:'Q3 2023', items:['FY2024 <b>$94–99B</b>; D&A to rise much more in 2024 than in 2023.'] },
+      { q:'Q4 2023', items:['FY2024 <b>$94–99B</b>: higher infrastructure costs (D&A to rise by more than in 2023) and payroll for higher-cost technical roles.'] },
       { q:'Q2 2024', items:['FY2024 <b>$96–99B</b>.'] },
       { q:'Q3 2024', items:['Higher infrastructure costs through D&A in 2025.'] },
+      { q:'Q4 2024', items:['Reconciled: FY2024 total expenses <b>$95.1B</b>, below the last range; D&A <b>$15.5B</b> vs $11.2B in 2023 (+39%).'] },
+    ]},
+  { seg:'Costs & capital', theme:'FY2025 expenses', st:{ k:'promise', since:'Q4 2024', last:'Q4 2025' }, trackUntil:'Q4 2025',
+    why:'The full-year expense guide and how it landed.',
+    updates:[
       { q:'Q4 2024', items:['FY2025 <b>$114–119B</b>: infrastructure first, employee compensation second; G&A fell on <b>$1.55B</b> lower legal accruals.'] },
-      { q:'Q1 2025', items:['FY2025 lowered to <b>$113–118B</b>; D&A growth slower than 2024 on extended useful lives.'] },
-      { q:'Q2 2025', items:['FY2025 <b>$114–118B</b>; 2026 expense growth <b>above 2025</b>: sharp rise in D&A and infrastructure opex, then technical pay.'] },
-      { q:'Q3 2025', items:['FY2025 <b>$116–118B</b>; expenses <b>+32%</b> in Q3; 2026 to grow at a faster rate: infrastructure, cloud and depreciation first.'] },
+      { q:'Q1 2025', items:['Lowered to <b>$113–118B</b>; D&A growth slower than 2024 on extended useful lives.'] },
+      { q:'Q2 2025', items:['<b>$114–118B</b>.'] },
+      { q:'Q3 2025', items:['<b>$116–118B</b>; expenses <b>+32%</b> in Q3.'] },
+      { q:'Q4 2025', items:['Reconciled: FY2025 total expenses <b>$117.7B</b>, inside the range.'] },
+    ]},
+  { seg:'Costs & capital', theme:'FY2026 expenses', st:{ k:'promise', since:'Q2 2025', last:'Q2 2026' },
+    why:'The current year: infrastructure (D&A, cloud) first, technical pay second.',
+    updates:[
+      { q:'Q2 2025', items:['2026 expense growth <b>above 2025</b>: sharp rise in D&A and infrastructure opex, then technical pay.'] },
+      { q:'Q3 2025', items:['2026 to grow at a faster rate: infrastructure, cloud and depreciation first.'] },
       { q:'Q4 2025', items:['FY2026 <b>$162–169B</b>: infrastructure, third-party cloud and D&A, then compensation (AI hires).'] },
       { q:'Q1 2026', items:['FY2026 kept at <b>$162–169B</b>.'] },
       { q:'Q2 2026', items:['Costs <b>+55%</b> YoY, incl. <b>$2.4B</b> legal and <b>$1.18B</b> severance; FY2026 lower end raised to <b>$165–169B</b> on legal charges.'] },
@@ -164,32 +260,42 @@ export var META_THEMES = [
   { seg:'Costs & capital', theme:'2026 operating income above 2025', st:{ k:'promise', since:'Q4 2025', last:'Q2 2026' },
     why:'The commitment that frames the 2026 spend; reconcile it at the Q4 2026 print.',
     updates:[
-      { q:'Q4 2025', items:['2026 operating income to be <b>above 2025</b>.'] },
+      { q:'Q4 2025', items:['2026 operating income to be <b>above 2025</b> ($83.3B).'] },
       { q:'Q1 2026', items:['Reiterated: FY2026 operating income above FY2025.'] },
       { q:'Q2 2026', items:['Reiterated, with expenses raised for the legal charges.'] },
     ]},
-  { seg:'Costs & capital', theme:'Headcount and efficiency', st:{ k:'watch', since:'Q4 2022', last:'Q2 2026' },
-    why:'From the 2023 layoffs to a hiring cycle for AI talent, and back to severance in 2026.',
+  { seg:'Costs & capital', theme:'Headcount and AI hiring', st:{ k:'watch', since:'Q1 2024', last:'Q2 2026' },
+    why:'From the 2023 cuts to a hiring cycle for AI talent, and back to severance in 2026.',
     updates:[
-      { q:'Q4 2022', items:['2023 layoffs; fewer data centers; operating more efficiently.'] },
-      { q:'Q3 2023', items:['Highest operating margin in <b>over two years</b>.'] },
-      { q:'Q4 2023', items:['Headcount <b>−22%</b> YoY; lower restructuring costs.'] },
       { q:'Q1 2024', items:['FoA margin lower (<b>49%</b>) on higher investment.'] },
       { q:'Q2 2024', items:['2024 headcount meaningfully higher.'] },
       { q:'Q3 2024', items:['Headcount <b>+9%</b> YoY.'] },
       { q:'Q2 2025', items:['Operating margin <b>43%</b>; headcount growth in 2025 and 2026.'] },
       { q:'Q2 2026', items:['<b>$1.18B</b> severance from the May 2026 layoffs.'] },
     ]},
-  { seg:'Costs & capital', theme:'Capital return, tax and legal', st:{ k:'watch', since:'Q4 2022', last:'Q2 2026' },
-    why:'What the cash goes to besides capex, and the items below operating income.',
+  { seg:'Costs & capital', theme:'Capital return', st:{ k:'trend', since:'Q4 2023', last:'Q4 2024' },
+    why:'Dividends and buybacks next to the capex.',
+    updates:[
+      { q:'Q4 2023', items:['First dividend; buyback authorization up <b>$50B</b>.'] },
+      { q:'Q3 2024', items:['Buybacks <b>$8.86B</b>, dividends <b>$1.26B</b>.'] },
+      { q:'Q4 2024', items:['Capital return to continue through dividends and buybacks.'] },
+    ]},
+  { seg:'Costs & capital', theme:'Tax rate guide', st:{ k:'watch', since:'Q4 2022', last:'Q2 2026' },
+    why:'The guided tax rate, each year.',
     updates:[
       { q:'Q4 2022', items:['Tax rate <b>24%</b>; 2023 guided to the low 20s.'] },
-      { q:'Q4 2023', items:['First dividend; buyback authorization up <b>$50B</b>; 2024 tax rate mid-teens.'] },
-      { q:'Q3 2024', items:['Buybacks <b>$8.86B</b>, dividends <b>$1.26B</b>.'] },
-      { q:'Q4 2024', items:['Capital return to continue through dividends and buybacks; 2025 tax rate <b>12–15%</b>.'] },
+      { q:'Q4 2023', items:['2024 tax rate mid-teens.'] },
+      { q:'Q4 2024', items:['2025 tax rate <b>12–15%</b>.'] },
       { q:'Q2 2025', items:['Lower tax rate expected in future years.'] },
-      { q:'Q3 2025', items:['<b>$16B</b> one-time non-cash tax charge (valuation allowance): tax rate 87% vs 14% without it; EPS <b>$1.05</b> vs $7.25 ex-charge.', 'Q4 tax rate <b>12–15%</b>.'] },
-      { q:'Q1 2026', items:['Tax rate for the rest of the year <b>13–16%</b>; normalized Q1 rate would have been 14%.'] },
-      { q:'Q2 2026', items:['<b>$2.4B</b> of legal proceedings in costs; tax rate for the rest of the year <b>15–17%</b>.'] },
+      { q:'Q3 2025', items:['Q4 tax rate <b>12–15%</b>.'] },
+      { q:'Q1 2026', items:['Tax rate for the rest of the year <b>13–16%</b>.'] },
+      { q:'Q2 2026', items:['Tax rate for the rest of the year <b>15–17%</b>; <b>$2.4B</b> of legal proceedings in costs.'] },
+    ]},
+  { seg:'Costs & capital', theme:'The OBBBA tax charge', st:{ k:'trend', since:'Q3 2025', last:'Q1 2026' }, trackUntil:'Q1 2026',
+    why:'A one-time non-cash charge and its partial reversal.',
+    updates:[
+      { q:'Q3 2025', items:['<b>$16B</b> one-time non-cash tax charge (valuation allowance): tax rate 87% vs 14% without it; EPS <b>$1.05</b> vs $7.25 ex-charge.'] },
+      { q:'Q1 2026', items:['Reconciled: normalized Q1 tax rate would have been <b>14%</b>; the quarter booked a one-time tax benefit.'] },
     ]},
 ];
+META_THEMES.forEach(function(t){ t.v = META_THEMES_V; });

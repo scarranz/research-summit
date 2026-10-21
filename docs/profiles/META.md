@@ -5,6 +5,28 @@
 > Estados: ⬜ pendiente · 📝 propuesta · 🔨 en construcción · 👀 en revisión · 🔁 cambios pedidos ·
 > ✅ aprobada · ⏭️ omitida (con razón) · ⛔ bloqueada (qué falta y quién lo consigue)
 
+## ▶ Retomar aquí (dejado el 2026-10-21 en la noche, último commit `e6d51f8`)
+
+Meta reportó el 3T26 el 21-oct después del cierre. Ya está: el print del 3T26 (8-K) en Results y en
+Earnings ▸ Post-Results, el 4T26 abierto en Setup con la guía nueva, y Notes reestructurado (31 hilos, 13 cerrados;
+la copia en Supabase ya es la nueva). **Plan para el 22-oct en la mañana, en este orden:**
+1. **Call Summary del 3T26** — transcripción verbatim por Quartr (ya reconectado): `prepared`, `qanda`,
+   `highlights` y `newQuestions` en el bloque Q3 2026 de `js/overviews/meta-ce-data.js` (formato del 2T26).
+   De paso, cambiar las citas del 2T26 (hoy de cobertura de prensa) por el verbatim de IR.
+2. **Notas de SAB del 3T26 → Notes**: SAB trae sus notas de la llamada; se agregan a los hilos abiertos
+   (y se cierran los que se reconcilien). Si se reestructura la semilla, subir `META_THEMES_V`.
+3. **Watch List**: pasar al 4T26 los ganchos abiertos del 3T26 (hoy el 4T26 dice "No open hooks yet").
+4. **F-FINAL**: borrar el código muerto de `meta.js` (bloque `ce*` viejo, `callsBody`/`META_THEMES` viejos,
+   `suppliersBody`/`SC_*`, imports sin uso como `metaResults`/`metaBBG`), revisión final del perfil completo en el
+   portal y cierre de esta bitácora (avance 44/44 salvo VA-TM ⛔).
+5. **PR** (SAB lo pidió para mañana): `feat/meta-profile` → `main`, un solo PR con los cambios de la guía + META.
+   Resumen: guía (review TSM, §12/§21/EV-NOTES/EV-POST), perfil META completo, `watchlist.js` (`palette:'summit'`),
+   `tsm-ce.js` (bug de `stmt`), `bbg_extract.py` (fila más reciente), `serve.ps1` (no-store). Se abre solo cuando
+   SAB lo confirme.
+
+Pendientes que NO bloquean el PR: VA-TM ⛔ (sin valuación de META en el MCP); BL ▸ Segments 3T26 (pago y otros
+costos llegan con el 10-Q); OV-6 cita aún el consenso META "Sep 8"; columna 3T26 de Hyperscalers (otra rama).
+
 | Campo | Valor |
 |---|---|
 | Empresa | Meta Platforms, Inc. (NASDAQ: META) |

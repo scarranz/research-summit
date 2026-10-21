@@ -29,13 +29,11 @@ import {
   HS_DEP_YEARS, HS_DEP_MODEL, HS_DEP_COGS, HS_LIVES, HS_LIVES_FLAG, HS_GW_MSFT_FY,
   HS_CSP_QTRS, HS_CSP_REV, HS_CSP_OI, HS_CSP_NOTES,
   HS_THEME_QTRS, HS_THEMES,
-  HS_SPCX, HS_GW_SPCX_TOTAL, HS_GW_SPCX_NOTES,
+  HS_GW_SPCX_TOTAL, HS_GW_SPCX_NOTES,
 } from './hyperscalers-data.js';
 
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-// SpaceX is resolvable by id (the capacity tab uses it) but is not in
-// HS_COMPANIES, so the tabs that iterate the four never see it.
-function co(id){ return HS_COMPANIES.concat([HS_SPCX]).filter(function(c){ return c.id === id; })[0]; }
+function co(id){ return HS_COMPANIES.filter(function(c){ return c.id === id; })[0]; }
 function dot(id){ return '<span class="hs-dot" style="background:' + co(id).color + '"></span>'; }
 var LABELS = HS_VINTAGES.map(function(v){ return v.label; });
 
@@ -501,7 +499,8 @@ function ladderBody(){
         '<span class="hs-chart-u">US$B · midpoint of guided range</span></div>' +
       '<div class="hs-canvas"><canvas id="hs-ladder"></canvas></div>' +
       '<p class="hs-cap">Each marker is a guide actually stated on that call. The line crosses quarters where no annual number was given — that is visual continuity, not interpolation.' +
-      (_view.guideYear === '2025' ? ' <b>Microsoft is absent</b> because it does not guide on a calendar year; its first calendar figure is CY2026.' : '') +
+      (_view.guideYear === '2025' ? ' <b>Microsoft is absent</b> because it does not guide on a calendar year; its first calendar figure is CY2026. <b>SpaceX is absent</b> because it was private until 2Q26.' : '') +
+      (_view.guideYear === '2026' ? ' <b>SpaceX’s two points are derived and total-company</b>: it guides one quarter at a time and never by segment, so each point is the year-to-date actuals plus the quarters it guided. The October point is the only Oct ’26 call so far — the other four report 3Q26 later.' : '') +
       '</p>' +
     '</div>' +
     sec('From first guide to outcome') +
@@ -534,6 +533,8 @@ function quarterlyBody(){
   var yrRows = HS_COMPANIES.map(function(c){
     return [dot(c.id) + c.ticker].concat(HS_YEARS.map(function(y){
       var qs = HS_YEAR_QTRS[c.id][y];
+      // A year with no quarter at all is a gap, not a $0.0B year (SpaceX 2024).
+      if (!qs.some(function(v){ return v != null; })) return null;
       var tot = qs.reduce(function(a, v){ return a + (v || 0); }, 0);
       var g = HS_YEAR_GUIDE[c.id][y];
       var gs = g ? (g[0] === g[1] ? '~$' + g[0] + 'B' : '$' + g[0] + '–' + g[1] + 'B') : '—';
@@ -557,10 +558,11 @@ function quarterlyBody(){
       '</div>' +
       body +
       (one ? '<p class="hs-cap">In this view colour carries the <b>quarter</b>, not the company — the ticker under each column carries identity. Company hue and quarter shade cannot share one frame: tested both ways, AMZN blue and MSFT violet land at ΔE 0.1–0.3 under deuteranopia at every shade. Switch to “one panel each” to get the company colours back.</p>' : '') +
-      '<p class="hs-cap"><b>2026 is two quarters in</b> — the washed column holds only 1Q and 2Q actuals, with the guidance range drawn as the dashed band above them. ' +
+      '<p class="hs-cap"><b>2026 is two quarters in</b> (three for SpaceX, which reported 3Q26 on October 20) — the washed column holds only the actuals so far, with the guidance range drawn as the dashed band above them. ' +
+      '<b>SpaceX is its Super Intelligence segment only</b>, with no band: its only guide is total-company, and drawing that over segment bars would show a gap that is just Space and Connectivity. ' +
       'For closed years the band shows where the final guide sat, so you can see the bar land inside it. ' +
       '<b>2023 is not shown:</b> no Amazon, Alphabet or Meta call in the corpus predates April 2024, so three of the four would be empty columns. ' +
-      'Four quarters are derived rather than stated (Amazon 2Q24/3Q24/4Q25, Meta 1Q25) — marked in the tooltip and listed in the data file.</p>' +
+      'Six quarters are derived rather than stated (Amazon 2Q24/3Q24/4Q25, Meta 1Q25, SpaceX 2Q25/4Q25) — marked in the tooltip and listed in the data file.</p>' +
       table(yrRows, [''].concat(HS_YEARS)) +
     '</div>' +
     sec('Every reported quarter') +
@@ -568,9 +570,9 @@ function quarterlyBody(){
       '<div class="hs-chart-head"><span class="hs-chart-t">Reported CapEx by quarter</span>' +
         '<span class="hs-chart-u">US$B · calendar axis</span></div>' +
       '<div class="hs-canvas"><canvas id="hs-qtr"></canvas></div>' +
-      '<p class="hs-cap">Gaps are gaps: the call gave no figure (Alphabet 2Q24 is not in the corpus). Nothing is interpolated.</p>' +
+      '<p class="hs-cap">Gaps are gaps: the call gave no figure (Alphabet 2Q24 is not in the corpus). Nothing is interpolated. SpaceX starts in 2025 (segment CapEx from its S-1 and releases) and is alone in the Oct ’26 column until the other four report 3Q26.</p>' +
     '</div>' +
-    sec('Why these four series cannot be stacked') +
+    sec('Why these five series cannot be stacked') +
     '<div class="hs-card hs-card--warn"><ul class="hs-src">' + basis + '</ul></div>' +
     sec('Table') +
     '<div class="hs-card">' + table(rows, [''].concat(LABELS)) + '</div>';
@@ -740,8 +742,11 @@ function depreciationBody(){
 // plot to window periods, drag on the y-axis strip to set the value range,
 // double-click to reset). Growth and margin are computed from revenue and
 // operating income rather than stored, so no view can disagree with another.
-var CSP_LABEL = { googl: 'Google Cloud', amzn: 'AWS', msft: 'Intelligent Cloud' };
-var CSP_IDS = ['googl', 'amzn', 'msft'];
+// SpaceX's Super Intelligence segment rides along as a fourth series (Oct 2026):
+// it is mostly GPU rental plus X and Grok, so it is a peer on the question "what
+// does the compute earn", not a like-for-like cloud segment.
+var CSP_LABEL = { googl: 'Google Cloud', amzn: 'AWS', msft: 'Intelligent Cloud', spcx: 'SpaceX SI' };
+var CSP_IDS = ['googl', 'amzn', 'msft', 'spcx'];
 
 // Complete calendar years only. Q4'19 stands alone and 2026 has two quarters, so
 // neither forms a year; Microsoft's restated series starts Q3'22, so its 2022 is
@@ -1119,13 +1124,14 @@ function cspBody(){
 
   return '<p class="hs-lede">The businesses the CapEx is supposed to produce, on their own history back to 2019. ' +
     'Microsoft here is <b>Intelligent Cloud</b>, the reported segment — not the non-GAAP “Microsoft Cloud” metric, which bundles M365 commercial, Dynamics and LinkedIn and carries no segment operating income. ' +
-    'All figures as reported; growth and margin computed from them.</p>' +
+    'All figures as reported; growth and margin computed from them. ' +
+    '<b>SpaceX SI</b> is SpaceX’s Super Intelligence segment (xAI, X, Grok and — since Aug 14 — Cursor), mostly renting GPU capacity: public only since 2Q26, so its history starts at Q1’25, and it is the only one with a Q3’26 column so far.</p>' +
     '<div class="hs-controls">' +
       '<div class="hs-seg">' + periods + '</div>' +
       (annual ? '' : '<div class="hs-seg">' + growth + '</div>') +
       (annual ? '' : '<div class="hs-seg">' + ranges + '</div>') +
     '</div>' +
-    (annual ? '<p class="hs-note" style="margin-bottom:14px">Complete calendar years only. Q4’19 stands alone and 2026 has just two quarters, so neither forms a year; Microsoft’s restated series starts Q3’22, so its 2022 is short and shows as blank rather than a misleading part-year.</p>' : '') +
+    (annual ? '<p class="hs-note" style="margin-bottom:14px">Complete calendar years only. Q4’19 stands alone and 2026 is still in progress, so neither forms a year; Microsoft’s restated series starts Q3’22, so its 2022 is short and shows as blank rather than a misleading part-year. SpaceX SI has one complete year, 2025.</p>' : '') +
     cspSection(CSP_TOP) +
     cspSection(CSP_BOT) +
     sec('What the segments say') +
@@ -1425,6 +1431,7 @@ function themesBody(){
       '<p class="hs-cap"><b>Quarters covered on this theme:</b> ' + counts + '. ' +
       'A blank cell means the theme did not come up on that call in a way worth recording — not that the company said nothing at all. ' +
       'Alphabet has no 2Q24 row anywhere, because that call is not in the corpus. ' +
+      'SpaceX starts at 1Q26, where the cell is its S-1 (a prospectus, not a call); 2Q26 and 3Q26 are its August and October calls, and the 3Q26 row is SpaceX alone until the other four report. ' +
       'Quoted fragments are verbatim; the connective text is compression.</p>' +
     '</div>';
 }
@@ -1443,7 +1450,7 @@ var TABS = [
 function html(){
   var h = '<div class="hs">';
   h += '<div class="hs-head"><div class="hs-h-title">Hyperscaler AI CapEx &amp; Guidance</div>' +
-    '<div class="hs-h-sub">Amazon · Alphabet · Meta · Microsoft — every revision dated to the call that made it, 2024–2026</div></div>';
+    '<div class="hs-h-sub">Amazon · Alphabet · Meta · Microsoft · SpaceX (Super Intelligence) — every revision dated to the call that made it, 2024–2026</div></div>';
   h += '<div class="hs-tabs">' + TABS.map(function(t, i){
     return '<button type="button" class="hs-tab' + (i === 0 ? ' active' : '') + '" data-ht="' + t.key + '">' +
       esc(t.label) + '</button>';

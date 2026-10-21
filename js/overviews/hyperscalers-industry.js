@@ -1323,7 +1323,7 @@ function capacityBody(){
       '<div class="hs-canvas"><canvas id="hs-gw"></canvas></div>' +
       '<p class="hs-cap">Hover for the shell/silicon split of each year. <b>The model checks out against the tape:</b> it puts Amazon at 3.88 GW added in 2025, and on the 4Q25 call Jassy said 3.99 GW over the trailing twelve months — a 3% gap on a number derived entirely from the balance sheet. ' +
       'Note the shape: Alphabet was the <i>smallest</i> of the four as recently as 2020 and is modelled to add more than Meta from 2026. ' +
-      'SpaceX’s bars are the year-on-year change in its <b>reported</b> nameplate, not a model output — so no shell/silicon split. Its 2027E bar (+10.25 GW, more than anyone) rests entirely on Musk’s “highly confident of 10 gigawatts incremental” from the 3Q26 call.</p>' +
+      'SpaceX’s bars are the year-on-year change in its <b>reported</b> nameplate, not a model output — so no shell/silicon split. Its 2027E bar (+10.25 GW, more than anyone) rests entirely on Musk’s “highly confident of 10 gigawatts incremental” from the 3Q26 call; its 2028E bar (+10 GW) is <b>our assumption</b> that the 2027 pace holds — SpaceX has said nothing about 2028.</p>' +
       '<div class="hs-card hs-card--warn" style="margin-top:10px"><div class="hs-lbl">Microsoft’s 2026 bar is not like the others</div>' +
       '<p class="hs-body">' + HS_GW_MSFT_FY.note + '</p></div>' +
       '<div class="hs-inset" style="margin-top:10px"><div class="hs-lbl">Two vintages, one reconciliation to do</div>' +
@@ -1337,9 +1337,10 @@ function capacityBody(){
       '<div class="hs-canvas"><canvas id="hs-gw-total"></canvas></div>' +
       '<p class="hs-cap">Hover for what each year added. For the four hyperscalers the total is the <b>running sum of the modelled adds since 2018</b> — it carries no pre-2018 base and retires nothing, so read it as the AI-era capacity each one has built rather than a census of every data hall. ' +
       '<b>It squares with what Amazon guided:</b> 13.6 GW at end-2025 doubling to 28.3 GW by end-2027 is the “double overall capacity by the end of 2027” Jassy gave in October 2025. Microsoft’s “roughly double the footprint in two years” is more conservative than its model, which goes 5.9 → 14.2 GW (2.4×) from FY25 to FY27. ' +
-      'SpaceX is its own disclosure: 0.3 GW at end-2024, 0.8 GW at end-2025, 2.5–3 GW guided for end-2026 (midpoint shown) and Musk’s 13 GW for end-2027 — which would put it level with Meta (14.5) and Microsoft (14.2) in two years, from a standing start in 2023.</p>' +
+      'SpaceX is its own disclosure: 0.3 GW at end-2024, 0.8 GW at end-2025, 2.5–3 GW guided for end-2026 (midpoint shown) and Musk’s 13 GW for end-2027 — which would put it level with Meta (14.5) and Microsoft (14.2) in two years, from a standing start in 2023. ' +
+      'For 2028 we <b>assume</b> another +10 GW (the 2027 pace held flat, not company guidance): 23 GW would put SpaceX second only to Amazon (38.5), just ahead of Alphabet (23.0) and Microsoft (20.0).</p>' +
       '<div class="hs-card hs-card--warn" style="margin-top:10px"><div class="hs-lbl">Two kinds of number on one axis</div>' +
-      '<p class="hs-body">Both sides measure IT load — the model sizes a gigawatt as accelerators × their draw, and SpaceX’s “Nameplate Compute Draw” is GPUs installed × all-in draw, excluding cooling and facility overhead (S-1) — so the bars are comparable in kind. They are not comparable in confidence: the hyperscaler bars are inferred from capex, SpaceX’s 2027E is a CEO’s floor (his stretch plan is ≈23 GW), and Microsoft’s columns are fiscal years ending in June. No SpaceX figure is stated for 2028.</p></div>' +
+      '<p class="hs-body">Both sides measure IT load — the model sizes a gigawatt as accelerators × their draw, and SpaceX’s “Nameplate Compute Draw” is GPUs installed × all-in draw, excluding cooling and facility overhead (S-1) — so the bars are comparable in kind. They are not comparable in confidence: the hyperscaler bars are inferred from capex, SpaceX’s 2027E is a CEO’s floor (his stretch plan is ≈23 GW), and Microsoft’s columns are fiscal years ending in June. SpaceX’s 2028E is a Summit assumption (+10 GW on 2027), not anything the company has said.</p></div>' +
     '</div>' +
 
     sec('What a gigawatt costs') +

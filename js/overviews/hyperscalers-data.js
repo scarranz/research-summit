@@ -288,16 +288,20 @@ export var HS_GW_MSFT_FY = {
 //                                     total"; a plan for 20 GW incremental (≈23)
 //                                     is a stretch he called "difficult but not
 //                                     impossible". 13 is HIS floor, not a model.
-//   2028E null                        nothing stated
+//   2028E 23                          ANALYST ASSUMPTION (SAB, Oct 21 2026), not
+//                                     company: another +10 GW in 2028, i.e. the
+//                                     2027 pace held flat. SpaceX stated nothing
+//                                     for 2028.
 // Interim prints for context: 0.6 GW (3Q25), 1.0 (1Q26), 1.4 (2Q26), 1.7 (3Q26).
 export var HS_SPCX = { id: 'spcx', ticker: 'SPCX', name: 'SpaceX', color: '#008300', fy: 'Calendar' };
 
-export var HS_GW_SPCX_TOTAL = [null, null, null, null, null, 0, 0.3, 0.8, 2.75, 13, null];
+export var HS_GW_SPCX_TOTAL = [null, null, null, null, null, 0, 0.3, 0.8, 2.75, 13, 23];
 
 // Tooltip notes for the SpaceX cells that are not a plain print.
 export var HS_GW_SPCX_NOTES = {
   '2026E': 'guided 2.5–3 GW by year-end (3Q26 call) — midpoint',
   '2027E': 'Musk’s floor ("highly confident"); stretch plan ≈23 GW',
+  '2028E': 'Summit assumption: +10 GW, the 2027 pace held — not company guidance',
 };
 
 // The same GW split by which spend bucket funded it: the shell and everything

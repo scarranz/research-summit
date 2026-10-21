@@ -3386,6 +3386,7 @@ img.org-photo { object-fit: cover; }
 .ov-meta-dd .me-bl-h360{min-height:360px}
 .ov-meta-dd .me-bl-ctl{margin:0 0 8px}
 .ov-meta-dd .me-bl-pills{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+:is(.ov-tsm-dd, .ov-meta-dd) [hidden]{display:none !important}   /* the hidden attribute must win over .mch-ctl / .acx-tog display:flex (bridge mode controls) */
 .ov-meta-dd .me-bl-lbl{font-size:11px;color:var(--mu)}
 .ov-meta-dd .me-bl-sliders{display:flex;flex-direction:column;gap:6px;margin:0 0 10px}
 .ov-meta-dd .acx-tog button.me-bl-off{opacity:.35;cursor:not-allowed}

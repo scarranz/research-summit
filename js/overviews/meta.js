@@ -23,7 +23,7 @@ import { mountWatchList } from '../watchlist.js';
 import { metaHistMult } from './meta-histmult.js';
 import { metaSens } from './meta-sensitivity.js';
 import { metaOwnBody, metaOwnInit } from './meta-own.js';
-import { metaBlGeneralHtml, metaBlGeneralBuild } from './meta-bl.js';
+import { metaBlGeneralHtml, metaBlGeneralBuild, metaBlSegmentsHtml, metaBlSegmentsBuild } from './meta-bl.js';
 import { metaCompBody, metaCompInit } from './meta-comp.js';   // Misc ▸ Competitive Position (MISC-comp, §15b)
 import { metaCapexBody, metaCapexBuild, metaStrategyBody, metaMnaBody, metaCapacityBody } from './meta-misc.js';   // Misc ▸ Capex, Strategy, M&A, Capacity (formal, §15b)   // Bottom Line ▸ General (copy of tsm-bl.js + AMZN SBC)   // Management ▸ Ownership (2026 proxy holder table)   // Valuation ▸ Sensitivity (copy of tsm-sensitivity.js; Summit frozen 2026-08-04)   // Valuation ▸ Historic Multiple (copy of tsm-histmult.js)
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/meta.js)
@@ -3622,6 +3622,7 @@ function deepDiveHtml(c){
   ]);
   h+=subtabs('bottomline',[
     { k:'margins', l:'General', body:metaBlGeneralHtml() },
+    { k:'segments', l:'Segments', body:metaBlSegmentsHtml() },
     { k:'supplychain', l:'Supply Chain', body:suppliersBody() },
   ]);
   h+=subtabs('evolution',[
@@ -3702,6 +3703,7 @@ function buildSub(root, group, key){
   if(group==='misc' && key==='capex') requestAnimationFrame(function(){ metaCapexBuild(root); });
   if(group==='bottomline' && key==='supplychain') scRenderSuppliers();
   if(group==='bottomline' && key==='margins') requestAnimationFrame(function(){ metaBlGeneralBuild(root); });
+  if(group==='bottomline' && key==='segments') requestAnimationFrame(function(){ metaBlSegmentsBuild(root); });
   // Earnings ▸ Setup chart (the Results engine, META_SETUP dataset) — build only when Earnings is
   // the visible subpane AND Setup is the active phase (Chart.js needs a non-null offsetParent).
   if(group==='evolution' && key==='earnings'){

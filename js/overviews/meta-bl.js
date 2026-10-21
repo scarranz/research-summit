@@ -22,7 +22,8 @@
 import { SUMMIT_CAT, SUMMIT_INK, SUMMIT_MUTE, SUMMIT_POS, SUMMIT_NEG, fade } from '../viz-palette.js';
 import { metaBBG } from './meta-bbg.js';
 import { metaResults } from '../results-data/meta.js';
-import { META_OPEX_YEARS, META_OPEX, META_OPEXQ, META_SBC_FN, META_SBC_FN_SRC, META_TAX_ONEOFF, META_EW_LINES, META_EW_SRC } from './meta-bl-data.js';
+import { META_OPEX_YEARS, META_OPEX, META_OPEXQ, META_SBC_FN, META_SBC_FN_SRC, META_TAX_ONEOFF, META_EW_LINES, META_EW_SRC,
+  META_SEG_Y, META_SEG_Q, META_SEG_SRC, META_SEG_ALLOC, META_SEG_DIVES } from './meta-bl-data.js';
 
 var INK=SUMMIT_INK, MUTE=SUMMIT_MUTE, POS=SUMMIT_POS, NEG=SUMMIT_NEG, ONEOFF=SUMMIT_CAT[3];
 var GRID='rgba(0,0,0,0.06)';
@@ -735,3 +736,272 @@ export function metaBlGeneralHtml(){
     aCollap('Expense lines — the '+A_MB_COST.length+' cost lines of the income statement (what is inside, drivers, calls)', expenseTabsBody(), false)+metaBlFootGeneral();
 }
 export function metaBlGeneralBuild(root){ if(root) _root=root; aBuildMargins(); aBuildExpenses(); }
+
+// ═══ BL-SEG Bottom Line ▸ Segments (playbook §13 BL-SEG; design approved by SAB 2026-10-21) ═══
+// Stacked, no picker: Profit by segment → Revenue vs profit → The segment bridge → Segment deep dives → footer.
+// Adapted from amzn.js segmentsBody / aBuildSegFc / aBuildSegOi / aBuildSegBridge to what Meta discloses: segment
+// revenue, employee compensation, other costs and income from operations — no segment D&A (so no segment EBITDA),
+// and no estimate of segment profit anywhere (Bloomberg carries segment revenue only; the Summit model stopped
+// projecting segments after 4Q25). So operating income only, consensus profit only for Consolidated, and the
+// bridge's forward mode is replaced by Meta's own split of the change: revenue · employee compensation · other costs.
+function sPane(){ return R().querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]'); }
+var SEG_DEF=[{k:'foa',lab:'Family of Apps',c:SUMMIT_CAT[0],rk:'foa',ok:'foaop',bbg:'seg607716'},
+             {k:'rl',lab:'Reality Labs',c:SUMMIT_CAT[1],rk:'rl',ok:'rlop',bbg:'seg607718'}];
+var SEG_CONS={k:'cons',lab:'Consolidated',c:INK,rk:'rev',ok:'opinc'};
+function sSeg(k){ return k==='cons'?SEG_CONS:SEG_DEF.filter(function(s){ return s.k===k; })[0]||SEG_DEF[0]; }
+function sNull(){ return null; }
+// Annual axis: the reported years with segment operating income in the Results dataset, then the BBG forward years.
+var S_YA=(function(){ var m=metaResults.views.y.metrics.foaop, o=[]; m.periods.forEach(function(p,i){ if(m.act[i]!=null) o.push(+p); }); return o; })();
+var S_LA=S_YA.length-1;
+var S_YRS=S_YA.concat(A_YF.filter(function(y){ return y>S_YA[S_LA]; }));
+var S_LAB=S_YRS.map(function(y,i){ return fyLab(y)+(i>S_LA?'E':''); });
+function rY(mk, src){ var m=metaResults.views.y.metrics[mk];
+  return S_YRS.map(function(y){ if(!m||!m[src]) return null; var i=m.periods.indexOf(String(y)); return i>=0?m[src][i]:null; }); }
+// Summit by year: the frozen ANNUAL row where the Results dataset has one; otherwise the four frozen quarterly
+// projections of that year added up (as amzn.js aSegSummitAnnual does) — so the years the model projected quarter
+// by quarter (FY23–FY24) show too. sumYFrom() lists which years came from quarters, for the note.
+function sumQ(mk, y){ var m=metaResults.views.q.metrics[mk]; if(!m||!m.summit) return null; var t=0;
+  for(var q=1;q<=4;q++){ var i=m.periods.indexOf(q+'Q'+String(y).slice(2)); if(i<0||m.summit[i]==null) return null; t+=m.summit[i]; } return t; }
+function sumY(mk){ var a=rY(mk,'summit'); return S_YRS.map(function(y,i){ return a[i]!=null?a[i]:sumQ(mk,y); }); }
+function sumYFrom(mk){ var a=rY(mk,'summit'); return S_YRS.filter(function(y,i){ return a[i]==null&&sumQ(mk,y)!=null; }); }
+function bbgF(s){ return S_YRS.map(function(y,i){ if(i<=S_LA||!s||!s.f) return null; var j=A_YF.indexOf(y); return j>=0?s.f[j]:null; }); }
+function consRevY(k){ return bbgF(k==='cons'?metaBBG.is.rev:((metaBBG.seg[sSeg(k).bbg]||{}).rev)); }
+function consOiY(k){ return k==='cons'?bbgF(metaBBG.is.oi):S_YRS.map(sNull); }
+function sB(v){ return v==null?'—':(v<0?'−':'')+'$'+(Math.abs(v)/1000).toFixed(1)+'B'; }
+function sPct(v){ return v==null?'—':(v<0?'−':'')+Math.abs(v).toFixed(1)+'%'; }
+function sLastIdx(a){ var j=-1; (a||[]).forEach(function(v,i){ if(v!=null) j=i; }); return j; }
+function sSumEnd(){ var m=metaResults.views.q.metrics.foaop, j=sLastIdx(m.summit); return j>=0?m.periods[j]:'—'; }   // last quarter the model projects segment profit
+
+// ── 1 · Profit by segment — Actual vs Summit vs Consensus (operating income only) ──
+function sProfitBody(){
+  return aStdScaffold({ id:'me-segfc', title:'Profit by segment — Actual vs Summit vs Consensus', height:340,
+    modes:[{cls:'seg',label:'Segment',opts:SEG_DEF.concat([SEG_CONS]).map(function(s,i){ return {v:s.k,label:s.lab,on:i===0}; })},
+           {cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]}],
+    presets:[['all','All'],['rep','Reported'],['fwd','Forward'],['l5','Last 5']] });
+}
+function sBuildProfit(){
+  aStdRender('me-segfc', function(st){
+    var s=sSeg(st.modes.seg||'foa'), gran=st.modes.gran||'y', isRL=s.k==='rl', lab=isRL?'Op. loss':'Op. income';
+    var sSrc=s.k==='cons'?SUM_SRC:'Summit (discontinued)';   // the model stopped projecting segments (SAB 2026-10-21)
+    var labels, la, act, sum, con, rA, rS, rC;
+    if(gran==='q'){ var Q=metaResults.views.q.metrics, o=Q[s.ok], r=Q[s.rk];
+      labels=o.periods.slice(); la=aLastActIdx(o.act); act=o.act; sum=o.summit; con=o.cons; rA=r.act; rS=r.summit; rC=r.cons; }
+    else { labels=S_LAB.slice(); la=S_LA;
+      act=rY(s.ok,'act').map(function(v,i){ return i<=la?v:null; }); sum=sumY(s.ok);
+      con=consOiY(s.k); rA=rY(s.rk,'act'); rS=sumY(s.rk); rC=consRevY(s.k); }
+    function amt(a){ return labels.map(function(_,i){ return a&&a[i]!=null?Math.round(a[i]/100)/10:null; }); }
+    function marg(a,r){ return labels.map(function(_,i){ return (a&&a[i]!=null&&r&&r[i])?Math.round(a[i]/r[i]*1000)/10:null; }); }
+    var series=[
+      {k:'act$',grp:'act',src:'Actual',label:lab+' — Actual',color:ASTD_ACT,type:'bar',data:amt(act)},
+      {k:'sum$',grp:'sum',src:sSrc,label:lab+' — '+sSrc,color:ASTD_SUMMIT,type:'bar',data:amt(sum)},
+      {k:'con$',grp:'con',src:'Consensus',label:lab+' — Consensus',color:ASTD_CONS,type:'bar',data:amt(con)}];
+    if(!isRL) series.push(
+      {k:'actM',grp:'act',src:'Actual',label:'Margin — Actual',color:ASTD_ACT,type:'line',yAxisID:'y2',data:marg(act,rA)},
+      {k:'sumM',grp:'sum',src:sSrc,label:'Margin — Summit',color:ASTD_SUMMIT,type:'line',yAxisID:'y2',data:marg(sum,rS)},
+      {k:'conM',grp:'con',src:'Consensus',label:'Margin — Consensus',color:ASTD_CONS,type:'line',yAxisID:'y2',dash:true,data:marg(con,rC)});
+    series=series.filter(function(x){ return x.data.some(function(v){ return v!=null; }); });
+    var end=Math.max.apply(null, series.map(function(x){ return sLastIdx(x.data); }));   // a segment has no forward: end the axis at its last value
+    if(end>=0 && end<labels.length-1){ labels=labels.slice(0,end+1); series.forEach(function(x){ x.data=x.data.slice(0,end+1); }); }
+    var ls=sLastIdx(sum), notes=[];
+    if(s.k!=='cons') notes.push('Meta discloses no D&amp;A by segment, so this is operating income only (no segment EBITDA). No estimate of segment profit exists: Bloomberg carries segment revenue only, and the Summit model no longer projects segments — its last segment figure is '+(ls>=0?esc(labels[ls]):'—')+'. Forward periods are blank on purpose.');
+    else notes.push('Consolidated = the two segments added up (Meta has no unallocated corporate line). Summit is the model frozen at its dated snapshots; Consensus is the Bloomberg export.');
+    var fq=gran==='y'?sumYFrom(s.ok):[];
+    if(fq.length) notes.push('Summit for '+fq.map(fyLab).join(' and ')+' = the four quarterly projections the model held going into each print, added up (no annual row was frozen for those years); later years are the frozen annual figure.');
+    if(isRL){ var yl=META_SEG_Y[S_YA[S_LA]]; if(yl) notes.push('No margin line for Reality Labs: its FY'+String(S_YA[S_LA]).slice(2)+' loss was '+(Math.abs(yl.rl.oi)/yl.rl.rev).toFixed(1)+'× its revenue, so a margin does not read.'); }
+    var out={ labels:labels, lastAct:la, type:'bar', stacked:false, series:series, note:notes.join(' '),
+      yFmt:function(x){ return (x<0?'−$':'$')+(x==null?'':Math.abs(x).toFixed(1))+'B'; }, y2Fmt:function(x){ return x+'%'; } };
+    if(isRL) out.legCap='Bars = operating loss, $B'; else out.paired=true;
+    return out;
+  });
+}
+
+// ── 2 · Revenue vs profit — common size by segment ──
+function sMixBody(){
+  return aStdScaffold({ id:'me-segmix', title:'Revenue vs profit — common size by segment', height:340,
+    metricSel:[{v:'rev',label:'Revenue',on:true,group:'Revenue'},{v:'oi',label:'Operating income',group:'Profit'}],
+    modes:[{cls:'basis',label:'Basis',opts:[{v:'cons',label:'Actual + Consensus',on:true},{v:'summit',label:'Actual + Summit'}]},
+           {cls:'show',label:'Show',opts:[{v:'amt',label:'$B',on:true},{v:'share',label:'Share'},{v:'growth',label:'Growth'}]},
+           {cls:'layout',label:'Layout',opts:[{v:'stack',label:'Stacked',on:true},{v:'side',label:'Side by side'}]},
+           {cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},
+           {cls:'cmp',label:'Compare',opts:[{v:'yoy',label:'YoY',on:true},{v:'qoq',label:'QoQ'}]},
+           {cls:'gin',label:'Growth in',opts:[{v:'pct',label:'%',on:true},{v:'add',label:'$ added'}]}],
+    presets:[['all','All'],['rep','Reported'],['fwd','Forward']] });
+}
+function sBuildMix(){
+  aStdRender('me-segmix', function(st){
+    var metric=st.sel||'rev', basis=st.modes.basis||'cons', show=st.modes.show||'amt', layout=st.modes.layout||'stack', gran=st.modes.gran||'y';
+    var cmp=st.modes.cmp||'yoy', gin=st.modes.gin||'pct', notes=[];
+    if(metric==='oi'){ basis='cons';
+      if(show==='share'){ show='amt'; notes.push('Share is not drawn for operating income: Reality Labs loses money, so the shares would run above 100% and below zero. Shown in $B instead.'); }
+      notes.push('No estimate of segment operating income exists (Bloomberg carries segment revenue only; the Summit model no longer projects segments, last figure '+esc(sSumEnd())+'), so forward periods are blank. Reality Labs sits below zero; the line is consolidated operating income.'); }
+    if(basis==='summit') gran='y';
+    var Q=metaResults.views.q.metrics, labels, la;
+    if(gran==='q'){ labels=Q.foa.periods.slice(); la=aLastActIdx(Q.foa.act); } else { labels=S_LAB.slice(); la=S_LA; }
+    function raw(s){ var mk=metric==='rev'?s.rk:s.ok;
+      if(gran==='q'){ var m=Q[mk]; return labels.map(function(_,i){ return i<=la?m.act[i]:(m.cons?m.cons[i]:null); }); }
+      var ac=rY(mk,'act'), fw=basis==='summit'?rY(mk,'summit'):(metric==='rev'?consRevY(s.k):S_YRS.map(sNull));
+      return labels.map(function(_,i){ return i<=la?ac[i]:fw[i]; }); }
+    var step=gran==='q'?(cmp==='qoq'?1:4):1, addMode=(show==='growth'&&gin==='add');
+    var rows=SEG_DEF.map(function(s){ return { s:s, v:raw(s) }; });
+    var totals=labels.map(function(_,i){ var t=0, any=false; rows.forEach(function(r){ if(r.v[i]!=null){ t+=r.v[i]; any=true; } }); return any?t:null; });
+    function val(v, pv, tot){ if(v==null) return null;
+      if(show==='share') return tot?Math.round(v/tot*1000)/10:null;
+      if(show==='growth'){ if(pv==null) return null; if(addMode) return Math.round((v-pv)/100)/10; return !pv?null:Math.round((v-pv)/Math.abs(pv)*1000)/10; }
+      return Math.round(v/100)/10; }
+    var series=rows.map(function(r){ return { k:r.s.k, label:r.s.lab, color:r.s.c, type:'bar',
+      data:labels.map(function(_,i){ return val(r.v[i], r.v[i-step], totals[i]); }) }; });
+    if(metric==='oi'&&show==='amt') series.push({ k:'tot', label:'Consolidated operating income', color:INK, type:'line', stack:'tot',
+      data:totals.map(function(v){ return v==null?null:Math.round(v/100)/10; }) });
+    var end=Math.max.apply(null, series.map(function(x){ return sLastIdx(x.data); }));   // no estimate → end the axis at the last value
+    if(end>=0 && end<labels.length-1){ labels=labels.slice(0,end+1); series.forEach(function(x){ x.data=x.data.slice(0,end+1); }); }
+    if(metric==='oi'&&show==='growth'&&!addMode) notes.push('For Reality Labs a negative change means the loss widened.');
+    if(basis==='summit') notes.push('Actual through '+esc(labels[la])+', then the Summit model (frozen) — annual only.');
+    var stacked=show==='share'||(show==='amt'&&layout==='stack')||(addMode&&layout==='stack');
+    var yFmt=(show==='amt'||addMode)?function(x){ return (x<0?'−$':'$')+(x==null?'':Math.abs(x).toFixed(1))+'B'; }:function(x){ return x+'%'; };
+    var hide=[]; if(!(show==='growth'&&gran==='q')) hide.push('cmp'); if(show!=='growth') hide.push('gin'); if(show==='share') hide.push('layout');
+    if(basis==='summit') hide.push('gran'); if(metric==='oi') hide.push('basis');
+    return { labels:labels, lastAct:la, yFmt:yFmt, type:'bar', stacked:stacked, yMax:show==='share'?100:undefined, series:series, hideModes:hide, note:notes.join(' ') };
+  });
+}
+
+// ── 3 · The segment bridge — By segment (Δ operating income per segment) | By cost (Δ revenue · pay · other costs) ──
+var SBR_QS=META_SEG_Q.filter(function(r,i){ return i>=4; });   // quarters with a same-quarter-last-year row
+var SEG_YRS=Object.keys(META_SEG_Y).map(Number).sort();
+function sBridgeBody(){
+  function yB(cls, ys, sel){ return ys.map(function(y){ return '<button type="button" data-'+cls+'="'+y+'"'+(y===sel?' class="active"':'')+'>'+fyLab(y)+'</button>'; }).join(''); }
+  var nS=S_YA.length, nC=SEG_YRS.length, qL=SBR_QS[SBR_QS.length-1].p;
+  return '<div class="ov-sec"><div class="ov-sec-h">The segment bridge — what moved operating income</div>'+
+    '<div class="mch-ctl"><span class="acx-tog sbr-mode"><button type="button" data-sbrm="seg" class="active">By segment</button><button type="button" data-sbrm="cost">By cost — revenue, pay, other costs</button></span><span></span></div>'+
+    '<div class="sbr-ctl-seg mch-ctl me-bl-ctl"><span></span><span class="me-bl-pills">'+
+      '<span class="me-bl-lbl">From</span><span class="acx-tog sbr-from">'+yB('sbrf',S_YA,S_YA[Math.max(0,nS-4)])+'</span>'+
+      '<span class="me-bl-lbl">to</span><span class="acx-tog sbr-to">'+yB('sbrt',S_YA,S_YA[nS-1])+'</span></span></div>'+
+    '<div class="sbr-ctl-cost mch-ctl me-bl-ctl" hidden>'+
+      '<span class="acx-tog sbr-seg">'+SEG_DEF.concat([SEG_CONS]).map(function(s,i){ return '<button type="button" data-sbrs="'+s.k+'"'+(i===0?' class="active"':'')+'>'+esc(s.lab)+'</button>'; }).join('')+'</span>'+
+      '<span class="me-bl-pills"><span class="acx-tog sbr-gran"><button type="button" data-sbrg="y" class="active">Annual</button><button type="button" data-sbrg="q">Quarterly</button></span>'+
+        '<span class="sbr-cy"><span class="me-bl-lbl">From</span><span class="acx-tog sbr-cfrom">'+yB('sbrcf',SEG_YRS,SEG_YRS[nC-2])+'</span>'+
+        '<span class="me-bl-lbl">to</span><span class="acx-tog sbr-cto">'+yB('sbrct',SEG_YRS,SEG_YRS[nC-1])+'</span></span>'+
+        '<span class="acx-tog sbr-cq" hidden>'+SBR_QS.map(function(r){ return '<button type="button" data-sbrq="'+r.p+'"'+(r.p===qL?' class="active"':'')+'>'+r.p+'</button>'; }).join('')+'</span>'+
+      '</span></div>'+
+    '<div class="me-bl-h340"><canvas id="meSegBr"></canvas></div>'+
+    '<div id="meSegBr-tbl" class="me-bl-tblhost"></div>'+
+    '<div class="acx-cap me-bl-note" id="meSegBrCap"></div></div>';
+}
+function sAct(p, mk){ var m=metaResults.views.y.metrics[mk], i=m.periods.indexOf(String(p)); return i>=0?m.act[i]:null; }
+function sBridgeSync(pane){
+  var mb=pane.querySelector('.sbr-mode .active'), mode=mb?mb.getAttribute('data-sbrm'):'seg';
+  aShow(pane.querySelector('.sbr-ctl-seg'), mode==='seg'); aShow(pane.querySelector('.sbr-ctl-cost'), mode==='cost');
+  var g=pane.querySelector('.sbr-gran .active'), q=!!(g&&g.getAttribute('data-sbrg')==='q');
+  aShow(pane.querySelector('.sbr-cy'), !q); aShow(pane.querySelector('.sbr-cq'), q);
+}
+function sRow(src, k){   // one period's {rev, comp, other, oi} for a segment, or the two added up
+  if(k!=='cons') return src[k];
+  var o={}; ['rev','comp','other','oi'].forEach(function(f){ o[f]=src.foa[f]+src.rl[f]; }); return o; }
+function sBuildBridge(){
+  var pane=sPane(); if(!pane) return;
+  var mb=pane.querySelector('.sbr-mode .active'), mode=mb?mb.getAttribute('data-sbrm'):'seg', cap=pane.querySelector('#meSegBrCap'), steps;
+  function A(sel,attr){ var b=pane.querySelector(sel+' .active'); return b?b.getAttribute(attr):null; }
+  if(mode==='seg'){
+    var y0=+A('.sbr-from','data-sbrf'), y1=+A('.sbr-to','data-sbrt');
+    if(!(y1>y0)){ aDestroy('meSegBr'); var tw=$id('meSegBr-tbl'); if(tw) tw.innerHTML=''; if(cap) cap.innerHTML='Pick a “to” year after the “from” year.'; return; }
+    var t0=SEG_DEF.reduce(function(a,s){ return a+sAct(y0,s.ok); },0)/1000, run=t0;
+    steps=[{label:fyLab(y0)+' op. income', kind:'base', color:INK, range:[0,run], runAfter:run, val:run}];
+    var parts=SEG_DEF.map(function(s){ var d=(sAct(y1,s.ok)-sAct(y0,s.ok))/1000, lo=run; run=lo+d;
+      steps.push({label:s.lab, kind:d>=0?'up':'down', color:s.c, dc:d>=0?POS:NEG, range:[Math.min(lo,run),Math.max(lo,run)], runAfter:run, val:d}); return d; });
+    steps.push({label:fyLab(y1)+' op. income', kind:'total', color:POS, range:[0,run], runAfter:null, val:run});
+    aBuildBrWaterfall('meSegBr', steps, BR_FMT_D);
+    if(cap) cap.innerHTML='Operating income went from <b>'+sB(t0*1000)+'</b> in '+fyLab(y0)+' to <b>'+sB(run*1000)+'</b> in '+fyLab(y1)+': Family of Apps added <b>'+sB(parts[0]*1000)+'</b> and Reality Labs '+(parts[1]<0?'took':'added')+' <b>'+sB(Math.abs(parts[1])*1000)+'</b>. The two segments add up to income from operations — Meta has no unallocated corporate line. Source: Results dataset (10-K and 10-Q segment notes).';
+    return;
+  }
+  var k=A('.sbr-seg','data-sbrs')||'foa', s=sSeg(k), gq=A('.sbr-gran','data-sbrg')==='q', a, b, la, lb;
+  if(gq){ var qp=A('.sbr-cq','data-sbrq')||SBR_QS[SBR_QS.length-1].p, iq=META_SEG_Q.map(function(r){ return r.p; }).indexOf(qp);
+    b=sRow(META_SEG_Q[iq],k); a=sRow(META_SEG_Q[iq-4],k); lb=META_SEG_Q[iq].p; la=META_SEG_Q[iq-4].p; }
+  else { var c0=+A('.sbr-cfrom','data-sbrcf'), c1=+A('.sbr-cto','data-sbrct');
+    if(!(c1>c0)){ aDestroy('meSegBr'); var tw2=$id('meSegBr-tbl'); if(tw2) tw2.innerHTML=''; if(cap) cap.innerHTML='Pick a “to” year after the “from” year.'; return; }
+    a=sRow(META_SEG_Y[c0],k); b=sRow(META_SEG_Y[c1],k); la=fyLab(c0); lb=fyLab(c1); }
+  var r0=a.oi/1000, run2=r0;
+  steps=[{label:la+' op. income', kind:'base', color:INK, range:[0,run2], runAfter:run2, val:r0}];
+  function st2(lab, d){ var lo=run2; run2=lo+d; steps.push({label:lab, kind:d>=0?'up':'down', color:d>=0?POS:NEG, range:[Math.min(lo,run2),Math.max(lo,run2)], runAfter:run2, val:d}); }
+  st2('Revenue', (b.rev-a.rev)/1000); st2('Employee comp.', -(b.comp-a.comp)/1000); st2('Other costs', -(b.other-a.other)/1000);
+  steps.push({label:lb+' op. income', kind:'total', color:b.oi>=0?POS:NEG, range:[0,run2], runAfter:null, val:run2});
+  aBuildBrWaterfall('meSegBr', steps, BR_FMT_D);
+  if(cap){ var mA=a.rev?a.oi/a.rev*100:null, mB=b.rev?b.oi/b.rev*100:null;
+    cap.innerHTML='<b>'+esc(s.lab)+'</b>, '+la+' → '+lb+': revenue '+(b.rev>=a.rev?'added':'took')+' <b>'+sB(Math.abs(b.rev-a.rev))+'</b>, employee compensation '+(b.comp>=a.comp?'took':'gave back')+' <b>'+sB(Math.abs(b.comp-a.comp))+'</b> and other costs '+(b.other>=a.other?'took':'gave back')+' <b>'+sB(Math.abs(b.other-a.other))+'</b>'+
+      (k==='rl'?'.':' — operating margin '+sPct(mA)+' → '+sPct(mB)+'.')+
+      (gq?' Each quarter is compared with the same quarter a year earlier.':'')+' Meta breaks segment costs into these two lines only (since its FY2024 10-K). Source: '+META_SEG_SRC+'.'; }
+}
+
+// ── 4 · Segment deep dives (collapsible) — one tab per segment, same formal layout as the Expense lines ──
+var S_DY=S_YA.slice(-5);   // the margin bars: last five reported years
+function sSpark(vals, labs, fmt){ var mx=Math.max.apply(null,vals.map(function(v){ return Math.abs(v||0); }))||1;
+  return '<div class="ew-spark">'+vals.map(function(v,i){ return '<div class="ew-sb'+(i===vals.length-1?' on':'')+'"><div class="ew-sb-v">'+fmt(v)+'</div><div class="ew-sb-bar" style="height:'+Math.max(2,Math.round(Math.abs(v||0)/mx*72))+'px"></div><div class="ew-sb-l">'+labs[i]+'</div></div>'; }).join('')+'</div>'; }
+function sCostTable(k){
+  var qL=META_SEG_Q[META_SEG_Q.length-1], qP=META_SEG_Q[META_SEG_Q.length-5];
+  var rows=SEG_YRS.map(function(y){ return [fyLab(y), META_SEG_Y[y][k]]; }).concat([[qP.p, qP[k]],[qL.p, qL[k]]]);
+  return '<div class="twrap ew-twrap"><table class="rt ew-tbl"><thead><tr><th>Period</th><th>Revenue</th><th>Employee comp.</th><th>Other costs</th><th>Op. income</th><th>'+(k==='rl'?'Loss ÷ revenue':'Op. margin')+'</th></tr></thead><tbody>'+
+    rows.map(function(r){ var d=r[1], m=d.rev?d.oi/d.rev:null;
+      return '<tr><td class="ew-tk">'+r[0]+'</td><td>'+sB(d.rev)+'</td><td>'+sB(d.comp)+'</td><td>'+sB(d.other)+'</td><td>'+sB(d.oi)+'</td><td>'+(m==null?'—':(k==='rl'?(Math.abs(m)).toFixed(1)+'×':sPct(m*100)))+'</td></tr>'; }).join('')+
+    '</tbody></table></div>';
+}
+function sDive(d){
+  var k=d.k, yL=SEG_YRS[SEG_YRS.length-1], cur=META_SEG_Y[yL][k], tot=sRow(META_SEG_Y[yL],'cons');
+  var qL=META_SEG_Q[META_SEG_Q.length-1], qP=META_SEG_Q[META_SEG_Q.length-5], isRL=k==='rl';
+  var kp=[[sB(cur.rev), fyLab(yL)+' revenue · '+sPct(cur.rev/tot.rev*100)+' of Meta'],
+    isRL?[sB(cur.oi), fyLab(yL)+' operating loss · '+(Math.abs(cur.oi)/cur.rev).toFixed(1)+'× revenue']:[sB(cur.oi), fyLab(yL)+' operating income · '+sPct(cur.oi/cur.rev*100)+' margin'],
+    isRL?[sB(qL[k].oi), qL.p+' operating loss ('+sB(qP[k].oi)+' in '+qP.p+')']:[sB(qL[k].oi), qL.p+' operating income · '+sPct(qL[k].oi/qL[k].rev*100)+' margin ('+sPct(qP[k].oi/qP[k].rev*100)+' in '+qP.p+')'],
+    [sPct(cur.comp/(cur.comp+cur.other)*100), 'of '+fyLab(yL)+' segment costs is employee compensation']];
+  var h='<div class="ew-h">Key figures</div><div class="ov-kpis">'+kp.map(function(x){ return '<div class="ov-kpi"><div class="ov-kpi-v">'+x[0]+'</div><div class="ov-kpi-d muted">'+x[1]+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="ew-h">Definition — Form 10-K</div><div class="ew-q ew-def">“'+d.def+'”<span class="ew-att">— Meta Form 10-K for FY'+yL+', Note 15</span></div>';
+  h+='<div class="ew-q ew-def">“'+d.otherDef+'”<span class="ew-att">— what “other costs and expenses” contains · Form 10-Q for '+esc(qL.p)+', segment note</span></div>';
+  h+='<div class="ew-h">The business</div><div class="ew-note">'+d.business+'</div>';
+  var oiS=S_DY.map(function(y){ return sAct(y,isRL?'rlop':'foaop'); }), rvS=S_DY.map(function(y){ return sAct(y,isRL?'rl':'foa'); });
+  h+='<div class="ew-h">'+(isRL?'Operating loss':'Operating margin')+', '+fyLab(S_DY[0])+'–'+fyLab(S_DY[S_DY.length-1])+'</div>'+
+    (isRL?sSpark(oiS.map(function(v){ return v/1000; }), S_DY.map(fyLab), function(v){ return '−$'+Math.abs(v).toFixed(1)+'B'; })
+         :sSpark(oiS.map(function(v,i){ return rvS[i]?v/rvS[i]*100:null; }), S_DY.map(fyLab), function(v){ return v==null?'—':v.toFixed(0)+'%'; }));
+  h+='<div class="ew-h">Cost split — what Meta breaks out by segment</div>'+sCostTable(k);
+  h+='<div class="ew-h">What drives it</div><div class="twrap ew-twrap"><table class="rt ew-tbl"><tbody>'+d.moves.map(function(m){ return '<tr><td class="ew-tk">'+m[0]+'</td><td>'+m[1]+'</td></tr>'; }).join('')+'</tbody></table></div>';
+  h+='<div class="ew-h">What the segment note discloses — and what it does not</div><div class="twrap ew-twrap"><table class="rt ew-tbl"><tbody>'+
+    ewTableRows('Disclosed by segment', [['','Revenue, costs, income','Revenue; employee compensation; other costs and expenses; income (loss) from operations — annual and quarterly.']])+
+    ewTableRows('Not disclosed by segment', [['','D&amp;A, capex, assets','No depreciation, capital expenditure or assets by segment, so no segment EBITDA or return on capital. “'+esc(META_SEG_ALLOC.codm)+'”'],
+      ['','Income-statement lines','No cost of revenue, R&amp;D, marketing or G&amp;A by segment — only the two-way split above.']])+
+    ewTableRows('How costs reach a segment — Form 10-K Note 15', [['','Direct','“'+esc(META_SEG_ALLOC.direct)+'”'],['','Indirect','“'+esc(META_SEG_ALLOC.indirect)+'”'],['','Infrastructure','“'+esc(META_SEG_ALLOC.infra)+'”']])+
+    '</tbody></table></div>';
+  h+=ewCallsTable(d.calls);
+  h+='<div class="ov-foot">Sources: '+META_SEG_SRC+'; Results dataset for '+fyLab(S_DY[0])+'–'+fyLab(S_DY[S_DY.length-1])+' segment operating income; Meta earnings calls (docs/calls/META.md) for management commentary.</div>';
+  return h;
+}
+function sDivesBody(){
+  var yL=SEG_YRS[SEG_YRS.length-1];
+  var tabs=META_SEG_DIVES.map(function(d,i){ var s=sSeg(d.k), c=META_SEG_Y[yL][d.k];
+    var tag=d.k==='rl'?sB(c.oi)+' op. loss':sB(c.oi)+' · '+sPct(c.oi/c.rev*100)+' margin';
+    return '<button type="button" class="exp-tab'+(i===0?' active':'')+'" data-segtab="'+d.k+'"><span class="exp-dot" style="background:'+s.c+'"></span>'+esc(d.name)+' <span class="exp-tag">'+tag+' · '+fyLab(yL)+'</span></button>'; }).join('');
+  return '<div class="exp-explorer exp-flat"><div class="exp-tabs">'+tabs+'</div><div class="exp-panels">'+
+    META_SEG_DIVES.map(function(d,i){ return '<div class="exp-panel exp-panel-card" data-segpanel="'+d.k+'"'+(i>0?' hidden':'')+'>'+sDive(d)+'</div>'; }).join('')+'</div></div>';
+}
+function metaBlFootSegments(){
+  var q=metaResults.views.q.metrics.foaop, qs=q.periods[0], snaps=aSummitSnaps();
+  return '<div class="ov-foot">Sources — '+META_SEG_SRC+': segment revenue, employee compensation, other costs and income from operations, '+fyLab(SEG_YRS[0])+'–'+fyLab(SEG_YRS[SEG_YRS.length-1])+' and '+esc(META_SEG_Q[0].p)+'–'+esc(META_SEG_Q[META_SEG_Q.length-1].p)+' (a Q4 is the year less the nine months); '+
+    'Results dataset for segment operating income from '+fyLab(S_YA[0])+' and '+esc(qs)+', and for the Summit series — Summit DCF model, frozen (not live)'+(snaps.length?', snapshots '+snaps.map(esc).join(' and '):'')+'; '+
+    'Bloomberg consensus export (BBG_CONSENSUS, as of '+esc(metaBBG.asOf)+') for segment revenue and consolidated operating income forward — it carries no segment operating income; Meta earnings calls (docs/calls/META.md). Forward figures are estimates.</div>';
+}
+function sBuildSegments(){
+  var pane=sPane(); if(!pane) return;
+  aWireCollaps(pane);
+  sBuildProfit(); sBuildMix(); sBridgeSync(pane); sBuildBridge();
+  if(pane._segWired) return; pane._segWired=true;
+  var tog=function(sel,after){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); after(); }; }); };
+  ['.sbr-mode','.sbr-gran'].forEach(function(s){ tog(s, function(){ sBridgeSync(pane); sBuildBridge(); }); });
+  ['.sbr-from','.sbr-to','.sbr-seg','.sbr-cfrom','.sbr-cto','.sbr-cq'].forEach(function(s){ tog(s, sBuildBridge); });
+  var stabs=pane.querySelectorAll('.exp-tab[data-segtab]');
+  stabs.forEach(function(b){ b.onclick=function(){ var key=b.getAttribute('data-segtab');
+    stabs.forEach(function(x){ x.classList.toggle('active',x===b); });
+    pane.querySelectorAll('.exp-panel[data-segpanel]').forEach(function(p){ p.hidden=(p.getAttribute('data-segpanel')!==key); }); }; });
+}
+// Mount: '<div class="ovt-subpane" data-ovst="segments">'+metaBlSegmentsHtml()+'</div>' in the Bottom Line pane;
+// build lazily once visible: metaBlSegmentsBuild(root).
+export function metaBlSegmentsHtml(){
+  return '<div class="seg-gsec" data-sgsec="oimargin">'+sProfitBody()+'</div>'+
+    '<div class="seg-gsec me-bl-gap" data-sgsec="mix">'+sMixBody()+'</div>'+
+    '<div class="seg-gsec me-bl-gap" data-sgsec="bridge">'+sBridgeBody()+'</div>'+
+    aCollap('Segment deep dives — Family of Apps and Reality Labs (key figures, cost split, drivers, what is disclosed, calls)', sDivesBody(), false)+metaBlFootSegments();
+}
+export function metaBlSegmentsBuild(root){ if(root) _root=root; sBuildSegments(); }

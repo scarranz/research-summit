@@ -12,7 +12,7 @@
 | Rama | `feat/meta-profile` (en el mismo PR que los cambios de la guía del review de TSM, decisión SAB 2026-10-20) |
 | Analista responsable | SAB |
 | Inicio | 2026-10-20 |
-| Avance | 12 de 41 unidades aprobadas (F0, F0-SM, B1, B2, OV-1…OV-7, OV-F) · 0 omitidas · 1 bloqueada (VA-TM) (M = filas del tablero − ⏭️ de alcance; Anexo C) |
+| Avance | 38 de 44 unidades aprobadas (pendientes: EV-SET, EV-POST, EV-NOTES, BL-SPLC, F-FINAL) · 0 omitidas · 1 bloqueada (VA-TM) (M = filas del tablero − ⏭️ de alcance; Anexo C) |
 
 ## 1. Inventario de datos (F0)
 
@@ -166,17 +166,21 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 | BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ✅ | 2026-10-20 | SAB | | OI → net income con el cargo único destacado |
 | BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ✅ | 2026-10-20 | SAB | | SBC (dilución + por línea FY23–25), eje de acciones a la derecha |
 | BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ✅ | 2026-10-20 | SAB | | 4 líneas, cost of revenue primero; citas verbatim 10-K + llamadas |
-| BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
+| BL-SEG | Bottom Line ▸ Segments | ✅ | 2026-10-21 | SAB | | Summit de segmentos = "Summit (discontinued)", FY23–24 = suma de trimestres congelados; operating income only (no segment D&A); forward by segment does not exist → bridge = By segment + By cost (revenue · pay · other costs, segment note FY22–25 / 1Q24–2Q26); deep dives FoA/RL |
 | BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
 | VA-HIST | Valuation ▸ Historic Multiple | ✅ | 2026-10-20 | SAB | | copia de tsm-histmult.js; denominadores 10-Q/10-K 1Q19–2Q26 (meta-histmult-data.js); precio FB antes del 9 jun 2022 y META después |
 | VA-PEERS | Valuation ▸ Peers | ✅ | 2026-10-20 | SAB | | mismo mapa de OV-6 + tabla de números, en vivo |
-| VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
+| VA-TM | Valuation ▸ Target Multiple / PEG | ⛔ | 2026-10-21 | | | sin valuación de META en el MCP (revisado 2026-10-21) — §6 |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | ✅ | 2026-10-20 | SAB | | copia de tsm-sensitivity.js; Summit 2026-08-04 congelado; 3 líneas de ingreso + margen consolidado; múltiplo arranca en el de mercado de hoy (sin valuación del modelo) |
 | MG-TEAM | Management ▸ Executives & Board | ✅ | 2026-10-20 | SAB | | se conserva (management.js, 9 ejecutivos + consejo) |
 | MG-OWN | Management ▸ Ownership | ✅ | 2026-10-20 | SAB | | tabla de insiders del proxy 2026 (Class A/B, % acciones y % votos, valor en vivo) + holders >5% (BlackRock, FMR) + Fiscal.ai |
 | MG-GOV | Management ▸ Governance & SBC | ✅ | 2026-10-20 | SAB | | se conserva + Capital Allocation (B2 #87–89) |
 | MG-TRACK | Management ▸ Track Record | ✅ | 2026-10-20 | SAB | | se conserva; sin "~$1.8T" sembrado |
-| MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab aprobada) | ⬜ | | | | |
+| MISC-comp | Miscellaneous ▸ Competitive Position | ✅ | 2026-10-20 | SAB | | ver §7 |
+| MISC-capex | Miscellaneous ▸ Capex & Depreciation | ✅ | 2026-10-20 | SAB | | ampliado a pedido de SAB (§7) |
+| MISC-capacity | Miscellaneous ▸ Capacity → Revenue | ✅ | 2026-10-20 | SAB | | ver §7 |
+| MISC-strategy | Miscellaneous ▸ Strategy | ✅ | 2026-10-20 | SAB | | ver §7 |
+| MISC-manda | Miscellaneous ▸ M&A | ✅ | 2026-10-20 | SAB | | ver §7 |
 | F-FINAL | Cierre y entrega | ⬜ | | | | |
 
 (Modo B: agregar B1 — inventario de contenido existente y B2 — mapa de reubicación después de F0.)
@@ -195,6 +199,8 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 - 2026-10-20 · B1 pieza 2 · Quitar por completo la tira de precio en vivo del Overview (precio, cambio, market cap, net debt) — el precio ya está en la cabecera — SAB. Regla llevada a la guía §8.
 - 2026-10-20 · OV-4 (META, AMZN, TSM) · Barras de "How it makes money" en grises claros por tamaño, montos en negro; títulos del 2×2 en negro también en AMZN y TSM — SAB. Guía §8 OV-4.
 - 2026-10-20 · todo el perfil · Títulos del 2×2 (What it sells, Who buys it…) en negro (--navy) y **un solo acento en todo el perfil: el azul Summit que subraya las pestañas del perfil (--steel)** — línea de Key Facts, subrayado de pestañas activas en todos los niveles. Meta entra a css/selectors.css. Aplicado a Meta y escrito en la guía (§8, §21, §21b) — SAB
+- 2026-10-21 · BL-SEG · Diseño adaptado a lo que Meta publica: solo utilidad operativa (sin D&A por segmento → sin EBITDA); Consensus de utilidad solo en Consolidated; el modo Forward del puente se reemplaza por "By cost" (ingreso · compensación · otros costos, de la nota de segmentos) — SAB
+- 2026-10-21 · BL-SEG · Summit anual de segmentos hacia atrás: fila anual congelada si existe (FY25), si no la suma de las 4 proyecciones trimestrales congeladas (FY23–24). Etiqueta **"Summit (discontinued)"** en FoA/RL porque el modelo ya no proyecta segmentos; Consolidated sigue "Summit (frozen)" — SAB
 
 ## 4. Excepciones aceptadas
 
@@ -411,3 +417,10 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 - Verificado: sin emojis, una `.ov-foot` por sub-tab, sin errores de consola. Cifras revisadas contra 10-K y transcripciones; se reemplazaron 3 afirmaciones del perfil viejo sin fuente (alzas de conversión, ventas de lentes, severance exacto).
 - **Contenido viejo NO absorbido (decidir dónde va):** Bull vs Bear, TAILWINDS/HEADWINDS (quema de RL, rotación de talento IA, gobierno dual-class, disciplina operativa), lista "What to watch", parte de FOA_WINS (contenido recomendado por IA >40% del feed, paridad de monetización de Reels, Threads +20%). El código sigue en meta.js, sin montar.
 - **Ajustes de SAB (2026-10-20):** (1) Capex & Depreciation se había resumido demasiado → ampliado con los 10-K FY2024/FY2025 y 10-Q 1Q26/2Q26: KPIs; capex y D&A anual/trimestral + intensidad de capital; guía de capex en cada revisión; las tres vías de financiar el build (propio, arrendado, nube contratada); compromisos fuera del balance dic-24 → jun-26 ($32.8B → $349.3B contractuales; $34.1B → $279.0B arrendamientos no iniciados; +$68B en julio) con gráfica; calendario de vencimientos; propiedad y equipo por clase; depreciación (servidores); arrendamientos en balance (costo, plazos, tasas, vencimientos); el Venture de Louisiana (20%, $27B, garantía de $28B, exposición máxima $46B); deuda emitida ($29B → $84B); split Summit y acuerdos de nube de prensa, marcados como no divulgados por Meta. (2) Bull vs Bear, vientos a favor/en contra y "What to watch": **descartados por decisión de SAB** (no se muestran; código muerto en meta.js a limpiar en F-FINAL).
+
+### 2026-10-21 · BL-SEG Bottom Line ▸ Segments — ✅ APROBADA (SAB)
+- Qué se mostró: (1) Profit by segment FoA · RL · Consolidated, anual/trimestral, Actual · Summit · Consensus (RL sin línea de margen: pérdida FY25 = 8.7× ingreso; eje recortado donde acaba el dato); (2) Revenue vs profit — common size (Revenue con Actual + Consensus | Actual + Summit; Operating income en $B con RL bajo cero + línea consolidada, sin Share); (3) The segment bridge — By segment (FY22 $28.9B + FoA $59.8B − RL $5.5B = FY25 $83.3B) y By cost (Δ ingreso / compensación / otros costos, anual FY22–25 o trimestral vs mismo trimestre del año anterior); (4) Segment deep dives FoA/RL (KPIs calculados, definición verbatim 10-K Note 15 y "other costs" del 10-Q, margen o pérdida FY21–25, tabla de costos, qué lo mueve, qué se divulga y qué no con las reglas de asignación verbatim, citas de llamadas); pie del panel.
+- Fuentes: tabla de segmentos de los 10-K FY2024/FY2025 (Note 15) y 10-Q 1Q25–2Q26 (EDGAR), Q4 = año − 9 meses, ingreso − compensación − otros = utilidad en cada fila (`META_SEG_Y`/`META_SEG_Q` en `meta-bl-data.js`); Results dataset (utilidad por segmento y Summit congelado); BBG 9/8/2026 (ingreso por segmento forward, utilidad consolidada); `docs/calls/META.md` (citas, oradores verificados; 2Q26 reconstruida no se cita).
+- Archivos: `meta-bl.js` (BL-SEG sobre el andamiaje de BL-GEN), `meta-bl-data.js`, `meta.js` (sub-tab Segments), `css/overview.css` (regla `[hidden]` con alcance Meta/TSM: los controles ocultos del puente se veían; también arregla General ▸ The bridge).
+- Autoauditoría: ✔ sin errores de consola · ✔ un pie por panel y por deep dive · ✔ sin emojis · ✔ sin `<style>` en línea · ✔ números de KPIs y textos derivados del dato · ✘→✔ corregido un texto propio que decía que el margen de FoA se amplió hasta 2025 (bajó de 53.7% a 51.6%).
+- Cambios pedidos por SAB: Summit anual hacia atrás (FY23–24 desde los trimestres) y etiqueta "Summit (discontinued)" en segmentos.

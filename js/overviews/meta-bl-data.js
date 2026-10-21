@@ -135,3 +135,79 @@ export var META_EW_LINES=[
            {q:'4Q25', txt:'“Legal expense growth was due to both lapping legal accrual reversals in Q4’24 and charges recorded in Q4’25.”', who:'Susan Li, CFO'},
            {q:'1Q26', txt:'“…we continue to see scrutiny on youth-related issues and have additional trials scheduled for this year in the US, which may ultimately result in a material loss.”', who:'Susan Li, CFO'}] },
 ];
+
+// 5) META_SEG_Y / META_SEG_Q — the segment table (Bottom Line ▸ Segments, BL-SEG), US$ million, typed from the filings'
+//    segment note ("segment information of revenue, expenses, and income (loss) from operations"): Form 10-K FY2024 and
+//    FY2025, Note 15 (FY2022–FY2025); Forms 10-Q 1Q25–2Q26 (each quarter plus its prior-year comparative, so 1Q24–3Q24
+//    come from the 2025 10-Qs). A Q4 is the fiscal year less the nine months, so a Q4 can differ by $1M–3M from the sum
+//    of the quarters through rounding. In every row rev − comp − other = oi (checked when typed).
+//    comp  = "Employee compensation": payroll, share-based compensation, bonus and benefits (2Q26 includes $1.18B of
+//            severance for the May 2026 reduction of ~8,000 employees, across both segments).
+//    other = "Other costs and expenses": FoA — infrastructure, professional services, partner arrangements, marketing,
+//            facilities, legal-related costs and other; RL — inventory, professional services, marketing, infrastructure,
+//            facilities and other.
+//    Meta discloses no D&A, capex or assets by segment (the CODM "does not evaluate operating segments using asset or
+//    liability information"), so there is no segment EBITDA.
+export var META_SEG_Y={
+  2022:{ foa:{rev:114450, comp:28545, other:43244, oi:42661},  rl:{rev:2159, comp:7766,  other:8110,  oi:-13717} },
+  2023:{ foa:{rev:133006, comp:28878, other:41257, oi:62871},  rl:{rev:1896, comp:8942,  other:9074,  oi:-16120} },
+  2024:{ foa:{rev:162355, comp:31116, other:44130, oi:87109},  rl:{rev:2146, comp:10211, other:9664,  oi:-17729} },
+  2025:{ foa:{rev:198759, comp:39943, other:56347, oi:102469}, rl:{rev:2207, comp:10759, other:10641, oi:-19193} }
+};
+export var META_SEG_Q=[
+  { p:'1Q24', foa:{rev:36015, comp:7445,  other:10906, oi:17664}, rl:{rev:440,  comp:2458, other:1828, oi:-3846} },
+  { p:'2Q24', foa:{rev:38718, comp:7746,  other:11637, oi:19335}, rl:{rev:353,  comp:2600, other:2241, oi:-4488} },
+  { p:'3Q24', foa:{rev:40319, comp:8089,  other:10452, oi:21778}, rl:{rev:270,  comp:2655, other:2043, oi:-4428} },
+  { p:'4Q24', foa:{rev:47302, comp:7836,  other:11135, oi:28331}, rl:{rev:1083, comp:2498, other:3552, oi:-4967} },
+  { p:'1Q25', foa:{rev:41902, comp:9031,  other:11106, oi:21765}, rl:{rev:412,  comp:2777, other:1845, oi:-4210} },
+  { p:'2Q25', foa:{rev:47146, comp:9336,  other:12839, oi:24971}, rl:{rev:370,  comp:2523, other:2377, oi:-4530} },
+  { p:'3Q25', foa:{rev:50772, comp:10645, other:15160, oi:24967}, rl:{rev:470,  comp:2594, other:2308, oi:-4432} },
+  { p:'4Q25', foa:{rev:58938, comp:10932, other:17239, oi:30767}, rl:{rev:955,  comp:2864, other:4113, oi:-6022} },
+  { p:'1Q26', foa:{rev:55909, comp:12079, other:16930, oi:26900}, rl:{rev:402,  comp:2545, other:1885, oi:-4028} },
+  { p:'2Q26', foa:{rev:60370, comp:14571, other:22405, oi:23394}, rl:{rev:431,  comp:2468, other:2582, oi:-4619} }
+];
+export var META_SEG_SRC='Meta Forms 10-K FY2024 and FY2025 (Note 15, Segment and Geographical Information) and Forms 10-Q 1Q25–2Q26 (segment note) · SEC EDGAR';
+// The 10-K's own words on how costs reach a segment (Form 10-K FY2025, Note 15), verbatim.
+export var META_SEG_ALLOC={
+  codm:'Our CODM uses consolidated and operating segment’s revenue and income (loss) from operations to allocate resources during our annual planning process and to assess performance. Our CODM does not evaluate operating segments using asset or liability information.',
+  direct:'These directly attributable costs and expenses include certain product development related operating expenses, costs associated with partnership arrangements, consumer hardware product costs, content costs, and legal-related costs.',
+  indirect:'Indirect operating expenses, such as facilities, information technology, certain shared research and development activities, recruiting, and physical security expenses are mostly allocated based on headcount.',
+  infra:'Costs related to the operation of our data centers and technical infrastructure are generally allocated to our segments based on estimated usage, most of which is allocated to the FoA segment.'
+};
+// One deep dive per segment. Definitions verbatim from the 10-K FY2025 Note 15; "other" composition verbatim from the
+// 10-Q 2Q26 footnotes; calls verbatim from docs/calls/META.md (the 2Q26 call is reconstructed from press, so it is not
+// quoted). Every number in the key figures and the bars is computed in meta-bl.js from META_SEG_Y / META_SEG_Q.
+export var META_SEG_DIVES=[
+  { k:'foa', name:'Family of Apps',
+    def:'FoA includes Facebook, Instagram, Messenger, WhatsApp, and other services.',
+    otherDef:'Includes costs and expenses in FoA segment for infrastructure, professional services, partner arrangements, marketing, facilities, legal-related costs, and other expenses.',
+    business:'The advertising business, and all of Meta’s profit: its operating income pays for the Reality Labs loss, and what remains is the consolidated operating income. Most of the AI and data-center build lands here, because infrastructure is allocated by usage.',
+    moves:[
+      ['Advertising revenue','Impressions × average price per ad (Top Line ▸ Segments). Revenue grew faster than segment costs in 2023 and 2024, so the margin widened; in 2025 and the first half of 2026 costs grew faster and it narrowed (cost-split table above).'],
+      ['Infrastructure','Data-center operation, depreciation and third-party cloud sit in “other costs”, and are “generally allocated … based on estimated usage, most of which is allocated to the FoA segment” (10-K Note 15). The capex cycle reaches the segment through this line (Miscellaneous ▸ Capex &amp; Depreciation).'],
+      ['Employee compensation','Technical and AI hiring, share-based compensation and, in 2Q26, severance from the May 2026 reduction (10-Q 2Q26).'],
+      ['Legal-related costs','Charged to the segment directly (10-K Note 15); 2Q26 carried $2.40B of charges for legal proceedings (10-Q 2Q26, MD&amp;A).']
+    ],
+    calls:[
+      {q:'4Q24', txt:'“In Q4, Family of Apps expenses were $19.0 billion, representing 76% of our overall expenses. Family of Apps expenses were up 5%, primarily due to growth in infrastructure costs and employee compensation, which were partially offset by lower legal-related expenses. Family of Apps operating income was $28.3 billion, representing a 60% operating margin.”', who:'Susan Li, CFO'},
+      {q:'2Q25', txt:'“In Q2, Family of Apps expenses were $22.2 billion, representing 82% of our overall expenses. Family of Apps expenses were up 14%, mainly due to growth in employee compensation and infrastructure costs, partially offset by lower legal-related costs. Family of Apps operating income was $25.0 billion, representing a 53% operating margin.”', who:'Susan Li, CFO'},
+      {q:'4Q25', txt:'“At a segment level, we expect expense growth to be driven by the Family of Apps, with Reality Labs operating losses remaining similar to 2025 levels.”', who:'Susan Li, CFO'}
+    ] },
+  { k:'rl', name:'Reality Labs',
+    def:'RL includes our virtual and augmented reality related consumer hardware, software, and content.',
+    otherDef:'Includes costs and expenses in RL segment for inventory, professional services, marketing, infrastructure, facilities, and other expenses.',
+    business:'A research budget with a small hardware business attached: revenue is about 1% of Meta’s, and the cost base is roughly half people and half everything else. The loss is set by how much Meta chooses to spend, not by sales. Its products are described in Top Line ▸ Segments.',
+    moves:[
+      ['Employee compensation','About half of the segment’s costs: the engineers building headsets, glasses and future devices.'],
+      ['Inventory and hardware cost','Consumer hardware product costs are charged to the segment directly (10-K Note 15). They rise with Quest and glasses volumes, which is why Q4 carries both the most revenue and the largest loss.'],
+      ['Portfolio mix','In 2026 spend moved from VR and Horizon to wearables (calls below). Management expects 2026 losses similar to 2025 and lower from 2027, without a stated path.'],
+      ['Revenue','Small and seasonal: Q4 holiday hardware sales, and retail partners stocking Quest ahead of it. Revenue has not covered even the segment’s employee compensation in any quarter of the series.']
+    ],
+    calls:[
+      {q:'4Q24', txt:'“…we expect in 2025 that roughly half of our Reality Labs investment will be across the Wearables initiatives and the remaining half on Metaverse.”', who:'Susan Li, CFO'},
+      {q:'1Q25', txt:'“Reality Labs expenses were $4.6 billion, up 8% year-over-year driven primarily by higher employee compensation.”', who:'Susan Li, CFO'},
+      {q:'4Q25', txt:'“I expect Reality Labs losses this year to be similar to last year, and this will likely be the peak as we start to gradually reduce our losses going forward while continuing to execute on our vision.”', who:'Mark Zuckerberg, CEO'},
+      {q:'4Q25', txt:'“So, we are meaningfully reducing our investment in VR and Horizon this year, but we’re growing our investment in wearables to capitalize on the momentum that we’re seeing in our position as a market leader.”', who:'Susan Li, CFO'},
+      {q:'4Q25', txt:'“So, I think our expectation is for Reality Labs losses to trend down from 2026 levels, but it’s hard to characterize the exact shape of that line.”', who:'Susan Li, CFO'}
+    ] }
+];

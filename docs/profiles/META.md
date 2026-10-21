@@ -12,7 +12,7 @@
 | Rama | `feat/meta-profile` (en el mismo PR que los cambios de la guía del review de TSM, decisión SAB 2026-10-20) |
 | Analista responsable | SAB |
 | Inicio | 2026-10-20 |
-| Avance | 38 de 44 unidades aprobadas (pendientes: EV-SET, EV-POST, EV-NOTES, BL-SPLC, F-FINAL) · 0 omitidas · 1 bloqueada (VA-TM) (M = filas del tablero − ⏭️ de alcance; Anexo C) |
+| Avance | 41 de 44 unidades aprobadas (pendientes: BL-SPLC, F-FINAL; 3Q26 Post-Results tras el print del 21-oct) · 0 omitidas · 1 bloqueada (VA-TM) (M = filas del tablero − ⏭️ de alcance; Anexo C) |
 
 ## 1. Inventario de datos (F0)
 
@@ -158,9 +158,9 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 | TL-OTH | Top Line ▸ Other | ✅ | 2026-10-20 | SAB | | Revenue lines (q+y) y Geography (Note 2, anual) |
 | TL-CUS | Top Line ▸ Customers | ✅ | 2026-10-20 | SAB | | 10-K (sin cliente ≥10%), 3 clases con cita, SPLC 5 clientes; sección 5 espera motor |
 | EV-EST | Evolution ▸ Estimates | ✅ | 2026-10-20 | SAB | | 5 snapshots: Dec 15 · Feb 3 · May 5 · Aug 4 (sin el 05-22 que ya no existe) |
-| EV-SET | Evolution ▸ Earnings ▸ Setup | ⬜ | | | | |
-| EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
-| EV-NOTES | Evolution ▸ Earnings ▸ Notes | ⬜ | | | | |
+| EV-SET | Evolution ▸ Earnings ▸ Setup | ✅ | 2026-10-21 | SAB | | 3Q26: BBG 10/21 (cargo legal $10B, base mixta de EPS), Summit 08-04 leído de Results; sin tarjetas IR/EDGAR ni párrafo intro |
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results | ✅ | 2026-10-21 | SAB | | port a `meta-ce.js` (copia de `tsm-ce.js`); Call Summary 2Q26 (cobertura), 1Q26 y 4Q25 (verbatim); sin emojis, piel formal |
+| EV-NOTES | Evolution ▸ Earnings ▸ Notes | ✅ | 2026-10-21 | SAB | | semilla de las notas de SAB (4T22–2T26): 14 hilos en 4 ejes; Watch List compartida debajo con `palette:'summit'` |
 | BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ✅ | 2026-10-20 | SAB | | márgenes (Actual / Summit congelado / Consensus), EBITDA base reportada, Normalized (OBBBA $15.93B 3Q25; beneficio $8.03B 1Q26) |
 | BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ✅ | 2026-10-20 | SAB | | COGS primero + Gross profit; modo nuevo Cost structure (guía R7) |
 | BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ✅ | 2026-10-20 | SAB | | OI → net income con el cargo único destacado |
@@ -201,6 +201,9 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 - 2026-10-20 · todo el perfil · Títulos del 2×2 (What it sells, Who buys it…) en negro (--navy) y **un solo acento en todo el perfil: el azul Summit que subraya las pestañas del perfil (--steel)** — línea de Key Facts, subrayado de pestañas activas en todos los niveles. Meta entra a css/selectors.css. Aplicado a Meta y escrito en la guía (§8, §21, §21b) — SAB
 - 2026-10-21 · BL-SEG · Diseño adaptado a lo que Meta publica: solo utilidad operativa (sin D&A por segmento → sin EBITDA); Consensus de utilidad solo en Consolidated; el modo Forward del puente se reemplaza por "By cost" (ingreso · compensación · otros costos, de la nota de segmentos) — SAB
 - 2026-10-21 · BL-SEG · Summit anual de segmentos hacia atrás: fila anual congelada si existe (FY25), si no la suma de las 4 proyecciones trimestrales congeladas (FY23–24). Etiqueta **"Summit (discontinued)"** en FoA/RL porque el modelo ya no proyecta segmentos; Consolidated sigue "Summit (frozen)" — SAB
+- 2026-10-21 · EV-SET · El consenso del 3T26 es el snapshot de BBG del 10/21 (agregado a mano por SAB; `bbg_extract.py` ahora toma la fila más reciente por `data_as_of`). Earnings sin las tarjetas grandes de IR/EDGAR ni el párrafo "decision layer".
+- 2026-10-21 · EV-NOTES · El registro de temas sale de las notas a mano de SAB (META.pdf, 4T22–2T26), no de las transcripciones: 14 hilos en Family of Apps · Reality Labs · AI & compute · Costs & capital. Fuera: el recap del modelo (precio objetivo) y la guía del ecosistema de anuncios.
+- 2026-10-21 · EV-POST · Earnings pasa a la maquinaria de la guía (copia de `tsm-ce.js` → `meta-ce.js`, datos en `meta-ce-data.js`): Setup · Post-Results · Notes. Sin nada generado por IA, sin emojis, colores Summit (Watch List con `palette:'summit'`). Se conserva debajo de Notes la Watch List con filas en Supabase.
 
 ## 4. Excepciones aceptadas
 
@@ -424,3 +427,11 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 - Archivos: `meta-bl.js` (BL-SEG sobre el andamiaje de BL-GEN), `meta-bl-data.js`, `meta.js` (sub-tab Segments), `css/overview.css` (regla `[hidden]` con alcance Meta/TSM: los controles ocultos del puente se veían; también arregla General ▸ The bridge).
 - Autoauditoría: ✔ sin errores de consola · ✔ un pie por panel y por deep dive · ✔ sin emojis · ✔ sin `<style>` en línea · ✔ números de KPIs y textos derivados del dato · ✘→✔ corregido un texto propio que decía que el margen de FoA se amplió hasta 2025 (bajó de 53.7% a 51.6%).
 - Cambios pedidos por SAB: Summit anual hacia atrás (FY23–24 desde los trimestres) y etiqueta "Summit (discontinued)" en segmentos.
+
+### 2026-10-21 · EV-SET · EV-POST · EV-NOTES Evolution ▸ Earnings — ✅ APROBADAS (SAB)
+- Qué se mostró: Setup del 3T26 (Street BBG 10/21 · Summit 08-04 · guía 8-K: revenue $61–64B); Post-Results 2T26/1T26/4T25 en el formato de la guía (The print en orden del estado de resultados, Call Summary por Prepared Remarks y por pregunta de analista, Propose Notes, Also on the call); Notes con el theme record de las notas de SAB + editor + Watch List de ganchos abiertos.
+- Fuentes: BBG_CONSENSUS.txt (snapshot 10/21), `results-data/meta.js` (Summit congelado 08-04), 8-K Ex. 99.1; transcripciones `docs/calls/META.md` (1T26, 4T25 verbatim) y `META-latest.md` (2T26 reconstruido de cobertura — pendiente el verbatim de IR); notas manuscritas de SAB (META.pdf).
+- Archivos: `meta-ce.js`, `meta-ce-data.js` (nuevos), `themes-data/meta.js` (nuevo), `meta.js` (monta Earnings desde `meta-ce.js`; el código `ce*` viejo queda muerto hasta F-FINAL), `segments.js` (THEME_SRC/THEME_SEG de META), `watchlist.js` (opción `palette:'summit'`), `tsm-ce.js` (bug de `stmt`), `scripts/bbg_extract.py`, `results-data/meta.js` + `meta-bbg.js` (regenerados), guía §12/§21.
+- Autoauditoría: ✔ sin errores de consola · ✔ sin emojis · ✔ Statement order corregido (bug heredado de TSM) · ⚠ atribuciones de algunos oradores en el follow-up del 1T26/4T25 inferidas del contenido (transcripción con etiquetas revueltas).
+- Cambios pedidos por SAB: quitar IR/EDGAR y la intro; notas propias como base del theme record; colores formales; Post-Results homogéneo con la guía; todo el texto corrido en negro (no navy/azul).
+

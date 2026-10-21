@@ -45,6 +45,7 @@ import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
 import { SN_THEMES } from './themes-data/sn.js';
 import { TSM_THEMES } from './themes-data/tsm.js';
+import { META_THEMES } from './themes-data/meta.js';
 import { SUMMIT_CAT, SUMMIT_MUTE } from './viz-palette.js';   // the portal's fixed categorical palette
 
 // The Notes taxonomy names segments in prose; the datasets key them. One map, stated once.
@@ -52,8 +53,9 @@ var THEME_SEG = {
   AMZN: { 'Amazon US': 'na', 'Amazon International': 'intl', 'AWS': 'aws' },
   SN: { 'SharkNinja': 'sn' },
   TSM: { 'AI & HPC demand': 'hpc', 'Consumer & smartphone': 'smart' },   // the other TSM themes are company-wide
+  META: { 'Family of Apps': 'foa', 'Reality Labs': 'rl' },               // AI & compute, Costs & capital are company-wide
 };
-var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES };
+var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, META: META_THEMES };
 var SEGMENTS_DATA = {
   AMZN: { seg: amznSegments, res: amznResults },
   DHR:  { seg: dhrSegments,  res: dhrResults  },

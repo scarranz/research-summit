@@ -24,6 +24,11 @@ import { metaHistMult } from './meta-histmult.js';
 import { metaSens } from './meta-sensitivity.js';
 import { metaOwnBody, metaOwnInit } from './meta-own.js';
 import { metaBlGeneralHtml, metaBlGeneralBuild, metaBlSegmentsHtml, metaBlSegmentsBuild } from './meta-bl.js';
+import { metaResults } from '../results-data/meta.js';   // Earnings ▸ Setup grid (CE_CONS) + setup.us, read at load
+import { metaBBG } from './meta-bbg.js';
+import { META_THEMES } from '../themes-data/meta.js';
+import { META_CE_CONS as CE_CONS, META_CALL_EARNINGS as CALL_EARNINGS } from './meta-ce-data.js';
+import { metaCeHtml, metaCeWire, metaCeBuild, metaCePop } from './meta-ce.js';   // Evolution ▸ Earnings (Setup · Post-Results · Notes)
 import { metaCompBody, metaCompInit } from './meta-comp.js';   // Misc ▸ Competitive Position (MISC-comp, §15b)
 import { metaCapexBody, metaCapexBuild, metaStrategyBody, metaMnaBody, metaCapacityBody } from './meta-misc.js';   // Misc ▸ Capex, Strategy, M&A, Capacity (formal, §15b)   // Bottom Line ▸ General (copy of tsm-bl.js + AMZN SBC)   // Management ▸ Ownership (2026 proxy holder table)   // Valuation ▸ Sensitivity (copy of tsm-sensitivity.js; Summit frozen 2026-08-04)   // Valuation ▸ Historic Multiple (copy of tsm-histmult.js)
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/meta.js)
@@ -370,7 +375,7 @@ var HEADWINDS=[
 var SOURCES='Financials: Summit DCF model for META (snapshot 2026-05-22) — actuals FY2019–25 + 2026E–27E consolidated estimates (shaded); segment splits (FoA/RL) and 2028+ are actuals-only (thin/terminal in the model). GAAP 2025 earnings are depressed by a one-time OBBBA deferred-tax charge (model-normalized ~$73.9B). DAP (~3.5B) & ARPP are company disclosures (not in the snapshot). Spend Engine (leases + cloud commitments) is a Summit analytical reconstruction from Meta 10-K/10-Q Note-8 + vendor 8-Ks/press — estimate, not charted. Supply chain: Bloomberg SPLC, 26-Jun-2026. Qualitative: Meta 10-Ks + Q4 2023–Q1 2026 earnings calls + a Summit Ad-Ecosystem primer. Live price/market cap via Massive.';
 var OV_SOURCE='Financials: Summit DCF model (snapshot 2026-05-22); actuals FY19–25 + 2026E–27E est. Operating KPIs (DAP ~3.5B, ARPP) are company disclosures. Qualitative: Meta 10-Ks + Q4 2023–Q1 2026 earnings calls. Live price/market cap via Massive. Peer multiples are web-sourced approximations (mid-2026); market caps are live.';
 var SRC_FIN='Summit DCF model for META, snapshot 2026-05-22. 2028+ excluded (terminal-artifact). GAAP 2025 net income depressed by a one-time OBBBA deferred-tax charge (model-normalized ~$73.9B).';
-var SRC_CALLS='Meta Q4 2023–Q2 2026 earnings-call transcripts & prepared remarks. Contemporaneous highlights — written from each call, not with hindsight.';
+var SRC_CALLS='SAB’s call notes, Q4 2022 → Q2 2026 (15 earnings calls; GS Communacopia Sep 2025 and Morgan Stanley TMT Mar 2026 filed under the quarter of the last call). Paraphrased, contemporaneous — written at each call, not with hindsight.';
 var SRC_SC='Bloomberg Supply Chain Analysis (SPLC), META US Equity, as-of 26-Jun-2026. Total Relationship Size is Bloomberg\'s dollar estimate of the commercial relationship; point-in-time, not live. Refresh source to be confirmed.';
 
 // ── Ad-spend flow ("follow $1.00") — open web vs Meta's walled garden. ──
@@ -557,390 +562,7 @@ var CALLS_NOTE='Highlights extracted from Meta Platforms earnings call transcrip
 // ════════════════════════════════════════════════════════════════════════════
 var BLUE='#2557D6', RED='#EA4335', YELLOW='#E8A00C', PURPLE='#7A5AF8', AMBER='#B7791F';
 
-// ── CE_CONS — the consensus archive spine (EARNINGS_CONVENTIONS §6a) ─────────
-// Parsed 2026-07-30 from G:\My Drive\Summit\Docs\0\BBG_CONSENSUS.txt (12 META
-// snapshots). Label integrity: 60 fq-label checks + 72 close-date checks, 0
-// mismatches. Corruption this load: OCF fq-3/fq+2 cells in the four 2023–24
-// snapshots came through as Excel dates → null (the corruption MOVES between
-// exports — derived on every reload, never carried forward by hand).
-// Values $B (file is $M, scale per metric); EPS $; shares/DAP B; the two ad
-// KPIs are ALREADY YoY-% lines (see their notes). Capex is the file's
-// CF_PURCHASE_OF_FIXED_PROD_ASSETS — purchases of PP&E, sign-flipped to the
-// positive magnitude. ⚠ Meta STATES capex incl. principal payments on finance
-// leases, ~2–4% higher (2Q26: $31.1B stated vs $30.1B on this line) — a basis
-// difference, not an error; noted on the cells where it matters.
-var CE_CONS = {
-  src:'Bloomberg (BST) · BBG_CONSENSUS.txt snapshot archive',
-  asOf:['2023-10-27','2024-02-03','2024-04-26','2024-08-02','2024-11-01','2025-01-31','2025-05-02','2025-08-01','2025-10-31','2026-01-30','2026-05-01','2026-07-29'],
-  q:['Q4 2022','Q1 2023','Q2 2023','Q3 2023','Q4 2023','Q1 2024','Q2 2024','Q3 2024','Q4 2024','Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026','Q2 2026','Q3 2026','Q4 2026','Q1 2027','Q2 2027'],
-  hz:['4q out','3q out','2q out','1q out'],
-  nHead:9,
-  m:[
-    { k:'Revenue', u:'$B', t:'ok', code:'SALES_REV_TURN',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,38.7],[null,null,33.5,35.5],[null,36.2,37.7,38.1],[37.6,38.7,39,40],[44.7,45.1,45.9,46.8],[40.9,41.4,41.8,41.5],[44.4,44.8,44.9,44.5],[46.4,46.7,45.8,49],[55.1,54.3,57,58.1],[47.7,50.1,51,54.9],[54.7,56,59.2,60],[59.5,62.5,63.1,63.2],[72.7,73.2,73.4,null],[66.8,67.6,null,null],[72.1,null,null,null]],
-      qa:[32.2,28.6,32,34.1,40.1,36.5,39.1,40.6,48.4,42.3,47.5,51.2,59.9,56.3,60.8,null,null,null,null],
-      qy:[null,null,null,null,32.2,28.6,32,34.1,40.1,36.5,39.1,40.6,48.4,42.3,47.5,51.2,59.9,56.3,60.8],
-      qq:[null,32.2,28.6,32,34.1,40.1,36.5,39.1,40.6,48.4,42.3,47.5,51.2,59.9,56.3,60.8,null,null,null] },
-    { k:'Gross profit', u:'$B', t:'ok', code:'GROSS_PROFIT',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,31.2],[null,null,26.8,28.4],[null,29.1,30.4,30.9],[30.4,31.5,31.8,32.3],[36,36.4,36.9,37.8],[33.6,33.4,33.8,33.6],[35.6,36.1,36.2,35.8],[37.4,37.9,37,39.7],[44.2,43.8,46,46.9],[38.2,40.6,40.9,44.3],[44.2,44.8,47.5,47.9],[47.5,50,50,50.4],[57.4,57.8,58.3,null],[52.7,53.9,null,null],[56.4,null,null,null]],
-      qa:[23.8,22.5,26.1,27.9,32.4,29.8,31.8,33.2,39.5,34.7,39,42,49,46.1,null,null,null,null,null],
-      qy:[null,null,null,null,23.8,22.5,26.1,27.9,32.4,29.8,31.8,33.2,39.5,34.7,39,42,49,46.1,null],
-      qq:[null,23.8,22.5,26.1,27.9,32.4,29.8,31.8,33.2,39.5,34.7,39,42,49,46.1,null,null,null,null] },
-    { k:'Operating income', u:'$B', t:'ok', code:'IS_COMPARABLE_EBIT',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,15.2],[null,null,11.4,13],[null,13.1,14.2,14.4],[13.9,15.1,15.2,15.8],[18.6,18.7,19,19.8],[16.1,16.1,16.3,15.6],[18.2,18.1,17.4,17],[19.5,18.4,17.4,19.1],[23.3,21.9,23.2,23.9],[18.8,19,18.5,19.3],[21,20.7,20.8,21.3],[21.3,21,20.8,21],[25.4,25.1,25.3,null],[24.3,25,null,null],[25.2,null,null,null]],
-      qa:[6.4,7.2,9.4,13.7,16.4,13.8,14.8,17.4,23.4,17.6,20.4,20.5,24.7,22.9,18.8,null,null,null,null],
-      qy:[null,null,null,null,6.4,7.2,9.4,13.7,16.4,13.8,14.8,17.4,23.4,17.6,20.4,20.5,24.7,22.9,18.8],
-      qq:[null,6.4,7.2,9.4,13.7,16.4,13.8,14.8,17.4,23.4,17.6,20.4,20.5,24.7,22.9,18.8,null,null,null] },
-    { k:'EBITDA', u:'$B', t:'ok', code:'IS_COMPARABLE_EBITDA',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,21.9],[null,null,17.9,19.9],[null,20.4,21.2,21.4],[20.6,21.9,22,22.2],[25.5,25.8,25.5,26.3],[22.5,21.5,22.6,23.2],[23.5,24.7,25.7,23.3],[26.3,26.9,23.7,25.4],[31.8,29,30.3,30.9],[24.2,25,25.3,26.7],[28,29.3,29.4,29.7],[30.8,30.1,29.8,29.5],[35.5,34.8,34.4,null],[32.8,34,null,null],[36,null,null,null]],
-      qa:[8.8,9.8,12,16.6,19.6,17.2,18.5,21.4,27.8,21.5,24.8,25.5,30.2,28.9,null,null,null,null,null],
-      qy:[null,null,null,null,8.8,9.8,12,16.6,19.6,17.2,18.5,21.4,27.8,21.5,24.8,25.5,30.2,28.9,null],
-      qq:[null,8.8,9.8,12,16.6,19.6,17.2,18.5,21.4,27.8,21.5,24.8,25.5,30.2,28.9,null,null,null,null] },
-    { k:'EPS (diluted)', u:'$', t:'ok', code:'IS_COMP_EPS_GAAP',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,4.83],[null,null,3.56,4.15],[null,4.09,4.61,4.67],[4.41,4.83,4.83,5.14],[6,5.99,6.28,6.71],[5.11,5.22,5.46,5.3],[5.8,5.96,5.89,5.81],[6.37,6.23,5.93,6.62],[7.86,7.47,8.05,8.19],[6.4,6.63,6.49,6.56],[7.31,7.21,7.1,7.16],[7.47,7.18,7,6.96],[8.65,8.46,8.4,null],[8.24,8.39,null,null],[8.48,null,null,null]],
-      qa:[1.76,2.2,2.98,4.39,5.33,4.71,5.16,6.03,8.02,6.43,7.14,1.05,8.88,10.44,6.18,null,null,null,null],
-      qy:[null,null,null,null,1.76,2.2,2.98,4.39,5.33,4.71,5.16,6.03,8.02,6.43,7.14,1.05,8.88,10.44,6.18],
-      qq:[null,1.76,2.2,2.98,4.39,5.33,4.71,5.16,6.03,8.02,6.43,7.14,1.05,8.88,10.44,6.18,null,null,null] },
-    { k:'Operating cash flow', u:'$B', t:'ok', code:'CB_CF_NET_CASH_OPERATING_ACT',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,17.9],[null,null,null,18.4],[null,18.9,null,20.2],[18.9,20.9,null,22.1],[23.5,23.8,null,26.4],[23.1,22.6,null,22.9],[23.6,25,null,22.5],[29.8,28.1,26.5,28.4],[30.3,30,31.5,34.2],[26.5,27.7,28.2,29.2],[29.6,30.4,31.7,33.3],[30.9,32.3,35.4,34.7],[39.8,44.5,43.7,null],[39.6,38,null,null],[40.9,null,null,null]],
-      qa:[null,null,null,20.4,19.4,19.2,19.4,24.7,28,24,25.6,30,36.2,32.2,31.9,null,null,null,null],
-      qy:[null,null,null,null,null,null,null,20.4,19.4,19.2,19.4,24.7,28,24,25.6,30,36.2,32.2,31.9],
-      qq:[null,null,null,null,20.4,19.4,19.2,19.4,24.7,28,24,25.6,30,36.2,32.2,31.9,null,null,null] },
-    { k:'Capex', u:'$B', t:'ok', code:'CF_PURCHASE_OF_FIXED_PROD_ASSETS',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,8.5],[null,null,null,7.3],[null,null,7.9,8],[null,8.1,9.2,9.8],[9.2,11.2,11.6,13.4],[8.1,9.8,12.4,10.5],[11.5,13.2,11.3,15.7],[12.4,11.6,16.9,18.3],[10.8,19,20.9,21.2],[16.5,17,21.9,16.8],[16.5,25.7,19.7,25.4],[28.1,23.3,28.7,37.8],[26.2,32.7,45.5,null],[17.6,37.9,null,null],[43.7,null,null,null]],
-      qa:[9,6.8,6.2,6.5,7.7,6.4,8.2,8.3,14.4,12.9,16.5,18.8,21.4,19,30.1,null,null,null,null],
-      qy:[null,null,null,null,9,6.8,6.2,6.5,7.7,6.4,8.2,8.3,14.4,12.9,16.5,18.8,21.4,19,30.1],
-      qq:[null,9,6.8,6.2,6.5,7.7,6.4,8.2,8.3,14.4,12.9,16.5,18.8,21.4,19,30.1,null,null,null] },
-    { k:'D&A', u:'$B', t:'ok', code:'CF_DEPR_AMORT',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,3],[null,null,3.3,3.5],[null,3.4,3.6,3.6],[3.6,3.9,3.9,3.9],[4.1,4.1,4.2,4.6],[4.4,4.4,4.6,4.7],[4.6,5,5.1,4.7],[5.5,5.5,5.2,5.1],[5.9,5.8,5.7,5.7],[5.8,6.1,6.3,6.3],[6.5,6.9,7.1,7.2],[7.6,8,8.3,8.3],[9,9.7,9.6,null],[9.9,10,null,null],[11.6,null,null,null]],
-      qa:[2.4,2.5,2.6,2.9,3.2,3.4,3.6,4,4.5,3.9,4.3,5,5.4,6,6.4,null,null,null,null],
-      qy:[null,null,null,null,2.4,2.5,2.6,2.9,3.2,3.4,3.6,4,4.5,3.9,4.3,5,5.4,6,6.4],
-      qq:[null,2.4,2.5,2.6,2.9,3.2,3.4,3.6,4,4.5,3.9,4.3,5,5.4,6,6.4,null,null,null] },
-    { k:'Diluted shares', u:'B', t:'ok', code:'IS_SH_FOR_DILUTED_EPS',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,2.62],[null,null,2.62,2.62],[null,2.61,2.61,2.61],[2.6,2.61,2.6,2.59],[2.59,2.59,2.58,2.58],[2.59,2.57,2.58,2.58],[2.56,2.57,2.58,2.57],[2.56,2.57,2.57,2.56],[2.57,2.56,2.56,2.56],[2.55,2.55,2.55,2.56],[2.54,2.55,2.56,2.56],[2.54,2.56,2.56,2.57],[2.57,2.57,2.57,null],[2.57,2.57,null,null],[2.57,null,null,null]],
-      qa:[2.64,2.6,2.61,2.64,2.63,2.62,2.61,2.6,2.6,2.59,2.57,2.57,2.56,2.56,2.57,null,null,null,null],
-      qy:[null,null,null,null,2.64,2.6,2.61,2.64,2.63,2.62,2.61,2.6,2.6,2.59,2.57,2.57,2.56,2.56,2.57],
-      qq:[null,2.64,2.6,2.61,2.64,2.63,2.62,2.61,2.6,2.6,2.59,2.57,2.57,2.56,2.56,2.57,null,null,null] },
-    { k:'Family of Apps revenue', u:'$B', t:'ok', code:'SALES_REV_TURN',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,38.1],[null,null,33.3,35],[null,35.9,37.1,37.8],[37.2,38.2,38.6,39.7],[43.4,43.8,44.9,45.8],[40.4,41.1,41.4,41],[44,44.4,44.4,44.1],[46.1,46.2,45.4,48.3],[53.8,53.2,55.4,57.2],[47.2,49.2,50.5,54.4],[53.7,55.6,58.7,59.6],[59.1,61.9,62.4,62.5],[71.4,72,72.2,null],[66.4,67,null,null],[71.6,null,null,null]],
-      qa:[31.4,28.3,31.7,33.9,39,36,38.7,40.3,47.3,41.9,47.1,50.8,58.9,55.9,60.4,null,null,null,null],
-      qy:[null,null,null,null,31.4,28.3,31.7,33.9,39,36,38.7,40.3,47.3,41.9,47.1,50.8,58.9,55.9,60.4],
-      qq:[null,31.4,28.3,31.7,33.9,39,36,38.7,40.3,47.3,41.9,47.1,50.8,58.9,55.9,60.4,null,null,null] },
-    { k:'Daily Active People (DAP)', u:'B', t:'ok', code:'DAILY_ACTIVE_USERS',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,3.12],[null,null,3.16,3.19],[null,3.2,3.23,3.27],[3.24,3.26,3.31,3.32],[3.29,3.35,3.36,3.31],[3.35,3.37,3.36,3.37],[3.4,3.39,3.4,3.44],[3.41,3.42,3.46,3.48],[3.46,3.51,3.53,3.55],[3.54,3.57,3.6,3.61],[3.6,3.64,3.65,3.62],[3.69,3.69,3.68,3.67],[3.74,3.72,3.71,null],[3.71,3.7,null,null],[3.74,null,null,null]],
-      qa:[2.96,3.02,3.07,3.14,3.19,3.24,3.27,3.29,3.35,3.43,3.48,3.54,3.58,3.56,3.6,null,null,null,null],
-      qy:[null,null,null,null,2.96,3.02,3.07,3.14,3.19,3.24,3.27,3.29,3.35,3.43,3.48,3.54,3.58,3.56,3.6],
-      qq:[null,2.96,3.02,3.07,3.14,3.19,3.24,3.27,3.29,3.35,3.43,3.48,3.54,3.58,3.56,3.6,null,null,null] },
-    { k:'Ad impressions growth (YoY)', u:'%', t:'ok', code:'NUMBER_OF_ADS_DELIVERED_YOY_PCT',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,22],[null,null,14.6,17.4],[null,12,13.5,14.7],[11.2,10.8,11.7,10.3],[9.9,11.9,12.2,9.7],[10.9,11.6,9.2,7.1],[11.1,9.5,8,6.4],[9.2,7.8,6.5,10],[7.7,6.4,9.4,11.5],[5.9,8.2,10.8,15.8],[7.4,9.1,12.7,13.2],[8.5,11.2,11.8,12.9],[10.5,10.9,11.8,null],[10.3,11.1,null,null],[11,null,null,null]],
-      qa:[23,26,34,31,21,20,10,7,6,5,11,14,18,19,14,null,null,null,null],
-      qy:[null,null,null,null,23,26,34,31,21,20,10,7,6,5,11,14,18,19,14],
-      qq:[null,23,26,34,31,21,20,10,7,6,5,11,14,18,19,14,null,null,null] },
-    { k:'Avg price per ad (YoY)', u:'%', t:'ok', code:'PRICE_PER_AD_YOY_PERCENTAGE',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,-1.4],[null,null,2,5.9],[null,0.7,4.2,4.8],[-1.1,2.8,3.6,7.2],[3.7,0,3.6,7.5],[1.3,4.2,5.5,6.7],[4.6,5.1,6.7,7.2],[4.8,6.7,5.8,9.8],[6.2,5.4,8,8.9],[6.9,9.4,9.5,12.2],[8.8,8.5,10.9,11.5],[8,9.7,9.7,10],[10.4,11,11.3,null],[8.8,9,null,null],[9,null,null,null]],
-      qa:[-22,-17,-16,-6,2,6,10,11,14,10,9,10,6,12,12,null,null,null,null],
-      qy:[null,null,null,null,-22,-17,-16,-6,2,6,10,11,14,10,9,10,6,12,12],
-      qq:[null,-22,-17,-16,-6,2,6,10,11,14,10,9,10,6,12,12,null,null,null] },
-  ]
-};
-
-var CALL_EARNINGS = { ticker:'META', quarters:[
-  // ── UPCOMING: Q3 2026 (quarter ending Sep 2026; reports ~late Oct 2026). Rolled 2026-07-30
-  // after the Q2 fill; Watch List seeded from Q2's newQuestions (§6a-ix, §6d).
-  //
-  // CONSENSUS PROVENANCE — BBG_CONSENSUS.txt, `data_as_of` 2026-07-29 (the newest row, exported
-  // after the print): its `fq0` is "2026 Q2 (Rep)", so its `fq+1` — "2026 Q3 (Fwd)" — IS this
-  // quarter. YoY = that row's `fq-3` (Q3 2025, a reported actual). Summit = the model's live
-  // 2026-05-22 vintage (js/results-data/meta.js — the re-rate flag applies).
-  { q:'Q3 2026', status:'upcoming', date:'reports ~late October 2026 (date TBC)',
-    setup:{
-      source:'Bloomberg (BST) — BBG_CONSENSUS.txt snapshot archive · Summit — 2026-05-22 vintage', asOf:'2026-07-29',
-      notes:{
-        'Revenue':{ t:'Guided $61–64B — with the FX flip', h:'<p>Meta guided Q3 2026 total revenue to <b>$61–64B</b>, assuming an <b>~1% FX headwind</b> — the first flip after several quarters of tailwind. Consensus ($63.2B) sits in the top half of the guide, implying mid/high-20s growth against the cycle\'s toughest comp (Q3 2025 printed +26%).</p><p>The optics warning is pre-loaded: reported growth decelerating toward the guide is arithmetic (FX + comps) unless constant-currency breaks too.</p>' },
-        'Operating income':{ t:'Watch the base, not just the quarter', h:'<p>The FY26 expense guide is <b>$165–169B</b> (floor raised at the Q2 print to absorb $3.6B of legal + severance charges). Q3 laps a clean base — and the Q2 base it follows was dirty, so sequential margin comparisons need the ex-items lens. Management still frames FY26 operating income above FY25.</p><p>⚠ The Summit number ($30.4B) is the re-rated 2026-05-22 vintage — flagged for the model owner.</p>' },
-        'EPS (diluted)':{ t:'Tax guided 15–17%', h:'<p>Tax rate guided <b>15–17%</b> for the rest of 2026 (raised from 13–16% at the Q2 print). The one-time noise of the last three prints (3Q25 charge, 1Q26 benefit, 2Q26 legal/severance) should finally wash out — a clean EPS quarter would itself be news.</p>' },
-        'Capex':{ t:'Basis note + the $130B floor', h:'<p>This line is PP&E-only (<code>CF_PURCHASE_OF_FIXED_PROD_ASSETS</code>); Meta states capex incl. finance-lease principal, ~2–4% higher. FY26 guide <b>$130–145B</b> (floor raised $5B at the Q2 print); 1H26 ran $50.9B stated, so the guide implies an H2 of roughly $80–95B — consensus has Q3 at $37.8B on this line, the ladder still climbing.</p>' },
-        'Family of Apps revenue':{ t:'Advertising + other revenue', h:'<p>FoA = advertising (~98%) + other revenue (paid messaging, Meta Verified, and now Meta One) — the other line crossed $1B/quarter in Q2 (+73%) and is the surface where subscription monetization would first show.</p>' },
-        'Daily Active People (DAP)':{ t:'Family-wide daily actives, in billions', h:'<p>Daily Active People across the Family of Apps, period average — 3.6B as of Q2, with Instagram past 2B DAU and Threads past 500M MAU (both disclosed on the Q2 call).</p>' },
-        'Ad impressions growth (YoY)':{ t:'This line IS a YoY rate', h:'<p>Ad impressions delivered as a YoY % change — the cell shows the rate itself; the growth lens does not apply. Decelerating gently (+19% → +14% through 1H26) as comps toughen; the split vs price is what decomposes any revenue surprise.</p>' },
-        'Avg price per ad (YoY)':{ t:'This line IS a YoY rate', h:'<p>Average price per ad as a YoY % change — held at +12% in Q2 despite tougher comps, with the first system-level AI attribution behind it (Generative Recommender +8.3% clicks / +15.7% conversions). The quality lever to watch as the volume lever decelerates.</p>' }
-      },
-      us:{ 'Revenue':{v:65.2}, 'Operating income':{v:30.4}, 'Capex':{v:41.4}, 'Family of Apps revenue':{v:64.7} },
-      debate:{ rows:null, synth:'The one thing to resolve: do the monetization surfaces (Model API · Meta One · Business Agents · a compute deal) start carrying <b>disclosed dollars</b> while the ad engine laps the FX flip — or is Q3 another quarter of premium-priced promises funded by a ~zero-FCF cash line and a rising debt stack?' }
-    },
-    results:null, call:null },
-
-  // ── REPORTED: Q2 2026 (quarter ended Jun 2026; reported Jul 29, 2026 AMC) ──
-  //
-  // CONSENSUS PROVENANCE — BBG_CONSENSUS.txt, `data_as_of` 2026-05-01: the last
-  // snapshot before the print, so its `fq+1` ("2026 Q2 (Fwd)") IS this quarter.
-  // YoY = that row's `fq-3` (Q2 2025, a reported actual). Summit = the model's
-  // frozen per-quarter projections (2026-05-22 vintage, js/results-data/meta.js).
-  { q:'Q2 2026', status:'reported', date:'July 29, 2026 · after close (call 5:00pm ET)',
-    setup:{
-      source:'Bloomberg (BST) — BBG_CONSENSUS.txt snapshot archive · Summit — frozen 2026-05-22 vintage', asOf:'2026-05-01',
-      notes:{
-        'Revenue':{ t:'Guided $58–61B — and the Street sits at the top of it', h:'<p>Management guided Q2 2026 total revenue to <b>$58–61B</b> with FX an ~2% tailwind; consensus ($60.0B) sits at the top of the range. Meta has landed in the top half of its guide (or above it) in nearly every print since 1Q23.</p><p>Comps toughen vs Q2 2025 (+22%); the drivers to watch are price-per-ad and impressions, both already YoY lines in the custom KPIs below.</p>' },
-        'Operating income':{ t:'Not guided directly — read it through the expense guide', h:'<p>Meta guides FY total expenses (<b>$162–169B</b> for 2026), not operating income. Management reiterated FY26 operating income <b>above 2025</b> — the swing factors are the capex-driven depreciation ramp and AI-talent comp.</p><p>⚠ The Summit number here ($29.4B) is the <b>2026-05-22 re-rated vintage</b>, which lifted FY26 op income $92→$117B with no print in between — flagged for the model owner; treat it as the model\'s live view, not a calibrated forecast.</p>' },
-        'EPS (diluted)':{ t:'Read EPS ex the tax items', h:'<p>Recent EPS is distorted by discrete tax items: 3Q25 carried a <b>−$15.93B</b> non-cash OBBBA deferred-tax charge (GAAP EPS $1.05), and 1Q26 the mirror-image <b>+$8.03B</b> benefit (GAAP $10.44, ex-benefit ~$7.31). Guided tax rate 13–16% for the rest of 2026 — read the line ex the discrete items, and expect the YoY chip to be noisy for two more quarters.</p>' },
-        'Capex':{ t:'Basis note — this line is PP&E-only', h:'<p>The archive line is <code>CF_PURCHASE_OF_FIXED_PROD_ASSETS</code> — purchases of property & equipment, sign-flipped positive. <b>Meta states capex including principal payments on finance leases</b>, ~2–4% higher; the FY26 guide (<b>$125–145B</b>, raised from $115–135B at the Q1 print) is on Meta\'s stated basis. Same basis gap in the Summit model\'s capex line.</p>' },
-        'Family of Apps revenue':{ t:'Advertising + other revenue', h:'<p>FoA = advertising (~98%) + WhatsApp Business paid messaging / Meta Verified. The custom KPI set is the file\'s own (kpi1–kpi4): FoA revenue · DAP · impressions growth · price-per-ad growth.</p>' },
-        'Daily Active People (DAP)':{ t:'Family-wide daily actives, in billions', h:'<p>Daily Active People across the Family of Apps (Facebook, Instagram, WhatsApp, Messenger, Threads), period average. ~3.6B — approaching half of humanity; the growth left is engagement depth and monetization per person, not user count.</p>' },
-        'Ad impressions growth (YoY)':{ t:'This line IS a YoY rate', h:'<p>The file carries ad impressions delivered as a <b>YoY % change</b>, not a level — so the cell shows the rate itself and the growth lens does not apply (a growth of a growth means nothing). Impressions + price-per-ad together decompose ad revenue growth.</p>' },
-        'Avg price per ad (YoY)':{ t:'This line IS a YoY rate', h:'<p>Average price per ad as a <b>YoY % change</b>. The ad engine\'s quality lever: +12% in 1Q26 (from +6% in 4Q25) on AI ranking gains (GEM, Lattice, Adaptive Ranking). The growth lens does not apply to a rate line.</p>' }
-      },
-      us:{ 'Revenue':{v:59.5}, 'Operating income':{v:29.4}, 'Capex':{v:36.4}, 'Family of Apps revenue':{v:59.1} },
-      debate:{ rows:null, synth:'The one thing to resolve: does the AI investment start showing <b>monetization / ROIC signposts</b> — or does another capex raise (plus the hinted 2027 step-up) arrive with the payoff still described in adjectives?' }
-    },
-    // ── SINGLE FILL (v2.8): results + call landed together, 2026-07-30, from the Jul 29 8-K
-    // (Ex. 99.1) + the earnings-call transcript (5:00pm ET; see docs/calls/META-latest.md).
-    results:{
-      headline:'The engine beat and the optics missed: +28% revenue against an EPS bar that $3.6B of charges made unbeatable — while the capex floor rose again and quarterly FCF went to ~zero.',
-      summary:{
-        paras:[
-          { p:'<b>Q2 2026 was a clean beat wearing a dirty print.</b> Revenue accelerated to <b>$60.8B (+28%)</b>, grazing the top of the $58–61B guide — but EPS printed <b>$6.18 against a ~$7.17 bar</b> and operating income FELL 8%, entirely because the quarter swallowed <b>$2.4B of legal-proceedings charges and $1.2B of severance</b> from the May headcount reduction. Ex those items, operating income grew ~9%. The tape sold the optics (~−9% <span class="ce-gl" data-def="Trading after the 4pm ET close, on lower volume — moves often partially retrace by the next regular session.">after hours</span>), but the miss was manufactured by charges the desk already had flagged as a live risk — the legal red-line fired, the operating engine did not.',
-            more:'The reading order for this print: score revenue and the ad KPIs against the frozen numbers (clean beat), score EPS/op income only ex-charges (roughly in line), and treat the legal charge itself as the resolution of Watch theme #5 — the "may result in a material loss" language stopped being hypothetical this quarter.' },
-          { p:'<b>The ad engine got its clearest AI attribution yet.</b> Ad revenue grew +27% (+26% <span class="ce-gl" data-def="Growth stripped of currency swings — last year re-priced at this year\'s exchange rates, so the number reflects real volume and price.">constant-currency</span>) on impressions +14% and price-per-ad +12% — and for the first time management put system-level numbers on the AI stack: the new <b>Meta Generative Recommender</b> (LLMs reasoning about ad content and user preferences together, replacing per-ad scoring) drove <b>+8.3% ad clicks and +15.7% conversions on Facebook</b>, and Advantage+ end-to-end reached a <b>$75B annual <span class="ce-gl" data-def="The current quarter\'s (or month\'s) pace annualized — not trailing-twelve-month revenue.">run-rate</span></b>.',
-            moreLabel:'＋ more — the attribution chain, engagement included',
-            more:{ body:'The engagement side compounds the same way: the inventory the ads auction sells is itself increasingly AI-manufactured.',
-              nodes:[
-                { t:'Recommendations — the LLM turn', body:'Every public Instagram Reels/feed post now runs through an LLM; the largest single Reels ranking release to date (+15bps Instagram sessions); over half of recommended content is now <b>less than a day old</b> (2x a year ago). Instagram time spent grew double digits; Facebook video +9% global / +10% US.' },
-                { t:'Disclosure cluster', body:'<b>Instagram passed 2B daily actives</b> (announced on this call), Threads 500M+ monthly, DAP 3.6B. User-control surfaces (Your Algo, Shape Your Feed) show 80%+ retention among users who touch them — recommendations as a product, not just a ranking.' } ] } },
-          { p:'<b>The monetization question finally got surfaces with numbers attached.</b> Four quarters of "milestones, not dollars" gave way to shipped product: <b>Meta Business Agents</b> went global on WhatsApp/Messenger with <b>1M+ businesses using them weekly</b> (Movida resolves 85% of booking conversations with no human), a <b>high-intelligence Model API</b> launched (Muse Spark on OpenRouter), <b>Meta One</b> subscriptions rolled out, and Mark said Meta is fielding <b>compute offers "at a significant premium"</b> — with the doctrine that "there will continue to be a significantly higher margin on selling intelligence rather than selling compute." Still no AI revenue line — but the answer moved from adjectives to products.',
-            more:'Zuckerberg\'s framing of the end state: business agents evolve toward "a business-in-a-box service," priced like the ad system — "businesses only pay us when we achieve results." That is the first coherent description of how the AI spend becomes a revenue MODEL rather than a cost line; what it still lacks is a disclosed dollar figure, which is exactly what next quarter\'s Watch List hunts.' },
-          { p:'<b>The bill kept rising — and the funding doctrine is now explicit.</b> A record <b>$31.1B of capex in one quarter</b> (1H26: $50.9B) took quarterly <span class="ce-gl" data-def="Operating cash flow minus capital expenditure — the cash the business keeps after paying for its own growth.">free cash flow</span> to <b>$784M</b>; the FY26 capex guide <b>narrowed upward to $130–145B</b> (the floor rose $5B); total debt stands at $83.7B; and a <b>1GW El Paso data-center venture with BlackRock</b> was announced the day before the print. Susan, on capital: "a greater mix of debt as we work to bring down our cost of capital." And 2027 capex remains — for the third consecutive ask — an adjective: planning is "highly dynamic," near-term capacity "more valuable than long-term."',
-            more:{ body:'The demand-side defense was more specific than prior quarters: "we are today and expect to be in the foreseeable future demand-constrained — that includes our core business, where we still have numerous ROI-positive places we would put compute toward if we had it." The 2028+ stance is flexibility: land and power now, chip decisions later.',
-              nodes:[ { t:'Why the floor moved', body:'The low end rose $125→$130B with the range top unchanged — a narrowing that signals the year is landing in the upper half of the old range, not a re-basing like Q1\'s $10B raise. The severance and legal charges also pushed the FY expense guide floor up ($165–169B).' } ] } },
-          { p:'<b>Reality Labs actually turned.</b> RL revenue grew <b>+16%</b> (first meaningful growth since the glasses pivot) on AI-glasses strength that management called "exceeding our expectations" — the new Meta-brand line with EssilorLuxottica ships with Muse Spark onboard — while the operating loss of <b>$4.6B came in ~$450M smaller than the Street modeled</b>. Loss-peak framing intact, next catalyst Connect (Sep 23).' }
-        ]
-      },
-      notes:{
-        'Revenue':{ t:'Top of the guide, past the Street', h:'<p><b>$60.8B (+28%)</b> vs $60.0B modeled — grazing the top of the $58–61B guide, the eleventh straight print in the guide\'s upper half. FoA ad revenue $59.4B (+27%; +26% cc) on impressions +14% and price/ad +12%; FoA <b>other</b> revenue crossed $1B for the first time (+73%) on paid messaging + Meta Verified.</p>' },
-        'Operating income':{ t:'⚠ The dirtiest print in the window — read it ex-charges', h:'<p>$18.8B (−8%, 31% margin) vs $21.3B modeled — but the quarter carries <b>$2.4B of legal-proceedings charges + $1.18B of severance</b> (May headcount reduction). Ex those items ~$22.4B (<b>+9%</b>) — roughly on the Street\'s line. Total expenses $42.0B (+55%, +43% ex-items). FY26 expense guide floor raised to <b>$165–169B</b> to absorb the charges.</p>' },
-        'EPS (diluted)':{ t:'⚠ The miss is the charges', h:'<p>$6.18 vs $7.16 modeled (LSEG had $7.17) — the third straight quarter where the EPS optics are one-time items: after 3Q25\'s tax charge and 1Q26\'s benefit, 2Q26 carries $3.58B pre-tax of legal + severance. Ex-charges, roughly in line (derived). Tax rate normalized at 16%; guided <b>15–17%</b> for the rest of 2026 (raised from 13–16%).</p>' },
-        'Capex':{ t:'Record quarter — and the floor moved up', h:'<p>$30.1B on this (PP&E-only) line; <b>$31.1B as Meta states it</b> (incl. finance leases) — a record, vs $17.0B a year ago; 1H26 $50.9B. FY26 guide <b>narrowed to $130–145B</b> (floor +$5B). Funding: quarterly FCF $784M, total debt $83.7B, and the <b>BlackRock 1GW El Paso venture</b> under Meta Compute.</p>' },
-        'Operating cash flow':{ t:'The squeeze in one line', h:'<p>OCF $31.9B against $31.1B of stated capex → quarterly FCF <b>$784M</b>. The cash machine still covers the build — barely; the funding mix (debt + partnerships) is now doing the rest by explicit doctrine.</p>' },
-        'Family of Apps revenue':{ t:'$60.4B (+28%)', h:'<p>FoA revenue $60.4B vs $59.6B modeled; segment op income $23.4B carries the legal charges (they land in FoA). The other-revenue line crossing $1B (+73%) is the quiet compounder.</p>' },
-        'EBITDA':{ t:'No Q2 actual in the archive yet', h:'<p>The 2026-07-29 export carries no reported Q2 actual for this line (normal load lag, not corruption) — scoreable when the actual returns in the next snapshot.</p>' },
-        'Gross profit':{ t:'No Q2 actual in the archive yet', h:'<p>Same as EBITDA — the 07-29 export had not loaded this actual yet; nothing to score until the next snapshot.</p>' },
-        'Ad impressions growth (YoY)':{ t:'+14% — the volume lever', h:'<p>Printed +14% vs +13.2% modeled (this line is itself a YoY rate). Volume decelerating gently from Q1\'s +19% as comps toughen — while the price lever holds.</p>' },
-        'Avg price per ad (YoY)':{ t:'+12% — the quality lever held', h:'<p>+12% vs +11.5% modeled, flat with Q1\'s +12% despite tougher comps — the Generative Recommender / GEM attribution (+8.3% FB clicks, +15.7% conversions) says the pricing power is model-driven, not auction-scarcity-driven.</p>' }
-      },
-      watch:{ 'Capex':1, 'Revenue':3, 'Ad impressions growth (YoY)':3, 'Avg price per ad (YoY)':3, 'Operating income':5, 'EPS (diluted)':5 },
-      thesisCheck:[
-        { line:'Another capex raise with 2027 still unquantified and no monetization signpost', tripped:false, note:'Two clauses fired — the floor rose to $130–145B and 2027 stayed an adjective (third ask: "highly dynamic") — but the monetization-signpost clause finally got answered with shipped surfaces (Model API, Meta One, Business Agents at 1M businesses/week, compute offers at a premium). Dollars still undisclosed; the rank-1 hook stays open, but the red-line as written did not fully trip.' },
-        { line:'A trial or regulatory action lands as a material loss', tripped:true, note:'⚑ $2.4B of legal-proceedings charges LANDED in the quarter — the "may ultimately result in a material loss" language stopped being hypothetical. Youth-related US trials remain scheduled, same language repeated; the FY expense floor absorbed the hit.' },
-        { line:'Ad revenue decelerates sharply below ~20% as comps toughen', tripped:false, note:'+27% ad revenue (+26% cc) against the cycle\'s toughest comp; price/ad held at +12% with the first system-level AI attribution (Generative Recommender +8.3% clicks / +15.7% conversions).' },
-        { line:'Muse / MSL stays engagement-only with no monetization path', tripped:false, note:'The path shipped: Model API (Muse Spark on OpenRouter), Meta One subscriptions, Business Agents global with 1M+ businesses weekly, Meta AI daily interactions +60% since the Muse Spark integration. Revenue disclosure: still none.' },
-        { line:'RL losses grow rather than peak, or the glasses ramp stalls', tripped:false, note:'The opposite: RL revenue +16% (glasses "exceeding our expectations", new Meta-brand line with Muse Spark onboard), loss $4.6B ~$450M smaller than the Street\'s $5.1B. Peak framing intact; Connect Sep 23.' },
-      ],
-      intoCall:[
-        '💸 <b>The charges</b> — is $2.4B the extent of the legal exposure, or the first installment? (The release absorbed it into the expense guide floor.)',
-        '🏗️ <b>The floor</b> — $130–145B: landing in the upper half, or re-basing again? And does 2027 finally get a number? (Watch #1, third ask.)',
-        '🤖 <b>The surfaces</b> — Business Agents / Model API / Meta One: any dollar disclosure, pricing, or adoption curve? (Watch #2.)',
-        '🥽 <b>The RL turn</b> — +16% with a smaller loss: is the glasses ramp finally big enough to bend the segment? (Watch #4.)',
-      ],
-      priceReaction:'−7.95% next-day close (Jul 30: $539.03 vs $585.61) — the tape sold the EPS optics + the higher capex floor; the after-hours ~−9% move mostly held into the close.' },
-    call:{
-      take:'The monetization answer finally moved from adjectives to shipped products — while the bill\'s funding doctrine (debt + partners, 2027 TBD) was said out loud for the first time.',
-      highlights:[
-        { tag:'watch', band:'lead', open:'2027 capex: a number or a fourth adjective? And does the $130B floor hold?',
-          head:'The capex floor rose again ($130–145B) with a stated funding doctrine — debt mix + partnerships (BlackRock 1GW) — and 2027 still "highly dynamic"',
-          detail:'<p>Nowak and Sheridan both pressed 2027: Susan gave process ("infrastructure planning remains highly dynamic… near-term capacity is more valuable than long-term capacity"), not a number — the third consecutive quarter. The new content was the <b>funding doctrine</b>: strong operating cash flow first, then "a greater mix of debt as we work to bring down our cost of capital," now broadened to partnerships — the <b>BlackRock 1GW El Paso venture</b> announced the day before, under Meta Compute.</p><p><b>Demand defense, more specific than before:</b> "we are today and expect to be in the foreseeable future <b>demand-constrained</b> — that includes our core business, where we still have numerous ROI-positive places we would put compute toward if we had it." 2028+: land + power now, chip decisions later.</p>' },
-        { tag:'thesis', band:'lead', open:'Do the surfaces get dollars attached — API pricing/volume, Meta One subs, Business Agent economics?',
-          head:'The ROIC answer became products: Business Agents (1M businesses/week) · Model API · Meta One · compute at a premium — "higher margin on selling intelligence rather than selling compute"',
-          detail:'<p>Nowak\'s which-scales-first question got Mark\'s doctrine: <b>"there will continue to be a significantly higher margin on selling intelligence rather than selling compute directly"</b> — plus "meaningful growth in all of these areas" and "more to share soon."</p><p>The shipped stack: <b>Business Agents</b> global on WhatsApp/Messenger, <b>1M+ businesses weekly</b> (Movida: 85% of booking conversations resolved with no human), an enterprise <b>Business Agent Platform</b>, the <b>Model API</b> (Muse Spark on OpenRouter, "competitive price"), and <b>Meta One</b> subscriptions. End state per Mark: "a business-in-a-box service," paid like ads — "businesses only pay us when we achieve results."</p><p><b>Open:</b> not one of these carries a disclosed dollar figure yet.</p>' },
-        { tag:'tone', band:'context',
-          head:'The candor pair: charges absorbed into the guide without spin, and the compute trade-off argued from first principles',
-          detail:'<p>Susan walked the $2.4B legal + $1.2B severance through the P&L unprompted and raised the expense floor to absorb them — no adjusted-EPS theater in the release. Mark, on selling compute: "it would be foolish to basically just sell all of the compute and take a short-term profit… when you have the opportunity to build intelligence on top of it" — an argument against the easy near-term revenue his own bulls keep asking for.</p>' },
-        { tag:'thesis', band:'context',
-          head:'The ad-AI attribution cluster: Generative Recommender +8.3% clicks / +15.7% conversions · Advantage+ $75B run-rate · price/ad +12% into the toughest comp',
-          detail:'<p>The first quarter where the AI→ads chain is quantified end-to-end: LLM-based ad retrieval (the "paradigm shift" from per-ad scoring), GEM + sequence learning, 9M small businesses on AI creative tools (image-gen adoption doubled in the quarter). Settled strength — the cash engine\'s AI story no longer needs asserting.</p>' },
-        { tag:'thesis', band:'context',
-          head:'Reality Labs turned: +16% revenue, loss ~$450M smaller than the Street, glasses "exceeding our expectations"',
-          detail:'<p>The new Meta-brand glasses line with EssilorLuxottica (incl. the Kylie Jenner style) is the first to ship with Muse Spark onboard. Quest still shrinking; the wearables pivot is carrying the segment. Loss-peak framing intact; next catalyst Connect, Sep 23.</p>' },
-        { tag:'curious', band:'context',
-          head:'Instagram crossed 2B daily actives; Threads 500M+ monthly — the engagement disclosure cluster',
-          detail:'<p>New rungs on the inventory machine: Instagram <b>2B DAU</b> (announced on this call), Threads <b>500M+ MAU</b>, DAP 3.6B, Facebook video +9% global / +10% US, over half of recommended content now <1 day old (2x YoY). User-control surfaces (Your Algo, Shape Your Feed) retain 80%+ of users who touch them.</p>' },
-        { tag:'watch', band:'logged', open:'A dated promise: open-source models return "at some point soon" — score it next call.',
-          head:'The open-source stance softened: "we expect that we will get back to releasing some open source models at some point soon"',
-          detail:'<p>Sandler and Gawrelski both probed the closed pivot; Mark reframed it as sequencing, not doctrine ("I just wanted to make sure the MSL team was uninhibited") and committed to a mixed open/closed future. Alongside: larger Muse models "in the process of scaling." Two shippable promises on the record.</p>' },
-        { tag:'curious', band:'logged',
-          head:'Meta is fielding compute offers "at a significant premium over what we paid for it"',
-          detail:'<p>Said twice, unprompted and in Q&A (Anmuth). The scarcity said out loud: "there\'s just nowhere near enough compute for all the demand." Read with Susan\'s demand-constrained framing, it is the first market-price evidence for the infrastructure\'s option value — without a single disclosed transaction.</p>' },
-        { tag:'logged', band:'logged',
-          head:'Call colour: WhatsApp peaked at 30M messages/second in the World Cup final · incognito mode shipped · headcount 75K (−3% QoQ)',
-          detail:'<p>The World Cup stat is the scale flex; incognito mode (assistant conversations "even Meta can\'t see") is the trust play for personal agents; headcount down ~8,000 from the May reduction — the "leaner, AI-native" promise showing up in the denominator.</p>' },
-      ],
-      dots:'The three big threads braided on this call: the <b>spend</b> (floor up, FCF ~zero, debt + BlackRock), the <b>proof</b> (Business Agents / API / Meta One — surfaces shipped, dollars withheld), and the <b>engine</b> (ads +27% with the first quantified AI attribution). The print\'s message is that the engine now visibly funds the spend while the proof layer ships product — what is still missing, for the fourth straight quarter, is a NUMBER on either the 2027 bill or the AI revenue. Both sides of the trade are still adjectives.',
-      threeMinutes:[
-        '<b>The miss is manufactured; the engine beat.</b> Revenue +28% at the top of the guide; EPS "missed" only because $3.6B of legal + severance charges landed in one quarter — ex-charges, operating income grew ~9%. Score the quarter ex-items and it is the same accelerating ad story as Q1.',
-        '<b>The monetization answer finally shipped.</b> Business Agents at 1M businesses/week, a Model API on OpenRouter, Meta One subscriptions, and compute bids at a premium — "higher margin selling intelligence than selling compute." The adjectives became products; the products still lack dollars. That is next quarter\'s hunt.',
-        '<b>The bill\'s funding doctrine is now explicit.</b> Record $31.1B capex quarter, FCF $784M, floor raised to $130B — funded by cash flow, then "a greater mix of debt," then partners (BlackRock 1GW). 2027 is still an adjective after a third direct ask.',
-        '<b>Reality Labs quietly turned.</b> +16% revenue on glasses "exceeding expectations," loss ~$450M better than the Street. The bet\'s worst segment is inflecting exactly as guided — watch Connect (Sep 23) for the next leg.',
-      ],
-      notBringing:[
-        { item:'The −9% after-hours move', why:'An optics-driven reaction to a charges-manufactured miss; quoting it as verdict misreads the print. The next-day close is the scoreable number.' },
-        { item:'WhatsApp World Cup records / Kylie Jenner glasses', why:'Great colour, already in every recap; logged in the aside — nothing to argue.' },
-        { item:'Muse Spark 1.1 benchmark positioning', why:'The lab debate (efficient-small vs frontier-large) matters, but the tradeable items are the shipped surfaces and the open-source promise — both tracked.' },
-      ],
-      newQuestions:[
-        { n:'2027 capex: a number or a fourth adjective — and does the $130B floor hold?', landed:{ q:'Q3 2026', rank:1 }, tripped:true },
-        { n:'Do the monetization surfaces get dollars attached (Model API pricing/volume, Meta One subs, Business Agent economics, a compute deal)?', landed:{ q:'Q3 2026', rank:2 } },
-        { n:'Does the ad engine hold mid/high-20s through the FX flip (~1% headwind) and the comp lap?', landed:{ q:'Q3 2026', rank:3 } },
-        { n:'Is $2.4B the extent of the legal exposure — or the first installment, with the youth trials still live?', landed:{ q:'Q3 2026', rank:4 } },
-        { n:'Do the two model promises ship: larger Muse models + the open-source return, both "soon"?', landed:{ q:'Q3 2026', rank:5 } },
-      ],
-    } },
-
-  // ── REPORTED: Q1 2026 (quarter ended Mar 2026; reported Apr 29, 2026) ──
-  { q:'Q1 2026', status:'reported', date:'April 29, 2026',
-    setup:{
-      // Grid RECONSTRUCTED 2026-07-30 from BBG_CONSENSUS.txt, snapshot `data_as_of`
-      // 2026-01-30 — the last pull before this quarter printed, so its `fq+1` IS the
-      // consensus that stood going in. Contemporaneous, recovered — not a retro-fit.
-      source:'Bloomberg (BST) — BBG_CONSENSUS.txt snapshot archive · reconstructed from the 2026-01-30 pull', asOf:'2026-01-30',
-      notes:{
-        'EPS (diluted)':{ t:'The tax-noise quarter', h:'<p>Consensus $6.56 against a print of <b>$10.44</b> — but the beat is the <b>+$8.03B tax benefit</b> (the partial reversal of 3Q25\'s OBBBA charge), not operations. Ex-benefit ~$7.31. Score the operating lines, not this one.</p>' },
-        'Capex':{ t:'The real capex news was the guide', h:'<p>The quarterly print ($19.8B vs $16.8B modeled) was the small news. The big news: the FY26 guide was <b>raised to $125–145B</b> (from $115–135B) on memory/component costs, plus a <b>$107B step-up in contractual commitments</b>.</p>' }
-      },
-      us:{ 'Revenue':{v:52.9}, 'Operating income':{v:25.0}, 'Capex':{v:28.5}, 'Family of Apps revenue':{v:52.3} },
-      debate:{ rows:null, synth:'Going in, the bar was "ad engine keeps humming + the first MSL model lands." The risk the tape was pricing: how much higher capex goes, and whether the AI investment shows any ROIC signpost.' },
-      pricedIn:'Strong ad growth (high-20s/low-30s), 40%+ op margin, and the first model from Meta Superintelligence Labs. The open questions: how much higher does capex go, and does the AI investment show any ROIC signpost?',
-      oneLiner:'The bar was "ad engine keeps humming + first AI model lands" — Meta beat on revenue but raised capex AGAIN and gave no ROIC framework, so the debate stayed spend-vs-proof.' },
-    results:{
-      headline:'A strong ad print overshadowed by the spend: revenue $56.3B (+33%), op income $22.9B (41% margin) — but capex was RAISED again to $125–145B, contractual commitments stepped up $107B, and EPS ($10.44) was flattered by an $8.03B tax benefit (ex-benefit $7.31).',
-      notes:{
-        'Revenue':{ t:'The ad engine accelerated', h:'<p>$56.3B (+33%) vs $54.9B modeled. FoA ad revenue <b>$55.0B (+33%; +29% cc)</b>; price/ad +12% (from +6% in Q4); impressions +19% — acceleration on AI ranking (GEM, Lattice, Adaptive Ranking Model; value-optimization run-rate >$20B).</p>' },
-        'Operating income':{ t:'41% margin', h:'<p>$22.9B vs $19.3B modeled (+18.6%) — the margin held at 41% while total expenses grew; the FY26 expense guide was held at $162–169B with a headcount reduction planned for May.</p>' },
-        'EPS (diluted)':{ t:'⚠ Tax-flattered', h:'<p>$10.44 vs $6.56 modeled — an <b>$8.03B tax benefit</b> (partial reversal of the 3Q25 OBBBA charge) drove the optics; tax rate −23% (14% absent the benefit), guided 13–16% for the rest of 2026. Ex-benefit ~$7.31: a real but ordinary beat.</p>' },
-        'Capex':{ t:'The guide moved, again', h:'<p>$19.8B printed vs $16.8B modeled (+18%) — and the FY26 guide went to <b>$125–145B</b> with a <b>$107B</b> contractual-commitment step-up. Susan declined a 2027 number ("dynamic planning"); Brian Nowak pushed on ROIC signposts and got qualitative milestones.</p>' },
-        'Avg price per ad (YoY)':{ t:'+12% — accelerating', h:'<p>Up from +6% in Q4 on ad-performance improvements, better macro, and FX; partially offset by lower-monetizing-region impression mix. The quality lever of the ad engine\'s acceleration.</p>' }
-      },
-      watch:{ 'Capex':1, 'Revenue':3, 'Avg price per ad (YoY)':3 },
-      thesisCheck:[
-        {line:'Ad engine strong into comps', tripped:false, note:'Ad rev +33%, price/ad +12%, impressions +19% — accelerated on AI ranking; held strongly.'},
-        {line:'Capex FY26 guide holds ($115–135B)', tripped:true, note:'⚑ RAISED to $125–145B on memory/component costs; +$107B contractual commitments — the guide did not hold.'},
-        {line:'First MSL model ships credibly', tripped:false, note:'Muse Spark shipped; double-digit Meta-AI session gains; "leading lab on track" — held (engagement, not revenue yet).'},
-        {line:'RL losses peaking; glasses offset', tripped:false, note:'RL rev $402M (−2%); glasses up, Quest down — consistent with the peak framing; held.'},
-      ],
-      intoCall:[
-        'How much higher does capex go — any 2027 framework or ROIC signpost?',
-        'Does Muse Spark / MSL have any monetization path, or is it engagement-only?',
-        'How durable is the ad-engine acceleration (price/ad +12%) into tougher comps?',
-      ],
-      priceReaction:'Next trading day: −8.6% (approximate move, per the calls record).' },
-    call:{
-      take:'A strong ad print whose <b>story is the spend</b>: revenue +33% and a 41% op margin, but capex was raised AGAIN to $125–145B with a $107B step-up in contractual commitments — and management framed the AI payoff (Muse Spark / MSL) in <b>milestones, not dollars</b>. The ad engine is funding a bet whose ROIC is still asserted, not shown; EPS optics ($10.44) were tax-flattered.',
-      highlights:[
-        { tag:'watch', band:'lead', head:'Capex raised AGAIN to <b>$125–145B</b> + a <b>$107B</b> step-up in contractual commitments — with no 2027 number.',
-          open:'Where is the ROIC framework? Brian Nowak asked for signposts; Mark gave qualitative milestones (model quality → product scale → monetization), and Susan declined a 2027 figure ("dynamic planning").',
-          detail:'<p>The FY26 capex guide went from $115–135B (Q4) to <b>$125–145B</b> on higher memory/component pricing plus additional data-center costs. On top, multi-year cloud deals + infrastructure purchase agreements drove a <b>$107B step-up in contractual commitments</b> this quarter — spend that lands over 2026–2027.</p><p>Peers flagged a big 2027 step-up on their own calls; Susan would not quantify Meta\'s, citing a "very dynamic planning process." So the spend keeps climbing while the return remains a <b>trajectory, not a number</b> — the core tension of the print.</p>' },
-        { tag:'thesis', band:'lead', head:'Muse Spark / MSL: the first model landed, but the payoff is <b>engagement, not revenue</b>.',
-          open:'What monetizes it? Double-digit Meta-AI session gains are promising, but there is no revenue signal or product-to-revenue timeline — the thing the $125–145B is meant to earn.',
-          detail:'<p>Muse Spark — the first model from Meta Superintelligence Labs — now powers Meta AI across the Family of Apps, driving <b>double-digit percent increases in Meta-AI sessions per user</b> and a top-of-app-store ranking. Mark: the lab is "on track to be a leading lab," with more advanced models in training.</p><p>His ROIC formula ("build leading models → leading products → monetize at scale") is the same one Meta has run for 20 years — but for now the AI bet is validated on <b>usage and model quality</b>, not dollars. That is the gap the next few prints have to close.</p>' },
-        { tag:'thesis', band:'context', head:'The ad engine <b>accelerated</b> — revenue +33%, price/ad +12%, impressions +19%.',
-          detail:'<p>FoA ad revenue $55.0B (+33%); price/ad +12% (up from +6% in Q4); impressions +19%. Driven by AI ranking (GEM, Lattice, Adaptive Ranking Model), value-optimization run-rate now >$20B (2x YoY), partnership-ads run-rate $10B (2x). This is the cash engine underwriting the AI build — settled strength.</p>' },
-        { tag:'thesis', band:'context', head:'Business AIs scaling — <b>10M conversations/week</b>, up from 1M at the start of the year.',
-          detail:'<p>Business AIs expanded on WhatsApp (LatAm, Indonesia) and Messenger (APAC); the Meta AI business assistant fully rolled out to eligible advertisers (20% higher issue-resolution rate). 8M+ advertisers using gen-AI creative tools. Early monetization surface for the AI stack.</p>' },
-        { tag:'thesis', band:'context', head:'Leaner operating model — headcount reduction planned for <b>May</b>; opex guide unchanged.',
-          detail:'<p>77,900 employees (−1% QoQ); a further reduction announced internally for May. FY26 total-expense guide held at $162–169B. The "AI-native, flatter teams" framing as the offset to the capex ramp.</p>' },
-        { tag:'watch', band:'logged', head:'EPS $10.44 <b>tax-flattered</b> — $8.03B benefit vs the Q3\'25 $15.93B charge.',
-          detail:'<p>Q1 tax rate −23% on an $8.03B benefit partially relieving the prior R&D-capitalization charge; ex-benefit EPS would be $7.31 and tax rate 14%. Guided 13–16% for the rest of 2026. Read the EPS line ex the discrete items.</p>' },
-        { tag:'watch', band:'logged', head:'Regulatory: US <b>youth trials</b> this year — "may result in a material loss"; EU headwinds.',
-          detail:'<p>Legal expense elevated; management flagged additional US youth-related trials in 2026 and continued EU/US scrutiny that "could significantly impact our business and financial results."</p>' },
-        { tag:'watch', band:'logged', head:'Custom silicon + Reality Labs pivot — Broadcom 1GW, AMD, Nvidia; glasses tripling.',
-          detail:'<p>Rolling out >1GW of Meta\'s own Broadcom-developed silicon + AMD to complement Nvidia ("Meta Compute" efficiency edge). RL revenue $402M (−2%): Quest down, AI glasses tripling YoY; losses framed as peaking this year.</p>' },
-      ],
-      dots:'The two lead items are the same trade from both sides: the <b>capex keeps rising</b> (now $125–145B + $107B commitments) precisely because the <b>AI products are working on engagement</b> (Muse Spark) — but neither the spend nor the payoff has a number attached (no 2027 capex, no AI revenue). The ad engine (+33%, price +12%) is the only fully-quantified part of the story, and it is funding a bet the market is asked to take on trajectory. The next print\'s job: put a number on either side.',
-      threeMinutes:[
-        '<b>The print is about the spend, not the beat.</b> Revenue +33% and a 41% margin are great, but capex was raised AGAIN to $125–145B with a $107B step-up in contractual commitments — and management gave no 2027 figure and no ROIC framework (Brian Nowak asked; Mark gave qualitative milestones). The debate stays spend-vs-proof.',
-        '<b>Muse Spark landed — the AI bet is validated on engagement, not revenue.</b> The first Meta-Superintelligence-Labs model drove double-digit Meta-AI session gains, but there\'s no monetization path yet. That\'s the gap the capex is meant to close, and the next prints have to start closing it.',
-        '<b>The ad engine is the only fully-quantified part of the story — and it\'s accelerating.</b> Ad revenue +33%, price/ad +12% (from +6%), impressions +19% on AI ranking; value-optimization run-rate >$20B. It\'s funding everything; watch it as the tell if the AI spend is ever going to be underwritten.',
-      ],
-      notBringing:[
-        {item:'EPS $10.44 headline', why:'Tax-flattered by an $8.03B benefit; the clean number is ~$7.31 — leading with the headline EPS misreads the quarter.'},
-        {item:'Reality Labs quarterly revenue', why:'$402M (−2%) is noise; the signal is the loss-peak framing + glasses pivot, not the print.'},
-        {item:'Individual ad-product features', why:'GEM/Lattice/Adaptive Ranking are real but everyone has the release; the debate is capex ROIC, not feature lists.'},
-      ],
-      newQuestions:[
-        {n:'How much higher does capex go — any 2027 framework or ROIC signpost?', landed:{q:'Q2 2026', rank:1}, tripped:true},
-        {n:'Does Muse Spark / MSL have a monetization path, or engagement-only?', landed:{q:'Q2 2026', rank:2}},
-        {n:'How durable is the ad-engine acceleration into tougher comps?', landed:{q:'Q2 2026', rank:3}},
-        {n:'Do Reality Labs losses actually peak and start declining?', landed:{q:'Q2 2026', rank:4}},
-        {n:'How do the US youth trials / EU headwinds resolve?', landed:{q:'Q2 2026', rank:5}},
-      ] } },
-
-  // ── REPORTED: Q4 2025 (quarter ended Dec 2025; reported Jan 28, 2026) ──
-  { q:'Q4 2025', status:'reported', date:'January 28, 2026',
-    setup:{
-      // Grid RECONSTRUCTED 2026-07-30 from BBG_CONSENSUS.txt, snapshot `data_as_of`
-      // 2025-10-31 — the last pull before this quarter printed.
-      source:'Bloomberg (BST) — BBG_CONSENSUS.txt snapshot archive · reconstructed from the 2025-10-31 pull', asOf:'2025-10-31',
-      notes:{
-        'EPS (diluted)':{ t:'A clean tax quarter between two noisy ones', h:'<p>Tax rate 10% (below the 12–15% outlook) on settlements — contrast with 3Q25\'s −$15.93B OBBBA charge and 1Q26\'s +$8.03B partial reversal. This is the cleanest EPS print in the window.</p>' }
-      },
-      us:{ 'Revenue':{v:59.3}, 'Operating income':{v:24.4}, 'Family of Apps revenue':{v:58.3} },
-      debate:{ rows:null, synth:'The bar was "finish 2025 strong and set a credible FY26 spend frame" — the open question was how big the 2026 AI-infra step-up would be, and whether the AI product roadmap was credible.' },
-      pricedIn:'A record holiday quarter: mid-20s ad growth, 40%+ margin, and the initial FY26 capex/expense frame. The open question was how big the 2026 AI-infra step-up would be and whether the AI product roadmap was credible.',
-      oneLiner:'The bar was "finish 2025 strong and set a credible FY26 spend frame" — Meta beat (+24%, 41% margin) and set FY26 capex at $115–135B, framing 2026 as the year AI changes how it works.' },
-    results:{
-      headline:'A record close to 2025: revenue $59.9B (+24%), op income $24.7B (41% margin), EPS $8.88 — with the initial FY26 capex frame ($115–135B) and "2026 is the year AI changes how we work" as the setup.',
-      notes:{
-        'Revenue':{ t:'Record holiday demand', h:'<p>$59.9B (+24%; +23% cc) vs $58.1B modeled. FoA ad revenue $58.1B (+24%); price/ad +6%; impressions +18% — record-breaking holiday demand + AI-ranking gains (Reels watch-time +30% YoY US).</p>' },
-        'Operating income':{ t:'Margin held on revenue speed', h:'<p>$24.7B (41% margin) vs $23.9B modeled. Total expenses $35.1B (<b>+40%</b>) on AI-talent comp, legal expense, and infrastructure (depreciation + cloud) — the margin held only because revenue grew +24%. The cost ramp is the dynamic to watch as growth normalizes.</p>' },
-        'EPS (diluted)':{ t:'Tax rate 10%', h:'<p>$8.88 vs $8.19 modeled — helped by a 10% tax rate (below the 12–15% outlook) on settlements. A cleaner quarter than the tax-noisy 3Q25/1Q26 on either side of it.</p>' },
-        'Capex':{ t:'The real news: the FY26 frame', h:'<p>$22.1B printed vs $21.2B modeled. The news was the guide: initial FY26 capex at <b>$115–135B</b>, <b>Meta Compute</b> announced (efficiency-as-strategy), and Dina Powell McCormick joining to lead sovereign / strategic-capital partnerships for capacity.</p>' }
-      },
-      watch:{ 'Capex':1, 'Revenue':3, 'EPS (diluted)':5 },
-      thesisCheck:[
-        {line:'Ad engine record holiday strength', tripped:false, note:'Ad rev +24% on record holiday demand + AI ranking; held.'},
-        {line:'Credible FY26 capex frame', tripped:false, note:'Set at $115–135B with Meta Compute; framed but large — held (and later raised in Q1).'},
-        {line:'AI roadmap credible', tripped:false, note:'First models "shipping over coming months"; MSL rebuilt — held (execution TBD).'},
-        {line:'RL losses framed to peak', tripped:false, note:'Losses ~flat this year and "likely the peak"; glasses pivot — held.'},
-      ],
-      intoCall:[
-        'How big does the 2026 capex ramp get, and is the AI roadmap specific?',
-        'Does the ad engine hold as holiday comps roll off?',
-        'Is the Reality Labs loss peak real, and how fast do glasses scale?',
-      ],
-      priceReaction:'Next trading day: +10.4% (approximate move, per the calls record).' },
-    call:{
-      take:'A record close to 2025 (revenue +24%, 41% margin, EPS $8.88) that set the frame for the year to come: FY26 capex at <b>$115–135B</b>, Meta Compute as an efficiency thesis, and "2026 is the year AI changes how we work." Strong ad engine, but the story is the setup for a very large spend year.',
-      highlights:[
-        { tag:'thesis', band:'lead', head:'FY26 capex framed at <b>$115–135B</b> + Meta Compute — the spend year is set.',
-          open:'How much does it climb from here, and what returns? The frame is large and explicitly a starting point; the ROIC question was left for execution.',
-          detail:'<p>Management set the initial FY26 capex guide at $115–135B and introduced <b>Meta Compute</b> — the thesis that being the most efficient at building infrastructure becomes a strategic advantage. <b>Dina Powell McCormick</b> joined as President & Vice Chairman to lead sovereign / strategic-capital partnerships for long-term capacity. The setup for a very large, AI-driven spend year.</p>' },
-        { tag:'thesis', band:'context', head:'Ad engine record holiday strength — revenue +24%, price/ad +6%, impressions +18%.',
-          detail:'<p>Record-breaking holiday demand + AI-ranking gains (Reels watch-time +30% YoY US; Facebook video double-digit). The cash engine funding the AI build.</p>' },
-        { tag:'thesis', band:'context', head:'"2026 is the year AI changes how we work" — leaner, AI-native, flatter teams.',
-          detail:'<p>Mark: investing in AI-native tooling, elevating ICs, flattening teams; "projects that used to require big teams now done by a single talented person." The efficiency offset to the capex ramp — to show up in 2026.</p>' },
-        { tag:'thesis', band:'context', head:'Reality Labs — losses "likely the peak" this year; investment pivots to glasses.',
-          detail:'<p>RL rev $955M (−12%) on Quest lapping; losses ~flat this year and "likely the peak," then gradually declining. Investment redirected to glasses/wearables (tripled sales) + making Horizon/VR sustainable.</p>' },
-        { tag:'watch', band:'logged', head:'Expenses +40% — the cost ramp is real; margin held only on revenue speed.',
-          detail:'<p>Total expenses $35.1B (+40%) on AI-talent comp, legal expense, and infrastructure (depreciation + cloud). The 41% margin held because revenue grew +24% — a dynamic to watch as growth normalizes.</p>' },
-        { tag:'watch', band:'logged', head:'Tax rate 10% — a clean quarter between the tax-noisy Q3\'25 and Q1\'26.',
-          detail:'<p>Tax rate 10% (below the 12–15% outlook) on settlements. Contrast with the Q3\'25 $15.93B non-cash R&D-capitalization charge and the Q1\'26 $8.03B partial reversal.</p>' },
-      ],
-      dots:'The Q4 print planted the two tensions that dominate 2026: the <b>capex frame</b> ($115–135B, explicitly a floor) and the <b>AI roadmap</b> (models "shipping soon"). Both resolved toward "bigger and later" in Q1 2026 — capex raised to $125–145B and the first model (Muse Spark) shipping on engagement, not revenue — which is exactly the spend-vs-proof debate that carried forward.',
-      threeMinutes:[
-        '<b>Record close to 2025, but the story is the setup for a huge spend year.</b> Revenue +24%, 41% margin, EPS $8.88 — and FY26 capex framed at $115–135B (a floor) with Meta Compute as the efficiency thesis. Watch how much higher it climbs.',
-        '<b>The ad engine delivered a record holiday</b> (+24%, price/ad +6%) on AI ranking — the cash engine that has to fund the AI build. Durability into 2026 comps is the tell.',
-        '<b>Two forward tensions planted:</b> the capex frame (explicitly a starting point) and the AI roadmap (models "shipping soon"). Both are the spend-vs-proof debate that defines the year — and 2026 is framed as when AI changes how Meta itself works (leaner, flatter).',
-      ],
-      notBringing:[
-        {item:'Reality Labs quarterly revenue', why:'$955M (−12%) is Quest-lapping noise; the signal is the loss-peak framing.'},
-        {item:'Tax rate 10%', why:'A clean quarter, but tax is noise across these prints — not thesis-moving.'},
-        {item:'Individual engagement stats', why:'Reels/video gains are real but everyone has the release; the debate is the capex frame.'},
-      ],
-      newQuestions:[
-        {n:'How big does the 2026 capex ramp get from the $115–135B frame?', landed:{q:'Q1 2026', rank:1}},
-        {n:'Do the first MSL models ship credibly?', landed:{q:'Q1 2026', rank:2}},
-        {n:'Does the ad engine hold as holiday comps roll off?', landed:{q:'Q1 2026', rank:3}},
-        {n:'Is the Reality Labs loss peak real?', landed:{q:'Q1 2026', rank:4}},
-        {n:'Does the "leaner, AI-native" model show up in headcount/opex?', landed:{q:'Q1 2026', rank:5}},
-      ] } },
-]};
+// CE_CONS + CALL_EARNINGS moved to ./meta-ce-data.js (EV-POST port, SAB 2026-10-21); imported at the top.
 
 // ── WL_ROWS — the Watch List: ONE flat table, ours to author (§6f) ───────────
 // Live list = rows with a trackSince and NO trackUntil. Migrated from the v2.4
@@ -1169,78 +791,6 @@ function ceStyle(){
     /* ── #5 · earnings-call theme status with age ── */
     '.calls-st-age{font-size:8.5px;font-weight:700;opacity:.8;margin-left:4px}</style>';
 }
-// ─── The IR button — every Earnings opens with it. On earnings day the source is ONE tap away:
-// release, webcast, transcripts, straight from the company. Deliberately loud; convention for
-// every company (EARNINGS_CONVENTIONS §6). META → https://investor.atmeta.com/
-var CE_IR_URL='https://investor.atmeta.com/';
-var CE_EDGAR_URL='https://www.sec.gov/edgar/browse/?CIK=1326801&owner=exclude';
-// Identity, not decoration: the company's real logo on the IR card, the SEC eagle seal on the
-// EDGAR card — both oversized, on near-black, with a giant watermark of the same mark behind.
-// Logo comes from the portal's standard logo CDN (parqet, CSP-allowed); the SEC seal is the
-// official public-domain seal served locally (img/sec-seal.png).
-// META mark from the portal logo CDN (parqet, CSP-allowed) so both marks get the same
-// treatment: transparent emblem in a glowing ring + giant watermark. No white tiles.
-var CE_LOGO_URL='https://assets.parqet.com/logos/symbol/META';
-var CE_SEC_SEAL='img/sec-seal.png';
-function ceIRButton(){
-  return '<style>'+
-    '.ce-srcrow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 16px}@media(max-width:760px){.ce-srcrow{grid-template-columns:1fr}}'+
-    '.ce-ir{display:flex;align-items:center;gap:20px;text-decoration:none;border-radius:18px;padding:26px 26px;min-height:120px;position:relative;overflow:hidden;'+
-      'background:linear-gradient(115deg,#04060B 0%,#0A1224 60%,#04060B 100%);border:1px solid rgba(66,133,244,.3);box-shadow:0 10px 32px rgba(0,0,0,.4);transition:.18s}'+
-    '.ce-ir:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,'+BRAND+','+RED+','+YELLOW+','+BRAND2+');height:4px;top:0}'+
-    '.ce-ir:hover{transform:translateY(-2px);box-shadow:0 16px 42px rgba(26,115,232,.4);border-color:rgba(66,133,244,.75)}'+
-    /* the giant watermark — the mark itself, monumental, bleeding off the card */
-    '.ce-ir-wm{position:absolute;right:-40px;bottom:-60px;width:230px;height:230px;object-fit:contain;opacity:.09;pointer-events:none;transition:.25s}'+
-    '.ce-ir:hover .ce-ir-wm{opacity:.16;transform:scale(1.04) rotate(-2deg)}'+
-    /* the emblem — transparent mark in a glowing ring, same treatment both cards */
-    '.ce-ir-ic{width:72px;height:72px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:1;'+
-      'box-shadow:0 0 0 1px rgba(138,180,248,.3),0 0 32px rgba(66,133,244,.55)}'+
-    '.ce-ir-ic img{width:52px;height:52px;object-fit:contain;display:block;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}'+
-    '.ce-ir-body{flex:1;min-width:0;position:relative;z-index:1}'+
-    '.ce-ir-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:#8AB4F8;display:flex;align-items:center;gap:7px}'+
-    '.ce-ir-dot{width:7px;height:7px;border-radius:50%;background:'+BRAND2+';box-shadow:0 0 0 0 rgba(52,168,83,.7);animation:cpirp 1.6s infinite}'+
-    '@keyframes cpirp{0%{box-shadow:0 0 0 0 rgba(52,168,83,.6)}70%{box-shadow:0 0 0 8px rgba(52,168,83,0)}100%{box-shadow:0 0 0 0 rgba(52,168,83,0)}}'+
-    '.ce-ir-t{font-size:19px;font-weight:900;color:#fff;letter-spacing:.05em;text-transform:uppercase;margin-top:4px}'+
-    '.ce-ir-s{font-size:11.5px;color:#9FB0C8;font-weight:600;margin-top:3px;letter-spacing:.01em}'+
-    '.ce-ir-go{font-size:13px;font-weight:900;color:#fff;background:'+BLUE+';border-radius:999px;padding:12px 22px;white-space:nowrap;flex:none;display:flex;align-items:center;gap:8px;position:relative;z-index:1;letter-spacing:.04em;transition:.14s}'+
-    '.ce-ir:hover .ce-ir-go{gap:12px;box-shadow:0 4px 18px rgba(26,115,232,.55)}'+
-    '@media(max-width:560px){.ce-ir{flex-wrap:wrap}.ce-ir-go{width:100%;justify-content:center}}'+
-    /* EDGAR variant — federal weight: near-black + the gold of the seal, eagle front and center */
-    '.ce-ir.edgar{background:linear-gradient(115deg,#070502 0%,#171106 60%,#070502 100%);border-color:rgba(197,164,90,.35)}'+
-    '.ce-ir.edgar:before{background:linear-gradient(90deg,#8C6D2F,#E3C878,#8C6D2F)}'+
-    '.ce-ir.edgar:hover{box-shadow:0 16px 42px rgba(197,164,90,.32);border-color:rgba(227,200,120,.75)}'+
-    '.ce-ir.edgar .ce-ir-ic{box-shadow:0 0 0 1px rgba(227,200,120,.28),0 0 32px rgba(197,164,90,.55)}'+
-    '.ce-ir.edgar .ce-ir-ic img{width:72px;height:72px}'+
-    '.ce-ir.edgar .ce-ir-k{color:#E3C878}'+
-    '.ce-ir.edgar .ce-ir-dot{background:#E3C878;animation:none;box-shadow:0 0 8px rgba(227,200,120,.8)}'+
-    '.ce-ir.edgar .ce-ir-go{background:linear-gradient(135deg,#E3C878,#B8933F);color:#1A1305}'+
-    '.ce-ir.edgar:hover .ce-ir-go{box-shadow:0 4px 18px rgba(197,164,90,.6)}'+
-    '.ce-ir.edgar .ce-ir-wm{opacity:.1}'+
-    '.ce-ir.edgar:hover .ce-ir-wm{opacity:.17}'+
-  '</style>'+
-  '<div class="ce-srcrow">'+
-  '<a class="ce-ir" href="'+CE_IR_URL+'" target="_blank" rel="noopener">'+
-    '<img class="ce-ir-wm" src="'+CE_LOGO_URL+'" alt="" aria-hidden="true">'+
-    '<span class="ce-ir-ic"><img src="'+CE_LOGO_URL+'" alt="Meta logo" onerror="this.parentNode.style.display=\'none\'"></span>'+
-    '<span class="ce-ir-body">'+
-      '<span class="ce-ir-k"><span class="ce-ir-dot"></span>THE SOURCE · EARNINGS HQ</span>'+
-      '<span class="ce-ir-t" style="display:block">Meta Platforms Investor Relations</span>'+
-      '<span class="ce-ir-s" style="display:block">Release · webcast · slides · transcripts — straight from investor.atmeta.com. Skip the search, go direct.</span>'+
-    '</span>'+
-    '<span class="ce-ir-go">OPEN IR <span>↗</span></span>'+
-  '</a>'+
-  '<a class="ce-ir edgar" href="'+CE_EDGAR_URL+'" target="_blank" rel="noopener">'+
-    '<img class="ce-ir-wm" src="'+CE_SEC_SEAL+'" alt="" aria-hidden="true">'+
-    '<span class="ce-ir-ic"><img src="'+CE_SEC_SEAL+'" alt="SEC seal" onerror="this.parentNode.style.display=\'none\'"></span>'+
-    '<span class="ce-ir-body">'+
-      '<span class="ce-ir-k"><span class="ce-ir-dot"></span>THE RECORD · U.S. SECURITIES AND EXCHANGE COMMISSION</span>'+
-      '<span class="ce-ir-t" style="display:block">Meta on EDGAR</span>'+
-      '<span class="ce-ir-s" style="display:block">10-K · 10-Q · 8-K · DEF 14A — the regulator\'s copy, as filed. What IR curates, EDGAR certifies.</span>'+
-    '</span>'+
-    '<span class="ce-ir-go">OPEN EDGAR <span>↗</span></span>'+
-  '</a>'+
-  '</div>';
-}
 function ceQkey(q){ return String(q||'').replace(/\s/g,''); }
 // Renders the quarter-pill selector (shared across the three phase panes via .ce-qblock filtering).
 // The quarter selector is PHASE-AWARE: Setup & Watch List offer every quarter, but Post-Results
@@ -1391,7 +941,7 @@ function ceSetupBody(c){
       '</div>';
       b+='<div class="ce-evwrap" data-ev="cons" data-g="yoy">';
       b+='<div class="ce-row-cap">Headline — every company, always</div>'+ceGrid(u,'head');
-      b+='<div class="ce-row-cap" style="margin-top:12px">Custom KPIs — META</div>'+ceGrid(u,'cust');
+      b+='<div class="ce-row-cap" style="margin-top:12px">Custom KPIs — '+CALL_EARNINGS.ticker+'</div>'+ceGrid(u,'cust');
       b+='</div>';
       b+='<div class="ave-subh-note" style="margin-top:6px">Growth chips are computed from the archive: <b>YoY</b> against <code>fq-3</code>, <b>QoQ</b> against <code>fq0</code> — both reported actuals. '+
          '<b>Street</b> = Bloomberg (BST), hardcoded from the export only. <b>Summit</b> = our own expectation. <b>?</b> = a number with a caveat worth knowing. '+
@@ -1424,9 +974,9 @@ function ceSetupBody(c){
           }).join('')+'</div>';
         }
         if(nous.length){
-          b+='<div class="ce-dbt-none"><b>No Summit number yet on '+nous.length+' of '+(nous.length+diffs.length)+' lines:</b> '+
-             esc(nous.join(' · '))+'.<br>Until those are filled the debate is the Street against itself — '+
-             'the grid above still shows what it expects, and the track record below shows how often it has been wrong.</div>';
+          b+='<div class="ce-dbt-none"><b>No quarterly Summit projection on '+nous.length+' of '+(nous.length+diffs.length)+' lines:</b> '+
+             esc(nous.join(' · '))+' (the model projects them by year only).<br>On those lines there is no debate, only the Street — '+
+             'and the track record below shows how often it has been wrong.</div>';
         }
         if(d&&d.synth) b+='<div class="ce-synth">'+d.synth+'</div>';
       }
@@ -1460,7 +1010,7 @@ function ceSetupBody(c){
 // canvases/tables/sliders UNIQUE, so the two engine instances (Setup + Results) coexist on the page.
 function ceAnnualBody(){
   return '<div class="ce-ann" style="margin:20px 0 4px;padding:16px 0 0;border-top:2px solid var(--bdr)">'+
-    '<div class="ov-sec-h">The Setup picture — reported vs Street (Summit pending): pick any line, window the period with the lever, toggle margins</div>'+
+    '<div class="ov-sec-h">The Setup picture — reported vs Summit vs Street: pick any line, window the period with the lever, toggle margins</div>'+
     resultsHtml('META_SETUP')+'</div>';
 }
 function ceSetupWrap(){ return document.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phpane[data-cep="setup"] .rs-wrap'); }
@@ -1478,7 +1028,7 @@ function ceWatchBody(c){
   // ── FUSED: the full multi-year theme record (was the standalone Evolution ▸ Earnings Calls tab,
   // dissolved Jul 2026 — no two tabs on the same call highlights). Lives here, under the Watch List. ──
   h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px">';
-  h+='<div class="ce-band" style="--bc:'+BRAND+'"><span class="ce-band-i">▤</span><span class="ce-band-t">The theme record — every thread, across all calls</span><span class="ce-band-s">the multi-year backbone behind the hunt above (the former "Earnings Calls" tab, folded in)</span><span class="ce-band-l"></span></div>';
+  h+='<div class="ce-band" style="--bc:var(--navy)"><span class="ce-band-t">The theme record — every thread, across all calls</span><span class="ce-band-s">from SAB’s call notes</span><span class="ce-band-l"></span></div>';
   h+=callsBody();
   h+='</div>';
   return h;
@@ -1907,7 +1457,8 @@ function ceSummaryBlock(qLabel, s){
 // ENHANCED with a status chip per theme (trend / promise-to-reconcile / watch) — the essence of
 // the dissolved Promise Tracker. Source: docs/calls/META.md + META-latest.md.
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-var CE_THST={ trend:{c:'#0a8f4c',l:'Confirmed trend'}, promise:{c:'#2E6BE6',l:'Promise — reconcile'}, watch:{c:'#B7791F',l:'Watch'} };
+// Summit tokens only (PROFILE_PLAYBOOK §21): trend = steel, promise = navy, watch = slate. No green/blue/amber.
+var CE_THST={ trend:{c:BRAND,l:'Confirmed trend'}, promise:{c:BRAND2,l:'Promise — reconcile'}, watch:{c:metaTok('--gold','#64748B'),l:'Watch'} };
 // A promise open for one quarter and one open for four look identical without this. Age is the
 // signal: how long has it been unreconciled, or how many quarters has the silence run?
 function ceQnum(q){ var m=String(q||'').match(/Q(\d)\s+(\d{4})/); return m?((+m[2])*4+(+m[1])):null; }
@@ -2066,62 +1617,14 @@ function wireCallEarnings(root){
   var wmount=pane.querySelector('.ce-phpane[data-cep="watch"] [data-wlmount]');
   if(wmount && _co && _co.id){
     mountWatchList(wmount, { companyId:_co.id, ticker:_co.ticker, quarters:CALL_EARNINGS.quarters,
-      colors:{ brand:BRAND, brand2:BRAND2, purple:PURPLE, gray:GRAY, red:RED } });
+      colors:{ brand:BRAND, brand2:BRAND2, purple:PURPLE, gray:GRAY, red:RED }, palette:'summit' });
   }
 }
 
-// Narrative threads across the 11 calls Q4'23 → Q2'26 (theme ⇄ quarter toggle).
-var META_THEMES=[
-  { theme:'The AI-capex escalation', st:{ k:'watch', since:'Q1 2024', last:'Q2 2026' },
-    why:'The number that actually moves the stock: capex guidance has been raised at nearly every call, from ~$30B to ~$145B in two years.',
-    updates:[
-      { q:'Q4 2023', items:['First-ever dividend + $50B buyback — "the business can fund AI <b>and</b> return cash."'] },
-      { q:'Q1 2024', items:['CapEx raised to <b>$35–40B</b>; explicit warning of a "<b>multi-year investment cycle</b> before Meta AI is profitable — expect volatility." Stock −11%.'] },
-      { q:'Q4 2024', items:['2025 CapEx guided <b>$60–65B</b> — nearly doubled. "Hundreds of billions over the long term."'] },
-      { q:'Q1 2025', items:['CapEx raised to <b>$64–72B</b>; 2026 to see "similarly significant dollar growth."'] },
-      { q:'Q4 2025', items:['2026 CapEx guided <b>$115–135B</b>; expenses $162–169B — but "<b>operating income above 2025</b>." Spending through it.'] },
-      { q:'Q1 2026', items:['CapEx raised AGAIN to <b>$125–145B</b> — "higher component costs, particularly <b>memory pricing</b>." Stock −9%.'] },
-      { q:'Q2 2026', items:['Record <b>$31.1B in ONE quarter</b>; FY26 floor raised — narrowed to <b>$130–145B</b>; quarterly FCF <b>$784M</b>. The funding doctrine said out loud: cash flow → "a greater mix of debt" (total debt $83.7B) → partners (<b>BlackRock 1GW El Paso JV</b>). 2027: still no number, third ask. Stock ~−9% after hours.'] },
-    ]},
-  { theme:'Superintelligence & the talent war', st:{ k:'watch', since:'Q2 2025', last:'Q2 2026' },
-    why:'The 2025 pivot: from open Llama to a closed, frontier "personal superintelligence" push — bought with a $14.3B Scale AI stake and an aggressive talent raid.',
-    updates:[
-      { q:'Q2 2024', items:['Llama 3.1 — "first frontier-level <b>open source</b> model; an inflection point." (The open-first era.)'] },
-      { q:'Q1 2025', items:['~1B Meta AI MAU; standalone app launched — but "at least the next year" is about scaling, not monetizing.'] },
-      { q:'Q2 2025', items:['<b>Meta Superintelligence Labs (MSL)</b> founded — Wang, Friedman, Zhao. "Superintelligence is now <b>in sight</b>." (The closed pivot.)'] },
-      { q:'Q3 2025', items:['"Front-load for the <b>most optimistic</b> superintelligence cases." If it comes slower, "extra compute accelerates the core business profitably."'] },
-      { q:'Q1 2026', items:['<b>Muse Spark</b> released — MSL\'s first model. "Fastest lab from standing up to a widely accepted strong model."'] },
-      { q:'Q2 2026', items:['<b>Muse Spark 1.1 + Muse Image</b> shipped; Meta AI daily interactions <b>+60%</b> since the Muse integration. The monetization surfaces arrived: <b>Model API</b> (Muse Spark on OpenRouter), <b>Meta One</b> subscriptions, <b>Business Agents</b> at 1M+ businesses/week. And the open-source stance softened: releases return "<b>at some point soon</b>."'] },
-    ]},
-  { theme:'Reality Labs → the glasses pivot', st:{ k:'trend', since:'Q1 2024', last:'Q2 2026' },
-    why:'The long, expensive bet re-aimed: away from the holographic metaverse and toward AI glasses shipping now — with the first concrete loss-peak guidance.',
-    updates:[
-      { q:'Q3 2024', items:['Ray-Ban Meta clear edition sold out, reselling >$1,000 — <b>glasses validated</b> as real consumer electronics.'] },
-      { q:'Q3 2025', items:['Display glasses sold out in 48 hours — "clearly leading." RL investment <b>pivoting toward wearables</b>, away from VR.'] },
-      { q:'Q4 2025', items:['"RL losses will <b>peak in 2026</b>, then gradually reduce" — first concrete inflection guidance.'] },
-      { q:'Q2 2026', items:['The turn: RL revenue <b>+16%</b> (first real growth of the pivot) on glasses "<b>exceeding our expectations</b>" — the new Meta-brand line with EssilorLuxottica (incl. the Kylie Jenner style), first to ship with Muse Spark onboard. Loss $4.6B, ~$450M <b>smaller</b> than the Street modeled. Next leg: Connect, Sep 23.'] },
-    ]},
-  { theme:'The ad engine — GEM & Advantage+', st:{ k:'trend', since:'Q1 2024', last:'Q2 2026' },
-    why:'Where AI capex turns straight into revenue: better ranking models lift clicks/conversions and price-per-ad at the same time, moving toward full "agentic" advertising.',
-    updates:[
-      { q:'Q2 2024', items:['Long-term ad vision: "advertisers will just tell us an objective and a budget, and <b>we\'ll do the rest</b>."'] },
-      { q:'Q1 2025', items:['<b>GEM</b> ads model 2× more efficient per unit of compute; five-opportunities framework ("don\'t need to win all five").'] },
-      { q:'Q4 2025', items:['GEM drove <b>+3.5% ad clicks on Facebook</b> and <b>&gt;1% more IG conversions</b>; impressions +18%, price-per-ad +6%.'] },
-      { q:'Q1 2026', items:['Narrative shifts assistant → <b>agent</b>; business AIs at 10M weekly conversations (from ~1M at year start).'] },
-      { q:'Q2 2026', items:['The first system-level AI attribution: <b>Meta Generative Recommender</b> (LLM ad retrieval) drove <b>+8.3% ad clicks and +15.7% conversions</b> on Facebook; Advantage+ end-to-end at a <b>$75B annual run-rate</b>; 9M small businesses on AI creative tools (image-gen adoption doubled). <b>Business Agents</b> went global — 1M+ businesses weekly, "pay us when we achieve results."'] },
-    ]},
-  { theme:'Engagement — the inventory machine', st:{ k:'trend', since:'Q1 2024', last:'Q2 2026' },
-    why:'Engagement manufactures ad inventory: Reels catching up to feed, AI-recommended content, Threads and Meta AI all feed more impressions to auction.',
-    updates:[
-      { q:'Q4 2023', items:['Year of Efficiency declared a success — a leaner company as a <b>permanent operating philosophy</b>.'] },
-      { q:'Q3 2025', items:['Instagram <b>3B MAU</b>; Threads <b>150M DAP</b>; Reels ARR >$50B — "core business strength IS the funding mechanism."'] },
-      { q:'Q4 2025', items:['AI-recommended content 40%+ of the FB feed; Threads time-spent +20% YoY.'] },
-      { q:'Q2 2026', items:['The disclosure cluster: <b>Instagram crossed 2B daily actives</b>, Threads <b>500M+ MAU</b>, DAP 3.6B; FB video +9% (US +10%). Over half of recommended content now <b>&lt;1 day old</b> (2x YoY); largest single Reels ranking release to date; user-control surfaces (Your Algo, Shape Your Feed) retain 80%+.'] },
-    ]},
-];
+// The theme record lives in js/themes-data/meta.js (the seed, from SAB's call notes Q4 2022 → Q2 2026).
 function metaCallsByQuarter(){
   var map={}, order=[];
-  META_THEMES.forEach(function(ct){ ct.updates.forEach(function(u){ if(!map[u.q]){ map[u.q]=[]; order.push(u.q); } map[u.q].push({ theme:ct.theme, items:u.items }); }); });
+  META_THEMES.forEach(function(ct){ ct.updates.forEach(function(u){ if(!map[u.q]){ map[u.q]=[]; order.push(u.q); } map[u.q].push({ theme:ct.seg+' · '+ct.theme, items:u.items }); }); });
   function qv(q){ var m=String(q).match(/Q(\d)\s+(\d{4})/); return m?(+m[2])*10+(+m[1]):0; }
   order.sort(function(a,b){ return qv(b)-qv(a); });
   return { order:order, map:map };
@@ -2481,16 +1984,23 @@ function callsBody(){
     '.calls-pill{border:none;background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--mu);padding:5px 15px;border-radius:999px;cursor:pointer;transition:.12s}'+
     '.calls-pill:hover{color:var(--navy)}.calls-pill.active{background:'+BRAND+';color:#fff}'+
     '.calls-tl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin:0 0 4px}'+
+    '#meCallsTheme .lpb-acc-item.open,#meCallsQuarter .lpb-acc-item.open{border-color:var(--steel)}#meCallsTheme .lpb-acc-item.open .lpb-acc-h,#meCallsQuarter .lpb-acc-item.open .lpb-acc-h{color:var(--navy)}'+
+    '.calls-pill.active{background:var(--navy)}'+
     '.calls-st{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid;flex:none}</style>';
-  h+='<p class="ov-lede">The key narrative threads from the <b>11 earnings calls</b> Q4 2023 → Q2 2026. Switch lens: <b>By theme</b> traces how each story evolved; <b>By quarter</b> shows what mattered on a given call. Each theme carries a status — <b>trend</b> (confirmed), <b>promise</b> (a commitment to reconcile next call) or <b>watch</b> — <b>with its age</b>: a watch running two quarters is louder than a fresh one. Tap any row to expand. (Quarterly guided-vs-delivered revenue is in the <b>Guidance</b> tab.)</p>';
+  h+='<p class="ov-lede">The threads SAB’s call notes keep returning to, <b>Q4 2022 → Q2 2026</b>, grouped by business axis. <b>By theme</b> traces each thread call by call; <b>By quarter</b> shows what was noted on a given call. Each thread carries a status (<b>trend</b>, <b>promise</b> to reconcile, or <b>watch</b>) and its age.</p>';
   h+='<div class="calls-tog" role="tablist"><button type="button" class="calls-pill active" data-callsv="theme">By theme</button><button type="button" class="calls-pill" data-callsv="quarter">By quarter</button></div>';
   h+='<div class="lpb-acc" id="meCallsTheme">';
-  META_THEMES.forEach(function(ct){
+  var segSeen={}, segs=[];
+  META_THEMES.forEach(function(ct){ if(!segSeen[ct.seg]){ segSeen[ct.seg]=1; segs.push(ct.seg); } });
+  segs.forEach(function(sg){
+  h+='<div class="calls-tl" style="margin:14px 0 6px">'+esc(sg)+'</div>';
+  META_THEMES.filter(function(ct){ return ct.seg===sg; }).forEach(function(ct){
     var sk=(ct.st&&ct.st.k)?ct.st.k:'watch'; var st=CE_THST[sk]||CE_THST.watch;
     h+='<div class="lpb-acc-item"><button type="button" class="lpb-acc-h"><span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(ct.theme)+' <span class="calls-st" style="color:'+st.c+';border-color:'+st.c+'">'+st.l+ceStAge(ct.st)+'</span></span><span class="lpb-acc-ic">+</span></button>';
     h+='<div class="lpb-acc-body"><p style="font-size:12px;color:var(--mu);margin:0 0 10px;font-style:italic">'+esc(ct.why)+'</p>';
     ct.updates.forEach(function(u){ h+='<div style="margin-bottom:10px"><span class="ov-chip" style="margin-right:6px">'+esc(u.q)+'</span><ul class="ov-bullets" style="margin-top:4px">'+u.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>'; });
     h+='</div></div>';
+  });
   });
   h+='</div>';
   var byQ=metaCallsByQuarter();
@@ -3626,20 +3136,7 @@ function deepDiveHtml(c){
     { k:'supplychain', l:'Supply Chain', body:suppliersBody() },
   ]);
   h+=subtabs('evolution',[
-    { k:'earnings', l:'Earnings', body:
-      ceIRButton()+
-      '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (the print scored against what was frozen, <i>plus</i> the call highlights — the things worth taking into the conversation). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Meta. Each quarter combines Meta\'s earnings call + same-day Follow-Up Q&A as <b>one call</b> (docs/calls/META*.md). The <b>Watch List</b> is the single home for what we <i>track over time</i>; the Post-Results highlights are <i>talking points</i>, not tracking — so they can include non-trackable call colour (a capex number, a user count) that would never earn a Watch slot.</div>'+
-      // Phase tabs ABOVE the quarter pills: the section decides which quarters exist, so it comes
-      // first; the quarter selector below reflects the active section (§6a-ix).
-      '<div class="ce-phtabs">'+
-        '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
-        '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>'+
-        '<button type="button" class="ce-phtab" data-cep="results">Post-Results</button>'+
-      '</div>'+
-      ceQPills()+
-      '<div class="ce-phpane" data-cep="setup">'+ceSetupBody(c)+'</div>'+
-      '<div class="ce-phpane" data-cep="watch" hidden>'+ceWatchBody(c)+'</div>'+
-      '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>' },
+    { k:'earnings', l:'Earnings', body:metaCeHtml(c) },   // ./meta-ce.js — Amazon's machinery via the guide-built TSM copy (EV-SET/POST/NOTES)
     { k:'results', l:'Results', body:resultsHtml('META') },
     { k:'estevo', l:'Estimates', body:resultsEvoHtml('META') },
   ]);
@@ -3707,8 +3204,7 @@ function buildSub(root, group, key){
   // Earnings ▸ Setup chart (the Results engine, META_SETUP dataset) — build only when Earnings is
   // the visible subpane AND Setup is the active phase (Chart.js needs a non-null offsetParent).
   if(group==='evolution' && key==='earnings'){
-    var ph=root.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phtab.active');
-    if(!ph || ph.getAttribute('data-cep')==='setup') requestAnimationFrame(gBuildCeAnnual);
+    metaCeBuild(root);
   }
   // Results / Estimates engine — pass the pane's OWN wrap + ticker so this second engine instance
   // (beside the Setup chart) re-establishes its dataset and wires the right wrap.
@@ -3776,7 +3272,7 @@ function wireModal(root){
   function closeM(){ back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden=true; }, 180); }
   root.querySelector('#meModalX').onclick=closeM; back.onclick=function(e){ if(e.target===back) closeM(); };
   function resolve(key){ var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
-    if(kind==='ce'){ return CE_POP[id]||null; }
+    if(kind==='ce'){ return metaCePop(id); }
     if(kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:esc(t.y),h:t.d}:null; }
     if(kind==='prod'){ var f=META_PRODUCTS[+id]; if(!f) return null;   // Overview ▸ Products & platforms (OV-5)
       var pb=f.items.map(function(it){ return '<div class="prod-item"><div class="prod-item-n">'+esc(it[0])+'</div><div class="famd">'+it[1]+'</div></div>'; }).join('');
@@ -3850,8 +3346,6 @@ function init(c){
   // Deep Dive machinery
   wireDD(root);
   ['topline','bottomline','evolution','valuation','mgmt','misc'].forEach(function(g){ wireSubtabs(root, g); });
-  wireCallEarnings(root);
-  wireCeTrack(root);
   // AVE metric pills + Financials metric pills
   root.querySelectorAll('.ave-pill[data-ave]').forEach(function(b){ b.onclick=function(){ switchAveMetric(root, b.getAttribute('data-ave')); }; });
   root.querySelectorAll('.fin-pill').forEach(function(b){ b.onclick=function(){ switchFinMetric(root, b.getAttribute('data-finm')); }; });
@@ -3862,6 +3356,7 @@ function init(c){
     root.querySelectorAll('.calls-pill[data-callsv]').forEach(function(x){ x.classList.toggle('active', x===b); });
     var th=root.querySelector('#meCallsTheme'), qu=root.querySelector('#meCallsQuarter'); if(th) th.style.display=(v==='theme'?'':'none'); if(qu) qu.style.display=(v==='quarter'?'':'none'); }; });
   root.querySelectorAll('.sc-pill').forEach(function(b){ b.onclick=function(){ switchScFilter(root, b.getAttribute('data-sccat')); }; });
+  metaCeWire(root);   // Earnings: phase tabs · quarter pills · estimate toggles · Notes (after the generic accordions, so its handlers win)
   // Paint the initially-visible Deep Dive pane if it is already in the DOM (openCo renders DD after Overview).
   requestAnimationFrame(function(){ if(root.querySelector('.dd-pane')) buildDD(root, activeDD(root)); });
 }

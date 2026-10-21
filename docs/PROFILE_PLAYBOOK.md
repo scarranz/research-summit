@@ -1343,6 +1343,10 @@ el trimestre "upcoming" nuevo se agrega cuando el Post-Results anterior ya está
 
 ### EV-SET Setup (antes del print)
 
+> **Ajuste de SAB (2026-10-21, META):** Earnings **no** abre con las tarjetas grandes de Investor Relations y
+> EDGAR (`ceIRButton`) ni con el párrafo introductorio "Earnings — the decision layer…": la pestaña empieza
+> directo en Setup · Watch List · Post-Results. Al copiar el bloque `ce*` de AMZN se quitan los dos.
+
 1. Chip "① Pre-Call" (gris "frozen" si el trimestre ya se reportó).
 2. **Barra "Estimates":** Consensus | Summit | Both (Consensus) · YoY | QoQ | Off (YoY) ·
    Margin | Hide mgn (Hide).
@@ -1371,6 +1375,19 @@ el trimestre "upcoming" nuevo se agrega cuando el Post-Results anterior ya está
 
 ### EV-POST Post-Results (después del print)
 
+> **Ajustes de SAB (2026-10-21, META):**
+> - **Sin emojis ni glifos** en Earnings: el chip de fase dice "Pre-Call" / "Post-Results" (sin ①/②), el banco
+>   del analista va sin 🏦, "Propose Notes" sin 📝, botones "Accept" / "Rejected" / "Edit / Add note" sin ✓ ↻ ✎.
+> - **Colores = piel formal (§21):** steel de acento, navy de tinta, pizarra para lo neutro; verde/rojo solo
+>   para Beat/Miss. Nada de los morados/azules/ámbar que traía la copia.
+> - **Nada generado por IA ni de relleno:** sin "Call summary — the minute", sin red-lines ni "tee-up"; solo
+>   The print · Call Summary (prepared + Q&A con citas textuales) · Propose Notes · Also on the call.
+> - **Fuente del código:** la copia más reciente y corregida es `tsm-ce.js` (META la copió a `meta-ce.js` con los
+>   datos en `meta-ce-data.js`). Bug corregido en las dos: la propiedad `stmt` quedaba dentro de un comentario,
+>   así que "Statement order" en realidad mostraba el orden por sorpresa.
+> - **Notes de META** conserva debajo del theme record la Watch List compartida (ganchos abiertos, Supabase),
+>   porque ya tenía filas guardadas; un perfil nuevo sin filas no la necesita.
+
 Por trimestre reportado:
 1. Chip "② Post-Results".
 2. **"The print — down the income statement"** (`?` "How this is built"): controles View Cards | Chart
@@ -1398,6 +1415,19 @@ Por trimestre reportado:
   gastar tiempo llenándolos.
 
 ### EV-NOTES Notes — ver §24 para las reglas de uso
+
+> **Ajustes de SAB (2026-10-21, META):**
+> - **La semilla sale de las notas del analista** cuando las tiene (cuaderno escaneado, PDF): primero se leen
+>   todas, se identifican los hilos a los que vuelve llamada tras llamada, y esos son los sub-temas; cada nota
+>   es paráfrasis en inglés de lo que anotó, con el trimestre de la llamada. Las conferencias (GS, MS…) van en
+>   el trimestre de la última llamada, con el nombre del evento en el texto. No entran: el recap del modelo
+>   propio (precio objetivo, múltiplo — es opinión nuestra) ni material de contexto que no es una llamada. Si
+>   el PDF es de escritura a mano, la capa de texto de iOS sale ilegible en las primeras páginas: renderizar
+>   esas páginas a imagen y leerlas; las cifras dudosas se cotejan con el 8-K o se omiten.
+> - **Temas de primer nivel = ejes del negocio** (los segmentos más los ejes de toda la empresa, p. ej. "AI &
+>   compute", "Costs & capital"); los que son segmento se mapean en `THEME_SEG`.
+> - **Colores:** ver §21 (Watch List con `palette:'summit'`, estados en tokens). La banda del theme record sin
+>   ícono y con un subtítulo corto que diga de dónde salen las notas.
 
 Lo que se construye en esta unidad: el registro de temas de la empresa (`js/themes-data/<ticker>.js`,
 semilla), el orden de temas (`<T>_SEG_ORDER`), el montaje de `ceWatchBody`, y el **registro de la
@@ -2137,6 +2167,15 @@ se usa: es el diccionario con el que Claude sabe qué etiqueta del MCP es cada l
   colaba desde el código copiado de AMZN/TSM. (SAB 2026-10-20, en Bottom Line ▸ Expense lines.)
 - **Sin emojis ni íconos decorativos en el Deep Dive** (tarjetas, tablas, títulos). OV-5 Products es la única
   excepción (un emoji por familia de producto).
+- **El texto corrido va en negro** (`#111418`), no en navy ni azul (SAB 2026-10-21, en META ▸ Earnings): oraciones,
+  notas, respuestas de la llamada, viñetas y sus negritas. Navy/steel quedan para títulos de sección, chips,
+  pestañas y controles; gris para rótulos y pies. En Earnings se hace redefiniendo `--navy`/`--text`/`--blue` en
+  el subpane (`meta-ce.js`, `ceStyle`) para no tocar regla por regla.
+- **Earnings ▸ Watch List con la piel formal** (SAB 2026-10-21, en META): el motor compartido `js/watchlist.js`
+  se monta con `palette:'summit'` — tags y chips en `--steel` sobre `--ice`, etiquetas de fase y botones en
+  `--navy`, avisos en `--pale`, sin morado ni verde ni el 🔁/⚑. Los estados del theme record (`CE_THST`) van
+  en tokens: Confirmed trend = `--steel`, Promise = `--navy`, Watch = `--gold` (pizarra); el acordeón abierto
+  con borde `--steel`, no `--brand`. La opción es por montaje: los perfiles viejos conservan su look.
 - **Series:** `SUMMIT_CAT` de `js/viz-palette.js`, en orden fijo, sin ciclar; el color sigue a la
   entidad (ocultar una serie no repinta las demás); más de 8 → "Other".
 - **Fuentes de dato:** Actual = navy · Summit = azul · Consensus = gris — siempre las mismas.

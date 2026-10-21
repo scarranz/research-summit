@@ -29,7 +29,7 @@ import {
   HS_DEP_YEARS, HS_DEP_MODEL, HS_DEP_COGS, HS_LIVES, HS_LIVES_FLAG, HS_GW_MSFT_FY,
   HS_CSP_QTRS, HS_CSP_REV, HS_CSP_OI, HS_CSP_NOTES,
   HS_THEME_QTRS, HS_THEMES,
-  HS_GW_SPCX_TOTAL, HS_GW_SPCX_NOTES,
+  HS_GW_SPCX_TOTAL, HS_GW_SPCX_NOTES, HS_SPCX_SI_CAPEX,
 } from './hyperscalers-data.js';
 
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -204,6 +204,15 @@ var guideBand = {
   },
 };
 
+// SpaceX's CapEx tab bars are total company; this appends the Super
+// Intelligence slice so the AI share travels with every number.
+function siNote(cid, year, q){
+  if (cid !== 'spcx') return '';
+  var tot = HS_YEAR_QTRS.spcx[year][q], si = HS_SPCX_SI_CAPEX[year][q];
+  if (tot == null || si == null) return '';
+  return '  · SI $' + si.toFixed(1) + 'B (' + Math.round(si / tot * 100) + '%)';
+}
+
 // ─── Small multiples: calendar-year CapEx, stacked by quarter ─────────────────
 // One panel per company. Faceted rather than grouped because company×quarter in
 // one frame cannot be coloured safely — see HS_QTR_RAMP for the tested result.
@@ -259,7 +268,8 @@ function yearChart(id, cid){
             label: function(c){
               if (c.raw == null) return null;
               var der = HS_YEAR_DERIVED[cid][c.label][c.datasetIndex];
-              return c.dataset.label + ': $' + c.raw.toFixed(1) + 'B' + (der ? '  (derived)' : '');
+              return c.dataset.label + ': $' + c.raw.toFixed(1) + 'B' + (der ? '  (derived)' : '') +
+                siNote(cid, c.label, c.datasetIndex);
             },
             footer: function(items){
               var y = items[0].label;
@@ -377,7 +387,8 @@ function combinedYearChart(id){
               if (c.raw == null) return null;
               var cell = cells[c.dataIndex];
               var der = HS_YEAR_DERIVED[cell.cid][cell.year][c.datasetIndex];
-              return c.dataset.label + ': $' + c.raw.toFixed(1) + 'B' + (der ? '  (derived)' : '');
+              return c.dataset.label + ': $' + c.raw.toFixed(1) + 'B' + (der ? '  (derived)' : '') +
+                siNote(cell.cid, cell.year, c.datasetIndex);
             },
             footer: function(items){
               var cell = cells[items[0].dataIndex];
@@ -525,7 +536,7 @@ function quarterlyBody(){
       ? '<div class="hs-panel-warn">◍ ' + esc(part[Object.keys(part)[0]]) + '</div>' : '';
     return '<div class="hs-panel">' +
       '<div class="hs-panel-h">' + dot(c.id) + '<b>' + c.ticker + '</b>' +
-        '<span class="hs-panel-s">' + esc(c.name) + '</span></div>' +
+        '<span class="hs-panel-s">' + esc(c.id === 'spcx' ? 'SpaceX · total company' : c.name) + '</span></div>' +
       '<div class="hs-panel-c"><canvas id="hs-yr-' + c.id + '"></canvas></div>' + warn +
     '</div>';
   }).join('');
@@ -559,7 +570,7 @@ function quarterlyBody(){
       body +
       (one ? '<p class="hs-cap">In this view colour carries the <b>quarter</b>, not the company — the ticker under each column carries identity. Company hue and quarter shade cannot share one frame: tested both ways, AMZN blue and MSFT violet land at ΔE 0.1–0.3 under deuteranopia at every shade. Switch to “one panel each” to get the company colours back.</p>' : '') +
       '<p class="hs-cap"><b>2026 is two quarters in</b> (three for SpaceX, which reported 3Q26 on October 20) — the washed column holds only the actuals so far, with the guidance range drawn as the dashed band above them. ' +
-      '<b>SpaceX is its Super Intelligence segment only</b>, with no band: its only guide is total-company, and drawing that over segment bars would show a gap that is just Space and Connectivity. ' +
+      '<b>SpaceX is total company here</b> — the same basis as the other four and the only level it guides at. Its 2026 band ($83–88B) is derived: three reported quarters plus the $35–40B it guided for 4Q. Hover any SpaceX bar for the Super Intelligence slice (84–86% in 2Q–3Q26). ' +
       'For closed years the band shows where the final guide sat, so you can see the bar land inside it. ' +
       '<b>2023 is not shown:</b> no Amazon, Alphabet or Meta call in the corpus predates April 2024, so three of the four would be empty columns. ' +
       'Six quarters are derived rather than stated (Amazon 2Q24/3Q24/4Q25, Meta 1Q25, SpaceX 2Q25/4Q25) — marked in the tooltip and listed in the data file.</p>' +
@@ -570,7 +581,7 @@ function quarterlyBody(){
       '<div class="hs-chart-head"><span class="hs-chart-t">Reported CapEx by quarter</span>' +
         '<span class="hs-chart-u">US$B · calendar axis</span></div>' +
       '<div class="hs-canvas"><canvas id="hs-qtr"></canvas></div>' +
-      '<p class="hs-cap">Gaps are gaps: the call gave no figure (Alphabet 2Q24 is not in the corpus). Nothing is interpolated. SpaceX starts in 2025 (segment CapEx from its S-1 and releases) and is alone in the Oct ’26 column until the other four report 3Q26.</p>' +
+      '<p class="hs-cap">Gaps are gaps: the call gave no figure (Alphabet 2Q24 is not in the corpus). Nothing is interpolated. SpaceX starts in 2025 (total-company CapEx from its S-1 and releases) and is alone in the Oct ’26 column until the other four report 3Q26.</p>' +
     '</div>' +
     sec('Why these five series cannot be stacked') +
     '<div class="hs-card hs-card--warn"><ul class="hs-src">' + basis + '</ul></div>' +

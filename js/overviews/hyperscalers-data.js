@@ -25,8 +25,9 @@ export var HS_COMPANIES = [
   { id: 'googl', ticker: 'GOOGL', name: 'Alphabet',  color: '#eb6834', fy: 'Calendar' },
   { id: 'meta',  ticker: 'META',  name: 'Meta',      color: '#1baf7a', fy: 'Calendar' },
   { id: 'msft',  ticker: 'MSFT',  name: 'Microsoft', color: '#4a3aa7', fy: 'Fiscal Jun' },
-  // SpaceX's SUPER INTELLIGENCE segment (xAI + X + Cursor; "AI" until 3Q26), not
-  // the whole company — added Oct 2026. Public since 2Q26, so its history is
+  // SpaceX's SUPER INTELLIGENCE segment (xAI + X + Cursor; "AI" until 3Q26) on the
+  // CSP and capacity tabs — but TOTAL COMPANY on the Ladder and Quarterly CapEx
+  // tabs, the only level SpaceX guides CapEx at (SAB, Oct 21 2026). Added Oct 2026. Public since 2Q26, so its history is
   // short and starts in the 1Q26 column (the S-1). Green = slot 6 of the data-viz
   // palette, validated as the fifth series: adjacent pairs pass (worst CVD ΔE 9.2,
   // normal 27.6) and all-pairs normal vision passes (worst 15.6, green↔aqua).
@@ -117,13 +118,25 @@ export var HS_QUARTERLY = {
   amzn:  [14.0, null, null, 26.3, 24.3, 31.4, 34.2, null, 43.2, 53.1, null],
   meta:  [6.7,  8.5,  9.2,  14.8, null, 17.0, 19.4, 22.1, 19.8, 31.1, null],
   msft:  [14.0, 19.0, 20.0, 22.6, 21.4, 24.2, 34.9, 37.5, 31.9, 41.0, null],
-  // SUPER INTELLIGENCE SEGMENT CapEx, not total company (see HS_BASIS).
-  //   1Q25 2.6  S-1 ($2,567M)          3Q25 4.8  3Q26 release ($4,760M)
-  //   2Q25 0.8  DERIVED: 9M25 $8,077M − 1Q $2,567M − 3Q $4,760M = $750M
-  //   4Q25 4.7  DERIVED: FY25 $12,727M (S-1) − 9M25 $8,077M = $4,650M
-  //   1Q26 7.7  S-1 ($7,723M)   2Q26 15.8 ($15,828M)   3Q26 16.4 ($16,444M)
-  // 2024 is null: xAI was private and the S-1 gives 2024 as a full year only.
-  spcx:  [null, null, null, null, 2.6,  0.8,  4.8,  4.7,  7.7,  15.8, 16.4],
+  // TOTAL-COMPANY CapEx (SAB, Oct 21 2026: same basis as the other four, and the
+  // only level SpaceX guides at, so the guide band can sit on the bars). Sum of
+  // the three segments = purchases of PP&E. Super Intelligence share in
+  // HS_SPCX_SI_CAPEX.
+  //   1Q25 4.1  S-1 ($4,140M)          3Q25 6.9  3Q26 release ($6,880M)
+  //   2Q25 2.8  DERIVED: 9M25 $13,846M − 1Q $4,140M − 3Q $6,880M = $2,826M
+  //   4Q25 6.9  DERIVED: FY25 $20,737M (S-1) − 9M25 $13,846M = $6,891M
+  //   1Q26 10.1 S-1 ($10,107M)  2Q26 18.4 ($18,369M)  3Q26 19.6 ($19,593M)
+  // 2024 is null: the S-1 gives 2024 as a full year only.
+  spcx:  [null, null, null, null, 4.1,  2.8,  6.9,  6.9,  10.1, 18.4, 19.6],
+};
+
+// SpaceX's Super Intelligence segment CapEx inside those totals, US$B, exact —
+// carried into the tooltips so the AI share is never lost. Same derivations:
+// 2Q25 = 9M $8,077M − $2,567M − $4,760M; 4Q25 = FY $12,727M − 9M $8,077M.
+export var HS_SPCX_SI_CAPEX = {
+  '2024': [null, null, null, null],
+  '2025': [2.567, 0.750, 4.760, 4.650],
+  '2026': [7.723, 15.828, 16.444, null],
 };
 
 // ── 2b · CALENDAR-YEAR CAPEX, SPLIT BY QUARTER ────────────────────────────────
@@ -151,9 +164,9 @@ export var HS_YEAR_QTRS = {
   amzn:  { '2024': [14.0, 16.5, 21.4, 26.3], '2025': [24.3, 31.4, 34.2, 35.1], '2026': [43.2, 53.1, null, null] },
   meta:  { '2024': [6.7,  8.5,  9.2,  14.8], '2025': [12.5, 17.0, 19.4, 22.1], '2026': [19.8, 31.1, null, null] },
   msft:  { '2024': [14.0, 19.0, 20.0, 22.6], '2025': [21.4, 24.2, 34.9, 37.5], '2026': [31.9, 41.0, null, null] },
-  // Exact $M ÷ 1000 rather than the rounded HS_QUARTERLY figures, so 2025 sums to
-  // the S-1's $12.7B instead of a rounding artefact of $12.9B.
-  spcx:  { '2024': [null, null, null, null], '2025': [2.567, 0.750, 4.760, 4.650], '2026': [7.723, 15.828, 16.444, null] },
+  // Total company, exact $M ÷ 1000 rather than the rounded HS_QUARTERLY figures,
+  // so 2025 sums to the S-1's $20.7B and 2026 YTD to $48.1B with no rounding drift.
+  spcx:  { '2024': [null, null, null, null], '2025': [4.140, 2.826, 6.880, 6.891], '2026': [10.107, 18.369, 19.593, null] },
 };
 
 // true = that quarter is derived, not stated.
@@ -168,7 +181,7 @@ export var HS_YEAR_DERIVED = {
 // Company-years where a quarter is missing and underivable — the bar understates.
 export var HS_YEAR_PARTIAL = {
   googl: { '2024': '2Q24 never disclosed on any call in the corpus — this bar is 3 of 4 quarters.' },
-  spcx:  { '2024': 'Super Intelligence segment only. No 2024 quarters (xAI was private) and no SI guide — SpaceX guides total-company CapEx only, so there is no band.' },
+  spcx:  { '2024': 'Total company. No 2024 quarters (private until 2Q26). The 2026 band is derived from the 4Q guide; hover for the Super Intelligence share.' },
 };
 
 // Full-year guidance range as most recently stated, [lo, hi]; lo === hi for a
@@ -178,11 +191,10 @@ export var HS_YEAR_GUIDE = {
   amzn:  { '2024': [75, 75],  '2025': [125, 125], '2026': [220, 220] },
   meta:  { '2024': [38, 40],  '2025': [70, 72],   '2026': [130, 145] },
   msft:  { '2024': null,      '2025': null,       '2026': [175, 175] },
-  // No band on purpose: SpaceX's only guide is TOTAL-company ($83–88B implied for
-  // 2026) and these bars are the Super Intelligence segment alone. Drawing the
-  // company guide over segment bars would show a gap that is just the other two
-  // segments.
-  spcx:  { '2024': null,      '2025': null,       '2026': null },
+  // DERIVED: SpaceX guides one quarter at a time. 2026 = 1Q–3Q actual $48,069M +
+  // the 4Q guide of $35–40B (3Q26 call) = $83.1–88.1B. Same total-company basis
+  // as the bars. Private in 2024–25, so no guide.
+  spcx:  { '2024': null,      '2025': null,       '2026': [83.1, 88.1] },
 };
 
 // Quarter ramps: one ordinal lightness ramp per company hue, Q1 lightest → Q4
@@ -216,8 +228,8 @@ export var HS_BASIS = [
     note: '⚠ Since the Blue Owl JV (Hyperion, Louisiana), data-centre construction cost no longer enters CapEx at all: Meta contributes 20% through other investing. The BlackRock JV (El Paso, 1 GW) follows the same structure. Reported CapEx understates the capacity Meta controls.' },
   { id: 'msft',  basis: 'CapEx including finance leases',
     note: '⚠ The gap between CapEx and "cash paid for PP&E" is the finance lease, recognised in full at commencement. From FY27 the useful-life extension pushes future leases to operating, which sit OUTSIDE reported CapEx (~$15B less in CY2026 with no change in investment).' },
-  { id: 'spcx',  basis: 'Super Intelligence segment CapEx only',
-    note: '⚠ A segment, not a company: Space and Connectivity are excluded (another $3.1B in 3Q26). SI was 84–86% of SpaceX CapEx in 2Q–3Q26. 2Q25 and 4Q25 are derived from year-to-date totals, and 2Q25 ($0.8B) is unusually low against its neighbours. The guidance ladder, by contrast, is total company — the only level SpaceX guides at.' },
+  { id: 'spcx',  basis: 'Total-company CapEx, three businesses in one number',
+    note: '⚠ Like Amazon’s retail spend, not all of it is AI: Starship and Starlink satellites sit in the same total. Super Intelligence was 61% of CapEx in 2025 but 84–86% in 2Q–3Q26 — hover any bar for the split. 2Q25 and 4Q25 are derived from year-to-date totals, and the 2026 guide band is derived from the 4Q guide ($35–40B) on top of the three reported quarters.' },
 ];
 
 // ── 3 · CONTRACTED BACKLOG ────────────────────────────────────────────────────

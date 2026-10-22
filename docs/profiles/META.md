@@ -40,7 +40,7 @@ costos llegan con el 10-Q); OV-6 cita aún el consenso META "Sep 8"; columna 3T2
 | Rama | `feat/meta-profile` (en el mismo PR que los cambios de la guía del review de TSM, decisión SAB 2026-10-20) |
 | Analista responsable | SAB |
 | Inicio | 2026-10-20 |
-| Avance | 42 de 44 unidades aprobadas (pendientes: F-FINAL; 3Q26 Post-Results tras el print del 21-oct) · 0 omitidas · 1 bloqueada (VA-TM) (M = filas del tablero − ⏭️ de alcance; Anexo C) |
+| Avance | 43 de 44 unidades aprobadas (F-FINAL y 3Q26 Post-Results hechos el 22-oct; revisión final de SAB el 22-oct) · 0 omitidas · 1 bloqueada (VA-TM) (M = filas del tablero − ⏭️ de alcance; Anexo C) |
 
 ## 1. Inventario de datos (F0)
 

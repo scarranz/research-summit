@@ -1515,15 +1515,28 @@ function ceSegsList(){
   return ceWlThemes().map(function(g){ return g.seg; });
 }
 function ceSubsOfSeg(seg){ var g=ceWlThemes().filter(function(x){ return x.seg===seg; })[0]; return g?g.themes:[]; }
-function ceGuessTarget(txt){
-  var t=(txt||'').toLowerCase(), theme;
-  if(/capex|capacity|compute|data cent|infrastructure|silicon|chip|gpu/.test(t)) theme='Capex guidance';
-  else if(/superintelligence|muse|model|meta ai|llama|open.?source|agent/.test(t)) theme='Meta AI and superintelligence';
+// Sub-theme names are the ones in js/themes-data/meta.js (seed v3). A newQuestions entry can name its target
+// explicitly (`theme:`); the regexes are only the fallback for free text.
+function ceGuessTarget(txt, explicit){
+  var t=(txt||'').toLowerCase(), theme=explicit||null;
+  if(theme) {}
+  else if(/2027/.test(t) && /capex|expense/.test(t)) theme='2027 capex';
+  else if(/capex/.test(t)) theme='FY2026 capex';
+  else if(/capacity|compute|data cent|infrastructure|silicon|chip|gpu/.test(t)) theme='Compute capacity and custom silicon';
+  else if(/\bmuse\b|personal agent/.test(t)) theme='Muse personal agent';
+  else if(/superintelligence|model|meta ai|llama|open.?source|agent/.test(t)) theme='Meta AI and superintelligence';
+  else if(/reality labs|\brl\b/.test(t) && /loss/.test(t)) theme='RL losses in 2026';
   else if(/glasses|reality labs|quest|wearable|connect/.test(t)) theme='AI glasses';
-  else if(/legal|severance|expense|cost|headcount|tax|margin/.test(t)) theme='Expense guidance and drivers';
-  else if(/whatsapp|messag|business ai|paid/.test(t)) theme='Business messaging and WhatsApp';
+  else if(/legal|youth|trial|settlement|attorneys/.test(t)) theme='Youth litigation and the AG settlement';
+  else if(/tax/.test(t)) theme='Tax rate guide';
+  else if(/headcount|severance|hiring/.test(t)) theme='Headcount and AI hiring';
+  else if(/class c|dividend|buyback|split/.test(t)) theme='Capital return';
+  else if(/operating income/.test(t)) theme='2026 operating income above 2025';
+  else if(/expense|cost|margin/.test(t)) theme='FY2026 expenses';
+  else if(/whatsapp|messag|business ai|paid|meta one|subscri/.test(t)) theme='Business messaging and WhatsApp';
   else if(/impression|price per ad|price-per-ad/.test(t)) theme='Ad impressions and price per ad';
   else if(/engagement|reels|threads|instagram|time spent|dap|recommend/.test(t)) theme='Engagement and recommendations';
+  else if(/guide|revenue/.test(t)) theme='Revenue guide and demand mix';
   else theme='AI in the ad system';
   var seg=(ceSegsList()[0]||'Family of Apps');
   ceWlThemes().forEach(function(g){ if(g.themes.indexOf(theme)>=0) seg=g.seg; });
@@ -1550,7 +1563,7 @@ function ceThemeProposals(q, qk){
   if(!nq.length) return '';
   var cards=nq.map(function(x,i){
     var txt=(typeof x==='string')?x:(x.n||'');
-    var tg=ceGuessTarget(txt);
+    var tg=ceGuessTarget(txt, (typeof x==='object')?x.theme:null);
     return '<div class="ce-tp-card" data-tp="'+qk+'-'+i+'">'+
       '<div class="ce-tp-row1">'+
         '<span class="ce-tp-fld"><label class="ce-tp-lb">Theme</label>'+ceSegSelectHtml(tg.seg)+'</span>'+

@@ -10,12 +10,17 @@
 Meta reportó el 3T26 el 21-oct después del cierre. Ya está: el print del 3T26 (8-K) en Results y en
 Earnings ▸ Post-Results, el 4T26 abierto en Setup con la guía nueva, y Notes reestructurado (31 hilos, 13 cerrados;
 la copia en Supabase ya es la nueva). **Plan para el 22-oct en la mañana, en este orden:**
-1. **Call Summary del 3T26** — transcripción verbatim por Quartr (ya reconectado): `prepared`, `qanda`,
-   `highlights` y `newQuestions` en el bloque Q3 2026 de `js/overviews/meta-ce-data.js` (formato del 2T26).
-   De paso, cambiar las citas del 2T26 (hoy de cobertura de prensa) por el verbatim de IR.
-2. **Notas de SAB del 3T26 → Notes**: SAB trae sus notas de la llamada; se agregan a los hilos abiertos
-   (y se cierran los que se reconcilien). Si se reestructura la semilla, subir `META_THEMES_V`.
-3. **Watch List**: pasar al 4T26 los ganchos abiertos del 3T26 (hoy el 4T26 dice "No open hooks yet").
+1. **Call Summary del 3T26** — ✔ (22-oct): 10 temas de prepared remarks, 7 preguntas, 7 puntos (2 `lead` al Watch
+   List), 5 `newQuestions`. Quartr seguía caído: citas textuales de la transcripción publicada, cada una cotejada
+   (aparecen literal en la transcripción o en el 8-K). Pendiente menor: las citas del 2T26 siguen de prensa.
+   `ceGuessTarget` reescrito a los sub-temas de la semilla v3 y acepta `theme:` explícito en `newQuestions`.
+2. **Notas de SAB del 3T26 → Notes** — ✔ (22-oct): 15 notas en 13 hilos; hilos nuevos "Muse personal agent",
+   "RL losses in 2027", "Youth litigation and the AG settlement"; `META_THEMES_V` = 3 (la copia en Supabase ya es
+   la v3; antes se comprobó que la guardada no tenía notas que la semilla no tuviera). Cifras corregidas contra el
+   8-K: pérdidas RL 2026 $18–19B (el cuaderno dice 17–19); la guía $73–76B es del 4T26; y en el 2T26 el crecimiento
+   de ingresos era +28%, no +18%.
+3. **Watch List** — ✔ (22-oct): 5 ganchos del 3T26 cerrados (`track_until` Q3 2026; el de modelos con su
+   desenlace) y 5 abiertos para el 4T26 (capex/2027 · Muse → dólares · motor de anuncios vs guía · legal · RL).
 4. **F-FINAL**: ✔ código muerto borrado (22-oct): `meta.js` 3,369 → ~890 líneas; se quitaron el bloque `ce*` viejo,
    `callsBody`, `suppliersBody`/`SC_*`, los paneles pre-guía (segmentos, spend, model vs reality, Sensitivity vieja)
    y los imports sin uso. Recorrido en el portal: las 24 sub-pestañas y los pop-ups cargan sin errores, igual que

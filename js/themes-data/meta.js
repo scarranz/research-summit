@@ -5,7 +5,7 @@
 // 'Family of Apps' → foa and 'Reality Labs' → rl; the other themes are company-wide). Once the portal saves a
 // record (Supabase, company_theme_record) that copy wins and this seed is no longer read.
 //
-// Source: SAB's handwritten call notes, Q4 2022 → Q2 2026 (META.pdf, Oct 21 2026): 15 earnings calls plus two
+// Source: SAB's handwritten call notes, Q4 2022 → Q2 2026 (META.pdf, Oct 21 2026) and Q3 2026 (scan of Oct 22 2026): 16 earnings calls plus two
 // conferences (GS Communacopia, Sep 2025; Morgan Stanley TMT, Mar 2026), filed under the quarter of the last call.
 // Every note is a paraphrase of what management said (no quotation marks). Not used: the Jan 2025 model recap
 // (our own price target) and the Jul 2025 ad-ecosystem primer (background, not a call).
@@ -17,10 +17,10 @@
 // D&A = EBITDA − operating income), not from the handwritten notes.
 // Seed version: bump it when the seed is restructured. Every thread carries it as `v`, and the Notes tab replaces
 // a saved record older than this with the seed (a stale open tab cannot bring an old structure back).
-export var META_THEMES_V = 2;
+export var META_THEMES_V = 3;
 export var META_THEMES = [
   // ── Family of Apps ────────────────────────────────────────────────────────────────────────────
-  { seg:'Family of Apps', theme:'Ad impressions and price per ad', st:{ k:'trend', since:'Q2 2024', last:'Q2 2026' },
+  { seg:'Family of Apps', theme:'Ad impressions and price per ad', st:{ k:'trend', since:'Q2 2024', last:'Q3 2026' },
     why:'The two levers of ad revenue, noted every quarter: volume (impressions) and price.',
     updates:[
       { q:'Q2 2024', items:['Ad impressions grew at the <b>lowest rate of the last five quarters</b>, in all markets.'] },
@@ -31,6 +31,7 @@ export var META_THEMES = [
       { q:'Q3 2025', items:['Impressions <b>+14%</b>, average price per ad <b>+10%</b>.'] },
       { q:'Q1 2026', items:['Impressions <b>+19%</b>, healthy across all regions on engagement; price per ad <b>+12%</b>, helped by FX, offset by growth in lower-priced regions.'] },
       { q:'Q2 2026', items:['Impressions <b>+14%</b>, average price per ad <b>+12%</b>.'] },
+      { q:'Q3 2026', items:['Revenue <b>+26%</b> YoY: average price per ad <b>+14%</b>, ad impressions <b>+10%</b>, DAP <b>+3%</b>.'] },
     ]},
   { seg:'Family of Apps', theme:'AI in the ad system', st:{ k:'trend', since:'Q4 2022', last:'Q2 2026' },
     why:'Where the AI spend pays back first: better ranking and automated campaigns lift conversions and price.',
@@ -45,12 +46,13 @@ export var META_THEMES = [
       { q:'Q1 2026', items:['At Morgan Stanley TMT (Mar 2026): <b>iREV</b>, the internal measure of ad performance; ranking and recommendations remain the main focus.'] },
       { q:'Q2 2026', items:['Expanded the context used for ad relevance.'] },
     ]},
-  { seg:'Family of Apps', theme:'Gen AI as a revenue line', st:{ k:'promise', since:'Q2 2024', last:'Q2 2025' },
+  { seg:'Family of Apps', theme:'Gen AI as a revenue line', st:{ k:'promise', since:'Q2 2024', last:'Q3 2026' },
     why:'Management keeps saying generative AI is not yet a revenue driver; reconcile when it is.',
     updates:[
       { q:'Q2 2024', items:['Advertisers see higher ROI from gen AI tools; core AI returns in the short term, gen AI <b>not in 2024</b> but accretive over time.'] },
       { q:'Q4 2024', items:['Meta AI is not focused on monetization yet.'] },
       { q:'Q2 2025', items:['Gen AI will <b>not be a strong revenue contributor</b> this year or next.'] },
+      { q:'Q3 2026', items:['<b>Meta One</b>: one subscription for consumers, creators and businesses; <b>15M</b> to date.'] },
     ]},
   { seg:'Family of Apps', theme:'Reels becomes core', st:{ k:'trend', since:'Q3 2023', last:'Q1 2024' }, trackUntil:'Q1 2024',
     why:'Reels went from a monetization drag to the core of engagement.',
@@ -77,7 +79,7 @@ export var META_THEMES = [
     updates:[
       { q:'Q4 2023', items:['Stops reporting Family MAP and Facebook DAU/MAU; will report only <b>Family daily active people</b>.'] },
     ]},
-  { seg:'Family of Apps', theme:'Business messaging and WhatsApp', st:{ k:'trend', since:'Q4 2022', last:'Q2 2026' },
+  { seg:'Family of Apps', theme:'Business messaging and WhatsApp', st:{ k:'trend', since:'Q4 2022', last:'Q3 2026' },
     why:'The second revenue stream inside FoA: click-to-message ads, paid messaging and business agents, now in other revenue.',
     updates:[
       { q:'Q4 2022', items:['Other revenue growth from <b>WhatsApp business messaging</b>.'] },
@@ -89,8 +91,9 @@ export var META_THEMES = [
       { q:'Q4 2025', items:['Paid messaging reached a <b>$2B</b> run-rate.'] },
       { q:'Q1 2026', items:['Hundreds of millions see ads in WhatsApp Status daily; business AI conversations at <b>10M a week</b> vs 1M at the start of the year, rolling out to more countries.'] },
       { q:'Q2 2026', items:['FoA other revenue reached <b>$1B</b> on WhatsApp paid messaging and subscriptions.'] },
+      { q:'Q3 2026', items:['FoA other revenue driven by WhatsApp paid messaging and subscriptions revenue.'] },
     ]},
-  { seg:'Family of Apps', theme:'Revenue guide and demand mix', st:{ k:'watch', since:'Q4 2022', last:'Q2 2026' },
+  { seg:'Family of Apps', theme:'Revenue guide and demand mix', st:{ k:'watch', since:'Q4 2022', last:'Q3 2026' },
     why:'The next-quarter guide and where the growth comes from (verticals, regions).',
     updates:[
       { q:'Q4 2022', items:['Weak advertising demand; Q1 2023 guide <b>$26–28.5B</b>.'] },
@@ -104,7 +107,8 @@ export var META_THEMES = [
       { q:'Q3 2025', items:['Q4 guide <b>$56–59B</b> (FX 1% tailwind); strong revenue growth expected in 2026.'] },
       { q:'Q4 2025', items:['Q1 2026 guide <b>$53.5–56.5B</b>; FY2026 growth to be lower than Q1.'] },
       { q:'Q1 2026', items:['Revenue <b>+33%</b>, all from FoA; Q2 guide <b>$58–61B</b> (FX 2% tailwind).'] },
-      { q:'Q2 2026', items:['Revenue <b>+18%</b> YoY; Q3 guide <b>$61–64B</b> (FX 1% headwind).'] },
+      { q:'Q2 2026', items:['Revenue <b>+28%</b> YoY; Q3 guide <b>$61–64B</b> (FX 1% headwind).'] },
+      { q:'Q3 2026', items:['Q4 guide <b>$73–76B</b>.', '2027 revenue: the benefits of the AI investments will power 2027 growth (no full-year guide).'] },
     ]},
   { seg:'Family of Apps', theme:'Asia e-commerce pullback', st:{ k:'watch', since:'Q1 2025', last:'Q2 2025' }, trackUntil:'Q2 2025',
     why:'Tariffs and the end of the de minimis exemption cut spending by Asia-based e-commerce advertisers.',
@@ -121,14 +125,20 @@ export var META_THEMES = [
       { q:'Q1 2024', items:['RL expense stable; RL teams now the main operators of the new AI focus.'] },
       { q:'Q4 2024', items:['Reconciled: FY2024 RL loss <b>$17.7B</b> vs $16.1B in 2023 (+10%).'] },
     ]},
-  { seg:'Reality Labs', theme:'RL losses in 2026', st:{ k:'promise', since:'Q4 2025', last:'Q2 2026' },
+  { seg:'Reality Labs', theme:'RL losses in 2026', st:{ k:'promise', since:'Q4 2025', last:'Q3 2026' },
     why:'Guided flat for 2026; reconcile against the year.',
     updates:[
       { q:'Q4 2025', items:['FoA opex will grow; <b>RL losses to stay flat</b> in 2026 (FY2025 loss: $19.2B).'] },
       { q:'Q1 2026', items:['RL revenue did not grow: Quest down, AI glasses up.'] },
       { q:'Q2 2026', items:['RL revenue <b>+16%</b> on AI glasses, partly offset by lower Quest sales.'] },
+      { q:'Q3 2026', items:['FY2026 RL losses now guided to <b>$18–19B</b>, below 2025.'] },
     ]},
-  { seg:'Reality Labs', theme:'AI glasses', st:{ k:'trend', since:'Q2 2024', last:'Q2 2026' },
+  { seg:'Reality Labs', theme:'RL losses in 2027', st:{ k:'promise', since:'Q3 2026', last:'Q3 2026' },
+    why:'The first guide for 2027: losses narrow as investment moves to AI; reconcile against the year.',
+    updates:[
+      { q:'Q3 2026', items:['RL losses expected to narrow to about <b>$15B</b> in 2027.'] },
+    ]},
+  { seg:'Reality Labs', theme:'AI glasses', st:{ k:'trend', since:'Q2 2024', last:'Q3 2026' },
     why:'The part of RL that sells: glasses as the next computing platform, replacing Quest as the growth line.',
     updates:[
       { q:'Q2 2024', items:['Demand for Ray-Ban Meta glasses <b>exceeds capacity</b>; Connect on Sep 25.'] },
@@ -138,6 +148,7 @@ export var META_THEMES = [
       { q:'Q3 2025', items:['Q3 RL growth came from retailer stocking, not repeated in Q4; Q4 RL revenue lower YoY on the Quest overlap.', 'At GS Communacopia (Sep 2025): more glasses announced at Connect.'] },
       { q:'Q4 2025', items:['Glasses sales <b>tripled</b> last year; glasses are the incarnation of more immersive formats.'] },
       { q:'Q2 2026', items:['New glasses ship with <b>Muse Spark</b> out of the box; Connect on Sep 23.'] },
+      { q:'Q3 2026', items:['The business model of the glasses is not the hardware but the software sold afterwards.', 'Reality Labs to move toward profitability after 2026.'] },
     ]},
   // ── AI & compute ──────────────────────────────────────────────────────────────────────────────
   { seg:'AI & compute', theme:'FY2023 capex', st:{ k:'promise', since:'Q4 2022', last:'Q4 2023' }, trackUntil:'Q4 2023',
@@ -168,7 +179,7 @@ export var META_THEMES = [
       { q:'Q3 2025', items:['FY2025 <b>$70–72B</b>.'] },
       { q:'Q4 2025', items:['Reconciled: FY2025 capex <b>$72.2B</b>, at the top of the range.'] },
     ]},
-  { seg:'AI & compute', theme:'FY2026 capex', st:{ k:'promise', since:'Q2 2025', last:'Q2 2026' },
+  { seg:'AI & compute', theme:'FY2026 capex', st:{ k:'promise', since:'Q2 2025', last:'Q3 2026' },
     why:'The current year: the guide and every revision until it lands.',
     updates:[
       { q:'Q2 2025', items:['Another year of similar dollar growth in 2026.'] },
@@ -176,11 +187,13 @@ export var META_THEMES = [
       { q:'Q4 2025', items:['FY2026 <b>$115–135B</b>, driven by Meta Superintelligence Labs.'] },
       { q:'Q1 2026', items:['FY2026 raised to <b>$125–145B</b>, partly component (memory) inflation.'] },
       { q:'Q2 2026', items:['Q2 capex <b>$31.08B</b> vs CFO <b>$31.87B</b>: FCF <b>$784M</b>; FY2026 lower end raised to <b>$130–145B</b>.'] },
+      { q:'Q3 2026', items:['FY2026 narrowed to <b>$135–145B</b>.'] },
     ]},
-  { seg:'AI & compute', theme:'2027 capex', st:{ k:'watch', since:'Q1 2026', last:'Q1 2026' },
+  { seg:'AI & compute', theme:'2027 capex', st:{ k:'watch', since:'Q1 2026', last:'Q3 2026' },
     why:'No number yet; only direction.',
     updates:[
       { q:'Q1 2026', items:['2027 capex will grow; Meta keeps underestimating its compute needs.'] },
+      { q:'Q3 2026', items:['Still early on the 2027 capex guide.'] },
     ]},
   { seg:'AI & compute', theme:'Funding the build', st:{ k:'watch', since:'Q3 2025', last:'Q3 2025' },
     why:'How the capex is paid for beyond operating cash flow: partners, off-balance vehicles, debt.',
@@ -215,6 +228,11 @@ export var META_THEMES = [
       { q:'Q1 2026', items:['At Morgan Stanley TMT (Mar 2026): each new model to be decided as open or closed.'] },
       { q:'Q2 2026', items:['Focus: distributing <b>superintelligence for everyone</b>; WhatsApp the leading surface for Meta AI.'] },
     ]},
+  { seg:'AI & compute', theme:'Muse personal agent', st:{ k:'watch', since:'Q3 2026', last:'Q3 2026' },
+    why:'The first AI product with its own business model: adoption, use cases, revenue per user and compute cost.',
+    updates:[
+      { q:'Q3 2026', items:['<b>10M</b> people in the US and Canada have set up Muse.', 'About <b>25%</b> have shopped through it, with an average order of about <b>$200</b>.', 'Second most common use: personal productivity, connected to email and calendar.', 'The focus now is on scaling it.', 'Revenue per user of the people on Muse is several hundred dollars a year, and Meta expects Muse to take it higher; to serve <b>1B+</b> people in the coming years.', 'Compute efficiency to improve about <b>10x</b>, which allows profitability.'] },
+    ]},
   // ── Costs & capital ───────────────────────────────────────────────────────────────────────────
   { seg:'Costs & capital', theme:'The 2023 efficiency reset', st:{ k:'trend', since:'Q4 2022', last:'Q4 2023' }, trackUntil:'Q4 2023',
     why:'Layoffs, fewer data centers and restructuring charges, until margins recovered.',
@@ -248,7 +266,7 @@ export var META_THEMES = [
       { q:'Q3 2025', items:['<b>$116–118B</b>; expenses <b>+32%</b> in Q3.'] },
       { q:'Q4 2025', items:['Reconciled: FY2025 total expenses <b>$117.7B</b>, inside the range.'] },
     ]},
-  { seg:'Costs & capital', theme:'FY2026 expenses', st:{ k:'promise', since:'Q2 2025', last:'Q2 2026' },
+  { seg:'Costs & capital', theme:'FY2026 expenses', st:{ k:'promise', since:'Q2 2025', last:'Q3 2026' },
     why:'The current year: infrastructure (D&A, cloud) first, technical pay second.',
     updates:[
       { q:'Q2 2025', items:['2026 expense growth <b>above 2025</b>: sharp rise in D&A and infrastructure opex, then technical pay.'] },
@@ -256,13 +274,20 @@ export var META_THEMES = [
       { q:'Q4 2025', items:['FY2026 <b>$162–169B</b>: infrastructure, third-party cloud and D&A, then compensation (AI hires).'] },
       { q:'Q1 2026', items:['FY2026 kept at <b>$162–169B</b>.'] },
       { q:'Q2 2026', items:['Costs <b>+55%</b> YoY, incl. <b>$2.4B</b> legal and <b>$1.18B</b> severance; FY2026 lower end raised to <b>$165–169B</b> on legal charges.'] },
+      { q:'Q3 2026', items:['FY2026 raised to <b>$175–179B</b> to include the legal charge.', 'Same commentary on the rise in opex.'] },
     ]},
-  { seg:'Costs & capital', theme:'2026 operating income above 2025', st:{ k:'promise', since:'Q4 2025', last:'Q2 2026' },
+  { seg:'Costs & capital', theme:'2026 operating income above 2025', st:{ k:'promise', since:'Q4 2025', last:'Q3 2026' },
     why:'The commitment that frames the 2026 spend; reconcile it at the Q4 2026 print.',
     updates:[
       { q:'Q4 2025', items:['2026 operating income to be <b>above 2025</b> ($83.3B).'] },
       { q:'Q1 2026', items:['Reiterated: FY2026 operating income above FY2025.'] },
       { q:'Q2 2026', items:['Reiterated, with expenses raised for the legal charges.'] },
+      { q:'Q3 2026', items:['Excluding the Q3 legal charge, 2026 operating income still above 2025.'] },
+    ]},
+  { seg:'Costs & capital', theme:'Youth litigation and the AG settlement', st:{ k:'watch', since:'Q3 2026', last:'Q3 2026' },
+    why:'The teen-harm cases: the charge booked, what the agreement can still cost, and the trials still scheduled.',
+    updates:[
+      { q:'Q3 2026', items:['Q3 carries a <b>$9.89B</b> expense for the teen cases; the agreement can reach about <b>$18.59B</b>.', 'Without the charge, diluted EPS <b>$3.83</b> would be <b>$7.40</b>.'] },
     ]},
   { seg:'Costs & capital', theme:'Headcount and AI hiring', st:{ k:'watch', since:'Q1 2024', last:'Q2 2026' },
     why:'From the 2023 cuts to a hiring cycle for AI talent, and back to severance in 2026.',
@@ -273,14 +298,15 @@ export var META_THEMES = [
       { q:'Q2 2025', items:['Operating margin <b>43%</b>; headcount growth in 2025 and 2026.'] },
       { q:'Q2 2026', items:['<b>$1.18B</b> severance from the May 2026 layoffs.'] },
     ]},
-  { seg:'Costs & capital', theme:'Capital return', st:{ k:'trend', since:'Q4 2023', last:'Q4 2024' },
+  { seg:'Costs & capital', theme:'Capital return', st:{ k:'trend', since:'Q4 2023', last:'Q3 2026' },
     why:'Dividends and buybacks next to the capex.',
     updates:[
       { q:'Q4 2023', items:['First dividend; buyback authorization up <b>$50B</b>.'] },
       { q:'Q3 2024', items:['Buybacks <b>$8.86B</b>, dividends <b>$1.26B</b>.'] },
       { q:'Q4 2024', items:['Capital return to continue through dividends and buybacks.'] },
+      { q:'Q3 2026', items:['New <b>Class C</b> stock with no voting power, effective January 2027: one Class C share paid as a dividend for each Class A and B share, in effect a <b>2-for-1</b> split.'] },
     ]},
-  { seg:'Costs & capital', theme:'Tax rate guide', st:{ k:'watch', since:'Q4 2022', last:'Q2 2026' },
+  { seg:'Costs & capital', theme:'Tax rate guide', st:{ k:'watch', since:'Q4 2022', last:'Q3 2026' },
     why:'The guided tax rate, each year.',
     updates:[
       { q:'Q4 2022', items:['Tax rate <b>24%</b>; 2023 guided to the low 20s.'] },
@@ -290,6 +316,7 @@ export var META_THEMES = [
       { q:'Q3 2025', items:['Q4 tax rate <b>12–15%</b>.'] },
       { q:'Q1 2026', items:['Tax rate for the rest of the year <b>13–16%</b>.'] },
       { q:'Q2 2026', items:['Tax rate for the rest of the year <b>15–17%</b>; <b>$2.4B</b> of legal proceedings in costs.'] },
+      { q:'Q3 2026', items:['Q3 tax rate <b>24%</b>; <b>17%</b> without the legal charge.'] },
     ]},
   { seg:'Costs & capital', theme:'The OBBBA tax charge', st:{ k:'trend', since:'Q3 2025', last:'Q1 2026' }, trackUntil:'Q1 2026',
     why:'A one-time non-cash charge and its partial reversal.',

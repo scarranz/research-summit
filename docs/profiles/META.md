@@ -5,7 +5,11 @@
 > Estados: ⬜ pendiente · 📝 propuesta · 🔨 en construcción · 👀 en revisión · 🔁 cambios pedidos ·
 > ✅ aprobada · ⏭️ omitida (con razón) · ⛔ bloqueada (qué falta y quién lo consigue)
 
-## ▶ Retomar aquí (dejado el 2026-10-21 en la noche, último commit `e6d51f8`)
+## ▶ Estado (2026-10-22): perfil terminado, revisado por SAB, PR abierto
+
+SAB revisó el perfil completo el 22-oct y pidió abrir el PR. Pendiente fuera de este PR: VA-TM ⛔ (falta la valuación de META en el MCP), BL ▸ Segments 3T26 (el 10-Q salió el 22-oct), cambiar las citas del 3T26 por el PDF oficial de Meta cuando lo publique, y OV-6, que aún cita el consenso del 8 de septiembre.
+
+### Bitácora del 21–22 de octubre
 
 Meta reportó el 3T26 el 21-oct después del cierre. Ya está: el print del 3T26 (8-K) en Results y en
 Earnings ▸ Post-Results, el 4T26 abierto en Setup con la guía nueva, y Notes reestructurado (31 hilos, 13 cerrados;

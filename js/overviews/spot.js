@@ -1,20 +1,18 @@
-// overviews/spot.js — custom Overview for Spotify Technology S.A. (NYSE: SPOT)
-// Built per the portal's per-company Overview model (see CLAUDE.md).
+// overviews/spot.js — Overview + Deep Dive for Spotify Technology S.A. (NYSE: SPOT), built on the canonical profile
+// structure (docs/PROFILE_PLAYBOOK.md; reference: TSMC / AMZN). Reports and is modelled in EUR (foreign private issuer, IFRS).
 //
-// Sub-tabs:
-//   • Overview     — snapshot, business description, headline KPIs (Summit DCF).
-//   • Product Mix  — VISUAL-FIRST gross-margin story: how content economics shifted
-//                    from a music-only royalty model to a three-format platform
-//                    (music + podcasts + audiobooks), and why that re-rates the P&L.
+// Deep Dive: Top Line (segments.js) · Bottom Line (spot-bl.js) · Evolution (spot-ce.js + results.js) · Valuation
+// (spot-target-multiple.js, spot-sensitivity.js). Management and Miscellaneous are added as they are built.
 //
-// Sources: Spotify FY2024 Annual Report (Form 20-F), Q1 2026 Shareholder Deck &
-// earnings call prepared remarks, historical 20-F income statements, and the Summit
-// DCF model (snapshot 2026-05-22). Financial figures reported in EUR.
+// Sources: FY2025 Form 20-F (acc. 0001628280-26-006874), 6-K / earnings calls, Bloomberg consensus, Summit DCF snapshots.
+// Build log: docs/profiles/SPOT.md.
 
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { spotResults } from '../results-data/spot.js';
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line (engine + js/segments-data/spot.js)
+import { spotSplcBody, spotSplcBuild, spotSplcPop } from './spot-splc.js';   // Bottom Line ▸ Supply Chain (Bloomberg SPLC, 21 Oct 2026)
 import { spotBlGeneralHtml, spotBlGeneralBuild } from './spot-bl.js';   // Bottom Line ▸ General (Amazon's views + ./spot-bl-data.js)
+import { spotHistMult } from './spot-histmult.js';   // Valuation ▸ Historic Multiple (EDGAR denominators, live price and ECB rate)
 import { spotTargetMult } from './spot-target-multiple.js';
 import { spotSens } from './spot-sensitivity.js';   // Valuation ▸ Sensitivity (frozen Summit snapshot, EUR)   // Valuation ▸ Target Multiple / PEG (frozen Summit valuation)
 import { spotCeHtml, spotCeWire, spotCeBuild, spotCePop } from './spot-ce.js';   // Evolution ▸ Earnings (canonical machinery + ./spot-ce-data.js)
@@ -30,6 +28,21 @@ function collapsible(title, inner, open){
 // ── Block 1 · Key Facts — exactly 10 cells (5×2). Filer status VERIFIED on EDGAR:
 // CIK 1639920 has filed 20-F ×8 and 6-K ×91 and ZERO 10-K/10-Q/8-K ever — foreign
 // private issuer, not inferred from the Luxembourg domicile.
+var CE_IR_URL='https://investors.spotify.com/';
+var CE_EDGAR_URL='https://www.sec.gov/edgar/browse/?CIK=1639920&owner=exclude';
+var CE_LOGO_URL='https://assets.parqet.com/logos/symbol/SPOT';
+var CE_SEC_SEAL='img/sec-seal.png';
+function ceHeaderSources(){
+  return '<div class="cohd-src">'+
+  '<a href="'+CE_IR_URL+'" target="_blank" rel="noopener" title="Spotify Investor Relations" aria-label="Spotify Investor Relations">'+
+    '<img src="'+CE_LOGO_URL+'" alt="Spotify logo" onerror="this.style.display=\'none\'">'+
+  '</a>'+
+  '<a class="edgar" href="'+CE_EDGAR_URL+'" target="_blank" rel="noopener" title="Spotify on SEC EDGAR" aria-label="Spotify on SEC EDGAR">'+
+    '<img src="'+CE_SEC_SEAL+'" alt="SEC seal" onerror="this.style.display=\'none\'">'+
+  '</a>'+
+  '</div>';
+}
+
 var STD_FACTS=[
   ['Listing','NYSE: SPOT'],
   ['HQ','Stockholm, Sweden (operations)'],
@@ -235,6 +248,11 @@ function sScMult(p){ var key=(S_SC.metric==='pe'?'pe':'ev')+(S_SC.basis==='f'?'F
 function sScMax(){ return S_SC.metric==='pe'?60:36; }   // headroom above the widest real value on each axis
 function scLogoUrl(p){ return p.logo || ('https://assets.parqet.com/logos/symbol/'+p.tk); }
 
+// Valuation ▸ Peers (VA-PEERS): the same map as Overview ▸ Competitors, same state (removing a peer here removes it there), plus the table.
+function valuationPeersBody(){
+  return '<p class="ov-lede"><b>The peer map.</b> The same peer map as the Overview, with the numbers behind it. Market caps are live; the multiples and growth rates are the seeded figures noted below.</p>'+
+    stdPeerScatter('dd');
+}
 function stdPeerScatter(sfx){
   sfx=sfx||'ov';
   var h='';   // peer-map classes (.mg-*, .asc-*) live in css/overview.css
@@ -255,6 +273,8 @@ function stdPeerScatter(sfx){
     '<g class="spot-sc-nodes"></g>'+
   '</svg></div>';
   h+='<div class="asc-chips spot-sc-chips"></div>';
+  if(sfx==='dd') h+='<div class="rs-collap"><button type="button" class="rs-collap-h spot-sc-tblh" data-selfwired="1"></button>'+
+    '<div class="rs-collap-b spot-sc-tblb"><div class="rs-tablewrap asc-tblwrap"><div class="spot-sc-tbl"></div></div></div></div>';
   h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker. <b>Only listed peers with a public multiple plot here.</b> Spotify\'s biggest rivals in every vertical — <b>Apple Music, YouTube Music and Amazon Music/Audible</b> — are units inside AAPL, GOOGL and AMZN with no separable financials, so they have no multiple to plot; the same goes for private rivals (SoundCloud, JOOX) and for the independent-rights agency Merlin. They belong in the competitive landscape, not on this chart. Apple is also Spotify\'s <b>distribution gatekeeper</b>, which is a structural relationship a scatter cannot express. <span class="ave-subh-note spot-sc-src"></span></div>';
   h+='<div class="mg-tip spot-sc-tip" hidden></div>';
   h+='</div>';
@@ -316,12 +336,49 @@ function sScChipsOne(wrap){
   h+='<span class="asc-add"><input class="spot-sc-addtk" placeholder="+ TICKER" maxlength="6"><button type="button" class="spot-sc-addbtn">Add</button></span>';
   box.innerHTML=h;
 }
-function sScRenderAll(root){ root.querySelectorAll('.spot-sc').forEach(sScRenderOne); }
+function sScNum(v){ return v!=null && !isNaN(v); }
+function sScGrowth(p){ return S_SC.basis==='f'?p.gf:p.gt; }
+function sScFmtMult(v){ return sScNum(v)?v.toFixed(1)+'×':'—'; }
+function sScFmtPct(v){ return sScNum(v)?v.toFixed(1)+'%':'—'; }
+function sScFmtMc(v){ return sScNum(v)?('$'+(v>=1000?(v/1000).toFixed(2)+'T':Math.round(v)+'B')):'—'; }
+function sScMean(a){ if(!a.length) return null; return a.reduce(function(s,v){ return s+v; },0)/a.length; }
+function sScMedian(a){ if(!a.length) return null; var s=a.slice().sort(function(x,y){ return x-y; }), h=Math.floor(s.length/2); return s.length%2?s[h]:(s[h-1]+s[h])/2; }
+function sScVsAvg(m, avg){ if(!sScNum(m)||!sScNum(avg)||!avg) return '<span class="asc-nilv">—</span>'; var d=(m/avg-1)*100; return (d>=0?'+':'−')+Math.abs(d).toFixed(0)+'%'; }
+// "The numbers behind the map": every peer on the ACTIVE multiple and basis, cheapest first (a name with no multiple sinks to the
+// bottom, never sorts as zero), with the peer average and median EXCLUDING Spotify.
+function sScTableOne(wrap){
+  var box=wrap.querySelector('.spot-sc-tbl'); if(!box||!S_SC.peers) return;
+  var mLab=(S_SC.metric==='pe'?'P/E':'EV/EBITDA'), bLab=(S_SC.basis==='f'?'forward':'trailing');
+  var rows=S_SC.peers.map(function(p){ return { p:p, m:sScMult(p), g:sScGrowth(p) }; });
+  rows.sort(function(a,b){ var an=sScNum(a.m), bn=sScNum(b.m); if(!an&&!bn) return 0; if(!an) return 1; if(!bn) return -1; return a.m-b.m; });
+  var peers=rows.filter(function(r){ return !r.p.hl; });
+  var ms=peers.filter(function(r){ return sScNum(r.m); }).map(function(r){ return r.m; });
+  var gs=peers.filter(function(r){ return sScNum(r.g); }).map(function(r){ return r.g; });
+  var avgM=sScMean(ms), medM=sScMedian(ms), avgG=sScMean(gs), medG=sScMedian(gs);
+  var body=rows.map(function(r){
+    var p=r.p, cls=(p.hl?'asc-hl':'')+(sScNum(r.m)?'':' asc-nil');
+    return '<tr class="'+cls.trim()+'"><td><span class="asc-nm"><img src="'+esc(scLogoUrl(p))+'" alt="" onerror="this.style.display=\'none\'">'+
+        '<span>'+esc(p.n)+' <span class="asc-tk">'+esc(p.tk)+(sScNum(r.m)?'':' · no multiple on this basis')+'</span></span></span></td>'+
+      '<td class="asc-m">'+sScFmtMult(r.m)+'</td><td>'+sScFmtPct(r.g)+'</td><td>'+sScFmtMc(p.mc)+'</td><td>'+sScVsAvg(r.m, avgM)+'</td></tr>';
+  }).join('');
+  var foot='<tr class="asc-avg"><td>Peer average <span class="asc-tk">ex-Spotify · '+ms.length+' name'+(ms.length===1?'':'s')+'</span></td>'+
+      '<td>'+sScFmtMult(avgM)+'</td><td>'+sScFmtPct(avgG)+'</td><td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>'+
+    '<tr class="asc-med"><td>Peer median <span class="asc-tk">ex-Spotify</span></td>'+
+      '<td>'+sScFmtMult(medM)+'</td><td>'+sScFmtPct(medG)+'</td><td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>';
+  box.innerHTML='<table class="asc-tbl"><thead><tr><th>Peer</th><th>'+esc(mLab)+' · '+esc(bLab)+'</th><th>Rev growth · '+esc(bLab)+'</th><th>Market cap</th><th>vs peer avg</th></tr></thead>'+
+    '<tbody>'+body+'</tbody><tfoot>'+foot+'</tfoot></table>';
+  var hd=wrap.querySelector('.spot-sc-tblh'), bd=wrap.querySelector('.spot-sc-tblb');
+  if(hd){ var open=!(bd&&bd.hidden);
+    hd.innerHTML='<span class="rs-collap-ic">'+(open?'▾':'▸')+'</span>The numbers behind the map<span class="rs-collap-sub">'+(open?'hide':'show')+' · '+esc(mLab)+' · '+esc(bLab)+', '+rows.length+' names</span>'; }
+}
+function sScRenderAll(root){ root.querySelectorAll('.spot-sc').forEach(function(w){ sScRenderOne(w); sScTableOne(w); }); }
 function sScChipsAll(root){ root.querySelectorAll('.spot-sc').forEach(function(w){ sScChipsOne(w); wireScChips(root, w); }); }
 function wireScatters(root){
   sScReset();
   root.querySelectorAll('.spot-sc').forEach(function(wrap){
     if(wrap._scWired) return; wrap._scWired=true;
+    var tblH=wrap.querySelector('.spot-sc-tblh'), tblB=wrap.querySelector('.spot-sc-tblb');
+    if(tblH&&tblB) tblH.onclick=function(){ tblB.hidden=!tblB.hidden; sScTableOne(wrap); };
     var g=wrap.querySelector('.spot-sc-nodes'), tip=wrap.querySelector('.spot-sc-tip');
     wrap.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(btn){ btn.onclick=function(){ S_SC.basis=btn.getAttribute('data-mgbasis'); sScRenderAll(root); }; });
     wrap.querySelectorAll('.mg-pill[data-mgmetric]').forEach(function(btn){ btn.onclick=function(){ S_SC.metric=btn.getAttribute('data-mgmetric'); sScRenderAll(root); }; });
@@ -403,110 +460,15 @@ function wireModal(root){
     // rendered, the cursor changed, the click did nothing. googl.js has this line (its
     // `resolve`); the splice into spot.js and lyft.js dropped it. ⚑ lyft.js is still missing it.
     if(kind==='ce'){ return spotCePop(id); }
+    if(kind==='splc'){ return spotSplcPop(id); }   // Bottom Line ▸ Supply Chain cards
     return null;
   }
   root.querySelectorAll('[data-detail]').forEach(function(el){
-    // `ce:` must be included here too — the old guard admitted only prod/hist, so even with a
-    // resolver the Earnings pop-ups would never have been bound. `sax`/`news` keep their own
-    // handlers elsewhere and are still deliberately excluded.
-    if(!/^(prod|hist|ce):/.test(el.getAttribute('data-detail')||'')) return;
+    // prod / hist (Overview) and ce (Earnings pop-ups) are the only kinds this modal resolves.
+    if(!/^(prod|hist|ce|splc):/.test(el.getAttribute('data-detail')||'')) return;
     el.style.cursor='pointer';
     el.onclick=function(){ var d=resolve(el.getAttribute('data-detail')); if(d) openM(d.t,d.h); };
   });
-}
-
-// Each card is clickable → opens a visual explainer (newsDetailHtml). Fields:
-//   d = short blurb on the card · icon/tagline/what = the explainer · facts = stat
-//   chips · viz = a small inline visual ('flow' | 'tiles' | 'stack').
-var ID_NEWS = [
-  { tag:'Surprise',   t:'No “Super Premium” tier',
-    d:'Against market expectations, Spotify chose the power-law add-on approach over a single high-priced tier.',
-    icon:'🧩', tagline:'À-la-carte add-ons over one pricey tier',
-    what:'The market expected a single expensive “Super Premium” plan. Instead, Spotify keeps standard Premium as the price anchor and monetizes power users through modular add-ons they buy individually — AI remix, Audiobooks+, superfan perks. It’s a “power-law” bet: a small share of superfans spend a lot, without raising the price for everyone else.',
-    facts:[ {k:'Approach',v:'À-la-carte'}, {k:'Base price',v:'Unchanged'}, {k:'Upside',v:'Superfans'} ],
-    viz:{ type:'stack' } },
-  { tag:'AI',         t:'AI music creation & remix',
-    d:'Landmark licensing with Universal Music Group & UMPG lets fans legally make AI covers/remixes — consent, credit, compensation. Launches as a paid Premium add-on.',
-    icon:'🎛️', tagline:'Legal AI covers & remixes, built on consent',
-    what:'A landmark licensing deal with Universal Music Group and UMPG lets fans legally create AI covers and remixes of real, licensed songs. It rests on three principles — consent (artists opt in), credit, and compensation (artists get paid) — and ships as a paid Premium add-on rather than a free feature.',
-    facts:[ {k:'Partners',v:'UMG · UMPG'}, {k:'Principles',v:'Consent · Credit · Pay'}, {k:'Pricing',v:'Premium add-on'} ],
-    viz:{ type:'flow', steps:[ {ic:'🎵',l:'Licensed track'}, {ic:'🤖',l:'Fan makes AI remix'}, {ic:'✅',l:'Artist consent · credit · pay'} ] } },
-  { tag:'Superfans',  t:'Reserved by Spotify',
-    d:'Premium superfans get 2 tour tickets held before general on-sale. Launches summer 2026 in the U.S. with Live Nation.',
-    icon:'🎟️', tagline:'2 concert tickets held for superfans',
-    what:'Spotify uses its listening data to spot an artist’s true superfans and reserves 2 concert tickets for them before the public on-sale — turning streaming engagement into real-world access. It launches summer 2026 in the U.S. in partnership with Live Nation.',
-    facts:[ {k:'Tickets',v:'2 reserved'}, {k:'Launch',v:'Summer 2026'}, {k:'Market',v:'U.S.'}, {k:'Partner',v:'Live Nation'} ],
-    viz:{ type:'flow', steps:[ {ic:'🎧',l:'Superfan identified'}, {ic:'🎟️',l:'2 tickets reserved'}, {ic:'⭐',l:'Buy before general on-sale'} ] } },
-  { tag:'Audiobooks', t:'Audiobooks+ scaling',
-    d:'On track for $100M annualized recurring revenue by July 2026 — 700k+ titles, 22 markets, +60% listening hours ’24→’25.',
-    icon:'📚', tagline:'Marching toward $100M ARR',
-    what:'Audiobooks+ has become a real business inside Spotify. Management says it’s on track to reach $100M in annualized recurring revenue by July 2026, powered by a deep catalog, wide reach, and fast-growing engagement — higher-margin content that lifts overall gross margin.',
-    facts:[ {k:'ARR target',v:'$100M by Jul ’26'} ],
-    viz:{ type:'tiles', tiles:[
-      {ic:'📖',t:'700k+ titles',d:'A catalog rivaling dedicated audiobook apps.'},
-      {ic:'🌍',t:'22 markets',d:'Live and expanding across regions.'},
-      {ic:'📈',t:'+60% hours',d:'Listening hours grew ’24 → ’25.'} ] } },
-  { tag:'AI',         t:'Studio by Spotify',
-    d:'Creator/AI labs (research preview, 20+ markets), plus Podcast Memberships and new audiobook creation tools.',
-    icon:'🛠️', tagline:'A creator & AI toolkit',
-    what:'Studio by Spotify brings Spotify’s creator-facing tools together in one place, including AI-powered “labs” now in a research preview across 20+ markets. It adds Podcast Memberships (recurring revenue for podcasters) and new audiobook-creation tools — deepening Spotify’s role as a platform creators build on, not just distribute through.',
-    facts:[ {k:'Stage',v:'Research preview'}, {k:'Reach',v:'20+ markets'} ],
-    viz:{ type:'tiles', tiles:[
-      {ic:'🧪',t:'Creator AI labs',d:'Experimental AI tools for creators.'},
-      {ic:'🎙️',t:'Podcast Memberships',d:'Recurring revenue for podcasters.'},
-      {ic:'📗',t:'Audiobook creation',d:'New tools to produce audiobooks.'} ] } },
-  { tag:'Engagement', t:'Beyond music',
-    d:'Fitness hub with Peloton content; DJ at 94M users; Taste Profile beta — widening “time well spent”.',
-    icon:'🎧', tagline:'Widening “time well spent”',
-    what:'Spotify is pushing engagement beyond music to keep users in the app longer. A new fitness hub brings in Peloton content, the AI DJ has reached 94M users, and a Taste Profile beta gives listeners a clearer view of their own tastes — all aimed at more “time well spent” and lower churn.',
-    facts:[ {k:'AI DJ',v:'94M users'} ],
-    viz:{ type:'tiles', tiles:[
-      {ic:'🏃',t:'Fitness hub',d:'Workouts with Peloton content.'},
-      {ic:'🎚️',t:'AI DJ',d:'94M users and growing.'},
-      {ic:'🫧',t:'Taste Profile',d:'Beta — see your own listening taste.'} ] } },
-];
-
-var NEWS_DETAIL_DEFAULT = '<div class="spot-news-hint">Tap any announcement above for a visual explainer of what it is and why it matters.</div>';
-
-// Small inline visuals for the news explainer — CSP-safe HTML/SVG, no libraries.
-function newsViz(v){
-  if(!v) return '';
-  if(v.type === 'flow') return '<div class="spot-nflow">'+v.steps.map(function(s,i){
-    return (i ? '<span class="spot-nflow-arr">→</span>' : '')+
-      '<div class="spot-nflow-step"><span class="spot-nflow-ic">'+s.ic+'</span>'+
-      '<span class="spot-nflow-l">'+esc(s.l)+'</span></div>';
-  }).join('')+'</div>';
-  if(v.type === 'tiles') return '<div class="spot-ntiles">'+v.tiles.map(function(t){
-    return '<div class="spot-ntile"><span class="spot-ntile-ic">'+t.ic+'</span>'+
-      '<div class="spot-ntile-t">'+esc(t.t)+'</div><div class="spot-ntile-d">'+esc(t.d)+'</div></div>';
-  }).join('')+'</div>';
-  if(v.type === 'stack') return '<div class="spot-nstack">'+
-    '<div class="spot-nstack-col"><div class="spot-nstack-cap">What the market expected</div>'+
-      '<div class="spot-nstack-tier">One pricey<br>“Super Premium” tier</div></div>'+
-    '<div class="spot-nstack-vs">vs</div>'+
-    '<div class="spot-nstack-col"><div class="spot-nstack-cap">What Spotify chose</div>'+
-      '<div class="spot-nstack-addon">＋ Superfan perks</div>'+
-      '<div class="spot-nstack-addon">＋ Audiobooks+</div>'+
-      '<div class="spot-nstack-addon">＋ AI remix</div>'+
-      '<div class="spot-nstack-base">Premium base (unchanged)</div></div>'+
-  '</div>';
-  return '';
-}
-
-function newsDetailHtml(i){
-  var n = ID_NEWS[i];
-  if(!n) return NEWS_DETAIL_DEFAULT;
-  var facts = (n.facts && n.facts.length) ? '<div class="spot-nfacts">'+n.facts.map(function(f){
-    return '<div class="spot-nfact"><span class="spot-nfact-k">'+esc(f.k)+'</span>'+
-      '<span class="spot-nfact-v">'+esc(f.v)+'</span></div>';
-  }).join('')+'</div>' : '';
-  return '<div class="spot-nd-head"><span class="spot-nd-ic">'+(n.icon || '✨')+'</span>'+
-      '<div><span class="spot-news-tag">'+esc(n.tag)+'</span>'+
-      '<div class="spot-nd-t">'+esc(n.t)+'</div>'+
-      (n.tagline ? '<div class="spot-nd-tag">'+esc(n.tagline)+'</div>' : '')+'</div></div>'+
-    '<div class="spot-nd-what">'+esc(n.what || n.d)+'</div>'+
-    newsViz(n.viz)+
-    facts;
 }
 
 function html(c){
@@ -540,13 +502,15 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="segdrv" hidden>'+segmentsHtml('SPOT')+'</div>'+
       '<div class="ovt-subpane" data-ovst="segcus" hidden>'+segmentsCustomersHtml('SPOT')+'</div>'+
     '</div>'+
-    // ── BOTTOM LINE — General only. Segments does not apply (the only segment profit Spotify reports is GROSS profit,
-    // already on Top Line ▸ Segments; no segment operating income) and Supply Chain does not apply (no SPLC export) — playbook §13 ⏭️ ──
+    // ── BOTTOM LINE — General · Supply Chain. Segments does not apply (the only segment profit Spotify reports is GROSS profit,
+    // already on Top Line ▸ Segments; no segment operating income). Supply Chain is built from the Bloomberg SPLC screens of 21 Oct 2026. ──
     '<div class="dd-pane" data-dd="bottomline" hidden>'+
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="margins">General</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="margins">'+spotBlGeneralHtml()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+spotSplcBody()+'</div>'+
     '</div>'+
     // ── EVOLUTION — Earnings (Setup · Post-Results · Notes) · Results · Estimates ──
     '<div class="dd-pane" data-dd="evolution" hidden>'+
@@ -559,13 +523,17 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="track" hidden>'+resultsHtml('SPOT')+'</div>'+
       '<div class="ovt-subpane" data-ovst="estevo" hidden>'+resultsEvoHtml('SPOT')+'</div>'+
     '</div>'+
-    // ── VALUATION — Target Multiple / PEG (Summit valuation, frozen) ──
+    // ── VALUATION — Historic Multiple · Peers · Target Multiple / PEG (Summit valuation, frozen) · Sensitivity ──
     '<div class="dd-pane" data-dd="valuation" hidden>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="targetmult">Target Multiple</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="histmult">Historic Multiple</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="targetmult">Target Multiple</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="sensitivity">Sensitivity</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="targetmult">'+spotTargetMult.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="histmult">'+spotHistMult.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="peers" hidden>'+valuationPeersBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="targetmult" hidden>'+spotTargetMult.body()+'</div>'+
       '<div class="ovt-subpane" data-ovst="sensitivity" hidden>'+spotSens.body()+'</div>'+
     '</div>'+
   '</div>';
@@ -589,7 +557,8 @@ function buildSub(root, ddKey, subKey){
     else if (subKey === 'segcus') initSegmentsCustomers(root, 'SPOT');
     else initSegmentsOverview(root, 'SPOT');
   } else if (ddKey === 'bottomline'){
-    spotBlGeneralBuild();
+    if (subKey === 'supplychain') spotSplcBuild();
+    else spotBlGeneralBuild();
   } else if (ddKey === 'evolution'){
     // The Results engine builds its charts on first paint of a VISIBLE pane, so it is init'd here.
     if (subKey === 'track'){
@@ -601,7 +570,9 @@ function buildSub(root, ddKey, subKey){
       spotCeBuild(root);
     }
   } else if (ddKey === 'valuation'){
-    if (subKey === 'targetmult') spotTargetMult.init(root);
+    if (subKey === 'histmult') requestAnimationFrame(function(){ spotHistMult.init(root); });
+    else if (subKey === 'peers') requestAnimationFrame(function(){ wireScatters(root); });
+    else if (subKey === 'targetmult') spotTargetMult.init(root);
     else if (subKey === 'sensitivity') spotSens.init(root);
   }
 }
@@ -686,4 +657,4 @@ function deepDiveInit(c){
   requestAnimationFrame(function(){ buildSub(root, activeDD(root), activeSub(root, activeDD(root))); });
 }
 
-export var spotOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };
+export var spotOverview = { html: html, init: init, headerSources: ceHeaderSources, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

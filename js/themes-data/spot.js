@@ -5,12 +5,11 @@
 // Once the portal has saved a record (Supabase table company_theme_record) that copy wins and this seed
 // is no longer read.
 //
-// Moved Oct 2026 from js/overviews/spot.js (the SPOT_THEMES record, 8 themes over Q3 2023–Q2 2026) with two
-// change: each theme gained a `seg` (the canonical Notes groups themes under a segment). The Watch List hooks (WL_ROWS,
-// wl001–wl011) restate these themes quarter by quarter; they are preserved verbatim in js/overviews/spot-wl-legacy.js
-// and are not merged here. Two themes were added from the 4 Aug 2026
-// transcript (Add-ons lift ARPU structurally; Reserved ticketing). The original Watch List rows are preserved
-// verbatim in js/overviews/spot-wl-legacy.js, including the Q3 2026 previews, which are not call notes.
+// Moved Oct 2026 from js/overviews/spot.js (the SPOT_THEMES record, 8 themes over Q3 2023–Q2 2026); each theme gained a
+// `seg` (the canonical Notes groups themes under a segment).
+// The old Watch List rows (WL_ROWS, wl001–wl011) only restated these themes quarter by quarter and were retired;
+// they live in git history (commit f52d20d). Two themes were added from the 4 Aug 2026
+// transcript (Add-ons lift ARPU structurally; Reserved ticketing).
 // Sources of the original record, as written there:
 // var SRC_CALLS='Spotify FY2025 Form 20-F, the Q1 2026 and Q2 2026 6-Ks and shareholder updates (the Q2 2026 Update is Exhibit 99.1 to the Form 6-K of 4 Aug 2026), the May 2026 Investor Day remarks, the Q2 2026 earnings call of 4 Aug 2026 (Bryan Goldberg IR; Alex Norström and Gustav Söderström, Co-CEOs; Christian Luiga, CFO), and earnings-day coverage. ⚠ A per-call record (docs/calls/SPOT*.md) has still NOT been written — the Q2 2026 call is quoted here from the published transcript, but the earlier threads are compiled from filings and decks rather than from transcripts. Building the calls repository back through 2024 is the next step.';
 export var SPOT_THEMES = [

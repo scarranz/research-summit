@@ -18,7 +18,7 @@
 // NOT READ: the 20-F's Note 23 text and revenue-by-geography table (the fetch tool stops before the financial statements), so
 // no segment definition from the notes is quoted and no geography cut is built (TL-OTH omitted).
 
-var Q = ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26'];   // reported quarters only: 3Q26 is a single estimated quarter and the General cards read the last period
+var Q = ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26'];   // 2023 from `history` below, reported quarters, then two forecast quarters (3Q26, 4Q26). Summit has no 2027 quarterly forecast yet.
 
 var FIL = 'FY2025 Form 20-F';
 var PREM_Q = { text: 'We generate revenue for our Premium segment through the sale of subscriptions to the Subscription Offerings. The Subscription Offerings are primarily sold directly to end users. The Premium Service is also sold through partners who are generally telecommunications companies that bundle the subscription with their own services or collect payment for the stand-alone subscriptions from their end customers. Premium partner subscription revenue is based on a per-subscriber rate in a negotiated partner agreement.',
@@ -45,7 +45,7 @@ var NO_CONC = 'The Business and Operating sections of the FY2025 Form 20-F (Item
 export var spotSegments = {
   company: 'Spotify',
   updated: 'Oct 2026',
-  source: 'Segment revenue and gross profit: the Results dataset (js/results-data/spot.js) — Spotify quarterly shareholder decks and 6-Ks (1Q24–2Q26), the FY2025 Form 20-F (SEC EDGAR, CIK 1639920, accession 0001628280-26-006874) for the annual totals, and the Bloomberg export for 2023 and segment gross profit by quarter (3Q25 derived from the 20-F segment totals). Subscribers, MAU, ad-supported MAU and ARPU: shareholder decks and the Bloomberg export; definitions verbatim from the 20-F. Summit FY2026–FY2028: DCF model snapshot of 2026-08-05, frozen. Everything in EUR.',
+  source: 'Segment revenue and gross profit: the Results dataset (js/results-data/spot.js) — Spotify quarterly shareholder decks and 6-Ks (1Q24–2Q26), the FY2025 Form 20-F (SEC EDGAR, CIK 1639920, accession 0001628280-26-006874) for the annual totals, and the Bloomberg export for 2023 and segment gross profit by quarter (3Q25 derived from the 20-F segment totals). Subscribers, MAU, ad-supported MAU and ARPU: shareholder decks and the Bloomberg export; definitions verbatim from the 20-F. Quarterly 1Q23–4Q23: the Bloomberg export (reported columns of the oldest snapshot, 2024-04-28). Summit forecast 3Q26–4Q26 (the model has no 2027 quarterly forecast yet) and FY2026–FY2028 annual: DCF model snapshot of 2026-08-05, frozen. Subscribers, Ad-Supported MAU and ARPU for 3Q24–4Q26 are the estimates of the Summit model supplied by the analyst (the model rows are empty); the total MAU forecast is Street (Bloomberg, 2026-10-21) because the model does not carry it. Everything in EUR.',
 
   axis: {
     q: Q,
@@ -54,13 +54,36 @@ export var spotSegments = {
 
   shared: {},
 
-  derived: {
-    revPerSubMonth:   { label: 'Revenue per subscriber-month', short: '€ / sub-month', unit: 'eps', num: 'rev', den: 'subMonths' },
-    costPerSubMonth:  { label: 'Cost of revenue per subscriber-month', short: 'Cost / sub-month', unit: 'eps', num: 'cogs', den: 'subMonths' },
-    gpPerSubMonth:    { label: 'Gross profit per subscriber-month', short: 'GP / sub-month', unit: 'eps', num: 'opinc', den: 'subMonths' },
-    gpMgn:            { label: 'Segment gross margin', short: 'Gross margin', unit: 'pct', num: 'opinc', den: 'rev' },
-    revPerAdMau:      { label: 'Revenue per ad-supported MAU (per quarter)', short: '€ / ad MAU', unit: 'eps', num: 'rev', den: 'avgAdMau' },
+  // Reported 2023 quarters, ahead of where the Results dataset starts (1Q24). Source: Bloomberg's reported columns in the oldest SPOT
+  // snapshot (BBG_CONSENSUS.txt, 2024-04-28, which carries 1Q23-1Q24). Same as-originally-reported basis as 2024-25 (the Jan 2026
+  // reclassification is not applied to either). Checks: Premium + Ad-Supported = total revenue in every quarter; the 1Q24 column
+  // equals the Results dataset. EUR millions; users in millions; ARPU in euros.
+  history: {
+    rev:     { q: { '1Q23': 3042, '2Q23': 3177, '3Q23': 3357, '4Q23': 3671 } },
+    premrev: { q: { '1Q23': 2713, '2Q23': 2773, '3Q23': 2910, '4Q23': 3170 } },
+    adrev:   { q: { '1Q23': 329,  '2Q23': 404,  '3Q23': 447,  '4Q23': 501 } },
+    premgp:  { q: { '1Q23': 776,  '2Q23': 789,  '3Q23': 847,  '4Q23': 922 } },
+    adgp:    { q: { '1Q23': -10,  '2Q23': -23,  '3Q23': 37,   '4Q23': 58 } },
+    subs:    { q: { '1Q23': 210,  '2Q23': 220,  '3Q23': 226,  '4Q23': 236 } },
+    mau:     { q: { '1Q23': 515,  '2Q23': 551,  '3Q23': 574,  '4Q23': 602 } },
+    admau:   { q: { '1Q23': 317,  '2Q23': 343,  '3Q23': 361,  '4Q23': 379 } },
+    arpu:    { q: { '1Q23': 4.32, '2Q23': 4.27, '3Q23': 4.34, '4Q23': 4.6 } },
   },
+
+  // Common size for counts: subscribers and ad-supported users over total MAU (the two add to MAU less the overlap). ARPU and total MAU have none.
+  shareBase: { 'results:subs': 'results:mau', 'results:admau': 'results:mau' },
+  shareLabel: '% of MAU',
+  defaultHidden: ['margin'],   // Summit and Consensus chips open ON in the Top Line charts; the margin lines (three, on a second axis) open OFF
+  bridgeLines: true,           // the Revenue interactions chart is drawn as lines, each over its own first quarter (= 100), so users, revenue per user and revenue share one axis
+  ramp: ['#475569', '#94a3b8', '#0f172a', '#cbd5e1'],   // the series colours of this profile: slate greys, no categorical palette (CIO)
+
+  derived: {
+    revPerSub:   { label: 'Premium ARPU (revenue per subscriber, per month)', short: 'ARPU', unit: 'eps', num: 'rev', den: 'subs', div: 3 },
+    costPerSub:  { label: 'Premium cost per subscriber (per month)', short: 'Cost / subscriber', unit: 'eps', num: 'cogs', den: 'subs', div: 3 },
+    gpMgn:       { label: 'Segment gross margin', short: 'Gross margin', unit: 'pct', num: 'opinc', den: 'rev' },
+    revPerAdMau: { label: 'Ad-Supported ARPU (revenue per ad MAU, per month)', short: 'ARPU', unit: 'eps', num: 'rev', den: 'admau', div: 3 },
+  },
+
 
   overview: {
     tenK: {
@@ -106,32 +129,28 @@ export var spotSegments = {
         { name: 'Premium ARPU', definition: 'Average monthly revenue per Premium subscriber, in euros: Premium revenue in the quarter ÷ average daily subscribers ÷ three months.',
           filing: ARPU_Q.text, filingWhere: ARPU_Q.where, unit: 'eps', periodicity: 'Quarterly (annual = average of the four quarters)',
           source: 'Spotify shareholder decks (1Q24–2Q26); Bloomberg export; definition verbatim from the 20-F.', series: 'results:arpu' },
-        { name: 'Revenue per subscriber-month (ours)', definition: 'Premium revenue ÷ (average of the opening and closing subscribers × 3). The same quantity as ARPU on a simpler average; it lands within about 1% of the reported ARPU in every quarter.',
-          filing: null, unit: 'eps', periodicity: 'Quarterly', source: 'Derived here from the two published lines above.', series: null,
-          needs: 'Not a published KPI; shown as a table row, not a series.' },
       ],
-      kpiNote: 'Spotify publishes two operating KPIs for Premium: subscribers at period end and monthly ARPU. It does not publish revenue by plan, by region or by partner, and no price list. Total MAU is on the Ad-Supported tab, because its definition adds both tiers.',
+      kpiNote: 'Spotify publishes two operating KPIs for Premium: subscribers at period end and monthly ARPU. It does not publish revenue by plan, by region or by partner, and no price list. Total MAU, which adds both tiers, is the base of the “% of MAU” view.',
       interactions: [
-        { name: 'Subscribers × price', relation: 'Premium revenue = subscriber-months × revenue per subscriber-month', bridge: 'pricevol',
+        { name: 'Subscribers × revenue per subscriber', relation: 'Premium revenue = subscribers × revenue per subscriber', bridge: 'pricevol',
           lines: ['Premium plans (Individual · Duo · Family · Student)', 'Premium through telecom partners'],
-          why: 'The 20-F states the identity itself: “Revenue from our Premium segment is a function of the price of our Subscription Offerings and the number of subscribers who subscribe to our Subscription Offerings.” Volume is subscriber-months (average subscribers × 3); price is what each of them yields per month, which is ARPU. Price durability: (1) the price per unit, the series in the chart below — about €4.55 a month in 1Q24, €4.89 in 2Q26; (2) the increases the company announced — the 20-F credits “an increase in Premium ARPU of €0.25 as a result of price increases” for FY2025, and the portal’s theme record dates the broad rises (Q3 2023, Aug 2025, and the US individual plan to $12.99 in Jan 2026); (3) the cost per unit it is measured against — cost of revenue per subscriber-month, in the table rows, which has moved from about €3.18 in 1Q24 to €3.17 in 2Q26 while price rose, so the gross profit per subscriber-month is what widened.',
-          data: 'Both terms are derived from published lines (subscribers at period end, Premium revenue) for 1Q24–2Q26; ARPU as Spotify reports it sits within about 1% of the derived price in every quarter. Cost per unit is Premium cost of revenue ÷ subscriber-months (Bloomberg export, tied to the 6-K segment note).' },
+          why: 'The 20-F states the identity itself: “Revenue from our Premium segment is a function of the price of our Subscription Offerings and the number of subscribers who subscribe to our Subscription Offerings.” Revenue grows either because there are more subscribers or because each one yields more.',
+          data: 'Subscribers at quarter end and Premium revenue are published; revenue per subscriber is their quotient, per quarter (divide by three for a monthly figure; the reported Premium ARPU is the monthly one, on average subscribers).' },
       ],
       drivers: {
         rev: { from: 'results:premrev' },
         opinc: { from: 'results:premgp' },
-        subMonths: { label: 'Subscriber-months (average subscribers × 3, millions)', short: 'Sub-months', unit: 'count', src: 'Average of the opening and closing Premium subscribers (decks), × 3',
-          q: { act: { '1Q24': 712.5, '2Q24': 727.5, '3Q24': 747, '4Q24': 772.5, '1Q25': 796.5, '2Q25': 816, '3Q25': 835.5, '4Q25': 856.5, '1Q26': 874.5, '2Q26': 889.5 }, summit: {} } },
+        subs: { from: 'results:subs' },
         cogs: { label: 'Premium cost of revenue', short: 'Premium cost of revenue', unit: 'usdM', src: 'Bloomberg export (ties to the 6-K segment note: Premium revenue − Premium gross profit)',
           q: { act: { '1Q24': 2268, '2Q24': 2300, '3Q24': 2338, '4Q24': 2418, '1Q25': 2509, '2Q25': 2503, '3Q25': 2557, '4Q25': 2615, '1Q26': 2703, '2Q26': 2820 }, summit: {} } },
       },
       bridges: [
-        { key: 'pricevol', label: 'Subscribers × price', view: 'q', target: 'rev', kind: 'decomposition',
-          terms: ['subMonths', 'revPerSubMonth'],
-          identity: 'Premium revenue = subscriber-months × revenue per subscriber-month',
-          note: 'A decomposition, not an independent build: revenue per subscriber-month IS revenue divided by subscriber-months, so the terms multiply back to revenue by construction. What it buys is the split — how much of the Premium line is more subscribers versus more yield from each. The reported ARPU is the same thing measured on average daily subscribers; it is within about 1% of the derived term in every quarter shown.' },
+        { key: 'pricevol', label: 'Subscribers × revenue per subscriber', view: 'q', target: 'rev', kind: 'decomposition',
+          terms: ['subs', 'revPerSub'],
+          identity: 'Premium revenue = subscribers × revenue per subscriber',
+          note: 'A decomposition, not an independent build: revenue per subscriber is Premium revenue divided by subscribers, so the terms multiply back to revenue by construction. What it shows is how much of the Premium line comes from more subscribers and how much from more revenue per subscriber.' },
       ],
-      highlights: ['revPerSubMonth', 'costPerSubMonth', 'gpPerSubMonth', 'gpMgn'],
+      highlights: ['revPerSub', 'costPerSub', 'gpMgn'],
     },
     {
       key: 'ads', label: 'Ad-Supported', short: 'Ad-Supported',
@@ -164,28 +183,23 @@ export var spotSegments = {
           filing: MAU_Q.text, filingWhere: MAU_Q.where, unit: 'count', periodicity: 'Quarterly',
           source: 'Spotify shareholder decks (1Q24–2Q26); Bloomberg export; definition verbatim from the 20-F.', series: 'results:mau' },
       ],
-      kpiNote: 'Spotify publishes the audience, not the advertising: no impressions, no price per impression, no advertiser count in the filings (the call gives 33,000 active advertisers once). Revenue per ad-supported MAU below is derived, and says so.',
+      kpiNote: 'Spotify publishes the audience, not the advertising: no impressions, no price per impression, no advertiser count in the filings (the call gives 33,000 active advertisers once). Revenue per ad-supported MAU and the costs per user are derived: they sit in Revenue interactions and its table, not here.',
       interactions: [
-        { name: 'Audience × monetization per user', relation: 'Ad-Supported revenue = average ad-supported MAUs × revenue per MAU', bridge: 'audience',
+        { name: 'Ad-supported MAUs × revenue per ad MAU', relation: 'Ad-Supported revenue = ad-supported MAUs × revenue per ad MAU', bridge: 'audience',
           lines: ['Display, audio and video advertising'],
-          why: 'The audience is the supply of advertising; revenue per user is how hard it is monetized, mixing impressions sold, price and the mix of markets. Emerging markets drive most MAU growth and monetize least, so audience can grow while revenue per user falls — the pattern Spotify’s own Q3 2026 MAU guide is meant to change.',
-          data: 'Both terms from published lines for 1Q24–2Q26. As-reported revenue: the 1 Jan 2026 reclassification moved revenue out of this segment, so 1Q26 onward is not comparable with earlier quarters.' },
-        { name: 'Impressions × price', relation: 'Ad-Supported revenue = impressions sold × price per impression', bridge: null,
-          lines: ['Display, audio and video advertising', 'Spotify Ad Exchange (programmatic)'],
-          why: 'The identity advertising is actually sold on. Management says Q2 2026 growth came from impressions sold, partly offset by softness in pricing, and expects automated channels to lift both.',
-          data: 'NOT CHARTED — Spotify discloses neither impressions nor price per impression.' },
+          why: 'The audience is the supply of advertising; revenue per ad MAU is how hard it is monetized. Emerging markets drive most MAU growth and monetize least, so the audience can grow while revenue per ad MAU falls.',
+          data: 'Ad-supported MAUs at quarter end and Ad-Supported revenue are published; revenue per ad MAU is their quotient, per quarter. As-reported revenue: the 1 Jan 2026 reclassification moved revenue out of this segment, so 1Q26 onward is not comparable with earlier quarters.' },
       ],
       drivers: {
         rev: { from: 'results:adrev' },
         opinc: { from: 'results:adgp' },
-        avgAdMau: { label: 'Average ad-supported MAUs (millions)', short: 'Avg ad MAU', unit: 'count', src: 'Average of the opening and closing ad-supported MAUs (decks)',
-          q: { act: { '1Q24': 383.5, '2Q24': 390.5, '3Q24': 397.5, '4Q24': 413.5, '1Q25': 424, '2Q25': 428, '3Q25': 439.5, '4Q25': 461, '1Q26': 479.5, '2Q26': 488.5 }, summit: {} } },
+        admau: { from: 'results:admau' },
       },
       bridges: [
-        { key: 'audience', label: 'Audience × monetization', view: 'q', target: 'rev', kind: 'decomposition',
-          terms: ['avgAdMau', 'revPerAdMau'],
-          identity: 'Ad-Supported revenue = average ad-supported MAUs × revenue per MAU',
-          note: 'A decomposition, not an independent build: revenue per MAU IS revenue divided by the audience. What it buys is the split between a bigger audience and a better-monetized one.' },
+        { key: 'audience', label: 'Ad-supported MAUs × revenue per ad MAU', view: 'q', target: 'rev', kind: 'decomposition',
+          terms: ['admau', 'revPerAdMau'],
+          identity: 'Ad-Supported revenue = ad-supported MAUs × revenue per ad MAU',
+          note: 'A decomposition, not an independent build: revenue per ad MAU is Ad-Supported revenue divided by ad-supported MAUs. What it shows is how much of the Ad-Supported line comes from a bigger audience and how much from monetizing it better.' },
       ],
       highlights: ['revPerAdMau', 'gpMgn'],
     },
@@ -197,6 +211,40 @@ export var spotSegments = {
 
   // ── Customers ────────────────────────────────────────────────────────────────────────────
   customers: {
+    splc: {
+      revBaseM: null, revBaseLabel: 'revenue',
+      coverageWhy: 'none of the 25 named customers carries a relationship size in Bloomberg, so this is a census of who has disclosed a relationship with Spotify, not a measure of how much they buy. The “what” column is the customer’s Bloomberg industry; the screen does not say what the relationship is.',
+      named: 25, sized: 0, sizedSumM: null,
+      source: 'Bloomberg Supply Chain Analysis (SPLC), SPOT US Equity, Customers tab, as of 21 Oct 2026, currency EUR — counterparty disclosures, not Spotify filings',
+      file: 'G:\\My Drive\\Summit\\Docs\\Extras\\Team\\DAA\\Ad hoc info search\\SPOT UPDATE (screenshots; customer side)',
+      customers: [
+        { name: 'WW International', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2025Q1 filing', what: 'Consumer Services' },
+        { name: 'Danal', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2026C2 filing', what: 'Specialty Finance' },
+        { name: 'Flutter Entertainment', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2025 annual filing', what: 'Leisure Facilities & Services' },
+        { name: 'Episode', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2026C2 filing', what: 'Entertainment Content' },
+        { name: 'Bank of Innovation', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2024C3 filing', what: 'Entertainment Content' },
+        { name: 'Orient Electric', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2026Q1 filing', what: 'Electrical Equipment' },
+        { name: 'Kunlun Tech', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2023 annual filing', what: 'Internet Media & Services' },
+        { name: 'The Trade Desk', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2026Q2 filing', what: 'Advertising & Marketing' },
+        { name: 'Partner Communications', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2022 annual filing', what: 'Telecommunications' },
+        { name: 'Audacy', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2024Q1 filing', what: 'Publishing & Broadcasting' },
+        { name: 'Universal Entertainment', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2025 annual filing', what: 'Leisure Facilities & Services' },
+        { name: 'Telefonica Brasil', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2023 annual filing', what: 'Telecommunications' },
+        { name: 'PC Connection', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2025Q1 filing', what: 'Wholesale - Discretionary' },
+        { name: 'Sonos', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2025 annual filing', what: 'Technology Hardware' },
+        { name: 'Emirates Airline', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2026 annual filing', what: 'Transportation & Logistics' },
+        { name: 'Kansai Nerolac Paints', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2026Q4 filing', what: 'Chemicals' },
+        { name: 'Innity', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2024 annual filing', what: 'Advertising & Marketing' },
+        { name: 'KPN', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2023Q3 filing', what: 'Telecommunications' },
+        { name: 'Bollore', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2025 annual filing', what: 'Oil & Gas Supply Chain' },
+        { name: 'Globe Telecom', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2025 annual filing', what: 'Telecommunications' },
+        { name: 'Tapestry', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Company news', what: 'Apparel & Textile Products' },
+        { name: 'Bertelsmann', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2023 annual filing', what: 'Publishing & Broadcasting' },
+        { name: 'Lagardere', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2024 annual filing', what: 'Retail - Discretionary' },
+        { name: 'Air Canada', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2024 annual filing', what: 'Transportation & Logistics' },
+        { name: 'Cliq Digital', ticker: null, amtM: null, period: null, theirPct: null, basis: 'Customer’s 2024 annual filing', what: 'Entertainment Content' },
+      ]
+    },
     classes: [
       { key: 'listeners', label: 'Listeners — subscribers and free users', where: FIL + ', Item 4.B (p. 35)',
         text: 'We offer both Premium and Ad-Supported Services to our customers. Our Premium and Ad-Supported Services live independently, but thrive together.' },

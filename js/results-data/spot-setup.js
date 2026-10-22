@@ -52,6 +52,7 @@ export var spotSetup = {
   source: spotResults.source,
   // The Street comes from the Bloomberg vintages (estMatrix.cons), not from flat arrays: carry the matrix across.
   estMatrix: spotResults.estMatrix,
+  conv: false,   // no "Road to the print" block in Setup: it lives in Evolution ▸ Results, as for TSMC and META
   views: {
     q: { label: 'Quarterly',
          note: 'Rolling — the last 8 reported quarters plus the one next (forecast) quarter. ' + spotResults.views.q.note,

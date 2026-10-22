@@ -166,7 +166,7 @@ Decisión DAA (2026-10-20): portar `tsm-ce.js` → `spot-ce.js` (Watch List en c
 |---|---|---|
 | `CE_CONS` (rejilla, solo guía) | `spot-ce-data.js` `SPOT_CE_CONS` | ahora se arma al cargar desde `results-data/spot.js`: Street BBG + guía + actuals + bases YoY/QoQ (bases reexpresadas de Premium/Ads tras la reclasificación de ene-2026) |
 | `CALL_EARNINGS` (Q3 upcoming, Q2 reported: setup.notes, debate, results.notes/watch/thesisCheck/intoCall/priceReaction/summary, call.highlights) | `spot-ce-data.js` `SPOT_CALL_EARNINGS` | movido sin cambios; `us` se lee de Results; Q2 ganó `call.take/prepared/qanda/newQuestions` |
-| `WL_ROWS` (11 hooks Q4-23…Q3-26) | `spot-wl-legacy.js` (verbatim) | el Watch List canónico es Notes; los hooks reexpresan los temas del registro, no se fusionaron |
+| `WL_ROWS` (11 hooks Q4-23…Q3-26) | retirado (git, commit `f52d20d`) | el Watch List canónico es Notes; los hooks reexpresan los temas del registro, no se fusionaron |
 | `SPOT_THEMES` (8 temas) + `SRC_CALLS` | `themes-data/spot.js` | + `seg` por tema (8 grupos) + 2 temas nuevos de la call (Add-ons ARPU, Reserved) |
 | `ceIRButton` (tarjeta IR/EDGAR) y el párrafo explicativo de dos fases | — | eran decoración copiada de GOOGL (colores de Google); los enlaces (IR e EDGAR CIK 1639920) quedan en el comentario de `spot.js` |
 | ~2,260 líneas de renderizadores `ce*`/`wl*` | `spot-ce.js` (canónico) | `spot.js` pasó de 4,504 a 2,268 líneas |
@@ -290,3 +290,116 @@ Observaciones del analista tras ver el portal: consenso ausente en el pasado, gu
 **Límites reales de datos (no son bugs):** (1) el archivo BBG más antiguo es 2024-04-28, ya posterior al print de 1Q24 → no hay consenso pre-print de 1Q24 ni FY2023; (2) Summit solo tiene 4 snapshots → Summit pre-print solo para 4Q25–3Q26 y FY2025; (3) el modelo no tiene EPS ni utilidad neta trimestral. 2Q25–2Q26 vienen del 20-F/6-K, no de snapshots nuevos.
 
 **Pendiente de revisión del analista:** las dos guías derivadas (GP y MAU ad-supported); si prefiere no mostrarlas como "Guidance", se quitan de `guideLo/Hi` y quedan en la nota. Distinto y no tocado: en el motor, las etiquetas de barras negativas chocan con el eje en "Actuals vs Estimates" (2Q25).
+
+## 17. Limpieza de restos del formato anterior (DAA, 2026-10-21)
+
+Las tandas anteriores agregaron la estructura canónica pero dejaron piezas que ya nada dibuja. Retirado (todo recuperable en git, commits `f52d20d` y `105f722`):
+
+- `spot.js`: `ID_NEWS` (tarjetas "What's new"), `NEWS_DETAIL_DEFAULT`, `newsViz`, `newsDetailHtml` (~95 líneas sin llamador); cabecera del archivo reescrita (hablaba de "Product Mix" y de dos sub-tabs que ya no existen); comentario de `wireModal` sobre `sax`/`news`.
+- `css/overview.css` (−323 líneas): bloques `.spot-*` (euro bar, fmt bars, vs Netflix, Investor Day, news, SAX, flujo TTD), `.ov-spot .ovg-*`/`.ovs-*`, `.idt-pnl-*`, `.pr-table`/`.pr-usdwrap` (ARPU) y `.spl-*` (Price Sensitivity). Ninguna clase tenía uso en JS.
+- `spot-ce-data.js`: `results.thesisCheck`, `intoCall`, `priceReaction`, `summary` del Q2 2026 (el formato canónico no los dibuja; la decisión pendiente del §8 queda resuelta: se retiran).
+- `spot-wl-legacy.js` borrado (los hooks del Watch List viejo; los temas viven en `themes-data/spot.js`).
+
+Agregado por consistencia con AMZN/TSM: `headerSources` (logo IR + sello SEC/EDGAR en la cabecera de la empresa).
+
+## 18. Consenso de hoy (2026-10-21)
+
+DAA actualizó `BBG_CONSENSUS.txt` con una fila **viva** de SPOT (primera de las 11; `data_as_of` en blanco, fechas de cierre como serial). Regla del analista: el consenso del Setup es **el más reciente que exista, aunque sea de un día antes del call**, no el de días después del print anterior.
+
+- `scripts/consensus/emit_matrix.py`: una fila con `data_as_of` en blanco se fecha por la fecha del archivo (hoy, 2026-10-21); además el `.txt` se lee con `errors='replace'` (trae un byte cp1252 y el lector estricto fallaba).
+- Regenerado y empalmado (`emit_matrix.py` → `apply_matrix.py` → `verify_preprint.py`: filled=220, changed=0, blanked=0). Nuevo vintage `2026-10-21` en `estMatrix.cons`.
+- La primera exportación de la fila venía cortada (solo Revenue/Gross Profit, por un error al agregarla); DAA la corrigió y se volvió a correr todo: las 19 métricas trimestrales y las anuales traen el vintage `2026-10-21` (verify: filled=220, changed=0, blanked=0). El Setup de 3Q26 queda 100% sobre el consenso del 21-oct.
+- `js/overviews/spot-bbg.js` regenerado desde la fila de hoy (`bbg_extract.py SPOT`; una fila con `data_as_of` en blanco se fecha por el archivo → asOf 10/21/2026). 445 de 1,006 celdas cambiaron, todas en estimados (años y trimestres forward); ninguna columna reportada se movió. Lo leen Bottom Line (Street de la gráfica forward) y Sensitivity (Street FY26–28 por segmento).
+- **Un snapshot por print:** la fila del 21-oct reemplaza a la del 9-sep (misma ventana post-2Q26), no se suma. `map_spot.json` ganó `"supersede_latest": true` y `emit_matrix.py` lo aplica solo a SPOT: quedan **10 vintages** (2024-04-28 → 2026-10-21), igual que antes. La fila del 9-sep sigue en el `.txt` como archivo, pero ya no entra a `estMatrix`.
+
+## 19. Top Line, segunda pasada (DAA, 2026-10-21)
+
+Problemas vistos en Top Line y qué se hizo (el motor `segments.js` es compartido: los cambios no alteran AMZN/TSM, verificado con `harness-tsm`):
+
+| Hallazgo | Causa | Acción |
+|---|---|---|
+| General sin forecast trimestral (TSM sí: 3Q26–2Q27) | el eje de SPOT era solo trimestres reportados y Results terminaba en 3Q26 | `results-data/spot.js`: +4Q26, 1Q27, 2Q27 con el snapshot Summit 2026-08-05 (rev, Premium, Ads, GP, op. income, EBITDA, FCF); eje del segmento hasta 2Q27. El Setup sigue acotado a 3Q26 (`spot-ce-data.js`). |
+| Historia desde 1Q24 | el dataset de Results arranca en 1Q24 | `segments-data/spot.js` ▸ `history`: 1Q23–4Q23 de las columnas *reportadas* del snapshot BBG más viejo (2024-04-28): rev, Premium, Ads, GP por segmento, subs, MAU, ad-MAU, ARPU. Cuadra: Premium + Ads = total en cada trimestre; 1Q24 = Results. |
+| Subs/ARPU/MAU sin forecast | el modelo Summit no los trae (solo 4Q25) | campo `fwd` en esas 4 métricas de Results = Street BBG 2026-10-21 (3Q26–2Q27); el motor lo lee solo donde no hay `summit` ni `act`. |
+| "Share" y "€B" en KPIs (counts, ARPU) | los controles eran los mismos para todo | `modesHtml`: sin series monetarias el primer botón es **Level** y no hay "Growth in € added"; **Share** solo aparece si hay base (`shareBase`: subs y ad-MAU sobre MAU total → "% of MAU"); ARPU no tiene common size. Las opciones siguen lo que está dibujado. |
+| Customers con panel "Who has said they buy from… SPLC not loaded" | estado vacío genérico del motor | `customers.splc: false` en SPOT: B2C, no hay censo contraparte; la sección no se dibuja. |
+| Pie de tabla decía "US$ billions" | texto fijo | usa la moneda del dataset (TSM sigue en US$). |
+
+Observaciones abiertas: (1) el modelo Summit 2026-08-05 trae 1Q27 muy por debajo de 4Q26 (ingreso 4,829 vs 5,428; Ads 385 vs 590): se muestra tal cual, sin ajustar. (2) Las tarjetas de General leen el último periodo del eje, que ahora es 2Q27 (forecast), igual que TSM. (3) Antes de 1Q23 no hay datos de segmento en el repo.
+
+## 20. Summit user and unit-economics estimates (2026-10-21)
+
+The Summit model rows for MAUPS, MAUAD, MAU and ARPU_PREM exist in the 2026-08-05 snapshot but are zero in every period (checked through the MCP), so no Summit users forecast was loaded before. The analyst supplied the last Summit estimate before each print:
+
+- Quarters: 4Q26, 3Q26, then 2Q25 back to 3Q23. 3Q25-2Q26 were not supplied. Identified by reproducing each column from the Summit rows (4Q26: Premium revenue 4,838.4 / 319.0 subscribers = 15.17; Ad revenue 590 / 526.4 = 1.12; cost per user = (revenue - gross profit) / users = 9.86 and 0.86).
+- ARPU and cost per user are quarterly, on end-of-period users, in EUR (the analyst wrote $; Summit SPOT is EUR). They are not Spotify's reported ARPU (monthly, average subscribers).
+- `results-data/spot.js`: Summit arrays for `subs` and `admau` filled (1Q24-2Q25, 3Q26, 4Q26); new metrics `parpu`, `pcpu`, `aarpu`, `acpu` (reported quarters computed from the published lines).
+- `segments-data/spot.js`: `historySummit` holds 3Q23/4Q23 (not drawn: Results axis starts 1Q24); four KPI cards added.
+
+- Reproducibility: only 3Q26/4Q26 (and about 3Q24) reproduce from the Summit revenue and gross profit rows in the dataset; the other supplied quarters come from different model vintages (the model logic changed), so they are stored as supplied. Premium + Ad-Supported does not equal MAU (overlap), which is why user-based ratios never tie exactly.
+
+## 21. No Summit quarterly forecast for 2027
+Summit has made no quarterly forecast beyond 4Q26 (the 1Q27/2Q27 values in the 2026-08-05 snapshot, e.g. the 1Q27 revenue dip, are not forecasts; they were removed from `views.q` and `estMatrix.summit`). Consensus keeps 1Q27/2Q27 on the Results axis. The Top Line axis ends at 4Q26 (two forecast quarters). Top Line charts open with the Summit and Consensus chips on (`defaultHidden: []` in the segments dataset; the engine reads it, TSM keeps the old default). FY2026-FY2028 annual Summit values are unchanged.
+
+## 22. Margin lines on the gross-profit charts
+On Gross Profit metrics the chart draws three margin lines on the right axis (margin of each series over its own revenue: solid dark = Actual, dashed blue = Summit, dotted grey = Consensus). The legend had one chip that did not say so, and the tooltip rows were just "Margin % (...)". `js/results.js` (shared engine): the chip now reads "<margin label> % · right axis: solid line Actual, dashed Summit, dotted Consensus" and the tooltip rows carry the metric's margin label. Wiring the Summit and Consensus chips on by default (section 21) is what made the three lines visible at once; the margin chip hides all three.
+
+## 23. Top Line cleanup after review (2026-10-21)
+- The supplied ARPU and cost figures are quarterly; the reported ARPU is monthly. Summit ARPU now lives in the existing `arpu` series as the supplied figure divided by three (so it sits next to reported and Street on one basis). The separate Premium ARPU series and the five "(ours)" KPI cards were removed. Cost per user stays as Results-tab series only (`pcpu` per subscriber-month, `aarpu`/`acpu` per ad MAU); Top Line carries only the published KPIs.
+- Margin lines (three series, second axis) open OFF on the segment charts (`defaultHidden: ['margin']`); the chip turns them on.
+- "Revenue interactions" opens on growth rates (`bridgeGrowth: true`): one axis, one unit, Premium and Ad-Supported identical in form. Levels are one click away. Chip colours now follow what is drawn.
+- Open: the forecast quarters of the bridge draw only the target (the terms have no Summit value for 3Q26-4Q26); Premium and Ad-Supported still differ in content where the business does (3 vs 2 product lines, 1 vs 2 relations).
+
+## 24. Revenue interactions, rebuilt (2026-10-21)
+- Both segments now carry the same single relation, built only from published lines: Premium revenue = subscribers × revenue per subscriber; Ad-Supported revenue = ad-supported MAUs × revenue per ad MAU (per quarter, on quarter-end users). Subscriber-months, average-MAU drivers and the "Impressions × price" relation (Spotify discloses neither) are removed.
+- The chart opens as an INDEX (first quarter shown = 100) on one axis (`bridgeIndex: true`, new `idx` mode in `js/segments.js`, offered only on the bridge, with Growth as the alternative). Growth is no longer the default. The terms now carry the 3Q26/4Q26 forecast, because they come from the Summit-supplied users and Summit revenue.
+- Series are labelled "Premium revenue" and "Ad-Supported revenue" (results `short` renamed).
+- `js/results.js`: with Values On, a bar narrower than its label (three series per period) prints the number above the bar in dark ink, staggered by series, instead of white text on the white page.
+
+## 25. Premium and Ad-Supported mirrored
+Each segment now carries the same two KPI cards, users and revenue per user (Premium: Subscribers and Premium ARPU; Ad-Supported: Ad-Supported MAUs and Revenue per Ad-Supported MAU, derived and labelled so), and the same single relation with the same Index chart. The Total MAUs card was removed from the Ad-Supported tab; total MAU stays as the base of the "% of MAU" view. Reference check: `origin/feat/meta-profile` (2026-10-20) has `bridges: []` on both Family of Apps and Reality Labs; its two Family of Apps relations are listed as NOT CHARTED, and its KPI cards are ARPP, impressions growth and price-per-ad growth. SPOT charts its relation because users and revenue are published in levels.
+
+## 26. Same calculation structure in both segments
+Both segments follow the same DCF structure: users, revenue per user (ARPU) and cost per user, so each Top Line carries the same three KPI cards on the same basis (euros per month, the quarterly quotient divided by three, as the reported ARPU is): Premium Subscribers / Premium ARPU / Premium cost per subscriber; Ad-Supported MAUs / Ad-Supported ARPU / Ad-Supported cost per MAU. Results series renamed to match (`aarpu`, `acpu`, `pcpu` now monthly). The Revenue interactions derived terms use `div: 3` (new option in `sgDerived`) so they read per month as well. Before this, Premium ARPU was monthly and Ad revenue per MAU was quarterly, and the cost-per-user series were missing from the Top Line.
+
+## 27. Correction of the supplied quarters, SAB/META alignment (2026-10-21)
+- The ten supplied columns are 4Q26, 3Q26, 2Q26, 1Q26, 4Q25, 3Q25, 2Q25, 1Q25, 4Q24, 3Q24 (not 3Q23-4Q23): each column reproduces the Premium revenue and gross profit of the model's `projection_history` sheet (8/5 snapshot). The earlier placement (2Q25 back to 3Q23, 4Q26/3Q26) was wrong and is replaced; `historySummit` (3Q23/4Q23) is removed. Premium and Ad-Supported gross profit 1Q24-3Q25 supplied by the analyst are loaded (gp = sum). Open: `premrev`/`rev` Summit values already in the dataset for 1Q24-3Q25 do not match `projection_history` (e.g. 1Q24 Premium revenue 3,170.0 vs 2,820.8) and their source is not traceable.
+- Per the META branch (`origin/feat/meta-profile`, playbook TL-GEN / TL-SEG): General cards show the last REPORTED quarter (engine change merged); "KPIs the company publishes" lists only published KPIs, so the derived ARPU-per-MAU and cost-per-user series left the cards (they live in the relation's table and in Results); price x volume is the Revenue interactions relation of both segments. Total MAUs card restored (published).
+- Revenue interactions chart = growth drivers (index mode removed): YoY revenue growth split into users and revenue per user, plus total growth line; slate greys via the dataset `ramp`. KPI chart: a lone non-money series is a solid dark line on the main axis.
+
+## 28. Revenue interactions: Lines and Growth drivers, both working (2026-10-21)
+- The relation chart has two views with working toggles in both segments: Lines (default; the three series, each divided by its own first quarter = 100 so one axis serves users, revenue per user and revenue; the legend says so and chips hide a series) and Growth drivers (bars: year-on-year growth split into users and revenue per user, plus the total growth line). Values On/Off works in both. The table always carries the levels. Tested by clicking each control in headless Chrome and reading the chart datasets, for Premium and Ad-Supported; the KPI chart controls (Level, % of MAU, Growth, Values, card selection) were tested the same way.
+- Profile palette (`ramp`): slate greys.
+- Bottom Line ▸ Supply Chain is not built: playbook BL-SPLC applies only when the company has a Bloomberg SPLC supplier export; none exists for SPOT in the repo or on the Drive. It was marked "does not apply" without telling the analyst, and should have been asked for. Needs `SPLC_BBG.xlsx` (SPLC, SPOT US Equity, suppliers).
+
+## 29. Supply Chain and Customers from the SPLC screens (2026-10-21)
+The earlier note "Supply Chain does not apply (no SPLC export)" was wrong: it only looked for xlsx/csv exports, and the analyst had Bloomberg SPLC screenshots for SPOT (G:\My Drive\Summit\Docs\Extras\Team\DAA\Ad hoc info search\SPOT UPDATE, 21 Oct 2026, currency EUR).
+- Bottom Line ▸ Supply Chain (`js/overviews/spot-splc.js`, copy of the META/TSM module, BL-SPLC): 67 suppliers with a domicile, 1,022 supplier facilities (US 57.5%, China 1.8%), nine suppliers carry a size (EUR 3.7B in total; Universal Music EUR 2.5B = 19.5% of cost of revenue and 20.1% of Universal's revenue; Warner Music EUR 1.2B filed under SG&A, as reported). Chain 1 = the two licensors, Chain 2 = the seven software/other suppliers with a size, Who needs whom, geography (twelve countries in the table, six drawn). The other ~60 supplier names have no size and are not drawn; Sony Group is among them.
+- Top Line ▸ Customers: the 25 customers Bloomberg lists, none sized (names, Bloomberg industry, filing basis); the empty-state panel is gone and `splc: false` removed.
+- Compiled by hand from the screenshots (no loader on the supplier side). Cost percentages are Bloomberg's "SPOT's Cost %" in the category named in the next column.
+
+Format check (SPLC, same day): compared against the rendered TSMC Supply Chain pane and the META module of the SAB branch. SPOT now follows them: limitation badge first ("Only 9 suppliers carry a size"), five KPIs, Chain 1 cards with the TSMC chip set (share of cost, dependency, amount and period, basis), Chain 2 table with the same columns (Supplier, Relationship with its period, cost %, their exposure, Category, Lands in, Basis), Who needs whom with the value in the bar and the relationship size at the right, geography with its data table, standard source footer. META's navy skin is kept (no categorical colours).
+
+## 30. Review round: Valuation, Evolution, relation chart (2026-10-21)
+- Relation chart: the Growth drivers bars are removed (code and button). The relation is drawn as lines only, each over its own first quarter (= 100) on one axis, chips hide a series, Values On/Off works (`bridgeLines: true`).
+- Evolution ▸ Earnings ▸ Setup no longer carries "Road to the print" (`conv: false` in `results-data/spot-setup.js`); it stays in Evolution ▸ Results, where TSMC and META carry it (both have a vintage matrix).
+- Valuation now has Peers (VA-PEERS): the Overview map with the same state plus "The numbers behind the map" (cheapest first, peer average and median excluding Spotify). Still seeded: the peer multiples and growth rates (stockanalysis.com, 31 Jul 2026), which playbook rule 10 does not allow; only the market caps are live. Order: Peers, Target Multiple, Sensitivity.
+- Valuation ▸ Historic Multiple is NOT built: it needs the price-history service (get-market-history, not deployed; the playbook ships the tab with the "Live data pending" notice) and a decision on currency: price is in US$ and EPS/EBITDA in EUR, and the only rate on file is one ECB value dated 2026-10-20, which cannot translate a history. Waiting for the analyst's call.
+- "What management has said": the three blocks in Bottom Line ▸ General are per expense line (different quotes); in Top Line ▸ Segments the Quarter order repeats a theme title under every quarter that mentioned it. Not changed.
+
+## 31. Empty charts in Evolution: audit and fixes (2026-10-21)
+Audit of `results-data/spot.js` (which metric has Actual, Summit and Street per period) and what the Evolution tabs read: they read the vintage matrix (`estMatrix`), not the arrays, so a metric absent from the matrix has an empty Summit/Street line however full its array is.
+- Fixed by derivation, computed from the matrix itself (block at the end of the dataset, nothing typed): gross margin (gross profit / revenue) for Summit and Street; Premium ARPU (Summit), Premium cost per subscriber, Ad-Supported ARPU and cost per MAU for Summit and Street (users at quarter end, divided by 3). Summit subscribers and ad-supported MAU for 3Q26/4Q26 (analyst-supplied) are in the 2026-08-05 vintage.
+- Added annual lines: Net income (Summit FY2026-28 from the model's EARNINGS row, 2,821.6 / 3,234.8 / 4,363.4; reported FY2024-25 as the sum of the quarters) and EBITDA (reported FY2024-25, Street).
+- "Road to the print": Spotify guides one number, so there is no range to shade; the legend now says "Guidance (single number)" and the line is heavier. TSMC and META guide a range.
+- Evolution ▸ Estimates exists on the META branch (SAB); TSMC has Track Record instead.
+- Not available, and why: Summit quarterly net income, EPS, shares, operating cash flow, capex, D&A (the model rows are annual-only or zero); Summit annual EBITDA in the 2026-08-05 snapshot (zero); Summit anything for 1Q27/2Q27 (no forecast yet); consensus for the per-user costs is derived, not published.
+- Historic Multiple still needs: the price-history service (not deployed; the tab ships with the "Live data pending" notice), a EUR/US$ history (price is US$, EPS is EUR), and net debt per quarter (cash, short-term investments and debt from the 6-K / 20-F; not on file, Quartr needed a new sign-in).
+
+## 32. Valuation ▸ Historic Multiple built (2026-10-21)
+- How TSMC and META do it: the same `get-market-history` edge function for the daily price (not deployed: Supabase answers 404, per CLAUDE.md; only San/Oscar can deploy it) and filings-derived denominators in a data file (`tsm-histmult-data.js`, `meta-histmult-data.js`). No price list exists. SPOT now follows them: `js/overviews/spot-histmult.js` (copy of the TSMC module) and `js/overviews/spot-histmult-data.js` (generated, not typed, from Spotify's 6-K interim statements and 20-Fs on SEC EDGAR, 1Q21-2Q26: diluted EPS LTM, EBITDA, diluted shares, cash, short term investments, Exchangeable Notes, net debt). Net debt: Exchangeable Notes (non-current plus current line) less cash and short term investments, net cash every quarter since 1Q21.
+- Currency: the price is in US$ and Spotify reports in EUR. Every line is computed in EUR: the daily US$ close is divided by the ECB euro reference rate of the same day, fetched live from the ECB data API (public, no key, CORS open). No rate is written in the code; if the ECB request fails the tab shows its own note.
+- In the real portal the tab shows "Live data pending — daily price unavailable" until the edge function is deployed, as TSMC and META do. Checked with an invented price path (`?mockmarket=1` in the local harness, not delivered): P/E forward 35-65x, now about 40x; EV/EBITDA trailing is empty where EBITDA is negative (2022-2023).
+- Basis difference to know: the Results EBITDA (Bloomberg) is EUR 82-96M higher than operating income + D&A + SBC in 1Q24, 3Q24 and 4Q24 (social costs); the module uses Results from 1Q24 and the filings before.
+- Finding: Results `eps` 4Q25 = 4.43 does not tie to the 20-F (FY2025 diluted EPS 10.51, nine months 4.93, so 4Q25 is about 5.58; net income 1,174M / 212M shares = 5.5). Not changed; to be checked.
+- Peers: TSMC and META keep EPS/EBITDA/net debt per peer in a file and compute the multiple live from `liveQuote`; SPOT's peers still carry written multiples (stockanalysis.com, 31 Jul 2026). EDGAR gives the US filers (NFLX, WMG, SIRI, DUOL, LYV); UMG (Euronext) and TME (CNY) need their annual reports; BBG_CONSENSUS.txt has no peer, so forward would be empty.

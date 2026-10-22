@@ -114,6 +114,8 @@ def main(ticker):
     collect('code_kpi','kpi','segment_kpi')
 
     asof = (g('data_as_of') or '').strip()
+    if not asof:                                  # the LIVE row leaves data_as_of blank -> dated by the file (the export day)
+        import time, datetime; d = datetime.date.fromtimestamp(os.path.getmtime(SRC)); asof = '%d/%d/%d' % (d.month, d.day, d.year)
     # anchor calendar from the close_ dates: fy0 year and fq0 quarter/year
     def yr(datestr):
         m=re.search(r'/(\d{4})$', datestr or ''); return int(m.group(1)) if m else None

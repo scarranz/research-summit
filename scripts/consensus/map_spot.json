@@ -1,0 +1,138 @@
+{
+  "supersede_latest": true,
+  "_doc": "SPOT metric map for emit_matrix.py (schema v2 — Bloomberg CODE + segment). Read off the newest snapshot (9/9/2026, 10 SPOT snapshots 2024-04-28 -> 2026-09-09). EVERYTHING IS IN EUROS (SPOT US Equity is Spotify\u2019s ordinary-share NYSE listing (a foreign private issuer, not an ADR) and Bloomberg consensus is in EUR, scale M) — the dataset declares currency '€', so unit 'usdM' here just means 'millions, apply the scale token' (the engine's unit key), not dollars. Counts (MAU, subscribers) carry scale M and are passed through as millions of users. ARPU has a blank scale and is a per-user monthly euro figure, so it uses unit 'eps' (no scaling). Segment ids: Premium SEG0000454645 · Ad-Supported SEG0000454644 · Europe SEG0000340043 · North America SEG0000340046 · Latin America SEG0000340044 · Rest of World SEG0000340047. Total MAU has no segment. 'Premium Monthly Active Users' is Bloomberg's label for paying subscribers (the Premium segment's MONTHLY_ACTIVE_USERS), cross-checked: 3Q26 Street 305.2M = the 305M guide. BBG does NOT carry the quarterly guide, the Summit side does. The file is cp1252 now, not UTF-8: run through a patched copy or open with encoding='cp1252'. Added Oct 20 2026 for the canonical Earnings headline grid: ocf, capex (sign -1: Bloomberg stores spend as negative), dna and diluted shares (millions).",
+  "segments": {
+    "prem": "SEG0000454645",
+    "ads": "SEG0000454644",
+    "eu": "SEG0000340043",
+    "na": "SEG0000340046",
+    "latam": "SEG0000340044",
+    "row": "SEG0000340047"
+  },
+  "q": {
+    "rev": {
+      "code": "IS_COMP_SALES",
+      "unit": "usdM"
+    },
+    "premrev": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "prem"
+    },
+    "adrev": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "ads"
+    },
+    "gp": {
+      "code": "CB_IS_GROSS_PROFIT",
+      "unit": "usdM"
+    },
+    "premgp": {
+      "code": "CB_IS_GROSS_PROFIT",
+      "unit": "usdM",
+      "segment": "prem"
+    },
+    "adgp": {
+      "code": "CB_IS_GROSS_PROFIT",
+      "unit": "usdM",
+      "segment": "ads"
+    },
+    "opinc": {
+      "code": "IS_COMPARABLE_EBIT",
+      "unit": "usdM"
+    },
+    "ebitda": {
+      "code": "IS_COMPARABLE_EBITDA",
+      "unit": "usdM"
+    },
+    "netinc": {
+      "code": "IS_COMP_NET_INCOME_GAAP",
+      "unit": "usdM"
+    },
+    "eps": {
+      "code": "IS_COMP_EPS_ADJUSTED_OLD",
+      "unit": "eps"
+    },
+    "fcf": {
+      "code": "HEADLINE_FCF",
+      "unit": "usdM"
+    },
+    "mau": {
+      "code": "MONTHLY_ACTIVE_USERS",
+      "unit": "usdM"
+    },
+    "subs": {
+      "code": "MONTHLY_ACTIVE_USERS",
+      "unit": "usdM",
+      "segment": "prem"
+    },
+    "admau": {
+      "code": "MONTHLY_ACTIVE_USERS",
+      "unit": "usdM",
+      "segment": "ads"
+    },
+    "arpu": {
+      "code": "AVERAGE_REVENUE_PER_USER",
+      "unit": "eps",
+      "segment": "prem"
+    },
+    "ocf": {
+      "code": "CB_CF_NET_CASH_OPERATING_ACT",
+      "unit": "usdM"
+    },
+    "capex": {
+      "code": "HEADLINE_CAPEX",
+      "unit": "usdM",
+      "sign": -1
+    },
+    "dna": {
+      "code": "CF_DEPR_AMORT",
+      "unit": "usdM"
+    },
+    "shares": {
+      "code": "IS_SH_FOR_DILUTED_EPS",
+      "unit": "usdM"
+    }
+  },
+  "y": {
+    "rev": {
+      "code": "IS_COMP_SALES",
+      "unit": "usdM"
+    },
+    "premrev": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "prem"
+    },
+    "adrev": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "ads"
+    },
+    "gp": {
+      "code": "CB_IS_GROSS_PROFIT",
+      "unit": "usdM"
+    },
+    "opinc": {
+      "code": "IS_COMPARABLE_EBIT",
+      "unit": "usdM"
+    },
+    "ebitda": {
+      "code": "IS_COMPARABLE_EBITDA",
+      "unit": "usdM"
+    },
+    "earnings": {
+      "code": "IS_COMP_NET_INCOME_GAAP",
+      "unit": "usdM"
+    },
+    "eps": {
+      "code": "IS_COMP_EPS_ADJUSTED_OLD",
+      "unit": "eps"
+    },
+    "fcf": {
+      "code": "HEADLINE_FCF",
+      "unit": "usdM"
+    }
+  }
+}

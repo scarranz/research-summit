@@ -1392,20 +1392,6 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 .ov-table.ov-cmp tbody td { text-align: center; font-size: 11.5px; }
 .ov-table.ov-cmp tbody td:first-child { text-align: left; }
 
-/* ARPU tab — Premium price-by-region & price-history tables */
-.pr-table thead th:nth-child(3), .pr-table td.pr-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.pr-table td.pr-num { color: var(--navy); font-weight: 600; }
-.pr-table tbody td { vertical-align: middle; }
-.pr-base { background: rgba(29,185,84,.06); }
-.pr-tag { display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
-  color: #11833b; background: rgba(29,185,84,.14); border-radius: 10px; padding: 1px 6px; vertical-align: middle; }
-.pr-usdwrap { display: flex; align-items: center; gap: 9px; min-width: 130px; }
-.pr-track { flex: 1; height: 8px; min-width: 40px; border-radius: 5px; background: #EEF2F7; overflow: hidden; }
-.pr-fill { display: block; height: 100%; background: #1DB954; border-radius: 5px; }
-.pr-usdwrap b { font-variant-numeric: tabular-nums; color: var(--navy); min-width: 54px; text-align: right; }
-.pr-hist td.pr-mkt { color: var(--navy); font-weight: 600; }
-.pr-hist tbody td { font-size: 11.5px; }
-
 /* ── Sensitivity tab ── */
 .sens-regions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .sens-region { text-align: left; border: 1px solid var(--bdr); border-radius: 12px; background: var(--w); padding: 11px 13px;
@@ -1417,14 +1403,6 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 .sens-region-d { display: block; font-size: 11px; color: var(--mu); margin-top: 3px; }
 .sens-region::after { content: 'off'; float: right; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--mu); }
 .sens-region.active::after { content: 'on'; color: #11833b; }
-
-.spl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
-.spl-item { display: block; min-width: 0; border: 1px solid var(--bdr); border-radius: 12px; padding: 12px 14px 13px; background: var(--w); }
-.spl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 9px; }
-.spl-head label { font-size: 12.5px; font-weight: 700; color: var(--navy); }
-.spl-val { flex: none; font-size: 13px; font-weight: 800; color: #11833b; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.spl-item input[type=range] { display: block; width: 100%; accent-color: #1DB954; height: 4px; cursor: pointer; }
-.spl-hint { font-size: 10.5px; color: var(--mu); line-height: 1.45; margin-top: 7px; overflow-wrap: break-word; }
 
 /* Valuation-method toggle + forward-multiple selects */
 .sens-method { display: inline-flex; gap: 4px; background: var(--surface,#F1F4F7); border: 1px solid var(--bdr); border-radius: 10px; padding: 3px; margin-bottom: 14px; flex-wrap: wrap; }
@@ -2142,33 +2120,6 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 .ov-sofi .ovg-tab.active { color: var(--brand); background: var(--brand-soft); border-color: var(--brand); }
 .ovg-pane[hidden] { display: none; }
 
-/* Spotify — nested General sub-tabs (MAU / ARPU) */
-.ov-spot .ovg-tabs { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 22px; }
-.ov-spot .ovg-tab {
-  border: 1px solid var(--bdr); background: var(--w); border-radius: 20px; color: var(--mu);
-  font: 600 12.5px 'Inter', sans-serif; padding: 7px 15px; cursor: pointer;
-  transition: color .15s, background .15s, border-color .15s;
-}
-.ov-spot .ovg-tab:hover { color: var(--navy); border-color: var(--brand); }
-.ov-spot .ovg-tab.active { color: #11833b; background: rgba(29,185,84,.10); border-color: var(--brand); }
-
-/* Sensitivity → sub-tabs (Price increase / Investor Day targets) */
-.ov-spot .ovs-tabs { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 22px; }
-.ov-spot .ovs-tab {
-  border: 1px solid var(--bdr); background: var(--w); border-radius: 20px; color: var(--mu);
-  font: 600 12.5px 'Inter', sans-serif; padding: 7px 15px; cursor: pointer;
-  transition: color .15s, background .15s, border-color .15s;
-}
-.ov-spot .ovs-tab:hover { color: var(--navy); border-color: var(--brand); }
-.ov-spot .ovs-tab.active { color: #11833b; background: rgba(29,185,84,.10); border-color: var(--brand); }
-
-/* Investor Day targets — 2030 P&L readout chips */
-.idt-pnl { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 14px; }
-.idt-pnl-cell { border: 1px solid var(--bdr); border-radius: 10px; padding: 10px 12px; background: rgba(29,185,84,.05); }
-.idt-pnl-l { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--mu); }
-.idt-pnl-v { font-size: 17px; font-weight: 900; letter-spacing: -.02em; color: var(--navy); margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
-.idt-pnl-s { font-size: 10.5px; color: var(--mu); line-height: 1.35; }
-
 /* ── Management → nested sub-tabs (Organization Chart / Insider Activity) ── */
 .ov-sofi .ovm-tabs { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 22px; }
 .ov-sofi .ovm-tab {
@@ -2229,280 +2180,6 @@ img.org-photo { object-fit: cover; }
 .org-modal-h { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--mu); margin-bottom: 7px; }
 #omEdu { font-size: 12.5px; color: var(--navy); }
 .org-prior { display: inline-block; font-size: 11.5px; font-weight: 600; color: var(--navy); background: var(--surface, #F1F4F7); border: 1px solid var(--bdr); border-radius: 20px; padding: 4px 11px; margin: 0 6px 6px 0; }
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Spotify (SPOT) — Product Mix tab visuals
-   ───────────────────────────────────────────────────────────────────────── */
-
-/* "Every €1 of music revenue" hero split bar */
-.spot-euro { margin-top: 2px; }
-.spot-euro-bar { display: flex; height: 64px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(16,32,56,.10); }
-.spot-euro-seg { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-size: 20px; font-weight: 800; letter-spacing: -.01em; }
-.spot-euro-seg small { display: block; font-size: 11px; font-weight: 600; opacity: .92; margin-top: 2px; text-transform: uppercase; letter-spacing: .04em; }
-.spot-euro-cap { font-size: 13px; line-height: 1.6; color: var(--navy); margin-top: 12px; }
-
-/* Per-format "toll" bars */
-.spot-fmts { display: flex; flex-direction: column; gap: 16px; }
-.spot-fmt-h { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
-.spot-fmt-ic { display: inline-flex; }
-.spot-fmt-n { font-size: 14px; font-weight: 800; color: var(--navy); }
-.spot-fmt-tag { font-size: 11.5px; font-weight: 600; color: var(--mu); background: var(--surface, #F1F4F7); border-radius: 20px; padding: 2px 10px; }
-.spot-fmt-track { height: 22px; background: #EEF2F7; border-radius: 7px; overflow: hidden; }
-.spot-fmt-fill { height: 100%; border-radius: 7px; transition: width .5s ease; min-width: 4px; }
-.spot-fmt-note { font-size: 12px; color: var(--mu); margin-top: 6px; font-weight: 600; }
-.spot-axis { display: flex; justify-content: space-between; margin-top: 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--mu); }
-
-/* Before / After toggle */
-.spot-toggle { display: inline-flex; background: var(--surface, #F1F4F7); border: 1px solid var(--bdr); border-radius: 10px; padding: 4px; gap: 4px; margin-bottom: 16px; }
-.spot-tg { border: none; background: none; font: 700 13px Inter, sans-serif; color: var(--mu); padding: 7px 22px; border-radius: 7px; cursor: pointer; transition: all .15s ease; }
-.spot-tg:hover { color: var(--navy); }
-.spot-tg.active { background: var(--brand); color: #fff; box-shadow: 0 1px 3px rgba(16,32,56,.18); }
-.spot-state[hidden] { display: none; }
-.spot-state-h { font-size: 14.5px; line-height: 1.55; color: var(--navy); font-weight: 600; margin-bottom: 14px; }
-
-/* Big headline margin stat (the punchline of each state) */
-.spot-bigstat { display: flex; align-items: baseline; gap: 12px; margin-top: 18px; padding: 14px 18px; border-radius: 12px; border: 1px solid var(--bdr); }
-.spot-bigstat.is-low  { background: rgba(226,87,76,.07); border-color: rgba(226,87,76,.25); }
-.spot-bigstat.is-high { background: rgba(29,185,84,.09); border-color: rgba(29,185,84,.30); }
-.spot-bigstat-v { font-size: 38px; font-weight: 900; letter-spacing: -.02em; line-height: 1; }
-.spot-bigstat.is-low  .spot-bigstat-v { color: #C0392B; }
-.spot-bigstat.is-high .spot-bigstat-v { color: #11833b; }
-.spot-bigstat-l { font-size: 12.5px; font-weight: 600; color: var(--navy); }
-
-/* Product Mix — the "$10 flow" Sankey map */
-.flow-wrap { width: 100%; max-width: 720px; margin: 6px auto 4px; }
-.flow-svg { width: 100%; height: auto; display: block; overflow: visible; }
-.flow-svg .flow-nm  { font: 700 12.5px 'Inter', sans-serif; fill: var(--navy); }
-.flow-svg .flow-amt { font: 800 13.5px 'Inter', sans-serif; }
-.flow-svg .flow-pct { font-weight: 700; font-size: 11.5px; fill: var(--mu); }
-.flow-svg .flow-src   { font: 800 14px 'Inter', sans-serif; fill: var(--navy); }
-.flow-svg .flow-src-s { font: 600 10.5px 'Inter', sans-serif; fill: var(--mu); text-transform: uppercase; letter-spacing: .04em; }
-
-/* Product Mix — bundle-mechanism callout */
-.flow-note { border: 1px solid rgba(232,163,61,.38); background: rgba(232,163,61,.07); border-radius: 14px; padding: 16px 18px; }
-.flow-note-h { font-size: 14px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
-.flow-note p { font-size: 13px; line-height: 1.6; color: var(--navy); margin: 0 0 13px; }
-.flow-note-stats { display: flex; flex-wrap: wrap; gap: 10px; }
-.flow-note-stat { flex: 1; min-width: 160px; background: var(--w); border: 1px solid var(--bdr); border-radius: 10px; padding: 10px 13px; }
-.flow-note-stat-v { font-size: 17px; font-weight: 900; letter-spacing: -.01em; color: #B26A00; }
-.flow-note-stat-l { font-size: 11px; color: var(--mu); margin-top: 3px; line-height: 1.4; }
-
-/* ═══ Spotify · vs Netflix — diverging comparison bars ═══ */
-.spot-vs { border: 1px solid var(--bdr); border-radius: 14px; padding: 16px 18px; background: var(--w); }
-.spot-vs-head { display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; margin-bottom: 12px; }
-.spot-vs-head .s { color: #11833b; }
-.spot-vs-head .n { color: #E50914; }
-.spot-vs-row { display: grid; grid-template-columns: 72px 1fr 72px; align-items: center; gap: 10px; }
-.spot-vs-v { font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
-.spot-vs-v.s { color: #11833b; text-align: right; }
-.spot-vs-v.n { color: #E50914; text-align: left; }
-.spot-vs-track { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
-.spot-vs-half { height: 16px; display: flex; }
-.spot-vs-half.l { justify-content: flex-end; }
-.spot-vs-half.r { justify-content: flex-start; }
-.spot-vs-fill { height: 100%; border-radius: 5px; display: block; min-width: 4px; }
-.spot-vs-fill.s { background: #1DB954; }
-.spot-vs-fill.n { background: #E50914; }
-.spot-vs-mid { text-align: center; min-width: 116px; font-size: 11.5px; font-weight: 700; color: var(--navy); line-height: 1.25; }
-.spot-vs-mid small { display: block; font-weight: 500; color: var(--mu); font-size: 10px; }
-.spot-vs-note { font-size: 11px; color: var(--mu); text-align: center; margin: 3px 0 13px; line-height: 1.4; }
-.spot-vs-note:last-child { margin-bottom: 0; }
-
-/* Two business-model cards */
-.spot-models { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.spot-model { border: 1px solid var(--bdr); border-radius: 12px; padding: 16px 18px; background: var(--w); }
-.spot-model-h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
-.spot-model-co { font-size: 16px; font-weight: 800; }
-.spot-model-tag { font-size: 10.5px; font-weight: 600; color: var(--mu); letter-spacing: .03em; }
-.spot-model-t { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 10px; }
-.spot-model-d { font-size: 12.5px; line-height: 1.55; color: var(--navy); }
-.spot-model-d b { font-weight: 700; }
-.spot-model-list { margin: 0; padding-left: 18px; }
-.spot-model-list li { font-size: 12.5px; color: var(--navy); line-height: 1.5; margin-bottom: 5px; }
-
-/* ═══ Spotify · Investor Day 2026 ═══ */
-.spot-hero { border-radius: 16px; padding: 26px 28px; margin-bottom: 22px; color: #fff;
-  background: linear-gradient(120deg, #1DB954 0%, #11833b 60%, #0a5c2a 100%); box-shadow: 0 6px 20px rgba(17,131,59,.22); }
-.spot-hero-badge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-  background: rgba(255,255,255,.18); padding: 4px 12px; border-radius: 20px; margin-bottom: 12px; }
-.spot-hero-t { font-size: 28px; font-weight: 900; letter-spacing: -.02em; line-height: 1.12; }
-.spot-hero-d { font-size: 12.5px; font-weight: 500; opacity: .92; margin-top: 10px; }
-
-/* 2030 target "from → to" cards */
-.spot-tgts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.spot-tgt { border: 1px solid var(--bdr); border-radius: 12px; padding: 14px 16px; background: var(--w); }
-.spot-tgt-l { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--mu); margin-bottom: 10px; }
-.spot-tgt-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.spot-tgt-now { font-size: 16px; font-weight: 700; color: #9AA3AF; }
-.spot-tgt-arr { font-size: 16px; font-weight: 800; color: #1DB954; }
-.spot-tgt-goal { font-size: 22px; font-weight: 900; letter-spacing: -.02em; color: #11833b; }
-.spot-tgt-d { font-size: 11px; color: var(--mu); margin-top: 8px; line-height: 1.4; }
-
-/* North Star band */
-.spot-north { border-radius: 14px; padding: 18px 20px; margin: 22px 0; border: 1px dashed rgba(29,185,84,.5); background: rgba(29,185,84,.06); }
-.spot-north-h { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: #11833b; margin-bottom: 14px; }
-.spot-north-h small { display: inline; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--mu); margin-left: 8px; }
-.spot-north-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.spot-north-cell { text-align: center; }
-.spot-north-v { font-size: 32px; font-weight: 900; letter-spacing: -.02em; color: #11833b; line-height: 1; }
-.spot-north-l { font-size: 11.5px; font-weight: 600; color: var(--navy); margin-top: 6px; }
-
-/* Strategic pillars */
-.spot-pillars { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-.spot-pillar { border: 1px solid var(--bdr); border-radius: 12px; padding: 16px; background: var(--w); }
-.spot-pillar-ic { font-size: 24px; line-height: 1; margin-bottom: 10px; }
-.spot-pillar-t { font-size: 13.5px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
-.spot-pillar-d { font-size: 12px; color: var(--mu); line-height: 1.5; }
-
-/* What's new — announcement cards */
-.spot-news { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
-.spot-newscard { border: 1px solid var(--bdr); border-radius: 12px; padding: 15px 16px; background: var(--w); position: relative; }
-.spot-news-tag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
-  color: #11833b; background: rgba(29,185,84,.12); padding: 3px 9px; border-radius: 14px; margin-bottom: 9px; }
-.spot-news-t { font-size: 13.5px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
-.spot-news-d { font-size: 12px; color: var(--mu); line-height: 1.5; }
-.spot-news-ic { font-size: 15px; }
-
-/* Clickable "What's new" cards → visual explainer panel */
-.spot-newscard.is-clickable { cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .15s; }
-.spot-newscard.is-clickable:hover { border-color: #1DB954; box-shadow: 0 6px 18px rgba(17,131,59,.12); transform: translateY(-1px); }
-.spot-newscard.is-active { border-color: #1DB954; box-shadow: 0 0 0 2px rgba(29,185,84,.35); }
-.spot-newscard.is-clickable:focus-visible { outline: 2px solid #1DB954; outline-offset: 2px; }
-.spot-news-more { display: inline-block; margin-top: 9px; font-size: 11px; font-weight: 700; color: #11833b; }
-
-.spot-news-detail { margin-top: 14px; border: 1px solid var(--bdr); border-radius: 14px; padding: 18px 20px; background: rgba(29,185,84,.05); }
-.spot-news-hint { font-size: 12.5px; color: var(--mu); text-align: center; padding: 6px 0; }
-.spot-nd-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px; }
-.spot-nd-ic { font-size: 34px; line-height: 1; flex-shrink: 0; }
-.spot-nd-t { font-size: 17px; font-weight: 800; color: var(--navy); margin-top: 6px; }
-.spot-nd-tag { font-size: 12.5px; font-weight: 600; color: #11833b; margin-top: 3px; }
-.spot-nd-what { font-size: 13px; color: var(--navy); line-height: 1.6; margin-bottom: 14px; }
-
-/* Explainer visual: horizontal flow */
-.spot-nflow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-.spot-nflow-step { display: flex; flex-direction: column; align-items: center; gap: 6px; background: var(--w);
-  border: 1px solid var(--bdr); border-radius: 12px; padding: 12px 16px; min-width: 96px; }
-.spot-nflow-ic { font-size: 24px; line-height: 1; }
-.spot-nflow-l { font-size: 11.5px; font-weight: 600; color: var(--navy); text-align: center; line-height: 1.3; }
-.spot-nflow-arr { font-size: 18px; font-weight: 800; color: #1DB954; }
-
-/* Explainer visual: tiles */
-.spot-ntiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
-.spot-ntile { background: var(--w); border: 1px solid var(--bdr); border-radius: 12px; padding: 14px; }
-.spot-ntile-ic { font-size: 22px; line-height: 1; }
-.spot-ntile-t { font-size: 12.5px; font-weight: 700; color: var(--navy); margin: 8px 0 4px; }
-.spot-ntile-d { font-size: 11.5px; color: var(--mu); line-height: 1.45; }
-
-/* Explainer visual: add-on stack comparison */
-.spot-nstack { display: flex; align-items: stretch; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
-.spot-nstack-col { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 6px; justify-content: flex-end; }
-.spot-nstack-cap { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--mu); margin-bottom: 4px; }
-.spot-nstack-tier { background: #E9ECF1; border: 1px dashed #B6BEC9; border-radius: 10px; padding: 30px 14px;
-  text-align: center; font-size: 13px; font-weight: 700; color: #6b7482; line-height: 1.4; }
-.spot-nstack-vs { align-self: center; font-size: 12px; font-weight: 800; color: var(--mu); }
-.spot-nstack-addon { background: rgba(29,185,84,.12); border: 1px solid rgba(29,185,84,.3); border-radius: 8px;
-  padding: 8px 12px; font-size: 12px; font-weight: 700; color: #11833b; text-align: center; }
-.spot-nstack-base { background: #1DB954; color: #fff; border-radius: 8px; padding: 12px; font-size: 13px; font-weight: 800; text-align: center; }
-
-/* Explainer visual: fact chips */
-.spot-nfacts { display: flex; flex-wrap: wrap; gap: 8px; }
-.spot-nfact { display: flex; flex-direction: column; background: var(--w); border: 1px solid var(--bdr); border-radius: 10px; padding: 8px 12px; }
-.spot-nfact-k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--mu); }
-.spot-nfact-v { font-size: 13px; font-weight: 800; color: var(--navy); margin-top: 2px; }
-
-/* Pull-quotes */
-.spot-quotes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-.spot-quote { margin: 0; border-left: 3px solid #1DB954; background: var(--surface, #F1F4F7); border-radius: 0 10px 10px 0;
-  padding: 14px 16px; font-size: 13.5px; font-style: italic; color: var(--navy); line-height: 1.5; }
-.spot-quote cite { display: block; margin-top: 10px; font-style: normal; font-size: 11.5px; font-weight: 700; color: #11833b; }
-
-/* Advertising — SAX panel & partner chips */
-.spot-sax { border: 1px solid var(--bdr); border-radius: 12px; padding: 16px 18px; background: rgba(29,185,84,.05); margin-bottom: 16px; }
-.spot-sax-t { font-size: 13.5px; font-weight: 700; color: #11833b; margin-bottom: 6px; }
-.spot-sax-d { font-size: 12.5px; color: var(--navy); line-height: 1.55; }
-.spot-chipgrp { margin-bottom: 13px; }
-.spot-chipgrp-l { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--mu); margin-bottom: 7px; }
-.spot-chips { display: flex; flex-wrap: wrap; gap: 7px; }
-.spot-chip { font-size: 12px; font-weight: 600; color: var(--navy); background: var(--w); border: 1px solid var(--bdr); border-radius: 20px; padding: 5px 12px; }
-
-/* Advertising — SAX deep-dive: narrative, auction schematic, before/after */
-.sax-lead { font-size: 13px; line-height: 1.65; color: var(--navy); margin: 0 0 11px; }
-.sax-lead:last-child { margin-bottom: 0; }
-.sax-lead b { color: #11833b; }
-.sax-note { font-size: 12.5px; line-height: 1.6; color: var(--navy); margin: 12px 0 0;
-  border-left: 3px solid #1DB954; background: rgba(29,185,84,.05); border-radius: 0 8px 8px 0; padding: 11px 14px; }
-.sax-note b { color: #11833b; }
-
-/* Trade Desk-style supply-chain flow: buy-side → SAX marketplace → sell-side */
-.ttd-flow { border: 1px solid var(--bdr); border-radius: 14px; padding: 15px 18px 15px; background: linear-gradient(180deg, #FBFCFD, #F3F6F9); }
-.ttd-zones { display: flex; justify-content: space-between; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; color: var(--mu); margin-bottom: 11px; }
-.ttd-zones .r { text-align: right; }
-.ttd-track { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.ttd-track::before { content: ''; position: absolute; left: 7%; right: 7%; top: 50%; height: 2px; transform: translateY(-50%);
-  background: linear-gradient(90deg, #C9D3DE 0%, #1DB954 50%, #C9D3DE 100%); z-index: 0; }
-.ttd-node { position: relative; z-index: 1; flex: 1 1 0; min-width: 0; text-align: center; background: #fff;
-  border: 1px solid var(--bdr); border-radius: 10px; padding: 10px 6px; box-shadow: 0 1px 2px rgba(16,32,56,.06); }
-.ttd-node b { display: block; font-size: 12.5px; font-weight: 800; letter-spacing: -.01em; color: var(--navy); }
-.ttd-node span { display: block; font-size: 10px; color: var(--mu); margin-top: 2px; }
-.ttd-hub { position: relative; z-index: 1; flex: 1.18 1 0; min-width: 0; text-align: center; background: #11833b;
-  border-radius: 12px; padding: 13px 6px; box-shadow: 0 7px 20px rgba(17,131,59,.34); }
-.ttd-hub b { display: block; font-size: 15px; font-weight: 900; letter-spacing: .02em; color: #fff; }
-.ttd-hub span { display: block; font-size: 10px; color: rgba(255,255,255,.9); margin-top: 2px; }
-.ttd-base { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
-.ttd-base-cell { font-size: 11px; color: var(--navy); background: #fff; border: 1px solid var(--bdr);
-  border-radius: 9px; padding: 8px 12px; text-align: center; }
-.ttd-base-l { display: block; font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--mu); margin-bottom: 2px; }
-
-/* Clickable boxes + detail panel */
-.ttd-node, .ttd-hub, .ttd-base-cell { cursor: pointer; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
-.ttd-node:hover, .ttd-base-cell:hover { transform: translateY(-2px); border-color: #1DB954; box-shadow: 0 4px 12px rgba(29,185,84,.18); }
-.ttd-hub:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(17,131,59,.42); }
-.ttd-node:focus-visible, .ttd-hub:focus-visible, .ttd-base-cell:focus-visible { outline: 2px solid #1DB954; outline-offset: 2px; }
-.ttd-node.is-active, .ttd-base-cell.is-active { border-color: #1DB954; box-shadow: 0 0 0 2px rgba(29,185,84,.35); }
-.ttd-hub.is-active { box-shadow: 0 0 0 2px rgba(29,185,84,.55), 0 10px 24px rgba(17,131,59,.4); }
-
-.sax-detail { margin-top: 13px; border: 1px solid var(--bdr); border-radius: 12px; background: #fff; padding: 13px 15px; min-height: 58px; }
-.sax-detail-hint { font-size: 12px; color: var(--mu); font-style: italic; }
-.sax-detail-t { font-size: 13px; font-weight: 800; color: #11833b; letter-spacing: -.01em; margin-bottom: 4px; }
-.sax-detail-d { font-size: 12.5px; line-height: 1.55; color: var(--navy); }
-.sax-logos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 11px; }
-.sax-logo { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--navy);
-  background: var(--surface, #F6F8FA); border: 1px solid var(--bdr); border-radius: 22px; padding: 4px 12px 4px 5px; }
-.sax-logo img { width: 20px; height: 20px; border-radius: 5px; object-fit: contain; background: #fff; }
-.sax-logo.is-plain { padding: 5px 12px; color: var(--mu); }
-
-.sax-steps { display: grid; gap: 9px; margin-top: 14px; }
-.sax-step { display: flex; gap: 11px; align-items: flex-start; }
-.sax-step-n { flex: 0 0 auto; width: 25px; height: 25px; border-radius: 50%; background: #11833b; color: #fff;
-  font-size: 12.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
-.sax-step-b { font-size: 12.5px; line-height: 1.55; color: var(--navy); }
-.sax-step-b b { color: #11833b; }
-
-.sax-cmp { display: grid; gap: 8px; }
-.sax-cmp-head { display: grid; grid-template-columns: 148px 1fr 1fr; gap: 10px; }
-.sax-cmp-head > div { font-size: 12px; font-weight: 800; padding: 2px 4px; }
-.sax-cmp-head .old { color: #C0392B; }
-.sax-cmp-head .new { color: #11833b; }
-.sax-cmp-row { display: grid; grid-template-columns: 148px 1fr 1fr; gap: 10px; align-items: stretch; }
-.sax-cmp-k { font-size: 12px; font-weight: 700; color: var(--navy); display: flex; align-items: center; }
-.sax-cell { font-size: 12.5px; line-height: 1.5; color: var(--navy); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--bdr); }
-.sax-cell.old { background: rgba(226,87,76,.05); border-color: rgba(226,87,76,.22); }
-.sax-cell.new { background: rgba(29,185,84,.06); border-color: rgba(29,185,84,.28); font-weight: 600; }
-.sax-tag { display: none; }
-
-@media (max-width: 720px) {
-  .spot-models, .spot-tgts, .spot-north-row { grid-template-columns: 1fr; }
-  .ttd-track { flex-direction: column; align-items: stretch; }
-  .ttd-track::before { display: none; }
-  .ttd-node, .ttd-hub { flex: none; }
-  .ttd-base { grid-template-columns: 1fr; }
-  .sax-cmp-head { display: none; }
-  .sax-cmp-row { grid-template-columns: 1fr; gap: 5px; }
-  .sax-cmp-k { margin-top: 8px; }
-  .sax-tag { display: inline-block; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; margin-right: 6px; }
-  .sax-tag.old { color: #C0392B; }
-  .sax-tag.new { color: #11833b; }
-}
 
 /* ════════════════════════════════════════════════════════════════════════
    LAYERED-REVEAL OVERVIEW  (.ovlr-*)  — progressive-disclosure summary tab.
@@ -3593,6 +3270,186 @@ img.org-photo { object-fit: cover; }
 .ov-tsm-dd .fab-collap{margin:6px 0 4px}
 #co-detailview .fab-pop-note{font-size:11px;color:var(--mu);white-space:normal}
 .ov-tsm-dd .fab-econ td,.ov-tsm-dd .fab-econ th{text-align:left;white-space:nowrap}
+
+/* ── Spotify (SPOT) — Overview without colour (SAB, Oct 19–20 2026; playbook §8). One accent for the whole
+   profile: the Summit blue that underlines the profile tabs (--steel). Spotify's green lives only in its logo. ── */
+.ov-spot { --brand: var(--steel); --brand-2: var(--steel); --brand-soft: rgba(62,90,130,0.08); }
+.ov-spot .q2-k { color: var(--navy); }
+/* "How Spotify makes money" bars — light greys only, the bigger the slice the slightly darker the grey,
+   amounts in black. gmmBars() ranks the rows and gives each fill .gmm-g1 (largest) … .gmm-g6. */
+.ov-mbars.gmm-neutral .ov-mbar-fill { color: var(--navy); }
+.ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g1 { background: #B4BBC5; }
+.ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g2 { background: #C1C7D0; }
+.ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g3 { background: #CCD2D9; }
+.ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g4 { background: #D6DBE1; }
+.ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g5 { background: #DFE3E8; }
+.ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g6 { background: #E6E9ED; }
+
+/* ── Spotify ▸ Valuation ▸ Target Multiple / PEG — the TSMC rules above, scoped to .ov-spot-dd ── */
+.ov-spot-dd .ovt-subpane[data-ovst="targetmult"] .sens-ctrl-l{min-width:0}
+.ov-spot-dd .ovt-subpane[data-ovst="targetmult"] .sens-ctrl{margin:0;gap:8px}
+.ov-spot-dd .tm-blk .rs-preset.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.ov-spot-dd .tm-leg{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 8px}
+.ov-spot-dd .tm-chartwrap{position:relative;height:340px;margin:2px 0 6px}
+.ov-spot-dd .tm-chartwrap-peg{height:320px}
+.ov-spot-dd .tm-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}
+.ov-spot-dd .tm-tbl th,.ov-spot-dd .tm-tbl td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}
+.ov-spot-dd .tm-tbl th:first-child,.ov-spot-dd .tm-tbl td:first-child{text-align:left}
+.ov-spot-dd .tm-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}
+.ov-spot-dd .tm-tbl tbody tr.tm-last{background:var(--brand-soft)}
+.ov-spot-dd .tm-tbl tbody tr.tm-rep{background:var(--surface);color:var(--mu)}
+.ov-spot-dd .tm-tbl thead tr.tm-grp th{padding:5px 10px;text-align:center;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bdr)}
+.ov-spot-dd .tm-tbl thead tr.tm-grp th.tm-gh-ev{background:#2a78d6;color:#fff}
+.ov-spot-dd .tm-tbl thead tr.tm-grp th.tm-gh-pe{background:#eb6834;color:#fff}
+.ov-spot-dd .tm-tbl th.tm-gs,.ov-spot-dd .tm-tbl td.tm-gs{border-left:2px solid var(--bdr)}
+.ov-spot-dd .tm-tbl td.tm-flat{color:var(--mu)}
+.ov-spot-dd .tm-tbl thead tr.tm-grp .tm-gsub{display:block;font-size:9px;font-weight:600;letter-spacing:.02em;text-transform:none;opacity:.92;margin-top:2px}
+.ov-spot-dd .tm-tbl td.tm-miss-hi{color:var(--neg);font-weight:800}
+.ov-spot-dd .tm-tbl td.tm-miss-lo{color:var(--pos);font-weight:800}
+.ov-spot-dd .tm-tbl td.tm-pt{font-weight:800;color:var(--navy)}
+.ov-spot-dd .tm-tag{display:inline-block;font-size:8.5px;font-weight:800;border-radius:20px;padding:1px 7px;margin-left:6px;vertical-align:1px}
+.ov-spot-dd .tm-tag-rev{color:var(--pos);border:1px solid var(--pos)}
+.ov-spot-dd .tm-tag-rep{color:var(--mu);border:1px solid var(--bdr)}
+.ov-spot-dd .tm-tag-brk{color:var(--neg);border:1px solid var(--neg)}
+.ov-spot-dd .tm-warn{border:1px solid rgba(220,38,38,.35);border-left:4px solid var(--neg);background:rgba(220,38,38,.05);border-radius:9px;padding:11px 14px;font-size:12px;line-height:1.55;color:var(--navy);margin:12px 0}
+.ov-spot-dd .tm-tbl th.peg-out,.ov-spot-dd .tm-tbl td.peg-out{background:var(--surface);font-weight:800}
+
+/* ── Spotify ▸ Bottom Line ▸ General — the TSMC bridge / expense-explorer rules above, scoped to .ov-spot-dd ── */
+.ov-spot-dd .br-sl{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--navy)}
+.ov-spot-dd .br-sl input{flex:1;max-width:180px;accent-color:var(--accent)}
+.ov-spot-dd .br-sl-v{width:44px;text-align:right;color:var(--steel);font-variant-numeric:tabular-nums}
+.ov-spot-dd .br-sl-l{width:120px}
+.ov-spot-dd .br-fx-reset{cursor:pointer;border:1px solid var(--bdr);background:#fff;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--navy)}
+.ov-spot-dd .ew-h{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--steel);margin:18px 0 9px;display:flex;align-items:center;gap:8px}
+.ov-spot-dd .ew-h::after{content:"";flex:1;height:1px;background:var(--bdr)}
+.ov-spot-dd .ew-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.ov-spot-dd .ew-two{grid-template-columns:1fr}}
+.ov-spot-dd .ew-box{border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;background:var(--card,#fff)}
+.ov-spot-dd .ew-box-h{font-size:13px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.ov-spot-dd .ew-box-i{font-size:18px}
+.ov-spot-dd .ew-box-t{font-size:11.5px;color:var(--navy);line-height:1.5}
+.ov-spot-dd .ew-note{font-size:12px;color:var(--navy);background:rgba(20,110,180,.06);border-radius:8px;padding:9px 12px;margin-top:9px;line-height:1.5}
+.ov-spot-dd .ew-spark{display:flex;align-items:flex-end;gap:5px;height:96px;margin:4px 0}
+.ov-spot-dd .ew-sb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px}
+.ov-spot-dd .ew-sb-v{font-size:9.5px;font-weight:800;color:var(--navy)}
+.ov-spot-dd .ew-sb-bar{width:100%;border-radius:4px 4px 0 0;background:#B7CBE0}
+.ov-spot-dd .ew-sb.on .ew-sb-bar{background:var(--steel)}
+.ov-spot-dd .ew-sb-l{font-size:8.5px;color:var(--mu)}
+.ov-spot-dd .ew-flow{display:flex;align-items:stretch;flex-wrap:wrap;margin:2px 0}
+.ov-spot-dd .ew-fn{flex:1;min-width:110px;border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;background:var(--card,#fff);text-align:center}
+.ov-spot-dd .ew-fn-v{font-size:14px;font-weight:800;color:var(--navy)}
+.ov-spot-dd .ew-fn-l{font-size:9.5px;color:var(--mu);font-weight:600;margin-top:2px}
+.ov-spot-dd .ew-far{display:flex;align-items:center;justify-content:center;color:var(--steel);font-size:18px;font-weight:800;padding:0 6px}
+.ov-spot-dd .ew-q{border-left:3px solid var(--accent);background:rgba(0,0,0,.025);border-radius:0 8px 8px 0;padding:9px 13px;margin:8px 0;font-size:12px;line-height:1.55;color:var(--navy)}
+.ov-spot-dd .ew-q .ew-att{display:block;margin-top:4px;font-size:10.5px;font-weight:700;color:var(--mu)}
+.ov-spot-dd .ew-tls{position:relative;margin:8px 0 2px;padding-left:20px}
+.ov-spot-dd .ew-tls::before{content:"";position:absolute;left:5px;top:5px;bottom:5px;width:2px;background:var(--bdr)}
+.ov-spot-dd .ew-tli{position:relative;margin-bottom:13px}
+.ov-spot-dd .ew-tli:last-child{margin-bottom:2px}
+.ov-spot-dd .ew-tli::before{content:"";position:absolute;left:-18px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--steel);border:2px solid var(--card,#fff);box-shadow:0 0 0 1px var(--bdr)}
+.ov-spot-dd .ew-tlq{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--steel)}
+.ov-spot-dd .ew-tlt{font-size:12px;color:var(--navy);line-height:1.5;margin-top:2px}
+.ov-spot-dd .ew-tlw{font-size:10px;font-weight:700;color:var(--mu);margin-top:3px}
+.ov-spot-dd .ew-tag{display:inline-block;font-size:8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:1px 6px;border-radius:5px;margin-left:7px;vertical-align:middle;transform:translateY(-1px)}
+.ov-spot-dd .ew-tag.why{background:rgba(192,80,77,.13);color:#B23A38}
+.ov-spot-dd .ew-tag.fwd{background:rgba(46,139,87,.15);color:#2E7D51}
+.ov-spot-dd .ew-tag.ctx{background:rgba(107,118,131,.15);color:#5B6673}
+.ov-spot-dd .ew-calls{margin-top:14px}
+.ov-spot-dd .ew-callsum{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--steel);cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:5px 0}
+.ov-spot-dd .ew-callsum::-webkit-details-marker{display:none}
+.ov-spot-dd .ew-callsum::before{content:"▸";font-size:11px;transition:transform .15s}
+.ov-spot-dd .ew-calls[open] .ew-callsum::before{content:"▾"}
+.ov-spot-dd .ew-callsum::after{content:"";flex:1;height:1px;background:var(--bdr)}
+.ov-spot-dd .exp-explorer{border:1.5px solid var(--accent);border-radius:14px;padding:14px 16px 16px;background:linear-gradient(180deg,var(--ice),transparent);margin:6px 0 6px}
+.ov-spot-dd .exp-explorer-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--steel);margin:0 0 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ov-spot-dd .exp-explorer-h .exp-hint{font-size:9px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--mu);background:#fff;border:1px solid var(--bdr);border-radius:20px;padding:2px 9px}
+.ov-spot-dd .exp-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.ov-spot-dd .exp-tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bdr);background:#fff;border-radius:20px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:800;color:var(--navy);transition:.13s}
+.ov-spot-dd .exp-tab:hover{border-color:var(--accent)}
+.ov-spot-dd .exp-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.ov-spot-dd .exp-tab.active .exp-tag{color:rgba(255,255,255,.8)}
+.ov-spot-dd .exp-tab .exp-dot{width:10px;height:10px;border-radius:3px;flex:none}
+.ov-spot-dd .exp-tab .exp-tag{font-size:10px;font-weight:800;color:var(--mu)}
+.ov-spot-dd .exp-panel-card{background:var(--card,#fff);border:1px solid var(--bdr);border-radius:12px;padding:15px 17px}
+
+/* ── Spotify ▸ Valuation ▸ Sensitivity — the TSMC rules above, scoped to .ov-spot-dd ── */
+.ov-spot-dd .ovt-subpane[data-ovst="sensitivity"] .sens-ctrl-l{min-width:0}
+.ov-spot-dd .ovt-subpane[data-ovst="sensitivity"] .sens-ctrl{margin:0;gap:8px}
+.ov-spot-dd .ovt-subpane[data-ovst="sensitivity"] .sens-row-inp{gap:12px 18px}
+.ov-spot-dd .ovt-subpane[data-ovst="sensitivity"] .as-reset{padding:5px 11px;font-size:11px}
+.ov-spot-dd .as-mxrow{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin:10px 0 4px}
+.ov-spot-dd .as-mxrow>.sens-matrix-wrap{flex:1 1 520px;min-width:0;margin:0}
+.ov-spot-dd .as-cons{flex:0 0 258px;border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.ov-spot-dd .as-cons-h{font-size:11px;font-weight:800;color:var(--navy);letter-spacing:.02em;margin-bottom:2px}
+.ov-spot-dd .as-cons-src{font-size:10px;color:var(--mu);margin-bottom:10px}
+.ov-spot-dd .as-cons-r{padding:8px 0;border-top:1px solid var(--bdr)}
+.ov-spot-dd .as-cons-k{font-size:10.5px;font-weight:700;color:var(--mu);margin-bottom:3px}
+.ov-spot-dd .as-cons-v{display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:800;color:var(--navy)}
+.ov-spot-dd .as-cons-v small{font-size:10px;font-weight:600;color:var(--mu)}
+.ov-spot-dd .as-cons-d{font-size:10.5px;font-weight:700;margin-top:2px}
+.ov-spot-dd .as-cons-nil{font-size:10.5px;color:var(--mu);line-height:1.45}
+.ov-spot-dd .as-cons-px{margin-top:10px;padding-top:10px;border-top:2px solid var(--bdr)}
+.ov-spot-dd .as-cons-px .v{font-size:20px;font-weight:800;color:var(--navy);line-height:1.1}
+.ov-spot-dd .as-cons-px .s{font-size:10.5px;color:var(--mu);margin-top:3px;line-height:1.45}
+.ov-spot-dd .sens-cell.as-cons-cell{outline:2px solid var(--navy);outline-offset:-2px}
+
+/* Spotify ▸ Bottom Line ▸ Supply Chain (js/overviews/spot-splc.js) — scoped, formal skin: Summit tokens, running text black */
+.ov-spot-dd .ovt-subpane[data-ovst="supplychain"]{color:#111418}
+.ov-spot-dd .ovt-subpane[data-ovst="supplychain"] .ov-lede{color:#111418}
+.ov-spot-dd .spot-splc-cap{margin:18px 0 6px;color:#111418}
+.ov-spot-dd .spot-splc-card{border-left:4px solid var(--steel)}
+.ov-spot-dd .spot-splc-card .ce-w-metric{color:#111418}
+.ov-spot-dd .spot-splc-chip{background:var(--ice);border:1px solid var(--bdr);color:#111418}
+.ov-spot-dd .spot-splc-more{margin-left:auto;color:var(--steel);background:none;border:none}
+.ov-spot-dd .spot-splc-bar{margin:4px 0 6px}
+.ov-spot-dd .spot-splc-bar .ov-mbar-track{height:8px}
+.ov-spot-dd .spot-splc-bar .ov-mbar-fill,.ov-spot-dd .ovt-subpane[data-ovst="supplychain"] .ov-mbars .ov-mbar-fill{background:var(--navy)}
+.ov-spot-dd .ovt-subpane[data-ovst="supplychain"] .ov-mbars .ov-mbar-l{width:230px;color:#111418}
+.ov-spot-dd .spot-splc-sub,#co-detailview .spot-splc-sub{color:var(--mu);font-weight:600}
+.ov-spot-dd .spot-splc-geo{margin-top:16px}
+.ov-spot-dd .spot-splc-geo-c{height:220px}
+.ov-spot-dd .spot-splc-geo .rs-collap{margin-top:10px}
+.ov-spot-dd .ovt-subpane[data-ovst="supplychain"] .ov-mbar-track{position:relative}
+.ov-spot-dd .spot-splc-in{position:absolute;top:50%;transform:translateY(-50%);font:600 11px Inter,sans-serif;color:#111418}
+/* Spotify ▸ Valuation ▸ Peers — the TSMC rules for the table under the map, scoped to .ov-spot-dd */
+.ov-spot-dd .asc-tblwrap{overflow-x:auto}
+.ov-spot-dd .asc-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}
+.ov-spot-dd .asc-tbl th,.ov-spot-dd .asc-tbl td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}
+.ov-spot-dd .asc-tbl th:first-child,.ov-spot-dd .asc-tbl td:first-child{text-align:left}
+.ov-spot-dd .asc-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}
+.ov-spot-dd .asc-tbl td.asc-m{font-weight:800;color:var(--navy)}
+.ov-spot-dd .asc-tbl tbody tr.asc-hl{background:var(--brand-soft)}
+.ov-spot-dd .asc-tbl tbody tr.asc-nil td{color:var(--mu)}
+.ov-spot-dd .asc-tbl tfoot td{border-top:2px solid var(--bdr);border-bottom:none;font-weight:800;color:var(--navy);background:var(--surface)}
+.ov-spot-dd .asc-tbl tfoot tr.asc-med td{background:var(--surface);font-weight:700;color:var(--mu)}
+.ov-spot-dd .asc-nm{display:inline-flex;align-items:center;gap:7px}
+.ov-spot-dd .asc-nm img{width:16px;height:16px;border-radius:4px;background:#fff;object-fit:contain}
+.ov-spot-dd .asc-tk{color:var(--mu);font-weight:700;font-size:10.5px}
+.ov-spot-dd .asc-up{color:var(--neg);font-weight:700}
+.ov-spot-dd .asc-dn{color:var(--pos);font-weight:700}
+.ov-spot-dd .asc-nilv{color:var(--mu)}
+.ov-spot-dd .tsm-sc-collap{margin-top:10px}
+/* Spotify ▸ Valuation ▸ Historic Multiple (js/overviews/spot-histmult.js) — the TSMC rules, scoped to .ov-spot-dd */
+.ov-spot-dd .hm-notice{padding:14px 2px;color:var(--mu);font:400 12px Inter,sans-serif}
+.ov-spot-dd .hm-hint{margin-left:6px}
+.ov-spot-dd .hm-blk .rs-preset.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.ov-spot-dd .hm-leg{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 6px}
+.ov-spot-dd .hm-chartwrap{position:relative;height:380px;margin:2px 0 4px}
+.ov-spot-dd #hmTable{overflow-x:auto}
+.ov-spot-dd .hm-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}
+.ov-spot-dd .hm-tbl th,.ov-spot-dd .hm-tbl td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}
+.ov-spot-dd .hm-tbl th:first-child,.ov-spot-dd .hm-tbl td:first-child{text-align:left}
+.ov-spot-dd .hm-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}
+.ov-spot-dd .hm-tbl tbody tr:hover td{background:var(--surface)}
+.ov-spot-dd .hm-tbl td.hm-out{font-weight:800;color:var(--navy)}
+.ov-spot-dd .hm-slider{margin:10px 2px 2px}
+.ov-spot-dd .hm-range{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:11px;margin:6px 2px 2px}
+.ov-spot-dd .hm-range-l{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}
+.ov-spot-dd .hm-range-i{display:inline-flex;align-items:baseline;gap:6px;color:var(--mu)}
+.ov-spot-dd .hm-range-i b{font-size:12.5px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}
+.ov-spot-dd .hm-sw{width:9px;height:9px;border-radius:2px;display:inline-block;align-self:center}
+.ov-spot-dd .hm-full{appearance:none;border:1px solid rgba(183,121,31,.4);background:rgba(183,121,31,.08);color:#B7791F;font:700 10.5px Inter,sans-serif;padding:3px 9px;border-radius:999px;cursor:pointer}
+.ov-spot-dd .hm-full:hover{background:rgba(183,121,31,.16)}
 /* META ▸ Miscellaneous — formal tables and the strategy loop (SAB, Oct 20 2026: no emoji, tables over cards) */
 .ov-meta-dd .mx-twrap{margin:0 0 8px}
 .ov-meta-dd .mx-tbl{width:100%;border-collapse:collapse;font-size:12px}

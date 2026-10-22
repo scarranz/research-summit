@@ -1,0 +1,52 @@
+{
+  "_note": "Config for emit_summit_matrix.py - the SUMMIT side of estMatrix for SPOT (the model's own estimates per snapshot, EUR millions). The consensus side is map_spot.json. Written Oct 20 2026 (DAA / Claude).",
+
+  "metrics": {
+    "rev":    "REV",
+    "premrev": "PREMIUM_REVENUE",
+    "adrev":  "ADS_REVENUE",
+    "premgp": "PREMIUM_GROSS_PROFIT",
+    "adgp":   "ADS_GROSS_PROFIT",
+    "opinc":  "OP_INCOME",
+    "ebitda": "EBITDA",
+    "fcf":    "FCF",
+    "mau":    "MAU",
+    "subs":   "MAUPS",
+    "admau":  "MAUAD"
+  },
+
+  "_derived_note": "The model has no consolidated gross-profit row (only the two segment rows), so the dataset's `gp` is Premium + Ad-Supported gross profit, the same sum the results-data header already names.",
+  "derived": {
+    "gp": ["PREMIUM_GROSS_PROFIT", "ADS_GROSS_PROFIT"]
+  },
+
+  "_decimals_note": "Millions at 1 decimal, like the hand-authored summit arrays.",
+  "decimals": { "_default": 1 },
+
+  "_vintages_note": "The four model snapshots in the MCP (2025-12-18 -> 2026-08-05). lastActual = the last period REPORTED when that file was saved (docs/profiles/SPOT.md, valuation-history table: 2025-12-18 and 2026-02-09 both stand after 3Q25; 2026-04-28 after 1Q26; 2026-08-05 after 2Q26). 2026-02-09 is the day before the 4Q25 print (Feb 10).",
+  "vintages": [
+    { "id": "2025-12-18", "label": "Dec 18, 2025", "lastActual": { "q": "3Q25", "y": "2024" } },
+    { "id": "2026-02-09", "label": "Feb 9, 2026",  "lastActual": { "q": "3Q25", "y": "2024" } },
+    { "id": "2026-04-28", "label": "Apr 28, 2026", "lastActual": { "q": "1Q26", "y": "2025" } },
+    { "id": "2026-08-05", "label": "Aug 5, 2026",  "lastActual": { "q": "2Q26", "y": "2025" } }
+  ],
+
+  "_views_note": "MAU / subscribers / ad-supported MAU exist only in the 2025-12-18 snapshot (zero in the later three) and, there, only 4Q25 is a real estimate: 2026Q1 onward repeats a flat 737.6 / 295.1 / 442.6 placeholder. The post-filter in the pipeline script keeps only 4Q25 / FY2025 for those three.",
+  "views": {
+    "q": ["rev", "premrev", "adrev", "gp", "premgp", "adgp", "opinc", "ebitda", "fcf", "mau", "subs", "admau"],
+    "y": ["rev", "premrev", "adrev", "gp", "premgp", "adgp", "opinc", "ebitda", "fcf", "mau", "subs", "admau"]
+  },
+
+  "_horizon_note": "2025-12-18: the model was mid-rebuild, every quarter after 4Q25 repeats the 1Q26 row (1Q27 = 1Q26, 2Q27 = 2Q26) and does not tie to its own annual, so only the next print (4Q25) is kept.",
+  "horizon": { "2025-12-18": { "q": 1 } },
+  "_repeat_note": "Premium revenue / gross profit are held flat at the last real quarter in 2026-02-09 and 2026-04-28 (4Q26 = 1Q27 = 2Q27); the held-flat cells are placeholders, not estimates.",
+  "drop_repeat_quarters": true,
+
+  "prefer_source": ["SEGM", "DEFAULT"],
+
+  "_axis_note": "Same period axis as the Bloomberg matrix in js/results-data/spot.js.",
+  "axis": {
+    "q": ["1Q24","2Q24","3Q24","4Q24","1Q25","2Q25","3Q25","4Q25","1Q26","2Q26","3Q26","4Q26","1Q27","2Q27"],
+    "y": ["2024","2025","2026","2027","2028","2029"]
+  }
+}

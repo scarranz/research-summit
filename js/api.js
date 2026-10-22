@@ -244,7 +244,7 @@ export async function liveQuote(ticker) {
   var marketCap = (shares != null) ? price * shares : num(r0.market_cap);
   var ev = num(r0.enterprise_value);
   var netDebt = (ev != null && marketCap != null) ? ev - marketCap : null;
-  return ok({ price: price, changePct: tk ? num(tk.todaysChangePerc) : null, marketCap: marketCap, ev: ev, netDebt: netDebt, shares: shares });
+  return ok({ price: price, changePct: tk ? (num(tk.todaysChangePerc) != null ? num(tk.todaysChangePerc) : (num(tk.prevDay && tk.prevDay.c) ? (price / tk.prevDay.c - 1) * 100 : null)) : null, marketCap: marketCap, ev: ev, netDebt: netDebt, shares: shares });
 }
 
 // Yahoo price via the `get-quote` edge function — the live-price banner of the IBKR, LYFT, SOFI

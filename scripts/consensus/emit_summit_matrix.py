@@ -151,6 +151,27 @@ def main():
                         value = vals.get((v["id"], view, period, metrics[mkey]))
                     if value is not None:
                         row[period] = value * sign.get(mkey, 1)
+                # Optional, per config: a vintage whose QUARTERLY rows past its next print are
+                # copy-forward placeholders (SPOT 2025-12-18: every 2026+ quarter repeats the
+                # 1Q26 row) is cut to `horizon[<vintage>][q]` quarters; and, with
+                # `drop_repeat_quarters`, a quarter identical to the one before it is a held-flat
+                # placeholder (SPOT Premium revenue 4Q26 = 1Q27 = 2Q27) and is dropped with
+                # everything after it. Both are reported, never silent.
+                if view == "q" and row:
+                    ordered = [p for p in axis["q"] if p in row]
+                    n = cfg.get("horizon", {}).get(v["id"], {}).get("q")
+                    if n is not None and len(ordered) > n:
+                        print("-- horizon: %s %s keeps %d of %d quarters" % (mkey, v["id"], n, len(ordered)))
+                        for p in ordered[n:]:
+                            del row[p]
+                        ordered = ordered[:n]
+                    if cfg.get("drop_repeat_quarters"):
+                        for i in range(1, len(ordered)):
+                            if row.get(ordered[i]) == row.get(ordered[i - 1]):
+                                print("-- repeat: %s %s drops %s onward (= %s)" % (mkey, v["id"], ordered[i], ordered[i - 1]))
+                                for p in ordered[i:]:
+                                    row.pop(p, None)
+                                break
                 if row:
                     cells[(view, mkey, v["id"])] = row
 

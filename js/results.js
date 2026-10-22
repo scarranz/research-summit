@@ -118,6 +118,18 @@ function rsCurrentFY(data){
   }
   return bestY != null ? bestY + 1 : null;
 }
+// The ordinal (y*4+q) of the last REPORTED quarter, for datasets that set `forwardQuarters`.
+function rsLastActQ(data){
+  var best = null, vq = data.views && data.views.q, k, m, i, pq;
+  if (vq) for (k in vq.metrics){ m = vq.metrics[k];
+    if (!m.act) continue;
+    for (i = 0; i < m.periods.length; i++){
+      if (m.act[i] == null) continue;
+      pq = rsParseQ(m.periods[i]); if (!pq) continue;
+      var o = pq.y * 4 + pq.q; if (best == null || o > best) best = o;
+    } }
+  return best;
+}
 function rsTrimMetric(m, keep){
   var idx = [], i;
   for (i = 0; i < m.periods.length; i++) if (keep(m.periods[i])) idx.push(i);
@@ -131,7 +143,10 @@ function rsTrimMetric(m, keep){
 function rsTrimData(raw){
   var fy = rsCurrentFY(raw);
   if (fy == null) return raw;
-  var keepQ = function(p){ var pq = rsParseQ(p); return !pq || pq.y <= fy; };
+  // A dataset may opt out of the current-fiscal-year rule with `forwardQuarters: n` — show n quarters past the last print instead
+  // (SPOT: 2, analyst rule Oct 22 2026; the Street reaches them, Summit does not model them).
+  var nfq = raw.forwardQuarters, lastQ = nfq ? rsLastActQ(raw) : null;
+  var keepQ = function(p){ var pq = rsParseQ(p); if (!pq) return true; return lastQ != null ? (pq.y * 4 + pq.q <= lastQ + nfq) : pq.y <= fy; };
   var keepY = function(p){ return isNaN(+p) || +p <= fy + 2; };
   var d = {}, k; for (k in raw) d[k] = raw[k];
   d.views = {};
@@ -1039,7 +1054,7 @@ function rsVintSelHtml(val, scope, label, vsrc){
 // of it — so trimming the option to "Mobility" would leave the control reading "Mobility"
 // with no clue which line that is. One name per metric, the same one the chart title and the
 // table header use.
-function rsOptLabel(m){ return m.label; }
+function rsOptLabel(m){ return m.guided ? m.label + ' (guided)' : m.label; }   // `guided`: a line the company guides every period, tracked on the profile
 function rsSelectHtml(k){
   var view = rsView(k), cfg = rsSecCfg(k), st = rsSt(k);
   rsMetric(k);                                        // ensure st.metric is valid
@@ -1080,7 +1095,7 @@ function rsLegendHtml(k, m){
   else h += '<span class="rs-noguide" title="This company issued no numeric guidance for this line/period — so there is no guidance band to score against (only Street and Summit).">⚑ No company guidance</span>';
   // The margin LINE chip only exists in level mode — in margin mode the margin IS the chart,
   // and in growth mode it is suppressed (two unrelated percentages on one axis).
-  if (!isTop && !marg && !rsIsGrow(k) && rsHasMargin(k, m)) h += chip('margin', RS_ACT, (m.marginLabel || 'margin') + ' %', true);
+  if (!isTop && !marg && !rsIsGrow(k) && rsHasMargin(k, m)) h += chip('margin', RS_ACT, (m.marginLabel || 'margin') + ' % · right axis: solid line Actual, dashed Summit, dotted Consensus', true);
   h += '<span class="tech-leg-i" style="margin-left:auto">▲ beat · ▼ miss · click a chip to hide it</span>';
   return h;
 }
@@ -1118,6 +1133,9 @@ var rsLabels = {
         if (el.x - w / 2 < area.left - 1 || el.x + w / 2 > area.right + 1) return;
         if (bar){
           var top = Math.min(el.y, el.base), bot = Math.max(el.y, el.base);
+          // A bar narrower than its label (three series per period) would print white text onto the white page:
+          // those labels sit above the bar in the dark ink instead.
+          if (el.width && w + 3 > el.width){ ctx.textBaseline = 'bottom'; ctx.fillStyle = 'rgba(30,39,51,0.85)'; ctx.fillText(txt, el.x, Math.max(top - 3 - (di % 3) * 10, area.top + 26)); return; }   // staggered by series so neighbours do not overprint
           if (bot - top < 13) return;
           ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
           ctx.fillText(txt, el.x, (top + bot) / 2);
@@ -1220,19 +1238,19 @@ function rsBuildChart(k){
     var ma = rsMarginArr(k, m, 'act'), ms = rsMarginArr(k, m, 'summit'), mc = rsMarginArr(k, m, 'cons');
     if (!st.hidden.act && ma && ma.some(function(v){ return v != null; })){
       needY2 = true;
-      datasets.push({ label: 'Margin % (actual)', type: 'line', yAxisID: 'y2', data: sl(ma),
+      datasets.push({ label: (m.marginLabel || 'Margin') + ' % (actual)', type: 'line', yAxisID: 'y2', data: sl(ma),
         borderColor: 'rgba(30,39,51,0.9)', backgroundColor: 'rgba(30,39,51,0.9)', borderWidth: 2,
         pointRadius: 2.5, tension: 0.25, spanGaps: true, order: 1 });
     }
     if (!st.hidden.summit && ms && ms.some(function(v){ return v != null; })){
       needY2 = true;
-      datasets.push({ label: 'Margin % (Summit)', type: 'line', yAxisID: 'y2', data: sl(ms),
+      datasets.push({ label: (m.marginLabel || 'Margin') + ' % (Summit)', type: 'line', yAxisID: 'y2', data: sl(ms),
         borderColor: RS_SUMMIT, backgroundColor: RS_SUMMIT, borderWidth: 2, borderDash: [5, 4],
         pointRadius: 2, tension: 0.25, spanGaps: true, order: 2 });
     }
     if (!st.hidden.cons && mc && mc.some(function(v){ return v != null; })){
       needY2 = true;
-      datasets.push({ label: 'Margin % (consensus)', type: 'line', yAxisID: 'y2', data: sl(mc),
+      datasets.push({ label: (m.marginLabel || 'Margin') + ' % (consensus)', type: 'line', yAxisID: 'y2', data: sl(mc),
         borderColor: 'rgba(124,134,148,0.9)', backgroundColor: 'rgba(124,134,148,0.9)', borderWidth: 2, borderDash: [2, 3],
         pointRadius: 2, tension: 0.25, spanGaps: true, order: 2 });
     }
@@ -1261,7 +1279,7 @@ function rsBuildChart(k){
     x: { grid: { display: false }, ticks: { color: 'rgba(80,90,104,0.9)', font: { size: 11 }, autoSkip: false,
         callback: function(v, i){ return (fwdFrom >= 0 && i >= fwdFrom) ? '' : this.getLabelForValue(v); } } },
     y: { position: 'right', weight: 0, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-      callback: function(v, i, ts){ return pctMode ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, m.cur, ts); } } }
+      callback: function(v, i, ts){ return pctMode ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, rsCur(m), ts); } } }
   };
   if (st.yr){ scales.y.min = st.yr[0]; scales.y.max = st.yr[1]; }
   if (needY2) scales.y2 = { position: 'right', weight: 1, grid: { display: false },
@@ -2050,7 +2068,7 @@ function rsBuildEvo(k){
         // Right-hand axis, like every other chart in Results and Estimates (SAB, Aug 11 2026):
         // the latest snapshot is the right-most point and the scale now sits beside it.
         y: { position: 'right', grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-          callback: function(v, i, ts){ return pct ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, m.cur, ts); } },
+          callback: function(v, i, ts){ return pct ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, rsCur(m), ts); } },
           min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined }
       }
     }
@@ -2983,8 +3001,10 @@ function rsConvLegendHtml(m, pi){
   var hasGuide = !!(m.guideLo && m.guideLo[pi] != null);
   // In distance mode the base IS the zero line, so it is named there rather than chipped.
   if (!dist && hasAct)   h += chip('act', RS_ACT, 'Reported (' + m.periods[pi] + ')', true);
-  if (!dist && hasGuide) h += chip('guide', 'rgba(62,90,130,0.7)', 'Guidance range', true);
-  if (dist && hasGuide && st.base === 'act') h += chip('guide', 'rgba(62,90,130,0.7)', 'Guidance range', true);
+  // A company that guides ONE number (Spotify) has no range to shade: the chip says what is drawn, a line.
+  var guideTxt = (hasGuide && m.guideHi && m.guideLo[pi] === m.guideHi[pi]) ? 'Guidance (single number)' : 'Guidance range';
+  if (!dist && hasGuide) h += chip('guide', 'rgba(62,90,130,0.7)', guideTxt, true);
+  if (dist && hasGuide && st.base === 'act') h += chip('guide', 'rgba(62,90,130,0.7)', guideTxt, true);
   if (!hasAct)
     h += '<span class="rs-noguide" title="This period has not printed yet, so there is no outcome to walk toward — only the forecasts moving.">⚑ ' + esc(m.periods[pi]) + ' has not printed</span>';
   else if (!hasGuide)
@@ -3026,7 +3046,7 @@ function rsBuildConv(){
   if (showGuide){
     if (isPointGuide){
       datasets.push({ label: 'Guidance', data: flat(m.guideLo[pi]),
-        borderColor: 'rgba(62,90,130,0.75)', borderWidth: 1.5, borderDash: [4, 3],
+        borderColor: 'rgba(62,90,130,0.85)', borderWidth: 2.5, borderDash: [4, 3],
         pointRadius: 0, pointHitRadius: 6, fill: false, order: 20 });
     } else {
       datasets.push({ label: 'Guidance high', data: flat(m.guideHi[pi]),
@@ -3133,7 +3153,7 @@ function rsBuildConv(){
           min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined,
           ticks: { font: { size: 11 }, callback: function(v, i, ts){
             if (pct) return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(Math.max(1, rsTickDec(ts))) + '%';
-            return rsTick(v, m.unit, div, m.cur, ts);
+            return rsTick(v, m.unit, div, rsCur(m), ts);
           } } }
       }
     },
@@ -3987,7 +4007,7 @@ function rsBuildCurve(){
           min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined,
           ticks: { font: { size: 11 }, callback: function(v, i, ts){
             if (pct) return (+v.toFixed(rsTickDec(ts))) + '%';
-            return rsTick(v, m.unit, div, m.cur, ts);
+            return rsTick(v, m.unit, div, rsCur(m), ts);
           } } }
       }
     },

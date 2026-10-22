@@ -19,6 +19,7 @@
 # Those columns no longer exist except for the `kpiN` slots, which is why a stale config
 # silently yields an almost-empty matrix. Legacy slot-name configs still work (see resolve()),
 # but new tickers should use the code form.
+import time
 import openpyxl, csv, json, sys, re
 
 import os
@@ -115,6 +116,10 @@ def read_rows(rows, hdr, origin):
     for r in rows:
         if not r or not r[0] or not str(r[0]).upper().startswith(TK+' '): continue
         asof=str(r[idx['data_as_of']])[:10]
+        live=False
+        if asof in ('', 'None'):                         # the LIVE row: the export leaves data_as_of blank -> dated by the file (today)
+            asof=time.strftime('%Y-%m-%d', time.localtime(os.path.getmtime(TXT)))
+            live=True
         if '/' in asof:                                  # 8/4/2026 -> 2026-08-04
             mm,dd,yy = asof.split('/'); asof = '%s-%02d-%02d' % (yy, int(mm), int(dd))
         slots = slot_index(r, idx)
@@ -142,7 +147,7 @@ def read_rows(rows, hdr, origin):
                 if unit == 'usdM': v *= SCALE.get(scale, 1e-6)
                 v *= spec.get('sign', 1)
                 fwd.setdefault(mkey,{})[per]=(v, HORN.get(h,9))
-        out.append({'asof':asof,'fwd':fwd,'lastQ':lastQ,'lastY':lastY,'origin':origin,
+        out.append({'live':live,'asof':asof,'fwd':fwd,'lastQ':lastQ,'lastY':lastY,'origin':origin,
                     'slots':slots})
     return out
 
@@ -164,6 +169,13 @@ for s in snaps:
     else:
         by[s['asof']]=s
 snaps=sorted(by.values(), key=lambda s:s['asof'])
+# One snapshot per print (opt-in per ticker: map `"supersede_latest": true`). When the newest snapshot carries the SAME last reported
+# quarter as the one before it, it is a fresher read of the same post-print window: it REPLACES that one instead of adding a vintage.
+if MAP.get('supersede_latest') and len(snaps) > 1:
+    new, old = snaps[-1], snaps[-2]
+    if new['lastQ'] == old['lastQ'] and new['lastY'] == old['lastY']:
+        print('   newest snapshot %s supersedes %s (same last print, %s) - replaced, not added' % (new['asof'], old['asof'], new['lastQ']))
+        snaps = snaps[:-2] + [new]
 print('%s: %d unique snapshots from %s + sheet %s' % (TK, len(snaps), os.path.basename(TXT), sheet))
 only_txt  = [s['asof'] for s in snaps if s['origin']=='txt']
 only_xlsm = [s['asof'] for s in snaps if s['origin']=='xlsm']

@@ -39,12 +39,15 @@ import { snSegments } from './segments-data/sn.js';
 import { snResults } from './results-data/sn.js';
 import { tsmSegments } from './segments-data/tsm.js';
 import { tsmResults } from './results-data/tsm.js';
+import { spotSegments } from './segments-data/spot.js';
+import { spotResults } from './results-data/spot.js';
 import { metaSegments } from './segments-data/meta.js';
 import { metaResults } from './results-data/meta.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
 import { SN_THEMES } from './themes-data/sn.js';
 import { TSM_THEMES } from './themes-data/tsm.js';
+import { SPOT_THEMES } from './themes-data/spot.js';
 import { META_THEMES } from './themes-data/meta.js';
 import { SUMMIT_CAT, SUMMIT_MUTE } from './viz-palette.js';   // the portal's fixed categorical palette
 
@@ -53,9 +56,10 @@ var THEME_SEG = {
   AMZN: { 'Amazon US': 'na', 'Amazon International': 'intl', 'AWS': 'aws' },
   SN: { 'SharkNinja': 'sn' },
   TSM: { 'AI & HPC demand': 'hpc', 'Consumer & smartphone': 'smart' },   // the other TSM themes are company-wide
+  SPOT: { 'Pricing & ARPU': 'prem', 'Royalties & legal': 'prem', 'Advertising': 'ads', 'Users & subscribers': 'ads' },   // the free tier is the funnel; the other SPOT themes are company-wide
   META: { 'Family of Apps': 'foa', 'Reality Labs': 'rl' },               // AI & compute, Costs & capital are company-wide
 };
-var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, META: META_THEMES };
+var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES, META: META_THEMES };
 var SEGMENTS_DATA = {
   AMZN: { seg: amznSegments, res: amznResults },
   DHR:  { seg: dhrSegments,  res: dhrResults  },
@@ -66,6 +70,8 @@ var SEGMENTS_DATA = {
   // TSM has ONE operating segment (foundry); its six PLATFORMS stand in as the segments here (SAB,
   // Oct 15 2026) and the General tab quotes the 20-F so they are not read as reportable segments.
   TSM:  { seg: tsmSegments, res: tsmResults },
+  // SPOT: two reportable segments (Premium, Ad-Supported); the segment profit line is GROSS profit (no segment operating income).
+  SPOT: { seg: spotSegments, res: spotResults },
   // META: two reportable segments (Family of Apps, Reality Labs), 10-K Note 15.
   META: { seg: metaSegments, res: metaResults }
 };
@@ -90,6 +96,7 @@ var RS_FWD  = '#2563EB';
 // hypothetical seventh entity silently re-used the first one's colour. Both are categorical-colour
 // errors. Now the portal's fixed categorical order, assigned by slot and never cycled.
 var SG_RAMP = SUMMIT_CAT;
+function sgRamp(i){ var d = sgData(), r = (d && d.seg.ramp) || SG_RAMP; return r[i] || SUMMIT_MUTE; }   // a dataset may restrict the series colours (SPOT: slate greys, no categorical palette)
 
 function rsRR(ctx, x, y, w, h, r){
   ctx.beginPath();
@@ -309,8 +316,23 @@ function sgResolveRef(ref, view){
     m.periods.forEach(function(p, i){
       if (m.act && m.act[i] != null) act[p] = m.act[i];
       else if (m.summit && m.summit[i] != null) est[p] = m.summit[i];
+      else if (m.fwd && m.fwd[i] != null) est[p] = m.fwd[i];   // `fwd`: Street (Bloomberg) forward values for lines the Summit model does not carry (SPOT users, ARPU)
     });
-    return { unit: m.unit === 'eps' ? 'eps' : 'usdM', label: m.label, short: m.short || m.label,
+    // Street (Bloomberg) fills the quarters Summit does not forecast, so the quarterly axis reaches two quarters past the last print.
+    // The latest vintage of the dataset's estimate matrix is read; nothing beyond that horizon is drawn.
+    if (view === 'q' && d.seg.streetForward){
+      var mx = d.res.estMatrix && d.res.estMatrix.cons && d.res.estMatrix.cons.q && d.res.estMatrix.cons.q[key], vts = mx ? Object.keys(mx).sort() : [];
+      var lastA = -1; m.periods.forEach(function(p, i){ if (act[p] != null) lastA = i; });
+      m.periods.forEach(function(p, i){
+        if (i > lastA + 2){ delete est[p]; return; }
+        if (i <= lastA || est[p] != null) return;
+        for (var vi = vts.length - 1; vi >= 0; vi--){ if (mx[vts[vi]][p] != null){ est[p] = mx[vts[vi]][p]; break; } }
+      });
+    }
+    // `history` (segments dataset): reported quarters/years that predate the Results axis, so the Top Line reaches further back than Results does.
+    var hi = d.seg.history && d.seg.history[key] && d.seg.history[key][view];
+    if (hi) Object.keys(hi).forEach(function(p){ if (act[p] == null) act[p] = hi[p]; });
+    return { unit: m.unit === 'eps' ? 'eps' : (m.unit === 'count' ? 'count' : 'usdM'), label: m.label, short: m.short || m.label,
              act: act, est: est, src: 'Results dataset' };
   }
   if (kind === 'shared'){
@@ -343,7 +365,7 @@ function sgDerived(key, view){
     var num = n.act[p] != null ? n.act[p] : n.est[p];
     var den = dn.act[p] != null ? dn.act[p] : dn.est[p];
     if (num == null || den == null || !den) return;
-    var v = num / (den * (spec.annualiseDen ? PPY[view] : 1));
+    var v = num / (den * (spec.annualiseDen ? PPY[view] : 1)) / (spec.div || 1);   // `div`: a quarterly quotient shown per month (÷3), as ARPU is reported
     if (n.act[p] != null && dn.act[p] != null) act[p] = v; else est[p] = v;
   });
   return { unit: spec.unit, label: spec.label, short: spec.short || spec.label, act: act, est: est,
@@ -356,14 +378,19 @@ function sgResolve(key, view){
 }
 
 // ─── formatting (rule 5 — never a bare number) ────────────────────────────────────────────────
+// Currency symbol: the Results dataset names its own (`currency: '€'` on SPOT); every other dataset says nothing and
+// keeps the dollar sign. One definition, so a euro company never prints $ on this tab.
+function cur(){ var d = sgData(); return (d && d.res && d.res.currency) || '$'; }
 function fmtVal(v, unit){
   if (v == null) return '—';
   if (unit === 'pct')  return (v * 100).toFixed(1) + '%';
+  if (unit === 'idx')  return v.toFixed(1);
   if (unit === 'x')    return v.toFixed(2) + '×';
   if (unit === 'days') return Math.round(v) + 'd';
-  if (unit === 'eps')  return '$' + v.toFixed(2);
+  if (unit === 'eps')  return cur() + v.toFixed(2);
+  if (unit === 'count') return (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(1)) + 'M';   // users / subscribers, millions
   var a = Math.abs(v);
-  return a >= 1000 ? '$' + (v / 1000).toFixed(1) + 'B' : '$' + Math.round(v) + 'M';
+  return a >= 1000 ? cur() + (v / 1000).toFixed(1) + 'B' : cur() + Math.round(v) + 'M';
 }
 function pctStr(v){ return v == null ? '—' : (v * 100).toFixed(1) + '%'; }
 
@@ -416,6 +443,13 @@ function firstFwd(id, list, view, ps){
 function seriesValues(id, x, allPs, view, mode){
   var out = {};
   allPs.forEach(function(p){ var v = x.d.act[p] != null ? x.d.act[p] : x.d.est[p]; if (v != null) out[p] = v; });
+  if (mode === 'idx'){   // Lines: each series over its own first period (= 100), so different units can share one axis
+    var b0v = null;
+    allPs.forEach(function(p){ if (b0v == null && out[p] != null) b0v = out[p]; });
+    var ix = {};
+    if (b0v) allPs.forEach(function(p){ if (out[p] != null) ix[p] = out[p] / b0v * 100; });
+    return ix;
+  }
   if (mode === 'growth'){
     // On an annual axis "one back" IS a year, so there is only one growth to show. On a quarterly
     // axis there are two different questions — vs the same quarter last year (seasonality out) and
@@ -444,19 +478,42 @@ function fmtNum(v){
   if (a >= 1) return v.toFixed(1);
   return v.toFixed(2);
 }
+// Common size. Only an ADDITIVE series (money) shares a whole with its siblings. A count (subscribers, MAU) has a natural
+// denominator the dataset names (`shareBase`: series ref -> series ref, e.g. subscribers over total MAU); a per-unit price
+// (ARPU) and a ratio have none, so Share is simply not offered for them.
+function shareBase(x, view){
+  var d = sgData(), m = d && d.seg.shareBase, ref = m && m[x.key];
+  return ref ? sgResolve(ref, view) : null;
+}
+function baseVal(b, p){ return b ? (b.act[p] != null ? b.act[p] : b.est[p]) : null; }
 function modeUnit(id, mode, unit){
   if (mode === 'amt') return unit;
+  if (mode === 'idx') return 'idx';
   if (mode === 'growth' && blk(id).growUnit === 'amt') return 'usdM';
   return 'pct';
 }
 // The control row. Each group is LABELLED and boxed in its own `.rs-views` segmented control —
 // three sets of pills in an undivided row read as one nine-way choice, which is how a reader ends
 // up believing "Growth" and "Side by side" are alternatives to each other.
-function modesHtml(id, opts){
+function modesHtml(id, opts, list, view){
   var st = blk(id);
+  var ser = list ? blockSeries(list, view || st.view || 'q') : [];
+  var on = ser.filter(function(x){ return vis(id, x.key); });
+  if (on.length) ser = on;                                  // the options follow what is DRAWN: ARPU alone has no common size
+  var hasAdd = !list || ser.some(function(x){ return x.d.unit === 'usdM'; });
+  var shareOk = hasAdd || ser.some(function(x){ return !!shareBase(x, view || st.view || 'q'); });
+  var dd = sgData(), shareLabel = hasAdd ? 'Share' : ((dd && dd.seg.shareLabel) || 'Share');
+  if (!shareOk && st.mode === 'share') st.mode = 'amt';
+  if (!hasAdd && st.growUnit === 'amt') st.growUnit = 'pct';
   function group(label, pills){
     return '<div class="sg-ctrlg"><span class="rs-quick-l">' + esc(label) + '</span>' +
       '<div class="rs-views">' + pills + '</div></div>';
+  }
+  if (opts && opts.lines){
+    return '<div class="sg-ctrls">' +
+      group('Values', [[true, 'On'], [false, 'Off']].map(function(m){
+        return '<button type="button" class="rs-view' + ((st.labels === true) === m[0] ? ' active' : '') +
+          '" data-sglab="' + esc(id) + '|' + (m[0] ? '1' : '0') + '">' + m[1] + '</button>'; }).join('')) + '</div>';
   }
   var h = '<div class="sg-ctrls">';
   if (opts && opts.views){
@@ -464,7 +521,7 @@ function modesHtml(id, opts){
       return '<button type="button" class="rs-view' + ((st.view || 'q') === v[0] ? ' active' : '') +
         '" data-sgview="' + esc(id) + '|' + v[0] + '">' + v[1] + '</button>'; }).join(''));
   }
-  h += group('Show', [['amt', '$B'], ['share', 'Share'], ['growth', 'Growth']].map(function(m){
+  h += group('Show', [['amt', hasAdd ? cur() + 'B' : 'Level'], shareOk ? ['share', shareLabel] : null, ['growth', 'Growth']].filter(Boolean).map(function(m){
     return '<button type="button" class="rs-view' + (st.mode === m[0] ? ' active' : '') +
       '" data-sgmode="' + esc(id) + '|' + m[0] + '">' + m[1] + '</button>'; }).join(''));
   if (st.mode === 'growth'){
@@ -476,7 +533,7 @@ function modesHtml(id, opts){
           (l[0] === 'yoy' ? 'vs the same quarter last year' : 'vs the previous quarter') +
           '">' + l[1] + '</button>'; }).join(''));
     }
-    h += group('Growth in', [['pct', '%'], ['amt', '$ added']].map(function(u){
+    if (hasAdd) h += group('Growth in', [['pct', '%'], ['amt', cur() + ' added']].map(function(u){
       return '<button type="button" class="rs-view' + ((st.growUnit || 'pct') === u[0] ? ' active' : '') +
         '" data-sggrow="' + esc(id) + '|' + u[0] + '">' + u[1] + '</button>'; }).join(''));
   }
@@ -496,8 +553,8 @@ function modesHtml(id, opts){
 
 function chipsHtml(id, list, view, firstIsTarget){
   return blockSeries(list, view).map(function(x, i){
-    var money = x.d.unit === 'usdM' || x.d.unit === 'eps';
-    var color = !money ? RS_CONS : (firstIsTarget && i === 0 ? RS_ACT : (SG_RAMP[i] || SUMMIT_MUTE));
+    var md = blk(id).mode || 'amt', money = x.d.unit === 'usdM' || x.d.unit === 'eps' || (md !== 'amt' && !(md === 'growth' && blk(id).growUnit === 'amt'));   // the chip wears the colour the chart draws: a count is grey only while it sits on the second axis
+    var color = !money ? RS_CONS : (firstIsTarget && i === 0 ? RS_ACT : sgRamp(i));
     return '<button type="button" class="rs-leg' + (vis(id, x.key) ? '' : ' off') +
       '" data-sgleg="' + esc(id) + '|' + esc(x.key) + '" title="Show / hide">' +
       '<span class="rs-leg-line" style="background:' + color + '"></span>' +
@@ -512,13 +569,20 @@ function tblHeadHtml(id, list, view, title){
     '<span class="rs-collap-sub">' + (open ? 'hide' : 'show') + ' · ' +
     n + ' series over ' + ps.length + ' periods</span>';
 }
+
+// The legend of a block: its chips; the Lines view of a relation adds one sentence on how the lines are scaled.
+function legendInner(id, list, view, opts){
+  return chipsHtml(id, list, view, opts && opts.firstIsTarget) +
+    ((opts && opts.lines) ? '<p class="sg-basis">Each line is divided by its own first quarter (= 100), so users, revenue per user and revenue share one axis. The table gives the levels.</p>' : '');
+}
 function chartBlockHtml(id, list, view, opts){
   opts = opts || {};
+  if (opts.defaultMode && !blk(id)._dm){ blk(id)._dm = 1; blk(id).mode = opts.defaultMode; }
   var st = blk(id);
   if (!blockSeries(list, view).length) return '';            // rule 6 — nothing, never broken
   return '<div class="sg-chartblock" data-sgblock="' + esc(id) + '">' +
-    (opts.modes ? modesHtml(id, opts) : '') +
-    '<div class="rs-legend">' + chipsHtml(id, list, view, opts.firstIsTarget) + '</div>' +
+    (opts.modes ? modesHtml(id, opts, list, view) : '') +
+    '<div class="rs-legend">' + legendInner(id, list, view, opts) + '</div>' +
     '<div class="sg-chartwrap" style="height:' + (opts.height || 280) + 'px">' +
       '<canvas id="sgCv-' + esc(id) + '"></canvas></div>' +
     sliderHtml(id) +
@@ -547,30 +611,39 @@ function buildChartBlock(id, list, view, opts){
   allSer.forEach(function(x, i){ slotOf[x.key] = i; });
   var ser = allSer.filter(function(x){ return vis(id, x.key); });
   function money(u){ return u === 'usdM' || u === 'eps'; }
+  // One series that is not money (users, a ratio) owns the main axis and a solid dark line: the dashed grey line is the
+  // convention for a SECOND axis, and a lone series has no second axis to be told apart from.
+  var solo = (ser.length === 1 && !money(ser[0].d.unit)) ? ser[0].d.unit : null;
+  function sideFmt(u, v){ return u === 'pct' ? v.toFixed(0) + '%' : u === 'days' ? v.toFixed(0) + 'd' : u === 'count' ? v.toFixed(0) + 'M' : v.toFixed(2) + '×'; }
   var mode = st.mode || 'amt';
   var allPs = blockPeriods(id, list, view);
   var vals = ser.map(function(x){ return seriesValues(id, x, allPs, view, mode); });
   // Share re-bases against the visible money series only.
   var totals = {};
   if (mode === 'share') allPs.forEach(function(p){
-    var t = 0; ser.forEach(function(x, i){ if (money(x.d.unit) && vals[i][p] != null) t += vals[i][p]; });
+    var t = 0; ser.forEach(function(x, i){ if (x.d.unit === 'usdM' && vals[i][p] != null) t += vals[i][p]; });
     totals[p] = t;
   });
   var datasets = [], needY2 = false, y2unit = null;
   var growAmt = mode === 'growth' && st.growUnit === 'amt';
+  var leftUnit = (ser.filter(function(x){ return money(x.d.unit); })[0] || { d: {} }).d.unit;   // unit of the main axis: usdM (billions) or eps (per-unit euros)
   ser.forEach(function(x, i){
-    var m = money(x.d.unit) || (mode !== 'amt' && !growAmt) || (growAmt && money(x.d.unit));
+    var m = !!solo || money(x.d.unit) || (mode !== 'amt' && !growAmt) || (growAmt && money(x.d.unit));
     if (!m){ needY2 = true; y2unit = y2unit || x.d.unit; }
     var data = ps.map(function(p){
       var v = vals[i][p];
       if (v == null) return null;
-      if (mode === 'share') return (money(x.d.unit) && totals[p]) ? v / totals[p] * 100 : null;
+      if (mode === 'share'){
+        if (x.d.unit === 'usdM') return totals[p] ? v / totals[p] * 100 : null;
+        var sb = baseVal(shareBase(x, view), p); return sb ? v / sb * 100 : null;
+      }
+      if (mode === 'idx') return v;
       if (mode === 'growth') return growAmt ? v / 1000 : v * 100;
       return (x.d.unit === 'usdM') ? v / 1000 : (x.d.unit === 'pct' ? v * 100 : v);
     });
     var isTarget = opts.firstIsTarget && slotOf[x.key] === 0;
-    var color = !m ? RS_CONS : (isTarget ? RS_ACT : (SG_RAMP[slotOf[x.key]] || SUMMIT_MUTE));
-    datasets.push((m && opts.bars && !isTarget)
+    var color = solo ? RS_ACT : (!m ? RS_CONS : (isTarget ? RS_ACT : sgRamp(slotOf[x.key])));
+    datasets.push((m && opts.bars && !isTarget && mode !== 'idx')
       ? { label: x.label || x.d.short, data: data, type: 'bar', backgroundColor: color,
           maxBarThickness: 34, order: 3, yAxisID: 'y' }
       : { label: x.label || x.d.short, data: data, type: 'line', yAxisID: m ? 'y' : 'y2',
@@ -586,18 +659,19 @@ function buildChartBlock(id, list, view, opts){
     y: { position: 'right', grid: { color: 'rgba(0,0,0,0.05)' },
          min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined,
          stacked: mode === 'share' || (opts.stack && mode === 'amt' && st.stack !== false),
-         ticks: { callback: function(v){ return (mode === 'amt' || growAmt) ? '$' + v + 'B' : v.toFixed(0) + '%'; } } }
+         ticks: { callback: function(v){ if (mode === 'idx') return v.toFixed(0); if (solo && mode === 'amt') return sideFmt(solo, v); return (mode === 'amt' || growAmt) ? (leftUnit === 'eps' ? cur() + v.toFixed(2) : cur() + v + 'B') : v.toFixed(mode === 'share' ? 1 : 0) + '%'; } } }
   };
+  if (!datasets.some(function(d){ return d.yAxisID === 'y'; })) scales.y.display = false;   // only secondary-axis series (users in M): no empty main axis
   if (needY2) scales.y2 = { position: 'right', weight: 1, grid: { display: false },
     ticks: { callback: function(v){
-      return y2unit === 'pct' ? v.toFixed(0) + '%' : y2unit === 'days' ? v.toFixed(0) + 'd' : v.toFixed(2) + '×'; } } };
+      return y2unit === 'pct' ? v.toFixed(0) + '%' : y2unit === 'days' ? v.toFixed(0) + 'd' : y2unit === 'count' ? v.toFixed(0) + 'M' : v.toFixed(2) + '×'; } } };
   st.chart = new Chart(el.getContext('2d'), {
     data: { labels: ps, datasets: datasets },
     options: { responsive: true, maintainAspectRatio: false, animation: false,
       interaction: { mode: 'index', intersect: false },
       plugins: { legend: { display: false }, rsFwdZone: { from: f },
         sgLabels: { on: st.labels === true, fmt: function(v){
-          return (mode === 'amt' || growAmt) ? '$' + fmtNum(v) + 'B'
+          return (mode === 'amt' || growAmt) ? cur() + fmtNum(v) + 'B'
                : mode === 'share' || mode === 'growth' ? fmtNum(v) + '%'
                : fmtNum(v); } },
         sgTotals: (opts.totals && mode === 'amt') ? { vals: ps.map(function(p){
@@ -608,11 +682,12 @@ function buildChartBlock(id, list, view, opts){
               t = (t == null ? 0 : t) + v;
             });
             return t;
-          }), fmt: function(v){ return '$' + (v / 1000).toFixed(0) + 'B'; } } : false,
+          }), fmt: function(v){ return cur() + (v / 1000).toFixed(Math.abs(v) < 20000 ? 1 : 0) + 'B'; } } : false,
         tooltip: { callbacks: { label: function(c){
           var x = ser[c.datasetIndex], p = ps[c.dataIndex], v = vals[c.datasetIndex][p];
           var txt = mode === 'amt' ? fmtVal(v, x.d.unit)
-                  : mode === 'growth' ? (growAmt ? (v >= 0 ? '+' : '') + fmtVal(v, 'usdM') : fmtVal(v, 'pct'))
+                  : mode === 'idx' ? v.toFixed(1)
+                  : mode === 'growth' ? (growAmt ? (v >= 0 ? '+' : '') + fmtVal(v, x.d.unit === 'count' ? 'count' : 'usdM') : fmtVal(v, 'pct'))
                   : (totals[p] ? fmtVal(v / totals[p], 'pct') : '—');
           return (x.label || x.d.short) + ': ' + txt + (x.d.act[p] == null ? '  (est.)' : '');
         } } } },
@@ -633,7 +708,7 @@ function renderTableBlock(id, list, view, opts){
   var ser = blockSeries(list, view).filter(function(x){ return vis(id, x.key); });   // SAME predicate
   var f = firstFwd(id, list, view, ps);
   var h = '<div class="rs-ft-cap">' + esc(opts.caption || '') +
-    ' · money in US$ billions, other units as shown · <span class="rs-ft-e">E</span> = estimate</div>';
+    ' · money in ' + (cur() === '$' ? 'US$' : cur()) + ' billions, other units as shown · <span class="rs-ft-e">E</span> = estimate</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   ps.forEach(function(p, i){
     var e = f >= 0 && i >= f;
@@ -650,18 +725,22 @@ function renderTableBlock(id, list, view, opts){
     return r + '</tr>';
   }
   var mode = blk(id).mode || 'amt';
+  if (mode === 'idx') mode = 'amt';   // Lines is a way of drawing; the table always carries the levels
   var allPs = blockPeriods(id, list, view);
   var vals = ser.map(function(x){ return seriesValues(id, x, allPs, view, mode); });
   var totals = {};
   if (mode === 'share') allPs.forEach(function(p){
-    var t = 0; ser.forEach(function(x, i){ if ((x.d.unit === 'usdM' || x.d.unit === 'eps') && vals[i][p] != null) t += vals[i][p]; });
+    var t = 0; ser.forEach(function(x, i){ if (x.d.unit === 'usdM' && vals[i][p] != null) t += vals[i][p]; });
     totals[p] = t;
   });
   ser.forEach(function(x, i){
     var shown = {}, u = modeUnit(id, mode, x.d.unit);
     allPs.forEach(function(p){
       var v = vals[i][p]; if (v == null) return;
-      shown[p] = mode === 'share' ? (totals[p] ? v / totals[p] : null) : v;
+      if (mode === 'share'){
+        if (x.d.unit === 'usdM') shown[p] = totals[p] ? v / totals[p] : null;
+        else { var sb = baseVal(shareBase(x, view), p); shown[p] = sb ? v / sb : null; }
+      } else shown[p] = v;
     });
     h += line((opts.prefix ? opts.prefix(i, ser.length) : '') + (x.label || x.d.short),
               { act: shown, est: {}, unit: u }, 'main');
@@ -733,7 +812,7 @@ function renderBlock(id, list, view, opts){
   var host = document.querySelector('[data-sgblock="' + id + '"]');
   if (host){
     var leg = host.querySelector('.rs-legend');
-    if (leg) leg.innerHTML = chipsHtml(id, list, view, opts.firstIsTarget);
+    if (leg) leg.innerHTML = legendInner(id, list, view, opts);
     var th = host.querySelector('[data-sgtblb]');
     if (th) th.innerHTML = tblHeadHtml(id, list, view, opts.tableTitle || 'Period detail');
   }
@@ -756,12 +835,14 @@ function buildSegResults(){
   // has already said what the segment is, and the Results pane says the rest. `source` is dropped
   // rather than copied — the provenance of these series belongs where they are the subject.
   var out = { updated: d.res.updated, intro: '', source: '', surprise: false, conv: false,
-              defaultHidden: ['summit', 'cons'], views: {} };
+              currency: d.res.currency, currencyName: d.res.currencyName,
+              defaultHidden: d.seg.defaultHidden || ['summit', 'cons'], views: {} };   // a segments dataset may open with Summit and the Street on (`defaultHidden: []`)
   // Carry the vintage matrix through. These are the same metric keys the Results dataset carries,
   // so the segment's top line gets the "Estimates as of" axis for free — and without it the engine
   // correctly prints "no vintage matrix yet", which is true of the composed dataset and misleading
   // about the data.
   if (d.res.estMatrix) out.estMatrix = d.res.estMatrix;
+  if (d.res.forwardQuarters) out.forwardQuarters = d.res.forwardQuarters;
   ['q', 'y'].forEach(function(v){
     var src = d.res.views[v]; if (!src) return;
     var metrics = {}, keys = [];
@@ -1019,6 +1100,8 @@ function kpiSeriesList(s){
 function kpiGrowth(d, view, yoy){
   var ps = sgData().seg.axis[view], lag = yoy ? PPY[view] : 1;
   var have = ps.filter(function(p){ return d.act[p] != null || d.est[p] != null; });
+  var rep = have.filter(function(p){ return d.act[p] != null; });   // the card shows the last REPORTED period; a forecast only if nothing has printed
+  if (rep.length) have = rep;
   var last = have[have.length - 1];
   if (!last) return { v: null, p: null, g: null };
   var i = ps.indexOf(last), b = ps[i - lag];
@@ -1100,7 +1183,8 @@ function secKpis(s, view){
 // publishes neither term, is worth more than the relation quietly not being there.
 function bridgeList(b){ return b.terms.concat([b.target]).map(function(k){ return { key: k, ref: k }; }); }
 function bridgeOpts(s, b){
-  return { bars: true, tableTitle: 'Bridge detail', height: 300,
+  var dd = sgData(), lines = !!(dd && dd.seg.bridgeLines);   // a dataset may draw the relation as lines, each over its own first quarter (= 100): users, revenue per user and revenue on ONE axis
+  return { bars: true, tableTitle: 'Bridge detail', height: 300, lines: lines, modes: lines, defaultMode: lines ? 'idx' : null,
            caption: s.label + ' · ' + (b.view === 'q' ? 'quarterly' : 'fiscal years'),
            extraRows: s.highlights || [],
            prefix: function(i, n){ return i === n - 1 ? '= ' : '× '; } };
@@ -1543,9 +1627,9 @@ export function segmentsCustomersHtml(ticker){
           'short and self-selected list — read it as what management is proud of, not as a ranking.</p>' +
           mdHtml('cname', null)
         : '<div class="sg-needs">⚑ No customer has been named on a call for this company yet.</div>')) +
-    custSplcSection(c, 4) +
-    '<div class="ov-fynote sg-src">Three registers, kept apart on purpose: what the filing says, ' +
-    'what management said on a call, and what somebody else disclosed about ' + coName() + '. None of them ' +
+    (c.splc === false ? '' : custSplcSection(c, 4)) +      // `splc: false` — a consumer business with no counterparty census to load (SPOT): no empty section
+    '<div class="ov-fynote sg-src">' + (c.splc === false ? 'Two registers' : 'Three registers') + ', kept apart on purpose: what the filing says, ' +
+    'what management said on a call' + (c.splc === false ? '' : ', and what somebody else disclosed about ' + coName()) + '. None of them ' +
     'is a revenue ranking, and the tab never presents one.</div></div>';
 }
 export function initSegmentsCustomers(root, ticker){

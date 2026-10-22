@@ -312,6 +312,17 @@ function sgResolveRef(ref, view){
       else if (m.summit && m.summit[i] != null) est[p] = m.summit[i];
       else if (m.fwd && m.fwd[i] != null) est[p] = m.fwd[i];   // `fwd`: Street (Bloomberg) forward values for lines the Summit model does not carry (SPOT users, ARPU)
     });
+    // Street (Bloomberg) fills the quarters Summit does not forecast, so the quarterly axis reaches two quarters past the last print.
+    // The latest vintage of the dataset's estimate matrix is read; nothing beyond that horizon is drawn.
+    if (view === 'q' && d.seg.streetForward){
+      var mx = d.res.estMatrix && d.res.estMatrix.cons && d.res.estMatrix.cons.q && d.res.estMatrix.cons.q[key], vts = mx ? Object.keys(mx).sort() : [];
+      var lastA = -1; m.periods.forEach(function(p, i){ if (act[p] != null) lastA = i; });
+      m.periods.forEach(function(p, i){
+        if (i > lastA + 2){ delete est[p]; return; }
+        if (i <= lastA || est[p] != null) return;
+        for (var vi = vts.length - 1; vi >= 0; vi--){ if (mx[vts[vi]][p] != null){ est[p] = mx[vts[vi]][p]; break; } }
+      });
+    }
     // `history` (segments dataset): reported quarters/years that predate the Results axis, so the Top Line reaches further back than Results does.
     var hi = d.seg.history && d.seg.history[key] && d.seg.history[key][view];
     if (hi) Object.keys(hi).forEach(function(p){ if (act[p] == null) act[p] = hi[p]; });
@@ -825,6 +836,7 @@ function buildSegResults(){
   // correctly prints "no vintage matrix yet", which is true of the composed dataset and misleading
   // about the data.
   if (d.res.estMatrix) out.estMatrix = d.res.estMatrix;
+  if (d.res.forwardQuarters) out.forwardQuarters = d.res.forwardQuarters;
   ['q', 'y'].forEach(function(v){
     var src = d.res.views[v]; if (!src) return;
     var metrics = {}, keys = [];
@@ -1082,6 +1094,8 @@ function kpiSeriesList(s){
 function kpiGrowth(d, view, yoy){
   var ps = sgData().seg.axis[view], lag = yoy ? PPY[view] : 1;
   var have = ps.filter(function(p){ return d.act[p] != null || d.est[p] != null; });
+  var rep = have.filter(function(p){ return d.act[p] != null; });   // the card shows the last REPORTED period; a forecast only if nothing has printed
+  if (rep.length) have = rep;
   var last = have[have.length - 1];
   if (!last) return { v: null, p: null, g: null };
   var i = ps.indexOf(last), b = ps[i - lag];

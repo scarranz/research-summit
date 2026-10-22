@@ -18,7 +18,7 @@
 // NOT READ: the 20-F's Note 23 text and revenue-by-geography table (the fetch tool stops before the financial statements), so
 // no segment definition from the notes is quoted and no geography cut is built (TL-OTH omitted).
 
-var Q = ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26'];   // 2023 from `history` below, reported quarters, then two forecast quarters (3Q26, 4Q26). Summit has no 2027 quarterly forecast yet.
+var Q = ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27'];   // 2023 from `history` below, reported quarters, then two quarters ahead: 4Q26 (Summit and Street) and 1Q27 (Street only, read by the engine from the estimate matrix). Summit has no 2027 quarterly forecast.
 
 var FIL = 'FY2025 Form 20-F';
 var PREM_Q = { text: 'We generate revenue for our Premium segment through the sale of subscriptions to the Subscription Offerings. The Subscription Offerings are primarily sold directly to end users. The Premium Service is also sold through partners who are generally telecommunications companies that bundle the subscription with their own services or collect payment for the stand-alone subscriptions from their end customers. Premium partner subscription revenue is based on a per-subscriber rate in a negotiated partner agreement.',
@@ -47,6 +47,7 @@ export var spotSegments = {
   updated: 'Oct 2026',
   source: 'Segment revenue and gross profit: the Results dataset (js/results-data/spot.js) — Spotify quarterly shareholder decks and 6-Ks (1Q24–3Q26; 3Q26 segment gross profit derived from the deck’s segment margins until the interim 6-K is filed), the FY2025 Form 20-F (SEC EDGAR, CIK 1639920, accession 0001628280-26-006874) for the annual totals, and the Bloomberg export for 2023 and segment gross profit by quarter (3Q25 derived from the 20-F segment totals). Subscribers, MAU, ad-supported MAU and ARPU: shareholder decks and the Bloomberg export; definitions verbatim from the 20-F. Quarterly 1Q23–4Q23: the Bloomberg export (reported columns of the oldest snapshot, 2024-04-28). Summit forecast 4Q26 (the model has no 2027 quarterly forecast yet) and FY2026–FY2028 annual: DCF model snapshot of 2026-08-05, frozen. Subscribers, Ad-Supported MAU and ARPU for 3Q24–4Q26 are the estimates of the Summit model supplied by the analyst (the model rows are empty); the total MAU forecast is Street (Bloomberg, 2026-10-21) because the model does not carry it. Everything in EUR.',
 
+  streetForward: true,   // Top Line quarterly axis reaches two quarters past the last print: Street fills where Summit has no quarter (js/segments.js)
   axis: {
     q: Q,
     y: ['2023', '2024', '2025', '2026', '2027', '2028'],

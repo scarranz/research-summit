@@ -118,6 +118,18 @@ function rsCurrentFY(data){
   }
   return bestY != null ? bestY + 1 : null;
 }
+// The ordinal (y*4+q) of the last REPORTED quarter, for datasets that set `forwardQuarters`.
+function rsLastActQ(data){
+  var best = null, vq = data.views && data.views.q, k, m, i, pq;
+  if (vq) for (k in vq.metrics){ m = vq.metrics[k];
+    if (!m.act) continue;
+    for (i = 0; i < m.periods.length; i++){
+      if (m.act[i] == null) continue;
+      pq = rsParseQ(m.periods[i]); if (!pq) continue;
+      var o = pq.y * 4 + pq.q; if (best == null || o > best) best = o;
+    } }
+  return best;
+}
 function rsTrimMetric(m, keep){
   var idx = [], i;
   for (i = 0; i < m.periods.length; i++) if (keep(m.periods[i])) idx.push(i);
@@ -131,7 +143,10 @@ function rsTrimMetric(m, keep){
 function rsTrimData(raw){
   var fy = rsCurrentFY(raw);
   if (fy == null) return raw;
-  var keepQ = function(p){ var pq = rsParseQ(p); return !pq || pq.y <= fy; };
+  // A dataset may opt out of the current-fiscal-year rule with `forwardQuarters: n` — show n quarters past the last print instead
+  // (SPOT: 2, analyst rule Oct 22 2026; the Street reaches them, Summit does not model them).
+  var nfq = raw.forwardQuarters, lastQ = nfq ? rsLastActQ(raw) : null;
+  var keepQ = function(p){ var pq = rsParseQ(p); if (!pq) return true; return lastQ != null ? (pq.y * 4 + pq.q <= lastQ + nfq) : pq.y <= fy; };
   var keepY = function(p){ return isNaN(+p) || +p <= fy + 2; };
   var d = {}, k; for (k in raw) d[k] = raw[k];
   d.views = {};
@@ -1039,7 +1054,7 @@ function rsVintSelHtml(val, scope, label, vsrc){
 // of it — so trimming the option to "Mobility" would leave the control reading "Mobility"
 // with no clue which line that is. One name per metric, the same one the chart title and the
 // table header use.
-function rsOptLabel(m){ return m.label; }
+function rsOptLabel(m){ return m.guided ? m.label + ' (guided)' : m.label; }   // `guided`: a line the company guides every period, tracked on the profile
 function rsSelectHtml(k){
   var view = rsView(k), cfg = rsSecCfg(k), st = rsSt(k);
   rsMetric(k);                                        // ensure st.metric is valid

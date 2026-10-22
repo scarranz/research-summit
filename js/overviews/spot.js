@@ -565,7 +565,7 @@ function buildSub(root, ddKey, subKey){
       var w = root.querySelector('.ovt-subpane[data-ovst="track"] .rs-wrap');
       if (w) initResults(w, 'SPOT');
     } else if (subKey === 'estevo'){
-      if (root.querySelector('#rsEvoWrap')) initResultsEvo();
+      if (root.querySelector('#rsEvoWrap')) requestAnimationFrame(function(){ initResultsEvo('SPOT'); });
     } else if (subKey === 'earnings'){
       spotCeBuild(root);
     }

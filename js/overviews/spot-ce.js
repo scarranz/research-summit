@@ -18,7 +18,7 @@ import { mountWatchList } from '../watchlist.js';
 import { fetchThemeRecord, saveThemeRecord } from '../api.js';   // durable persistence of the SPOT theme record (Notes)
 import { SPOT_THEMES } from '../themes-data/spot.js';
 import { SUMMIT_CAT, SUMMIT_INK } from '../viz-palette.js';
-import { SPOT_CE_CONS as CE_CONS, SPOT_CALL_EARNINGS as CALL_EARNINGS } from './spot-ce-data.js';
+import { SPOT_CE_CONS as CE_CONS, SPOT_CALL_EARNINGS as CALL_EARNINGS, SPOT_GUIDED } from './spot-ce-data.js';
 
 // ════ extracted from amzn.js ════════════════════════════════════════════════════════════════════
 function esc(s){ if(s==null) return ''; return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1044,7 +1044,8 @@ function cePrintBlock(qLabel, r, us){
     var cK=cV.k, uK=uV.k, cHas=(cK==='beat'||cK==='miss'||cK==='inline'), uHas=(uK==='beat'||uK==='miss'||uK==='inline');
     var mixed=(cHas&&uHas&&cK!==uK);
     var bothV=(cHas&&uHas)?((cK===uK)?{l:cV.l+' ×2',c:cV.c}:{l:'MIXED',c:AMBER}):(cHas?{l:cV.l,c:cV.c}:(uHas?{l:uV.l,c:uV.c}:{l:'—',c:'#6b7684'}));
-    var hdr='<div class="ce-fz-k"><span class="ce-fz-kn">'+esc(m.k)+'</span>'+
+    var guided=SPOT_GUIDED.indexOf(m.k)>=0;
+    var hdr='<div class="ce-fz-k"><span class="ce-fz-kn">'+esc(m.k)+(guided?' <span class="ce-fz-gd" title="Spotify guides this line every quarter; it is one of the five tracked">GUIDED</span>':'')+'</span>'+
       '<span class="ce-fz-vd ce-vd-cons" style="color:'+cV.c+'">'+cV.l+sp(r.cSurp)+'</span>'+
       '<span class="ce-fz-vd ce-vd-us" style="color:'+uV.c+'">'+uV.l+sp(r.uSurp)+'</span>'+
       '<span class="ce-fz-vd ce-vd-both" style="color:'+bothV.c+'">'+bothV.l+'</span></div>';
@@ -1074,7 +1075,7 @@ function cePrintBlock(qLabel, r, us){
       '<span class="ce-fz-cv ce-fz-surp ce-col-us" style="color:'+uV.c+';font-weight:800">'+surpFmt(r.uSurp)+' '+uV.l+'</span>'+
       '<span class="ce-fz-cv ce-fz-surp ce-col-act"></span>'+
     '</div>';
-    return '<div class="ce-fz-t" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'" data-cat="'+ceCat(m.k)+'" data-mixed="'+(mixed?1:0)+'" style="--od:'+r.od+'">'+hdr+tbl+'</div>';
+    return '<div class="ce-fz-t'+(guided?' ce-fz-guided':'')+'" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'" data-cat="'+ceCat(m.k)+'" data-mixed="'+(mixed?1:0)+'" style="--od:'+r.od+'">'+hdr+tbl+'</div>';
   });
   return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="on" data-view="cards" data-ord="stmt" data-fzcat="all"><div class="ce-fz-h">The print — down the income statement'+
     ceQ('fz-'+ceQkey(qLabel),'How this is built',
@@ -1120,6 +1121,8 @@ function cePhaseStyle(){
     '.ce-fz-t{border:1px solid var(--bdr);border-radius:9px;padding:7px 9px;background:#fff}'+
     '.ce-fz-t.basis{opacity:.62}'+
     '.ce-fz-k{font-size:10px;font-weight:800;color:var(--navy);line-height:1.25}'+
+    '.ce-fz-guided{border-left:3px solid var(--navy)}'+
+    '.ce-fz-gd{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:3px;background:var(--navy);color:#fff;font-size:9px;font-weight:800;letter-spacing:.06em;vertical-align:middle}'+
     '.ce-fz-kn{flex:1 1 auto;min-width:0}'+   /* full metric name, wraps — NEVER truncated (e.g. "…operating income") */
     /* the table layout — Street/Summit est. | Actual columns, with Growth / Margin rows below (Dani, Aug 2026) */
     '.ce-fz-tbl{display:grid;grid-template-columns:auto 1fr 1fr;gap:3px 8px;margin-top:6px;align-items:baseline;font-variant-numeric:tabular-nums}'+

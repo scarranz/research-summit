@@ -46,6 +46,7 @@
 //    Open: the 1Q24 and 2Q24 Street cells, because the oldest Bloomberg file (2024-04-28) already knew 1Q24.
 
 export var spotResults = {
+  forwardQuarters: 2,   // two quarters past the last print, not just the current fiscal year (see rsTrimData in js/results.js)
   updated: 'Oct 2026',
   currency: '€',
   currencyName: '€',
@@ -55,14 +56,14 @@ export var spotResults = {
       label: 'Quarterly',
       note: 'Actuals from Spotify’s quarterly shareholder decks (investors.spotify.com; 3Q26 from the deck of 22 Oct 2026). Guidance is the point estimate issued for that quarter in the PRIOR quarter’s deck — Spotify guides a single number, not a range, so the guidance band renders as a line. ⚠ Premium and Ad-Supported revenue are AS ORIGINALLY REPORTED in each quarter’s own deck: effective Jan 1 2026 Spotify moved certain activities from Ad-Supported into Premium and restated 2023–2025, so those two lines carry a basis break at 1Q26 (total revenue, gross profit and every consolidated line are unaffected).',
       metrics: {
-        rev: { label: 'Total Revenue', short: 'Total revenue', group: 'Revenue', unit: 'usdM',
+        rev: { label: 'Total Revenue', guided: true, short: 'Total revenue', group: 'Revenue', unit: 'usdM',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [3636, 3807, 3988, 4242, 4190, 4193, 4272, 4531, 4533, 4777, 4969, null, null, null],
           summit: [3561.9, 3771.4, 3899.6, 4193.6, 4166.5, 4318.9, 4229.1, 4539.6, 4663.8, 4817.3, 5023.1, 5428.4, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[3600, 3800, 4000, 4100, 4200, 4300, 4200, 4500, 4500, 4800, 5000, 5200, null, null],
           guideHi:[3600, 3800, 4000, 4100, 4200, 4300, 4200, 4500, 4500, 4800, 5000, 5200, null, null],
-          note: 'Consolidated revenue. The guide is a single point, so “beat/miss” here is against that point. The record across the eleven reported quarters: six at or above the guided point, five below — but four of the five shortfalls (3Q24 −€12M, 1Q25 −€10M, 2Q26 −€23M, 3Q26 −€31M) are inside 0.7% and read as in-line, which is how the company itself describes 3Q26. The one real miss is 2Q25 (€4,193M against a €4,300M guide) on a ~490bps FX headwind. FX is the recurring swing factor: management states a bps assumption alongside every guide and it flips direction — a ~670bps headwind going into 1Q26, ~70bps of actual headwind in 2Q26, ~190bps of actual tailwind in 3Q26 (against ~200bps guided), and ~230bps of tailwind assumed for the €5.2B 4Q26 guide (struck on USD:EUR 0.8828 at the September 30 close). Read the guided growth as part currency. 3Q26 printed €4,969M, +16% reported and +14% constant-currency; the Street (Bloomberg, snapshot of 21 Oct 2026) stood at €4,983M (−0.3%).' },
+          note: 'Consolidated revenue. The guide is a single point, so “beat/miss” here is against that point. The record across the eleven reported quarters: six at or above the guided point, five below — but four of the five shortfalls (3Q24 −€12M, 1Q25 −€10M, 2Q26 −€23M, 3Q26 −€31M) are inside 0.7% and read as in-line, which is how the company itself describes 3Q26. The one real miss is 2Q25 (€4,193M against a €4,300M guide) on a ~490bps FX headwind. FX is the recurring swing factor: management states a bps assumption alongside every guide and it flips direction — a ~670bps headwind going into 1Q26, ~70bps of actual headwind in 2Q26, ~190bps of actual tailwind in 3Q26 (against ~200bps guided), and ~230bps of tailwind assumed for the €5.2B 4Q26 guide (struck on USD:EUR 0.8828 at the September 30 close). Read the guided growth as part currency. 3Q26 printed €4,969M, +16% reported and +14% constant-currency; the Street (Bloomberg, snapshot of 21 Oct 2026) stood at €4,983M (−0.3%). Investor Day target (21 May 2026, to 2030): a mid-teens revenue CAGR; 3Q26 grew +16% reported and +14% in constant currency, and the 4Q26 guide is about +15%.' },
         premrev: { label: 'Premium Revenue', short: 'Premium revenue', group: 'Revenue', unit: 'usdM',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [3247, 3351, 3516, 3705, 3771, 3740, 3826, 4013, 4148, 4331, 4487, null, null, null],
@@ -78,7 +79,7 @@ export var spotResults = {
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          note: '⚠ Same basis break as Premium (the reclassification moved revenue OUT of this line from 1Q26; the restated comparatives are €407M for 1Q25 against €419M as originally reported, and €437M for 3Q25 against €446M). 3Q26 printed €482M, +10% reported and +9% constant-currency against the restated €437M: the first clear step up after two quarters at +3% constant-currency. The deck credits the automated sales channels, which remain the largest contributor, and podcast sponsorship in the Owned & Licensed portfolio; music advertising grew on impressions sold with softness in pricing. The CFO puts the biddable channel at up to 40% and guides to continued progress toward double-digit growth in 4Q26. Summit’s 2026-08-05 snapshot carried €511.6M for 3Q26, so the print sits 6% under the model. Not guided separately.' },
+          note: '⚠ Same basis break as Premium (the reclassification moved revenue OUT of this line from 1Q26; the restated comparatives are €407M for 1Q25 against €419M as originally reported, and €437M for 3Q25 against €446M). 3Q26 printed €482M, +10% reported and +9% constant-currency against the restated €437M: the first clear step up after two quarters at +3% constant-currency. The deck credits the automated sales channels, which remain the largest contributor, and podcast sponsorship in the Owned & Licensed portfolio; music advertising grew on impressions sold with softness in pricing. The CFO puts the biddable channel at up to 40% and guides to continued progress toward double-digit growth in 4Q26. Summit’s 2026-08-05 snapshot carried €511.6M for 3Q26, so the print sits 6% under the model. Not guided separately. Context: on the Q2 call (4 Aug 2026) management said the migration of the ad inventory to the in-house ad server was complete, which is why double-digit growth in H2 2026 was expected; 3Q26 grew +10% reported and +9% in constant currency.' },
         gp: { label: 'Gross Profit', short: 'Gross profit', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'gross margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [1004, 1112, 1240, 1368, 1326, 1320, 1351, 1499, 1495, 1596, 1639, null, null, null],
@@ -87,22 +88,22 @@ export var spotResults = {
           guideLo:[950.4, 1067.8, 1208, 1303.8, 1323, 1354.5, 1306.2, 1480.5, 1476, 1588.8, 1645, 1757.6, null, null],
           guideHi:[950.4, 1067.8, 1208, 1303.8, 1323, 1354.5, 1306.2, 1480.5, 1476, 1588.8, 1645, 1757.6, null, null],
           note: 'The margin line is the story: consolidated gross margin climbed 27.6% → 33.0% across these eleven quarters (the record is 33.4% in 2Q26; 33.0% is the highest Q3). 3Q26 printed 33.0% against a 32.9% guide, +136bps YoY, with Premium gross margin 34.5% (+130bps) and Ad-Supported 18.7% (+105bps). The 4Q26 guide is 33.8%, +70bps YoY and about +130bps for the full year, after the 3Q26 guide had stepped down 50bps from the record. Spotify guides gross MARGIN (a percentage) every quarter, not gross profit: the guide drawn on this chart is that guided percentage times the guided revenue (derived arithmetic on two of the company’s own numbers: €5.2B × 33.8% = €1,758M for 4Q26), and the guided percentage itself is plotted under Margins (as Spotify guides them). Summit carries no consolidated gross-profit line; here it is the sum of its two segment lines, held from the snapshot before each print (3Q26 from Aug 5 2026: ~32.9% against 32.9% guided and 33.0% reported). The 3Q26 segment gross profits (Premium €1,549M, Ad-Supported €90M) are derived from the deck’s segment margins and the €1,639M total — the only whole-euro pair consistent with 34.5%, 18.7% and the sum — until the segment note of the interim 6-K is filed.' },
-        gm: { label: 'Gross Margin (as guided)', short: 'Gross margin', group: 'Margins', unit: 'pct', surprise: false,
+        gm: { label: 'Gross Margin (as guided)', guided: true, short: 'Gross margin', group: 'Margins', unit: 'pct', surprise: false,
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [27.6, 29.2, 31.1, 32.2, 31.6, 31.5, 31.6, 33.1, 33, 33.4, 33, null, null, null],
           summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[26.4, 28.1, 30.2, 31.8, 31.5, 31.5, 31.1, 32.9, 32.8, 33.1, 32.9, 33.8, null, null],
           guideHi:[26.4, 28.1, 30.2, 31.8, 31.5, 31.5, 31.1, 32.9, 32.8, 33.1, 32.9, 33.8, null, null],
-          note: 'Gross profit ÷ revenue (€, exact; matches each deck’s reported margin). Guide: the single percentage Spotify gave on the prior quarter’s call, every quarter from 1Q24 (Q4 2023 call → 1Q24 … Q3 2026 call → 4Q26). 3Q26 printed 33.0% against a 32.9% guide. The Street margin is on Gross Profit in margin mode; the Summit model has no consolidated margin line.' },
-        opinc: { label: 'Operating Income', short: 'Op. income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
+          note: 'Gross profit ÷ revenue (€, exact; matches each deck’s reported margin). Guide: the single percentage Spotify gave on the prior quarter’s call, every quarter from 1Q24 (Q4 2023 call → 1Q24 … Q3 2026 call → 4Q26). 3Q26 printed 33.0% against a 32.9% guide. The Street margin is on Gross Profit in margin mode; the Summit model has no consolidated margin line. Investor Day target (21 May 2026, to 2030): a 35–40% gross margin; 3Q26 at 33.0% is 200bps below the bottom of the range and the 4Q26 guide of 33.8% is 120bps below it.' },
+        opinc: { label: 'Operating Income', guided: true, short: 'Op. income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [168, 266, 454, 477, 509, 406, 582, 701, 715, 655, 672, null, null, null],
           summit: [-59.9, 62.4, 292.7, 287.0, 553.5, 520.8, 510.4, 632.1, 710.9, 637.6, 672.5, 927.2, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[180, 250, 405, 481, 548, 539, 485, 620, 660, 630, 670, 820, null, null],
           guideHi:[180, 250, 405, 481, 548, 539, 485, 620, 660, 630, 670, 820, null, null],
-          note: 'The second guided line, and historically the one that missed most often — 1Q24, 4Q24, 1Q25 and 2Q25 all landed under the guided point. The recurring reason is SOCIAL CHARGES: Spotify embeds an assumption for them in the guide based on the share price at the prior quarter’s close, so a rising stock mechanically inflates the charge and pushes the actual below the guide. 3Q26 printed €672M against €670M with €22M of social charges against €9M embedded (struck on a $459.13 close), so excluding the unforecast €13M the beat is €15M, which the deck attributes to marketing and personnel-related costs and gross-margin strength; the prior-year quarter carried a €16M credit. Six straight quarters at or above the guide now. 4Q26 is guided to €820M with €6M of social charges embedded at a $487.38 close, and the CFO says operating expense growth is moderating and will keep doing so into 2027. The Street stood at €670M going in; Summit’s 2026-08-05 snapshot carried €698.9M, 4% above the print.' },
+          note: 'The second guided line, and historically the one that missed most often — 1Q24, 4Q24, 1Q25 and 2Q25 all landed under the guided point. The recurring reason is SOCIAL CHARGES: Spotify embeds an assumption for them in the guide based on the share price at the prior quarter’s close, so a rising stock mechanically inflates the charge and pushes the actual below the guide. 3Q26 printed €672M against €670M with €22M of social charges against €9M embedded (struck on a $459.13 close), so excluding the unforecast €13M the beat is €15M, which the deck attributes to marketing and personnel-related costs and gross-margin strength; the prior-year quarter carried a €16M credit. Six straight quarters at or above the guide now. 4Q26 is guided to €820M with €6M of social charges embedded at a $487.38 close, and the CFO says operating expense growth is moderating and will keep doing so into 2027. The Street stood at €670M going in; Summit’s 2026-08-05 snapshot carried €698.9M, 4% above the print. Investor Day target (21 May 2026, to 2030): an operating margin above 20%; 3Q26 printed 13.5% and the 4Q26 guide implies 15.8% (€820M on €5.2B). Marketing and AI-related investments are the spend behind the operating-expense growth: about €200M of incremental operating expense for the full year (CFO, Q2 call), +19% ex-FX and social charges in 3Q26, growth peaking in Q3 and moderating from Q4 into 2027.' },
         netinc: { label: 'Net Income', short: 'Net income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'net margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [197, 274, 300, 367, 225, -86, 899, 1174, 721, 545, 518, null, null, null],
@@ -127,7 +128,7 @@ export var spotResults = {
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'Free cash flow has run consistently ABOVE operating income in most quarters — the payment timing of royalty accruals plus deferred subscription revenue give Spotify a structurally favourable working-capital cycle — and 3Q26 is the exception: €735M against €672M of operating income, but down 9% YoY and 14% under the €857M the Street carried, on €740M of operating cash flow less €6M of capex (and a €1M restricted-cash change). The CFO names unfavourable working-capital and cash-tax timing. LTM free cash flow is €3.2B and cash, restricted cash and short term investments €9.9B, with no debt other than leases. Repurchases: $1.1B year to date through Oct 21 (2.2M shares), which neutralizes this year’s dilution, and about 3M shares (~1.5% of the count) since August 2025. Not guided.' },
-        mau: { label: 'Monthly Active Users', short: 'MAU', group: 'Users', unit: 'count', unitLabel: 'millions of users',
+        mau: { label: 'Monthly Active Users', guided: true, short: 'MAU', group: 'Users', unit: 'count', unitLabel: 'millions of users',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [615, 626, 640, 675, 678, 696, 713, 751, 761, 777, 788, null, null, null],
           summit: [null, null, null, null, null, null, null, 761.2, null, null, null, null, null, null],
@@ -136,7 +137,7 @@ export var spotResults = {
           guideLo:[618, 631, 639, 665, 678, 689, 710, 745, 759, 778, 788, 818, null, null],
           guideHi:[618, 631, 639, 665, 678, 689, 710, 745, 759, 778, 788, 818, null, null],
           note: 'Total monthly active users (millions, end of quarter). Reported by Spotify; the series matches the Bloomberg export (1Q23-3Q26). The guide is the point Spotify gave on the prior quarter’s call, every quarter from 1Q24 (the model holds it only for 4Q25–3Q26; the earlier ones are read from the calls). 3Q26 printed 788M, exactly on the guide (+11M net adds, +11% YoY, growth in all regions). Management says it is optimizing MAU growth across markets (sign-up hygiene, ad load and client migration in markets such as India and Indonesia). The 4Q26 guide is 818M (+30M), with growth the company says is not as high as last year’s record rollout of the new free tier. Summit: only the 2025-12-18 snapshot carries a total-MAU forecast (4Q25 761.2M); in the three later snapshots the row is zero, so there is no Summit line after 4Q25.' },
-        subs: { label: 'Premium Subscribers', short: 'Subscribers', group: 'Users', unit: 'count', unitLabel: 'millions of subscribers',
+        subs: { label: 'Premium Subscribers', guided: true, short: 'Subscribers', group: 'Users', unit: 'count', unitLabel: 'millions of subscribers',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [239, 246, 252, 263, 268, 276, 281, 290, 293, 300, 306, null, null, null],
           summit: [null, null, 230.5, 245.4, 240.8, 250.6, 257, 270.9, 270.7, 281.8, 304.9, 319, null, null],
@@ -940,6 +941,8 @@ export var spotResults = {
   var mx = spotResults.estMatrix;
   mx.summit.q.subs['2026-08-05'] = { '3Q26': 304.9, '4Q26': 319.0 };
   mx.summit.q.admau['2026-08-05'] = { '3Q26': 501.5, '4Q26': 526.4 };
+  var vq = spotResults.views.q.metrics, vs = vq.subs.summit, va = vq.admau.summit;
+  vq.mau.summit.forEach(function(x, i){ if (vs[i] != null && va[i] != null) vq.mau.summit[i] = Math.round((vs[i] + va[i]) * 10) / 10; });
   function at(src, m, v){ var o = mx[src].q[m]; return (o && o[v]) || {}; }
   function put(src, m, v, p, x){
     if (!mx[src].q[m]) mx[src].q[m] = {};
@@ -950,6 +953,10 @@ export var spotResults = {
     mx[src].vintages.forEach(function(vt){
       var v = vt.id, rev = at(src, 'rev', v), gp = at(src, 'gp', v), pr = at(src, 'premrev', v), pg = at(src, 'premgp', v),
           ar = at(src, 'adrev', v), ag = at(src, 'adgp', v), sb = at(src, 'subs', v), ad = at(src, 'admau', v);
+      if (src === 'summit'){   // Summit's total MAU is its Premium subscribers + ad-supported MAU (how the analyst's model defines it; the model's own MAU row is empty)
+        var mu = at(src, 'mau', v);
+        Object.keys(sb).forEach(function(p){ if (ad[p] != null && mu[p] == null) put(src, 'mau', v, p, sb[p] + ad[p]); });
+      }
       Object.keys(gp).forEach(function(p){ if (rev[p]) put(src, 'gm', v, p, gp[p] / rev[p] * 100); });
       Object.keys(pr).forEach(function(p){
         if (sb[p]){
@@ -964,5 +971,18 @@ export var spotResults = {
         }
       });
     });
+  });
+})();
+
+// ─── Quarterly axis: two quarters past the last print ──────────────────────────────────────────
+// The Bloomberg vintage carries 2Q27, but the profile shows two quarters ahead of the last reported one (analyst rule): after
+// 3Q26 that is 4Q26 and 1Q27. Every per-period array of the quarterly view is cut at the same index, so nothing drifts.
+(function(){
+  Object.keys(spotResults.views.q.metrics).forEach(function(k){
+    var m = spotResults.views.q.metrics[k], n = m.periods.length, last = -1;
+    m.act.forEach(function(x, i){ if (x != null) last = i; });
+    var keep = Math.min(n, last + 3);   // the last print plus two quarters
+    if (keep >= n) return;
+    Object.keys(m).forEach(function(f){ if (Array.isArray(m[f]) && m[f].length === n) m[f] = m[f].slice(0, keep); });
   });
 })();

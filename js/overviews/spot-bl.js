@@ -17,6 +17,22 @@ import { spotBBG } from './spot-bbg.js';
 import { spotResults } from '../results-data/spot.js';
 import { SPOT_OPEX_YEARS, SPOT_OPEX, SPOT_OPEXQ, SPOT_SBC, SPOT_EW_LINES, SPOT_EW_SRC } from './spot-bl-data.js';
 
+// The Bloomberg export carries every forward quarter it has; the profile shows TWO quarters past the last print (analyst rule),
+// so the trailing quarters are cut here once, from every quarterly array (qtrs, q, qF) of the export.
+(function(){
+  var cut = Math.max(0, spotBBG.qtrs.length - 1 - spotBBG.qtrs.indexOf('4Q26E') - 1);   // quarters after 1Q27E
+  if (!cut) return;
+  spotBBG.qtrs = spotBBG.qtrs.slice(0, spotBBG.qtrs.length - cut);
+  (function walk(o){
+    if (!o || typeof o !== 'object' || Array.isArray(o)) return;
+    Object.keys(o).forEach(function(k){
+      var v = o[k];
+      if ((k === 'q' || k === 'qF') && Array.isArray(v)) o[k] = v.slice(0, v.length - cut);
+      else walk(v);
+    });
+  })(spotBBG);
+})();
+
 var BRAND=SUMMIT_CAT[0], BRAND2=SUMMIT_CAT[1], SQUID=SUMMIT_INK, GREEN='#2E8B57', GRAY='#9AA4B0';
 // spot-bbg.js keeps Bloomberg's field slugs where Spotify's labels differ from Amazon's (the extractor's CODE map is
 // Amazon-shaped). Alias the ones this code reads, so the copied functions run unchanged.
@@ -146,7 +162,7 @@ function aStdRender(id, derive){
   var ds=spec.series.filter(function(s){ return !st.hidden[s.k]; }).map(function(s){
     var t=s.type||spec.type||'line'; if(s.yAxisID==='y2') needY2=true;
     if(t==='bar') return { type:'bar', label:s.label, data:s.data.slice(lo,hi+1), backgroundColor:s.data.slice(lo,hi+1).map(function(_,i){ return (lo+i)>la?aFadeC(s.color,0.5):s.color; }), borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:stk, yAxisID:s.yAxisID||'y', order:s.order||3 };
-    return { type:'line', label:s.label, data:s.data.slice(lo,hi+1), borderColor:s.color, backgroundColor:s.color, borderWidth:2.2, pointRadius:s.pts?6:2, pointStyle:s.pts?'rectRot':'circle', showLine:s.pts?false:true, tension:0.2, spanGaps:false, yAxisID:s.yAxisID||'y', order:s.order||2,
+    return { type:'line', label:s.label, data:s.data.slice(lo,hi+1), borderColor:s.color, backgroundColor:s.color, borderWidth:2.2, pointRadius:s.pts?14:2, pointStyle:s.pts?'line':'circle', showLine:s.pts?false:true, tension:0.2, spanGaps:false, yAxisID:s.yAxisID||'y', order:s.order||2,
       borderDash:s.dash?[5,4]:undefined, segment: s.fwdDash?{ borderDash:function(ctx){ return (lo+ctx.p1DataIndex)>la?[5,4]:undefined; } }:undefined }; });
   var anyBar=spec.series.some(function(s){ return (s.type||spec.type)==='bar'; }), y2f=spec.y2Fmt||function(v){return v;};
   var scales={ x:{ stacked:anyBar&&spec.stacked, grid:{ display:false }, ticks:{ font:{ size:11 } } },
@@ -575,7 +591,11 @@ function aQAxis(){
   var set={}; spotResults.views.q.metrics.rev.periods.forEach(function(p){ set[p]=1; });
   var C=spotResults.estMatrix&&spotResults.estMatrix.cons&&spotResults.estMatrix.cons.q&&spotResults.estMatrix.cons.q.rev;
   if(C) Object.keys(C).forEach(function(v){ Object.keys(C[v]).forEach(function(p){ set[p]=1; }); });
-  return Object.keys(set).sort(function(a,b){ return aOrd('q',a)-aOrd('q',b); });
+  var ax=Object.keys(set).sort(function(a,b){ return aOrd('q',a)-aOrd('q',b); });
+  // two quarters past the last reported one (analyst rule): the Street vintages carry more, the chart does not
+  var ra=spotResults.views.q.metrics.rev, li=-1; ra.act.forEach(function(x,i){ if(x!=null) li=i; });
+  var cut=li>=0?ax.indexOf(ra.periods[li]):-1;
+  return cut>=0?ax.slice(0,cut+3):ax;
 }
 var A_QKEY={gross:'gp', operating:'opinc', ebitda:'ebitda', net:'netinc', fcf:'fcf'};
 var A_YKEY={gross:'gp', operating:'opinc', ebitda:'ebitda', net:'earnings', fcf:'fcf'};

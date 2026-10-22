@@ -16,9 +16,10 @@ la copia en Supabase ya es la nueva). **Plan para el 22-oct en la mañana, en es
 2. **Notas de SAB del 3T26 → Notes**: SAB trae sus notas de la llamada; se agregan a los hilos abiertos
    (y se cierran los que se reconcilien). Si se reestructura la semilla, subir `META_THEMES_V`.
 3. **Watch List**: pasar al 4T26 los ganchos abiertos del 3T26 (hoy el 4T26 dice "No open hooks yet").
-4. **F-FINAL**: borrar el código muerto de `meta.js` (bloque `ce*` viejo, `callsBody`/`META_THEMES` viejos,
-   `suppliersBody`/`SC_*`, imports sin uso como `metaResults`/`metaBBG`), revisión final del perfil completo en el
-   portal y cierre de esta bitácora (avance 44/44 salvo VA-TM ⛔).
+4. **F-FINAL**: ✔ código muerto borrado (22-oct): `meta.js` 3,369 → ~890 líneas; se quitaron el bloque `ce*` viejo,
+   `callsBody`, `suppliersBody`/`SC_*`, los paneles pre-guía (segmentos, spend, model vs reality, Sensitivity vieja)
+   y los imports sin uso. Recorrido en el portal: las 24 sub-pestañas y los pop-ups cargan sin errores, igual que
+   antes. Falta: la revisión final de SAB del perfil completo y cerrar esta bitácora (avance 44/44 salvo VA-TM ⛔).
 5. **PR** (SAB lo pidió para mañana): `feat/meta-profile` → `main`, un solo PR con los cambios de la guía + META.
    Resumen: guía (review TSM, §12/§21/EV-NOTES/EV-POST), perfil META completo, `watchlist.js` (`palette:'summit'`),
    `tsm-ce.js` (bug de `stmt`), `bbg_extract.py` (fila más reciente), `serve.ps1` (no-store). Se abre solo cuando

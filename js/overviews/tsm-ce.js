@@ -1018,7 +1018,7 @@ function cePrintBlock(qLabel, r, us){
     var uSurp=(uexp!=null&&a!=null&&uexp)?((a/uexp-1)*100):null;
     return { m:m, c:c, a:a, uexp:uexp, cSurp:cSurp, uSurp:uSurp,
       cV:ceVerdict(m,c,a,cSurp), uV:ceVerdict(m,uexp,a,uSurp),
-      py:(m.u==='%'?null:m.qy[qi]), pq:(m.u==='%'?null:m.qq[qi]),   // no growth-of-a-margin (fixed in the TSM copy) stmt:ceStmtIdx(m.k),
+      py:(m.u==='%'?null:m.qy[qi]), pq:(m.u==='%'?null:m.qq[qi]), stmt:ceStmtIdx(m.k),   // no growth-of-a-margin (fixed in the TSM copy)
       surpAbs:(cSurp==null?-1:Math.abs(cSurp)) };
   }).filter(Boolean);
   if(!rows.length) return '';

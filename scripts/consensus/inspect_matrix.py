@@ -25,7 +25,7 @@ DOCS = os.environ.get('SUMMIT_DOCS', 'G:/My Drive/Summit/Docs/0')
 TK   = (sys.argv[1] if len(sys.argv) > 1 else 'AMZN').upper()
 PATH = os.path.join(DOCS, 'BBG_CONSENSUS.txt')
 
-rows = list(csv.reader(open(PATH, newline='', encoding='utf-8-sig'), delimiter='\t'))
+rows = list(csv.reader(open(PATH, newline='', encoding='utf-8-sig', errors='replace'), delimiter='\t'))
 head = rows[0]; idx = {n: i for i, n in enumerate(head)}
 HORS = ['fq-4','fq-3','fq-2','fq-1','fq0','fq+1','fq+2','fq+3','fq+4',
         'fy-2','fy-1','fy0','fy+1','fy+2','fy+3']

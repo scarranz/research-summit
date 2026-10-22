@@ -4,6 +4,8 @@ The working file for the current cycle per docs/EARNINGS_CONVENTIONS.md §3. MET
 call AND a same-day Follow-Up Q&A call for the same quarter — per the convention, they are ONE call.
 When Q3 2026 lands, this rotates to the TOP of META.md.
 
+**Update 2026-10-22:** checked against Meta's own transcript (investor.atmeta.com, `META-Q2-2026-Earnings-Call-Transcript.pdf`); the portal quotes (`js/overviews/meta-ce-data.js`, Q2 2026) now use that wording. One substantive correction: Susan Li said Meta is **"supply constrained"**, not "demand-constrained" (Ken Gawrelski Q&A). Other quotes below are the coverage's and may differ slightly from the official text.
+
 **⚠ PROVENANCE / TO UPGRADE:** the verbatim IR transcript PDF was not yet on hand at fill time
 (2026-07-30). This file carries a **structured call record reconstructed from earnings-day
 transcript coverage** (Investing.com full-transcript article; figures cross-checked against the
@@ -104,7 +106,7 @@ final; incognito mode shipped for Meta AI.
   "right now, the open-source models are not as strong as the frontier models, so no"; full-stack
   sovereignty argument; "I get that this is a big investment and it's a big bet… my personal bet is
   that the people who invest in this are going to be rewarded." Susan: "we are today and expect to be
-  in the foreseeable future **demand-constrained** — that includes our core business"; 2028+ =
+  in the sort of foreseeable future, **supply constrained**, and that really includes our core business, too" (official transcript; the coverage said "demand-constrained"); 2028+ =
   flexibility (land + power now, chips later).
 
 ### Analysis (Part I passes — feeds the Earnings tab fill in js/overviews/meta.js)

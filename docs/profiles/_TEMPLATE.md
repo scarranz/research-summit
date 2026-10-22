@@ -105,8 +105,9 @@ Modelo: `<ruta del .xlsm>` · moneda · escala · N snapshots (primero → últi
 
 (Modo B: agregar B1 — inventario de contenido existente y B2 — mapa de reubicación después de F0.)
 
-> Al 14 oct 2026, para una empresa nueva, **EV-EST, VA-TM y VA-SENS arrancan en ⛔** (necesitan Summit
-> en vivo; playbook §20b caso 2) y se anotan en Bloqueos. Cada `MISC-<clave>` aprobada reemplaza la fila MISC.
+> Desde el 15 oct 2026 EV-EST, VA-TM y VA-SENS se construyen con Summit congelado del MCP (regla 10);
+> EV-EST necesita ≥ 2 snapshots. Cada `MISC-<clave>` aprobada reemplaza la fila MISC; en MISC siempre se
+> proponen `MISC-comp` y, si aplica, `MISC-capacity` (playbook §15b).
 
 ## 3. Decisiones del analista
 
@@ -138,6 +139,15 @@ Conteo de control (piezas originales): **N**
 
 | Desde | Unidad ▸ bloque | Qué falta (función / dato) | Quién lo destraba | Estado |
 |---|---|---|---|---|
+
+## 6c. Review del analista — pendientes
+
+> `docs/PROFILE_PLAYBOOK.md` §16 paso 7. Pedidos del analista después de entregado el perfil. Cada R pasa
+> por la compuerta normal y se registra en §7 al aprobarse. Si el pedido vale para toda empresa, se
+> propone también como cambio a la guía.
+
+| # | Pedido (textual) | Unidad | Qué hay que construir | Depende de | ¿Va a la guía? | Estado |
+|---|---|---|---|---|---|---|
 
 ## 7. Historial de aprobaciones
 

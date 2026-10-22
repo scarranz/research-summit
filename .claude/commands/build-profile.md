@@ -53,6 +53,8 @@ approved unit sends it back to review.
 
 Full sweep in the real portal on localhost (rAF shim, zoom 100%), mode-B reconciliation of
 the relocation map, every unit ✅ / ⏭️ / ⛔ with a reason. Then ask for the final approval.
+If the analyst reviews the delivered profile later, log each request as `R<n>` in the build log §6c
+(playbook §16 step 7) and run each through the gate.
 
 ## Hard rules
 
@@ -60,6 +62,13 @@ the relocation map, every unit ✅ / ⏭️ / ⛔ with a reason. Then ask for th
 - Sources decide; every pane ends with a source footer naming the primary document and date.
 - No placeholder sub-tabs, no invented sub-tabs, no fake precision, no invented data.
 - Summit palette only; the company's brand lives only in its logo; no new inline `<style>`.
+  **The Overview carries no categorical colour at all** — navy, steel and greys only (playbook §8).
+- From SAB's TSM review (Oct 19 2026, playbook header lists where each lives): estimated quarters tie to
+  the annual within each source; every segment says what it sells and to whom, and TL-CUS says what each
+  top customer buys; price × volume + price durability in TL-SEG; cost of revenue split from opex in
+  the bridge; in MISC always propose Competitive position and, when revenue is capacity-bound,
+  Capacity → revenue; asset directories as grouped tables with subtotals. Post-delivery review requests
+  go to the build log §6c.
 - Everything shown in the portal is in English (golden rule 9); talk to the analyst in Spanish.
 - **Market data live, Summit model frozen** (golden rule 10, playbook §20b): price, market cap, EV and
   market multiples are read live (`liveQuote`, `get-market-history`) — never seeded. Every Summit model

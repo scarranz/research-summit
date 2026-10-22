@@ -74,8 +74,14 @@ def main(ticker):
     rows = list(csv.reader(open(SRC, encoding='utf-8', errors='replace'), delimiter='\t'))
     hdr = rows[0]
     idx = {c:i for i,c in enumerate(hdr)}
-    row = next((r for r in rows if r and r[0].strip().upper().startswith(ticker.upper())), None)
-    if not row: raise SystemExit("ticker not found: "+ticker)
+    # The NEWEST snapshot by data_as_of — not the first row in the file: a snapshot added by hand can sit
+    # anywhere in the archive (META's 10/21/2026 row landed below the older ones, Oct 2026).
+    def asof_key(r):
+        i = idx.get('data_as_of'); m = re.match(r'(\d+)/(\d+)/(\d{4})', (r[i] if i is not None and i < len(r) else '') or '')
+        return (int(m.group(3)), int(m.group(1)), int(m.group(2))) if m else (0, 0, 0)
+    cand = [r for r in rows[1:] if r and r[0].strip().upper().startswith(ticker.upper())]
+    if not cand: raise SystemExit("ticker not found: "+ticker)
+    row = max(cand, key=asof_key)
     def g(col):
         i = idx.get(col); return row[i] if (i is not None and i < len(row)) else None
     def series(prefix, n):

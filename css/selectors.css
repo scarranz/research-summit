@@ -9,14 +9,15 @@
        $B/Growth, legends, pickers, collapsibles) keep their own styles — SAB, Oct 15 2026.
      · only profiles that have been built or rebuilt with docs/PROFILE_PLAYBOOK.md. A profile joins
        by adding its Deep Dive root class to the :is() list below when it goes through the guide
-       (today: AMZN, TSM). Nothing is swept across every company at once.
+       (today: AMZN, TSM, META). Nothing is swept across every company at once.
 
    The system — text only, each level a step smaller and quieter than the one above:
      L1  Profile tabs   OVERVIEW · DEEP DIVE · PILLARS · RESOURCES   portal shell, companies.css (unchanged)
      L2  Section tabs   Top Line · Bottom Line · Evolution …          13.5px · 2px underline on a full rule
      L3  Sub-tabs       General · Segments · Other …                  12.5px · 1.5px underline, no rule
      L3b Nested tabs    Setup · Post-Results · Notes                  same as L3, on its own line under a hairline
-   Sentence case (no uppercase below L1); Summit navy for every active state — never --brand (it made
+   Sentence case (no uppercase below L1); active text in Summit navy, active underline in the Summit
+   blue that underlines the profile tabs (--steel; SAB, Oct 20 2026) — never --brand (it made
    AMZN's active section orange) and no filled backgrounds.
 
    Loaded after every other sheet. `!important` only on properties older modules set as inline style
@@ -24,38 +25,38 @@
    Playbook: docs/PROFILE_PLAYBOOK.md §21b. ═══════════════════════════════════════════════════════ */
 
 /* ── L2 · Section tabs ─────────────────────────────────────────────────────────────────────── */
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .dd-tabs {
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .dd-tabs {
   display: flex; flex-wrap: wrap; gap: 28px; margin: 0 0 18px; padding: 0;
   border-bottom: 1px solid var(--bdr); background: none;
 }
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .dd-tab {
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .dd-tab {
   font-family: inherit; font-size: 13.5px; font-weight: 600; letter-spacing: 0; text-transform: none;
   color: var(--mu); background: none; border: none; border-bottom: 2px solid transparent; border-radius: 0;
   padding: 10px 0 9px; margin: 0 0 -1px; cursor: pointer; transition: color .12s, border-color .12s;
 }
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .dd-tab:hover { color: var(--navy); }
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .dd-tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .dd-tab:hover { color: var(--navy); }
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .dd-tab.active { color: var(--navy); border-bottom-color: var(--steel); }
 
 /* ── L3 · Sub-tabs, and L3b · nested sub-tabs ──────────────────────────────────────────────── */
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ovt-subtabs,
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ce-phtabs {
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .ovt-subtabs,
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .ce-phtabs {
   display: flex; flex-wrap: wrap; gap: 22px; align-items: center;
   width: auto !important; margin: 0 0 18px; padding: 0;
   background: none; border: none; border-radius: 0; box-shadow: none;
 }
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ce-evohead { margin-bottom: 4px !important; }
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ce-evohead .ovt-subtabs { margin: 0 !important; }
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ce-phtabs { margin-top: 8px; padding-top: 10px; border-top: 1px solid #EEF1F5; }
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ovt-subtab,
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ce-phtab {
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .ce-evohead { margin-bottom: 4px !important; }
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .ce-evohead .ovt-subtabs { margin: 0 !important; }
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .ce-phtabs { margin-top: 8px; padding-top: 10px; border-top: 1px solid #EEF1F5; }
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .ovt-subtab,
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .ce-phtab {
   font-family: inherit; font-size: 12.5px; font-weight: 500; letter-spacing: 0; text-transform: none;
   color: var(--mu); background: none; border: none; border-bottom: 1.5px solid transparent; border-radius: 0;
   padding: 4px 0 5px; flex: none !important; box-shadow: none;
   cursor: pointer; white-space: nowrap; transition: color .12s, border-color .12s;
 }
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ovt-subtab:hover,
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ce-phtab:hover { color: var(--navy); }
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ovt-subtab.active,
-:is(.ov-amzn-dd, .ov-tsm-dd, .ov-spot-dd) .ce-phtab.active {
-  color: var(--navy); font-weight: 600; border-bottom-color: var(--navy); background: none;
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .ovt-subtab:hover,
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .ce-phtab:hover { color: var(--navy); }
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .ovt-subtab.active,
+:is(.ov-amzn-dd, .ov-tsm-dd, .ov-meta-dd, .ov-spot-dd) .ce-phtab.active {
+  color: var(--navy); font-weight: 600; border-bottom-color: var(--steel); background: none;
 }

@@ -527,10 +527,14 @@ function stdKeyFacts(){
 function stdFourQuad(){
   return '<div class="q2">'+STD_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
 }
+// Neutral light greys, ranked by size (css/overview.css .gmm-neutral) — the colour field r[4] is ignored.
+function gmmRank(arr){ var o=arr.map(function(r,i){ return [r[1],i]; }).sort(function(a,b){ return b[0]-a[0]; }), rk=[];
+  o.forEach(function(x,j){ rk[x[1]]=Math.min(j+1,6); }); return rk; }
 function gmmBars(arr){
-  return '<div class="ov-mbars">'+arr.map(function(r){
+  var rk=gmmRank(arr);
+  return '<div class="ov-mbars gmm-neutral">'+arr.map(function(r,i){
     return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+'</div>'+
-      '<div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+Math.max(r[1],1.2)+'%;background:'+r[4]+';">'+esc(r[2])+'</div></div>'+
+      '<div class="ov-mbar-track"><div class="ov-mbar-fill gmm-g'+rk[i]+'" style="width:'+Math.max(r[1],1.2)+'%">'+esc(r[2])+'</div></div>'+
       '<div class="ov-mbar-v">'+esc(r[3])+'</div></div>';
   }).join('')+'</div>';
 }
@@ -565,7 +569,7 @@ function stdOverviewBody(c){
     '.q2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--bdr);border-radius:12px;overflow:hidden;background:var(--w);margin:4px 0}'+
     '.q2-cell{padding:13px 15px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
     '.q2-cell:nth-child(2n){border-right:none}.q2-cell:nth-child(n+3){border-bottom:none}'+
-    '.q2-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:'+BRAND2+';margin-bottom:5px}'+
+    '.q2-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);margin-bottom:5px}'+
     '.q2-v{font-size:12px;color:var(--navy);line-height:1.5}.q2-v b{font-weight:800}'+
     '@media(max-width:600px){.q2{grid-template-columns:1fr}.q2-cell{border-right:none}.q2-cell:nth-child(n+2){border-bottom:1px solid var(--bdr)}.q2-cell:last-child{border-bottom:none}}'+
     '.acc-list .acc{border:1px solid var(--bdr);border-radius:9px;margin-top:6px;overflow:hidden;background:var(--w)}'+

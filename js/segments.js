@@ -41,11 +41,14 @@ import { tsmSegments } from './segments-data/tsm.js';
 import { tsmResults } from './results-data/tsm.js';
 import { spotSegments } from './segments-data/spot.js';
 import { spotResults } from './results-data/spot.js';
+import { metaSegments } from './segments-data/meta.js';
+import { metaResults } from './results-data/meta.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
 import { SN_THEMES } from './themes-data/sn.js';
 import { TSM_THEMES } from './themes-data/tsm.js';
 import { SPOT_THEMES } from './themes-data/spot.js';
+import { META_THEMES } from './themes-data/meta.js';
 import { SUMMIT_CAT, SUMMIT_MUTE } from './viz-palette.js';   // the portal's fixed categorical palette
 
 // The Notes taxonomy names segments in prose; the datasets key them. One map, stated once.
@@ -54,8 +57,9 @@ var THEME_SEG = {
   SN: { 'SharkNinja': 'sn' },
   TSM: { 'AI & HPC demand': 'hpc', 'Consumer & smartphone': 'smart' },   // the other TSM themes are company-wide
   SPOT: { 'Pricing & ARPU': 'prem', 'Royalties & legal': 'prem', 'Advertising': 'ads', 'Users & subscribers': 'ads' },   // the free tier is the funnel; the other SPOT themes are company-wide
+  META: { 'Family of Apps': 'foa', 'Reality Labs': 'rl' },               // AI & compute, Costs & capital are company-wide
 };
-var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES };
+var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES, META: META_THEMES };
 var SEGMENTS_DATA = {
   AMZN: { seg: amznSegments, res: amznResults },
   DHR:  { seg: dhrSegments,  res: dhrResults  },
@@ -67,7 +71,9 @@ var SEGMENTS_DATA = {
   // Oct 15 2026) and the General tab quotes the 20-F so they are not read as reportable segments.
   TSM:  { seg: tsmSegments, res: tsmResults },
   // SPOT: two reportable segments (Premium, Ad-Supported); the segment profit line is GROSS profit (no segment operating income).
-  SPOT: { seg: spotSegments, res: spotResults }
+  SPOT: { seg: spotSegments, res: spotResults },
+  // META: two reportable segments (Family of Apps, Reality Labs), 10-K Note 15.
+  META: { seg: metaSegments, res: metaResults }
 };
 
 export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }
@@ -1334,7 +1340,7 @@ function ovCards(d, view){
     var dd = spec && spec.from ? sgResolve(spec.from, view) : null;
     var last = null, base = null, lp = null;
     if (dd){
-      // The card is the last REPORTED period (playbook TL-GEN, as on the META branch); a forecast only when nothing is reported.
+      // The card is the last REPORTED period (playbook §10 TL-GEN); a forecast only when nothing is reported.
       var have = ps.filter(function(p){ return dd.act[p] != null; });
       if (!have.length) have = ps.filter(function(p){ return dd.est[p] != null; });
       lp = have[have.length - 1];

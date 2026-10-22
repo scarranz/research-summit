@@ -29,6 +29,7 @@ import {
   HS_DEP_YEARS, HS_DEP_MODEL, HS_DEP_COGS, HS_LIVES, HS_LIVES_FLAG, HS_GW_MSFT_FY,
   HS_CSP_QTRS, HS_CSP_REV, HS_CSP_OI, HS_CSP_NOTES,
   HS_THEME_QTRS, HS_THEMES,
+  HS_GW_SPCX_TOTAL, HS_GW_SPCX_NOTES, HS_SPCX_SI_CAPEX,
 } from './hyperscalers-data.js';
 
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -203,6 +204,15 @@ var guideBand = {
   },
 };
 
+// SpaceX's CapEx tab bars are total company; this appends the Super
+// Intelligence slice so the AI share travels with every number.
+function siNote(cid, year, q){
+  if (cid !== 'spcx') return '';
+  var tot = HS_YEAR_QTRS.spcx[year][q], si = HS_SPCX_SI_CAPEX[year][q];
+  if (tot == null || si == null) return '';
+  return '  · SI $' + si.toFixed(1) + 'B (' + Math.round(si / tot * 100) + '%)';
+}
+
 // ─── Small multiples: calendar-year CapEx, stacked by quarter ─────────────────
 // One panel per company. Faceted rather than grouped because company×quarter in
 // one frame cannot be coloured safely — see HS_QTR_RAMP for the tested result.
@@ -258,7 +268,8 @@ function yearChart(id, cid){
             label: function(c){
               if (c.raw == null) return null;
               var der = HS_YEAR_DERIVED[cid][c.label][c.datasetIndex];
-              return c.dataset.label + ': $' + c.raw.toFixed(1) + 'B' + (der ? '  (derived)' : '');
+              return c.dataset.label + ': $' + c.raw.toFixed(1) + 'B' + (der ? '  (derived)' : '') +
+                siNote(cid, c.label, c.datasetIndex);
             },
             footer: function(items){
               var y = items[0].label;
@@ -376,7 +387,8 @@ function combinedYearChart(id){
               if (c.raw == null) return null;
               var cell = cells[c.dataIndex];
               var der = HS_YEAR_DERIVED[cell.cid][cell.year][c.datasetIndex];
-              return c.dataset.label + ': $' + c.raw.toFixed(1) + 'B' + (der ? '  (derived)' : '');
+              return c.dataset.label + ': $' + c.raw.toFixed(1) + 'B' + (der ? '  (derived)' : '') +
+                siNote(cell.cid, cell.year, c.datasetIndex);
             },
             footer: function(items){
               var cell = cells[items[0].dataIndex];
@@ -498,7 +510,8 @@ function ladderBody(){
         '<span class="hs-chart-u">US$B · midpoint of guided range</span></div>' +
       '<div class="hs-canvas"><canvas id="hs-ladder"></canvas></div>' +
       '<p class="hs-cap">Each marker is a guide actually stated on that call. The line crosses quarters where no annual number was given — that is visual continuity, not interpolation.' +
-      (_view.guideYear === '2025' ? ' <b>Microsoft is absent</b> because it does not guide on a calendar year; its first calendar figure is CY2026.' : '') +
+      (_view.guideYear === '2025' ? ' <b>Microsoft is absent</b> because it does not guide on a calendar year; its first calendar figure is CY2026. <b>SpaceX is absent</b> because it was private until 2Q26.' : '') +
+      (_view.guideYear === '2026' ? ' <b>SpaceX’s two points are derived and total-company</b>: it guides one quarter at a time and never by segment, so each point is the year-to-date actuals plus the quarters it guided. The October point is the only Oct ’26 call so far — the other four report 3Q26 later.' : '') +
       '</p>' +
     '</div>' +
     sec('From first guide to outcome') +
@@ -523,7 +536,7 @@ function quarterlyBody(){
       ? '<div class="hs-panel-warn">◍ ' + esc(part[Object.keys(part)[0]]) + '</div>' : '';
     return '<div class="hs-panel">' +
       '<div class="hs-panel-h">' + dot(c.id) + '<b>' + c.ticker + '</b>' +
-        '<span class="hs-panel-s">' + esc(c.name) + '</span></div>' +
+        '<span class="hs-panel-s">' + esc(c.id === 'spcx' ? 'SpaceX · total company' : c.name) + '</span></div>' +
       '<div class="hs-panel-c"><canvas id="hs-yr-' + c.id + '"></canvas></div>' + warn +
     '</div>';
   }).join('');
@@ -531,6 +544,8 @@ function quarterlyBody(){
   var yrRows = HS_COMPANIES.map(function(c){
     return [dot(c.id) + c.ticker].concat(HS_YEARS.map(function(y){
       var qs = HS_YEAR_QTRS[c.id][y];
+      // A year with no quarter at all is a gap, not a $0.0B year (SpaceX 2024).
+      if (!qs.some(function(v){ return v != null; })) return null;
       var tot = qs.reduce(function(a, v){ return a + (v || 0); }, 0);
       var g = HS_YEAR_GUIDE[c.id][y];
       var gs = g ? (g[0] === g[1] ? '~$' + g[0] + 'B' : '$' + g[0] + '–' + g[1] + 'B') : '—';
@@ -554,10 +569,11 @@ function quarterlyBody(){
       '</div>' +
       body +
       (one ? '<p class="hs-cap">In this view colour carries the <b>quarter</b>, not the company — the ticker under each column carries identity. Company hue and quarter shade cannot share one frame: tested both ways, AMZN blue and MSFT violet land at ΔE 0.1–0.3 under deuteranopia at every shade. Switch to “one panel each” to get the company colours back.</p>' : '') +
-      '<p class="hs-cap"><b>2026 is two quarters in</b> — the washed column holds only 1Q and 2Q actuals, with the guidance range drawn as the dashed band above them. ' +
+      '<p class="hs-cap"><b>2026 is two quarters in</b> (three for SpaceX, which reported 3Q26 on October 20) — the washed column holds only the actuals so far, with the guidance range drawn as the dashed band above them. ' +
+      '<b>SpaceX is total company here</b> — the same basis as the other four and the only level it guides at. Its 2026 band ($83–88B) is derived: three reported quarters plus the $35–40B it guided for 4Q. Hover any SpaceX bar for the Super Intelligence slice (84–86% in 2Q–3Q26). ' +
       'For closed years the band shows where the final guide sat, so you can see the bar land inside it. ' +
       '<b>2023 is not shown:</b> no Amazon, Alphabet or Meta call in the corpus predates April 2024, so three of the four would be empty columns. ' +
-      'Four quarters are derived rather than stated (Amazon 2Q24/3Q24/4Q25, Meta 1Q25) — marked in the tooltip and listed in the data file.</p>' +
+      'Six quarters are derived rather than stated (Amazon 2Q24/3Q24/4Q25, Meta 1Q25, SpaceX 2Q25/4Q25) — marked in the tooltip and listed in the data file.</p>' +
       table(yrRows, [''].concat(HS_YEARS)) +
     '</div>' +
     sec('Every reported quarter') +
@@ -565,9 +581,9 @@ function quarterlyBody(){
       '<div class="hs-chart-head"><span class="hs-chart-t">Reported CapEx by quarter</span>' +
         '<span class="hs-chart-u">US$B · calendar axis</span></div>' +
       '<div class="hs-canvas"><canvas id="hs-qtr"></canvas></div>' +
-      '<p class="hs-cap">Gaps are gaps: the call gave no figure (Alphabet 2Q24 is not in the corpus). Nothing is interpolated.</p>' +
+      '<p class="hs-cap">Gaps are gaps: the call gave no figure (Alphabet 2Q24 is not in the corpus). Nothing is interpolated. SpaceX starts in 2025 (total-company CapEx from its S-1 and releases) and is alone in the Oct ’26 column until the other four report 3Q26.</p>' +
     '</div>' +
-    sec('Why these four series cannot be stacked') +
+    sec('Why these five series cannot be stacked') +
     '<div class="hs-card hs-card--warn"><ul class="hs-src">' + basis + '</ul></div>' +
     sec('Table') +
     '<div class="hs-card">' + table(rows, [''].concat(LABELS)) + '</div>';
@@ -737,8 +753,11 @@ function depreciationBody(){
 // plot to window periods, drag on the y-axis strip to set the value range,
 // double-click to reset). Growth and margin are computed from revenue and
 // operating income rather than stored, so no view can disagree with another.
-var CSP_LABEL = { googl: 'Google Cloud', amzn: 'AWS', msft: 'Intelligent Cloud' };
-var CSP_IDS = ['googl', 'amzn', 'msft'];
+// SpaceX's Super Intelligence segment rides along as a fourth series (Oct 2026):
+// it is mostly GPU rental plus X and Grok, so it is a peer on the question "what
+// does the compute earn", not a like-for-like cloud segment.
+var CSP_LABEL = { googl: 'Google Cloud', amzn: 'AWS', msft: 'Intelligent Cloud', spcx: 'SpaceX SI' };
+var CSP_IDS = ['googl', 'amzn', 'msft', 'spcx'];
 
 // Complete calendar years only. Q4'19 stands alone and 2026 has two quarters, so
 // neither forms a year; Microsoft's restated series starts Q3'22, so its 2022 is
@@ -1116,13 +1135,14 @@ function cspBody(){
 
   return '<p class="hs-lede">The businesses the CapEx is supposed to produce, on their own history back to 2019. ' +
     'Microsoft here is <b>Intelligent Cloud</b>, the reported segment — not the non-GAAP “Microsoft Cloud” metric, which bundles M365 commercial, Dynamics and LinkedIn and carries no segment operating income. ' +
-    'All figures as reported; growth and margin computed from them.</p>' +
+    'All figures as reported; growth and margin computed from them. ' +
+    '<b>SpaceX SI</b> is SpaceX’s Super Intelligence segment (xAI, X, Grok and — since Aug 14 — Cursor), mostly renting GPU capacity: public only since 2Q26, so its history starts at Q1’25, and it is the only one with a Q3’26 column so far.</p>' +
     '<div class="hs-controls">' +
       '<div class="hs-seg">' + periods + '</div>' +
       (annual ? '' : '<div class="hs-seg">' + growth + '</div>') +
       (annual ? '' : '<div class="hs-seg">' + ranges + '</div>') +
     '</div>' +
-    (annual ? '<p class="hs-note" style="margin-bottom:14px">Complete calendar years only. Q4’19 stands alone and 2026 has just two quarters, so neither forms a year; Microsoft’s restated series starts Q3’22, so its 2022 is short and shows as blank rather than a misleading part-year.</p>' : '') +
+    (annual ? '<p class="hs-note" style="margin-bottom:14px">Complete calendar years only. Q4’19 stands alone and 2026 is still in progress, so neither forms a year; Microsoft’s restated series starts Q3’22, so its 2022 is short and shows as blank rather than a misleading part-year. SpaceX SI has one complete year, 2025.</p>' : '') +
     cspSection(CSP_TOP) +
     cspSection(CSP_BOT) +
     sec('What the segments say') +
@@ -1140,15 +1160,39 @@ function cspCharts(){
 // every panel says so. All four names are now modelled (Microsoft was added to
 // the DCF workbook in Aug 2026) — but Microsoft is on a fiscal year, so its 2026
 // bar is a REPORTED year against three estimates. See HS_GW_MSFT_FY.
-function gwChart(id){
+//
+// Two views of the same series, one chart builder so they cannot drift apart:
+//   'add'   — GW added in the year (the model's output; SpaceX = change in its
+//             reported year-end nameplate)
+//   'total' — GW installed at year-end. For the four modelled names that is the
+//             running sum of modelled adds since 2018 — no pre-2018 base, no
+//             retirements — so read it as "AI-era capacity built", not a census
+//             of every data hall. SpaceX's is its own reported nameplate.
+var GW_IDS = ['amzn', 'googl', 'meta', 'msft', 'spcx'];
+
+function gwTotals(cid){
+  if (cid === 'spcx') return HS_GW_SPCX_TOTAL;
+  var run = 0;
+  return HS_GW_ADDS[cid].map(function(v){ run += v; return run; });
+}
+
+function gwAdds(cid){
+  if (cid !== 'spcx') return HS_GW_ADDS[cid];
+  return HS_GW_SPCX_TOTAL.map(function(v, i){
+    return v == null ? null : v - (HS_GW_SPCX_TOTAL[i - 1] || 0);
+  });
+}
+
+function gwChart(id, kind){
   var el = document.getElementById(id);
   if (!el || !el.offsetParent) return;
   if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
   var fwd = HS_GW_YEARS.indexOf('2026E');
+  var total = kind === 'total';
   _charts[id] = new Chart(el.getContext('2d'), {
     type: 'bar',
-    data: { labels: HS_GW_YEARS, datasets: ['amzn', 'googl', 'meta', 'msft'].map(function(cid){
-      return { label: co(cid).ticker, data: HS_GW_ADDS[cid],
+    data: { labels: HS_GW_YEARS, datasets: GW_IDS.map(function(cid){
+      return { label: co(cid).ticker, data: total ? gwTotals(cid) : gwAdds(cid),
                backgroundColor: co(cid).color, borderRadius: { topLeft: 3, topRight: 3 } };
     }) },
     options: {
@@ -1162,12 +1206,19 @@ function gwChart(id){
         tooltip: {
           backgroundColor: '#1E2733', padding: 9, cornerRadius: 6, boxWidth: 8, boxHeight: 8,
           titleFont: { size: 11, family: 'Inter' }, bodyFont: { size: 11, family: 'Inter' },
+          filter: function(c){ return c.raw != null; },
           callbacks: {
             label: function(c){
               var cid = c.dataset.label.toLowerCase();
-              var i = c.dataIndex, s = HS_GW_SPLIT[cid];
-              return c.dataset.label + ': ' + c.raw.toFixed(2) + ' GW' +
-                '  (shell ' + s.infra[i].toFixed(2) + ' / silicon ' + s.chips[i].toFixed(2) + ')';
+              var i = c.dataIndex, yr = HS_GW_YEARS[i];
+              var head = c.dataset.label + ': ' + c.raw.toFixed(2) + ' GW';
+              if (cid === 'spcx'){
+                var n = HS_GW_SPCX_NOTES[yr];
+                return head + (n ? '  (' + n + ')' : '  (reported)');
+              }
+              if (total) return head + '  (+' + HS_GW_ADDS[cid][i].toFixed(2) + ' added)';
+              var s = HS_GW_SPLIT[cid];
+              return head + '  (shell ' + s.infra[i].toFixed(2) + ' / silicon ' + s.chips[i].toFixed(2) + ')';
             },
           },
         },
@@ -1279,7 +1330,8 @@ function capacityBody(){
   });
 
   return '<p class="hs-lede">How much capacity the spend actually buys, and what a gigawatt costs. ' +
-    'This tab is built from the Summit model — the CapEx/D&amp;A tabs inside the live DCFs (<code>CapEx D&amp;A DCFs.xlsx</code>) plus the unit-economics workbook — not from company disclosure. It works backwards from reported PP&amp;E additions to infer the gigawatts behind them. <b>All four are now modelled</b> — Microsoft was added to the workbook in August 2026, so this tab no longer has a hole in it. ⚠ Microsoft reports on a <b>June fiscal year</b>, so its 2026 column is a closed, reported year while the other three are still estimates; every panel that matters says so.</p>' +
+    'This tab is built from the Summit model — the CapEx/D&amp;A tabs inside the live DCFs (<code>CapEx D&amp;A DCFs.xlsx</code>) plus the unit-economics workbook — not from company disclosure. It works backwards from reported PP&amp;E additions to infer the gigawatts behind them. <b>All four are now modelled</b> — Microsoft was added to the workbook in August 2026, so this tab no longer has a hole in it. ⚠ Microsoft reports on a <b>June fiscal year</b>, so its 2026 column is a closed, reported year while the other three are still estimates; every panel that matters says so. ' +
+    '<b>SpaceX (xAI) is on the two GW charts</b> as the fifth builder — but it is <i>not</i> modelled: its bars are the nameplate compute it reports, and its forward years are management’s own targets.</p>' +
 
     sec('Capacity added per year') +
     '<div class="hs-card">' +
@@ -1287,11 +1339,25 @@ function capacityBody(){
         '<span class="hs-chart-u">gigawatts · 2026E–28E modelled</span></div>' +
       '<div class="hs-canvas"><canvas id="hs-gw"></canvas></div>' +
       '<p class="hs-cap">Hover for the shell/silicon split of each year. <b>The model checks out against the tape:</b> it puts Amazon at 3.88 GW added in 2025, and on the 4Q25 call Jassy said 3.99 GW over the trailing twelve months — a 3% gap on a number derived entirely from the balance sheet. ' +
-      'Note the shape: Alphabet was the <i>smallest</i> of the four as recently as 2020 and is modelled to add more than Meta from 2026.</p>' +
+      'Note the shape: Alphabet was the <i>smallest</i> of the four as recently as 2020 and is modelled to add more than Meta from 2026. ' +
+      'SpaceX’s bars are the year-on-year change in its <b>reported</b> nameplate, not a model output — so no shell/silicon split. Its 2027E bar (+10.25 GW, more than anyone) rests entirely on Musk’s “highly confident of 10 gigawatts incremental” from the 3Q26 call; its 2028E bar (+10 GW) is <b>our assumption</b> that the 2027 pace holds — SpaceX has said nothing about 2028.</p>' +
       '<div class="hs-card hs-card--warn" style="margin-top:10px"><div class="hs-lbl">Microsoft’s 2026 bar is not like the others</div>' +
       '<p class="hs-body">' + HS_GW_MSFT_FY.note + '</p></div>' +
       '<div class="hs-inset" style="margin-top:10px"><div class="hs-lbl">Two vintages, one reconciliation to do</div>' +
       '<p class="hs-body">The DCF tabs and the standalone capacity workbook disagree: Amazon 2026 is 6.52 GW here against 6.03 GW there (the DCF carries the raised ~$220B guide, the older file still had $205B), and Meta 2025 is 1.87 GW against 2.05 GW on identical capex — a cost-per-GW difference between the two builds, not a spend one. The DCF numbers are shown because they are the current vintage and the only ones covering Alphabet.</p></div>' +
+    '</div>' +
+
+    sec('Total capacity at year-end') +
+    '<div class="hs-card">' +
+      '<div class="hs-chart-head"><span class="hs-chart-t">Total GW of capacity</span>' +
+        '<span class="hs-chart-u">gigawatts at year-end · 2026E–28E modelled · SpaceX reported</span></div>' +
+      '<div class="hs-canvas"><canvas id="hs-gw-total"></canvas></div>' +
+      '<p class="hs-cap">Hover for what each year added. For the four hyperscalers the total is the <b>running sum of the modelled adds since 2018</b> — it carries no pre-2018 base and retires nothing, so read it as the AI-era capacity each one has built rather than a census of every data hall. ' +
+      '<b>It squares with what Amazon guided:</b> 13.6 GW at end-2025 doubling to 28.3 GW by end-2027 is the “double overall capacity by the end of 2027” Jassy gave in October 2025. Microsoft’s “roughly double the footprint in two years” is more conservative than its model, which goes 5.9 → 14.2 GW (2.4×) from FY25 to FY27. ' +
+      'SpaceX is its own disclosure: 0.3 GW at end-2024, 0.8 GW at end-2025, 2.5–3 GW guided for end-2026 (midpoint shown) and Musk’s 13 GW for end-2027 — which would put it level with Meta (14.5) and Microsoft (14.2) in two years, from a standing start in 2023. ' +
+      'For 2028 we <b>assume</b> another +10 GW (the 2027 pace held flat, not company guidance): 23 GW would put SpaceX second only to Amazon (38.5), just ahead of Alphabet (23.0) and Microsoft (20.0).</p>' +
+      '<div class="hs-card hs-card--warn" style="margin-top:10px"><div class="hs-lbl">Two kinds of number on one axis</div>' +
+      '<p class="hs-body">Both sides measure IT load — the model sizes a gigawatt as accelerators × their draw, and SpaceX’s “Nameplate Compute Draw” is GPUs installed × all-in draw, excluding cooling and facility overhead (S-1) — so the bars are comparable in kind. They are not comparable in confidence: the hyperscaler bars are inferred from capex, SpaceX’s 2027E is a CEO’s floor (his stretch plan is ≈23 GW), and Microsoft’s columns are fiscal years ending in June. SpaceX’s 2028E is a Summit assumption (+10 GW on 2027), not anything the company has said.</p></div>' +
     '</div>' +
 
     sec('What a gigawatt costs') +
@@ -1376,6 +1442,7 @@ function themesBody(){
       '<p class="hs-cap"><b>Quarters covered on this theme:</b> ' + counts + '. ' +
       'A blank cell means the theme did not come up on that call in a way worth recording — not that the company said nothing at all. ' +
       'Alphabet has no 2Q24 row anywhere, because that call is not in the corpus. ' +
+      'SpaceX starts at 1Q26, where the cell is its S-1 (a prospectus, not a call); 2Q26 and 3Q26 are its August and October calls, and the 3Q26 row is SpaceX alone until the other four report. ' +
       'Quoted fragments are verbatim; the connective text is compression.</p>' +
     '</div>';
 }
@@ -1394,7 +1461,7 @@ var TABS = [
 function html(){
   var h = '<div class="hs">';
   h += '<div class="hs-head"><div class="hs-h-title">Hyperscaler AI CapEx &amp; Guidance</div>' +
-    '<div class="hs-h-sub">Amazon · Alphabet · Meta · Microsoft — every revision dated to the call that made it, 2024–2026</div></div>';
+    '<div class="hs-h-sub">Amazon · Alphabet · Meta · Microsoft · SpaceX (Super Intelligence) — every revision dated to the call that made it, 2024–2026</div></div>';
   h += '<div class="hs-tabs">' + TABS.map(function(t, i){
     return '<button type="button" class="hs-tab' + (i === 0 ? ' active' : '') + '" data-ht="' + t.key + '">' +
       esc(t.label) + '</button>';
@@ -1433,7 +1500,8 @@ function buildFor(key){
     else HS_COMPANIES.forEach(function(c){ yearChart('hs-yr-' + c.id, c.id); });
   }
   if (key === 'cap'){
-    gwChart('hs-gw');
+    gwChart('hs-gw', 'add');
+    gwChart('hs-gw-total', 'total');
   }
 }
 

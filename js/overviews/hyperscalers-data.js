@@ -25,6 +25,20 @@ export var HS_COMPANIES = [
   { id: 'googl', ticker: 'GOOGL', name: 'Alphabet',  color: '#eb6834', fy: 'Calendar' },
   { id: 'meta',  ticker: 'META',  name: 'Meta',      color: '#1baf7a', fy: 'Calendar' },
   { id: 'msft',  ticker: 'MSFT',  name: 'Microsoft', color: '#4a3aa7', fy: 'Fiscal Jun' },
+  // SpaceX's SUPER INTELLIGENCE segment (xAI + X + Cursor; "AI" until 3Q26) on the
+  // CSP and capacity tabs — but TOTAL COMPANY on the Ladder and Quarterly CapEx
+  // tabs, the only level SpaceX guides CapEx at (SAB, Oct 21 2026). Added Oct 2026. Public since 2Q26, so its history is
+  // short and starts in the 1Q26 column (the S-1). Green = slot 6 of the data-viz
+  // palette, validated as the fifth series: adjacent pairs pass (worst CVD ΔE 9.2,
+  // normal 27.6) and all-pairs normal vision passes (worst 15.6, green↔aqua).
+  // Red was rejected — ΔE 7.1 against Alphabet's orange with full colour vision.
+  //
+  // SOURCES are not the `hyperscalers/` corpus: S-1 (May 20 2026), the 2Q26 and
+  // 3Q26 earnings releases (SEC EX-99.1), and the 2Q26 (Aug 4) and 3Q26 (Oct 20)
+  // call transcripts as published by The Motley Fool — which flags itself as
+  // partly LLM-assisted, so quoted fragments should be checked against the audio
+  // before they are quoted outside the portal.
+  { id: 'spcx',  ticker: 'SPCX',  name: 'SpaceX · Super Intelligence', color: '#008300', fy: 'Calendar' },
 ];
 
 // The calls, in calendar order. `msft` names the fiscal quarter that lands here.
@@ -39,6 +53,9 @@ export var HS_VINTAGES = [
   { key: '25q4', label: "Jan '26", calls: '4Q25', msft: 'FY26Q2' },
   { key: '26q1', label: "Apr '26", calls: '1Q26', msft: 'FY26Q3' },
   { key: '26q2', label: "Jul '26", calls: '2Q26', msft: 'FY26Q4' },
+  // Added Oct 21 2026 for SpaceX's 3Q26 call (Oct 20). The four had not reported
+  // 3Q26 yet, so their cells in this column are null until they do.
+  { key: '26q3', label: "Oct '26", calls: '3Q26', msft: 'FY27Q1' },
 ];
 
 // ── 1 · THE GUIDANCE LADDER ───────────────────────────────────────────────────
@@ -51,17 +68,19 @@ export var HS_GUIDE = [
     label: 'CY2025 CapEx',
     blurb: 'The first full year of the race. Nobody guided down. Alphabet raised three times and finished 22% above where it started.',
     series: {
-      //        Apr24  Jul24  Oct24  Jan25  Apr25  Jul25  Oct25  Jan26  Apr26  Jul26
-      googl: [  null,  null,  null,  75,    75,    85,    92,    null,  null,  null ],
-      amzn:  [  null,  null,  null,  105,   null,  null,  125,   null,  null,  null ],
-      meta:  [  null,  null,  null,  62.5,  68,    69,    71,    null,  null,  null ],
-      msft:  [  null,  null,  null,  null,  null,  null,  null,  null,  null,  null ],
+      //        Apr24  Jul24  Oct24  Jan25  Apr25  Jul25  Oct25  Jan26  Apr26  Jul26  Oct26
+      googl: [  null,  null,  null,  75,    75,    85,    92,    null,  null,  null,  null ],
+      amzn:  [  null,  null,  null,  105,   null,  null,  125,   null,  null,  null,  null ],
+      meta:  [  null,  null,  null,  62.5,  68,    69,    71,    null,  null,  null,  null ],
+      msft:  [  null,  null,  null,  null,  null,  null,  null,  null,  null,  null,  null ],
+      spcx:  [  null,  null,  null,  null,  null,  null,  null,  null,  null,  null,  null ],
     },
     resolve: {
       googl: { first: 75,   last: 92,   actual: 91.4, src: 'Opening guide on the 4Q24 call ("approximately $75 billion"); $85B at 2Q25; $91–93B at 3Q25; the $91.4B actual was confirmed on the 4Q25 call.' },
       amzn:  { first: 105,  last: 125,  actual: 125,  d: true, src: 'The 4Q24 guide was not an annual number: Olsavsky gave "$26.3B a quarter… reasonably representative", which implies ~$105B (derived). The explicit annual figure ($125B) only arrived on the 3Q25 call.' },
       meta:  { first: 62.5, last: 71,   actual: 71,   src: 'Range $60–65B (4Q24) → $64–72B (1Q25) → $66–72B (2Q25) → $70–72B (3Q25). Midpoint plotted.' },
       msft:  { first: null, last: null, actual: 118,  d: true, src: 'Microsoft does not guide on a calendar year. The $118B is the SUM of its four stated calendar-2025 quarters ($21.4 + $24.2 + $34.9 + $37.5B), finance leases included. Derived, not stated.' },
+      spcx:  { first: null, last: null, actual: 20.7, src: 'Private in 2025, so no guide. $20.7B is <b>total-company</b> FY2025 CapEx from the S-1 (Space $3.8B + Connectivity $4.2B + AI $12.7B) — the AI segment alone was $12.7B.' },
     },
   },
   {
@@ -69,17 +88,24 @@ export var HS_GUIDE = [
     label: 'CY2026 CapEx',
     blurb: 'The step change. All four raise again — and the only line that falls does so because of an accounting change, not less investment.',
     series: {
-      //        Apr24  Jul24  Oct24  Jan25  Apr25  Jul25  Oct25  Jan26  Apr26  Jul26
-      googl: [  null,  null,  null,  null,  null,  null,  null,  180,   185,   200  ],
-      amzn:  [  null,  null,  null,  null,  null,  null,  null,  200,   null,  220  ],
-      meta:  [  null,  null,  null,  null,  null,  null,  null,  125,   135,   137.5],
-      msft:  [  null,  null,  null,  null,  null,  null,  null,  null,  190,   175  ],
+      //        Apr24  Jul24  Oct24  Jan25  Apr25  Jul25  Oct25  Jan26  Apr26  Jul26  Oct26
+      googl: [  null,  null,  null,  null,  null,  null,  null,  180,   185,   200,   null ],
+      amzn:  [  null,  null,  null,  null,  null,  null,  null,  200,   null,  220,   null ],
+      meta:  [  null,  null,  null,  null,  null,  null,  null,  125,   135,   137.5, null ],
+      msft:  [  null,  null,  null,  null,  null,  null,  null,  null,  190,   175,   null ],
+      // SpaceX guides a QUARTER, never a year, and only at TOTAL-COMPANY level
+      // (no Super Intelligence split). Both points are derived:
+      //   Jul26 65.3 = 1Q 10.1 + 2Q 18.4 + 2 × 18.4 ("the next 2 quarters are
+      //               very similar to the current quarter", CFO, 2Q26 call)
+      //   Oct26 85.6 = 1Q 10.1 + 2Q 18.4 + 3Q 19.6 + 4Q guide $35–40B midpoint
+      spcx:  [  null,  null,  null,  null,  null,  null,  null,  null,  null,  65.3,  85.6 ],
     },
     resolve: {
       googl: { first: 180, last: 200, actual: null, src: '$175–185B (4Q25) → $180–190B (1Q26, now including Intersect) → $195–205B (2Q26). Midpoint plotted.' },
       amzn:  { first: 200, last: 220, actual: null, src: '"About $200 billion" (4Q25) → "approximately $220 billion" (2Q26). Jassy attributes the raise to higher memory cost.' },
       meta:  { first: 125, last: 137.5, actual: null, src: '$115–135B (4Q25) → $125–145B (1Q26) → $130–145B (2Q26, floor raised). Midpoint plotted.' },
       msft:  { first: 190, last: 175, actual: null, flag: 'accounting', src: '⚠ ~$190B (FY26Q3, including ~$25B of higher component pricing) → ~$175B (FY26Q4). The drop is NOT less investment: extending data-centre useful life from 15 to 25 years pushes more leases from finance to operating, and operating leases are not CapEx. Hood: "outside of this useful life impact, our calendar year 2026 CapEx investment expectations remain unchanged."' },
+      spcx:  { first: 65.3, last: 85.6, actual: null, d: true, src: '⚠ <b>Total company, derived from quarterly guides</b> — SpaceX never states a full year and never splits CapEx by segment. Aug: the next two quarters “very similar to the current quarter” ($18.4B) → ~$65B. Oct: 4Q raised to <b>$35–40B</b> — “SI infrastructure continuing to come online at Memphis and Southaven gives us visibility into an accelerated build path” → ~$86B ($83–88B). Super Intelligence was 86% and 84% of total CapEx in 2Q and 3Q26.' },
     },
   },
 ];
@@ -88,10 +114,29 @@ export var HS_GUIDE = [
 // US$B, as stated on that quarter's call. Definitions differ by company — see
 // HS_BASIS. null = not stated on any call in the corpus.
 export var HS_QUARTERLY = {
-  googl: [12.0, null, 13.0, 14.0, 17.2, 22.4, 24.0, 27.9, 35.7, 44.9],
-  amzn:  [14.0, null, null, 26.3, 24.3, 31.4, 34.2, null, 43.2, 53.1],
-  meta:  [6.7,  8.5,  9.2,  14.8, null, 17.0, 19.4, 22.1, 19.8, 31.1],
-  msft:  [14.0, 19.0, 20.0, 22.6, 21.4, 24.2, 34.9, 37.5, 31.9, 41.0],
+  googl: [12.0, null, 13.0, 14.0, 17.2, 22.4, 24.0, 27.9, 35.7, 44.9, null],
+  amzn:  [14.0, null, null, 26.3, 24.3, 31.4, 34.2, null, 43.2, 53.1, null],
+  meta:  [6.7,  8.5,  9.2,  14.8, null, 17.0, 19.4, 22.1, 19.8, 31.1, null],
+  msft:  [14.0, 19.0, 20.0, 22.6, 21.4, 24.2, 34.9, 37.5, 31.9, 41.0, null],
+  // TOTAL-COMPANY CapEx (SAB, Oct 21 2026: same basis as the other four, and the
+  // only level SpaceX guides at, so the guide band can sit on the bars). Sum of
+  // the three segments = purchases of PP&E. Super Intelligence share in
+  // HS_SPCX_SI_CAPEX.
+  //   1Q25 4.1  S-1 ($4,140M)          3Q25 6.9  3Q26 release ($6,880M)
+  //   2Q25 2.8  DERIVED: 9M25 $13,846M − 1Q $4,140M − 3Q $6,880M = $2,826M
+  //   4Q25 6.9  DERIVED: FY25 $20,737M (S-1) − 9M25 $13,846M = $6,891M
+  //   1Q26 10.1 S-1 ($10,107M)  2Q26 18.4 ($18,369M)  3Q26 19.6 ($19,593M)
+  // 2024 is null: the S-1 gives 2024 as a full year only.
+  spcx:  [null, null, null, null, 4.1,  2.8,  6.9,  6.9,  10.1, 18.4, 19.6],
+};
+
+// SpaceX's Super Intelligence segment CapEx inside those totals, US$B, exact —
+// carried into the tooltips so the AI share is never lost. Same derivations:
+// 2Q25 = 9M $8,077M − $2,567M − $4,760M; 4Q25 = FY $12,727M − 9M $8,077M.
+export var HS_SPCX_SI_CAPEX = {
+  '2024': [null, null, null, null],
+  '2025': [2.567, 0.750, 4.760, 4.650],
+  '2026': [7.723, 15.828, 16.444, null],
 };
 
 // ── 2b · CALENDAR-YEAR CAPEX, SPLIT BY QUARTER ────────────────────────────────
@@ -119,6 +164,9 @@ export var HS_YEAR_QTRS = {
   amzn:  { '2024': [14.0, 16.5, 21.4, 26.3], '2025': [24.3, 31.4, 34.2, 35.1], '2026': [43.2, 53.1, null, null] },
   meta:  { '2024': [6.7,  8.5,  9.2,  14.8], '2025': [12.5, 17.0, 19.4, 22.1], '2026': [19.8, 31.1, null, null] },
   msft:  { '2024': [14.0, 19.0, 20.0, 22.6], '2025': [21.4, 24.2, 34.9, 37.5], '2026': [31.9, 41.0, null, null] },
+  // Total company, exact $M ÷ 1000 rather than the rounded HS_QUARTERLY figures,
+  // so 2025 sums to the S-1's $20.7B and 2026 YTD to $48.1B with no rounding drift.
+  spcx:  { '2024': [null, null, null, null], '2025': [4.140, 2.826, 6.880, 6.891], '2026': [10.107, 18.369, 19.593, null] },
 };
 
 // true = that quarter is derived, not stated.
@@ -127,10 +175,14 @@ export var HS_YEAR_DERIVED = {
   amzn:  { '2024': [false, true,  true,  false], '2025': [false, false, false, true ], '2026': [false, false, false, false] },
   meta:  { '2024': [false, false, false, false], '2025': [true,  false, false, false], '2026': [false, false, false, false] },
   msft:  { '2024': [false, false, false, false], '2025': [false, false, false, false], '2026': [false, false, false, false] },
+  spcx:  { '2024': [false, false, false, false], '2025': [false, true,  false, true ], '2026': [false, false, false, false] },
 };
 
 // Company-years where a quarter is missing and underivable — the bar understates.
-export var HS_YEAR_PARTIAL = { googl: { '2024': '2Q24 never disclosed on any call in the corpus — this bar is 3 of 4 quarters.' } };
+export var HS_YEAR_PARTIAL = {
+  googl: { '2024': '2Q24 never disclosed on any call in the corpus — this bar is 3 of 4 quarters.' },
+  spcx:  { '2024': 'Total company. No 2024 quarters (private until 2Q26). The 2026 band is derived from the 4Q guide; hover for the Super Intelligence share.' },
+};
 
 // Full-year guidance range as most recently stated, [lo, hi]; lo === hi for a
 // point guide. null where the company gave no full-year number for that year.
@@ -139,6 +191,10 @@ export var HS_YEAR_GUIDE = {
   amzn:  { '2024': [75, 75],  '2025': [125, 125], '2026': [220, 220] },
   meta:  { '2024': [38, 40],  '2025': [70, 72],   '2026': [130, 145] },
   msft:  { '2024': null,      '2025': null,       '2026': [175, 175] },
+  // DERIVED: SpaceX guides one quarter at a time. 2026 = 1Q–3Q actual $48,069M +
+  // the 4Q guide of $35–40B (3Q26 call) = $83.1–88.1B. Same total-company basis
+  // as the bars. Private in 2024–25, so no guide.
+  spcx:  { '2024': null,      '2025': null,       '2026': [83.1, 88.1] },
 };
 
 // Quarter ramps: one ordinal lightness ramp per company hue, Q1 lightest → Q4
@@ -157,6 +213,9 @@ export var HS_QTR_RAMP = {
   googl: ['#fe8e66', '#eb6834', '#cb4b0b', '#a33800'],
   meta:  ['#48cc95', '#1caf7a', '#009163', '#04724e'],
   msft:  ['#a7a6fe', '#8a83f7', '#7167d8', '#584cba'],
+  // Same method off #008300, but L = .74/.655/.57/.485: at .76 the light end
+  // measured 1.96:1 and failed the 2:1 floor. Passes --ordinal as shipped.
+  spcx:  ['#5dc657', '#40ab3a', '#1d901a', '#007600'],
 };
 
 // Why these four series cannot be stacked without adjustment first.
@@ -169,6 +228,8 @@ export var HS_BASIS = [
     note: '⚠ Since the Blue Owl JV (Hyperion, Louisiana), data-centre construction cost no longer enters CapEx at all: Meta contributes 20% through other investing. The BlackRock JV (El Paso, 1 GW) follows the same structure. Reported CapEx understates the capacity Meta controls.' },
   { id: 'msft',  basis: 'CapEx including finance leases',
     note: '⚠ The gap between CapEx and "cash paid for PP&E" is the finance lease, recognised in full at commencement. From FY27 the useful-life extension pushes future leases to operating, which sit OUTSIDE reported CapEx (~$15B less in CY2026 with no change in investment).' },
+  { id: 'spcx',  basis: 'Total-company CapEx, three businesses in one number',
+    note: '⚠ Like Amazon’s retail spend, not all of it is AI: Starship and Starlink satellites sit in the same total. Super Intelligence was 61% of CapEx in 2025 but 84–86% in 2Q–3Q26 — hover any bar for the split. 2Q25 and 4Q25 are derived from year-to-date totals, and the 2026 guide band is derived from the 4Q guide ($35–40B) on top of the three reported quarters.' },
 ];
 
 // ── 3 · CONTRACTED BACKLOG ────────────────────────────────────────────────────
@@ -176,10 +237,10 @@ export var HS_BASIS = [
 // Meta has none by design — it sells no contracted cloud capacity. That absence
 // is a finding, not missing data.
 export var HS_BACKLOG = {
-  googl: [null, null, null, null, null, null, 155, 240, 462, 514],
-  amzn:  [null, null, null, null, 189,  null, 200, 244, 364, 496],
-  meta:  [null, null, null, null, null, null, null, null, null, null],
-  msft:  [null, 269,  null, 298,  315,  368,  392,  625,  627,  678],
+  googl: [null, null, null, null, null, null, 155, 240, 462, 514, null],
+  amzn:  [null, null, null, null, 189,  null, 200, 244, 364, 496, null],
+  meta:  [null, null, null, null, null, null, null, null, null, null, null],
+  msft:  [null, 269,  null, 298,  315,  368,  392,  625,  627,  678, null],
 };
 
 export var HS_BACKLOG_NOTES = [
@@ -259,6 +320,41 @@ export var HS_GW_ADDS = {
 export var HS_GW_MSFT_FY = {
   id: 'msft', year: '2026E',
   note: 'Microsoft’s financial year ends 30 June, so its FY2026 is <b>closed and reported</b> while 2026 is still an estimate for the other three. The Microsoft bar in the 2026 column is the reported year — 3.08 GW off $115.9B of actual capex — not a forecast. The model’s own 2026 projection column (3.26 GW off $122.6B) was superseded by the print and is not used here.',
+};
+
+// ── SpaceX on the capacity charts ─────────────────────────────────────────────
+// SpaceX (SPCX, xAI merged in Feb 2026) is the fifth builder of AI capacity and
+// sits on both GW charts (it is in HS_COMPANIES; see the note there).
+//
+// UNLIKE the four, SpaceX is NOT modelled. Its numbers are what the company
+// reports: "Nameplate Compute Draw" = GPUs installed at period end × their
+// all-in power draw, excluding cooling and facility overhead (S-1, Key Business
+// Metrics). That is an IT-load measure, the same basis as the model's GW (chips
+// per GW × kW per chip = 1 GW), so the bars are comparable in kind — but one side
+// is a disclosure and the other a balance-sheet inference.
+//   2023 0 · 2024 0.3 · 2025 0.8      S-1 (May 2026), AI segment table, year-end
+//   2026E 2.75                        3Q26 call (Oct 20 2026), CFO Bret Johnsen:
+//                                     "nameplate compute in the range of 2.5 to
+//                                     3 gigawatts just by the end of this quarter"
+//                                     — midpoint shown, range in the tooltip
+//   2027E 13                          3Q26 call, Musk: "highly confident of 10
+//                                     gigawatts incremental next year, so 13
+//                                     total"; a plan for 20 GW incremental (≈23)
+//                                     is a stretch he called "difficult but not
+//                                     impossible". 13 is HIS floor, not a model.
+//   2028E 23                          ANALYST ASSUMPTION (SAB, Oct 21 2026), not
+//                                     company: another +10 GW in 2028, i.e. the
+//                                     2027 pace held flat. SpaceX stated nothing
+//                                     for 2028.
+// Interim prints for context: 0.6 GW (3Q25), 1.0 (1Q26), 1.4 (2Q26), 1.7 (3Q26).
+
+export var HS_GW_SPCX_TOTAL = [null, null, null, null, null, 0, 0.3, 0.8, 2.75, 13, 23];
+
+// Tooltip notes for the SpaceX cells that are not a plain print.
+export var HS_GW_SPCX_NOTES = {
+  '2026E': 'guided 2.5–3 GW by year-end (3Q26 call) — midpoint',
+  '2027E': 'Musk’s floor ("highly confident"); stretch plan ≈23 GW',
+  '2028E': 'Summit assumption: +10 GW, the 2027 pace held — not company guidance',
 };
 
 // The same GW split by which spend bucket funded it: the shell and everything
@@ -383,6 +479,8 @@ export var HS_CAPACITY_QUOTES = [
   { id: 'meta', when: "Jan '25", q: 'Expects to bring <b>almost a gigawatt online in 2025</b>, and is building a 2 GW-plus site “so big it would cover a significant part of Manhattan”.' },
   { id: 'meta', when: "Jul '25", q: 'Prometheus (1 GW+) lands in 2026; <b>Hyperion scales to 5 GW</b> over several years, with more Titan clusters in development.' },
   { id: 'meta', when: "Apr '26", q: 'Rolling out <b>more than 1 GW of its own custom silicon</b> developed with Broadcom, plus significant AMD volume alongside the new NVIDIA systems.' },
+  { id: 'spcx', when: "May '26", q: 'S-1: Colossus and Colossus II “collectively provide approximately <b>1.0 gigawatt</b> of compute power” — up from 0.3 GW at end-2024 and 0.8 GW at end-2025.' },
+  { id: 'spcx', when: "Oct '26", q: '<b>1.7 GW</b> at the end of 3Q, ~2.2 GW by end-October and <b>2.5–3 GW by year-end</b>. Musk: “highly confident of <b>10 gigawatts incremental</b> next year, so 13 total”, with a plan for 20 GW of power and cooling.' },
   { id: 'googl', when: "Oct '24", q: 'The first corporate agreement to buy nuclear power from <b>multiple small modular reactors — up to 500 MW</b> of 24/7 carbon-free power. Google reports the most efficient PUE in the industry but does not disclose GW added.' },
 ];
 
@@ -450,32 +548,46 @@ export var HS_CSP_QTRS = [
   "Q4'19", "Q1'20", "Q2'20", "Q3'20", "Q4'20", "Q1'21", "Q2'21", "Q3'21", "Q4'21",
   "Q1'22", "Q2'22", "Q3'22", "Q4'22", "Q1'23", "Q2'23", "Q3'23", "Q4'23",
   "Q1'24", "Q2'24", "Q3'24", "Q4'24", "Q1'25", "Q2'25", "Q3'25", "Q4'25",
-  "Q1'26", "Q2'26",
+  "Q1'26", "Q2'26", "Q3'26",
 ];
 
-// US$M as reported. null = not reported on the restated basis.
+// US$M as reported. null = not reported on the restated basis. Q3'26 exists for
+// SpaceX only (reported Oct 20); the other three fill in when they report.
+//
+// SPCX = the SUPER INTELLIGENCE segment (xAI + X, plus Cursor from Aug 14 2026),
+// recast by SpaceX for all periods. Q1'25 and Q1'26 from the S-1; Q3'25, Q2'26
+// and Q3'26 from the releases; Q2'25 and Q4'25 DERIVED from year-to-date totals
+// (9M25 rev 2,278 / OI −4,182; FY25 rev 3,201 / OI −6,355). The four quarters of
+// 2025 sum to the FY25 figures exactly. Q3'26 includes $608M of Cursor revenue
+// and $1,217M of Cursor-related stock comp inside operating income.
 export var HS_CSP_REV = {
   googl: [2614, 2777, 3007, 3444, 3831, 4047, 4628, 4990, 5541, 5821, 6276, 6868, 7315,
           7454, 8031, 8411, 9192, 9574, 10347, 11353, 11955, 12260, 13624, 15157, 17664,
-          20028, 24768],
+          20028, 24768, null],
   amzn:  [9954, 10219, 10808, 11601, 12742, 13503, 14809, 16110, 17780, 18441, 19739, 20538, 21378,
           21354, 22140, 23059, 24204, 25037, 26281, 27452, 28786, 29267, 30873, 33006, 35579,
-          37587, 42232],
+          37587, 42232, null],
   msft:  [null, null, null, null, null, null, null, null, null, null, null, 16885, 17926,
           18244, 19889, 20013, 21525, 22141, 23785, 24092, 25544, 26751, 29878, 30897, 32907,
-          34681, 39306],
+          34681, 39306, null],
+  spcx:  [null, null, null, null, null, null, null, null, null, null, null, null, null,
+          null, null, null, null, null, null, null, null, 727, 738, 813, 923,
+          818, 2561, 7560],
 };
 
 export var HS_CSP_OI = {
   googl: [-1194, -1730, -1426, -1208, -1243, -974, -591, -644, -890, -706, -590, -440, -186,
           191, 395, 266, 864, 900, 1172, 1947, 2093, 2177, 2826, 3594, 5313,
-          6598, 8814],
+          6598, 8814, null],
   amzn:  [2596, 3075, 3357, 3535, 3564, 4163, 4193, 4883, 5293, 6518, 5715, 5403, 5205,
           5123, 5365, 6976, 7167, 9421, 9334, 10447, 10632, 11547, 10160, 11434, 12465,
-          14161, 16621],
+          14161, 16621, null],
   msft:  [null, null, null, null, null, null, null, null, null, null, null, 6750, 6727,
           7017, 7917, 8908, 9555, 9515, 9835, 10503, 10851, 11095, 12140, 13391, 13873,
-          13753, 15955],
+          13753, 15955, null],
+  spcx:  [null, null, null, null, null, null, null, null, null, null, null, null, null,
+          null, null, null, null, null, null, null, null, -936, -1524, -1722, -2173,
+          -2469, -1257, 431],
 };
 
 export var HS_CSP_NOTES = [
@@ -484,6 +596,7 @@ export var HS_CSP_NOTES = [
   'AWS margin peaked at a record <b>39.5% in 1Q25</b>, fell to 32.9% the next quarter — roughly half seasonal stock comp, the rest depreciation on the AI fleet — and has since recovered to 39.4%. Growth troughed at 17% in mid-2025 and reached 36.8% by Q2\'26.',
   'Intelligent Cloud is the steadiest: margin has held a <b>40–43%</b> band for three years while revenue doubled. Note Q1\'26 — revenue grew 30% but operating income <i>fell</i> sequentially, the first quarter that has happened in this dataset.',
   'On absolute dollars AWS is still ahead, but Google Cloud has closed the quarterly operating-income gap from <b>$8.5B in Q1\'24 to $7.8B in Q2\'26</b> while growing off a base a third the size.',
+  'SpaceX’s <b>Super Intelligence</b> segment is not a cloud segment like the other three — it is X advertising, Grok subscriptions, Cursor and, above all, <b>renting GPU capacity</b> (“cloud services agreements”). Revenue went <b>$0.8B → $2.6B → $7.6B</b> in the three quarters to Q3\'26 and operating income turned positive ($0.4B, or ~$1.6B before $1.2B of Cursor stock comp) after losing $2.5B in Q1\'26. Its percentage growth and margin dwarf the others on these charts — click “SpaceX SI” in the legend to hide it.',
 ];
 
 // ── 6b · THE MODELLED DEPRECIATION TRAJECTORY ─────────────────────────────────
@@ -613,7 +726,11 @@ export var HS_DEP_NOTES = [
 // The quarter labels are CALENDAR quarters, so Microsoft's fiscal offset is
 // already absorbed: its FY26Q2 call sits in the 4Q25 row alongside everyone
 // else's 4Q25 call.
-export var HS_THEME_QTRS = ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26'];
+//
+// SPCX (added Oct 2026) starts at 1Q26, where the cell is the S-1 (May 2026) —
+// a prospectus, not a call. 2Q26 is the Aug 4 call, 3Q26 the Oct 20 call. The
+// 3Q26 row exists for SpaceX only until the other four report.
+export var HS_THEME_QTRS = ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26'];
 
 export var HS_THEMES = [
   {
@@ -667,6 +784,12 @@ export var HS_THEMES = [
         'Over $40B in the quarter; <b>~$190B for calendar 2026</b>, including ~$25B of higher component pricing.',
         'CY2026 restated to <b>~$175B</b> — the cut is the finance-to-operating lease shift, not less investment.',
       ],
+      spcx: [
+        '', '', '', '', '', '', '', '',
+        'S-1, no number: CapEx “will scale as quickly as we are able to deploy power and compute”, while aiming to keep an investment-grade rating.',
+        'Q2 $18.4B, $15.8B of it AI. “The next 2 quarters are very similar to the current quarter” — <b>~$65B for 2026</b> by implication.',
+        '⚠ <b>Raised: Q4 to $35–40B</b>, nearly double Q3, — “SI infrastructure continuing to come online at Memphis and Southaven gives us visibility into an accelerated build path” — <b>~$86B for 2026</b> by implication.',
+      ],
     },
   },
   {
@@ -717,6 +840,12 @@ export var HS_THEMES = [
         'Two-thirds short-lived; finance leases $4.7B for large data centre sites.',
         'Two-thirds short-lived. “If the demand environment changes, you just slow down what is the largest component.”',
       ],
+      spcx: [
+        '', '', '', '', '', '', '', '',
+        'AI was <b>$7.7B of $10.1B</b> in Q1; Space and Connectivity the rest (Starship, satellites).',
+        '<b>“All CapEx is not the same”</b> — AI compute pays back in under a year, “almost an item that you would put otherwise in COGS”, unlike launch sites built for decades.',
+        'SI compute first, then Starship infrastructure and satellite production. “Demand-led” — semiconductor procurement matched “to the near-term customer demand”.',
+      ],
     },
   },
   {
@@ -756,6 +885,12 @@ export var HS_THEMES = [
         '', '', '', '', '', '', '', '',
         'Server life is six years against an RPO duration of 2.5 — answered with “those are sold for the entirety of the useful life of the GPU”.',
         '⚠ <b>Data centres and offices extended from 15 to 25 years</b> from FY27. “Minimal benefit” to operating income — but it moves leases from finance to operating and cuts reported CapEx ~$15B.',
+      ],
+      spcx: [
+        '', '', '', '', '', '', '', '',
+        'AI operating loss widened to $2.5B, “primarily driven by higher cloud computing and GPU depreciation costs”.',
+        'The argument for not worrying about it: new compute is paying back in <b>“less than 1 year”</b>.',
+        'Group D&amp;A doubled to <b>$3.6B</b> in the quarter (from $1.8B), yet SI turned an operating profit — payback “less than a year” at current pricing.',
       ],
     },
   },
@@ -803,6 +938,12 @@ export var HS_THEMES = [
         'Maia 200 “now scaling”; millions of servers already on first-party networking, security and virtualisation silicon.',
         'Maia 200 continues to scale at “30% better performance per dollar than the latest generation hardware”.',
       ],
+      spcx: [
+        '', '', '', '', '', '', '', '',
+        '',
+        '⚠ The opposite bet: <b>“we’ve decided to build exclusively on NVIDIA”</b> (Vera Rubin). Starmind satellites to be an optimised NVL72, launching next year.',
+        '<b>Terafab</b>: a test chip around May–June 2027 and volume production “around Q3 of ’28” — with “big error bars”. Aim: “a terawatt of super intelligence chips per year”.',
+      ],
     },
   },
   {
@@ -843,6 +984,12 @@ export var HS_THEMES = [
         '<b>Nearly 1 GW added in the quarter alone.</b> “Customer demand continues to exceed our supply.”',
         'Another gigawatt; still on track to double in two years.',
         '“Demand exceeds available supply in a sort of relatively extreme moment.” Dock-to-live times for new GPUs cut ~50%.',
+      ],
+      spcx: [
+        '', '', '', '', '', '', '', '',
+        'Colossus I and II provide <b>“approximately 1.0 gigawatt”</b> of compute.',
+        '<b>1.4 GW</b>; over 2 GW by year-end and “closer to 10 gigawatts of compute than 5” by end-2027, against 20 GW of power and cooling.',
+        '<b>1.7 GW</b>, 2.5–3 GW by year-end; “highly confident of 10 gigawatts incremental” in 2027. “We could rent out our compute several times over” — a shortage that will “remain for a long time”.',
       ],
     },
   },

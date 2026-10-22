@@ -1,0 +1,104 @@
+/* eps-attribution.css — Market Analysis > EPS Attribution (js/eps-attribution.js). Scoped to #eps-root.
+   Uses the portal's own pieces (.sec/.sechdr, .card, .rt, .sb-toggle, .ndx-tab-btn, --pos/--neg/--navy) so it reads like Index Analysis. */
+
+/* the Market Analysis tab bar (.ma-tabs / .ma-tab) is defined in css/market-history.css */
+
+/* this tab replaces the Index Analysis sections while it is open */
+#eps-root { display: none; }
+#tp-rot.eps-on > .sec { display: none; }
+#tp-rot.eps-on #eps-root { display: block; }
+
+#eps-root .secn { font-size: 11px; color: var(--mu); margin-left: 12px; }
+
+/* per-section controls: one row above each card, like Index Analysis */
+#eps-root .eps-ctl { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: flex-end; margin-bottom: 10px; }
+#eps-root .eps-ctl > div { display: flex; flex-direction: column; gap: 5px; }
+#eps-root .eps-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mu); }
+#eps-root select { font: 500 12.5px 'Inter', sans-serif; color: var(--navy); border: 1.5px solid var(--bdr); border-radius: 8px; padding: 4px 8px; background: #fff; }
+#eps-root .eps-chips { display: inline-block; margin-top: 6px; }
+#eps-root .eps-x { opacity: .7; margin-left: 3px; }
+#eps-root .ndx-chip { margin: 0 4px 4px 0; }
+#eps-root .eps-eqrow { margin-bottom: 6px; }
+#eps-root .eps-eqn { font-size: 12px; font-weight: 700; color: var(--navy); margin: 8px 0 2px 2px; }
+
+/* hero: return = EPS × multiple */
+#eps-root .eps-eq { display: flex; align-items: stretch; gap: 14px; flex-wrap: wrap; padding: 6px 0 4px; }
+#eps-root .eps-eqt { flex: 1 1 200px; border: 1.5px solid var(--bdr); border-radius: 12px; padding: 14px 18px; background: #fff; }
+#eps-root .eps-eqt.tot { background: var(--surface); border-color: var(--navy); }
+#eps-root .eps-eqt .k { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mu); }
+#eps-root .eps-eqt .v { font-size: 30px; font-weight: 700; line-height: 1.15; margin: 5px 0 3px; font-variant-numeric: tabular-nums; }
+#eps-root .eps-eqt .s { font-size: 11px; color: var(--mu); font-variant-numeric: tabular-nums; }
+#eps-root .eps-eq .op { align-self: center; font-size: 26px; color: var(--mu); font-weight: 300; }
+#eps-root .eps-split { font-size: 12px; line-height: 1.6; color: var(--text); margin: 10px 2px 0; padding: 9px 13px; background: var(--surface); border-radius: 9px; }
+#eps-root .eps-h2 { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--navy); margin: 20px 0 6px; }
+#eps-root .eps-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+#eps-root .eps-two .eps-h2 { margin-top: 4px; }
+
+/* tables */
+#eps-root .eps-tw { overflow-x: auto; }
+#eps-root .eps-scr { max-height: 260px; overflow-y: auto; }
+#eps-root table.rt td, #eps-root table.rt th { font-variant-numeric: tabular-nums; }
+#eps-root .eps-t2 tr.on td { font-weight: 700; background: var(--surface); }
+#eps-root .eps-t3 td { vertical-align: top; }
+#eps-root .eps-dn { font-weight: 600; color: var(--navy); font-size: 12.5px; }
+#eps-root .eps-dd { font-size: 11px; color: var(--mu); line-height: 1.5; margin-top: 2px; max-width: 520px; font-weight: 400; }
+#eps-root .eps-defs td.nm { white-space: nowrap; font-weight: 700; color: var(--navy); width: 170px; }
+#eps-root .eps-defs td { font-size: 12px; line-height: 1.55; }
+#eps-root .eps-ul { margin: 6px 0 0; padding-left: 18px; font-size: 12px; line-height: 1.6; }
+#eps-root .eps-ul li { margin-bottom: 4px; }
+
+/* detail table */
+#eps-root table.eps-dt { width: 100%; table-layout: auto; }
+#eps-root .eps-dt tr.gh th { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--mu); text-align: center; border-bottom: none; padding-bottom: 0; }
+#eps-root .eps-dt tr.gh th.grp { border-bottom: 1.5px solid var(--bdr); }
+#eps-root .eps-dt th[data-act] { cursor: pointer; user-select: none; white-space: nowrap; }
+#eps-root .eps-dt th.on { color: var(--navy); }
+
+#eps-root .eps-dt tr[data-act] { cursor: pointer; }
+#eps-root .eps-dt td.c { text-align: center; padding: 6px 4px; }
+#eps-root .eps-dt td.nm { overflow: hidden; text-overflow: ellipsis; }
+#eps-root .eps-dt tr.eps-r1 { background: var(--surface); }
+#eps-root .eps-dt tr.eps-r1 td.nm { font-weight: 700; color: var(--navy); }
+#eps-root .eps-dt tr.eps-r2 td { font-size: 12px; }
+#eps-root .eps-dt tr.eps-r3 td { font-size: 11.5px; }
+#eps-root .eps-dt tr.off { opacity: .4; }
+#eps-root .eps-dt tr.eps-tot td { border-top: 2px solid var(--navy); font-weight: 700; color: var(--navy); }
+#eps-root .eps-dt tr.eps-tot2 td { color: var(--mu); font-size: 11.5px; }
+#eps-root .eps-arr { display: inline-block; width: 100%; cursor: pointer; user-select: none; color: var(--mu); font-size: 10px; }
+#eps-root .eps-sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 8px; vertical-align: 0; }
+#eps-root .eps-tbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+#eps-root .eps-hint { font-size: 11.5px; color: var(--mu); line-height: 1.5; max-width: 640px; }
+#eps-root .eps-note { font-size: 11px; color: var(--mu); line-height: 1.55; margin-top: 10px; }
+
+/* chart bits */
+#eps-root .eps-row { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 12px; }
+#eps-root .eps-pl { display: inline-flex; gap: 3px; flex-wrap: wrap; }
+#eps-root .eps-leg { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 11px; color: var(--mu); margin-top: 8px; }
+#eps-root .eps-leg i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+
+@media (max-width: 900px) {
+  #eps-root .eps-two { grid-template-columns: minmax(0, 1fr); }
+  #eps-root .eps-eq .op { display: none; }
+}
+
+#eps-root .eps-three { font-size: 12px; line-height: 1.6; margin-top: 12px; padding: 9px 13px; background: var(--surface); border-radius: 9px; }
+
+#eps-root .tp { display: block; font-size: 12px; line-height: 1.55; color: #52514e; margin-top: 4px; }
+#eps-root .eps-ctl input[type=text] { width: 150px; font: 600 12.5px Inter, sans-serif; padding: 5px 10px; border: 1.5px solid var(--bdr); border-radius: 8px; color: var(--navy); text-transform: uppercase; }
+#eps-root .eps-ctl input[type=number] { width: 78px; font: 500 11px Inter, sans-serif; padding: 4px 6px; border: 1.5px solid var(--bdr); border-radius: 14px; color: var(--navy); margin-left: 4px; }
+#eps-root .eps-pl { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+#eps-root .eps-hb + .eps-hb { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--bdr); }
+#eps-root .eps-hb .eps-eqn { margin: 0 0 4px 2px; font-size: 13px; }
+#eps-root .eps-hb .eps-eq { padding-top: 2px; }
+#eps-root .eps-p { font-size: 12.5px; line-height: 1.65; color: #2B3B4E; margin: 4px 0 6px; max-width: 900px; }
+/* popup: who is behind a concentration bar */
+#eps-root .eps-pop { position: fixed; inset: 0; z-index: 2000; background: rgba(30, 39, 51, .38); display: flex; align-items: center; justify-content: center; padding: 20px; }
+#eps-root .eps-popc { position: relative; background: #fff; border-radius: 14px; box-shadow: 0 14px 44px rgba(30, 39, 51, .28); padding: 22px 26px 18px; width: min(680px, 100%); max-height: 86vh; overflow: auto; cursor: default; }
+#eps-root .eps-popx { position: absolute; top: 10px; right: 12px; border: none; background: none; font-size: 24px; line-height: 1; color: var(--mu); cursor: pointer; }
+#eps-root .eps-popx:hover { color: var(--navy); }
+#eps-root .eps-popt { font-size: 15px; font-weight: 700; color: var(--navy); }
+#eps-root .eps-popd { font-size: 12.5px; color: var(--mu); margin: 3px 0 12px; }
+#eps-root .eps-msg { font-size: 14px; line-height: 1.55; color: var(--navy); margin-bottom: 10px; }
+#eps-root details.eps-det { margin-top: 14px; font-size: 12px; }
+#eps-root details.eps-det > summary { cursor: pointer; font-weight: 600; color: var(--steel); padding: 4px 0; }
+#eps-root details.eps-det[open] > summary { margin-bottom: 8px; }

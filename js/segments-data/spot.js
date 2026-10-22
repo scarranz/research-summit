@@ -45,7 +45,7 @@ var NO_CONC = 'The Business and Operating sections of the FY2025 Form 20-F (Item
 export var spotSegments = {
   company: 'Spotify',
   updated: 'Oct 2026',
-  source: 'Segment revenue and gross profit: the Results dataset (js/results-data/spot.js) — Spotify quarterly shareholder decks and 6-Ks (1Q24–2Q26), the FY2025 Form 20-F (SEC EDGAR, CIK 1639920, accession 0001628280-26-006874) for the annual totals, and the Bloomberg export for 2023 and segment gross profit by quarter (3Q25 derived from the 20-F segment totals). Subscribers, MAU, ad-supported MAU and ARPU: shareholder decks and the Bloomberg export; definitions verbatim from the 20-F. Quarterly 1Q23–4Q23: the Bloomberg export (reported columns of the oldest snapshot, 2024-04-28). Summit forecast 3Q26–4Q26 (the model has no 2027 quarterly forecast yet) and FY2026–FY2028 annual: DCF model snapshot of 2026-08-05, frozen. Subscribers, Ad-Supported MAU and ARPU for 3Q24–4Q26 are the estimates of the Summit model supplied by the analyst (the model rows are empty); the total MAU forecast is Street (Bloomberg, 2026-10-21) because the model does not carry it. Everything in EUR.',
+  source: 'Segment revenue and gross profit: the Results dataset (js/results-data/spot.js) — Spotify quarterly shareholder decks and 6-Ks (1Q24–3Q26; 3Q26 segment gross profit derived from the deck’s segment margins until the interim 6-K is filed), the FY2025 Form 20-F (SEC EDGAR, CIK 1639920, accession 0001628280-26-006874) for the annual totals, and the Bloomberg export for 2023 and segment gross profit by quarter (3Q25 derived from the 20-F segment totals). Subscribers, MAU, ad-supported MAU and ARPU: shareholder decks and the Bloomberg export; definitions verbatim from the 20-F. Quarterly 1Q23–4Q23: the Bloomberg export (reported columns of the oldest snapshot, 2024-04-28). Summit forecast 4Q26 (the model has no 2027 quarterly forecast yet) and FY2026–FY2028 annual: DCF model snapshot of 2026-08-05, frozen. Subscribers, Ad-Supported MAU and ARPU for 3Q24–4Q26 are the estimates of the Summit model supplied by the analyst (the model rows are empty); the total MAU forecast is Street (Bloomberg, 2026-10-21) because the model does not carry it. Everything in EUR.',
 
   axis: {
     q: Q,
@@ -125,10 +125,10 @@ export var spotSegments = {
       kpis: [
         { name: 'Premium Subscribers', definition: 'Users with a registered account and an activated payment method for the subscription offerings, at period end (millions).',
           filing: SUBS_Q.text, filingWhere: SUBS_Q.where, unit: 'count', periodicity: 'Quarterly',
-          source: 'Spotify shareholder decks (1Q24–2Q26); Bloomberg export; definition verbatim from the 20-F.', series: 'results:subs' },
+          source: 'Spotify shareholder decks (1Q24–3Q26); Bloomberg export; definition verbatim from the 20-F.', series: 'results:subs' },
         { name: 'Premium ARPU', definition: 'Average monthly revenue per Premium subscriber, in euros: Premium revenue in the quarter ÷ average daily subscribers ÷ three months.',
           filing: ARPU_Q.text, filingWhere: ARPU_Q.where, unit: 'eps', periodicity: 'Quarterly (annual = average of the four quarters)',
-          source: 'Spotify shareholder decks (1Q24–2Q26); Bloomberg export; definition verbatim from the 20-F.', series: 'results:arpu' },
+          source: 'Spotify shareholder decks (1Q24–3Q26); Bloomberg export; definition verbatim from the 20-F.', series: 'results:arpu' },
       ],
       kpiNote: 'Spotify publishes two operating KPIs for Premium: subscribers at period end and monthly ARPU. It does not publish revenue by plan, by region or by partner, and no price list. Total MAU, which adds both tiers, is the base of the “% of MAU” view.',
       interactions: [
@@ -178,10 +178,10 @@ export var spotSegments = {
       kpis: [
         { name: 'Ad-Supported MAUs', definition: 'Users of the free tier who consumed any content in the last thirty days, at period end (millions): the audience the advertising business sells.',
           filing: ADMAU_Q.text, filingWhere: ADMAU_Q.where, unit: 'count', periodicity: 'Quarterly',
-          source: 'Spotify shareholder decks (1Q24–2Q26); Bloomberg export; definition verbatim from the 20-F.', series: 'results:admau' },
+          source: 'Spotify shareholder decks (1Q24–3Q26); Bloomberg export; definition verbatim from the 20-F.', series: 'results:admau' },
         { name: 'Total MAUs', definition: 'Ad-Supported users plus Premium subscribers active in the last thirty days, at period end (millions); the headline user count.',
           filing: MAU_Q.text, filingWhere: MAU_Q.where, unit: 'count', periodicity: 'Quarterly',
-          source: 'Spotify shareholder decks (1Q24–2Q26); Bloomberg export; definition verbatim from the 20-F.', series: 'results:mau' },
+          source: 'Spotify shareholder decks (1Q24–3Q26); Bloomberg export; definition verbatim from the 20-F.', series: 'results:mau' },
       ],
       kpiNote: 'Spotify publishes the audience, not the advertising: no impressions, no price per impression, no advertiser count in the filings (the call gives 33,000 active advertisers once). Revenue per ad-supported MAU and the costs per user are derived: they sit in Revenue interactions and its table, not here.',
       interactions: [

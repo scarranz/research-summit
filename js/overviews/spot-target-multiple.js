@@ -13,8 +13,8 @@
 //     multiplied by the last available ECB rate (./spot-fx-data.js) so they read in the same currency as the targets.
 //     Fair value, upside and WACC of each submit stay in the frozen data file but are NOT shown: this portal does not
 //     use WACC or a discounted fair value for Summit estimates.
-//   · net debt for Live = Spotify's cash at 30 Jun 2026 (EUR 9.4B cash and equivalents, no debt other than lease
-//     liabilities — Q2 2026 call, 4 Aug 2026), source named in the footer.
+//   · net debt for Live = Spotify's cash at 30 Sep 2026 (EUR 9.9B of cash and cash equivalents, restricted cash and short term
+//     investments, no debt other than lease liabilities — Q3 2026 update, 22 Oct 2026), source named in the footer.
 //   · the targets are the workbook's, never recomputed here; "Live" recomputes from your own multiples as a secondary read.
 //   · four snapshots (Dec 18 2025 · Feb 9 · Apr 28 · Aug 5 2026): the first valued FY2029 on EV/EBITDA and FY2026 on P/E.
 //   · inline <style> → css/overview.css (.ov-spot-dd); hex colours → Summit tokens.
@@ -149,8 +149,8 @@ var _last = SNAPS[SNAPS.length-1];
 var _mode = 'preview';    // 'preview' = Recorded multiple (the workbook's) · 'live' = your own multiples
 var _mEv  = _last.ev ? _last.ev.mult : 12;     // Live starts from the model's own multiples, never a guess
 var _mPe  = _last.pe ? _last.pe.mult : 19;
-var _netDebt = -9400;                           // EUR M, negative = net cash: EUR 9.4B cash, no debt other than leases
-var _ndSrc = 'Spotify Q2 2026 call (4 Aug 2026): EUR 9.4B of cash and cash equivalents at 30 Jun 2026, no debt other than lease liabilities';
+var _netDebt = -9900;                           // EUR M, negative = net cash: EUR 9.9B cash, restricted cash and short term investments, no debt other than leases
+var _ndSrc = 'Spotify Q3 2026 update (22 Oct 2026): EUR 9.9B of cash and cash equivalents, restricted cash and short term investments at 30 Sep 2026, no debt other than lease liabilities';
 
 var _px = null;
 

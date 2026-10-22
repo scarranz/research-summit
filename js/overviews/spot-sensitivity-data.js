@@ -22,7 +22,7 @@ export var SPOT_SENS = {
 };
 
 // Net cash for the EV → equity step, EUR millions (negative = net cash). The Summit model carries no net-debt line.
-// Source: Q2 2026 earnings call, Aug 4 2026, CFO: "As at close of the quarter, we had €9.4 billion cash and cash
-// equivalents and no debt other than lease liabilities." Rounded as stated; lease liabilities and short-term
-// investments are not in it.
-export var SPOT_NETCASH = { value: -9400, asOf: '2026-06-30', src: 'Q2 2026 call, Aug 4 2026 (rounded; excludes lease liabilities and short-term investments)' };
+// Source: Q3 2026 update, Oct 22 2026: EUR 9.9 billion of cash and cash equivalents, restricted cash and short term
+// investments at 30 Sep 2026 (the deck), and on the call the CFO: no debt other than lease liabilities. Rounded as
+// stated; lease liabilities are not in it.
+export var SPOT_NETCASH = { value: -9900, asOf: '2026-09-30', src: 'Q3 2026 update, Oct 22 2026 (rounded; cash, restricted cash and short term investments; excludes lease liabilities)' };

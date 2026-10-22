@@ -12,7 +12,7 @@ Earnings ▸ Post-Results, el 4T26 abierto en Setup con la guía nueva, y Notes 
 la copia en Supabase ya es la nueva). **Plan para el 22-oct en la mañana, en este orden:**
 1. **Call Summary del 3T26** — ✔ (22-oct): 10 temas de prepared remarks, 7 preguntas, 7 puntos (2 `lead` al Watch
    List), 5 `newQuestions`. Quartr seguía caído: citas textuales de la transcripción publicada, cada una cotejada
-   (aparecen literal en la transcripción o en el 8-K). Pendiente menor: las citas del 2T26 siguen de prensa.
+   (aparecen literal en la transcripción o en el 8-K). Citas del 2T26 cambiadas (22-oct) por la transcripción oficial de Meta (PDF en investor.atmeta.com); corrección de fondo: Li dijo "supply constrained", no "demand-constrained" como decía la prensa.
    `ceGuessTarget` reescrito a los sub-temas de la semilla v3 y acepta `theme:` explícito en `newQuestions`.
 2. **Notas de SAB del 3T26 → Notes** — ✔ (22-oct): 15 notas en 13 hilos; hilos nuevos "Muse personal agent",
    "RL losses in 2027", "Youth litigation and the AG settlement"; `META_THEMES_V` = 3 (la copia en Supabase ya es

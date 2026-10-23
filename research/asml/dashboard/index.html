@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ASML Deep Dive</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/portal.css">
+</head>
+<body>
+<div id="app">
+  <aside class="side">
+    <div class="lw"><div class="logomark">ASML</div><div class="lnm">ASML Deep Dive<small>Lithography · Summit research</small></div></div>
+    <nav id="snav"></nav>
+    <div class="side-foot">
+      <a href="../tsmc_dashboard_v7.html" id="tsmc-link">→ TSMC Capacity Dashboard</a>
+      Frozen data as of Oct 2026 · ASML 6-K Q3'26 (Oct 14) · FY2025 20-F · Bloomberg consensus (Oct 16)
+    </div>
+  </aside>
+  <div class="contentwrap">
+    <header class="topbar">
+      <div class="topbar-title"><span id="tb-title">ASML</span><small>ASML Holding N.V. · Euronext Amsterdam / Nasdaq · reports in EUR</small></div>
+      <div class="tb-r" id="tb-r"></div>
+    </header>
+    <div class="scroller"><main id="content"></main></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="js/core.js"></script>
+<script src="js/data-overview.js"></script>
+<script src="js/img.js"></script>
+<script src="js/data-units.js"></script>
+<script src="js/views/pl.js"></script>
+<script src="js/views/ov.js"></script>
+<script src="js/views/asp.js" onerror="void 0"></script>
+<script src="js/views/ib.js" onerror="void 0"></script>
+<script src="js/views/rev.js" onerror="void 0"></script>
+<script src="js/views/gm.js" onerror="void 0"></script>
+<script src="js/views/cust.js" onerror="void 0"></script>
+<script src="js/views/tsmc.js" onerror="void 0"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

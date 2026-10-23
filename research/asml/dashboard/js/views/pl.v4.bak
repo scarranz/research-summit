@@ -1,0 +1,172 @@
+/* ═════════════ MACHINES (pl) — what ASML sells, how many, and how many it says it can build ═════════════
+   v4 (Oct 23 2026): The Machines + Volume Model merged; the schematic, chip loop, video player and "how hard to build" lists removed
+   (pl.v3.bak / vm.v3.bak keep them). Unit data lives in js/data-units.js (VM_*). Numbers frozen: 20-F, 6-K, Bloomberg Oct 16 2026. */
+registerView({ id:"pl", html:`
+    <div class="srow" id="pl-kpis"></div>
+
+    <section class="card">
+      <div class="ch"><div><div class="ct">Product families</div><div class="cs">Lithography systems, FY2025 · shorter wavelength = finer lines, higher price</div></div></div>
+      <div class="tw" id="pl-fam-tbl"></div>
+      <div class="snote">Source: FY2025 20-F Note 2 (units, €); asml.com product pages; Bloomberg consensus, Oct 16 2026. Average price = 2025 revenue ÷ units.
+        Short explainer: <a href="https://www.youtube.com/watch?v=RI3lCUEzSvE" target="_blank" rel="noopener">How EUV lithography works (IBM Research, 1:37)</a>.</div>
+    </section>
+
+    <section class="card">
+      <div class="ch">
+        <div><div class="ct">Units sold</div><div class="cs" id="pl-u-s"></div></div>
+        <div class="ctls"><span><span class="ctl-l">Period</span><div class="fbg" id="pl-u-per"><button class="fb active" data-v="a">Annual</button><button class="fb" data-v="q">Quarterly</button></div></span>
+          <span><span class="ctl-l">Family</span><div class="fbg" id="pl-u-fam"></div></span></div>
+      </div>
+      <div class="leg" id="pl-u-leg"></div>
+      <div class="ch-wrap"><canvas id="pl-u-chart"></canvas></div>
+      <details class="tbl"><summary>Data table &amp; method</summary><div class="tw" id="pl-u-tbl"></div><div class="pl-method" id="pl-u-more"></div></details>
+      <div class="snote">Source: 20-F Note 2 and 6-K quarterly presentations; consensus = Bloomberg, Oct 16 2026 (lighter bars). Lithography only, new + used.</div>
+    </section>
+
+    <section class="card">
+      <div class="ch"><div><div class="ct">Capacity: what ASML has said</div><div class="cs">Each statement next to the units sold or expected</div></div></div>
+      <div class="tw" id="pl-cap-tbl"></div>
+      <div class="snote">Source: Investor Day, Nov 2022; Q2 and Q3 2026 results releases (6-K). ASML has not given 2026 capacity in units.</div>
+    </section>
+`, css:`
+  #v-pl .pl-fam td{vertical-align:middle}
+  #v-pl .pl-fam img{width:54px;height:40px;object-fit:cover;border-radius:4px;border:1px solid var(--bdr);display:block}
+  #v-pl .pl-fn{display:flex;align-items:center;gap:10px;font-weight:600}
+  #v-pl .pl-use{color:var(--mu);white-space:normal;text-align:left;min-width:180px;font-size:11.5px}
+  #v-pl .pl-cap td{white-space:normal;text-align:left;vertical-align:top}
+  #v-pl .pl-cap td:first-child{white-space:nowrap}
+  #v-pl .pl-method{padding:10px 13px;font-size:11px;line-height:1.6;color:var(--mu);border-top:1px solid var(--bdr)}
+`, init(){ initPl(); } });
+
+/* Units / € : FY2025 20-F Note 2 (NXE = 0.33 NA, EXE = High-NA). 2026E: Bloomberg consensus Oct 16 2026 (asml-work/data/bbg_s1.tsv). */
+const FAM = [
+  { k:'iline', n:'i-line', c:'#A9B4C2', light:'Mercury lamp', wl:365, na:'≈0.5–0.65', res:'≈220–350 nm', resN:280, model:'XT:400M', wph:null,
+    u25:54, e25:307.3, u26:60, e26:332,
+    tag:'The marker pen.', txt:'The oldest and cheapest family. Light from a mercury lamp prints big, simple shapes — the thick, forgiving layers that every chip still has.',
+    use:['Power & analog chips','Sensors / MEMS','Thick & implant layers','Advanced packaging'] },
+  { k:'krf', n:'KrF', c:'#1E2733', light:'Krypton-fluoride laser', wl:248, na:'≈0.8–0.93', res:'≈80–110 nm', resN:95, model:'NXT:870B', wph:'400',
+    u25:78, e25:1001.3, u26:143, e26:1778,
+    tag:'The volume workhorse.', txt:'A deep-UV laser instead of a lamp. Very fast and cheap per wafer, so it does the many non-critical layers — and 3D NAND memory, which stacks hundreds of thick layers, buys a lot of them.',
+    use:['3D NAND','Image sensors','Microcontrollers','Non-critical layers of every chip'] },
+  { k:'arfd', n:'ArF dry', c:'#93B1F0', light:'Argon-fluoride laser', wl:193, na:'0.93', res:'57 nm', resN:57, model:'NXT:1470', wph:'>300',
+    u25:16, e25:427.0, u26:36, e26:1034,
+    tag:'Mid-critical layers.', txt:'Shorter 193 nm laser light through big lenses, in air. Covers the middle layers of a chip and the critical layers of mature nodes (28 nm and older).',
+    use:['Mature logic (28 nm+)','Mid-critical layers','Automotive / IoT chips'] },
+  { k:'arfi', n:'ArF immersion', c:'#3E5A82', light:'Argon-fluoride laser, through water', wl:193, wlEff:134, na:'1.35', res:'38 nm', resN:38, model:'NXT:2100i', wph:'≈295',
+    u25:131, e25:10311.4, u26:132, e26:11091,
+    tag:'The trick: print through water.', txt:'Same 193 nm laser, but a thin film of ultra-pure water sits between the last lens and the wafer. Water bends light more than air, so the light behaves like ~134 nm and draws finer lines. With multiple exposures per layer it reaches 7 nm-class chips — the backbone of DRAM and of China\'s fabs.',
+    use:['DRAM','Logic down to 7 nm-class','Most critical layers outside EUV','China capacity build-out'] },
+  { k:'euv', n:'EUV', c:'#2563EB', light:'Tin plasma, 13.5 nm', wl:13.5, na:'0.33', res:'13 nm', resN:13, model:'NXE:3800E', wph:'≈220',
+    u25:44, e25:10445.8, u26:65, e26:15868,
+    tag:'A different machine altogether.', txt:'Light 14× shorter than DUV, made by hitting 50,000 molten tin droplets a second with a laser. Air and glass absorb it, so everything runs in a vacuum and bounces off mirrors instead of passing through lenses. One EUV exposure replaces 3–4 DUV passes on the hardest layers. <strong>ASML is the only company in the world that makes it.</strong>',
+    use:['Leading-edge logic (5, 3, 2 nm)','Leading-edge DRAM / HBM','AI accelerators & phone chips'] },
+  { k:'hna', n:'High-NA EUV', c:'#1B3F94', light:'Tin plasma, 13.5 nm', wl:13.5, na:'0.55', res:'8 nm', resN:8, model:'EXE:5200B', wph:'≈175',
+    u25:4, e25:1156.9, u26:5, e26:1747,
+    tag:'Bigger mirrors, finer lines.', txt:'Same EUV light, but larger mirrors collect more of it (NA 0.55 vs 0.33), so it resolves 8 nm lines in one shot. Each tool costs ~€290–400M (2025 average €289M) and is still ramping: first for sub-2 nm logic, later for DRAM.',
+    use:['Sub-2 nm logic (e.g. Intel 14A)','Future DRAM','R&D and pilot lines'] }
+];
+
+const PL_F0 = x => x == null ? '—' : Math.round(x).toLocaleString('en-US');
+
+/* — tiles — */
+function renderPlKpis(){
+  const u = FAM.reduce((a,f)=>a+f.u25,0), e = FAM.reduce((a,f)=>a+f.e25,0);
+  const eu = FAM.filter(f=>f.k==='euv'||f.k==='hna'), euE = eu.reduce((a,f)=>a+f.e25,0), euU = eu.reduce((a,f)=>a+f.u25,0);
+  const qt = i => ['eua','arfi','arfd','krf','il'].reduce((s,k)=>s+VM_Q[k][i],0);
+  const nm26 = qt(16)+qt(17)+qt(18), nm25 = qt(12)+qt(13)+qt(14);
+  const c26 = VM_FAM.reduce((s,f)=>s+VM_A[f.k][11],0);
+  const rec = Math.max(...VM_Q_LBL.slice(0, VM_Q_EST).map((_,i)=>qt(i)));
+  const k = [
+    ['Machines sold, 2025', u, 'plus 208 metrology tools'],
+    ['Sold, 9M 2026', nm26, `${sgn(nm26/nm25-1)} vs 9M 2025`],
+    ['Consensus, FY2026E', PL_F0(c26), `needs ~${PL_F0(c26-nm26)} in Q4 · record ${rec}`],
+    ['EUV share, 2025', pct(euE/e,0) + ' of €', `${pct(euU/u,0)} of units`]
+  ];
+  $('#pl-kpis').innerHTML = k.map(([l,v,s]) => `<div class="sc"><div class="sl">${l}</div><div class="sv">${v}</div><div class="ss">${s}</div></div>`).join('');
+}
+
+/* — 1 · families table — */
+function renderPlFam(){
+  const rows = FAM.slice().reverse().map(f => `<tr>
+    <td><div class="pl-fn"><img src="${IMG[f.k]}" alt="ASML ${f.model}">${f.n}</div></td>
+    <td>${f.wlEff ? f.wl + ' nm, in water' : f.wl + ' nm'}</td><td>${f.res}</td>
+    <td>${f.u25}</td><td>€${(f.e25/f.u25).toFixed(1)}M</td><td>€${(f.e25/1000).toFixed(1)}B</td>
+    <td class="est">${f.u26}</td><td class="pl-use">${f.use.slice(0,2).join(' · ')}</td></tr>`).join('');
+  $('#pl-fam-tbl').innerHTML = `<table class="pl-fam"><thead><tr><th>Family</th><th>Light</th><th>Finest line</th><th>Units 2025</th><th>Avg price</th><th>Revenue 2025</th><th class="est">Units 2026E</th><th style="text-align:left">Used for</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+/* — 2 · units, one family at a time; stated capacity drawn only where ASML gave a unit figure — */
+const PL_UF = [ {k:'all',n:'All'}, {k:'euv',n:'EUV'}, {k:'hna',n:'High-NA'}, {k:'arfi',n:'ArFi'}, {k:'arfd',n:'ArF dry'}, {k:'krf',n:'KrF'}, {k:'il',n:'i-line'} ];
+const PL_CAPLINE = { euv:{ v:90, yrs:['2025','2026E'] }, hna:{ v:20, yrs:['2027E','2028E'] } };   // Investor Day Nov 2022 (VM_CAP)
+const plU = { per:'a', fam:'all', hidden:new Set(), x:null, y:null };
+let plUChart;
+function plUData(){
+  const q = plU.per === 'q', L = q ? VM_Q_LBL : VM_A_LBL, EST = q ? VM_Q_EST : VM_A_EST, D = q ? VM_Q : VM_A;
+  const keys = q ? ['eua','arfi','arfd','krf','il'] : VM_FAM.map(f=>f.k);
+  const tot = L.map((_,i) => keys.reduce((s,k)=>s+(D[k][i]||0),0));
+  let bar;
+  if(plU.fam === 'all') bar = { label:'All lithography', color:'#1E2733', data:tot };
+  else if(plU.fam === 'euv') bar = q ? { label:'EUV, incl. High-NA', color:'#2563EB', data:D.eua } : { label:'EUV (0.33 NA)', color:'#2563EB', data:D.euv };
+  else if(plU.fam === 'hna') bar = q ? { label:'High-NA (as stated)', color:'#1B3F94', data:L.map((_,i)=>i < VM_Q_HNA.length ? VM_Q_HNA[i] : null) } : { label:'High-NA EUV', color:'#1B3F94', data:D.hna };
+  else { const f = VM_FAM.find(x=>x.k===plU.fam); bar = { label:f.n, color:f.c, data:D[f.k] }; }
+  const cd = !q && PL_CAPLINE[plU.fam];
+  const cap = cd ? { label:`Stated capacity (2022): ${cd.v} a year`, color:'#DC2626', data:L.map(y => cd.yrs.includes(y) ? cd.v : null) } : null;
+  return { q, L, EST, tot, bar, cap };
+}
+function renderPlUnits(){
+  const { q, L, EST, tot, bar, cap } = plUData(), H = plU.hidden;
+  let lo = 0, hi = L.length - 1;
+  if(plU.x){ lo = Math.max(0, plU.x[0]); hi = Math.min(hi, plU.x[1]); if(hi < lo){ lo = 0; hi = L.length - 1; } }
+  const idx = L.map((_,i)=>i).slice(lo, hi + 1), ds = [];
+  if(!H.has('bar')) ds.push({ type:'bar', label:bar.label, data:idx.map(i=>bar.data[i]), order:2, borderRadius:2, barPercentage:.7,
+    backgroundColor: idx.map(i => i >= EST ? bar.color + '55' : bar.color), borderColor:bar.color, borderWidth: idx.map(i => i >= EST ? 1 : 0) });
+  if(cap && !H.has('cap')) ds.push({ type:'line', label:cap.label, data:idx.map(i=>cap.data[i]), order:1, borderColor:cap.color, borderDash:[5,4], borderWidth:1.8, pointRadius:3, pointBackgroundColor:cap.color, spanGaps:false });
+  if(plUChart) plUChart.destroy();
+  plUChart = new Chart($('#pl-u-chart'), { data:{ labels:idx.map(i=>L[i]), datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{display:false}, tooltip:{ ...TIP, filter: it => it.parsed.y != null, callbacks:{
+        title: it => { const i = idx[it[0].dataIndex]; return L[i] + (i >= EST ? ' · Bloomberg consensus, Oct 16 2026' : ' · actual'); },
+        label: it => ` ${it.dataset.label}: ${PL_F0(it.parsed.y)} units` } } },
+      scales:{ x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:true } },
+        y:{ beginAtZero:true, grid:{color:'#EEF1F5'}, title:{ display:true, text:'units' }, min: plU.y ? plU.y[0] : 0, max: plU.y ? plU.y[1] : undefined } } } });
+  plUChart.$lo = lo;
+  legend($('#pl-u-leg'), [{ key:'bar', label:bar.label, color:bar.color }].concat(cap ? [{ key:'cap', label:cap.label, color:cap.color, line:true, dash:true }] : []), H, renderPlUnits);
+  $('#pl-u-s').textContent = q ? "Units per quarter, Q1'22–Q4'27E" : 'Units per year, 2015–2029E';
+
+  const est = new Set(idx.map((i,j) => i >= EST ? j + 1 : -1)), rows = [];
+  if(!H.has('bar')){
+    rows.push([bar.label].concat(idx.map(i => PL_F0(bar.data[i]))));
+    if(plU.fam !== 'all') rows.push(['All lithography'].concat(idx.map(i => PL_F0(tot[i]))),
+      ['Share of all units'].concat(idx.map(i => bar.data[i] == null || !tot[i] ? '—' : pct(bar.data[i] / tot[i], 0))));
+  }
+  if(cap && !H.has('cap')) rows.push([cap.label].concat(idx.map(i => cap.data[i] == null ? '' : cap.data[i])));
+  $('#pl-u-tbl').innerHTML = table(['Units'].concat(idx.map(i=>L[i])), rows, est);
+  $('#pl-u-more').innerHTML = `<b>Method.</b> Lithography systems sold, new + used; metrology &amp; inspection excluded. Annual: 20-F Note 2 (FY2017, FY2019, FY2022, FY2025); EUV split 0.33 NA / High-NA from the FY2025 20-F; 2015–2022 EUV is all 0.33 NA. ` +
+    `Quarterly: 6-K presentations; High-NA is stated only in some quarters (blank = not stated), so quarterly EUV includes it. Consensus: Bloomberg Low-NA / High-NA / family rows, Oct 16 2026 (fractions = average of contributors); Bloomberg's own "EUV", "DUV" and total rows do not add up to its family rows. ` +
+    `Capacity line: Investor Day Nov 2022 plan, drawn only where ASML gave a unit figure (Low-NA EUV 2025–26, High-NA 2027–28).`;
+}
+
+/* — 3 · capacity statements — */
+function renderPlCap(){
+  const a = (k, y) => VM_A[k][VM_A_LBL.indexOf(y)];
+  const duv25 = ['arfi','arfd','krf','il'].reduce((s,k)=>s+a(k,'2025'),0);
+  const rows = [
+    ['Nov 2022 · Investor Day', 'Capacity plan of 90 Low-NA EUV and 600 DUV systems a year in 2025–26.', `2025 sold: ${a('euv','2025')} Low-NA EUV, ${duv25} DUV`],
+    ['Nov 2022 · Investor Day', 'Capacity of 20 High-NA EUV systems a year in 2027–28.', `Consensus: ${PL_F0(a('hna','2027E'))} in 2027E, ${PL_F0(a('hna','2028E'))} in 2028E`],
+    ['Q2 2026 results', 'Low-NA EUV and ArFi capacity +30% in 2027 vs 2026; a further +30% for 2028 being studied.', `Consensus Low-NA EUV: ${PL_F0(a('euv','2026E'))} → ${PL_F0(a('euv','2027E'))} → ${PL_F0(a('euv','2028E'))} (2026E–28E)`],
+    ['Oct 14 2026 · Q3 results', '“Our supply as currently planned for both 2027 and 2028 will not fully meet the demand.”', `Consensus ArFi: ${PL_F0(a('arfi','2026E'))} → ${PL_F0(a('arfi','2027E'))} → ${PL_F0(a('arfi','2028E'))}`]
+  ];
+  $('#pl-cap-tbl').innerHTML = `<table class="pl-cap"><thead><tr><th>When</th><th style="text-align:left">What ASML said</th><th style="text-align:left">Units, for comparison</th></tr></thead><tbody>` +
+    rows.map(r => `<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('') + '</tbody></table>';
+}
+
+$('#pl-u-fam').innerHTML = PL_UF.map(f => `<button class="fb${f.k==='all'?' active':''}" data-v="${f.k}">${f.n}</button>`).join('');
+pills('#pl-u-per', v => { plU.per = v; plU.hidden.clear(); plU.x = null; plU.y = null; renderPlUnits(); });
+pills('#pl-u-fam', v => { plU.fam = v; plU.hidden.clear(); plU.y = null; renderPlUnits(); });
+
+let plBuilt = false;
+function initPl(){
+  if(plBuilt) return; plBuilt = true;
+  renderPlKpis(); renderPlFam(); renderPlUnits(); renderPlCap();
+  attachZoom(() => plUChart, r => { if(!r){ plU.x = null; plU.y = null; } else { if(r.x) plU.x = r.x; if(r.y) plU.y = r.y; } renderPlUnits(); });
+}

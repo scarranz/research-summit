@@ -1,0 +1,364 @@
+registerView({ id:"pl", html:`
+    <div class="srow" id="pl-kpis"></div>
+
+    <div class="r32" style="grid-template-columns:2fr 1fr">
+      <div class="card">
+        <div class="ch">
+          <div><div class="ct">What an ASML machine does — a projector that prints circuits</div>
+          <div class="cs">Simplified schematic · click a number to see what each part does</div></div>
+          <div class="fbg" id="pl-mode"><button class="fb active" data-m="duv">DUV (lenses)</button><button class="fb" data-m="euv">EUV (mirrors, vacuum)</button></div>
+        </div>
+        <div class="cb">
+          <div class="pl-split">
+            <svg class="pl-svg" id="pl-svg" viewBox="0 0 560 270"></svg>
+            <div class="pl-cap" id="pl-cap"></div>
+          </div>
+          <div class="pl-loop" id="pl-loop"></div>
+        </div>
+        <div class="snote">A chip is built up layer by layer (up to ~100 patterned layers on a leading-edge chip). For each layer the scanner shines light through a stencil (the reticle), shrinks the image 4× and exposes it onto a light-sensitive coating on the wafer; the wafer then goes to etch/deposition and comes back for the next layer. Blue steps are where ASML sells the tool.
+          Source: ASML "EUV lithography systems" and "DUV lithography systems" product pages (asml.com); ASML 20-F FY2025, Item 4.</div>
+      </div>
+      <div class="card">
+        <div class="ch"><div><div class="ct">Watch it first</div><div class="cs">Short clips · pick one</div></div></div>
+        <div class="cb">
+          <div class="vid" id="pl-vid"></div>
+          <div class="vlist" id="pl-vlist"></div>
+          <div class="vdeep">Going deeper (long form): <a href="https://www.youtube.com/watch?v=B2482h_TNwg" target="_blank" rel="noopener">Branch Education — The $200M machine that prints microchips (38 min, made with ASML)</a> · <a href="https://www.youtube.com/watch?v=MiUHjLxm3V0" target="_blank" rel="noopener">Veritasium — The closest thing we have to alien technology (55 min)</a></div>
+        </div>
+        <div class="snote">Clips from YouTube. In the local file they play here; in the published version they open on YouTube.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch">
+        <div><div class="ct">The machine ladder — six families, one idea: shorter light draws finer lines</div>
+        <div class="cs">Click a family, or press play to walk the ladder · 2025 = 20-F actuals · 2026E = Bloomberg consensus (Oct 16 2026)</div></div>
+        <div class="fbg"><button class="fb" id="pl-play">▶ Walk the ladder</button></div>
+      </div>
+      <div class="cb">
+        <div class="lad" id="pl-lad"></div>
+        <div class="lad-axis"><span>◂ older · cheaper · coarser</span><span>newer · pricier · finer ▸</span></div>
+        <div class="lad-body">
+          <div>
+            <div class="wave-box">
+              <div class="t"><span>The light it uses</span><b id="pl-wl"></b></div>
+              <svg id="pl-wave" viewBox="0 0 600 70" preserveAspectRatio="none" style="width:100%;height:70px;display:block"></svg>
+              <div class="t" style="margin-top:8px"><span>Finest line it prints vs the other families</span><b id="pl-res"></b></div>
+              <svg id="pl-lines" viewBox="0 0 600 64" style="width:100%;height:auto;display:block"></svg>
+              <div class="hair"><span class="big" id="pl-hair"></span><span class="s">lines of that width fit side by side across one human hair (~80 µm, with equal gaps)</span></div>
+            </div>
+            <div class="lad-txt" id="pl-txt"></div>
+            <div class="build" id="pl-build"></div>
+          </div>
+          <div><div class="lad-photo" id="pl-photo"></div><div class="facts" id="pl-facts"></div></div>
+        </div>
+      </div>
+      <div class="snote">Resolution = ASML's stated production resolution for the platform (half-pitch); it is not the same thing as a "2 nm" or "3 nm" node name, which is marketing. Throughput = flagship model, wafers per hour. Units and € from ASML FY2025 20-F Note 2 (EUV split into NXE = 0.33 NA and EXE = High-NA); 2026E from Bloomberg consensus (AVERAGE_SALES_PRICE and unit fields, Oct 16 2026). Specs: asml.com product pages; KrF / i-line resolution ranges are approximate across models. Photos: ASML press images (asml.com). Size &amp; build facts: ASML product and "hot machines" pages; NXT:2100i overlay from asml.com; EUV parts and shipping from Intel Newsroom ("EUV: the most precise, complex machine at Intel"); EUV weight is reported at ~180–200 t depending on the source; High-NA weight, crates and the bus comparison from CNBC (Feb 2024).</div>
+    </div>
+
+    <div class="card">
+      <div class="ch">
+        <div><div class="ct">How many machines ASML sells each year — and how many it says it can build</div><div class="cs" id="pl-u-s"></div></div>
+        <div class="fbg" id="pl-u-grp"><button class="fb active" data-v="all">All machines</button><button class="fb" data-v="euv">EUV</button><button class="fb" data-v="duv">DUV</button></div>
+      </div>
+      <div class="cb pl-u-grid">
+        <div style="min-width:0">
+          <div class="leg" id="pl-u-leg"></div>
+          <div class="ch-wrap"><canvas id="pl-u"></canvas></div>
+        </div>
+        <div class="watch pl-u-said">
+          <div class="wk" style="padding:0 0 2px">What ASML has said about capacity</div>
+          <div class="wi"><div class="wk">2022</div><div>Capacity to build <strong>90 EUV and 600 DUV</strong> machines a year in 2025–26, and <strong>20 High-NA</strong> a year in 2027–28.</div></div>
+          <div class="wi"><div class="wk">Q2'26</div><div><strong>+30%</strong> Low-NA EUV and ArFi capacity in 2027 vs 2026, and studying <strong>another +30%</strong> for 2028.</div></div>
+          <div class="wi"><div class="wk">Q3'26</div><div>"Our supply as currently planned for <strong>both 2027 and 2028 will not fully meet the demand</strong>." Some customers want to order for 2029–2030.</div></div>
+          <div class="wi"><div class="wk">Limit</div><div>Zeiss, the only optics supplier, sets how many machines can be built.</div></div>
+        </div>
+      </div>
+      <details class="tbl"><summary>Show data table</summary><div class="tw" id="pl-u-tbl"></div></details>
+      <div class="snote">Lithography machines sold (new + used); measuring tools (M&amp;I) excluded. Lighter bars = Bloomberg consensus (Oct 16 2026), not ASML guidance. Dashed lines = capacity: solid-dash is what ASML stated in 2022; the 2027–28 EUV path is <strong>illustrative</strong> — ASML gave the +30% steps but never a 2026 capacity in units, so it is drawn on the 2022 figure of 90. ASML has not restated DUV capacity since 2022 (the +30% covers ArFi only). Drag to zoom, double-click to reset, click a legend item to hide it from the chart and the table.
+        Source: ASML 20-F (FY2017, FY2019, FY2022, FY2025, Note 2); Investor Day Nov 2022 (6-K 0001193125-22-282132); Q2 and Q3 2026 press releases (6-K, Oct 14 2026); FY2025 20-F risk factors (Zeiss).</div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><div><div class="ct">Why only ASML can build them</div><div class="cs">Parts, suppliers and logistics · EUV is the extreme case</div></div></div>
+      <div class="cb pl-why">
+        <figure class="pl-fig"><img id="pl-img-inside" alt="Render of the two wafer stages inside an ASML EUV system"><figcaption>Inside an NXE EUV system: two wafer stages, one measured while the other is exposed (ASML render).</figcaption></figure>
+        <figure class="pl-fig"><img id="pl-img-clean" alt="Two ASML engineers in cleanroom suits assembling a module"><figcaption>Module assembly in an ASML cleanroom in Veldhoven (ASML photo).</figcaption></figure>
+        <div class="pl-whyfacts">
+          <div class="bx"><div class="k">One EUV system</div><div class="v">~100,000 parts</div><p>Built and tested in Veldhoven, taken apart, shipped in <strong>40 containers, 20 trucks and 3 Boeing 747s</strong>, then rebuilt and recalibrated in the customer's fab.</p></div>
+          <div class="bx"><div class="k">Supply chain</div><div class="v">5,100 suppliers</div><p>About <strong>80%</strong> of the bill of materials is bought in, and many parts come from a single supplier.</p></div>
+          <div class="bx"><div class="k">Optics</div><div class="v">1 supplier: Zeiss</div><p>Carl Zeiss SMT is the <strong>sole supplier</strong> of lenses, mirrors and other critical optics. ASML says Zeiss's capacity limits how many systems it can build.</p></div>
+          <div class="bx"><div class="k">R&amp;D, 2025</div><div class="v">€4.7B</div><p>14% of sales goes back into developing the next generation of machines.</p></div>
+        </div>
+      </div>
+      <div class="snote">Source: ASML FY2025 20-F (5,100 suppliers; ~80% of bill of materials sourced externally; Carl Zeiss SMT sole supplier of optics and a production-capacity limit; R&amp;D €4,699M of €32,667M net sales). EUV parts and shipping: Intel Newsroom. Photos: ASML (asml.com technology pages).</div>
+    </div>
+
+    <div class="r32" style="grid-template-columns:1fr">
+      <div class="card">
+        <div class="ch"><div><div class="ct">Beyond the scanner</div><div class="cs">The other two things ASML sells · FY2025</div></div></div>
+        <div class="cb side2">
+          <div class="bx"><div class="k">Installed Base Management</div><div class="v">€8.2B · 25% of sales</div>
+            <p>Every machine ever sold keeps paying: service contracts, spare parts and <strong>field upgrades</strong> that make an old tool faster or more precise. It grows with the installed base, not with the chip cycle — the steadiest line in the P&amp;L.</p></div>
+          <div class="bx"><div class="k">Metrology &amp; Inspection</div><div class="v">€0.8B · 208 tools</div>
+            <p>The <strong>measuring</strong> side: YieldStar (optical) checks that each layer landed exactly on top of the last; HMI e-beam tools hunt for defects. The data feeds back into the scanner to correct the next wafer.</p></div>
+        </div>
+        <div class="snote">Source: ASML FY2025 20-F (Installed Base Management = net service and field option sales €8,193M of €32,667M; M&amp;I €824.6M, 208 systems, Note 2).</div>
+      </div>
+    </div>
+`, init(){ initPl(); }, onHide(){ stopWalk(); } });
+
+/* Units / € : FY2025 20-F Note 2 (NXE = 0.33 NA, EXE = High-NA). 2026E: Bloomberg consensus Oct 16 2026 (asml-work/data/bbg_s1.tsv). */
+const FAM = [
+  { k:'iline', n:'i-line', c:'#A9B4C2', light:'Mercury lamp', wl:365, na:'≈0.5–0.65', res:'≈220–350 nm', resN:280, model:'XT:400M', wph:null,
+    u25:54, e25:307.3, u26:60, e26:332,
+    tag:'The marker pen.', txt:'The oldest and cheapest family. Light from a mercury lamp prints big, simple shapes — the thick, forgiving layers that every chip still has.',
+    use:['Power & analog chips','Sensors / MEMS','Thick & implant layers','Advanced packaging'] },
+  { k:'krf', n:'KrF', c:'#1E2733', light:'Krypton-fluoride laser', wl:248, na:'≈0.8–0.93', res:'≈80–110 nm', resN:95, model:'NXT:870B', wph:'400',
+    u25:78, e25:1001.3, u26:143, e26:1778,
+    tag:'The volume workhorse.', txt:'A deep-UV laser instead of a lamp. Very fast and cheap per wafer, so it does the many non-critical layers — and 3D NAND memory, which stacks hundreds of thick layers, buys a lot of them.',
+    use:['3D NAND','Image sensors','Microcontrollers','Non-critical layers of every chip'] },
+  { k:'arfd', n:'ArF dry', c:'#93B1F0', light:'Argon-fluoride laser', wl:193, na:'0.93', res:'57 nm', resN:57, model:'NXT:1470', wph:'>300',
+    u25:16, e25:427.0, u26:36, e26:1034,
+    tag:'Mid-critical layers.', txt:'Shorter 193 nm laser light through big lenses, in air. Covers the middle layers of a chip and the critical layers of mature nodes (28 nm and older).',
+    use:['Mature logic (28 nm+)','Mid-critical layers','Automotive / IoT chips'] },
+  { k:'arfi', n:'ArF immersion', c:'#3E5A82', light:'Argon-fluoride laser, through water', wl:193, wlEff:134, na:'1.35', res:'38 nm', resN:38, model:'NXT:2100i', wph:'≈295',
+    u25:131, e25:10311.4, u26:132, e26:11091,
+    tag:'The trick: print through water.', txt:'Same 193 nm laser, but a thin film of ultra-pure water sits between the last lens and the wafer. Water bends light more than air, so the light behaves like ~134 nm and draws finer lines. With multiple exposures per layer it reaches 7 nm-class chips — the backbone of DRAM and of China\'s fabs.',
+    use:['DRAM','Logic down to 7 nm-class','Most critical layers outside EUV','China capacity build-out'] },
+  { k:'euv', n:'EUV', c:'#2563EB', light:'Tin plasma, 13.5 nm', wl:13.5, na:'0.33', res:'13 nm', resN:13, model:'NXE:3800E', wph:'≈220',
+    u25:44, e25:10445.8, u26:65, e26:15868,
+    tag:'A different machine altogether.', txt:'Light 14× shorter than DUV, made by hitting 50,000 molten tin droplets a second with a laser. Air and glass absorb it, so everything runs in a vacuum and bounces off mirrors instead of passing through lenses. One EUV exposure replaces 3–4 DUV passes on the hardest layers. <strong>ASML is the only company in the world that makes it.</strong>',
+    use:['Leading-edge logic (5, 3, 2 nm)','Leading-edge DRAM / HBM','AI accelerators & phone chips'] },
+  { k:'hna', n:'High-NA EUV', c:'#1B3F94', light:'Tin plasma, 13.5 nm', wl:13.5, na:'0.55', res:'8 nm', resN:8, model:'EXE:5200B', wph:'≈175',
+    u25:4, e25:1156.9, u26:5, e26:1747,
+    tag:'Bigger mirrors, finer lines.', txt:'Same EUV light, but larger mirrors collect more of it (NA 0.55 vs 0.33), so it resolves 8 nm lines in one shot. Each tool costs ~€290–400M (2025 average €289M) and is still ramping: first for sub-2 nm logic, later for DRAM.',
+    use:['Sub-2 nm logic (e.g. Intel 14A)','Future DRAM','R&D and pilot lines'] }
+];
+const HAIR_NM = 80000;
+/* Size & build: sourced facts only (see the ladder footnote) */
+const BUILD = {
+  iline:{ cap:'TWINSCAN XT:400M', rows:[['~€5.7M','average price in 2025, the cheapest machine ASML sells'],['2 stages','still a full TWINSCAN: one wafer is measured while the other is exposed'],['Zeiss','projection lens from Carl Zeiss SMT, ASML\'s only optics supplier']] },
+  krf:  { cap:'TWINSCAN NXT:870B', rows:[['400 / hour','wafers on the NXT:870B, one every 9 seconds'],['~€12.8M','average price in 2025'],['Zeiss','projection lens']] },
+  arfd: { cap:'TWINSCAN NXT:1470', rows:[['>300 / hour','wafers, 50% more than ASML\'s previous fastest ArF tool'],['4×','Zeiss Starlith reduction lens shrinks the reticle image'],['0.70–0.93','variable NA, tuned per layer']] },
+  arfi: { cap:'TWINSCAN NXT:2100i', rows:[['0.9 nm','overlay: each layer lands within a few atoms of the one below'],['>6,000 / day','wafers on NXT immersion tools'],['~€78.7M','average price in 2025']] },
+  euv:  { cap:'TWINSCAN NXE:3800E', rows:[['~100,000','parts in one system'],['40 · 20 · 3','containers, trucks and Boeing 747 flights to ship one'],['~180–200 t','weight, as reported'],['50,000 / s','tin droplets, flying at 70 m/s, each hit twice by a laser'],['¼ nm','wafer-stage accuracy, corrected 20,000 times a second']] },
+  hna:  { cap:'TWINSCAN EXE:5200B', rows:[['~150 t','weight; "bigger than a double-decker bus"'],['250 crates','plus 13 containers to ship the first one to Intel'],['€289M','average price in 2025 (4 tools)'],['4× / 8×','anamorphic mirrors shrink the image 4× one way and 8× the other']] }
+};
+const plState = { sel:'euv', mode:'duv', part:0, timer:null, mx:'share', yr:'2025', hidden:new Set() };
+
+function renderPlKpis(){
+  const u = FAM.reduce((a,f)=>a+f.u25,0), e = FAM.reduce((a,f)=>a+f.e25,0);
+  const eu = FAM.filter(f=>f.k==='euv'||f.k==='hna'), euU = eu.reduce((a,f)=>a+f.u25,0), euE = eu.reduce((a,f)=>a+f.e25,0);
+  const hna = FAM[5], il = FAM[0];
+  const k = [
+    ['d','Lithography families','6','from a 365 nm lamp to 13.5 nm plasma'],
+    ['b','Litho systems sold, 2025', u, '+208 measuring tools (M&amp;I)'],
+    ['a','EUV share of units', pct(euU/u,0), `but <b>${pct(euE/e,0)}</b> of litho revenue`],
+    ['p','One High-NA tool, 2025', '€' + (hna.e25/hna.u25).toFixed(0) + 'M', `≈${Math.round((hna.e25/hna.u25)/(il.e25/il.u25))} i-line tools`],
+    ['n','EUV makers worldwide','1','ASML is the only one'],
+    ['g','Service &amp; upgrades','€8.2B','25% of 2025 sales · recurring']
+  ];
+  $('#pl-kpis').innerHTML = k.map(([c,l,v,s]) => `<div class="sc ${c}"><div class="sl">${l}</div><div class="sv">${v}</div><div class="ss">${s}</div></div>`).join('');
+}
+
+/* — schematic — */
+const PL_PARTS = {
+  duv: [
+    { x:165, y:22, h:'Light source', k:'Step 1 · light', t:'An excimer laser fires deep-ultraviolet pulses at 193 nm (ArF) or 248 nm (KrF). The laser itself comes from Cymer, which ASML owns.' },
+    { x:356, y:76, h:'Reticle (the stencil)', k:'Step 2 · pattern', t:'A quartz plate carrying the circuit drawing for one layer, 4× larger than it will be on the chip. Light passes through the clear parts and is blocked by the chrome.' },
+    { x:346, y:148, h:'Projection lens', k:'Step 3 · shrink', t:'A column of dozens of ultra-precise glass elements (made by Zeiss) shrinks the image 4× and focuses it. On immersion tools the last lens sits in a film of water.' },
+    { x:392, y:226, h:'Wafer on the stage', k:'Step 4 · expose', t:'The wafer is coated with a light-sensitive resist. The stage scans it under the beam at high speed, field after field, positioned to a fraction of a nanometre, then swaps wafers — ~300 an hour.' }
+  ],
+  euv: [
+    { x:30, y:30, h:'Everything in a vacuum', k:'Why it is so hard', t:'EUV light is absorbed by air and by glass. So the whole light path sits in a vacuum and there are no lenses at all — only mirrors.' },
+    { x:150, y:178, h:'Tin-plasma light source', k:'Step 1 · light', t:'Tiny drops of molten tin fall at ~50,000 a second. A CO₂ laser hits each one twice, turning it into a plasma hotter than the surface of the sun that glows at 13.5 nm.' },
+    { x:458, y:28, h:'Reflective reticle', k:'Step 2 · pattern', t:'The stencil is a mirror, not a window: dozens of alternating molybdenum/silicon layers reflect EUV where the circuit should be printed.' },
+    { x:500, y:112, h:'Zeiss mirrors', k:'Step 3 · shrink', t:'Multilayer mirrors polished to atomic-scale smoothness, made only by Zeiss. Each one absorbs part of the light, which is why the source must be so powerful.' },
+    { x:492, y:238, h:'Wafer stage', k:'Step 4 · expose', t:'Same job as DUV but harder: the stage places each exposure to within a quarter of a nanometre, checking its position 20,000 times a second.' }
+  ]
+};
+function svgDUV(){
+  return `<defs><linearGradient id="cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5E8BEC" stop-opacity=".35"/><stop offset="1" stop-color="#2563EB" stop-opacity=".55"/></linearGradient></defs>
+  <rect x="20" y="20" width="130" height="36" rx="6" fill="#1E2733"/><text x="85" y="42" class="lbl" fill="#fff" style="fill:#fff" text-anchor="middle">Laser · 193 / 248 nm</text>
+  <path class="beam" stroke="#5E8BEC" d="M150 38 H280 V72"/>
+  <rect x="232" y="98" width="96" height="104" rx="10" fill="#EEF1F5" stroke="#D7DDE4"/>
+  <polygon points="226,80 334,80 290,214 270,214" fill="url(#cone)"/>
+  ${[112,130,148,166,184].map((y,i)=>`<ellipse cx="280" cy="${y}" rx="${[42,46,42,36,28][i]}" ry="5" fill="#fff" fill-opacity=".7" stroke="#5E8BEC"/>`).join('')}
+  <path class="beam" stroke="#2563EB" d="M280 80 V214"/>
+  <rect x="218" y="72" width="124" height="8" rx="1.5" fill="#2563EB" fill-opacity=".85"/>
+  ${[0,1,2,3,4,5,6].map(i=>`<rect x="${230+i*15}" y="73.5" width="7" height="5" fill="#1E2733"/>`).join('')}
+  <ellipse cx="280" cy="220" rx="78" ry="9" fill="#D7DDE4" stroke="#8A93A0"/>
+  ${[-48,-24,0,24,48].map(dx=>`<rect x="${276+dx}" y="216" width="8" height="5" fill="#8A93A0"/>`).join('')}
+  <rect x="200" y="231" width="160" height="15" rx="4" fill="#1E2733"/><text x="280" y="242" class="lbl" style="fill:#fff" text-anchor="middle">◂ scanning stage ▸</text>
+  <text x="372" y="64" class="lbl b">reticle 4× size</text><text x="340" y="190" class="lbl">lens column</text><text x="20" y="262" class="lbl">Image shrinks 4× on its way down · not to scale</text>`;
+}
+function svgEUV(){
+  const path = 'M188 212 L250 150 L300 72 L390 32 L470 110 L360 150 L462 192 L420 232';
+  const mir = [[300,72,-30],[470,110,60],[360,150,-60],[462,192,50]];
+  return `<rect x="10" y="10" width="540" height="250" rx="12" fill="#F6F7F9" stroke="#8A93A0" stroke-dasharray="5 4"/>
+  <text x="46" y="34" class="lbl b">high vacuum</text>
+  <rect x="24" y="196" width="96" height="32" rx="6" fill="#1E2733"/><text x="72" y="216" class="lbl" style="fill:#fff" text-anchor="middle">CO₂ laser</text>
+  <path class="beam" stroke="#c0392b" d="M120 212 H178"/>
+  <rect x="182" y="132" width="12" height="18" rx="2" fill="#7C8694"/>
+  ${[160,176,192].map(y=>`<circle cx="188" cy="${y}" r="2.2" fill="#7C8694"/>`).join('')}
+  <path d="M164 238 A34 34 0 0 1 164 186" fill="none" stroke="#3a4a5c" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="188" cy="212" r="17" fill="#2563EB" opacity=".25" class="flash"/><circle cx="188" cy="212" r="7" fill="#2563EB" class="flash"/>
+  <path class="beam" stroke="#2563EB" d="${path}"/>
+  ${mir.map(([x,y,a])=>`<line x1="${x-14}" y1="${y}" x2="${x+14}" y2="${y}" stroke="#3a4a5c" stroke-width="5" stroke-linecap="round" transform="rotate(${a} ${x} ${y})"/>`).join('')}
+  <rect x="338" y="22" width="104" height="8" rx="1.5" fill="#2563EB" fill-opacity=".85"/>
+  <ellipse cx="420" cy="238" rx="62" ry="8" fill="#D7DDE4" stroke="#8A93A0"/>
+  <rect x="356" y="246" width="128" height="10" rx="3" fill="#1E2733"/>
+  <text x="206" y="246" class="lbl">tin plasma · 13.5 nm</text><text x="250" y="140" class="lbl" text-anchor="end">collector</text>
+  <text x="244" y="60" class="lbl">mirror</text><text x="332" y="30" class="lbl" text-anchor="end">reflective reticle</text><text x="300" y="176" class="lbl">projection mirrors</text>`;
+}
+function renderSchematic(){
+  const m = plState.mode, parts = PL_PARTS[m];
+  if(plState.part >= parts.length) plState.part = 0;
+  $('#pl-svg').innerHTML = (m==='duv' ? svgDUV() : svgEUV()) +
+    parts.map((p,i)=>`<g class="hs${i===plState.part?' on':''}" data-i="${i}"><circle class="dot" cx="${p.x}" cy="${p.y}" r="10"/><text x="${p.x}" y="${p.y}">${i+1}</text></g>`).join('');
+  $('#pl-svg').querySelectorAll('.hs').forEach(g => g.onclick = () => { plState.part = +g.dataset.i; renderSchematic(); });
+  const p = parts[plState.part];
+  $('#pl-cap').innerHTML = `<div class="k">${p.k}</div><h4>${p.h}</h4><p>${p.t}</p>
+    <div class="fbg" style="margin-top:10px"><button class="fb" id="pl-prev">◂</button><button class="fb" id="pl-next">Next ▸</button></div>`;
+  $('#pl-prev').onclick = () => { plState.part = (plState.part + parts.length - 1) % parts.length; renderSchematic(); };
+  $('#pl-next').onclick = () => { plState.part = (plState.part + 1) % parts.length; renderSchematic(); };
+}
+function renderLoop(){
+  const st = [['Deposit a film',0],['Coat with resist',0],['Expose — scanner',1],['Develop',0],['Etch',0],['Measure — YieldStar / e-beam',1]];
+  $('#pl-loop').innerHTML = st.map(([s,a],i)=>`<span class="pl-step${a?' asml':''}">${s}</span>${i<st.length-1?'<span class="pl-arrow">→</span>':''}`).join('') +
+    '<span class="pl-arrow">↻</span><span class="pl-step">repeat for every layer</span>';
+}
+
+/* — videos — */
+const VIDS = [
+  { id:'wI6nCmG-PpI', t:'ASML in 1 minute', by:'ASML', d:'1:09' },
+  { id:'RI3lCUEzSvE', t:'How EUV lithography works', by:'IBM Research', d:'1:37' },
+  { id:'MfFGRl00LKY', t:'Inside the machine: how a High-NA system makes EUV light', by:'ASML', d:'2:19' },
+  { id:'h_zgURwr6nA', t:'Unveiling High-NA EUV', by:'ASML', d:'1:39' },
+  { id:'Jv40Viz-KTc', t:'Behind this door: Intel\'s EUV machine', by:'Intel', d:'4:20' }
+];
+let vidSel = 1;   // IBM Research clip: the clearest "how it works" for an intro
+// Local file (localhost): the clip plays inside the page. Published artifact: YouTube can't be embedded, so it links out.
+const PL_EMBED = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+function renderVid(play){
+  const v = VIDS[vidSel], url = id => `https://www.youtube.com/watch?v=${id}`;
+  if(PL_EMBED){
+    $('#pl-vid').innerHTML = play
+      ? `<iframe src="https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="${v.t}"></iframe>`
+      : `<img src="https://i.ytimg.com/vi/${v.id}/hqdefault.jpg" alt="${v.t}"><div class="play"><span></span></div>`;
+    $('#pl-vid').onclick = play ? null : () => renderVid(true);
+    $('#pl-vlist').innerHTML = VIDS.map((x,i)=>`<div class="vi${i===vidSel?' active':''}" data-i="${i}"><div><b>${x.t}</b><small>${x.by} · <a href="${url(x.id)}" target="_blank" rel="noopener">open on YouTube</a></small></div><span class="dur">${x.d}</span></div>`).join('');
+    $('#pl-vlist').querySelectorAll('.vi').forEach(n => n.onclick = e => { if(e.target.tagName==='A') return; vidSel = +n.dataset.i; renderVid(true); });
+    return;
+  }
+  $('#pl-vid').innerHTML = `<a class="vid-out" href="${url(v.id)}" target="_blank" rel="noopener">
+      <div class="play"><span></span></div>
+      <div class="vk">Recommended for the intro · ${v.d}</div><div class="vt">${v.t}</div><div class="vb">${v.by} · Watch on YouTube ↗</div></a>`;
+  $('#pl-vlist').innerHTML = VIDS.map((x,i)=>`<a class="vi${i===vidSel?' active':''}" href="${url(x.id)}" target="_blank" rel="noopener"><div><b>${x.t}</b><small>${x.by} · opens YouTube ↗</small></div><span class="dur">${x.d}</span></a>`).join('');
+}
+
+/* — ladder — */
+function renderLadder(){
+  $('#pl-lad').innerHTML = FAM.map(f=>`<button class="lad-b${f.k===plState.sel?' active':''}" style="--c:${f.c}" data-k="${f.k}"><div class="n">${f.n}</div><div class="w">${f.wl} nm · ${f.res.replace('≈','~')}</div></button>`).join('');
+  $('#pl-lad').querySelectorAll('.lad-b').forEach(b => b.onclick = () => { stopWalk(); plState.sel = b.dataset.k; renderLadder(); });
+  const f = FAM.find(x=>x.k===plState.sel);
+  // wave: period proportional to wavelength (inside water for immersion); faint i-line wave for reference
+  const wave = (wl, amp) => { const P = wl/365*150; let d=''; for(let x=0;x<=600;x+= Math.min(1, P/16)) d += (d?'L':'M') + x.toFixed(2) + ' ' + (35 - amp*Math.sin(2*Math.PI*x/P)).toFixed(2); return d; };
+  $('#pl-wave').innerHTML = `<path d="${wave(365,26)}" fill="none" stroke="#D7DDE4" stroke-width="1.2" vector-effect="non-scaling-stroke"/>` +
+    `<path d="${wave(f.wlEff||f.wl,22)}" fill="none" stroke="${f.c}" stroke-width="${f.wl<20?0.9:2}" vector-effect="non-scaling-stroke"/>`;
+  $('#pl-wl').textContent = f.wlEff ? `${f.wl} nm (acts like ~${f.wlEff} nm in water)` : `${f.wl} nm` + (f.k==='iline' ? '' : ` · ${ (365/f.wl).toFixed(f.wl<20?0:1) }× shorter than i-line`);
+  // finest-line bars (linear, i-line midpoint = full width)
+  const max = FAM[0].resN;
+  $('#pl-lines').innerHTML = FAM.map((g,i)=>{ const w = Math.max(1.5, g.resN/max*470), on = g.k===f.k;
+    return `<rect x="0" y="${i*10.5+1}" width="${w}" height="8" rx="2" fill="${on?g.c:'#E7EAEE'}"/><text x="${w+6}" y="${i*10.5+8.5}" class="lbl" style="font-size:9px;${on?'font-weight:700;fill:#1E2733':''}">${g.n} · ${g.res}</text>`; }).join('');
+  $('#pl-res').textContent = f.res;
+  $('#pl-hair').textContent = Math.round(HAIR_NM/(2*f.resN)).toLocaleString('en-US');
+  $('#pl-txt').innerHTML = `<strong>${f.tag}</strong> ${f.txt}<div class="use">${f.use.map(u=>`<span>${u}</span>`).join('')}</div>`;
+  const b = BUILD[f.k];
+  $('#pl-photo').innerHTML = `<img src="${IMG[f.k]}" alt="ASML ${b.cap} lithography system"><span class="cap">${b.cap} · ASML</span>`;
+  $('#pl-build').innerHTML = `<div class="k">Size &amp; how hard it is to build</div>` + b.rows.map(([v,t])=>`<div class="br"><b>${v}</b><span>${t}</span></div>`).join('');
+  const totE = FAM.reduce((a,g)=>a+g.e25,0);
+  const facts = [
+    ['Light', f.light, `${f.wl} nm`], ['Optics NA', f.na, f.wl<20 ? 'mirrors' : f.k==='arfi' ? 'lens + water' : 'lenses'],
+    ['Finest line', f.res, 'production resolution'], ['Flagship model', f.model, f.wph ? `${f.wph} wafers / hour` : 'dual-stage TWINSCAN'],
+    ['Units sold', `${f.u25} → ${f.u26}`, '2025A → 2026E'], ['Average price', `€${(f.e25/f.u25).toFixed(1)}M`, `2026E €${(f.e26/f.u26).toFixed(1)}M`],
+    ['Revenue 2025', fmtB(f.e25, f.e25<1000?2:1), `${pct(f.e25/totE,0)} of litho sales`], ['Revenue 2026E', fmtB(f.e26, f.e26<1000?2:1), `${sgn(f.e26/f.e25-1)} vs 2025`]
+  ];
+  $('#pl-facts').innerHTML = facts.map(([l,v,s])=>`<div class="fact"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+}
+function stopWalk(){ if(plState.timer){ clearInterval(plState.timer); plState.timer=null; $('#pl-play').textContent='▶ Walk the ladder'; $('#pl-play').classList.remove('active'); } }
+$('#pl-play').onclick = () => {
+  if(plState.timer) return stopWalk();
+  plState.sel = FAM[0].k; renderLadder();
+  $('#pl-play').textContent = '❚❚ Pause'; $('#pl-play').classList.add('active');
+  plState.timer = setInterval(() => { const i = FAM.findIndex(f=>f.k===plState.sel); if(i===FAM.length-1) return stopWalk(); plState.sel = FAM[i+1].k; renderLadder(); }, 3500);
+};
+
+/* — machines sold per year + stated capacity — */
+/* Units: 20-F Note 2 (litho, new + used; NXE/EXE split from FY2025 20-F, 2015–22 reported as "EUV" = all 0.33 NA). 2026E–2029E: Bloomberg consensus Oct 16 2026,
+   Low-NA / High-NA family rows (same series as the Volume Model view). Capacity: Investor Day Nov 2022 (90 EUV + 600 DUV a year 2025–26; 20 High-NA a year 2027–28);
+   Q2'26 release: +30% Low-NA EUV and ArFi capacity in 2027 vs 2026, a further +30% for 2028 under study. 2026 capacity in units was never given → the 2027–28 path is illustrative on 90. */
+const PL_U_LBL = ['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025','2026E','2027E','2028E','2029E'];
+const PL_U_EST = 11;
+const PL_U = {
+  hna:  [null,null,null,null,null,null,null,null,0,2,4,   4.9,5.4,7.8,12.4],
+  euv:  [1,4,11,18,26,31,42,40,53,42,44,                65.1,88.0,112.1,111.2],
+  arfi: [67,70,76,86,82,68,81,81,125,129,131,           132.2,167.1,206.1,207.6],
+  arfd: [9,6,13,16,22,22,22,28,32,28,16,                35.7,44.5,48.6,47.4],
+  krf:  [74,57,71,78,65,103,131,151,184,152,78,         142.6,151.7,162.7,164.5],
+  iline:[18,20,26,26,34,34,33,45,55,65,54,              59.9,69.4,75.6,73.2]
+};
+const PL_U_GRP = { all:['hna','euv','arfi','arfd','krf','iline'], euv:['hna','euv'], duv:['arfi','arfd','krf','iline'] };
+const pu = (y) => PL_U_LBL.indexOf(y);
+const PL_U_CAP = {   // [label, values by year index, style]  stated = ASML's own number; illus = derived from stated steps
+  all: [ ['Stated capacity 2022: 90 EUV + 600 DUV', {'2025':690,'2026E':690}, 'stated'] ],
+  euv: [ ['Low-NA capacity stated 2022 (90/yr)', {'2025':90,'2026E':90}, 'stated'],
+         ['Low-NA +30% / +30% path (illustrative)', {'2026E':90,'2027E':117,'2028E':152}, 'illus'],
+         ['High-NA capacity stated 2022 (20/yr)', {'2027E':20,'2028E':20}, 'stated'] ],
+  duv: [ ['DUV capacity stated 2022 (600/yr)', {'2025':600,'2026E':600}, 'stated'] ]
+};
+const plU = { g:'all', hidden:new Set(), x:null, y:null };
+let plUChart;
+function renderPlUnits(){
+  const fams = FAM.filter(f => PL_U_GRP[plU.g].includes(f.k));
+  const vis = fams.filter(f => !plU.hidden.has(f.k));
+  const caps = PL_U_CAP[plU.g].map(([label, vals, st], i) => ({ key:'cap'+i, label, st, data: PL_U_LBL.map(y => vals[y] ?? null) }));
+  const visCaps = caps.filter(c => !plU.hidden.has(c.key));
+  let lo = 0, hi = PL_U_LBL.length - 1;
+  if(plU.x){ lo = Math.max(0, plU.x[0]); hi = Math.min(hi, plU.x[1]); }
+  const sl = a => a.slice(lo, hi + 1), lbl = sl(PL_U_LBL);
+  const isE = i => (i + lo) >= PL_U_EST;
+  const ds = vis.map(f => ({ type:'bar', label:f.n, data: sl(PL_U[f.k]), backgroundColor: sl(PL_U[f.k]).map((_,i) => isE(i) ? f.c + '66' : f.c),
+      borderColor:f.c, borderWidth: sl(PL_U[f.k]).map((_,i) => isE(i) ? 1 : 0), stack:'u', order:2, $k:f.k }))
+    .concat(visCaps.map(c => ({ type:'line', label:c.label, data: sl(c.data), borderColor: c.st==='stated' ? '#DC2626' : '#7C8694', backgroundColor:'#fff',
+      borderDash: c.st==='stated' ? [6,4] : [2,3], borderWidth:2, pointRadius:3, pointBorderWidth:1.5, spanGaps:false, order:1, stack:c.key, $cap:true })));
+  if(plUChart) plUChart.destroy();
+  plUChart = new Chart($('#pl-u'), { data:{ labels:lbl, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{display:false}, tooltip:{ ...TIP, filter: it => it.parsed.y != null,
+        callbacks:{ title: it => it[0].label + (isE(it[0].dataIndex) ? ' — Bloomberg consensus' : ''),
+          label: it => ` ${it.dataset.label}: ${Math.round(it.parsed.y)}${it.dataset.$cap ? ' a year' : ' machines'}`,
+          footer: it => { const t = it.filter(x => !x.dataset.$cap).reduce((a,x)=>a+(x.parsed.y||0),0); return 'Machines shown: ' + Math.round(t); } } } },
+      scales:{ x:{ stacked:true, grid:{display:false} },
+        y:{ stacked:true, grid:{color:'#EEF1F5'}, title:{display:true, text:'machines per year'}, min: plU.y ? plU.y[0] : 0, max: plU.y ? plU.y[1] : undefined } },
+      onClick:(e, els) => { const d = els.length && plUChart.data.datasets[els[0].datasetIndex]; if(d && d.$k){ stopWalk(); plState.sel = d.$k; renderLadder(); $('#pl-lad').scrollIntoView({behavior:'smooth', block:'center'}); } } } });
+  plUChart.$lo = lo;
+  legend($('#pl-u-leg'), fams.map(f => ({ key:f.k, label:f.n, color:f.c })).concat(caps.map(c => ({ key:c.key, label:c.label, color: c.st==='stated' ? '#DC2626' : '#7C8694', line:true, dash:true }))), plU.hidden, renderPlUnits);
+  const tot = PL_U_LBL.map((_, i) => vis.reduce((a, f) => a + (PL_U[f.k][i] || 0), 0));
+  const eu25 = PL_U.euv[10] + PL_U.hna[10];
+  $('#pl-u-s').textContent = plU.g === 'euv' ? `2025: ${eu25} EUV sold vs capacity of 90 stated in 2022 · consensus 2028E: ${Math.round(PL_U.euv[13] + PL_U.hna[13])}`
+    : plU.g === 'duv' ? `2025: ${PL_U_GRP.duv.reduce((a,k)=>a+PL_U[k][10],0)} DUV sold vs capacity of 600 stated in 2022`
+    : `2015–2025 actual (20-F) · 2026E–2029E Bloomberg consensus · 2025: ${PL_U_GRP.all.reduce((a,k)=>a+(PL_U[k][10]||0),0)} machines`;
+  const f0 = x => x == null ? '—' : Math.round(x).toLocaleString('en-US');
+  $('#pl-u-tbl').innerHTML = table(['Machines / year'].concat(lbl),
+    vis.map(f => [f.n].concat(sl(PL_U[f.k]).map(f0)))
+      .concat([['<b>Total shown</b>'].concat(sl(tot).map(x => '<b>' + f0(x) + '</b>'))])
+      .concat(visCaps.map(c => [c.label].concat(sl(c.data).map(f0)))),
+    new Set(lbl.map((_, i) => isE(i) ? i + 1 : -1)));
+}
+pills('#pl-u-grp', v => { plU.g = v; plU.hidden.clear(); plU.x = null; plU.y = null; renderPlUnits(); });
+
+let plBuilt = false;
+function initPl(){ if(plBuilt) return; plBuilt = true; renderPlKpis(); renderSchematic(); renderLoop(); renderVid(false); renderLadder(); renderPlUnits(); attachZoom(() => plUChart, r => { if(!r){ plU.x=null; plU.y=null; } else { if(r.x) plU.x=r.x; if(r.y) plU.y=r.y; } renderPlUnits(); }); $('#pl-img-clean').src = IMG.clean; $('#pl-img-inside').src = IMG.inside; }
+

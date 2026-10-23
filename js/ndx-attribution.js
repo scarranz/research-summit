@@ -546,7 +546,7 @@ window.ndxSetHeroStart = function(key) {
 };
 
 function renderHero() {
-  if (!document.getElementById('ndx-hero-growth')) return;   // the price block now lives in js/ma-price.js
+  if (!document.getElementById('ndx-hero-growth')) return;   // the Index Price Return section was removed
   var yrs = chronoYears();
   if (!_heroStart || !YEAR_HOCS[_heroStart]) _heroStart = yrs[yrs.length - 1];
   var start = _heroStart, startIdx = yrs.indexOf(start);
@@ -2885,17 +2885,7 @@ export function ndxSetSim(exSecs, exIGs) {
   refresh();
 }
 
-// For the joint sections (js/ma-price.js, the Nasdaq-100 side of Sector Summary and Stock Lookup)
-// Year returns + a growth path of the index from the start of the first year (HOC closes).
-export function ndxPriceData() {
-  var yrs = chronoYears();
-  var path = growthPath(yrs[0]);
-  return {
-    years: yrs.map(function(k) { return { key: k, year: +yearOf(k), ytd: k.indexOf('ytd') === 0, ret: computeYearReturn(k) }; }),
-    points: path.map(function(p) { return { d: p.d, v: p.v }; }),
-    asOf: latestDate()
-  };
-}
+// For the joint sections (the Nasdaq-100 side of Sector Summary and Stock Lookup)
 // Every security that was in the index in any year: its return in each year (compounded over
 // the HOCs it was in) and whether it was in for the whole year (every HOC of that year).
 export function ndxStocks() {
@@ -2925,7 +2915,7 @@ export function ndxStocks() {
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────
-// hosts: { sector, detail, comp, top, wl, scatter } — elements of the unified Market Analysis page
+// hosts: { sector, detail, comp, top, wl } — elements of the unified Market Analysis page
 export async function loadNdxAttribution(hosts) {
   var _allYears = hosts.allYears || [];
   _onYear = hosts.onYear || null;

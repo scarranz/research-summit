@@ -7,14 +7,12 @@ before changing the data, `scripts/spx/extract_spx.py` or the page.
 
 | Section | S&P 500 | Nasdaq-100 | Module |
 |---|---|---|---|
-| Index Price Return | both at once (SPY month-ends · QQQ holdings per HOC) | | `js/ma-price.js` |
 | Sector Return / Contribution | one or the other | | `js/spx-sector-alpha.js` · `js/ndx-sector-returns.js` |
 | Attribution Detail & Simulation | ONE table: S&P, Nasdaq or both side by side | | `js/ma-detail.js` (engines: `spx-attribution.js` · `ndx-attribution.js`) |
 | Sector Summary — Market Beaters | one or the other (same table) | | `js/market-analysis.js` |
 | Index Composition — Weight Change | one or the other, sectors | | `js/market-analysis.js` · `js/ndx-attribution.js` |
 | Top Contributors | one or the other | | `js/spx-securities.js` · `js/ndx-attribution.js` |
 | Winners vs Losers (return distribution, click a bar for the names) | one or the other | | `js/ma-charts.js` |
-| Security Return vs Weight (one year, one sector or group) | one or the other | | `js/spx-securities.js` · `js/ndx-attribution.js` |
 | Stock Lookup (one card per year: return, beat S&P? beat Nasdaq?) | both | | `js/market-analysis.js` |
 
 Agreed details (Oct 14, 2026): one year selector and one Sector / Industry Group column in the
@@ -28,6 +26,7 @@ Return: each year's months sit right under that year. Scatter: Return / Contribu
 sectors / groups listed by index weight (largest first = the default), axes fixed for the year.
 Year-end weights: S&P close of Y = open of Y+1 by construction (same month-end); Nasdaq within 0.05 pp.
 
+Removed (Oct 23, 2026): Index Price Return and Security Return vs Weight (sections, `js/ma-price.js`, the S&P scatter, `ndxPriceData()`).
 Removed (CIO, Oct 14, 2026): the S&P 500 Companies Explorer, Return Scatter 2025 vs 2026, Rotation
 Winners and "Negative 2025 → beating 2026", the Sector Performance chart, the top-level "SPY
 Attribution by Sector" chart, and the Chart / Treemap views of the attribution detail.

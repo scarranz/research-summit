@@ -2,7 +2,7 @@
 
 One workbook replaces the four the S&P / EPS extractors read today. **Status: contract + empty template
 only. No extractor reads it yet and no `js/*-data.js` was generated from it.** Template:
-`templates/Summit Index Data - TEMPLATE.xlsx` (built by `scripts/data/make_template.py`).
+`templates/Summit Index Data - TEMPLATE.xlsx` (built by `scripts/index-data/make_template.py`).
 
 ## Why
 The CIO moved price pulls to Systems. The analyst now supplies only: index levels, weights (index,

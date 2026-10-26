@@ -12,26 +12,32 @@ import { sofiResults } from '../results-data/sofi.js';
 // The lines SoFi guides (adjusted basis; discrete quarterly guidance from the prior quarter's 8-K, plus the full year). The Revenue
 // line is GAAP total net revenue in the Bloomberg and Summit series while SoFi guides ADJUSTED net revenue; the gap is small
 // (2Q26 $1,205.6M adjusted vs $1,218.7M GAAP) and accepted (analyst, Oct 26 2026), so the guide sits under the GAAP line.
-export var SOFI_GUIDED = ['Revenue', 'Adjusted EBITDA', 'Adjusted net income', 'EPS (diluted)'];
+// Every line that the Summit model and the Street (or the company) track, in the order the print reads down the income statement:
+// [name, unit, results key, divisor from the results file]. HEADLINE first (the fixed nHead block), then the company's own lines.
+// Money is $M in the results file: lines big enough to read in billions are '$B' (divisor 1000), the rest '$M'; members and shares in millions.
+var SOFI_LINES = [
+  ['Revenue', '$B', 'rev', 1000], ['Operating income', '$M', 'opinc', 1], ['Adjusted EBITDA', '$M', 'ebitda', 1], ['EPS (diluted)', '$', 'eps', 1],
+  ['Depreciation and amortization', '$M', 'dna', 1], ['Diluted shares', 'Mn', 'shares', 1],
+  ['Net interest income', '$M', 'nii', 1], ['Noninterest income', '$M', 'nonint', 1], ['Loan platform fees', '$M', 'lpb', 1],
+  ['Technology products and solutions', '$M', 'tp', 1], ['Loan origination, sales and servicing', '$M', 'loss', 1], ['Other noninterest income', '$M', 'other', 1],
+  ['Total members', 'M', 'members', 1000], ['Personal loan originations', '$B', 'plov', 1000], ['Student loan originations', '$B', 'slov', 1000], ['Home loan originations', '$B', 'hlov', 1000],
+  ['Noninterest expense', '$M', 'nie', 1], ['Technology and product development', '$M', 'tdev', 1], ['Sales and marketing', '$M', 'sm', 1],
+  ['Cost of operations', '$M', 'coo', 1], ['General and administrative', '$M', 'ga', 1], ['Provision for credit losses', '$M', 'pcl', 1], ['Stock-based compensation', '$M', 'sbc', 1],
+  ['Adjusted net income', '$M', 'earnings', 1], ['Income tax expense', '$M', 'tax', 1], ['Effective tax rate', '%', 'etr', 1],
+  ['Personal loan balance', '$B', 'plb', 1000], ['Student loan balance', '$B', 'slb', 1000], ['Home loan balance', '$B', 'hlb', 1000],
+  ['Credit card balance', '$M', 'ccb', 1], ['Commercial and consumer banking balance', '$M', 'ccbb', 1],
+  ['Interest-bearing deposits', '$B', 'ibd', 1000], ['Deposits with banks', '$B', 'ibdb', 1000], ['Total debt', '$B', 'tdb', 1000]
+];
+
+export var SOFI_GUIDED = ['Revenue', 'Adjusted EBITDA', 'Adjusted net income', 'EPS (diluted)', 'Effective tax rate'];
 
 export var SOFI_CE_CONS = {
   src: 'Bloomberg (BST) · BBG_CONSENSUS.txt snapshot archive',
   asOf: [],
   q: ['Q1 2024','Q2 2024','Q3 2024','Q4 2024','Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026','Q2 2026','Q3 2026','Q4 2026','Q1 2027','Q2 2027'],
   hz: ['4q out','3q out','2q out','1q out'],
-  nHead: 9,
-  m: [
-    { k:'Revenue',                    u:'$B', t:'ok', code:'CB_IS_NET_REVENUE' },
-    { k:'Total members',              u:'M',  t:'ok', code:'NUM_ACTIVE_ACCOUNTS' },
-    { k:'Personal loan originations', u:'$B', t:'ok', code:'LOAN_PRODUCTION_ORIGINAL' },
-    { k:'Student loan originations',  u:'$B', t:'ok', code:'LOAN_PRODUCTION_ORIGINAL' },
-    { k:'Home loan originations',     u:'$B', t:'ok', code:'LOAN_PRODUCTION_ORIGINAL' },
-    { k:'Noninterest expense',        u:'$B', t:'ok', code:'IS_OPERATING_EXPN' },
-    { k:'Stock-based compensation',   u:'$B', t:'ok', code:'CF_STOCK_BASED_COMPENSATION' },
-    { k:'Adjusted EBITDA',            u:'$B', t:'ok', code:'IS_COMPARABLE_EBITDA' },
-    { k:'Adjusted net income',        u:'$B', t:'ok', code:'IS_COMP_NET_INCOME_ADJUST_OLD' },
-    { k:'EPS (diluted)',              u:'$',  t:'ok', code:'IS_COMP_EPS_ADJUSTED_OLD' }
-  ]
+  nHead: 6,
+  m: SOFI_LINES.map(function(L){ return { k: L[0], u: L[1], t: 'ok' }; })
 };
 
 (function(){
@@ -40,7 +46,7 @@ export var SOFI_CE_CONS = {
   function ord(p){ var m=/^(\d)Q(\d{2})$/.exec(p); return m?(2000+(+m[2]))*4+(+m[1]):null; }
   var Q = SOFI_CE_CONS.q, QP = Q.map(pOf);
   // Round the way the archive prints: $B to 0.01 (0.1 from $10B up), EPS and members to 0.01.
-  function rnd(v,u){ if(v==null) return null; var d=((u==='$B'&&Math.abs(v)>=10)||u==='%')?10:100; return Math.round(v*d)/d; }
+  function rnd(v,u){ if(v==null) return null; var d=((u==='$B'&&Math.abs(v)>=10)||u==='%'||u==='$M'||u==='Mn')?10:100; return Math.round(v*d)/d; }
   function growth(m){
     m.qa=m.qa.map(function(v){ return rnd(v,m.u); }); m.qr=m.qr.map(function(r){ return r.map(function(v){ return rnd(v,m.u); }); });
     m.qy=Q.map(function(q,i){ return i>=4?m.qa[i-4]:null; }); m.qq=Q.map(function(q,i){ return i>=1?m.qa[i-1]:null; }); }
@@ -55,11 +61,9 @@ export var SOFI_CE_CONS = {
         var x=rows[v.id]&&rows[v.id][p]; if(x!=null) row[4-h]=x/scale; });
       return row; });
     growth(m); return m; }
-  var RS = { 'Revenue':['rev',1000], 'Total members':['members',1000], 'Personal loan originations':['plov',1000],
-             'Student loan originations':['slov',1000], 'Home loan originations':['hlov',1000], 'Noninterest expense':['nie',1000],
-             'Stock-based compensation':['sbc',1000], 'Adjusted EBITDA':['ebitda',1000], 'Adjusted net income':['earnings',1000], 'EPS (diluted)':['eps',1] };
+  var RS = {}; SOFI_LINES.forEach(function(L){ RS[L[0]] = [L[2], L[3]]; });
   SOFI_CE_CONS.m.forEach(function(m){ var s=RS[m.k]; if(s) fromResults(m, s[0], s[1]); });
-  var GK = { 'Revenue':['rev',1000], 'Adjusted EBITDA':['ebitda',1000], 'Adjusted net income':['earnings',1000], 'EPS (diluted)':['eps',1] };
+  var GK = { 'Revenue':['rev',1000], 'Adjusted EBITDA':['ebitda',1], 'Adjusted net income':['earnings',1], 'EPS (diluted)':['eps',1], 'Effective tax rate':['etr',1] };
   SOFI_CE_CONS.m.forEach(function(m){ var g=GK[m.k]; if(!g) return; var r=M[g[0]];
     m.qg=QP.map(function(p){ var i=r.periods.indexOf(p); if(i<0||r.guideLo[i]==null||r.guideHi[i]==null) return null;
       return rnd((r.guideLo[i]+r.guideHi[i])/2/g[1], m.u); }); });
@@ -72,11 +76,9 @@ export var SOFI_CE_CONS = {
 // (rule 10), never typed. Only the lines the model projects by quarter; the rest stay "—". Summit EPS is the model's EARNINGS / SHARES.
 function ceSummitUs(p){
   var M = sofiResults.views.q.metrics, out = {};
-  [['Revenue','rev',1000],['Total members','members',1000],['Personal loan originations','plov',1000],['Student loan originations','slov',1000],
-   ['Home loan originations','hlov',1000],['Noninterest expense','nie',1000],['Stock-based compensation','sbc',1000],
-   ['Adjusted EBITDA','ebitda',1000],['Adjusted net income','earnings',1000],['EPS (diluted)','eps',1]].forEach(function(x){
-    var r=M[x[1]], i=r?r.periods.indexOf(p):-1, v=(i>=0&&r.summit)?r.summit[i]:null;
-    if(v!=null){ v=v/x[2]; out[x[0]]={ v:Math.abs(v)>=10?Math.round(v*10)/10:Math.round(v*100)/100 }; } });
+  SOFI_LINES.forEach(function(x){
+    var r = M[x[2]], i = r ? r.periods.indexOf(p) : -1, v = (i >= 0 && r.summit) ? r.summit[i] : null;
+    if (v != null){ v = v / x[3]; out[x[0]] = { v: Math.abs(v) >= 10 ? Math.round(v * 10) / 10 : Math.round(v * 100) / 100 }; } });
   return out;
 }
 

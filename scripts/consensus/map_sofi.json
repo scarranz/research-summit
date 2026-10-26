@@ -8,7 +8,9 @@
     "lend": "SEG0000519972",
     "fs": "SEG0000519975",
     "tech": "SEG0000519976",
-    "oth": "SEG0000519978"
+    "oth": "SEG0000519978",
+    "cc": "SEG1029856575",
+    "cb": "SEG4918759227"
   },
   "q": {
     "rev": {
@@ -133,6 +135,51 @@
       "code": "IS_CONTRIBUTION_PROFIT",
       "unit": "usdM",
       "segment": "tech"
+    },
+    "dna": {
+      "code": "CF_DEPR_AMORT",
+      "unit": "usdM"
+    },
+    "shares": {
+      "code": "IS_SH_FOR_DILUTED_EPS",
+      "unit": "usdM"
+    },
+    "plb": {
+      "code": "BS_TOTAL_UNPAID_LOAN_PRINCIPAL",
+      "unit": "usdM",
+      "segment": "pl"
+    },
+    "slb": {
+      "code": "BS_TOTAL_UNPAID_LOAN_PRINCIPAL",
+      "unit": "usdM",
+      "segment": "sl"
+    },
+    "hlb": {
+      "code": "BS_TOTAL_UNPAID_LOAN_PRINCIPAL",
+      "unit": "usdM",
+      "segment": "hl"
+    },
+    "ccb": {
+      "code": "BS_AVERAGE_TOTAL_LOANS",
+      "unit": "usdM",
+      "segment": "cc"
+    },
+    "ccbb": {
+      "code": "BS_AVERAGE_TOTAL_LOANS",
+      "unit": "usdM",
+      "segment": "cb"
+    },
+    "ibdb": {
+      "code": "BS_AVERAGE_INT_EARNING_DEP",
+      "unit": "usdM"
+    },
+    "ibd": {
+      "code": "BS_AVERAGE_INTEREST_BEAR_DEPOSIT",
+      "unit": "usdM"
+    },
+    "tdb": {
+      "code": "CB_BS_TOTAL_DEBT",
+      "unit": "usdM"
     }
   },
   "y": {
@@ -258,6 +305,51 @@
       "code": "IS_CONTRIBUTION_PROFIT",
       "unit": "usdM",
       "segment": "tech"
+    },
+    "dna": {
+      "code": "CF_DEPR_AMORT",
+      "unit": "usdM"
+    },
+    "shares": {
+      "code": "IS_SH_FOR_DILUTED_EPS",
+      "unit": "usdM"
+    },
+    "plb": {
+      "code": "BS_TOTAL_UNPAID_LOAN_PRINCIPAL",
+      "unit": "usdM",
+      "segment": "pl"
+    },
+    "slb": {
+      "code": "BS_TOTAL_UNPAID_LOAN_PRINCIPAL",
+      "unit": "usdM",
+      "segment": "sl"
+    },
+    "hlb": {
+      "code": "BS_TOTAL_UNPAID_LOAN_PRINCIPAL",
+      "unit": "usdM",
+      "segment": "hl"
+    },
+    "ccb": {
+      "code": "BS_AVERAGE_TOTAL_LOANS",
+      "unit": "usdM",
+      "segment": "cc"
+    },
+    "ccbb": {
+      "code": "BS_AVERAGE_TOTAL_LOANS",
+      "unit": "usdM",
+      "segment": "cb"
+    },
+    "ibdb": {
+      "code": "BS_AVERAGE_INT_EARNING_DEP",
+      "unit": "usdM"
+    },
+    "ibd": {
+      "code": "BS_AVERAGE_INTEREST_BEAR_DEPOSIT",
+      "unit": "usdM"
+    },
+    "tdb": {
+      "code": "CB_BS_TOTAL_DEBT",
+      "unit": "usdM"
     }
   }
 }

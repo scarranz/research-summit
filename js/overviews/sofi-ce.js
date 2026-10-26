@@ -602,8 +602,11 @@ function ceFmtV(u,v){
   if(u==='$B') return '$'+(+v)+'B';
   if(u==='B')  return (+v)+'B';
   if(u==='%')  return (+v).toFixed(1)+'%';
+  if(u==='$M') return '$'+ceNumM(v)+'M';
+  if(u==='Mn') return ceNumM(v)+'M';
   return String(v);
 }
+function ceNumM(v){ var a=Math.abs(+v), d=a>=1000?0:1; return (+v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}); }
 // `cur` = the current-period value the growth is measured off. Omitted → the consensus actual
 // (Street); pass Summit's own estimate to get Summit's implied growth, so BOTH columns carry a
 // YoY/QoQ chip, not just Street (Dani, Aug 2026).
@@ -630,19 +633,25 @@ function ceMarginPct(v, rev){ return (v==null||rev==null||!rev)?null:Math.round(
 // THAT segment's net sales (segment OI ÷ total revenue is meaningless — which is why segment margins were
 // absent before). The value is the metric whose actual/estimate/prior supplies the denominator.
 var CE_MARGIN_DEN={
-  'Adjusted EBITDA':'Revenue','Adjusted net income':'Revenue','Noninterest expense':'Revenue','Stock-based compensation':'Revenue'
+  'Operating income':'Revenue','Adjusted EBITDA':'Revenue','Adjusted net income':'Revenue','Depreciation and amortization':'Revenue',
+  'Noninterest expense':'Revenue','Technology and product development':'Revenue','Sales and marketing':'Revenue','Cost of operations':'Revenue',
+  'General and administrative':'Revenue','Provision for credit losses':'Revenue','Stock-based compensation':'Revenue','Income tax expense':'Operating income'
 };
 function ceMetricByKey(k){ for(var i=0;i<CE_CONS.m.length;i++){ if(CE_CONS.m[i].k===k) return CE_CONS.m[i]; } return null; }
 // Post-Results DEFAULT ordering — top-to-bottom down the income statement, NOT by surprise (Dani,
 // Aug 2026): top line → sales by segment → margins/expenses → profit by segment → cash & shares →
 // EPS last. The "By surprise" toggle re-sorts to |Street surprise| desc. Keys are CE_CONS.m[].k;
 // anything not listed sorts to the end (so a new line never silently jumps to the top).
-var CE_STMT_ORDER=['Revenue','Total members','Personal loan originations','Student loan originations','Home loan originations',
-  'Noninterest expense','Stock-based compensation','Adjusted EBITDA','Adjusted net income','EPS (diluted)'];
+var CE_STMT_ORDER=['Revenue','Net interest income','Noninterest income','Loan platform fees','Technology products and solutions','Loan origination, sales and servicing','Other noninterest income',
+  'Total members','Personal loan originations','Student loan originations','Home loan originations',
+  'Noninterest expense','Technology and product development','Sales and marketing','Cost of operations','General and administrative','Provision for credit losses','Stock-based compensation',
+  'Depreciation and amortization','Adjusted EBITDA','Operating income','Income tax expense','Effective tax rate','Adjusted net income','EPS (diluted)','Diluted shares',
+  'Personal loan balance','Student loan balance','Home loan balance','Credit card balance','Commercial and consumer banking balance','Interest-bearing deposits','Deposits with banks','Total debt'];
 function ceStmtIdx(k){ var i=CE_STMT_ORDER.indexOf(k); return i<0?CE_STMT_ORDER.length:i; }
 // Post-Results category filter (All / Top line / Bottom line). Top line = the revenue lines; everything
 // below the top line (profit, margins, cash, shares, EPS) is Bottom line. Keys are CE_CONS.m[].k.
-var CE_TOPLINE={'Revenue':1,'Total members':1,'Personal loan originations':1,'Student loan originations':1,'Home loan originations':1};
+var CE_TOPLINE={'Revenue':1,'Net interest income':1,'Noninterest income':1,'Loan platform fees':1,'Technology products and solutions':1,'Loan origination, sales and servicing':1,'Other noninterest income':1,
+  'Total members':1,'Personal loan originations':1,'Student loan originations':1,'Home loan originations':1};
 function ceCat(k){ return CE_TOPLINE[k]?'top':'bottom'; }
 // A dedicated margin ROW for a cell (label + value + the base-period margin in parens). Sits on
 // its own line so it always fits the box — the old inline chip overflowed (§6a-ii). The base
@@ -1680,6 +1689,8 @@ function ceTkFmt(u,v){
   if(u==='$B') return '$'+(+v).toFixed(1)+'B';
   if(u==='B')  return (+v).toFixed(2)+'B';
   if(u==='%')  return (+v).toFixed(1)+'%';
+  if(u==='$M') return '$'+ceNumM(v)+'M';
+  if(u==='Mn') return ceNumM(v)+'M';
   return String(v);
 }
 function wireCeTrack(root){

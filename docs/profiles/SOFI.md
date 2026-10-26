@@ -171,7 +171,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | OV-3 | Overview ▸ Cuadrante 2×2 | ✅ | 2026-10-26 | Dani | 6664b2c | 4 celdas ≤ 30 palabras; The edge = banco + productos |
 | OV-4 | Overview ▸ How it makes money | ✅ | 2026-10-26 | Dani | 110f4fe | solo vista Segments (el 10-K no trae geografía); acordeones por segmento + The revenue lines |
 | OV-5 | Overview ▸ Products & platforms | ✅ | 2026-10-26 | Dani | 2c8e8db | 5 familias, 16 productos; modal por familia |
-| OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
+| OV-6 | Overview ▸ Competitors (peer map) | 📝 | 2026-10-26 | | | peers elegidos; denominadores de EDGAR (5 de 6 listos); Nu bloqueado |
 | OV-7 | Overview ▸ Timeline | ⬜ | | | | |
 | OV-F | Overview ▸ Pie de fuentes | ⬜ | | | | |
 | EV-RES-DATA | Dataset de Results (números) | ⬜ | | | | |
@@ -221,6 +221,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 - 2026-10-26 · OV-3 · "The edge" = banco nacional que financia préstamos con depósitos propios ($37.5B) + miembros que adoptan más productos (Financial Services Productivity Loop) — Dani
 - 2026-10-26 · OV-4 · Solo vista Segments (sin Geography: el 10-K no desagrega ingresos por geografía); Corporate/Other (−$227.8M, derivado: total reportado menos los tres segmentos) aparece solo en la leyenda; acordeón final "The revenue lines" con las 5 líneas del 10-K — Dani
 - 2026-10-26 · OV-5 · 5 familias: Lending · Banking & cards · Investing & crypto · Member tools · Technology Platform — Dani
+- 2026-10-26 · OV-6 · Peers: HOOD, NU, IBKR, SCHW, AFRM, UPST (+ SOFI); denominadores y crecimiento de EDGAR (10-K / 20-F del propio peer), sin agregadores — Dani
 
 ## 4. Excepciones aceptadas
 
@@ -356,3 +357,19 @@ playbook (candidata a podar, **solo con tu OK**).
 
 ### 2026-10-26 · OV-5 Products & platforms — APROBADA
 - Qué se mostró: 5 familias y 16 productos en el preview (commit `2c8e8db`). Sin cambios pedidos.
+
+### 2026-10-26 · OV-6 Competitors (peer map) — 📝 PROPUESTA, datos de EDGAR a medias
+- Fuente: XBRL `companyfacts` de data.sec.gov (cada peer, su propio 10-K / 20-F). Último año fiscal anual, USD. EV/EBITDA no aplica a brokers ni bancos (SCHW, IBKR, NU, HOOD); solo P/E.
+
+| Peer | Año fiscal (filing) | Ingreso | Ingreso año previo | Crecimiento | EPS diluido | Utilidad neta | Nota |
+|---|---|---|---|---|---|---|---|
+| HOOD (Robinhood) | FY2025 (10-K/A, 2026-02-20) | 4,473 M | 2,951 M | +51.6% | 2.05 | 1,883 M | el feed trae la enmienda 10-K/A; falta confirmar contra el 10-K original |
+| SCHW (Schwab) | FY2025 (10-K, 2026-02-25) | 23,921 M | 19,606 M | +22.0% | 4.65 | 8,852 M | |
+| IBKR (Interactive Brokers) | FY2025 (10-K, 2026-02-27) | 6,205 M (net of interest expense) | 5,185 M | +19.7% | 2.22 | 4,357 M (incluye participaciones no controladoras) | EPS de la Clase A; el grupo gana más |
+| UPST (Upstart) | FY2025 (10-K, 2026-02-10) | 1,043.9 M | 636.5 M | +64.0% | 0.45 | 53.6 M | |
+| AFRM (Affirm) | FY2026, cierre 2026-06-30 (10-K, 2026-08-27) | 4,261.1 M | 3,224.4 M | +32.2% | 5.53 | 1,929.8 M | EPS y utilidad inflados (la utilidad pasó de 52.2 M a 1,929.8 M): P/E no comparable hasta revisar qué partida única lo causa |
+| NU (Nu Holdings) | FY2025 (20-F, 2026-04-08) | ⛔ | | | | | SEC responde 403 al documento completo y el feed XBRL solo llega a FY2024 |
+
+- Crecimiento calculado como ingreso FY ÷ ingreso FY previo − 1 (mismo concepto XBRL en ambos años).
+- SoFi: forward con consenso BBG (está en `BBG_CONSENSUS.txt`); los 6 peers van solo con trailing, "no Street file".
+- Pendiente de decisión del analista: qué hacer con Nu y con el P/E de Affirm; el `why` de cada peer.

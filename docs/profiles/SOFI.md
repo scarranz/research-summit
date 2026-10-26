@@ -191,9 +191,9 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results | 👀 | 2026-10-26 | | | 2Q26, 1Q26 y 4Q25 completos (resumen, notas, discurso preparado, preguntas); trimestres anteriores (4Q23–3Q25) sin cargar |
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | 👀 | 2026-10-26 | | | registro de temas vacío a propósito; el analista agrega notas en el portal |
 | BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | 👀 | 2026-10-26 | | | sobre el motor Results (sección blprof) |
-| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⬜ | | | | |
-| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ⬜ | | | | |
-| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ⬜ | | | | |
+| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⏭️ | 2026-10-26 | | | el puente a medida (ingreso → costo → utilidad) no se portó: SoFi es un banco sin costo de ventas; lo cubren las líneas de gasto y el recorrido a utilidad neta. Se reabre si el analista define el diseño |
+| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | 👀 | 2026-10-26 | | | grupo "Operating income to net income" en el motor: utilidad antes de impuestos, impuestos con tasa efectiva, utilidad GAAP y ajustada |
+| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | 👀 | 2026-10-26 | | | SBC y su % del ingreso en "Expense lines" (sección blexp) |
 | BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | 👀 | 2026-10-26 | | | 4 líneas funcionales + provisión + SBC, % del ingreso (sección blexp) |
 | BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
 | BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
@@ -496,3 +496,11 @@ playbook (candidata a podar, **solo con tu OK**).
 - **Estilos:** las 22 reglas CSS de `.ov-sofi …` se extendieron a `:is(.ov-sofi, .ov-sofi-dd) …` para que los paneles viejos conserven su formato dentro del Deep Dive.
 - **Autoauditoría:** `node --check` ✔ · el Overview genera sin la barra vieja ni las secciones movidas ✔ · el Deep Dive genera las 6 secciones con los 5 sub-tabs de Misc, Sensitivity y los colapsables ✔ · `init` del Overview y del Deep Dive corren sin errores con un DOM de prueba ✔ · **no probado:** los gráficos de los paneles viejos dentro del Deep Dive (Chart.js) y el precio en vivo; lo ve Dani en el preview.
 - **VA-TM ⏭️:** Summit no tiene múltiplo ni precio objetivo para SOFI.
+
+### 2026-10-26 · BL-GEN-3 / BL-GEN-4 Bottom Line — 👀 EN REVISIÓN (BL-GEN-2 ⏭️)
+- Qué se agregó a Bottom Line ▸ General (motor Results): grupo **Operating income to net income** con utilidad antes de impuestos, impuesto sobre la renta (con su tasa efectiva como margen sobre la utilidad antes de impuestos), utilidad neta GAAP y utilidad ajustada. SBC y su % del ingreso ya estaban en "Expense lines".
+- Cuadre: utilidad antes de impuestos − impuestos = utilidad GAAP en **2Q25 a 2Q26 al decimal** (97.3, 139.4, 173.5, 166.7 y 156.6). FY2025: 525.9 − 44.5 = 481.3. 1Q25 no trae impuestos (Bloomberg solo cubre 4 trimestres reportados).
+- **Corrección de datos (descubierta con este cuadre):** la utilidad antes de impuestos de 2Q26 del modelo es 182.8, no la reportada. Con el ingreso real de 1,218.7 sale 204.3 (1,218.676 − 1,000.612 − 13.755), que menos 47.7 de impuestos da la utilidad GAAP de 156.6. El actual de 2Q26 se fijó con el 10-Q y la nota de la métrica lo dice (el modelo tiene 21.7 de menos en ingreso, ya registrado).
+- Nota de datos: la tasa efectiva de FY2024 no es comparable (beneficio fiscal único por liberar la reserva de valuación); la nota de la métrica lo advierte.
+- BL-GEN-2 (el puente a medida) queda ⏭️: se reabre si el analista define cómo quiere el puente de un banco; mientras tanto el recorrido a utilidad neta y las líneas de gasto cubren la pregunta de la sección.
+- `verify_preprint.py SOFI cons`: 320 iguales, 0 cambiadas ✔.

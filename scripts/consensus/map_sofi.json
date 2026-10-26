@@ -74,6 +74,10 @@
     "coo": {
       "code": "CB_IS_OTHER_OPEX",
       "unit": "usdM"
+    },
+    "tax": {
+      "code": "IS_INC_TAX_EXP",
+      "unit": "usdM"
     }
   },
   "y": {
@@ -143,6 +147,10 @@
     },
     "coo": {
       "code": "CB_IS_OTHER_OPEX",
+      "unit": "usdM"
+    },
+    "tax": {
+      "code": "IS_INC_TAX_EXP",
       "unit": "usdM"
     }
   }

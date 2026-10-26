@@ -170,7 +170,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | OV-2 | Overview ▸ Descripción | ✅ | 2026-10-26 | Dani | 2341e93 | lede de 3 oraciones; cita de la misión → Misc |
 | OV-3 | Overview ▸ Cuadrante 2×2 | ✅ | 2026-10-26 | Dani | 6664b2c | 4 celdas ≤ 30 palabras; The edge = banco + productos |
 | OV-4 | Overview ▸ How it makes money | ✅ | 2026-10-26 | Dani | 110f4fe | solo vista Segments (el 10-K no trae geografía); acordeones por segmento + The revenue lines |
-| OV-5 | Overview ▸ Products & platforms | 👀 | 2026-10-26 | | | 5 familias, 16 productos; modal por familia |
+| OV-5 | Overview ▸ Products & platforms | ✅ | 2026-10-26 | Dani | 2c8e8db | 5 familias, 16 productos; modal por familia |
 | OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
 | OV-7 | Overview ▸ Timeline | ⬜ | | | | |
 | OV-F | Overview ▸ Pie de fuentes | ⬜ | | | | |
@@ -353,3 +353,6 @@ playbook (candidata a podar, **solo con tu OK**).
 - Autoauditoría: tarjeta = icono + familia + línea ≤ 6 palabras + "See products ›" ✔ · modal = icono + familia, línea en gris, productos ✔ · dos niveles (nunca todos los productos a la vista) ✔ · ninguna familia con más de ~6 productos (Member tools = 6) ✔ · sin color ni estilos en línea ✔ · `node --check` ✔ · render visual no verificado por Claude.
 - Supuesto a confirmar: Galileo = "event and authorization platform accessed via APIs" por eliminación (el 10-K nombra a Technisys como la plataforma bancaria nativa en la nube; no liga explícitamente a Galileo con su descripción). Peach y Composer (solo en el 10-Q de 2026) quedan fuera y van al Timeline.
 - Corrección al mapa B2: `OFFERINGS` del perfil viejo son ofertas de capital (convertibles y acciones), no productos; se movió a #13 (`MISC-capital`).
+
+### 2026-10-26 · OV-5 Products & platforms — APROBADA
+- Qué se mostró: 5 familias y 16 productos en el preview (commit `2c8e8db`). Sin cambios pedidos.

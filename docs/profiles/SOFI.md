@@ -1,0 +1,254 @@
+# SOFI — bitácora de construcción del perfil
+
+> Reglas: `docs/PROFILE_PLAYBOOK.md` §3.
+> Claude la lee completa al empezar cada sesión y la actualiza en cada aprobación (no al final).
+> Estados: ⬜ pendiente · 📝 propuesta · 🔨 en construcción · 👀 en revisión · 🔁 cambios pedidos ·
+> ✅ aprobada · ⏭️ omitida (con razón) · ⛔ bloqueada (qué falta y quién lo consigue)
+
+| Campo | Valor |
+|---|---|
+| Empresa | SoFi Technologies, Inc. (NASDAQ: SOFI) |
+| Modo | B — reordenar existente (perfil viejo, `js/overviews/sofi.js`, 3,799 líneas, un solo archivo) |
+| Rama | `feat/sofi-profile` (desde `origin/main` @ `95c00e0`) |
+| Analista responsable | Dani (Daniel Alvarez) |
+| Inicio | 2026-10-26 |
+| Avance | 0 de 39 unidades aprobadas · F0 y B1 en propuesta |
+
+**Regla de esta sesión (analista, 2026-10-26):** el perfil es viejo y puede tener cosas que ya no aplican
+a la convención actual (la de META / TSM / AMZN). Lo que claramente contradice la convención se puede
+quitar, **pero ante la duda se conserva y se confirma con el analista antes de podar**. Que algo se haya
+construido antes no es razón para quedarse, ni para irse. Esto es más estricto que la regla 1 del playbook
+solo en un punto: aquí "podar" siempre pasa por una pregunta explícita pieza por pieza (§5).
+
+## 1. Inventario de datos (F0)
+
+Revisado 2026-10-26. ✔ verificado hoy · ❓ por verificar.
+
+| Fuente | ¿Existe? | Detalle | Qué habilita | Qué queda fuera sin ella |
+|---|---|---|---|---|
+| Fila en `companies` | ✔ (el perfil ya abre hoy) | `SOFI: sofiOverview` en `js/overviews/index.js:33` | el perfil abre | — |
+| Filing anual / trimestral | ❓ | el perfil viejo cita 10-K FY2025 y 10-Q 1Q26. Hoy es 2026-10-26: habría 10-Q de 2Q26 y 3Q26 todavía sin publicar. Forma 10-K (empresa doméstica, calendario, USD) → verificar acc. en EDGAR | Overview, Top Line, textos verbatim | todo |
+| Año fiscal / moneda | ✔ (por el perfil viejo) | cierre 31 dic, USD. Sin ajustes de FX | — | — |
+| Summit DCF | ✔ (MCP autenticado 2026-10-26) | 3 snapshots: `2026-02-03`, `2026-04-29`, `2026-08-05`; 92 etiquetas, 23,298 hechos cada uno, USD millones. El último trae **2Q26 ya real** (llamada del 2026-07-29). **Ninguna valuación** (`get_valuation_history` → `no_valuations_for_ticker`). El perfil viejo citaba el snapshot `2026-05-13`, que **ya no existe** en el MCP | F0-SM, serie Summit, Estimates (3 snapshots, necesita ≥ 2 ✔) | Target Multiple sin múltiplo ni precio objetivo del modelo (⏭️ propuesto) |
+| Consenso BBG | ✔ (agregado 2026-10-26 por el analista) | `inspect_matrix.py SOFI`: 18 snapshots, 2022-05-15 → 2026-10-26. Core: Net Revenue, Non-Interest Expense, Adjusted EBITDA, Income Tax, Adjusted Net Income, Diluted Shares, Diluted EPS, D&A, SBC (+ Other Non-Op sin datos). 23 KPIs: miembros, originaciones PL/SL/HL, saldos, depósitos, deuda, Loan Platform Fees, líneas de opex y Provision for Credit Losses. Horizontes fq-4…fq+4, fy-2…fy+3 | `estMatrix.cons`, Setup, export de Bottom Line | ver dudas ❓ BBG abajo |
+| `get-market-history` (Massive) | ❓ | estado de despliegue por verificar | Historic Multiple en vivo | "Live data pending" |
+| `get-quote` (Yahoo, hoy lo usa SOFI) | ❓ | CLAUDE.md dice "Not yet deployed"; el perfil viejo cae a un precio fijo $17.57 | precio en vivo | regla 10: el precio no se siembra |
+| SPLC | ❓ | no se buscó todavía en `nvidia-map-reference/` ni exports de Drive | BL-SPLC, TL-CUS | probable ⏭️: SoFi es banco/fintech de consumo |
+| Transcripciones | ✘ en repo | `docs/calls/` no tiene SOFI. Quartr por consultar | EV-POST, EV-NOTES, citas | — |
+| Fiscal.ai (plan) | ❓ | hoy Management usa **Form 4 sembrado a mano** (`INSIDER_TX`) | tabla en vivo de Management | hueco "not available on current plan" |
+| Massive (`liveQuote`) | ❓ | probar en la vista previa | market cap, peers | — |
+| Fotos | ❓ | el perfil viejo usa iniciales (`orgInitials`) | Management | iniciales |
+
+**Escalera de capacidades provisional:** con consenso BBG ya hay `estMatrix`, Setup y el export de Bottom Line; Summit (Estimates, Target Multiple, Sensitivity) espera la autenticación del MCP. Se confirma al cerrar F0.
+
+**Alcance acordado:** pendiente (compuerta F0).
+
+## 1b. Mapa Summit (F0-SM)
+
+📝 **Primera pasada, 2026-10-26** — snapshot `2026-08-05` (source 14:50 UTC), moneda USD, escala millones, 92 etiquetas.
+**Pendiente:** cuadre contra el 10-K/10-Q (hoy sólo cuadra con el perfil viejo y por aritmética interna del modelo) y
+confirmación del autor del modelo en las ❓. El archivo `js/summit-map/sofi.js` todavía **no** está escrito (se genera al aprobar).
+
+**Cómo está armado el modelo (lo que el MCP no dice):**
+- Todas las etiquetas dicen `USD · millions · sum`, incluidas conteos, saldos, tasas y precios; la unidad real va abajo.
+- Hay tres fuentes: `DEFAULT` (core consolidado), `SEGM` (segmentos y KPIs) y `BBG` (4 etiquetas de consenso, sólo anuales).
+- **`REV` (DEFAULT) es ingreso bruto, no neto:** FY25 `REV` 4,770 = `SEG_REVENUE` 3,613 + gasto por intereses 1,156. El "total net
+  revenue" que usa SoFi y el perfil viejo ($3.61B) es **`SEG_REVENUE`** (2Q26: 1,197 = `NIM_REVENUE` 788 + `NII_REVENUE` 409 ✔).
+- Último real: **2Q26** (trimestral). 2026 anual y 2026Q3+ son proyección Summit.
+- `EARNINGS` = utilidad neta **ajustada** (2Q26 160.4); `NET_INCOME_GAAP` = GAAP (2Q26 156.6); coinciden en FY25 (481.3).
+- La valuación no se mapea (no existe para SOFI).
+
+| Etiqueta MCP | Rol | Clave portal | Qué es, en una línea | Unidad real | Agregación | Cuadre / evidencia | Confianza |
+|---|---|---|---|---|---|---|---|
+| `SEG_REVENUE` | core | `rev` | Ingreso neto total (NII + no financiero) | USD M | suma | FY25 3,613 = perfil viejo ✔; 2Q26 = 788 + 409 ✔ | ⚠ falta 10-K |
+| `REV` | core | — | Ingreso **bruto** (neto + gasto por intereses) | USD M | suma | 4,770 − 1,156 = 3,613 ✔ | ✔ (no usar como `rev`) |
+| `NIM_REVENUE` | segment | `nii` | Ingreso neto por intereses | USD M | suma | `II_REVENUE` + `IE_REVENUE` ✔ | ✔ |
+| `II_REVENUE` · `IE_REVENUE` · `LII_REVENUE` · `IEBIBD_REVENUE` · `IETD_REVENUE` | segment | `int.*` | Ingreso por intereses · gasto (negativo) · de préstamos · gasto de depósitos con interés · (todo 0) | USD M | suma | II 1,141 + IE −352 = 788 ✔ | ✔ · `IETD` ignore (0) |
+| `NII_REVENUE` | segment | `nonint` | Ingreso **no financiero** (el nombre engaña: no es "net interest income") | USD M | suma | 1,197 − 788 = 409 ✔ | ✔ ⚠ nombre |
+| `LPB_REVENUE` · `LPBO_REVENUE` · `LPBR_REVENUE` | segment | `lpb.*` | Loan Platform Business: total · originación · referral | USD M | suma | 140.9 = 116.6 + 24.4 ✔ | ✔ |
+| `TP_REVENUE` | segment | `tp.rev` | Ingreso Technology Platform | USD M | suma | FY25 360.9 = perfil viejo ✔ | ⚠ falta 10-K |
+| `OTHER_REVENUE` · `SERVICING_REVENUE` · `LOSS_REVENUE` | segment | `other.*` | Otros ingresos · servicing · `LOSS_REVENUE` ❓ | USD M | suma | — | ❓ `LOSS_REVENUE` |
+| `NIE` | core | `nie` | Gasto no financiero total | USD M | suma | = `SME`+`GAE`+`TPDEV`+`COO`+`PCL` (2Q26 1,014.4 ✔) | ✔ |
+| `SME` · `GAE` · `TPDEV` · `COO` · `PCL` | segment | `opex.*` | Ventas y marketing · G&A · tecnología y desarrollo · costo de operaciones · provisión de pérdidas (decodificados por aritmética) | USD M | suma | la suma cuadra con `NIE` ✔ | ⚠ confirmar nombres |
+| `OP_INCOME` | core | `opinc` | Utilidad operativa | USD M | suma | 1,197 − 1,014 = 183 ✔ | ✔ |
+| `ITE` · `ISB` | segment | `tax.*` | Gasto de impuestos (`ITE`) · `ISB` ❓ (30 en 2Q26, 0 en FY25) | USD M | suma | — | ❓ `ISB` |
+| `TAX_RATE` | core | `tax_rate` | Tasa efectiva | **fracción** (0.261 = 26.1%) | promedio | FY25 8.5% | ⚠ |
+| `EARNINGS` | core | `earnings` | Utilidad neta **ajustada** | USD M | suma | FY25 481.3 ✔ | ✔ |
+| `NET_INCOME_GAAP` | core | `ni_gaap` | Utilidad neta GAAP | USD M | suma | 2Q26 156.6 | ✔ |
+| `ADJ_NET_INCOME` | core | — | Idéntica a `EARNINGS` en todos los periodos vistos | USD M | suma | = `EARNINGS` | ⚠ duplicada, ¿ignore? |
+| `EBITDA` · `ADJ_EBITDA` | core | `ebitda` | EBITDA ajustado (idénticos en todos los periodos vistos) | USD M | suma | FY25 1,054 = perfil viejo ✔ | ⚠ duplicada |
+| `SHARES` | core | `shares` | Acciones diluidas promedio | **millones de acciones** | promedio | FY25 1,252 | ⚠ confirmar base |
+| `DNA` · `SBC` · `CAPEX` | core | `dna` · `sbc` · `capex` | D&A · compensación en acciones · capex (signo −; trimestral vacío, sólo FY25 −242.4) | USD M | suma | — | ⚠ `CAPEX` trimestral |
+| `CFO` · `FCF` | core | `cfo` · `fcf` | Flujo operativo y libre — FY25 **−3,742 / −3,985** (préstamos mantenidos para venta); trimestral 0 | USD M | suma | — | ⚠ no usar sin explicar |
+| `INT_INC` · `INT_EXP` | core | `int_inc` · `int_exp` | Ingreso/gasto por intereses consolidados; `INT_EXP` anual = 0 pero trimestral −352 | USD M | suma | `INT_INC` 2Q26 = `II_REVENUE` ✔ | ⚠ `INT_EXP` FY25 vacío |
+| `MEMB` | kpi | `members` | Miembros totales | **miles** (13,650 = 13.65M ✔ perfil viejo) | fin de periodo | 2Q26 15,810 | ✔ ⚠ unidad |
+| `PPM` · `FSPPM` | kpi | `ppm` | Productos por miembro · productos de Financial Services por miembro | x (1.54) | fin de periodo | — | ✔ |
+| `FSP` · `TPA` | kpi | `fsp` · `tp.accts` | Productos de Financial Services (miles) · cuentas habilitadas de Technology Platform (miles; 134,800 = 134.8M) | miles | fin de periodo | `TPA` FY25 128.5M = perfil viejo ✔ | ✔ |
+| `TPRPA` | kpi | — | Ingreso por cuenta de Technology Platform | USD | — | — | ❓ definición (0.42 / 2.81) |
+| `PLOV` · `SLOV` · `HLOV` · `LOV` | kpi | `orig.*` | Originaciones: personal · estudiantil · hipotecario · total | USD M | suma | 10,720 + 2,687 + 1,393 = 14,800 ✔ (2Q26) | ✔ |
+| `PNO` · `PLPBO` | kpi | `orig.pl.*` | Originaciones personales: con balance propio · vía Loan Platform | USD M | suma | `PNO` + `PLPBO` = `PLOV` (7,618 + 3,100 ✔) | ✔ |
+| `PLB` · `SLB` · `HLB` | kpi | `bal.*` | Saldo de préstamos: personal 26.2B · estudiantil 16.0B · hipotecario 1.9B | USD M | fin de periodo | — | ⚠ `HLB` salta 541 → 1,887 (2Q25 → 2Q26) |
+| `TNL` · `TNPL` · `TNSL` · `TNHL` · `TNLO` · `TNPLO` · `TNSLO` · `TNHLO` | kpi | `n.*` | Número de préstamos (total / personal / estudiantil / hipotecario) y sufijo `O` | miles | fin de periodo | `TNL` 3,093 | ❓ unidad y sufijo `O` |
+| `AVGPL` · `AVGSL` · `AVGHL` | kpi | `avg.loan.*` | Tamaño promedio de préstamo (USD: 25,360 / 45,900 / 232,300) | USD | promedio | — | ❓ |
+| `PLBPM` · `SLBPM` · `HLBPM` · `LBPM` · `LPBPM` · `LPPM` | kpi | `perm.*` | Razones "por miembro" | USD | — | sin comprobar | ❓ |
+| `DBPM` · `DBORPM` | kpi | `dep.perm` | Depósitos por miembro (USD) · `DBORPM` ❓ | USD | — | `DBPM` = 41.9B ÷ 15.81M = 2,651 ✔ | ✔ · ❓ `DBORPM` |
+| `IBD` · `IBDB` · `IBL` · `IEA` · `LIEA` · `TDB` | kpi | `bs.*` | Depósitos con interés · `IBDB` ❓ · pasivos con interés · activos que generan interés · `LIEA` ❓ · `TDB` ❓ | USD M | fin de periodo | `IEA` 52.9B (2Q26) | ❓ |
+| `CCB` · `CCBB` · `NPRM` · `SRPM` · `LOSS` | kpi | — | sin identificar | ? | ? | — | ❓ |
+| `ADJ_EBITDA_LOW_GUIDANCE` · `ADJ_EBITDA_HIGH_GUIDANCE` · `REV_LOW_GUIDANCE` · `REV_HIGH_GUIDANCE` | guidance | `guid.*` | Guía de la empresa — **todas en 0** en FY25, 2Q25 y 2Q26 | USD M | — | — | ⛔ vacías; la guía sale de los 8-K y las llamadas |
+| `REV_BBG_EST` · `EBITDA_BBG_EST` · `EARNINGS_BBG_EST` · `SHARES_BBG_EST` | consensus | `cons.*` | Consenso BBG embebido en el modelo (sólo FY25, `source=BBG`) | USD M | suma | FY25 3,560 / 1,037 / 460 / 1,231 | ⚠ sólo anual; se usa el workbook de consenso |
+
+**Resumen:** 92 etiquetas, todas incluidas arriba (agrupadas por familia). La clasificación por rol es provisional: se cuenta exacta al aprobar el mapa.
+
+### Dudas
+
+```
+❓ SOFI · REV vs SEG_REVENUE — ¿`rev` del portal = SEG_REVENUE (neto)? REV (DEFAULT) es bruto.
+   Lo que se ve: FY25 4,770 vs 3,613; la diferencia es el gasto por intereses, 1,156.
+   Quién responde: analista. Mientras tanto: ninguna unidad usa REV.
+
+❓ SOFI · EBITDA/ADJ_EBITDA y EARNINGS/ADJ_NET_INCOME — idénticas; ¿cuál es la fuente y cuál se ignora?
+   Quién responde: autor del modelo. Mientras tanto: se usa EBITDA y EARNINGS.
+
+❓ SOFI · CFO/FCF/CAPEX/INT_EXP — vacíos en trimestres; FY25 CFO −3,742 por préstamos mantenidos para venta.
+   Mientras tanto: Bottom Line no muestra flujo de caja hasta aclararlo.
+
+❓ SOFI · opacas (ISB, LOSS, LOSS_REVENUE, TPRPA, DBORPM, TDB, IBDB, LIEA, CCB, CCBB, NPRM, SRPM, salto de HLB)
+   Quién responde: autor del modelo, con la celda del .xlsm. Mientras tanto: no se usan.
+
+❓ SOFI · unidades — MEMB, TPA y FSP en miles; AVG* en USD; TAX_RATE fracción; SHARES en millones de acciones; todas dicen "USD millions".
+   Se anotan aquí y en el mapa; ninguna se convierte en silencio.
+
+❓ SOFI · guía — las 4 etiquetas de guía están en 0; la guía se saca de los 8-K y de las llamadas (SOFI_calls.txt).
+```
+
+### Cambios del mapa
+
+- 2026-10-26 · snapshot 2026-08-05 · primera pasada — falta cuadre contra filing y el archivo `summit-map/sofi.js`.
+
+## 2. Tablero de unidades
+
+| ID | Unidad | Estado | Fecha | Aprobó | Commit | Nota |
+|---|---|---|---|---|---|---|
+| F0 | Inventario de datos | 📝 | 2026-10-26 | | | esperando compuerta |
+| B1 | Inventario de lo que existe | 📝 | 2026-10-26 | | | §5 abajo (34 filas por función; conteo fino pendiente) |
+| B2 | Mapa de reubicación | ⬜ | | | | depende de F0 y B1 |
+| F0-SM | Mapa de métricas Summit | 📝 | 2026-10-26 | | | primera pasada; dudas ❓ abiertas |
+| F1 | Esqueleto + vista previa | ⬜ | | | | |
+| OV-1 | Overview ▸ Key Facts | ⬜ | | | | |
+| OV-2 | Overview ▸ Descripción | ⬜ | | | | |
+| OV-3 | Overview ▸ Cuadrante 2×2 | ⬜ | | | | |
+| OV-4 | Overview ▸ How it makes money | ⬜ | | | | |
+| OV-5 | Overview ▸ Products & platforms | ⬜ | | | | |
+| OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
+| OV-7 | Overview ▸ Timeline | ⬜ | | | | |
+| OV-F | Overview ▸ Pie de fuentes | ⬜ | | | | |
+| EV-RES-DATA | Dataset de Results (números) | ⬜ | | | | |
+| EV-RES | Evolution ▸ Results | ⬜ | | | | |
+| TL-GEN | Top Line ▸ General | ⬜ | | | | |
+| TL-SEG | Top Line ▸ Segments | ⬜ | | | | |
+| TL-OTH | Top Line ▸ Other | ⬜ | | | | |
+| TL-CUS | Top Line ▸ Customers | ⬜ | | | | |
+| EV-EST | Evolution ▸ Estimates | ⬜ | | | | |
+| EV-SET | Evolution ▸ Earnings ▸ Setup | ⬜ | | | | |
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
+| EV-NOTES | Evolution ▸ Earnings ▸ Notes | ⬜ | | | | |
+| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ⬜ | | | | |
+| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⬜ | | | | |
+| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ⬜ | | | | |
+| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ⬜ | | | | |
+| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ⬜ | | | | |
+| BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
+| BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
+| VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
+| VA-PEERS | Valuation ▸ Peers | ⬜ | | | | |
+| VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
+| VA-SENS | Valuation ▸ Sensitivity Analysis | ⬜ | | | | |
+| MG-TEAM | Management ▸ Executives & Board | ⬜ | | | | |
+| MG-OWN | Management ▸ Ownership | ⬜ | | | | |
+| MG-GOV | Management ▸ Governance & SBC | ⬜ | | | | |
+| MG-TRACK | Management ▸ Track Record | ⬜ | | | | |
+| MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab) | ⬜ | | | | aquí caerán Members, Loan Platform, Tech Platform, FICO, capital… |
+| F-FINAL | Cierre y conciliación | ⬜ | | | | |
+
+## 3. Decisiones del analista
+
+- 2026-10-26 · general · Se sigue la convención más reciente (META, TSM, AMZN; playbook actualizado con el review de SAB del 2026-10-19) — Dani
+- 2026-10-26 · general · Lo viejo que contradice la convención se puede quitar, pero ante la duda se conserva y se confirma antes de podar — Dani
+
+## 4. Excepciones aceptadas
+
+(ninguna todavía)
+
+## 5. Mapa de reubicación / B1 — inventario de lo que existe
+
+Conteo de control (piezas originales): **pendiente** (hoy 34 filas agrupadas por función; falta contar abriendo el perfil en el portal
+local, playbook §4.2 B1). Archivo: `js/overviews/sofi.js`.
+
+Estructura actual (ocho pestañas propias, anterior al sistema compartido): **Overview · General · Interest
+Income · Fee Income · Management · Valuation · Sensitivity · Peers**. La convención actual es Overview +
+Deep Dive (Top Line · Bottom Line · Evolution · Valuation · Management · Miscellaneous). Columna **Marca**:
+🟢 encaja en la convención y se reubica · 🟡 duda — se conserva y se pregunta · 🔴 contradice una regla del
+playbook (candidata a podar, **solo con tu OK**).
+
+| # | Pieza original (`sofi.js:función`) | Destino propuesto (convención actual) | Marca / por qué | Estado |
+|---|---|---|---|---|
+| 1 | `overviewBody` snapshot + KPIs (`SNAPSHOT`, `KPIS`) | Overview ▸ Key Facts | 🟡 KPIs de 1Q26 sembrados (hoy ya hay 2Q26 / 3Q26 por publicar); precio y market cap deben ir en vivo (regla 10) | ⬜ |
+| 2 | `DESC`, `AS_OF`, `FY_NOTE` | Overview ▸ Descripción | 🟡 texto de FY2025 / 1Q26; se actualiza, no se pierde | ⬜ |
+| 3 | `HOW_MONEY` + `SEGMENTS` + `incomeSquare` | Overview ▸ How SoFi makes money | 🟢 | ⬜ |
+| 4 | `ENGINE` (cross-buy flywheel) | Overview ▸ Cuadrante 2×2 / Products | 🟡 | ⬜ |
+| 5 | `OFFERINGS` | Overview ▸ Products & platforms | 🟢 | ⬜ |
+| 6 | `TAILWINDS` / `HEADWINDS` | Misc (o Overview, por decidir) | 🟡 no hay bloque equivalente en la convención | ⬜ |
+| 7 | `TARGETS` / `DRIVERS` (metas de largo plazo) | Misc ▸ guidance / targets | 🟡 | ⬜ |
+| 8 | `FINANCIALS` + `FIN_NOTE` (FY24 vs FY25) | Bottom Line ▸ General / Results | 🟢 sustituida por el motor, el texto pasa a nota | ⬜ |
+| 9 | `PEERS` (tarjetas de rivales en Overview) | Overview ▸ Competitors | 🟢 | ⬜ |
+| 10 | `milestonesBody` / `TIMELINE` | Overview ▸ Timeline | 🟢 | ⬜ |
+| 11 | `membersBody` + `MEM_*` (miembros, slider CAGR) | Top Line ▸ Segments (KPI) o Misc | 🟢 motor `segments.js` | ⬜ |
+| 12 | `rule40Body` / `buildRule40Chart` | Misc ▸ Rule of 40 | 🟡 no tiene hogar en la convención | ⬜ |
+| 13 | `capRaisesBody` + `CAPR_*` (capital, BVPS, TBVPS) | Misc ▸ capital / Bottom Line | 🟡 | ⬜ |
+| 14 | `interestBody` + `loanBlock` (`LOAN_PL/SL/HL`) | Top Line ▸ Segments ▸ Lending | 🟢 | ⬜ |
+| 15 | `ficoCard` / `ficoGauge` (FICO 746) | Top Line ▸ Segments ▸ Lending KPIs | 🟡 | ⬜ |
+| 16 | `capCard` (ratio de capital vs 10.5% requerido) | Misc ▸ capacity → revenue | 🟢 encaja con "Capacity → revenue" (§15b) | ⬜ |
+| 17 | `feeBody` + `FEE_INTRO` | Top Line ▸ Segments (Fee) | 🟡 | ⬜ |
+| 18 | `lpbBody` (Loan Platform Business: hero, flujo, funders, pie) | Top Line ▸ Segments ▸ Lending / Misc ▸ LPB | 🟢 contenido único, se conserva entero | ⬜ |
+| 19 | `techBody` (Galileo/Technisys, clientes, gráfica de cuentas e ingreso) | Top Line ▸ Segments ▸ Technology Platform + TL-CUS | 🟢 | ⬜ |
+| 20 | `fsBody` (Financial Services) | Top Line ▸ Segments ▸ Financial Services | 🟢 | ⬜ |
+| 21 | `valuationBody` → `aveBody` (Actuals vs Estimates, `AVE_METRICS`) | Evolution ▸ Results (surprise scorecard) | 🔴/🟡 compara el modelo Summit vs actual con números **sembrados** del snapshot 2026-05-13 (regla 10); el motor Results ya lo hace | ⬜ |
+| 22 | `guidanceBody` (Actuals vs Guidance, anual + trimestral) | Evolution ▸ Results (guidance) | 🟢 **ya portado a `results.js`** (comentario en `results.js:3573`) — pieza fuente | ⬜ |
+| 23 | Evolution `EVO_*` (cómo cambió el modelo entre snapshots) | Evolution ▸ Estimates | 🟡 hoy sólo 3 snapshots sembrados; EV-EST necesita ≥ 2 del MCP | ⬜ |
+| 24 | `sensBody` + `SENS_*` (multi-driver, LPB e ingreso por intereses) | Valuation ▸ Sensitivity Analysis | 🔴/🟡 base sembrada del snapshot 2026-05-13; diseño propio de SoFi | ⬜ |
+| 25 | `SOTP_*` + `renderSotp` (suma de partes) | Valuation ▸ Target Multiple / Misc | 🟡 no existe en la convención; es análisis propio | ⬜ |
+| 26 | `fetchSofiQuote` / `renderLiveBanner` (banner de precio, fallback $17.57) | Eliminada por precio en vivo estándar | 🔴 precio sembrado de respaldo (regla 10) | ⬜ |
+| 27 | `peersBody` + `PEER_SERIES`, `PEER_FEE`, tabla, series de tiempo, mix, scatter | Valuation ▸ Peers | 🟡 precios del 25-Jun-2026 y EPS de consenso de stockanalysis/Yahoo sembrados (regla 3: no son fuente primaria) | ⬜ |
+| 28 | `managementBody` → `orgChartBody` (`ORG_*`, `PROFILES`, modal) | Management ▸ Executives & Board | 🟢 | ⬜ |
+| 29 | `insiderActivityBody` + `INSIDER_TX` (Form 4 a mano) | Management ▸ Governance / Fiscal.ai | 🟡 hoy sembrado; debería venir del motor | ⬜ |
+| 30 | `INSIDER_OWN` / `SHARES_OUT` | Management ▸ Ownership | 🟡 | ⬜ |
+| 31 | `BRAND '#0E7CC0'`, `PEER_COLORS`, `AVE_GREEN/RED`, `EVO_COLORS` | Tokens Summit | 🔴 la marca de SoFi sólo en el logo; el Overview sin color categórico (§8, §21) | ⬜ |
+| 32 | 15 `style="…"` en línea | CSS compartido | 🔴 un perfil nuevo no agrega estilos en línea | ⬜ |
+| 33 | `soonBody` (placeholder) | — | 🔴 no se publican sub-tabs "pendiente" (regla 5) — ¿todavía se usa? | ⬜ |
+| 34 | `SOURCES` | pies de fuentes por panel | 🟢 | ⬜ |
+
+(34 filas agrupadas por función; el conteo de control definitivo se fija en B1 abriendo el perfil en local.)
+
+## 6. Bloqueos y preguntas abiertas
+
+| Desde | Unidad | Qué falta | Quién lo consigue | Estado |
+|---|---|---|---|---|
+| 2026-10-26 | F0-SM, EV-EST, VA-TM, VA-SENS | ~~MCP sin autenticar~~ resuelto 2026-10-26 | Dani | ✔ cerrado |
+| 2026-10-26 | EV-SET, BL | ~~SOFI no estaba en el workbook~~ resuelto 2026-10-26 | Dani | ✔ cerrado |
+| 2026-10-26 | EV-RES-DATA | ❓ BBG slot `kpi17` etiqueta "Servicing" pero código `CB_IS_SERVICE_REVENUE`; `kpi18` etiqueta "Technology Products and Solutions" con código `IS_MORTGAGE_PRODUCTION_REVENUE`; `kpi16` "Loan Origination, Sales, and Securitiz…" con código `LOAN_SERVICING_INCOME`. Etiqueta y código parecen cruzados; `kpi1` Total Members sólo trae fq-4 y fq+1…+4 (sin fq0). No se usan hasta confirmar contra el 10-Q | Dani (quien armó los slots) | abierto |
+| 2026-10-26 | EV-POST, EV-NOTES | ~~transcripciones~~ resuelto: Dani subió `SOFI_calls.txt` (11 llamadas, Q4 2023 → Q2 2026). Quartr **ya no se consulta** (sin acceso). Falta copiarlas a `docs/calls/` | Claude | ✔ cerrado |
+
+## 6b. Conexiones pendientes ("Live data pending")
+
+| Desde | Unidad ▸ bloque | Qué falta | Quién lo destraba | Estado |
+|---|---|---|---|---|
+| 2026-10-26 | precio / Key Facts / Peers | `get-quote` / `get-market-history` sin desplegar (por verificar) | San / Oscar | por verificar |
+
+## 6c. Review del analista — pendientes
+
+| # | Pedido | Unidad | Qué hay que construir | Depende de | ¿Va a la guía? | Estado |
+|---|---|---|---|---|---|---|
+
+## 7. Historial de aprobaciones
+
+(ninguna todavía)

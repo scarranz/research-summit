@@ -80,6 +80,26 @@ const BUILD = {
 };
 /* Size & build sources: asml.com product pages and press releases; Intel Newsroom (High-NA shipment); CNBC (EUV shipping, weight). */
 
+/* What chips each family makes and which end markets they ship into (Oct 26 2026). ASML does not split end-use per family: it reports
+   Logic vs Memory for all systems together (20-F Note 2). The mapping is qualitative, from the FY2025 20-F (Our marketplace; product
+   sections: "advanced Logic and DRAM" for EUV; "More than Moore … mature, cost-effective technologies for applications like automotive,
+   consumer electronics and data centers"; "around two-thirds of components in … the latest smartphones"; EV power electronics; XT:260 for
+   advanced packaging) and asml.com product pages. */
+const PL_END = {
+  iline: { chips:'Power chips (MOSFETs, IGBTs), analog, sensors and MEMS; the thick, simple layers of every chip; advanced-packaging layers (XT:260)',
+           mkts:['Automotive and EV power electronics','Industrial','Consumer electronics and IoT','AI chip packaging'] },
+  krf:   { chips:'3D NAND flash, image sensors, microcontrollers, analog / mixed-signal; the non-critical layers of advanced chips',
+           mkts:['Smartphones and PCs','Data-center storage (SSDs)','Automotive and industrial','Cameras'] },
+  arfd:  { chips:'Mature-node logic (28 nm and older) and the mid-critical layers of DRAM and logic',
+           mkts:['Automotive','IoT and connectivity','Consumer electronics','Industrial'] },
+  arfi:  { chips:'DRAM, logic down to 7 nm-class (with multiple exposures), and the critical layers that do not need EUV; most of China\'s mainstream build-out',
+           mkts:['AI servers and data centers (DRAM)','Smartphones and PCs','China domestic chips: auto, industrial, consumer'] },
+  euv:   { chips:'Leading-edge logic (5, 3, 2 nm: GPUs, AI accelerators, CPUs, phone processors) and leading-edge DRAM, including HBM',
+           mkts:['AI data centers','Smartphones','PCs'] },
+  hna:   { chips:'Next-generation logic below 2 nm (e.g. Intel 14A) and, later, DRAM; today mostly R&D and pilot lines',
+           mkts:['Future AI and data-center chips','Future high-end mobile'] }
+};
+
 /* What ASML has said about capacity, per group, newest first. Verbatim quotes from ASML's own call transcripts (prepared remarks; the
    published PDFs stop before Q&A) and press releases — asml-work/data/capacity_quotes.md, checked against filings/tr_q126/q226 and
    q226/q326 press releases. Q3 2026 call Q&A not frozen (no verbatim transcript available yet). para = our summary, not a quote. */
@@ -165,12 +185,20 @@ function plOpen(){
   const k = plU.open, f = FAM.find(x => plVk(x.k) === k), b = f && BUILD[f.k];
   const img = f ? IMG[f.k] : IMG.clean, cap = f ? `ASML ${b.cap}` : 'ASML cleanroom, Veldhoven';
   const facts = b ? `<div class="pl-k">Size &amp; how hard it is to build</div>` + b.rows.map(([v,t]) => `<div class="pl-br"><b>${v}</b><span>${t}</span></div>`).join('') : '';
+  const end = f ? PL_END[f.k] : null;
+  const endH = end
+    ? `<div class="pl-k">Chips it makes and where they go</div><div class="pl-br"><b>Chips</b><span>${end.chips}</span></div>` +
+      `<div class="pl-br"><b>End markets</b><span>${end.mkts.join(' · ')}</span></div>` +
+      `<div class="pl-q n" style="border:none;font-size:11px">ASML does not split end markets per machine; this is a qualitative map from the FY2025 20-F and asml.com.</div>`
+    : `<div class="pl-k">Chips it makes and where they go</div><div class="pl-br"><b>Logic</b><span>€16.1B of 2025 system sales (66%): processors, GPUs and AI accelerators, made by foundries and IDMs</span></div>` +
+      `<div class="pl-br"><b>Memory</b><span>€8.4B (34%): DRAM (incl. HBM) and NAND flash</span></div>` +
+      `<div class="pl-q n" style="border:none;font-size:11px">FY2025 20-F Note 2, net system sales by end-use (incl. metrology &amp; inspection). The only end-use split ASML discloses.</div>`;
   const said = PL_SAID[PL_SAID_KEY[k]] || [];
   const saidH = said.length ? said.map(s => `<div class="pl-q"><div class="w">${s.when} · ${s.url ? `<a href="${s.url}" target="_blank" rel="noopener">${s.src}</a>` : s.src}${s.who ? ' · ' + s.who : ''}</div>${s.q}${s.para ? ' <span class="n">(summary, not a quote)</span>' : ''}</div>`).join('')
     : '<div class="pl-q n">No capacity comment specific to this family.</div>';
   const tr = document.createElement('tr'); tr.className = 'pl-det';
   tr.innerHTML = `<td colspan="8"><div class="pl-dg">
-      <div><div class="pl-big"><img id="pl-big-img" src="${img}" alt="${cap}"><div class="cap">${cap} · click to enlarge</div></div>${facts}</div>
+      <div><div class="pl-big"><img id="pl-big-img" src="${img}" alt="${cap}"><div class="cap">${cap} · click to enlarge</div></div>${endH}${facts}</div>
       <div>
         <div class="ch" style="margin-bottom:6px"><div><div class="pl-k" style="margin:0">Units sold</div></div>
           <div class="ctls"><span><span class="ctl-l">Period</span><div class="fbg" id="pl-u-per"><button class="fb${plU.per==='a'?' active':''}" data-v="a">Annual</button><button class="fb${plU.per==='q'?' active':''}" data-v="q">Quarterly</button></div></span></div></div>

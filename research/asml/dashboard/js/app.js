@@ -2,7 +2,7 @@
    NAV fixes the sidebar order. A view that has not registered (file missing or not built yet) shows as "soon". */
 const NAV = [
   ['Business',  [['pl','Machines'], ['ib','Installed Base'], ['ov','Overview']]],
-  ['Revenue',   [['asp','ASP Engine'], ['rev','Revenue Model']]],
+  ['Revenue',   [['rb','Revenue build']]],
   ['Customers', [['cust','Customers & Geography'], ['tsmc','TSMC Link']]],
   ['Margins',   [['gm','GM Bridge & OpEx']]],
   ['Summary',   [['pnl','P&L & Multiples']]]

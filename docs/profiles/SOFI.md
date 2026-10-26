@@ -195,8 +195,8 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | 👀 | 2026-10-26 | | | grupo "Operating income to net income" en el motor: utilidad antes de impuestos, impuestos con tasa efectiva, utilidad GAAP y ajustada |
 | BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | 👀 | 2026-10-26 | | | SBC y su % del ingreso en "Expense lines" (sección blexp) |
 | BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | 👀 | 2026-10-26 | | | 4 líneas funcionales + provisión + SBC, % del ingreso (sección blexp) |
-| BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
-| BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
+| BL-SEG | Bottom Line ▸ Segments | 👀 | 2026-10-26 | | | utilidad de contribución y margen por segmento (motor Results, sección blscp) |
+| BL-SPLC | Bottom Line ▸ Supply Chain | ⏭️ | 2026-10-26 | | | no hay export SPLC de SOFI (mismo motivo que TL-CUS); se reabre si Dani consigue el export |
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
 | VA-PEERS | Valuation ▸ Peers | 👀 | 2026-10-26 | | | mapa + tabla de números; mismo estado que el Overview |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⏭️ | 2026-10-26 | | | Summit no tiene valuación para SOFI (`get_valuation_history`: no_valuations_for_ticker); se reabre cuando el modelo traiga múltiplo y precio objetivo |
@@ -504,3 +504,8 @@ playbook (candidata a podar, **solo con tu OK**).
 - Nota de datos: la tasa efectiva de FY2024 no es comparable (beneficio fiscal único por liberar la reserva de valuación); la nota de la métrica lo advierte.
 - BL-GEN-2 (el puente a medida) queda ⏭️: se reabre si el analista define cómo quiere el puente de un banco; mientras tanto el recorrido a utilidad neta y las líneas de gasto cubren la pregunta de la sección.
 - `verify_preprint.py SOFI cons`: 320 iguales, 0 cambiadas ✔.
+
+### 2026-10-26 · BL-SEG Bottom Line ▸ Segments — 👀 EN REVISIÓN (BL-SPLC ⏭️)
+- Qué se mostró: sub-tab Segments de Bottom Line con la utilidad de contribución de Lending, Technology Platform y Financial Services y su margen sobre el ingreso del segmento (motor Results, `SOFI_BLS`, mismas cifras del 10-K / 10-Q que Top Line ▸ Segments; FY2025: 1,016.9 / 144.4 / 792.9; márgenes 55% / 32% / 51%). Solo actuals: Summit no proyecta líneas de segmento.
+- BL-SPLC ⏭️: no hay export SPLC de SOFI (se buscó en `nvidia-map-reference/` y `robotics-research/`); no se inventa.
+- Autoauditoría: `node --check` ✔ · el HTML del Deep Dive genera el sub-tab y `init` corre sin errores con un DOM de prueba ✔ · render visual no verificado por Claude.

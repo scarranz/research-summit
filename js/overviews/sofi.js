@@ -4002,7 +4002,8 @@ function deepDiveHtml(c){
         collapsible('Fee income — Loan Platform Business, Technology Platform and Financial Services (earlier profile, seeded)', feeBody(c), false) }
   ], false);
   h += ddSubtabs('bottomline', [
-    { k:'margins', l:'General', body:resultsHtml('SOFI_BL')+financialsBlock() }
+    { k:'margins', l:'General', body:resultsHtml('SOFI_BL')+financialsBlock() },
+    { k:'segments', l:'Segments', body:resultsHtml('SOFI_BLS') }
   ], true);
   h += ddSubtabs('evolution', [
     { k:'earnings', l:'Earnings', body:sofiCeHtml(c) },
@@ -4050,6 +4051,8 @@ function ddBuildSub(root, group, key){
     initResults(root.querySelector('.ovt-subpane[data-ovst="segov"] .rs-wrap'), 'SOFI_TLG'); });
   if (group === 'topline' && key === 'segdrv') requestAnimationFrame(function(){
     initResults(root.querySelector('.ovt-subpane[data-ovst="segdrv"] .rs-wrap'), 'SOFI_TLS'); buildInterestTab(); buildFeeTab(); });
+  if (group === 'bottomline' && key === 'segments') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ovt-subpane[data-ovst="segments"] .rs-wrap'), 'SOFI_BLS'); });
   if (group === 'bottomline' && key === 'margins') requestAnimationFrame(function(){
     initResults(root.querySelector('.ovt-subpane[data-ovst="margins"] .rs-wrap'), 'SOFI_BL'); });
   if (group === 'evolution' && key === 'earnings') sofiCeBuild(root);

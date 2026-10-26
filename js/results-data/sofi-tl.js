@@ -148,3 +148,19 @@ export var sofiTlGeneral = {
     y: { label: 'Annual', note: sofiResults.views.y.note, metrics: pick(sofiResults.views.y), sections: tlgSections() }
   }
 };
+
+// Bottom Line ▸ Segments: where each segment's revenue stops being revenue. The segment contribution profit (segment revenue
+// less the costs directly attributable to it) and its margin on segment revenue, from the same 10-K / 10-Q figures as Top Line ▸
+// Segments. Actuals only (the Summit model projects no segment lines). Unique section key.
+function blsView(v, label){
+  var m = {};
+  ['lend', 'tech', 'fs', 'lcp', 'tcp', 'fcp'].forEach(function(k){ m[k] = sofiTlSegments.views[v].metrics[k]; });
+  return { label: label, note: sofiTlSegments.views[v].note, metrics: m, sections: [
+    { key: 'blscp', label: 'Segment profitability', defaultMetric: 'lcp', groups: [ { label: 'Contribution profit', keys: ['lcp', 'tcp', 'fcp'] } ] }
+  ] };
+}
+export var sofiBlSegments = {
+  updated: 'Oct 2026',
+  source: sofiTlSegments.source,
+  views: { q: blsView('q', 'Quarterly'), y: blsView('y', 'Annual') }
+};

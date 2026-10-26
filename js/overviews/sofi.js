@@ -24,7 +24,7 @@ var SOFI_FACTS = [
   ['SEC filer', 'Domestic (10-K/10-Q/8-K)'],
   ['Founded', '2011'],
   ['IPO', 'Jun 2021 · SPAC merger (Social Capital Hedosophia V) · Nasdaq'],
-  ['CEO', 'Anthony Noto'],
+  ['CEO', 'Anthony Noto · CEO since Mar 2018'],
   ['Employees', '~6,100 · Dec 2025'],
   ['Dividend', 'Non-payer · never paid one'],
   ['Market cap', 'loading live quote…']
@@ -386,6 +386,33 @@ function sofiProducts(){
         '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
     }).join('')+'</div>';
 }
+// ─── OV-7 — Timeline (strict chronological order; "Read more →" opens sequential bullets) ──────────────────
+// Sources: FY2025 10-K (Item 1A acquisitions list; Note 1 organization and IPO; Note 13 equity; SoFiUSD, SoFi
+// Crypto), 2Q26 10-Q Note 2 (Peach, Composer), SoFi newsroom ("SoFi names Anthony Noto chief executive officer",
+// Jan 23 2018). The pre-playbook list (TIMELINE) stays for General ▸ Milestones until that pane is relocated (B2 #10).
+var SOFI_TIMELINE = [
+  { y:'2011', t:'Founded to refinance private <b>student loans</b>.' },
+  { y:'Mar 2018', t:'<b>Anthony Noto</b> becomes CEO.', d:'<ul class="ov-bullets"><li>Sep 2017: founder Mike Cagney steps down; Tom Hutton becomes interim CEO.</li><li>Jan 23, 2018: the board names Anthony Noto, then Twitter\'s COO, CEO and a director.</li><li>Mar 1, 2018: his tenure begins; Hutton moves to non-executive chairman.</li></ul>' },
+  { y:'May 2020', t:'Acquires <b>Galileo</b>, the base of today\'s Technology Platform.' },
+  { y:'Jun 2021', t:'Lists on <b>Nasdaq</b> through a merger with a SPAC.', d:'<ul class="ov-bullets"><li>SoFi merges with Social Capital Hedosophia Holdings Corp. V (SCH V), a special purpose acquisition company.</li><li>Jun 1, 2021: the common stock begins trading on the Nasdaq Global Select Market as <b>SOFI</b>.</li></ul>' },
+  { y:'Feb 2022', t:'Buys <b>Golden Pacific</b> and becomes a <b>bank holding company</b>.', d:'<ul class="ov-bullets"><li>Feb 2022: SoFi acquires Golden Pacific, a bank holding company, and is approved as a bank holding company.</li><li>Then: the lending business moves into SoFi Bank, a nationally chartered bank.</li><li>Today: SoFi funds loans with deposits held at SoFi Bank, which lowers its cost of funding.</li></ul>' },
+  { y:'Mar 2022', t:'Acquires <b>Technisys</b>, a cloud-native core banking platform.' },
+  { y:'Apr 2023', t:'Acquires <b>Wyndham</b>, a mortgage lender.' },
+  { y:'2024–25', t:'<b>Financial Services</b> becomes the second-largest segment.', d:'<ul class="ov-bullets"><li>FY2023 segment net revenue: $436.5M.</li><li>FY2024: $821.5M (+88%).</li><li>FY2025: $1,542.0M (+88%), more than three times the FY2023 level.</li></ul>' },
+  { y:'Jul–Dec 2025', t:'Two large public <b>equity offerings</b> in the second half of 2025.', d:'<ul class="ov-bullets"><li>Jul 31, 2025: 82.7M shares at $20.85, net proceeds of $1.7B.</li><li>Dec 8, 2025: 54.5M shares at $27.50.</li><li>Including the underwriters\' option, the December offering totaled 57.8M shares (Dec 2025 and Jan 2026).</li></ul>' },
+  { y:'Q4 2025', t:'Relaunches <b>SoFi Crypto</b> and launches the <b>SoFiUSD</b> stablecoin.', d:'<ul class="ov-bullets"><li>2023–Q1 2024: the earlier crypto service is wound down after the Federal Reserve rules it is not a permitted activity for a bank holding company.</li><li>Q4 2025: SoFi Crypto relaunches through SoFi Bank, designed for the current regulatory framework.</li><li>Dec 2025: SoFi Bank launches SoFiUSD, a stablecoin.</li></ul>' },
+  { y:'Q2 2026', t:'Acquires <b>Peach</b> and <b>Composer</b> for about $70M in cash.', d:'<ul class="ov-bullets"><li>Peach, a loan management and servicing platform, is to be integrated into the Technology Platform.</li><li>Composer, an AI-powered investing platform, is to enhance the investing services in Financial Services.</li></ul>' }
+];
+function sofiTimeline(){
+  return '<div class="ov-timeline">'+SOFI_TIMELINE.map(function(t, i){
+    var more = t.d ? '<div class="ov-tl-more">Read more →</div>' : '';
+    var cls = t.d ? ' ov-clickable' : '';
+    var attr = t.d ? ' data-detail="hist:'+i+'"' : '';
+    return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>';
+  }).join('')+'</div>';
+}
+// OV-F — the Overview's one source footer (playbook §8 / §22): the collapsibles carry none of their own.
+var OV_SOURCES = 'Sources — SoFi FY2025 Form 10-K (SEC EDGAR, dated Feb 17 2026) and 2Q26 Form 10-Q for company facts, headcount, segment and revenue figures, products and acquisitions; SoFi newsroom for the 2018 CEO appointment. Market cap is live (Massive). Forward figures are estimates, not company guidance.';
 function wireProductModal(root){
   var back = root.querySelector('#sofiModalBack'), mT = root.querySelector('#sofiModalT'), mB = root.querySelector('#sofiModalB');
   if (!back || !mT || !mB) return;
@@ -400,6 +427,12 @@ function wireProductModal(root){
       openM(f.ic+' '+esc(f.fam), '<div class="famd prod-lead">'+esc(f.d)+'</div>'+f.items.map(function(it){
         return '<div class="prod-item"><div class="prod-item-n">'+esc(it[0])+'</div><div class="famd">'+esc(it[1])+'</div></div>';
       }).join(''));
+    };
+  });
+  root.querySelectorAll('[data-detail^="hist:"]').forEach(function(el){   // OV-7 timeline "Read more →"
+    el.onclick = function(){
+      var t = SOFI_TIMELINE[+el.getAttribute('data-detail').split(':')[1]]; if (!t || !t.d) return;
+      openM(esc(t.y), t.d);
     };
   });
 }
@@ -442,10 +475,8 @@ function overviewBody(c){
   // 6 — The member / product flywheel
   h += sec('The Member & Product Flywheel', '<div class="ov-callout">'+bullets(ENGINE)+'</div>');
 
-  // 7 — Timeline
-  h += sec('History & Milestones', '<div class="ov-timeline">'+TIMELINE.map(function(t){
-    return '<div class="ov-tl-item"><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t[0])+'</div><div class="ov-tl-body">'+t[1]+'</div></div>';
-  }).join('')+'</div>');
+  // 7 — OV-7 Timeline replaces the old "History & Milestones" section here (same list stays in General ▸ Milestones)
+  h += collapsible('Timeline — how it became today\'s SoFi', sofiTimeline(), false);
 
   // 8 — Peers
   h += sec('Peers & Competitive Landscape',
@@ -479,7 +510,7 @@ function overviewBody(c){
   }).join(''));
 
   // 12 — Sources
-  h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
+  h += '<div class="ov-foot">'+esc(OV_SOURCES)+'</div>';   // OV-F (the pre-playbook SOURCES text stays as a constant)
 
   return h;
 }

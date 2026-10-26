@@ -171,9 +171,9 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | OV-3 | Overview ▸ Cuadrante 2×2 | ✅ | 2026-10-26 | Dani | 6664b2c | 4 celdas ≤ 30 palabras; The edge = banco + productos |
 | OV-4 | Overview ▸ How it makes money | ✅ | 2026-10-26 | Dani | 110f4fe | solo vista Segments (el 10-K no trae geografía); acordeones por segmento + The revenue lines |
 | OV-5 | Overview ▸ Products & platforms | ✅ | 2026-10-26 | Dani | 2c8e8db | 5 familias, 16 productos; modal por familia |
-| OV-6 | Overview ▸ Competitors (peer map) | 📝 | 2026-10-26 | | | peers elegidos; denominadores de EDGAR (5 de 6 listos); Nu bloqueado |
-| OV-7 | Overview ▸ Timeline | ⬜ | | | | |
-| OV-F | Overview ▸ Pie de fuentes | ⬜ | | | | |
+| OV-6 | Overview ▸ Competitors (peer map) | ⏳ | 2026-10-26 | | | peers elegidos; denominadores de EDGAR (5 de 6 listos); Nu bloqueado |
+| OV-7 | Overview ▸ Timeline | 👀 | 2026-10-26 | | | 11 hitos en orden cronológico; 6 con Read more |
+| OV-F | Overview ▸ Pie de fuentes | 👀 | 2026-10-26 | | | OV_SOURCES, único pie del Overview |
 | EV-RES-DATA | Dataset de Results (números) | ⬜ | | | | |
 | EV-RES | Evolution ▸ Results | ⬜ | | | | |
 | TL-GEN | Top Line ▸ General | ⬜ | | | | |
@@ -222,6 +222,8 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 - 2026-10-26 · OV-4 · Solo vista Segments (sin Geography: el 10-K no desagrega ingresos por geografía); Corporate/Other (−$227.8M, derivado: total reportado menos los tres segmentos) aparece solo en la leyenda; acordeón final "The revenue lines" con las 5 líneas del 10-K — Dani
 - 2026-10-26 · OV-5 · 5 familias: Lending · Banking & cards · Investing & crypto · Member tools · Technology Platform — Dani
 - 2026-10-26 · OV-6 · Peers: HOOD, NU, IBKR, SCHW, AFRM, UPST (+ SOFI); denominadores y crecimiento de EDGAR (10-K / 20-F del propio peer), sin agregadores — Dani
+- 2026-10-26 · general · Nu queda fuera del peer map (Dani no sube el 20-F); los desajustes leves de datos son aceptables; Claude sigue ejecutando las unidades restantes y los gates se agrupan: Dani revisa en el preview y marca lo que no le convence — Dani
+- 2026-10-26 · OV-1 · Celda CEO cerrada: "Anthony Noto · CEO since Mar 2018" (nombrado el 2018-01-23, efectivo 2018-03-01; fuente: sala de prensa de SoFi) — verificado por Claude
 
 ## 4. Excepciones aceptadas
 
@@ -373,3 +375,9 @@ playbook (candidata a podar, **solo con tu OK**).
 - Crecimiento calculado como ingreso FY ÷ ingreso FY previo − 1 (mismo concepto XBRL en ambos años).
 - SoFi: forward con consenso BBG (está en `BBG_CONSENSUS.txt`); los 6 peers van solo con trailing, "no Street file".
 - Decidido 2026-10-26 (Dani): Nu entra cuando Dani suba el 20-F FY2025 a la carpeta de SOFI en Drive; Affirm se verifica y su P/E queda "not meaningful" (hecho arriba). Pendiente: el `why` de cada peer y construir el mapa.
+
+### 2026-10-26 · OV-7 Timeline y OV-F Pie — 👀 EN REVISIÓN (gates agrupados)
+- Qué se mostró: bloque colapsable "Timeline — how it became today's SoFi" con 11 hitos en orden estricto (2011 · Mar 2018 · May 2020 · Jun 2021 · Feb 2022 · Mar 2022 · Apr 2023 · 2024–25 · Jul–Dec 2025 · Q4 2025 · Q2 2026); 6 abren modal con viñetas. Pie único del Overview.
+- Fuentes: 10-K FY2025 (Item 1A lista de adquisiciones: Galileo mayo 2020, Golden Pacific feb 2022, Technisys mar 2022, Wyndham abr 2023; Nota 1: cotización 2021-06-01; Nota 13: ofertas del 2025-07-31 y 2025-12-08; SoFiUSD dic 2025; SoFi Crypto Q4 2025), 10-Q 2Q26 Nota 2 (Peach y Composer, ~$70.1M en efectivo), sala de prensa de SoFi (CEO).
+- Autoría: se descartó del perfil viejo lo que no estaba en filings ("Stanford", la biografía de Noto en Goldman/Twitter más allá del dato de Twitter, la tarjeta de Q1 2026); el `TIMELINE` viejo sigue en General ▸ Milestones hasta reubicarlo (B2 #10).
+- Autoauditoría: orden cronológico estricto ✔ · cada hito responde "por qué importa hoy" ✔ · sin splits, recompras ni litigios ✔ · `Read more` solo con viñetas, nunca prosa ✔ · pie sin firma ni Summit copiado ✔ · `node --check` ✔.

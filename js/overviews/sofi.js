@@ -40,7 +40,14 @@ var SNAPSHOT = [
   ['Chairman & CEO', 'Anthony Noto (since 2018)'],
 ];
 
-var DESC = 'SoFi is a member-centric, one-stop digital financial services company. Members borrow, save, spend, invest and protect their money inside a single app, with no physical branches. SoFi operates its own national bank (SoFi Bank, N.A.) and runs three businesses: Lending (personal, student and home loans), Financial Services (SoFi Money, Invest, Credit Card and more), and a B2B Technology Platform (Galileo and Technisys) that powers other fintechs and banks. Its mission is to help members "achieve financial independence to realize their ambitions."';
+// OV-2 lede (playbook §8: 2–4 sentences, 50–80 words, neutral, no segment list, no moat). Paraphrased from the
+// FY2025 10-K, Item 1 "Company Overview" and "Bank Holding Company" (SoFi Technologies is a bank holding company;
+// SoFi Bank is a nationally chartered association; deposits lower the cost to fund loans).
+var DESC = 'SoFi Technologies is a digital financial services company that lets people borrow, save, spend, invest and protect their money through a single app. It is a bank holding company and operates its own nationally chartered bank, SoFi Bank, whose deposits help fund its lending. SoFi also sells the technology behind financial products to other banks and fintechs.';
+// Pre-playbook lede (segment list + mission quote). Not rendered: the segments move to OV-4 "How SoFi makes money";
+// the mission quote is kept for Miscellaneous (analyst decision 2026-10-26, OV-2). "No physical branches" is not in
+// the 10-K and is not used.
+var DESC_LEGACY = 'SoFi is a member-centric, one-stop digital financial services company. Members borrow, save, spend, invest and protect their money inside a single app, with no physical branches. SoFi operates its own national bank (SoFi Bank, N.A.) and runs three businesses: Lending (personal, student and home loans), Financial Services (SoFi Money, Invest, Credit Card and more), and a B2B Technology Platform (Galileo and Technisys) that powers other fintechs and banks. Its mission is to help members "achieve financial independence to realize their ambitions."';
 
 // Headline KPIs — most recent quarter (Q1 2026, ended Mar 31, 2026).
 // Not rendered in the Overview any more (playbook §8 allows no second KPI box; analyst approved moving them,

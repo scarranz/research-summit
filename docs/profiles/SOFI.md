@@ -166,8 +166,8 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | B2 | Mapa de reubicación | 📝 | 2026-10-26 | | | decisiones de #12 #13 #21 #23 #24 #25 #27 #29 #30 tomadas; faltan #1 #2 #4 #6 #7 #15 #17 #26 #31 #32 #33 y la aprobación del mapa completo |
 | F0-SM | Mapa de métricas Summit | 📝 | 2026-10-26 | | | primera pasada; dudas ❓ abiertas |
 | F1 | Esqueleto + vista previa | ✅ | 2026-10-26 | Dani | 7a0f231 | modo B: sin cambio de código (el perfil viejo ya corre); preview de Netlify del PR #152 listo; el analista confirma que SOFI abre ahí. Ojo: las funciones del portal limitan CORS a research-summit.netlify.app y localhost:8000, así que precio/Massive/Fiscal.ai pueden salir como no disponibles en el preview |
-| OV-1 | Overview ▸ Key Facts | 👀 | 2026-10-26 | | | 10 celdas del 10-K; celda CEO sin fecha hasta que Dani la confirme; market cap en vivo |
-| OV-2 | Overview ▸ Descripción | ⬜ | | | | |
+| OV-1 | Overview ▸ Key Facts | ✅ | 2026-10-26 | Dani | 326247d | 10 celdas del 10-K; celda CEO sin fecha hasta que Dani la confirme; market cap en vivo |
+| OV-2 | Overview ▸ Descripción | 👀 | 2026-10-26 | | | lede de 3 oraciones; cita de la misión → Misc |
 | OV-3 | Overview ▸ Cuadrante 2×2 | ⬜ | | | | |
 | OV-4 | Overview ▸ How it makes money | ⬜ | | | | |
 | OV-5 | Overview ▸ Products & platforms | ⬜ | | | | |
@@ -217,6 +217,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 - 2026-10-26 · general · El analista juzga el portal real abriendo el preview de Netlify del PR (https://deploy-preview-152--research-summit.netlify.app), no capturas ni harness; Claude no manda capturas salvo que se pidan — Dani
 - 2026-10-26 · OV-1 · Las 4 tarjetas de KPIs, la nota FY2025 y la celda "Bank charter" salen del Overview y se **mueven** (no se borran): tarjetas → Top Line/Results, nota FY2025 → Bottom Line, Bank charter → lede y How SoFi makes money; las constantes quedan en `sofi.js` con comentario hasta entonces — Dani
 - 2026-10-26 · OV-1 · Celda CEO: Dani confirma la fecha de inicio de Anthony Noto (el 10-K no la trae); mientras tanto la celda dice solo "Anthony Noto" — Dani
+- 2026-10-26 · OV-2 · Lede aprobado como se propuso; la cita de la misión ("achieve financial independence…") se conserva en `DESC_LEGACY` y va a Miscellaneous — Dani
 
 ## 4. Excepciones aceptadas
 
@@ -307,3 +308,14 @@ playbook (candidata a podar, **solo con tu OK**).
 - Fuentes: 10-K FY2025 (portada: Nasdaq, San Francisco, Delaware; Item 1: fundada 2011, ~6,100 empleados al 31-dic-2025; Item 5: nunca ha pagado dividendos; Nota 1: cotiza desde el 1-jun-2021 tras la fusión con Social Capital Hedosophia V). Market cap: `api.liveQuote('SOFI')` (Massive), sin semilla.
 - Autoauditoría: 10 celdas ✔ · orden y etiquetas exactas ✔ · sin hex ni color categórico nuevo ✔ (línea de acento = `--steel` vía `--brand-2` en `.ov-sofi`) · market cap con estados "loading / live / unavailable" ✔ · sin celdas vacías ✔ · CEO **sin antigüedad** ✘ (falta la fecha: la confirma Dani) · filer verificado en EDGAR ⚠ (se infiere de que presenta 10-K/10-Q; no se abrió EDGAR) · `node --check` de `sofi.js` ✔ · render visual no verificado por Claude (lo juzga el analista en el preview).
 - Ojo: en el preview de Netlify el market cap puede salir "live quote unavailable" porque las funciones limitan CORS a `research-summit.netlify.app` y `localhost:8000`.
+
+### 2026-10-26 · OV-1 Key Facts — APROBADA
+- Qué se mostró: las 10 celdas en el preview del PR #152 (commit `326247d`).
+- Fuentes: 10-K FY2025; market cap `liveQuote`.
+- Autoauditoría: ver entrada anterior; pendiente la fecha de CEO (la pasa Dani aparte) y el filer sin abrir EDGAR.
+- Cambios pedidos / decisiones: ninguno.
+
+### 2026-10-26 · OV-2 Descripción — 👀 EN REVISIÓN
+- Qué se mostró: lede de 3 oraciones, 57 palabras, en el Overview del preview.
+- Fuentes: 10-K FY2025, Item 1 (Company Overview; Bank Holding Company), parafraseado.
+- Autoauditoría: 2–4 oraciones ✔ (3) · 50–80 palabras ✔ (57) · sin lista de segmentos ni moat ✔ · sin adjetivos prohibidos ✔ · neutral ✔ · "no physical branches" del lede viejo no está en el 10-K y se descartó ✔.

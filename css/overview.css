@@ -3512,3 +3512,8 @@ img.org-photo { object-fit: cover; }
 .ov-meta-dd .mx-ctl{margin:0 0 8px}
 .ov-meta-dd .mx-collap{margin:6px 0}
 .ov-meta-dd .mx-kpis{margin:4px 0 6px}
+
+/* Alphabet ▸ Management ▸ Governance & SBC (js/overviews/googl-gov.js) — a text table: left-aligned, wrapped */
+.ov-googl-dd .gov-tbl td,.ov-googl-dd .gov-tbl th{text-align:left;white-space:normal;vertical-align:top}
+.ov-googl-dd .gov-tbl td:first-child{min-width:130px}
+.ov-googl-dd .gov-tbl td:nth-child(2){min-width:180px}

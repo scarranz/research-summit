@@ -12,7 +12,7 @@
 | Rama | `feat/googl-restructure` (desde `origin/main` @ `95c00e0`, 2026-10-26; worktree `rs-playbook`). Nombre de modo B (§7.1); `feat/googl-profile` ya existe en GitHub (rama vieja de DOAA351, jul 2026) y no se toca |
 | Analista responsable | SAB (Santiago Alvarez) |
 | Inicio | 2026-10-26 |
-| Avance | **34 de 43** unidades aprobadas (F0 · F0-SM · B1 · B2 · F1 · OV-1…OV-7 · OV-F · EV-RES-DATA · EV-RES · TL-GEN · TL-SEG · TL-OTH · TL-CUS · EV-EST · EV-SET · EV-NOTES · EV-POST · BL-GEN-1…5 · BL-SEG · BL-SPLC · VA-HIST · VA-PEERS · VA-TM · VA-SENS) · 0 omitidas · 0 bloqueadas. M = 38 del Anexo C + B1/B2 + 3 (MISC aprobado en B2 con 4 sub-tabs: comp · tam · capex · strategy). Siguiente: MG-TEAM |
+| Avance | **38 de 43** unidades aprobadas (F0 · F0-SM · B1 · B2 · F1 · OV-1…OV-7 · OV-F · EV-RES-DATA · EV-RES · TL-GEN · TL-SEG · TL-OTH · TL-CUS · EV-EST · EV-SET · EV-NOTES · EV-POST · BL-GEN-1…5 · BL-SEG · BL-SPLC · VA-HIST · VA-PEERS · VA-TM · VA-SENS · MG-TEAM · MG-OWN · MG-GOV · MG-TRACK) · 0 omitidas · 0 bloqueadas. M = 38 del Anexo C + B1/B2 + 3 (MISC aprobado en B2 con 4 sub-tabs: comp · tam · capex · strategy). Siguiente: MISC |
 
 ## 1. Inventario de datos (F0)
 
@@ -223,10 +223,10 @@ siguientes a **2027** (cambio de definición: VA-TM lo marca).
 | VA-PEERS | Valuation ▸ Peers | ✅ | 2026-10-26 | SAB | | el mapa de OV-6 (estado compartido) + tabla abierta con múltiplos en vivo; callout de Dani (#43) → pregunta del lede; tabla sembrada de Dani reemplazada; EPS de Alphabet ex-OI&E ($8.81, sin P/E forward) también en OV-6 por decisión de SAB |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ✅ | 2026-10-26 | SAB | | `googl-target-multiple.js` (copia de `tsm-target-multiple.js`) + `googl-target-multiple-data.js` congelado del MCP (snapshots 28-jul y 6-ago; 23-jul excluido): EV/EBITDA 12.7× y P/E 21.3×→24.0× FY2027, PT $318.50/$317.53 → $344.60/$391.52; duda abierta: el PT de P/E implica EPS $16.31 vs EARNINGS÷SHARES $15.96; deuda neta Live del 10-Q 2T26 |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | ✅ | 2026-10-26 | SAB | | `googl-sensitivity.js` (copia de `meta-sensitivity.js`) + `googl-sensitivity-data.js` (Summit 08-06 congelado: Services · Cloud · Other Bets, margen operativo consolidado, EBITDA ajustado); múltiplo de salida = el del modelo (12.7× / 24.0× FY2027); Street = consenso BBG por segmento; SENS sembrado de Dani (#42) reemplazado |
-| MG-TEAM | Management ▸ Executives & Board | ⬜ | | | | |
-| MG-OWN | Management ▸ Ownership | ⬜ | | | | |
-| MG-GOV | Management ▸ Governance & SBC | ⬜ | | | | |
-| MG-TRACK | Management ▸ Track Record | ⬜ | | | | |
+| MG-TEAM | Management ▸ Executives & Board | ✅ | 2026-10-26 | SAB | | datos a `googl-mgmt-data.js` (motor `management.js`, brand = SUMMIT_CAT[0]); 8 ejecutivos (los 7 de Dani + Kent Walker); consejo de 10 verificado contra el DEF 14A 2026 (Page/Brin desde 1998, Doerr desde 1999; Porat President & CIO desde sep-2023); 3 celdas de gobierno; línea de Kurian al 2T26 |
+| MG-OWN | Management ▸ Ownership | ✅ | 2026-10-26 | SAB | | `googl-own.js` (copia de `meta-own.js`): tabla de los 14 insiders del DEF 14A 2026 (Clase A, Clase B, % del voto, valor en vivo de acciones con voto) + tabla de las 3 clases (10-Q 2T26) + >5% (BlackRock; Vanguard en nota) + hueco Fiscal.ai; sin selector de fondos (no hay export HDS); barras aproximadas de Dani (#47) reemplazadas |
+| MG-GOV | Management ▸ Governance & SBC | ✅ | 2026-10-26 | SAB | | `googl-gov.js`: 4 KPIs (7/10 independientes, SBC $25.0B = 6.2% del ingreso, recompras $45.4B, dividendos $10.0B FY2025) + tabla "How Alphabet is governed" (las 6 filas de Dani #48 verificadas + comités; recompras/dividendo de #44) + puntero a BL ▸ SBC; sin repetir % de voto de Ownership; CSS .gov-tbl nuevo |
+| MG-TRACK | Management ▸ Track Record | ✅ | 2026-10-26 | SAB | | `googl-track.js` (copia de `tsm-mgmt.js` tsmTrackBody): 8 líderes SIN calificaciones (SAB, como TSM) — At Alphabet / Context con cifras reportadas del portal y citas oficiales; modal `gtrk:`; "The bench, in one line" del callout de Dani (#51); las 7 calificaciones "delivering" de Dani (#49) quedan registradas aquí, no se muestran |
 | MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab aprobada) | ⬜ | | | | |
 | F-FINAL | Cierre y entrega | ⬜ | | | | |
 
@@ -488,3 +488,20 @@ Destinos aprobados por SAB el 2026-10-26 (B2), incluidas las fusiones #18, #41, 
 ### 2026-10-26 · VA-SENS Valuation ▸ Sensitivity Analysis — APROBADA
 - Qué se mostró: `js/overviews/googl-sensitivity.js` (copia de `meta-sensitivity.js`) + `googl-sensitivity-data.js` (Summit 08-06 congelado; Cloud 2026 = $117.5B corregido; los tres segmentos suman REV salvo −$74M de hedging 2026). Múltiplo de salida = el del modelo (12.7× EV/EBITDA, 24.0× P/E, FY2027); puente fijo = D&A + SBC (EBITDA ajustado); deuda neta del 10-Q 2T26 (caja neta $142B, incluye $87.1B de acciones negociables — por eso la celda base difiere del PT del modelo, el pie lo dice).
 - Reubicación: Dani #42 (SENS sembrado $235B × 15×) reemplazado; el pie lo nombra.
+
+### 2026-10-26 · MG-TEAM Management ▸ Executives & Board — APROBADA
+- Qué se mostró: `js/overviews/googl-mgmt-data.js` (datos de `GOOGL_MGMT` sacados de googl.js; motor `management.js`; brand = SUMMIT_CAT[0]). 8 ejecutivos (Dani + Kent Walker, del DEF 14A 2026); consejo de 10 contra el proxy (Page/Brin 1998, Doerr 1999 — Dani decía 2015/2016; Porat President & CIO sep-2023); 3 celdas de gobierno; Kurian al 2T26.
+- Reubicación: #46 ✅; #50 (franja de consejo independiente del Track Record) fusionada aquí.
+
+### 2026-10-26 · MG-OWN Management ▸ Ownership — APROBADA
+- Qué se mostró: `js/overviews/googl-own.js` (copia de `meta-own.js`): 14 insiders del DEF 14A 2026 (al 6-abr-2026; Page 27.4% y Brin 25.3% del voto; grupo 54.3%), tabla de las 3 clases (10-Q 2T26: A 48.0% / B 6.8% / C 45.2% de las acciones; B = 58.7% del voto), >5% (BlackRock 6.1% de A; Vanguard en nota), hueco Fiscal.ai.
+- Decisión (SAB): sin selector "Top holders" (no hay export HDS de GOOGL). Reubicación #47 ✅.
+
+### 2026-10-26 · MG-GOV Management ▸ Governance & SBC — APROBADA
+- Qué se mostró: `js/overviews/googl-gov.js`: 4 KPIs (7/10 independientes; SBC $25.0B = 6.2% del ingreso; recompras $45.4B; dividendos pagados $10.0B, FY2025, 10-K) + tabla "How Alphabet is governed" (6 filas de Dani #48 verificadas/actualizadas + comités del DEF 14A 2026; recompras y dividendo de #44) + puntero a BL ▸ General ▸ SBC. CSS nuevo `.ov-googl-dd .gov-tbl` (texto a la izquierda).
+- Reubicación: #48 ✅; #44 → recompras/dividendo aquí (capex queda para MISC-capex).
+
+### 2026-10-26 · MG-TRACK Management ▸ Track Record — APROBADA
+- Qué se mostró: `js/overviews/googl-track.js` (copia de `tsm-mgmt.js` tsmTrackBody/Pop): 8 líderes sin calificaciones; "At Alphabet" con cifras reportadas que ya están en el portal, "Context" del DEF 14A 2026; citas verificadas contra las transcripciones oficiales; modal `gtrk:` en `wireModal`.
+- Decisión (SAB): sin calificaciones (como TSM). Registro: Dani calificaba "delivering" a Pichai, Ashkenazi, Porat, Kurian, Hassabis, Schindler y Mohan (G_TRACK, julio 2026).
+- Reubicación: #49 ✅ (sin calificaciones), #51 → "The bench, in one line".

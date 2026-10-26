@@ -19,7 +19,14 @@ import { googlBlGeneralHtml, googlBlGeneralBuild, googlBlSegmentsHtml, googlBlSe
 import { googlSplcBody, googlSplcBuild, googlSplcPop } from './googl-splc.js';
 import { googlHistMult } from './googl-histmult.js';
 import { googlTargetMult } from './googl-target-multiple.js';
-import { googlSens } from './googl-sensitivity.js';   // Valuation ▸ Sensitivity (VA-SENS, copy of meta-sensitivity.js)   // Valuation ▸ Target Multiple / PEG (VA-TM, copy of tsm-target-multiple.js)   // Valuation ▸ Historic Multiple (VA-HIST, copy of meta-histmult.js)   // Bottom Line ▸ Supply Chain (BL-SPLC, copy of meta-splc.js)   // Bottom Line ▸ General, BL-GEN-1…5 (copy of meta-bl.js)   // Evolution ▸ Earnings (Setup · Post-Results · Notes), EV-SET/POST/NOTES
+import { googlSens } from './googl-sensitivity.js';
+import { GOOGL_MGMT_DATA } from './googl-mgmt-data.js';
+import { googlOwnBody, googlOwnInit } from './googl-own.js';
+import { googlGovBody } from './googl-gov.js';
+import { googlTrackBody, googlTrackPop } from './googl-track.js';   // Management ▸ Track Record (MG-TRACK, copy of tsm-mgmt.js tsmTrackBody)   // Management ▸ Governance & SBC (MG-GOV)   // Management ▸ Ownership (MG-OWN, copy of meta-own.js)
+import { SUMMIT_CAT } from '../viz-palette.js';
+// Evolution ▸ Earnings = googl-ce.js · Bottom Line ▸ General/Segments = googl-bl.js · Supply Chain = googl-splc.js ·
+// Valuation ▸ Historic Multiple = googl-histmult.js · Target Multiple = googl-target-multiple.js · Sensitivity = googl-sensitivity.js
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/googl.js)
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode it) ──
@@ -2520,47 +2527,7 @@ function financialsBody(c){
   return h;
 }
 // ─── Management ─────────────────────────────────────────────────────────────────────────────────
-var GOOGL_MGMT = makeManagement({
-  brand:BRAND,
-  lede:'Alphabet is <b>founder-controlled but operator-run</b>: Larry Page and Sergey Brin hold voting control (Class B) and board seats but stepped out of operations in 2019, leaving a deep professional bench under <b>Sundar Pichai</b> — with the divisional CEOs (Cloud, DeepMind, YouTube) running their own P&Ls at unusual autonomy.',
-  execs:[
-    { id:'pichai', img:'img/leadership/googl-pichai.jpg', lead:true, name:'Sundar Pichai', title:'CEO, Alphabet & Google', since:'at Google since 2004 · Google CEO 2015 · Alphabet CEO 2019',
-      line:'From Chrome PM to the AI-era CEO; architect of the full-stack response.',
-      bio:'Joined in 2004; ran Chrome and Android before becoming Google CEO in the 2015 Alphabet restructuring and Alphabet CEO in 2019 when the founders stepped back. Declared the company "AI-first" in 2016 (the TPU/DeepMind groundwork), absorbed the 2023 "code red," and delivered the Gemini-era turnaround — reorganizing research (DeepMind merge), shipping Gemini 1→3 in 24 months, and committing the largest capital program in corporate history.' },
-    { id:'anat', img:'img/leadership/googl-ashkenazi.jpg', name:'Anat Ashkenazi', title:'SVP & CFO', since:'since Jul 2024 · ex-Eli Lilly CFO',
-      line:'Owns the capex-ladder narrative: raises with proof attached, depreciation flagged unprompted.',
-      bio:'CFO since July 2024, after two decades at Eli Lilly (CFO 2021-24). Brought pharma-style capital discipline to the AI build-out: ROIC framing on every allocation question, per-call depreciation candor, the backlog-conversion disclosure, and the first material debt issuance — executed while group margins expanded.' },
-    { id:'schindler', img:'img/leadership/googl-schindler.jpg', name:'Philipp Schindler', title:'SVP & Chief Business Officer', since:'at Google since 2005',
-      line:'Runs the ads franchise — carried it through the AI transition accelerating, not shrinking.',
-      bio:'Chief Business Officer since 2015; two decades at Google across European and global sales. Owns the advertiser relationship end-to-end — the AI-campaign migration (AI Max, PMax, Demand Gen), the new-surface monetization ladder (AIO ads, Direct Offers, UCP), and the vertical franchises (retail, finance). Notably candid on his own numbers (the volunteered FX caveat, Q1 2026).' },
-    { id:'porat', img:'img/leadership/googl-porat.jpg', name:'Ruth Porat', title:'President & Chief Investment Officer', since:'at Alphabet since 2015 · CFO 2015-2024',
-      line:'The discipline era\'s CFO, now running Other Bets investment and the capital relationships.',
-      bio:'CFO 2015-2024 (ex-Morgan Stanley CFO) — brought the cost discipline that made "Other Bets" a reported, bounded number and built the buyback program. As President & CIO since 2024, oversees Alphabet\'s investment portfolio and the Bets\' external-capital strategy (Waymo\'s $16B round, Verily/GFiber deconsolidations bear her signature).' },
-    { id:'kurian', img:'img/leadership/googl-kurian.jpg', name:'Thomas Kurian', title:'CEO, Google Cloud', since:'since 2019 · ex-Oracle (22 yrs)',
-      line:'2.6% → 32.9% segment margin in three years, while growth accelerated to +63%.',
-      bio:'Left Oracle\'s product organization to run Google Cloud in 2019, inheriting a loss-making #3. Systematized enterprise sales, priced the AI portfolio (Vertex, Gemini Enterprise — 8M paid seats in four months), and delivered the sector\'s fastest large-scale margin build alongside its fastest growth. The $462B backlog is his book.' },
-    { id:'hassabis', img:'img/leadership/googl-hassabis.jpg', name:'Demis Hassabis', title:'CEO, Google DeepMind', since:'DeepMind founder 2010 · acquired 2014 · merged 2023',
-      line:'Nobel laureate; turned the research jewel into the revenue engine\'s core input.',
-      bio:'Chess prodigy, neuroscientist, DeepMind founder. AlphaFold won him the 2024 Nobel Prize in Chemistry; the 2023 Brain-DeepMind merger under his leadership produced Gemini — now the fastest-adopted model family in company history, powering Search, Cloud and the app. The clearest research-to-product transmission in the industry.' },
-    { id:'mohan', img:'img/leadership/googl-mohan.jpg', name:'Neal Mohan', title:'CEO, YouTube', since:'since 2023 · at Google since 2008',
-      line:'#1 US streamer three straight years; the Shorts defense turned profitable.',
-      bio:'Ad-tech veteran (DoubleClick) who became YouTube\'s product chief and then CEO in 2023. Record: US streaming watch-time leadership three consecutive years, Shorts monetization parity with in-stream (US), the subscriptions twin-engine (>$60B/yr combined), NFL Sunday Ticket and the living-room pivot.' },
-  ],
-  board:[
-    { name:'John L. Hennessy', chair:true, independent:true, role:'Independent Chair since 2018 (Lead Independent Director 2007–2018) · ex-Stanford president · Turing Award winner · director since 2004.' },
-    { name:'Larry Page', independent:false, role:'Co-founder · Class B holder · stepped back from operations 2019 · director since 2015 (Google 1998).' },
-    { name:'Sergey Brin', independent:false, role:'Co-founder · Class B holder · returned hands-on for the Gemini effort · director since 2015 (Google 1998).' },
-    { name:'Sundar Pichai', dual:true, independent:false, role:'CEO · director since 2017.' },
-    { name:'Frances H. Arnold', independent:true, role:'Nobel laureate (Chemistry) · Caltech professor · director since 2019.' },
-    { name:'R. Martin "Marty" Chávez', independent:true, role:'ex-Goldman Sachs CFO/CIO · Sixth Street vice chairman · director since 2022.' },
-    { name:'L. John Doerr', independent:true, role:'Kleiner Perkins chairman · early investor (1999 round) · director since 2016.' },
-    { name:'Roger W. Ferguson Jr.', independent:true, role:'ex-Federal Reserve vice chairman · ex-TIAA CEO · now CIO, Red Cell Partners · director since 2016.' },
-    { name:'K. Ram Shriram', independent:true, role:'Managing Partner, Sherpalo Ventures · founding board member & one of Google\'s earliest investors · longest-tenured director, since 1998.' },
-    { name:'Robin L. Washington', independent:true, role:'President & COO/CFO of Salesforce · ex-Gilead CFO · audit expertise · director since 2019.' },
-  ],
-  boardNote:'The full 10-member board (verified vs the 2026 DEF 14A, filed 2026-04-24, and abc.xyz/investor). 7 independent; key committees (Audit, Talent & Comp, Leadership Dev & Comp, Nominating & Gov) are 100% independent. Founders\' Class B control means board power ultimately traces to Page & Brin.',
-  foot:'Roster & titles per Alphabet\'s 2026 DEF 14A (filed 2026-04-24) and abc.xyz/investor board page.',
-});
+var GOOGL_MGMT = makeManagement(Object.assign({ brand:SUMMIT_CAT[0] }, GOOGL_MGMT_DATA));   // MG-TEAM — data in ./googl-mgmt-data.js
 function ownershipBody(c){
   var h='<p class="ov-lede"><b>Three share classes, one asymmetry:</b> the public owns most of the economics; the founders keep control. All figures approximate per the last proxy on record — <span class="ave-subh-note">verify against the 2026 DEF 14A before publishing.</span></p>';
   h+='<div class="gdd-own">'+
@@ -2790,9 +2757,9 @@ function deepDiveHtml(c){
   ], true);
   h+=subtabs('mgmt',[
     { k:'team', l:'Executives & Board', body:GOOGL_MGMT.body() },
-    { k:'ownership', l:'Ownership', body:ownershipBody(c) },
-    { k:'governance', l:'Governance & SBC', body:govBody(c) },
-    { k:'track', l:'Track Record', body:trackBody(c) },
+    { k:'ownership', l:'Ownership', body:googlOwnBody() },   // MG-OWN: insider table + share classes (Dani's #47 approximate bars replaced)
+    { k:'governance', l:'Governance & SBC', body:googlGovBody() },   // MG-GOV: Dani's six rows (#48) checked + capital returns (#44)
+    { k:'track', l:'Track Record', body:googlTrackBody() },   // MG-TRACK: no ratings (SAB); Dani's #49 cards + #51 caveat
   ], true);
   h+=subtabs('misc',[
     { k:'comp', l:'Competitive Position', body:industryBody(c) },      // B2 #17–18 → MISC-comp
@@ -2831,6 +2798,7 @@ function buildSub(root, group, key){
     if(key==='sensitivity') requestAnimationFrame(function(){ googlSens.init(root); });
   } else if(group==='mgmt'){
     if(key==='team') GOOGL_MGMT.init(root);
+    if(key==='ownership') googlOwnInit(root);
   } else if(group==='misc'){
     if(key==='comp') wireScatters(root);
     else if(key==='capex') gBuildCap();
@@ -2983,7 +2951,8 @@ function wireModal(root){
     if(kind==='ddc'){ var cu=DD_CUST[+id]; return cu?{t:cu.ic+' '+esc(cu.n)+' <span class="ov-modal-sub">'+esc(cu.tag)+'</span>',h:cu.detail}:null; }
     if(kind==='arena'){ var ar=DD_ARENA[+id]; return ar?{t:ar.ic+' '+esc(ar.n)+' <span class="ov-modal-sub">'+esc(ar.tag)+'</span>',h:ar.detail}:null; }
     if(kind==='guide'){ var gd=G_GUIDE[+id]; return gd?{t:gd.ic+' '+esc(gd.k),h:gd.d}:null; }
-    if(kind==='splc'){ return googlSplcPop(id); }   // Bottom Line ▸ Supply Chain cards (googl-splc.js)
+    if(kind==='splc'){ return googlSplcPop(id); }
+    if(kind==='gtrk'){ return googlTrackPop(id); }   // Management ▸ Track Record cards (googl-track.js)   // Bottom Line ▸ Supply Chain cards (googl-splc.js)
     if(kind==='gexec'){ var ex=G_TRACK[+id]; return ex?{t:esc(ex.n)+' <span class="ov-modal-sub">'+esc(ex.role)+' · '+esc(ex.since)+'</span>',h:ex.detail}:null; }
     return null;
   }

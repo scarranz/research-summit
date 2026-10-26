@@ -188,7 +188,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | TL-CUS | Top Line ▸ Customers | ⬜ | | | | |
 | EV-EST | Evolution ▸ Estimates | 👀 | 2026-10-26 | | | 8 métricas, 4 años × 3 snapshots Summit; sin serie de consenso |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | 👀 | 2026-10-26 | | | grilla de consenso por horizonte + gráfica Setup + notas de guía de 3Q26 |
-| EV-POST | Evolution ▸ Earnings ▸ Post-Results | 🔨 | 2026-10-26 | | | maquinaria lista; contenido por trimestre (de las llamadas) en construcción |
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results | 👀 | 2026-10-26 | | | 2Q26 completo (resumen, 9 notas, 8 temas preparados, 8 preguntas); 1Q26 y 4Q25 en construcción |
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | 👀 | 2026-10-26 | | | registro de temas vacío a propósito; el analista agrega notas en el portal |
 | BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | 👀 | 2026-10-26 | | | sobre el motor Results (sección blprof) |
 | BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⬜ | | | | |
@@ -460,3 +460,9 @@ playbook (candidata a podar, **solo con tu OK**).
 - Cuadre: las 4 líneas funcionales + provisión suman $1,014.4M en 2Q26; el "gasto no financiero" del filing ($1,000.6M) **no incluye** la provisión ($13.8M). La nota de esa métrica lo dice. `verify_preprint.py SOFI cons`: 301 iguales, 0 cambiadas ✔.
 - Decisión de construcción (Claude): SoFi es un banco, sin costo de ventas ni utilidad bruta; en vez de portar el módulo a medida de META (1,000 líneas, bridge desde costo de ingresos) Bottom Line ▸ General se construye sobre el motor Results ya probado. **Pendiente a medida:** el puente ingreso → utilidad neta (BL-GEN-2), op. income → net income (BL-GEN-3) y SBC (BL-GEN-4).
 - Autoauditoría: `node --check` ✔ · el HTML del Deep Dive genera las 4 secciones y el panel del motor ✔ (prueba en Node) · render visual no verificado por Claude.
+
+### 2026-10-26 · EV-POST Post-Results, trimestre 2Q26 — 👀 EN REVISIÓN
+- Qué se mostró: entrada completa de Q2 2026 en `js/overviews/sofi-ce-data.js`: Setup pre-print (consenso BBG del 2026-05-04, Summit congelado, guía de la llamada del 29-abr), resultados (titular, 5 párrafos de resumen en tono objetivo, 9 notas por métrica, ranking para el siguiente print, 4 preguntas para la llamada) y la llamada (8 bloques de discurso preparado, 8 preguntas y respuestas con analista y tema, la lectura de una frase, tres minutos y 3 preguntas nuevas).
+- Fuentes: transcripción verbatim de la llamada del 2026-07-29 (`SOFI_calls.txt`, que subió Dani; Quartr no se usa), 10-Q 2Q26 (ingreso GAAP 1,218.7), consenso BBG pre-print (ingreso ≈ 1.13B, EBITDA ajustado ≈ 0.35B, utilidad ajustada ≈ 0.17B, EPS 0.12, originaciones personales ≈ 8.5B, estudiantiles ≈ 1.7B, hipotecarias ≈ 1.3B) y el Summit congelado (ingreso 1,123).
+- Autoauditoría: cifras de las notas = transcripción o dataset ✔ · las claves de nota existen en `SOFI_CE_CONS` ✔ · tono del resumen: sin guiones largos, sin construcción "no A sino B", sin narrar crecimientos (las cifras van en las notas) ✔ · el Post-Results queda sin `thesisCheck` (no hay tesis del analista de SOFI) ni `highlights` ✔ declarado · sin precio del día siguiente (no hay serie cargada) — se dice en `priceReaction` ✔ · `node --check` ✔ · el HTML de Earnings renderiza (148 mil caracteres) con el Q&A y las preguntas ✔.
+- Nota: el modelo Summit trae 1,197 de ingreso en 2Q26, 21.7 por debajo del filing; la entrada usa lo reportado y lo dice.

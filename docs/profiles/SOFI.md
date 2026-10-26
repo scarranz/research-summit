@@ -169,7 +169,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | OV-1 | Overview ▸ Key Facts | ✅ | 2026-10-26 | Dani | 326247d | 10 celdas del 10-K; celda CEO sin fecha hasta que Dani la confirme; market cap en vivo |
 | OV-2 | Overview ▸ Descripción | ✅ | 2026-10-26 | Dani | 2341e93 | lede de 3 oraciones; cita de la misión → Misc |
 | OV-3 | Overview ▸ Cuadrante 2×2 | ✅ | 2026-10-26 | Dani | 6664b2c | 4 celdas ≤ 30 palabras; The edge = banco + productos |
-| OV-4 | Overview ▸ How it makes money | 👀 | 2026-10-26 | | | solo vista Segments (el 10-K no trae geografía); acordeones por segmento + The revenue lines |
+| OV-4 | Overview ▸ How it makes money | ✅ | 2026-10-26 | Dani | 110f4fe | solo vista Segments (el 10-K no trae geografía); acordeones por segmento + The revenue lines |
 | OV-5 | Overview ▸ Products & platforms | ⬜ | | | | |
 | OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
 | OV-7 | Overview ▸ Timeline | ⬜ | | | | |
@@ -342,3 +342,6 @@ playbook (candidata a podar, **solo con tu OK**).
 - Autoauditoría: sin geografía → una sola vista, dicho en la leyenda ✔ · barras en grises por tamaño con el monto dentro (`.gmm-neutral`) ✔ · desc sin números ✔ · "The numbers" con filas clave/valor ✔ · sin hex nuevos ni estilos en línea salvo el ancho de barra ✔ · `node --check` ✔ · render visual no verificado por Claude.
 - Se quitaron del Overview las secciones "How SoFi Makes Money" (bullets) y "Three Segments"; `HOW_MONEY` y `SEGMENTS` siguen como constantes (B2 #3) porque traen cifras de Q1 2026 (96% fondeo con depósitos, NIM 5.9%, 43% cross-buy) que no son del 10-K FY2025 y se ubican en otra unidad.
 - Duda abierta: "beneficio fiscal único de 2024" va sin cifra porque el 10-K da dos importes distintos según la tabla (258.4 y 247.2) y el perfil viejo decía ~266.
+
+### 2026-10-26 · OV-4 How SoFi makes money — APROBADA
+- Qué se mostró: bloque completo en el preview (commit `110f4fe`). Sin cambios pedidos.

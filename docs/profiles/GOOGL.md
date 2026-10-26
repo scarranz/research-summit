@@ -9,7 +9,7 @@
 |---|---|
 | Empresa | Alphabet Inc. (NASDAQ: GOOGL · también GOOG, mismo módulo) |
 | Modo | B — reordenar existente (perfil de DOAA351, PRs #60/#62, jul 2026; `js/overviews/googl.js` 2,900 líneas) |
-| Rama | `feat/googl-profile` (desde `origin/main` @ `95c00e0`, 2026-10-26; worktree `rs-playbook`) |
+| Rama | `feat/googl-restructure` (desde `origin/main` @ `95c00e0`, 2026-10-26; worktree `rs-playbook`). Nombre de modo B (§7.1); `feat/googl-profile` ya existe en GitHub (rama vieja de DOAA351, jul 2026) y no se toca |
 | Analista responsable | SAB (Santiago Alvarez) |
 | Inicio | 2026-10-26 |
 | Avance | **19 de 43** unidades aprobadas (F0 · F0-SM · B1 · B2 · F1 · OV-1…OV-7 · OV-F · EV-RES-DATA · EV-RES · TL-GEN · TL-SEG · TL-OTH · TL-CUS) · 0 omitidas · 0 bloqueadas. M = 38 del Anexo C + B1/B2 + 3 (MISC aprobado en B2 con 4 sub-tabs: comp · tam · capex · strategy). Siguiente: EV-EST |

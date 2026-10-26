@@ -14,6 +14,7 @@ import { mountWatchList } from '../watchlist.js';
 
 import { makeManagement } from './management.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
+import { googlCeHtml, googlCeWire, googlCeBuild, googlCePop } from './googl-ce.js';   // Evolution ▸ Earnings (Setup · Post-Results · Notes), EV-SET/POST/NOTES
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/googl.js)
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode it) ──
@@ -661,7 +662,7 @@ var CE_CONS = {
       qa:[42.6,40.4,42.6,44,48,46.2,48.5,49.4,54,50.7,54.2,56.6,63.1,60.4,63.3,null,null,null,null],
       qy:[null,null,null,null,42.6,40.4,42.6,44,48,46.2,48.5,49.4,54,50.7,54.2,56.6,63.1,60.4,63.3],
       qq:[null,42.6,40.4,42.6,44,48,46.2,48.5,49.4,54,50.7,54.2,56.6,63.1,60.4,63.3,null,null,null] },
-    { k:'Cloud backlog (RPO)', u:'$B', t:'ok', code:'BS_REMAINING_PERFORMANCE_OBLIG',
+    { k:'Revenue backlog (RPO)', u:'$B', t:'ok', code:'BS_REMAINING_PERFORMANCE_OBLIG',
       qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,74.6],[null,null,null,74.9],[null,null,77.1,77],[null,80.8,81,83.3],[96.1,96,98.6,90.2],[97,100,99.3,94.2],[102.2,101.3,96.2,96.2],[104.3,99.2,99.2,111.2],[115.2,115.2,127.2,136.4],[null,null,null,190],[null,null,129.5,318],[null,110.2,330.6,530.9],[192,457.3,552.6,null],[519.6,572.7,null,null],[602.5,null,null,null]],
       qa:[64.3,61.7,60.6,64.9,74.1,72.5,78.8,86.8,93.2,92.4,108.2,157.7,242.8,467.6,519.5,null,null,null,null],
       qy:[null,null,null,null,64.3,61.7,60.6,64.9,74.1,72.5,78.8,86.8,93.2,92.4,108.2,157.7,242.8,467.6,519.5],
@@ -721,7 +722,7 @@ var CALL_EARNINGS = {
           'EPS (diluted)':{ t:'Which EPS this is — and why QoQ reads −67%', h:'<p>Bloomberg <code>IS_COMP_EPS_GAAP</code> — comparable GAAP EPS.</p><p><b>The QoQ chip is real but useless:</b> Q2 2026 printed <b>$9.11</b> carrying <b>$99.0B of one-off securities gains</b> (+$6.26 to EPS). Against a clean $3.02, that is −67%. Nothing operational declined. Read the YoY, or better, read operating income.</p>' },
           'Operating cash flow':{ t:'No forward estimate exists', h:'<p>The archive carries <b>no consensus at all</b> for this line: every <code>fq+N</code> and <code>fy+N</code> cell is a near-zero placeholder (3.3×10⁻⁶), while <code>fq-3</code> / <code>fq0</code> / <code>fy0</code> are real numbers.</p><p>That is a normal, expected state — not a broken file. The line is kept because its <b>actuals</b> matter (Q2 2026 OCF was $39.1B against $44.9B of capex, which is the whole FCF story), but there is nothing to score against.</p>' },
           'Capex':{ t:'Sign flip — and the field CHANGED this export', h:'<p>Capex arrives as a cash <b>outflow</b> (negative) and is shown here as a positive magnitude, matching how the guide is quoted.</p><p><b>Read the change carefully:</b> this export switched the field from <code>CF_PURCHASE_OF_FIXED_PROD_ASSETS</code> to <code>HEADLINE_CAPEX</code>. They do not agree — Q3 2026 moved $54.6B → <b>$54.3B</b>, and the historical mean gap vs actuals moved +4.7% → <b>+10.2%</b>. The metric set is the file\'s, so we follow it; but a field swap is a break in the series, not a revision.</p><p><b>The read:</b> $54.3B against Q2\'s $44.9B — consensus already has the ladder stepping up again, consistent with the FY26 $195–205B guide.</p>' },
-          'Cloud backlog (RPO)':{ t:'A balance, not a flow — and a very thin sample', h:'<p><code>BS_REMAINING_PERFORMANCE_OBLIG</code>: total remaining performance obligations, a <b>balance-sheet</b> line, not quarterly revenue. Against Q2 2026\'s reported <b>$514B</b>, consensus has it reaching <b>$530.9B</b> — another +$17B of net book-building while the quarter converts revenue out of the book.</p><p><b>Directional only:</b> a single contributor stands behind the quarterly figure, and it has been off by 63–146%.</p>' },
+          'Revenue backlog (RPO)':{ t:'A balance, not a flow — and a very thin sample', h:'<p><code>BS_REMAINING_PERFORMANCE_OBLIG</code>: total remaining performance obligations, a <b>balance-sheet</b> line, not quarterly revenue. Against Q2 2026\'s reported <b>$514B</b>, consensus has it reaching <b>$530.9B</b> — another +$17B of net book-building while the quarter converts revenue out of the book.</p><p><b>Directional only:</b> a single contributor stands behind the quarterly figure, and it has been off by 63–146%.</p>' },
           'Cloud operating income':{ t:'New this export — now fully wired', h:'<p>kpi4 changed from capex to <b>Cloud operating income</b> (<code>IS_OPER_INC</code>, Cloud segment). Its actuals are cabled, so it is scored like every other line: Q2 2026 printed <b>$8.8B</b> against a ~$6.7B consensus, <b>+31.5%</b>.</p><p>The Street has consistently <b>under-modelled the Cloud margin ramp</b>, so the surprise here has run positive — read it as the market catching up to Cloud profitability, not as noise.</p>' },
           'Diluted shares':{ t:'The one line nobody gets wrong', h:'<p>Mean gap <b>+0.1%</b>, σ <b>0.4%</b> — by far the tightest line in the set, because share count is mechanical rather than forecast.</p><p>Worth watching anyway: it is the denominator, and Q2 2026 introduced an equity raise plus a $40B ATM shelf. A share count that starts drifting up is the dilution showing.</p>' }
         }, us:null,
@@ -743,7 +744,7 @@ var CALL_EARNINGS = {
           'Revenue':{ t:'Why revenue runs above the forward line', h:'<p>Print <b>$119.8B</b> vs a $99.7B forward consensus — the usual ~20% FX / gross-vs-net gap, shown as a real surprise. A same-basis pull on Jul 22 had $117.0B (a clean +2.4%).</p>' },
           'EPS (diluted)':{ t:'⚠ EPS optics', h:'<p>Consensus $2.86; the print was <b>$9.11</b>, driven by <b>$99.0B of one-off securities gains</b>. The +218% "beat" is marks, not operations — ex-marks EPS was ~$2.85, i.e. in line.</p><p>This is why EPS is flagged <code>noisy</code>: GAAP EPS on this company is not a forecastable line.</p>' },
           'Operating cash flow':{ t:'No forward estimate — but the actual is the story', h:'<p>No consensus exists for this line. The <b>actual</b> is the point: OCF $39.1B against capex $44.9B produced the <b>first negative FCF quarter on record (−$5.9B)</b>.</p>' },
-          'Cloud backlog (RPO)':{ t:'Thin sample — print was $519.5B', h:'<p>Consensus $318.0B against a <b>$519.5B</b> print. One contributor. Directional only.</p>' }
+          'Revenue backlog (RPO)':{ t:'Thin sample — print was $519.5B', h:'<p>Consensus $318.0B against a <b>$519.5B</b> print. One contributor. Directional only.</p>' }
         }, us:null,
         debate:{ rows:null, synth:'So the real question isn\'t the beat — it\'s whether the <b>contracted demand keeps out-running the capex ladder</b>. Backlog/Cloud accelerate again tonight and the raises stay funded by proof; a mere in-line and the FCF squeeze becomes the story. That\'s the one thing to resolve.' }
       },
@@ -837,7 +838,7 @@ var CALL_EARNINGS = {
         ],
         notBringing:[
           { item:'World Cup records (1.7B viewers, 550M on TV, most-watched WC in YouTube history)', why:'Spectacular color, already in the release, and the ads lift is inside the +13% — nothing left to argue.' },
-          { item:'Waymo Oasis vehicle · Wing 1M deliveries · Isomorphic $2B raise', why:'Real SOTP progress, logged in the themes — moves lines nobody underwrites quarterly. The Waymo external-structure question (Gawrelski) was deflected; noted, not news.' },
+          { item:'Waymo Ojai vehicle · Wing 1M deliveries · Isomorphic $2B raise', why:'Real SOTP progress, logged in the themes — moves lines nobody underwrites quarterly. The Waymo external-structure question (Gawrelski) was deflected; noted, not news.' },
           { item:'Security stats (90% of F100 on Google Cloud security; Wiz AI adoption ~90%)', why:'Impressive adoption metrics with zero new economics attached — context for the Cloud mix, not meeting material.' },
         ],
         newQuestions:[
@@ -863,7 +864,7 @@ var CALL_EARNINGS = {
           'EPS (diluted)':{ t:'The only negative YoY in the set', h:'<p>Consensus sat <b>below</b> the year-ago print — Q1 2025 EPS was $2.81 and carried securities marks. The Street was modelling the operating line, correctly. Then Q1 2026 printed <b>$5.11</b> on $37.7B of unrealized gains, and the "+96% beat" was marks again, in the other direction.</p>' },
           'Google Cloud':{ t:'Under-modelled, again', h:'<p>Consensus $18.2B; the print was <b>$20.0B (+10%)</b>. Third quarter running that the Street under-modelled Cloud by ~10–14% while nailing Search to within 3%. That asymmetry is the most reliable thing in this dataset.</p>' },
           'Capex':{ t:'The line the Street gets right once it is guided', h:'<p>Consensus $34.7B vs a $35.7B print. Capex is <b>guided</b>, so the Street converges hard on it — 34.7% off a year out, within 3% the last three quarters. When capex is the surprise, it is because the <i>guide</i> moved, not the quarter.</p>' },
-          'Cloud backlog (RPO)':{ t:'One contributor — and it was not close', h:'<p>Consensus $190.0B against a <b>$467.6B</b> print. Directional only; never scored as a beat.</p>' }
+          'Revenue backlog (RPO)':{ t:'One contributor — and it was not close', h:'<p>Consensus $190.0B against a <b>$467.6B</b> print. Directional only; never scored as a beat.</p>' }
         }, us:null,
         debate:{ rows:null, synth:'Going in, the argument was never the quarter — it was the bill. Consensus had Cloud at +48% and capex at $35.9B against a $175–185B FY guide; the risk was a raise on top of a raise.' },
         pricedIn:'Post-Q4 euphoria: Gemini 3 shipping, Cloud +48%, and a ~2x FY26 capex guide already (mostly) digested. The bar was "accelerate again, or else" — with the tape most nervous about a capex raise ON TOP of $175–185B.',
@@ -871,7 +872,7 @@ var CALL_EARNINGS = {
       },
       results:{
         headline:'A <b>beat with an asterisk</b>: 11th straight double-digit quarter, Cloud\'s 5th acceleration and a ~2x backlog — but the capex guide was raised AGAIN, 2027 was guided "significantly" higher, and the +82% EPS is investment marks, not operations. The business beat; the bill got bigger.',
-        notes:{"Operating income":{"t":"FX inside the beat","h":"\u003cp>Services carried a \u003cb>~3pp FX tailwind\u003c/b> — Philipp volunteered the caveat unprompted (\"important to keep in mind\"). Fades to ~1pp in Q2.\u003c/p>"},"EPS (diluted)":{"t":"⚠ The asterisk","h":"\u003cp>\u003cb>$37.7B of Other income\u003c/b> (mostly unrealized gains on non-marketable securities) drove the +82%. The operating line (+30%) is the honest read — treat headline EPS as optics both ways from here.\u003c/p>"},"Capex":{"t":"The ladder extends","h":"\u003cp>Raised one quarter after doubling — cover was Intersect closing + the backlog doubling (a real demand proof, per the watch-item red-line). But \u003cb>2027 got guided UP with an adjective, not a number\u003c/b>, and LT debt jumped $46.5B→$77.5B. Quarterly FCF: $10.1B.\u003c/p>"}}, watch:{"Google Cloud":2,"Cloud backlog (RPO)":2,"Search & other":3,"Capex":1},
+        notes:{"Operating income":{"t":"FX inside the beat","h":"\u003cp>Services carried a \u003cb>~3pp FX tailwind\u003c/b> — Philipp volunteered the caveat unprompted (\"important to keep in mind\"). Fades to ~1pp in Q2.\u003c/p>"},"EPS (diluted)":{"t":"⚠ The asterisk","h":"\u003cp>\u003cb>$37.7B of Other income\u003c/b> (mostly unrealized gains on non-marketable securities) drove the +82%. The operating line (+30%) is the honest read — treat headline EPS as optics both ways from here.\u003c/p>"},"Capex":{"t":"The ladder extends","h":"\u003cp>Raised one quarter after doubling — cover was Intersect closing + the backlog doubling (a real demand proof, per the watch-item red-line). But \u003cb>2027 got guided UP with an adjective, not a number\u003c/b>, and LT debt jumped $46.5B→$77.5B. Quarterly FCF: $10.1B.\u003c/p>"}}, watch:{"Google Cloud":2,"Revenue backlog (RPO)":2,"Search & other":3,"Capex":1},
         thesisCheck:[
           { line:'Capex raise without a demand proof point', tripped:false, note:'Raised WITH the proof — backlog ~2x in the same print. But the 2027 "significantly increase" extends the ladder; the debate is bigger, not settled.' },
           { line:'Cloud decelerates / backlog stalls', tripped:false, note:'5th straight acceleration (+63%); backlog $462B. Constraint claim now paired with "revenue would have been higher."' },
@@ -938,7 +939,7 @@ var CALL_EARNINGS = {
           'Revenue':{ t:'Why revenue runs above the forward line', h:'<p>Forward and reported revenue are not the same definition (+20.0%, σ 1.2%, n=11). The print was <b>$113.8B</b>. Not a 20% beat.</p>' },
           'Operating income':{ t:'The rare miss — and it was a charge', h:'<p>Consensus $36.7B, print <b>$35.9B (−2.2%)</b>. The gap is almost entirely the <b>$2.1B Waymo SBC charge</b> that landed in R&D. Underlying growth was ~+22%, not the +16% reported.</p>' },
           'Google Cloud':{ t:'Under-modelled by 10%', h:'<p>Consensus $16.1B; print <b>$17.7B (+48% YoY)</b>. The Street had Cloud decelerating to +34% — it accelerated instead. First of three straight ~10% Cloud misses.</p>' },
-          'Cloud backlog (RPO)':{ t:'Thin sample — print was $242.8B', h:'<p>Consensus $136.4B against a <b>$242.8B</b> print (+55% QoQ). One contributor.</p>' }
+          'Revenue backlog (RPO)':{ t:'Thin sample — print was $242.8B', h:'<p>Consensus $136.4B against a <b>$242.8B</b> print (+55% QoQ). One contributor.</p>' }
         }, us:null,
         debate:{ rows:null, synth:'The setup was asymmetric by construction: the quarter itself was well modelled (capex within 0.4%, Search within 3%), so the print could only be decided by two things the grid could not hold — the FY26 capex number, and whether Cloud broke past +34%. Both did.' },
         pricedIn:'Gemini 3 landed in December to the best reception of any Google model and the stock ran into the print. Two live questions: how big is the FY26 capex number (Q3 promised "a significant increase — details on the Q4 call"), and does Cloud accelerate past +34% with backlog $155B.',
@@ -946,7 +947,7 @@ var CALL_EARNINGS = {
       },
       results:{
         headline:'<b>Every Q3 promise landed at once</b>: Gemini 3 shipped and visibly accelerated the whole complex (Search +17%, Cloud +48%, backlog $240B), FY25 closed above $400B — and the capex answer was <b>~2x, $175–185B</b>. One optical drag: a $2.1B Waymo SBC charge sat on op income.',
-        notes:{"Operating income":{"t":"The Waymo charge","h":"\u003cp>A \u003cb>$2.1B SBC charge\u003c/b> (Waymo's valuation step-up in the $16B round) sat mostly in R&D — reported +16% understates an underlying ~+22%. Same lesson as the Q3 EC fine: read op income ex-items first.\u003c/p>"},"Capex":{"t":"Scored as the shock it was","h":"\u003cp>Roughly DOUBLE the FY25 spend, with FY25 depreciation already +38%. The demand cover (backlog +55%, Cloud +48%) arrived in the same print — per the red-line, covered. But the magnitude reset every model.\u003c/p>"}}, watch:{"Search & other":3,"Google Cloud":2,"Cloud backlog (RPO)":2,"Capex":1},
+        notes:{"Operating income":{"t":"The Waymo charge","h":"\u003cp>A \u003cb>$2.1B SBC charge\u003c/b> (Waymo's valuation step-up in the $16B round) sat mostly in R&D — reported +16% understates an underlying ~+22%. Same lesson as the Q3 EC fine: read op income ex-items first.\u003c/p>"},"Capex":{"t":"Scored as the shock it was","h":"\u003cp>Roughly DOUBLE the FY25 spend, with FY25 depreciation already +38%. The demand cover (backlog +55%, Cloud +48%) arrived in the same print — per the red-line, covered. But the magnitude reset every model.\u003c/p>"}}, watch:{"Search & other":3,"Google Cloud":2,"Revenue backlog (RPO)":2,"Capex":1},
         thesisCheck:[
           { line:'Capex number without demand cover', tripped:false, note:'~2x, but delivered WITH backlog +55% and a 4th Cloud acceleration in the same print.' },
           { line:'Cloud plateaus mid-30s', tripped:false, note:'+48% — the sharpest acceleration of the cycle.' },
@@ -2093,7 +2094,7 @@ var GOOGL_THEMES=[
       { q:'Q3 2025', items:['London (2026) + Tokyo announced; Dallas/Nashville/Denver/Seattle; airports + freeways.'] },
       { q:'Q4 2025', items:['<b>$16B round — largest ever</b> (Alphabet funded a significant portion → $2.1B SBC charge); 20M trips; 400K rides/week.'] },
       { q:'Q1 2026', items:['<b>500K rides/week (2x in <1yr)</b>; 11 US cities · <b>Verily deconsolidated</b>; GFiber→Astound (deconsolidates Q4) — the pruning is explicit.'] },
-      { q:'Q2 2026', items:['Waymo <b>Oasis</b> vehicle debuts (first on the 6th-gen Driver) · Wing passes <b>1M deliveries</b> (+Papa John\'s) · <b>Isomorphic Labs raises $2B+</b> for AI drug design · external-structure question (Gawrelski) deflected: "focused on scaling."'] },
+      { q:'Q2 2026', items:['Waymo <b>Ojai</b> vehicle debuts (first on the 6th-gen Driver) · Wing passes <b>1M deliveries</b> (+Papa John\'s) · <b>Isomorphic Labs raises $2B+</b> for AI drug design · external-structure question (Gawrelski) deflected: "focused on scaling."'] },
     ]},
   { theme:'Quiet decliners & headline distorters', st:{ k:'watch', since:'Q3 2025', last:'Q1 2026' },
     why:'The lines nobody asks about, and the one-offs that distort a print — read every headline through these.',
@@ -2755,24 +2756,13 @@ function deepDiveHtml(c){
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="earnings">'+
-        ceIRButton()+
-        '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (the print scored against what was frozen, <i>plus</i> the call highlights — the things worth taking into the conversation). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Alphabet. The <b>Watch List</b> is the single home for what we <i>track over time</i>; the Post-Results highlights are <i>talking points</i>, not tracking — so they can include non-trackable call colour (a backlog figure, a capex number, a user count) that would never earn a Watch slot.</div>'+
-        // Phase tabs ABOVE the quarter pills: the section decides which quarters exist, so it comes
-        // first; the quarter selector below reflects the active section (§6a-ix).
-        '<div class="ce-phtabs">'+
-          '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
-          '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>'+
-          '<button type="button" class="ce-phtab" data-cep="results">Post-Results</button>'+
-        '</div>'+
-        ceQPills()+
-        '<div class="ce-phpane" data-cep="setup">'+ceSetupBody(c)+'</div>'+
-        // B2 #39: the Guidance commitments sit with the theme record until EV-NOTES turns them into hooks.
-        '<div class="ce-phpane" data-cep="watch" hidden>'+ceWatchBody(c)+'<div style="margin-top:22px">'+guidanceBody(c)+'</div></div>'+
-        '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>'+
-      '</div>'+
+      // Earnings on the guide's machinery (./googl-ce.js, copy of meta-ce.js). The old Setup / Watch List / Post-Results
+      // panes, the IR button and the intro are retired (B2 #32–36); their data constants stay in this file until F-FINAL.
+      '<div class="ovt-subpane" data-ovst="earnings">'+googlCeHtml(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="results" hidden>'+resultsHtml('GOOGL')+'</div>'+
+      '<div class="ovt-subpane" data-ovst="estevo" hidden>'+resultsEvoHtml('GOOGL')+'</div>'+   // EV-EST (B2 #38)
     '</div>';
   h+=subtabs('valuation',[
     { k:'peers', l:'Peers', body:peersBody(c) },               // B2 #43 → VA-PEERS
@@ -2822,17 +2812,14 @@ function buildSub(root, group, key){
   } else if(group==='evolution'){
     // The Setup's track-record charts. Only build when Earnings is the visible subpane AND the
     // Setup phase is the active one — Chart.js needs a non-null offsetParent.
-    if(key==='earnings'){
-      var ph=root.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phtab.active');
-      if(!ph || ph.getAttribute('data-cep')==='setup'){
-        requestAnimationFrame(gBuildCeAnnual);   // the Setup chart IS the Results engine (GOOGL_SETUP)
-      }
-    }
+    if(key==='earnings') googlCeBuild(root);   // the Setup chart (Results engine, GOOGL_SETUP) when Setup is the active phase
     // Amazon-style Results / Estimates engine — build lazily when the pane is visible (Chart.js needs
     // a non-null offsetParent). Pass the pane's OWN wrap + ticker so this second engine instance
     // (beside the Setup chart) re-establishes its dataset and wires the right wrap.
     else if(key==='results') requestAnimationFrame(function(){
       initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'GOOGL'); });
+    // The montage must pass the ticker (playbook §11), or Growth / table buttons stop responding.
+    else if(key==='estevo') requestAnimationFrame(function(){ initResultsEvo('GOOGL'); });
   }
 }
 // Tab switches hide a tall pane and show a shorter one, so the browser clamps scrollTop and the
@@ -2966,7 +2953,7 @@ function wireModal(root){
     if(kind==='prod'){ var f=G_PRODUCTS[+id]; if(!f) return null;
       var body=f.items.map(function(it){ return '<div style="margin:0 0 10px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">'+esc(it[0])+'</div><div class="famd">'+it[1]+'</div></div>'; }).join('');
       return {t:f.ic+' '+esc(f.fam),h:'<div class="famd" style="margin-bottom:10px;color:var(--mu)">'+esc(f.d)+'</div>'+body}; }
-    if(kind==='ce'){ return CE_POP[id]||null; }
+    if(kind==='ce'){ return googlCePop(id); }
     if(kind==='dds'){ var sg=DD_SEGS[+id]; return sg?{t:sg.ic+' '+esc(sg.n)+' <span class="ov-modal-sub">'+esc(sg.kpi)+'</span>',h:sg.detail}:null; }
     if(kind==='ddc'){ var cu=DD_CUST[+id]; return cu?{t:cu.ic+' '+esc(cu.n)+' <span class="ov-modal-sub">'+esc(cu.tag)+'</span>',h:cu.detail}:null; }
     if(kind==='arena'){ var ar=DD_ARENA[+id]; return ar?{t:ar.ic+' '+esc(ar.n)+' <span class="ov-modal-sub">'+esc(ar.tag)+'</span>',h:ar.detail}:null; }
@@ -2983,21 +2970,12 @@ function wireModal(root){
 function init(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
   wireDD(root);
-  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt'); wireSubtabs(root,'misc'); wireCallEarnings(root); wireCeTrack(root); wireCeAnnual(root);
+  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt'); wireSubtabs(root,'misc'); googlCeWire(root);   // Earnings: phase tabs · quarter pills · toggles · Notes (record + Watch List)
   wireModal(root);
   // Collapsible sections
   root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var cc=btn.parentElement; var open=cc.classList.toggle('open'); var b=cc.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }; });
   // Money-map accordions
   root.querySelectorAll('.acc-h').forEach(function(btn){ btn.onclick=function(){ var b=btn.nextElementSibling; if(!b) return; var open=b.hidden; b.hidden=!open; var x=btn.querySelector('.acc-x'); if(x) x.textContent=open?'–':'+'; }; });
-  // Earnings-calls accordion + By theme ⇄ By quarter lens toggle (standard contract)
-  root.querySelectorAll('.lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'–':'+'; }; });
-  root.querySelectorAll('.calls-pill').forEach(function(btn){ btn.onclick=function(){
-    var v=btn.getAttribute('data-callsv');
-    root.querySelectorAll('.calls-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    var t=root.querySelector('#googlCallsTheme'), q=root.querySelector('#googlCallsQuarter');
-    if(t) t.style.display=(v==='theme')?'':'none';
-    if(q) q.style.display=(v==='quarter')?'':'none';
-  }; });
   // Money-map view toggle (Segments ⇄ Geography)
   root.querySelectorAll('.ov-googl .mg-pill[data-gmm]').forEach(function(btn){ btn.onclick=function(){
     var v=btn.getAttribute('data-gmm');

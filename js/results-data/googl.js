@@ -1694,4 +1694,80 @@ export var googlResults = {
       },
     },
   },
+  // ── Estimates pane (EV-EST): how the Summit model's view of each fiscal year moved across its saved snapshots.
+  // Frozen on purpose, not live (rule 10) — pulled from the Summit MCP on 2026-10-26; add a vintage when a new
+  // snapshot is submitted. summit[year][vintage]; cons = the Bloomberg figures STORED IN THE MODEL at the same date.
+  // The 2026-07-23 snapshot is left out (SAB, 2026-10-26): it was saved mid-update (capex 2026 $77.9B, operating
+  // income empty, FCF +$107.7B). Cloud and TAC exist only in the 2026-08-06 snapshot. Cloud 2026 = reported 1Q–2Q +
+  // the model's 3Q–4Q (as in Results). A literal 0 in the model (EBITDA / FCF 2029) means "not populated" → null.
+  evolution: {
+    vintages: [
+      { label: 'Jul 28, 2026', event: 'post-2Q26 print' },
+      { label: 'Aug 6, 2026',  event: 'post-2Q26 print (current)' }
+    ],
+    years: ['2026', '2027', '2028', '2029'],
+    sections: [
+      { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
+        { label: 'Totals', keys: ['rev'] },
+        { label: 'Segments (Summit only)', keys: ['svc', 'cloud'] },
+        { label: 'Revenue lines (Summit only)', keys: ['ads'] }
+      ] },
+      { key: 'prof', label: 'Profitability', defaultMetric: 'capex', groups: [
+        { label: 'Company', keys: ['capex', 'fcf', 'opinc', 'ebitda', 'earnings', 'tac'] }
+      ] }
+    ],
+    metrics: {
+      rev: { label: 'Total Revenue', unit: 'usdM',
+        summit: [[491251, 506295], [604679, 629543], [729095, 754863], [783884, 794384]],
+        cons: null,
+        prior: { summit: [402836, 402836] },
+        note: 'Summit raised revenue in every year between the two files: FY26 $491.3B → $506.3B, FY27 $604.7B → $629.5B. No consensus line here: the revenue consensus stored in the model is Bloomberg\'s headline figure, which mixes gross and net-of-TAC forecasts; the comparable consensus (sum of segments) is in Results.' },
+      svc: { label: 'Google Services Revenue', unit: 'usdM',
+        summit: [[388080, 388080], [434570, 434570], [483364, 483364], [536296, 536296]],
+        cons: null,
+        prior: { summit: [342721, 342721] },
+        note: 'Unchanged between the two files: every revision came from Cloud.' },
+      cloud: { label: 'Google Cloud Revenue', unit: 'usdM',
+        summit: [[null, 117495], [null, 194192], [null, 270363], [null, 256325]],
+        cons: null,
+        prior: { summit: [58705, 58705] },
+        note: 'Only the 2026-08-06 file carries Cloud. FY26 = reported 1Q–2Q + the model\'s 3Q–4Q ($117.5B); the model has Cloud reaching $270.4B in FY28 and easing to $256.3B in FY29.' },
+      ads: { label: 'Google Advertising Revenue', unit: 'usdM',
+        summit: [[332948, 332948], [371279, 371279], [411790, 411790], [456133, 456133]],
+        cons: null,
+        prior: { summit: [294691, 294691] },
+        note: 'Search & other + YouTube ads + Network. Unchanged between the two files.' },
+      capex: { label: 'Capital Expenditure', unit: 'usdM', marginOf: 'rev', marginLabel: 'capex % of revenue',
+        summit: [[203869, 205756], [260012, 308634], [117146, 385792], [125949, 317754]],
+        cons: null,
+        prior: { summit: [91447, 91447] },
+        note: 'The big revision: the Jul 28 file had capex falling back to ~$117–126B in FY28–29 after a $260.0B FY27; the Aug 6 file keeps it rising to $308.6B (FY27) and $385.8B (FY28) — the model no longer assumes the build-out stops in 2028. FY26 ($205.8B) sits at the top of the $195–205B guide.' },
+      fcf: { label: 'Free Cash Flow', unit: 'usdM', marginOf: 'rev', marginLabel: 'FCF margin',
+        summit: [[-13074, -7712], [-7346, -39016], [207566, -35403], [null, null]],
+        cons: null,
+        prior: { summit: [73266, 73266] },
+        note: 'The mirror of capex: FY28 free cash flow went from +$207.6B (Jul 28) to −$35.4B (Aug 6) once the model kept capex rising. FY29 is not populated in either file. Where a year flips sign, the change is shown in dollars only.' },
+      opinc: { label: 'Operating Income (GAAP)', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
+        summit: [[169768, 184812], [220229, 245093], [275233, 301001], [273038, 283539]],
+        cons: null,
+        prior: { summit: [129039, 129039] },
+        note: 'Raised in every year between the two files (FY26 $169.8B → $184.8B), in step with Cloud.' },
+      ebitda: { label: 'EBITDA (adj.)', unit: 'usdM', marginOf: 'rev', marginLabel: 'EBITDA margin',
+        summit: [[232588, 248305], [307908, 334682], [368558, 422116], [360833, null]],
+        cons:   [[227753, 225902], [293506, 296392], [377909, 380956], [466425, 466220]],
+        prior: { summit: [175128, 175128], cons: [174183, 174183] },
+        note: 'The model\'s EBITDA (operating income + depreciation + stock-based compensation) against the Bloomberg comparable EBITDA stored in the same file. Summit moved above the Street for FY26–27 on the Aug 6 file ($248.3B vs $225.9B for FY26). FY29 is not populated in the Aug 6 file.' },
+      earnings: { label: 'Model Earnings (adj.) vs Street Net Income (GAAP)', unit: 'usdM', marginOf: 'rev', marginLabel: 'net margin',
+        summit: [[138527, 147945], [180148, 196620], [222796, 242958], [225531, 226859]],
+        cons:   [[232809, 253856], [185133, 187002], [219315, 222705], [256167, 263315]],
+        prior: { summit: [105984, 105984], cons: [132170, 132170] },
+        note: '⚑ Different bases. Summit = model earnings (adjusted): operating income plus net interest, after the model\'s tax rate — no gains on equity stakes. Bloomberg = GAAP net income, which for FY26 includes the large gains already booked (other income of $98B in 2Q26 alone) — hence $253.9B against $147.9B. The gap is the basis, not a disagreement on the business.' },
+      tac: { label: 'Traffic Acquisition Costs', unit: 'usdM', marginOf: 'ads', marginLabel: 'TAC % of ad revenue',
+        summit: [[null, 65515], [null, 71657], [null, 77828], [null, 84385]],
+        cons: null,
+        prior: { summit: [59926, 59926] },
+        note: 'Only the 2026-08-06 file carries TAC.' }
+    },
+    note: 'Single source: every number on this tab is the Summit DCF model for GOOGL, frozen from its saved snapshots (not live): Jul 28 2026 and Aug 6 2026, both after the 2Q26 print. The Jul 23 file is left out (saved mid-update). Consensus = the Bloomberg figures stored inside each model file (EBITDA, net income); the full Bloomberg history is in Results.'
+  },
 };

@@ -12,7 +12,7 @@
 | Rama | `feat/googl-restructure` (desde `origin/main` @ `95c00e0`, 2026-10-26; worktree `rs-playbook`). Nombre de modo B (§7.1); `feat/googl-profile` ya existe en GitHub (rama vieja de DOAA351, jul 2026) y no se toca |
 | Analista responsable | SAB (Santiago Alvarez) |
 | Inicio | 2026-10-26 |
-| Avance | **19 de 43** unidades aprobadas (F0 · F0-SM · B1 · B2 · F1 · OV-1…OV-7 · OV-F · EV-RES-DATA · EV-RES · TL-GEN · TL-SEG · TL-OTH · TL-CUS) · 0 omitidas · 0 bloqueadas. M = 38 del Anexo C + B1/B2 + 3 (MISC aprobado en B2 con 4 sub-tabs: comp · tam · capex · strategy). Siguiente: EV-EST |
+| Avance | **23 de 43** unidades aprobadas (F0 · F0-SM · B1 · B2 · F1 · OV-1…OV-7 · OV-F · EV-RES-DATA · EV-RES · TL-GEN · TL-SEG · TL-OTH · TL-CUS · EV-EST · EV-SET · EV-NOTES · EV-POST) · 0 omitidas · 0 bloqueadas. M = 38 del Anexo C + B1/B2 + 3 (MISC aprobado en B2 con 4 sub-tabs: comp · tam · capex · strategy). Siguiente: BL-GEN-1 |
 
 ## 1. Inventario de datos (F0)
 
@@ -26,7 +26,7 @@
 | `get-market-history` (Massive) | ✔ desplegada (2026-10-14, PR #142) | precio diario; `ratios` falla → acciones/deuda de EDGAR XBRL como en META | Historic Multiple en vivo | — |
 | Valuación del modelo en el MCP (`get_valuation_history`) | ✔ | 2 métodos por snapshot, `quality_flags` vacío en los 3. 08-06: EV/EBITDA 12.7× y P/E 24.0×, 2027 Forward. ⚠ 07-23: EV/EBITDA con `target_year` **2029** (14.0×) vs 2027 en los otros — cambio de definición a revisar en VA-TM. Falta confirmar contra la hoja Output del workbook | VA-TM, VA-SENS | — |
 | SPLC (clientes / proveedores) | ◐ | el perfil actual usa un export **GOOGL US Equity, as of 22-Jul-2026** (728 proveedores / 1,166 clientes), pero el archivo no está en el repo ni en Drive por nombre — falta ubicarlo | TL-CUS tabla, BL-SPLC | BL-SPLC sin el archivo fuente |
-| Transcripciones | ✔ | `docs/calls/GOOGL.md` (4Q23 → 1Q26) + `GOOGL-latest.md` (2Q26, 2026-07-22). Quartr: requiere volver a iniciar sesión (2026-10-26). **3T26 se reporta a fines de oct 2026** (fecha por confirmar) | EV-POST, EV-NOTES, citas | — |
+| Transcripciones | ✔ | `docs/calls/GOOGL.md` (4Q23 → 1Q26) + `GOOGL-latest.md` (2Q26, 2026-07-22). Quartr: ya no se conecta (SAB, 2026-10-26); transcripciones oficiales en PDF de Alphabet IR (s206.q4cdn.com). **3T26 se reporta a fines de oct 2026** (fecha por confirmar) | EV-POST, EV-NOTES, citas | — |
 | Fiscal.ai (plan) | ✘ (según CLAUDE.md) | GOOGL no está en el plan gratis (solo AMZN, MA, NVDA, UBER, V) — se verifica en el portal | tabla en vivo de Management | el hueco dice "not available on the current Fiscal.ai plan" (correcto) |
 | Massive (`liveQuote`) | ✔ | funciona vía `covered-calls-massive` | market cap, peers | — |
 | Fotos / imágenes | ✔ | `img/leadership/googl-*.jpg` (7: Pichai, Porat, Ashkenazi, Hassabis, Kurian, Mohan, Schindler) | Management | — |
@@ -208,10 +208,10 @@ siguientes a **2027** (cambio de definición: VA-TM lo marca).
 | TL-SEG | Top Line ▸ Segments | ✅ | 2026-10-26 | SAB | | Services · Cloud · Other Bets; 4 KPIs de monetización + TAC rate + backlog; precio×volumen Search y Network; bloque 5 con ⚑ hasta EV-NOTES |
 | TL-OTH | Top Line ▸ Other | ✅ | 2026-10-26 | SAB | | líneas de ingreso (q/y) + geografía (anual 2023–25) |
 | TL-CUS | Top Line ▸ Customers | ✅ | 2026-10-26 | SAB | | sin concentración >10% (verbatim); 3 clases; sección 4 sin export SPLC; sección 5 espera el motor |
-| EV-EST | Evolution ▸ Estimates | ⬜ | | | | |
-| EV-SET | Evolution ▸ Earnings ▸ Setup | ⬜ | | | | |
-| EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
-| EV-NOTES | Evolution ▸ Earnings ▸ Notes | ⬜ | | | | |
+| EV-EST | Evolution ▸ Estimates | ✅ | 2026-10-26 | SAB | | 2 snapshots (28-jul, 6-ago; 23-jul fuera); FY26–29; consenso EBITDA + utilidad (bases distintas, con aviso) |
+| EV-SET | Evolution ▸ Earnings ▸ Setup | ✅ | 2026-10-26 | SAB | | `googl-ce.js` (copia de meta-ce.js) + `googl-ce-data.js`; 3T26 (28-oct) con Street segment-sum, Summit 08-06 y notas verbatim del CFO |
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results | ✅ | 2026-10-26 | SAB | | The print + Call Summary de 2T26/1T26/4T25 (9 puntos de prepared, 9 Q&A, 7 'Also on the call', 5 Propose Notes c/u); citas textuales de las transcripciones oficiales de Alphabet IR (PDF, descargadas con permiso de SAB), verificadas cita por cita y hablante por hablante (56/57/57, 0 fallas). 3T26 se llena después del 28-oct |
+| EV-NOTES | Evolution ▸ Earnings ▸ Notes | ✅ | 2026-10-26 | SAB (v2 con sus notas, aprobada) | | semilla v2 `themes-data/googl.js`: base = notas a mano de SAB (GOOGL (2).pdf, 3T22→2T26 + GS Sep25/Sep26, MS Mar26, I/O May26) + hilos de Dani no cubiertos; 24 hilos, 167 notas, 7 ganchos cerrados (caída de publicidad 22–23, Cloud rentable, reset de costos 23–24, capex FY23/24/25, "same rate"); cifras contrastadas con 10-K/10-Q (4 corregidas) + Watch List de Dani (21 filas) |
 | BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ⬜ | | | | |
 | BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⬜ | | | | |
 | BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ⬜ | | | | |
@@ -290,13 +290,13 @@ Destinos aprobados por SAB el 2026-10-26 (B2), incluidas las fusiones #18, #41, 
 | 29 | Bottom Line ▸ Margins · lede "Two margin stories" | Bottom Line ▸ BL-GEN-1 ▸ nota | texto a nota | ⬜ |
 | 30 | Margins · gráfica `gChartMargin` margen grupo y Services FY19–25 + nota de one-offs | Bottom Line ▸ BL-GEN-1 (grupo) + BL-SEG ▸ Profit by segment (Services) | reemplazada por los motores; la nota de one-offs (multa CE 3T25…) a la `note` | ⬜ |
 | 31 | Margins · gráfica `gChartCloudM` escalera de margen Cloud 1Q23–1Q26 | Bottom Line ▸ BL-SEG ▸ Profit by segment (Cloud, trimestral) | reemplazada; la leyenda "2.6% → 32.9%" a la nota | ⬜ |
-| 32 | Evolution ▸ Earnings · botón IR + intro "the decision layer" | fusionada con la cabecera del perfil (IR/EDGAR en `headerSources`) | se quita por regla de SAB (META, 2026-10-21) — pide aprobación específica | ⬜ |
-| 33 | Earnings ▸ Setup (`ceSetupBody`, `CE_CONS` tecleado, gráficas Setup, `ceAnnualBody` con `GOOGL_SETUP`) | Evolution ▸ EV-SET | copia de `meta-ce.js`; `CE_CONS` armado al cargar desde Results | ⬜ |
-| 34 | Earnings ▸ Watch List (motor `watchlist.js`, filas en Supabase `company_themes`) | Evolution ▸ EV-NOTES (Watch List debajo del theme record, como META) | se conservan las filas guardadas; `palette:'summit'` | ⬜ |
-| 35 | Earnings ▸ theme record `callsBody` / `GOOGL_THEMES` (9 temas, 11 llamadas) | Evolution ▸ EV-NOTES (semilla `themes-data/googl.js`) | temas = segmentos/ejes; ganchos cerrados; revisar la copia en Supabase antes de re-sembrar | ⬜ |
-| 36 | Earnings ▸ Post-Results (`CALL_EARNINGS`: 2T26, 1T26, 4T25 reportados; 3T26 upcoming) | Evolution ▸ EV-POST | formato de la guía (citas verbatim de `docs/calls/`); se agrega el 3T26 cuando reporte | ⬜ |
-| 37 | Evolution ▸ Results (`results-data/googl.js`) | Evolution ▸ EV-RES | dataset rehecho: base del consenso (duda 7), Summit congelado | ⬜ |
-| 38 | Evolution ▸ Estimates (vacío → "pending") | Evolution ▸ EV-EST | se construye con los 3 snapshots | ⬜ |
+| 32 | Evolution ▸ Earnings · botón IR + intro "the decision layer" | fusionada con la cabecera del perfil (IR/EDGAR en `headerSources`) | se quita por regla de SAB (META, 2026-10-21) — pide aprobación específica | 👀 (quitados en EV-SET) |
+| 33 | Earnings ▸ Setup (`ceSetupBody`, `CE_CONS` tecleado, gráficas Setup, `ceAnnualBody` con `GOOGL_SETUP`) | Evolution ▸ EV-SET | copia de `meta-ce.js`; `CE_CONS` armado al cargar desde Results | 👀 (el archivo de Dani pasa a `googl-ce-data.js`; ingreso/op. income/EPS/capex/segmentos se rehacen al cargar desde Results) |
+| 34 | Earnings ▸ Watch List (motor `watchlist.js`, filas en Supabase `company_themes`) | Evolution ▸ EV-NOTES (Watch List debajo del theme record, como META) | se conservan las filas guardadas; `palette:'summit'` | 👀 (21 filas visibles) |
+| 35 | Earnings ▸ theme record `callsBody` / `GOOGL_THEMES` (9 temas, 11 llamadas) | Evolution ▸ EV-NOTES (semilla `themes-data/googl.js`) | temas = segmentos/ejes; ganchos cerrados; revisar la copia en Supabase antes de re-sembrar | 👀 (no había registro guardado en Supabase: el viejo vivía solo en memoria) |
+| 36 | Earnings ▸ Post-Results (`CALL_EARNINGS`: 2T26, 1T26, 4T25 reportados; 3T26 upcoming) | Evolution ▸ EV-POST | formato de la guía (citas verbatim de `docs/calls/`); se agrega el 3T26 cuando reporte | 🔨 (The print listo; Call Summary verbatim pendiente; el contenido de Dani sigue en `CALL_EARNINGS` de googl.js) |
+| 37 | Evolution ▸ Results (`results-data/googl.js`) | Evolution ▸ EV-RES | dataset rehecho: base del consenso (duda 7), Summit congelado | ✅ |
+| 38 | Evolution ▸ Estimates (vacío → "pending") | Evolution ▸ EV-EST | se construye con los 3 snapshots | ✅ (2 snapshots: el 23-jul queda fuera por decisión de SAB) |
 | 39 | Evolution ▸ Guidance · `G_GUIDE` (5 compromisos, con modal) + callout "what they will NOT give you" | Evolution ▸ EV-NOTES (cada compromiso = gancho "Promise — reconcile") + la frase "no numeric guidance" a la nota de Results | sin sub-tab Guidance (no existe en la estructura) | ⬜ |
 | 40 | Evolution ▸ Strategy · ciclo de 5 pasos + callout "broaden the box" | Miscellaneous ▸ MISC-strategy (como META) | se conserva | ⬜ |
 | 41 | Evolution ▸ Timeline (`timelineBody`, el mismo de OV-7) | fusionada con #7 (OV-7) | duplicado exacto (requiere aprobación específica) | ⬜ |
@@ -319,7 +319,7 @@ Destinos aprobados por SAB el 2026-10-26 (B2), incluidas las fusiones #18, #41, 
 | 2026-10-26 | BL-SPLC, TL-CUS tabla | Ubicar el export SPLC de GOOGL del 22-Jul-2026 que usó Dani | SAB / DOAA351 | abierto |
 | 2026-10-26 | TL-CUS ▸ sección 5 | "What each top customer buys" espera el motor (`segments.js` aún no dibuja `customers.buys`) — PR de motor aparte | Claude (PR de motor) | abierto |
 | 2026-10-26 | TL-* / OV-4 | El motor escribe fijo "net sales" (Alphabet dice "revenue") — generalizar en PR de motor aparte (playbook §10) | Claude (PR de motor) | abierto |
-| 2026-10-26 | EV-NOTES | Llevar a la semilla de Notes, con trimestre, las cifras de llamadas de `DD_SEGS`, `DD_CUST` y la tira de KPIs (mapa #9, #12, #13) | Claude | abierto |
+| 2026-10-26 | EV-NOTES | Llevar a la semilla de Notes, con trimestre, las cifras de llamadas de `DD_SEGS`, `DD_CUST` y la tira de KPIs (mapa #9, #12, #13) | Claude | cerrado (semilla v2) |
 
 ## 6b. Conexiones pendientes ("Live data pending")
 
@@ -429,3 +429,25 @@ Destinos aprobados por SAB el 2026-10-26 (B2), incluidas las fusiones #18, #41, 
 - Fuentes: 10-K FY2025 (acc. 0001652044-26-000018), 10-Q 2T26 (acc. 0001652044-26-000071), BBG (KPIs reportados, cuadrados contra el 10-Q 2T26), Results dataset.
 - Autoauditoría: ✔ FILING solo verbatim con ubicación (notas y secciones cotejadas en el texto del 10-K) · ✔ series por puntero a Results · ✔ 4 sub-tabs sin errores (4 gráficas) · ✔ 4T23 vacío en KPIs (BBG no lo trae, regla 7).
 - Pendientes: sección 4 (sin export SPLC) y sección 5 (motor) de Customers; bloque 5 de Segments con ⚑ hasta EV-NOTES; cifras de llamadas de Dani → EV-NOTES (mapa #9, #12, #13).
+
+### 2026-10-26 · EV-EST Evolution ▸ Estimates — APROBADA
+- Qué se mostró: bloque `evolution` en `results-data/googl.js` (Summit snapshots 2026-07-28 y 2026-08-06, FY2026–29; montado con `initResultsEvo('GOOGL')`); revisión grande = capex FY27–28 ($260.0B→$308.6B; $117.1B→$385.8B) y FCF FY28 (+$207.6B→−$35.4B).
+- Decisiones: el snapshot 2026-07-23 queda fuera (guardado a medio actualizar: capex 2026 $77.9B, op. income vacío, FCF +$107.7B); consenso = EBITDA y utilidad guardados en el modelo, la utilidad con aviso de bases distintas (BBG GAAP vs modelo ajustado) — SAB. Ingreso sin consenso aquí (REV_BBG_EST es el headline mezclado).
+- Autoauditoría: ✔ ticker pasado al montaje · ✔ `prior` FY2025 · ✔ rampa de un tono · ✔ ceros del modelo → null · ✔ consola sin errores.
+
+### 2026-10-26 · EV-SET Earnings ▸ Setup — APROBADA · EV-NOTES Notes — APROBADA y reabierta
+- Qué se mostró: `js/overviews/googl-ce.js` (copia de meta-ce.js con datos de Alphabet), `js/overviews/googl-ce-data.js` (archivo BBG de Dani + reconstrucción al cargar desde Results; ingreso = suma de segmentos), `js/results-data/googl-setup.js` (copia de meta-setup.js), `js/themes-data/googl.js` (18 hilos, 5 ejes; capex FY24/FY25 cerrados), registro en `js/segments.js` (THEME_SRC/THEME_SEG). 3T26 = mié 28-oct-2026 después del cierre (Alphabet IR, 6-oct-2026). Notas del Setup con citas textuales del CFO (llamada 2T26). Watch List de Dani: 21 filas.
+- Autoauditoría: ✔ sin emojis ni tarjetas IR · ✔ texto en negro · ✔ Summit leído de Results · ✔ claves de notas = líneas del grid · ✔ consola sin errores.
+- Decisiones (SAB): **Quartr ya no va a estar conectado** — las transcripciones salen de docs/calls y de la transcripción oficial de Alphabet IR; las notas de SAB están en `C:\Users\santi\Downloads\GOOGL (2).pdf` (GoodNotes) y pasan a ser la base de la semilla de Notes → EV-NOTES vuelve a revisión.
+
+### 2026-10-26 · EV-NOTES Notes (v2) — APROBADA
+- Qué se mostró: semilla `js/themes-data/googl.js` v2 (GOOGL_THEMES_V = 2): base = las notas a mano de SAB (25 páginas, 3T22 → 2T26, más GS Communacopia sep-2025 y sep-2026, Morgan Stanley TMT mar-2026 y Google I/O may-2026, cada evento en el trimestre calendario en que ocurrió y nombrado en la nota) + los hilos de Dani que las notas no cubren (con sus citas textuales). 24 hilos, 167 notas, 7 ganchos cerrados.
+- Fuera de Notes: revisión propia de sep-2024 (múltiplos), primer de Gemini jun-2024, diagramas ad-tech de la CE, primers de DV360 y Ad Manager, notas de META/SMCI en las mismas páginas.
+- Autoauditoría: ✔ cifras contrastadas con `results-data/googl.js` (10-K/10-Q); corregidas 4 (Cloud 4T24 +30%, Cloud 2T25 +32%, backlog 2T25 +38%, FCF $24.8B = 4T24) · ✔ parafraseo en inglés · ✔ ganchos cerrados con "Reconciled:" desde el 10-K · ✔ consola sin errores.
+
+### 2026-10-26 · EV-POST Post-Results — APROBADA
+- Qué se mostró: Call Summary de 4T25, 1T26 y 2T26 en `js/overviews/googl-ce-data.js` (9 prepared, 9 Q&A, 7 'Also on the call', 5 Propose Notes c/u). Fuente: transcripciones oficiales de Alphabet IR (PDF de s206.q4cdn.com, descargadas con permiso de SAB); `docs/calls/GOOGL*.md` no se cita (sin hablantes en 2T26, Q&A de 4T25 solo en notas, texto sin editar).
+- Autoauditoría: ✔ cada cita comprobada contra el PDF oficial, incluido el hablante (56/57/57, 0 fallas) · ✔ sin texto generado ni emojis · ✔ consola sin errores.
+- Correcciones que trajo la fuente oficial: el vehículo de Waymo es **Ojai** (no "Oasis"; corregido también en Notes y en `googl.js`; semilla de Notes → v3); la última analista de 2T26 es Shweta Khajuria (Wolfe Research).
+- Ajuste (SAB): la tarjeta "Cloud backlog (RPO)" pasa a **"Revenue backlog (RPO)"** — $519.5B es el backlog total del 10-Q; Cloud = $513.9B.
+- Pendiente: Call Summary de 3T26 después del reporte del 28-oct-2026.

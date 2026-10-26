@@ -201,7 +201,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | VA-PEERS | Valuation ▸ Peers | 👀 | 2026-10-26 | | | mapa + tabla de números; mismo estado que el Overview |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | ⬜ | | | | |
-| MG-TEAM | Management ▸ Executives & Board | ⬜ | | | | |
+| MG-TEAM | Management ▸ Executives & Board | 👀 | 2026-10-26 | | | 10 ejecutivos + 9 consejeros del perfil viejo, marcados "seeded, dated" |
 | MG-OWN | Management ▸ Ownership | ⬜ | | | | |
 | MG-GOV | Management ▸ Governance & SBC | ⬜ | | | | |
 | MG-TRACK | Management ▸ Track Record | ⬜ | | | | |
@@ -441,3 +441,9 @@ playbook (candidata a podar, **solo con tu OK**).
 - Qué se mostró: segunda sección del Deep Dive (Valuation ▸ Peers): el mismo mapa del Overview (mismo estado, quitar un peer en uno lo quita en el otro) y debajo, abierta, la tabla "The numbers behind the map": peer, múltiplo (P/E o EV/EBITDA, forward o trailing), crecimiento, market cap y "vs peer avg"; promedio y mediana excluyen a SoFi.
 - Fuentes: las del OV-6 (10-K de cada peer en EDGAR; consenso BBG solo para SoFi); precio, market cap y EV en vivo (Massive). Pie con fuentes y fechas, y avisos de Nu fuera y del P/E de Affirm.
 - Autoauditoría: mismo conjunto de datos que OV-6 ✔ · prueba en Node con precios de prueba: 9 filas (encabezado, 6 peers, promedio y mediana) ✔ · peers sin múltiplo se hunden al final en vez de ordenarse como cero ✔ · `node --check` ✔ · `css/overview.css` extendió las reglas compartidas `.ov-tsm-dd, .ov-meta-dd` a `.ov-sofi-dd` ✔ · render visual no verificado por Claude.
+
+### 2026-10-26 · MG-TEAM Management ▸ Executives & Board — 👀 EN REVISIÓN
+- Qué se mostró: tercera sección del Deep Dive (Management ▸ Executives & Board) con el motor compartido `management.js`: lede, 10 tarjetas de ejecutivos (Noto, Lapointe, Lavet, Avalos, Tanona, Rishel, Stafford Webb, Keough, Schuppenhauer, Pinto; fotos de `img/leadership` donde existen, iniciales si no), modal con la bio completa y franja del consejo (Hutton presidente, Freiberg vicepresidente, Noto también ejecutivo, Meltzer, Liang, Yesil, Bashir, Hele, Borden).
+- Fuentes: roster, bios y consejo **del perfil viejo** (página de liderazgo de SoFi, Form 4 de consejeros 2025–26 y proxy FY2026), **no re-verificados contra el proxy en esta construcción** (decisión del analista 2026-10-26: conservar y marcar). La fecha de Noto como CEO es de la sala de prensa de SoFi. Módulo `js/overviews/sofi-mgmt.js`.
+- Autoauditoría: bio y línea en texto plano ✔ · acento = token Summit `--steel`, no el azul de SoFi ✔ · sin etiquetas de independencia (no hay proxy; no se afirma) ✔ · sin celdas "Governance & compensation" (sin datos verificados) ✔ · pie con fuente y la advertencia de no re-verificado ✔ · `node --check` ✔ · render visual no verificado por Claude.
+- Pendiente real: verificar roster, cargos y consejo contra el proxy DEF 14A de 2026 (no está en Drive) y agregar independencia, comités y compensación (MG-GOV).

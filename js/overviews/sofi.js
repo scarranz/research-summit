@@ -10,6 +10,7 @@
 // SoFi's FY2025 Form 10-K, Q1 2026 Form 10-Q, and Q1 2026 investor presentation / earnings call.
 
 import { soStdPeerScatter, soWireScatters, soValuationPeersBody } from './sofi-peers.js';   // OV-6 peer map (data + render + live quotes)
+import { SOFI_MGMT } from './sofi-mgmt.js';   // Management ▸ Executives & Board (MG-TEAM)
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';   // Evolution ▸ Results engine (dataset: js/results-data/sofi.js)
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -4015,13 +4016,17 @@ function ddSubtabs(group, subs, hiddenPane){
 function deepDiveHtml(c){
   var h = '<div class="ov ov-sofi-dd" data-brand="SOFI">';
   h += '<div class="dd-tabs"><button type="button" class="dd-tab active" data-dd="evolution">Evolution</button>'+
-       '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button></div>';
+       '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
+       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button></div>';
   h += ddSubtabs('evolution', [
     { k:'results', l:'Results', body:resultsHtml('SOFI') },
     { k:'estevo', l:'Estimates', body:resultsEvoHtml('SOFI') }
   ], false);
   h += ddSubtabs('valuation', [
     { k:'peers', l:'Peers', body:soValuationPeersBody() }
+  ], true);
+  h += ddSubtabs('mgmt', [
+    { k:'team', l:'Executives & Board', body:SOFI_MGMT.body() }
   ], true);
   h += '</div>';
   return h;
@@ -4032,6 +4037,7 @@ function ddBuildSub(root, group, key){
     initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'SOFI'); });
   if (group === 'evolution' && key === 'estevo') requestAnimationFrame(function(){ initResultsEvo('SOFI'); });
   if (group === 'valuation' && key === 'peers') requestAnimationFrame(function(){ soWireScatters(root); });
+  if (group === 'mgmt' && key === 'team') SOFI_MGMT.init(root);
 }
 function ddShowSub(root, group, key){
   var pane = root.querySelector('.dd-pane[data-dd="'+group+'"]'); if (!pane) return;
@@ -4047,7 +4053,7 @@ function ddShow(root, group){
 function deepDiveInit(c){
   var root = document.querySelector('.ov-sofi-dd'); if (!root) return;
   root.querySelectorAll('.dd-tab').forEach(function(b){ b.onclick = function(){ ddShow(root, b.getAttribute('data-dd')); }; });
-  ['evolution', 'valuation'].forEach(function(g){
+  ['evolution', 'valuation', 'mgmt'].forEach(function(g){
     var pane = root.querySelector('.dd-pane[data-dd="'+g+'"]'); if (!pane) return;
     pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.onclick = function(){ ddShowSub(root, g, b.getAttribute('data-ovst')); }; });
   });

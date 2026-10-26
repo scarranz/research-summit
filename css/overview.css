@@ -18,6 +18,7 @@
 .ov-sofi {
   --brand: #0E7CC0;
   --brand-soft: #E9F3FB;
+  --brand-2: var(--steel);   /* Key Facts accent line = Summit steel, not SoFi blue (playbook §8) */
 }
 
 /* SoFi sub-tabs — refreshed segmented / pill style (scoped to SoFi only). */

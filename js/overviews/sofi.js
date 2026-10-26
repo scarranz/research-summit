@@ -12,6 +12,25 @@
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ─── Snapshot & narrative ────────────────────────────────────────────────────
+// OV-1 Key Facts (playbook §8): 10 cells, in this order. Sources: FY2025 Form 10-K — cover page (listing, HQ,
+// incorporation), Item 1 (founded 2011; ~6,100 employees at Dec 31 2025), Item 5 ("We have never declared nor
+// paid cash dividends"), Note 1 (common stock began trading on Nasdaq Global Select on June 1 2021 after the
+// merger with Social Capital Hedosophia Holdings Corp. V). SEC filer: SoFi files 10-K / 10-Q (domestic).
+// CEO start date is not in the 10-K (proxy); left off until the analyst confirms it (build log, OV-1).
+var SOFI_FACTS = [
+  ['Listing', 'Nasdaq: SOFI'],
+  ['HQ', 'San Francisco, California, USA'],
+  ['Incorporated', 'Delaware, USA'],
+  ['SEC filer', 'Domestic (10-K/10-Q/8-K)'],
+  ['Founded', '2011'],
+  ['IPO', 'Jun 2021 · SPAC merger (Social Capital Hedosophia V) · Nasdaq'],
+  ['CEO', 'Anthony Noto'],
+  ['Employees', '~6,100 · Dec 2025'],
+  ['Dividend', 'Non-payer · never paid one'],
+  ['Market cap', 'loading live quote…']
+];
+// Pre-playbook snapshot (6 cells). Not rendered any more; "Bank charter" moves to the lede and "How SoFi makes
+// money" (OV-2 / OV-4) and the rest is covered by SOFI_FACTS — kept here until those units are approved (B2 #1).
 var SNAPSHOT = [
   ['Listing', 'Nasdaq: SOFI'],
   ['HQ', 'San Francisco, CA'],
@@ -24,6 +43,8 @@ var SNAPSHOT = [
 var DESC = 'SoFi is a member-centric, one-stop digital financial services company. Members borrow, save, spend, invest and protect their money inside a single app, with no physical branches. SoFi operates its own national bank (SoFi Bank, N.A.) and runs three businesses: Lending (personal, student and home loans), Financial Services (SoFi Money, Invest, Credit Card and more), and a B2B Technology Platform (Galileo and Technisys) that powers other fintechs and banks. Its mission is to help members "achieve financial independence to realize their ambitions."';
 
 // Headline KPIs — most recent quarter (Q1 2026, ended Mar 31, 2026).
+// Not rendered in the Overview any more (playbook §8 allows no second KPI box; analyst approved moving them,
+// 2026-10-26, B2 #1): the tiles go to Top Line / Results and FY_NOTE to Bottom Line when those units are built.
 var KPIS = [
   { l:'Total Members',   v:'14.7M',  d:'+35% YoY',                dir:'up' },
   { l:'Total Products',  v:'22.2M',  d:'+39% YoY',                dir:'up' },
@@ -238,21 +259,29 @@ function bullets(arr){ return '<ul class="ov-bullets">'+arr.map(function(b){retu
 function rows(arr){ return arr.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join(''); }
 
 // Overview sub-tab body (the company profile).
+// OV-1 — ten cells; the market-cap cell is filled from the live quote (no seeded value, golden rule 10).
+function sofiKeyFacts(){
+  return '<div class="stdkf">'+SOFI_FACTS.slice(0,10).map(function(p){
+    var v = p[0] === 'Market cap' ? '<span id="sofiMc">'+esc(p[1])+'</span>' : esc(p[1]);
+    return '<div class="stdkf-cell"><div class="stdkf-k">'+esc(p[0])+'</div><div class="stdkf-v">'+v+'</div></div>';
+  }).join('')+'</div>';
+}
+function sofiMcCell(root, txt){ var el = root.querySelector('#sofiMc'); if (el) el.textContent = txt; }
+function renderMarketCap(root){
+  import('../api.js').then(function(api){ return api.liveQuote('SOFI'); }).then(function(res){
+    var q = (res && res.success) ? res.data : null;
+    if (!q || q.marketCap == null){ sofiMcCell(root, 'live quote unavailable'); return; }
+    var mcB = q.marketCap / 1e9;
+    sofiMcCell(root, '$'+(mcB >= 1000 ? (mcB/1000).toFixed(2)+'T' : mcB.toFixed(1)+'B')+' · live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}));
+  }).catch(function(){ sofiMcCell(root, 'live quote unavailable'); });
+}
+
 function overviewBody(c){
   var h = '';
 
-  // 1 — Snapshot + lede
-  h += '<div class="ov-snap">' + SNAPSHOT.map(function(p){
-    return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>';
-  }).join('') + '</div>';
+  // 1 — OV-1 Key Facts + lede (the KPI tiles and FY note moved out, see KPIS)
+  h += sofiKeyFacts();
   h += '<p class="ov-lede">'+esc(DESC)+'</p>';
-
-  // 2 — KPI tiles + notes
-  h += '<div class="ov-kpis">' + KPIS.map(function(k){
-    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>';
-  }).join('') + '</div>';
-  h += '<div class="ov-asof">'+esc(AS_OF)+'</div>';
-  h += '<div class="ov-fynote">'+esc(FY_NOTE)+'</div>';
 
   // 3 — How it makes money
   h += sec('How SoFi Makes Money', bullets(HOW_MONEY));
@@ -3651,6 +3680,7 @@ function showOvt(root, key){
 function init(c){
   var root = document.querySelector('.ov-sofi');
   if (!root) return;
+  renderMarketCap(root);   // OV-1 market-cap cell (live, Massive via api.liveQuote)
   // Idempotent wiring (init may run again when the Overview pane is re-activated).
   root.querySelectorAll('.ovt-tab').forEach(function(btn){
     btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };

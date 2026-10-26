@@ -170,7 +170,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | OV-2 | Overview ▸ Descripción | ✅ | 2026-10-26 | Dani | 2341e93 | lede de 3 oraciones; cita de la misión → Misc |
 | OV-3 | Overview ▸ Cuadrante 2×2 | ✅ | 2026-10-26 | Dani | 6664b2c | 4 celdas ≤ 30 palabras; The edge = banco + productos |
 | OV-4 | Overview ▸ How it makes money | ✅ | 2026-10-26 | Dani | 110f4fe | solo vista Segments (el 10-K no trae geografía); acordeones por segmento + The revenue lines |
-| OV-5 | Overview ▸ Products & platforms | ⬜ | | | | |
+| OV-5 | Overview ▸ Products & platforms | 👀 | 2026-10-26 | | | 5 familias, 16 productos; modal por familia |
 | OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
 | OV-7 | Overview ▸ Timeline | ⬜ | | | | |
 | OV-F | Overview ▸ Pie de fuentes | ⬜ | | | | |
@@ -220,6 +220,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 - 2026-10-26 · OV-2 · Lede aprobado como se propuso; la cita de la misión ("achieve financial independence…") se conserva en `DESC_LEGACY` y va a Miscellaneous — Dani
 - 2026-10-26 · OV-3 · "The edge" = banco nacional que financia préstamos con depósitos propios ($37.5B) + miembros que adoptan más productos (Financial Services Productivity Loop) — Dani
 - 2026-10-26 · OV-4 · Solo vista Segments (sin Geography: el 10-K no desagrega ingresos por geografía); Corporate/Other (−$227.8M, derivado: total reportado menos los tres segmentos) aparece solo en la leyenda; acordeón final "The revenue lines" con las 5 líneas del 10-K — Dani
+- 2026-10-26 · OV-5 · 5 familias: Lending · Banking & cards · Investing & crypto · Member tools · Technology Platform — Dani
 
 ## 4. Excepciones aceptadas
 
@@ -242,7 +243,7 @@ playbook (candidata a podar, **solo con tu OK**).
 | 2 | `DESC`, `AS_OF`, `FY_NOTE` | Overview ▸ Descripción | 🟡 texto de FY2025 / 1Q26; se actualiza, no se pierde | ⬜ |
 | 3 | `HOW_MONEY` + `SEGMENTS` + `incomeSquare` | Overview ▸ How SoFi makes money | 🟢 | ⬜ |
 | 4 | `ENGINE` (cross-buy flywheel) | Overview ▸ Cuadrante 2×2 / Products | 🟡 | ⬜ |
-| 5 | `OFFERINGS` | Overview ▸ Products & platforms | 🟢 | ⬜ |
+| 5 | `FS_APP` (productos de Financial Services) y `TECH_PRODUCTS` (Galileo, Technisys) | Overview ▸ Products & platforms | 🟢 corregido 2026-10-26: antes decía `OFFERINGS`, que son ofertas de capital y van con #13 | ⬜ |
 | 6 | `TAILWINDS` / `HEADWINDS` | Misc (o Overview, por decidir) | 🟡 no hay bloque equivalente en la convención | ⬜ |
 | 7 | `TARGETS` / `DRIVERS` (metas de largo plazo) | Misc ▸ guidance / targets | 🟡 | ⬜ |
 | 8 | `FINANCIALS` + `FIN_NOTE` (FY24 vs FY25) | Bottom Line ▸ General / Results | 🟢 sustituida por el motor, el texto pasa a nota | ⬜ |
@@ -250,7 +251,7 @@ playbook (candidata a podar, **solo con tu OK**).
 | 10 | `milestonesBody` / `TIMELINE` | Overview ▸ Timeline | 🟢 | ⬜ |
 | 11 | `membersBody` + `MEM_*` (miembros, slider CAGR) | Top Line ▸ Segments (KPI) o Misc | 🟢 motor `segments.js` | ⬜ |
 | 12 | `rule40Body` / `buildRule40Chart` | Misc ▸ Rule of 40 (`MISC-rule40`) | ✔ decidido 2026-10-26: se conserva en Misc, se reconstruye con datos frescos al aprobarla | ⬜ |
-| 13 | `capRaisesBody` + `CAPR_*` (capital, BVPS, TBVPS) | Misc ▸ Capital (`MISC-capital`) | ✔ decidido 2026-10-26: Misc | ⬜ |
+| 13 | `capRaisesBody` + `CAPR_*` (capital, BVPS, TBVPS) + `OFFERINGS` (convertibles y acciones) | Misc ▸ Capital (`MISC-capital`) | ✔ decidido 2026-10-26: Misc | ⬜ |
 | 14 | `interestBody` + `loanBlock` (`LOAN_PL/SL/HL`) | Top Line ▸ Segments ▸ Lending | 🟢 | ⬜ |
 | 15 | `ficoCard` / `ficoGauge` (FICO 746) | Top Line ▸ Segments ▸ Lending KPIs | 🟡 | ⬜ |
 | 16 | `capCard` (ratio de capital vs 10.5% requerido) | Misc ▸ capacity → revenue | 🟢 encaja con "Capacity → revenue" (§15b) | ⬜ |
@@ -345,3 +346,10 @@ playbook (candidata a podar, **solo con tu OK**).
 
 ### 2026-10-26 · OV-4 How SoFi makes money — APROBADA
 - Qué se mostró: bloque completo en el preview (commit `110f4fe`). Sin cambios pedidos.
+
+### 2026-10-26 · OV-5 Products & platforms — 👀 EN REVISIÓN
+- Qué se mostró: bloque colapsable "Products & platforms" (cerrado de inicio): leyenda "Tap any family…" + 5 tarjetas; cada una abre un modal con sus productos (nombre en negrita + 1–2 líneas).
+- Fuentes: 10-K FY2025, Item 1 (segmentos Lending, Technology Platform y Financial Services; Loan Platform Business; productos de Financial Services).
+- Autoauditoría: tarjeta = icono + familia + línea ≤ 6 palabras + "See products ›" ✔ · modal = icono + familia, línea en gris, productos ✔ · dos niveles (nunca todos los productos a la vista) ✔ · ninguna familia con más de ~6 productos (Member tools = 6) ✔ · sin color ni estilos en línea ✔ · `node --check` ✔ · render visual no verificado por Claude.
+- Supuesto a confirmar: Galileo = "event and authorization platform accessed via APIs" por eliminación (el 10-K nombra a Technisys como la plataforma bancaria nativa en la nube; no liga explícitamente a Galileo con su descripción). Peach y Composer (solo en el 10-Q de 2026) quedan fuera y van al Timeline.
+- Corrección al mapa B2: `OFFERINGS` del perfil viejo son ofertas de capital (convertibles y acciones), no productos; se movió a #13 (`MISC-capital`).

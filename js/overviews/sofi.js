@@ -346,6 +346,63 @@ function sofiMoneyMap(){
        '<span class="ave-subh-note">Source: SoFi FY2025 Form 10-K (MD&amp;A segment results and noninterest income table; Note on segments; Item 1).</span></div>';
   return h;
 }
+// ─── OV-5 — Products & platforms ─────────────────────────────────────────────────────────────────────────
+// Five families (analyst, 2026-10-26). Card line ≤ 6 words; each product = bold name + 1–3 lines. Source: FY2025
+// 10-K, Item 1 (Lending / Technology Platform / Financial Services segments, Loan Platform Business). Galileo is
+// the "event and authorization platform accessed via APIs" by elimination: the 10-K names Technisys as the
+// "cloud-native digital and core banking platform"; Peach and Composer (2026) are not in the 10-K and are left out.
+var SOFI_PRODUCTS = [
+  { ic:'🏠', fam:'Lending', d:'Personal, student and home loans', items:[
+    ['Personal Loans', 'Fixed-rate loans for needs such as debt consolidation, home improvement, family planning, travel and weddings. Loan sizes generally $5,000 to $100,000, terms 2 to 7 years.'],
+    ['Student Loans', 'Refinancing of prime and super-prime school loans, plus "in-school" loans for members still studying. Fixed and variable rates; terms generally 5 to 20 years.'],
+    ['Home Loans', 'Agency, non-agency and government (FHA, VA) loans to buy or refinance a home, plus home equity loans. Down payments from 3% (0% for VA); jumbo loans up to $3,000,000.'],
+    ['Loan Platform Business', 'Fee-based services for enterprise partners: partners use SoFi\'s origination and servicing platform to acquire loans that fit their credit rules, and SoFi refers pre-qualified borrowers to them.']
+  ] },
+  { ic:'🏦', fam:'Banking & cards', d:'Checking, savings and credit card', items:[
+    ['SoFi Money (Checking and Savings)', 'Digital checking and savings accounts at SoFi Bank with competitive interest rates and expanded FDIC insurance of up to $3 million through the Insured Deposit Program.'],
+    ['SoFi Credit Card', 'Credit cards for everyday spending and borrowing, with cash-back rewards that can be redeemed as a statement credit or toward other SoFi products.']
+  ] },
+  { ic:'📈', fam:'Investing & crypto', d:'Investing and crypto in one app', items:[
+    ['SoFi Invest', 'A mobile-first platform for active investing (stocks, ETFs, options, IPOs, fractional shares, margin, a retirement account) and a robo-advisor with managed ETF and mutual-fund portfolios.'],
+    ['SoFi Crypto', 'Buy, sell and hold digital assets through SoFi Bank, funded directly from a SoFi Money account. Launched in Q4 2025, after the earlier structure was wound down in 2023–2024.']
+  ] },
+  { ic:'🧭', fam:'Member tools', d:'Planning, insurance, travel, marketplace', items:[
+    ['SoFi Relay', 'Personal finance management: all of a member\'s accounts in one place, with credit score monitoring and spending insights. It earns no revenue directly but adds touch points.'],
+    ['SoFi Protect', 'Partnerships with insurance providers across auto, life, homeowners, renters and cyber insurance, and estate planning.'],
+    ['SoFi Travel', 'Travel search and booking through a partner, inside the SoFi app or website, with member prices on certain bookings and extra cash back with the SoFi Credit Card.'],
+    ['Lantern', 'A marketplace that connects small businesses and individuals who do not qualify for SoFi products to alternative financial solutions from a curated network of providers.'],
+    ['SoFi At Work', 'A service through which employers partner with SoFi to give employees financial benefits, such as student loan payments made on their behalf.'],
+    ['SoFi Plus', 'SoFi\'s premium financial membership, with benefits that span its offerings.']
+  ] },
+  { ic:'⚙️', fam:'Technology Platform', d:'Cards and core banking for others', items:[
+    ['Galileo', 'An event and authorization platform accessed through APIs, used for card and payments processing by financial institutions, government entities and other businesses, mainly in North America and Latin America.'],
+    ['Technisys', 'A cloud-native digital and core banking platform that lets clients build and run accounts and financial products. Clients pay for using the platforms, or through license and maintenance fees.']
+  ] }
+];
+function sofiProducts(){
+  return '<div class="ov-diagram-cap gmm-cap-top"><b>Tap any family</b> for the specific products inside it.</div>'+
+    '<div class="stdp">'+SOFI_PRODUCTS.map(function(f, i){
+      return '<div class="stdp-card ov-clickable" data-detail="prod:'+i+'"><div class="stdp-ic">'+f.ic+'</div>'+
+        '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
+    }).join('')+'</div>';
+}
+function wireProductModal(root){
+  var back = root.querySelector('#sofiModalBack'), mT = root.querySelector('#sofiModalT'), mB = root.querySelector('#sofiModalB');
+  if (!back || !mT || !mB) return;
+  function onEsc(e){ if (e.key === 'Escape') closeM(); }
+  function openM(t, b){ mT.innerHTML = t; mB.innerHTML = b; back.hidden = false; requestAnimationFrame(function(){ back.classList.add('on'); }); document.addEventListener('keydown', onEsc); }
+  function closeM(){ back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden = true; }, 180); }
+  root.querySelector('#sofiModalX').onclick = closeM;
+  back.onclick = function(e){ if (e.target === back) closeM(); };
+  root.querySelectorAll('[data-detail^="prod:"]').forEach(function(el){
+    el.onclick = function(){
+      var f = SOFI_PRODUCTS[+el.getAttribute('data-detail').split(':')[1]]; if (!f) return;
+      openM(f.ic+' '+esc(f.fam), '<div class="famd prod-lead">'+esc(f.d)+'</div>'+f.items.map(function(it){
+        return '<div class="prod-item"><div class="prod-item-n">'+esc(it[0])+'</div><div class="famd">'+esc(it[1])+'</div></div>';
+      }).join(''));
+    };
+  });
+}
 function collapsible(title, inner, open){
   return '<div class="ov-collap'+(open?' open':'')+'">'+
     '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+esc(title)+'</button>'+
@@ -372,6 +429,7 @@ function overviewBody(c){
   // OV-4 — How SoFi makes money (replaces "How SoFi Makes Money" bullets and "Three Segments"; both constants
   // stay below, unrendered, until their remaining facts find a home — B2 #3).
   h += collapsible('How SoFi makes money', sofiMoneyMap(), false);
+  h += collapsible('Products & platforms', sofiProducts(), false);   // OV-5
 
   // 5 — Financial performance (FY2024 vs FY2025)
   h += sec('Financial Performance (FY2024 → FY2025)',
@@ -2642,6 +2700,9 @@ function html(c){
   h += '<div class="ovt-pane" data-ovt="valuation" hidden>'+valuationBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="sensitivity" hidden>'+sensBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="peers" hidden>'+peersBody(c)+'</div>';
+  h += '<div class="ov-modal-back" id="sofiModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
+    '<button class="ov-modal-x" id="sofiModalX" aria-label="Close">×</button>'+
+    '<div class="ov-modal-t" id="sofiModalT"></div><div class="ov-modal-b" id="sofiModalB"></div></div></div>';
   h += '</div>';
   return h;
 }
@@ -3765,6 +3826,7 @@ function init(c){
   renderMarketCap(root);   // OV-1 market-cap cell (live, Massive via api.liveQuote)
   // OV-4: Overview collapsible blocks and the nested definition accordions.
   root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick = function(){ var c2 = btn.parentElement; var body = c2.querySelector('.ov-collap-b'); var open = c2.classList.toggle('open'); if (body) body.hidden = !open; var ic = btn.querySelector('.ov-collap-ic'); if (ic) ic.textContent = open ? '▾' : '▸'; }; });
+  wireProductModal(root);   // OV-5: family cards open the product pop-up
   root.querySelectorAll('.acc-h').forEach(function(btn){ btn.onclick = function(){ var b = btn.nextElementSibling; if (!b) return; var open = b.hidden; b.hidden = !open; var x = btn.querySelector('.acc-x'); if (x) x.textContent = open ? '–' : '+'; }; });
   // Idempotent wiring (init may run again when the Overview pane is re-activated).
   root.querySelectorAll('.ovt-tab').forEach(function(btn){

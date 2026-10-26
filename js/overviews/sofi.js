@@ -9,6 +9,7 @@
 // ended March 31, 2026); annual figures are fiscal years ended December 31. Sourced from
 // SoFi's FY2025 Form 10-K, Q1 2026 Form 10-Q, and Q1 2026 investor presentation / earnings call.
 
+import { sofiHistMult } from './sofi-histmult.js';   // Valuation ▸ Historic Multiple (VA-HIST)
 import { soStdPeerScatter, soWireScatters, soValuationPeersBody } from './sofi-peers.js';   // OV-6 peer map (data + render + live quotes)
 import { sofiCeHtml, sofiCeWire, sofiCeBuild, sofiCePop } from './sofi-ce.js';   // Evolution ▸ Earnings (EV-SET / EV-POST / EV-NOTES)
 import { SOFI_MGMT } from './sofi-mgmt.js';   // Management ▸ Executives & Board (MG-TEAM)
@@ -4011,6 +4012,7 @@ function deepDiveHtml(c){
     { k:'estevo', l:'Estimates', body:resultsEvoHtml('SOFI') }
   ], true);
   h += ddSubtabs('valuation', [
+    { k:'histmult', l:'Historic Multiple', body:sofiHistMult.body() },
     { k:'peers', l:'Peers', body:soValuationPeersBody()+collapsible('Trends over time — peer series (earlier profile, seeded and dated)', peersBody(c), false) },
     { k:'sensitivity', l:'Sensitivity Analysis', body:sensBody(c) }
   ], true);
@@ -4059,6 +4061,7 @@ function ddBuildSub(root, group, key){
   if (group === 'evolution' && key === 'results') requestAnimationFrame(function(){
     initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'SOFI'); });
   if (group === 'evolution' && key === 'estevo') requestAnimationFrame(function(){ initResultsEvo('SOFI'); });
+  if (group === 'valuation' && key === 'histmult') requestAnimationFrame(function(){ sofiHistMult.init(root); });
   if (group === 'valuation' && key === 'peers') requestAnimationFrame(function(){ soWireScatters(root); buildPeersTab(); });
   if (group === 'valuation' && key === 'sensitivity') requestAnimationFrame(buildSensTab);
   if (group === 'misc' && key === 'members') requestAnimationFrame(buildMembersTab);

@@ -197,7 +197,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | 👀 | 2026-10-26 | | | 4 líneas funcionales + provisión + SBC, % del ingreso (sección blexp) |
 | BL-SEG | Bottom Line ▸ Segments | 👀 | 2026-10-26 | | | utilidad de contribución y margen por segmento (motor Results, sección blscp) |
 | BL-SPLC | Bottom Line ▸ Supply Chain | ⏭️ | 2026-10-26 | | | no hay export SPLC de SOFI (mismo motivo que TL-CUS); se reabre si Dani consigue el export |
-| VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
+| VA-HIST | Valuation ▸ Historic Multiple | 👀 | 2026-10-26 | | | solo P/E (forward y trailing); precio en vivo: depende de `get-market-history` |
 | VA-PEERS | Valuation ▸ Peers | 👀 | 2026-10-26 | | | mapa + tabla de números; mismo estado que el Overview |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⏭️ | 2026-10-26 | | | Summit no tiene valuación para SOFI (`get_valuation_history`: no_valuations_for_ticker); se reabre cuando el modelo traiga múltiplo y precio objetivo |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | 👀 | 2026-10-26 | | | diseño propio de SoFi (LPB e interés neto), base del snapshot 2026-08-05, precio solo en vivo |
@@ -301,7 +301,7 @@ playbook (candidata a podar, **solo con tu OK**).
 
 | Desde | Unidad ▸ bloque | Qué falta | Quién lo destraba | Estado |
 |---|---|---|---|---|
-| 2026-10-26 | precio / Key Facts / Peers | `get-quote` / `get-market-history` sin desplegar (por verificar) | San / Oscar | por verificar |
+| 2026-10-26 | precio / Key Facts / Peers / Historic Multiple / Sensitivity | `get-quote`, `get-market-history` y CORS del preview de Netlify (por verificar): sin ellos el market cap, los peers, el Historic Multiple y el P/E de Sensitivity muestran "live price pending" | San / Oscar | por verificar |
 
 ## 6c. Review del analista — pendientes
 
@@ -509,3 +509,10 @@ playbook (candidata a podar, **solo con tu OK**).
 - Qué se mostró: sub-tab Segments de Bottom Line con la utilidad de contribución de Lending, Technology Platform y Financial Services y su margen sobre el ingreso del segmento (motor Results, `SOFI_BLS`, mismas cifras del 10-K / 10-Q que Top Line ▸ Segments; FY2025: 1,016.9 / 144.4 / 792.9; márgenes 55% / 32% / 51%). Solo actuals: Summit no proyecta líneas de segmento.
 - BL-SPLC ⏭️: no hay export SPLC de SOFI (se buscó en `nvidia-map-reference/` y `robotics-research/`); no se inventa.
 - Autoauditoría: `node --check` ✔ · el HTML del Deep Dive genera el sub-tab y `init` corre sin errores con un DOM de prueba ✔ · render visual no verificado por Claude.
+
+### 2026-10-26 · VA-HIST Valuation ▸ Historic Multiple — 👀 EN REVISIÓN
+- Qué se mostró: primer sub-tab de Valuation: múltiplo histórico de SoFi, copia adaptada de `meta-histmult.js` (`js/overviews/sofi-histmult.js`). P/E forward (NTM, año actual, FY+1, FY+2, FY+3) y trailing (LTM, último FY) contra el precio diario, con rangos, chips, zoom y tabla.
+- **Solo P/E.** EV/EBITDA se quitó de las series: SoFi es un bank holding company, donde la deuda y los depósitos financian la cartera, así que el valor empresa no es una medida con sentido. Se dice en la pista del módulo y en el pie. (Decisión de construcción de Claude; se reabre si el analista quiere otra base.)
+- Datos: EPS forward = consenso BBG anual por vintage (`estMatrix.cons.y.eps`, 18 snapshots); EPS y acciones reportados = los valores reportados del propio export de Bloomberg 2Q21–2Q26 (20 trimestres, `sofi-histmult-data.js`, generados, no tipeados), escalonados en la fecha de la llamada de resultados (4Q23 en adelante) o del 10-Q/10-K (antes, de SEC EDGAR). EPS de base ajustada: FY2025 GAAP y ajustado son ambos $0.39; FY2024 ajustado $0.15 vs GAAP $0.39 (beneficio fiscal único). Antes de 2024 el EPS es pequeño o negativo, así que el P/E trailing no es significativo allí y la serie lo deja vacío (denominador ≤ 0).
+- Precio: en vivo de Massive vía `get-market-history`. **Si esa función no está desplegada, el panel dice "⚑ Live data pending — daily price unavailable"** y no se estima nada (regla 10); no pude verificar el despliegue desde aquí. Queda en "Conexiones pendientes" (§6b).
+- Autoauditoría: `node --check` ✔ · el HTML del Deep Dive genera el sub-tab y el bloque del gráfico ✔ · EPS LTM a 2Q26 = 0.48 ✔ · se quitaron las 4 comprobaciones de visibilidad de EV que quedaban activas por defecto (`vis('ev_f')` siempre daba verdadero) ✔ · **no probado:** el gráfico con precios reales.

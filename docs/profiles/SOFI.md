@@ -187,9 +187,9 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | TL-OTH | Top Line ▸ Other | ⬜ | | | | |
 | TL-CUS | Top Line ▸ Customers | ⬜ | | | | |
 | EV-EST | Evolution ▸ Estimates | 👀 | 2026-10-26 | | | 8 métricas, 4 años × 3 snapshots Summit; sin serie de consenso |
-| EV-SET | Evolution ▸ Earnings ▸ Setup | ⬜ | | | | |
-| EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
-| EV-NOTES | Evolution ▸ Earnings ▸ Notes | ⬜ | | | | |
+| EV-SET | Evolution ▸ Earnings ▸ Setup | 👀 | 2026-10-26 | | | grilla de consenso por horizonte + gráfica Setup + notas de guía de 3Q26 |
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results | 🔨 | 2026-10-26 | | | maquinaria lista; contenido por trimestre (de las llamadas) en construcción |
+| EV-NOTES | Evolution ▸ Earnings ▸ Notes | 👀 | 2026-10-26 | | | registro de temas vacío a propósito; el analista agrega notas en el portal |
 | BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ⬜ | | | | |
 | BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⬜ | | | | |
 | BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ⬜ | | | | |
@@ -447,3 +447,9 @@ playbook (candidata a podar, **solo con tu OK**).
 - Fuentes: roster, bios y consejo **del perfil viejo** (página de liderazgo de SoFi, Form 4 de consejeros 2025–26 y proxy FY2026), **no re-verificados contra el proxy en esta construcción** (decisión del analista 2026-10-26: conservar y marcar). La fecha de Noto como CEO es de la sala de prensa de SoFi. Módulo `js/overviews/sofi-mgmt.js`.
 - Autoauditoría: bio y línea en texto plano ✔ · acento = token Summit `--steel`, no el azul de SoFi ✔ · sin etiquetas de independencia (no hay proxy; no se afirma) ✔ · sin celdas "Governance & compensation" (sin datos verificados) ✔ · pie con fuente y la advertencia de no re-verificado ✔ · `node --check` ✔ · render visual no verificado por Claude.
 - Pendiente real: verificar roster, cargos y consejo contra el proxy DEF 14A de 2026 (no está en Drive) y agregar independencia, comités y compensación (MG-GOV).
+
+### 2026-10-26 · EV-SET / EV-NOTES Evolution ▸ Earnings — 👀 EN REVISIÓN (Post-Results en construcción)
+- Qué se mostró: primer sub-tab de Evolution: Earnings con Setup · Post-Results · Notes, copia adaptada de `meta-ce.js` (`js/overviews/sofi-ce.js`). Datos en `js/overviews/sofi-ce-data.js` (consenso por horizonte armado al cargar desde `results-data/sofi.js` y su `estMatrix`: ingreso, miembros, originaciones, gasto no financiero, SBC, EBITDA ajustado, utilidad ajustada, EPS), dataset `results-data/sofi-setup.js` registrado como `SOFI_SETUP` en `results.js`, registro de temas `themes-data/sofi.js` (vacío).
+- Setup de 3Q26 (próximo print): consenso BBG del 2026-10-26, Summit congelado del 2026-08-05 y la guía de la llamada del 29-jul (solo año completo: ingreso ajustado $4.75–4.85B, EBITDA ≈ $1.6B, utilidad ajustada ≈ $825M, EPS ≈ $0.60 con 22% de impuestos; sin guía discreta del trimestre).
+- Autoauditoría: `node --check` de los 5 archivos ✔ · el constructor de la grilla da ingreso 2Q26 = 1.22 ($B), miembros 15.81 M, filas de consenso por horizonte ✔ · el HTML de Earnings se genera completo (82 mil caracteres) con las 3 fases y los pills de trimestre ✔ (prueba en Node con los imports de red sustituidos) · `ov-sofi-dd` en las reglas ✔ · render visual no verificado por Claude.
+- Pendiente (EV-POST): las entradas por trimestre reportado (resumen, sorpresas, preparado, Q&A) se escriben a partir de `docs/calls`; el consenso pre-print de 2Q26 ya está en la grilla. Notes: sin semilla (no hay notas del analista de SOFI).

@@ -10,6 +10,7 @@
 // SoFi's FY2025 Form 10-K, Q1 2026 Form 10-Q, and Q1 2026 investor presentation / earnings call.
 
 import { soStdPeerScatter, soWireScatters, soValuationPeersBody } from './sofi-peers.js';   // OV-6 peer map (data + render + live quotes)
+import { sofiCeHtml, sofiCeWire, sofiCeBuild, sofiCePop } from './sofi-ce.js';   // Evolution ▸ Earnings (EV-SET / EV-POST / EV-NOTES)
 import { SOFI_MGMT } from './sofi-mgmt.js';   // Management ▸ Executives & Board (MG-TEAM)
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';   // Evolution ▸ Results engine (dataset: js/results-data/sofi.js)
 
@@ -4019,6 +4020,7 @@ function deepDiveHtml(c){
        '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
        '<button type="button" class="dd-tab" data-dd="mgmt">Management</button></div>';
   h += ddSubtabs('evolution', [
+    { k:'earnings', l:'Earnings', body:sofiCeHtml(c) },
     { k:'results', l:'Results', body:resultsHtml('SOFI') },
     { k:'estevo', l:'Estimates', body:resultsEvoHtml('SOFI') }
   ], false);
@@ -4028,11 +4030,30 @@ function deepDiveHtml(c){
   h += ddSubtabs('mgmt', [
     { k:'team', l:'Executives & Board', body:SOFI_MGMT.body() }
   ], true);
+  h += '<div class="ov-modal-back" id="sofiDdModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
+    '<button class="ov-modal-x" id="sofiDdModalX" aria-label="Close">×</button>'+
+    '<div class="ov-modal-t" id="sofiDdModalT"></div><div class="ov-modal-b" id="sofiDdModalB"></div></div></div>';
   h += '</div>';
   return h;
 }
+// The "?" pop-ups of Earnings (data-detail="ce:<id>") open in the Deep Dive's own modal.
+function wireDdModal(root){
+  var back = root.querySelector('#sofiDdModalBack'), mT = root.querySelector('#sofiDdModalT'), mB = root.querySelector('#sofiDdModalB');
+  if (!back || !mT || !mB) return;
+  function onEsc(e){ if (e.key === 'Escape') closeM(); }
+  function closeM(){ back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden = true; }, 180); }
+  root.querySelector('#sofiDdModalX').onclick = closeM;
+  back.onclick = function(e){ if (e.target === back) closeM(); };
+  root.addEventListener('click', function(e){
+    var el = e.target.closest ? e.target.closest('[data-detail^="ce:"]') : null; if (!el || !root.contains(el)) return;
+    var d = sofiCePop(el.getAttribute('data-detail').slice(3)); if (!d) return;
+    mT.innerHTML = d.t; mB.innerHTML = d.h; back.hidden = false;
+    requestAnimationFrame(function(){ back.classList.add('on'); }); document.addEventListener('keydown', onEsc);
+  });
+}
 function ddActiveKey(root, group){ var p = root.querySelector('.dd-pane[data-dd="'+group+'"] .ovt-subtab.active'); return p ? p.getAttribute('data-ovst') : null; }
 function ddBuildSub(root, group, key){
+  if (group === 'evolution' && key === 'earnings') sofiCeBuild(root);
   if (group === 'evolution' && key === 'results') requestAnimationFrame(function(){
     initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'SOFI'); });
   if (group === 'evolution' && key === 'estevo') requestAnimationFrame(function(){ initResultsEvo('SOFI'); });
@@ -4057,6 +4078,8 @@ function deepDiveInit(c){
     var pane = root.querySelector('.dd-pane[data-dd="'+g+'"]'); if (!pane) return;
     pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.onclick = function(){ ddShowSub(root, g, b.getAttribute('data-ovst')); }; });
   });
+  sofiCeWire(root);   // Earnings: phase tabs, quarter pills, toggles, Notes
+  wireDdModal(root);
   var g0 = root.querySelector('.dd-tab.active'); if (g0) ddShow(root, g0.getAttribute('data-dd'));
 }
 

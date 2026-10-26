@@ -9,6 +9,11 @@
 
 import { sofiResults } from '../results-data/sofi.js';
 
+// The lines SoFi guides (adjusted basis; discrete quarterly guidance from the prior quarter's 8-K, plus the full year). The Revenue
+// line is GAAP total net revenue in the Bloomberg and Summit series while SoFi guides ADJUSTED net revenue; the gap is small
+// (2Q26 $1,205.6M adjusted vs $1,218.7M GAAP) and accepted (analyst, Oct 26 2026), so the guide sits under the GAAP line.
+export var SOFI_GUIDED = ['Revenue', 'Adjusted EBITDA', 'Adjusted net income', 'EPS (diluted)'];
+
 export var SOFI_CE_CONS = {
   src: 'Bloomberg (BST) · BBG_CONSENSUS.txt snapshot archive',
   asOf: [],
@@ -54,6 +59,10 @@ export var SOFI_CE_CONS = {
              'Student loan originations':['slov',1000], 'Home loan originations':['hlov',1000], 'Noninterest expense':['nie',1000],
              'Stock-based compensation':['sbc',1000], 'Adjusted EBITDA':['ebitda',1000], 'Adjusted net income':['earnings',1000], 'EPS (diluted)':['eps',1] };
   SOFI_CE_CONS.m.forEach(function(m){ var s=RS[m.k]; if(s) fromResults(m, s[0], s[1]); });
+  var GK = { 'Revenue':['arev',1000], 'Adjusted EBITDA':['ebitda',1000], 'Adjusted net income':['earnings',1000], 'EPS (diluted)':['eps',1] };
+  SOFI_CE_CONS.m.forEach(function(m){ var g=GK[m.k]; if(!g) return; var r=M[g[0]];
+    m.qg=QP.map(function(p){ var i=r.periods.indexOf(p); if(i<0||r.guideLo[i]==null||r.guideHi[i]==null) return null;
+      return rnd((r.guideLo[i]+r.guideHi[i])/2/g[1], m.u); }); });
   var nv = MX && MX.vintages[MX.vintages.length-1];
   SOFI_CE_CONS.asOf = MX ? MX.vintages.map(function(v){ return v.id; }) : [];
   SOFI_CE_CONS.src = 'Bloomberg (BST) · BBG_CONSENSUS.txt — via js/results-data/sofi.js (estMatrix'+(nv?', newest snapshot '+nv.id:'')+')';

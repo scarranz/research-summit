@@ -183,13 +183,13 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | EV-RES-DATA | Dataset de Results (números) | 👀 | 2026-10-26 | | | 17 métricas q + y; act, summit, cons; estMatrix cons + summit; guía de la empresa incluida (8-K y llamadas) |
 | EV-RES | Evolution ▸ Results | 👀 | 2026-10-26 | | | primer sub-tab del Deep Dive; motor results.js |
 | TL-GEN | Top Line ▸ General | 👀 | 2026-10-26 | | | motor Results (SOFI_TLG): ingreso, 6 líneas, miembros y originaciones |
-| TL-SEG | Top Line ▸ Segments | 👀 | 2026-10-26 | | | motor Results (SOFI_TLS): ingreso y utilidad de contribución por segmento; solo actuals, trimestres incompletos |
+| TL-SEG | Top Line ▸ Segments | 👀 | 2026-10-26 | | | motor Results (SOFI_TLS): ingreso por segmento (+ Corporate/Other) con consenso BBG; la utilidad de contribución vive solo en Bottom Line ▸ Segments |
 | TL-OTH | Top Line ▸ Other | ⏭️ | 2026-10-26 | | | no hay cortes adicionales con datos (geografía no existe en el 10-K) |
 | TL-CUS | Top Line ▸ Customers | ⏭️ | 2026-10-26 | | | no hay export SPLC de SOFI en el repo ni cliente que supere 10% del ingreso; se reabre si Dani consigue el export |
-| EV-EST | Evolution ▸ Estimates | 👀 | 2026-10-26 | | | 8 métricas, 4 años × 3 snapshots Summit; sin serie de consenso |
+| EV-EST | Evolution ▸ Estimates | 👀 | 2026-10-26 | | | 15 métricas, 4 años × 3 snapshots Summit, ahora con la serie de consenso BBG del archivo con el mismo último trimestre reportado (2025-11-02, 2026-02-04, 2026-10-26) y `prior` para el modo Growth; notas con el movimiento y la guía de la empresa |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | 👀 | 2026-10-26 | | | grilla de consenso por horizonte + gráfica Setup + notas de guía de 3Q26 |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results | 👀 | 2026-10-26 | | | 2Q26, 1Q26 y 4Q25 completos (resumen, notas, discurso preparado, preguntas); trimestres anteriores (4Q23–3Q25) sin cargar |
-| EV-NOTES | Evolution ▸ Earnings ▸ Notes | 👀 | 2026-10-26 | | | registro de temas vacío a propósito; el analista agrega notas en el portal |
+| EV-NOTES | Evolution ▸ Earnings ▸ Notes | 👀 | 2026-10-26 | | | semilla de 11 hilos sacada de las 11 llamadas (Q4 2023 → Q2 2026): Loan Platform Business, crédito, depósitos, mezcla de comisiones, cripto/SoFiUSD, guía de miembros 2025 (cerrada), Technology Platform, TBV y capital, tasa de impuestos, guía de ingresos 2024 (cerrada) y guía 2026 (abierta) |
 | BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | 👀 | 2026-10-26 | | | sobre el motor Results (sección blprof) |
 | BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⏭️ | 2026-10-26 | | | el puente a medida (ingreso → costo → utilidad) no se portó: SoFi es un banco sin costo de ventas; lo cubren las líneas de gasto y el recorrido a utilidad neta. Se reabre si el analista define el diseño |
 | BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | 👀 | 2026-10-26 | | | grupo "Operating income to net income" en el motor: utilidad antes de impuestos, impuestos con tasa efectiva, utilidad GAAP y ajustada |
@@ -199,13 +199,13 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | BL-SPLC | Bottom Line ▸ Supply Chain | ⏭️ | 2026-10-26 | | | no hay export SPLC de SOFI (mismo motivo que TL-CUS); se reabre si Dani consigue el export |
 | VA-HIST | Valuation ▸ Historic Multiple | 👀 | 2026-10-26 | | | solo P/E (forward y trailing); precio en vivo: depende de `get-market-history` |
 | VA-PEERS | Valuation ▸ Peers | 👀 | 2026-10-26 | | | mapa + tabla de números; mismo estado que el Overview |
-| VA-TM | Valuation ▸ Target Multiple / PEG | ⏭️ | 2026-10-26 | | | Summit no tiene valuación para SOFI (`get_valuation_history`: no_valuations_for_ticker); se reabre cuando el modelo traiga múltiplo y precio objetivo |
+| VA-TM | Valuation ▸ Target Multiple / PEG | 👀 | 2026-10-26 | | | construido con la valuación del propio workbook `DCF SOFI.xlsm` (hoja Projection History, 3 submits: P/E 32× → 25× → 25×, EV/EBITDA 18× → 14.1× → 14.1×, año 2027); el MCP la tiene vacía (`valuation_count` 0) |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | 👀 | 2026-10-26 | | | diseño propio de SoFi (LPB e interés neto), base del snapshot 2026-08-05, precio solo en vivo |
 | MG-TEAM | Management ▸ Executives & Board | 👀 | 2026-10-26 | | | 10 ejecutivos + 9 consejeros del perfil viejo, marcados "seeded, dated" |
 | MG-OWN | Management ▸ Ownership | ⬜ | | | | |
 | MG-GOV | Management ▸ Governance & SBC | ⬜ | | | | |
 | MG-TRACK | Management ▸ Track Record | ⬜ | | | | |
-| MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab) | 👀 | 2026-10-26 | | | 5 sub-tabs: Strategy, Members, Rule of 40, Capital, Sum of the Parts |
+| MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab) | 👀 | 2026-10-26 | | | 3 sub-tabs, solo las que Dani decidió el 2026-10-26: Rule of 40 y Capital (reconstruidas con datos frescos sobre el motor Results), Sum of the Parts. Strategy y Members dejaron de mostrarse (ver historia 2026-10-26 · correcciones de Dani) |
 | F-FINAL | Cierre y conciliación | 👀 | 2026-10-26 | | | conciliación B3 hecha (34 filas); pendiente la aprobación del analista y lo que no se construyó (Management 3 de 4, BL-GEN-2, Target Multiple, Other, Customers, Supply Chain) |
 
 ## 3. Decisiones del analista
@@ -537,3 +537,19 @@ Qué se perdió **de la vista** (no del repo): las tarjetas de KPIs del Overview
 - 📝 propuestas esperando aprobación formal: F0, F0-SM, B1, B2 (4, fuera de las 38 filas de unidades de construcción).
 
 **Pendientes que no son de construcción:** (1) verificar en el preview qué se ve mal; (2) proxy DEF 14A 2026 para Management; (3) export SPLC de SOFI para Customers y Supply Chain; (4) que San/Oscar confirmen `get-quote`/`get-market-history`/CORS del preview; (5) preguntas al autor del modelo Summit (2Q26 de ingreso, trimestres vs anual 2026–27, etiquetas opacas); (6) verificar el 10-K original de Robinhood y el estado "Domestic filer" en EDGAR; (7) si el analista quiere el puente a medida (BL-GEN-2) o Target Multiple cuando Summit traiga valuación.
+
+### 2026-10-26 · Correcciones de Dani tras revisar el preview — 👀 EN REVISIÓN
+
+Lo que Dani señaló y lo que se hizo (todo reconstruido con scripts, nada tecleado):
+- **KPI 18 (Technology Products and Solutions) = TP_REVENUE.** Confirmado contra el archivo: FY2025 BBG 360.903 = modelo 360.9. `map_sofi.json` ahora mapea kpi18 → `tp` (la etiqueta manda, no el código `IS_MORTGAGE_PRODUCTION_REVENUE`), kpi16 → `loss`, y los KPIs nuevos que agregó (kpi23–32: provisión, NII, ingreso no financiero, ingreso y utilidad de contribución por segmento). Se re-corrió `emit_matrix.py` → `apply_matrix.py` (el archivo BBG ya llega hasta 2026-10-26, 18 snapshots).
+- **BBG trae el 3Q25 de los segmentos acumulado a 9 meses** (Lending 1,350.267 = 413.4 + 443.5 + 493.4). El 3Q25 se reconstruye restando 1T y 2T; Corporate/Other 1Q25 sale de ingreso total GAAP − 3 segmentos. Suma de trimestres = anual (−227.822) ✔.
+- **Guía.** SoFi sí guía ingreso neto ajustado: FY2026 4,750–4,850 (antes ~4,655), EBITDA ~1,600, utilidad neta ~825, EPS ~0.60, tasa 22% (antes mid-teens) y miembros ≥30% — ya estaba en Results (anual y trimestral) y ahora además: miembros como punto en el piso (13,651K × 1.30), notas de las métricas con la guía previa y la nueva, fila "guide" y etiqueta GUIDED en la grilla de Setup (portado de `spot-ce.js`) para Revenue (ajustado vs GAAP, brecha aceptada), EBITDA, utilidad neta y EPS.
+- **Ingreso de Summit.** El workbook (`DCF SOFI.xlsm`, Projection History) usa la fila `REV` (FY2026: 4,613 → 4,670 → 4,845); el pull anterior del MCP usaba `SEG_REVENUE` (5,317), que es la suma del armado por segmento. Se cambió Summit anual `rev` a `REV` en Results, `estMatrix` y Estimates. Esto explica casi toda la pregunta abierta "trimestres no suman el anual" de 2026 (los trimestres 1T/2T son proyecciones previas al print); la de 2027 (trimestres 6,953 vs anual 6,280) sigue abierta para el autor del modelo.
+- **Gráficas repetidas.** Results ahora solo tiene lo que SoFi guía (ingreso neto, ingreso ajustado, EBITDA ajustado, utilidad neta ajustada, EPS); Top Line ▸ General ya no repite el ingreso total; Top Line ▸ Segments ya no trae la utilidad de contribución (vive en Bottom Line ▸ Segments); Bottom Line ▸ General ya no repite EBITDA ni utilidad ajustada y su selector ya no lista dos veces las mismas métricas. El Setup sigue mostrando todas las líneas (agrupadas por la propiedad `group` de cada métrica).
+- **Estimates** ahora lleva consenso BBG y `prior` (modo Growth), 15 líneas en 3 grupos, y notas generadas desde los datos.
+- **Notes** sembrado desde las 11 llamadas (transcripción copiada a `docs/calls/SOFI.md` y `SOFI-latest.md`). Antes quedó vacío porque dije que no había notas escritas a mano; las llamadas sí se podían leer.
+- **Valuación.** Target Multiple construido del workbook (el MCP no tiene valuación); EV/EBITDA se muestra como la registró el modelo y con deuda neta 0 en el modo Live, P/E es la pata a leer. Pendiente de la reingesta del MCP.
+- **Peers.** El mapa y la tabla dependen de precios en vivo (`liveQuote`); si el servicio no responde desde el preview, antes todo quedaba en "—". Ahora hay un aviso explícito ("Live data pending") y la tabla muestra el EPS/EBITDA de cada peer aunque no haya precio.
+- **Miscellaneous — error mío.** Rule of 40, Capital y Sum of the Parts sí los decidió Dani el 2026-10-26 (B2 #12 #13 #25, "se reconstruye con datos frescos al aprobarla"), pero los dejé con los datos viejos sin reconstruir; Strategy (flywheel, tailwinds, metas) y Members los puse yo sin aprobación. Ahora: Rule of 40 y Capital reconstruidas desde Results y desde las llamadas; SOTP queda como estaba (NI del modelo congelado, múltiplos que mueve el lector); Strategy y Members ya no se muestran (el código sigue en `sofi.js`; pendiente de decisión de Dani qué hacer con flywheel, tailwinds y metas, y con la cita de la misión).
+- **Propuesta de MISC-comp** (Competitive position, §15b; siempre se propone, no se construye sin aprobación): ver el mensaje de Claude del 2026-10-26.
+- **Cadena de datos (no olvidar):** `mkresults.py` reescribe `sofi.js` SIN el `estMatrix`; después hay que correr `emit_matrix.py SOFI map_sofi.json`, `emit_summit_matrix.py` y `apply_matrix.py SOFI` (el bloque `rev` anual de `out/estmatrix_summit_sofi.js` se parcheó a la fila `REV` del workbook).

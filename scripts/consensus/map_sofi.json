@@ -1,10 +1,14 @@
 {
   "supersede_latest": true,
-  "_doc": "SOFI metric map for emit_matrix.py (schema v2 — Bloomberg CODE + segment). Read off the newest snapshot (10/26/2026; 18 SOFI snapshots 2022-05-15 -> 2026-10-26). USD millions unless noted. Net Revenue is GAAP total net revenue (2Q26 1,218.676 = the 10-Q), not the Summit model's 1,197. Adjusted EBITDA / Adjusted Net Income / Diluted EPS are the company's adjusted measures (FY2025: GAAP and adjusted net income are both 481.3). Written Oct 26 2026 for the SOFI profile (docs/profiles/SOFI.md). Slots kpi16-18 are not mapped: their label and code disagree (build log §6, BBG). Members: Bloomberg reports millions (15.8); the dataset carries THOUSANDS like the Summit model and the filings, so sign=1000.",
+  "_doc": "SOFI metric map for emit_matrix.py (schema v2 \u2014 Bloomberg CODE + segment). Read off the newest snapshot (10/26/2026; 18 SOFI snapshots 2022-05-15 -> 2026-10-26). USD millions unless noted. Net Revenue is GAAP total net revenue (2Q26 1,218.676 = the 10-Q), not the Summit model's 1,197. Adjusted EBITDA / Adjusted Net Income / Diluted EPS are the company's adjusted measures (FY2025: GAAP and adjusted net income are both 481.3). Written Oct 26 2026 for the SOFI profile (docs/profiles/SOFI.md). Oct 26 2026 refresh: the analyst added kpi23-32 and confirmed that the KPI LABEL is what counts (kpi18 'Technology Products and Solutions' = TP_REVENUE although its code reads IS_MORTGAGE_PRODUCTION_REVENUE; kpi16 = Loan origination, sales, securitizations and servicing). Segment series: lend/fs/tech/oth net revenue and contribution profit. Members: Bloomberg reports millions (15.8); the dataset carries THOUSANDS like the Summit model and the filings, so sign=1000.",
   "segments": {
     "pl": "SEG0000519979",
     "sl": "SEG0000519984",
-    "hl": "SEG0000519980"
+    "hl": "SEG0000519980",
+    "lend": "SEG0000519972",
+    "fs": "SEG0000519975",
+    "tech": "SEG0000519976",
+    "oth": "SEG0000519978"
   },
   "q": {
     "rev": {
@@ -78,6 +82,57 @@
     "tax": {
       "code": "IS_INC_TAX_EXP",
       "unit": "usdM"
+    },
+    "nii": {
+      "code": "CB_IS_NII",
+      "unit": "usdM"
+    },
+    "nonint": {
+      "code": "CB_IS_NON_INTEREST_INCOME",
+      "unit": "usdM"
+    },
+    "tp": {
+      "code": "IS_MORTGAGE_PRODUCTION_REVENUE",
+      "unit": "usdM"
+    },
+    "loss": {
+      "code": "CB_IS_LOAN_SERVICING_INCOME",
+      "unit": "usdM"
+    },
+    "lend": {
+      "code": "CB_IS_NET_REVENUE",
+      "unit": "usdM",
+      "segment": "lend"
+    },
+    "fs": {
+      "code": "CB_IS_NET_REVENUE",
+      "unit": "usdM",
+      "segment": "fs"
+    },
+    "tech": {
+      "code": "CB_IS_NET_REVENUE",
+      "unit": "usdM",
+      "segment": "tech"
+    },
+    "oth": {
+      "code": "CB_IS_NET_REVENUE",
+      "unit": "usdM",
+      "segment": "oth"
+    },
+    "lcp": {
+      "code": "IS_CONTRIBUTION_PROFIT",
+      "unit": "usdM",
+      "segment": "lend"
+    },
+    "fcp": {
+      "code": "IS_CONTRIBUTION_PROFIT",
+      "unit": "usdM",
+      "segment": "fs"
+    },
+    "tcp": {
+      "code": "IS_CONTRIBUTION_PROFIT",
+      "unit": "usdM",
+      "segment": "tech"
     }
   },
   "y": {
@@ -152,6 +207,57 @@
     "tax": {
       "code": "IS_INC_TAX_EXP",
       "unit": "usdM"
+    },
+    "nii": {
+      "code": "CB_IS_NII",
+      "unit": "usdM"
+    },
+    "nonint": {
+      "code": "CB_IS_NON_INTEREST_INCOME",
+      "unit": "usdM"
+    },
+    "tp": {
+      "code": "IS_MORTGAGE_PRODUCTION_REVENUE",
+      "unit": "usdM"
+    },
+    "loss": {
+      "code": "CB_IS_LOAN_SERVICING_INCOME",
+      "unit": "usdM"
+    },
+    "lend": {
+      "code": "CB_IS_NET_REVENUE",
+      "unit": "usdM",
+      "segment": "lend"
+    },
+    "fs": {
+      "code": "CB_IS_NET_REVENUE",
+      "unit": "usdM",
+      "segment": "fs"
+    },
+    "tech": {
+      "code": "CB_IS_NET_REVENUE",
+      "unit": "usdM",
+      "segment": "tech"
+    },
+    "oth": {
+      "code": "CB_IS_NET_REVENUE",
+      "unit": "usdM",
+      "segment": "oth"
+    },
+    "lcp": {
+      "code": "IS_CONTRIBUTION_PROFIT",
+      "unit": "usdM",
+      "segment": "lend"
+    },
+    "fcp": {
+      "code": "IS_CONTRIBUTION_PROFIT",
+      "unit": "usdM",
+      "segment": "fs"
+    },
+    "tcp": {
+      "code": "IS_CONTRIBUTION_PROFIT",
+      "unit": "usdM",
+      "segment": "tech"
     }
   }
 }

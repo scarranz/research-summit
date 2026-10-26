@@ -51,8 +51,14 @@ function annualIdx(view){
 }
 
 function mergedSection(view){
-  // One section, keeping the original groups as the <select> optgroups (Revenue / Profitability).
-  var groups = view.sections.reduce(function(a, s){ return a.concat(s.groups); }, []);
+  // One section holding EVERY tracked line, grouped by each metric's own `group` (Totals, Revenue lines, Operating metrics, Company,
+  // Expense lines). The Results tab shows only the lines SoFi guides; Setup keeps them all so the grid and the picture agree.
+  var groups = [], byLabel = {};
+  Object.keys(view.metrics).forEach(function(k){
+    var g = view.metrics[k].group || 'Other';
+    if (!byLabel[g]){ byLabel[g] = { label: g, keys: [] }; groups.push(byLabel[g]); }
+    byLabel[g].keys.push(k);
+  });
   return [{ key: 'setup', label: 'All tracked lines', defaultMetric: 'rev', groups: groups }];
 }
 

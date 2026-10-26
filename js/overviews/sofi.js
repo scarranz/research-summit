@@ -13,6 +13,7 @@ import { SUMMIT_CAT, SUMMIT_POS, SUMMIT_NEG, fade } from '../viz-palette.js';   
 import { sofiHistMult } from './sofi-histmult.js';   // Valuation ▸ Historic Multiple (VA-HIST)
 import { soStdPeerScatter, soWireScatters, soValuationPeersBody } from './sofi-peers.js';   // OV-6 peer map (data + render + live quotes)
 import { sofiCeHtml, sofiCeWire, sofiCeBuild, sofiCePop } from './sofi-ce.js';   // Evolution ▸ Earnings (EV-SET / EV-POST / EV-NOTES)
+import { sofiTargetMult } from './sofi-target-multiple.js';   // Valuation ▸ Target Multiple / PEG (VA-TM, frozen Summit valuation)
 import { SOFI_MGMT } from './sofi-mgmt.js';   // Management ▸ Executives & Board (MG-TEAM)
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';   // Evolution ▸ Results engine (dataset: js/results-data/sofi.js)
 
@@ -4012,16 +4013,18 @@ function deepDiveHtml(c){
   h += ddSubtabs('valuation', [
     { k:'histmult', l:'Historic Multiple', body:sofiHistMult.body() },
     { k:'peers', l:'Peers', body:soValuationPeersBody()+collapsible('Trends over time — peer series (earlier profile, seeded and dated)', peersBody(c), false) },
+    { k:'targetmult', l:'Target Multiple', body:sofiTargetMult.body() },
     { k:'sensitivity', l:'Sensitivity Analysis', body:sensBody(c) }
   ], true);
   h += ddSubtabs('mgmt', [
     { k:'team', l:'Executives & Board', body:SOFI_MGMT.body()+collapsible('Organization chart and insider activity (earlier profile, seeded)', managementBody(c), false) }
   ], true);
+  // Miscellaneous: only what the analyst decided on Oct 26 2026 (Rule of 40, Capital, Sum of the Parts), rebuilt on fresh data.
+  // The earlier profile's Strategy (flywheel, tailwinds and headwinds, targets) and Members panes are no longer rendered: their
+  // code stays in this file and the build log lists them as pending the analyst's decision.
   h += ddSubtabs('misc', [
-    { k:'strategy', l:'Strategy', body:strategyBody() },
-    { k:'members', l:'Members', body:membersBody(c) },
-    { k:'rule40', l:'Rule of 40', body:rule40Body() },
-    { k:'capital', l:'Capital', body:capRaisesBody() },
+    { k:'rule40', l:'Rule of 40', body:sofiRule40Body() },
+    { k:'capital', l:'Capital', body:sofiCapitalBody() },
     { k:'sotp', l:'Sum of the Parts', body:sotpBody() }
   ], true);
   h += '<div class="ov-modal-back" id="sofiDdModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
@@ -4029,6 +4032,25 @@ function deepDiveHtml(c){
     '<div class="ov-modal-t" id="sofiDdModalT"></div><div class="ov-modal-b" id="sofiDdModalB"></div></div></div>';
   h += '</div>';
   return h;
+}
+// Miscellaneous ▸ Rule of 40 and ▸ Capital: Results-engine panes on fresh data (js/results-data/sofi-misc.js).
+function sofiRule40Body(){
+  return '<p class="ov-lede">Revenue growth plus adjusted EBITDA margin, the health test for a growth company: 40 is the bar. Built from the same actuals, Summit model and Street consensus as the Results tab.</p>'+
+    resultsHtml('SOFI_R40')+
+    '<div class="ov-foot">Rule of 40 = year-over-year growth of total net revenue + adjusted EBITDA margin on that revenue. SoFi presents the test on adjusted net revenue; the two differ by about 1% (2Q26: $1,205.6M adjusted against $1,218.7M GAAP) and the gap is accepted. Actuals: 10-K / 10-Q and Bloomberg reported values. Estimates: Summit DCF snapshot 2026-08-05 (frozen) and Bloomberg consensus, Oct 26 2026. 2025 is the first year with a prior-year base on file.</div>';
+}
+function sofiCapitalBody(){
+  var rows = [
+    ['Q1 2024', 'Exchange of convertible notes for equity', 'A one-time benefit of $59M in the quarter', 'Q1 2024 call'],
+    ['Jul 2025', 'Common equity offering', 'About $1.7B of new capital', 'Q3 2025 call'],
+    ['2025', 'New capital over the year', '$3.2B in total, lifting tangible book value by about $2 per share', 'Q4 2025 call']
+  ];
+  return '<p class="ov-lede">Capital is what lets SoFi keep loans on its own balance sheet. Tangible book value, its per-share value and deposits, as management stated them on each call, followed by the capital actions it described.</p>'+
+    resultsHtml('SOFI_CAP')+
+    sec('Capital actions stated on the calls',
+      '<table class="ov-table"><thead><tr><th>When</th><th>Action</th><th>What management said</th><th>Source</th></tr></thead><tbody>'+
+      rows.map(function(r){ return '<tr><td class="ov-td-name">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+esc(r[3])+'</td></tr>'; }).join('')+'</tbody></table>')+
+    '<div class="ov-foot">Source: SoFi earnings calls (docs/calls/SOFI.md, SOFI-latest.md). Only figures read off a call are charted; periods where management gave no number stay empty. The earlier profile listed more offerings (terms, prices) that were not re-verified and are not shown here.</div>';
 }
 // The "?" pop-ups of Earnings (data-detail="ce:<id>") open in the Deep Dive's own modal.
 function wireDdModal(root){
@@ -4061,10 +4083,10 @@ function ddBuildSub(root, group, key){
   if (group === 'evolution' && key === 'estevo') requestAnimationFrame(function(){ initResultsEvo('SOFI'); });
   if (group === 'valuation' && key === 'histmult') requestAnimationFrame(function(){ sofiHistMult.init(root); });
   if (group === 'valuation' && key === 'peers') requestAnimationFrame(function(){ soWireScatters(root); buildPeersTab(); });
+  if (group === 'valuation' && key === 'targetmult') requestAnimationFrame(function(){ sofiTargetMult.init(root); });
   if (group === 'valuation' && key === 'sensitivity') requestAnimationFrame(buildSensTab);
-  if (group === 'misc' && key === 'members') requestAnimationFrame(buildMembersTab);
-  if (group === 'misc' && key === 'rule40') requestAnimationFrame(buildRule40Chart);
-  if (group === 'misc' && key === 'capital') requestAnimationFrame(buildCapRaiseChart);
+  if (group === 'misc' && key === 'rule40') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="rule40"] .rs-wrap'), 'SOFI_R40'); });
+  if (group === 'misc' && key === 'capital') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="capital"] .rs-wrap'), 'SOFI_CAP'); });
   if (group === 'misc' && key === 'sotp') buildSotpTab();
   if (group === 'mgmt' && key === 'team') SOFI_MGMT.init(root);
 }

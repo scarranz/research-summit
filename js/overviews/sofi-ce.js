@@ -7,8 +7,11 @@
 // Copied from ./tsm-ce.js — the guide-built extraction of amzn.js's Earnings closure (ceQPills, ceSetupBody,
 // ceResultsBody, ceWatchBody, gBuildCeAnnual, wireCallEarnings, wireCeTrack, wireThemeRecord, the editor and the
 // theme-record persistence) — with the data swapped (SAB 2026-10-21):
-//   • CE_CONS / CALL_EARNINGS come from ./sofi-ce-data.js; SOFI_THEMES → SOFI_THEMES (themes-data/sofi.js, seeded
-//     from SAB's call notes); SOFI_SEG_ORDER carries SoFi's four axes
+//   • CE_CONS / CALL_EARNINGS come from ./sofi-ce-data.js; SOFI_THEMES (themes-data/sofi.js) is seeded from the eleven
+//     earnings-call transcripts (docs/calls/SOFI.md), since the analyst has no handwritten SoFi notes; SOFI_SEG_ORDER carries
+//     SoFi's four axes
+//   • Setup grid (ported from spot-ce.js): a "guide" row under Street | Summit and a GUIDED tag on the lines SoFi guides
+//     (adjusted net revenue, adjusted EBITDA, adjusted net income, EPS), from ./sofi-ce-data.js SOFI_GUIDED
 //   • CE_MARGIN_DEN / CE_STMT_ORDER / CE_TOPLINE carry SoFi's lines; ceGuessTarget maps SoFi's themes
 //   • dataset TSM_SETUP → SOFI_SETUP; tsm* helper names, hooks and classes → meta*
 //   • formal skin (PROFILE_PLAYBOOK §21): Summit tokens only, no emojis or decorative glyphs; the shared Watch List
@@ -20,7 +23,7 @@ import { mountWatchList } from '../watchlist.js';
 import { fetchThemeRecord, saveThemeRecord } from '../api.js';   // durable persistence of the SOFI theme record (Notes)
 import { SOFI_THEMES, SOFI_THEMES_V } from '../themes-data/sofi.js';
 import { SUMMIT_CAT, SUMMIT_INK } from '../viz-palette.js';
-import { SOFI_CE_CONS as CE_CONS, SOFI_CALL_EARNINGS as CALL_EARNINGS } from './sofi-ce-data.js';
+import { SOFI_CE_CONS as CE_CONS, SOFI_CALL_EARNINGS as CALL_EARNINGS, SOFI_GUIDED } from './sofi-ce-data.js';
 
 // ════ extracted from amzn.js ════════════════════════════════════════════════════════════════════
 function esc(s){ if(s==null) return ''; return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -609,7 +612,7 @@ function ceGrowth(m,qi,base,cur){
   if(m.u==='%') return null;                           // a %-line IS a YoY rate — no growth-of-a-growth (AMZN ad KPIs)
   var c=(cur!==undefined&&cur!==null)?cur:(m.qr[qi]?m.qr[qi][3]:null);
   var b=(base==='qoq')?m.qq[qi]:m.qy[qi];
-  if(c==null||b==null||!b) return null;
+  if(c==null||b==null||!(b>0)) return null;   // no growth off a zero or negative base
   return Math.round((c/b-1)*100);
 }
 function ceChip(g){
@@ -684,6 +687,7 @@ function ceGrid(u,which){
       '<div class="ce-mtbl">'+
         '<span class="ce-mrl"></span><span class="ce-mh ce-mcol-cons">Street</span><span class="ce-mh ce-mcol-us">Summit</span>'+
         '<span class="ce-mrl">est</span><span class="ce-mv ce-mcol-cons">'+street+'</span><span class="ce-mv ce-mcol-us">'+summitCell+'</span>'+
+        ((m.qg&&m.qg[qi]!=null)?('<span class="ce-mrl">guide</span><span class="ce-mv ce-mguide">'+ceFmtV(m.u,m.qg[qi])+'<span class="ce-gy">'+ceChip(ceGrowth(m,qi,'yoy',m.qg[qi]))+'</span><span class="ce-gq">'+ceChip(ceGrowth(m,qi,'qoq',m.qg[qi]))+'</span></span>'):'')+
         ((mgn&&den)?('<span class="ce-mrl ce-mmc">margin</span>'+
           '<span class="ce-mv ce-mgn-v ce-mmc ce-mcol-cons">'+(mExpC!=null?mExpC+'%':'—')+'</span>'+
           '<span class="ce-mv ce-mgn-v ce-mmc ce-mcol-us">'+(mExpU!=null?mExpU+'%':'—')+'</span>'+
@@ -705,6 +709,7 @@ function ceGridStyle(){
     '.ce-evwrap[data-ev="both"] .ce-mtbl{grid-template-columns:auto 1fr 1fr}'+
     '.ce-evwrap[data-ev="cons"] .ce-mtbl .ce-mcol-us{display:none}'+
     '.ce-evwrap[data-ev="us"] .ce-mtbl .ce-mcol-cons{display:none}'+
+    '.ce-mguide{grid-column:2/-1;color:var(--mu)}'+
     '.ce-mrl{font-size:8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);white-space:nowrap;align-self:center}'+
     '.ce-mh{font-size:8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}'+
     '.ce-mv{font-size:13px;font-weight:900;color:var(--navy);display:flex;align-items:baseline;gap:4px;flex-wrap:wrap}'+
@@ -1051,7 +1056,8 @@ function cePrintBlock(qLabel, r, us){
     var cK=cV.k, uK=uV.k, cHas=(cK==='beat'||cK==='miss'||cK==='inline'), uHas=(uK==='beat'||uK==='miss'||uK==='inline');
     var mixed=(cHas&&uHas&&cK!==uK);
     var bothV=(cHas&&uHas)?((cK===uK)?{l:cV.l+' ×2',c:cV.c}:{l:'MIXED',c:AMBER}):(cHas?{l:cV.l,c:cV.c}:(uHas?{l:uV.l,c:uV.c}:{l:'—',c:'#6b7684'}));
-    var hdr='<div class="ce-fz-k"><span class="ce-fz-kn">'+esc(m.k)+'</span>'+
+    var guided=SOFI_GUIDED.indexOf(m.k)>=0;
+    var hdr='<div class="ce-fz-k"><span class="ce-fz-kn">'+esc(m.k)+(guided?' <span class="ce-fz-gd" title="SoFi guides this line (adjusted basis); it is tracked against its own guidance">GUIDED</span>':'')+'</span>'+
       '<span class="ce-fz-vd ce-vd-cons" style="color:'+cV.c+'">'+cV.l+sp(r.cSurp)+'</span>'+
       '<span class="ce-fz-vd ce-vd-us" style="color:'+uV.c+'">'+uV.l+sp(r.uSurp)+'</span>'+
       '<span class="ce-fz-vd ce-vd-both" style="color:'+bothV.c+'">'+bothV.l+'</span></div>';
@@ -1081,7 +1087,7 @@ function cePrintBlock(qLabel, r, us){
       '<span class="ce-fz-cv ce-fz-surp ce-col-us" style="color:'+uV.c+';font-weight:800">'+surpFmt(r.uSurp)+' '+uV.l+'</span>'+
       '<span class="ce-fz-cv ce-fz-surp ce-col-act"></span>'+
     '</div>';
-    return '<div class="ce-fz-t" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'" data-cat="'+ceCat(m.k)+'" data-mixed="'+(mixed?1:0)+'" style="--od:'+r.od+'">'+hdr+tbl+'</div>';
+    return '<div class="ce-fz-t'+(guided?' ce-fz-guided':'')+'" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'" data-cat="'+ceCat(m.k)+'" data-mixed="'+(mixed?1:0)+'" style="--od:'+r.od+'">'+hdr+tbl+'</div>';
   });
   return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="on" data-view="cards" data-ord="stmt" data-fzcat="all"><div class="ce-fz-h">The print — down the income statement'+
     ceQ('fz-'+ceQkey(qLabel),'How this is built',
@@ -1127,6 +1133,8 @@ function cePhaseStyle(){
     '.ce-fz-t{border:1px solid var(--bdr);border-radius:9px;padding:7px 9px;background:#fff}'+
     '.ce-fz-t.basis{opacity:.62}'+
     '.ce-fz-k{font-size:10px;font-weight:800;color:var(--navy);line-height:1.25}'+
+    '.ce-fz-guided{border-left:3px solid var(--navy)}'+
+    '.ce-fz-gd{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:3px;background:var(--navy);color:#fff;font-size:9px;font-weight:800;letter-spacing:.06em;vertical-align:middle}'+
     '.ce-fz-kn{flex:1 1 auto;min-width:0}'+   /* full metric name, wraps — NEVER truncated (e.g. "…operating income") */
     /* the table layout — Street/Summit est. | Actual columns, with Growth / Margin rows below (Dani, Aug 2026) */
     '.ce-fz-tbl{display:grid;grid-template-columns:auto 1fr 1fr;gap:3px 8px;margin-top:6px;align-items:baseline;font-variant-numeric:tabular-nums}'+

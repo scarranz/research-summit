@@ -60,6 +60,7 @@ function soStdPeerScatter(sfx){
     '<span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgmetric="pe">P/E</button><button type="button" class="mg-pill" data-mgmetric="ev">EV/EBITDA</button></span></span>'+
     '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill" data-mgbasis="f">Forward</button><button type="button" class="mg-pill active" data-mgbasis="t">Trailing</button></span></span>'+
   '</div>';
+  h+='<div class="rs-noguide so-sc-live" hidden></div>';
   h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" class="so-sc-svg" role="img" aria-label="Peer valuation vs growth map">'+
     '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
     '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
@@ -170,24 +171,31 @@ function soWireScChips(root, wrap){
       addIn.value=''; soScRenderAll(root); soLiveOne(root, tk); };
   }
 }
-function soScFetchCaps(root){ if(SO_SC._capsFetched||!SO_SC.peers) return; SO_SC._capsFetched=true; SO_SC.peers.forEach(function(p){ if(p.tk) soLiveOne(root, p.tk); }); }
+function soScLiveNote(root){
+  var n=(SO_SC.peers||[]).length, got=(SO_SC.peers||[]).filter(function(p){ return soScNum(p.px); }).length;
+  var msg=(SO_SC._pend>0)?'':(got===0?'⚑ Live data pending — the price service did not answer from this address, so no multiple can be computed yet. The reported EPS and growth behind each peer are in the table; the multiples and bubbles appear as soon as prices load.'
+    :(got<n?'⚑ Live prices arrived for '+got+' of '+n+' names; the rest show no multiple until theirs load.':''));
+  document.querySelectorAll('.so-sc-live').forEach(function(el){ el.textContent=msg; el.hidden=!msg; });
+}
+function soScFetchCaps(root){ if(SO_SC._capsFetched||!SO_SC.peers) return; SO_SC._capsFetched=true; SO_SC._pend=SO_SC.peers.length; SO_SC.peers.forEach(function(p){ if(p.tk) soLiveOne(root, p.tk); }); }
 
 // Live market cap (Key Facts cell) via Massive (api.liveQuote). Market data is ALWAYS live — no seeded
 // number is ever shown: until the quote arrives the cell says so, and if it fails it says that.
 // The same quote feeds the peer bubbles: price (P/E), market cap (bubble size) and EV when Massive has one.
 function soLiveOne(root, tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(res){ var q=res&&res.data?res.data:res;
-    if(!q||q.marketCap==null){ if(tk==='SOFI') soMcCell(root,'live quote unavailable'); return; }
+    if(!q||q.marketCap==null){ if(tk==='SOFI') soMcCell(root,'live quote unavailable'); SO_SC._pend--; soScLiveNote(root); return; }
     var mcB=q.marketCap/1e9;
     (SO_SC.peers||[]).forEach(function(p){ if(p.tk===tk){ p.px=q.price; p.mc=mcB; p.ev=(q.ev!=null?q.ev/1e6:null); } });
     if(tk==='SOFI') soMcCell(root, '$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}));
-    soScRenderAll(root);
-  }).catch(function(){ if(tk==='SOFI') soMcCell(root,'live quote unavailable'); }); }
+    SO_SC._pend--; soScRenderAll(root); soScLiveNote(root);
+  }).catch(function(){ if(tk==='SOFI') soMcCell(root,'live quote unavailable'); SO_SC._pend--; soScLiveNote(root); }); }
 
 
 // ─── The comps table under the peer map (Valuation ▸ Peers) — ported from meta.js ─────────
 // Everything the map draws, as numbers: the metric/basis pills pick the column, removing a chip drops the
 // row. Average and median exclude SoFi, the company the profile reads against. Premium in red, discount in green.
 function soScFmtMult(v){ return soScNum(v)?v.toFixed(1)+'×':'—'; }
+function soScFmtDen(p){ var f=SO_SC.basis==='f', v=SO_SC.metric==='pe'?(f?p.epsF:p.epsT):(f?p.ebitdaF:p.ebitdaT); return soScNum(v)?(SO_SC.metric==='pe'?'$'+v.toFixed(2):'$'+v.toFixed(1)+'M'):'<span class="asc-nilv">—</span>'; }
 function soScFmtPct(v){ return soScNum(v)?v.toFixed(1)+'%':'—'; }
 function soScFmtMc(v){ return soScNum(v)?('$'+(v>=1000?(v/1000).toFixed(2)+'T':Math.round(v)+'B')):'—'; }
 function soScMean(a){ if(!a.length) return null; return a.reduce(function(s,v){ return s+v; },0)/a.length; }
@@ -218,18 +226,19 @@ function soScTableOne(wrap){
       '<td><span class="asc-nm"><img src="'+esc(soScLogoUrl(p))+'" alt="" onerror="this.style.display=\'none\'">'+
         '<span>'+esc(p.n)+' <span class="asc-tk">'+esc(p.tk)+(nt?' · '+esc(nt):'')+'</span></span></span></td>'+
       '<td class="asc-m">'+soScFmtMult(r.m)+'</td>'+
+      '<td>'+soScFmtDen(p)+'</td>'+
       '<td>'+soScFmtPct(r.g)+'</td>'+
       '<td>'+soScFmtMc(p.mc)+'</td>'+
       '<td>'+soScVsAvg(r.m, avgM)+'</td></tr>';
   }).join('');
   var foot='<tr class="asc-avg"><td>Peer average <span class="asc-tk">ex-SoFi · '+nM+' name'+(nM===1?'':'s')+'</span></td>'+
-      '<td>'+soScFmtMult(avgM)+'</td><td>'+soScFmtPct(avgG)+'</td>'+
+      '<td>'+soScFmtMult(avgM)+'</td><td><span class="asc-nilv">—</span></td><td>'+soScFmtPct(avgG)+'</td>'+
       '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>'+
     '<tr class="asc-med"><td>Peer median <span class="asc-tk">ex-SoFi</span></td>'+
-      '<td>'+soScFmtMult(medM)+'</td><td>'+soScFmtPct(medG)+'</td>'+
+      '<td>'+soScFmtMult(medM)+'</td><td><span class="asc-nilv">—</span></td><td>'+soScFmtPct(medG)+'</td>'+
       '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>';
   box.innerHTML='<table class="asc-tbl"><thead><tr>'+
-      '<th>Peer</th><th>'+esc(mLab)+' · '+esc(bLab)+'</th>'+
+      '<th>Peer</th><th>'+esc(mLab)+' · '+esc(bLab)+'</th><th>'+(SO_SC.metric==='pe'?'EPS':'EBITDA')+' · '+esc(bLab)+'</th>'+
       '<th>Rev growth · '+esc(bLab)+'</th><th>Market cap</th><th>vs peer avg</th></tr></thead>'+
     '<tbody>'+body+'</tbody><tfoot>'+foot+'</tfoot></table>';
   var hd=wrap.querySelector('.so-sc-tblh'), bd=wrap.querySelector('.so-sc-tblb');

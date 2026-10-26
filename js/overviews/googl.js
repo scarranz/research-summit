@@ -23,7 +23,8 @@ import { googlSens } from './googl-sensitivity.js';
 import { GOOGL_MGMT_DATA } from './googl-mgmt-data.js';
 import { googlOwnBody, googlOwnInit } from './googl-own.js';
 import { googlGovBody } from './googl-gov.js';
-import { googlTrackBody, googlTrackPop } from './googl-track.js';   // Management ▸ Track Record (MG-TRACK, copy of tsm-mgmt.js tsmTrackBody)   // Management ▸ Governance & SBC (MG-GOV)   // Management ▸ Ownership (MG-OWN, copy of meta-own.js)
+import { googlTrackBody, googlTrackPop } from './googl-track.js';
+import { googlCompBody } from './googl-comp.js';   // Misc ▸ Competitive Position (MISC-comp, copy of meta-comp.js)   // Management ▸ Track Record (MG-TRACK, copy of tsm-mgmt.js tsmTrackBody)   // Management ▸ Governance & SBC (MG-GOV)   // Management ▸ Ownership (MG-OWN, copy of meta-own.js)
 import { SUMMIT_CAT } from '../viz-palette.js';
 // Evolution ▸ Earnings = googl-ce.js · Bottom Line ▸ General/Segments = googl-bl.js · Supply Chain = googl-splc.js ·
 // Valuation ▸ Historic Multiple = googl-histmult.js · Target Multiple = googl-target-multiple.js · Sensitivity = googl-sensitivity.js
@@ -2762,7 +2763,7 @@ function deepDiveHtml(c){
     { k:'track', l:'Track Record', body:googlTrackBody() },   // MG-TRACK: no ratings (SAB); Dani's #49 cards + #51 caveat
   ], true);
   h+=subtabs('misc',[
-    { k:'comp', l:'Competitive Position', body:industryBody(c) },      // B2 #17–18 → MISC-comp
+    { k:'comp', l:'Competitive Position', body:googlCompBody() },      // MISC-comp (Dani #17 arenas → challenges; #18 scatter → Valuation ▸ Peers)
     { k:'tam', l:'TAM', body:tamBody(c) },                             // B2 #15–16 → MISC-tam
     { k:'capex', l:'Capex & Depreciation', body:capallocBody(c) },     // B2 #44 → MISC-capex
     { k:'strategy', l:'Strategy', body:strategyBody(c) },              // B2 #40 → MISC-strategy
@@ -2800,7 +2801,7 @@ function buildSub(root, group, key){
     if(key==='team') GOOGL_MGMT.init(root);
     if(key==='ownership') googlOwnInit(root);
   } else if(group==='misc'){
-    if(key==='comp') wireScatters(root);
+    if(key==='comp') { /* static tables */ }
     else if(key==='capex') gBuildCap();
   } else if(group==='evolution'){
     // The Setup's track-record charts. Only build when Earnings is the visible subpane AND the

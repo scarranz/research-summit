@@ -12,7 +12,7 @@
 | Rama | `feat/googl-restructure` (desde `origin/main` @ `95c00e0`, 2026-10-26; worktree `rs-playbook`). Nombre de modo B (§7.1); `feat/googl-profile` ya existe en GitHub (rama vieja de DOAA351, jul 2026) y no se toca |
 | Analista responsable | SAB (Santiago Alvarez) |
 | Inicio | 2026-10-26 |
-| Avance | **38 de 43** unidades aprobadas (F0 · F0-SM · B1 · B2 · F1 · OV-1…OV-7 · OV-F · EV-RES-DATA · EV-RES · TL-GEN · TL-SEG · TL-OTH · TL-CUS · EV-EST · EV-SET · EV-NOTES · EV-POST · BL-GEN-1…5 · BL-SEG · BL-SPLC · VA-HIST · VA-PEERS · VA-TM · VA-SENS · MG-TEAM · MG-OWN · MG-GOV · MG-TRACK) · 0 omitidas · 0 bloqueadas. M = 38 del Anexo C + B1/B2 + 3 (MISC aprobado en B2 con 4 sub-tabs: comp · tam · capex · strategy). Siguiente: MISC |
+| Avance | **39 de 43** unidades aprobadas (F0 · F0-SM · B1 · B2 · F1 · OV-1…OV-7 · OV-F · EV-RES-DATA · EV-RES · TL-GEN · TL-SEG · TL-OTH · TL-CUS · EV-EST · EV-SET · EV-NOTES · EV-POST · BL-GEN-1…5 · BL-SEG · BL-SPLC · VA-HIST · VA-PEERS · VA-TM · VA-SENS · MG-TEAM · MG-OWN · MG-GOV · MG-TRACK · MISC-comp) · 0 omitidas · 0 bloqueadas. M = 38 del Anexo C + B1/B2 + 3 (MISC aprobado en B2 con 4 sub-tabs: comp · tam · capex · strategy). Siguiente: MISC-capex (retomar el 27-oct) |
 
 ## 1. Inventario de datos (F0)
 
@@ -227,7 +227,11 @@ siguientes a **2027** (cambio de definición: VA-TM lo marca).
 | MG-OWN | Management ▸ Ownership | ✅ | 2026-10-26 | SAB | | `googl-own.js` (copia de `meta-own.js`): tabla de los 14 insiders del DEF 14A 2026 (Clase A, Clase B, % del voto, valor en vivo de acciones con voto) + tabla de las 3 clases (10-Q 2T26) + >5% (BlackRock; Vanguard en nota) + hueco Fiscal.ai; sin selector de fondos (no hay export HDS); barras aproximadas de Dani (#47) reemplazadas |
 | MG-GOV | Management ▸ Governance & SBC | ✅ | 2026-10-26 | SAB | | `googl-gov.js`: 4 KPIs (7/10 independientes, SBC $25.0B = 6.2% del ingreso, recompras $45.4B, dividendos $10.0B FY2025) + tabla "How Alphabet is governed" (las 6 filas de Dani #48 verificadas + comités; recompras/dividendo de #44) + puntero a BL ▸ SBC; sin repetir % de voto de Ownership; CSS .gov-tbl nuevo |
 | MG-TRACK | Management ▸ Track Record | ✅ | 2026-10-26 | SAB | | `googl-track.js` (copia de `tsm-mgmt.js` tsmTrackBody): 8 líderes SIN calificaciones (SAB, como TSM) — At Alphabet / Context con cifras reportadas del portal y citas oficiales; modal `gtrk:`; "The bench, in one line" del callout de Dani (#51); las 7 calificaciones "delivering" de Dani (#49) quedan registradas aquí, no se muestran |
-| MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab aprobada) | ⬜ | | | | |
+| MISC-comp | Miscellaneous ▸ Competitive Position | ✅ | 2026-10-26 | SAB | | `googl-comp.js` (copia de `meta-comp.js`): lede = OV-3 "The edge"; 5 cuestionamientos (arenas de Dani #17) con evidencia en ambos sentidos; tablas Cloud (Google Cloud, AWS, Intelligent Cloud, OCI) y publicidad (Google, Meta, Amazon, Microsoft) del último trimestre de cada filing; sin cuota de mercado (sin fuente primaria); mapa de Dani (#18) no se repite (vive en VA-PEERS) |
+| MISC-capex | Miscellaneous ▸ Capex & Depreciation | ⬜ | | | | Ficha: Responde ¿cuánto invierte y cuándo pega en resultados? · Contenido: copia de meta-misc capex (capex/D&A real+Summit, guías, compromisos, PP&E, leases, Intersect) · Fuentes: 10-K/10-Q, Results, llamadas · Verificación: capex = Results |
+| MISC-capacity | Miscellaneous ▸ Capacity → Revenue | ⬜ | | | | Ficha (SAB: incluir mostrando dónde se corta): capex → capacidad (no publicada) → backlog/ingreso de Cloud |
+| MISC-strategy | Miscellaneous ▸ Strategy | ⬜ | | | | Ficha: ciclo de 5 pasos de Dani (#40) + "broaden the box", en tabla formal como META |
+| MISC-tam | Miscellaneous ▸ TAM | ⬜ | | | | Ficha (SAB: buscar fuentes y citarlas): 3 vectores de Dani (#15–16) con tamaños de terceros con fuente y fecha |
 | F-FINAL | Cierre y entrega | ⬜ | | | | |
 
 
@@ -505,3 +509,9 @@ Destinos aprobados por SAB el 2026-10-26 (B2), incluidas las fusiones #18, #41, 
 - Qué se mostró: `js/overviews/googl-track.js` (copia de `tsm-mgmt.js` tsmTrackBody/Pop): 8 líderes sin calificaciones; "At Alphabet" con cifras reportadas que ya están en el portal, "Context" del DEF 14A 2026; citas verificadas contra las transcripciones oficiales; modal `gtrk:` en `wireModal`.
 - Decisión (SAB): sin calificaciones (como TSM). Registro: Dani calificaba "delivering" a Pichai, Ashkenazi, Porat, Kurian, Hassabis, Schindler y Mohan (G_TRACK, julio 2026).
 - Reubicación: #49 ✅ (sin calificaciones), #51 → "The bench, in one line".
+
+- 2026-10-26 · MISC propuesta — SAB: Comp (Cloud + publicidad) · Capex · Capacity (incluirla mostrando dónde se corta) · Strategy · TAM (con fuentes citadas); orden Comp · Capex · Capacity · Strategy · TAM.
+
+### 2026-10-26 · MISC-comp Miscellaneous ▸ Competitive Position — APROBADA
+- Qué se mostró: `js/overviews/googl-comp.js` (copia de `meta-comp.js`; CSS .mcp-* de META extendido a `.ov-googl-dd`): lede = OV-3; 5 cuestionamientos (Dani #17) con evidencia en ambos sentidos; tabla Cloud (Google Cloud, AWS, Intelligent Cloud, OCI — 10-Q/8-K de cada empresa, último trimestre) y tabla de publicidad (Google, Meta, Amazon, Microsoft). Sin cuota de mercado. #18 (mapa) no se repite: vive en VA-PEERS.
+- Pendiente para el 27-oct (SAB: "deja lo demás para mañana"): MISC-capex → MISC-capacity → MISC-strategy → MISC-tam, luego F-FINAL; reordenar las sub-tabs Comp · Capex · Capacity · Strategy · TAM al construir. Sin commit desde 2b3e034 (Comp + log + CSS).

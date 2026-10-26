@@ -43,6 +43,8 @@ import { spotSegments } from './segments-data/spot.js';
 import { spotResults } from './results-data/spot.js';
 import { metaSegments } from './segments-data/meta.js';
 import { metaResults } from './results-data/meta.js';
+import { googlSegments } from './segments-data/googl.js';
+import { googlResults } from './results-data/googl.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
 import { SN_THEMES } from './themes-data/sn.js';
@@ -73,7 +75,9 @@ var SEGMENTS_DATA = {
   // SPOT: two reportable segments (Premium, Ad-Supported); the segment profit line is GROSS profit (no segment operating income).
   SPOT: { seg: spotSegments, res: spotResults },
   // META: two reportable segments (Family of Apps, Reality Labs), 10-K Note 15.
-  META: { seg: metaSegments, res: metaResults }
+  META: { seg: metaSegments, res: metaResults },
+  // GOOGL: two Google segments (Services, Cloud) + Other Bets, 10-K Note 15. Alphabet-level activities is not a revenue segment.
+  GOOGL: { seg: googlSegments, res: googlResults }
 };
 
 export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }

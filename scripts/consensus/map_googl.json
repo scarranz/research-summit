@@ -1,0 +1,240 @@
+{
+  "_doc": "GOOGL metric map for emit_matrix.py (schema v2 — by Bloomberg CODE + segment). Codes read off inspect_matrix.py GOOGL (newest snapshot 9/8/2026). Segment ids (kpi slots): Services SEG0000295814, Google advertising SEG0000295819, Search & other SEG0000344782, YouTube ads SEG0000344783, Network SEG0000295843, Subscriptions/platforms/devices SEG0000295847, Cloud SEG0000344781, Other Bets SEG0000295791, hedging + Alphabet-level SEG0000295833. Total revenue consensus = SUM of the segment lines (SAB 2026-10-26): Bloomberg's headline SALES_REV_TURN consensus mixes brokers that forecast gross revenue with brokers that forecast it net of TAC (3Q26 headline $110.2B vs segment sum $126.5B), while the segment lines are gross and add up to the reported total to the dollar. Capex comes out negative in the export and is flipped to positive spend.",
+  "segments": {
+    "svc": "SEG0000295814",
+    "ads": "SEG0000295819",
+    "search": "SEG0000344782",
+    "yt": "SEG0000344783",
+    "net": "SEG0000295843",
+    "subs": "SEG0000295847",
+    "cloud": "SEG0000344781",
+    "bets": "SEG0000295791",
+    "hedge": "SEG0000295833",
+    "alpha": "SEG0000295833"
+  },
+  "q": {
+    "svc": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "svc"
+    },
+    "cloud": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "cloud"
+    },
+    "bets": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "bets"
+    },
+    "hedge": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "hedge"
+    },
+    "rev": {
+      "sum": [
+        "svc",
+        "cloud",
+        "bets",
+        "hedge"
+      ],
+      "optional": [
+        "hedge"
+      ]
+    },
+    "ads": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "ads"
+    },
+    "search": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "search"
+    },
+    "yt": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "yt"
+    },
+    "net": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "net"
+    },
+    "subs": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "subs"
+    },
+    "opinc": {
+      "code": "IS_COMPARABLE_EBIT",
+      "unit": "usdM"
+    },
+    "svcop": {
+      "code": "IS_OPER_INC",
+      "unit": "usdM",
+      "segment": "svc"
+    },
+    "cloudop": {
+      "code": "IS_OPER_INC",
+      "unit": "usdM",
+      "segment": "cloud"
+    },
+    "betsop": {
+      "code": "IS_OPER_INC",
+      "unit": "usdM",
+      "segment": "bets"
+    },
+    "alphaop": {
+      "code": "IS_OPER_INC",
+      "unit": "usdM",
+      "segment": "alpha"
+    },
+    "netinc": {
+      "code": "IS_COMP_NET_INCOME_GAAP",
+      "unit": "usdM"
+    },
+    "eps": {
+      "code": "IS_COMP_EPS_GAAP",
+      "unit": "eps"
+    },
+    "capex": {
+      "code": "CF_PURCHASE_OF_FIXED_PROD_ASSETS",
+      "unit": "usdM",
+      "sign": -1
+    },
+    "tac": {
+      "code": "INTERNET_TRAFFIC_ACQ_COSTS",
+      "unit": "usdM",
+      "segment": "svc"
+    },
+    "fcf": {
+      "code": "HEADLINE_FCF",
+      "unit": "usdM"
+    }
+  },
+  "y": {
+    "svc": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "svc"
+    },
+    "cloud": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "cloud"
+    },
+    "bets": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "bets"
+    },
+    "hedge": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "hedge"
+    },
+    "rev": {
+      "sum": [
+        "svc",
+        "cloud",
+        "bets",
+        "hedge"
+      ],
+      "optional": [
+        "hedge"
+      ]
+    },
+    "ads": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "ads"
+    },
+    "search": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "search"
+    },
+    "yt": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "yt"
+    },
+    "net": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "net"
+    },
+    "subs": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "subs"
+    },
+    "opinc": {
+      "code": "IS_COMPARABLE_EBIT",
+      "unit": "usdM"
+    },
+    "svcop": {
+      "code": "IS_OPER_INC",
+      "unit": "usdM",
+      "segment": "svc"
+    },
+    "cloudop": {
+      "code": "IS_OPER_INC",
+      "unit": "usdM",
+      "segment": "cloud"
+    },
+    "betsop": {
+      "code": "IS_OPER_INC",
+      "unit": "usdM",
+      "segment": "bets"
+    },
+    "alphaop": {
+      "code": "IS_OPER_INC",
+      "unit": "usdM",
+      "segment": "alpha"
+    },
+    "netinc": {
+      "code": "IS_COMP_NET_INCOME_GAAP",
+      "unit": "usdM"
+    },
+    "eps": {
+      "code": "IS_COMP_EPS_GAAP",
+      "unit": "eps"
+    },
+    "ebitda": {
+      "code": "IS_COMPARABLE_EBITDA",
+      "unit": "usdM"
+    },
+    "capex": {
+      "code": "CF_PURCHASE_OF_FIXED_PROD_ASSETS",
+      "unit": "usdM",
+      "sign": -1
+    },
+    "tac": {
+      "code": "INTERNET_TRAFFIC_ACQ_COSTS",
+      "unit": "usdM",
+      "segment": "svc"
+    },
+    "fcf": {
+      "code": "HEADLINE_FCF",
+      "unit": "usdM"
+    }
+  },
+  "dropVintages": {
+    "y": {
+      "svc": [
+        "2020-08-04"
+      ],
+      "rev": [
+        "2020-08-04"
+      ],
+      "yt": [
+        "2019-07-30"
+      ]
+    }
+  }
+}

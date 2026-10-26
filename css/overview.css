@@ -1928,7 +1928,11 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 .ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g5 { background: #DFE3E8; }
 .ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g6 { background: #E6E9ED; }
 /* 2×2 titles in black for the profiles built with the playbook (SAB, Oct 20 2026; §8). */
-:is(.ov-amzn, .ov-tsm, .ov-meta) .q2-k { color: var(--navy); }
+:is(.ov-amzn, .ov-tsm, .ov-meta, .ov-googl) .q2-k { color: var(--navy); }
+/* Running text in black, not navy or blue (playbook §21, SAB 2026-10-21; applied to the Overview for GOOGL,
+   SAB 2026-10-26): sentences, values and captions. Titles stay navy; labels and source lines stay grey. */
+.ov-googl :is(.ov-lede, .stdkf-v, .q2-v, .famd, .ov-row-v, .ov-diagram-cap, .ov-mbar-l, .ov-mbar-v, .stdp-d, .ov-tl-body) { color: #111418; }
+.ov-googl .ov-diagram-cap .ave-subh-note { color: var(--mu); }
 
 /* Flywheel / driver cards */
 .ov-fly { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }

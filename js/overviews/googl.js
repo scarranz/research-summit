@@ -14,6 +14,7 @@ import { mountWatchList } from '../watchlist.js';
 
 import { makeManagement } from './management.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
+import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/googl.js)
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode it) ──
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -31,98 +32,115 @@ function collapsible(title, inner, open){
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // DATA — Overview
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// Key Facts — 10 cells (5 columns × 2 rows), canonical set. Filer status verified on EDGAR
-// (CIK 1652044 files 10-K/10-Q/8-K — domestic).
+// Key Facts — 10 cells (5 columns × 2 rows), canonical set (playbook §8 OV-1). Filer status verified on EDGAR
+// (CIK 1652044 files 10-K/10-Q/8-K — domestic). HQ, incorporation and employees: FY2025 10-K (cover page; Item 1
+// "As of December 31, 2025, Alphabet had 190,820 employees"). CEO since Dec 2019 = Alphabet CEO (Google CEO since 2015).
+// Market cap is live only (rule 10): no seed — 'loading…' until the quote lands, 'unavailable' if it fails.
 var STD_FACTS=[
-  ['Listing','NASDAQ: GOOGL / GOOG'],
-  ['HQ','Mountain View, CA, USA'],
+  ['Listing','NASDAQ: GOOGL · GOOG'],
+  ['HQ','Mountain View, California, USA'],
   ['Incorporated','Delaware, USA'],
   ['SEC filer','Domestic (10-K/10-Q/8-K)'],
-  ['Founded','1998 (Page & Brin)'],
-  ['IPO','Aug 2004 · Dutch auction'],
-  ['CEO','Sundar Pichai · Google 2015 · Alphabet 2019'],
+  ['Founded','1998 (Larry Page & Sergey Brin)'],
+  ['IPO','Aug 2004 · NASDAQ (Dutch auction)'],
+  ['CEO','Sundar Pichai · joined 2004 · CEO since Dec 2019'],
   ['Employees','190,820 · Dec 2025'],
-  ['Dividend','Payer · first ever in 2024'],
-  ['Market cap','live'],
+  ['Dividend','Payer · quarterly'],
+  ['Market cap','loading live quote…'],
 ];
 
-var UB_LEDE='Alphabet is the holding company of Google, created in a 2015 restructuring. Its platforms — Search, YouTube, Android, Chrome, Maps, Play, the Gemini AI models and Google Cloud — reach billions of users and millions of enterprises worldwide. The company remains founder-controlled through super-voting Class B shares, and since 2023 has been reorganizing every product around its own AI stack, from self-designed TPU chips to the Gemini models that now run inside Search itself.';
+// OV-2 lede (playbook §8: 2–4 sentences, ~50–80 words, no numbers, neutral). Paraphrased from the FY2025 10-K,
+// Item 1 ("Alphabet is a collection of businesses — the largest of which is Google"). The old lede's founder-control
+// sentence moves to Management ▸ Ownership and its AI-stack sentence to the 2×2 "The edge" (B2 #2).
+var UB_LEDE='Alphabet is the holding company of Google, set up in a 2015 reorganization. Google builds the products people use to find information and get things done — Search, YouTube, Android, Chrome and Maps — and earns most of its money from the advertising shown in them, while also selling computing, data and AI services to businesses through Google Cloud. Outside Google, Alphabet runs a group of earlier-stage ventures, the largest being Waymo.';
 
 // 2x2 quadrant (each cell ≤ ~30 words)
 var STD_BIZ=[
   ['What it sells','Attention and answers at global scale — search, video, maps, mobile OS — monetized with ads; plus cloud/AI computing for enterprises and consumer subscriptions.'],
   ['Who buys it','Advertisers (the core); enterprises & developers (Google Cloud); consumers (subscriptions, devices, app purchases); OEMs distributing Android.'],
-  ['How it earns','FY2025: ~73% advertising (Search · YouTube · Network) · ~15% Google Cloud · ~12% subscriptions, platforms & devices.'],
-  ['The edge','Unmatched distribution (multiple billion-user products), the ad-auction data flywheel, and a full-stack AI position: own TPUs → Gemini models → billions of users.'],
+  // FY2025 10-K: revenues by type (advertising 294,691 · Cloud 58,705 · subs/platforms/devices 48,030 of 402,836)
+  // and the segment note (operating income: Services 139,404 · Cloud 13,910).
+  ['How it earns','FY2025: ~73% advertising (Search · YouTube · Network) · ~15% Google Cloud · ~12% subscriptions, platforms & devices — but Services earns 10× Cloud\'s operating income ($139.4B vs $13.9B).'],
+  ['The edge','Distribution through several billion-user products, the data loop of its ad auctions, and an AI stack it owns end to end: TPU chips → Gemini models → its own products.'],
 ];
 
-// How it makes money — FY2025 total revenues $402.8B (+15%), per the Q4/FY2025 release (SEC).
-// Two views of the SAME total (they must and do reconcile): segments and geography.
-// Segments: Services $342.7B · Cloud $58.7B · Other Bets ~$1.5B · hedging −$0.1B = $402.8B.
-// Geography: US $194.2B · EMEA $117.2B · APAC $67.7B · Other Americas $23.9B · hedging = $402.8B.
+// OV-4 How it makes money — FY2025 10-K (acc. 0001652044-26-000018): MD&A "revenues by type", Note 2 (revenues by
+// geography, based on customer address) and the segment note (operating income). Two views of the SAME total; both
+// reconcile to $402,836M with hedging gains (losses) of −$127M (shown in the caption, not as a bar):
+//   Services 342,721 + Cloud 58,705 + Other Bets 1,537 − 127 = 402,836
+//   US 194,229 + EMEA 117,152 + APAC 67,680 + Other Americas 23,902 − 127 = 402,836
+// Bars are neutral greys ranked by size (gmmBars / .gmm-neutral); the fifth field is no longer used (playbook §8).
 var GMM_SEG=[
-  ['Google Services', 85, '$342.7B', '85%', BRAND],
-  ['Google Cloud', 15, '$58.7B', '15%', BRAND2],
-  ['Other Bets', 1.2, '~$1.5B', '<1%', YELLOW],
+  ['Google Services', 85.1, '$342.7B', '85%', null],
+  ['Google Cloud',    14.6, '$58.7B',  '15%', null],
+  ['Other Bets',       0.4, '$1.5B',   '<1%', null],
 ];
 var GMM_GEO=[
-  ['United States', 48, '$194.2B', '48%', BRAND],
-  ['EMEA', 29, '$117.2B', '29%', BRAND2],
-  ['APAC', 17, '$67.7B', '17%', YELLOW],
-  ['Other Americas', 6, '$23.9B', '6%', RED],
+  ['United States',  48.2, '$194.2B', '48%', null],
+  ['EMEA',           29.1, '$117.2B', '29%', null],
+  ['APAC',           16.8, '$67.7B',  '17%', null],
+  ['Other Americas',  5.9, '$23.9B',  '6%',  null],
 ];
+// One accordion per segment: what it is (no numbers) + "The numbers" (10-K figures). The old approximate sub-splits
+// ("derived from the quarterly releases") are replaced by the 10-K's own revenue-by-type table (B2 #4).
 var REV_DEFS=[
-  { seg:'Google Services (the core)',
+  { seg:'Google Services (ads, subscriptions, devices)',
     desc:'Everything consumer-facing: <b>advertising</b> sold on Google Search, YouTube and partner sites/apps (Google Network), plus <b>subscriptions, platforms and devices</b> — Google One, YouTube Premium & TV, Play Store fees and Pixel hardware. Advertising is priced largely through real-time auctions.',
-    econ:[['Search & other','~$224B'],['YouTube ads','~$40B'],['Subscriptions, platforms & devices','~$48B'],['Google Network','~$30B'],['FY2025 segment total','$342.7B (+12%)']],
-    econNote:'Sub-splits derived from the four FY2025 quarterly releases — approximate; segment total reconciles to the reported FY figure.' },
-  { seg:'Google Cloud',
+    econ:[['FY2025 revenue','$342.7B · 85% of total'],['Growth','+12% (from $304.9B)'],['Operating income','$139.4B · 40.7% margin'],['Google advertising','$294.7B (+11%): Search & other $224.5B · YouTube ads $40.4B · Network $29.8B'],['Subscriptions, platforms & devices','$48.0B (+19%)']] },
+  { seg:'Google Cloud (computing and AI for businesses)',
     desc:'Infrastructure and platform services for enterprises: <b>Google Cloud Platform</b> (compute, storage, and AI infrastructure — including Alphabet\'s own TPU chips — plus Vertex AI and Gemini for business), and <b>Google Workspace</b> (Gmail, Docs, Meet for organizations). Earns consumption-based fees and subscriptions.',
-    econ:[['FY2025 revenue','$58.7B (+36%)'],['Exit run-rate','>$70B (Q4 2025 annualized)'],['Q4 2025 growth','+48% YoY — accelerating on AI demand']] },
-  { seg:'Other Bets',
+    econ:[['FY2025 revenue','$58.7B · 15% of total'],['Growth','+36% (from $43.2B)'],['Operating income','$13.9B · 23.7% margin (from $6.1B)'],['4Q25','$17.7B (+48% YoY) — a run-rate above $70B a year'],['Revenue backlog','$242.8B at Dec 31, 2025, mostly Google Cloud (Note 2)']] },
+  { seg:'Other Bets (Waymo and the ventures)',
     desc:'A portfolio of earlier-stage businesses outside Google — most prominently <b>Waymo</b> (autonomous ride-hailing) plus Verily (health), Wing (drone delivery) and other ventures. Revenues come primarily from autonomous transportation and internet services.',
-    econ:[['FY2025 revenue','~$1.5B'],['Scale','<1% of Alphabet revenue — option value, not an earnings driver today']] },
+    econ:[['FY2025 revenue','$1.5B · under 1% of total'],['Growth','−7% (from $1.6B)'],['Operating income','−$7.5B (−$4.4B in 2024)']] },
+  { seg:'The revenue lines (as the 10-K reports them)',
+    desc:'The 10-K also splits the same total into six lines: three kinds of advertising, subscriptions and devices, Cloud and Other Bets.',
+    econ:[['Google Search & other','$224.5B · 55.7% (+13%)'],['YouTube ads','$40.4B · 10.0% (+12%)'],['Google Network','$29.8B · 7.4% (−2%)'],['Subscriptions, platforms & devices','$48.0B · 11.9% (+19%)'],['Google Cloud','$58.7B · 14.6% (+36%)'],['Other Bets','$1.5B · 0.4% (−7%)'],['Hedging gains (losses)','−$0.1B']],
+    econNote:'10-K MD&A, revenues by type. Growth vs FY2024. 4Q25 Cloud from the 4Q25 earnings release (8-K Ex. 99.1).' },
 ];
 
-// Products — two tiers: family card → pop-up with the specific products (key = prod:i).
+// OV-5 Products — two tiers: family card → pop-up with the specific products (key = prod:i). Paraphrases the
+// FY2025 10-K Item 1 and the 2Q26 10-Q (Note 2: TPU system sales in Google Cloud; Note 8: Wiz closed Mar 11, 2026),
+// plus Google's product pages. Descriptive, no opinion (playbook §19).
 var G_PRODUCTS=[
-  { ic:'🔍', fam:'Search & assistant', d:'The front door of the internet.', items:[
-    ['Google Search','The core product — answers, now increasingly AI-generated, for billions of daily queries.'],
-    ['AI Overviews & AI Mode','Generative-AI answers inside Search itself — the biggest change to the product since its launch.'],
-    ['Gemini app','The standalone AI assistant (mobile + web), Alphabet\'s consumer counterpart to ChatGPT.'],
-    ['Maps & Lens','Local search, navigation and visual search — major query surfaces in their own right.'] ]},
-  { ic:'📺', fam:'YouTube', d:'Video: ads + subscriptions.', items:[
-    ['YouTube ads','In-stream and Shorts advertising across the world\'s largest video platform.'],
-    ['Shorts','Short-form video — the TikTok answer, now monetizing at scale.'],
+  { ic:'🔍', fam:'Search & assistant', d:'Finding information and answers.', items:[
+    ['Google Search','The core product, with trillions of searches a year (10-K) — answers increasingly generated by AI.'],
+    ['AI Overviews & AI Mode','Generative-AI answers inside Search itself, built on the Gemini models.'],
+    ['Gemini app','The stand-alone AI assistant, on mobile and the web.'],
+    ['Maps & Lens','Local search, navigation and visual search.'] ]},
+  { ic:'📺', fam:'YouTube', d:'Video: ads and subscriptions.', items:[
+    ['YouTube ads','Ads shown in videos and in Shorts.'],
+    ['Shorts','Short-form vertical video inside YouTube.'],
     ['YouTube Premium & Music','Ad-free viewing and music subscriptions.'],
-    ['YouTube TV & Sunday Ticket','Live-TV bundle (US) plus exclusive NFL Sunday Ticket rights.'] ]},
-  { ic:'🤖', fam:'Android, Chrome & Play', d:'The distribution layer.', items:[
-    ['Android','The world\'s most-used mobile OS — licensed free; its role is distributing Google services (Search, Play) onto billions of devices.'],
-    ['Google Play','App and content store — Alphabet\'s cut of app purchases and subscriptions.'],
-    ['Chrome','The dominant desktop/mobile browser; another default-search distribution channel.'] ]},
-  { ic:'☁️', fam:'Google Cloud', d:'Enterprise compute & AI.', items:[
-    ['Google Cloud Platform (GCP)','Compute, storage, data and networking for enterprises — with AI infrastructure the fastest-growing piece.'],
-    ['Vertex AI & Gemini for enterprise','The platform where businesses build on Alphabet\'s models.'],
-    ['Workspace','Gmail, Docs, Drive, Meet for organizations — subscription seats.'],
-    ['Security','Mandiant threat intelligence; the pending <b>Wiz</b> acquisition (agreed 2025, ~$32B) would make security a pillar.'] ]},
-  { ic:'🧠', fam:'AI models & silicon', d:'The full-stack AI position.', items:[
-    ['Gemini models','Alphabet\'s frontier model family — powering Search AI, the Gemini app, Cloud and Workspace.'],
-    ['Google DeepMind','The consolidated research arm (AlphaFold, and the research behind the Transformer architecture modern AI is built on).'],
-    ['TPUs','Self-designed AI accelerator chips — Alphabet trains and serves its models on its own silicon, a structural cost/supply edge.'],
-    ['Gemma','Open-weight model family for developers.'] ]},
-  { ic:'📢', fam:'Ads platforms', d:'The machinery advertisers use.', items:[
-    ['Google Ads','Self-serve auction buying across Search, YouTube, Maps and partners.'],
-    ['Ad Manager · AdSense · AdMob','The sell-side: monetization tools for publishers and app developers (the Google Network business).'],
-    ['Display & Video 360','Enterprise media-buying for large advertisers and agencies.'] ]},
-  { ic:'💳', fam:'Subscriptions & devices', d:'The growing non-ads consumer layer.', items:[
-    ['Google One','Storage + AI-feature subscription; one of the fastest-growing subscription lines.'],
-    ['Pixel','Phones, watches and earbuds — Alphabet\'s own hardware showcase for Android + Gemini.'],
-    ['Nest & Fitbit','Smart home and wearables.'] ]},
-  { ic:'🚗', fam:'Other Bets', d:'Waymo and the moonshots.', items:[
-    ['Waymo','Autonomous ride-hailing, live in multiple US cities and scaling paid rides — the most valuable Bet. Still a small revenue contributor relative to Alphabet (<1% of group revenue).'],
+    ['YouTube TV & NFL Sunday Ticket','A live-TV bundle in the US, plus the NFL Sunday Ticket package.'] ]},
+  { ic:'🤖', fam:'Android, Chrome & Play', d:'Where Google\'s services reach users.', items:[
+    ['Android','The mobile operating system, licensed free to device makers; it carries Google\'s services (Search, Play) onto phones.'],
+    ['Google Play','The app and content store — Alphabet earns on app sales and in-app purchases.'],
+    ['Chrome','The web browser; another way people reach Search.'] ]},
+  { ic:'☁️', fam:'Google Cloud', d:'Computing and AI for businesses.', items:[
+    ['Google Cloud Platform (GCP)','Compute, storage, data, networking and AI infrastructure, paid mostly by consumption.'],
+    ['TPU systems','Alphabet\'s own AI chips, now also sold to customers as systems — recorded as Cloud product sales (2Q26 10-Q).'],
+    ['Vertex AI & Gemini Enterprise','The platform where businesses build on Google\'s models.'],
+    ['Workspace','Gmail, Docs, Drive and Meet for organizations, sold as subscription seats.'],
+    ['Security','Mandiant threat intelligence and <b>Wiz</b>, the cloud-security platform acquired in March 2026 for $29.5B.'] ]},
+  { ic:'🧠', fam:'AI models & silicon', d:'The models and the chips.', items:[
+    ['Gemini models','Google\'s frontier model family, used in Search, the Gemini app, Cloud and Workspace.'],
+    ['Google DeepMind','The research unit that builds the models (also AlphaFold).'],
+    ['TPUs','Custom-built AI accelerator chips; Ironwood is the seventh generation (10-K). Google trains and serves its models on them.'],
+    ['Gemma','Open-weight models for developers.'] ]},
+  { ic:'📢', fam:'Ads platforms', d:'The tools advertisers and publishers use.', items:[
+    ['Google Ads','Auction-based buying across Search, YouTube, Maps and partner sites.'],
+    ['Ad Manager · AdSense · AdMob','Tools for publishers and app developers to sell ad space — the Google Network business.'],
+    ['Display & Video 360','Media buying for large advertisers and agencies.'] ]},
+  { ic:'💳', fam:'Subscriptions & devices', d:'Paid consumer services and hardware.', items:[
+    ['Google One','Storage plus access to Google\'s most capable Gemini models (10-K).'],
+    ['Pixel','Phones, watches and earbuds — Pixel 10 and Pixel Watch 4 are the latest (10-K).'],
+    ['Nest & Fitbit','Smart-home devices and wearables.'] ]},
+  { ic:'🚗', fam:'Other Bets', d:'Waymo and the early-stage ventures.', items:[
+    ['Waymo','Fully autonomous ride-hailing; the largest of the Other Bets.'],
     ['Wing','Drone delivery.'],
-    ['Verily','Life sciences / health data.'],
-    ['X','The "moonshot factory" incubator.'] ]},
+    ['Verily','Life sciences and health data.'],
+    ['X','The incubator for new ventures.'] ]},
 ];
 
 // Timeline — corporate lineage per the conventions rubric (genesis, inflections, material M&A,
@@ -135,125 +153,223 @@ var TIMELINE=[
   { y:'Aug 2004', t:'<b>IPO</b> on NASDAQ — an unusual <b>Dutch-auction</b> offering, with a dual-class structure preserving founder control.',
     d:'<ul class="ov-bullets"><li>Priced at $85 via an open Dutch auction (retail investors could bid) — a deliberate break with Wall Street bookbuilding.</li><li><b>Dual-class from day one:</b> Class B shares (10 votes, founders/insiders) vs Class A (1 vote). A third class (C, no votes — today\'s GOOG) was added in 2014.</li><li>Founders\' letter: "Google is not a conventional company. We do not intend to become one."</li></ul>' },
   { y:'2005–06', t:'The two defining acquisitions: <b>Android</b> (~$50M, 2005) and <b>YouTube</b> ($1.65B, 2006).',
-    d:'<ul class="ov-bullets"><li><b>Android (2005, ~$50M)</b> — a tiny startup buy that became the world\'s dominant mobile OS and Google\'s distribution moat in the smartphone era.</li><li><b>YouTube (2006, $1.65B in stock)</b> — widely questioned at the time; by FY2025 YouTube ads alone are ~$40B/yr and YouTube ads + subscriptions exceed <b>$60B/yr</b> (company disclosure).</li></ul>' },
+    d:'<ul class="ov-bullets"><li><b>Android (2005, ~$50M)</b> — a small startup purchase that became the mobile operating system carrying Google\'s services onto most of the world\'s smartphones.</li><li><b>YouTube (2006, $1.65B in stock)</b> — widely questioned at the time; by FY2025 YouTube ads alone are ~$40B/yr and YouTube ads + subscriptions exceed <b>$60B/yr</b> (company disclosure).</li></ul>' },
   { y:'2007', t:'<b>DoubleClick</b> acquired ($3.1B) — the ad-serving stack behind today\'s Network / publisher business.' },
   { y:'2012–14', t:'<b>Motorola Mobility:</b> bought for $12.5B, sold to Lenovo for $2.9B — the failed hardware bet; kept the patents.',
-    d:'<ul class="ov-bullets"><li>2012 — acquires Motorola Mobility for <b>$12.5B</b>, largely for its patent portfolio during the smartphone patent wars.</li><li>2014 — sells the handset business to Lenovo for <b>$2.91B</b>, retaining most patents.</li><li>The clearest fiasco in the M&A record — and the reason later hardware efforts (Pixel) were built in-house instead.</li></ul>' },
+    d:'<ul class="ov-bullets"><li>2012 — acquires Motorola Mobility for <b>$12.5B</b>, largely for its patent portfolio during the smartphone patent wars.</li><li>2014 — sells the handset business to Lenovo for <b>$2.91B</b>, retaining most patents.</li><li>Later hardware (Pixel) was built in-house instead.</li></ul>' },
   { y:'2014–16', t:'<b>The AI turn:</b> DeepMind acquired (2014) · "AI-first" declared (2016) · first in-house <b>TPU</b> chip.',
     d:'<ul class="ov-bullets"><li>2014 — acquires London-based <b>DeepMind</b> (~$500M+).</li><li>2016 — Pichai declares Google an <b>"AI-first"</b> company; first <b>TPU</b> (self-designed AI chip) revealed.</li><li>2017 — Google researchers publish the <b>Transformer</b> paper ("Attention Is All You Need") — the architecture underlying essentially all modern generative AI.</li></ul>' },
   { y:'2015', t:'<b>Alphabet restructuring</b> — Google reorganizes under a new holding company; <b>Sundar Pichai becomes CEO of Google</b>.',
     d:'<ul class="ov-bullets"><li>Google creates <b>Alphabet Inc.</b> as parent, separating core Google from the "Other Bets" (Waymo, Verily, etc.).</li><li>Goal: capital discipline and reporting transparency — the Bets\' losses become visible instead of buried in Google\'s P&L.</li><li>Page & Brin move up to Alphabet; <b>Pichai takes over Google</b>.</li></ul>' },
   { y:'2019', t:'<b>Pichai becomes CEO of Alphabet</b> — the founders step back from operations but keep voting control.' },
   { y:'2023–25', t:'<b>The Gemini era:</b> generative AI goes <i>into</i> Search itself (AI Overviews → AI Mode) on Alphabet\'s own models and TPUs.',
-    d:'<ul class="ov-bullets"><li>2023 — Bard launches (the rushed ChatGPT answer); DeepMind + Google Brain merge into <b>Google DeepMind</b>; <b>Gemini</b> models ship at year-end.</li><li>2024–25 — <b>AI Overviews</b> then <b>AI Mode</b> roll into Search: the second business-model inflection in the company\'s history, this time <i>inside</i> the core earning engine.</li><li>The differentiator vs. rivals: a <b>full stack</b> — own TPUs (7 generations) → own frontier models → distribution across billions of users.</li></ul>' },
-  { y:'Apr 2024', t:'<b>First-ever dividend</b> declared ($0.20/qtr) — a coming-of-age signal, 26 years in.' },
+    d:'<ul class="ov-bullets"><li>2023 — Bard launches; DeepMind + Google Brain merge into <b>Google DeepMind</b>; <b>Gemini</b> models ship at year-end.</li><li>2024–25 — <b>AI Overviews</b> then <b>AI Mode</b> roll into Search: the second business-model inflection in the company\'s history, this time <i>inside</i> the core earning engine.</li><li>Built on a <b>full stack</b> it owns: its own TPU chips (Ironwood is the seventh generation) → its own frontier models → its own products.</li></ul>' },
+  { y:'Apr 2024', t:'<b>First-ever dividend</b> declared ($0.20 a quarter), alongside a buyback.' },
   { y:'2024–25', t:'<b>US v. Google:</b> search ruled an illegal monopoly (Aug 2024); remedies land Sep 2025 — <b>no Chrome divestiture</b>.',
-    d:'<ul class="ov-bullets"><li>Aug 2024 — Judge Mehta rules Google <b>illegally maintained its search monopoly</b> (the defining legal matter in company history).</li><li>Sep 2025 — remedies: Google <b>keeps Chrome and Android</b>; default-placement payments (e.g. to Apple) survive with restrictions (non-exclusive, annually renegotiable); Google must share certain search data with qualified competitors.</li><li>Net: far lighter than the breakup scenarios the market had priced. A separate ad-tech case proceeds on its own track.</li></ul>' },
-  { y:'2025', t:'<b>Wiz</b> agreed (~$32B, cloud security) — the <b>largest acquisition in company history</b>, subject to regulatory review.' },
+    d:'<ul class="ov-bullets"><li>Aug 2024 — Judge Mehta rules Google <b>illegally maintained its search monopoly</b> (the defining legal matter in company history).</li><li>Sep 2025 — remedies: Google <b>keeps Chrome and Android</b>; default-placement payments (e.g. to Apple) survive with restrictions (non-exclusive, annually renegotiable); Google must share certain search data with qualified competitors.</li><li>No divestiture was ordered. A separate ad-tech case proceeds on its own track.</li></ul>' },
   { y:'Sep 2025', t:'Crosses <b>$3 trillion</b> in market cap (the latest trillion-dollar milestone).' },
+  { y:'Mar 2026', t:'<b>Wiz</b> acquired for <b>$29.5B</b> — cloud security, now part of Google Cloud; the largest acquisition in company history.',
+    d:'<ul class="ov-bullets"><li>Mar 2025 — agreement to buy Wiz for $32.0B in cash, subject to regulatory approval (FY2025 10-K).</li><li>Mar 11, 2026 — closed for $29.5B after purchase-price adjustments; Wiz reports inside the Google Cloud segment (2Q26 10-Q, Note 8).</li></ul>' },
 ];
 
-// ─── Peers scatter — big-tech map. Toggles: metric (P/E ⇄ EV/EBITDA — never P/S) × basis
-// (Forward ⇄ Trailing, default Forward). Bubble = LIVE market cap (Massive). Multiples/growth are
-// seeded approximations (mid-2026), labeled — replaced by live/model values when confirmed. ──────
+// ═══ OV-6 Competitors — the peer map (the same G_PEERS / G_SC feed Valuation ▸ Peers) — copied from meta.js ═══
+// Rule 10: no multiple and no market cap is written here. The file holds the DENOMINATORS, from each company's
+// latest 10-K (SEC EDGAR XBRL); price, market cap and (when Massive has it) EV are live (api.liveQuote) and the
+// multiple is computed in the browser: P/E = price ÷ EPS, EV/EBITDA = EV ÷ EBITDA (EV = live EV, else live
+// market cap + net debt below).
+//   epsT/epsF  diluted EPS, US$ (GAAP; forward = Bloomberg consensus FY2026)
+//   ebitdaT    US$ M = operating income + depreciation & amortization from the 10-K; ebitdaF = Bloomberg FY2026
+//   nd         net debt, US$ M = debt ex leases − cash and equivalents, at the 10-K balance-sheet date
+//   gt/gf      revenue growth, % — last fiscal year vs the one before (10-K) / FY2026 consensus vs FY2025 on the
+//              SAME Bloomberg basis (Alphabet's Bloomberg revenue is net of TAC, so it is never divided by GAAP revenue)
+// Fiscal years differ: Microsoft ends June (FY2026 = Jul 2025–Jun 2026), Oracle ends May (FY2026), Apple ends
+// September (FY2025). Forward exists only for the names in BBG_CONSENSUS.txt: GOOGL and META (Sep 8 2026), AMZN
+// (Sep 10 2026). Alphabet, Meta and Amazon denominators are the same ones Meta's profile uses (meta.js ME_PEERS).
+// Peer set: SAB, 2026-10-26 (Dani's four + Oracle).
 var G_PEERS=[
-  { tk:'GOOGL', n:'Alphabet', peT:27, peF:23, evT:20, evF:16, gt:15, gf:13, mc:2900, hl:true,
-    why:'The cheapest of the mega-cap platforms on nearly every multiple — the market\'s open question is whether AI disrupts or compounds the search franchise.' },
-  { tk:'MSFT', n:'Microsoft', peT:37, peF:32, evT:25, evF:22, gt:15, gf:14, mc:3900,
-    why:'The enterprise-software + Azure giant and OpenAI\'s partner. Similar growth to Alphabet, materially richer multiple — the premium is for perceived AI certainty.' },
-  { tk:'AAPL', n:'Apple', peT:32, peF:29, evT:24, evF:22, gt:6, gf:6, mc:3300,
-    why:'Slowest grower on the map yet still premium-priced — the ecosystem/buyback machine. Also Alphabet\'s single biggest distribution partner (default-search deal).' },
-  { tk:'AMZN', n:'Amazon', peT:36, peF:31, evT:19, evF:16, gt:11, gf:11, mc:2400,
-    why:'AWS is the cloud share leader Alphabet chases; retail depresses the blended margin. The #3 player in digital ads and a genuine rival on AI infrastructure.' },
-  { tk:'META', n:'Meta', peT:28, peF:24, evT:18, evF:15, gt:17, gf:15, mc:1900,
-    why:'The other ad duopolist — faster ad growth than Google, no cloud business, and the same open-source-AI capex debate. The purest ads comparable.' },
+  { tk:'GOOGL', n:'Alphabet', hl:true, epsT:10.81, epsF:19.90, ebitdaT:150175, ebitdaF:226428, nd:18377, gt:15.1, gf:26.8,
+    src:'10-K FY2025; forward: Bloomberg consensus FY2026, Sep 8 2026',
+    why:'The profile company: Search and YouTube ads, subscriptions and devices, and Google Cloud.' },
+  { tk:'MSFT', n:'Microsoft', epsT:17.95, epsF:null, ebitdaT:194237, ebitdaF:null, nd:19359, gt:17.8, gf:null,
+    src:'10-K FY2026 (year to Jun 30 2026)',
+    why:'Azure and Microsoft 365 compete with Google Cloud and Workspace; Bing competes with Search.' },
+  { tk:'AMZN', n:'Amazon', epsT:7.17, epsF:12.66, ebitdaT:145731, ebitdaF:220794, nd:-17974, gt:12.4, gf:15.6,
+    src:'10-K FY2025; forward: Bloomberg consensus FY2026, Sep 10 2026',
+    why:'AWS is the largest cloud rival; Amazon also sells search and retail-media ads.' },
+  { tk:'META', n:'Meta', epsT:23.49, epsF:31.61, ebitdaT:101892, ebitdaF:119147, nd:22871, gt:22.2, gf:26.4,
+    src:'10-K FY2025; forward: Bloomberg consensus FY2026, Sep 8 2026',
+    why:'The other large digital-ad platform; competes with YouTube and Search for ad budgets.' },
+  { tk:'AAPL', n:'Apple', epsT:7.46, epsF:null, ebitdaT:144748, ebitdaF:null, nd:54744, gt:6.4, gf:null,
+    src:'10-K FY2025 (year to Sep 27 2025)',
+    why:'Android competes with the iPhone; Apple is also a large distribution partner for Google Search.' },
+  { tk:'ORCL', n:'Oracle', epsT:5.83, epsF:null, ebitdaT:29900, ebitdaF:null, nd:98252, gt:17.3, gf:null,
+    src:'10-K FY2026 (year to May 31 2026)',
+    why:'Oracle Cloud Infrastructure competes with Google Cloud for AI computing contracts.' },
 ];
-var G_SC={ metric:'pe', basis:'f', peers:null, _capsFetched:false };
+
+var G_SC={ metric:'pe', basis:'t', peers:null, _capsFetched:false };   // Trailing by default: only GOOGL, META and AMZN have a Street forward
+function gTok(name, fb){ try{ var v=getComputedStyle(document.documentElement).getPropertyValue(name).trim(); return v||fb; }catch(e){ return fb; } }
 function gScReset(){ if(!G_SC.peers) G_SC.peers=G_PEERS.map(function(p){ var o={}; for(var k in p) o[k]=p[k]; o.on=true; return o; }); }
-function gScMult(p){ var key=(G_SC.metric==='pe'?'pe':'ev')+(G_SC.basis==='f'?'F':'T'); return p[key]; }
-function gScMax(){ return G_SC.metric==='pe'?45:30; }
+function gScNum(v){ return v!=null && !isNaN(v); }
+function gScMult(p){
+  if(!gScNum(p.px)) return null;                                      // no live price → no bubble (no seeded fallback)
+  var f=G_SC.basis==='f';
+  if(G_SC.metric==='pe'){ var eps=f?p.epsF:p.epsT; return (gScNum(eps)&&eps>0)?p.px/eps:null; }
+  var eb=f?p.ebitdaF:p.ebitdaT; if(!gScNum(eb)||eb<=0) return null;
+  var ev=gScNum(p.ev)?p.ev:(gScNum(p.mc)&&gScNum(p.nd)?p.mc*1000+p.nd:null);   // US$ M
+  return gScNum(ev)?ev/eb:null;
+}
+function gScGrowth(p){ return G_SC.basis==='f'?p.gf:p.gt; }
+function gScVisible(){ return (G_SC.peers||[]).filter(function(p){ return p.on && gScNum(gScMult(p)) && gScNum(gScGrowth(p)); }); }
+// Axes come from the data (max of the visible peers + headroom), never fixed caps.
+function gScNice(v){ var step=v<=20?5:(v<=100?10:25); return Math.ceil(v/step)*step; }
 function scLogoUrl(p){ return p.logo || ('https://assets.parqet.com/logos/symbol/'+p.tk); }
 
 function stdPeerScatter(sfx){
   sfx=sfx||'ov';
-  var h='<style>.mg-tog-row{display:flex;flex-wrap:wrap;gap:14px;margin:2px 0 8px}'+
-    '.mg-tog{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mu)}'+
-    '.mg-seg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
-    '.mg-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
-    '.mg-pill.active{background:var(--navy);color:#fff}'+
-    '.mg-node{cursor:pointer}.mg-node text{pointer-events:none}'+
-    '.gsc-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 2px}'+
-    '.gsc-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:999px;padding:3px 9px;background:var(--w);cursor:pointer;color:var(--navy)}'+
-    '.gsc-chip .x{color:var(--mu);font-weight:800}'+
-    '.gsc-add{display:inline-flex;gap:5px;align-items:center}'+
-    '.gsc-add input{width:74px;font:inherit;font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:3px 7px;text-transform:uppercase}'+
-    '.gsc-add button{font:inherit;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:7px;padding:3px 9px;background:#F2F5F8;cursor:pointer}'+
-    '.mg-tip{position:fixed;z-index:60;max-width:250px;background:#10141A;color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 22px rgba(16,20,26,.28);pointer-events:none;border-top:3px solid '+BRAND+'}'+
-    '.mg-tip .mgt-h{display:flex;align-items:center;gap:7px;margin-bottom:4px}.mg-tip .mgt-h img{width:18px;height:18px;border-radius:4px;background:#fff;object-fit:contain}'+
-    '.mg-tip .mgt-n{font-weight:800;font-size:12.5px;color:#8AB4F8}</style>';
-  h+='<div class="googl-sc" data-sfx="'+sfx+'">';
-  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Big-tech peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD.</b> <span style="opacity:.75">Hover or tap a bubble for the read.</span></div>';
+  var h='<div class="googl-sc" data-sfx="'+sfx+'">';
+  h+='<div class="ov-diagram-cap asc-cap-top">Peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD.</b> <span class="asc-hint">Hover or tap a bubble for the read.</span></div>';
   h+='<div class="mg-tog-row">'+
     '<span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgmetric="pe">P/E</button><button type="button" class="mg-pill" data-mgmetric="ev">EV/EBITDA</button></span></span>'+
-    '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgbasis="f">Forward</button><button type="button" class="mg-pill" data-mgbasis="t">Trailing</button></span></span>'+
+    '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill" data-mgbasis="f">Forward</button><button type="button" class="mg-pill active" data-mgbasis="t">Trailing</button></span></span>'+
   '</div>';
   h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" class="googl-sc-svg" role="img" aria-label="Peer valuation vs growth map">'+
     '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
     '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
     '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← cheaper (lower multiple)</text>'+
     '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">more expensive →</text>'+
-    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" class="googl-sc-xlab">P/E · forward</text>'+
-    '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">slow</text>'+
-    '<text x="74" y="52" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">fast growth</text>'+
+    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" class="googl-sc-xlab">P/E · trailing</text>'+
+    '<text x="74" y="225" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end" class="googl-sc-ylo">slow</text>'+
+    '<text x="74" y="60" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end" class="googl-sc-yhi">fast growth</text>'+
     '<g class="googl-sc-nodes"></g>'+
   '</svg></div>';
-  h+='<div class="gsc-chips googl-sc-chips"></div>';
-  h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here — private AI rivals (OpenAI, Anthropic) have no market multiple and appear in the qualitative competitive map instead. <span class="ave-subh-note">Multiples & growth are seeded approximations (mid-2026); market caps are live.</span></div>';
+  h+='<div class="asc-chips googl-sc-chips"></div>';
+  h+='<div class="ov-diagram-cap asc-cap-end">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only listed peers plot here. '+
+    '<span class="ave-subh-note">Multiples = live price ÷ figures from each company\'s latest 10-K (fiscal years differ: Microsoft to June, Oracle to May, Apple to September), or Bloomberg consensus FY2026 (as of Sep 2026) where it exists; market caps are live.</span></div>';
+  // Valuation ▸ Peers only: the receipt under the read (chart standard rule 3), OPEN by default.
+  if(sfx==='dd') h+='<div class="rs-collap googl-sc-collap">'+
+      '<button type="button" class="rs-collap-h googl-sc-tblh" data-selfwired="1"></button>'+
+      '<div class="rs-collap-b googl-sc-tblb">'+
+        '<div class="rs-tablewrap asc-tblwrap"><div class="googl-sc-tbl"></div></div>'+
+      '</div></div>';
   h+='<div class="mg-tip googl-sc-tip" hidden></div>';
   h+='</div>';
   return h;
 }
 function gScRenderOne(wrap){
   var g=wrap.querySelector('.googl-sc-nodes'); if(!g||!G_SC.peers) return;
-  var maxMult=gScMax(), X0=80, X1=612, Y0=252, Y1=44;
-  var lab=wrap.querySelector('.googl-sc-xlab'); if(lab) lab.textContent=(G_SC.metric==='pe'?'P/E':'EV/EBITDA')+' · '+(G_SC.basis==='f'?'forward':'trailing');
+  var X0=80, X1=612, Y0=222, Y1=56;   // data area; the axis line sits lower (y 252) so bottom labels clear the axis text
+  var NAVY=gTok('--navy','#1E2733');
+  var vis=gScVisible();
+  var maxMult=gScNice(Math.max.apply(null, vis.map(gScMult).concat([1]))*1.12);
+  var gs=vis.map(gScGrowth), gMax=gScNice(Math.max.apply(null, gs.concat([1]))*1.12), gMin=Math.min.apply(null, gs.concat([0]));
+  gMin=gMin<0?-gScNice(-gMin*1.5):0;
+  var lab=wrap.querySelector('.googl-sc-xlab'); if(lab) lab.textContent=(G_SC.metric==='pe'?'P/E':'EV/EBITDA')+' · '+(G_SC.basis==='f'?'forward':'trailing')+' · axis 0–'+maxMult+'×';
+  var yhi=wrap.querySelector('.googl-sc-yhi'); if(yhi) yhi.textContent='+'+gMax+'% growth';
+  var ylo=wrap.querySelector('.googl-sc-ylo'); if(ylo) ylo.textContent=gMin<0?(gMin+'%'):'0%';
   wrap.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mgbasis')===G_SC.basis); });
   wrap.querySelectorAll('.mg-pill[data-mgmetric]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mgmetric')===G_SC.metric); });
   var frag='';
-  G_SC.peers.forEach(function(p){
-    if(!p.on) return; var m=gScMult(p); if(m==null||isNaN(m)) return;
-    var growth=G_SC.basis==='f'?p.gf:p.gt; if(growth==null) growth=p.gf!=null?p.gf:p.gt;
+  vis.forEach(function(p){
+    var m=gScMult(p), growth=gScGrowth(p);
     var x=X0+Math.max(0,Math.min(1,m/maxMult))*(X1-X0);
-    var y=Y0-Math.max(0,Math.min(1,(growth||0)/25))*(Y0-Y1);
-    var r=Math.max(11,Math.min(27,9+Math.sqrt(Math.max(1,p.mc))*0.32));
+    var y=Y0-Math.max(0,Math.min(1,(growth-gMin)/(gMax-gMin)))*(Y0-Y1);
+    var r=gScNum(p.mc)?Math.max(11,Math.min(27,9+Math.sqrt(Math.max(1,p.mc))*0.32)):11;
     var logo=scLogoUrl(p);
-    frag+='<g class="mg-node" data-name="'+esc(p.n)+'" data-tk="'+esc(p.tk)+'" data-logo="'+esc(logo)+'" data-why="'+esc(p.why||'')+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
-      '<circle r="'+r.toFixed(1)+'" fill="#fff" stroke="'+(p.hl?BRAND:'#C7CED6')+'" stroke-width="'+(p.hl?3:1.5)+'"></circle>'+
-      '<image href="'+esc(logo)+'" x="'+(-r*0.72).toFixed(1)+'" y="'+(-r*0.72).toFixed(1)+'" width="'+(r*1.44).toFixed(1)+'" height="'+(r*1.44).toFixed(1)+'" preserveAspectRatio="xMidYMid meet" style="pointer-events:none"></image>'+
-      '<text y="'+(r+12).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?BRAND:'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
+    var read=(G_SC.metric==='pe'?'P/E ':'EV/EBITDA ')+m.toFixed(1)+'× · revenue growth '+(growth>0?'+':'')+growth.toFixed(1)+'%'+(gScNum(p.mc)?' · market cap $'+(p.mc>=1000?(p.mc/1000).toFixed(2)+'T':Math.round(p.mc)+'B'):'');
+    frag+='<g class="mg-node" data-name="'+esc(p.n)+'" data-tk="'+esc(p.tk)+'" data-logo="'+esc(logo)+'" data-why="'+esc(p.why||'')+'" data-read="'+esc(read)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
+      '<circle r="'+r.toFixed(1)+'" fill="#fff" stroke="'+(p.hl?NAVY:'#C7CED6')+'" stroke-width="'+(p.hl?3:1.5)+'"></circle>'+
+      '<image href="'+esc(logo)+'" x="'+(-r*0.72).toFixed(1)+'" y="'+(-r*0.72).toFixed(1)+'" width="'+(r*1.44).toFixed(1)+'" height="'+(r*1.44).toFixed(1)+'" preserveAspectRatio="xMidYMid meet" pointer-events="none"></image>'+
+      '<text y="'+(r+12).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?NAVY:'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
   });
   g.innerHTML=frag;
+  gScChipsOne(wrap);
+  gScTableOne(wrap);
+}
+// ─── The comps table under the peer map (Valuation ▸ Peers) — copied from meta.js meScTableOne ─────────
+// Everything the map draws, as numbers: the metric/basis pills pick the column, removing a chip drops the
+// row. Average and median EXCLUDE Alphabet (the set it is read against). Premium in red, discount in green.
+function gScFmtMult(v){ return gScNum(v)?v.toFixed(1)+'×':'—'; }
+function gScFmtPct(v){ return gScNum(v)?v.toFixed(1)+'%':'—'; }
+function gScFmtMc(v){ return gScNum(v)?('$'+(v>=1000?(v/1000).toFixed(2)+'T':Math.round(v)+'B')):'—'; }
+function gScMean(a){ if(!a.length) return null; return a.reduce(function(s,v){ return s+v; },0)/a.length; }
+function gScMedian(a){ if(!a.length) return null; var s=a.slice().sort(function(x,y){ return x-y; }), h=Math.floor(s.length/2); return s.length%2?s[h]:(s[h-1]+s[h])/2; }
+function gScVsAvg(m, avg){
+  if(!gScNum(m)||!gScNum(avg)||avg===0) return '<span class="asc-nilv">—</span>';
+  var d=(m/avg-1)*100;
+  return '<span class="'+(d>=0?'asc-up':'asc-dn')+'">'+(d>=0?'+':'')+Math.round(d)+'%</span>';
+}
+function gScTableOne(wrap){
+  var box=wrap.querySelector('.googl-sc-tbl'); if(!box||!G_SC.peers) return;
+  var mLab=(G_SC.metric==='pe'?'P/E':'EV/EBITDA'), bLab=(G_SC.basis==='f'?'forward':'trailing');
+  var rows=G_SC.peers.map(function(p){ return { p:p, m:gScMult(p), g:gScGrowth(p) }; });
+  // Cheapest first on the ACTIVE multiple; a name with no multiple sinks to the bottom (never sorts as zero).
+  rows.sort(function(a,b){
+    var an=gScNum(a.m), bn=gScNum(b.m);
+    if(!an&&!bn) return 0; if(!an) return 1; if(!bn) return -1; return a.m-b.m;
+  });
+  var peers=rows.filter(function(r){ return !r.p.hl; });
+  var avgM=gScMean(peers.filter(function(r){ return gScNum(r.m); }).map(function(r){ return r.m; }));
+  var medM=gScMedian(peers.filter(function(r){ return gScNum(r.m); }).map(function(r){ return r.m; }));
+  var avgG=gScMean(peers.filter(function(r){ return gScNum(r.g); }).map(function(r){ return r.g; }));
+  var medG=gScMedian(peers.filter(function(r){ return gScNum(r.g); }).map(function(r){ return r.g; }));
+  var nM=peers.filter(function(r){ return gScNum(r.m); }).length;
+  var body=rows.map(function(r){
+    var p=r.p, cls=(p.hl?'asc-hl':'')+(gScNum(r.m)?'':' asc-nil'), nt=gScNum(r.m)?'':gScChipNote(p);
+    return '<tr class="'+cls.trim()+'">'+
+      '<td><span class="asc-nm"><img src="'+esc(scLogoUrl(p))+'" alt="" onerror="this.style.display=\'none\'">'+
+        '<span>'+esc(p.n)+' <span class="asc-tk">'+esc(p.tk)+(nt?' · '+esc(nt):'')+'</span></span></span></td>'+
+      '<td class="asc-m">'+gScFmtMult(r.m)+'</td>'+
+      '<td>'+gScFmtPct(r.g)+'</td>'+
+      '<td>'+gScFmtMc(p.mc)+'</td>'+
+      '<td>'+gScVsAvg(r.m, avgM)+'</td></tr>';
+  }).join('');
+  var foot='<tr class="asc-avg"><td>Peer average <span class="asc-tk">ex-Alphabet · '+nM+' name'+(nM===1?'':'s')+'</span></td>'+
+      '<td>'+gScFmtMult(avgM)+'</td><td>'+gScFmtPct(avgG)+'</td>'+
+      '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>'+
+    '<tr class="asc-med"><td>Peer median <span class="asc-tk">ex-Alphabet</span></td>'+
+      '<td>'+gScFmtMult(medM)+'</td><td>'+gScFmtPct(medG)+'</td>'+
+      '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>';
+  box.innerHTML='<table class="asc-tbl"><thead><tr>'+
+      '<th>Peer</th><th>'+esc(mLab)+' · '+esc(bLab)+'</th>'+
+      '<th>Rev growth · '+esc(bLab)+'</th><th>Market cap</th><th>vs peer avg</th></tr></thead>'+
+    '<tbody>'+body+'</tbody><tfoot>'+foot+'</tfoot></table>';
+  var hd=wrap.querySelector('.googl-sc-tblh'), bd=wrap.querySelector('.googl-sc-tblb');
+  if(hd){ var open=!(bd&&bd.hidden);
+    hd.innerHTML='<span class="rs-collap-ic">'+(open?'▾':'▸')+'</span>The numbers behind the map'+
+      '<span class="rs-collap-sub">'+(open?'hide':'show')+' · '+esc(mLab)+' · '+esc(bLab)+
+      ', '+rows.length+' names</span>'; }
+}
+// A chip says why its peer is missing from the current view (no forward, negative EPS, no live price).
+function gScChipNote(p){
+  if(!gScNum(p.epsT)&&!gScNum(p.ebitdaT)&&!gScNum(p.epsF)&&!gScNum(p.ebitdaF)) return 'no figures on file';
+  if(!gScNum(p.px)) return 'no live price';
+  if(G_SC.basis==='f' && !gScNum(G_SC.metric==='pe'?p.epsF:p.ebitdaF)) return 'trailing only — no Street file';
+  if(!gScNum(gScMult(p))) return G_SC.metric==='pe'?'no P/E — loss':'no EBITDA on file';
+  return '';
 }
 function gScChipsOne(wrap){
   var box=wrap.querySelector('.googl-sc-chips'); if(!box||!G_SC.peers) return;
-  var h=G_SC.peers.map(function(p,i){ return '<span class="gsc-chip" data-sci="'+i+'" title="Remove '+esc(p.n)+'">'+esc(p.n)+' <span class="x">×</span></span>'; }).join('');
-  h+='<span class="gsc-add"><input class="googl-sc-addtk" placeholder="+ TICKER" maxlength="6"><button type="button" class="googl-sc-addbtn">Add</button></span>';
+  var keep=box.querySelector('.googl-sc-addtk'); var typed=keep?keep.value:'';
+  var h=G_SC.peers.map(function(p,i){ var nt=gScChipNote(p); return '<span class="asc-chip" data-sci="'+i+'" title="Remove '+esc(p.n)+'">'+esc(p.n)+(nt?' <span class="asc-chip-note">· '+esc(nt)+'</span>':'')+' <span class="x">×</span></span>'; }).join('');
+  h+='<span class="asc-add"><input class="googl-sc-addtk" placeholder="+ TICKER" maxlength="6"><button type="button" class="googl-sc-addbtn">Add</button></span>';
   box.innerHTML=h;
+  var inp=box.querySelector('.googl-sc-addtk'); if(inp) inp.value=typed;
 }
-function gScRenderAll(root){ root.querySelectorAll('.googl-sc').forEach(gScRenderOne); }
-function gScChipsAll(root){ root.querySelectorAll('.googl-sc').forEach(function(w){ gScChipsOne(w); wireScChips(root, w); }); }
+function gScRenderAll(root){ root.querySelectorAll('.googl-sc').forEach(function(w){ gScRenderOne(w); wireScChips(root, w); }); }
 function wireScatters(root){
   gScReset();
   root.querySelectorAll('.googl-sc').forEach(function(wrap){
     if(wrap._scWired) return; wrap._scWired=true;
+    var tblH=wrap.querySelector('.googl-sc-tblh'), tblB=wrap.querySelector('.googl-sc-tblb');
+    if(tblH&&tblB) tblH.onclick=function(){ tblB.hidden=!tblB.hidden; gScTableOne(wrap); };
     var g=wrap.querySelector('.googl-sc-nodes'), tip=wrap.querySelector('.googl-sc-tip');
     wrap.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(btn){ btn.onclick=function(){ G_SC.basis=btn.getAttribute('data-mgbasis'); gScRenderAll(root); }; });
     wrap.querySelectorAll('.mg-pill[data-mgmetric]').forEach(function(btn){ btn.onclick=function(){ G_SC.metric=btn.getAttribute('data-mgmetric'); gScRenderAll(root); }; });
-    // Tooltips delegated on the stable nodes container — never reparent a node mid-hover.
     if(g&&tip){
       var svg=wrap.querySelector('.googl-sc-svg');
       function nodeOf(e){ return (e.target&&e.target.closest)?e.target.closest('.mg-node'):null; }
-      function show(node){ tip.innerHTML='<div class="mgt-h"><img src="'+node.getAttribute('data-logo')+'" alt="" onerror="this.style.display=\'none\'"><span class="mgt-n">'+node.getAttribute('data-name')+'</span></div>'+node.getAttribute('data-why'); tip.hidden=false; }
+      function show(node){ tip.innerHTML='<div class="mgt-h"><img src="'+node.getAttribute('data-logo')+'" alt="" onerror="this.style.display=\'none\'"><span class="mgt-n">'+node.getAttribute('data-name')+'</span></div>'+node.getAttribute('data-why')+'<div class="mgt-m">'+node.getAttribute('data-read')+'</div>'; tip.hidden=false; }
       function move(e){ tip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; tip.style.top=(e.clientY+16)+'px'; }
       function hide(){ tip.hidden=true; }
       g.addEventListener('pointerover', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } });
@@ -263,22 +379,38 @@ function wireScatters(root){
       g.addEventListener('click', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } });
     }
   });
-  gScRenderAll(root); gScChipsAll(root); gScFetchCaps(root);
+  gScRenderAll(root); gScFetchCaps(root);
 }
 function wireScChips(root, wrap){
-  wrap.querySelectorAll('.googl-sc-chips .gsc-chip[data-sci]').forEach(function(ch){ ch.onclick=function(){ var i=+ch.getAttribute('data-sci'); if(G_SC.peers[i]){ G_SC.peers.splice(i,1); gScRenderAll(root); gScChipsAll(root); } }; });
+  wrap.querySelectorAll('.googl-sc-chips .asc-chip[data-sci]').forEach(function(ch){ ch.onclick=function(){ var i=+ch.getAttribute('data-sci'); if(G_SC.peers[i]){ G_SC.peers.splice(i,1); gScRenderAll(root); } }; });
   var addBtn=wrap.querySelector('.googl-sc-addbtn'), addIn=wrap.querySelector('.googl-sc-addtk');
-  if(addBtn&&addIn){ addBtn.onclick=function(){ var tk=(addIn.value||'').trim().toUpperCase(); if(!tk) return;
-    if(!G_SC.peers.some(function(p){ return p.tk===tk; })){
-      var seed=G_PEERS.filter(function(p){ return p.tk===tk; })[0];
-      if(seed){ var o={}; for(var k in seed) o[k]=seed[k]; o.on=true; G_SC.peers.push(o); }
-      else G_SC.peers.push({ tk:tk, n:tk, on:true, mc:100, peT:null,peF:null,evT:null,evF:null,gt:null,gf:null, why:'Added by ticker — live market cap only; no multiple on file, so it plots once one is available.' });
-    }
-    addIn.value=''; gScRenderAll(root); gScChipsAll(root); gLiveOne(root, tk); }; }
+  if(addBtn&&addIn){
+    addIn.onkeydown=function(e){ if(e.key==='Enter') addBtn.click(); };
+    addBtn.onclick=function(){ var tk=(addIn.value||'').trim().toUpperCase(); if(!tk) return;
+      if(!G_SC.peers.some(function(p){ return p.tk===tk; })){
+        var seed=G_PEERS.filter(function(p){ return p.tk===tk; })[0];   // re-adding a known peer restores its file data
+        if(seed){ var o={}; for(var k in seed) o[k]=seed[k]; o.on=true; G_SC.peers.push(o); }
+        else G_SC.peers.push({ tk:tk, n:tk, on:true, epsT:null, epsF:null, ebitdaT:null, ebitdaF:null, nd:null, gt:null, gf:null,
+          why:'Added by ticker — live market cap only; no reported figures on file, so it plots once they are added.' });
+      }
+      addIn.value=''; gScRenderAll(root); gLiveOne(root, tk); };
+  }
 }
-// Live market cap (Key Facts cell + peer bubbles) via Massive (api.liveQuote). Degrades gracefully.
-function gLiveOne(root, tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(res){ var q=res&&res.data?res.data:res; if(!q||q.marketCap==null) return; var mcB=q.marketCap/1e9; G_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; }); if(tk==='GOOGL'){ var el=root.querySelector('#googlMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live'; } if(tk==='GOOGL'&&q.price!=null){ SENS.price=q.price; renderSens(root); } gScRenderAll(root); }).catch(function(){}); }
 function gScFetchCaps(root){ if(G_SC._capsFetched||!G_SC.peers) return; G_SC._capsFetched=true; G_SC.peers.forEach(function(p){ if(p.tk) gLiveOne(root, p.tk); }); }
+
+// Live quote via Massive (api.liveQuote). Market data is ALWAYS live — no seeded number is ever shown: the
+// Key Facts cell says "loading…" until the quote arrives and "unavailable" if it fails. The same quote feeds the
+// peer bubbles (price → P/E, market cap → bubble size, EV when Massive has one) and the old Sensitivity pane.
+function gLiveOne(root, tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(res){ var q=res&&res.data?res.data:res;
+    if(!q||q.marketCap==null){ if(tk==='GOOGL') gMcFail(root); return; }
+    var mcB=q.marketCap/1e9;
+    gScReset();
+    (G_SC.peers||[]).forEach(function(p){ if(p.tk===tk){ p.px=q.price; p.mc=mcB; p.ev=(q.ev!=null?q.ev/1e6:null); } });
+    if(tk==='GOOGL'){ var el=root.querySelector('#googlMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      if(q.price!=null){ SENS.price=q.price; renderSens(root); } }
+    gScRenderAll(root);
+  }).catch(function(){ if(tk==='GOOGL') gMcFail(root); }); }
+function gMcFail(root){ var el=root.querySelector('#googlMc'); if(el) el.textContent='live quote unavailable'; }
 
 function stdTimeline(){
   return '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
@@ -295,23 +427,30 @@ function stdKeyFacts(){
 function stdFourQuad(){
   return '<div class="q2">'+STD_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
 }
+function gmmRank(arr){ var o=arr.map(function(r,i){ return [r[1],i]; }).sort(function(a,b){ return b[0]-a[0]; }), rk=[];
+  o.forEach(function(x,j){ rk[x[1]]=Math.min(j+1,6); }); return rk; }
 function gmmBars(arr){
-  return '<div class="ov-mbars">'+arr.map(function(r){
+  var rk=gmmRank(arr);
+  return '<div class="ov-mbars gmm-neutral">'+arr.map(function(r,i){
+    var out=r[1]<10;
     return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+'</div>'+
-      '<div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+Math.max(r[1],1.2)+'%;background:'+r[4]+';">'+esc(r[2])+'</div></div>'+
+      '<div class="ov-mbar-track'+(out?' out':'')+'"><div class="ov-mbar-fill gmm-g'+rk[i]+'" style="width:'+Math.max(r[1],1.2)+'%">'+(out?'':esc(r[2]))+'</div>'+(out?'<span class="ov-mbar-outv">'+esc(r[2])+'</span>':'')+'</div>'+
       '<div class="ov-mbar-v">'+esc(r[3])+'</div></div>';
   }).join('')+'</div>';
 }
 function stdMoneyMap(){
-  var h='<div class="ov-diagram-cap" style="margin:0 0 8px">FY2025 total revenues <b>$402.8B (+15%)</b> — the same total, two ways: by <b>segment</b> or by <b>geography</b>. Both reconcile to the reported figure (hedging −$0.1B).</div>';
-  h+='<div class="mg-tog-row" style="display:flex;gap:14px;margin:2px 0 8px"><span class="mg-tog" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mu)">View: <span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px"><button type="button" class="mg-pill active" data-gmm="seg" style="border:none;background:var(--navy);color:#fff;font:inherit;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:999px;cursor:pointer">Segments</button><button type="button" class="mg-pill" data-gmm="geo" style="border:none;background:transparent;color:var(--mu);font:inherit;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:999px;cursor:pointer">Geography</button></span></span></div>';
+  var h='<div class="ov-diagram-cap gmm-cap-top">FY2025 revenues <b>$402.8B (+15%)</b> — the same total, two ways: by <b>segment</b> or by <b>geography</b> (where customers are based). Both reconcile to the reported figure, with hedging losses of −$0.1B.</div>';
+  h+='<div class="mg-tog-row"><span class="mg-tog">View: <span class="mg-seg">'+
+    '<button type="button" class="mg-pill active" data-gmm="seg">Segments</button>'+
+    '<button type="button" class="mg-pill" data-gmm="geo">Geography</button></span></span></div>';
   h+='<div class="gmm-view" data-gmm="seg">'+gmmBars(GMM_SEG)+'</div>';
   h+='<div class="gmm-view" data-gmm="geo" hidden>'+gmmBars(GMM_GEO)+'</div>';
-  h+='<div class="mm-defs acc-list" style="margin-top:12px">'+REV_DEFS.map(function(s){
-    var econ='<div class="acc" style="margin-top:8px"><button type="button" class="acc-h">The numbers <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+(s.econNote?'<div class="ave-subh-note" style="margin-top:6px">'+esc(s.econNote)+'</div>':'')+'</div></div>';
+  h+='<div class="mm-defs acc-list">'+REV_DEFS.map(function(s){
+    var econ='<div class="acc"><button type="button" class="acc-h">The numbers <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+(s.econNote?'<div class="ave-subh-note acc-note">'+esc(s.econNote)+'</div>':'')+'</div></div>';
     return '<div class="acc"><button type="button" class="acc-h">'+esc(s.seg)+'<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+s.desc+'</div>'+econ+'</div></div>';
   }).join('')+'</div>';
-  h+='<div class="ov-diagram-cap" style="margin-top:10px">FY2025: operating income <b>$129.0B (32% margin)</b> · net income <b>$132.2B</b> · diluted EPS <b>$10.81</b>. <span class="ave-subh-note">Source: Alphabet Q4/FY2025 earnings release (SEC). Services sub-splits derived from the quarterly releases — approximate.</span></div>';
+  h+='<div class="ov-diagram-cap gmm-cap-end">FY2025: operating income <b>$129.0B</b> (32.0% margin) · net income <b>$132.2B</b> · diluted EPS <b>$10.81</b>. Net income is above operating income because of <b>$29.8B of other income</b>, mostly gains on equity stakes in private companies. '+
+    '<span class="ave-subh-note">Source: Alphabet FY2025 Form 10-K (MD&A revenues by type; Note 2 Revenues; segment note; income statement). Geography is by customer address, as Note 2 reports it.</span></div>';
   return h;
 }
 function stdProducts(){
@@ -321,26 +460,24 @@ function stdProducts(){
         '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
     }).join('')+'</div>';
 }
-var OV_SOURCES='Sources — Alphabet Q4/FY2025 earnings release (SEC EDGAR, Ex-99.1) for all FY2025 revenue, segment, geographic, margin, EPS and headcount figures; Alphabet 10-K and IR for qualitative content and the product taxonomy; SEC filing history for filer status. Market cap and peer bubbles are live (Massive); peer multiples & growth are seeded approximations (mid-2026), directional. Forward figures are estimates, not company guidance.';
+// OV-F — the Overview's one source footer (the collapsibles carry none of their own; playbook §8, §22).
+var OV_SOURCES='Sources — Alphabet FY2025 Form 10-K (SEC EDGAR, filed Feb 5, 2026) for revenue, segment, geographic, margin, EPS and headcount figures and the business description; Q2 2026 Form 10-Q (filed Jul 23, 2026) for the Wiz closing and TPU system sales; Q4 2025 earnings release (8-K Ex. 99.1) for fourth-quarter Cloud revenue; Alphabet IR and product pages for qualitative content and history; SEC EDGAR for filer status. Market cap and peer multiples are live (Massive price ÷ figures from each company\'s latest 10-K, or Bloomberg consensus FY2026 as of Sep 2026). Forward figures are estimates, not company guidance.';
 function stdOverviewBody(c){
-  var h='<style>.stdkf{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--bdr);border-top:3px solid '+BRAND+';border-radius:12px;overflow:hidden;background:var(--w);margin:2px 0}'+
-    '.stdkf-cell{padding:11px 13px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
-    '.stdkf-cell:nth-child(5n){border-right:none}.stdkf-cell:nth-child(n+6){border-bottom:none}'+
-    '.stdkf-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:3px}'+
-    '.stdkf-v{font-size:12px;font-weight:700;color:var(--navy);line-height:1.3}'+
-    '@media(max-width:720px){.stdkf{grid-template-columns:repeat(2,1fr)}.stdkf-cell{border-right:none}}'+
+  var h='<style>'+
+    ''+
+    ''+
+    ''+
+    ''+
     '.ov-lede{margin:16px 0 6px;font-size:13px;line-height:1.6;color:var(--navy)}'+
-    '.q2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--bdr);border-radius:12px;overflow:hidden;background:var(--w);margin:4px 0}'+
-    '.q2-cell{padding:13px 15px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
-    '.q2-cell:nth-child(2n){border-right:none}.q2-cell:nth-child(n+3){border-bottom:none}'+
-    '.q2-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:'+BRAND+';margin-bottom:5px}'+
-    '.q2-v{font-size:12px;color:var(--navy);line-height:1.5}.q2-v b{font-weight:800}'+
-    '@media(max-width:600px){.q2{grid-template-columns:1fr}.q2-cell{border-right:none}.q2-cell:nth-child(n+2){border-bottom:1px solid var(--bdr)}.q2-cell:last-child{border-bottom:none}}'+
-    '.acc-list .acc{border:1px solid var(--bdr);border-radius:9px;margin-top:6px;overflow:hidden;background:var(--w)}'+
-    '.acc-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12px;font-weight:700;color:var(--navy);padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}'+
-    '.acc-h:hover{background:#EEF2F6}.acc-x{color:var(--mu);font-weight:800}.acc-b{padding:10px 12px}'+
-    '.famd{font-size:12px;color:var(--navy);line-height:1.55}.famd b{font-weight:800}'+
-    '.ov-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:11.5px}.ov-row:last-child{border-bottom:none}.ov-row-k{color:var(--mu);font-weight:600}.ov-row-v{color:var(--navy);font-weight:800}'+
+    ''+
+    ''+
+    ''+
+    ''+
+    '.acc-list '+
+    ''+
+    ''+
+    '.famd b{font-weight:800}'+
+    ''+
     '.stdp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}'+
     '.stdp-card{border:1px solid var(--bdr);border-radius:11px;padding:13px 14px;background:var(--w);cursor:pointer;transition:.14s}'+
     '.stdp-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px);border-color:'+BRAND+'}'+
@@ -2571,7 +2708,7 @@ function gBuildFin(){
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 function html(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring
-  var h='<div class="ov ov-googl" data-brand="GOOGL" style="--brand:'+BRAND+';--brand-soft:rgba(66,133,244,0.08)">';
+  var h='<div class="ov ov-googl" data-brand="GOOGL" style="--brand:var(--steel);--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">';
   h+=stdOverviewBody(c);
   h+='<div class="ov-modal-back" id="googlModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="googlModalX" aria-label="Close">×</button>'+
@@ -2579,46 +2716,45 @@ function html(c){
   h+='</div>';
   return h;
 }
+// Sub-tab block for one Deep Dive section: the first entry starts active and visible.
+function subtabs(group, list, hidden){
+  var h='<div class="dd-pane" data-dd="'+group+'"'+(hidden?' hidden':'')+'><div class="ovt-subtabs">';
+  list.forEach(function(s,i){ h+='<button type="button" class="ovt-subtab'+(i?'':' active')+'" data-ovst="'+s.k+'">'+esc(s.l)+'</button>'; });
+  h+='</div>';
+  list.forEach(function(s,i){ h+='<div class="ovt-subpane" data-ovst="'+s.k+'"'+(i?' hidden':'')+'>'+s.body+'</div>'; });
+  return h+'</div>';
+}
+// Deep Dive — the Amazon spine (docs/PROFILE_PLAYBOOK.md §5), set in F1 (2026-10-26). Until each unit is
+// rebuilt, the old panes sit at their approved B2 destination (docs/profiles/GOOGL.md §5); sub-tabs with
+// nothing to show yet (Top Line ▸ Segments/Other, Bottom Line ▸ Segments, Estimates, Historic Multiple) are
+// added when their unit is built (golden rule 5).
 function deepDiveHtml(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring
-  var h='<div class="ov ov-googl ov-googl-dd" data-brand="GOOGL" style="--brand:'+BRAND+';--brand-soft:rgba(66,133,244,0.08)">';
+  var h='<div class="ov ov-googl ov-googl-dd" data-brand="GOOGL" style="--brand:var(--steel);--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">';
   h+='<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
       '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
       '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
       '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+      '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
     '</div>';
-  h+='<div class="dd-pane" data-dd="topline">'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="segments">Segments</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="customers">Customers</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="tam">TAM</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="industry">Industry Analysis</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="segments">'+segmentsBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="customers" hidden>'+customersBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="tam" hidden>'+tamBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="industry" hidden>'+industryBody(c)+'</div>'+
-    '</div>';
-  h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="unit">Unit Economics</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="splc">Supply Chain</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="margins">Margins</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="unit">'+unitEconBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="splc" hidden>'+splcBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="margins" hidden>'+marginsBody(c)+'</div>'+
-    '</div>';
+  h+=subtabs('topline',[
+    // The shared segments engine (TL-GEN · TL-SEG · TL-OTH · TL-CUS). The old segmentsBody / customersBody panes
+    // are retired into it (B2 #9–14): their text lives in segments-data/googl.js; their data constants stay here.
+    { k:'segov', l:'General', body:segmentsOverviewHtml('GOOGL') },
+    { k:'segdrv', l:'Segments', body:segmentsHtml('GOOGL') },
+    { k:'segoth', l:'Other', body:segmentsOtherHtml('GOOGL') },
+    { k:'segcus', l:'Customers', body:segmentsCustomersHtml('GOOGL') },
+  ]);
+  h+=subtabs('bottomline',[
+    { k:'margins', l:'General', body:marginsBody(c)+unitEconBody(c)+financialsBody(c) },   // B2 #19–22, #29–31, #45
+    { k:'supplychain', l:'Supply Chain', body:splcBody(c) },   // B2 #23–28 → BL-SPLC
+  ], true);
   h+='<div class="dd-pane" data-dd="evolution" hidden>'+
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="earnings">'+
         ceIRButton()+
@@ -2632,39 +2768,28 @@ function deepDiveHtml(c){
         '</div>'+
         ceQPills()+
         '<div class="ce-phpane" data-cep="setup">'+ceSetupBody(c)+'</div>'+
-        '<div class="ce-phpane" data-cep="watch" hidden>'+ceWatchBody(c)+'</div>'+
+        // B2 #39: the Guidance commitments sit with the theme record until EV-NOTES turns them into hooks.
+        '<div class="ce-phpane" data-cep="watch" hidden>'+ceWatchBody(c)+'<div style="margin-top:22px">'+guidanceBody(c)+'</div></div>'+
         '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="results" hidden>'+(resultsHtml('GOOGL')||ceResultsPending('Results'))+'</div>'+
-      '<div class="ovt-subpane" data-ovst="estevo" hidden>'+(resultsEvoHtml('GOOGL')||ceResultsPending('Estimates'))+'</div>'+
-      '<div class="ovt-subpane" data-ovst="guidance" hidden>'+guidanceBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="strategy" hidden>'+strategyBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="timeline" hidden>'+timelineBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="results" hidden>'+resultsHtml('GOOGL')+'</div>'+
     '</div>';
-  h+='<div class="dd-pane" data-dd="valuation" hidden>'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="sensitivity">Sensitivity</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="capital">Capital Allocation</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="financials">Financials</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="sensitivity">'+sensBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="peers" hidden>'+peersBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="capital" hidden>'+capallocBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="financials" hidden>'+financialsBody(c)+'</div>'+
-    '</div>';
-  h+='<div class="dd-pane" data-dd="mgmt" hidden>'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="team">Executives & Board</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="ownership">Ownership</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="governance">Governance</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="track">Track Record</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="team">'+GOOGL_MGMT.body()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="ownership" hidden>'+ownershipBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="governance" hidden>'+govBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="track" hidden>'+trackBody(c)+'</div>'+
-    '</div>';
+  h+=subtabs('valuation',[
+    { k:'peers', l:'Peers', body:peersBody(c) },               // B2 #43 → VA-PEERS
+    { k:'sensitivity', l:'Sensitivity Analysis', body:sensBody(c) },   // B2 #42 → VA-SENS
+  ], true);
+  h+=subtabs('mgmt',[
+    { k:'team', l:'Executives & Board', body:GOOGL_MGMT.body() },
+    { k:'ownership', l:'Ownership', body:ownershipBody(c) },
+    { k:'governance', l:'Governance & SBC', body:govBody(c) },
+    { k:'track', l:'Track Record', body:trackBody(c) },
+  ], true);
+  h+=subtabs('misc',[
+    { k:'comp', l:'Competitive Position', body:industryBody(c) },      // B2 #17–18 → MISC-comp
+    { k:'tam', l:'TAM', body:tamBody(c) },                             // B2 #15–16 → MISC-tam
+    { k:'capex', l:'Capex & Depreciation', body:capallocBody(c) },     // B2 #44 → MISC-capex
+    { k:'strategy', l:'Strategy', body:strategyBody(c) },              // B2 #40 → MISC-strategy
+  ], true);
   h+='</div>';
   return h;
 }
@@ -2681,16 +2806,19 @@ function ceResultsPending(label){
 // ═══ Sub-tab + Deep Dive tab machinery (standardized contract) ══════════════════════════════════
 function buildSub(root, group, key){
   if(group==='topline'){
-    if(key==='segments') gBuildSeg();
-    else if(key==='industry') wireScatters(root);
+    if(key==='segdrv') requestAnimationFrame(function(){ initSegments(root, 'GOOGL'); });
+    else if(key==='segoth') requestAnimationFrame(function(){ initSegmentsOther(root, 'GOOGL'); });
+    else if(key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'GOOGL'); });
+    else requestAnimationFrame(function(){ initSegmentsOverview(root, 'GOOGL'); });
   } else if(group==='bottomline'){
-    if(key==='margins'){ gBuildMargin(); gBuildCloudM(); }
+    if(key==='margins'){ gBuildMargin(); gBuildCloudM(); gBuildFin(); }
   } else if(group==='valuation'){
     if(key==='sensitivity') renderSens(root);
-    else if(key==='capital') gBuildCap();
-    else if(key==='financials') gBuildFin();
   } else if(group==='mgmt'){
     if(key==='team') GOOGL_MGMT.init(root);
+  } else if(group==='misc'){
+    if(key==='comp') wireScatters(root);
+    else if(key==='capex') gBuildCap();
   } else if(group==='evolution'){
     // The Setup's track-record charts. Only build when Earnings is the visible subpane AND the
     // Setup phase is the active one — Chart.js needs a non-null offsetParent.
@@ -2705,7 +2833,6 @@ function buildSub(root, group, key){
     // (beside the Setup chart) re-establishes its dataset and wires the right wrap.
     else if(key==='results') requestAnimationFrame(function(){
       initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'GOOGL'); });
-    else if(key==='estevo') requestAnimationFrame(function(){ initResultsEvo('GOOGL'); });
   }
 }
 // Tab switches hide a tall pane and show a shorter one, so the browser clamps scrollTop and the
@@ -2856,7 +2983,7 @@ function wireModal(root){
 function init(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
   wireDD(root);
-  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt'); wireCallEarnings(root); wireCeTrack(root); wireCeAnnual(root);
+  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt'); wireSubtabs(root,'misc'); wireCallEarnings(root); wireCeTrack(root); wireCeAnnual(root);
   wireModal(root);
   // Collapsible sections
   root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var cc=btn.parentElement; var open=cc.classList.toggle('open'); var b=cc.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }; });
@@ -2872,10 +2999,10 @@ function init(c){
     if(q) q.style.display=(v==='quarter')?'':'none';
   }; });
   // Money-map view toggle (Segments ⇄ Geography)
-  root.querySelectorAll('.mg-pill[data-gmm]').forEach(function(btn){ btn.onclick=function(){
+  root.querySelectorAll('.ov-googl .mg-pill[data-gmm]').forEach(function(btn){ btn.onclick=function(){
     var v=btn.getAttribute('data-gmm');
-    root.querySelectorAll('.mg-pill[data-gmm]').forEach(function(b){ var on=(b===btn); b.style.background=on?'var(--navy)':'transparent'; b.style.color=on?'#fff':'var(--mu)'; });
-    root.querySelectorAll('.gmm-view').forEach(function(p){ p.hidden=(p.getAttribute('data-gmm')!==v); });
+    root.querySelectorAll('.ov-googl .mg-pill[data-gmm]').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    root.querySelectorAll('.ov-googl .gmm-view').forEach(function(p){ p.hidden=(p.getAttribute('data-gmm')!==v); });
   }; });
   // Sensitivity sliders (Valuation ▸ Sensitivity)
   var se=root.querySelector('#gSensEbitda'), sm=root.querySelector('#gSensMult');

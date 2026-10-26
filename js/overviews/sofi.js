@@ -350,7 +350,7 @@ function sofiMoneyMap(){
   h += '<div class="acc"><button type="button" class="acc-h">The revenue lines <span class="acc-x">+</span></button><div class="acc-b" hidden>'+accRows(REV_LINES)+
        '<div class="ave-subh-note acc-note">The five lines add to the $3,613.4M of total net revenue. They are company-wide, not split by segment.</div></div></div>';
   h += '</div>';
-  h += '<div class="ov-diagram-cap gmm-cap-end">FY2025: income before income taxes <b>$525.9M</b> (14.6% margin) · net income <b>$481.3M</b> (13.3%). Net income is about flat versus FY2024 ($498.7M) because 2024 included a one-time income tax benefit from releasing a valuation allowance. '+
+  h += '<div class="ov-diagram-cap gmm-cap-end">FY2025: operating income <b>$525.9M</b> (14.6% margin) · net income <b>$481.3M</b> (13.3%). Net income is about flat versus FY2024 ($498.7M) because 2024 included a one-time income tax benefit from releasing a valuation allowance. '+
        '<span class="ave-subh-note">Source: SoFi FY2025 Form 10-K (MD&amp;A segment results and noninterest income table; Note on segments; Item 1).</span></div>';
   return h;
 }
@@ -1392,46 +1392,46 @@ function guidanceBody(c){
 // Pick a driver (LPB, Interest Income, …); its variables become sliders. Every
 // other line in the model is held at its FY2026E base, so the change flows
 // straight through to revenue → net income → EPS → the multiple. Each scenario
-// defines its variables, a revenue function, and a flow-through-to-pre-tax rate.
+// defines its variables, a revenue function, and a flow-through-to-operating-income rate.
 var SENS_BASE = {
   totalRevB: 5.3175, // FY2026E total net revenue, $B (Summit model, snapshot 2026-08-05, frozen)
   niM:       825.7,  // FY2026E adjusted net income, $M (same snapshot)
   shares:    1352.0, // diluted shares, M (2Q26 reported, weighted average)
   price:     null,   // live only (Massive via api.liveQuote); nothing seeded, so P/E and implied price wait for it
-  taxRate:   0.22    // tax on incremental pre-tax income: SoFi FY2026 EPS guide uses 22% (Q2 2026 call)
+  taxRate:   0.22    // tax on incremental operating income: SoFi FY2026 EPS guide uses 22% (Q2 2026 call)
 };
 SENS_BASE.baseEps = SENS_BASE.niM / SENS_BASE.shares;     // base EPS
 SENS_BASE.basePe  = null;                                 // base fwd P/E: fixed at the first live price, then held as the reference multiple
 
 // Each scenario: vars (sliders), rev(v) → driver revenue $M, flow = fraction of
-// incremental driver revenue that reaches pre-tax income, eq(v,rev) → equation line.
+// incremental driver revenue that reaches operating income, eq(v,rev) → equation line.
 var SENS_SCEN = {
   lpb: {
     label:'LPB', title:'LPB Sensitivity — origination × take rate', driver:'LPB revenue', flow:1.0,
-    intro:'The two levers behind SoFi\'s Loan Platform Business: annual origination volume and the take rate (the fee SoFi earns per dollar originated). LPB revenue = origination × take rate. LPB is capital-light, so incremental revenue flows straight to pre-tax income.',
+    intro:'The two levers behind SoFi\'s Loan Platform Business: annual origination volume and the take rate (the fee SoFi earns per dollar originated). LPB revenue = origination × take rate. LPB is capital-light, so incremental revenue flows straight to operating income.',
     vars:[
       { id:'origB',   label:'LPB origination (annual)',      min:2,   max:50,  step:0.5, base:22.0, unit:'$B', dec:1 },
       { id:'takePct', label:'Take rate (origination fee)',    min:1.0, max:9.0, step:0.1, base:5.0,  unit:'%',  dec:1 }
     ],
     rev:function(v){ return v.origB * 1000 * v.takePct / 100; },
     eq:function(v, rev){ return '$'+v.origB.toFixed(1)+'B origination &nbsp;×&nbsp; '+v.takePct.toFixed(1)+'% take rate &nbsp;=&nbsp; <b>$'+Math.round(rev).toLocaleString()+'M</b> LPB revenue'; },
-    note:'Base case (FY2026E, Summit model, snapshot 2026-08-05): $22.0B personal-loan platform origination × 5.0% take = about $1,100M LPB revenue, inside $5.32B total net revenue. LPB is capital-light, so incremental LPB revenue flows 100% to pre-tax and is taxed at 22%.'
+    note:'Base case (FY2026E, Summit model, snapshot 2026-08-05): $22.0B personal-loan platform origination × 5.0% take = about $1,100M LPB revenue, inside $5.32B total net revenue. LPB is capital-light, so incremental LPB revenue flows to operating income and is taxed at 22%.'
   },
   ii: {
     label:'Interest Income', title:'Net interest income — NIM × earning assets', driver:'Net interest income', flow:1.0,
-    intro:'The two levers behind net interest income: the average rate SoFi nets on its balance sheet (net interest margin) and the size of its interest-earning assets (the loan book plus cash and investments). Net interest income = earning assets × NIM. It is already net of funding cost, so it flows to pre-tax income.',
+    intro:'The two levers behind net interest income: the average rate SoFi nets on its balance sheet (net interest margin) and the size of its interest-earning assets (the loan book plus cash and investments). Net interest income = earning assets × NIM. It is already net of funding cost, so it flows to operating income income.',
     vars:[
       { id:'nimPct', label:'Net interest margin (avg rate kept on earning assets)', min:3.0, max:9.0, step:0.05, base:5.98, unit:'%',  dec:2 },
       { id:'ieaB',   label:'Interest-earning assets (loan book + cash & investments)', min:25, max:90, step:0.5,  base:52.1, unit:'$B', dec:1 }
     ],
     rev:function(v){ return v.ieaB * 1000 * v.nimPct / 100; },
     eq:function(v, rev){ return '$'+v.ieaB.toFixed(1)+'B earning assets &nbsp;×&nbsp; '+v.nimPct.toFixed(2)+'% NIM &nbsp;=&nbsp; <b>$'+Math.round(rev).toLocaleString()+'M</b> net interest income'; },
-    note:'Base case (FY2026E, Summit model, snapshot 2026-08-05): net interest income of about $3.1B, shown as $52.1B of interest-earning assets × the 5.98% net interest margin SoFi reported in 2Q26 (the model carries no FY2026 earning-asset row, so the asset base is backed out), inside $5.32B total net revenue. The NIM already nets out funding cost, so incremental net interest income flows to pre-tax and is taxed at 25% (credit provisions on a bigger book are not separately modeled).'
+    note:'Base case (FY2026E, Summit model, snapshot 2026-08-05): net interest income of about $3.1B, shown as $52.1B of interest-earning assets × the 5.98% net interest margin SoFi reported in 2Q26 (the model carries no FY2026 earning-asset row, so the asset base is backed out), inside $5.32B total net revenue. The NIM already nets out funding cost, so incremental net interest income flows to operating income and is taxed at 25% (credit provisions on a bigger book are not separately modeled).'
   }
 };
 var SENS_ORDER = ['lpb','ii'];
 var _sensScen = 'lpb';
-var SENS_FOOT = 'Single-driver sensitivity: the selected variables move while every other line in the model is held at its FY2026E base (total net revenue $5.32B, adjusted net income $826M, 1,352M diluted shares, 22% tax). Incremental driver revenue flows to pre-tax income at the stated rate and is taxed; the share count is held fixed. The forward P/E and the implied price need the live price (nothing is seeded): the base multiple is fixed at the first live price and held constant for the implied price. This is a back-of-envelope sensitivity, not a re-solved model. Base values from the Summit model (snapshot 2026-08-05, frozen), the 2Q26 call and 10-Q.';
+var SENS_FOOT = 'Single-driver sensitivity: the selected variables move while every other line in the model is held at its FY2026E base (total net revenue $5.32B, adjusted net income $826M, 1,352M diluted shares, 22% tax). Incremental driver revenue flows to operating income income at the stated rate and is taxed; the share count is held fixed. The forward P/E and the implied price need the live price (nothing is seeded): the base multiple is fixed at the first live price and held constant for the implied price. This is a back-of-envelope sensitivity, not a re-solved model. Base values from the Summit model (snapshot 2026-08-05, frozen), the 2Q26 call and 10-Q.';
 
 function sensVarsBase(scen){ var v = {}; scen.vars.forEach(function(x){ v[x.id] = x.base; }); return v; }
 

@@ -1,7 +1,7 @@
 // overviews/sofi-ce-data.js — the DATA behind SoFi's Evolution ▸ Earnings (the rendering is ./sofi-ce.js).
 //
 //   SOFI_CE_CONS — the estimate grid and "The print" cards, rebuilt at load from js/results-data/sofi.js (actuals,
-//     Bloomberg consensus and the estMatrix vintages; BBG_CONSENSUS.txt snapshots May 2022 → Oct 26 2026).
+//     Bloomberg consensus and the estMatrix vintages; BBG_CONSENSUS.txt snapshots May 2022 → Aug 3 2026).
 //   SOFI_CALL_EARNINGS — per quarter, newest first: setup (notes per line), results and the call. Transcripts:
 //     docs/calls/SOFI.md (verbatim, Q4 2023 → Q2 2026, supplied by the analyst; Quartr is not used).
 //
@@ -81,14 +81,14 @@ function ceSummitUs(p){
 }
 
 export var SOFI_CALL_EARNINGS = { ticker:'SOFI', quarters:[
-  // ── UPCOMING: Q3 2026 (quarter ended Sep 30 2026). Consensus = the Bloomberg snapshot of Oct 26 2026 (last reported quarter
+  // ── UPCOMING: Q3 2026 (quarter ended Sep 30 2026). Consensus = the Bloomberg snapshot of Aug 3 2026 (last reported quarter
   // 2Q26, so its fq+1 is this quarter). Summit = the 2026-08-05 snapshot, frozen in js/results-data/sofi.js. Guidance: SoFi
   // gave full-year 2026 guidance on the Jul 29 2026 call (adjusted net revenue $4.75–4.85B, adjusted EBITDA about $1.6B,
   // adjusted net income about $825M, EPS about $0.60) and no discrete 3Q26 guide.
   { q:'Q3 2026', status:'upcoming', date:'quarter ended Sep 30 2026 (not yet reported in the call file)',
     setup:{
-      source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-10-26 · Summit DCF model — snapshot 2026-08-05, frozen · guidance: Q2 2026 call (Jul 29 2026), full year only',
-      asOf:'2026-10-26',
+      source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-08-03 · Summit DCF model — snapshot 2026-08-05, frozen · guidance: Q2 2026 call (Jul 29 2026), full year only',
+      asOf:'2026-08-03',
       notes:{
         'Revenue':{ t:'No discrete 3Q26 guide; FY26 adjusted revenue guided $4.75–4.85B', h:'<p>Full-year 2026 guidance on the Jul 29 call: adjusted net revenue of $4.75 billion to $4.85 billion, about 32% to 35% growth, raised from about 30%. Revenue on this grid is GAAP total net revenue, which differs from the adjusted measure SoFi guides (2Q26: GAAP $1,218.7M, adjusted $1,205.6M).</p>' },
         'Adjusted EBITDA':{ t:'FY26 guided at about $1.6B', h:'<p>The call kept adjusted EBITDA at about $1.6 billion for 2026, a margin of about 33% to 34%. Through 2Q26 the company had reported $697.7M, so the second half implies about $0.9B.</p>' },

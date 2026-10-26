@@ -1,5 +1,5 @@
 {
-  "_note": "Config for emit_summit_matrix.py - the SUMMIT side of estMatrix for SOFI (the model's own estimates per snapshot, USD millions). The consensus side is map_sofi.json. Written Oct 26 2026 for the SOFI profile (docs/profiles/SOFI.md). The model has no EPS row, so `eps` has no Summit series.",
+  "_note": "Config for emit_summit_matrix.py - the SUMMIT side of estMatrix for SOFI (the model's own estimates per snapshot, USD millions). The consensus side is map_sofi.json. Written Oct 26 2026 for the SOFI profile (docs/profiles/SOFI.md). The model has no EPS row: Summit EPS is EARNINGS / SHARES, computed in mkresults.py. prefer_source is DEFAULT before SEGM: OP_INCOME carries both and the SEGM annual (2026: 1,493.8) is a segment build-up that does not tie to the model Operating Income row (1,021.5).",
   "metrics": {
     "rev": "SEG_REVENUE",
     "nie": "NIE",
@@ -90,8 +90,8 @@
     ]
   },
   "prefer_source": [
-    "SEGM",
-    "DEFAULT"
+    "DEFAULT",
+    "SEGM"
   ],
   "axis": {
     "q": [

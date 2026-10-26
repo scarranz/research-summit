@@ -14,8 +14,8 @@ var BRAND2 = soTok('--navy', '#1E2733');   // Summit navy (token), for the profi
 function soMcCell(){}   // the Key Facts market-cap cell is filled by sofi.js (OV-1)
 
 var SO_PEERS = [
-  { tk:'SOFI', n:'SoFi', hl:true, epsT:0.39, epsF:0.5967, ebitdaT:null, ebitdaF:null, nd:null, gt:35.1, gf:32.4,
-    src:'10-K FY2025; forward: Bloomberg consensus FY2026, Oct 26 2026',
+  { tk:'SOFI', n:'SoFi', hl:true, epsT:0.39, epsF:0.6014, ebitdaT:null, ebitdaF:null, nd:null, gt:35.1, gf:30.4,
+    src:'10-K FY2025; forward: Bloomberg consensus FY2026, Aug 3 2026',
     why:'The profile company: a digital bank that lends, runs everyday banking and investing, and sells technology to other banks.' },
   { tk:'HOOD', n:'Robinhood', epsT:2.05, epsF:null, ebitdaT:null, ebitdaF:null, nd:null, gt:51.6, gf:null,
     src:'10-K FY2025 (SEC EDGAR XBRL; the feed carries the 10-K/A filed Feb 20 2026)',
@@ -272,7 +272,7 @@ function soScTableOne(wrap){
 function soValuationPeersBody(){
   return '<p class="ov-lede">The same peer map as the Overview, with the numbers behind it. Multiples use live prices.</p>'+
     soStdPeerScatter('dd')+
-    '<div class="ov-foot">Sources — denominators from each company\'s latest annual report on SEC EDGAR (Robinhood, Schwab, Interactive Brokers and Upstart FY2025; Affirm FY2026, year ended Jun 30 2026); forward = Bloomberg consensus FY2026 (as of Oct 26 2026) for SoFi only. Price, market cap and EV are live (Massive). EBITDA = operating income + D&A and is not meaningful for brokers, so HOOD, SCHW and IBKR plot on P/E only. Affirm\'s FY2026 net income includes a $1.44B income tax benefit, so its P/E is not shown. Nu is not mapped.</div>';
+    '<div class="ov-foot">Sources — denominators from each company\'s latest annual report on SEC EDGAR (Robinhood, Schwab, Interactive Brokers and Upstart FY2025; Affirm FY2026, year ended Jun 30 2026); forward = Bloomberg consensus FY2026 (as of Aug 3 2026) for SoFi only. Price, market cap and EV are live (Massive). EBITDA = operating income + D&A and is not meaningful for brokers, so HOOD, SCHW and IBKR plot on P/E only. Affirm\'s FY2026 net income includes a $1.44B income tax benefit, so its P/E is not shown. Nu is not mapped.</div>';
 }
 
 export { soStdPeerScatter, soWireScatters, soScRenderAll, soValuationPeersBody };

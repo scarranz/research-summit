@@ -199,13 +199,13 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
 | VA-PEERS | Valuation ▸ Peers | 👀 | 2026-10-26 | | | mapa + tabla de números; mismo estado que el Overview |
-| VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
-| VA-SENS | Valuation ▸ Sensitivity Analysis | ⬜ | | | | |
+| VA-TM | Valuation ▸ Target Multiple / PEG | ⏭️ | 2026-10-26 | | | Summit no tiene valuación para SOFI (`get_valuation_history`: no_valuations_for_ticker); se reabre cuando el modelo traiga múltiplo y precio objetivo |
+| VA-SENS | Valuation ▸ Sensitivity Analysis | 👀 | 2026-10-26 | | | diseño propio de SoFi (LPB e interés neto), base del snapshot 2026-08-05, precio solo en vivo |
 | MG-TEAM | Management ▸ Executives & Board | 👀 | 2026-10-26 | | | 10 ejecutivos + 9 consejeros del perfil viejo, marcados "seeded, dated" |
 | MG-OWN | Management ▸ Ownership | ⬜ | | | | |
 | MG-GOV | Management ▸ Governance & SBC | ⬜ | | | | |
 | MG-TRACK | Management ▸ Track Record | ⬜ | | | | |
-| MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab) | ⬜ | | | | aquí caerán Members, Loan Platform, Tech Platform, FICO, capital… |
+| MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab) | 👀 | 2026-10-26 | | | 5 sub-tabs: Strategy, Members, Rule of 40, Capital, Sum of the Parts |
 | F-FINAL | Cierre y conciliación | ⬜ | | | | |
 
 ## 3. Decisiones del analista
@@ -487,3 +487,12 @@ playbook (candidata a podar, **solo con tu OK**).
 - Huecos declarados: 3Q25 y Lending 4Q25 no están en los filings disponibles (el de Lending de la llamada es ajustado, base distinta) y quedan vacíos; el modelo Summit no proyecta ingreso por segmento (DCF SOFI.xlsm, hoja Segments), así que no hay zona de forecast ni consenso.
 - TL-OTH ⏭️: el 10-K no desagrega ingresos por geografía ni hay otro corte con datos. TL-CUS ⏭️: sin export SPLC de SOFI en el repo (se buscó en `nvidia-map-reference/` y `robotics-research/`) ni cliente de más de 10% (el 10-Q dice que ningún comprador de préstamos supera 10% del ingreso consolidado).
 - Autoauditoría: `node --check` ✔ · el HTML del Deep Dive genera las 5 secciones y los dos sub-tabs de Top Line ✔ · render visual no verificado por Claude.
+
+### 2026-10-26 · Reubicación del perfil viejo (B2/B3) y VA-SENS, MISC — 👀 EN REVISIÓN
+- **Qué cambió:** el Overview quedó con exactamente los bloques de la guía (Key Facts, lede, 2×2, How SoFi makes money, Products & platforms, Competitors, Timeline y el pie) y **sin la barra de 8 pestañas del perfil viejo**. Cada pieza vieja se movió a su destino sin borrarse; el código viejo sigue en `sofi.js`.
+- **Mapa de dónde quedó cada pieza:** `Financial Performance (FY24→FY25)` → Bottom Line ▸ General (abajo del motor); `interestBody` (cartera por producto, FICO, ratio de capital) y `feeBody` (Loan Platform Business, Technology Platform, Financial Services) → Top Line ▸ Segments, como dos colapsables bajo las gráficas (#14 #15 #16 #17 #18 #19 #20); series de peers del perfil viejo → Valuation ▸ Peers, colapsable bajo la tabla (#27); `sensBody` → Valuation ▸ Sensitivity Analysis (#24); SOTP → Misc ▸ Sum of the Parts (#25); `membersBody` → Misc ▸ Members (#11); `rule40Body` → Misc ▸ Rule of 40 (#12); `capRaisesBody` y `OFFERINGS` → Misc ▸ Capital (#13); flywheel, tailwinds y headwinds, objetivos y drivers, y la cita de la misión → Misc ▸ Strategy (#4 #6 #7 y la misión de OV-2); organigrama e insiders → Management ▸ Executives & Board, como colapsable (#28 #29 #30; Management queda para después, por instrucción de Dani); timeline viejo → OV-7 (#10); peers viejos → OV-6 (#9); `HOW_MONEY` y `SEGMENTS` siguen como constantes (#3).
+- **Deliberadamente retirado de la vista (el contenido sigue como constante/código):** Actuals vs Estimates (`aveBody`), Actuals vs Guidance (`guidanceBody`) y las revisiones entre snapshots (`EVO_*`), porque Results y Estimates los reemplazan con datos reales del MCP (decisión de Dani del 2026-10-26, B2 #21 y #23); el pane "Milestones" del viejo General, reemplazado por OV-7.
+- **Sensitivity re-basada (B2 #24):** ingreso FY2026E $5.32B y utilidad ajustada $826M del snapshot 2026-08-05 (congelado), 1,352M acciones diluidas del 2Q26, impuestos 22% (guía de la llamada del 29-jul). LPB base: $22.0B de originación × 5.0% de comisión = $1,100M (coincide con `LPB_REVENUE` 2026 del modelo); interés neto base: $52.1B de activos × 5.98% de margen de 2Q26 = $3.1B (el modelo no trae filas de activos 2026, se dice en la nota). **El precio sembrado de $17.57 se eliminó**: el P/E y el precio implícito esperan el precio en vivo y mientras tanto dicen "live price pending". SOTP usa la utilidad ajustada del mismo snapshot ($0.83B, $1.10B, $1.52B y $3.12B para 2026–2029). Las tarjetas de objetivos de Strategy se actualizaron a la guía del 29-jul ($4.75–4.85B de ingreso ajustado, EBITDA ≈ $1.6B, EPS ≈ $0.60 al 22%) y al plan de mediano plazo.
+- **Estilos:** las 22 reglas CSS de `.ov-sofi …` se extendieron a `:is(.ov-sofi, .ov-sofi-dd) …` para que los paneles viejos conserven su formato dentro del Deep Dive.
+- **Autoauditoría:** `node --check` ✔ · el Overview genera sin la barra vieja ni las secciones movidas ✔ · el Deep Dive genera las 6 secciones con los 5 sub-tabs de Misc, Sensitivity y los colapsables ✔ · `init` del Overview y del Deep Dive corren sin errores con un DOM de prueba ✔ · **no probado:** los gráficos de los paneles viejos dentro del Deep Dive (Chart.js) y el precio en vivo; lo ve Dani en el preview.
+- **VA-TM ⏭️:** Summit no tiene múltiplo ni precio objetivo para SOFI.

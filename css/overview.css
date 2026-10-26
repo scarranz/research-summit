@@ -21,7 +21,7 @@
   --brand-2: var(--steel);   /* Key Facts accent line = Summit steel, not SoFi blue (playbook §8) */
 }
 
-/* SoFi Deep Dive root: Summit steel accent, never SoFi blue (playbook §8 / §21); the legacy .ov-sofi tabs keep theirs. */
+/* SoFi Deep Dive root: Summit steel accent, never SoFi blue (playbook §8 / §21); the legacy :is(.ov-sofi, .ov-sofi-dd) tabs keep theirs. */
 .ov-sofi-dd {
   --brand: var(--steel);
   --brand-soft: rgba(62,90,130,0.08);
@@ -29,7 +29,7 @@
 }
 
 /* SoFi sub-tabs — refreshed segmented / pill style (scoped to SoFi only). */
-.ov-sofi .ovt-tabs {
+:is(.ov-sofi, .ov-sofi-dd) .ovt-tabs {
   display: inline-flex;
   gap: 4px;
   border-bottom: none;
@@ -39,7 +39,7 @@
   padding: 4px;
   margin: 0 0 22px;
 }
-.ov-sofi .ovt-tab {
+:is(.ov-sofi, .ov-sofi-dd) .ovt-tab {
   border: none;
   border-radius: 8px;
   text-transform: none;
@@ -51,24 +51,24 @@
   margin-bottom: 0;
   transition: background .15s, color .15s;
 }
-.ov-sofi .ovt-tab:hover { color: var(--navy); background: rgba(14,124,192,0.06); }
-.ov-sofi .ovt-tab.active {
+:is(.ov-sofi, .ov-sofi-dd) .ovt-tab:hover { color: var(--navy); background: rgba(14,124,192,0.06); }
+:is(.ov-sofi, .ov-sofi-dd) .ovt-tab.active {
   color: #fff;
   background: var(--brand);
   border-bottom: none;
   box-shadow: 0 1px 3px rgba(14,124,192,0.28);
 }
-.ov-sofi .ovt-tab.active:hover { color: #fff; }
+:is(.ov-sofi, .ov-sofi-dd) .ovt-tab.active:hover { color: #fff; }
 
 /* SoFi Fee Income — nested (second-level) sub-tabs. Lighter, rounded "ghost" pills
    so the hierarchy reads clearly below the filled level-1 segmented control. */
-.ov-sofi .ovf-tabs {
+:is(.ov-sofi, .ov-sofi-dd) .ovf-tabs {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 6px;
   margin: 2px 0 22px;
 }
-.ov-sofi .ovf-tab {
+:is(.ov-sofi, .ov-sofi-dd) .ovf-tab {
   border: 1px solid var(--bdr);
   background: var(--w);
   border-radius: 20px;
@@ -80,8 +80,8 @@
   cursor: pointer;
   transition: color .15s, background .15s, border-color .15s;
 }
-.ov-sofi .ovf-tab:hover { color: var(--navy); border-color: var(--brand); }
-.ov-sofi .ovf-tab.active {
+:is(.ov-sofi, .ov-sofi-dd) .ovf-tab:hover { color: var(--navy); border-color: var(--brand); }
+:is(.ov-sofi, .ov-sofi-dd) .ovf-tab.active {
   color: var(--brand);
   background: var(--brand-soft);
   border-color: var(--brand);
@@ -89,13 +89,13 @@
 .ovf-pane[hidden] { display: none; }
 
 /* SoFi Valuation — nested (second-level) sub-tabs. Same ghost-pill treatment as Fee Income. */
-.ov-sofi .ovv-tabs {
+:is(.ov-sofi, .ov-sofi-dd) .ovv-tabs {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 6px;
   margin: 2px 0 22px;
 }
-.ov-sofi .ovv-tab {
+:is(.ov-sofi, .ov-sofi-dd) .ovv-tab {
   border: 1px solid var(--bdr);
   background: var(--w);
   border-radius: 20px;
@@ -107,8 +107,8 @@
   cursor: pointer;
   transition: color .15s, background .15s, border-color .15s;
 }
-.ov-sofi .ovv-tab:hover { color: var(--navy); border-color: var(--brand); }
-.ov-sofi .ovv-tab.active {
+:is(.ov-sofi, .ov-sofi-dd) .ovv-tab:hover { color: var(--navy); border-color: var(--brand); }
+:is(.ov-sofi, .ov-sofi-dd) .ovv-tab.active {
   color: var(--brand);
   background: var(--brand-soft);
   border-color: var(--brand);
@@ -2118,25 +2118,25 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 .r40-q-c { font-size: 10.5px; font-weight: 700; color: var(--brand); margin-top: 8px; }
 
 /* ── General → nested sub-tabs (Milestones / Members / Rule of 40 / Capital Raises) ── */
-.ov-sofi .ovg-tabs { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 22px; }
-.ov-sofi .ovg-tab {
+:is(.ov-sofi, .ov-sofi-dd) .ovg-tabs { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 22px; }
+:is(.ov-sofi, .ov-sofi-dd) .ovg-tab {
   border: 1px solid var(--bdr); background: var(--w); border-radius: 20px; color: var(--mu);
   font: 600 12.5px 'Inter', sans-serif; padding: 7px 15px; cursor: pointer;
   transition: color .15s, background .15s, border-color .15s;
 }
-.ov-sofi .ovg-tab:hover { color: var(--navy); border-color: var(--brand); }
-.ov-sofi .ovg-tab.active { color: var(--brand); background: var(--brand-soft); border-color: var(--brand); }
+:is(.ov-sofi, .ov-sofi-dd) .ovg-tab:hover { color: var(--navy); border-color: var(--brand); }
+:is(.ov-sofi, .ov-sofi-dd) .ovg-tab.active { color: var(--brand); background: var(--brand-soft); border-color: var(--brand); }
 .ovg-pane[hidden] { display: none; }
 
 /* ── Management → nested sub-tabs (Organization Chart / Insider Activity) ── */
-.ov-sofi .ovm-tabs { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 22px; }
-.ov-sofi .ovm-tab {
+:is(.ov-sofi, .ov-sofi-dd) .ovm-tabs { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 22px; }
+:is(.ov-sofi, .ov-sofi-dd) .ovm-tab {
   border: 1px solid var(--bdr); background: var(--w); border-radius: 20px; color: var(--mu);
   font: 600 12.5px 'Inter', sans-serif; padding: 7px 15px; cursor: pointer;
   transition: color .15s, background .15s, border-color .15s;
 }
-.ov-sofi .ovm-tab:hover { color: var(--navy); border-color: var(--brand); }
-.ov-sofi .ovm-tab.active { color: var(--brand); background: var(--brand-soft); border-color: var(--brand); }
+:is(.ov-sofi, .ov-sofi-dd) .ovm-tab:hover { color: var(--navy); border-color: var(--brand); }
+:is(.ov-sofi, .ov-sofi-dd) .ovm-tab.active { color: var(--brand); background: var(--brand-soft); border-color: var(--brand); }
 .ovm-pane[hidden] { display: none; }
 
 /* ── Organization chart ── */

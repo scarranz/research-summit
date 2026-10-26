@@ -142,10 +142,10 @@ var HEADWINDS = [
 
 // Guidance / targets (FY2026 guide and 2028 long-term targets).
 var TARGETS = [
-  { v:'~$4.66B', l:'FY2026 adj. revenue',  s:'Guidance: +30% YoY (vs $3.59B in 2025).' },
-  { v:'~$1.6B',  l:'FY2026 adj. EBITDA',   s:'Guidance: +52% YoY · ~34% margin.' },
-  { v:'~$0.60',  l:'FY2026 diluted EPS',   s:'Guidance: +54% YoY (vs $0.39 in 2025).' },
-  { v:'~$7.9B',  l:'2028 adj. revenue tgt',s:'Long-term: ~30% revenue CAGR 2025–2028.' },
+  { v:'$4.75–4.85B', l:'FY2026 adj. revenue',  s:'Raised on the Jul 29 2026 call to about 32%–35% growth (from about 30%); $3.59B in 2025.' },
+  { v:'~$1.6B',  l:'FY2026 adj. EBITDA',   s:'Held at about $1.6B on the Jul 29 2026 call · about 33%–34% margin.' },
+  { v:'~$0.60',  l:'FY2026 diluted EPS',   s:'About $0.60 on a 22% tax rate (about $0.65 at the original mid-teens rate); $0.39 in 2025.' },
+  { v:'≥30% / yr',  l:'2025–2028 revenue CAGR',s:'Medium-term plan from the Jan 30 2026 call: at least 30% revenue CAGR and 38%–42% EPS CAGR.' },
 ];
 
 var DRIVERS = [
@@ -458,44 +458,38 @@ function renderMarketCap(root){
 
 function overviewBody(c){
   var h = '';
-
-  // 1 — OV-1 Key Facts + lede (the KPI tiles and FY note moved out, see KPIS)
-  h += sofiKeyFacts();
-  h += '<p class="ov-lede">'+esc(DESC)+'</p>';
-  h += sofiFourQuad();   // OV-3
-
-  // OV-4 — How SoFi makes money (replaces "How SoFi Makes Money" bullets and "Three Segments"; both constants
-  // stay below, unrendered, until their remaining facts find a home — B2 #3).
-  h += collapsible('How SoFi makes money', sofiMoneyMap(), false);
-  h += collapsible('Products & platforms', sofiProducts(), false);   // OV-5
-
-  // 5 — Financial performance (FY2024 vs FY2025)
-  h += sec('Financial Performance (FY2024 → FY2025)',
+  // Playbook §8: exactly these blocks, in this order (OV-1 … OV-7 + OV-F). Everything else the earlier profile showed here
+  // moved to its destination (build log §5): Financial Performance → Bottom Line, flywheel / winds / targets / mission → Misc.
+  h += sofiKeyFacts();                                                   // OV-1
+  h += '<p class="ov-lede">'+esc(DESC)+'</p>';                           // OV-2
+  h += sofiFourQuad();                                                   // OV-3
+  h += collapsible('How SoFi makes money', sofiMoneyMap(), false);       // OV-4
+  h += collapsible('Products & platforms', sofiProducts(), false);       // OV-5
+  h += collapsible('Competitors — the peer map', soStdPeerScatter('ov'), false);   // OV-6
+  h += collapsible('Timeline — how it became today\'s SoFi', sofiTimeline(), false);   // OV-7
+  h += '<div class="ov-foot">'+esc(OV_SOURCES)+'</div>';                 // OV-F
+  return h;
+}
+// Relocated from the old Overview (B2 #8): FY2024 → FY2025 financial performance, now under Bottom Line ▸ General.
+function financialsBlock(){
+  return sec('Financial Performance (FY2024 → FY2025)',
     '<table class="ov-table"><thead><tr><th>Metric</th><th>FY2024</th><th>FY2025</th></tr></thead><tbody>'+
     FINANCIALS.map(function(r){return '<tr><td class="ov-td-name">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>';}).join('')+
     '</tbody></table>'+
     '<div class="ov-callout">'+esc(FIN_NOTE)+'</div>'
   );
-
-  // 6 — The member / product flywheel
+}
+// Relocated from the old Overview (B2 #4, #6, #7): the flywheel, tailwinds and headwinds, guidance targets, growth drivers and
+// the mission quote, under Miscellaneous ▸ Strategy. The figures are the earlier profile's (Q1 2026 and company targets).
+function strategyBody(){
+  var h = '';
+  h += sec('Mission', '<p class="ov-lede">'+esc('SoFi states its mission as helping members “achieve financial independence to realize their ambitions” (FY2025 Form 10-K, Item 1).')+'</p>');
   h += sec('The Member & Product Flywheel', '<div class="ov-callout">'+bullets(ENGINE)+'</div>');
-
-  // 7 — OV-7 Timeline replaces the old "History & Milestones" section here (same list stays in General ▸ Milestones)
-  h += collapsible('Timeline — how it became today\'s SoFi', sofiTimeline(), false);
-
-  // 8 — OV-6 Competitors — the peer map (replaces the old "Peers & Competitive Landscape" table; the PEERS
-  // constant with its "what they offer / how SoFi differs" text stays in this file, B2 #9)
-  h += collapsible('Competitors — the peer map', soStdPeerScatter('ov'), false);
-
-  // 9 — Tailwinds / Headwinds
   h += sec('Tailwinds & Headwinds',
     '<div class="ov-grid2">'+
       '<div class="ov-wind ov-wind-up"><div class="ov-wind-h">Tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
       '<div class="ov-wind ov-wind-down"><div class="ov-wind-h">Headwinds</div>'+bullets(HEADWINDS)+'</div>'+
-    '</div>'
-  );
-
-  // 10 — Strategic focus: guidance/targets + growth drivers
+    '</div>');
   function statBox(b){ return '<div class="ov-target"><div class="ov-target-v">'+esc(b.v)+'</div><div class="ov-target-l">'+esc(b.l)+'</div><div class="ov-target-s">'+esc(b.s)+'</div></div>'; }
   h += sec('Strategic Focus',
     '<div class="ov-subh">Guidance & Targets</div>'+
@@ -503,17 +497,8 @@ function overviewBody(c){
     '<div class="ov-subh">Growth Drivers</div>'+
     '<div class="ov-drivers">'+DRIVERS.map(function(d){
       return '<div class="ov-driver"><div class="ov-driver-t">'+esc(d[0])+'</div><div class="ov-driver-d">'+esc(d[1])+'</div></div>';
-    }).join('')+'</div>'
-  );
-
-  // 11 — Leadership
-  h += sec('Leadership', LEADERSHIP.map(function(l){
-    return '<div class="ov-row"><div class="ov-row-k">'+esc(l[0])+'</div><div class="ov-row-v">'+esc(l[1])+'</div></div>';
-  }).join(''));
-
-  // 12 — Sources
-  h += '<div class="ov-foot">'+esc(OV_SOURCES)+'</div>';   // OV-F (the pre-playbook SOURCES text stays as a constant)
-
+    }).join('')+'</div>');
+  h += '<div class="ov-foot">Seeded from the earlier SoFi profile (company FY2025 results, Q1 2026 materials and company targets); not re-verified in this build.</div>';
   return h;
 }
 
@@ -1407,14 +1392,14 @@ function guidanceBody(c){
 // straight through to revenue → net income → EPS → the multiple. Each scenario
 // defines its variables, a revenue function, and a flow-through-to-pre-tax rate.
 var SENS_BASE = {
-  totalRevB: 4.66,  // FY2026E total net revenue, $B
-  niM:       828.7, // FY2026E net income, $M (model earnings)
-  shares:    1378.0,// diluted shares, M (Q1 2026 actual)
-  price:     17.57, // share price for the P/E line ($) — replaced by the live quote when available
-  taxRate:   0.25   // tax applied to incremental pre-tax income
+  totalRevB: 5.3175, // FY2026E total net revenue, $B (Summit model, snapshot 2026-08-05, frozen)
+  niM:       825.7,  // FY2026E adjusted net income, $M (same snapshot)
+  shares:    1352.0, // diluted shares, M (2Q26 reported, weighted average)
+  price:     null,   // live only (Massive via get-quote); nothing seeded, so P/E and implied price wait for it
+  taxRate:   0.22    // tax on incremental pre-tax income: SoFi FY2026 EPS guide uses 22% (Q2 2026 call)
 };
 SENS_BASE.baseEps = SENS_BASE.niM / SENS_BASE.shares;     // base EPS
-SENS_BASE.basePe  = SENS_BASE.price / SENS_BASE.baseEps;  // base fwd P/E (reference multiple, fixed at $17.57)
+SENS_BASE.basePe  = null;                                 // base fwd P/E: fixed at the first live price, then held as the reference multiple
 
 // Each scenario: vars (sliders), rev(v) → driver revenue $M, flow = fraction of
 // incremental driver revenue that reaches pre-tax income, eq(v,rev) → equation line.
@@ -1423,28 +1408,28 @@ var SENS_SCEN = {
     label:'LPB', title:'LPB Sensitivity — origination × take rate', driver:'LPB revenue', flow:1.0,
     intro:'The two levers behind SoFi\'s Loan Platform Business: annual origination volume and the take rate (the fee SoFi earns per dollar originated). LPB revenue = origination × take rate. LPB is capital-light, so incremental revenue flows straight to pre-tax income.',
     vars:[
-      { id:'origB',   label:'LPB origination (annual)',      min:2,   max:50,  step:0.5, base:16.5, unit:'$B', dec:1 },
+      { id:'origB',   label:'LPB origination (annual)',      min:2,   max:50,  step:0.5, base:22.0, unit:'$B', dec:1 },
       { id:'takePct', label:'Take rate (origination fee)',    min:1.0, max:9.0, step:0.1, base:5.0,  unit:'%',  dec:1 }
     ],
     rev:function(v){ return v.origB * 1000 * v.takePct / 100; },
     eq:function(v, rev){ return '$'+v.origB.toFixed(1)+'B origination &nbsp;×&nbsp; '+v.takePct.toFixed(1)+'% take rate &nbsp;=&nbsp; <b>$'+Math.round(rev).toLocaleString()+'M</b> LPB revenue'; },
-    note:'Base case (FY2026E, Summit model): $16.5B origination × 5.0% take = ~$825M LPB revenue, inside $4.66B total net revenue. LPB is capital-light, so incremental LPB revenue flows 100% to pre-tax and is taxed at 25%.'
+    note:'Base case (FY2026E, Summit model, snapshot 2026-08-05): $22.0B personal-loan platform origination × 5.0% take = about $1,100M LPB revenue, inside $5.32B total net revenue. LPB is capital-light, so incremental LPB revenue flows 100% to pre-tax and is taxed at 22%.'
   },
   ii: {
     label:'Interest Income', title:'Net interest income — NIM × earning assets', driver:'Net interest income', flow:1.0,
     intro:'The two levers behind net interest income: the average rate SoFi nets on its balance sheet (net interest margin) and the size of its interest-earning assets (the loan book plus cash and investments). Net interest income = earning assets × NIM. It is already net of funding cost, so it flows to pre-tax income.',
     vars:[
-      { id:'nimPct', label:'Net interest margin (avg rate kept on earning assets)', min:3.0, max:9.0, step:0.05, base:5.88, unit:'%',  dec:2 },
-      { id:'ieaB',   label:'Interest-earning assets (loan book + cash & investments)', min:25, max:90, step:0.5,  base:49.3, unit:'$B', dec:1 }
+      { id:'nimPct', label:'Net interest margin (avg rate kept on earning assets)', min:3.0, max:9.0, step:0.05, base:5.98, unit:'%',  dec:2 },
+      { id:'ieaB',   label:'Interest-earning assets (loan book + cash & investments)', min:25, max:90, step:0.5,  base:52.1, unit:'$B', dec:1 }
     ],
     rev:function(v){ return v.ieaB * 1000 * v.nimPct / 100; },
     eq:function(v, rev){ return '$'+v.ieaB.toFixed(1)+'B earning assets &nbsp;×&nbsp; '+v.nimPct.toFixed(2)+'% NIM &nbsp;=&nbsp; <b>$'+Math.round(rev).toLocaleString()+'M</b> net interest income'; },
-    note:'Base case (FY2026E, Summit DCF): $49.3B interest-earning assets × 5.88% net interest margin ≈ $2.9B net interest income, inside $4.66B total net revenue. The NIM already nets out funding cost, so incremental net interest income flows to pre-tax and is taxed at 25% (credit provisions on a bigger book are not separately modeled).'
+    note:'Base case (FY2026E, Summit model, snapshot 2026-08-05): net interest income of about $3.1B, shown as $52.1B of interest-earning assets × the 5.98% net interest margin SoFi reported in 2Q26 (the model carries no FY2026 earning-asset row, so the asset base is backed out), inside $5.32B total net revenue. The NIM already nets out funding cost, so incremental net interest income flows to pre-tax and is taxed at 25% (credit provisions on a bigger book are not separately modeled).'
   }
 };
 var SENS_ORDER = ['lpb','ii'];
 var _sensScen = 'lpb';
-var SENS_FOOT = 'Single-driver sensitivity: the selected variables move while every other line in the model is held at its FY2026E base (total net revenue $4.66B, net income $829M, 1,378M diluted shares, 25% tax). Incremental driver revenue flows to pre-tax income at the stated rate and is taxed; share count is held fixed and forward P/E uses the live price when available, else $17.57 (last close). The "implied price" holds the base ~29x multiple constant. This is a back-of-envelope sensitivity, not a re-solved model. Base values from the Summit DCF (snapshot 2026-05-13).';
+var SENS_FOOT = 'Single-driver sensitivity: the selected variables move while every other line in the model is held at its FY2026E base (total net revenue $5.32B, adjusted net income $826M, 1,352M diluted shares, 22% tax). Incremental driver revenue flows to pre-tax income at the stated rate and is taxed; the share count is held fixed. The forward P/E and the implied price need the live price (nothing is seeded): the base multiple is fixed at the first live price and held constant for the implied price. This is a back-of-envelope sensitivity, not a re-solved model. Base values from the Summit model (snapshot 2026-08-05, frozen), the 2Q26 call and 10-Q.';
 
 function sensVarsBase(scen){ var v = {}; scen.vars.forEach(function(x){ v[x.id] = x.base; }); return v; }
 
@@ -1472,9 +1457,9 @@ function sensBody(c){
   // Live price banner — feeds the Fwd P/E line. Falls back to the fixed price.
   h += '<div class="sens-live">'+
     '<span class="sens-live-tk">SOFI</span>'+
-    '<span class="sens-live-px" id="sensLivePx">$'+SENS_BASE.price.toFixed(2)+'</span>'+
+    '<span class="sens-live-px" id="sensLivePx">live price pending</span>'+
     '<span class="sens-live-ch" id="sensLiveCh"></span>'+
-    '<span class="sens-live-ts" id="sensLiveTs">price held fixed</span>'+
+    '<span class="sens-live-ts" id="sensLiveTs">waiting for the live price</span>'+
     '<button type="button" class="sens-live-rf" id="sensLiveRf">↻ Live</button>'+
   '</div>';
 
@@ -1490,6 +1475,11 @@ function sensBody(c){
   h += '<div class="ov-foot" id="sensNote"></div>';
   h += '<div class="ov-foot">'+esc(SENS_FOOT)+'</div>';
 
+  return h;
+}
+// Sum-of-the-Parts body (was the second half of the Sensitivity tab; relocated to Miscellaneous, B2 #25).
+function sotpBody(){
+  var h = '';
   // ── Sum-of-the-Parts: forward-earnings valuation ──
   h += '<div class="ov-sec-h evo-sec-h">Sum-of-the-Parts — forward-earnings valuation</div>';
   h += '<p class="ov-lede">'+esc(SOTP_INTRO)+'</p>';
@@ -1520,8 +1510,8 @@ function sensCompute(scen, v){
   var dNi     = dRev * scen.flow * (1 - SENS_BASE.taxRate);
   var niM     = SENS_BASE.niM + dNi;
   var eps     = niM / SENS_BASE.shares;
-  var pe      = SENS_BASE.price / eps;
-  var implied = SENS_BASE.basePe * eps; // price if the base multiple were held
+  var pe      = (SENS_BASE.price != null) ? SENS_BASE.price / eps : null;
+  var implied = (SENS_BASE.basePe != null) ? SENS_BASE.basePe * eps : null; // price if the base multiple were held
   return { baseRev:baseRev, newRev:newRev, dRev:dRev, totalM:totalM, niM:niM, dNi:dNi, eps:eps, pe:pe, implied:implied };
 }
 
@@ -1555,14 +1545,15 @@ function renderSens(){
       '</div><div class="ov-kpi-d '+(dir||'muted')+'">'+esc(sub)+'</div></div>';
   }
   var revPct = (r.totalM / (SENS_BASE.totalRevB*1000) - 1) * 100;
-  var prcPct = (r.implied / SENS_BASE.price - 1) * 100;
+  var havePx = (SENS_BASE.price != null && r.implied != null);
+  var prcPct = havePx ? (r.implied / SENS_BASE.price - 1) * 100 : null;
   box.innerHTML =
     tile(scen.driver, '$'+Math.round(r.newRev).toLocaleString()+'M', sensSigned(r.dRev, true)+'M vs base', r.dRev>=0?'up':'down') +
     tile('Total net revenue', '$'+(r.totalM/1000).toFixed(2)+'B', sensSigned(revPct)+'% vs base', revPct>=0?'up':'down') +
     tile('Net income', '$'+Math.round(r.niM).toLocaleString()+'M', sensSigned(r.dNi, true)+'M vs base', r.dNi>=0?'up':'down') +
     tile('EPS (FY2026E)', '$'+r.eps.toFixed(2), sensSigned(r.eps-SENS_BASE.baseEps)+' vs $'+SENS_BASE.baseEps.toFixed(2), (r.eps-SENS_BASE.baseEps)>=0?'up':'down') +
-    tile('Fwd P/E @ $'+SENS_BASE.price.toFixed(2), r.pe.toFixed(1)+'x', 'base '+SENS_BASE.basePe.toFixed(1)+'x', 'muted') +
-    tile('Implied price @ '+SENS_BASE.basePe.toFixed(1)+'x', '$'+r.implied.toFixed(2), sensSigned(prcPct)+'% vs $'+SENS_BASE.price.toFixed(2), prcPct>=0?'up':'down');
+    (havePx ? tile('Fwd P/E @ $'+SENS_BASE.price.toFixed(2), r.pe.toFixed(1)+'x', 'base '+SENS_BASE.basePe.toFixed(1)+'x', 'muted') : tile('Fwd P/E', '—', 'live price pending', 'muted')) +
+    (havePx ? tile('Implied price @ '+SENS_BASE.basePe.toFixed(1)+'x', '$'+r.implied.toFixed(2), sensSigned(prcPct)+'% vs $'+SENS_BASE.price.toFixed(2), prcPct>=0?'up':'down') : tile('Implied price', '—', 'live price pending', 'muted'));
 }
 
 function setupSensSliders(){
@@ -1598,7 +1589,7 @@ function fetchSofiQuote(){
 function renderLiveBanner(){
   var px = document.getElementById('sensLivePx');
   var ch = document.getElementById('sensLiveCh');
-  if (px) px.textContent = '$' + SENS_BASE.price.toFixed(2);
+  if (px) px.textContent = (SENS_BASE.price != null) ? '$' + SENS_BASE.price.toFixed(2) : 'live price pending';
   if (ch && _liveQuote && typeof _liveQuote.changePct === 'number'){
     var p = _liveQuote.changePct;
     ch.textContent = (p >= 0 ? '▲ +' : '▼ −') + Math.abs(p).toFixed(2) + '%';
@@ -1608,7 +1599,7 @@ function renderLiveBanner(){
 
 function applyLiveQuote(q){
   _liveQuote = q;
-  if (typeof q.price === 'number') SENS_BASE.price = q.price;
+  if (typeof q.price === 'number'){ SENS_BASE.price = q.price; if (SENS_BASE.basePe == null) SENS_BASE.basePe = q.price / SENS_BASE.baseEps; }
   renderLiveBanner();
   renderSens(); // recompute P/E and implied price off the live price
   renderSotp(); // SOTP upside is vs the live price too
@@ -1625,7 +1616,7 @@ function refreshLiveQuote(){
   var ts = document.getElementById('sensLiveTs');
   if (ts) ts.textContent = 'fetching live price…';
   fetchSofiQuote().then(applyLiveQuote).catch(function(){
-    if (ts) ts.textContent = 'live price unavailable here — using $' + SENS_BASE.price.toFixed(2) + ' (last close)';
+    if (ts) ts.textContent = 'live price unavailable here: the P/E and implied price wait for it';
   });
 }
 
@@ -1635,8 +1626,8 @@ function buildSensTab(){
   var rf = document.getElementById('sensLiveRf');
   if (rf) rf.onclick = refreshLiveQuote;
   refreshLiveQuote(); // try to pull a live price when the tab opens
-  requestAnimationFrame(function(){ buildSotpChart(); setupSotpInputs(); });
 }
+function buildSotpTab(){ requestAnimationFrame(function(){ buildSotpChart(); setupSotpInputs(); }); }
 
 // ─── Sensitivity → Sum-of-the-Parts (forward-earnings valuation) ─────────────
 // A forward-earnings SOTP. You stand on a valuation date and capitalise the NEXT
@@ -1644,10 +1635,10 @@ function buildSensTab(){
 // split those forward earnings into a fee share and an interest share, give each
 // its own P/E, and read off the implied share price. All inputs are typed.
 // Net income by fiscal year ($M), Summit DCF (snapshot 2026-05-13, adj. net income).
-var SOTP_NI = { '2026':1160, '2027':1292, '2028':1865, '2029':2160 };
+var SOTP_NI = { '2026':825.7, '2027':1095.0, '2028':1515.7, '2029':3116.3 };   // $M adjusted net income, Summit model snapshot 2026-08-05 (frozen)
 var SOTP_FYEARS = [2026, 2027, 2028, 2029]; // forward earnings years available to capitalise
 var SOTP_INTRO = 'A forward-earnings sum-of-the-parts. Pick a valuation date — you capitalise the next twelve months of earnings (standing at 31-Dec-2026 values FY2027). Split those forward earnings into a fee share and an interest share, then give each part its own P/E: fee income is capital-light and recurring, so it earns a richer multiple than net interest income. The implied price is the sum of the parts ÷ shares. Type any value — date, the two mix shares (they stay complementary), and the two P/E multiples.';
-var SOTP_NOTE = 'Method: forward net income = next-twelve-months net income from the valuation date (linear blend of the two straddling fiscal years; standing at a year-end gives the next full year). Equity value = (forward NI × fee%) × fee P/E + (forward NI × interest%) × interest P/E; implied price = value ÷ 1,378M shares; blended P/E = fee% × fee P/E + interest% × interest P/E. Net income by year from the Summit DCF (snapshot 2026-05-13, adjusted net income): FY2026 $1.16B, FY2027 $1.29B, FY2028 $1.87B, FY2029 $2.16B. The fee/interest split of EARNINGS is your assumption (the model does not report segment net income). Illustrative, not a target price.';
+var SOTP_NOTE = 'Method: forward net income = next-twelve-months net income from the valuation date (linear blend of the two straddling fiscal years; standing at a year-end gives the next full year). Equity value = (forward NI × fee%) × fee P/E + (forward NI × interest%) × interest P/E; implied price = value ÷ 1,352M shares; blended P/E = fee% × fee P/E + interest% × interest P/E. Net income by year from the Summit model (snapshot 2026-08-05, frozen, adjusted net income): FY2026 $0.83B, FY2027 $1.10B, FY2028 $1.52B, FY2029 $3.12B. The fee/interest split of EARNINGS is your assumption (the model does not report segment net income). Illustrative, not a target price.';
 var _sotpChart = null;
 
 function sotpField(id, label, type, attrs, val, unit){
@@ -1713,7 +1704,7 @@ function renderSotp(){
   var intPct = 100 - feePct;
   var feePE = sotpNum('sotpFeePE', 30), intPE = sotpNum('sotpIntPE', 12);
   var blendedPE = feePct/100 * feePE + intPct/100 * intPE;
-  var cur = SENS_BASE.price;
+  var cur = SENS_BASE.price;   // live only; null until the quote arrives
 
   // Chart: implied price by forward year, given the current mix & multiples.
   if (_sotpChart){
@@ -1733,7 +1724,7 @@ function renderSotp(){
   if (!fwd){ if (fwdEl) fwdEl.textContent = 'Enter a valuation date between 2026 and 2028.'; if (box) box.innerHTML = ''; return; }
 
   var E = fwd.ni, feeE = E*feePct/100, intE = E*intPct/100;
-  var value = feeE*feePE + intE*intPE, price = value/SENS_BASE.shares, up = (price/cur - 1) * 100;
+  var value = feeE*feePE + intE*intPE, price = value/SENS_BASE.shares, up = (cur != null) ? (price/cur - 1) * 100 : null;
 
   if (fwdEl) fwdEl.innerHTML = 'Standing at <b>'+esc(dateEl.value)+'</b> → forward earnings ≈ <b>'+esc(fwd.label)+'</b> · forward net income <b>$'+Math.round(E).toLocaleString()+'M</b>';
   if (eq) eq.innerHTML = feePct.toFixed(0)+'% fee × '+feePE.toFixed(1)+'x &nbsp;+&nbsp; '+intPct.toFixed(0)+'% interest × '+intPE.toFixed(1)+'x &nbsp;=&nbsp; <b>'+blendedPE.toFixed(1)+'x</b> blended P/E on forward earnings';
@@ -1743,7 +1734,7 @@ function renderSotp(){
       '</div><div class="ov-kpi-d '+(dir||'muted')+'">'+esc(sub)+'</div></div>';
   }
   if (box) box.innerHTML =
-    tile('Implied price', '$'+price.toFixed(2), sensSigned(up)+'% vs $'+cur.toFixed(2), up>=0?'up':'down') +
+    tile('Implied price', '$'+price.toFixed(2), (cur != null) ? sensSigned(up)+'% vs $'+cur.toFixed(2) : 'live price pending', (up != null && up >= 0) ? 'up' : 'muted') +
     tile('Blended P/E', blendedPE.toFixed(1)+'x', feePct.toFixed(0)+'% fee / '+intPct.toFixed(0)+'% interest', 'muted') +
     tile('Equity value', '$'+(value/1000).toFixed(1)+'B', 'on $'+(E/1000).toFixed(2)+'B fwd earnings', 'muted') +
     tile('Fee earnings', '$'+Math.round(feeE).toLocaleString()+'M', feePct.toFixed(0)+'% × '+feePE.toFixed(1)+'x', 'muted') +
@@ -2285,7 +2276,8 @@ function insOwnCell(name){
 function insOwnValCell(name){
   var o = INSIDER_OWN[name];
   if (!o || !o[0]) return '<span class="ins-dash">—</span>';
-  return '<span class="ins-own" title="'+insNum(o[0])+' shares × $'+SENS_BASE.price.toFixed(2)+' (as of '+o[1]+')">'+insUsd(o[0]*SENS_BASE.price)+'</span>';
+  if (SENS_BASE.price == null) return '<span class="ins-dash" title="'+insNum(o[0])+' shares (as of '+o[1]+'); value needs the live price">—</span>';
+  return '<span class="ins-own" title="'+insNum(o[0])+' shares × $'+SENS_BASE.price.toFixed(2)+' (live, shares as of '+o[1]+')">'+insUsd(o[0]*SENS_BASE.price)+'</span>';
 }
 
 var INS_GRP_LABEL = { M:'Management', B:'Board', I:'10% Owner' };
@@ -2473,7 +2465,7 @@ function insiderActivityBody(c){
   '</div>';
   h += '<div id="insTableWrap">'+insTxTableHTML()+'</div>';
 
-  h += '<div class="ov-foot">Source: SEC EDGAR Form 4 filings (CIK 0001818874), '+INSIDER_TX[INSIDER_TX.length-1][0]+' – '+INSIDER_TX[0][0]+'. Open-market buys (code P) and sells (code S) only; derivative transactions, grants, exercises and tax-withholding excluded. Value = shares × reported price per share. Ownership % = each insider\'s latest reported direct common shares ÷ '+(SHARES_OUT/1e9).toFixed(2)+'B shares outstanding (Q1 2026 10-Q); ownership value = those shares × $'+SENS_BASE.price.toFixed(2)+' (last close). Hover either figure for the as-of date — holders who have since exited or stopped filing (e.g. SoftBank, Wilkes) reflect their last report.</div>';
+  h += '<div class="ov-foot">Source: SEC EDGAR Form 4 filings (CIK 0001818874), '+INSIDER_TX[INSIDER_TX.length-1][0]+' – '+INSIDER_TX[0][0]+'. Open-market buys (code P) and sells (code S) only; derivative transactions, grants, exercises and tax-withholding excluded. Value = shares × reported price per share. Ownership % = each insider\'s latest reported direct common shares ÷ '+(SHARES_OUT/1e9).toFixed(2)+'B shares outstanding (Q1 2026 10-Q); ownership value = those shares × the live price (shown once the quote is available). Hover either figure for the as-of date — holders who have since exited or stopped filing (e.g. SoftBank, Wilkes) reflect their last report.</div>';
   return h;
 }
 
@@ -2713,26 +2705,7 @@ function managementBody(c){
 
 function html(c){
   var h = '<div class="ov ov-sofi" data-brand="SOFI">';
-  // Sub-tab bar
-  h += '<div class="ovt-tabs">'+
-    '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="members">General</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="interest">Interest Income</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="fees">Fee Income</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="management">Management</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="sensitivity">Sensitivity</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="peers">Peers</button>'+
-  '</div>';
-  // Panes
-  h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="members" hidden>'+generalBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="interest" hidden>'+interestBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="fees" hidden>'+feeBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="management" hidden>'+managementBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="valuation" hidden>'+valuationBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="sensitivity" hidden>'+sensBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="peers" hidden>'+peersBody(c)+'</div>';
+  h += overviewBody(c);
   h += '<div class="ov-modal-back" id="sofiModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="sofiModalX" aria-label="Close">×</button>'+
     '<div class="ov-modal-t" id="sofiModalT"></div><div class="ov-modal-b" id="sofiModalB"></div></div></div>';
@@ -3862,6 +3835,11 @@ function init(c){
   wireProductModal(root);   // OV-5: family cards open the product pop-up
   soWireScatters(root);     // OV-6: peer map (pills, chips, tooltips, live quotes)
   root.querySelectorAll('.acc-h').forEach(function(btn){ btn.onclick = function(){ var b = btn.nextElementSibling; if (!b) return; var open = b.hidden; b.hidden = !open; var x = btn.querySelector('.acc-x'); if (x) x.textContent = open ? '–' : '+'; }; });
+}
+// Wiring of the relocated earlier-profile panes (Lending detail, Fee income, Members, Rule of 40, Capital, Sensitivity, SOTP,
+// Peers trends, organization chart and insider activity); runs on the Deep Dive root.
+function legacyWire(root){
+  if (!root) return;
   // Idempotent wiring (init may run again when the Overview pane is re-activated).
   root.querySelectorAll('.ovt-tab').forEach(function(btn){
     btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
@@ -4000,11 +3978,6 @@ function init(c){
       if (open) requestAnimationFrame(buildLpbPie);
     };
   });
-  var active = root.querySelector('.ovt-tab.active');
-  var activeKey = active ? active.getAttribute('data-ovt') : '';
-  if (activeKey === 'members') requestAnimationFrame(buildMembersTab);
-  if (activeKey === 'interest') requestAnimationFrame(buildInterestTab);
-  if (activeKey === 'fees') requestAnimationFrame(buildFeeTab);
 }
 
 // ═══ Deep Dive (playbook §5 / §7.2) — built one sub-tab at a time; a section or sub-tab is added only when its unit is
@@ -4020,13 +3993,16 @@ function deepDiveHtml(c){
        '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
        '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
        '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
-       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button></div>';
+       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+       '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button></div>';
   h += ddSubtabs('topline', [
     { k:'segov', l:'General', body:resultsHtml('SOFI_TLG') },
-    { k:'segdrv', l:'Segments', body:resultsHtml('SOFI_TLS') }
+    { k:'segdrv', l:'Segments', body:resultsHtml('SOFI_TLS')+
+        collapsible('Lending detail — loan book, borrower credit and capital headroom (earlier profile, seeded)', interestBody(c), false)+
+        collapsible('Fee income — Loan Platform Business, Technology Platform and Financial Services (earlier profile, seeded)', feeBody(c), false) }
   ], false);
   h += ddSubtabs('bottomline', [
-    { k:'margins', l:'General', body:resultsHtml('SOFI_BL') }
+    { k:'margins', l:'General', body:resultsHtml('SOFI_BL')+financialsBlock() }
   ], true);
   h += ddSubtabs('evolution', [
     { k:'earnings', l:'Earnings', body:sofiCeHtml(c) },
@@ -4034,10 +4010,18 @@ function deepDiveHtml(c){
     { k:'estevo', l:'Estimates', body:resultsEvoHtml('SOFI') }
   ], true);
   h += ddSubtabs('valuation', [
-    { k:'peers', l:'Peers', body:soValuationPeersBody() }
+    { k:'peers', l:'Peers', body:soValuationPeersBody()+collapsible('Trends over time — peer series (earlier profile, seeded and dated)', peersBody(c), false) },
+    { k:'sensitivity', l:'Sensitivity Analysis', body:sensBody(c) }
   ], true);
   h += ddSubtabs('mgmt', [
-    { k:'team', l:'Executives & Board', body:SOFI_MGMT.body() }
+    { k:'team', l:'Executives & Board', body:SOFI_MGMT.body()+collapsible('Organization chart and insider activity (earlier profile, seeded)', managementBody(c), false) }
+  ], true);
+  h += ddSubtabs('misc', [
+    { k:'strategy', l:'Strategy', body:strategyBody() },
+    { k:'members', l:'Members', body:membersBody(c) },
+    { k:'rule40', l:'Rule of 40', body:rule40Body() },
+    { k:'capital', l:'Capital', body:capRaisesBody() },
+    { k:'sotp', l:'Sum of the Parts', body:sotpBody() }
   ], true);
   h += '<div class="ov-modal-back" id="sofiDdModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="sofiDdModalX" aria-label="Close">×</button>'+
@@ -4065,14 +4049,19 @@ function ddBuildSub(root, group, key){
   if (group === 'topline' && key === 'segov') requestAnimationFrame(function(){
     initResults(root.querySelector('.ovt-subpane[data-ovst="segov"] .rs-wrap'), 'SOFI_TLG'); });
   if (group === 'topline' && key === 'segdrv') requestAnimationFrame(function(){
-    initResults(root.querySelector('.ovt-subpane[data-ovst="segdrv"] .rs-wrap'), 'SOFI_TLS'); });
+    initResults(root.querySelector('.ovt-subpane[data-ovst="segdrv"] .rs-wrap'), 'SOFI_TLS'); buildInterestTab(); buildFeeTab(); });
   if (group === 'bottomline' && key === 'margins') requestAnimationFrame(function(){
     initResults(root.querySelector('.ovt-subpane[data-ovst="margins"] .rs-wrap'), 'SOFI_BL'); });
   if (group === 'evolution' && key === 'earnings') sofiCeBuild(root);
   if (group === 'evolution' && key === 'results') requestAnimationFrame(function(){
     initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'SOFI'); });
   if (group === 'evolution' && key === 'estevo') requestAnimationFrame(function(){ initResultsEvo('SOFI'); });
-  if (group === 'valuation' && key === 'peers') requestAnimationFrame(function(){ soWireScatters(root); });
+  if (group === 'valuation' && key === 'peers') requestAnimationFrame(function(){ soWireScatters(root); buildPeersTab(); });
+  if (group === 'valuation' && key === 'sensitivity') requestAnimationFrame(buildSensTab);
+  if (group === 'misc' && key === 'members') requestAnimationFrame(buildMembersTab);
+  if (group === 'misc' && key === 'rule40') requestAnimationFrame(buildRule40Chart);
+  if (group === 'misc' && key === 'capital') requestAnimationFrame(buildCapRaiseChart);
+  if (group === 'misc' && key === 'sotp') buildSotpTab();
   if (group === 'mgmt' && key === 'team') SOFI_MGMT.init(root);
 }
 function ddShowSub(root, group, key){
@@ -4089,10 +4078,12 @@ function ddShow(root, group){
 function deepDiveInit(c){
   var root = document.querySelector('.ov-sofi-dd'); if (!root) return;
   root.querySelectorAll('.dd-tab').forEach(function(b){ b.onclick = function(){ ddShow(root, b.getAttribute('data-dd')); }; });
-  ['topline', 'bottomline', 'evolution', 'valuation', 'mgmt'].forEach(function(g){
+  ['topline', 'bottomline', 'evolution', 'valuation', 'mgmt', 'misc'].forEach(function(g){
     var pane = root.querySelector('.dd-pane[data-dd="'+g+'"]'); if (!pane) return;
     pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.onclick = function(){ ddShowSub(root, g, b.getAttribute('data-ovst')); }; });
   });
+  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick = function(){ var c2 = btn.parentElement; var bd = c2.querySelector('.ov-collap-b'); var open = c2.classList.toggle('open'); if (bd) bd.hidden = !open; var ic = btn.querySelector('.ov-collap-ic'); if (ic) ic.textContent = open ? '▾' : '▸'; }; });
+  legacyWire(root);   // relocated earlier-profile panes
   sofiCeWire(root);   // Earnings: phase tabs, quarter pills, toggles, Notes
   wireDdModal(root);
   var g0 = root.querySelector('.dd-tab.active'); if (g0) ddShow(root, g0.getAttribute('data-dd'));

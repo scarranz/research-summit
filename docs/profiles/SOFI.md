@@ -165,7 +165,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | B1 | Inventario de lo que existe | 📝 | 2026-10-26 | | | §5 abajo (34 filas por función; conteo fino pendiente) |
 | B2 | Mapa de reubicación | 📝 | 2026-10-26 | | | decisiones de #12 #13 #21 #23 #24 #25 #27 #29 #30 tomadas; faltan #1 #2 #4 #6 #7 #15 #17 #26 #31 #32 #33 y la aprobación del mapa completo |
 | F0-SM | Mapa de métricas Summit | 📝 | 2026-10-26 | | | primera pasada; dudas ❓ abiertas |
-| F1 | Esqueleto + vista previa | ⬜ | | | | |
+| F1 | Esqueleto + vista previa | 👀 | 2026-10-26 | | e40d690 | modo B: sin cambio de código (el perfil viejo ya corre); preview de Netlify del PR #152 listo; el analista confirma que SOFI abre ahí. Ojo: las funciones del portal limitan CORS a research-summit.netlify.app y localhost:8000, así que precio/Massive/Fiscal.ai pueden salir como no disponibles en el preview |
 | OV-1 | Overview ▸ Key Facts | ⬜ | | | | |
 | OV-2 | Overview ▸ Descripción | ⬜ | | | | |
 | OV-3 | Overview ▸ Cuadrante 2×2 | ⬜ | | | | |
@@ -213,9 +213,12 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 - 2026-10-26 · general · Quartr ya no se consulta (sin acceso); las llamadas vienen de `SOFI_calls.txt` que subió Dani — Dani
 - 2026-10-26 · general · El PR #152 se mantiene en borrador, con aviso de no mergear, sólo para previsualizar desde otra computadora — Dani
 
+- 2026-10-26 · F0-SM · Los desajustes pequeños entre el modelo Summit y los filings (2Q26 −$21.7M de ingreso neto, `TP_REVENUE`) y entre el consenso BBG y el DCF (métricas "close to" pero no idénticas, margen bajo) no bloquean: son aproximadamente comparables — Dani
+- 2026-10-26 · general · El analista juzga el portal real abriendo el preview de Netlify del PR (https://deploy-preview-152--research-summit.netlify.app), no capturas ni harness; Claude no manda capturas salvo que se pidan — Dani
+
 ## 4. Excepciones aceptadas
 
-(ninguna todavía)
+- 2026-10-26 · F0-SM · Cuadre contra filings con 3 diferencias abiertas (ingreso neto 2Q26, `TP_REVENUE`, etiquetas opacas) — se aceptan como aproximadas, pero **la serie Summit de 2Q26 se marca "model actual, does not tie to 10-Q" donde se muestre** y `TP_REVENUE` no se rotula "segment revenue" — Dani
 
 ## 5. Mapa de reubicación / B1 — inventario de lo que existe
 

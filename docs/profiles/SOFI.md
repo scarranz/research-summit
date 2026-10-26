@@ -593,3 +593,4 @@ Dani: "no todas las métricas están en Evolution, en las cards y en los gráfic
 - **No incluidas, con razón:** ingreso y utilidad de contribución por segmento (solo consenso; Summit no proyecta segmentos — siguen en Top Line/Bottom Line ▸ Segments), servicing y valores de inversión (definiciones que no cuadran entre modelo y BBG o ceros en el modelo), préstamos garantizados promedio (la etiqueta SLB del modelo está duplicada: estudiantil y garantizados), cuentas de Technology Platform y originaciones LPB (solo Summit; ver Misc ▸ LPB). "Other noninterest income" no tiene serie de consenso en el archivo.
 - **Definiciones:** varios saldos de Summit (hipotecario, estudiantil, tarjeta) no tienen la misma definición que el unpaid principal / saldo promedio de BBG; cada nota de métrica lo dice.
 
+

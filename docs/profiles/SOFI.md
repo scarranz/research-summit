@@ -27,7 +27,7 @@ Revisado 2026-10-26. ✔ verificado hoy · ❓ por verificar.
 | Fuente | ¿Existe? | Detalle | Qué habilita | Qué queda fuera sin ella |
 |---|---|---|---|---|
 | Fila en `companies` | ✔ (el perfil ya abre hoy) | `SOFI: sofiOverview` en `js/overviews/index.js:33` | el perfil abre | — |
-| Filing anual / trimestral | ❓ | el perfil viejo cita 10-K FY2025 y 10-Q 1Q26. Hoy es 2026-10-26: habría 10-Q de 2Q26 y 3Q26 todavía sin publicar. Forma 10-K (empresa doméstica, calendario, USD) → verificar acc. en EDGAR | Overview, Top Line, textos verbatim | todo |
+| Filing anual / trimestral | ✔ | 10-K FY2025 (31-dic-2025) y 10-Q 2Q26 (30-jun-2026) en Drive (`Ad hoc info search\SOFI`). Forma 10-K (empresa doméstica, calendario, USD). Número de acceso EDGAR: por anotar | Overview, Top Line, textos verbatim, cuadre F0-SM | todo |
 | Año fiscal / moneda | ✔ (por el perfil viejo) | cierre 31 dic, USD. Sin ajustes de FX | — | — |
 | Summit DCF | ✔ (MCP autenticado 2026-10-26) | 3 snapshots: `2026-02-03`, `2026-04-29`, `2026-08-05`; 92 etiquetas, 23,298 hechos cada uno, USD millones. El último trae **2Q26 ya real** (llamada del 2026-07-29). **Ninguna valuación** (`get_valuation_history` → `no_valuations_for_ticker`). El perfil viejo citaba el snapshot `2026-05-13`, que **ya no existe** en el MCP | F0-SM, serie Summit, Estimates (3 snapshots, necesita ≥ 2 ✔) | Target Multiple sin múltiplo ni precio objetivo del modelo (⏭️ propuesto) |
 | Consenso BBG | ✔ (agregado 2026-10-26 por el analista) | `inspect_matrix.py SOFI`: 18 snapshots, 2022-05-15 → 2026-10-26. Core: Net Revenue, Non-Interest Expense, Adjusted EBITDA, Income Tax, Adjusted Net Income, Diluted Shares, Diluted EPS, D&A, SBC (+ Other Non-Op sin datos). 23 KPIs: miembros, originaciones PL/SL/HL, saldos, depósitos, deuda, Loan Platform Fees, líneas de opex y Provision for Credit Losses. Horizontes fq-4…fq+4, fy-2…fy+3 | `estMatrix.cons`, Setup, export de Bottom Line | ver dudas ❓ BBG abajo |
@@ -46,8 +46,7 @@ Revisado 2026-10-26. ✔ verificado hoy · ❓ por verificar.
 ## 1b. Mapa Summit (F0-SM)
 
 📝 **Primera pasada, 2026-10-26** — snapshot `2026-08-05` (source 14:50 UTC), moneda USD, escala millones, 92 etiquetas.
-**Pendiente:** cuadre contra el 10-K/10-Q (hoy sólo cuadra con el perfil viejo y por aritmética interna del modelo) y
-confirmación del autor del modelo en las ❓. El archivo `js/summit-map/sofi.js` todavía **no** está escrito (se genera al aprobar).
+**Cuadre contra 10-K / 10-Q hecho 2026-10-26 (ver abajo): 3 diferencias abiertas.** Falta la confirmación del autor del modelo en las ❓. El archivo `js/summit-map/sofi.js` todavía **no** está escrito (se genera al aprobar).
 
 **Cómo está armado el modelo (lo que el MCP no dice):**
 - Todas las etiquetas dicen `USD · millions · sum`, incluidas conteos, saldos, tasas y precios; la unidad real va abajo.
@@ -60,7 +59,7 @@ confirmación del autor del modelo en las ❓. El archivo `js/summit-map/sofi.js
 
 | Etiqueta MCP | Rol | Clave portal | Qué es, en una línea | Unidad real | Agregación | Cuadre / evidencia | Confianza |
 |---|---|---|---|---|---|---|---|
-| `SEG_REVENUE` | core | `rev` | Ingreso neto total (NII + no financiero) | USD M | suma | FY25 3,613 = perfil viejo ✔; 2Q26 = 788 + 409 ✔ | ⚠ falta 10-K |
+| `SEG_REVENUE` | core | `rev` | Ingreso neto total (NII + no financiero) | USD M | suma | FY25 3,613 = perfil viejo ✔; 2Q26 = 788 + 409 ✔ | ✔ FY25 · ✘ 2Q26 (−21.7) |
 | `REV` | core | — | Ingreso **bruto** (neto + gasto por intereses) | USD M | suma | 4,770 − 1,156 = 3,613 ✔ | ✔ (no usar como `rev`) |
 | `NIM_REVENUE` | segment | `nii` | Ingreso neto por intereses | USD M | suma | `II_REVENUE` + `IE_REVENUE` ✔ | ✔ |
 | `II_REVENUE` · `IE_REVENUE` · `LII_REVENUE` · `IEBIBD_REVENUE` · `IETD_REVENUE` | segment | `int.*` | Ingreso por intereses · gasto (negativo) · de préstamos · gasto de depósitos con interés · (todo 0) | USD M | suma | II 1,141 + IE −352 = 788 ✔ | ✔ · `IETD` ignore (0) |
@@ -98,6 +97,39 @@ confirmación del autor del modelo en las ❓. El archivo `js/summit-map/sofi.js
 | `REV_BBG_EST` · `EBITDA_BBG_EST` · `EARNINGS_BBG_EST` · `SHARES_BBG_EST` | consensus | `cons.*` | Consenso BBG embebido en el modelo (sólo FY25, `source=BBG`) | USD M | suma | FY25 3,560 / 1,037 / 460 / 1,231 | ⚠ sólo anual; se usa el workbook de consenso |
 
 **Resumen:** 92 etiquetas, todas incluidas arriba (agrupadas por familia). La clasificación por rol es provisional: se cuenta exacta al aprobar el mapa.
+
+### Cuadre del modelo contra los filings (2026-10-26)
+
+Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-jun-2026), ambos en
+`G:\My Drive\Summit\Docs\Extras\Team\DAA\Ad hoc info search\SOFI\`. Cifras en USD miles del filing → millones.
+
+| Concepto | Modelo (snapshot 2026-08-05) | Filing | Δ | |
+|---|---|---|---|---|
+| Ingreso neto GAAP FY25 | `SEG_REVENUE` 3,613 | 3,613.4 | 0 | ✔ |
+| Utilidad neta FY25 | `NET_INCOME_GAAP` 481.3 | 481.3 | 0 | ✔ |
+| Ingreso neto GAAP **2Q25** | 854.9 | 854.9 | 0 | ✔ |
+| Utilidad neta 2Q26 | `NET_INCOME_GAAP` 156.6 | 156.6 | 0 | ✔ |
+| Ingreso neto por intereses 2Q26 | `NIM_REVENUE` 788.2 | 788.2 | 0 | ✔ |
+| Ingreso por intereses 2Q26 / gasto 2Q26 | 1,141 / −352.3 | 1,140.5 / 352.3 | 0 | ✔ |
+| Adjusted EBITDA 2Q26 | 357.8 | 357.8 | 0 | ✔ |
+| Miembros 2Q26 | `MEMB` 15,810 mil | "más de 15.8 millones" | 0 | ✔ |
+| Cuentas habilitadas Tech Platform 2Q26 | `TPA` 134,800 mil | "135 millones" | redondeo | ✔ |
+| **Ingreso neto GAAP 2Q26** | `SEG_REVENUE` **1,197** | **1,218.7** (ajustado 1,205.6) | **−21.7** | ✘ |
+| Ingreso no financiero 2Q26 | `NII_REVENUE` 409 | 430.5 | −21.5 | ✘ (mismo origen) |
+| **Tech Platform ingreso 2Q26** | `TP_REVENUE` 50.5 | segmento 84.5 · menos fees intercompañía 27.8 = 56.7 | −6.2 vs neto de intercompañía | ✘ |
+| Tech Platform ingreso 2Q25 | 90.8 | segmento 109.8 · menos intercompañía 18.2 = 91.6 | −0.8 | ⚠ |
+| Tech Platform ingreso FY25 | 360.9 | segmento 450.2 · menos intercompañía 85.5 = 364.7 | −3.8 | ⚠ |
+
+**Lo que significa:**
+1. El 2Q26 "real" del modelo **no cuadra con el 10-Q** en ingreso neto (−$21.7M, 1.8%): ni con GAAP ni con el ajustado.
+   El modelo parece tener una cifra preliminar o de otra fecha para 2Q26. Hasta que el autor la confirme, las series
+   Summit de 2Q26 **no se muestran como real** (❓).
+2. `TP_REVENUE` es el ingreso del segmento **menos los fees intercompañía**, y aun así no cuadra al dólar. El perfil viejo
+   lo rotulaba "segment net revenue" ($360.9M en 2025); el filing da **$450.2M** para el segmento. Es un error de etiqueta
+   que no se copia al perfil nuevo (se muestra el ingreso reportado del segmento y, aparte, el externo).
+3. Las demás etiquetas que se pudieron cruzar (utilidad neta, NII, EBITDA ajustado, miembros, FY25) **sí cuadran al dólar**.
+
+**Quién responde:** autor del modelo (celda del .xlsm del 2Q26 y de `TP_REVENUE`).
 
 ### Dudas
 

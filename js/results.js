@@ -3375,8 +3375,9 @@ function wireResults(pane){
       var bk = blk.getAttribute('data-rsblock'), bst = rsSt(bk);
       if (ctl.hasAttribute('data-rsview')){
         bst.view = ctl.getAttribute('data-rsview');
-        bst.metric = null;                             // the metric list is per view
-        bst.win = null;                                // and so is the period axis
+        // the tracked line is KEPT across a Quarterly/Annual toggle (analyst, Oct 26 2026): rsMetric() falls back to the section
+        // default only when the new view does not carry that line
+        bst.win = null;                                // the period axis is per view
       }
       if (ctl.hasAttribute('data-rsmode')) bst.mode = ctl.getAttribute('data-rsmode');
       if (ctl.hasAttribute('data-rsgrow')) bst.growth = ctl.getAttribute('data-rsgrow');

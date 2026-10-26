@@ -15,6 +15,7 @@
 // identical; known gaps are logged in docs/profiles/SOFI.md §1b (2Q26 net revenue $21.7M low in the model).
 // Members are in THOUSANDS; money is US$ millions; EPS is US$.
 export var sofiResults = {
+  forwardQuarters: 2,   // two quarters past the last print (analyst rule Oct 22 2026, as SPOT): 3Q26 and 4Q26 after the 2Q26 print
   updated: 'Oct 2026',
   source: 'SoFi FY2025 Form 10-K and 2Q26 Form 10-Q (SEC EDGAR) for reported figures; Bloomberg consensus (BBG_CONSENSUS.txt + Consensus_Portal.xlsm, snapshots May 2022 to Oct 26 2026) for reported values since 2Q25 and the Street series; Summit DCF model, snapshots 2026-02-03, 2026-04-29 and 2026-08-05 (frozen, not live) for the model series and older actuals.',
   views: {
@@ -27,17 +28,9 @@ export var sofiResults = {
           act:    [644.995, 599.756, 697.121, 734.125, 771.759, 854.944, 961.6, 1025.051, 1100.368, 1218.676, null, null, null, null, null, null],
           summit: [646.238, 688.7092, 657.3023, 735.3361, 707.6762, 788.2007, 831.0365, 1009.795, 1020.8663, 1123.0166, 1207.4058, 1340.2345, 1594.054, 1719.7103, 1761.6503, 1877.1812],
           cons:   [566.5965, 579.5865, 628.3377, 671.1883, 740.6685, 802.5636, 879.2386, 992.2276, 1055.5772, 1129.5246, 1274.9066, 1330.563, 1373.752, 1494.3879, null, null],
-          guideLo: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          guideHi: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          note: 'GAAP total net revenue (net interest income plus noninterest income). Actuals tie to the 10-K / 10-Q; for the last five quarters and three fiscal years they are the Bloomberg reported values (2Q26 $1,218.7M, where the Summit model carries $1,123.0M pre-print). The Summit annual is the model headline revenue row (REV, DCF SOFI.xlsm, Aug 5 2026: FY2026 $4,845M, which already contains the first-half actuals); an earlier pull of the segment-build row read $5,317M and is not used. The model quarters for 2026 add to $4,692M because 1Q26 and 2Q26 are still the pre-print projections; the 2027 quarters ($6,953M) do not add to the 2027 annual ($6,280M), an open question for the model author. The Street annual is $4,782M against quarters that sum to $4,925M (~3%).' },
-        arev: { label: 'Adjusted net revenue', short: 'Adj. net revenue', group: 'Totals', unit: 'usdM',
-          periods: ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27', '4Q27'],
-          act:    [580.6, 597, 689.4, 739.1, 770.7, 858.2, 949.6, 1012.8, 1087.2, 1205.55, null, null, null, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo: [550, 555, 625, null, 725, 785, null, null, 1040, 1115, null, null, null, null, null, null],
           guideHi: [560, 565, 645, null, 745, 805, null, null, 1040, 1115, null, null, null, null, null, null],
-          note: 'Company non-GAAP measure (total net revenue excluding fair-value changes in servicing-rights and residual-interest assumptions); it is the revenue line SoFi guides. Not in the Summit model or the Bloomberg export, so it carries no Summit or Street series. Guidance is the range issued in the prior quarter\'s release (2Q26: "approximately $1.115 billion", point); the full-year bar is the last update (FY2026: $4.75B to $4.85B, Jul 29 2026, raised from about $4.655B; FY2025 actual $3,591M). Companion guidance for FY2026: adjusted EBITDA about $1.6B (33% to 34% margin), adjusted net income about $825M (about 17% margin), adjusted EPS about $0.60 at a 22% tax rate.' },
+          note: 'GAAP total net revenue (net interest income plus noninterest income). Actuals tie to the 10-K / 10-Q; for the last five quarters and three fiscal years they are the Bloomberg reported values (2Q26 $1,218.7M, where the Summit model carries $1,123.0M pre-print). The Summit annual is the model headline revenue row (REV, DCF SOFI.xlsm, Aug 5 2026: FY2026 $4,845M, which already contains the first-half actuals); an earlier pull of the segment-build row read $5,317M and is not used. The model quarters for 2026 add to $4,692M because 1Q26 and 2Q26 are still the pre-print projections; the 2027 quarters ($6,953M) do not add to the 2027 annual ($6,280M), an open question for the model author. The Street annual is $4,782M against quarters that sum to $4,925M (~3%). SoFi guides ADJUSTED net revenue (a non-GAAP measure that excludes fair-value changes in servicing-rights and residual-interest assumptions; 2Q26 $1,205.6M against $1,218.7M GAAP), and the guidance is drawn on this line: the gap is about 1% and accepted (analyst, Oct 26 2026). The quarterly band is the range issued in the prior quarter release (2Q26: approximately $1.115 billion); the full-year bar is the last update (FY2026: $4.75B to $4.85B, Jul 29 2026, raised from about $4.655B; FY2025 actual $3,591M adjusted). Companion FY2026 guidance: adjusted EBITDA about $1.6B (33% to 34% margin), adjusted net income about $825M (about 17% margin), adjusted EPS about $0.60 at a 22% tax rate.' },
         nii: { label: 'Net interest income', short: 'Net interest income', group: 'Revenue lines', unit: 'usdM',
           periods: ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27', '4Q27'],
           act:    [402.718, 413.584, 431.01, 470.169, 498.726, 517.837, 585.114, 617.279, 692.988, 788.195, null, null, null, null, null, null],
@@ -166,14 +159,14 @@ export var sofiResults = {
           guideLo: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'Provision for credit losses. ⚠ Summit 2027 quarters ($47.7M) do not add to the Summit annual ($60.5M).' },
-        opinc: { label: 'Income before income taxes', short: 'Pre-tax income', group: 'Company', unit: 'usdM', marginOf: 'rev', marginLabel: 'Pre-tax income % of net revenue',
+        opinc: { label: 'Operating income', short: 'Operating income', group: 'Company', unit: 'usdM', marginOf: 'rev', marginLabel: 'Operating income % of net revenue',
           periods: ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27', '4Q27'],
           act:    [94.226, 16.478, 63.855, 59.924, 79.782, 112.192, 148.551, 185.332, 199.552, 204.309, null, null, null, null, null, null],
           summit: [-101.5098, -111.0013, -143.9911, -88.5909, -105.61, 59.3633, 69.228, 180.5598, 167.294, 177.3502, 269.9454, 369.211, 250.3217, 207.1836, 367.3453, 434.0559],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          note: 'GAAP income before income taxes (net revenue less noninterest expense). Model series only; Bloomberg has no line for it. 2Q26 is the 10-Q figure ($204.3M; the model carries $182.8M because its 2Q26 revenue is $21.7M low).' },
+          note: 'Operating income, which for SoFi is GAAP income before income taxes (net revenue less noninterest expense). Model series only; Bloomberg has no line for it. 2Q26 is the 10-Q figure ($204.3M; the model carries $182.8M because its 2Q26 revenue is $21.7M low).' },
         tax: { label: 'Income tax expense', short: 'Income tax', group: 'Company', unit: 'usdM', marginOf: 'opinc', marginLabel: 'Effective tax rate (% of pre-tax income)',
           periods: ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27', '4Q27'],
           act:    [null, null, null, null, null, 14.929, 9.159, 11.783, 32.821, 47.717, null, null, null, null, null, null],
@@ -182,14 +175,6 @@ export var sofiResults = {
           guideLo: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'Income tax expense (benefit). FY2024 includes a one-time benefit from releasing a valuation allowance, so its effective rate is not comparable. Model series is not in the Summit pull; Bloomberg and reported only.' },
-        ni: { label: 'Net income (GAAP)', short: 'GAAP net income', group: 'Company', unit: 'usdM', marginOf: 'rev', marginLabel: 'GAAP net income % of net revenue',
-          periods: ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27', '4Q27'],
-          act:    [88.043, 17.404, 60.745, 332.473, 71.116, 97.263, 139.392, 173.549, 166.731, 156.592, null, null, null, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          guideLo: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          guideHi: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          note: 'Reported GAAP net income. Actuals only: the Summit model carries no GAAP net income projection and Bloomberg has no GAAP line (adjusted net income is the other series).' },
         tdev: { label: 'Technology and product development', short: 'Tech & product dev', group: 'Expense lines', unit: 'usdM', marginOf: 'rev', marginLabel: 'Tech & product development % of net revenue',
           periods: ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27', '4Q27'],
           act:    [130.92, 132.167, 139.714, 148.986, 156.206, 152.146, 167.144, 172.836, 187.675, 191.276, null, null, null, null, null, null],
@@ -225,10 +210,10 @@ export var sofiResults = {
       },
       sections: [
         { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
-          { label: 'Totals', keys: ['rev', 'arev'] }
+          { label: 'Totals', keys: ['rev'] }
         ] },
         { key: 'margins', label: 'Margins & Profitability', defaultMetric: 'ebitda', groups: [
-          { label: 'What SoFi guides', keys: ['ebitda', 'earnings', 'eps'] }
+          { label: 'Company', keys: ['ebitda', 'opinc', 'earnings', 'eps'] }
         ] }
       ]
     },
@@ -241,17 +226,9 @@ export var sofiResults = {
           act:    [2674.859, 3613.354, null, null, null],
           summit: [2675.997, 3613.354, 4845.1913, 6280.3042, 8083.7886],
           cons:   [2539.6964, 3494.8339, 4782.405, 6040.6518, 7416.4344],
-          guideLo: [null, null, null, null, null],
-          guideHi: [null, null, null, null, null],
-          note: 'GAAP total net revenue (net interest income plus noninterest income). Actuals tie to the 10-K / 10-Q; for the last five quarters and three fiscal years they are the Bloomberg reported values (2Q26 $1,218.7M, where the Summit model carries $1,123.0M pre-print). The Summit annual is the model headline revenue row (REV, DCF SOFI.xlsm, Aug 5 2026: FY2026 $4,845M, which already contains the first-half actuals); an earlier pull of the segment-build row read $5,317M and is not used. The model quarters for 2026 add to $4,692M because 1Q26 and 2Q26 are still the pre-print projections; the 2027 quarters ($6,953M) do not add to the 2027 annual ($6,280M), an open question for the model author. The Street annual is $4,782M against quarters that sum to $4,925M (~3%).' },
-        arev: { label: 'Adjusted net revenue', short: 'Adj. net revenue', group: 'Totals', unit: 'usdM',
-          periods: ['2024', '2025', '2026', '2027', '2028'],
-          act:    [2606.2, 3591.4, null, null, null],
-          summit: [null, null, null, null, null],
-          cons:   [null, null, null, null, null],
           guideLo: [2535, 3540, 4750, null, null],
           guideHi: [2550, 3540, 4850, null, null],
-          note: 'Company non-GAAP measure (total net revenue excluding fair-value changes in servicing-rights and residual-interest assumptions); it is the revenue line SoFi guides. Not in the Summit model or the Bloomberg export, so it carries no Summit or Street series. Guidance is the range issued in the prior quarter\'s release (2Q26: "approximately $1.115 billion", point); the full-year bar is the last update (FY2026: $4.75B to $4.85B, Jul 29 2026, raised from about $4.655B; FY2025 actual $3,591M). Companion guidance for FY2026: adjusted EBITDA about $1.6B (33% to 34% margin), adjusted net income about $825M (about 17% margin), adjusted EPS about $0.60 at a 22% tax rate.' },
+          note: 'GAAP total net revenue (net interest income plus noninterest income). Actuals tie to the 10-K / 10-Q; for the last five quarters and three fiscal years they are the Bloomberg reported values (2Q26 $1,218.7M, where the Summit model carries $1,123.0M pre-print). The Summit annual is the model headline revenue row (REV, DCF SOFI.xlsm, Aug 5 2026: FY2026 $4,845M, which already contains the first-half actuals); an earlier pull of the segment-build row read $5,317M and is not used. The model quarters for 2026 add to $4,692M because 1Q26 and 2Q26 are still the pre-print projections; the 2027 quarters ($6,953M) do not add to the 2027 annual ($6,280M), an open question for the model author. The Street annual is $4,782M against quarters that sum to $4,925M (~3%). SoFi guides ADJUSTED net revenue (a non-GAAP measure that excludes fair-value changes in servicing-rights and residual-interest assumptions; 2Q26 $1,205.6M against $1,218.7M GAAP), and the guidance is drawn on this line: the gap is about 1% and accepted (analyst, Oct 26 2026). The quarterly band is the range issued in the prior quarter release (2Q26: approximately $1.115 billion); the full-year bar is the last update (FY2026: $4.75B to $4.85B, Jul 29 2026, raised from about $4.655B; FY2025 actual $3,591M adjusted). Companion FY2026 guidance: adjusted EBITDA about $1.6B (33% to 34% margin), adjusted net income about $825M (about 17% margin), adjusted EPS about $0.60 at a 22% tax rate.' },
         nii: { label: 'Net interest income', short: 'Net interest income', group: 'Revenue lines', unit: 'usdM',
           periods: ['2024', '2025', '2026', '2027', '2028'],
           act:    [1716.481, 2218.956, null, null, null],
@@ -380,14 +357,14 @@ export var sofiResults = {
           guideLo: [null, null, null, null, null],
           guideHi: [null, null, null, null, null],
           note: 'Provision for credit losses. ⚠ Summit 2027 quarters ($47.7M) do not add to the Summit annual ($60.5M).' },
-        opinc: { label: 'Income before income taxes', short: 'Pre-tax income', group: 'Company', unit: 'usdM', marginOf: 'rev', marginLabel: 'Pre-tax income % of net revenue',
+        opinc: { label: 'Operating income', short: 'Operating income', group: 'Company', unit: 'usdM', marginOf: 'rev', marginLabel: 'Operating income % of net revenue',
           periods: ['2024', '2025', '2026', '2027', '2028'],
           act:    [234.483, 525.857, null, null, null],
           summit: [-445.0932, 203.541, 1493.8044, 1403.797, 1968.4437],
           cons:   [null, null, null, null, null],
           guideLo: [null, null, null, null, null],
           guideHi: [null, null, null, null, null],
-          note: 'GAAP income before income taxes (net revenue less noninterest expense). Model series only; Bloomberg has no line for it. 2Q26 is the 10-Q figure ($204.3M; the model carries $182.8M because its 2Q26 revenue is $21.7M low).' },
+          note: 'Operating income, which for SoFi is GAAP income before income taxes (net revenue less noninterest expense). Model series only; Bloomberg has no line for it. 2Q26 is the 10-Q figure ($204.3M; the model carries $182.8M because its 2Q26 revenue is $21.7M low).' },
         tax: { label: 'Income tax expense', short: 'Income tax', group: 'Company', unit: 'usdM', marginOf: 'opinc', marginLabel: 'Effective tax rate (% of pre-tax income)',
           periods: ['2024', '2025', '2026', '2027', '2028'],
           act:    [-265.32, 44.537, null, null, null],
@@ -396,14 +373,6 @@ export var sofiResults = {
           guideLo: [null, null, null, null, null],
           guideHi: [null, null, null, null, null],
           note: 'Income tax expense (benefit). FY2024 includes a one-time benefit from releasing a valuation allowance, so its effective rate is not comparable. Model series is not in the Summit pull; Bloomberg and reported only.' },
-        ni: { label: 'Net income (GAAP)', short: 'GAAP net income', group: 'Company', unit: 'usdM', marginOf: 'rev', marginLabel: 'GAAP net income % of net revenue',
-          periods: ['2024', '2025', '2026', '2027', '2028'],
-          act:    [498.665, 481.32, null, null, null],
-          summit: [null, null, null, null, null],
-          cons:   [null, null, null, null, null],
-          guideLo: [null, null, null, null, null],
-          guideHi: [null, null, null, null, null],
-          note: 'Reported GAAP net income. Actuals only: the Summit model carries no GAAP net income projection and Bloomberg has no GAAP line (adjusted net income is the other series).' },
         tdev: { label: 'Technology and product development', short: 'Tech & product dev', group: 'Expense lines', unit: 'usdM', marginOf: 'rev', marginLabel: 'Tech & product development % of net revenue',
           periods: ['2024', '2025', '2026', '2027', '2028'],
           act:    [551.787, 648.332, null, null, null],
@@ -439,10 +408,10 @@ export var sofiResults = {
       },
       sections: [
         { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
-          { label: 'Totals', keys: ['rev', 'arev'] }
+          { label: 'Totals', keys: ['rev'] }
         ] },
         { key: 'margins', label: 'Margins & Profitability', defaultMetric: 'ebitda', groups: [
-          { label: 'What SoFi guides', keys: ['ebitda', 'earnings', 'eps'] }
+          { label: 'Company', keys: ['ebitda', 'opinc', 'earnings', 'eps'] }
         ] }
       ]
     }

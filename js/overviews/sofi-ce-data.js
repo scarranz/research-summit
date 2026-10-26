@@ -59,7 +59,7 @@ export var SOFI_CE_CONS = {
              'Student loan originations':['slov',1000], 'Home loan originations':['hlov',1000], 'Noninterest expense':['nie',1000],
              'Stock-based compensation':['sbc',1000], 'Adjusted EBITDA':['ebitda',1000], 'Adjusted net income':['earnings',1000], 'EPS (diluted)':['eps',1] };
   SOFI_CE_CONS.m.forEach(function(m){ var s=RS[m.k]; if(s) fromResults(m, s[0], s[1]); });
-  var GK = { 'Revenue':['arev',1000], 'Adjusted EBITDA':['ebitda',1000], 'Adjusted net income':['earnings',1000], 'EPS (diluted)':['eps',1] };
+  var GK = { 'Revenue':['rev',1000], 'Adjusted EBITDA':['ebitda',1000], 'Adjusted net income':['earnings',1000], 'EPS (diluted)':['eps',1] };
   SOFI_CE_CONS.m.forEach(function(m){ var g=GK[m.k]; if(!g) return; var r=M[g[0]];
     m.qg=QP.map(function(p){ var i=r.periods.indexOf(p); if(i<0||r.guideLo[i]==null||r.guideHi[i]==null) return null;
       return rnd((r.guideLo[i]+r.guideHi[i])/2/g[1], m.u); }); });

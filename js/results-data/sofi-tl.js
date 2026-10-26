@@ -7,6 +7,7 @@
 import { sofiResults } from './sofi.js';
 
 export var sofiTlSegments = {
+  forwardQuarters: 2,   // two quarters past the last print (analyst rule Oct 22 2026), same as SPOT
   updated: 'Oct 2026',
   source: 'SoFi FY2025 Form 10-K and 2Q26 Form 10-Q (SEC EDGAR), segment results; the Q4 2025 call (Jan 30 2026) for 4Q25 Financial Services and Technology Platform.',
   views: {
@@ -147,13 +148,15 @@ var TLG = ['rev', 'nii', 'nonint', 'lpb', 'tp', 'loss', 'other', 'members', 'plo
 function pick(view){ var out = {}; TLG.forEach(function(k){ if (view.metrics[k]) out[k] = view.metrics[k]; }); return out; }
 function tlgSections(){
   return [
-    { key: 'tlgrev', label: 'Revenue', defaultMetric: 'nii', groups: [
+    { key: 'tlgrev', label: 'Revenue', defaultMetric: 'rev', groups: [
+      { label: 'Totals', keys: ['rev'] },
       { label: 'Revenue lines', keys: ['nii', 'nonint', 'lpb', 'tp', 'loss', 'other'] } ] },
     { key: 'tlgops', label: 'Operating metrics', defaultMetric: 'members', groups: [
       { label: 'Members and originations', keys: ['members', 'plov', 'slov', 'hlov'] } ] }
   ];
 }
 export var sofiTlGeneral = {
+  forwardQuarters: 2,   // two quarters past the last print (analyst rule Oct 22 2026), same as SPOT
   updated: sofiResults.updated,
   source: sofiResults.source,
   views: {
@@ -173,6 +176,7 @@ function blsView(v, label){
   ] };
 }
 export var sofiBlSegments = {
+  forwardQuarters: 2,   // two quarters past the last print (analyst rule Oct 22 2026), same as SPOT
   updated: 'Oct 2026',
   source: sofiTlSegments.source,
   views: { q: blsView('q', 'Quarterly'), y: blsView('y', 'Annual') }

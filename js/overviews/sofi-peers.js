@@ -35,6 +35,18 @@ var SO_PEERS = [
     why:'Buy-now-pay-later and consumer credit at the point of sale. Its FY2026 net income includes a one-time tax benefit, so its P/E is not shown.' }
 ];
 
+// Dated fallback for market data (analyst, Oct 26 2026: never leave the map blank). Market data is live first (api.liveQuote); when that
+// service does not answer (for example from a deploy preview), the last close below is used and the page says so, with the date.
+// Source: Yahoo Finance (chart and quote endpoints), regular-session close of Oct 26 2026. px in US$, mc and ev in US$ billions.
+// IBKR's EV is negative (net cash from customer-related balances), so its EV/EBITDA is not shown.
+var SO_FALLBACK = { asOf: 'Oct 26 2026 close', src: 'Yahoo Finance', q: {
+  SOFI: { px: 14.46, mc: 18.676, ev: 18.925 },
+  HOOD: { px: 92.84, mc: 83.471, ev: 84.557 },
+  SCHW: { px: 89.73, mc: 155.173, ev: 128.022 },
+  IBKR: { px: 80.59, mc: 137.310, ev: null },
+  UPST: { px: 23.00, mc: 2.238,   ev: 3.914 },
+  AFRM: { px: 69.49, mc: 23.447,  ev: 31.967 }
+} };
 var SO_SC={ metric:'pe', basis:'t', peers:null, _capsFetched:false };   // Trailing by default: only SOFI has a Street forward
 function soScReset(){ if(!SO_SC.peers) SO_SC.peers=SO_PEERS.map(function(p){ var o={}; for(var k in p) o[k]=p[k]; o.on=true; return o; }); }
 function soScNum(v){ return v!=null && !isNaN(v); }
@@ -171,10 +183,17 @@ function soWireScChips(root, wrap){
       addIn.value=''; soScRenderAll(root); soLiveOne(root, tk); };
   }
 }
+function soScApplyFallback(){
+  (SO_SC.peers||[]).forEach(function(p){ var f=SO_FALLBACK.q[p.tk]; if(f && !soScNum(p.px)){ p.px=f.px; p.mc=f.mc; p.ev=(f.ev!=null?f.ev*1000:null); p.stale=true; } });
+}
 function soScLiveNote(root){
-  var n=(SO_SC.peers||[]).length, got=(SO_SC.peers||[]).filter(function(p){ return soScNum(p.px); }).length;
-  var msg=(SO_SC._pend>0)?'':(got===0?'⚑ Live data pending — the price service did not answer from this address, so no multiple can be computed yet. The reported EPS and growth behind each peer are in the table; the multiples and bubbles appear as soon as prices load.'
-    :(got<n?'⚑ Live prices arrived for '+got+' of '+n+' names; the rest show no multiple until theirs load.':''));
+  var n=(SO_SC.peers||[]).length, live=(SO_SC.peers||[]).filter(function(p){ return soScNum(p.px) && !p.stale; }).length;
+  var msg='';
+  if(SO_SC._pend<=0 && live<n){
+    soScApplyFallback();
+    msg='Live prices did not load from this address, so the multiples use the last close ('+SO_FALLBACK.asOf+', '+SO_FALLBACK.src+'); they switch to live prices when the price service answers.';
+    soScRenderAll(root);
+  }
   document.querySelectorAll('.so-sc-live').forEach(function(el){ el.textContent=msg; el.hidden=!msg; });
 }
 function soScFetchCaps(root){ if(SO_SC._capsFetched||!SO_SC.peers) return; SO_SC._capsFetched=true; SO_SC._pend=SO_SC.peers.length; SO_SC.peers.forEach(function(p){ if(p.tk) soLiveOne(root, p.tk); }); }
@@ -185,7 +204,7 @@ function soScFetchCaps(root){ if(SO_SC._capsFetched||!SO_SC.peers) return; SO_SC
 function soLiveOne(root, tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(res){ var q=res&&res.data?res.data:res;
     if(!q||q.marketCap==null){ if(tk==='SOFI') soMcCell(root,'live quote unavailable'); SO_SC._pend--; soScLiveNote(root); return; }
     var mcB=q.marketCap/1e9;
-    (SO_SC.peers||[]).forEach(function(p){ if(p.tk===tk){ p.px=q.price; p.mc=mcB; p.ev=(q.ev!=null?q.ev/1e6:null); } });
+    (SO_SC.peers||[]).forEach(function(p){ if(p.tk===tk){ p.px=q.price; p.mc=mcB; p.ev=(q.ev!=null?q.ev/1e6:null); p.stale=false; } });
     if(tk==='SOFI') soMcCell(root, '$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}));
     SO_SC._pend--; soScRenderAll(root); soScLiveNote(root);
   }).catch(function(){ if(tk==='SOFI') soMcCell(root,'live quote unavailable'); SO_SC._pend--; soScLiveNote(root); }); }

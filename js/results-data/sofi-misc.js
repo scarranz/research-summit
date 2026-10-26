@@ -49,6 +49,7 @@ function view(label, key, periods, act, summit){
     }, sections: [ { key: 'lpbvol', label: 'Loan Platform Business', defaultMetric: 'plpbo', groups: [ { label: 'Volume', keys: ['plpbo'] }, { label: 'Monetization', keys: ['take'] } ] } ] };
 }
 export var sofiLpb = {
+  forwardQuarters: 2,   // two quarters past the last print (analyst rule Oct 22 2026), same as SPOT
   updated: 'Oct 2026',
   source: 'Summit DCF model, snapshot 2026-08-05 (metric PLPBO, frozen; reported quarters tie to the earnings calls Q1 2025 to Q2 2026); Bloomberg reported loan platform fees (BBG_CONSENSUS.txt). No Street series on volume.',
   views: { q: view('Quarterly', 'q', QP, ACT_Q, SUM_Q), y: view('Annual', 'y', YP, ACT_Y, SUM_Y) }

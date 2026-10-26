@@ -20,6 +20,7 @@
 //   · styles: css/overview.css (.hm-* rules shared with TSM via :is(.ov-tsm-dd, .ov-sofi-dd)).
 import { sofiResults } from '../results-data/sofi.js';
 import { fetchPriceHistory } from '../api.js';
+import { SOFI_PX_FALLBACK } from './sofi-price-fallback.js';   // dated daily closes, used only when the live service does not answer
 import { SUMMIT_CAT, SUMMIT_MUTE, SUMMIT_NEG, fade } from '../viz-palette.js';
 import { SOFI_HM_Q } from './sofi-histmult-data.js';
 
@@ -212,6 +213,7 @@ function hmLoad(){
   return get('SOFI', START, TODAY)
     .then(function(priceRes){
     var priceRows=(priceRes && priceRes.success && Array.isArray(priceRes.data)) ? priceRes.data : [];
+    if(!priceRows.length){ priceRows=SOFI_PX_FALLBACK.rows.map(function(r){ return { t:r[0], c:r[1] }; }); hmData.fallback=true; }   // live service did not answer: dated closes
     PX = buildPxFromHistory(priceRows);
     SHARES = buildShares(); NETDEBT = buildNetDebt();
     EST.ebitda = buildEstY('ebitda');
@@ -721,7 +723,7 @@ function footHtml(){
     'the vertical drops in a forward-multiple chart are that roll, not a re-rating. '+
     '<b>NTM</b> blends FY0 × (days left in FY0 ÷ 365) + FY1 × the rest, so it slides instead of stepping. '+
     'Quarterly and annual points are the <b>average</b> over the period. '+
-    '<b>Sources.</b> Price: Massive daily close (live). Consensus EPS: Bloomberg consensus export, one vintage per print ('+
+    (hmData.fallback?'<b>Price source for this view: the live service did not answer from this address, so the daily closes are Yahoo Finance data up to '+esc(SOFI_PX_FALLBACK.asOf)+'; they switch to Massive when it answers.</b> ':'')+'<b>Sources.</b> Price: Massive daily close (live). Consensus EPS: Bloomberg consensus export, one vintage per print ('+
     esc(vs[0].id)+' to '+esc(vs[vs.length-1].id)+'). Reported EPS and diluted shares: the reported values in that export, '+esc(n0[0])+'–'+esc(n1[0])+', stepped on the earnings date. '+
     'EPS is the company-adjusted figure (FY2025 GAAP and adjusted are both $0.39; FY2024 adjusted $0.15 versus GAAP $0.39, which included a one-time tax benefit), so trailing P/E before 2024 uses small or negative EPS and is not meaningful.';
 }

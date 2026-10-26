@@ -229,10 +229,10 @@ function ficoCard(){
 // Bank-level total risk-based capital ratio vs the 10.5% required minimum (incl.
 // capital conservation buffer), plus loans outstanding and the implied lending
 // capacity if the ratio fell to the minimum. Source: SoFi 10-K / 10-Q.
-var CAP_YEARS = ['2022', '2023', '2024', '2025', 'Q1 26'];
-var CAP_RATIO = [15.1, 17.6, 17.5, 16.6, 15.4];   // SoFi Bank total risk-based capital ratio, %
+var CAP_YEARS = ['2022', '2023', '2024', '2025', 'Q2 26'];   // Q2 26 from the 2Q26 Form 10-Q: SoFi Bank total risk-based capital ratio 15.3%, total loans $47.9B
+var CAP_RATIO = [15.1, 17.6, 17.5, 16.6, 15.3];   // SoFi Bank total risk-based capital ratio, %
 var CAP_REQ   = 10.5;                              // required minimum (incl. buffer), %
-var CAP_LOANS = [13.9, 23.0, 27.5, 38.0, 42.2];    // total loans outstanding, $B
+var CAP_LOANS = [13.9, 23.0, 27.5, 38.0, 47.9];    // total loans outstanding, $B
 // Implied max lending at the 10.5% floor (capital held constant → loans scale by ratio/min).
 var CAP_POT = CAP_LOANS.map(function(l, i){ return +(l * CAP_RATIO[i] / CAP_REQ).toFixed(1); });
 
@@ -453,10 +453,10 @@ function sofiMcCell(root, txt){ var el = root.querySelector('#sofiMc'); if (el) 
 function renderMarketCap(root){
   import('../api.js').then(function(api){ return api.liveQuote('SOFI'); }).then(function(res){
     var q = (res && res.success) ? res.data : null;
-    if (!q || q.marketCap == null){ sofiMcCell(root, 'live quote unavailable'); return; }
+    if (!q || q.marketCap == null){ sofiMcCell(root, '$18.7B · last close Oct 26 2026 (Yahoo Finance; live service did not answer)'); return; }
     var mcB = q.marketCap / 1e9;
     sofiMcCell(root, '$'+(mcB >= 1000 ? (mcB/1000).toFixed(2)+'T' : mcB.toFixed(1)+'B')+' · live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}));
-  }).catch(function(){ sofiMcCell(root, 'live quote unavailable'); });
+  }).catch(function(){ sofiMcCell(root, '$18.7B · last close Oct 26 2026 (Yahoo Finance; live service did not answer)'); });
 }
 
 function overviewBody(c){
@@ -669,7 +669,8 @@ function interestBody(c){
     '<div class="int-left">'+ficoCard()+incomeSquare()+'</div>'+
     '<div class="int-right">'+capCard()+'</div>'+
   '</div>';
-  h += LOANS.map(loanBlock).join('');
+  // The personal, student and home loan origination charts that followed are drawn by Top Line ▸ General (engine, Summit frozen);
+  // the earlier seeded copies (with typed estimates) are no longer rendered.
   return h;
 }
 
@@ -870,7 +871,6 @@ var TECH_TIMELINE = [
 
 // Publicly known clients of Galileo / SoFi's Technology Platform (logos via Clearbit).
 var TECH_CLIENTS = [
-  { name:'Chime',     domain:'chime.com',     d:'U.S. neobank — historically Galileo\'s largest client.' },
   { name:'Robinhood', domain:'robinhood.com', d:'Debit card and cash management for the investing app.' },
   { name:'MoneyLion', domain:'moneylion.com', d:'All-in-one financial app.' },
   { name:'Dave',      domain:'dave.com',      d:'Everyday-banking neobank with paycheck advances.' },
@@ -879,7 +879,7 @@ var TECH_CLIENTS = [
   { name:'Varo',      domain:'varomoney.com', d:'Digital bank with its own banking charter.' },
   { name:'HSBC',      domain:'hsbc.com',      d:'Global bank — client for digital initiatives.' },
 ];
-var TECH_CLIENTS_NOTE = 'Clients shown are publicly disclosed; many contracts are confidential. Together, Galileo and Technisys enable ~158M end-customer accounts (Q3 2025) for neobanks, fintechs and banks across the U.S. and Latin America.';
+var TECH_CLIENTS_NOTE = 'Clients shown are publicly disclosed; many contracts are confidential. The large customer SoFi lost is not listed: its contract ended and its revenue stopped in Q4 2025, and the 2026 outlook assumes no revenue from it (Q4 2025 and Q1 2026 calls). Management never names it; an analyst on the Q2 2025 call called it the Chime migration. Together, Galileo and Technisys enable ~158M end-customer accounts (Q3 2025) for neobanks, fintechs and banks across the U.S. and Latin America.';
 var TECH_SOURCES = 'Sources: SoFi press releases on the Galileo (Apr 2020, ~$1.2B) and Technisys (announced Feb 22, 2022; closed Mar 3, 2022; ~$1.1B in stock) acquisitions; SoFi FY2025 Form 10-K and investor presentations (segment revenue and contribution profit, enabled accounts); Galileo press pages. All figures in US dollars.';
 
 // ── Scale chart: enabled accounts (bars) vs. segment net revenue (line) ──
@@ -1618,7 +1618,10 @@ function refreshLiveQuote(){
   var ts = document.getElementById('sensLiveTs');
   if (ts) ts.textContent = 'fetching live price…';
   fetchSofiQuote().then(applyLiveQuote).catch(function(){
-    if (ts) ts.textContent = 'live price unavailable here: the P/E and implied price wait for it';
+    // Dated fallback (analyst, Oct 26 2026: never leave a pane blank): the last close, labelled as such, until the live service answers.
+    if (SENS_BASE.price == null){ SENS_BASE.price = 14.46; if (SENS_BASE.basePe == null) SENS_BASE.basePe = SENS_BASE.price / SENS_BASE.baseEps; }
+    renderLiveBanner(); renderSens(); renderSotp();
+    if (ts) ts.textContent = 'last close Oct 26 2026 (Yahoo Finance); the live service did not answer from this address';
   });
 }
 
@@ -2994,7 +2997,6 @@ function setupLoanSlider(cfg){
 }
 
 function buildInterestTab(){
-  LOANS.forEach(function(cfg){ buildLoanChart(cfg); setupLoanSlider(cfg); });
   buildCapChart();
 }
 
@@ -3164,14 +3166,10 @@ function buildTechChart(){
 }
 
 function buildFeeTab(){
-  var root = document.querySelector('.ov-sofi');
+  var root = document.querySelector('.ov-sofi-dd') || document.querySelector('.ov-sofi');
   if (!root) return;
   var act = root.querySelector('.ovf-tab.active');
   var k = act ? act.getAttribute('data-ovf') : '';
-  if (k === 'lpb') requestAnimationFrame(function(){
-    buildLoanChart(LPB_ORIG); setupLoanSlider(LPB_ORIG); // origination chart (visible)
-    buildLpbPie();                                       // commitments pie (inside accordion)
-  });
   if (k === 'tech') requestAnimationFrame(buildTechChart);
   // if (k === 'fs')   requestAnimationFrame(buildFeeFS);
 }
@@ -4000,7 +3998,7 @@ function deepDiveHtml(c){
         collapsible('Fee income — Loan Platform Business, Technology Platform and Financial Services (earlier profile, seeded)', feeBody(c), false) }
   ], false);
   h += ddSubtabs('bottomline', [
-    { k:'margins', l:'General', body:resultsHtml('SOFI_BL')+financialsBlock() },
+    { k:'margins', l:'General', body:resultsHtml('SOFI_BL') },
     { k:'segments', l:'Segments', body:resultsHtml('SOFI_BLS') }
   ], true);
   h += ddSubtabs('evolution', [
@@ -4091,7 +4089,7 @@ function deepDiveInit(c){
     var pane = root.querySelector('.dd-pane[data-dd="'+g+'"]'); if (!pane) return;
     pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.onclick = function(){ ddShowSub(root, g, b.getAttribute('data-ovst')); }; });
   });
-  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick = function(){ var c2 = btn.parentElement; var bd = c2.querySelector('.ov-collap-b'); var open = c2.classList.toggle('open'); if (bd) bd.hidden = !open; var ic = btn.querySelector('.ov-collap-ic'); if (ic) ic.textContent = open ? '▾' : '▸'; }; });
+  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick = function(){ var c2 = btn.parentElement; var bd = c2.querySelector('.ov-collap-b'); var open = c2.classList.toggle('open'); if (bd) bd.hidden = !open; var ic = btn.querySelector('.ov-collap-ic'); if (ic) ic.textContent = open ? '▾' : '▸'; if (open) requestAnimationFrame(function(){ buildInterestTab(); buildTechChart(); buildLpbPie(); }); }; });
   legacyWire(root);   // relocated earlier-profile panes
   sofiCeWire(root);   // Earnings: phase tabs, quarter pills, toggles, Notes
   wireDdModal(root);

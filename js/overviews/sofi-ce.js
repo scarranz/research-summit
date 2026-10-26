@@ -1089,7 +1089,7 @@ function cePrintBlock(qLabel, r, us){
     '</div>';
     return '<div class="ce-fz-t'+(guided?' ce-fz-guided':'')+'" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'" data-cat="'+ceCat(m.k)+'" data-mixed="'+(mixed?1:0)+'" style="--od:'+r.od+'">'+hdr+tbl+'</div>';
   });
-  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="on" data-view="cards" data-ord="stmt" data-fzcat="all"><div class="ce-fz-h">The print — down the income statement'+
+  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="on" data-view="cards" data-ord="stmt" data-fzcat="all" data-lay="grid" data-fzgd="off"><div class="ce-fz-h">The print — down the income statement'+
     ceQ('fz-'+ceQkey(qLabel),'How this is built',
       '<p>One block, archive-driven. Every number and surprise is computed from <code>BBG_CONSENSUS.txt</code>: the last snapshot before the print carries the consensus (<code>fq+1</code>), a later snapshot carries the print (<code>fq0</code>). Reconstructed from data, so it cannot drift.</p>'+
       '<ul><li><b>Order</b> — by default the lines read top-to-bottom down the income statement (top line → sales by segment → margins → profit by segment → cash &amp; shares → EPS last). <b>By surprise</b> re-sorts to the biggest |Street surprise| first.</li>'+
@@ -1121,6 +1121,12 @@ function cePrintBlock(qLabel, r, us){
     '<span class="ce-gseg ce-gseg-cardsonly"><button type="button" class="active" data-ceg="yoy">YoY</button>'+
       '<button type="button" data-ceg="qoq">QoQ</button>'+
       '<button type="button" data-ceg="off">Off</button></span>'+
+    // Layout and scope (analyst, Oct 26 2026): Rows puts each line in one full-width horizontal rectangle, scrolling down instead of
+    // squeezing three cards across; Guided keeps only the lines the company guides.
+    '<span class="ce-gseg ce-gseg-cardsonly"><button type="button" class="active" data-fzlay="grid">Grid</button>'+
+      '<button type="button" data-fzlay="rows">Rows</button></span>'+
+    '<span class="ce-gseg ce-gseg-cardsonly"><button type="button" class="active" data-fzgd="off">All lines</button>'+
+      '<button type="button" data-fzgd="on">Guided only</button></span>'+
     '</div>'+cePrintChart(qi, us)+'<div class="ce-fz-g" data-vdf-host>'+tiles.join('')+'</div></div>';
 }
 function cePhaseStyle(){
@@ -1134,6 +1140,11 @@ function cePhaseStyle(){
     '.ce-fz-t.basis{opacity:.62}'+
     '.ce-fz-k{font-size:10px;font-weight:800;color:var(--navy);line-height:1.25}'+
     '.ce-fz-guided{border-left:3px solid var(--navy)}'+
+    '.ce-fz[data-fzgd="on"] .ce-fz-t:not(.ce-fz-guided){display:none}'+
+    '.ce-fz[data-lay="rows"] .ce-fz-g{grid-template-columns:1fr;gap:6px}'+
+    '.ce-fz[data-lay="rows"] .ce-fz-t{display:grid;grid-template-columns:minmax(190px,26%) minmax(0,1fr);column-gap:22px;align-items:center;padding:10px 16px}'+
+    '.ce-fz[data-lay="rows"] .ce-fz-tbl{margin-top:0;max-width:680px}'+
+    '@media(max-width:700px){.ce-fz[data-lay="rows"] .ce-fz-t{grid-template-columns:1fr}.ce-fz[data-lay="rows"] .ce-fz-tbl{margin-top:6px}}'+
     '.ce-fz-gd{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:3px;background:var(--navy);color:#fff;font-size:9px;font-weight:800;letter-spacing:.06em;vertical-align:middle}'+
     '.ce-fz-kn{flex:1 1 auto;min-width:0}'+   /* full metric name, wraps — NEVER truncated (e.g. "…operating income") */
     /* the table layout — Street/Summit est. | Actual columns, with Growth / Margin rows below (Dani, Aug 2026) */
@@ -1735,6 +1746,14 @@ function wireCeTrack(root){
     btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
     if(fz) fz.setAttribute('data-fzcat', v);
   }; });
+  // Layout Grid ⇄ Rows and All ⇄ Guided only — pure CSS off data-lay / data-fzgd on the .ce-fz.
+  [['data-fzlay','data-lay'],['data-fzgd','data-fzgd']].forEach(function(pr){
+    pane.querySelectorAll('.ce-gseg button['+pr[0]+']').forEach(function(btn){ btn.onclick=function(){
+      var v=btn.getAttribute(pr[0]), fz=btn.closest('.ce-fz');
+      btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+      if(fz) fz.setAttribute(pr[1], v);
+    }; });
+  });
   // Per-point "＋ add note" (Prepared Remarks / Q&A / Also on the call) — opens the manual note composer;
   // reuses the note engine (cePublishNoteToRecord) but the user files Theme/Sub-theme by hand.
   pane.querySelectorAll('[data-noteadd]').forEach(function(btn){ btn.onclick=function(e){

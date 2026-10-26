@@ -12,7 +12,7 @@
 | Rama | `feat/googl-restructure` (desde `origin/main` @ `95c00e0`, 2026-10-26; worktree `rs-playbook`). Nombre de modo B (§7.1); `feat/googl-profile` ya existe en GitHub (rama vieja de DOAA351, jul 2026) y no se toca |
 | Analista responsable | SAB (Santiago Alvarez) |
 | Inicio | 2026-10-26 |
-| Avance | **23 de 43** unidades aprobadas (F0 · F0-SM · B1 · B2 · F1 · OV-1…OV-7 · OV-F · EV-RES-DATA · EV-RES · TL-GEN · TL-SEG · TL-OTH · TL-CUS · EV-EST · EV-SET · EV-NOTES · EV-POST) · 0 omitidas · 0 bloqueadas. M = 38 del Anexo C + B1/B2 + 3 (MISC aprobado en B2 con 4 sub-tabs: comp · tam · capex · strategy). Siguiente: BL-GEN-1 |
+| Avance | **30 de 43** unidades aprobadas (F0 · F0-SM · B1 · B2 · F1 · OV-1…OV-7 · OV-F · EV-RES-DATA · EV-RES · TL-GEN · TL-SEG · TL-OTH · TL-CUS · EV-EST · EV-SET · EV-NOTES · EV-POST · BL-GEN-1…5 · BL-SEG · BL-SPLC) · 0 omitidas · 0 bloqueadas. M = 38 del Anexo C + B1/B2 + 3 (MISC aprobado en B2 con 4 sub-tabs: comp · tam · capex · strategy). Siguiente: VA-HIST |
 
 ## 1. Inventario de datos (F0)
 
@@ -212,13 +212,13 @@ siguientes a **2027** (cambio de definición: VA-TM lo marca).
 | EV-SET | Evolution ▸ Earnings ▸ Setup | ✅ | 2026-10-26 | SAB | | `googl-ce.js` (copia de meta-ce.js) + `googl-ce-data.js`; 3T26 (28-oct) con Street segment-sum, Summit 08-06 y notas verbatim del CFO |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results | ✅ | 2026-10-26 | SAB | | The print + Call Summary de 2T26/1T26/4T25 (9 puntos de prepared, 9 Q&A, 7 'Also on the call', 5 Propose Notes c/u); citas textuales de las transcripciones oficiales de Alphabet IR (PDF, descargadas con permiso de SAB), verificadas cita por cita y hablante por hablante (56/57/57, 0 fallas). 3T26 se llena después del 28-oct |
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | ✅ | 2026-10-26 | SAB (v2 con sus notas, aprobada) | | semilla v2 `themes-data/googl.js`: base = notas a mano de SAB (GOOGL (2).pdf, 3T22→2T26 + GS Sep25/Sep26, MS Mar26, I/O May26) + hilos de Dani no cubiertos; 24 hilos, 167 notas, 7 ganchos cerrados (caída de publicidad 22–23, Cloud rentable, reset de costos 23–24, capex FY23/24/25, "same rate"); cifras contrastadas con 10-K/10-Q (4 corregidas) + Watch List de Dani (21 filas) |
-| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ⬜ | | | | |
-| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⬜ | | | | |
-| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ⬜ | | | | |
-| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ⬜ | | | | |
-| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ⬜ | | | | |
-| BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
-| BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
+| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ✅ | 2026-10-26 | SAB | | copia de `meta-bl.js` → `googl-bl.js`; consenso de ingreso = suma de segmentos BBG; bruta sin consenso (base mixta); Summit = `opinc/ebitda/mearn/fcf` congelado 08-06; Normalized = − OI&E después de impuestos; notas de one-offs (multa CE, Waymo) |
+| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ✅ | 2026-10-26 | SAB | | costo de ventas en 2 barras (TAC · otros, 10-K) + bruta + R&D · S&M · G&A; FY19–FY25 y 1T23–2T26 cuadran con la utilidad operativa; forward: costo de ventas derivado (ingreso − opex − EBIT), TAC del consenso de Services |
+| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ✅ | 2026-10-26 | SAB | | OI&E en ámbar; Normalized grava solo la utilidad operativa a la tasa efectiva |
+| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ✅ | 2026-10-26 | SAB | | solo Dilution: Alphabet no divulga SBC por línea (10-K) |
+| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ✅ | 2026-10-26 | SAB | | 5 pestañas (TAC · otros costos de ventas · R&D · S&M · G&A); definiciones verbatim 10-K FY2025; drivers 10-K/10-Q 2T26; citas de las transcripciones oficiales; Unit Economics de Dani (#19, #21, #22) en TAC y otros costos |
+| BL-SEG | Bottom Line ▸ Segments | ✅ | 2026-10-26 | SAB | | copia del bloque de segmentos de `meta-bl.js` en `googl-bl.js`; Services · Cloud · Other Bets + Alphabet-level como línea propia (suman la utilidad consolidada); consenso BBG de utilidad por segmento; Summit solo en Consolidated (el modelo no proyecta utilidad por segmento); By segment con años del consenso + By cost (compensación · otros, Services y Cloud, 10-K/10-Q); 3 fichas; escalera de margen de Cloud de Dani (#31) en la nota de Cloud |
+| BL-SPLC | Bottom Line ▸ Supply Chain | ✅ | 2026-10-26 | SAB | | `js/overviews/googl-splc.js` (copia de `meta-splc.js`) con las cifras SPLC de Dani tal cual (SAB: export del 22-jul-2026 no ubicado); KPIs · cadena 1 capex (6 tarjetas) · cadena 2 contenido (`.rs-ft`) · quién necesita a quién · geografía · riesgos y clientes rastreables (mapa #23–#28) |
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
 | VA-PEERS | Valuation ▸ Peers | ⬜ | | | | |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
@@ -316,7 +316,7 @@ Destinos aprobados por SAB el 2026-10-26 (B2), incluidas las fusiones #18, #41, 
 | Desde | Unidad | Qué falta | Quién lo consigue | Estado |
 |---|---|---|---|---|
 | 2026-10-26 | F0-SM, EV-EST, VA-TM, VA-SENS + series Summit | GOOGL no estaba ingestado en el MCP de Summit | SAB | ✅ cerrado 2026-10-26 (ingestado, 3 snapshots) |
-| 2026-10-26 | BL-SPLC, TL-CUS tabla | Ubicar el export SPLC de GOOGL del 22-Jul-2026 que usó Dani | SAB / DOAA351 | abierto |
+| 2026-10-26 | BL-SPLC, TL-CUS tabla | Ubicar el export SPLC de GOOGL del 22-Jul-2026 que usó Dani | SAB / DOAA351 | cerrado: SAB decidió usar las cifras de Dani tal cual |
 | 2026-10-26 | TL-CUS ▸ sección 5 | "What each top customer buys" espera el motor (`segments.js` aún no dibuja `customers.buys`) — PR de motor aparte | Claude (PR de motor) | abierto |
 | 2026-10-26 | TL-* / OV-4 | El motor escribe fijo "net sales" (Alphabet dice "revenue") — generalizar en PR de motor aparte (playbook §10) | Claude (PR de motor) | abierto |
 | 2026-10-26 | EV-NOTES | Llevar a la semilla de Notes, con trimestre, las cifras de llamadas de `DD_SEGS`, `DD_CUST` y la tira de KPIs (mapa #9, #12, #13) | Claude | cerrado (semilla v2) |
@@ -451,3 +451,22 @@ Destinos aprobados por SAB el 2026-10-26 (B2), incluidas las fusiones #18, #41, 
 - Correcciones que trajo la fuente oficial: el vehículo de Waymo es **Ojai** (no "Oasis"; corregido también en Notes y en `googl.js`; semilla de Notes → v3); la última analista de 2T26 es Shweta Khajuria (Wolfe Research).
 - Ajuste (SAB): la tarjeta "Cloud backlog (RPO)" pasa a **"Revenue backlog (RPO)"** — $519.5B es el backlog total del 10-Q; Cloud = $513.9B.
 - Pendiente: Call Summary de 3T26 después del reporte del 28-oct-2026.
+
+### 2026-10-26 · BL-GEN-1…5 Bottom Line ▸ General — APROBADAS
+- Qué se mostró: `js/overviews/googl-bl.js` (copia de `meta-bl.js`, parte General) + `js/overviews/googl-bl-data.js` (líneas de gasto de SEC XBRL FY2019–FY2025 y 1T23–2T26, TAC del MD&A, dives verbatim) + `js/overviews/googl-bbg.js` (export BBG, as of 9/8/2026, generado con `scripts/bbg_extract.py`). CSS: los selectores META de Bottom Line ahora incluyen `.ov-googl-dd` (sin reglas nuevas).
+- Decisiones (SAB): consenso de ingreso = suma de segmentos BBG, sin consenso de utilidad bruta/costo de ventas (base mixta bruto/neto de TAC); Normalized = − OI&E después de impuestos a la tasa efectiva; costo de ventas en TAC + otros, luego R&D · S&M · G&A.
+- Autoauditoría: ✔ las líneas cuadran con la utilidad operativa en cada periodo · ✔ sin años tecleados (pie y etiquetas derivados del dato) · ✔ EBITDA = op. income + D&A + SBC en BBG y Summit (la nota lo dice) · ✔ Summit "Model earnings (adj.)" (`mearn`) en Net · ✔ citas de llamadas contra las transcripciones oficiales · ✔ consola sin errores.
+- Excepciones: sin vista "SBC by line" (Alphabet no la divulga). FY2019 dobla la línea "European Commission fines" ($1,697M) dentro de G&A.
+- Reubicación: Dani #19/#21/#22 → dives de TAC y otros costos de ventas; #29/#30 → notas de márgenes; #45 → EV-RES + BL-GEN-1; #31 (escalera de margen de Cloud) → BL-SEG (pendiente).
+
+### 2026-10-26 · BL-SEG Bottom Line ▸ Segments — APROBADA
+- Qué se mostró: bloque de segmentos de `js/overviews/googl-bl.js` (copia del de `meta-bl.js`) + `GOOGL_SEG_Y/Q`, `GOOGL_SEG_ALLOC`, `GOOGL_SEG_DIVES` en `googl-bl-data.js` (10-K FY2025 Nota 15 y 10-Q 1T25–2T26; Q4 = año − nueve meses; rev − comp − other = oi en cada fila).
+- Decisiones (SAB): Alphabet-level como su propia línea (sin ficha); puente By segment (con años del consenso) + By cost, sin sliders; Services por defecto.
+- Autoauditoría: ✔ los cuatro renglones suman la utilidad consolidada · ✔ Summit solo en Consolidated (el modelo no proyecta utilidad por segmento; la nota lo dice) · ✔ citas oficiales · ✔ consola sin errores.
+- Reubicación: Dani #31 (escalera de margen de Cloud) → nota de Profit by segment ▸ Google Cloud + ficha de Cloud.
+- SPLC (SAB): usar los datos de Dani tal cual (export GOOGL US Equity, 22-jul-2026), reformateados al formato de la guía.
+
+### 2026-10-26 · BL-SPLC Bottom Line ▸ Supply Chain — APROBADA
+- Qué se mostró: `js/overviews/googl-splc.js` (copia de `meta-splc.js`) con las cifras SPLC que compiló DOAA351 (GOOGL US Equity, 22-jul-2026), reformateadas a la guía; estilos META extendidos a `.ov-googl-dd`. Modal `splc:` ahora resuelve con `googlSplcPop`.
+- Decisión (SAB): usar los datos de Dani tal cual (el export no está en el repo ni en Drive); el pie lo dice.
+- Reubicación: mapa #23–#28 completos (KPIs, cadena de capex, contenido, dependencia, asimetría → nota, clientes rastreables y geografía → tabla de riesgos/clientes y geografía). `SPLC_INFRA/CONTENT/DEP` y `splcBody` quedan en `googl.js` hasta F-FINAL.

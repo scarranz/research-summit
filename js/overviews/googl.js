@@ -14,7 +14,9 @@ import { mountWatchList } from '../watchlist.js';
 
 import { makeManagement } from './management.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
-import { googlCeHtml, googlCeWire, googlCeBuild, googlCePop } from './googl-ce.js';   // Evolution ▸ Earnings (Setup · Post-Results · Notes), EV-SET/POST/NOTES
+import { googlCeHtml, googlCeWire, googlCeBuild, googlCePop } from './googl-ce.js';
+import { googlBlGeneralHtml, googlBlGeneralBuild, googlBlSegmentsHtml, googlBlSegmentsBuild } from './googl-bl.js';
+import { googlSplcBody, googlSplcBuild, googlSplcPop } from './googl-splc.js';   // Bottom Line ▸ Supply Chain (BL-SPLC, copy of meta-splc.js)   // Bottom Line ▸ General, BL-GEN-1…5 (copy of meta-bl.js)   // Evolution ▸ Earnings (Setup · Post-Results · Notes), EV-SET/POST/NOTES
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/googl.js)
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode it) ──
@@ -2749,8 +2751,9 @@ function deepDiveHtml(c){
     { k:'segcus', l:'Customers', body:segmentsCustomersHtml('GOOGL') },
   ]);
   h+=subtabs('bottomline',[
-    { k:'margins', l:'General', body:marginsBody(c)+unitEconBody(c)+financialsBody(c) },   // B2 #19–22, #29–31, #45
-    { k:'supplychain', l:'Supply Chain', body:splcBody(c) },   // B2 #23–28 → BL-SPLC
+    { k:'margins', l:'General', body:googlBlGeneralHtml() },   // BL-GEN-1…5; Dani's #19–22 → expense dives, #29–30 → margin notes, #31 → BL-SEG, #45 → EV-RES + BL-GEN-1
+    { k:'segments', l:'Segments', body:googlBlSegmentsHtml() },   // BL-SEG; Dani's #31 Cloud margin ladder → Profit by segment ▸ Google Cloud
+    { k:'supplychain', l:'Supply Chain', body:googlSplcBody() },   // BL-SPLC: Dani's SPLC figures (#23–28) in the guide format
   ], true);
   h+='<div class="dd-pane" data-dd="evolution" hidden>'+
       '<div class="ovt-subtabs">'+
@@ -2801,7 +2804,9 @@ function buildSub(root, group, key){
     else if(key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'GOOGL'); });
     else requestAnimationFrame(function(){ initSegmentsOverview(root, 'GOOGL'); });
   } else if(group==='bottomline'){
-    if(key==='margins'){ gBuildMargin(); gBuildCloudM(); gBuildFin(); }
+    if(key==='margins') requestAnimationFrame(function(){ googlBlGeneralBuild(root); });
+    if(key==='segments') requestAnimationFrame(function(){ googlBlSegmentsBuild(root); });
+    if(key==='supplychain') requestAnimationFrame(googlSplcBuild);
   } else if(group==='valuation'){
     if(key==='sensitivity') renderSens(root);
   } else if(group==='mgmt'){
@@ -2958,7 +2963,7 @@ function wireModal(root){
     if(kind==='ddc'){ var cu=DD_CUST[+id]; return cu?{t:cu.ic+' '+esc(cu.n)+' <span class="ov-modal-sub">'+esc(cu.tag)+'</span>',h:cu.detail}:null; }
     if(kind==='arena'){ var ar=DD_ARENA[+id]; return ar?{t:ar.ic+' '+esc(ar.n)+' <span class="ov-modal-sub">'+esc(ar.tag)+'</span>',h:ar.detail}:null; }
     if(kind==='guide'){ var gd=G_GUIDE[+id]; return gd?{t:gd.ic+' '+esc(gd.k),h:gd.d}:null; }
-    if(kind==='splc'){ var sp=SPLC_INFRA[+id]; return sp?{t:esc(sp.n)+' <span class="ov-modal-sub">'+esc(sp.rel)+' relationship · '+esc(sp.cost)+'</span>',h:sp.d}:null; }
+    if(kind==='splc'){ return googlSplcPop(id); }   // Bottom Line ▸ Supply Chain cards (googl-splc.js)
     if(kind==='gexec'){ var ex=G_TRACK[+id]; return ex?{t:esc(ex.n)+' <span class="ov-modal-sub">'+esc(ex.role)+' · '+esc(ex.since)+'</span>',h:ex.detail}:null; }
     return null;
   }

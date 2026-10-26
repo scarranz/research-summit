@@ -255,5 +255,86 @@ export var SOFI_CALL_EARNINGS = { ticker:'SOFI', quarters:[
         { n:'Do margins widen in the second half after the first-half investment?', landed:{ q:'Q2 2026', rank:3 }, tripped:true },
         { n:'Does the capital ratio stay on a path to the low to mid-teens?', landed:{ q:'Q2 2026', rank:1 }, tripped:true }
       ]
+    } },
+
+  // ── REPORTED: Q4 2025 (quarter ended Dec 31 2025; reported Jan 30 2026). Call transcript: docs/calls/SOFI.md (verbatim).
+  // Street = the Bloomberg snapshot of Nov 2 2025 (the last before the print). Summit = the 2026-08-05 model file, frozen in
+  // js/results-data/sofi.js. SoFi gave no discrete 4Q25 guide; the implied Q4 below is derived from the last full-year guide.
+  { q:'Q4 2025', status:'reported', date:'January 30, 2026',
+    setup:{
+      source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2025-11-02 (the last before the print) · Summit DCF model — snapshot 2026-08-05, frozen (its stored 4Q25 projection) · guidance: Q3 2025 call full-year update (no discrete 4Q25 guide)',
+      asOf:'2025-11-02',
+      notes:{
+        'Revenue':{ t:'No discrete guide; the full-year guide implied about $0.96B adjusted', h:'<p>The last full-year guide for 2025 was adjusted net revenue of about <b>$3.54 billion</b>. Against the first three quarters reported (about $2.58B adjusted) that implies roughly <b>$0.96B</b> for the fourth quarter (derived here). The Street on file was near <b>$0.99B</b> on the GAAP total net revenue line.</p>' },
+        'Adjusted EBITDA':{ t:'Full-year guide implied about $0.30B', h:'<p>The full-year guide of about <b>$1.035 billion</b> against about $736M reported through three quarters implies roughly <b>$0.30B</b> for the fourth (derived here). The Street on file was near $0.31B.</p>' },
+        'Adjusted net income':{ t:'Full-year guide implied about $0.15B', h:'<p>The full-year guide of about <b>$455 million</b> against about $308M through three quarters implies roughly <b>$0.15B</b> (derived here). The Street on file was near $0.14B.</p>' },
+        'EPS (diluted)':{ t:'Street at $0.12', h:'<p>The Street bar was about <b>$0.12</b>; SoFi gave no quarterly EPS guide for the fourth quarter.</p>' }
+      },
+      us:ceSummitUs('4Q25'),
+      debate:{ rows:null, synth:'' }
+    },
+    results:{
+      headline:'A record year closed with the first billion-dollar revenue quarter, and management paired it with a 2026 and medium-term outlook that set the next set of bars.',
+      summary:{ paras:[
+        { p:'<b>The year ended with scale in revenue and in profit.</b> Fourth-quarter revenue and adjusted net income came in above the Street, and total originations passed $10B in a quarter for the first time.' },
+        { p:'<b>The outlook carried the weight of the print.</b> Management guided 2026 growth of about 30%, a medium-term plan of at least 30% annual revenue growth and 38% to 42% annual EPS growth through 2028, and segment targets for Financial Services, Lending and Technology Platform.' },
+        { p:'<b>The Technology Platform fall is a contract event rather than demand.</b> Revenue from a large client ended with its contract in the fourth quarter, and the 2026 outlook assumes none from that client.' },
+        { p:'<b>Capital had room.</b> The total risk-based capital ratio was about 23% against a 10.5% minimum, which supports growing the balance sheet.' },
+        { p:'<b>The Loan Platform Business is now a structural part of the model.</b> Fourth-quarter platform originations of $3.7B ran at about $14.5B annualized, and partners had extended their contracts.' }
+      ] },
+      notes:{
+        'Revenue':{ t:'About 4% above the Street on the GAAP line', h:'<p>GAAP total net revenue of <b>$1,025.1M</b> against a Street bar near <b>$0.99B</b>; adjusted net revenue was <b>$1,012.8M</b>, the first quarter above $1B. Financial Services net revenue was $457M (+78%), Lending $486M (+15%) and Technology Platform $122M (+19%). The Summit model had <b>$1,010M</b>.</p>' },
+        'Adjusted EBITDA':{ t:'Slightly above the Street, margin 31%', h:'<p><b>$317.6M</b>, up 60%, against a Street bar near $0.31B and the implied full-year guide of about $0.30B.</p>' },
+        'Adjusted net income':{ t:'About 21% above the Street', h:'<p><b>$173.5M</b> at a 17% margin against a Street bar near $0.14B. It was the ninth consecutive profitable quarter; net income for 2025 was $481M.</p>' },
+        'EPS (diluted)':{ t:'A cent above the Street', h:'<p>EPS of <b>$0.13</b> against a Street bar near $0.12.</p>' },
+        'Total members':{ t:'First quarter above 1M net adds', h:'<p>Members rose 35% to <b>13.7 million</b> after a record 1.0 million additions. Rule of 40 score was 68.</p>' },
+        'Personal loan originations':{ t:'In line with the Street, at a record', h:'<p><b>$7.5B</b> against a Street bar near $7.6B, with platform originations of $3.7B alongside, for total originations of a record $10.5B and over $36B for 2025.</p>' },
+        'Student loan originations':{ t:'Above the Street', h:'<p><b>$1.9B</b>, up 38%, against a Street bar near $1.5B.</p>' },
+        'Home loan originations':{ t:'Near double a year ago, above the Street', h:'<p><b>$1.1B</b>, nearly double the prior year and a record, against a Street bar near $0.9B.</p>' },
+        'Noninterest expense':{ t:'Slightly above the Street', h:'<p>Total noninterest expense of about <b>$0.83B</b> against a Street bar near $0.80B.</p>' }
+      },
+      watch:{ 'Revenue':1, 'Adjusted net income':2, 'Total members':3, 'Personal loan originations':4, 'Adjusted EBITDA':5 },
+      thesisCheck:[],
+      intoCall:[
+        'Guide delivery: does first-quarter revenue come in above the guided $1.04B adjusted?',
+        'Balance sheet mix: how much of personal loan volume stays on the balance sheet as capital ratios stay above 20%?',
+        'Technology Platform: what is the run-rate after the large client exit?',
+        'Cash revenue: how do net interest income and fees split in the next quarter?'
+      ],
+      priceReaction:'Not on file: no price series for the post-print session was loaded into this build.'
+    },
+    call:{
+      prepared:[
+        { topic:'A record year and quarter', theme:'Results', body:'Fourth-quarter adjusted net revenue passed <b>$1B</b> for the first time (+37%); adjusted EBITDA was <b>$318M</b> (+60%, 31% margin), net income <b>$174M</b> (17% margin) and EPS <b>$0.13</b>. For 2025: adjusted net revenue <b>$3.6B (+38%)</b>, adjusted EBITDA <b>$1.1B (+58%, 29% margin)</b>, net income <b>$481M</b>. Rule of 40 score of 68 for the quarter.' },
+        { topic:'Members, products and fee revenue', theme:'Members and products', body:'A record <b>1.0M</b> members were added, the first time above one million in a quarter, for <b>13.7M (+35%)</b>, more than twenty times the 650,000 of 2018. Unaided brand awareness reached a record 9.6%. Fee-based revenue ran at about <b>$1.8B</b> annualized, from under $1.2B a year earlier.' },
+        { topic:'Originations and the Loan Platform Business', theme:'Loan Platform Business', body:'Total originations reached a record <b>$10.5B</b>, the first quarter above $10B, including <b>$3.7B</b> from the Loan Platform Business; over $36B for the year. Student loans <b>$1.9B (+38%)</b> and home loans a record <b>$1.1B</b>, nearly double. A securitization priced at a spread of 101 basis points.' },
+        { topic:'Financial Services, Lending and Technology Platform', theme:'Segments', body:'Financial Services net revenue <b>$457M (+78%)</b>, contribution margin 51%, with platform revenue of $194M in the quarter. Lending adjusted net revenue <b>$486M (+15%)</b>, margin 54%. Technology Platform net revenue <b>$122M (+19%)</b>, over $450M for the year. Interchange rose 66% on close to $22B of annualized spend.' },
+        { topic:'Crypto, SoFiUSD and new products', theme:'New products', body:'SoFi Pay (international payments on blockchain rails) was launched in October in over 30 countries; SoFiUSD launched in December as the first stablecoin issued by a national bank on a public permissionless blockchain. Business banking for crypto and fiat clients starts in 2026, and a Smart Card was built in four and a half months on the technology platform.' },
+        { topic:'Credit and capital', theme:'Credit and capital', body:'The rise in the balance sheet personal loan charge-off rate was driven by mix, as more loans went through the platform and the held book aged; management calls underlying credit strong. Total capital ratio <b>22.9%</b> against a 10.5% minimum; tangible book value <b>$8.9B</b>, or <b>$7.01</b> per share (+57%).' },
+        { topic:'2026 and medium-term outlook', theme:'Outlook', body:'2026: revenue growth of about <b>30%</b>, adjusted EBITDA about <b>$1.6B</b>, adjusted net income about <b>$825M</b> (18% margin) and EPS about <b>$0.60</b> on a mid-teens tax rate. First quarter: adjusted net revenue about <b>$1.04B</b>, EBITDA about <b>$300M</b>, net income about <b>$160M</b>. Medium term: at least 30% revenue CAGR and 38% to 42% EPS CAGR from 2025 to 2028.' }
+      ],
+      qanda:[
+        { q:'Segment detail behind the consolidated guide', analyst:'First question of the Q&A', theme:'Guidance', qFull:'Can the consolidated guidance be broken out by segment?', a:'<b>Chris Lapointe:</b> Revenue growth of roughly 30% in 2026; Financial Services 40% or more; Lending about 23%; Technology Platform about 20% normalized for the large client exit; corporate revenue in line with 2025 in dollars. Medium term: at least 30% annual growth and 38% to 42% EPS growth through 2028, with acceleration in 2027 and 2028 in crypto, brokerage, home and student loans.' },
+        { q:'Loan Platform Business allocation', analyst:'Dan Dolev · Mizuho', theme:'Loan Platform Business', qFull:'How should originations be allocated to the Loan Platform Business versus the balance sheet?', a:'<b>Chris Lapointe:</b> Demand was robust in every asset class in 2025 and remains so, and the company has more flexibility than ever. SoFi is not guiding to platform volumes; the fourth quarter ran at $3.65B, about $14.5B annualized, a level the company is comfortable with, and existing partners have extended their contracts.' },
+        { q:'Crypto, stablecoin and demand for the technology platform', analyst:'Analyst question', theme:'Technology Platform', qFull:'Could the crypto, stablecoin and Smart Card innovation lift interest and adoption among technology platform clients?', a:'<b>Anthony Noto:</b> A year ago there was no interest in blockchain, stablecoins or wallets among platform partners; since the OCC permitted crypto activity at banks, interest has risen meaningfully, with nothing to announce yet. He expects activity in Latin America first, spilling over to the U.S. and to international companies, and sees the CLARITY Act as important.' },
+        { q:'Baseline and termination fee for the large client', analyst:'Analyst question', theme:'Technology Platform', qFull:'What baseline should be used for the pro forma Technology Platform growth, and was the termination fee recognized this quarter?', a:'<b>Anthony Noto:</b> The 20% growth is apples to apples without the large client in both years and the outlook assumes no 2026 revenue from it. The contract ended and its revenue ended in the fourth quarter, recognized at a level equal to the average of the previous six quarters.' },
+        { q:'Return on equity and investment', analyst:'Analyst question', theme:'Returns', qFull:'Has the long-term return-on-equity ambition of 20% to 30% changed, given the progress on ROTCE?', a:'<b>Anthony Noto:</b> The target stays at 20% to 30%; the company will not under-invest while growing above 30%. It will keep running at about a 30% incremental EBITDA margin and keeps at least thirty cents of each incremental dollar for the bottom line.' },
+        { q:'Capital allocation and M&A', analyst:'Analyst question', theme:'Capital', qFull:'How is capital allocation being thought of, including M&A?', a:'<b>Chris Lapointe:</b> The total capital ratio of about 23% is more than 1,000 basis points above the minimum, so the company can grow the balance sheet with good-returning assets and platform partnerships.<br><b>Anthony Noto:</b> So far it is all organic; an acquisition would come only if it appeared at the right price versus building it.' }
+      ],
+      take:'The quarter closed a record year and set a medium-term plan that pairs 30% revenue growth with 38% to 42% EPS growth, with the Loan Platform Business and capital cushion as the support.',
+      highlights:[],
+      dots:'Three threads ran through the call: the <b>outlook</b> (2026 and medium term set the bars), the <b>mix</b> (balance sheet versus platform, with capital room) and the <b>platform reset</b> (a large client exit and a crypto-driven demand story).',
+      threeMinutes:[
+        '<b>Record year, first billion-dollar quarter.</b> Revenue and adjusted net income above the Street; originations above $10B.',
+        '<b>A multi-year plan was set.</b> At least 30% revenue CAGR and 38% to 42% EPS CAGR through 2028.',
+        '<b>Technology Platform resets lower.</b> A large client exited; guidance assumes about 20% growth without it.'
+      ],
+      notBringing:[
+        { item:'The Technology Platform quarterly revenue', why:'Fourth-quarter revenue included the recognition tied to the ended contract, so it is not a run-rate for 2026.' }
+      ],
+      newQuestions:[
+        { n:'Does first-quarter revenue come in above the guided $1.04B?', landed:{ q:'Q1 2026', rank:1 }, tripped:true },
+        { n:'How much of personal loan volume is kept on the balance sheet?', landed:{ q:'Q1 2026', rank:2 }, tripped:true }
+      ]
     } }
 ] };

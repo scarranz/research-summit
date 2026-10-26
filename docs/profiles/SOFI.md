@@ -188,7 +188,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | TL-CUS | Top Line ▸ Customers | ⬜ | | | | |
 | EV-EST | Evolution ▸ Estimates | 👀 | 2026-10-26 | | | 8 métricas, 4 años × 3 snapshots Summit; sin serie de consenso |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | 👀 | 2026-10-26 | | | grilla de consenso por horizonte + gráfica Setup + notas de guía de 3Q26 |
-| EV-POST | Evolution ▸ Earnings ▸ Post-Results | 👀 | 2026-10-26 | | | 2Q26 y 1Q26 completos (resumen, notas, discurso preparado, preguntas); 4Q25 en construcción |
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results | 👀 | 2026-10-26 | | | 2Q26, 1Q26 y 4Q25 completos (resumen, notas, discurso preparado, preguntas); trimestres anteriores (4Q23–3Q25) sin cargar |
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | 👀 | 2026-10-26 | | | registro de temas vacío a propósito; el analista agrega notas en el portal |
 | BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | 👀 | 2026-10-26 | | | sobre el motor Results (sección blprof) |
 | BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⬜ | | | | |
@@ -472,3 +472,10 @@ playbook (candidata a podar, **solo con tu OK**).
 - Fuentes: transcripción de la llamada del 2026-04-29, 10-Q / consenso: ingreso GAAP 1,100.4 vs Street ≈ 1.06B; EBITDA ajustado 339.9 vs ≈ 0.32B; originaciones personales 8.3B vs ≈ 7.6B, estudiantiles 2.6B vs ≈ 1.6B, hipotecarias 1.2B vs ≈ 1.0B; miembros 14.7M.
 - Verificado contra la transcripción: récords de originación "por cuatro trimestres seguidos", platform +90% interanual y menos que en 4Q25, SoFi Plus a $10 al mes con 4.5% de APY hasta $20,000. Se quitó de un borrador una frase que no estaba en la llamada (crecimiento del platform de "2.3 veces en dos años").
 - Autoauditoría: claves de nota válidas en `SOFI_CE_CONS` ✔ · mismo tono objetivo y mismas omisiones declaradas que 2Q26 (sin `thesisCheck`, sin precio del día siguiente) ✔ · `node --check` ✔.
+
+### 2026-10-26 · EV-POST Post-Results, trimestre 4Q25 — 👀 EN REVISIÓN
+- Qué se mostró: entrada completa de Q4 2025 (reportado el 2026-01-30) en `js/overviews/sofi-ce-data.js`: Setup (consenso BBG del 2025-11-02, Summit congelado, **sin guía discreta del 4T25**: el implícito sale de la última guía anual: ingreso ajustado ≈ $0.96B, EBITDA ≈ $0.30B y utilidad ajustada ≈ $0.15B, derivados y marcados como tales), resultados (titular, 5 párrafos, 9 notas) y la llamada (7 bloques preparados, 6 preguntas y respuestas).
+- Fuentes: transcripción de la llamada del 2026-01-30 y consenso BBG: ingreso GAAP 1,025.1 vs Street ≈ 0.99B; utilidad ajustada 173.5 vs ≈ 0.14B; EBITDA ajustado 317.6 vs ≈ 0.31B; originaciones personales 7.5B vs ≈ 7.6B, estudiantiles 1.9B vs ≈ 1.5B, hipotecarias 1.1B vs ≈ 0.9B. Guía de 2026 y de mediano plazo de esa llamada (crecimiento ≈ 30%, EBITDA ≈ $1.6B, utilidad ≈ $825M, EPS ≈ $0.60; CAGR 2025–2028 de ingreso ≥ 30% y de EPS 38–42%; segmentos: FS ≥ 40%, Lending ≈ 23%, Tecnología ≈ 20% normalizado).
+- Limitación declarada: en las preguntas de analistas del 4T25 solo atribuí el nombre cuando la transcripción lo identifica con certeza (Dan Dolev, Mizuho); las demás dicen "Analyst question".
+- Con esto, Earnings cubre los tres últimos prints (4Q25, 1Q26, 2Q26) más el Setup de 3Q26. Los trimestres anteriores en `docs/calls` (4Q23–3Q25) quedan sin cargar.
+- Autoauditoría: claves válidas ✔ · claims contrastados con la transcripción ✔ (contratos de partners extendidos, "al menos $0.30 de cada dólar incremental", interchange +66% sobre ~$22B) · `node --check` ✔ · el HTML de Earnings renderiza (267 mil caracteres) con los pills Q4 2025, Q1 2026, Q2 2026 y Q3 2026 ✔.

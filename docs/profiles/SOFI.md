@@ -153,6 +153,12 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 ❓ SOFI · guía — las 4 etiquetas de guía están en 0; la guía se saca de los 8-K y de las llamadas (SOFI_calls.txt).
 ```
 
+```
+❓ SOFI · SEG_REVENUE / NIE / SBC / PCL — los trimestres de Summit no suman al anual del mismo modelo
+   Lo que se ve: ingreso 2026 = trimestres 4,866.7 (1Q26 1,100.4 + 2Q26 1,218.7 + 3Q26 1,207.4 + 4Q26 1,340.2) vs anual 5,317.5; 2027 = 6,952.6 vs 6,280.3. 1Q27 salta a 1,594 (+19% QoQ) desde 4Q26. NIE 2027 5,693.7 vs 4,876.5; SBC 2027 512.4 vs 390.1; PCL 2027 47.7 vs 60.5. EBITDA, utilidad, SBC y PCL de 2026 sí cuadran (diferencia ≤ 0.1).
+   Quién responde: autor del modelo. Mientras tanto: se muestra tal cual con la advertencia en la nota; no se fuerza el cuadre.
+```
+
 ### Cambios del mapa
 
 - 2026-10-26 · snapshot 2026-08-05 · primera pasada — falta cuadre contra filing y el archivo `summit-map/sofi.js`.
@@ -174,8 +180,8 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | OV-6 | Overview ▸ Competitors (peer map) | 👀 | 2026-10-26 | | | 5 peers + SoFi; Nu fuera; denominadores de EDGAR; módulo `sofi-peers.js` |
 | OV-7 | Overview ▸ Timeline | 👀 | 2026-10-26 | | | 11 hitos en orden cronológico; 6 con Read more |
 | OV-F | Overview ▸ Pie de fuentes | 👀 | 2026-10-26 | | | OV_SOURCES, único pie del Overview |
-| EV-RES-DATA | Dataset de Results (números) | ⬜ | | | | |
-| EV-RES | Evolution ▸ Results | ⬜ | | | | |
+| EV-RES-DATA | Dataset de Results (números) | 👀 | 2026-10-26 | | | 17 métricas q + y; act, summit, cons; estMatrix cons + summit; sin guía todavía |
+| EV-RES | Evolution ▸ Results | 👀 | 2026-10-26 | | | primer sub-tab del Deep Dive; motor results.js |
 | TL-GEN | Top Line ▸ General | ⬜ | | | | |
 | TL-SEG | Top Line ▸ Segments | ⬜ | | | | |
 | TL-OTH | Top Line ▸ Other | ⬜ | | | | |
@@ -225,6 +231,8 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 - 2026-10-26 · general · Nu queda fuera del peer map (Dani no sube el 20-F); los desajustes leves de datos son aceptables; Claude sigue ejecutando las unidades restantes y los gates se agrupan: Dani revisa en el preview y marca lo que no le convence — Dani
 - 2026-10-26 · OV-1 · Celda CEO cerrada: "Anthony Noto · CEO since Mar 2018" (nombrado el 2018-01-23, efectivo 2018-03-01; fuente: sala de prensa de SoFi) — verificado por Claude
 - 2026-10-26 · OV-6 · Peers finales: HOOD, SCHW, IBKR, UPST, AFRM (+ SOFI). Nu queda fuera. Las frases `why` de cada peer las propuso Claude (el analista las puede cambiar al revisar) — Dani / Claude
+- 2026-10-26 · EV-RES-DATA · `act` = valores reportados de Bloomberg (últimos 5 trimestres y 3 años; cuadran con el 10-K / 10-Q) y, para lo anterior y las líneas de ingreso, el `actuals_history` del modelo; 2Q26 de interés neto (788.2) y de ingreso no financiero (430.5) se fijan con el 10-Q. `summit` = `projection_history` del snapshot 2026-08-05, congelado. `cons` = último snapshot BBG que aún traía el periodo como pronóstico. La guía de la empresa queda vacía hasta cargarla de los 8-K / llamadas — Claude, bajo la regla del analista de aceptar desajustes leves
+- 2026-10-26 · EV-RES-DATA · La inconsistencia del modelo Summit (los trimestres de ingreso, gasto no financiero, SBC y provisión no suman al anual de 2026–27) **se publica con una advertencia en la nota de cada métrica**, no se corrige ni se fuerza el cuadre; es una duda para el autor del modelo — Claude (el analista pidió no frenar por desajustes)
 
 ## 4. Excepciones aceptadas
 
@@ -389,3 +397,31 @@ playbook (candidata a podar, **solo con tu OK**).
 - Autoauditoría: ningún múltiplo ni market cap en el archivo ✔ · P/E y EV/EBITDA cambian el eje ✔ (prueba en Node con precios de prueba: P/E trailing dibuja 5, forward solo SOFI, EV/EBITDA ninguno hasta tener EV vivo) · Forward/Trailing cambian ambos ejes ✔ · × elimina y Add restaura datos del archivo ✔ · ejes derivados del dato ✔ · sin precio en vivo no hay burbuja ✔ · sin hex nuevos más allá de los grises de ejes del módulo copiado ✔ · `node --check` ✔ · render visual no verificado por Claude.
 - Notas: EBITDA no aplica a brokers (HOOD, SCHW, IBKR) y por eso solo P/E; UPST y AFRM llevan EBITDA = utilidad operativa + D&A del 10-K y necesitan EV en vivo; AFRM sin P/E (beneficio fiscal de $1.44B, chip lo dice); IBKR usa el EPS de la Clase A; el feed de HOOD trae el 10-K/A (falta contrastar con el 10-K original). Peers sin forward: "trailing only — no Street file".
 - Dependencia: la tabla de números va en Valuation ▸ Peers (VA-PEERS), mismo estado.
+
+### 2026-10-26 · EV-RES-DATA Dataset de Results — 👀 EN REVISIÓN
+- Qué se mostró: `js/results-data/sofi.js` (registrado en `js/results.js`): 17 métricas trimestrales (1Q24–4Q27) y anuales (2024–2028) — Top Line (ingreso neto, 6 líneas de ingreso, miembros y originaciones) y Margins & Profitability (EBITDA ajustado, utilidad neta ajustada, EPS, gasto no financiero, SBC, provisión); `act` · `summit` · `cons` + `estMatrix` (BBG: 18 snapshots; Summit: 3 snapshots).
+- Fuentes: 10-K FY2025 y 10-Q 2Q26; `BBG_CONSENSUS.txt` + `Consensus_Portal.xlsm` (último snapshot 2026-10-26); Summit MCP (snapshots 2026-02-03, 2026-04-29, 2026-08-05, congelados). Mapas: `scripts/consensus/map_sofi.json` y `map_summit_sofi.json`.
+- Cuadre vs fuente (3 periodos): ingreso 4Q25 act 1,025.051 = 10-Q (tabla trimestral 1,025,051) ✔ · EBITDA ajustado 1Q26 act 339.901 = 10-Q (339,901) ✔ · miembros 2Q26 act 15,814 mil = "más de 15.8 millones" ✔.
+- Cuadre trimestres ↔ año de cada año estimado (suma de trimestres · anual · diferencia, millones):
+
+| Métrica · año | Summit | Street (BBG) |
+|---|---|---|
+| Ingreso 2026 | 4,866.7 · 5,317.5 · −450.8 ✘ | 4,924.5 · 4,782.4 · +142.1 (~3%) |
+| Ingreso 2027 | 6,952.6 · 6,280.3 · +672.3 ✘ | trimestres incompletos (BBG llega a 2Q27) |
+| EBITDA 2026 | 1,647.1 · 1,647.1 · 0.0 ✔ | 1,628.3 · 1,628.4 · −0.1 ✔ |
+| EBITDA 2027 | 2,177.8 · 2,186.1 · −8.3 | trimestres incompletos |
+| Utilidad ajustada 2026 | 825.7 · 825.7 · 0.0 ✔ | 810.4 · 806.0 · +4.4 |
+| Utilidad ajustada 2027 | 1,133.0 · 1,095.0 · +38.1 | trimestres incompletos |
+| Gasto no financiero 2026 | 3,801.0 · 3,823.7 · −22.7 | 3,858.0 · 3,853.0 · +5.0 |
+| SBC 2026 | 282.5 · 282.5 · 0.0 ✔ | 299.1 · 299.2 · −0.1 ✔ |
+| Provisión 2026 | 48.7 · 48.7 · 0.0 ✔ | 48.8 · 48.2 · +0.6 |
+
+- Prueba de aceptación `verify_preprint.py SOFI cons`: 225 celdas iguales, 0 cambiadas, 0 rellenadas, 0 borradas ✔.
+- Autoauditoría: etiquetas de periodo `nQyy` / `yyyy` ✔ · comillas rectas ✔ · margen con numerador y denominador de la misma serie ✔ · periodo futuro = `act: null` ✔ · estimados sin trimestres que existan en otra fuente quedan `null` (BBG sin 3Q27–4Q27) ✔ · `node` carga el dataset y `results.js` ✔.
+- Pendiente: guía de la empresa (de los 8-K y las llamadas; el perfil viejo trae `GUID_ANNUAL` / `GUID_QTR` en `sofi.js`); métrica por segmento (Lending / Technology Platform / Financial Services) no está en el modelo y se arma con los filings en TL-SEG.
+
+### 2026-10-26 · EV-RES Evolution ▸ Results — 👀 EN REVISIÓN
+- Qué se mostró: primer sub-tab del Deep Dive de SOFI (pestaña "Deep Dive" ahora visible): Evolution ▸ Results con el motor `results.js` (gráfica de barras, selector de métrica por familia, Quarterly | Annual, leyenda Actual · Summit · Consensus, tabla "Period detail", tarjeta Actuals vs Estimates y Road to the print por el `estMatrix`).
+- Raíz `ov-sofi-dd` agregada a las listas de `css/selectors.css` y con acento `--steel` en `css/overview.css`.
+- Sin Estimates / Earnings todavía: el sub-tab se agrega cuando su unidad esté construida (regla 5).
+- Autoauditoría: `node --check` de `sofi.js` y `results.js` ✔ · `resultsHtml('SOFI')` genera el panel ✔ · render visual no verificado por Claude.

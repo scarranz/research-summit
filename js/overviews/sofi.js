@@ -10,6 +10,7 @@
 // SoFi's FY2025 Form 10-K, Q1 2026 Form 10-Q, and Q1 2026 investor presentation / earnings call.
 
 import { soStdPeerScatter, soWireScatters } from './sofi-peers.js';   // OV-6 peer map (data + render + live quotes)
+import { resultsHtml, initResults } from '../results.js';   // Evolution ▸ Results engine (dataset: js/results-data/sofi.js)
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -4004,4 +4005,46 @@ function init(c){
   if (activeKey === 'fees') requestAnimationFrame(buildFeeTab);
 }
 
-export var sofiOverview = { html: html, init: init };
+// ═══ Deep Dive (playbook §5 / §7.2) — built one sub-tab at a time; a section or sub-tab is added only when its unit is
+// built (rule 5: nothing placeholder). Today: Evolution ▸ Results (EV-RES), the Results engine on js/results-data/sofi.js.
+function ddSubtabs(group, subs, hiddenPane){
+  var bar = '<div class="ovt-subtabs">'+subs.map(function(s, i){ return '<button type="button" class="ovt-subtab'+(i===0?' active':'')+'" data-ovst="'+s.k+'">'+esc(s.l)+'</button>'; }).join('')+'</div>';
+  var panes = subs.map(function(s, i){ return '<div class="ovt-subpane" data-ovst="'+s.k+'"'+(i===0?'':' hidden')+'>'+s.body+'</div>'; }).join('');
+  return '<div class="dd-pane" data-dd="'+group+'"'+(hiddenPane?' hidden':'')+'>'+bar+panes+'</div>';
+}
+function deepDiveHtml(c){
+  var h = '<div class="ov ov-sofi-dd" data-brand="SOFI">';
+  h += '<div class="dd-tabs"><button type="button" class="dd-tab active" data-dd="evolution">Evolution</button></div>';
+  h += ddSubtabs('evolution', [
+    { k:'results', l:'Results', body:resultsHtml('SOFI') }
+  ], false);
+  h += '</div>';
+  return h;
+}
+function ddActiveKey(root, group){ var p = root.querySelector('.dd-pane[data-dd="'+group+'"] .ovt-subtab.active'); return p ? p.getAttribute('data-ovst') : null; }
+function ddBuildSub(root, group, key){
+  if (group === 'evolution' && key === 'results') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'SOFI'); });
+}
+function ddShowSub(root, group, key){
+  var pane = root.querySelector('.dd-pane[data-dd="'+group+'"]'); if (!pane) return;
+  pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst') === key); });
+  pane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovst') !== key); });
+  requestAnimationFrame(function(){ ddBuildSub(root, group, key); });
+}
+function ddShow(root, group){
+  root.querySelectorAll('.dd-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-dd') === group); });
+  root.querySelectorAll('.dd-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-dd') !== group); });
+  var k = ddActiveKey(root, group); if (k) requestAnimationFrame(function(){ ddBuildSub(root, group, k); });
+}
+function deepDiveInit(c){
+  var root = document.querySelector('.ov-sofi-dd'); if (!root) return;
+  root.querySelectorAll('.dd-tab').forEach(function(b){ b.onclick = function(){ ddShow(root, b.getAttribute('data-dd')); }; });
+  ['evolution'].forEach(function(g){
+    var pane = root.querySelector('.dd-pane[data-dd="'+g+'"]'); if (!pane) return;
+    pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.onclick = function(){ ddShowSub(root, g, b.getAttribute('data-ovst')); }; });
+  });
+  var g0 = root.querySelector('.dd-tab.active'); if (g0) ddShow(root, g0.getAttribute('data-dd'));
+}
+
+export var sofiOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

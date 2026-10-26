@@ -1,0 +1,109 @@
+{
+  "_note": "Config for emit_summit_matrix.py - the SUMMIT side of estMatrix for SOFI (the model's own estimates per snapshot, USD millions). The consensus side is map_sofi.json. Written Oct 26 2026 for the SOFI profile (docs/profiles/SOFI.md). The model has no EPS row, so `eps` has no Summit series.",
+  "metrics": {
+    "rev": "SEG_REVENUE",
+    "nie": "NIE",
+    "ebitda": "EBITDA",
+    "earnings": "EARNINGS",
+    "sbc": "SBC",
+    "pcl": "PCL",
+    "lpb": "LPB_REVENUE",
+    "members": "MEMB",
+    "plov": "PLOV",
+    "slov": "SLOV",
+    "hlov": "HLOV"
+  },
+  "_sign_note": "MEMB is in THOUSANDS in the model and the dataset carries thousands too, so no scaling.",
+  "sign": {},
+  "decimals": {
+    "_default": 1,
+    "members": 0
+  },
+  "_vintages_note": "The three model snapshots in the MCP. lastActual = the last period REPORTED in that file: the Feb 3 and Apr 29 files still carry 4Q25 as a projection (1,009.2 and 1,009.8 vs the reported 1,025.1), so both are pre-4Q25-print vintages; the Aug 5 file has actuals through 2Q26 (call Jul 29 2026).",
+  "vintages": [
+    {
+      "id": "2026-02-03",
+      "label": "Feb 3, 2026",
+      "lastActual": {
+        "q": "3Q25",
+        "y": "2024"
+      }
+    },
+    {
+      "id": "2026-04-29",
+      "label": "Apr 29, 2026",
+      "lastActual": {
+        "q": "3Q25",
+        "y": "2024"
+      }
+    },
+    {
+      "id": "2026-08-05",
+      "label": "Aug 5, 2026",
+      "lastActual": {
+        "q": "2Q26",
+        "y": "2025"
+      }
+    }
+  ],
+  "views": {
+    "q": [
+      "rev",
+      "nie",
+      "ebitda",
+      "earnings",
+      "sbc",
+      "pcl",
+      "lpb",
+      "members",
+      "plov",
+      "slov",
+      "hlov"
+    ],
+    "y": [
+      "rev",
+      "nie",
+      "ebitda",
+      "earnings",
+      "sbc",
+      "pcl",
+      "lpb",
+      "members",
+      "plov",
+      "slov",
+      "hlov"
+    ]
+  },
+  "prefer_source": [
+    "SEGM",
+    "DEFAULT"
+  ],
+  "axis": {
+    "q": [
+      "1Q24",
+      "2Q24",
+      "3Q24",
+      "4Q24",
+      "1Q25",
+      "2Q25",
+      "3Q25",
+      "4Q25",
+      "1Q26",
+      "2Q26",
+      "3Q26",
+      "4Q26",
+      "1Q27",
+      "2Q27",
+      "3Q27",
+      "4Q27"
+    ],
+    "y": [
+      "2024",
+      "2025",
+      "2026",
+      "2027",
+      "2028",
+      "2029"
+    ]
+  }
+}

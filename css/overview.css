@@ -21,6 +21,13 @@
   --brand-2: var(--steel);   /* Key Facts accent line = Summit steel, not SoFi blue (playbook §8) */
 }
 
+/* SoFi Deep Dive root: Summit steel accent, never SoFi blue (playbook §8 / §21); the legacy .ov-sofi tabs keep theirs. */
+.ov-sofi-dd {
+  --brand: var(--steel);
+  --brand-soft: rgba(62,90,130,0.08);
+  --brand-2: var(--steel);
+}
+
 /* SoFi sub-tabs — refreshed segmented / pill style (scoped to SoFi only). */
 .ov-sofi .ovt-tabs {
   display: inline-flex;

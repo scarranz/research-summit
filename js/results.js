@@ -25,6 +25,7 @@ import { googlResults } from './results-data/googl.js';
 import { googlSetup } from './results-data/googl-setup.js';
 import { uberResults, uberSetup } from './results-data/uber.js';
 import { metaResults } from './results-data/meta.js';
+import { sofiResults } from './results-data/sofi.js';
 import { metaSetup } from './results-data/meta-setup.js';
 import { ibkrResults } from './results-data/ibkr.js';
 import { ibkrSetup } from './results-data/ibkr-setup.js';
@@ -52,6 +53,7 @@ var RESULTS_DATA = {
   UBER: uberResults,
   UBER_SETUP: uberSetup,
   META: metaResults,
+  SOFI: sofiResults,
   META_SETUP: metaSetup,
   IBKR: ibkrResults,
   IBKR_SETUP: ibkrSetup,

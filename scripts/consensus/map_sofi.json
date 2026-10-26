@@ -1,0 +1,117 @@
+{
+  "supersede_latest": true,
+  "_doc": "SOFI metric map for emit_matrix.py (schema v2 — Bloomberg CODE + segment). Read off the newest snapshot (10/26/2026; 18 SOFI snapshots 2022-05-15 -> 2026-10-26). USD millions unless noted. Net Revenue is GAAP total net revenue (2Q26 1,218.676 = the 10-Q), not the Summit model's 1,197. Adjusted EBITDA / Adjusted Net Income / Diluted EPS are the company's adjusted measures (FY2025: GAAP and adjusted net income are both 481.3). Written Oct 26 2026 for the SOFI profile (docs/profiles/SOFI.md). Slots kpi16-18 are not mapped: their label and code disagree (build log §6, BBG). Members: Bloomberg reports millions (15.8); the dataset carries THOUSANDS like the Summit model and the filings, so sign=1000.",
+  "segments": {
+    "pl": "SEG0000519979",
+    "sl": "SEG0000519984",
+    "hl": "SEG0000519980"
+  },
+  "q": {
+    "rev": {
+      "code": "CB_IS_NET_REVENUE",
+      "unit": "usdM"
+    },
+    "nie": {
+      "code": "IS_OPERATING_EXPN",
+      "unit": "usdM"
+    },
+    "ebitda": {
+      "code": "IS_COMPARABLE_EBITDA",
+      "unit": "usdM"
+    },
+    "earnings": {
+      "code": "IS_COMP_NET_INCOME_ADJUST_OLD",
+      "unit": "usdM"
+    },
+    "eps": {
+      "code": "IS_COMP_EPS_ADJUSTED_OLD",
+      "unit": "eps"
+    },
+    "sbc": {
+      "code": "CF_STOCK_BASED_COMPENSATION",
+      "unit": "usdM"
+    },
+    "pcl": {
+      "code": "IS_PROV_FOR_LOAN_LOSS",
+      "unit": "usdM"
+    },
+    "lpb": {
+      "code": "CB_IS_LENDNG_FEES",
+      "unit": "usdM"
+    },
+    "members": {
+      "code": "NUM_ACTIVE_ACCOUNTS",
+      "unit": "eps",
+      "sign": 1000
+    },
+    "plov": {
+      "code": "LOAN_PRODUCTION_ORIGINAL",
+      "unit": "usdM",
+      "segment": "pl"
+    },
+    "slov": {
+      "code": "LOAN_PRODUCTION_ORIGINAL",
+      "unit": "usdM",
+      "segment": "sl"
+    },
+    "hlov": {
+      "code": "LOAN_PRODUCTION_ORIGINAL",
+      "unit": "usdM",
+      "segment": "hl"
+    }
+  },
+  "y": {
+    "rev": {
+      "code": "CB_IS_NET_REVENUE",
+      "unit": "usdM"
+    },
+    "nie": {
+      "code": "IS_OPERATING_EXPN",
+      "unit": "usdM"
+    },
+    "ebitda": {
+      "code": "IS_COMPARABLE_EBITDA",
+      "unit": "usdM"
+    },
+    "earnings": {
+      "code": "IS_COMP_NET_INCOME_ADJUST_OLD",
+      "unit": "usdM"
+    },
+    "eps": {
+      "code": "IS_COMP_EPS_ADJUSTED_OLD",
+      "unit": "eps"
+    },
+    "sbc": {
+      "code": "CF_STOCK_BASED_COMPENSATION",
+      "unit": "usdM"
+    },
+    "pcl": {
+      "code": "IS_PROV_FOR_LOAN_LOSS",
+      "unit": "usdM"
+    },
+    "lpb": {
+      "code": "CB_IS_LENDNG_FEES",
+      "unit": "usdM"
+    },
+    "members": {
+      "code": "NUM_ACTIVE_ACCOUNTS",
+      "unit": "eps",
+      "sign": 1000
+    },
+    "plov": {
+      "code": "LOAN_PRODUCTION_ORIGINAL",
+      "unit": "usdM",
+      "segment": "pl"
+    },
+    "slov": {
+      "code": "LOAN_PRODUCTION_ORIGINAL",
+      "unit": "usdM",
+      "segment": "sl"
+    },
+    "hlov": {
+      "code": "LOAN_PRODUCTION_ORIGINAL",
+      "unit": "usdM",
+      "segment": "hl"
+    }
+  }
+}

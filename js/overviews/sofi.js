@@ -287,6 +287,70 @@ var SOFI_BIZ = [
 function sofiFourQuad(){
   return '<div class="q2">'+SOFI_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
 }
+// ─── OV-4 — How SoFi makes money (FY2025) ─────────────────────────────────────────────────────────────────
+// Segments, in 10-K order: [label, % of the three segments' $3,841.2M, '$x.xxB', share text]. Source: FY2025 10-K,
+// MD&A segment table: Lending $1,848.9M · Technology Platform $450.2M · Financial Services $1,542.0M. They sum to
+// $3,841.2M; total net revenue is $3,613.4M, so Corporate/Other (which holds the intercompany eliminations —
+// $85.5M of Technology Platform fees, Note on segments) takes $227.8M off (reported total minus the segments).
+// The 10-K gives no revenue by geography, so there is no Geography view (playbook §8: a view needs ≥ 2 slices).
+var GMM_SEG = [
+  ['Lending',             48.1, '$1.85B', '48%'],
+  ['Technology Platform', 11.7, '$0.45B', '12%'],
+  ['Financial Services',  40.1, '$1.54B', '40%']
+];
+// Qualitative definitions (no numbers in desc); the numbers sit in the nested "The numbers" rows.
+var REV_DEFS = [
+  { seg:'Lending (the largest segment)',
+    desc:'Personal, student and home loans made to members, which SoFi holds on its balance sheet or sells, plus the <b>Loan Platform Business</b>, where SoFi originates loans for third-party partners. It earns interest on loans it holds, fees and gains when it originates and sells them, and servicing income.',
+    econ:[['FY2025 net revenue','$1,848.9M · 48% of the three segments'],['Growth','+24% (from $1,485.2M)'],['Contribution profit','$1,016.9M (+14%)'],['Contribution margin','55%'],['Origination volume','+57% (10-K)']] },
+  { seg:'Technology Platform (the B2B engine)',
+    desc:'Cloud technology that lets banks, fintechs and other enterprises create, launch and run financial products: card and payments processing and core-banking software. Clients pay SoFi for using the platform and for related services; it holds no loans and takes no credit risk.',
+    econ:[['FY2025 net revenue','$450.2M · 12% of the three segments'],['Growth','+14% (from $395.2M)'],['Contribution profit','$144.4M (+14%)'],['Contribution margin','32%'],['Intercompany fees','$85.5M inside segment revenue, eliminated in Corporate/Other']],
+    econNote:'Segment revenue differs from the "Technology products and solutions" line of the income statement ($360.9M): the segment includes intercompany fees that are eliminated in consolidation.' },
+  { seg:'Financial Services (the member engine)',
+    desc:'Everyday money products: <b>SoFi Money</b> checking and savings, <b>SoFi Invest</b>, <b>SoFi Credit Card</b>, <b>SoFi Crypto</b> and <b>SoFi Relay</b>. They bring members in often. SoFi earns interchange, brokerage and other fees, plus net interest on deposits and card balances; the deposits also help fund its lending.',
+    econ:[['FY2025 net revenue','$1,542.0M · 40% of the three segments'],['Growth','+88% (from $821.5M)'],['Contribution profit','$792.9M (+158%)'],['Contribution margin','51%'],['Total deposits (company-wide)','$37.5B at Dec 2025 (+44%)']] }
+];
+// The five lines of total net revenue, as the 10-K's income statement and MD&A report them (not split by segment).
+var REV_LINES = [
+  ['Net interest income',                                     '$2,219.0M · 61% · +29%'],
+  ['Loan platform fees',                                      '$575.9M · 16% · +307%'],
+  ['Technology products and solutions',                       '$360.9M · 10% · +3%'],
+  ['Loan origination, sales, securitizations and servicing',  '$242.9M · 7% · −13%'],
+  ['Other',                                                   '$214.6M · 6% · +14%']
+];
+// Bars shorter than ~10% can't hold their $ label: it moves just outside. Light greys ranked by size (css .gmm-neutral).
+function gmmRank(arr){ var o = arr.map(function(r, i){ return [r[1], i]; }).sort(function(a, b){ return b[0] - a[0]; }), rk = [];
+  o.forEach(function(x, j){ rk[x[1]] = Math.min(j + 1, 6); }); return rk; }
+function gmmBars(arr){
+  var rk = gmmRank(arr);
+  return '<div class="ov-mbars gmm-neutral">'+arr.map(function(r, i){
+    var out = r[1] < 10;
+    return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+'</div>'+
+      '<div class="ov-mbar-track'+(out?' out':'')+'"><div class="ov-mbar-fill gmm-g'+rk[i]+'" style="width:'+Math.max(r[1],1.2)+'%">'+(out?'':esc(r[2]))+'</div>'+(out?'<span class="ov-mbar-outv">'+esc(r[2])+'</span>':'')+'</div>'+
+      '<div class="ov-mbar-v">'+esc(r[3])+'</div></div>';
+  }).join('')+'</div>';
+}
+function accRows(rowsArr){ return rowsArr.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join(''); }
+function sofiMoneyMap(){
+  var h = '<div class="ov-diagram-cap gmm-cap-top">FY2025 net revenue <b>$3.61B (+35%)</b>, by <b>segment</b>. The three segments sum to $3.84B; Corporate/Other, which includes intercompany eliminations, takes it down to the reported figure. The 10-K gives no revenue by geography.</div>';
+  h += gmmBars(GMM_SEG);
+  h += '<div class="mm-defs acc-list">'+REV_DEFS.map(function(s){
+    var econ = '<div class="acc"><button type="button" class="acc-h">The numbers <span class="acc-x">+</span></button><div class="acc-b" hidden>'+accRows(s.econ)+(s.econNote?'<div class="ave-subh-note acc-note">'+esc(s.econNote)+'</div>':'')+'</div></div>';
+    return '<div class="acc"><button type="button" class="acc-h">'+esc(s.seg)+'<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+s.desc+'</div>'+econ+'</div></div>';
+  }).join('');
+  h += '<div class="acc"><button type="button" class="acc-h">The revenue lines <span class="acc-x">+</span></button><div class="acc-b" hidden>'+accRows(REV_LINES)+
+       '<div class="ave-subh-note acc-note">The five lines add to the $3,613.4M of total net revenue. They are company-wide, not split by segment.</div></div></div>';
+  h += '</div>';
+  h += '<div class="ov-diagram-cap gmm-cap-end">FY2025: income before income taxes <b>$525.9M</b> (14.6% margin) · net income <b>$481.3M</b> (13.3%). Net income is about flat versus FY2024 ($498.7M) because 2024 included a one-time income tax benefit from releasing a valuation allowance. '+
+       '<span class="ave-subh-note">Source: SoFi FY2025 Form 10-K (MD&amp;A segment results and noninterest income table; Note on segments; Item 1).</span></div>';
+  return h;
+}
+function collapsible(title, inner, open){
+  return '<div class="ov-collap'+(open?' open':'')+'">'+
+    '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+esc(title)+'</button>'+
+    '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+inner+'</div></div>';
+}
 function sofiMcCell(root, txt){ var el = root.querySelector('#sofiMc'); if (el) el.textContent = txt; }
 function renderMarketCap(root){
   import('../api.js').then(function(api){ return api.liveQuote('SOFI'); }).then(function(res){
@@ -305,13 +369,9 @@ function overviewBody(c){
   h += '<p class="ov-lede">'+esc(DESC)+'</p>';
   h += sofiFourQuad();   // OV-3
 
-  // 3 — How it makes money
-  h += sec('How SoFi Makes Money', bullets(HOW_MONEY));
-
-  // 4 — Segments
-  h += sec('Three Segments', SEGMENTS.map(function(s){
-    return '<div class="ov-row"><div class="ov-row-k">'+esc(s[0])+'</div><div class="ov-row-v">'+esc(s[1])+'</div></div>';
-  }).join(''));
+  // OV-4 — How SoFi makes money (replaces "How SoFi Makes Money" bullets and "Three Segments"; both constants
+  // stay below, unrendered, until their remaining facts find a home — B2 #3).
+  h += collapsible('How SoFi makes money', sofiMoneyMap(), false);
 
   // 5 — Financial performance (FY2024 vs FY2025)
   h += sec('Financial Performance (FY2024 → FY2025)',
@@ -3703,6 +3763,9 @@ function init(c){
   var root = document.querySelector('.ov-sofi');
   if (!root) return;
   renderMarketCap(root);   // OV-1 market-cap cell (live, Massive via api.liveQuote)
+  // OV-4: Overview collapsible blocks and the nested definition accordions.
+  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick = function(){ var c2 = btn.parentElement; var body = c2.querySelector('.ov-collap-b'); var open = c2.classList.toggle('open'); if (body) body.hidden = !open; var ic = btn.querySelector('.ov-collap-ic'); if (ic) ic.textContent = open ? '▾' : '▸'; }; });
+  root.querySelectorAll('.acc-h').forEach(function(btn){ btn.onclick = function(){ var b = btn.nextElementSibling; if (!b) return; var open = b.hidden; b.hidden = !open; var x = btn.querySelector('.acc-x'); if (x) x.textContent = open ? '–' : '+'; }; });
   // Idempotent wiring (init may run again when the Overview pane is re-activated).
   root.querySelectorAll('.ovt-tab').forEach(function(btn){
     btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };

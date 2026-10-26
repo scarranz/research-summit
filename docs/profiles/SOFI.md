@@ -116,17 +116,17 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | Cuentas habilitadas Tech Platform 2Q26 | `TPA` 134,800 mil | "135 millones" | redondeo | ✔ |
 | **Ingreso neto GAAP 2Q26** | `SEG_REVENUE` **1,197** | **1,218.7** (ajustado 1,205.6) | **−21.7** | ✘ |
 | Ingreso no financiero 2Q26 | `NII_REVENUE` 409 | 430.5 | −21.5 | ✘ (mismo origen) |
-| **Tech Platform ingreso 2Q26** | `TP_REVENUE` 50.5 | segmento 84.5 · menos fees intercompañía 27.8 = 56.7 | −6.2 vs neto de intercompañía | ✘ |
-| Tech Platform ingreso 2Q25 | 90.8 | segmento 109.8 · menos intercompañía 18.2 = 91.6 | −0.8 | ⚠ |
-| Tech Platform ingreso FY25 | 360.9 | segmento 450.2 · menos intercompañía 85.5 = 364.7 | −3.8 | ⚠ |
+| Tech Platform ingreso 2Q26 | `TP_REVENUE` 50.5 | línea "Technology products and solutions" 52.5 (ingresos por contratos del segmento: 50.5) | −2.0 | ⚠ |
+| Tech Platform ingreso 2Q25 | 90.8 | línea "Technology products and solutions" 90.8 | 0 | ✔ |
+| Tech Platform ingreso FY25 | 360.9 | línea "Technology products and solutions" 360.9 (el **segmento** Technology Platform reporta 450.2) | 0 | ✔ |
+| Loan platform fees FY25 · Other noninterest FY25 | `LPB_REVENUE` 575.9 · `OTHER_REVENUE` 214.6 | 575.9 · 214.6 | 0 | ✔ |
+| Other noninterest 2Q26 | `OTHER_REVENUE` 66.0 | 85.5 | −19.5 | ✘ (explica casi todo el −21.5 del ingreso no financiero) |
 
 **Lo que significa:**
 1. El 2Q26 "real" del modelo **no cuadra con el 10-Q** en ingreso neto (−$21.7M, 1.8%): ni con GAAP ni con el ajustado.
    El modelo parece tener una cifra preliminar o de otra fecha para 2Q26. Hasta que el autor la confirme, las series
    Summit de 2Q26 **no se muestran como real** (❓).
-2. `TP_REVENUE` es el ingreso del segmento **menos los fees intercompañía**, y aun así no cuadra al dólar. El perfil viejo
-   lo rotulaba "segment net revenue" ($360.9M en 2025); el filing da **$450.2M** para el segmento. Es un error de etiqueta
-   que no se copia al perfil nuevo (se muestra el ingreso reportado del segmento y, aparte, el externo).
+2. **Corrección (2026-10-26):** `TP_REVENUE` **no** es el ingreso del segmento. Es la línea consolidada "Technology products and solutions" del ingreso no financiero (FY25 360.9 y 2Q25 90.8 cuadran al dólar); el **segmento** Technology Platform reporta 450.2 en FY25. El perfil viejo la rotulaba "segment net revenue": error de etiqueta que no se copia. La diferencia de 2Q26 (−21.7 en ingreso neto) viene sobre todo de `OTHER_REVENUE` (66.0 vs 85.5) y un poco de tecnología (−2.0).
 3. Las demás etiquetas que se pudieron cruzar (utilidad neta, NII, EBITDA ajustado, miembros, FY25) **sí cuadran al dólar**.
 
 **Quién responde:** autor del modelo (celda del .xlsm del 2Q26 y de `TP_REVENUE`).
@@ -168,8 +168,8 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | F1 | Esqueleto + vista previa | ✅ | 2026-10-26 | Dani | 7a0f231 | modo B: sin cambio de código (el perfil viejo ya corre); preview de Netlify del PR #152 listo; el analista confirma que SOFI abre ahí. Ojo: las funciones del portal limitan CORS a research-summit.netlify.app y localhost:8000, así que precio/Massive/Fiscal.ai pueden salir como no disponibles en el preview |
 | OV-1 | Overview ▸ Key Facts | ✅ | 2026-10-26 | Dani | 326247d | 10 celdas del 10-K; celda CEO sin fecha hasta que Dani la confirme; market cap en vivo |
 | OV-2 | Overview ▸ Descripción | ✅ | 2026-10-26 | Dani | 2341e93 | lede de 3 oraciones; cita de la misión → Misc |
-| OV-3 | Overview ▸ Cuadrante 2×2 | 👀 | 2026-10-26 | | | 4 celdas ≤ 30 palabras; The edge = banco + productos |
-| OV-4 | Overview ▸ How it makes money | ⬜ | | | | |
+| OV-3 | Overview ▸ Cuadrante 2×2 | ✅ | 2026-10-26 | Dani | 6664b2c | 4 celdas ≤ 30 palabras; The edge = banco + productos |
+| OV-4 | Overview ▸ How it makes money | 👀 | 2026-10-26 | | | solo vista Segments (el 10-K no trae geografía); acordeones por segmento + The revenue lines |
 | OV-5 | Overview ▸ Products & platforms | ⬜ | | | | |
 | OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
 | OV-7 | Overview ▸ Timeline | ⬜ | | | | |
@@ -219,10 +219,11 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 - 2026-10-26 · OV-1 · Celda CEO: Dani confirma la fecha de inicio de Anthony Noto (el 10-K no la trae); mientras tanto la celda dice solo "Anthony Noto" — Dani
 - 2026-10-26 · OV-2 · Lede aprobado como se propuso; la cita de la misión ("achieve financial independence…") se conserva en `DESC_LEGACY` y va a Miscellaneous — Dani
 - 2026-10-26 · OV-3 · "The edge" = banco nacional que financia préstamos con depósitos propios ($37.5B) + miembros que adoptan más productos (Financial Services Productivity Loop) — Dani
+- 2026-10-26 · OV-4 · Solo vista Segments (sin Geography: el 10-K no desagrega ingresos por geografía); Corporate/Other (−$227.8M, derivado: total reportado menos los tres segmentos) aparece solo en la leyenda; acordeón final "The revenue lines" con las 5 líneas del 10-K — Dani
 
 ## 4. Excepciones aceptadas
 
-- 2026-10-26 · F0-SM · Cuadre contra filings con 3 diferencias abiertas (ingreso neto 2Q26, `TP_REVENUE`, etiquetas opacas) — se aceptan como aproximadas, pero **la serie Summit de 2Q26 se marca "model actual, does not tie to 10-Q" donde se muestre** y `TP_REVENUE` no se rotula "segment revenue" — Dani
+- 2026-10-26 · F0-SM · Cuadre contra filings con 3 diferencias abiertas (ingreso neto 2Q26, `TP_REVENUE`, etiquetas opacas) — se aceptan como aproximadas, pero **la serie Summit de 2Q26 se marca "model actual, does not tie to 10-Q" donde se muestre** y `TP_REVENUE` se rotula "Technology products and solutions", no "segment revenue" — Dani
 
 ## 5. Mapa de reubicación / B1 — inventario de lo que existe
 
@@ -329,4 +330,15 @@ playbook (candidata a podar, **solo con tu OK**).
 - Qué se mostró: tabla 2×2 (`.q2`) bajo el lede, nunca colapsada.
 - Fuentes: 10-K FY2025 — Item 1; MD&A: ingreso por intereses netos 2,219.0 + no financiero 1,394.4 = 3,613.4; segmentos Lending 1,848.9 · Technology Platform 450.2 · Financial Services 1,542.0 = 3,841.2 antes de eliminaciones (48% / 12% / 40%); miembros 13.6M (+35%); depósitos totales $37.5B.
 - Autoauditoría: orden What it sells · Who buys it · How it earns · The edge ✔ · palabras por celda (What it sells 26, Who buys it 24, How it earns 22, The edge 27) ≤ 30 ✔ · solo "How it earns" lleva mezcla de ingresos con año ✔ · sin color (`.q2-k` en navy: se agregó `.ov-sofi` a la regla compartida) ✔ · `node --check` ✔.
-- Corrección al perfil viejo: Technology Platform ya no se muestra como $361M (neto de intercompañía) sino como el ingreso de segmento que reporta el 10-K, $450.2M.
+- Corrección al perfil viejo: Technology Platform ya no se muestra como $361M (que es la línea "Technology products and solutions", no el segmento) sino como el ingreso de segmento que reporta el 10-K, $450.2M.
+
+### 2026-10-26 · OV-3 Cuadrante 2×2 — APROBADA
+- Qué se mostró: tabla 2×2 en el preview (commit `6664b2c`). Sin cambios pedidos.
+
+### 2026-10-26 · OV-4 How SoFi makes money — 👀 EN REVISIÓN
+- Qué se mostró: bloque colapsable "How SoFi makes money" (cerrado de inicio) con leyenda, barras grises por segmento, 3 acordeones de segmento (definición + "The numbers"), acordeón "The revenue lines" y leyenda de cierre.
+- Fuentes: 10-K FY2025 — MD&A (tabla de segmentos; componentes del ingreso no financiero; resultados consolidados), nota de segmentos (intercompañía $85.5M eliminada en Corporate/Other), Item 1.
+- Cuadre (④): segmentos 1,848.9 + 450.2 + 1,542.0 = 3,841.2; Corporate/Other = 3,613.4 − 3,841.2 = −227.8 (derivado); las 5 líneas 2,219.0 + 575.9 + 360.9 + 242.9 + 214.6 = 3,613.4 ✔; crecimientos +35% · +24% · +14% · +88% ✔; márgenes de contribución 55% · 32% · 51% ✔; utilidad antes de impuestos 525.9 (14.6%) y neta 481.3 (13.3%) ✔.
+- Autoauditoría: sin geografía → una sola vista, dicho en la leyenda ✔ · barras en grises por tamaño con el monto dentro (`.gmm-neutral`) ✔ · desc sin números ✔ · "The numbers" con filas clave/valor ✔ · sin hex nuevos ni estilos en línea salvo el ancho de barra ✔ · `node --check` ✔ · render visual no verificado por Claude.
+- Se quitaron del Overview las secciones "How SoFi Makes Money" (bullets) y "Three Segments"; `HOW_MONEY` y `SEGMENTS` siguen como constantes (B2 #3) porque traen cifras de Q1 2026 (96% fondeo con depósitos, NIM 5.9%, 43% cross-buy) que no son del 10-K FY2025 y se ubican en otra unidad.
+- Duda abierta: "beneficio fiscal único de 2024" va sin cifra porque el 10-K da dos importes distintos según la tabla (258.4 y 247.2) y el perfil viejo decía ~266.

@@ -206,7 +206,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | MG-GOV | Management ▸ Governance & SBC | ⬜ | | | | |
 | MG-TRACK | Management ▸ Track Record | ⬜ | | | | |
 | MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab) | 👀 | 2026-10-26 | | | 5 sub-tabs: Strategy, Members, Rule of 40, Capital, Sum of the Parts |
-| F-FINAL | Cierre y conciliación | ⬜ | | | | |
+| F-FINAL | Cierre y conciliación | 👀 | 2026-10-26 | | | conciliación B3 hecha (34 filas); pendiente la aprobación del analista y lo que no se construyó (Management 3 de 4, BL-GEN-2, Target Multiple, Other, Customers, Supply Chain) |
 
 ## 3. Decisiones del analista
 
@@ -516,3 +516,24 @@ playbook (candidata a podar, **solo con tu OK**).
 - Datos: EPS forward = consenso BBG anual por vintage (`estMatrix.cons.y.eps`, 18 snapshots); EPS y acciones reportados = los valores reportados del propio export de Bloomberg 2Q21–2Q26 (20 trimestres, `sofi-histmult-data.js`, generados, no tipeados), escalonados en la fecha de la llamada de resultados (4Q23 en adelante) o del 10-Q/10-K (antes, de SEC EDGAR). EPS de base ajustada: FY2025 GAAP y ajustado son ambos $0.39; FY2024 ajustado $0.15 vs GAAP $0.39 (beneficio fiscal único). Antes de 2024 el EPS es pequeño o negativo, así que el P/E trailing no es significativo allí y la serie lo deja vacío (denominador ≤ 0).
 - Precio: en vivo de Massive vía `get-market-history`. **Si esa función no está desplegada, el panel dice "⚑ Live data pending — daily price unavailable"** y no se estima nada (regla 10); no pude verificar el despliegue desde aquí. Queda en "Conexiones pendientes" (§6b).
 - Autoauditoría: `node --check` ✔ · el HTML del Deep Dive genera el sub-tab y el bloque del gráfico ✔ · EPS LTM a 2Q26 = 0.48 ✔ · se quitaron las 4 comprobaciones de visibilidad de EV que quedaban activas por defecto (`vis('ev_f')` siempre daba verdadero) ✔ · **no probado:** el gráfico con precios reales.
+
+### 2026-10-26 · F-FINAL Cierre: conciliación B3 y limpieza — 👀 EN REVISIÓN
+**Conciliación del mapa de reubicación (playbook §4.2 B3).** Conteo de control: 34 filas del mapa. Resultado: **34 de 34 con destino**, ninguna eliminada.
+
+| Disposición | Filas |
+|---|---|
+| Reubicada y **visible** en su destino | #4 #5 #6 #7 #8 #11 #12 #13 #14 #15 #16 #17 #18 #19 #20 #24 #25 #27 #28 #29 #30 (21) |
+| **Reemplazada por la versión de la guía** (el contenido viejo sigue como constante en `sofi.js`) | #1 → OV-1 · #2 → OV-2 · #3 → OV-4 · #9 → OV-6 · #10 → OV-7 · #34 → OV-F (6) |
+| **Reemplazada por el motor Results/Estimates** con datos reales del MCP, aprobado por Dani (la lógica de guía se portó a `results-data/sofi.js`; el panel viejo no se muestra, su código sigue) | #21 #22 #23 (3) |
+| Limpieza de forma (no son contenido) | #26 banner de precio: ahora usa `api.liveQuote` de Massive y sin precio de respaldo · #31 colores de marca → tokens Summit (24 de 26 hex; 2 quedan en el panel retirado Actuals vs Estimates) · #32 estilos en línea: ningún bloque `<style>`; quedan atributos `style=` solo para anchos dinámicos y paneles retirados · #33 `soonBody` borrado (no se usaba) (4) |
+
+Qué se perdió **de la vista** (no del repo): las tarjetas de KPIs del Overview viejo (los mismos datos están en Top Line ▸ General y Results), las tarjetas de "How SoFi differs" de peers y el texto de `HOW_MONEY`/`SEGMENTS`/`DESC_LEGACY` con cifras de Q1 2026 (siguen como constantes, comentadas, y la misión se mostró en Misc ▸ Strategy). La nota FY2025 se agregó a Bottom Line junto a la tabla de Financial Performance.
+
+**Estado de las 38 unidades del tablero al cierre:**
+- ✅ aprobadas por el analista: F1, OV-1 a OV-5 (6).
+- 👀 construidas y subidas, esperando tu revisión: OV-6, OV-7, OV-F, EV-RES-DATA, EV-RES, EV-EST, EV-SET, EV-POST, EV-NOTES, TL-GEN, TL-SEG, BL-GEN-1, BL-GEN-3, BL-GEN-4, BL-GEN-5, BL-SEG, VA-HIST, VA-PEERS, VA-SENS, MG-TEAM, MISC, F-FINAL (22).
+- ⏭️ omitidas con razón: TL-OTH, TL-CUS, BL-GEN-2, BL-SPLC, VA-TM (5).
+- ⬜ sin construir: MG-OWN, MG-GOV, MG-TRACK (Management, por instrucción de Dani) (3).
+- 📝 propuestas esperando aprobación formal: F0, F0-SM, B1, B2 (4, fuera de las 38 filas de unidades de construcción).
+
+**Pendientes que no son de construcción:** (1) verificar en el preview qué se ve mal; (2) proxy DEF 14A 2026 para Management; (3) export SPLC de SOFI para Customers y Supply Chain; (4) que San/Oscar confirmen `get-quote`/`get-market-history`/CORS del preview; (5) preguntas al autor del modelo Summit (2Q26 de ingreso, trimestres vs anual 2026–27, etiquetas opacas); (6) verificar el 10-K original de Robinhood y el estado "Domestic filer" en EDGAR; (7) si el analista quiere el puente a medida (BL-GEN-2) o Target Multiple cuando Summit traiga valuación.

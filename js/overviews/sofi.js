@@ -9,6 +9,7 @@
 // ended March 31, 2026); annual figures are fiscal years ended December 31. Sourced from
 // SoFi's FY2025 Form 10-K, Q1 2026 Form 10-Q, and Q1 2026 investor presentation / earnings call.
 
+import { SUMMIT_CAT, SUMMIT_POS, SUMMIT_NEG, fade } from '../viz-palette.js';   // Summit tokens: the company's brand colours live only in its logo
 import { sofiHistMult } from './sofi-histmult.js';   // Valuation ▸ Historic Multiple (VA-HIST)
 import { soStdPeerScatter, soWireScatters, soValuationPeersBody } from './sofi-peers.js';   // OV-6 peer map (data + render + live quotes)
 import { sofiCeHtml, sofiCeWire, sofiCeBuild, sofiCePop } from './sofi-ce.js';   // Evolution ▸ Earnings (EV-SET / EV-POST / EV-NOTES)
@@ -477,7 +478,8 @@ function financialsBlock(){
     '<table class="ov-table"><thead><tr><th>Metric</th><th>FY2024</th><th>FY2025</th></tr></thead><tbody>'+
     FINANCIALS.map(function(r){return '<tr><td class="ov-td-name">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>';}).join('')+
     '</tbody></table>'+
-    '<div class="ov-callout">'+esc(FIN_NOTE)+'</div>'
+    '<div class="ov-callout">'+esc(FIN_NOTE)+'</div>'+
+    '<div class="ov-callout">'+esc(FY_NOTE)+'</div>'
   );
 }
 // Relocated from the old Overview (B2 #4, #6, #7): the flywheel, tailwinds and headwinds, guidance targets, growth drivers and
@@ -728,7 +730,7 @@ var LPB_FEES = [
 
 // Publicly announced LPB capital commitments, by partner — pie chart + logo legend.
 var LPB_PIE = [
-  { name:'Blue Owl Capital',          v:5.0, clr:'#0E7CC0', domain:'blueowl.com',           sub:'Mar 2025 · largest agreement to date' },
+  { name:'Blue Owl Capital',          v:5.0, clr:SUMMIT_CAT[0], domain:'blueowl.com',           sub:'Mar 2025 · largest agreement to date' },
   { name:'3 new partners (Q1 2026)',  v:3.6, clr:'#AEB8C4', domain:null, mark:'+3',         sub:'A global bank · an insurer · a top-5 asset manager' },
   { name:'Fortress Investment Group', v:2.0, clr:'#0A4E78', domain:'fortress.com',          sub:'Oct 2024 · first LPB partner' },
   { name:'Fortress × Edge Focus JV',  v:1.2, clr:'#5BB0E3', domain:'edgefocuspartners.com', sub:'Apr 2025' },
@@ -1396,7 +1398,7 @@ var SENS_BASE = {
   totalRevB: 5.3175, // FY2026E total net revenue, $B (Summit model, snapshot 2026-08-05, frozen)
   niM:       825.7,  // FY2026E adjusted net income, $M (same snapshot)
   shares:    1352.0, // diluted shares, M (2Q26 reported, weighted average)
-  price:     null,   // live only (Massive via get-quote); nothing seeded, so P/E and implied price wait for it
+  price:     null,   // live only (Massive via api.liveQuote); nothing seeded, so P/E and implied price wait for it
   taxRate:   0.22    // tax on incremental pre-tax income: SoFi FY2026 EPS guide uses 22% (Q2 2026 call)
 };
 SENS_BASE.baseEps = SENS_BASE.niM / SENS_BASE.shares;     // base EPS
@@ -1579,12 +1581,12 @@ function switchSensScen(root, k){
   setupSensSliders();
 }
 
-// ── Live price (via the get-quote edge function; falls back to the fixed price) ──
+// ── Live price (Massive via api.liveQuote; no fallback price, the P/E and implied price wait for it) ──
 var _liveQuote = null;
 function fetchSofiQuote(){
-  // via api.js so the signed-in user's token is sent (get-quote rejects the anon key)
-  return import('../api.js').then(function(m){ return m.fetchYahooQuote('SOFI'); })
-    .then(function(r){ if (r && r.success) return r.data; throw new Error((r && r.error && r.error.message) || 'no price'); });
+  // Massive via api.liveQuote (the same live path as the Key Facts market cap and the peer map); nothing is seeded.
+  return import('../api.js').then(function(m){ return m.liveQuote('SOFI'); })
+    .then(function(r){ if (r && r.success && r.data && typeof r.data.price === 'number') return r.data; throw new Error((r && r.error && r.error.message) || 'no price'); });
 }
 
 function renderLiveBanner(){
@@ -1676,7 +1678,7 @@ function buildSotpChart(){
     data: { labels: SOTP_FYEARS.map(function(y){ return 'FY' + y + 'E'; }), datasets: [
       { type:'bar', label:'Interest earnings', data:[], backgroundColor:'#9DB4C4', stack:'e', yAxisID:'y', borderRadius:3, maxBarThickness:70 },
       { type:'bar', label:'Fee earnings', data:[], backgroundColor:BRAND, stack:'e', yAxisID:'y', borderRadius:3, maxBarThickness:70 },
-      { type:'line', label:'Implied price', data:[], borderColor:'#E8833A', backgroundColor:'#E8833A', yAxisID:'y1', borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#fff', pointBorderColor:'#E8833A', tension:0 }
+      { type:'line', label:'Implied price', data:[], borderColor:SUMMIT_CAT[1], backgroundColor:SUMMIT_CAT[1], yAxisID:'y1', borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#fff', pointBorderColor:SUMMIT_CAT[1], tension:0 }
     ] },
     options: {
       responsive:true, maintainAspectRatio:false, animation:false,
@@ -1692,7 +1694,7 @@ function buildSotpChart(){
         y:{ stacked:true, position:'left', beginAtZero:true, grid:{ color:'rgba(0,0,0,0.04)' },
           ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return '$'+v+'B'; } } },
         y1:{ position:'right', grid:{ drawOnChartArea:false }, grace:'25%', beginAtZero:true,
-          ticks:{ color:'#E8833A', font:{ size:10 }, callback:function(v){ return '$'+v.toFixed(0); } } },
+          ticks:{ color:SUMMIT_CAT[1], font:{ size:10 }, callback:function(v){ return '$'+v.toFixed(0); } } },
         x:{ stacked:true, grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:12 } } }
       }
     }
@@ -1767,7 +1769,7 @@ var PEERS = [
 // null = no value available (e.g. peers have no published forward user estimate).
 var PEER_YEARS = ['2020','2021','2022','2023','2024','2025','2026','2027','2028'];
 var PEER_FIRST_EST = 6;  // index of first estimate year (2026)
-var PEER_COLORS = { SOFI:'#0E7CC0', HOOD:'#1E9E62', IBKR:'#E8833A', NU:'#8E6FD0' };
+var PEER_COLORS = { SOFI:SUMMIT_CAT[0], HOOD:SUMMIT_CAT[2], IBKR:SUMMIT_CAT[1], NU:SUMMIT_CAT[6] };
 var PEER_SERIES = {
   users: { label:'Users', log:true, fmt:function(v){ return v.toFixed(1)+'M'; }, data:{
     SOFI:[1.85,3.46,5.22,7.54,10.13,13.70,17.75,23.07,29.99], HOOD:[12.5,22.7,23.0,23.4,25.2,27.0,null,null,null], IBKR:[1.07,1.68,2.09,2.56,3.34,4.40,null,null,null], NU:[33.3,53.9,74.6,93.9,114.2,131.0,null,null,null] } },
@@ -2078,10 +2080,6 @@ function nodeInner(n){
 }
 
 // Placeholder body for tabs that are not built yet.
-function soonBody(label){
-  return '<div class="ovs-soon"><div class="ovs-soon-t">'+esc(label)+'</div>'+
-    '<div class="ovs-soon-d">In development — building this next.</div></div>';
-}
 
 // ─── Management — insider open-market activity (SEC Form 4) ───────────────────
 // Every open-market buy (code P) and sale (code S) reported by SoFi insiders on
@@ -2715,7 +2713,7 @@ function html(c){
 }
 
 // ─── Members chart ────────────────────────────────────────────────────────────
-var BRAND = '#0E7CC0';   // SoFi blue
+var BRAND = SUMMIT_CAT[0];   // SoFi blue
 
 // Inline plugin: draw the member count (millions) and YoY growth above each bar.
 var memLabels = {
@@ -2821,10 +2819,10 @@ var r40Plugin = {
     var y40 = chart.scales.y.getPixelForValue(40);
     ctx.save();
     // 40 threshold line
-    ctx.strokeStyle = '#DC2626'; ctx.lineWidth = 1.4; ctx.setLineDash([5,4]);
+    ctx.strokeStyle = SUMMIT_NEG; ctx.lineWidth = 1.4; ctx.setLineDash([5,4]);
     ctx.beginPath(); ctx.moveTo(ca.left, y40); ctx.lineTo(ca.right, y40); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = '#DC2626'; ctx.font = '700 9px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillStyle = SUMMIT_NEG; ctx.font = '700 9px Inter, sans-serif'; ctx.textAlign = 'left';
     ctx.fillText('Rule of 40', ca.left + 3, y40 - 4);
     // score on top of each stacked bar
     var top = chart.getDatasetMeta(1).data;
@@ -2841,7 +2839,7 @@ function buildRule40Chart(){
     type: 'bar',
     data: { labels: R40_LABELS, datasets: [
       { label:'Revenue growth (YoY)', data: R40_REV, backgroundColor:'#A9BCC6', stack:'r40', maxBarThickness:30 },
-      { label:'Adj. EBITDA margin', data: R40_EBITDA, backgroundColor:'#0E7CC0', stack:'r40', maxBarThickness:30 }
+      { label:'Adj. EBITDA margin', data: R40_EBITDA, backgroundColor:SUMMIT_CAT[0], stack:'r40', maxBarThickness:30 }
     ]},
     options: {
       responsive:true, maintainAspectRatio:false, animation:false,
@@ -2877,7 +2875,7 @@ function buildCapRaiseChart(){
       { type:'line', label:'Book value / share', data: CAPR_BVPS, yAxisID:'y1',
         borderColor:'#0F1720', backgroundColor:'#0F1720', fill:false, tension:.3, pointRadius:2.5, borderWidth:2, order:1 },
       { type:'line', label:'Tangible BV / share', data: CAPR_TBVPS, yAxisID:'y1',
-        borderColor:'#E8833A', backgroundColor:'#E8833A', borderDash:[5,4], fill:false, tension:.3, pointRadius:0, borderWidth:1.6, order:2 }
+        borderColor:SUMMIT_CAT[1], backgroundColor:SUMMIT_CAT[1], borderDash:[5,4], fill:false, tension:.3, pointRadius:0, borderWidth:1.6, order:2 }
     ]},
     options: {
       responsive:true, maintainAspectRatio:false, animation:false,
@@ -2920,7 +2918,7 @@ var loanLabels = {
       if (yoy[i] != null) {
         var g = yoy[i];
         ctx.font = '600 11px Inter, sans-serif';
-        ctx.fillStyle = g < 0 ? '#C0392B' : BRAND;
+        ctx.fillStyle = g < 0 ? SUMMIT_NEG : BRAND;
         ctx.fillText((g < 0 ? '−' : '+') + Math.abs(g).toFixed(1) + '%', bar.x, bar.y - 7);
       }
       ctx.restore();
@@ -3016,13 +3014,13 @@ function buildCapChart(){
           borderColor:'rgba(14,124,192,.40)', backgroundColor:'rgba(14,124,192,.10)',
           fill:'origin', tension:.3, pointRadius:0, borderWidth:1 },
         { label:'Loans outstanding', data: CAP_LOANS, yAxisID:'y1',
-          borderColor:'#0E7CC0', backgroundColor:'rgba(14,124,192,.32)',
+          borderColor:SUMMIT_CAT[0], backgroundColor:fade(SUMMIT_CAT[0], 0.32),
           fill:'origin', tension:.3, pointRadius:2.5, borderWidth:2 },
         { label:'Total risk-based capital ratio', data: CAP_RATIO, yAxisID:'y',
           borderColor:'#0F1720', backgroundColor:'#0F1720', fill:false, tension:.3,
           pointRadius:3, borderWidth:2 },
         { label:'Required minimum (10.5%)', data: reqLine, yAxisID:'y',
-          borderColor:'#DC2626', borderDash:[5,4], fill:false, pointRadius:0, borderWidth:1.5 }
+          borderColor:SUMMIT_NEG, borderDash:[5,4], fill:false, pointRadius:0, borderWidth:1.5 }
       ]
     },
     options: {
@@ -3182,7 +3180,7 @@ function buildFeeTab(){
 // ─── Valuation: Actuals vs. Estimates engine ─────────────────────────────────
 var _aveChart = null;
 var _aveMetric = 'rev';
-var AVE_GREEN = '#1E9E62', AVE_RED = '#C0392B', AVE_GRAY = '#C7CED6';
+var AVE_GREEN = SUMMIT_POS, AVE_RED = SUMMIT_NEG, AVE_GRAY = '#C7CED6';
 
 function avePct(v){ return (v < 0 ? '−' : '+') + Math.abs(v).toFixed(1) + '%'; }
 
@@ -3385,7 +3383,7 @@ var EVO_INTRO = 'Our Summit DCF model is re-snapshotted over time. This shows, f
 var EVO_SOURCE = 'Source: Summit DCF model for SOFI — projection_history across the three stored snapshots (3 Feb 2026, 29 Apr 2026, 13 May 2026). Values in US$ millions. The 13 May 2026 snapshot carried forward the same projections as 29 Apr 2026 (no change). Data sourced from Summit DCF models.';
 var EVO_SNAPS  = [ { d:'2026-02-03', l:'Feb 2026' }, { d:'2026-04-29', l:'Apr 2026' }, { d:'2026-05-13', l:'May 2026' } ];
 var EVO_YEARS  = ['2026','2027','2028','2029'];
-var EVO_COLORS = ['#0E7CC0','#1E9E62','#E8833A','#8E6FD0'];
+var EVO_COLORS = [SUMMIT_CAT[0],SUMMIT_CAT[2],SUMMIT_CAT[1],SUMMIT_CAT[6]];
 // proj[year] = [value at snapshot0, snapshot1, snapshot2] in US$ millions.
 var EVO_METRICS = {
   rev: { short:'Revenue', label:'Total Net Revenue', unit:'usd',

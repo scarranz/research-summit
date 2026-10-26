@@ -186,7 +186,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | TL-SEG | Top Line ▸ Segments | ⬜ | | | | |
 | TL-OTH | Top Line ▸ Other | ⬜ | | | | |
 | TL-CUS | Top Line ▸ Customers | ⬜ | | | | |
-| EV-EST | Evolution ▸ Estimates | ⬜ | | | | |
+| EV-EST | Evolution ▸ Estimates | 👀 | 2026-10-26 | | | 8 métricas, 4 años × 3 snapshots Summit; sin serie de consenso |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | ⬜ | | | | |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | ⬜ | | | | |
@@ -430,3 +430,9 @@ playbook (candidata a podar, **solo con tu OK**).
 - Se agregó la métrica "Adjusted net revenue" (la que SoFi guía; no está en el modelo ni en BBG, sin series Summit/Street) y las bandas `guideLo`/`guideHi` de ingreso ajustado, EBITDA ajustado, utilidad neta ajustada y EPS: trimestral 1Q24–2Q26 y anual 2024–2026. Fuentes: 8-K Ex. 99.1 (capturadas en el perfil viejo, `GUID_QTR`/`GUID_ANNUAL`), llamada de Q1 2026 (guía de 2Q26: ingreso ≈ $1.115B, EBITDA ≈ $330M, margen de utilidad 12–13%, EPS $0.10–0.11) y llamada de Q2 2026 (FY2026: ingreso ajustado $4.75–4.85B, EBITDA ≈ $1.6B, utilidad ajustada ≈ $825M, EPS ≈ $0.60).
 - La banda de utilidad de 2Q26 ($133.8–145.0M) está **derivada** del margen declarado (12–13%) sobre $1.115B; se dice en la nota de la métrica. La guía de utilidad y EPS fue GAAP hasta mediados de 2025 y ajustada después (también en la nota). La llamada de Q2 2026 no da guía trimestral de 3Q26 (solo año completo).
 - `verify_preprint.py SOFI cons`: 225 iguales, 0 cambiadas ✔.
+
+### 2026-10-26 · EV-EST Evolution ▸ Estimates — 👀 EN REVISIÓN
+- Qué se mostró: segundo sub-tab de Evolution: cómo se movió la proyección de Summit de cada año fiscal (2026–2029) entre los 3 snapshots guardados (3-feb, 29-abr y 5-ago de 2026), en 8 métricas: ingreso neto, EBITDA ajustado, utilidad ajustada, gasto no financiero, miembros y originaciones personal / estudiantil / hipotecaria. Bloque `evolution` en `js/results-data/sofi.js`.
+- Fuentes: Summit MCP, `projection_history` de cada snapshot (congelado, sin conexión en vivo). Sin serie de consenso en esta pestaña (`cons: null`).
+- Hallazgos: ingreso 2026: 4,725.2 → 4,935.2 → 5,317.5 (+12.5%); 2027: 6,105.2 → 6,287.6 → 6,280.3 (+2.9%); 2029 salta de 8,838.9 a 10,682.5 en el último snapshot.
+- Autoauditoría: ≥ 2 snapshots ✔ (hay 3) · números del bloque = valores guardados en cada snapshot (nunca los actuals) ✔ · la nota advierte la inconsistencia trimestres↔anual del modelo ✔ · `node --check` ✔.

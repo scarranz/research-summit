@@ -10,7 +10,7 @@
 // SoFi's FY2025 Form 10-K, Q1 2026 Form 10-Q, and Q1 2026 investor presentation / earnings call.
 
 import { soStdPeerScatter, soWireScatters } from './sofi-peers.js';   // OV-6 peer map (data + render + live quotes)
-import { resultsHtml, initResults } from '../results.js';   // Evolution ▸ Results engine (dataset: js/results-data/sofi.js)
+import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';   // Evolution ▸ Results engine (dataset: js/results-data/sofi.js)
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -4016,7 +4016,8 @@ function deepDiveHtml(c){
   var h = '<div class="ov ov-sofi-dd" data-brand="SOFI">';
   h += '<div class="dd-tabs"><button type="button" class="dd-tab active" data-dd="evolution">Evolution</button></div>';
   h += ddSubtabs('evolution', [
-    { k:'results', l:'Results', body:resultsHtml('SOFI') }
+    { k:'results', l:'Results', body:resultsHtml('SOFI') },
+    { k:'estevo', l:'Estimates', body:resultsEvoHtml('SOFI') }
   ], false);
   h += '</div>';
   return h;
@@ -4025,6 +4026,7 @@ function ddActiveKey(root, group){ var p = root.querySelector('.dd-pane[data-dd=
 function ddBuildSub(root, group, key){
   if (group === 'evolution' && key === 'results') requestAnimationFrame(function(){
     initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'SOFI'); });
+  if (group === 'evolution' && key === 'estevo') requestAnimationFrame(function(){ initResultsEvo('SOFI'); });
 }
 function ddShowSub(root, group, key){
   var pane = root.querySelector('.dd-pane[data-dd="'+group+'"]'); if (!pane) return;

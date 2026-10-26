@@ -954,4 +954,56 @@ export var sofiResults = {
       },
     },
   },
+  evolution: {
+    intro: 'How the Summit model view of each fiscal year has moved across its three saved snapshots (Feb 3, Apr 29 and Aug 5, 2026). Each line is one fiscal year.',
+    vintages: [
+      { label: 'Feb 3, 2026', event: '4Q25 still a projection' },
+      { label: 'Apr 29, 2026', event: 'pre-1Q26 print' },
+      { label: 'Aug 5, 2026', event: 'post-2Q26 print' },
+    ],
+    years: ['2026', '2027', '2028', '2029'],
+    sections: [
+      { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
+        { label: 'Totals', keys: ['rev'] },
+        { label: 'Operating metrics', keys: ['members', 'plov', 'slov', 'hlov'] }
+      ] },
+      { key: 'prof', label: 'Margins & Profitability', defaultMetric: 'ebitda', groups: [
+        { label: 'Company', keys: ['ebitda', 'earnings', 'nie'] }
+      ] }
+    ],
+    metrics: {
+      rev: { label: 'Total net revenue', unit: 'usdM',
+        summit: [[4725.168, 4935.1615, 5317.4713], [6105.2456, 6287.6491, 6280.3042], [7985.7844, 8133.065, 8083.7886], [8838.9116, 9407.8633, 10682.5361]],
+        cons: null,
+        note: 'Model series (frozen). FY2026 moved +12.5% from the Feb 3 file to the Aug 5 file; FY2027 +2.9%. The model quarters do not add to its annual for 2026–27 (build log, open question).' },
+      ebitda: { label: 'Adjusted EBITDA', unit: 'usdM',
+        summit: [[1603.6603, 1576.6354, 1647.1407], [2204.3, 2292.5544, 2186.0583], [3085.6289, 3112.4754, 2902.395], [2850.0055, 3268.1589, 4344.8832]],
+        cons: null,
+        note: 'Model series (frozen). FY2026 moved +2.7% from the Feb 3 file to the Aug 5 file; FY2027 -0.8%.' },
+      earnings: { label: 'Adjusted net income', unit: 'usdM',
+        summit: [[827.2047, 828.7428, 825.679], [1243.9538, 1292.0591, 1094.9616], [1873.7725, 1864.868, 1515.7016], [1816.0861, 2159.874, 3116.2597]],
+        cons: null,
+        note: 'Model series (frozen). FY2026 moved -0.2% from the Feb 3 file to the Aug 5 file; FY2027 -12.0%.' },
+      nie: { label: 'Noninterest expense', unit: 'usdM',
+        summit: [[3639.986, 3737.8071, 3823.6669], [4641.7706, 4767.5795, 4876.5072], [5781.3461, 5939.1026, 6115.3449], [6821.0382, 7008.0033, 7220.0254]],
+        cons: null,
+        note: 'Model series (frozen). FY2026 moved +5.0% from the Feb 3 file to the Aug 5 file; FY2027 +5.1%. The model quarters do not add to its annual for 2026–27 (build log, open question).' },
+      members: { label: 'Total members (thousands)', unit: 'count',
+        summit: [[17746.3, 17746.3, 18019.32], [23070.19, 23070.19, 23425.116], [29991.247, 29991.247, 30452.6508], [38988.6211, 38988.6211, 39588.446]],
+        cons: null,
+        note: 'Model series (frozen). FY2026 moved +1.5% from the Feb 3 file to the Aug 5 file; FY2027 +1.5%.' },
+      plov: { label: 'Personal loan originations', unit: 'usdM',
+        summit: [[33819.5068, 35140.379, 37646.1423], [40583.4082, 42168.4548, 47057.6779], [48700.0898, 50602.1458, 58822.0973], [62823.1159, 65276.768, 75880.5055]],
+        cons: null,
+        note: 'Model series (frozen). FY2026 moved +11.3% from the Feb 3 file to the Aug 5 file; FY2027 +16.0%.' },
+      slov: { label: 'Student loan originations', unit: 'usdM',
+        summit: [[8306.901, 8885.083, 10330.1855], [11629.6614, 12439.1162, 14462.2597], [16281.526, 17414.7627, 20247.1636], [21003.1685, 22465.0439, 26118.841]],
+        cons: null,
+        note: 'Model series (frozen). FY2026 moved +24.4% from the Feb 3 file to the Aug 5 file; FY2027 +24.4%.' },
+      hlov: { label: 'Home loan originations', unit: 'usdM',
+        summit: [[5930.7413, 5969.7304, 6244.672], [7413.4266, 7462.163, 7805.84], [9266.7832, 9327.7038, 9757.3], [11954.1503, 12032.7378, 12586.917]],
+        cons: null,
+        note: 'Model series (frozen). FY2026 moved +5.3% from the Feb 3 file to the Aug 5 file; FY2027 +5.3%.' },
+    }
+  }
 };

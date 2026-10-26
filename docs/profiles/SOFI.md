@@ -198,7 +198,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
 | BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
-| VA-PEERS | Valuation ▸ Peers | ⬜ | | | | |
+| VA-PEERS | Valuation ▸ Peers | 👀 | 2026-10-26 | | | mapa + tabla de números; mismo estado que el Overview |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | ⬜ | | | | |
 | MG-TEAM | Management ▸ Executives & Board | ⬜ | | | | |
@@ -436,3 +436,8 @@ playbook (candidata a podar, **solo con tu OK**).
 - Fuentes: Summit MCP, `projection_history` de cada snapshot (congelado, sin conexión en vivo). Sin serie de consenso en esta pestaña (`cons: null`).
 - Hallazgos: ingreso 2026: 4,725.2 → 4,935.2 → 5,317.5 (+12.5%); 2027: 6,105.2 → 6,287.6 → 6,280.3 (+2.9%); 2029 salta de 8,838.9 a 10,682.5 en el último snapshot.
 - Autoauditoría: ≥ 2 snapshots ✔ (hay 3) · números del bloque = valores guardados en cada snapshot (nunca los actuals) ✔ · la nota advierte la inconsistencia trimestres↔anual del modelo ✔ · `node --check` ✔.
+
+### 2026-10-26 · VA-PEERS Valuation ▸ Peers — 👀 EN REVISIÓN
+- Qué se mostró: segunda sección del Deep Dive (Valuation ▸ Peers): el mismo mapa del Overview (mismo estado, quitar un peer en uno lo quita en el otro) y debajo, abierta, la tabla "The numbers behind the map": peer, múltiplo (P/E o EV/EBITDA, forward o trailing), crecimiento, market cap y "vs peer avg"; promedio y mediana excluyen a SoFi.
+- Fuentes: las del OV-6 (10-K de cada peer en EDGAR; consenso BBG solo para SoFi); precio, market cap y EV en vivo (Massive). Pie con fuentes y fechas, y avisos de Nu fuera y del P/E de Affirm.
+- Autoauditoría: mismo conjunto de datos que OV-6 ✔ · prueba en Node con precios de prueba: 9 filas (encabezado, 6 peers, promedio y mediana) ✔ · peers sin múltiplo se hunden al final en vez de ordenarse como cero ✔ · `node --check` ✔ · `css/overview.css` extendió las reglas compartidas `.ov-tsm-dd, .ov-meta-dd` a `.ov-sofi-dd` ✔ · render visual no verificado por Claude.

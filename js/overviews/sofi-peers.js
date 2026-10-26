@@ -12,7 +12,6 @@ function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').r
 function soTok(name, fb){ try{ var v=getComputedStyle(document.documentElement).getPropertyValue(name).trim(); return v||fb; }catch(e){ return fb; } }
 var BRAND2 = soTok('--navy', '#1E2733');   // Summit navy (token), for the profile company's thick border and label
 function soMcCell(){}   // the Key Facts market-cap cell is filled by sofi.js (OV-1)
-function soScTableOne(){}   // the comps table arrives with Valuation ▸ Peers (VA-PEERS)
 
 var SO_PEERS = [
   { tk:'SOFI', n:'SoFi', hl:true, epsT:0.39, epsF:0.5967, ebitdaT:null, ebitdaF:null, nd:null, gt:35.1, gf:32.4,
@@ -111,6 +110,7 @@ function soScRenderOne(wrap){
   });
   g.innerHTML=frag;
   soScChipsOne(wrap);
+  soScTableOne(wrap);
 }
 
 // A chip says why its peer is missing from the current view (no forward, negative EPS, no live price).
@@ -184,4 +184,67 @@ function soLiveOne(root, tk){ import('../api.js').then(function(m){ if(!m||!m.li
   }).catch(function(){ if(tk==='SOFI') soMcCell(root,'live quote unavailable'); }); }
 
 
-export { soStdPeerScatter, soWireScatters, soScRenderAll };
+// ─── The comps table under the peer map (Valuation ▸ Peers) — ported from meta.js ─────────
+// Everything the map draws, as numbers: the metric/basis pills pick the column, removing a chip drops the
+// row. Average and median exclude SoFi, the company the profile reads against. Premium in red, discount in green.
+function soScFmtMult(v){ return soScNum(v)?v.toFixed(1)+'×':'—'; }
+function soScFmtPct(v){ return soScNum(v)?v.toFixed(1)+'%':'—'; }
+function soScFmtMc(v){ return soScNum(v)?('$'+(v>=1000?(v/1000).toFixed(2)+'T':Math.round(v)+'B')):'—'; }
+function soScMean(a){ if(!a.length) return null; return a.reduce(function(s,v){ return s+v; },0)/a.length; }
+function soScMedian(a){ if(!a.length) return null; var s=a.slice().sort(function(x,y){ return x-y; }), h=Math.floor(s.length/2); return s.length%2?s[h]:(s[h-1]+s[h])/2; }
+function soScVsAvg(m, avg){
+  if(!soScNum(m)||!soScNum(avg)||avg===0) return '<span class="asc-nilv">—</span>';
+  var d=(m/avg-1)*100;
+  return '<span class="'+(d>=0?'asc-up':'asc-dn')+'">'+(d>=0?'+':'')+Math.round(d)+'%</span>';
+}
+function soScTableOne(wrap){
+  var box=wrap.querySelector('.so-sc-tbl'); if(!box||!SO_SC.peers) return;
+  var mLab=(SO_SC.metric==='pe'?'P/E':'EV/EBITDA'), bLab=(SO_SC.basis==='f'?'forward':'trailing');
+  var rows=SO_SC.peers.map(function(p){ return { p:p, m:soScMult(p), g:soScGrowth(p) }; });
+  // Cheapest first on the ACTIVE multiple; a name with no multiple sinks to the bottom (never sorts as zero).
+  rows.sort(function(a,b){
+    var an=soScNum(a.m), bn=soScNum(b.m);
+    if(!an&&!bn) return 0; if(!an) return 1; if(!bn) return -1; return a.m-b.m;
+  });
+  var peers=rows.filter(function(r){ return !r.p.hl; });
+  var avgM=soScMean(peers.filter(function(r){ return soScNum(r.m); }).map(function(r){ return r.m; }));
+  var medM=soScMedian(peers.filter(function(r){ return soScNum(r.m); }).map(function(r){ return r.m; }));
+  var avgG=soScMean(peers.filter(function(r){ return soScNum(r.g); }).map(function(r){ return r.g; }));
+  var medG=soScMedian(peers.filter(function(r){ return soScNum(r.g); }).map(function(r){ return r.g; }));
+  var nM=peers.filter(function(r){ return soScNum(r.m); }).length;
+  var body=rows.map(function(r){
+    var p=r.p, cls=(p.hl?'asc-hl':'')+(soScNum(r.m)?'':' asc-nil'), nt=soScNum(r.m)?'':soScChipNote(p);
+    return '<tr class="'+cls.trim()+'">'+
+      '<td><span class="asc-nm"><img src="'+esc(soScLogoUrl(p))+'" alt="" onerror="this.style.display=\'none\'">'+
+        '<span>'+esc(p.n)+' <span class="asc-tk">'+esc(p.tk)+(nt?' · '+esc(nt):'')+'</span></span></span></td>'+
+      '<td class="asc-m">'+soScFmtMult(r.m)+'</td>'+
+      '<td>'+soScFmtPct(r.g)+'</td>'+
+      '<td>'+soScFmtMc(p.mc)+'</td>'+
+      '<td>'+soScVsAvg(r.m, avgM)+'</td></tr>';
+  }).join('');
+  var foot='<tr class="asc-avg"><td>Peer average <span class="asc-tk">ex-SoFi · '+nM+' name'+(nM===1?'':'s')+'</span></td>'+
+      '<td>'+soScFmtMult(avgM)+'</td><td>'+soScFmtPct(avgG)+'</td>'+
+      '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>'+
+    '<tr class="asc-med"><td>Peer median <span class="asc-tk">ex-SoFi</span></td>'+
+      '<td>'+soScFmtMult(medM)+'</td><td>'+soScFmtPct(medG)+'</td>'+
+      '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>';
+  box.innerHTML='<table class="asc-tbl"><thead><tr>'+
+      '<th>Peer</th><th>'+esc(mLab)+' · '+esc(bLab)+'</th>'+
+      '<th>Rev growth · '+esc(bLab)+'</th><th>Market cap</th><th>vs peer avg</th></tr></thead>'+
+    '<tbody>'+body+'</tbody><tfoot>'+foot+'</tfoot></table>';
+  var hd=wrap.querySelector('.so-sc-tblh'), bd=wrap.querySelector('.so-sc-tblb');
+  if(hd){ var open=!(bd&&bd.hidden);
+    hd.innerHTML='<span class="rs-collap-ic">'+(open?'▾':'▸')+'</span>The numbers behind the map'+
+      '<span class="rs-collap-sub">'+(open?'hide':'show')+' · '+esc(mLab)+' · '+esc(bLab)+
+      ', '+rows.length+' names</span>'; }
+}
+
+// Valuation ▸ Peers (VA-PEERS): the same map as Overview ▸ Competitors, same SO_SC state (removing a peer here removes it
+// there), plus the table of numbers. Multiples and caps are live; the file holds the denominators.
+function soValuationPeersBody(){
+  return '<p class="ov-lede">The same peer map as the Overview, with the numbers behind it. Multiples use live prices.</p>'+
+    soStdPeerScatter('dd')+
+    '<div class="ov-foot">Sources — denominators from each company\'s latest annual report on SEC EDGAR (Robinhood, Schwab, Interactive Brokers and Upstart FY2025; Affirm FY2026, year ended Jun 30 2026); forward = Bloomberg consensus FY2026 (as of Oct 26 2026) for SoFi only. Price, market cap and EV are live (Massive). EBITDA = operating income + D&A and is not meaningful for brokers, so HOOD, SCHW and IBKR plot on P/E only. Affirm\'s FY2026 net income includes a $1.44B income tax benefit, so its P/E is not shown. Nu is not mapped.</div>';
+}
+
+export { soStdPeerScatter, soWireScatters, soScRenderAll, soValuationPeersBody };

@@ -12,7 +12,7 @@
 | Rama | `feat/googl-restructure` (desde `origin/main` @ `95c00e0`, 2026-10-26; worktree `rs-playbook`). Nombre de modo B (§7.1); `feat/googl-profile` ya existe en GitHub (rama vieja de DOAA351, jul 2026) y no se toca |
 | Analista responsable | SAB (Santiago Alvarez) |
 | Inicio | 2026-10-26 |
-| Avance | **30 de 43** unidades aprobadas (F0 · F0-SM · B1 · B2 · F1 · OV-1…OV-7 · OV-F · EV-RES-DATA · EV-RES · TL-GEN · TL-SEG · TL-OTH · TL-CUS · EV-EST · EV-SET · EV-NOTES · EV-POST · BL-GEN-1…5 · BL-SEG · BL-SPLC) · 0 omitidas · 0 bloqueadas. M = 38 del Anexo C + B1/B2 + 3 (MISC aprobado en B2 con 4 sub-tabs: comp · tam · capex · strategy). Siguiente: VA-HIST |
+| Avance | **34 de 43** unidades aprobadas (F0 · F0-SM · B1 · B2 · F1 · OV-1…OV-7 · OV-F · EV-RES-DATA · EV-RES · TL-GEN · TL-SEG · TL-OTH · TL-CUS · EV-EST · EV-SET · EV-NOTES · EV-POST · BL-GEN-1…5 · BL-SEG · BL-SPLC · VA-HIST · VA-PEERS · VA-TM · VA-SENS) · 0 omitidas · 0 bloqueadas. M = 38 del Anexo C + B1/B2 + 3 (MISC aprobado en B2 con 4 sub-tabs: comp · tam · capex · strategy). Siguiente: MG-TEAM |
 
 ## 1. Inventario de datos (F0)
 
@@ -219,10 +219,10 @@ siguientes a **2027** (cambio de definición: VA-TM lo marca).
 | BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ✅ | 2026-10-26 | SAB | | 5 pestañas (TAC · otros costos de ventas · R&D · S&M · G&A); definiciones verbatim 10-K FY2025; drivers 10-K/10-Q 2T26; citas de las transcripciones oficiales; Unit Economics de Dani (#19, #21, #22) en TAC y otros costos |
 | BL-SEG | Bottom Line ▸ Segments | ✅ | 2026-10-26 | SAB | | copia del bloque de segmentos de `meta-bl.js` en `googl-bl.js`; Services · Cloud · Other Bets + Alphabet-level como línea propia (suman la utilidad consolidada); consenso BBG de utilidad por segmento; Summit solo en Consolidated (el modelo no proyecta utilidad por segmento); By segment con años del consenso + By cost (compensación · otros, Services y Cloud, 10-K/10-Q); 3 fichas; escalera de margen de Cloud de Dani (#31) en la nota de Cloud |
 | BL-SPLC | Bottom Line ▸ Supply Chain | ✅ | 2026-10-26 | SAB | | `js/overviews/googl-splc.js` (copia de `meta-splc.js`) con las cifras SPLC de Dani tal cual (SAB: export del 22-jul-2026 no ubicado); KPIs · cadena 1 capex (6 tarjetas) · cadena 2 contenido (`.rs-ft`) · quién necesita a quién · geografía · riesgos y clientes rastreables (mapa #23–#28) |
-| VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
-| VA-PEERS | Valuation ▸ Peers | ⬜ | | | | |
-| VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
-| VA-SENS | Valuation ▸ Sensitivity Analysis | ⬜ | | | | |
+| VA-HIST | Valuation ▸ Historic Multiple | ✅ | 2026-10-26 | SAB | | `googl-histmult.js` (copia de `meta-histmult.js`) + `googl-histmult-data.js` (XBRL 1T19–2T26, depreciación 2019–1T23 de los flujos de cada 10-Q/10-K, acciones pre-split ×20); precio en vivo (get-market-history ya responde); P/E solo trailing ex-OI&E (sin P/E forward, deshabilitado con razón); EV/EBITDA ajustado fwd/trail; FY+3 deshabilitado |
+| VA-PEERS | Valuation ▸ Peers | ✅ | 2026-10-26 | SAB | | el mapa de OV-6 (estado compartido) + tabla abierta con múltiplos en vivo; callout de Dani (#43) → pregunta del lede; tabla sembrada de Dani reemplazada; EPS de Alphabet ex-OI&E ($8.81, sin P/E forward) también en OV-6 por decisión de SAB |
+| VA-TM | Valuation ▸ Target Multiple / PEG | ✅ | 2026-10-26 | SAB | | `googl-target-multiple.js` (copia de `tsm-target-multiple.js`) + `googl-target-multiple-data.js` congelado del MCP (snapshots 28-jul y 6-ago; 23-jul excluido): EV/EBITDA 12.7× y P/E 21.3×→24.0× FY2027, PT $318.50/$317.53 → $344.60/$391.52; duda abierta: el PT de P/E implica EPS $16.31 vs EARNINGS÷SHARES $15.96; deuda neta Live del 10-Q 2T26 |
+| VA-SENS | Valuation ▸ Sensitivity Analysis | ✅ | 2026-10-26 | SAB | | `googl-sensitivity.js` (copia de `meta-sensitivity.js`) + `googl-sensitivity-data.js` (Summit 08-06 congelado: Services · Cloud · Other Bets, margen operativo consolidado, EBITDA ajustado); múltiplo de salida = el del modelo (12.7× / 24.0× FY2027); Street = consenso BBG por segmento; SENS sembrado de Dani (#42) reemplazado |
 | MG-TEAM | Management ▸ Executives & Board | ⬜ | | | | |
 | MG-OWN | Management ▸ Ownership | ⬜ | | | | |
 | MG-GOV | Management ▸ Governance & SBC | ⬜ | | | | |
@@ -470,3 +470,21 @@ Destinos aprobados por SAB el 2026-10-26 (B2), incluidas las fusiones #18, #41, 
 - Qué se mostró: `js/overviews/googl-splc.js` (copia de `meta-splc.js`) con las cifras SPLC que compiló DOAA351 (GOOGL US Equity, 22-jul-2026), reformateadas a la guía; estilos META extendidos a `.ov-googl-dd`. Modal `splc:` ahora resuelve con `googlSplcPop`.
 - Decisión (SAB): usar los datos de Dani tal cual (el export no está en el repo ni en Drive); el pie lo dice.
 - Reubicación: mapa #23–#28 completos (KPIs, cadena de capex, contenido, dependencia, asimetría → nota, clientes rastreables y geografía → tabla de riesgos/clientes y geografía). `SPLC_INFRA/CONTENT/DEP` y `splcBody` quedan en `googl.js` hasta F-FINAL.
+
+### 2026-10-26 · VA-HIST Valuation ▸ Historic Multiple — APROBADA
+- Qué se mostró: `js/overviews/googl-histmult.js` (copia de `meta-histmult.js`) + `js/overviews/googl-histmult-data.js` (1T19–2T26 de SEC XBRL; depreciación 2019–1T23 leída del estado de flujos de cada 10-Q/10-K porque es etiqueta propia; acciones pre-split ×20). Precio en vivo: `get-market-history` YA responde (26-oct-2026), sin aviso de pendiente.
+- Decisiones (SAB): P/E solo trailing ex-OI&E (operativa × (1 − tasa) ÷ acciones); sin P/E forward (el consenso EPS de BBG es GAAP) — chip gris con la razón; EBITDA ajustado (operativa + depreciación + SBC) en forward y trailing.
+- Autoauditoría: ✔ FY2025 EBITDA trimestral = BBG ($175,128M) · ✔ deuda = la que dijo la CFO · ✔ FY+3 deshabilitado con razón · ✔ consola sin errores.
+- Nota: desde 2T26 la línea de caja incluye $87.1B de acciones negociables (CFO), lo dice el pie.
+
+### 2026-10-26 · VA-PEERS Valuation ▸ Peers — APROBADA
+- Qué se mostró: `googlValuationPeersBody()` en `googl.js` = lede + `stdPeerScatter('dd')` (mismo estado `G_SC` que OV-6, tabla "The numbers behind the map" abierta) + pie. P/E trailing hoy: Alphabet 29.4× GAAP vs Microsoft 29.6×, Meta 26.9×; promedio ex-Alphabet 31.8×.
+- Decisión (SAB): el P/E de Alphabet en el mapa usa EPS ex-OI&E ($8.81 FY2025, de `googl-histmult-data.js`) y no tiene P/E forward (el consenso BBG es GAAP) → 36.0× trailing. Los demás quedan GAAP. Cambia también OV-6 (mismo `G_PEERS`): nota del mapa y chip "no forward P/E — Street EPS is GAAP, with the gains".
+
+### 2026-10-26 · VA-TM Valuation ▸ Target Multiple / PEG — APROBADA
+- Qué se mostró: `js/overviews/googl-target-multiple.js` (copia de `tsm-target-multiple.js`) + `googl-target-multiple-data.js` (MCP `get_valuation_history` + `get_fundamentals`, congelado 26-oct; snapshots 28-jul y 6-ago, 23-jul excluido). CSS .tm-* de TSM extendido a `.ov-googl-dd`.
+- ❓ Duda para el autor del modelo: el PT por P/E ($391.52 a 24×) implica EPS FY2027 $16.31 vs EARNINGS ÷ SHARES $15.96 (acciones implícitas ~12,050M vs 12,317M); el EV/EBITDA cuadra con ~$6.0B de deuda neta. Se muestra como lo grabó el modelo.
+
+### 2026-10-26 · VA-SENS Valuation ▸ Sensitivity Analysis — APROBADA
+- Qué se mostró: `js/overviews/googl-sensitivity.js` (copia de `meta-sensitivity.js`) + `googl-sensitivity-data.js` (Summit 08-06 congelado; Cloud 2026 = $117.5B corregido; los tres segmentos suman REV salvo −$74M de hedging 2026). Múltiplo de salida = el del modelo (12.7× EV/EBITDA, 24.0× P/E, FY2027); puente fijo = D&A + SBC (EBITDA ajustado); deuda neta del 10-Q 2T26 (caja neta $142B, incluye $87.1B de acciones negociables — por eso la celda base difiere del PT del modelo, el pie lo dice).
+- Reubicación: Dani #42 (SENS sembrado $235B × 15×) reemplazado; el pie lo nombra.

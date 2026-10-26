@@ -3168,34 +3168,34 @@ img.org-photo { object-fit: cover; }
 
 /* TSMC ▸ Valuation ▸ Target Multiple / PEG (js/overviews/tsm-target-multiple.js) — moved from
    amzn-target-multiple.js's inline <style>; band colours = SUMMIT_CAT[0] (EV/EBITDA) and [1] (P/E) */
-.ov-tsm-dd .ovt-subpane[data-ovst="targetmult"] .sens-ctrl-l{min-width:0}
-.ov-tsm-dd .ovt-subpane[data-ovst="targetmult"] .sens-ctrl{margin:0;gap:8px}
-.ov-tsm-dd .tm-blk .rs-preset.active{background:var(--navy);color:#fff;border-color:var(--navy)}
-.ov-tsm-dd .tm-leg{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 8px}
-.ov-tsm-dd .tm-chartwrap{position:relative;height:340px;margin:2px 0 6px}
-.ov-tsm-dd .tm-chartwrap-peg{height:320px}
-.ov-tsm-dd #tmTable,.ov-tsm-dd #pegTable{overflow-x:auto}
-.ov-tsm-dd .tm-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}
-.ov-tsm-dd .tm-tbl th,.ov-tsm-dd .tm-tbl td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}
-.ov-tsm-dd .tm-tbl th:first-child,.ov-tsm-dd .tm-tbl td:first-child{text-align:left}
-.ov-tsm-dd .tm-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}
-.ov-tsm-dd .tm-tbl tbody tr.tm-last{background:var(--brand-soft)}
-.ov-tsm-dd .tm-tbl tbody tr.tm-rep{background:var(--surface);color:var(--mu)}
-.ov-tsm-dd .tm-tbl thead tr.tm-grp th{padding:5px 10px;text-align:center;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bdr)}
-.ov-tsm-dd .tm-tbl thead tr.tm-grp th.tm-gh-ev{background:#2a78d6;color:#fff}
-.ov-tsm-dd .tm-tbl thead tr.tm-grp th.tm-gh-pe{background:#eb6834;color:#fff}
-.ov-tsm-dd .tm-tbl th.tm-gs,.ov-tsm-dd .tm-tbl td.tm-gs{border-left:2px solid var(--bdr)}
-.ov-tsm-dd .tm-tbl td.tm-flat{color:var(--mu)}
-.ov-tsm-dd .tm-tbl thead tr.tm-grp .tm-gsub{display:block;font-size:9px;font-weight:600;letter-spacing:.02em;text-transform:none;opacity:.92;margin-top:2px}
-.ov-tsm-dd .tm-tbl td.tm-miss-hi{color:var(--neg);font-weight:800}
-.ov-tsm-dd .tm-tbl td.tm-miss-lo{color:var(--pos);font-weight:800}
-.ov-tsm-dd .tm-tbl td.tm-pt{font-weight:800;color:var(--navy)}
-.ov-tsm-dd .tm-tag{display:inline-block;font-size:8.5px;font-weight:800;border-radius:20px;padding:1px 7px;margin-left:6px;vertical-align:1px}
-.ov-tsm-dd .tm-tag-rev{color:var(--pos);border:1px solid var(--pos)}
-.ov-tsm-dd .tm-tag-rep{color:var(--mu);border:1px solid var(--bdr)}
-.ov-tsm-dd .tm-tag-brk{color:var(--neg);border:1px solid var(--neg)}
-.ov-tsm-dd .tm-warn{border:1px solid rgba(220,38,38,.35);border-left:4px solid var(--neg);background:rgba(220,38,38,.05);border-radius:9px;padding:11px 14px;font-size:12px;line-height:1.55;color:var(--navy);margin:12px 0}
-.ov-tsm-dd .tm-tbl th.peg-out,.ov-tsm-dd .tm-tbl td.peg-out{background:var(--surface);font-weight:800}
+.ov-tsm-dd .ovt-subpane[data-ovst="targetmult"] .sens-ctrl-l,.ov-googl-dd .ovt-subpane[data-ovst="targetmult"] .sens-ctrl-l{min-width:0}
+.ov-tsm-dd .ovt-subpane[data-ovst="targetmult"] .sens-ctrl,.ov-googl-dd .ovt-subpane[data-ovst="targetmult"] .sens-ctrl{margin:0;gap:8px}
+.ov-tsm-dd .tm-blk .rs-preset.active,.ov-googl-dd .tm-blk .rs-preset.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.ov-tsm-dd .tm-leg,.ov-googl-dd .tm-leg{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 8px}
+.ov-tsm-dd .tm-chartwrap,.ov-googl-dd .tm-chartwrap{position:relative;height:340px;margin:2px 0 6px}
+.ov-tsm-dd .tm-chartwrap-peg,.ov-googl-dd .tm-chartwrap-peg{height:320px}
+.ov-tsm-dd #tmTable,.ov-googl-dd #tmTable,.ov-tsm-dd #pegTable,.ov-googl-dd #pegTable{overflow-x:auto}
+.ov-tsm-dd .tm-tbl,.ov-googl-dd .tm-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}
+.ov-tsm-dd .tm-tbl th,.ov-googl-dd .tm-tbl th,.ov-tsm-dd .tm-tbl td,.ov-googl-dd .tm-tbl td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}
+.ov-tsm-dd .tm-tbl th:first-child,.ov-googl-dd .tm-tbl th:first-child,.ov-tsm-dd .tm-tbl td:first-child,.ov-googl-dd .tm-tbl td:first-child{text-align:left}
+.ov-tsm-dd .tm-tbl thead th,.ov-googl-dd .tm-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}
+.ov-tsm-dd .tm-tbl tbody tr.tm-last,.ov-googl-dd .tm-tbl tbody tr.tm-last{background:var(--brand-soft)}
+.ov-tsm-dd .tm-tbl tbody tr.tm-rep,.ov-googl-dd .tm-tbl tbody tr.tm-rep{background:var(--surface);color:var(--mu)}
+.ov-tsm-dd .tm-tbl thead tr.tm-grp th,.ov-googl-dd .tm-tbl thead tr.tm-grp th{padding:5px 10px;text-align:center;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bdr)}
+.ov-tsm-dd .tm-tbl thead tr.tm-grp th.tm-gh-ev,.ov-googl-dd .tm-tbl thead tr.tm-grp th.tm-gh-ev{background:#2a78d6;color:#fff}
+.ov-tsm-dd .tm-tbl thead tr.tm-grp th.tm-gh-pe,.ov-googl-dd .tm-tbl thead tr.tm-grp th.tm-gh-pe{background:#eb6834;color:#fff}
+.ov-tsm-dd .tm-tbl th.tm-gs,.ov-googl-dd .tm-tbl th.tm-gs,.ov-tsm-dd .tm-tbl td.tm-gs,.ov-googl-dd .tm-tbl td.tm-gs{border-left:2px solid var(--bdr)}
+.ov-tsm-dd .tm-tbl td.tm-flat,.ov-googl-dd .tm-tbl td.tm-flat{color:var(--mu)}
+.ov-tsm-dd .tm-tbl thead tr.tm-grp .tm-gsub,.ov-googl-dd .tm-tbl thead tr.tm-grp .tm-gsub{display:block;font-size:9px;font-weight:600;letter-spacing:.02em;text-transform:none;opacity:.92;margin-top:2px}
+.ov-tsm-dd .tm-tbl td.tm-miss-hi,.ov-googl-dd .tm-tbl td.tm-miss-hi{color:var(--neg);font-weight:800}
+.ov-tsm-dd .tm-tbl td.tm-miss-lo,.ov-googl-dd .tm-tbl td.tm-miss-lo{color:var(--pos);font-weight:800}
+.ov-tsm-dd .tm-tbl td.tm-pt,.ov-googl-dd .tm-tbl td.tm-pt{font-weight:800;color:var(--navy)}
+.ov-tsm-dd .tm-tag,.ov-googl-dd .tm-tag{display:inline-block;font-size:8.5px;font-weight:800;border-radius:20px;padding:1px 7px;margin-left:6px;vertical-align:1px}
+.ov-tsm-dd .tm-tag-rev,.ov-googl-dd .tm-tag-rev{color:var(--pos);border:1px solid var(--pos)}
+.ov-tsm-dd .tm-tag-rep,.ov-googl-dd .tm-tag-rep{color:var(--mu);border:1px solid var(--bdr)}
+.ov-tsm-dd .tm-tag-brk,.ov-googl-dd .tm-tag-brk{color:var(--neg);border:1px solid var(--neg)}
+.ov-tsm-dd .tm-warn,.ov-googl-dd .tm-warn{border:1px solid rgba(220,38,38,.35);border-left:4px solid var(--neg);background:rgba(220,38,38,.05);border-radius:9px;padding:11px 14px;font-size:12px;line-height:1.55;color:var(--navy);margin:12px 0}
+.ov-tsm-dd .tm-tbl th.peg-out,.ov-googl-dd .tm-tbl th.peg-out,.ov-tsm-dd .tm-tbl td.peg-out,.ov-googl-dd .tm-tbl td.peg-out{background:var(--surface);font-weight:800}
 
 /* TSMC and META ▸ Valuation ▸ Sensitivity (js/overviews/tsm-sensitivity.js) — moved from sharkninja-sensitivity.js's inline
    <style>. The pane-scoped .sens-ctrl fixes neutralise the global slider rule without touching TBBB/SOFI. */
@@ -3242,38 +3242,38 @@ img.org-photo { object-fit: cover; }
 :is(.ov-tsm-dd, .ov-meta-dd, .ov-googl-dd) .own-com td:last-child,:is(.ov-tsm-dd, .ov-meta-dd, .ov-googl-dd) .own-com th:last-child{text-align:right}
 :is(.ov-tsm-dd, .ov-meta-dd, .ov-googl-dd) .own-pay th,:is(.ov-tsm-dd, .ov-meta-dd, .ov-googl-dd) .own-pool th{white-space:normal;vertical-align:bottom}
 /* TSMC ▸ Management ▸ Track Record — SN/AMZN card layout without rating colours (SAB) */
-.ov-tsm-dd .trk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.ov-tsm-dd .trk-grid,.ov-googl-dd .trk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
 @media(max-width:700px){.ov-tsm-dd .trk-grid{grid-template-columns:1fr}}
-.ov-tsm-dd .trk-card{border:1px solid var(--bdr);border-left:4px solid var(--steel);background:var(--w,#fff);border-radius:11px;padding:13px 15px;cursor:pointer;transition:box-shadow .15s,transform .15s}
-.ov-tsm-dd .trk-card:hover{box-shadow:0 3px 14px rgba(0,0,0,.08);transform:translateY(-1px)}
-.ov-tsm-dd .trk-n{font-size:13.5px;font-weight:800;color:var(--navy)}
-.ov-tsm-dd .trk-r{font-size:11px;color:var(--mu);font-weight:600;margin:1px 0 8px}
-.ov-tsm-dd .trk-t{font-size:11.5px;color:var(--navy);line-height:1.5;margin-bottom:6px}
-.ov-tsm-dd .trk-k{color:var(--steel)}
-.ov-tsm-dd .trk-c{color:var(--mu)}
-.ov-tsm-dd .trk-more{margin-top:7px;font-size:10.5px;font-weight:800;color:var(--steel)}
+.ov-tsm-dd .trk-card,.ov-googl-dd .trk-card{border:1px solid var(--bdr);border-left:4px solid var(--steel);background:var(--w,#fff);border-radius:11px;padding:13px 15px;cursor:pointer;transition:box-shadow .15s,transform .15s}
+.ov-tsm-dd .trk-card:hover,.ov-googl-dd .trk-card:hover{box-shadow:0 3px 14px rgba(0,0,0,.08);transform:translateY(-1px)}
+.ov-tsm-dd .trk-n,.ov-googl-dd .trk-n{font-size:13.5px;font-weight:800;color:var(--navy)}
+.ov-tsm-dd .trk-r,.ov-googl-dd .trk-r{font-size:11px;color:var(--mu);font-weight:600;margin:1px 0 8px}
+.ov-tsm-dd .trk-t,.ov-googl-dd .trk-t{font-size:11.5px;color:var(--navy);line-height:1.5;margin-bottom:6px}
+.ov-tsm-dd .trk-k,.ov-googl-dd .trk-k{color:var(--steel)}
+.ov-tsm-dd .trk-c,.ov-googl-dd .trk-c{color:var(--mu)}
+.ov-tsm-dd .trk-more,.ov-googl-dd .trk-more{margin-top:7px;font-size:10.5px;font-weight:800;color:var(--steel)}
 #co-detailview .trk-pop-r{font-weight:600;color:var(--mu)}
-.ov-tsm-dd .ovt-subpane[data-ovst="track"] .ew-note{margin-top:14px}
+.ov-tsm-dd .ovt-subpane[data-ovst="track"] .ew-note,.ov-googl-dd .ovt-subpane[data-ovst="track"] .ew-note{margin-top:14px}
 
 /* TSMC ▸ Miscellaneous ▸ Fabs & Capacity (js/overviews/tsm-fabs.js) */
-.ov-tsm-dd .fab-ctl{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:6px 0 8px}
-.ov-tsm-dd .fab-legs{display:flex;gap:12px;flex-wrap:wrap}
-.ov-tsm-dd .fab-leg{font-size:10.5px;font-weight:700;color:var(--mu);display:inline-flex;align-items:center;gap:5px}
-.ov-tsm-dd .fab-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
-.ov-tsm-dd .fab-map-wrap{border:1px solid var(--bdr);border-radius:10px;overflow:hidden;background:#EEF3F9}
-.ov-tsm-dd .fab-map{display:block;width:100%;height:auto;aspect-ratio:3/1}
-.ov-tsm-dd .fab-land{fill:#D5DEE9;stroke:#fff;stroke-width:.15}
-.ov-tsm-dd .fab-site{cursor:pointer}
-.ov-tsm-dd .fab-site:hover circle{opacity:.85}
-.ov-tsm-dd .fab-est{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#B7791F;border:1px solid rgba(183,121,31,.45);border-radius:20px;padding:0 6px;margin-left:5px;vertical-align:1px}
-.ov-tsm-dd .fab-tbl td:nth-child(n+3),.ov-tsm-dd .fab-tbl th:nth-child(n+3){text-align:left}
-.ov-tsm-dd .fab-tbl td:first-child,.ov-tsm-dd .fab-tbl td:nth-child(2){text-align:left;white-space:normal}
-.ov-tsm-dd .fab-num td:first-child,.ov-tsm-dd .fab-num th:first-child,.ov-tsm-dd .fab-num td:last-child,.ov-tsm-dd .fab-num th:last-child{text-align:left}
-.ov-tsm-dd .fab-chart{position:relative;height:280px;margin:4px 0}
-.ov-tsm-dd .fab-chart-sm{height:220px}
-.ov-tsm-dd .fab-collap{margin:6px 0 4px}
+.ov-tsm-dd .fab-ctl,.ov-googl-dd .fab-ctl{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:6px 0 8px}
+.ov-tsm-dd .fab-legs,.ov-googl-dd .fab-legs{display:flex;gap:12px;flex-wrap:wrap}
+.ov-tsm-dd .fab-leg,.ov-googl-dd .fab-leg{font-size:10.5px;font-weight:700;color:var(--mu);display:inline-flex;align-items:center;gap:5px}
+.ov-tsm-dd .fab-dot,.ov-googl-dd .fab-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+.ov-tsm-dd .fab-map-wrap,.ov-googl-dd .fab-map-wrap{border:1px solid var(--bdr);border-radius:10px;overflow:hidden;background:#EEF3F9}
+.ov-tsm-dd .fab-map,.ov-googl-dd .fab-map{display:block;width:100%;height:auto;aspect-ratio:3/1}
+.ov-tsm-dd .fab-land,.ov-googl-dd .fab-land{fill:#D5DEE9;stroke:#fff;stroke-width:.15}
+.ov-tsm-dd .fab-site,.ov-googl-dd .fab-site{cursor:pointer}
+.ov-tsm-dd .fab-site:hover circle,.ov-googl-dd .fab-site:hover circle{opacity:.85}
+.ov-tsm-dd .fab-est,.ov-googl-dd .fab-est{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#B7791F;border:1px solid rgba(183,121,31,.45);border-radius:20px;padding:0 6px;margin-left:5px;vertical-align:1px}
+.ov-tsm-dd .fab-tbl td:nth-child(n+3),.ov-googl-dd .fab-tbl td:nth-child(n+3),.ov-tsm-dd .fab-tbl th:nth-child(n+3),.ov-googl-dd .fab-tbl th:nth-child(n+3){text-align:left}
+.ov-tsm-dd .fab-tbl td:first-child,.ov-googl-dd .fab-tbl td:first-child,.ov-tsm-dd .fab-tbl td:nth-child(2),.ov-googl-dd .fab-tbl td:nth-child(2){text-align:left;white-space:normal}
+.ov-tsm-dd .fab-num td:first-child,.ov-googl-dd .fab-num td:first-child,.ov-tsm-dd .fab-num th:first-child,.ov-googl-dd .fab-num th:first-child,.ov-tsm-dd .fab-num td:last-child,.ov-googl-dd .fab-num td:last-child,.ov-tsm-dd .fab-num th:last-child,.ov-googl-dd .fab-num th:last-child{text-align:left}
+.ov-tsm-dd .fab-chart,.ov-googl-dd .fab-chart{position:relative;height:280px;margin:4px 0}
+.ov-tsm-dd .fab-chart-sm,.ov-googl-dd .fab-chart-sm{height:220px}
+.ov-tsm-dd .fab-collap,.ov-googl-dd .fab-collap{margin:6px 0 4px}
 #co-detailview .fab-pop-note{font-size:11px;color:var(--mu);white-space:normal}
-.ov-tsm-dd .fab-econ td,.ov-tsm-dd .fab-econ th{text-align:left;white-space:nowrap}
+.ov-tsm-dd .fab-econ td,.ov-googl-dd .fab-econ td,.ov-tsm-dd .fab-econ th,.ov-googl-dd .fab-econ th{text-align:left;white-space:nowrap}
 
 /* ── Spotify (SPOT) — Overview without colour (SAB, Oct 19–20 2026; playbook §8). One accent for the whole
    profile: the Summit blue that underlines the profile tabs (--steel). Spotify's green lives only in its logo. ── */

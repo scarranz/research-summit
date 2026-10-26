@@ -16,7 +16,10 @@ import { makeManagement } from './management.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { googlCeHtml, googlCeWire, googlCeBuild, googlCePop } from './googl-ce.js';
 import { googlBlGeneralHtml, googlBlGeneralBuild, googlBlSegmentsHtml, googlBlSegmentsBuild } from './googl-bl.js';
-import { googlSplcBody, googlSplcBuild, googlSplcPop } from './googl-splc.js';   // Bottom Line ▸ Supply Chain (BL-SPLC, copy of meta-splc.js)   // Bottom Line ▸ General, BL-GEN-1…5 (copy of meta-bl.js)   // Evolution ▸ Earnings (Setup · Post-Results · Notes), EV-SET/POST/NOTES
+import { googlSplcBody, googlSplcBuild, googlSplcPop } from './googl-splc.js';
+import { googlHistMult } from './googl-histmult.js';
+import { googlTargetMult } from './googl-target-multiple.js';
+import { googlSens } from './googl-sensitivity.js';   // Valuation ▸ Sensitivity (VA-SENS, copy of meta-sensitivity.js)   // Valuation ▸ Target Multiple / PEG (VA-TM, copy of tsm-target-multiple.js)   // Valuation ▸ Historic Multiple (VA-HIST, copy of meta-histmult.js)   // Bottom Line ▸ Supply Chain (BL-SPLC, copy of meta-splc.js)   // Bottom Line ▸ General, BL-GEN-1…5 (copy of meta-bl.js)   // Evolution ▸ Earnings (Setup · Post-Results · Notes), EV-SET/POST/NOTES
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/googl.js)
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode it) ──
@@ -189,8 +192,11 @@ var TIMELINE=[
 // September (FY2025). Forward exists only for the names in BBG_CONSENSUS.txt: GOOGL and META (Sep 8 2026), AMZN
 // (Sep 10 2026). Alphabet, Meta and Amazon denominators are the same ones Meta's profile uses (meta.js ME_PEERS).
 // Peer set: SAB, 2026-10-26 (Dani's four + Oracle).
+// Alphabet's EPS is ex-OI&E (SAB, 2026-10-26, as in Valuation ▸ Historic Multiple): FY2025 = the four quarters of operating
+// income × (1 − tax rate) ÷ diluted shares (js/overviews/googl-histmult-data.js), US$8.81 against US$10.81 GAAP, which
+// carries the gains on equity securities. No forward EPS for Alphabet: Bloomberg's consensus is GAAP. Peers stay GAAP.
 var G_PEERS=[
-  { tk:'GOOGL', n:'Alphabet', hl:true, epsT:10.81, epsF:19.90, ebitdaT:150175, ebitdaF:226428, nd:18377, gt:15.1, gf:26.8,
+  { tk:'GOOGL', n:'Alphabet', hl:true, epsT:8.81, epsF:null, epsFNote:'no forward P/E — Street EPS is GAAP, with the gains', ebitdaT:150175, ebitdaF:226428, nd:18377, gt:15.1, gf:26.8,
     src:'10-K FY2025; forward: Bloomberg consensus FY2026, Sep 8 2026',
     why:'The profile company: Search and YouTube ads, subscriptions and devices, and Google Cloud.' },
   { tk:'MSFT', n:'Microsoft', epsT:17.95, epsF:null, ebitdaT:194237, ebitdaF:null, nd:19359, gt:17.8, gf:null,
@@ -248,7 +254,7 @@ function stdPeerScatter(sfx){
   '</svg></div>';
   h+='<div class="asc-chips googl-sc-chips"></div>';
   h+='<div class="ov-diagram-cap asc-cap-end">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only listed peers plot here. '+
-    '<span class="ave-subh-note">Multiples = live price ÷ figures from each company\'s latest 10-K (fiscal years differ: Microsoft to June, Oracle to May, Apple to September), or Bloomberg consensus FY2026 (as of Sep 2026) where it exists; market caps are live.</span></div>';
+    '<span class="ave-subh-note">Multiples = live price ÷ figures from each company\'s latest 10-K (fiscal years differ: Microsoft to June, Oracle to May, Apple to September), or Bloomberg consensus FY2026 (as of Sep 2026) where it exists; market caps are live. Alphabet\'s P/E uses EPS ex-OI&amp;E (without the gains on equity securities), so it has no forward P/E.</span></div>';
   // Valuation ▸ Peers only: the receipt under the read (chart standard rule 3), OPEN by default.
   if(sfx==='dd') h+='<div class="rs-collap googl-sc-collap">'+
       '<button type="button" class="rs-collap-h googl-sc-tblh" data-selfwired="1"></button>'+
@@ -347,6 +353,7 @@ function gScTableOne(wrap){
 function gScChipNote(p){
   if(!gScNum(p.epsT)&&!gScNum(p.ebitdaT)&&!gScNum(p.epsF)&&!gScNum(p.ebitdaF)) return 'no figures on file';
   if(!gScNum(p.px)) return 'no live price';
+  if(G_SC.basis==='f' && G_SC.metric==='pe' && p.epsFNote) return p.epsFNote;
   if(G_SC.basis==='f' && !gScNum(G_SC.metric==='pe'?p.epsF:p.ebitdaF)) return 'trailing only — no Street file';
   if(!gScNum(gScMult(p))) return G_SC.metric==='pe'?'no P/E — loss':'no EBITDA on file';
   return '';
@@ -2464,6 +2471,14 @@ function renderSens(root){
   set('gSensEV','$'+(ev/1000).toFixed(2)+'T'); set('gSensPx','$'+px.toFixed(0));
   if(SENS.price){ set('googlSensLive','$'+SENS.price.toFixed(2)); set('gSensUp',((px/SENS.price-1)*100).toFixed(0)+'%'); }
 }
+// Valuation ▸ Peers (VA-PEERS): the same map as Overview ▸ Competitors — same G_SC state, so removing a peer here
+// removes it there — with the table open. Multiples and caps are live; the file holds denominators (G_PEERS).
+// Relocation #43: Dani's seeded-multiples table is replaced by the live table; its callout becomes the lede's question.
+function googlValuationPeersBody(){
+  return '<p class="ov-lede">The same peer map as the Overview, with the numbers behind it; multiples use live prices. The July profile’s question, now answered live: Alphabet grows like Microsoft and earns margins like Meta — does it still trade below both?</p>'+
+    stdPeerScatter('dd')+
+    '<div class="ov-foot">Sources — denominators from each company’s latest 10-K on SEC EDGAR (EPS GAAP diluted, except Alphabet’s, which is ex-OI&amp;E — without the gains on equity securities; EBITDA = operating income + D&amp;A; net debt = debt ex leases − cash and equivalents); forward = Bloomberg consensus FY2026 (as of Sep 8–10 2026) for Alphabet, Meta and Amazon only. Price, market cap and EV live (Massive). Peer set: SAB, Oct 26 2026.</div>';
+}
 function peersBody(c){
   var rows=[
     ['Alphabet','+13%','16x','23x','32.0%','The cheapest mega-platform on nearly every multiple — the discount IS the AI-disruption debate.'],
@@ -2768,8 +2783,10 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="estevo" hidden>'+resultsEvoHtml('GOOGL')+'</div>'+   // EV-EST (B2 #38)
     '</div>';
   h+=subtabs('valuation',[
-    { k:'peers', l:'Peers', body:peersBody(c) },               // B2 #43 → VA-PEERS
-    { k:'sensitivity', l:'Sensitivity Analysis', body:sensBody(c) },   // B2 #42 → VA-SENS
+    { k:'histmult', l:'Historic Multiple', body:googlHistMult.body() },   // VA-HIST (live price + filings + BBG consensus)
+    { k:'peers', l:'Peers', body:googlValuationPeersBody() },   // VA-PEERS: the OV-6 map + table (Dani's #43 seeded table → live)
+    { k:'targetmult', l:'Target Multiple', body:googlTargetMult.body() },   // VA-TM (Summit model valuation, frozen)
+    { k:'sensitivity', l:'Sensitivity Analysis', body:googlSens.body() },   // VA-SENS (Summit 08-06 frozen; Dani's #42 seeded SENS replaced)
   ], true);
   h+=subtabs('mgmt',[
     { k:'team', l:'Executives & Board', body:GOOGL_MGMT.body() },
@@ -2808,7 +2825,10 @@ function buildSub(root, group, key){
     if(key==='segments') requestAnimationFrame(function(){ googlBlSegmentsBuild(root); });
     if(key==='supplychain') requestAnimationFrame(googlSplcBuild);
   } else if(group==='valuation'){
-    if(key==='sensitivity') renderSens(root);
+    if(key==='histmult') requestAnimationFrame(function(){ googlHistMult.init(root); });
+    if(key==='peers') requestAnimationFrame(function(){ wireScatters(root); });
+    if(key==='targetmult') requestAnimationFrame(function(){ googlTargetMult.init(root); });
+    if(key==='sensitivity') requestAnimationFrame(function(){ googlSens.init(root); });
   } else if(group==='mgmt'){
     if(key==='team') GOOGL_MGMT.init(root);
   } else if(group==='misc'){

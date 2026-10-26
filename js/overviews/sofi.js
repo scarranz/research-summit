@@ -4016,13 +4016,18 @@ function ddSubtabs(group, subs, hiddenPane){
 }
 function deepDiveHtml(c){
   var h = '<div class="ov ov-sofi-dd" data-brand="SOFI">';
-  h += '<div class="dd-tabs"><button type="button" class="dd-tab active" data-dd="bottomline">Bottom Line</button>'+
+  h += '<div class="dd-tabs"><button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
+       '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
        '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
        '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
        '<button type="button" class="dd-tab" data-dd="mgmt">Management</button></div>';
+  h += ddSubtabs('topline', [
+    { k:'segov', l:'General', body:resultsHtml('SOFI_TLG') },
+    { k:'segdrv', l:'Segments', body:resultsHtml('SOFI_TLS') }
+  ], false);
   h += ddSubtabs('bottomline', [
     { k:'margins', l:'General', body:resultsHtml('SOFI_BL') }
-  ], false);
+  ], true);
   h += ddSubtabs('evolution', [
     { k:'earnings', l:'Earnings', body:sofiCeHtml(c) },
     { k:'results', l:'Results', body:resultsHtml('SOFI') },
@@ -4057,6 +4062,10 @@ function wireDdModal(root){
 }
 function ddActiveKey(root, group){ var p = root.querySelector('.dd-pane[data-dd="'+group+'"] .ovt-subtab.active'); return p ? p.getAttribute('data-ovst') : null; }
 function ddBuildSub(root, group, key){
+  if (group === 'topline' && key === 'segov') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ovt-subpane[data-ovst="segov"] .rs-wrap'), 'SOFI_TLG'); });
+  if (group === 'topline' && key === 'segdrv') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ovt-subpane[data-ovst="segdrv"] .rs-wrap'), 'SOFI_TLS'); });
   if (group === 'bottomline' && key === 'margins') requestAnimationFrame(function(){
     initResults(root.querySelector('.ovt-subpane[data-ovst="margins"] .rs-wrap'), 'SOFI_BL'); });
   if (group === 'evolution' && key === 'earnings') sofiCeBuild(root);
@@ -4080,7 +4089,7 @@ function ddShow(root, group){
 function deepDiveInit(c){
   var root = document.querySelector('.ov-sofi-dd'); if (!root) return;
   root.querySelectorAll('.dd-tab').forEach(function(b){ b.onclick = function(){ ddShow(root, b.getAttribute('data-dd')); }; });
-  ['bottomline', 'evolution', 'valuation', 'mgmt'].forEach(function(g){
+  ['topline', 'bottomline', 'evolution', 'valuation', 'mgmt'].forEach(function(g){
     var pane = root.querySelector('.dd-pane[data-dd="'+g+'"]'); if (!pane) return;
     pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.onclick = function(){ ddShowSub(root, g, b.getAttribute('data-ovst')); }; });
   });

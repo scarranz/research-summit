@@ -182,10 +182,10 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | OV-F | Overview ▸ Pie de fuentes | 👀 | 2026-10-26 | | | OV_SOURCES, único pie del Overview |
 | EV-RES-DATA | Dataset de Results (números) | 👀 | 2026-10-26 | | | 17 métricas q + y; act, summit, cons; estMatrix cons + summit; guía de la empresa incluida (8-K y llamadas) |
 | EV-RES | Evolution ▸ Results | 👀 | 2026-10-26 | | | primer sub-tab del Deep Dive; motor results.js |
-| TL-GEN | Top Line ▸ General | ⬜ | | | | |
-| TL-SEG | Top Line ▸ Segments | ⬜ | | | | |
-| TL-OTH | Top Line ▸ Other | ⬜ | | | | |
-| TL-CUS | Top Line ▸ Customers | ⬜ | | | | |
+| TL-GEN | Top Line ▸ General | 👀 | 2026-10-26 | | | motor Results (SOFI_TLG): ingreso, 6 líneas, miembros y originaciones |
+| TL-SEG | Top Line ▸ Segments | 👀 | 2026-10-26 | | | motor Results (SOFI_TLS): ingreso y utilidad de contribución por segmento; solo actuals, trimestres incompletos |
+| TL-OTH | Top Line ▸ Other | ⏭️ | 2026-10-26 | | | no hay cortes adicionales con datos (geografía no existe en el 10-K) |
+| TL-CUS | Top Line ▸ Customers | ⏭️ | 2026-10-26 | | | no hay export SPLC de SOFI en el repo ni cliente que supere 10% del ingreso; se reabre si Dani consigue el export |
 | EV-EST | Evolution ▸ Estimates | 👀 | 2026-10-26 | | | 8 métricas, 4 años × 3 snapshots Summit; sin serie de consenso |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | 👀 | 2026-10-26 | | | grilla de consenso por horizonte + gráfica Setup + notas de guía de 3Q26 |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results | 👀 | 2026-10-26 | | | 2Q26, 1Q26 y 4Q25 completos (resumen, notas, discurso preparado, preguntas); trimestres anteriores (4Q23–3Q25) sin cargar |
@@ -479,3 +479,11 @@ playbook (candidata a podar, **solo con tu OK**).
 - Limitación declarada: en las preguntas de analistas del 4T25 solo atribuí el nombre cuando la transcripción lo identifica con certeza (Dan Dolev, Mizuho); las demás dicen "Analyst question".
 - Con esto, Earnings cubre los tres últimos prints (4Q25, 1Q26, 2Q26) más el Setup de 3Q26. Los trimestres anteriores en `docs/calls` (4Q23–3Q25) quedan sin cargar.
 - Autoauditoría: claves válidas ✔ · claims contrastados con la transcripción ✔ (contratos de partners extendidos, "al menos $0.30 de cada dólar incremental", interchange +66% sobre ~$22B) · `node --check` ✔ · el HTML de Earnings renderiza (267 mil caracteres) con los pills Q4 2025, Q1 2026, Q2 2026 y Q3 2026 ✔.
+
+### 2026-10-26 · TL-GEN / TL-SEG Top Line — 👀 EN REVISIÓN (TL-OTH y TL-CUS ⏭️)
+- Qué se mostró: nueva sección **Top Line** (primera del Deep Dive) con dos sub-tabs sobre el motor Results (`results-data/sofi-tl.js`, registrados como `SOFI_TLG` y `SOFI_TLS`). **General**: ingreso neto total, las 6 líneas de ingreso (interés neto, ingreso no financiero, Loan Platform, Technology products, origination and sales, other), miembros y originaciones (con Summit congelado y consenso BBG). **Segments**: ingreso neto y utilidad de contribución de Lending, Technology Platform y Financial Services, con margen de contribución.
+- Fuentes de Segments: 10-K FY2025 (anual 2023–2025: Lending 1,370.6 / 1,485.2 / 1,848.9; Technology Platform 352.3 / 395.2 / 450.2; Financial Services 436.5 / 821.5 / 1,542.0; utilidad de contribución 823.3 / 890.5 / 1,016.9, 94.8 / 127.0 / 144.4 y −0.3 / 307.0 / 792.9); 10-Q 2Q26 (2Q25, 2Q26 y semestres; 1Q25 y 1Q26 = semestre menos segundo trimestre); llamada de 4Q25 (Financial Services 457 y 231 de contribución, Technology Platform 122).
+- Cuadre: los tres segmentos de FY2025 suman 3,841.2, que es el total antes de Corporate/Other; el ingreso neto reportado es 3,613.4 (la diferencia, −227.8, son eliminaciones intersegmento). Los trimestres derivados reproducen las cifras de las llamadas (Financial Services 1Q26 428.5 vs "$429M"; Technology Platform 1Q26 75.1 vs "$75M"; Lending CP 1Q26 382.4 vs "$382M").
+- Huecos declarados: 3Q25 y Lending 4Q25 no están en los filings disponibles (el de Lending de la llamada es ajustado, base distinta) y quedan vacíos; el modelo Summit no proyecta ingreso por segmento (DCF SOFI.xlsm, hoja Segments), así que no hay zona de forecast ni consenso.
+- TL-OTH ⏭️: el 10-K no desagrega ingresos por geografía ni hay otro corte con datos. TL-CUS ⏭️: sin export SPLC de SOFI en el repo (se buscó en `nvidia-map-reference/` y `robotics-research/`) ni cliente de más de 10% (el 10-Q dice que ningún comprador de préstamos supera 10% del ingreso consolidado).
+- Autoauditoría: `node --check` ✔ · el HTML del Deep Dive genera las 5 secciones y los dos sub-tabs de Top Line ✔ · render visual no verificado por Claude.

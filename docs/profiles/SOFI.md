@@ -131,7 +131,7 @@ confirmación del autor del modelo en las ❓. El archivo `js/summit-map/sofi.js
 |---|---|---|---|---|---|---|
 | F0 | Inventario de datos | 📝 | 2026-10-26 | | | esperando compuerta |
 | B1 | Inventario de lo que existe | 📝 | 2026-10-26 | | | §5 abajo (34 filas por función; conteo fino pendiente) |
-| B2 | Mapa de reubicación | ⬜ | | | | depende de F0 y B1 |
+| B2 | Mapa de reubicación | 📝 | 2026-10-26 | | | decisiones de #12 #13 #21 #23 #24 #25 #27 #29 #30 tomadas; faltan #1 #2 #4 #6 #7 #15 #17 #26 #31 #32 #33 y la aprobación del mapa completo |
 | F0-SM | Mapa de métricas Summit | 📝 | 2026-10-26 | | | primera pasada; dudas ❓ abiertas |
 | F1 | Esqueleto + vista previa | ⬜ | | | | |
 | OV-1 | Overview ▸ Key Facts | ⬜ | | | | |
@@ -174,6 +174,12 @@ confirmación del autor del modelo en las ❓. El archivo `js/summit-map/sofi.js
 
 - 2026-10-26 · general · Se sigue la convención más reciente (META, TSM, AMZN; playbook actualizado con el review de SAB del 2026-10-19) — Dani
 - 2026-10-26 · general · Lo viejo que contradice la convención se puede quitar, pero ante la duda se conserva y se confirma antes de podar — Dani
+- 2026-10-26 · B2 #12 #13 #25 · Rule of 40, Capital Raises y SOTP van a Miscellaneous (`MISC-rule40`, `MISC-capital`, `MISC-sotp`) — no tienen hogar en la convención y se conservan — Dani
+- 2026-10-26 · B2 #21 #23 · Actuals vs Estimates y Evolution se rehacen con Results y Estimates sobre los 3 snapshots reales del MCP (el snapshot 05-13 ya no existe) — Dani
+- 2026-10-26 · B2 #24 · Sensitivity conserva el diseño multi-driver de SoFi; base del snapshot 08-05 y precio en vivo sin fallback sembrado — Dani
+- 2026-10-26 · B2 #27 #29 #30 · Peers e Insiders se conservan marcados "seeded, dated" hasta reemplazarlos con fuentes primarias — Dani
+- 2026-10-26 · general · Quartr ya no se consulta (sin acceso); las llamadas vienen de `SOFI_calls.txt` que subió Dani — Dani
+- 2026-10-26 · general · El PR #152 se mantiene en borrador, con aviso de no mergear, sólo para previsualizar desde otra computadora — Dani
 
 ## 4. Excepciones aceptadas
 
@@ -203,8 +209,8 @@ playbook (candidata a podar, **solo con tu OK**).
 | 9 | `PEERS` (tarjetas de rivales en Overview) | Overview ▸ Competitors | 🟢 | ⬜ |
 | 10 | `milestonesBody` / `TIMELINE` | Overview ▸ Timeline | 🟢 | ⬜ |
 | 11 | `membersBody` + `MEM_*` (miembros, slider CAGR) | Top Line ▸ Segments (KPI) o Misc | 🟢 motor `segments.js` | ⬜ |
-| 12 | `rule40Body` / `buildRule40Chart` | Misc ▸ Rule of 40 | 🟡 no tiene hogar en la convención | ⬜ |
-| 13 | `capRaisesBody` + `CAPR_*` (capital, BVPS, TBVPS) | Misc ▸ capital / Bottom Line | 🟡 | ⬜ |
+| 12 | `rule40Body` / `buildRule40Chart` | Misc ▸ Rule of 40 (`MISC-rule40`) | ✔ decidido 2026-10-26: se conserva en Misc, se reconstruye con datos frescos al aprobarla | ⬜ |
+| 13 | `capRaisesBody` + `CAPR_*` (capital, BVPS, TBVPS) | Misc ▸ Capital (`MISC-capital`) | ✔ decidido 2026-10-26: Misc | ⬜ |
 | 14 | `interestBody` + `loanBlock` (`LOAN_PL/SL/HL`) | Top Line ▸ Segments ▸ Lending | 🟢 | ⬜ |
 | 15 | `ficoCard` / `ficoGauge` (FICO 746) | Top Line ▸ Segments ▸ Lending KPIs | 🟡 | ⬜ |
 | 16 | `capCard` (ratio de capital vs 10.5% requerido) | Misc ▸ capacity → revenue | 🟢 encaja con "Capacity → revenue" (§15b) | ⬜ |
@@ -212,16 +218,16 @@ playbook (candidata a podar, **solo con tu OK**).
 | 18 | `lpbBody` (Loan Platform Business: hero, flujo, funders, pie) | Top Line ▸ Segments ▸ Lending / Misc ▸ LPB | 🟢 contenido único, se conserva entero | ⬜ |
 | 19 | `techBody` (Galileo/Technisys, clientes, gráfica de cuentas e ingreso) | Top Line ▸ Segments ▸ Technology Platform + TL-CUS | 🟢 | ⬜ |
 | 20 | `fsBody` (Financial Services) | Top Line ▸ Segments ▸ Financial Services | 🟢 | ⬜ |
-| 21 | `valuationBody` → `aveBody` (Actuals vs Estimates, `AVE_METRICS`) | Evolution ▸ Results (surprise scorecard) | 🔴/🟡 compara el modelo Summit vs actual con números **sembrados** del snapshot 2026-05-13 (regla 10); el motor Results ya lo hace | ⬜ |
+| 21 | `valuationBody` → `aveBody` (Actuals vs Estimates, `AVE_METRICS`) | Evolution ▸ Results (surprise scorecard) | ✔ decidido 2026-10-26: se rehace con el motor Results y los 3 snapshots reales (02-03, 04-29, 08-05) congelados; texto y lógica de surprise se conservan | ⬜ |
 | 22 | `guidanceBody` (Actuals vs Guidance, anual + trimestral) | Evolution ▸ Results (guidance) | 🟢 **ya portado a `results.js`** (comentario en `results.js:3573`) — pieza fuente | ⬜ |
-| 23 | Evolution `EVO_*` (cómo cambió el modelo entre snapshots) | Evolution ▸ Estimates | 🟡 hoy sólo 3 snapshots sembrados; EV-EST necesita ≥ 2 del MCP | ⬜ |
-| 24 | `sensBody` + `SENS_*` (multi-driver, LPB e ingreso por intereses) | Valuation ▸ Sensitivity Analysis | 🔴/🟡 base sembrada del snapshot 2026-05-13; diseño propio de SoFi | ⬜ |
-| 25 | `SOTP_*` + `renderSotp` (suma de partes) | Valuation ▸ Target Multiple / Misc | 🟡 no existe en la convención; es análisis propio | ⬜ |
+| 23 | Evolution `EVO_*` (cómo cambió el modelo entre snapshots) | Evolution ▸ Estimates | ✔ decidido 2026-10-26: motor Estimates con los 3 snapshots reales | ⬜ |
+| 24 | `sensBody` + `SENS_*` (multi-driver, LPB e ingreso por intereses) | Valuation ▸ Sensitivity Analysis | ✔ decidido 2026-10-26: se conserva el diseño propio; base re-sacada del snapshot 08-05; precio en vivo | ⬜ |
+| 25 | `SOTP_*` + `renderSotp` (suma de partes) | Misc ▸ SOTP (`MISC-sotp`) | ✔ decidido 2026-10-26: Misc | ⬜ |
 | 26 | `fetchSofiQuote` / `renderLiveBanner` (banner de precio, fallback $17.57) | Eliminada por precio en vivo estándar | 🔴 precio sembrado de respaldo (regla 10) | ⬜ |
-| 27 | `peersBody` + `PEER_SERIES`, `PEER_FEE`, tabla, series de tiempo, mix, scatter | Valuation ▸ Peers | 🟡 precios del 25-Jun-2026 y EPS de consenso de stockanalysis/Yahoo sembrados (regla 3: no son fuente primaria) | ⬜ |
+| 27 | `peersBody` + `PEER_SERIES`, `PEER_FEE`, tabla, series de tiempo, mix, scatter | Valuation ▸ Peers | ✔ decidido 2026-10-26: se conserva y se marca "seeded, dated"; se reemplaza por fuentes primarias en su unidad | ⬜ |
 | 28 | `managementBody` → `orgChartBody` (`ORG_*`, `PROFILES`, modal) | Management ▸ Executives & Board | 🟢 | ⬜ |
-| 29 | `insiderActivityBody` + `INSIDER_TX` (Form 4 a mano) | Management ▸ Governance / Fiscal.ai | 🟡 hoy sembrado; debería venir del motor | ⬜ |
-| 30 | `INSIDER_OWN` / `SHARES_OUT` | Management ▸ Ownership | 🟡 | ⬜ |
+| 29 | `insiderActivityBody` + `INSIDER_TX` (Form 4 a mano) | Management ▸ Governance | ✔ decidido 2026-10-26: se conserva y se marca "seeded, dated" hasta reemplazarlo | ⬜ |
+| 30 | `INSIDER_OWN` / `SHARES_OUT` | Management ▸ Ownership | ✔ decidido 2026-10-26: igual que #29 | ⬜ |
 | 31 | `BRAND '#0E7CC0'`, `PEER_COLORS`, `AVE_GREEN/RED`, `EVO_COLORS` | Tokens Summit | 🔴 la marca de SoFi sólo en el logo; el Overview sin color categórico (§8, §21) | ⬜ |
 | 32 | 15 `style="…"` en línea | CSS compartido | 🔴 un perfil nuevo no agrega estilos en línea | ⬜ |
 | 33 | `soonBody` (placeholder) | — | 🔴 no se publican sub-tabs "pendiente" (regla 5) — ¿todavía se usa? | ⬜ |

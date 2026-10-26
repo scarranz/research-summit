@@ -11,7 +11,12 @@
     "members": "MEMB",
     "plov": "PLOV",
     "slov": "SLOV",
-    "hlov": "HLOV"
+    "hlov": "HLOV",
+    "opinc": "OP_INCOME",
+    "tdev": "TPDEV",
+    "sm": "SME",
+    "ga": "GAE",
+    "coo": "COO"
   },
   "_sign_note": "MEMB is in THOUSANDS in the model and the dataset carries thousands too, so no scaling.",
   "sign": {},
@@ -58,7 +63,12 @@
       "members",
       "plov",
       "slov",
-      "hlov"
+      "hlov",
+      "opinc",
+      "tdev",
+      "sm",
+      "ga",
+      "coo"
     ],
     "y": [
       "rev",
@@ -71,7 +81,12 @@
       "members",
       "plov",
       "slov",
-      "hlov"
+      "hlov",
+      "opinc",
+      "tdev",
+      "sm",
+      "ga",
+      "coo"
     ]
   },
   "prefer_source": [

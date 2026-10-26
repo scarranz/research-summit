@@ -4016,14 +4016,18 @@ function ddSubtabs(group, subs, hiddenPane){
 }
 function deepDiveHtml(c){
   var h = '<div class="ov ov-sofi-dd" data-brand="SOFI">';
-  h += '<div class="dd-tabs"><button type="button" class="dd-tab active" data-dd="evolution">Evolution</button>'+
+  h += '<div class="dd-tabs"><button type="button" class="dd-tab active" data-dd="bottomline">Bottom Line</button>'+
+       '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
        '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
        '<button type="button" class="dd-tab" data-dd="mgmt">Management</button></div>';
+  h += ddSubtabs('bottomline', [
+    { k:'margins', l:'General', body:resultsHtml('SOFI_BL') }
+  ], false);
   h += ddSubtabs('evolution', [
     { k:'earnings', l:'Earnings', body:sofiCeHtml(c) },
     { k:'results', l:'Results', body:resultsHtml('SOFI') },
     { k:'estevo', l:'Estimates', body:resultsEvoHtml('SOFI') }
-  ], false);
+  ], true);
   h += ddSubtabs('valuation', [
     { k:'peers', l:'Peers', body:soValuationPeersBody() }
   ], true);
@@ -4053,6 +4057,8 @@ function wireDdModal(root){
 }
 function ddActiveKey(root, group){ var p = root.querySelector('.dd-pane[data-dd="'+group+'"] .ovt-subtab.active'); return p ? p.getAttribute('data-ovst') : null; }
 function ddBuildSub(root, group, key){
+  if (group === 'bottomline' && key === 'margins') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ovt-subpane[data-ovst="margins"] .rs-wrap'), 'SOFI_BL'); });
   if (group === 'evolution' && key === 'earnings') sofiCeBuild(root);
   if (group === 'evolution' && key === 'results') requestAnimationFrame(function(){
     initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'SOFI'); });
@@ -4074,7 +4080,7 @@ function ddShow(root, group){
 function deepDiveInit(c){
   var root = document.querySelector('.ov-sofi-dd'); if (!root) return;
   root.querySelectorAll('.dd-tab').forEach(function(b){ b.onclick = function(){ ddShow(root, b.getAttribute('data-dd')); }; });
-  ['evolution', 'valuation', 'mgmt'].forEach(function(g){
+  ['bottomline', 'evolution', 'valuation', 'mgmt'].forEach(function(g){
     var pane = root.querySelector('.dd-pane[data-dd="'+g+'"]'); if (!pane) return;
     pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.onclick = function(){ ddShowSub(root, g, b.getAttribute('data-ovst')); }; });
   });

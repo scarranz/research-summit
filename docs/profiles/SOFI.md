@@ -190,11 +190,11 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | EV-SET | Evolution ▸ Earnings ▸ Setup | 👀 | 2026-10-26 | | | grilla de consenso por horizonte + gráfica Setup + notas de guía de 3Q26 |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results | 🔨 | 2026-10-26 | | | maquinaria lista; contenido por trimestre (de las llamadas) en construcción |
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | 👀 | 2026-10-26 | | | registro de temas vacío a propósito; el analista agrega notas en el portal |
-| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ⬜ | | | | |
+| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | 👀 | 2026-10-26 | | | sobre el motor Results (sección blprof) |
 | BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⬜ | | | | |
 | BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ⬜ | | | | |
 | BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ⬜ | | | | |
-| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ⬜ | | | | |
+| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | 👀 | 2026-10-26 | | | 4 líneas funcionales + provisión + SBC, % del ingreso (sección blexp) |
 | BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
 | BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
@@ -453,3 +453,10 @@ playbook (candidata a podar, **solo con tu OK**).
 - Setup de 3Q26 (próximo print): consenso BBG del 2026-10-26, Summit congelado del 2026-08-05 y la guía de la llamada del 29-jul (solo año completo: ingreso ajustado $4.75–4.85B, EBITDA ≈ $1.6B, utilidad ajustada ≈ $825M, EPS ≈ $0.60 con 22% de impuestos; sin guía discreta del trimestre).
 - Autoauditoría: `node --check` de los 5 archivos ✔ · el constructor de la grilla da ingreso 2Q26 = 1.22 ($B), miembros 15.81 M, filas de consenso por horizonte ✔ · el HTML de Earnings se genera completo (82 mil caracteres) con las 3 fases y los pills de trimestre ✔ (prueba en Node con los imports de red sustituidos) · `ov-sofi-dd` en las reglas ✔ · render visual no verificado por Claude.
 - Pendiente (EV-POST): las entradas por trimestre reportado (resumen, sorpresas, preparado, Q&A) se escriben a partir de `docs/calls`; el consenso pre-print de 2Q26 ya está en la grilla. Notes: sin semilla (no hay notas del analista de SOFI).
+
+### 2026-10-26 · BL-GEN-1 y BL-GEN-5 Bottom Line ▸ General — 👀 EN REVISIÓN
+- Qué se mostró: nueva sección **Bottom Line** (primera del Deep Dive) con el sub-tab General sobre el motor Results (`results-data/sofi-bl.js`, registrado como `SOFI_BL`): "Profitability & margins" (utilidad antes de impuestos, EBITDA ajustado, utilidad ajustada, con margen sobre ingreso neto) y "Expense lines" (gasto no financiero, tecnología y producto, ventas y marketing, costo de operaciones, G&A, provisión y SBC, cada una como % del ingreso). Series: actuals, Summit congelado y consenso BBG.
+- Fuentes: DCF de SOFI (`DCF SOFI.xlsm`, hoja Segments; Dani 2026-10-26) como referencia de qué proyecta Summit: las líneas funcionales, utilidad antes de impuestos, impuestos, EBITDA, D&A, SBC y EPS tienen forecast trimestral y anual; **los ingresos por segmento (Lending, Technology Platform, Financial Services) vienen vacíos, o sea Summit no los proyecta**. Mismos valores que el MCP (ingreso 2026 = 5,317.5; 3Q26 = 1,207.4). Consenso: `BBG_CONSENSUS.txt`, slots kpi19–22 (códigos `CB_IS_DATA_PROCESSING_COST`, `CB_IS_S_AND_M_EXPENSE`, `CB_IS_GENL_AND_ADMIN_EXPN`, `CB_IS_OTHER_OPEX`).
+- Cuadre: las 4 líneas funcionales + provisión suman $1,014.4M en 2Q26; el "gasto no financiero" del filing ($1,000.6M) **no incluye** la provisión ($13.8M). La nota de esa métrica lo dice. `verify_preprint.py SOFI cons`: 301 iguales, 0 cambiadas ✔.
+- Decisión de construcción (Claude): SoFi es un banco, sin costo de ventas ni utilidad bruta; en vez de portar el módulo a medida de META (1,000 líneas, bridge desde costo de ingresos) Bottom Line ▸ General se construye sobre el motor Results ya probado. **Pendiente a medida:** el puente ingreso → utilidad neta (BL-GEN-2), op. income → net income (BL-GEN-3) y SBC (BL-GEN-4).
+- Autoauditoría: `node --check` ✔ · el HTML del Deep Dive genera las 4 secciones y el panel del motor ✔ (prueba en Node) · render visual no verificado por Claude.

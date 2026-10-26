@@ -58,6 +58,22 @@
       "code": "LOAN_PRODUCTION_ORIGINAL",
       "unit": "usdM",
       "segment": "hl"
+    },
+    "tdev": {
+      "code": "CB_IS_DATA_PROCESSING_COST",
+      "unit": "usdM"
+    },
+    "sm": {
+      "code": "CB_IS_S_AND_M_EXPENSE",
+      "unit": "usdM"
+    },
+    "ga": {
+      "code": "CB_IS_GENL_AND_ADMIN_EXPN",
+      "unit": "usdM"
+    },
+    "coo": {
+      "code": "CB_IS_OTHER_OPEX",
+      "unit": "usdM"
     }
   },
   "y": {
@@ -112,6 +128,22 @@
       "code": "LOAN_PRODUCTION_ORIGINAL",
       "unit": "usdM",
       "segment": "hl"
+    },
+    "tdev": {
+      "code": "CB_IS_DATA_PROCESSING_COST",
+      "unit": "usdM"
+    },
+    "sm": {
+      "code": "CB_IS_S_AND_M_EXPENSE",
+      "unit": "usdM"
+    },
+    "ga": {
+      "code": "CB_IS_GENL_AND_ADMIN_EXPN",
+      "unit": "usdM"
+    },
+    "coo": {
+      "code": "CB_IS_OTHER_OPEX",
+      "unit": "usdM"
     }
   }
 }

@@ -69,12 +69,12 @@ export var SOFI_CE_CONS = {
 })();
 
 // Summit for a quarter's Setup (`setup.us`): READ from the Results dataset, where the model is frozen at its dated snapshot
-// (rule 10), never typed. Only the lines the model projects by quarter; the rest stay "—". The model has no EPS row.
+// (rule 10), never typed. Only the lines the model projects by quarter; the rest stay "—". Summit EPS is the model's EARNINGS / SHARES.
 function ceSummitUs(p){
   var M = sofiResults.views.q.metrics, out = {};
   [['Revenue','rev',1000],['Total members','members',1000],['Personal loan originations','plov',1000],['Student loan originations','slov',1000],
    ['Home loan originations','hlov',1000],['Noninterest expense','nie',1000],['Stock-based compensation','sbc',1000],
-   ['Adjusted EBITDA','ebitda',1000],['Adjusted net income','earnings',1000]].forEach(function(x){
+   ['Adjusted EBITDA','ebitda',1000],['Adjusted net income','earnings',1000],['EPS (diluted)','eps',1]].forEach(function(x){
     var r=M[x[1]], i=r?r.periods.indexOf(p):-1, v=(i>=0&&r.summit)?r.summit[i]:null;
     if(v!=null){ v=v/x[2]; out[x[0]]={ v:Math.abs(v)>=10?Math.round(v*10)/10:Math.round(v*100)/100 }; } });
   return out;

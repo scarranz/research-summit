@@ -130,7 +130,7 @@ export var sofiResults = {
         eps: { label: 'Diluted EPS (adjusted)', short: 'Diluted EPS', group: 'Company', unit: 'eps',
           periods: ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27', '4Q27'],
           act:    [null, null, null, null, null, 0.08, 0.11, 0.13, 0.12, 0.12, null, null, null, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          summit: [-0.0888, -0.0958, -0.1217, -0.0722, -0.0826, 0.0451, 0.0503, 0.1259, 0.1056, 0.1094, 0.1557, 0.213, 0.1666, 0.1379, 0.2445, 0.2889],
           cons:   [0.0091, 0.0069, 0.0353, 0.0381, 0.0456, 0.0566, 0.0789, 0.1161, 0.12, 0.1211, 0.1677, 0.1895, 0.1716, 0.1941, null, null],
           guideLo: [null, null, 0.04, null, 0.03, 0.05, null, null, 0.12, 0.1, null, null, null, null, null, null],
           guideHi: [null, null, 0.04, null, 0.03, 0.06, null, null, 0.12, 0.11, null, null, null, null, null, null],
@@ -163,18 +163,26 @@ export var sofiResults = {
           periods: ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27', '4Q27'],
           act:    [94.226, 16.478, 63.855, 59.924, 79.782, 112.192, 148.551, 185.332, 199.552, 204.309, null, null, null, null, null, null],
           summit: [-101.5098, -111.0013, -143.9911, -88.5909, -105.61, 59.3633, 69.228, 180.5598, 167.294, 177.3502, 269.9454, 369.211, 250.3217, 207.1836, 367.3453, 434.0559],
-          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [11.8835, 8.1654, 36.8729, 35.1734, 64.3971, 86.6047, 127.7442, 184.6132, 192.8274, 207.0724, 290.0682, 323.7887, 286.4648, 315.7437, null, null],
           guideLo: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'Operating income, which for SoFi is GAAP income before income taxes (net revenue less noninterest expense). Model series only; Bloomberg has no line for it. 2Q26 is the 10-Q figure ($204.3M; the model carries $182.8M because its 2Q26 revenue is $21.7M low).' },
         tax: { label: 'Income tax expense', short: 'Income tax', group: 'Company', unit: 'usdM', marginOf: 'opinc', marginLabel: 'Effective tax rate (% of pre-tax income)',
           periods: ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27', '4Q27'],
           act:    [null, null, null, null, null, 14.929, 9.159, 11.783, 32.821, 47.717, null, null, null, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          summit: [-10.151, -11.1001, -14.3991, -8.8591, -10.561, 5.9363, 5.5382, 18.056, 25.0941, 26.6025, 59.388, 81.2264, 25.0322, 20.7184, 36.7345, 43.4056],
           cons:   [0.5101, -0.3194, 5.5922, 3.4713, 10.9723, 20.3671, 28.2755, 29.8821, 28.9187, 30.0735, 64.6648, 72.9259, 66.0327, 76.3202, null, null],
           guideLo: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          note: 'Income tax expense (benefit). FY2024 includes a one-time benefit from releasing a valuation allowance, so its effective rate is not comparable. Model series is not in the Summit pull; Bloomberg and reported only.' },
+          note: 'Income tax expense (benefit). FY2024 includes a one-time benefit from releasing a valuation allowance, so its effective rate is not comparable. Summit series: the model\'s Income Tax Expense row (DCF SOFI.xlsm, Aug 5 2026 block).' },
+        etr: { label: 'Effective tax rate', short: 'Effective tax rate', group: 'Company', unit: 'pct',
+          periods: ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27', '4Q27'],
+          act:    [null, null, null, null, null, 13.31, 6.17, 6.36, 16.45, 23.36, null, null, null, null, null, null],
+          summit: [10, 10, 10, 10, 10, 10, 8, 10, 15, 15, 22, 22, 10, 10, 10, 10],
+          cons:   [4.29, -3.91, 15.17, 9.87, 17.04, 23.52, 22.13, 16.19, 15, 14.52, 22.29, 22.52, 23.05, 24.17, null, null],
+          guideLo: [null, null, null, null, null, null, null, 10, null, null, null, null, null, null, null, null],
+          guideHi: [null, null, null, null, null, null, null, 10, null, null, null, null, null, null, null, null],
+          note: 'Income tax expense divided by operating income, per source. SoFi guides the rate: about 26% for 2025 (Q4 2024 call), about 10% for 4Q25 (Q3 2025 call), mid-teens for 2026 at first and now about 22% for the full year 2026 (Jul 29 2026). FY2024 includes a one-time valuation-allowance release, so its rate is not comparable; the model carries a flat 10% rate assumption and its own income tax expense row.' },
         tdev: { label: 'Technology and product development', short: 'Tech & product dev', group: 'Expense lines', unit: 'usdM', marginOf: 'rev', marginLabel: 'Tech & product development % of net revenue',
           periods: ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27', '4Q27'],
           act:    [130.92, 132.167, 139.714, 148.986, 156.206, 152.146, 167.144, 172.836, 187.675, 191.276, null, null, null, null, null, null],
@@ -213,7 +221,7 @@ export var sofiResults = {
           { label: 'Totals', keys: ['rev'] }
         ] },
         { key: 'margins', label: 'Margins & Profitability', defaultMetric: 'ebitda', groups: [
-          { label: 'Company', keys: ['ebitda', 'opinc', 'earnings', 'eps'] }
+          { label: 'Company', keys: ['ebitda', 'opinc', 'earnings', 'eps', 'tax', 'etr'] }
         ] }
       ]
     },
@@ -328,7 +336,7 @@ export var sofiResults = {
         eps: { label: 'Diluted EPS (adjusted)', short: 'Diluted EPS', group: 'Company', unit: 'eps',
           periods: ['2024', '2025', '2026', '2027', '2028'],
           act:    [0.15, 0.39, null, null, null],
-          summit: [null, null, null, null, null],
+          summit: [0.2063, 0.3822, 0.6556, 0.8695, 1.2035],
           cons:   [0.1247, 0.3783, 0.5962, 0.8196, 1.0562],
           guideLo: [0.11, 0.37, 0.6, null, null],
           guideHi: [0.12, 0.37, 0.6, null, null],
@@ -361,18 +369,26 @@ export var sofiResults = {
           periods: ['2024', '2025', '2026', '2027', '2028'],
           act:    [234.483, 525.857, null, null, null],
           summit: [-445.0932, 203.541, 1493.8044, 1403.797, 1968.4437],
-          cons:   [null, null, null, null, null],
+          cons:   [182.5626, 463.8326, 881.1562, 1373.8335, 1912.9945],
           guideLo: [null, null, null, null, null],
           guideHi: [null, null, null, null, null],
           note: 'Operating income, which for SoFi is GAAP income before income taxes (net revenue less noninterest expense). Model series only; Bloomberg has no line for it. 2Q26 is the 10-Q figure ($204.3M; the model carries $182.8M because its 2Q26 revenue is $21.7M low).' },
         tax: { label: 'Income tax expense', short: 'Income tax', group: 'Company', unit: 'usdM', marginOf: 'opinc', marginLabel: 'Effective tax rate (% of pre-tax income)',
           periods: ['2024', '2025', '2026', '2027', '2028'],
           act:    [-265.32, 44.537, null, null, null],
-          summit: [null, null, null, null, null],
+          summit: [-44.5093, 18.9695, 155.5104, 308.8353, 452.742],
           cons:   [8.6313, 69.5995, 213.7583, 319.5623, 430.1061],
           guideLo: [null, null, null, null, null],
           guideHi: [null, null, null, null, null],
-          note: 'Income tax expense (benefit). FY2024 includes a one-time benefit from releasing a valuation allowance, so its effective rate is not comparable. Model series is not in the Summit pull; Bloomberg and reported only.' },
+          note: 'Income tax expense (benefit). FY2024 includes a one-time benefit from releasing a valuation allowance, so its effective rate is not comparable. Summit series: the model\'s Income Tax Expense row (DCF SOFI.xlsm, Aug 5 2026 block).' },
+        etr: { label: 'Effective tax rate', short: 'Effective tax rate', group: 'Company', unit: 'pct',
+          periods: ['2024', '2025', '2026', '2027', '2028'],
+          act:    [-113.15, 8.47, null, null, null],
+          summit: [10, 9.32, 10.41, 22, 23],
+          cons:   [4.73, 15.01, 24.26, 23.26, 22.48],
+          guideLo: [null, 26, 22, null, null],
+          guideHi: [null, 26, 22, null, null],
+          note: 'Income tax expense divided by operating income, per source. SoFi guides the rate: about 26% for 2025 (Q4 2024 call), about 10% for 4Q25 (Q3 2025 call), mid-teens for 2026 at first and now about 22% for the full year 2026 (Jul 29 2026). FY2024 includes a one-time valuation-allowance release, so its rate is not comparable; the model carries a flat 10% rate assumption and its own income tax expense row.' },
         tdev: { label: 'Technology and product development', short: 'Tech & product dev', group: 'Expense lines', unit: 'usdM', marginOf: 'rev', marginLabel: 'Tech & product development % of net revenue',
           periods: ['2024', '2025', '2026', '2027', '2028'],
           act:    [551.787, 648.332, null, null, null],
@@ -411,7 +427,7 @@ export var sofiResults = {
           { label: 'Totals', keys: ['rev'] }
         ] },
         { key: 'margins', label: 'Margins & Profitability', defaultMetric: 'ebitda', groups: [
-          { label: 'Company', keys: ['ebitda', 'opinc', 'earnings', 'eps'] }
+          { label: 'Company', keys: ['ebitda', 'opinc', 'earnings', 'eps', 'tax', 'etr'] }
         ] }
       ]
     }
@@ -1736,7 +1752,7 @@ export var sofiResults = {
         { label: 'Operating metrics', keys: ['members', 'plov', 'slov', 'hlov'] }
       ] },
       { key: 'prof', label: 'Margins & Profitability', defaultMetric: 'ebitda', groups: [
-        { label: 'Company', keys: ['ebitda', 'earnings', 'nie', 'pcl', 'sbc'] },
+        { label: 'Company', keys: ['ebitda', 'opinc', 'earnings', 'eps', 'nie', 'pcl', 'sbc'] },
         { label: 'Expense lines', keys: ['tdev', 'sm', 'ga'] }
       ] }
     ],
@@ -1781,11 +1797,21 @@ export var sofiResults = {
         cons:   [[1561.5714, 1575.15, 1628.3913], [1999.5263, 2043.6842, 2103.6522], [null, 2445.7, 2638.3529], [null, null, null]],
         prior: { summit: [1053.898, 1053.898, 1053.898], cons: [1053.898, 1053.898, 1053.898] },
         note: 'Summit FY2026 $1,604M → $1,577M → $1,647M (+2.7% across the three files); FY2027 -0.8%; the Street FY2026 line went $1,562M → $1,575M → $1,628M (+4.3%); on Aug 5 the model sits +1.2% against the Street. Company guidance: about $1.6B for FY2026 (unchanged), a 33% to 34% margin.' },
+      opinc: { label: 'Operating income', unit: 'usdM', marginOf: 'rev', marginLabel: 'Operating income margin',
+        summit: [[973.182, 931.7115, 1021.5244], [1463.475, 1520.0696, 1403.797], [2204.4383, 2193.9623, 1968.4437], [2017.8734, 2399.86, 3462.5108]],
+        cons:   [[1102.5519, 1015.0149, 881.1562], [1686.8707, 1489.4668, 1373.8335], [null, 1989.3646, 1912.9945], [null, null, null]],
+        prior: { summit: [525.857, 525.857, 525.857], cons: [525.857, 525.857, 525.857] },
+        note: 'Summit FY2026 $973M → $932M → $1,022M (+5.0% across the three files); FY2027 -4.1%; the Street FY2026 line went $1,103M → $1,015M → $881M (-20.1%); on Aug 5 the model sits +15.9% against the Street.' },
       earnings: { label: 'Adjusted net income', unit: 'usdM', marginOf: 'rev', marginLabel: 'Adj. net income margin',
         summit: [[827.2047, 828.7428, 825.679], [1243.9538, 1292.0591, 1094.9616], [1873.7725, 1864.868, 1515.7016], [1816.0861, 2159.874, 3116.2597]],
         cons:   [[766.1429, 812.1053, 806], [1062.9444, 1128.8889, 1126.8696], [null, 1326.875, 1468.75], [null, null, null]],
         prior: { summit: [481.32, 481.32, 481.32], cons: [481.32, 481.32, 481.32] },
         note: 'Summit FY2026 $827M → $829M → $826M (-0.2% across the three files); FY2027 -12.0%; the Street FY2026 line went $766M → $812M → $806M (+5.2%); on Aug 5 the model sits +2.4% against the Street. Company guidance: about $825M for FY2026 (unchanged), at a 22% tax rate (it was originally framed on a mid-teens rate).' },
+      eps: { label: 'Diluted EPS (adjusted)', unit: 'eps',
+        summit: [[0.6568, 0.6581, 0.6556], [0.9878, 1.026, 0.8695], [1.4879, 1.4808, 1.2035], [1.4421, 1.715, 2.4745]],
+        cons:   [[0.5984, 0.585, 0.5962], [0.8259, 0.8076, 0.8196], [null, 0.9725, 1.0562], [null, null, null]],
+        prior: { summit: [0.39, 0.39, 0.39], cons: [0.39, 0.39, 0.39] },
+        note: 'Summit FY2026 $1M → $1M → $1M (-0.2% across the three files); FY2027 -12.0%; the Street FY2026 line went $1M → $1M → $1M (-0.4%); on Aug 5 the model sits +10.0% against the Street.' },
       nie: { label: 'Noninterest expense', unit: 'usdM', marginOf: 'rev', marginLabel: 'Noninterest expense % of net revenue',
         summit: [[3639.986, 3737.8071, 3823.6669], [4641.7706, 4767.5795, 4876.5072], [5781.3461, 5939.1026, 6115.3449], [6821.0382, 7008.0033, 7220.0254]],
         cons:   [[3344.7451, 3584.4833, 3853.0055], [3651.2685, 4090.4548, 4600.6145], [null, 4369.4546, 5429.3165], [null, null, null]],

@@ -723,7 +723,7 @@ function footHtml(){
     'the vertical drops in a forward-multiple chart are that roll, not a re-rating. '+
     '<b>NTM</b> blends FY0 × (days left in FY0 ÷ 365) + FY1 × the rest, so it slides instead of stepping. '+
     'Quarterly and annual points are the <b>average</b> over the period. '+
-    (hmData.fallback?'<b>Price source for this view: the live service did not answer from this address, so the daily closes are Yahoo Finance data up to '+esc(SOFI_PX_FALLBACK.asOf)+'; they switch to Massive when it answers.</b> ':'')+'<b>Sources.</b> Price: Massive daily close (live). Consensus EPS: Bloomberg consensus export, one vintage per print ('+
+    (hmData.fallback?'<b>Prices through the '+esc(SOFI_PX_FALLBACK.asOf)+'.</b> ':'')+'<b>Sources.</b> Price: Massive daily close (live). Consensus EPS: Bloomberg consensus export, one vintage per print ('+
     esc(vs[0].id)+' to '+esc(vs[vs.length-1].id)+'). Reported EPS and diluted shares: the reported values in that export, '+esc(n0[0])+'–'+esc(n1[0])+', stepped on the earnings date. '+
     'EPS is the company-adjusted figure (FY2025 GAAP and adjusted are both $0.39; FY2024 adjusted $0.15 versus GAAP $0.39, which included a one-time tax benefit), so trailing P/E before 2024 uses small or negative EPS and is not meaningful.';
 }

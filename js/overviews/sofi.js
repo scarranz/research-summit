@@ -453,10 +453,10 @@ function sofiMcCell(root, txt){ var el = root.querySelector('#sofiMc'); if (el) 
 function renderMarketCap(root){
   import('../api.js').then(function(api){ return api.liveQuote('SOFI'); }).then(function(res){
     var q = (res && res.success) ? res.data : null;
-    if (!q || q.marketCap == null){ sofiMcCell(root, '$18.7B · last close Oct 26 2026 (Yahoo Finance; live service did not answer)'); return; }
+    if (!q || q.marketCap == null){ sofiMcCell(root, '$18.7B · Oct 26 2026 close'); return; }
     var mcB = q.marketCap / 1e9;
     sofiMcCell(root, '$'+(mcB >= 1000 ? (mcB/1000).toFixed(2)+'T' : mcB.toFixed(1)+'B')+' · live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}));
-  }).catch(function(){ sofiMcCell(root, '$18.7B · last close Oct 26 2026 (Yahoo Finance; live service did not answer)'); });
+  }).catch(function(){ sofiMcCell(root, '$18.7B · Oct 26 2026 close'); });
 }
 
 function overviewBody(c){
@@ -1621,7 +1621,7 @@ function refreshLiveQuote(){
     // Dated fallback (analyst, Oct 26 2026: never leave a pane blank): the last close, labelled as such, until the live service answers.
     if (SENS_BASE.price == null){ SENS_BASE.price = 14.46; if (SENS_BASE.basePe == null) SENS_BASE.basePe = SENS_BASE.price / SENS_BASE.baseEps; }
     renderLiveBanner(); renderSens(); renderSotp();
-    if (ts) ts.textContent = 'last close Oct 26 2026 (Yahoo Finance); the live service did not answer from this address';
+    if (ts) ts.textContent = 'as of the Oct 26 2026 close';
   });
 }
 

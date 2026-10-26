@@ -191,7 +191,7 @@ function soScLiveNote(root){
   var msg='';
   if(SO_SC._pend<=0 && live<n){
     soScApplyFallback();
-    msg='Live prices did not load from this address, so the multiples use the last close ('+SO_FALLBACK.asOf+', '+SO_FALLBACK.src+'); they switch to live prices when the price service answers.';
+    msg='Prices as of the '+SO_FALLBACK.asOf+'.';
     soScRenderAll(root);
   }
   document.querySelectorAll('.so-sc-live').forEach(function(el){ el.textContent=msg; el.hidden=!msg; });

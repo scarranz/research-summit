@@ -7,7 +7,7 @@
 // income plus noninterest income). The unique section keys keep this instance's canvases apart from the Results tab's.
 import { sofiResults } from './sofi.js';
 
-var KEEP = ['rev', 'ebitda', 'opinc', 'earnings', 'tax', 'nie', 'tdev', 'sm', 'coo', 'ga', 'pcl', 'sbc'];
+var KEEP = ['rev', 'ebitda', 'opinc', 'earnings', 'tax', 'etr', 'nie', 'tdev', 'sm', 'coo', 'ga', 'pcl', 'sbc'];
 function pick(view){
   var out = {};
   KEEP.forEach(function(k){ if (view.metrics[k]) out[k] = view.metrics[k]; });
@@ -16,7 +16,7 @@ function pick(view){
 function sections(){
   return [
     { key: 'blprof', label: 'Profitability & margins', defaultMetric: 'ebitda', groups: [
-      { label: 'Profit', keys: ['ebitda', 'opinc', 'earnings', 'tax'] } ] },
+      { label: 'Profit', keys: ['ebitda', 'opinc', 'earnings', 'tax', 'etr'] } ] },
     { key: 'blexp', label: 'Expense lines', defaultMetric: 'nie', groups: [
       { label: 'Noninterest expense', keys: ['nie', 'tdev', 'sm', 'coo', 'ga'] },
       { label: 'Credit and equity', keys: ['pcl', 'sbc'] } ] }

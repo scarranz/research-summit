@@ -9,6 +9,8 @@
 // ended March 31, 2026); annual figures are fiscal years ended December 31. Sourced from
 // SoFi's FY2025 Form 10-K, Q1 2026 Form 10-Q, and Q1 2026 investor presentation / earnings call.
 
+import { soStdPeerScatter, soWireScatters } from './sofi-peers.js';   // OV-6 peer map (data + render + live quotes)
+
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ─── Snapshot & narrative ────────────────────────────────────────────────────
@@ -478,12 +480,9 @@ function overviewBody(c){
   // 7 — OV-7 Timeline replaces the old "History & Milestones" section here (same list stays in General ▸ Milestones)
   h += collapsible('Timeline — how it became today\'s SoFi', sofiTimeline(), false);
 
-  // 8 — Peers
-  h += sec('Peers & Competitive Landscape',
-    '<table class="ov-table"><thead><tr><th>Peer</th><th>What they offer</th><th>How SoFi differs</th></tr></thead><tbody>'+
-    PEERS.map(function(p){return '<tr><td class="ov-td-name">'+esc(p[0])+'</td><td>'+esc(p[1])+'</td><td>'+esc(p[2])+'</td></tr>';}).join('')+
-    '</tbody></table>'
-  );
+  // 8 — OV-6 Competitors — the peer map (replaces the old "Peers & Competitive Landscape" table; the PEERS
+  // constant with its "what they offer / how SoFi differs" text stays in this file, B2 #9)
+  h += collapsible('Competitors — the peer map', soStdPeerScatter('ov'), false);
 
   // 9 — Tailwinds / Headwinds
   h += sec('Tailwinds & Headwinds',
@@ -3858,6 +3857,7 @@ function init(c){
   // OV-4: Overview collapsible blocks and the nested definition accordions.
   root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick = function(){ var c2 = btn.parentElement; var body = c2.querySelector('.ov-collap-b'); var open = c2.classList.toggle('open'); if (body) body.hidden = !open; var ic = btn.querySelector('.ov-collap-ic'); if (ic) ic.textContent = open ? '▾' : '▸'; }; });
   wireProductModal(root);   // OV-5: family cards open the product pop-up
+  soWireScatters(root);     // OV-6: peer map (pills, chips, tooltips, live quotes)
   root.querySelectorAll('.acc-h').forEach(function(btn){ btn.onclick = function(){ var b = btn.nextElementSibling; if (!b) return; var open = b.hidden; b.hidden = !open; var x = btn.querySelector('.acc-x'); if (x) x.textContent = open ? '–' : '+'; }; });
   // Idempotent wiring (init may run again when the Overview pane is re-activated).
   root.querySelectorAll('.ovt-tab').forEach(function(btn){

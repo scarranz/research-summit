@@ -171,7 +171,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | OV-3 | Overview ▸ Cuadrante 2×2 | ✅ | 2026-10-26 | Dani | 6664b2c | 4 celdas ≤ 30 palabras; The edge = banco + productos |
 | OV-4 | Overview ▸ How it makes money | ✅ | 2026-10-26 | Dani | 110f4fe | solo vista Segments (el 10-K no trae geografía); acordeones por segmento + The revenue lines |
 | OV-5 | Overview ▸ Products & platforms | ✅ | 2026-10-26 | Dani | 2c8e8db | 5 familias, 16 productos; modal por familia |
-| OV-6 | Overview ▸ Competitors (peer map) | ⏳ | 2026-10-26 | | | peers elegidos; denominadores de EDGAR (5 de 6 listos); Nu bloqueado |
+| OV-6 | Overview ▸ Competitors (peer map) | 👀 | 2026-10-26 | | | 5 peers + SoFi; Nu fuera; denominadores de EDGAR; módulo `sofi-peers.js` |
 | OV-7 | Overview ▸ Timeline | 👀 | 2026-10-26 | | | 11 hitos en orden cronológico; 6 con Read more |
 | OV-F | Overview ▸ Pie de fuentes | 👀 | 2026-10-26 | | | OV_SOURCES, único pie del Overview |
 | EV-RES-DATA | Dataset de Results (números) | ⬜ | | | | |
@@ -224,6 +224,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 - 2026-10-26 · OV-6 · Peers: HOOD, NU, IBKR, SCHW, AFRM, UPST (+ SOFI); denominadores y crecimiento de EDGAR (10-K / 20-F del propio peer), sin agregadores — Dani
 - 2026-10-26 · general · Nu queda fuera del peer map (Dani no sube el 20-F); los desajustes leves de datos son aceptables; Claude sigue ejecutando las unidades restantes y los gates se agrupan: Dani revisa en el preview y marca lo que no le convence — Dani
 - 2026-10-26 · OV-1 · Celda CEO cerrada: "Anthony Noto · CEO since Mar 2018" (nombrado el 2018-01-23, efectivo 2018-03-01; fuente: sala de prensa de SoFi) — verificado por Claude
+- 2026-10-26 · OV-6 · Peers finales: HOOD, SCHW, IBKR, UPST, AFRM (+ SOFI). Nu queda fuera. Las frases `why` de cada peer las propuso Claude (el analista las puede cambiar al revisar) — Dani / Claude
 
 ## 4. Excepciones aceptadas
 
@@ -381,3 +382,10 @@ playbook (candidata a podar, **solo con tu OK**).
 - Fuentes: 10-K FY2025 (Item 1A lista de adquisiciones: Galileo mayo 2020, Golden Pacific feb 2022, Technisys mar 2022, Wyndham abr 2023; Nota 1: cotización 2021-06-01; Nota 13: ofertas del 2025-07-31 y 2025-12-08; SoFiUSD dic 2025; SoFi Crypto Q4 2025), 10-Q 2Q26 Nota 2 (Peach y Composer, ~$70.1M en efectivo), sala de prensa de SoFi (CEO).
 - Autoría: se descartó del perfil viejo lo que no estaba en filings ("Stanford", la biografía de Noto en Goldman/Twitter más allá del dato de Twitter, la tarjeta de Q1 2026); el `TIMELINE` viejo sigue en General ▸ Milestones hasta reubicarlo (B2 #10).
 - Autoauditoría: orden cronológico estricto ✔ · cada hito responde "por qué importa hoy" ✔ · sin splits, recompras ni litigios ✔ · `Read more` solo con viñetas, nunca prosa ✔ · pie sin firma ni Summit copiado ✔ · `node --check` ✔.
+
+### 2026-10-26 · OV-6 Competitors (peer map) — 👀 EN REVISIÓN (gate agrupado)
+- Qué se mostró: bloque colapsable "Competitors — the peer map" en el Overview: leyenda, pastillas Multiple (P/E · EV/EBITDA) y Basis (Forward · Trailing), dispersión SVG con burbujas, chips con × y campo "+ TICKER", tooltip con el `why`. Reemplaza la tabla "Peers & Competitive Landscape" (el texto de `PEERS` queda en `sofi.js`, B2 #9).
+- Fuentes (denominadores, de cada peer): HOOD, SCHW, IBKR, UPST y AFRM — XBRL `companyfacts` de SEC EDGAR (10-K FY2025; AFRM 10-K FY2026 al 2026-06-30). SOFI: EPS GAAP FY2025 0.39 (10-K) y consenso BBG FY2026 EPS 0.5967 / ingreso 4,782.4 (`data_as_of` 2026-10-26); crecimiento 35.1% (FY2025) y 32.4% (FY2026E). Precio, market cap y EV: en vivo (`api.liveQuote`), nada sembrado.
+- Autoauditoría: ningún múltiplo ni market cap en el archivo ✔ · P/E y EV/EBITDA cambian el eje ✔ (prueba en Node con precios de prueba: P/E trailing dibuja 5, forward solo SOFI, EV/EBITDA ninguno hasta tener EV vivo) · Forward/Trailing cambian ambos ejes ✔ · × elimina y Add restaura datos del archivo ✔ · ejes derivados del dato ✔ · sin precio en vivo no hay burbuja ✔ · sin hex nuevos más allá de los grises de ejes del módulo copiado ✔ · `node --check` ✔ · render visual no verificado por Claude.
+- Notas: EBITDA no aplica a brokers (HOOD, SCHW, IBKR) y por eso solo P/E; UPST y AFRM llevan EBITDA = utilidad operativa + D&A del 10-K y necesitan EV en vivo; AFRM sin P/E (beneficio fiscal de $1.44B, chip lo dice); IBKR usa el EPS de la Clase A; el feed de HOOD trae el 10-K/A (falta contrastar con el 10-K original). Peers sin forward: "trailing only — no Street file".
+- Dependencia: la tabla de números va en Valuation ▸ Peers (VA-PEERS), mismo estado.

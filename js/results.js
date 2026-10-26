@@ -29,7 +29,7 @@ import { sofiResults } from './results-data/sofi.js';
 import { metaSetup } from './results-data/meta-setup.js';
 import { sofiSetup } from './results-data/sofi-setup.js';
 import { sofiBl } from './results-data/sofi-bl.js';
-import { sofiRule40, sofiCapital } from './results-data/sofi-misc.js';
+import { sofiLpb } from './results-data/sofi-misc.js';
 import { sofiTlSegments, sofiTlGeneral, sofiBlSegments } from './results-data/sofi-tl.js';
 import { ibkrResults } from './results-data/ibkr.js';
 import { ibkrSetup } from './results-data/ibkr-setup.js';
@@ -64,8 +64,7 @@ var RESULTS_DATA = {
   SOFI_TLS: sofiTlSegments,
   SOFI_TLG: sofiTlGeneral,
   SOFI_BLS: sofiBlSegments,
-  SOFI_R40: sofiRule40,
-  SOFI_CAP: sofiCapital,
+  SOFI_LPB: sofiLpb,
   IBKR: ibkrResults,
   IBKR_SETUP: ibkrSetup,
   SPOT: spotResults,

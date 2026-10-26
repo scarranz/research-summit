@@ -680,13 +680,11 @@ function feeBody(c){
   var h = '<p class="ov-lede">'+esc(FEE_INTRO)+'</p>';
   // Nested (second-level) sub-tab bar.
   h += '<div class="ovf-tabs">'+
-    '<button type="button" class="ovf-tab active" data-ovf="lpb">Loan Platform Business</button>'+
-    '<button type="button" class="ovf-tab" data-ovf="tech">Technology Platform</button>'+
+    '<button type="button" class="ovf-tab active" data-ovf="tech">Technology Platform</button>'+
     '<button type="button" class="ovf-tab" data-ovf="fs">Financial Services</button>'+
   '</div>';
   // Nested panes (LPB is built; the other two are placeholders for now).
-  h += '<div class="ovf-pane" data-ovf="lpb">'+lpbBody(c)+'</div>';
-  h += '<div class="ovf-pane" data-ovf="tech" hidden>'+techBody(c)+'</div>';
+  h += '<div class="ovf-pane" data-ovf="tech">'+techBody(c)+'</div>';
   h += '<div class="ovf-pane" data-ovf="fs" hidden>'+fsBody(c)+'</div>';
   return h;
 }
@@ -757,11 +755,11 @@ var LPB_FORWARD = 'A forward-flow agreement is a commitment to buy loans before 
 var LPB_SOURCES = 'Sources: SoFi FY2025 Form 10-K and Q2 2025–Q1 2026 earnings calls; SoFi press releases on the Blue Owl ($5B, Mar 2025) and Fortress (Oct 2024, expanded Apr 2025) agreements. LPB is fee-based and capital-light: after transfer, SoFi has no funding obligation and no retained credit risk. Named partners are publicly announced; the Q1 2026 additions are described by type, not named.';
 
 // "Loan Platform Business" nested-pane body — a visual explainer of how LPB works.
-function lpbBody(c){
+function lpbBody(c, noChart){
   var h = '';
 
-  // 0 — LPB origination volume chart (the first thing shown in this tab).
-  h += loanBlock(LPB_ORIG);
+  // 0 — LPB origination volume chart (the first thing shown in this tab); the Miscellaneous pane replaces it with the engine chart.
+  if (!noChart) h += loanBlock(LPB_ORIG);
 
   // 1 — Hero / one-line definition + badges.
   h += '<div class="lpb-hero">'+
@@ -4019,13 +4017,11 @@ function deepDiveHtml(c){
   h += ddSubtabs('mgmt', [
     { k:'team', l:'Executives & Board', body:SOFI_MGMT.body()+collapsible('Organization chart and insider activity (earlier profile, seeded)', managementBody(c), false) }
   ], true);
-  // Miscellaneous: only what the analyst decided on Oct 26 2026 (Rule of 40, Capital, Sum of the Parts), rebuilt on fresh data.
-  // The earlier profile's Strategy (flywheel, tailwinds and headwinds, targets) and Members panes are no longer rendered: their
-  // code stays in this file and the build log lists them as pending the analyst's decision.
+  // Miscellaneous: only the Loan Platform Business (analyst, Oct 26 2026: "Miscellaneous should include only the Loan Platform Business").
+  // Rule of 40, Capital, Sum of the Parts, Strategy and Members are no longer rendered; their code stays in this file and the build log
+  // lists them.
   h += ddSubtabs('misc', [
-    { k:'rule40', l:'Rule of 40', body:sofiRule40Body() },
-    { k:'capital', l:'Capital', body:sofiCapitalBody() },
-    { k:'sotp', l:'Sum of the Parts', body:sotpBody() }
+    { k:'lpb', l:'Loan Platform Business', body:sofiLpbBody(c) }
   ], true);
   h += '<div class="ov-modal-back" id="sofiDdModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="sofiDdModalX" aria-label="Close">×</button>'+
@@ -4033,24 +4029,12 @@ function deepDiveHtml(c){
   h += '</div>';
   return h;
 }
-// Miscellaneous ▸ Rule of 40 and ▸ Capital: Results-engine panes on fresh data (js/results-data/sofi-misc.js).
-function sofiRule40Body(){
-  return '<p class="ov-lede">Revenue growth plus adjusted EBITDA margin, the health test for a growth company: 40 is the bar. Built from the same actuals, Summit model and Street consensus as the Results tab.</p>'+
-    resultsHtml('SOFI_R40')+
-    '<div class="ov-foot">Rule of 40 = year-over-year growth of total net revenue + adjusted EBITDA margin on that revenue. SoFi presents the test on adjusted net revenue; the two differ by about 1% (2Q26: $1,205.6M adjusted against $1,218.7M GAAP) and the gap is accepted. Actuals: 10-K / 10-Q and Bloomberg reported values. Estimates: Summit DCF snapshot 2026-08-05 (frozen) and Bloomberg consensus, Oct 26 2026. 2025 is the first year with a prior-year base on file.</div>';
-}
-function sofiCapitalBody(){
-  var rows = [
-    ['Q1 2024', 'Exchange of convertible notes for equity', 'A one-time benefit of $59M in the quarter', 'Q1 2024 call'],
-    ['Jul 2025', 'Common equity offering', 'About $1.7B of new capital', 'Q3 2025 call'],
-    ['2025', 'New capital over the year', '$3.2B in total, lifting tangible book value by about $2 per share', 'Q4 2025 call']
-  ];
-  return '<p class="ov-lede">Capital is what lets SoFi keep loans on its own balance sheet. Tangible book value, its per-share value and deposits, as management stated them on each call, followed by the capital actions it described.</p>'+
-    resultsHtml('SOFI_CAP')+
-    sec('Capital actions stated on the calls',
-      '<table class="ov-table"><thead><tr><th>When</th><th>Action</th><th>What management said</th><th>Source</th></tr></thead><tbody>'+
-      rows.map(function(r){ return '<tr><td class="ov-td-name">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+esc(r[3])+'</td></tr>'; }).join('')+'</tbody></table>')+
-    '<div class="ov-foot">Source: SoFi earnings calls (docs/calls/SOFI.md, SOFI-latest.md). Only figures read off a call are charted; periods where management gave no number stay empty. The earlier profile listed more offerings (terms, prices) that were not re-verified and are not shown here.</div>';
+// Miscellaneous ▸ Loan Platform Business: the Results-engine chart on fresh data (js/results-data/sofi-misc.js), then the explainer
+// of the earlier profile (how a loan flows, how SoFi is paid, partners). The explainer's own origination chart is not drawn: it
+// held seeded estimates, and the engine chart above replaces it with the frozen Summit model.
+function sofiLpbBody(c){
+  return '<p class="ov-lede">The Loan Platform Business lets SoFi originate loans that partners fund, so SoFi earns a fee without using its own balance sheet. How much volume it moves, and what it earns on it.</p>'+
+    resultsHtml('SOFI_LPB')+lpbBody(c, true);
 }
 // The "?" pop-ups of Earnings (data-detail="ce:<id>") open in the Deep Dive's own modal.
 function wireDdModal(root){
@@ -4085,9 +4069,8 @@ function ddBuildSub(root, group, key){
   if (group === 'valuation' && key === 'peers') requestAnimationFrame(function(){ soWireScatters(root); buildPeersTab(); });
   if (group === 'valuation' && key === 'targetmult') requestAnimationFrame(function(){ sofiTargetMult.init(root); });
   if (group === 'valuation' && key === 'sensitivity') requestAnimationFrame(buildSensTab);
-  if (group === 'misc' && key === 'rule40') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="rule40"] .rs-wrap'), 'SOFI_R40'); });
-  if (group === 'misc' && key === 'capital') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="capital"] .rs-wrap'), 'SOFI_CAP'); });
-  if (group === 'misc' && key === 'sotp') buildSotpTab();
+  if (group === 'misc' && key === 'lpb') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ovt-subpane[data-ovst="lpb"] .rs-wrap'), 'SOFI_LPB'); buildLpbPie(); });
   if (group === 'mgmt' && key === 'team') SOFI_MGMT.init(root);
 }
 function ddShowSub(root, group, key){

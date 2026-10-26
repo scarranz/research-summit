@@ -175,5 +175,85 @@ export var SOFI_CALL_EARNINGS = { ticker:'SOFI', quarters:[
         { n:'Do the new Loan Platform asset types (SMB, home equity) add measurable volume?', landed:{ q:'Q3 2026', rank:2 }, tripped:false },
         { n:'When does the EBITDA margin start to widen from about 30%?', landed:{ q:'Q3 2026', rank:3 }, tripped:false }
       ]
+    } },
+
+  // ── REPORTED: Q1 2026 (quarter ended Mar 31 2026; reported Apr 29 2026). Call transcript: docs/calls/SOFI.md (verbatim).
+  // Street = the Bloomberg snapshot of Feb 4 2026 (the last before the print). Summit = the 2026-08-05 model file, frozen in
+  // js/results-data/sofi.js. Guidance = the Q4 2025 call (Jan 30 2026), as captured in the earlier profile.
+  { q:'Q1 2026', status:'reported', date:'April 29, 2026',
+    setup:{
+      source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-02-04 (the last before the print) · Summit DCF model — snapshot 2026-08-05, frozen (its stored 1Q26 projection) · guidance: Q4 2025 call (Jan 30 2026)',
+      asOf:'2026-02-04',
+      notes:{
+        'Revenue':{ t:'Guided about $1.04B adjusted; the Street sat above it', h:'<p>The first-quarter guide was adjusted net revenue of about <b>$1.04 billion</b>. The Street on file was near <b>$1.06B</b> on the GAAP total net revenue line, which differs from the adjusted measure SoFi guides.</p>' },
+        'Adjusted EBITDA':{ t:'Guided about $300M', h:'<p>Guide: adjusted EBITDA of about <b>$300 million</b>. The Street on file was near $0.32B.</p>' },
+        'Adjusted net income':{ t:'Guided about $160M', h:'<p>Guide: adjusted net income of about <b>$160 million</b>. The Street on file was near $0.16B.</p>' },
+        'EPS (diluted)':{ t:'Guided $0.12, the Street at $0.12', h:'<p>Guide and Street were both at about <b>$0.12</b>, so any beat had to come from revenue and costs rather than from the bar.</p>' }
+      },
+      us:ceSummitUs('1Q26'),
+      debate:{ rows:null, synth:'' }
+    },
+    results:{
+      headline:'Every loan product set a record, revenue and profit beat the Street, and management introduced cash revenue as the lens on quality.',
+      summary:{ paras:[
+        { p:'<b>Lending volume and fee revenue grew together.</b> Personal, student and home loan originations all set records and revenue came in above the Street, with management choosing how much to put on the balance sheet and how much to route through the Loan Platform Business.' },
+        { p:'<b>Profit beat at the EBITDA and net income lines while EPS matched the bar.</b> A lower discrete tax benefit cost about a cent of EPS.' },
+        { p:'<b>Management disclosed cash revenue for the first time.</b> It reported that cash revenue exceeded adjusted net revenue in 2024 and 2025, to answer questions about non-cash premiums on loans held at fair value.' },
+        { p:'<b>The next-quarter guide carried lower margins by design.</b> Management cited first-half payroll taxes and accelerated marketing, with the spend aimed at the second half and beyond.' },
+        { p:'<b>Two accounting questions took analyst time.</b> Capitalized member-acquisition commissions and a loan sale to a vehicle held by JPMorgan; management stated that the amortized marketing cost is expensed against revenue and lowers EBITDA.' }
+      ] },
+      notes:{
+        'Revenue':{ t:'About 4% above the Street on the GAAP line', h:'<p>GAAP total net revenue of <b>$1,100.4M</b> against a Street bar near <b>$1.06B</b>; adjusted net revenue was <b>$1,087.2M</b> against the guide of about $1.04B. Lending adjusted net revenue was $629M, Financial Services $429M (+41%) and Technology Platform $75M, which fell because a large client exited before year end.</p>' },
+        'Adjusted EBITDA':{ t:'About 6% above the Street, margin 31%', h:'<p><b>$339.9M</b>, up 62%, against a guide of about $300M and a Street bar near $0.32B. The incremental margin was 41%.</p>' },
+        'Adjusted net income':{ t:'Above the Street and the guide', h:'<p><b>$166.7M</b> at a 15% margin against a guide of about $160M. It was the tenth consecutive profitable quarter.</p>' },
+        'EPS (diluted)':{ t:'In line with the Street', h:'<p>EPS of <b>$0.12</b>, or $0.13 on a constant stock price basis, with a decrease in discrete tax benefits costing about one cent.</p>' },
+        'Total members':{ t:'Record 1.1M net adds', h:'<p>Members reached <b>14.7 million</b> (+35%), up more than twenty times from 650,000 in 2018. A record 1.8 million products were added for a total of 22.2 million (+39%), with 43% of new products opened by existing members.</p>' },
+        'Personal loan originations':{ t:'Record $8.3B', h:'<p><b>$8.3B</b> against a Street bar near $7.6B: about $5.4B for the balance sheet and about $3B through the Loan Platform Business. Management chose to channel more to the balance sheet because of strong capital ratios, so platform volume fell from the fourth quarter, although it was up 90% year over year.</p>' },
+        'Student loan originations':{ t:'Record, 2.2 times a year ago', h:'<p><b>$2.6B</b> against a Street bar near $1.6B, the highest in the company history.</p>' },
+        'Home loan originations':{ t:'Record, more than double', h:'<p><b>$1.2B</b>, more than double a year earlier, against a Street bar near $1.0B. Origination records were set for four straight quarters.</p>' },
+        'Noninterest expense':{ t:'Slightly above the Street', h:'<p>Total noninterest expense of about <b>$0.89B</b> against a Street bar near $0.85B. Accelerated first-half marketing was flagged in the guide.</p>' }
+      },
+      watch:{ 'Revenue':1, 'Personal loan originations':2, 'Total members':3, 'Adjusted EBITDA':4, 'EPS (diluted)':5 },
+      thesisCheck:[],
+      intoCall:[
+        'Balance sheet versus platform: how much of personal loan volume does SoFi keep, given a 21% total capital ratio?',
+        'Loan Platform demand: do partners keep buying above their contractual levels, and what new asset types come on?',
+        'Operating leverage: do margins widen in the second half after the guided first-half investment?',
+        'Technology Platform: how does revenue stabilize after the exit of a large client?'
+      ],
+      priceReaction:'Not on file: no price series for the post-print session was loaded into this build.'
+    },
+    call:{
+      prepared:[
+        { topic:'Rule of 40 and the first cash revenue disclosure', theme:'Results', body:'The 18th consecutive quarter above the Rule of 40, with a score of <b>72</b> (41% revenue growth plus a 31% EBITDA margin). Cash revenue exceeded <b>$1B</b> for the second straight quarter (about $690M from net interest income and $390M from fees) and was more than 100% of adjusted net revenue in both 2024 and 2025.' },
+        { topic:'Members and products', theme:'Members and products', body:'Members reached <b>14.7M</b>, up more than twenty times since 2018, with a record <b>1.8M</b> products added for <b>22.2M (+39%)</b>. Cross-buy reached <b>43%</b> of new products from existing members, from 40% the prior quarter and 36% a year earlier.' },
+        { topic:'Lending and the balance sheet versus platform choice', theme:'Lending', body:'Lending adjusted net revenue <b>$629M</b>; record originations of <b>$12.2B</b> ($9.2B for the lending segment, $3B through the Loan Platform Business). Personal loans <b>$8.3B</b>, student <b>$2.6B</b>, home <b>$1.2B</b>. Noto frames platform volume as the volume SoFi would not otherwise keep because of capital ratios, balance sheet growth and borrower credit profile.' },
+        { topic:'Financial Services and Technology Platform', theme:'Segments', body:'Financial Services net revenue <b>$429M (+41%)</b>, contribution margin 46%. Technology Platform net revenue <b>$75M</b>, reduced by the exit of a large client before year end, with a 16% contribution margin. The company plans a unified brand, SoFi Technology Solutions, across four platform businesses: processing, banking core, payment hub and fraud and identity.' },
+        { topic:'Profit and tangible book value', theme:'Results', body:'Adjusted EBITDA <b>$340M (+62%)</b> at a 31% margin and a 41% incremental margin; net income <b>$167M</b> at a 15% margin; EPS <b>$0.12</b>. Tangible book value reached <b>$9.2B</b>, or <b>$7.21</b> per share (+57%).' },
+        { topic:'Crypto, SoFiUSD and SoFi Plus', theme:'New products', body:'SoFiUSD, the first stablecoin from a national bank on a public blockchain, began minting, with a Mastercard settlement partnership; big business banking for crypto and fiat clients is in build. SoFi Plus relaunched on April 1 as a paid subscription ($10 a month, a 4.5% APY on up to $20,000, a 1% investing match).' },
+        { topic:'Credit, capital and the second-quarter guide', theme:'Outlook', body:'Personal loan net charge-offs excluding delinquent-loan sales were <b>4.4%</b>, flat on the quarter; the 90-day delinquency rate was 47 basis points. Net interest margin <b>5.94%</b>, deposits <b>$40.2B</b>, total capital ratio <b>21%</b>. Second-quarter guide: adjusted net revenue about <b>$1.115B</b>, adjusted EBITDA margin about 30% (<b>$330M</b>), adjusted net income margin 12% to 13% (EPS $0.10 to $0.11); the full-year guide of about 30% growth and $0.60 of EPS stands.' }
+      ],
+      qanda:[
+        { q:'How much to keep on the balance sheet versus the Loan Platform', analyst:'Andrew Jeffrey · William Blair', theme:'Loan Platform Business', qFull:'How does SoFi decide how much personal loan volume to hold versus sell through the platform, when platform sales would add fee income?', a:'<b>Anthony Noto:</b> Held loans require capital and carry credit risk but produce a revenue stream that lasts; platform loans pay cash up front and remove credit risk. Platform volume is the volume the company would not otherwise do for its balance sheet because of capital ratios, growth or borrower credit. He sees no private-credit concerns in demand, which exceeds contractual obligations.' },
+        { q:'Segment-level guidance', analyst:'Dan Dolev · Mizuho', theme:'Guidance', qFull:'Can you give color on segment-level guidance?', a:'<b>Chris Lapointe:</b> The company expects about 30% top-line growth and $0.60 of EPS in 2026. Financial Services adjusted net revenue growth of at least 40% is still expected, and corporate revenue should match 2025; segments may run faster or slower in any period as capital shifts to the best opportunities.' },
+        { q:'Capitalized marketing costs and the JPMorgan loan sale', analyst:'Kyle Joseph · Stephens', theme:'Accounting', qFull:'What is the accounting and rationale for capitalizing marketing expenses and the effect on EPS and EBITDA, and how should the JPMorgan facility be read as a loan sale versus a borrowing?', a:'<b>Chris Lapointe:</b> Success-based commissions paid to third parties for acquiring Money and Invest members are treated as contract acquisition costs under ASC 340-40 and amortized over expected member life; lending and credit card acquisition is not included. In September 2024 a senior secured loan was sold through a special purpose entity in which JPMorgan held the controlling interest.<br><b>Anthony Noto:</b> The amortized marketing cost is subtracted from revenue and lowers EBITDA; it is not excluded.' },
+        { q:'Depth of third-party demand for platform loans', analyst:'Devin Ryan · Citizens JMP', theme:'Loan Platform Business', qFull:'How deep is demand from third-party capital providers and where is the interest, and how did it evolve through the quarter?', a:'<b>Chris Lapointe:</b> Demand remains very robust and broad across asset managers, insurance funds and investment banks; partners including Blue Owl and Fortress buy at their contractual levels and in several quarters above. Partners cite a flight to quality, especially on re-securitizations.<br><b>Anthony Noto:</b> Personal, student refinancing and home loan originations all set records, with home and student loans more than doubling.' },
+        { q:'Member channels and characteristics', analyst:'John Hecht · Jefferies', theme:'Members and products', qFull:'Which channels are the record member additions coming from, and have new-member characteristics changed?', a:'<b>Anthony Noto:</b> Characteristics are in line with history. Lending leans on direct mail and affiliates, Money on broad digital marketing, and debit interchange and crypto launches are adding to the non-interest cash revenue base.' }
+      ],
+      take:'The quarter paired record volumes across all three loan products with a new cash-revenue disclosure, while management kept margins lower in the guide to fund growth.',
+      highlights:[],
+      dots:'Three threads ran through the call: the <b>mix choice</b> between balance sheet and platform, <b>revenue quality</b> (cash revenue disclosed for the first time) and the <b>investment plan</b> (first-half marketing and product spend).',
+      threeMinutes:[
+        '<b>Volumes and revenue beat the Street.</b> Records in personal, student and home loans; EBITDA and net income above the bar, EPS in line.',
+        '<b>Cash revenue is the quality argument.</b> More than 100% of adjusted net revenue was cash in 2024 and 2025.',
+        '<b>Guide margins dip for investment.</b> Second-quarter EBITDA margin about 30%, the year held at 30% growth and $0.60.'
+      ],
+      notBringing:[
+        { item:'The Technology Platform decline', why:'The segment fell because one large client exited before year end, so a read on platform demand needs the base without that client.' }
+      ],
+      newQuestions:[
+        { n:'Do margins widen in the second half after the first-half investment?', landed:{ q:'Q2 2026', rank:3 }, tripped:true },
+        { n:'Does the capital ratio stay on a path to the low to mid-teens?', landed:{ q:'Q2 2026', rank:1 }, tripped:true }
+      ]
     } }
 ] };

@@ -188,7 +188,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | TL-CUS | Top Line ▸ Customers | ⬜ | | | | |
 | EV-EST | Evolution ▸ Estimates | 👀 | 2026-10-26 | | | 8 métricas, 4 años × 3 snapshots Summit; sin serie de consenso |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | 👀 | 2026-10-26 | | | grilla de consenso por horizonte + gráfica Setup + notas de guía de 3Q26 |
-| EV-POST | Evolution ▸ Earnings ▸ Post-Results | 👀 | 2026-10-26 | | | 2Q26 completo (resumen, 9 notas, 8 temas preparados, 8 preguntas); 1Q26 y 4Q25 en construcción |
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results | 👀 | 2026-10-26 | | | 2Q26 y 1Q26 completos (resumen, notas, discurso preparado, preguntas); 4Q25 en construcción |
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | 👀 | 2026-10-26 | | | registro de temas vacío a propósito; el analista agrega notas en el portal |
 | BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | 👀 | 2026-10-26 | | | sobre el motor Results (sección blprof) |
 | BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⬜ | | | | |
@@ -466,3 +466,9 @@ playbook (candidata a podar, **solo con tu OK**).
 - Fuentes: transcripción verbatim de la llamada del 2026-07-29 (`SOFI_calls.txt`, que subió Dani; Quartr no se usa), 10-Q 2Q26 (ingreso GAAP 1,218.7), consenso BBG pre-print (ingreso ≈ 1.13B, EBITDA ajustado ≈ 0.35B, utilidad ajustada ≈ 0.17B, EPS 0.12, originaciones personales ≈ 8.5B, estudiantiles ≈ 1.7B, hipotecarias ≈ 1.3B) y el Summit congelado (ingreso 1,123).
 - Autoauditoría: cifras de las notas = transcripción o dataset ✔ · las claves de nota existen en `SOFI_CE_CONS` ✔ · tono del resumen: sin guiones largos, sin construcción "no A sino B", sin narrar crecimientos (las cifras van en las notas) ✔ · el Post-Results queda sin `thesisCheck` (no hay tesis del analista de SOFI) ni `highlights` ✔ declarado · sin precio del día siguiente (no hay serie cargada) — se dice en `priceReaction` ✔ · `node --check` ✔ · el HTML de Earnings renderiza (148 mil caracteres) con el Q&A y las preguntas ✔.
 - Nota: el modelo Summit trae 1,197 de ingreso en 2Q26, 21.7 por debajo del filing; la entrada usa lo reportado y lo dice.
+
+### 2026-10-26 · EV-POST Post-Results, trimestre 1Q26 — 👀 EN REVISIÓN
+- Qué se mostró: entrada completa de Q1 2026 en `js/overviews/sofi-ce-data.js`: Setup pre-print (consenso BBG del 2026-02-04, Summit congelado, guía de la llamada de 4Q25: ingreso ajustado ≈ $1.04B, EBITDA ≈ $300M, utilidad ajustada ≈ $160M, EPS $0.12), resultados (titular, 5 párrafos, 9 notas, ranking, 4 preguntas) y la llamada (7 bloques preparados, 5 preguntas y respuestas con analista y tema).
+- Fuentes: transcripción de la llamada del 2026-04-29, 10-Q / consenso: ingreso GAAP 1,100.4 vs Street ≈ 1.06B; EBITDA ajustado 339.9 vs ≈ 0.32B; originaciones personales 8.3B vs ≈ 7.6B, estudiantiles 2.6B vs ≈ 1.6B, hipotecarias 1.2B vs ≈ 1.0B; miembros 14.7M.
+- Verificado contra la transcripción: récords de originación "por cuatro trimestres seguidos", platform +90% interanual y menos que en 4Q25, SoFi Plus a $10 al mes con 4.5% de APY hasta $20,000. Se quitó de un borrador una frase que no estaba en la llamada (crecimiento del platform de "2.3 veces en dos años").
+- Autoauditoría: claves de nota válidas en `SOFI_CE_CONS` ✔ · mismo tono objetivo y mismas omisiones declaradas que 2Q26 (sin `thesisCheck`, sin precio del día siguiente) ✔ · `node --check` ✔.

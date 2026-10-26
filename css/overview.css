@@ -1929,7 +1929,7 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 .ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g5 { background: #DFE3E8; }
 .ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g6 { background: #E6E9ED; }
 /* 2×2 titles in black for the profiles built with the playbook (SAB, Oct 20 2026; §8). */
-:is(.ov-amzn, .ov-tsm, .ov-meta) .q2-k { color: var(--navy); }
+:is(.ov-amzn, .ov-tsm, .ov-meta, .ov-sofi) .q2-k { color: var(--navy); }
 
 /* Flywheel / driver cards */
 .ov-fly { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }

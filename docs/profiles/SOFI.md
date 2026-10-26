@@ -167,8 +167,8 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | F0-SM | Mapa de métricas Summit | 📝 | 2026-10-26 | | | primera pasada; dudas ❓ abiertas |
 | F1 | Esqueleto + vista previa | ✅ | 2026-10-26 | Dani | 7a0f231 | modo B: sin cambio de código (el perfil viejo ya corre); preview de Netlify del PR #152 listo; el analista confirma que SOFI abre ahí. Ojo: las funciones del portal limitan CORS a research-summit.netlify.app y localhost:8000, así que precio/Massive/Fiscal.ai pueden salir como no disponibles en el preview |
 | OV-1 | Overview ▸ Key Facts | ✅ | 2026-10-26 | Dani | 326247d | 10 celdas del 10-K; celda CEO sin fecha hasta que Dani la confirme; market cap en vivo |
-| OV-2 | Overview ▸ Descripción | 👀 | 2026-10-26 | | | lede de 3 oraciones; cita de la misión → Misc |
-| OV-3 | Overview ▸ Cuadrante 2×2 | ⬜ | | | | |
+| OV-2 | Overview ▸ Descripción | ✅ | 2026-10-26 | Dani | 2341e93 | lede de 3 oraciones; cita de la misión → Misc |
+| OV-3 | Overview ▸ Cuadrante 2×2 | 👀 | 2026-10-26 | | | 4 celdas ≤ 30 palabras; The edge = banco + productos |
 | OV-4 | Overview ▸ How it makes money | ⬜ | | | | |
 | OV-5 | Overview ▸ Products & platforms | ⬜ | | | | |
 | OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
@@ -218,6 +218,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 - 2026-10-26 · OV-1 · Las 4 tarjetas de KPIs, la nota FY2025 y la celda "Bank charter" salen del Overview y se **mueven** (no se borran): tarjetas → Top Line/Results, nota FY2025 → Bottom Line, Bank charter → lede y How SoFi makes money; las constantes quedan en `sofi.js` con comentario hasta entonces — Dani
 - 2026-10-26 · OV-1 · Celda CEO: Dani confirma la fecha de inicio de Anthony Noto (el 10-K no la trae); mientras tanto la celda dice solo "Anthony Noto" — Dani
 - 2026-10-26 · OV-2 · Lede aprobado como se propuso; la cita de la misión ("achieve financial independence…") se conserva en `DESC_LEGACY` y va a Miscellaneous — Dani
+- 2026-10-26 · OV-3 · "The edge" = banco nacional que financia préstamos con depósitos propios ($37.5B) + miembros que adoptan más productos (Financial Services Productivity Loop) — Dani
 
 ## 4. Excepciones aceptadas
 
@@ -319,3 +320,13 @@ playbook (candidata a podar, **solo con tu OK**).
 - Qué se mostró: lede de 3 oraciones, 57 palabras, en el Overview del preview.
 - Fuentes: 10-K FY2025, Item 1 (Company Overview; Bank Holding Company), parafraseado.
 - Autoauditoría: 2–4 oraciones ✔ (3) · 50–80 palabras ✔ (57) · sin lista de segmentos ni moat ✔ · sin adjetivos prohibidos ✔ · neutral ✔ · "no physical branches" del lede viejo no está en el 10-K y se descartó ✔.
+
+### 2026-10-26 · OV-2 Descripción — APROBADA
+- Qué se mostró: lede de 3 oraciones y 57 palabras en el preview (commit `2341e93`).
+- Cambios pedidos / decisiones: la cita de la misión va a Miscellaneous.
+
+### 2026-10-26 · OV-3 Cuadrante 2×2 — 👀 EN REVISIÓN
+- Qué se mostró: tabla 2×2 (`.q2`) bajo el lede, nunca colapsada.
+- Fuentes: 10-K FY2025 — Item 1; MD&A: ingreso por intereses netos 2,219.0 + no financiero 1,394.4 = 3,613.4; segmentos Lending 1,848.9 · Technology Platform 450.2 · Financial Services 1,542.0 = 3,841.2 antes de eliminaciones (48% / 12% / 40%); miembros 13.6M (+35%); depósitos totales $37.5B.
+- Autoauditoría: orden What it sells · Who buys it · How it earns · The edge ✔ · palabras por celda (What it sells 26, Who buys it 24, How it earns 22, The edge 27) ≤ 30 ✔ · solo "How it earns" lleva mezcla de ingresos con año ✔ · sin color (`.q2-k` en navy: se agregó `.ov-sofi` a la regla compartida) ✔ · `node --check` ✔.
+- Corrección al perfil viejo: Technology Platform ya no se muestra como $361M (neto de intercompañía) sino como el ingreso de segmento que reporta el 10-K, $450.2M.

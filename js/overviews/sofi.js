@@ -273,6 +273,20 @@ function sofiKeyFacts(){
     return '<div class="stdkf-cell"><div class="stdkf-k">'+esc(p[0])+'</div><div class="stdkf-v">'+v+'</div></div>';
   }).join('')+'</div>';
 }
+// OV-3 — the 2×2 (≤ 30 words a cell). Sources: FY2025 10-K — Item 1 (products, members, Loan Platform Business,
+// Technology Platform, Financial Services Productivity Loop), MD&A (net interest income $2,219.0M + noninterest
+// income $1,394.4M = total net revenue $3,613.4M; segment net revenue Lending $1,848.9M, Technology Platform
+// $450.2M, Financial Services $1,542.0M = $3,841.2M before intersegment eliminations; members 13.6M, +35%;
+// total deposits $37.5B). "The edge" is the analyst's read (Dani, 2026-10-26), defensible from the 10-K.
+var SOFI_BIZ = [
+  ['What it sells', 'Loans (personal, student, home), everyday banking, investing and cards through one app, plus loan origination for partners and technology that other banks and fintechs run on.'],
+  ['Who buys it', 'Consumers, called members (<b>13.6M</b> at Dec 2025, +35%), who borrow, save, spend and invest, and enterprise clients such as banks, fintechs and loan buyers.'],
+  ['How it earns', 'FY2025 net revenue <b>$3.61B</b>: ~61% net interest income, ~39% noninterest income. Segments before eliminations: Lending 48%, Financial Services 40%, Technology Platform 12%.'],
+  ['The edge', 'A national bank funds loans with its own deposits (<b>$37.5B</b> at Dec 2025), and members who adopt more products drive growth, the 10-K\'s Financial Services Productivity Loop.']
+];
+function sofiFourQuad(){
+  return '<div class="q2">'+SOFI_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
+}
 function sofiMcCell(root, txt){ var el = root.querySelector('#sofiMc'); if (el) el.textContent = txt; }
 function renderMarketCap(root){
   import('../api.js').then(function(api){ return api.liveQuote('SOFI'); }).then(function(res){
@@ -289,6 +303,7 @@ function overviewBody(c){
   // 1 — OV-1 Key Facts + lede (the KPI tiles and FY note moved out, see KPIS)
   h += sofiKeyFacts();
   h += '<p class="ov-lede">'+esc(DESC)+'</p>';
+  h += sofiFourQuad();   // OV-3
 
   // 3 — How it makes money
   h += sec('How SoFi Makes Money', bullets(HOW_MONEY));

@@ -25,7 +25,12 @@ import { googlResults } from './results-data/googl.js';
 import { googlSetup } from './results-data/googl-setup.js';
 import { uberResults, uberSetup } from './results-data/uber.js';
 import { metaResults } from './results-data/meta.js';
+import { sofiResults } from './results-data/sofi.js';
 import { metaSetup } from './results-data/meta-setup.js';
+import { sofiSetup } from './results-data/sofi-setup.js';
+import { sofiBl } from './results-data/sofi-bl.js';
+import { sofiLpb } from './results-data/sofi-misc.js';
+import { sofiTlSegments, sofiTlGeneral, sofiBlSegments } from './results-data/sofi-tl.js';
 import { ibkrResults } from './results-data/ibkr.js';
 import { ibkrSetup } from './results-data/ibkr-setup.js';
 import { spotResults } from './results-data/spot.js';
@@ -52,7 +57,14 @@ var RESULTS_DATA = {
   UBER: uberResults,
   UBER_SETUP: uberSetup,
   META: metaResults,
+  SOFI: sofiResults,
   META_SETUP: metaSetup,
+  SOFI_SETUP: sofiSetup,
+  SOFI_BL: sofiBl,
+  SOFI_TLS: sofiTlSegments,
+  SOFI_TLG: sofiTlGeneral,
+  SOFI_BLS: sofiBlSegments,
+  SOFI_LPB: sofiLpb,
   IBKR: ibkrResults,
   IBKR_SETUP: ibkrSetup,
   SPOT: spotResults,
@@ -3363,8 +3375,9 @@ function wireResults(pane){
       var bk = blk.getAttribute('data-rsblock'), bst = rsSt(bk);
       if (ctl.hasAttribute('data-rsview')){
         bst.view = ctl.getAttribute('data-rsview');
-        bst.metric = null;                             // the metric list is per view
-        bst.win = null;                                // and so is the period axis
+        // the tracked line is KEPT across a Quarterly/Annual toggle (analyst, Oct 26 2026): rsMetric() falls back to the section
+        // default only when the new view does not carry that line
+        bst.win = null;                                // the period axis is per view
       }
       if (ctl.hasAttribute('data-rsmode')) bst.mode = ctl.getAttribute('data-rsmode');
       if (ctl.hasAttribute('data-rsgrow')) bst.growth = ctl.getAttribute('data-rsgrow');

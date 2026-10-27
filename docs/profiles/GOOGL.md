@@ -12,7 +12,7 @@
 | Rama | `feat/googl-restructure` (desde `origin/main` @ `95c00e0`, 2026-10-26; worktree `rs-playbook`). Nombre de modo B (§7.1); `feat/googl-profile` ya existe en GitHub (rama vieja de DOAA351, jul 2026) y no se toca |
 | Analista responsable | SAB (Santiago Alvarez) |
 | Inicio | 2026-10-26 |
-| Avance | **39 de 43** unidades aprobadas (F0 · F0-SM · B1 · B2 · F1 · OV-1…OV-7 · OV-F · EV-RES-DATA · EV-RES · TL-GEN · TL-SEG · TL-OTH · TL-CUS · EV-EST · EV-SET · EV-NOTES · EV-POST · BL-GEN-1…5 · BL-SEG · BL-SPLC · VA-HIST · VA-PEERS · VA-TM · VA-SENS · MG-TEAM · MG-OWN · MG-GOV · MG-TRACK · MISC-comp) · 0 omitidas · 0 bloqueadas. M = 38 del Anexo C + B1/B2 + 3 (MISC aprobado en B2 con 4 sub-tabs: comp · tam · capex · strategy). Siguiente: MISC-capex (retomar el 27-oct) |
+| Avance | **44 de 44** unidades aprobadas (F0 · F0-SM · B1 · B2 · F1 · OV-1…OV-7 · OV-F · EV-RES-DATA · EV-RES · TL-GEN · TL-SEG · TL-OTH · TL-CUS · EV-EST · EV-SET · EV-NOTES · EV-POST · BL-GEN-1…5 · BL-SEG · BL-SPLC · VA-HIST · VA-PEERS · VA-TM · VA-SENS · MG-TEAM · MG-OWN · MG-GOV · MG-TRACK · MISC-comp · MISC-capex · MISC-capacity · MISC-strategy · MISC-tam · F-FINAL) · 0 omitidas · 0 bloqueadas. M = 38 del Anexo C + B1/B2 + 4 (MISC aprobado en B2 con 4 sub-tabs: comp · tam · capex · strategy; capacity agregada por SAB el 26-oct). Perfil completo (F-FINAL 2026-10-27). Pendiente: 3T26 tras el reporte del 28-oct |
 
 ## 1. Inventario de datos (F0)
 
@@ -228,11 +228,11 @@ siguientes a **2027** (cambio de definición: VA-TM lo marca).
 | MG-GOV | Management ▸ Governance & SBC | ✅ | 2026-10-26 | SAB | | `googl-gov.js`: 4 KPIs (7/10 independientes, SBC $25.0B = 6.2% del ingreso, recompras $45.4B, dividendos $10.0B FY2025) + tabla "How Alphabet is governed" (las 6 filas de Dani #48 verificadas + comités; recompras/dividendo de #44) + puntero a BL ▸ SBC; sin repetir % de voto de Ownership; CSS .gov-tbl nuevo |
 | MG-TRACK | Management ▸ Track Record | ✅ | 2026-10-26 | SAB | | `googl-track.js` (copia de `tsm-mgmt.js` tsmTrackBody): 8 líderes SIN calificaciones (SAB, como TSM) — At Alphabet / Context con cifras reportadas del portal y citas oficiales; modal `gtrk:`; "The bench, in one line" del callout de Dani (#51); las 7 calificaciones "delivering" de Dani (#49) quedan registradas aquí, no se muestran |
 | MISC-comp | Miscellaneous ▸ Competitive Position | ✅ | 2026-10-26 | SAB | | `googl-comp.js` (copia de `meta-comp.js`): lede = OV-3 "The edge"; 5 cuestionamientos (arenas de Dani #17) con evidencia en ambos sentidos; tablas Cloud (Google Cloud, AWS, Intelligent Cloud, OCI) y publicidad (Google, Meta, Amazon, Microsoft) del último trimestre de cada filing; sin cuota de mercado (sin fuente primaria); mapa de Dani (#18) no se repite (vive en VA-PEERS) |
-| MISC-capex | Miscellaneous ▸ Capex & Depreciation | ⬜ | | | | Ficha: Responde ¿cuánto invierte y cuándo pega en resultados? · Contenido: copia de meta-misc capex (capex/D&A real+Summit, guías, compromisos, PP&E, leases, Intersect) · Fuentes: 10-K/10-Q, Results, llamadas · Verificación: capex = Results |
-| MISC-capacity | Miscellaneous ▸ Capacity → Revenue | ⬜ | | | | Ficha (SAB: incluir mostrando dónde se corta): capex → capacidad (no publicada) → backlog/ingreso de Cloud |
-| MISC-strategy | Miscellaneous ▸ Strategy | ⬜ | | | | Ficha: ciclo de 5 pasos de Dani (#40) + "broaden the box", en tabla formal como META |
-| MISC-tam | Miscellaneous ▸ TAM | ⬜ | | | | Ficha (SAB: buscar fuentes y citarlas): 3 vectores de Dani (#15–16) con tamaños de terceros con fuente y fecha |
-| F-FINAL | Cierre y entrega | ⬜ | | | | |
+| MISC-capex | Miscellaneous ▸ Capex & Depreciation | ✅ | 2026-10-27 | SAB | | `googl-misc.js` + `googl-misc-data.js` (copia de `meta-misc.js` capex): capex/depreciación real + Summit 2026-08-06 (anual y trimestral, con depreciación trimestral), 10 revisiones de guía, 4 vías de pago, compromisos fuera del capex ($63B → $225B → $940B), PP&E por línea, leases, Intersect, financiamiento; capex = Results; reemplaza el panel #44 de Dani |
+| MISC-capacity | Miscellaneous ▸ Capacity → Revenue | ✅ | 2026-10-27 | SAB | | `googl-misc.js` (copia de `metaCapacityBody`): cadena de 5 eslabones (se corta en capacidad: sin MW/GW/TPUs), backlog vs ingreso Cloud, cobertura del backlog firmado vs consenso/Summit con control de conversión (50%), 68 data centers por país |
+| MISC-strategy | Miscellaneous ▸ Strategy | ✅ | 2026-10-27 | SAB | | `googlStrategyBody` (copia de `metaStrategyBody`): ciclo "full stack" de 5 pasos (Dani #40) con cifras de las transcripciones oficiales + 4 apuestas en tabla ("broaden the box"); sin Nobel / 15 productos / ⅔–⅓ (sin fuente) |
+| MISC-tam | Miscellaneous ▸ TAM | ✅ | 2026-10-27 | SAB | | `googlTamBody`: publicidad (WPP Media, 16-jun-2026) y cloud (Synergy, 30-jul-2026) con la cifra de Alphabet al lado (de Results); fronteras sin tamaño; sin Gartner; fuera "~$700B"/"$700B+" y el callout de tesis |
+| F-FINAL | Cierre y entrega | ✅ | 2026-10-27 | SAB | | recorrido completo sin errores; código muerto de Dani borrado (googl.js 2,956 → 1,022 líneas); gráficas de Misc a la norma §17.2; mapa conciliado (#14 ◐) |
 
 
 > Desde el 15 oct 2026 EV-EST, VA-TM y VA-SENS se construyen con Summit congelado del MCP (regla 10);
@@ -277,43 +277,43 @@ Destinos aprobados por SAB el 2026-10-26 (B2), incluidas las fusiones #18, #41, 
 | 12 | Top Line ▸ Segments · tarjetas `DD_SEGS` (3, con modal) | Top Line ▸ TL-GEN tarjetas + TL-SEG "What it is" / "What it sells" | el texto de cada modal se reparte en `brief`, `sells`, `products` | ◐ lo descriptivo → `brief`/`sells`/`products` ✅; las cifras y lecturas de llamadas del modal (Search +10→+19%, escalera de margen Cloud, Waymo 500K viajes/semana y ronda de $16B, Verily/GFiber) → semilla de EV-NOTES con su trimestre; `DD_SEGS` sigue en el código |
 | 13 | Top Line ▸ Customers · tarjetas `DD_CUST` (4 bolsas de demanda, con modal) | Top Line ▸ TL-CUS ▸ "The customer classes it names" + sección 5 (por clase) | se conserva el texto; citas FILING verbatim donde el 10-K las da | ◐ clases con cita 10-K ✅; las cifras de llamadas de cada modal (retail #1, >30% del gasto en campañas con IA, 120K+ empresas en Gemini, 350M subs, 13M desarrolladores…) → semilla de EV-NOTES y, cuando exista el motor, sección 5; `DD_CUST` sigue en el código |
 | 14 | Top Line ▸ Customers · callout "cross-pool read" | Top Line ▸ TL-CUS ▸ nota de la sección 5 | texto a nota (OURS) | ◐ espera la sección 5 del motor; el texto sigue en el código |
-| 15 | Top Line ▸ TAM · lede + 3 tarjetas (Ads, Cloud & AI, frontiers) | Miscellaneous ▸ MISC-tam (propuesta) | sin equivalente en AMZN; sub-tab propia de Misc | ⬜ |
-| 16 | Top Line ▸ TAM · callout "one-line TAM thesis" | Miscellaneous ▸ MISC-tam | va con #15 | ⬜ |
-| 17 | Top Line ▸ Industry Analysis · lede + `DD_ARENA` (5 arenas, con modal) | Miscellaneous ▸ MISC-comp (Competitive position) | cada arena = un cuestionamiento con evidencia a favor/en contra | ⬜ |
-| 18 | Top Line ▸ Industry Analysis · segundo mapa de peers `stdPeerScatter('ind')` | fusionada con #6 (OV-6 / VA-PEERS) | duplicado exacto del mapa (requiere aprobación específica) | ⬜ |
-| 19 | Bottom Line ▸ Unit Economics · lede "The unit is a query" | Bottom Line ▸ BL-GEN-5 ▸ Cost of revenues ▸ Key figures / Effect on margin | texto a la línea de costo | ⬜ |
-| 20 | Unit Economics · cadena de ingreso (queries → % comercial → subasta → paid clicks × CPC) | Top Line ▸ TL-SEG Search ▸ "Revenue interactions" (precio × volumen: paid clicks × CPC) | identidad con datos del 10-K/10-Q (crecimientos YoY) | ⬜ |
-| 21 | Unit Economics · curva de costo de servir (4 barras, cifras de management) | Bottom Line ▸ BL-GEN-5 ▸ Cost of revenues ▸ Composition and drivers + Management commentary | citas verbatim con trimestre | ⬜ |
-| 22 | Unit Economics · tarjetas TAC y Depreciación | Bottom Line ▸ BL-GEN-5 ▸ Cost of revenues (TAC y depreciación como componentes) | componentes del costo de ventas (10-K los da) | ⬜ |
-| 23 | Bottom Line ▸ Supply Chain · lede + tira de KPIs (728 proveedores…) | Bottom Line ▸ BL-SPLC ▸ KPIs | formato de la guía (copia de `meta-splc.js`) | ⬜ |
-| 24 | Supply Chain · cadena de capex `SPLC_INFRA` (6 tarjetas con modal) | Bottom Line ▸ BL-SPLC ▸ Cadena 1 | se conserva la lectura; sin colores por proveedor | ⬜ |
-| 25 | Supply Chain · tabla de contenido `SPLC_CONTENT` | Bottom Line ▸ BL-SPLC ▸ Cadena 2 (`.rs-ft`) | tabla al componente de la guía | ⬜ |
-| 26 | Supply Chain · dependencia `SPLC_DEP` (8 barras) | Bottom Line ▸ BL-SPLC ▸ "Who needs whom" | se conserva | ⬜ |
-| 27 | Supply Chain · callout "asymmetry" | Bottom Line ▸ BL-SPLC ▸ nota | texto a nota | ⬜ |
-| 28 | Supply Chain · tarjetas "traceable customer" y "geography" | BL-SPLC ▸ Geografía + TL-CUS ▸ "Who has said they buy" | se reparten | ⬜ |
-| 29 | Bottom Line ▸ Margins · lede "Two margin stories" | Bottom Line ▸ BL-GEN-1 ▸ nota | texto a nota | ⬜ |
-| 30 | Margins · gráfica `gChartMargin` margen grupo y Services FY19–25 + nota de one-offs | Bottom Line ▸ BL-GEN-1 (grupo) + BL-SEG ▸ Profit by segment (Services) | reemplazada por los motores; la nota de one-offs (multa CE 3T25…) a la `note` | ⬜ |
-| 31 | Margins · gráfica `gChartCloudM` escalera de margen Cloud 1Q23–1Q26 | Bottom Line ▸ BL-SEG ▸ Profit by segment (Cloud, trimestral) | reemplazada; la leyenda "2.6% → 32.9%" a la nota | ⬜ |
-| 32 | Evolution ▸ Earnings · botón IR + intro "the decision layer" | fusionada con la cabecera del perfil (IR/EDGAR en `headerSources`) | se quita por regla de SAB (META, 2026-10-21) — pide aprobación específica | 👀 (quitados en EV-SET) |
-| 33 | Earnings ▸ Setup (`ceSetupBody`, `CE_CONS` tecleado, gráficas Setup, `ceAnnualBody` con `GOOGL_SETUP`) | Evolution ▸ EV-SET | copia de `meta-ce.js`; `CE_CONS` armado al cargar desde Results | 👀 (el archivo de Dani pasa a `googl-ce-data.js`; ingreso/op. income/EPS/capex/segmentos se rehacen al cargar desde Results) |
-| 34 | Earnings ▸ Watch List (motor `watchlist.js`, filas en Supabase `company_themes`) | Evolution ▸ EV-NOTES (Watch List debajo del theme record, como META) | se conservan las filas guardadas; `palette:'summit'` | 👀 (21 filas visibles) |
-| 35 | Earnings ▸ theme record `callsBody` / `GOOGL_THEMES` (9 temas, 11 llamadas) | Evolution ▸ EV-NOTES (semilla `themes-data/googl.js`) | temas = segmentos/ejes; ganchos cerrados; revisar la copia en Supabase antes de re-sembrar | 👀 (no había registro guardado en Supabase: el viejo vivía solo en memoria) |
-| 36 | Earnings ▸ Post-Results (`CALL_EARNINGS`: 2T26, 1T26, 4T25 reportados; 3T26 upcoming) | Evolution ▸ EV-POST | formato de la guía (citas verbatim de `docs/calls/`); se agrega el 3T26 cuando reporte | 🔨 (The print listo; Call Summary verbatim pendiente; el contenido de Dani sigue en `CALL_EARNINGS` de googl.js) |
+| 15 | Top Line ▸ TAM · lede + 3 tarjetas (Ads, Cloud & AI, frontiers) | Miscellaneous ▸ MISC-tam (propuesta) | sin equivalente en AMZN; sub-tab propia de Misc | ✅ |
+| 16 | Top Line ▸ TAM · callout "one-line TAM thesis" | Miscellaneous ▸ MISC-tam | va con #15 | ✅ |
+| 17 | Top Line ▸ Industry Analysis · lede + `DD_ARENA` (5 arenas, con modal) | Miscellaneous ▸ MISC-comp (Competitive position) | cada arena = un cuestionamiento con evidencia a favor/en contra | ✅ |
+| 18 | Top Line ▸ Industry Analysis · segundo mapa de peers `stdPeerScatter('ind')` | fusionada con #6 (OV-6 / VA-PEERS) | duplicado exacto del mapa (requiere aprobación específica) | ✅ |
+| 19 | Bottom Line ▸ Unit Economics · lede "The unit is a query" | Bottom Line ▸ BL-GEN-5 ▸ Cost of revenues ▸ Key figures / Effect on margin | texto a la línea de costo | ✅ |
+| 20 | Unit Economics · cadena de ingreso (queries → % comercial → subasta → paid clicks × CPC) | Top Line ▸ TL-SEG Search ▸ "Revenue interactions" (precio × volumen: paid clicks × CPC) | identidad con datos del 10-K/10-Q (crecimientos YoY) | ✅ |
+| 21 | Unit Economics · curva de costo de servir (4 barras, cifras de management) | Bottom Line ▸ BL-GEN-5 ▸ Cost of revenues ▸ Composition and drivers + Management commentary | citas verbatim con trimestre | ✅ |
+| 22 | Unit Economics · tarjetas TAC y Depreciación | Bottom Line ▸ BL-GEN-5 ▸ Cost of revenues (TAC y depreciación como componentes) | componentes del costo de ventas (10-K los da) | ✅ |
+| 23 | Bottom Line ▸ Supply Chain · lede + tira de KPIs (728 proveedores…) | Bottom Line ▸ BL-SPLC ▸ KPIs | formato de la guía (copia de `meta-splc.js`) | ✅ |
+| 24 | Supply Chain · cadena de capex `SPLC_INFRA` (6 tarjetas con modal) | Bottom Line ▸ BL-SPLC ▸ Cadena 1 | se conserva la lectura; sin colores por proveedor | ✅ |
+| 25 | Supply Chain · tabla de contenido `SPLC_CONTENT` | Bottom Line ▸ BL-SPLC ▸ Cadena 2 (`.rs-ft`) | tabla al componente de la guía | ✅ |
+| 26 | Supply Chain · dependencia `SPLC_DEP` (8 barras) | Bottom Line ▸ BL-SPLC ▸ "Who needs whom" | se conserva | ✅ |
+| 27 | Supply Chain · callout "asymmetry" | Bottom Line ▸ BL-SPLC ▸ nota | texto a nota | ✅ |
+| 28 | Supply Chain · tarjetas "traceable customer" y "geography" | BL-SPLC ▸ Geografía + TL-CUS ▸ "Who has said they buy" | se reparten | ✅ |
+| 29 | Bottom Line ▸ Margins · lede "Two margin stories" | Bottom Line ▸ BL-GEN-1 ▸ nota | texto a nota | ✅ |
+| 30 | Margins · gráfica `gChartMargin` margen grupo y Services FY19–25 + nota de one-offs | Bottom Line ▸ BL-GEN-1 (grupo) + BL-SEG ▸ Profit by segment (Services) | reemplazada por los motores; la nota de one-offs (multa CE 3T25…) a la `note` | ✅ |
+| 31 | Margins · gráfica `gChartCloudM` escalera de margen Cloud 1Q23–1Q26 | Bottom Line ▸ BL-SEG ▸ Profit by segment (Cloud, trimestral) | reemplazada; la leyenda "2.6% → 32.9%" a la nota | ✅ |
+| 32 | Evolution ▸ Earnings · botón IR + intro "the decision layer" | fusionada con la cabecera del perfil (IR/EDGAR en `headerSources`) | se quita por regla de SAB (META, 2026-10-21) — pide aprobación específica | ✅ (quitados en EV-SET) |
+| 33 | Earnings ▸ Setup (`ceSetupBody`, `CE_CONS` tecleado, gráficas Setup, `ceAnnualBody` con `GOOGL_SETUP`) | Evolution ▸ EV-SET | copia de `meta-ce.js`; `CE_CONS` armado al cargar desde Results | ✅ (el archivo de Dani pasa a `googl-ce-data.js`; ingreso/op. income/EPS/capex/segmentos se rehacen al cargar desde Results) |
+| 34 | Earnings ▸ Watch List (motor `watchlist.js`, filas en Supabase `company_themes`) | Evolution ▸ EV-NOTES (Watch List debajo del theme record, como META) | se conservan las filas guardadas; `palette:'summit'` | ✅ (21 filas visibles) |
+| 35 | Earnings ▸ theme record `callsBody` / `GOOGL_THEMES` (9 temas, 11 llamadas) | Evolution ▸ EV-NOTES (semilla `themes-data/googl.js`) | temas = segmentos/ejes; ganchos cerrados; revisar la copia en Supabase antes de re-sembrar | ✅ (no había registro guardado en Supabase: el viejo vivía solo en memoria) |
+| 36 | Earnings ▸ Post-Results (`CALL_EARNINGS`: 2T26, 1T26, 4T25 reportados; 3T26 upcoming) | Evolution ▸ EV-POST | formato de la guía (citas verbatim de `docs/calls/`); se agrega el 3T26 cuando reporte | ✅ (Call Summary de las transcripciones oficiales; `CALL_EARNINGS` de Dani borrado en F-FINAL) |
 | 37 | Evolution ▸ Results (`results-data/googl.js`) | Evolution ▸ EV-RES | dataset rehecho: base del consenso (duda 7), Summit congelado | ✅ |
 | 38 | Evolution ▸ Estimates (vacío → "pending") | Evolution ▸ EV-EST | se construye con los 3 snapshots | ✅ (2 snapshots: el 23-jul queda fuera por decisión de SAB) |
-| 39 | Evolution ▸ Guidance · `G_GUIDE` (5 compromisos, con modal) + callout "what they will NOT give you" | Evolution ▸ EV-NOTES (cada compromiso = gancho "Promise — reconcile") + la frase "no numeric guidance" a la nota de Results | sin sub-tab Guidance (no existe en la estructura) | ⬜ |
-| 40 | Evolution ▸ Strategy · ciclo de 5 pasos + callout "broaden the box" | Miscellaneous ▸ MISC-strategy (como META) | se conserva | ⬜ |
-| 41 | Evolution ▸ Timeline (`timelineBody`, el mismo de OV-7) | fusionada con #7 (OV-7) | duplicado exacto (requiere aprobación específica) | ⬜ |
-| 42 | Valuation ▸ Sensitivity (`SENS`: EBITDA $235B y 15× sembrados, sliders) | Valuation ▸ VA-SENS | se rehace con Summit congelado (12.7× / 24.0× del modelo); el texto a la nota | ⬜ |
-| 43 | Valuation ▸ Peers · tabla de 5 con múltiplos sembrados + callout | Valuation ▸ VA-PEERS ("The numbers behind the map") | múltiplos en vivo; el callout al lede | ⬜ |
-| 44 | Valuation ▸ Capital Allocation · gráfica `gChartCap` + 4 tarjetas (capex, buybacks, dividendo, deuda) | Miscellaneous ▸ MISC-capex (Capex & Depreciation, como AMZN/META) + MG-OWN ▸ "Capital returned" (buybacks, dividendo) | se reparte | ⬜ |
-| 45 | Valuation ▸ Financials · gráfica `gChartFin` FY19–25 + tabla FY23–25 | Evolution ▸ EV-RES (anual) + Bottom Line ▸ BL-GEN-1 | reemplazada por los motores; la columna "read" a las notas | ⬜ |
-| 46 | Management ▸ Executives & Board (`GOOGL_MGMT`: 7 ejecutivos, 10 consejeros) | Management ▸ MG-TEAM | se conserva; `brand` → token Summit | ⬜ |
-| 47 | Management ▸ Ownership (barras por clase y votos, "approximate") | Management ▸ MG-OWN (tabla estructurada + top holders) | cifras con documento (DEF 14A 2026) | ⬜ |
-| 48 | Management ▸ Governance (6 filas) | Management ▸ MG-GOV | se conserva; sin repetir KPIs de Ownership | ⬜ |
-| 49 | Management ▸ Track Record (`G_TRACK`, 7 tarjetas con modal) | Management ▸ MG-TRACK | calificaciones las decide SAB | ⬜ |
-| 50 | Track Record · franja "Independent board" (7 consejeros) | fusionada con #46 (consejo en MG-TEAM) | duplicado (requiere aprobación específica) | ⬜ |
-| 51 | Track Record · callout "the caveat" | Management ▸ MG-TRACK ▸ "The bench, in one line" | se conserva | ⬜ |
+| 39 | Evolution ▸ Guidance · `G_GUIDE` (5 compromisos, con modal) + callout "what they will NOT give you" | Evolution ▸ EV-NOTES (cada compromiso = gancho "Promise — reconcile") + la frase "no numeric guidance" a la nota de Results | sin sub-tab Guidance (no existe en la estructura) | ✅ |
+| 40 | Evolution ▸ Strategy · ciclo de 5 pasos + callout "broaden the box" | Miscellaneous ▸ MISC-strategy (como META) | se conserva | ✅ |
+| 41 | Evolution ▸ Timeline (`timelineBody`, el mismo de OV-7) | fusionada con #7 (OV-7) | duplicado exacto (requiere aprobación específica) | ✅ |
+| 42 | Valuation ▸ Sensitivity (`SENS`: EBITDA $235B y 15× sembrados, sliders) | Valuation ▸ VA-SENS | se rehace con Summit congelado (12.7× / 24.0× del modelo); el texto a la nota | ✅ |
+| 43 | Valuation ▸ Peers · tabla de 5 con múltiplos sembrados + callout | Valuation ▸ VA-PEERS ("The numbers behind the map") | múltiplos en vivo; el callout al lede | ✅ |
+| 44 | Valuation ▸ Capital Allocation · gráfica `gChartCap` + 4 tarjetas (capex, buybacks, dividendo, deuda) | Miscellaneous ▸ MISC-capex (Capex & Depreciation, como AMZN/META) + MG-OWN ▸ "Capital returned" (buybacks, dividendo) | se reparte | ✅ |
+| 45 | Valuation ▸ Financials · gráfica `gChartFin` FY19–25 + tabla FY23–25 | Evolution ▸ EV-RES (anual) + Bottom Line ▸ BL-GEN-1 | reemplazada por los motores; la columna "read" a las notas | ✅ |
+| 46 | Management ▸ Executives & Board (`GOOGL_MGMT`: 7 ejecutivos, 10 consejeros) | Management ▸ MG-TEAM | se conserva; `brand` → token Summit | ✅ |
+| 47 | Management ▸ Ownership (barras por clase y votos, "approximate") | Management ▸ MG-OWN (tabla estructurada + top holders) | cifras con documento (DEF 14A 2026) | ✅ |
+| 48 | Management ▸ Governance (6 filas) | Management ▸ MG-GOV | se conserva; sin repetir KPIs de Ownership | ✅ |
+| 49 | Management ▸ Track Record (`G_TRACK`, 7 tarjetas con modal) | Management ▸ MG-TRACK | calificaciones las decide SAB | ✅ |
+| 50 | Track Record · franja "Independent board" (7 consejeros) | fusionada con #46 (consejo en MG-TEAM) | duplicado (requiere aprobación específica) | ✅ |
+| 51 | Track Record · callout "the caveat" | Management ▸ MG-TRACK ▸ "The bench, in one line" | se conserva | ✅ |
 
 ## 6. Bloqueos y preguntas abiertas
 
@@ -515,3 +515,29 @@ Destinos aprobados por SAB el 2026-10-26 (B2), incluidas las fusiones #18, #41, 
 ### 2026-10-26 · MISC-comp Miscellaneous ▸ Competitive Position — APROBADA
 - Qué se mostró: `js/overviews/googl-comp.js` (copia de `meta-comp.js`; CSS .mcp-* de META extendido a `.ov-googl-dd`): lede = OV-3; 5 cuestionamientos (Dani #17) con evidencia en ambos sentidos; tabla Cloud (Google Cloud, AWS, Intelligent Cloud, OCI — 10-Q/8-K de cada empresa, último trimestre) y tabla de publicidad (Google, Meta, Amazon, Microsoft). Sin cuota de mercado. #18 (mapa) no se repite: vive en VA-PEERS.
 - Pendiente para el 27-oct (SAB: "deja lo demás para mañana"): MISC-capex → MISC-capacity → MISC-strategy → MISC-tam, luego F-FINAL; reordenar las sub-tabs Comp · Capex · Capacity · Strategy · TAM al construir. Sin commit desde 2b3e034 (Comp + log + CSS).
+
+### 2026-10-27 · MISC-capex Miscellaneous ▸ Capex & Depreciation — APROBADA
+- Qué se mostró: `js/overviews/googl-misc.js` + `googl-misc-data.js` (copia de `meta-misc.js` capex; CSS `.mx-*` de META extendido a `.ov-googl-dd`): 4 KPIs (capex FY25 $91.4B; 1S26 $80.6B vs guía $195–205B; compras comprometidas $811B; PP&E neto $321.2B); gráfica capex + depreciación FY21–FY28E (Summit 2026-08-06) y 1T23–2T26 (con línea de depreciación trimestral); 10 revisiones de guía; 4 vías de pago; compromisos fuera del capex dic-24/dic-25/mar-26/jun-26 ($63B → $225B → $940B) + lo firmado después + definiciones de Alphabet; PP&E por línea (no en servicio $50.6B → $122.8B; vida útil de servidores 4 → 6 años en 2023); leases; Intersect; financiamiento (deuda LP $10.9B → $98.2B, bonos 1S26, acciones 2T26, recompras en cero en 1S26).
+- Fuentes: 10-K FY2023/24/25, 10-Q 1T26/2T26 (EDGAR; SAB autorizó su email de Summit como contacto del User-Agent), llamadas 4T23–2T26, Summit 2026-08-06. Capex = Results. 3T26 pendiente (reporta el 28-oct).
+- Sub-tabs Misc: Comp · Capex · Strategy · TAM (Capacity entra entre Capex y Strategy). Panel #44 de Dani (`capallocBody`/`gBuildCap`) eliminado; reubicación #44 ✅.
+
+### 2026-10-27 · MISC-capacity Miscellaneous ▸ Capacity → Revenue — APROBADA
+- Qué se mostró: `googl-misc.js` (`googlCapacityBody/Build`, copia de `metaCapacityBody`) + datos en `googl-misc-data.js`: cadena capex → capacidad → uso (tokens) → backlog → ingreso de Cloud, cortada en capacidad (Alphabet no publica MW/GW/TPUs; proxy = activos no en servicio $50.6B → $122.8B); gráfica backlog vs ingreso de Cloud 1T23–2T26 + tabla (backlog ÷ ingreso anualizado 5.2×); cobertura del backlog de Cloud firmado ($513.9B × 50% / 2 = $128.5B al año) vs consenso próximos 4T (96%), FY27 (76%), FY28 (52%) y Summit, con control 40–70%; directorio de 68 ubicaciones (31 en desarrollo) por país, de datacenters.google/locations (leído 27-oct).
+- Citas verificadas contra las transcripciones oficiales 4T25/1T26/2T26 y el 10-Q 2T26. Sub-tabs Misc: Comp · Capex · Capacity → Revenue · Strategy · TAM.
+- Avance corregido a 41 de 44: MISC-capacity no estaba en la M original.
+
+### 2026-10-27 · MISC-strategy Miscellaneous ▸ Strategy — APROBADA
+- Qué se mostró: `googlStrategyBody` en `googl-misc.js` + `GOOGL_LOOP`/`GOOGL_BETS` en `googl-misc-data.js` (copia de `metaStrategyBody`; CSS `.mx-loop5` de 5 columnas): lede "full stack"; ciclo Own the silicon → Lead the research → Ship to billions → Earn four ways → Reinvest; tabla de apuestas (suscripciones de IA, venta de TPUs, UCP, Waymo). Citas verificadas contra las transcripciones oficiales 4T25/1T26/2T26.
+- Decisión (SAB): quitar lo que no tiene fuente primaria: "tres Nobel en dos años", "15 productos ≥500M", "⅔ caja / ⅓ deuda"; capex $180–190B → $195–205B. `strategyBody` de Dani eliminado. Reubicación #40 ✅.
+
+### 2026-10-27 · MISC-tam Miscellaneous ▸ TAM — APROBADA
+- Qué se mostró: `googlTamBody` + `GOOGL_TAM_*` (googl-misc-data.js): publicidad (WPP Media TYNY Midyear, 16-jun-2026: $1.3T +8.9%; búsqueda 21.8% ≈ $283B derivado; búsqueda generativa $5.1B → >$100B 2030; Alphabet+Meta+Amazon 57.6% ex China) junto a Google ads FY2025 $294.7B (+14.9% 1S26) y Search $224.5B (+17.9%); cloud (Synergy, 30-jul-2026: $143.4B 2T26 +43%, $500B TTM, AMZN 28% / MSFT 20% / GOOG 15%, GenAI +165%) junto a Google Cloud $24.8B +82%; fronteras (suscripciones, TPUs, Waymo) solo con cifras de Alphabet; nota de definiciones (no es cuota).
+- Decisión (SAB): fronteras sin tamaño; sin Gartner. Dani "~$700B digital", "$700B+ cloud" y "one-line TAM thesis" fuera (sin fuente / opinión). `tamBody` eliminado. Reubicación #15 y #16 ✅.
+
+### 2026-10-27 · F-FINAL Cierre y entrega — APROBADO (SAB)
+- ① Recorrido completo en el portal real (sesión de SAB): Overview + 6 secciones, 25 sub-tabs y fases; sin errores de consola, sin `NaN`/`undefined`, todas las gráficas dibujadas, todos los paneles con pie (Top Line con el `sg-src` del motor), ninguno < 400 caracteres (Customers 888). IDs duplicados: 16 `rs*` del motor de Results montado 3 veces (Setup · Results · Estimates), como en META/TSM. `<style>` en línea: ninguno nuevo; 6 heredados (5 de `meta-ce.js` en Earnings, 1 en Executives & Board).
+- ② Cabecera, precio en vivo, Fiscal.ai (hueco "fuera de plan" previsto) OK; sin avisos "Live data pending". Notes no se probó guardando (no escribir en Supabase).
+- ③ §17.4: las 3 gráficas de Misc (capex/depreciación, compromisos, backlog) pasadas a la norma §17.2 a pedido de SAB — chips como leyenda (ocultar quita la serie de gráfica, tabla y total), zoom en ambos ejes con doble clic para restablecer (`attachBrush` copiado de `rsAttachBrush`), el cambio anual/trimestral suelta el zoom, tabla debajo en desplegable con conteo de series y periodos. Probado en el portal.
+- ④ Mapa de reubicación conciliado: 50 de 51 ✅; #14 ◐ (espera la sección 5 del motor de segmentos).
+- Limpieza (SAB: "sí, bórralo"): código muerto de Dani eliminado de `googl.js` tras moverse su contenido — paneles viejos (`industryBody`, `unitEconBody`, `timelineBody`, `financialsBody`, márgenes, guidance, peers, sensibilidad, ownership, gobierno, track, SPLC), el Earnings viejo (`ce*`, `CE_CONS`, `CALL_EARNINGS`, `GOOGL_THEMES`, `callsBody`) y sus reglas CSS `gdd-*` sin uso; la Watch List toma los trimestres de `googl-ce-data.js`. `googl.js` 2,956 → 1,022 líneas; el recorrido da los mismos paneles que antes.
+- Pendiente después del reporte del 28-oct: 3T26 (Call Summary del PDF oficial, Results, Notes) y la columna sep-2026 de Capex (10-Q 3T26).

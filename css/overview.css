@@ -3455,19 +3455,23 @@ img.org-photo { object-fit: cover; }
 .ov-spot-dd .hm-full{appearance:none;border:1px solid rgba(183,121,31,.4);background:rgba(183,121,31,.08);color:#B7791F;font:700 10.5px Inter,sans-serif;padding:3px 9px;border-radius:999px;cursor:pointer}
 .ov-spot-dd .hm-full:hover{background:rgba(183,121,31,.16)}
 /* META ▸ Miscellaneous — formal tables and the strategy loop (SAB, Oct 20 2026: no emoji, tables over cards) */
-.ov-meta-dd .mx-twrap{margin:0 0 8px}
-.ov-meta-dd .mx-tbl{width:100%;border-collapse:collapse;font-size:12px}
-.ov-meta-dd .mx-tbl td,.ov-meta-dd .mx-tbl th{padding:7px 10px;border-bottom:1px solid var(--bdr);vertical-align:top;text-align:left;line-height:1.5;color:var(--navy)}
-.ov-meta-dd .mx-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}
-.ov-meta-dd .mx-tbl td.mx-k{font-weight:700;white-space:nowrap}
-.ov-meta-dd .mx-chart{margin:0 0 6px}
-.ov-meta-dd .mx-det{margin:6px 0 4px}
-.ov-meta-dd .mx-loop{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 6px}
-@media(max-width:720px){.ov-meta-dd .mx-loop{grid-template-columns:1fr 1fr}}
-.ov-meta-dd .mx-step{border:1px solid var(--bdr);border-top:3px solid var(--steel);border-radius:10px;padding:11px 12px;background:var(--card,#fff)}
-.ov-meta-dd .mx-step-n{font-size:10px;font-weight:800;color:var(--mu)}
-.ov-meta-dd .mx-step-t{font-size:13px;font-weight:800;color:var(--navy);margin:2px 0 4px}
-.ov-meta-dd .mx-step-d{font-size:11.5px;color:var(--mu);line-height:1.45}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-twrap{margin:0 0 8px}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-tbl{width:100%;border-collapse:collapse;font-size:12px}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-tbl td,:is(.ov-meta-dd,.ov-googl-dd) .mx-tbl th{padding:7px 10px;border-bottom:1px solid var(--bdr);vertical-align:top;text-align:left;line-height:1.5;color:var(--navy)}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-tbl td.mx-k{font-weight:700;white-space:nowrap}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-chart{margin:0 0 6px}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-det{margin:6px 0 4px}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-loop{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 6px}
+@media(max-width:720px){:is(.ov-meta-dd,.ov-googl-dd) .mx-loop{grid-template-columns:1fr 1fr}}
+.ov-googl-dd .mx-loop.mx-loop5{grid-template-columns:repeat(5,1fr)}   /* GOOGL loop has five steps (Dani #40) */
+@media(max-width:960px){.ov-googl-dd .mx-loop.mx-loop5{grid-template-columns:1fr 1fr}}
+.ov-googl-dd .mx-leg{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 6px}   /* chips = the legend of the Misc charts (§17.2 rule 2) */
+.ov-googl-dd .mx-zhint{margin-top:4px}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-step{border:1px solid var(--bdr);border-top:3px solid var(--steel);border-radius:10px;padding:11px 12px;background:var(--card,#fff)}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-step-n{font-size:10px;font-weight:800;color:var(--mu)}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-step-t{font-size:13px;font-weight:800;color:var(--navy);margin:2px 0 4px}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-step-d{font-size:11.5px;color:var(--mu);line-height:1.45}
 
 /* Meta ▸ Miscellaneous ▸ Competitive Position (js/overviews/meta-comp.js) — tables over cards, accents in --steel. */
 .ov-meta-dd .mcp-wrap,.ov-googl-dd .mcp-wrap{max-height:none;margin:6px 0 4px}
@@ -3506,12 +3510,12 @@ img.org-photo { object-fit: cover; }
 .ov-meta-dd .mcp-bar-f.mcp-bar-src,.ov-googl-dd .mcp-bar-f.mcp-bar-src{background:var(--steel)}
 .ov-meta-dd .mcp-bar-v,.ov-googl-dd .mcp-bar-v{font-size:12px;font-weight:700;color:var(--navy);text-align:right;font-variant-numeric:tabular-nums}
 @media(max-width:640px){.ov-meta-dd .mcp-bar-row{grid-template-columns:1fr 60px}.ov-meta-dd .mcp-bar-t{grid-column:1/-1;order:3}}
-.ov-meta-dd .mx-tbl th.mx-n,.ov-meta-dd .mx-tbl td.mx-n{text-align:right;white-space:nowrap}
-.ov-meta-dd .mx-tbl tr.mx-tot td{font-weight:700;background:var(--surface)}
-.ov-meta-dd .mx-tbl .mx-src{font-size:9px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--mu)}
-.ov-meta-dd .mx-ctl{margin:0 0 8px}
-.ov-meta-dd .mx-collap{margin:6px 0}
-.ov-meta-dd .mx-kpis{margin:4px 0 6px}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-tbl th.mx-n,:is(.ov-meta-dd,.ov-googl-dd) .mx-tbl td.mx-n{text-align:right;white-space:nowrap}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-tbl tr.mx-tot td{font-weight:700;background:var(--surface)}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-tbl .mx-src{font-size:9px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--mu)}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-ctl{margin:0 0 8px}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-collap{margin:6px 0}
+:is(.ov-meta-dd,.ov-googl-dd) .mx-kpis{margin:4px 0 6px}
 
 /* Alphabet ▸ Management ▸ Governance & SBC (js/overviews/googl-gov.js) — a text table: left-aligned, wrapped */
 .ov-googl-dd .gov-tbl td,.ov-googl-dd .gov-tbl th{text-align:left;white-space:normal;vertical-align:top}

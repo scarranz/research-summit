@@ -83,11 +83,33 @@ function ceSummitUs(p){
 }
 
 export var SOFI_CALL_EARNINGS = { ticker:'SOFI', quarters:[
-  // ── UPCOMING: Q3 2026 (quarter ended Sep 30 2026). Consensus = the Bloomberg snapshot of Aug 3 2026 (last reported quarter
-  // 2Q26, so its fq+1 is this quarter). Summit = the 2026-08-05 snapshot, frozen in js/results-data/sofi.js. Guidance: SoFi
-  // gave full-year 2026 guidance on the Jul 29 2026 call (adjusted net revenue $4.75–4.85B, adjusted EBITDA about $1.6B,
-  // adjusted net income about $825M, EPS about $0.60) and no discrete 3Q26 guide.
-  { q:'Q3 2026', status:'upcoming', date:'quarter ended Sep 30 2026 (not yet reported in the call file)',
+  // ── UPCOMING: Q4 2026 (quarter ending Dec 31 2026). Consensus = the newest Bloomberg snapshot on file, Aug 3 2026, which sits
+  // BEFORE the 3Q26 print (2Q26 was the last reported quarter then, so this quarter was its fq+2): the Street bar below does not yet
+  // reflect the Oct 27 2026 guidance raise. Summit = the 2026-08-05 snapshot, frozen in js/results-data/sofi.js. Guidance: the Oct 27
+  // 2026 release raised FY2026 (adjusted net revenue about $5.04B, adjusted EBITDA about $1.66B, adjusted net income about $840M,
+  // EPS about $0.61) and introduced FY2027 (about $6.4B, $2.24B, $1.28B, $0.90). There is no discrete 4Q26 guide in the release;
+  // the implied quarter below is the full-year guide less the nine-month adjusted actuals (revenue $3,663.9M, EBITDA $1,167.5M,
+  // net income $570.1M, EPS $0.43).
+  { q:'Q4 2026', status:'upcoming', date:'quarter ending Dec 31 2026',
+    setup:{
+      source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-08-03 (newest on file, before the 3Q26 print) · Summit DCF model — snapshot 2026-08-05, frozen · guidance: 3Q26 release and presentation (Oct 27 2026), full year only',
+      asOf:'2026-08-03',
+      notes:{
+        'Revenue':{ t:'No discrete 4Q26 guide; the FY26 guide implies about $1.38B adjusted', h:'<p>The Oct 27 release raised FY2026 adjusted net revenue to about <b>$5.04 billion</b> (about 40% growth), from $4.75 billion to $4.85 billion. Against <b>$3,663.9M</b> of adjusted net revenue through nine months, the full-year guide implies about <b>$1.38 billion</b> for the fourth quarter. The Street bar on file (<b>$1.31B</b>, GAAP total net revenue) is the Aug 3 Bloomberg snapshot, taken before the raise, so it is likely stale. Management said it would address quarterly guidance on the call.</p>' },
+        'Adjusted EBITDA':{ t:'FY26 guide about $1.66B implies about $0.49B', h:'<p>Full-year adjusted EBITDA guidance moved to about <b>$1.66 billion</b> (about 33% margin) from about $1.6 billion. Against <b>$1,167.5M</b> reported through nine months, the fourth quarter implied is about <b>$493M</b>, a margin near 36% on the implied revenue. The Street bar on file is about $0.48B.</p>' },
+        'Adjusted net income':{ t:'FY26 guide about $840M implies about $270M', h:'<p>Adjusted net income guidance of about <b>$840 million</b> (about 17% margin), from about $825 million. Against <b>$570.1M</b> through nine months, the fourth quarter implied is about <b>$270M</b>. The tax rate assumption for the year stays at 22%.</p>' },
+        'EPS (diluted)':{ t:'FY26 EPS about $0.61 implies about $0.18', h:'<p>Full-year adjusted EPS of about <b>$0.61</b> (from about $0.60) less <b>$0.43</b> reported through nine months leaves about <b>$0.18</b> for the fourth quarter. The Street bar on file is about $0.19.</p>' }
+      },
+      us: ceSummitUs('4Q26'),
+      debate:{ rows:null, synth:'' }
+    },
+    results:null, call:null },
+
+  // ── REPORTED: Q3 2026 (quarter ended Sep 30 2026; reported Oct 27 2026). Figures: 3Q26 earnings release and investor presentation.
+  // The call transcript has not been loaded yet (docs/calls/SOFI.md ends at Q2 2026), so `call` stays null until it is supplied.
+  // Street = the Bloomberg snapshot of Aug 3 2026 (the last before the print), read through CE_CONS above. Summit = the 2026-08-05
+  // model file, frozen in js/results-data/sofi.js (its stored 3Q26 projection). SoFi gave no discrete 3Q26 guide (full year only, Jul 29 2026).
+  { q:'Q3 2026', status:'reported', date:'October 27, 2026',
     setup:{
       source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-08-03 · Summit DCF model — snapshot 2026-08-05, frozen · guidance: Q2 2026 call (Jul 29 2026), full year only',
       asOf:'2026-08-03',
@@ -100,7 +122,36 @@ export var SOFI_CALL_EARNINGS = { ticker:'SOFI', quarters:[
       us: ceSummitUs('3Q26'),
       debate:{ rows:null, synth:'' }
     },
-    results:null, call:null },
+    results:{
+      headline:'Revenue, profit and volumes all cleared the Street, the full-year guide was raised and a 2027 outlook arrived well above the bar.',
+      summary:{ paras:[
+        { p:'<b>The quarter validates the balance-sheet model that the Street was still discounting.</b> Net interest income carried most of the upside, and personal loan volume cleared the bar by a wide margin while home loans and loan platform fees fell short of it. The mix leans further toward earning assets held on the balance sheet and away from fee income that depends on partner demand.' },
+        { p:'<b>Profit followed revenue this time.</b> Adjusted EBITDA, adjusted net income and EPS all landed above the Street, with operating expense rising mainly through sales and marketing. The contrast with the second quarter, when management held the profit guide to fund new products, suggests the investment phase now has operating leverage behind it.' },
+        { p:'<b>The 2027 outlook resets the forward debate.</b> Management introduced revenue, EBITDA, net income and EPS guidance for 2027 that it describes as well ahead of analyst estimates, with the tax rate assumption stepping up to 24%. The Street bar on file predates the guide, so the revisions that follow will be the first read on how much of it the market accepts.' },
+        { p:'<b>Technology Platform is the weak segment in the mix.</b> Segment revenue declined year over year on the departure of a large client, and the 2030 targets of 100 million products and five businesses above $1 billion put the weight of the story on Financial Services and Lending.' },
+        { p:'<b>Data note.</b> Credit card and commercial and consumer banking balances are not in the release; they stay blank until a post-print Bloomberg snapshot is on file. The Street series is the Aug 3 snapshot, before the print and before the guide.' }
+      ] },
+      notes:{
+        'Revenue':{ t:'About 10% above the Street on the GAAP line', h:'<p>GAAP total net revenue of <b>$1,385.1M</b> (+44%) against a Street bar near <b>$1.26B</b> and a Summit projection of <b>$1,207M</b>. Adjusted net revenue was <b>$1,371.1M</b>. Fee-based revenue was $570.6M, 42% of the total. Lending adjusted net revenue was $807.4M, Financial Services $525.1M and Technology Platform $87.4M. SoFi gave no discrete third-quarter guide.</p>' },
+        'Net interest income':{ t:'The largest source of upside', h:'<p><b>$929.5M</b> (+59%) against a Street bar near $0.84B and Summit at $763M. Net interest margin was 6.14%, up 16 basis points on the quarter. Year over year, average interest-earning assets rose 51% and the cost of funds fell 38 basis points. Deposits grew $5.8B to $51.3B.</p>' },
+        'Loan platform fees':{ t:'Below the Street', h:'<p><b>$151.2M</b> against a Street bar near $174M, down 8% year over year, on $3.8B of loans originated for third parties.</p>' },
+        'Adjusted EBITDA':{ t:'About 5% above the Street, margin 34%', h:'<p><b>$469.8M</b>, up 70%, against a Street bar near $445M. The adjusted EBITDA margin was 34%, from 30% in the second quarter.</p>' },
+        'Adjusted net income':{ t:'Above the Street', h:'<p><b>$243.0M</b> at an 18% margin against a Street bar near $231M. GAAP net income was $241.0M. It was the twelfth consecutive profitable quarter; return on tangible common equity was about 10%.</p>' },
+        'EPS (diluted)':{ t:'A penny above the Street bar', h:'<p>Adjusted EPS of <b>$0.18</b> against a Street bar near $0.17. The effective tax rate was 24.2%, above the 19.9% in the Street series.</p>' },
+        'Total members':{ t:'Record net additions of 1.2M', h:'<p>Members rose 35% to <b>17.1 million</b>, 1.3% above the Street bar, with a record 1.2 million added. Products rose 44% to 26.7 million with a record 2.2 million added; products per member reached about 1.56 and 51% of new products came from existing members.</p>' },
+        'Personal loan originations':{ t:'Another record, 30% above the Street', h:'<p><b>$12.6B</b> against a Street bar near $9.7B. Total originations reached a record $16.9B, including about $3.8B for Loan Platform Business partners.</p>' },
+        'Student loan originations':{ t:'Above the Street', h:'<p><b>$2.9B</b> against a Street bar near $2.7B, nearly double the year-ago quarter.</p>' },
+        'Home loan originations':{ t:'Below the Street', h:'<p><b>$1.4B</b> against a Street bar near $1.5B, slightly below the second quarter.</p>' },
+        'Sales and marketing':{ t:'Main driver of the expense overshoot', h:'<p><b>$444.0M</b> against a Street bar near $359M, up 55% year over year and from $392M in the second quarter.</p>' },
+        'Noninterest expense':{ t:'Above the Street on marketing', h:'<p>Total noninterest expense of about <b>$1.05B</b> (provision excluded) against a Street bar near $0.95B. Sales and marketing explains most of the gap.</p>' },
+        'Effective tax rate':{ t:'24.2% against a Street near 20%', h:'<p>Income tax expense of <b>$76.8M</b> on income before taxes of $317.8M. The full-year guide keeps a 22% rate for 2026 and assumes 24% for 2027.</p>' }
+      },
+      watch:{ 'Revenue':1, 'Net interest income':2, 'Personal loan originations':3, 'Adjusted EBITDA':4, 'Sales and marketing':5 },
+      thesisCheck:[],
+      intoCall:[],
+      priceReaction:'Not on file: no price series for the post-print session was loaded into this build.'
+    },
+    call:null },
 
   // ── REPORTED: Q2 2026 (quarter ended Jun 30 2026; reported Jul 29 2026). Call transcript: docs/calls/SOFI.md (verbatim).
   // Street = the Bloomberg snapshot of May 4 2026 (the last before the print), read through CE_CONS above. Summit = the 2026-08-05

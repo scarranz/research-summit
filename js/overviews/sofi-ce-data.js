@@ -18,6 +18,7 @@ import { sofiResults } from '../results-data/sofi.js';
 var SOFI_LINES = [
   ['Revenue', '$B', 'rev', 1000], ['Operating income', '$M', 'opinc', 1], ['Adjusted EBITDA', '$M', 'ebitda', 1], ['EPS (diluted)', '$', 'eps', 1],
   ['Depreciation and amortization', '$M', 'dna', 1], ['Diluted shares', 'Mn', 'shares', 1],
+  ['Adjusted net revenue', '$M', 'adjrev', 1],
   ['Net interest income', '$M', 'nii', 1], ['Noninterest income', '$M', 'nonint', 1], ['Loan platform fees', '$M', 'lpb', 1],
   ['Technology products and solutions', '$M', 'tp', 1], ['Loan origination, sales and servicing', '$M', 'loss', 1], ['Other noninterest income', '$M', 'other', 1],
   ['Total members', 'M', 'members', 1000], ['Personal loan originations', '$B', 'plov', 1000], ['Student loan originations', '$B', 'slov', 1000], ['Home loan originations', '$B', 'hlov', 1000],
@@ -29,7 +30,7 @@ var SOFI_LINES = [
   ['Interest-bearing deposits', '$B', 'ibd', 1000], ['Deposits with banks', '$B', 'ibdb', 1000], ['Total debt', '$B', 'tdb', 1000]
 ];
 
-export var SOFI_GUIDED = ['Revenue', 'Adjusted EBITDA', 'Adjusted net income', 'EPS (diluted)', 'Effective tax rate'];
+export var SOFI_GUIDED = ['Adjusted net revenue', 'Adjusted EBITDA', 'Adjusted net income', 'EPS (diluted)', 'Effective tax rate'];
 
 export var SOFI_CE_CONS = {
   src: 'Bloomberg (BST) · BBG_CONSENSUS.txt snapshot archive',
@@ -63,7 +64,7 @@ export var SOFI_CE_CONS = {
     growth(m); return m; }
   var RS = {}; SOFI_LINES.forEach(function(L){ RS[L[0]] = [L[2], L[3]]; });
   SOFI_CE_CONS.m.forEach(function(m){ var s=RS[m.k]; if(s) fromResults(m, s[0], s[1]); });
-  var GK = { 'Revenue':['rev',1000], 'Adjusted EBITDA':['ebitda',1], 'Adjusted net income':['earnings',1], 'EPS (diluted)':['eps',1], 'Effective tax rate':['etr',1] };
+  var GK = { 'Adjusted net revenue':['adjrev',1], 'Adjusted EBITDA':['ebitda',1], 'Adjusted net income':['earnings',1], 'EPS (diluted)':['eps',1], 'Effective tax rate':['etr',1] };
   SOFI_CE_CONS.m.forEach(function(m){ var g=GK[m.k]; if(!g) return; var r=M[g[0]];
     m.qg=QP.map(function(p){ var i=r.periods.indexOf(p); if(i<0||r.guideLo[i]==null||r.guideHi[i]==null) return null;
       return rnd((r.guideLo[i]+r.guideHi[i])/2/g[1], m.u); }); });
@@ -97,7 +98,7 @@ export var SOFI_CALL_EARNINGS = { ticker:'SOFI', quarters:[
       source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-08-03 (newest on file, before the 3Q26 print) · Summit DCF model — snapshot 2026-08-05, frozen · guidance: 3Q26 release, presentation and call (Oct 27 2026), full year and 4Q26',
       asOf:'2026-08-03',
       notes:{
-        'Revenue':{ t:'Guided about $1.375B adjusted, up 36%', h:'<p>On the Oct 27 call management said the raised full-year guide (adjusted net revenue about <b>$5.04 billion</b>, from $4.75 billion to $4.85 billion) implies about <b>$1.375 billion</b> for the fourth quarter, up 36%. By segment: lending about <b>$785M</b>, financial services about <b>$550M</b>, technology platform about <b>$90M</b>, and corporate in line with the third quarter. The Street bar on file (<b>$1.31B</b>, GAAP total net revenue) is the Aug 3 Bloomberg snapshot, taken before the raise, so it is stale.</p>' },
+        'Adjusted net revenue':{ t:'Guided about $1.375B adjusted, up 36%', h:'<p>On the Oct 27 call management said the raised full-year guide (adjusted net revenue about <b>$5.04 billion</b>, from $4.75 billion to $4.85 billion) implies about <b>$1.375 billion</b> for the fourth quarter, up 36%. By segment: lending about <b>$785M</b>, financial services about <b>$550M</b>, technology platform about <b>$90M</b>, and corporate in line with the third quarter. The Street bar on file (<b>$1.31B</b>, GAAP total net revenue) is the Aug 3 Bloomberg snapshot, taken before the raise, so it is stale.</p>' },
         'Adjusted EBITDA':{ t:'Guided about $492M', h:'<p>Full-year adjusted EBITDA guidance moved to about <b>$1.66 billion</b> (about 33% margin) from about $1.6 billion. The call put the fourth quarter at about <b>$492M</b>, a margin near 36%. The Street bar on file is about $0.48B.</p>' },
         'Adjusted net income':{ t:'Guided about $276M, a 20% margin', h:'<p>Adjusted net income guidance of about <b>$840 million</b> (about 17% margin), from about $825 million; the fourth quarter implied by the CEO is about <b>$276M</b>. The CFO later cited about $270M when sizing organic capital creation. The tax rate assumption for the year stays at 22%.</p>' },
         'EPS (diluted)':{ t:'Guided about $0.19', h:'<p>Full-year adjusted EPS of about <b>$0.61</b> (from about $0.60) less <b>$0.43</b> reported through nine months leaves about <b>$0.18</b>; management stated <b>$0.19</b> on the call. The Street bar on file is about $0.19.</p>' }
@@ -116,7 +117,7 @@ export var SOFI_CALL_EARNINGS = { ticker:'SOFI', quarters:[
       source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-08-03 · Summit DCF model — snapshot 2026-08-05, frozen · guidance: Q2 2026 call (Jul 29 2026), full year only',
       asOf:'2026-08-03',
       notes:{
-        'Revenue':{ t:'No discrete 3Q26 guide; FY26 adjusted revenue guided $4.75–4.85B', h:'<p>Full-year 2026 guidance on the Jul 29 call: adjusted net revenue of $4.75 billion to $4.85 billion, about 32% to 35% growth, raised from about 30%. Revenue on this grid is GAAP total net revenue, which differs from the adjusted measure SoFi guides (2Q26: GAAP $1,218.7M, adjusted $1,205.6M).</p>' },
+        'Adjusted net revenue':{ t:'No discrete 3Q26 guide; FY26 adjusted revenue guided $4.75–4.85B', h:'<p>Full-year 2026 guidance on the Jul 29 call: adjusted net revenue of $4.75 billion to $4.85 billion, about 32% to 35% growth, raised from about 30%. Revenue on this grid is GAAP total net revenue, which differs from the adjusted measure SoFi guides (2Q26: GAAP $1,218.7M, adjusted $1,205.6M).</p>' },
         'Adjusted EBITDA':{ t:'FY26 guided at about $1.6B', h:'<p>The call kept adjusted EBITDA at about $1.6 billion for 2026, a margin of about 33% to 34%. Through 2Q26 the company had reported $697.7M, so the second half implies about $0.9B.</p>' },
         'Adjusted net income':{ t:'FY26 about $825M; EPS about $0.60 on a 22% tax rate', h:'<p>Adjusted net income of about $825 million (margin about 17%) and EPS of about $0.60. The EPS guide now carries a 22% tax rate, about 700 basis points above the original guide; at the original mid-teens rate it would have been $0.65.</p>' },
         'EPS (diluted)':{ t:'FY26 EPS about $0.60', h:'<p>EPS guidance of about $0.60 for 2026 includes a 22% tax rate (original guide: mid-teens).</p>' }
@@ -136,6 +137,7 @@ export var SOFI_CALL_EARNINGS = { ticker:'SOFI', quarters:[
       ] },
       notes:{
         'Revenue':{ t:'About 10% above the Street on the GAAP line', h:'<p>GAAP total net revenue of <b>$1,385.1M</b> (+44%) against a Street bar near <b>$1.26B</b> and a Summit projection of <b>$1,207M</b>. Adjusted net revenue was <b>$1,371.1M</b>. Fee-based revenue was $570.6M, 42% of the total. Lending adjusted net revenue was $807.4M, Financial Services $525.1M and Technology Platform $87.4M. SoFi gave no discrete third-quarter guide.</p>' },
+        'Adjusted net revenue':{ t:'Up 44%, the basis SoFi guides on', h:'<p>Adjusted net revenue of <b>$1,371.1M</b> (+44%), which excludes $14.0M of fair-value gains on servicing rights and residual interests from the $1,385.1M GAAP figure. The fourth-quarter guide of about <b>$1.375B</b> (+36%) is on this basis. The Street and Summit series are the GAAP lines carried over.</p>' },
         'Net interest income':{ t:'The largest source of upside', h:'<p><b>$929.5M</b> (+59%) against a Street bar near $0.84B and Summit at $763M. Net interest margin was 6.14%, up 16 basis points on the quarter. Year over year, average interest-earning assets rose 51% and the cost of funds fell 38 basis points. Deposits grew $5.8B to $51.3B.</p>' },
         'Loan platform fees':{ t:'Below the Street', h:'<p><b>$151.2M</b> against a Street bar near $174M, down 8% year over year, on $3.8B of loans originated for third parties.</p>' },
         'Adjusted EBITDA':{ t:'About 5% above the Street, margin 34%', h:'<p><b>$469.8M</b>, up 70%, against a Street bar near $445M. The adjusted EBITDA margin was 34%, from 30% in the second quarter.</p>' },
@@ -210,7 +212,7 @@ export var SOFI_CALL_EARNINGS = { ticker:'SOFI', quarters:[
       source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-05-04 (the last before the print) · Summit DCF model — snapshot 2026-08-05, frozen (its stored 2Q26 projection) · guidance: Q1 2026 call (Apr 29 2026)',
       asOf:'2026-05-04',
       notes:{
-        'Revenue':{ t:'Guided about $1.115B adjusted; the Street sat above it', h:'<p>For the second quarter management guided adjusted net revenue growth of about 30%, roughly <b>$1.115 billion</b>. The Street on file was near <b>$1.13B</b> on the GAAP total net revenue line, which differs from the adjusted measure SoFi guides.</p>' },
+        'Adjusted net revenue':{ t:'Guided about $1.115B adjusted; the Street sat above it', h:'<p>For the second quarter management guided adjusted net revenue growth of about 30%, roughly <b>$1.115 billion</b>. The Street on file was near <b>$1.13B</b> on the GAAP total net revenue line, which differs from the adjusted measure SoFi guides.</p>' },
         'Adjusted EBITDA':{ t:'Guided about $330M, a 30% margin', h:'<p>Guide: an adjusted EBITDA margin of about 30%, roughly <b>$330 million</b>. The Street on file was near $0.35B.</p>' },
         'Adjusted net income':{ t:'Guided a 12% to 13% margin', h:'<p>Guide: adjusted net income margin of about 12% to 13%, which management tied to roughly $0.10 to $0.11 of EPS. The company said payroll taxes and accelerated marketing in the first half would weigh on profit before the second half.</p>' },
         'EPS (diluted)':{ t:'Guided $0.10 to $0.11; the Street was at $0.12', h:'<p>The guided EPS range sat below the Street bar of about $0.12, so a result at the Street figure already needed a beat against the company guide.</p>' }
@@ -295,7 +297,7 @@ export var SOFI_CALL_EARNINGS = { ticker:'SOFI', quarters:[
       source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-02-04 (the last before the print) · Summit DCF model — snapshot 2026-08-05, frozen (its stored 1Q26 projection) · guidance: Q4 2025 call (Jan 30 2026)',
       asOf:'2026-02-04',
       notes:{
-        'Revenue':{ t:'Guided about $1.04B adjusted; the Street sat above it', h:'<p>The first-quarter guide was adjusted net revenue of about <b>$1.04 billion</b>. The Street on file was near <b>$1.06B</b> on the GAAP total net revenue line, which differs from the adjusted measure SoFi guides.</p>' },
+        'Adjusted net revenue':{ t:'Guided about $1.04B adjusted; the Street sat above it', h:'<p>The first-quarter guide was adjusted net revenue of about <b>$1.04 billion</b>. The Street on file was near <b>$1.06B</b> on the GAAP total net revenue line, which differs from the adjusted measure SoFi guides.</p>' },
         'Adjusted EBITDA':{ t:'Guided about $300M', h:'<p>Guide: adjusted EBITDA of about <b>$300 million</b>. The Street on file was near $0.32B.</p>' },
         'Adjusted net income':{ t:'Guided about $160M', h:'<p>Guide: adjusted net income of about <b>$160 million</b>. The Street on file was near $0.16B.</p>' },
         'EPS (diluted)':{ t:'Guided $0.12, the Street at $0.12', h:'<p>Guide and Street were both at about <b>$0.12</b>, so any beat had to come from revenue and costs rather than from the bar.</p>' }
@@ -375,7 +377,7 @@ export var SOFI_CALL_EARNINGS = { ticker:'SOFI', quarters:[
       source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2025-11-02 (the last before the print) · Summit DCF model — snapshot 2026-08-05, frozen (its stored 4Q25 projection) · guidance: Q3 2025 call full-year update (no discrete 4Q25 guide)',
       asOf:'2025-11-02',
       notes:{
-        'Revenue':{ t:'No discrete guide; the full-year guide implied about $0.96B adjusted', h:'<p>The last full-year guide for 2025 was adjusted net revenue of about <b>$3.54 billion</b>. Against the first three quarters reported (about $2.58B adjusted) that implies roughly <b>$0.96B</b> for the fourth quarter (derived here). The Street on file was near <b>$0.99B</b> on the GAAP total net revenue line.</p>' },
+        'Adjusted net revenue':{ t:'No discrete guide; the full-year guide implied about $0.96B adjusted', h:'<p>The last full-year guide for 2025 was adjusted net revenue of about <b>$3.54 billion</b>. Against the first three quarters reported (about $2.58B adjusted) that implies roughly <b>$0.96B</b> for the fourth quarter (derived here). The Street on file was near <b>$0.99B</b> on the GAAP total net revenue line.</p>' },
         'Adjusted EBITDA':{ t:'Full-year guide implied about $0.30B', h:'<p>The full-year guide of about <b>$1.035 billion</b> against about $736M reported through three quarters implies roughly <b>$0.30B</b> for the fourth (derived here). The Street on file was near $0.31B.</p>' },
         'Adjusted net income':{ t:'Full-year guide implied about $0.15B', h:'<p>The full-year guide of about <b>$455 million</b> against about $308M through three quarters implies roughly <b>$0.15B</b> (derived here). The Street on file was near $0.14B.</p>' },
         'EPS (diluted)':{ t:'Street at $0.12', h:'<p>The Street bar was about <b>$0.12</b>; SoFi gave no quarterly EPS guide for the fourth quarter.</p>' }

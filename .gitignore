@@ -65,3 +65,4 @@ scripts/ndx/.ingest-key
 scripts/market-history/macro/shiller_ie_data.xls
 
 __pycache__/
+scripts/consensus/ma/out/

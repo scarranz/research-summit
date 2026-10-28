@@ -14,6 +14,7 @@ import { spotSplcBody, spotSplcBuild, spotSplcPop } from './spot-splc.js';   // 
 import { spotBlGeneralHtml, spotBlGeneralBuild } from './spot-bl.js';   // Bottom Line ▸ General (Amazon's views + ./spot-bl-data.js)
 import { spotHistMult } from './spot-histmult.js';   // Valuation ▸ Historic Multiple (EDGAR denominators, live price and ECB rate)
 import { spotTargetMult } from './spot-target-multiple.js';
+import { submitsHtml, initSubmits } from '../submits.js';   // Valuation ▸ Submit History (engine + js/submits-data/spot.js)
 import { spotSens } from './spot-sensitivity.js';   // Valuation ▸ Sensitivity (frozen Summit snapshot, EUR)   // Valuation ▸ Target Multiple / PEG (frozen Summit valuation)
 import { spotCeHtml, spotCeWire, spotCeBuild, spotCePop } from './spot-ce.js';   // Evolution ▸ Earnings (canonical machinery + ./spot-ce-data.js)
 
@@ -529,11 +530,13 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab active" data-ovst="histmult">Historic Multiple</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="targetmult">Target Multiple</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="submits">Submit History</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="sensitivity">Sensitivity</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="histmult">'+spotHistMult.body()+'</div>'+
       '<div class="ovt-subpane" data-ovst="peers" hidden>'+valuationPeersBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="targetmult" hidden>'+spotTargetMult.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="submits" hidden>'+submitsHtml('SPOT')+'</div>'+
       '<div class="ovt-subpane" data-ovst="sensitivity" hidden>'+spotSens.body()+'</div>'+
     '</div>'+
   '</div>';
@@ -573,6 +576,7 @@ function buildSub(root, ddKey, subKey){
     if (subKey === 'histmult') requestAnimationFrame(function(){ spotHistMult.init(root); });
     else if (subKey === 'peers') requestAnimationFrame(function(){ wireScatters(root); });
     else if (subKey === 'targetmult') spotTargetMult.init(root);
+    else if (subKey === 'submits') requestAnimationFrame(function(){ initSubmits(root, 'SPOT'); });
     else if (subKey === 'sensitivity') spotSens.init(root);
   }
 }

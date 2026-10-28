@@ -136,15 +136,17 @@ Summit no tiene trimestres, así que no hay cuadre trimestral del lado Summit (r
 ## 7. Bloqueos y preguntas abiertas
 
 - ⛔ **MCP Summit sin autenticar** (`/mcp` → "still unauthorized"): bloquea Estimates (`evolution`), `estMatrix.summit` y el snapshot Summit por trimestre. Quién: Dani (reautenticar) · desde 2026-10-28.
-- ⏳ **Holders del DEF 14A** (tabla de accionistas) y **proxy** (Executives & Board se mantiene con la plantilla anterior más el cambio de CFO de jun-2026): pendientes del proxy.
+- ✅ Holders y proxy: Dani (2026-10-28) los saca del alcance ("no lo recuerdo relevante para el análisis"); Ownership queda con capital allocation y dividendos del 10-K.
 - ⏳ **Balance a trimestres intermedios** (1Q21–3Q21, 1Q22–3Q22, 1Q23–3Q23, 1Q24–3Q24, 1Q25–3Q25): net debt solo en los cierres de año FY2021–FY2025 y 1Q26/2Q26 (10-K/10-Q entregados); EV/EBITDA empieza en 4Q21.
-- ⏳ **SPLC de MA** (export CSV) para la tabla de contrapartes de Customers.
+- ✅ SPLC de MA cargado (capturas de Bloomberg del 28-oct-2026): 61 clientes sin tamaño (Customers) y 60 proveedores, 13 con tamaño estimado (Bottom Line ▸ Supply Chain, que reemplaza la lista del 29-jun).
 - ⛔ **Quartr** pidió re-autenticar: el cotejo de actuals contra filings se hizo contra la llamada, no contra el 8-K. Pendiente: cotejo contra el 8-K del Q2 2026.
 - ❓ Dani decide si las 34 líneas se quedan todas en la rejilla de Setup o si se colapsan las secundarias.
 - Q3 2026 se reporta en los últimos días de octubre de 2026: al llegar el print y la llamada, rotar `MA-latest.md` → `MA.md`, llenar `results` y `call`, abrir Q4 2026 (rutina del playbook, §12).
 - Cuadre del trimestre contra el 8-K (EV-RES-DATA) y revisión de la Watch List en el portal real (la fila de `companies` de MA existe; el harness local no tiene id válido).
 
 ## 8. Historial de aprobaciones (solo se agrega)
+
+- 2026-10-28 (5.ª pasada, cierre; Dani: "NO IMPORTA QUE NO ESTE EL TARGET MULTIPLE, Y PORQUE QUIERES HOLDERS Y PROXY?") · Target Multiple queda ⏭️ sin pendiente; holders y proxy fuera de alcance; SPLC cargado desde `...\MA\SPLC` (8 capturas): Customers con 61 relaciones y Supply Chain con 60 proveedores.
 
 - 2026-10-28 (5.ª pasada; Dani: "SIGUEN FALTANDO DEMASIADAS COSAS Y SIGUE VIENDOSE MAL") · se vio el harness: el perfil usaba el rojo/naranja de Mastercard (pastillas, línea de Key Facts, títulos del 2×2) y el Overview seguía con cifras sembradas. Cambios: acento único Summit (`selectors.css` sin `.ov-mastercard-dd`, `.ov-mastercard` con `--brand: var(--steel)`, `MA_RED/MA_ORANGE` → `SUMMIT_CAT`); Overview reconstruido con el 10-K FY2025; peers con denominadores de Bloomberg; Top Line sobre el motor de segmentos; Unit Economics con datos reportados; net debt de 10-K/10-Q para EV/EBITDA; dividendos del 10-K ($3.04 por acción, $0.87 trimestral declarado); Guidance record desde las presentaciones (22 guías). Corregido un error de marcado en Ownership. Tour del harness: 25 sub-tabs, 0 errores de consola. Fuentes: 10-K FY2019–FY2025 y 10-Q Q1/Q2 2026 (carpeta Descargas), 22 comunicados y 23 presentaciones, `MA calls.txt`, Equity Universe Consensus.
 

@@ -913,29 +913,53 @@ function maUnitEconBody(c){
 // "supply chain" of the rails (issuers/acquirers/merchants/cardholders); and (2) the
 // REAL vendor supply chain from Bloomberg SPLC (as of Jun 29, 2026) — which is almost
 // entirely IT / software / cloud / security, the proof of the asset-light model. ──
+// Bloomberg Supply Chain Analysis (SPLC), MA US Equity, Suppliers, as of Oct 28 2026 (terminal screens, Key Metrics and Geo-Exposure). 60 suppliers; 13 carry a
+// BBG-estimated relationship size (US$ M) and a share of Mastercard's cost. [name, industry, size US$ M, % of Mastercard cost, cost category, supplier's revenue %, source]
+var MA_SUP_SIZED=[
+  ['Infosys Ltd','IT Services',145.30,'1.10%','SG&A','0.74%','Supplier\u2019s 2026Q2 CF'],
+  ['Cloudflare Inc','Software',16.91,'0.11%','COGS','0.61%','Company News'],
+  ['ACI Worldwide Inc','Software',14.93,'0.10%','COGS','0.87%','Supplier\u2019s 2024Q3 CF'],
+  ['Amadeus IT Group SA','Leisure Facilities & Services',10.80,'0.07%','COGS','0.14%','Supplier\u2019s 2022Q4 CF'],
+  ['Oracle Corp','Software',10.63,'0.07%','COGS','0.01%','Company News'],
+  ['Microsoft Corp','Software',5.43,'0.04%','COGS','<0.01%','Company News'],
+  ['Snowflake Inc','Software',4.12,'0.03%','COGS','0.07%','Supplier\u2019s 2024Q4 CF'],
+  ['Riskified Ltd','Software',1.68,'0.01%','COGS','0.49%','Company News'],
+  ['Kudelski SA','Software',1.20,'<0.01%','COGS','0.33%','Supplier\u2019s 2023A CF'],
+  ['Qualys Inc','Software',1.15,'<0.01%','COGS','0.16%','Supplier\u2019s 2022Q3 CF'],
+  ['IonQ Inc','Software',0.59,'<0.01%','COGS','0.18%','Supplier\u2019s 2026Q2 CF'],
+  ['Verimatrix SA','Software',0.09,'<0.01%','COGS','0.20%','Supplier\u2019s 2023A CF'],
+  ['T Stamp Inc','Software',0.07,'<0.01%','COGS','1.92%','Supplier\u2019s 2024Q3 CF'],
+];
 var MA_SUP_GROUPS=[
-  { t:'IT services, cloud & core software', ic:'🖥️', note:'the biggest cost bucket — Infosys is ~1.5% of Mastercard’s SG&A',
-    names:['Infosys','Microsoft','Oracle','Informatica','Snowflake','Cloudflare','ACI Worldwide','CSG Systems','Pegasystems','Endava','Azul Systems'] },
-  { t:'AI & advanced compute', ic:'🤖', note:'feeds the gen-AI fraud models announced in 2026',
-    names:['NVIDIA','D-Wave Quantum'] },
-  { t:'Security, identity & biometrics', ic:'🛡️', note:'the tech behind the security-VAS leg',
-    names:['Qualys','Verimatrix','Kudelski','GB Group','Riskified','Fingerprint Cards','IDEX Biometrics','T Stamp'] },
-  { t:'Card & payments hardware / rails tech', ic:'💳', note:'cards, terminals, connectivity',
-    names:['Goldpac','Newland Digital','GMO Financial Gate','Euronet','Global Payments'] },
-  { t:'Travel tech, marketing & facilities', ic:'✈️', note:'travel data (Amadeus), agencies, and the office footprint',
-    names:['Amadeus IT Group','WPP','Ascential','Live Nation','Intl Workplace Group'] },
+  { t:'Software, cloud and data', note:'the largest group by count',
+    names:['Cloudflare','ACI Worldwide','Oracle','Microsoft','Snowflake','Informatica','Databricks','FullStory','Azul Systems','GB Group','Beijing Shiji Information Technology','Ebix','Intelligent Wave','Rezolve AI','Riskified','Kudelski','Qualys','IonQ','Verimatrix','T Stamp'] },
+  { t:'IT services and outsourcing', note:'Infosys alone is $145M of the $213M that Bloomberg sizes',
+    names:['Infosys','Bytes Technology','Endava','Itera','Quisitive','IT Way','CSG Systems','Elixirr International'] },
+  { t:'Payments technology and specialty finance', note:'processors and issuer-processing partners',
+    names:['Global Payments','Euronet','Network International','Usio','Currenc','EML Payments'] },
+  { t:'Technology hardware and semiconductors', note:'cards, biometrics, terminals and compute',
+    names:['NVIDIA','D-Wave Quantum','Goldpac','Newland Digital','GMO Financial Gate','Fingerprint Cards','IDEX Biometrics','Hengbao','Wuhan Tianyu Information Industry'] },
+  { t:'Advertising, sponsorship and travel', note:'marketing agencies, sports and entertainment, travel data',
+    names:['WPP','Mission Group','Ascential','MediaZest','McLaren Racing','Olympique Lyonnais','Live Nation','Amadeus IT Group','Malaysia Airports'] },
+  { t:'Offices and other', note:'real estate and telecom',
+    names:['International Workplace Group','Piedmont Realty','Societe Fonciere Lyonnaise','Wallenstam','Helical','CPI Property Group','ADN Telecom','Beijing Yuanlong Yato Culture Dissemination'] },
 ];
 function maSupplierChips(){
-  return '<div class="ov-chart-card" style="padding:14px 16px">'+
-    '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px">'+
-      '<div><div style="font-size:20px;font-weight:900;color:var(--navy)">~59</div><div style="font-size:10.5px;color:var(--mu)">named suppliers (BBG SPLC)</div></div>'+
-      '<div><div style="font-size:20px;font-weight:900;color:'+MA_RED+'">~0%</div><div style="font-size:10.5px;color:var(--mu)">raw-material / COGS suppliers</div></div>'+
-      '<div><div style="font-size:20px;font-weight:900;color:var(--navy)">IG1</div><div style="font-size:10.5px;color:var(--mu)">default-risk grade of the top vendors</div></div>'+
-      '<div><div style="font-size:20px;font-weight:900;color:var(--navy)">US·UK·CN</div><div style="font-size:10.5px;color:var(--mu)">34% / 17% / 8% of suppliers domiciled</div></div>'+
-    '</div>'+
-    MA_SUP_GROUPS.map(function(g){ return '<div style="margin:10px 0 4px"><div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:5px">'+g.ic+' '+esc(g.t)+' <span style="font-weight:600;color:var(--mu);font-size:10.5px">— '+esc(g.note)+'</span></div>'+
-      '<div style="display:flex;flex-wrap:wrap;gap:5px">'+g.names.map(function(n){ return '<span style="background:#F1F4F8;border:1px solid var(--bdr);border-radius:7px;padding:3px 9px;font-size:11px;color:var(--navy)">'+esc(n)+'</span>'; }).join('')+'</div></div>'; }).join('')+
+  var sum=MA_SUP_SIZED.reduce(function(a,r){ return a+r[2]; },0), top=MA_SUP_SIZED[0][2];
+  var tile=function(l,v,d){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+l+'</div><div class="ov-kpi-v">'+v+'</div><div class="ov-kpi-d muted">'+d+'</div></div>'; };
+  var h='<div class="ov-kpis">'+
+    tile('Named suppliers','60','Bloomberg SPLC, Oct 28 2026')+
+    tile('With a size','13','$'+sum.toFixed(0)+'M together, a Bloomberg estimate')+
+    tile('Largest','Infosys','$'+top.toFixed(0)+'M \u00b7 '+(top/sum*100).toFixed(0)+'% of the sized total \u00b7 1.10% of SG&A')+
+    tile('Domiciled in','US 35% \u00b7 UK 18% \u00b7 China 8%','21, 11 and 5 of the 60 suppliers')+
   '</div>';
+  h+='<div class="asc-tblwrap" style="margin-top:12px"><table class="asc-tbl"><thead><tr><th>Supplier</th><th>Industry</th><th>Relationship size</th><th>% of Mastercard cost</th><th>Cost category</th><th>% of supplier\u2019s revenue</th><th>Source</th></tr></thead><tbody>'+
+    MA_SUP_SIZED.map(function(r){ return '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td class="asc-m">$'+r[2].toFixed(2)+'M</td><td class="asc-m">'+esc(r[3])+'</td><td>'+esc(r[4])+'</td><td class="asc-m">'+esc(r[5])+'</td><td>'+esc(r[6])+'</td></tr>'; }).join('')+
+  '</tbody></table></div>';
+  h+='<div class="ov-subh" style="margin:14px 0 6px">All 60 named suppliers, grouped by what they sell <span style="font-weight:600;color:var(--mu)">(grouping is ours)</span></div>';
+  h+=MA_SUP_GROUPS.map(function(g){ return '<div style="margin:10px 0 4px"><div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:5px">'+esc(g.t)+' <span style="font-weight:600;color:var(--mu);font-size:10.5px">\u2014 '+esc(g.note)+'</span></div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:5px">'+g.names.map(function(n){ return '<span class="asc-chip" style="cursor:default">'+esc(n)+'</span>'; }).join('')+'</div></div>'; }).join('');
+  return h;
 }
 function ddSuppliersBody(c){
   var h='<p class="ov-lede">Mastercard is an <b>asset-light network</b>: it does not issue, lend or take credit risk. So "suppliers" means two different things — the <b>four-party model</b> (the conceptual supply chain of the rails), and the <b>real vendor list</b> (who Mastercard actually pays), which turns out to be <b>almost entirely IT, cloud, software and security</b>. That second list <i>is</i> the asset-light thesis.</p>';
@@ -943,9 +967,9 @@ function ddSuppliersBody(c){
       '<div class="ov-diagram-cap" style="margin:0 0 8px">The conceptual supply chain of the rails — tap any box for its role, then press <b>Play</b> to follow a single $100 purchase and see who earns at each step.</div>'+
       '<div class="ov-diagram" style="margin-top:6px">'+FOURPARTY_SVG+'</div>'+flowHtml());
   h+=sec('The real vendor supply chain — who Mastercard actually pays',
-      '<div class="ov-diagram-cap" style="margin:0 0 10px">From <b>Bloomberg SPLC</b> (as of Jun 29, 2026). Notice what’s <b>not</b> here: no factories, no commodities, no cost-of-goods. Mastercard’s "supply chain" is <b>cloud, software, security and data-center tech</b> — a handful of low-risk, investment-grade vendors (Infosys is its single largest, ~1.5% of SG&A). That is why a ~57% operating margin is even possible.</div>'+maSupplierChips());
+      '<div class="ov-diagram-cap" style="margin:0 0 10px">From <b>Bloomberg SPLC</b> (as of Oct 28 2026). There are no factories, commodities or cost of goods here: Mastercard’s suppliers are <b>software, cloud, IT services, security and payments technology</b>. Only 13 of the 60 carry a size, a Bloomberg estimate; the rest are named without one.</div>'+maSupplierChips());
   h+=sec('How Mastercard makes money', '<div class="ov-callout">'+bullets(HOW_MONEY)+'</div>');
-  h+='<div class="ov-foot">Vendor list & relationship sizes: Bloomberg SPLC (supply-chain), MA US Equity, as of Jun 29, 2026 — relationships are BBG estimates / company-disclosed, not a Mastercard statement. Grouping is editorial. Most top suppliers carry Bloomberg’s lowest default-risk grade (IG1).</div>';
+  h+='<div class="ov-foot">Vendor list and relationship sizes: Bloomberg SPLC (Supply Chain Analysis), MA US Equity, Suppliers, as of Oct 28 2026. Sizes and the share of Mastercard\u2019s cost are Bloomberg estimates (size source: BBG Estimate); the relationships themselves come from the counterparties\u2019 filings or company news, not from a Mastercard statement. Geography: 60 suppliers domiciled, 69 supplier facilities. Grouping is editorial.</div>';
   return h;
 }
 // ── Bottom Line ▸ Margins — profitability & cash margins as % of revenue. Sourced fallback

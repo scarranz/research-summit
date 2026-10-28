@@ -1394,16 +1394,16 @@ function maOwnBody(c){
     '<div class="ov-kpi"><div class="ov-kpi-l">FY25 buybacks</div><div class="ov-kpi-v">'+maB(a.v)+'</div><div class="ov-kpi-d muted">Street FY26E '+maB(buy[5].v)+'</div></div>'+
     '<div class="ov-kpi"><div class="ov-kpi-l">Buybacks \u00f7 free cash flow, FY25</div><div class="ov-kpi-v">'+(pct==null?'\u2014':pct+'%')+'</div><div class="ov-kpi-d muted">FCF '+maB(f.v)+'</div></div>'+
     '<div class="ov-kpi"><div class="ov-kpi-l">Diluted shares FY21\u2192FY25</div><div class="ov-kpi-v">\u2212'+shDrop+'%</div><div class="ov-kpi-d muted">'+Math.round(sh[0].v)+'M \u2192 '+Math.round(sh[4].v)+'M</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Dividends</div><div class="ov-kpi-v">\u2014</div><div class="ov-kpi-d muted">from the 10-K, not loaded yet</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Dividend per share, FY25</div><div class="ov-kpi-v">$3.04</div><div class="ov-kpi-d muted">+15% from $2.64 · $2.8B paid · $0.87 a quarter declared for 2026</div></div></div></div>'+
   '</div>';
   h+=sec('Capital returned vs free cash flow',
     '<div class="ov-chart-card"><div class="ov-chart-t">Share repurchases vs free cash flow <span>\u00b7 $B \u00b7 fiscal years \u00b7 FY26E = Bloomberg consensus</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="maChartCapital"></canvas></div></div>'+
     '<div class="ov-chart-card" style="overflow-x:auto;margin-top:10px"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:6px 10px">FY</th><th style="text-align:right;padding:6px 10px">Free cash flow</th><th style="text-align:right;padding:6px 10px">Buybacks</th><th style="text-align:right;padding:6px 10px">Buybacks \u00f7 FCF</th><th style="text-align:right;padding:6px 10px">Diluted shares</th></tr></thead><tbody>'+
       buy.map(function(r,i){ var fv=fcf[i].v; return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:800">'+esc(r.fy)+'</td><td style="text-align:right;padding:7px 10px">'+maB(fv)+'</td><td style="text-align:right;padding:7px 10px">'+maB(r.v)+'</td><td style="text-align:right;padding:7px 10px">'+((r.v&&fv)?Math.round(r.v/fv*100)+'%':'\u2014')+'</td><td style="text-align:right;padding:7px 10px">'+(sh[i].v==null?'\u2014':Math.round(sh[i].v)+'M')+'</td></tr>'; }).join('')+
     '</tbody></table></div>'+
-    '<div class="ov-fynote" style="margin-top:8px">Repurchases are shown as positive spend; the Bloomberg series arrives negative. An E marks the Street estimate for a year not yet reported.</div>');
+    '<div class="ov-fynote" style="margin-top:8px">Repurchases are shown as positive spend; the Bloomberg series arrives negative. An E marks the Street estimate for a year not yet reported. The 10-K reports $11.7B of repurchases in FY2025 (21.1M shares) and $2.8B of dividends, $14.5B returned in total; the Bloomberg repurchase line reads $12.0B.</div>');
   h+=sec('Executives & insider activity \u2014 live from Fiscal.ai','<div id="dd-mgmt-slot"></div>');
-  h+='<div class="ov-foot">Sources: free cash flow, repurchases and diluted shares from the Bloomberg consensus export (BBG_CONSENSUS.txt, snapshot 2026-10-28; reported actuals and the FY26 consensus). Dividends and the holder table come from the 10-K and the DEF 14A and are not loaded yet; insider activity is live from Fiscal.ai when the plan covers the company.</div>';
+  h+='<div class="ov-foot">Sources: free cash flow, repurchases and diluted shares from the Bloomberg consensus export (BBG_CONSENSUS.txt, snapshot 2026-10-28; reported actuals and the FY26 consensus). Dividends and the repurchase reconciliation from the FY2025 Form 10-K (Item 7); the holder table comes from the DEF 14A and is not loaded yet; insider activity is live from Fiscal.ai when the plan covers the company.</div>';
   return h;
 }
 function buildMaCapital(){

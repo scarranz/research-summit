@@ -3559,3 +3559,22 @@ img.org-photo { object-fit: cover; }
 .ov-googl-dd .gov-tbl td,.ov-googl-dd .gov-tbl th{text-align:left;white-space:normal;vertical-align:top}
 .ov-googl-dd .gov-tbl td:first-child{min-width:130px}
 .ov-googl-dd .gov-tbl td:nth-child(2){min-width:180px}
+
+/* Valuation ▸ Submit History (js/submits.js) — shared by every profile that mounts it */
+.dsh-blk .dsh-leg{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 8px}
+.dsh-blk .dsh-chartwrap{position:relative;height:360px;margin:2px 0 6px}
+.dsh-blk .dsh-ft{table-layout:fixed;min-width:640px}
+.dsh-blk .dsh-ft col.dsh-c0{width:240px}
+.dsh-blk .dsh-ft thead th{vertical-align:bottom;line-height:1.35}
+.dsh-blk .dsh-ft .dsh-sub{display:block;font-size:10px;font-weight:500;color:var(--mu);margin-top:2px}
+.dsh-blk .dsh-ft th.dsh-now,.dsh-blk .dsh-ft td.dsh-now{background:#F4F7FC}
+.dsh-blk .dsh-ft tr.dsh-sec td{background:#F7F9FB;font-size:10.5px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.04em;padding:8px 16px;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.dsh-blk .dsh-ft tbody tr.dsh-sec:first-child td{border-top:0}
+.dsh-blk .dsh-ft tbody tr.dsh-sec:hover td{background:#F7F9FB}
+.dsh-blk .dsh-ft .dsh-unit{font-weight:500;text-transform:none;letter-spacing:0;color:var(--mu);margin-left:8px}
+.dsh-blk .dsh-ft tr.rs-ft-main .rs-ft-h{font-weight:500}
+.dsh-blk .dsh-ft tr.dsh-key td{font-weight:700}
+.dsh-blk .dsh-ft tr.dsh-key .rs-ft-h{font-weight:700}
+.dsh-blk .dsh-ft tr.dsh-subrow td{font-size:11.5px;color:var(--mu)}
+.dsh-blk .dsh-ft tr.dsh-subrow .rs-ft-h{padding-left:28px}
+.dsh-blk .rs-ft-scroll{max-height:none}

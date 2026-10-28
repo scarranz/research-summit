@@ -76,7 +76,7 @@ If the analyst reviews the delivered profile later, log each request as `R<n>` i
   with `js/summit-map/<ticker>.js` and **frozen into a data file** whose header names the snapshot date
   and says "frozen on purpose, not live"; refresh it by re-pulling when a new snapshot is submitted.
   There is no live Summit feed (SAB, Oct 15 2026) — nothing waits on `get-summit-data`, and EV-EST,
-  VA-TM, VA-SENS are built in full. Filings and Bloomberg data live in data files with source + date.
+  VA-TM, VA-SUB, VA-SENS are built in full. Filings and Bloomberg data live in data files with source + date.
   If a live *market* path is not deployed yet, never seed numbers in the meantime: show
   `<div class="rs-noguide">⚑ Live data pending — <what></div>` and log it under "Conexiones pendientes".
 - For a new company, this playbook wins over `CLAUDE.md`, `/fill-overview` and the older docs.

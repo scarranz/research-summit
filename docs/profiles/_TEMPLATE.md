@@ -24,7 +24,7 @@
 | Summit DCF | | # snapshots, último periodo real de cada uno | Summit en Results/Estimates; Target Multiple; Sensitivity | |
 | Consenso BBG (`BBG_CONSENSUS.txt` + `Consensus_Portal.xlsm`) | | # snapshots, último `data_as_of` | `estMatrix.cons`, Setup, export de Bottom Line | sin consenso ni export (caso DHR) |
 | `get-market-history` (Massive) | | desplegada sí/no | Historic Multiple en vivo | Historic Multiple con "Live data pending" |
-| Valuación del modelo en el MCP (`get_valuation_history`) | | snapshot más reciente · ¿coincide con la hoja Output del workbook? · ¿confiable (quality_flags)? | Summit congelado en todo el perfil (regla 10): series Summit, EV-EST, VA-TM, VA-SENS | VA-TM sin múltiplo del modelo (⏭️) |
+| Valuación del modelo en el MCP (`get_valuation_history`) | | snapshot más reciente · ¿coincide con la hoja Output del workbook? · ¿confiable (quality_flags)? | Summit congelado en todo el perfil (regla 10): series Summit, EV-EST, VA-TM, VA-SUB, VA-SENS | VA-TM y VA-SUB sin múltiplo del modelo (⏭️) |
 | SPLC (clientes / proveedores) | | archivo, fecha | TL-CUS tabla, BL-SPLC | |
 | Transcripciones | | trimestres disponibles | EV-POST, EV-NOTES, citas | |
 | Fiscal.ai (plan) | | | tabla en vivo de Management | |
@@ -95,6 +95,7 @@ Modelo: `<ruta del .xlsm>` · moneda · escala · N snapshots (primero → últi
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
 | VA-PEERS | Valuation ▸ Peers | ⬜ | | | | |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
+| VA-SUB | Valuation ▸ Submit History | ⬜ | | | | |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | ⬜ | | | | |
 | MG-TEAM | Management ▸ Executives & Board | ⬜ | | | | |
 | MG-OWN | Management ▸ Ownership | ⬜ | | | | |

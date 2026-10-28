@@ -1335,32 +1335,43 @@ function ddRiskBody(c){
 //  currency-neutral, ex-acquisitions); it does NOT guide EPS. Bands are indicative
 //  mappings of MA's qualitative language ("low-teens" → 12–14%); delivered = reported
 //  cn ex-acq growth. Sourced from the quarterly calls (Q4-23 → Q1-26 provided). ──
-var MA_GQ=['Q1 24','Q2 24','Q3 24','Q4 24','Q1 25','Q2 25','Q3 25','Q4 25','Q1 26','Q2 26','Q3 26'];
+var MA_GQ=['Q2 21','Q3 21','Q4 21','Q1 22','Q2 22','Q3 22','Q4 22','Q1 23','Q2 23','Q3 23','Q4 23','Q1 24','Q2 24','Q3 24','Q4 24','Q1 25','Q2 25','Q3 25','Q4 25','Q1 26','Q2 26','Q3 26'];
 var MA_GUIDE={
   netrev:{ label:'Net-revenue growth', axis:'net-revenue growth (cn, ex-acq)',
-    glo:[10,10,12,13,13,13,12,12,10,10,12], ghi:[11,12,13,14,14,14,13,13,11,11,13],
-    words:['low end of low double-digits','low double-digits','high end of low double-digits','low teens','low teens','low teens','high end of low double-digits','high end of low double-digits','low end of low double-digits','low end of low double-digits (Middle East)','high end of low double-digits'],
-    act:[11,13,14,16,16,15,14,14,12,12,null],
-    note:'Delivered net-revenue growth (cn, ex-acquisitions) landed <b>above the guided band in 9 of the 10 reported quarters</b>; Q1 2024 landed inside it. The deliberate step down was the front of 2026: Q1 guided "low end of low double-digits" (delivered +12%), and Q2 was guided the same on the Middle East conflict, which hit lighter than feared (delivered +12%); management then moved the full-year guide <b>higher within</b> the "high end of low double-digits" range. Q3 2026 is guided to the high end of low double-digits (no actual yet).' },
+    glo:[21,25,21,18,18,18,15,10,12,10,10,10,10,12,13,13,13,12,12,10,10,12], ghi:[24,26,23,19,19,19,16,11,13,12,11,11,12,13,14,14,14,13,13,11,11,13],
+    words:['low-to-mid 20s','high end of mid-20s','low 20s','high end of high-teens','high end of high-teens','high end of high-teens','high end of mid-teens','low end of low double-digits','high end of low double-digits','low double-digits','low end of low double-digits','low end of low double-digits','low double-digits','high end of low double-digits','low teens','low teens','low teens','high end of low double-digits','high end of low double-digits','low end of low double-digits','low end of low double-digits (Middle East)','high end of low double-digits'],
+    act:[28,26,25,25,26,22,16,14,15,11,11,11,13,14,16,16,15,14,14,12,12,null],
+    note:'Net revenue has never landed below its guided band in the 21 quarters on file: <b>16 above it and 5 in its top half</b>. The step down from the 2021-22 reopening growth to low double-digits is in the guide itself, and the front of 2026 was the one place management guided deliberately low ("low end of low double-digits" for Q1 and Q2, delivered +12% both times). Q3 2026 is guided to the high end of low double-digits (no actual yet).' },
   opex:{ label:'Operating-expense growth', axis:'operating-expense growth (cn, ex-acq)',
-    glo:[8,10,10,12,10,10,10,10,8,10,10], ghi:[9,11,12,13,12,11,11,12,9,11,12],
-    act:[9,10,12,14,10,null,null,7,9,11,null],
-    words:['high end of high single-digits','low end of low double-digits','low double-digits','high end of low double-digits','low double-digits','low end of low double-digits','low end of low double-digits','low double-digits','high end of high single-digits','low end of low double-digits','low double-digits'],
-    note:'Mastercard guides opex growth <b>ex-acquisitions</b> and calls out acquisitions separately (4-5 PPT on 2025 opex growth from Recorded Future and Minna). Delivered = reported cn growth less the acquisition (or disposition) points stated on the call. Q4 2025 (+12% reported, 5 PPT from acquisitions, so about +7% ex-acquisitions) came in below the band; the call attributes about 5.5 PPT of the quarter’s opex growth to the full-year effect of the 2025 equity grants. Q2 and Q3 2025 are not plotted: the transcripts give the acquisition contribution ambiguously ("a full ppt" against a guided 4-5 PPT).' },
+    glo:[21,15,10,8,7,12,10,7,12,8,7,8,10,10,12,10,10,10,10,8,10,10], ghi:[23,16,11,9,9,13,12,8,13,9,9,9,11,12,13,12,11,11,12,9,11,12],
+    act:[20,15,12,7,7,14,10,10,13,8,9,9,10,12,14,10,10,10,7,9,11,null],
+    words:['low 20s','high end of mid-teens','low end of low double-digits','high end of high single-digits','high single-digits','high end of low double-digits','low double-digits','low end of high single-digits','high end of low double-digits','high end of high single-digits','high single-digits','high end of high single-digits','low end of low double-digits','low double-digits','high end of low double-digits','low double-digits','low end of low double-digits','low end of low double-digits','low double-digits','high end of high single-digits','low end of low double-digits','low double-digits'],
+    note:'Opex is guided and delivered ex-acquisitions (the deals added 4-8 PPT to reported opex in 2021-22 and 4-5 PPT in 2025, stated separately each quarter). Delivered lands <b>inside or in the top half of the band in 14 of 21 quarters, above it in 4 and below it in 3</b>: Q2 2021, Q1 2022 and Q4 2025 (+7% ex-acquisitions; the call puts about 5.5 PPT of that quarter\u2019s opex growth on the full-year effect of the 2025 equity grants).' },
 };
+var MA_FY=[
+  ['FY 2022','Jan 2022','high end of high-teens','low end of low double-digits'],['','Apr 2022','high end of high-teens','high single-digits'],['','Jul 2022','low twenties','low end of low double-digits'],
+  ['FY 2023','Jan 2023','high end of low double-digits','high end of high single-digits'],['','Apr 2023','low teens','high end of high single-digits'],['','Jul 2023','low teens','high end of high single-digits'],
+  ['FY 2024','Jan 2024','high end of low double-digits','low end of low double-digits'],['','Apr 2024','high end of low double-digits','low end of low double-digits'],['','Jul 2024','high end of low double-digits','low end of low double-digits'],
+  ['FY 2025','Jan 2025','high end of low double-digits to low teens','low end of low double-digits'],['','Apr 2025','high end of low double-digits to low teens','low end of low double-digits'],['','Jul 2025','low teens','low end of low double-digits'],['','Oct 2025','low teens','low end of low double-digits'],
+  ['FY 2026','Jan 2026','high end of low double-digits','low end of low double-digits'],['','Apr 2026','high end of low double-digits','low double-digits'],['','Jul 2026','high end of low double-digits (higher within the range)','low double-digits']
+];
+function maFyBody(){
+  var rows=MA_FY.map(function(r){ return '<tr><td>'+(r[0]?'<b>'+esc(r[0])+'</b>':'')+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+esc(r[3])+'</td></tr>'; }).join('');
+  return '<div class="guid-tbl-wrap" style="margin-top:14px"><div class="ov-chart-t" style="margin-bottom:6px">Full-year guide, as it moved <span>· cn, ex-acq</span></div><table class="guid-tbl"><thead><tr><th>Year</th><th>Given</th><th>Net revenue growth</th><th>Operating expense growth</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
 var _maGuideMetric='netrev';
 function maGuidePct(v){ return v==null?'—':(v>0?'+':'')+v+'%'; }
-function maGuideColor(a,lo,hi){ if(a==null) return MA_STEEL; if(a>=hi) return MA_GREEN; if(a>=(lo+hi)/2) return MA_RED; if(a>=lo-0.4) return MA_RED; return '#C0392B'; }
+function maGuideColor(a,lo,hi){ if(a==null) return MA_STEEL; if(a>hi) return MA_GREEN; if(a>=lo) return MA_RED; return '#C0392B'; }
 function maGuideLand(a,lo,hi){ if(a==null) return { t:'current guide', c:'guid-mut' }; var mid=(lo+hi)/2;
-  if(a>=hi) return { t:'above range', c:'guid-up' }; if(a>=mid) return { t:'upper half', c:'' }; if(a>=lo-0.4) return { t:'in range', c:'' }; return { t:'below range', c:'guid-dn' }; }
+  if(a>hi) return { t:'above range', c:'guid-up' }; if(a>=mid) return { t:'upper half', c:'' }; if(a>=lo) return { t:'in range', c:'' }; return { t:'below range', c:'guid-dn' }; }
 function maGuideBody(c){
-  var h='<p class="ov-lede">Mastercard <b>does not guide EPS</b>. Each quarter it guides two things — <b>net-revenue growth</b> and <b>operating-expense growth</b>, both <b>currency-neutral and ex-acquisitions</b>. Switch metric, then read the <b>guided band vs what it delivered</b> (the dot); green = above the range. Bands are indicative mappings of Mastercard’s qualitative language ("low-teens" → ~12–14%).</p>';
+  var h='<p class="ov-lede">Mastercard <b>does not guide EPS</b>. Every quarter, and again for the full year, it guides two things — <b>net-revenue growth</b> and <b>operating-expense growth</b>, both <b>currency-neutral and ex-acquisitions</b>, in words, and the earnings deck reconciles each guide from GAAP growth to that basis. Switch metric, then read the <b>guided band vs what it delivered</b> (the dot); green = above the range. Bands are indicative numeric mappings of those words.</p>';
   h+='<div class="guid-pills">'+['netrev','opex'].map(function(k){ return '<button type="button" class="guid-pill'+(k===_maGuideMetric?' active':'')+'" data-maguidm="'+k+'">'+esc(MA_GUIDE[k].label)+'</button>'; }).join('')+'</div>';
   h+='<div id="maGuideLeg" style="margin-bottom:6px"></div>';
   h+='<div class="ov-chart-card"><div class="ov-chart-t" id="maGuideT"></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="maGuideChart"></canvas></div></div>';
   h+='<div class="ov-fynote" id="maGuideNote" style="margin-top:8px"></div>';
-  h+='<div class="guid-tbl-wrap" style="margin-top:12px"><div id="maGuideTbl"></div></div>';
-  h+='<div class="ov-foot">Sources: Mastercard quarterly earnings calls (CFO outlook, Q4 2023 – Q2 2026, transcripts). Mastercard guides in words, so the bands are an <b>indicative</b> numeric mapping: low end of low double-digits 10–11%, low double-digits 10–12%, high end of low double-digits 12–13%, low teens 13–14%, high end of high single-digits 8–9%. Delivered is the cn growth stated on the call, less the acquisition or disposition points. Q3 2026 shows the current guide (no actual yet). The 2021 – Q3 2023 quarters have no call transcript on file.</div>';
+  h+='<div class="guid-tbl-wrap" style="margin-top:12px"><div id="maGuideTbl"></div></div>'+maFyBody();
+  h+='<div class="ov-foot">Sources: Mastercard earnings presentations, Q1 2021 – Q2 2026 (Appendix B and C, the non-GAAP reconciliation of each outlook, row "Non-GAAP growth, currency-neutral, excluding acquisitions"). Delivered = currency-neutral growth in the earnings release less the acquisition or disposition points it states; the CFO outlook on the calls (Q4 2023 – Q2 2026) agrees with the decks. Mastercard guides in words, so the bands are an <b>indicative</b> mapping: low end of low double-digits 10–11%, low double-digits 10–12%, high end of low double-digits 12–13%, low teens 13–14%, mid-teens 14–16%, high-teens 17–19%, the 20s as stated, high end of high single-digits 8–9%, high single-digits 7–9%. Delivered values are rounded to the point, as the releases give them. Q3 2026 shows the current guide (no actual yet). The deck guides only the next quarter and the year in progress; the October full-year update for 2022, 2023 and 2024 is not in the table.</div>';
   return h;
 }
 function maGuideLegend(){
@@ -1400,7 +1411,7 @@ function renderMaGuideTable(){
 }
 function renderMaGuide(){
   var leg=document.getElementById('maGuideLeg'); if(leg) leg.innerHTML=maGuideLegend();
-  var t=document.getElementById('maGuideT'); if(t) t.innerHTML=esc(MA_GUIDE[_maGuideMetric].label)+' — guided range vs delivered <span>· per quarter · cn, ex-acq · Q3-26 = current guide</span>';
+  var t=document.getElementById('maGuideT'); if(t) t.innerHTML=esc(MA_GUIDE[_maGuideMetric].label)+' — guided range vs delivered <span>· per quarter · cn, ex-acq · Q3 26 = current guide</span>';
   var note=document.getElementById('maGuideNote'); if(note) note.innerHTML=MA_GUIDE[_maGuideMetric].note;
   buildMaGuideChart(); renderMaGuideTable();
 }

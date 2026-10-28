@@ -27,6 +27,7 @@ import { maResults } from './results-data/ma.js';
 import { maSetup } from './results-data/ma-setup.js';
 import { maTlGeneral } from './results-data/ma-tl.js';
 import { maBl } from './results-data/ma-bl.js';
+import { maDrivers } from './results-data/ma-drivers.js';
 import { uberResults, uberSetup } from './results-data/uber.js';
 import { metaResults } from './results-data/meta.js';
 import { sofiResults } from './results-data/sofi.js';
@@ -62,6 +63,7 @@ var RESULTS_DATA = {
   MA_SETUP: maSetup,
   MA_TLG: maTlGeneral,
   MA_BL: maBl,
+  MA_DRV: maDrivers,
   UBER: uberResults,
   UBER_SETUP: uberSetup,
   META: metaResults,

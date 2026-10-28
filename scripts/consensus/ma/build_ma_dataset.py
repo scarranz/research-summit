@@ -47,6 +47,24 @@ NOTES={
  'pvol':"Purchase volume across the network (NTWK_SPENDNG_VOL_PURCHSE), in USD millions: $2.4 trillion in Q2 2026. It is the spend that assessments are charged on.",
  'ptx':"Processed (switched) transactions (PAYMENT_PROCESSING_TRANS), in millions: a count, never a dollar amount. Bloomberg tags it USD / M; it is switched transaction volume.",
 }
+SUMNOTE={
+ 'pnr':"Summit (annual): the model's Payment Network line, which ties to the reported history; from 2027 the model holds it nearly flat (gross revenue less client incentives that grow faster), against Street growth, so read the Summit gap as the model's own assumption.",
+ 'vas':"Summit (annual): the model's VAS line, which ties to the reported history and grows about 23% a year to 2029.",
+ 'gross':"Summit (annual): the model's gross revenue; 2022 is left blank because the model carries a different gross-revenue basis that year.",
+ 'tp':"Summit (annual): the model's transaction processing assessments, ties to the reported history.",
+ 'oth':"Summit (annual): the model's other network assessments; 2022 is left blank (different basis).",
+ 'cinc':"Summit (annual): the model's client incentives, which ties to the reported history and keeps growing faster than gross revenue.",
+ 'opex':"Summit (annual): the model's operating expenses; the definition runs 1% to 2.5% above Bloomberg's history (the model includes the litigation provision), so the gap is partly a definition.",
+ 'ga':"Summit (annual): the model's G&A, ties to the reported history.",
+ 'am':"Summit (annual): the model's advertising and marketing, ties to the reported history.",
+ 'sbc':"Summit (annual): the model's stock-based compensation, ties to the reported history.",
+ 'lit':"Summit (annual): the model carries about $740M a year of litigation provisions from 2026, an assumption well above the Street's roughly $150M, so the Summit and Street lines differ by design.",
+ 'tax':"Summit (annual): the model's income tax expense, ties to the reported history.",
+ 'buyback':"Summit (annual): the model's buyback dollars, ties to the reported history.",
+ 'ptx':"Summit (annual): the model's switched transactions, ties to the reported history.",
+ 'pvol':"Summit (annual): the model's purchase volume (stored in $B, shown here in $M), ties to the reported history.",
+ 'eps':"Summit (annual): the model's EPS line (ADJ_EPS), which ties to Bloomberg's GAAP-comparable actual for 2022 to 2025 (FY2025 $16.52)."
+}
 PER_METRIC_LABEL={}
 GROUPS_Q=[
  ('top','Top Line','rev',[('Totals',['rev']),('Revenue build (gross to net)',['gross','dom','xb','tp','oth','cinc']),('Net revenue by segment',['pnr','vas']),('Volumes & transactions',['pvol','ptx'])]),
@@ -69,7 +87,7 @@ def metric_lines(key,P,getA,getC,withsum):
     L.append("          cons:   %s,"%arrfmt(c))
     L.append("          guideLo:%s,"%arrfmt([None]*len(P)))
     L.append("          guideHi:%s,"%arrfmt([None]*len(P)))
-    L.append("          note: '%s' },"%esc(NOTES[key]))
+    L.append("          note: '%s' },"%esc(NOTES[key]+((' '+SUMNOTE[key]) if (withsum and key in SUMNOTE) else '')))
     return "\n".join(L)
 def sections_js(indent='      '):
     o=[indent+"sections: ["]
@@ -83,8 +101,8 @@ def sections_js(indent='      '):
 Pq=[ql(n) for n in Qn]; Py=[str(y) for y in Y]
 QN=("Reported actuals and the Bloomberg consensus that stood one quarter out, both from the rolling BBG_CONSENSUS.txt archive (23 snapshots, May 2021 to Oct 28 2026): each reported quarter takes the last snapshot before its print, and the four forward quarters come from the newest snapshot. "
     "Mastercard guides growth rates (currency-neutral, ex-acquisitions), not dollar levels, so no guidance band is drawn. The Summit model is annual-only, so its column is blank here. Capex and share repurchases are shown as positive spend; client incentives stay negative (contra-revenue). For 2026 the Street quarters tie to the Street year within about 0.2% on revenue, operating income, EBITDA, net income, D&A and operating cash flow (3% on capex), but each cell is still its own contributor set, so do not add or subtract across lines.")
-YN=("Fiscal-year actuals (the archive's fy0) and the Street's full-year consensus (fy+1 to fy+3 from the newest snapshot), with the Summit DCF model's own annual line (2022 to 2029) on the lines the model carries: revenue, operating income, EBITDA, net income, D&A, interest expense, operating cash flow, capex, free cash flow and diluted shares. "
-    "Summit's operating income and EBITDA definitions can differ from Bloomberg's (the model's own lines, not a restatement); the Summit model has no annual EPS.")
+YN=("Fiscal-year actuals (the archive's fy0) and the Street's full-year consensus (fy+1 to fy+3 from the newest snapshot), with the Summit DCF model's own annual line (2022 to 2029) on the lines the model carries: from the Projection History tab revenue, operating income, EBITDA, net income, D&A, interest expense, operating cash flow, capex, free cash flow and diluted shares; from the Segments tab adjusted EPS, Payment Network and VAS net revenue, the gross-to-net revenue build, operating expenses, G&A, advertising and marketing, stock-based comp, litigation, tax, repurchases, purchase volume and switched transactions. "
+    "Summit's operating income and EBITDA definitions can differ from Bloomberg's (the model's own lines, not a restatement), and the model's operating expenses run 1% to 2.5% above Bloomberg's history; the model's EPS line ties to Bloomberg's actual.")
 out=[]
 out.append("""// results-data/ma.js — Mastercard (MA) dataset for the standardized "Results" tab.
 // Rebuilt on the playbook format (docs/PROFILE_PLAYBOOK.md §9, EV-RES-DATA, Oct 28 2026; build log docs/profiles/MA.md),
@@ -95,9 +113,11 @@ out.append("""// results-data/ma.js — Mastercard (MA) dataset for the standard
 //   cons    — Bloomberg consensus (BBG_CONSENSUS.txt). The estMatrix block at the foot is GENERATED by scripts/consensus/emit_matrix.py
 //             with map_ma.json and spliced by apply_matrix.py; the flat `cons` arrays carry what the engine reads from the matrix for
 //             each print (the last snapshot before it) and, for the four forward quarters, the newest snapshot (10/28/2026).
-//   summit  — the Summit DCF model's own ANNUAL line, FROZEN on purpose (playbook rule 10): DCF MA - New.xlsm, tab Projection History,
-//             read 2026-10-28. The model has no quarterly projections, so quarterly summit stays null. Lines carried: revenue,
-//             operating income, EBITDA, net income, D&A, interest expense, CFO, capex (positive), FCF, diluted shares.
+//   summit  — the Summit DCF model's own ANNUAL line, FROZEN on purpose (playbook rule 10): DCF MA - New.xlsm, read 2026-10-28.
+//             Tab Projection History: revenue, operating income, EBITDA, net income, D&A, interest expense, CFO, capex (positive), FCF,
+//             diluted shares. Tab Segments: EPS, Payment Network and VAS, the gross-to-net revenue build, operating expenses, G&A,
+//             advertising and marketing, SBC, litigation, tax, repurchases, purchase volume and switched transactions (25 lines in all;
+//             the model's history ties to the Bloomberg actuals). The model has no quarterly projections, so quarterly summit stays null.
 //   guideLo / guideHi — null: Mastercard guides growth rates, not dollar levels.
 //
 // Integrity checked on load: fq+N == fq0+N, fq-3 == fq0-3 and every close_fqN is that quarter's calendar end (23 snapshots, 0 mismatches).

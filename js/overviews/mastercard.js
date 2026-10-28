@@ -14,6 +14,7 @@
 import { makeManagement } from './management.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { maCeHtml, maCeWire, maCeBuild, maCePop } from './ma-ce.js';   // Evolution ▸ Earnings (playbook machinery + ./ma-ce-data.js)
+import { MA_SENS_MODEL } from './ma-sensitivity-data.js';   // Valuation ▸ Sensitivity: frozen Summit model snapshot
 
 // The live company object (id + ticker), captured in html()/deepDiveHtml(), so the Watch List
 // can mount the shared engine against this company's Supabase rows. Same pattern as uber.js.
@@ -1518,31 +1519,38 @@ function ceResultsPending(label){
 //  Valuation ▸ Sensitivity — a multi-driver model (SoFi pattern). Turn Mastercard’s
 //  revenue algorithm into an EPS and an implied price. Base ≈ FY26E. Live price via
 //  api.liveQuote overrides the anchor. All drivers flex from the base case. ──
-var MA_SENS_BASE={
-  netBase:18.5,   // FY25 payment-network net revenue ($B), ~58% of net rev
-  vasBase:13.4,   // FY25 value-added-services net revenue ($B), ~42%
-  shares:905,     // diluted shares (M)
-  netToOp:0.79,   // net income ÷ operating income (≈44.6/56.6)
-  pxFallback:519  // dated market anchor (~$470B mkt cap ÷ ~905M sh); overridden by the live price
-};
 var MA_SENS_DRIVERS=[
-  { k:'gnet', label:'Payment-network growth', unit:'%', min:3, max:15, step:0.5, base:9,  hint:'GDV × cross-border × net yield, blended' },
-  { k:'gvas', label:'Value-added services growth', unit:'%', min:6, max:28, step:1, base:18, hint:'the high-teens growth engine' },
-  { k:'opm',  label:'Operating margin', unit:'%', min:52, max:62, step:0.5, base:57, hint:'guided ≥55% floor' },
-  { k:'buy',  label:'Net share reduction (buyback)', unit:'%', min:0, max:4, step:0.25, base:2, hint:'~$14.5B/yr program' },
-  { k:'pe',   label:'P/E (re-rate)', unit:'×', min:20, max:40, step:0.5, base:31, hint:'premium duopoly multiple' },
+  { k:'gnet', label:'Payment Network growth', unit:'%', min:-10, max:20, step:0.5, hint:'net revenue after client incentives, versus the year before' },
+  { k:'gvas', label:'Value-added services growth', unit:'%', min:5, max:35, step:1, hint:'versus the year before' },
+  { k:'opm',  label:'Operating margin', unit:'%', min:50, max:65, step:0.5, hint:'operating income as a share of net revenue' },
+  { k:'buy',  label:'Net share reduction (buyback)', unit:'%', min:0, max:6, step:0.25, hint:'fall in ending diluted shares versus the year before' },
+  { k:'pe',   label:'P/E on the model EPS', unit:'×', min:15, max:45, step:0.5, hint:'starts at the market multiple on the model EPS when the live price is in' },
 ];
-var _maSens={}; MA_SENS_DRIVERS.forEach(function(d){ _maSens[d.k]=d.base; });
-var _maLivePx=null;
+var _maSens={}, _maSensY=2027, _maSensPeTouched=false, _maLivePx=null;
+function maSensIdx(y){ return MA_SENS_MODEL.years.indexOf(y); }
+function maSensBase(y){
+  var M=MA_SENS_MODEL, i=maSensIdx(y), p=i-1;
+  var rev=M.pnr[i]+M.vas[i];
+  return { gnet:(M.pnr[i]/M.pnr[p]-1)*100, gvas:(M.vas[i]/M.vas[p]-1)*100, opm:M.opinc[i]/rev*100, buy:(1-M.sh[i]/M.sh[p])*100,
+           ni2op:M.ni[i]/M.opinc[i], pnrPrev:M.pnr[p], vasPrev:M.vas[p], shPrev:M.sh[p], eps:M.eps[i], rev:rev };
+}
+function maSensSnap(v,d){ return Math.round(v/d.step)*d.step; }
+function maSensFmt(v){ return (Math.round(v*100)/100)+''; }
+function maSensReset(){
+  var B=maSensBase(_maSensY); _maSensPeTouched=false;
+  MA_SENS_DRIVERS.forEach(function(d){
+    if(d.k==='pe'){ _maSens.pe=_maLivePx?maSensSnap(_maLivePx/B.eps,d):30; return; }
+    _maSens[d.k]=Math.max(d.min,Math.min(d.max,B[d.k])); });
+}
+maSensReset();
 function maSensCompute(){
-  var s=_maSens, B=MA_SENS_BASE;
-  var netRev = B.netBase*(1+s.gnet/100) + B.vasBase*(1+s.gvas/100); // $B
+  var s=_maSens, B=maSensBase(_maSensY);
+  var netRev = B.pnrPrev*(1+s.gnet/100) + B.vasPrev*(1+s.gvas/100);   // $B
   var opInc  = netRev*(s.opm/100);
-  var netInc = opInc*B.netToOp;                                     // $B
-  var shares = B.shares*(1-s.buy/100);                              // M
-  var eps    = (netInc*1000)/shares;                               // $
-  var price  = eps*s.pe;
-  return { netRev:netRev, opInc:opInc, netInc:netInc, eps:eps, price:price };
+  var netInc = opInc*B.ni2op;                                          // $B
+  var shares = B.shPrev*(1-s.buy/100);                                 // M
+  var eps    = (netInc*1000)/shares;                                   // $
+  return { netRev:netRev, opInc:opInc, netInc:netInc, eps:eps, price:eps*s.pe, modelEps:B.eps };
 }
 function maSensBody(c){
   var h='<style>.msn-wrap{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;margin-top:6px}@media(max-width:820px){.msn-wrap{grid-template-columns:1fr}}'+
@@ -1557,34 +1565,44 @@ function maSensBody(c){
     '.msn-tile{border:1px solid var(--bdr);border-radius:11px;padding:12px 14px;text-align:center}.msn-tile-v{font-size:20px;font-weight:900;color:var(--navy)}.msn-tile-l{font-size:10.5px;color:var(--mu);margin-top:2px}'+
     '.msn-price{grid-column:1 / -1;border-top:3px solid '+MA_RED+';background:rgba(207,10,44,0.05)}.msn-price .msn-tile-v{font-size:26px;color:'+MA_RED+'}'+
     '.msn-up{font-size:12.5px;font-weight:800;margin-top:3px}.msn-reset{margin-top:12px;font-size:11px;font-weight:800;color:'+MA_RED+';background:none;border:1px solid '+MA_RED+';border-radius:8px;padding:6px 12px;cursor:pointer}</style>';
-  h+='<p class="ov-lede">Mastercard doesn’t guide EPS — so here’s the model that turns its <b>revenue algorithm</b> into one. Move any driver; the equation, the KPI tiles and the <b>implied price</b> (EPS × P/E) recompute live and compare to the market price. Base case ≈ <b>FY26E</b>.</p>';
+  var M=MA_SENS_MODEL, dcfToday=M.dcf.intrinsic.filter(function(x){ return x[0]==='Today'; })[0];
+  h+='<p class="ov-lede">Mastercard doesn\u2019t guide EPS, so this turns its <b>revenue algorithm</b> into one. Pick a year, move any driver and the equation, the tiles and the <b>implied price</b> (EPS \u00d7 P/E) recompute. Every driver starts at what the <b>Summit model</b> has for that year, so the base case reproduces the model\u2019s EPS.</p>';
+  h+='<div class="msn-years" id="maSensYears" style="display:flex;gap:6px;margin:0 0 12px">'+[2026,2027,2028,2029].map(function(y){
+    return '<button type="button" class="msn-yr'+(y===_maSensY?' on':'')+'" data-masy="'+y+'" style="font:inherit;font-size:11px;font-weight:800;padding:5px 12px;border-radius:999px;border:1px solid var(--bdr);background:'+(y===_maSensY?'var(--navy)':'var(--w)')+';color:'+(y===_maSensY?'#fff':'var(--mu)')+';cursor:pointer">FY'+y+'E</button>'; }).join('')+'</div>';
   h+='<div class="msn-wrap"><div id="maSensDrivers">'+MA_SENS_DRIVERS.map(function(d){
-      return '<div class="msn-drv"><div class="msn-drl"><span class="msn-dn">'+esc(d.label)+'</span><span class="msn-dv" id="maSensV-'+d.k+'">'+d.base+d.unit+'</span></div>'+
-        '<input type="range" class="msn-slider" id="maSens-'+d.k+'" min="'+d.min+'" max="'+d.max+'" step="'+d.step+'" value="'+d.base+'">'+
-        '<div class="msn-dh">'+esc(d.hint)+' · base '+d.base+d.unit+'</div></div>'; }).join('')+
-      '<button type="button" class="msn-reset" id="maSensReset">↺ Reset to base case</button></div>'+
+      return '<div class="msn-drv"><div class="msn-drl"><span class="msn-dn">'+esc(d.label)+'</span><span class="msn-dv" id="maSensV-'+d.k+'">'+maSensFmt(_maSens[d.k])+d.unit+'</span></div>'+
+        '<input type="range" class="msn-slider" id="maSens-'+d.k+'" min="'+d.min+'" max="'+d.max+'" step="'+d.step+'" value="'+_maSens[d.k]+'">'+
+        '<div class="msn-dh">'+esc(d.hint)+'</div></div>'; }).join('')+
+      '<button type="button" class="msn-reset" id="maSensReset">\u21ba Reset to the Summit model</button></div>'+
     '<div><div class="msn-eq" id="maSensEq"></div><div class="msn-tiles" id="maSensTiles"></div></div></div>';
-  h+='<div class="ov-fynote" style="margin-top:14px"><b>How it chains:</b> network + VAS revenue → operating income (× margin) → net income (× 0.79 net/op) → EPS (÷ shares, net of buyback) → <b>price = EPS × P/E</b>. Illustrative, not a Mastercard forecast; net/op ratio, share count and segment split are FY2025 anchors.</div>';
-  h+='<div class="ov-foot">Anchors from Mastercard FY2025 results (net-revenue split ~58/42 network/VAS; ~905M diluted shares; net/op ≈ 0.79). Live price via Massive; P/E base ~31× is a mid-2026 premium-duopoly multiple. All outputs are model estimates.</div>';
+  h+='<div class="ov-fynote" style="margin-top:14px"><b>How it chains:</b> last year\u2019s Payment Network and VAS revenue grown by the two drivers \u2192 operating income (\u00d7 margin) \u2192 net income (\u00d7 the model\u2019s net-to-operating ratio) \u2192 EPS (\u00f7 ending shares, net of buyback) \u2192 <b>price = EPS \u00d7 P/E</b>. The Summit model has Payment Network almost flat after 2026 (client incentives grow faster than gross revenue), so that driver starts near zero: it is the model\u2019s assumption, not a forecast of the network. '+
+    'The Summit DCF itself values the shares at <b>$'+Math.round(dcfToday[1])+'</b> today (WACC '+(M.dcf.wacc*100).toFixed(1)+'%, terminal '+M.dcf.terminalEvEbitda+'\u00d7 EV/EBITDA) against a workbook price of $'+M.dcf.workbookPrice.toFixed(2)+'. The target multiple of the model lives in the Summit MCP and is not in the workbook, so the P/E starts at the market multiple instead.</div>';
+  h+='<div class="ov-foot">'+esc(M.src)+'. Live price via Massive when the call responds; no price is written into this file. All outputs are model estimates.</div>';
   return h;
 }
 function maSensRender(root){
   root=root||document; var r=maSensCompute();
-  var px=_maLivePx||MA_SENS_BASE.pxFallback;
-  var up=(r.price/px-1)*100, upCol=up>=0?'#0F9D58':'#C0392B';
+  if(_maLivePx && !_maSensPeTouched){ var d=MA_SENS_DRIVERS.filter(function(x){ return x.k==='pe'; })[0], nv=maSensSnap(_maLivePx/r.modelEps,d); if(nv!==_maSens.pe){ _maSens.pe=nv; r=maSensCompute(); var el=root.querySelector('#maSens-pe'); if(el) el.value=nv; var vv=root.querySelector('#maSensV-pe'); if(vv) vv.textContent=nv+'\u00d7'; } }
+  var px=_maLivePx, up=px?(r.price/px-1)*100:null, upCol=(up!=null&&up>=0)?'#0F9D58':'#C0392B';
   var eq=root.querySelector('#maSensEq');
-  if(eq) eq.innerHTML='Net revenue <b>$'+r.netRev.toFixed(1)+'B</b> → operating income <b>$'+r.opInc.toFixed(1)+'B</b> → net income <b>$'+r.netInc.toFixed(1)+'B</b> → EPS <b>$'+r.eps.toFixed(2)+'</b> → price = EPS × P/E = <b>$'+Math.round(r.price)+'</b>';
+  if(eq) eq.innerHTML='Net revenue <b>$'+r.netRev.toFixed(1)+'B</b> \u2192 operating income <b>$'+r.opInc.toFixed(1)+'B</b> \u2192 net income <b>$'+r.netInc.toFixed(1)+'B</b> \u2192 EPS <b>$'+r.eps.toFixed(2)+'</b> \u2192 price = EPS \u00d7 P/E = <b>$'+Math.round(r.price)+'</b>';
   var tiles=root.querySelector('#maSensTiles');
   if(tiles) tiles.innerHTML=
     '<div class="msn-tile"><div class="msn-tile-v">$'+r.netRev.toFixed(1)+'B</div><div class="msn-tile-l">Net revenue</div></div>'+
-    '<div class="msn-tile"><div class="msn-tile-v">$'+r.eps.toFixed(2)+'</div><div class="msn-tile-l">EPS (model)</div></div>'+
-    '<div class="msn-tile msn-price"><div class="msn-tile-l" style="margin-bottom:2px">Implied price</div><div class="msn-tile-v">$'+Math.round(r.price)+'</div><div class="msn-up" style="color:'+upCol+'">'+(up>=0?'+':'')+up.toFixed(1)+'% vs $'+Math.round(px)+(_maLivePx?' live':' est')+'</div></div>';
+    '<div class="msn-tile"><div class="msn-tile-v">$'+r.eps.toFixed(2)+'</div><div class="msn-tile-l">EPS (this case) \u00b7 Summit model $'+r.modelEps.toFixed(2)+'</div></div>'+
+    '<div class="msn-tile msn-price"><div class="msn-tile-l" style="margin-bottom:2px">Implied price</div><div class="msn-tile-v">$'+Math.round(r.price)+'</div>'+
+      (px?'<div class="msn-up" style="color:'+upCol+'">'+(up>=0?'+':'')+up.toFixed(1)+'% vs $'+Math.round(px)+' live</div>':'<div class="msn-up" style="color:var(--mu)">\u2691 Live price pending: no upside shown</div>')+'</div>';
 }
 function maSensInit(root){
   root=root||document;
+  function paint(){ MA_SENS_DRIVERS.forEach(function(d){ var el=root.querySelector('#maSens-'+d.k); if(el) el.value=_maSens[d.k]; var v=root.querySelector('#maSensV-'+d.k); if(v) v.textContent=maSensFmt(_maSens[d.k])+d.unit; }); }
   MA_SENS_DRIVERS.forEach(function(d){ var el=root.querySelector('#maSens-'+d.k); if(!el) return;
-    el.oninput=function(){ _maSens[d.k]=parseFloat(el.value); var v=root.querySelector('#maSensV-'+d.k); if(v) v.textContent=el.value+d.unit; maSensRender(root); }; });
-  var rb=root.querySelector('#maSensReset'); if(rb) rb.onclick=function(){ MA_SENS_DRIVERS.forEach(function(d){ _maSens[d.k]=d.base; var el=root.querySelector('#maSens-'+d.k); if(el) el.value=d.base; var v=root.querySelector('#maSensV-'+d.k); if(v) v.textContent=d.base+d.unit; }); maSensRender(root); };
+    el.oninput=function(){ _maSens[d.k]=parseFloat(el.value); if(d.k==='pe') _maSensPeTouched=true; var v=root.querySelector('#maSensV-'+d.k); if(v) v.textContent=el.value+d.unit; maSensRender(root); }; });
+  var rb=root.querySelector('#maSensReset'); if(rb) rb.onclick=function(){ maSensReset(); paint(); maSensRender(root); };
+  root.querySelectorAll('#maSensYears [data-masy]').forEach(function(b){ b.onclick=function(){
+    _maSensY=parseInt(b.getAttribute('data-masy'),10); maSensReset();
+    root.querySelectorAll('#maSensYears [data-masy]').forEach(function(x){ var on=(x===b); x.classList.toggle('on',on); x.style.background=on?'var(--navy)':'var(--w)'; x.style.color=on?'#fff':'var(--mu)'; });
+    paint(); maSensRender(root); }; });
   maSensRender(root);
 }
 
@@ -1711,12 +1729,14 @@ function deepDiveHtml(c){
   h+='<div class="dd-pane" data-dd="topline">'+
     '<div class="ovt-subtabs">'+
       '<button type="button" class="ovt-subtab active" data-ovst="segov">General</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="segdrv">Drivers</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="customers">Customers</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="tam">TAM</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="industry">Industry Analysis</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="segov">'+resultsHtml('MA_TLG')+'</div>'+
+    '<div class="ovt-subpane" data-ovst="segdrv" hidden>'+resultsHtml('MA_DRV')+'</div>'+
     '<div class="ovt-subpane" data-ovst="segments" hidden>'+ddSegmentsBody(c)+'</div>'+
     '<div class="ovt-subpane" data-ovst="customers" hidden>'+ddCustomersBody(c)+'</div>'+
     '<div class="ovt-subpane" data-ovst="tam" hidden>'+ddTamBody(c)+'</div>'+
@@ -1828,6 +1848,7 @@ function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.
 function activeSubKey(root, group){ var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return null; var b=pane.querySelector('.ovt-subtab.active'); return b?b.getAttribute('data-ovst'):null; }
 function buildSub(root, group, key){
   if(group==='topline' && key==='segov') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="segov"] .rs-wrap'), 'MA_TLG'); });
+  if(group==='topline' && key==='segdrv') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="segdrv"] .rs-wrap'), 'MA_DRV'); });
   if(group==='bottomline' && key==='blgen') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="blgen"] .rs-wrap'), 'MA_BL'); });
   if(group==='bottomline' && key==='margins') buildMaMargins();
   if(group==='evolution' && key==='earnings') maCeBuild(root);

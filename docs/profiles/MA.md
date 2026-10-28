@@ -14,7 +14,7 @@
 | Rama | `feat/mastercard-remitly` (PR draft #153; worktree `research-summit-mastercard`) |
 | Analista responsable | Dani (DOAA351) |
 | Inicio | 2026-07-30 (remediación de Earnings) · reconstrucción 2026-10-28 |
-| Avance | 0 de 8 unidades aprobadas · 8 en revisión · 1 omitida (EV-EST) |
+| Avance | 0 de 10 unidades aprobadas · 10 en revisión · 1 omitida (EV-EST) |
 
 ## 1. Inventario de datos (F0)
 
@@ -22,13 +22,13 @@
 |---|---|---|---|---|
 | Consenso BBG (`BBG_CONSENSUS.txt`) | Sí | 23 snapshots de `MA US EQUITY` (2021-05-04 → 2026-10-28), 50 slots de métrica y 50 de KPI por bloque, 22 métricas + 12 KPIs con valores para MA; layout estable en los 23; etiquetas de periodo y fechas de cierre sin desajustes | `estMatrix.cons`, Setup, Post-Results | — |
 | `Consensus_Portal.xlsm` (hoja `CONSENSUS`) | Sí (leída por `emit_matrix.py`) | misma unión de snapshots; sin filas solo-hoja | idem | — |
-| Summit DCF | Parcial | `G:\My Drive\Summit\Docs\Research\DCF\Payments - All\MA\DCF MA - New.xlsm`, pestaña Projection History: **solo anual** (2022–2029); sin proyecciones trimestrales | Summit anual en Results (10 líneas) | Summit trimestral; Estimates (necesita ≥ 2 snapshots del MCP) |
+| Summit DCF | Parcial | `G:\My Drive\Summit\Docs\Research\DCF\Payments - All\MA\DCF MA - New.xlsm`: pestañas Projection History y Segments (**solo anual**, 2018–2029; sin proyecciones trimestrales), Discounted Cash Flow y SOTP (valuación propia del modelo) | Summit anual en Results (25 líneas; la historia del modelo cuadra con los actuals de Bloomberg), Drivers, Sensitivity | Summit trimestral; Estimates (necesita ≥ 2 snapshots del MCP) |
 | MCP Summit | ⛔ | `/mcp` no logró autenticar el 2026-10-28 | snapshots por fecha, `estMatrix.summit`, `evolution` | Estimates, Road to the print del lado Summit |
 | Transcripciones | Sí | `docs/calls/MA-latest.md` (Q2 2026) y `MA.md` (Q1 2026, Q4 2025, Q3 2025, Q2 2025), verbatim | Post-Results, Notes | — |
 | Quartr | ⛔ | el conector pidió re-autenticar | cotejo de actuals contra filings | cotejo: se hizo contra lo dicho en las llamadas |
 | Filing / 8-K | No leído en esta pasada | los actuals son los de Bloomberg (`fq0`), cotejados con las cifras de la llamada (ingresos $9,277M, EPS $4.97 vs $5.04 ajustado, VAS $3,826M, etc.) | — | cuadre contra el 8-K: pendiente |
 
-**Alcance acordado:** Earnings (Setup · Post-Results · Notes), Results, y las sub-tabs General de Top Line y Bottom Line (mismo dataset de Results). Estimates ⏭️ (ver §7). Valuation, Management y Miscellaneous no se tocaron en esta pasada.
+**Alcance acordado:** Earnings (Setup · Post-Results · Notes), Results, y las sub-tabs General de Top Line y Bottom Line (mismo dataset de Results). Estimates ⏭️ (ver §7). De Valuation solo Sensitivity (con el DCF). Historic Multiple (necesita `get-market-history`), Peers, Target Multiple (el múltiplo objetivo y el precio objetivo viven en la hoja Output del modelo, que solo llega por el MCP), Management y Miscellaneous no se tocaron.
 
 ## 2. Tablero de unidades
 
@@ -41,6 +41,8 @@
 | EV-NOTES | Notes (`js/themes-data/ma.js`, versión 2) | 👀 2026-10-28 | 6 ejes, 15 hilos; 2 ganchos cerrados; notas de Q3 2025 agregadas (migración de Capital One, cross-border, recompras) |
 | TL-GEN | Top Line ▸ General (`results-data/ma-tl.js`: net revenue, segments Payment Network and VAS, revenue build, volumes and transactions; motor `results.js`, registro `MA_TLG`) | 👀 2026-10-28 | las sub-tabs Segments, Customers, TAM e Industry Analysis existentes se conservan |
 | BL-GEN | Bottom Line ▸ General (`results-data/ma-bl.js`: rentabilidad y márgenes, costos y debajo de la línea, flujo de caja y capital; registro `MA_BL`) | 👀 2026-10-28 | Unit Economics, Suppliers y Margins existentes se conservan; sin costo de ventas ni utilidad bruta (MA no los tiene) |
+| TL-DRV | Top Line ▸ Drivers (`results-data/ma-drivers.js`, generado por `scripts/consensus/ma/build_ma_drivers.py` desde la pestaña Segments del DCF: tarjetas, volumen de compra por región y producto, transacciones conmutadas, plantilla, yield; historia del modelo 2018–2025 + proyección Summit 2026–2029, anual) | 👀 2026-10-28 | registro `MA_DRV`; el modelo no trae consenso ni guía para estas series |
+| VA-SENS | Valuation ▸ Sensitivity re-basada en el snapshot congelado del DCF (`ma-sensitivity-data.js`, generado por `build_ma_sensitivity.py`): año base FY26E–FY29E, cada driver arranca en el valor del modelo y el caso base reproduce el EPS del modelo ($21.99 en FY27E) | 👀 2026-10-28 | el P/E arranca en el múltiplo de mercado sobre el EPS del modelo cuando llega el precio en vivo (sin múltiplo ni precio escritos); la valuación del propio DCF (WACC 11.0%, terminal 14× EV/EBITDA, $417 por acción hoy) va en el pie, no como default |
 | EV-EST | Estimates | ⏭️ | requiere ≥ 2 snapshots del MCP Summit; la pestaña no se publica (regla 5) |
 
 ## 3. Decisiones
@@ -113,5 +115,6 @@ Summit no tiene trimestres, así que no hay cuadre trimestral del lado Summit (r
 
 ## 8. Historial de aprobaciones (solo se agrega)
 
+- 2026-10-28 (3.ª pasada, solo con el DCF; Dani: "quédate con lo del DCF") · Summit anual ampliado de 10 a 25 líneas con la pestaña Segments (EPS, Payment Network, VAS, bruto a neto, opex, G&A, A&M, SBC, litigio, impuestos, recompras, volumen, transacciones; cuadre de la historia del modelo contra Bloomberg 0.0% salvo opex +1.4% a +2.5% y pre-tax −1.8%, que se dejaron fuera o se anotaron) · Top Line ▸ Drivers · Valuation ▸ Sensitivity re-basada · las filas de dominio y cross-border de la pestaña Segments se dejaron fuera porque el modelo las proyecta en cero desde 2027 · el modelo trae litigio de ~$740M al año contra ~$150M del Street y Payment Network casi plano después de 2026: está dicho en las notas de cada línea.
 - 2026-10-28 (2.ª pasada) · EV-POST ampliado a Q3 2025 (setup con la guía de la llamada de Q2 2025, notas por línea, 8 remarks, 10 preguntas con citas, 5 highlights, 4 preguntas nuevas); notas de las tarjetas de EPS aclaran que el crecimiento de la tarjeta es nominal sobre las líneas de Bloomberg y el de la llamada es non-GAAP a moneda constante · TL-GEN y BL-GEN agregados.
 - 2026-10-28 · todas las unidades · 👀 en revisión (sin compuerta; instrucción explícita de Dani de ejecutar) · se mostró: capturas del harness local de Setup, Post-Results (Q2 2026), Notes y Results · fuentes: `BBG_CONSENSUS.txt` (snapshot 2026-10-28), `DCF MA - New.xlsm`, `docs/calls/MA-latest.md` y `MA.md` · scripts: `scripts/consensus/map_ma.json`, `scripts/consensus/ma/build_ma_dataset.py`.

@@ -124,6 +124,26 @@ for key,code in SM.items():
         if not isinstance(v,(int,float)) or v==0 or y<2022: arr.append(None)
         else: arr.append(int(math.floor(abs(v)+0.5)) if key!='shares' else int(math.floor(v+0.5)))
     summit[key]=arr
+# ---- Summit model operating build (same workbook, tab Segments; annual 2018-2029, model actuals through 2025 tie to the Bloomberg actuals)
+SEGR=list(wb['Segments'].iter_rows(max_col=20,values_only=True))
+SEGCOL={2029:5,2028:6,2027:7,2026:8,2025:9,2024:10,2023:11,2022:12}
+def segrow(code=None,label=None):
+    for r in SEGR:
+        if code is not None and r[3]==code: return r
+        if label is not None and r[2]==label and not r[3]: return r
+    raise SystemExit('Segments row not found: %s%s'%(code,label))
+SEG={'pnr':('SEG1_REV',None,1,False),'vas':('SEG2_REV',None,1,False),'gross':('SEG3_REV',None,1,True),'tp':('SEG6_REV',None,1,False),
+     'oth':('SEG7_REV',None,1,True),'cinc':('SEG8_REV',None,1,False),'opex':('OPEX',None,1,False),'ga':('G&A',None,1,False),'am':('MARKETING',None,1,False),
+     'sbc':('SEG_SBC',None,1,False),'lit':('PROV_LIT',None,1,False),'tax':('SEG_INCTAX',None,1,False),'buyback':('STOCK_BUYBACK',None,-1,False),
+     'ptx':('SWITCH_TRANS',None,1,False),'pvol':(None,'Purchase Volume',1000,False),'eps':('ADJ_EPS',None,1,False)}
+for key,(code,label,mult,skip22) in SEG.items():
+    r=segrow(code,label); arr=[]
+    for y in Y:
+        v=r[SEGCOL[y]] if y in SEGCOL else None
+        if not isinstance(v,(int,float)) or y<2022 or (skip22 and y==2022): arr.append(None)
+        elif key=='eps': arr.append(round(v,2))
+        else: arr.append(int(math.floor(abs(v*mult) if key=='buyback' else v*mult+0.5)))
+    summit[key]=arr
 def rnd(x,dp):
     if x is None: return None
     f=10**dp; r=math.floor(abs(x)*f+0.5)/f

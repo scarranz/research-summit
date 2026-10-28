@@ -200,6 +200,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | VA-HIST | Valuation ▸ Historic Multiple | 👀 | 2026-10-26 | | | solo P/E (forward y trailing); precio en vivo: depende de `get-market-history` |
 | VA-PEERS | Valuation ▸ Peers | 👀 | 2026-10-26 | | | mapa + tabla de números; mismo estado que el Overview |
 | VA-TM | Valuation ▸ Target Multiple / PEG | 👀 | 2026-10-26 | | | construido con la valuación del propio workbook `DCF SOFI.xlsm` (hoja Projection History, 3 submits: P/E 32× → 25× → 25×, EV/EBITDA 18× → 14.1× → 14.1×, año 2027); el MCP la tiene vacía (`valuation_count` 0) |
+| VA-SUB | Valuation ▸ Submit History | ⛔ | 2026-10-28 | | | sin valuación en el MCP: `get_valuation_history('SOFI')` → `no_valuations_for_ticker` (4 snapshots sin bloque de valuación). Se construye en cuanto Oscar procese la valuación |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | 👀 | 2026-10-26 | | | diseño propio de SoFi (LPB e interés neto), base del snapshot 2026-08-05, precio solo en vivo |
 | MG-TEAM | Management ▸ Executives & Board | 👀 | 2026-10-26 | | | 10 ejecutivos + 9 consejeros del perfil viejo, marcados "seeded, dated" |
 | MG-OWN | Management ▸ Ownership | ⬜ | | | | |

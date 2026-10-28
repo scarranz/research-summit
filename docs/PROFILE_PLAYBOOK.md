@@ -1820,7 +1820,7 @@ con qué supuestos?* (Decisión SAB, 28 oct 2026; piloto SPOT, rama `feat/dcf-su
      submit excluido. Pie (`.ov-foot`) con el modelo, las fechas de los submits, "frozen, not live — pulled
      <fecha>", y el precio de Massive en vivo.
 - **Datos — `js/submits-data/<t>.js`, congelado (regla 10):** `{ ticker, name, ccy, mccy, pulled, src,
-  submits:[…] }`. `ccy` = moneda del precio objetivo (la del precio de la acción); `mccy` = moneda del modelo.
+  submits:[…] }`. `ccy` = moneda del precio objetivo (la del precio de la acción); `mccy` = moneda del modelo. Opcional: `ebitdaLabel` (rótulo de la fila EBITDA; por default "Adj. EBITDA" — TSM usa "EBITDA").
   Por submit:
   - de `get_valuation_history`, tal cual: `d` (snapshot_date), `after` (after_quarter → "3Q26"), `px`
     (current_price), `wacc`, `coe`, y `val.ev` / `val.pe` con `method`, `kase`, `mult`, `year`, `basis`,
@@ -1828,7 +1828,7 @@ con qué supuestos?* (Decisión SAB, 28 oct 2026; piloto SPOT, rama `feat/dcf-su
   - de `get_metric_snapshot_series(metric, año)` — **solo las filas `projection_history`** (las
     `actuals_history` traen 0) —: `model[año] = { rev, opi, ebitda, ni, sh }` para el año objetivo y el
     anterior de cada método (con las métricas `core` del mapa F0-SM: ingreso, utilidad operativa, EBITDA
-    (el que usa el workbook en el bloque EV/EBITDA — en SPOT, `ADJ_EBITDA`), earnings, acciones).
+    (el que usa el workbook en el bloque EV/EBITDA — en SPOT, `ADJ_EBITDA`), earnings, acciones). Un valor que el MCP guarda en 0 se escribe `null` (la vista muestra — y no calcula su margen; TSM: OP_INCOME).
   - Lo que la vista calcula y **no** se escribe: crecimientos, márgenes, EPS = earnings ÷ acciones,
     crecimiento implícito = tasa − 1 ÷ múltiplo (la fórmula de las celdas *Growth* U45 / *Implied Growth*
     U79 del workbook).

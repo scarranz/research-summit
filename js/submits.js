@@ -15,8 +15,11 @@
 import { SUMMIT_MUTE, fade } from './viz-palette.js';
 import { fetchPriceHistory } from './api.js';
 import { spotSubmits } from './submits-data/spot.js';
+import { googlSubmits } from './submits-data/googl.js';
+import { metaSubmits } from './submits-data/meta.js';
+import { tsmSubmits } from './submits-data/tsm.js';
 
-var SUBMITS_DATA = { SPOT: spotSubmits };
+var SUBMITS_DATA = { SPOT: spotSubmits, GOOGL: googlSubmits, META: metaSubmits, TSM: tsmSubmits };
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -201,12 +204,12 @@ function assumptionsHtml(tk){
       { l:'Revenue', v:col(function(m){ return fmtM(D, m.rev); }) },
       { l:'Revenue growth', sub:true, v:col(function(m, p){ return gr(m.rev, p && p.rev); }) },
       { l:'Operating income', v:col(function(m){ return fmtM(D, m.opi); }) },
-      { l:'Operating margin', sub:true, v:col(function(m){ return m.rev ? fmtRate(m.opi/m.rev) : null; }) },
-      { l:'Adj. EBITDA', key:!isPE, v:col(function(m){ return fmtM(D, m.ebitda); }) },
-      { l:'EBITDA margin', sub:true, v:col(function(m){ return m.rev ? fmtRate(m.ebitda/m.rev) : null; }) },
+      { l:'Operating margin', sub:true, v:col(function(m){ return m.rev && m.opi!=null ? fmtRate(m.opi/m.rev) : null; }) },
+      { l:D.ebitdaLabel||'Adj. EBITDA', key:!isPE, v:col(function(m){ return fmtM(D, m.ebitda); }) },
+      { l:'EBITDA margin', sub:true, v:col(function(m){ return m.rev && m.ebitda!=null ? fmtRate(m.ebitda/m.rev) : null; }) },
       { l:'EBITDA growth', sub:true, v:col(function(m, p){ return gr(m.ebitda, p && p.ebitda); }) },
       { l:'Net income', v:col(function(m){ return fmtM(D, m.ni); }) },
-      { l:'Net margin', sub:true, v:col(function(m){ return m.rev ? fmtRate(m.ni/m.rev) : null; }) },
+      { l:'Net margin', sub:true, v:col(function(m){ return m.rev && m.ni!=null ? fmtRate(m.ni/m.rev) : null; }) },
       { l:'EPS', key:isPE, v:col(function(m){ return fmtEps(D, eps(m)); }) },
       { l:'EPS growth', sub:true, v:col(function(m, p){ return gr(eps(m), eps(p)); }) }
     ] }
@@ -269,8 +272,11 @@ function render(scope, tk){
   if(ab){
     ab.hidden=!st.asm;
     ab.innerHTML=assumptionsHtml(tk)+'<div class="ov-fynote">Implied perpetual growth = '+(legOf(tk).k==='pe'?'cost of equity':'WACC')+
-      ' − 1 ÷ multiple, the workbook’s own formula: the growth forever that the multiple prices in. Model figures are in '+
-      esc(D.mccy)+' as the model is built; the price targets above are in '+esc(D.ccy)+' (the workbook converts at its own rate), so EPS × multiple does not equal the target. Growth = target year over the year before, both from the same submit.</div>';
+      ' − 1 ÷ multiple, the workbook’s own formula: the growth forever that the multiple prices in. '+
+      (D.mccy!==D.ccy
+        ? 'Model figures are in '+esc(D.mccy)+' as the model is built; the price targets above are in '+esc(D.ccy)+' (the workbook converts at its own rate), so EPS × multiple does not equal the target. '
+        : 'EPS here is model earnings ÷ diluted shares; the workbook prices the target off its own per-share line, so EPS × multiple lands close to the target but not on it. ')+
+      'Growth = target year over the year before, both from the same submit.</div>';
     scope.querySelector('[data-dshasmb]').innerHTML = '<span class="rs-collap-ic">'+(st.asm?'▾':'▸')+'</span> What the target was built on <span class="rs-collap-sub">'+
       (st.asm?'hide':'show')+' · discount rate, implied growth and the model at the target year</span>';
   }

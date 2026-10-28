@@ -20,6 +20,7 @@ import { googlBlGeneralHtml, googlBlGeneralBuild, googlBlSegmentsHtml, googlBlSe
 import { googlSplcBody, googlSplcBuild, googlSplcPop } from './googl-splc.js';
 import { googlHistMult } from './googl-histmult.js';
 import { googlTargetMult } from './googl-target-multiple.js';
+import { submitsHtml, initSubmits } from '../submits.js';   // Valuation ▸ Submit History (engine + js/submits-data/googl.js)
 import { googlSens } from './googl-sensitivity.js';
 import { GOOGL_MGMT_DATA } from './googl-mgmt-data.js';
 import { googlOwnBody, googlOwnInit } from './googl-own.js';
@@ -783,6 +784,7 @@ function deepDiveHtml(c){
     { k:'histmult', l:'Historic Multiple', body:googlHistMult.body() },   // VA-HIST (live price + filings + BBG consensus)
     { k:'peers', l:'Peers', body:googlValuationPeersBody() },   // VA-PEERS: the OV-6 map + table (Dani's #43 seeded table → live)
     { k:'targetmult', l:'Target Multiple', body:googlTargetMult.body() },   // VA-TM (Summit model valuation, frozen)
+    { k:'submits', l:'Submit History', body:submitsHtml('GOOGL') },   // VA-SUB (Summit valuation per submit, frozen; price live)
     { k:'sensitivity', l:'Sensitivity Analysis', body:googlSens.body() },   // VA-SENS (Summit 08-06 frozen; Dani's #42 seeded SENS replaced)
   ], true);
   h+=subtabs('mgmt',[
@@ -817,6 +819,7 @@ function buildSub(root, group, key){
     if(key==='histmult') requestAnimationFrame(function(){ googlHistMult.init(root); });
     if(key==='peers') requestAnimationFrame(function(){ wireScatters(root); });
     if(key==='targetmult') requestAnimationFrame(function(){ googlTargetMult.init(root); });
+    if(key==='submits') requestAnimationFrame(function(){ initSubmits(root, 'GOOGL'); });
     if(key==='sensitivity') requestAnimationFrame(function(){ googlSens.init(root); });
   } else if(group==='mgmt'){
     if(key==='team') GOOGL_MGMT.init(root);

@@ -25,6 +25,8 @@ import { googlResults } from './results-data/googl.js';
 import { googlSetup } from './results-data/googl-setup.js';
 import { maResults } from './results-data/ma.js';
 import { maSetup } from './results-data/ma-setup.js';
+import { maTlGeneral } from './results-data/ma-tl.js';
+import { maBl } from './results-data/ma-bl.js';
 import { uberResults, uberSetup } from './results-data/uber.js';
 import { metaResults } from './results-data/meta.js';
 import { sofiResults } from './results-data/sofi.js';
@@ -58,6 +60,8 @@ var RESULTS_DATA = {
   GOOGL_SETUP: googlSetup,
   MA: maResults,
   MA_SETUP: maSetup,
+  MA_TLG: maTlGeneral,
+  MA_BL: maBl,
   UBER: uberResults,
   UBER_SETUP: uberSetup,
   META: metaResults,

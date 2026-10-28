@@ -14,7 +14,7 @@
 | Rama | `feat/mastercard-remitly` (PR draft #153; worktree `research-summit-mastercard`) |
 | Analista responsable | Dani (DOAA351) |
 | Inicio | 2026-07-30 (remediación de Earnings) · reconstrucción 2026-10-28 |
-| Avance | 0 de 6 unidades aprobadas · 6 en revisión · 1 omitida (EV-EST) |
+| Avance | 0 de 8 unidades aprobadas · 8 en revisión · 1 omitida (EV-EST) |
 
 ## 1. Inventario de datos (F0)
 
@@ -28,7 +28,7 @@
 | Quartr | ⛔ | el conector pidió re-autenticar | cotejo de actuals contra filings | cotejo: se hizo contra lo dicho en las llamadas |
 | Filing / 8-K | No leído en esta pasada | los actuals son los de Bloomberg (`fq0`), cotejados con las cifras de la llamada (ingresos $9,277M, EPS $4.97 vs $5.04 ajustado, VAS $3,826M, etc.) | — | cuadre contra el 8-K: pendiente |
 
-**Alcance acordado:** Earnings (Setup · Post-Results · Notes) + Results. Estimates ⏭️ (ver §6).
+**Alcance acordado:** Earnings (Setup · Post-Results · Notes), Results, y las sub-tabs General de Top Line y Bottom Line (mismo dataset de Results). Estimates ⏭️ (ver §7). Valuation, Management y Miscellaneous no se tocaron en esta pasada.
 
 ## 2. Tablero de unidades
 
@@ -39,6 +39,8 @@
 | EV-SET | Setup (`ma-ce.js`, `ma-setup.js`, trimestre Q3 2026) | 👀 2026-10-28 | rejilla de 22 + 12 líneas, notas de guía por línea, gráfica Setup |
 | EV-POST | Post-Results de Q2 2026, Q1 2026 y Q4 2025 | 👀 2026-10-28 | The print · Call Summary (prepared + 10 preguntas por trimestre, respuestas con citas) · Propose Notes · Also on the call |
 | EV-NOTES | Notes (`js/themes-data/ma.js`) | 👀 2026-10-28 | 6 ejes, 15 hilos; 2 ganchos cerrados |
+| TL-GEN | Top Line ▸ General (`results-data/ma-tl.js`: net revenue, segments Payment Network and VAS, revenue build, volumes and transactions; motor `results.js`, registro `MA_TLG`) | 👀 2026-10-28 | las sub-tabs Segments, Customers, TAM e Industry Analysis existentes se conservan |
+| BL-GEN | Bottom Line ▸ General (`results-data/ma-bl.js`: rentabilidad y márgenes, costos y debajo de la línea, flujo de caja y capital; registro `MA_BL`) | 👀 2026-10-28 | Unit Economics, Suppliers y Margins existentes se conservan; sin costo de ventas ni utilidad bruta (MA no los tiene) |
 | EV-EST | Estimates | ⏭️ | requiere ≥ 2 snapshots del MCP Summit; la pestaña no se publica (regla 5) |
 
 ## 3. Decisiones

@@ -1710,12 +1710,14 @@ function deepDiveHtml(c){
   // Top Line
   h+='<div class="dd-pane" data-dd="topline">'+
     '<div class="ovt-subtabs">'+
-      '<button type="button" class="ovt-subtab active" data-ovst="segments">Segments</button>'+
+      '<button type="button" class="ovt-subtab active" data-ovst="segov">General</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="customers">Customers</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="tam">TAM</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="industry">Industry Analysis</button>'+
     '</div>'+
-    '<div class="ovt-subpane" data-ovst="segments">'+ddSegmentsBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="segov">'+resultsHtml('MA_TLG')+'</div>'+
+    '<div class="ovt-subpane" data-ovst="segments" hidden>'+ddSegmentsBody(c)+'</div>'+
     '<div class="ovt-subpane" data-ovst="customers" hidden>'+ddCustomersBody(c)+'</div>'+
     '<div class="ovt-subpane" data-ovst="tam" hidden>'+ddTamBody(c)+'</div>'+
     '<div class="ovt-subpane" data-ovst="industry" hidden>'+ddIndustryBody(c)+'</div>'+
@@ -1723,11 +1725,13 @@ function deepDiveHtml(c){
   // Bottom Line
   h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
     '<div class="ovt-subtabs">'+
-      '<button type="button" class="ovt-subtab active" data-ovst="unit">Unit Economics</button>'+
+      '<button type="button" class="ovt-subtab active" data-ovst="blgen">General</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="unit">Unit Economics</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="suppliers">Suppliers</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="margins">Margins</button>'+
     '</div>'+
-    '<div class="ovt-subpane" data-ovst="unit">'+ddUnitEconBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="blgen">'+resultsHtml('MA_BL')+'</div>'+
+    '<div class="ovt-subpane" data-ovst="unit" hidden>'+ddUnitEconBody(c)+'</div>'+
     '<div class="ovt-subpane" data-ovst="suppliers" hidden>'+ddSuppliersBody(c)+'</div>'+
     '<div class="ovt-subpane" data-ovst="margins" hidden>'+ddMarginsBody(c)+'</div>'+
   '</div>';
@@ -1823,6 +1827,8 @@ function renderFin(){
 function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'topline'; }
 function activeSubKey(root, group){ var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return null; var b=pane.querySelector('.ovt-subtab.active'); return b?b.getAttribute('data-ovst'):null; }
 function buildSub(root, group, key){
+  if(group==='topline' && key==='segov') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="segov"] .rs-wrap'), 'MA_TLG'); });
+  if(group==='bottomline' && key==='blgen') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="blgen"] .rs-wrap'), 'MA_BL'); });
   if(group==='bottomline' && key==='margins') buildMaMargins();
   if(group==='evolution' && key==='earnings') maCeBuild(root);
   if(group==='evolution' && key==='results') requestAnimationFrame(function(){

@@ -1,0 +1,283 @@
+/* ══════════════════════════════════════════════════════════════════════════════════════════════
+ *  The Earnings tab's shared machinery — the ".ce-*" classes every company profile's
+ *  Deep Dive ▸ Evolution ▸ Earnings sub-tab renders into (quarter pills, watch-list themes
+ *  and their add/edit form, the scorecard, post-call highlight bands, the "three minutes"
+ *  deliverable, the inline prompt/confirm popover, and their supporting chips/badges/tables).
+ *
+ *  WHY THIS EXISTS (Stage 2, Sep 8 2026). Six overview modules — amzn.js, googl.js, uber.js,
+ *  lyft.js, meta.js, spot.js — each carried their OWN copy of this same ~21-25KB block inside a
+ *  `function ceStyle()` that returned an inline `<style>` string. Four of the six (googl/lyft/
+ *  uber/meta) were byte-identical; spot differed by 3 lines; amzn carried a superset (the
+ *  `.ce-ip-*` inline prompt/confirm popover, absent from the other five). That duplication is
+ *  what this file replaces — moved to a real stylesheet, loaded once, with the per-company brand
+ *  colour read from the CSS custom properties every profile's `.ov` root ALREADY declares
+ *  (`--brand`, `--brand-2`; see css/overview.css) rather than JS-string-interpolated per file.
+ *
+ *  WHAT CHANGED IN THE MOVE (so a diff against any one file's old `ceStyle()` isn't a surprise):
+ *    - `'+BRAND+'`  → `var(--brand)`
+ *    - `'+BRAND2+'` → `var(--brand-2, var(--brand))` — GOOGL and META never declared a secondary
+ *      brand colour, so this falls back to the primary rather than rendering `unset`.
+ *    - The six "semantic state" colours (RED/YELLOW/BLUE/PURPLE/AMBER/GRAY) were supposed to be
+ *      identical everywhere but had drifted between copies from hand-editing (e.g. uber.js and
+ *      googl.js both carried GOOGLE's own Material red/yellow/blue as their "generic" semantics,
+ *      not a deliberate choice). Converged here to AMZN's values — AMZN is the reference
+ *      implementation per docs/COMPANY_PROFILE_BLUEPRINT.md. NOT reusing css/base.css's own
+ *      `--red`/`--blue`/`--green` — those carry a different meaning (e.g. growth/decline) and
+ *      coupling them here would let an unrelated change move these by accident:
+ *        RED    #EA4335      YELLOW  #E8A00C      BLUE   #2557D6
+ *        PURPLE #7A5AF8      AMBER   #B7791F      GRAY   #9AA4B0
+ *    - Spotify's own 3-line addition (`.ce-w-fwd` / `.ce-w-chip.fwd`, the "carried forward ↗"
+ *      badge on a watch-list theme that a later quarter's row now owns) is folded in for every
+ *      company, since the state it marks isn't Spotify-specific. Its background/border tint was
+ *      hardcoded to Spotify green (`rgba(29,185,84,...)`) — restyled here to the same neutral
+ *      blue-tint family every other state chip in this file already uses (e.g. `.ce-w-chip.cons`
+ *      below), so the shared file doesn't bake in one company's colour as if it were universal.
+ *    - `_ceStyleEmitted` / `ceStyleReset()` (AMZN's guard against emitting this block 3× per
+ *      render) is GONE — a `<link>` stylesheet loads once regardless of how many times a pane
+ *      re-renders, so the guard's whole reason to exist goes away with it.
+ *
+ *  WHAT DIDN'T CHANGE: everything else is copied verbatim from AMZN's `ceStyle()`, including the
+ *  handful of `rgba(66,133,244,...)` / `rgba(26,115,232,...)` etc. tints used as background fills
+ *  throughout — those were ALREADY hardcoded blue-ish literals, not `BRAND`-derived, in every one
+ *  of the six per-file copies (this file changes nothing about how they render for any company
+ *  that wasn't already true). Making those track `--brand` too is a real, separate design
+ *  question — flagged here, not solved here.
+ *
+ *  NOT YET WIRED UP. This file exists on its own; the six overview modules still carry their own
+ *  `ceStyle()` and still emit their own inline `<style>` tag — nothing renders differently yet.
+ *  Wiring this in means: add `<link rel="stylesheet" href="css/earnings.css">` wherever these six
+ *  companies' profiles are loaded (index.html plus every harness-*.html that mounts one of them),
+ *  then delete `ceStyle()` / `ceStyleReset()` / `_ceStyleEmitted` and every call site from each of
+ *  the six files, and re-render each company in its harness to confirm the Earnings tab still
+ *  looks identical before calling any one of them done.
+ * ══════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* page-styled inline prompt/confirm popover (replaces window.prompt / window.confirm) */
+.ce-ip{z-index:9999;background:#fff;border:1px solid var(--bdr);border-radius:12px;box-shadow:0 16px 44px rgba(15,23,42,.30);padding:13px 14px;min-width:264px;max-width:380px}
+.ce-ip-t{font-size:11px;font-weight:800;color:var(--navy);margin-bottom:9px;line-height:1.4}
+.ce-ip-in{width:100%;box-sizing:border-box;font:inherit;font-size:12px;line-height:1.5;border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;color:var(--navy);resize:vertical}
+.ce-ip-in:focus{outline:none;border-color:var(--brand-2, var(--brand))}
+.ce-ip-warn{margin-top:10px;padding:8px 11px;border:1px solid #EA4335;border-left:4px solid #EA4335;border-radius:8px;background:rgba(234,67,53,0.06);color:#EA4335;font-size:11px;font-weight:700;line-height:1.4}
+.ce-ip-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:11px}
+.ce-ip-btns button{font:inherit;font-size:11px;font-weight:800;border-radius:8px;padding:6px 15px;cursor:pointer;border:1px solid var(--bdr);background:#fff;color:var(--mu);transition:background .14s,color .14s,border-color .14s,transform .06s,box-shadow .14s}
+/* Cancel — secondary, but it now answers the click (hover fill + pressed nudge). */
+.ce-ip-btns .ce-ip-cancel:hover{background:#F2F5F8;color:var(--navy);border-color:var(--mu)}
+.ce-ip-btns .ce-ip-cancel:active{transform:translateY(1px)}
+/* Save — the primary action. Scoped to `.ce-ip-btns .ce-ip-ok` so it BEATS `.ce-ip-btns button`
+   (which was painting it grey), and it now reacts: hover darkens, :active presses in, .done flashes
+   green with a "Saved ✓" confirmation before the composer closes. */
+.ce-ip-btns .ce-ip-ok{background:var(--brand-2, var(--brand));color:#fff;border-color:var(--brand-2, var(--brand));box-shadow:0 1px 3px rgba(20,110,180,.30)}
+.ce-ip-btns .ce-ip-ok:hover{background:#0F5A8F;border-color:#0F5A8F}
+.ce-ip-btns .ce-ip-ok:active{transform:translateY(1px);box-shadow:none}
+.ce-ip-btns .ce-ip-ok:focus-visible{outline:2px solid #0F5A8F;outline-offset:2px}
+.ce-ip-btns .ce-ip-ok.done{background:#0a8f4c;border-color:#0a8f4c;box-shadow:none}
+.ce-ip-note{min-width:min(1040px,94vw);max-width:94vw}
+.ce-ip-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.ce-ip-l{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);width:66px;flex:none}
+.ce-ip-note select{flex:1;min-width:0;font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:6px 8px;color:var(--navy);background:#fff}
+.ce-ip-note .ce-ip-subwrap{flex:1;display:flex;min-width:0}
+.ce-ip-newseg,.ce-ip-newsub{width:100%;box-sizing:border-box;font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:7px 9px;margin-top:6px;color:var(--navy)}
+.ce-note-row{display:flex;justify-content:flex-end;margin-top:10px}
+.ce-noteadd{display:inline-block;font:inherit;font-size:9.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--brand-2, var(--brand));background:rgba(20,110,180,.08);border:1px solid rgba(20,110,180,.28);border-radius:7px;padding:4px 10px;cursor:pointer}
+.ce-noteadd:hover{background:rgba(20,110,180,.16)}
+.ce-ip-btns .ce-ip-ok.danger{background:#EA4335;border-color:#EA4335}
+.ce-ip-btns .ce-ip-ok.danger:hover{background:#C5221F;border-color:#C5221F}
+.ce-note{font-size:11px;color:var(--mu);line-height:1.5;background:#F7F9FB;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 12px}
+.ce-phtabs{display:inline-flex;gap:3px;background:rgba(66,133,244,0.08);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 20px}
+.ce-phtab{background:none;border:none;color:var(--mu);font-family:'Inter',sans-serif;font-size:12px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.ce-phtab:hover{color:var(--navy)}.ce-phtab.active{background:var(--brand);color:#fff}
+.ce-phpane[hidden]{display:none}
+/* quarter selector — one Earnings, many quarters; only the selected quarter renders (page stays light) */
+.ce-qpills{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}
+.ce-qpills[hidden]{display:none}
+.ce-qpill{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);padding:5px 13px;border-radius:999px;cursor:pointer;transition:.12s}
+.ce-qpill:hover{color:var(--navy)}.ce-qpill.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.ce-qpill .ce-qtag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-left:6px;opacity:.75}
+.ce-qblock[hidden]{display:none}
+.ce-frozen{display:inline-block;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:#9AA4B0;border-radius:20px;padding:2px 8px;margin-left:7px;vertical-align:middle}
+/* watch-list theme tags (cross-quarter filter) + add-theme form */
+.ce-wl-hint{font-size:10.5px;line-height:1.5;color:var(--navy);background:rgba(66,133,244,0.06);border:1px solid rgba(66,133,244,0.28);border-radius:9px;padding:8px 12px;margin:0 0 10px}
+.ce-wl-tagbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:9px 12px;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px}
+.ce-wl-tag{border:1px solid rgba(122,90,248,0.35);background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:#7A5AF8;padding:3px 10px;border-radius:999px;cursor:pointer;transition:.12s}
+.ce-wl-tag:hover{background:rgba(122,90,248,0.08)}.ce-wl-tag.active{background:#7A5AF8;color:#fff;border-color:#7A5AF8}
+.ce-wl-clear{border-color:var(--bdr);color:var(--mu)}
+.ce-wl-add-btn{margin-left:auto;border:1px dashed var(--brand);background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:var(--brand);padding:3px 10px;border-radius:999px;cursor:pointer}
+.ce-wl-bar-k{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu)}
+.ce-wl-win{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 11px;border-radius:999px;cursor:pointer}
+.ce-wl-win.active{background:var(--navy);color:#fff}
+/* ── the Add / Edit theme form ── */
+.ce-wl-addform{display:flex;flex-direction:column;gap:5px;border:1px dashed var(--brand);border-radius:10px;padding:14px 15px;margin:0 0 12px;background:rgba(66,133,244,0.03)}
+.ce-wl-addform[hidden]{display:none}
+.ce-wl-fh{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:4px}
+.ce-wl-fh-t{font-size:12.5px;font-weight:800;color:var(--navy)}
+.ce-wl-fh-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}
+.ce-wl-lb{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--navy);margin-top:5px}
+.ce-wl-lb span{font-weight:600;text-transform:none;letter-spacing:0;color:var(--mu);font-size:10px;margin-left:5px}
+.ce-wl-in{font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:7px 10px;background:var(--w);color:var(--navy);width:100%;box-sizing:border-box}
+.ce-wl-in:focus{outline:none;border-color:var(--brand)}
+.ce-wl-ta{resize:vertical;line-height:1.5}
+.ce-wl-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:600px){.ce-wl-2col{grid-template-columns:1fr}}
+.ce-wl-tagpick{display:flex;gap:6px;flex-wrap:wrap;border:1px solid var(--bdr);border-radius:8px;padding:8px 9px;background:var(--w);min-height:20px}
+.ce-wl-pick{border:1px solid rgba(122,90,248,0.35);background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:#7A5AF8;padding:3px 10px;border-radius:999px;cursor:pointer;transition:.12s}
+.ce-wl-pick:hover{background:rgba(122,90,248,0.08)}.ce-wl-pick.on{background:#7A5AF8;color:#fff;border-color:#7A5AF8}
+.ce-wl-newtag{display:flex;gap:7px;align-items:center}.ce-wl-newtag .ce-wl-in{flex:1}
+.ce-wl-newtag-go{font:inherit;font-size:10.5px;font-weight:800;border:1px dashed #7A5AF8;background:var(--w);color:#7A5AF8;padding:6px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.ce-wl-frow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:9px}
+.ce-wl-add-go{font:inherit;font-size:11px;font-weight:800;border:none;border-radius:8px;padding:7px 15px;background:var(--brand);color:#fff;cursor:pointer}
+.ce-wl-cancel{font:inherit;font-size:10.5px;font-weight:700;border:1px solid var(--bdr);background:var(--w);color:var(--mu);padding:6px 12px;border-radius:8px;cursor:pointer}
+.ce-wl-all[hidden]{display:none}.ce-w[data-wlhide]{display:none}
+/* ── the table: the storage view + the copy-out ── */
+.ce-wl-tbl-sc[hidden]{display:none}
+.ce-wl-tbl-wrap{margin-top:22px;border:1px solid var(--bdr);border-top:3px solid var(--brand);border-radius:12px;padding:13px 15px;background:var(--w)}
+.ce-wl-tbl-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:9px}
+.ce-wl-tbl-t{font-size:12.5px;font-weight:800;color:var(--navy)}
+.ce-wl-tbl-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}
+.ce-wl-tbl-n{margin-left:auto;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-2, var(--brand));background:rgba(52,168,83,0.10);border:1px solid rgba(52,168,83,0.3);border-radius:999px;padding:3px 11px;white-space:nowrap}
+.ce-wl-copy{border:1px solid var(--brand);background:var(--brand);font:inherit;font-size:10px;font-weight:800;color:#fff;padding:4px 14px;border-radius:999px;cursor:pointer;letter-spacing:.03em;transition:.12s}
+.ce-wl-copy:hover{filter:brightness(1.08)}
+.ce-wl-copy.alt{background:var(--w);color:var(--brand)}.ce-wl-copy.alt:hover{background:rgba(66,133,244,0.08)}
+.ce-wl-tbl-sc{overflow-x:auto;border:1px solid var(--bdr);border-radius:9px}
+.ce-wl-tbl{width:100%;border-collapse:collapse;font-size:10.5px;min-width:1100px}
+.ce-wl-tbl th{text-align:left;background:#F7F9FB;color:var(--mu);font-weight:800;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;padding:7px 9px;border-bottom:1px solid var(--bdr);white-space:nowrap;position:sticky;top:0}
+.ce-wl-tbl td{padding:7px 9px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top;max-width:270px}
+.ce-wl-tbl tr:last-child td{border-bottom:none}
+.ce-wl-tbl td.wl-key{white-space:nowrap;font-weight:800;color:var(--mu);font-size:10px}
+.ce-wl-tbl td.wl-th{font-weight:800;min-width:190px}
+.ce-wl-tbl tr.wl-open td.wl-key{color:var(--brand-2, var(--brand))}
+.ce-wl-tbl tbody tr:hover{background:rgba(66,133,244,0.035)}
+.ce-empty{color:var(--mu);font-style:italic;opacity:.7}
+.ce-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0}@media(max-width:640px){.ce-grid4{grid-template-columns:1fr 1fr}}
+.ce-cell{border:1px solid var(--bdr);border-top:3px solid #2557D6;border-radius:10px;padding:11px 13px;background:var(--w)}
+.ce-cell-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}.ce-cell-v{font-size:15px;font-weight:800;color:var(--navy);margin-top:3px;line-height:1.2}
+/* Setup v2 — estimates toggle (Consensus ⇄ Summit ⇄ Both) */
+.ce-ev-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}
+.ce-ev-pill.active{background:var(--navy);color:#fff}
+.ce-cell-custom{border-top-color:#E8A00C}
+.ce-row-cap{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:2px 0 4px}
+.ce-val{display:flex;align-items:baseline;gap:7px}
+.ce-val-lab{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:1px 7px;flex:none}
+.ce-val-cons .ce-val-lab{background:rgba(26,115,232,0.10);color:#2557D6}
+.ce-val-us .ce-val-lab{background:rgba(52,168,83,0.12);color:var(--brand-2, var(--brand))}
+.ce-evwrap[data-ev="cons"] .ce-val-us{display:none}
+.ce-evwrap[data-ev="us"] .ce-val-cons{display:none}
+.ce-evwrap:not([data-ev="both"]) .ce-val-lab{display:none}
+.ce-evwrap[data-ev="both"] .ce-cell-v{font-size:13px}
+.ce-evwrap[data-ev="both"] .ce-val{margin-top:3px}
+.ce-banner{border:1px solid var(--bdr);border-left:4px solid var(--brand);border-radius:11px;padding:13px 15px;background:linear-gradient(180deg,rgba(66,133,244,0.05),transparent);font-size:12.5px;line-height:1.6;color:var(--navy);margin:12px 0}
+.ce-watch{display:flex;flex-direction:column;gap:11px}
+.ce-w{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w);position:relative}
+.ce-w-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+/* v2.6: the numbered rank badge is gone — a plain marker, so removing a theme never leaves a
+   stale number behind. `rank` still orders the rows, it just is not rendered. */
+.ce-w-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);flex:none;margin:0 2px}
+.ce-w-metric{font-size:13.5px;font-weight:800;color:var(--navy)}
+/* the definition — what the theme means, in our words. (v2.6 replaced the tell 🔎 box, which
+   had been carrying the model's voice; no black slabs left anywhere in the watch cards.) */
+.ce-w-def{color:var(--navy);border-left:3px solid rgba(66,133,244,0.35);padding:1px 0 1px 11px;font-size:12px;line-height:1.55;margin-top:7px}
+.ce-w-def b{color:#2557D6}
+/* per-card edit / delete (live quarter only) + the closed-hook badge */
+.ce-w-ctl{margin-left:auto;display:inline-flex;gap:5px;flex:none}
+.ce-w-ed,.ce-w-del{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);width:24px;height:24px;border-radius:7px;cursor:pointer;line-height:1;transition:.12s}
+.ce-w-ed:hover{border-color:var(--brand);color:var(--brand)}.ce-w-del:hover{border-color:#EA4335;color:#EA4335}
+.ce-w-closed{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);background:#F2F5F8;border:1px solid var(--bdr);border-radius:20px;padding:2px 8px;flex:none}
+/* "carried forward ↗" — a watch-list theme still live, but a later quarter's row now owns it and
+   inherits the whole thread (folded in from spot.js Sep 8, 2026 — the state isn't Spotify-specific,
+   so every company gets it; restyled from a Spotify-green tint to the same neutral blue-tint family
+   every other state chip on this page already uses, e.g. .ce-w-chip.cons below). */
+.ce-w-fwd{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--brand);background:rgba(26,115,232,0.10);border:1px solid rgba(26,115,232,0.30);border-radius:20px;padding:2px 8px;flex:none}
+.ce-w-chip.fwd{color:var(--brand);border-color:rgba(26,115,232,0.30);background:rgba(26,115,232,0.06)}
+.ce-kind{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid}
+.ce-phase{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;border-radius:20px;padding:3px 10px;margin-bottom:8px}
+.ce-info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#B7791F;color:#fff;font-size:10px;font-weight:800;cursor:pointer;margin-left:5px;vertical-align:middle;flex:none}
+.ce-info:hover{filter:brightness(1.1)}
+/* (retired Jul 2026: .ce-debate / .ce-dc / .ce-mech — the fear-vs-consensus pair and the
+   mechanism chips. The Setup now goes straight from the estimates grid to the debate box.) */
+.ce-synth{border-left:4px solid var(--navy);background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:6px 0}.ce-synth b{color:#AECBFA}
+.ce-why-btn{display:inline-block;font-size:10px;font-weight:800;color:#2557D6;cursor:pointer;margin-top:8px}
+.ce-w-chips{display:flex;gap:7px;flex-wrap:wrap;margin:6px 0 0}
+.ce-w-chip{font-size:10px;font-weight:700;border-radius:7px;padding:4px 9px;line-height:1.3;color:var(--navy)}
+.ce-w-chip.tag{background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3)}
+.ce-w-chip.since{background:rgba(251,188,5,0.12);border:1px solid rgba(183,121,31,0.35)}
+.ce-w-chip.until{background:#F2F5F8;border:1px solid var(--bdr);color:var(--mu)}
+.ce-w-chip.cons{background:rgba(26,115,232,0.08);border:1px solid rgba(26,115,232,0.28)}
+/* .cons and .red are kept for the SPLC infra cards (Deep Dive ▸ SPLC), their only remaining user */
+.ce-w-chip.red{background:rgba(234,67,53,0.06);border:1px solid rgba(234,67,53,0.28)}
+.ce-w-chip b{font-weight:800}
+.ce-take{border-left:4px solid var(--brand);background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:2px 0 14px}.ce-take b{color:#AECBFA}
+.ce-hl{display:flex;flex-direction:column;gap:8px}
+.ce-hl-row{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--hc);border-radius:10px;padding:10px 13px;background:var(--w);cursor:pointer;transition:.12s}
+.ce-hl-row:hover{box-shadow:0 3px 10px rgba(0,0,0,.08)}
+.ce-hl-tag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:var(--hc);border-radius:20px;padding:3px 9px;white-space:nowrap}
+.ce-hl-head{font-size:12.5px;font-weight:700;color:var(--navy);line-height:1.4}
+.ce-hl-more{font-size:15px;color:var(--hc);font-weight:800}
+@media(max-width:560px){.ce-hl-row{grid-template-columns:auto 1fr}.ce-hl-more{display:none}}
+.ce-dots{border:1px dashed var(--brand);border-radius:11px;padding:12px 15px;margin-top:14px;background:rgba(66,133,244,0.03);font-size:12px;line-height:1.6;color:var(--navy)}.ce-dots b{color:var(--brand)}
+.ce-sc{display:flex;flex-direction:column;gap:6px}
+.ce-sc-row{display:grid;grid-template-columns:1.1fr 1fr 1.2fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--sc);border-radius:9px;padding:8px 12px}
+.ce-sc-m{font-size:12px;font-weight:800;color:var(--navy)}.ce-sc-c{font-size:11px;color:var(--mu)}.ce-sc-a{font-size:11.5px;font-weight:700;color:var(--navy)}
+.ce-sc-v{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 10px;background:var(--sc);white-space:nowrap}
+@media(max-width:600px){.ce-sc-row{grid-template-columns:1fr auto}.ce-sc-c,.ce-sc-a{display:none}}
+.ce-tc{display:flex;flex-direction:column;gap:6px}
+.ce-tc-row{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--navy);line-height:1.45;border:1px solid var(--bdr);border-radius:9px;padding:8px 11px}
+.ce-tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.ce-tbl th{text-align:left;color:var(--mu);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}
+.ce-tbl td{padding:9px 10px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top}
+/* ── Bottom Line ▸ Supply Chain — stat row (ported from googl.js ddStat) ── */
+.gdd-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.gdd-kpi{background:var(--w);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px}
+.gdd-kpi-v{font-size:19px;font-weight:800;color:var(--navy);line-height:1.12}
+.gdd-kpi-k{font-size:10.5px;color:var(--mu);margin-top:4px;line-height:1.35}
+.ce-pill{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 9px;white-space:nowrap}
+/* ── #1 · the chain: seededBy chip on watch items, landing chip on newQuestions ── */
+.ce-seed{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;color:#7A5AF8;background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3);border-radius:20px;padding:2px 9px;white-space:nowrap;flex:none}
+.ce-nq{display:flex;flex-direction:column;gap:5px}
+.ce-nq-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:3px solid #7A5AF8;border-radius:9px;padding:7px 11px;font-size:11.5px;color:var(--navy);line-height:1.45}
+.ce-nq-land{font-size:9.5px;font-weight:800;color:#7A5AF8;white-space:nowrap}
+.ce-nq-land.open{color:var(--mu)}
+@media(max-width:560px){.ce-nq-row{grid-template-columns:1fr}.ce-nq-land{margin-top:3px}}
+/* ── #2 · scorecard: surprise bars, watch-rank badges, richer result kinds ── */
+.ce-sc-row{grid-template-columns:78px 1.1fr 1fr 1.2fr 92px auto}
+.ce-sc-rk{font-size:9px;font-weight:800;color:var(--brand);background:rgba(66,133,244,0.10);border:1px solid rgba(66,133,244,0.3);border-radius:20px;padding:2px 8px;white-space:nowrap;text-align:center}
+.ce-sc-rk.blank{background:transparent;border:none}
+.ce-sc-surp{font-size:9.5px;font-weight:800;text-align:center;letter-spacing:.02em;border-radius:20px;padding:2px 8px;white-space:nowrap}
+.ce-sc-surp.hi{color:#EA4335;background:rgba(234,67,53,0.09);border:1px solid rgba(234,67,53,0.3)}
+.ce-sc-surp.md{color:#B7791F;background:rgba(183,121,31,0.09);border:1px solid rgba(183,121,31,0.3)}
+.ce-sc-surp.lo{color:var(--mu);background:transparent;border:1px solid var(--bdr)}
+/* the legend that makes the row readable without a manual */
+.ce-legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px;padding:10px 13px;margin:0 0 10px}
+.ce-legend-i{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--navy);line-height:1.4}
+.ce-legend-i b{font-weight:800}
+@media(max-width:600px){.ce-sc-row{grid-template-columns:1fr auto}.ce-sc-c,.ce-sc-a,.ce-sc-bw,.ce-sc-rk{display:none}}
+/* ── #3 · post-call highlight bands ── */
+.ce-band{margin:16px 0 8px;display:flex;align-items:center;gap:9px}
+.ce-band-i{font-size:13px;font-weight:800;color:var(--bc);line-height:1}
+.ce-band-t{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--bc)}
+.ce-band-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}
+.ce-band-l{flex:1;height:1px;background:var(--bdr)}
+@media(max-width:560px){.ce-band-s{display:none}}
+.ce-hl-open{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#B7791F;border:1px solid #B7791F;border-radius:20px;padding:2px 7px;white-space:nowrap;margin-left:7px;vertical-align:middle}
+/* ── #4 · the deliverable: three minutes + what we are not bringing ── */
+.ce-3m{border:1px solid var(--bdr);border-top:4px solid var(--brand);border-radius:12px;padding:15px 17px;margin:16px 0 0;background:linear-gradient(180deg,rgba(66,133,244,0.05),transparent)}
+.ce-3m-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px}
+.ce-3m-t{font-size:12.5px;font-weight:800;color:var(--navy)}
+.ce-3m-sub{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}
+.ce-3m-copy{margin-left:auto;border:1px solid var(--brand);background:var(--w);font:inherit;font-size:10px;font-weight:800;color:var(--brand);padding:3px 11px;border-radius:999px;cursor:pointer;transition:.12s}
+.ce-3m-copy:hover{background:var(--brand);color:#fff}
+.ce-3m-l{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(max-width:760px){.ce-3m-l{grid-template-columns:1fr}}
+.ce-3m-n{width:22px;height:22px;border-radius:50%;background:var(--brand);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex:none}
+.ce-3m-bd{min-width:0}
+.ce-3m-lead{display:block;font-size:13.5px;font-weight:800;color:var(--navy);line-height:1.4}
+.ce-3m-ev{display:block;font-size:11px;font-weight:500;color:var(--mu);line-height:1.5;margin-top:4px}
+.ce-3m-more{margin-top:6px}
+.ce-3m-more>summary{font-size:9.5px;font-weight:800;color:#2557D6;cursor:pointer;list-style:none}
+.ce-3m-more>summary::-webkit-details-marker{display:none}
+.ce-3m-more[open]>summary{color:var(--mu)}
+.ce-3m-i{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--bdr);border-top:3px solid var(--brand);border-radius:11px;padding:11px 13px;background:#fff}
+.ce-nb{margin-top:13px;border-top:1px dashed var(--bdr);padding-top:11px}
+.ce-nb-h{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:6px}
+.ce-nb-r{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;font-size:11px;line-height:1.5;color:var(--mu);padding:2px 0}
+.ce-nb-r b{color:var(--navy);font-weight:800}
+.ce-nb-x{color:#9AA4B0;font-weight:800;flex:none}
+/* ── #5 · earnings-call theme status with age ── */
+.calls-st-age{font-size:8.5px;font-weight:700;opacity:.8;margin-left:4px}

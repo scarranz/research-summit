@@ -1,0 +1,30 @@
+{
+  "_doc": "AMZN metric map for emit_matrix.py (schema v2 — address by Bloomberg CODE + segment, never by slot number). Segment ids read off the workbook's own segment_kpiN columns and identified by tying each one's fq0 revenue to the 2Q26 print: NA 116,177 / Intl 42,197 / AWS 42,232.",
+  "segments": {
+    "na":   "SEG0000227430",
+    "intl": "SEG0000227462",
+    "aws":  "SEG0000227465"
+  },
+  "q": {
+    "rev":      { "code": "SALES_REV_TURN",      "unit": "usdM" },
+    "usrev":    { "code": "SALES_REV_TURN",      "unit": "usdM", "segment": "na" },
+    "intrev":   { "code": "SALES_REV_TURN",      "unit": "usdM", "segment": "intl" },
+    "aws":      { "code": "SALES_REV_TURN",      "unit": "usdM", "segment": "aws" },
+    "opinc":    { "code": "IS_COMPARABLE_EBIT",  "unit": "usdM" },
+    "naopinc":  { "code": "IS_OPER_INC",         "unit": "usdM", "segment": "na" },
+    "intopinc": { "code": "IS_OPER_INC",         "unit": "usdM", "segment": "intl" },
+    "awsopinc": { "code": "IS_OPER_INC",         "unit": "usdM", "segment": "aws" },
+    "eps":      { "code": "IS_COMP_EPS_GAAP",    "unit": "eps" },
+    "capex":    { "code": "HEADLINE_CAPEX",      "unit": "usdM", "sign": -1 }
+  },
+  "_drop_note": "y.usrev is DEAD DATA and must not be plotted. The workbook has reprinted the same three North-America annual estimates — 473,099 / 517,634 / 561,728 — at every snapshot since 2021-05-04, relabelling them one year forward at each print (FY21-23, then FY22-24, … now FY26-28). 27 distinct values across 90 cells. The quarterly twin of the same slot moves normally and is kept, so this is one dead BQL cell, not a bad ticker. Today's labelling happens to look plausible; its history is fiction. Raise it with San/Oscar and delete this entry once the cell is refreshed.",
+  "drop": { "y": ["usrev"] },
+  "y": {
+    "rev":      { "code": "SALES_REV_TURN",      "unit": "usdM" },
+    "usrev":    { "code": "SALES_REV_TURN",      "unit": "usdM", "segment": "na" },
+    "intrev":   { "code": "SALES_REV_TURN",      "unit": "usdM", "segment": "intl" },
+    "aws":      { "code": "SALES_REV_TURN",      "unit": "usdM", "segment": "aws" },
+    "ebitda":   { "code": "IS_COMPARABLE_EBITDA","unit": "usdM" },
+    "capex":    { "code": "HEADLINE_CAPEX",      "unit": "usdM", "sign": -1 }
+  }
+}

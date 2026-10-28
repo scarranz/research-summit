@@ -1,0 +1,85 @@
+{
+  "_note": "Config for emit_summit_matrix.py — the SUMMIT side of estMatrix for AMZN (the model's own estimates per snapshot). The consensus side has its own map_amzn.json.",
+
+  "metrics": {
+    "usrev":    "USREV",
+    "intrev":   "INTREV",
+    "aws":      "AWS",
+    "naopinc":  "OPINC",
+    "intopinc": "OPINC2",
+    "awsopinc": "OPINC3",
+    "rev":      "REV",
+    "ebitda":   "EBITDA",
+    "earnings": "EARNINGS",
+    "capex":    "CAPEX",
+    "fcf":      "FCF"
+  },
+
+  "_derived_note": "QUARTERLY totals are not modelled directly — the model's own quarterly REV and OP_INCOME rows are literal 0 forward (and OP_INCOME once reads 197000 for a single quarter, which is the annual frame leaking into a quarterly cell: never read it). Both totals are therefore the sum of the three segment rows, which is exactly how the dataset's hand-built quarterly `summit` column was constructed and how it ties to the reported total. ANNUAL is the opposite: REV / EBITDA / EARNINGS / CAPEX are populated directly per year, so they are read straight.",
+  "derived": {
+    "q": {
+      "rev":   ["USREV", "INTREV", "AWS"],
+      "opinc": ["OPINC", "OPINC2", "OPINC3"]
+    }
+  },
+
+  "_sign_note": "The model carries capex as negative cash flow; every Results dataset shows it as positive spend.",
+  "sign": { "capex": -1 },
+
+  "decimals": { "_default": 1 },
+
+  "_vintages_note": "All 7 Summit snapshots, distinct by facts_hash. lastActual = the last period the model had REPORTED when that file was saved — established from the data, not from the calendar: 2026-07-30 and 2026-08-03 still carry the MAY projection for 2Q26 (AWS 39,826 against a 42,232 print), so both are pre-print saves despite their dates; 2026-08-04 is the re-cut that ingested it (AWS 3Q26 41,918 -> 44,558, FY26 AWS 166,210 -> 173,476). 2026-05-13 differs from 2026-05-05 on annual EBITDA — the MCP-vs-file reconciliation flagged in RESULTS_CONVENTIONS §4 — so both are kept and the picker can show the gap rather than hiding it.",
+  "vintages": [
+    { "id": "2025-12-18", "label": "Dec 18, 2025", "lastActual": { "q": "3Q25", "y": "2024" } },
+    { "id": "2026-02-10", "label": "Feb 10, 2026", "lastActual": { "q": "4Q25", "y": "2025" } },
+    { "id": "2026-05-05", "label": "May 5, 2026",  "lastActual": { "q": "1Q26", "y": "2025" } },
+    { "id": "2026-05-13", "label": "May 13, 2026", "lastActual": { "q": "1Q26", "y": "2025" } },
+    { "id": "2026-07-30", "label": "Jul 30, 2026", "lastActual": { "q": "1Q26", "y": "2025" } },
+    { "id": "2026-08-03", "label": "Aug 3, 2026",  "lastActual": { "q": "1Q26", "y": "2025" } },
+    { "id": "2026-08-04", "label": "Aug 4, 2026",  "lastActual": { "q": "2Q26", "y": "2025" } }
+  ],
+
+  "_views_note": "Which dataset metric keys get a matrix row per view. Quarterly capex and EPS are absent on purpose: the model projects capex ANNUALLY only (its quarterly row is a literal 0) and carries no EPS row at all, so both would be manufactured. Annual op-income lines are absent because the dataset's annual view has no segment op-income metrics to plot them on.",
+  "views": {
+    "q": ["rev", "usrev", "intrev", "aws", "opinc", "naopinc", "intopinc", "awsopinc"],
+    "y": ["rev", "usrev", "intrev", "aws", "ebitda", "earnings", "capex"]
+  },
+
+  "_evolution_note": "Feeds emit_evolution.py — the Estimates pane's own block. Same dumps, opposite read: every year on the axis, forward or already reported, because the pane plots how the model's view of a year moved. Total op income is DERIVED here (the model zeroes its own total row) while annual revenue is read straight, which is why this block carries its own `derived`. `prior` is FY2025, the year before years[0], used for the first year's implied growth on the Top Line metrics.",
+  "evolution": {
+    "years": ["2026", "2027", "2028", "2029"],
+    "prior": "2025",
+    "keys": ["capex", "fcf", "rev", "ebitda", "earnings", "aws", "usrev", "intrev", "opinc", "naopinc", "intopinc", "awsopinc"],
+
+    "derived": { "opinc": ["OPINC", "OPINC2", "OPINC3"] },
+
+    "_cons_metrics_note": "The BBG figure the MODEL stores inside the same snapshot block — same save date as the solid line, which is exactly the claim this pane makes. The model carries these three only.",
+    "cons_metrics": { "rev": "REV_BBG_EST", "ebitda": "EBITDA_BBG_EST", "earnings": "EARNINGS_BBG_EST" },
+
+    "_cons_map_note": "For lines the model stores no consensus for, mapped off the Bloomberg workbook's own calendar (each model date takes the Street's latest file on or before it — up to ~3 months stale, so each affected note says so). Only possible at all since the Aug-2026 export started carrying segment revenue and capex; before that these were Summit-only. Segment OP INCOME is deliberately left out: the annual view has no metric to hang it on, and adding a matrix row purely to feed this generator would put numbers in the dataset the Results pane can never draw.",
+    "cons_map": { "aws": "aws", "intrev": "intrev", "capex": "capex" },
+
+    "labels": {
+      "capex":    { "label": "Capital Expenditure", "unit": "usdM", "marginOf": "rev", "marginLabel": "capex % of revenue" },
+      "fcf":      { "label": "Free Cash Flow", "unit": "usdM", "marginOf": "rev", "marginLabel": "FCF margin" },
+      "rev":      { "label": "Net Sales (Total)", "unit": "usdM", "prior": true },
+      "ebitda":   { "label": "EBITDA", "unit": "usdM", "marginOf": "rev", "marginLabel": "EBITDA margin" },
+      "earnings": { "label": "Earnings (model definition)", "unit": "usdM", "marginOf": "rev", "marginLabel": "net margin (model def.)" },
+      "aws":      { "label": "AWS Net Sales", "unit": "usdM", "prior": true },
+      "usrev":    { "label": "North America Net Sales", "unit": "usdM", "prior": true },
+      "intrev":   { "label": "International Net Sales", "unit": "usdM", "prior": true },
+      "opinc":    { "label": "Operating Income (Total, derived)", "unit": "usdM", "marginOf": "rev", "marginLabel": "operating margin" },
+      "naopinc":  { "label": "North America Op. Income (GAAP)", "unit": "usdM", "marginOf": "usrev", "marginLabel": "NA operating margin" },
+      "intopinc": { "label": "International Op. Income (GAAP)", "unit": "usdM", "marginOf": "intrev", "marginLabel": "Intl operating margin" },
+      "awsopinc": { "label": "AWS Op. Income (GAAP)", "unit": "usdM", "marginOf": "aws", "marginLabel": "AWS operating margin" }
+    }
+  },
+
+  "prefer_source": ["SEGM", "DEFAULT"],
+
+  "_axis_note": "The dataset's period axis — cells outside it are dropped so the matrix never carries a period the metric cannot plot.",
+  "axis": {
+    "q": ["1Q23","2Q23","3Q23","4Q23","1Q24","2Q24","3Q24","4Q24","1Q25","2Q25","3Q25","4Q25","1Q26","2Q26","3Q26","4Q26","1Q27","2Q27","3Q27","4Q27","1Q28","2Q28"],
+    "y": ["2020","2021","2022","2023","2024","2025","2026","2027","2028","2029"]
+  }
+}

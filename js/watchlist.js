@@ -105,7 +105,29 @@ function injectStyle(){
     '.wl-tbl th{text-align:left;background:#F7F9FB;color:var(--mu);font-weight:800;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;padding:7px 9px;border-bottom:1px solid var(--bdr);white-space:nowrap}',
     '.wl-tbl td{padding:7px 9px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top;max-width:270px}',
     '.wl-tbl td.wl-tk{white-space:nowrap;font-weight:800;color:var(--mu);font-size:10px}.wl-tbl td.wl-tth{font-weight:800;min-width:190px}',
-    '.wl-tbl tr.wl-open td.wl-tk{color:var(--wl-brand2)}'
+    '.wl-tbl tr.wl-open td.wl-tk{color:var(--wl-brand2)}',
+    // ── palette:'summit' — the formal skin for guide-built profiles (PROFILE_PLAYBOOK §21): Summit tokens only,
+    // one accent (steel), no brand tints, no purple/green chips. Opt-in per mount so older profiles keep their look. ──
+    '.wl-summit .wl-hint{background:var(--pale);border-color:var(--bdr);color:var(--navy)}',
+    '.wl-summit .wl-tagbar{background:var(--pale)}',
+    '.wl-summit .wl-tag,.wl-summit .wl-pick{border-color:var(--bdr);color:var(--steel);background:var(--w)}',
+    '.wl-summit .wl-tag:hover,.wl-summit .wl-pick:hover{background:var(--ice)}',
+    '.wl-summit .wl-tag.active,.wl-summit .wl-pick.on{background:var(--steel);border-color:var(--steel);color:#fff}',
+    '.wl-summit .wl-tag.wl-clear{color:var(--mu)}',
+    '.wl-summit .wl-add-btn,.wl-summit .wl-newtag-go{border-color:var(--steel);color:var(--steel)}',
+    '.wl-summit .wl-phase,.wl-summit .wl-all .wl-phase{background:var(--navy)!important}',
+    '.wl-summit .wl-frozen{background:var(--mid)}',
+    '.wl-summit .wl-form{border-color:var(--bdr);background:var(--pale)}',
+    '.wl-summit .wl-fixed b,.wl-summit .wl-w-def b,.wl-summit .wl-thread-row b,.wl-summit .wl-thread>summary{color:var(--steel)}',
+    '.wl-summit .wl-in:focus{border-color:var(--steel)}',
+    '.wl-summit .wl-go,.wl-summit .wl-copy{background:var(--navy);border-color:var(--navy)}.wl-summit .wl-copy.alt{background:var(--w);color:var(--navy)}',
+    '.wl-summit .wl-w-dot{background:var(--steel)}',
+    '.wl-summit .wl-seed,.wl-summit .wl-qchip,.wl-summit .wl-chip.tag{color:var(--steel);background:var(--ice);border:1px solid var(--bdr)}',
+    '.wl-summit .wl-w-def{border-left-color:var(--ice)}',
+    '.wl-summit .wl-btn:hover{border-color:var(--steel);color:var(--steel)}.wl-summit .wl-btn.wl-del:hover{border-color:var(--neg);color:var(--neg)}',
+    '.wl-summit .wl-tbl-wrap{border-top-color:var(--navy)}',
+    '.wl-summit .wl-tbl-n{color:var(--steel);background:var(--ice);border-color:var(--bdr)}',
+    '.wl-summit .wl-tbl tr.wl-open td.wl-tk{color:var(--steel)}'
   ].join('');
   document.head.appendChild(s);
 }
@@ -127,6 +149,7 @@ export function mountWatchList(host, opts){
 
   // per-host brand colours (optional)
   host.classList.add('wl-root');
+  var summit=(opts.palette==='summit'); if(summit) host.classList.add('wl-summit');
   if(opts.colors){ Object.keys(opts.colors).forEach(function(k){ host.style.setProperty('--wl-'+k, opts.colors[k]); }); }
 
   var ROWS=[];                                        // camelCase rows, the in-memory mirror of the DB
@@ -173,7 +196,7 @@ export function mountWatchList(host, opts){
       deep+='<div class="wl-thread-b">'+w.thread.map(function(t){ return '<div class="wl-thread-row"><b>'+esc(t.q)+'</b><span>'+esc(t.n)+'</span></div>'; }).join('')+'</div>';
     }
     var thread=deep?('<details class="wl-thread"><summary>'+(w.thread?'the thread':'background')+' ›</summary>'+deep+'</details>'):'';
-    var seed=w.seededBy?'<span class="wl-seed" title="'+esc(w.seededBy.n)+'">'+(w.seededBy.tripped?'⚑ '+esc(w.seededBy.q):'left open by '+esc(w.seededBy.q))+'</span>':'';
+    var seed=w.seededBy?'<span class="wl-seed" title="'+esc(w.seededBy.n)+'">'+(w.seededBy.tripped?(summit?'tripped '+esc(w.seededBy.q):'⚑ '+esc(w.seededBy.q)):'left open by '+esc(w.seededBy.q))+'</span>':'';
     var tagsAttr=(w.tags&&w.tags.length)?w.tags.join(' '):'';
     var ctl='';
     if(flags.editable){
@@ -241,7 +264,7 @@ export function mountWatchList(host, opts){
   // ── the whole shell (static structure; card hosts are filled by render()) ──
   function shellHtml(){
     var h='';
-    h+='<div class="wl-hint">🔁 <b>How quarters advance:</b> a new upcoming quarter opens in the Watch List once the prior quarter is filled. Open hooks (a <i>Tracking since</i> with no <i>Tracking until</i>) carry forward; closed ones drop off.</div>';
+    h+='<div class="wl-hint">'+(summit?'':'🔁 ')+'<b>How quarters advance:</b> a new upcoming quarter opens in the Watch List once the prior quarter is filled. Open hooks (a <i>Tracking since</i> with no <i>Tracking until</i>) carry forward; closed ones drop off.</div>';
     h+='<div class="wl-tagbar"><span class="wl-bar-k">Filter by theme (across quarters):</span><span data-wltags></span>'+
        '<button type="button" class="wl-tag wl-clear" data-wltag="">clear</button>'+
        '<button type="button" class="wl-add-btn">+ Add theme</button></div>';

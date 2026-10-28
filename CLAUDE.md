@@ -34,6 +34,18 @@ js/companies.js         — Companies tab (grid, detail view, four-pillar analys
 js/market-analysis.js   — Market Analysis tab (sector bars, filters, scatter, tables)
 js/hedge-funds.js       — Hedge Funds tab (alpha chart, benchmark, investor cards)
 js/team.js              — Team tab (Investment Portfolio + Investment Ideas)
+js/derivatives.js       — Derivatives tab shell (sub-tabs, lazy-loads the four strategies)
+js/options-core.js      — Shared options engine (Massive proxy, estimates + sensitivity, multiples, income-statement block)
+js/options-data.js      — Forward estimates for the Derivatives tabs (APP consensus + the Summit DCF snapshots)
+js/covered-calls.js     — Derivatives ▸ Covered Calls (the live book of sold calls)
+js/protective-put.js    — Derivatives ▸ Protective Put (downside insurance on stock we own)
+js/buy-calls.js         — Derivatives ▸ Buy Calls (long-call analyzer)
+js/short-puts.js        — Derivatives ▸ Short Puts (cash-secured puts)
+js/betas.js             — Tools ▸ Betas shell (Calculator · History · Portfolio sub-tabs)
+js/betas-core.js        — Betas engine: prices (Massive), regression, rolling β, beta history store
+js/betas-calc.js        — Betas ▸ Calculator (beta of any name, every variable, Submit)
+js/betas-history.js     — Betas ▸ History (every submitted beta, filter, reopen, CSV export)
+js/betas-portfolio.js   — Betas ▸ Portfolio (portfolio beta from manual weights)
 css/base.css            — CSS variables and reset
 css/layout.css          — Loading overlay styles
 css/shared.css          — Cards, sections, tables, filters, modals (shared components)
@@ -43,6 +55,9 @@ css/companies.css       — Company grid, detail view, four-pillar analysis
 css/market-analysis.css — Sector bars, chips, scatter plot styles
 css/hedge-funds.css     — Investor cards, benchmark bar, holdings table
 css/team.css            — Investment Ideas cards, voting UI, portfolio table
+css/covered-calls.css   — Covered Calls book table (scoped to #cc-root)
+css/derivatives.css     — Derivatives sub-nav + the shared ladder analyzer chrome (.der-an)
+css/betas.css           — Tools ▸ Betas (scoped to #tp-betas)
 css/responsive.css      — Mobile breakpoints
 sql/schema.sql          — Database schema (run in Supabase SQL Editor)
 netlify.toml            — Netlify build + routing config
@@ -124,8 +139,12 @@ supabase functions deploy <function-name> --project-ref bvflqjndivouhgwqfbrq
 | `sync-management` | Fiscal.ai `/v1/company/ownership/insider/*` | Pull executives + insider transactions |
 | `sync-ratings` | Massive `/benzinga/v1/ratings` | Pull analyst ratings + price targets |
 | `get-margins` | Massive `/stocks/financials/v1/income-statements` + `/cash-flow-statements` | Historical profitability & cash margins (gross/op/net/EBITDA/CFO/FCF) for the Overview Margins box — computed server-side, no DB write |
+| `get-quote` | Yahoo Finance `/v8/finance/chart/{ticker}` (no key) | Live-price banner of the IBKR, LYFT, SOFI and UBER overviews — called through `api.js fetchYahooQuote()` so the user's session token is sent (the function verifies the user; sending the anon key gets a 401). No DB write. **Not yet deployed.** |
 | `get-transcript` | Fiscal.ai `/v1/company/ir-events` + `/ir-events/transcript/{eventKey}` | Earnings-call events list + structured transcripts for Earnings — generic for any ticker on our Fiscal.ai tier, no DB write. `unavailable: true` = company not on current plan |
 | `generate-investment-writeup` | Anthropic Messages API (`claude-opus-4-8` + `web_search` tool) | "Research & write with AI" button in the Investment tab's Add modal — researches a company via web search and drafts its Overview/Moat/Opportunity text in Summit's house tone. Requires a separate `ANTHROPIC_API_KEY` secret. |
+| `get-market-history` | Massive `/v2/aggs/ticker/.../range/...` (daily prices) + `/stocks/financials/v1/ratios` (quarterly, for market_cap/enterprise_value/price) | Daily closes + quarterly shares/net-debt for the AMZN Historic Multiple chart (`js/overviews/amzn-histmult.js`) — computed client-side from the raw passthrough, no DB write. **NEW on feat/amzn-polish, not yet deployed** — smoke-test after deploying (see that file's header for exact field-name assumptions to verify). |
+| `ndx-attribution` | Massive `/v2/aggs/grouped/locale/us/market/stocks/{date}` (2 calls per refresh) + table `ndx_snapshots` | Data for Market Analysis ▸ Nasdaq-100 Analysis. `get` = newest snapshot (any signed-in user). `ingest` / `refresh-prices` (header `x-ndx-ingest-key` = secret `NDX_INGEST_KEY`) save a new snapshot: the analyst's Excel via `python scripts/ndx/extract_ndx.py --upload`, or only the open HOC re-priced via `--refresh-prices`. Closed HOCs keep the Excel returns; the open HOC is re-priced from Massive closes. The page falls back to `js/ndx-attribution-data.js` if the function fails. **NEW on feat/ndx-attribution-v2, not yet deployed** — needs `sql/025_ndx_attribution.sql` run and the `NDX_INGEST_KEY` secret set first. |
+| `get-summit-data` | Summit Financial Data MCP server over HTTP (JSON-RPC `tools/call`: `list_dcf_models`, `list_snapshots`, `list_metrics`, `get_snapshot`, `get_fundamentals`, `get_metric_snapshot_series`, `get_valuation_history`) | Live, read-only access to the Summit DCF models (snapshots, facts, metric catalog, and each snapshot's valuation: multiple, price target, fair value per method, WACC) **Superseded (SAB, Oct 15 2026): company profiles do not use it — Summit model numbers are pulled once from the MCP and frozen into dated data files (PROFILE_PLAYBOOK.md rule 10, §20b).** No AI involved — the function is a plain MCP client; no DB write. `api.js`: `fetchSummitModels/Snapshots/Metrics/Snapshot/Fundamentals/Series/Valuation`. A valuation block with `quality_flags` is unreliable (show it with a caveat). What each label means comes from `js/summit-map/<ticker>.js` (one per company, `docs/PROFILE_PLAYBOOK.md` §6.3). **NEW on feat/get-summit-data, not yet deployed** — needs secrets `SUMMIT_MCP_URL` + `SUMMIT_MCP_TOKEN` (read-only); if the MCP can't take a service token, swap `callSummit()` for a direct read of its database, nothing else changes. |
 
 **Security:** All edge functions restrict CORS to `research-summit.netlify.app` and `localhost:8000`. Ticker and companyId inputs are validated.
 
@@ -153,7 +172,7 @@ Most team members using this portal are **not developers**. When they ask Claude
 - Each dashboard tab is a `<div class="tp" id="tp-{tab}">` inside `index.html`
 - Page data loaders are registered in `index.html` via `registerPageLoader(name, loaderFn)`
 - Navigation items are `.ntb.nav-item[data-page][data-tab]` buttons in the sidebar
-- Tab IDs map: companies→co, market-analysis→rot, hedge-funds→inv, team→team (defined in js/nav.js)
+- Tab IDs map: research→res, market-analysis→rot, hedge-funds→inv, team→team, fund-returns→ret, derivatives→der (defined in js/nav.js)
 - Role access is controlled in `js/auth.js` ROLE_CONFIG — add new roles there
 - CSS variables are defined in `css/base.css` (:root)
 
@@ -174,13 +193,15 @@ Most team members using this portal are **not developers**. When they ask Claude
 |---|---|---|---|---|
 | **San** (Santiago Carranza) | `scarranz` | Yes | Yes | Yes |
 | **Oscar** (Oscar Cordova) | `ocordova` | Yes | Yes | Yes |
-| SAB (Santiago Alvarez) | `salvarez-summit` | No — open PRs only | No | No |
+| SAB (Santiago Alvarez) | `salvarez-summit` | Yes — approve & merge | No | No |
 | Deborah | `posterdeb` | No — open PRs only | No | No |
 | Pablo (Pablo Valles) | `pvalles96` | No — open PRs only | No | No |
 | Dani (Daniel Alvarez) | `DOAA351` | No — open PRs only | No | No |
 
+**San, Oscar and SAB** can:
+- Approve and merge pull requests (SAB is a CODEOWNER)
+
 **Only San and Oscar** can:
-- Approve and merge pull requests
 - Run SQL in the Supabase SQL Editor
 - Deploy edge functions (`supabase functions deploy`)
 - Manage Supabase secrets (`supabase secrets set`)
@@ -188,7 +209,7 @@ Most team members using this portal are **not developers**. When they ask Claude
 
 **All other team members** work through Claude:
 - They describe what they want → Claude creates a branch, writes code, opens a PR
-- San or Oscar reviews and merges the PR
+- San, Oscar or SAB reviews and merges the PR
 - They should **never** run SQL, deploy functions, or touch the database directly
 
 ### Adding a new team member
@@ -222,7 +243,7 @@ Before making ANY code changes, Claude MUST:
 4. **Make changes**, commit with clear messages
 5. **Push the branch:** `git push -u origin <branch-name>`
 6. **Open a PR** using `gh pr create` — include a clear summary of what changed and why
-7. **Never merge the PR** — leave it for San or Oscar to review and merge
+7. **Never merge the PR** — leave it for San, Oscar or SAB to review and merge
 8. **If the user asks to work on something new**, go back to step 1 (new branch from main)
 
 ### For team members
@@ -230,7 +251,7 @@ Before making ANY code changes, Claude MUST:
 Most team members are non-technical. Claude handles all git operations for them. Team members just need to:
 
 - **Describe what they want** — Claude creates the branch, writes code, and opens the PR
-- **Review PRs on GitHub** — only San and Oscar can approve and merge
+- **Review PRs on GitHub** — San, Oscar and SAB can approve and merge
 - **Never edit files on `main` directly** — always ask Claude to make changes
 - **Never run SQL or deploy functions** — only San and Oscar handle database and infrastructure
 
@@ -252,9 +273,53 @@ If a PR has merge conflicts:
 
 The Companies tab is the core of the portal. Each company has a profile that is **designed and built individually with Claude's help**.
 
+### Building or extending a company profile (start here)
+
+**To add a new company or restructure an existing one, follow `docs/PROFILE_PLAYBOOK.md`** (in
+Spanish) — the step-by-step, interactive guide: one unit at a time (each Overview block, each Deep Dive
+sub-tab, each Earnings phase), each one proposed → built → shown on localhost → self-audited → **approved
+by the analyst** → logged in the company's build log `docs/profiles/<TICKER>.md` (template:
+`docs/profiles/_TEMPLATE.md`). It fixes the order, the content of every unit, chart/table formats,
+where text goes and where it doesn't, the source of every number, the Notes rules, and lists the AMZN
+defects **not** to copy (Annex A). Where it disagrees with the docs below, the playbook wins. The
+`/build-profile <TICKER>` command runs it.
+
+For a **new** company, the playbook is the only process: do not start from the blueprint, `/fill-overview`
+or OVERVIEW_CONVENTIONS. The blueprint below is **background reference** (useful to understand an existing
+profile); where it differs from the playbook, the playbook wins. **Amazon is the reference
+implementation**; `docs/COMPANY_PROFILE_BLUEPRINT.md` is the older map from it to any other ticker: the six-section tab
+spine (Top Line · Bottom Line · Evolution · Valuation · Management · Miscellaneous), the list of
+**shared engines you feed with a data file instead of writing a pane** (`results.js`, `segments.js`,
+`consensus-evolution.js`, `watchlist.js`, `management.js`), the canonical design components and the
+rule that a new profile adds **no inline `<style>`**, the palette rule (**Summit tokens everywhere;
+the company's brand only in its logo**), where every number comes from, the interaction contract, the
+build order, how to audit it in a harness, and a pre-ship checklist. Key invariants: **prefer an engine over a bespoke pane**; **never delete
+existing content**; **no sub-tab that is a placeholder**; **every pane ends with a source footer**;
+produce a **draft for review** — don't commit/push/PR automatically.
+
+### Adding a chart (anywhere in the portal)
+
+Before writing a new chart, read **`docs/CHART_ENGINE_REFERENCE.md` §0 — the standard**. It is the
+build manual: the six things every chart in the portal must do no matter what it plots (drag-to-zoom
+on **both** axes with double-click reset · clicking a series hides it *and* removes it from every
+table and total · a table under the chart inside a dropdown carrying **at minimum** everything
+drawn · metric dropdowns grouped by family with segments inside · units and estimate markers never
+ambiguous · missing data renders nothing rather than something broken), each with the exact call,
+plus a menu of optional capabilities and a pre-ship checklist. The rest of that file documents every
+function and control in detail.
+
+`js/results.js` is a generic engine for "a metric over time, against expectations" and already ships
+four series (actual / Summit / Street / guidance), quarterly and annual axes, level ⇄ growth ⇄ margin
+modes, growth in percent or in amount, range presets + slider + drag-to-zoom, a vintage axis
+("estimates as of …"), collapsible tables that mirror the chart, and a surprise scorecard. **If your
+chart is a metric over time, you almost certainly want to write a dataset
+(`js/results-data/<ticker>.js`), not a canvas** — `docs/CHART_TOOLKIT.md` is the how, and
+`docs/RESULTS_CONVENTIONS.md` is the data contract. **If it is not** (a waterfall, a choropleth, a
+scatter, a bridge), you write the canvas yourself — but §0 still applies.
+
 ### Filling a company Overview (standardized)
 
-When asked to **fill, create, or refresh a company's Overview** (e.g. "llena el overview de Broadcom", "fill AVGO"), you **must** follow `docs/OVERVIEW_CONVENTIONS.md` — it defines the fixed Overview structure, the Key Facts set, the official-first source hierarchy, the anti-wall/pop-up rules, the competitor scatter spec, and a self-audit checklist. The `/fill-overview <TICKER>` command runs this end-to-end. Key invariants: **never delete existing content — move non-conforming Overview content into the most relevant Deep Dive section**; **sources decide (company IR/filings first, never a forum as authority)**; **no walls of text, no fake precision**; produce a **draft for review**, don't commit/push/PR automatically.
+**For a company that has no profile yet, use `/build-profile <TICKER>` instead** — the Overview is units OV-1…OV-7 of `docs/PROFILE_PLAYBOOK.md` §8, built and approved one at a time. What follows is for touching up the Overview of an **existing** profile. When asked to **fill or refresh an existing company's Overview** (e.g. "llena el overview de Broadcom", "fill AVGO"), you **must** follow `docs/OVERVIEW_CONVENTIONS.md` — it defines the fixed Overview structure, the Key Facts set, the official-first source hierarchy, the anti-wall/pop-up rules, the competitor scatter spec, and a self-audit checklist. The `/fill-overview <TICKER>` command runs this end-to-end. Key invariants: **never delete existing content — move non-conforming Overview content into the most relevant Deep Dive section**; **sources decide (company IR/filings first, never a forum as authority)**; **no walls of text, no fake precision**; produce a **draft for review**, don't commit/push/PR automatically.
 
 ### Adding a company
 
@@ -266,9 +331,9 @@ When asked to **fill, create, or refresh a company's Overview** (e.g. "llena el 
 
 ### Company profile tabs
 
-Every company has three tabs: **Overview**, **Pillars**, and **Resources**.
+Every company has **Overview**, **Pillars** and **Resources**, plus **Deep Dive** once its first sub-tab is approved.
 
-**Overview** — empty by default. The user works with Claude to build custom content for each company (charts, metrics, notes). Each company can look different.
+**Overview / Deep Dive** — empty until the company's profile module exists. New profiles follow the **Amazon structure** (7 Overview blocks; Deep Dive: Top Line · Bottom Line · Evolution · Valuation · Management · Miscellaneous), built with `/build-profile` per `docs/PROFILE_PLAYBOOK.md`. Company-specific content that fits no other tab goes to Miscellaneous.
 
 **Pillars** — standardized across all companies. Four pillars with a toggle filter:
 - **Business** — competitive moat, market structure, unit economics, pricing power
@@ -294,6 +359,95 @@ Every company has three tabs: **Overview**, **Pillars**, and **Resources**.
 - Resources are managed through the portal UI (add/edit/delete)
 - Overview is custom-designed per company with Claude's help
 - Claude handles all the technical work — the user just describes what they want to see
+
+## NDX 100 Return Attribution — read docs/NDX_ATTRIBUTION.md first
+
+Market Analysis ▸ Nasdaq-100 Analysis (`js/ndx-attribution.js`). **Before changing its data, the extractor (`scripts/ndx/extract_ndx.py`), the `ndx-attribution` edge function or the page, read `docs/NDX_ATTRIBUTION.md`**: source sheet and columns, HOC / year rules (no hard-coded dates; a new year needs no code change), Carino math, drifted close weights, Bloomberg dummy tickers (`9990294D` → LBTYA, `9999794D` → LBTYK, `9210611D` → SIRI, `9996651D` → AZN — never show the dummy code), the Supabase refresh routine, and the page conventions agreed with the analyst.
+
+## S&P 500 panel (Market Analysis) — read docs/SPX_MARKET_ANALYSIS.md first
+
+Market Analysis is one list of functions, each with its own S&P 500 / Nasdaq-100 (/ Both) toggle — the section map is at the top of `docs/SPX_MARKET_ANALYSIS.md`. The S&P side (`js/market-analysis.js` coordinator, `js/spx-sector-alpha.js`, `js/spx-attribution.js`, `js/ma-price.js`, `js/ma-charts.js`) reads `js/spx-data.js`, generated by `scripts/spx/extract_spx.py` from the analyst's Bloomberg workbook (+ `--groups` Equity Universe Consensus for industry groups). **Before changing its data, the extractor or the page, read `docs/SPX_MARKET_ANALYSIS.md`**: the three-sheet BQL layout, composite tickers/IDs (never `UN`/`UW` or venue-level `id_bb_global`), `ca_adj=SPLITS` = price return, sectors from the S5 GICS sector indices, and the full-year membership rule.
+
+## Market History 1995-2005 (Market Analysis ▸ second tab) — read docs/MARKET_HISTORY.md first
+
+A tab next to Index Analysis inside Market Analysis (`js/market-history.js`, data `js/market-history-data.js`, generated by `scripts/market-history/extract_history.py` from the analyst's `dot com analysis.xlsx` + public macro files fetched by `fetch_macro.py`). It is a narrative page (the story, the numbers behind each finding, what to take away) over the S&P 500's own members, weights and returns. **No multiples, no fundamentals, no companies outside the S&P 500** (analyst decision, Oct 15 2026).
+
+## EPS Attribution (Market Analysis tab) — read docs/EPS_ATTRIBUTION.md first
+
+Third tab of Market Analysis (after Index Analysis and Market History) (`js/eps-attribution.js`, engine `js/eps-engine.js`, data `js/eps-attribution-data.js` from `scripts/eps-attribution/extract_eps.py`). Contributions are by index weight (price = w × return, EPS effect = w × own EPS change, multiple = the rest), never by shares × EPS; the index-level aggregate is a memo only. The doc lists the corrections to the original spec and the GAAP-basis caveat. Check the maths with `node tests/eps-engine.test.mjs`.
+
+## Derivatives tab — how it works
+
+One sidebar item, four strategies as sub-tabs. They are two questions crossed — is
+this stock one we **own** or one we **want**, and are we being **paid** the premium or
+**paying** it:
+
+|  | paid the premium | paying the premium |
+|---|---|---|
+| **stock you own** | Covered Calls | Protective Put |
+| **stock you want** | Short Puts | Buy Calls |
+
+Every pane answers the same underlying question — *what price am I agreeing to, and
+what valuation is that?* — so a strike, a breakeven, a floor and a cost basis are all
+priced back into an implied **P/E and EV/EBITDA** on an estimate year picked in the
+table header. That is the point of the tab; the option chain alone shows none of it.
+
+### Files
+
+| File | What it owns |
+|---|---|
+| `js/derivatives.js` | The shell: sub-tab pills, the quadrant map, lazy-loading each pane on first open |
+| `js/options-core.js` | Everything shared: the Massive proxy, expiries/underlying/chain fetches, the estimate layer + revenue-growth sensitivity, `multiplesAt()`, the income-statement block, the strike-band helpers, the cursor tooltip |
+| `js/options-data.js` | `OPT_ESTIMATES` — forward revenue/EBITDA/net income/EPS/shares/net debt per ticker. APP from `js/overviews/app-model.js` (Bloomberg consensus), everything else from `js/covered-calls-summit.js` (Summit DCF snapshots). Nothing is retyped, so nothing drifts. |
+| `js/covered-calls.js` | The book of sold calls (nine positions, all in %) — its own table shape and its own sheet, `css/covered-calls.css` |
+| `js/protective-put.js` · `js/buy-calls.js` · `js/short-puts.js` | One hand-picked strike ladder each, all on the shared `.der-an` chrome in `css/derivatives.css` |
+
+### Adding or changing a strategy pane
+
+The three ladder panes are the same skeleton: state → `loadTicker` → `loadChain` →
+`render` (KPIs, ladder, picker, income statement, footnote). To add one, copy
+`short-puts.js`, change the ladder columns and the footnote, register it in the
+`PANES` array in `derivatives.js`, and add its `<div class="der-sub">` in
+`index.html`. Do **not** re-implement fetching, multiples or the income statement —
+they live in `options-core.js` so a multiple means the same thing in all four panes.
+
+### Data and deployment
+
+- Price, premium, IV, greeks and open interest are live from Massive through the
+  **existing** `covered-calls-massive` edge function. It already forwards
+  `contract_type`, so **puts need no new function and no deploy**. Its `expirations`
+  route asks for calls, which is fine — listed equity options carry the same
+  expiration series on both sides.
+- Forward estimates are the Summit DCF snapshots (plus Bloomberg consensus for APP,
+  which is not in the Summit universe). Non-USD reporters (SPOT in EUR, TBBB in MXN)
+  deliberately show option economics but **no** multiples.
+- Nothing is stored. Every input on every pane is in-memory and resets on reload.
+- The tab is admin-only (`derivatives` in `ROLE_CONFIG.allowedPages`).
+- `harness-derivatives.html` (local-only — `harness-*.html` is gitignored) renders all
+  four panes against a synthetic option chain by stubbing `supabase.functions`, so the
+  layout and the maths can be checked on localhost without logging in or spending
+  Massive calls. Ask Claude to regenerate it if it is missing.
+
+## Betas tab — how it works
+
+Tools ▸ Betas, three sub-tabs (admin-only, `betas` in `ROLE_CONFIG`), all UI in English.
+**There is no house method** — which beta is right is decided per company, so the
+Calculator exposes every variable and each submission records the method it used.
+
+| File | What it owns |
+|---|---|
+| `js/betas.js` | Shell: Calculator · History · Portfolio pills, lazy-loads each pane, cross-pane jumps |
+| `js/betas-core.js` | Prices (**Massive only**, daily split-adjusted closes, 15 years, via `api.fetchPriceHistory` → `get-market-history`), resampling D/W/M, regression (β, α, corr, R², SE, vols), Blume adjustment, rolling β, the **beta history store**, `attachBrush` |
+| `js/betas-calc.js` | **Calculator** — any ticker vs any index; frequency, time window, end date, rolling window, α/anchor; KPI tiles, method matrix (click to apply), rolling-β and returns-scatter charts; **Submit** (with an optional note) appends a record to the history |
+| `js/betas-history.js` | **History** — every submission, newest first; filter by ticker (with a submitted-beta-over-time chart), expand for full stats, reopen in the Calculator with the exact method, delete, export CSV |
+| `js/betas-portfolio.js` | **Portfolio** — manually typed weights (stock/ETF % of NAV, or a derivative's signed delta-adjusted exposure); beta = the ticker's latest submission or manual; contribution chart |
+| `css/betas.css` | Scoped to `#tp-betas`; chart chrome comes from the global `css/results.css` |
+| `sql/024_beta_history.sql` | **Draft, not run** — the table the history will move to; same column names as the local records |
+
+- **Storage today:** the history (`betas-history-v1`) and the portfolio weights (`betas-portfolio-v1`) live in the browser's `localStorage` — per user and per browser, not shared. Moving to Supabase = San/Oscar run the SQL draft, then only the store functions in `betas-core.js` change (through `api.js`).
+- **Derivative beta** = delta-adjusted exposure × the underlying's beta (delta converts to equivalent shares; beta converts shares to market exposure).
+- **Prices come only from Massive** (SAB, Sep 16 2026 — not the embedded IBKR snapshot in `portfolio-metrics-prices-daily.js`, which is frozen at 2026-09-10). ⚠ `get-market-history` was **not deployed** as of Sep 16 2026 (Supabase answers 404), so the Calculator shows a "not deployed" message until San/Oscar run `supabase functions deploy get-market-history --project-ref bvflqjndivouhgwqfbrq`.
+- Working material (Frank's original marimo notebook + SPEC, the one-off SMGS review) is in `betas/`, excluded from git locally.
 
 ## Team tab — how it works
 

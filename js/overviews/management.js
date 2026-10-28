@@ -100,7 +100,10 @@ export function makeManagement(cfg){
   }
 
   function init(root){
-    var scope = root.querySelector('.ovt-pane[data-ovt="mgmt"]') || root.querySelector('.ov-pane[data-capane="mgmt"]') || root;
+    // Every layout this mold is mounted in: the old .ovt-pane / .ov-pane tabs and the Deep Dive spine
+    // (.dd-pane[data-dd="mgmt"], or "management" on profiles that keyed it that way).
+    var scope = root.querySelector('.ovt-pane[data-ovt="mgmt"]') || root.querySelector('.ov-pane[data-capane="mgmt"]') ||
+                root.querySelector('.dd-pane[data-dd="mgmt"]') || root.querySelector('.dd-pane[data-dd="management"]') || root;
     var modal = scope.querySelector('.mg2-modal'); if(!modal) return;
     var avEl=modal.querySelector('.mg2-card-av'), nEl=modal.querySelector('.mg2-card-name'),
         tEl=modal.querySelector('.mg2-card-title'), sEl=modal.querySelector('.mg2-card-since'), bEl=modal.querySelector('.mg2-card-bio');
@@ -118,7 +121,16 @@ export function makeManagement(cfg){
       el.onkeydown=function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(el.getAttribute('data-pid')); } };
     });
     modal.querySelectorAll('[data-close]').forEach(function(el){ el.onclick=close; });
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !modal.hidden) close(); });
+    // Wired ONCE per modal: init runs on every Deep Dive open, and each run used to add another
+    // document listener. The second listener closes the bio on ANY tab or sub-tab change — before,
+    // it stayed open behind the hidden pane and popped back when the reader returned.
+    if(!modal._mg2Wired){ modal._mg2Wired=true;
+      document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !modal.hidden) modal.hidden=true; });
+      document.addEventListener('click', function(e){
+        if(modal.hidden || !e.target.closest) return;
+        if(e.target.closest('.dd-tab, .ovt-subtab, .ovt-tab, .cotab, .ov-tab')) modal.hidden=true;
+      }, true);
+    }
   }
 
   return { body:body, init:init };

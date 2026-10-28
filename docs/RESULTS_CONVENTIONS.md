@@ -12,6 +12,12 @@ estimate-evolution pane, `data-ovst="estevo"`) is its own sub-tab at the same le
 briefly a stacked block inside Results; SAB split it out and later shortened the label, Jul 28).
 See `js/overviews/amzn.js` → `deepDiveHtml()` + `wireDD()` for the embedding pattern.
 
+**Adding a chart ANYWHERE in the portal?** Read **`docs/CHART_TOOLKIT.md`** first. This file is
+the data contract for the Results tab; that one is the guide to the engine as a reusable
+component — every reading mode, the period rules, the windowing, the tables, and the gotchas. The
+engine is not Results-specific, and you almost certainly want to write a dataset rather than a
+canvas.
+
 ---
 
 ## 1. Architecture
@@ -44,7 +50,7 @@ export var <tk>Results = {
   }
 }
 // section: { key:'top'|'margins', label, defaultMetric, groups:[{label, keys:[metricKey]}] }
-//   groups feed the grouped <select> (Totals / Segments / Revenue lines / …)
+//   groups feed the grouped <select> — GROUP BY METRIC FAMILY, SEGMENTS INSIDE (see below)
 // metric: { label, short, unit:'usdM'|'eps', marginOf?:<metricKey>, marginLabel?,
 //   periods:[...], act:[], summit:[], cons:[], guideLo:[], guideHi:[], note }
 //   All arrays parallel to periods; null = not available; act:null ⇒ forward ("E") period.
@@ -53,6 +59,27 @@ export var <tk>Results = {
 ```
 
 AMZN quarterly periods run `1Q23 … 2Q28` (13 reported + 9 forward); annual `2020 … 2028`.
+
+### Grouping rule — by metric family, segments inside (SAB, Aug 10 2026)
+
+A dropdown group is a **metric family**; its options are the **segments** of that family:
+
+```js
+{ label: 'Gross Bookings', keys: ['gb', 'mobgb', 'delgb', 'frgb'] },   //  Total · Mobility · Delivery · Freight
+{ label: 'Revenue',        keys: ['rev', 'mobrev', 'delrev'] }        //  Total · Mobility · Delivery
+```
+
+**Not** the transpose (`Mobility ▸ GB · revenue`), which is how UBER started. The reason is the
+rollout: every company has a handful of families and a few segments beneath them, so this shape
+carries across tickers, while a segment-first grouping is different for every business.
+
+The option TEXT stays the metric's **full label** even though the group header repeats the family.
+A closed `<select>` renders only the chosen option — the optgroup label is not part of it — so
+trimming the option to "Mobility" leaves the control reading "Mobility" with no clue which line
+that is. One name per metric, the same one the chart title and the table header use.
+
+Sections whose metrics are not segmented (Margins & Profitability, KPIs) keep a plain group —
+there is no family to fold them into and inventing one would be noise.
 
 **Optional `evolution` block** (top level, beside `views`) — feeds the *Estimate evolution*
 section (added Jul 28): how the ANNUAL forecast for each fiscal year moved across the model's
@@ -70,11 +97,17 @@ evolution: {
   metrics: { <key>: { label, unit:'usdM',
     summit: [[v per vintage] per year],       // rows parallel to years
     cons:   [[...]] | null,                   // BBG stored IN the model at each snapshot
-    prior:  { summit:[...], cons:[...] },     // Top Line only: the fiscal year BEFORE
-                                              // years[0], per vintage, for implied-growth —
+    prior:  { summit:[...], cons:[...] },     // needed by ANY metric with a Growth mode (not
+                                              // Top-Line-only — added to Profitability's capex/
+                                              // ebitda/earnings Sep 8, 2026): the fiscal year
+                                              // BEFORE years[0], per vintage, for implied-growth —
                                               // ALWAYS the value stored in that vintage block
                                               // (frozen projection for segments), never the
-                                              // reported actual (provenance rule, §3.6a)
+                                              // reported actual (provenance rule, §3.6a). `cons`
+                                              // is commonly partial/absent: Bloomberg's own
+                                              // estimate for a closed year disappears from the
+                                              // model once the print lands, so only the vintage(s)
+                                              // before that print carry a value.
     marginOf, marginLabel,                    // Profitability only: margin denominator key
     note } }
 }
@@ -138,7 +171,16 @@ evolution: {
    fetched through the Summit connection (Summit DB → API/edge function), replacing the
    hand-built arrays; the dataset shape in §2 is the contract that connection must fill. Colors are an ordered
    one-hue ramp of the portal blue (`EVO_RAMP` in results.js, darkest = nearest year; validated
-   with the dataviz palette checker). Solid = Summit, dashed = the BBG consensus stored in the
+   with the dataviz palette checker). **Sized to 5** and indexed directly (`EVO_RAMP[yi] ||
+   SUMMIT_MUTE`, never `% length`) — fixed Sep 8, 2026 after finding this was the SAME cycling bug
+   `SG_RAMP` had before its Sep 1 fix. Not yet visibly wrong for anyone: `rsTrimData`'s
+   forward-horizon rule (§7 item 8, `keepY`) caps what actually renders at the current fiscal
+   year + 2, and Uber — the widest raw `years` today, `['2025'..'2029']`, 5 elements — is trimmed
+   to 4 (`2025-2028`) as of Sep 2026, which the OLD 4-slot ramp still covered. But that trim margin
+   closes as the current FY rolls forward: once `fy` reaches 2027 the same dataset keeps all 5
+   years and the old ramp WOULD have silently repainted FY2029 the same colour as FY2025 — this
+   was fixed before that became visible, not after. Adding a 6th year needs a new step, not a
+   bigger modulo. Solid = Summit, dashed = the BBG consensus stored in the
    model at the same snapshot (so both columns are as-of the same date). Each block has a
    **US$B / % display toggle**: Top Line's % = the IMPLIED YoY GROWTH each snapshot carries
    (first year chains to `prior` — own estimate while the year was open, reported actual once
@@ -225,6 +267,35 @@ trusting rounded output (the BBG margin rows carry full precision).
 
 ## 7. Open items / next iterations (as of Jul 28, 2026)
 
+- **✓ RESOLVED (Sep 8, 2026) — the current fiscal year showed no growth in the Estimates
+  (Evolution) view.** Root cause was NOT the growth formula (`rsRefGrowthPct` in the Results table
+  is unaffected; the Evolution chart's own `rsEvoPctAt` was never touching `.act`, per its own
+  design). It was a documented but stale data-schema rule: §2 said `prior` — the FY-before-`years[0]`
+  base every first-tracked-year growth chains to — was "Top Line only," so AMZN's Profitability
+  metrics (`capex` — the section's DEFAULT metric — plus `ebitda`, `earnings`) never got one, and a
+  metric with no `prior` "simply has no growth for its first year" (§3.6a, by design). Verified
+  against the live Summit MCP snapshots (not guessed): pulled FY2025 `CAPEX`/`EBITDA`/`EARNINGS`
+  facts from all 7 AMZN vintages (`projection_history` sheet, `DEFAULT`/`BBG` sources) and confirmed
+  the same pattern already used for `rev`/`aws`/`intrev`: Summit's own frozen figure persists at
+  every vintage after the print (and can itself later be re-cut — EBITDA's frozen FY2025 jumped
+  168,024→185,600 at the May-13 save), while Bloomberg's `*_BBG_EST` fact zeroes out (→ `null`) the
+  moment the year closes, so a Street base only survives on the one pre-print vintage. Added
+  `prior` to all three metrics in `js/results-data/amzn.js` with those verified values.
+  **Follow-up (Sep 8, 2026, same day):** closed the remaining gap — segment op. income
+  (`naopinc`/`intopinc`/`awsopinc`) and `fcf`/`opinc` (Total, derived) now have `prior` too.
+  The DCF fact labels don't self-evidently map to segments, so this was verified, not guessed:
+  `OPINC`/`OPINC2`/`OPINC3` were confirmed to be NA/Intl/AWS GAAP op. income respectively by
+  cross-checking `EBITDA − D&A` per segment (`AWS_EBITDA − AWS_DNA` = `OPINC3` to the dollar at
+  every snapshot checked) and by matching FY2026 vintage-0 values against the metric's own
+  `summit[0][0]` already in the dataset. `opinc` (Total)'s `prior` is the sum of the three
+  segment priors, consistent with how its own `summit`/`cons` arrays are already built. None of
+  the five had a `*_BBG_EST` fact in the model, so all five stay Summit-only — no consensus row.
+  **FCF's caveat:** FY26 growth swings sign (−3.0% Dec → −219.0% Feb → −87.5% Aug 4) because FY26
+  FCF itself crosses zero across vintages — read that one in $ amount mode, not percent, per the
+  existing sign-flip convention. **Rule going forward:** `prior` is not Top-Line-only — any metric
+  with a `mode:'grow'` toggle needs one to show current-FY growth; §2 below is corrected
+  accordingly.
+
 - **GOOGL (Jul 29):** the Evolution **Results + Estimates sub-tabs are wired** in `js/overviews/googl.js`
   (row: `Earnings · Results · Estimates · Guidance · Strategy · Timeline`) and **`GOOGL` is registered
   in `RESULTS_DATA`**. The dataset `js/results-data/googl.js` was **reconstructed from the rolling
@@ -268,3 +339,240 @@ ticker, with Summit/guidance filled in later.
   needs consistent definitions first.
 - AMZN Overview/Deep Dive: Deep Dive sections still scaffolded (fill via the Call Prep flow /
   by hand); Call Prep phases pending "arma el Call Prep de AMZN".
+
+### DHR (Aug 31, 2026) — the first ticker with NO Summit model and NO consensus archive
+
+Danaher is on the engine: `DHR` is registered in `RESULTS_DATA`, `js/results-data/dhr.js` carries
+both views, and Evolution's three panes (Earnings · Results · Estimates) are wired in
+`js/overviews/dhr.js`. It is worth reading as the **floor case** of the rollout — what the contract
+still delivers when neither of the two normal sources exists:
+
+* **No Summit model.** `search_ticker('Danaher')` → `no_matches`. `summit` is `[]` on every metric
+  and nothing is invented. The Setup grid's second column is the **company's own guide** instead,
+  which is a better comparator than a blank one.
+* **No consensus archive.** DHR is not in `BBG_CONSENSUS.txt` / `Consensus_Portal.xlsm`. The only
+  snapshot is a single Bloomberg export, archived at `danaher-research/bbg/BBG_DHR_2026-08-31.xlsx`
+  (gitignored — a Bloomberg export never goes in a public repo). One snapshot is a reading, not an
+  axis, so there is **no `estMatrix` and no `evolution` block**, and the Estimates pane falls back
+  to a note naming the blocker. It switches itself on when a second vintage lands.
+* **Two sources that replaced them.** Reported adjusted figures, core growth and *all* guidance
+  come from the 15 quarterly **8-K EX-99.1 releases** (1Q23→2Q26) — that is where adjusted EPS,
+  which Bloomberg only carries for five quarters, is complete. Pre-print consensus for **1Q25–2Q26
+  only** comes from earnings-day coverage, which is what lights up the surprise block.
+
+**Three traps this ticker documents, all live in the dataset header:**
+1. **Bloomberg mixes bases inside one annual row.** Veralto separated in Sept 2023 and Danaher
+   restated only the income statement, back to FY2021. Bloomberg keeps the as-filed figure
+   everywhere else, so FY21/FY22 total revenue arrives with Veralto in it while the segment rows
+   do not. Check any annual row against the segment sum before trusting it.
+2. **Guidance in words is not a band.** Danaher guides core revenue growth, and until the 2Q26
+   release it guided it qualitatively. `guideLo/Hi` is populated on four cells only; the wording
+   for every other period is recorded in prose. Do not translate "mid-single digits" into numbers.
+3. **A percentage metric's surprise is in POINTS, not a ratio.** +3.0% against +2.0% is not "50%".
+
+**Two engine fixes DHR surfaced** (both in `js/results.js`, both verified no-change on AMZN):
+`rsSurpPairOk` now requires a pair to overlap on a **reported** period — a forward-only overlap
+(a Street number and a company guide for the same future quarter) was putting a metric in the
+"Actuals vs Estimates" dropdown that drew an empty chart. `rsVintNote` no longer names a source
+the dataset has no values for — DHR and GOOGL ship `summit: []` and the note still announced a
+Summit series that was not there.
+
+**Also worth knowing:** panes that read their period axis *through* a Results dataset must cut it
+at the last period with an actual. Adding DHR's forward horizon grew phantom FY26–FY29 buttons on
+the Bottom Line segment bridge and made "the latest quarter" resolve to 3Q27. Fixed in
+`dhr-bl-segments.js` / `dhr-misc-other.js`; check the same thing on the next ticker.
+
+---
+
+# 8. The rollout contract — `estMatrix`, the vintage axis (v2.1 · Aug 17, 2026)
+
+**Why this exists.** Through v1 each dataset shipped `summit` and `cons` as flat arrays with the
+pre-print snapshot already chosen *by hand*, and the choice justified in a 20-line file comment.
+That made two things impossible: reading what the model or the Street said about every period
+**as of one date**, and refreshing a company without re-doing the judgement. v2 stores the whole
+matrix and **derives** the flat series. Adding a company stops being an authoring job and becomes
+a generator run.
+
+**v2.1 (this pass)** rebuilt the generators after the Bloomberg export changed shape, and moved
+AMZN onto the axis. Everything below is what the AMZN migration established; UBER is the other
+live example.
+
+## 8.1 Shape
+
+```js
+export var <tk>Results = {
+  updated, intro, source, views: { q, y },      // unchanged — hand-curated
+  estMatrix: {                                  // GENERATED — overwrite wholesale, never hand-edit
+    cons:   { vintages: [ … ], q: { <metric>: { '<vintageId>': { '<period>': value, … } } }, y: { … } },
+    summit: { … same shape … }
+  },
+  evolution: { … }                              // GENERATED too, since v2.1 — prose stays by hand
+}
+// vintage: { id:'2026-08-04', label, lastActual: { q:'2Q26', y:'2025' } }
+```
+
+Rules that matter:
+
+* **Period-keyed, not positional.** A row is `{'3Q26': 14821}`, not a 19-slot array. It survives
+  the forward-horizon trim (§3.8) and any change to a metric's period axis.
+* **At the ROOT, beside `views`** — machine-generated numbers stay out of the hand-curated metric
+  blocks (labels, `act`, `guideLo/Hi`, notes). A refresh replaces one block and touches nothing
+  anyone wrote. `scripts/consensus/apply_matrix.py` does the splice and is idempotent.
+* **`lastActual` per view is the only date logic needed.** A vintage is an *estimate* for every
+  period after its own last reported period — so "pre-print" is computable and no per-period
+  report dates are required anywhere.
+* **Back-compatible.** A metric with no matrix row keeps its flat `summit`/`cons`. The picker only
+  renders when a dataset has an `estMatrix`, so the tickers still on v1 are untouched.
+
+## 8.2 The two reading modes (engine)
+
+| Mode | Meaning |
+|---|---|
+| `preprint` (default) | Per period, the latest snapshot whose `lastActual` is still *before* it — ties broken by the later snapshot. Reproduces the v1 hand-picked columns. |
+| `<vintageId>` / `asof:<date>` | One snapshot read straight across, or (as-of) each source's latest file up to that date. Periods it never covered stay **null** — blank, not zero, and never a silent fallback to an older snapshot. |
+
+**`preprint` has two fallbacks to the dataset's own flat array, and both matter.**
+
+1. **On an ALREADY-REPORTED period the flat value wins.** It is the projection the model *froze at
+   that print*; a snapshot is only ever as fresh as the day it was saved.
+2. **Where no vintage reaches back far enough, the flat value is kept, not blanked.** Model
+   snapshots typically begin long after the reported history does.
+
+Stated the other way: **the matrix ADDS to a dataset and never silently subtracts from it.** That
+is a testable property, and `verify_preprint.py` tests it: `blanked` must be 0.
+
+On AMZN the matrix filled **110 cells the dataset had as `null`** — every reported quarter of
+segment revenue, segment operating income, total operating income and capex consensus, none of
+which had any Street history before this. The 51 `changed` cells were all forward periods moving
+from the July pre-print export to the 2026-08-04 post-print snapshot, i.e. genuine refreshes.
+
+`rsApplyVintage()` resolves the selection into `m.summit` / `m.cons` once. Those arrays are read
+in ~40 places; resolving centrally means no reader changes. The flat arrays are stashed as
+`m._flat_<src>` on first use, so switching modes never compounds.
+
+## 8.3 Where the numbers come from
+
+| Column | Source | Rule |
+|---|---|---|
+| `estMatrix.cons` | **`BBG_CONSENSUS.txt` ∪ `Consensus_Portal.xlsm` sheet `CONSENSUS`**, deduped by `data_as_of` | Read the UNION. The archive is the immutable copy; the live sheet can hold a row it lacks. `emit_matrix.py` prints which snapshots came from only one of them. Note the sheet was renamed `BBG_CONSENSUS` → `CONSENSUS` in the Aug-2026 rebuild; the generator takes either. |
+| `estMatrix.summit` | Summit MCP `get_fundamentals(snapshot_date=…, sheet_sources=['projection_history'])`, one pull per snapshot | Forward-only rows. Dedupe by `facts_hash`, not by date. **Drop literal zeros** — in these models a `0` is a row nobody populated, not a forecast of nothing. |
+| `evolution` | The same MCP dumps, read across ALL years | The opposite read: the pane plots how the model's view of a *year* moved. See §3.6a. |
+| `act` | Summit MCP `actuals_history`, cross-checked against the release | Bloomberg's own `(Rep)` columns are **not** a substitute. |
+| `guideLo/Hi` | The company's release, or the model's guidance rows where populated | Hand-curated; never generated. |
+
+### The export schema (changed Aug 2026) — address metrics by CODE
+
+The workbook is now **self-describing**. Each row declares its own slots:
+
+```
+metric1..50      code1..50      segment1..50      unit1..50      scale1..50
+metric_kpi1..50  code_kpi1..50  segment_kpi1..50  unit_kpi1..50  scale_kpi1..50
+```
+
+with values in `<slot>_<horizon>` columns (`metric12_fq+1`, `kpi3_fy+2`) over `fq-4..fq+4` and
+`fy-2..fy+3`. Each horizon column names its own period: `2026 Q3 (Fwd)`, `2025 A (Rep)`.
+
+**Bind by Bloomberg code + segment id, never by slot number.** Slot numbering is a property of the
+export, not of the ticker, and the codes differ per company too — AMZN's operating income is
+`IS_COMPARABLE_EBIT`, LYFT's is `IS_EBIT_AS_REPORTED`. The pre-v2.1 configs named fixed columns
+(`rev_fq+1`, `ebitda_fq0`) that no longer exist, and a stale config yields an almost-empty matrix
+rather than an error — which is why `emit_matrix.py` now prints a **resolution report** binding
+every configured metric to a slot or to `UNRESOLVED`.
+
+Identify a segment id by tying its `fq0` value to the last printed quarter. AMZN's three were
+pinned that way: NA 116,177 / Intl 42,197 / AWS 42,232 for 2Q26.
+
+⚠ **Read the `scale` column.** A blank scale on a money row means whole units, not millions.
+AMZN's North-America operating income arrives as `9123000000` beside siblings at `1717` and
+`16621`. The config declares the target unit (`usdM` / `eps`) and the generator normalizes. This
+is the highest-consequence, lowest-visibility trap in the file: get it wrong and one series is
+off by 10⁶ while every other line looks perfect.
+
+⚠ **A dead BQL cell looks exactly like a smooth estimate series.** When a cell stops updating, the
+export keeps emitting its last result and *relabels it a year forward at each print*. AMZN's
+ANNUAL North-America revenue has printed 473,099 / 517,634 / 561,728 at every snapshot since May
+2021 — 27 distinct values across 90 cells — labelled FY21–23, then FY22–24, … now FY26–28. Today's
+labelling happens to look plausible; its history is fiction. `emit_matrix.py` runs a
+**frozen-series check** (unique values ÷ cells) and will not let one through quietly; excluded
+lines go in `drop`. The QUARTERLY twin of that same slot moves normally, so this is per cell, not
+per ticker — check both frequencies before trusting either.
+
+**Only FORWARD horizons are consensus.** The `(Rep)`-marked columns are Bloomberg's own reported
+figures and belong to no estimate series — they can also sit on a different basis than the
+company's measure.
+
+**Bloomberg's adjusted-EPS baskets can be off-basis before they reconcile.** Check per ticker via
+`valid_<tk>.json` rather than trusting the column name.
+
+**A snapshot is an estimate for nothing it already knew.** Its `projection_history` also carries
+frozen projections for periods already reported, but those belong to whatever vintage stood before
+*that* print — filing them under the snapshot's own date would date them wrong.
+
+**A reported year holds the ACTUAL, not a forecast.** Estimate lines therefore go *flat* after the
+print rather than continuing to move — say so on screen; it is what the Reported toggle is for.
+
+**A model row that does not tie to the reported basis stays null.** Never fill with a number you
+cannot stand behind.
+
+## 8.4 Adding a company — the short version
+
+1. **Confirm coverage first.** `py inspect_matrix.py <TK>` exits telling you which tickers the
+   workbook actually holds. As of Aug 2026 that is **four — AMZN, GOOGL, LYFT, UBER** (an earlier
+   version of this section said 32; that is no longer true). Confirm the Summit MCP has snapshots
+   via `list_snapshots`.
+2. Write `map_<TK>.json` off the inspector's CODE column, plus `valid_<TK>.json` for any off-basis
+   line.
+3. `py emit_matrix.py <TK> …` — **read the resolution report and the frozen-series check.**
+4. `py apply_matrix.py <TK> && py verify_preprint.py <TK> cons` — the acceptance test. `blanked`
+   must be 0; classify every `changed` as rounding, a genuine refresh, or a bug before moving on.
+5. Same for the Summit side (`emit_summit_matrix.py`, then `emit_evolution.py`), establishing each
+   file's `lastActual` **from the data, not the calendar**: AMZN's 2026-07-30 and 2026-08-03 files
+   are dated after the 2Q26 print but still carry the May projection for 2Q26, so both are
+   pre-print saves; 2026-08-04 is the re-cut that ingested it.
+6. Hand-curate only what a machine cannot: labels, groups/sections, `act` reconciliation, guidance,
+   and the basis notes.
+7. Verify in the browser (§9). `node` is installed now, so `import()` the dataset first — a syntax
+   error surfaces in a second — but DOM behaviour still has to be clicked.
+
+## 8.5 What is genuinely reusable, and what is not
+
+**Reusable as-is.** The engine (`js/results.js`) is fully generic and needed no change at all for
+AMZN — the vintage picker, the surprise scorecard, the revision record and the Estimates pane all
+appeared from the dataset alone. The dataset contract, all six scripts, both acceptance tests and
+both guard rails are ticker-agnostic.
+
+**Per ticker, unavoidably.** The metric→code map and segment ids (~20 lines of JSON); which totals
+must be derived from segment rows rather than read (the model commonly zeroes its own quarterly
+total); the `lastActual` register; and the prose.
+
+**The binding constraint is Bloomberg coverage, not the tooling.** Four tickers are in the
+workbook. Everything above works the moment a fifth is added, and nothing in this repo can work
+around its absence — adding one is a terminal job for San/Oscar. A ticker with Summit snapshots
+but no Bloomberg row can still take `estMatrix.summit` on its own; the two halves are independent.
+
+## 9. Verifying — the checklist lives elsewhere now
+
+**The ship checklist is `CHART_ENGINE_REFERENCE.md` §0.5**, and the six non-negotiables it tests
+are §0.2. Run them; do not re-derive them here. Note that **adding `estMatrix` switches on block C
+("Road to the print") by itself** — a chart you did not ask for and now own, so it goes through
+§0.5 too.
+
+What follows is only what is specific to a matrix refresh and is *not* in §0.5:
+
+* `node` **is** installed (v24). `node --input-type=module -e "await import('./js/results-data/<tk>.js')"`
+  catches a syntax error in a second, and `resultsHtml('<TK>')` renders headlessly — enough to
+  prove the picker and the blocks exist before opening a browser.
+* **Charts build lazily on visibility, and a hidden PARENT counts.** Clicking the `Results`
+  sub-tab while the Deep Dive tab above it is not selected leaves `offsetParent` null and reports
+  zero charts. It looks broken and is fine.
+* **Reset the vintage picker between checks.** A single-file mode left selected from a previous
+  step makes every later reading look empty — that is the mode working, not a regression. This is
+  the single most misleading thing about testing the matrix.
+* **Blocks that re-render via `outerHTML` invalidate your handles.** `rsRerenderConv` replaces
+  block C wholesale, so a cached element or `Chart.getChart` reference goes stale after any
+  control change. Re-query on every step or every reading comes back null.
+* Long `await`-driven loops over chart rebuilds time out CDP at 45s. Drive the selects
+  synchronously and read `Chart.getChart(canvas)` back.
+* **The acceptance tests are the real verification of the data.** `verify_preprint.py` and the
+  Summit emitter's per-metric verdict catch what no amount of clicking will: a series that renders
+  beautifully out of a dead Bloomberg cell.

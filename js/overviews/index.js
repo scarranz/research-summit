@@ -20,8 +20,15 @@ import { qcomOverview } from './qcom.js';
 import { ibkrOverview } from './ibkr.js';
 import { googlOverview } from './googl.js';
 import { amznOverview } from './amzn.js';
+import { disOverview } from './dis.js';
+import { appOverview } from './app.js';
+import { sharkninjaOverview } from './sharkninja.js';
+import { dhrOverview } from './dhr.js';
+import { marOverview } from './mar.js';
+import { tsmOverview } from './tsm.js';
 
 var OVERVIEWS = {
+  SN: sharkninjaOverview,
   RELY: remitlyOverview,
   SOFI: sofiOverview,
   MSFT: msftOverview,
@@ -41,6 +48,11 @@ var OVERVIEWS = {
   GOOGL: googlOverview,
   GOOG: googlOverview,
   AMZN: amznOverview,
+  DIS: disOverview,
+  APP: appOverview,
+  DHR: dhrOverview,
+  MAR: marOverview,
+  TSM: tsmOverview,
 };
 
 // Returns the overview module for a ticker, or null if none is built yet.

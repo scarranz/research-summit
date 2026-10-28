@@ -23,10 +23,18 @@
 <link rel="stylesheet" href="css/team.css">
 <link rel="stylesheet" href="css/fund-returns.css">
 <link rel="stylesheet" href="css/covered-calls.css">
+<link rel="stylesheet" href="css/portfolio-metrics.css">
+<link rel="stylesheet" href="css/derivatives.css">
+<link rel="stylesheet" href="css/betas.css">
+<link rel="stylesheet" href="css/market-history.css">
 <link rel="stylesheet" href="css/industry.css">
+<link rel="stylesheet" href="css/spectrum.css">
+<link rel="stylesheet" href="css/ndx-attribution.css">
+<link rel="stylesheet" href="css/eps-attribution.css">
 <link rel="stylesheet" href="css/results.css">
 <link rel="stylesheet" href="css/payments.css">
   <link rel="stylesheet" href="css/hyperscalers.css">
+<link rel="stylesheet" href="css/selectors.css">   <!-- one selector system for company profiles; after every other sheet -->
 <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
@@ -50,20 +58,23 @@
   </div>
   <nav class="snav">
     <button class="ntb nav-item active" data-tab="res" data-page="research" onclick="switchTab('res')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Research</button>
+    <button class="ntb nav-item" data-tab="pf" data-page="portfolio" onclick="switchTab('pf')"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg>Portafolio</button>
   </nav>
   <nav class="snav">
     <button class="ntb nav-item" data-tab="rot" data-page="market-analysis" onclick="switchTab('rot')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Market Analysis</button>
     <button class="ntb nav-item" data-tab="inv" data-page="hedge-funds" onclick="switchTab('inv')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20v-1.5a4.5 4.5 0 0 1 7-3.7"/><circle cx="17" cy="10" r="2.6"/><path d="M14 20v-1a3.6 3.6 0 0 1 6.5-2.1"/></svg>Hedge Funds</button>
     <button class="ntb nav-item" data-tab="team" data-page="team" onclick="switchTab('team')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Team</button>
     <button class="ntb nav-item" data-tab="ret" data-page="fund-returns" onclick="switchTab('ret')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M19 9l-5 5-4-4-3 3"/></svg>Return Analysis</button>
-    <button class="ntb nav-item" data-tab="cc" data-page="covered-calls" onclick="switchTab('cc')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg>Covered Calls</button>
+    <button class="ntb nav-item" data-tab="der" data-page="derivatives" onclick="switchTab('der')"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Derivatives</button>
   </nav>
   <div class="snav-lbl">Pipeline</div>
   <nav class="snav">
     <button class="ntb" disabled style="opacity:.55;cursor:default"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Idea Backlog</button>
   </nav>
   <div class="side-foot">
-    <div class="sfnav"></div>
+    <div class="sfnav">
+      <button class="ntb nav-item" data-tab="tools" data-page="tools" onclick="switchTab('tools')"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.3l-6 6a1.5 1.5 0 0 0 2.1 2.1l6-6a4 4 0 0 0 5.3-5.4l-2.6 2.6-2.1-2.1 2.6-2.6z"/></svg>Tools</button>
+    </div>
     <div class="userbox">
       <div class="userav" id="sbUserInitial">—</div>
       <div><div class="username" id="sbUserName">—</div><div class="userrole" id="sbUserRole">—</div></div>
@@ -118,6 +129,7 @@
         <div id="co-logo"></div>
         <div class="cotitle"><div class="co-eyebrow">Company Profile</div><h2 id="co-name">Uber Technologies</h2><div class="sub" id="co-sub">NYSE: UBER &middot; Transport</div></div>
         <div class="copx"><div class="big" id="co-px">$82.40</div><div class="co-pxsub" id="co-pxsub"></div></div>
+        <div class="cohead-src" id="co-srcbtns"></div>
       </div>
       <div class="cotabs">
         <button class="cotab active" data-pane="overview" onclick="coTab('overview')">Overview</button>
@@ -164,172 +176,204 @@
 
     <!-- SPECTRUM -->
     <div id="summit-spectrum" class="summit-sub">
-      <div class="ind-wrap">
-        <div class="ind-head">
-          <h2 class="ind-title">Spectrum</h2>
-          <p class="ind-sub">Coming soon.</p>
-        </div>
-      </div>
+      <div id="spectrum-root"></div>
     </div>
   </div>
 </div>
 
-<!-- MARKET ANALYSIS TAB -->
+<!-- PORTAFOLIO TAB (empty — to be built) -->
+<div id="tp-pf" class="tp">
+  <div id="pm-root"></div>
+</div>
+
+<!-- MARKET ANALYSIS TAB — one list of functions; each section picks its own index
+     (S&P 500 · Nasdaq-100 · or both where that makes sense). The index toggles are
+     filled by market-analysis.js (MA_SECTIONS); the Nasdaq panes by ndx-attribution.js. -->
 <div id="tp-rot" class="tp">
-  <div class="srow">
-    <div class="sc"><div class="sl">S&amp;P 500 Universe</div><div class="sv">503</div><div class="ss">Companies Analyzed</div></div>
-    <div class="sc" style="border-top-color:#177A4E"><div class="sl">Positive YTD 2026</div><div class="sv" style="color:#177A4E">265</div><div class="ss">53% of companies</div></div>
-    <div class="sc" style="border-top-color:#1E3A5F"><div class="sl">Beating S&amp;P 500</div><div class="sv">186</div><div class="ss">vs +7.6% benchmark</div></div>
-    <div class="sc" style="border-top-color:#177A4E"><div class="sl">S&amp;P 500 YTD 2026</div><div class="sv" style="color:#177A4E">+7.6%</div><div class="ss">May 19, 2026</div></div>
+  <div class="ma-tabs"><button class="ma-tab active" data-matab="index">Index Analysis</button><button class="ma-tab" data-matab="history">Market History 1995-2005</button><button class="ma-tab" data-matab="eps">EPS Attribution</button></div>
+  <!-- Market History tab: js/market-history.js · data js/market-history-data.js (scripts/market-history/extract_history.py) · docs/MARKET_HISTORY.md -->
+  <div id="mh-root"></div>
+  <!-- EPS Attribution tab: js/eps-attribution.js · engine js/eps-engine.js · data js/eps-attribution-data.js (scripts/eps-attribution/extract_eps.py) · docs/EPS_ATTRIBUTION.md -->
+  <div id="eps-root"></div>
+  <div id="ndx-tip" style="position:fixed;pointer-events:none;opacity:0;transition:opacity .09s;background:var(--w,#fff);border:1px solid rgba(0,0,0,.1);border-radius:9px;padding:8px 12px;font-size:12px;box-shadow:0 5px 18px rgba(0,0,0,.14);z-index:1999;max-width:260px;font-family:Inter,sans-serif"></div>
+
+  <div class="sec" data-ma="price">
+    <div class="sechdr"><span class="sect">Index Price Return</span><span class="secn" id="ma-price-asof"></span></div>
+    <div class="card" id="ma-price"></div>
   </div>
-  <div class="sec">
-    <div class="sechdr"><span class="sect">Sector Alpha &mdash; Avg Annual Return by Sector</span></div>
-    <div class="card">
-      <div class="sb-secrow" id="sb-secrow"></div>
-      <div class="sbl">
-      <div class="sb-toggle" id="sb-yearfilter" style="gap:6px;padding:3px;flex-wrap:wrap">
-        <button class="sb-tbtn active" data-yr="2017" onclick="toggleYear('2017')">2017</button>
-        <button class="sb-tbtn active" data-yr="2018" onclick="toggleYear('2018')">2018</button>
-        <button class="sb-tbtn active" data-yr="2019" onclick="toggleYear('2019')">2019</button>
-        <button class="sb-tbtn active" data-yr="2020" onclick="toggleYear('2020')">2020</button>
-        <button class="sb-tbtn active" data-yr="2021" onclick="toggleYear('2021')">2021</button>
-        <button class="sb-tbtn active" data-yr="2022" onclick="toggleYear('2022')">2022</button>
-        <button class="sb-tbtn active" data-yr="2023" onclick="toggleYear('2023')">2023</button>
-        <button class="sb-tbtn active" data-yr="2024" onclick="toggleYear('2024')">2024</button>
-        <button class="sb-tbtn active" data-yr="2025" onclick="toggleYear('2025')">2025</button>
-        <button class="sb-tbtn active" data-yr="2026" onclick="toggleYear('2026')">2026</button>
+
+  <div class="sec" data-ma="sector">
+    <div class="sechdr"><span class="sect">Sector Return / Contribution</span><span class="ma-idx"></span></div>
+    <div class="ma-pane" data-idx="spx">
+      <div class="card">
+        <div class="sb-secrow" id="sb-qbar"></div>
+        <div class="sb-secrow" id="sb-secrow"></div>
+        <div class="sb-secrow" id="sb-dates" style="flex-direction:column;align-items:stretch;gap:10px"></div>
+        <div class="sbrs" id="sb-wrap"></div>
+        <div id="sb-note" style="font-size:11px;color:var(--mu);margin-top:12px;line-height:1.5"></div>
       </div>
-      <div class="sb-toggle">
-        <button class="sb-tbtn active" id="sb-abs" onclick="setSBMode('abs')">Absolute</button>
-        <button class="sb-tbtn" id="sb-rel" onclick="setSBMode('rel')">Relative</button>
-      </div>
-    </div><div class="sbrs" id="sb-wrap"></div></div>
+    </div>
+    <div class="ma-pane" data-idx="ndx"><div class="card" id="ndx-sector-returns"></div></div>
   </div>
-  <div class="sec">
-    <div class="sechdr"><span class="sect">Sector Summary &mdash; Market Beaters</span><span class="secn">Stock counts update with filters above</span></div>
+
+  <div class="sec" data-ma="detail">
+    <div class="sechdr"><span class="sect">Attribution Detail &amp; Simulation</span><span class="ma-idx"></span></div>
+    <div class="card" id="ma-detail"></div>
+  </div>
+
+  <div class="sec" data-ma="summary">
+    <div class="sechdr"><span class="sect">Sector Summary &mdash; Market Beaters</span><span class="ma-idx"></span></div>
     <div class="card">
-      <div class="fbar">
-        <span class="flm">Filters:</span>
-        <label class="fc" id="fc-p26"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2026</label>
-        <label class="fc" id="fc-b26"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2026</label>
-        <label class="fc" id="fc-p25"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2025</label>
-        <label class="fc" id="fc-b25"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2025</label>
-        <label class="fc" id="fc-p24"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2024</label>
-        <label class="fc" id="fc-b24"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2024</label>
-        <label class="fc" id="fc-p23"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2023</label>
-        <label class="fc" id="fc-b23"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2023</label>
-        <label class="fc" id="fc-p22"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2022</label>
-        <label class="fc" id="fc-b22"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2022</label>
-        <button onclick="clearFilters()" style="padding:5px 11px;border:1px solid var(--bdr);border-radius:7px;background:var(--w);cursor:pointer;font-size:11px;color:var(--mu)">Clear</button>
-      </div>
+      <div class="fbar" id="fc-bar"></div>
       <div class="sb-secrow" id="sec-excl-row"></div>
+      <div id="sec-summary-note" style="font-size:11px;color:var(--mu);line-height:1.55;margin:6px 2px 4px"></div>
       <table class="rt" id="sec-summary-tbl" style="margin-top:6px"><thead><tr>
         <th>Sector</th>
         <th style="text-align:right">Stocks Matching</th>
         <th style="text-align:right">% of Sector</th>
         <th style="text-align:right">Total in Sector</th>
-        <th style="text-align:right">2026 YTD</th>
+        <th style="text-align:right" id="sec-summary-ytd-h">2026 YTD</th>
       </tr></thead><tbody id="sec-summary-body"></tbody></table>
     </div>
   </div>
-  <div class="sec">
-    <div class="sechdr"><span class="sect">S&amp;P 500 Companies Explorer</span><span class="secn">Working copy</span></div>
-    <div class="card">
-      <div class="fbar">
-        <span class="flm">Filters:</span>
-        <label class="fc" id="fc2-p26"><input type="checkbox" onchange="applyFilters2()"> &#x2713; Positive 2026</label>
-        <label class="fc" id="fc2-b26"><input type="checkbox" onchange="applyFilters2()"> &#x2191; Beat Market 2026</label>
-        <label class="fc" id="fc2-p25"><input type="checkbox" onchange="applyFilters2()"> &#x2713; Positive 2025</label>
-        <label class="fc" id="fc2-b25"><input type="checkbox" onchange="applyFilters2()"> &#x2191; Beat Market 2025</label>
-        <label class="fc" id="fc2-p24"><input type="checkbox" onchange="applyFilters2()"> &#x2713; Positive 2024</label>
-        <label class="fc" id="fc2-b24"><input type="checkbox" onchange="applyFilters2()"> &#x2191; Beat Market 2024</label>
-        <button onclick="clearFilters2()" style="padding:5px 11px;border:1px solid var(--bdr);border-radius:7px;background:var(--w);cursor:pointer;font-size:11px;color:var(--mu)">Clear</button>
-      </div>
-      <div class="fbar2">
-        <span class="flm">Sector:</span>
-        <select class="fsel" id="sec-flt2" onchange="onSecChange('tbl2')">
-          <option value="">All Sectors</option>
-          <option>Communication Services</option><option>Consumer Discretionary</option><option>Consumer Staples</option><option>Energy</option><option>Financials</option><option>Health Care</option><option>Industrials</option><option>Materials</option><option>Real Estate</option><option>Technology</option><option>Utilities</option>
-        </select>
-        <span class="flm">Subsector:</span>
-        <select class="fsel" id="ind-flt2" onchange="applyFilters2()" style="max-width:240px"><option value="">All Subsectors</option></select>
-      </div>
-      <div class="tcnt" id="tbl-cnt2">503 <span>companies shown</span></div>
-      <div class="twrap"><table class="dt" id="main-tbl2">
-        <thead><tr>
-          <th onclick="sortTbl2(0)">Ticker<span class="sa">&#x25BC;</span></th>
-          <th onclick="sortTbl2(1)">Sector<span class="sa">&#x25BC;</span></th>
-          <th onclick="sortTbl2(2)">Industry<span class="sa">&#x25BC;</span></th>
-          <th onclick="sortTbl2(3)">2022<span class="sa">&#x25BC;</span></th>
-          <th onclick="sortTbl2(4)">2023<span class="sa">&#x25BC;</span></th>
-          <th onclick="sortTbl2(5)">2024<span class="sa">&#x25BC;</span></th>
-          <th onclick="sortTbl2(6)">2025<span class="sa">&#x25BC;</span></th>
-          <th onclick="sortTbl2(7)">2026 YTD<span class="sa">&#x25BC;</span></th>
-          <th onclick="sortTbl2(8)" style="white-space:nowrap">3yr Cumul.<span class="sa">&#x25BC;</span></th>
-        </tr></thead>
-        <tbody id="tbl-body2"></tbody>
-      </table></div>
-    </div>
+
+  <div class="sec" data-ma="comp">
+    <div class="sechdr"><span class="sect">Index Composition &mdash; Weight Change</span><span class="ma-idx"></span></div>
+    <div class="ma-pane" data-idx="spx"><div class="card" id="ma-spx-comp"></div></div>
+    <div class="ma-pane" data-idx="ndx" id="ma-ndx-comp"></div>
   </div>
-  <div class="sec">
-    <div class="sechdr"><span class="sect">Return Scatter &mdash; 2025 vs 2026 YTD</span><span class="secn">Quadrant counts update with filters</span></div>
-    <div class="card">
-      <div class="fbar2" style="margin-bottom:10px">
-        <span class="flm">Sector:</span>
-        <select class="fsel" id="scat-sec" onchange="onSecChange('scat')">
-          <option value="">All Sectors</option>
-          <option>Communication Services</option><option>Consumer Discretionary</option><option>Consumer Staples</option><option>Energy</option><option>Financials</option><option>Health Care</option><option>Industrials</option><option>Materials</option><option>Real Estate</option><option>Technology</option><option>Utilities</option>
-        </select>
-        <span class="flm">Subsector:</span>
-        <select class="fsel" id="scat-ind" onchange="renderScatter()" style="max-width:240px"><option value="">All Subsectors</option></select>
-      </div>
-      <div class="qcounts" id="quad-counts"></div>
-      <div class="scrl">
-        <span class="scrli"><span class="scline" style="border-color:#4A7FB5"></span>S&amp;P 2025 (+15.7%)</span>
-        <span class="scrli"><span class="scline" style="border-color:#177A4E"></span>S&amp;P 2026 (+7.6%)</span>
-        <span class="scrli"><span style="width:12px;height:12px;background:rgba(180,30,30,.1);border:1px solid rgba(180,30,30,.25);display:inline-block;border-radius:2px"></span>Lag both years</span>
-      </div>
-      <div style="position:relative;height:390px"><canvas id="scat-c"></canvas></div>
-      <div class="scleg" id="scleg"></div>
-    </div>
+
+  <div class="sec" data-ma="top">
+    <div class="sechdr"><span class="sect">Top Contributors</span><span class="ma-idx"></span></div>
+    <div class="ma-pane" data-idx="spx"><div class="card" id="ma-spx-top"></div></div>
+    <div class="ma-pane" data-idx="ndx" id="ma-ndx-top"></div>
   </div>
-  <div class="sec">
-    <div class="sechdr"><span class="sect">Stock Lookup &amp; Rotation Winners</span></div>
+
+  <div class="sec" data-ma="wl">
+    <div class="sechdr"><span class="sect">Winners vs Losers</span><span class="ma-idx"></span></div>
+    <div class="ma-pane" data-idx="spx"><div class="card" id="ma-spx-wl"></div></div>
+    <div class="ma-pane" data-idx="ndx" id="ma-ndx-wl"></div>
+  </div>
+
+  <div class="sec" data-ma="scatter">
+    <div class="sechdr"><span class="sect">Security Return vs Weight</span><span class="ma-idx"></span></div>
+    <div class="ma-pane" data-idx="spx"><div class="card" id="ma-spx-scatter"></div></div>
+    <div class="ma-pane" data-idx="ndx" id="ma-ndx-scatter"></div>
+  </div>
+
+  <div class="sec" data-ma="lookup">
+    <div class="sechdr"><span class="sect">Stock Lookup</span></div>
     <div class="card">
-      <div class="srw"><span class="sric">&#x1F50D;</span><input type="text" class="sri" id="sr-inp" placeholder="Search any S&amp;P 500 ticker (AAPL, XOM, DVN...)" autocomplete="off"><div class="srres" id="sr-res"></div></div>
-      <div id="sr-det" style="display:none;margin-bottom:16px"><div style="background:var(--surface);border-radius:10px;padding:14px 17px;border:1px solid var(--bdr)"><div id="sr-det-c"></div></div></div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:9px;letter-spacing:.5px">NEGATIVE 2025 &rarr; BEATING MARKET 2026</div>
-      <table class="rt"><thead><tr><th>Ticker</th><th>Sector</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026 YTD</th><th>3yr Cumulative</th><th>vs S&amp;P 3yr</th></tr></thead><tbody id="rot-body"></tbody></table>
+      <div class="srw"><span class="sric">&#x1F50D;</span><input type="text" class="sri" id="sr-inp" placeholder="Search a ticker or company in the S&amp;P 500 or the Nasdaq-100 (AAPL, XOM, PDD...)" autocomplete="off"><div class="srres" id="sr-res"></div></div>
+      <div id="sr-det" style="display:none"></div>
     </div>
   </div>
 </div>
 
 <!-- HEDGE FUNDS TAB -->
 <div id="tp-inv" class="tp">
-  <div class="sechdr" style="margin-bottom:18px">
-    <span class="sect">Cumulative Return vs S&amp;P 500 &mdash; 2015&ndash;2025</span>
-    <span class="secn">Four managers benchmarked to the index</span>
+<div id="inv-gridview">
+  <div class="hf-maintabs">
+    <button class="hf-maintab active" data-pane="overall" onclick="hfMainTab('overall')">Overall</button>
+    <button class="hf-maintab" data-pane="superinvestors" onclick="hfMainTab('superinvestors')">Superinvestors</button>
+    <button class="hf-maintab" data-pane="resources" onclick="hfMainTab('resources')">Resources</button>
   </div>
-  <div class="card" style="margin-bottom:30px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-      <div style="display:flex;align-items:center;gap:9px"><span style="font-size:12px;color:var(--mu)">Start year</span><select class="fsel" id="alpha-start" onchange="setAlphaStart(this.value)"><option>2015</option><option>2016</option><option>2017</option><option>2018</option><option>2019</option><option>2020</option><option>2021</option><option>2022</option><option>2023</option><option>2024</option><option>2025</option></select></div>
-      <div class="sb-toggle" id="alpha-toggle">
-        <button class="sb-tbtn" data-am="annual" onclick="setAlphaMode('annual')">Annual</button>
-        <button class="sb-tbtn active" data-am="cum" onclick="setAlphaMode('cum')">Cumulative</button>
+
+  <div class="hf-mainpane active" data-pane="overall">
+    <div class="sechdr" style="margin-bottom:18px">
+      <span class="sect">Cumulative Return vs S&amp;P 500 &mdash; 2015&ndash;2025</span>
+      <div style="display:flex;align-items:center;gap:14px">
+        <span class="secn">Four managers benchmarked to the index</span>
+        <label class="hf-chart-toggle" title="Show or hide the chart">
+          <input type="checkbox" id="chart-toggle" checked onchange="toggleChartVisibility(this.checked)">
+          <span class="hf-chart-toggle-track"><span class="hf-chart-toggle-thumb"></span></span>
+          <span class="hf-chart-toggle-txt">Chart</span>
+        </label>
       </div>
     </div>
-    <div class="sb-secrow" id="fund-chips" style="margin-bottom:14px"></div>
-    <div style="position:relative;height:380px"><canvas id="alphaChart"></canvas><div id="alphaStatus" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#8A93A0;font-size:13px;text-align:center;padding:20px;line-height:1.5"></div></div>
+    <div class="card" style="margin-bottom:30px" id="hf-chart-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;gap:9px"><span style="font-size:12px;color:var(--mu)">Start year</span><select class="fsel" id="alpha-start" onchange="setAlphaStart(this.value)"><option>2015</option><option>2016</option><option>2017</option><option>2018</option><option>2019</option><option>2020</option><option>2021</option><option>2022</option><option>2023</option><option>2024</option><option>2025</option></select></div>
+        <div class="sb-toggle" id="alpha-toggle">
+          <button class="sb-tbtn" data-am="annual" onclick="setAlphaMode('annual')">Annual</button>
+          <button class="sb-tbtn active" data-am="cum" onclick="setAlphaMode('cum')">Cumulative</button>
+        </div>
+      </div>
+      <div class="sb-secrow" id="fund-chips" style="margin-bottom:14px"></div>
+      <div style="position:relative;height:380px"><canvas id="alphaChart"></canvas><div id="alphaStatus" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#8A93A0;font-size:13px;text-align:center;padding:20px;line-height:1.5"></div></div>
+    </div>
+    <div class="sechdr" style="margin-bottom:18px">
+      <span class="sect">Sector Exposure Across Superinvestors</span>
+      <span class="secn">Aggregate of every fund&rsquo;s disclosed top holdings, rolled up by GICS sector &mdash; hover a tile for the exact split</span>
+    </div>
+    <div class="card" style="margin-bottom:30px" id="hf-heatmap-card">
+      <div id="hf-sector-heatmap"></div>
+      <p style="margin-top:16px;font-size:11px;color:var(--mu);line-height:1.6">
+Each tile is a GICS sector, colored by the average YTD return of the companies tracked superinvestors hold there (Summit&rsquo;s own book excluded) &mdash; green means that sector&rsquo;s holdings are up on the year on average, red means down, like a stock-market heatmap. It&rsquo;s not the sector&rsquo;s market performance, just the performance of the specific names these funds happen to hold. Click a tile to see which companies make up that sector, their individual YTD, and which superinvestors hold each one.
+      </p>
+    </div>
+    <div class="sechdr" style="margin-bottom:18px">
+      <span class="sect">Superinvestor Conviction by Stock</span>
+      <span class="secn">Pick a stock Summit covers &mdash; see which superinvestors also own it and how their position size has moved over the last 12 quarters on file</span>
+    </div>
+    <div class="card" style="margin-bottom:30px" id="hf-stocklookup-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:9px"><span style="font-size:12px;color:var(--mu)">Stock</span><select class="fsel" id="hf-stocklookup-sel" onchange="hfStockLookupSelect(this.value)"></select></div>
+        <label class="hf-chart-toggle" title="Show or hide position-size color coding">
+          <input type="checkbox" id="hf-stocklookup-perf-toggle" checked onchange="hfStockLookupTogglePerf(this.checked)">
+          <span class="hf-chart-toggle-track"><span class="hf-chart-toggle-thumb"></span></span>
+          <span class="hf-chart-toggle-txt">Performance</span>
+        </label>
+      </div>
+      <div id="hf-stocklookup-body"></div>
+    </div>
   </div>
-  <div class="sechdr" style="margin-bottom:18px">
-    <span class="sect">Superinvestor Holdings &amp; Performance</span>
-    <span class="secn">Q1 2026 13F positions &middot; YTD returns through May 19, 2026</span>
+
+  <div class="hf-mainpane" data-pane="superinvestors">
+    <div class="sechdr" style="margin-bottom:18px">
+      <span class="sect">Superinvestor Holdings &amp; Performance</span>
+      <div style="display:flex;align-items:center;gap:14px">
+        <span class="secn">Holdings from the latest 13F on file (Q2 2026) &middot; click a card for the full holdings analysis</span>
+        <div class="sb-toggle" id="hf-topn-toggle">
+          <button type="button" class="sb-tbtn" data-topn="3" onclick="hfSetTopN(3)">Top 3 Concentration</button>
+          <button type="button" class="sb-tbtn active" data-topn="5" onclick="hfSetTopN(5)">Top 5 Concentration</button>
+        </div>
+        <button type="button" class="hf-showall-btn" id="hf-check13f" onclick="openCheck13FPanel()">Check for new 13Fs</button>
+        <button type="button" class="hf-showall-btn" id="hf-showall" style="display:none" onclick="showAllInvestors()">Show all</button>
+      </div>
+    </div>
+    <div class="inv-grid" id="inv-grid"></div>
+    <p style="margin-top:16px;font-size:11px;color:var(--mu);line-height:1.6">
+      Holdings: SEC 13F filings, Q2 2026 (most recent on file) &middot; Each holding&rsquo;s return is its own stock price move from Jan 1 to today, not the fund&rsquo;s overall return &middot; Fund-level returns: H1 2026 (through June 30, 2026) &middot; Buffett (BRK.B price), Ackman (PSH NAV), Tepper (Bloomberg), and Loeb (Third Point investor letters) are real, sourced figures &middot; &#x26A0; other funds&rsquo; H1 2026 returns are estimated by weighting each fund&rsquo;s disclosed 13F holdings by their actual quarterly stock performance, since none of those funds publish real-time returns
+    </p>
+    <div class="hf-res-cta">
+      <button type="button" class="hf-res-cta-btn" onclick="hfMainTab('resources')">View all Superinvestor Resources &rarr;</button>
+    </div>
   </div>
-  <div class="inv-bench" id="inv-bench"></div>
-  <div class="inv-grid" id="inv-grid"></div>
-  <p style="margin-top:16px;font-size:11px;color:var(--mu);line-height:1.6">
-    Holdings: SEC 13F filings (Q1 2026) &middot; Returns: YTD through May 19, 2026 &middot; Einhorn Q1 2026 verified via Greenlight investor letter &middot; &#x26A0; Altimeter returns estimated from portfolio composition
-  </p>
+
+  <div class="hf-mainpane" data-pane="resources">
+    <div class="sechdr" style="margin-bottom:18px">
+      <span class="sect">Superinvestor Resources</span>
+      <div style="display:flex;align-items:center;gap:14px">
+        <span class="secn">Letters, reports &amp; commentary from every tracked fund</span>
+        <div class="sb-toggle" id="hf-res-mode-toggle">
+          <button type="button" class="sb-tbtn" data-mode="date" onclick="hfResSetMode('date')">By Date</button>
+          <button type="button" class="sb-tbtn active" data-mode="fund" onclick="hfResSetMode('fund')">By Fund</button>
+        </div>
+        <button type="button" class="hf-res-cta-btn" style="padding:7px 14px;font-size:11px" onclick="openHfAddResourcesModal()">+ Add Resources</button>
+      </div>
+    </div>
+    <div class="hf-res-searchrow">
+      <div class="hf-res-search-wrap">
+        <input type="text" id="hf-res-search" class="hf-res-search-input" placeholder="Search superinvestor&hellip;" autocomplete="off" oninput="hfResSearchInput(this.value)" onfocus="hfResSearchInput(this.value)">
+        <div class="hf-res-search-results" id="hf-res-search-results"></div>
+      </div>
+      <div id="hf-res-filter-pill"></div>
+    </div>
+    <div id="hf-res-body"><div class="im-loading">Loading&hellip;</div></div>
+  </div>
+</div>
+<div id="inv-detailview" style="display:none"></div>
 </div>
 
 <!-- TEAM TAB -->
@@ -616,9 +660,60 @@
   <div id="fr-root"></div>
 </div>
 
-<!-- COVERED CALLS TAB -->
-<div id="tp-cc" class="tp">
-  <div id="cc-root"></div>
+<!-- DERIVATIVES TAB -->
+<div id="tp-der" class="tp">
+  <div class="der-subnav">
+    <button class="der-pill active" data-sub="covered-calls">Covered Calls</button>
+    <button class="der-pill" data-sub="protective-put">Protective Put</button>
+    <button class="der-pill" data-sub="buy-calls">Buy Calls</button>
+    <button class="der-pill" data-sub="short-puts">Short Puts</button>
+  </div>
+  <div id="der-covered-calls" class="der-sub active"><div id="cc-root"></div></div>
+  <div id="der-protective-put" class="der-sub"><div id="pp-root"></div></div>
+  <div id="der-buy-calls" class="der-sub"><div id="bc-root"></div></div>
+  <div id="der-short-puts" class="der-sub"><div id="sp-root"></div></div>
+</div>
+
+<!-- TOOLS TAB — landing grid of tool cards -->
+<div id="tp-tools" class="tp">
+  <div class="tools-cards">
+    <button class="tcard" onclick="switchTab('dcf')">
+      <div class="tcard-hd">
+        <span class="tcard-ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 15l3-4 3 2 4-6"/></svg></span>
+        <span class="tcard-title">DCF Models</span>
+      </div>
+      <div class="tcard-desc">Manage discounted cash flow models</div>
+    </button>
+    <button class="tcard" onclick="switchTab('betas')">
+      <div class="tcard-hd">
+        <span class="tcard-ic"><svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><circle cx="9" cy="13" r="1.6"/><circle cx="14" cy="9" r="1.6"/><circle cx="18" cy="11" r="1.6"/></svg></span>
+        <span class="tcard-title">Betas</span>
+      </div>
+      <div class="tcard-desc">Calculate, submit and track equity betas; portfolio beta from weights</div>
+    </button>
+  </div>
+</div>
+
+<!-- TOOLS · DCF MODELS TAB (empty — to be built) -->
+<div id="tp-dcf" class="tp">
+  <div class="tab-empty">DCF Models</div>
+</div>
+
+<!-- TOOLS · BETAS TAB — Calculator · History · Portfolio. js/betas*.js -->
+<div id="tp-betas" class="tp">
+  <div class="bt-subnav">
+    <button class="bt-pill active" data-sub="calc">Calculator</button>
+    <button class="bt-pill" data-sub="history">History</button>
+    <button class="bt-pill" data-sub="portfolio">Portfolio</button>
+  </div>
+  <div id="bt-calc" class="bt-sub active"></div>
+  <div id="bt-history" class="bt-sub"></div>
+  <div id="bt-portfolio" class="bt-sub"></div>
+</div>
+
+<!-- BUY CALLS TAB -->
+<div id="tp-bc" class="tp">
+  <div id="bc-root"></div>
 </div>
 
 </main>
@@ -647,11 +742,16 @@ import { initNav, registerPageLoader } from './js/nav.js';
 import { loadCompaniesPage } from './js/companies.js';
 import { loadInvestmentPage } from './js/investment.js';
 import { loadThesisPage } from './js/thesis.js';
+import { loadSpectrumPage } from './js/spectrum.js';
+import { initEpsTab } from './js/eps-attribution.js';
 import { loadMarketAnalysisPage } from './js/market-analysis.js';
+import { initMarketHistoryTabs } from './js/market-history.js';
 import { loadHedgeFundsPage } from './js/hedge-funds.js';
 import { loadTeamPage } from './js/team.js';
 import { loadFundReturnsPage } from './js/fund-returns.js';
-import { loadCoveredCallsPage } from './js/covered-calls.js';
+import { loadPortfolioMetricsPage } from './js/portfolio-metrics.js';
+import { loadDerivativesPage } from './js/derivatives.js';
+import { loadBetasPage } from './js/betas.js';
 import { loadIndustryPage } from './js/industry.js';
 
 const statusEl = document.getElementById('status');
@@ -679,6 +779,7 @@ async function boot() {
         if (!_summitLoaded[sub]) {
           _summitLoaded[sub] = true;
           if (sub === 'thesis') loadThesisPage();
+          if (sub === 'spectrum') loadSpectrumPage();
         }
       };
 
@@ -697,11 +798,13 @@ async function boot() {
 
       // Register page loaders
       registerPageLoader('research', () => switchResearchTab('companies'));
-      registerPageLoader('market-analysis', loadMarketAnalysisPage);
+      registerPageLoader('market-analysis', () => { loadMarketAnalysisPage(); initMarketHistoryTabs(); initEpsTab(); });
       registerPageLoader('hedge-funds', loadHedgeFundsPage);
       registerPageLoader('team', loadTeamPage);
       registerPageLoader('fund-returns', loadFundReturnsPage);
-      registerPageLoader('covered-calls', loadCoveredCallsPage);
+      registerPageLoader('portfolio', loadPortfolioMetricsPage);
+      registerPageLoader('derivatives', loadDerivativesPage);
+      registerPageLoader('betas', loadBetasPage);
 
       // Update user display
       const user = getCurrentUser();

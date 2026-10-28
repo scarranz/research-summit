@@ -244,7 +244,18 @@ export async function liveQuote(ticker) {
   var marketCap = (shares != null) ? price * shares : num(r0.market_cap);
   var ev = num(r0.enterprise_value);
   var netDebt = (ev != null && marketCap != null) ? ev - marketCap : null;
-  return ok({ price: price, changePct: tk ? num(tk.todaysChangePerc) : null, marketCap: marketCap, ev: ev, netDebt: netDebt, shares: shares });
+  return ok({ price: price, changePct: tk ? (num(tk.todaysChangePerc) != null ? num(tk.todaysChangePerc) : (num(tk.prevDay && tk.prevDay.c) ? (price / tk.prevDay.c - 1) * 100 : null)) : null, marketCap: marketCap, ev: ev, netDebt: netDebt, shares: shares });
+}
+
+// Yahoo price via the `get-quote` edge function — the live-price banner of the IBKR, LYFT, SOFI
+// and UBER overviews. Goes through supabase.functions.invoke so the signed-in user's token is
+// sent: get-quote verifies the user, and the overviews used to send the anon key instead (→ 401).
+// data = { ticker, price, previousClose, change, changePct, … } as get-quote returns it.
+export async function fetchYahooQuote(ticker) {
+  var { data, error } = await supabase.functions.invoke('get-quote', { body: { ticker: ticker } });
+  if (error) return fail(error.message);
+  if (!data || typeof data.price !== 'number') return fail((data && data.error) || 'no price');
+  return ok(data);
 }
 
 // Historical margins for a ticker via the `get-margins` edge function (which pulls
@@ -263,6 +274,105 @@ export async function fetchMargins(ticker) {
   });
   if (rows.length > 12) rows = rows.slice(rows.length - 12);   // cap the history we surface
   return ok(rows);
+}
+
+// ─── Market History (Massive proxy: daily prices + quarterly ratios) ────────
+// Two routes on the `get-market-history` edge function, key injected server-side, no DB write —
+// see that function's header for the exact Massive shapes. Used by Historic Multiple charts
+// (price for the numerator; market_cap/enterprise_value per quarter to derive diluted shares and
+// net debt). Deploy-gated on get-market-history existing.
+
+export async function fetchPriceHistory(ticker, from, to) {
+  var { data, error } = await supabase.functions.invoke('get-market-history', {
+    body: { resource: 'prices', ticker: ticker, from: from, to: to },
+  });
+  if (error) return fail(error.message);
+  var results = (data && Array.isArray(data.results)) ? data.results : [];
+  if (!results.length) return fail('no price data');
+  return ok(results.map(function (r) { return { t: r.t, c: r.c }; }));
+}
+
+export async function fetchRatiosHistory(ticker, limit) {
+  var { data, error } = await supabase.functions.invoke('get-market-history', {
+    body: { resource: 'ratios', ticker: ticker, limit: limit || 20 },
+  });
+  if (error) return fail(error.message);
+  var results = (data && Array.isArray(data.results)) ? data.results : [];
+  if (!results.length) return fail('no ratios data');
+  return ok(results);
+}
+
+// ─── Summit DCF models (live) ───────────────────────────────
+// Read the Summit Financial Data base through the `get-summit-data` edge function, so model
+// numbers are never copied into the repo. The fetchSummit* helpers return the tool's row array;
+// summitRaw returns the whole { data, metadata, warnings } body. What each label MEANS (role,
+// GAAP vs adjusted, real unit) comes from js/summit-map/<ticker>.js, not from here.
+// Deploy-gated on get-summit-data existing.
+
+async function summitCall(body) {
+  var { data, error } = await supabase.functions.invoke('get-summit-data', { body: body });
+  if (error) return fail(error.message);
+  if (!data || data.error) return fail((data && data.error) || 'no summit data');
+  return ok(data);
+}
+
+export function summitRaw(body) { return summitCall(body); }
+
+async function summitRows(body, empty) {
+  var r = await summitCall(body);
+  if (!r.success) return r;
+  var rows = Array.isArray(r.data.data) ? r.data.data : [];
+  if (!rows.length) return fail(empty);
+  return ok(rows);
+}
+
+// Every company with a DCF model: instrument_id, currency, snapshot_count, last_snapshot_date…
+export function fetchSummitModels() { return summitRows({ resource: 'models' }, 'no summit models'); }
+
+// Snapshots of one model, newest first: snapshot_date, snapshot_id, fact_count…
+export function fetchSummitSnapshots(ticker) { return summitRows({ resource: 'snapshots', ticker: ticker }, 'no snapshots'); }
+
+// The model's metric catalog: label ↔ metric_id (ids are what fundamentals/series take).
+export function fetchSummitMetrics(ticker) { return summitRows({ resource: 'metrics', ticker: ticker }, 'no metrics'); }
+
+// Every fact of one snapshot (heavy: ~8.5K rows for AMZN). Prefer fetchSummitFundamentals.
+export function fetchSummitSnapshot(ticker, date) {
+  return summitRows({ resource: 'snapshot', ticker: ticker, date: date }, 'empty snapshot');
+}
+
+// Filtered facts. opts = { date?, metricIds?, periodKeys?, sheets? } — at least one of
+// date / metricIds / periodKeys. Omit date for the latest snapshot. ⚠ actuals_history carries
+// future periods as 0: pass sheets:['projection_history'] for estimates.
+export function fetchSummitFundamentals(ticker, opts) {
+  opts = opts || {};
+  return summitRows({
+    resource: 'fundamentals', ticker: ticker, date: opts.date,
+    metric_ids: opts.metricIds, period_keys: opts.periodKeys, sheet_sources: opts.sheets,
+  }, 'no facts');
+}
+
+// One cell (metric × period) across every snapshot — the model's revision history.
+export function fetchSummitSeries(metricId, periodKey) {
+  return summitRows({ resource: 'series', metric_id: metricId, period_key: periodKey }, 'no series');
+}
+
+// The model's valuation per snapshot, newest first: current_price, wacc…, and valuations[] =
+// one block per method (multiple, target_year, multiple_basis, price_target, fair_value,
+// upside_pct, quality_flags). method is optional ('EV / EBITDA', 'P / E'). A block with
+// quality_flags is unreliable — show it with the caveat, never as a clean number.
+export function fetchSummitValuation(ticker, method) {
+  return summitRows({ resource: 'valuation', ticker: ticker, method: method }, 'no valuations');
+}
+
+// ─── NDX 100 Return Attribution ─────────────────────────────
+// Latest snapshot from the `ndx-attribution` edge function: { meta, hocs } in the same
+// shape as js/ndx-attribution-data.js, with the open HOC re-priced from Massive at the
+// last refresh. Fails (caller falls back to the bundled file) until the function is deployed.
+export async function fetchNdxAttribution() {
+  var { data, error } = await supabase.functions.invoke('ndx-attribution', { body: { action: 'get' } });
+  if (error) return fail(error.message);
+  if (!data || !Array.isArray(data.hocs) || !data.hocs.length) return fail('no NDX snapshot');
+  return ok(data);
 }
 
 // ─── Company Resources ──────────────────────────────────────
@@ -370,10 +480,36 @@ export async function deleteTheme(id) {
   return ok(null);
 }
 
-// ─── Fund Returns ───────────────────────────────────────────
-// Daily series for the Performance Analysis dashboard. Tables are RLS-gated,
-// so only authenticated users can read them. Rows exceed PostgREST's 1000-row
-// page limit, so fetch them in pages.
+// ─── Company Theme RECORD (AMZN-style segmented Notes) ───────
+// The AMZN Notes tab is a SEGMENTED theme record with per-quarter note items — a richer shape than
+// the flat company_themes rows, so it persists as ONE JSONB blob per company (load on mount, save on
+// every edit) so a refresh — and the rest of the team — see the same record.
+// See sql/011_company_theme_record.sql.
+export async function fetchThemeRecord(companyId) {
+  var { data, error } = await supabase
+    .from('company_theme_record')
+    .select('record')
+    .eq('company_id', companyId)
+    .maybeSingle();
+  if (error) return fail(error.message);
+  return ok(data ? data.record : null);
+}
+
+export async function saveThemeRecord(companyId, ticker, record) {
+  var { data, error } = await supabase
+    .from('company_theme_record')
+    .upsert({ company_id: companyId, ticker: ticker, record: record, updated_at: new Date().toISOString() }, { onConflict: 'company_id' })
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+// ─── Return Analysis ────────────────────────────────────────
+// Daily series for the Return Analysis dashboard, from 2026 onward (everything
+// earlier is the frozen history in js/fund-history-data.js). Tables are
+// RLS-gated, so only authenticated users can read them. Rows exceed PostgREST's
+// 1000-row page limit, so fetch them in pages.
 
 async function fetchAllRows(table, build) {
   const pageSize = 1000;
@@ -390,12 +526,185 @@ async function fetchAllRows(table, build) {
   return ok(all);
 }
 
-export async function fetchFundReturns(portfolio) {
-  return fetchAllRows('fund_daily_returns', q => q.eq('portfolio', portfolio || 'STRATEGY').order('date'));
+// The portfolios the tab can show. Their database ids live here and never in
+// the committed front-end registry (the repo is public), so the front end looks
+// a portfolio up by its `code`.
+export async function fetchPortfolios() {
+  return fetchAllRows('portfolios', q => q.eq('active', true).order('display_order'));
 }
 
-export async function fetchBenchmarkPrices(symbol) {
-  return fetchAllRows('benchmark_prices', q => q.eq('symbol', symbol || 'SPY').order('date'));
+// One portfolio's daily returns, from `from` (inclusive) onward.
+export async function fetchPortfolioReturns(portfolioId, from) {
+  return fetchAllRows('portfolio_daily_returns', q =>
+    q.eq('portfolio_id', portfolioId).gte('date', from || '1900-01-01').order('date'));
+}
+
+// Benchmark daily closes, from `from` (inclusive) onward. Returns are derived
+// from the closes client-side, so `from` should reach back far enough to include
+// the close *before* the first day you need a return for.
+export async function fetchBenchmarkPrices(symbol, from) {
+  return fetchAllRows('benchmark_prices', q =>
+    q.eq('symbol', symbol || 'SPY').gte('date', from || '1900-01-01').order('date'));
+}
+
+// ─── Investor Profiles (Hedge Funds tab) ─────────────────────
+// Per-year depth behind each investor card: yearly returns, that
+// year's top holdings, and annual letters / investor messages.
+// investor_key matches INVESTORS[].key in js/portal-data.js.
+// See sql/014_investor_profiles.sql.
+
+export async function fetchInvestorReturns(investorKey) {
+  var { data, error } = await supabase
+    .from('investor_yearly_returns')
+    .select('*')
+    .eq('investor_key', investorKey)
+    .order('year');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function fetchInvestorHoldings(investorKey) {
+  var { data, error } = await supabase
+    .from('investor_yearly_holdings')
+    .select('*')
+    .eq('investor_key', investorKey)
+    .order('year')
+    .order('rank');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+// Cross-investor lookup for one ticker — "who owns this, and how has their
+// position size moved" — used by the Overall sub-tab's stock lookup table.
+// Unlike fetchInvestorHoldings, this is NOT scoped to a single investor_key.
+export async function fetchHoldingsByTicker(ticker) {
+  var { data, error } = await supabase
+    .from('investor_yearly_holdings')
+    .select('*')
+    .eq('ticker', ticker)
+    .order('year')
+    .order('quarter');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function fetchInvestorLetters(investorKey) {
+  var { data, error } = await supabase
+    .from('investor_letters')
+    .select('*')
+    .eq('investor_key', investorKey)
+    .order('category')
+    .order('sort_order');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+// Every fund's letters in one round trip, for the Superinvestors ->
+// Resources tab (aggregated view across all tracked funds).
+export async function fetchAllInvestorLetters() {
+  var { data, error } = await supabase
+    .from('investor_letters')
+    .select('*')
+    .order('date', { ascending: false });
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+// ─── Resources-only fund metadata (Add Resources) ────────────
+// investor_meta backs funds/people that get resources via "Add
+// Resources" but aren't a Superinvestor card (js/portal-data.js
+// INVESTORS) or one of the hardcoded RES_ONLY_FUNDS in
+// js/hedge-funds.js — see sql/022_investor_meta.sql.
+
+export async function fetchInvestorMeta() {
+  var { data, error } = await supabase.from('investor_meta').select('*');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function insertInvestorMeta(row) {
+  var { data, error } = await supabase
+    .from('investor_meta')
+    .insert([row])
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+export async function insertInvestorReturn(row) {
+  var { data, error } = await supabase
+    .from('investor_yearly_returns')
+    .insert([row])
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+export async function insertInvestorHolding(row) {
+  var { data, error } = await supabase
+    .from('investor_yearly_holdings')
+    .insert([row])
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+// Replaces every holdings row for one investor_key+year+quarter with a
+// fresh batch — used by the "Upload 13F" flow so re-uploading a quarter
+// (e.g. an amended filing) doesn't leave stale rows behind.
+export async function replaceInvestorHoldings(investorKey, year, quarter, rows) {
+  var del = supabase
+    .from('investor_yearly_holdings')
+    .delete()
+    .eq('investor_key', investorKey)
+    .eq('year', year);
+  del = quarter == null ? del.is('quarter', null) : del.eq('quarter', quarter);
+  var { error: delError } = await del;
+  if (delError) return fail(delError.message);
+
+  if (!rows.length) return ok([]);
+  var { data, error } = await supabase
+    .from('investor_yearly_holdings')
+    .insert(rows)
+    .select();
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function insertInvestorLetter(row) {
+  var { data, error } = await supabase
+    .from('investor_letters')
+    .insert([row])
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+// Fetches the latest 13F-HR filing for an investor straight from SEC
+// EDGAR (via the sync-13f edge function, which is the only thing
+// allowed to make that request — see supabase/functions/sync-13f).
+// Returns { year, quarter, periodOfReport, filedDate, accessionNumber,
+// xml } — xml is the raw information-table XML, parsed client-side with
+// parseSec13FXml() exactly like an uploaded file.
+export async function syncLatest13F(cik) {
+  var { data, error } = await supabase.functions.invoke('sync-13f', {
+    body: { cik: cik },
+  });
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+export async function deleteInvestorLetter(id) {
+  var { error } = await supabase
+    .from('investor_letters')
+    .delete()
+    .eq('id', id);
+  if (error) return fail(error.message);
+  return ok(null);
 }
 
 // ─── Auth ───────────────────────────────────────────────────

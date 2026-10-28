@@ -12,6 +12,8 @@
 .fr-meta-row b { font-weight: 600; }
 .fr-meta-sub { margin-top: 5px; font-size: 11.5px; color: var(--mu); }
 .fr-source { color: var(--accent); background: rgba(37,99,235,.07); padding: 1px 7px; border-radius: 5px; }
+/* Where the days on screen came from (frozen history + live feed) */
+.fr-meta-note { color: var(--mu); }
 
 .fr-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .fr-ctl {
@@ -37,6 +39,18 @@
 .fr-canvas-wrap { position: relative; height: 300px; }
 .fr-canvas-short { height: 240px; }
 .fr-foot { font-size: 10px; color: var(--mu); margin-top: 8px; font-style: italic; }
+
+/* Portfolio chooser — sits above the dashboard, which is rebuilt beneath it */
+.fr-pf-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--bdr);
+}
+/* Slightly heavier than the in-card selects: this one governs the whole page */
+.fr-pf-select { font-size: 13px; font-weight: 600; padding: 6px 12px; min-width: 170px; }
+.fr-loading { color: var(--mu); font-size: 13px; padding: 40px 0; text-align: center; }
+/* A control the current series cannot fill (e.g. a 5Y window on one year) */
+.fr-tg[disabled] { opacity: .38; cursor: not-allowed; }
+.fr-empty { color: var(--mu); font-size: 12px; padding: 10px 0; }
 
 .fr-hero-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
 .fr-hero-label { font-size: 11px; font-weight: 600; color: var(--mu); text-transform: uppercase; letter-spacing: .03em; }
@@ -64,6 +78,22 @@
 .pos { color: var(--pos); }
 .neg { color: var(--neg); }
 
+/* Period picker — one instance per block, so it has to stay compact */
+.fr-period { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fr-period-card { margin-bottom: 12px; }
+.fr-pdate {
+  font-family: inherit; font-size: 12px; color: var(--text); padding: 4px 7px;
+  border: 1px solid var(--bdr); border-radius: 8px; background: var(--w);
+}
+.fr-pdash { color: var(--mu); font-size: 12px; }
+
+/* Card header: title on the left, its own controls on the right */
+.fr-cardhead {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+.fr-cardhead .fr-charttitle { margin-bottom: 12px; }
+
 /* Rolling window controls */
 .fr-win-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
 .fr-toggle { display: inline-flex; border: 1px solid var(--bdr); border-radius: 8px; overflow: hidden; }
@@ -77,6 +107,16 @@
   font-family: inherit; font-size: 12px; padding: 5px 9px; color: var(--text);
   border: 1px solid var(--bdr); border-radius: 8px; background: var(--w); cursor: pointer;
 }
+
+/* Grid and flex children default to min-width:auto, so a wide table pushes its
+   card and then the page instead of scrolling. This is the half that makes
+   .fr-tscroll actually work. */
+.fr-tcol, .fr-tcol > .card, .fr-hero > .card, .fr-secgrid > * { min-width: 0; }
+
+/* A table wider than its card scrolls inside it instead of pushing the page
+   out (CHART_ENGINE_REFERENCE 0.5). The cells are nowrap, so on a narrow screen
+   something has to give and it should not be the layout. */
+.fr-tscroll { overflow-x: auto; }
 
 /* Monthly returns table */
 .fr-monthly-table { width: 100%; }

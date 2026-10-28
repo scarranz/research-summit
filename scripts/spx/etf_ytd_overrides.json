@@ -1,0 +1,9 @@
+{
+  "_INTERNAL_NOTE": "TEMPORARY EXCEPTION (Oct 13, 2026, Dani). The 2026 YTD of the SPDR sector ETFs is forced to the figures of the Summit portal list (Polygon/Massive based; it measures YTD from a different base than the Dec 31 close Bloomberg and Yahoo use). extract_spx.py rescales each ETF's LAST level so its YTD equals these numbers; earlier years and the base are untouched. Not shown on the page by design. Remove this file (or change asOf) to go back to Bloomberg closes.",
+  "asOf": "2026-10-12",
+  "base": "2025-12-31",
+  "ytd": {
+    "XLP": 8.58, "XLF": 0.34, "XLC": -5.68, "XLY": -6.46, "XLI": 8.63, "XLK": 34.78,
+    "XLE": 47.72, "XLU": -3.08, "XLRE": 3.87, "XLV": 11.06, "XLB": 8.72
+  }
+}

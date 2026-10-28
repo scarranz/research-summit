@@ -1,0 +1,247 @@
+{
+  "_doc": "TSM metric map for emit_matrix.py (schema v2 — address by Bloomberg CODE + segment, never by slot number). Codes and segment ids read off inspect_matrix.py TSM (newest snapshot 7/21/2026). TSM US Equity is quoted per ADR but Bloomberg's EPS (IS_COMP_EPS_ADJUSTED_OLD) is per COMMON share in US$ (FY2025 = 2.13 vs 10.66 per ADR), so eps carries a x5 multiplier through the generator's 'sign' factor (1 ADR = 5 common shares). Revenue is IS_COMP_SALES here (not SALES_REV_TURN, which this ticker uses only for the platform/node segments). DCE (SEG0000401577) has no forward horizons in the export, so its consensus is history only. Margins (gm/om) are not mapped: the export carries no margin code, and the dataset's gross-profit and operating-income metrics already give the consensus margin through marginOf. Quarterly ebitda / ocf / dna / shares feed Evolution ▸ Earnings (headline grid) only; shares carry ×0.2 (common → ADR equivalents). The frozen/reprint checks flag q.shares: expected — TSMC's share count barely moves (25,928–25,932M common), so the Street repeats it; kept.",
+  "segments": {
+    "hpc": "SEG0000401579",
+    "smart": "SEG0000401575",
+    "iot": "SEG0000401576",
+    "auto": "SEG0000401561",
+    "dce": "SEG0000401577",
+    "oth": "SEG0000519339"
+  },
+  "q": {
+    "rev": {
+      "code": "IS_COMP_SALES",
+      "unit": "usdM"
+    },
+    "hpc": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "hpc"
+    },
+    "smart": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "smart"
+    },
+    "iot": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "iot"
+    },
+    "auto": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "auto"
+    },
+    "dce": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "dce"
+    },
+    "oth": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "oth"
+    },
+    "gp": {
+      "code": "GROSS_PROFIT",
+      "unit": "usdM"
+    },
+    "opinc": {
+      "code": "IS_COMPARABLE_EBIT",
+      "unit": "usdM"
+    },
+    "eps": {
+      "code": "IS_COMP_EPS_ADJUSTED_OLD",
+      "unit": "eps",
+      "sign": 5
+    },
+    "capex": {
+      "code": "HEADLINE_CAPEX",
+      "unit": "usdM",
+      "sign": -1
+    },
+    "ebitda": {
+      "code": "IS_COMPARABLE_EBITDA",
+      "unit": "usdM"
+    },
+    "ocf": {
+      "code": "CB_CF_NET_CASH_OPERATING_ACT",
+      "unit": "usdM"
+    },
+    "dna": {
+      "code": "CF_DEPR_AMORT",
+      "unit": "usdM"
+    },
+    "shares": {
+      "code": "IS_SH_FOR_DILUTED_EPS",
+      "unit": "usdM",
+      "sign": 0.2
+    }
+  },
+  "y": {
+    "rev": {
+      "code": "IS_COMP_SALES",
+      "unit": "usdM"
+    },
+    "hpc": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "hpc"
+    },
+    "smart": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "smart"
+    },
+    "iot": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "iot"
+    },
+    "auto": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "auto"
+    },
+    "dce": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "dce"
+    },
+    "oth": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM",
+      "segment": "oth"
+    },
+    "gp": {
+      "code": "GROSS_PROFIT",
+      "unit": "usdM"
+    },
+    "opinc": {
+      "code": "IS_COMPARABLE_EBIT",
+      "unit": "usdM"
+    },
+    "ebitda": {
+      "code": "IS_COMPARABLE_EBITDA",
+      "unit": "usdM"
+    },
+    "earnings": {
+      "code": "IS_COMP_NET_INCOME_ADJUST_OLD",
+      "unit": "usdM"
+    },
+    "eps": {
+      "code": "IS_COMP_EPS_ADJUSTED_OLD",
+      "unit": "eps",
+      "sign": 5
+    },
+    "capex": {
+      "code": "HEADLINE_CAPEX",
+      "unit": "usdM",
+      "sign": -1
+    }
+  },
+  "_dropVintages_note": "REPRINTED SNAPSHOTS (found Oct 15 2026): in these historical snapshots every platform-segment cell (quarterly AND annual) holds the 7/21/2026 snapshot's values verbatim, relabelled onto that row's own horizons — e.g. annual HPC 104,062 / 141,633 / 170,432 appears at 2023-04-25, 2024-01-23 and 2026-07-21. Only the 2026-07-21 row is genuine. Totals (rev, gp, opinc, eps, capex, ebitda, earnings) are clean. Raise with San/Oscar; delete an entry once Bloomberg refills that row. DCE has no reprints.",
+  "dropVintages": {
+    "q": {
+      "hpc": [
+        "2020-10-20",
+        "2021-01-19",
+        "2021-04-20",
+        "2021-10-19",
+        "2022-01-18",
+        "2023-04-25",
+        "2024-01-23"
+      ],
+      "smart": [
+        "2019-07-22",
+        "2020-04-20",
+        "2020-07-21",
+        "2021-01-19",
+        "2021-04-20",
+        "2021-07-20",
+        "2021-10-19",
+        "2023-04-25"
+      ],
+      "iot": [
+        "2020-04-20",
+        "2020-07-21",
+        "2020-10-20",
+        "2021-04-20",
+        "2021-07-20",
+        "2022-04-19",
+        "2024-01-23"
+      ],
+      "auto": [
+        "2020-10-20",
+        "2021-01-19",
+        "2021-07-20",
+        "2021-10-19",
+        "2022-01-18",
+        "2022-04-19",
+        "2023-04-25",
+        "2023-10-24",
+        "2024-01-23"
+      ],
+      "oth": [
+        "2019-07-22",
+        "2020-04-20",
+        "2020-07-21",
+        "2020-10-20",
+        "2021-04-20",
+        "2021-10-19",
+        "2022-01-18"
+      ]
+    },
+    "y": {
+      "hpc": [
+        "2020-10-20",
+        "2021-01-19",
+        "2021-04-20",
+        "2021-10-19",
+        "2022-01-18",
+        "2023-04-25",
+        "2024-01-23"
+      ],
+      "smart": [
+        "2019-07-22",
+        "2020-04-20",
+        "2020-07-21",
+        "2021-01-19",
+        "2021-04-20",
+        "2021-07-20",
+        "2021-10-19",
+        "2023-04-25"
+      ],
+      "iot": [
+        "2020-04-20",
+        "2020-07-21",
+        "2020-10-20",
+        "2021-04-20",
+        "2021-07-20",
+        "2022-04-19",
+        "2024-01-23"
+      ],
+      "auto": [
+        "2020-10-20",
+        "2021-01-19",
+        "2021-07-20",
+        "2021-10-19",
+        "2022-01-18",
+        "2022-04-19",
+        "2023-04-25",
+        "2023-10-24",
+        "2024-01-23"
+      ],
+      "oth": [
+        "2019-07-22",
+        "2020-04-20",
+        "2020-07-21",
+        "2020-10-20",
+        "2021-04-20",
+        "2021-10-19",
+        "2022-01-18"
+      ]
+    }
+  }
+}

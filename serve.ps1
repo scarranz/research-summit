@@ -35,6 +35,8 @@ while ($listener.IsListening) {
       $bytes = [System.IO.File]::ReadAllBytes($path)
       $ext = [System.IO.Path]::GetExtension($path).ToLower()
       if ($mime.ContainsKey($ext)) { $ctx.Response.ContentType = $mime[$ext] }
+      # Local dev: never let the browser keep an old module (a stale tab once saved an old Notes record back).
+      $ctx.Response.Headers.Add("Cache-Control", "no-store")
       $ctx.Response.ContentLength64 = $bytes.Length
       $ctx.Response.OutputStream.Write($bytes, 0, $bytes.Length)
     } else {

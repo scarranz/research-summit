@@ -260,6 +260,11 @@
   font-variant-numeric: tabular-nums;
 }
 .co-pxsub:empty { display: none; }
+
+/* IR / EDGAR source buttons parked at the far right of the header, next to the price.
+   Content (logo-only tiles + scoped styles) is injected per-company by headerSources(). */
+.cohead-src { display: flex; align-items: center; }
+.cohead-src:empty { display: none; }
 .co-px-ch.up { color: #1E9E62; }
 .co-px-ch.down { color: #C0392B; }
 .co-px-mc { color: var(--navy); }

@@ -1,0 +1,422 @@
+// overviews/app-data.js — AppLovin (NASDAQ: APP) qualitative + presentation data.
+//
+// Everything here traces to the FY2025 Form 10-K, the 1Q26/2Q26 Forms 10-Q, or the
+// Bloomberg consensus model. Numeric time series live in app-model.js.
+// Sourcing discipline follows docs/OVERVIEW_CONVENTIONS.md §2: company-official first.
+//
+// ── ESCAPING CONTRACT (conventions §5 — never double-encode) ─────────────────────
+// RAW fields are injected as HTML: they may carry <b>/<i>, must write a literal
+// ampersand as &amp;, and use plain apostrophes. RAW fields are:
+//     APP_QUAD values · APP_PROD_DEFS[].desc · APP_ONE_SEGMENT · APP_GEO_CAPTION
+//     APP_DD_INTRO · APP_PEERS_NOTE · APP_MARGIN_DRIVERS[].d and .pts
+//     APP_INV_SURFACES[].d · APP_INV_FLOW[].d · APP_AXON_STEPS[].d · APP_AXON_LIMIT
+//     APP_CLIENT_SIDES[].d · APP_CLIENT_TENSION
+// Every other string is PLAIN TEXT — it goes through esc(), so write a real & and a
+// real apostrophe and never an HTML entity.
+
+// ─── Palette ────────────────────────────────────────────────────────────────────
+export var APP_BRAND  = '#2563EB';   // AppLovin blue
+export var APP_BRAND2 = '#60A5FA';
+export var C_US   = '#2563EB';       // United States
+export var C_ROW  = '#7C3AED';       // Rest of world
+export var C_COGS = '#64748B';       // Cost of revenue
+export var C_SM   = '#F59E0B';       // Sales & marketing
+export var C_RD   = '#7C3AED';       // Research & development
+export var C_GA   = '#0EA5A4';       // General & administrative
+export var C_APPS = '#94A3B8';       // Divested Apps business
+export var C_POS  = '#2FA36B';
+export var C_NEG  = '#E0463C';
+
+// ─── 1. Key Facts — exactly 10 cells, 5x2 ───────────────────────────────────────
+export var APP_FACTS = [
+  ['Listing',      'NASDAQ: APP'],
+  ['HQ',           'Palo Alto, California, US'],
+  ['Incorporated', 'Delaware (July 2011)'],
+  ['SEC filer',    'Domestic — 10-K / 10-Q / 8-K'],
+  ['Founded',      '2011'],
+  ['IPO',          'Apr 15, 2021 · $80.00/sh'],
+  ['CEO',          'Adam Foroughi · co-founder, CEO since 2011'],
+  ['Employees',    '~898 · Dec 2025'],
+  ['Dividend',     'Non-payer'],
+  ['Market cap',   'live'],
+];
+
+// ─── 2. Lede — one tight paragraph, non-redundant, no hype (PLAIN) ──────────────
+export var APP_LEDE = "AppLovin Corporation runs an advertising platform that places ads inside mobile apps and, more recently, on the web and connected TV. Advertisers set a return-on-ad-spend target and the company's Axon recommendation system decides, in microseconds, which ad to show which user; AppLovin is paid out of the spend it places. It was founded in 2011 by mobile app developers and, until mid-2025, also built and operated its own portfolio of mobile games.";
+
+// ─── 3. The 2x2 quadrant — RAW, each cell <= ~30 words, always visible ──────────
+export var APP_QUAD = [
+  ['What it sells', 'Software that buys and sells mobile ad inventory: <b>AppLovin Ads</b> for advertisers, <b>MAX</b> for publishers, plus <b>Adjust</b> (measurement) and <b>Wurl</b> (connected TV).'],
+  ['Who buys it',   'Advertisers of every size — indie game studios through to the largest internet platforms, <b>Meta and Google among them</b> — plus app publishers monetising their own inventory.'],
+  ['How it earns',  'Fees out of advertiser spend, priced dynamically against each campaign\'s return target. Revenue is booked <b>net of what publishers are paid</b>. One reportable segment.'],
+  ['The edge',      'A closed loop: more spend gives Axon more outcome data, better targeting attracts more spend. The scale is in the data, not the payroll — <b>898 employees</b>.'],
+];
+
+// ─── 4. How it makes money ───────────────────────────────────────────────────────
+// Single reportable segment, so the >=2-slice rule (conventions §4.4) is satisfied by
+// GEOGRAPHY ONLY. Never draw a one-bar "segments" chart.
+export var APP_ONE_SEGMENT = 'AppLovin reports a <b>single operating and reportable segment</b>. Since selling the Apps business on 30 June 2025 there is only one business to report, so there is no segment split to chart — the company\'s only revenue disaggregation is geography, by end-user location.';
+
+export var APP_GEO = [
+  // [label, % width, $ label, share label, colour]  — labels are PLAIN
+  ['United States', 51.6, '$2,827M', '51.6% of revenue', C_US],
+  ['Rest of world', 48.4, '$2,653M', '48.4% of revenue', C_ROW],
+];
+export var APP_GEO_CAPTION = 'FY2025 revenue of $5,481M split by <b>end-user location</b> — the only disaggregation AppLovin publishes. The mix is now essentially 50/50: rest-of-world briefly overtook the US in 1Q26 before the US retook the lead in 2Q26.';
+
+// "What is X?" accordions — QUALITATIVE ONLY, no numbers (conventions §4.4).
+// .desc is RAW; .subs entries are PLAIN.
+export var APP_PROD_DEFS = [
+  { seg: 'AppLovin Ads',
+    desc: 'The advertiser-side engine, and the product that generates the vast majority of revenue. It was called <b>Axon Ads Manager</b> until the 2Q26 10-Q renamed it. An advertiser sets a campaign goal and a return-on-ad-spend target; the <b>Axon</b> recommendation system then decides which ad to show which user, matching advertiser demand against publisher supply through auctions run at microsecond speed. Pricing is dynamic — set against the advertiser\'s goal rather than a fixed rate card — so AppLovin only grows when the advertiser\'s campaign works.',
+    subs: [
+      ['Axon', 'The recommendation system underneath everything. It learns from the outcomes of the ads it places, so its accuracy compounds with the volume of spend flowing through the platform.'],
+      ['Where it runs', 'Historically mobile gaming inventory. The company has opened it to web-based e-commerce and social media advertisers, and describes that expansion as early.'],
+    ] },
+  { seg: 'MAX',
+    desc: 'The publisher side of the same marketplace. App publishers use MAX to sell their advertising inventory, running a live competitive auction across demand-side platforms and ad networks so each impression goes to the highest bidder rather than to a pre-agreed buyer. It earns a share of the winning auction spend, and gives publishers the reporting they need to manage their own profitability.',
+    subs: [
+      ['In-app bidding', 'Replaces the older waterfall model, where networks were called in a fixed order. Every buyer bids at once, which is what lets the auction find the real clearing price.'],
+    ] },
+  { seg: 'Adjust',
+    desc: 'A measurement and analytics platform for marketers — attribution, campaign measurement and fraud prevention — so a customer can see which spend actually produced which outcome. Unlike the rest of the suite it is sold as an <b>annual software subscription</b> rather than as a share of media spend. It is run by a wholly-owned subsidiary and is deliberately walled off: the 10-K states that data generated by Adjust is not shared with AppLovin or used to optimise its recommendation engine unless the customer directs it.',
+    subs: [
+      ['Why the wall matters', 'Adjust measures campaigns that run on rival networks too. The separation is what lets competitors keep using it.'],
+    ] },
+  { seg: 'Wurl',
+    desc: 'The connected-TV arm. Wurl distributes streaming video on behalf of content companies and gives them advertising and publishing tools to attract viewers and monetise the audience. It earns from content companies and streamers, typically on a usage or CPM basis, and it is the vehicle the company uses to carry Axon beyond mobile into television.',
+    subs: [
+      ['Why it exists', 'Management frames CTV as one of the two expansion routes out of mobile gaming, alongside web-based e-commerce.'],
+    ] },
+];
+
+// ─── 5. Products — family cards -> modal. All PLAIN (esc'd). ────────────────────
+export var APP_PRODUCTS = [
+  { ic:'🎯', fam:'AppLovin Ads', d:'The advertiser-side engine. Vast majority of revenue.',
+    items: [
+      ['AppLovin Ads', 'Campaign creation, optimisation and management for user and customer acquisition. Advertisers set goals; the platform spends against their return target.'],
+      ['Axon', 'The recommendation system that matches demand to supply. Its accuracy compounds with the volume of spend it sees.'],
+      ['Web & e-commerce', 'The same engine opened to web-based advertisers. Management calls this expansion early, with positive results so far.'],
+    ] },
+  { ic:'📈', fam:'MAX', d:'Publisher-side monetisation and in-app bidding.',
+    items: [
+      ['MAX', 'Runs a real-time competitive auction for a publisher\'s ad inventory across ad networks and demand-side platforms.'],
+      ['Analytics', 'Reporting against key performance indicators, user lifetime value and profitability for the publisher.'],
+    ] },
+  { ic:'📊', fam:'Adjust', d:'Measurement, attribution and analytics. Subscription-priced.',
+    items: [
+      ['Attribution', 'Ties an install or an action back to the campaign that produced it, across networks.'],
+      ['Fraud prevention', 'Screens out invalid installs and clicks before they are paid for.'],
+      ['Analytics', 'Journey and cohort reporting so marketers can compare spend across channels.'],
+    ] },
+  { ic:'📺', fam:'Wurl', d:'Connected-TV distribution and advertising.',
+    items: [
+      ['Content distribution', 'Delivers streaming video for content companies into CTV platforms and free ad-supported channels.'],
+      ['CTV advertising', 'Advertising and publishing tools for streamers, priced on usage and CPM.'],
+    ] },
+];
+
+// ─── 6. Competitors ─────────────────────────────────────────────────────────────
+// `named` = named as a competitor in the FY2025 10-K. Everything else is analyst-selected
+// and is labelled as such on the chart. Multiples are SEEDED approximations, never live.
+export var APP_PEERS = [
+  { tk:'APP',   name:'AppLovin',       self:true, named:false, ev:29.0, evF:21.0, pe:47.0, peF:29.0, g:70, gF:49 },
+  { tk:'META',  name:'Meta Platforms',            named:true,  ev:12.5, evF:11.0, pe:24.0, peF:21.0, g:20, gF:16 },
+  { tk:'GOOGL', name:'Alphabet',                  named:true,  ev:15.0, evF:13.0, pe:24.0, peF:21.5, g:14, gF:12 },
+  { tk:'AMZN',  name:'Amazon',                    named:true,  ev:15.5, evF:13.0, pe:33.0, peF:27.0, g:11, gF:10 },
+  { tk:'U',     name:'Unity Software',            named:true,  ev:38.0, evF:26.0, pe:null, peF:60.0, g:5,  gF:12 },
+  { tk:'TTD',   name:'The Trade Desk',            named:false, ev:24.0, evF:18.0, pe:38.0, peF:28.0, g:18, gF:16 },
+];
+export var APP_PEERS_NOTE = 'Bubble size is <b>live market cap</b> via Massive; add or remove any ticker with the controls above. <b>Multiples and growth are seeded approximations</b> (mid-2026) shown for shape, not live quotes — never read them as precise. Meta, Alphabet, Amazon and Unity are the competitors AppLovin itself names in its FY2025 10-K; The Trade Desk is analyst-selected and marked with a dot. Meta, Alphabet and Amazon are conglomerates whose multiples reflect far more than advertising — and all three are also AppLovin customers. Unity has no meaningful trailing P/E, so it drops out of that view.';
+
+// ─── 7. Timeline — all PLAIN (esc'd), including the read-more bullets ───────────
+export var APP_TIMELINE = [
+  ['2011', 'Founded in Palo Alto — and incorporated as it still is today',
+   'Adam Foroughi and his co-founders, mobile app developers themselves, start AppLovin to solve their own problem: getting an app discovered and monetised in a crowded app store.',
+   ['Incorporated in Delaware on 18 July 2011 — no spin-off, no reverse merger, no roll-up. The company that trades today is the one that was founded.',
+    'The founders\' own experience as developers is the origin of both sides of the marketplace: tools to buy users, and tools to monetise them.',
+    'Foroughi has been CEO and Chairperson throughout.']],
+
+  ['2018', 'KKR takes a large stake, and the debt that funded a decade of M&A is put in place',
+   'KKR becomes a major shareholder through KKR Denali Holdings, and the 2018 Credit Agreement — arranged with KKR Capital Markets — becomes the borrowing facility behind the acquisitions that assembled Adjust, MAX and Wurl.',
+   ['The 10-K confirms KKR Denali held more than 10% of voting interests, and that KKR Capital Markets was joint lead arranger and joint bookrunner on the 2018 Credit Agreement.',
+    'That facility grew to a $1.5B term loan, a $2.1B term loan and a $610M secured revolver before it was retired in December 2024.',
+    'The size and terms of KKR\'s original 2018 investment are NOT stated in these filings — source separately before publishing this entry.']],
+
+  ['Apr 2021', 'IPO on Nasdaq at $80.00 — and it broke issue on day one',
+   'A conventional underwritten IPO, not a SPAC and not a direct listing. The stock closed its first day at $65.20, about 19% below the offer price.',
+   ['First trading day 15 April 2021; ticker APP, Class A shares only.',
+    'The 10-K performance graph is indexed off the $65.20 close rather than the $80.00 offer price.',
+    'Class B (20 votes) and Class C (no votes) were never listed and still are not.']],
+
+  ['2023', 'Advertising overtakes games, and the business quietly changes shape',
+   'For the first time advertising revenue is larger than the Apps business. From here the games portfolio is the smaller half and, eventually, the disposable half.',
+   ['Advertising revenue passed the Apps business during 2023, then roughly doubled again in 2024.',
+    'The headline revenue line barely moved in 2022 — the mix shift underneath it is the real story of those years.',
+    'This is what made a clean divestiture possible two years later.']],
+
+  ['Dec 2024', 'The balance sheet is refinanced into $3.55B of fixed-rate senior notes',
+   'Four unsecured tranches maturing between 2029 and 2054 replace the 2018 bank facility, which is repaid in full. Nothing falls due before 2029.',
+   ['$1.0B at 5.125% due 2029, $1.0B at 5.375% due 2031, $1.0B at 5.500% due 2034, $550M at 5.950% due 2054.',
+    '$4.2B of principal was repaid during 2024 to retire the old structure.',
+    'A new $1.0B unsecured revolver was signed at the same time and is undrawn.']],
+
+  ['2024', 'KKR exits completely',
+   'KKR Denali converts its remaining Class B shares into Class A, sells the position, and ceases to be a related party at the end of the year.',
+   ['AppLovin repurchased 10,466,397 shares directly from the underwriters in the March 2024 secondary at $54.46 — the same price the underwriters paid KKR.',
+    'Earlier private repurchases from KKR: 15,000,000 shares at $36.85 in August 2023, and 15,952,381 shares at $21.00 in May 2023.',
+    'Control never changed hands: the founder-held Class B and its voting agreement were always the control block.']],
+
+  ['Mar 2025', 'Securities class action — the one defining legal matter',
+   'Alleged stockholders sue the company, the CEO, the CFO and others, claiming materially false and misleading statements about the advertising solutions and the company\'s financial growth.',
+   ['Consolidated as the Brownback Action in the Northern District of California; putative class period 7 November 2024 to 27 March 2025.',
+    'Defendants: the Company, Adam Foroughi, Matthew Stumpf, Herald Chen and, added in September 2025, Basil Shikin.',
+    'Motion to dismiss filed November 2025 and heard March 2026. Parallel derivative suits are consolidated and stayed behind it.',
+    'The company says the allegations lack merit; it states it cannot reasonably estimate any range of loss.']],
+
+  ['Jun 2025', 'The Apps business is sold and AppLovin becomes a single-segment ad company',
+   'The mobile-games portfolio goes to Tripledot for $715.6M of total consideration. Apps moves into discontinued operations in every period, and what remains reports as one segment.',
+   ['$430.6M in cash plus 596.9M Tripledot shares valued at $285.0M — roughly 20% of Tripledot fully diluted, now carried at equity method.',
+    'A $188.9M goodwill impairment was taken on the Apps reporting unit in 1Q25, once the sale was in negotiation.',
+    'Pre-tax gain of $106.2M after $18.3M of transaction costs; a $204.3M capital loss was fully offset by a valuation allowance.',
+    'This is why revenue as originally reported for 2021-2024 is not comparable to 2025 onward.']],
+
+  ['Oct 2025', 'Engineers are paid to chase a $300B-to-$1-trillion market cap',
+   'A performance-share grant to key non-executive engineering staff vests only on market-capitalisation milestones — starting at $300 billion and running up to $1 trillion, measured over a seven-year period.',
+   ['920,526 PSUs with a grant-date fair value of $410.5M, valued on a Monte Carlo model off a $620.62 share price and 70.95% expected volatility.',
+    'Deloitte made this valuation the Critical Audit Matter of the FY2025 audit.',
+    'Earlier grants worked the same way and all vested: the March 2023 tranches targeted $36 to $79 a share and were fully vested by the end of 2024.',
+    'It is the clearest statement of management ambition in the filings — and a real future expense and source of dilution.']],
+];
+
+// ─── Deep Dive narrative ────────────────────────────────────────────────────────
+export var APP_DD_INTRO = 'Everything below is <b>continuing operations</b> — the advertising business. The Apps segment sold in June 2025 sits in discontinued operations in every period, so the revenue line AppLovin printed before 2025 is not the same business; where a view needs the old basis it is labelled <i>as reported</i>. Shaded columns are <b>Bloomberg consensus (BST)</b>, not company guidance: AppLovin publishes none in its SEC filings.';
+
+// .d and .pts are RAW (write &amp; for a literal ampersand)
+export var APP_MARGIN_DRIVERS = [
+  { ic:'🧮', t:'Almost nothing scales with revenue', tag:'Structural',
+    d:'Total costs and expenses grew <b>1.2%</b> in 2025 while revenue grew <b>70%</b>. The only line that genuinely tracks volume is datacenter cost — and even that fell as a share of revenue.',
+    pts:['Datacenter cost: 13.6% of revenue in 2023 to 9.9% in 2025.',
+         'Capex was $0.5M in FY2025. The compute is rented, not owned.',
+         'Operating margin went 42% to 59% to 76% across 2023-2025.'] },
+  { ic:'👥', t:'898 people', tag:'Operating leverage',
+    d:'The company produced <b>$5.5B of revenue and $4.2B of operating income</b> in 2025 with 898 employees, about 380 of them in research and development.',
+    pts:['Roughly $6.1M of revenue and $4.6M of operating income per employee.',
+         'About 60% of staff sit outside the United States.',
+         'Headcount is not the growth constraint — Axon accuracy is.'] },
+  { ic:'📉', t:'The expense lines are stock comp, not activity', tag:'Read carefully',
+    d:'Sales &amp; marketing fell 19% and research &amp; development fell 40% in 2025. Almost all of that was <b>lower stock-based-compensation payroll cost</b>, not retrenchment — and it reverses hard in 2026.',
+    pts:['FY25 declines: minus $57.1M of S&amp;M and minus $151.1M of R&amp;D personnel cost, both stock-comp driven.',
+         '2Q26 R&amp;D then rose 127% year over year, $54.8M of it stock comp, as the October-2025 PSU grant began to amortise.',
+         'Unrecognised stock comp was $489.0M over a 1.95-year weighted average at 31 Dec 2025 — before that grant is fully in the run rate.'] },
+  { ic:'🏛️', t:'The tax rate is the soft spot', tag:'Watch',
+    d:'A <b>13.1%</b> effective rate in 2025 rests on a negotiated Singapore rate, the foreign-derived intangible income deduction and a stock-comp windfall — and the mix is moving against all three.',
+    pts:['Pillar 2 global minimum tax already cut the Singapore benefit by $82.7M.',
+         'Pre-tax income flipped to $2,211M US against $1,742M foreign in 2025, from $88M against $1,524M in 2024.',
+         'The stock-comp benefit, worth 3.4 points, only exists while the share price compounds.',
+         '1H26 already runs near 15.8%.'] },
+];
+
+// PLAIN (esc'd)
+export var APP_CAPRET = [
+  ['Dividend', 'None, ever. The 10-K states the company does not anticipate paying one in the foreseeable future.'],
+  ['Buyback', 'The only return of capital. $2.2B of stock retired in 2025 and $1.5B in 1H26, leaving $1.8B of authorisation at 30 June 2026.'],
+  ['Leverage', '$3.55B of fixed-rate senior notes with nothing due before 2029, against $3.1B of cash at 30 June 2026. Consensus has the company at net cash during 2026.'],
+  ['Dilution', 'Diluted share count is falling — 362.6M in 2023 to 342.0M in 2025 — but $489M of unrecognised stock comp and a 5%-of-shares annual evergreen on the 2021 Plan push the other way.'],
+];
+
+// ─── Advertising ecosystem — replicated from The Trade Desk's investor deck ─────
+// Slide 11 ("The pie is getting bigger while waste is being pushed out") and slide 14
+// ("With hundreds of different players"). Colours below were sampled pixel-by-pixel from
+// the rendered slides so the replica matches the source exactly.
+export var ECO_NAVY  = '#111462';   // slide 11 background
+export var ECO_GREEN = '#00564C';   // Publishers / Sellers / Content Owners
+export var ECO_MINT  = '#CFF8EE';   // Supply-side platform
+export var ECO_GRAY  = '#F2F2F2';   // the middle stack
+export var ECO_SKY   = '#ADE3FF';   // Self-serve DSP + the arrows
+export var ECO_BLUE  = '#0371E2';   // Advertisers / Agencies + slide 14 dots
+export var ECO_RULE  = '#7F7F7F';   // slide 14 dividers
+export var ECO_HEAD  = '#0C0C27';   // slide 14 category headings
+
+// Slide 11. `t` strings use \n for the line breaks that appear on the slide.
+export var APP_ECO_CHAIN = {
+  title: 'The pie is getting bigger while waste is being pushed out',
+  leftValue: '$0.55',
+  rightValue: '$1.00',
+  sell: [
+    { t:'Publishers/\nSellers/\nContent Owners', bg:ECO_GREEN, fg:'#FFFFFF' },
+    { t:'Supply-side\nplatform\n(SSP)\nand yield\nmanagement', bg:ECO_MINT, fg:'#1C1C35' },
+  ],
+  middle: [
+    { t:'Managed-service DSPs\nand ad networks', h:80 },
+    { t:'Networks exchange', h:44 },
+    { row:['Display','Mobile','Social','TV+'], h:42 },
+    { t:'Ad server', h:44 },
+    { t:'Data platform', h:44 },
+  ],
+  buy: [
+    { t:'Self-serve\nDemand-side\nplatform (DSP)', bg:ECO_SKY, fg:'#1C1C35' },
+    { t:'Advertisers/\nAgencies', bg:ECO_BLUE, fg:'#FFFFFF' },
+  ],
+};
+
+// Slide 14. Company names are transcribed from the slide's logos, in slide order, and
+// render as text wordmarks — the deck's logo images are not reproduced.
+//
+// MODIFIED vs the source slide: The Trade Desk places AppLovin in ONE box, Ad Exchange.
+// That understates it. AppLovin runs a product in four of these seven layers, so each is
+// marked with `{ app:true, via:'<product>' }` and highlighted. Every placement below is
+// justified by the FY2025 10-K's own description of the product:
+//   • DSP            — AppLovin Ads, the advertiser-side buying engine ("vast majority of revenue")
+//   • AD EXCHANGE    — the auction matching advertiser demand to publisher supply (TTD's own placement)
+//   • SSP            — MAX, "in-app bidding technology... running a real-time competitive auction"
+//                      for a publisher's inventory: the same job as Magnite or PubMatic
+//   • DATA MGMT      — Adjust, "measurement and analytics marketing platform". Strictly an MMP
+//                      rather than a DMP, but it competes in this layer with Nielsen and Adobe
+// Deliberately NOT placed in PUBLISHER: Wurl distributes streaming video *for* content
+// companies, so it serves that layer rather than competing in it. See APP_ECO_APPNOTE.
+export var APP_ECO_PLAYERS = {
+  title: 'With hundreds of different players',
+  top: [
+    { cat:'ADVERTISER', items:['Under Armour','Aflac','Marriott','Travelers','New York Life','Vanguard'] },
+    { cat:'AGENCY', items:['WPP','Omnicom Group','Publicis Groupe','Havas Media','IPG','dentsu Aegis Network'],
+      note:'Plus hundreds of independent agencies' },
+    { cat:'DATA MANAGEMENT PLATFORM',
+      items:[{ n:'AppLovin', app:true, via:'Adjust' },'The Trade Desk','Nielsen','Adobe','Lotame','Salesforce DMP'] },
+    { cat:'DSP',
+      items:[{ n:'AppLovin', app:true, via:'AppLovin Ads' },'The Trade Desk','Moloco','Criteo','Adobe','Display & Video 360','Yahoo Advertising','MNTN'] },
+  ],
+  bottom: [
+    { cat:'AD EXCHANGE',
+      items:[{ n:'AppLovin', app:true, via:'Axon auction' },'Microsoft','Google Ad Manager','OpenX','Smaato','Magnite','PubMatic','SmartyAds'] },
+    { cat:'SSP',
+      items:[{ n:'AppLovin', app:true, via:'MAX' },'Magnite','Google Ad Manager','PubMatic','Triton','Yieldmo','OpenX','Microsoft Advertising'] },
+    { cat:'PUBLISHER', items:['The New York Times','Hulu','CNN','BBC','NBC','WSJ','National Geographic','ESPN','Dotdash Meredith'] },
+  ],
+};
+
+export var APP_ECO_LEGEND = 'Where AppLovin competes';
+
+export var APP_ECO_APPNOTE = 'The Trade Desk\'s slide puts AppLovin in a single box — Ad Exchange. On the 10-K\'s own description of its products, it runs one in <b>four of these seven layers</b>: the buying engine (<b>AppLovin Ads</b>, the vast majority of revenue), the auction itself, the publisher-side monetisation layer (<b>MAX</b>, which does the same job as Magnite or PubMatic), and measurement (<b>Adjust</b>). That is the structural difference between the two companies: The Trade Desk deliberately occupies one layer and sells neutrality; AppLovin owns the whole path from advertiser to impression. <b>Wurl</b> is not marked — it distributes streaming video <i>for</i> content companies, so it serves the publisher layer rather than competing in it.';
+
+export var APP_ECO_SOURCE = 'Panel one is replicated verbatim from The Trade Desk investor presentation, slide 11 (The pie is getting bigger while waste is being pushed out). Panel two follows slide 14 (With hundreds of different players) in layout, wording and ordering, but is MODIFIED: the source places AppLovin only in Ad Exchange, whereas the highlighted boxes mark every layer in which AppLovin actually fields a product, each traced to the FY2025 10-K. Colour values were sampled directly from the rendered source pages. Company logos are rendered as text wordmarks rather than reproduced images. The underlying framing of the open-internet ad ecosystem is The Trade Desk\'s, not AppLovin\'s and not Summit\'s.';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INVENTORY — what is actually being sold
+// ═══════════════════════════════════════════════════════════════════════════════
+// AppLovin does NOT disclose revenue by inventory type, surface or format. There is no
+// published split beyond geography. So nothing here carries a share-of-revenue number:
+// this describes STRUCTURE and maturity, both of which the 10-K does state.
+
+// The three surfaces the inventory sits on. `.d` is RAW.
+export var APP_INV_SURFACES = [
+  { ic:'📱', t:'Mobile in-app', tag:'Core', tone:'core',
+    sum:'Ad slots inside mobile apps — overwhelmingly games.',
+    d:'The inventory the business was built on and where Axon has seen the most spend.',
+    pts:['Supply reaches the platform through MAX and through direct publisher integrations',
+         'The 10-K describes the mobile app ecosystem as the existing market being expanded within'] },
+  { ic:'🛒', t:'Web & e-commerce', tag:'Early', tone:'early',
+    sum:'The same engine, opened to web and social advertisers.',
+    d:'Management lists this first among its new verticals and says the solutions are already available to web advertisers.',
+    pts:['The 10-K explicitly calls this expansion early',
+         'Seasonality is expected to become more pronounced as large e-commerce advertisers grow in the mix'] },
+  { ic:'📺', t:'Connected TV', tag:'Emerging', tone:'emerge',
+    sum:'Streaming video inventory, reached through Wurl.',
+    d:'Wurl distributes content for streamers and content companies. Management frames applying Axon to CTV as the second route out of mobile.',
+    pts:['Wurl serves content owners rather than competing with them for the impression',
+         'Earns on a usage or CPM basis, unlike the performance pricing of the core engine'] },
+];
+
+// The life of one impression. `.d` is RAW. `who` marks which side of the market acts.
+export var APP_INV_FLOW = [
+  { n:'1', t:'A publisher has a slot',   who:'Publisher',  sum:'A user opens an app.',
+    d:'An ad slot becomes available for a fraction of a second.' },
+  { n:'2', t:'The slot goes to auction', who:'MAX',        sum:'Every buyer bids at once.',
+    d:'MAX runs a live <b>in-app bidding</b> auction, rather than calling networks in a fixed waterfall order.' },
+  { n:'3', t:'Axon decides what to bid', who:'Axon',       sum:'In microseconds.',
+    d:'The recommendation system predicts what this impression is worth against each advertiser\'s <b>return-on-ad-spend</b> target.' },
+  { n:'4', t:'The ad is shown',          who:'Advertiser', sum:'Priced against the goal, not a rate card.',
+    d:'The winning advertiser\'s ad renders and is charged dynamically against the campaign goal.' },
+  { n:'5', t:'The outcome is measured',  who:'Adjust',     sum:'Which spend produced which install.',
+    d:'Attribution and analytics close the loop. Adjust is walled off from Axon and also measures rival networks.' },
+  { n:'6', t:'The publisher is paid',    who:'Publisher',  sum:'Revenue is booked net of this.',
+    d:'AppLovin reports the <b>take</b>, not the gross media spend flowing through the system.' },
+];
+export var APP_INV_NOTE = 'AppLovin publishes no revenue split by inventory type, surface, format or vertical — geography is the only disaggregation in the filings. The maturity labels above are the 10-K\'s own words (existing market / early / expansion route), not a size estimate. The net-revenue point matters when comparing to peers: gross media spend running through the platform is materially larger than the revenue line, and the company never discloses it.';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PRODUCTS vs COMPETITION
+// ═══════════════════════════════════════════════════════════════════════════════
+// The 10-K names FOUR competitors for the company as a whole: Meta, Google, Amazon and
+// Unity. It does NOT map competitors to individual products. The per-product rivals below
+// are therefore ANALYST-ADDED and flagged as such — never present them as company-stated.
+export var APP_PROD_MATRIX = [
+  { p:'AppLovin Ads', role:'Buys the impression for the advertiser', earn:'Dynamic, against the advertiser\'s ROAS target',
+    named:['Meta','Google','Amazon','Unity'], added:[],
+    edge:'Paid on performance rather than on placement, so the company only grows when the campaign works.' },
+  { p:'MAX', role:'Sells the publisher\'s inventory', earn:'A percentage of winning auction spend',
+    named:['Unity'], added:['Magnite','PubMatic'],
+    edge:'Owning the supply side as well as the demand side is the structural difference from a pure DSP.' },
+  { p:'Adjust', role:'Measures whether the spend worked', earn:'Annual software subscription',
+    named:[], added:['AppsFlyer','Branch','Kochava'],
+    edge:'Deliberately walled off from Axon, which is what lets competing networks keep using it.' },
+  { p:'Wurl', role:'Distributes streaming video for content owners', earn:'Usage or CPM',
+    named:[], added:[],
+    edge:'Serves the publisher layer rather than competing in it — the route for taking Axon into CTV.' },
+];
+export var APP_PROD_MATRIX_NOTE = 'Competitors in blue are the ones AppLovin names in its FY2025 10-K (Meta, Google, Amazon, Unity Software) — the filing names them for the business as a whole, and the mapping to individual products is this note\'s judgement, not the company\'s. Competitors in grey are ANALYST-ADDED for orientation and appear nowhere in the filings. The 10-K also observes that several competitors are simultaneously partners and clients, which is why the same names recur on the Clients tab.';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AXON — the engine
+// ═══════════════════════════════════════════════════════════════════════════════
+// Management's own flywheel framing (10-K), kept in its own words and labelled as such.
+// `.d` is RAW.
+export var APP_AXON_STEPS = [
+  { n:'1', t:'More advertisers',          d:'Demand arrives on the platform with budgets and <b>return-on-ad-spend</b> targets.' },
+  { n:'2', t:'More data',                 d:'Every impression served produces an outcome — an install, a purchase, nothing at all.' },
+  { n:'3', t:'Stronger distribution',     d:'Scale across publisher supply gives the system more places to test and to place.' },
+  { n:'4', t:'Better insights for Axon',  d:'The recommendation system learns from those outcomes; the 10-K describes the link to the ecosystem as <b>a durable competitive advantage</b>.' },
+  { n:'5', t:'Higher efficiency',         d:'Each impression is matched to the advertiser who values it most, so the same slot yields more.' },
+];
+export var APP_AXON_CLAIM = 'This loop is management\'s own framing, reproduced from the FY2025 10-K. It is a claim about why the business compounds, not an audited fact — the test of it is whether yield keeps rising, which is what the panel below measures.';
+// The evidence: the company's own volume/price disclosure. These are AM_DRIVERS values,
+// restated here as a narrative so the tab stands on its own.
+export var APP_AXON_EVID = 'Axon\'s effect is measurable in one place: the split between how many installs AppLovin delivers and how much revenue it earns per install. In FY2024 growth still came from volume — installs +50%. Since then volume has gone flat and then negative, while <b>net revenue per installation</b> has risen +72%, +93% and +58% in FY2025, 1Q26 and 2Q26. Essentially all growth is now the engine extracting more from each impression.';
+export var APP_AXON_LIMIT = 'Read the same fact the other way. Yield is a <b>ratio</b>, and a ratio has a ceiling that a volume does not — an advertiser will not pay more than the customer is worth. Install volume fell 18% in 1Q26 and 2% in 2Q26; if that is the platform running out of incremental supply rather than mix shifting, then the yield gains have to keep accelerating just to hold the growth rate. That is the single most important thing to watch in this business.';
+export var APP_AXON_NOTE = 'AppLovin discloses only ROUNDED year-over-year percentages for installation volume and net revenue per installation — never the absolute install count, never the dollar revenue per install, and never any metric about Axon itself (no model size, no accuracy measure, no version history in the filings). Volume times price does not multiply out exactly to revenue growth because of that rounding and because mix shifts between periods.';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CLIENTS — who pays, and for what
+// ═══════════════════════════════════════════════════════════════════════════════
+// `.d` is RAW.
+export var APP_CLIENT_SIDES = [
+  { ic:'💰', t:'Advertisers', pay:'Pay AppLovin', tone:'pay',
+    sum:'Substantially all revenue. Indie studios up to Meta and Google.',
+    d:'Fees collected from advertisers are, in the 10-K\'s words, <b>substantially all</b> of revenue.',
+    pts:['Charged dynamically against their return-on-ad-spend target','Buy through AppLovin Ads, powered by Axon'] },
+  { ic:'📦', t:'Publishers', pay:'Get paid', tone:'paid',
+    sum:'Supply the inventory. A cost, not a revenue source.',
+    d:'Publishers are <b>paid out of the gross spend</b>, and revenue is booked net of what they receive — so they sit above the revenue line rather than in it.',
+    pts:['Sell through MAX, which takes a share of winning auction spend','MAX gives them the reporting to manage their own profitability'] },
+  { ic:'📊', t:'Adjust subscribers', pay:'Pay a subscription', tone:'sub',
+    sum:'Marketers buying measurement. Annual software fee.',
+    d:'Sold as an <b>annual subscription</b> rather than a share of media spend, and includes customers running campaigns on competing networks.',
+    pts:['The only recurring, non-performance revenue in the suite','Walled off from Axon unless the customer directs otherwise'] },
+  { ic:'🎬', t:'Content companies', pay:'Pay for distribution', tone:'ctv',
+    sum:'Streamers using Wurl. Usage or CPM.',
+    d:'Content owners use <b>Wurl</b> to distribute video and monetise the audience.',
+    pts:['The CTV client base, distinct from the mobile advertiser base'] },
+];
+export var APP_CLIENT_FACTS = [
+  ['No customer reached 10% of revenue', 'in 2023, 2024 or 2025'],
+  ['No customer reached 10% of receivables', 'at 12/31/25 or 12/31/24'],
+  ['Named competitors are also clients', 'Meta, Google, Amazon, Unity Software'],
+  ['Seasonality is expected to increase', 'as large e-commerce advertisers grow in the mix'],
+];
+export var APP_CLIENT_TENSION = 'Two things in the 10-K sit in tension and both are worth carrying into a discussion. The concentration <b>test is passed</b> — no customer reached 10% of revenue in any of the last three years, and none reached 10% of receivables. Yet the company still flags <b>concentration of our revenue sources</b> as a risk factor. The most likely reading is category concentration rather than customer concentration: a business overwhelmingly exposed to mobile gaming advertising budgets is concentrated even when no single logo is.';
+export var APP_CLIENTS_NOTE = 'Customer composition, the 10% concentration tests, the competitor list and the seasonality comment are all from the FY2025 10-K. AppLovin does not disclose customer counts, revenue by customer type, revenue by vertical, or any retention or churn metric — so there is no client-mix chart to draw, and any number you see quoted for those elsewhere did not come from the filings.';
+
+// ─── Footers — PLAIN ────────────────────────────────────────────────────────────
+export var APP_OV_SOURCES = "Sources — AppLovin Corporation FY2025 Form 10-K (filed 19 Feb 2026) for the business description, products, competitors, employees, capital structure, litigation and all FY2023-FY2025 figures; the 1Q26 and 2Q26 Forms 10-Q for 2026 figures and for the AppLovin Ads renaming. Market cap is live via Massive. Competitor multiples are seeded approximations, not live quotes, and are labelled as such on the chart. KKR's 2018 investment terms are not stated in these filings and are flagged in the timeline for separate sourcing.";
+
+export var APP_DD_SOURCES = "Sources — AppLovin Corporation FY2025 Form 10-K and the 1Q26/2Q26 Forms 10-Q for all actuals; Bloomberg (APP US Equity, estimate source BST) for 2026E-2028E consensus and for the 2021/2022 advertising-segment split, which was cross-checked line by line against the 10-K restatement. Consensus is not company guidance: AppLovin publishes none in its SEC filings. All figures are continuing operations unless labelled as reported or Apps. Derived cells are marked in the note under each table.";

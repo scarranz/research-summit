@@ -1,0 +1,115 @@
+{
+  "_doc": "AMZN segments config for emit_segments.py. A BRIDGE is a chain of terms whose product equals a target — that is the generic shape, so Uber's 'GB = MAUs x trips/MAU x price' and AWS's 'revenue = capacity x revenue per $ of capacity' are the same object with different terms. Drivers that already live in js/results-data/amzn.js are REFERENCED (from: results:<key>), never copied, so segment revenue and operating income keep exactly one home.",
+
+  "ticker": "AMZN",
+
+  "_shared_note": "Drivers Bloomberg reports for the company as a whole, not per segment. RPO is essentially all AWS for Amazon, but that is an assumption and the note says so on screen.",
+  "shared": {
+    "rpo":      { "label": "Remaining performance obligations", "short": "Backlog", "unit": "usdM", "bbg": "metric38", "scope": "company" },
+    "shipping": { "label": "Shipping cost", "short": "Shipping", "unit": "usdM", "bbg": "kpi4", "scope": "company" },
+    "dpo":      { "label": "Days payable outstanding", "short": "Days payable", "unit": "days", "bbg": "kpi6", "scope": "company" }
+  },
+
+  "_rejected_note": "Checked and deliberately excluded. The DCF's segment D&A is an even three-way split (US, Intl and AWS all read 4809.5188588 in 2026Q2) so it is an allocation, not a measurement — Bloomberg's segment D&A differs by segment and is used instead. The DCF's actuals_history FCF row reads 99,595 for 2026Q2 against CFO 45,387 + capex -54,208 = -8,821, so it is on some other definition and is not read. Bloomberg's inventory turnover is 0.00 in all 30 snapshots.",
+  "rejected": ["dcf:US_DNA", "dcf:INT_DNA", "dcf:AWS_DNA", "dcf:FCF", "bbg:kpi5"],
+
+  "segments": [
+    {
+      "key": "aws", "label": "AWS", "short": "AWS",
+      "lede": "The profit engine, and the reason the capex line looks the way it does. AWS sells compute, storage and managed services on capacity Amazon has to build before it can sell it — so the honest read is not price x units, it is contracted demand against deployed capacity.",
+      "sells": [
+        { "name": "Compute", "what": "EC2 instances and the managed layers on top of them; increasingly accelerated instances for training and inference." },
+        { "name": "Storage & data", "what": "S3, EBS, and the database and analytics services that bill off stored volume and queries." },
+        { "name": "AI platform", "what": "Bedrock, SageMaker and the Trainium/Inferentia silicon — the newest line and the one driving the capex step-up." },
+        { "name": "Networking & the long tail", "what": "Data transfer, edge, security and the rest of the managed-service catalogue." }
+      ],
+      "drivers": {
+        "rev":    { "from": "results:aws" },
+        "opinc":  { "from": "results:awsopinc" },
+        "ppe":    { "label": "Capacity deployed (PP&E, net)", "short": "Capacity", "unit": "usdM", "dcf": "AWS_PPE" },
+        "capex":  { "label": "Capacity added (capex)", "short": "Capex", "unit": "usdM", "dcf": "AWS_CAPEX", "sign": -1 },
+        "ebitda": { "label": "Segment EBITDA", "short": "EBITDA", "unit": "usdM", "dcf": "AWS_EBITDA" },
+        "dna":    { "label": "Depreciation & amortisation", "short": "D&A", "unit": "usdM", "bbg": "kpi12" }
+      },
+      "bridges": [
+        { "key": "capacity", "label": "Capacity", "view": "y", "target": "rev", "terms": ["ppe", "revPerPpe"],
+          "kind": "decomposition",
+          "identity": "revenue = capacity deployed x revenue per $ of capacity",
+          "note": "A decomposition, not an independent build: revenue per $ of capacity IS revenue divided by capacity, so the two terms multiply back to revenue by construction. What it buys you is the split — how much of the revenue line is more capacity versus better yield on it. Both terms are projected by the model, so the split runs forward." },
+        { "key": "backlog", "label": "Backlog", "view": "q", "target": "rev", "terms": ["rpo", "rpoConv"],
+          "kind": "decomposition",
+          "identity": "revenue = contracted backlog x conversion into the quarter",
+          "note": "Bloomberg reports remaining performance obligations for the company; for Amazon that is essentially all AWS, which is an assumption worth holding lightly. Backlog is the closest thing AWS has to a units number — demand already signed and not yet delivered." }
+      ]
+    },
+    {
+      "key": "na", "label": "North America", "short": "NA",
+      "lede": "The retail surface at home: first-party stores, the third-party marketplace riding the same fulfilment network, and advertising riding on both. Amazon discloses no units, no average selling price and no Prime member count, so a classic price x quantity bridge cannot be built honestly here.",
+      "sells": [
+        { "name": "Online stores (1P)", "what": "Amazon's own inventory, sold and shipped by Amazon." },
+        { "name": "Third-party seller services", "what": "Commissions, FBA fulfilment and shipping fees from sellers on the same network." },
+        { "name": "Advertising", "what": "Sponsored placement against shopping intent — reported company-wide, not split by segment." },
+        { "name": "Subscriptions & physical stores", "what": "Prime and content subscriptions; Whole Foods, Fresh and Go." }
+      ],
+      "drivers": {
+        "rev":    { "from": "results:usrev" },
+        "opinc":  { "from": "results:naopinc" },
+        "ppe":    { "label": "Fulfilment capacity (PP&E, net)", "short": "Capacity", "unit": "usdM", "dcf": "US_PPE" },
+        "capex":  { "label": "Capacity added (capex)", "short": "Capex", "unit": "usdM", "dcf": "US_CAPEX", "sign": -1 },
+        "ebitda": { "label": "Segment EBITDA", "short": "EBITDA", "unit": "usdM", "dcf": "US_EBITDA" },
+        "dna":    { "label": "Depreciation & amortisation", "short": "D&A", "unit": "usdM", "bbg": "kpi10" }
+      },
+      "bridges": [
+        { "key": "capacity", "label": "Capacity", "view": "y", "target": "rev", "terms": ["ppe", "revPerPpe"],
+          "kind": "decomposition",
+          "identity": "revenue = fulfilment capacity x revenue per $ of capacity",
+          "note": "The only bridge the disclosure supports for retail. Read it as network productivity — and read it against AWS, because the gap between the two is the whole difference between the businesses in one number." }
+      ]
+    },
+    {
+      "key": "intl", "label": "International", "short": "Intl",
+      "lede": "The same retail model outside North America, several years behind on margin and with a different mix of owned versus marketplace. Same disclosure limits as North America.",
+      "sells": [
+        { "name": "Online stores (1P)", "what": "Amazon's own inventory in each country it operates." },
+        { "name": "Third-party seller services", "what": "The marketplace, at a lower share of the mix than North America." },
+        { "name": "Subscriptions & other", "what": "Prime and local services." }
+      ],
+      "drivers": {
+        "rev":    { "from": "results:intrev" },
+        "opinc":  { "from": "results:intopinc" },
+        "ppe":    { "label": "Fulfilment capacity (PP&E, net)", "short": "Capacity", "unit": "usdM", "dcf": "INT_PPE" },
+        "capex":  { "label": "Capacity added (capex)", "short": "Capex", "unit": "usdM", "dcf": "INT_CAPEX", "sign": -1 },
+        "ebitda": { "label": "Segment EBITDA", "short": "EBITDA", "unit": "usdM", "dcf": "INT_EBITDA" },
+        "dna":    { "label": "Depreciation & amortisation", "short": "D&A", "unit": "usdM", "bbg": "kpi11" }
+      },
+      "bridges": [
+        { "key": "capacity", "label": "Capacity", "view": "y", "target": "rev", "terms": ["ppe", "revPerPpe"],
+          "kind": "decomposition",
+          "identity": "revenue = fulfilment capacity x revenue per $ of capacity",
+          "note": "International carries the least owned infrastructure per dollar sold of the three segments. That reads as high productivity and is really a mix statement: more of the sales here run through the marketplace and through leased rather than owned capacity." }
+      ]
+    }
+  ],
+
+  "_derived_note": "Ratios the generator computes from two drivers. `annualiseDen` multiplies the denominator by the periods-per-year of the view, so a quarterly coverage ratio reads against a run-rate rather than against a single quarter.",
+  "derived": {
+    "revPerPpe": { "label": "Revenue per $ of capacity", "short": "Rev / $ capacity", "unit": "x", "num": "rev", "den": "ppe" },
+    "rpoConv":   { "label": "Backlog converted in the quarter", "short": "Conversion", "unit": "x", "num": "rev", "den": "rpo" },
+    "coverage":  { "label": "Backlog coverage (years of run-rate)", "short": "Coverage", "unit": "x", "num": "rpo", "den": "rev", "annualiseDen": true },
+    "capexInt":  { "label": "Capex intensity (% of revenue)", "short": "Capex %", "unit": "pct", "num": "capex", "den": "rev" },
+    "ebitdaMgn": { "label": "Segment EBITDA margin", "short": "EBITDA %", "unit": "pct", "num": "ebitda", "den": "rev" },
+    "dnaInt":    { "label": "D&A as % of revenue", "short": "D&A %", "unit": "pct", "num": "dna", "den": "rev" }
+  },
+
+  "_highlights_note": "Per segment, the derived ratios worth putting on screen beside the bridge.",
+  "highlights": {
+    "aws":  ["revPerPpe", "coverage", "capexInt", "ebitdaMgn", "dnaInt"],
+    "na":   ["revPerPpe", "capexInt", "ebitdaMgn"],
+    "intl": ["revPerPpe", "capexInt", "ebitdaMgn"]
+  },
+
+  "axis": {
+    "q": ["1Q23","2Q23","3Q23","4Q23","1Q24","2Q24","3Q24","4Q24","1Q25","2Q25","3Q25","4Q25","1Q26","2Q26"],
+    "y": ["2022","2023","2024","2025","2026","2027","2028","2029"]
+  }
+}

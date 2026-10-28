@@ -1,0 +1,16 @@
+{
+  "_note": "Bloomberg closes checked by the analyst (Oct 12, 2026) for card holdings outside the S&P 500. Used before Yahoo by holdings_ytd.py; update both dates when the cut-off moves. ipo = no prior year-end price: return from the first-day open instead.",
+  "base": "2025-12-31",
+  "asOf": "2026-10-12",
+  "prices": {
+    "AER": [143.76, 146.20], "ASML": [1069.86, 1750.24], "BABA": [146.58, 110.78], "BN": [45.89, 37.05],
+    "CP": [73.63, 85.53], "CRS": [314.84, 377.25], "CRWV": [71.61, 80.26], "EWZ": [31.77, 43.54],
+    "HHH": [79.77, 72.34], "INSM": [174.04, 98.56], "NTRA": [229.09, 397.77], "QSR": [68.23, 71.12],
+    "RPRX": [38.64, 57.78], "RSP": [191.56, 213.19], "SE": [127.57, 95.88], "SGI": [89.28, 62.40],
+    "TBBB": [33.39, 56.30], "TDS": [41.00, 34.79], "TEVA": [28.61, 41.17], "TSM": [303.89, 444.35],
+    "WBD": [28.82, 30.95], "WCC": [244.64, 361.34], "XLF": [54.77, 55.05]
+  },
+  "ipo": {
+    "CBRS": {"date": "2026-05-14", "open": 350.00, "last": 146.62}
+  }
+}

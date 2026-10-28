@@ -15,6 +15,9 @@ import { makeManagement } from './management.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { maCeHtml, maCeWire, maCeBuild, maCePop } from './ma-ce.js';   // Evolution ▸ Earnings (playbook machinery + ./ma-ce-data.js)
 import { MA_SENS_MODEL } from './ma-sensitivity-data.js';   // Valuation ▸ Sensitivity: frozen Summit model snapshot
+import { maHistMult } from './ma-histmult.js';   // Valuation ▸ Historic Multiple (copy of meta-histmult.js; P/E now, EV/EBITDA when net debt is loaded)
+import { maResults } from '../results-data/ma.js';   // Ownership / Governance charts read the Bloomberg annual series
+import { SUMMIT_CAT } from '../viz-palette.js';
 
 // The live company object (id + ticker), captured in html()/deepDiveHtml(), so the Watch List
 // can mount the shared engine against this company's Supabase rows. Same pattern as uber.js.
@@ -444,18 +447,6 @@ var PEER_NOTE = 'Mastercard and Visa are the two global open-loop "toll roads" �
 // ── Financials → Valuation ▸ Balance Sheet. Summit DCF (snapshot 2026-06-25); 2021–2025
 // actuals, 2026–2029 = model projection. FCF 2025 = 15,121 (model) — corrected from an
 // older seed. REV/OP_INCOME/EBITDA verified against the model. ──
-var FIN_YEARS = [2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029];
-var FIN_EST   = [false, false, false, false, false, true, true, true, true];
-var FIN_FMT   = function(v){ return v==null ? '—' : '$'+(v/1000).toFixed(1)+'B'; };
-var FIN_SERIES = {
-  finRev:    { label:'Revenue',          type:'bar',  color:MA_RED,   data:[18884, 22237, 25098, 28167, 32791, 38162, 41902, 46640, 52166] },
-  finOpInc:  { label:'Operating Income', type:'bar',  color:MA_STEEL, data:[10079, 12127, 13824, 15278, 18554, 22085, 23928, 26614, 29859] },
-  finEbitda: { label:'EBITDA',           type:'bar',  color:MA_ORANGE,data:[11461, 12816, 14829, 16493, 20100, 23505, 26302, 29249, 32770] },
-  finFcf:    { label:'Free Cash Flow',   type:'line', color:MA_GREEN, data:[9056, 10753, 11705, 14306, 15121, 18024, 19455, 21654, 24318] },
-};
-var FIN_INTRO = 'Mastercard\'s financials, pulled from the <b>Summit DCF model</b> — <b>actuals through FY2025</b> and the model\'s <b>projection to FY2029</b> (faded / dashed). Drag the timeline handles to mold the window; each chart\'s CAGR updates to your selection.';
-var FIN_NOTE  = 'Annual, USD billions. <b>2021–2025 actuals · 2026–2029 = DCF projection</b> (faded/dashed). Source: Summit DCF model for Mastercard (snapshot 2026-06-25). FCF FY2025 = $15.1B per the model (a prior seed of $17.2B was corrected). Forward figures are model estimates, not company guidance.';
-var _finStart=2021, _finEnd=2029, _finCharts={};
 
 // ── Management (Executives & Board) → Management tab. Full Management-Committee core +
 // the complete 11-member board, from the investor.mastercard.com Management Committee page
@@ -463,7 +454,7 @@ var _finStart=2021, _finEnd=2029, _finCharts={};
 // flagged inline; titles below are the operative mid-2026 (pre-Aug-3) roster. ──
 var MA_RESHUFFLE = 'On <b>June 2, 2026</b> Mastercard announced a C-suite reshuffle effective <b>Aug 3, 2026</b>: CFO <b>Sachin Mehra → Chief Business Officer</b>; <b>Ling Hai → CFO</b>; <b>Linda Kirkpatrick → Chief Services Officer</b> (Vosburg → Vice Chair); <b>Dimitrios Dosis → Chief Commercial Payments Officer</b> (Seshadri → Senior Advisor). Vice Chair <b>Tim Murphy</b> retires Oct 2026. Titles shown are the operative mid-2026 roster.';
 var MA_MGMT = makeManagement({
-  brand:MA_RED,
+  brand:SUMMIT_CAT[0],
   lede:"Mastercard runs a deep, unusually long-tenured bench under CEO <b>Michael Miebach</b> (CEO since Jan 2021), continuing the network-plus-services pivot begun under Ajay Banga. The Management Committee spans ~40 people; the core executive officers, the regional presidents and the functional chiefs are below. Two reads stand out: <b>most of the top team are 15–25-year Mastercard lifers</b> (Kirkpatrick joined as an intern in 1997), and the company just refreshed several functional chiefs from the outside (marketing, people, cyber). A major <b>C-suite reshuffle was announced June 2026</b> (see the note). Live ownership & insider activity populate the Ownership subtab (Fiscal.ai).",
   execs:[
     { id:'miebach', lead:true, name:'Michael Miebach', title:'Chief Executive Officer & President', since:'CEO since Jan 2021 · at MA since 2010', img:'img/leadership/ma-miebach.jpg',
@@ -1132,56 +1123,7 @@ function ddSuppliersBody(c){
 // (FY21–25 actuals from the model/filings, FY26E from the Summit model); the live Massive
 // feed (api.fetchMargins) overrides it when reachable. MA has no cost-of-revenue line, so
 // there is no "gross" margin — the story is operating/EBITDA/net/cash. ──
-var MA_MRG_METRICS=[
-  {key:'oper',label:'Operating',color:MA_RED},
-  {key:'net',label:'Net',color:'#7A5AF8'},
-  {key:'ebitda',label:'EBITDA',color:MA_ORANGE},
-  {key:'cfo',label:'CFO',color:'#12B5A5'},
-  {key:'fcf',label:'FCF',color:MA_GREEN}
-];
-var MA_MRG_FALLBACK=[
-  {fy:'FY21', oper:53.4, net:46.0, ebitda:60.7, cfo:47.0, fcf:48.0},
-  {fy:'FY22', oper:54.5, net:44.7, ebitda:57.6, cfo:47.0, fcf:48.4},
-  {fy:'FY23', oper:55.1, net:44.6, ebitda:59.1, cfo:46.0, fcf:46.6},
-  {fy:'FY24', oper:54.2, net:45.7, ebitda:58.6, cfo:51.0, fcf:50.8},
-  {fy:'FY25', oper:56.6, net:44.6, ebitda:61.3, cfo:47.6, fcf:46.1},
-  {fy:'FY26E',oper:57.9, net:44.7, ebitda:61.6, cfo:48.8, fcf:47.2, proj:true}
-];
-var MA_MRG_NOTE_FB='Operating / net = <b>GAAP</b>; EBITDA and CFO/FCF ÷ net revenue. <b>FY26E</b> = Summit model. Mastercard runs one of the <b>highest operating margins in the S&P 500 (~55–58%)</b> and converts nearly half of revenue to free cash flow — the asset-light, no-credit-risk model in one picture. <span style="color:#B7791F">Directional fallback; the live Massive feed overrides it when reachable.</span> <span class="ave-subh-note">CFO FY21–24 are directional seeds.</span>';
-var MA_MRG_NOTE_LIVE='Historical margins computed <b>live from Massive</b> (income & cash-flow statements): operating/net = line ÷ revenue; EBITDA = (op income + D&A) ÷ revenue; CFO & FCF ÷ revenue. Mastercard has no cost-of-revenue line, so there is no gross margin.';
-var _maMrgRows=MA_MRG_FALLBACK.slice();
 var _maMrgSrc='fallback';
-function ddMarginsBody(c){
-  return '<p class="ov-lede">Profitability & cash margins as a % of net revenue. The whole thesis reads in one chart: a business with <b>no credit risk and almost no capital</b> earns a <b>~57% operating margin</b>, a <b>~61% EBITDA margin</b>, and converts <b>~46–48% of revenue to free cash flow</b> — margins near the very top of any large company.</p>'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Margins (% of net revenue) <span>· fiscal years · FY26E = estimate</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="maChartMargins"></canvas></div></div>'+
-    '<div class="ave-subh-note" id="maMrgNote" style="margin-top:8px">'+MA_MRG_NOTE_FB+'</div>';
-}
-function buildMaMargins(){
-  var cv=document.getElementById('maChartMargins'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
-  var ex=Chart.getChart?Chart.getChart(cv):null; if(ex) ex.destroy();
-  var labels=_maMrgRows.map(function(r){ return r.fy; });
-  var projIdx=_maMrgRows.reduce(function(a,r,i){ return r.proj?i:a; }, -1);
-  var ds=MA_MRG_METRICS.map(function(m){ return { label:m.label, data:_maMrgRows.map(function(r){ return r[m.key]; }), borderColor:m.color, backgroundColor:m.color, borderWidth:2, tension:.25, spanGaps:true, fill:false,
-    pointRadius:_maMrgRows.map(function(r){ return r.proj?4:2; }), pointStyle:_maMrgRows.map(function(r){ return r.proj?'rectRot':'circle'; }),
-    segment:{ borderDash:function(ctx){ return ctx.p1DataIndex===projIdx?[5,4]:undefined; } } }; });
-  new Chart(cv.getContext('2d'),{ type:'line', data:{ labels:labels, datasets:ds },
-    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
-      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ title:function(it){ var l=it[0].label; return l==='FY26E'?'FY26E · estimate':l; }, label:function(ctx){ return ctx.dataset.label+': '+(ctx.parsed.y==null?'—':ctx.parsed.y.toFixed(1)+'%'); } } } },
-      scales:{ y:{ ticks:{ callback:function(v){ return v+'%'; }, font:{size:10} }, grid:{color:'#EEF2F7'} }, x:{ grid:{display:false}, ticks:{font:{size:10.5}} } } }
-  });
-  maLoadMargins();
-}
-function maLoadMargins(){
-  if(_maMrgSrc==='massive') return;
-  import('../api.js').then(function(api){ return api.fetchMargins?api.fetchMargins('MA'):null; }).then(function(res){
-    if(!res||!res.success||!res.data||res.data.length<3) return;
-    var proj=MA_MRG_FALLBACK[MA_MRG_FALLBACK.length-1];
-    _maMrgRows=res.data.concat(proj&&proj.proj?[proj]:[]);
-    _maMrgSrc='massive';
-    var note=document.getElementById('maMrgNote'); if(note) note.innerHTML=MA_MRG_NOTE_LIVE;
-    buildMaMargins();
-  }).catch(function(){});
-}
 // ── Evolution ▸ Strategy — the real architecture: grow/diversify/build × 3 vectors, the
 // multi-rail hedge, and the forward bets (tokenization/agentic/stablecoins). Sourced from
 // the Nov 2024 Investor Day, FY2025 10-K and the Q4 2025 call. Driver cards → pop-ups. ──
@@ -1283,24 +1225,6 @@ function ddStrategyBody(c){
   return h;
 }
 // ── Valuation ▸ Balance Sheet (the DCF financials) ──
-function ddFinancialsBody(c){
-  var h='<p class="ov-lede">'+FIN_INTRO+'</p>';
-  h+='<div class="ov-rangebar">'+
-    '<div class="ov-range-head"><span class="ov-range-title">Timeline</span><span class="ov-range-val" id="ovFinVal">2021 – 2029E</span></div>'+
-    '<div class="ov-range-slider"><div class="ov-range-track"></div><div class="ov-range-fill" id="ovFinFill"></div>'+
-      '<input type="range" id="ovFinMin" min="2021" max="2029" step="1" value="2021">'+
-      '<input type="range" id="ovFinMax" min="2021" max="2029" step="1" value="2029">'+
-      '<div class="ov-range-ticks" id="ovFinTicks"></div></div>'+
-  '</div>';
-  h+='<div class="ov-charts ov-charts-2">'+
-    finCard('finRev','Revenue','FY21 – FY29E')+
-    finCard('finOpInc','Operating Income','FY21 – FY29E')+
-    finCard('finEbitda','EBITDA','FY21 – FY29E')+
-    finCard('finFcf','Free Cash Flow','FY21 – FY29E')+
-  '</div>';
-  h+='<div class="ov-diagram-cap" style="margin-top:10px">'+FIN_NOTE+'</div>';
-  return h;
-}
 function finCard(id, title, sub){
   return '<div class="ov-chart-card"><div class="ov-chart-t">'+esc(title)+' <span>'+esc(sub)+'</span></div>'+
     '<div class="ov-chart-wrap"><canvas id="'+id+'"></canvas></div>'+
@@ -1404,24 +1328,6 @@ function ddRiskBody(c){
   return h;
 }
 // ── Valuation ▸ Multiples — how the listed peers trade (the qualitative map is in Industry). ──
-function ddMultiplesBody(c){
-  var rows=[
-    { tk:'MA', n:'Mastercard', mc:'~$470B', ev:'~28×', pe:'~31×', g:'+13%', self:true, read:'The #2 network — premium for a larger (~40%) services mix and cross-border tilt; bears litigation directly.' },
-    { tk:'V', n:'Visa', mc:'~$640B', ev:'~24×', pe:'~27×', g:'+11%', read:'The larger network — a touch cheaper, smaller services mix (~27%), Class-B litigation shield.' },
-    { tk:'AXP', n:'Amex', mc:'~$210B', ev:'n/m', pe:'~17×', g:'+9%', read:'Closed-loop (it lends) — EV/EBITDA not comparable; a premium, affluent, spend-centric model. P/E only.' },
-    { tk:'PYPL', n:'PayPal', mc:'~$50B', ev:'~11×', pe:'~14×', g:'+9%', read:'A wallet / A2A player on a different rail; much cheaper on slower growth and a more contested moat.' },
-  ];
-  var h='<p class="ov-lede">How the <b>listed</b> peers trade. Mastercard and Visa are the twin premium "toll roads"; Mastercard carries a slight premium to Visa for its larger services mix and cross-border tilt. Amex (closed-loop, lends) is comparable only on P/E; PayPal is a cheaper, different-rail name.</p>';
-  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Company</th><th style="text-align:right;padding:7px 10px">Mkt cap</th><th style="text-align:right;padding:7px 10px">EV/EBITDA <span style="font-weight:600">(fwd)</span></th><th style="text-align:right;padding:7px 10px">P/E <span style="font-weight:600">(fwd)</span></th><th style="text-align:right;padding:7px 10px">Rev growth</th><th style="text-align:left;padding:7px 10px">The read</th></tr></thead><tbody>'+
-    rows.map(function(p){ var bg=p.self?'background:rgba(207,10,44,0.05);':''; return '<tr style="border-top:1px solid var(--bdr);'+bg+'"><td style="padding:8px 10px;font-weight:'+(p.self?'800':'700')+'">'+esc(p.n)+' <span class="muted" style="font-weight:600">'+esc(p.tk)+'</span></td><td style="text-align:right;padding:8px 10px">'+esc(p.mc)+'</td><td style="text-align:right;padding:8px 10px">'+esc(p.ev)+'</td><td style="text-align:right;padding:8px 10px">'+esc(p.pe)+'</td><td style="text-align:right;padding:8px 10px">'+esc(p.g)+'</td><td style="padding:8px 10px;color:var(--mu);font-size:11px;line-height:1.45">'+esc(p.read)+'</td></tr>'; }).join('')+
-  '</tbody></table></div>';
-  h+=sec('Reading the table', '<div class="ov-callout">'+bullets([
-    '<b>Amex shows P/E only — its "n/m" on EV/EBITDA is deliberate, not a data gap.</b> Amex is a <b>lender</b>: interest income is a <i>core operating</i> line and its own borrowings fund a card-loan book. EV/EBITDA is built to strip out interest and net out debt — useful for an asset-light toll road, but for a lender it removes the actual business and treats its funding as if it were free. That is why banks and card-lenders are valued on <b>P/E</b> (or book value), and why only Amex\'s P/E sits alongside the networks here.',
-    '<b>UnionPay & state-linked A2A rails aren\'t shown</b> — they\'re unlisted, so there is no market price or multiple to quote. They\'re compared qualitatively on the map in <b>Top Line ▸ Industry Analysis</b>.',
-    '<b>Live market caps</b> and the add / remove-peer comparison live on the interactive scatter in the <b>Overview</b> tab (Massive feed).'])+'</div>');
-  h+='<div class="ov-foot">Multiples ~Jul 2026, forward where available (web-sourced, directional); growth is latest reported YoY. Market caps live via Massive on the Overview scatter.</div>';
-  return h;
-}
 // ════════════════════════════════════════════════════════════════════════════
 //  Evolution ▸ Guidance — SAME format as UBER/LYFT/CART: metric toggle → quarterly
 //  guided-range (floating bar) vs delivered (dot, colored by landing) + landing
@@ -1610,91 +1516,11 @@ function maSensInit(root){
 //  Valuation ▸ Capital Allocation — the asset-light cash machine returns ~all FCF.
 //  Buybacks (~$14.5B FY25) + a serially-raised dividend, shares down ~990M→~906M.
 //  Figures directional (annual splits from cash-flow statements / press). ──
-var MA_CAP_ROWS=[
-  { fy:'FY21', fcf:8.7, buy:5.9, div:1.7, sh:986 },
-  { fy:'FY22', fcf:10.1, buy:8.8, div:1.9, sh:966 },
-  { fy:'FY23', fcf:10.4, buy:9.0, div:2.1, sh:940 },
-  { fy:'FY24', fcf:14.3, buy:11.0, div:2.4, sh:920 },
-  { fy:'FY25', fcf:15.1, buy:14.5, div:2.6, sh:906 },
-];
-function maCapAllocBody(c){
-  var last=MA_CAP_ROWS[MA_CAP_ROWS.length-1], first=MA_CAP_ROWS[0];
-  var shDrop=((first.sh-last.sh)/first.sh*100).toFixed(1);
-  var h='<p class="ov-lede">Mastercard is an <b>asset-light cash machine</b>: almost no capex, no credit risk, ~46–48% FCF margin — so nearly <b>all</b> free cash flow goes back to shareholders, tilted heavily to <b>buybacks</b> with a <b>serially-raised dividend</b> on top. The share count has fallen every year.</p>';
-  h+='<div class="ov-kpis">'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">FY25 buybacks</div><div class="ov-kpi-v">~$14.5B</div><div class="ov-kpi-d muted">up from ~$5.9B in FY21</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">FY25 dividends</div><div class="ov-kpi-v">~$2.6B</div><div class="ov-kpi-d muted">raised ~11–12%/yr</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Total returned FY25</div><div class="ov-kpi-v">~$17B</div><div class="ov-kpi-d muted">≈ 110%+ of FCF</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Shares FY21→FY25</div><div class="ov-kpi-v">−'+shDrop+'%</div><div class="ov-kpi-d muted">~986M → ~906M</div></div>'+
-  '</div>';
-  h+=sec('Capital returned vs free cash flow',
-    '<div class="ov-chart-card"><div class="ov-chart-t">Buybacks + dividends vs FCF <span>· $B · fiscal years</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="maChartCapital"></canvas></div></div>'+
-    '<div class="ov-chart-card" style="overflow-x:auto;margin-top:10px"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:6px 10px">FY</th><th style="text-align:right;padding:6px 10px">FCF</th><th style="text-align:right;padding:6px 10px">Buybacks</th><th style="text-align:right;padding:6px 10px">Dividends</th><th style="text-align:right;padding:6px 10px">Total return</th><th style="text-align:right;padding:6px 10px">% of FCF</th><th style="text-align:right;padding:6px 10px">Shares (M)</th></tr></thead><tbody>'+
-      MA_CAP_ROWS.map(function(r){ var tot=r.buy+r.div, pct=(tot/r.fcf*100).toFixed(0); return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:800">'+esc(r.fy)+'</td><td style="text-align:right;padding:7px 10px">$'+r.fcf.toFixed(1)+'B</td><td style="text-align:right;padding:7px 10px">$'+r.buy.toFixed(1)+'B</td><td style="text-align:right;padding:7px 10px">$'+r.div.toFixed(1)+'B</td><td style="text-align:right;padding:7px 10px;font-weight:700">$'+tot.toFixed(1)+'B</td><td style="text-align:right;padding:7px 10px;color:'+(pct>=100?'#0F9D58':'var(--navy)')+'">'+pct+'%</td><td style="text-align:right;padding:7px 10px">'+r.sh+'</td></tr>'; }).join('')+
-    '</tbody></table></div>'+
-    '<div class="ov-fynote" style="margin-top:8px">Buybacks (dark) are the primary lever; the dividend (orange) is smaller but <b>raised every year</b>. Total return has run <b>at or above 100% of FCF</b> — funded partly with the balance sheet, consistent with the low-capital model. Annual splits are directional (from cash-flow statements / dividend announcements).</div>');
-  h+='<div class="ov-foot">Sources: Mastercard cash-flow statements FY2021–FY2025, dividend press releases, share-count from the 10-Ks. Values are approximate/directional, rounded to the nearest $0.1B.</div>';
-  return h;
-}
-function buildMaCapital(){
-  var cv=document.getElementById('maChartCapital'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
-  var ex=Chart.getChart?Chart.getChart(cv):null; if(ex) ex.destroy();
-  var labels=MA_CAP_ROWS.map(function(r){ return r.fy; });
-  new Chart(cv.getContext('2d'),{ type:'bar',
-    data:{ labels:labels, datasets:[
-      { label:'Buybacks', data:MA_CAP_ROWS.map(function(r){ return r.buy; }), backgroundColor:MA_RED, stack:'ret', borderRadius:{topLeft:0,topRight:0,bottomLeft:4,bottomRight:4}, maxBarThickness:40 },
-      { label:'Dividends', data:MA_CAP_ROWS.map(function(r){ return r.div; }), backgroundColor:MA_ORANGE, stack:'ret', borderRadius:{topLeft:4,topRight:4}, maxBarThickness:40 },
-      { label:'Free cash flow', type:'line', data:MA_CAP_ROWS.map(function(r){ return r.fcf; }), borderColor:MA_GREEN, backgroundColor:MA_GREEN, borderWidth:2.5, tension:.25, pointRadius:3, order:0 }
-    ] },
-    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
-      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': $'+ctx.parsed.y.toFixed(1)+'B'; } } } },
-      scales:{ y:{ stacked:true, ticks:{ callback:function(v){ return '$'+v+'B'; }, font:{size:10} }, grid:{color:'#EEF2F7'} }, x:{ stacked:true, grid:{display:false}, ticks:{font:{size:10.5}} } } }
-  });
-}
 
 // ════════════════════════════════════════════════════════════════════════════
 //  Management ▸ Governance & SBC — clean governance (independent chair, single
 //  class, no litigation escrow) and modest, buyback-swamped stock comp. SBC $ and
 //  share count directional (from proxy / cash-flow statements). ──
-var MA_SBC_ROWS=[
-  { fy:'FY22', sbc:0.295, rev:22.24, sh:966 },
-  { fy:'FY23', sbc:0.42,  rev:25.10, sh:940 },
-  { fy:'FY24', sbc:0.52,  rev:28.17, sh:920 },
-  { fy:'FY25', sbc:0.60,  rev:31.90, sh:906 },
-];
-function maSbcBody(c){
-  var h='<p class="ov-lede">Two things to check on a compounder: is the <b>governance</b> clean, and is <b>stock comp</b> quietly diluting you? Mastercard scores well on both — an <b>independent chair</b>, a <b>single class</b> of stock, and <b>SBC around ~1.5–2% of revenue</b> that is <b>swamped by buybacks</b> (net share count falls every year).</p>';
-  h+=sec('Governance — the structure',
-    '<div class="ov-grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="ov-callout"><div class="ov-subh" style="margin:0 0 6px">✓ Shareholder-friendly</div>'+bullets([
-      '<b>Independent Chair</b> (Merit E. Janow) — CEO Miebach is <b>not</b> chairman; roles are split.',
-      '<b>Single class of common stock</b> — one share, one vote; no founder super-voting.',
-      '<b>Board is operator-heavy</b> (ex-CEOs of U.S. Bancorp, Itaú, Singapore Airlines; Markit founder) — see Track Record.',
-      'Serial dividend increases + a standing multi-billion buyback authorization.']) +'</div>'+
-    '<div class="ov-callout"><div class="ov-subh" style="margin:0 0 6px">⚑ Things to know</div>'+bullets([
-      '<b>No litigation-escrow shield</b> (unlike Visa’s Class-B) — interchange litigation hits MA directly (see Risk & Litigation).',
-      'The <b>Mastercard Foundation</b> historically held a large Class-A stake with <b>voting caps and a required sell-down</b> — a governance feature, not an overhang on control.',
-      'Executive pay is heavily equity/performance-linked — aligned, but watch the grant size vs the modest SBC expense.']) +'</div></div>');
-  h+=sec('Stock-based comp — modest, and more than bought back',
-    '<div class="ov-chart-card"><div class="ov-chart-t">SBC ($B, bars) vs shares outstanding (M, line) <span>· fiscal years</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="maChartSbc"></canvas></div></div>'+
-    '<div class="ov-fynote" style="margin-top:8px">SBC has grown with the company but sits around <b>~1.5–2% of net revenue</b> — and the <b>~$14.5B/yr buyback</b> overwhelms it, so <b>diluted shares fall every year</b> (~966M → ~906M). Net dilution is <b>negative</b>: you own more of the company each year. SBC $ figures are directional (from the proxy / cash-flow statements).</div>');
-  h+='<div class="ov-foot">Sources: Mastercard 2026 DEF 14A (governance, board independence, pay), FY2022–FY2025 cash-flow statements (SBC), 10-Ks (share count). SBC dollars are approximate/directional.</div>';
-  return h;
-}
-function buildMaSbc(){
-  var cv=document.getElementById('maChartSbc'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
-  var ex=Chart.getChart?Chart.getChart(cv):null; if(ex) ex.destroy();
-  var labels=MA_SBC_ROWS.map(function(r){ return r.fy; });
-  new Chart(cv.getContext('2d'),{ data:{ labels:labels, datasets:[
-      { type:'bar', label:'SBC ($B)', data:MA_SBC_ROWS.map(function(r){ return r.sbc; }), backgroundColor:MA_ORANGE, borderRadius:4, maxBarThickness:40, yAxisID:'y' },
-      { type:'line', label:'Diluted shares (M)', data:MA_SBC_ROWS.map(function(r){ return r.sh; }), borderColor:MA_STEEL, backgroundColor:MA_STEEL, borderWidth:2.5, tension:.25, pointRadius:3, yAxisID:'y1' }
-    ] },
-    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
-      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+(ctx.dataset.yAxisID==='y1'?ctx.parsed.y+'M':'$'+ctx.parsed.y.toFixed(2)+'B'); } } } },
-      scales:{ y:{ position:'left', ticks:{ callback:function(v){ return '$'+v+'B'; }, font:{size:10} }, grid:{color:'#EEF2F7'}, title:{display:true,text:'SBC',font:{size:10},color:C_AXIS} },
-               y1:{ position:'right', ticks:{ font:{size:10} }, grid:{display:false}, title:{display:true,text:'shares (M)',font:{size:10},color:C_AXIS} },
-               x:{ grid:{display:false}, ticks:{font:{size:10.5}} } } }
-  });
-}
 
 // ── Evolution ▸ Timeline (history + M&A) ──
 function ddTimelineBody(c){
@@ -1712,6 +1538,110 @@ function ddTimelineBody(c){
   return h;
 }
 
+// ── Management ▸ Ownership and Governance, and Valuation ▸ Peers: built from the Results dataset (Bloomberg) where a number exists. ──
+function maYrow(key){
+  var m=maResults.views.y.metrics[key], out=[];
+  ['2021','2022','2023','2024','2025','2026'].forEach(function(y){ var i=m.periods.indexOf(y), a=m.act[i], e=(a==null);
+    out.push({ fy:'FY'+y.slice(2)+(e?'E':''), y:y, v:e?m.cons[i]:a, est:e}); });
+  return out;
+}
+function maB(v){ return v==null?'\u2014':'$'+(v/1000).toFixed(1)+'B'; }
+function maOwnBody(c){
+  var buy=maYrow('buyback'), fcf=maYrow('fcf'), sh=maYrow('shares'), a=buy[4], f=fcf[4];
+  var pct=(a.v&&f.v)?Math.round(a.v/f.v*100):null, shDrop=((sh[0].v-sh[4].v)/sh[0].v*100).toFixed(1);
+  var h='<p class="ov-lede">Mastercard is an <b>asset-light cash machine</b>: almost no capex and no credit risk, so nearly all free cash flow goes back to shareholders, and the lever that moves is the <b>buyback</b>. It has taken the diluted share count down every year since 2021, and the Street expects the pace to rise again in 2026.</p>';
+  h+='<div class="ov-kpis">'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">FY25 buybacks</div><div class="ov-kpi-v">'+maB(a.v)+'</div><div class="ov-kpi-d muted">Street FY26E '+maB(buy[5].v)+'</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Buybacks \u00f7 free cash flow, FY25</div><div class="ov-kpi-v">'+(pct==null?'\u2014':pct+'%')+'</div><div class="ov-kpi-d muted">FCF '+maB(f.v)+'</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Diluted shares FY21\u2192FY25</div><div class="ov-kpi-v">\u2212'+shDrop+'%</div><div class="ov-kpi-d muted">'+Math.round(sh[0].v)+'M \u2192 '+Math.round(sh[4].v)+'M</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Dividends</div><div class="ov-kpi-v">\u2014</div><div class="ov-kpi-d muted">from the 10-K, not loaded yet</div></div>'+
+  '</div>';
+  h+=sec('Capital returned vs free cash flow',
+    '<div class="ov-chart-card"><div class="ov-chart-t">Share repurchases vs free cash flow <span>\u00b7 $B \u00b7 fiscal years \u00b7 FY26E = Bloomberg consensus</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="maChartCapital"></canvas></div></div>'+
+    '<div class="ov-chart-card" style="overflow-x:auto;margin-top:10px"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:6px 10px">FY</th><th style="text-align:right;padding:6px 10px">Free cash flow</th><th style="text-align:right;padding:6px 10px">Buybacks</th><th style="text-align:right;padding:6px 10px">Buybacks \u00f7 FCF</th><th style="text-align:right;padding:6px 10px">Diluted shares</th></tr></thead><tbody>'+
+      buy.map(function(r,i){ var fv=fcf[i].v; return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:800">'+esc(r.fy)+'</td><td style="text-align:right;padding:7px 10px">'+maB(fv)+'</td><td style="text-align:right;padding:7px 10px">'+maB(r.v)+'</td><td style="text-align:right;padding:7px 10px">'+((r.v&&fv)?Math.round(r.v/fv*100)+'%':'\u2014')+'</td><td style="text-align:right;padding:7px 10px">'+(sh[i].v==null?'\u2014':Math.round(sh[i].v)+'M')+'</td></tr>'; }).join('')+
+    '</tbody></table></div>'+
+    '<div class="ov-fynote" style="margin-top:8px">Repurchases are shown as positive spend; the Bloomberg series arrives negative. An E marks the Street estimate for a year not yet reported.</div>');
+  h+=sec('Executives & insider activity \u2014 live from Fiscal.ai','<div id="dd-mgmt-slot"></div>');
+  h+='<div class="ov-foot">Sources: free cash flow, repurchases and diluted shares from the Bloomberg consensus export (BBG_CONSENSUS.txt, snapshot 2026-10-28; reported actuals and the FY26 consensus). Dividends and the holder table come from the 10-K and the DEF 14A and are not loaded yet; insider activity is live from Fiscal.ai when the plan covers the company.</div>';
+  return h;
+}
+function buildMaCapital(){
+  var cv=document.getElementById('maChartCapital'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
+  var ex=Chart.getChart?Chart.getChart(cv):null; if(ex) ex.destroy();
+  var buy=maYrow('buyback'), fcf=maYrow('fcf');
+  new Chart(cv.getContext('2d'),{ type:'bar',
+    data:{ labels:buy.map(function(r){ return r.fy; }), datasets:[
+      { label:'Buybacks', data:buy.map(function(r){ return r.v==null?null:r.v/1000; }), backgroundColor:buy.map(function(r){ return r.est?SUMMIT_CAT[0]+'80':SUMMIT_CAT[0]; }), borderRadius:4, maxBarThickness:40 },
+      { label:'Free cash flow', type:'line', data:fcf.map(function(r){ return r.v==null?null:r.v/1000; }), borderColor:SUMMIT_CAT[1], backgroundColor:SUMMIT_CAT[1], borderWidth:2.5, tension:.25, pointRadius:3, order:0 }
+    ] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': $'+ctx.parsed.y.toFixed(1)+'B'; } } } },
+      scales:{ y:{ ticks:{ callback:function(v){ return '$'+v+'B'; }, font:{size:10} }, grid:{color:'#EEF2F7'} }, x:{ grid:{display:false}, ticks:{font:{size:10.5}} } } }
+  });
+}
+function maGovBody(c){
+  var sbc=maYrow('sbc'), rev=maYrow('rev'), sh=maYrow('shares'), a=sbc[4], r=rev[4];
+  var pct=(a.v&&r.v)?(a.v/r.v*100).toFixed(1):null;
+  var h='<p class="ov-lede">Two things to check on a compounder: is the <b>governance</b> clean, and is <b>stock comp</b> quietly diluting you? Mastercard has an <b>independent chair</b>, a <b>single class</b> of stock, and stock comp of about <b>'+(pct||'\u2014')+'% of net revenue</b> that the buyback more than offsets.</p>';
+  h+='<div class="ov-kpis">'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Voting structure</div><div class="ov-kpi-v">1 vote / share</div><div class="ov-kpi-d muted">single class, no escrow shield</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Board independence</div><div class="ov-kpi-v">10 of 11</div><div class="ov-kpi-d muted">independent chair</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">SBC FY25</div><div class="ov-kpi-v">'+(a.v==null?'\u2014':'$'+Math.round(a.v)+'M')+'</div><div class="ov-kpi-d muted">'+(pct||'\u2014')+'% of net revenue</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Diluted shares FY21\u2192FY25</div><div class="ov-kpi-v">'+Math.round(sh[0].v)+'M \u2192 '+Math.round(sh[4].v)+'M</div><div class="ov-kpi-d muted">net of SBC issuance</div></div>'+
+  '</div>';
+  h+=sec('How Mastercard is governed',
+    '<div class="ov-grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="ov-callout"><div class="ov-subh" style="margin:0 0 6px">Shareholder-friendly</div>'+bullets([
+      '<b>Independent Chair</b> (Merit E. Janow); CEO Miebach is <b>not</b> chairman, so the roles are split.',
+      '<b>Single class of common stock</b>: one share, one vote; no founder super-voting.',
+      '<b>Operator-heavy board</b> (former CEOs of U.S. Bancorp, Ita\u00fa and Singapore Airlines; the Markit founder); see Track Record.',
+      'Serial dividend increases and a standing multi-billion buyback authorization.']) +'</div>'+
+    '<div class="ov-callout"><div class="ov-subh" style="margin:0 0 6px">Things to know</div>'+bullets([
+      '<b>No litigation-escrow shield</b> (unlike Visa\u2019s Class-B): interchange litigation hits Mastercard directly (see Miscellaneous \u25b8 Litigation & regulation).',
+      'The <b>Mastercard Foundation</b> historically held a large Class-A stake with <b>voting caps and a required sell-down</b>: a governance feature, not an overhang on control.',
+      'Executive pay is heavily equity- and performance-linked; watch the grant size against the modest SBC expense.']) +'</div></div>');
+  h+=sec('Stock-based comp \u2014 modest, and more than bought back',
+    '<div class="ov-chart-card"><div class="ov-chart-t">SBC ($M, bars) vs diluted shares (M, line) <span>\u00b7 fiscal years \u00b7 FY26E = Bloomberg consensus</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="maChartSbc"></canvas></div></div>'+
+    '<div class="ov-fynote" style="margin-top:8px">Stock comp has grown with the company but stays under 2% of net revenue, and the buyback (see Ownership) outruns the shares it issues, so the diluted count falls every year. The SBC chart by quarter lives in Bottom Line \u25b8 General.</div>');
+  h+='<div class="ov-foot">Sources: Mastercard 2026 DEF 14A (governance, board independence, pay); SBC, revenue and diluted shares from the Bloomberg consensus export (BBG_CONSENSUS.txt, snapshot 2026-10-28).</div>';
+  return h;
+}
+function buildMaSbc(){
+  var cv=document.getElementById('maChartSbc'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
+  var ex=Chart.getChart?Chart.getChart(cv):null; if(ex) ex.destroy();
+  var sbc=maYrow('sbc'), sh=maYrow('shares');
+  new Chart(cv.getContext('2d'),{ data:{ labels:sbc.map(function(r){ return r.fy; }), datasets:[
+      { type:'bar', label:'SBC ($M)', data:sbc.map(function(r){ return r.v; }), backgroundColor:sbc.map(function(r){ return r.est?SUMMIT_CAT[0]+'80':SUMMIT_CAT[0]; }), borderRadius:4, maxBarThickness:40, yAxisID:'y' },
+      { type:'line', label:'Diluted shares (M)', data:sh.map(function(r){ return r.v; }), borderColor:SUMMIT_CAT[1], backgroundColor:SUMMIT_CAT[1], borderWidth:2.5, tension:.25, pointRadius:3, yAxisID:'y1' }
+    ] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+(ctx.dataset.yAxisID==='y1'?Math.round(ctx.parsed.y)+'M':'$'+Math.round(ctx.parsed.y)+'M'); } } } },
+      scales:{ y:{ position:'left', ticks:{ callback:function(v){ return '$'+v+'M'; }, font:{size:10} }, grid:{color:'#EEF2F7'}, title:{display:true,text:'SBC',font:{size:10},color:C_AXIS} },
+               y1:{ position:'right', ticks:{ font:{size:10} }, grid:{display:false}, title:{display:true,text:'shares (M)',font:{size:10},color:C_AXIS} },
+               x:{ grid:{display:false}, ticks:{font:{size:10.5}} } } }
+  });
+}
+// Valuation ▸ Peers — the numbers behind the map in the Overview. The multiples and growth are the SEEDED values of MA_PEERS (web-sourced,
+// mid-2026, directional); they are replaced by filings-based denominators when the peers' 10-Ks are loaded (playbook VA-PEERS, rule 10).
+function maPeersBody(c){
+  var peers=MA_PEERS.filter(function(p){ return !p.hl; });
+  function avg(a){ var v=a.filter(function(x){ return x!=null; }); return v.length?v.reduce(function(x,y){ return x+y; },0)/v.length:null; }
+  function med(a){ var v=a.filter(function(x){ return x!=null; }).sort(function(x,y){ return x-y; }); if(!v.length) return null; var m=Math.floor(v.length/2); return v.length%2?v[m]:(v[m-1]+v[m])/2; }
+  function fx(v){ return v==null?'\u2014':v+'\u00d7'; }
+  var me=MA_PEERS.filter(function(p){ return p.hl; })[0];
+  var h='<p class="ov-lede">The peer map. The same live-cap scatter as the Overview, kept beside the valuation work: Mastercard and Visa are the twin premium toll roads, and everyone else is a processor, acquirer or wallet that rides the rails. <b>Add or remove a peer on the Overview map</b>; this table reads the same set.</p>';
+  h+='<div class="ov-chart-card" style="overflow-x:auto"><div class="ov-chart-t">The numbers behind the map <span>\u00b7 forward P/E and EV/EBITDA, growth</span></div><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Company</th><th style="text-align:right;padding:7px 10px">P/E fwd</th><th style="text-align:right;padding:7px 10px">EV/EBITDA fwd</th><th style="text-align:right;padding:7px 10px">Growth fwd</th><th style="text-align:right;padding:7px 10px">P/E vs peer avg</th></tr></thead><tbody>'+
+    [me].concat(peers).map(function(p){ var pa=avg(peers.map(function(x){ return x.peF; })); var d=(p.peF!=null&&pa)?Math.round((p.peF/pa-1)*100):null; return '<tr style="border-top:1px solid var(--bdr)'+(p.hl?';background:rgba(14,124,192,0.05)':'')+'"><td style="padding:8px 10px;font-weight:'+(p.hl?'800':'700')+'">'+esc(p.n)+' <span class="muted" style="font-weight:600">'+esc(p.tk)+'</span></td><td style="text-align:right;padding:8px 10px">'+fx(p.peF)+'</td><td style="text-align:right;padding:8px 10px">'+fx(p.evF)+'</td><td style="text-align:right;padding:8px 10px">'+(p.gf==null?'\u2014':'+'+p.gf+'%')+'</td><td style="text-align:right;padding:8px 10px">'+(p.hl||d==null?'\u2014':(d>=0?'+':'')+d+'%')+'</td></tr>'; }).join('')+
+    '<tr style="border-top:2px solid var(--bdr);color:var(--mu)"><td style="padding:8px 10px;font-weight:800">Peer average (without Mastercard)</td><td style="text-align:right;padding:8px 10px">'+fx(Math.round(avg(peers.map(function(x){ return x.peF; }))))+'</td><td style="text-align:right;padding:8px 10px">'+fx(Math.round(avg(peers.map(function(x){ return x.evF; }))))+'</td><td style="text-align:right;padding:8px 10px">+'+Math.round(avg(peers.map(function(x){ return x.gf; })))+'%</td><td></td></tr>'+
+    '<tr style="color:var(--mu)"><td style="padding:8px 10px;font-weight:800">Peer median (without Mastercard)</td><td style="text-align:right;padding:8px 10px">'+fx(med(peers.map(function(x){ return x.peF; })))+'</td><td style="text-align:right;padding:8px 10px">'+fx(med(peers.map(function(x){ return x.evF; })))+'</td><td style="text-align:right;padding:8px 10px">+'+med(peers.map(function(x){ return x.gf; }))+'%</td><td></td></tr>'+
+    '</tbody></table></div>';
+  h+=sec('Reading the table','<div class="ov-callout">'+bullets([
+    '<b>Amex shows P/E only</b>: it is a lender, so EV/EBITDA is not comparable and the blank is deliberate, not a data gap.',
+    '<b>UnionPay and the state-linked account-to-account rails are not shown</b>: they are unlisted, so there is no price to quote; they are compared qualitatively in Miscellaneous \u25b8 Competitive position.']) +'</div>');
+  h+='<div class="ov-foot">\u2691 Peer multiples and growth are <b>seeded</b> values (web-sourced, mid-2026, directional) from the earlier Overview map; they are replaced by denominators from each peer\u2019s filings and the Bloomberg export when those are loaded. Mastercard\u2019s own multiple and the live market caps come from Massive on the Overview map.</div>';
+  return h;
+}
+
 function deepDiveHtml(c){
   _co = c;   // capture the live company object (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-mastercard ov-mastercard-dd" data-brand="MA">';
@@ -1724,143 +1654,74 @@ function deepDiveHtml(c){
     '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
     '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
     '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+    '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
   '</div>';
+  function pane(group, hiddenPane, subs){
+    var bar='<div class="ovt-subtabs">'+subs.map(function(x,i){ return '<button type="button" class="ovt-subtab'+(i===0?' active':'')+'" data-ovst="'+x.k+'">'+x.l+'</button>'; }).join('')+'</div>';
+    var body=subs.map(function(x,i){ return '<div class="ovt-subpane" data-ovst="'+x.k+'"'+(i===0?'':' hidden')+'>'+x.body+'</div>'; }).join('');
+    return '<div class="dd-pane" data-dd="'+group+'"'+(hiddenPane?' hidden':'')+'>'+bar+body+'</div>';
+  }
+  var hasEvo=!!resultsEvoHtml('MA');
   // Top Line
-  h+='<div class="dd-pane" data-dd="topline">'+
-    '<div class="ovt-subtabs">'+
-      '<button type="button" class="ovt-subtab active" data-ovst="segov">General</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="segdrv">Drivers</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="customers">Customers</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="tam">TAM</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="industry">Industry Analysis</button>'+
-    '</div>'+
-    '<div class="ovt-subpane" data-ovst="segov">'+resultsHtml('MA_TLG')+'</div>'+
-    '<div class="ovt-subpane" data-ovst="segdrv" hidden>'+resultsHtml('MA_DRV')+'</div>'+
-    '<div class="ovt-subpane" data-ovst="segments" hidden>'+ddSegmentsBody(c)+'</div>'+
-    '<div class="ovt-subpane" data-ovst="customers" hidden>'+ddCustomersBody(c)+'</div>'+
-    '<div class="ovt-subpane" data-ovst="tam" hidden>'+ddTamBody(c)+'</div>'+
-    '<div class="ovt-subpane" data-ovst="industry" hidden>'+ddIndustryBody(c)+'</div>'+
-  '</div>';
-  // Bottom Line
-  h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
-    '<div class="ovt-subtabs">'+
-      '<button type="button" class="ovt-subtab active" data-ovst="blgen">General</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="unit">Unit Economics</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="suppliers">Suppliers</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="margins">Margins</button>'+
-    '</div>'+
-    '<div class="ovt-subpane" data-ovst="blgen">'+resultsHtml('MA_BL')+'</div>'+
-    '<div class="ovt-subpane" data-ovst="unit" hidden>'+ddUnitEconBody(c)+'</div>'+
-    '<div class="ovt-subpane" data-ovst="suppliers" hidden>'+ddSuppliersBody(c)+'</div>'+
-    '<div class="ovt-subpane" data-ovst="margins" hidden>'+ddMarginsBody(c)+'</div>'+
-  '</div>';
-  // Evolution
-  h+='<div class="dd-pane" data-dd="evolution" hidden>'+
-    '<div class="ovt-subtabs">'+
-      '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
-      (resultsEvoHtml('MA')?'<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>':'')+
-      '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
-    '</div>'+
-    '<div class="ovt-subpane" data-ovst="earnings">'+maCeHtml(c)+'</div>'+
-    '<div class="ovt-subpane" data-ovst="results" hidden>'+(resultsHtml('MA')||ceResultsPending('Results'))+'</div>'+
-    (resultsEvoHtml('MA')?'<div class="ovt-subpane" data-ovst="estevo" hidden>'+resultsEvoHtml('MA')+'</div>':'')+
-    '<div class="ovt-subpane" data-ovst="guidance" hidden>'+maGuideBody(c)+'</div>'+
-    '<div class="ovt-subpane" data-ovst="strategy" hidden>'+ddStrategyBody(c)+'</div>'+
-    '<div class="ovt-subpane" data-ovst="timeline" hidden>'+ddTimelineBody(c)+'</div>'+
-  '</div>';
-  // Valuation
-  h+='<div class="dd-pane" data-dd="valuation" hidden>'+
-    '<div class="ovt-subtabs">'+
-      '<button type="button" class="ovt-subtab active" data-ovst="ratings">Analyst Ratings</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="multiples">Multiples</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="sensitivity">Sensitivity</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="capalloc">Capital Allocation</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="balance">Financials</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="risk">Risk & Litigation</button>'+
-    '</div>'+
-    '<div class="ovt-subpane" data-ovst="ratings"><div id="dd-val-slot"></div></div>'+
-    '<div class="ovt-subpane" data-ovst="multiples" hidden>'+ddMultiplesBody(c)+'</div>'+
-    '<div class="ovt-subpane" data-ovst="sensitivity" hidden>'+maSensBody(c)+'</div>'+
-    '<div class="ovt-subpane" data-ovst="capalloc" hidden>'+maCapAllocBody(c)+'</div>'+
-    '<div class="ovt-subpane" data-ovst="balance" hidden>'+ddFinancialsBody(c)+'</div>'+
-    '<div class="ovt-subpane" data-ovst="risk" hidden>'+ddRiskBody(c)+'</div>'+
-  '</div>';
-  // Management
-  h+='<div class="dd-pane" data-dd="mgmt" hidden>'+
-    '<div class="ovt-subtabs">'+
-      '<button type="button" class="ovt-subtab active" data-ovst="team">Executives & Board</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="track">Track Record</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="gov">Governance & SBC</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="ownership">Ownership</button>'+
-    '</div>'+
-    '<div class="ovt-subpane" data-ovst="team">'+MA_MGMT.body()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="track" hidden>'+maTrackBody(c)+'</div>'+
-    '<div class="ovt-subpane" data-ovst="gov" hidden>'+maSbcBody(c)+'</div>'+
-    '<div class="ovt-subpane" data-ovst="ownership" hidden><div id="dd-mgmt-slot"></div></div>'+
-  '</div>';
+  h+=pane('topline', false, [
+    { k:'segov', l:'General', body:resultsHtml('MA_TLG') },
+    { k:'segdrv', l:'Drivers', body:resultsHtml('MA_DRV') },
+    { k:'segments', l:'Segments', body:ddSegmentsBody(c) },
+    { k:'customers', l:'Customers', body:ddCustomersBody(c) },
+    { k:'tam', l:'Other', body:ddTamBody(c) } ]);
+  // Bottom Line — the old Margins pane is superseded by General (same margins on the Results engine, from Bloomberg actuals and the Summit model)
+  h+=pane('bottomline', true, [
+    { k:'blgen', l:'General', body:resultsHtml('MA_BL') },
+    { k:'unit', l:'Unit Economics', body:ddUnitEconBody(c) },
+    { k:'suppliers', l:'Supply Chain', body:ddSuppliersBody(c) } ]);
+  // Evolution — Earnings · Results · Estimates (Estimates is the Street's revision history with the Summit model's one snapshot)
+  h+=pane('evolution', true, [
+    { k:'earnings', l:'Earnings', body:maCeHtml(c) },
+    { k:'results', l:'Results', body:(resultsHtml('MA')||ceResultsPending('Results')) } ].concat(hasEvo?[{ k:'estevo', l:'Estimates', body:resultsEvoHtml('MA') }]:[]));
+  // Valuation — Historic Multiple · Peers · Sensitivity · Analyst Ratings (the shared live slot). Target Multiple is not published:
+  // the model's target multiple and price target live in the Summit MCP, not in the DCF workbook.
+  h+=pane('valuation', true, [
+    { k:'histmult', l:'Historic Multiple', body:maHistMult.body() },
+    { k:'peers', l:'Peers', body:maPeersBody(c) },
+    { k:'sensitivity', l:'Sensitivity Analysis', body:maSensBody(c) },
+    { k:'ratings', l:'Analyst Ratings', body:'<div id="dd-val-slot"></div>' } ]);
+  // Management — Executives & Board · Ownership (+ capital allocation) · Governance & SBC · Track Record
+  h+=pane('mgmt', true, [
+    { k:'team', l:'Executives & Board', body:MA_MGMT.body() },
+    { k:'ownership', l:'Ownership', body:maOwnBody(c) },
+    { k:'governance', l:'Governance & SBC', body:maGovBody(c) },
+    { k:'track', l:'Track Record', body:maTrackBody(c) } ]);
+  // Miscellaneous — what is specific to Mastercard and answers no other tab
+  h+=pane('misc', true, [
+    { k:'comp', l:'Competitive position', body:ddIndustryBody(c) },
+    { k:'litigation', l:'Litigation & regulation', body:ddRiskBody(c) },
+    { k:'guidance', l:'Guidance record', body:maGuideBody(c) },
+    { k:'strategy', l:'Strategy', body:ddStrategyBody(c) },
+    { k:'manda', l:'History & M&A', body:ddTimelineBody(c) } ]);
   h+='<div class="ov-foot">'+esc(DD_SOURCES)+'</div>';
   h+='</div>';
   return h;
 }
 
 // ─── Financials charts (DCF actuals + projection, timeline-moldable) ─────────
-function finSlice(s){
-  var o={years:[],labels:[],data:[],est:[]};
-  for(var i=0;i<FIN_YEARS.length;i++){ var y=FIN_YEARS[i];
-    if(y>=_finStart && y<=_finEnd){ o.years.push(y); o.data.push(s.data[i]); o.est.push(FIN_EST[i]); o.labels.push(String(y)+(FIN_EST[i]?'E':'')); } }
-  return o;
-}
-function makeFin(id){
-  var s=FIN_SERIES[id]; var cv=document.getElementById(id); if(!cv) return;
-  var sl=finSlice(s); var ds;
-  if(s.type==='bar'){
-    ds={ data:sl.data, backgroundColor:sl.est.map(function(e){ return e?_hexRgba(s.color,0.4):s.color; }), borderRadius:5, maxBarThickness:46 };
-  } else {
-    ds={ data:sl.data, borderColor:s.color, backgroundColor:_hexRgba(s.color,0.08), fill:true, tension:0.3, borderWidth:2.5, pointRadius:3, pointHoverRadius:5, spanGaps:true,
-      pointBackgroundColor: sl.est.map(function(e){ return e?_hexRgba(s.color,0.4):s.color; }),
-      segment:{ borderDash:function(ctx){ return sl.est[ctx.p1DataIndex]?[6,4]:undefined; } } };
-  }
-  _finCharts[id]=new Chart(cv.getContext('2d'), { type:s.type, data:{labels:sl.labels, datasets:[ds]},
-    options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(ctx){ return ' '+FIN_FMT(ctx.parsed.y); } } } },
-      scales:{ x:{ grid:{display:false}, ticks:{color:C_AXIS,font:{size:10}} },
-               y:{ grid:{color:C_GRID}, ticks:{color:C_AXIS,font:{size:10},callback:FIN_FMT} } } }
-  });
-  var el=document.getElementById('stat-'+id); if(!el) return;
-  var idxs=[]; for(var j=0;j<sl.data.length;j++) if(sl.data[j]!=null) idxs.push(j);
-  if(idxs.length>=2){ var fi=idxs[0], li=idxs[idxs.length-1], a=sl.data[fi], z=sl.data[li], yrs=sl.years[li]-sl.years[fi];
-    var cagr=(Math.pow(z/a, 1/(yrs||1))-1)*100;
-    el.innerHTML='<b>'+sl.labels[fi]+'</b> '+FIN_FMT(a)+' → <b>'+sl.labels[li]+'</b> '+FIN_FMT(z)+' · CAGR <span class="'+(cagr>=0?'pos':'neg')+'">'+(cagr>=0?'+':'')+cagr.toFixed(1)+'%</span>';
-  } else { el.innerHTML='<span class="ov-stat-mut">Pick a wider range</span>'; }
-}
-function renderFin(){
-  if (typeof Chart === 'undefined') return;
-  Object.keys(_finCharts).forEach(function(id){ try{ _finCharts[id].destroy(); }catch(e){} }); _finCharts={};
-  Object.keys(FIN_SERIES).forEach(makeFin);
-}
 
 // ─── Deep Dive tab machinery (top-level .dd-tab + nested .ovt-subtab) ─────────
 function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'topline'; }
 function activeSubKey(root, group){ var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return null; var b=pane.querySelector('.ovt-subtab.active'); return b?b.getAttribute('data-ovst'):null; }
 function buildSub(root, group, key){
-  if(group==='topline' && key==='segov') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="segov"] .rs-wrap'), 'MA_TLG'); });
-  if(group==='topline' && key==='segdrv') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="segdrv"] .rs-wrap'), 'MA_DRV'); });
-  if(group==='bottomline' && key==='blgen') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="blgen"] .rs-wrap'), 'MA_BL'); });
-  if(group==='bottomline' && key==='margins') buildMaMargins();
+  function rs(sel, tk){ requestAnimationFrame(function(){ initResults(root.querySelector(sel+' .rs-wrap'), tk); }); }
+  if(group==='topline' && key==='segov') rs('.ovt-subpane[data-ovst="segov"]','MA_TLG');
+  if(group==='topline' && key==='segdrv') rs('.ovt-subpane[data-ovst="segdrv"]','MA_DRV');
+  if(group==='bottomline' && key==='blgen') rs('.ovt-subpane[data-ovst="blgen"]','MA_BL');
   if(group==='evolution' && key==='earnings') maCeBuild(root);
-  if(group==='evolution' && key==='results') requestAnimationFrame(function(){
-    initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'MA'); });
+  if(group==='evolution' && key==='results') rs('.ovt-subpane[data-ovst="results"]','MA');
   if(group==='evolution' && key==='estevo') requestAnimationFrame(function(){ initResultsEvo('MA'); });
-  if(group==='evolution' && key==='guidance') renderMaGuide();
+  if(group==='valuation' && key==='histmult') requestAnimationFrame(function(){ maHistMult.init(root); });
   if(group==='valuation' && key==='sensitivity') maSensInit(root);
-  if(group==='valuation' && key==='capalloc') buildMaCapital();
-  if(group==='valuation' && key==='balance') renderFin();
   if(group==='mgmt' && key==='team') MA_MGMT.init(root);
-  if(group==='mgmt' && key==='gov') buildMaSbc();
+  if(group==='mgmt' && key==='ownership') buildMaCapital();
+  if(group==='mgmt' && key==='governance') buildMaSbc();
+  if(group==='misc' && key==='guidance') renderMaGuide();
 }
 function buildDD(root, key){ var s=activeSubKey(root,key); if(s) buildSub(root,key,s); }
 function showSub(root, pane, group, key){
@@ -1944,7 +1805,7 @@ function init(c){
 
   // Deep Dive tab wiring (root spans both panes)
   wireDD(root);
-  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt');
+  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt'); wireSubtabs(root,'misc');
   maCeWire(root);   // Earnings: phase tabs · quarter pills · estimate toggles · Notes (theme record + editor)
 
   // Evolution ▸ Guidance — metric toggle (net-revenue ⇄ opex)
@@ -1957,25 +1818,6 @@ function init(c){
   }; });
   // Earnings-call accordion rows (theme & quarter) — expand/collapse
   root.querySelectorAll('.lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var it=btn.parentElement; var open=it.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'–':'+'; }; });
-
-  // Financials timeline slider (Deep Dive ▸ Valuation ▸ Financials)
-  var fmn = root.querySelector('#ovFinMin'), fmx = root.querySelector('#ovFinMax');
-  var ffill = root.querySelector('#ovFinFill'), fval = root.querySelector('#ovFinVal'), ftk = root.querySelector('#ovFinTicks');
-  if (fmn){
-    var FY0=2021, FY1=2029, th='';
-    for (var y=FY0; y<=FY1; y++) th += '<span>' + "'" + String(y).slice(2) + (y>=2026?'E':'') + '</span>';
-    ftk.innerHTML = th;
-    var paintFin = function(){
-      var lo=Math.min(+fmn.value,+fmx.value), hi=Math.max(+fmn.value,+fmx.value);
-      _finStart=lo; _finEnd=hi;
-      var pa=(lo-FY0)/(FY1-FY0)*100, pb=(hi-FY0)/(FY1-FY0)*100;
-      ffill.style.left=pa+'%'; ffill.style.width=(pb-pa)+'%';
-      fval.textContent = lo + ' – ' + hi + (hi>=2026?'E':'');
-    };
-    fmn.oninput = function(){ paintFin(); renderFin(); };
-    fmx.oninput = function(){ paintFin(); renderFin(); };
-    paintFin();
-  }
 
   // Modal (shared; hoisted to #co-detailview so Deep Dive triggers reach it)
   root.querySelectorAll(':scope > .ov-modal-back').forEach(function(m){ if(m.id!=='ovModalBack') m.remove(); });

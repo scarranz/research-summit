@@ -14,7 +14,7 @@
 | Rama | `feat/mastercard-remitly` (PR draft #153; worktree `research-summit-mastercard`) |
 | Analista responsable | Dani (DOAA351) |
 | Inicio | 2026-07-30 (remediación de Earnings) · reconstrucción 2026-10-28 |
-| Avance | 0 de 10 unidades aprobadas · 10 en revisión · 1 omitida (EV-EST) |
+| Avance | 0 de 19 unidades aprobadas · 18 en revisión · 1 omitida (VA-TM) |
 
 ## 1. Inventario de datos (F0)
 
@@ -43,7 +43,12 @@
 | BL-GEN | Bottom Line ▸ General (`results-data/ma-bl.js`: rentabilidad y márgenes, costos y debajo de la línea, flujo de caja y capital; registro `MA_BL`) | 👀 2026-10-28 | Unit Economics, Suppliers y Margins existentes se conservan; sin costo de ventas ni utilidad bruta (MA no los tiene) |
 | TL-DRV | Top Line ▸ Drivers (`results-data/ma-drivers.js`, generado por `scripts/consensus/ma/build_ma_drivers.py` desde la pestaña Segments del DCF: tarjetas, volumen de compra por región y producto, transacciones conmutadas, plantilla, yield; historia del modelo 2018–2025 + proyección Summit 2026–2029, anual) | 👀 2026-10-28 | registro `MA_DRV`; el modelo no trae consenso ni guía para estas series |
 | VA-SENS | Valuation ▸ Sensitivity re-basada en el snapshot congelado del DCF (`ma-sensitivity-data.js`, generado por `build_ma_sensitivity.py`): año base FY26E–FY29E, cada driver arranca en el valor del modelo y el caso base reproduce el EPS del modelo ($21.99 en FY27E) | 👀 2026-10-28 | el P/E arranca en el múltiplo de mercado sobre el EPS del modelo cuando llega el precio en vivo (sin múltiplo ni precio escritos); la valuación del propio DCF (WACC 11.0%, terminal 14× EV/EBITDA, $417 por acción hoy) va en el pie, no como default |
-| EV-EST | Estimates | ⏭️ | requiere ≥ 2 snapshots del MCP Summit; la pestaña no se publica (regla 5) |
+| EV-EST | Evolution ▸ Estimates (`evolution` en `ma.js`, generado por `build_ma_evolution.py`) | 👀 2026-10-28 | 11 vintages de Bloomberg que traen FY26–FY28 (feb 2024 → oct 28 2026) con el único snapshot del modelo Summit (lectura del xlsm, 2026-10-28) como un punto a la derecha; Dani: "MA solo tiene 1 snapshot, con eso basta" |
+| VA-HIST | Valuation ▸ Historic Multiple (`ma-histmult.js` copiado de `meta-histmult.js` + `ma-histmult-data.js` generado por `build_ma_histmult.py`) | 👀 2026-10-28 | P/E hacia adelante y trailing con precio en vivo (`get-market-history`; sin desplegar sale "Live data pending") y EPS/EBITDA/acciones de Bloomberg; **EV/EBITDA vacío** hasta cargar la deuda neta de los 10-Q/10-K (no está en el export de Bloomberg); la rama de EPS GAAP-comparable está dicha en el pie |
+| VA-PEERS | Valuation ▸ Peers (`maPeersBody`) | 👀 2026-10-28 | tabla "The numbers behind the map" sobre los valores SEMBRADOS de `MA_PEERS` (múltiplos web, mediados de 2026, direccionales): marcado con ⚑ en el pie; se reemplazan con denominadores de los filings de cada peer cuando Dani los pase |
+| VA-TM | Valuation ▸ Target Multiple / PEG | ⏭️ | el múltiplo objetivo y el precio objetivo viven en la hoja Output del modelo, que solo llega por el MCP (no está en el xlsm); no se publica la pestaña |
+| MG-TEAM · MG-OWN · MG-GOV · MG-TRACK | Management reordenado a Executives & Board · Ownership · Governance & SBC · Track Record | 👀 2026-10-28 | Ownership absorbe Capital Allocation reconstruida con Bloomberg (recompras y FCF: la cifra vieja de $14.5B en FY25 era errónea, el dato es $12.0B); Governance & SBC usa SBC y acciones de Bloomberg; la tabla de Fiscal.ai sigue en vivo; el texto de los ejecutivos pasó a tiempo pasado donde el cambio del 3-ago ya ocurrió; pendiente: dividendos y tenedores del 10-K y el proxy |
+| MISC | Miscellaneous (5 sub-tabs: Competitive position, Litigation & regulation, Guidance record, Strategy, History & M&A) | 👀 2026-10-28 | todo lo que ya existía y es propio de Mastercard; ver mapa de reubicación |
 
 ## 3. Decisiones
 
@@ -104,6 +109,18 @@ Summit no tiene trimestres, así que no hay cuadre trimestral del lado Summit (r
 | 8 | `results.summary` (AI Summary), `thesisCheck`, `intoCall`, `priceReaction`, `call.take`, `dots`, `threeMinutes`, `notBringing`, `debate`, `pricedIn`, `oneLiner` | — | **retirados** del render (SAB 2026-10-21: nada generado por IA ni de relleno); el texto sigue en el historial de git (commit `c253dad` y anteriores) |
 | 9 | `ceIRButton` + párrafo "Earnings — the decision layer" | — | retirados (ajuste SAB META) |
 | 10 | `CE_ANNUAL` (código muerto) | — | retirado |
+| 11 | Valuation ▸ Multiples (`ddMultiplesBody`, múltiplos escritos a mano "~28×") | Valuation ▸ Historic Multiple + Peers | **retirada**: violaba la regla 10 (múltiplos de mercado sembrados); lo que sobrevive es el mapa de peers y su lectura cualitativa |
+| 12 | Valuation ▸ Financials (`ddFinancialsBody`, series DCF tecleadas) | Top Line ▸ General/Drivers y Bottom Line ▸ General (motor de Results) | **retirada**: las mismas series, con datos de Bloomberg y del modelo, ya están en el motor |
+| 13 | Bottom Line ▸ Margins (`ddMarginsBody`, márgenes en vivo de Massive con respaldo tecleado) | Bottom Line ▸ General | **fusionada**: márgenes sobre ingreso neto en el motor de Results |
+| 14 | Valuation ▸ Capital Allocation (`maCapAllocBody`, valores aproximados a mano) | Management ▸ Ownership | movida y reconstruida con Bloomberg |
+| 15 | Management ▸ Governance & SBC (`maSbcBody`, SBC aproximado a mano) | Management ▸ Governance & SBC | reconstruida con Bloomberg; el texto de gobierno se conserva |
+| 16 | Top Line ▸ Industry Analysis (`ddIndustryBody`) | Miscellaneous ▸ Competitive position | movida tal cual |
+| 17 | Valuation ▸ Risk & Litigation (`ddRiskBody`) | Miscellaneous ▸ Litigation & regulation | movida tal cual |
+| 18 | Evolution ▸ Guidance (`maGuideBody`) | Miscellaneous ▸ Guidance record | movida tal cual (Mastercard guía crecimientos, no niveles) |
+| 19 | Evolution ▸ Strategy (`ddStrategyBody`) | Miscellaneous ▸ Strategy | movida tal cual |
+| 20 | Evolution ▸ Timeline (`ddTimelineBody`) | Miscellaneous ▸ History & M&A | movida tal cual (la línea de tiempo corta sigue en el Overview) |
+| 21 | Top Line ▸ TAM (`ddTamBody`) | Top Line ▸ Other | renombrada según la guía |
+| 22 | Bottom Line ▸ Suppliers (`ddSuppliersBody`) | Bottom Line ▸ Supply Chain | renombrada según la guía |
 
 ## 7. Bloqueos y preguntas abiertas
 
@@ -115,6 +132,7 @@ Summit no tiene trimestres, así que no hay cuadre trimestral del lado Summit (r
 
 ## 8. Historial de aprobaciones (solo se agrega)
 
+- 2026-10-28 (4.ª pasada; Dani: "MA solo tiene 1 snapshot... usa los consensus de BBG... ¿por qué no tocamos Management y Miscellaneous?") · Estimates, Historic Multiple, Peers, Management reordenado, Miscellaneous y limpieza de lo que sobraba (mapa de reubicación filas 11–22). Recorrido completo de las 6 secciones y 24 sub-tabs en el harness local: sin errores de consola. Pendiente cuando Dani pase calls y filings: dividendos y tenedores, deuda neta (EV/EBITDA), peers con denominadores de filings, cotejo contra el 8-K.
 - 2026-10-28 (3.ª pasada, solo con el DCF; Dani: "quédate con lo del DCF") · Summit anual ampliado de 10 a 25 líneas con la pestaña Segments (EPS, Payment Network, VAS, bruto a neto, opex, G&A, A&M, SBC, litigio, impuestos, recompras, volumen, transacciones; cuadre de la historia del modelo contra Bloomberg 0.0% salvo opex +1.4% a +2.5% y pre-tax −1.8%, que se dejaron fuera o se anotaron) · Top Line ▸ Drivers · Valuation ▸ Sensitivity re-basada · las filas de dominio y cross-border de la pestaña Segments se dejaron fuera porque el modelo las proyecta en cero desde 2027 · el modelo trae litigio de ~$740M al año contra ~$150M del Street y Payment Network casi plano después de 2026: está dicho en las notas de cada línea.
 - 2026-10-28 (2.ª pasada) · EV-POST ampliado a Q3 2025 (setup con la guía de la llamada de Q2 2025, notas por línea, 8 remarks, 10 preguntas con citas, 5 highlights, 4 preguntas nuevas); notas de las tarjetas de EPS aclaran que el crecimiento de la tarjeta es nominal sobre las líneas de Bloomberg y el de la llamada es non-GAAP a moneda constante · TL-GEN y BL-GEN agregados.
 - 2026-10-28 · todas las unidades · 👀 en revisión (sin compuerta; instrucción explícita de Dani de ejecutar) · se mostró: capturas del harness local de Setup, Post-Results (Q2 2026), Notes y Results · fuentes: `BBG_CONSENSUS.txt` (snapshot 2026-10-28), `DCF MA - New.xlsm`, `docs/calls/MA-latest.md` y `MA.md` · scripts: `scripts/consensus/map_ma.json`, `scripts/consensus/ma/build_ma_dataset.py`.

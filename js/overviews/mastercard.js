@@ -17,6 +17,7 @@ import { maCeHtml, maCeWire, maCeBuild, maCePop } from './ma-ce.js';   // Evolut
 import { MA_SENS_MODEL } from './ma-sensitivity-data.js';   // Valuation ▸ Sensitivity: frozen Summit model snapshot
 import { maHistMult } from './ma-histmult.js';   // Valuation ▸ Historic Multiple (copy of meta-histmult.js; P/E now, EV/EBITDA when net debt is loaded)
 import { maStdPeerScatter, maWireScatters, maValuationPeersBody } from './ma-peers.js';   // OV-6 peer map + Valuation ▸ Peers (denominators from Bloomberg, live quotes)
+import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/ma.js)
 import { maResults } from '../results-data/ma.js';   // Ownership / Governance charts read the Bloomberg annual series
 import { SUMMIT_CAT } from '../viz-palette.js';
 
@@ -83,7 +84,7 @@ var MA_LEDE="Mastercard is a technology company in the global payments industry.
 // ── OV-3 the 2×2 (each cell at most ~30 words). ──
 var MA_BIZ=[
   ['What it sells','Payment switching on its card brands and account-based rails, plus services: security, data and analytics, consulting, loyalty and open banking.'],
-  ['Who buys it','Banks and other issuers and acquirers, merchants, governments, fintechs and businesses. Customers are mostly billed weekly, some monthly or quarterly.'],
+  ['Who buys it','Banks and other issuers and acquirers, merchants, governments, fintechs and businesses. The five largest customers were 21% of FY2025 net revenue.'],
   ['How it earns','FY2025 net revenue $32.8B: ~59% payment network (fees on volume and transactions, net of rebates) · ~41% value-added services and solutions.'],
   ['The edge','A global two-sided network, services that also sell on non-Mastercard volume, and no lending book.'],
 ];
@@ -128,13 +129,13 @@ function accList(defs){
   }).join('')+'</div>';
 }
 function stdMoneyMap(){
-  var h='<div class="ov-diagram-cap gmm-cap-top">FY2025 net revenue <b>$32.8B (+16%)</b> \u2014 the same total, two ways: by <b>segment</b> or by <b>geography</b>. Both reconcile to the reported figure.</div>';
+  var h='<div class="ov-diagram-cap gmm-cap-top">FY2025 net revenue <b>$32.8B (+16%)</b> \u2014 the same total, two ways: by <b>category</b> or by <b>region</b>. Mastercard reports one operating segment, Payment Solutions; the two categories are how it splits net revenue. Both views reconcile to the reported figure.</div>';
   h+='<div class="mg-tog-row"><span class="mg-tog">View: <span class="mg-seg">'+
-    '<button type="button" class="mg-pill active" data-gmm="seg">Segments</button>'+
-    '<button type="button" class="mg-pill" data-gmm="geo">Geography</button></span></span></div>';
+    '<button type="button" class="mg-pill active" data-gmm="seg">Categories</button>'+
+    '<button type="button" class="mg-pill" data-gmm="geo">Region</button></span></span></div>';
   h+='<div class="gmm-view" data-gmm="seg">'+gmmBars(GMM_SEG)+accList(REV_DEFS)+'</div>';
   h+='<div class="gmm-view" data-gmm="geo" hidden>'+gmmBars(GMM_GEO)+accList(GEO_DEFS)+'</div>';
-  h+='<div class="ov-diagram-cap gmm-cap-end">FY2025: GAAP net income <b>$15.0B</b> (+16%), diluted EPS <b>$16.52</b> (+19%). Net revenue is gross revenue less the $20.5B of rebates and incentives paid to customers. <span class="ave-subh-note">Source: Mastercard FY2025 Form 10-K (Item 7; Note 3, Revenue). Americas = United States, Canada and Latin America.</span></div>';
+  h+='<div class="ov-diagram-cap gmm-cap-end">FY2025: GAAP net income <b>$15.0B</b> (+16%), diluted EPS <b>$16.52</b> (+19%). Net revenue is gross revenue less the $20.5B of rebates and incentives paid to customers. <span class="ave-subh-note">Source: Mastercard FY2025 Form 10-K (Item 7; Note 3, Revenue). Americas = United States, Canada and Latin America; the United States alone was about 29% of net revenue.</span></div>';
   return h;
 }
 
@@ -1521,11 +1522,12 @@ function deepDiveHtml(c){
   var hasEvo=!!resultsEvoHtml('MA');
   // Top Line
   h+=pane('topline', false, [
-    { k:'segov', l:'General', body:resultsHtml('MA_TLG') },
-    { k:'segdrv', l:'Drivers', body:resultsHtml('MA_DRV') },
-    { k:'segments', l:'Segments', body:ddSegmentsBody(c) },
-    { k:'customers', l:'Customers', body:ddCustomersBody(c) },
-    { k:'tam', l:'Other', body:ddTamBody(c) } ]);
+    { k:'segov', l:'General', body:segmentsOverviewHtml('MA') },
+    { k:'segdrv', l:'Segments', body:segmentsHtml('MA') },
+    { k:'segoth', l:'Other', body:segmentsOtherHtml('MA') },
+    { k:'segcus', l:'Customers', body:segmentsCustomersHtml('MA') },
+    { k:'build', l:'Revenue build', body:resultsHtml('MA_TLG') },
+    { k:'drivers', l:'Drivers', body:resultsHtml('MA_DRV') } ]);
   // Bottom Line — the old Margins pane is superseded by General (same margins on the Results engine, from Bloomberg actuals and the Summit model)
   h+=pane('bottomline', true, [
     { k:'blgen', l:'General', body:resultsHtml('MA_BL') },
@@ -1567,8 +1569,12 @@ function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.
 function activeSubKey(root, group){ var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return null; var b=pane.querySelector('.ovt-subtab.active'); return b?b.getAttribute('data-ovst'):null; }
 function buildSub(root, group, key){
   function rs(sel, tk){ requestAnimationFrame(function(){ initResults(root.querySelector(sel+' .rs-wrap'), tk); }); }
-  if(group==='topline' && key==='segov') rs('.ovt-subpane[data-ovst="segov"]','MA_TLG');
-  if(group==='topline' && key==='segdrv') rs('.ovt-subpane[data-ovst="segdrv"]','MA_DRV');
+  if(group==='topline' && key==='segov') requestAnimationFrame(function(){ initSegmentsOverview(root, 'MA'); });
+  if(group==='topline' && key==='segdrv') requestAnimationFrame(function(){ initSegments(root, 'MA'); });
+  if(group==='topline' && key==='segoth') requestAnimationFrame(function(){ initSegmentsOther(root, 'MA'); });
+  if(group==='topline' && key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'MA'); });
+  if(group==='topline' && key==='build') rs('.ovt-subpane[data-ovst="build"]','MA_TLG');
+  if(group==='topline' && key==='drivers') rs('.ovt-subpane[data-ovst="drivers"]','MA_DRV');
   if(group==='bottomline' && key==='blgen') rs('.ovt-subpane[data-ovst="blgen"]','MA_BL');
   if(group==='evolution' && key==='earnings') maCeBuild(root);
   if(group==='evolution' && key==='results') rs('.ovt-subpane[data-ovst="results"]','MA');

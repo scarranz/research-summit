@@ -16,6 +16,7 @@ import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../res
 import { maCeHtml, maCeWire, maCeBuild, maCePop } from './ma-ce.js';   // Evolution ▸ Earnings (playbook machinery + ./ma-ce-data.js)
 import { MA_SENS_MODEL } from './ma-sensitivity-data.js';   // Valuation ▸ Sensitivity: frozen Summit model snapshot
 import { maHistMult } from './ma-histmult.js';   // Valuation ▸ Historic Multiple (copy of meta-histmult.js; P/E now, EV/EBITDA when net debt is loaded)
+import { maStdPeerScatter, maWireScatters, maValuationPeersBody } from './ma-peers.js';   // OV-6 peer map + Valuation ▸ Peers (denominators from Bloomberg, live quotes)
 import { maResults } from '../results-data/ma.js';   // Ownership / Governance charts read the Bloomberg annual series
 import { SUMMIT_CAT } from '../viz-palette.js';
 
@@ -40,28 +41,35 @@ function collapsible(title, inner, open){
     '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+esc(title)+'</button>'+
     '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+inner+'</div></div>';
 }
-function mbars(arr){ return '<div class="ov-mbars">'+arr.map(function(r){
-  return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+'</div>'+
-    '<div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+r[1]+'%;background:'+r[3]+';">'+esc(r[2])+'</div></div>'+
-    '<div class="ov-mbar-v">'+r[1]+'%</div></div>';
-}).join('')+'</div>'; }
+// OV-4 bars: neutral light greys ranked by size (css/overview.css .gmm-neutral); a bar under ~10% puts its $ outside.
+function gmmRank(arr){ var o=arr.map(function(r,i){ return [r[1],i]; }).sort(function(a,b){ return b[0]-a[0]; }), rk=[];
+  o.forEach(function(x,j){ rk[x[1]]=Math.min(j+1,6); }); return rk; }
+function gmmBars(arr){
+  var rk=gmmRank(arr);
+  return '<div class="ov-mbars gmm-neutral">'+arr.map(function(r,i){
+    var out=r[1]<10;
+    return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+'</div>'+
+      '<div class="ov-mbar-track'+(out?' out':'')+'"><div class="ov-mbar-fill gmm-g'+rk[i]+'" style="width:'+Math.max(r[1],1.2)+'%">'+(out?'':esc(r[2]))+'</div>'+(out?'<span class="ov-mbar-outv">'+esc(r[2])+'</span>':'')+'</div>'+
+      '<div class="ov-mbar-v">'+esc(r[3])+'</div></div>';
+  }).join('')+'</div>';
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  STANDARDIZED OVERVIEW DATA (the 7 blocks — OVERVIEW_CONVENTIONS §4)
+//  STANDARDIZED OVERVIEW DATA (playbook section 8: OV-1 ... OV-7 + OV-F). Facts from the FY2025 Form 10-K.
 // ═══════════════════════════════════════════════════════════════════════════
 
-// ── Block 1 — Key Facts (exactly 10, 5×2). Market cap cell is live (#maMc). ──
+// ── OV-1 Key Facts (exactly 10, 5×2). The market cap cell is live (#maMc), never seeded. ──
 var MA_FACTS=[
   ['Listing','NYSE: MA'],
   ['HQ','Purchase, NY, USA'],
-  ['Incorporation','Delaware'],
+  ['Incorporated','Delaware, USA'],
   ['SEC filer','Domestic (10-K/10-Q/8-K)'],
-  ['Founded','1966 — Interbank'],
-  ['IPO','May 2006 · $39.00'],
-  ['CEO','Michael Miebach · since Jan 2021'],
-  ['Employees','~35,000 · 2025'],
-  ['Dividend','Payer (+ buybacks)'],
-  ['Market cap','~$470B · est'],
+  ['Founded','1966 (Interbank Card Association)'],
+  ['IPO','May 2006 · NYSE · $39.00'],
+  ['CEO','Michael Miebach · CEO since Jan 2021'],
+  ['Employees','~39,800 · Dec 2025'],
+  ['Dividend','Payer'],
+  ['Market cap','loading live quote…'],
 ];
 function stdKeyFacts(){
   return '<div class="stdkf">'+MA_FACTS.slice(0,10).map(function(p){
@@ -69,54 +77,64 @@ function stdKeyFacts(){
     return '<div class="stdkf-cell"><div class="stdkf-k">'+esc(p[0])+'</div><div class="stdkf-v">'+v+'</div></div>'; }).join('')+'</div>';
 }
 
-// ── Block 2 — Description (high-level only; NON-redundant with the blocks below). ──
-var MA_LEDE="Mastercard is a global payments-technology company. It operates one of the world's two large open-loop card networks — the rails that authorize, clear and settle electronic payments between banks across 210+ countries — and, layered on top, a fast-growing set of value-added services (security, identity, data, consulting, open banking and real-time payments). It does not issue cards, lend, or set interchange, and takes no credit risk; it earns a thin fee on the volume and transactions that flow over its network, plus the services sold alongside.";
+// ── OV-2 Description (2-4 sentences; says what it is, not the segments, customers or moat that sit below). ──
+var MA_LEDE="Mastercard is a technology company in the global payments industry. It runs a network that switches (authorizes, clears and settles) card and account-based payments in more than 220 countries and territories, and sells services such as security, data and open banking on top of it. It does not issue cards or lend.";
 
-// ── Block 3 — the 4-quadrant (each cell ≤ ~30 words). ──
+// ── OV-3 the 2×2 (each cell at most ~30 words). ──
 var MA_BIZ=[
-  ['What it sells','Access to a global card-payment network (authorization, clearing, settlement) plus value-added services — fraud/security, identity, data & analytics, consulting, open banking and real-time-payment infrastructure.'],
-  ['Who buys it','~14,000 financial-institution customers (issuing & acquiring banks), plus merchants, fintechs, governments and processors that connect to the rails and buy the services.'],
-  ['How it earns','A thin fee on network volume & transactions (net of incentives) + services fees. FY2025 net revenue $32.8B — ~58% Payment Network, ~42% Value-Added Services.'],
-  ['The edge','A global two-sided network with deep acceptance and scale economics, a services layer that is often network-agnostic, and a business that carries no credit risk.'],
+  ['What it sells','Payment switching on its card brands and account-based rails, plus services: security, data and analytics, consulting, loyalty and open banking.'],
+  ['Who buys it','Banks and other issuers and acquirers, merchants, governments, fintechs and businesses. Customers are mostly billed weekly, some monthly or quarterly.'],
+  ['How it earns','FY2025 net revenue $32.8B: ~59% payment network (fees on volume and transactions, net of rebates) · ~41% value-added services and solutions.'],
+  ['The edge','A global two-sided network, services that also sell on non-Mastercard volume, and no lending book.'],
 ];
 function stdFourQuad(){
   return '<div class="q2">'+MA_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
 }
 
-// ── Block 4 — How it makes money. Segments (2 reporting pillars) ⇄ Geography (US vs
-// International) — both are the SAME FY2025 net revenue seen two ways (revenue cross-check). ──
-var MA_REV_SEG=[['Payment Network',58,'$19.0B',MA_STEEL],['Value-Added Services & Solutions',42,'$13.8B',MA_ORANGE]];
-// Geography: Mastercard reports US vs the rest of the world; ~2/3 of net revenue is international.
-var MA_REV_GEO=[['International (ex-US)',67,'~$22.0B',MA_RED],['United States',33,'~$10.8B',MA_STEEL]];
-var MA_MM_STATS=[['Net revenue','$32,791M'],['Gross Dollar Volume','~$10.6T'],['Switched txns','~175.5B/yr'],['Credentials','~3.5B'],['VAS % of net rev','~42%'],['Cross-border','high-yield']];
-var MA_SEG_DEF=[
-  { seg:'Payment Network',
-    desc:'The core switching business — the rails that authorize, clear and settle a card payment between the issuing bank and the acquiring bank. It earns three ways: domestic assessments (a few basis points of domestic purchase volume), cross-border fees (where the card country differs from the merchant country — the highest-yield line), and transaction processing (a near-fixed fee per switched transaction). Rebates & incentives paid to customers net against these.',
-    econ:[['Net revenue','~$19.0B (~58% of total)'],['GDV','~$10.6T'],['Cross-border growth','+13% lc (Q1 2026)'],['Switched-txn growth','~+9% (Q1 2026)']] },
-  { seg:'Value-Added Services & Solutions',
-    desc:'Everything sold on top of the rails: fraud & cyber security, digital identity, data & analytics, consulting, loyalty/personalization, open banking and real-time / account-to-account payment infrastructure. Much of it is network-agnostic — it earns on non-Mastercard volume too — and it is more recurring and higher-margin than network fees, which is why it is the main growth driver.',
-    econ:[['Net revenue','~$13.8B (~42% of total)'],['Growth','+22% YoY (Q1 2026)'],['Mix','vs ~27% services at the larger peer'],['Character','recurring, network-agnostic']] },
+// ── OV-4 How Mastercard makes money. Segments ⇄ Geography: the same FY2025 net revenue, $32,791M, seen two ways
+// (10-K Note 3). [label, % of total, $, share text]. ──
+var GMM_SEG=[
+  ['Payment network', 59.4, '$19.5B', '59%'],
+  ['Value-added services and solutions', 40.6, '$13.3B', '41%'],
 ];
-var MA_GEO_DEF=[
-  { seg:'International (ex-US)',
-    desc:'Volume and services on credentials issued outside the United States — the larger share of net revenue and the structurally faster-growing side, because cash is still a big share of spend in many markets (a long cash-to-digital runway) and because cross-border travel and e-commerce concentrate here.',
-    econ:[['Net revenue','~$22.0B (~2/3 of total)'],['Driver','cash-to-digital + cross-border'],['Note','"International" = issuance geography, distinct from cross-border']] },
-  { seg:'United States',
-    desc:'Volume and services on US-issued credentials — a more mature, more debit-heavy market than the international book. Still large and growing, but with a shorter cash-conversion runway than the international side.',
-    econ:[['Net revenue','~$10.8B (~1/3 of total)'],['Character','mature, more debit-weighted']] },
+var GMM_GEO=[
+  ['Asia Pacific, Europe, Middle East and Africa', 57.2, '$18.7B', '57%'],
+  ['Americas', 42.8, '$14.0B', '43%'],
 ];
+var REV_DEFS=[
+  { seg:'Payment network (the core, the larger share)',
+    desc:'The switching business. It authorizes, clears and settles payments between the cardholder\u2019s bank and the merchant\u2019s bank across the Mastercard, Maestro and Cirrus brands, and runs account-based and real-time payments. Customers pay fees on the dollar volume of activity and on the number of transactions switched, with domestic and cross-border volume priced separately. Rebates and incentives paid to customers are deducted, so reported revenue is the net.',
+    econ:[['FY2025 net revenue','$19.5B \u00b7 59% of total'],['Growth','+12% (from $17.3B), the same in currency-neutral terms'],['Gross revenue before rebates','$40.0B'],['Rebates and incentives','$20.5B (+16%), 51% of gross'],['Gross dollar volume','$10.6T (+9% in local currency)'],['Switched transactions','175.5B (+10%)']] },
+  { seg:'Value-added services and solutions (the faster-growing share)',
+    desc:'Services sold on top of the network and in part beyond it: security and fraud tools, digital and authentication solutions, data and analytics, consulting, loyalty and consumer acquisition and engagement, and open banking. The 10-K credits its growth to the underlying key drivers, security and digital and authentication solutions, consumer acquisition and engagement, pricing, and business and market insights.',
+    econ:[['FY2025 net revenue','$13.3B \u00b7 41% of total'],['Growth','+23% (from $10.8B); +21% currency-neutral'],['From acquisitions','3 points of the growth'],['Unsatisfied performance obligations','$2.0B, to be recognized through 2030']] },
+  { seg:'The revenue lines (payment network, before rebates)',
+    desc:'Mastercard bills the network by four assessments: <b>domestic</b> (driven by domestic dollar volume or the number of cards), <b>cross-border</b> (card country differs from merchant country), <b>transaction processing</b> (the number of switched transactions) and <b>other</b> (licensing, implementation and franchise fees). Rebates and incentives then come off the total.',
+    econ:[['Domestic assessments','$11.0B (+8%)'],['Cross-border assessments','$12.0B (+18%)'],['Transaction processing assessments','$15.9B (+17%)'],['Other network assessments','$1.0B (+9%)'],['Total before rebates','$40.0B'],['Less: rebates and incentives','$20.5B (+16%)'],['Payment network net revenue','$19.5B (+12%)']],
+    econNote:'The four lines are the payment network only, before rebates; value-added services and solutions are reported as one line.' },
+];
+var GEO_DEFS=[
+  { seg:'Asia Pacific, Europe, Middle East and Africa (the larger region)',
+    desc:'Net revenue earned in these regions, the larger and faster-growing side of the total. Mastercard reports its geography in two regions and says no country other than the United States produced more than 10% of net revenue.',
+    econ:[['FY2025 net revenue','$18.7B \u00b7 57% of total'],['Growth','+19% (from $15.8B)']] },
+  { seg:'Americas (the United States, Canada and Latin America)',
+    desc:'Net revenue earned in the Americas, which the 10-K defines as the United States, Canada and Latin America.',
+    econ:[['FY2025 net revenue','$14.0B \u00b7 43% of total'],['Growth','+13% (from $12.4B)']] },
+];
+function accList(defs){
+  return '<div class="mm-defs acc-list">'+defs.map(function(s){
+    var econ='<div class="acc"><button type="button" class="acc-h">The numbers <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+(s.econNote?'<div class="ave-subh-note acc-note">'+esc(s.econNote)+'</div>':'')+'</div></div>';
+    return '<div class="acc"><button type="button" class="acc-h">'+esc(s.seg)+'<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+s.desc+'</div>'+econ+'</div></div>';
+  }).join('')+'</div>';
+}
 function stdMoneyMap(){
-  var seg=mbars(MA_REV_SEG);
-  var geo=mbars(MA_REV_GEO);
-  var defBlock=function(defs, econLabel){ return '<div class="mm-defs acc-list" style="margin-top:12px">'+defs.map(function(s){
-    var econ='<div class="acc" style="margin-top:8px"><button type="button" class="acc-h">'+esc(econLabel)+' <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+'</div></div>';
-    return '<div class="acc"><button type="button" class="acc-h">What is "'+esc(s.seg)+'"?<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+esc(s.desc)+'</div>'+econ+'</div></div>';
-  }).join('')+'</div>'; };
-  var h='<div class="mm-tog"><button type="button" class="mm-pill active" data-mm="seg">Segments</button><button type="button" class="mm-pill" data-mm="geo">Geography</button></div>';
-  h+='<div class="mm-view" data-mm="seg">'+seg+defBlock(MA_SEG_DEF,'Segment economics (as-of Q1 2026 / FY2025)')+'</div>';
-  h+='<div class="mm-view" data-mm="geo" hidden>'+geo+defBlock(MA_GEO_DEF,'Detail')+'</div>';
-  h+='<div class="mm-stats">'+MA_MM_STATS.map(function(s){ return '<div class="mm-stat"><div class="mm-stat-v">'+esc(s[1])+'</div><div class="mm-stat-l">'+esc(s[0])+'</div></div>'; }).join('')+'</div>';
-  h+='<div class="ov-diagram-cap" style="margin-top:10px">Cross-check: Payment Network ~$19.0B + Value-Added Services ~$13.8B = <b>~$32.8B</b> net revenue ✓ (ties to FY2025 reported); the Geography view (International ~$22.0B + US ~$10.8B) is the <b>same total seen two ways</b>. <span class="ave-subh-note">Net revenue = gross revenue minus rebates & incentives paid to customers. Segment/geography splits from Mastercard filings; "lc" = local-currency. Source: Mastercard FY2025 10-K & Q1 2026 results.</span></div>';
+  var h='<div class="ov-diagram-cap gmm-cap-top">FY2025 net revenue <b>$32.8B (+16%)</b> \u2014 the same total, two ways: by <b>segment</b> or by <b>geography</b>. Both reconcile to the reported figure.</div>';
+  h+='<div class="mg-tog-row"><span class="mg-tog">View: <span class="mg-seg">'+
+    '<button type="button" class="mg-pill active" data-gmm="seg">Segments</button>'+
+    '<button type="button" class="mg-pill" data-gmm="geo">Geography</button></span></span></div>';
+  h+='<div class="gmm-view" data-gmm="seg">'+gmmBars(GMM_SEG)+accList(REV_DEFS)+'</div>';
+  h+='<div class="gmm-view" data-gmm="geo" hidden>'+gmmBars(GMM_GEO)+accList(GEO_DEFS)+'</div>';
+  h+='<div class="ov-diagram-cap gmm-cap-end">FY2025: GAAP net income <b>$15.0B</b> (+16%), diluted EPS <b>$16.52</b> (+19%). Net revenue is gross revenue less the $20.5B of rebates and incentives paid to customers. <span class="ave-subh-note">Source: Mastercard FY2025 Form 10-K (Item 7; Note 3, Revenue). Americas = United States, Canada and Latin America.</span></div>';
   return h;
 }
 
@@ -140,22 +158,22 @@ var MA_PROD_GROUPS=[
   { seg:'Value-Added Services & Solutions', families:[
     { ic:'🛡️', fam:'Security & identity', d:'Fraud, cyber and identity — the largest VAS family.', items:[
       ['Decision Intelligence','Real-time AI fraud scoring on transactions.'],
-      ['Ekata','Digital identity verification ($850M, 2021).'],
-      ['RiskRecon','Third-party cyber-risk ratings (2020).'],
-      ['Recorded Future','Threat intelligence — the largest deal ($2.65B, 2024); a step into enterprise cyber.'],
-      ['Tokenization','Replaces card numbers with tokens; ~40% of transactions tokenized.'],
+      ['Ekata','Digital identity verification.'],
+      ['RiskRecon','Third-party cyber-risk ratings.'],
+      ['Recorded Future','Threat intelligence; a step into enterprise cyber.'],
+      ['Tokenization','Replaces card numbers with tokens.'],
     ]},
     { ic:'📊', fam:'Data & Services / Consulting', d:'Analytics, advisory, loyalty.', items:[
       ['Mastercard Advisors','Consulting + analytics across the client base.'],
-      ['Test & Learn (APT)','Business-experimentation analytics (~$600M, 2015).'],
+      ['Test & Learn (APT)','Business-experimentation analytics.'],
       ['Dynamic Yield','AI personalization (from McDonald\'s, 2022).'],
       ['Loyalty & marketing','Rewards programs and campaign tools.'],
     ]},
     { ic:'🏦', fam:'Open banking & real-time', d:'Account data + non-card rails.', items:[
-      ['Finicity','US open-banking / financial-data APIs ($825M, 2020).'],
-      ['Aiia','European open-banking platform (2021).'],
-      ['Vocalink','Runs the UK\'s Faster Payments & BACS (~£700M+, 2017).'],
-      ['Nets A2A','European account-to-account / clearing assets (~€2.85B, 2021).'],
+      ['Finicity','US open-banking / financial-data APIs.'],
+      ['Aiia','European open-banking platform.'],
+      ['Vocalink','Runs the UK\'s Faster Payments & BACS.'],
+      ['Nets A2A','European account-to-account / clearing assets.'],
     ]},
     { ic:'📲', fam:'Digital enablement', d:'Tokens & smoother checkout.', items:[
       ['Mastercard Token Service','Network tokens for cards-on-file and wallets.'],
@@ -171,95 +189,6 @@ function stdProducts(){
           '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
       }).join('')+'</div></div>';
   }).join('');
-}
-
-// ── Block 6 — Competitor scatter (DYNAMIC). X = valuation multiple, Y = revenue growth,
-// bubble = LIVE market cap (api.liveQuote). Multiple EV/EBITDA ⇄ P/E; basis Trailing ⇄
-// Forward (default Forward). Peers add/removable by ticker; chip × deletes immediately.
-// ⚠ Multiples & growth are web-sourced approximations (mid-2026); market caps are live. ──
-var MA_PEERS=[
-  { tk:'MA', n:'Mastercard', evT:33, evF:28, peT:38, peF:31, gt:14, gf:13, mc:470, hl:true, why:'The #2 global open-loop network — a premium multiple on a thin-fee, no-credit-risk model, a larger (~42%) value-added-services mix than Visa, and a more international / cross-border tilt. Bears interchange litigation directly (no escrow shield).' },
-  { tk:'V',  n:'Visa',      evT:28, evF:24, peT:33, peF:27, gt:11, gf:11, mc:640, why:'The larger open-loop network — bigger by volume and acceptance, slightly cheaper on multiples, a smaller services mix (~30%), and a Class-B litigation escrow shield Mastercard lacks.' },
-  { tk:'AXP', n:'Amex',     evT:null, evF:null, peT:21, peF:18, gt:9, gf:9, mc:210, why:'Closed-loop — it issues and lends, so revenue includes net interest income and EV/EBITDA is not comparable (it carries credit risk). Shown on P/E only; a premium, affluent, spend-centric model that competes with Mastercard for high-end volume.' },
-  { tk:'PYPL', n:'PayPal',  evT:12, evF:11, peT:16, peF:14, gt:8, gf:9, mc:75, why:'A digital-wallet / account-to-account player on a different rail that partly competes with cards — much cheaper on multiples, reflecting slower growth and a more contested moat. A frenemy: most of its funding and its debit cards still ride Mastercard/Visa.' },
-  { tk:'FI', n:'Fiserv',    evT:15, evF:14, peT:16, peF:14, gt:8, gf:8, mc:90, why:'A payments & fintech processor (Clover, Carat) that connects merchants and issuers to the rails — a partner and customer of Mastercard, not a network. A mid-teens multiple, well below the networks.' },
-  { tk:'FIS', n:'FIS',      evT:13, evF:12, peT:14, peF:12, gt:6, gf:7, mc:45, why:'Fidelity National Information Services — core-banking & issuer processing that rides the networks\' rails rather than competing with them. A cheaper, slower-growth processor multiple.' },
-  { tk:'GPN', n:'Global Payments', evT:10, evF:9, peT:9, peF:8, gt:5, gf:6, mc:22, why:'A merchant acquirer / processor — the cheapest of the payments majors on a high-single-digit multiple, reflecting slow growth and integration overhang. Rides the rails, doesn\'t own them.' },
-  { tk:'XYZ', n:'Block',    evT:13, evF:11, peT:16, peF:14, gt:10, gf:11, mc:48, why:'Square (acquiring) + Cash App (wallet / P2P) — partly competes for merchant and P2P flow, but its cards and funding still ride Mastercard/Visa. A cheaper, more contested fintech multiple.' },
-  { tk:'ADYEN', n:'Adyen',  evT:32, evF:26, peT:38, peF:30, gt:22, gf:21, mc:55, logo:'img/logos/adyen.svg', why:'A single-platform global acquirer / PSP — the high-growth premium name in acceptance, compounding ~20%+ at a network-like multiple. A partner on acceptance, not a network.' },
-  { tk:'FOUR', n:'Shift4',  evT:14, evF:12, peT:16, peF:13, gt:22, gf:20, mc:10, why:'A fast-growing US acquirer (hospitality, stadiums, crypto) — ~20% growth at a mid-teens multiple. Rides the rails on the acceptance side.' },
-  { tk:'CPAY', n:'Corpay',  evT:13, evF:12, peT:14, peF:12, gt:9, gf:9, mc:24, logo:'img/logos/corpay.svg', why:'A commercial-payments & fleet-card specialist (ex-FLEETCOR) — competes in the B2B / new-flows space Mastercard is chasing, at a low-teens multiple.' },
-];
-var MA_SC={ type:'pe', basis:'f', peers:null };
-function maScReset(){ MA_SC.peers=MA_PEERS.map(function(p){ var o={}; for(var k in p) o[k]=p[k]; o.on=true; return o; }); }
-function maScMult(p){ if(MA_SC.type==='ev') return MA_SC.basis==='f'?p.evF:p.evT; return MA_SC.basis==='f'?p.peF:p.peT; }
-function stdPeerScatter(){
-  var h='<style>.mg-tog-row{display:flex;flex-wrap:wrap;gap:14px;margin:2px 0 8px}'+
-    '.mg-tog{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mu)}'+
-    '.mg-seg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
-    '.mg-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
-    '.mg-pill.active{background:var(--navy);color:#fff}'+
-    '.mg-dot{transition:.15s}.mg-node text{pointer-events:none}'+
-    '.masc-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 2px}'+
-    '.masc-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:999px;padding:3px 9px;background:var(--w);cursor:pointer;color:var(--navy)}'+
-    '.masc-chip .x{color:var(--mu);font-weight:800}'+
-    '.masc-add{display:inline-flex;gap:5px;align-items:center}'+
-    '.masc-add input{width:74px;font:inherit;font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:3px 7px;text-transform:uppercase}'+
-    '.masc-add button{font:inherit;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:7px;padding:3px 9px;background:#F2F5F8;cursor:pointer}'+
-    '.mg-node .mg-dot{transition:stroke-width .12s}.mg-node:hover .mg-dot{stroke-width:4.5}.mg-node:hover{filter:drop-shadow(0 3px 7px rgba(16,20,26,.25))}.mg-node text{pointer-events:none}'+
-    '.mg-tip{position:fixed;z-index:60;width:262px;background:#fff;color:var(--navy);border-radius:12px;padding:0;overflow:hidden;box-shadow:0 12px 30px rgba(16,20,26,.28);pointer-events:none;border:1px solid var(--bdr)}'+
-    '.mgt-hd{display:flex;align-items:center;gap:9px;padding:11px 13px 8px}'+
-    '.mgt-logo{width:32px;height:32px;border-radius:50%;border:2px solid;background:#fff;overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center}.mgt-logo img{width:100%;height:100%;object-fit:cover;border-radius:50%}'+
-    '.mgt-n{font-weight:800;font-size:14px}'+
-    '.mgt-chips{display:flex;flex-wrap:wrap;gap:5px;padding:0 13px 8px}'+
-    '.mgt-chip{font-size:10px;color:var(--mu);background:var(--surface);border:1px solid var(--bdr);border-radius:7px;padding:2px 7px}.mgt-chip b{color:var(--navy);font-weight:800}'+
-    '.mgt-why{font-size:11px;line-height:1.5;color:var(--navy);padding:8px 13px 12px;border-top:1px solid var(--bdr);background:#F8FAFC}</style>';
-  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Listed peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y) — each is its <b>company logo</b>, sized by <b>live market cap</b>. <span style="opacity:.75">Hover or tap a logo for the read.</span></div>';
-  h+='<div class="mg-tog-row"><span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill" data-mgtype="ev">EV/EBITDA</button><button type="button" class="mg-pill active" data-mgtype="pe">P/E</button></span></span>'+
-     '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgbasis="f">Forward</button><button type="button" class="mg-pill" data-mgbasis="t">Trailing</button></span></span></div>';
-  h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" id="maScSvg" role="img" aria-label="Peer valuation vs growth map">'+
-    '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
-    '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
-    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← cheaper</text>'+
-    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">more expensive →</text>'+
-    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" id="maScXlab">P/E · forward</text>'+
-    '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">slow</text>'+
-    '<text x="74" y="52" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">fast growth</text>'+
-    '<g id="maScNodes"></g>'+
-  '</svg></div>';
-  h+='<div class="masc-chips" id="maScChips"></div>';
-  h+='<div class="ov-diagram-cap" style="margin-top:4px">The map spans the <b>listed payments ecosystem</b> — the two networks (<b>Mastercard, Visa</b>), the closed-loop lender (<b>Amex</b>), a wallet (<b>PayPal</b>), the big processors (<b>Fiserv, FIS, Global Payments</b>), acquirers / PSPs (<b>Adyen, Shift4</b>), fintech (<b>Block</b>) and commercial payments (<b>Corpay</b>). <b>P/E is the default so every name plots;</b> switch to <b>EV/EBITDA</b> and the lenders drop out (Amex carries credit risk, so EV/EBITDA isn\'t meaningful). Remove a peer with the <b>×</b> or add one by ticker. Private / government rails (UPI, Pix, FedNow) and unlisted processors have no market multiple and sit on the qualitative map in <b>Deep Dive ▸ Top Line ▸ Industry Analysis</b>. <span class="ave-subh-note">Multiples & growth are approximate, web-sourced (mid-2026); market caps are live. Directional, not exact.</span></div>';
-  h+='<div id="maScTip" class="mg-tip" hidden></div>';
-  return h;
-}
-function maScRender(root){
-  var g=root.querySelector('#maScNodes'); if(!g||!MA_SC.peers) return;
-  var mLo=MA_SC.type==='ev'?7:7, mHi=MA_SC.type==='ev'?34:40, gLo=4, gHi=24, X0=84, X1=610, Y0=250, Y1=46;
-  var lab=root.querySelector('#maScXlab'); if(lab) lab.textContent=(MA_SC.type==='ev'?'EV/EBITDA':'P/E')+' · '+(MA_SC.basis==='f'?'forward':'trailing');
-  var frag='';
-  MA_SC.peers.forEach(function(p){
-    if(!p.on) return; var m=maScMult(p); if(m==null||isNaN(m)) return;
-    var growth=MA_SC.basis==='f'?p.gf:p.gt; if(growth==null) growth=p.gf!=null?p.gf:p.gt;
-    var col=p.hl?MA_RED:'#7A8699';
-    var x=X0+Math.max(0,Math.min(1,(m-mLo)/(mHi-mLo)))*(X1-X0);
-    var y=Y0-Math.max(0,Math.min(1,((growth||0)-gLo)/(gHi-gLo)))*(Y0-Y1);
-    var r=Math.max(15,Math.min(25, 13+Math.sqrt(Math.max(1,p.mc))*0.30)); var ri=r-2.5;
-    var mono=esc((p.tk||p.n).slice(0,4));
-    frag+='<g class="mg-node" data-tk="'+esc(p.tk)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')" style="cursor:pointer">'+
-      '<clipPath id="maClip-'+esc(p.tk)+'"><circle r="'+ri.toFixed(1)+'"/></clipPath>'+
-      '<circle class="mg-dot" r="'+r.toFixed(1)+'" fill="#fff" stroke="'+col+'" stroke-width="'+(p.hl?3.5:2)+'"></circle>'+
-      '<text class="mg-mono" y="4" text-anchor="middle" font-family="Inter,sans-serif" font-size="'+(ri>18?12:10)+'" font-weight="800" fill="'+col+'">'+mono+'</text>'+
-      '<image href="'+(p.logo?esc(p.logo):'https://assets.parqet.com/logos/symbol/'+esc(p.tk))+'" x="'+(-ri).toFixed(1)+'" y="'+(-ri).toFixed(1)+'" width="'+(2*ri).toFixed(1)+'" height="'+(2*ri).toFixed(1)+'" clip-path="url(#maClip-'+esc(p.tk)+')" preserveAspectRatio="xMidYMid slice" onerror="this.remove()"></image>'+
-      (p.hl?'<circle r="'+(r+3).toFixed(1)+'" fill="none" stroke="'+col+'" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6"></circle>':'')+
-      '</g>';
-  });
-  g.innerHTML=frag;
-}
-function maScChips(root){
-  var box=root.querySelector('#maScChips'); if(!box||!MA_SC.peers) return;
-  var h=MA_SC.peers.map(function(p,i){ return '<span class="masc-chip" data-sci="'+i+'" title="Remove '+esc(p.n)+'">'+esc(p.n)+' <span class="x">×</span></span>'; }).join('');
-  h+='<span class="masc-add"><input id="maScAddTk" placeholder="+ TICKER" maxlength="6"><button type="button" id="maScAddBtn">Add</button></span>';
-  box.innerHTML=h;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -374,9 +303,9 @@ var TIMELINE = [
   { y:'1979', t:'<b>Renamed Mastercard.</b>', d:'"Master Charge" becomes <b>MasterCard</b>, with the interlocking-circles mark. Through the 1980s–90s it operates as a bank-owned association, building global acceptance and the Maestro debit brand.' },
   { y:'2002', t:'<b>Merges with Europay International</b> — one global franchise ahead of the IPO.', d:'MasterCard International merges with <b>Europay International</b> (which included Eurocard) to form <b>MasterCard Incorporated</b>, consolidating the franchise globally.' },
   { y:'May 2006', t:'<b>IPO at $39.00</b> — two years before Visa, and a cleaner (single-class) structure.', d:'<b>Genesis of the public company.</b> Mastercard IPO\'d on May 25, 2006 (95.5M shares at $39 — the largest U.S. IPO since 2004), <b>two years before Visa</b>. It went public via a conventional IPO (not a spin-off/SPAC). The IPO reduced the member banks\' control (an independent board) — partly to address antitrust exposure — and created the independent <b>Mastercard Foundation</b>, endowed with ~10% of the company. Unlike Visa\'s later IPO, there is <b>no multi-class / litigation-escrow share structure</b> — a fact that matters for how it bears litigation.' },
-  { y:'2010–20', t:'<b>The Ajay Banga decade</b> — the business-model pivot to services.', d:'<b>A model inflection, not just growth.</b> Under CEO <b>Ajay Banga</b>, revenue roughly <b>triples</b> and market value rises ~10×. The defining choice: build a large <b>value-added services</b> business (cybersecurity, identity, data & analytics) on top of the rails — changing what Mastercard earns on, not just how much. This services tilt, plus a strong international and cross-border mix, is the main reason a structural #2 kept gaining share and economics.' },
+  { y:'2010–20', t:'<b>The Ajay Banga decade</b> — the business-model pivot to services.', d:'<b>A model inflection, not just growth.</b> Under CEO <b>Ajay Banga</b> the company made its defining choice: build a large <b>value-added services</b> business (cybersecurity, identity, data & analytics) on top of the rails — changing what Mastercard earns on, not just how much. This services tilt, plus a strong international and cross-border mix, is the main reason a structural #2 kept gaining share and economics.' },
   { y:'2017–24', t:'<b>A services-and-rails buying spree</b> (see M&A).', d:'Mastercard acquires real-time-payment and open-banking infrastructure (<b>Vocalink, Nets A2A, Finicity, Aiia</b>) and a deep security/identity/cyber stack (<b>RiskRecon, Ekata, CipherTrace, Recorded Future</b>) — building optionality beyond card swipes into account-to-account, identity and enterprise cyber.' },
-  { y:'Jan 2021', t:'<b>Michael Miebach becomes CEO</b> (current CEO).', d:'Miebach (previously Chief Product Officer) takes over as Banga moves on (later to lead the World Bank). The strategy continues: grow the network, scale services, and extend into new flows (B2B, disbursements, real-time).' },
+  { y:'Jan 2021', t:'<b>Michael Miebach becomes CEO</b> (current CEO).', d:'Miebach, a long-time Mastercard executive, takes over as Banga moves on (later to lead the World Bank). The strategy continues: grow the network, scale services, and extend into new flows (B2B, disbursements, real-time).' },
   { y:'2024', t:'<b>Recorded Future ($2.65B) — largest acquisition to date</b>, a step into enterprise cyber.', d:'The threat-intelligence deal is Mastercard\'s biggest ever and marks the services ambition widening from payment fraud into <b>enterprise cybersecurity</b> — extending the addressable market well beyond card swipes.' },
 ];
 var TL_NOTE = 'Corporate lineage per Mastercard filings, IR and company history; the 2006 IPO and Mastercard Foundation per the prospectus and press. Genesis: a conventional IPO of a bank-association-turned-independent company (not a spin-off/SPAC).';
@@ -673,7 +602,7 @@ function maTrackBody(c){
   return h;
 }
 
-var OV_SOURCES = 'Sources — Mastercard FY2025 10-K & Q1 2026 results/earnings release (Apr 30, 2026); Mastercard IR & investor materials; Summit DCF model (snapshot 2026-06-25) for the financial series; EDGAR for filer status. Market cap and peer bubbles are live via Massive; peer multiples & growth are web-sourced approximations (mid-2026), labeled directional. Forward figures are model estimates, not company guidance.';
+var OV_SOURCES = 'Sources — Mastercard FY2025 Form 10-K (SEC EDGAR) for company facts, headcount, FY2025 net revenue by segment, revenue line and region, volumes and capital return; Mastercard investor relations and press releases for history and products. Market cap and peer multiples are live (Massive price ÷ Bloomberg consensus figures as of Oct 2026). Forward figures are estimates, not company guidance.';
 var DD_SOURCES = 'Sources — Mastercard Q1 2026 results & earnings release (Apr 30, 2026), FY2025 10-K and prior filings; IR & company history; acquisition press releases & SEC filings for M&A terms; UK Competition Appeal Tribunal & reporting on the Merricks settlement; public reporting on MDL 1720 and the 2006 IPO / Mastercard Foundation. Some M&A values are estimates where terms were undisclosed; "lc"/"cn" = local-currency/currency-neutral.';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -683,79 +612,15 @@ function stdTimeline(){
   return '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
 }
 function stdOverviewBody(c){
-  var h='<style>.stdkf{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--bdr);border-top:3px solid var(--brand-2, var(--brand));border-radius:12px;overflow:hidden;background:var(--w);margin:2px 0}'+
-    '.stdkf-cell{padding:11px 13px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
-    '.stdkf-cell:nth-child(5n){border-right:none}.stdkf-cell:nth-child(n+6){border-bottom:none}'+
-    '.stdkf-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:3px}'+
-    '.stdkf-v{font-size:12px;font-weight:700;color:var(--navy);line-height:1.3}'+
-    '@media(max-width:720px){.stdkf{grid-template-columns:repeat(2,1fr)}.stdkf-cell{border-right:none}}'+
-    '.ov-lede{margin:16px 0 6px;font-size:13px;line-height:1.6;color:var(--navy)}'+
-    '.q2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--bdr);border-radius:12px;overflow:hidden;background:var(--w);margin:4px 0}'+
-    '.q2-cell{padding:13px 15px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
-    '.q2-cell:nth-child(2n){border-right:none}.q2-cell:nth-child(n+3){border-bottom:none}'+
-    '.q2-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:'+MA_RED+';margin-bottom:5px}'+
-    '.q2-v{font-size:12px;color:var(--navy);line-height:1.5}.q2-v b{font-weight:800}'+
-    '@media(max-width:600px){.q2{grid-template-columns:1fr}.q2-cell{border-right:none}.q2-cell:nth-child(n+2){border-bottom:1px solid var(--bdr)}.q2-cell:last-child{border-bottom:none}}'+
-    '.mm-tog{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px;margin:2px 0 4px}'+
-    '.mm-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:4px 12px;border-radius:999px;cursor:pointer}.mm-pill.active{background:var(--navy);color:#fff}'+
-    '.mm-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:14px 0 2px}@media(max-width:640px){.mm-stats{grid-template-columns:repeat(3,1fr)}}'+
-    '.mm-stat{border:1px solid var(--bdr);border-radius:9px;padding:8px 10px;text-align:center;background:var(--w)}'+
-    '.mm-stat-v{font-size:13px;font-weight:800;color:var(--navy)}.mm-stat-l{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin-top:2px}'+
-    '.acc-list .acc{border:1px solid var(--bdr);border-radius:9px;margin-top:6px;overflow:hidden;background:var(--w)}'+
-    '.acc-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12px;font-weight:700;color:var(--navy);padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}'+
-    '.acc-h:hover{background:#EEF2F6}.acc-x{color:var(--mu);font-weight:800}.acc-b{padding:10px 12px}'+
-    '.famd{font-size:12px;color:var(--navy);line-height:1.55}.famd b{font-weight:800}'+
-    '.ov-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:11.5px}.ov-row:last-child{border-bottom:none}.ov-row-k{color:var(--mu);font-weight:600}.ov-row-v{color:var(--navy);font-weight:800}'+
-    '.stdp-seg{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:12px 0 7px}.stdp-group:first-child .stdp-seg{margin-top:2px}'+
-    '.stdp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}'+
-    '.stdp-card{border:1px solid var(--bdr);border-radius:11px;padding:13px 14px;background:var(--w);cursor:pointer;transition:.14s}'+
-    '.stdp-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px);border-color:'+MA_RED+'}'+
-    '.stdp-ic{font-size:26px;line-height:1}.stdp-n{font-size:13px;font-weight:800;color:var(--navy);margin:7px 0 3px}'+
-    '.stdp-d{font-size:11px;color:var(--mu);line-height:1.45}.stdp-more{font-size:10px;font-weight:700;color:'+MA_RED+';margin-top:6px}'+
-    '.ov-collap{border:1px solid var(--bdr);border-radius:10px;margin:12px 0 0;overflow:hidden}'+
-    '.ov-collap-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12.5px;font-weight:800;color:var(--navy);padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:8px}'+
-    '.ov-collap-h:hover{background:#EEF2F6}.ov-collap-ic{font-size:10px;color:var(--mu)}.ov-collap-b{padding:12px 14px 6px}</style>';
-  // ── Hook (always visible): Key Facts, Description, 2×2 quadrant ──
-  h+=stdKeyFacts();
+  var h=stdKeyFacts();
   h+='<p class="ov-lede">'+esc(MA_LEDE)+'</p>';
   h+=stdFourQuad();
-  // ── Progressive disclosure: everything below defaults collapsed ──
-  h+=collapsible('How it makes money', stdMoneyMap());
-  h+=collapsible('What it makes — the products', stdProducts());
-  h+=collapsible('Value-Added Services — the moat\'s growth engine', stdVasSpotlight());
-  h+=collapsible('Competitors — valuation vs growth', stdPeerScatter());
-  h+=collapsible('Timeline', stdTimeline());
+  h+=collapsible('How Mastercard makes money', stdMoneyMap(), false);
+  h+=collapsible('Products & platforms', '<div class="ov-diagram-cap gmm-cap-top"><b>Tap any family</b> for the specific products inside it.</div>'+stdProducts(), false);
+  h+=collapsible('Competitors \u2014 the peer map', maStdPeerScatter('ov'), false);
+  h+=collapsible('Timeline \u2014 how it became today\u2019s Mastercard', stdTimeline(), false);
   h+='<div class="ov-foot">'+esc(OV_SOURCES)+'</div>';
   return h;
-}
-// ── VAS spotlight — the moat's growth engine. Punchy, high-visibility (open by default). ──
-function stdVasSpotlight(){
-  var fam=function(ic,t,d){ return '<div class="vas-fam"><div class="vas-fam-ic">'+ic+'</div><div><div class="vas-fam-t">'+esc(t)+'</div><div class="vas-fam-d">'+d+'</div></div></div>'; };
-  var stat=function(v,l){ return '<div class="vas-h"><div class="vas-h-v">'+v+'</div><div class="vas-h-l">'+l+'</div></div>'; };
-  return '<style>'+
-    '.vas-hero{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 6px}@media(max-width:640px){.vas-hero{grid-template-columns:1fr}}'+
-    '.vas-h{border-radius:13px;padding:15px 16px;color:#fff;background:linear-gradient(135deg,'+MA_RED+' 0%,#e0344e 100%)}'+
-    '.vas-h-v{font-size:26px;font-weight:900;letter-spacing:-.5px;line-height:1}'+
-    '.vas-h-l{font-size:11px;font-weight:600;opacity:.93;margin-top:6px;line-height:1.45}'+
-    '.vas-fams{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0 2px}@media(max-width:640px){.vas-fams{grid-template-columns:1fr}}'+
-    '.vas-fam{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--bdr);border-radius:11px;padding:11px 13px;background:var(--w)}'+
-    '.vas-fam-ic{font-size:20px;line-height:1;flex:none}.vas-fam-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
-    '.vas-fam-d{font-size:11px;color:var(--mu);line-height:1.45;margin-top:2px}</style>'+
-    '<div class="ov-diagram-cap" style="margin:0 0 10px"><b>Value-Added Services (VAS)</b> is the leg that keeps the moat <b>widening</b> — the fastest-growing, least-regulated, most <b>network-agnostic</b> revenue Mastercard has, and the one it points to for durable double-digit growth.</div>'+
-    '<div class="vas-hero">'+
-      stat('~40%','of net revenue today — up from ~30% a few years ago, and still climbing')+
-      stat('+20%+ <span style="font-size:15px">YoY</span>','growth — running well ahead of the payments network, pulling up the whole company')+
-      stat('~$490B','addressable market (Investor Day 2024) — Mastercard holds <b>&lt;7%</b> of the serviceable slice')+
-    '</div>'+
-    '<div class="ov-subh" style="margin:14px 0 6px">Four families — sold on top of the rails (and off them)</div>'+
-    '<div class="vas-fams">'+
-      fam('🛡️','Security & cyber','<b>Recorded Future</b> threat intel, RiskRecon & <b>Decision Intelligence</b> AI fraud scoring — the trust layer, priced per transaction.')+
-      fam('🎯','Consumer engagement','Loyalty & personalization (<b>Dynamic Yield</b>, SessionM) — help issuers & merchants acquire and retain cardholders.')+
-      fam('📊','Business & market insights','<b>Test & Learn</b>, <b>Credit Intelligence</b> & <b>Ekata</b> identity — data, analytics and decisioning.')+
-      fam('🔗','Open banking & processing','<b>Finicity</b> (US) & <b>Aiia</b> (Europe) plus gateway / processing — account-based reach beyond cards.')+
-    '</div>'+
-    '<div class="ov-subh" style="margin:16px 0 8px">Why it defends the moat <span style="font-weight:600;color:var(--mu)">— tap any card for the detail</span></div>'+
-    vasPopTiles(VAS_MOAT,'vasm');
 }
 function html(c){
   _co = c;   // capture the live company object (id + ticker) for the Watch List DB wiring
@@ -1634,25 +1499,6 @@ function buildMaSbc(){
 }
 // Valuation ▸ Peers — the numbers behind the map in the Overview. The multiples and growth are the SEEDED values of MA_PEERS (web-sourced,
 // mid-2026, directional); they are replaced by filings-based denominators when the peers' 10-Ks are loaded (playbook VA-PEERS, rule 10).
-function maPeersBody(c){
-  var peers=MA_PEERS.filter(function(p){ return !p.hl; });
-  function avg(a){ var v=a.filter(function(x){ return x!=null; }); return v.length?v.reduce(function(x,y){ return x+y; },0)/v.length:null; }
-  function med(a){ var v=a.filter(function(x){ return x!=null; }).sort(function(x,y){ return x-y; }); if(!v.length) return null; var m=Math.floor(v.length/2); return v.length%2?v[m]:(v[m-1]+v[m])/2; }
-  function fx(v){ return v==null?'\u2014':v+'\u00d7'; }
-  var me=MA_PEERS.filter(function(p){ return p.hl; })[0];
-  var h='<p class="ov-lede">The peer map. The same live-cap scatter as the Overview, kept beside the valuation work: Mastercard and Visa are the twin premium toll roads, and everyone else is a processor, acquirer or wallet that rides the rails. <b>Add or remove a peer on the Overview map</b>; this table reads the same set.</p>';
-  h+='<div class="ov-chart-card" style="overflow-x:auto"><div class="ov-chart-t">The numbers behind the map <span>\u00b7 forward P/E and EV/EBITDA, growth</span></div><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Company</th><th style="text-align:right;padding:7px 10px">P/E fwd</th><th style="text-align:right;padding:7px 10px">EV/EBITDA fwd</th><th style="text-align:right;padding:7px 10px">Growth fwd</th><th style="text-align:right;padding:7px 10px">P/E vs peer avg</th></tr></thead><tbody>'+
-    [me].concat(peers).map(function(p){ var pa=avg(peers.map(function(x){ return x.peF; })); var d=(p.peF!=null&&pa)?Math.round((p.peF/pa-1)*100):null; return '<tr style="border-top:1px solid var(--bdr)'+(p.hl?';background:rgba(14,124,192,0.05)':'')+'"><td style="padding:8px 10px;font-weight:'+(p.hl?'800':'700')+'">'+esc(p.n)+' <span class="muted" style="font-weight:600">'+esc(p.tk)+'</span></td><td style="text-align:right;padding:8px 10px">'+fx(p.peF)+'</td><td style="text-align:right;padding:8px 10px">'+fx(p.evF)+'</td><td style="text-align:right;padding:8px 10px">'+(p.gf==null?'\u2014':'+'+p.gf+'%')+'</td><td style="text-align:right;padding:8px 10px">'+(p.hl||d==null?'\u2014':(d>=0?'+':'')+d+'%')+'</td></tr>'; }).join('')+
-    '<tr style="border-top:2px solid var(--bdr);color:var(--mu)"><td style="padding:8px 10px;font-weight:800">Peer average (without Mastercard)</td><td style="text-align:right;padding:8px 10px">'+fx(Math.round(avg(peers.map(function(x){ return x.peF; }))))+'</td><td style="text-align:right;padding:8px 10px">'+fx(Math.round(avg(peers.map(function(x){ return x.evF; }))))+'</td><td style="text-align:right;padding:8px 10px">+'+Math.round(avg(peers.map(function(x){ return x.gf; })))+'%</td><td></td></tr>'+
-    '<tr style="color:var(--mu)"><td style="padding:8px 10px;font-weight:800">Peer median (without Mastercard)</td><td style="text-align:right;padding:8px 10px">'+fx(med(peers.map(function(x){ return x.peF; })))+'</td><td style="text-align:right;padding:8px 10px">'+fx(med(peers.map(function(x){ return x.evF; })))+'</td><td style="text-align:right;padding:8px 10px">+'+med(peers.map(function(x){ return x.gf; }))+'%</td><td></td></tr>'+
-    '</tbody></table></div>';
-  h+=sec('Reading the table','<div class="ov-callout">'+bullets([
-    '<b>Amex shows P/E only</b>: it is a lender, so EV/EBITDA is not comparable and the blank is deliberate, not a data gap.',
-    '<b>UnionPay and the state-linked account-to-account rails are not shown</b>: they are unlisted, so there is no price to quote; they are compared qualitatively in Miscellaneous \u25b8 Competitive position.']) +'</div>');
-  h+='<div class="ov-foot">\u2691 Peer multiples and growth are <b>seeded</b> values (web-sourced, mid-2026, directional) from the earlier Overview map; they are replaced by denominators from each peer\u2019s filings and the Bloomberg export when those are loaded. Mastercard\u2019s own multiple and the live market caps come from Massive on the Overview map.</div>';
-  return h;
-}
-
 function deepDiveHtml(c){
   _co = c;   // capture the live company object (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-mastercard ov-mastercard-dd" data-brand="MA">';
@@ -1693,7 +1539,7 @@ function deepDiveHtml(c){
   // the model's target multiple and price target live in the Summit MCP, not in the DCF workbook.
   h+=pane('valuation', true, [
     { k:'histmult', l:'Historic Multiple', body:maHistMult.body() },
-    { k:'peers', l:'Peers', body:maPeersBody(c) },
+    { k:'peers', l:'Peers', body:maValuationPeersBody() },
     { k:'sensitivity', l:'Sensitivity Analysis', body:maSensBody(c) },
     { k:'ratings', l:'Analyst Ratings', body:'<div id="dd-val-slot"></div>' } ]);
   // Management — Executives & Board · Ownership (+ capital allocation) · Governance & SBC · Track Record
@@ -1728,6 +1574,7 @@ function buildSub(root, group, key){
   if(group==='evolution' && key==='results') rs('.ovt-subpane[data-ovst="results"]','MA');
   if(group==='evolution' && key==='estevo') requestAnimationFrame(function(){ initResultsEvo('MA'); });
   if(group==='valuation' && key==='histmult') requestAnimationFrame(function(){ maHistMult.init(root); });
+  if(group==='valuation' && key==='peers') requestAnimationFrame(function(){ maWireScatters(root); });
   if(group==='valuation' && key==='sensitivity') maSensInit(root);
   if(group==='mgmt' && key==='team') MA_MGMT.init(root);
   if(group==='mgmt' && key==='ownership') buildMaCapital();
@@ -1760,59 +1607,16 @@ function init(c){
   // Segment "What is X?" accordions
   root.querySelectorAll('.acc-h').forEach(function(btn){ btn.onclick=function(){ var b=btn.nextElementSibling; if(!b) return; var open=b.hidden; b.hidden=!open; var x=btn.querySelector('.acc-x'); if(x) x.textContent=open?'–':'+'; }; });
   // How-it-makes-money Segments ⇄ Geography toggle
-  root.querySelectorAll('.mm-pill').forEach(function(btn){ btn.onclick=function(){
-    var v=btn.getAttribute('data-mm');
-    root.querySelectorAll('.mm-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    root.querySelectorAll('.mm-view').forEach(function(p){ p.hidden=(p.getAttribute('data-mm')!==v); });
+  root.querySelectorAll('.mg-pill[data-gmm]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-gmm');
+    root.querySelectorAll('.mg-pill[data-gmm]').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    root.querySelectorAll('.gmm-view').forEach(function(p){ p.hidden=(p.getAttribute('data-gmm')!==v); });
   }; });
 
-  // Dynamic peer scatter (Overview)
-  maScReset(); maScRender(root); maScChips(root);
-  var sctip=root.querySelector('#maScTip');
-  function maPeerByTk(tk){ var r=null; (MA_SC.peers||[]).forEach(function(p){ if(p.tk===tk) r=p; }); return r; }
-  // Delegated pointer wiring on the stable #maScNodes container. Delegation (not per-node
-  // mouseenter/leave) is what lets us re-append the hovered node to the FRONT so its full
-  // circle clears any peer stacked on top — a per-node listener would fire mouseleave on
-  // the re-append and hide the tooltip. Guarded so scRefresh() can't stack duplicates.
-  function wireScNodes(){ if(!sctip) return; var cont=root.querySelector('#maScNodes'); if(!cont||cont._scWired) return; cont._scWired=true; var cur=null;
-    function nodeOf(e){ return (e.target&&e.target.closest)?e.target.closest('.mg-node'):null; }
-    function show(g){ var p=maPeerByTk(g.getAttribute('data-tk')); if(!p) return;
-      var col=p.hl?MA_RED:'#7A8699';
-      var pe=(MA_SC.basis==='f'?p.peF:p.peT), ev=(MA_SC.basis==='f'?p.evF:p.evT), gr=(MA_SC.basis==='f'?p.gf:p.gt);
-      var chip=function(l,v){ return v==null?'':'<span class="mgt-chip"><b>'+v+'</b> '+l+'</span>'; };
-      sctip.innerHTML='<div class="mgt-hd"><span class="mgt-logo" style="border-color:'+col+'"><img src="'+(p.logo?esc(p.logo):'https://assets.parqet.com/logos/symbol/'+esc(p.tk))+'" alt="" onerror="this.remove()"></span><span class="mgt-n" style="color:'+col+'">'+esc(p.n)+'</span></div>'+
-        '<div class="mgt-chips">'+chip('P/E',pe?pe+'×':null)+chip('EV/EBITDA',ev?ev+'×':null)+chip('growth',gr?gr+'%':null)+chip('mkt cap',p.mc?'$'+(p.mc>=1000?(p.mc/1000).toFixed(2)+'T':Math.round(p.mc)+'B'):null)+'</div>'+
-        '<div class="mgt-why">'+(p.why||'')+'</div>';
-      sctip.hidden=false; }
-    function move(e){ sctip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; sctip.style.top=(e.clientY+16)+'px'; }
-    function raise(g){ if(g.parentNode) g.parentNode.appendChild(g); }
-    cont.addEventListener('pointerover', function(e){ var g=nodeOf(e); if(!g) return; if(g!==cur){ cur=g; raise(g); } show(g); move(e); });
-    cont.addEventListener('pointermove', function(e){ if(nodeOf(e)) move(e); });
-    cont.addEventListener('pointerout', function(e){ var g=nodeOf(e); if(!g) return; var to=e.relatedTarget; if(to&&(g===to||g.contains(to)||(to.closest&&to.closest('.mg-node')===g))) return; cur=null; sctip.hidden=true; });
-    cont.addEventListener('click', function(e){ var g=nodeOf(e); if(!g) return; raise(g); cur=g; show(g); move(e); });
-  }
-  function scRefresh(){ maScRender(root); wireScNodes(); }
-  wireScNodes();
-  root.querySelectorAll('.mg-pill').forEach(function(btn){ btn.onclick=function(){
-    if(btn.hasAttribute('data-mgtype')){ MA_SC.type=btn.getAttribute('data-mgtype'); root.querySelectorAll('.mg-pill[data-mgtype]').forEach(function(b){ b.classList.toggle('active', b===btn); }); }
-    else { MA_SC.basis=btn.getAttribute('data-mgbasis'); root.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(b){ b.classList.toggle('active', b===btn); }); }
-    scRefresh();
-  }; });
-  function wireChips(){
-    root.querySelectorAll('#maScChips .masc-chip[data-sci]').forEach(function(ch){ ch.onclick=function(){ var i=+ch.getAttribute('data-sci'); if(MA_SC.peers[i]){ MA_SC.peers.splice(i,1); maScChips(root); wireChips(); scRefresh(); } }; });
-    var addBtn=root.querySelector('#maScAddBtn'), addIn=root.querySelector('#maScAddTk');
-    if(addBtn&&addIn){ addBtn.onclick=function(){ var tk=(addIn.value||'').trim().toUpperCase(); if(!tk) return;
-      if(!MA_SC.peers.some(function(p){ return p.tk===tk; })){
-        var seed=MA_PEERS.filter(function(p){ return p.tk===tk; })[0];
-        if(seed){ var o={}; for(var k in seed) o[k]=seed[k]; o.on=true; MA_SC.peers.push(o); }
-        else MA_SC.peers.push({ tk:tk, n:tk, on:true, mc:10, evT:null,evF:null,peT:null,peF:null,gt:null,gf:null, why:'Added by ticker — live market cap only; no multiple on file, so it plots once one is available.' });
-      }
-      addIn.value=''; maScChips(root); wireChips(); scRefresh(); maLiveOne(tk); }; }
-  }
-  wireChips();
-  // Live market cap (Key Facts cell + peer bubbles) — Massive via api.liveQuote
-  function maLiveOne(tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(q){ if(!q) return; if(tk==='MA' && q.price!=null){ _maLivePx=q.price; maSensRender(root); } if(q.marketCap==null) return; var mcB=q.marketCap/1e9; MA_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; }); if(tk==='MA'){ var el=root.querySelector('#maMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live'; } scRefresh(); }).catch(function(){}); }
-  MA_SC.peers.forEach(function(p){ if(p.tk) maLiveOne(p.tk); });
+  // Peer map (Overview ▸ Competitors; the same state feeds Valuation ▸ Peers) + live quotes
+  maWireScatters(root);
+  // Live price of Mastercard for the Sensitivity P/E starting point
+  import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote('MA'); }).then(function(res){ var q=res&&res.data?res.data:res; if(q&&q.price!=null){ _maLivePx=q.price; maSensRender(root); } }).catch(function(){});
 
   // Deep Dive tab wiring (root spans both panes)
   wireDD(root);

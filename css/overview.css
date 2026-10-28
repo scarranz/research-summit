@@ -1936,7 +1936,7 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 .ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g5 { background: #DFE3E8; }
 .ov-mbars.gmm-neutral .ov-mbar-fill.gmm-g6 { background: #E6E9ED; }
 /* 2×2 titles in black for the profiles built with the playbook (SAB, Oct 20 2026; §8). */
-:is(.ov-amzn, .ov-tsm, .ov-meta, .ov-sofi) .q2-k { color: var(--navy); }
+:is(.ov-amzn, .ov-tsm, .ov-meta, .ov-sofi, .ov-mastercard) .q2-k { color: var(--navy); }
 
 /* Flywheel / driver cards */
 .ov-fly { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -1997,15 +1997,15 @@ img.mgmt-av { border: 1px solid var(--bdr); }
    live above; here we only add the MA brand scope and the few selectors the
    Mastercard profile introduces. Rules that would collide with another
    company's global rule (flow node/earn colors) are scoped under .ov-mastercard. */
-.ov-mastercard {
-  --brand: #CF0A2C;
-  --brand-soft: #FCEDEF;
-  --brand-2: #FF9F00;
+.ov-mastercard, .ov-mastercard-dd {
+  --brand: var(--steel);
+  --brand-soft: rgba(62,90,130,0.08);
+  --brand-2: var(--steel);   /* one accent for the whole profile: Summit steel, never the Mastercard red/orange (playbook section 8, 21) */
 }
 .ov-mastercard .ov-snap { border-top: 3px solid var(--brand-2); }
-.ov-mastercard .ov-flow-node.on { box-shadow: 0 4px 14px rgba(207,10,44,.16); }
-.ov-mastercard .ov-flow-node[data-node="net"].on { border-color: var(--brand-2); box-shadow: 0 4px 14px rgba(255,159,0,.30); }
-.ov-mastercard .ov-flow-earn.earn-net { background: #FCEDEF; color: #9B0B23; border: 1px solid var(--brand); }
+.ov-mastercard .ov-flow-node.on { box-shadow: 0 4px 14px rgba(62,90,130,.16); }
+.ov-mastercard .ov-flow-node[data-node="net"].on { border-color: var(--brand-2); box-shadow: 0 4px 14px rgba(62,90,130,.22); }
+.ov-mastercard .ov-flow-earn.earn-net { background: rgba(62,90,130,0.08); color: var(--navy); border: 1px solid var(--brand); }
 .ov-segmap-2 { grid-template-columns: 1fr 1fr; }
 .ov-prod-tile { border: 1px solid var(--bdr); border-top: 2px solid var(--brand); border-radius: 8px; background: var(--w); padding: 9px 11px; }
 .ov-prod-n { font-size: 11.5px; font-weight: 700; color: var(--navy); }

@@ -1,21 +1,18 @@
-// results-data/ma-setup.js — the Mastercard "Setup" dataset for the Results ENGINE, rendered inside
-// Earnings ▸ Setup. Same engine + data as maResults, but with the TWO Setup-specific rules
-// (EARNINGS_CONVENTIONS.md §6a-viii-bis):
+// results-data/ma-setup.js — the MA "Setup" dataset for the Results ENGINE, rendered inside
+// Earnings ▸ Setup. Same engine + data as maResults, but with TWO Setup-specific rules
+// (EARNINGS_CONVENTIONS §6a-viii-bis):
 //
 //   1. CLUBBED into ONE merged section (key 'setup') so every tracked line lives in a single
-//      chart + table + picker (Amazon splits Top Line vs Margins; Setup keeps one). The unique
-//      section key means its engine canvases/tables/sliders never collide with the Results tab's.
-//      Margin lines come from each metric's own `marginOf` — only PROFIT lines (operating income,
-//      EBITDA) carry a margin; revenue / VAS / purchase volume / processed transactions have none, so the engine draws none.
+//      chart + table + picker (the Results tab splits Top Line vs Margins; Setup keeps one). The
+//      unique section key means its engine canvases/tables/sliders never collide with the Results
+//      tab's. Margin lines come from each metric's own `marginOf` — only PROFIT lines carry a
+//      margin; revenue / segment-revenue / a plain KPI have none, so the engine draws none.
 //
-//   2. NARROW, ROLLING period windows — NOT the full timeline (enforced HERE by slicing every
-//      metric's parallel arrays to the chosen indices, so the engine plots exactly those periods):
-//        • Quarterly = the last 8 reported quarters + the ONE next (forecast) quarter (9 columns).
-//        • Annual = the last 4 fiscal years + the next 2 forward years (6 columns).
-//      The window advances by itself as new prints land (the forecast anchor moves, the window follows).
-//
-// Street consensus comes from the BBG_CONSENSUS.txt archive (via maResults); Summit is the DCF
-// model's own annual line (via maResults, annual only — blank on the quarterly window). Never invented.
+//   2. NARROW, ROLLING period windows — NOT the full timeline:
+//        • Quarterly: the last 8 reported quarters + the ONE next (forecast) quarter.
+//        • Annual: the last 4 fiscal years + the next 2 forward years.
+//      Enforced HERE by slicing every metric's parallel arrays to the chosen indices, anchored on
+//      the forecast quarter / last reported FY — so the window advances by itself as prints land.
 import { maResults } from './ma.js';
 
 // Slice every metric's parallel arrays (periods/act/summit/cons/guide…) to the chosen indices.
@@ -54,8 +51,14 @@ function annualIdx(view){
 }
 
 function mergedSection(view){
-  // One section, keeping the original groups as the <select> optgroups (Totals / Segments / Company / …).
-  var groups = view.sections.reduce(function(a, s){ return a.concat(s.groups); }, []);
+  // One section holding EVERY tracked line, grouped by each metric's own `group` (Totals, Revenue lines, Operating metrics, Company,
+  // Expense lines). Setup keeps every line so the grid and the picture agree.
+  var groups = [], byLabel = {};
+  Object.keys(view.metrics).forEach(function(k){
+    var g = view.metrics[k].group || 'Other';
+    if (!byLabel[g]){ byLabel[g] = { label: g, keys: [] }; groups.push(byLabel[g]); }
+    byLabel[g].keys.push(k);
+  });
   return [{ key: 'setup', label: 'All tracked lines', defaultMetric: 'rev', groups: groups }];
 }
 
@@ -64,7 +67,7 @@ var yIdx = annualIdx(maResults.views.y);
 
 export var maSetup = {
   updated: maResults.updated,
-  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, and margin lines for the profit lines (only operating income / EBITDA carry a margin — every other line does not). The window is rolling: quarterly shows the last 8 reported quarters + the one next (forecast) quarter; annual shows the last 4 fiscal years + the next 2. Street from the Bloomberg archive; Summit is the DCF model’s own annual line (annual view only — the MA model has no quarterly projections).',
+  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, and margin lines for the profit lines (only profit lines carry a margin — a revenue line or a KPI does not). The window is rolling: quarterly shows the last 8 reported quarters + the one next (forecast) quarter; annual shows the last 4 fiscal years + the next 2. Summit = the DCF model’s frozen annual line (annual view only); Street consensus from the Bloomberg archive; no guidance band (Mastercard guides growth rates, not dollar levels).',
   source: maResults.source,
   views: {
     q: { label: 'Quarterly', note: 'Rolling — the last 8 reported quarters plus the one next (forecast) quarter; it advances by itself as new prints land. ' + maResults.views.q.note,

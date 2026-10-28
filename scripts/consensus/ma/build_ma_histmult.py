@@ -3,7 +3,7 @@
 #   EPS     BBG diluted EPS (GAAP-comparable, IS_COMP_EPS_GAAP) for the quarter, reported figure from the Bloomberg archive (results-data/ma.js `act`)
 #   EBITDA  BBG comparable EBITDA for the quarter (IS_COMPARABLE_EBITDA)
 #   shares  BBG diluted weighted-average shares (M)
-#   cash / debt / net debt  null: the Bloomberg slots for MA carry no balance sheet, so EV/EBITDA is a gap until the 10-Q / 10-K net debt is supplied
+#   cash / debt / net debt  from the 10-K and 10-Q balance sheets (the Bloomberg slots for MA carry none); only the supplied dates, EV/EBITDA steps from the last known
 #   published  the date of the FIRST Bloomberg snapshot that carries the print (a few days after the call), the date the chart steps each series on
 import os,re,json,subprocess
 HERE=os.path.dirname(os.path.abspath(__file__)); W=os.path.abspath(os.path.join(HERE,'..','..','..'))+os.sep
@@ -21,10 +21,15 @@ for v in mx['vintages']:
     first.setdefault(v['lastActual']['q'],v['id'])
 def qend(p):   # '2Q26' -> 2026-06-30
     q=int(p[0]); y=2000+int(p[2:]); return '%d-%s'%(y,{1:'03-31',2:'06-30',3:'09-30',4:'12-31'}[q])
+# Balance sheet (US$ M) from the 10-K / 10-Q balance sheets and debt notes: cash and cash equivalents, total debt outstanding (long-term debt plus the
+# current portion / short-term debt). Net debt = debt - cash and cash equivalents (restricted cash and the investments line are not netted).
+# Only the dates for which a 10-K or 10-Q was supplied; the others stay empty and the EV/EBITDA line steps from the last known value.
+BS={'4Q21':(7421,13901),'4Q22':(7008,14023),'4Q23':(8588,15681),'4Q24':(8442,18226),'4Q25':(10566,19000),'1Q26':(7906,18960),'2Q26':(11291,24643)}
 rows=[]
 for i,p in enumerate(D['p']):
     if D['eps'][i] is None or p not in first: continue
-    rows.append("  ['%s','%s','%s', %s, %s, %s, %s, null, null, null],"%(p,qend(p),first[p],D['eps'][i],D['ebitda'][i],D['opinc'][i],D['sh'][i]))
+    c,dbt=BS.get(p,(None,None)); nd=None if c is None else dbt-c
+    rows.append("  ['%s','%s','%s', %s, %s, %s, %s, %s, %s, %s],"%(p,qend(p),first[p],D['eps'][i],D['ebitda'][i],D['opinc'][i],D['sh'][i],'null' if c is None else c,'null' if dbt is None else dbt,'null' if nd is None else nd))
 data='''// ma-histmult-data.js — Mastercard quarterly denominators for Valuation ▸ Historic Multiple (VA-HIST, playbook §14).
 //
 // Source: the REPORTED values carried in the Bloomberg consensus export (BBG_CONSENSUS.txt; where a quarter appears in several
@@ -34,8 +39,10 @@ data='''// ma-histmult-data.js — Mastercard quarterly denominators for Valuati
 //            company-adjusted 5.04, so trailing P/E here reads slightly above the P/E on adjusted EPS.
 //   EBITDA   Bloomberg comparable EBITDA (US$ M).
 //   shares   weighted diluted shares for the quarter (millions).
-//   cash / debt / net debt  EMPTY: the Bloomberg export for MA has no balance-sheet slots. EV/EBITDA is therefore a gap (never a made-up
-//            zero) until the net debt from the 10-Q / 10-K is supplied; the chart shows P/E only until then.
+//   cash / debt / net debt  from the 10-K (FY2021-FY2025) and 10-Q (Mar and Jun 2026) balance sheets, SEC EDGAR; the Bloomberg export for MA has no
+//            balance-sheet slots. Cash = cash and cash equivalents; debt = total debt outstanding (long-term plus current portion); net debt = debt - cash.
+//            Only the dates for which a filing was supplied carry a value; between them the chart steps from the last known net debt, and before
+//            4Q21 EV/EBITDA is a gap (never a made-up zero).
 // The "published" date is the date of the first Bloomberg snapshot that carries the print, a few days after the call; the chart steps
 // each series on that date.
 // [quarter, period end, published, EPS, EBITDA, operating income, shares, cash, debt, net debt] \u2014 US$ million (EPS in $)
@@ -58,8 +65,8 @@ hdr='''// overviews/ma-histmult.js — Mastercard (MA) Deep Dive ▸ Valuation �
 //
 // COPIED from js/overviews/meta-histmult.js (itself the TSM/AMZN copy), then adapted to Mastercard: one price series (MA, live from Massive via
 // get-market-history), reported EPS, EBITDA and shares from ./ma-histmult-data.js (Bloomberg reported values) and forward EPS and EBITDA from the
-// Bloomberg estMatrix in js/results-data/ma.js. Net debt is EMPTY (no balance sheet in the Bloomberg export), so the EV/EBITDA lines are a gap
-// until the filings supply it and the chart shows P/E; the module already treats a missing net debt as a gap, never as zero.
+// Bloomberg estMatrix in js/results-data/ma.js. Net debt comes from the 10-K / 10-Q balance sheets (none in the Bloomberg export), known at the
+// year-ends FY2021-FY2025 and at Mar and Jun 2026; the module steps from the last known value and treats a missing net debt as a gap, never as zero.
 // Styles: css/overview.css (.hm-* rules shared via :is(.ov-tsm-dd, .ov-meta-dd, .ov-sofi-dd, .ov-mastercard-dd)).
 '''
 s=hdr+s[h:]
@@ -76,7 +83,7 @@ foot='''  var nd=MA_HM_Q, n0=nd[0], n1=nd[nd.length-1], vs=maResults.estMatrix.c
     '<b>Sources.</b> Price: Massive daily close (live). Consensus EPS and EBITDA: Bloomberg consensus export, one vintage per print ('+
     esc(vs[0].id)+' to '+esc(vs[vs.length-1].id)+'). Reported EPS, EBITDA and diluted shares: the same Bloomberg export ('+
     esc(n0[0])+'\\u2013'+esc(n1[0])+'), stepped on the first snapshot that carries each print. EPS is the GAAP-comparable line ($4.97 in 2Q26 against the company-adjusted $5.04). '+
-    '<b>EV/EBITDA is not drawn yet:</b> net debt comes from the 10-Q / 10-K balance sheet and is not in the Bloomberg export, so that line stays empty until the filings are loaded.';
+    '<b>EV/EBITDA</b> uses net debt from the 10-K and 10-Q balance sheets (total debt outstanding less cash and cash equivalents), which is not in the Bloomberg export. It is known at 12/31 of FY2021-FY2025 and at Mar and Jun 2026; between those dates the line steps from the last known value, and before the 2021 year-end it is empty.';
 }
 
 '''

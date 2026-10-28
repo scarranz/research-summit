@@ -2,8 +2,8 @@
 //
 // COPIED from js/overviews/meta-histmult.js (itself the TSM/AMZN copy), then adapted to Mastercard: one price series (MA, live from Massive via
 // get-market-history), reported EPS, EBITDA and shares from ./ma-histmult-data.js (Bloomberg reported values) and forward EPS and EBITDA from the
-// Bloomberg estMatrix in js/results-data/ma.js. Net debt is EMPTY (no balance sheet in the Bloomberg export), so the EV/EBITDA lines are a gap
-// until the filings supply it and the chart shows P/E; the module already treats a missing net debt as a gap, never as zero.
+// Bloomberg estMatrix in js/results-data/ma.js. Net debt comes from the 10-K / 10-Q balance sheets (none in the Bloomberg export), known at the
+// year-ends FY2021-FY2025 and at Mar and Jun 2026; the module steps from the last known value and treats a missing net debt as a gap, never as zero.
 // Styles: css/overview.css (.hm-* rules shared via :is(.ov-tsm-dd, .ov-meta-dd, .ov-sofi-dd, .ov-mastercard-dd)).
 import { maResults } from '../results-data/ma.js';
 import { fetchPriceHistory } from '../api.js';
@@ -396,7 +396,7 @@ function hmBody(){
   // Row 1 is identity. There is no metric select: the four chips ARE the picker, and a dropdown
   // repeating them would be a second control for the same choice.
   h+='<div class="rs-block-top"><div class="rs-block-h">Historic Multiple</div>'+
-     '<span class="rs-quick-l hm-hint">P/E, forward and trailing — click a chip to drop one (EV/EBITDA joins when net debt is loaded from the filings)</span></div>';
+     '<span class="rs-quick-l hm-hint">P/E and EV/EBITDA, forward and trailing — click a chip to drop one</span></div>';
   h+='<div class="rs-block-modes"><div class="rs-modes" id="hmModes"></div>'+
      '<div class="rs-quick"><span class="rs-quick-l">Range</span>'+
        ['1y','2y','3y','5y','all'].map(function(k){
@@ -658,7 +658,7 @@ function renderRange(scope, data){
   var h='<span class="hm-range-l">Range</span>'+vs.map(function(s){
     var sm=data[s.k].sm;
     if(!sm) return '<span class="hm-range-i"><span class="hm-sw" style="background:'+s.color+'"></span>'+
-      esc(s.short)+' <b>—</b> <span>'+(/EV\/EBITDA/.test(s.short)&&!NETDEBT.some(function(r){ return r[1]!=null; })?'net debt pending (filings)':'no estimate this far back')+'</span></span>';
+      esc(s.short)+' <b>—</b> <span>no estimate this far back</span></span>';
     return '<span class="hm-range-i"><span class="hm-sw" style="background:'+s.color+'"></span>'+
       esc(s.short)+' <b>'+fmtX(sm.min)+' – '+fmtX(sm.max)+'</b>'+
       '<span>now '+fmtX(sm.last)+'</span></span>';
@@ -713,7 +713,7 @@ function footHtml(){
     '<b>Sources.</b> Price: Massive daily close (live). Consensus EPS and EBITDA: Bloomberg consensus export, one vintage per print ('+
     esc(vs[0].id)+' to '+esc(vs[vs.length-1].id)+'). Reported EPS, EBITDA and diluted shares: the same Bloomberg export ('+
     esc(n0[0])+'\u2013'+esc(n1[0])+'), stepped on the first snapshot that carries each print. EPS is the GAAP-comparable line ($4.97 in 2Q26 against the company-adjusted $5.04). '+
-    '<b>EV/EBITDA is not drawn yet:</b> net debt comes from the 10-Q / 10-K balance sheet and is not in the Bloomberg export, so that line stays empty until the filings are loaded.';
+    '<b>EV/EBITDA</b> uses net debt from the 10-K and 10-Q balance sheets (total debt outstanding less cash and cash equivalents), which is not in the Bloomberg export. It is known at 12/31 of FY2021-FY2025 and at Mar and Jun 2026; between those dates the line steps from the last known value, and before the 2021 year-end it is empty.';
 }
 
 // ── Render ───────────────────────────────────────────────────────────────────────

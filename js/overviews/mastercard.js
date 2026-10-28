@@ -29,7 +29,7 @@ function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').repla
 
 // ─── Chart palette / formatters ──────────────────────────────────────────────
 var C_AXIS='#8A93A0', C_GRID='#EEF2F7';
-var MA_RED='#CF0A2C', MA_ORANGE='#FF9F00', MA_STEEL='#7A8699', MA_GREEN='#16A34A';
+var MA_RED=SUMMIT_CAT[0], MA_ORANGE=SUMMIT_CAT[1], MA_STEEL='#7A8699', MA_GREEN='#16A34A';   // Summit categorical slots: a profile never paints the company’s brand colour (the brand lives in the logo)
 var fT  = function(v){ return '$'+(Math.round(v*100)/100)+'T'; };
 var fBn = function(v){ return (Math.round(v*10)/10)+'B'; };
 function _hexRgba(hex, a){ var h=hex.replace('#',''); return 'rgba('+parseInt(h.substr(0,2),16)+','+parseInt(h.substr(2,2),16)+','+parseInt(h.substr(4,2),16)+','+a+')'; }
@@ -210,7 +210,7 @@ var FOURPARTY_SVG =
   '<g class="ov-fpm-node ov-clickable" data-detail="role:merchant"><rect x="480" y="28" width="170" height="56" rx="10" fill="var(--surface)" stroke="var(--bdr)"/><text x="565" y="54" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--navy)">Merchant</text><text x="565" y="71" text-anchor="middle" font-size="9.5" fill="#8A93A0">tap to read role ›</text></g>' +
   '<g class="ov-fpm-node ov-clickable" data-detail="role:issuer"><rect x="30" y="276" width="170" height="62" rx="10" fill="var(--surface)" stroke="var(--bdr)"/><text x="115" y="302" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--navy)">Issuer</text><text x="115" y="320" text-anchor="middle" font-size="9.5" fill="#8A93A0">cardholder’s bank ›</text></g>' +
   '<g class="ov-fpm-node ov-clickable" data-detail="role:acquirer"><rect x="480" y="276" width="170" height="62" rx="10" fill="var(--surface)" stroke="var(--bdr)"/><text x="565" y="302" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--navy)">Acquirer</text><text x="565" y="320" text-anchor="middle" font-size="9.5" fill="#8A93A0">merchant’s bank ›</text></g>' +
-  '<g class="ov-fpm-node ov-clickable" data-detail="role:network"><rect x="250" y="150" width="180" height="64" rx="11" fill="'+MA_RED+'" stroke="#9a0020" stroke-width="2.5"/><text x="340" y="180" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">MASTERCARD</text><text x="340" y="198" text-anchor="middle" font-size="9.5" fill="#ffe1e1">network · clearing & settlement ›</text></g>' +
+  '<g class="ov-fpm-node ov-clickable" data-detail="role:network"><rect x="250" y="150" width="180" height="64" rx="11" fill="'+MA_RED+'" stroke="#2F4766" stroke-width="2.5"/><text x="340" y="180" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">MASTERCARD</text><text x="340" y="198" text-anchor="middle" font-size="9.5" fill="#ffe1e1">network · clearing & settlement ›</text></g>' +
 '</svg>';
 var ROLE_DETAIL = {
   cardholder: { t:'Cardholder', h:'The consumer who pays with a Mastercard credential. They are the <b>issuer\'s</b> customer — Mastercard has no direct relationship with them and charges them nothing; the merchant pays.' },
@@ -750,7 +750,7 @@ function maCustomerChips(){
       '<div><div style="font-size:20px;font-weight:900;color:var(--navy)">★</div><div style="font-size:10.5px;color:var(--mu)">= an earnings-call flip / renewal win</div></div>'+
     '</div>'+
     MA_CUST_GROUPS.map(function(g){ return '<div style="margin:10px 0 4px"><div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:5px">'+g.ic+' '+esc(g.t)+' <span style="font-weight:600;color:var(--mu);font-size:10.5px">— '+esc(g.note)+'</span></div>'+
-      '<div style="display:flex;flex-wrap:wrap;gap:5px">'+g.names.map(function(n){ var win=n.indexOf('★')!==-1; return '<span style="background:'+(win?'rgba(207,10,44,0.06)':'#F1F4F8')+';border:1px solid '+(win?'rgba(207,10,44,0.25)':'var(--bdr)')+';border-radius:7px;padding:3px 9px;font-size:11px;color:var(--navy)">'+esc(n)+'</span>'; }).join('')+'</div></div>'; }).join('')+
+      '<div style="display:flex;flex-wrap:wrap;gap:5px">'+g.names.map(function(n){ var win=n.indexOf('★')!==-1; return '<span style="background:'+(win?'rgba(62,90,130,0.06)':'#F1F4F8')+';border:1px solid '+(win?'rgba(62,90,130,0.25)':'var(--bdr)')+';border-radius:7px;padding:3px 9px;font-size:11px;color:var(--navy)">'+esc(n)+'</span>'; }).join('')+'</div></div>'; }).join('')+
   '</div>';
 }
 // ── Top Line ▸ TAM — Mastercard's OWN addressable-market framing (Nov 2024 Investor Day):
@@ -1008,11 +1008,11 @@ var MA_VERBS={
 function ddStrategyBody(c){
   var h='<style>'+
     '.mstr-hero{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin:8px 0 18px}'+
-    '.mstr-verb{flex:1;min-width:150px;border:1px solid var(--bdr);border-top:4px solid '+MA_RED+';border-radius:13px;padding:15px 16px;text-align:center;background:linear-gradient(180deg,rgba(207,10,44,.055),var(--w))}'+
+    '.mstr-verb{flex:1;min-width:150px;border:1px solid var(--bdr);border-top:4px solid '+MA_RED+';border-radius:13px;padding:15px 16px;text-align:center;background:linear-gradient(180deg,rgba(62,90,130,.055),var(--w))}'+
     '.mstr-verb-ic{font-size:25px;line-height:1}.mstr-verb-v{font-size:23px;font-weight:900;color:var(--navy);margin-top:5px;letter-spacing:-.4px}'+
     '.mstr-verb-l{font-size:11px;color:var(--mu);font-weight:700;margin-top:2px}'+
     '.mstr-plus{align-self:center;font-size:22px;font-weight:900;color:'+MA_RED+'}@media(max-width:640px){.mstr-plus{display:none}}'+
-    '.mstr-verb.ov-clickable{cursor:pointer;transition:box-shadow .15s,transform .1s}.mstr-verb.ov-clickable:hover{box-shadow:0 5px 16px rgba(207,10,44,.13);transform:translateY(-1px)}'+
+    '.mstr-verb.ov-clickable{cursor:pointer;transition:box-shadow .15s,transform .1s}.mstr-verb.ov-clickable:hover{box-shadow:0 5px 16px rgba(62,90,130,.13);transform:translateY(-1px)}'+
     '.mstr-verb-more{font-size:10px;font-weight:800;color:'+MA_RED+';margin-top:7px;letter-spacing:.3px}'+
     '.mad-flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:stretch;margin:4px 0 12px}@media(max-width:760px){.mad-flow{grid-template-columns:1fr}}'+
     '.mad-arr{align-self:center;color:'+MA_RED+';font-size:20px;font-weight:900}@media(max-width:760px){.mad-arr{text-align:center}}'+
@@ -1035,7 +1035,7 @@ function ddStrategyBody(c){
       '<div class="mad-step" style="border-top:3px solid '+MA_ORANGE+'"><div class="mad-h">② So the game changes</div><div class="mad-p">Mastercard already holds enormous network share. The battle is no longer <i>winning</i> share — it is <b>defending</b> it. The moat: earn <b>more on every transaction</b>, and even off its own rails.</div></div>'+
       '<div class="mad-arr">→</div>'+
       '<div class="mad-step" style="border-top:3px solid '+MA_RED+'"><div class="mad-h">③ The response: buy the "more"</div><div class="mad-p"><b>~$10B+ of acquisitions since 2015</b> bolt value-added services onto the rails:</div>'+
-        '<div class="mad-chips">'+['Security','Identity','Data & AI','Open banking','A2A rails'].map(function(x){ return '<span class="mad-chip" style="background:rgba(207,10,44,.08);color:'+MA_RED+'">'+esc(x)+'</span>'; }).join('')+'</div></div>'+
+        '<div class="mad-chips">'+['Security','Identity','Data & AI','Open banking','A2A rails'].map(function(x){ return '<span class="mad-chip" style="background:rgba(62,90,130,.08);color:'+MA_RED+'">'+esc(x)+'</span>'; }).join('')+'</div></div>'+
     '</div>'+
     '<div class="ov-callout" style="margin-top:4px"><b>The payoff:</b> VAS is now <b>~40% of revenue and growing 20%+</b>, much of it sells <b>even where Mastercard doesn\'t win the card</b> (fraud, identity, open banking), and every service sold into an issuer or merchant <b>raises switching costs</b> — so the network share gets <i>stickier</i>. The through-line of a decade of M&A: <b>services → a wider, better-defended moat</b>.</div>');
   h+=sec('The five levers — tap any card',
@@ -1147,7 +1147,7 @@ function ddRiskBody(c){
     '.lsv-node{display:flex;align-items:center;gap:9px;border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;font-size:11.5px;color:var(--navy);line-height:1.35;background:#FBFCFD}'+
     '.lsv-ic{font-size:16px;flex:none}.lsv-arr{text-align:center;color:var(--mu);font-size:14px;line-height:1;margin:3px 0}'+
     '.lsv-cap{font-size:10.5px;color:var(--mu);margin-top:9px;line-height:1.5}'+
-    '.lsv-col.ov-clickable{cursor:pointer;transition:box-shadow .15s,border-color .15s}.lsv-col.ov-clickable:hover{border-color:'+MA_RED+';box-shadow:0 2px 10px rgba(207,10,44,.08)}'+
+    '.lsv-col.ov-clickable{cursor:pointer;transition:box-shadow .15s,border-color .15s}.lsv-col.ov-clickable:hover{border-color:'+MA_RED+';box-shadow:0 2px 10px rgba(62,90,130,.08)}'+
     '.lsv-more{margin-top:10px;font-size:11px;font-weight:800;color:'+MA_RED+';text-align:right}</style>';
   h+='<p class="ov-lede">The bull/bear forces and disintermediation threats live in <b>Top Line ▸ Industry Analysis</b>. This tab covers the one risk <b>structurally specific to Mastercard</b>: how it bears decades of interchange antitrust litigation — and why that lands differently than at Visa.</p>';
   h+='<p class="ov-lede" style="margin-bottom:14px">'+LIT_INTRO+'</p>';
@@ -1309,7 +1309,7 @@ function maSensBody(c){
     '.msn-eq{background:var(--w);border:1px solid var(--bdr);border-radius:11px;padding:13px 15px;font-size:12px;color:var(--navy);line-height:1.9}'+
     '.msn-eq b{color:'+MA_RED+'}.msn-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}'+
     '.msn-tile{border:1px solid var(--bdr);border-radius:11px;padding:12px 14px;text-align:center}.msn-tile-v{font-size:20px;font-weight:900;color:var(--navy)}.msn-tile-l{font-size:10.5px;color:var(--mu);margin-top:2px}'+
-    '.msn-price{grid-column:1 / -1;border-top:3px solid '+MA_RED+';background:rgba(207,10,44,0.05)}.msn-price .msn-tile-v{font-size:26px;color:'+MA_RED+'}'+
+    '.msn-price{grid-column:1 / -1;border-top:3px solid '+MA_RED+';background:rgba(62,90,130,0.05)}.msn-price .msn-tile-v{font-size:26px;color:'+MA_RED+'}'+
     '.msn-up{font-size:12.5px;font-weight:800;margin-top:3px}.msn-reset{margin-top:12px;font-size:11px;font-weight:800;color:'+MA_RED+';background:none;border:1px solid '+MA_RED+';border-radius:8px;padding:6px 12px;cursor:pointer}</style>';
   var M=MA_SENS_MODEL, dcfToday=M.dcf.intrinsic.filter(function(x){ return x[0]==='Today'; })[0];
   h+='<p class="ov-lede">Mastercard doesn\u2019t guide EPS, so this turns its <b>revenue algorithm</b> into one. Pick a year, move any driver and the equation, the tiles and the <b>implied price</b> (EPS \u00d7 P/E) recompute. Every driver starts at what the <b>Summit model</b> has for that year, so the base case reproduces the model\u2019s EPS.</p>';

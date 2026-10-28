@@ -7,8 +7,10 @@
 //            company-adjusted 5.04, so trailing P/E here reads slightly above the P/E on adjusted EPS.
 //   EBITDA   Bloomberg comparable EBITDA (US$ M).
 //   shares   weighted diluted shares for the quarter (millions).
-//   cash / debt / net debt  EMPTY: the Bloomberg export for MA has no balance-sheet slots. EV/EBITDA is therefore a gap (never a made-up
-//            zero) until the net debt from the 10-Q / 10-K is supplied; the chart shows P/E only until then.
+//   cash / debt / net debt  from the 10-K (FY2021-FY2025) and 10-Q (Mar and Jun 2026) balance sheets, SEC EDGAR; the Bloomberg export for MA has no
+//            balance-sheet slots. Cash = cash and cash equivalents; debt = total debt outstanding (long-term plus current portion); net debt = debt - cash.
+//            Only the dates for which a filing was supplied carry a value; between them the chart steps from the last known net debt, and before
+//            4Q21 EV/EBITDA is a gap (never a made-up zero).
 // The "published" date is the date of the first Bloomberg snapshot that carries the print, a few days after the call; the chart steps
 // each series on that date.
 // [quarter, period end, published, EPS, EBITDA, operating income, shares, cash, debt, net debt] — US$ million (EPS in $)
@@ -16,23 +18,23 @@ export var MA_HM_Q = [
   ['1Q21','2021-03-31','2021-05-04', 1.83, 2360, 2197, 998, null, null, null],
   ['2Q21','2021-06-30','2021-08-03', 2.08, 2527, 2341, 994, null, null, null],
   ['3Q21','2021-09-30','2021-11-02', 2.44, 2764, 2717, 990, null, null, null],
-  ['4Q21','2021-12-31','2022-02-01', 2.42, 2951, 2827, 986, null, null, null],
+  ['4Q21','2021-12-31','2022-02-01', 2.42, 2951, 2827, 986, 7421, 13901, 6480],
   ['1Q22','2022-03-31','2022-05-03', 2.68, 3146, 2950, 981, null, null, null],
   ['2Q22','2022-06-30','2022-08-02', 2.34, 3367, 3018, 974, null, null, null],
   ['3Q22','2022-09-30','2022-11-01', 2.58, 3505, 3112, 968, null, null, null],
-  ['4Q22','2022-12-31','2023-01-31', 2.62, 3384, 3184, 963, null, null, null],
+  ['4Q22','2022-12-31','2023-01-31', 2.62, 3384, 3184, 963, 7008, 14023, 7015],
   ['1Q23','2023-03-31','2023-05-02', 2.47, 3538, 3136, 956, null, null, null],
   ['2Q23','2023-06-30','2023-08-01', 3, 3869, 3656, 949, null, null, null],
   ['3Q23','2023-09-30','2023-10-31', 3.39, 4055, 3844, 943, null, null, null],
-  ['4Q23','2023-12-31','2024-02-05', 2.97, 3885, 3372, 939, null, null, null],
+  ['4Q23','2023-12-31','2024-02-05', 2.97, 3885, 3372, 939, 8588, 15681, 7093],
   ['1Q24','2024-03-31','2024-05-06', 3.22, 3947, 3604, 935, null, null, null],
   ['2Q24','2024-06-30','2024-08-05', 3.5, 4358, 4036, 930, null, null, null],
   ['3Q24','2024-09-30','2024-11-05', 3.53, 4595, 4004, 925, null, null, null],
-  ['4Q24','2024-12-31','2025-02-04', 3.64, 4431, 3938, 919, null, null, null],
+  ['4Q24','2024-12-31','2025-02-04', 3.64, 4431, 3938, 919, 8442, 18226, 9784],
   ['1Q25','2025-03-31','2025-05-06', 3.59, 4424, 4149, 914, null, null, null],
   ['2Q25','2025-06-30','2025-08-05', 4.07, 5154, 4777, 909, null, null, null],
   ['3Q25','2025-09-30','2025-11-04', 4.34, 5434, 5061, 905, null, null, null],
-  ['4Q25','2025-12-31','2026-02-03', 4.52, 5381, 4910, 898, null, null, null],
-  ['1Q26','2026-03-31','2026-05-05', 4.35, 5408, 4907, 893, null, null, null],
-  ['2Q26','2026-06-30','2026-10-28', 4.97, 5978, 5587, 883, null, null, null],
+  ['4Q25','2025-12-31','2026-02-03', 4.52, 5381, 4910, 898, 10566, 19000, 8434],
+  ['1Q26','2026-03-31','2026-05-05', 4.35, 5408, 4907, 893, 7906, 18960, 11054],
+  ['2Q26','2026-06-30','2026-10-28', 4.97, 5978, 5587, 883, 11291, 24643, 13352],
 ];

@@ -93,7 +93,7 @@ Modo B: antes de F1 van **B1 (inventario de lo que existe)** y **B2 (mapa de reu
 - 2026-10-20 · fuentes · Se parte del MCP de Summit (SPOT sí está, 4 snapshots) + el consenso BBG ya cargado (10 snapshots) — DAA
 - 2026-10-28 · VA-SUB · Submit History: escalón por submit, un método a la vez (abre en P/E), objetivo en azul Summit (`--steel`, el de Key Facts; SAB lo corrigió desde `SUMMIT_CAT[0]`), precio en gris claro, fair value apagado al abrir, tablas horizontales (Submit detail + What the target was built on) — SAB
 - 2026-10-28 · VA-SUB · Fuera el submit del 18-dic-2025 (EV/EBITDA a FY2029, P/E a FY2026 a 49×: mal armado) — SAB
-- 2026-10-28 · VA-SUB · El P/E del 22-oct se congela en US$645.14 (celda P80 del workbook); el MCP traía 672.78 (Q80, año siguiente). Pendiente avisar a Oscar.
+- 2026-10-28 · VA-SUB · El P/E del 22-oct se congela en US$645.14 (celda P80 del workbook); el MCP traía 672.78 (Q80, año siguiente). Arreglo pendiente en el DCF (sección 6).
 - 2026-10-28 · VA-SUB · Los precios objetivo de SPOT están en **US$** (el `px` de cada submit coincide con el cierre de Massive en dólares); el modelo sigue en EUR y la tabla de supuestos lo muestra en €. Excepción a "SPOT en EUR en todo el perfil", solo para precios por acción.
 
 ## 5. Excepciones aceptadas
@@ -106,6 +106,10 @@ Modo B: antes de F1 van **B1 (inventario de lo que existe)** y **B2 (mapa de reu
 - ~~**No encontré el branch de SAB de hoy con META.** En `origin` y `mine` lo más reciente de SAB es el perfil de **TSM** (#146, 2026-10-16, hecho con el playbook) y `chore/company-profile-playbook` (2026-10-14). `feat/meta-restructure` es de julio. Se usa TSM + playbook como referencia de formato. Si el branch de hoy es local o está sin pushear, hay que pasarlo.~~
 - ~~Autenticar el MCP de Summit~~ ✔ 2026-10-20.
 - `BBG_CONSENSUS.txt` en cp1252: los scripts de `scripts/consensus/` necesitan `encoding='cp1252'`.
+
+**Arreglos pendientes en el DCF (los hace SAB; anotado 2026-10-28):**
+- [ ] `DCF SPOT.xlsm`, bloque P/E: con el año objetivo en FY2028 (dos años adelante), el price target que se guarda es Q80 (US$672.78), pero el fair value se descuenta de P80 (US$645.14). Dejar el target y su fair value en la misma celda/año y volver a hacer submit. En el portal el 22-oct va congelado con P80 y la nota "Corrected".
+- (sin acción) El submit del 18-dic-2025 (EV/EBITDA a FY2029, P/E a FY2026 a 49×) ya no se puede arreglar: el workbook se sobreescribió. Sigue fuera.
 
 ## 7. Historial de aprobaciones
 

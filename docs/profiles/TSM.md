@@ -141,7 +141,7 @@ Revisado 2026-10-15.
 | VA-HIST | Valuation ▸ Historic Multiple | ✅ | 2026-10-16 | SAB | | 4 líneas; precio en vivo (Massive); caja neta de los 6-K; EV/EBITDA desde mediados de 2022 |
 | VA-PEERS | Valuation ▸ Peers | ✅ | 2026-10-16 | SAB | | mismo mapa que OV-6 + tabla con promedio/mediana ex-TSMC |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ✅ | 2026-10-16 | SAB | | valuación Summit congelada (snapshot 2026-10-15); EV 12× $413.63 · P/E 19× $410.28 |
-| VA-SUB | Valuation ▸ Submit History | 👀 | 2026-10-28 | | | motor `js/submits.js` + `js/submits-data/tsm.js` congelado del MCP: 2 submits (15-oct, 19-oct), abre en P/E (19× → 20× FY2027; PT $410.28 → $453.92, por ADR). PT÷FV 1.038/1.038 y 1.036/1.036: limpio. El MCP guarda OP_INCOME en 0 → la fila Operating income sale en blanco; el caso viene como "0" (no se muestra) |
+| VA-SUB | Valuation ▸ Submit History | ✅ | 2026-10-28 | SAB | | motor `js/submits.js` + `js/submits-data/tsm.js` congelado del MCP: 2 submits (15-oct, 19-oct), abre en P/E (19× → 20× FY2027; PT $410.28 → $453.92, por ADR). PT÷FV 1.038/1.038 y 1.036/1.036: limpio. El MCP guarda OP_INCOME en 0 → la fila Operating income sale en blanco; el caso viene como "0" (no se muestra) |
 | VA-SENS | Valuation ▸ Sensitivity | ✅ | 2026-10-16 | SAB | | snapshot Summit 2026-10-15 congelado; 5 plataformas + margen consolidado; Street BBG real |
 | MG-TEAM | Management ▸ Executives & Board | ✅ | 2026-10-16 | SAB | | top 6 ejecutivos + consejo completo (10), 20-F Item 6; foto solo de Wei (las demás iniciales) |
 | MG-OWN | Management ▸ Ownership | ✅ | 2026-10-16 | SAB | | tabla de insiders (36, 20-F) en formato .rt; toggle "Top holders" pendiente del HDS de Bloomberg |
@@ -170,7 +170,7 @@ Revisado 2026-10-15.
 - 2026-10-16 · MG-TRACK · Sin calificaciones de color (Claude propuso 4 verdes / 2 ámbar; SAB prefirió solo el historial) — SAB
 - 2026-10-16 · MISC · Misc llevará el análisis TSMC + ASML que SAB prepara en otro chat; se agrega cuando esté depurado — SAB
 - 2026-10-16 · VA-TM · Construir ya con un solo snapshot; la diferencia del EPS de la pierna P/E queda como duda abierta para el autor del modelo — SAB
-- 2026-10-28 · VA-SUB · Submit History con el motor común (P/E por default, azul Summit `--steel`, precio gris claro, fair value apagado); fila EBITDA rotulada "EBITDA" (el del modelo, no ajustado) — Claude, falta confirmación de SAB
+- 2026-10-28 · VA-SUB · Submit History con el motor común (P/E por default, azul Summit `--steel`, precio gris claro, fair value apagado); fila EBITDA rotulada "EBITDA" (el del modelo, no ajustado) — SAB (aprobado 2026-10-28)
 
 ## 4. Excepciones aceptadas
 
@@ -190,6 +190,10 @@ No aplica (modo A).
 | 2026-10-15 | EV-RES-DATA, EV-SET, BL-*, VA-HIST forward | decisión: agregar TSM a `Consensus_Portal.xlsm` | SAB | abierto |
 | 2026-10-16 | EV-EST | 2º snapshot del modelo Summit (el eje de Estimates son los snapshots; hoy hay 1) | SAB (submit del 4Q26) | abierto |
 | 2026-10-16 | MG-OWN ▸ toggle Top holders | export Bloomberg HDS de 2330 TT Equity (y TSM US Equity), formato NVDA_OWN.xlsx | SAB | abierto |
+
+**Arreglos pendientes en el DCF (los hace SAB; anotado 2026-10-28):**
+- [ ] `DCF TSMC.xlsm`: la utilidad operativa (OP_INCOME) llega en 0 en las proyecciones de los dos submits (15-oct, 19-oct) — revisar que la fila esté ligada en la hoja que lee el MCP. En el portal sale en blanco.
+- [ ] `DCF TSMC.xlsm`, bloque de valuación: el caso está escrito "0" en vez de "Base" en los dos métodos.
 
 ## 6b. Conexiones pendientes ("Live data pending")
 
@@ -463,4 +467,5 @@ No aplica (modo A).
 ### 2026-10-28 · VA-SUB Submit History — 👀 EN REVISIÓN
 - Qué se mostró: Valuation ▸ Submit History en localhost (entre Target Multiple y Sensitivity).
 - Fuentes: MCP `get_valuation_history('TSM')` + `get_metric_snapshot_series` (REV, OP_INCOME, EBITDA, EARNINGS, SHARES · 2026–2027), jalado 2026-10-28; precio Massive (ADR).
-- Ojo: OP_INCOME = 0 en el MCP para ambos submits (null en el archivo); caso "0" en vez de "Base" — los dos para Oscar.
+- Ojo: OP_INCOME = 0 en el MCP para ambos submits (null en el archivo); caso "0" en vez de "Base" — los dos son arreglos en el DCF (sección 6).
+- 2026-10-28 · Aprobación: SAB "Aprobado META y TSM" → ✅. Los hallazgos son errores del DCF, no del MCP: los corrige SAB (sección 6).

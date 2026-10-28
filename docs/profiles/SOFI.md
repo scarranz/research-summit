@@ -298,6 +298,9 @@ playbook (candidata a podar, **solo con tu OK**).
 | 2026-10-26 | EV-RES-DATA | ❓ BBG slot `kpi17` etiqueta "Servicing" pero código `CB_IS_SERVICE_REVENUE`; `kpi18` etiqueta "Technology Products and Solutions" con código `IS_MORTGAGE_PRODUCTION_REVENUE`; `kpi16` "Loan Origination, Sales, and Securitiz…" con código `LOAN_SERVICING_INCOME`. Etiqueta y código parecen cruzados; `kpi1` Total Members sólo trae fq-4 y fq+1…+4 (sin fq0). No se usan hasta confirmar contra el 10-Q | Dani (quien armó los slots) | abierto |
 | 2026-10-26 | EV-POST, EV-NOTES | ~~transcripciones~~ resuelto: Dani subió `SOFI_calls.txt` (11 llamadas, Q4 2023 → Q2 2026). Quartr **ya no se consulta** (sin acceso). Falta copiarlas a `docs/calls/` | Claude | ✔ cerrado |
 
+**Arreglos pendientes en el DCF (los hace SAB; anotado 2026-10-28):**
+- [ ] DCF de SOFI: el MCP no encuentra ningún bloque de valuación en los 4 submits (`no_valuations_for_ticker`). Revisar que el DCF tenga el bloque como los demás (Output ▸ VALUATION y la hoja *Discounted Cash Flow* con EV/EBITDA y P/E) y volver a hacer submit. Hasta entonces VA-SUB ⛔ (y el múltiplo del modelo de VA-TM no viene del MCP).
+
 ## 6b. Conexiones pendientes ("Live data pending")
 
 | Desde | Unidad ▸ bloque | Qué falta | Quién lo destraba | Estado |

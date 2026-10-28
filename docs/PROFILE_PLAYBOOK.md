@@ -455,13 +455,18 @@ advertencia. Lo único que se revisa por empresa en F0-SM es la **calidad** (va 
    Mientras tanto: <qué no se muestra>   ·   Quién responde: autor del modelo / Oscar
 ```
 
-**Revisar el precio objetivo contra su fair value antes de congelarlo (SAB, 28 oct 2026).** Cuando el
-`target_year` del P/E queda dos años adelante, el MCP lee el `price_target` de la celda del año siguiente
-(Q80 de la hoja *Discounted Cash Flow*) en vez de la de 1 año (P80). La prueba rápida: `price_target ÷
-fair_value` tiene que ser igual en los dos métodos de un mismo submit (es el factor de descuento de un
-año; en SPOT 22-oct: 532.86 ÷ 514.20 = 1.036 en EV/EBITDA, pero 672.78 ÷ 622.34 = 1.081 en P/E). Si no
-cuadra, se abre el workbook, se toma P80 (P49 para EV/EBITDA), se congela ese valor con un campo `fix`
-que lo explique, y va a "Dudas" para Oscar.
+**Revisar el precio objetivo contra su fair value antes de congelarlo (SAB, 28 oct 2026).** El MCP solo
+jala lo que trae el DCF: si el bloque de valuación está mal armado, el error llega tal cual, y **se corrige
+en el DCF (lo hace el analista), no en el MCP**. El caso conocido: cuando el `target_year` de un método
+queda dos años adelante, el `price_target` que se guarda es la celda del año siguiente (Q80 / Q49 de la
+hoja *Discounted Cash Flow*), mientras el fair value se descuenta de la de 1 año (P80 / P49) — el target y
+su fair value quedan apuntando a celdas distintas. La prueba rápida: `price_target ÷ fair_value` tiene que
+ser igual en los dos métodos de un mismo submit (es el mismo factor de descuento; en SPOT 22-oct: 532.86 ÷
+514.20 = 1.036 en EV/EBITDA, pero 672.78 ÷ 622.34 = 1.081 en P/E). Si no cuadra: se abre el workbook, se
+congela P80 (P49 para EV/EBITDA) con un campo `fix` que lo explique, y se anota en la bitácora, sección 6,
+como **arreglo pendiente en el DCF** para el analista (corregir el bloque y volver a hacer submit; al
+re-jalar se quita el `fix`). Igual con un valor que el MCP traiga en 0 o una etiqueta rara (caso "0"): se
+revisa primero el DCF.
 
 Estado al 14 oct 2026 (Oscar): con valuación AMZN, CART, NVDA, SPOT, UBER; TBBB solo P/E confiable
 (EV/EBITDA mezcla Bull y Base); LYFT no confiable (P/E copia EV/EBITDA); sin valuación MA, META, SOFI.
@@ -1844,7 +1849,9 @@ con qué supuestos?* (Decisión SAB, 28 oct 2026; piloto SPOT, rama `feat/dcf-su
     `skip: '<razón> (SAB, <fecha>)'` — no se dibujan y se listan en "Left out" (SPOT 18-dic-2025: EV/EBITDA
     a FY2029 y P/E a FY2026 a 49×).
   - **`quality_flags` no vacío:** el método se dibuja con la advertencia o se deja fuera, nunca limpio.
-- **Sin valuación en el MCP** (META hasta que Oscar reprocese): ⛔ con la razón; no se siembra a mano.
+- **Sin valuación en el MCP** (SOFI al 28 oct 2026): ⛔ con la razón; no se siembra a mano. Lo primero es
+  revisar que el DCF tenga el bloque de valuación como lo esperan los demás (Output ▸ VALUATION y la hoja
+  *Discounted Cash Flow*) y volver a hacer submit — es arreglo del analista en el DCF.
 - **Sin modelo Summit:** ⏭️.
 - **Qué decide el analista:** qué submits quedan fuera; nada más (múltiplos y precios son los del modelo).
 

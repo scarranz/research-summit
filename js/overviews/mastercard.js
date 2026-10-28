@@ -465,7 +465,7 @@ var MA_TRACK=[
     note:'Proven operator — the diversification thesis is his. High confidence.'},
   {id:'mehra', n:'Sachin Mehra', r:'CFO (→ Chief Business Officer Aug 2026)', t:'CFO since 2019 · at MA since 2010', rate:'green',
     one:'Long-tenured, disciplined CFO through the whole services build; steps up to run the business.',
-    co:['Ran finance, IR, strategy, M&A, treasury & risk through the growth decade','Architect of the ~$14.5B/yr buyback + growing-dividend capital return','Elevated to <b>Chief Business Officer</b> (country ops, partnerships) Aug 2026'],
+    co:['Ran finance, IR, strategy, M&A, treasury & risk through the growth decade','Architect of the buyback and growing-dividend capital return','Elevated to <b>Chief Business Officer</b> (country ops, partnerships) Aug 2026'],
     ext:['Treasury/finance at <b>Hess</b>, <b>GM</b> and <b>GMAC</b>','Darden MBA; sits on the <b>Salesforce</b> board'],
     note:'Operational discipline + financial rigor; a promotion, not an exit. High confidence.'},
   {id:'kirkpatrick', n:'Linda Kirkpatrick', r:'President Americas (→ Chief Services Officer Aug 2026)', t:'at MA since 1997', rate:'green',
@@ -828,10 +828,10 @@ function ddIndustryBody(c){
   h+='<p class="ov-lede">Mastercard and Visa run a global <b>open-loop duopoly</b> — a thin-fee "toll road" with no credit risk and the highest margins in the S&P 500. The useful question isn’t "who’s the peer" (that’s Visa) but <b>what could bypass the rails entirely</b>. First the economics, then the threats — <b>tap any threat card</b>.</p>';
   h+=sec('The duopoly, in numbers',
     '<div class="ov-kpis">'+
-      '<div class="ov-kpi"><div class="ov-kpi-l">US purchase volume (V+MA)</div><div class="ov-kpi-v">$9.99T</div><div class="ov-kpi-d muted">2025 · Visa ~70% / MA ~30%</div></div>'+
-      '<div class="ov-kpi"><div class="ov-kpi-l">Card processing ex-China</div><div class="ov-kpi-v">~90%</div><div class="ov-kpi-d muted">controlled by the two</div></div>'+
-      '<div class="ov-kpi"><div class="ov-kpi-l">MA gross dollar volume</div><div class="ov-kpi-v">$10.6T</div><div class="ov-kpi-d muted">+15% · 175.5B switched txns</div></div>'+
-      '<div class="ov-kpi"><div class="ov-kpi-l">Operating margin</div><div class="ov-kpi-v">~57%</div><div class="ov-kpi-d muted">MA · vs Visa ~67%</div></div>'+
+      '<div class="ov-kpi"><div class="ov-kpi-l">Gross dollar volume, FY25</div><div class="ov-kpi-v">$10.6T</div><div class="ov-kpi-d muted">+9% in local currency (10-K)</div></div>'+
+      '<div class="ov-kpi"><div class="ov-kpi-l">Switched transactions, FY25</div><div class="ov-kpi-v">175.5B</div><div class="ov-kpi-d muted">+10% (10-K)</div></div>'+
+      '<div class="ov-kpi"><div class="ov-kpi-l">Cross-border volume, FY25</div><div class="ov-kpi-v">+15%</div><div class="ov-kpi-d muted">local currency (10-K)</div></div>'+
+      '<div class="ov-kpi"><div class="ov-kpi-l">Operating margin, FY25</div><div class="ov-kpi-v">'+(maYv('opinc','2025')&&maYv('rev','2025')?(maYv('opinc','2025')/maYv('rev','2025')*100).toFixed(1)+'%':'—')+'</div><div class="ov-kpi-d muted">operating income ÷ net revenue</div></div>'+
     '</div>'+
     '<div class="ov-diagram-cap" style="margin-top:10px">The moat is a two-sided network effect + entrenched acceptance. The interchange (the big ~1.5–2.5% fee) flows to <b>issuing banks, not the networks</b> — the networks take a thin switching fee and bear no credit risk.</div>');
   // Threats
@@ -843,7 +843,7 @@ function ddIndustryBody(c){
   h+=sec('The investment forces — bull vs bear (with the evidence)',
     '<div class="mbb"><div class="mbb-col mbb-bull"><div class="mbb-h">▲ Bull</div>'+bullets([
       '<b>Secular cash-to-digital</b> still has a long runway — $54T consumer + $77T un-carded commercial.',
-      '<b>Duopoly pricing power</b>, ~57% margins, asset-light, huge FCF, ~$14.5B/yr buybacks.',
+      '<b>Duopoly pricing power</b>, a 57.6% operating margin, asset-light, $17.2B of free cash flow and $14.5B returned to shareholders in 2025.',
       '<b>Services + data/security</b> — the fastest-growing, <b>less-regulated</b> leg (~40% of revenue).',
       '<b>Co-opting</b> wallets, tokenization and now stablecoins rather than being bypassed in developed markets.',
       '<b>Cross-border/travel</b> recovery — the highest-margin volume.']) +'</div>'+
@@ -1354,7 +1354,7 @@ function maSensInit(root){
 
 // ════════════════════════════════════════════════════════════════════════════
 //  Valuation ▸ Capital Allocation — the asset-light cash machine returns ~all FCF.
-//  Buybacks (~$14.5B FY25) + a serially-raised dividend, shares down ~990M→~906M.
+//  Buybacks ($11.7B FY25 per the 10-K) + a serially-raised dividend, shares down ~990M→~906M.
 //  Figures directional (annual splits from cash-flow statements / press). ──
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1394,7 +1394,7 @@ function maOwnBody(c){
     '<div class="ov-kpi"><div class="ov-kpi-l">FY25 buybacks</div><div class="ov-kpi-v">'+maB(a.v)+'</div><div class="ov-kpi-d muted">Street FY26E '+maB(buy[5].v)+'</div></div>'+
     '<div class="ov-kpi"><div class="ov-kpi-l">Buybacks \u00f7 free cash flow, FY25</div><div class="ov-kpi-v">'+(pct==null?'\u2014':pct+'%')+'</div><div class="ov-kpi-d muted">FCF '+maB(f.v)+'</div></div>'+
     '<div class="ov-kpi"><div class="ov-kpi-l">Diluted shares FY21\u2192FY25</div><div class="ov-kpi-v">\u2212'+shDrop+'%</div><div class="ov-kpi-d muted">'+Math.round(sh[0].v)+'M \u2192 '+Math.round(sh[4].v)+'M</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Dividend per share, FY25</div><div class="ov-kpi-v">$3.04</div><div class="ov-kpi-d muted">+15% from $2.64 · $2.8B paid · $0.87 a quarter declared for 2026</div></div></div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Dividend per share, FY25</div><div class="ov-kpi-v">$3.04</div><div class="ov-kpi-d muted">+15% from $2.64 · $2.8B paid · $0.87 a quarter declared for 2026</div></div>'+
   '</div>';
   h+=sec('Capital returned vs free cash flow',
     '<div class="ov-chart-card"><div class="ov-chart-t">Share repurchases vs free cash flow <span>\u00b7 $B \u00b7 fiscal years \u00b7 FY26E = Bloomberg consensus</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="maChartCapital"></canvas></div></div>'+

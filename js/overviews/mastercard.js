@@ -1338,15 +1338,15 @@ function ddRiskBody(c){
 var MA_GQ=['Q1 24','Q2 24','Q3 24','Q4 24','Q1 25','Q2 25','Q3 25','Q4 25','Q1 26','Q2 26','Q3 26'];
 var MA_GUIDE={
   netrev:{ label:'Net-revenue growth', axis:'net-revenue growth (cn, ex-acq)',
-    glo:[10,11,12,12,12,12,12,12,10,10,12], ghi:[12,13,13,13,14,14,14,13,11,11,14],
-    words:['low double-digits','low double-digits','high end low-dd','low double-digits (FY: low-teens)','low-teens','low-teens','high end low-dd','high end low-dd','low end low-dd','low end low-dd (ME conflict)','high end low-dd'],
-    act:[11,13,14,16,14,13,15,15,12,12,null],
-    note:'The engine Mastercard keeps clearing: delivered net-revenue growth has landed <b>in the upper half of — or above — the guided band nearly every quarter</b>. The one deliberate step-<i>down</i> was the front of 2026: Q1 guided "low end of low-double-digits" (beaten at +12%), and Q2-26 was guided the same on the <b>Middle East conflict</b> — but the conflict hit lighter than feared and Q2 <b>landed +12%, above its low-end guide</b>, prompting management to nudge the FY guide <b>higher within</b> the range. Q3-26 is guided to the high end of low-double-digits (no actual yet).' },
+    glo:[10,10,12,13,13,13,12,12,10,10,12], ghi:[11,12,13,14,14,14,13,13,11,11,13],
+    words:['low end of low double-digits','low double-digits','high end of low double-digits','low teens','low teens','low teens','high end of low double-digits','high end of low double-digits','low end of low double-digits','low end of low double-digits (Middle East)','high end of low double-digits'],
+    act:[11,13,14,16,16,15,14,14,12,12,null],
+    note:'Delivered net-revenue growth (cn, ex-acquisitions) landed <b>above the guided band in 9 of the 10 reported quarters</b>; Q1 2024 landed inside it. The deliberate step down was the front of 2026: Q1 guided "low end of low double-digits" (delivered +12%), and Q2 was guided the same on the Middle East conflict, which hit lighter than feared (delivered +12%); management then moved the full-year guide <b>higher within</b> the "high end of low double-digits" range. Q3 2026 is guided to the high end of low double-digits (no actual yet).' },
   opex:{ label:'Operating-expense growth', axis:'operating-expense growth (cn, ex-acq)',
-    glo:[9,9,10,10,10,10,10,10,8,9,10], ghi:[11,11,12,12,12,12,12,12,10,11,12],
-    act:[9,10,10,11,11,10,10,10,9,10,null],
-    words:['low double-digits','low double-digits','low double-digits','low double-digits','low double-digits','low double-digits','low double-digits','low double-digits','high-single-digit','low double-digits','low double-digits'],
-    note:'The other half of the algorithm. Mastercard guides opex growth <b>ex-acquisitions</b> and generally lands <b>inside</b> the band — spending to a plan while it invests in the secular opportunity and services. Acquisitions (Recorded Future, Minna) are called out separately and add a few points to <i>reported</i> opex on top of this.' },
+    glo:[8,10,10,12,10,10,10,10,8,10,10], ghi:[9,11,12,13,12,11,11,12,9,11,12],
+    act:[9,10,12,14,10,null,null,7,9,11,null],
+    words:['high end of high single-digits','low end of low double-digits','low double-digits','high end of low double-digits','low double-digits','low end of low double-digits','low end of low double-digits','low double-digits','high end of high single-digits','low end of low double-digits','low double-digits'],
+    note:'Mastercard guides opex growth <b>ex-acquisitions</b> and calls out acquisitions separately (4-5 PPT on 2025 opex growth from Recorded Future and Minna). Delivered = reported cn growth less the acquisition (or disposition) points stated on the call. Q4 2025 (+12% reported, 5 PPT from acquisitions, so about +7% ex-acquisitions) came in below the band; the call attributes about 5.5 PPT of the quarter’s opex growth to the full-year effect of the 2025 equity grants. Q2 and Q3 2025 are not plotted: the transcripts give the acquisition contribution ambiguously ("a full ppt" against a guided 4-5 PPT).' },
 };
 var _maGuideMetric='netrev';
 function maGuidePct(v){ return v==null?'—':(v>0?'+':'')+v+'%'; }
@@ -1360,7 +1360,7 @@ function maGuideBody(c){
   h+='<div class="ov-chart-card"><div class="ov-chart-t" id="maGuideT"></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="maGuideChart"></canvas></div></div>';
   h+='<div class="ov-fynote" id="maGuideNote" style="margin-top:8px"></div>';
   h+='<div class="guid-tbl-wrap" style="margin-top:12px"><div id="maGuideTbl"></div></div>';
-  h+='<div class="ov-foot">Sources: Mastercard quarterly earnings calls & releases (Q4 2023 – Q1 2026, transcripts). Mastercard guides qualitatively ("low-teens", "low-double-digits"); the bands here are an <b>indicative</b> numeric mapping and the delivered dots are reported currency-neutral, ex-acquisition growth — directional, not to the decimal. Q2-26 shows the current guide (no actual yet). Interim-2025 quarters use MA’s reported trajectory pending their transcripts.</div>';
+  h+='<div class="ov-foot">Sources: Mastercard quarterly earnings calls (CFO outlook, Q4 2023 – Q2 2026, transcripts). Mastercard guides in words, so the bands are an <b>indicative</b> numeric mapping: low end of low double-digits 10–11%, low double-digits 10–12%, high end of low double-digits 12–13%, low teens 13–14%, high end of high single-digits 8–9%. Delivered is the cn growth stated on the call, less the acquisition or disposition points. Q3 2026 shows the current guide (no actual yet). The 2021 – Q3 2023 quarters have no call transcript on file.</div>';
   return h;
 }
 function maGuideLegend(){
@@ -1400,7 +1400,7 @@ function renderMaGuideTable(){
 }
 function renderMaGuide(){
   var leg=document.getElementById('maGuideLeg'); if(leg) leg.innerHTML=maGuideLegend();
-  var t=document.getElementById('maGuideT'); if(t) t.innerHTML=esc(MA_GUIDE[_maGuideMetric].label)+' — guided range vs delivered <span>· per quarter · cn, ex-acq · Q2-26 = current guide</span>';
+  var t=document.getElementById('maGuideT'); if(t) t.innerHTML=esc(MA_GUIDE[_maGuideMetric].label)+' — guided range vs delivered <span>· per quarter · cn, ex-acq · Q3-26 = current guide</span>';
   var note=document.getElementById('maGuideNote'); if(note) note.innerHTML=MA_GUIDE[_maGuideMetric].note;
   buildMaGuideChart(); renderMaGuideTable();
 }

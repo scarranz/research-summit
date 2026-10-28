@@ -91,7 +91,7 @@ Modo B: antes de F1 van **B1 (inventario de lo que existe)** y **B2 (mapa de reu
 - 2026-10-20 · EV-RES-DATA · Summit: se conserva la historia 1Q24–2Q26 (xlsm); 3Q26 se re-congela del MCP 2026-08-05 (rev 5,023.1 · Premium 4,511.6 · Ads 511.6 · op. income 672.5 · FCF 742.3) — DAA
 - 2026-10-20 · orden · Results → Setup 3Q26 → Estimates → Post-Results/Notes 2Q26 → Overview — DAA
 - 2026-10-20 · fuentes · Se parte del MCP de Summit (SPOT sí está, 4 snapshots) + el consenso BBG ya cargado (10 snapshots) — DAA
-- 2026-10-28 · VA-SUB · Submit History: escalón por submit, un método a la vez (abre en P/E), objetivo en azul Summit, precio en gris claro, fair value apagado al abrir, tablas horizontales (Submit detail + What the target was built on) — SAB
+- 2026-10-28 · VA-SUB · Submit History: escalón por submit, un método a la vez (abre en P/E), objetivo en azul Summit (`--steel`, el de Key Facts; SAB lo corrigió desde `SUMMIT_CAT[0]`), precio en gris claro, fair value apagado al abrir, tablas horizontales (Submit detail + What the target was built on) — SAB
 - 2026-10-28 · VA-SUB · Fuera el submit del 18-dic-2025 (EV/EBITDA a FY2029, P/E a FY2026 a 49×: mal armado) — SAB
 - 2026-10-28 · VA-SUB · El P/E del 22-oct se congela en US$645.14 (celda P80 del workbook); el MCP traía 672.78 (Q80, año siguiente). Pendiente avisar a Oscar.
 - 2026-10-28 · VA-SUB · Los precios objetivo de SPOT están en **US$** (el `px` de cada submit coincide con el cierre de Massive en dólares); el modelo sigue en EUR y la tabla de supuestos lo muestra en €. Excepción a "SPOT en EUR en todo el perfil", solo para precios por acción.

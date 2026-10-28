@@ -12,7 +12,7 @@
 // chips hide a series in the chart and the table, drag zooms either axis, double-click resets, the table sits under
 // the chart in a dropdown that counts what it holds. Styles: css/overview.css (.dsh-* rules).
 
-import { SUMMIT_CAT, SUMMIT_MUTE, fade } from './viz-palette.js';
+import { SUMMIT_MUTE, fade } from './viz-palette.js';
 import { fetchPriceHistory } from './api.js';
 import { spotSubmits } from './submits-data/spot.js';
 
@@ -34,10 +34,12 @@ var LEGS = [
   { k:'ev', short:'EV/EBITDA', label:'Price target · EV/EBITDA' },
   { k:'pe', short:'P/E',       label:'Price target · P/E' }
 ];
-// One method on screen at a time, so the target is always the Summit blue (SAB, Oct 28 2026). The fair value of the
-// same submit is the same line faded and dashed, and starts switched off: it is there to check, not to read first.
-var PT_COLOR = SUMMIT_CAT[0];
-var FV_COLOR = fade(SUMMIT_CAT[0], 0.45);
+// One method on screen at a time, so the target is always the Summit blue: the --steel token that underlines the
+// profile tabs and tops the Key Facts box (SAB, Oct 28 2026). The fair value of the same submit is the same line faded
+// and dashed, and starts switched off: it is there to check, not to read first.
+var SUMMIT_STEEL = '#3E5A82';
+var PT_COLOR = SUMMIT_STEEL;
+var FV_COLOR = fade(SUMMIT_STEEL, 0.45);
 var DEFAULT_LEG = 'pe';
 var PX_COLOR = fade(SUMMIT_MUTE, 0.45);   // the share price is context, not the subject: light grey
 

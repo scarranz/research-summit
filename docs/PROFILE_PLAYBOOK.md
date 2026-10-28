@@ -1800,7 +1800,7 @@ con qué supuestos?* (Decisión SAB, 28 oct 2026; piloto SPOT, rama `feat/dcf-su
      (daily close)*.
   4. Gráfica: el precio objetivo de cada submit **plano todo el periodo en que estuvo vigente**, y solo sube
      o baja **el día del siguiente submit** (`stepped:'before'`), con un punto el día de cada submit. Línea
-     del objetivo en **azul Summit** (`SUMMIT_CAT[0]`); fair value del mismo azul atenuado y punteado;
+     del objetivo en **azul Summit** (`--steel`, #3E5A82: el de las pestañas y la línea de Key Facts — no `SUMMIT_CAT[0]`); fair value del mismo azul atenuado y punteado;
      precio diario en **gris claro** (`fade(SUMMIT_MUTE, .45)`). Eje de días hábiles desde 45 días antes del
      primer submit hasta hoy; eje Y a la derecha en la moneda del precio. Tooltip: "PT · múltiplo× FYaaaaE,
      submitted <fecha>". Zoom en los dos ejes, doble clic restablece (§17.2).

@@ -15,7 +15,7 @@
 //
 // Moved here from the earlier inline MA_THEMES in js/overviews/mastercard.js (Q4 2023 → Q1 2026 notes kept, regrouped under
 // axes); the Q2 2026 notes were added from MA-latest.md.
-export var MA_THEMES_V = 1;
+export var MA_THEMES_V = 2;
 export var MA_THEMES = [
   // ── Consumer payments ─────────────────────────────────────────────────────────────────────────
   { seg:'Consumer payments', theme:'Cross-border and the consumer', st:{ k:'trend', since:'Q4 2023', last:'Q2 2026' },
@@ -24,6 +24,7 @@ export var MA_THEMES = [
       { q:'Q4 2023', items:['Cross-border <b>+18%</b> in local currency; a healthy consumer supported by a strong labor market and the wealth effect.'] },
       { q:'Q2 2024', items:['Cross-border <b>+17%</b>; some moderation in the Middle East and Africa; a savvy, intentional consumer using the digital economy to find the best deal.'] },
       { q:'Q1 2025', items:['Cross-border <b>+15%</b>; consumer solid despite tariff uncertainty, with no meaningful pull-forward of spend.'] },
+      { q:'Q3 2025', items:['Cross-border <b>+15%</b>; card-not-present ex-travel running near <b>20%</b>, partly on crypto on-ramp purchases; management credits winning cross-border-heavy affluent portfolios (Japan Airlines, the American Airlines renewal) and daily work on corridors. Consumer steady across affluent and mass market.'] },
       { q:'Q4 2025', items:['Cross-border <b>+14%</b>; card-not-present ex-travel eased against a year earlier, when crypto purchases lifted it; January travel hit by weather in Europe.'] },
       { q:'Q1 2026', items:['Cross-border <b>+13%</b>; card-not-present ex-travel <b>+18%</b>; travel pressured from March by the Middle East conflict and by portfolio shifts, with Ramadan and Easter timing on top. Cross-border travel growth fell from <b>8%</b> in the quarter to <b>2%</b> in the first four weeks of April.'] },
       { q:'Q2 2026', items:['Cross-border <b>+12%</b>; card-not-present ex-travel <b>+20%</b>, helped by Venezuela (more US dollars available, a debit market where Mastercard leads) and the timing of large retail promotions. Travel improved on April as the Middle East impact lightened. Cross-border assessments <b>+20%</b> against volume <b>+12%</b>, the gap being pricing and mix. July metrics stable.'] },
@@ -39,6 +40,7 @@ export var MA_THEMES = [
     why:'A dated headwind: the Capital One debit portfolio moving to its own network, weighing on US debit and switched volume until the migration finished.',
     updates:[
       { q:'Q4 2024', items:['Capital One credit renewed, with Mastercard the network for a large share of new credit accounts; the debit portfolio moves to Discover over time.'] },
+      { q:'Q3 2025', items:['The debit migration is underway: Mastercard will lose the associated revenue. Not material to 2025 net revenue, but further impacts in 2026 as cards move, partly offset by contractual obligations that do not fully cover the loss; the conversion completes in 2026 and the offset ends after it, so 2027 carries a further headwind. US switched volume growth stepped down from <b>8%</b> in Q3 to <b>5%</b> in early October. Credit stays a robust partnership.'] },
       { q:'Q4 2025', items:['Debit growth still held back by the migration, which continued through the quarter; US GDV <b>+4%</b>, debit <b>+2%</b>. Credit agreement extended and Capital One keeps using several Mastercard services.'] },
       { q:'Q1 2026', items:['Reconciled: the migration is basically complete. US debit GDV <b>+1%</b> (<b>+7%</b> excluding it); US switched volume flat on the quarter and over a point faster excluding Capital One.'] },
       { q:'Q2 2026', items:['After the migration: US GDV <b>+6%</b>, debit <b>+1%</b> (<b>+8%</b> excluding Capital One). US switched volume excluding Capital One <b>+10%</b>, two points up on the quarter, on fuel and broad spending.'] },
@@ -127,6 +129,7 @@ export var MA_THEMES = [
   { seg:'Guidance, costs and capital', theme:'Share repurchases', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
     why:'The pace of buybacks and what they add to EPS, set against the cash balance and the debt issued to fund them.',
     updates:[
+      { q:'Q3 2025', items:['<b>$3.3B</b> in the quarter and <b>$1.2B</b> through October 27; EPS $4.38 including <b>$0.10</b> from buybacks, with net income <b>+8%</b> held back by a higher tax rate (Pillar Two, geographic mix and a discrete item).'] },
       { q:'Q4 2025', items:['<b>$3.6B</b> repurchased in the quarter and <b>$715M</b> more through January 26; EPS $4.76 including <b>$0.10</b> from buybacks.'] },
       { q:'Q1 2026', items:['<b>$4.0B</b> in the quarter and <b>$1.7B</b> through April 27; pace accelerated given valuation and conviction in long-term growth; EPS $4.60 including <b>$0.10</b> from buybacks.'] },
       { q:'Q2 2026', items:['<b>$4.9B</b> in the quarter and about <b>$700M</b> through July 27; EPS $5.04 including <b>$0.14</b> from buybacks. Debt issued in June lifts interest expense in Q3.'] },

@@ -37,8 +37,8 @@
 | EV-RES-DATA | `js/results-data/ma.js` (34 métricas, 29 trimestres 2Q20→2Q27, anual 2020→2029, notas por métrica, `estMatrix.cons` generado) | 👀 2026-10-28 | verificación pre-print: 1085 iguales · 12 "cambiados" (redondeo de líneas pequeñas en $M, ≤ 1.7%) · 3 rellenados · 0 en blanco |
 | EV-RES | pestaña Results (motor `results.js`, selector "Estimates as of", Road to the print) | 👀 2026-10-28 | revisada en harness local (capturas) |
 | EV-SET | Setup (`ma-ce.js`, `ma-setup.js`, trimestre Q3 2026) | 👀 2026-10-28 | rejilla de 22 + 12 líneas, notas de guía por línea, gráfica Setup |
-| EV-POST | Post-Results de Q2 2026, Q1 2026 y Q4 2025 | 👀 2026-10-28 | The print · Call Summary (prepared + 10 preguntas por trimestre, respuestas con citas) · Propose Notes · Also on the call |
-| EV-NOTES | Notes (`js/themes-data/ma.js`) | 👀 2026-10-28 | 6 ejes, 15 hilos; 2 ganchos cerrados |
+| EV-POST | Post-Results de Q2 2026, Q1 2026, Q4 2025 y Q3 2025 | 👀 2026-10-28 | The print · Call Summary (prepared + 10 preguntas por trimestre, respuestas con citas) · Propose Notes · Also on the call |
+| EV-NOTES | Notes (`js/themes-data/ma.js`, versión 2) | 👀 2026-10-28 | 6 ejes, 15 hilos; 2 ganchos cerrados; notas de Q3 2025 agregadas (migración de Capital One, cross-border, recompras) |
 | TL-GEN | Top Line ▸ General (`results-data/ma-tl.js`: net revenue, segments Payment Network and VAS, revenue build, volumes and transactions; motor `results.js`, registro `MA_TLG`) | 👀 2026-10-28 | las sub-tabs Segments, Customers, TAM e Industry Analysis existentes se conservan |
 | BL-GEN | Bottom Line ▸ General (`results-data/ma-bl.js`: rentabilidad y márgenes, costos y debajo de la línea, flujo de caja y capital; registro `MA_BL`) | 👀 2026-10-28 | Unit Economics, Suppliers y Margins existentes se conservan; sin costo de ventas ni utilidad bruta (MA no los tiene) |
 | EV-EST | Estimates | ⏭️ | requiere ≥ 2 snapshots del MCP Summit; la pestaña no se publica (regla 5) |
@@ -113,4 +113,5 @@ Summit no tiene trimestres, así que no hay cuadre trimestral del lado Summit (r
 
 ## 8. Historial de aprobaciones (solo se agrega)
 
+- 2026-10-28 (2.ª pasada) · EV-POST ampliado a Q3 2025 (setup con la guía de la llamada de Q2 2025, notas por línea, 8 remarks, 10 preguntas con citas, 5 highlights, 4 preguntas nuevas); notas de las tarjetas de EPS aclaran que el crecimiento de la tarjeta es nominal sobre las líneas de Bloomberg y el de la llamada es non-GAAP a moneda constante · TL-GEN y BL-GEN agregados.
 - 2026-10-28 · todas las unidades · 👀 en revisión (sin compuerta; instrucción explícita de Dani de ejecutar) · se mostró: capturas del harness local de Setup, Post-Results (Q2 2026), Notes y Results · fuentes: `BBG_CONSENSUS.txt` (snapshot 2026-10-28), `DCF MA - New.xlsm`, `docs/calls/MA-latest.md` y `MA.md` · scripts: `scripts/consensus/map_ma.json`, `scripts/consensus/ma/build_ma_dataset.py`.

@@ -257,18 +257,6 @@ var FEE_LINES = [
     products:[{n:'Switching', d:'Routing the transaction message between issuer and acquirer.'},{n:'Connectivity / other', d:'Network access, licensing and related fees.'}],
     competition:'Visa; domestic switches; U.S. debit-routing networks.' },
 ];
-var REBATES_INTRO = 'Mastercard reports <b>net revenue</b> — gross revenue minus the rebates & incentives it pays customers. That contra-revenue is large (well over a third of gross) and rising, so the gross-to-net bridge is one of the most important things to model. The same concept exists at the other big network.';
-var REBATES_BRIDGE = [
-  { v:'Gross revenue', l:'all network + services fees' },
-  { v:'(−) Rebates & incentives', l:'paid to issuers, acquirers & merchants' },
-  { v:'= Net revenue', l:'$32.8B · FY2025' },
-];
-var REBATES = [
-  '<b>What they are:</b> payments and incentives to <b>issuers, acquirers and merchants</b> to grow and retain volume and to win new portfolios. Because they are consideration paid to customers, they are booked as a <b>reduction of gross revenue (contra-revenue)</b>, not an operating expense.',
-  '<b>Two flavors:</b> <b>volume / performance-based</b> incentives (accrued as the customer delivers volume) and <b>upfront / fixed</b> deal payments (capitalized and amortized over the contract life). So a big signing depresses net revenue for years, smoothing the hit.',
-  '<b>Why they exist:</b> issuers can route to <b>either</b> network, so incentives are how Mastercard wins and keeps issuer and co-brand deals. As the #2 network this is the core competitive battleground — the same dollars Visa is also spending for the same portfolios.',
-  '<b>Why it matters for the model:</b> the <b>rebate ratio (rebates & incentives ÷ gross revenue)</b> is a key swing factor. A rising ratio can signal intensifying competition; a heavy <b>renewal year</b> steps it up and can optically slow net-revenue growth even when gross volume is perfectly healthy. Watch the ratio, not just net revenue.',
-];
 
 // ── VAS depth. The full rich text is preserved verbatim in `full`; the surface shows a
 //    compact tappable card (icon + lead) and the wall opens in a pop-up (vasPopTiles →
@@ -876,74 +864,49 @@ function ddIndustryBody(c){
   return h;
 }
 // A CSS gross-to-net waterfall — the single most important thing to model at a network.
-function maGrossNetWaterfall(){
-  // Illustrative FY25: gross ~$53B → rebates ~$20.2B (~38% of gross) → net ~$32.8B.
-  // Rendered as a vertical waterfall: full Gross bar → floating rebate "drop" → Net bar.
-  var gross=53, net=32.8, netPct=(net/gross*100), rebPct=((gross-net)/gross*100);
-  var hatch='repeating-linear-gradient(45deg,#E8A00C,#E8A00C 7px,#f0b53a 7px,#f0b53a 14px)';
-  var track=function(inner){ return '<div style="position:relative;height:172px">'+inner+'</div>'; };
-  var lab=function(t,s){ return '<div style="text-align:center;margin-top:9px"><div style="font-size:11.5px;font-weight:800;color:var(--navy)">'+t+'</div><div style="font-size:9.5px;color:var(--mu)">'+s+'</div></div>'; };
-  var val=function(t,c){ return '<div style="position:absolute;top:-21px;left:0;right:0;text-align:center;font-size:13px;font-weight:900;color:'+c+'">'+t+'</div>'; };
-  return '<div class="ov-chart-card" style="padding:22px 18px 14px">'+
-    '<div style="display:flex;gap:16px;align-items:flex-end">'+
-      '<div style="flex:1">'+track('<div style="position:absolute;bottom:0;left:0;right:0;height:100%;background:'+MA_STEEL+';border-radius:6px 6px 0 0">'+val('$53B','var(--navy)')+'</div>')+lab('Gross revenue','all network + services fees')+'</div>'+
-      '<div style="flex:1">'+track(
-        '<div style="position:absolute;top:0;left:-16px;right:-16px;border-top:1px dashed var(--mu);opacity:.4"></div>'+
-        '<div style="position:absolute;bottom:'+netPct.toFixed(1)+'%;left:-16px;right:-16px;border-top:1px dashed var(--mu);opacity:.4"></div>'+
-        '<div style="position:absolute;bottom:'+netPct.toFixed(1)+'%;left:0;right:0;height:'+rebPct.toFixed(1)+'%;background:'+hatch+';border-radius:5px;display:flex;align-items:center;justify-content:center"><span style="font-size:12px;font-weight:900;color:#7A5200">−$20.2B</span></div>')+
-        lab('(−) Rebates & incentives','paid to issuers · acquirers · merchants')+'</div>'+
-      '<div style="flex:1">'+track('<div style="position:absolute;bottom:0;left:0;right:0;height:'+netPct.toFixed(1)+'%;background:'+MA_RED+';border-radius:6px 6px 0 0">'+val('$32.8B',MA_RED)+'</div>')+lab('= Net revenue','FY2025 · what MA reports & grows')+'</div>'+
-    '</div>'+
-    '<div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--bdr);padding-top:13px">'+
-      '<div style="font-size:28px;font-weight:900;color:#B7791F;line-height:1">~38%</div>'+
-      '<div style="font-size:11.5px;color:var(--navy);line-height:1.5;flex:1;min-width:220px">of <b>gross</b> revenue is handed back to customers as rebates & incentives. The <b>rebate ratio</b> is the single most important swing factor — a heavy renewal year steps it up and can optically slow net-revenue growth even when volume is perfectly healthy. <b>Watch the ratio, not just net revenue.</b></div>'+
-    '</div>'+
-    '<div style="font-size:10px;color:var(--mu);margin-top:9px">Illustrative FY25 magnitudes (gross and rebates are not separately reported line items); bars to scale.</div>'+
-  '</div>';
-}
-// Rebates "why they exist / how they behave" as a visual (two flavors + the #2-network
-// battleground) instead of a wall of bullets.
-function maRebatesVisual(){
-  var flavor=function(ic,name,book,effect,col){ return '<div class="reb-fl" style="border-top:3px solid '+col+'"><div class="reb-fl-h"><span class="reb-fl-ic">'+ic+'</span>'+name+'</div><div class="reb-fl-book">'+book+'</div><div class="reb-fl-eff">'+effect+'</div></div>'; };
-  return '<style>'+
-    '.reb-fl-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:2px 0 18px}@media(max-width:640px){.reb-fl-wrap{grid-template-columns:1fr}}'+
-    '.reb-fl{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w)}'+
-    '.reb-fl-h{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:900;color:var(--navy);margin-bottom:7px}.reb-fl-ic{font-size:18px}'+
-    '.reb-fl-book{font-size:11.5px;color:var(--navy);line-height:1.5;margin-bottom:7px}'+
-    '.reb-fl-eff{font-size:11px;color:var(--mu);line-height:1.5;border-top:1px dashed var(--bdr);padding-top:7px}'+
-    '.reb-battle{display:grid;grid-template-columns:1fr auto 1.15fr auto 1fr;align-items:center;gap:8px;margin:4px 0 2px}@media(max-width:640px){.reb-battle{grid-template-columns:1fr}}'+
-    '.reb-net{border:1.5px solid;border-radius:11px;padding:13px 10px;text-align:center}.reb-net-n{font-size:13px;font-weight:900}.reb-net-s{font-size:10px;color:var(--mu);margin-top:2px}'+
-    '.reb-arr{text-align:center;font-size:11px;font-weight:800;color:#B7791F;white-space:nowrap}@media(max-width:640px){.reb-arr{transform:rotate(90deg)}}'+
-    '.reb-prize{border:2px solid var(--navy);border-radius:12px;padding:12px 10px;text-align:center;background:#F8FAFC}.reb-prize-ic{font-size:24px;line-height:1}.reb-prize-n{font-size:13px;font-weight:900;color:var(--navy);margin-top:3px}.reb-prize-s{font-size:10.5px;color:var(--mu);margin-top:3px;line-height:1.4}</style>'+
-    '<p class="ov-diagram-cap" style="margin-bottom:13px"><b>Rebates & incentives</b> are payments to <b>issuers, acquirers and merchants</b> to win and keep volume — booked as a <b>reduction of gross revenue</b> (contra-revenue), not an operating expense. They come in two flavors:</p>'+
-    '<div class="reb-fl-wrap">'+
-      flavor('📊','Volume / performance-based','Accrued as the customer <b>delivers volume</b>.','Moves with activity — scales up and down with the book.',MA_STEEL)+
-      flavor('📝','Upfront / fixed','<b>Capitalized and amortized</b> over the contract life.','A big signing depresses net revenue for <b>years</b> — smoothing the hit.',MA_ORANGE)+
-    '</div>'+
-    '<div class="ov-subh" style="margin-bottom:9px">Why they exist — the #2-network battleground</div>'+
-    '<div class="reb-battle">'+
-      '<div class="reb-net" style="border-color:'+MA_RED+'"><div class="reb-net-n" style="color:'+MA_RED+'">Mastercard</div><div class="reb-net-s">bids incentives</div></div>'+
-      '<div class="reb-arr">incentives&nbsp;$&nbsp;→</div>'+
-      '<div class="reb-prize"><div class="reb-prize-ic">🏦</div><div class="reb-prize-n">The issuer</div><div class="reb-prize-s">routes its portfolio to <b>either</b> network</div></div>'+
-      '<div class="reb-arr">←&nbsp;$&nbsp;incentives</div>'+
-      '<div class="reb-net" style="border-color:var(--mu)"><div class="reb-net-n" style="color:var(--mu)">Visa</div><div class="reb-net-s">bids incentives</div></div>'+
-    '</div>'+
-    '<div class="ov-fynote" style="margin-top:13px">Because an issuer can send its portfolio to <b>either</b> rail, incentives are how Mastercard <b>wins and keeps</b> deals — the same dollars Visa is spending for the same portfolios. As the #2 network, this is the core competitive battleground.</div>';
-}
-// ── Bottom Line ▸ Unit Economics (rebates gross-to-net bridge + fee economics) ──
-function ddUnitEconBody(c){
-  var h='<p class="ov-lede">A network has no cost of goods — its "unit economics" are a <b>take-rate story</b>: how many basis points it keeps on each dollar of volume, and how much of gross revenue it hands back as incentives to win the volume in the first place. Two things to model: the <b>gross-to-net bridge</b> and the <b>rebate ratio</b>.</p>';
-  h+=sec('The gross-to-net bridge — the most important thing to model',
-    '<p class="ov-lede" style="margin-bottom:14px">'+REBATES_INTRO+'</p>'+maGrossNetWaterfall());
-  h+=sec('Rebates & incentives — why they exist and how they behave', maRebatesVisual());
-  h+=sec('Why the economics are so good — the take-rate, unpacked',
-    '<div class="ov-kpis">'+
-      '<div class="ov-kpi"><div class="ov-kpi-l">Blended net yield</div><div class="ov-kpi-v">~31 bps</div><div class="ov-kpi-d muted">net revenue ÷ GDV</div></div>'+
-      '<div class="ov-kpi"><div class="ov-kpi-l">Credit risk taken</div><div class="ov-kpi-v">$0</div><div class="ov-kpi-d muted">issuers hold the receivable</div></div>'+
-      '<div class="ov-kpi"><div class="ov-kpi-l">Incremental cost / txn</div><div class="ov-kpi-v">~nil</div><div class="ov-kpi-d muted">the switch is already built</div></div>'+
-      '<div class="ov-kpi"><div class="ov-kpi-l">Operating margin</div><div class="ov-kpi-v">~57%</div><div class="ov-kpi-d muted">flows from the above</div></div>'+
-    '</div>'+
-    '<div class="ov-fynote" style="margin-top:10px">Because the switching infrastructure is <b>already built</b>, each extra transaction is almost pure margin — a tiny toll, collected billions of times, with the credit risk parked at the banks. That is why a ~31bps take-rate turns into a ~57% operating margin.</div>');
+// ── Bottom Line ▸ Unit Economics: the gross-to-net bridge and the take rate, every figure read from the Results dataset
+// (Bloomberg actuals, FY2023-FY2025). Gross revenue is the payment network's gross revenue before rebates and incentives (the
+// four network assessments); value-added services and solutions are reported net. ──
+function maYv(key, yr){ var m=maResults.views.y.metrics[key]; if(!m) return null; var i=m.periods.indexOf(yr); return i<0?null:m.act[i]; }
+function maUnitEconBody(c){
+  var Y=['2023','2024','2025'];
+  function col(fn){ return Y.map(function(y){ return fn(y); }); }
+  var gross=col(function(y){ return maYv('gross',y); }), reb=col(function(y){ var v=maYv('cinc',y); return v==null?null:-v; }),
+      pnr=col(function(y){ return maYv('pnr',y); }), vas=col(function(y){ return maYv('vas',y); }), rev=col(function(y){ return maYv('rev',y); }),
+      pv=col(function(y){ return maYv('pvol',y); }), op=col(function(y){ return maYv('opinc',y); }), am=col(function(y){ return maYv('amort',y); });
+  function b(v){ return v==null?'\u2014':'$'+(v/1000).toFixed(1)+'B'; }
+  function t(v){ return v==null?'\u2014':'$'+(v/1e6).toFixed(2)+'T'; }
+  function pc(v){ return v==null?'\u2014':(v*100).toFixed(1)+'%'; }
+  function bp(v){ return v==null?'\u2014':(v*1e4).toFixed(1)+' bps'; }
+  function row(l, vals, strong){ return '<tr'+(strong?' class="asc-hl"':'')+'><td>'+esc(l)+'</td>'+vals.map(function(v){ return '<td class="asc-m">'+v+'</td>'; }).join('')+'</tr>'; }
+  var i2=2;
+  var h='<p class="ov-lede">A network has no cost of goods, so its unit economics are a take-rate story: how much of the gross fee on each dollar of volume it keeps after paying customers rebates and incentives. Everything below is read from the reported figures, not estimated.</p>';
+  h+=sec('The gross-to-net bridge, FY2025',
+    '<div class="ov-diagram-cap gmm-cap-top">Payment network gross revenue <b>'+b(gross[i2])+'</b>, less rebates and incentives <b>'+b(reb[i2])+'</b> ('+pc(reb[i2]/gross[i2])+' of gross), leaves payment network net revenue of <b>'+b(pnr[i2])+'</b>. Value-added services and solutions are reported net and add <b>'+b(vas[i2])+'</b>, for net revenue of <b>'+b(rev[i2])+'</b>.</div>'+
+    gmmBars([['Payment network gross revenue',100,b(gross[i2]),'100%'],['Less: rebates and incentives',reb[i2]/gross[i2]*100,b(reb[i2]),pc(reb[i2]/gross[i2])],['Payment network net revenue',pnr[i2]/gross[i2]*100,b(pnr[i2]),pc(pnr[i2]/gross[i2])],['Value-added services and solutions',vas[i2]/gross[i2]*100,b(vas[i2]),pc(vas[i2]/gross[i2])],['Net revenue',rev[i2]/gross[i2]*100,b(rev[i2]),pc(rev[i2]/gross[i2])]])+
+    '<div class="ov-fynote" style="margin-top:8px">Bars are scaled to payment network gross revenue. The check closes: '+b(gross[i2])+' \u2212 '+b(reb[i2])+' + '+b(vas[i2])+' = '+b(rev[i2])+'.</div>');
+  h+=sec('The take rate, three years',
+    '<div class="asc-tblwrap"><table class="asc-tbl"><thead><tr><th></th>'+Y.map(function(y){ return '<th>FY'+y+'</th>'; }).join('')+'</tr></thead><tbody>'+
+      row('Payment network gross revenue', gross.map(b))+
+      row('Rebates and incentives', reb.map(b))+
+      row('Rebates as % of gross revenue', gross.map(function(g,i){ return pc(reb[i]/g); }), true)+
+      row('Payment network net revenue', pnr.map(b))+
+      row('Value-added services and solutions', vas.map(b))+
+      row('Net revenue', rev.map(b))+
+      row('Purchase volume', pv.map(t))+
+      row('Gross revenue per $ of purchase volume', gross.map(function(g,i){ return bp(g/pv[i]); }))+
+      row('Rebates per $ of purchase volume', reb.map(function(r,i){ return bp(r/pv[i]); }))+
+      row('Net yield (network net revenue per $ of purchase volume)', pnr.map(function(n,i){ return bp(n/pv[i]); }), true)+
+      row('Amortization of customer and merchant incentives', am.map(b))+
+      row('Operating margin', op.map(function(o,i){ return pc(o/rev[i]); }))+
+    '</tbody></table></div>'+
+    '<div class="ov-fynote" style="margin-top:8px">Rebates and incentives took a larger share of gross revenue each year, while gross revenue per dollar of volume rose enough to hold the net yield: cross-border and transaction processing grew faster than volume. Before 2023 Mastercard classified part of its other revenue inside the network lines, so the series are not comparable with 2020\u20132022.</div>');
+  h+=sec('How rebates and incentives are booked',
+    '<div class="ov-callout">'+bullets([
+      '<b>Contra-revenue, not an expense.</b> The 10-K says net revenue categories \u201care recognized net of rebates and incentives provided to customers\u201d, and that \u201crebates and incentives can be either fixed or variable and are attributed to the category of revenue to which they pertain\u201d.',
+      '<b>Variable</b> incentives move with the customer\u2019s volume; <b>fixed</b> and upfront incentives are capitalized and amortized over the contract, which is the amortization line in the table.',
+      'The 10-K adds that customers can reassess their commitments and that some have exclusive or near-exclusive relationships with competitors, so incentives are how the network wins and keeps volume.'])+'</div>');
+  h+='<div class="ov-foot">Sources \u2014 Mastercard FY2025 Form 10-K (Item 7; Note 3) and earnings releases as recorded by Bloomberg, through the Results dataset. Purchase volume is Mastercard\u2019s supplemental data as recorded by Bloomberg and is smaller than the gross dollar volume the 10-K headlines ($10.6T in FY2025), which also counts cash.</div>';
   return h;
 }
 // ── Bottom Line ▸ Suppliers. Two layers: (1) the FOUR-PARTY model — the conceptual
@@ -1531,7 +1494,7 @@ function deepDiveHtml(c){
   // Bottom Line — the old Margins pane is superseded by General (same margins on the Results engine, from Bloomberg actuals and the Summit model)
   h+=pane('bottomline', true, [
     { k:'blgen', l:'General', body:resultsHtml('MA_BL') },
-    { k:'unit', l:'Unit Economics', body:ddUnitEconBody(c) },
+    { k:'unit', l:'Unit Economics', body:maUnitEconBody(c) },
     { k:'suppliers', l:'Supply Chain', body:ddSuppliersBody(c) } ]);
   // Evolution — Earnings · Results · Estimates (Estimates is the Street's revision history with the Summit model's one snapshot)
   h+=pane('evolution', true, [

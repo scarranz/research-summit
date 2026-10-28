@@ -11,7 +11,15 @@ W=os.path.abspath(os.path.join(HERE,"..","..",".."))+os.sep
 with contextlib.redirect_stdout(io.StringIO()):
     exec(open(os.path.join(HERE,'ma_build.py'),encoding='utf-8').read())
 
+# 'card' = Domestic assessments + Cross-border volume fees. The Summit model forecasts the two as ONE line (Card related activity, SEG4_REV; its
+# history equals the sum, e.g. 2Q26 3,154 + 3,460 = 6,614) while Bloomberg consensus carries them apart, so the like-for-like Street figure is their sum.
+def _sum2(a,b): return None if a is None or b is None else a+b
+data['card']=dict(label='Card related activity (domestic assessments + cross-border volume fees)',short='Card related',grp='Revenue build (gross to net)',kind='kpi',flip=1,
+    act={n:_sum2(data['dom']['act'][n],data['xb']['act'][n]) for n in Qn},cons={n:_sum2(data['dom']['cons'][n],data['xb']['cons'][n]) for n in Qn},
+    ya={y:_sum2(data['dom']['ya'][y],data['xb']['ya'][y]) for y in Y},yc={y:_sum2(data['dom']['yc'][y],data['xb']['yc'][y]) for y in Y})
+KEYS=[c[1] for c in C]; KEYS.insert(KEYS.index('xb')+1,'card')
 NOTES={
+ 'card':"Domestic assessments plus cross-border volume fees. The Summit model forecasts the two as a single line, Card related activity, so this metric adds the two Bloomberg lines to compare like for like; the reported history of the two sums to the model's line.",
  'rev':"Net revenue (Bloomberg IS_COMP_SALES) — gross revenue less client incentives; Q2 2026 $9,277M is the release. Mastercard guides growth (currency-neutral, ex-acquisitions), not a dollar level, so no guidance band is drawn; the growth guide is in the Earnings Setup notes.",
  'opinc':"Operating income as reported (Bloomberg IS_EBIT_AS_REPORTED, GAAP). It carries litigation provisions and restructuring that the company strips out of its adjusted figure, so it sits below the adjusted operating income Mastercard quotes on the call. The Street series is on the same GAAP basis.",
  'ebitda':"Bloomberg's comparable EBITDA (IS_COMPARABLE_EBITDA), the adjusted measure: operating income before depreciation and amortization with one-offs removed. It is the only profit line here on the adjusted basis.",
@@ -65,9 +73,16 @@ SUMNOTE={
  'pvol':"Summit (annual): the model's purchase volume (stored in $B, shown here in $M), ties to the reported history.",
  'eps':"Summit (annual): the model's EPS line (ADJ_EPS), which ties to Bloomberg's GAAP-comparable actual for 2022 to 2025 (FY2025 $16.52)."
 }
+SQNOTE={
+ 'opex':"Summit (quarterly): the model's operating expenses line, which includes the litigation provision; its 1Q26 and 2Q26 values are the estimates the model held going into those prints.",
+ 'lit':"Summit (quarterly): the model's own provision, well above the Street, which carries little.",
+ 'invinc':"Summit (quarterly): the model's interest income, shown with the Bloomberg sign (a negative line); the model's interest income equals Bloomberg's investment income with the sign flipped (2Q26 88).",
+ 'intnet':"Summit (quarterly): the model's non-operating line (interest income less interest expense plus other income) with the Bloomberg sign.",
+ 'netint':"Summit (quarterly): the model's interest expense less its interest income.",
+}
 PER_METRIC_LABEL={}
 GROUPS_Q=[
- ('top','Top Line','rev',[('Totals',['rev']),('Revenue build (gross to net)',['gross','dom','xb','tp','oth','cinc']),('Net revenue by segment',['pnr','vas']),('Volumes & transactions',['pvol','ptx'])]),
+ ('top','Top Line','rev',[('Totals',['rev']),('Revenue build (gross to net)',['gross','dom','xb','card','tp','oth','cinc']),('Net revenue by segment',['pnr','vas']),('Volumes & transactions',['pvol','ptx'])]),
  ('margins','Margins & Profitability','opinc',[('Profit',['opinc','ebitda','eps','ni','pti']),('Operating costs',['opex','ga','am','dna','sbc','lit']),('Below the line',['intexp','netint','intnet','invinc','oie','tax']),('Cash flow & capital',['cfo','fcf','capex','buyback','shares','amort'])])]
 def arrfmt(a): return '['+', '.join('null' if v is None else (str(v)) for v in a)+']'
 def metric_lines(key,P,getA,getC,withsum):
@@ -76,7 +91,8 @@ def metric_lines(key,P,getA,getC,withsum):
     extra=''
     if key in('opinc','ebitda'): extra=", marginOf: 'rev', marginLabel: '%s'"%('operating margin' if key=='opinc' else 'EBITDA margin')
     sm=[None]*len(P)
-    if withsum and key in summit: sm=summit[key]
+    if withsum is True and key in summit: sm=summit[key]
+    elif withsum=='q' and key in SQV: sm=[rnd(SQV[key].get(p),dp) for p in P]
     esc=lambda t:t.replace('\\','\\\\').replace("'","\\'")
     cm=''
     L=[]
@@ -87,7 +103,7 @@ def metric_lines(key,P,getA,getC,withsum):
     L.append("          cons:   %s,"%arrfmt(c))
     L.append("          guideLo:%s,"%arrfmt([None]*len(P)))
     L.append("          guideHi:%s,"%arrfmt([None]*len(P)))
-    L.append("          note: '%s' },"%esc(NOTES[key]+((' '+SUMNOTE[key]) if (withsum and key in SUMNOTE) else '')))
+    L.append("          note: '%s' },"%esc(NOTES[key]+((' '+SUMNOTE[key]) if (withsum is True and key in SUMNOTE) else ((' '+SQNOTE[key]) if (withsum=='q' and key in SQNOTE) else ''))))
     return "\n".join(L)
 def sections_js(indent='      '):
     o=[indent+"sections: ["]
@@ -100,7 +116,7 @@ def sections_js(indent='      '):
     return "\n".join(o)
 Pq=[ql(n) for n in Qn]; Py=[str(y) for y in Y]
 QN=("Reported actuals and the Bloomberg consensus that stood one quarter out, both from the rolling BBG_CONSENSUS.txt archive (23 snapshots, May 2021 to Oct 28 2026): each reported quarter takes the last snapshot before its print, and the four forward quarters come from the newest snapshot. "
-    "Mastercard guides growth rates (currency-neutral, ex-acquisitions), not dollar levels, so no guidance band is drawn. The Summit model is annual-only, so its column is blank here. Capex and share repurchases are shown as positive spend; client incentives stay negative (contra-revenue). For 2026 the Street quarters tie to the Street year within about 0.2% on revenue, operating income, EBITDA, net income, D&A and operating cash flow (3% on capex), but each cell is still its own contributor set, so do not add or subtract across lines.")
+    "Mastercard guides growth rates (currency-neutral, ex-acquisitions), not dollar levels, so no guidance band is drawn. Summit is the DCF model's own quarterly estimate on the lines the Street also models: the 1Q26 and 2Q26 values are what the model held going into those prints, 3Q26 and 4Q26 are its forecasts (no 2027 quarter is loaded: the model's quarterly chain breaks from 1Q27), and the model has no quarterly share count, D&A, cash flow, capex or volume lines. Capex and share repurchases are shown as positive spend; client incentives stay negative (contra-revenue). For 2026 the Street quarters tie to the Street year within about 0.2% on revenue, operating income, EBITDA, net income, D&A and operating cash flow (3% on capex), but each cell is still its own contributor set, so do not add or subtract across lines.")
 YN=("Fiscal-year actuals (the archive's fy0) and the Street's full-year consensus (fy+1 to fy+3 from the newest snapshot), with the Summit DCF model's own annual line (2022 to 2029) on the lines the model carries: from the Projection History tab revenue, operating income, EBITDA, net income, D&A, interest expense, operating cash flow, capex, free cash flow and diluted shares; from the Segments tab adjusted EPS, Payment Network and VAS net revenue, the gross-to-net revenue build, operating expenses, G&A, advertising and marketing, stock-based comp, litigation, tax, repurchases, purchase volume and switched transactions. "
     "Summit's operating income and EBITDA definitions can differ from Bloomberg's (the model's own lines, not a restatement), and the model's operating expenses run 1% to 2.5% above Bloomberg's history; the model's EPS line ties to Bloomberg's actual.")
 out=[]
@@ -117,7 +133,7 @@ out.append("""// results-data/ma.js — Mastercard (MA) dataset for the standard
 //             Tab Projection History: revenue, operating income, EBITDA, net income, D&A, interest expense, CFO, capex (positive), FCF,
 //             diluted shares. Tab Segments: EPS, Payment Network and VAS, the gross-to-net revenue build, operating expenses, G&A,
 //             advertising and marketing, SBC, litigation, tax, repurchases, purchase volume and switched transactions (25 lines in all;
-//             the model's history ties to the Bloomberg actuals). The model has no quarterly projections, so quarterly summit stays null.
+//             the model's history ties to the Bloomberg actuals). Quarterly summit (tab Projection History, newest save): 1Q26 and 2Q26 are the estimates the model held going into those prints, 3Q26 and 4Q26 its forecasts, on the lines the Street also models; see ma_build.py SQ.
 //   guideLo / guideHi — null: Mastercard guides growth rates, not dollar levels.
 //
 // Integrity checked on load: fq+N == fq0+N, fq-3 == fq0-3 and every close_fqN is that quarter's calendar end (23 snapshots, 0 mismatches).
@@ -129,14 +145,14 @@ out.append("""// results-data/ma.js — Mastercard (MA) dataset for the standard
 export var maResults = {
   updated: 'Oct 2026',
   intro: 'How Mastercard’s reported results have stacked up against what the Street expected, and what our Summit model projected on the annual view. Pick a period view and a metric — each print shows the actual against the Street number that stood going in, with the surprise in percent.',
-  source: 'Actuals and Street consensus: Bloomberg via BBG_CONSENSUS.txt (23 snapshots, latest data_as_of 2026-10-28, reported through 2026 Q2). Summit: DCF model, DCF MA - New.xlsm Projection History read 2026-10-28; frozen, not live; annual only. EPS is the Bloomberg GAAP-comparable line.',
+  source: 'Actuals and Street consensus: Bloomberg via BBG_CONSENSUS.txt (23 snapshots, latest data_as_of 2026-10-28, reported through 2026 Q2). Summit: DCF model, DCF MA - New.xlsm Projection History read 2026-10-28; frozen, not live; annual and, on the lines the Street also models, quarterly. EPS is the Bloomberg GAAP-comparable line.',
   views: {
     q: {
       label: 'Quarterly',
       note: '%s',
       metrics: {"""%(QN.replace("'","\\'")))
-for k in [c[1] for c in C]:
-    out.append(metric_lines(k,Pq,lambda D:[D['act'][n] for n in Qn],lambda D:[D['cons'][n] for n in Qn],False))
+for k in KEYS:
+    out.append(metric_lines(k,Pq,lambda D:[D['act'][n] for n in Qn],lambda D:[D['cons'][n] for n in Qn],'q'))
 out.append("      },")
 out.append(sections_js())
 out.append("    },")
@@ -144,7 +160,7 @@ out.append("""    y: {
       label: 'Annual',
       note: '%s',
       metrics: {"""%YN.replace("'","\\'"))
-for k in [c[1] for c in C]:
+for k in KEYS:
     out.append(metric_lines(k,Py,lambda D:[D['ya'][y] for y in Y],lambda D:[D['yc'][y] for y in Y],True))
 out.append("      },")
 out.append(sections_js())

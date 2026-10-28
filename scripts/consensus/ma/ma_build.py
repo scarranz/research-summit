@@ -130,7 +130,7 @@ SEGCOL={2029:5,2028:6,2027:7,2026:8,2025:9,2024:10,2023:11,2022:12}
 def segrow(code=None,label=None):
     for r in SEGR:
         if code is not None and r[3]==code: return r
-        if label is not None and r[2]==label and not r[3]: return r
+        if label is not None and r[2]==label: return r
     raise SystemExit('Segments row not found: %s%s'%(code,label))
 SEG={'pnr':('SEG1_REV',None,1,False),'vas':('SEG2_REV',None,1,False),'gross':('SEG3_REV',None,1,True),'tp':('SEG6_REV',None,1,False),
      'oth':('SEG7_REV',None,1,True),'cinc':('SEG8_REV',None,1,False),'opex':('OPEX',None,1,False),'ga':('G&A',None,1,False),'am':('MARKETING',None,1,False),
@@ -144,6 +144,34 @@ for key,(code,label,mult,skip22) in SEG.items():
         elif key=='eps': arr.append(round(v,2))
         else: arr.append(int(math.floor(abs(v*mult) if key=='buyback' else v*mult+0.5)))
     summit[key]=arr
+# ---- Summit QUARTERLY (tab Projection History, quarterly columns, snapshot ID 3 = rows 2-55: the newest save, after the 2Q26 print).
+# Columns 1Q26 and 2Q26 hold the model's own pre-print estimates for those quarters (the model was built in 2026, so earlier quarters carry
+# only the actuals tab); 3Q26 and 4Q26 are forecasts. Read through 4Q26 ONLY: from 1Q27 the model's quarterly chain breaks on the lines that sum
+# other lines (net revenue, payment network, gross, transaction processing, operating income, EBITDA, EBT, tax, net income and SBC go negative or
+# explode) and the stand-alone lines do not tie to the model's own 2027 year either (Card related activity: four 2027 quarters sum to 24.5B against 29.0B
+# in the year), so no 2027 quarter is loaded.
+SQ={'rev':('SEG_REV',1,True),'pnr':('SEG1_REV',1,True),'vas':('SEG2_REV',1,False),'gross':('SEG3_REV',1,True),'card':('SEG4_REV',1,False),
+    'tp':('SEG6_REV',1,True),'oth':('SEG7_REV',1,False),'cinc':('SEG8_REV',1,False),'opex':('OPEX',1,False),'ga':('G&A',1,False),
+    'am':('MARKETING',1,False),'lit':('PROV_LIT',1,False),'opinc':('SEG_OPINC',1,True),'ebitda':('SEG_EBITDA',1,True),'pti':('SEG_EBT',1,True),
+    'tax':('SEG_INCTAX',1,True),'ni':('SEG_NETINC',1,True),'sbc':('SEG_SBC',1,True),'intexp':('SEG_INT_EXP',1,False),
+    'invinc':('SEG_INT_INC',-1,False),'intnet':('SEG_NON_OPINC',-1,False),'buyback':('STOCK_BUYBACK',-1,False)}
+_hq={hdr[c]:c for c in range(len(hdr)) if isinstance(hdr[c],str) and hdr[c].startswith('Q') and ' - ' in hdr[c]}
+_rowq={R[i][1]:i for i in range(1,56) if R[i][1]}
+def _qlab(h): a,b=h.replace('Q','').split(' - '); return '%sQ%s'%(a,b[2:])
+SQV={}   # key -> {period label: value}, summit's own sign convention already flipped to the dataset's
+SQ_PERIODS=['1Q26','2Q26','3Q26','4Q26']
+for key,(code,sg,cut) in SQ.items():
+    row=R[_rowq[code]]; d={}
+    for per in SQ_PERIODS:
+        h='Q%s - 20%s'%(per[0],per[2:]); v=row[_hq[h]]
+        if isinstance(v,(int,float)) and v!=0: d[per]=v*sg
+    SQV[key]=d
+_ii=SQV.get('invinc',{}); _ie={}
+_ri=R[_rowq['SEG_INT_EXP']]
+for per in SQ_PERIODS:
+    v=_ri[_hq['Q%s - 20%s'%(per[0],per[2:])]]
+    if isinstance(v,(int,float)) and v!=0 and per in _ii: _ie[per]=v+_ii[per]   # interest expense less interest income = net interest expense
+SQV['netint']=_ie
 def rnd(x,dp):
     if x is None: return None
     f=10**dp; r=math.floor(abs(x)*f+0.5)/f

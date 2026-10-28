@@ -64,7 +64,7 @@ var yIdx = annualIdx(maResults.views.y);
 
 export var maSetup = {
   updated: maResults.updated,
-  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, and margin lines for the profit lines (only operating income / EBITDA carry a margin — revenue, VAS, purchase volume, processed transactions and the other KPIs do not). The window is rolling: quarterly shows the last 8 reported quarters + the one next (forecast) quarter; annual shows the last 4 fiscal years + the next 2. Street from the Bloomberg archive; Summit is the DCF model’s own annual line (annual view only — the MA model has no quarterly projections).',
+  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, and margin lines for the profit lines (only operating income / EBITDA carry a margin — every other line does not). The window is rolling: quarterly shows the last 8 reported quarters + the one next (forecast) quarter; annual shows the last 4 fiscal years + the next 2. Street from the Bloomberg archive; Summit is the DCF model’s own annual line (annual view only — the MA model has no quarterly projections).',
   source: maResults.source,
   views: {
     q: { label: 'Quarterly', note: 'Rolling — the last 8 reported quarters plus the one next (forecast) quarter; it advances by itself as new prints land. ' + maResults.views.q.note,

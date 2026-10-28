@@ -703,12 +703,10 @@ A metric can therefore be missing in two distinct directions, and they mean diff
   Results / chart KPIs are exactly the `metric*` (headline) and `kpi*` (custom) slots that
   `G:\My Drive\Summit\Docs\0\BBG_CONSENSUS.txt` carries for THAT ticker — read them from the file,
   never decide them yourself and never copy them from the Overview's headline-stats box (those are
-  qualitative colour and can legitimately differ). For **MA** the file's four customs are
-  **VAS revenue · purchase_volume · client_incentives · processed_transactions** — NOT "GDV", NOT
-  "cross-border volume" (cross-border volume is not even in the file). A count metric
-  (`processed_transactions`: `unit` empty + `scale` `M`) renders as a **count, never with a `$`**
-  (results engine `unit:'cnt'`).
+  qualitative colour and can legitimately differ). For **MA** (Oct-2026 export, 23 snapshots) the file populates **22 headline slots** (metric1–39: revenue, operating income, EBITDA, EPS, net income, pre-tax, opex lines, interest / investment / other income, tax, cash flow, FCF, capex, repurchases, diluted shares) and **12 customs** (kpi1–12: purchase volume, processed transactions, Payment Network, gross revenue, domestic assessments, cross-border volume fees, transaction processing, other revenue, client incentives, incentive amortization, VAS, litigation provision) — and **every slot with valid values renders**. This supersedes the earlier 8-headline / 4-custom set; the old 'cross-border volume is not in the file' note is also superseded (cross-border now arrives as *Cross-Border Volume **Fees***, a revenue line, not a volume). Not "GDV". A count metric (`processed_transactions`, diluted shares: the file says unit USD / scale M but they are counts) renders as a **count, never with a `$`** (results engine `unit:'cnt'`; CE_CONS `u:'B'`). The revenue build reconciles in ACTUALS only (Q2 2026: 3,154 + 3,460 + 4,508 + 326 = gross 11,448; − incentives 5,997 = Payment Network 5,451; + VAS 3,826 = net 9,277) — never sum consensus across lines. **Slot numbers are not stable across exports**: read `metricN`/`metric_kpiN` names every time (the Oct-2026 file went to 50 slots per block).
 
+> **Oct 2026 update:** the export was widened and re-pulled (23 snapshots; 22 headline + 12 KPI for MA); steps 1–2 below were re-done against it — `js/results-data/ma.js`, `ma-setup.js` and `CE_CONS` regenerated, Summit annual lines from the local `DCF MA - New.xlsm` (Projection History). Steps 3–6 still pending.
+>
 > **Action plan — MA earnings remediation (opened 2026-07-31).** A prior pass shipped the wrong KPIs
 > and half-authored sections. Fixed in order, each grounded in the file/transcript, never invented:
 > 1. **KPIs → the file's set** (`js/results-data/ma.js` + `ma-setup.js`): customs = VAS · purchase

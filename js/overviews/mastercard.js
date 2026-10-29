@@ -17,7 +17,7 @@ import { maCeHtml, maCeWire, maCeBuild, maCePop } from './ma-ce.js';   // Evolut
 import { MA_SENS_MODEL } from './ma-sensitivity-data.js';   // Valuation ▸ Sensitivity: frozen Summit model snapshot
 import { maHistMult } from './ma-histmult.js';   // Valuation ▸ Historic Multiple (copy of meta-histmult.js; P/E now, EV/EBITDA when net debt is loaded)
 import { maStdPeerScatter, maWireScatters, maValuationPeersBody } from './ma-peers.js';   // OV-6 peer map + Valuation ▸ Peers (denominators from Bloomberg, live quotes)
-import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/ma.js)
+import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCostsHtml, initSegmentsCosts, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/ma.js)
 import { maResults } from '../results-data/ma.js';   // Ownership / Governance charts read the Bloomberg annual series
 import { SUMMIT_CAT } from '../viz-palette.js';
 
@@ -1514,11 +1514,12 @@ function deepDiveHtml(c){
     { k:'segoth', l:'Other', body:segmentsOtherHtml('MA') },
     { k:'segcus', l:'Customers', body:segmentsCustomersHtml('MA') },
     { k:'build', l:'Revenue build', body:resultsHtml('MA_TLG') },
-    { k:'drivers', l:'Drivers', body:resultsHtml('MA_DRV') } ]);
+    { k:'drivers', l:'Drivers', body:resultsHtml('MA_DRV') },
+    { k:'unit', l:'Take rate', body:maUnitEconBody(c) } ]);   // the gross-to-net bridge and the take rate are revenue-side: they moved here from Bottom Line (analyst, Oct 29 2026)
   // Bottom Line — the old Margins pane is superseded by General (same margins on the Results engine, from Bloomberg actuals and the Summit model)
   h+=pane('bottomline', true, [
     { k:'blgen', l:'General', body:resultsHtml('MA_BL') },
-    { k:'unit', l:'Unit Economics', body:maUnitEconBody(c) },
+    { k:'costs', l:'Operating costs', body:segmentsCostsHtml('MA') },
     { k:'suppliers', l:'Supply Chain', body:ddSuppliersBody(c) } ]);
   // Evolution — Earnings · Results · Estimates (Estimates is the Street's revision history with the Summit model's one snapshot)
   h+=pane('evolution', true, [
@@ -1562,6 +1563,7 @@ function buildSub(root, group, key){
   if(group==='topline' && key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'MA'); });
   if(group==='topline' && key==='build') rs('.ovt-subpane[data-ovst="build"]','MA_TLG');
   if(group==='topline' && key==='drivers') rs('.ovt-subpane[data-ovst="drivers"]','MA_DRV');
+  if(group==='bottomline' && key==='costs') requestAnimationFrame(function(){ initSegmentsCosts(root, 'MA'); });
   if(group==='bottomline' && key==='blgen') rs('.ovt-subpane[data-ovst="blgen"]','MA_BL');
   if(group==='evolution' && key==='earnings') maCeBuild(root);
   if(group==='evolution' && key==='results') rs('.ovt-subpane[data-ovst="results"]','MA');

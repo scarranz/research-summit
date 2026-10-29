@@ -777,9 +777,9 @@ function ceSetupBody(c){
     if(hasGrid){
       b+='<div class="ov-diagram-cap" style="margin:6px 0 6px;display:flex;flex-wrap:wrap;align-items:center;gap:12px"><b>Estimates</b>'+
         '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
-          '<button type="button" class="ce-ev-pill active" data-ceev="cons">Consensus</button>'+
+          '<button type="button" class="ce-ev-pill" data-ceev="cons">Consensus</button>'+
           '<button type="button" class="ce-ev-pill" data-ceev="us">Summit</button>'+
-          '<button type="button" class="ce-ev-pill" data-ceev="both">Both</button>'+
+          '<button type="button" class="ce-ev-pill active" data-ceev="both">Both</button>'+
         '</span>'+
         // Growth lens. `fq-3` and `fq0` are both reported actuals, so the same consensus cell can
         // be read against either base — that is exactly why the archive carries fq-3.
@@ -789,7 +789,7 @@ function ceSetupBody(c){
         '<span class="ce-gseg"><button type="button" data-cemm="on">Margin</button>'+
           '<button type="button" class="active" data-cemm="off">Hide mgn</button></span>'+
       '</div>';
-      b+='<div class="ce-evwrap" data-ev="cons" data-g="yoy">';
+      b+='<div class="ce-evwrap" data-ev="both" data-g="yoy">';
       b+='<div class="ce-row-cap">The quarter — down the income statement: volume, transactions, revenue and its build, then costs, profit and cash</div>'+ceGrid(u,'all');
       b+='</div>';
       // (The "debate" line-by-line block + its synth line were removed per request — Aug 2026.)
@@ -1104,7 +1104,7 @@ function cePrintBlock(qLabel, r, us){
     '</div>';
     return '<div class="ce-fz-t'+(guided?' ce-fz-guided':'')+'" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'" data-cat="'+ceCat(m.k)+'" data-mixed="'+(mixed?1:0)+'" style="--od:'+r.od+'">'+hdr+tbl+'</div>';
   });
-  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="on" data-view="cards" data-ord="stmt" data-fzcat="all" data-lay="rows" data-fzgd="off"><div class="ce-fz-h">The print — down the income statement'+
+  return '<div class="ce-fz" data-g="yoy" data-ev="both" data-mm="on" data-view="cards" data-ord="stmt" data-fzcat="all" data-lay="rows" data-fzgd="off"><div class="ce-fz-h">The print — down the income statement'+
     ceQ('fz-'+ceQkey(qLabel),'How this is built',
       '<p>One block, archive-driven. Every number and surprise is computed from <code>BBG_CONSENSUS.txt</code>: the last snapshot before the print carries the consensus (<code>fq+1</code>), a later snapshot carries the print (<code>fq0</code>). Reconstructed from data, so it cannot drift.</p>'+
       '<ul><li><b>Order</b> — by default the lines read top-to-bottom down the income statement (top line → sales by segment → margins → profit by segment → cash &amp; shares → EPS last). <b>By surprise</b> re-sorts to the biggest |Street surprise| first.</li>'+
@@ -1119,9 +1119,9 @@ function cePrintBlock(qLabel, r, us){
     // (slot kept) in Chart via .ce-gseg-cardsonly — the four above stay put.
     '<span class="ce-gseg"><button type="button" class="active" data-fzview="cards">Cards</button>'+
       '<button type="button" data-fzview="chart">Chart</button></span>'+
-    '<span class="ce-gseg"><button type="button" class="active" data-fzev="cons">vs Street</button>'+
+    '<span class="ce-gseg"><button type="button" data-fzev="cons">vs Street</button>'+
       '<button type="button" data-fzev="us">vs Summit</button>'+
-      '<button type="button" data-fzev="both">Both</button></span>'+
+      '<button type="button" class="active" data-fzev="both">Both</button></span>'+
     '<span class="ce-vdf"><button type="button" class="active" data-vdf="all">All</button>'+
       '<button type="button" data-vdf="beat">Beats</button>'+
       '<button type="button" data-vdf="miss">Misses</button>'+
@@ -1721,8 +1721,8 @@ function wireCeTrack(root){
     pane.querySelectorAll('.ce-fz').forEach(function(f){ f.setAttribute('data-g', v); });
   }
   ceSetLens('yoy');
-  pane.querySelectorAll('.ce-ev-pill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ceev')==='cons'); });
-  pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-ev','cons'); });
+  pane.querySelectorAll('.ce-ev-pill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ceev')==='both'); });
+  pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-ev','both'); });   // Summit and the Street open side by side (analyst, Oct 29 2026)
   // Margin default: off, and its own segment's active state set independently of the growth lens.
   pane.querySelectorAll('.ce-gseg button[data-cemm]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-cemm')==='off'); });
   pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-mm','off'); });

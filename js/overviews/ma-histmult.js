@@ -9,6 +9,7 @@ import { maResults } from '../results-data/ma.js';
 import { fetchPriceHistory } from '../api.js';
 import { SUMMIT_CAT, SUMMIT_MUTE, SUMMIT_NEG, fade } from '../viz-palette.js';
 import { MA_HM_Q } from './ma-histmult-data.js';
+import { MA_PX_FALLBACK } from './ma-price-fallback.js';   // dated daily closes, used only when the live service does not answer
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function num(v){ return (typeof v==='number' && isFinite(v)) ? v : null; }
@@ -199,6 +200,7 @@ function hmLoad(){
   return get('MA', START, TODAY)
     .then(function(priceRes){
     var priceRows=(priceRes && priceRes.success && Array.isArray(priceRes.data)) ? priceRes.data : [];
+    if(!priceRows.length){ priceRows=MA_PX_FALLBACK.rows.map(function(r){ return { t:r[0], c:r[1] }; }); hmData.fallback=true; }   // live service did not answer: dated closes
     PX = buildPxFromHistory(priceRows);
     SHARES = buildShares(); NETDEBT = buildNetDebt();
     EST.ebitda = buildEstY('ebitda');
@@ -710,10 +712,11 @@ function footHtml(){
     'the vertical drops in a forward-multiple chart are that roll, not a re-rating. '+
     '<b>NTM</b> blends FY0 \u00d7 (days left in FY0 \u00f7 365) + FY1 \u00d7 the rest, so it slides instead of stepping. '+
     'Quarterly and annual points are the <b>average</b> over the period. '+
-    '<b>Sources.</b> Price: Massive daily close (live). Consensus EPS and EBITDA: Bloomberg consensus export, one vintage per print ('+
-    esc(vs[0].id)+' to '+esc(vs[vs.length-1].id)+'). Reported EPS, EBITDA and diluted shares: the same Bloomberg export ('+
+    (hmData.fallback?'<b>Prices through the '+esc(MA_PX_FALLBACK.asOf)+' (Yahoo Finance daily closes; the live service did not answer).</b> ':'')+
+    '<b>Sources.</b> Price: '+(hmData.fallback?'dated daily close':'Massive daily close (live)')+'. Consensus EPS and EBITDA: Bloomberg consensus export, one vintage per print ('+
+    esc(vs[0].id)+' to '+esc(vs[vs.length-1].id)+'). Reported EPS, EBITDA and diluted shares: the same Bloomberg export (3Q26: the Oct 29 2026 release) ('+
     esc(n0[0])+'\u2013'+esc(n1[0])+'), stepped on the first snapshot that carries each print. EPS is the GAAP-comparable line ($4.97 in 2Q26 against the company-adjusted $5.04). '+
-    '<b>EV/EBITDA</b> uses net debt from the 10-K and 10-Q balance sheets (total debt outstanding less cash and cash equivalents), which is not in the Bloomberg export. It is known at 12/31 of FY2021-FY2025 and at Mar and Jun 2026; between those dates the line steps from the last known value, and before the 2021 year-end it is empty.';
+    '<b>EV/EBITDA</b> uses net debt from the 10-K and 10-Q balance sheets (total debt outstanding less cash and cash equivalents), which is not in the Bloomberg export. It is known at 12/31 of FY2021-FY2025 and at Mar, Jun and Sep 2026; between those dates the line steps from the last known value, and before the 2021 year-end it is empty.';
 }
 
 // ── Render ───────────────────────────────────────────────────────────────────────

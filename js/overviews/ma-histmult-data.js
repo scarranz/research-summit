@@ -13,6 +13,7 @@
 //            4Q21 EV/EBITDA is a gap (never a made-up zero).
 // The "published" date is the date of the first Bloomberg snapshot that carries the print, a few days after the call; the chart steps
 // each series on that date.
+// 3Q26 is the Oct 29 2026 release (EPS, EBITDA = adjusted operating income + D&A, shares, and the Sep 30 2026 balance sheet: cash 10,147, short-term debt 1,749 + long-term debt 22,189), added before the next Bloomberg export carries it.
 // [quarter, period end, published, EPS, EBITDA, operating income, shares, cash, debt, net debt] — US$ million (EPS in $)
 export var MA_HM_Q = [
   ['1Q21','2021-03-31','2021-05-04', 1.83, 2360, 2197, 998, null, null, null],
@@ -37,4 +38,5 @@ export var MA_HM_Q = [
   ['4Q25','2025-12-31','2026-02-03', 4.52, 5381, 4910, 898, 10566, 19000, 8434],
   ['1Q26','2026-03-31','2026-05-05', 4.35, 5408, 4907, 893, 7906, 18960, 11054],
   ['2Q26','2026-06-30','2026-10-28', 4.97, 5978, 5587, 883, 11291, 24643, 13352],
+  ['3Q26','2026-09-30','2026-10-29', 5.28, 6261, 5862, 876, 10147, 23938, 13791],
 ];

@@ -102,6 +102,7 @@ var RS_FWD  = '#2563EB';
 // hypothetical seventh entity silently re-used the first one's colour. Both are categorical-colour
 // errors. Now the portal's fixed categorical order, assigned by slot and never cycled.
 var SG_RAMP = SUMMIT_CAT;
+function sgY2Ink(){ var d = sgData(); return !!(d && d.seg.colorY2); }   // a dataset may keep a second-axis series in its own ink instead of grey
 function sgRamp(i){ var d = sgData(), r = (d && d.seg.ramp) || SG_RAMP; return r[i] || SUMMIT_MUTE; }   // a dataset may restrict the series colours (SPOT: slate greys, no categorical palette)
 
 function rsRR(ctx, x, y, w, h, r){
@@ -565,7 +566,7 @@ function modesHtml(id, opts, list, view){
 function chipsHtml(id, list, view, firstIsTarget){
   return blockSeries(list, view).map(function(x, i){
     var md = blk(id).mode || 'amt', money = x.d.unit === 'usdM' || x.d.unit === 'eps' || (md !== 'amt' && !(md === 'growth' && blk(id).growUnit === 'amt'));   // the chip wears the colour the chart draws: a count is grey only while it sits on the second axis
-    var color = !money ? RS_CONS : (firstIsTarget && i === 0 ? RS_ACT : sgRamp(i));
+    var color = !money && !sgY2Ink() ? RS_CONS : (firstIsTarget && i === 0 ? RS_ACT : sgRamp(i));
     return '<button type="button" class="rs-leg' + (vis(id, x.key) ? '' : ' off') +
       '" data-sgleg="' + esc(id) + '|' + esc(x.key) + '" title="Show / hide">' +
       '<span class="rs-leg-line" style="background:' + color + '"></span>' +
@@ -653,7 +654,7 @@ function buildChartBlock(id, list, view, opts){
       return (x.d.unit === 'usdM') ? v / 1000 : (x.d.unit === 'pct' ? v * 100 : v);
     });
     var isTarget = opts.firstIsTarget && slotOf[x.key] === 0;
-    var color = solo ? RS_ACT : (!m ? RS_CONS : (isTarget ? RS_ACT : sgRamp(slotOf[x.key])));
+    var color = solo ? RS_ACT : (!m && !sgY2Ink() ? RS_CONS : (isTarget ? RS_ACT : sgRamp(slotOf[x.key])));
     datasets.push((m && opts.bars && !isTarget && mode !== 'idx')
       ? { label: x.label || x.d.short, data: data, type: 'bar', backgroundColor: color,
           maxBarThickness: 34, order: 3, yAxisID: 'y' }
@@ -689,7 +690,7 @@ function buildChartBlock(id, list, view, opts){
   if (!datasets.some(function(d){ return d.yAxisID === 'y'; })) scales.y.display = false;   // only secondary-axis series (users in M): no empty main axis
   if (needY2) scales.y2 = { position: 'right', weight: 1, grid: { display: false },
     ticks: { callback: function(v){
-      return y2unit === 'pct' ? v.toFixed(0) + '%' : y2unit === 'days' ? v.toFixed(0) + 'd' : y2unit === 'count' ? v.toFixed(0) + 'M' : v.toFixed(2) + '×'; } } };
+      return y2unit === 'pct' ? (Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(0)) + '%' : y2unit === 'days' ? v.toFixed(0) + 'd' : y2unit === 'count' ? v.toFixed(0) + 'M' : v.toFixed(2) + '×'; } } };
   st.chart = new Chart(el.getContext('2d'), {
     data: { labels: ps, datasets: datasets },
     options: { responsive: true, maintainAspectRatio: false, animation: false,
@@ -885,6 +886,12 @@ function buildSegResults(){
       metrics[mk] = copy; keys.push(mk);
     });
     if (!keys.length) return;
+    var comp = [];   // a segment may carry its gross-to-net build next to the reported line (Mastercard: gross, card related, processing, other, incentives)
+    (s.components || []).forEach(function(ref){
+      var ck = ref.split(':')[1], cm = src.metrics[ck]; if (!cm || metrics[ck]) return;
+      var cc = {}; for (var k2 in cm) cc[k2] = cm[k2];
+      cc.note = ''; metrics[ck] = cc; comp.push(ck);
+    });
     out.views[v] = { label: src.label, note: '',
       metrics: metrics,
       // The section key becomes the engine's element ids (rsChart-<k>, rsTable-<k>, the slider,
@@ -894,7 +901,7 @@ function buildSegResults(){
       // the "hidden duplicate block stealing getElementById" failure the reference warns about.
       // Namespacing the key keeps the two instances apart.
       sections: [{ key: 'segtop', label: s.label + ' — top line', defaultMetric: keys[0],
-                   groups: [{ label: 'Segment', keys: keys }] }] };
+                   groups: [{ label: 'Segment', keys: keys }].concat(comp.length ? [{ label: 'Revenue build (gross to net)', keys: comp }] : []) }] };
   });
   return out;
 }
@@ -1700,16 +1707,20 @@ export function initSegmentsCustomers(root, ticker){
 // The same total revenue, sliced the other ways the company reports it — by product line and by
 // country. Neither is extra revenue and the pane says so out loud, because a reader who adds a
 // segment chart to a geography chart has just double-counted the company.
-function otherCuts(){ var d = sgData(); return (d && d.seg.other) || []; }
+// The same machinery draws a SECOND family of cuts for Bottom Line: `seg.costs`, the way net revenue is spent (an operating-expense bridge). `_oc` names which
+// family the call in hand belongs to ('other' = Top Line ▸ Other, 'costs' = Bottom Line ▸ Operating costs); each family keeps its own selected cut and block ids.
+var _oc = 'other';
+function otherCuts(){ var d = sgData(); return (d && d.seg[_oc]) || []; }
+function curCutKey(){ return (_sg.cutBy || (_sg.cutBy = {}))[_oc] || (_oc === 'other' ? _sg.cut : null); }
 function otherCut(){
-  var cs = otherCuts();
-  return cs.filter(function(c){ return c.key === _sg.cut; })[0] || cs[0] || null;
+  var cs = otherCuts(), k = curCutKey();
+  return cs.filter(function(c){ return c.key === k; })[0] || cs[0] || null;
 }
-function otherBlockId(c){ return 'oth-' + c.key; }
+function otherBlockId(c){ return (_oc === 'costs' ? 'cst-' : 'oth-') + c.key; }
 function otherOpts(c){
   return { modes: true, views: (c.views || ['q', 'y']).length > 1, bars: true, stack: true,
            totals: true, tableTitle: 'Period detail', height: 330,
-           caption: c.label + ' — the same revenue, cut by ' + c.sub };
+           caption: c.label + (_oc === 'costs' ? ' — ' + c.sub : ' — the same revenue, cut by ' + c.sub) };
 }
 function otherDefault(c){ return (c.views && c.views[0]) || 'y'; }
 
@@ -1724,6 +1735,7 @@ function otherPane(){
   if (c.axis) SG_AXIS[id] = c.axis;
   var view = st.view;
 
+  var costs = _oc === 'costs';
   var pills = '<div class="sg-segpills"><div class="rs-views">' + cs.map(function(x){
     return '<button type="button" class="rs-view' + (x.key === c.key ? ' active' : '') +
       '" data-sgcut="' + esc(x.key) + '">' + esc(x.label) + '</button>'; }).join('') + '</div></div>';
@@ -1758,21 +1770,30 @@ function otherPane(){
         (x.tenK.where ? '<p class="sg-cite">' + esc(x.tenK.where) + '</p>' : '') + '</div>';
     }).join('') + '</div>';
   }
-  var defsSec = body ? sec(2, 'How the filing defines it',
-    defs.length ? defs.length + ' lines defined' : 'verbatim', body) : '';
+  var defsSec = body ? sec(2, _oc === 'costs' ? 'Basis' : 'How the filing defines it',
+    defs.length ? defs.length + ' lines defined' : (_oc === 'costs' ? 'what is on the chart' : 'verbatim'), body) : '';
 
-  return '<div class="sg-wrap" id="sgOthWrap">' + pills + chart + defsSec +
-    '<div class="ov-fynote sg-src">Every cut on this tab disaggregates the SAME consolidated net sales — ' +
+  return '<div class="sg-wrap" id="' + (costs ? 'sgCstWrap' : 'sgOthWrap') + '">' + pills + chart + defsSec +
+    (costs ? '<div class="ov-fynote sg-src">Both cuts read the same reported lines as Evolution ▸ Results; the expense lines add to total operating expenses and, with operating income, to net revenue.</div>'
+           : '<div class="ov-fynote sg-src">Every cut on this tab disaggregates the SAME consolidated net sales — ' +
     'the segments, the product lines and the countries each add to the identical total. They are ' +
-    'alternative slices, never additive.</div></div>';
+    'alternative slices, never additive.</div>') + '</div>';
 }
 
 export function segmentsOtherHtml(ticker){
   var d = SEGMENTS_DATA[ticker];
   if (!d) return '<p class="sg-lede">No segments dataset for ' + esc(ticker) + '.</p>';
-  _sg.ticker = ticker;
+  _sg.ticker = ticker; _oc = 'other';
   if (!_sg.cut && d.seg.other && d.seg.other.length) _sg.cut = d.seg.other[0].key;
   return otherPane();
+}
+// Bottom Line ▸ Operating costs: the same pane, over the dataset's `costs` cuts.
+export function segmentsCostsHtml(ticker){
+  var d = SEGMENTS_DATA[ticker];
+  if (!d || !d.seg.costs || !d.seg.costs.length) return '';
+  _sg.ticker = ticker; _oc = 'costs';
+  if (!curCutKey()) (_sg.cutBy || (_sg.cutBy = {}))[_oc] = d.seg.costs[0].key;
+  var h = otherPane(); _oc = 'other'; return h;
 }
 function renderOther(){
   var c = otherCut(); if (!c) return;
@@ -1782,23 +1803,27 @@ function renderOther(){
   if (allow.indexOf(st.view) < 0) st.view = allow[0];
   renderBlock(id, c.series, st.view, otherOpts(c));
 }
-export function initSegmentsOther(root, ticker){
+export function initSegmentsCosts(root, ticker){ initSegmentsOther(root, ticker, 'costs'); }
+export function initSegmentsOther(root, ticker, scope){
   var d = SEGMENTS_DATA[ticker]; if (!d) return;
+  scope = scope || 'other'; _oc = scope;
   _sg.ticker = ticker;
   var host = root || document;
-  var wrap = host.querySelector ? host.querySelector('#sgOthWrap') : null;
+  var wrap = host.querySelector ? host.querySelector(scope === 'costs' ? '#sgCstWrap' : '#sgOthWrap') : null;
   if (!wrap) return;
   if (!wrap.__sgWired){
     wrap.__sgWired = true;
     wrap.addEventListener('click', function(ev){
+      _oc = scope; _sg.ticker = ticker;
       function redraw(){
         var parent = wrap.parentElement;
-        wrap.outerHTML = segmentsOtherHtml(_sg.ticker);
-        var fresh = parent.querySelector('#sgOthWrap');
-        if (fresh){ fresh.__sgWired = false; initSegmentsOther(parent, _sg.ticker); }
+        wrap.outerHTML = scope === 'costs' ? segmentsCostsHtml(_sg.ticker) : segmentsOtherHtml(_sg.ticker);
+        _oc = scope;
+        var fresh = parent.querySelector(scope === 'costs' ? '#sgCstWrap' : '#sgOthWrap');
+        if (fresh){ fresh.__sgWired = false; initSegmentsOther(parent, _sg.ticker, scope); }
       }
       var cu = ev.target.closest('[data-sgcut]');
-      if (cu){ _sg.cut = cu.getAttribute('data-sgcut');
+      if (cu){ if (scope === 'costs') (_sg.cutBy || (_sg.cutBy = {}))[scope] = cu.getAttribute('data-sgcut'); else _sg.cut = cu.getAttribute('data-sgcut');
                // a different cut is a different set of series on a different axis
                var nid = otherBlockId(otherCut()); _sg.blocks[nid] = blank();
                redraw(); return; }
@@ -1833,7 +1858,7 @@ export function initSegmentsOther(root, ticker){
                if (bd) bd.hidden = !(bst.tbl === true);
                renderOther(); return; }
     });
-    sgWireSlider(wrap, renderOther);
+    sgWireSlider(wrap, function(){ _oc = scope; renderOther(); });
   }
   renderOther();
 }

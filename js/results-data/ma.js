@@ -29,7 +29,7 @@ export var maResults = {
   views: {
     q: {
       label: 'Quarterly',
-      note: 'Reported actuals and the Bloomberg consensus that stood one quarter out, both from the rolling BBG_CONSENSUS.txt archive (23 snapshots, May 2021 to Oct 28 2026): each reported quarter takes the last snapshot before its print, and the four forward quarters come from the newest snapshot. Mastercard guides growth rates, not dollar levels, so the guidance band on net revenue and operating expenses is its guided reported growth applied to the quarter a year earlier. Summit is the DCF model\'s own quarterly estimate on the lines the Street also models: the 1Q26 and 2Q26 values are what the model held going into those prints, 3Q26 and 4Q26 are its forecasts (no 2027 quarter is loaded: the model\'s quarterly chain breaks from 1Q27), and the model has no quarterly share count, D&A, cash flow, capex or volume lines. Capex and share repurchases are shown as positive spend; client incentives stay negative (contra-revenue). For 2026 the Street quarters tie to the Street year within about 0.2% on revenue, operating income, EBITDA, net income, D&A and operating cash flow (3% on capex), but each cell is still its own contributor set, so do not add or subtract across lines.',
+      note: 'Reported actuals and the Bloomberg consensus that stood one quarter out, both from the rolling BBG_CONSENSUS.txt archive (23 snapshots, May 2021 to Oct 28 2026): each reported quarter takes the last snapshot before its print, and the four forward quarters come from the newest snapshot. Mastercard guides growth rates, not dollar levels, so the guidance band on net revenue and operating expenses is its guided reported growth applied to the quarter a year earlier. Summit is the DCF model\'s own quarterly estimate on the lines the Street also models: the 1Q26 and 2Q26 values are what the model held going into those prints, 3Q26 and 4Q26 are its forecasts (Summit quarterly EPS is the model’s quarterly net income over its 2026 diluted share count, since the model has no quarterly share line) (no 2027 quarter is loaded: the model\'s quarterly chain breaks from 1Q27), and the model has no quarterly share count, D&A, cash flow, capex or volume lines. Capex and share repurchases are shown as positive spend; client incentives stay negative (contra-revenue). For 2026 the Street quarters tie to the Street year within about 0.2% on revenue, operating income, EBITDA, net income, D&A and operating cash flow (3% on capex), but each cell is still its own contributor set, so do not add or subtract across lines.',
       metrics: {
         rev: { label: 'Net revenue', short: 'Net revenue', group: 'Totals', unit: 'usdM',
           periods: ['2Q20', '3Q20', '4Q20', '1Q21', '2Q21', '3Q21', '4Q21', '1Q22', '2Q22', '3Q22', '4Q22', '1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27'],
@@ -58,7 +58,7 @@ export var maResults = {
         eps: { label: 'EPS (GAAP-comparable, diluted)', short: 'EPS', group: 'Profit', unit: 'eps',
           periods: ['2Q20', '3Q20', '4Q20', '1Q21', '2Q21', '3Q21', '4Q21', '1Q22', '2Q22', '3Q22', '4Q22', '1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [1.41, 1.51, 1.78, 1.83, 2.08, 2.44, 2.42, 2.68, 2.34, 2.58, 2.62, 2.47, 3.0, 3.39, 2.97, 3.22, 3.5, 3.53, 3.64, 3.59, 4.07, 4.34, 4.52, 4.35, 4.97, 5.28, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 4.16, 4.78, 5.15, 5.23, null, null],
           cons:   [null, null, null, null, 1.73, 2.18, 2.2, 2.21, 2.35, 2.61, 2.58, 2.71, 2.99, 3.22, 3.1, 3.23, 3.51, 3.68, 3.69, 3.59, 4.0, 4.29, 4.25, 4.3, 4.76, 5.13, 5.15, 5.1, 5.75],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -302,7 +302,7 @@ export var maResults = {
           cons:   [null, null, null, null, 1357406, 1545758, 1624585, 1523526, 1640593, 1706297, 1784726, 1650505, 1832591, 1872096, 1917338, 1885369, 2009664, 2052376, 2116603, 2041635, 2157303, 2263751, 2339399, 2198613, 2398672, 2503667, 2573321, 2462912, 2638201],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          note: 'Purchase volume across the network (NTWK_SPENDNG_VOL_PURCHSE), in USD millions: $2.4 trillion in Q2 2026. It is the spend that assessments are charged on.' },
+          note: 'Purchase volume across the network (NTWK_SPENDNG_VOL_PURCHSE), in USD millions: $2.5 trillion in Q3 2026. It is the spend that assessments are charged on.' },
         ptx: { label: 'Processed (switched) transactions', short: 'Processed txns', group: 'Volumes & transactions', unit: 'cnt',
           periods: ['2Q20', '3Q20', '4Q20', '1Q21', '2Q21', '3Q21', '4Q21', '1Q22', '2Q22', '3Q22', '4Q22', '1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [19400, 23800, 24800, 23800, 27200, 29700, 31400, 29000, 30400, 32352, 34000, 32500, 35519, 37155, 38100, 36700, 39445, 41102, 42226, 40096, 43538, 45373, 46457, 43797, 47350, 49327, null, null, null],
@@ -339,7 +339,7 @@ export var maResults = {
       sections: [
         { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
           { label: 'Totals', keys: ['rev'] },
-          { label: 'Revenue build (gross to net)', keys: ['gross', 'dom', 'xb', 'card', 'tp', 'oth', 'cinc'] },
+          { label: 'Revenue build (gross to net)', keys: ['gross', 'card', 'tp', 'oth', 'cinc'] },
           { label: 'Net revenue by segment', keys: ['pnr', 'vas'] },
           { label: 'Volumes & transactions', keys: ['pvol', 'ptx'] },
           { label: 'Yield (% of purchase volume)', keys: ['netyld', 'grossyld', 'incyld'] }
@@ -575,7 +575,7 @@ export var maResults = {
         card: { label: 'Card related activity (domestic assessments + cross-border volume fees)', short: 'Card related', group: 'Revenue build (gross to net)', unit: 'usdM',
           periods: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'],
           act:    [10168, 12822, 15528, 17975, 20426, 23050, null, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, 17975, 20426, 23050, 25817, 27669, 29501, 31638],
           cons:   [null, 12764, 15465, 17989, 20435, 23026, 26482, 29302, 32657, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null],
@@ -627,7 +627,7 @@ export var maResults = {
           cons:   [null, 5926865, 6627149, 7338515, 8020848, 8791189, 9746827, 10660035, 11641820, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null],
-          note: 'Purchase volume across the network (NTWK_SPENDNG_VOL_PURCHSE), in USD millions: $2.4 trillion in Q2 2026. It is the spend that assessments are charged on. Summit (annual): the model\'s purchase volume (stored in $B, shown here in $M), ties to the reported history.' },
+          note: 'Purchase volume across the network (NTWK_SPENDNG_VOL_PURCHSE), in USD millions: $2.5 trillion in Q3 2026. It is the spend that assessments are charged on. Summit (annual): the model\'s purchase volume (stored in $B, shown here in $M), ties to the reported history.' },
         ptx: { label: 'Processed (switched) transactions', short: 'Processed txns', group: 'Volumes & transactions', unit: 'cnt',
           periods: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'],
           act:    [90100, 112100, 125700, 143200, 159424, 175464, null, null, null, null],
@@ -664,7 +664,7 @@ export var maResults = {
       sections: [
         { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
           { label: 'Totals', keys: ['rev'] },
-          { label: 'Revenue build (gross to net)', keys: ['gross', 'dom', 'xb', 'card', 'tp', 'oth', 'cinc'] },
+          { label: 'Revenue build (gross to net)', keys: ['gross', 'card', 'tp', 'oth', 'cinc'] },
           { label: 'Net revenue by segment', keys: ['pnr', 'vas'] },
           { label: 'Volumes & transactions', keys: ['pvol', 'ptx'] },
           { label: 'Yield (% of purchase volume)', keys: ['netyld', 'grossyld', 'incyld'] }
@@ -2498,7 +2498,7 @@ export var maResults = {
       { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
         { label: 'Totals', keys: ['rev'] },
         { label: 'Net revenue by segment', keys: ['pnr', 'vas'] },
-        { label: 'Revenue build (gross to net)', keys: ['gross', 'dom', 'xb', 'tp', 'oth', 'cinc'] },
+        { label: 'Revenue build (gross to net)', keys: ['gross', 'card', 'tp', 'oth', 'cinc'] },
         { label: 'Volumes & transactions', keys: ['pvol', 'ptx'] }
       ] },
       { key: 'prof', label: 'Margins & Profitability', defaultMetric: 'opinc', groups: [
@@ -2682,3 +2682,18 @@ export var maResults = {
     }
   },
 };
+
+// Evolution ▸ Estimates: ONE card related line (domestic + cross-border assessments), the way the Summit model carries it (analyst, Oct 29 2026).
+// Street vintages = domestic + cross-border as the Street publishes them; the Summit model has no split, so its card line is gross revenue less
+// transaction processing and other revenue, the same identity as the quarterly and annual Summit cells above. Built from the lines in this file, not typed.
+(function(){
+  var M = maResults.evolution.metrics;
+  function mat(f){ return M.dom[f].map(function(row, r){ return row.map(function(_, c){
+    var a = M.dom[f][r][c], b = M.xb[f][r][c]; return (a == null || b == null) ? null : Math.round((a + b) * 1000) / 1000; }); }); }
+  var summit = M.gross.summit.map(function(row, r){ return row.map(function(_, c){
+    var g = M.gross.summit[r][c], t = M.tp.summit[r][c], o = M.oth.summit[r][c]; return (g == null || t == null || o == null) ? null : g - t - o; }); });
+  var prior = { summit: M.gross.prior.summit.map(function(g, c){ var t = M.tp.prior.summit[c], o = M.oth.prior.summit[c]; return (g == null || t == null || o == null) ? null : g - t - o; }),
+                cons: M.dom.prior.cons.map(function(a, c){ var b = M.xb.prior.cons[c]; return (a == null || b == null) ? null : Math.round((a + b) * 1000) / 1000; }) };
+  M.card = { label: 'Card related activity (domestic assessments + cross-border volume fees)', unit: 'usdM', summit: summit, cons: mat('cons'), prior: prior,
+             note: 'Domestic assessments plus cross-border volume fees, taken together as the Summit model carries them. The Summit model has no split, so its line is gross revenue less transaction processing and other revenue.' };
+})();

@@ -48,7 +48,8 @@ export var maSegments = {
   source: 'Net revenue by category and revenue lines: Mastercard earnings releases (as recorded by Bloomberg) and the FY2025 Form 10-K (Item 7; Note 3), through the Results dataset; Summit DCF model (DCF MA - New.xlsm, read Oct 2026, frozen, not live) for forecast periods; Street quarters from Bloomberg consensus. Purchase volume and switched transactions: Mastercard supplemental data as recorded by Bloomberg. Region: 10-K Note 3. Customers: 10-K and the earnings calls.',
   streetForward: true,
   defaultHidden: ['margin'],   // Summit and the Street open ON in the Top Line charts; the margin line opens OFF
-  ramp: ['#475569', '#94a3b8', '#0f172a', '#cbd5e1', '#64748b'],   // the series colours of this profile: slate greys, no categorical palette (CIO)
+  ramp: ['#0f172a', '#2563eb', '#64748b', '#0d9488', '#b45309'],   // navy, blue, slate, teal, amber: five distinct, restrained inks (no rainbow); the first three are what a two- or three-series chart uses
+  colorY2: true,   // a series on the second axis (a yield, a count) keeps its own ink instead of turning grey, so the chips and the lines agree
 
   axis: {
     q: ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26'],
@@ -83,7 +84,7 @@ export var maSegments = {
       y: { act: { '2023': 13963, '2024': 15792, '2025': 18747 } } },
   },
   derived: {
-    tpFee: { num: 'results:tp', den: 'results:ptx', unit: 'eps', label: 'Transaction processing revenue per switched transaction (US$)', short: 'Fee per transaction' },
+    tpFee: { num: 'results:tp', den: 'results:ptx', unit: 'idx', div: 0.01, label: 'Transaction processing revenue per switched transaction (US cents)', short: 'Fee per transaction (cents)' },
   },
 
   overview: {
@@ -140,16 +141,27 @@ export var maSegments = {
       ],
       kpiNote: 'Mastercard publishes gross dollar volume, cross-border volume growth and switched transaction growth each quarter, and the amounts of its four network assessments each year. It publishes no card count by quarter and no price list: fees are negotiated by customer and the rebates and incentives that come off them are reported only in total.',
       interactions: [
-        { name: 'Purchase volume × net yield', relation: 'payment network net revenue = purchase volume × net yield', bridge: null,
-          lines: ['Domestic and cross-border volume', 'Transaction switching'],
+        { name: 'Purchase volume × net yield', relation: 'net revenue = purchase volume × net yield', bridge: 'netyield',
+          lines: ['Domestic and cross-border volume', 'Transaction switching'], bridge: 'netyield',
           why: 'The price × volume identity of the network. Volume grows with spending; yield is what the network keeps per dollar. Is the yield durable? Net revenue per dollar of purchases held at 21.5, 21.6 and 22.1 basis points in 2023, 2024 and 2025 even though rebates and incentives rose from 49.0% to 51.3% of gross network revenue: gross revenue per dollar rose from 42.2 to 45.5 basis points (cross-border and processing grew faster than volume) and paid for the higher incentives. Mastercard does not announce network price rises; the 10-K names pricing only among the drivers of value-added services growth. The cost that sits against the yield is the incentive itself, shown in Bottom Line.',
-          data: 'Net, gross and incentive yield are charted in the KPIs above. NOT CHARTED as a bridge: both inputs are reported, but the 2023 presentation change (other revenue moved out of the network lines) breaks the comparison before 2023.' },
-        { name: 'Switched transactions × fee per transaction', relation: 'transaction processing revenue = switched transactions × revenue per transaction', bridge: null,
+          data: 'Charted quarterly from 1Q23: purchase volume and net revenue are reported, the yield is derived, and the Street and the Summit model are read through the same two terms.' },
+        { name: 'Switched transactions × fee per transaction', relation: 'transaction processing revenue = switched transactions × revenue per transaction', bridge: 'txnfee',
           lines: ['Transaction processing'],
           why: 'The second price × volume identity: transaction processing assessments divided by switched transactions. Revenue per transaction was about 8.4 cents in 2023, 8.5 in 2024 and 9.1 in 2025, so the line grew faster than the transaction count in 2025 (+17% against +10%).',
-          data: 'The per-transaction fee is derived from the two reported series. NOT CHARTED as a bridge.' },
+          data: 'Charted quarterly from 1Q23: the fee per transaction is derived from the two reported series, for the actual, the Street and the Summit model.' },
       ],
-      bridges: [], highlights: [],
+      bridges: [
+        { key: 'netyield', label: 'Purchase volume × net yield', view: 'q', target: 'results:rev', kind: 'decomposition',
+          terms: ['shared:pv', 'results:netyld'],
+          identity: 'Net revenue = purchase volume × net yield',
+          note: 'A decomposition, not an independent build: net yield is net revenue divided by purchase volume, for the actual, the Street and the Summit model alike, so the two terms multiply back to net revenue by construction. What it shows is how much of a quarter’s growth is more spend and how much is more revenue per dollar of spend.' },
+        { key: 'txnfee', label: 'Switched transactions × fee per transaction', view: 'q', target: 'results:tp', kind: 'decomposition',
+          terms: ['shared:ptx', 'tpFee'],
+          identity: 'Transaction processing revenue = switched transactions (B) × revenue per transaction (cents)',
+          note: 'A decomposition, not an independent build: the fee per transaction is transaction processing revenue divided by switched transactions, in US cents. Transactions are in billions, so billions × cents reads in tens of millions of dollars; the last bar is the line in dollars.' },
+      ],
+      highlights: [],
+      components: ['results:gross', 'results:card', 'results:tp', 'results:oth', 'results:cinc'],   // the gross-to-net build, drawn in the Payment network top-line chart next to net revenue
       drivers: { rev: { from: 'results:pnr' } },
     },
     {
@@ -185,16 +197,15 @@ export var maSegments = {
 
   other: [
     {
-      key: 'lines', label: 'Revenue lines', sub: 'the four network assessments, before rebates',
-      lede: 'The payment network’s gross revenue by line: domestic, cross-border and transaction processing assessments, and other network assessments. Rebates and incentives then come off the total to give the net revenue the rest of the pane uses.',
+      key: 'lines', label: 'Revenue lines', sub: 'the network assessments, before rebates',
+      lede: 'The payment network’s gross revenue by line: card related activity (domestic and cross-border assessments, taken together as the Summit model and the Street both carry them), transaction processing assessments, and other network assessments. Rebates and incentives then come off the total to give the net revenue the rest of the pane uses.',
       note: 'Quarterly from Mastercard’s releases as recorded by Bloomberg; annual from the 10-K. Before 2023 Mastercard classified part of its other revenue inside these lines, so the 2020–2022 values are not comparable with 2023 onward.',
       caveat: 'The rebates and incentives that come off these four lines ($20.5B in FY2025) are not drawn here; they are in Bottom Line.',
       tenK: { text: 'Assessments represent agreed upon standard pricing provided to our customers based on various forms of payment-related activity. Assessments are used internally by management to monitor operating performance as it allows for comparability and provides visibility into cardholder trends. Assessments do not represent our net revenue.', where: TENK + ', Item 7 — Key Metrics related to the Payment Network' },
       spans: 'Quarterly 2Q20–2Q26; annual 2020–2025.',
       views: ['q', 'y'],
       series: [
-        { key: 'dom', ref: 'results:dom', label: 'Domestic assessments' },
-        { key: 'xb', ref: 'results:xb', label: 'Cross-border assessments' },
+        { key: 'card', ref: 'results:card', label: 'Card related activity (domestic + cross-border assessments)' },
         { key: 'tp', ref: 'results:tp', label: 'Transaction processing assessments' },
         { key: 'oth', ref: 'results:oth', label: 'Other network assessments' },
       ],
@@ -213,21 +224,37 @@ export var maSegments = {
         { key: 'g_am', ref: 'shared:g_am', label: 'Americas' },
       ],
     },
+  ],
+
+  // ── Costs: Bottom Line ▸ Operating costs. How net revenue is spent, on the same reported lines as Evolution ▸ Results (G&A, advertising and marketing,
+  // D&A, litigation provision); the Street and the Summit model are read through the same refs. The two cuts are alternative views of the same dollars. ──
+  costs: [
     {
-      key: 'gdv', label: 'Volume by region', sub: 'gross dollar volume, five regions',
-      lede: 'Revenue is reported in two regions, so the finer cut is the volume that drives it: Mastercard reports gross dollar volume for the United States, Canada, Latin America, Europe and Asia Pacific, the Middle East and Africa every quarter. The United States is the largest single region and the slowest growing.',
-      note: 'Quarterly from Mastercard’s earnings releases (Operating Performance table, all Mastercard credit, charge and debit programs), US$ converted at the quarter’s average rate; the five regions sum to the worldwide figure within rounding. Annual is the sum of the four quarters. This is volume, not revenue: Mastercard does not report revenue for these regions.',
-      caveat: 'GDV counts purchases and cash, and converts local currency to US dollars at each quarter’s average rate, so a stronger or weaker dollar moves a region’s reported figure without any change in activity.',
-      tenK: { text: 'Gross Dollar Volume (“GDV”) measures dollar volume of activity, including both domestic and cross-border volume, on cards carrying our brands during the period, on a local currency basis and U.S. dollar-converted basis. GDV represents purchase volume plus cash volume.',
-              where: TENK + ', Item 7 — Key Metrics and Drivers', verbatim: true },
-      spans: 'Quarterly 1Q23–2Q26; annual 2023–2025.',
+      key: 'bridge', label: 'Net revenue to operating income', sub: 'where each dollar of net revenue goes',
+      lede: 'Net revenue has no cost of goods to subtract: it goes to the four operating expense lines and what is left is operating income. Read in Share, the bars are the margin structure; in Growth, which line is taking the dollars.',
+      note: 'Quarterly from Mastercard’s earnings releases as recorded by Bloomberg (GAAP lines); annual from the 10-K. G&A, advertising and marketing, depreciation and amortization and the provision for litigation add to total operating expenses, and with operating income to net revenue. Mastercard guides operating expense growth, not these lines. Street and Summit values are shown for the quarters and years after the last print where either carries the line.',
+      caveat: 'The Summit model carries general and administrative, advertising and marketing and the litigation provision for the 2026 quarters but no depreciation and amortization line; the Street carries all four.',
+      spans: 'Quarterly 1Q23 onward; annual 2023 onward.',
       views: ['q', 'y'],
       series: [
-        { key: 'gv_us', ref: 'shared:gv_us', label: 'United States' },
-        { key: 'gv_eu', ref: 'shared:gv_eu', label: 'Europe' },
-        { key: 'gv_ap', ref: 'shared:gv_ap', label: 'Asia Pacific, Middle East and Africa' },
-        { key: 'gv_la', ref: 'shared:gv_la', label: 'Latin America' },
-        { key: 'gv_ca', ref: 'shared:gv_ca', label: 'Canada' },
+        { key: 'ga', ref: 'results:ga', label: 'General and administrative' },
+        { key: 'am', ref: 'results:am', label: 'Advertising and marketing' },
+        { key: 'dna', ref: 'results:dna', label: 'Depreciation and amortization' },
+        { key: 'lit', ref: 'results:lit', label: 'Provision for litigation' },
+        { key: 'opinc', ref: 'results:opinc', label: 'Operating income' },
+      ],
+    },
+    {
+      key: 'opex', label: 'Operating expenses by line', sub: 'the four lines that make up operating expenses',
+      lede: 'Total operating expenses split into the four lines Mastercard reports. General and administrative (personnel and professional fees) is the bulk; advertising and marketing, depreciation and amortization and the litigation provision are the swing lines.',
+      note: 'Same source and basis as the cut before. Total operating expenses are the sum of the four bars; the guided quarterly growth in operating expenses is on Evolution ▸ Results.',
+      spans: 'Quarterly 1Q23 onward; annual 2023 onward.',
+      views: ['q', 'y'],
+      series: [
+        { key: 'ga', ref: 'results:ga', label: 'General and administrative' },
+        { key: 'am', ref: 'results:am', label: 'Advertising and marketing' },
+        { key: 'dna', ref: 'results:dna', label: 'Depreciation and amortization' },
+        { key: 'lit', ref: 'results:lit', label: 'Provision for litigation' },
       ],
     },
   ],

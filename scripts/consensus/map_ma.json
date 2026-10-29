@@ -1,0 +1,315 @@
+{
+ "_doc": "MA metric map for emit_matrix.py (schema v2 - by Bloomberg CODE + segment). Read off inspect_matrix.py MA (newest snapshot 10/28/2026; 23 snapshots 2021-05-04 -> 2026-10-28; slot layout stable). USD millions. Net revenue = IS_COMP_SALES (Q2 2026 9,277 = the release). Operating income is IS_EBIT_AS_REPORTED (GAAP as reported), EBITDA is the comparable (adjusted) line, EPS is the BBG GAAP-comparable line (Q2 2026 4.97 vs the company-adjusted 5.04). Capex (HEADLINE_CAPEX) and repurchases (CF_DECR_CAP_STOCK) arrive negative, sign=-1 gives the positive spend shown in the portal (SAB, META). Client incentives stay negative (contra-revenue). Shares and processed transactions are counts carried in millions; purchase volume is USD millions. Revenue build segments tied to the Q2 2026 print: gross SEG2112701904 11,448 = domestic assessments SEG0000202649 3,154 + cross-border volume fees SEG0000202683 3,460 + transaction processing SEG0000202647 4,508 + other SEG0000202596 326; Payment Network SEG0001328534 5,451 = gross - client incentives 5,997; VAS SEG0001328535 3,826; 5,451 + 3,826 = net 9,277. Written Oct 28 2026.",
+ "supersede_latest": true,
+ "segments": {
+  "pnr": "SEG0001328534",
+  "gross": "SEG2112701904",
+  "dom": "SEG0000202649",
+  "xb": "SEG0000202683",
+  "tp": "SEG0000202647",
+  "oth": "SEG0000202596",
+  "vas": "SEG0001328535"
+ },
+ "q": {
+  "rev": {
+   "code": "IS_COMP_SALES",
+   "unit": "usdM"
+  },
+  "opinc": {
+   "code": "IS_EBIT_AS_REPORTED",
+   "unit": "usdM"
+  },
+  "ebitda": {
+   "code": "IS_COMPARABLE_EBITDA",
+   "unit": "usdM"
+  },
+  "eps": {
+   "code": "IS_COMP_EPS_GAAP",
+   "unit": "eps"
+  },
+  "ni": {
+   "code": "IS_COMP_NET_INCOME_GAAP",
+   "unit": "usdM"
+  },
+  "pti": {
+   "code": "IS_COMP_PTP_EX_STK_BASED_COMP",
+   "unit": "usdM"
+  },
+  "opex": {
+   "code": "IS_TOT_OPER_EXP",
+   "unit": "usdM"
+  },
+  "ga": {
+   "code": "CB_IS_GENL_AND_ADMIN_EXPN",
+   "unit": "usdM"
+  },
+  "am": {
+   "code": "CB_IS_S_AND_M_EXPENSE",
+   "unit": "usdM"
+  },
+  "dna": {
+   "code": "CB_IS_DEPRECIATION_AMORT_EXP",
+   "unit": "usdM"
+  },
+  "sbc": {
+   "code": "CF_STOCK_BASED_COMPENSATION",
+   "unit": "usdM"
+  },
+  "lit": {
+   "code": "IS_LEGAL_LIT_SETTLE_EXPN_OP",
+   "unit": "usdM"
+  },
+  "intexp": {
+   "code": "IS_INT_EXPENSE",
+   "unit": "usdM"
+  },
+  "netint": {
+   "code": "IS_NET_INTEREST_EXPENSE",
+   "unit": "usdM"
+  },
+  "intnet": {
+   "code": "IS_NON_OPERATING_INC_LOSS_GAAP",
+   "unit": "usdM"
+  },
+  "invinc": {
+   "code": "IS_OTHER_INVEST_INC_LOSS_GAAP",
+   "unit": "usdM"
+  },
+  "oie": {
+   "code": "CB_IS_OTHER_NON_OPER_INC_EXPN",
+   "unit": "usdM"
+  },
+  "tax": {
+   "code": "IS_INC_TAX_EXP",
+   "unit": "usdM"
+  },
+  "cfo": {
+   "code": "CB_CF_NET_CASH_OPERATING_ACT",
+   "unit": "usdM"
+  },
+  "fcf": {
+   "code": "CF_FREE_CASH_FLOW",
+   "unit": "usdM"
+  },
+  "capex": {
+   "code": "HEADLINE_CAPEX",
+   "unit": "usdM",
+   "sign": -1
+  },
+  "buyback": {
+   "code": "CF_DECR_CAP_STOCK",
+   "unit": "usdM",
+   "sign": -1
+  },
+  "shares": {
+   "code": "IS_SH_FOR_DILUTED_EPS",
+   "unit": "usdM"
+  },
+  "amort": {
+   "code": "CF_OTHR_NONCASH_AMORTIZATN",
+   "unit": "usdM"
+  },
+  "gross": {
+   "code": "IS_GROSS_REVENUE",
+   "unit": "usdM",
+   "segment": "gross"
+  },
+  "dom": {
+   "code": "IS_GROSS_REVENUE",
+   "unit": "usdM",
+   "segment": "dom"
+  },
+  "xb": {
+   "code": "IS_GROSS_REVENUE",
+   "unit": "usdM",
+   "segment": "xb"
+  },
+  "tp": {
+   "code": "IS_GROSS_REVENUE",
+   "unit": "usdM",
+   "segment": "tp"
+  },
+  "oth": {
+   "code": "IS_GROSS_REVENUE",
+   "unit": "usdM",
+   "segment": "oth"
+  },
+  "cinc": {
+   "code": "CB_IS_ADJ_FROM_GROSS_TO_NET_SALES",
+   "unit": "usdM"
+  },
+  "pnr": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM",
+   "segment": "pnr"
+  },
+  "vas": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM",
+   "segment": "vas"
+  },
+  "pvol": {
+   "code": "NTWK_SPENDNG_VOL_PURCHSE",
+   "unit": "usdM"
+  },
+  "ptx": {
+   "code": "PAYMENT_PROCESSING_TRANS",
+   "unit": "usdM"
+  }
+ },
+ "y": {
+  "rev": {
+   "code": "IS_COMP_SALES",
+   "unit": "usdM"
+  },
+  "opinc": {
+   "code": "IS_EBIT_AS_REPORTED",
+   "unit": "usdM"
+  },
+  "ebitda": {
+   "code": "IS_COMPARABLE_EBITDA",
+   "unit": "usdM"
+  },
+  "eps": {
+   "code": "IS_COMP_EPS_GAAP",
+   "unit": "eps"
+  },
+  "ni": {
+   "code": "IS_COMP_NET_INCOME_GAAP",
+   "unit": "usdM"
+  },
+  "pti": {
+   "code": "IS_COMP_PTP_EX_STK_BASED_COMP",
+   "unit": "usdM"
+  },
+  "opex": {
+   "code": "IS_TOT_OPER_EXP",
+   "unit": "usdM"
+  },
+  "ga": {
+   "code": "CB_IS_GENL_AND_ADMIN_EXPN",
+   "unit": "usdM"
+  },
+  "am": {
+   "code": "CB_IS_S_AND_M_EXPENSE",
+   "unit": "usdM"
+  },
+  "dna": {
+   "code": "CB_IS_DEPRECIATION_AMORT_EXP",
+   "unit": "usdM"
+  },
+  "sbc": {
+   "code": "CF_STOCK_BASED_COMPENSATION",
+   "unit": "usdM"
+  },
+  "lit": {
+   "code": "IS_LEGAL_LIT_SETTLE_EXPN_OP",
+   "unit": "usdM"
+  },
+  "intexp": {
+   "code": "IS_INT_EXPENSE",
+   "unit": "usdM"
+  },
+  "netint": {
+   "code": "IS_NET_INTEREST_EXPENSE",
+   "unit": "usdM"
+  },
+  "intnet": {
+   "code": "IS_NON_OPERATING_INC_LOSS_GAAP",
+   "unit": "usdM"
+  },
+  "invinc": {
+   "code": "IS_OTHER_INVEST_INC_LOSS_GAAP",
+   "unit": "usdM"
+  },
+  "oie": {
+   "code": "CB_IS_OTHER_NON_OPER_INC_EXPN",
+   "unit": "usdM"
+  },
+  "tax": {
+   "code": "IS_INC_TAX_EXP",
+   "unit": "usdM"
+  },
+  "cfo": {
+   "code": "CB_CF_NET_CASH_OPERATING_ACT",
+   "unit": "usdM"
+  },
+  "fcf": {
+   "code": "CF_FREE_CASH_FLOW",
+   "unit": "usdM"
+  },
+  "capex": {
+   "code": "HEADLINE_CAPEX",
+   "unit": "usdM",
+   "sign": -1
+  },
+  "buyback": {
+   "code": "CF_DECR_CAP_STOCK",
+   "unit": "usdM",
+   "sign": -1
+  },
+  "shares": {
+   "code": "IS_SH_FOR_DILUTED_EPS",
+   "unit": "usdM"
+  },
+  "amort": {
+   "code": "CF_OTHR_NONCASH_AMORTIZATN",
+   "unit": "usdM"
+  },
+  "gross": {
+   "code": "IS_GROSS_REVENUE",
+   "unit": "usdM",
+   "segment": "gross"
+  },
+  "dom": {
+   "code": "IS_GROSS_REVENUE",
+   "unit": "usdM",
+   "segment": "dom"
+  },
+  "xb": {
+   "code": "IS_GROSS_REVENUE",
+   "unit": "usdM",
+   "segment": "xb"
+  },
+  "tp": {
+   "code": "IS_GROSS_REVENUE",
+   "unit": "usdM",
+   "segment": "tp"
+  },
+  "oth": {
+   "code": "IS_GROSS_REVENUE",
+   "unit": "usdM",
+   "segment": "oth"
+  },
+  "cinc": {
+   "code": "CB_IS_ADJ_FROM_GROSS_TO_NET_SALES",
+   "unit": "usdM"
+  },
+  "pnr": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM",
+   "segment": "pnr"
+  },
+  "vas": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM",
+   "segment": "vas"
+  },
+  "pvol": {
+   "code": "NTWK_SPENDNG_VOL_PURCHSE",
+   "unit": "usdM"
+  },
+  "ptx": {
+   "code": "PAYMENT_PROCESSING_TRANS",
+   "unit": "usdM"
+  }
+ },
+ "dropVintages": {
+  "y": {
+   "oth": [
+    "2022-08-02"
+   ]
+  }
+ },
+ "_dropVintages_note": "y.oth: the 2022-08-02 snapshot repeats the 2022-11-01 cells verbatim (reprinted-snapshot check, Oct 28 2026), so that vintage is dropped for the annual Other revenue line."
+}

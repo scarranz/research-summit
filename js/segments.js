@@ -102,7 +102,7 @@ var RS_FWD  = '#2563EB';
 // hypothetical seventh entity silently re-used the first one's colour. Both are categorical-colour
 // errors. Now the portal's fixed categorical order, assigned by slot and never cycled.
 var SG_RAMP = SUMMIT_CAT;
-function sgY2Ink(){ var d = sgData(); return !!(d && d.seg.colorY2); }   // a dataset may keep a second-axis series in its own ink instead of grey
+function sgY2Ink(i){ var d = sgData(), r = d && d.seg.y2Ramp; return r ? (r[i] || SUMMIT_MUTE) : null; }   // a dataset may keep a second-axis series in its own ink instead of grey
 function sgRamp(i){ var d = sgData(), r = (d && d.seg.ramp) || SG_RAMP; return r[i] || SUMMIT_MUTE; }   // a dataset may restrict the series colours (SPOT: slate greys, no categorical palette)
 
 function rsRR(ctx, x, y, w, h, r){
@@ -566,7 +566,7 @@ function modesHtml(id, opts, list, view){
 function chipsHtml(id, list, view, firstIsTarget){
   return blockSeries(list, view).map(function(x, i){
     var md = blk(id).mode || 'amt', money = x.d.unit === 'usdM' || x.d.unit === 'eps' || (md !== 'amt' && !(md === 'growth' && blk(id).growUnit === 'amt'));   // the chip wears the colour the chart draws: a count is grey only while it sits on the second axis
-    var color = !money && !sgY2Ink() ? RS_CONS : (firstIsTarget && i === 0 ? RS_ACT : sgRamp(i));
+    var color = !money ? (sgY2Ink(i) || RS_CONS) : (firstIsTarget && i === 0 ? RS_ACT : sgRamp(i));
     return '<button type="button" class="rs-leg' + (vis(id, x.key) ? '' : ' off') +
       '" data-sgleg="' + esc(id) + '|' + esc(x.key) + '" title="Show / hide">' +
       '<span class="rs-leg-line" style="background:' + color + '"></span>' +
@@ -654,7 +654,7 @@ function buildChartBlock(id, list, view, opts){
       return (x.d.unit === 'usdM') ? v / 1000 : (x.d.unit === 'pct' ? v * 100 : v);
     });
     var isTarget = opts.firstIsTarget && slotOf[x.key] === 0;
-    var color = solo ? RS_ACT : (!m && !sgY2Ink() ? RS_CONS : (isTarget ? RS_ACT : sgRamp(slotOf[x.key])));
+    var color = solo ? RS_ACT : (!m ? (sgY2Ink(slotOf[x.key]) || RS_CONS) : (isTarget ? RS_ACT : sgRamp(slotOf[x.key])));
     datasets.push((m && opts.bars && !isTarget && mode !== 'idx')
       ? { label: x.label || x.d.short, data: data, type: 'bar', backgroundColor: color,
           maxBarThickness: 34, order: 3, yAxisID: 'y' }
@@ -952,7 +952,7 @@ function noteEditor(slot, fallback, opt){
   if (editing){
     return '<div class="sg-noteed">' + tierTag('OURS') +
       '<textarea class="sg-note-ta" id="sgNoteTa" rows="' + (opt.rows || 5) + '" placeholder="' +
-        esc(opt.placeholder || 'In our words — the thing the filing does not say.') + '">' +
+        esc(opt.placeholder || 'In Summit’s words — the thing the filing does not say.') + '">' +
         esc(txt) + '</textarea>' +
       '<div class="sg-note-act">' +
         '<button type="button" class="sg-btn primary" data-sgnsave="' + esc(slot) + '">Save</button>' +
@@ -977,12 +977,12 @@ function noteHtml(s){
   return '<div class="rs-collap sg-note">' +
     '<button type="button" class="rs-collap-h" data-sgnote="1">' +
       '<span class="rs-collap-ic">' + (open ? '▾' : '▸') + '</span>' +
-      (txt ? 'Our read on it' : 'Add our read on it') + tierTag('OURS') +
+      (txt ? 'Summit’s read on it' : 'Add Summit’s read on it') + tierTag('OURS') +
       '<span class="rs-collap-sub">' + (open ? 'hide' : (txt ? 'show' : 'nothing written yet')) +
       '</span></button>' +
     '<div class="rs-collap-b"' + (open ? '' : ' hidden') + '>' +
       noteEditor(slot, s.summary || s.lede || '', { rows: 6,
-        placeholder: 'What this segment actually is, in our words — the thing the filing does not say.',
+        placeholder: 'What this segment actually is, in Summit’s words — the thing the filing does not say.',
         empty: 'No note yet for this segment.' }) +
     '</div></div>';
 }
@@ -1092,7 +1092,7 @@ function renderMd(kind){
 // "we think" carry completely different weight, and a tab that mixes them teaches nobody anything.
 function slug(t){ return String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
 function tierTag(kind){
-  return '<span class="sg-tier sg-tier-' + kind.toLowerCase() + '">' + esc(kind) + '</span>';
+  return '<span class="sg-tier sg-tier-' + kind.toLowerCase() + '">' + esc(kind === 'OURS' ? 'SUMMIT' : kind) + '</span>';
 }
 SG_MD.prod = function(s){
   return (s.products || s.sells || []).map(function(it){
@@ -1680,7 +1680,7 @@ export function initSegmentsCustomers(root, ticker){
   // No chart on this tab, so a card only ever re-renders its own deck — nothing else moves.
   wrap.addEventListener('click', function(ev){
     var pk = ev.target.closest('[data-sgpick]');
-    if (pk && !ev.target.closest('.sg-panel')){
+    if (pk && (!ev.target.closest('.sg-panel') || pk.classList.contains('sg-panel-x'))){
       var pa = pk.getAttribute('data-sgpick').split('|'), kind = pa[0];
       _sg.open[sgPickKey(kind)] = (pa[1] === 'close') ? null
         : (sgPicked(kind) === +pa[1] ? null : +pa[1]);
@@ -1939,7 +1939,7 @@ export function initSegments(root, ticker){
       // Master-detail. Only the cards+panel block is re-rendered, so opening a card never
       // rebuilds the charts underneath it and never moves the page under the reader.
       var pk = ev.target.closest('[data-sgpick]');
-      if (pk && !ev.target.closest('.sg-panel')){
+      if (pk && (!ev.target.closest('.sg-panel') || pk.classList.contains('sg-panel-x'))){
         var pa = pk.getAttribute('data-sgpick').split('|'), pkind = pa[0];
         _sg.open[sgPickKey(pkind)] = (pa[1] === 'close') ? null
           : (sgPicked(pkind) === +pa[1] ? null : +pa[1]);

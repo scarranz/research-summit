@@ -68,7 +68,8 @@ var yIdx = annualIdx(maResults.views.y);
 
 export var maSetup = {
   updated: maResults.updated,
-  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, and margin lines for the profit lines (only profit lines carry a margin — a revenue line or a KPI does not). The window is rolling: quarterly shows the last 8 reported quarters + the one next (forecast) quarter; annual shows the last 4 fiscal years + the next 2. Summit = the DCF model’s frozen annual line (annual view only); Street consensus from the Bloomberg archive; no guidance band (Mastercard guides growth rates, not dollar levels).',
+  forwardQuarters: 2,   // two quarters past the last print: without it the engine falls back to the current-fiscal-year cut and drops 1Q27
+  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, and margin lines for the profit lines (only profit lines carry a margin — a revenue line or a KPI does not). The window is rolling: quarterly shows the last 8 reported quarters + the two next (forecast) quarters; annual shows the last 4 fiscal years + the next 2. Summit = the DCF model’s frozen line (annual, and quarterly through 4Q26); Street consensus from the Bloomberg archive; no guidance band (Mastercard guides growth rates, not dollar levels).',
   source: maResults.source,
   views: {
     q: { label: 'Quarterly', note: 'Rolling — the last 8 reported quarters plus the two next (forecast) quarters; it advances by itself as new prints land. ' + maResults.views.q.note,

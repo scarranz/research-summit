@@ -48,11 +48,11 @@ export var maSegments = {
   source: 'Net revenue by category and revenue lines: Mastercard earnings releases (as recorded by Bloomberg) and the FY2025 Form 10-K (Item 7; Note 3), through the Results dataset; Summit DCF model (DCF MA - New.xlsm, read Oct 2026, frozen, not live) for forecast periods; Street quarters from Bloomberg consensus. Purchase volume and switched transactions: Mastercard supplemental data as recorded by Bloomberg. Region: 10-K Note 3. Customers: 10-K and the earnings calls.',
   streetForward: true,
   defaultHidden: ['margin'],   // Summit and the Street open ON in the Top Line charts; the margin line opens OFF
-  ramp: ['#0f172a', '#2563eb', '#64748b', '#0d9488', '#b45309'],   // navy, blue, slate, teal, amber: five distinct, restrained inks (no rainbow); the first three are what a two- or three-series chart uses
-  colorY2: true,   // a series on the second axis (a yield, a count) keeps its own ink instead of turning grey, so the chips and the lines agree
+  ramp: ['#475569', '#94a3b8', '#0f172a', '#cbd5e1', '#64748b'],   // the series colours of this profile: slate greys, no categorical palette (CIO)
+  y2Ramp: ['#0f172a', '#2563eb', '#64748b', '#0d9488', '#b45309'],   // only a series on the second axis (net, gross, incentive yield) wears its own ink; every other chart keeps the slate greys
 
   axis: {
-    q: ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26'],
+    q: ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27'],
     y: ['2023', '2024', '2025', '2026', '2027', '2028', '2029'],
   },
 

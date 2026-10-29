@@ -13,7 +13,9 @@
 // 21, Alphabet Oct 28, Microsoft Oct 28) — the same route as SpaceX. Motley Fool
 // flags its transcripts as partly LLM-assisted: check a quoted fragment against
 // the audio or the official transcript before quoting it outside the portal.
-// Amazon's 3Q26 cells stay null until it reports.
+// Amazon's 3Q26 column (filled Oct 29 2026, the night of its print) comes from its 8-K earnings release (Ex. 99.1):
+// cash capex, the 2026 capex frame and AWS revenue / operating income. Its call (Oct 29, 5pm ET) has no published
+// transcript yet, so the cells that need the call (backlog, capacity quotes, What They Said) stay null until it does.
 //
 // AXIS CONVENTION (per SAB): everything is on a CALENDAR basis so the four are
 // comparable. Microsoft is the only fiscal-year reporter (FY ends 30 June), so its
@@ -62,7 +64,7 @@ export var HS_VINTAGES = [
   { key: '26q1', label: "Apr '26", calls: '1Q26', msft: 'FY26Q3' },
   { key: '26q2', label: "Jul '26", calls: '2Q26', msft: 'FY26Q4' },
   // Added Oct 21 2026 for SpaceX's 3Q26 call (Oct 20); Alphabet, Meta and Microsoft
-  // filled Oct 29 2026. Amazon's cells stay null until it reports.
+  // filled Oct 29 2026; Amazon's from its 8-K the same night (call-based cells pending the transcript).
   { key: '26q3', label: "Oct '26", calls: '3Q26', msft: 'FY27Q1' },
 ];
 
@@ -98,7 +100,7 @@ export var HS_GUIDE = [
     series: {
       //        Apr24  Jul24  Oct24  Jan25  Apr25  Jul25  Oct25  Jan26  Apr26  Jul26  Oct26
       googl: [  null,  null,  null,  null,  null,  null,  null,  180,   185,   200,   200  ],
-      amzn:  [  null,  null,  null,  null,  null,  null,  null,  200,   null,  220,   null ],
+      amzn:  [  null,  null,  null,  null,  null,  null,  null,  200,   null,  220,   220  ],
       meta:  [  null,  null,  null,  null,  null,  null,  null,  125,   135,   137.5, 140  ],
       msft:  [  null,  null,  null,  null,  null,  null,  null,  null,  190,   175,   170  ],
       // SpaceX guides a QUARTER, never a year, and only at TOTAL-COMPANY level
@@ -110,7 +112,7 @@ export var HS_GUIDE = [
     },
     resolve: {
       googl: { first: 180, last: 200, actual: null, src: '$175–185B (4Q25) → $180–190B (1Q26, now including Intersect) → $195–205B (2Q26) → unchanged at 3Q26 (“remain unchanged”). Midpoint plotted.' },
-      amzn:  { first: 200, last: 220, actual: null, src: '"About $200 billion" (4Q25) → "approximately $220 billion" (2Q26). Jassy attributes the raise to higher memory cost.' },
+      amzn:  { first: 200, last: 220, actual: null, src: '"About $200 billion" (4Q25) → "approximately $220 billion" (2Q26) → reiterated at 3Q26 ("We continue to expect 2026 cash capital expenditures to be approximately $220 billion", 8-K Oct 29 2026). Jassy attributes the raise to higher memory cost.' },
       meta:  { first: 125, last: 137.5, actual: null, src: '$115–135B (4Q25) → $125–145B (1Q26) → $130–145B (2Q26, floor raised) → $135–145B (3Q26, “narrowed from our prior outlook”, floor raised again). Midpoint plotted.' },
       msft:  { first: 190, last: 175, actual: null, flag: 'accounting', src: '⚠ ~$190B (FY26Q3, including ~$25B of higher component pricing) → ~$175B (FY26Q4). The drop is NOT less investment: extending data-centre useful life from 15 to 25 years pushes more leases from finance to operating, and operating leases are not CapEx. Hood: "outside of this useful life impact, our calendar year 2026 CapEx investment expectations remain unchanged." Then ~$170B (FY27Q1): “for the calendar year, spend should be approximately $170 billion due to the 3P capacity delays” — third-party capacity deliveries expected in the quarter slipped.' },
       spcx:  { first: 65.3, last: 85.6, actual: null, d: true, src: '⚠ <b>Total company, derived from quarterly guides</b> — SpaceX never states a full year and never splits CapEx by segment. Aug: the next two quarters “very similar to the current quarter” ($18.4B) → ~$65B. Oct: 4Q raised to <b>$35–40B</b> — “SI infrastructure continuing to come online at Memphis and Southaven gives us visibility into an accelerated build path” → ~$86B ($83–88B). Super Intelligence was 86% and 84% of total CapEx in 2Q and 3Q26.' },
@@ -121,9 +123,11 @@ export var HS_GUIDE = [
 // ── 2 · REPORTED QUARTERLY CAPEX ──────────────────────────────────────────────
 // US$B, as stated on that quarter's call. Definitions differ by company — see
 // HS_BASIS. null = not stated on any call in the corpus.
+// AMZN 3Q26 = 8-K Ex. 99.1 (Oct 29 2026), cash basis like its calls: purchases of property and equipment
+// $77,259M − proceeds from sales and incentives $1,381M = $75.9B (DERIVED from the release, not stated on the call).
 export var HS_QUARTERLY = {
   googl: [12.0, null, 13.0, 14.0, 17.2, 22.4, 24.0, 27.9, 35.7, 44.9, 51.4],
-  amzn:  [14.0, null, null, 26.3, 24.3, 31.4, 34.2, null, 43.2, 53.1, null],
+  amzn:  [14.0, null, null, 26.3, 24.3, 31.4, 34.2, null, 43.2, 53.1, 75.9],
   meta:  [6.7,  8.5,  9.2,  14.8, null, 17.0, 19.4, 22.1, 19.8, 31.1, 34.9],
   msft:  [14.0, 19.0, 20.0, 22.6, 21.4, 24.2, 34.9, 37.5, 31.9, 41.0, 45.2],
   // TOTAL-COMPANY CapEx (SAB, Oct 21 2026: same basis as the other four, and the
@@ -169,7 +173,7 @@ export var HS_YEARS = ['2024', '2025', '2026'];
 
 export var HS_YEAR_QTRS = {
   googl: { '2024': [12.0, null, 13.0, 14.0], '2025': [17.2, 22.4, 24.0, 27.9], '2026': [35.7, 44.9, 51.4, null] },
-  amzn:  { '2024': [14.0, 16.5, 21.4, 26.3], '2025': [24.3, 31.4, 34.2, 35.1], '2026': [43.2, 53.1, null, null] },
+  amzn:  { '2024': [14.0, 16.5, 21.4, 26.3], '2025': [24.3, 31.4, 34.2, 35.1], '2026': [43.2, 53.1, 75.9, null] },
   meta:  { '2024': [6.7,  8.5,  9.2,  14.8], '2025': [12.5, 17.0, 19.4, 22.1], '2026': [19.8, 31.1, 34.9, null] },
   msft:  { '2024': [14.0, 19.0, 20.0, 22.6], '2025': [21.4, 24.2, 34.9, 37.5], '2026': [31.9, 41.0, 45.2, null] },
   // Total company, exact $M ÷ 1000 rather than the rounded HS_QUARTERLY figures,
@@ -583,7 +587,7 @@ export var HS_CSP_REV = {
           20028, 24768, 30709],
   amzn:  [9954, 10219, 10808, 11601, 12742, 13503, 14809, 16110, 17780, 18441, 19739, 20538, 21378,
           21354, 22140, 23059, 24204, 25037, 26281, 27452, 28786, 29267, 30873, 33006, 35579,
-          37587, 42232, null],
+          37587, 42232, 45984],
   msft:  [null, null, null, null, null, null, null, null, null, null, null, 16885, 17926,
           18244, 19889, 20013, 21525, 22141, 23785, 24092, 25544, 26751, 29878, 30897, 32907,
           34681, 39306, null],
@@ -605,7 +609,7 @@ export var HS_CSP_OI = {
           6598, 8814, 11121],
   amzn:  [2596, 3075, 3357, 3535, 3564, 4163, 4193, 4883, 5293, 6518, 5715, 5403, 5205,
           5123, 5365, 6976, 7167, 9421, 9334, 10447, 10632, 11547, 10160, 11434, 12465,
-          14161, 16621, null],
+          14161, 16621, 17773],
   msft:  [null, null, null, null, null, null, null, null, null, null, null, 6750, 6727,
           7017, 7917, 8908, 9555, 9515, 9835, 10503, 10851, 11095, 12140, 13391, 13873,
           13753, 15955, null],

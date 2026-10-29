@@ -1,124 +1,135 @@
-// overviews/amzn-sensitivity.js — Amazon (AMZN) Deep Dive ▸ Valuation ▸ Sensitivity Analysis.
+// overviews/amzn-sensitivity.js — Amazon (AMZN) Deep Dive ▸ Valuation ▸ Sensitivity Analysis (VA-SENS, playbook §14).
 //
-// Pick any two drivers, hold everything else at the Summit model, and read the implied share
-// price off a 5×5 grid. Terminal value is an exit multiple — EV/EBITDA or P/E, your choice.
+// COPIED from js/overviews/googl-sensitivity.js (meta- → tsm- → sharkninja- → the original amzn-sensitivity.js) — same
+// functions, markup, class names and interactions; only the data layer, the drivers and the labels change. Pick any two
+// drivers, hold everything else at the base, read the implied share price off a 5×5 grid; exit multiple EV/EBITDA or P/E.
+// It REPLACES the old Amazon pane: its `M` / `SHARES` typed without a snapshot date, its hand-picked 12× / 30× exit
+// multiples, its invented `CONS` numbers (A24) and its inline <style> are gone.
 //
-// ── Data ─────────────────────────────────────────────────────────────────────────
-// Summit DCF model, instrument AMZN, snapshot 2026-08-04 (latest of 7), $M. Every figure below
-// is read straight off the model — nothing is invented:
-//   revenue          AMZN:aws · AMZN:usrev · AMZN:intrev          (ties exactly to AMZN:rev)
-//   operating income AMZN:opinc3 (AWS) · AMZN:opinc (NA) · AMZN:opinc2 (International)
-//   EBITDA           AMZN:aws_ebitda · AMZN:us_ebitda · AMZN:int_ebitda · AMZN:corp_other_ebitda
-//   earnings         AMZN:earnings          shares AMZN:shares       tax AMZN:tax_rate
-// Segment D&A is derived as segment EBITDA − segment operating income, which is the only
-// consistent way to hold depreciation fixed while the operating margin moves.
-//
-// The model's own operating margins come out as round numbers (2028: AWS 37.0%, North America
-// 9.0%, International 4.3%), i.e. these ARE the model's drivers — which is why the axes are
-// built on operating margin rather than an EBITDA margin.
-//
-// ── Reconciliation, stated rather than plugged ───────────────────────────────────
-// Sum of the three segment operating incomes vs the model's consolidated OP_INCOME:
-//   2025   81,058  vs  79,975   → a 1.4% corporate/unallocated drag
-// OP_INCOME is 0 (unpopulated) for 2026-2029, so that drag cannot be tracked forward and is
-// NOT applied here. Separately, CORP_OTHER_EBITDA is unpopulated in 2029 and TAX_RATE stops
-// after 2028 — both hold the 2028 value, marked ⚠ in the UI. Flagged for the model owner.
+// What changed for AMZN (vs googl-sensitivity.js):
+//   • BASE = the Summit DCF model, ONE snapshot FROZEN in ./amzn-sensitivity-data.js (2026-08-04; rule 10) — the same
+//     snapshot as the latest Target Multiple row.
+//   • SEGMENTS = North America · International · AWS, each with a GROWTH and an OPERATING-MARGIN driver: unlike Alphabet,
+//     the model projects segment operating income in every year (OPINC · OPINC2 · OPINC3), so the margins are the
+//     model's own (back to the original Amazon pane's drivers).
+//   • BASE YEAR 2025 = reported segment revenue (js/results-data/amzn.js act).
+//   • EBITDA = the model's consolidated adjusted EBITDA (operating income + D&A + SBC) — the one Target Multiple values:
+//     segment operating income moves with the drivers, the model's D&A + SBC bridge (EBITDA − operating income) is held
+//     fixed, so the base case reproduces the model's EBITDA exactly. The segment EBITDAs (operating income + segment D&A,
+//     no SBC) + unallocated D&A do NOT sum to it; the footer says so with the numbers (A26).
+//   • STREET = Bloomberg consensus by segment from ./amzn-bbg.js (revenue and operating income, FY2026–2028, as of
+//     2026-09-10): growth = CAGR off the 2025 actual to Bloomberg's estimate, margin = Bloomberg operating income ÷ revenue.
+//     2029 has no Bloomberg figure — those drivers fall back to the model, visibly.
+//   • EXIT MULTIPLE starts at the MODEL's own target multiples (EV/EBITDA 9.5×, P/E 28.0× on FY2027 — Target Multiple,
+//     ./amzn-target-multiple-data.js), never at a hand-picked number; yours to move.
+//   • NET DEBT = Amazon's latest reported balance sheet (./amzn-histmult-data.js), its source named (A23); the quote
+//     supplies the price only.
+//   • YEARS 2026–2029 (the snapshot carries every line through 2029; its unallocated D&A is 0 in 2029, which only touches
+//     the reconciliation in the footer, not the grid).
+//   • styles: css/overview.css (.sens-* / .as-* rules shared via :is(…) — .ov-amzn-dd has to be on those lists).
 
-import { SUMMIT_CAT } from '../viz-palette.js';
+import { SUMMIT_CAT, SUMMIT_POS, SUMMIT_NEG } from '../viz-palette.js';
+import { amznResults } from '../results-data/amzn.js';
+import { amznBBG } from './amzn-bbg.js';
+import { AMZN_SENS } from './amzn-sensitivity-data.js';
+import { AMZN_TM } from './amzn-target-multiple-data.js';
+import { AMZN_HM_Q } from './amzn-histmult-data.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-var SNAP = '2026-08-04';
+var SNAP = AMZN_SENS.snapshot;            // the Summit snapshot every figure comes from
 var BASE_YEAR = 2025;
 var YEARS = [2026, 2027, 2028, 2029];
-var SHARES = 10827;                       // millions, flat across the model horizon
 
-// rev / op = operating income / eb = EBITDA, all $M straight from the model.
-var M = {
-  2025:{ aws:{rev:127053, op:44100,  eb:65794},  na:{rev:423912, op:31206, eb:47693}, intl:{rev:158890, op:5752,  eb:10620}, corp:20705, earn:64969,  tax:0.20 },
-  2026:{ aws:{rev:173476, op:65881,  eb:107693}, na:{rev:474880, op:37306, eb:56833}, intl:{rev:182768, op:6915,  eb:12735}, corp:18853, earn:92039,  tax:0.16 },
-  2027:{ aws:{rev:234193, op:84309,  eb:149526}, na:{rev:519993, op:46799, eb:67248}, intl:{rev:205614, op:8636,  eb:15110}, corp:19823, earn:119053, tax:0.16 },
-  2028:{ aws:{rev:292741, op:108314, eb:183363}, na:{rev:571993, op:51479, eb:73567}, intl:{rev:236456, op:10168, eb:17339}, corp:40309, earn:137412, tax:0.20 },
-  2029:{ aws:{rev:365926, op:139052, eb:235691}, na:{rev:629192, op:56627, eb:82723}, intl:{rev:271925, op:11965, eb:19797}, corp:null,  earn:169851, tax:null },
-};
-var OP_INCOME_2025 = 79975;               // model consolidated, for the reconciliation note
-
-// Fixed portal categorical slots, not hand-picked hues — was '#FF9900'/'#146EB4'/'#2E8B57', the
-// first of which was Amazon's own old smile-orange brand.
+// ── Data layer: the frozen Summit snapshot + the reported 2025 base, never re-typed here ─────────────
+var MX = (amznResults && amznResults.views && amznResults.views.y) ? amznResults.views.y.metrics : {};
+function yAct(key, year){ var m=MX[key]; if(!m||!m.periods) return null; var i=m.periods.indexOf(String(year)); return (i<0||!m.act)?null:m.act[i]; }
+// Fixed portal categorical slots, in the order of Amazon's segment note (10-K Note 10).
 var SEGS = [
-  { k:'aws',  n:'AWS',           c:SUMMIT_CAT[0] },
-  { k:'na',   n:'North America', c:SUMMIT_CAT[1] },
-  { k:'intl', n:'International', c:SUMMIT_CAT[2] },
+  { k:'na',   rk:'usrev',  n:'North America', c:SUMMIT_CAT[0] },
+  { k:'intl', rk:'intrev', n:'International', c:SUMMIT_CAT[1] },
+  { k:'aws',  rk:'aws',    n:'AWS',           c:SUMMIT_CAT[2] },
 ];
+// Per segment: rev = revenue · op = operating income · eb = segment EBITDA (op + segment D&A, no SBC). Per year: rev / eb =
+// consolidated revenue and adjusted EBITDA (op + D&A + SBC) · corp = unallocated D&A · dna = consolidated D&A ·
+// earn = model earnings (adj.) · tax = fraction · sh = diluted shares (M). $M throughout.
+var M = {};
+M[BASE_YEAR] = {};
+SEGS.forEach(function(sg){ M[BASE_YEAR][sg.k]={ rev:yAct(sg.rk, BASE_YEAR) }; });
+M[BASE_YEAR].rev = SEGS.reduce(function(t,sg){ return t+(M[BASE_YEAR][sg.k].rev||0); }, 0);
+YEARS.forEach(function(y){ var r=AMZN_SENS.y[y]; if(!r) return;
+  M[y] = { rev:r.rev, eb:r.eb, corp:r.corp, dna:r.dna, earn:r.earn, tax:r.tax, sh:r.sh, eps:r.earn/r.sh };
+  SEGS.forEach(function(sg){ var g=r[sg.k]||{}; M[y][sg.k]={ rev:g.rev, op:g.op, eb:g.eb }; });
+});
+var _ndRow = AMZN_HM_Q[AMZN_HM_Q.length-1];
+var NET_DEBT_SEED = _ndRow[9];            // $M, negative = net cash — long-term debt − cash, equivalents and marketable securities
+var ND_SRC = _ndRow[0]+(_ndRow[0]==='3Q26' ? ' earnings release (8-K Ex. 99.1, '+_ndRow[2]+'; long-term debt non-current only)'
+                                           : ' 10-Q / 10-K, filed '+_ndRow[2]);
+
+// Every series the calc needs, for every year — if one is missing the pane says so instead of NaN.
+function dataOk(){
+  var ok=true;
+  SEGS.forEach(function(sg){ if(M[BASE_YEAR][sg.k].rev==null) ok=false; });
+  YEARS.forEach(function(y){
+    if(!M[y]){ ok=false; return; }
+    SEGS.forEach(function(sg){ if(M[y][sg.k].rev==null || M[y][sg.k].op==null) ok=false; });
+    if(M[y].eb==null || M[y].earn==null || M[y].rev==null || M[y].tax==null || !M[y].sh) ok=false;
+  });
+  return ok;
+}
 
 // Axis drivers. `step` is the default grid increment; the user can override start and step.
 var DRIVERS = [
-  { k:'aws_g',  seg:'aws',  kind:'g', n:'AWS revenue growth',              step:0.02  },
-  { k:'aws_m',  seg:'aws',  kind:'m', n:'AWS operating margin',            step:0.02  },
-  { k:'na_g',   seg:'na',   kind:'g', n:'North America revenue growth',    step:0.01  },
-  { k:'na_m',   seg:'na',   kind:'m', n:'North America operating margin',  step:0.01  },
-  { k:'intl_g', seg:'intl', kind:'g', n:'International revenue growth',    step:0.01  },
-  { k:'intl_m', seg:'intl', kind:'m', n:'International operating margin',  step:0.005 },
-  { k:'mult',   seg:null,   kind:'x', n:'Exit multiple',                   step:1     },
+  { k:'na_g',   seg:'na',   kind:'g', n:'North America revenue growth',   step:0.01  },
+  { k:'na_m',   seg:'na',   kind:'m', n:'North America operating margin', step:0.01  },
+  { k:'intl_g', seg:'intl', kind:'g', n:'International revenue growth',   step:0.01  },
+  { k:'intl_m', seg:'intl', kind:'m', n:'International operating margin', step:0.005 },
+  { k:'aws_g',  seg:'aws',  kind:'g', n:'AWS revenue growth',             step:0.02  },
+  { k:'aws_m',  seg:'aws',  kind:'m', n:'AWS operating margin',           step:0.02  },
+  { k:'mult',   seg:null,   kind:'x', n:'Exit multiple',                  step:1     },
 ];
 function drv(k){ for(var i=0;i<DRIVERS.length;i++) if(DRIVERS[i].k===k) return DRIVERS[i]; return DRIVERS[0]; }
 
 var NCELL = 5;
 
-// ── Street consensus — THE MAP IS REAL, THE NUMBERS ARE NOT ──────────────────────
-// What consensus assumes for the two drivers on the axes, shown beside the grid so the matrix can
-// be read against someone other than us.
-//
-// ⚠ The workbook this comes from is not wired yet. Every figure in CONS.v below is INVENTED to
-// show the layout — placed a little under the model, which is where the Street usually sits, but
-// it is not Street data and the card says so in amber until it is. Nothing else in this file is
-// invented (see the header): keep that line clean by replacing these numbers, not by adding more.
-//
-// The shape IS the mapping, and it is what the sheet has to supply: one value per driver key per
-// valuation year. Wiring it up is three things and no UI work —
-//   1. fill CONS.v from the sheet (same keys as DRIVERS, same years as YEARS),
-//   2. set CONS.src ('Bloomberg consensus', 'Visible Alpha', whatever it is) and CONS.asOf,
-//   3. nothing else — the amber placeholder badge disappears on its own once CONS.src is set.
-//
-// Units match the drivers exactly: growth is a CAGR off the 2025 actual (the same basis the axis
-// applies), margin is that year's operating margin, both as fractions.
-var CONS = {
-  src:  null,        // e.g. 'Bloomberg consensus' — null means "still a placeholder"
-  asOf: null,        // e.g. '2026-08-04'
-  v: {
-    aws_g:  { 2026:0.345, 2027:0.335, 2028:0.300, 2029:0.285 },
-    aws_m:  { 2026:0.365, 2027:0.350, 2028:0.355, 2029:0.360 },
-    na_g:   { 2026:0.110, 2027:0.100, 2028:0.097, 2029:0.095 },
-    na_m:   { 2026:0.075, 2027:0.082, 2028:0.084, 2029:0.086 },
-    intl_g: { 2026:0.138, 2027:0.128, 2028:0.130, 2029:0.126 },
-    intl_m: { 2026:0.035, 2027:0.038, 2028:0.040, 2029:0.042 },
-    // The exit multiple is the reader's own input, not something consensus publishes. Left empty
-    // on purpose: it is the null path the sheet will also hit, and it should render as a stated
-    // absence rather than as a number nobody chose.
-    mult:   {},
-  },
-};
+// ── The comparison slot — Street (Bloomberg consensus by segment), read through ───────────────────────
+// ./amzn-bbg.js `seg` carries Bloomberg's segment revenue and operating income: 2023–2025 actual (a) and FY2026–2028
+// estimates (f). Growth = CAGR off Bloomberg's own 2025 actual (the reported figure) to its estimate for that year;
+// margin = Bloomberg operating income ÷ Bloomberg revenue. A year Bloomberg does not cover stays empty and falls back
+// visibly. No figure here is typed.
+function bbgSeg(seg, line, year){
+  var s=amznBBG && amznBBG.seg && amznBBG.seg[seg] && amznBBG.seg[seg][line]; if(!s) return null;
+  if(year===BASE_YEAR){ var ia=amznBBG.yearsA.indexOf(year); return ia<0?null:s.a[ia]; }
+  var i=amznBBG.yearsF.indexOf(year); return (i<0||s.f[i]==null)?null:s.f[i];
+}
+function streetCagr(seg, year){ var a=bbgSeg(seg,'rev',BASE_YEAR), c=bbgSeg(seg,'rev',year); return (a&&c)?(Math.pow(c/a, 1/(year-BASE_YEAR))-1):null; }
+function streetMargin(seg, year){ var o=bbgSeg(seg,'oi',year), r=bbgSeg(seg,'rev',year); return (o!=null&&r)?o/r:null; }
+function isoOf(us){ var p=String(us||'').split('/'); return p.length===3 ? (p[2]+'-'+('0'+p[0]).slice(-2)+'-'+('0'+p[1]).slice(-2)) : null; }
+var CONS = { src:'Bloomberg consensus', asOf:isoOf(amznBBG && amznBBG.asOf), v:{ mult:{} } };
+SEGS.forEach(function(sg){ CONS.v[sg.k+'_g']={}; CONS.v[sg.k+'_m']={}; });
+YEARS.forEach(function(y){
+  SEGS.forEach(function(sg){
+    var g=streetCagr(sg.k, y); if(g!=null) CONS.v[sg.k+'_g'][y]=g;
+    var m=streetMargin(sg.k, y); if(m!=null) CONS.v[sg.k+'_m'][y]=m;
+  });
+});
 function consValue(k, year){ var row=CONS.v[k]; var v=row?row[year]:null; return v==null?null:v; }
 function consPlaceholder(){ return !CONS.src; }
-function consSrcLabel(){ return CONS.src ? (CONS.src + (CONS.asOf?(' · '+CONS.asOf):'')) : 'placeholder'; }
-function baseName(b){ return (b||_base)==='cons' ? 'Street consensus' : 'the Summit model'; }
-function baseNameCap(b){ return (b||_base)==='cons' ? 'Street consensus' : 'Summit model'; }
+function consSrcLabel(){ return CONS.src + (CONS.asOf?(' · as of '+CONS.asOf):''); }
+function baseName(b){ return (b||_base)==='cons' ? 'Street (Bloomberg consensus)' : 'the Summit model'; }
+function baseNameCap(b){ return (b||_base)==='cons' ? 'Street' : 'Summit model'; }
 function altBase(){ return _base==='summit' ? 'cons' : 'summit'; }
 
 // ── Whose number is this? ────────────────────────────────────────────────────────
-// One function decides it for every driver, and everything downstream — the grid's defaults, the
-// axis centring, the assumptions strip and the year cards — reads it. Consensus does not cover
-// every driver (the exit multiple is nobody's but yours), so a missing figure falls back to the
-// model rather than blanking the grid; consFellBack() is what makes that fallback visible instead
-// of silent.
+// One function decides it for every driver. On Street, a driver Bloomberg does not cover falls back to the
+// model; consFellBack() is what makes that fallback visible instead of silent.
 function baseValue(k, year){
   if(_base==='cons'){ var c=consValue(k,year); if(c!=null) return c; }
   return modelValue(k, year);
 }
 function consFellBack(k, year){ return _base==='cons' && consValue(k,year)==null; }
-// Segment defaults under the current base. Growth is applied the same way an axis applies it —
-// a flat rate compounded off the 2025 actual — so a consensus CAGR and an axis CAGR mean the same
-// thing and the base case sits exactly on the grid.
+// Category defaults under the current base. Growth is applied the same way an axis applies it —
+// a flat rate compounded off the 2025 actual.
 function baseRev(seg, year){
   var g = (_base==='cons') ? consValue(seg+'_g', year) : null;
   if(g==null) return M[year][seg].rev;
@@ -131,8 +142,7 @@ function baseMargin(seg, year){
   return m==null ? modelOpMargin(seg, year) : m;
 }
 
-// The OTHER side, for the card beside the grid: consensus while you are reading the model, the
-// model while you are reading consensus.
+// The OTHER side, for the card beside the grid.
 function altValue(k, year){ return _base==='summit' ? consValue(k, year) : modelValue(k, year); }
 // The same calc as any grid cell, with the other side substituted for the two drivers on the axes
 // and everything else left at the current base — so the number is directly comparable to a cell.
@@ -145,32 +155,45 @@ function altCalc(year){
 }
 
 // ── State ────────────────────────────────────────────────────────────────────────
-var _year  = 2028;
-var _base  = 'summit';    // whose assumptions everything OFF the axes is held at: 'summit' | 'cons'
+var _year  = (function(){ var s=AMZN_TM.snaps[AMZN_TM.snaps.length-1]; return s.val.ev?s.val.ev.year:2027; })();   // the model's target year
+var _base  = 'summit';    // 'summit' = the Summit model (populated) · 'cons' = Street (Bloomberg)
 var _x     = 'aws_g';
 var _y     = 'aws_m';
 var _basis = 'ev';        // 'ev' = EV/EBITDA · 'pe' = P/E
-var _mEv   = 12;          // exit EV/EBITDA
-var _mPe   = 30;          // exit P/E
-var _netDebt = 0;         // $M, seeded from the live quote (Massive)
-var _rx = { start:null, step:null };   // null = auto from the model
+var _mEv   = null;        // exit EV/EBITDA — starts at the model's target multiple (startAtMarket below)
+var _mPe   = null;        // exit P/E — likewise
+var _mTouched = false;    // once the user moves the multiple, a later quote no longer resets it
+var _netDebt = NET_DEBT_SEED;   // $M, Amazon's latest reported balance sheet; the live quote does not override it (A23)
+var _rx = { start:null, step:null };   // null = auto from the base
 var _ry = { start:null, step:null };
 var _px = null;           // live share price
 
 function activeMult(){ return _basis==='ev' ? _mEv : _mPe; }
+// The exit multiple starts at the MODEL's own target multiples (Target Multiple, latest submit) — never today's market
+// multiple, never a guess. The name is kept from the copy so every caller stays unchanged.
+var _tmLast = AMZN_TM.snaps[AMZN_TM.snaps.length-1].val;
+function startAtMarket(){
+  if(_tmLast.ev) _mEv=_tmLast.ev.mult;
+  if(_tmLast.pe) _mPe=_tmLast.pe.mult;
+}
+startAtMarket();
 function multLabel(){ return _basis==='ev' ? 'EV/EBITDA' : 'P/E'; }
 
 // ── Model reads ──────────────────────────────────────────────────────────────────
-function corpFor(year){ return M[year].corp==null ? M[2028].corp : M[year].corp; }
-function taxFor(year){ return M[year].tax==null ? M[2028].tax : M[year].tax; }
-function heldFlags(year){ return (M[year].corp==null || M[year].tax==null); }
-function segDna(seg, year){ return M[year][seg].eb - M[year][seg].op; }
+function lastYearWith(field, year){ for(var y=year; y>=BASE_YEAR; y--) if(M[y] && M[y][field]!=null) return y; return YEARS[0]; }
+function taxFor(year){ return M[year].tax==null ? M[lastYearWith('tax',year)].tax : M[year].tax; }
+function sharesFor(year){ return M[year].sh; }   // the model's diluted shares (held flat)
+function heldFlags(year){ return M[year].tax==null; }
+function catSum(year){ var t=0; SEGS.forEach(function(sg){ t += M[year][sg.k].rev; }); return t; }
+function modelOpTotal(year){ var t=0; SEGS.forEach(function(s){ t += M[year][s.k].op; }); return t; }
+// D&A + SBC, held fixed: the model's consolidated adjusted EBITDA − its operating income (the sum of the three segments,
+// summit-map). Adding it back to the driven operating income reproduces the model's EBITDA in the base case.
+function dnaFor(year){ return M[year].eb - modelOpTotal(year); }
 function modelOpMargin(seg, year){ return M[year][seg].op / M[year][seg].rev; }
 function modelCagr(seg, year){
   var n = year - BASE_YEAR;
   return Math.pow(M[year][seg].rev / M[BASE_YEAR][seg].rev, 1/n) - 1;
 }
-function modelOpTotal(year){ var t=0; SEGS.forEach(function(s){ t += M[year][s.k].op; }); return t; }
 
 // The model's own value for a driver — the axis default centres on this.
 function modelValue(k, year){
@@ -178,8 +201,7 @@ function modelValue(k, year){
   if(d.kind==='x') return activeMult();
   return d.kind==='g' ? modelCagr(d.seg, year) : modelOpMargin(d.seg, year);
 }
-// Axis geometry: start + step, defaulting to "the BASE's value sits in the middle" — so switching
-// to consensus re-centres the grid on consensus rather than leaving it around the model.
+// Axis geometry: start + step, defaulting to "the BASE's value sits in the middle".
 function axis(k, st, year){
   var d = drv(k);
   var step  = (st.step!=null)  ? st.step  : d.step;
@@ -191,7 +213,7 @@ function axis(k, st, year){
 // ── The calculation ──────────────────────────────────────────────────────────────
 function calc(year, over){
   over = over || {};
-  var parts=[], opTotal=0, ebitda=0;
+  var parts=[], revTotal=0, opTotal=0;
   SEGS.forEach(function(s){
     var gK=s.k+'_g', mK=s.k+'_m', rev;
     if(over[gK]!=null){                                   // flat rate compounded 2026 → year
@@ -200,33 +222,39 @@ function calc(year, over){
     } else rev = baseRev(s.k, year);                      // off the axes: whichever base is selected
     var om = over[mK]!=null ? over[mK] : baseMargin(s.k, year);
     var op = rev * om;
-    var dna = segDna(s.k, year);                          // depreciation held at the model
-    opTotal += op;
-    ebitda  += op + dna;
-    parts.push({ k:s.k, n:s.n, c:s.c, rev:rev, om:om, op:op, dna:dna, eb:op+dna });
+    revTotal += rev; opTotal += op;
+    parts.push({ k:s.k, n:s.n, c:s.c, rev:rev, om:om, op:op });
   });
-  ebitda += corpFor(year);
+  var dna = dnaFor(year);                                 // D&A + SBC, held at the model
+  var ebitda = opTotal + dna;
   var tax = taxFor(year);
-  // Flow the operating-income delta through tax onto the model's own earnings line, so the
-  // base case reproduces AMZN:earnings exactly and only the delta is modelled.
+  var shares = sharesFor(year);
+  // Flow the operating-income delta through tax onto the model's own earnings, so the base case
+  // reproduces the model's EPS exactly and only the delta is modelled.
   var earnings = M[year].earn + (opTotal - modelOpTotal(year)) * (1 - tax);
   var mult = over.mult!=null ? over.mult : activeMult();
   var ev, equity, px;
-  if(_basis==='ev'){ ev = ebitda*mult; equity = ev - _netDebt; px = equity/SHARES; }
-  else             { px = (earnings/SHARES)*mult; equity = px*SHARES; ev = equity + _netDebt; }
-  return { parts:parts, corp:corpFor(year), opTotal:opTotal, ebitda:ebitda, earnings:earnings,
-           mult:mult, ev:ev, equity:equity, px:px, eps:earnings/SHARES };
+  if(_basis==='ev'){ ev = ebitda*mult; equity = ev - _netDebt; px = equity/shares; }
+  else             { px = (earnings/shares)*mult; equity = px*shares; ev = equity + _netDebt; }
+  return { parts:parts, rev:revTotal, dna:dna, opTotal:opTotal, ebitda:ebitda, earnings:earnings,
+           mult:mult, ev:ev, equity:equity, px:px, eps:earnings/shares, shares:shares };
 }
 
 // ── Formatting ───────────────────────────────────────────────────────────────────
-function fmtB(v){ var b=v/1000; return (Math.abs(b)>=1000) ? ('$'+(b/1000).toFixed(2)+'T') : ('$'+Math.round(b)+'B'); }
+function fmtB(v){
+  if(Math.abs(v)<0.5) v=0;                       // no "−$0M" from a rounding residue
+  var s=v<0?'−':'', a=Math.abs(v);
+  if(a<1000) return s+'$'+Math.round(a).toLocaleString('en-US')+'M';
+  var b=a/1000;
+  return s+(b>=1000 ? ('$'+(b/1000).toFixed(2)+'T') : ('$'+(b<100?b.toFixed(2):Math.round(b))+'B'));
+}
 function fmtPx(v){ return '$'+Math.round(v).toLocaleString('en-US'); }
 function pctLbl(v){ var s=v*100; return (Math.abs(s-Math.round(s))<0.05 ? Math.round(s) : s.toFixed(1))+'%'; }
 function axisLbl(k,v){ return drv(k).kind==='x' ? (v.toFixed(1)+'×') : pctLbl(v); }
 function signPct(p){ return (p>=0?'+':'−')+(Math.abs(p)*100).toFixed(1)+'%'; }
 function lerp(a,b,t){ return Math.round(a+(b-a)*t); }
 function colorFor(up, cap){
-  if(cap<=0) return '#ffffff';
+  if(cap<=0) return 'white';
   var t = Math.max(-1, Math.min(1, up/cap));
   if(t>=0) return 'rgb('+lerp(255,168,t)+','+lerp(255,205,t)+','+lerp(255,160,t)+')';
   t=-t;    return 'rgb('+lerp(255,240,t)+','+lerp(255,176,t)+','+lerp(255,168,t)+')';
@@ -242,38 +270,13 @@ function selHtml(id, cur){
   }).join('')+'</select>';
 }
 function sensBody(){
+  if(!dataOk()){
+    return '<div class="rs-noguide">Sensitivity analysis is unavailable: a series it needs (segment revenue or operating income, '+
+      'EBITDA, earnings, tax rate or shares) is missing from the frozen Summit snapshot in js/overviews/amzn-sensitivity-data.js. '+
+      'Nothing is estimated in its place.</div>';
+  }
   var h = '';
-  // overview.css carries two competing .sens-ctrl rules: the slider style (~line 416) sets
-  // .sens-ctrl-l { min-width:200px } and the matrix style (~line 509) never clears it, so every
-  // label reserved 200px and pushed the reset button onto its own line. Neutralise it for THIS
-  // pane only — editing the global rule would shift TBBB's and SOFI's sensitivity layouts.
-  h += '<style>'+
-    '.ovt-subpane[data-ovst="sensitivity"] .sens-ctrl-l{min-width:0}'+
-    '.ovt-subpane[data-ovst="sensitivity"] .sens-ctrl{margin:0;gap:8px}'+
-    '.ovt-subpane[data-ovst="sensitivity"] .sens-row-inp{gap:12px 18px}'+
-    '.ovt-subpane[data-ovst="sensitivity"] .as-reset{padding:5px 11px;font-size:11px}'+
-    // the grid and the consensus card sit side by side; the card drops under the grid when the
-    // pane gets narrow rather than squeezing the matrix
-    '.as-mxrow{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin:10px 0 4px}'+
-    '.as-mxrow>.sens-matrix-wrap{flex:1 1 520px;min-width:0;margin:0}'+
-    '.as-cons{flex:0 0 258px;border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;background:#FCFCFD}'+
-    '.as-cons-h{font-size:11px;font-weight:800;color:var(--navy);letter-spacing:.02em;margin-bottom:2px}'+
-    '.as-cons-src{font-size:10px;color:var(--mu);margin-bottom:10px}'+
-    '.as-cons-r{padding:8px 0;border-top:1px solid var(--bdr)}'+
-    '.as-cons-k{font-size:10.5px;font-weight:700;color:var(--mu);margin-bottom:3px}'+
-    '.as-cons-v{display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:800;color:var(--navy)}'+
-    '.as-cons-v small{font-size:10px;font-weight:600;color:var(--mu)}'+
-    '.as-cons-d{font-size:10.5px;font-weight:700;margin-top:2px}'+
-    '.as-cons-nil{font-size:10.5px;color:var(--mu);line-height:1.45}'+
-    '.as-cons-px{margin-top:10px;padding-top:10px;border-top:2px solid var(--bdr)}'+
-    '.as-cons-px .v{font-size:20px;font-weight:800;color:var(--navy);line-height:1.1}'+
-    '.as-cons-px .s{font-size:10.5px;color:var(--mu);margin-top:3px;line-height:1.45}'+
-    // the consensus cell, ringed on the grid — purple, the same "not model data" colour the
-    // Target Multiple block uses for its stand-ins
-    '.sens-cell.as-cons-cell{outline:2px solid #8E44AD;outline-offset:-2px}'+
-    '.as-cons-ph{display:inline-block;font-size:9px;font-weight:800;border-radius:20px;padding:1px 7px;'+
-      'color:#8E44AD;border:1px solid #8E44AD;margin-left:6px;vertical-align:1px}'+
-    '</style>';
+  // styles: css/overview.css (:is(…, .ov-amzn-dd) — the pane-scoped .sens-ctrl fixes and the .as-* card)
   h += '<div class="sens-controls-row sens-row-year">'+
        '<div class="sens-ctrl"><span class="sens-ctrl-l">Valuation year</span><div class="sens-years">'+
          YEARS.map(function(y){ return '<button type="button" class="sens-year'+(y===_year?' active':'')+'" data-asyear="'+y+'">'+y+'</button>'; }).join('')+
@@ -282,19 +285,17 @@ function sensBody(){
        // is the control that changes what the whole matrix means — hence its place on the top row.
        '<div class="sens-ctrl"><span class="sens-ctrl-l">Assumptions</span><div class="sens-years">'+
          '<button type="button" class="sens-year'+(_base==='summit'?' active':'')+'" data-asbase="summit"'+
-           ' title="Every driver off the axes held at the Summit model">Summit model</button>'+
-         // Street consensus is offered ONLY once real Street figures are wired (CONS.src set) — the
-         // placeholder numbers are never shown as an option (SAB, Oct 13 2026).
-         (consPlaceholder() ? '' :
+           ' title="Every driver off the axes held at the Summit model (snapshot '+esc(SNAP)+')">Summit model</button>'+
          '<button type="button" class="sens-year'+(_base==='cons'?' active':'')+'" data-asbase="cons"'+
-           ' title="Every driver off the axes held at consensus">Street consensus</button>')+
+           ' title="Every driver off the axes held at Bloomberg consensus where it has a figure; the rest stay at the model">'+
+           'Street (Bloomberg consensus)</button>'+
        '</div></div>'+
        '<div class="sens-ctrl"><span class="sens-ctrl-l">Exit multiple on</span><div class="sens-years">'+
          '<button type="button" class="sens-year'+(_basis==='ev'?' active':'')+'" data-asbasis="ev">EV/EBITDA</button>'+
          '<button type="button" class="sens-year'+(_basis==='pe'?' active':'')+'" data-asbasis="pe">P/E</button>'+
        '</div></div>'+
        '<div class="sens-ctrl"><span class="sens-ctrl-l" id="asMultL">'+multLabel()+'</span><span class="sens-inp-wrap">'+
-         '<input class="sens-inp" id="asMult" type="number" step="0.5" value="'+activeMult()+'"><span class="sens-inp-u">×</span></span></div>'+
+         '<input class="sens-inp" id="asMult" type="number" step="0.5" value="'+(activeMult()==null?'':activeMult())+'"><span class="sens-inp-u">×</span></span></div>'+
        '</div>';
 
   h += '<div class="sens-controls-row sens-row-inp">'+
@@ -303,7 +304,7 @@ function sensBody(){
          '<input class="sens-inp" id="asXs" type="number" step="0.5"><span class="sens-inp-u" id="asXsU">%</span></span></div>'+
        '<div class="sens-ctrl"><span class="sens-ctrl-l">step</span><span class="sens-inp-wrap">'+
          '<input class="sens-inp" id="asXd" type="number" step="0.25"><span class="sens-inp-u" id="asXdU">pp</span></span></div>'+
-       '<button type="button" class="sens-year as-reset" id="asXr" title="Back to the model-centred range">reset</button>'+
+       '<button type="button" class="sens-year as-reset" id="asXr" title="Back to the base-centred range">reset</button>'+
        '</div>';
   h += '<div class="sens-controls-row sens-row-inp">'+
        '<div class="sens-ctrl"><span class="sens-ctrl-l">Y axis ↓</span>'+selHtml('asY', _y)+'</div>'+
@@ -311,7 +312,7 @@ function sensBody(){
          '<input class="sens-inp" id="asYs" type="number" step="0.5"><span class="sens-inp-u" id="asYsU">%</span></span></div>'+
        '<div class="sens-ctrl"><span class="sens-ctrl-l">step</span><span class="sens-inp-wrap">'+
          '<input class="sens-inp" id="asYd" type="number" step="0.25"><span class="sens-inp-u" id="asYdU">pp</span></span></div>'+
-       '<button type="button" class="sens-year as-reset" id="asYr" title="Back to the model-centred range">reset</button>'+
+       '<button type="button" class="sens-year as-reset" id="asYr" title="Back to the base-centred range">reset</button>'+
        '</div>';
 
   h += '<div class="sens-assum" id="asAssum"></div>';
@@ -322,9 +323,9 @@ function sensBody(){
   h += '<div class="sens-legend"><span>Lower</span><div class="sens-legend-bar"></div><span>Higher</span>'+
        '<span class="sens-legend-n" id="asLegendN"></span></div>';
 
-  h += '<div class="ov-sec" style="margin-top:16px"><div class="ov-sec-h">The same base case across years</div>'+
+  h += '<div class="ov-sec as-years-sec"><div class="ov-sec-h">The same base case across years</div>'+
        '<div id="asYears"></div>'+
-       '<div class="ov-fynote">The model untouched, valued at the multiple above. It climbs across years purely because the model compounds — '+
+       '<div class="ov-fynote">The Summit model untouched, valued at the multiple above. It climbs across years purely because the model compounds — '+
        'nothing here is discounted back, so read the later years as "what the model implies you would be paying for", not as a target price.</div></div>';
 
   h += '<div class="ov-foot" id="asFoot"></div>';
@@ -347,44 +348,42 @@ function syncAxisInputs(scope){
 function renderAssum(scope){
   var year=_year;
   var items = SEGS.map(function(s){
-    var live = (drv(_x).seg===s.k) || (drv(_y).seg===s.k);
-    // a consensus run that quietly used model figures for a segment the sheet does not cover
-    // would read as consensus; say which lines fell back instead
-    var fb = consFellBack(s.k+'_g', year) || consFellBack(s.k+'_m', year);
-    return '<span class="sens-assum-i'+(live?' sens-assum-hi':'')+'">'+esc(s.n)+
-      ' growth <b>'+pctLbl(baseValue(s.k+'_g',year))+'</b> · op margin <b>'+pctLbl(baseValue(s.k+'_m',year))+'</b>'+
-      (live?' <i>(on an axis)</i>':'')+(fb?' <i>(no consensus figure — held at the model)</i>':'')+'</span>';
+    var gk=s.k+'_g', mk=s.k+'_m';
+    var gLive = (_x===gk) || (_y===gk), mLive = (_x===mk) || (_y===mk);
+    // a Street run that quietly used model figures would read as Street; say which fell back
+    var gFb = consFellBack(gk, year), mFb = consFellBack(mk, year);
+    return '<span class="sens-assum-i'+(gLive?' sens-assum-hi':'')+'">'+esc(s.n)+
+      ' growth <b>'+pctLbl(baseValue(gk,year))+'</b>'+
+      (gLive?' <i>(on an axis)</i>':'')+(gFb?' <i>(no Street figure — held at the model)</i>':'')+'</span>'+
+      '<span class="sens-assum-i'+(mLive?' sens-assum-hi':'')+'">'+esc(s.n)+
+      ' margin <b>'+pctLbl(baseValue(mk,year))+'</b>'+
+      (mLive?' <i>(on an axis)</i>':'')+(mFb?' <i>(no Street figure — held at the model)</i>':'')+'</span>';
   }).join('');
   scope.querySelector('#asAssum').innerHTML =
-    '<span class="sens-assum-t">Held at '+esc(baseName())+' ('+year+')'+
-      (_base==='cons' && consPlaceholder() ? ' ⚑ placeholder' : '')+'</span>'+items+
-    // consensus covers the six segment drivers and nothing else — these three stay the model's
-    // under either base, and say so rather than inheriting the strip's title
-    '<span class="sens-assum-i">Corporate / other EBITDA <b>'+fmtB(corpFor(year))+'</b>'+(M[year].corp==null?' <i>(2029 unpopulated — held at 2028)</i>':(_base==='cons'?' <i>(model)</i>':''))+'</span>'+
-    '<span class="sens-assum-i">Tax <b>'+pctLbl(taxFor(year))+'</b>'+(M[year].tax==null?' <i>(held at 2028)</i>':(_base==='cons'?' <i>(model)</i>':''))+'</span>'+
-    '<span class="sens-assum-i">Shares <b>'+SHARES.toLocaleString('en-US')+'M</b> <i>(flat in the model)</i></span>'+
-    '<span class="sens-assum-i">Net debt <b>'+fmtB(_netDebt)+'</b></span>';
+    '<span class="sens-assum-t">Held at '+esc(baseName())+' ('+year+')</span>'+items+
+    // these stay the model's under either base, and say so rather than inheriting the strip's title
+    '<span class="sens-assum-i">D&amp;A + SBC <b>'+fmtB(dnaFor(year))+'</b> <i>(model, held'+(_base==='cons'?' at the model':'')+')</i></span>'+
+    '<span class="sens-assum-i">Tax <b>'+pctLbl(taxFor(year))+'</b>'+(M[year].tax==null?' <i>(held at '+lastYearWith('tax',year)+')</i>':(_base==='cons'?' <i>(model)</i>':''))+'</span>'+
+    '<span class="sens-assum-i">Shares <b>'+sharesFor(year).toLocaleString('en-US')+'M</b> <i>(diluted, model — held flat)</i></span>'+
+    '<span class="sens-assum-i">Net debt <b>'+fmtB(_netDebt)+'</b> <i>('+(_netDebt<0?'net cash — ':'')+esc(ND_SRC)+')</i></span>';
 }
 
 // ── The other side, at the right of the grid ─────────────────────────────────────
-// Always shows whichever base you are NOT reading: consensus while the grid is on the Summit
-// model, the model while the grid is on consensus. One row per axis driver — its figure, the
-// current base's figure, and the gap — then the price those two figures imply, computed exactly
-// like a cell so it is comparable.
+// Always shows whichever base you are NOT reading: Street while the grid is on the Summit model, the model
+// while it is on Street. A driver the other side has no figure for says so rather than inventing a comparison.
 function consRowHtml(role, k, year){
   var d=drv(k), av=altValue(k,year), bv=baseValue(k,year);
   var h='<div class="as-cons-r"><div class="as-cons-k">'+esc(role)+' &nbsp;'+esc(d.n)+'</div>';
   if(d.kind==='x' || av==null){
-    // stated, not blank: an empty row here would read as "consensus says nothing" when the truth
-    // is that this driver is the reader's own input
+    // stated, not blank
     return h+'<div class="as-cons-nil">'+(d.kind==='x'
-      ? 'The exit multiple is your input — consensus does not publish one.'
-      : 'No consensus figure for this driver; the grid holds it at the model.')+'</div></div>';
+      ? 'The exit multiple starts at the model’s own target multiple (Target Multiple) and is yours to move; Bloomberg publishes none.'
+      : 'No Bloomberg figure for this driver in '+year+' — the grid holds it at the model.')+'</div></div>';
   }
   var gap=av-bv;
   var gapTxt = d.kind==='x' ? ((gap>=0?'+':'−')+Math.abs(gap).toFixed(1)+'×')
                             : ((gap>=0?'+':'−')+Math.abs(gap*100).toFixed(1)+' pp');
-  var col = Math.abs(gap) < (d.kind==='x'?0.05:0.0005) ? 'var(--mu)' : (gap>=0?'#2E8B57':'#C0392B');
+  var col = Math.abs(gap) < (d.kind==='x'?0.05:0.0005) ? 'var(--mu)' : (gap>=0?SUMMIT_POS:SUMMIT_NEG);
   return h+
     '<div class="as-cons-v">'+axisLbl(k,av)+'<small>'+esc(baseNameCap())+' '+axisLbl(k,bv)+'</small></div>'+
     '<div class="as-cons-d" style="color:'+col+'">'+gapTxt+' vs '+esc(baseName())+'</div></div>';
@@ -393,24 +392,14 @@ function renderCons(scope, aX, aY, cell){
   var el=scope.querySelector('#asCons'); if(!el) return;
   var year=_year, r=altCalc(year), live=_px;
   var isCons=(altBase()==='cons');
-  if(isCons && consPlaceholder()){   // blocked, not faked: no invented Street numbers on screen
-    el.innerHTML='<div class="as-cons-h">What consensus assumes</div>'+
-      '<div class="rs-noguide" style="margin-top:6px">⚑ Live Street figures pending — the comparison appears once the '+
-      'Street\'s segment growth and margins are wired. Nothing here is estimated in the meantime.</div>';
-    return;
-  }
-  var h='<div class="as-cons-h">What '+(isCons?'consensus':'the Summit model')+' assumes'+
-        (isCons && consPlaceholder()?'<span class="as-cons-ph">placeholder</span>':'')+'</div>'+
-    '<div class="as-cons-src">'+esc(isCons?consSrcLabel():('Summit DCF model · '+SNAP))+' · '+year+
+  var h='<div class="as-cons-h">What '+(isCons?'Street (Bloomberg consensus)':'the Summit model')+' assumes</div>'+
+    '<div class="as-cons-src">'+esc(isCons?consSrcLabel():('Summit DCF model · snapshot '+SNAP))+' · '+year+
     ' · the two drivers on the axes</div>';
   h += consRowHtml('X →', _x, year);
   h += consRowHtml('Y ↓', _y, year);
 
   if(r){
     var up = live ? (r.px/live-1) : null;
-    // Which drivers consensus actually spoke about. With only one of them covered the price is a
-    // hybrid — consensus on that driver, your own input on the other — and the label has to say so
-    // rather than claiming "at both".
     var hasX = drv(_x).kind!=='x' && altValue(_x,year)!=null;
     var hasY = drv(_y).kind!=='x' && altValue(_y,year)!=null;
     var lbl  = (hasX&&hasY) ? 'Implied at both' : ('Implied at the '+(hasX?'X':'Y')+' figure alone');
@@ -426,10 +415,6 @@ function renderCons(scope, aX, aY, cell){
       '<br>'+where+
       '</div></div>';
   }
-  if(consPlaceholder()){
-    h += '<div class="rs-noguide" style="margin-top:10px">⚑ The consensus figures are invented, shown to '+
-         'fix the layout. They land here from the consensus workbook once it is wired — nothing else changes.</div>';
-  }
   el.innerHTML=h;
 }
 
@@ -441,8 +426,7 @@ function renderMatrix(scope){
   var rowsY = aY.vals.slice().reverse();      // highest at the top
 
   // Where the OTHER side lands on this grid. Nearest cell, but only when it is genuinely inside
-  // the range — half a step past either end and the ring would be claiming a precision the grid
-  // does not have. Null means "off the grid", which the card says out loud.
+  // the range. Null means "off the grid", which the card says out loud.
   function nearest(vals, v, step){
     if(v==null) return -1;
     var lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals);
@@ -453,7 +437,7 @@ function renderMatrix(scope){
   }
   var cxi = drv(_x).kind==='x' ? -1 : nearest(aX.vals, altValue(_x,year), aX.step);
   var cyi = drv(_y).kind==='x' ? -1 : nearest(rowsY,   altValue(_y,year), aY.step);
-  var consCell = (cxi>=0 && cyi>=0 && !(altBase()==='cons' && consPlaceholder())) ? { x:cxi, y:cyi } : null;   // never ring a cell off placeholder numbers
+  var consCell = (cxi>=0 && cyi>=0) ? { x:cxi, y:cyi } : null;
   var grid = rowsY.map(function(vy){
     return aX.vals.map(function(vx){
       var over={}; over[_x]=vx; over[_y]=vy;
@@ -477,8 +461,7 @@ function renderMatrix(scope){
         (_basis==='ev' ? ('EBITDA '+fmtB(c.r.ebitda)+' × '+c.r.mult.toFixed(1)+'× = EV '+fmtB(c.r.ev)+' → equity '+fmtB(c.r.equity))
                        : ('EPS $'+c.r.eps.toFixed(2)+' × '+c.r.mult.toFixed(1)+'× (earnings '+fmtB(c.r.earnings)+')'))+
         ' → '+fmtPx(c.r.px)+'/sh ('+signPct(c.up)+(refIsLive?' vs live price)':' vs base case)')+
-        (isCons ? ('  ·  closest cell to '+baseName(altBase())+
-          (altBase()==='cons' && consPlaceholder() ? ' (placeholder)' : '')) : '');
+        (isCons ? ('  ·  closest cell to '+baseName(altBase())) : '');
       h += '<td class="sens-cell'+(isCons?' as-cons-cell':'')+'" style="background:'+colorFor(c.up,cap)+'" title="'+esc(ttl)+'">'+
            '<div class="sens-eb">'+fmtPx(c.r.px)+'</div>'+
            '<div class="sens-pct">'+signPct(c.up)+'</div></td>';
@@ -502,29 +485,29 @@ function renderMatrix(scope){
   }).join('');
   scope.querySelector('#asYears').innerHTML = '<div class="sens-regions">'+ys+'</div>';
 
+  var y=_year, mY=M[y], segEb=SEGS.reduce(function(t,s){ return t+(mY[s.k].eb||0); },0)+(mY.corp||0);
   scope.querySelector('#asFoot').innerHTML =
-    'Every figure is read from the Summit DCF model (snapshot '+SNAP+'): segment revenue (AMZN:aws · usrev · intrev), segment '+
-    '<b>operating income</b> (AMZN:opinc3 · opinc · opinc2), segment EBITDA, AMZN:earnings, AMZN:shares and AMZN:tax_rate. '+
-    'Segment depreciation is derived as segment EBITDA − segment operating income and is <b>held fixed</b>, so moving an operating margin moves '+
-    'operating income and EBITDA together. A driver on an axis is applied as a <b>flat rate compounded from the '+BASE_YEAR+' actual</b> '+
-    '(growth) or as that year\'s margin (margin). <b>EV/EBITDA</b> values EV = EBITDA × multiple, less net debt, over shares. <b>P/E</b> flows the '+
-    'operating-income delta through tax onto the model\'s own earnings line and applies the multiple to EPS, so the base case reproduces '+
-    'AMZN:earnings exactly. <b>Reconciliation:</b> the three segment operating incomes sum to '+fmtB(modelOpTotal(2025))+' in 2025 against the '+
-    'model\'s consolidated OP_INCOME of '+fmtB(OP_INCOME_2025)+' — a 1.4% corporate/unallocated drag that is left OUT rather than plugged, because '+
-    'OP_INCOME is unpopulated for 2026-2029. Corporate/other EBITDA (2029) and the tax rate (2029) are likewise unpopulated and hold the 2028 value, '+
-    'marked ⚠. All three flagged for the model owner. The exit multiple is your input, not a model output. Live price and net debt via Massive. '+
-    '<b>Assumptions</b> switches whose figures every driver OFF the two axes is held at: the Summit model, or Street consensus. Consensus covers the '+
-    'six segment drivers only — the exit multiple stays your input, and corporate/other EBITDA, tax and shares stay the model\'s, each marked in the '+
-    'strip above the grid. Growth is applied identically under both (a flat CAGR off the '+BASE_YEAR+' actual), so a consensus base case sits exactly '+
-    'on the grid. The card beside the grid always shows <b>the other side</b> — consensus while you read the model, the model while you read consensus — '+
-    'with the two axis drivers substituted and everything else left at the current base, so its price is directly comparable to a cell. '+
-    (consPlaceholder()
-      ? '<b>⚑ Street consensus is not wired yet, so the Street option and its comparison are withheld rather than estimated.</b> '
-      : '<b>Consensus read from '+esc(consSrcLabel())+'.</b> ')+
-    'Data sourced from Summit DCF models.';
+    'Every base figure is the <b>Summit DCF model</b> for AMZN, snapshot '+esc(SNAP)+' (after '+esc(AMZN_SENS.after)+'), frozen into the portal on '+esc(AMZN_SENS.pulled)+
+    ' (not live; a new submit replaces it): revenue and operating income by segment (North America · International · AWS — revenue sums to the model’s total, operating income to its operating income), '+
+    'adjusted EBITDA, the model’s adjusted earnings (without the non-operating gains), tax rate and diluted shares (held flat in the model). '+
+    'A growth on an axis is a <b>flat rate compounded from Amazon’s reported '+BASE_YEAR+' revenue for that segment</b>; a margin is that segment’s operating margin in that year. '+
+    '<b>EBITDA</b> = the driven operating income + the model’s D&amp;A and SBC (its EBITDA − operating income), held fixed — so the base case is the same adjusted EBITDA Target Multiple values ('+fmtB(mY.eb)+' in '+y+'). '+
+    '<b>Not the sum of the segment EBITDAs:</b> the model’s segment EBITDA is operating income + segment D&amp;A with no SBC; the three segments plus unallocated D&amp;A sum to '+fmtB(segEb)+' in '+y+
+    ', against '+fmtB(mY.eb)+' consolidated — the consolidated line adds SBC, and its D&amp;A ('+fmtB(mY.dna)+') is larger than the segment D&amp;A'+(mY.corp===0?' (the model leaves unallocated D&amp;A at 0 in '+y+')':'')+'. '+
+    '<b>EV/EBITDA</b>: EV = EBITDA × multiple, less net debt, over shares. <b>P/E</b>: the operating-income delta flows through tax onto the model’s earnings, so '+
+    'the base reproduces the model’s EPS. <b>Exit multiple</b>: starts at the model’s own target multiples (EV/EBITDA '+(_tmLast.ev?_tmLast.ev.mult.toFixed(1)+'×':'—')+', P/E '+(_tmLast.pe?_tmLast.pe.mult.toFixed(1)+'×':'—')+' on FY'+(_tmLast.ev?_tmLast.ev.year:'—')+', Target Multiple) and is yours to move. '+
+    '<b>Net debt</b> = '+fmtB(_netDebt)+' ('+esc(ND_SRC)+'; long-term debt minus cash, equivalents and marketable securities, leases excluded). '+
+    '<b>Street (Bloomberg consensus</b>'+(CONS.asOf?', as of '+esc(CONS.asOf):'')+'): growth of each segment as a CAGR off the 2025 actual to Bloomberg’s estimate, margin = '+
+    'Bloomberg segment operating income ÷ segment revenue, FY2026–2028; where Bloomberg has no figure (2029) the driver stays at the model and the strip says so. '+
+    'The card beside the grid always shows <b>the other side</b> for the two axis drivers. '+(_px!=null?'Live price via Massive. ':'Live price unavailable — the grid is read against the base case. ')+
+    'Data sourced from Summit DCF models and Bloomberg consensus.';
 }
 
-function render(scope){ syncAxisInputs(scope); renderAssum(scope); renderMatrix(scope); }
+function render(scope){
+  if(activeMult()==null){   // no seeded multiple (rule 10): wait for the live quote
+    var mx=scope.querySelector('#asMatrix'); if(mx) mx.innerHTML='<div class="rs-noguide">⚑ Live data pending — the exit multiple starts at today’s market multiple, which needs the live price.</div>';
+    renderAssum(scope); return; }
+  syncAxisInputs(scope); renderAssum(scope); renderMatrix(scope); }
 
 // ── Init ─────────────────────────────────────────────────────────────────────────
 function initSens(root){
@@ -535,15 +518,14 @@ function initSens(root){
     scope._wired = true;
 
     scope.querySelectorAll('[data-asyear]').forEach(function(b){ b.onclick=function(){
-      _year = +b.getAttribute('data-asyear');
+      _year = +b.getAttribute('data-asyear'); if(!_mTouched) startAtMarket();
       _rx={start:null,step:null}; _ry={start:null,step:null};      // ranges re-centre on the new year
       scope.querySelectorAll('[data-asyear]').forEach(function(x){ x.classList.toggle('active', x===b); });
       render(scope);
     }; });
 
     // Switching the base moves every default on the grid, so the auto-centred ranges have to
-    // re-centre with it — leaving them where they were would show a consensus grid framed around
-    // the model's numbers.
+    // re-centre with it.
     scope.querySelectorAll('[data-asbase]').forEach(function(b){ b.onclick=function(){
       _base = b.getAttribute('data-asbase');
       _rx={start:null,step:null}; _ry={start:null,step:null};
@@ -562,15 +544,22 @@ function initSens(root){
     }; });
 
     var sx=scope.querySelector('#asX'), sy=scope.querySelector('#asY');
+    // X = Y would make a meaningless grid — the other axis moves to the next driver (from amzn-sensitivity.js)
+    function keepDistinct(changed){ if(_x!==_y) return; var other=changed==='x'?sy:sx;
+      var alt=[].slice.call(other.options).filter(function(o){ return o.value!==_x; })[0]; if(!alt) return;
+      other.value=alt.value; if(changed==='x'){ _y=alt.value; _ry={start:null,step:null}; } else { _x=alt.value; _rx={start:null,step:null}; } }
+    sx.onchange=function(){ _x=sx.value; _rx={start:null,step:null}; keepDistinct('x'); render(scope); };
+    sy.onchange=function(){ _y=sy.value; _ry={start:null,step:null}; keepDistinct('y'); render(scope); };
 
     var mi=scope.querySelector('#asMult');
     mi.oninput=function(){ var v=parseFloat(mi.value); if(!isFinite(v)||v<=0) return;
+      _mTouched=true;
       if(_basis==='ev') _mEv=v; else _mPe=v;
       if(drv(_x).kind==='x' && _rx.start==null) {} // auto axes follow the new centre
       render(scope); };
 
-    // The axis-range object is looked up on EVERY input, not captured once: each reset / year / base /
-    // axis change replaces _rx/_ry with a new object, and a captured one went stale after the first reset.
+    // reads _rx/_ry at input time — a reset or an axis change REPLACES those objects, so binding the object
+    // itself (sharkninja-sensitivity.js) left the start/step inputs dead after the first change (fixed in AMZN)
     function bindRange(inpId, kind, getK, axis){
       var el=scope.querySelector('#'+inpId);
       el.oninput=function(){ var v=parseFloat(el.value); if(!isFinite(v)) return;
@@ -580,22 +569,17 @@ function initSens(root){
     bindRange('asXd','step', function(){ return _x; }, 'x');
     bindRange('asYs','start',function(){ return _y; }, 'y');
     bindRange('asYd','step', function(){ return _y; }, 'y');
-    // One driver cannot be both axes — the grid collapses to a diagonal. Keep X and Y distinct.
-    function keepDistinct(changed){ if(_x!==_y) return; var other=changed==='x'?sy:sx;
-      var alt=[].slice.call(other.options).filter(function(o){ return o.value!==_x; })[0]; if(!alt) return;
-      other.value=alt.value; if(changed==='x'){ _y=alt.value; _ry={start:null,step:null}; } else { _x=alt.value; _rx={start:null,step:null}; } }
-    sx.onchange=function(){ _x=sx.value; _rx={start:null,step:null}; keepDistinct('x'); render(scope); };
-    sy.onchange=function(){ _y=sy.value; _ry={start:null,step:null}; keepDistinct('y'); render(scope); };
     scope.querySelector('#asXr').onclick=function(){ _rx={start:null,step:null}; render(scope); };
     scope.querySelector('#asYr').onclick=function(){ _ry={start:null,step:null}; render(scope); };
 
-    // live price + net debt (Massive); the grid still renders if this fails.
+    // live price (Massive); net debt keeps its balance-sheet source. The grid still renders if this fails.
     import('../api.js').then(function(m){ return m && m.liveQuote ? m.liveQuote('AMZN') : null; })
       .then(function(res){
         var q = res && res.data ? res.data : res; if(!q) return;
-        if(q.price!=null) _px = q.price;
-        if(q.netDebt!=null) _netDebt = q.netDebt/1e6;
-        render(scope);
+        if(q.price!=null){ _px = q.price;
+          if(!_mTouched) startAtMarket();
+          scope.querySelector('#asMult').value = activeMult()==null ? '' : activeMult();
+          render(scope); }
       }).catch(function(){});
   }
   render(scope);

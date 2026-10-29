@@ -31,6 +31,10 @@ import { amznSens } from './amzn-sensitivity.js';   // Valuation ▸ Sensitivity
 import { amznTargetMult } from './amzn-target-multiple.js';   // Valuation ▸ Target Multiple
 import { SUMMIT_CAT, SUMMIT_INK } from '../viz-palette.js';   // the portal's fixed categorical palette (see the file header)
 import { amznHistMult } from './amzn-histmult.js';            // Valuation ▸ Historic Multiple
+import { amznCeHtml, amznCeWire, amznCeBuild, amznCePop } from './amzn-ce.js';
+import { submitsHtml, initSubmits } from '../submits.js';
+import { amznCapacityBody, amznCapacityBuild } from './amzn-misc.js';   
+import { amznBlGeneralHtml, amznBlGeneralBuild, amznBlSegmentsHtml, amznBlSegmentsBuild } from './amzn-bl.js';   // Bottom Line ▸ General + Segments (guide machinery, copy of googl-bl.js)   // Misc ▸ Capacity → revenue (MISC-capacity)   // Valuation ▸ Submit History (VA-SUB, shared engine)   // Evolution ▸ Earnings on the guide's formal machinery (Oct 29 2026)
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode) ──
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -179,7 +183,7 @@ var STD_FACTS=[
   ['Market cap','loading live quote…'],
 ];
 
-var AMZN_LEDE='Amazon started in 1994 as an online bookstore and grew into one of the largest companies on earth by revenue, spanning e-commerce, logistics, cloud computing, advertising, media and devices. It serves consumers, third-party sellers, enterprises, developers and advertisers, and runs one of the world\'s largest physical infrastructures — fulfillment centers, a delivery fleet and data centers — which it monetizes both for itself and as a service to others.';
+var AMZN_LEDE='Amazon started in 1994 as an online bookstore and grew into one of the largest companies in the world by revenue, spanning e-commerce, logistics, cloud computing, advertising, media and devices. It runs one of the world\'s largest physical infrastructures — fulfillment centers, a delivery fleet and data centers — which it uses for itself and also sells as a service to others.';
 
 // 2x2 quadrant (each cell ≤ ~30 words)
 var STD_BIZ=[
@@ -192,16 +196,16 @@ var STD_BIZ=[
 // How it makes money — FY2025 per the 10-K. Two views of the SAME total (they must and do
 // reconcile): segments and geography.
 var GMM_SEG=[
-  ['North America', 59.5, '$426.3B', '59%', BRAND],
-  ['International', 22.6, '$161.9B', '23%', BRAND2],
-  ['AWS', 18.0, '$128.7B', '18%', SQUID],
+  ['North America', 59.5, '$426.3B', '59%'],
+  ['International', 22.6, '$161.9B', '23%'],
+  ['AWS', 18.0, '$128.7B', '18%'],
 ];
 var GMM_GEO=[
-  ['United States', 68.3, '$489.7B', '68%', BRAND],
-  ['Rest of world', 15.0, '$107.5B', '15%', GRAY],
-  ['Germany', 6.4, '$45.9B', '6%', BRAND2],
-  ['United Kingdom', 6.0, '$43.2B', '6%', SQUID],
-  ['Japan', 4.3, '$30.7B', '4%', GREEN],
+  ['United States', 68.3, '$489.7B', '68%'],
+  ['Germany', 6.4, '$45.9B', '6%'],
+  ['United Kingdom', 6.0, '$43.2B', '6%'],
+  ['Japan', 4.3, '$30.7B', '4%'],
+  ['Rest of world', 15.0, '$107.5B', '15%'],
 ];
 var REV_DEFS=[
   { seg:'North America (the core store)',
@@ -214,7 +218,7 @@ var REV_DEFS=[
     desc:'Amazon Web Services — the on-demand cloud: compute, storage, databases, networking and, increasingly, <b>AI infrastructure</b> (Trainium chips, Bedrock model platform, SageMaker). Customers pay for consumption plus committed contracts. Invented the cloud category in 2006 and still leads it; carries far higher margins than retail and contributes the majority of Amazon\'s operating income.',
     econ:[['FY2025 net sales','$128.7B (+20%)'],['Operating income','$45.6B · 35.4% margin'],['Share of company op income','~57%, on 18% of revenue']] },
   { seg:'The revenue lines (what the money is paid for)',
-    desc:'The 10-K also cuts the same total by <b>type of revenue</b>, across all three segments — the clearest view of the mix shift: retail lines grow single-digit while <b>advertising (+22%)</b> and <b>AWS (+20%)</b> — the high-margin lines — compound much faster.',
+    desc:'The 10-K also cuts the same total by <b>type of revenue</b>, across all three segments — the clearest view of the mix shift: the retail lines grow more slowly than <b>advertising</b> and <b>AWS</b>, the high-margin lines.',
     econ:[['Online stores','$269.3B · 38% (+9%)'],['Third-party seller services','$172.2B · 24% (+10%)'],['AWS','$128.7B · 18% (+20%)'],['Advertising services','$68.6B · 10% (+22%)'],['Subscription services','$49.6B · 7% (+12%)'],['Physical stores','$22.6B · 3% (+6%)'],['Other','$5.9B · 1%']],
     econNote:'10-K revenue disaggregation (Note 10). Shares of FY2025 total net sales of $716.9B; growth vs FY2024.' },
 ];
@@ -272,98 +276,87 @@ var TIMELINE=[
   { y:'Jul 2021', t:'<b>Bezos steps down</b> — AWS chief <b>Andy Jassy becomes CEO</b>; Bezos stays Executive Chairman.',
     d:'<ul class="ov-bullets"><li>Jassy joined Amazon in 1997 and <b>built AWS from a memo into the profit engine</b> — the succession chose the cloud, not the store.</li><li>Bezos remains Executive Chairman and the largest individual shareholder (8.8%, 2026 proxy).</li><li>Jassy\'s era so far: a post-pandemic cost reset (the largest layoffs in company history, 2022–23), then the AI capex supercycle.</li></ul>' },
   { y:'2022', t:'<b>MGM acquired ($8.5B)</b> — a century of film/TV IP folded into Prime Video.' },
-  { y:'2023–25', t:'<b>The defining legal matter: FTC v. Amazon</b> — the monopoly suit (2023, ongoing) and a <b>$2.5B Prime settlement</b> (2025).',
-    d:'<ul class="ov-bullets"><li>Sep 2023 — the FTC and 17 states sue Amazon for <b>illegally maintaining monopoly power</b> in online retail (seller fees, anti-discounting, Prime bundling). Trial is on its own multi-year track.</li><li>Sep 2025 — separately, Amazon pays <b>$2.5B ($1.0B penalty + $1.5B customer refunds)</b> — the largest civil penalty for an FTC rule violation — to settle claims it enrolled customers in Prime through "dark patterns" and made canceling hard. Settled on day 4 of trial; the charge hit the North America segment in 3Q25.</li><li>Why it matters: the monopoly case attacks the marketplace/Prime flywheel itself — the structural risk to watch.</li></ul>' },
-  { y:'2023–26', t:'<b>The AI era:</b> $8B — and counting — into <b>Anthropic</b>, Bedrock + Trainium ship, and capex explodes toward AI capacity.',
+  { y:'2023', t:'<b>The AI era:</b> $8B — and counting — into <b>Anthropic</b>, Bedrock + Trainium ship, and capex explodes toward AI capacity.',
     d:'<ul class="ov-bullets"><li>2023–24 — Amazon invests <b>$8B in Anthropic</b> (maker of Claude), expanded in <b>Apr 2026 with $5B more plus rights for up to another $20B</b>; Anthropic committed over $100B of AWS spend over 10 years — the counter to Microsoft/OpenAI.</li><li>Bedrock (rent any foundation model on AWS) and <b>Trainium</b> chips became the AI platform bet: own the infrastructure layer of AI, not the chatbot.</li><li>Capex went from <b>~$53B (2023) to ~$132B (2025)</b> and is still climbing in 2026 — the largest infrastructure build-out in the company\'s history, and the central investor debate.</li><li>1Q26 — the Anthropic stake\'s markup added ~$16.8B of pre-tax gains in a single quarter, showing its scale.</li></ul>' },
-  { y:'Jun 2024', t:'Crosses <b>$2 trillion</b> in market cap — the latest trillion-dollar milestone (it has approached, but not crossed, $3T in 2026).' },
+  { y:'Sep 2023', t:'<b>The defining legal matter: FTC v. Amazon</b> — the monopoly suit (2023, ongoing) and a <b>$2.5B Prime settlement</b> (2025).',
+    d:'<ul class="ov-bullets"><li>Sep 2023 — the FTC and 17 states sue Amazon for <b>illegally maintaining monopoly power</b> in online retail (seller fees, anti-discounting, Prime bundling). Trial is on its own multi-year track.</li><li>Sep 2025 — separately, Amazon pays <b>$2.5B ($1.0B penalty + $1.5B customer refunds)</b> — the largest civil penalty for an FTC rule violation — to settle claims it enrolled customers in Prime through "dark patterns" and made canceling hard. Settled on day 4 of trial; the charge hit the North America segment in 3Q25.</li><li>Why it matters: the monopoly case attacks the marketplace/Prime flywheel itself — the structural risk to watch.</li></ul>' },
+  { y:'Jun 2024', t:'Crosses <b>$2 trillion</b> in market cap — the latest trillion-dollar milestone.' },
 ];
 
-// ─── Peers scatter — retail + cloud hybrids. Toggles: metric (P/E ⇄ EV/EBITDA — never P/S) ×
-// basis (Forward ⇄ Trailing, default Forward). Bubble = LIVE market cap (Massive). Multiples/
-// growth are seeded approximations (Jul 2026), labeled — replaced by live values when confirmed.
-// Seeds from stockanalysis.com (Jul 2026). Forward EV/EBITDA is not published there — the evF
-// values are DERIVED approximations (trailing EV/EBITDA deflated by consensus revenue growth),
-// labeled as such in the caption. Fiscal years differ (WMT Jan, COST Aug, MSFT Jun, BABA Mar).
+// ─── Peers scatter (OV-6, shared with Valuation ▸ Peers) — ported from googl.js (playbook §8 OV-6, rule 10) ─────
+// Toggles: metric (P/E ⇄ EV/EBITDA — never P/S) × basis (Forward ⇄ Trailing). The file holds NO multiple and NO
+// market cap: only the DENOMINATORS, from each company's latest annual filing (trailing) or the Bloomberg consensus
+// file (forward, only where the ticker is in it). Multiples are computed in the browser: P/E = live price ÷ EPS,
+// EV/EBITDA = live EV ÷ EBITDA (EV = live market cap + net debt when Massive has no EV). Bubble = live market cap.
+// EBITDA = operating income + D&A; net debt = total long-term debt (current + non-current) − cash & equivalents,
+// leases excluded — US$ M. Growth = revenue growth of the filing's year (trailing) or consensus FY2026 (forward), %.
+// EPS is diluted GAAP for every peer. Amazon's is ex non-operating items (SAB, 2026-10-29, as for Alphabet in its own
+// profile): FY2025 operating income × (1 − effective tax rate 19.7%) ÷ diluted shares = US$5.93, against US$7.17 GAAP,
+// which carries the gains on equity stakes (Anthropic, Rivian). No forward EPS for Amazon: Bloomberg's consensus is GAAP.
 var A_PEERS=[
-  { tk:'AMZN', n:'Amazon', peT:27.8, peF:27.8, evT:16.6, evF:14.5, gt:12.4, gf:14.8, mc:2500, hl:true,
-    why:'The everything store plus the cloud leader. Cheaper than the pure retailers on earnings, cheaper than it looks on EV/EBITDA — the mix keeps shifting toward AWS and ads.' },
-  { tk:'WMT', n:'Walmart', peT:38.5, peF:36.7, evT:21.2, evF:20, gt:4.7, gf:5.5, mc:887,
-    why:'The offline giant gone omnichannel — much slower growth, yet priced at a premium to Amazon on earnings as the market pays up for its ads/membership mix shift.' },
-  { tk:'COST', n:'Costco', peT:47, peF:42.7, evT:29.7, evF:27, gt:8.2, gf:9.5, mc:422,
-    why:'The membership-warehouse compounder — steady single-digit growth at one of the richest multiples in retail.' },
-  { tk:'GOOGL', n:'Alphabet', peT:16, peF:24.1, evT:22.4, evF:18, gt:15.1, gf:23.6, mc:4000,
-    why:'Cloud rival #3 and the other ads giant. Its trailing P/E (~16) is depressed by one-off investment gains inflating GAAP EPS — read the forward number.' },
-  { tk:'MSFT', n:'Microsoft', peT:22.7, peF:20.6, evT:15, evF:13, gt:14.9, gf:17, mc:2920,
-    why:'Azure — AWS\'s closest rival — on top of the enterprise-software franchise. A similar growth profile at a comparable multiple.' },
-  { tk:'BABA', n:'Alibaba', peT:17.6, peF:17.1, evT:17.5, evF:16, gt:2.7, gf:9.9, mc:261,
-    why:'China\'s Amazon analogue (e-commerce + cloud). The discount reflects geopolitics and a slower core — the cheapest name on the map.' },
-  { tk:'MELI', n:'MercadoLibre', peT:47.6, peF:44.9, evT:25.3, evF:18, gt:39.1, gf:40.9, mc:93,
-    why:'Latin America\'s Amazon and PayPal in one — the growth outlier on the map, priced accordingly.' },
+  { tk:'AMZN', n:'Amazon', hl:true, epsT:5.93, epsF:null, epsFNote:'no forward P/E — Street EPS is GAAP, with the gains', ebitdaT:145731, ebitdaF:220794, nd:-17974, gt:12.4, gf:15.6,
+    src:'10-K FY2025; forward: Bloomberg consensus FY2026, Sep 10 2026',
+    why:'The profile company: online and physical stores, third-party seller services, advertising, subscriptions and AWS.' },
+  { tk:'WMT', n:'Walmart', epsT:2.73, epsF:null, ebitdaT:44028, ebitdaF:null, nd:27439, gt:4.7, gf:null,
+    src:'10-K FY2026 (year to Jan 31 2026)',
+    why:'The largest store-based retailer, now selling online with its own marketplace, advertising and membership.' },
+  { tk:'COST', n:'Costco', epsT:20.76, epsF:null, ebitdaT:14359, ebitdaF:null, nd:-14045, gt:10.1, gf:null,
+    src:'10-K FY2026 (year to Aug 30 2026)',
+    why:'Membership warehouse retailer; competes with Amazon for household staples and with Prime for membership fees.' },
+  { tk:'GOOGL', n:'Alphabet', epsT:10.81, epsF:19.90, ebitdaT:150175, ebitdaF:226428, nd:18377, gt:15.1, gf:26.8,
+    src:'10-K FY2025; forward: Bloomberg consensus FY2026, Sep 8 2026',
+    why:'Google Cloud competes with AWS; Search and YouTube compete with Amazon for advertising budgets.' },
+  { tk:'MSFT', n:'Microsoft', epsT:17.95, epsF:null, ebitdaT:194237, ebitdaF:null, nd:19359, gt:17.8, gf:null,
+    src:'10-K FY2026 (year to Jun 30 2026)',
+    why:'Azure is the closest rival to AWS, sold alongside Microsoft\'s enterprise software.' },
+  { tk:'BABA', n:'Alibaba', epsT:6.40, epsF:null, ebitdaT:12339, ebitdaF:null, nd:null, gt:2.7, gf:null,
+    src:'20-F FY2026 (year to Mar 31 2026), US$ convenience translation at RMB 6.898 per US$; EPS per ADS (8 shares); EV from the live quote',
+    why:'China\'s e-commerce and cloud leader — the closest analogue to Amazon\'s mix outside the US.' },
+  { tk:'MELI', n:'MercadoLibre', epsT:39.40, epsF:null, ebitdaT:4019, ebitdaF:null, nd:5523, gt:39.1, gf:null,
+    src:'10-K FY2025',
+    why:'Latin America\'s marketplace, logistics network and payments business (Mercado Pago).' },
 ];
 
-var A_SC={ metric:'pe', basis:'f', peers:null, _capsFetched:false };
+var A_SC={ metric:'pe', basis:'t', peers:null, _capsFetched:false };   // Trailing by default: only AMZN and GOOGL have a Street forward
+function aTok(name, fb){ try{ var v=getComputedStyle(document.documentElement).getPropertyValue(name).trim(); return v||fb; }catch(e){ return fb; } }
 function aScReset(){ if(!A_SC.peers) A_SC.peers=A_PEERS.map(function(p){ var o={}; for(var k in p) o[k]=p[k]; o.on=true; return o; }); }
-function aScMult(p){ var key=(A_SC.metric==='pe'?'pe':'ev')+(A_SC.basis==='f'?'F':'T'); return p[key]; }
-function aScMax(){ return A_SC.metric==='pe'?45:30; }
+function aScNum(v){ return v!=null && !isNaN(v); }
+function aScMult(p){
+  if(!aScNum(p.px)) return null;                                      // no live price → no bubble (no seeded fallback)
+  var f=A_SC.basis==='f';
+  if(A_SC.metric==='pe'){ var eps=f?p.epsF:p.epsT; return (aScNum(eps)&&eps>0)?p.px/eps:null; }
+  var eb=f?p.ebitdaF:p.ebitdaT; if(!aScNum(eb)||eb<=0) return null;
+  var ev=aScNum(p.ev)?p.ev:(aScNum(p.mc)&&aScNum(p.nd)?p.mc*1000+p.nd:null);   // US$ M
+  return aScNum(ev)?ev/eb:null;
+}
+function aScGrowth(p){ return A_SC.basis==='f'?p.gf:p.gt; }
+function aScVisible(){ return (A_SC.peers||[]).filter(function(p){ return p.on && aScNum(aScMult(p)) && aScNum(aScGrowth(p)); }); }
+// Axes come from the data (max of the visible peers + headroom), never fixed caps.
+function aScNice(v){ var step=v<=20?5:(v<=100?10:25); return Math.ceil(v/step)*step; }
 function scLogoUrl(p){ return p.logo || ('https://assets.parqet.com/logos/symbol/'+p.tk); }
 
 function stdPeerScatter(sfx){
   sfx=sfx||'ov';
-  var h='<style>.mg-tog-row{display:flex;flex-wrap:wrap;gap:14px;margin:2px 0 8px}'+
-    '.mg-tog{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mu)}'+
-    '.mg-seg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
-    '.mg-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
-    '.mg-pill.active{background:var(--navy);color:#fff}'+
-    '.mg-node{cursor:pointer}.mg-node text{pointer-events:none}'+
-    '.asc-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 2px}'+
-    '.asc-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:999px;padding:3px 9px;background:var(--w);cursor:pointer;color:var(--navy)}'+
-    '.asc-chip .x{color:var(--mu);font-weight:800}'+
-    '.asc-add{display:inline-flex;gap:5px;align-items:center}'+
-    '.asc-add input{width:74px;font:inherit;font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:3px 7px;text-transform:uppercase}'+
-    '.asc-add button{font:inherit;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:7px;padding:3px 9px;background:#F2F5F8;cursor:pointer}'+
-    '.mg-tip{position:fixed;z-index:60;max-width:250px;background:#10141A;color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 22px rgba(16,20,26,.28);pointer-events:none;border-top:3px solid '+BRAND+'}'+
-    '.mg-tip .mgt-h{display:flex;align-items:center;gap:7px;margin-bottom:4px}.mg-tip .mgt-h img{width:18px;height:18px;border-radius:4px;background:#fff;object-fit:contain}'+
-    '.mg-tip .mgt-n{font-weight:800;font-size:12.5px;color:var(--ice)}</style>';
-  h+='<div class="amzn-sc" data-sfx="'+sfx+'">';
-  // The comps table under the map. Same visual language as the Target Multiple tables (.tm-tbl),
-  // written here rather than imported because this canvas carries its own styles already.
-  h+='<style>.asc-tblwrap{overflow-x:auto}'+
-    '.asc-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}'+
-    '.asc-tbl th,.asc-tbl td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}'+
-    '.asc-tbl th:first-child,.asc-tbl td:first-child{text-align:left}'+
-    '.asc-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}'+
-    '.asc-tbl td.asc-m{font-weight:800;color:var(--navy)}'+
-    '.asc-tbl tbody tr.asc-hl{background:var(--brand-soft)}'+
-    '.asc-tbl tbody tr.asc-nil td{color:var(--mu)}'+
-    '.asc-tbl tfoot td{border-top:2px solid var(--bdr);border-bottom:none;font-weight:800;color:var(--navy);background:#F7F9FB}'+
-    '.asc-tbl tfoot tr.asc-med td{background:#FAFBFC;font-weight:700;color:var(--mu)}'+
-    '.asc-nm{display:inline-flex;align-items:center;gap:7px}'+
-    '.asc-nm img{width:16px;height:16px;border-radius:4px;background:#fff;object-fit:contain}'+
-    '.asc-tk{color:var(--mu);font-weight:700;font-size:10.5px}'+
-    '.asc-up{color:#C0392B;font-weight:700}.asc-dn{color:#2E8B57;font-weight:700}'+
-    '.asc-nilv{color:var(--mu)}'+
-    '</style>';
-  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD.</b> <span style="opacity:.75">Hover or tap a bubble for the read.</span></div>';
+  var h='<div class="amzn-sc" data-sfx="'+sfx+'">';
+  h+='<div class="ov-diagram-cap asc-cap-top">Peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD.</b> <span class="asc-hint">Hover or tap a bubble for the read.</span></div>';
   h+='<div class="mg-tog-row">'+
     '<span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgmetric="pe">P/E</button><button type="button" class="mg-pill" data-mgmetric="ev">EV/EBITDA</button></span></span>'+
-    '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgbasis="f">Forward</button><button type="button" class="mg-pill" data-mgbasis="t">Trailing</button></span></span>'+
+    '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill" data-mgbasis="f">Forward</button><button type="button" class="mg-pill active" data-mgbasis="t">Trailing</button></span></span>'+
   '</div>';
   h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" class="amzn-sc-svg" role="img" aria-label="Peer valuation vs growth map">'+
     '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
     '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
     '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← cheaper (lower multiple)</text>'+
     '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">more expensive →</text>'+
-    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" class="amzn-sc-xlab">P/E · forward</text>'+
-    '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">slow</text>'+
-    '<text x="74" y="52" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">fast growth</text>'+
+    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" class="amzn-sc-xlab">P/E · trailing</text>'+
+    '<text x="74" y="225" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end" class="amzn-sc-ylo">slow</text>'+
+    '<text x="74" y="60" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end" class="amzn-sc-yhi">fast growth</text>'+
     '<g class="amzn-sc-nodes"></g>'+
   '</svg></div>';
   h+='<div class="asc-chips amzn-sc-chips"></div>';
-  h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here — private retail rivals (SHEIN, Temu\'s parent PDD is listed but Temu itself is a unit) and private AI/cloud players have no market multiple. <span class="ave-subh-note">Multiples & growth are seeded approximations (Jul 2026; forward EV/EBITDA is derived, not quoted); market caps are live.</span></div>';
-  // §0.2 rule 3 — the receipt under the read. It is .rs-collap markup so it reads like every other
-  // table in the portal, but it OPENS by default: there is one table, it is the block's own detail,
-  // and the whole point of the sub-tab is the numbers (Pablo, Aug 20 2026).
+  h+='<div class="ov-diagram-cap asc-cap-end">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers plot here — private retail rivals (SHEIN; Temu is a unit of PDD) and private AI and cloud players have no market multiple. '+
+    '<span class="ave-subh-note">Multiples = live price ÷ figures from each company\'s latest annual filing (fiscal years differ: Walmart to January, Costco to August, Microsoft to June, Alibaba to March; Alibaba converted at its 20-F rate), or Bloomberg consensus FY2026 (as of Sep 2026) where it exists; market caps are live. Amazon\'s P/E uses EPS ex non-operating items (operating income after tax, without the gains on equity stakes), so it has no forward P/E; the peers\' EPS is GAAP.</span></div>';
+  // Valuation ▸ Peers only: the receipt under the read (chart standard rule 3), OPEN by default.
   if(sfx==='dd') h+='<div class="rs-collap amzn-sc-collap">'+
       '<button type="button" class="rs-collap-h amzn-sc-tblh" data-selfwired="1"></button>'+
       '<div class="rs-collap-b amzn-sc-tblb">'+
@@ -375,45 +368,37 @@ function stdPeerScatter(sfx){
 }
 function aScRenderOne(wrap){
   var g=wrap.querySelector('.amzn-sc-nodes'); if(!g||!A_SC.peers) return;
-  var maxMult=aScMax(), X0=80, X1=612, Y0=252, Y1=44;
-  var lab=wrap.querySelector('.amzn-sc-xlab'); if(lab) lab.textContent=(A_SC.metric==='pe'?'P/E':'EV/EBITDA')+' · '+(A_SC.basis==='f'?'forward':'trailing');
+  var X0=80, X1=612, Y0=222, Y1=56;   // data area; the axis line sits lower (y 252) so bottom labels clear the axis text
+  var NAVY=aTok('--navy','#1E2733');
+  var vis=aScVisible();
+  var maxMult=aScNice(Math.max.apply(null, vis.map(aScMult).concat([1]))*1.12);
+  var gs=vis.map(aScGrowth), gMax=aScNice(Math.max.apply(null, gs.concat([1]))*1.12), gMin=Math.min.apply(null, gs.concat([0]));
+  gMin=gMin<0?-aScNice(-gMin*1.5):0;
+  var lab=wrap.querySelector('.amzn-sc-xlab'); if(lab) lab.textContent=(A_SC.metric==='pe'?'P/E':'EV/EBITDA')+' · '+(A_SC.basis==='f'?'forward':'trailing')+' · axis 0–'+maxMult+'×';
+  var yhi=wrap.querySelector('.amzn-sc-yhi'); if(yhi) yhi.textContent='+'+gMax+'% growth';
+  var ylo=wrap.querySelector('.amzn-sc-ylo'); if(ylo) ylo.textContent=gMin<0?(gMin+'%'):'0%';
   wrap.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mgbasis')===A_SC.basis); });
   wrap.querySelectorAll('.mg-pill[data-mgmetric]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mgmetric')===A_SC.metric); });
   var frag='';
-  A_SC.peers.forEach(function(p){
-    if(!p.on) return; var m=aScMult(p); if(m==null||isNaN(m)) return;
-    var growth=A_SC.basis==='f'?p.gf:p.gt; if(growth==null) growth=p.gf!=null?p.gf:p.gt;
+  vis.forEach(function(p){
+    var m=aScMult(p), growth=aScGrowth(p);
     var x=X0+Math.max(0,Math.min(1,m/maxMult))*(X1-X0);
-    var y=Y0-Math.max(0,Math.min(1,(growth||0)/25))*(Y0-Y1);
-    var r=Math.max(11,Math.min(27,9+Math.sqrt(Math.max(1,p.mc))*0.32));
+    var y=Y0-Math.max(0,Math.min(1,(growth-gMin)/(gMax-gMin)))*(Y0-Y1);
+    var r=aScNum(p.mc)?Math.max(11,Math.min(27,9+Math.sqrt(Math.max(1,p.mc))*0.32)):11;
     var logo=scLogoUrl(p);
-    frag+='<g class="mg-node" data-name="'+esc(p.n)+'" data-tk="'+esc(p.tk)+'" data-logo="'+esc(logo)+'" data-why="'+esc(p.why||'')+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
-      '<circle r="'+r.toFixed(1)+'" fill="#fff" stroke="'+(p.hl?BRAND:'#C7CED6')+'" stroke-width="'+(p.hl?3:1.5)+'"></circle>'+
-      '<image href="'+esc(logo)+'" x="'+(-r*0.72).toFixed(1)+'" y="'+(-r*0.72).toFixed(1)+'" width="'+(r*1.44).toFixed(1)+'" height="'+(r*1.44).toFixed(1)+'" preserveAspectRatio="xMidYMid meet" style="pointer-events:none"></image>'+
-      '<text y="'+(r+12).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?BRAND:'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
+    var read=(A_SC.metric==='pe'?'P/E ':'EV/EBITDA ')+m.toFixed(1)+'× · revenue growth '+(growth>0?'+':'')+growth.toFixed(1)+'%'+(aScNum(p.mc)?' · market cap $'+(p.mc>=1000?(p.mc/1000).toFixed(2)+'T':Math.round(p.mc)+'B'):'');
+    frag+='<g class="mg-node" data-name="'+esc(p.n)+'" data-tk="'+esc(p.tk)+'" data-logo="'+esc(logo)+'" data-why="'+esc(p.why||'')+'" data-read="'+esc(read)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
+      '<circle r="'+r.toFixed(1)+'" fill="#fff" stroke="'+(p.hl?NAVY:'#C7CED6')+'" stroke-width="'+(p.hl?3:1.5)+'"></circle>'+
+      '<image href="'+esc(logo)+'" x="'+(-r*0.72).toFixed(1)+'" y="'+(-r*0.72).toFixed(1)+'" width="'+(r*1.44).toFixed(1)+'" height="'+(r*1.44).toFixed(1)+'" preserveAspectRatio="xMidYMid meet" pointer-events="none"></image>'+
+      '<text y="'+(r+12).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?NAVY:'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
   });
   g.innerHTML=frag;
+  aScChipsOne(wrap);
   aScTableOne(wrap);
 }
-function aScChipsOne(wrap){
-  var box=wrap.querySelector('.amzn-sc-chips'); if(!box||!A_SC.peers) return;
-  var h=A_SC.peers.map(function(p,i){ return '<span class="asc-chip" data-sci="'+i+'" title="Remove '+esc(p.n)+'">'+esc(p.n)+' <span class="x">×</span></span>'; }).join('');
-  h+='<span class="asc-add"><input class="amzn-sc-addtk" placeholder="+ TICKER" maxlength="6"><button type="button" class="amzn-sc-addbtn">Add</button></span>';
-  box.innerHTML=h;
-}
-function aScRenderAll(root){ root.querySelectorAll('.amzn-sc').forEach(aScRenderOne); }
-// ─── The comps table under the peer map (Valuation ▸ Peers) ─────────────────────────────────────
-// §0.2 rule 3: everything the scatter draws, as numbers, in the units it draws them in. It reads
-// the SAME state as the bubbles — the metric/basis pills pick the column, removing a chip drops the
-// row, and a ticker added by hand appears here with an em dash until a multiple exists for it.
-//
-// The average and the median EXCLUDE Amazon. They are the set Amazon is being read against, so
-// folding the subject into its own benchmark would shrink whatever gap the table exists to show.
-// AMZN keeps its highlighted row and its "vs peer avg" is its premium/discount to them.
-// Both statistics are shown because this set is skewed: COST and MELI in the 40s against BABA at
-// 17 drag a mean that seven names cannot defend, and the median is the honest middle.
-function aScGrowth(p){ var g=A_SC.basis==='f'?p.gf:p.gt; if(g==null) g=(p.gf!=null?p.gf:p.gt); return g; }
-function aScNum(v){ return v!=null && !isNaN(v); }
+// ─── The comps table under the peer map (Valuation ▸ Peers) ─────────────────────────────────────────────────────
+// Everything the map draws, as numbers: the metric/basis pills pick the column, removing a chip drops the row.
+// Average and median EXCLUDE Amazon (the set it is read against). Premium in red, discount in green.
 function aScFmtMult(v){ return aScNum(v)?v.toFixed(1)+'×':'—'; }
 function aScFmtPct(v){ return aScNum(v)?v.toFixed(1)+'%':'—'; }
 function aScFmtMc(v){ return aScNum(v)?('$'+(v>=1000?(v/1000).toFixed(2)+'T':Math.round(v)+'B')):'—'; }
@@ -428,8 +413,7 @@ function aScTableOne(wrap){
   var box=wrap.querySelector('.amzn-sc-tbl'); if(!box||!A_SC.peers) return;
   var mLab=(A_SC.metric==='pe'?'P/E':'EV/EBITDA'), bLab=(A_SC.basis==='f'?'forward':'trailing');
   var rows=A_SC.peers.map(function(p){ return { p:p, m:aScMult(p), g:aScGrowth(p) }; });
-  // Cheapest first on the ACTIVE multiple. A name with no multiple on file sinks to the bottom
-  // instead of sorting as zero, which would read as "the cheapest name on the map".
+  // Cheapest first on the ACTIVE multiple; a name with no multiple sinks to the bottom (never sorts as zero).
   rows.sort(function(a,b){
     var an=aScNum(a.m), bn=aScNum(b.m);
     if(!an&&!bn) return 0; if(!an) return 1; if(!bn) return -1; return a.m-b.m;
@@ -441,19 +425,19 @@ function aScTableOne(wrap){
   var medG=aScMedian(peers.filter(function(r){ return aScNum(r.g); }).map(function(r){ return r.g; }));
   var nM=peers.filter(function(r){ return aScNum(r.m); }).length;
   var body=rows.map(function(r){
-    var p=r.p, cls=(p.hl?'asc-hl':'')+(aScNum(r.m)?'':' asc-nil');
+    var p=r.p, cls=(p.hl?'asc-hl':'')+(aScNum(r.m)?'':' asc-nil'), nt=aScNum(r.m)?'':aScChipNote(p);
     return '<tr class="'+cls.trim()+'">'+
       '<td><span class="asc-nm"><img src="'+esc(scLogoUrl(p))+'" alt="" onerror="this.style.display=\'none\'">'+
-        '<span>'+esc(p.n)+' <span class="asc-tk">'+esc(p.tk)+'</span></span></span></td>'+
+        '<span>'+esc(p.n)+' <span class="asc-tk">'+esc(p.tk)+(nt?' · '+esc(nt):'')+'</span></span></span></td>'+
       '<td class="asc-m">'+aScFmtMult(r.m)+'</td>'+
       '<td>'+aScFmtPct(r.g)+'</td>'+
       '<td>'+aScFmtMc(p.mc)+'</td>'+
       '<td>'+aScVsAvg(r.m, avgM)+'</td></tr>';
   }).join('');
-  var foot='<tr class="asc-avg"><td>Peer average <span class="asc-tk">ex-AMZN · '+nM+' names</span></td>'+
+  var foot='<tr class="asc-avg"><td>Peer average <span class="asc-tk">ex-Amazon · '+nM+' name'+(nM===1?'':'s')+'</span></td>'+
       '<td>'+aScFmtMult(avgM)+'</td><td>'+aScFmtPct(avgG)+'</td>'+
       '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>'+
-    '<tr class="asc-med"><td>Peer median <span class="asc-tk">ex-AMZN</span></td>'+
+    '<tr class="asc-med"><td>Peer median <span class="asc-tk">ex-Amazon</span></td>'+
       '<td>'+aScFmtMult(medM)+'</td><td>'+aScFmtPct(medG)+'</td>'+
       '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>';
   box.innerHTML='<table class="asc-tbl"><thead><tr>'+
@@ -466,20 +450,37 @@ function aScTableOne(wrap){
       '<span class="rs-collap-sub">'+(open?'hide':'show')+' · '+esc(mLab)+' · '+esc(bLab)+
       ', '+rows.length+' names</span>'; }
 }
-function aScChipsAll(root){ root.querySelectorAll('.amzn-sc').forEach(function(w){ aScChipsOne(w); wireScChips(root, w); }); }
+// A chip says why its peer is missing from the current view (no forward, negative EPS, no live price).
+function aScChipNote(p){
+  if(!aScNum(p.epsT)&&!aScNum(p.ebitdaT)&&!aScNum(p.epsF)&&!aScNum(p.ebitdaF)) return 'no figures on file';
+  if(!aScNum(p.px)) return 'no live price';
+  if(A_SC.basis==='f' && A_SC.metric==='pe' && p.epsFNote) return p.epsFNote;
+  if(A_SC.basis==='f' && !aScNum(A_SC.metric==='pe'?p.epsF:p.ebitdaF)) return 'trailing only — no Street file';
+  if(!aScNum(aScMult(p))) return A_SC.metric==='pe'?'no P/E — loss':'no EV on file';
+  return '';
+}
+function aScChipsOne(wrap){
+  var box=wrap.querySelector('.amzn-sc-chips'); if(!box||!A_SC.peers) return;
+  var keep=box.querySelector('.amzn-sc-addtk'); var typed=keep?keep.value:'';
+  var h=A_SC.peers.map(function(p,i){ var nt=aScChipNote(p); return '<span class="asc-chip" data-sci="'+i+'" title="Remove '+esc(p.n)+'">'+esc(p.n)+(nt?' <span class="asc-chip-note">· '+esc(nt)+'</span>':'')+' <span class="x">×</span></span>'; }).join('');
+  h+='<span class="asc-add"><input class="amzn-sc-addtk" placeholder="+ TICKER" maxlength="6"><button type="button" class="amzn-sc-addbtn">Add</button></span>';
+  box.innerHTML=h;
+  var inp=box.querySelector('.amzn-sc-addtk'); if(inp) inp.value=typed;
+}
+function aScRenderAll(root){ root.querySelectorAll('.amzn-sc').forEach(function(w){ aScRenderOne(w); wireScChips(root, w); }); }
 function wireScatters(root){
   aScReset();
   root.querySelectorAll('.amzn-sc').forEach(function(wrap){
     if(wrap._scWired) return; wrap._scWired=true;
     var tblH=wrap.querySelector('.amzn-sc-tblh'), tblB=wrap.querySelector('.amzn-sc-tblb');
-    if(tblH&&tblB) tblH.onclick=function(){ tblB.hidden=!tblB.hidden; aScRenderOne(wrap); };
+    if(tblH&&tblB) tblH.onclick=function(){ tblB.hidden=!tblB.hidden; aScTableOne(wrap); };
     var g=wrap.querySelector('.amzn-sc-nodes'), tip=wrap.querySelector('.amzn-sc-tip');
     wrap.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(btn){ btn.onclick=function(){ A_SC.basis=btn.getAttribute('data-mgbasis'); aScRenderAll(root); }; });
     wrap.querySelectorAll('.mg-pill[data-mgmetric]').forEach(function(btn){ btn.onclick=function(){ A_SC.metric=btn.getAttribute('data-mgmetric'); aScRenderAll(root); }; });
     if(g&&tip){
       var svg=wrap.querySelector('.amzn-sc-svg');
       function nodeOf(e){ return (e.target&&e.target.closest)?e.target.closest('.mg-node'):null; }
-      function show(node){ tip.innerHTML='<div class="mgt-h"><img src="'+node.getAttribute('data-logo')+'" alt="" onerror="this.style.display=\'none\'"><span class="mgt-n">'+node.getAttribute('data-name')+'</span></div>'+node.getAttribute('data-why'); tip.hidden=false; }
+      function show(node){ tip.innerHTML='<div class="mgt-h"><img src="'+node.getAttribute('data-logo')+'" alt="" onerror="this.style.display=\'none\'"><span class="mgt-n">'+node.getAttribute('data-name')+'</span></div>'+node.getAttribute('data-why')+'<div class="mgt-m">'+node.getAttribute('data-read')+'</div>'; tip.hidden=false; }
       function move(e){ tip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; tip.style.top=(e.clientY+16)+'px'; }
       function hide(){ tip.hidden=true; }
       g.addEventListener('pointerover', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } });
@@ -489,25 +490,32 @@ function wireScatters(root){
       g.addEventListener('click', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } });
     }
   });
-  aScRenderAll(root); aScChipsAll(root); aScFetchCaps(root);
+  aScRenderAll(root); aScFetchCaps(root);
 }
 function wireScChips(root, wrap){
-  wrap.querySelectorAll('.amzn-sc-chips .asc-chip[data-sci]').forEach(function(ch){ ch.onclick=function(){ var i=+ch.getAttribute('data-sci'); if(A_SC.peers[i]){ A_SC.peers.splice(i,1); aScRenderAll(root); aScChipsAll(root); } }; });
+  wrap.querySelectorAll('.amzn-sc-chips .asc-chip[data-sci]').forEach(function(ch){ ch.onclick=function(){ var i=+ch.getAttribute('data-sci'); if(A_SC.peers[i]){ A_SC.peers.splice(i,1); aScRenderAll(root); } }; });
   var addBtn=wrap.querySelector('.amzn-sc-addbtn'), addIn=wrap.querySelector('.amzn-sc-addtk');
-  if(addBtn&&addIn){ addBtn.onclick=function(){ var tk=(addIn.value||'').trim().toUpperCase(); if(!tk) return;
-    if(!A_SC.peers.some(function(p){ return p.tk===tk; })){
-      var seed=A_PEERS.filter(function(p){ return p.tk===tk; })[0];
-      if(seed){ var o={}; for(var k in seed) o[k]=seed[k]; o.on=true; A_SC.peers.push(o); }
-      else A_SC.peers.push({ tk:tk, n:tk, on:true, mc:100, peT:null,peF:null,evT:null,evF:null,gt:null,gf:null, why:'Added by ticker — live market cap only; no multiple on file, so it plots once one is available.' });
-    }
-    addIn.value=''; aScRenderAll(root); aScChipsAll(root); aLiveOne(root, tk); }; }
+  if(addBtn&&addIn){
+    addIn.onkeydown=function(e){ if(e.key==='Enter') addBtn.click(); };
+    addBtn.onclick=function(){ var tk=(addIn.value||'').trim().toUpperCase(); if(!tk) return;
+      if(!A_SC.peers.some(function(p){ return p.tk===tk; })){
+        var seed=A_PEERS.filter(function(p){ return p.tk===tk; })[0];   // re-adding a known peer restores its file data
+        if(seed){ var o={}; for(var k in seed) o[k]=seed[k]; o.on=true; A_SC.peers.push(o); }
+        else A_SC.peers.push({ tk:tk, n:tk, on:true, epsT:null, epsF:null, ebitdaT:null, ebitdaF:null, nd:null, gt:null, gf:null,
+          why:'Added by ticker — live market cap only; no reported figures on file, so it plots once they are added.' });
+      }
+      addIn.value=''; aScRenderAll(root); aLiveOne(root, tk); };
+  }
 }
-// Live market cap (Key Facts cell + peer bubbles) via Massive (api.liveQuote). Market data is ALWAYS live —
-// no seeded number is ever shown: until the quote arrives the cell says so, and if it fails it says that.
+// Live quote via Massive (api.liveQuote). Market data is ALWAYS live — no seeded number is ever shown: the Key Facts
+// cell says "loading…" until the quote arrives and "unavailable" if it fails. The same quote feeds the peer bubbles
+// (price → P/E, market cap → bubble size, EV when Massive has one).
 function aMcCell(root, txt){ var el=root.querySelector('#amznMc'); if(el) el.textContent=txt; }
 function aLiveOne(root, tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(res){ var q=res&&res.data?res.data:res;
     if(!q||q.marketCap==null){ if(tk==='AMZN') aMcCell(root,'live quote unavailable'); return; }
-    var mcB=q.marketCap/1e9; A_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; });
+    var mcB=q.marketCap/1e9;
+    aScReset();
+    A_SC.peers.forEach(function(p){ if(p.tk===tk){ p.px=q.price; p.mc=mcB; p.ev=(q.ev!=null?q.ev/1e6:null); } });
     if(tk==='AMZN') aMcCell(root, '$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}));
     aScRenderAll(root); }).catch(function(){ if(tk==='AMZN') aMcCell(root,'live quote unavailable'); }); }
 function aScFetchCaps(root){ if(A_SC._capsFetched||!A_SC.peers) return; A_SC._capsFetched=true; A_SC.peers.forEach(function(p){ if(p.tk) aLiveOne(root, p.tk); }); }
@@ -539,15 +547,17 @@ function gmmBars(arr){
   }).join('')+'</div>';
 }
 function stdMoneyMap(){
-  var h='<div class="ov-diagram-cap" style="margin:0 0 8px">FY2025 net sales <b>$716.9B (+12%)</b> — the same total, two ways: by <b>segment</b> or by <b>geography</b>. Both reconcile to the reported figure.</div>';
-  h+='<div class="mg-tog-row" style="display:flex;gap:14px;margin:2px 0 8px"><span class="mg-tog" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mu)">View: <span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px"><button type="button" class="mg-pill active" data-gmm="seg" style="border:none;background:var(--navy);color:#fff;font:inherit;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:999px;cursor:pointer">Segments</button><button type="button" class="mg-pill" data-gmm="geo" style="border:none;background:transparent;color:var(--mu);font:inherit;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:999px;cursor:pointer">Geography</button></span></span></div>';
+  var h='<div class="ov-diagram-cap gmm-cap-top">FY2025 net sales <b>$716.9B (+12%)</b> — the same total, two ways: by <b>segment</b> or by <b>geography</b>. Both reconcile to the reported figure.</div>';
+  h+='<div class="mg-tog-row"><span class="mg-tog">View: <span class="mg-seg">'+
+    '<button type="button" class="mg-pill active" data-gmm="seg">Segments</button>'+
+    '<button type="button" class="mg-pill" data-gmm="geo">Geography</button></span></span></div>';
   h+='<div class="gmm-view" data-gmm="seg">'+gmmBars(GMM_SEG)+'</div>';
   h+='<div class="gmm-view" data-gmm="geo" hidden>'+gmmBars(GMM_GEO)+'</div>';
-  h+='<div class="mm-defs acc-list" style="margin-top:12px">'+REV_DEFS.map(function(s){
-    var econ='<div class="acc" style="margin-top:8px"><button type="button" class="acc-h">The numbers <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+(s.econNote?'<div class="ave-subh-note" style="margin-top:6px">'+esc(s.econNote)+'</div>':'')+'</div></div>';
+  h+='<div class="mm-defs acc-list">'+REV_DEFS.map(function(s){
+    var econ='<div class="acc"><button type="button" class="acc-h">The numbers <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+(s.econNote?'<div class="ave-subh-note acc-note">'+esc(s.econNote)+'</div>':'')+'</div></div>';
     return '<div class="acc"><button type="button" class="acc-h">'+esc(s.seg)+'<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+s.desc+'</div>'+econ+'</div></div>';
   }).join('')+'</div>';
-  h+='<div class="ov-diagram-cap" style="margin-top:10px">FY2025: operating income <b>$80.0B (11.2% margin)</b> · net income <b>$77.7B</b>. AWS contributes <b>~57% of operating income on 18% of revenue</b> — the profit engine under the store. <span class="ave-subh-note">Source: Amazon FY2025 Form 10-K (Note 10). The revenue-line split is company-wide, not per segment.</span></div>';
+  h+='<div class="ov-diagram-cap gmm-cap-end">FY2025: operating income <b>$80.0B (11.2% margin)</b> · net income <b>$77.7B</b>. AWS contributes <b>~57% of operating income on 18% of revenue</b> — the profit engine under the store. <span class="ave-subh-note">Source: Amazon FY2025 Form 10-K (Note 10). The revenue-line split is company-wide, not per segment.</span></div>';
   return h;
 }
 function stdProducts(){
@@ -557,42 +567,9 @@ function stdProducts(){
         '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
     }).join('')+'</div>';
 }
-var OV_SOURCES='Sources — Amazon FY2025 Form 10-K (SEC EDGAR) for all FY2025 revenue, segment, geographic, product-line and headcount figures; Amazon IR / press releases for qualitative content and history; SEC filing history for filer status; Summit DCF model (snapshot 2026-05-13) cross-checked for segment revenue. Market cap and peer bubbles are live (Massive); peer multiples & growth are seeded approximations (Jul 2026), directional. Forward figures are estimates, not company guidance.';
+var OV_SOURCES='Sources — Amazon FY2025 Form 10-K (SEC EDGAR, filed Feb 6, 2026) for revenue, segment, geographic, product-line, margin and headcount figures and the business description; Amazon IR and press releases for qualitative content and history; SEC EDGAR for filer status. Market cap and peer multiples are live (Massive price ÷ figures from each company\'s latest annual filing, or Bloomberg consensus FY2026 as of Sep 2026). Forward figures are estimates, not company guidance.';
 function stdOverviewBody(c){
-  var h='<style>.stdkf{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--bdr);border-top:3px solid var(--brand-2,var(--brand));border-radius:12px;overflow:hidden;background:var(--w);margin:2px 0}'+
-    '.stdkf-cell{padding:11px 13px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
-    '.stdkf-cell:nth-child(5n){border-right:none}.stdkf-cell:nth-child(n+6){border-bottom:none}'+
-    '.stdkf-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:3px}'+
-    '.stdkf-v{font-size:12px;font-weight:700;color:var(--navy);line-height:1.3}'+
-    '@media(max-width:720px){.stdkf{grid-template-columns:repeat(2,1fr)}.stdkf-cell{border-right:none}}'+
-    '.ov-lede{margin:16px 0 6px;font-size:13px;line-height:1.6;color:var(--navy)}'+
-    '.q2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--bdr);border-radius:12px;overflow:hidden;background:var(--w);margin:4px 0}'+
-    '.q2-cell{padding:13px 15px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
-    '.q2-cell:nth-child(2n){border-right:none}.q2-cell:nth-child(n+3){border-bottom:none}'+
-    '.q2-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);margin-bottom:5px}'+
-    '.q2-v{font-size:12px;color:var(--navy);line-height:1.5}.q2-v b{font-weight:800}'+
-    '@media(max-width:600px){.q2{grid-template-columns:1fr}.q2-cell{border-right:none}.q2-cell:nth-child(n+2){border-bottom:1px solid var(--bdr)}.q2-cell:last-child{border-bottom:none}}'+
-    '.acc-list .acc{border:1px solid var(--bdr);border-radius:9px;margin-top:6px;overflow:hidden;background:var(--w)}'+
-    '.acc-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12px;font-weight:700;color:var(--navy);padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}'+
-    '.acc-h:hover{background:#EEF2F6}.acc-x{color:var(--mu);font-weight:800}.acc-b{padding:10px 12px}'+
-    '.famd{font-size:12px;color:var(--navy);line-height:1.55}.famd b{font-weight:800}'+
-    '.ov-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:11.5px}.ov-row:last-child{border-bottom:none}.ov-row-k{color:var(--mu);font-weight:600}.ov-row-v{color:var(--navy);font-weight:800}'+
-    '.stdp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}'+
-    '.stdp-card{border:1px solid var(--bdr);border-radius:11px;padding:13px 14px;background:var(--w);cursor:pointer;transition:.14s}'+
-    '.stdp-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px);border-color:'+BRAND+'}'+
-    '.stdp-ic{font-size:26px;line-height:1}.stdp-n{font-size:13px;font-weight:800;color:var(--navy);margin:7px 0 3px}'+
-    '.stdp-d{font-size:11px;color:var(--mu);line-height:1.45}.stdp-more{font-size:10px;font-weight:700;color:'+BRAND2+';margin-top:6px}'+
-    '.ov-collap{border:1px solid var(--bdr);border-radius:10px;margin:12px 0 0;overflow:hidden}'+
-    '.ov-collap-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12.5px;font-weight:800;color:var(--navy);padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:8px}'+
-    '.ov-collap-h:hover{background:#EEF2F6}.ov-collap-ic{font-size:10px;color:var(--mu)}.ov-collap-b{padding:12px 14px 6px}'+
-    '.dd-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--bdr)}'+
-    '.dd-tab{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--mu);padding:9px 14px;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px}'+
-    '.dd-tab:hover{color:var(--navy)}.dd-tab.active{color:'+BRAND2+';border-bottom-color:'+BRAND+'}'+
-    '.dd-pane[hidden]{display:none}'+
-    '.add-empty{border:1px dashed var(--bdr);border-radius:12px;padding:34px 20px;text-align:center;color:var(--mu);font-size:12.5px;background:var(--w)}'+
-    '.ov-foot{font-size:10px;color:var(--mu);line-height:1.5;margin:16px 0 4px;padding-top:10px;border-top:1px solid var(--bdr)}'+
-    '.ave-subh-note{font-size:10px;color:var(--mu);font-weight:600}'+
-    '</style>';
+  var h='';
   // The hook — always visible: Key Facts, description, 2x2 quadrant.
   h+=stdKeyFacts();
   h+='<p class="ov-lede">'+AMZN_LEDE+'</p>';
@@ -3923,8 +3900,8 @@ function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depre
   '</style>';
   h+='<div class="ov-sec"><div class="ov-sec-h">Leases — the other capacity bill (10-K Note 4)</div>';
   h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 10px">'+
-    '<div style="flex:1;min-width:220px;border:1px solid var(--bdr);border-left:4px solid '+BRAND2+';border-radius:9px;padding:8px 12px;background:var(--card,#fff)"><div style="font-size:12px;font-weight:800;color:var(--navy)">🏢 Operating leases</div><div style="font-size:10.5px;color:var(--mu);margin-top:2px">ROU asset on its <b>own B/S line</b> · cost runs through COGS / fulfillment / tech · <b>not</b> in capex or PP&amp;E</div></div>'+
-    '<div style="flex:1;min-width:220px;border:1px solid var(--bdr);border-left:4px solid '+SQUID+';border-radius:9px;padding:8px 12px;background:var(--card,#fff)"><div style="font-size:12px;font-weight:800;color:var(--navy)">✈️ Finance leases</div><div style="font-size:10.5px;color:var(--mu);margin-top:2px">Ownership-like · asset sits <b>inside PP&amp;E</b> · depreciates into D&amp;A</div></div>'+
+    '<div style="flex:1;min-width:220px;border:1px solid var(--bdr);border-left:4px solid '+BRAND2+';border-radius:9px;padding:8px 12px;background:var(--card,#fff)"><div style="font-size:12px;font-weight:800;color:var(--navy)"> Operating leases</div><div style="font-size:10.5px;color:var(--mu);margin-top:2px">ROU asset on its <b>own B/S line</b> · cost runs through COGS / fulfillment / tech · <b>not</b> in capex or PP&amp;E</div></div>'+
+    '<div style="flex:1;min-width:220px;border:1px solid var(--bdr);border-left:4px solid '+SQUID+';border-radius:9px;padding:8px 12px;background:var(--card,#fff)"><div style="font-size:12px;font-weight:800;color:var(--navy)"> Finance leases</div><div style="font-size:10.5px;color:var(--mu);margin-top:2px">Ownership-like · asset sits <b>inside PP&amp;E</b> · depreciates into D&amp;A</div></div>'+
   '</div>'+
   '<div style="font-size:11.5px;font-weight:700;color:var(--brand-2);margin:0 0 12px">Debt-like capacity that never shows in the capex/PP&amp;E charts — plus ~$62B signed but not yet started.</div>';
   h+='<div class="exp-stat" style="margin:0 0 12px">'+
@@ -3945,8 +3922,8 @@ function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depre
       '<div class="exp-st"><div class="exp-sl">Finance-lease D&amp;A</div><div class="exp-sv">$3.3B</div><div class="exp-ss">inside the $41.9B P&amp;E D&amp;A</div></div>'+
     '</div>'+
     '<div class="ew-h">Where the two lease types land</div>'+
-    '<div class="ew-two">'+box('🏢','Operating leases','The bulk — fulfillment centers, offices, some data centers. The cost flows into <b>cost of sales / fulfillment / technology</b> (not a separate line); the asset is a right-of-use (ROU) asset on its own balance-sheet line.')+
-      box('✈️','Finance leases','Ownership-like (e.g. Amazon Air aircraft, some equipment). The asset sits <b>inside PP&amp;E</b>, and its cost splits into <b>amortization ($3.3B, inside D&amp;A)</b> + <b>interest ($0.3B)</b> — that is why finance-lease D&amp;A is already in the $41.9B P&amp;E depreciation.')+'</div>';
+    '<div class="ew-two">'+box('','Operating leases','The bulk — fulfillment centers, offices, some data centers. The cost flows into <b>cost of sales / fulfillment / technology</b> (not a separate line); the asset is a right-of-use (ROU) asset on its own balance-sheet line.')+
+      box('','Finance leases','Ownership-like (e.g. Amazon Air aircraft, some equipment). The asset sits <b>inside PP&amp;E</b>, and its cost splits into <b>amortization ($3.3B, inside D&amp;A)</b> + <b>interest ($0.3B)</b> — that is why finance-lease D&amp;A is already in the $41.9B P&amp;E depreciation.')+'</div>';
   // Panel 2 — owned vs leased vs pipeline (the capacity picture)
   var p2='<div class="ew-h">The full capacity picture — owned, leased, and signed-but-not-started</div>'+
     mbar('Total controlled capacity (~$738B of assets + pipeline)',[{w:72.4,c:'#1E2733',t:'Owned PP&E $534B'},{w:11.7,c:BRAND2,t:'Op-lease ROU $86B'},{w:7.5,c:SQUID,t:'Fin-lease ROU $56B'},{w:8.4,c:acxRGBA(BRAND,0.55),t:'Pipeline $62B'}])+
@@ -3965,10 +3942,10 @@ function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depre
     mbar('',[{w:16,c:BRAND2,t:'≤1yr ~$12B'},{w:38,c:acxRGBA(BRAND2,0.7),t:'2–5yr'},{w:46,c:acxRGBA(BRAND2,0.4),t:'thereafter ~$44B'}])+
     '<div class="ov-foot">Maturities &amp; not-yet-commenced per 10-K Note 4 (FY2024); balance-sheet totals FY2025.</div>';
   // Panel 4 — what Amazon leases
-  var p4='<div class="ew-two">'+box('📦','Fulfillment &amp; logistics','Warehouses, sortation centers, delivery stations and (increasingly) grocery — the largest slice of operating leases. Leasing lets Amazon flex the network up and down without owning every building.')+
-      box('🖥️','Data centers','A mix — Amazon <b>owns</b> core AWS capacity (the capex build) but also <b>leases</b> data-center space and power, especially to move fast; much of the not-yet-commenced pipeline is here.')+
-      box('✈️','Amazon Air','The cargo-aircraft fleet is largely under <b>finance</b> leases — the main reason finance-lease assets and their amortization are material.')+
-      box('🏢','Offices &amp; other','Corporate offices, physical stores and equipment round it out.')+'</div>'+
+  var p4='<div class="ew-two">'+box('','Fulfillment &amp; logistics','Warehouses, sortation centers, delivery stations and (increasingly) grocery — the largest slice of operating leases. Leasing lets Amazon flex the network up and down without owning every building.')+
+      box('','Data centers','A mix — Amazon <b>owns</b> core AWS capacity (the capex build) but also <b>leases</b> data-center space and power, especially to move fast; much of the not-yet-commenced pipeline is here.')+
+      box('','Amazon Air','The cargo-aircraft fleet is largely under <b>finance</b> leases — the main reason finance-lease assets and their amortization are material.')+
+      box('','Offices &amp; other','Corporate offices, physical stores and equipment round it out.')+'</div>'+
     '<div class="ew-note"><b>Own vs lease is deliberate:</b> own where control/long-run cost matter (core AWS → capex/PP&amp;E), lease where speed matters (fulfillment, incremental DC space, aircraft). The capex charts show only the owned half.</div>';
   h+='<div class="lx-panels">'+
     '<div class="lx-panel lx-card" data-lxpanel="bs">'+p2+'</div>'+
@@ -4626,48 +4603,7 @@ var A_QSEAS={
 var A_QCOL=['#C6DBEF','#6BAED6','#2E7EBC','#0B3D66']; // Q1..Q4 sequential
 
 function bottomlineCapexBody(){
-  var h='<style>'+
-    '.acx-wrap{display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start;margin-top:6px}'+
-    '@media(max-width:900px){.acx-wrap{grid-template-columns:1fr}}'+
-    '.acx-ctl{position:sticky;top:12px}'+
-    '.acx-grp{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand-2);margin:15px 0 8px;display:flex;align-items:center;gap:8px}'+
-    '.acx-grp:first-child{margin-top:2px}.acx-grp::after{content:"";flex:1;height:1px;background:var(--bdr)}.acx-grp .acx-sum{font-size:10px;font-weight:800}'+
-    '.acx-row{margin-bottom:10px}.acx-rh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:3px}'+
-    '.acx-rl{font-size:12px;font-weight:600;color:var(--navy)}'+
-    '.acx-rv{font-size:11.5px;font-weight:800;color:var(--brand-2);font-variant-numeric:tabular-nums;background:rgba(20,110,180,.08);border-radius:5px;padding:1px 7px;min-width:50px;text-align:right}'+
-    '.acx-ctl input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:3px;background:var(--bdr);outline:none;margin:2px 0 0}'+
-    '.acx-ctl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--brand-2);border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer}'+
-    '.acx-ctl input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--brand-2);border:2px solid #fff;cursor:pointer}'+
-    '.acx-ctl input.acx-warn::-webkit-slider-thumb{background:var(--brand)}.acx-ctl input.acx-warn::-moz-range-thumb{background:var(--brand)}'+
-    '.acx-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:9px;overflow:hidden;margin-bottom:14px}'+
-    '@media(max-width:620px){.acx-kpis{grid-template-columns:repeat(2,1fr)}}'+
-    '.acx-kpi{background:var(--card,#fff);padding:10px 13px}.acx-kl{font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}'+
-    '.acx-kv{font-size:20px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin-top:2px;letter-spacing:-.02em}.acx-ks{font-size:10px;color:var(--mu);font-variant-numeric:tabular-nums;margin-top:1px}'+
-    /* match SAB pills (results.css .rs-views/.rs-view) so every toggle reads as one product */
-    '.acx-tog{display:inline-flex;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;flex-wrap:wrap}'+
-    '.acx-tog button{appearance:none;border:0;border-right:1px solid var(--bdr);background:#fff;font:600 12px Inter,sans-serif;color:var(--mu);padding:7px 16px;cursor:pointer}.acx-tog button:last-child{border-right:0}.acx-tog button:hover{color:var(--navy)}.acx-tog button.active{background:var(--navy);color:#fff}'+
-    '.acx-reset{border:1px solid var(--bdr);background:#fff;color:var(--navy);font:inherit;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:5px 10px;cursor:pointer}.acx-reset:hover{background:rgba(0,0,0,.03)}'+
-    '.acx-read{font-size:11px;color:var(--mu);font-variant-numeric:tabular-nums;margin:8px 0 0;line-height:1.5}.acx-read b{color:var(--navy)}'+
-    '.acx-cap{font-size:11px;color:var(--mu);line-height:1.45;margin-top:8px}.acx-cap b{color:var(--navy);font-weight:600}'+
-    '.mch-ctl{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin:8px 0 4px}'+
-    /* single dual-thumb range (Setup pattern) */
-    '.acx-slwrap{display:flex;align-items:center;gap:10px;margin:2px 0 4px}'+
-    '.acxsl{position:relative;height:26px;flex:1}'+
-    '.acxsl-track{position:absolute;left:0;right:0;top:11px;height:4px;background:var(--bdr);border-radius:2px}'+
-    '.acxsl-fill{position:absolute;top:0;height:100%;background:var(--brand-2);border-radius:2px}'+
-    '.acxsl-tk{position:absolute;left:0;right:0;top:0;height:26px;pointer-events:none}'+
-    '.acxsl-tk span{position:absolute;top:13px;width:5px;height:5px;border-radius:50%;transform:translate(-50%,-50%);background:#fff;border:1.5px solid #C7CED6}'+
-    '.acxsl-tk span.on{background:var(--brand-2);border-color:var(--brand-2)}.acxsl-tk span.on.est{opacity:.5}'+
-    '.acxsl input[type=range]{position:absolute;top:0;left:0;width:100%;height:26px;margin:0;background:none;pointer-events:none;-webkit-appearance:none;appearance:none}'+
-    '.acxsl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--brand-2);box-shadow:0 1px 3px rgba(0,0,0,.22);cursor:pointer}'+
-    '.acxsl input[type=range]::-moz-range-thumb{pointer-events:auto;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--brand-2);cursor:pointer}.acxsl input[type=range]::-moz-range-track{background:none}'+
-    '.acx-rp{border:1px solid var(--bdr);background:#fff;color:var(--mu);font:700 10.5px Inter,sans-serif;padding:3px 9px;border-radius:999px;cursor:pointer}.acx-rp:hover{color:var(--navy);border-color:var(--brand-2)}.acx-rp.active{background:var(--brand-2);color:#fff;border-color:var(--brand-2)}'+
-    '.acx-slend{font-size:10.5px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;min-width:42px;text-align:center}'+
-    /* gdd-style economics bars */
-    '.acx-eb{display:flex;align-items:center;gap:10px;margin-bottom:7px}.acx-eb-l{width:120px;font-size:11px;font-weight:600;color:var(--navy);text-align:right;flex-shrink:0}'+
-    '.acx-eb-tr{flex:1;height:22px;background:rgba(0,0,0,.04);border-radius:5px;overflow:hidden}.acx-eb-f{height:100%;border-radius:5px;display:flex;align-items:center;padding:0 9px;font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap}'+
-    '.acx-eb-v{width:80px;text-align:right;font-size:11px;font-weight:700;color:var(--mu);flex-shrink:0;font-variant-numeric:tabular-nums}'+
-  '</style>';
+  var h='';   // styles: css/overview.css (.ov-amzn-dd .acx-*), moved out of this function Oct 29 2026 (A10)
   h+='<div class="acx-kpis" id="acxKpis"></div>';
   h+='<div class="acx-wrap">';
   h+='<aside class="acx-ctl"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--navy)">Assumptions</span><button type="button" class="acx-reset" id="acxReset">Reset</button></div><div class="acx-scen" style="display:flex;gap:4px;margin:2px 0 10px;flex-wrap:wrap"><span style="font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);align-self:center;margin-right:2px">Scenario</span><button type="button" class="acx-rp active" data-scen="base">Base</button><button type="button" class="acx-rp" data-scen="ai">AI supercycle</button><button type="button" class="acx-rp" data-scen="decel">Deceleration</button></div>';
@@ -4695,7 +4631,7 @@ function bottomlineCapexBody(){
      '<div class="acx-cap" style="margin-bottom:8px"><b>~0.5 GW (2019) → ~10 GW (2028E).</b> Each GW of capacity costs ~$34B, and the split is where the money goes:</div>'+
      '<div class="acx-eb"><div class="acx-eb-l">Chips (GPU/accelerators)</div><div class="acx-eb-tr"><div class="acx-eb-f" style="width:68.5%;background:'+BRAND2+'">68.5%</div></div><div class="acx-eb-v">$23.3B / GW</div></div>'+
      '<div class="acx-eb"><div class="acx-eb-l">General infrastructure</div><div class="acx-eb-tr"><div class="acx-eb-f" style="width:31.5%;background:'+SQUID+'">31.5%</div></div><div class="acx-eb-v">$10.7B / GW</div></div>'+
-     '<div class="acx-cap">Chip mix per GW: Trainium 40% · Inferentia2 35% · Blackwell/H200 25% (blended ~$11.8k/chip). Source: DCF datacenter build assumptions.</div></div>';
+     '<div class="acx-cap">Chip mix per GW: Trainium 40% · Inferentia2 35% · Blackwell/H200 25% (blended ~$11.8k/chip). Source: Summit DCF workbook (Amazon), datacenter build sheet, submit of Aug 4, 2026 — frozen, not live.</div></div>';
   // 3 · seasonality
   h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center">Deployment cadence — quarters as % of the year<span class="acx-tog acx-seastog"><button type="button" data-acxseas="cap" class="active">Capex</button><button type="button" data-acxseas="da">D&amp;A</button></span></div>'+
      '<div style="height:240px"><canvas id="acxSeas"></canvas></div>'+
@@ -4946,8 +4882,8 @@ function aBuildCapex(root){
 // the pane says so — the module header lists what each series has to come from.
 function valuationHistBody(){ return amznHistMult.body(); }
 function valuationPeersBody(){
-  return '<p class="ov-lede"><b>The peer map.</b> The same live-cap scatter as the Overview, kept beside the valuation work: X = multiple (P/E ⇄ EV/EBITDA, forward ⇄ trailing), Y = expected growth, bubble = live market cap. Peer multiples are seeded approximations (Jul 2026) — directional, not live.</p>'+stdPeerScatter('dd')+
-    '<div class="ov-foot">Sources — peer P/E, EV/EBITDA and revenue growth seeded Jul 2026 from consensus pages (stockanalysis.com); forward EV/EBITDA derived (trailing deflated by consensus growth), not quoted; fiscal years differ by peer (WMT Jan, COST Aug, MSFT Jun, BABA Mar). Market caps live (Massive). ⚑ Seeded multiples are pending a live source.</div>';
+  return '<p class="ov-lede"><b>The peer map.</b> The same live-cap scatter as the Overview, kept beside the valuation work: X = multiple (P/E ⇄ EV/EBITDA, forward ⇄ trailing), Y = revenue growth, bubble = live market cap.</p>'+stdPeerScatter('dd')+
+    '<div class="ov-foot">Sources — Amazon EPS ex non-operating items = FY2025 operating income × (1 − effective tax rate) ÷ diluted shares (10-K). Trailing EPS, EBITDA (operating income + D&amp;A), net debt and revenue growth from each company\'s latest annual filing: Amazon, Alphabet and MercadoLibre 10-K FY2025; Walmart 10-K FY2026 (year to Jan 31 2026); Costco 10-K FY2026 (year to Aug 30 2026); Microsoft 10-K FY2026 (year to Jun 30 2026); Alibaba 20-F FY2026 (year to Mar 31 2026, US$ convenience translation, EPS per ADS). Forward: Bloomberg consensus FY2026 (Amazon Sep 10 2026, Alphabet Sep 8 2026). Price, market cap and EV live (Massive).</div>';
 }
 // ⚠ PARKED, not dead: the Financials sub-tab was taken off the Valuation bar (Pablo, Aug 19 2026).
 // This body and aBuildFin below are kept so the work is not lost — restoring the tab is one button
@@ -5057,25 +4993,25 @@ function amznOwnBody(){   // Ownership
   h+='<div class="ov-kpis">'+[['8.8%','Jeff Bezos — largest individual holder (Feb 2026)'],['1 class','one share, one vote'],['~$19.5B','stock-based comp (FY25)'],['~nil','buybacks · no dividend']].map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-v">'+k[0]+'</div><div class="ov-kpi-d muted">'+k[1]+'</div></div>'; }).join('')+'</div>';
   h+='<div class="ov-sec-h">Who owns Amazon</div>';
   h+=ewBoxes([
-    ['👤','Founder','Jeff Bezos holds 8.8% (950M shares, Feb 2026) — the largest single holder — as Executive Chair. He sells regularly under pre-set <b>10b5-1</b> plans (funding Blue Origin and philanthropy), so the stake trends down over time even as it stays the largest.'],
-    ['🏦','Institutions','The float is overwhelmingly institutional; the largest holders are the index-fund complexes — <b>Vanguard, BlackRock and State Street</b> — whose stakes track the passive flows, not an active view on Amazon.']
+    ['','Founder','Jeff Bezos holds 8.8% (950M shares, Feb 2026) — the largest single holder — as Executive Chair. He sells regularly under pre-set <b>10b5-1</b> plans (funding Blue Origin and philanthropy), so the stake trends down over time even as it stays the largest.'],
+    ['','Institutions','The float is overwhelmingly institutional; the largest holders are the index-fund complexes — <b>Vanguard, BlackRock and State Street</b> — whose stakes track the passive flows, not an active view on Amazon.']
   ]);
-  h+='<div class="ov-sec-h" style="margin-top:16px">Capital returned to shareholders</div>';
+  h+='<div class="ov-sec-h">Capital returned to shareholders</div>';
   h+='<div class="ov-fynote">Amazon pays <b>no dividend</b> and repurchases stock only opportunistically — it authorized a $10B buyback in 2022 and bought ~$6B that year, then effectively paused. Capital goes to the capex build (see <b>Miscellaneous ▸ Capex &amp; Depreciation</b>), not to shareholders — so SBC dilution is <b>not</b> offset by buybacks.</div>';
-  h+='<div class="ov-sec-h" style="margin-top:18px">Executives &amp; insider activity — live from Fiscal.ai</div>';
+  h+='<div class="ov-sec-h">Executives &amp; insider activity — live from Fiscal.ai</div>';
   h+='<div id="dd-mgmt-slot"></div>';   // filled by companies.js (the same live table as Pillars ▸ Management), like UBER
   h+='<div class="ov-foot">Sources — Amazon 2026 proxy statement (DEF 14A, filed Apr 9 2026), security-ownership table: Jeff Bezos 950,434,581 shares, 8.8% of 10,751M outstanding as of Feb 24 2026; FY2025 Form 10-K: stock-based compensation $19,467M; FY2022 Form 10-K: $10B repurchase program authorized Mar 2022, $6.0B bought in 2022. Executive holdings and insider transactions sync live from Fiscal.ai (also in Pillars ▸ Management).</div>';
   return h;
 }
 function amznGovBody(){   // Governance & SBC
   var h='<p class="ov-lede"><b>Clean, conventional governance.</b> Single-class stock, an independent-majority board, four standing committees and an annual say-on-pay vote — governance risk is low by construction. The trade-off: no outside holder can force a strategy change.</p>';
-  h+='<div class="ov-kpis">'+[['1 vote / sh','single share class'],['12 dirs','majority independent'],['~$19.5B','SBC · ~2.7% of revenue (FY25)'],['~nil','buybacks · no dividend']].map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-v">'+k[0]+'</div><div class="ov-kpi-d muted">'+k[1]+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="ov-kpis">'+[['12 directors','majority independent'],['4','standing board committees'],['Lead Director','independent, since 2010'],['2.7%','SBC as a share of FY25 net sales']].map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-v">'+k[0]+'</div><div class="ov-kpi-d muted">'+k[1]+'</div></div>'; }).join('')+'</div>';
   h+='<div class="ov-sec-h">How Amazon is governed</div>';
   h+=ewBoxes([
-    ['🗳️','Single share class','One share, one vote — no founder super-voting stock. The opposite of META/GOOGL dual-class.'],
-    ['⚖️','Independent-majority board','12 directors, the majority independent; an independent Lead Director since 2010.'],
-    ['🏛️','Four standing committees','Audit (Nooyi), Leadership Dev &amp; Comp, Nominating &amp; Corp Gov, Security (Huttenlocher).'],
-    ['📉','SBC, not buybacks','No dividend and minimal repurchases — SBC is the main driver of share-count growth.']
+    ['','Single share class','One share, one vote — no founder super-voting stock. The opposite of META/GOOGL dual-class.'],
+    ['','Independent-majority board','12 directors, the majority independent; an independent Lead Director since 2010.'],
+    ['','Four standing committees','Audit (Nooyi), Leadership Dev &amp; Comp, Nominating &amp; Corp Gov, Security (Huttenlocher).'],
+    ['','SBC, not buybacks','No dividend and minimal repurchases — SBC is the main driver of share-count growth.']
   ]);
   h+='<div class="ov-fynote">SBC totals <b>~$19.5B (FY25, ~2.7% of revenue)</b>, down from $24.0B in 2023, and dilutes ~1%/yr with buybacks near zero. The full <b>by-line, actuals-vs-consensus SBC chart lives in Bottom Line ▸ General</b> (where the expenses are).</div>';
   h+='<div class="ov-foot">Sources — Amazon 2026 proxy statement (DEF 14A, filed Apr 9 2026): board composition, committees, Lead Director; FY2025 Form 10-K: stock-based compensation $19,467M (≈2.7% of $716.9B net sales), $24,023M in 2023.</div>';
@@ -5083,52 +5019,52 @@ function amznGovBody(){   // Governance & SBC
 }
 // Track Record — per-leader scorecard (management only), color-rated with a tap-for-detail modal.
 // Molded on UBER's ubTrackBody. Ratings are an editorial read, not a Summit output.
-var AMZN_TRK_RATE={ green:{c:'#06965A',bg:'rgba(6,150,90,0.09)',bd:'rgba(6,150,90,0.34)',l:'Value creator'},
-  amber:{c:'#B7791F',bg:'rgba(183,121,31,0.10)',bd:'rgba(183,121,31,0.34)',l:'Mixed / unproven'} };
+var AMZN_TRK_RATE={ green:{c:'var(--pos)',bg:'var(--w)',bd:'var(--bdr)',l:'Value creator'},
+  amber:{c:'var(--gold)',bg:'var(--w)',bd:'var(--bdr)',l:'Mixed / unproven'} };   // Summit state tokens (§21), no hex
 // since = the year the person JOINED Amazon (the card reads "at Amazon since"), never the year they took the role.
 var AMZN_TRACK=[
   { id:'jassy', n:'Andy Jassy', role:'President & CEO', since:'1997', rate:'green',
-    amzn:'Built AWS into the profit engine (its first leader, 2003-21); as CEO drove the efficiency era — regionalization, org flattening, ~41k roles out — that lifted group operating margin from low-single-digits to a record ~11%, and set the AI build-out.',
+    at:'Built AWS into the profit engine (its first leader, 2003-21); as CEO drove the efficiency era — regionalization, org flattening, ~41k roles out — that lifted group operating margin from low-single-digits to a record ~11%, and set the AI build-out.',
     prior:'26 years inside Amazon; no outside executive record — his track record <i>is</i> the AWS-and-then-Amazon record.',
     detail:'<p><b>At Amazon (CEO since Jul 2021; joined 1997).</b> Founded and ran AWS from a 2003 memo to the majority of group operating income. As CEO: the efficiency reset (US network regionalization 2023, a flatter org, ~27k + ~14k corporate roles out), the largest capex cycle in company history, and the AI doctrine.</p>'+
       '<p><b>Net read — value creator (green).</b> Delivered the margin turnaround and the AWS reacceleration. Caveats, not disqualifying: the ~$220B/yr AI capex is a huge bet still unproven on returns, and the 2025-26 layoffs are efficiency but also culture risk.</p>' },
   { id:'garman', n:'Matt Garman', role:'CEO, AWS', since:'2006', rate:'green',
-    amzn:'One of AWS\'s first product managers, then its top salesman, now its CEO — presiding over the re-acceleration (growth +24% → +28%), the Trainium ramp and the Anthropic partnership.',
+    at:'One of AWS\'s first product managers, then its top salesman, now its CEO — presiding over the re-acceleration (growth +24% → +28%), the Trainium ramp and the Anthropic partnership.',
     prior:'Career built inside AWS (joined 2006) — deep-inside credibility, but no outside benchmark.',
     detail:'<p><b>At Amazon (CEO of AWS since Jun 2024; joined 2006).</b> Rose from one of AWS\'s first PMs to head of sales & marketing to the top seat. Owns the current reacceleration, the custom-silicon (Trainium) price-performance push, and the Anthropic partnership; backlog (RPO) has stepped up sharply.</p>'+
       '<p><b>Net read — value creator, lightly caveated (green).</b> Strong reacceleration on his watch; the caveat is simply a short standalone tenure as CEO.</p>' },
   { id:'herrington', n:'Doug Herrington', role:'CEO, Worldwide Amazon Stores', since:'2005', rate:'green',
-    amzn:'Ran the retail turnaround — North America from a 2022 operating loss to a mid-single-digit margin, on cost and mix rather than price; drove same-day, grocery ($150B+ gross sales) and the robotics rollout.',
+    at:'Ran the retail turnaround — North America from a 2022 operating loss to a mid-single-digit margin, on cost and mix rather than price; drove same-day, grocery ($150B+ gross sales) and the robotics rollout.',
     prior:'At Amazon since 2005 (ex-Consumer chief); the retail turnaround is his defining record.',
     detail:'<p><b>At Amazon (CEO Worldwide Stores since 2022; joined 2005).</b> Took the retail segment from the 2022 over-investment loss back to profit via regionalization, cost-to-serve discipline and the advertising mix — not price. Drove the everyday-essentials push, the same-day network and the 1M+-robot rollout.</p>'+
       '<p><b>Net read — value creator (green).</b> A clean, measurable turnaround. The forward question is whether retail margin keeps climbing as the LEO/robotics capex lands.</p>' },
   { id:'olsavsky', n:'Brian Olsavsky', role:'SVP & CFO', since:'2002', rate:'green',
-    amzn:'Two decades of Amazon finance — the consistent voice of the guide across the pandemic build, the 2022 trough and the AI capex cycle; owns the capex framing that anchors the bull case.',
+    at:'Two decades of Amazon finance — the consistent voice of the guide across the pandemic build, the 2022 trough and the AI capex cycle; owns the capex framing that anchors the bull case.',
     prior:'At Amazon since 2002 (Worldwide Operations finance); a company lifer in the finance seat.',
     detail:'<p><b>At Amazon (CFO since 2015; joined 2002).</b> Guided the company through the pandemic over-build, the 2022 margin trough and reset, and now the AI capex cycle — with the framing "as fast as we install this capacity, we are monetizing it."</p>'+
       '<p><b>Net read — solid (green).</b> Continuity and credibility; the open question he owns is defending the capex thesis if AWS demand ever lags the build.</p>' },
   { id:'desantis', n:'Peter DeSantis', role:'SVP, Foundational AI Models, Custom Silicon & Quantum', since:'2005', rate:'green',
-    amzn:'The technical architect behind AWS\'s cost/performance edge — Nitro, the Graviton/Trainium/Inferentia custom-silicon program, data-center and power scale; now foundational models + quantum.',
+    at:'The technical architect behind AWS\'s cost/performance edge — Nitro, the Graviton/Trainium/Inferentia custom-silicon program, data-center and power scale; now foundational models + quantum.',
     prior:'Career built inside AWS — one of the longest-tenured infrastructure leaders.',
     detail:'<p><b>At Amazon (since 2005).</b> Ran AWS compute and infrastructure for years; drove the Nitro system and the custom-silicon roadmap (Graviton for general compute, Trainium/Inferentia for AI) that underpins AWS\'s price-performance advantage, plus the power/data-center scale-up.</p>'+
       '<p><b>Net read — value creator (green).</b> The silicon and infrastructure edge he owns is central to the AWS margin story; deep, proven, low-drama.</p>' },
   { id:'grandinetti', n:'Russell Grandinetti', role:'SVP, International Stores', since:'2000', rate:'green',
-    amzn:'A 25-year Amazon veteran (early Kindle and digital); now runs International Stores — the segment that crossed into operating profit in 2024 on the same regionalization + advertising playbook as North America.',
+    at:'A 25-year Amazon veteran (early Kindle and digital); now runs International Stores — the segment that crossed into operating profit in 2024 on the same regionalization + advertising playbook as North America.',
     prior:'Essentially a career-Amazon operator; helped build the Kindle/digital business.',
     detail:'<p><b>At Amazon (since 2000).</b> Held senior roles across digital, Kindle and consumer; now leads International Stores, which reached its first full-year operating profit in 2024 and keeps expanding in the established markets while the emerging ones invest.</p>'+
       '<p><b>Net read — value creator (green).</b> Long, credible operating record; the open item is the pace of emerging-market profitability.</p>' },
   { id:'zapolsky', n:'David Zapolsky', role:'Chief Global Affairs & Legal Officer', since:'1999', rate:'green',
-    amzn:'General Counsel since 2014 and now the combined legal + global public-policy chief — steering the FTC antitrust suit, EU/DMA regulation and the M&A legal work through the most scrutiny in Amazon\'s history.',
+    at:'General Counsel since 2014 and now the combined legal + global public-policy chief — steering the FTC antitrust suit, EU/DMA regulation and the M&A legal work through the most scrutiny in Amazon\'s history.',
     prior:'At Amazon since 1999; earlier a litigator (antitrust) and prosecutor.',
     detail:'<p><b>At Amazon (GC since 2014; joined 1999).</b> Leads Legal, Compliance and Global Public Policy through the FTC monopolization case, EU Digital Markets Act obligations, the $2.5B FTC/Prime settlement and the deal reviews (MGM, iRobot [terminated]).</p>'+
       '<p><b>Net read — value creator (green).</b> Seasoned through Amazon\'s hardest regulatory period; the docket he manages is the standing risk, not his handling of it.</p>' },
   { id:'galetti', n:'Beth Galetti', role:'SVP, People eXperience & Technology', since:'2013', rate:'green',
-    amzn:'Head of HR — owns the workforce through the largest headcount actions in company history (~27k in 2022-23, ~14k more in 2025-26) and the "fewer managers, more builders" flattening.',
+    at:'Head of HR — owns the workforce through the largest headcount actions in company history (~27k in 2022-23, ~14k more in 2025-26) and the "fewer managers, more builders" flattening.',
     prior:'Ex-FedEx (engineering/IT leadership) before joining Amazon in 2013.',
     detail:'<p><b>At Amazon (HR chief since ~2016; joined 2013).</b> Executed the corporate-cost reset — the two large rounds of role eliminations and the manager-to-builder ratio push that drive the G&amp;A leverage — while scaling a 1.5M+ employee base.</p>'+
       '<p><b>Net read — green, caveated.</b> Delivered the org efficiency the margin story needed; the caveat is culture/morale risk from repeated layoffs, which is hers to manage.</p>' },
   { id:'panay', n:'Panos Panay', role:'SVP, Devices & Services', since:'2023', rate:'amber',
-    amzn:'The ex-Microsoft Surface creator, recruited in 2023 to run Devices & Services (Echo/Alexa, Kindle, Ring) and fix the historically loss-making devices unit — Alexa+ (the generative-AI assistant) launched on his watch.',
+    at:'The ex-Microsoft Surface creator, recruited in 2023 to run Devices & Services (Echo/Alexa, Kindle, Ring) and fix the historically loss-making devices unit — Alexa+ (the generative-AI assistant) launched on his watch.',
     prior:'~19 years at <b>Microsoft</b> — created and led the Surface hardware line and Windows + Devices.',
     detail:'<p><b>At Amazon (since Oct 2023).</b> Took over Devices & Services after Dave Limp left for Blue Origin; relaunched Alexa as the paid, generative <b>Alexa+</b> and owns the Echo/Kindle/Ring hardware roadmap.</p>'+
       '<p><b>Net read — mixed / unproven (amber).</b> Strong hardware pedigree from Surface, but Devices has long lost money and the Alexa+ monetization is early — the turnaround is not yet demonstrated in the numbers.</p>' }
@@ -5139,9 +5075,9 @@ function amznTrackBody(){
     return '<div class="ov-clickable" data-detail="exec:'+m.id+'" style="border:1px solid '+r.bd+';border-left:4px solid '+r.c+';background:'+r.bg+';border-radius:11px;padding:13px 15px;cursor:pointer">'+
       '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><div style="font-size:13.5px;font-weight:800;color:var(--navy)">'+esc(m.n)+'</div><div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:'+r.c+'">'+r.l+'</div></div>'+
       '<div style="font-size:11px;color:var(--mu);font-weight:600;margin:1px 0 8px">'+esc(m.role)+' · at Amazon since '+esc(m.since)+'</div>'+
-      '<div style="font-size:11.5px;color:var(--navy);line-height:1.5;margin-bottom:6px"><b style="color:'+r.c+'">At Amazon:</b> '+m.amzn+'</div>'+
+      '<div style="font-size:11.5px;color:var(--navy);line-height:1.5;margin-bottom:6px"><b style="color:'+r.c+'">At Amazon:</b> '+m.at+'</div>'+
       '<div style="font-size:11.5px;color:var(--navy);line-height:1.5"><b style="color:var(--mu)">Context:</b> '+m.prior+'</div>'+
-      '<div class="ov-more" style="margin-top:7px;font-size:10.5px;font-weight:800;color:'+BRAND2+'">Full track record ›</div></div>';
+      '<div class="ov-more" style="margin-top:7px;font-size:10.5px;font-weight:800;color:var(--steel)">Full track record ›</div></div>';
   }).join('');
   var h='<p class="ov-lede">The people running Amazon today, rated on <b>what they have actually built</b>. Color = the net read; <b>tap a card</b> for the full history. (Management only — board and ownership are separate tabs.)</p>';
   h+='<div style="display:flex;gap:14px;flex-wrap:wrap;margin:0 0 12px">'+legend+'</div>';
@@ -5153,7 +5089,7 @@ function amznTrackBody(){
 
 function html(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring
-  var h='<div class="ov ov-amzn" data-brand="AMZN" style="--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">';
+  var h='<div class="ov ov-amzn" data-brand="AMZN" style="--brand:var(--steel);--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">';
   h+=stdOverviewBody(c);
   h+='<div class="ov-modal-back" id="amznModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="amznModalX" aria-label="Close">×</button>'+
@@ -5220,7 +5156,7 @@ function aSplcBody(c){
     '</div>';
   }).join('')+'</div>';
   h+='<div class="ov-diagram-cap" style="margin:18px 0 6px"><b>Chain 2 · the retail, CPG &amp; logistics chain</b> — first-party merchandise, devices and parcel</div>';
-  h+='<div style="overflow-x:auto"><table class="ce-tbl"><thead><tr><th>Supplier</th><th>Relationship</th><th>AMZN cost %</th><th>Their exposure to Amazon</th><th>Category</th></tr></thead><tbody>'+
+  h+='<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th>Supplier</th><th>Relationship</th><th>AMZN cost %</th><th>Their exposure to Amazon</th><th>Category</th></tr></thead><tbody>'+
     A_SPLC_RETAIL.map(function(r){ return '<tr><td style="font-weight:700">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+esc(r[3])+'</td><td style="color:var(--mu)">'+esc(r[4])+'</td></tr>'; }).join('')+
   '</tbody></table></div>';
   h+='<div class="ov-diagram-cap" style="margin:18px 0 6px"><b>Who needs whom — revenue dependency ON Amazon</b> (% of the counterpart\'s revenue)</div>';
@@ -5490,13 +5426,10 @@ function deepDiveHtml(c){
       '</div>'+
       // General = the four charts stacked top to bottom, all visible (SAB, Oct 13 2026 — replaces the
       // "pick one" dropdown; aGeneralPicker is no longer mounted).
-      '<div class="ovt-subpane" data-ovst="margins">'+
-        '<div class="gen-sec" data-gsec="margins">'+aMarginsBody()+'</div>'+
-        '<div class="gen-sec" data-gsec="bridge" style="margin-top:26px">'+aBridgeBody()+'</div>'+
-        '<div class="gen-sec" data-gsec="net" style="margin-top:26px">'+aNetBridgeBody()+'</div>'+
-        '<div class="gen-sec" data-gsec="sbc" style="margin-top:26px">'+aSbcBody()+'</div>'+
-        aCollap('Expense lines — the six functional deep dives (unit economics, drivers, calls)', expenseTabsBody(), false)+aBlFootGeneral()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="segments" hidden>'+segmentsBody()+'</div>'+
+      // BL-GEN / BL-SEG on the guide's machinery (./amzn-bl.js, copy of googl-bl.js; data ./amzn-bl-data.js, Oct 29 2026).
+      // The in-file builders (aMarginsBody … aBuildSegments) are no longer mounted; A_TENK and aBuildSegCapDa still serve Misc.
+      '<div class="ovt-subpane" data-ovst="margins">'+amznBlGeneralHtml()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segments" hidden>'+amznBlSegmentsHtml()+'</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+aSplcBody(c)+'</div>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="evolution" hidden>'+
@@ -5507,18 +5440,9 @@ function deepDiveHtml(c){
           '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
         '</div>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="earnings">'+
-        /* IR + EDGAR moved to the Company Profile header (Dani, Aug 2026) — see ceHeaderSources(). */
-        '<div class="ce-phtabs">'+
-          '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
-          '<button type="button" class="ce-phtab" data-cep="results">Post-Results</button>'+
-          '<button type="button" class="ce-phtab" data-cep="watch">Notes</button>'+
-        '</div>'+
-        ceQPills()+
-        '<div class="ce-phpane" data-cep="setup">'+ceSetupBody(c)+'</div>'+
-        '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>'+
-        '<div class="ce-phpane" data-cep="watch" hidden>'+ceWatchBody(c)+'</div>'+
-      '</div>'+
+      // Earnings on the guide's formal machinery (./amzn-ce.js, copy of googl-ce.js; data in ./amzn-ce-data.js).
+      // The in-file ce* closure below is no longer mounted; its data moved to amzn-ce-data.js (AMZN restructure, Oct 29 2026).
+      '<div class="ovt-subpane" data-ovst="earnings">'+amznCeHtml(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="results" hidden>'+resultsHtml('AMZN')+'</div>'+
       '<div class="ovt-subpane" data-ovst="estevo" hidden>'+resultsEvoHtml('AMZN')+'</div>'+
     '</div>';
@@ -5527,6 +5451,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab active" data-ovst="histmult">Historic Multiple</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="targetmult">Target Multiple / PEG</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="submits">Submit History</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="sensitivity">Sensitivity Analysis</button>'+
       '</div>'+
       // Financials was removed from this bar (Pablo, Aug 19 2026). Its body and chart builder are
@@ -5534,6 +5459,7 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="histmult">'+valuationHistBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="peers" hidden>'+valuationPeersBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="targetmult" hidden>'+amznTargetMult.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="submits" hidden>'+submitsHtml('AMZN')+'</div>'+   // VA-SUB (frozen submits; price live)
       '<div class="ovt-subpane" data-ovst="sensitivity" hidden>'+amznSens.body()+'</div>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="mgmt" hidden>'+
@@ -5551,10 +5477,12 @@ function deepDiveHtml(c){
   h+='<div class="dd-pane" data-dd="misc" hidden>'+
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="capex">Capex &amp; Depreciation</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="capacity">Capacity → Revenue</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="manda">M&amp;A</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="other">Other Analysis</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="capex">'+bottomlineCapexBody()+segCapDaBody()+aLeasesBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="capacity" hidden>'+amznCapacityBody()+'</div>'+   // MISC-capacity (SAB, Oct 29 2026)
       '<div class="ovt-subpane" data-ovst="manda" hidden>'+aMandaBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="other" hidden>'+aOtherAnalysisBody()+'</div>'+
     '</div>';
@@ -5578,7 +5506,7 @@ function wireModal(root){
     if(kind==='prod'){ var f=A_PRODUCTS[+id]; if(!f) return null;
       var body=f.items.map(function(it){ return '<div style="margin:0 0 10px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">'+esc(it[0])+'</div><div class="famd">'+it[1]+'</div></div>'; }).join('');
       return {t:f.ic+' '+esc(f.fam),h:'<div class="famd" style="margin-bottom:10px;color:var(--mu)">'+esc(f.d)+'</div>'+body}; }
-    if(kind==='ce'){ return CE_POP[id]||null; }
+    if(kind==='ce'){ return amznCePop(id); }
     if(kind==='seg'){ return SEG_WORLD[id]||null; }
     if(kind==='splc'){ var sp=A_SPLC_INFRA[+id]; return sp?{t:esc(sp.n)+' <span style="font-weight:600;color:var(--mu)">'+esc(sp.rel)+' · '+esc(sp.cost)+'</span>',h:sp.d}:null; }
     if(kind==='exec'){ var ex=AMZN_TRACK.filter(function(x){ return x.id===id; })[0]; return ex?{t:esc(ex.n)+' <span style="font-weight:600;color:var(--mu)">'+esc(ex.role)+'</span>',h:ex.detail}:null; }
@@ -5604,16 +5532,18 @@ function aBuildSub(root, dd, key){
   }
   if(dd==='bottomline'){
     if(key==='supplychain') requestAnimationFrame(aBuildSplc);
-    else if(key==='segments') requestAnimationFrame(aBuildSegments);
-    else requestAnimationFrame(function(){ aBuildMargins(); aBuildExpenses(); });
+    else if(key==='segments') requestAnimationFrame(function(){ amznBlSegmentsBuild(root); });
+    else requestAnimationFrame(function(){ amznBlGeneralBuild(root); });
   }
   if(dd==='misc'){
     if(key==='capex' || key==null) requestAnimationFrame(function(){ aBuildCapex(root); aBuildSegCapDa(); aBuildLeases(); });
+    else if(key==='capacity') requestAnimationFrame(function(){ amznCapacityBuild(root); });
   }
   if(dd==='valuation'){
     if(key==='histmult') requestAnimationFrame(function(){ amznHistMult.init(root); });
     if(key==='sensitivity') requestAnimationFrame(function(){ amznSens.init(root); });
     if(key==='targetmult') requestAnimationFrame(function(){ amznTargetMult.init(root); });
+    else if(key==='submits') requestAnimationFrame(function(){ initSubmits(root, 'AMZN'); });
     // wireScatters() rather than the three render calls it ends with: entering the sub-tab must also
     // bind the pills and the table dropdown. It is idempotent (the _scWired guard) and keeps the peer
     // list as the user left it (aScReset only seeds when A_SC.peers is null).
@@ -5621,10 +5551,7 @@ function aBuildSub(root, dd, key){
     // no 'financials' branch — that sub-tab was removed (Aug 19 2026); aBuildFin is parked with it
   }
   if(dd==='evolution'){
-    if(key==='earnings'){
-      var ph=root.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phtab.active');
-      if(!ph || ph.getAttribute('data-cep')==='setup') requestAnimationFrame(gBuildCeAnnual);
-    }
+    if(key==='earnings') amznCeBuild(root);   // the Setup chart (Results engine, AMZN_SETUP) when Setup is the active phase
     if(key==='results') requestAnimationFrame(function(){
       initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'AMZN'); });
     if(key==='estevo') requestAnimationFrame(function(){ initResultsEvo('AMZN'); });
@@ -5671,23 +5598,8 @@ function wireDD(root){
       aBuildSub(root, dd, key);
     }; });
   });
-  // Earnings machinery: phase tabs · quarter pills · estimate toggles · Watch List authoring.
-  wireCallEarnings(root);
-  wireCeTrack(root);
-  // Accordions (theme record) + the By theme ⇄ By quarter toggle.
-  wireThemeRecord(root);
-  // Show/hide the editing surface (the Theme → Sub-theme editor). Hidden by default so the record reads clean.
-  root.querySelectorAll('.amzn-edit-tog[data-amzneditog]').forEach(function(btn){ btn.onclick=function(){
-    var wrap=btn.closest('.amzn-edit'); if(!wrap) return;
-    var body=wrap.querySelector('.amzn-edit-body'); if(!body) return;
-    var open=body.hidden; body.hidden=!open;
-    wrap.setAttribute('data-open', open?'1':'0');
-    btn.setAttribute('aria-expanded', open?'true':'false');
-  }; });
-  // Build the Theme → Sub-theme editor inside the (hidden) panel.
-  amznRenderEditor(root);
-  // Load the saved theme record from Supabase (if any) and, from here on, persist every edit.
-  amznHydrateThemes(root);
+  // Earnings (amzn-ce.js): phase tabs · quarter pills · toggles · Notes (theme record + shared Watch List).
+  amznCeWire(root);
   // Equalize the two Evolution tab bars once laid out (no-ops if Evolution isn't the visible pane yet).
   requestAnimationFrame(function(){ ceEqualizeTabBars(root); });
 }

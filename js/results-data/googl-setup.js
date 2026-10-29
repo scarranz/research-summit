@@ -1,19 +1,18 @@
 // results-data/googl-setup.js — the GOOGL "Setup" dataset for the Results ENGINE, rendered inside
 // Earnings ▸ Setup. Same engine + data as googlResults, but with TWO Setup-specific rules
-// (§6a-viii-bis):
+// (EARNINGS_CONVENTIONS §6a-viii-bis):
 //
 //   1. CLUBBED into ONE merged section (key 'setup') so every tracked line lives in a single
-//      chart + table + picker (Amazon splits Top Line vs Margins; Setup keeps one). The unique
-//      section key means its engine canvases/tables/sliders never collide with the Results tab's.
-//      Margin lines come from each metric's own `marginOf` — only PROFIT lines carry a margin;
-//      revenue / segment-revenue / a backlog / a plain KPI have none, so the engine draws none.
+//      chart + table + picker (the Results tab splits Top Line vs Margins; Setup keeps one). The
+//      unique section key means its engine canvases/tables/sliders never collide with the Results
+//      tab's. Margin lines come from each metric's own `marginOf` — only PROFIT lines carry a
+//      margin; revenue / segment-revenue / a plain KPI have none, so the engine draws none.
 //
-//   2. NARROW period windows — NOT the full timeline:
-//        • Quarterly is SEASONAL: only the forecast quarter across prior years (Q3 → Q3 25/24/23…)
-//          plus the ONE next quarter. Column-to-column is therefore year-over-year.
-//        • Annual: the reported history plus only the NEXT 2 fiscal years (not the whole forward run).
-//      This is enforced HERE by slicing every metric's parallel arrays to the chosen period indices,
-//      so the engine (which just plots what the dataset holds) shows exactly those periods.
+//   2. NARROW, ROLLING period windows — NOT the full timeline:
+//        • Quarterly: the last 8 reported quarters + the ONE next (forecast) quarter.
+//        • Annual: the last 4 fiscal years + the next 2 forward years.
+//      Enforced HERE by slicing every metric's parallel arrays to the chosen indices, anchored on
+//      the forecast quarter / last reported FY — so the window advances by itself as prints land.
 import { googlResults } from './googl.js';
 
 // Slice every metric's parallel arrays (periods/act/summit/cons/guide…) to the chosen indices.
@@ -30,8 +29,7 @@ function sliceMetrics(view, idx){
 }
 
 // Quarterly ROLLING window: the last 8 reported quarters + the ONE next (forecast) quarter.
-// Forecast quarter = the first quarter with no reported actual (on the revenue line). As new prints
-// land the window rolls forward on its own (the forecast index advances, so the 8-back window follows).
+// Forecast quarter = the first quarter with no reported actual (on the revenue line).
 var Q_BACK = 8;   // reported quarters shown; +1 forecast quarter => 9 columns
 function quarterlyIdx(view){
   var rev = view.metrics.rev, fc = -1, i;
@@ -53,7 +51,7 @@ function annualIdx(view){
 }
 
 function mergedSection(view){
-  // One section, keeping the original groups as the <select> optgroups (Top Line / Margins / …).
+  // One section, keeping the original groups as the <select> optgroups (Revenue / Profitability).
   var groups = view.sections.reduce(function(a, s){ return a.concat(s.groups); }, []);
   return [{ key: 'setup', label: 'All tracked lines', defaultMetric: 'rev', groups: groups }];
 }
@@ -63,7 +61,7 @@ var yIdx = annualIdx(googlResults.views.y);
 
 export var googlSetup = {
   updated: googlResults.updated,
-  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, and margin lines for the profit lines (only profit lines carry a margin — a backlog, a KPI or a revenue line does not). The window is rolling: quarterly shows the last 8 reported quarters + the one next (forecast) quarter; annual shows the last 4 fiscal years + the next 2. Street from the Bloomberg archive; Summit is empty for now (pending the estimate-visibility work).',
+  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, the guidance band where Alphabet guides the line (capex only), and margin lines for the profit lines (only profit lines carry a margin — a revenue line or a KPI does not). The window is rolling: quarterly shows the last 8 reported quarters + the one next (forecast) quarter; annual shows the last 4 fiscal years + the next 2. Summit = the model’s frozen per-quarter projections; consensus and guidance per the dataset’s own sources (js/results-data/googl.js header).',
   source: googlResults.source,
   views: {
     q: { label: 'Quarterly', note: 'Rolling — the last 8 reported quarters plus the one next (forecast) quarter; it advances by itself as new prints land. ' + googlResults.views.q.note,

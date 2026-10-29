@@ -200,6 +200,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 | VA-HIST | Valuation ▸ Historic Multiple | 👀 | 2026-10-26 | | | solo P/E (forward y trailing); precio en vivo: depende de `get-market-history` |
 | VA-PEERS | Valuation ▸ Peers | 👀 | 2026-10-26 | | | mapa + tabla de números; mismo estado que el Overview |
 | VA-TM | Valuation ▸ Target Multiple / PEG | 👀 | 2026-10-26 | | | construido con la valuación del propio workbook `DCF SOFI.xlsm` (hoja Projection History, 3 submits: P/E 32× → 25× → 25×, EV/EBITDA 18× → 14.1× → 14.1×, año 2027); el MCP la tiene vacía (`valuation_count` 0) |
+| VA-SUB | Valuation ▸ Submit History | ⛔ | 2026-10-28 | | | sin valuación en el MCP: `get_valuation_history('SOFI')` → `no_valuations_for_ticker` (4 snapshots sin bloque de valuación). Se construye en cuanto Oscar procese la valuación |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | 👀 | 2026-10-26 | | | diseño propio de SoFi (LPB e interés neto), base del snapshot 2026-08-05, precio solo en vivo |
 | MG-TEAM | Management ▸ Executives & Board | 👀 | 2026-10-26 | | | 10 ejecutivos + 9 consejeros del perfil viejo, marcados "seeded, dated" |
 | MG-OWN | Management ▸ Ownership | ⬜ | | | | |
@@ -296,6 +297,9 @@ playbook (candidata a podar, **solo con tu OK**).
 | 2026-10-26 | EV-SET, BL | ~~SOFI no estaba en el workbook~~ resuelto 2026-10-26 | Dani | ✔ cerrado |
 | 2026-10-26 | EV-RES-DATA | ❓ BBG slot `kpi17` etiqueta "Servicing" pero código `CB_IS_SERVICE_REVENUE`; `kpi18` etiqueta "Technology Products and Solutions" con código `IS_MORTGAGE_PRODUCTION_REVENUE`; `kpi16` "Loan Origination, Sales, and Securitiz…" con código `LOAN_SERVICING_INCOME`. Etiqueta y código parecen cruzados; `kpi1` Total Members sólo trae fq-4 y fq+1…+4 (sin fq0). No se usan hasta confirmar contra el 10-Q | Dani (quien armó los slots) | abierto |
 | 2026-10-26 | EV-POST, EV-NOTES | ~~transcripciones~~ resuelto: Dani subió `SOFI_calls.txt` (11 llamadas, Q4 2023 → Q2 2026). Quartr **ya no se consulta** (sin acceso). Falta copiarlas a `docs/calls/` | Claude | ✔ cerrado |
+
+**Arreglos pendientes en el DCF (los hace SAB; anotado 2026-10-28):**
+- [ ] DCF de SOFI: el MCP no encuentra ningún bloque de valuación en los 4 submits (`no_valuations_for_ticker`). Revisar que el DCF tenga el bloque como los demás (Output ▸ VALUATION y la hoja *Discounted Cash Flow* con EV/EBITDA y P/E) y volver a hacer submit. Hasta entonces VA-SUB ⛔ (y el múltiplo del modelo de VA-TM no viene del MCP).
 
 ## 6b. Conexiones pendientes ("Live data pending")
 

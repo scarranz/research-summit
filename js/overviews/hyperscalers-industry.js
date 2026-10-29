@@ -33,7 +33,11 @@ import {
 } from './hyperscalers-data.js';
 
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function co(id){ return HS_COMPANIES.filter(function(c){ return c.id === id; })[0]; }
+// Azure is a CSP-only series (Microsoft dropped Intelligent Cloud in Sep 2026), not a
+// sixth company: Microsoft's violet one step lighter (its own ordinal ramp, slot 2),
+// so it reads as Microsoft but never as the Intelligent Cloud bars beside it.
+var CSP_EXTRA = { msftaz: { id: 'msftaz', color: '#8a83f7' } };
+function co(id){ return HS_COMPANIES.filter(function(c){ return c.id === id; })[0] || CSP_EXTRA[id]; }
 function dot(id){ return '<span class="hs-dot" style="background:' + co(id).color + '"></span>'; }
 var LABELS = HS_VINTAGES.map(function(v){ return v.label; });
 
@@ -756,8 +760,8 @@ function depreciationBody(){
 // SpaceX's Super Intelligence segment rides along as a fourth series (Oct 2026):
 // it is mostly GPU rental plus X and Grok, so it is a peer on the question "what
 // does the compute earn", not a like-for-like cloud segment.
-var CSP_LABEL = { googl: 'Google Cloud', amzn: 'AWS', msft: 'Intelligent Cloud', spcx: 'SpaceX SI' };
-var CSP_IDS = ['googl', 'amzn', 'msft', 'spcx'];
+var CSP_LABEL = { googl: 'Google Cloud', amzn: 'AWS', msft: 'Intelligent Cloud', msftaz: 'Azure', spcx: 'SpaceX SI' };
+var CSP_IDS = ['googl', 'amzn', 'msft', 'msftaz', 'spcx'];
 
 // Complete calendar years only. Q4'19 stands alone and 2026 has two quarters, so
 // neither forms a year; Microsoft's restated series starts Q3'22, so its 2022 is
@@ -1055,6 +1059,8 @@ function cspSection(cfg){
   };
   var rows = [];
   CSP_IDS.forEach(function(cid){
+    // A series with nothing in this section (Azure has no operating income) gets no rows.
+    if (!cspLevel(kind, cid).some(function(n){ return n != null; })) return;
     if (metric === 'margin'){
       var mg = cspSeries('margin', cid, cfg.k).slice(w[0], w[1] + 1);
       rows.push([dot(cid) + CSP_LABEL[cid] + ' <span class="hs-growthrow">margin</span>']
@@ -1092,11 +1098,11 @@ var CSP_TOP = {
   k: 'top', label: 'Top Line', state: 'cspTop', attr: 'csptop', canvas: 'hs-csp-top',
   metrics: [
     { k: 'rev', label: 'Revenue', title: 'Segment revenue', base: 'Revenue',
-      cap: 'Not a like-for-like: Google Cloud is GCP + Workspace, AWS is pure infrastructure and platform, Intelligent Cloud adds on-prem server products and Enterprise Services to Azure. Microsoft restated its segments in FY2025, so its bars start at Q3\'22. Columns are CALENDAR periods — verified against the FY26Q3 call, which put Jan–Mar 2026 at $34.7B and +30% against the $34,681M and +29.6% here.' },
+      cap: 'Not a like-for-like: Google Cloud is GCP + Workspace, AWS is pure infrastructure and platform, Intelligent Cloud adds on-prem server products and Enterprise Services to Azure. Microsoft restated its segments in FY2025, so its bars start at Q3\'22, and dropped Intelligent Cloud in Sep 2026: from Q3\'26 its bar is Azure alone ($33.2B, against $22.4B a year earlier — the only two Azure dollar figures it has published). Columns are CALENDAR periods — verified against the FY26Q3 call, which put Jan–Mar 2026 at $34.7B and +30% against the $34,681M and +29.6% here.' },
     { k: 'growth', label: 'Growth %', title: 'Revenue growth', base: 'Revenue',
-      cap: 'The basis-independent view, and the cleanest read of the period: Google Cloud accelerating past 80% while AWS troughs at 17% and recovers to 37%, with Intelligent Cloud steady in the twenties and thirties. Hover for the dollar change behind each percentage — a rate off a small base is not the same event as the same rate off a large one.' },
+      cap: 'The basis-independent view, and the cleanest read of the period: Google Cloud accelerating past 100% by Q3\'26 while AWS troughs at 17% and recovers to 37%, with Intelligent Cloud steady in the twenties and thirties and Azure at 48% in Q3\'26. Hover for the dollar change behind each percentage — a rate off a small base is not the same event as the same rate off a large one.' },
     { k: 'dgrowth', label: 'Growth $', title: 'Revenue growth in dollars', base: 'Revenue',
-      cap: 'The same growth in dollars, which reorders the picture entirely: Alphabet’s 82% is the fastest rate but AWS still adds the most absolute revenue in most periods. This is the view that says who is actually taking the market.' },
+      cap: 'The same growth in dollars, which reorders the picture entirely: Alphabet’s 103% is the fastest rate but AWS still adds the most absolute revenue in most periods. This is the view that says who is actually taking the market.' },
   ],
 };
 
@@ -1104,13 +1110,13 @@ var CSP_BOT = {
   k: 'bot', label: 'Bottom Line', state: 'cspBot', attr: 'cspbot', canvas: 'hs-csp-bot',
   metrics: [
     { k: 'opInc', label: 'Operating income', title: 'Segment operating income', base: 'Operating income',
-      cap: 'The line that makes the CapEx argument. Google Cloud was <b>losing $1.7B a quarter in 2020</b> and did not turn profitable until Q1\'23; it now earns $8.8B. AWS is still the largest in absolute dollars, but the gap has narrowed from $8.5B a quarter to $7.8B.' },
+      cap: 'The line that makes the CapEx argument. Google Cloud was <b>losing $1.7B a quarter in 2020</b> and did not turn profitable until Q1\'23; it now earns $11.1B a quarter (Q3\'26). AWS is still the largest in absolute dollars, but the gap narrowed from $8.5B a quarter to $7.8B by Q2\'26. Intelligent Cloud stops at Q2\'26; Azure reports no operating income.' },
     { k: 'margin', label: 'Operating margin', title: 'Segment operating margin', base: 'Operating income',
-      cap: 'Segment operating income over segment revenue. Google Cloud’s climb out of deeply negative territory to 35.6% is the standout. AWS peaked at 39.5% in Q1\'25, gave back six points as AI depreciation began landing, and has recovered to 39.4%. Intelligent Cloud has held a 40–43% band throughout.' },
+      cap: 'Segment operating income over segment revenue. Google Cloud’s climb out of deeply negative territory to 36.2% (Q3\'26) is the standout. AWS peaked at 39.5% in Q1\'25, gave back six points as AI depreciation began landing, and has recovered to 39.4%. Intelligent Cloud has held a 40–43% band throughout.' },
     { k: 'growth', label: 'Growth %', title: 'Operating income growth', base: 'Operating income',
       cap: 'Growth of segment operating income. Blank wherever the base crosses zero — Google Cloud goes from loss to profit in Q1\'23 and a percent change through zero means nothing. Use the dollar view for those periods; hover for the dollar change behind each percentage.' },
     { k: 'dgrowth', label: 'Growth $', title: 'Operating income growth in dollars', base: 'Operating income',
-      cap: 'The dollar change in segment operating income, which stays defined through the sign flip the percentage view cannot handle. Google Cloud added roughly $3.5B of quarterly operating income year-on-year by Q2\'26 — from a base that was negative six years earlier.' },
+      cap: 'The dollar change in segment operating income, which stays defined through the sign flip the percentage view cannot handle. Google Cloud added roughly $7.5B of quarterly operating income year-on-year by Q3\'26 — from a base that was negative six years earlier.' },
   ],
 };
 
@@ -1134,9 +1140,9 @@ function cspBody(){
   }).join('');
 
   return '<p class="hs-lede">The businesses the CapEx is supposed to produce, on their own history back to 2019. ' +
-    'Microsoft here is <b>Intelligent Cloud</b>, the reported segment — not the non-GAAP “Microsoft Cloud” metric, which bundles M365 commercial, Dynamics and LinkedIn and carries no segment operating income. ' +
+    'Microsoft here is <b>Intelligent Cloud</b>, the reported segment — not the non-GAAP “Microsoft Cloud” metric, which bundles M365 commercial, Dynamics and LinkedIn and carries no segment operating income — <b>until Q2’26</b>: Microsoft dropped the segment in September 2026, and from Q3’26 its series is <b>Azure</b> revenue alone, with no operating income of its own. ' +
     'All figures as reported; growth and margin computed from them. ' +
-    '<b>SpaceX SI</b> is SpaceX’s Super Intelligence segment (xAI, X, Grok and — since Aug 14 — Cursor), mostly renting GPU capacity: public only since 2Q26, so its history starts at Q1’25, and it is the only one with a Q3’26 column so far.</p>' +
+    '<b>SpaceX SI</b> is SpaceX’s Super Intelligence segment (xAI, X, Grok and — since Aug 14 — Cursor), mostly renting GPU capacity: public only since 2Q26, so its history starts at Q1’25. Q3’26 is in for everyone but AWS, which fills in when Amazon reports.</p>' +
     '<div class="hs-controls">' +
       '<div class="hs-seg">' + periods + '</div>' +
       (annual ? '' : '<div class="hs-seg">' + growth + '</div>') +
@@ -1442,7 +1448,7 @@ function themesBody(){
       '<p class="hs-cap"><b>Quarters covered on this theme:</b> ' + counts + '. ' +
       'A blank cell means the theme did not come up on that call in a way worth recording — not that the company said nothing at all. ' +
       'Alphabet has no 2Q24 row anywhere, because that call is not in the corpus. ' +
-      'SpaceX starts at 1Q26, where the cell is its S-1 (a prospectus, not a call); 2Q26 and 3Q26 are its August and October calls, and the 3Q26 row is SpaceX alone until the other four report. ' +
+      'SpaceX starts at 1Q26, where the cell is its S-1 (a prospectus, not a call); 2Q26 and 3Q26 are its August and October calls, and the 3Q26 row for Meta, Alphabet and Microsoft comes from the Motley Fool transcripts (the corpus has no 3Q26 calls yet); Amazon fills in when it reports. ' +
       'Quoted fragments are verbatim; the connective text is compression.</p>' +
     '</div>';
 }

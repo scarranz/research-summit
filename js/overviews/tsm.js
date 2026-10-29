@@ -22,6 +22,7 @@ import { TSM_MGMT, tsmOwnBody, tsmOwnInit, tsmGovBody, tsmTrackBody, tsmTrackPop
 import { tsmFabsBody, tsmFabsBuild, tsmFabsPop } from './tsm-fabs.js';
 import { tsmAsmlBody, tsmAsmlBuild } from './tsm-asml.js';   // Miscellaneous ▸ TSMC × ASML (from SAB's TSMC dashboard)   // Miscellaneous ▸ Fabs & Capacity (from SAB's TSMC dashboard)   // Management ▸ Executives & Board (shared makeManagement mold)   // Valuation ▸ Sensitivity (frozen Summit snapshot; SN's one-segment structure)
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/tsm.js)
+import { submitsHtml, initSubmits } from '../submits.js';   // Valuation ▸ Submit History (engine + js/submits-data/tsm.js)
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -634,11 +635,13 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab active" data-ovst="histmult">Historic Multiple</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="targetmult">Target Multiple</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="submits">Submit History</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="sensitivity">Sensitivity</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="histmult">'+tsmHistMult.body()+'</div>'+
       '<div class="ovt-subpane" data-ovst="peers" hidden>'+valuationPeersBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="targetmult" hidden>'+tsmTargetMult.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="submits" hidden>'+submitsHtml('TSM')+'</div>'+
       '<div class="ovt-subpane" data-ovst="sensitivity" hidden>'+tsmSens.body()+'</div>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="mgmt" hidden>'+
@@ -687,6 +690,7 @@ function aBuildSub(root, dd, key){
     if(key==='histmult' || key==null) requestAnimationFrame(function(){ tsmHistMult.init(root); });
     if(key==='peers') requestAnimationFrame(function(){ wireScatters(root); });
     if(key==='targetmult') requestAnimationFrame(function(){ tsmTargetMult.init(root); });
+    if(key==='submits') requestAnimationFrame(function(){ initSubmits(root, 'TSM'); });
     if(key==='sensitivity') requestAnimationFrame(function(){ tsmSens.init(root); });
   }
   if(dd==='evolution'){

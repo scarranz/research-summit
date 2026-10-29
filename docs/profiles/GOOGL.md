@@ -549,3 +549,38 @@ Destinos aprobados por SAB el 2026-10-26 (B2), incluidas las fusiones #18, #41, 
 - Fuentes: MCP `get_valuation_history('GOOGL')` + `get_metric_snapshot_series` (REV, OP_INCOME, EBITDA, EARNINGS, SHARES · 2026/2027), jalado 2026-10-28; precio Massive.
 - Autoauditoría: P/E activo al abrir · línea `#3E5A82` · chips ocultan serie en gráfica y tabla · nota "Left out" del 23-jul · pie de fuentes · sin errores de consola.
 - La rama trae además el motor y la ficha VA-SUB de la guía (merge de `feat/dcf-submit-history`) para un solo PR.
+
+### 2026-10-29 · 3T26-RES Results del 3T26 — 👀 EN REVISIÓN
+- Qué se mostró: actuals del 3T26 en `js/results-data/googl.js` (19 líneas trimestrales) y en Earnings ▸ Post-Results (`googl-ce-data.js`: Q3 2026 pasa a `reported`, `basisNote`, y `qa` del 3T26 en las 6 líneas del archivo BBG — gross profit, EBITDA, flujo operativo, D&A, acciones diluidas, RPO).
+- Fuentes: earnings release del 28-oct-2026 (PDF de Alphabet IR) cruzado contra el XBRL del 10-Q (accession 0001652044-26-000084, presentado el 29-oct): revenue, op. income, net income, EPS, capex y CFO del trimestre (9M − 1S) cuadran exacto.
+- Decisiones: net income = antes de dividendos preferentes ($26,468M; disponible para comunes $26,170M, base del EPS $2.12) — la serie ya era así (2T26 $112,193M). EBITDA 3T26 = op. income + depreciación + SBC ($57.6B), la definición de la nota de Results (BBG "comparable" no está disponible para el trimestre). RPO $567.7B (10-Q).
+- Autoauditoría: ✔ consola sin errores · ✔ sin NaN/undefined · ✔ Results cuenta 15 periodos reportados · ✔ el pill Q3 2026 ya no dice "upcoming".
+- Pendiente: Call Summary 3T26 (`call:null`) hasta que Alphabet IR publique la transcripción oficial (al 29-oct solo está el webcast); Notes 3T26; columna sep-2026 de Capex (Misc); Bottom Line (`googl-bl-data.js`: líneas de gasto y segmentos) aún termina en 2T26.
+
+### 2026-10-29 · 3T26-NOTES Notes del 3T26 — 👀 EN REVISIÓN
+- Qué se mostró: entradas Q3 2026 en 16 hilos de `js/themes-data/googl.js` (semilla **v4**). Base = notas a mano de SAB del call del 28-oct (imagen compartida el 29-oct), en paráfrasis; cifras contrastadas con el release y el 10-Q, que agregan detalle marcado "(10-Q)" / "(release)".
+- "Where the chain breaks": paid subscriptions (último total 350M, 1T26; ahora solo YouTube 150M con trials) y Waymo rides/semana (último 500K+, 1T26).
+- Contraste con filings: Services margin 40.7% vs 38.5% ✔ · otros costos de ventas ex-TAC +32% ✔ · Alphabet-level +71% ✔ · G&A −17% ✔ · R&D +36% ✔ · FCF −$9.1B ✔ · deuda LP $125.1B ✔ · compromisos $924.4B ✔ · los "$152B" de SAB = $130.5B arrendamientos no iniciados + $21.9B compromisos de inversión ✔ · backlog Cloud $560.8B, "just over 55%" en 24 meses ✔. Pérdida de otros ingresos: $8.2B (SAB anotó ~$9B; el 10-Q nombra SpaceX y "a private company" — Anthropic queda como atribución de SAB). Las cifras "esperadas" (15%, 27%) son lectura de consenso de SAB, no verificadas.
+- v3 → v4: la copia guardada en Supabase era idéntica a la semilla v3 (comparado en el portal), así que el reemplazo no perdió ediciones; al abrir Notes el portal guardó la v4.
+- Autoauditoría: ✔ consola sin errores tras la carga · ✔ sin NaN/undefined · ✔ Q3 2026 visible en By quarter.
+- Pendiente: citas textuales del call cuando Alphabet IR publique la transcripción oficial (Call Summary 3T26).
+
+### 2026-10-29 · 3T26-CAPEX Misc ▸ Capex (y Capacity) al 30-sep-2026 — 👀 EN REVISIÓN
+- Qué se mostró: columna Sep 30 2026 en `googl-misc-data.js` (compromisos, PP&E, arrendamientos, financiamiento, depreciación 3T26 $8,369M) y fila Oct 2026 en la guía de capex; textos de `googl-misc.js` toman la última fecha del dato (sin "Jun 30 2026" fijo). Capacity: backlog $567.7B / Cloud $560.8B, conversión por defecto 55% ("just over 55%"), Cloud $30.7B. Top Line (`segments-data/googl.js`): 3T26 de clicks +8%, CPC +4%, impresiones −14%, CPI +14% y backlog, tecleados del 10-Q (BBG aún no los tiene).
+- Fuente: 10-Q 3T26 (acc. 0001652044-26-000084). Garantías: se mantiene la definición de antes (Note 10, equipo de energía, $16.2B); los $6.6B de recompra de TPUs (el MD&A suma $22.8B) van como fila aparte. Backstops acordados $27.7B ($10.0B con Crux AI, parte relacionada).
+- Guía FY2026 "sin cambio" y "bridge capacity online late in Q3": de las notas de SAB (transcripción oficial pendiente).
+- Autoauditoría: ✔ gráficas trimestral y de compromisos llegan a 3Q26 / Sep 30 2026 · ✔ sin NaN/undefined · ✔ consola sin errores.
+- No tocado: Competitive Position y TAM siguen con cifras del 2T26 (Cloud +82%, backlog $514B, 950M MAU, 22B tokens; Synergy 2T26).
+
+### 2026-10-29 · 3T26-BL Bottom Line al 3T26 — 👀 EN REVISIÓN
+- Qué se mostró: fila 3T26 en `GOOGL_OPEXQ` (revenue 127,577 · costo de ventas 51,419 = TAC 16,366 + otros 35,053 · R&D 20,640 · S&M 8,804 · G&A 6,138; cuadra con op. income 40,576) y en `GOOGL_SEG_Q` (Services comp 12,280 / otros 44,865 / OI 39,157; Cloud 7,081 / 12,507 / 11,121; los nueve meses cuadran con el 10-Q). Drivers de cada línea: citas del MD&A del 10-Q 3T26 en lugar del 2T26. Cloud: margen 36.2%, otros costos ×2 por inventario de TPUs (10-Q), bridge capacity según notas de SAB (como pregunta abierta para 4T26).
+- Fuente: 10-Q 3T26 (acc. 0001652044-26-000084), Note 15 y MD&A. Fila agregada a mano dentro del bloque GENERATED (anotado en el encabezado).
+- Pendiente: citas del CFO del 3T26 (transcripción oficial) en las dives.
+- Autoauditoría: ✔ gráfica trimestral y tablas de segmentos con 3Q26 · ✔ sin NaN/undefined · ✔ consola sin errores.
+
+### 2026-10-29 · 3T26-COMP Misc ▸ Competitive Position al 3T26 — 👀 EN REVISIÓN
+- Qué se mostró: `googl-comp.js` — Google, Microsoft y Meta en jul–sep 2026; Amazon (sin reportar al 29-oct) y Oracle (FQ jun–ago) siguen en su último trimestre, con nota. Los 5 desafíos con evidencia del 3T26 (release, 10-Q y notas de SAB del call).
+- Fuentes: Alphabet 10-Q 3T26; Microsoft 10-Q FQ1 2027 (acc. 0001193125-26-436133, 28-oct); Meta 10-Q 3T26 (acc. 0001628280-26-066773, 22-oct).
+- ⚑ Microsoft dejó de reportar Intelligent Cloud (sep-2026; segmentos nuevos Agents and Infra · Devices and Consumer). La fila pasa a **Azure** ($33.2B, +48%, sin margen propio). Afecta también al análisis de Hyperscalers (pestaña CSPs usa Intelligent Cloud).
+- ⚑ Meta: margen de Family of Apps 26.7% incluye $9.89B de cargos por el acuerdo con fiscales estatales (ago-2026).
+- Autoauditoría: ✔ tablas con 3T26 · ✔ sin NaN/undefined.

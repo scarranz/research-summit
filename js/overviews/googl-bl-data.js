@@ -17,13 +17,15 @@
 //      · tie-out run at generation: revenue − cost of revenues − R&D − S&M − G&A = reported income from operations
 //        (OperatingIncomeLoss) in every year FY2019–FY2025 and every quarter 1Q23–2Q26, to the US$ million. These four
 //        lines ARE Alphabet's costs and expenses.
+//      · 3Q26 (Oct 29 2026) appended by hand from the 3Q26 10-Q (acc. 0001652044-26-000084, the same XBRL tags); it ties
+//        to income from operations ($40,576M) the same way.
 //
 // 2) Share-based compensation by income-statement line is NOT disclosed by Alphabet (the 10-K gives total SBC only;
 //    the segment note gives none by function), so GOOGL_SBC_FN is empty and the "SBC by line" view is not offered.
 //
 // 3) GOOGL_EW_LINES — one dive per line. Quotes are verbatim: Form 10-K FY2025 (filed Feb 5 2026), Item 7 MD&A ("Costs
-//    and Expenses" and "Results of Operations"); Form 10-Q 2Q26, MD&A; Alphabet's official earnings-call transcripts
-//    (IR PDFs, 4Q25 · 1Q26 · 2Q26). The amount, share of revenue, margin effect and the share-of-revenue bars are
+//    and Expenses" and "Results of Operations"); Forms 10-Q 2Q26 and 3Q26, MD&A (the drivers quote the newest); Alphabet's
+//    official earnings-call transcripts (IR PDFs, 4Q25 · 1Q26 · 2Q26; 3Q26 to be added once Alphabet IR posts it). The amount, share of revenue, margin effect and the share-of-revenue bars are
 //    computed in googl-bl.js from the series above — never typed here. Dani's "Unit Economics" panel (relocation map
 //    #19, #21, #22) lives in the TAC and other-cost-of-revenues dives, with each management figure tied to its call.
 //
@@ -53,6 +55,7 @@ export var GOOGL_OPEXQ=[
   {"p": "4Q25", "yr": 2025, "q": "Q4", "revenue": 113829, "costOfRevenue": 45767, "tac": 16597, "otherCor": 29170, "rnd": 18572, "marketing": 8215, "gAdmin": 5341},
   {"p": "1Q26", "yr": 2026, "q": "Q1", "revenue": 109896, "costOfRevenue": 41271, "tac": 15228, "otherCor": 26043, "rnd": 17032, "marketing": 7606, "gAdmin": 4291},
   {"p": "2Q26", "yr": 2026, "q": "Q2", "revenue": 119796, "costOfRevenue": 45943, "tac": 16179, "otherCor": 29764, "rnd": 18219, "marketing": 8403, "gAdmin": 6461},
+  {"p": "3Q26", "yr": 2026, "q": "Q3", "revenue": 127577, "costOfRevenue": 51419, "tac": 16366, "otherCor": 35053, "rnd": 20640, "marketing": 8804, "gAdmin": 6138},
 ];
 // END GENERATED
 
@@ -73,7 +76,7 @@ export var GOOGL_EW_LINES=[
     unit:'<div class="ew-note">Alphabet discloses the TAC rate (TAC as a share of the ad revenue it applies to), not a cost per query or per partner.</div>',
     why:'<b>A cost that scales with ad revenue, so its weight falls as the mix shifts.</b> The 10-K on 2025: “The TAC rate decreased from 20.7% to 20.3% from 2024 to 2025, primarily due to a revenue mix shift from Google Network properties to Google Search &amp; other properties. The TAC rates on Google Search &amp; other and Google Network revenues were substantially consistent from 2024 to 2025.”',
     drivers:[['','Mix shift away from Network','“TAC as a percentage of revenues generated from ads placed on Google Network properties are significantly higher than TAC as a percentage of revenues generated from ads placed on Google Search &amp; other properties” (10-K) — so a shrinking Network lowers the blended rate.'],
-             ['','Distribution partners','2Q26: “The increase in TAC … was largely due to an increase in TAC paid to distribution partners, primarily driven by growth in revenues subject to TAC.” The TAC rate fell from 20.6% to 19.8% (10-Q).'],
+             ['','Distribution partners','3Q26: “The increase in TAC … was largely due to an increase in TAC paid to distribution partners, primarily driven by growth in revenues subject to TAC.” The TAC rate fell from 20.1% to 20.0% (10-Q).'],
              ['','Default-placement deals after the US search case','The September 2025 remedies ruling in the US search case left default payments to partners in place but barred exclusive contracts (relocated from the Unit Economics panel).']],
     calls:[{q:'4Q25', txt:'“TAC was $16.6 billion, up 12%.”', who:'Anat Ashkenazi, CFO'},
            {q:'2Q26', txt:'“TAC was $16.2 billion, up 10%.”', who:'Anat Ashkenazi, CFO'}] },
@@ -85,7 +88,7 @@ export var GOOGL_EW_LINES=[
     unit:'<div class="ew-note">Alphabet does not disclose a dollar cost per query or per AI answer. What management gives is the direction of that cost — see the commentary below: Gemini serving unit cost −78% over 2025 (4Q25), the cost of core AI responses −30% since Gemini 3 (1Q26), Search latency −35% in five years (1Q26) and, from an earlier call, the cost of an AI Overviews query −90% in its first 18 months (3Q24; relocated from the Unit Economics panel, “the unit is a query”).</div>',
     why:'<b>Where the AI build lands in the income statement</b> — servers and data centers depreciate here, against a falling cost to answer each query. The 10-K on 2025: “Cost of revenues increased $16.2 billion from 2024 to 2025 due to an increase in other cost of revenues and TAC of $11.2 billion and $5.0 billion, respectively. … The increase in other cost of revenues from 2024 to 2025 was primarily due to increases in content acquisition costs, largely for YouTube, depreciation expense, and other technical infrastructure operations costs.”',
     drivers:[['','Depreciation of the capex wave','“Given the increase in our CapEx investments in recent years, we expect the growth rate in 2026 depreciation to accelerate in Q1, and meaningfully increase for the full year.” (CFO, 4Q25 call)'],
-             ['','TPU systems sold to customers','2Q26: “The increase in other cost of revenues … was primarily due to increases in depreciation expense, inventory and other costs, content acquisition costs, largely for YouTube, and other technical infrastructure operations costs.” (10-Q)'],
+             ['','TPU systems sold to customers','3Q26: “The increase in other cost of revenues … was primarily due to increases in inventory and related costs, primarily associated with the sale of TPU systems, depreciation expense, content acquisition costs, largely for YouTube, and other technical infrastructure operations costs.” TPU systems moved to the top of the list (10-Q).'],
              ['','YouTube content','Payments to content providers, based on revenues generated, subscriber counts or a flat fee, grow with YouTube ads and subscriptions (10-K).']],
     calls:[{q:'4Q25', txt:'“We were able to lower Gemini serving unit costs by 78% over 2025 through model optimizations, efficiency and utilization improvements.”', who:'Sundar Pichai, CEO'},
            {q:'4Q25', txt:'“Other Costs of Revenues was $29.2 billion, up 13%, with the increase primarily driven by depreciation associated with the deployment of our technical infrastructure, content acquisition costs largely for YouTube, and other technical infrastructure operations costs.”', who:'Anat Ashkenazi, CFO'},
@@ -102,7 +105,7 @@ export var GOOGL_EW_LINES=[
     why:'The largest operating expense, and the one the AI talent and training compute run through. The 10-K on 2025: “Research and development expenses increased $11.8 billion from 2024 to 2025, primarily driven by increases in employee compensation expenses of $6.9 billion and depreciation expense of $2.4 billion. The increase in employee compensation expenses was primarily driven by an increase in SBC expenses of $4.2 billion, which included an increase in a valuation-based compensation charge related to Waymo.”',
     drivers:[['','AI talent','“R&amp;D expenses increased by 26%, driven by compensation due to investment in AI talent, as well as depreciation.” (CFO, 1Q26 call)'],
              ['','Waymo compensation charge','4Q25: the $2.1B stock-based compensation charge related to Waymo — “The vast majority of the charge was reflected in R&amp;D expenses.” (CFO)'],
-             ['','Depreciation','2Q26: R&amp;D rose “primarily driven by increases in employee compensation expenses of $2.9 billion and $5.3 billion, as well as depreciation expense of $592 million and $1.1 billion” for the three and six months (10-Q).']],
+             ['','Depreciation','3Q26: R&amp;D rose “primarily driven by increases in employee compensation expenses of $3.5 billion and $8.8 billion, as well as depreciation expense of $802 million and $1.9 billion” for the three and nine months (10-Q).']],
     calls:[{q:'4Q25', txt:'“R&amp;D expense increased by 42%, driven by compensation and depreciation.”', who:'Anat Ashkenazi, CFO'},
            {q:'1Q26', txt:'“R&amp;D expenses increased by 26%, driven by compensation due to investment in AI talent, as well as depreciation.”', who:'Anat Ashkenazi, CFO'},
            {q:'2Q26', txt:'“R&amp;D expenses increased by 32%, driven by compensation from investment in AI talent, as well as depreciation.”', who:'Anat Ashkenazi, CFO'}] },
@@ -113,7 +116,7 @@ export var GOOGL_EW_LINES=[
           ['','Advertising and promotion','Brand and product campaigns — lately the Gemini app and Search.']],
     unit:'<div class="ew-note">Alphabet does not disclose a cost per advertiser or per user acquired.</div>',
     why:'The line that has shrunk as a share of revenue as revenue grew. The 10-K on 2025: “Sales and marketing expenses increased $885 million from 2024 to 2025, primarily driven by an increase in advertising and promotional activities of $1.2 billion, partially offset by a decrease in employee compensation expenses of $214 million.”',
-    drivers:[['','Gemini app and Search campaigns','2Q26: “Sales and marketing expenses increased $1.3 billion and $2.7 billion … primarily driven by increases in advertising and promotional activities of $764 million and $1.4 billion, as well as employee compensation expenses of $402 million and $806 million, respectively.” (10-Q)']],
+    drivers:[['','Gemini app and Search campaigns','3Q26: “Sales and marketing expenses increased $1.6 billion and $4.3 billion … primarily driven by increases in advertising and promotional activities of $722 million and $2.1 billion, as well as employee compensation expenses of $715 million and $1.5 billion, respectively.” (10-Q)']],
     calls:[{q:'4Q25', txt:'“Sales and Marketing expenses were up 12%, primarily driven by marketing investments to support the Gemini App and Search.”', who:'Anat Ashkenazi, CFO'},
            {q:'1Q26', txt:'“Sales and Marketing expenses were up 23%, driven primarily by marketing investments to support the Gemini app and Search, as well as compensation.”', who:'Anat Ashkenazi, CFO'},
            {q:'2Q26', txt:'“Sales and Marketing expenses were up 18% due to investments to support the Gemini app in Search, and compensation.”', who:'Anat Ashkenazi, CFO'}] },
@@ -125,7 +128,7 @@ export var GOOGL_EW_LINES=[
     compNote:'FY2019 carried a separate “European Commission fines” line ($1.70B) on the income statement; it is included in G&amp;A here, where Alphabet books fines today.',
     unit:'<div class="ew-note">Not a unit-cost line: it moves with legal accruals, not with volume.</div>',
     why:'The volatile line — one fine or legal accrual moves it by billions in a quarter. The 10-K on 2025: “General and administrative expenses increased $7.3 billion from 2024 to 2025, primarily driven by an increase in expenses related to legal and other matters of $6.2 billion, largely the result of the $3.5 billion EC fine accrued in the third quarter of 2025 and a $1.4 billion legal accrual made in the second quarter of 2025.”',
-    drivers:[['','Fines and legal accruals','2Q26: G&amp;A rose “primarily driven by increases in employee compensation expenses of $279 million, non-income tax expenses of $258 million, expenses related to legal and other matters of $231 million which included a $1.5 billion charge related to a certain legal matter” (10-Q).'],
+    drivers:[['','Fines and legal accruals','3Q26: G&amp;A “decreased $1.3 billion … primarily driven by a decrease in expenses related to legal and other matters of $2.1 billion, largely reflecting the effect of a $3.5 billion EC fine accrued in the third quarter of 2025” (10-Q). 2Q26 had risen on a $1.5 billion charge for a legal matter.'],
              ['','Charitable contributions','4Q25: “G&amp;A expenses increased 21%, primarily due to a shift in timing of our charitable contributions.” (CFO)']],
     calls:[{q:'4Q25', txt:'“G&amp;A expenses increased 21%, primarily due to a shift in timing of our charitable contributions.”', who:'Anat Ashkenazi, CFO'},
            {q:'1Q26', txt:'“G&amp;A expenses increased 21%, primarily due to an increase in compensation and costs related to legal and other matters.”', who:'Anat Ashkenazi, CFO'},
@@ -134,7 +137,7 @@ export var GOOGL_EW_LINES=[
 
 // 4) GOOGL_SEG_Y / GOOGL_SEG_Q — the segment cost split (Bottom Line ▸ Segments, BL-SEG), US$ million, typed from the
 //    filings' segment note ("revenue, profitability, and expense information about our segments" — "Supplemental
-//    information about segment expenses"): Form 10-K FY2025, Note 15 (FY2023–FY2025); Forms 10-Q 1Q25–2Q26 (each with
+//    information about segment expenses"): Form 10-K FY2025, Note 15 (FY2023–FY2025); Forms 10-Q 1Q25–3Q26 (each with
 //    its prior-year comparative, so 1Q24–3Q24 come from the 2025 10-Qs). A Q4 is the fiscal year less the nine months.
 //    In every row rev − comp − other = oi (checked when typed).
 //    comp  = "Employee compensation expenses" (direct and allocated employees).
@@ -158,9 +161,10 @@ export var GOOGL_SEG_Q=[
   { p:'3Q25', svc:{rev:87052, comp:11070, other:42455, oi:33527}, cloud:{rev:15157, comp:5586, other:5977, oi:3594} },
   { p:'4Q25', svc:{rev:95862, comp:11411, other:44319, oi:40132}, cloud:{rev:17664, comp:5563, other:6788, oi:5313} },
   { p:'1Q26', svc:{rev:89637, comp:12206, other:36842, oi:40589}, cloud:{rev:20028, comp:6443, other:6987, oi:6598} },
-  { p:'2Q26', svc:{rev:94540, comp:12275, other:42721, oi:39544}, cloud:{rev:24768, comp:6933, other:9021, oi:8814} }
+  { p:'2Q26', svc:{rev:94540, comp:12275, other:42721, oi:39544}, cloud:{rev:24768, comp:6933, other:9021, oi:8814} },
+  { p:'3Q26', svc:{rev:96302, comp:12280, other:44865, oi:39157}, cloud:{rev:30709, comp:7081, other:12507, oi:11121} }
 ];
-export var GOOGL_SEG_SRC='Alphabet Form 10-K FY2025 (Note 15, Information about Segments and Geographic Areas) and Forms 10-Q 1Q25–2Q26 (segment note) · SEC EDGAR';
+export var GOOGL_SEG_SRC='Alphabet Form 10-K FY2025 (Note 15, Information about Segments and Geographic Areas) and Forms 10-Q 1Q25–3Q26 (segment note) · SEC EDGAR';
 // The 10-K's own words on how costs reach a segment (Form 10-K FY2025, Note 15), verbatim.
 export var GOOGL_SEG_ALLOC={
   codm:'Our CODM uses segment operating income (loss) to allocate resources to our segments in our annual planning process and to assess the performance of our segments, primarily by monitoring actual results versus the annual plan. Our operating segments are not evaluated using asset information.',
@@ -191,12 +195,12 @@ export var GOOGL_SEG_DIVES=[
   { k:'cloud', name:'Google Cloud',
     def:'Google Cloud includes infrastructure and platform services, applications, and other services for enterprise customers. Google Cloud generates revenues primarily from consumption-based fees and subscriptions received for Google Cloud Platform services, Google Workspace communication and collaboration tools, and other enterprise services.',
     otherDef:G_OTHER_DEF,
-    business:'The enterprise business: AI infrastructure and Gemini models sold by consumption, Workspace and Gemini Enterprise by the seat and, since 2Q26, TPU systems sold into customers’ data centers. Its operating margin went from 2.6% in 1Q23 to 35.6% in 2Q26 while revenue growth accelerated (relocated from the Margins panel, “the Cloud margin ladder”).',
+    business:'The enterprise business: AI infrastructure and Gemini models sold by consumption, Workspace and Gemini Enterprise by the seat and, since 2Q26, TPU systems sold into customers’ data centers. Its operating margin went from 2.6% in 1Q23 to 36.2% in 3Q26 while revenue growth accelerated (relocated from the Margins panel, “the Cloud margin ladder”).',
     moves:[
       ['Scale','Revenue grew faster than both cost lines in every year of the split (cost-split table above), so the margin widened.'],
-      ['Capacity','Management says Cloud has been supply-constrained; in Q3 2026 it adds third-party capacity as a bridge, which “will put some pressure on operating margins for Cloud” (CFO, 2Q26 call).'],
+      ['Capacity','Management says Cloud has been supply-constrained; in Q3 2026 it adds third-party capacity as a bridge, which “will put some pressure on operating margins for Cloud” (CFO, 2Q26 call). Per SAB’s 3Q26 call notes it came online late in the quarter, so no impact showed in 3Q26; whether it weighs on 4Q26 is the open question.'],
       ['Wiz','Reported in Cloud since the acquisition closed in March 2026; a low-single-digit percentage-point headwind to Cloud’s operating margin for the rest of 2026 (CFO, 1Q26 call).'],
-      ['TPU system sales','Inventory cost of TPU systems sits in “other costs” from 2Q26 (10-Q 2Q26 segment note).']
+      ['TPU system sales','Inventory cost of TPU systems sits in “other costs” from 2Q26 (10-Q 2Q26 segment note). In 3Q26 Cloud’s other costs more than doubled ($6.0B to $12.5B) as operating income rose “partially offset by increases in inventory and related costs associated with the sale of TPU systems and usage costs for technical infrastructure” (10-Q 3Q26).']
     ],
     calls:[
       {q:'4Q25', txt:'“Cloud operating income was $5.3 billion, more than doubling year-over-year.”', who:'Anat Ashkenazi, CFO'},

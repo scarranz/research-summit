@@ -26,7 +26,7 @@ export var GOOGL_CE_CONS = {
       qq:[null,76,69.8,74.6,76.7,86.3,80.5,84.7,88.3,96.5,90.2,96.4,102.3,113.8,109.9,119.8,null,null,null] },
     { k:'Gross profit', u:'$B', t:'ok', code:'GROSS_PROFIT',
       qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,47],[null,null,44.1,44.7],[null,47.1,47.5,48.3],[48.2,48.5,49.1,49.5],[53.6,54.4,54.7,55.5],[50.9,51.6,52.1,51.8],[54.3,54.8,54.6,54.7],[57,57,56.8,58.2],[62.1,61.9,62.9,64.6],[58.7,59.4,61.4,63.2],[62.9,64.9,66.9,70],[67.8,70.5,73.5,76.1],[77.6,81,84.2,null],[78.2,81.8,null,null],[86.7,null,null,null]],
-      qa:[40.7,39.2,42.7,43.5,48.7,46.8,49.2,51.8,55.9,53.9,57.4,61,68.1,68.6,73.9,null,null,null,null],
+      qa:[40.7,39.2,42.7,43.5,48.7,46.8,49.2,51.8,55.9,53.9,57.4,61,68.1,68.6,73.9,76.2,null,null,null],
       qy:[null,null,null,null,40.7,39.2,42.7,43.5,48.7,46.8,49.2,51.8,55.9,53.9,57.4,61,68.1,68.6,73.9],
       qq:[null,40.7,39.2,42.7,43.5,48.7,46.8,49.2,51.8,55.9,53.9,57.4,61,68.1,68.6,73.9,null,null,null] },
     { k:'Operating income', u:'$B', t:'ok', code:'IS_COMPARABLE_EBIT',
@@ -36,7 +36,7 @@ export var GOOGL_CE_CONS = {
       qq:[null,18.2,17.4,21.8,21.3,23.7,25.5,27.4,28.5,31,30.6,31.3,31.2,35.9,39.7,40.8,null,null,null] },
     { k:'EBITDA', u:'$B', t:'ok', code:'IS_COMPARABLE_EBITDA',
       qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,33.9],[null,null,31.5,31.5],[null,34.2,34.1,35.7],[34.3,34.5,35.6,36],[37.9,38.8,39,40],[37.5,38.3,38.9,39.1],[41.2,41.7,41.4,41.6],[42.9,43.4,43,44.7],[46.5,49.7,50.4,49.6],[41.9,43.6,46.1,49.4],[48.5,50.4,55.1,54.7],[52.3,55.2,57.6,58.6],[61,63.1,64.4,null],[65.1,67,null,null],[71.6,null,null,null]],
-      qa:[27.5,25.9,31,30.9,32.7,34.1,37,38.4,35.2,40.6,42.3,43.2,49,46.2,55.8,null,null,null,null],
+      qa:[27.5,25.9,31,30.9,32.7,34.1,37,38.4,35.2,40.6,42.3,43.2,49,46.2,55.8,57.6,null,null,null],
       qy:[null,null,null,null,27.5,25.9,31,30.9,32.7,34.1,37,38.4,35.2,40.6,42.3,43.2,49,46.2,55.8],
       qq:[null,27.5,25.9,31,30.9,32.7,34.1,37,38.4,35.2,40.6,42.3,43.2,49,46.2,55.8,null,null,null] },
     { k:'EPS (diluted)', u:'$', t:'ok', code:'IS_COMP_EPS_GAAP',
@@ -46,7 +46,7 @@ export var GOOGL_CE_CONS = {
       qq:[null,1.05,1.17,1.44,1.55,1.64,1.89,1.89,2.12,2.15,2.81,2.31,2.87,2.82,5.11,9.11,null,null,null] },
     { k:'Operating cash flow', u:'$B', t:'ok', code:'CB_CF_NET_CASH_OPERATING_ACT',
       qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,24.7],[null,null,28.5,31.1],[null,32.1,31.9,35.4],[31.3,31.1,32.9,36.5],[30.1,31.4,33.2,40.4],[33.3,35.1,35.8,36.7],[35.2,36,35.7,35.1],[38.9,38.2,37.7,42],[42,41.4,45.5,45.7],[41.6,42.9,45,47.6],[38.4,41.4,44.3,46.2],[53.2,56.4,57.9,53.9],[60.5,62.2,57.7,null],[61,62.1,null,null],[66,null,null,null]],
-      qa:[null,null,null,30.7,18.9,28.8,26.6,30.7,39.1,36.1,27.7,48.4,52.4,45.8,39.1,null,null,null,null],
+      qa:[null,null,null,30.7,18.9,28.8,26.6,30.7,39.1,36.1,27.7,48.4,52.4,45.8,39.1,42.3,null,null,null],
       qy:[null,null,null,null,null,null,null,30.7,18.9,28.8,26.6,30.7,39.1,36.1,27.7,48.4,52.4,45.8,39.1],
       qq:[null,null,null,null,30.7,18.9,28.8,26.6,30.7,39.1,36.1,27.7,48.4,52.4,45.8,39.1,null,null,null] },
     { k:'Capex', u:'$B', t:'ok', code:'CF_PURCHASE_OF_FIXED_PROD_ASSETS',
@@ -56,12 +56,12 @@ export var GOOGL_CE_CONS = {
       qq:[null,7.6,6.3,6.9,8.1,11,12,13.2,13.1,14.3,17.2,22.4,24,27.9,35.7,44.9,null,null,null] },
     { k:'D&A', u:'$B', t:'ok', code:'CF_DEPR_AMORT',
       qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,4.1],[null,null,3.9,3.7],[null,4,3.9,3.8],[4.3,4.1,4.1,4.2],[4.3,4.3,4.4,4.3],[4.2,4.5,4.5,4.6],[4.8,4.8,5,5],[5.1,5.4,5.4,5.6],[5.7,5.9,6.1,6.2],[6.1,6.2,6.4,7],[6.7,7.2,8.4,8.4],[8,9.9,10.1,8.3],[11.8,12.1,9.5,null],[10.5,11.1,null,null],[11.8,null,null,null]],
-      qa:[4.2,3.2,3.4,3.8,3.3,3.4,3.7,4,4.2,4.5,5,5.6,6,6.5,7.1,null,null,null,null],
+      qa:[4.2,3.2,3.4,3.8,3.3,3.4,3.7,4,4.2,4.5,5,5.6,6,6.5,7.1,8.4,null,null,null],
       qy:[null,null,null,null,4.2,3.2,3.4,3.8,3.3,3.4,3.7,4,4.2,4.5,5,5.6,6,6.5,7.1],
       qq:[null,4.2,3.2,3.4,3.8,3.3,3.4,3.7,4,4.2,4.5,5,5.6,6,6.5,7.1,null,null,null] },
     { k:'Diluted shares', u:'B', t:'ok', code:'IS_SH_FOR_DILUTED_EPS',
       qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,12.67],[null,null,12.59,12.54],[null,12.52,12.48,12.48],[12.46,12.42,12.42,12.43],[12.37,12.37,12.38,12.36],[12.31,12.33,12.32,12.3],[12.28,12.27,12.26,12.23],[12.23,12.22,12.18,12.14],[12.18,12.13,12.09,12.15],[12.1,12.03,12.11,12.19],[11.97,12.07,12.16,12.22],[12.02,12.14,12.21,12.32],[12.11,12.19,12.34,null],[12.15,12.31,null,null],[12.32,null,null,null]],
-      qa:[12.95,13.71,13.64,12.7,12.6,12.53,12.49,12.42,12.35,12.29,12.2,12.2,12.23,12.24,12.31,null,null,null,null],
+      qa:[12.95,13.71,13.64,12.7,12.6,12.53,12.49,12.42,12.35,12.29,12.2,12.2,12.23,12.24,12.31,12.37,null,null,null],
       qy:[null,null,null,null,12.95,13.71,13.64,12.7,12.6,12.53,12.49,12.42,12.35,12.29,12.2,12.2,12.23,12.24,12.31],
       qq:[null,12.95,13.71,13.64,12.7,12.6,12.53,12.49,12.42,12.35,12.29,12.2,12.2,12.23,12.24,12.31,null,null,null] },
     { k:'Google Cloud', u:'$B', t:'ok', code:'SALES_REV_TURN',
@@ -76,7 +76,7 @@ export var GOOGL_CE_CONS = {
       qq:[null,42.6,40.4,42.6,44,48,46.2,48.5,49.4,54,50.7,54.2,56.6,63.1,60.4,63.3,null,null,null] },
     { k:'Revenue backlog (RPO)', u:'$B', t:'ok', code:'BS_REMAINING_PERFORMANCE_OBLIG',
       qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,74.6],[null,null,null,74.9],[null,null,77.1,77],[null,80.8,81,83.3],[96.1,96,98.6,90.2],[97,100,99.3,94.2],[102.2,101.3,96.2,96.2],[104.3,99.2,99.2,111.2],[115.2,115.2,127.2,136.4],[null,null,null,190],[null,null,129.5,318],[null,110.2,330.6,530.9],[192,457.3,552.6,null],[519.6,572.7,null,null],[602.5,null,null,null]],
-      qa:[64.3,61.7,60.6,64.9,74.1,72.5,78.8,86.8,93.2,92.4,108.2,157.7,242.8,467.6,519.5,null,null,null,null],
+      qa:[64.3,61.7,60.6,64.9,74.1,72.5,78.8,86.8,93.2,92.4,108.2,157.7,242.8,467.6,519.5,567.7,null,null,null],
       qy:[null,null,null,null,64.3,61.7,60.6,64.9,74.1,72.5,78.8,86.8,93.2,92.4,108.2,157.7,242.8,467.6,519.5],
       qq:[null,64.3,61.7,60.6,64.9,74.1,72.5,78.8,86.8,93.2,92.4,108.2,157.7,242.8,467.6,519.5,null,null,null] },
     { k:'Cloud operating income', u:'$B', t:'ok', code:'IS_OPER_INC',
@@ -93,7 +93,10 @@ export var GOOGL_CE_CONS = {
 //     estMatrix vintage whose last reported quarter sits that many quarters before; `qa` = the reported actual.
 //   • REVENUE is the sum of Bloomberg's segment lines (SAB, 2026-10-26): the archive's SALES_REV_TURN forward column
 //     mixes gross and net-of-TAC forecasts (3Q26: $110.2B headline vs $126.5B segment sum), so it is replaced.
-//   • the other lines (gross profit, EBITDA, cash flow, D&A, shares, the backlog) keep the archive above.
+//   • the other lines (gross profit, EBITDA, cash flow, D&A, shares, the backlog) keep the archive above. Their
+//     Q3 2026 actual (qa) comes from the 3Q26 release and 10-Q (Oct 28–29 2026): gross profit = revenue − cost
+//     of revenues; EBITDA = operating income + depreciation + SBC ($40.6B + $8.4B + $8.6B); D&A = depreciation of
+//     property and equipment; RPO $567.7B (10-Q).
 // Six lines are added to the custom KPIs from Results: Services revenue, YouTube ads, Network, subscriptions,
 // Services operating income and TAC.
 (function(){
@@ -146,10 +149,11 @@ function ceSummitUs(p){
 
 var SRC_Q3='Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-09-08 (the newest before the print; revenue = sum of the segment lines) · Summit DCF model — snapshot 2026-08-06, frozen (quarterly projections of revenue, segments, operating income, capex and TAC) · outlook: Q2 2026 earnings call (Jul 22 2026), CFO prepared remarks';
 export var GOOGL_CALL_EARNINGS = { ticker:'GOOGL', quarters:[
-  // ── UPCOMING: Q3 2026 (quarter ended Sep 30 2026; reports Wed Oct 28 2026 after close, call 1:30pm PT —
-  // Alphabet IR release of Oct 6 2026). Alphabet gives no revenue or EPS guidance; the notes quote the CFO's
-  // outlook from the 2Q26 call (docs/calls/GOOGL-latest.md), verbatim.
-  { q:'Q3 2026', status:'upcoming', date:'Wed Oct 28, 2026 · after close (call 1:30pm PT / 4:30pm ET)',
+  // ── REPORTED: Q3 2026 (quarter ended Sep 30 2026; reported Wed Oct 28 2026 after close; 10-Q filed Oct 29).
+  // The Setup stays frozen as it stood before the print: Alphabet gives no revenue or EPS guidance; the notes
+  // quote the CFO's outlook from the 2Q26 call, verbatim. call:null until Alphabet IR posts the official
+  // transcript PDF (quotes come only from it — SAB, Oct 26 2026).
+  { q:'Q3 2026', status:'reported', date:'Wed Oct 28, 2026 · after close (call 1:30pm PT / 4:30pm ET)',
     setup:{
       source:SRC_Q3, asOf:'2026-09-08',
       notes:{
@@ -165,7 +169,8 @@ export var GOOGL_CALL_EARNINGS = { ticker:'GOOGL', quarters:[
       us:ceSummitUs('3Q26'),
       debate:{ rows:null, synth:'' },
     },
-    results:null, call:null },
+    results:{ basisNote:'<b>Basis.</b> Net income and EPS include an <b>$8.2B</b> other expense, mostly an <b>$8.7B</b> loss on equity securities (−$0.55 of EPS, per the release). EPS is on net income available to common stockholders, after <b>$298M</b> of preferred dividends.' },
+    call:null },
 
   // ── REPORTED. The print is scored from the grid above (Results dataset + archive). The call summaries carry only
   // verbatim quotes from the official transcript (SAB, Oct 26 2026: no generated text).

@@ -10,7 +10,8 @@
 // The engine reads `act` and falls back to `summit` (frozen, snapshot 2026-08-06), never `cons`.
 // KPI series (paid clicks, cost-per-click, impressions, cost-per-impression — year-on-year change — and the revenue
 // backlog) are held in `shared`, from Bloomberg's record of the reported values (BBG_CONSENSUS.txt, reported columns
-// of each snapshot); every 2Q26 value matches the 2Q26 10-Q. Bloomberg has no 4Q23 value for the four rates, so that
+// of each snapshot); every 2Q26 value matches the 2Q26 10-Q. 3Q26 (Oct 29 2026): typed from the 3Q26 10-Q (acc.
+// 0001652044-26-000084, Monetization Metrics and Note 2), before Bloomberg records it. Bloomberg has no 4Q23 value for the four rates, so that
 // quarter is empty (playbook rule 7). TAC rate is derived (TAC ÷ Google advertising revenue, both from Results).
 //
 // TEXT CHIPS: `tenK` = FILING, verbatim from the FY2025 10-K (SEC EDGAR, acc. 0001652044-26-000018) or the 2Q26 10-Q
@@ -28,7 +29,7 @@ var CLOUDC = { text: 'Google Cloud generates revenues primarily from consumption
                where: TENK + ', Item 1 — Google Cloud' };
 var SUBS = { text: 'consumer subscriptions, which primarily include revenues from YouTube services, such as YouTube TV, YouTube Music and Premium, and NFL Sunday Ticket, as well as Google One, which offers access to our most capable Gemini models',
              where: TENK + ', Item 7 — Google subscriptions, platforms, and devices' };
-var Q = ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26'];
+var Q = ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26'];
 function qmap(vals){ var o = {}; Q.forEach(function(p, i){ if (vals[i] != null) o[p] = vals[i]; }); return o; }
 var KPI_SRC = 'Alphabet 10-Q / 10-K (Monetization Metrics), as recorded by Bloomberg';
 
@@ -44,16 +45,16 @@ export var googlSegments = {
 
   shared: {
     clicks: { label: 'Paid clicks change (YoY)', short: 'Paid clicks YoY', unit: 'pct', scope: 'segment', src: KPI_SRC,
-      q: { act: qmap([0.08, 0.08, 0.07, null, 0.05, 0.06, 0.04, 0.05, 0.02, 0.04, 0.07, 0.11, 0.13, 0.13]) } },
+      q: { act: qmap([0.08, 0.08, 0.07, null, 0.05, 0.06, 0.04, 0.05, 0.02, 0.04, 0.07, 0.11, 0.13, 0.13, 0.08]) } },
     cpc: { label: 'Cost-per-click change (YoY)', short: 'CPC YoY', unit: 'pct', scope: 'segment', src: KPI_SRC,
-      q: { act: qmap([-0.07, -0.03, 0.04, null, 0.08, 0.07, 0.08, 0.05, 0.07, 0.08, 0.07, 0.06, 0.05, 0.03]) } },
+      q: { act: qmap([-0.07, -0.03, 0.04, null, 0.08, 0.07, 0.08, 0.05, 0.07, 0.08, 0.07, 0.06, 0.05, 0.03, 0.04]) } },
     impr: { label: 'Impressions change (YoY)', short: 'Impressions YoY', unit: 'pct', scope: 'segment', src: KPI_SRC,
-      q: { act: qmap([-0.05, 0.00, -0.03, null, -0.13, -0.17, -0.14, 0.00, -0.05, -0.06, -0.05, -0.12, -0.09, -0.12]) } },
+      q: { act: qmap([-0.05, 0.00, -0.03, null, -0.13, -0.17, -0.14, 0.00, -0.05, -0.06, -0.05, -0.12, -0.09, -0.12, -0.14]) } },
     cpi: { label: 'Cost-per-impression change (YoY)', short: 'CPI YoY', unit: 'pct', scope: 'segment', src: KPI_SRC,
-      q: { act: qmap([-0.05, -0.05, 0.01, null, 0.14, 0.13, 0.15, -0.02, 0.04, 0.06, 0.06, 0.12, 0.06, 0.13]) } },
+      q: { act: qmap([-0.05, -0.05, 0.01, null, 0.14, 0.13, 0.15, -0.02, 0.04, 0.06, 0.06, 0.12, 0.06, 0.13, 0.14]) } },
     rpo: { label: 'Revenue backlog (remaining performance obligations)', short: 'Revenue backlog', unit: 'usdM', scope: 'company',
       src: 'Alphabet 10-Q / 10-K (Note 2), as recorded by Bloomberg (BS_REMAINING_PERFORMANCE_OBLIG)',
-      q: { act: qmap([61700, 60600, 64900, 74100, 72500, 78800, 86800, 93200, 92400, 108200, 157700, 242800, 467600, 519500]) } },
+      q: { act: qmap([61700, 60600, 64900, 74100, 72500, 78800, 86800, 93200, 92400, 108200, 157700, 242800, 467600, 519500, 567700]) } },
     g_us: { label: 'United States', short: 'United States', unit: 'usdM', scope: 'company', src: TENK + ' Note 2, by customer address',
       y: { act: { '2023': 146286, '2024': 170447, '2025': 194229 } } },
     g_emea: { label: 'EMEA', short: 'EMEA', unit: 'usdM', scope: 'company', src: TENK + ' Note 2, by customer address',

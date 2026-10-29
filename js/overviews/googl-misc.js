@@ -41,9 +41,9 @@ function kpis(){
   var C=GOOGL_COMMIT, n=C.dates.length-1, P=GOOGL_PPE;
   var k=[
     [bn(cxA('2025')), 'capex FY2025 (FY2024: '+bn(cxA('2024'))+')'],
-    [bn(cqA('1Q26')+cqA('2Q26')), 'capex 1H26 — FY2026 guided $195–205B'],
-    [bB(C.purchase[n]), 'purchase commitments, Jun 30 2026 (Dec 2025: '+bB(C.purchase[1])+')'],
-    [bn(P.net[P.net.length-1]), 'property and equipment, net, Jun 30 2026 (Dec 2024: '+bn(P.net[0])+')']
+    [bn(cqA('1Q26')+cqA('2Q26')+cqA('3Q26')), 'capex 9M26 — FY2026 guided $195–205B'],
+    [bB(C.purchase[n]), 'purchase commitments, '+C.dates[n]+' (Dec 2025: '+bB(C.purchase[1])+')'],
+    [bn(P.net[P.net.length-1]), 'property and equipment, net, '+P.cols[P.cols.length-1]+' (Dec 2024: '+bn(P.net[0])+')']
   ];
   return '<div class="ov-kpis mx-kpis">'+k.map(function(x){ return '<div class="ov-kpi"><div class="ov-kpi-v">'+x[0]+'</div><div class="ov-kpi-d muted">'+x[1]+'</div></div>'; }).join('')+'</div>';
 }
@@ -51,12 +51,12 @@ function kpis(){
 export function googlCapexBody(){
   var C=GOOGL_COMMIT, n=C.dates.length-1, P=GOOGL_PPE, F=GOOGL_FUNDING;
   var off0=C.purchase[1]+C.leasesNotCommenced[1]+C.creditBackstops[1], offN=C.purchase[n]+C.leasesNotCommenced[n]+C.creditBackstops[n];
-  var h='<p class="ov-lede">Alphabet’s build is paid for in four ways — capex on servers and data centers it owns, leases on data centers others build, long-term supply agreements for the hardware still to come, and backstops on other companies’ data-center leases. Only the first shows up as capex. The other three went from $'+off0.toFixed(0)+'B at the end of 2025 to $'+offN.toFixed(0)+'B by June 2026; the depreciation and lease cost they create reach the income statement over the following years.</p>';
+  var h='<p class="ov-lede">Alphabet’s build is paid for in four ways — capex on servers and data centers it owns, leases on data centers others build, long-term supply agreements for the hardware still to come, and backstops on other companies’ data-center leases. Only the first shows up as capex. The other three went from $'+Math.round(off0).toLocaleString('en-US')+'B at the end of 2025 to $'+Math.round(offN).toLocaleString('en-US')+'B by '+C.dates[n]+'; the depreciation and lease cost they create reach the income statement over the following years.</p>';
   h+=kpis();
 
   // 1 — capex and depreciation
   h+=h3('Capex and depreciation')+
-     '<div class="mx-ctl"><span class="mg-seg">'+[['y','Annual, FY2021–FY2028E'],['q','Quarterly, 1Q23–2Q26']].map(function(o){ return '<button type="button" class="mg-pill'+(MX.view===o[0]?' active':'')+'" data-mxv="'+o[0]+'">'+o[1]+'</button>'; }).join('')+'</span></div>'+
+     '<div class="mx-ctl"><span class="mg-seg">'+[['y','Annual, FY2021–FY2028E'],['q','Quarterly, 1Q23–3Q26']].map(function(o){ return '<button type="button" class="mg-pill'+(MX.view===o[0]?' active':'')+'" data-mxv="'+o[0]+'">'+o[1]+'</button>'; }).join('')+'</span></div>'+
      chartBlock('capex', 280)+
      '<div class="ov-fynote" id="gMxCapexNote"></div>';
   var c26=capexOf('2026'), r26=revOf('2026');
@@ -65,14 +65,14 @@ export function googlCapexBody(){
 
   // 2 — the four ways the build is paid for
   h+=h3('Four ways the build is paid for')+tbl(['Route','What it is','How it reaches the income statement','Scale (latest filing)'],[
-    ['1 · Owned — capex','Servers, network gear and data-center buildings Alphabet buys and builds itself.','Capitalized as property and equipment, then depreciated once in service (servers generally over six years). The cost arrives years after the cash.','Capex '+bn(cxA('2025'))+' in 2025 and '+bn(cqA('1Q26')+cqA('2Q26'))+' in 1H26; '+bn(P.notInService[n])+' of assets not yet in service at Jun 30 2026, not yet depreciating.'],
-    ['2 · Leased','Data centers that others build and Alphabet leases, including leases with data-center leasing entities (VIEs), accounted for as finance leases.','Lease cost over the term from the day each lease commences — operating lease cost, or amortization plus interest for finance leases.','$'+C.leasesNotCommenced[n].toFixed(1)+'B signed but not yet commenced at Jun 30 2026 (from $'+C.leasesNotCommenced[0].toFixed(1)+'B at Dec 2024), commencing 2026–2031; plus a $5.8B short-term lease starting in 3Q26.'],
-    ['3 · Contracted — supply agreements','Long-term agreements that secure future production capacity for technical-infrastructure and inventory components, plus energy take-or-pay contracts and content licenses.','Infrastructure hardware becomes capex on delivery, then depreciation; inventory components become cost of revenue when the TPU systems are sold; energy and content are operating cost as used.','$'+C.purchase[n].toFixed(1)+'B of purchase commitments at Jun 30 2026, $'+C.purchaseShort[n].toFixed(1)+'B short-term (Dec 2025: $'+C.purchase[1].toFixed(1)+'B). Note 10: $707.0B fixed or guaranteed, generally fulfilled through 2030.'],
-    ['4 · Backstopped — third-party data centers','Alphabet guarantees other companies’ data-center lease payments (credit derivatives) and energy-equipment orders (financial guarantees).','Nothing unless a counterparty defaults; changes in fair value run through other income (OI&amp;E). On a default Alphabet can take over the leases.','$'+C.creditBackstops[n].toFixed(1)+'B of lease backstops and $'+C.guarantees[n].toFixed(1)+'B of guarantees at Jun 30 2026 (lease backstops: zero at Dec 2024); about $'+C.backstopsAgreed[n].toFixed(1)+'B more agreed, terms not final.']
+    ['1 · Owned — capex','Servers, network gear and data-center buildings Alphabet buys and builds itself.','Capitalized as property and equipment, then depreciated once in service (servers generally over six years). The cost arrives years after the cash.','Capex '+bn(cxA('2025'))+' in 2025 and '+bn(cqA('1Q26')+cqA('2Q26')+cqA('3Q26'))+' in 9M26; '+bn(P.notInService[P.notInService.length-1])+' of assets not yet in service at '+P.cols[P.cols.length-1]+', not yet depreciating.'],
+    ['2 · Leased','Data centers that others build and Alphabet leases, including leases with data-center leasing entities (VIEs), accounted for as finance leases.','Lease cost over the term from the day each lease commences — operating lease cost, or amortization plus interest for finance leases.','$'+C.leasesNotCommenced[n].toFixed(1)+'B signed but not yet commenced at '+C.dates[n]+' (from $'+C.leasesNotCommenced[0].toFixed(1)+'B at Dec 2024), commencing 2026–2031.'],
+    ['3 · Contracted — supply agreements','Long-term agreements that secure future production capacity for technical-infrastructure and inventory components, plus energy take-or-pay contracts and content licenses.','Infrastructure hardware becomes capex on delivery, then depreciation; inventory components become cost of revenue when the TPU systems are sold; energy and content are operating cost as used.','$'+C.purchase[n].toFixed(1)+'B of purchase commitments at '+C.dates[n]+', $'+C.purchaseShort[n].toFixed(1)+'B short-term (Dec 2025: $'+C.purchase[1].toFixed(1)+'B). Note 10: $802.1B under contracts longer than a year, the significant majority paid through 2031.'],
+    ['4 · Backstopped — third-party data centers','Alphabet guarantees other companies’ data-center lease payments (credit derivatives) and energy-equipment orders (financial guarantees).','Nothing unless a counterparty defaults; changes in fair value run through other income (OI&amp;E). On a default Alphabet can take over the leases.','$'+C.creditBackstops[n].toFixed(1)+'B of lease backstops and $'+C.guarantees[n].toFixed(1)+'B of guarantees at '+C.dates[n]+' (lease backstops: zero at Dec 2024); about $'+C.backstopsAgreed[n].toFixed(1)+'B more agreed, terms not final.']
   ]);
 
   // 3 — commitments over time
-  h+=h3('Commitments outside the capex line, Dec 2024 – Jun 2026')+
+  h+=h3('Commitments outside the capex line, Dec 2024 – '+C.dates[n].replace(/ \d+ /,' '))+
      chartBlock('commit', 260, true);
   h+='<div class="ov-fynote">'+GOOGL_BACKSTOP_NOTE+' The purchase-commitment total is the filing’s headline figure; its wording moved from purchase orders (2024) to long-term supply agreements (2026), so read the jump as both more hardware ordered and longer contracts. — = not disclosed at that date.</div>';
   h+=tbl(['Signed','What Alphabet signed','Source'], GOOGL_COMMIT_AFTER);
@@ -85,16 +85,16 @@ export function googlCapexBody(){
       row(['Less: accumulated depreciation'].concat(P.accum.map(mm))),
       row(['Add: assets not yet in service'].concat(P.notInService.map(mm))),
       row(['Property and equipment, net'].concat(P.net.map(mm)),'mx-tot')]), null, 1)+
-     '<div class="ov-fynote">Technical infrastructure in service grew '+((P.rows[0][4]/P.rows[0][1]-1)*100).toFixed(0)+'% in 18 months and assets not yet in service went from '+bn(P.notInService[0])+' to '+bn(P.notInService[3])+' — most of the build is still to start depreciating. '+P.note+'</div>';
-  h+=collap('Why depreciation fell in 2023', '<div class="ov-fynote">'+GOOGL_LIFE_NOTE+' Since then depreciation has grown faster than in-service assets as the 2024–2026 capex comes online: $'+(GOOGL_DEPR.act['2025']/1000).toFixed(1)+'B in 2025 (+'+((GOOGL_DEPR.act['2025']/GOOGL_DEPR.act['2024']-1)*100).toFixed(0)+'%), and $'+((GOOGL_DEPR.q['1Q26']+GOOGL_DEPR.q['2Q26'])/1000).toFixed(1)+'B in 1H26 (+'+(((GOOGL_DEPR.q['1Q26']+GOOGL_DEPR.q['2Q26'])/(GOOGL_DEPR.q['1Q25']+GOOGL_DEPR.q['2Q25'])-1)*100).toFixed(0)+'%). The CFO, 4Q25 call: “we expect the growth rate in 2026 depreciation to accelerate in Q1, and meaningfully increase for the full year.”</div>');
+     '<div class="ov-fynote">Technical infrastructure in service grew '+((P.rows[0][P.cols.length]/P.rows[0][1]-1)*100).toFixed(0)+'% in 21 months and assets not yet in service went from '+bn(P.notInService[0])+' to '+bn(P.notInService[P.cols.length-1])+' — most of the build is still to start depreciating. '+P.note+'</div>';
+  h+=collap('Why depreciation fell in 2023', '<div class="ov-fynote">'+GOOGL_LIFE_NOTE+' Since then depreciation has grown faster than in-service assets as the 2024–2026 capex comes online: $'+(GOOGL_DEPR.act['2025']/1000).toFixed(1)+'B in 2025 (+'+((GOOGL_DEPR.act['2025']/GOOGL_DEPR.act['2024']-1)*100).toFixed(0)+'%), and $'+((GOOGL_DEPR.q['1Q26']+GOOGL_DEPR.q['2Q26']+GOOGL_DEPR.q['3Q26'])/1000).toFixed(1)+'B in 9M26 (+'+(((GOOGL_DEPR.q['1Q26']+GOOGL_DEPR.q['2Q26']+GOOGL_DEPR.q['3Q26'])/(GOOGL_DEPR.q['1Q25']+GOOGL_DEPR.q['2Q25']+GOOGL_DEPR.q['3Q25'])-1)*100).toFixed(0)+'%). The CFO, 4Q25 call: “we expect the growth rate in 2026 depreciation to accelerate in Q1, and meaningfully increase for the full year.”</div>');
 
   // 5 — leases on the balance sheet
   var L=GOOGL_LEASES, M=L.mat;
   h+=collap('Leases already on the balance sheet', tbl(['US$ millions'].concat(L.cols), [
       ['Operating lease liabilities'].concat(L.opLiab.map(mm)), ['Finance lease liabilities'].concat(L.finLiab.map(mm)),
       ['Undiscounted future payments — operating'].concat(L.opPay.map(mm)), ['Undiscounted future payments — finance'].concat(L.finPay.map(mm))], null, 1)+
-      tbl(['Maturities at Jun 30 2026 (US$ M)'].concat(M.years), [['Operating leases'].concat(M.op.map(mm)), ['Finance leases'].concat(M.fin.map(mm))], null, 1)+
-      '<div class="ov-fynote">The leases already recorded total about $'+((L.opPay[2]+L.finPay[2])/1000).toFixed(0)+'B of future payments; the leases signed but not yet commenced ($'+C.leasesNotCommenced[n].toFixed(1)+'B) are about three and a half times that — that cost is still to come.</div>');
+      tbl(['Maturities at '+M.asOf+' (US$ M)'].concat(M.years), [['Operating leases'].concat(M.op.map(mm)), ['Finance leases'].concat(M.fin.map(mm))], null, 1)+
+      '<div class="ov-fynote">The leases already recorded total about $'+((L.opPay[L.opPay.length-1]+L.finPay[L.finPay.length-1])/1000).toFixed(0)+'B of future payments; the leases signed but not yet commenced ($'+C.leasesNotCommenced[n].toFixed(1)+'B) are about '+(C.leasesNotCommenced[n]*1000/(L.opPay[L.opPay.length-1]+L.finPay[L.finPay.length-1])).toFixed(1)+' times that — that cost is still to come.</div>');
 
   // 6 — Intersect
   h+=h3('Intersect — buying the power and the sites')+tbl(['Item','What the filings say'], GOOGL_INTERSECT)+
@@ -105,9 +105,9 @@ export function googlCapexBody(){
       ['Long-term debt'].concat(F.ltDebt.map(bB)),
       ['Cash, cash equivalents and marketable securities'].concat(F.cash.map(bB))], null, 1)+
      tbl(['Item','What the filings say','Source'], GOOGL_FUNDING_ROWS)+
-     '<div class="ov-fynote">Long-term debt rose about ninefold in 18 months and buybacks stopped; together with the 2Q26 equity, the raised money more than covered the spend — cash and securities nearly doubled in the first half of 2026.</div>';
+     '<div class="ov-fynote">Long-term debt rose about '+(F.ltDebt[F.ltDebt.length-1]/F.ltDebt[0]).toFixed(0)+'x in 21 months and buybacks stopped; together with the 2026 equity (the 2Q26 offerings and the at-the-market program from 3Q26), the money raised more than covered the spend — cash and securities went from '+bB(F.cash[1])+' to '+bB(F.cash[F.cash.length-1])+' in the first nine months of 2026.</div>';
 
-  h+='<div class="ov-foot">Sources — Alphabet Form 10-K FY2023, FY2024 and FY2025 and Form 10-Q 1Q26 and 2Q26 (MD&amp;A; cash-flow statements; notes on derivatives, leases, variable interest entities, debt, property and equipment, acquisitions, commitments and contingencies), SEC EDGAR, read Oct 27 2026; earnings calls 4Q23–2Q26 (docs/calls); Summit DCF model, snapshot 2026-08-06 (frozen, not live). 3Q26 (10-Q due after the Oct 28 print) not yet included.</div>';
+  h+='<div class="ov-foot">Sources — Alphabet Form 10-K FY2023, FY2024 and FY2025 and Form 10-Q 1Q26, 2Q26 and 3Q26 (MD&amp;A; cash-flow statements; notes on derivatives, leases, variable interest entities, debt, property and equipment, acquisitions, commitments and contingencies), SEC EDGAR, read Oct 27 and Oct 29 2026; earnings calls 4Q23–2Q26 (docs/calls) and SAB’s 3Q26 call notes; Summit DCF model, snapshot 2026-08-06 (frozen, not live).</div>';
   return h;
 }
 
@@ -194,7 +194,7 @@ function drawChart(sp, k, spec){
 }
 function yB(){ return { color:'#8A93A0', font:{ size:10 }, callback:function(v){ return '$'+v+'B'; } }; }
 
-// 1 — capex and depreciation (annual FY21–FY28E, quarterly 1Q23–2Q26)
+// 1 — capex and depreciation (annual FY21–FY28E, quarterly 1Q23–3Q26)
 function capexSpec(){
   var navy=cssVar('--navy','#1B2A41'), steel=cssVar('--steel','#3E5A82'), labels, cap, dep, cE, dE, tbl2;
   if(MX.view==='q'){
@@ -221,7 +221,7 @@ function capexSpec(){
 }
 function capexNote(){
   return MX.view==='q'
-    ? 'Bars = quarterly capex (purchases of property and equipment), 1Q23–2Q26; line = depreciation of property and equipment, from the 10-Q year-to-date figures. 2Q26 alone was $44.9B, more than all of 2023.'
+    ? 'Bars = quarterly capex (purchases of property and equipment), 1Q23–3Q26; line = depreciation of property and equipment, from the 10-Q year-to-date figures. 3Q26 alone was $51.4B, more than all of 2023.'
     : 'Bars = capex (purchases of property and equipment); line = depreciation of property and equipment, from the cash-flow statement. Solid = reported; lighter bars and dashed line = Summit model, snapshot 2026-08-06 (frozen) — FY2026E is reported 1Q–2Q plus the model’s 3Q–4Q, and at $205.8B sits at the top of the $195–205B guide.';
 }
 function buildCapex(sp){ drawChart(sp, 'capex', capexSpec()); var nt=sp.querySelector('#gMxCapexNote'); if(nt) nt.innerHTML=capexNote(); }
@@ -278,11 +278,11 @@ function collapClick(e){
 // ── Capacity → revenue (MISC-capacity) ───────────────────────────────────────
 // Copy of meta-misc.js metaCapacityBody (chain table + directory by country), plus what Alphabet publishes that Meta
 // does not: the revenue backlog. Backlog = segments-data shared:rpo (as TL-SEG); Cloud revenue and its consensus/Summit
-// = results-data (as Results). Conversion share is the reader's control, default 50% (“just over 50%” in 24 months).
+// = results-data (as Results). Conversion share is the reader's control, default 55% (“just over 55%” in 24 months).
 var CLQ = googlResults.views.q.metrics.cloud, CLY = googlResults.views.y.metrics.cloud, RPO = googlSegments.shared.rpo.q.act;
 var BL_Q = Object.keys(RPO);
-var CAP = { share:50 };
-var CLOUD_BACKLOG = 513900;   // Google Cloud's part of the Jun 30 2026 backlog, US$ M (10-Q 2Q26, Note 2)
+var CAP = { share:55 };
+var CLOUD_BACKLOG = 560800;   // Google Cloud's part of the Sep 30 2026 backlog, US$ M (10-Q 3Q26, Note 2)
 function clq(p){ var i=CLQ.periods.indexOf(p); return i<0?null:{ act:CLQ.act[i], cons:CLQ.cons[i] }; }
 function cly(y){ var i=CLY.periods.indexOf(y); return i<0?null:{ cons:CLY.cons[i], summit:CLY.summit[i] }; }
 function pc(v){ return v==null ? '—' : Math.round(v*100)+'%'; }
@@ -290,7 +290,7 @@ function coverRows(){
   var perYr=CLOUD_BACKLOG*CAP.share/100/2, n4=['3Q26','4Q26','1Q27','2Q27'].reduce(function(s,p){ var c=clq(p); return s+(c&&c.cons!=null?c.cons:0); },0);
   var y27=cly('2027'), y28=cly('2028');
   var cmp=[
-    ['Consensus, next four quarters (3Q26–2Q27)', n4],
+    ['Consensus, 3Q26–2Q27 (Bloomberg, Sep 8 2026 — the newest four quarters it has)', n4],
     ['Consensus FY2027', y27&&y27.cons], ['Summit FY2027', y27&&y27.summit],
     ['Consensus FY2028', y28&&y28.cons], ['Summit FY2028', y28&&y28.summit]
   ];
@@ -298,7 +298,7 @@ function coverRows(){
 }
 function coverHtml(){
   var C=coverRows();
-  return '<div class="me-bl-note">At '+CAP.share+'% within 24 months, Google Cloud’s $513.9B backlog alone is <b>'+bn(C.perYr)+' a year</b> of revenue from contracts already signed (3Q26–2Q28, averaged).</div>'+
+  return '<div class="me-bl-note">At '+CAP.share+'% within 24 months, Google Cloud’s '+bn(CLOUD_BACKLOG)+' backlog alone is <b>'+bn(C.perYr)+' a year</b> of revenue from contracts already signed (4Q26–3Q28, averaged).</div>'+
     tbl(['Against','Cloud revenue expected','From signed backlog, per year','Covered'], C.rows, null, 1);
 }
 export function googlCapacityBody(){
@@ -306,7 +306,7 @@ export function googlCapacityBody(){
   h+=h3('The chain, link by link')+tbl(['Link','Measure','Latest value','Source','Status'],GOOGL_CHAIN.map(function(r){ return ['<b>'+r[0]+'</b>',r[1],r[2],r[3],r[4]]; }));
   // backlog vs Cloud revenue
   h+=h3('Revenue backlog against Google Cloud revenue')+chartBlock('backlog', 280)+
-    '<div class="me-bl-note">Bars = revenue backlog at each quarter-end (left axis); line = Google Cloud revenue in the quarter (right axis). Both reported. The backlog went from $61.7B (1Q23) to $519.5B (2Q26); Cloud revenue from $7.5B to $24.8B a quarter.</div>';
+    '<div class="me-bl-note">Bars = revenue backlog at each quarter-end (left axis); line = Google Cloud revenue in the quarter (right axis). Both reported. The backlog went from $61.7B (1Q23) to $567.7B (3Q26); Cloud revenue from $7.5B to $30.7B a quarter.</div>';
   // what the signed backlog covers
   h+=h3('What the signed backlog already covers')+
     '<div class="br-sl"><span class="br-sl-l">Recognized in 24 months</span><input type="range" data-gcap="1" min="40" max="70" step="1" value="'+CAP.share+'" aria-label="Share of the backlog recognized within 24 months"><span class="br-sl-v" data-gcapv="1">'+CAP.share+'%</span></div>'+
@@ -323,7 +323,7 @@ export function googlCapacityBody(){
   h+=h3('Data centers by country ('+GOOGL_DC.length+' locations, '+dev+' in development)')+
     collap('All locations', '<div class="twrap mx-twrap"><table class="rt mx-tbl ew-tbl"><thead><tr><th>Location</th><th>Status</th></tr></thead><tbody>'+body+'</tbody></table></div>');
   h+='<div class="ov-fynote">Google lists each location and whether it is in development; a location may hold more than one data-center site. It publishes no capacity (MW), investment or opening year per site, so none is shown.</div>';
-  h+='<div class="ov-foot">Sources — Alphabet Form 10-K FY2025 and 10-Q 2Q26 (Notes 2 and 7), SEC EDGAR; earnings calls 4Q24, 2Q25–2Q26 (official transcripts for 4Q25–2Q26); Results dataset (Cloud revenue, Bloomberg consensus, Summit snapshot 2026-08-06); Top Line dataset (revenue backlog); '+GOOGL_DC_SRC+'.</div>';
+  h+='<div class="ov-foot">Sources — Alphabet Form 10-K FY2025 and 10-Q 2Q26 and 3Q26 (Notes 2 and 7), SEC EDGAR; 3Q26 earnings release and SAB’s 3Q26 call notes; earnings calls 4Q24, 2Q25–2Q26 (official transcripts for 4Q25–2Q26); Results dataset (Cloud revenue, Bloomberg consensus, Summit snapshot 2026-08-06); Top Line dataset (revenue backlog); '+GOOGL_DC_SRC+'.</div>';
   return h;
 }
 // 3 — revenue backlog (bars, left axis) against Google Cloud revenue (line, right axis); vertical zoom acts on the left axis

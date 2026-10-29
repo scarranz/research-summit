@@ -338,7 +338,11 @@ function sgResolveRef(ref, view){
     // `history` (segments dataset): reported quarters/years that predate the Results axis, so the Top Line reaches further back than Results does.
     var hi = d.seg.history && d.seg.history[key] && d.seg.history[key][view];
     if (hi) Object.keys(hi).forEach(function(p){ if (act[p] == null) act[p] = hi[p]; });
-    return { unit: m.unit === 'eps' ? 'eps' : (m.unit === 'count' ? 'count' : 'usdM'), label: m.label, short: m.short || m.label,
+    if (m.unit === 'pct'){          // the Results engine stores percent numbers (0.38 = 0.38%); this engine stores fractions
+      Object.keys(act).forEach(function(p){ act[p] = act[p] / 100; });
+      Object.keys(est).forEach(function(p){ est[p] = est[p] / 100; });
+    }
+    return { unit: m.unit === 'eps' ? 'eps' : (m.unit === 'count' ? 'count' : (m.unit === 'pct' ? 'pct' : 'usdM')), label: m.label, short: m.short || m.label,
              act: act, est: est, src: 'Results dataset' };
   }
   if (kind === 'shared'){
@@ -389,13 +393,14 @@ function sgResolve(key, view){
 function cur(){ var d = sgData(); return (d && d.res && d.res.currency) || '$'; }
 function fmtVal(v, unit){
   if (v == null) return '—';
-  if (unit === 'pct')  return (v * 100).toFixed(1) + '%';
+  if (unit === 'pct')  return (v * 100).toFixed(Math.abs(v) < 0.01 ? 2 : 1) + '%';   // a yield of 0.38% needs its second decimal
   if (unit === 'idx')  return v.toFixed(1);
   if (unit === 'x')    return v.toFixed(2) + '×';
   if (unit === 'days') return Math.round(v) + 'd';
   if (unit === 'eps')  return cur() + v.toFixed(2);
   if (unit === 'count') return (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(1)) + 'M';   // users / subscribers, millions
   var a = Math.abs(v);
+  if (a >= 1e6) return cur() + (v / 1e6).toFixed(2) + 'T';   // $M stored: 2,417,000 = $2.42T
   return a >= 1000 ? cur() + (v / 1000).toFixed(1) + 'B' : cur() + Math.round(v) + 'M';
 }
 function pctStr(v){ return v == null ? '—' : (v * 100).toFixed(1) + '%'; }
@@ -667,6 +672,20 @@ function buildChartBlock(id, list, view, opts){
          stacked: mode === 'share' || (opts.stack && mode === 'amt' && st.stack !== false),
          ticks: { callback: function(v){ if (mode === 'idx') return v.toFixed(0); if (solo && mode === 'amt') return sideFmt(solo, v); return (mode === 'amt' || growAmt) ? (leftUnit === 'eps' ? cur() + v.toFixed(2) : cur() + v + 'B') : v.toFixed(mode === 'share' ? 1 : 0) + '%'; } } }
   };
+  // Headroom for the FORECAST badge (top-left of the forward zone) and the group totals above the columns: without it the tallest
+  // forward columns run under the badge.
+  if (f >= 0 && !st.yr && (mode === 'amt' || mode === 'idx')){
+    var yTop = null, stk = !!scales.y.stacked;
+    ps.forEach(function(p, j){
+      var t = null;
+      datasets.forEach(function(d){
+        if (d.yAxisID !== 'y' || typeof d.data[j] !== 'number') return;
+        t = stk ? (t == null ? 0 : t) + d.data[j] : (t == null || d.data[j] > t ? d.data[j] : t);
+      });
+      if (t != null && (yTop == null || t > yTop)) yTop = t;
+    });
+    if (yTop != null && yTop > 0) scales.y.suggestedMax = yTop * 1.16;
+  }
   if (!datasets.some(function(d){ return d.yAxisID === 'y'; })) scales.y.display = false;   // only secondary-axis series (users in M): no empty main axis
   if (needY2) scales.y2 = { position: 'right', weight: 1, grid: { display: false },
     ticks: { callback: function(v){
@@ -849,6 +868,7 @@ function buildSegResults(){
   // about the data.
   if (d.res.estMatrix) out.estMatrix = d.res.estMatrix;
   if (d.res.forwardQuarters) out.forwardQuarters = d.res.forwardQuarters;
+  if (d.res.defaultRange) out.defaultRange = d.res.defaultRange;   // opens on the last N reported periods plus the forward ones, like the Results tab
   ['q', 'y'].forEach(function(v){
     var src = d.res.views[v]; if (!src) return;
     var metrics = {}, keys = [];

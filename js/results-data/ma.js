@@ -12,7 +12,7 @@
 //             diluted shares. Tab Segments: EPS, Payment Network and VAS, the gross-to-net revenue build, operating expenses, G&A,
 //             advertising and marketing, SBC, litigation, tax, repurchases, purchase volume and switched transactions (25 lines in all;
 //             the model's history ties to the Bloomberg actuals). Quarterly summit (tab Projection History, newest save): 1Q26 and 2Q26 are the estimates the model held going into those prints, 3Q26 and 4Q26 its forecasts, on the lines the Street also models; see ma_build.py SQ.
-//   guideLo / guideHi — null: Mastercard guides growth rates, not dollar levels.
+//   guideLo / guideHi — net revenue and total operating expenses only: the company's guided reported growth (outlook table, GAAP row) as an indicative range, applied to the same quarter a year earlier.
 //
 // Integrity checked on load: fq+N == fq0+N, fq-3 == fq0-3 and every close_fqN is that quarter's calendar end (23 snapshots, 0 mismatches).
 // The metric set is the file's (EARNINGS_CONVENTIONS §6a): every populated slot with valid values is carried. Capex and repurchases arrive
@@ -21,22 +21,24 @@
 // Arrays are parallel to `periods`. A period with act:null is an upcoming print. Generated — regenerate, do not hand-edit.
 
 export var maResults = {
+  forwardQuarters: 2,   // two quarters past the last print (analyst rule Oct 22 2026), same as SPOT and SoFi
+  defaultRange: { q: 8, y: 5 },   // opens on the last 8 reported quarters (5 years) plus everything forward; the presets and the slider reach 2Q20
   updated: 'Oct 2026',
   intro: 'How Mastercard’s reported results have stacked up against what the Street expected, and what our Summit model projected on the annual view. Pick a period view and a metric — each print shows the actual against the Street number that stood going in, with the surprise in percent.',
   source: 'Actuals and Street consensus: Bloomberg via BBG_CONSENSUS.txt (23 snapshots, latest data_as_of 2026-10-28, reported through 2026 Q2). Summit: DCF model, DCF MA - New.xlsm Projection History read 2026-10-28; frozen, not live; annual and, on the lines the Street also models, quarterly. EPS is the Bloomberg GAAP-comparable line.',
   views: {
     q: {
       label: 'Quarterly',
-      note: 'Reported actuals and the Bloomberg consensus that stood one quarter out, both from the rolling BBG_CONSENSUS.txt archive (23 snapshots, May 2021 to Oct 28 2026): each reported quarter takes the last snapshot before its print, and the four forward quarters come from the newest snapshot. Mastercard guides growth rates (currency-neutral, ex-acquisitions), not dollar levels, so no guidance band is drawn. Summit is the DCF model\'s own quarterly estimate on the lines the Street also models: the 1Q26 and 2Q26 values are what the model held going into those prints, 3Q26 and 4Q26 are its forecasts (no 2027 quarter is loaded: the model\'s quarterly chain breaks from 1Q27), and the model has no quarterly share count, D&A, cash flow, capex or volume lines. Capex and share repurchases are shown as positive spend; client incentives stay negative (contra-revenue). For 2026 the Street quarters tie to the Street year within about 0.2% on revenue, operating income, EBITDA, net income, D&A and operating cash flow (3% on capex), but each cell is still its own contributor set, so do not add or subtract across lines.',
+      note: 'Reported actuals and the Bloomberg consensus that stood one quarter out, both from the rolling BBG_CONSENSUS.txt archive (23 snapshots, May 2021 to Oct 28 2026): each reported quarter takes the last snapshot before its print, and the four forward quarters come from the newest snapshot. Mastercard guides growth rates, not dollar levels, so the guidance band on net revenue and operating expenses is its guided reported growth applied to the quarter a year earlier. Summit is the DCF model\'s own quarterly estimate on the lines the Street also models: the 1Q26 and 2Q26 values are what the model held going into those prints, 3Q26 and 4Q26 are its forecasts (no 2027 quarter is loaded: the model\'s quarterly chain breaks from 1Q27), and the model has no quarterly share count, D&A, cash flow, capex or volume lines. Capex and share repurchases are shown as positive spend; client incentives stay negative (contra-revenue). For 2026 the Street quarters tie to the Street year within about 0.2% on revenue, operating income, EBITDA, net income, D&A and operating cash flow (3% on capex), but each cell is still its own contributor set, so do not add or subtract across lines.',
       metrics: {
         rev: { label: 'Net revenue', short: 'Net revenue', group: 'Totals', unit: 'usdM',
           periods: ['2Q20', '3Q20', '4Q20', '1Q21', '2Q21', '3Q21', '4Q21', '1Q22', '2Q22', '3Q22', '4Q22', '1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [3335, 3837, 4120, 4155, 4528, 4985, 5216, 5136, 5497, 5756, 5817, 5748, 6269, 6533, 6548, 6348, 6961, 7369, 7489, 7250, 8133, 8602, 8806, 8398, 9277, null, null, null, null],
           summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 8179, 9381, 9743, 9995, null, null],
           cons:   [null, null, null, null, 4328, 4952, 5181, 4954, 5262, 5689, 5818, 5619, 6183, 6538, 6495, 6343, 6858, 7254, 7404, 7123, 7923, 8470, 8768, 8268, 9079, 9669, 9970, 9451, 10397],
-          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          note: 'Net revenue (Bloomberg IS_COMP_SALES) — gross revenue less client incentives; Q2 2026 $9,277M is the release. Mastercard guides growth (currency-neutral, ex-acquisitions), not a dollar level, so no guidance band is drawn; the growth guide is in the Earnings Setup notes.' },
+          guideLo:[null, null, null, null, 4235, 4911, 5109, 4861, 5162, 5583, 5738, 5547, 6157, 6504, 6399, 6323, 6771, 7186, 7399, 6983, 7936, 8474, 8762, 8193, 8946, 9634, null, null, null],
+          guideHi:[null, null, null, null, 4302, 4950, 5191, 4944, 5252, 5633, 5790, 5598, 6212, 6562, 6515, 6380, 6833, 7317, 7465, 7110, 8075, 8548, 8912, 8265, 9109, 9720, null, null, null],
+          note: 'Net revenue (Bloomberg IS_COMP_SALES) — gross revenue less client incentives; Q2 2026 $9,277M is the release. Mastercard guides growth, not a dollar level: the guidance band is its guided reported (GAAP) growth, each phrase mapped to an indicative range, applied to the same quarter a year earlier (see Miscellaneous ▸ Guidance for the words quarter by quarter).' },
         opinc: { label: 'Operating income', short: 'Op. income', group: 'Profit', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
           periods: ['2Q20', '3Q20', '4Q20', '1Q21', '2Q21', '3Q21', '4Q21', '1Q22', '2Q22', '3Q22', '4Q22', '1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [1707, 2100, 2058, 2197, 2341, 2717, 2827, 2950, 3018, 3112, 3184, 3136, 3656, 3844, 3372, 3604, 4036, 4004, 3938, 4149, 4777, 5061, 4910, 4907, 5587, null, null, null, null],
@@ -82,9 +84,9 @@ export var maResults = {
           act:    [1628, 1732, 2062, 1958, 2187, 2268, 2389, 2217, 2479, 2644, 2633, 2612, 2613, 2689, 3176, 2744, 2925, 3365, 3551, 3101, 3356, 3541, 3896, 3491, 3690, null, null, null, null],
           summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 3523, 3774, 3871, 4030, null, null],
           cons:   [null, null, null, null, 2144, 2211, 2415, 2234, 2358, 2454, 2632, 2378, 2608, 2772, 2871, 2665, 2876, 3112, 3232, 2983, 3238, 3502, 3832, 3418, 3642, 3892, 4217, 3793, 4077],
-          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          note: 'Total operating expenses (IS_TOT_OPER_EXP): general and administrative plus advertising and marketing plus depreciation and litigation. Management guides opex growth ex-acquisitions, so reported dollars move with FX and deals. A higher print than the Street is a cost overshoot, not a beat. Summit (quarterly): the model\'s operating expenses line, which includes the litigation provision; its 1Q26 and 2Q26 values are the estimates the model held going into those prints.' },
+          guideLo:[null, null, null, null, 2116, 2200, 2351, 2213, 2274, 2427, 2628, 2306, 2578, 2670, 2844, 2612, 2822, 3173, 3208, 2936, 3218, 3399, 3800, 3473, 3591, 3789, null, null, null],
+          guideHi:[null, null, null, null, 2165, 2234, 2392, 2232, 2318, 2472, 2652, 2350, 2628, 2723, 2870, 2638, 2848, 3200, 3271, 2991, 3247, 3466, 3871, 3504, 3658, 3860, null, null, null],
+          note: 'Total operating expenses (IS_TOT_OPER_EXP): general and administrative plus advertising and marketing plus depreciation and litigation. Management guides opex growth: the guidance band is its guided reported (GAAP) growth, which carries the litigation provision, applied to the same quarter a year earlier. A higher print than the Street is a cost overshoot, not a beat. Summit (quarterly): the model\'s operating expenses line, which includes the litigation provision; its 1Q26 and 2Q26 values are the estimates the model held going into those prints.' },
         ga: { label: 'General & administrative expense', short: 'G&A', group: 'Operating costs', unit: 'usdM',
           periods: ['2Q20', '3Q20', '4Q20', '1Q21', '2Q21', '3Q21', '4Q21', '1Q22', '2Q22', '3Q22', '4Q22', '1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [1368, 1423, 1625, 1676, 1718, 1831, 1862, 1844, 1947, 2069, 2218, 2043, 2200, 2285, 2399, 2286, 2418, 2744, 2745, 2523, 2766, 2923, 3106, 3039, 3082, null, null, null, null],
@@ -296,7 +298,7 @@ export var maResults = {
         pvol: { label: 'Purchase volume (network spend)', short: 'Purchase vol', group: 'Volumes & transactions', unit: 'usdM',
           periods: ['2Q20', '3Q20', '4Q20', '1Q21', '2Q21', '3Q21', '4Q21', '1Q22', '2Q22', '3Q22', '4Q22', '1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [1037000, 1236000, 1321000, 1296000, 1466000, 1543000, 1655000, 1517000, 1650000, 1669000, 1728000, 1707000, 1839000, 1879000, 1921000, 1871000, 1975000, 2058000, 2114000, 1993000, 2182000, 2280000, 2344000, 2251000, 2417000, null, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 2201650, 2432842, 2409280, 2570983, null, null],
           cons:   [null, null, null, null, 1357406, 1545758, 1624585, 1523526, 1640593, 1706297, 1784726, 1650505, 1832591, 1872096, 1917338, 1885369, 2009664, 2052376, 2116603, 2041635, 2157303, 2263751, 2339399, 2198613, 2398672, 2503667, 2573321, 2462912, 2638201],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -304,18 +306,43 @@ export var maResults = {
         ptx: { label: 'Processed (switched) transactions', short: 'Processed txns', group: 'Volumes & transactions', unit: 'cnt',
           periods: ['2Q20', '3Q20', '4Q20', '1Q21', '2Q21', '3Q21', '4Q21', '1Q22', '2Q22', '3Q22', '4Q22', '1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [19400, 23800, 24800, 23800, 27200, 29700, 31400, 29000, 30400, 32352, 34000, 32500, 35519, 37155, 38100, 36700, 39445, 41102, 42226, 40096, 43538, 45373, 46457, 43797, 47350, null, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 44294, 47456, 49457, 50638, null, null],
           cons:   [null, null, null, null, 25772, 29658, 30709, 29004, 30839, 32777, 34263, 31646, 34591, 36860, 37883, 36280, 39498, 41241, 42118, 40532, 43480, 45277, 46449, 44234, 47627, 49534, 50714, 48162, 51969],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'Processed (switched) transactions (PAYMENT_PROCESSING_TRANS), in millions: a count, never a dollar amount. Bloomberg tags it USD / M; it is switched transaction volume.' },
+        netyld: { label: 'Net yield (net revenue as % of purchase volume)', short: 'Net yield', group: 'Yield (% of purchase volume)', unit: 'pct',
+          periods: ['2Q20', '3Q20', '4Q20', '1Q21', '2Q21', '3Q21', '4Q21', '1Q22', '2Q22', '3Q22', '4Q22', '1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27'],
+          act:    [0.322, 0.31, 0.312, 0.321, 0.309, 0.323, 0.315, 0.339, 0.333, 0.345, 0.337, 0.337, 0.341, 0.348, 0.341, 0.339, 0.352, 0.358, 0.354, 0.364, 0.373, 0.377, 0.376, 0.373, 0.384, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.371, 0.386, 0.404, 0.389, null, null],
+          cons:   [null, null, null, null, 0.319, 0.32, 0.319, 0.325, 0.321, 0.333, 0.326, 0.34, 0.337, 0.349, 0.339, 0.336, 0.341, 0.353, 0.35, 0.349, 0.367, 0.374, 0.375, 0.376, 0.378, 0.386, 0.387, 0.384, 0.394],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'Net revenue as a percentage of purchase volume: what the network and the services keep, after rebates and incentives, per dollar of purchases. Derived per source from net revenue and purchase volume (Bloomberg for the actual and the Street, the DCF model for Summit); not a Bloomberg line.' },
+        grossyld: { label: 'Gross yield (net revenue plus client incentives, as % of purchase volume)', short: 'Gross yield', group: 'Yield (% of purchase volume)', unit: 'pct',
+          periods: ['2Q20', '3Q20', '4Q20', '1Q21', '2Q21', '3Q21', '4Q21', '1Q22', '2Q22', '3Q22', '4Q22', '1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27'],
+          act:    [0.491, 0.48, 0.486, 0.496, 0.125, 0.507, 0.506, 0.527, 0.528, 0.549, 0.545, 0.537, 0.542, 0.559, 0.555, 0.558, 0.566, 0.583, 0.575, 0.594, 0.598, 0.614, 0.616, 0.624, 0.632, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.609, 0.628, 0.657, 0.649, null, null],
+          cons:   [null, null, null, null, 0.499, 0.507, 0.505, 0.516, 0.509, 0.527, 0.525, 0.543, 0.52, 0.512, 0.55, 0.507, 0.559, 0.557, 0.531, 0.554, 0.577, 0.591, 0.588, 0.599, 0.6, 0.637, 0.636, 0.638, 0.647],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'Net revenue plus client incentives, as a percentage of purchase volume: everything before rebates and incentives come off. Derived per source; where Bloomberg has no client-incentives cell the incentives are gross revenue less payment network net revenue.' },
+        incyld: { label: 'Incentive yield (client incentives as % of purchase volume)', short: 'Incentive yield', group: 'Yield (% of purchase volume)', unit: 'pct',
+          periods: ['2Q20', '3Q20', '4Q20', '1Q21', '2Q21', '3Q21', '4Q21', '1Q22', '2Q22', '3Q22', '4Q22', '1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27'],
+          act:    [0.17, 0.17, 0.175, 0.175, -0.184, 0.184, 0.191, 0.188, 0.194, 0.204, 0.209, 0.2, 0.201, 0.211, 0.214, 0.219, 0.214, 0.225, 0.221, 0.23, 0.226, 0.236, 0.24, 0.251, 0.248, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.238, 0.243, 0.253, 0.26, null, null],
+          cons:   [null, null, null, null, 0.18, 0.186, 0.186, 0.191, 0.188, 0.193, 0.199, 0.203, 0.182, 0.163, 0.211, 0.171, 0.218, 0.203, 0.182, 0.205, 0.21, 0.216, 0.213, 0.223, 0.222, 0.251, 0.249, 0.254, 0.253],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'Client incentives as a percentage of purchase volume, the part of the gross yield given back to customers; it rises when incentives grow faster than volume. Derived per source.' },
       },
       sections: [
         { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
           { label: 'Totals', keys: ['rev'] },
           { label: 'Revenue build (gross to net)', keys: ['gross', 'dom', 'xb', 'card', 'tp', 'oth', 'cinc'] },
           { label: 'Net revenue by segment', keys: ['pnr', 'vas'] },
-          { label: 'Volumes & transactions', keys: ['pvol', 'ptx'] }
+          { label: 'Volumes & transactions', keys: ['pvol', 'ptx'] },
+          { label: 'Yield (% of purchase volume)', keys: ['netyld', 'grossyld', 'incyld'] }
         ] },
         { key: 'margins', label: 'Margins & Profitability', defaultMetric: 'opinc', groups: [
           { label: 'Profit', keys: ['opinc', 'ebitda', 'eps', 'ni', 'pti'] },
@@ -336,7 +363,7 @@ export var maResults = {
           cons:   [null, 18858, 22187, 25077, 28075, 32740, 37289, 41976, 46997, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null],
-          note: 'Net revenue (Bloomberg IS_COMP_SALES) — gross revenue less client incentives; Q2 2026 $9,277M is the release. Mastercard guides growth (currency-neutral, ex-acquisitions), not a dollar level, so no guidance band is drawn; the growth guide is in the Earnings Setup notes.' },
+          note: 'Net revenue (Bloomberg IS_COMP_SALES) — gross revenue less client incentives; Q2 2026 $9,277M is the release. Mastercard guides growth, not a dollar level: the guidance band is its guided reported (GAAP) growth, each phrase mapped to an indicative range, applied to the same quarter a year earlier (see Miscellaneous ▸ Guidance for the words quarter by quarter).' },
         opinc: { label: 'Operating income', short: 'Op. income', group: 'Profit', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
           periods: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'],
           act:    [8081, 10082, 12264, 14008, 15582, 18897, null, null, null, null],
@@ -384,7 +411,7 @@ export var maResults = {
           cons:   [null, 8796, 9818, 10832, 12231, 13839, 15279, 16828, 18565, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null],
-          note: 'Total operating expenses (IS_TOT_OPER_EXP): general and administrative plus advertising and marketing plus depreciation and litigation. Management guides opex growth ex-acquisitions, so reported dollars move with FX and deals. A higher print than the Street is a cost overshoot, not a beat. Summit (annual): the model\'s operating expenses; the definition runs 1% to 2.5% above Bloomberg\'s history (the model includes the litigation provision), so the gap is partly a definition.' },
+          note: 'Total operating expenses (IS_TOT_OPER_EXP): general and administrative plus advertising and marketing plus depreciation and litigation. Management guides opex growth: the guidance band is its guided reported (GAAP) growth, which carries the litigation provision, applied to the same quarter a year earlier. A higher print than the Street is a cost overshoot, not a beat. Summit (annual): the model\'s operating expenses; the definition runs 1% to 2.5% above Bloomberg\'s history (the model includes the litigation provision), so the gap is partly a definition.' },
         ga: { label: 'General & administrative expense', short: 'G&A', group: 'Operating costs', unit: 'usdM',
           periods: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'],
           act:    [5910, 7087, 8078, 8927, 10193, 11318, null, null, null, null],
@@ -609,13 +636,38 @@ export var maResults = {
           guideLo:[null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null],
           note: 'Processed (switched) transactions (PAYMENT_PROCESSING_TRANS), in millions: a count, never a dollar amount. Bloomberg tags it USD / M; it is switched transaction volume. Summit (annual): the model\'s switched transactions, ties to the reported history.' },
+        netyld: { label: 'Net yield (net revenue as % of purchase volume)', short: 'Net yield', group: 'Yield (% of purchase volume)', unit: 'pct',
+          periods: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'],
+          act:    [0.323, 0.316, 0.338, 0.342, 0.351, 0.373, null, null, null, null],
+          summit: [null, null, 0.339, 0.342, 0.351, 0.373, 0.388, 0.381, 0.406, 0.436],
+          cons:   [null, 0.318, 0.335, 0.342, 0.35, 0.372, 0.383, 0.394, 0.404, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null],
+          note: 'Net revenue as a percentage of purchase volume: what the network and the services keep, after rebates and incentives, per dollar of purchases. Derived per source from net revenue and purchase volume (Bloomberg for the actual and the Street, the DCF model for Summit); not a Bloomberg line.' },
+        grossyld: { label: 'Gross yield (net revenue plus client incentives, as % of purchase volume)', short: 'Gross yield', group: 'Yield (% of purchase volume)', unit: 'pct',
+          periods: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'],
+          act:    [0.498, 0.5, 0.538, 0.548, 0.571, 0.606, null, null, null, null],
+          summit: [null, null, 0.538, 0.548, 0.571, 0.606, 0.641, 0.652, 0.704, 0.764],
+          cons:   [null, 0.5, 0.513, 0.528, 0.531, 0.569, 0.632, 0.649, 0.667, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null],
+          note: 'Net revenue plus client incentives, as a percentage of purchase volume: everything before rebates and incentives come off. Derived per source; where Bloomberg has no client-incentives cell the incentives are gross revenue less payment network net revenue.' },
+        incyld: { label: 'Incentive yield (client incentives as % of purchase volume)', short: 'Incentive yield', group: 'Yield (% of purchase volume)', unit: 'pct',
+          periods: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'],
+          act:    [0.175, 0.183, 0.199, 0.207, 0.22, 0.233, null, null, null, null],
+          summit: [null, null, 0.199, 0.207, 0.22, 0.233, 0.253, 0.271, 0.298, 0.328],
+          cons:   [null, 0.182, 0.179, 0.186, 0.181, 0.196, 0.249, 0.255, 0.264, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null],
+          note: 'Client incentives as a percentage of purchase volume, the part of the gross yield given back to customers; it rises when incentives grow faster than volume. Derived per source.' },
       },
       sections: [
         { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
           { label: 'Totals', keys: ['rev'] },
           { label: 'Revenue build (gross to net)', keys: ['gross', 'dom', 'xb', 'card', 'tp', 'oth', 'cinc'] },
           { label: 'Net revenue by segment', keys: ['pnr', 'vas'] },
-          { label: 'Volumes & transactions', keys: ['pvol', 'ptx'] }
+          { label: 'Volumes & transactions', keys: ['pvol', 'ptx'] },
+          { label: 'Yield (% of purchase volume)', keys: ['netyld', 'grossyld', 'incyld'] }
         ] },
         { key: 'margins', label: 'Margins & Profitability', defaultMetric: 'opinc', groups: [
           { label: 'Profit', keys: ['opinc', 'ebitda', 'eps', 'ni', 'pti'] },
@@ -2332,6 +2384,12 @@ export var maResults = {
       },
       netint: {
         '2026-10-28': { '3Q26': 133, '4Q26': 133 },
+      },
+      pvol: {
+        '2026-10-28': { '3Q26': 2409280, '4Q26': 2570983 },
+      },
+      ptx: {
+        '2026-10-28': { '3Q26': 49457, '4Q26': 50638 },
       },
       },
       y: {

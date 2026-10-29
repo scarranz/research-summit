@@ -9,8 +9,8 @@
 //
 // Money lines are $B above $1B and $M below it; purchase volume is $T; processed transactions are counts in billions and diluted
 // shares in millions, never a dollar amount. Capex and repurchases are positive spend (the Bloomberg series arrive negative).
-// Summit: the DCF model is annual-only, so there is no quarterly Summit number (`setup.us` stays empty and the column reads "—").
-// Mastercard guides growth rates, not dollar levels, so there is no guide row (MA_GUIDED is empty); each guide sits in the notes.
+// Summit: the DCF model's quarterly estimates (1Q26 to 4Q26) are read from js/results-data/ma.js into `setup.us`; a line the model does not project by quarter reads "—".
+// Mastercard guides growth rates, not dollar levels: net revenue and total operating expenses carry a guide band (guided reported growth on the quarter a year earlier, js/results-data/ma.js); each guide's words sit in the notes.
 
 import { maResults } from '../results-data/ma.js';
 
@@ -27,13 +27,14 @@ var MA_LINES = [
   ['Operating cash flow', '$B', 'cfo', 1000], ['Free cash flow', '$B', 'fcf', 1000], ['Capex', '$M', 'capex', 1], ['Share repurchases', '$B', 'buyback', 1000],
   ['Shares outstanding', 'Mn', 'shares', 1],
   ['Purchase volume', '$T', 'pvol', 1000000], ['Switched transactions', 'B', 'ptx', 1000],
-  ['Gross revenue', '$B', 'gross', 1000], ['Domestic assessments', '$B', 'dom', 1000], ['Cross-border volume fees', '$B', 'xb', 1000],
+  ['Gross revenue', '$B', 'gross', 1000], ['Domestic assessments', '$B', 'dom', 1000], ['Cross-border volume fees', '$B', 'xb', 1000], ['Card related activity', '$B', 'card', 1000],
   ['Transaction processing revenue', '$B', 'tp', 1000], ['Other revenue', '$M', 'oth', 1], ['Client incentives', '$B', 'cinc', 1000],
   ['Payment network revenue', '$B', 'pnr', 1000], ['VAS revenue', '$B', 'vas', 1000],
   ['Customer & merchant incentive amortization', '$M', 'amort', 1], ['Provision for litigation', '$M', 'lit', 1]
 ];
 
-export var MA_GUIDED = [];
+// The two lines Mastercard guides, as growth: the card shows the guided reported growth applied to the same quarter a year earlier (a band; the midpoint is the 'guide' figure).
+export var MA_GUIDED = ['Net revenue', 'Total operating expenses'];
 
 export var MA_CE_CONS = {
   src: 'Bloomberg (BST) · BBG_CONSENSUS.txt snapshot archive',
@@ -71,13 +72,24 @@ export var MA_CE_CONS = {
     return m; }
   var RS = {}; MA_LINES.forEach(function(L){ RS[L[0]] = [L[2], L[3]]; });
   MA_CE_CONS.m.forEach(function(m){ var s=RS[m.k]; if(s) fromResults(m, s[0], s[1]); });
+  var GK = { 'Net revenue':['rev',1000], 'Total operating expenses':['opex',1000] };
+  MA_CE_CONS.m.forEach(function(m){ var g=GK[m.k]; if(!g) return; var r=M[g[0]];
+    m.qg=QP.map(function(p){ var i=r.periods.indexOf(p); if(i<0||r.guideLo[i]==null||r.guideHi[i]==null) return null;
+      return rnd((r.guideLo[i]+r.guideHi[i])/2/g[1], m.u); }); });
   var nv = MX && MX.vintages[MX.vintages.length-1];
   MA_CE_CONS.asOf = MX ? MX.vintages.map(function(v){ return v.id; }) : [];
   MA_CE_CONS.src = 'Bloomberg (BST) · BBG_CONSENSUS.txt — via js/results-data/ma.js (estMatrix'+(nv?', newest snapshot '+nv.id:'')+')';
 })();
 
-// Summit for a quarter's Setup (`setup.us`): the DCF model is annual-only, so there is nothing to read by quarter; the column reads "—".
-function ceSummitUs(p){ return {}; }
+// Summit for a quarter's Setup (`setup.us`): READ from the Results dataset, where the model is frozen at its dated save (rule 10), never typed. Only the
+// lines the model projects by quarter (1Q26 and 2Q26 are what it held going into those prints, 3Q26 and 4Q26 its forecasts); the rest stay "—".
+function ceSummitUs(p){
+  var M = maResults.views.q.metrics, out = {};
+  MA_LINES.forEach(function(x){
+    var r = M[x[2]], i = r ? r.periods.indexOf(p) : -1, v = (i >= 0 && r.summit) ? r.summit[i] : null;
+    if (v != null){ v = v / x[3]; out[x[0]] = { v: Math.abs(v) >= 10 ? Math.round(v * 10) / 10 : Math.round(v * 100) / 100 }; } });
+  return out;
+}
 
 export var MA_CALL_EARNINGS = { ticker:'MA', quarters:[
   // ── UPCOMING: Q3 2026 (quarter ending Sep 30 2026; reports in the last days of October 2026). Consensus = the newest Bloomberg

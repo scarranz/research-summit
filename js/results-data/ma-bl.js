@@ -33,6 +33,7 @@ function sections(){
   ];
 }
 export var maBl = {
+  defaultRange: maResults.defaultRange,
   forwardQuarters: 2,   // two quarters past the last print (analyst rule Oct 22 2026), same as SPOT and SoFi
   updated: maResults.updated,
   source: maResults.source,

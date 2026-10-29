@@ -172,6 +172,16 @@ for per in SQ_PERIODS:
     v=_ri[_hq['Q%s - 20%s'%(per[0],per[2:])]]
     if isinstance(v,(int,float)) and v!=0 and per in _ii: _ie[per]=v+_ii[per]   # interest expense less interest income = net interest expense
 SQV['netint']=_ie
+# Purchase volume and switched transactions: the model's quarterly build lives in tab Segments (columns Q1 2026 ... Q4 2029, newest save), not in
+# Projection History's quarterly block (empty there). Purchase volume is stored in $B (shown as $M), transactions in millions. Same 4Q26 cut as above.
+_SGQ=list(wb['Segments'].iter_rows(min_row=1,max_row=130,max_col=70,values_only=True))
+_sgh={_SGQ[4][c]:c for c in range(40,70) if isinstance(_SGQ[4][c],str) and _SGQ[4][c].startswith('Q')}
+def _sgrow(code): return [r for r in _SGQ if r[3]==code][0]
+for _k,_code,_m in (('pvol','TOTAL_PURCH_VOL',1000),('ptx','SWITCH_TRANS',1)):
+    _r=_sgrow(_code); SQV[_k]={}
+    for per in SQ_PERIODS:
+        v=_r[_sgh['Q%s - 20%s'%(per[0],per[2:])]]
+        if isinstance(v,(int,float)) and v!=0: SQV[_k][per]=v*_m
 def rnd(x,dp):
     if x is None: return None
     f=10**dp; r=math.floor(abs(x)*f+0.5)/f

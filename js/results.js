@@ -273,7 +273,7 @@ var EVO_RAMP = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0', '#C8D7F4'];
 // `growth` (quarterly only): 'yoy' = vs the same quarter last year; 'qoq' = vs
 // the previous reported quarter.
 var _rs = { data: null, view: 'q', growth: 'yoy', mode: 'level', growUnit: 'pct',
-            sec: {}, evo: null, surp: null, vint: 'preprint' };
+            sec: {}, evo: null, surp: null, vint: 'preprint', pref: {} };
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
 
@@ -309,10 +309,18 @@ function rsSt(k){
     var off = (_rs.data && _rs.data.defaultHidden) || [];
     var hid = { act:false, summit:false, cons:false, guide:false, margin:false };
     off.forEach(function(x){ hid[x] = true; });
+    // What the reader switched on or off wins over the dataset's opening default and survives every metric, period-view
+    // and pane change (analyst, Oct 28 2026): the Summit / Consensus / Guidance chips are filters, not part of the view.
+    Object.keys(_rs.pref).forEach(function(x){ hid[x] = _rs.pref[x]; });
     _rs.sec[k] = { metric: null, win: null, yr: null, chart: null,
       view: _rs.view, mode: 'level', growth: 'yoy', growUnit: 'pct', labels: false, tbl: false, hidden: hid };
   }
   return _rs.sec[k];
+}
+function rsPrefSet(key, off){
+  _rs.pref[key] = !!off;
+  Object.keys(_rs.sec).forEach(function(s){ _rs.sec[s].hidden[key] = !!off; });
+  if (_rs.evo && _rs.evo.sec) Object.keys(_rs.evo.sec).forEach(function(s){ _rs.evo.sec[s].hidden[key] = !!off; });
 }
 function rsMetric(k){
   var st = rsSt(k), cfg = rsSecCfg(k);
@@ -332,7 +340,7 @@ function rsFmt(m, v){
   if (v == null) return '—';
   var neg = v < 0 ? '−' : '', a = Math.abs(v), c = rsCur(m);
   if (m.unit === 'eps') return neg + c + a.toFixed(2);
-  if (m.unit === 'pct') return neg + a.toFixed(1) + '%';
+  if (m.unit === 'pct') return neg + a.toFixed(a < 1 && a !== 0 ? 2 : 1) + '%';
   if (m.unit === 'count') return neg + Math.round(a).toLocaleString();
   if (m.unit === 'cnt') return neg + (a >= 10000 ? (a/1000).toFixed(1) + 'B' : Math.round(a).toLocaleString() + 'M');  // count w/ B/M scaling, no $ (e.g. MA processed txns / shares)
   if (a >= 10000) return neg + c + (a/1000).toFixed(1) + 'B';
@@ -342,7 +350,7 @@ function rsFmtD(m, v, dec){
   if (v == null) return '—';
   var sign = v >= 0 ? '+' : '−', a = Math.abs(v), c = rsCur(m);
   if (m.unit === 'eps') return sign + c + a.toFixed(2);
-  if (m.unit === 'pct') return sign + a.toFixed(dec == null ? 1 : dec) + ' pts';
+  if (m.unit === 'pct') return sign + a.toFixed(dec == null ? (a < 1 && a !== 0 ? 2 : 1) : dec) + ' pts';
   if (m.unit === 'count') return sign + Math.round(a).toLocaleString();
   if (m.unit === 'cnt') return sign + (a >= 10000 ? (a/1000).toFixed(dec == null ? 1 : dec) + 'B' : Math.round(a).toLocaleString() + 'M');
   if (a >= 10000) return sign + c + (a/1000).toFixed(dec == null ? 1 : dec) + 'B';
@@ -442,7 +450,12 @@ function rsTick(v, unit, div, cur, ticks){
 }
 function rsWin(k, m){
   var st = rsSt(k), n = m.periods.length;
-  if (!st.win || st.win[1] >= n || st.win[0] < 0){ st.win = [0, n - 1]; }
+  if (!st.win || st.win[1] >= n || st.win[0] < 0){
+    // A dataset may open on its last N reported periods plus everything forward (`defaultRange: { q: 8, y: 5 }`): nobody reads
+    // the 2020 quarters first. The presets and the slider still reach the whole history.
+    var dr = _rs.data && _rs.data.defaultRange && _rs.data.defaultRange[rsViewName(k)], lr = rsLastAct(m);
+    st.win = (dr && lr >= 0) ? [Math.max(0, lr - (dr - 1)), n - 1] : [0, n - 1];
+  }
   return st.win;
 }
 function rsRefsFor(m){
@@ -1308,6 +1321,16 @@ function rsBuildChart(k){
       callback: function(v, i, ts){ return pctMode ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, rsCur(m), ts); } } }
   };
   if (st.yr){ scales.y.min = st.yr[0]; scales.y.max = st.yr[1]; }
+  else if (fwdFrom >= 0){
+    // Headroom for the FORECAST badge, which sits in the top-left of the forward zone: without it the tallest forward bars run
+    // under the badge. Only the primary axis, only when the data is positive.
+    var yTop = null;
+    datasets.forEach(function(d){
+      if (d.yAxisID === 'y2') return;
+      (d.data || []).forEach(function(v){ [].concat(v).forEach(function(x){ if (typeof x === 'number' && (yTop == null || x > yTop)) yTop = x; }); });
+    });
+    if (yTop != null && yTop > 0) scales.y.suggestedMax = yTop * 1.16;
+  }
   if (needY2) scales.y2 = { position: 'right', weight: 1, grid: { display: false },
     ticks: { font: { size: 11 }, callback: function(v){ return v + '%'; } } };
 
@@ -1526,7 +1549,7 @@ function rsRenderTable(k, m){
   function num(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';
     if (m.unit === 'eps') return Number(v).toFixed(2);
-    if (m.unit === 'pct') return Number(v).toFixed(1) + '%';
+    if (m.unit === 'pct') return Number(v).toFixed(Math.abs(v) < 1 && +v !== 0 ? 2 : 1) + '%';
     if (m.unit === 'count') return Math.round(v).toLocaleString();
     return (v/div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
@@ -1696,7 +1719,7 @@ function rsEvoSecCfg(k){ return rsEvo().sections.filter(function(s){ return s.ke
 function rsEvoKeys(cfg){ return (cfg.groups || []).reduce(function(a, g){ return a.concat(g.keys); }, []); }
 function rsEvoSt(k){
   if (!_rs.evo) _rs.evo = { sec: {} };
-  if (!_rs.evo.sec[k]) _rs.evo.sec[k] = { metric: null, mode: 'usd', yr: null, chart: null, hidden: {} };
+  if (!_rs.evo.sec[k]) _rs.evo.sec[k] = { metric: null, mode: 'usd', yr: null, chart: null, hidden: { summit: !!_rs.pref.summit, cons: !!_rs.pref.cons } };
   return _rs.evo.sec[k];
 }
 function rsEvoMetric(k){
@@ -3454,8 +3477,8 @@ function wireResults(pane){
     if (l){
       var st2 = rsSt(k);
       var key = l.getAttribute('data-rsleg');
-      st2.hidden[key] = !st2.hidden[key];
-      rsBuildChart(k);
+      rsPrefSet(key, !st2.hidden[key]);
+      rsBuildAll();
     }
   });
   // Metric dropdown (grouped select) per section block, and the pane-wide vintage picker.
@@ -4259,8 +4282,13 @@ export function initResultsEvo(ticker){
     if (evl && (k = secOf(evl))){
       var st = rsEvoSt(k);
       var key = evl.getAttribute('data-rsevleg');
-      st.hidden[key] = !st.hidden[key];
-      rsBuildEvo(k);
+      if (key === 'summit' || key === 'cons'){
+        rsPrefSet(key, !st.hidden[key]);
+        Object.keys(_rs.evo.sec).forEach(function(s){ rsBuildEvo(s); });
+      } else {
+        st.hidden[key] = !st.hidden[key];
+        rsBuildEvo(k);
+      }
     }
   };
   wrap.onchange = function(e){

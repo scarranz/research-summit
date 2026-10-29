@@ -31,12 +31,24 @@ function readThrough(key, view, scale){
   m.periods.forEach(function(p, i){ if (m.act && m.act[i] != null) o[p] = m.act[i] / (scale || 1); });
   return o;
 }
+// the estimate for the periods not yet reported: the Summit model where it has the line, the Street otherwise
+function readEst(key, view, scale){
+  var m = maResults.views[view].metrics[key], o = {};
+  m.periods.forEach(function(p, i){
+    if (m.act && m.act[i] != null) return;
+    var v = (m.summit && m.summit[i] != null) ? m.summit[i] : ((m.cons && m.cons[i] != null) ? m.cons[i] : null);
+    if (v != null) o[p] = v / (scale || 1);
+  });
+  return o;
+}
 
 export var maSegments = {
   company: 'Mastercard',
   updated: 'Oct 2026',
   source: 'Net revenue by category and revenue lines: Mastercard earnings releases (as recorded by Bloomberg) and the FY2025 Form 10-K (Item 7; Note 3), through the Results dataset; Summit DCF model (DCF MA - New.xlsm, read Oct 2026, frozen, not live) for forecast periods; Street quarters from Bloomberg consensus. Purchase volume and switched transactions: Mastercard supplemental data as recorded by Bloomberg. Region: 10-K Note 3. Customers: 10-K and the earnings calls.',
   streetForward: true,
+  defaultHidden: ['margin'],   // Summit and the Street open ON in the Top Line charts; the margin line opens OFF
+  ramp: ['#475569', '#94a3b8', '#0f172a', '#cbd5e1', '#64748b'],   // the series colours of this profile: slate greys, no categorical palette (CIO)
 
   axis: {
     q: ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26'],
@@ -46,17 +58,31 @@ export var maSegments = {
   shared: {
     pv: { label: 'Purchase volume', short: 'Purchase volume', unit: 'usdM', scope: 'company',
       src: 'Mastercard supplemental data, as recorded by Bloomberg (network purchase volume, US$ M)',
-      q: { act: readThrough('pvol', 'q') }, y: { act: readThrough('pvol', 'y') } },
+      q: { act: readThrough('pvol', 'q'), summit: readEst('pvol', 'q') }, y: { act: readThrough('pvol', 'y'), summit: readEst('pvol', 'y') } },
     ptx: { label: 'Switched transactions (billions)', short: 'Switched transactions', unit: 'idx', scope: 'company',
       src: 'Mastercard supplemental data, as recorded by Bloomberg (processed transactions, billions)',
-      q: { act: readThrough('ptx', 'q', 1000) }, y: { act: readThrough('ptx', 'y', 1000) } },
+      q: { act: readThrough('ptx', 'q', 1000), summit: readEst('ptx', 'q', 1000) }, y: { act: readThrough('ptx', 'y', 1000), summit: readEst('ptx', 'y', 1000) } },
     g_am: { label: 'Americas', short: 'Americas', unit: 'usdM', scope: 'company', src: '10-K Note 3, by region (Americas = United States, Canada and Latin America)',
       y: { act: { '2023': 11135, '2024': 12375, '2025': 14044 } } },
+    gv_us: { label: 'United States', short: 'United States', unit: 'usdM', scope: 'company', src: 'Mastercard earnings releases, Operating Performance table, all Mastercard credit, charge and debit programs (gross dollar volume, US$ B, three months ended)',
+      q: { act: { '1Q23': 673000, '2Q23': 717000, '3Q23': 720000, '4Q23': 727000, '1Q24': 712000, '2Q24': 764000, '3Q24': 768000, '4Q24': 793000, '1Q25': 764000, '2Q25': 813000, '3Q25': 819000, '4Q25': 825000, '1Q26': 795000, '2Q26': 858000 } },
+      y: { act: { '2023': 2837000, '2024': 3037000, '2025': 3221000 } } },
+    gv_ca: { label: 'Canada', short: 'Canada', unit: 'usdM', scope: 'company', src: 'Mastercard earnings releases, Operating Performance table, all Mastercard credit, charge and debit programs (gross dollar volume, US$ B, three months ended)',
+      q: { act: { '1Q23': 57000, '2Q23': 66000, '3Q23': 66000, '4Q23': 68000, '1Q24': 62000, '2Q24': 68000, '3Q24': 68000, '4Q24': 70000, '1Q25': 60000, '2Q25': 70000, '3Q25': 71000, '4Q25': 74000, '1Q26': 68000, '2Q26': 76000 } },
+      y: { act: { '2023': 257000, '2024': 268000, '2025': 275000 } } },
+    gv_la: { label: 'Latin America', short: 'Latin America', unit: 'usdM', scope: 'company', src: 'Mastercard earnings releases, Operating Performance table, all Mastercard credit, charge and debit programs (gross dollar volume, US$ B, three months ended)',
+      q: { act: { '1Q23': 166000, '2Q23': 181000, '3Q23': 192000, '4Q23': 208000, '1Q24': 205000, '2Q24': 201000, '3Q24': 202000, '4Q24': 212000, '1Q25': 202000, '2Q25': 215000, '3Q25': 229000, '4Q25': 257000, '1Q26': 252000, '2Q26': 269000 } },
+      y: { act: { '2023': 747000, '2024': 820000, '2025': 903000 } } },
+    gv_eu: { label: 'Europe', short: 'Europe', unit: 'usdM', scope: 'company', src: 'Mastercard earnings releases, Operating Performance table, all Mastercard credit, charge and debit programs (gross dollar volume, US$ B, three months ended)',
+      q: { act: { '1Q23': 652000, '2Q23': 731000, '3Q23': 758000, '4Q23': 761000, '1Q24': 740000, '2Q24': 799000, '3Q24': 867000, '4Q24': 870000, '1Q25': 805000, '2Q25': 933000, '3Q25': 996000, '4Q25': 1006000, '1Q26': 943000, '2Q26': 1025000 } },
+      y: { act: { '2023': 2902000, '2024': 3276000, '2025': 3740000 } } },
+    gv_ap: { label: 'Asia Pacific, Middle East and Africa', short: 'APMEA', unit: 'usdM', scope: 'company', src: 'Mastercard earnings releases, Operating Performance table, all Mastercard credit, charge and debit programs (gross dollar volume, US$ B, three months ended)',
+      q: { act: { '1Q23': 559000, '2Q23': 572000, '3Q23': 569000, '4Q23': 587000, '1Q24': 570000, '2Q24': 571000, '3Q24': 597000, '4Q24': 615000, '1Q25': 587000, '2Q25': 599000, '3Q25': 632000, '4Q25': 657000, '1Q26': 645000, '2Q26': 654000 } },
+      y: { act: { '2023': 2287000, '2024': 2353000, '2025': 2475000 } } },
     g_ap: { label: 'Asia Pacific, Europe, Middle East and Africa', short: 'APEMEA', unit: 'usdM', scope: 'company', src: '10-K Note 3, by region',
       y: { act: { '2023': 13963, '2024': 15792, '2025': 18747 } } },
   },
   derived: {
-    netYield: { num: 'results:pnr', den: 'results:pvol', unit: 'pct', label: 'Payment network net revenue as % of purchase volume', short: 'Net yield' },
     tpFee: { num: 'results:tp', den: 'results:ptx', unit: 'eps', label: 'Transaction processing revenue per switched transaction (US$)', short: 'Fee per transaction' },
   },
 
@@ -105,15 +131,19 @@ export var maSegments = {
           source: 'Mastercard supplemental data (as recorded by Bloomberg)', periodicity: 'Quarterly', series: 'shared:pv', unit: 'usdM' },
         { name: 'Switched transactions', definition: 'Transactions authorized, cleared or settled over the network, in billions (FY2025: 175.5B, +10%).',
           source: 'Mastercard supplemental data (as recorded by Bloomberg)', periodicity: 'Quarterly', series: 'shared:ptx', unit: 'idx' },
-        { name: 'Net yield', definition: 'Payment network net revenue divided by purchase volume: what the network keeps, after rebates and incentives, per dollar of purchases. Computed here from the two reported series.',
-          source: 'Derived: payment network net revenue ÷ purchase volume', periodicity: 'Quarterly', series: 'netYield', unit: 'pct' },
+        { name: 'Net yield', definition: 'Net revenue divided by purchase volume: what the network and its services keep, after rebates and incentives, per dollar of purchases. Derived from the two series, for the actual, the Street and the Summit model alike.',
+          source: 'Derived: net revenue ÷ purchase volume', periodicity: 'Quarterly', series: 'results:netyld', unit: 'pct' },
+        { name: 'Gross yield', definition: 'Net revenue plus client incentives, divided by purchase volume: everything before rebates and incentives come off.',
+          source: 'Derived: (net revenue + client incentives) ÷ purchase volume', periodicity: 'Quarterly', series: 'results:grossyld', unit: 'pct' },
+        { name: 'Incentive yield', definition: 'Client incentives divided by purchase volume: the part of the gross yield Mastercard gives back to its customers.',
+          source: 'Derived: client incentives ÷ purchase volume', periodicity: 'Quarterly', series: 'results:incyld', unit: 'pct' },
       ],
       kpiNote: 'Mastercard publishes gross dollar volume, cross-border volume growth and switched transaction growth each quarter, and the amounts of its four network assessments each year. It publishes no card count by quarter and no price list: fees are negotiated by customer and the rebates and incentives that come off them are reported only in total.',
       interactions: [
         { name: 'Purchase volume × net yield', relation: 'payment network net revenue = purchase volume × net yield', bridge: null,
           lines: ['Domestic and cross-border volume', 'Transaction switching'],
           why: 'The price × volume identity of the network. Volume grows with spending; yield is what the network keeps per dollar. Is the yield durable? Net revenue per dollar of purchases held at 21.5, 21.6 and 22.1 basis points in 2023, 2024 and 2025 even though rebates and incentives rose from 49.0% to 51.3% of gross network revenue: gross revenue per dollar rose from 42.2 to 45.5 basis points (cross-border and processing grew faster than volume) and paid for the higher incentives. Mastercard does not announce network price rises; the 10-K names pricing only among the drivers of value-added services growth. The cost that sits against the yield is the incentive itself, shown in Bottom Line.',
-          data: 'Net yield is charted in the KPIs above. NOT CHARTED as a bridge: both inputs are reported, but the 2023 presentation change (other revenue moved out of the network lines) breaks the comparison before 2023.' },
+          data: 'Net, gross and incentive yield are charted in the KPIs above. NOT CHARTED as a bridge: both inputs are reported, but the 2023 presentation change (other revenue moved out of the network lines) breaks the comparison before 2023.' },
         { name: 'Switched transactions × fee per transaction', relation: 'transaction processing revenue = switched transactions × revenue per transaction', bridge: null,
           lines: ['Transaction processing'],
           why: 'The second price × volume identity: transaction processing assessments divided by switched transactions. Revenue per transaction was about 8.4 cents in 2023, 8.5 in 2024 and 9.1 in 2025, so the line grew faster than the transaction count in 2025 (+17% against +10%).',
@@ -170,8 +200,8 @@ export var maSegments = {
       ],
     },
     {
-      key: 'geo', label: 'Region', sub: 'Americas and the rest of the world',
-      lede: 'The same net revenue by region. Mastercard reports two: the Americas (the United States, Canada and Latin America) and Asia Pacific, Europe, the Middle East and Africa. The United States alone is about 29% of net revenue.',
+      key: 'geo', label: 'Revenue by region', sub: 'the two regions Mastercard reports',
+      lede: 'The same net revenue by region. In dollars Mastercard reports only two: the Americas (the United States, Canada and Latin America) and Asia Pacific, Europe, the Middle East and Africa. The United States alone is about 29% of net revenue.',
       note: 'Annual only, from the 10-K (Note 3). The 10-K adds that revenue by geographic market follows the location of the issuing customer, the acquirer where the card is used or the customer receiving services.',
       caveat: 'Net revenue by region is not by cardholder residence: it follows where the customer that issued or acquired the activity is located.',
       tenK: { text: 'Americas includes the United States, Canada and Latin America.', where: TENK + ', Note 3 (Revenue)' },
@@ -181,6 +211,23 @@ export var maSegments = {
       series: [
         { key: 'g_ap', ref: 'shared:g_ap', label: 'Asia Pacific, Europe, Middle East and Africa' },
         { key: 'g_am', ref: 'shared:g_am', label: 'Americas' },
+      ],
+    },
+    {
+      key: 'gdv', label: 'Volume by region', sub: 'gross dollar volume, five regions',
+      lede: 'Revenue is reported in two regions, so the finer cut is the volume that drives it: Mastercard reports gross dollar volume for the United States, Canada, Latin America, Europe and Asia Pacific, the Middle East and Africa every quarter. The United States is the largest single region and the slowest growing.',
+      note: 'Quarterly from Mastercard’s earnings releases (Operating Performance table, all Mastercard credit, charge and debit programs), US$ converted at the quarter’s average rate; the five regions sum to the worldwide figure within rounding. Annual is the sum of the four quarters. This is volume, not revenue: Mastercard does not report revenue for these regions.',
+      caveat: 'GDV counts purchases and cash, and converts local currency to US dollars at each quarter’s average rate, so a stronger or weaker dollar moves a region’s reported figure without any change in activity.',
+      tenK: { text: 'Gross Dollar Volume (“GDV”) measures dollar volume of activity, including both domestic and cross-border volume, on cards carrying our brands during the period, on a local currency basis and U.S. dollar-converted basis. GDV represents purchase volume plus cash volume.',
+              where: TENK + ', Item 7 — Key Metrics and Drivers', verbatim: true },
+      spans: 'Quarterly 1Q23–2Q26; annual 2023–2025.',
+      views: ['q', 'y'],
+      series: [
+        { key: 'gv_us', ref: 'shared:gv_us', label: 'United States' },
+        { key: 'gv_eu', ref: 'shared:gv_eu', label: 'Europe' },
+        { key: 'gv_ap', ref: 'shared:gv_ap', label: 'Asia Pacific, Middle East and Africa' },
+        { key: 'gv_la', ref: 'shared:gv_la', label: 'Latin America' },
+        { key: 'gv_ca', ref: 'shared:gv_ca', label: 'Canada' },
       ],
     },
   ],

@@ -18,15 +18,69 @@ data['card']=dict(label='Card related activity (domestic assessments + cross-bor
     act={n:_sum2(data['dom']['act'][n],data['xb']['act'][n]) for n in Qn},cons={n:_sum2(data['dom']['cons'][n],data['xb']['cons'][n]) for n in Qn},
     ya={y:_sum2(data['dom']['ya'][y],data['xb']['ya'][y]) for y in Y},yc={y:_sum2(data['dom']['yc'][y],data['xb']['yc'][y]) for y in Y})
 KEYS=[c[1] for c in C]; KEYS.insert(KEYS.index('xb')+1,'card')
+# ---- Yields (% of purchase volume), derived from the ingredients the Street and the model both carry. Not a Bloomberg line and not in any
+# snapshot, so each is computed per source: net = net revenue / purchase volume; incentive = client incentives / purchase volume; gross = (net
+# revenue + client incentives) / purchase volume, i.e. everything before rebates. Where Bloomberg has no client-incentives cell (1Q26 actual) the
+# incentives are gross revenue less payment network net revenue, which is the same number by construction. In percent, three decimals.
+YLD=['netyld','grossyld','incyld']
+def _inc(cinc,gross,pnr):
+    if cinc is not None: return -cinc
+    if gross is not None and pnr is not None: return gross-pnr
+    return None
+def _y3(rev,pv,inc):
+    if pv in (None,0): return {'netyld':None,'grossyld':None,'incyld':None}
+    return {'netyld':None if rev is None else rev/pv*100,'grossyld':None if (rev is None or inc is None) else (rev+inc)/pv*100,'incyld':None if inc is None else inc/pv*100}
+def _r3(v): return None if v is None else round(v,3)
+_dq={k:{'act':{},'cons':{}} for k in YLD}; _dy={k:{'ya':{},'yc':{}} for k in YLD}
+for n in Qn:
+    for side in ('act','cons'):
+        r=_y3(data['rev'][side][n],data['pvol'][side][n],_inc(data['cinc'][side][n],data['gross'][side][n],data['pnr'][side][n]))
+        for k in YLD: _dq[k][side][n]=_r3(r[k])
+for yy in Y:
+    for side in ('ya','yc'):
+        r=_y3(data['rev'][side][yy],data['pvol'][side][yy],_inc(data['cinc'][side][yy],data['gross'][side][yy],data['pnr'][side][yy]))
+        for k in YLD: _dy[k][side][yy]=_r3(r[k])
+_YL={'netyld':('Net yield (net revenue as % of purchase volume)','Net yield'),'grossyld':('Gross yield (net revenue plus client incentives, as % of purchase volume)','Gross yield'),'incyld':('Incentive yield (client incentives as % of purchase volume)','Incentive yield')}
+for k in YLD:
+    data[k]=dict(label=_YL[k][0],short=_YL[k][1],grp='Yield (% of purchase volume)',kind='kpi',flip=1,act=_dq[k]['act'],cons=_dq[k]['cons'],ya=_dy[k]['ya'],yc=_dy[k]['yc'])
+    SQV[k]={}
+for per in SQ_PERIODS:
+    if all(per in SQV[x] for x in ('rev','pvol','cinc')):
+        r=_y3(SQV['rev'][per],SQV['pvol'][per],-SQV['cinc'][per])
+        for k in YLD: SQV[k][per]=_r3(r[k])
+for k in YLD: summit[k]=[None]*len(Y)
+for i,yy in enumerate(Y):
+    if summit['rev'][i] is not None and summit['pvol'][i] and summit['cinc'][i] is not None:
+        r=_y3(summit['rev'][i],summit['pvol'][i],-summit['cinc'][i])
+        for k in YLD: summit[k][i]=_r3(r[k])
+KEYS+=YLD
+_unitOf=unitOf; unitOf=lambda key:'pct' if key in YLD else _unitOf(key)
+dp_for=lambda key:2 if key=='eps' else (3 if key in YLD else 0)
+# ---- Company guidance, as a dollar band. Mastercard guides GROWTH in words (reported basis: the GAAP row of the outlook table in each earnings
+# presentation, which is what Bloomberg's net revenue and total operating expense lines are on). The band is that growth, with each phrase mapped to a
+# numeric range (indicative, the same mapping as the Guidance record in Miscellaneous), applied to the same quarter a year earlier. Reported dollars
+# move with currency and acquisitions on top of this, which the outlook table lists separately.
+_W={'min':(0,1),'ls':(1,3),'ms':(4,6),'hs':(7,9),'hhs':(8,9),'llo':(10,11),'lo':(10,12),'hlo':(12,13),'lt':(13,14),'mt':(14,16),'hmt':(15,16),'ht':(17,19),'hht':(18,19),'h20':(27,29),'hh20':(28,29),'m20':(24,26),'l30':(30,33)}
+_GR={'2Q21':('h20','l30'),'3Q21':('hh20','h20'),'4Q21':('m20','mt'),'1Q22':('ht','lt'),'2Q22':('mt','ms'),'3Q22':('hlo','hs'),'4Q22':('llo','llo'),'1Q23':('hhs','ms'),
+     '2Q23':('hlo','ms'),'3Q23':('lt','ls'),'4Q23':('lo','hhs'),'1Q24':('llo','min'),'2Q24':('hhs','hhs'),'3Q24':('lo','hht'),'4Q24':('lt','ls'),'1Q25':('lo','hs'),
+     '2Q25':('mt','llo'),'3Q25':('hmt','ls'),'4Q25':('ht','hs'),'1Q26':('lt','hlo'),'2Q26':('lo','hs'),'3Q26':('hlo','hs')}
+GUIDE={'rev':{},'opex':{}}
+for per,(rw,ow) in _GR.items():
+    n=[x for x in Qn if ql(x)==per][0]
+    for key,w in (('rev',rw),('opex',ow)):
+        base=data[key]['act'].get(n-4)
+        if base is None: continue
+        GUIDE[key][per]=(base*(1+_W[w][0]/100),base*(1+_W[w][1]/100))
+
 NOTES={
  'card':"Domestic assessments plus cross-border volume fees. The Summit model forecasts the two as a single line, Card related activity, so this metric adds the two Bloomberg lines to compare like for like; the reported history of the two sums to the model's line.",
- 'rev':"Net revenue (Bloomberg IS_COMP_SALES) — gross revenue less client incentives; Q2 2026 $9,277M is the release. Mastercard guides growth (currency-neutral, ex-acquisitions), not a dollar level, so no guidance band is drawn; the growth guide is in the Earnings Setup notes.",
+ 'rev':"Net revenue (Bloomberg IS_COMP_SALES) — gross revenue less client incentives; Q2 2026 $9,277M is the release. Mastercard guides growth, not a dollar level: the guidance band is its guided reported (GAAP) growth, each phrase mapped to an indicative range, applied to the same quarter a year earlier (see Miscellaneous ▸ Guidance for the words quarter by quarter).",
  'opinc':"Operating income as reported (Bloomberg IS_EBIT_AS_REPORTED, GAAP). It carries litigation provisions and restructuring that the company strips out of its adjusted figure, so it sits below the adjusted operating income Mastercard quotes on the call. The Street series is on the same GAAP basis.",
  'ebitda':"Bloomberg's comparable EBITDA (IS_COMPARABLE_EBITDA), the adjusted measure: operating income before depreciation and amortization with one-offs removed. It is the only profit line here on the adjusted basis.",
  'eps':"Bloomberg's GAAP-comparable diluted EPS (IS_COMP_EPS_GAAP): $4.97 for Q2 2026 against the company-reported adjusted $5.04. The Street series is the same Bloomberg line, so the surprise is like for like; the call quotes the adjusted figure.",
  'ni':"GAAP-comparable net income (Bloomberg IS_COMP_NET_INCOME_GAAP): $4,388M in Q2 2026. The company quotes adjusted net income on the call, which is higher.",
  'pti':"Pre-tax income on Bloomberg's comparable basis (IS_COMP_PTP_EX_STK_BASED_COMP). Read it against its own history, not against operating income minus the other lines: each Street cell comes from a different set of contributors.",
- 'opex':"Total operating expenses (IS_TOT_OPER_EXP): general and administrative plus advertising and marketing plus depreciation and litigation. Management guides opex growth ex-acquisitions, so reported dollars move with FX and deals. A higher print than the Street is a cost overshoot, not a beat.",
+ 'opex':"Total operating expenses (IS_TOT_OPER_EXP): general and administrative plus advertising and marketing plus depreciation and litigation. Management guides opex growth: the guidance band is its guided reported (GAAP) growth, which carries the litigation provision, applied to the same quarter a year earlier. A higher print than the Street is a cost overshoot, not a beat.",
  'ga':"General and administrative expense (CB_IS_GENL_AND_ADMIN_EXPN), the largest operating cost line (personnel, professional fees, data processing).",
  'am':"Advertising and marketing expense (CB_IS_S_AND_M_EXPENSE), the smallest operating cost line and the most seasonal.",
  'dna':"Depreciation and amortization (CB_IS_DEPRECIATION_AMORT_EXP). Asset-light: roughly $200M to $300M a quarter, so it is shown in millions.",
@@ -80,9 +134,14 @@ SQNOTE={
  'intnet':"Summit (quarterly): the model's non-operating line (interest income less interest expense plus other income) with the Bloomberg sign.",
  'netint':"Summit (quarterly): the model's interest expense less its interest income.",
 }
+NOTES.update({
+ 'netyld':"Net revenue as a percentage of purchase volume: what the network and the services keep, after rebates and incentives, per dollar of purchases. Derived per source from net revenue and purchase volume (Bloomberg for the actual and the Street, the DCF model for Summit); not a Bloomberg line.",
+ 'grossyld':"Net revenue plus client incentives, as a percentage of purchase volume: everything before rebates and incentives come off. Derived per source; where Bloomberg has no client-incentives cell the incentives are gross revenue less payment network net revenue.",
+ 'incyld':"Client incentives as a percentage of purchase volume, the part of the gross yield given back to customers; it rises when incentives grow faster than volume. Derived per source.",
+})
 PER_METRIC_LABEL={}
 GROUPS_Q=[
- ('top','Top Line','rev',[('Totals',['rev']),('Revenue build (gross to net)',['gross','dom','xb','card','tp','oth','cinc']),('Net revenue by segment',['pnr','vas']),('Volumes & transactions',['pvol','ptx'])]),
+ ('top','Top Line','rev',[('Totals',['rev']),('Revenue build (gross to net)',['gross','dom','xb','card','tp','oth','cinc']),('Net revenue by segment',['pnr','vas']),('Volumes & transactions',['pvol','ptx']),('Yield (% of purchase volume)',['netyld','grossyld','incyld'])]),
  ('margins','Margins & Profitability','opinc',[('Profit',['opinc','ebitda','eps','ni','pti']),('Operating costs',['opex','ga','am','dna','sbc','lit']),('Below the line',['intexp','netint','intnet','invinc','oie','tax']),('Cash flow & capital',['cfo','fcf','capex','buyback','shares','amort'])])]
 def arrfmt(a): return '['+', '.join('null' if v is None else (str(v)) for v in a)+']'
 def metric_lines(key,P,getA,getC,withsum):
@@ -101,8 +160,12 @@ def metric_lines(key,P,getA,getC,withsum):
     L.append("          act:    %s,"%arrfmt(a))
     L.append("          summit: %s,"%arrfmt(sm))
     L.append("          cons:   %s,"%arrfmt(c))
-    L.append("          guideLo:%s,"%arrfmt([None]*len(P)))
-    L.append("          guideHi:%s,"%arrfmt([None]*len(P)))
+    gl=[None]*len(P); gh=[None]*len(P)
+    if withsum=='q' and key in GUIDE:
+        for i,pp in enumerate(P):
+            if pp in GUIDE[key]: gl[i]=rnd(GUIDE[key][pp][0],0); gh[i]=rnd(GUIDE[key][pp][1],0)
+    L.append("          guideLo:%s,"%arrfmt(gl))
+    L.append("          guideHi:%s,"%arrfmt(gh))
     L.append("          note: '%s' },"%esc(NOTES[key]+((' '+SUMNOTE[key]) if (withsum is True and key in SUMNOTE) else ((' '+SQNOTE[key]) if (withsum=='q' and key in SQNOTE) else ''))))
     return "\n".join(L)
 def sections_js(indent='      '):
@@ -116,7 +179,7 @@ def sections_js(indent='      '):
     return "\n".join(o)
 Pq=[ql(n) for n in Qn]; Py=[str(y) for y in Y]
 QN=("Reported actuals and the Bloomberg consensus that stood one quarter out, both from the rolling BBG_CONSENSUS.txt archive (23 snapshots, May 2021 to Oct 28 2026): each reported quarter takes the last snapshot before its print, and the four forward quarters come from the newest snapshot. "
-    "Mastercard guides growth rates (currency-neutral, ex-acquisitions), not dollar levels, so no guidance band is drawn. Summit is the DCF model's own quarterly estimate on the lines the Street also models: the 1Q26 and 2Q26 values are what the model held going into those prints, 3Q26 and 4Q26 are its forecasts (no 2027 quarter is loaded: the model's quarterly chain breaks from 1Q27), and the model has no quarterly share count, D&A, cash flow, capex or volume lines. Capex and share repurchases are shown as positive spend; client incentives stay negative (contra-revenue). For 2026 the Street quarters tie to the Street year within about 0.2% on revenue, operating income, EBITDA, net income, D&A and operating cash flow (3% on capex), but each cell is still its own contributor set, so do not add or subtract across lines.")
+    "Mastercard guides growth rates, not dollar levels, so the guidance band on net revenue and operating expenses is its guided reported growth applied to the quarter a year earlier. Summit is the DCF model's own quarterly estimate on the lines the Street also models: the 1Q26 and 2Q26 values are what the model held going into those prints, 3Q26 and 4Q26 are its forecasts (no 2027 quarter is loaded: the model's quarterly chain breaks from 1Q27), and the model has no quarterly share count, D&A, cash flow, capex or volume lines. Capex and share repurchases are shown as positive spend; client incentives stay negative (contra-revenue). For 2026 the Street quarters tie to the Street year within about 0.2% on revenue, operating income, EBITDA, net income, D&A and operating cash flow (3% on capex), but each cell is still its own contributor set, so do not add or subtract across lines.")
 YN=("Fiscal-year actuals (the archive's fy0) and the Street's full-year consensus (fy+1 to fy+3 from the newest snapshot), with the Summit DCF model's own annual line (2022 to 2029) on the lines the model carries: from the Projection History tab revenue, operating income, EBITDA, net income, D&A, interest expense, operating cash flow, capex, free cash flow and diluted shares; from the Segments tab adjusted EPS, Payment Network and VAS net revenue, the gross-to-net revenue build, operating expenses, G&A, advertising and marketing, stock-based comp, litigation, tax, repurchases, purchase volume and switched transactions. "
     "Summit's operating income and EBITDA definitions can differ from Bloomberg's (the model's own lines, not a restatement), and the model's operating expenses run 1% to 2.5% above Bloomberg's history; the model's EPS line ties to Bloomberg's actual.")
 out=[]
@@ -134,7 +197,7 @@ out.append("""// results-data/ma.js — Mastercard (MA) dataset for the standard
 //             diluted shares. Tab Segments: EPS, Payment Network and VAS, the gross-to-net revenue build, operating expenses, G&A,
 //             advertising and marketing, SBC, litigation, tax, repurchases, purchase volume and switched transactions (25 lines in all;
 //             the model's history ties to the Bloomberg actuals). Quarterly summit (tab Projection History, newest save): 1Q26 and 2Q26 are the estimates the model held going into those prints, 3Q26 and 4Q26 its forecasts, on the lines the Street also models; see ma_build.py SQ.
-//   guideLo / guideHi — null: Mastercard guides growth rates, not dollar levels.
+//   guideLo / guideHi — net revenue and total operating expenses only: the company's guided reported growth (outlook table, GAAP row) as an indicative range, applied to the same quarter a year earlier.
 //
 // Integrity checked on load: fq+N == fq0+N, fq-3 == fq0-3 and every close_fqN is that quarter's calendar end (23 snapshots, 0 mismatches).
 // The metric set is the file's (EARNINGS_CONVENTIONS §6a): every populated slot with valid values is carried. Capex and repurchases arrive
@@ -143,6 +206,8 @@ out.append("""// results-data/ma.js — Mastercard (MA) dataset for the standard
 // Arrays are parallel to `periods`. A period with act:null is an upcoming print. Generated — regenerate, do not hand-edit.
 
 export var maResults = {
+  forwardQuarters: 2,   // two quarters past the last print (analyst rule Oct 22 2026), same as SPOT and SoFi
+  defaultRange: { q: 8, y: 5 },   // opens on the last 8 reported quarters (5 years) plus everything forward; the presets and the slider reach 2Q20
   updated: 'Oct 2026',
   intro: 'How Mastercard’s reported results have stacked up against what the Street expected, and what our Summit model projected on the annual view. Pick a period view and a metric — each print shows the actual against the Street number that stood going in, with the surprise in percent.',
   source: 'Actuals and Street consensus: Bloomberg via BBG_CONSENSUS.txt (23 snapshots, latest data_as_of 2026-10-28, reported through 2026 Q2). Summit: DCF model, DCF MA - New.xlsm Projection History read 2026-10-28; frozen, not live; annual and, on the lines the Street also models, quarterly. EPS is the Bloomberg GAAP-comparable line.',

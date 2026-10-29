@@ -643,14 +643,14 @@ function ceMetricByKey(k){ for(var i=0;i<CE_CONS.m.length;i++){ if(CE_CONS.m[i].
 // Aug 2026): top line → sales by segment → margins/expenses → profit by segment → cash & shares →
 // EPS last. The "By surprise" toggle re-sorts to |Street surprise| desc. Keys are CE_CONS.m[].k;
 // anything not listed sorts to the end (so a new line never silently jumps to the top).
-var CE_STMT_ORDER=['Purchase volume','Switched transactions','Domestic assessments','Cross-border volume fees','Transaction processing revenue','Other revenue','Gross revenue','Client incentives','Payment network revenue','VAS revenue','Net revenue',
+var CE_STMT_ORDER=['Purchase volume','Switched transactions','Net revenue','Gross revenue','Domestic assessments','Cross-border volume fees','Card related activity','Transaction processing revenue','Other revenue','Client incentives','Payment network revenue','VAS revenue',
   'Total operating expenses','G&A expense','Advertising & marketing','Provision for litigation','D&A','Stock-based comp','Operating income','EBITDA',
   'Interest expense','Net interest expense','Interest expense / (income), net','Investment income','Other income / (expense), net','Pre-tax income','Income tax expense','Net income','EPS','Shares outstanding',
   'Operating cash flow','Capex','Free cash flow','Share repurchases','Customer & merchant incentive amortization'];
 function ceStmtIdx(k){ var i=CE_STMT_ORDER.indexOf(k); return i<0?CE_STMT_ORDER.length:i; }
 // Post-Results category filter (All / Top line / Bottom line). Top line = the revenue lines; everything
 // below the top line (profit, margins, cash, shares, EPS) is Bottom line. Keys are CE_CONS.m[].k.
-var CE_TOPLINE={'Net revenue':1,'Gross revenue':1,'Domestic assessments':1,'Cross-border volume fees':1,'Transaction processing revenue':1,'Other revenue':1,'Client incentives':1,
+var CE_TOPLINE={'Net revenue':1,'Gross revenue':1,'Card related activity':1,'Domestic assessments':1,'Cross-border volume fees':1,'Transaction processing revenue':1,'Other revenue':1,'Client incentives':1,
   'Payment network revenue':1,'VAS revenue':1,'Purchase volume':1,'Switched transactions':1};
 function ceCat(k){ return CE_TOPLINE[k]?'top':'bottom'; }
 // A dedicated margin ROW for a cell (label + value + the base-period margin in parens). Sits on
@@ -673,8 +673,10 @@ function ceGrid(u,which){
     var dc=(dm.qr[qi])?dm.qr[qi][3]:null;
     return { c:dc, s:(us[dk]&&us[dk].v!=null)?us[dk].v:dc, qy:dm.qy[qi], qq:dm.qq[qi] }; }
   var list=CE_CONS.m.map(function(m,i){ return {m:m,i:i}; })
-    .filter(function(x,i){ return (which==='head')?(x.i<CE_CONS.nHead):(x.i>=CE_CONS.nHead); });
-  return '<div class="ce-mgrid">'+list.map(function(x){
+    .filter(function(x,i){ return (which==='all')?true:(which==='head')?(x.i<CE_CONS.nHead):(x.i>=CE_CONS.nHead); });
+  // 'all' = ONE list down the income statement (CE_STMT_ORDER), one card per row, instead of the headline / custom split in a grid of four
+  if(which==='all') list.sort(function(a,b){ return (ceStmtIdx(a.m.k)-ceStmtIdx(b.m.k)) || (a.i-b.i); });
+  return '<div class="ce-mgrid'+(which==='all'?' rows':'')+'">'+list.map(function(x){
     var m=x.m, c=m.qr[qi]?m.qr[qi][3]:null;
     var note=notes[m.k], q=note?ceQ('setnote-'+ceQkey(u.q)+'-'+x.i, note.t, note.h):'';
     var uv=us[m.k];
@@ -709,6 +711,11 @@ function ceGridStyle(){
     '.ce-mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:8px;margin:4px 0}'+
     '.ce-mcell{border:1px solid var(--bdr);border-left:3px solid '+BRAND+';border-radius:9px;padding:8px 10px;background:#fff}'+
     '.ce-mcell.cust{border-left-color:'+BRAND2+'}'+
+    '.ce-mgrid.rows{grid-template-columns:1fr;gap:6px}'+
+    '.ce-mgrid.rows .ce-mcell{display:grid;grid-template-columns:minmax(190px,26%) minmax(0,1fr);column-gap:22px;align-items:center;padding:10px 16px}'+
+    '.ce-mgrid.rows .ce-mcell-k{min-height:0;font-size:11px}'+
+    '.ce-mgrid.rows .ce-mtbl{margin-top:0;max-width:640px}'+
+    '@media(max-width:700px){.ce-mgrid.rows .ce-mcell{grid-template-columns:1fr}.ce-mgrid.rows .ce-mtbl{margin-top:6px}}'+
     '.ce-mcell.flagged{border-left-color:'+GRAY+';opacity:.72}'+
     '.ce-mcell-k{font-size:10px;font-weight:700;color:var(--mu);display:flex;align-items:center;gap:4px;line-height:1.3;min-height:26px}'+
     '.ce-mcell-v{margin-top:3px}'+
@@ -783,8 +790,7 @@ function ceSetupBody(c){
           '<button type="button" class="active" data-cemm="off">Hide mgn</button></span>'+
       '</div>';
       b+='<div class="ce-evwrap" data-ev="cons" data-g="yoy">';
-      b+='<div class="ce-row-cap">Headline — every company, always</div>'+ceGrid(u,'head');
-      b+='<div class="ce-row-cap" style="margin-top:12px">Custom KPIs — Mastercard</div>'+ceGrid(u,'cust');
+      b+='<div class="ce-row-cap">The quarter — down the income statement: volume, transactions, revenue and its build, then costs, profit and cash</div>'+ceGrid(u,'all');
       b+='</div>';
       // (The "debate" line-by-line block + its synth line were removed per request — Aug 2026.)
       // (Foot caption "Frozen at call time…" removed — Dani, Aug 2026.)
@@ -1098,11 +1104,11 @@ function cePrintBlock(qLabel, r, us){
     '</div>';
     return '<div class="ce-fz-t'+(guided?' ce-fz-guided':'')+'" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'" data-cat="'+ceCat(m.k)+'" data-mixed="'+(mixed?1:0)+'" style="--od:'+r.od+'">'+hdr+tbl+'</div>';
   });
-  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="on" data-view="cards" data-ord="stmt" data-fzcat="all" data-lay="grid" data-fzgd="off"><div class="ce-fz-h">The print — down the income statement'+
+  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="on" data-view="cards" data-ord="stmt" data-fzcat="all" data-lay="rows" data-fzgd="off"><div class="ce-fz-h">The print — down the income statement'+
     ceQ('fz-'+ceQkey(qLabel),'How this is built',
       '<p>One block, archive-driven. Every number and surprise is computed from <code>BBG_CONSENSUS.txt</code>: the last snapshot before the print carries the consensus (<code>fq+1</code>), a later snapshot carries the print (<code>fq0</code>). Reconstructed from data, so it cannot drift.</p>'+
       '<ul><li><b>Order</b> — by default the lines read top-to-bottom down the income statement (top line → sales by segment → margins → profit by segment → cash &amp; shares → EPS last). <b>By surprise</b> re-sorts to the biggest |Street surprise| first.</li>'+
-      '<li><b>vs Street ⇄ vs Summit ⇄ Both</b> — which frozen expectation the print is scored against (Street = Bloomberg, Summit = ours). <b>Both</b> shows the two side by side; since one BEAT/MISS badge can\'t score two references it becomes a <b>Surprise</b> row (Both only) plus a <b>MIXED</b> flag when Street and Summit disagree. Where Summit had no number it reads <b>—</b> (only Revenue, Operating income and the segment net-sales are modelled).</li>'+
+      '<li><b>vs Street ⇄ vs Summit ⇄ Both</b> — which frozen expectation the print is scored against (Street = Bloomberg, Summit = ours). <b>Both</b> shows the two side by side; since one BEAT/MISS badge can\'t score two references it becomes a <b>Surprise</b> row (Both only) plus a <b>MIXED</b> flag when Street and Summit disagree. Where Summit had no number it reads <b>—</b> (the model projects net revenue and its build, operating expenses, operating income, EBITDA, net income, purchase volume and transactions by quarter; share count, D&amp;A and cash flow it carries only by year).</li>'+
       '<li><b>Growth</b> — the estimate\'s implied growth and the print\'s own growth, YoY or QoQ per the toggle, signed.</li>'+
       '<li><b>Margin</b> — operating income, EBITDA, net income, pre-tax income and the cost lines carry an expected (estimate-implied) and a realised margin on net revenue (tax on pre-tax income); the realised one is coloured by expansion vs the prior period on the same YoY/QoQ lens.</li>'+
       '<li><b>Verdict</b> — beat / miss / in-line off the computed surprise; <b>no est.</b> where that basis had no number. Beat and miss mean above and below the Street number on every line, costs and client incentives included: a cost line that prints above the Street reads as a beat, so read the direction before the colour.</li></ul>'+
@@ -1132,8 +1138,8 @@ function cePrintBlock(qLabel, r, us){
       '<button type="button" data-ceg="off">Off</button></span>'+
     // Layout and scope (analyst, Oct 26 2026): Rows puts each line in one full-width horizontal rectangle, scrolling down instead of
     // squeezing three cards across; Guided keeps only the lines the company guides.
-    '<span class="ce-gseg ce-gseg-cardsonly"><button type="button" class="active" data-fzlay="grid">Grid</button>'+
-      '<button type="button" data-fzlay="rows">Rows</button></span>'+
+    '<span class="ce-gseg ce-gseg-cardsonly"><button type="button" data-fzlay="grid">Grid</button>'+
+      '<button type="button" class="active" data-fzlay="rows">Rows</button></span>'+
     '<span class="ce-gseg ce-gseg-cardsonly"><button type="button" class="active" data-fzgd="off">All lines</button>'+
       '<button type="button" data-fzgd="on">Guided only</button></span>'+
     '</div>'+cePrintChart(qi, us)+'<div class="ce-fz-g" data-vdf-host>'+tiles.join('')+'</div></div>';

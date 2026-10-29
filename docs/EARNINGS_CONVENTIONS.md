@@ -181,8 +181,8 @@ These are binding for every company, not just AMZN. Reference implementation: `j
    a single chart+table, with margin-type controls **disabled for lines they do not apply to** (e.g.
    revenue has no margin). Period selection is deliberately narrow (§6a-viii-bis): **quarterly is
    SEASONAL** — the same fiscal quarter across prior years (forecasting Q3 2026 → Q3 2025, Q3 2024, …)
-   **plus only the ONE next quarter** (never two quarters out — only the immediately-next is
-   statistically meaningful); **annual shows the next 2 FY** forward. Both Street (Bloomberg) and
+   **plus the TWO next quarters** (analyst rule Oct 22 2026: two quarters ahead, always, in every
+   quarterly view, Setup chart, Results and the Earnings quarter pills); **annual shows the next 2 FY** forward. Both Street (Bloomberg) and
    Summit series (Summit is empty for many lines, populated only where a forecast exists).
 
 **What v2.8 changed — Post-Results grows two toggles, the aside is demoted, and the fill is ONE step:**
@@ -1191,7 +1191,7 @@ chart+table.** Club the two formats so **every tracked indicator coexists in a s
 
 | lens | what shows |
 |---|---|
-| **Quarterly (SEASONAL)** | the **same fiscal quarter across prior years** — forecasting **Q3 2026** → **Q3 2025, Q3 2024, Q3 2023, …** (reported actuals) **plus only the ONE next quarter** being forecast (Q3 2026, Street + Summit). **Never two quarters out** (no Q3 2027 as well) — only the immediately-next quarter is statistically meaningful. |
+| **Quarterly (SEASONAL)** | the **same fiscal quarter across prior years** — forecasting **Q3 2026** → **Q3 2025, Q3 2024, Q3 2023, …** (reported actuals) **plus the TWO next quarters** being forecast (Street + Summit where the model reaches). Analyst rule Oct 22 2026: two quarters ahead, always, superseding the earlier "only the immediately-next quarter" text. |
 | **Annual** | FY history **plus the next 2 FY** forward (Street + Summit). |
 
 **Both estimate series, always: Street (Bloomberg) + Summit.** Summit is **empty for many lines** and

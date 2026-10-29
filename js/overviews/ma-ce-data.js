@@ -92,6 +92,21 @@ function ceSummitUs(p){
 }
 
 export var MA_CALL_EARNINGS = { ticker:'MA', quarters:[
+  // ── UPCOMING: Q1 2027 (quarter ending Mar 31 2027; reports in late April 2027). The second quarter out: the portal always shows two quarters ahead.
+  // Consensus = the newest Bloomberg snapshot on file, Oct 28 2026. Mastercard has given no guidance for 2027: it arrives with the Q4 2026 release.
+  { q:'Q1 2027', status:'upcoming', date:'quarter ending Mar 31 2027',
+    setup:{
+      source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-10-28 (newest on file) · Summit DCF model: no quarterly estimate past 4Q26 (its quarterly chain breaks from 1Q27) · guidance: none yet',
+      asOf:'2026-10-28',
+      notes:{
+        'Net revenue':{ t:'No guide yet; 2027 guidance comes with the Q4 release', h:'<p>Mastercard has not guided 2027. On the Oct 29 call Ling Hai said formal guidance arrives with the next quarter’s release and listed what moves it: the macro environment, wins and losses, VAS demand, new products and foreign exchange, and that “some of the tailwinds can also become headwinds because they’re lapping.” Pricing is expected to start lapping in Q4, and the Capital One debit migration is lapped from Q2 2026.</p>' },
+        'Client incentives':{ t:'Not guided; Q4 is guided higher as a share of gross assessments', h:'<p>Rebates and incentives are not guided in dollars. For Q4 management expects them as a percentage of gross assessments to be higher than in Q3, and asked to be measured on net revenue yield. The Pinnacle Financial portfolio moves onto the network from 2027.</p>' }
+      },
+      us:{},
+      debate:{ rows:null, synth:'' }
+    },
+    results:null, call:null },
+
   // ── UPCOMING: Q4 2026 (quarter ending Dec 31 2026; reports in late January 2026-27). Consensus = the newest Bloomberg snapshot on file,
   // Oct 28 2026 (taken before the Q3 print, so it does not yet reflect it). Guidance: the Q3 2026 call (Oct 29 2026), growth rates, currency-neutral, ex-inorganic.
   { q:'Q4 2026', status:'upcoming', date:'quarter ending Dec 31 2026',

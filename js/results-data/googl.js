@@ -99,6 +99,14 @@ export var googlResults = {
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'YouTube subscriptions, Google One, Google Play and devices (Pixel).' },
+        gp: { label: 'Gross Profit', short: 'Gross profit', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'gross margin',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27'],
+          act:    [39175, 42688, 43464, 48735, 46827, 49235, 51794, 55856, 53873, 57389, 60977, 68062, 68625, 73853, 76158, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, 82632, 95560, null, null],
+          cons:   [null, null, null, 47000, 44700, 48300, 49500, 55500, 51800, 54700, 58200, 64600, 63200, 70000, 76210, 84235, 81999, 86915],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'Gross profit = revenue − cost of revenues (TAC and other cost of revenues), from the 10-K / 10-Q. Summit = the model\'s SEG_GP (3Q26–4Q26, snapshot 2026-08-06); it ties to the model\'s revenue − COGS. Consensus = Bloomberg GROSS_PROFIT, the last snapshot before each print (archive in $B to one decimal through 2Q26). Gross profit is TAC-neutral: a broker who forecasts revenue net of TAC also takes TAC out of cost of revenues, so the mixed revenue basis does not reach this line.' },
         opinc: { label: 'Operating Income (GAAP)', short: 'Op. income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27'],
           act:    [17415, 21838, 21343, 23697, 25472, 27425, 28521, 30972, 30606, 31271, 31228, 35934, 39696, 40770, 40576, null, null, null],
@@ -187,7 +195,7 @@ export var googlResults = {
           { label: 'Revenue lines', keys: ['ads', 'search', 'yt', 'net', 'subs'] }
         ] },
         { key: 'margins', label: 'Margins & Profitability', defaultMetric: 'opinc', groups: [
-          { label: 'Company', keys: ['opinc', 'netinc', 'eps', 'capex', 'tac', 'fcf'] },
+          { label: 'Company', keys: ['gp', 'opinc', 'netinc', 'eps', 'capex', 'tac', 'fcf'] },
           { label: 'Segments (op. income)', keys: ['svcop', 'cloudop', 'betsop', 'alphaop'] }
         ] }
       ]
@@ -268,6 +276,14 @@ export var googlResults = {
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null],
           note: 'YouTube subscriptions, Google One, Google Play and devices (Pixel).' },
+        gp: { label: 'Gross Profit', short: 'Gross profit', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'gross margin',
+          periods: ['2021','2022','2023','2024','2025','2026','2027','2028','2029'],
+          act:    [146698, 156633, 174062, 203712, 240301, null, null, null, null],
+          summit: [null, null, null, null, null, 320670, 405347, 486360, 483097],
+          cons:   [null, null, null, null, null, 300656, 365368, 438252, null],
+          guideLo:[null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null],
+          note: 'Gross profit = revenue − cost of revenues (TAC and other cost of revenues). Summit = the model\'s gross profit (snapshot 2026-08-06); FY2026 = reported 1Q–2Q + the model\'s 3Q–4Q, like every other 2026 line (the model\'s 2026 annual cell is empty). Consensus = Bloomberg GROSS_PROFIT (TAC-neutral, see the quarterly note); history not carried.' },
         opinc: { label: 'Operating Income (GAAP)', short: 'Op. income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
           periods: ['2021','2022','2023','2024','2025','2026','2027','2028','2029'],
           act:    [78714, 74842, 84293, 112390, 129039, null, null, null, null],
@@ -372,7 +388,7 @@ export var googlResults = {
           { label: 'Revenue lines', keys: ['ads', 'search', 'yt', 'net', 'subs'] }
         ] },
         { key: 'margins', label: 'Margins & Profitability', defaultMetric: 'ebitda', groups: [
-          { label: 'Company', keys: ['opinc', 'netinc', 'eps', 'capex', 'tac', 'fcf', 'ebitda', 'mearn'] },
+          { label: 'Company', keys: ['gp', 'opinc', 'netinc', 'eps', 'capex', 'tac', 'fcf', 'ebitda', 'mearn'] },
           { label: 'Segments (op. income)', keys: ['svcop', 'cloudop', 'betsop', 'alphaop'] }
         ] }
       ]

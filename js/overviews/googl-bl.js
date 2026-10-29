@@ -14,9 +14,10 @@
 //   • Consensus basis (SAB, Oct 26 2026): Bloomberg's headline revenue mixes brokers who forecast gross revenue with
 //     brokers who forecast it net of TAC, so consensus revenue = the SUM of Bloomberg's segment lines (Services ·
 //     Cloud · Other Bets · Alphabet-level hedging), as in the Results dataset, and every consensus margin is computed
-//     on it. Consensus cost of revenues and gross profit carry the same mix, so they are not shown (Actual only); the
-//     forward bridge derives cost of revenues as revenue − operating expenses − operating income, with TAC from the
-//     Services segment's consensus.
+//     on it. Consensus cost of revenues carries the same mix, so it is not shown; the forward bridge derives cost of
+//     revenues as revenue − operating expenses − operating income, with TAC from the Services segment's consensus.
+//     Gross profit IS shown (SAB, Oct 29 2026): it is TAC-neutral — a broker who nets TAC out of revenue also nets it
+//     out of cost of revenues — and Bloomberg's GROSS_PROFIT runs at a ~60% margin on the segment-sum revenue.
 //   • Normalized net income (SAB, Oct 26 2026) = GAAP − other income (expense), net, after tax at the period's
 //     effective rate — Alphabet's GAAP earnings carry large unrealized gains on equity securities.
 //   • Summit series: read from js/results-data/googl.js, where the Summit DCF model is FROZEN (rule 10 — coded from the
@@ -47,7 +48,7 @@ var G_SEG_SUM=['seg295814','seg344781','seg295791','seg295833'], G_SEG_SVC='seg2
   var r=B.is.rev, nF=r.f.length, nQF=r.qF.length;
   r.f=r.f.map(function(_,i){ return sum('f',i); }); r.qF=r.qF.map(function(_,i){ return sum('qF',i); });
   r.q=r.qA.concat(r.qF);
-  ['grossProfit','costOfRevenue','cogs'].forEach(function(k){ var s=B.is[k]; if(!s) return;   // mixed basis → no consensus
+  ['costOfRevenue','cogs'].forEach(function(k){ var s=B.is[k]; if(!s) return;   // mixed basis → no consensus (gross profit is TAC-neutral, kept)
     s.f=s.f.map(function(){ return null; }); s.qF=s.qF.map(function(){ return null; }); s.q=s.qA.concat(s.qF); });
   var tac=(B.seg[G_SEG_SVC]||{}).trafficAcquisitionCosts; if(tac) B.is.tac=tac;
 })(googlBBG);
@@ -557,8 +558,7 @@ function aBuildSbc(){
 function aYrSlice(arr, per){ return A_YRS.map(function(y){ var i=per.indexOf(String(y)); return i>=0?arr[i]:null; }); }
 // Summit's annual {numerator, revenue} for a margin metric, from the ANNUAL model rows frozen in the Results dataset.
 // The model's net line is its adjusted (normalized) earnings, so it is labelled "Model earnings (adj.)" (Annex A7).
-// Alphabet's dataset carries no Summit gross profit line → no Summit for Gross profit.
-var SUM_K={ operating:'opinc', ebitda:'ebitda', net:'mearn', fcf:'fcf' };   // Alphabet's dataset: the model's earnings line is `mearn`
+var SUM_K={ gross:'gp', operating:'opinc', ebitda:'ebitda', net:'mearn', fcf:'fcf' };   // Alphabet's dataset: the model's earnings line is `mearn`
 function aSummitAnnual(sel){
   var y=googlResults.views&&googlResults.views.y&&googlResults.views.y.metrics, K=SUM_K[sel];
   if(!K||!y||!y[K]||!y.rev||!y[K].summit||!y.rev.summit) return null;
@@ -576,6 +576,7 @@ function aMarginsBody(){
 function aLastActIdx(arr){ var la=0; for(var i=0;i<arr.length;i++) if(arr[i]!=null) la=i; return la; }
 var MARG_LAB2={gross:'Gross profit',operating:'Op. income',ebitda:'EBITDA',net:'Net income',fcf:'FCF'};
 var SUM_SRC='Summit (frozen)';
+var GP_NOTE='Gross profit = revenue − cost of revenues (TAC and other cost of revenues). Consensus = Bloomberg’s gross profit, with its margin on the sum of Bloomberg’s segment revenue lines: gross profit does not depend on whether a broker reports revenue gross or net of TAC (TAC leaves revenue and cost of revenues alike), so it is the one cost line where Bloomberg’s mixed basis does not matter. Summit = the model’s gross profit; FY2026 = reported 1Q–2Q + the model’s 3Q–4Q.';
 // Dual-axis: the $ amount as bars (Actual / Summit / Consensus) + the margin % as lines on the right y2 axis.
 // normSub[i] = the amount to SUBTRACT for the normalized value (for Alphabet: OI&E after tax at the period's rate).
 function aMargDual(lab, actNum, conNum, rev, la, normOn, normSub, sm){
@@ -599,18 +600,19 @@ function aBuildMargins(){
     var normVis=(metric==='net'&&gran==='y'), normOn=normVis&&st.modes.norm==='norm';   // Normalized only for annual net income (§13)
     var out={ type:'bar', stacked:false, hideModes:normVis?[]:['norm'],
       yFmt:function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }, y2Fmt:function(x){ return x+'%'; } };
-    if(gran==='q' && metric==='operating'){   // the Results dataset: Actual / Summit (frozen) / Consensus
-      var Q=googlResults.views.q.metrics, oi=Q.opinc, rv=Q.rev, labels=oi.periods.slice(), la=aLastActIdx(oi.act);
+    if(gran==='q' && (metric==='operating'||metric==='gross')){   // the Results dataset: Actual / Summit (frozen) / Consensus
+      var Q=googlResults.views.q.metrics, oi=Q[metric==='gross'?'gp':'opinc'], rv=Q.rev, labels=oi.periods.slice(), la=aLastActIdx(oi.act), ql=lab;
       function amtS(a){ return labels.map(function(_,i){ return a&&a[i]!=null?Math.round(a[i]/100)/10:null; }); }
       function margS(a,r){ return labels.map(function(_,i){ return (a&&a[i]!=null&&r&&r[i])?Math.round(a[i]/r[i]*1000)/10:null; }); }
       out.labels=labels; out.lastAct=la; out.paired=true; out.series=[
-        {k:'act$',grp:'act',src:'Actual',label:'Op. income — Actual',color:ASTD_ACT,type:'bar',data:amtS(oi.act)},
-        {k:'sum$',grp:'sum',src:SUM_SRC,label:'Op. income — Summit',color:ASTD_SUMMIT,type:'bar',data:amtS(oi.summit)},
-        {k:'con$',grp:'con',src:'Consensus',label:'Op. income — Consensus',color:ASTD_CONS,type:'bar',data:amtS(oi.cons)},
+        {k:'act$',grp:'act',src:'Actual',label:ql+' — Actual',color:ASTD_ACT,type:'bar',data:amtS(oi.act)},
+        {k:'sum$',grp:'sum',src:SUM_SRC,label:ql+' — Summit',color:ASTD_SUMMIT,type:'bar',data:amtS(oi.summit)},
+        {k:'con$',grp:'con',src:'Consensus',label:ql+' — Consensus',color:ASTD_CONS,type:'bar',data:amtS(oi.cons)},
         {k:'actM',grp:'act',src:'Actual',label:'Margin — Actual',color:ASTD_ACT,type:'line',yAxisID:'y2',data:margS(oi.act,rv.act)},
         {k:'sumM',grp:'sum',src:SUM_SRC,label:'Margin — Summit',color:ASTD_SUMMIT,type:'line',yAxisID:'y2',data:margS(oi.summit,rv.summit)},
         {k:'conM',grp:'con',src:'Consensus',label:'Margin — Consensus',color:ASTD_CONS,type:'line',yAxisID:'y2',dash:true,data:margS(oi.cons,rv.cons)} ];
       out.series=out.series.filter(function(x){ return x.data.some(function(v){ return v!=null; }); });
+      if(metric==='gross') out.note=GP_NOTE;
       return out;
     }
     var MET={gross:'grossProfit',operating:'oi',ebitda:'ebitda',net:'netIncome',fcf:'fcf'};
@@ -626,7 +628,7 @@ function aBuildMargins(){
     var actN=labelsY.map(function(_,i){ return i<=laY?na[i]:null; }), conN=labelsY.map(function(_,i){ return i>laY?na[i]:null; });
     out.labels=labelsY; out.lastAct=laY; out.paired=true; out.series=aMargDual(lab, actN, conN, rvY, laY, normOn, normSub, aSummitAnnual(metric));
     if(normVis) out.note=aNormNote();
-    else if(metric==='gross') out.note='Gross profit = revenue − cost of revenues (TAC and other cost of revenues). No consensus line: Bloomberg’s revenue and cost-of-revenues consensus mix brokers who forecast gross revenue with brokers who forecast it net of TAC, so a consensus gross margin would not mean one thing.';
+    else if(metric==='gross') out.note=GP_NOTE;
     else if(metric==='operating') out.note='One-offs inside reported operating income: the $3.5B European Commission fine in 3Q25 (G&amp;A; operating margin 30.5% reported, 33.9% without it) and the $2.1B Waymo-related stock-based compensation charge in 4Q25 (R&amp;D). 1Q26 printed a 36.1% margin with a three-point FX tailwind to consolidated revenue (CFO, 1Q26 call). Consensus revenue = the sum of Bloomberg’s segment lines.';
     else if(metric==='ebitda') out.note='Adjusted EBITDA — operating income + depreciation and amortization + stock-based compensation — for all three sources: Bloomberg’s comparable EBITDA and the Summit model use the same definition. Not GAAP.';
     return out;

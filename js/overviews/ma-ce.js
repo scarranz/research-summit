@@ -3,7 +3,7 @@
 // gBuildCeAnnual, wireCallEarnings, wireCeTrack, wireThemeRecord, the editor and the theme-record persistence) with the data swapped
 // (Oct 28 2026):
 //   • CE_CONS / CALL_EARNINGS come from ./ma-ce-data.js (CE_CONS is rebuilt at load from js/results-data/ma.js); MA_THEMES
-//     (themes-data/ma.js) is seeded from the Q4 2023 → Q2 2026 call transcripts (docs/calls/MA.md), moved over from the earlier
+//     (themes-data/ma.js) is seeded from the Q4 2023 → Q3 2026 call transcripts (docs/calls/MA.md), moved over from the earlier
 //     inline theme record; MA_SEG_ORDER carries Mastercard's six axes
 //   • CE_MARGIN_DEN / CE_STMT_ORDER / CE_TOPLINE carry Mastercard's 34 lines; ceGuessTarget maps Mastercard's themes
 //   • dataset SOFI_SETUP → MA_SETUP; sofi* helper names, hooks and classes → ma*; root class .ov-mastercard-dd

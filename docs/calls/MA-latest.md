@@ -1,361 +1,352 @@
-# MA — Latest earnings call · Q2 2026 (July 30, 2026)
+# MA — Latest earnings call · Q3 2026 (October 29, 2026)
 
 **The rotation rule (docs/EARNINGS_CONVENTIONS.md §3):** this file always holds ONLY the most recent
 call + its analysis. When the next call lands, this call is appended to the TOP of the historical
-compendium (`MA.md`) and the new transcript takes its place here.
+compendium (`MA.md`) and the new transcript takes its place here. (Q2 2026 rotated into `MA.md` on Oct 29 2026.)
 
-Participants: Michael Miebach (CEO), Sachin Mehra (CFO — outgoing), Ling Hai (President Asia Pacific /
-Europe / Middle East & Africa; incoming CFO effective Aug 3, 2026), Devin Corr (Head of IR).
+Participants: Michael Miebach (CEO), Ling Hai (CFO — her first call in the seat, from Aug 3 2026), Devin Corr (Head of IR).
+Sources read for the analysis: this transcript, the Q3 2026 earnings release (8-K Ex. 99.1), the earnings deck and the
+Supplemental Operational Performance Data, all dated Oct 29 2026.
 
 ---
 
 ## Analysis (per the EARNINGS_CONVENTIONS Part I rules — fact → why → so-what)
 
-**The take:** A beat-and-raise on Sachin Mehra's last call as CFO. Every line that worried the Street in
-Q1 broke the right way: the Middle East hit came in lighter than the base case, an unexpected Venezuela
-cross-border surge (USD availability, where Mastercard is market leader) added upside, and VAS held +18%.
-Net revenue +12%, EPS $5.04 (+19%), and management nudged the full-year guide *higher within* the range.
-The forward narrative escalated — Agent Pay for Machines (machine-to-machine, "the only network" doing it)
-and OpenUSD — while BVNK slips to a Q3 close. The one genuinely new variable is leadership: Ling Hai takes
-the CFO seat Aug 3.
+**The take:** A clean beat on Ling Hai's first call, with the quality caveat management itself volunteered:
+net revenue **+14%** cn (guide: high end of low double digits), VAS **+19%**, adjusted EPS **$5.31 (+21%)**, but part of the upside
+is revenue pulled from Q4 into Q3 (services projects and payment-network deal timing) and "you will see a similar offset in Q4".
+The full-year net-revenue guide is held, not raised again, so the guide now implies a Q4 that gives some of it back. Underneath,
+cross-border is decelerating on the low-yield intra-Europe leg while assessments keep outgrowing volume on pricing, the US is
+inflecting up (Capital One lapping, commercial wins, fuel), and the forward story is BVNK/Global Money Platform plus a firm line on
+agentic: fully tokenized, not one-time virtual cards.
 
-1. **Net revenue +12% cn, EPS $5.04 (+19% YoY, incl. $0.14 from buybacks); adjusted net income +16%, operating income +14% on +10% opex (1 ppt disposition benefit).** — why: Payment Network + VAS both strong. → so-what: a clean beat AND a raise — the deliberately low Q2 bar set in Q1 (low end of low-double-digits) was cleared by a wide margin. `thesis`
-2. **FY26 net-revenue guide nudged HIGHER within the low-double-digits range** (on strong 1H); ~+1 ppt FX tailwind. — why: first-half outperformance. → so-what: the Q1 "cn range unchanged" caution flips to a genuine raise. `thesis`
-3. **The beat was broad but three-sourced: lighter-than-feared Middle East, a Venezuela cross-border surge (USD availability; MA is market leader; shows up in CNP ex-travel debit), and VAS demand.** — why: Q1's biggest fear (the conflict) resolved better than the base case. → so-what: two of the three (Middle East relief, Venezuela) are idiosyncratic/non-repeatable — watch the underlying run-rate, not the headline. `watch`
-4. **Cross-border +12%; CNP ex-travel +20%; travel improved sequentially vs the April metrics.** — why: Middle East moderation + Venezuela + retail-promo timing. → so-what: the Q1 cross-border scare fully unwound — the swing factor turned tailwind. `dots`
-5. **Switching penetration 72% (was 70% in Q1); tokens >40% of switched transactions; contactless 80% of in-person (+5 ppt YoY).** — why: continued domestic-scheme wins plus flexing the network architecture (e.g. UAE / Al Etihad Payments / Jaywan). → so-what: the virtuous-cycle numerator keeps climbing — more data feedstock for VAS. `thesis`
-6. **VAS +18% cn, ~60% network-linked; security demand strong (Recorded Future / Threat Intelligence: 7M+ card-testing txns across 192 countries, ~$172M fraud prevented).** — why: cyber/fraud demand rising with the AI threat landscape. → so-what: durable organic 18% again — the engine, not the macro, carries the multiple. `thesis`
-7. **CFO transition: Sachin Mehra → Chief Business Officer; Ling Hai → CFO effective Aug 3** (part of the June 2 C-suite reshuffle). — why: leadership evolution "from a position of strength." → so-what: next quarter is the first guide under a new CFO — watch for any framing/disclosure changes; continuity was messaged heavily. `tone`
-8. **Buybacks accelerated again: $4.9B in-quarter + ~$700M through Jul 27.** — why: continued conviction. → so-what: even above Q1's $4B pace — sustained real-money support for EPS. `tone`
-9. **Agentic escalates: Agent Pay for Machines (machine-to-machine, on-chain permissioning / off-chain settlement, 30+ launch partners) — "the only network enabling M2M."** — why: a new class of low-value, high-velocity payments. → so-what: expands the addressable market into a genuinely new lane; still optionality, no numbers yet. `curious`
-10. **Stablecoins: OpenUSD via a 140-company "open standard" consortium (live later this year); crypto co-brand volume has more than tripled in two years; BVNK now expected to close Q3 (was Q1's "planned").** — why: the "world of multiplicity" thesis + owning the interoperable/trust layer. → so-what: BVNK timing slipped a quarter but the strategy is intact and additive (bps on volume in a market MA doesn't touch today). `curious`
-11. **Europe purchase-volume deceleration is deliberate: lapping the 2024 win wave + passing on unprofitable deals (e.g. Lloyds Credit).** — why: "profitable volume, not volume for its own sake." → so-what: a discipline signal, not a share problem — but watch the optics of a decelerating flagship region. `watch`
+1. **Net revenue $9,807M, +14% reported and cn (Payment Network +11%, VAS +19%); the Street stood at $9,669M. Adjusted EPS $5.31 (+21%, incl. $0.16 from buybacks); GAAP EPS $5.28 vs a Street $5.13 on Bloomberg's GAAP-comparable line.** — why: broad strength, plus services projects and deal signings moving from Q4 to Q3. → so-what: roughly two points of acceleration from Q2's +12% are not run-rate; read Q4 against an explicit offset. `thesis`
+2. **Pricing carried a bigger share of the gap between assessments and volume.** Domestic assessments +13% on GDV +7% (6 points; Q2: 2), cross-border assessments +16% on volume +11% (5 points; Q2: 8), transaction processing +14% on switched transactions +9% (5 points; Q2: 3). — why: pricing and mix, partly new pricing and partly previous, with lower FX-volatility revenue as an offset. → so-what: "we will expect some lapping of the pricing as we head into Q4": the domestic and processing spread is the line to watch for 2027. `dots`
+3. **Cross-border volume +11% (Q2: +12%), assessments +16% (Q2: +20%); card-not-present ex-travel +15% (Q2: +20%); intra-Europe cross-border down sequentially.** — why: a new EU customs fee, timing of large retail promotions and lower crypto purchases than last year, all on the lower-yielding intra-Europe leg; "other" cross-border held stable to slightly higher. October 1-21: volume +10%, intra-Europe +8%, other +12%, travel +7%, CNP ex-travel +14%. → so-what: mix is favorable to yield, but the volume line has stepped down 13% → 12% → 11% → 10% quarter by quarter and the call gives no read on where it settles. `watch`
+4. **US is inflecting.** GDV +6% (credit +10%, debit +1% including the Capital One migration); US switched volume +7% in Q3 and +9% in October. — why: lapping Capital One (migration ran late Q3 2025 through Q1 2026), recent commercial wins, higher spend on gas. → so-what: the US drag that held the 2026 volume line down is ending; Pinnacle's entire issuing portfolio moves to the network from 2027. `thesis`
+5. **Rebates and incentives +18% (payment network, reported); management expects them as a % of gross assessments to be higher in Q4 than in Q3.** — why: "a reflection of our solid deal momentum"; CFO frames net revenue yield as the measure. → so-what: on the release's numbers incentives were $6,369M on $12,118M gross (52.6%; Q3 2025: 51.0%), and the guided Q4 step-up is a second headwind to Q4 growth alongside the services timing offset. `watch`
+6. **Operating expenses +12% adjusted cn (1 point from acquisitions), operating income +15%, adjusted margin 60.5% (+0.7 pt).** — why: product, geographic expansion and technology spending, plus BVNK. → so-what: Q4 opex is guided to the **high end of low double digits** (1-point acquisition drag, ~0.5-point FX tailwind), the same pace as Q3's +12%, against Q4 revenue guided to the same band after a pull-forward into Q3: no operating leverage is guided for Q4. `tone`
+7. **Guide: full-year net revenue "high end of low double digits" cn ex-inorganic (unchanged from the Q2 raise), FX +1 pt; full-year opex low double digits; Q4 net revenue high end of low double digits with an FX headwind of ~1 pt (stronger dollar), Q4 opex high end of low double digits; other income and expense ~$115M expense; tax 20%-21%.** — why: the Q3 beat is a timing pull-forward. → so-what: net revenue is +13% cn year to date, so the guide leaves Q4 to land in the same band after the pull-forward; the swing is Q4 and the first 2027 guide. `thesis`
+8. **No 2027 view yet: formal guidance comes with the Q4 release.** — why: "so many puts and takes", lapping of tailwinds becoming headwinds (pricing, Capital One, Venezuela). → so-what: the Jan call carries the guide for 2027 *and* the unwinding of the Q3/Q4 timing; first clean read of Ling Hai's framing. `watch`
+9. **BVNK closed in August, inside the Q3 window the Q2 call gave and the first joint product, the Mastercard Global Money Platform, is live (hold, convert, send, receive fiat and stablecoins; Mastercard Move's 17 billion endpoints; Nuvei and Marqeta first to integrate).** — why: licenses, compliance function and native digital-asset talent were the reasons to buy rather than build. → so-what: revenue impact is "really minimal" off a small base; the test is customer adds (more partners "to be announced soon"). `curious`
+10. **Agentic: a firm line against one-time virtual cards as the long-term answer.** "We are not supporting solutions that take a one-time VCN"; processors using VCNs are "a bridge"; the target is fully tokenized (Agent Pay, Verifiable Intent, Agentic Trust Intelligence, Agent Connect for merchant discoverability). OpenAI signed a broad strategic partnership including Agent Pay; Shopify (Shop Pay) uses Agent Pay and network tokens. "The numbers are not yet significant." → so-what: Mastercard is trying to hold the token layer against wallets and VCN workarounds; the signal is OpenAI, not volume. `thesis`
+11. **Deal flow:** Pinnacle Financial (entire combined portfolio from 2027); DSGV and DZ Bank renewed, Handelsbanken and Swedbank renewed after SEB exclusive; China top-15 issuers plus Bank of Communications Hilton co-brand and a Bank of China consumer debit deal; HDFC Bank small business (3 million cards expected); 15 Essential Debit programs across seven markets (up to 70 million unbanked adults); 100 affluent wins and 25+ World Legend launches; Beast Industries co-brand; travel wins worth more than $20 billion of incremental spend over the life of the agreements. → so-what: renewals in Germany and the Nordics close the main European share-risk questions raised through 2026. `tone`
+12. **VAS +19% (Q2: +18%) on consumer acquisition and engagement, business and market insights, security and digital and authentication; ~60% network-linked; Digital Risk Protection reached nearly 800 enterprise customers after a few months.** — why: flywheel, further penetration, new services in cyber and agentic. → so-what: the cyber leg (Recorded Future, RiskRecon) is now a reported driver, and Q3 VAS includes the services-timing pull-forward. `thesis`
+13. **India: "no news" on competition; reported UPI fees are "a decision that we fundamentally welcome"; the HDFC small-business deal is the news.** → so-what: no change in the stance (partner and compete), the debit proposition is the lever. `context`
+14. **Balance sheet and capital:** repurchased 5.3M shares for $3.0B in the quarter and $648M through Oct 26, $4.9B of authorization left; long-term debt $22.2B (Dec 2025: $18.3B), goodwill $10.8B (Dec 2025: $9.6B) after $1.4B of acquisitions. → so-what: the buyback ran at $3.0B against Q2's $4.9B while debt and goodwill rose; the call does not link the two. `context`
 
-**Seeds → Q3 2026 Watch List:** (1) First quarter/guide under new CFO Ling Hai — any change in tone or
-disclosure. (2) Does BVNK actually close in Q3, and what are the day-one economics/integration notes?
-(3) Does the Venezuela cross-border surge persist or fade (idiosyncratic USD-availability driver)? (4) Does
-the Middle East stay moderated? (5) VAS holds ~18%? (6) Agentic / stablecoin — any first volume disclosure
-(Agent Pay for Machines, OpenUSD go-live)? (7) Europe volume — stabilize or decelerate further? (8) Buyback
-pace after the accelerated 1H.
+**Seeds → Q4 2026 Watch List:** (1) How large is the Q4 revenue offset from the Q3 services/deal timing? (2) First 2027 guide in the Q4 release: how are the lapping of pricing, Capital One and Venezuela framed? (3) Rebates and incentives as a % of gross assessments, guided higher in Q4. (4) Does cross-border volume stop at ~10% (intra-Europe customs-fee and crypto comps)? (5) Does US switched volume hold at +9% as Pinnacle and commercial wins phase in? (6) Does VAS hold high-teens, and what does BVNK add? (7) Any first agentic or Global Money Platform volume or customer disclosure (OpenAI, Nuvei, Marqeta)? (8) Buyback pace and the debt that funds it.
 
 ---
 
-## Transcript — Q2 2026 (July 30, 2026)
+## Transcript — Q3 2026 (October 29, 2026)
 
 Operator
 
-Good morning. My name is Julianne, and I will be your conference operator today. At this time, I would like to welcome everyone to the Mastercard Incorporated Q2 2026 earnings conference call. All lines have been placed on mute to prevent any background noise. After the speakers' remarks, there will be a question and answer session. If you would like to ask a question during this time, simply press star, followed by the number one on your telephone keypad. Please only press star one once to queue up for a question, as pressing star one multiple times may affect your position in the queue. If you would like to withdraw your question, press star one. Thank you. Mr. Devin Corr, Head of Investor Relations, you may now begin your conference.
+Good morning. My name is Elodie, and I will be your conference operator today. At this time, I would like to welcome everyone to the Mastercard Incorporated Q3 2026 earnings conference call. All lines have been placed on mute to prevent any background noise. After the speaker's remarks, there will be a question and answer session. If you would like to ask a question during this time, simply press star followed by the number 1 on your telephone keypad. Please only press star 1 once to queue up for a question, as pressing star 1 multiple times may affect your position in the queue. If you would like to withdraw your question, press star 1 again. Thank you. Mr. Devin Corr, Head of Investor Relations, you may now begin your conference.
 
 Devin Corr
 
-Thank you, Julianne. Good morning, everyone, and thank you for joining us for our second quarter 2026 earnings call. With me today are Michael Miebach, our Chief Executive Officer, Sachin Mehra, our Chief Financial Officer, and Ling Hai, our President of Asia Pacific, Europe, Middle East, and Africa, and incoming CFO effective August 3rd. Following comments from Michael and Sachin, the operator will announce your opportunity to get into the queue for the Q&A session. It is only then that the queue will open for questions. You can access our earnings release, supplemental performance data, and the slide deck that accompany this call in the investor relations section of our website, mastercard.com. Additionally, the release was furnished with the SEC earlier this morning. Our comments today regarding our financial results will be on a non-GAAP, currency-neutral basis unless otherwise noted.
+Thank you, Elodie. Good morning, everyone, and thank you for joining us for our third quarter 2026 earnings call. With me today are Michael Miebach, our Chief Executive Officer, and Ling Hai, our Chief Financial Officer. Following comments from Michael and Ling Hai, the operator will announce your opportunity to get into the queue for the Q&A session. It is only then that the queue will be open for your questions. You can access our earnings release, supplemental performance data, and the slide deck that accompany this call in the investor relations section of our website, mastercard.com. Additionally, the release was furnished with the SEC earlier this morning. Our comments today regarding our financial results will be on a non-GAAP, currency-neutral basis unless otherwise noted. Both the release and the slide deck include reconciliations of non-GAAP measures to GAAP-reported amounts.
 
-Both the release and the slide deck include reconciliations of non-GAAP measures to GAAP reported amounts. Finally, as set forth in more detail in our earnings release, I'd like to remind everyone that today's call will include forward-looking statements regarding Mastercard's future performance. Actual performance could differ materially from these forward-looking statements. Information about the factors that could affect future performance are summarized at the end of our earnings release and in our recent SEC filings. A replay of this call will be posted on our website for 30 days. With that, I will now turn the call over to our Chief Executive Officer, Michael Miebach.
-
-Michael Miebach
-
-Thank you, Devin. Good morning, everyone. This is Sachin's last earnings call as CFO, and he's sitting right across the table. Before turning to our quarterly results, I'd like to take this moment to thank him and recognize him for the significant impact he's had in the role. Sachin, thank you. We're excited to see you carry the same focus, discipline, and drive into your new role as Chief Business Officer. Same time, as you heard from Devin, Ling Hai is in the room today. He will assume the role of CFO, bringing his deep knowledge of our business, our products, and our industry. You've seen that play out in the company's strong track record of supporting and growing with customers across Asia, Pacific, Europe, Middle East, and Africa. These changes, as well as those across the entire leadership team, reflect the strength and depth of our team.
-
-Operating as one team brings complementary experience and perspectives that sharpen focus, strengthen execution, and create greater value for our customers and shareholders. From a position of strength, this evolution will help us capture the opportunities ahead and continue realizing Mastercard's full potential, and that's priceless, of course. With that, let's drive into this quarter's results. The second quarter of 2026 was another strong quarter for Mastercard. Net revenues were above our expectations, up 12%, adjusted net income up 16%, and value-added services net revenue up 18%, all year-over-year on a non-GAAP, currency-neutral basis. The macro environment remains supportive. Consumers and businesses are healthy and continue to spend, supported by positive job growth, low unemployment, and real purchasing power in many major economies. At the same time, we continue to monitor geopolitical uncertainty and its potential economic impacts.
-
-Macro is the only one part of our growth story. Our performance is driven by a clear strategy, disciplined execution, and differentiated value for our customers. We remain focused on consumer payments, commercial and new payment flows, and value-added services and solutions, each with significant runway, and together, reinforcing Mastercard's virtual cycle. That's a good roadmap for today's call. Let's dive in. Starting with the secular opportunity, there is significant runway to digitize consumer and commercial flows for many years to come. As a reminder, at our last Investor Day, we shared that only a third of consumer transactions were carded, and the secular opportunity is even larger in commercial flows. We're targeting the secular opportunity in a way that drives outsized growth to Mastercard.
-
-For example, we continue to work with governments around the world to digitize disbursements and benefits programs, making it easier for consumers to access and use benefits and driving more volume to Mastercard. This includes food assistance programs in the United States, which represent $100 billion of spend each year. Through our exclusive partnership with evermore, we are now rolling out a new program for beneficiaries to have a simple, more secure solution. We're also capturing incremental transactions through our exclusive partnership with Alipay+, embedding Mastercard credentials into their network of e-wallets. This quarter, we're expanding this partnership in Mexico with Clip, a leading fintech with a small and micro-business network approaching 1 million merchants. Combining Clip's merchant network, Alipay+ wallet capabilities, and Mastercard's global payment capabilities is a powerful solution to digitize payments in Mexico.
-
-That's a country where more than 70% of consumer payments are cash-based. Mastercard is exclusively tokenizing the stored wallet balances, enabling users to transact across Mastercard's global acceptance network. Complementing our efforts to drive outsized secular growth, we are finding new ways to power payments. Switching is critical to our virtuous cycle. More switch transactions lead to more data to fuel our services and increase our ability to distribute services over our network. We've steadily increased our switching penetration, now reaching 72%. The reason, Mastercard's rich value proposition, especially compared to local networks. It's our global acceptance reach, consumer protections, digital capabilities, and security overlays. We're also expanding our role in switching by flexing our network architecture. We're adapting to best meet the needs of the markets that we serve while ensuring we meet our long-term growth objectives and drive the virtuous cycle.
-
-That's exactly what we're doing in the United Arab Emirates. The Central Bank of the UAE, through its subsidiary, Al Etihad Payments, is partnering with Mastercard to build the switching technology in the UAE for the next phase of the country's domestic payments infrastructure. We will serve as the prime international scheme for co-badged credit cards with the domestic scheme named Jaywan. As part of this partnership, Mastercard will provide switching services behind domestic debit and Jaywan Mastercard co-badged credit transactions in the UAE. These transactions are incremental to what we process through our global switch. Mastercard will also provide value-add services to the domestic switch, including fraud prevention and cybersecurity. Our direct relationships with ecosystem customers in the UAE continue as they do today. That's our best-in-class technology at work locally, powering the UAE's digital economy, facilitating more transactions, and further scaling our services.
-
-That is another example of how we partner locally to drive collective value. We continue to win and expand issuing relationships across our business. In the first half of 2026, we won several hundred flips and deal expansions, which are expected to drive trillions of dollars in incremental volume to our network over the next decade. This quarter, we renewed a key partnership with JPMorgan Chase on the Chase Freedom Flex portfolio in the U.S., and in Mexico, renewed our partnership with Banamex, where we have exclusivity for nearly all portfolios, representing almost 19 million cards. We've expanded our partnership with Revolut, now supporting their affluent debit proposition, Ultra, across Singapore and Australia, plus their commercial portfolio in New Zealand, all building up on our growing partnership in the U.S. and long-standing relationship globally.
-
-We flipped through Alliance Federal Credit Union's U.S. credit and debit portfolios, as well as Eurobank's entire consumer and commercial portfolios in Greece. Once complete, that's over 1 million new Mastercards across the two. We launched new co-brands with Uber and Hilton in Mexico. With a recent flip in Saudi National Bank's travel co-brand portfolio, we're now the exclusive partner across their credit, debit, prepaid, and commercial portfolios. I shared some wins that span commercial already, but let's dig into that a bit more. Mastercard's commercial debit and credit volumes grew at 12% in the second quarter. We continue to build on this momentum as banks and large corporates turn to Mastercard for modernized commercial payment capabilities. We've added on average six million new Mastercard small business cards to the market each quarter for the past several quarters.
-
-We see incremental issuance from this quarter's wins, including Intuit in the United States. Truist Bank in the U.S. has chosen Mastercard's leading virtual card capabilities for their corporate clients' invoice-based payments needs. Also, we continue to support global money movement through Mastercard Move, most recently partnering with WeChat Pay Hong Kong and FlyRemit in India. In the travel space, we have an exclusive partnership with Riyadh Air, Saudi Arabia's new national airline. This is an exciting global first, as consumers can use their suite of branded prepaid and credit cards to purchase tickets and build brand loyalty while travel agents benefit from seamless virtual card payments and Riyadh Air can streamline supplier payments. We're winning. Our geographic footprint, differentiated proposition, and innovation allow us to capture more of the market.
-
-We have added over $230 million net new Mastercards into the market in the 12 months through quarter two of this year. That's new issuers, expanded relationships, and even more payment transactions, more tokens, all of which we can also attach services to. When you think about our virtuous cycle, it's real and at scale. The combination of that network scale, the breadth of our data, the depth of our customer relationships with differentiated services underpin our long-term sustainable growth. Our services benefit from Mastercard's proprietary transactional data as well as open finance, loyalty, and identity trends and insights. This also includes bespoke services like consulting, marketing, both key to winning carded market share and optimizing our portfolios. For example, starting this quarter, we're managing the portfolio conversions for Westpac in Australia and Yapı Kredi in Turkey following our recent wins.
-
-We're working with Santander in the U.K. to accelerate cross-border spend through targeted marketing campaigns. Our work with Bancolombia will help optimize their small business and commercial portfolios. The outcome, more payments volume. Moving to security solutions, a hot topic in today's environment. The proliferation of AI and new frontier models are amplifying new needs. We're seeing increased demand for Mastercard's robust and unique security solutions as clients navigate the ever-expanding threat landscape. Today, we have differentiated capabilities that span cybersecurity, identity, and fraud. Our value suite is unmatched, and we continue to build up on it. Let me share a few examples. We're identifying threats before they materialize. How? We're bringing Recorded Future's market-leading intelligence capabilities to our clients globally and seeing strong engagement across sectors. This quarter, we partnered with Wipro, a global information technology and consulting company, to further scale our capabilities.
-
-Building up on our acquisition of Recorded Future, we also launched Mastercard Threat Intelligence specifically for payment fraud. In its first three quarters, Threat Intelligence has identified more than 7 million card testing transactions across 192 countries. Stopping that activity prevented an estimated $172 million in fraud linked to malicious domains. That's real value to us, our customers, and of course, our cardholders. We're strengthening security and customer experiences. Mastercard's identity solutions help customers authenticate identities for payment and non-payment use cases. This quarter, Rogers Communications in Canada and Delivery Hero leveraged Mastercard's identity capabilities to verify transaction authenticity, customer onboarding, and more. We continue to make commerce safer through new innovations. Mastercard Merchant Trust Services is a new suite of AI-powered capabilities to help identify fraudulent merchants. Keeping the scammers from setting up shop will reduce fraud, cut out disputes, and provide greater security.
-
-The goal, real transactions for real purchases from real merchants. Our value-added services and solutions growth engine is strong and durable. We benefit from the underlying market tailwinds in security, data and AI, personalization, and more. There are also natural synergies between our Value-Added Services and Solutions and our payment network. That includes distribution. Today, about 60% of our Value-Added Services and Solutions net revenue is network-linked. We're attaching services to Mastercard switch transactions, as well as faster-growing drivers such as tokens or card-not-present transactions. Customers are using more Mastercard services, both existing and new products. We do so through direct engagement and through distribution partners. We recently launched Mastercard Partner Advantage Program and have more than 200 partners expanding our reach. All of this drives growth and expanding yields. More customers, more services adopted by each with higher contract value.
-
-That's the virtuous cycle at work, again, and that's powerful. We play a central role in commerce today, and we are shaping the future of commerce, and we're helping our customers navigate that future. Agentic commerce is the next evolution in payments, where the importance of security, transparency, and control only increase. Agentic commerce creates a significant opportunity for Mastercard. It leads to incremental transactions and even more opportunity for our services. Through Mastercard Agent Pay, we're helping power secure and trusted agentic transactions across our global acceptance network using tokenization, zero liability protections, and unique dispute resolution capabilities. These capabilities are just a few of the reasons why we expect cards will prevail in an agentic world, both in consumer and commercial use cases. It's early days, but engagement across the globe is energizing.
-
-The rise of agentic commerce also brings about an entirely new class of payment use cases, machine-to-machine payments. This is an expansion of our addressable market and one that we are at the forefront. We recently announced Mastercard Agent Pay for Machines, which enables AI agents to purchase low-value digital services such as APIs, compute, data, content at machine speed. With on-chain permissioning and off-chain settlement, Mastercard is the only network enabling machine-to-machine payments. An ecosystem is rallying behind us. At launch, we had more than 30 industry leaders participating, including Adyen, Ant International, BVNK, Checkout.com, Cloudflare, Coinbase, and OKX. We are a first mover in this space and one with credibility and trust to deliver. Next is stablecoins. We believe stablecoins have great potential, but to work, there are a few essential principles for it to scale. Reliability, security, and interoperability. That's what Mastercard delivers.
-
-There's clear utility for stablecoins, for example, in some B2B and P2P flows, but no problem to solve in P2M. In fact, digital asset players are choosing to partner with Mastercard to unlock trusted commerce at scale, benefiting from our global acceptance network protections and security. We offer a wide variety of crypto co-branded propositions, and we're seeing strong traction. Our crypto co-brand volume has more than tripled over the last two years. This quarter, we expanded our relationships with Bitget and Kraken. Stablecoins are additive to our network. It's another opportunity for us to enable choice in how our customers and cardholders engage in commerce. We're also enabling our customers to participate in the emerging digital asset ecosystem through the creation of open standards. For our customer, it provides direct participation, reduced dependency on third parties, and the benefits of distributed economics.
-
-OpenUSD is set to go live later this year. It's another coin that we will enable across our network. We believe the space will evolve, and with it will be a creation of digital assets, including blockchains, coins, and tokenized deposits, all operating in tandem and with fiat. That's an opportunity for us. We expect to close the BVNK acquisition this quarter. With BVNK, Mastercard will serve as the trusted interoperable layer, enabling customers to send, receive, store, and convert assets. BVNK's enterprise-grade payment orchestration capabilities, robust licensing, and connectivity are highly differentiated, and they are in market today. In summary, we have a proven strategy and continue to deliver consistently strong results. Our confidence is backed by proof points. We are winning. We're capturing outsized growth. We're delivering differentiated value, and we are shaping the future of commerce. That is what drives sustainable growth.
-
-Sachin, over to you one more time.
-
-Sachin Mehra
-
-Great. Well, thank you, Michael. Look, before I jump into the numbers, I'd like to take a moment to thank all of our investors and analysts. I truly appreciate your engagement, your thoughtful questions, and the support over the past seven plus years that I've had the privilege of serving as the CFO of this company. Mastercard is a special company with so much opportunity ahead, and I'm excited to continue driving our strategy from a different seat. I'm not going very far, and our paths will cross again in a different capacity, and I look forward to it. Now let's dive in. Turning to page three, which shows our financial performance for the second quarter on a currency-neutral basis, excluding, where applicable, special items and the impact of gains and losses on our equity investments.
-
-Net revenue was up 12%, reflecting continued growth in our payment network and our value-added services and solutions, with minimal impact from dispositions. Operating expenses increased 10%, including a 1 PPT benefit from dispositions. Operating income was up 14%. Net income and EPS increased 16% and 19% respectively, driven primarily by the strong operating income growth in the quarter. EPS was $5.04, which includes a $0.14 contribution from share repurchases. During the quarter, we repurchased $4.9 billion worth of stock and approximately $700 million of additional stock through July 27th, 2026. Now turning to page four, where I'll speak to the growth rates of our key volume drivers for the second quarter on a local currency basis. Worldwide gross dollar volume, or GDV, increased by 8% year-over-year. In the U.S., GDV increased by 6%, with credit growth of 10% and debit growth of 1%.
-
-As a reminder, the Capital One debit portfolio migration was basically complete in Q1. Excluding the impacts from that migration, our U.S. debit GDV growth would have been 8%. Outside of the U.S., GDV increased 9%, with credit growth of 9% and debit growth of 10%. Cross-border volume increased 12% globally for the quarter, reflecting continued growth in both travel and non-travel related cross-border spending. Turning to page five, switch transactions grew 9% year-over-year in Q2. We continue to drive contactless penetration, which in Q2 stood at 80% of all in-person switched purchase transactions. This is up 5 PPT since the same period last year. Token penetration reached over 40% of all switched transactions this quarter. In addition, card growth was 5%. Globally, there are 3.7 billion Mastercard and Maestro-branded cards issued.
-
-Turning to slide six for a look into our net revenue growth rates for the second quarter, discussed on a currency-neutral basis. Payment Network net revenue increased 8%, primarily driven by domestic and cross-border transaction and volume growth, as well as pricing. It also includes growth in rebates and incentives. Value-Added Services and Solutions net revenue increased 18%. This includes a minimal drag from dispositions. The increase was driven primarily by growth in our underlying drivers, strong demand for our security solutions, consumer acquisition and engagement, digital and authentication, and business and market insights, and pricing. Let's turn to page seven to discuss key metrics related to the Payment Network. Again, all growth rates are described on a currency-neutral basis unless otherwise noted. Looking quickly at each key metric. Domestic assessments were up 10%, while worldwide GDV grew 8%. The two PPT difference is primarily driven by pricing.
-
-Cross-border assessments increased 20%, while cross-border volumes increased 12%. The eight PPT difference is driven primarily by pricing in international markets and mix. Transaction processing assessments were up 12%, while switched transactions grew 9%. The three PPT difference is primarily due to favorable mix and pricing, partially offset by lower revenue from FX volatility, and other network assessments were $326 million this quarter. Moving on to page eight, you can see that on a non-GAAP currency neutral basis, excluding special items, total adjusted operating expenses increased 10%, which includes a one PPT benefit from dispositions. The growth in operating expenses was primarily driven by spending to drive the execution of our strategic priorities, including initiatives to further harden our infrastructure, geographic expansion, and product innovation. Turning to page nine, let me comment on the operating metric trends for Q2 and the first four weeks of July.
-
-Switched metrics were generally in line with Q1, and underlying spend remained stable. Of note, excluding Capital One debit, on a like-for-like basis, U.S. switched volume growth was 10%, or two PPT higher sequentially. This increase was driven by higher spend on fuel and overall strong consumer and business spending. Moving to our cross-border metrics, our overall cross-border volume growth remained healthy at 12% in the second quarter. Cross-border card-not-present ex-travel remained strong at 20%, benefiting from increased card-not-present spend from Venezuela and the timing of large retail promotional events. While cross-border travel was down sequentially, relative to the April metrics we discussed on our last earnings call, we saw improved growth in the quarter due to lower impacts from the developments in the Middle East and timing of holidays. As we look at the first four weeks of July, our metrics remain relatively stable and strong.
-
-Looking specifically at card-not-present ex travel, let's focus on July compared to June. The sequential decline is primarily driven by timing, including the large retail promotional events that happened in June this year as compared to July last year, and by mix of days. Turning to page 10. In Q2, Mastercard delivered above expectations. This strong performance was broad-based, with the upside primarily driven by lower than anticipated impact from the challenges in the Middle East, an uptick in cross-border spend out of Venezuela, where we are market leaders, and strong demand for our Value-Added Services and Solutions. These results, despite an uncertain geopolitical and economic backdrop, are evidence of the resilience of our diversified business model and our continued focus on execution across both Payment Network and Value-Added Services and Solutions. As Michael said, we continue to see a macroeconomic environment that is generally supportive.
-
-Around the world, economies are adapting to changing conditions, with consumers and businesses continuing to demonstrate resilience. This is reflected in our underlying drivers. We continue to monitor geopolitical tensions and related energy prices, along with critical economic data like unemployment, inflation, and so on. But overall, the underlying fundamentals of consumer and business spending and travel remain healthy. As we look at the second half of the year, our base case continues to assume spending remains healthy. As noted earlier, impacts from the instability in the Middle East moderated throughout the second quarter and were less severe than we anticipated. As we look to the rest of the year, we estimate impacts from the Middle East conflict will remain at similar levels to what we saw towards the end of Q2. As you know, the environment in the Middle East remains dynamic.
-
-Remember, we are a diversified company, and that's true across payment products, geographies, spend categories, and services. This, coupled with our continued execution, helps us navigate across a range of operating environments. Now turning to our thoughts for Q3 and the remainder of the year, which include the impacts related to the acquisition of BVNK that we expect to close in Q3. As it relates to our expectations for the third quarter of 2026, year-over-year net revenue growth is expected to be at the high end of low double digits range on a currency neutral basis, excluding inorganic activity. We expect a minimal impact from inorganic activity and a headwind of approximately 0.5 PPT from foreign exchange, given the recent trajectory of the U.S. dollar.
-
-From an operating expense standpoint, we expect Q3 growth to be at the low double digits range versus a year ago on a currency neutral basis, excluding inorganic activity and special items. We anticipate a 0.5 PPT headwind from inorganic activity, while foreign exchange is forecasted to be a tailwind of approximately zero to 0.5 PPT for the quarter. As we look to the full year of 2026, we expect net revenue growth to be at the high end of low double digits range on a currency neutral basis, excluding inorganic activity. Although this is the same range we shared previously, we now expect to be higher within the range than our prior expectations, largely due to our stronger first half performance. We anticipate minimal impact from inorganic activity and a tailwind of approximately 1 PPT from foreign exchange.
-
-As it relates to operating expenses, year-over-year growth is expected to remain at the low double digits range versus a year ago on a currency neutral basis, excluding inorganic activity and special items. We expect a minimal impact from inorganic activity and a headwind of 0.5-1 PPT from foreign exchange on a full year basis. Other items to keep in mind, on other income and expense, in Q3, we expect an expense of approximately $125 million. This is higher sequentially, driven primarily by incremental interest expense related to our bond issuance in June. This excludes gains and losses on our equity investments, which are excluded from our non-GAAP metrics. And finally, we expect a non-GAAP tax rate in the range of 20%-21% for both Q3 and Q4. And with that, I will turn the call back over to Devin.
-
-Devin Corr
-
-Thank you. Julianne, you may now open the queue for questions.
-
-Operator
-
-Thank you. At this time, I would like to remind everyone, in order to ask a question, press star, then the number one on your telephone keypad. Please only press star one once to queue up for a question, as pressing star one multiple times may affect your position in the queue. We'll pause for just a moment to compile the Q&A roster. Our first question comes from Ramsey El-Assal from Cantor Fitzgerald. Please go ahead. Your line is open.
-
-Ramsey El-Assal
-
-Hi. Thank you for taking my question. I wanted to ask you about stablecoins and agentic commerce sort of together. They're both sort of focus areas for you. You commented on them in your prepared remarks. Do you see use cases in agentic that will require stablecoins, something like micro-transactions perhaps? Or can traditional Mastercard credentials basically fulfill all the use cases that stablecoins can? I'm just trying to figure out whether there's a unique value proposition you're looking to solve for with stablecoins.
+Finally, as set forth in more detail in our earnings release, I would like to remind everyone that today's call will include forward-looking statements regarding Mastercard's future performance. Actual performance could differ materially from these forward-looking statements. Information about the factors that could affect future performance are summarized at the end of our earnings release and in our recent SEC filings. A replay of the call will be posted on our website for 30 days. With that, I will now turn the call over to our Chief Executive Officer, Michael Miebach.
 
 Michael Miebach
 
-Right. Thank you for that question, Ramsey. As we were laying out earlier, we're innovating around the future of payments, and these are two areas that will shape the future of payments, agentic commerce and stablecoins. Let me start off by talking just agentic commerce, and then we see how transactions can flow in agentic commerce.
+Thank you, Devin. Good morning, everyone, and thank you for joining us. Three quarters into the year, our performance continues to demonstrate the strength and consistency of our business. Net revenue growth was up 14% and net income up 18% in the third quarter on a year-over-year, non-GAAP, currency-neutral basis. While there continues to be economic and geopolitical uncertainty, consumers continue to spend, businesses continue to invest, and commerce continues to expand. The economy, our overall business, and our network have a resilient backdrop. At its core, our network helps people and businesses transact and participate in the economy, and our advantage here is clear: a diversified business, a trusted global network, and the ability to help our customers grow. We're building on that advantage by expanding the reach and utility of our network.
 
-There's the consumer-oriented use cases in agentic commerce where our keyword search turns changes, and we may use agents for that. That could be an LLM, that could be a first-party agent by a large retailer. There are transactions that are now then delegated to agents, and that can happen very well through the existing card networks. What you need for that is, that's what merchants always need. They need reach, they need predictable user experiences. That's the same, that's true for consumers. We really believe that cards will prevail in that world. This is a tremendous opportunity for us also on the services side through tokenization, inside tokens and so forth. We talked about this many times. The card infrastructure and the card ecosystem and the Mastercard proposition within that is unique.
+We now have more than 200 million acceptance locations and 300 million more digital access points around the world. That is unmatched. On a year-over-year basis in the first half of 2026, merchant acceptance is up 20% and growing. This includes initiatives like our Pay Local program, which expands acceptance by embedding cards into local wallets, and Tap on Phone, a smart acceptance solution. We are not only expanding how merchants accept payments, we are also finding valuable ways to get more Mastercard credentials to more people. That spans the full consumer spectrum, from premium offerings for affluent consumers and business owners to products that give people their first access to the financial system. There are huge numbers of financially underserved people around the world. Our new Essential Debit product builds on our longstanding work to help open the door to broader financial opportunities and economic resilience.
 
-It's unique because we have additional capabilities that we put into the Agent Pay protocol from us, and one of them is Verifiable Intent, which allows you to basically challenge a transaction, say, "I never wanted to buy this," and then the chargeback process can kick back in. This was innovated together with Google. There's some unique propositions here on the Agent Pay side, but it just basically comes back to the main point that cards can prevail there. Now, if you look on the B2B side, you can see there's a range of agentic commerce transactions that can happen where you have an agent that does purchasing for a company. That can very well happen on the card ecosystem, very similar to what I just said on the consumer side.
+We have signed 15 Essential Debit programs this year across seven markets. These programs give our partners tools to address up to 70 million unbanked adults in those markets. This means more people have a new payment option, our cards, that offer protections and broad acceptance not offered by local payment options. We are seeing early traction across a range of partners. These credentials are now issued within Airtel's scaled mobile wallet ecosystem, launching next quarter in Nigeria, and by Financoop, which supports a large network of cooperative institutions in Ecuador. This year, we have already won 100 new affluent credit and debit programs and launched more than 25 World Legend programs. Mastercard affluent portfolios have higher engagement and higher cross-border spend. In fact, our affluent spend is growing two times faster than overall credit.
 
-Amounts, speeds, purposes, they will need the protections, they need the global reach, all of that can apply, and we believe that's a continued opportunity for us, particularly on the services side again. Now, there could be an entirely new range of transactions, and that is machine-to-machine payments. That is low-ticket, micro-ticket transaction that happens at very high velocity. For that, we can see a world emerging where different kind of underlying infrastructure is required. For that, we've put out our protocol, which is an evolution of Agent Pay, which is Agent Pay for Machines. This is the only network protocol that's out there today to facilitate that. Now, the underlying infrastructure for that, we've mapped it out.
+This quarter, UBS launched a super premium, invitation-only Mastercard credit product in Switzerland's highly competitive affluent market. It includes our concierge service and frequent traveler benefits. Core to our programs is making a real connection with people and offering a product that appeals to their needs. That focus on meeting new people where they are led to our new partnership and co-brand program with Beast Industries. This program spans consumer and small business creator cards. With more than 1 billion followers across social media, MrBeast is one of the most influential creators in the world. That work is not just about clicks. It is capturing the cultural power of digital communities and driving economic and social opportunity. Together, we will connect creators and their communities in new ways, bringing Mastercard scale and capabilities to the next generation as their financial lives evolve. What does all of this tell us?
 
-You can start to see that there is a transaction that is recognized from one agent to another, these machines talking to each other, but the settlement happens through different kinds of rails. That could involve stablecoins, but it also could involve different types of settlements. We're actually quite open to that. What it needs is the immediacy of these agents to recognize that transaction, and that is what Agent Pay for Machines actually does. There is a connection to stablecoins. You could see that stablecoins play a role, but not the only thing. Stablecoins, on the other hand, for us is a separate topic generally.
+Mastercard products are in demand, and that demand continues to grow. More cards and more acceptance points drive more transactions and data, strengthening the power of our network and the value we deliver. Across over 200 countries and territories, every market and region is unique. We are winning, leveraging our global capabilities and that local expertise. Let us look at a few wins from this quarter. In the Nordics, we renewed our partnerships with Handelsbanken and Swedbank, following a previously signed exclusive agreement with SEB. These wins include services like fraud detection and loyalty, strengthening our position in one of the most advanced digital payment markets. At the same time, we renewed DSGV and DZ Bank, two of Germany's largest banking organizations. Let us put that in context. These renewals deepen our relationships with two of the leading credit issuers in Europe's largest economy.
 
-While it will play a role in the financial ecosystem of the future, which is why we have been investing, our current approach on stablecoins is really facilitating that you can spend your crypto balances if you still want to, or your stablecoin balances, that you purchase the same. We facilitated settlement on our networks if that is so wanted. We facilitate money movements using stablecoins to drive immediacy really and transparency of cost. It's also true that stablecoin isn't the answer to everything because you still need protections, you still need acceptance, and you still need to kind of find your way into fiat. We expect a world of multiplicity, many coins, many chains, and all of that needs a trusted interoperable layer because people will transact across different coins and so forth, and that is what BVNK will do for us. Sachin mentioned it.
+They position us to capture the substantial secular opportunity in Germany. In China, our teams on the grounds are very busy building and solidifying our position in the local market. This strong foundation for long-term growth is rooted in the growing acceptance and signing issuer deals to make Mastercard the preferred brand. This includes new programs with China's top 15 issuers. This quarter, we added to that with the new World Hilton co-brand with Bank of Communications and a consumer debit deal with Bank of China, who alone serves hundreds of millions of retail customers. Two fantastic deals to capture domestic and cross-border spend and deliver value-add services and solutions in the market. In the U.S., we secured a major win with Pinnacle Financial Partners. The newly combined bank's entire issuing portfolio will move onto our network starting in 2027.
 
-We're expecting to close the BVNK acquisition. That is another tremendous opportunity for us. Across the whole thing, there's still services opportunities for us. That's a lot more than you asked for, Ramsey, it is all very important. We're very excited about it. The two topics very much to your questions, they do interlink.
+This includes consumer credit, debit, small business, and commercial cards. Finally, moving to India. With a large domestic scheme, this is one of the world's most competitive markets. This quarter, we signed an important small business deal with HDFC Bank. It is India's largest private sector bank with nearly 10,000 branches, over 100 million customers. This deal includes value-add services and solutions and is expected to add 3 million cards to the Mastercard network. Beyond small business, we see a sizable opportunity across commercial payments, including invoice payments. Our work in invoice payments helps transform dated, cumbersome accounts payable processes into automated digital workflows with virtual cards. We focus on bringing more virtual cards to market and embed them directly into tools businesses already use. Tungsten Automation is adding Mastercard's virtual card technology into its automated accounts payable offerings.
 
-Operator
+A leader in intelligent document processing, Tungsten serves more than 25,000 customers. This will enable their enterprise customers to generate virtual cards seamlessly, and with that, accelerate supplier payments, reducing cost, friction, and risk. That is tangible value. We have seen those results play out. For example, a large U.S. retailer consolidated more than $100 million in supplier payments using Mastercard virtual cards through our partner Coupa. This one decision reduced the number of suppliers that needed to be onboarded, saving an estimated $35 million in onboarding costs. That is valuable savings for just one of their many clients, and Coupa is one of many partners working with us on improving B2B supplier payments. There is similar value in the travel vertical, where today we partner with 8 out of the 10 largest players to capture the secular opportunities.
 
-Our next question comes from Sanjay Sakhrani from KBW. Please go ahead. Your line is open.
+After that, our expanded relationship with Checkout.com in the UAE, and you have another channel to bring Mastercard virtual cards to travel businesses at scale. The aggregate of our travel-related wins from just this quarter is expected to generate more than $20 billion in incremental spend on our network over the lives of the agreements. These wins reflect our differentiated capabilities that address specific customer needs, but also create opportunities to deliver more value through value-added services and solutions. Many of our services directly support growth in our payment network. Our analytics, marketing, loyalty, and consulting services help clients acquire, engage, and retain customers while building healthier portfolios and driving more payment activity. For example, through our strategic partnership with Qatar National Bank Group, we are deploying these capabilities across QNB's presence in more than 28 countries to strengthen customer relationships and drive growth.
 
-Sanjay Sakhrani
+American Airlines has one of the industry's largest airline credit card programs. We are supporting customer acquisition for its refreshed premium offering, the Citi AAdvantage Executive World Legend Mastercard. These capabilities, powered by our data, can deliver meaningful results. Across Mastercard marketing services campaigns on a global basis, our clients see an average incremental spend growth of 8 percentage points over the measurement period. As commerce becomes more digital and AI changes elements of payments, our security solutions are becoming more relevant. As a reminder, security solutions include fraud, identity, and cybersecurity. Our portfolio is carefully designed to help our partners protect the ecosystem, and we see demand across the board. This quarter, we added our extended fraud and identity wins with Standard Bank, Monzo, and Starling Bank.
 
-Thank you. Good morning, Sachin and Ling Hai, congratulations again. Sachin, I have a question for you on the acceleration you saw in cross-border from April to June and into July. I know you mentioned the impacts of the Middle East conflict being lower, it seems like a pretty sizable lift. I'm curious if the World Cup had any play in that and factored into that. Should we expect some moderation and obviously anything else to call out? Thank you.
+Starling, for example, extended its use of Fraud Rule Manager, helping it respond faster to emerging attacks, reduce false declines, and protect the customer experience at scale. Within cybersecurity, we continue to scale one-to-one platform sales, but even more so new network products like our newly launched Digital Risk Protection. This capability helps organizations identify vulnerabilities in their own digital environments. After only a few months in market, it now serves nearly 800 enterprise customers. Additionally, our enhanced third-party risk offering brings together RiskRecon and Recorded Future capabilities in one solution. It helps identify, prioritize, and respond to risks before they become business disruptions. AI is not only changing the demand for our security solutions, it's also changing how commerce happens. The foundation I described earlier, broad participation, global acceptance, and trusted capabilities, positions us to help shape the next evolution of commerce.
 
-Sachin Mehra
+That includes agentic commerce, where a buyer uses AI agents to discover, select, and purchase a product or service. There are two forms, machine-to-machine and traditional e-commerce. Combined, they create significant opportunity for Mastercard, from more transactions to new B2B carded payments as businesses utilize agents. Eventually, an entirely new addressable market of micro-transactions, all the while creating more opportunity for our services from fraud to longer-term potential in insight and loyalty. Consumers are already beginning to use agents to discover and purchase products. We expect that trend to build as holiday shopping ramps up and to continue well beyond the season. It is still early days, and the numbers are not yet significant in the grand scheme. As the AI agentic assistants have emerged, agentic transactions are ramping up at impressive weekly growth rates. We're now seeing the early stages of consumer adoption.
 
-Sure, Sanjay. A couple of things to actually talk to as it relates to the trends we saw between April, May, and June. Certainly, you saw a recovery in terms of cross-border travel in the Middle East. Now, just to give you a little bit of color as to what we're seeing in the Middle East, broadly speaking. We did see better spending trends as it relates to outbound from the impacted GCC countries into other parts of the globe. Hard to identify whether that's necessarily tied to the World Cup or not, but we saw trends which were starting to actually present themselves across both consumer spending and commercial spending. For me, the way I kind of think about it is greater confidence in terms of how people are actually doing that outbound spend.
+For this type of agentic commerce to function at scale, we need four things. Trust in the payment, the agent, the ecosystem, and ubiquitous reach. Mastercard has built capabilities for each of these four. For trust in the payment, tokenization is embedded in Agent Pay and backed by the franchise rules everyone expects today. For trust in the agent, Agent Pay ensures agents are verified and authorized by the buyer and that the merchant and issuer are aware. For trust in the ecosystem, we bring transparency and continuity through the payment flow. Verifiable Intent captures the buyer intent, and our recently launched Agentic Trust Intelligence solution helps banks and merchants evaluate transactions initiated by any AI agent. That allows these transactions to occur wherever Mastercard is accepted. That is the unparalleled and growing reach I talked about earlier.
 
-That's also tied, by the way, to increasing capacity from flights and airlines and things of that sort. That's important to recognize. The other thing which has been supportive of cross-border during the quarter has been Venezuela. I called this out in my prepared remarks. Important to understand what's going on there. I think all of you are aware that we deconsolidated our Venezuela operations in 2018, where we deconsolidated revenue and we deconsolidated volumes at that point in time.
+At the same time, we are helping merchants ready themselves and be more discoverable to agents with our new Agent Connect solution. Many partners are putting all of this into practice. For example, Shopify, through Shop Pay, is using Agent Pay and our network tokens to make agentic payments more secure and seamless by preserving the integrity of the consumer's credential end-to-end. Shop Pay is already available on multiple agentic platforms with more to follow. With OpenAI this quarter, we signed a broad strategic partnership that includes the use of Agent Pay and goes well beyond. Our agreement establishes collaboration across payments, joint services growth, and AI transformation. We cannot forget the other technology that is part of virtually every conversation, digital assets and stablecoins. Our customers and partners are continually thinking about how they might use the technology in their offerings.
 
-Primarily due to the fact that it was a very challenged repatriation environment at that point in time. The ability to actually get U.S. dollars from Venezuela was challenged. Well, what we've seen is actually very interesting because over the course of the first quarter, and particularly going into the second quarter, there has become an increased availability of U.S. dollars in Venezuela. What that's effectively meant is that consumers have greater access to U.S. dollars, and they're utilizing those U.S. dollars for their cross-border spending, mostly in what we call card-not-present ex-travel. That's less about travel, that's more about card-not-present ex-travel. Also just to kind of just put a bow around it, we are the market leaders as it relates to Venezuela. It's primarily a debit market, so that's where you're seeing that spend come through.
+To be useful, digital assets need to work with existing financial and commercial services. That means enabling customers to connect digital asset capabilities with the accounts, payment systems, and money movement experiences already in use. That is why we acquired BVNK. Through BVNK, we are expanding the infrastructure that connects stablecoins with traditional payment and money movement experiences. Financial institutions and fintechs today struggle to offer both fiat and stablecoin accounts, creating the risk of customer deposits moving to competing stablecoin accounts. Our first combined Mastercard BVNK product is the Mastercard Global Money Platform, enables financial institutions and fintechs to offer accounts where customers can hold, convert, send, and receive across fiat currencies and stablecoins. Mastercard Move is also integrated, bringing its 17 billion endpoints to the platform. This enables businesses to pay out stablecoin balances directly into recipients' local bank accounts.
 
-What you're seeing is the impact of both that more of, I say lower than April effect, which came through in May and June as it relates to outbound travel from the Middle East. What you're also seeing is the trends from Venezuela, which have been holding up pretty well, to be honest with you. This is a competitive differentiator for us. We are the market leaders, and as you've seen the U.S. dollar availability come into play, you've seen that volume come through in terms of what we're seeing in card-not-present ex-travel there.
-
-Operator
-
-Our next question comes from Andrew Jeffrey from William Blair. Please go ahead. Your line is open.
-
-Andrew Jeffrey
-
-Thank you. Good morning. I wanted to drill down perhaps a little bit, Michael, on some of the domestic switching comments you made. I think the UAE initiative in particular is pretty compelling. What other markets are you targeting for those kinds of solutions? I wonder if, given all of Mastercard's capabilities, Europe is potentially ripe despite their closed-loop initiatives for the same kind of solutions.
-
-Michael Miebach
-
-Great question. Important topic. I want to take you back. I'll make it slightly shorter than previous answer, I think. I'll take you back to 2022, though. This was a time when we were in COVID, we said, "With everything that's going on, it's important to invest in the resilience of our business." We put a particular focus on a technology strategy, really with the goal to allow us to run anything, anywhere. That's what we did at the time, it drove the modularity of our network. That instance in the UAE is exactly that. We're basically running a part of the switch in the UAE, it gives us access to transactions that we didn't have before. It's a good partnership from that perspective, upside for us, but it gives that resilience and global technology to the UAE. Tremendous partnership.
-
-It's not the only partnership, though, where we have that. We have different versions of that, always coming back to it has to work from a technology perspective, has to work from an economics perspective. The give and take have to work for us. We can get access to more transactions, which fuel our virtuous cycle, as I said before. We've done something like this in South Africa, where we built a real-time payment switch that can actually carry anything. It can carry any ISO 20022 transaction, can carry a card transaction. This is the kind of technology that we have, or we're in the process of making available in Europe. Europe, it's a very competitive market with lots of payment choices for consumers there on the P2P side, on the card side. The digital euro is in the making.
-
-There's a lot going on in Europe. We feel very good that we have this technology that allows us to partner in different ways. For now, we are very well positioned with our card proposition in Europe. You know, we used to be Eurocard, so we have deep European roots, and we're competing very effectively today. As far as there are these local alternatives, various local Giros and so forth, a lot of co-badged partnerships. We partner with the wallets like Swish in Sweden, like Bizum in Spain. Wide set of options right now. At this point in time, we bring the most value through our card propositions, but we have the flexibility to do what we need to do should the time come and we find better engagements. That's how I look at it.
-
-You go into Asia, you see in the stand there are partnerships that we have with switches and so forth in other parts of the world. This run anything, anywhere concept is really important for us to see where the world is going. Always comes down to our economic principles, apply our services, economics, and standard technology that we can use so we don't have a 1,000 flowers blooming kind of landscape for us.
-
-Operator
-
-Our next question comes from Dan Dolev from Mizuho. Please go ahead. Your line is open.
-
-Dan Dolev
-
-Hey, guys. Great quarter. Congrats, Michael and Sachin. I had a question about OVAS, specifically about cyber demand. We think, given what we're seeing in security software, [MIPOs is driving very strong demand for cyber demand. Can you maybe unpack the upside to that for Mastercard? It should be a pretty big catalyst in our view. Thank you.
-
-Michael Miebach
-
-Right. On this safety and security part of our portfolio, great question, Dan. Hello once more. You know we have gone much deeper than other market participants on their cyber side, recognizing that as the world digitizes faster, clearly that's an underlying growth driver for us, a tailwind for us. There is more demand. We initially started out in fraud. We're now in fraud and identity, and we're in cyber. That is the portfolio. Those are the three big categories. On the cyber side, we've strengthened our proposition with the addition of Recorded Future.
-
-That's what the portfolio is. Currently, when you think about what is occupying the minds of CEOs, what's occupying the minds of directors in the boardroom, it is cybersecurity. The recent discussions around frontier models and how do you go about them? Is it more of a threat or is it actually a helpful tool for us to identify vulnerabilities in your company's technology? It's a bit of both. We have been engaging from day one on that. All of this puts cyber into the center of the discussion. We have strong relationships with cyber in a lot of our customers, really through the fraud side.
-
-That is a natural growth path for us to engage the CISO, and talk about the expanded capabilities that we have, while at the same time, the CEO talks to the CISO and say, "What are we doing to protect ourselves?" It all comes together in the moment. We're meeting the moment with this portfolio. When I was talking earlier about threat intelligence. Here, with this ever-expanding threat landscape, it is almost impossible for any company to meet every fraud risk that potentially is. What you really need to know is you have to have targeted information on how you might be targeted and what is the threat vector that applies to you the most, so you can actually focus there. That's very much what Recorded Future does today. If you take all of that together, I think we're in a good position here.
-
-As far as our own cybersecurity goes, of course, we have found that leveraging the latest frontier models help us accelerate identifying vulnerabilities. We take those learnings and those best practices on how to do that and share that with our customers around the world so that we can keep the whole ecosystem safer. Fundamentally, a strong trend for us, but let's not forget, it's not maybe that sexy, but everyday fraud. I gave you that example on the $172 million of fraud prevented on malicious domains. All that is powering our cybersecurity business today, and it's attached to the transaction growth that we talked about all the transactions that we're going after. This is a flywheel that is very much needed right now.
-
-Obviously, fraud and cyber risks are not a good thing, but they happen to be a part of a business that we're very good at. We're helping our customers with that.
-
-Operator
-
-Our next question comes from Harshita Rawat from Bernstein. Please go ahead. Your line is open.
-
-Harshita Rawat
-
-Hi. Good morning. I want to ask about Europe. It's a very important region for you. If I look at purchase volumes, it used to grow in the mid-teens, now the growth has decelerated a little bit. Maybe talk about the drivers there in terms of macro, competitive environment, local dynamics, I know there's a little bit of smaller contribution from Asia conversions as well, how should we think about the growth in the region? Thank you.
-
-Sachin Mehra
-
-Hey, Harshita, I just want to make sure I'm clear as which region you're talking about. I didn't quite pick up.
-
-Michael Miebach
-
-Europe.
-
-Sachin Mehra
-
-You said Europe? Okay.
-
-Michael Miebach
-
-Europe.
-
-Harshita Rawat
-
-Yes.
-
-Sachin Mehra
-
-All right. Look, I mean, at the end of the day, our business in Europe continues to perform exceedingly well. We are very much in the space of working very closely with our customers to deliver a ton of value, and they're seeing that come through in the nature of the partnerships which we've got there. I'm going to take you back a few years to talk a little bit about all the wins we had in Europe, and because a lot of that kind of explains the trend which you're talking about right here. Because if you look at the trend in terms of purchase volumes in Europe, back in Q2 of 2024, we were growing at 16%.
-
-At that point in time, what you were seeing was the tailwind of all of these wins come through, whether it was Santander or the fact that we've got wins with NatWest or UniCredit, you name it. All of that stuff was coming through in those quarters, which was giving us a lift in terms of the share wins. Naturally, what's going to happen after that, if you're looking at comparable growth rates on a sequential basis, you're going to start to see the lapping effect of that come through. That's certainly a factor which explains what's going on there. Then, we've been pretty clear about what kind of deals we want to win and what kind of deals we're going to actually pursue.
-
-There have been deals which we have competed for, but we've done it within the realm of what we thought made good financial sense for us. If it didn't work out, we've actually passed on it. For example, in Lloyds Credit, we've deliberately actually decided to go to a certain point in time after which you have to kind of make a call as to whether it makes economic sense or doesn't make economic sense for the company. That's what we did. You're seeing that come through as well in the nature of the roll-off of those volumes, very much the case. That discipline is something we're going to adopt and have always adopted because it's really, really important for us. Volume for the sake of volume is not what this company should be chasing.
-
-Profitable volume, which is going to drive higher net revenue yield, is what we're going to chase. We're going to do it in a manner which works well for our partners to drive higher growth for our partners. You know this, but I'll just say this anecdotally, winning share of a portfolio which is growing at 1% helps me in the first year and then is a huge drag on growth for the years thereafter. If you can't really grow the portfolio, it doesn't really matter. That is very much the philosophy we adopt. I know you asked the question broadly around Europe and trends, but you also asked about the competitive environment, and hopefully that gives you a little bit of color on the mindset that we adopt in terms of how we're actually running our business.
-
-Operator
-
-Our next question comes from Tien-tsin Huang from JP Morgan. Please go ahead. Your line is open.
-
-Tien-tsin Huang
-
-Great. Thanks. Good morning, and thanks and congrats to Sachin. On the U.S. growth, quite healthy here. Just curious how broad-based that is. Any difference in income bands to call out? Because again, that 10% ex cost Capital One is really quite strong. Just trying to get a sense of it has legs. Thanks.
-
-Sachin Mehra
-
-Yeah, sure, Tien-tsin. Look, at the end of the day, the business continues to perform really well. The strong underlying consumer and business spending, which we're seeing in the U.S. There has been a tailwind which has come on account of higher fuel prices, so let's recognize that. You probably have some impact coming through from the World Cup as well, as it relates to the second quarter in particular. Hard to really quantify what that is just because we can't really identify exactly what that is. I would tell you the underlying consumer and business spending trends continue to hold up well in the U.S. To your point, if I look at it's broad-based. We see it across credit and debit. We see it across consumer and commercial. And look, the teams are busy.
-
-They're busy with our customers, helping drive the growth of the customers, which at the end of the day is what matters, right? Because our customers grow, we bring our services assets to them, help them grow their portfolios, which is accretive from a volume standpoint, but also from a revenue standpoint. We're certainly seeing that come through. On your question about mass versus affluent engine, I would say they're holding up well, both across mass and affluent. Certainly in the U.S., but across the world as well. We try and track the best we can as it relates to what we're seeing in spending patterns based on the product codes that are out in the market, which serve the different categories of customers. When we look at that, we're seeing generally strong trends, across both mass and affluent.
-
-What you do tend to see is higher growth in the affluent side of spending. That's kind of not a new phenomenon. That's been with us for some time now.
-
-Operator
-
-Our next question comes from Rayna Kumar from Oppenheimer. Please go ahead. Your line is open.
-
-Rayna Kumar
-
-Good morning. Thanks for taking my question. I noticed you had a nice acceleration in APMEA, in your payments volume, 11% from 9% in the last quarter. Just wondering what the dynamics are there and if that type of growth is sustainable in the region going forward. Thank you.
-
-Sachin Mehra
-
-Yeah, Rayna. A couple of things to keep in mind. Underlying growth continues to perform well in APMEA as the broader region is known right here. The step up that you're seeing between Q1 and Q2 is driven by a couple of factors. Number one, there's a lapping effect. You'll remember last year in the second quarter, we had highlighted that there was some moderation in select markets in the Middle East. You're lapping that effect come through in terms of the growth rate. You've also got the impact of fuel, which is coming through, in terms of trends, and that's not truly in APMEA, that's true broad-based actually, the impact of higher fuel prices. Not to take away from the fact that the business continues to do well, and we continue to actually drive good growth across the portfolio there.
-
-Operator
-
-Our next question comes from Tim Chiodo from UBS. Please go ahead. Your line is open.
-
-Tim Chiodo
-
-Great. Thanks a lot. I want to also touch on the cyber fraud and identity portion of the Value-Added Services portfolio. There's a key underlying word or theme that I think we could maybe hit on here, which is the agnostic. Basically, the products being very agnostic from two ways. One is across card networks, and the other is even across non-payments use cases, many of which you alluded to earlier. I was hoping you could talk about that aspect of these services. A minor numbers question related to this. There's been a few acquisitions and dispositions since you last gave the mix of Value-Added Services from this category. It was around 40% before. If there's been any minor update to that mix, that would be appreciated as well. Thanks.
-
-Michael Miebach
-
-Let me take the first part while Sachin thinks about the mix. Of course, the safety security portfolio that we have cuts across a number of dimensions. As I said before, it started off in card fraud, then it branched out from card fraud into identity, into threat intelligence, cybersecurity at large and so forth. To your point, there is the other dimension is now fraud doesn't only happen on cards. Account-to-account scams, and account takeover threats and so forth. This is all the reality unfortunately today. There is a tremendous opportunity for us to engage our customers there. Now, cons live in an ecosystem, and here, to come to a common fraud solution through our rules, is something that's a little easier than the account-to-account side where this is infrastructure.
-
-We have learned through VocaLink, and our real-time payment expertise how to do this now in account-to-account payments. That is the first step that we've done there to prevent account-to-account fraud, through kind of like a consortium approach with the banks in the U.K. That is a good first step. That's a bit earlier on its journey, but a significant opportunity that we see going forward.
-
-Sachin Mehra
-
-Tim, on your question on mix, just to reiterate, what Michael mentioned in his script was that approximately 60% of our VAS revenue is network linked.
-
-Tim Chiodo
-
-Right.
-
-Sachin Mehra
-
-If your question is how does acquisitions and dispositions impact that? The reality is a lot of the acquisitions which are there, if they're in the security space, tend to be network linked for the most part. As we do more and we start to roll them out in the market and drive the synergistic impact of that, you might see some level of proportionate increase in terms of the network linked revenues which are there. That being said, the remaining 40% also continues to grow at a healthy clip. Just to be clear, right? Things we're doing from a marketing services standpoint continues to be actually a key contributor to our VAS growth. It's important, right?
-
-To actually keep in perspective that that balance of moving away from 60% is not going to change by one or two acquisitions. There's a very deliberate and intended kind of focus to make sure we've got good balance in terms of how our VAS revenues are generated.
-
-Michael Miebach
-
-If we can just add one more point on that. Take Recorded Future, for example. This is not necessarily network delivered on a standalone basis, but through Mastercard Threat Intelligence, actually, it is. Here the key point is when we make an acquisition, what we oftentimes try to do is use the network. That is one option. Sachin just touched on that. There are the kind of products that we sell in a one-on-one engagement or through distribution partners, but they still benefit from Mastercard's unique features, mostly through our data. We bring together the data of the respective acquisition with our data, and that makes a huge difference in terms of this is not just us inserting the company and having some sales synergies. We have more structural synergies out of that, and that's generally kind of target that we're looking for.
-
-Operator
-
-Our next question comes from James Faucette from Morgan Stanley. Please go ahead. Your line is open.
-
-James Faucette
-
-Thank you very much. I wanted to circle back to the open standard and that initiative. One of the questions we've gotten a lot from investors is how we should think about the governance and development roadmap there, and what kinds of initial use cases we should anticipate and think about as that moves forward? Thanks.
-
-Michael Miebach
-
-Open standard. Living up to the name open. Here's a set of company, 140+ companies that have come together to create a consortium that facilitates the OpenUSD coin, which has a couple of aspects to it. It's a neutral market utility. It's with a focus on value exchange and payments. It's a governance structure that is fairly straightforward with these companies around the table. Obviously, not every 140 participants will have a very specific say on that, otherwise we wouldn't move anything forward. This is what is currently being played out in more detail. Broadly speaking, the focus will be on payment use cases. It will be ensuring that the economics can be distributed and everybody can participate. Those are some of the underlying unique features of that. Hence we've seen all of the interest.
-
-For us, this is important, but it's not the only thing that we're doing. The key point, and I said it in my prepared remarks, is this will be one coin that we will enable on our network, and we will enable other coins. We are working with USDC today, USDG, and so forth, choice has always been a key criteria and will be the same here in stablecoins. Going forward, important initiative. We're happy we're part of that from the beginning. We will engage with various other stablecoin consortia around the world, ensure choice and a balanced market.
-
-Devin Corr
-
-One last question, Julianne.
-
-Operator
-
-Certainly. Our last question today will come from Matthew O'Neill from Bank of America. Please go ahead. Your line is open.
-
-Matthew O'Neill
-
-Yeah. Hi. Thanks so much, and congrats again, Sachin. Maybe a couple housekeeping questions just to round out after a lot of good thematic ones. Anything to call out or point to with respect to the rebates and incentive trend as a percent of gross payments revenue through the back half of the year? Obviously, this one's relatively hard to predict and sometimes lumpy. Along those lines, anything that we should prep for with respect to the timing or impact of the BVNK deal closure through the back half of the year as well? Thanks so much.
-
-Sachin Mehra
-
-Sure. First, on your question on rebates and incentives for Q2, our rebates and incentives actually came in pretty much in line with what our expectations were. That's pretty much on point. As it relates to Q3, we expect that our rebates and incentives as a percentage of our payment network assessments will be slightly higher than it was in Q2. Look, I mean, at the end of the day, like you said, it's hard to predict because it's largely based on timing of deals and deal performance and things of that sort. All of that being said, at the end of the day, what we're most focused on is making sure that we've got a rich pipeline of deals and that we are executing on the same, which is where we are right now. We have a rich pipeline. We're executing on that pipeline.
-
-It's in that vein that I've shared this third quarter kind of outlook for where I see rebates and incentives. As it relates to the BVNK closure, as Michael mentioned, we expect the acquisition to close in Q3. That is contemplated in what we've shared with you in our recs with the materials which are posted today. You can see the impact come through. Minimal impact from a net revenue standpoint. There's some impact from an operating expense standpoint. All of that's contemplated in what we've shared with you in our recs.
-
-Devin Corr
-
-Michael, any closing comments?
-
-Michael Miebach
-
-I want to chime in. Sachin, you got so many congratulations, I'll do it one more time. Congratulations.
-
-Sachin Mehra
-
-Thank you.
-
-Michael Miebach
-
-Thanks for this last call. Ling Hai, looking forward to working with you. Congrats to you as well.
+Nuvei and Marqeta will be among the first customers to integrate the platform, with more partners to be announced soon. All of this is complementary to our existing stablecoin offerings such as crypto co-brands and stablecoin settlement. Stepping back, the quarter demonstrates the breadth and consistency of our strategy. We are expanding the reach and utility of our network, solidifying differentiation. We continue to win important relationships and deepen those relationships with differentiated services, growing payments, and protecting the ecosystem. We are extending our trusted capabilities into agentic commerce and digital assets. We are executing and delivering today while investing and solidifying our position for the future. With that, I will turn it over for the very first time to Ling Hai.
 
 Ling Hai
 
-Thank you, Michael. I'm very excited about the new job, and I look forward to leading the next earnings call with you. Also my gratitude to Sachin for being such a wonderful CFO. For those of you on the call, for all the investors and analysts, I look forward to engaging more with all of you. Thank you.
+Thank you, Michael. Turning to page three, which shows our financial performance for the third quarter on a currency-neutral basis, excluding where applicable, special items and the impact of gains and losses on our equity investments. Net revenue was up 14%, reflecting continued growth in our payment network and our value-added services and solutions, with minimum impact from acquisitions and dispositions. These revenues were above our expectations, primarily due to the continued strength of our business and the timing of both services projects and payment network deals. Operating expenses increased 12%, including a one PPT increase from acquisitions and dispositions. Operating income was up 15%. Net income and EPS increased 18% and 21% respectively, driven primarily by the strong operating income growth in the quarter. EPS was $5.31, which includes a $0.16 contribution from share repurchases.
+
+During the quarter, we repurchased $3 billion worth of stock and $648 million of additional stock through October 26th of this year. Turning to page four, I'll speak to the growth rates of our key volume drivers for the third quarter on a local currency basis. Worldwide gross dollar volume, or GDV, increased by 7% year-over-year. In the U.S., GDV increased 6%, with credit growth of 10% and debit growth of 1%, which includes the impacts of the Capital One debit migration. Outside of the U.S., GDV increased 8%, with credit growth of 6% and debit growth of 10%. Cross-border volume increased 11% globally for the quarter, reflecting continued growth in both travel and non-travel related cross-border spending. Turning to page five, switched transactions grew 9% year-over-year in Q3.
+
+We continued to drive contactless penetration, which in Q3 stood at 81% of all in-person switched purchase transactions. This is up five PPT since the same period last year. In addition, card growth was 5%. Globally, there are now 3.8 billion Mastercard and Maestro-branded cards issued. Turning to slide six for a look into our net revenue growth rates for the third quarter, discussed on a currency-neutral basis. Payment network net revenue increased 11%, primarily driven by domestic and cross-border transaction volume growth as well as pricing. It also includes growth in rebates and incentives. Value-added services and solutions net revenue increased 19%. This includes a minimum impact from acquisitions and dispositions and now reflects the contributions from BVNK.
+
+Excluding these impacts, the increase was driven primarily by growth in our underlying drivers, strong demand across consumer acquisition and engagement, business and marketing insights, security solutions, as well as digital and authentication, and finally, pricing. Let's turn to page seven to discuss key metrics related to the payment network. Again, all growth rates are described on a currency-neutral basis unless otherwise noted. Looking quickly at each key metric. Domestic assessments were up 13%, while worldwide GDV grew 7%. The six PPT difference is primarily driven by pricing and mix. Cross-border assessments increased 16%, while cross-border volumes increased 11%. The five PPT difference is driven primarily by pricing in international markets and mix. Transaction processing assessments were up 14%, while switched transactions grew 9%. The five PPT difference is primarily related to pricing and a favorable mix, partially offset by lower revenue from FX volatility.
+
+Other network assessments were $285 million this quarter. Moving on to page eight. You can see that on a non-GAAP currency neutral basis, excluding special items, total adjusted operating expenses increased 12%, including a one PPT increase from acquisitions and dispositions. The growth in operating expenses was primarily driven by spending to drive the execution of our strategic priorities, including product innovation, geographic expansion, and continued investments in our technology. Turning to page nine, let me comment on the operating metric trends for Q3 and the first three weeks of October. Starting with Q3, switched volume and transaction metrics are generally in line with Q2 and remained strong. Of note, the sequential increase in the U.S. switched volume was primarily due to recent commercial wins. Looking at cross-border.
+
+First, lower yielding intra-Europe volumes were down sequentially from Q2 to Q3, driven by the impacts related to a new customs fee in the E.U., timing of large retail promotional events, and lower crypto purchases in the quarter compared to last year. These impacts on intra-Europe cross-border were the primary reasons for the decline in card not present ex-travel sequentially. Growth in higher yielding other cross-border remained stable and slightly higher quarter-over-quarter. As we look to the first 3 weeks of October, spend remained strong with metrics generally in line. A few points to note. In the U.S., switched volume improved sequentially as we begin to see the lapping of the Capital One debit migration, the lift from recent commercial wins, and higher spend on gas.
+
+As a reminder, the Capital One debit migration began towards the end of Q3 last year and continued through Q1 2026. Looking at cross-border, the sequential impacts remain predominantly intra-Europe. Growth in cross-border card not present ex-travel continued to see the impacts from 2 of the areas I noted earlier, notably the customs fee and a tougher comp due to higher spend on crypto purchases last year. The slight deceleration in cross-border travel was due to timing of holidays. Overall, underlying spend remains strong and consumers and businesses are spending. Turning to page 10, I wanted to share our thoughts for the remainder of the year. As mentioned, consumer and commercial spend was healthy in Q3 and so far into Q4. Our business fundamentals are strong, and we continue to deliver solid growth across both our payment network and value-added services and solutions.
+
+These results reflect our winning strategy, strength of our innovations, diversification of our business, and our relentless commitment to serving our customers. This is all underpinned by a supportive macroeconomic environment with balanced labor markets, strong household balance sheets, and continued wage growth. To date, consumers and businesses have demonstrated resilience. There is heightened geopolitical uncertainty, which has persisted for some time, driving energy prices higher and putting more focus on monetary policy around the world. We will continue to monitor the situation just as we always do. Our outlook on growth for the remainder of the year continues to remain positive. Turning to our expectations. For the full year 2026, we expect net revenue growth to remain at the high end of low double digits range on a currency-neutral basis, excluding inorganic activity.
+
+As a reminder, in Q2 earnings, we told you that our expectations were higher in the range compared to earlier in the year. Our full year remains in line with these expectations. We anticipate minimal impact from acquisitions and dispositions and a tailwind of approximately 1 PPT from foreign exchange. We also expect full-year operating expenses growth to remain in line with previous expectations at a low double digits range versus a year ago on a currency-neutral basis, excluding inorganic activity. We expect a minimal impact from acquisitions and dispositions and a headwind of 0.5-1 PPT from foreign exchange on a full year basis. As it relates to our expectations for the fourth quarter of 2026, year-over-year net revenue growth is expected to be at the high end of low double digits range on a currency-neutral basis, excluding inorganic activity.
+
+We expect minimum impact from acquisitions and dispositions and a headwind of approximately one PPT from foreign exchange, primarily driven by the strengthening of the U.S. dollar over the past quarter. From an operating expense standpoint, we expect Q4 growth to be at the high end of low double digits range versus a year ago, again, on a currency-neutral basis, excluding inorganic activity. We anticipate a one PPT drag from acquisitions and dispositions, while foreign exchange is forecasted to be a tailwind of approximately 0.5 PPT for the quarter. On other income and expense, in Q4, we expect an expense of approximately $115 million. This excludes gains and losses on our equity investments, which are excluded from our non-GAAP metrics. Finally, we expect a non-GAAP tax rate in the range of 20%-21% for both the full year and Q4.
+
+With that, I will turn the call back over to Devin.
+
+Devin Corr
+
+Thank you. LD, you may now open the line for questions.
+
+Operator
+
+At this time, I would like to remind everyone in order to ask a question, press star and then the number 1 on your telephone keypad. Please only press star 1 once to queue up for a question as pressing it multiple times may affect your position in the queue. We will pause just a moment to compile the Q&A roster. Your first question is from the line of Harshita Rawat with Bernstein. Please go ahead.
+
+Harshita Rawat — Bernstein
+
+Hi. Good morning. Michael, I want to ask about agentic commerce. A lot has been happening here, and it feels like there's a lot of patchwork of checkout options ranging from single-use virtual cards to wallets. My question is how important it is for you that Mastercard Agentic Tokens are being used as opposed to wallets or virtual cards. I know you have your own probability-based risk signals with Agent Pay now as well. How can you drive adoption for Mastercard Agent Pay? I know you talked about Shopify, OpenAI as well. Thanks.
 
 Michael Miebach
 
-That leaves me to do one important thing, and that is thank our employees around the world who do everything and make everything happen that we just shared with you. Also to thank you for your trust and support of Mastercard. Talk to you next quarter. Thank you very much.
+Thanks, Harshita. Morning, everyone. This is an important question. Agentic commerce, first of all, we think is the next evolution of digital commerce. It went through a year and a bit, in terms of getting the ecosystem ready. There's Agent Pay out there. There are the solutions out there. You just listed an additional set of
 
-Sachin Mehra
+checkout ways that are out there. The ecosystem's kind of balancing out. When you think about what matters, what I said in my prepared remarks is the trust in the payment is key. The trust in the agent is key. The trust in the ecosystem is key, and generally, reach is key. If we think that matters to merchants, that matters to consumers, altogether, I think this is the direction that the ecosystem is going into. It's also true, though, that not everybody's ready at the same time. There's a lot of patchwork going on right now, and I wouldn't call that solutions. It's kind of patching towards what is the golden goal here, and the golden goal I just listed. You have a protected transaction that works in the same way as consumers are used to and merchants are used to.
+
+One of the things that need to happen before this to really take off is consumers need to feel comfortable. Use of Agent Pay and having registered agent is a key thing. The other thing is merchants need to be actually discoverable because then the other side of the transaction isn't really working. That's a piece that is slightly behind the first one. If everybody uses Agent Pay, that doesn't mean that every merchant is still discoverable. By the way, there are other solutions out there similar to Agent Pay, but it's not virtual cards. On the merchant's discoverable side, how do I get my product catalog as a merchant into an agentic experience that a consumer is choosing? That's the key thing. Our Agent Connect solution helps to bridge that one. We're kind of ready to take off.
+
+It is in everybody's best interest to use Agent Pay and equivalent. We are not supporting solutions that take a one-time VCNs out there as you're fronting a transaction. That fundamentally breaks a transaction that is important from a consumer perspective. They made a choice. It's important from a rewards perspective, from a control perspective, and so forth. I think we're at this turning point where everybody is pushing in the same direction. We are very clear that fully tokenized all the way through agentic pay or an equivalent is the way to go. If we get this all right, it will truly be the next evolution of digital commerce.
+
+Harshita Rawat — Bernstein
 
 Thank you.
 
 Operator
 
-This concludes today's conference call. You may now disconnect.
+Next question, please. Your next question is from the line of Tien-tsin Huang with JPMorgan. Please go ahead.
+
+Tien-tsin Huang — JPMorgan
+
+Hi, thank you. Great results here. Ling Hai, welcome to the call. I wanted to ask on just the outperformance and growth for the quarter and the 2 points of acceleration in revenue growth. It seemed pretty broad-based, but just want to maybe just give us a little bit more detail on that, anything that was more one time in nature, et cetera.
+
+Ling Hai
+
+Thank you, Tien-tsin Huang, for the question. Yes, if I look at the overall performance in Q3, it really speaks to the strength of the business, and it is very much broad based, especially in value-added services and solutions. I do want to point out, as you probably heard in my prepared remarks, there is also a little bit timing of services projects and also the signing of deals moving from Q4 to Q3. So that really means it is a revenue benefit for Q3. You will see a similar offset in Q4. But overall, we continue to see strength. The underlying business is very strong. Consumers and businesses are spending. The overall environment remains very supportive. Consumer sentiment is positive. So all those things are very good. But we also know there is uncertainty, there is puts and takes. But overall, Q3 is very strong and we are very, very glad about the accomplishment.
+
+Tien-tsin Huang — JPMorgan
+
+Thank you.
+
+Operator
+
+Your next question is from the line of Adam Frisch with Evercore ISI. Please go ahead.
+
+Adam Frisch — Evercore ISI
+
+Hi. Thanks for taking my question. Cross-border is still a little bit, still obviously strong, but I know there were some portfolio changes in recent quarters. Should we expect some modest acceleration there as you move forward and lap the comps, or are there some underlying trends that are having a larger effect? Michael, just a clarification. If there's a processor that is using a virtual card to facilitate agentic transactions, so if I put my Mastercard in this particular wallet and they use a virtual card to facilitate the transaction, are you not supporting that scenario? Thanks, guys.
+
+Ling Hai
+
+Thanks, Adam. Let me take the first part of the question first. First off the bat, I would say when you look at cross-border volume at 11%, that is very strong. Not to also minimize the revenue side, cross-border assessment is 16% growth, so that's very strong performance. If we break it out a little bit, as you heard me talk about if you look at the cross-border card not present excluding travel, you're seeing a Q2 20% going to 15%, but 15% is also very strong, and I provided the explanations for why we are seeing a little bit of a downward trend in terms of the volume. Mostly it's intra, which is lower yielding. The other cross-border volume, which is the inter volume, remains very healthy, very resilient. As I have always said, we benefit from our diversification.
+
+You can have impacts hitting in one segment, one geography, but we can handle that because we're diversified and also benefit from upticks in other areas. A great example this year is we saw some negative impact out of the Middle East, the GCC countries.
+
+We then see this benefit in terms of outbound from Venezuela, right? In terms of where cross-border travel stands, I alluded to the fact that, yes, the Middle East conflict continues to have an impact. As we look at the balance of the year, as we've told you before, we are expecting a level that's similar to the end of Q2, and that's what we see in Q3. I think about the Middle East conflict, I think about the share shifts you mentioned, both are discrete and do not represent any fundamental change to our proposition. I think the underlying spend remains strong and we're very focused on driving cross-border travel. We have those services that's called Optimization Travel Rewards. We'll continue to do that.
+
+What is important to note is that we will continue to be focused on giving our consumers the right propositions for cross-border, whether it is travel or non-travel.
+
+Michael Miebach
+
+Adam, to your clarification question on the agentic. Let me be very clear. What we are not supporting is VCN as a solution in between. That is not the consumer scenario that you asked. You said, "If you put your card somewhere into an agent as an agent-first solution or whatever it is," consumers do what they do, and it is their choice, and we try to give them many choices to choose Mastercard. A VCN is a processor decision that is a bridge to get ready for a fully tokenized transaction all the way through for a period of time. We are cognizant that this ecosystem needs to get there, no question about it, but that is not a long-term solution that we will support.
+
+Adam Frisch — Evercore ISI
+
+Thank you, guys.
+
+Operator
+
+Your next question is from the line of Andrew Schmidt with KeyBanc Capital Markets. Please go ahead.
+
+Andrew Schmidt — KeyBanc Capital Markets
+
+Thank you very much. Hi, Michael. Hi, Ling. Good morning. Maybe we could just touch on the competitive environment in developing markets like India and Brazil, where there are entrenched A2A systems. The HDFC deal sort of piqued my interest, but there's been some interesting developments there. UPI pricing has increased. It seems like the markets might be broadening out a little bit. If you could just talk about positioning, any changes there, that would be helpful. Thank you so much.
+
+Michael Miebach
+
+All right. Thank you for your question. Let me just frame up the payment ecosystem to start with. Super competitive, and there is nothing new there. It has been competitive for some time. You have these wide ranges of competitors that are coming in, into payments and seeing the potential that we are seeing. If I go through some categories, before I find my way all the way to India, digital players, wallets, buy now, pay later providers have come in and, in the end, found a way to partner because we provide scale and protections and so forth. That is one angle on how we partner with new entrants. Stablecoin has been another kind of shift in the ecosystem. We have integrated that into our system to make datas available because we believe in consumer choice.
+
+We partner with governments and central banks around the world, and we do that on financial inclusion. We do that on protecting their economies. There are so many ways on how we are engaged in these 220 countries and territories around the world. You mentioned India in particular. India is a somewhat unique situation, but not totally unique. You could draw some comparison to Brazil as well, where there are two large economies that had one particular issue that was not solved by the private sector, and that was financial inclusion with very large population sets where people do not have access. I talked about this in my prepared remarks, that we as the private sector and Mastercard in particular, is very focused on financial inclusion. So we are driving that.
+
+It is true that in India, one of the most competitive and dynamic payments markets in the world, the Indian government has led the setup of UPI, which is a tremendous system and has brought a lot of people into the financial ecosystem, which is generally fantastic. This has grown to considerable scale, but if we go by reports, there are reports that are saying that the government is considering, the kind of owners of UPI are considering to have some additional fees in there that will, presumably, I cannot talk for them, but is really the interest of taking this amazing ecosystem that they have built and continue to fund it in a way that works for all parties as it continues to grow. So that is a decision that we fundamentally welcome.
+
+We continue to engage in India very effectively with the government, with the private sector. We have, meanwhile, spent the time to strengthen our debit proposition, which competes in the market. Fundamentally, I see what UPI has done is bringing a funnel of people into the digital ecosystem that will grow. They will graduate to different sets of products, which will include debit and then eventually credit. There is so much opportunity in India as well as in Brazil, where we essentially pursue the same strategy. So it's partner and compete. It's a market where we are open to compete. Same for Brazil, and that is kind of the key aspect for that. Overall, I think no news on the India front. But the HDFC deal is news. So, winning with the largest private sector bank in India is fundamentally something we're very excited about.
+
+We continue to lean in.
+
+Andrew Schmidt — KeyBanc Capital Markets
+
+Thank you very much.
+
+Operator
+
+Your next question is from Darrin Peller with Wolfe Research. Please go ahead.
+
+Darrin Peller — Wolfe Research
+
+Hey, guys. Thanks. Nice job. Just maybe when we look at VAS, and again, I know there was some one-time or near-term items, but the overall strength is consistent. Maybe just touch again on the key drivers. Honing in a little bit on cyber and what you're seeing there. I know Recorded Future has had some really good success with a lot of governments that are maybe even incremental to just payments offerings. Can you help us expand on what that could mean for the overall business going forward? Then, just a quick question on the puts and takes for Q4. If you don't mind, if you could quickly just give us a sense. We know comps get a little bit easier, the Capital One conversion has started, and pricing continues to be strong for our checks for fourth quarter.
+
+What are the puts and takes on guide for Q4? Thanks again, guys.
+
+Ling Hai
+
+Okay. Let me start with the color on the financials first. Darren, you're absolutely right. Broad-based strength in value-added services. If I think about where the strength and the durability come from, I think about the following. First of all, as we have told you, 60% of our services are network linked. So the drivers themselves create the tailwind. So that ability to have payment volume where we can then apply services, and the services then create the differentiation, that's the flywheel effect, and we're very proud of this business model. Secondly, if I look at services, just if I think about existing services, there's room for further penetrating our existing customer base. Right? So we have a very disciplined approach in terms of cross-sell, up-sell, in terms of looking at our customer base and where the penetration gap is.
+
+The third one I would say is, you mentioned it. There's room for new services in cyber, in a new world of agentic or the evolution towards that. By the way, I don't think agentic is going to be the only mode of commerce. It is going to be multimodal. Therefore, we have to be versatile and cut across all these different modes, whether it's in-person transactions, online, and agentic down the road. They can all coexist, and that speaks to the versatility of the network, and our services can apply across the board. Cyber is a big issue. AI will create more vulnerabilities, and therefore, we will need to come up with the best solutions to help our customers and consumers, customers safeguard the network and their systems, and the consumers to safeguard their payments as well.
+
+Fundamentally, those are the things that are driving. Before I hand over to Michael, you also asked about the Q4 guidance and the puts and takes. I would say, again, I talked about the timing of revenue. You see a little bit acceleration, and services play a big role because we accelerated a lot of the services projects in Q3, and therefore, accordingly, you are going to see an offset in Q4. Michael, please.
+
+Michael Miebach
+
+Yeah. You gave a very holistic answer. I just want to remind everybody. This situation where AI is not only driving productivity upside and is fueling new products for us, but it is also unfortunately, a tool in the hand of fraudsters and scammers and so forth. That is a situation that is fairly new. What is not new is that we stepped into the security market like a decade ago. We are very deeply invested in this space. This has been a significant contributor to our growth rate for that past decade. Overall, that business was initially fraud related, then we expanded into identity, and now we are in cybersecurity in a significant way, and I talked about that in my prepared remarks.
+
+I do not want to take too much credit, but our investment in Recorded Future kind of looked ahead and said, in this kind of a world where the threats are coming from all sides, it is so critical for us to provide threat intelligence to people because nobody can really defend themselves against all these risks. If you knew with higher probability where your risk is going to be, particularly on the payment side and the fraud sides, what are compromised cards, et cetera. This has been a long arc for us, and it just meets the moment. But that business has been growing very fast all the time. We are not expecting a significant kind of jump from one day to the other. All of this is kind of playing out at the right time and as predicted and expected for us.
+
+Darrin Peller — Wolfe Research
+
+Great. Thanks, guys.
+
+Operator
+
+Your next question is from the line of Will Nance with Goldman Sachs. Please go ahead.
+
+Will Nance — Goldman Sachs
+
+Hey, thank you for taking the question. I heard some of the commentary on some of the intra-Europe volumes. I was just wondering if you could kind of take a step back holistically about what you're seeing around the European consumer. Peeling back some of the noise, there's been a lot of focus on energy shocks. When you take out some of the discrete impacts, how are you kind of feeling about the trajectory of consumer spending there? Appreciate you taking the question.
+
+Ling Hai
+
+Thank you, Will. I'll take this one. Of course, before this job, I also oversaw Europe. It's a very important market for Mastercard, very sizable. I would say if I take a look at the macro environment right now, the European consumers are very resilient. That's probably the best description. The other thing that I would say is, I see in our own business, in the payment business, we see a lot of innovation. That innovation comes from our customers, whether the banks, the fintechs, the digital players, but also our teams on the ground. That is going to be a very important driver in terms of our growth. To your specific question about intra-Europe, I talk about the reasons, right? Nothing structural. It's more about timing and comparisons. I think overall, we see the market being stable and consistent right now.
+
+We've got some share shifts, but we'll continue to win deals in this market as well. We're seeing tremendous success in value-added services and solutions. Europe is probably a standout on this front. That's also very important for us to achieve that sustainability.
+
+Michael Miebach
+
+If I can add one point, I think it is important to remind us, when we look across Europe, very evolved economies, but it is still also true that at the same time, you still have a significant secular opportunity, as I mentioned in my prepared remarks earlier. DSGV and SEB are just two big wins that are going to help us eat into that secular opportunity in parts of rural Germany, for example. It is not just about spend, it is also about the secular opportunity and the tools that Ling Hai referred to are going to help us to go after that in many different ways, including our real-time payment position in Europe and our services and our card propositions.
+
+Operator
+
+Your next question is from the line of Timothy Chiodo with UBS. Please go ahead.
+
+Timothy Chiodo — UBS
+
+Great. Thank you. I also want to touch on some of the mechanics around agentic commerce. So appreciating that we are moving past the one-time use virtual card at some point and moving more towards the long-term of agentic network tokens. Specifically, I would like to dig into some of the steps for merchant readiness. You mentioned earlier some of the discoverability aspect, and I totally appreciate that. But I want to focus a little bit more on the ability to accept a network token and some of the work that is being done by either merchant acquirers or the merchants themselves to be ready for that. And whether or not the standard website can be that acceptance tool or if separate endpoints might be needed in certain cases. Any of that mechanic and the progress being made there would be much appreciated. Thank you.
+
+Michael Miebach
+
+Right. Tim, this is a wide spectrum, on kind of where merchants are on that. Take a small business that just has moved from a physical-only business to having some sort of digital component of their business. They are going to need all the help they can get to set that up. And you take a large merchant, they are going to probably consider a first merchant, or first agentic agent experience themselves and putting their own agent out there. And everything in between. So the community of PSPs and ISVs and processors are going to be absolutely critical to cater to all of that.
+
+With our solutions, Agentic Pay, Agent Connect, et cetera, what we're solving for is that, the individual merchant will not have to go with one solution for one partner and with some other solution for some other partner, because we're going to be that interface that deals with a lot of that. That's kind of where we are. There's a lot of details and nitty-gritties in that. Our Chief Digital Officer, Jorn, loves talking about this in all the detail that you want, but currently that is the situation. We are covering the base that we can cover as a network, and we're engaging the processor community to ensure that things like VCNs are only a bridge, because that's not a good long-term solution.
+
+But some of these issues that you highlighted, Tim, need to be addressed because otherwise it's not going to take off, and we believe it will take off.
+
+Timothy Chiodo — UBS
+
+Thank you.
+
+Operator
+
+Your next question is from the line of Sanjay Sakhrani with KBW. Please go ahead.
+
+Sanjay Sakhrani — KBW
+
+Thank you. Good morning. I guess, Michael, it's been 3 months since the BVNK acquisition, and the stablecoin ecosystem continues to evolve. I know there's a lot also happening with agentic as well. I'm just curious what your observations are with BVNK. Do you think the opportunity is moving forward? Any learnings? Obviously, any other types of deals you might do in the space? Thank you.
+
+Michael Miebach
+
+Right. Thanks, Sanjay. Always good to hear your voice. BVNK, it closed between the last call and this call. That's the first big piece. We're very happy that it closed. We're getting really strong out of the gate from day 1. The joint new product that I referred to in my prepared remarks, the Global Money account is out there. That takes our capabilities on the Mastercard side, our global reach, and it takes the stablecoin capabilities of send, receive, store, convert, and puts it all together to enable our customers to choose between fiat and stablecoins on the other side for our customers' customers as well. So tremendous product, very good, great in demand. This is really good. This just came at the perfect time on where the ecosystem is going.
+
+BVNK, if I just go a step back and say, what are they doing for us? What is, in its simplest form, the reason for them to join us? Here it is, it's really providing that choice between and all these capabilities. Send, receive, convert, and store. That's very much it. There are some other reasons for choosing BVNK and not choosing to build this our own. One is they have the full licensing footprint that is needed, and then have a very established compliance function. If you do all the send and receive that you want, we want to sure that it's totally fully compliant, very visible, easily managed too for our customers, and that we're very reliable taking that responsibility on. That's a piece. The other is really the native talent in the digital asset space. We now have a set of colleagues.
+
+We just had our global leadership meeting and they were there. You just see a very different mindset coming into Mastercard, which is excellent. All those, so new product is out, different mindset is in, compliance is ready, and we're out in the market and we're seeing great demand. As this is very straightforward for our customers to say, "All right.
+
+I want to somehow. Let's take a bank. I have really no conversation with a bank CEO where this topic doesn't come up. What should I be doing in a digital asset space? Obviously, there's a bunch of banks who are very clear what they want to do, but there are many others who are not very clear, and they're asking us the question. Our crypto consulting team comes in, and of course, with BVNK, we can now not only offer consulting, but also cover a set of solutions. People come in, and it's kind of an on-behalf service that BVNK provides, along with the money move capabilities that they have. It's not just about stablecoins.
+
+They want to choose for my customer that is a buyer in the U.S. and is importing from somewhere in Asia, what is the best way to send this money? They might choose stablecoins, or they might just choose something else. We have all the rails together. It comes at the perfect moment. BVNK bringing everything that we're looking for, but it's early days, huh? We just closed in August, so we're 2 months in. Integration goes well. That's a non-issue. We're ready to go.
+
+Operator
+
+Your next question is from the line of Trevor Williams with FT Partners. Please go ahead.
+
+Trevor Williams — FT Partners
+
+Great. Thanks very much. I wanted to ask on pricing. I think it was called out as a driver across pretty much every revenue line in the quarter. It would just be helpful to hear how sustainable you think this level of contribution from pricing is. Then just to clarify on the VAS growth in Q3, I know M&A was not material to total company growth, but how much of an impact BVNK had on the VAS growth rate in Q3 would be helpful. Thank you very much.
+
+Ling Hai
+
+Trevor, thank you. First of all, regarding pricing. As we have told you before, we price for value. We will always look for opportunities to price because we deliver value. Token pricing is probably a good example for me to illustrate this point. I feel, like I said before, from a VAS perspective, especially, you have more room for penetration. You have new functionalities you can build, especially in the world of agentic. As you see, we are using MDES as the platform to enhance our token for the agentic world. Of course, there will be new use cases. I think that ability for us to further penetrate existing customers, create new use cases, and penetrate new verticals is there, and we will price for the value we deliver. That is going to be the first point.
+
+Our pricing in Q3 has a component of previous pricing, but also some new pricing. We will expect some lapping of the pricing as we head into Q4, but again, we will continue to look for opportunities. You asked about VAS and impact from M&A. I would say as far as BVNK is concerned, the impact is really minimal. It is a revenue-generating enterprise already, but it is off a small base.
+
+Operator
+
+Your next question is from Fahed Kunwar with Rothschild & Co Redburn. Please go ahead.
+
+Fahed Kunwar — Rothschild & Co Redburn
+
+Hi, both. Thanks for taking the questions. Could I just get an update on incentives? I think you talked about it last quarter being broadly stable. Sorry, slightly higher, and it came in pretty stable. Was there any deal timings affecting incentives? Can we expect any of the Q3 impact you thought would happen going into Q4? Any sense of how large the renewal cycle is for Mastercard going into 2027? Thank you.
+
+Ling Hai
+
+Thank you, Fahad Kunwar, for the question. Let me take this one. Well, look, I have a tendency to call this a contra, but it's rebates and incentives. Well, this contra revenue is a reflection of our solid deal momentum. In fact, if that goes down, sometimes I worry about it. That's one thing to keep in mind, because the deals are what drive our business growth. We have not given guidance for 2026, so I'm not going to do that. As a reminder, though, we use rebates and incentives to drive volume and transaction onto the network. I'm just going to reiterate my flywheel point. You get the volume, then we deliver services on the volume, and then the services in turn become the differentiation that will drive even more volume. We'll continue to do that.
+
+We have been winning deals with new customers and expanding our customers in terms of our deal base. But we've been very disciplined. We've been very disciplined in terms of what deals we want to win, what deals we want to walk away. We're not just going to win every deal. We're not going to do that. We don't want to do that. We're going to win deals that gives us a higher growth momentum that's accretive to the growth trajectory. We're going to win deals that are additive to the cross-border flows, and we're going to win deals that will allow us to deliver services as well. The punchline is we'll use R&I as a tool to drive the growth momentum and the growth algorithm.
+
+Now, at the end of the day, I also want to remind everybody, we measure ourselves on driving net revenue growth and expanding overall net revenue yield. R&I, in my mind, is an input, but the ultimate measurement should be net revenue yield. I also want to maybe take this moment to mention that for Q4, we would expect our rebates and incentives as a percent of gross assessments to be higher than Q3.
+
+Operator
+
+Your last question will be from Dan Dolev with Mizuho. Please go ahead.
+
+Dan Dolev — Mizuho
+
+Hey, guys. Thank you so much for squeezing me in. I just had a question. I know you're not giving any formal guidance for 2027, but maybe, given the strong exit rates that you've highlighted, anything that we should keep in mind, especially as we're lapping things in 2026? I think it would be very useful for investors, any puts and takes on the growth and what we should expect. And congrats again on great results.
+
+Ling Hai
+
+Yeah. Okay. Dan, very nice to talk to you, but let me take this one as well. I also maybe want to quickly clarify, when I talk about guidance previously in my answer, I'm talking specifically about rebates and incentives. It's not so much 2026 versus 2027. It is rebates and incentives, which we don't guide. But for 2027, I guess, Dan, maybe the first answer is we're going to give our formal guidance in our next quarter's release, so please stay tuned. We'll get into the detailed discussion. Now, remember, there are so many puts and takes in our business throughout the year, and there are just so many different factors at play. Sometimes it's really hard to say, hard to predict. The macro environment can play a role. Wins and losses can play a role. Demand for our VAS can play a role.
+
+We have to continue to develop new things and drive new penetration. FX volatility, that's another factor. And just so many other things. The other thing I would say, yes, you're right, some of the headwinds can become tailwinds, but some of the tailwinds can also become headwinds because they're lapping. So there's all those things. All I can say is we have a very strong business model. We have a very diversified business model. We are optimistic about the future, but do stay tuned for 2027.
+
+Devin Corr
+
+Thank you very much. Might have any closing comments?
+
+Ling Hai
+
+Thank you.
+
+Michael Miebach
+
+Yeah. Dan, thanks for the question. That's a great question to end the call on. Thank you again for all of your questions and all your support in the past quarter. We look to talk to you over the coming quarter as we engage. All of these strong results, not possible without the amazing team at Mastercard. I want to thank all of our colleagues around the world who make this happen every day. I want to close this first call with Ling Hai. Thank you very much, and we'll speak to you next quarter. Thank you. Bye-bye.
+
+Ling Hai
+
+Thank you all.
+
+Operator
+
+This concludes today's call. Thank you for attending, and you may disconnect.

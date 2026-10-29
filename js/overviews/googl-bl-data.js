@@ -25,7 +25,8 @@
 //
 // 3) GOOGL_EW_LINES — one dive per line. Quotes are verbatim: Form 10-K FY2025 (filed Feb 5 2026), Item 7 MD&A ("Costs
 //    and Expenses" and "Results of Operations"); Forms 10-Q 2Q26 and 3Q26, MD&A (the drivers quote the newest); Alphabet's
-//    official earnings-call transcripts (IR PDFs, 4Q25 · 1Q26 · 2Q26; 3Q26 to be added once Alphabet IR posts it). The amount, share of revenue, margin effect and the share-of-revenue bars are
+//    official earnings-call transcripts (IR PDFs, 4Q25 · 1Q26 · 2Q26); 3Q26 from The Motley Fool's transcript
+//    (SAB, Oct 29 2026), to be swapped for the official wording when Alphabet IR posts it. The amount, share of revenue, margin effect and the share-of-revenue bars are
 //    computed in googl-bl.js from the series above — never typed here. Dani's "Unit Economics" panel (relocation map
 //    #19, #21, #22) lives in the TAC and other-cost-of-revenues dives, with each management figure tied to its call.
 //
@@ -79,7 +80,8 @@ export var GOOGL_EW_LINES=[
              ['','Distribution partners','3Q26: “The increase in TAC … was largely due to an increase in TAC paid to distribution partners, primarily driven by growth in revenues subject to TAC.” The TAC rate fell from 20.1% to 20.0% (10-Q).'],
              ['','Default-placement deals after the US search case','The September 2025 remedies ruling in the US search case left default payments to partners in place but barred exclusive contracts (relocated from the Unit Economics panel).']],
     calls:[{q:'4Q25', txt:'“TAC was $16.6 billion, up 12%.”', who:'Anat Ashkenazi, CFO'},
-           {q:'2Q26', txt:'“TAC was $16.2 billion, up 10%.”', who:'Anat Ashkenazi, CFO'}] },
+           {q:'2Q26', txt:'“TAC was $16.2 billion, up 10%.”', who:'Anat Ashkenazi, CFO'},
+           {q:'3Q26', txt:'“TAC was $16.4 billion, up 10%.”', who:'Anat Ashkenazi, CFO'}] },
   { k:'otherCor', name:'Other cost of revenues',
     kpiExtra:['$21.1B','depreciation in FY2025, from $15.3B in FY2024 (+38%), company-wide (4Q25 call)'],
     def:'Other cost of revenues primarily includes: content acquisition costs, which are payments to content providers from whom we license video and other content for distribution, primarily related to YouTube (we pay fees to these content providers based on revenues generated, subscriber counts, or a flat fee); depreciation expense, primarily related to our technical infrastructure; employee compensation expenses related to our technical infrastructure and other operations such as content review and customer and product support; inventory and other costs related to the devices we sell; and other technical infrastructure operations costs, including energy, equipment, and network capacity costs.',
@@ -95,6 +97,7 @@ export var GOOGL_EW_LINES=[
            {q:'1Q26', txt:'“And since upgrading AI Overviews and AI Mode to Gemini 3, we have reduced the cost of core AI responses by more than 30%, thanks to continued hardware and engineering breakthroughs.”', who:'Sundar Pichai, CEO'},
            {q:'1Q26', txt:'“Even as we have brought new AI features into our results page, we have reduced Search latency by more than 35% over the past five years.”', who:'Sundar Pichai, CEO'},
            {q:'2Q26', txt:'“Other Cost of Revenues was $29.8 billion, up 22%, driven by increases in depreciation, inventory costs, primarily from the sales of TPU systems to customers, and content acquisition costs, largely for YouTube.”', who:'Anat Ashkenazi, CFO'},
+           {q:'3Q26', txt:'“Other cost of revenues was $35.1 billion, up 32%, driven by hardware costs primarily related to the sales of TPU systems, increase in depreciation, content acquisition costs and technical infrastructure operations costs.”', who:'Anat Ashkenazi, CFO'},
            {q:'2Q26', txt:'“Thanks to our engineering and hardware optimizations, this quarter we reduced the cost of AI Mode responses to its lowest level since launch, even as we have brought more advanced AI capabilities.”', who:'Sundar Pichai, CEO'}] },
   { k:'rnd', name:'Research &amp; development',
     kpiExtra:['$4.2B','more SBC inside R&amp;D in FY2025, including the Waymo valuation-based charge (10-K MD&amp;A)'],
@@ -108,7 +111,8 @@ export var GOOGL_EW_LINES=[
              ['','Depreciation','3Q26: R&amp;D rose “primarily driven by increases in employee compensation expenses of $3.5 billion and $8.8 billion, as well as depreciation expense of $802 million and $1.9 billion” for the three and nine months (10-Q).']],
     calls:[{q:'4Q25', txt:'“R&amp;D expense increased by 42%, driven by compensation and depreciation.”', who:'Anat Ashkenazi, CFO'},
            {q:'1Q26', txt:'“R&amp;D expenses increased by 26%, driven by compensation due to investment in AI talent, as well as depreciation.”', who:'Anat Ashkenazi, CFO'},
-           {q:'2Q26', txt:'“R&amp;D expenses increased by 32%, driven by compensation from investment in AI talent, as well as depreciation.”', who:'Anat Ashkenazi, CFO'}] },
+           {q:'2Q26', txt:'“R&amp;D expenses increased by 32%, driven by compensation from investment in AI talent, as well as depreciation.”', who:'Anat Ashkenazi, CFO'},
+           {q:'3Q26', txt:'“R&amp;D expenses increased by 36%, driven by compensation, primarily for investment in AI talent as well as depreciation.”', who:'Anat Ashkenazi, CFO'}] },
   { k:'marketing', name:'Sales &amp; marketing',
     kpiExtra:['$1.2B','more advertising and promotion in FY2025, partly offset by $214M less compensation (10-K MD&amp;A)'],
     def:'The main components of our sales and marketing expenses are: employee compensation expenses for employees engaged in sales and marketing, sales support, and certain customer service functions; and spend relating to our advertising and promotional activities in support of our products and services.',
@@ -119,7 +123,8 @@ export var GOOGL_EW_LINES=[
     drivers:[['','Gemini app and Search campaigns','3Q26: “Sales and marketing expenses increased $1.6 billion and $4.3 billion … primarily driven by increases in advertising and promotional activities of $722 million and $2.1 billion, as well as employee compensation expenses of $715 million and $1.5 billion, respectively.” (10-Q)']],
     calls:[{q:'4Q25', txt:'“Sales and Marketing expenses were up 12%, primarily driven by marketing investments to support the Gemini App and Search.”', who:'Anat Ashkenazi, CFO'},
            {q:'1Q26', txt:'“Sales and Marketing expenses were up 23%, driven primarily by marketing investments to support the Gemini app and Search, as well as compensation.”', who:'Anat Ashkenazi, CFO'},
-           {q:'2Q26', txt:'“Sales and Marketing expenses were up 18% due to investments to support the Gemini app in Search, and compensation.”', who:'Anat Ashkenazi, CFO'}] },
+           {q:'2Q26', txt:'“Sales and Marketing expenses were up 18% due to investments to support the Gemini app in Search, and compensation.”', who:'Anat Ashkenazi, CFO'},
+           {q:'3Q26', txt:'“Sales and marketing expenses were up 22% due to investments in Gemini and compensation.”', who:'Anat Ashkenazi, CFO'}] },
   { k:'gAdmin', name:'General &amp; administrative',
     kpiExtra:['$3.5B','European Commission fine accrued in 3Q25 — inside G&amp;A (10-K MD&amp;A)'],
     def:'The main components of our general and administrative expenses are: employee compensation expenses for employees in finance, human resources, information technology, legal, and other administrative support functions; expenses relating to legal and other matters, including certain fines and settlements; and third-party services fees, including audit, consulting, outside legal, and other outsourced administrative services.',
@@ -132,7 +137,8 @@ export var GOOGL_EW_LINES=[
              ['','Charitable contributions','4Q25: “G&amp;A expenses increased 21%, primarily due to a shift in timing of our charitable contributions.” (CFO)']],
     calls:[{q:'4Q25', txt:'“G&amp;A expenses increased 21%, primarily due to a shift in timing of our charitable contributions.”', who:'Anat Ashkenazi, CFO'},
            {q:'1Q26', txt:'“G&amp;A expenses increased 21%, primarily due to an increase in compensation and costs related to legal and other matters.”', who:'Anat Ashkenazi, CFO'},
-           {q:'2Q26', txt:'“G&amp;A expenses increased 24%, primarily driven by compensation and charges for certain legal and other matters.”', who:'Anat Ashkenazi, CFO'}] },
+           {q:'2Q26', txt:'“G&amp;A expenses increased 24%, primarily driven by compensation and charges for certain legal and other matters.”', who:'Anat Ashkenazi, CFO'},
+           {q:'3Q26', txt:'“And G&amp;A expenses decreased 17%, primarily due to lapping of higher legal expenses that occurred in Q3 last year, partially offset by current year legal charges.”', who:'Anat Ashkenazi, CFO'}] },
 ];
 
 // 4) GOOGL_SEG_Y / GOOGL_SEG_Q — the segment cost split (Bottom Line ▸ Segments, BL-SEG), US$ million, typed from the
@@ -190,7 +196,8 @@ export var GOOGL_SEG_DIVES=[
     calls:[
       {q:'4Q25', txt:'“Google Services operating income increased 22% to $40.1 billion, and operating margins was 41.9%.”', who:'Anat Ashkenazi, CFO'},
       {q:'1Q26', txt:'“Google Services operating income increased 24% to $40.6 billion, and operating margin was 45.3%.”', who:'Anat Ashkenazi, CFO'},
-      {q:'2Q26', txt:'“Google Services operating income increased 20% to $39.5 billion, and operating margin was 41.8%.”', who:'Anat Ashkenazi, CFO'}
+      {q:'2Q26', txt:'“Google Services operating income increased 20% to $39.5 billion, and operating margin was 41.8%.”', who:'Anat Ashkenazi, CFO'},
+      {q:'3Q26', txt:'“Google Services operating income increased 17% to $39.2 billion, and operating margin was 40.7%.”', who:'Anat Ashkenazi, CFO'}
     ] },
   { k:'cloud', name:'Google Cloud',
     def:'Google Cloud includes infrastructure and platform services, applications, and other services for enterprise customers. Google Cloud generates revenues primarily from consumption-based fees and subscriptions received for Google Cloud Platform services, Google Workspace communication and collaboration tools, and other enterprise services.',
@@ -205,7 +212,8 @@ export var GOOGL_SEG_DIVES=[
     calls:[
       {q:'4Q25', txt:'“Cloud operating income was $5.3 billion, more than doubling year-over-year.”', who:'Anat Ashkenazi, CFO'},
       {q:'2Q26', txt:'“Cloud operating income was $8.8 billion, more than tripling year-over-year, and operating margin increased from 20.7% in the second quarter last year to 35.6%.”', who:'Anat Ashkenazi, CFO'},
-      {q:'2Q26', txt:'“That capacity, given the cost of that capacity, will put some pressure on operating margins for Cloud.”', who:'Anat Ashkenazi, CFO'}
+      {q:'2Q26', txt:'“That capacity, given the cost of that capacity, will put some pressure on operating margins for Cloud.”', who:'Anat Ashkenazi, CFO'},
+      {q:'3Q26', txt:'“Cloud operating income was $11.1 billion, more than tripling year-over-year. Operating margin increased from 23.7% in the third quarter last year to 36.2%. The third-party bridging capacity, which we discussed on our prior call, came online only at the very end of Q3 and therefore, had limited negative impact to our margin in the quarter.”', who:'Anat Ashkenazi, CFO'}
     ] },
   { k:'bets', name:'Other Bets',
     def:'Other Bets is a combination of multiple operating segments that are not individually material. Revenues from Other Bets are generated primarily from the sale of autonomous transportation services and internet services.',
@@ -218,6 +226,7 @@ export var GOOGL_SEG_DIVES=[
     calls:[
       {q:'4Q25', txt:'“In Other Bets, revenues were $370 million, and operating loss was $3.6 billion, reflecting the $2.1 billion Waymo charge I mentioned earlier.”', who:'Anat Ashkenazi, CFO'},
       {q:'1Q26', txt:'“In Other Bets, revenues were $411 million, and operating loss was $2.1 billion.”', who:'Anat Ashkenazi, CFO'},
-      {q:'2Q26', txt:'“In Other Bets, revenues were $382 million, and operating loss was $1.8 billion as we continue to expand Waymo\'s business and invest in key Other Bets.”', who:'Anat Ashkenazi, CFO'}
+      {q:'2Q26', txt:'“In Other Bets, revenues were $382 million, and operating loss was $1.8 billion as we continue to expand Waymo\'s business and invest in key Other Bets.”', who:'Anat Ashkenazi, CFO'},
+      {q:'3Q26', txt:'“In Other Bets, revenues were $372 million, and the operating loss was $2 billion as we continue to expand Waymo\'s business and invest in key Other Bets.”', who:'Anat Ashkenazi, CFO'}
     ] }
 ];

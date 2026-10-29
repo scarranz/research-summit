@@ -76,7 +76,7 @@ Modo B: antes de F1 van **B1 (inventario de lo que existe)** y **B2 (mapa de reu
 | BL-SPLC | Bottom Line ▸ Supply Chain | ⏭️ | 2026-10-20 | | | no hay export SPLC de SPOT |
 | VA-TM | Valuation ▸ Target Multiple / PEG | 👀 | 2026-10-20 | | | 4 snapshots del MCP con la valuación del workbook tal cual (EV/EBITDA 20.5× · P/E 28×, 2027); Live con FX implícito |
 | VA-HIST · VA-PEERS | Valuation | ⬜ | | | | HIST: `get-market-history` sin desplegar → "Live data pending"; PEERS: esperan denominadores (ver §6) |
-| VA-SUB | Valuation ▸ Submit History | 👀 | 2026-10-28 | | | piloto del motor `js/submits.js` + `js/submits-data/spot.js`: 4 submits (18-dic-2025 fuera), P/E del 22-oct corregido a P80; precios por acción en US$ (ver §4) |
+| VA-SUB | Valuation ▸ Submit History | ✅ | 2026-10-29 | SAB | | piloto del motor `js/submits.js` + `js/submits-data/spot.js`: 4 submits (18-dic-2025 fuera), P/E del 22-oct corregido a P80; precios por acción en US$ (ver §4) |
 | VA-SENS | Valuation ▸ Sensitivity | 👀 | 2026-10-20 | | | `spot-sensitivity.js` (copia de `tsm-sensitivity.js`) + `spot-sensitivity-data.js`; EUR, sin precio en vivo, sin WACC; ver §14 |
 | MG-TEAM · MG-OWN · MG-GOV · MG-TRACK | Management | ⬜ | | | | hoy placeholder |
 | MISC-* | Miscellaneous | ⬜ | | | | candidatos: Investor Day 2026, SAX/Advertising, vs Netflix, $10 flow map |
@@ -115,6 +115,7 @@ Modo B: antes de F1 van **B1 (inventario de lo que existe)** y **B2 (mapa de reu
 
 - 2026-10-20 · F0 · 📝 propuesta (sin aprobación todavía)
 - 2026-10-28 · VA-SUB · 👀 construido y mostrado en el portal; SAB: "se va viendo bien" → commit 4e86056 (falta la aprobación formal de la compuerta)
+- 2026-10-29 · VA-SUB · ✅ aprobada por SAB (4 submits, 18-dic-2025 fuera, P/E del 22-oct en P80).
 
 ## 1b. Mapa Summit (F0-SM)
 

@@ -8,6 +8,9 @@
 //     Call summaries (Q4 2025, Q1 2026, Q2 2026): every management quote is verbatim from Alphabet's official IR transcripts
 //     (s206.q4cdn.com …/2025_Q4_Earnings_Transcript.pdf, 2026_Q1_…, 2026_Q2_…; downloaded Oct 26 2026), checked quote by quote
 //     and speaker by speaker against those PDFs. docs/calls/GOOGL*.md is an unlabelled, unedited copy and is not quoted.
+//     Q3 2026 (Oct 28 2026): quotes from The Motley Fool's transcript (fool.com, Oct 29 2026) — SAB, Oct 29 2026: no need
+//     to wait for the official PDF. Checked quote by quote and speaker by speaker against that text; Motley Fool flags its
+//     transcripts as partly LLM-assisted, so swap in the official wording once Alphabet IR posts it.
 
 import { googlResults } from '../results-data/googl.js';
 
@@ -151,8 +154,8 @@ var SRC_Q3='Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-09-08 (the newe
 export var GOOGL_CALL_EARNINGS = { ticker:'GOOGL', quarters:[
   // ── REPORTED: Q3 2026 (quarter ended Sep 30 2026; reported Wed Oct 28 2026 after close; 10-Q filed Oct 29).
   // The Setup stays frozen as it stood before the print: Alphabet gives no revenue or EPS guidance; the notes
-  // quote the CFO's outlook from the 2Q26 call, verbatim. call:null until Alphabet IR posts the official
-  // transcript PDF (quotes come only from it — SAB, Oct 26 2026).
+  // quote the CFO's outlook from the 2Q26 call, verbatim. The call summary quotes the Motley Fool transcript
+  // (SAB, Oct 29 2026: no need to wait for the official one) — see the file header.
   { q:'Q3 2026', status:'reported', date:'Wed Oct 28, 2026 · after close (call 1:30pm PT / 4:30pm ET)',
     setup:{
       source:SRC_Q3, asOf:'2026-09-08',
@@ -170,7 +173,89 @@ export var GOOGL_CALL_EARNINGS = { ticker:'GOOGL', quarters:[
       debate:{ rows:null, synth:'' },
     },
     results:{ basisNote:'<b>Basis.</b> Net income and EPS include an <b>$8.2B</b> other expense, mostly an <b>$8.7B</b> loss on equity securities (−$0.55 of EPS, per the release). EPS is on net income available to common stockholders, after <b>$298M</b> of preferred dividends.' },
-    call:null },
+    call:{
+      prepared:[
+        { topic:'Revenue $127.6B, up 25%; operating income $40.6B', theme:'Results',
+          body:'<b>Anat Ashkenazi:</b> "We had a strong third quarter delivering our <b>13th consecutive quarter of double-digit revenue growth</b>. Consolidated revenues were <b>$127.6 billion, up 25%</b> in both reported and constant currency." … "Operating income increased 30% to $40.6 billion, and operating margin was 31.8%."' },
+        { topic:'Search & other +12% to $63.3B; query growth the highest in five years', theme:'Search',
+          body:'<b>Sundar Pichai:</b> "In fact, our year-over-year query growth rate is the <b>highest it\'s been in the last 5 years</b>."<br><b>Anat Ashkenazi:</b> "Google Search and other advertising revenues increased by <b>12% to $63.3 billion</b>, with retail driving the largest contribution followed by finance."' },
+        { topic:'Ads in AI Mode go international; multiturn ads in the US', theme:'Search',
+          body:'<b>Philipp Schindler:</b> "Click-through rates are already similar between sponsored and organic product list items within AI Mode." … "Today, we\'re announcing the <b>expansion of ads in AI Mode into international markets</b> alongside multiturn ads and AI Mode in the U.S."' },
+        { topic:'YouTube ads +9% to $11.2B; subscriptions +11% to $14.3B; 150M Music and Premium', theme:'YouTube',
+          body:'<b>Anat Ashkenazi:</b> "YouTube advertising revenues increased <b>9% to $11.2 billion</b>, with brand driving the largest contribution and notable strength in living room." … "Subscription, platforms and devices revenues increased <b>11% this quarter to $14.3 billion</b>"<br><b>Sundar Pichai:</b> "we have surpassed <b>150 million YouTube Music and Premium subscribers</b> globally, including trials."' },
+        { topic:'Cloud +103% to $30.7B; margin 36.2%; backlog $561B', theme:'Cloud',
+          body:'<b>Anat Ashkenazi:</b> "Cloud revenues were <b>up 103% to $30.7 billion</b>, driven by strong growth in GCP" … "Operating margin increased from 23.7% in the third quarter last year to <b>36.2%</b>." … "Google Cloud\'s backlog was <b>$561 billion</b> in the third quarter, with the majority of the backlog related to typical GCP contracts."' },
+        { topic:'TPU systems: nearly 100 customers; Crux AI and Oracle', theme:'Cloud',
+          body:'<b>Thomas Kurian:</b> "TPU system sales were also a meaningful contributor." … "Nearly <b>100 customers use TPUs</b> today, and we\'re seeing strong and growing demand from many others." … "we\'ve recently entered into partnerships to deliver TPU systems with both <b>Crux AI and Oracle</b>, with more in the works."' },
+        { topic:'Gemini 4 Argon and Carbon; 32 billion tokens a minute; Gemini app at 1 billion users', theme:'AI & compute',
+          body:'<b>Sundar Pichai:</b> "Our first-party model APIs are now processing <b>nearly 32 billion tokens per minute</b>, 40% more than last quarter and more than 4x what we processed a year ago." … "The Gemini app is now at <b>1 billion users</b> and is the fastest-growing product in Google\'s history."' },
+        { topic:'Other cost of revenues +32% on TPU hardware; free cash flow −$9.1B', theme:'Costs',
+          body:'<b>Anat Ashkenazi:</b> "Other cost of revenues was <b>$35.1 billion, up 32%</b>, driven by hardware costs primarily related to the sales of TPU systems" … "We had <b>negative free cash flow of $9.1 billion</b> in the third quarter, driven by our investments in CapEx."' },
+        { topic:'Q3 capex $51.4B; FY2026 $195-205B unchanged; 2027 to increase significantly', theme:'Capex',
+          body:'<b>Anat Ashkenazi:</b> "CapEx was <b>$51.4 billion</b> in the third quarter" … "Approximately 65% of our investments in technical infrastructure in Q3 was related to servers and networking equipment" … "Our full year 2026 CapEx guidance range of <b>$195 billion to $205 billion remain unchanged</b>." … "We continue to expect our CapEx to <b>increase significantly in 2027</b>, and we\'ll provide further details on our Q4 call."' },
+        { topic:'Other Bets loss $2.0B; Waymo past 300 million autonomous miles', theme:'Other Bets',
+          body:'<b>Anat Ashkenazi:</b> "In Other Bets, revenues were <b>$372 million</b>, and the operating loss was <b>$2 billion</b> as we continue to expand Waymo\'s business and invest in key Other Bets."<br><b>Sundar Pichai:</b> "We have now driven more than <b>300 million fully autonomous miles</b>. Waymo now operates in 15 major U.S. cities"' },
+      ],
+      qanda:[
+        { q:'A 2027 productivity step-up; why Search slowed despite record query growth', analyst:'Doug Anmuth · JPMorgan', theme:'Search',
+          qFull:'Sundar, you said 2027 could be a golden age of productivity for Google with the new class of models — can you elaborate? And Philipp, query growth is the fastest in five years but Search growth decelerated: is it that AI Overviews and AI Mode carry fewer ads and are now a bigger share of queries?',
+          a:'<b>Sundar Pichai:</b> "But I\'m definitely seeing a <b>huge point of inflection</b> once we\'ve started deploying Argon internally."<br><b>Philipp Schindler:</b> "So first, there was FX. It was the <b>single largest driver of Search deceleration</b> relative to Q2." … "it\'s worth noting that the strong growth in AI Mode queries had an impact because of the <b>lower monetization we were seeing in AI Mode</b>."' },
+        { q:'Hurdles to ship agents to every user; the Search comparison into 4Q', analyst:'Brian Nowak · Morgan Stanley', theme:'Search',
+          qFull:'What has to be solved technologically to ship agentic products to the full user base — model efficiency, capacity, readiness? And how should the Search comparison factor be thought of into 4Q and 1Q?',
+          a:'<b>Sundar Pichai:</b> "We are working on <b>distilled versions of our Carbon models</b> so that we can deploy it across 1 billion user scale efficiently"<br><b>Anat Ashkenazi:</b> "We left about <b>3 points of growth</b> versus Q3, and then we expect to see that continue in Q4, a couple of points of lapping that growth acceleration that we saw at the end of 2025."' },
+        { q:'Priorities for compute; cloud customers versus external TPUs', analyst:'Eric Sheridan · Goldman Sachs', theme:'AI & compute',
+          qFull:'Given the compute constraints, what are the priorities for compute as it becomes available? And within Google Cloud, how is the view evolving on compute for cloud customers relative to external TPUs?',
+          a:'<b>Sundar Pichai:</b> "And so I would broadly think of all of this as a <b>long-range planning process, not a short-term allocation exercise</b>."<br><b>Thomas Kurian:</b> "We have <b>over 100 significant TPU customers</b> who start in our cloud."' },
+        { q:'How much of a TPU system is revenue, and at what margin; capex as labs build their own', analyst:'Ross Sandler · Barclays', theme:'Cloud',
+          qFull:'If a gigawatt of TPU systems costs around $35 billion, what share is recognized as revenue and how does its margin compare with the Cloud segment? And as Anthropic and others bring on their own infrastructure, what does that mean for Alphabet\'s capex intensity?',
+          a:'<b>Anat Ashkenazi:</b> "We build the <b>inventory ahead of getting the revenue stream</b> in." … "So it\'s <b>not the traditional kind of CapEx</b> as you\'re thinking about this" … "To date, we\'ve had some system sales recorded as revenue, but expect more of it to come in through 2027."' },
+        { q:'Agentic shopping: headwind or more monetization; why TPU systems are a good business', analyst:'Justin Post · Bank of America', theme:'Search',
+          qFull:'As agentic use grows, could it be a headwind to Search, or drive more monetization over time? And without giving margins, why are TPU systems a good use of capacity?',
+          a:'<b>Philipp Schindler:</b> "we view agentic experiences as <b>clearly additive</b>."<br><b>Thomas Kurian:</b> "On TPU systems and margins, we don\'t break out margins for individual products or infrastructure components." … "we only do that <b>after we have signed contracts</b>."' },
+        { q:'Early agentic use; Cloud growth without TPUs and the capacity ceiling', analyst:'Mark Shmulik · Bernstein', theme:'Cloud',
+          qFull:'Has anything in the early agentic use cases surprised you? And what was Cloud growth excluding TPU system sales, how much was capacity-constrained, and should Cloud accelerate as third-party capacity comes online in Q4?',
+          a:'<b>Thomas Kurian:</b> "Cloud revenue growth, excluding the impact of TPU system sales was again very, very strong." … "we could obviously <b>serve a lot more demand with capacity</b>, but we are managing all of these parameters and growth carefully."' },
+        { q:'Selling TPUs to competitors; trust and safety in agents', analyst:'Michael Nathanson · MoffettNathanson', theme:'AI & compute',
+          qFull:'Why is working with companies that compete with you in models and cloud an opportunity rather than a risk? And what have you learned about safety and trust in agentic consumer behavior?',
+          a:'<b>Sundar Pichai:</b> "Similarly, we view our <b>TPU systems as an important platform</b> we are building." … "we clearly see people are <b>concerned about safety and trust</b>."' },
+      ],
+      highlights:[
+        { tag:'watch', band:'lead', open:'How much did the third-party capacity weigh on the Cloud operating margin in Q4?',
+          head:'Bridging capacity came online only at the very end of Q3; margin headwinds expected in the near term',
+          detail:'<p><b>Anat Ashkenazi:</b> "The third-party bridging capacity, which we discussed on our prior call, came online <b>only at the very end of Q3</b> and therefore, had limited negative impact to our margin in the quarter." … "we started utilizing third-party compute capacity at the end of Q3 and will ramp usage in Q4. We expect <b>margin headwinds in the near term</b> as we utilize this capacity."</p>' },
+        { tag:'watch', band:'lead', open:'How much did lapping and FX take off Search & other growth in Q4?',
+          head:'A slightly larger FX headwind in Q4, and a couple more points of lapping in Search',
+          detail:'<p><b>Anat Ashkenazi:</b> "at current spot rates, we would expect a <b>slightly larger FX headwind</b> to our consolidated revenues in Q4 relative to the prior quarter." … "In Google Services, we will continue to lap the search performance acceleration that began in the third quarter last year, which will pressure revenue growth in Q4."</p>' },
+        { tag:'watch', band:'lead', open:'How much TPU system revenue came through in Q4?',
+          head:'TPU system sales to keep scaling in Q4, then a meaningful revenue ramp in 2027',
+          detail:'<p><b>Anat Ashkenazi:</b> "In Google Cloud, we expect TPU system sales to continue to scale in Q4, followed by a <b>meaningful revenue ramp in 2027</b>."</p>' },
+        { tag:'thesis', band:'context',
+          head:'Argon inside Google: 35% more code with 30% fewer errors',
+          detail:'<p><b>Sundar Pichai:</b> "And at Google, just in the last few weeks, teams across Chrome, Ads and Search have used Argon to write and optimize code much faster, shipping <b>35% more code with 30% fewer errors</b>."</p>' },
+        { tag:'curious', band:'context',
+          head:'AI Mode queries 3x longer; one in five uses voice, images or documents',
+          detail:'<p><b>Sundar Pichai:</b> "Queries in AI Mode are on average <b>3x longer</b> than traditional searches, and 1 in 5 AI Mode searches globally use voice, images or documents."</p>' },
+        { tag:'curious', band:'context',
+          head:'Other income and expenses −$8.2 billion on SpaceX; a $5.2 billion EC fine paid',
+          detail:'<p><b>Anat Ashkenazi:</b> "Other income and expenses was <b>negative $8.2 billion</b> due primarily to unrealized loss from our investment in SpaceX from a decline in its stock price in the third quarter." … "as well as a <b>$5.2 billion cash payment for a 2018 EC fine</b> following the conclusion of the appeal process."</p>' },
+        { tag:'logged', band:'logged',
+          head:'Purchase commitments $924B; pre-commencement leases and other obligations $152B',
+          detail:'<p><b>Anat Ashkenazi:</b> "At the end of the third quarter, we had <b>future purchase commitments of $924 billion</b> and pre-commencement leases and other obligations of $152 billion. These dollar amounts reflect the maximum contractual obligations."</p>' },
+        { tag:'logged', band:'logged',
+          head:'Balance sheet: $265.1B cash and marketable securities; long-term debt $125.1B; dividend 22 cents',
+          detail:'<p><b>Anat Ashkenazi:</b> "We ended the quarter with <b>$265.1 billion</b> in cash and marketable securities, which includes $90.4 billion of marketable equity securities. Long-term debt was <b>$125.1 billion</b>." … "our Board of Directors declared a quarterly cash dividend on our common stock of $0.22 per share, which is payable in December."</p>' },
+        { tag:'logged', band:'logged',
+          head:'Network advertising revenues $7.5B, up 1%',
+          detail:'<p><b>Anat Ashkenazi:</b> "Network advertising revenues of <b>$7.5 billion were up 1%</b>."</p>' },
+      ],
+      newQuestions:[
+        { n:'How much did the third-party bridging capacity weigh on the Cloud operating margin in Q4?', theme:'Cloud margin: what drives it and what weighs on it' },
+        { n:'What 2027 capex figure or range is given on the Q4 call?', theme:'2027 capex — "increase significantly"' },
+        { n:'How much TPU system revenue was recognized in Q4, and where does the TPU inventory stand?', theme:'TPU system sales — "vast majority" of revenue in 2027' },
+        { n:'How many points did lapping and FX take off Search & other growth in Q4?', theme:'Search growth with AI Overviews and AI Mode' },
+        { n:'Did ads in AI Mode narrow the monetization gap with traditional Search?', theme:'New ad surfaces: AI Mode ads, Direct Offers, agentic commerce' },
+      ],
+    } },
 
   // ── REPORTED. The print is scored from the grid above (Results dataset + archive). The call summaries carry only
   // verbatim quotes from the official transcript (SAB, Oct 26 2026: no generated text).

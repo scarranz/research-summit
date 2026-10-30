@@ -876,7 +876,7 @@ function sBuildMix(){
     var cmp=st.modes.cmp||'yoy', gin=st.modes.gin||'pct', notes=[], prof=(metric!=='rev');
     if(metric==='ebitda') basis='cons';
     if(prof){
-      if(show==='share'){ show='amt'; notes.push('Share is not drawn for profit: International lost money in several years, so the shares would run above 100% and below zero. Shown in $B instead.'); }
+      if(show==='share') notes.push('Share = each segment’s '+(metric==='ebitda'?'EBITDA':'operating income')+' ÷ the three added up. When a segment loses money its share is below zero and the others add up to more than 100% (FY2022: North America and International both lost money, so AWS was 186% of the total).');
       notes.push(metric==='ebitda'?'EBITDA = segment operating income + segment D&amp;A (reported; quarterly from 1Q24). Forward = Bloomberg consensus (the Summit model does not project segment D&amp;A); the line is the three added up.':
         'Forward = '+(basis==='summit'?'the Summit model’s segment operating income (frozen)':'Bloomberg’s consensus operating income by segment')+'; the line is consolidated operating income.'); }
     else notes.push('Revenue = the three segments; they add up to consolidated net sales.');
@@ -909,7 +909,7 @@ function sBuildMix(){
     var yFmt=(show==='amt'||addMode)?function(x){ return (x<0?'−$':'$')+(x==null?'':Math.abs(x).toFixed(1))+'B'; }:function(x){ return x+'%'; };
     var hide=[]; if(!(show==='growth'&&gran==='q')) hide.push('cmp'); if(show!=='growth') hide.push('gin'); if(show==='share') hide.push('layout');
     if(basis==='summit') hide.push('gran'); if(metric==='ebitda') hide.push('basis');
-    return { labels:labels, lastAct:la, yFmt:yFmt, type:'bar', stacked:stacked, yMax:show==='share'?100:undefined, series:series, hideModes:hide, note:notes.join(' ') };
+    return { labels:labels, lastAct:la, yFmt:yFmt, type:'bar', stacked:stacked, yMax:(show==='share'&&!prof)?100:undefined, series:series, hideModes:hide, note:notes.join(' ') };
   });
 }
 

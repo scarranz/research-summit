@@ -858,7 +858,7 @@ function sBuildMix(){
     var metric=st.sel||'rev', basis=st.modes.basis||'cons', show=st.modes.show||'amt', layout=st.modes.layout||'stack', gran=st.modes.gran||'y';
     var cmp=st.modes.cmp||'yoy', gin=st.modes.gin||'pct', notes=[];
     if(metric==='oi'){ basis='cons';
-      if(show==='share'){ show='amt'; notes.push('Share is not drawn for operating income: Other Bets and the Alphabet-level line lose money, so the shares would run above 100% and below zero. Shown in $B instead.'); }
+      if(show==='share') notes.push('Share = each line’s operating income ÷ consolidated operating income. Other Bets and the Alphabet-level line lose money, so their shares are below zero and the profitable segments add up to more than 100%.');
       notes.push('Forward = Bloomberg’s consensus operating income by segment (the Summit model does not project segment profit). Other Bets and the Alphabet-level line sit below zero; the line is consolidated operating income.'); }
     else notes.push('Revenue = the three segments; hedging gains and losses on revenue (kept at the Alphabet level, under $0.3B a year) are left out.');
     if(basis==='summit') gran='y';
@@ -887,7 +887,7 @@ function sBuildMix(){
     var yFmt=(show==='amt'||addMode)?function(x){ return (x<0?'−$':'$')+(x==null?'':Math.abs(x).toFixed(1))+'B'; }:function(x){ return x+'%'; };
     var hide=[]; if(!(show==='growth'&&gran==='q')) hide.push('cmp'); if(show!=='growth') hide.push('gin'); if(show==='share') hide.push('layout');
     if(basis==='summit') hide.push('gran'); if(metric==='oi') hide.push('basis');
-    return { labels:labels, lastAct:la, yFmt:yFmt, type:'bar', stacked:stacked, yMax:show==='share'?100:undefined, series:series, hideModes:hide, note:notes.join(' ') };
+    return { labels:labels, lastAct:la, yFmt:yFmt, type:'bar', stacked:stacked, yMax:(show==='share'&&metric==='rev')?100:undefined, series:series, hideModes:hide, note:notes.join(' ') };
   });
 }
 

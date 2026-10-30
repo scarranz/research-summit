@@ -832,7 +832,7 @@ function sBuildMix(){
     var metric=st.sel||'rev', basis=st.modes.basis||'cons', show=st.modes.show||'amt', layout=st.modes.layout||'stack', gran=st.modes.gran||'y';
     var cmp=st.modes.cmp||'yoy', gin=st.modes.gin||'pct', notes=[];
     if(metric==='oi'){ basis='cons';
-      if(show==='share'){ show='amt'; notes.push('Share is not drawn for operating income: Reality Labs loses money, so the shares would run above 100% and below zero. Shown in $B instead.'); }
+      if(show==='share') notes.push('Share = each segment’s operating income ÷ consolidated operating income. Reality Labs loses money, so its share is below zero and Family of Apps runs above 100%.');
       notes.push('No estimate of segment operating income exists (Bloomberg carries segment revenue only; the Summit model no longer projects segments, last figure '+esc(sSumEnd())+'), so forward periods are blank. Reality Labs sits below zero; the line is consolidated operating income.'); }
     if(basis==='summit') gran='y';
     var Q=metaResults.views.q.metrics, labels, la;
@@ -860,7 +860,7 @@ function sBuildMix(){
     var yFmt=(show==='amt'||addMode)?function(x){ return (x<0?'−$':'$')+(x==null?'':Math.abs(x).toFixed(1))+'B'; }:function(x){ return x+'%'; };
     var hide=[]; if(!(show==='growth'&&gran==='q')) hide.push('cmp'); if(show!=='growth') hide.push('gin'); if(show==='share') hide.push('layout');
     if(basis==='summit') hide.push('gran'); if(metric==='oi') hide.push('basis');
-    return { labels:labels, lastAct:la, yFmt:yFmt, type:'bar', stacked:stacked, yMax:show==='share'?100:undefined, series:series, hideModes:hide, note:notes.join(' ') };
+    return { labels:labels, lastAct:la, yFmt:yFmt, type:'bar', stacked:stacked, yMax:(show==='share'&&metric==='rev')?100:undefined, series:series, hideModes:hide, note:notes.join(' ') };
   });
 }
 

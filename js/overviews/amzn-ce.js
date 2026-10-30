@@ -1559,6 +1559,9 @@ function ceThemeProposals(q, qk){
   var cards=nq.map(function(x,i){
     var txt=(typeof x==='string')?x:(x.n||'');
     var tg=ceGuessTarget(txt, (typeof x==='object')?x.theme:null);
+    // An entry can also name its theme (`seg`); a sub-theme not yet in the record arrives with its name filled in.
+    if(typeof x==='object' && x.seg) tg.seg=x.seg;
+    var newSubName=(ceSubsOfSeg(tg.seg).indexOf(tg.theme)<0)?tg.theme:'';
     return '<div class="ce-tp-card" data-tp="'+qk+'-'+i+'">'+
       '<div class="ce-tp-row1">'+
         '<span class="ce-tp-fld"><label class="ce-tp-lb">Theme</label>'+ceSegSelectHtml(tg.seg)+'</span>'+
@@ -1568,7 +1571,7 @@ function ceThemeProposals(q, qk){
           '<button type="button" class="ce-tp-no" data-tpact="reject" title="Drop this note">✕</button>'+
         '</span></div>'+
       '<input class="ce-tp-newseg" type="text" placeholder="New theme name" hidden>'+
-      '<input class="ce-tp-newsub" type="text" placeholder="New sub-theme name" hidden>'+
+      '<input class="ce-tp-newsub" type="text" placeholder="New sub-theme name" value="'+esc(newSubName).replace(/"/g,'&quot;')+'" hidden>'+
       '<div class="ce-tp-target" data-tptarget></div>'+
       '<textarea class="ce-tp-in" rows="2">'+esc(txt)+'</textarea>'+
     '</div>';

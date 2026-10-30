@@ -13,8 +13,10 @@
 //     Call records (Q4 2025, Q1 2026, Q2 2026): every management quote is verbatim from The Motley Fool's transcripts
 //     (fool.com, calls of Feb 5, Apr 29 and Jul 30 2026; fetched Oct 29 2026), checked quote by quote (77 · 84 · 66) —
 //     SAB, Oct 29 2026. They replace records reconstructed from press coverage, whose quotes were not verbatim. Motley Fool
-//     flags its transcripts as partly AI-assisted; Amazon publishes no official transcript. Q3 2026: pending the Fool
-//     transcript (not posted on Oct 29).
+//     flags its transcripts as partly AI-assisted; Amazon publishes no official transcript. Q3 2026 (call of Oct 29 2026):
+//     quotes verbatim from the transcript Dani compiled (Drive: Extras/Team/DAA/Ad hoc info search/AMZN calls.txt,
+//     Oct 30 2026; the file does not name its provider), checked quote by quote (73, 0 missing); Zoox and TTM free cash
+//     flow from the 8-K Ex. 99.1. `newQuestions` (Propose Notes) paraphrase SAB's handwritten notes on the call (Oct 30).
 
 import { amznResults } from '../results-data/amzn.js';
 
@@ -187,7 +189,96 @@ export var AMZN_CALL_EARNINGS = { ticker:'AMZN', quarters:[
         'Operating cash flow':{ t:'Below the Street', h:'<p>$42.4B in the quarter against $57.8B consensus; TTM $168.3B (+29%).</p>' },
         'Gross profit':{ t:'53.2% gross margin', h:'<p>$107.4B (net sales − cost of sales) against $105.3B consensus.</p>' }
       } },
-    call:null },
+    call:{
+      prepared:[
+        { topic:'Revenue $201.9B, up 12%; operating income $28.1B, up 61%, a 13.9% margin', theme:'Margins',
+          body:'<b>Andy Jassy:</b> "We\'re reporting <b>$201.9 billion in revenue, up 12%</b> year-over-year. Operating income was <b>$28.1 billion, up 61%</b> year-over-year."<br><b>Brian Olsavsky:</b> "Worldwide operating income was $28.1 billion, with an operating margin of 13.9%, which is our <b>highest operating margin ever</b>." … "Excluding the impact of this Prime Day time change, the third quarter 2026 year-over-year growth would be <b>approximately 400 basis points higher</b>."' },
+        { topic:'AWS +39.3%, sixth straight acceleration; backlog $578B', theme:'Backlog',
+          body:'<b>Andy Jassy:</b> "AWS grew <b>39.3%</b> year-over-year, accelerating for the sixth straight quarter, our fastest growth in nearly five years. Backlog is <b>$578 billion</b>, growing triple digits year-over-year and well-diversified. We\'re installing an AI accelerator about every 14 seconds, and almost as fast as we install capacity, customers are gobbling it up." … "AWS is a <b>$184 billion</b> annualized revenue run rate business"' },
+        { topic:'AWS operating income $17.8B, a 38.7% margin; AI margins improving', theme:'Margins',
+          body:'<b>Brian Olsavsky:</b> "AWS operating income was <b>$17.8 billion</b>, with an operating margin of <b>38.7%</b>, reflecting strong growth and our focus on driving efficiencies."<br><b>Andy Jassy:</b> "Our operating margins have long been strong on our core offering, but <b>rapidly improving on the AI side too</b>, well ahead of where they were on core at a similar time of evolution." … "We continue to <b>accelerate our CapEx payback</b>"' },
+        { topic:'Bedrock: the fastest-growing multi-billion-dollar service in AWS history', theme:'Backlog',
+          body:'<b>Andy Jassy:</b> "Fortune 500 companies spending <b>nearly 7x more on Bedrock</b> year-over-year and total Bedrock token volume growing <b>nearly 17x</b> year-over-year. Bedrock is the <b>fastest growing multi-billion dollar service in AWS\'s history</b>. We have recently added OpenAI models to Bedrock and usage is growing quickly."' },
+        { topic:'Chips: Graviton and Trainium commitments up more than 20x; Trainium outside AWS in late 2027', theme:'Custom silicon',
+          body:'<b>Andy Jassy:</b> "our chips business continues to grow triple-digit percentages year-over-year, and revenue commitments for Graviton and Trainium have each <b>increased more than 20x</b> year-over-year." … "Customers using our custom silicon saved <b>more than $2 billion in Q3</b> alone" … "With Trainium demand so strong, customers continue encouraging us to make it available outside of AWS. We intend to do so <b>late in 2027</b>."' },
+        { topic:'~$220B of 2026 cash capex, meaningfully more in 2027; AWS north of 40% in 2027 and 2028', theme:'Capex',
+          body:'<b>Andy Jassy:</b> "We still expect 2026 cash CapEx of <b>approximately $220 billion</b>, the majority for AWS, and expect to spend <b>meaningfully more in 2027</b> with a clear line of sight to attractive financial returns" … "we believe that AWS can grow <b>north of 40% in each of 2027 and in 2028</b> and be a <b>trillion-dollar revenue business in the next five to 10 years</b>."<br><b>Brian Olsavsky:</b> "Turning to our cash CapEx, which was <b>$75.9 billion in Q3</b>. This primarily relates to AWS and AI"' },
+        { topic:'Stores: units up nearly 15% on 30 billion items; nearly 80% of retail still in physical stores', theme:'Robotics',
+          body:'<b>Andy Jassy:</b> "Year to date, units have grown <b>nearly 15%</b> year-over-year, and that\'s on an enormous base, having sold more than 30 billion items last year." … "Over the past few years, our North America and International segments have each expanded operating margins by <b>nearly 10 percentage points</b>" … "The significant majority of retail, <b>nearly 80%</b>, currently occurs in physical stores."' },
+        { topic:'Grocery gross sales nearly $250B; Everyday Essentials half of units; Amazon Now in 450+ towns', theme:'Robotics',
+          body:'<b>Andy Jassy:</b> "gross sales grew to <b>nearly $250 billion</b> in the trailing 12 months. In Q3, fresh groceries and Everyday Essentials grew about <b>three times faster</b> than the rest of our store, representing about <b>half of all units</b> sold. Customers who shop perishables with same-day delivery buy nearly seven times more Everyday Essential units than those who don\'t." … "It\'s now available in <b>over 450 towns and cities</b>, and the number of items ordered through Amazon Now is up 10x year-over-year."' },
+        { topic:'Alexa for Shopping: 400 million customers, interactions up 570%', theme:'Advertisement',
+          body:'<b>Andy Jassy:</b> "Over <b>400 million customers</b> have used Alexa for Shopping, our agentic shopping assistant, in the last 12 months, with customer interactions <b>up 570%</b> year-over-year. U.S. customers using Alexa for Shopping are spending <b>50% more per order</b> than those who don\'t."' },
+        { topic:'Advertising $19.6B, up 12% on three timing items; high teens expected in Q4', theme:'Advertisement',
+          body:'<b>Andy Jassy:</b> "we generated <b>$19.6 billion of revenue in Q3, up 12%</b> year-over-year. Though there were some timing anomalies in this past quarter" … "For advertising, that was <b>850 basis points</b> sequential impact to Q3 year-over-year growth." … "We expect year-over-year growth will <b>return to the high teens in Q4</b>." … "The natural question is whether agentic shopping from external horizontal agents is meaningfully impacting Amazon Ads. <b>The answer is no.</b>"' },
+        { topic:'Segment margins 7.7% and 3.7%; cost to serve down despite fuel and line haul', theme:'Robotics',
+          body:'<b>Brian Olsavsky:</b> "North America segment operating income was $8.7 billion, with an operating margin of <b>7.7%</b>. International segment operating income was $1.6 billion, with an operating margin of <b>3.7%</b>." … "Even with these headwinds, we still lowered our overall cost to serve in Q3" … "Shipping costs increased 11% year-over-year versus a 12% increase in units. Excluding fuel and line haul inflation, shipping costs grew 8%" … "In 2026, we <b>doubled our fleet of robotic arms</b> like Cardinal and Sparrow."' },
+        { topic:'Prime Video profitable; "two of them in AWS and stores"', theme:'Margins',
+          body:'<b>Andy Jassy:</b> "Prime Video has emerged as a significant business with a revenue run rate in the <b>tens of billions of dollars</b>, now <b>profitable in its own right</b>." … "There has never been a business with a trillion dollars of annual revenue. Amazon is on a path to have <b>two of them in AWS and stores</b>."' },
+        { topic:'Q4 guide: revenue $240-247B, operating income $28.5-33.5B; Leo capitalization moves to Q1', theme:'LEO',
+          body:'<b>Brian Olsavsky:</b> "Q4 net sales are expected to be between <b>$240 billion and $247 billion</b>." … "which we expect to be a headwind of approximately 60 basis points in the quarter. Q4 operating income is expected to be between <b>$28.5 billion and $33.5 billion</b>." … "we expect to begin capitalizing certain costs in <b>Q1 of next year</b>, including production and launch costs. This is later than I\'ve been predicting in earlier earnings calls. As a result, we will continue to expense the majority of Leo-related costs in Q4."' },
+      ],
+      qanda:[
+        { q:'Why AWS quarter-over-quarter growth slowed; capacity adds in Q4; fuel costs in the Q4 guide', analyst:'Justin Post · Bank of America', theme:'Backlog',
+          qFull:'AWS keeps accelerating year-over-year, but the quarter-over-quarter growth slowed: was there a customer, token-cost or other driver, and how are capacity adds shaping up in Q4? And what is the impact of fuel costs on the Q4 guide?',
+          a:'<b>Andy Jassy:</b> "We add a lot of capacity every quarter. <b>The amount that we add every quarter is not equal.</b> We are adding different amounts each quarter." … "The amount of capacity we add each quarter will vary, but at this scale to be projecting <b>growing over 40% year-over-year in each of 2027 and 2028</b> is pretty significant"<br><b>Brian Olsavsky:</b> "I don\'t have an exact number for you, but it is <b>higher in Q4 than it was in Q3</b>. If you remember, we instituted a fuel surcharge at the beginning of the year for FBA sellers that recovers some, but <b>not all</b> of the costs that we\'re seeing on fuel for those shipments."' },
+        { q:'How AWS gets to a trillion dollars of revenue; robotics milestones for 2027', analyst:'Brian Nowak · Morgan Stanley', theme:'Backlog',
+          qFull:'The trillion-dollar AWS comment is more than Amazon usually gives: is it top-down or bottom-up, and what gives the confidence in that revenue path over five to ten years? And what are the key robotics milestones for the retail business in 2027?',
+          a:'<b>Andy Jassy:</b> "those big chunks are reserved well in advance because you cannot leave a gigawatt of capacity hanging around. We have <b>very good visibility into 2027 and 2028 and some of 2029 too</b>, with respect to what customers want in those really big chunks of capacity." … "it\'s not a stretch for us to imagine that this could be over a trillion-dollar business." … "We have <b>over 1 million robots</b> now in our fulfillment network" … "we think it is small compared to what it is going to be in the next five years."' },
+        { q:'Is the high-30s AWS margin stable over two years; perishables coverage and spend per Prime household', analyst:'Mark Mahaney · Evercore ISI', theme:'Margins',
+          qFull:'Over the next two years, does AWS hold a margin in the high 30s to 40%? And on perishables checkout: how many Prime households are covered, and how much does it lift spend per household?',
+          a:'<b>Brian Olsavsky:</b> "We are <b>not guiding at all</b> on our margin for AWS, but I can give you my color on it." … "the outsized growth of AI puts margin pressure on the business as a whole because <b>the margins are lower there</b>." … "they are ahead of where the core was at a similar point in time, but they are still lower, so there is going to be that <b>mix issue</b>. There are also headwinds from component pricing" … "customers who shop perishables through our same-day delivery, they buy about <b>seven time more</b> Everyday Essential units than those that do not."' },
+        { q:'What Amazon has learned about the Bedrock opportunity; balancing external Trainium sales against internal use', analyst:'Eric Sheridan · Goldman Sachs', theme:'Custom silicon',
+          qFull:'What are the key learnings about the Bedrock market opportunity and how it scales? And with the decision to sell Trainium externally, how is that balanced against the compute needed for Amazon\'s own and AWS use cases?',
+          a:'<b>Andy Jassy:</b> "I think that the size of the opportunity in Bedrock is gigantic, and it could be a service <b>as large as EC2</b>" … "If you sell externally, you are able to realize more revenue in the short term because you get to recognize the revenue as soon as it leaves your inventory. On the flip side, if you decide to use it inside your cloud" … "you actually will end up driving <b>more absolute revenue and free cash flow</b> from those chips" … "we believe we are going to have a very significant business selling chips externally, and we are going to <b>start in late 2027</b>."' },
+        { q:'The capex behind 40%+ AWS growth; the duration of returns on servers and data centers', analyst:'Doug Anmuth · J.P. Morgan', theme:'Capex',
+          qFull:'What capex does 40%+ AWS revenue growth in each of the next two years, and the path beyond, require? And how is Amazon now thinking about the duration of returns on servers and networking, and on data centers?',
+          a:'<b>Andy Jassy:</b> "On the break even on our infrastructure, as I mentioned in my opening comments, we\'re <b>continuing to move that left</b>." … "On the CapEx involved to grow the way we\'re talking about, <b>it\'s meaningful</b>." … "Would it be more convenient if this type of acceleration and opportunity happened over 25 years and you could spread the CapEx over 25 years? Yeah, it might be more convenient, but that\'s not the world that we live in" … "<b>We can fund this plan.</b>"' },
+        { q:'Bedrock on Trainium: what selling inference as a service does to AWS growth and margins', analyst:'Ross Sandler · Barclays', theme:'Margins',
+          qFull:'The Bedrock token marketplace seems to run mostly on Trainium. As it becomes a bigger part of AWS, how does the shift from selling bare metal to selling inference as a service affect revenue growth and especially margins?',
+          a:'<b>Andy Jassy:</b> "you are right, that the majority and most of Bedrock today is being run on top of Trainium." … "Neoclouds are about <b>3,500 basis points worse in operating margin</b> than if you long lease them." … "most of our capacity is either <b>owned or long leased</b>, which enjoys better operating margins than what you will find when people are mostly doing colo or neo"' },
+      ],
+      highlights:[
+        { tag:'thesis', band:'lead', open:'Conversion pace: $578B of backlog, with the big chunks of capacity reserved into 2029 — does AWS print north of 40% in 2027 as guided?',
+          head:'Backlog $578B, growing triple digits; AWS guided north of 40% in each of 2027 and 2028, with visibility into some of 2029',
+          detail:'<p><b>Andy Jassy:</b> "Backlog is <b>$578 billion</b>, growing triple digits year-over-year and well-diversified." … "We have <b>very good visibility into 2027 and 2028 and some of 2029 too</b>, with respect to what customers want in those really big chunks of capacity." … "The amount that we add every quarter is not equal."</p>' },
+        { tag:'watch', band:'lead', open:'The 2027 capex number: "meaningfully more" than ~$220B, with TTM free cash flow at −$42.4B.',
+          head:'2026 cash capex ~$220B reiterated, 2027 "meaningfully more"; Q3 cash capex $75.9B; TTM free cash flow an outflow of $42.4B (release)',
+          detail:'<p><b>Andy Jassy:</b> "We still expect 2026 cash CapEx of approximately $220 billion, the majority for AWS, and expect to spend <b>meaningfully more in 2027</b>" … "<b>We can fund this plan.</b> I think it will forever change the size of Amazon." The release shows TTM free cash flow of −$42.4B, against +$14.8B a year earlier.</p>' },
+        { tag:'thesis', band:'context',
+          head:'AWS margin 38.7%; the AI side runs at lower margins than the core, so growth mix weighs on the segment',
+          detail:'<p><b>Brian Olsavsky:</b> "the outsized growth of AI puts margin pressure on the business as a whole because the margins are lower there." … "they are ahead of where the core was at a similar point in time, but they are still lower, so there is going to be that mix issue."<br><b>Andy Jassy:</b> "Neoclouds are about 3,500 basis points worse in operating margin than if you long lease them."</p>' },
+        { tag:'thesis', band:'context',
+          head:'Trainium will be sold outside AWS from late 2027; Graviton and Trainium revenue commitments each up more than 20x',
+          detail:'<p><b>Andy Jassy:</b> "With Trainium demand so strong, customers continue encouraging us to make it available outside of AWS. We intend to do so late in 2027." … "There\'s only so many chips that provider can provide each year. Everybody gets an allocation. You have to decide with that allocation how much of it you want to sell externally and how much of it you want to use in your cloud."</p>' },
+        { tag:'curious', band:'context',
+          head:'Grocery gross sales nearly $250B TTM; grocery customers shop about 4x more non-grocery categories and spend about 2x more on them',
+          detail:'<p><b>Andy Jassy:</b> "Active grocery customers shop nearly four times more non-grocery categories like home and apparel, and spend over two times more on those categories compared to non-grocery customers. Amazon Pharmacy is also growing fast."<br><b>Brian Olsavsky:</b> "the biggest difference is grocery."</p>' },
+        { tag:'watch', band:'logged', open:'Leo cost capitalization now starts in Q1 2027: does the North America margin step up then?',
+          head:'Amazon Leo: initial service still this year, but cost capitalization slips to Q1 of next year, so most Leo cost stays in Q4 expense',
+          detail:'<p><b>Brian Olsavsky:</b> "we expect to begin capitalizing certain costs in Q1 of next year, including production and launch costs. This is <b>later than I\'ve been predicting</b> in earlier earnings calls. As a result, we will continue to expense the majority of Leo-related costs in Q4."</p>' },
+        { tag:'logged', band:'logged',
+          head:'Call colour: DuckDB becomes the SQL dialect of AWS analytics · AWS Continuum for code vulnerabilities · AgentCore deployments 2x · 34 new devices',
+          detail:'<p><b>Andy Jassy:</b> "With our acquisition of DuckLabs, DuckDB will become the universal SQL dialect of AWS Storage and Analytics" … "We built AWS Continuum to discover, prioritize, validate, and remediate code vulnerabilities at machine speed." … "Tens of thousands of customers currently use AgentCore, deploying 2x more agents with it in Q3 than the prior three quarters combined." … "We recently launched our most powerful devices lineup yet with 34 new products"</p>' },
+      ],
+      // Propose Notes — paraphrased from SAB's handwritten notes on the call (Oct 30 2026), each with its target sub-theme.
+      newQuestions:[
+        { n:'AWS +39% to $46.0B ($184B run rate); backlog $578B. Projected to grow at least 40% in both 2027 and 2028, with a lot of visibility into 2027, 2028 and 2029 in the big chunks of capacity demand. Capacity added per quarter will vary.', theme:'Backlog' },
+        { n:'2026 cash capex still ~$220B; 2027 expected to be meaningfully more. Capex payback keeps accelerating. TTM free cash flow an outflow of $42.4B.', theme:'Capex' },
+        { n:'AWS margin 38.7%. The AI side of AWS carries lower margins than the core. Neoclouds run ~3,500bps worse in operating margin than long-leased capacity.', theme:'Margins' },
+        { n:'Trainium to be made available outside AWS from late 2027.', theme:'Custom silicon — Graviton, Trainium, Rainier' },
+        { n:'Bedrock is the fastest-growing multi-billion-dollar business in AWS history.', theme:'Bedrock', seg:'AWS' },
+        { n:'Advertising +12% in Q3 on timing anomalies (Prime Day moved to Q2); Q4 advertising growth expected back in the high teens.', theme:'Advertisement' },
+        { n:'NA margin 7.7%, International 3.7%: cost to serve improved, but fuel costs weighed. The FBA fuel surcharge does not cover the whole increase, and the impact is higher in Q4 than in Q3.', theme:'Robotics — the efficiency flywheel' },
+        { n:'Units +15% YoY on a base of 30B products sold in 2025; ~80% of retail is still spent in physical stores; Amazon Now in 450 towns and cities.', theme:'Robotics — the efficiency flywheel' },
+        { n:'Grocery gross sales ~$250B TTM. Everyday essentials are half of units and grow 3x faster than the rest of the store; same-day perishables shoppers buy 7x the essentials units; grocery customers shop 4x more non-grocery categories and spend 2x on them.', theme:'Grocery & everyday essentials' },
+        { n:'400M customers have used Alexa for Shopping; interactions +570% YoY; they spend 50% more per order.', theme:'Agentic commerce' },
+        { n:'Zoox began paid rides in Las Vegas and started testing in San Diego and Houston; now operating in 12 U.S. cities (release).', theme:'Zoox' },
+        { n:'Q4 guide: revenue $240–247B (+12–16%, ~60bps FX headwind), operating income $28.5–33.5B. Leo cost capitalization begins in Q1 2027, later than predicted, so most Leo cost stays in Q4 expense.', theme:'Amazon Leo' },
+        { n:'"There has never been a $1T business" — Amazon could have two of them, AWS and stores, in the next 5–10 years.', theme:'Backlog' },
+        { n:'Prime Video runs at a revenue run rate in the tens of billions and is profitable on its own.', theme:'Prime Video' },
+      ],
+    } },
 
   // ── REPORTED: Q2 2026 (quarter ended Jun 2026; reported Jul 30, 2026 AMC, call 5pm ET) ──
   { q:'Q2 2026', status:'reported', date:'July 30, 2026',

@@ -14,8 +14,8 @@
 // flags its transcripts as partly LLM-assisted: check a quoted fragment against
 // the audio or the official transcript before quoting it outside the portal.
 // Amazon's 3Q26 column (filled Oct 29 2026, the night of its print) comes from its 8-K earnings release (Ex. 99.1):
-// cash capex, the 2026 capex frame and AWS revenue / operating income. Its call (Oct 29, 5pm ET) has no published
-// transcript yet, so the cells that need the call (backlog, capacity quotes, What They Said) stay null until it does.
+// cash capex, the 2026 capex frame and AWS revenue / operating income. The call cells (backlog $578B, the capacity quote,
+// What They Said) were filled Oct 30 2026 from the transcript Dani compiled (Drive: AMZN calls.txt; provider not named).
 //
 // AXIS CONVENTION (per SAB): everything is on a CALENDAR basis so the four are
 // comparable. Microsoft is the only fiscal-year reporter (FY ends 30 June), so its
@@ -64,7 +64,7 @@ export var HS_VINTAGES = [
   { key: '26q1', label: "Apr '26", calls: '1Q26', msft: 'FY26Q3' },
   { key: '26q2', label: "Jul '26", calls: '2Q26', msft: 'FY26Q4' },
   // Added Oct 21 2026 for SpaceX's 3Q26 call (Oct 20); Alphabet, Meta and Microsoft
-  // filled Oct 29 2026; Amazon's from its 8-K the same night (call-based cells pending the transcript).
+  // filled Oct 29 2026; Amazon's from its 8-K the same night, its call-based cells Oct 30 from the transcript.
   { key: '26q3', label: "Oct '26", calls: '3Q26', msft: 'FY27Q1' },
 ];
 
@@ -250,7 +250,7 @@ export var HS_BASIS = [
 // is a finding, not missing data.
 export var HS_BACKLOG = {
   googl: [null, null, null, null, null, null, 155, 240, 462, 514, 561],
-  amzn:  [null, null, null, null, 189,  null, 200, 244, 364, 496, null],
+  amzn:  [null, null, null, null, 189,  null, 200, 244, 364, 496, 578],
   meta:  [null, null, null, null, null, null, null, null, null, null, null],
   msft:  [null, 269,  null, 298,  315,  368,  392,  625,  627,  678, 677],
 };
@@ -484,6 +484,7 @@ export var HS_GW_MODEL_FLAG =
 export var HS_CAPACITY_QUOTES = [
   { id: 'amzn', when: "Oct '25", q: 'Added more than <b>3.8 GW of power in the past 12 months</b>, more than any other cloud provider — with at least another 1 GW expected in Q4, and a plan to <b>double overall capacity by the end of 2027</b>.' },
   { id: 'amzn', when: "Feb '26", q: '<b>3.99 GW added over the last 12 months</b> — “twice what we had in 2022, when we were an $80 billion annual run-rate business”. 1.2 GW came in Q4 alone. In 2025 AWS added more data-centre capacity than any other company in the world.' },
+  { id: 'amzn', when: "Oct '26", q: 'No GW figure. An AI accelerator installed “about every 14 seconds”; the big chunks — “the hundreds of megawatts or sometimes up to a gigawatt” — are reserved well in advance, with <b>“very good visibility into 2027 and 2028 and some of 2029 too”</b>. (call transcript)' },
   { id: 'msft', when: "Jul '25", q: 'Stood up <b>more than 2 GW of new capacity over the past 12 months</b>. Every Azure region is now AI-first and supports liquid cooling, which raises fleet fungibility.' },
   { id: 'msft', when: "Oct '25", q: 'Will <b>increase total AI capacity by over 80% this year</b> and roughly <b>double the total data-centre footprint over the next two years</b>. Fairwater in Wisconsin alone scales to 2 GW.' },
   { id: 'msft', when: "Jan '26", q: 'Added <b>nearly 1 GW in the quarter alone</b>. Maia 200 comes online at 10+ petaflops FP4 and 30%+ better TCO than the latest hardware already in the fleet.' },
@@ -762,7 +763,7 @@ export var HS_DEP_NOTES = [
 // SPCX (added Oct 2026) starts at 1Q26, where the cell is the S-1 (May 2026) —
 // a prospectus, not a call. 2Q26 is the Aug 4 call, 3Q26 the Oct 20 call. The
 // 3Q26 row: SpaceX (Oct 20), Meta (Oct 21), Alphabet and Microsoft (Oct 28), from
-// the Motley Fool transcripts (see the header); Amazon fills in when it reports.
+// the Motley Fool transcripts (see the header); Amazon (Oct 29) from the transcript Dani compiled.
 export var HS_THEME_QTRS = ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26'];
 
 export var HS_THEMES = [
@@ -793,6 +794,7 @@ export var HS_THEMES = [
         '<b>~$200B for 2026</b>, “predominantly in AWS, because we have very high demand”.',
         'Q1 $43.2B. “The faster AWS grows, the more short-term CapEx we’ll spend.”',
         'Raised to <b>~$220B</b> — “the higher cost of memory pushing this number up”.',
+        '<b>~$220B</b> reiterated; 2027 “meaningfully more”, “with a clear line of sight to attractive financial returns”. Q3 $75.9B.',
       ],
       meta: [
         'Raised to <b>$35–40B</b> from $30–37B; “CapEx will continue to increase next year”.',
@@ -853,6 +855,7 @@ export var HS_THEMES = [
         'Servers & networking 82% of the 2026 plan; heavy equipment 8%, CIP 4%, land under 1%.',
         '“Land, power, buildings, chips, servers, and networking gear” — laid out 6 to 24 months before billing starts.',
         'Same structure, now against a $220B year.',
+        'Q3 $75.9B “primarily relates to AWS and AI”. Capacity is mostly “owned or long leased” — neoclouds run “about 3,500 basis points worse in operating margin”.',
       ],
       meta: [
         'Servers, data centres and network infrastructure; sites staged “at various phases of development” to flex without over-committing.',
@@ -912,6 +915,7 @@ export var HS_THEMES = [
         '“A headwind from the investments in AI and the depreciation on that CapEx”, offset by efficiency work.',
         'Life framing: 30+ years for data centres, 5–6 for chips, servers and networking gear.',
         'Servers break even in “a little less than three years”, with AI capacity contracted for five-year terms.',
+        'Break-even “continuing to move that left” — “finding ways to extend useful lives and to make the break even sooner”.',
       ],
       meta: [
         '', '', 'Back-end-weighted 2024 CapEx means “a significant acceleration in infrastructure expense growth next year”.',
@@ -962,6 +966,7 @@ export var HS_THEMES = [
         'Chips business incl. Graviton and Trainium “over $10 billion annual revenue run rate, growing triple digits”.',
         '<b>~$50B standalone run rate — “one of the top three data center chip businesses in the world”</b>; $225B of Trainium revenue commitments.',
         'Chips run rate “over $25 billion”; multi-year, multi-gigawatt Trainium commitments from Anthropic and OpenAI.',
+        'Graviton and Trainium commitments “each increased more than 20x”; <b>Trainium sold outside AWS from “late in 2027”</b>. Most of Bedrock runs on Trainium.',
       ],
       meta: [
         '<b>MTIA</b> “has successfully enabled us to run some of our recommendation workloads”.',
@@ -1012,6 +1017,7 @@ export var HS_THEMES = [
         '', '', '<b>+3.8 GW added in twelve months</b>, “more than any other cloud provider”; 1 GW more in Q4; capacity to double by end-2027.',
         '<b>+3.99 GW over twelve months</b> — “twice what we had in 2022”. In 2025 AWS added more capacity than any company in the world.',
         '', 'Still short: “we will still not have enough capacity to meet all the demand we have in 2026, and… 2027 too”.',
+        'An AI accelerator installed “about every 14 seconds” — “almost as fast as we install capacity, customers are gobbling it up”. The big chunks are reserved early: <b>“very good visibility into 2027 and 2028 and some of 2029”</b>.',
       ],
       meta: [
         '', '', '', '<b>“Almost a gigawatt of capacity this year”</b>, plus a 2 GW-plus site “the size of Manhattan”.',

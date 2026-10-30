@@ -60,19 +60,22 @@ var endLabels = {
     ctx.save();
     ctx.font = '600 11px Inter, sans-serif';
     ctx.textBaseline = 'middle';
-    var placed = [];
+    var labs = [];
     chart.data.datasets.forEach(function(ds, di){
       var meta = chart.getDatasetMeta(di);
       if (meta.hidden) return;
       var last = -1;
       ds.data.forEach(function(v, i){ if (v != null) last = i; });
       if (last < 0 || !meta.data[last]) return;
-      var pt = meta.data[last], y = pt.y;
-      placed.forEach(function(py){ if (Math.abs(y - py) < 12) y = py + 12; });
-      placed.push(y);
-      ctx.fillStyle = ds.borderColor;
+      labs.push({ ds: ds, pt: meta.data[last], y: meta.data[last].y });
+    });
+    // Top to bottom, so two labels that collide keep the order of their lines.
+    labs.sort(function(a, b){ return a.y - b.y; });
+    labs.forEach(function(l, i){
+      if (i && l.y - labs[i - 1].y < 12) l.y = labs[i - 1].y + 12;
+      ctx.fillStyle = l.ds.borderColor;
       ctx.textAlign = 'left';
-      ctx.fillText(ds.label, Math.min(pt.x + 8, chart.chartArea.right + 4), y);
+      ctx.fillText(l.ds.label, Math.min(l.pt.x + 8, chart.chartArea.right + 4), l.y);
     });
     ctx.restore();
   },
@@ -1399,7 +1402,7 @@ function capacityBody(){
 
     sec('Capex to gigawatts') +
     '<div class="hs-panels">' + bridge + '</div>' +
-    '<div class="hs-card hs-card--warn"><div class="hs-lbl">Model QA</div><p class="hs-body">' + esc(HS_GW_MODEL_FLAG) + '</p></div>' +
+    '<div class="hs-card hs-card--warn"><div class="hs-lbl">Model QA</div><p class="hs-body">' + HS_GW_MODEL_FLAG + '</p></div>' +
 
     sec('What they have said about capacity') +
     '<div class="hs-card"><ul class="hs-src">' + quotes + '</ul>' +
@@ -1448,7 +1451,7 @@ function themesBody(){
       '<p class="hs-cap"><b>Quarters covered on this theme:</b> ' + counts + '. ' +
       'A blank cell means the theme did not come up on that call in a way worth recording — not that the company said nothing at all. ' +
       'Alphabet has no 2Q24 row anywhere, because that call is not in the corpus. ' +
-      'SpaceX starts at 1Q26, where the cell is its S-1 (a prospectus, not a call); 2Q26 and 3Q26 are its August and October calls, and the 3Q26 row for Meta, Alphabet and Microsoft comes from the Motley Fool transcripts (the corpus has no 3Q26 calls yet); Amazon fills in when it reports. ' +
+      'SpaceX starts at 1Q26, where the cell is its S-1 (a prospectus, not a call); 2Q26 and 3Q26 are its August and October calls, and the 3Q26 row for Meta, Alphabet and Microsoft comes from the Motley Fool transcripts (the corpus has no 3Q26 calls yet), Amazon’s from a call transcript compiled by the team. ' +
       'Quoted fragments are verbatim; the connective text is compression.</p>' +
     '</div>';
 }

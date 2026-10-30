@@ -185,7 +185,7 @@ se quita nada. El conteo de control se hace en F-FINAL contra las sub-tabs de ho
 | Desde | Unidad | Qué falta | Quién lo consigue | Estado |
 |---|---|---|---|---|
 | 2026-10-29 | VA-SUB / VA-TM | duda 4: valuación del submit 2025-12-18 | SAB | cerrada: se deja fuera |
-| 2026-10-29 | EV-POST ▸ 3T26 | Call Summary del 3T26: transcripción de Motley Fool no publicada el 29-oct (el 2T26 tardó ~8 días) | Claude, al publicarse | abierta |
+| 2026-10-29 | EV-POST ▸ 3T26 | Call Summary del 3T26: transcripción de Motley Fool no publicada el 29-oct (el 2T26 tardó ~8 días) | Claude, al publicarse | cerrada 2026-10-30: transcripción de Dani (Drive, `AMZN calls.txt`) |
 | 2026-10-29 | TL-CUS ▸ sección 5 | "What each top customer buys" — `segments.js` no la dibuja todavía | PR de motor aparte | abierta (igual que GOOGL) |
 
 ## 6b. Conexiones pendientes ("Live data pending")
@@ -260,3 +260,17 @@ se quita nada. El conteo de control se hace en F-FINAL contra las sub-tabs de ho
 
 ### 2026-10-29 · F-FINAL — APROBADO
 - SAB aprueba el perfil completo; commit + push de `feat/amzn-restructure` (sin PR hasta que lo pida).
+
+### 2026-10-30 · EV-POST ▸ 3T26 Call Summary · EV-NOTES (propuestas) · Hyperscalers (celdas de llamada) — en revisión
+- Fuente de la llamada: la transcripción que juntó Dani (Drive: `Extras/Team/DAA/Ad hoc info search/AMZN calls.txt`, 30-oct;
+  el archivo no dice de qué proveedor sale). 13 temas de prepared remarks, 6 preguntas (Post, Nowak, Mahaney, Sheridan, Anmuth,
+  Sandler), 7 puntos en "Also on the call"; 73 citas cotejadas palabra por palabra contra el archivo, 0 faltantes.
+- Propose Notes (`call.newQuestions`, 14): paráfrasis en inglés de las notas manuscritas de SAB (30-oct), cada una con su sub-tema.
+  Nuevos: AWS ▸ Bedrock; Amazon US ▸ Grocery & everyday essentials, Zoox, Amazon Leo, Prime Video. Se publican desde el portal
+  (la copia guardada en Supabase manda sobre la semilla). `amzn-ce.js`: una propuesta puede nombrar su tema (`seg`) y el
+  sub-tema nuevo llega con el nombre puesto.
+- Correcciones a las notas, contra la fuente: la capitalización de Leo empieza en el **1T27**, no en el 4T ("later than I've been
+  predicting"); "tens of billions… profitable" es **Prime Video**; Zoox y el FCF TTM (−$42.4B) salen del 8-K, no de la llamada.
+- Hyperscalers: backlog Oct '26 = $578B; cita de capacidad Oct '26; las 5 filas de What They Said con la celda 3T26.
+  Revisado en el portal (localhost, con sesión). Las etiquetas al final de cada línea ahora respetan el orden vertical (AMZN $578B quedaba debajo de GOOGL $561B) y se actualizó el pie de What They Said.
+- Pendiente: el 10-Q del 3T26 (presentado el 30-oct, acc. 0001018724-26-000040): deuda neta completa, D&A por segmento y drivers del MD&A en Bottom Line.

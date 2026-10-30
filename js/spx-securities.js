@@ -83,7 +83,11 @@ function renderTop(){
     (showNeg && !(showAll && showPos) ? block('neg', showAll ? 'All holdings, bottom to top' : 'Bottom ' + N + ' contributors') : '') + '</tbody>';
   var foot = '<tfoot><tr style="border-top:2px solid var(--navy)">' + years.map(function(y, i){
     var d = yd[y], shown = d.pos.concat(d.neg).reduce(function(s, x){ return s + x.contrib; }, 0), share = Math.abs(d.total) > 1e-9 ? shown / d.total * 100 : 0;
-    return '<td colspan="' + cpy + '" style="padding:7px 8px;font-size:11.5px;color:var(--navy);' + (i ? GAP : '') + '">Listed: <b style="color:' + colr(shown) + '">' + sgn2(shown) + '%</b> of <b style="color:' + colr(d.total) + '">' + sgn2(d.total) + '%</b> SPY return <span style="color:var(--mu)">(' + share.toFixed(0) + '%)</span></td>';
+    // with every holding listed, what is left is SPY's cash and the names with no price: shown, so the sum is exact
+    var rest = showAll ? d.total - shown : null;
+    return '<td colspan="' + cpy + '" style="padding:7px 8px;font-size:11.5px;color:var(--navy);' + (i ? GAP : '') + '">Listed: <b style="color:' + colr(shown) + '">' + sgn2(shown) + '%</b>' +
+      (rest != null ? ' + cash &amp; other <b style="color:' + colr(rest) + '">' + sgn2(rest) + '%</b> = <b style="color:' + colr(d.total) + '">' + sgn2(d.total) + '%</b> SPY return'
+        : ' of <b style="color:' + colr(d.total) + '">' + sgn2(d.total) + '%</b> SPY return <span style="color:var(--mu)">(' + share.toFixed(0) + '%)</span>') + '</td>';
   }).join('') + '</tr></tfoot>';
   html += '<div style="overflow-x:auto"><table style="width:auto;border-collapse:collapse;font-size:12px">' + thead + tbody + foot + '</table></div>' +
     '<div style="font-size:11px;color:var(--mu);margin-top:8px;line-height:1.5"><b>Contrib</b> = weight in SPY at the start of the year × the year\'s return (one snapshot per year). <b>Cum.</b> = running total down the list. ' +
@@ -148,9 +152,9 @@ function renderScatter(){
     if (top.indexOf(d.name) >= 0){ var lb = se('text', { x: X(xv(d)) + r + 3, y: Y(d.w1) + 4, 'font-family': 'Inter,sans-serif', 'font-size': 11, 'font-weight': 700, fill: '#1E2733' }); lb.textContent = d.name; svg.appendChild(lb); }
   });
   scatRoot.innerHTML = head; var box = document.createElement('div'); box.appendChild(svg); scatRoot.appendChild(box);
-  var note = document.createElement('div'); note.style.cssText = 'font-size:11px;color:var(--mu);margin-top:6px';
-  note.textContent = 'One dot per company: return or contribution (across) vs weight in SPY at the end of the year (up); bubble size = contribution. Same axes for every sector or group within a year. ' +
-    'Return = the whole year, for the companies in SPY at the start of it (one snapshot per year). A company in both indices can show a different return in the Nasdaq-100 view, which counts only the time it has been in that index (e.g. one that joined the Nasdaq-100 during the year).';
+  var note = document.createElement('div'); note.style.cssText = 'font-size:12px;color:var(--mu);margin-top:6px;line-height:1.5';
+  note.innerHTML = 'One dot per company: return or contribution (across) vs weight in SPY at the end of the year (up); bubble size = contribution. Same axes for every sector or group within a year. ' +
+    'Return = the whole year, for the companies in SPY at the start of it (one snapshot per year). <b style="color:var(--text)">A company in both indices can show a different return in the Nasdaq-100 view, which counts only the time it has been in that index (e.g. one that joined the Nasdaq-100 during the year).</b>';
   scatRoot.appendChild(note);
 }
 window.spxScatYear = function(y){ S.year = y; renderScatter(); };

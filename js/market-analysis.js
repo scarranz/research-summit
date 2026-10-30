@@ -243,11 +243,10 @@ function renderSpxWL(){
   var host = document.getElementById('ma-spx-wl'); if (!host || !SPX) return;
   if (!WL_YEAR) WL_YEAR = String(SPX.year);
   host.innerHTML = '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">' + SPX.years.map(function(y){
-    return '<button class="ndx-tab-btn' + (y === WL_YEAR ? ' active' : '') + '" onclick="maSpxWL(\'' + y + '\')">' + y + '</button>'; }).join('') + '</div><div id="ma-spx-wl-box"></div>' +
-    '<div style="font-size:11px;color:var(--mu);margin-top:6px">Today\'s S&amp;P 500 members that were in the index the whole year.</div>';
+    return '<button class="ndx-tab-btn' + (y === WL_YEAR ? ' active' : '') + '" onclick="maSpxWL(\'' + y + '\')">' + y + '</button>'; }).join('') + '</div><div id="ma-spx-wl-box"></div>';
   var yy = WL_YEAR.slice(2);
   var items = SPX.members.filter(function(s){ return s['e' + yy] === 1 && s['r' + yy] != null; }).map(function(s){ return { name: s.t, co: s.n, ret: s['r' + yy] }; });
-  distribution(document.getElementById('ma-spx-wl-box'), items, WL_STATE);
+  distribution(document.getElementById('ma-spx-wl-box'), items, WL_STATE, 'only today\'s S&amp;P 500 members that were in the index the whole year (those that joined during it, and former members, are left out)');
 }
 window.maSpxWL = function(y){ WL_YEAR = y; WL_STATE.bin = null; renderSpxWL(); };
 

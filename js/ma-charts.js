@@ -63,9 +63,11 @@ export function dumbbell(box, rows, hi, closeLbl, period, note, openLbl){
 // Clicking a bar lists its names (best first) under the chart; clicking it again closes it.
 var BINS = [[-1e9, -20], [-20, -10], [-10, -5], [-5, 0], [0, 5], [5, 10], [10, 20], [20, 1e9]];
 var LBLS = ['< −20%', '−20 to −10%', '−10 to −5%', '−5 to 0%', '0 to 5%', '5 to 10%', '10 to 20%', '> 20%'];
-// opt (optional): { bins: [[lo, hi, label], …] in ascending order, split: how many bins are losses } for returns spread wider than one year of an index (Market History)
+// opt (optional): a string = one line under the counts (why these companies), or { bins: [[lo, hi, label], …] in ascending order, split: how many bins are losses, note } for returns spread wider than one year of an index (Market History)
 export function distribution(box, items, state, opt){
-  var bins = opt ? opt.bins.map(function(b){ return [b[0], b[1]]; }) : BINS, lbls = opt ? opt.bins.map(function(b){ return b[2]; }) : LBLS, split = opt ? opt.split : 4;
+  var note = typeof opt === 'string' ? opt : (opt && opt.note) || '';
+  var arg = opt; if (typeof opt === 'string') opt = null;
+  var bins = opt && opt.bins ? opt.bins.map(function(b){ return [b[0], b[1]]; }) : BINS, lbls = opt && opt.bins ? opt.bins.map(function(b){ return b[2]; }) : LBLS, split = opt && opt.bins ? opt.split : 4;
   var counts = bins.map(function(){ return []; });
   items.forEach(function(d){ for (var i = 0; i < bins.length; i++) if (d.ret >= bins[i][0] && d.ret < bins[i][1]){ counts[i].push(d); break; } });
   var maxN = Math.max.apply(null, counts.map(function(c){ return c.length; })) || 1;
@@ -87,12 +89,13 @@ export function distribution(box, items, state, opt){
     var xl = txt({ x: x + bw / 2, y: VH - P.b + 14, 'text-anchor': 'end', 'font-size': 9.5, fill: sel ? '#1E2733' : '#8A93A0' }, lbls[i]);
     xl.setAttribute('transform', 'rotate(-30,' + (x + bw / 2) + ',' + (VH - P.b + 14) + ')'); svg.appendChild(xl);
     var hit = se('rect', { x: x, y: P.t, width: bw, height: VH - P.b - P.t, fill: 'transparent', style: 'cursor:pointer' });
-    hit.addEventListener('click', function(){ state.bin = state.bin === i ? null : i; distribution(box, items, state, opt); });
+    hit.addEventListener('click', function(){ state.bin = state.bin === i ? null : i; distribution(box, items, state, arg); });
     bindTip(hit, '<b>' + lbls[i] + '</b> · ' + c.length + ' compan' + (c.length === 1 ? 'y' : 'ies') + '<br><span style="color:#8A93A0">click to list them</span>');
     svg.appendChild(hit);
   });
   var up = items.filter(function(d){ return d.ret >= 0; }).length;
-  var head = '<div style="font-size:12px;margin-bottom:6px"><b style="color:var(--pos)">' + up + ' up</b> · <b style="color:var(--neg)">' + (items.length - up) + ' down</b> · ' + items.length + ' companies</div>';
+  var head = '<div style="font-size:12px;margin-bottom:6px"><b style="color:var(--pos)">' + up + ' up</b> · <b style="color:var(--neg)">' + (items.length - up) + ' down</b> · ' + items.length + ' companies' +
+    (note ? '<span style="color:var(--mu);font-size:11px"> — ' + note + '</span>' : '') + '</div>';
   var list = '';
   if (state.bin != null){
     var c = counts[state.bin].slice().sort(function(a, b){ return b.ret - a.ret; });

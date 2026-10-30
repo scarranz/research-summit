@@ -2190,10 +2190,12 @@ function renderPareto() {
     var d = yrData[yr];
     var shown = d.pos.concat(d.neg).reduce(function(s, x) { return s + x.contrib; }, 0);
     var share = Math.abs(d.total) > 1e-9 ? shown / d.total * 100 : 0;
+    // with every constituent listed, what is left is QQQ's cash & futures: shown, so the sum is exact
+    var rest = showAll ? d.total - shown : null;
     foot += '<td colspan="' + colsPerYr + '" style="padding:7px 8px;font-size:11.5px;color:var(--navy);' + (yi ? GAP : '') + '">' +
-      'Listed: <b style="color:' + colr(shown) + '">' + (shown >= 0 ? '+' : '') + shown.toFixed(2) + '%</b>' +
-      ' of <b style="color:' + colr(d.total) + '">' + (d.total >= 0 ? '+' : '') + d.total.toFixed(2) + '%</b> index return' +
-      ' <span style="color:var(--mu)">(' + share.toFixed(0) + '%)</span></td>';
+      'Listed: <b style="color:' + colr(shown) + '">' + sgn2(shown) + '%</b>' +
+      (rest != null ? ' + cash &amp; other <b style="color:' + colr(rest) + '">' + sgn2(rest) + '%</b> = <b style="color:' + colr(d.total) + '">' + sgn2(d.total) + '%</b> index return'
+        : ' of <b style="color:' + colr(d.total) + '">' + sgn2(d.total) + '%</b> index return <span style="color:var(--mu)">(' + share.toFixed(0) + '%)</span>') + '</td>';
   });
   foot += '</tr></tfoot>';
 
@@ -2459,7 +2461,7 @@ function renderWLSection() {
   var items = computeSecurities(new Set(), new Set(), hocs)
     .filter(function(d) { return inAll[d.name] === hocs.length; })
     .map(function(d) { return { name: d.name, co: d.co, ret: d.ret }; });
-  distribution(box, items, _wlState);
+  distribution(box, items, _wlState, 'only companies in the Nasdaq-100 the whole year (those that joined or left during it are left out)');
 }
 
 // ── Master refresh ────────────────────────────────────────────────────────
@@ -2843,7 +2845,7 @@ function buildPanes() {
           '<div id="ndx-scat-pills" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-basis:100%">' + scatPillsHtml() + '</div>' +
         '</div>' +
         '<div id="ndx-scatter-box"></div>' +
-        '<div style="font-size:11px;color:var(--mu);margin-top:6px">One dot per company: return or contribution (across) vs weight in the index (up); bubble size = contribution. Same axes for every sector or group within a year. Return = only the time the company has been in the Nasdaq-100 (from its entry date if it joined during the year), so it can differ from the S&amp;P 500 view, which takes the whole year for the companies in the index at the start of it.</div>' +
+        '<div style="font-size:12px;color:var(--mu);margin-top:6px;line-height:1.5">One dot per company: return or contribution (across) vs weight in the index (up); bubble size = contribution. Same axes for every sector or group within a year. <b style="color:var(--text)">Return = only the time the company has been in the Nasdaq-100 (from its entry date if it joined during the year), so it can differ from the S&amp;P 500 view, which takes the whole year for the companies in the index at the start of it.</b></div>' +
       '</div>'
   };
 }

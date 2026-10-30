@@ -63,7 +63,7 @@ YEARS.forEach(function(y){ var r=AMZN_SENS.y[y]; if(!r) return;
 });
 var _ndRow = AMZN_HM_Q[AMZN_HM_Q.length-1];
 var NET_DEBT_SEED = _ndRow[9];            // $M, negative = net cash — long-term debt − cash, equivalents and marketable securities
-var ND_SRC = _ndRow[0]+(_ndRow[0]==='3Q26' ? ' earnings release (8-K Ex. 99.1, '+_ndRow[2]+'; long-term debt non-current only)'
+var ND_SRC = _ndRow[0]+(_ndRow[0]==='3Q26' ? ' balance sheet (8-K of '+_ndRow[2]+'; current portion of debt from the 10-Q of 2026-10-30)'
                                            : ' 10-Q / 10-K, filed '+_ndRow[2]);
 
 // Every series the calc needs, for every year — if one is missing the pane says so instead of NaN.

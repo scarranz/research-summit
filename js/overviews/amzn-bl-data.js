@@ -25,14 +25,16 @@
 //      · AMZN_SEG_Y / AMZN_SEG_Q: segment net sales, operating expenses, operating income and "total depreciation and
 //        amortization expense, by segment" (us-gaap:Depreciation by segment, 10-K / 10-Q Note "Segment Information").
 //        Checked at generation: rev − opex = oi in every segment-period, and the three segments add up to consolidated
-//        net sales and operating income. Quarterly segment D&A is tagged from 1Q24; 2023 quarters and 3Q26 (the 8-K
-//        does not give it) are null.
+//        net sales and operating income. Quarterly segment D&A is tagged from 1Q24; 2023 quarters are null. 3Q26 D&A
+//        (the 8-K does not give it) typed Oct 30 2026 from the Form 10-Q for 3Q26 (filed Oct 30 2026, acc.
+//        0001018724-26-000040), Note 8: NA $4,566M · International $1,346M · AWS $9,230M (consolidated $15,142M).
 //
 // 2) AMZN_EW_LINES — one dive per line, in 10-K order. `def` is verbatim from the Form 10-K FY2025 (filed Feb 6 2026),
 //    Item 8, Note 1 — Description of Business, Accounting Policies, and Supplemental Disclosures. Quotes in `why` and
-//    `drivers` are verbatim from the 10-K FY2025 Item 7 (MD&A, "Operating Expenses") or the Form 10-Q for 2Q26 (filed
-//    Jul 31 2026, MD&A). `calls` are verbatim management remarks from The Motley Fool's transcripts of the 4Q25, 1Q26
-//    and 2Q26 calls. Amounts, shares of revenue, the margin effect, SBC inside each line and the share-of-revenue bars
+//    `drivers` are verbatim from the 10-K FY2025 Item 7 (MD&A, "Operating Expenses") or the Forms 10-Q for 2Q26 (filed
+//    Jul 31 2026) and 3Q26 (filed Oct 30 2026), MD&A and Note 1. `calls` are verbatim management remarks from The Motley
+//    Fool's transcripts of the 4Q25, 1Q26 and 2Q26 calls, and from the transcript of the 3Q26 call the team compiled
+//    (Drive: AMZN calls.txt). Amounts, shares of revenue, the margin effect, SBC inside each line and the share-of-revenue bars
 //    are computed in amzn-bl.js from the series above — never typed here. Content from the earlier Amazon expense dives
 //    (amzn.js EW_LINES / EW_UNIT / EW_DEF) is kept in substance; the paraphrases that sat inside quotation marks there
 //    are replaced by verbatim quotes or moved out of quotation marks.
@@ -101,7 +103,7 @@ export var AMZN_SEG_Q=[
   {"p": "4Q25", "na": {"rev": 127083, "opex": 115611, "da": 4230, "oi": 11472}, "intl": {"rev": 50724, "opex": 49684, "da": 1315, "oi": 1040}, "aws": {"rev": 35579, "opex": 23114, "da": 6568, "oi": 12465}},
   {"p": "1Q26", "na": {"rev": 104143, "opex": 95876, "da": 4280, "oi": 8267}, "intl": {"rev": 39789, "opex": 38365, "da": 1277, "oi": 1424}, "aws": {"rev": 37587, "opex": 23426, "da": 7277, "oi": 14161}},
   {"p": "2Q26", "na": {"rev": 116177, "opex": 107054, "da": 4500, "oi": 9123}, "intl": {"rev": 42197, "opex": 40480, "da": 1293, "oi": 1717}, "aws": {"rev": 42232, "opex": 25611, "da": 8076, "oi": 16621}},
-  {"p": "3Q26", "na": {"rev": 112852, "opex": 104129, "da": null, "oi": 8723}, "intl": {"rev": 43108, "opex": 41528, "da": null, "oi": 1580}, "aws": {"rev": 45984, "opex": 28211, "da": null, "oi": 17773}},
+  {"p": "3Q26", "na": {"rev": 112852, "opex": 104129, "da": 4566, "oi": 8723}, "intl": {"rev": 43108, "opex": 41528, "da": 1346, "oi": 1580}, "aws": {"rev": 45984, "opex": 28211, "da": 9230, "oi": 17773}},
 ];
 // END GENERATED
 
@@ -121,10 +123,12 @@ export var AMZN_EW_LINES=[
     why:'<b>The largest line, and the one whose share of revenue has fallen most.</b> The 10-K on 2025: “The increase in cost of sales in 2025, compared to the prior year, is primarily due to increased product and shipping costs resulting from increased sales, partially offset by operational efficiencies.” Cost of sales went from 51.1% of net sales in 2024 to 49.7% in 2025 (10-K MD&amp;A).',
     drivers:[['','Mix shift to higher-margin revenue','Third-party seller services, advertising and AWS grow faster than first-party retail, so product cost shrinks as a share of revenue — the main reason the line falls.'],
              ['','Shipping offers','“We expect our cost of shipping to continue to increase to the extent our customers accept and use our shipping offers at an increasing rate, we use more expensive shipping methods, and we offer additional services.” (10-K MD&amp;A)'],
-             ['','Tariff refunds (2Q26)','“Cost of sales in Q2 2026 includes tariff refunds received under the IEEPA.” (10-Q 2Q26 MD&amp;A)']],
+             ['','Tariff refunds (2Q26)','“Cost of sales in Q2 2026 includes tariff refunds received under the IEEPA.” (10-Q 2Q26 MD&amp;A)'],
+             ['','3Q26','“The increase in cost of sales in Q3 2026 and for the nine months ended September 30, 2026, compared to the comparable prior year periods, is primarily due to increased product and shipping costs resulting from increased sales, partially offset by operational efficiencies.” Shipping costs were $28.3B, from $25.3B in Q3 2025. (10-Q 3Q26 MD&amp;A)']],
     calls:[{q:'1Q26', txt:'“Overall unit growth of 15% continues to outpace our cost to operate the fulfillment network, as outbound shipping costs grew 12% year over year and fulfillment expense grew 9% year over year, both on an FX-neutral basis.”', who:'Brian Olsavsky, CFO'},
            {q:'2Q26', txt:'“First, we received tariff-related refunds of approximately $600 million. This is included in our North America segment and represents the significant majority of refunds we expect to receive.”', who:'Brian Olsavsky, CFO'},
-           {q:'2Q26', txt:'“Excluding the impact of higher fuel and line haul rates, shipping costs grew more slowly than worldwide unit growth at a pace that is relatively consistent with last quarter.”', who:'Brian Olsavsky, CFO'}] },
+           {q:'2Q26', txt:'“Excluding the impact of higher fuel and line haul rates, shipping costs grew more slowly than worldwide unit growth at a pace that is relatively consistent with last quarter.”', who:'Brian Olsavsky, CFO'},
+           {q:'3Q26', txt:'“Shipping costs increased 11% year-over-year versus a 12% increase in units. Excluding fuel and line haul inflation, shipping costs grew 8%, or approximately 400 basis points slower than unit growth.”', who:'Brian Olsavsky, CFO'}] },
   { k:'fulfillment', name:'Fulfillment',
     kpiExtra:['9% vs 15%','fulfillment expense growth vs unit growth in 1Q26, FX-neutral (CFO, 1Q26 call)'],
     def:'Fulfillment costs primarily consist of those costs incurred in operating and staffing our North America and International segments’ fulfillment centers, physical stores, and customer service centers, including facilities and equipment expenses, such as depreciation and amortization, and rent; costs attributable to buying, receiving, inspecting, and warehousing inventories; picking, packaging, and preparing customer orders for shipment; payment processing and related transaction costs, including costs associated with our guarantee for certain seller transactions; responding to inquiries from customers; and supply chain management for our manufactured electronic devices. Fulfillment costs also include amounts paid to third parties that assist us in fulfillment and customer service operations.',
@@ -139,7 +143,9 @@ export var AMZN_EW_LINES=[
            {q:'4Q25', txt:'“You know, we have over a million robots today in our fulfillment network.”', who:'Andy Jassy, CEO'},
            {q:'1Q26', txt:'“All of our U.S. large-format fulfillment center launches in 2026 will have this latest generation technology. We are seeing early positive results with improved site safety, higher productivity, and lower cost to serve.”', who:'Brian Olsavsky, CFO'},
            {q:'2Q26', txt:'“We\'re retrofitting our facilities with our latest generation technology, and we expect to more than double our fleet of robotic arms, like Cardinal and Sparrow, in 2026.”', who:'Brian Olsavsky, CFO'},
-           {q:'2Q26', txt:'“We continue to lower our overall cost to serve, even as we face heightened transportation costs driven by fuel inflation from the conflict in the Middle East and higher line haul rates from driver capacity limitations.”', who:'Brian Olsavsky, CFO'}] },
+           {q:'2Q26', txt:'“We continue to lower our overall cost to serve, even as we face heightened transportation costs driven by fuel inflation from the conflict in the Middle East and higher line haul rates from driver capacity limitations.”', who:'Brian Olsavsky, CFO'},
+           {q:'3Q26', txt:'“Even with these headwinds, we still lowered our overall cost to serve in Q3 through better inventory placement, shorter shipping distances, and package consolidation.”', who:'Brian Olsavsky, CFO'},
+           {q:'3Q26', txt:'“In 2026, we doubled our fleet of robotic arms like Cardinal and Sparrow.”', who:'Brian Olsavsky, CFO'}] },
   { k:'techInfra', name:'Technology and infrastructure',
     kpiExtra:['$21.5B','AWS depreciation and amortization in FY2025, from $13.3B in FY2024 (10-K Note 10) — most of it lands in this line'],
     def:'Technology and infrastructure costs include payroll and related expenses for employees involved in the research and development of new and existing products and services, development, design, and maintenance of our stores, curation and display of products and services made available in our online stores, and infrastructure costs. Infrastructure costs include servers, networking equipment, and data center related depreciation and amortization, rent, utilities, and other expenses necessary to support AWS and other Amazon businesses. Collectively, these costs reflect the investments we make in order to offer a wide variety of products and services to our customers, including expenditures related to initiatives to build and deploy innovative and efficient software and electronic devices and the development of a satellite network for global broadband service and autonomous vehicles for ride-hailing services. Technology and infrastructure costs are generally expensed as incurred.',
@@ -151,12 +157,15 @@ export var AMZN_EW_LINES=[
     why:'<b>The one functional line rising as a share of revenue</b> — the capex reaches the income statement through depreciation before the capacity it pays for is fully used. The 10-K on 2025: “The increase in technology and infrastructure costs in 2025, compared to the prior year, is primarily due to an increase in spending on infrastructure, including depreciation and amortization.”',
     drivers:[['','The AI build','“We expect spending in technology and infrastructure to increase over time as we continue to add infrastructure and employees, including to support our artificial intelligence and machine learning initiatives.” (10-K MD&amp;A)'],
              ['','Amazon LEO','“We currently expense the majority of the costs associated with the development of our satellite network for global broadband service (including production, launch, and payroll costs, and launch services deposits upon launch).” (10-K MD&amp;A)'],
-             ['','Energy contracts (2Q26)','“Technology and infrastructure costs in Q2 2026 include net unrealized gains for energy contracts that are subject to derivative accounting, primarily related to AWS.” (10-Q 2Q26 MD&amp;A)']],
+             ['','Energy contracts (2Q26)','“Technology and infrastructure costs in Q2 2026 include net unrealized gains for energy contracts that are subject to derivative accounting, primarily related to AWS.” (10-Q 2Q26 MD&amp;A)'],
+             ['','Energy contracts (3Q26)','The fair value measurements “resulted in net unrealized gains of $91 million in Q3 2026 and $690 million for the nine months ended September 30, 2026, recorded within ‘Technology and infrastructure’ and primarily impacting our AWS segment.” (10-Q 3Q26 Note 1)'],
+             ['','3Q26','“The increase in technology and infrastructure costs in Q3 2026 and for the nine months ended September 30, 2026, compared to the comparable prior year periods, is primarily due to an increase in spending on infrastructure, including depreciation and amortization.” (10-Q 3Q26 MD&amp;A)']],
     calls:[{q:'4Q25', txt:'“It certainly has a headwind from the investments in AI and the depreciation on that CapEx. But we also work very hard to offset that with efficiencies.”', who:'Brian Olsavsky, CFO'},
            {q:'4Q25', txt:'“As a reminder, today, we do expense most of these LEO costs as incurred. We expect that later in the year, many of these costs, such as satellite manufacturing and launch services, will be capitalized.”', who:'Brian Olsavsky, CFO'},
            {q:'1Q26', txt:'“Second, within the North America segment, we do expect a year-over-year cost increase of approximately $1 billion related to Amazon LEO, as we manufacture and launch more satellites in preparation for our service offering, and we expect to begin capitalizing certain costs in Q4.”', who:'Brian Olsavsky, CFO'},
            {q:'2Q26', txt:'“The servers currently have a useful life of at least five to six years, and most of our AI capacity these days is being contracted for at least five-year terms.”', who:'Andy Jassy, CEO'},
-           {q:'2Q26', txt:'“Second, we recorded a separate benefit of approximately $600 million related to the change in fair value measurement of energy contracts subject to derivative accounting. This primarily impacts the AWS segment.”', who:'Brian Olsavsky, CFO'}] },
+           {q:'2Q26', txt:'“Second, we recorded a separate benefit of approximately $600 million related to the change in fair value measurement of energy contracts subject to derivative accounting. This primarily impacts the AWS segment.”', who:'Brian Olsavsky, CFO'},
+           {q:'3Q26', txt:'“Amazon Leo\'s commercial service is on track to begin initial service this year, and we expect to begin capitalizing certain costs in Q1 of next year, including production and launch costs. This is later than I\'ve been predicting in earlier earnings calls. As a result, we will continue to expense the majority of Leo-related costs in Q4.”', who:'Brian Olsavsky, CFO'}] },
   { k:'marketing', name:'Sales and marketing',
     kpiExtra:['$23.5B','advertising and other promotional costs in FY2025, from $21.4B in FY2024 (10-K Note 1)'],
     def:'Sales and marketing costs include advertising and payroll and related expenses for personnel engaged in marketing and selling activities, including sales commissions related to AWS. We pay commissions to third parties when their customer referrals result in sales. We also participate in cooperative advertising arrangements with certain of our vendors, and other third parties.',
@@ -167,7 +176,7 @@ export var AMZN_EW_LINES=[
     why:'Falling as a share of revenue since 2022 — Amazon spends proportionally less to win the next sale. The 10-K on 2025: “The increase in sales and marketing costs in 2025, compared to the prior year, is primarily due to increased third-party advertising expenses.”',
     drivers:[['','Variable with sales','“Our marketing costs are largely variable, based on growth in sales and changes in rates.” (10-K MD&amp;A)'],
              ['','Prime as marketing','“While costs associated with Amazon Prime membership benefits and other shipping offers are not included in sales and marketing expense, we view these offers as effective worldwide marketing tools, and intend to continue offering them indefinitely.” (10-K MD&amp;A)'],
-             ['','2026 so far','“Sales and marketing costs in Q2 2026 and for the six months ended June 30, 2026 did not significantly change compared to the comparable prior year periods.” (10-Q 2Q26 MD&amp;A)']],
+             ['','2026 so far','“Sales and marketing costs in Q3 2026 and for the nine months ended September 30, 2026 did not significantly change compared to the comparable prior year periods.” (10-Q 3Q26 MD&amp;A)']],
     calls:[{q:'4Q25', txt:'“The second charge is $730 million for the estimated severance costs.”', who:'Brian Olsavsky, CFO'},
            {q:'4Q25', txt:'“This charge impacts all three of our segments and is recorded primarily in the fulfillment sales and marketing and technology and infrastructure expense line items.”', who:'Brian Olsavsky, CFO'}] },
   { k:'gAdmin', name:'General and administrative',
@@ -177,7 +186,7 @@ export var AMZN_EW_LINES=[
     compNote:'The smallest recurring line, and the one with the most operating leverage: corporate cost grows far slower than revenue.',
     unit:'<div class="ew-note">Not a unit-cost line: it moves with corporate headcount, not with volume.</div>',
     why:'Pure operating leverage — a largely fixed corporate base against compounding revenue. The 10-K: “General and administrative costs in 2025 did not significantly change compared to the prior year.”',
-    drivers:[['','Payroll','“The decrease in general and administrative costs in Q2 2026 and for the six months ended June 30, 2026, compared to the comparable prior year periods, is primarily due to a decrease in payroll and related expenses.” (10-Q 2Q26 MD&amp;A)'],
+    drivers:[['','Payroll','“The decrease in general and administrative costs in Q3 2026 and for the nine months ended September 30, 2026, compared to the comparable prior year periods, is primarily due to a decrease in payroll and related expenses.” (10-Q 3Q26 MD&amp;A)'],
              ['','Severance','Estimated severance for planned role eliminations: $1.8B recorded in 3Q25 (10-K MD&amp;A) and $730M in 4Q25 (CFO, 4Q25 call), spread across the expense lines.']],
     calls:[] },
   { k:'otherOpex', name:'Other operating expense (income), net',
@@ -188,7 +197,7 @@ export var AMZN_EW_LINES=[
     compNote:'Usually a few hundred million a year; a net income in FY2020. It can be negative, so in the cost-structure view it can sit below zero.',
     unit:'<div class="ew-note">Not a unit-cost line: it is charges and settlements.</div>',
     why:'The line that explains the 3Q25 and 4Q25 margin dips — not a run-rate. The 10-K: the increase in 2025 “was primarily related to the settlement of a lawsuit with the Federal Trade Commission” in Q3 2025, “and also included the resolution of tax disputes associated with our stores business in Italy, and physical stores and other asset impairments.”',
-    drivers:[['','2026 so far','“Other operating expense (income), net was $199 million and $90 million for Q2 2025 and Q2 2026, and $507 million and $537 million for the six months ended June 30, 2025 and 2026, and was primarily related to asset impairments and the amortization of intangible assets.” (10-Q 2Q26 MD&amp;A)']],
+    drivers:[['','2026 so far','“Other operating expense (income), net was $2.9 billion and $134 million for Q3 2025 and Q3 2026, and $3.4 billion and $671 million for the nine months ended September 30, 2025 and 2026, and other than the settlement of a lawsuit for the three and nine months ended September 30, 2025, was primarily related to asset impairments and the amortization of intangible assets.” (10-Q 3Q26 MD&amp;A)']],
     calls:[{q:'4Q25', txt:'“The first charge of $1.1 billion is for the resolution of tax disputes associated with our stores business in Italy, and the settlement of a lawsuit. This charge primarily impacts our international segment and is largely recorded in the fulfillment and other operating expense line items.”', who:'Brian Olsavsky, CFO'},
            {q:'4Q25', txt:'“The third charge of $610 million is for asset impairments primarily related to physical stores. This charge primarily impacts the North America segment as reported in other operating expense line.”', who:'Brian Olsavsky, CFO'}] }
 ];
@@ -198,7 +207,7 @@ export var AMZN_EW_LINES=[
 //    FY2025, Note 10 (Segment Information), FY2023–FY2025 (the same figures the earlier amzn.js A_TENK carried).
 export var AMZN_SEG_CAPEX={ 2023:{na:17529,intl:4144,aws:24843,corp:1828}, 2024:{na:24348,intl:6643,aws:53267,corp:1494}, 2025:{na:35919,intl:7617,aws:96496,corp:2320} };
 export var AMZN_SEG_PPE={ 2023:{na:93632,intl:24357,aws:72701,corp:13487}, 2024:{na:103041,intl:25618,aws:110683,corp:13323}, 2025:{na:122043,intl:30632,aws:190055,corp:14295} };
-export var AMZN_SEG_SRC='Amazon Form 10-K FY2025 (Note 10, Segment Information) and Forms 10-Q 1Q24–2Q26 (segment note), via SEC EDGAR XBRL; 3Q26 from the 8-K of Oct 29 2026';
+export var AMZN_SEG_SRC='Amazon Form 10-K FY2025 (Note 10, Segment Information) and Forms 10-Q 1Q24–2Q26 (segment note), via SEC EDGAR XBRL; 3Q26 from the 8-K of Oct 29 2026, its segment D&A from the Form 10-Q of Oct 30 2026';
 // The 10-K's own words on how costs reach a segment (Form 10-K FY2025, Note 10), verbatim.
 export var AMZN_SEG_ALLOC={
   codm:'Our chief operating decision maker (“CODM”) is our President and Chief Executive Officer. Our CODM regularly reviews consolidated net sales, consolidated operating expenses, and consolidated operating income (loss) by segment.',

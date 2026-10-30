@@ -19,8 +19,9 @@ export var amznSegments = {
   source: 'Segment PP&E, capex and EBITDA from the Summit DCF (snapshot 2026-08-04, actuals_history for reported periods and projection_history forward). Segment D&A, remaining performance obligations, shipping cost and days payable are Bloomberg reported figures assembled across the archive snapshots — Amazon does not publish any of them, so there is no company number to reconcile against. Segment revenue and operating income are read from the Results dataset.',
   axis: { q: ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26'], y: ['2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'] },
   shared: {
+    // 3Q26 ($578B) typed from the Form 10-Q for 3Q26 (Oct 30 2026), Note 1 — Bloomberg had not posted it yet.
     rpo: { label: 'Remaining performance obligations', short: 'Backlog', unit: 'usdM', src: 'BBG metric38', scope: 'company',
-      q: { act: { '1Q23': 122000, '2Q23': 132100, '3Q23': 133000, '4Q23': 155700, '1Q24': 157700, '2Q24': 156600, '3Q24': 164000, '4Q24': 177000, '1Q25': 189000, '2Q25': 195000, '3Q25': 200000, '4Q25': 244000, '1Q26': 364000, '2Q26': 496000 }, summit: {} },
+      q: { act: { '1Q23': 122000, '2Q23': 132100, '3Q23': 133000, '4Q23': 155700, '1Q24': 157700, '2Q24': 156600, '3Q24': 164000, '4Q24': 177000, '1Q25': 189000, '2Q25': 195000, '3Q25': 200000, '4Q25': 244000, '1Q26': 364000, '2Q26': 496000, '3Q26': 578000 }, summit: {} },
       y: { act: { '2022': 110400, '2023': 155700, '2024': 177000, '2025': 244000 }, summit: {} },
     },
     shipping: { label: 'Shipping cost', short: 'Shipping', unit: 'usdM', src: 'BBG kpi4', scope: 'company',

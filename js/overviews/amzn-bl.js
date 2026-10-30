@@ -681,7 +681,7 @@ function ewBase(c){
   h+='<div class="ew-h">Effect on the operating margin</div><div class="ew-note">'+c.why+'</div>';
   if(c.unit) h+=String(c.unit).replace('class="ew-note"','class="ew-note ew-small"');
   if(c.calls){ h+=ewCallsTable(c.calls); }
-  h+='<div class="ov-foot">FY'+EW_LAST+' figures unless noted. Sources: Amazon Form 10-K for FY'+EW_LAST+' (Note 1 for the definition; MD&amp;A, Operating Expenses) and Form 10-Q for the second quarter of '+esc(EW_QL.yr)+' (MD&amp;A); expense series from SEC EDGAR XBRL, '+esc(EW_QL.p)+' from the 8-K (see the panel footer); The Motley Fool’s earnings-call transcripts for management commentary.</div>';
+  h+='<div class="ov-foot">FY'+EW_LAST+' figures unless noted. Sources: Amazon Form 10-K for FY'+EW_LAST+' (Note 1 for the definition; MD&amp;A, Operating Expenses) and Forms 10-Q for the second and third quarters of '+esc(EW_QL.yr)+' (MD&amp;A, Note 1); expense series from SEC EDGAR XBRL, '+esc(EW_QL.p)+' from the 8-K (see the panel footer); earnings-call transcripts for management commentary (The Motley Fool through 2Q26; 3Q26 compiled by the team).</div>';
   return h;
 }
 // One dive per line: the text is AMZN_EW_LINES (amzn-bl-data.js, verbatim quotes); the KPIs and the share-of-revenue
@@ -847,7 +847,7 @@ function sBuildProfit(){
     var end=Math.max.apply(null, series.map(function(x){ return sLastIdx(x.data); }));   // end the axis at the last value
     if(end>=0 && end<labels.length-1){ labels=labels.slice(0,end+1); series.forEach(function(x){ x.data=x.data.slice(0,end+1); }); }
     var notes=[];
-    if(eb) notes.push('Segment EBITDA = segment operating income + the segment’s depreciation and amortization (10-K / 10-Q segment note; quarterly from '+esc(AMZN_SEG_Q.filter(function(r){ return r.na.da!=null; })[0].p)+', and not in the 8-K for the newest quarter). It is not the adjusted EBITDA of the General tab, which also adds back stock-based compensation and all D&amp;A. Summit is not drawn: the model does not project segment D&amp;A. Consensus = Bloomberg’s segment operating income + segment D&amp;A'+(gran==='q'?' (annual only, so none in the quarterly view)':'')+'.');
+    if(eb) notes.push('Segment EBITDA = segment operating income + the segment’s depreciation and amortization (10-K / 10-Q segment note; quarterly from '+esc(AMZN_SEG_Q.filter(function(r){ return r.na.da!=null; })[0].p)+(AMZN_SEG_Q[AMZN_SEG_Q.length-1].na.da==null?', and not in the 8-K for the newest quarter':'')+'). It is not the adjusted EBITDA of the General tab, which also adds back stock-based compensation and all D&amp;A. Summit is not drawn: the model does not project segment D&amp;A. Consensus = Bloomberg’s segment operating income + segment D&amp;A'+(gran==='q'?' (annual only, so none in the quarterly view)':'')+'.');
     else if(s.k!=='cons') notes.push('Summit = the model’s segment operating income, frozen at its dated snapshots (annual rows; quarters for the current fiscal year). Consensus = Bloomberg’s segment operating income.');
     else notes.push('Consolidated = North America + International + AWS: Amazon has no unallocated line, so the three add up to operating income. Summit is the model frozen at its dated snapshots; Consensus is the Bloomberg export.');
     if(s.k==='intl'&&!eb) notes.push('International lost money through FY2023 (except FY2020) and crossed into profit in FY2024; a negative margin is drawn below zero.');
@@ -1066,7 +1066,7 @@ function sDive(d){
     ewTableRows('How costs reach a segment — Form 10-K Note 10', [['','Operating expenses','“'+esc(AMZN_SEG_ALLOC.allocated)+'”'],['','Infrastructure','“'+esc(AMZN_SEG_ALLOC.infra)+'”'],['','Depreciation','“'+esc(AMZN_SEG_ALLOC.da)+'”']])+
     '</tbody></table></div>';
   h+=ewCallsTable(d.calls);
-  h+='<div class="ov-foot">Sources: '+esc(AMZN_SEG_SRC)+'; Results dataset for '+fyLab(S_DY[0])+'–'+fyLab(S_DY[S_DY.length-1])+' segment revenue and operating income; Form 10-K FY'+yL+' and Form 10-Q MD&amp;A for the drivers; The Motley Fool’s earnings-call transcripts for management commentary.</div>';
+  h+='<div class="ov-foot">Sources: '+esc(AMZN_SEG_SRC)+'; Results dataset for '+fyLab(S_DY[0])+'–'+fyLab(S_DY[S_DY.length-1])+' segment revenue and operating income; Form 10-K FY'+yL+' and Form 10-Q MD&amp;A for the drivers; earnings-call transcripts for management commentary (The Motley Fool through 2Q26; 3Q26 compiled by the team).</div>';
   return h;
 }
 function sDivesBody(){
@@ -1082,7 +1082,7 @@ function amznBlFootSegments(){
   return '<div class="ov-foot">Sources — '+esc(AMZN_SEG_SRC)+': segment operating expenses and D&amp;A, '+fyLab(SEG_YRS[0])+'–'+fyLab(SEG_YRS[SEG_YRS.length-1])+' and '+esc(AMZN_SEG_Q[0].p)+'–'+esc(AMZN_SEG_Q[AMZN_SEG_Q.length-1].p)+' (a Q4 is the year less the nine months; quarterly D&amp;A from '+esc(AMZN_SEG_Q.filter(function(r){ return r.na.da!=null; })[0].p)+'); '+
     'net additions to P&amp;E and P&amp;E by segment from the Form 10-K FY'+SEG_YRS[SEG_YRS.length-1]+' Note 10; '+
     'Results dataset for segment revenue and operating income from '+fyLab(S_YA[0])+' and '+esc(qs)+', and for the Summit series — Summit DCF model, frozen (not live)'+(snaps.length?', snapshots '+snaps.map(esc).join(' and '):'')+'; '+
-    'Bloomberg consensus export (BBG_CONSENSUS, as of '+esc(amznBBG.asOf)+') for segment revenue, operating income and D&amp;A forward; The Motley Fool’s earnings-call transcripts. Forward figures are estimates.</div>';
+    'Bloomberg consensus export (BBG_CONSENSUS, as of '+esc(amznBBG.asOf)+') for segment revenue, operating income and D&amp;A forward; earnings-call transcripts (The Motley Fool through 2Q26; 3Q26 compiled by the team). Forward figures are estimates.</div>';
 }
 function sBuildSegments(){
   var pane=sPane(); if(!pane) return;

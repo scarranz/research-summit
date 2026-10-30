@@ -172,7 +172,7 @@ var _mPe  = _last.pe ? _last.pe.mult : 19;
 var _ndRow = AMZN_HM_Q[AMZN_HM_Q.length-1];
 var _netDebt = _ndRow[9];                       // US$M, negative = net cash (latest reported balance sheet)
 var _ndSrc = 'Amazon balance sheet, '+_ndRow[0]+(_ndRow[0]==='3Q26'
-  ? ' (earnings release, 8-K Ex. 99.1 of '+_ndRow[2]+'; long-term debt non-current only)'
+  ? ' (8-K of '+_ndRow[2]+'; current portion of debt from the 10-Q of 2026-10-30)'
   : ' (10-Q / 10-K filed '+_ndRow[2]+')');
 var _px = null;
 

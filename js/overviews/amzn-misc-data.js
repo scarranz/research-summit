@@ -12,11 +12,11 @@ export var AMZN_CHAIN = [
   ['3 · Installed capacity', 'Total gigawatts in service',
    'Not disclosed — Amazon gives additions and a doubling target, never the installed total', '—', 'The chain breaks here'],
   ['4 · Contracted demand', 'Performance obligations not yet recognized, primarily AWS',
-   '$496B at Jun 30 2026; weighted-average remaining life 6.4 years', 'Form 10-Q 2Q26 (filed Jul 31 2026), Note 1 — Unearned Revenue', 'Reported'],
+   '$578B at Sep 30 2026; weighted-average remaining life 6.1 years', 'Form 10-Q 3Q26 (filed Oct 30 2026), Note 1 — Unearned Revenue', 'Reported'],
   ['5 · Revenue', 'AWS segment net sales',
    '$46.0B in 3Q26 (+39%), a $184B annualized run rate', '8-K Ex. 99.1, Oct 29 2026', 'Reported']
 ];
-export var AMZN_BACKLOG_NOTE = 'Backlog = performance obligations on contracts with original terms over one year, "primarily related to AWS" (Form 10-Q); the quarterly series is Bloomberg\'s reading of that disclosure (BS_REMAINING_PERFORMANCE_OBLIG, as carried in the Top Line dataset). Amazon also quotes "AWS backlog" on the calls: $244B (4Q25), $364B (1Q26), $496B (2Q26).';
+export var AMZN_BACKLOG_NOTE = 'Backlog = performance obligations on contracts with original terms over one year, "primarily related to AWS" (Form 10-Q); the quarterly series is Bloomberg\'s reading of that disclosure (BS_REMAINING_PERFORMANCE_OBLIG, as carried in the Top Line dataset). Amazon also quotes "AWS backlog" on the calls: $244B (4Q25), $364B (1Q26), $496B (2Q26), $578B (3Q26).';
 
 // AWS Regions by country — [country, Region, code, Availability Zones (null if announced), launch year, status].
 // Source: AWS, "Regions and Availability Zones" (aws.amazon.com/about-aws/global-infrastructure/regions_az), page data read

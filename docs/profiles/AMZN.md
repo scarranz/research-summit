@@ -274,3 +274,17 @@ se quita nada. El conteo de control se hace en F-FINAL contra las sub-tabs de ho
 - Hyperscalers: backlog Oct '26 = $578B; cita de capacidad Oct '26; las 5 filas de What They Said con la celda 3T26.
   Revisado en el portal (localhost, con sesión). Las etiquetas al final de cada línea ahora respetan el orden vertical (AMZN $578B quedaba debajo de GOOGL $561B) y se actualizó el pie de What They Said.
 - Pendiente: el 10-Q del 3T26 (presentado el 30-oct, acc. 0001018724-26-000040): deuda neta completa, D&A por segmento y drivers del MD&A en Bottom Line.
+- Aprobado por SAB (30-oct) → commit a7b5957. Además: el recuadro "Model QA" de Hyperscalers ya no muestra las etiquetas `<b>`.
+
+### 2026-10-30 · 10-Q del 3T26 (presentado el 30-oct, acc. 0001018724-26-000040) — en revisión
+- Deuda neta 3T26: deuda $179,952M (no circulante $173,125M + circulante $6,827M, Nota 5) − caja y valores $114,226M
+  ($55,783M + $58,443M) = **$65,726M** (antes $58,899M sin la porción circulante). Lo leen Historic Multiple, Target Multiple
+  y Sensitivity; las dos últimas ya no dicen "non-current only" y nombran el 10-Q.
+- D&A por segmento 3T26 (Nota 8): NA $4,566M · Internacional $1,346M · AWS $9,230M → Bottom Line ▸ Segments (EBITDA por
+  segmento y puente por costo). La nota de EBITDA ya no dice que al último trimestre le falta la D&A cuando sí la tiene.
+- Bottom Line ▸ General: drivers del MD&A al 3T26 (costo de ventas + envíos $28.3B, T&I, S&M, G&A, otros); contratos de energía
+  3T26 ($91M de ganancia no realizada, Nota 1); se conservan los puntos fechados del 2T26. Citas de la llamada del 3T26 en
+  costo de ventas, fulfillment y T&I (Leo: capitalización desde el 1T27). 10 citas cotejadas, 0 faltantes.
+- Backlog: 3T26 = $578B (Nota 1) agregado a la serie de Top Line (Bloomberg aún no lo tenía); Misc ▸ Capacity → Revenue con
+  vida remanente 6.1 años (antes 6.4, 10-Q del 2T26).
+- Cierra el pendiente "deuda neta 3T26 completa con el 10-Q". Queda: TL-CUS sección 5 (motor).

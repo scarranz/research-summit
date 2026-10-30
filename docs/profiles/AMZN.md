@@ -305,3 +305,15 @@ se quita nada. El conteo de control se hace en F-FINAL contra las sub-tabs de ho
   ($145.0B vs $135–145B) en el techo, −2.8% y −3.4% de GW al punto medio (aritmética nuestra, rotulada); MSFT no comparable (año fiscal).
 - Ladder CY2026: el resumen de META y MSFT seguía en $137.5B y $175B; ahora $140B y $170B, la guía del 3T26.
 - Pendiente para SAB: actualizar `CapEx D&A DCFs.xlsx` con el 3T26 para re-extraer GW, depreciación y el puente.
+
+### 2026-10-30 · Consenso Bloomberg 2026-10-30 (post-print, export de Dani) cargado
+- `estMatrix.cons`: se **agregó** el snapshot 10/30 (23 líneas, ninguna borrada) con un script de alta en vez de regenerar el
+  bloque: el archivo ya no trae el 9/10 (lo pisó la hoja viva) y trae otra versión del 8/4 (9 celdas) y del capex 2026 en cuatro
+  snapshots viejos; se conservan las versiones aprobadas el 29-oct (§20b).
+- Arreglos fijos `cons`: solo celdas futuras (sin `act`), 77 celdas (4T26, 1T–3T27, FY2026–28) al valor que el motor ya toma de la
+  matriz. `verify_preprint.py AMZN cons` → same=306, changed=0, filled=0, blanked=0; 0 celdas reportadas tocadas (cotejado contra copia).
+- `amzn-bbg.js` regenerado (`bbg_extract.py`, asOf 10/30/2026): Bottom Line, Sensitivity (Street), Target Multiple leen de ahí.
+- Peers (OV-6): fila AMZN forward EBITDA FY2026 $222,018M y crecimiento 15.7% (antes $220,794M / 15.6%, Sep 10). La fila GOOGL queda
+  en su snapshot del Sep 8: su crecimiento forward (26.8%) no se reproduce con el ingreso del consenso; pendiente de revisar en GOOGL.
+- No cambia: Estimates (`evolution`) — su consenso es el que viene dentro de cada snapshot Summit; sin snapshot Summit posterior al
+  4-ago no hay punto nuevo. Setup del 3T26 (consenso previo al print, 9/10) tampoco.

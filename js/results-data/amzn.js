@@ -1,6 +1,6 @@
 // results-data/amzn.js — Amazon (AMZN) dataset for the standardized "Results" tab (docs/PROFILE_PLAYBOOK.md §9).
 //
-// LAST UPDATED: 29 Oct 2026 — 3Q26 print (8-K Ex. 99.1, Oct 29 2026) and the AMZN restructure (docs/profiles/AMZN.md).
+// LAST UPDATED: 30 Oct 2026 — Bloomberg consensus snapshot 2026-10-30 added (forward cells only); 29 Oct 2026 — 3Q26 print (8-K Ex. 99.1) and the AMZN restructure (docs/profiles/AMZN.md).
 //
 // Compares REPORTED actuals against three references, per period:
 //   summit  — Summit DCF model, FROZEN on purpose, not live (playbook rule 10). Reported quarters keep the
@@ -13,8 +13,8 @@
 //             3 intermediate saves frozen in Aug 2026 that the MCP no longer serves (2026-05-13, 07-30, 08-03),
 //             kept as vintages. Refresh by re-pulling when a new snapshot is submitted.
 //   cons    — Bloomberg consensus. On a reported period = the last Bloomberg snapshot saved BEFORE that print
-//             (estMatrix.cons); forward = the newest snapshot (2026-09-10). The 2026-08-04 Bloomberg row,
-//             since overwritten in the live sheet, is kept from the earlier pull as a vintage. Revenue lines (online stores,
+//             (estMatrix.cons); forward = the newest snapshot (2026-10-30, added Oct 30 2026 by appending it — older vintages untouched). The 2026-09-10 and 2026-08-04 Bloomberg rows,
+//             both since overwritten in the live sheet, are kept from the earlier pulls as vintages. Revenue lines (online stores,
 //             3P, ads, subscriptions, physical, other) come from the Bloomberg export the profile already
 //             carried (no matrix line for them). No aggregator (CNBC/Refinitiv) figures are used.
 //   guideLo / guideHi — Amazon's guidance range for the quarter, from the prior quarter's 8-K (net sales and
@@ -33,13 +33,13 @@ export var amznResults = {
   views: {
     q: {
       label: 'Quarterly',
-      note: 'Actuals and guidance from Amazon\'s 8-K earnings releases (SEC EDGAR). Summit = the model\'s per-quarter projection held going into each print (frozen; 3Q26 and forward from the Aug 4, 2026 file; current fiscal year only). Consensus = the last Bloomberg snapshot before each print; forward = the Sep 10, 2026 snapshot.',
+      note: 'Actuals and guidance from Amazon\'s 8-K earnings releases (SEC EDGAR). Summit = the model\'s per-quarter projection held going into each print (frozen; 3Q26 and forward from the Aug 4, 2026 file; current fiscal year only). Consensus = the last Bloomberg snapshot before each print; forward = the Oct 30, 2026 snapshot.',
       metrics: {
         rev: { label: 'Net Sales (Total)', short: 'Total revenue', group: 'Revenue', unit: 'usdM',
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
           act:    [127358, 134383, 143083, 169961, 143313, 147977, 158877, 187792, 155667, 167702, 180169, 213386, 181519, 200606, 201944, null, null, null, null, null, null, null],
           summit: [128957, 134480, 141593, 165516, 143728, 150126, 157992, 188167, 154960, 162872, 178671, 213352, 179234, 199783, 204312, 244687, null, null, null, null, null, null],
-          cons:   [124526, 131481, 140892, 165689, 142393, 149091, 157221, 187180, 155194, 161930, 176787, 210950, 176974, 194811, 201932, 244479, 208684, 228800, null, null, null, null],
+          cons:   [124526, 131481, 140892, 165689, 142393, 149091, 157221, 187180, 155194, 161930, 176787, 210950, 176974, 194811, 201932, 244907, 209408, 230226, 236070, null, null, null],
           guideLo:[121000, 127000, 138000, 160000, 138000, 144000, 154000, 181500, 151000, 159000, 174000, 206000, 173500, 194000, 197000, 240000, null, null, null, null, null, null],
           guideHi:[126000, 133000, 143000, 167000, 143500, 149000, 158500, 188500, 155500, 164000, 179500, 213000, 178500, 199000, 202000, 247000, null, null, null, null, null, null],
           note: 'Consolidated net sales. Amazon guides net sales and GAAP operating income each quarter (prior quarter\'s 8-K); the 3Q26 comparison is dampened by Prime Day timing (Q3 in 2025, Q2 in 2026, ~400 bps per the company). Summit = sum of the model\'s three segment projections.' },
@@ -47,7 +47,7 @@ export var amznResults = {
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
           act:    [21354, 22140, 23059, 24204, 25037, 26281, 27452, 28786, 29267, 30873, 33006, 35579, 37587, 42232, 45984, null, null, null, null, null, null, null],
           summit: [21207, 22700, 22797, 23730, 24130, 25240, 26287, 27835, 29043, 30223, 32668, 35119, 36584, 39826, 44558, 49099, null, null, null, null, null, null],
-          cons:   [21274, 21764, 23066, 24264, 24156, 25949, 27460, 28783, 29382, 30768, 32401, 34792, 36509, 40019, 45444, 49283, 51954, 56657, null, null, null, null],
+          cons:   [21274, 21764, 23066, 24264, 24156, 25949, 27460, 28783, 29382, 30768, 32401, 34792, 36509, 40019, 45444, 50022, 53122, 59078, 64001, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'AWS segment net sales. Amazon does not guide segments.' },
@@ -55,7 +55,7 @@ export var amznResults = {
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
           act:    [76881, 82546, 87887, 105514, 86341, 90033, 95537, 115586, 92887, 100068, 106267, 127083, 104143, 116177, 112852, null, null, null, null, null, null, null],
           summit: [77553, 83362, 88304, 104567, 86107, 91626, 96676, 116065, 92385, 98136, 105091, 128300, 103105, 116579, 114768, 139791, null, null, null, null, null, null],
-          cons:   [75281, 79720, 86741, 102752, 84597, 89915, 95264, 114241, 92685, 97107, 104533, 127028, 101959, 112532, 112973, 139868, 113364, 125509, null, null, null, null],
+          cons:   [75281, 79720, 86741, 102752, 84597, 89915, 95264, 114241, 92685, 97107, 104533, 127028, 101959, 112532, 112973, 140012, 113450, 125500, 124007, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'North America segment net sales.' },
@@ -63,7 +63,7 @@ export var amznResults = {
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
           act:    [29123, 29697, 32137, 40243, 31935, 31663, 35888, 43420, 33513, 36761, 40896, 50724, 39789, 42197, 43108, null, null, null, null, null, null, null],
           summit: [30197, 28418, 30492, 37220, 33491, 33261, 35029, 44267, 33532, 34513, 40912, 49933, 39545, 43378, 44986, 55796, null, null, null, null, null, null],
-          cons:   [27670, 28924, 31576, 38909, 32942, 32859, 34541, 44101, 33126, 34058, 40046, 49582, 38748, 42163, 43627, 55794, 43638, 46962, null, null, null, null],
+          cons:   [27670, 28924, 31576, 38909, 32942, 32859, 34541, 44101, 33126, 34058, 40046, 49582, 38748, 42163, 43627, 55241, 43177, 46117, 47611, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'International segment net sales.' },
@@ -119,7 +119,7 @@ export var amznResults = {
           periods: ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27', '4Q27', '1Q28', '2Q28'],
           act:    [59567, 65010, 68061, 77408, 70680, 74192, 77900, 88899, 78691, 86893, 91499, 103427, 94056, 104828, 107371, null, null, null, null, null, null, null],
           summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          cons:   [55487, 60917, 66900, 74893, 68702, 73674, 76998, 88111, 77798, 81747, 88342, 102250, 90917, 101919, 105344, 122522, 111783, 123234, null, null, null, null],
+          cons:   [55487, 60917, 66900, 74893, 68702, 73674, 76998, 88111, 77798, 81747, 88342, 102250, 90917, 101919, 105344, 122371, 112487, 124706, 128373, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'Gross profit = net sales − cost of sales (income statement). Consensus = Bloomberg GROSS_PROFIT. No Summit line: the model carries no cost of sales.' },
@@ -127,7 +127,7 @@ export var amznResults = {
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
           act:    [4774, 7681, 11188, 13209, 15307, 14672, 17411, 21203, 18405, 19171, 17422, 24977, 23852, 27461, 28076, null, null, null, null, null, null, null],
           summit: [2029, 3420, 8180, 9162, 12070, 15409, 14956, 19312, 17612, 17178, 20823, 25445, 21420, 23817, 26675, 32113, null, null, null, null, null, null],
-          cons:   [3015, 5008, 7370, 10130, 10908, 13608, 14914, 18742, 17507, 17015, 19712, 24495, 20856, 23324, 26038, 32656, 30556, 34476, null, null, null, null],
+          cons:   [3015, 5008, 7370, 10130, 10908, 13608, 14914, 18742, 17507, 17015, 19712, 24495, 20856, 23324, 26038, 32777, 30775, 34952, 35989, null, null, null],
           guideLo:[0, 2000, 5500, 7000, 8000, 10000, 11500, 16000, 14000, 13000, 15500, 21000, 16500, 20000, 22500, 28500, null, null, null, null, null, null],
           guideHi:[4000, 5500, 8500, 11000, 12000, 14000, 15000, 20000, 18000, 17500, 20500, 26000, 21500, 24000, 26500, 33500, null, null, null, null, null, null],
           note: 'GAAP operating income. 3Q25 includes the $2.5B FTC settlement and $1.8B of severance; 4Q25 includes $2.4B of charges. Summit = sum of the model\'s three segment projections.' },
@@ -135,7 +135,7 @@ export var amznResults = {
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
           act:    [0.31, 0.65, 0.94, 1.00, 0.98, 1.26, 1.43, 1.86, 1.59, 1.68, 1.95, 1.95, 2.78, 5.75, 1.89, null, null, null, null, null, null, null],
           summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          cons:   [0.21, 0.34, 0.54, 0.73, 0.81, 1.02, 1.13, 1.47, 1.37, 1.32, 1.53, 1.94, 1.66, 1.81, 1.96, 2.45, 2.38, 2.65, null, null, null, null],
+          cons:   [0.21, 0.34, 0.54, 0.73, 0.81, 1.02, 1.13, 1.47, 1.37, 1.32, 1.53, 1.94, 1.66, 1.81, 1.96, 2.43, 2.34, 2.61, 2.66, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'GAAP diluted EPS; Amazon does not guide it. Non-operating gains move it: 1Q26 carries ~$16.8B and 2Q26 $53.4B of pre-tax other income, mostly the Anthropic mark; 3Q25 carries $9.5B.' },
@@ -143,7 +143,7 @@ export var amznResults = {
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
           act:    [14207, 11455, 12479, 14588, 14925, 17620, 22620, 27834, 25019, 32183, 35095, 39522, 44203, 54208, 77259, null, null, null, null, null, null, null],
           summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          cons:   [14258, 14400, 13619, 14635, 14578, 16109, 17873, 21654, 24293, 26786, 29668, 33886, 41391, 47763, 58250, 64021, 62583, 69373, null, null, null, null],
+          cons:   [14258, 14400, 13619, 14635, 14578, 16109, 17873, 21654, 24293, 26786, 29668, 33886, 41391, 47763, 58250, 65197, 64971, 73242, 78783, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'Purchases of property and equipment (gross, shown as positive spend). The Summit model projects capex annually only — see the Annual view.' },
@@ -151,7 +151,7 @@ export var amznResults = {
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
           act:    [898, 3211, 4307, 6461, 4983, 5065, 5663, 9256, 5841, 7517, 4789, 11472, 8267, 9123, 8723, null, null, null, null, null, null, null],
           summit: [-1551, -834, 3091, 3974, 5166, 5498, 5317, 6964, 6005, 5888, 8407, 10906, 7217, 8161, 8034, 11882, null, null, null, null, null, null],
-          cons:   [121, 1380, 2980, 4268, 3963, 5092, 5385, 7421, 6005, 5667, 7085, 10727, 7119, 8420, 7466, 12362, 9616, 10868, null, null, null, null],
+          cons:   [121, 1380, 2980, 4268, 3963, 5092, 5385, 7421, 6005, 5667, 7085, 10727, 7119, 8420, 7466, 12207, 9405, 10387, 9727, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'North America segment operating income (GAAP). 3Q25 carries the $2.5B FTC settlement.' },
@@ -159,7 +159,7 @@ export var amznResults = {
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
           act:    [-1247, -895, -95, -419, 903, 273, 1301, 1315, 1017, 1494, 1199, 1040, 1424, 1717, 1580, null, null, null, null, null, null, null],
           summit: [-1510, -1421, -610, -744, -335, 1330, 701, 1771, 1006, 863, 1636, 2247, 1582, 1518, 1710, 2064, null, null, null, null, null, null],
-          cons:   [-2152, -1665, -1320, -946, -655, -153, 369, 1165, 1141, 804, 1636, 2299, 1174, 1872, 2034, 2149, 2550, 3235, null, null, null, null],
+          cons:   [-2152, -1665, -1320, -946, -655, -153, 369, 1165, 1141, 804, 1636, 2299, 1174, 1872, 2034, 2215, 2453, 2799, 2422, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'International segment operating income (GAAP).' },
@@ -167,7 +167,7 @@ export var amznResults = {
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
           act:    [5123, 5365, 6976, 7167, 9421, 9334, 10447, 10632, 11547, 10160, 11434, 12465, 14161, 16621, 17773, null, null, null, null, null, null, null],
           summit: [5090, 5675, 5699, 5932, 7239, 8581, 8938, 10577, 10601, 10427, 10780, 12292, 12621, 14138, 16932, 18167, null, null, null, null, null, null],
-          cons:   [5342, 5092, 5519, 6605, 7117, 8397, 9184, 10218, 10304, 10848, 11234, 11611, 12417, 12556, 16331, 18735, 18393, 20266, null, null, null, null],
+          cons:   [5342, 5092, 5519, 6605, 7117, 8397, 9184, 10218, 10304, 10848, 11234, 11611, 12417, 12556, 16331, 18308, 17904, 20057, 22263, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           note: 'AWS segment operating income (GAAP).' }
@@ -186,13 +186,13 @@ export var amznResults = {
     },
     y: {
       label: 'Annual',
-      note: 'Actuals from the 10-K. Summit closed years = the model\'s frozen projection for that year; forward = the Aug 4, 2026 model file. Consensus = the last Bloomberg snapshot before the fourth-quarter print of each year; forward = the Sep 10, 2026 snapshot.',
+      note: 'Actuals from the 10-K. Summit closed years = the model\'s frozen projection for that year; forward = the Aug 4, 2026 model file. Consensus = the last Bloomberg snapshot before the fourth-quarter print of each year; forward = the Oct 30, 2026 snapshot.',
       metrics: {
         rev: { label: 'Net Sales (Total)', short: 'Total revenue', group: 'Revenue', unit: 'usdM',
           periods: ['2020','2021','2022','2023','2024','2025','2026','2027','2028'],
           act:    [386064, 469822, 513983, 574785, 637959, 716924, null, null, null],
           summit: [null, null, 508794, 570547, 640014, 709855, 831124, 959800, 1101190],
-          cons:   [378908, 471449, 513956, 570000, 637641, 713557, 828783, 949660, 1092285],
+          cons:   [378908, 471449, 513956, 570000, 637641, 713557, 829168, 956398, 1102182],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null],
           note: 'Full-year net sales. Summit closed years = the model\'s frozen segment projections summed; forward = the Aug 4, 2026 model file.' },
@@ -208,7 +208,7 @@ export var amznResults = {
           periods: ['2020','2021','2022','2023','2024','2025','2026','2027','2028'],
           act:    [104412, 127787, 118007, 131200, 142906, 161894, null, null, null],
           summit: [null, null, 121933, 126327, 146049, 158890, 182768, 205614, 236456],
-          cons:   [99348, 128329, 119142, 129566, 142222, 159719, 181228, 197969, 214232],
+          cons:   [99348, 128329, 119142, 129566, 142222, 159719, 180244, 196693, 213862],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null],
           note: 'International segment, full year.' },
@@ -216,7 +216,7 @@ export var amznResults = {
           periods: ['2020','2021','2022','2023','2024','2025','2026','2027','2028'],
           act:    [45370, 62202, 80096, 90757, 107556, 128725, null, null, null],
           summit: [null, null, 79396, 90434, 103491, 127053, 173476, 234193, 292741],
-          cons:   [45356, 61212, 81018, 90969, 107596, 127787, 174403, 234017, 304916],
+          cons:   [45356, 61212, 81018, 90969, 107596, 127787, 171671, 242865, 329036],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null],
           note: 'AWS segment, full year.' },
@@ -224,7 +224,7 @@ export var amznResults = {
           periods: ['2020','2021','2022','2023','2024','2025','2026','2027','2028'],
           act:    [57287, 72069, 73790, 109538, 143399, 165198, null, null, null],
           summit: [null, null, 82724, 114063, 155229, 185600, 250687, 332726, 430088],
-          cons:   [54377, 69410, 71473, 102497, 141466, 167186, 220794, 283088, 356131],
+          cons:   [54377, 69410, 71473, 102497, 141466, 167186, 222018, 286891, 365203],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null],
           note: 'EBITDA = operating income + D&A + stock-based compensation (the model\'s definition; Bloomberg IS_COMPARABLE_EBITDA ties to it in FY2025).' },
@@ -240,7 +240,7 @@ export var amznResults = {
           periods: ['2022','2023','2024','2025','2026','2027','2028'],
           act:    [63645, 52729, 82999, 131819, null, null, null],
           summit: [null, null, null, 125455, 221456, 276820, 346025],
-          cons:   [61487, 54098, 74585, 123205, 220544, 278964, 301866],
+          cons:   [61487, 54098, 74585, 123205, 222352, 293523, 330059],
           guideLo:[null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null],
           note: 'Purchases of property and equipment (gross, positive spend). Amazon guides 2026 cash capex at ~$220B (net of proceeds and incentives).' },
@@ -248,7 +248,7 @@ export var amznResults = {
           periods: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028'],
           act:    [152757, 197478, 225152, 270046, 311671, 360510, null, null, null],
           summit: [null, null, null, null, null, null, null, null, null],
-          cons:   [151208, 195957, 222271, 267295, 311017, 358808, 426740, 503287, 599912],
+          cons:   [151208, 195957, 222271, 267295, 311017, 358808, 426541, 509005, 614512],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null],
           note: 'Gross profit = net sales − cost of sales. Consensus = Bloomberg GROSS_PROFIT. No Summit line: the model carries no cost of sales.' },
@@ -256,7 +256,7 @@ export var amznResults = {
           periods: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028'],
           act:    [22899, 24879, 12248, 36852, 68593, 79975, null, null, null],
           summit: [null, null, null, null, null, 80442, 110102, 139745, 169961],
-          cons:   [20551, 23976, 14021, 32182, 66043, 80246, 110295, 140733, 179193],
+          cons:   [20551, 23976, 14021, 32182, 66043, 80246, 110724, 143300, 185532],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null],
           note: 'GAAP operating income. Summit = sum of the model\'s three segment projections (its own total row is not populated forward).' },
@@ -264,7 +264,7 @@ export var amznResults = {
           periods: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028'],
           act:    [2.09, 3.24, -0.27, 2.90, 5.53, 7.17, null, null, null],
           summit: [null, null, null, null, null, null, null, null, null],
-          cons:   [1.72, 2.13, -0.02, 2.45, 5.13, 7.06, 12.66, 10.78, 14.07],
+          cons:   [1.72, 2.13, -0.02, 2.45, 5.13, 7.06, 12.91, 10.8, 14.46],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null],
           note: 'GAAP diluted EPS, full year (split-adjusted). FY2026 carries the Anthropic gains of 1Q–2Q26.' },
@@ -272,7 +272,7 @@ export var amznResults = {
           periods: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028'],
           act:    [8651, 7271, -2847, 14877, 24967, 29619, null, null, null],
           summit: [null, null, null, null, null, 29053, 37306, 46799, 51479],
-          cons:   [7357, 8371, -3084, 12171, 22932, 28498, 37192, 45244, 53408],
+          cons:   [7357, 8371, -3084, 12171, 22932, 28498, 37415, 44481, 53364],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null],
           note: 'North America segment operating income (GAAP), full year.' },
@@ -280,7 +280,7 @@ export var amznResults = {
           periods: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028'],
           act:    [717, -924, -7746, -2656, 3792, 4750, null, null, null],
           summit: [null, null, null, null, null, 5957, 6915, 8636, 10168],
-          cons:   [-212, -719, -8126, -3133, 3535, 5686, 7406, 10636, 14272],
+          cons:   [-212, -719, -8126, -3133, 3535, 5686, 7455, 10486, 13892],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null],
           note: 'International segment operating income (GAAP), full year.' },
@@ -288,7 +288,7 @@ export var amznResults = {
           periods: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028'],
           act:    [13531, 18532, 22841, 24631, 39834, 45606, null, null, null],
           summit: [null, null, null, null, null, 45433, 65881, 84309, 108314],
-          cons:   [13713, 18082, 23571, 23603, 38832, 43947, 63560, 84408, 110478],
+          cons:   [13713, 18082, 23571, 23603, 38832, 43947, 61941, 86771, 112911],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null],
           note: 'AWS segment operating income (GAAP), full year.' },
@@ -345,6 +345,7 @@ export var amznResults = {
         { id: '2026-05-04', label: '2026-05-04', lastActual: { q: '1Q26', y: '2025' } },
         { id: '2026-08-04', label: '2026-08-04', lastActual: { q: '2Q26', y: '2025' } },
         { id: '2026-09-10', label: '2026-09-10', lastActual: { q: '2Q26', y: '2025' } },
+        { id: '2026-10-30', label: '2026-10-30', lastActual: { q: '3Q26', y: '2025' } },
       ],
       q: {
       rev: {
@@ -379,6 +380,7 @@ export var amznResults = {
         '2026-05-04': { '2Q26': 194810.6786, '3Q26': 203934.9123, '4Q26': 241795.9821, '1Q27': 203774.6061 },
         '2026-08-04': { '3Q26': 201829.8909, '4Q26': 244173.4717, '1Q27': 208526.625, '2Q27': 228731.0667 },
         '2026-09-10': { '3Q26': 201931.537, '4Q26': 244479.1923, '1Q27': 208684.4062, '2Q27': 228800.2581 },
+        '2026-10-30': { '4Q26': 244907.1111, '1Q27': 209407.5641, '2Q27': 230226.0789, '3Q27': 236070.4865 },
       },
       usrev: {
         '2019-04-30': { '2Q19': 37319.1007, '3Q19': 39992.6918, '4Q19': 51429.6121, '1Q20': 41820.1434 },
@@ -412,6 +414,7 @@ export var amznResults = {
         '2026-05-04': { '2Q26': 112532.433, '3Q26': 115483.6497, '4Q26': 139114.2633, '1Q27': 112619.3139 },
         '2026-08-04': { '3Q26': 112845.9454, '4Q26': 139665.056, '1Q27': 113279.5575, '2Q27': 125328.8155 },
         '2026-09-10': { '3Q26': 112972.6968, '4Q26': 139867.5014, '1Q27': 113363.6688, '2Q27': 125509.1978 },
+        '2026-10-30': { '4Q26': 140011.5891, '1Q27': 113450.2816, '2Q27': 125500.031, '3Q27': 124007.0628 },
       },
       intrev: {
         '2019-04-30': { '2Q19': 16603.7573, '3Q19': 18118.8604, '4Q19': 24347.9935, '1Q20': 19293.5139 },
@@ -445,6 +448,7 @@ export var amznResults = {
         '2026-05-04': { '2Q26': 42162.7446, '3Q26': 45140.9537, '4Q26': 56585.5552, '1Q27': 43145.3863 },
         '2026-08-04': { '3Q26': 43430.2904, '4Q26': 55964.4977, '1Q27': 43688.0294, '2Q27': 47241.3982 },
         '2026-09-10': { '3Q26': 43627.2732, '4Q26': 55794.3842, '1Q27': 43637.5153, '2Q27': 46962.4147 },
+        '2026-10-30': { '4Q26': 55241.4308, '1Q27': 43176.981, '2Q27': 46117.1286, '3Q27': 47611.3089 },
       },
       aws: {
         '2019-04-30': { '2Q19': 8476.4682, '3Q19': 9186.8275, '4Q19': 10129.48, '1Q20': 10270.6108 },
@@ -478,6 +482,7 @@ export var amznResults = {
         '2026-05-04': { '2Q26': 40018.5675, '3Q26': 42743.671, '4Q26': 46047.1246, '1Q27': 48102.8267 },
         '2026-08-04': { '3Q26': 45460.7579, '4Q26': 49234.5516, '1Q27': 51892.4639, '2Q27': 56556.4505 },
         '2026-09-10': { '3Q26': 45443.5294, '4Q26': 49282.9474, '1Q27': 51953.6615, '2Q27': 56657.242 },
+        '2026-10-30': { '4Q26': 50022.2707, '1Q27': 53122.3529, '2Q27': 59077.8427, '3Q27': 64000.8419 },
       },
       opinc: {
         '2019-04-30': { '2Q19': 3743.7143, '3Q19': 4366.9474, '4Q19': 5234.5263, '1Q20': 5870.75 },
@@ -511,6 +516,7 @@ export var amznResults = {
         '2026-05-04': { '2Q26': 23324.1277, '3Q26': 24542.2083, '4Q26': 30924.8085, '1Q27': 28751.5926 },
         '2026-08-04': { '3Q26': 26007.4545, '4Q26': 32489.1707, '1Q27': 30532.7143, '2Q27': 34548.2593 },
         '2026-09-10': { '3Q26': 26037.78, '4Q26': 32655.8085, '1Q27': 30555.5667, '2Q27': 34475.5172 },
+        '2026-10-30': { '4Q26': 32776.7143, '1Q27': 30775.2571, '2Q27': 34952.2353, '3Q27': 35989.0938 },
       },
       naopinc: {
         '2019-04-30': { '2Q19': 1866.272, '3Q19': 2096.3708, '4Q19': 2694.1948, '1Q20': 2534.4862 },
@@ -544,6 +550,7 @@ export var amznResults = {
         '2026-05-04': { '2Q26': 8420.3885, '3Q26': 8239.5119, '4Q26': 13305.7241, '1Q27': 9410.6635 },
         '2026-08-04': { '3Q26': 7198.5517, '4Q26': 12393.7461, '1Q27': 9419.6049, '2Q27': 10722.4333 },
         '2026-09-10': { '3Q26': 7465.6084, '4Q26': 12362.1035, '1Q27': 9616.3816, '2Q27': 10867.8821 },
+        '2026-10-30': { '4Q26': 12206.9857, '1Q27': 9405.0459, '2Q27': 10387.4058, '3Q27': 9727.23 },
       },
       intopinc: {
         '2019-04-30': { '2Q19': -546.2706, '3Q19': -431.2457, '4Q19': -210.1625, '1Q20': -238.3109 },
@@ -577,6 +584,7 @@ export var amznResults = {
         '2026-05-04': { '2Q26': 1871.8508, '3Q26': 1792.579, '4Q26': 2384.0412, '1Q27': 2115.0436 },
         '2026-08-04': { '3Q26': 2132.4441, '4Q26': 2196.3456, '1Q27': 2656.7948, '2Q27': 3403.8044 },
         '2026-09-10': { '3Q26': 2033.7844, '4Q26': 2148.9097, '1Q27': 2550.1883, '2Q27': 3235.1369 },
+        '2026-10-30': { '4Q26': 2215.4734, '1Q27': 2452.6638, '2Q27': 2798.6853, '3Q27': 2421.5132 },
       },
       awsopinc: {
         '2019-04-30': { '2Q19': 2441.5761, '3Q19': 2762.1644, '4Q19': 3034.1493, '1Q20': 3064.314 },
@@ -610,6 +618,7 @@ export var amznResults = {
         '2026-05-04': { '2Q26': 12556.4286, '3Q26': 13765.555, '4Q26': 14870.3226, '1Q27': 16219.1312 },
         '2026-08-04': { '3Q26': 16253.434, '4Q26': 17724.3519, '1Q27': 18158.6734, '2Q27': 19899.5953 },
         '2026-09-10': { '3Q26': 16330.9483, '4Q26': 18734.9722, '1Q27': 18392.9336, '2Q27': 20265.8913 },
+        '2026-10-30': { '4Q26': 18307.895, '1Q27': 17903.8459, '2Q27': 20056.5927, '3Q27': 22263.3375 },
       },
       eps: {
         '2019-04-30': { '2Q19': 0.2803, '3Q19': 0.3347, '4Q19': 0.4044, '1Q20': 0.4187 },
@@ -643,6 +652,7 @@ export var amznResults = {
         '2026-05-04': { '2Q26': 1.8087, '3Q26': 1.9145, '4Q26': 2.3763, '1Q27': 2.2417 },
         '2026-08-04': { '3Q26': 1.9659, '4Q26': 2.4442, '1Q27': 2.3788, '2Q27': 2.6546 },
         '2026-09-10': { '3Q26': 1.9649, '4Q26': 2.4509, '1Q27': 2.3756, '2Q27': 2.6474 },
+        '2026-10-30': { '4Q26': 2.4313, '1Q27': 2.3361, '2Q27': 2.611, '3Q27': 2.6628 },
       },
       capex: {
         '2019-04-30': { '2Q19': 3741, '3Q19': 3854, '4Q19': 4313, '1Q20': 4000 },
@@ -676,6 +686,7 @@ export var amznResults = {
         '2026-05-04': { '2Q26': 47763.2593, '3Q26': 51307.6, '4Q26': 56278.8333, '1Q27': 50634.4737 },
         '2026-08-04': { '3Q26': 56535.2917, '4Q26': 62455.625, '1Q27': 61946.9333, '2Q27': 67576.8571 },
         '2026-09-10': { '3Q26': 58250.2381, '4Q26': 64021.45, '1Q27': 62583.1333, '2Q27': 69372.9286 },
+        '2026-10-30': { '4Q26': 65197, '1Q27': 64971.1765, '2Q27': 73242.4375, '3Q27': 78783.1875 },
       },
       gp: {
         '2019-04-30': { '2Q19': 27187.4452, '3Q19': 28757.8194, '4Q19': 34161.7847, '1Q20': 31287.8407 },
@@ -708,6 +719,7 @@ export var amznResults = {
         '2026-02-10': { '1Q26': 90916.8515, '2Q26': 98706.0819, '3Q26': 104105.0852, '4Q26': 117728.3251 },
         '2026-05-04': { '2Q26': 101919.1873, '3Q26': 105292.2748, '4Q26': 120159.5062, '1Q27': 108495.5096 },
         '2026-09-10': { '3Q26': 105343.9773, '4Q26': 122522.4331, '1Q27': 111783.2675, '2Q27': 123234.131 },
+        '2026-10-30': { '4Q26': 122371.1523, '1Q27': 112487.4447, '2Q27': 124705.5709, '3Q27': 128373.481 },
       },
       },
       y: {
@@ -743,6 +755,7 @@ export var amznResults = {
         '2026-05-04': { '2026': 819746.3143, '2027': 924649.9701, '2028': 1023311.65 },
         '2026-08-04': { '2026': 818074.2273, '2027': 946788.0312, '2028': 1090132.9783 },
         '2026-09-10': { '2026': 828782.9692, '2027': 949660.5, '2028': 1092284.6444 },
+        '2026-10-30': { '2026': 829167.6119, '2027': 956397.7015, '2028': 1102181.5962 },
       },
       intrev: {
         '2019-04-30': { '2019': 75255.8778, '2020': 87541.9761, '2021': 98885.6174 },
@@ -776,6 +789,7 @@ export var amznResults = {
         '2026-05-04': { '2026': 183319.1931, '2027': 201811.817, '2028': 229871.2662 },
         '2026-08-04': { '2026': 181113.395, '2027': 197796.3761, '2028': 214199.8194 },
         '2026-09-10': { '2026': 181227.5521, '2027': 197968.8797, '2028': 214232.257 },
+        '2026-10-30': { '2026': 180244.2383, '2027': 196692.6167, '2028': 213861.6207 },
       },
       aws: {
         '2019-04-30': { '2019': 35491.254, '2020': 47342.9825, '2021': 60810.4092 },
@@ -809,6 +823,7 @@ export var amznResults = {
         '2026-05-04': { '2026': 166030.7433, '2027': 212175.1056, '2028': 269043.8157 },
         '2026-08-04': { '2026': 174428.0439, '2027': 232997.2052, '2028': 304372.672 },
         '2026-09-10': { '2026': 174402.5639, '2027': 234016.6746, '2028': 304916.0833 },
+        '2026-10-30': { '2026': 171671.1044, '2027': 242864.6621, '2028': 329036.1844 },
       },
       ebitda: {
         '2019-04-30': { '2019': 42974.3333, '2020': 53420.2632, '2021': 65420.3333 },
@@ -842,6 +857,7 @@ export var amznResults = {
         '2026-05-04': { '2026': 210697.0714, '2027': 266257.175, '2028': 327897.5185 },
         '2026-08-04': { '2026': 216828.1081, '2027': 279057.4878, '2028': 351705.871 },
         '2026-09-10': { '2026': 220794.4048, '2027': 283087.5, '2028': 356131.129 },
+        '2026-10-30': { '2026': 222017.7273, '2027': 286891.0476, '2028': 365202.9429 },
       },
       capex: {
         '2019-04-30': { '2019': 15391.6667, '2020': 17643.8333, '2021': 21355 },
@@ -875,6 +891,7 @@ export var amznResults = {
         '2026-05-04': { '2026': 197441.4359, '2027': 222484.4615, '2028': 227534.7391 },
         '2026-08-04': { '2026': 214301.3636, '2027': 267199.0909, '2028': 293367.8095 },
         '2026-09-10': { '2026': 220543.8667, '2027': 278964.1613, '2028': 301865.6667 },
+        '2026-10-30': { '2026': 222351.5758, '2027': 293523.4, '2028': 330058.8519 },
       },
       gp: {
         '2019-04-30': { '2019': 114867.2431, '2020': 140885.3208, '2021': 168058.1254 },
@@ -907,6 +924,7 @@ export var amznResults = {
         '2026-02-10': { '2026': 410173.9701, '2027': 467810.9989, '2028': 534442.8661 },
         '2026-05-04': { '2026': 419752.3335, '2027': 485225.4632, '2028': 562458.8809 },
         '2026-09-10': { '2026': 426739.8399, '2027': 503287.4039, '2028': 599911.7664 },
+        '2026-10-30': { '2026': 426541.278, '2027': 509005.0804, '2028': 614512.1138 },
       },
       opinc: {
         '2019-04-30': { '2019': 17669.0455, '2020': 25172.3182, '2021': 34605.8462 },
@@ -939,6 +957,7 @@ export var amznResults = {
         '2026-02-10': { '2026': 99302.2, '2027': 122661.5636, '2028': 150092.0625 },
         '2026-05-04': { '2026': 102656.6552, '2027': 129005.8393, '2028': 162039.1765 },
         '2026-09-10': { '2026': 110295.2586, '2027': 140732.5345, '2028': 179192.7561 },
+        '2026-10-30': { '2026': 110723.7541, '2027': 143299.7705, '2028': 185531.7447 },
       },
       naopinc: {
         '2019-04-30': { '2019': 8817.3722, '2020': 11645.0796, '2021': 14198.0967 },
@@ -971,6 +990,7 @@ export var amznResults = {
         '2026-02-10': { '2026': 38242.1068, '2027': 46630.1433, '2028': 55799.4463 },
         '2026-05-04': { '2026': 37999.3353, '2027': 46650.7112, '2028': 55928.9111 },
         '2026-09-10': { '2026': 37191.6449, '2027': 45244.0206, '2028': 53408.2799 },
+        '2026-10-30': { '2026': 37414.8215, '2027': 44481.3303, '2028': 53364.2251 },
       },
       intopinc: {
         '2019-04-30': { '2019': -1494.2945, '2020': -718.6597, '2021': 334.0376 },
@@ -1003,6 +1023,7 @@ export var amznResults = {
         '2026-02-10': { '2026': 7727.6111, '2027': 10285.2344, '2028': 12248.5083 },
         '2026-05-04': { '2026': 8063.9595, '2027': 10810.952, '2028': 14684.3338 },
         '2026-09-10': { '2026': 7405.6852, '2027': 10635.5173, '2028': 14271.8019 },
+        '2026-10-30': { '2026': 7454.6708, '2027': 10485.5554, '2028': 13892.4027 },
       },
       awsopinc: {
         '2019-04-30': { '2019': 10421.7734, '2020': 14058.4431, '2021': 18381.5247 },
@@ -1035,6 +1056,7 @@ export var amznResults = {
         '2026-02-10': { '2026': 51048.6493, '2027': 64127.9885, '2028': 81617.8063 },
         '2026-05-04': { '2026': 54254.4157, '2027': 68438.0347, '2028': 89153.6752 },
         '2026-09-10': { '2026': 63559.5085, '2027': 84407.7353, '2028': 110477.8626 },
+        '2026-10-30': { '2026': 61941.1581, '2027': 86770.6811, '2028': 112911.0676 },
       },
       eps: {
         '2019-04-30': { '2019': 1.3537, '2020': 1.9163, '2021': 2.6986 },
@@ -1067,6 +1089,7 @@ export var amznResults = {
         '2026-02-10': { '2026': 7.8247, '2027': 9.4714, '2028': 11.7422 },
         '2026-05-04': { '2026': 8.5225, '2027': 9.8409, '2028': 12.6036 },
         '2026-09-10': { '2026': 12.658, '2027': 10.783, '2028': 14.0731 },
+        '2026-10-30': { '2026': 12.9056, '2027': 10.796, '2028': 14.4628 },
       },
       },
     },

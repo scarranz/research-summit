@@ -18,7 +18,7 @@
 //     fixed, so the base case reproduces the model's EBITDA exactly. The segment EBITDAs (operating income + segment D&A,
 //     no SBC) + unallocated D&A do NOT sum to it; the footer says so with the numbers (A26).
 //   • STREET = Bloomberg consensus by segment from ./amzn-bbg.js (revenue and operating income, FY2026–2028, as of
-//     2026-09-10): growth = CAGR off the 2025 actual to Bloomberg's estimate, margin = Bloomberg operating income ÷ revenue.
+//     newest snapshot, 2026-10-30): growth = CAGR off the 2025 actual to Bloomberg's estimate, margin = Bloomberg operating income ÷ revenue.
 //     2029 has no Bloomberg figure — those drivers fall back to the model, visibly.
 //   • EXIT MULTIPLE starts at the MODEL's own target multiples (EV/EBITDA 9.5×, P/E 28.0× on FY2027 — Target Multiple,
 //     ./amzn-target-multiple-data.js), never at a hand-picked number; yours to move.

@@ -294,8 +294,8 @@ var TIMELINE=[
 // profile): FY2025 operating income × (1 − effective tax rate 19.7%) ÷ diluted shares = US$5.93, against US$7.17 GAAP,
 // which carries the gains on equity stakes (Anthropic, Rivian). No forward EPS for Amazon: Bloomberg's consensus is GAAP.
 var A_PEERS=[
-  { tk:'AMZN', n:'Amazon', hl:true, epsT:5.93, epsF:null, epsFNote:'no forward P/E — Street EPS is GAAP, with the gains', ebitdaT:145731, ebitdaF:220794, nd:-17974, gt:12.4, gf:15.6,
-    src:'10-K FY2025; forward: Bloomberg consensus FY2026, Sep 10 2026',
+  { tk:'AMZN', n:'Amazon', hl:true, epsT:5.93, epsF:null, epsFNote:'no forward P/E — Street EPS is GAAP, with the gains', ebitdaT:145731, ebitdaF:222018, nd:-17974, gt:12.4, gf:15.7,
+    src:'10-K FY2025; forward: Bloomberg consensus FY2026, Oct 30 2026',
     why:'The profile company: online and physical stores, third-party seller services, advertising, subscriptions and AWS.' },
   { tk:'WMT', n:'Walmart', epsT:2.73, epsF:null, ebitdaT:44028, ebitdaF:null, nd:27439, gt:4.7, gf:null,
     src:'10-K FY2026 (year to Jan 31 2026)',
@@ -4883,7 +4883,7 @@ function aBuildCapex(root){
 function valuationHistBody(){ return amznHistMult.body(); }
 function valuationPeersBody(){
   return '<p class="ov-lede"><b>The peer map.</b> The same live-cap scatter as the Overview, kept beside the valuation work: X = multiple (P/E ⇄ EV/EBITDA, forward ⇄ trailing), Y = revenue growth, bubble = live market cap.</p>'+stdPeerScatter('dd')+
-    '<div class="ov-foot">Sources — Amazon EPS ex non-operating items = FY2025 operating income × (1 − effective tax rate) ÷ diluted shares (10-K). Trailing EPS, EBITDA (operating income + D&amp;A), net debt and revenue growth from each company\'s latest annual filing: Amazon, Alphabet and MercadoLibre 10-K FY2025; Walmart 10-K FY2026 (year to Jan 31 2026); Costco 10-K FY2026 (year to Aug 30 2026); Microsoft 10-K FY2026 (year to Jun 30 2026); Alibaba 20-F FY2026 (year to Mar 31 2026, US$ convenience translation, EPS per ADS). Forward: Bloomberg consensus FY2026 (Amazon Sep 10 2026, Alphabet Sep 8 2026). Price, market cap and EV live (Massive).</div>';
+    '<div class="ov-foot">Sources — Amazon EPS ex non-operating items = FY2025 operating income × (1 − effective tax rate) ÷ diluted shares (10-K). Trailing EPS, EBITDA (operating income + D&amp;A), net debt and revenue growth from each company\'s latest annual filing: Amazon, Alphabet and MercadoLibre 10-K FY2025; Walmart 10-K FY2026 (year to Jan 31 2026); Costco 10-K FY2026 (year to Aug 30 2026); Microsoft 10-K FY2026 (year to Jun 30 2026); Alibaba 20-F FY2026 (year to Mar 31 2026, US$ convenience translation, EPS per ADS). Forward: Bloomberg consensus FY2026 (Amazon Oct 30 2026, Alphabet Sep 8 2026). Price, market cap and EV live (Massive).</div>';
 }
 // ⚠ PARKED, not dead: the Financials sub-tab was taken off the Valuation bar (Pablo, Aug 19 2026).
 // This body and aBuildFin below are kept so the work is not lost — restoring the tab is one button

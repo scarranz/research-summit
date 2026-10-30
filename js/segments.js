@@ -1610,6 +1610,52 @@ function custSplcSection(c, n){
       (sp.file ? ' · ' + esc(sp.file) : '') + '</p>');
 }
 
+// "What each top customer buys" (playbook §10, TL-CUS section 5) — one row per top customer, or per
+// customer CLASS when the company has no large customers. Data: customers.buys = [{name, tk?, what,
+// seg, share?, shareBasis:'filing'|'estimate', shareOf?, shareNote?, src}]. A weight is either typed
+// (`share`, in %, marked estimate unless the filing gives it) or computed from the dataset's own
+// annual series (`shareOf: [keys]` over customers.buysBase = {keys, y, label}), so it ties to the
+// filing. `buys: []` with `buysNone` says in one line that nothing quantifies it (rule 7).
+function custBuysShare(c, r){
+  var d = sgData(), sh = (d && d.seg.shared) || {}, b = c.buysBase;
+  function sum(keys, y){
+    var t = 0;
+    for (var i = 0; i < keys.length; i++){
+      var v = sh[keys[i]] && sh[keys[i]].y && sh[keys[i]].y.act ? sh[keys[i]].y.act[y] : null;
+      if (v == null) return null;
+      t += v;
+    }
+    return t;
+  }
+  if (r.shareOf && b){
+    var num = sum(r.shareOf, b.y), den = sum(b.keys, b.y);
+    if (num != null && den) return (num / den * 100).toFixed(1) + '% <span class="rs-ft-dim">· ' + esc(b.label) + '</span>';
+  }
+  if (r.share != null)
+    return (r.shareBasis === 'filing' ? '' : '~') + r.share + '%' +
+      (r.shareBasis === 'filing' ? '' : ' <span class="rs-ft-dim">· estimate</span>');
+  return '<span class="rs-ft-nil">' + esc(r.shareNote || 'not quantified') + '</span>';
+}
+function custBuysSection(c, n){
+  var rows = c.buys || [], tk = rows.some(function(r){ return r.tk; });
+  if (!rows.length)
+    return sec(n, 'What each top customer buys', 'not quantified',
+      '<div class="sg-needs">⚑ ' + esc(c.buysNone || ('Nothing ' + coName() + ' discloses quantifies what its customers buy.')) + '</div>');
+  return sec(n, 'What each top customer buys', rows.length + ' rows',
+    '<p class="sg-lede">' + esc(c.buysLede || ('What the largest customers of ' + coName() + ' pay it for, and how much of revenue each is.')) + '</p>' +
+    // A ticker column only when some row has one (a list of customer classes has none).
+    '<div class="rs-ft-scroll"><table class="rs-ft sg-buys"><thead><tr>' +
+      '<th class="rs-ft-h">Customer</th>' + (tk ? '<th>Ticker</th>' : '') + '<th>What it buys</th><th>Segment</th>' +
+      '<th class="sg-buys-n">Share of revenue</th><th>Source</th></tr></thead><tbody>' +
+      rows.map(function(r){
+        return '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(r.name) + '</td>' +
+          (tk ? '<td>' + esc(r.tk || '—') + '</td>' : '') +
+          '<td class="sg-buys-w">' + esc(r.what) + '</td><td>' + esc(r.seg || '—') + '</td>' +
+          '<td class="sg-buys-n">' + custBuysShare(c, r) + '</td><td>' + esc(r.src || '—') + '</td></tr>';
+      }).join('') + '</tbody></table></div>' +
+    (c.buysNote ? '<p class="sg-cite">' + esc(c.buysNote) + '</p>' : ''));
+}
+
 // ── the two card decks, in the same master-detail language as the rest of Top Line ────────────
 // A name is the index; the words behind it are one click down. The filing's own paragraphs run
 // from four lines to twenty, so putting any of them on a card is what made this tab a wall.
@@ -1644,7 +1690,7 @@ export function segmentsCustomersHtml(ticker){
   if (conc.disclosed === false){
     h1 = '<div class="sg-finding"><div class="sg-finding-h">⚑ No customer concentration is disclosed at all</div>' +
       '<p>No "no single customer accounted for 10%" sentence, and no named customer anywhere in ' +
-      'the filing. Nothing on this tab is a revenue ranking.</p></div>' +
+      'the filing. Nothing on this tab ranks individual customers by revenue.</p></div>' +
       drill('conc', 'What the filing does and does not say',
         '<p>' + esc(conc.note || '') + '</p>' +
         (c.cite ? '<p class="sg-cite">' + esc(c.cite.form) + ' for ' + esc(c.cite.period) +
@@ -1667,9 +1713,12 @@ export function segmentsCustomersHtml(ticker){
           mdHtml('cname', null)
         : '<div class="sg-needs">⚑ No customer has been named on a call for this company yet.</div>')) +
     (c.splc === false ? '' : custSplcSection(c, 4)) +      // `splc: false` — a consumer business with no counterparty census to load (SPOT): no empty section
+    (c.buys === undefined ? '' : custBuysSection(c, c.splc === false ? 4 : 5)) +   // section 5 only where a profile has filled `buys`
     '<div class="ov-fynote sg-src">' + (c.splc === false ? 'Two registers' : 'Three registers') + ', kept apart on purpose: what the filing says, ' +
     'what management said on a call' + (c.splc === false ? '' : ', and what somebody else disclosed about ' + coName()) + '. None of them ' +
-    'is a revenue ranking, and the tab never presents one.</div></div>';
+    'is a revenue ranking' + ((c.buys || []).length
+      ? '; only the last section weighs customers against revenue, and each weight names its basis.'
+      : ', and the tab never presents one.') + '</div></div>';
 }
 export function initSegmentsCustomers(root, ticker){
   var d = SEGMENTS_DATA[ticker]; if (!d) return;

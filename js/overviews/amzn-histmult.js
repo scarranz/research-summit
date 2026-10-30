@@ -1,72 +1,31 @@
-// overviews/amzn-histmult.js — Amazon (AMZN) Deep Dive ▸ Valuation ▸ Historic Multiple.
+// overviews/amzn-histmult.js — Amazon (AMZN) Deep Dive ▸ Valuation ▸ Historic Multiple (VA-HIST, playbook §14).
 //
-// The multiple the market has actually paid, over time. Modelled on the Fiscal.ai "Forward P/E"
-// export in Developer/AMZN — the dense daily line, the dashed average, the current-value badge —
-// and then given the four controls that export does not have:
+// COPIED from js/overviews/googl-histmult.js (meta- → tsm- → the original amzn-histmult.js), then adapted — never
+// reimplemented. The idea the chart is built on (a multiple = a daily numerator over a STEP denominator; NTM slides,
+// the fiscal-year horizons roll) is unchanged from the original Amazon pane this file replaces.
 //
-//   · P/E ⇄ EV/EBITDA          (the metric select)
-//   · Forward ⇄ Trailing       (which side of the print the denominator comes from)
-//   · NTM · Current FY · FY+1 · FY+2 · FY+3   (which period the estimate is FOR)
-//   · Daily ⇄ Quarterly ⇄ Annual              (how dense the line is)
-//   · a two-handle date slider + range presets + drag-to-zoom
-//
-// ── THE ONE IDEA THIS CHART IS BUILT ON ──────────────────────────────────────────
-// A multiple is a ratio of two series on DIFFERENT CLOCKS:
-//
-//     multiple(t)  =  numerator(t)  ÷  denominator(t, direction, horizon)
-//
-//   · the numerator moves every day   — price (P/E), or price × shares + net debt (EV/EBITDA)
-//   · the denominator moves in STEPS  — it only changes when the Street revises a number, or
-//                                       when the period the estimate is FOR rolls forward
-//
-// Those steps are the cliffs in the reference image. The big drop at Jan '23 is not the market
-// re-rating Amazon 30% overnight; it is "current FY" rolling from FY2022 to FY2023, so the same
-// price is suddenly divided by a much larger number. **That is the single most misread feature of
-// every forward-multiple chart in the industry**, which is why this one draws a dashed marker at
-// each roll and lets you switch the markers off only deliberately.
-//
-// It is also why NTM exists. NTM never rolls — it slides:
-//
-//     NTM = w · FY0 + (1 − w) · FY1,     w = days left in FY0 ÷ 365
-//
-// so the same underlying estimates produce a smooth line instead of a staircase. Comparing "the
-// stock at 28× NTM today vs 41× on average" is only honest on a basis that does not jump.
-//
-// ── DATA: REAL, FROM TWO SOURCES ─────────────────────────────────────────────────
-//   PX        daily closes                  → Massive, via the get-market-history edge function
-//             (resource:'prices' — a Polygon-shape /v2/aggs/ticker/.../range/1/day/... call, the
-//             same URL family the `fx` resource in covered-calls-massive already proves works).
-//   SHARES    diluted shares by quarter     → derived from get-market-history's `ratios` resource
-//             (timeframe=quarterly): shares = market_cap ÷ price, per print.
-//   NETDEBT   net debt by quarter           → the same `ratios` rows: enterprise_value − market_cap.
-//   EST       consensus EPS / EBITDA per fiscal year, WITH ITS REVISION DATES
-//             → EBITDA reads straight off estMatrix.cons.y.ebitda (js/results-data/amzn.js) — the
-//             vintage archive RESULTS_CONVENTIONS §8 describes, already populated for AMZN. EPS has
-//             no annual row in that matrix (its Bloomberg annual cell is basis-flagged per the
-//             dataset's own notes), so it is BUILT here by summing the four quarters of
-//             estMatrix.cons.q.eps for a fiscal year, per vintage — null until a vintage carries
-//             all four, which is the honest state for the FY+2/FY+3 columns this early.
-//   ACT       LTM EPS / EBITDA at each print → EPS: trailing four quarters of the Results dataset's
-//             real views.q.metrics.eps.act. EBITDA has NO quarterly actual anywhere in the portal
-//             (only annual) — LTM EV/EBITDA stays a gap; the Last FY basis (views.y.metrics.ebitda.act)
-//             covers the trailing EV/EBITDA line instead.
-//
-// Every print date used for STEPPING (when a denominator changes) is read off estMatrix.cons.
-// vintages' own lastActual field — the first vintage whose lastActual.q/y names a period is that
-// period's report date, to within a few days. No calendar of report dates is hand-kept anywhere in
-// this file; there is exactly one already in the dataset.
-//
-// ⚠ get-market-history (supabase/functions/get-market-history) is a NEW edge function shipped on
-// this branch — San/Oscar have to deploy it before this pane shows real data (until then it shows
-// a "live data unavailable" state, not broken charts). `market_cap`, `enterprise_value` and `price`
-// on the `ratios` route are fields js/api.js's liveQuote() already reads successfully from this
-// exact endpoint today — this is a parameter change (timeframe + limit) on a proven route, not a
-// new schema guess. Smoke-test after deploy: the chart should draw a real, non-flat price line; if
-// SHARES or NET DEBT look wrong, log one raw `ratios` row and check the field names above.
-
+// What changed for AMZN (vs googl-histmult.js):
+//   · price    — AMZN's daily close, live from Massive via get-market-history (split-adjusted for the 20-for-1 split of
+//                June 2022; no ticker change).
+//   · P/E      — ONLY on EPS ex-non-operating items (SAB, Oct 29 2026), like Alphabet's ex-OI&E: GAAP EPS carries the
+//                marks on the Anthropic and Rivian stakes. Trailing LTM = the four quarters of operating income ×
+//                (1 − tax rate) ÷ diluted shares from ./amzn-histmult-data.js; Last FY = the four quarters of that year.
+//                There is NO forward P/E: Bloomberg's consensus EPS (estMatrix.cons.y.eps) is GAAP, with the Anthropic
+//                gains, so the chip is shown disabled with that reason.
+//   · EBITDA   — adjusted: operating income + D&A + SBC (Bloomberg IS_COMPARABLE_EBITDA basis; ties to FY2025 $165,198M).
+//                Forward = amznResults.estMatrix.cons.y.ebitda; trailing LTM = the four reported quarters on the same
+//                basis; Last FY = views.y.metrics.ebitda.act.
+//   · shares / net debt — ./amzn-histmult-data.js (diluted shares; long-term debt − cash, equivalents and marketable
+//                securities; leases excluded), stepped at each filing. Massive's `ratios` route is not used (A20).
+//   · the old pane's EPS-from-four-quarters forward P/E (always empty, A20), its `ratios` shares/net debt, its single
+//     "not deployed yet" message and its hex colours are gone; the canvas plugins draw in viz-palette tokens.
+//   · FY+3     — disabled: the Bloomberg archive carries the current fiscal year and the next two per snapshot.
+//   · styles: css/overview.css (.hm-* rules shared via :is(.ov-tsm-dd, .ov-meta-dd, .ov-googl-dd, …) — .ov-amzn-dd
+//     has to be on those lists).
 import { amznResults } from '../results-data/amzn.js';
-import { fetchPriceHistory, fetchRatiosHistory } from '../api.js';
-import { SUMMIT_CAT, fade } from '../viz-palette.js';
+import { fetchPriceHistory } from '../api.js';
+import { SUMMIT_CAT, SUMMIT_MUTE, SUMMIT_NEG, SUMMIT_INK, fade } from '../viz-palette.js';
+import { AMZN_HM_Q } from './amzn-histmult-data.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function num(v){ return (typeof v==='number' && isFinite(v)) ? v : null; }
@@ -165,9 +124,10 @@ function dLong(n){ return MON[dMon(n)]+' '+new Date(n*DAY).getUTCDate()+', '+dYe
 
 function todayStr(){ var d=new Date();
   return d.getUTCFullYear()+'-'+('0'+(d.getUTCMonth()+1)).slice(-2)+'-'+('0'+d.getUTCDate()).slice(-2); }
-var START = '2022-10-03', TODAY = todayStr();
+// The window opens with the first Bloomberg vintage on file — before it there is no forward denominator.
+var START = amznResults.estMatrix.cons.vintages[0].id, TODAY = todayStr();
 
-// Fiscal years are calendar years for AMZN.
+// Fiscal years are calendar years for Amazon (10-K: fiscal year ends December 31).
 function fyEndDay(y){ return dnum(y+'-12-31'); }
 
 // Step lookup: the entry in force on day `d`, or null when the series has not started yet.
@@ -177,7 +137,7 @@ function stepAt(list, d){
   return v;
 }
 
-// ── Real data, built from js/results-data/amzn.js and the get-market-history edge function ──────
+// ── Real data, built from js/results-data/amzn.js, ./amzn-histmult-data.js and get-market-history ──
 // PX/SHARES/NETDEBT/EST/ACT/ACT_FY/ACT_FY_V start empty and are filled once by hmLoad(); every
 // reader below (denomAt, numerAt, buildSeries…) is unchanged from when they read synthetic arrays.
 var PX = [];                              // [{d, px}] — daily
@@ -192,14 +152,15 @@ var hmData = { loading:false, loaded:false, error:null };
 // estMatrix vintage whose lastActual names it — that vintage's own id IS the report date, to
 // within a few days. One archive, reused for every series below instead of a hand-kept calendar.
 function reportDateForQ(qLabel){
+  for(var i=0;i<AMZN_HM_Q.length;i++) if(AMZN_HM_Q[i][0]===qLabel) return AMZN_HM_Q[i][2];   // the 10-Q / 10-K filing date
   var vs=amznResults.estMatrix.cons.vintages;
-  for(var i=0;i<vs.length;i++){ var la=vs[i].lastActual; if(la && la.q===qLabel) return vs[i].id; }
+  for(var j=0;j<vs.length;j++){ var la=vs[j].lastActual; if(la && la.q===qLabel) return vs[j].id; }
   return null;
 }
-// EST.ebitda[fy] — cons.y.ebitda already carries the fiscal-year row directly; one point per
-// vintage that has it.
-function buildEstEbitda(){
-  var vs=amznResults.estMatrix.cons.vintages, y=amznResults.estMatrix.cons.y.ebitda, out={};
+// EST[metric][fy] — cons.y.<metric> carries the fiscal-year row per vintage, for EPS and EBITDA alike;
+// one point per vintage that has it.
+function buildEstY(metric){
+  var vs=amznResults.estMatrix.cons.vintages, y=amznResults.estMatrix.cons.y[metric]||{}, out={};
   vs.forEach(function(v){
     var row=y[v.id]; if(!row) return;
     Object.keys(row).forEach(function(fy){
@@ -209,34 +170,13 @@ function buildEstEbitda(){
   });
   return out;
 }
-// EST.eps[fy] — no annual row exists for EPS (RESULTS_CONVENTIONS §8: Bloomberg's annual EPS
-// basket is basis-flagged for AMZN), so it is the sum of that vintage's four quarters from
-// cons.q.eps — only once all four are on file, else the fiscal year is null for that vintage.
-function buildEstEpsFromQuarters(){
-  var vs=amznResults.estMatrix.cons.vintages, q=amznResults.estMatrix.cons.q.eps, out={};
-  vs.forEach(function(v){
-    var row=q[v.id]; if(!row) return;
-    var byYear={};
-    Object.keys(row).forEach(function(per){
-      var m=/^([1-4])Q(\d{2})$/.exec(per); if(!m) return;
-      var yy='20'+m[2]; (byYear[yy]||(byYear[yy]={}))[m[1]]=row[per];
-    });
-    Object.keys(byYear).forEach(function(yy){
-      var qs=byYear[yy];
-      if(qs['1']==null||qs['2']==null||qs['3']==null||qs['4']==null) return;
-      (out[yy]||(out[yy]=[])).push([v.id, qs['1']+qs['2']+qs['3']+qs['4']]);
-    });
-  });
-  return out;
-}
-// ACT.eps — real trailing-4-quarter sum of views.q.metrics.eps.act, stepped at each print.
-function buildActEpsLtm(){
-  var m=amznResults.views.q.metrics.eps, periods=m.periods, act=m.act, out=[];
-  for(var i=3;i<periods.length;i++){
-    var vals=[act[i-3],act[i-2],act[i-1],act[i]];
+// ACT[metric] — real trailing-4-quarter sum of views.q.metrics.<metric>.act, stepped at each print.
+function buildActLtm(metric){
+  var col=(metric==='eps')?3:4, out=[];
+  for(var i=3;i<AMZN_HM_Q.length;i++){
+    var vals=[AMZN_HM_Q[i-3][col],AMZN_HM_Q[i-2][col],AMZN_HM_Q[i-1][col],AMZN_HM_Q[i][col]];
     if(vals.some(function(v){ return v==null; })) continue;
-    var d=reportDateForQ(periods[i]); if(!d) continue;
-    out.push([d, vals[0]+vals[1]+vals[2]+vals[3]]);
+    out.push([AMZN_HM_Q[i][2], vals[0]+vals[1]+vals[2]+vals[3]]);
   }
   return out;
 }
@@ -249,24 +189,13 @@ function buildActFy(){
   });
   return out;
 }
-// ACT_FY_V.ebitda — real annual actuals, direct from the dataset.
-function buildActFyEbitda(){
-  var m=amznResults.views.y.metrics.ebitda, out={};
+// ACT_FY_V[metric] — real annual actuals, direct from the dataset (EPS and EBITDA both have the row).
+function buildActFyY(metric){
+  if(metric==='eps'){ var o={}, n={};   // ex-non-op: the four quarters of each fiscal year, from ./amzn-histmult-data.js
+    AMZN_HM_Q.forEach(function(r){ var y='20'+r[0].slice(2); o[y]=(o[y]||0)+r[3]; n[y]=(n[y]||0)+1; });
+    Object.keys(o).forEach(function(y){ if(n[y]!==4) delete o[y]; }); return o; }
+  var m=amznResults.views.y.metrics[metric], out={};
   m.periods.forEach(function(y,i){ if(m.act[i]!=null) out[y]=m.act[i]; });
-  return out;
-}
-// ACT_FY_V.eps — no annual actual row exists either; sum the four real quarterly actuals.
-function buildActFyEps(){
-  var m=amznResults.views.q.metrics.eps, byYear={}, out={};
-  m.periods.forEach(function(p,i){
-    var mm=/^([1-4])Q(\d{2})$/.exec(p); if(!mm) return;
-    var yy='20'+mm[2]; (byYear[yy]||(byYear[yy]={}))[mm[1]]=m.act[i];
-  });
-  Object.keys(byYear).forEach(function(yy){
-    var qs=byYear[yy];
-    if(qs['1']==null||qs['2']==null||qs['3']==null||qs['4']==null) return;
-    out[yy]=qs['1']+qs['2']+qs['3']+qs['4'];
-  });
   return out;
 }
 // The daily price series, from get-market-history's `prices` rows ({t: ms epoch, c: close}).
@@ -275,32 +204,10 @@ function buildPxFromHistory(rows){
     .filter(function(p){ return p.px!=null; })
     .sort(function(a,b){ return a.d-b.d; });
 }
-// A quarter label out of a `ratios` row's own fiscal fields — tolerant of 'Q2', 2, '2026-Q2'…
-function parseQNum(fp){
-  if(fp==null) return null;
-  if(typeof fp==='number' && fp>=1 && fp<=4) return String(fp);
-  var s=String(fp), m=/Q\s*([1-4])/i.exec(s); if(m) return m[1];
-  var m2=/^([1-4])$/.exec(s.trim()); return m2 ? m2[1] : null;
-}
-// SHARES + NETDEBT, from get-market-history's `ratios` rows: shares = market_cap ÷ price;
-// net debt = enterprise_value − market_cap. Both fields js/api.js's liveQuote() already reads
-// from this same Massive route in production — in raw dollars / a raw share count (liveQuote's
-// own marketCap = price × the raw share count from `details`, and market_cap is its fallback for
-// that same variable). Everything else in this file — EST, ACT, the Results dataset — is in $M and
-// millions of shares (see results-data/amzn.js's own header), so both get ÷1e6 here, once, at the
-// source, rather than teaching numerAt/denomAt two different scales.
-function buildSharesNetDebt(rows){
-  var shares=[], netDebt=[];
-  rows.slice().reverse().forEach(function(r){          // rows arrive fiscal_year.desc
-    var fy=r.fiscal_year, qn=parseQNum(r.fiscal_period!=null?r.fiscal_period:(r.fiscal_quarter!=null?r.fiscal_quarter:r.period));
-    if(fy==null || qn==null) return;
-    var d=reportDateForQ(qn+'Q'+String(fy).slice(-2)); if(!d) return;
-    var price=num(r.price), mc=num(r.market_cap), ev=num(r.enterprise_value);
-    if(price!=null && mc!=null) shares.push([d, (mc/price)/1e6]);      // millions of shares
-    if(mc!=null && ev!=null) netDebt.push([d, (ev-mc)/1e6]);           // $M
-  });
-  return { shares:shares, netDebt:netDebt };
-}
+// SHARES — diluted shares (millions); NETDEBT — long-term debt − cash and marketable securities (US$M,
+// negative = net cash); both from ./amzn-histmult-data.js, stepped on the day each filing became public.
+function buildShares(){ return AMZN_HM_Q.map(function(r){ return [r[2], r[6]]; }); }
+function buildNetDebt(){ return AMZN_HM_Q.map(function(r){ return [r[2], r[9]]; }); }
 
 // Fetch once (cached for the life of the page); every call after the first is a no-op that
 // resolves immediately. Errors leave hmData.error set rather than throwing, so a pane whose edge
@@ -308,25 +215,20 @@ function buildSharesNetDebt(rows){
 function hmLoad(){
   if(hmData.loaded || hmData.loading) return Promise.resolve();
   hmData.loading=true;
-  return Promise.all([
-    fetchPriceHistory('AMZN', START, TODAY).catch(function(e){ return { success:false, error:{message:(e&&e.message)||'price fetch failed'} }; }),
-    fetchRatiosHistory('AMZN', 20).catch(function(e){ return { success:false, error:{message:(e&&e.message)||'ratios fetch failed'} }; }),
-  ]).then(function(res){
-    var priceRes=res[0], ratiosRes=res[1];
+  return fetchPriceHistory('AMZN', START, TODAY).catch(function(e){ return { success:false, error:{message:(e&&e.message)||'price fetch failed'} }; })
+    .then(function(priceRes){
     var priceRows=(priceRes && priceRes.success && Array.isArray(priceRes.data)) ? priceRes.data : [];
-    var ratiosRows=(ratiosRes && ratiosRes.success && Array.isArray(ratiosRes.data)) ? ratiosRes.data : [];
     PX = buildPxFromHistory(priceRows);
-    var sn = buildSharesNetDebt(ratiosRows);
-    SHARES = sn.shares; NETDEBT = sn.netDebt;
-    EST.ebitda = buildEstEbitda();
-    EST.eps = buildEstEpsFromQuarters();
-    ACT.eps = buildActEpsLtm();
-    ACT.ebitda = [];                      // genuine gap — see the file header
+    SHARES = buildShares(); NETDEBT = buildNetDebt();
+    EST.ebitda = buildEstY('ebitda');
+    EST.eps = buildEstY('eps');
+    ACT.eps = buildActLtm('eps');
+    ACT.ebitda = buildActLtm('ebitda');
     ACT_FY = buildActFy();
-    ACT_FY_V.ebitda = buildActFyEbitda();
-    ACT_FY_V.eps = buildActFyEps();
+    ACT_FY_V.ebitda = buildActFyY('ebitda');
+    ACT_FY_V.eps = buildActFyY('eps');
     hmData.loading=false; hmData.loaded=true;
-    hmData.error = PX.length ? null : ((priceRes && priceRes.error && priceRes.error.message) || 'no price data');
+    hmData.error = PX.length ? null : ((priceRes && priceRes.error && priceRes.error.message) || 'the price service returned no rows for AMZN');
   });
 }
 
@@ -336,7 +238,7 @@ var HORIZONS = {
   fy0:   { dir:'fwd',   label:'Current FY', title:'The fiscal year each date sits inside — this is the one that rolls every January' },
   fy1:   { dir:'fwd',   label:'FY+1',       title:'One fiscal year past the one each date sits in' },
   fy2:   { dir:'fwd',   label:'FY+2',       title:'Two fiscal years out' },
-  fy3:   { dir:'fwd',   label:'FY+3',       title:'Three fiscal years out — thin early in the window, where nobody had published one yet' },
+  fy3:   { dir:'fwd',   label:'FY+3',       title:'Not available: the Bloomberg archive carries the current fiscal year and the next two per snapshot', off:true },
   ltm:   { dir:'trail', label:'LTM',        title:'The last twelve reported months, stepping at each print' },
   lastfy:{ dir:'trail', label:'Last FY',    title:'The last fiscal year fully reported' },
 };
@@ -373,7 +275,7 @@ function numerAt(metric, d, px){
 // ACT; `denomFmt` is what the tooltip and the table print, because a multiple with an unlabelled
 // denominator is a number nobody can check.
 var METRICS = {
-  pe:       { label:'P/E',        metric:'eps',    denomName:'EPS',
+  pe:       { label:'P/E (ex-non-op)', metric:'eps', denomName:'EPS ex-non-op',
               denomFmt:function(v){ return '$'+v.toFixed(2); } },
   evebitda: { label:'EV/EBITDA',  metric:'ebitda', denomName:'EBITDA',
               denomFmt:function(v){ return '$'+Math.round(v/1000)+'B'; } },
@@ -395,8 +297,8 @@ function buildSeries(mk, hz){
 // P/E and EV/EBITDA, each forward and trailing, all four on one chart and each one a chip.
 //
 // The colour system carries the two dimensions so the legend is almost redundant: **the metric
-// picks the hue** (P/E blue, EV/EBITDA Amazon orange) and **the direction picks the weight** —
-// forward solid, trailing dashed and lighter. Two blues and two oranges, never four unrelated
+// picks the hue** (P/E slot 0, EV/EBITDA slot 1) and **the direction picks the weight** —
+// forward solid, trailing dashed and lighter. Two hues, each solid and faded, never four unrelated
 // colours, because the reader's first question is "which metric" and the second is "which side of
 // the print".
 //
@@ -407,12 +309,10 @@ function buildSeries(mk, hz){
 // makes a dual-axis chart readable rather than a trap.
 // Two identities (P/E, EV/EBITDA) → the portal's fixed categorical slots 0 and 1, never a hand-picked
 // hue. Trailing is the SAME hue faded, not a different colour — confidence is alpha, identity is hue
-// (viz-palette.js's own rule). Was '#146EB4'/'#7FB3E0'/'#E08700'/'#F5C57A' — the EV/EBITDA pair in
-// particular was Amazon's old smile-orange family, exactly what Stage 2 removed everywhere else.
+// (viz-palette.js's own rule).
 var C_PE_F=SUMMIT_CAT[0], C_PE_T=fade(SUMMIT_CAT[0],0.45), C_EV_F=SUMMIT_CAT[1], C_EV_T=fade(SUMMIT_CAT[1],0.45);
 var SERIES = [
-  { k:'pe_f',  metric:'pe',       dir:'fwd',   color:C_PE_F, axis:'y',  short:'P/E fwd' },
-  { k:'pe_t',  metric:'pe',       dir:'trail', color:C_PE_T, axis:'y',  short:'P/E trail', dash:true },
+  { k:'pe_t',  metric:'pe',       dir:'trail', color:C_PE_T, axis:'y',  short:'P/E trail (ex-non-op)', dash:true },
   { k:'ev_f',  metric:'evebitda', dir:'fwd',   color:C_EV_F, axis:'y2', short:'EV/EBITDA fwd' },
   { k:'ev_t',  metric:'evebitda', dir:'trail', color:C_EV_T, axis:'y2', short:'EV/EBITDA trail', dash:true },
 ];
@@ -428,7 +328,7 @@ var st = {
   yr:null,             // y-range from the brush (reads off the P/E axis)
   full:false,          // true = never frame an axis, show the whole scale spikes and all
   // All four lines start on — seeing them together is the point.
-  hidden:{},
+  hidden:{ pe_f:true, pe_f_off:true },   // no forward P/E for Amazon (header): its key stays hidden so the forward controls follow EV/EBITDA alone
   tbl:false,           // the detail table starts CLOSED: the chart is the read, the table the receipt
   chart:null,
 };
@@ -508,35 +408,12 @@ function signPct(p){ return p==null?'—':((p>=0?'+':'−')+(Math.abs(p)*100).to
 
 // ── Body ─────────────────────────────────────────────────────────────────────────
 function hmBody(){
-  var h='<style>'+
-    '.hm-notice{padding:14px 2px;color:var(--mu);font:400 12px Inter,sans-serif}'+
-    '.hm-blk .rs-preset.active{background:var(--navy);color:#fff;border-color:var(--navy)}'+
-    '.hm-leg{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 6px}'+
-    '.hm-chartwrap{position:relative;height:380px;margin:2px 0 4px}'+
-    '#hmTable{overflow-x:auto}'+
-    '.hm-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}'+
-    '.hm-tbl th,.hm-tbl td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}'+
-    '.hm-tbl th:first-child,.hm-tbl td:first-child{text-align:left}'+
-    '.hm-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}'+
-    '.hm-tbl tbody tr:hover td{background:#F6F8FA}'+
-    '.hm-tbl td.hm-out{font-weight:800;color:var(--navy)}'+
-    '.hm-slider{margin:10px 2px 2px}'+
-    // the range readout: one inline pill per line, replacing the six tiles that used to sit here
-    '.hm-range{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:11px;margin:6px 2px 2px}'+
-    '.hm-range-l{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}'+
-    '.hm-range-i{display:inline-flex;align-items:baseline;gap:6px;color:var(--mu)}'+
-    '.hm-range-i b{font-size:12.5px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}'+
-    '.hm-sw{width:9px;height:9px;border-radius:2px;display:inline-block;align-self:center}'+
-    '.hm-full{appearance:none;border:1px solid rgba(183,121,31,.4);background:rgba(183,121,31,.08);color:#B7791F;'+
-      'font:700 10.5px Inter,sans-serif;padding:3px 9px;border-radius:999px;cursor:pointer}'+
-    '.hm-full:hover{background:rgba(183,121,31,.16)}'+
-    '</style>';
-
+  var h='';   // styles: css/overview.css (.ov-amzn-dd .hm-*)
   h+='<div class="rs-block hm-blk" id="hmBlock">';
   // Row 1 is identity. There is no metric select: the four chips ARE the picker, and a dropdown
   // repeating them would be a second control for the same choice.
   h+='<div class="rs-block-top"><div class="rs-block-h">Historic Multiple</div>'+
-     '<span class="rs-quick-l" style="margin-left:6px">P/E and EV/EBITDA, forward and trailing — click a chip to drop one</span></div>';
+     '<span class="rs-quick-l hm-hint">EV/EBITDA forward and trailing, P/E trailing (ex-non-op) — click a chip to drop one</span></div>';
   h+='<div class="rs-block-modes"><div class="rs-modes" id="hmModes"></div>'+
      '<div class="rs-quick"><span class="rs-quick-l">Range</span>'+
        ['1y','2y','3y','5y','all'].map(function(k){
@@ -574,7 +451,7 @@ function modesHtml(){
   };
   var fwdOff = !(vis('pe_f')||vis('ev_f')), trailOff = !(vis('pe_t')||vis('ev_t'));
   var h='<div class="rs-views" title="'+(fwdOff?'Both forward lines are hidden':'The period the forward estimates are FOR')+'">'+
-    FWD_H.map(function(k){ return b('hmhzf',k,st.hzF===k,HORIZONS[k].label,HORIZONS[k].title,fwdOff); }).join('')+'</div>';
+    FWD_H.map(function(k){ return b('hmhzf',k,st.hzF===k,HORIZONS[k].label,HORIZONS[k].title,fwdOff||!!HORIZONS[k].off); }).join('')+'</div>';
   h+='<div class="rs-views" title="'+(trailOff?'Both trailing lines are hidden':'What the company had already reported')+'">'+
     TRAIL_H.map(function(k){ return b('hmhzt',k,st.hzT===k,HORIZONS[k].label,HORIZONS[k].title,trailOff); }).join('')+'</div>';
   h+='<div class="rs-views">'+
@@ -590,14 +467,16 @@ function chip(k, label, color, dash, off, title){
 }
 function legendHtml(){
   var h=SERIES.map(function(s){ return chip(s.k, labelOf(s), s.color, s.dash); }).join('');
+  // No forward P/E for Amazon (see the header): shown disabled with the reason, never silently missing.
+  h=chip('pe_f_off','P/E · forward',C_PE_F,false,true,'Not drawn: Bloomberg’s consensus EPS is GAAP and includes the gains on Amazon’s Anthropic stake, which this chart takes out, so a forward P/E on that basis would not be comparable')+h;
   // The average only means something on ONE line: four dashed means is four more lines and no more
   // information. Disabled with the reason rather than hidden, so the control is never a mystery.
   var one=visSeries().length===1;
-  h+=chip('avg','Average over the range','#8A93A0',true,!one,
+  h+=chip('avg','Average over the range',SUMMIT_MUTE,true,!one,
       one?'The dashed mean of the one visible line':'Show a single line to get its average');
   // Rolls only exist on a basis that rolls. NTM slides and the trailing bases step at prints.
   var rollable = (st.hzF!=='ntm') && (vis('pe_f')||vis('ev_f'));
-  if(rollable) h+=chip('roll','Fiscal-year rolls','#C0392B',true,false,
+  if(rollable) h+=chip('roll','Fiscal-year rolls',SUMMIT_NEG,true,false,
       'The dashed verticals where the forward period rolls to the next fiscal year');
   return h;
 }
@@ -625,8 +504,8 @@ var hmTags = {
       var ys=chart.scales[o.avgAxis]||chart.scales.y, y=ys.getPixelForValue(o.avg);
       if(y>ar.top && y<ar.bottom){
         var t='Avg: '+o.avg.toFixed(1), w=ctx.measureText(t).width+10;
-        ctx.fillStyle='#F7F9FB'; rr(ctx, ar.left+4, y-18, w, 15, 4); ctx.fill();
-        ctx.fillStyle='#4A5563'; ctx.fillText(t, ar.left+9, y-10);
+        ctx.fillStyle=fade(SUMMIT_MUTE,0.08); rr(ctx, ar.left+4, y-18, w, 15, 4); ctx.fill();
+        ctx.fillStyle=SUMMIT_INK; ctx.fillText(t, ar.left+9, y-10);
       }
     }
     var used=[];
@@ -639,7 +518,7 @@ var hmTags = {
       used.push(y);
       var t=b.v.toFixed(1), w=ctx.measureText(t).width+12;
       ctx.fillStyle=b.color; rr(ctx, ar.right-w+34, y-9, w, 18, 5); ctx.fill();
-      ctx.fillStyle='#fff'; ctx.fillText(t, ar.right-w+40, y);
+      ctx.fillStyle='white'; ctx.fillText(t, ar.right-w+40, y);
     });
     ctx.restore();
   }
@@ -649,12 +528,12 @@ var hmRolls = {
   beforeDatasetsDraw:function(chart, args, opts){
     var idx=(opts&&opts.at)||[]; if(!idx.length) return;
     var ctx=chart.ctx, ar=chart.chartArea, xs=chart.scales.x;
-    ctx.save(); ctx.strokeStyle='rgba(192,57,43,0.35)'; ctx.lineWidth=1;
+    ctx.save(); ctx.strokeStyle=fade(SUMMIT_NEG,0.35); ctx.lineWidth=1;
     idx.forEach(function(p){
       var x=xs.getPixelForValue(p.i); if(x<ar.left||x>ar.right) return;
       ctx.setLineDash([4,4]);
       ctx.beginPath(); ctx.moveTo(x, ar.top); ctx.lineTo(x, ar.bottom); ctx.stroke();
-      ctx.setLineDash([]); ctx.fillStyle='rgba(192,57,43,0.75)'; ctx.font='700 9px Inter, sans-serif';
+      ctx.setLineDash([]); ctx.fillStyle=fade(SUMMIT_NEG,0.75); ctx.font='700 9px Inter, sans-serif';
       ctx.fillText('→ FY'+p.fy, x+3, ar.top+9);
     });
     ctx.restore();
@@ -675,7 +554,7 @@ function clipOf(data, axisId){
   if(st.full) return undefined;                    // the reader asked for the whole scale
   var vs=[];
   visSeries().forEach(function(s){
-    if(s.axis!==axisId) return;
+    if(s.axis!==axisId || !data[s.k]) return;   // a line toggled on after this render has no points yet
     data[s.k].pts.forEach(function(p){ if(p.v!=null) vs.push(p.v); });
   });
   if(vs.length<20) return undefined;
@@ -691,7 +570,7 @@ function clipped(data, axisId){
   var c=clipOf(data, axisId); if(c==null) return null;
   var over=[];
   visSeries().forEach(function(s){
-    if(s.axis!==axisId) return;
+    if(s.axis!==axisId || !data[s.k]) return;   // a line toggled on after this render has no points yet
     var hi=data[s.k].sm && data[s.k].sm.max;
     if(hi!=null && hi>c) over.push(s);
   });
@@ -702,7 +581,8 @@ function buildChart(scope, data){
   var cv=scope.querySelector('#hmChart');
   if(!cv || typeof Chart==='undefined' || cv.offsetParent===null) return;
   if(st.chart){ try{ st.chart.destroy(); }catch(e){} st.chart=null; }
-  var vs=visSeries();
+  // only the lines this render computed: a chip clicked between render() and this frame must not crash the draw
+  var vs=visSeries().filter(function(s){ return data[s.k]; });
   if(!vs.length) return;                          // every chip off — nothing to draw, nothing broken
 
   var ref=data[vs[0].k].pts;
@@ -714,7 +594,7 @@ function buildChart(scope, data){
   var soloSm = solo ? data[solo.k].sm : null;
   if(solo && soloSm && vis('avg'))
     ds.push({ label:'Average', yAxisID:solo.axis, data:ref.map(function(){ return soloSm.avg; }),
-      borderColor:'#8A93A0', borderWidth:1.5, borderDash:[6,4], pointRadius:0, fill:false, tension:0 });
+      borderColor:SUMMIT_MUTE, borderWidth:1.5, borderDash:[6,4], pointRadius:0, fill:false, tension:0 });
 
   vs.forEach(function(s){
     var pts=data[s.k].pts, sm=data[s.k].sm;
@@ -738,7 +618,7 @@ function buildChart(scope, data){
   var axisOpts=function(id, on, color, useYr){
     var cl=clipOf(data, id);
     return { position:'right', display:on, weight:(id==='y2'?1:0),
-      grid:{ color:'#EEF2F7', drawOnChartArea:(id==='y') },
+      grid:{ color:fade(SUMMIT_MUTE,0.15), drawOnChartArea:(id==='y') },
       min: (useYr && st.yr) ? st.yr[0] : undefined,
       // A brushed zoom always wins; otherwise the frame caps the axis and the spike runs off the
       // top, which is the whole point — and one click on the note below restores the full scale.
@@ -768,7 +648,7 @@ function buildChart(scope, data){
                 '  ÷  '+METRICS[s.metric].denomName+' '+METRICS[s.metric].denomFmt(p.den);
             } } } },
       scales:{
-        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:10 }, maxRotation:0, autoSkip:false,
+        x:{ grid:{ display:false }, ticks:{ color:SUMMIT_MUTE, font:{ size:10 }, maxRotation:0, autoSkip:false,
             callback:function(v,i){ return i%everyN===0 ? labels[i] : ''; } } },
         y:  axisOpts('y',  anyOnAxis('y'),  C_PE_F, anyOnAxis('y')),
         y2: axisOpts('y2', anyOnAxis('y2'), C_EV_F, !anyOnAxis('y')) } },   // the zoom lands on the axis it was read from
@@ -841,22 +721,23 @@ function renderTable(scope){
 }
 
 function footHtml(){
+  var nd=AMZN_HM_Q, n0=nd[0], n1=nd[nd.length-1], vs=amznResults.estMatrix.cons.vintages;
   return '<b>How the lines are built.</b> Each is a price divided by a number that stood on that day: '+
-    '<b>P/E</b> = price ÷ EPS, <b>EV/EBITDA</b> = (price × diluted shares + net debt) ÷ EBITDA, on every business day. '+
-    '<b>Forward</b> takes the estimate for the period you pick, <b>trailing</b> takes what the company had already reported. '+
+    '<b>P/E</b> = price ÷ EPS ex-non-op, <b>EV/EBITDA</b> = (price × diluted shares + net debt) ÷ adjusted EBITDA, on every business day. '+
+    '<b>Forward</b> takes the estimate for the period you pick, <b>trailing</b> takes what Amazon had already reported. '+
     'The denominator is a <b>step series</b>: it changes only when the Street revises, or when the period it is FOR rolls forward — '+
-    'which is what the vertical drops in a forward-multiple chart actually are, not a re-rating. '+
-    '<b>NTM</b> avoids the staircase by blending: FY0 × (days left in FY0 ÷ 365) + FY1 × the rest. '+
-    '<b>The two metrics keep separate axes</b>, both on the right and tinted their line\'s colour — P/E runs three to five times '+
-    'EV/EBITDA, so one shared scale would flatten EV/EBITDA into a line along the floor. '+
-    'Quarterly and annual points are the <b>average</b> over the period. The range readout follows the <b>selected range</b>, so it moves with '+
-    'the slider. '+
-    '<b>Sourcing.</b> Price is Massive\'s daily close. Diluted shares and net debt are derived each quarter from the same feed\'s ratios '+
-    '(market cap ÷ price, and enterprise value − market cap). Consensus EPS and EBITDA read off the Bloomberg vintage archive AMZN already '+
-    'carries (<code>estMatrix</code> — RESULTS_CONVENTIONS §8); forward FY EPS is the sum of that vintage\'s four quarters, so a fiscal year '+
-    'with fewer than four quarters on file is blank rather than guessed. Trailing P/E is the real reported LTM EPS. '+
-    '<b>EV/EBITDA has no LTM basis</b> — no quarterly EBITDA actual exists anywhere in the portal yet — use <b>Last FY</b> for the trailing '+
-    'EV/EBITDA line, which reads the reported annual figure directly.';
+    'the vertical drops in a forward-multiple chart are that roll, not a re-rating. '+
+    '<b>NTM</b> blends FY0 × (days left in FY0 ÷ 365) + FY1 × the rest, so it slides instead of stepping. '+
+    'Quarterly and annual points are the <b>average</b> over the period. '+
+    '<b>Bases.</b> EPS ex-non-op = operating income × (1 − the quarter’s effective tax rate) ÷ diluted shares: GAAP EPS without non-operating income (expense), which carries the marks on the Anthropic and Rivian stakes '+
+    '(4Q22’s effective rate was 129% on near-zero pre-tax income, so that quarter’s figure is negative). '+
+    'There is no forward P/E, because Bloomberg’s consensus EPS is GAAP, with the Anthropic gains. EBITDA is adjusted — operating income + D&amp;A + stock-based compensation — Bloomberg’s comparable EBITDA and the Summit model’s basis (FY2025 $165.2B). '+
+    '<b>Sources.</b> Price: Massive daily close (live, split-adjusted). Consensus EBITDA: Bloomberg consensus export, one vintage per print ('+
+    esc(vs[0].id)+' to '+esc(vs[vs.length-1].id)+'). Reported operating income, tax, D&amp;A, SBC, diluted shares and net debt: Amazon 10-Q / 10-K filings on SEC EDGAR ('+
+    esc(n0[0])+'–2Q26; share counts before the June 2022 split × 20) and the 3Q26 earnings release (8-K Ex. 99.1, Oct 29 2026), stepped on each filing date; '+
+    'net debt = long-term debt minus cash, equivalents and marketable securities, leases excluded ('+
+    (n1[9]<0?'net cash US$'+(-n1[9]/1000).toFixed(1)+'B':'net debt US$'+(n1[9]/1000).toFixed(1)+'B')+' at '+esc(n1[0])+
+    '; the 3Q26 release shows only the non-current portion of long-term debt, so that quarter’s net debt is understated by the current portion, US$3.3B at 2Q26).';
 }
 
 // ── Render ───────────────────────────────────────────────────────────────────────
@@ -865,12 +746,11 @@ function render(scope){
     var md0=scope.querySelector('#hmModes'); if(md0) md0.innerHTML='';
     var lg0=scope.querySelector('#hmLeg'); if(lg0) lg0.innerHTML='';
     var cw=scope.querySelector('.hm-chartwrap');
-    if(cw) cw.innerHTML='<div class="hm-notice">'+
-      (hmData.error ? '⚑ Live data pending. This chart reads daily prices, shares and net debt live from Massive (through the '+
-                      '<code>get-market-history</code> function, not deployed yet). Nothing is estimated or frozen in the meantime. '+
-                      '<span style="opacity:.7">('+esc(hmData.error)+')</span>'
-                    : 'Loading price history…')+
-      '</div>';
+    if(cw) cw.innerHTML = hmData.error
+      ? '<div class="rs-noguide">⚑ Live data pending — daily price unavailable</div>'+
+        '<div class="hm-notice">This chart reads AMZN\'s daily close live from Massive (get-market-history). The request failed: '+
+        esc(hmData.error)+'. Nothing is estimated or frozen in the meantime.</div>'
+      : '<div class="hm-notice">Loading price history…</div>';
     var rg0=scope.querySelector('#hmRange'); if(rg0) rg0.innerHTML='';
     var tbl0=scope.querySelector('#hmTable'); if(tbl0) tbl0.innerHTML='';
     var th0=scope.querySelector('#hmTblH'); if(th0) th0.innerHTML='';

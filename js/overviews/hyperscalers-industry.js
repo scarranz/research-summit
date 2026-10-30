@@ -25,7 +25,7 @@ import {
   HS_DEP_GOOGL, HS_DEP_NOTES,
   HS_YEARS, HS_YEAR_QTRS, HS_YEAR_DERIVED, HS_YEAR_PARTIAL, HS_YEAR_GUIDE, HS_QTR_RAMP,
   HS_NEUTRAL_RAMP, HS_GW_YEARS, HS_GW_ADDS, HS_GW_SPLIT, HS_GW_COST, HS_GPU_PRICES,
-  HS_CHIP_MIX, HS_GW_BRIDGE, HS_GW_MODEL_FLAG, HS_CAPACITY_QUOTES,
+  HS_CHIP_MIX, HS_GW_BRIDGE, HS_GW_MODEL_FLAG, HS_GW_GUIDE_CHECK, HS_CAPACITY_QUOTES,
   HS_DEP_YEARS, HS_DEP_MODEL, HS_DEP_COGS, HS_LIVES, HS_LIVES_FLAG, HS_GW_MSFT_FY,
   HS_CSP_QTRS, HS_CSP_REV, HS_CSP_OI, HS_CSP_NOTES,
   HS_THEME_QTRS, HS_THEMES,
@@ -60,19 +60,22 @@ var endLabels = {
     ctx.save();
     ctx.font = '600 11px Inter, sans-serif';
     ctx.textBaseline = 'middle';
-    var placed = [];
+    var labs = [];
     chart.data.datasets.forEach(function(ds, di){
       var meta = chart.getDatasetMeta(di);
       if (meta.hidden) return;
       var last = -1;
       ds.data.forEach(function(v, i){ if (v != null) last = i; });
       if (last < 0 || !meta.data[last]) return;
-      var pt = meta.data[last], y = pt.y;
-      placed.forEach(function(py){ if (Math.abs(y - py) < 12) y = py + 12; });
-      placed.push(y);
-      ctx.fillStyle = ds.borderColor;
+      labs.push({ ds: ds, pt: meta.data[last], y: meta.data[last].y });
+    });
+    // Top to bottom, so two labels that collide keep the order of their lines.
+    labs.sort(function(a, b){ return a.y - b.y; });
+    labs.forEach(function(l, i){
+      if (i && l.y - labs[i - 1].y < 12) l.y = labs[i - 1].y + 12;
+      ctx.fillStyle = l.ds.borderColor;
       ctx.textAlign = 'left';
-      ctx.fillText(ds.label, Math.min(pt.x + 8, chart.chartArea.right + 4), y);
+      ctx.fillText(l.ds.label, Math.min(l.pt.x + 8, chart.chartArea.right + 4), l.y);
     });
     ctx.restore();
   },
@@ -430,6 +433,23 @@ function table(rows, head, cls){
 }
 
 function sec(t){ return '<div class="hs-sec">' + esc(t) + '</div>'; }
+
+// The model's 2026 capex against each company's 3Q26 guide. The GW are not re-solved: the gap is what
+// the same cost per GW would give at the guide midpoint, so it reads as a sensitivity, not a new number.
+function guideCheck(){
+  var rows = HS_GW_GUIDE_CHECK.map(function(g){
+    var m = HS_GW_BRIDGE[g.id] && HS_GW_BRIDGE[g.id].total26;
+    var gap = (g.mid != null && m) ? (g.mid / m - 1) * 100 : null;
+    return [esc(co(g.id).name), g.id === 'msft' ? 'FY to June' : (m != null ? '$' + m.toFixed(1) + 'B' : null), esc(g.guide),
+      gap == null ? null : (Math.abs(gap) < 1 ? 'in line' : (gap > 0 ? '+' : '−') + Math.abs(gap).toFixed(1) + '%')];
+  });
+  return sec('The model against the 3Q26 guides') + '<div class="hs-card">' +
+    '<p class="hs-body">The gigawatts above are the <b>August vintage</b> of the Summit build; no newer one exists yet. ' +
+    'Against what each company guided on its 3Q26 call, Alphabet and Meta are modelled at the <b>top</b> of their ranges.</p>' +
+    table(rows, ['Company', 'Model 2026E capex', '3Q26 guide', 'GW at the midpoint']) +
+    '<ul class="hs-src">' + HS_GW_GUIDE_CHECK.map(function(g){ return '<li><b>' + esc(co(g.id).ticker) + '</b> · ' + esc(g.read) + '</li>'; }).join('') + '</ul>' +
+    '<p class="hs-cap">GW at the midpoint = the change in 2026 gigawatts if capex landed at the guide midpoint and the cost per GW stayed as modelled — our arithmetic, not the model.</p></div>';
+}
 
 // ─── Wide-table affordances: hover crosshair + pinned-column scroll shadow ────
 // Wired ONCE on the root and driven by delegation, because the CSP tables are
@@ -1399,7 +1419,8 @@ function capacityBody(){
 
     sec('Capex to gigawatts') +
     '<div class="hs-panels">' + bridge + '</div>' +
-    '<div class="hs-card hs-card--warn"><div class="hs-lbl">Model QA</div><p class="hs-body">' + esc(HS_GW_MODEL_FLAG) + '</p></div>' +
+    guideCheck() +
+    '<div class="hs-card hs-card--warn"><div class="hs-lbl">Model QA</div><p class="hs-body">' + HS_GW_MODEL_FLAG + '</p></div>' +
 
     sec('What they have said about capacity') +
     '<div class="hs-card"><ul class="hs-src">' + quotes + '</ul>' +
@@ -1448,7 +1469,7 @@ function themesBody(){
       '<p class="hs-cap"><b>Quarters covered on this theme:</b> ' + counts + '. ' +
       'A blank cell means the theme did not come up on that call in a way worth recording — not that the company said nothing at all. ' +
       'Alphabet has no 2Q24 row anywhere, because that call is not in the corpus. ' +
-      'SpaceX starts at 1Q26, where the cell is its S-1 (a prospectus, not a call); 2Q26 and 3Q26 are its August and October calls, and the 3Q26 row for Meta, Alphabet and Microsoft comes from the Motley Fool transcripts (the corpus has no 3Q26 calls yet); Amazon fills in when it reports. ' +
+      'SpaceX starts at 1Q26, where the cell is its S-1 (a prospectus, not a call); 2Q26 and 3Q26 are its August and October calls, and the 3Q26 row for Meta, Alphabet and Microsoft comes from the Motley Fool transcripts (the corpus has no 3Q26 calls yet), Amazon’s from a call transcript compiled by the team. ' +
       'Quoted fragments are verbatim; the connective text is compression.</p>' +
     '</div>';
 }

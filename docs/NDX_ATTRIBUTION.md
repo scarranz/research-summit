@@ -226,8 +226,9 @@ A new dummy code makes the extractor print `unmapped Bloomberg dummy ticker(s)` 
 
 **Oct 14, 2026 — one page for both indices.** The Nasdaq-100 sections are now panes of the unified
 Market Analysis page (map in `docs/SPX_MARKET_ANALYSIS.md`): `loadNdxAttribution(hosts)` fills the
-Sector, Detail, Composition, Top Contributors, Winners vs Losers and Scatter panes; `ndxPriceData()`
-feeds the joint Index Price Return (`js/ma-price.js`, the old NDX hero is no longer drawn) and
+Sector, Detail, Composition, Top Contributors and Winners vs Losers panes (the Scatter pane and the
+joint Index Price Return were removed Oct 23, 2026; the NDX scatter code in `ndx-attribution.js` is
+now unreachable) and
 `ndxStocks()` the Nasdaq side of Sector Summary and Stock Lookup (every company of every year, with
 the whole-year flag e<yy> = in every HOC of the year). Years are labelled by their number (2026, not
 "YTD 2026"). Removed: the Detail Chart / Treemap views, the Winners vs Losers Sector Matrix and

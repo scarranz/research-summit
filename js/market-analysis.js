@@ -1,25 +1,22 @@
 // market-analysis.js — Market Analysis tab: one list of functions, each with its own
 // index toggle (S&P 500 · Nasdaq-100 · both where that makes sense), Oct 2026:
 //
-//   Index Price Return              both at once            js/ma-price.js
 //   Sector Return / Contribution    S&P | Nasdaq            js/spx-sector-alpha.js · js/ndx-sector-returns.js
 //   Attribution Detail & Simulation S&P | Nasdaq | Both     js/ma-detail.js (one table) · engines in spx-/ndx-attribution.js
 //   Sector Summary — Market Beaters S&P | Nasdaq            this file (one table, two datasets)
 //   Index Composition               S&P | Nasdaq            this file · js/ndx-attribution.js
 //   Top Contributors                S&P | Nasdaq            js/spx-securities.js · js/ndx-attribution.js
 //   Winners vs Losers               S&P | Nasdaq            this file · js/ndx-attribution.js
-//   Security Return vs Weight       S&P | Nasdaq            js/spx-securities.js · js/ndx-attribution.js
 //   Stock Lookup                    both                    this file
 //
 // S&P data: js/spx-data.js (scripts/spx/extract_spx.py — docs/SPX_MARKET_ANALYSIS.md).
 // Nasdaq data: the ndx-attribution snapshot (docs/NDX_ATTRIBUTION.md).
 import { SCOLS } from './portal-data.js';
-import { loadNdxAttribution, ndxPriceData, ndxStocks, ndxDetail, ndxDetailYears, ndxIGs, ndxSetSim, ndxShowYear } from './ndx-attribution.js';
+import { loadNdxAttribution, ndxStocks, ndxDetail, ndxDetailYears, ndxIGs, ndxSetSim, ndxShowYear } from './ndx-attribution.js';
 import { initDetail, setDetailNdx, setDetailIndex } from './ma-detail.js';
 import { ndxLatestReturn } from './ndx-sector-returns.js';
 import { spyAttributionYears, spyWeightSnaps } from './spx-attribution.js';
 import { initSpxSectorAlpha } from './spx-sector-alpha.js';
-import { initPriceReturn } from './ma-price.js';
 import { dumbbell, distribution } from './ma-charts.js';
 import { initSpxSecurities } from './spx-securities.js';
 
@@ -53,11 +50,10 @@ var MA_OPTS = {
   summary: [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']],
   comp:    [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']],
   wl:      [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']],
-  top:     [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']],
-  scatter: [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']]
+  top:     [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']]
 };
 // S&P 500 first and selected by default in every section
-var MA_IDX = { sector: 'spx', detail: 'spx', summary: 'spx', comp: 'spx', wl: 'spx', top: 'spx', scatter: 'spx' };
+var MA_IDX = { sector: 'spx', detail: 'spx', summary: 'spx', comp: 'spx', wl: 'spx', top: 'spx' };
 function maSec(k){ return document.querySelector('.sec[data-ma="' + k + '"]'); }
 function renderToggle(k){
   var t = maSec(k) && maSec(k).querySelector('.ma-idx'); if (!t) return;
@@ -321,9 +317,9 @@ function initMarketAnalysis(D) {
   initDetail(document.getElementById('ma-detail'), SPX);
   renderFilterBar(); applyFilters(); renderSSExclChips();
   renderSpxComp(); renderSpxWL();
-  // S&P company weights (one SPY holdings snapshot per year): Top Contributors + Security Return vs Weight
-  import('./spx-holdings-data.js').then(function(m){ initSpxSecurities(document.getElementById('ma-spx-top'), document.getElementById('ma-spx-scatter'), m.SPX_HOLDINGS); },
-    function(){ ['ma-spx-top', 'ma-spx-scatter'].forEach(function(id){ var e = document.getElementById(id); if (e) e.innerHTML = '<div class="ma-pending">S&amp;P 500 company weights are not in the data.</div>'; }); });
+  // S&P company weights (one SPY holdings snapshot per year): Top Contributors
+  import('./spx-holdings-data.js').then(function(m){ initSpxSecurities(document.getElementById('ma-spx-top'), m.SPX_HOLDINGS); },
+    function(){ var e = document.getElementById('ma-spx-top'); if (e) e.innerHTML = '<div class="ma-pending">S&amp;P 500 company weights are not in the data.</div>';; });
   buildLookup();
   var si = document.getElementById('sr-inp');
   if (si){
@@ -336,12 +332,10 @@ function initMarketAnalysis(D) {
     comp:    document.getElementById('ma-ndx-comp'),
     top:     document.getElementById('ma-ndx-top'),
     wl:      document.getElementById('ma-ndx-wl'),
-    scatter: document.getElementById('ma-ndx-scatter'),
     allYears: SPX.years,            // the S&P years: those before the Nasdaq data starts show disabled
     onYear: function(sec, y){ if (sec === 'comp') COMP_YEAR = String(y); else { WL_YEAR = String(y); WL_STATE.bin = null; } }
   }).then(function(){
     NDX = ndxStocks();
-    initPriceReturn(document.getElementById('ma-price'), ndxPriceData(), SPX);
     setDetailNdx({ detail: ndxDetail, years: ndxDetailYears(), igs: ndxIGs(), setSim: ndxSetSim });
     buildLookup();
     Object.keys(MA_IDX).forEach(function(k){ renderToggle(k); showPanes(k); });

@@ -2,7 +2,8 @@
 // Valuation ▸ Submit History (js/submits.js).
 //
 // FROZEN ON PURPOSE, NOT LIVE (SAB, Oct 15 2026: Summit numbers are coded directly; playbook rule 10, §20b).
-// Pulled from the Summit Financial Data store (get_valuation_history('AMZN')) on 2026-10-29 and written here verbatim;
+// Pulled from the Summit Financial Data store (get_valuation_history('AMZN')) on 2026-10-29 (2026-10-30 submit appended on
+// 2026-10-30) and written here verbatim;
 // refresh by re-pulling after each new submit and APPENDING it — a submit is a vintage, never overwrite one.
 //
 // Fields per submit: d · after · px (share price the workbook recorded) · wacc · coe · val.ev / val.pe = the workbook's
@@ -12,12 +13,13 @@
 // model: the projections each submit was built on, per fiscal year, US$ millions: rev = REV · opi = OPINC + OPINC2 + OPINC3
 // (the three segments; the model's own OP_INCOME projection row is not populated — js/summit-map/amzn.js, doubt 1) ·
 // ebitda = EBITDA (the model's adjusted EBITDA: op. income + D&A + SBC) · ni = EARNINGS (model earnings, adjusted) ·
-// sh = SHARES (diluted) — projection_history of each snapshot (get_fundamentals / get_metric_snapshot_series, 2026-10-29).
+// sh = SHARES (diluted) — projection_history of each snapshot (get_fundamentals / get_metric_snapshot_series, 2026-10-29;
+// 2026-10-30 for the 2026-10-30 submit).
 //
-// Check before freezing (playbook §6.3): price target ÷ fair value per method — 08-04: 1.075 / 1.077 · 05-05: 1.129 /
+// Check before freezing (playbook §6.3): price target ÷ fair value per method — 10-30: 1.031 / 1.032 · 08-04: 1.075 / 1.077 · 05-05: 1.129 /
 // 1.131 · 02-10: 1.171 / 1.175 (consistent); 12-18: 1.002 / 1.132 → skipped (SAB, Oct 29 2026, docs/profiles/AMZN.md doubt 4).
 export var amznSubmits = {
-  ticker: 'AMZN', name: 'Amazon', ccy: 'US$', mccy: 'US$', pulled: '2026-10-29',
+  ticker: 'AMZN', name: 'Amazon', ccy: 'US$', mccy: 'US$', pulled: '2026-10-30',
   src: 'Summit DCF model (Amazon), the valuation block of each submit',
   submits: [
     { d: '2025-12-18', after: '3Q25', px: 227.1146, wacc: 0.13999758, coe: 0.14268535,
@@ -48,6 +50,13 @@ export var amznSubmits = {
         2027: { rev:959799.9897, opi:139744.5728, ebitda:332725.5287, ni:119053.4144, sh:10827 } },
       val: {
         ev: { method: 'EV / EBITDA', kase: 'Base', mult: 9.5, year: 2027, basis: 'Forward', pt: 292.99431231, fv: 272.55247943, upside: -0.017546, flags: [] },
-        pe: { method: 'P / E', kase: 'Base', mult: 28, year: 2027, basis: 'Forward', pt: 314.16989145, fv: 291.82140952, upside: 0.051912, flags: [] } } }
+        pe: { method: 'P / E', kase: 'Base', mult: 28, year: 2027, basis: 'Forward', pt: 314.16989145, fv: 291.82140952, upside: 0.051912, flags: [] } } },
+    { d: '2026-10-30', after: '3Q26', px: 238.3514, wacc: 0.19710537, coe: 0.2022229,
+      model: {
+        2026: { rev:831956.95, opi:113447.6841, ebitda:218164.1559, ni:90332.9513, sh:10827 },
+        2027: { rev:968050.199, opi:146252.8168, ebitda:280123.5746, ni:117182.2364, sh:10827 } },
+      val: {
+        ev: { method: 'EV / EBITDA', kase: 'Base', mult: 9.5, year: 2027, basis: 'Forward', pt: 241.66263331, fv: 234.38925674, upside: -0.016623, flags: [] },
+        pe: { method: 'P / E', kase: 'Base', mult: 25, year: 2027, basis: 'Forward', pt: 271.68451064, fv: 263.31668943, upside: 0.104742, flags: [] } } }
   ]
 };

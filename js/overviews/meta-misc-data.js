@@ -1,13 +1,13 @@
 // meta-misc-data.js — data for Meta Deep Dive ▸ Miscellaneous (MISC-capex, MISC-strategy, MISC-manda,
 // MISC-capacity; playbook §15b). Reported figures and filing / call text only, plus the Summit model's D&A,
-// FROZEN from snapshot 2026-08-04 (rule 10). Capex and revenue are read from js/results-data/meta.js, not here.
+// FROZEN from snapshot 2026-10-22 (rule 10; refreshed 2026-10-30, was 2026-08-04). Capex and revenue are read from js/results-data/meta.js, not here.
 
 // Depreciation and amortization, US$ M — reported: 10-K cash-flow statements (XBRL
-// DepreciationDepletionAndAmortization); forecast: Summit DNA, snapshot 2026-08-04 (frozen, not live).
+// DepreciationDepletionAndAmortization); forecast: Summit DNA, snapshot 2026-10-22 (frozen, not live).
 export var META_DNA = {
   act: { '2021': 7967, '2022': 8686, '2023': 11178, '2024': 15498, '2025': 18616 },
-  summit: { '2026': 28886, '2027': 43067, '2028': 59154 },
-  src: 'Meta Form 10-K (cash-flow statements, SEC EDGAR XBRL); Summit DCF model, snapshot 2026-08-04 (frozen, not live)'
+  summit: { '2026': 28886, '2027': 44941, '2028': 63971 },
+  src: 'Meta Form 10-K (cash-flow statements, SEC EDGAR XBRL); Summit DCF model, snapshot 2026-10-22 (frozen, not live)'
 };
 
 // Capex guidance as Meta gave it, every revision — CFO remarks in docs/calls/META.md (verbatim); 2Q26 from

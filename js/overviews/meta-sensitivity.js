@@ -5,7 +5,7 @@
 // else at the base, read the implied share price off a 5×5 grid; exit multiple EV/EBITDA or P/E.
 //
 // What changed for META:
-//   • BASE = the Summit DCF model, ONE snapshot FROZEN in ./meta-sensitivity-data.js (2026-08-04; rule 10).
+//   • BASE = the Summit DCF model, ONE snapshot FROZEN in ./meta-sensitivity-data.js (2026-10-22; rule 10).
 //   • CATEGORIES = Meta's three revenue lines (Advertising · Other revenue · Reality Labs) — the model's total
 //     revenue is exactly their sum. One margin driver: consolidated operating margin (the model's segment
 //     operating-income projections are not usable in this snapshot — F0-SM doubt), so no segment margin is invented.
@@ -13,7 +13,8 @@
 //   • STREET = Bloomberg consensus, read through js/results-data/meta.js annual `cons` (already Bloomberg):
 //     line growth as a CAGR off the 2025 actual, operating margin = consensus operating income ÷ revenue.
 //   • D&A bridge = the model's D&A (EBITDA = operating income + D&A, the reported basis Results uses).
-//   • EXIT MULTIPLE: META has no model valuation in the MCP yet (VA-TM blocked), so the multiple STARTS at today's
+//   • EXIT MULTIPLE: the multiple STARTS at today's market multiple (built before the model's valuation was readable; it now is,
+//     see Valuation ▸ Submit History — switching the start to the model's multiple is a design change for SAB), i.e. at today's
 //     market multiple on the model's numbers for the chosen year (live price ÷ the model's EPS; live market cap +
 //     net debt ÷ the model's EBITDA) — at that start the base cell equals today's price. Yours to move.
 //   • NET DEBT = Meta's latest 10-Q (./meta-histmult-data.js), its source named (A23); the quote supplies the price.

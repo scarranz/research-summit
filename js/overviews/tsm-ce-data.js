@@ -72,9 +72,9 @@ export var TSM_CE_CONS = {
 };
 
 // Summit's own number for a quarter = the `summit` series of js/results-data/tsm.js (the DCF model snapshot of
-// Oct 15 2026, frozen there — rule 10). Read through, never retyped; margins = the model's line ÷ its revenue.
+// Oct 19 2026, frozen there — rule 10). Read through, never retyped; margins = the model's line ÷ its revenue.
 // Lines the model has no quarterly figure for (EBITDA, EPS, cash flow, capex, D&A, shares) stay empty.
-var SUMMIT_SRC = 'Summit: DCF model snapshot of Oct 15 2026 (frozen, not live) — taken before the model absorbed the 3Q26 print and the 4Q26 guide (its 4Q26 revenue sits below the guided range).';
+var SUMMIT_SRC = 'Summit: DCF model snapshot of Oct 19 2026 (frozen, not live) — after the 3Q26 print and the 4Q26 guide; its 4Q26 revenue ($53.5B) sits inside the guided range.';
 var SUMMIT_NONE = 'Summit: no model snapshot predates this print (the first is Oct 15 2026).';
 function summitUs(per){
   var out = {};
@@ -112,7 +112,7 @@ export var TSM_CALL_EARNINGS = { ticker:'TSM', quarters:[
         'Gross margin':{ t:'Guide 65–67% (midpoint 66.0%)', h:'<p>2nm ramp dilution plus overseas fabs. The CFO now expects overseas-fab dilution "closer to 2%", widening "to 3%-4% in the next few years" as more US fabs ramp.</p>' },
         'Operating margin':{ t:'Guide 56.5–58.5% (midpoint 57.5%)', h:'<p>3Q26 printed 58.7% with operating expenses at 7.8% of revenue.</p>' },
       },
-      us:summitUs('4Q26'),   // the model's own 4Q26 (frozen snapshot of Oct 15 2026)
+      us:summitUs('4Q26'),   // the model's own 4Q26 (frozen snapshot of Oct 19 2026)
       debate:{ rows:null, synth:'' },
     },
     results:null, call:null },

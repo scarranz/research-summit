@@ -2,7 +2,7 @@
 // Valuation ▸ Target Multiple / PEG (VA-TM, docs/PROFILE_PLAYBOOK.md §14).
 //
 // FROZEN ON PURPOSE, NOT LIVE (SAB, Oct 15 2026: Summit numbers are coded directly; playbook rule 10, §20b).
-// Pulled once from the Summit Financial Data store on 2026-10-20 and written here; refresh by re-pulling when a
+// Pulled once from the Summit Financial Data store on 2026-10-20 (the 2026-10-22 submit appended on 2026-10-30) and written here; refresh by re-pulling when a
 // new snapshot is submitted and APPENDING a row (each row is a vintage — never overwrite one).
 //
 //   val      get_valuation_history('SPOT') — the workbook's Output ▸ VALUATION block, per method, verbatim:
@@ -18,7 +18,7 @@
 // The first submit valued FY2029 on EV/EBITDA and FY2026 on P/E (49×) — different years per leg — so its row has a
 // value for only one leg in each forward-year view.
 export var SPOT_TM = {
-  model: '9d5961bf-4181-46ab-9b39-2147981380e1', pulled: '2026-10-20',
+  model: '9d5961bf-4181-46ab-9b39-2147981380e1', pulled: '2026-10-20', pulledLast: '2026-10-30',
   snaps: [
     { d: '2025-12-18', after: '3Q25', px: 567.23, wacc: 0.1613306,
       val: {
@@ -91,6 +91,31 @@ export var SPOT_TM = {
         2027: { rev: 22316.1, ebitda: 3889.24, earn: 3218.68 },
         2028: { rev: 25332.73, ebitda: 4816.5, earn: 3972.89 },
         2029: { rev: 28150.16, ebitda: 5624.67, earn: 4665.63 }
+      } },
+    // 2026-10-22 (after 3Q26), appended 2026-10-30. The P/E leg moved to FY2028 (EV/EBITDA stays FY2027).
+    // pe.pt: the store records US$672.78, the workbook's NEXT-year price cell (Q80); the 1-year target is US$645.14 (P80),
+    // the cell its own fair value is discounted from — the same correction js/submits-data/spot.js carries (checked in
+    // DCF SPOT.xlsm, Oct 28 2026). ptStore keeps what the store returned.
+    // cons: only EARNINGS_BBG_EST is used — REV_BBG_EST and EBITDA_BBG_EST in this snapshot are on another scale (about
+    // 1.12–1.14x the EUR consensus on revenue, apparently US$) and FY2030 is zero, so they are left null (logged in SPOT.md §6).
+    // FY2025 is what this snapshot stores for the year (REV 17,177 / EBITDA 2,540, 9 below the reported 17,186 / 2,549).
+    { d: '2026-10-22', after: '3Q26', px: 583.59, wacc: 0.20427911,
+      val: {
+        ev: { method: 'EV / EBITDA', mult: 20.5, year: 2027, basis: 'Forward', pt: 532.86350547, fv: 514.20235111, upside: -0.118898, flags: [] },
+        pe: { method: 'P / E', mult: 28, year: 2028, basis: 'Forward', pt: 645.13951888, ptStore: 672.77781338, fv: 622.33963145, upside: 0.066399, flags: [] }
+      },
+      y: {
+        2025: { rev: 17177.0, ebitda: 2540.0, earn: 3226.01, sh: 210.509173, act: true },
+        2026: { rev: 19533.81, ebitda: 3289.69, earn: 2743.18, sh: 207.082 },
+        2027: { rev: 22753.48, ebitda: 4173.56, earn: 3163.27, sh: 203.655 },
+        2028: { rev: 26667.23, ebitda: 5352.98, earn: 4212.68, sh: 200.228 },
+        2029: { rev: 30872.61, ebitda: 7000.56, earn: 5601.01, sh: 200.228 }
+      },
+      cons: {
+        2026: { rev: null, ebitda: null, earn: 2539.09 },
+        2027: { rev: null, ebitda: null, earn: 3175.43 },
+        2028: { rev: null, ebitda: null, earn: 3924.81 },
+        2029: { rev: null, ebitda: null, earn: 4675.5 }
       } }
   ]
 };

@@ -23,7 +23,7 @@ Revisado 2026-10-20. Estado: 📝 propuesta (pendiente de confirmar con el anali
 | Fila en `companies` | ✔ (se asume) | el perfil ya abre hoy (registrado en `js/overviews/index.js` como `SPOT`) | el perfil abre | — |
 | Filing anual | ◐ por verificar | Spotify es **foreign private issuer** (Luxemburgo): 20-F anual + 6-K trimestral, IFRS. Falta bajar el 20-F FY2025 y anotar fecha/accession | Overview, Top Line, textos verbatim | — |
 | Año fiscal / moneda | ⚠ | cierre 31 dic. **Reporta y guía en EUR** (también el DCF y el consenso). Regla de `results-data/spot.js`: no convertir a USD | — | Múltiplos con el precio en US$ del ADR: hay que convertir con FX declarado (Derivatives ya decidió no mostrar múltiplos para SPOT) |
-| Summit DCF | ✔ | MCP autenticado 2026-10-20. **4 snapshots**: 2025-12-18 · 2026-02-09 · 2026-04-28 · **2026-08-05** (after Q2 - 2026; 13,192 datos; 54 etiquetas). ⚠ El código actual cita **"Aug 4"** y **"May 22"**: ninguno existe ya en el MCP (el de agosto es 08-05; el de 05-22 desapareció, igual que en META). Valuación limpia en los 4 (`quality_flags` vacío): **EV/EBITDA 20.5× y P/E 28×, 2027 Forward**, price target €561.15 / €517.91 (en EUR, como el modelo) | F0-SM, serie Summit, Estimates (4 vintages), Target Multiple, Sensitivity | — |
+| Summit DCF | ✔ | MCP autenticado 2026-10-20. **4 snapshots**: 2025-12-18 · 2026-02-09 · 2026-04-28 · **2026-08-05** (after Q2 - 2026; 13,192 datos; 54 etiquetas); **5º: 2026-10-22** (after Q3 - 2026, cargado 2026-10-30, §34). ⚠ El código actual cita **"Aug 4"** y **"May 22"**: ninguno existe ya en el MCP (el de agosto es 08-05; el de 05-22 desapareció, igual que en META). Valuación limpia en los 4 (`quality_flags` vacío): **EV/EBITDA 20.5× y P/E 28×, 2027 Forward**, price target €561.15 / €517.91 (en EUR, como el modelo) | F0-SM, serie Summit, Estimates (4 vintages), Target Multiple, Sensitivity | — |
 | Consenso BBG (`BBG_CONSENSUS.txt`) | ✔ **nuevo** | `SPOT US EQUITY`: **10 snapshots** (`data_as_of` 2024-04-28 → **2026-09-09**), EUR, escala M. Headline: Revenue, COGS, Gross Profit, Opex, G&A, S&M, R&D, Operating Income, Adj. EBITDA, interés, pre-tax, tax, Net Income, acciones, Diluted EPS, D&A, SBC, capex, CFO, FCF, recompras. KPIs: MAU total / Premium / Ad-supported, Premium ARPU, ingreso, COGS y GP por segmento (Premium · Ad-Supported), MAU y subs por 4 regiones. Hoy `results-data/spot.js` tiene `cons` casi vacío ("SPOT has no rows in BBG_CONSENSUS") → **quedó stale** | `estMatrix.cons`, Setup, Results con Street, export de Bottom Line | — |
 | Encoding del archivo | ⚠ | `BBG_CONSENSUS.txt` ya no es UTF-8 (byte `0xb5`): `scripts/consensus/*.py` fallan con `UnicodeDecodeError`; se lee como `cp1252` | — | — |
 | `get-market-history` (Massive) | ✘ desplegada | sigue sin desplegar (404, según `CLAUDE.md`) | Historic Multiple en vivo | Historic Multiple con "Live data pending" |
@@ -110,6 +110,12 @@ Modo B: antes de F1 van **B1 (inventario de lo que existe)** y **B2 (mapa de reu
 **Arreglos pendientes en el DCF (los hace SAB; anotado 2026-10-28):**
 - [ ] `DCF SPOT.xlsm`, bloque P/E: con el año objetivo en FY2028 (dos años adelante), el price target que se guarda es Q80 (US$672.78), pero el fair value se descuenta de P80 (US$645.14). Dejar el target y su fair value en la misma celda/año y volver a hacer submit. En el portal el 22-oct va congelado con P80 y la nota "Corrected".
 - (sin acción) El submit del 18-dic-2025 (EV/EBITDA a FY2029, P/E a FY2026 a 49×) ya no se puede arreglar: el workbook se sobreescribió. Sigue fuera.
+
+**Problemas del DCF encontrados al cargar el snapshot 2026-10-22 (anotado 2026-10-30; los arregla SAB, no se tocaron en el portal):**
+- [ ] **Consenso BBG guardado en el modelo, en otra escala.** En el snapshot 10-22 `REV_BBG_EST` y `EBITDA_BBG_EST` no están en EUR: FY2026 ingreso 22,346 contra 19,530 del workbook BBG del 21-oct (×1.144; FY27 ×1.133, FY28 ×1.117), parece una jalada en US$; EBITDA FY2026 3,853. FY2030 viene en cero. `EARNINGS_BBG_EST` (2,539) y `SHARES_BBG_EST` sí siguen en EUR / millones. En el portal se dejaron **fuera** (Estimates: la línea Street de revenue y EBITDA se corta en Aug 5; Target Multiple: `cons.rev/ebitda` null).
+- [ ] **3Q25 re-cargado mal en `actuals_history`.** El 10-22 baja 3Q25 a ingreso 4,263 (reportado 4,272), Ad-Supported 437, op. income 573 (reportado 582), EBITDA 672 y por arrastre FY2025 a 17,177 / 2,189 / 2,540 / earnings 2,203. Parece que se tomó el comparativo re-expresado de Ad-Supported (437, reclasificación de ene-2026) y se restó del total sin sumarlo a Premium (Premium 3Q25 no cambió); el total y el op. income no cambian con la reclasificación. No afecta al portal (los reportados salen de los decks).
+- (menor) 3Q26 en `actuals_history`: op. income 671.1 y EBITDA 791.1 (deck 672 / 792), FCF 734 (deck 735), GP Premium 1,548.0 / Ad 90.1: redondeos de márgenes derivados, no se corrige.
+- (se mantiene) Filas MAU / MAUPS / MAUAD / ARPU_PREM siguen en cero en el 10-22; 1Q27/2Q27 siguen sin ser forecast (Ad-Supported 1Q27 385.3 y 2Q27 446.9 idénticos al 08-05).
 
 ## 7. Historial de aprobaciones
 
@@ -424,3 +430,37 @@ One fill per print (EARNINGS_CONVENTIONS §8 step 9), then rolled to Q4 2026 upc
 - Review round (2026-10-22): Top Line quarterly axis now reaches 1Q27 with Street only (`streetForward` in `segments-data/spot.js`; Summit stays to 4Q26). Evolution ▸ Estimates was empty because `initResultsEvo()` was called without the ticker; now `initResultsEvo('SPOT')`. Summit total MAU is computed as Premium subscribers + ad-supported MAU (derived block at the end of `results-data/spot.js`, 3Q24–4Q26 and the Aug 5 vintage). The five guided lines (Total MAU, Revenue, Premium subscribers, Operating income, Gross margin) are flagged `guided: true` in Results (dropdown "★ guided") and carry a GUIDED tag in Post-Results (`SPOT_GUIDED`). Investor Day targets (mid-teens revenue CAGR, 35–40% gross margin, 20%+ operating margin by 2030) added to the revenue, gross margin and operating income notes of Q3 and Q4.
 - Open: Summit 4Q25 subscribers is 270.9 in the Results series but 295.1 in the Dec 18 2025 vintage; the 4Q25 MAU (761.2) comes from that vintage, so the Summit MAU line has a step there. Estimates (annual) still has no user metric: the dataset footer says the model's user rows are empty.
 - Horizon (2026-10-22): every chart shows TWO quarters past the last print (4Q26, 1Q27; Summit only to 4Q26, Street to 1Q27). The shared engine's forward-horizon rule (SAB, Jul 29 2026: forward quarters only within the current fiscal year) trimmed the Results/Evolution and Top Line "top line" charts to 4Q26; a dataset can now set `forwardQuarters: n` (SPOT: 2, `rsTrimData` in `js/results.js`, carried through `buildSegResults`). Bottom Line ▸ Profitability & margins quarterly axis capped at last print + 2 (`aQAxis`), guidance drawn as a horizontal line on each bar (was a diamond marker). Evolution ▸ Results dropdown tag is now "(guided)".
+
+## 34. Refresh Summit: snapshot 2026-10-22 (después de 3Q26) — 2026-10-30
+
+Jalado una vez del MCP (`list_snapshots`, `get_valuation_history`, `compare_snapshots` 08-05→10-22, `get_fundamentals` `projection_history` 3Q26–4Q27 + FY2025–FY2030 de 08-05 y 10-22; volcados en `scripts/consensus/out/summit_spot_dumps/`). El 10-22 es el 5º snapshot (13,200 datos, 54 etiquetas, valuación "after Q3 - 2026", sin `quality_flags`). Se **agregó** como vintage; ninguno anterior se tocó ni se borró.
+
+**Valuación 10-22 vs 08-05:** EV/EBITDA 20.5× FY2027 → PT US$532.86 (antes 561.15). P/E 28× pero el año objetivo pasa a **FY2028** (antes FY2027) → PT US$645.14 corregido (el store guarda 672.78, la celda del año siguiente; ver §6) (antes 517.91). Precio al submit US$583.59 (antes 482.43). WACC 20.4% (antes 20.7%) — guardado, no se muestra.
+
+**Lo que se movió (EUR M, 10-22 vs 08-05):**
+
+| | FY2026 | FY2027 | FY2028 | FY2029 |
+|---|---|---|---|---|
+| Ingreso | 19,534 (−1.2%) | 22,753 (−1.6%) | 26,667 (−1.6%) | 30,873 (−1.6%) |
+| Premium / Ad-Supported | 17,652 / 1,882 | 20,588 / 2,166 | 24,011 / 2,656 | 27,669 / 3,203 |
+| Utilidad bruta (Prem+Ad) | 6,507 (33.3%) | 7,787 (34.2%) | 9,388 (35.2%) | 11,519 (37.3%) |
+| Op. income | 2,881 (−3.0%) | 3,825 (−2.3%) | 5,072 (−3.6%) | 6,756 (−0.2%) |
+| EBITDA | 3,290 | 4,174 | 5,353 | 7,001 |
+| Earnings (def. modelo) | 2,743 | 3,163 | 4,213 | 5,601 |
+| FCF | 3,385 | 4,238 | 5,420 | 7,071 |
+
+4Q26: ingreso 5,255 (antes 5,428; guía 5,200), Premium 4,686, Ad 569, GP 1,778 (33.8% = la guía), op. income 839 (antes 927; guía 820), EBITDA 932, FCF 910. FY2026 = 9 meses reportados (14,279) + 4Q26 modelado. Margen bruto FY2026 33.3% (antes 33.3%), FY2027 34.2% (antes 34.3%). Usuarios: el modelo no los trae (filas en cero) y el analista no ha mandado los del 10-22 → 4Q26 suscriptores 319.0 / ad MAU 526.4 / ARPU 5.06 siguen siendo los del 08-05 (a revisar con DAA; con el Premium del 10-22 y 319.0 subs el ARPU sería ~€4.90).
+
+**Archivos:**
+- `js/results-data/spot.js` — Results trimestral: 3Q26 Summit se queda en 08-05 (lo que el modelo tenía antes del print); 4Q26 → 10-22 (rev, Premium, Ads, GP, GP por segmento, op. income, EBITDA, FCF). Anual FY2026–FY2028 → 10-22, y **EBITDA anual llenado** (la nota decía que la fila del modelo era cero; no lo es en 08-05 ni en 10-22, y es la misma definición que el actual: OI + D&A + SBC). `estMatrix.summit`: vintage `2026-10-22` (lastActual 3Q26 / 2025) con 4Q26 + FY2026–2029, pegado a mano desde `out/estmatrix_summit_spot.js` (sin 1Q27/2Q27, §21). Evolution: 5º vintage "Oct 22, 2026" en summit, `prior` a 5 entradas, Street null en revenue/EBITDA (§6) y earnings 2,539 / 3,175 / 3,925 / 4,676; intro y notas reescritas. Notas, header y fuente actualizados.
+- `js/overviews/spot-ce-data.js` — Setup Q4 2026: Summit = snapshot 22-oct (lee de results-data); textos de Revenue, Op. income, Gross margin, Subs, ARPU, Ads, FCF y la síntesis con los números nuevos (el modelo ahora queda 1% sobre la guía de ingreso y 2% sobre la de op. income, antes 4% y 13%). Setup Q3 2026 sin cambios (08-05).
+- `js/overviews/spot-target-multiple-data.js` — fila 2026-10-22 agregada (valuación, y FY2025–2029, cons solo earnings). `spot-target-multiple.js` solo header.
+- `js/overviews/spot-sensitivity-data.js` — base re-congelada al 10-22 (los valores del 08-05 quedan en §14).
+- `js/segments-data/spot.js`, `js/overviews/spot-bl.js` — comentarios y pies de fuente (leen de results-data).
+- `js/summit-map/spot.js` — 5 snapshots, valuación 10-22, dudas nuevas (BBG en otra escala, FY2025 re-cargado).
+- `scripts/consensus/map_summit_spot.json` — vintage 10-22 en el registro.
+- `js/submits-data/spot.js` — ya tenía el 10-22 (sin cambios).
+
+**Validación:** `verify_preprint.py SPOT summit` → same 149 · changed 0 · filled 9 (FY2025 desde el vintage 02-09, igual que antes) · blanked 0. `cons` → changed 0 · blanked 0. Los 45 valores del vintage 10-22 cotejados contra el volcado del MCP (0 diferencias); `get_metric_snapshot_series` sobre REV FY2027 (22,753.48), PREMIUM_GROSS_PROFIT 4Q26 (1,663.56) y EARNINGS FY2028 (4,212.68) cuadra con Results, Evolution, Target Multiple y Sensitivity. Sintaxis de los 8 JS revisada con esprima (no hay `node`).
+
+**Pendiente:** usuarios 4Q26 del analista sobre el 10-22; ver la pantalla en el portal (localhost) — no se abrió el navegador.

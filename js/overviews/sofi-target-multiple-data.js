@@ -5,8 +5,10 @@
 // Read once on 2026-10-26 from the analyst's own workbook, DCF SOFI.xlsm (Research/DCF/Banks - All/SOFI), sheet
 // 'Projection History': each saved snapshot block holds the model rows and, beside them, that submit's valuation block
 // (multiple, target year, basis, 1-year price target, fair value, price at the submit, WACC). The Summit data store
-// (get_valuation_history('SOFI')) answers 'no_valuations_for_ticker' for all three snapshots (valuation_count 0), so
+// (get_valuation_history('SOFI')) answers 'no_valuations_for_ticker' for all four snapshots (valuation_count 0), so
 // the workbook is the source until the store re-ingests; refresh by APPENDING a row per new submit (never overwrite).
+// Rows 1-3 read 2026-10-26; row 4 (snapshot 2026-10-27, after the 3Q26 print) read 2026-10-30: valuation from the workbook block,
+// REV / EBITDA / EARNINGS / SHARES from the Summit DCF model snapshot 2026-10-27 (they equal the workbook rows).
 //
 //   val  per method: multiple, target year, basis, price target, fair value, upside (fair value ÷ price − 1). The pane shows
 //        the price target and the multiple; fair value and WACC are kept as recorded and not shown (Dani, Oct 20 2026).
@@ -17,7 +19,7 @@
 // the Live read of that leg uses zero net debt and P/E is the leg to read. The model's EV/EBITDA target year and
 // multiples are exactly as the workbook wrote them.
 export var SOFI_TM = {
-  model: '2728dbdb-76e1-4bb3-a29a-f4d1f91946a1', pulled: '2026-10-26',
+  model: '2728dbdb-76e1-4bb3-a29a-f4d1f91946a1', pulled: '2026-10-30',
   snaps: [
     { d: '2026-02-03', after: '4Q25', px: 22.025, wacc: 0.29002,
       val: {
@@ -54,6 +56,20 @@ export var SOFI_TM = {
         2027: { rev: 6280.304, ebitda: 2186.058, earn: 1094.962, sh: 1259.367 },
         2028: { rev: 8083.789, ebitda: 2902.395, earn: 1515.702, sh: 1259.367 },
         2029: { rev: 10682.536, ebitda: 4344.883, earn: 3116.26, sh: 1259.367 }
+      } },
+    // 2026-10-27, the submit of 13:45:54 UTC (the one the Summit data store parsed; the workbook also holds a re-submit at 13:49:05
+    // with the same targets and a $16.40 price). The P/E leg moved its target year from 2027 to 2028 and its multiple from 25x to 22x.
+    { d: '2026-10-27', after: '3Q26', px: 16.445, wacc: 0.269327,
+      val: {
+        ev: { method: 'EV / EBITDA', mult: 14.1, year: 2027, basis: 'Forward', pt: 25.5475, fv: 24.4852, upside: 0.488903, flags: [] },
+        pe: { method: 'P / E', mult: 22, year: 2028, basis: 'Forward', pt: 28.6722, fv: 27.3727, upside: 0.664497, flags: [] }
+      },
+      y: {
+        2025: { rev: 3613.354, ebitda: 1053.898, earn: 481.32, sh: 1259.367, act: true },
+        2026: { rev: 5104.217, ebitda: 1692.135, earn: 840.257, sh: 1259.367 },
+        2027: { rev: 6469.750, ebitda: 2466.700, earn: 1279.202, sh: 1259.367 },
+        2028: { rev: 8472.104, ebitda: 3376.833, earn: 1854.141, sh: 1259.367 },
+        2029: { rev: 11116.829, ebitda: 4422.970, earn: 2665.527, sh: 1259.367 }
       } }
   ]
 };

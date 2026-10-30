@@ -16,7 +16,8 @@
 //   · net debt for Live = Spotify's cash at 30 Sep 2026 (EUR 9.9B of cash and cash equivalents, restricted cash and short term
 //     investments, no debt other than lease liabilities — Q3 2026 update, 22 Oct 2026), source named in the footer.
 //   · the targets are the workbook's, never recomputed here; "Live" recomputes from your own multiples as a secondary read.
-//   · four snapshots (Dec 18 2025 · Feb 9 · Apr 28 · Aug 5 2026): the first valued FY2029 on EV/EBITDA and FY2026 on P/E.
+//   · five snapshots (Dec 18 2025 · Feb 9 · Apr 28 · Aug 5 · Oct 22 2026): the first valued FY2029 on EV/EBITDA and FY2026 on P/E;
+//     the Oct 22 submit keeps EV/EBITDA on FY2027 and moves P/E to FY2028.
 //   · inline <style> → css/overview.css (.ov-spot-dd); hex colours → Summit tokens.
 
 import { SUMMIT_CAT, SUMMIT_MUTE, SUMMIT_POS, SUMMIT_NEG } from '../viz-palette.js';

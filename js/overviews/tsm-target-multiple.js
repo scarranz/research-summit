@@ -15,7 +15,7 @@
 //     footer (A23 — AMZN claimed "from the live quote" even when the quote failed).
 //   · the realized multiple stays "pending" until the target date (31 Dec of the year before the forward year).
 //   · inline <style> → css/overview.css (.ov-tsm-dd); hex colours → Summit tokens.
-//   · one snapshot today (2026-10-15, after 3Q26): the log grows by one point per submit.
+//   · two snapshots today (2026-10-15 and 2026-10-19, both after 3Q26): the log grows by one point per submit.
 
 import { SUMMIT_CAT, SUMMIT_MUTE, SUMMIT_POS, SUMMIT_NEG } from '../viz-palette.js';
 import { TSM_TM } from './tsm-target-multiple-data.js';

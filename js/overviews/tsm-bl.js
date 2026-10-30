@@ -9,7 +9,7 @@
 //   • no Stock-based-compensation view (SAB, Oct 15 2026: TSMC's SBC is immaterial — $40M in 2025).
 //   • no "Normalized" net income: TSMC carries no large non-cash investment mark; the net walk shows the
 //     non-operating items as one reconciling bar instead (see tsmNetBridge below).
-//   • Summit series: read from js/results-data/tsm.js, where the Summit DCF snapshot of Oct 15 2026 is FROZEN (rule 10 —
+//   • Summit series: read from js/results-data/tsm.js, where the Summit DCF snapshot of Oct 19 2026 is FROZEN (rule 10 —
 //     coded directly, not live). Forward years only (FY2026–FY2028; 4Q26–2Q27 quarterly for operating income).
 //   • inline <style> blocks moved to css/overview.css (.ov-tsm-dd scope).
 import { SUMMIT_CAT, SUMMIT_INK } from '../viz-palette.js';
@@ -449,7 +449,7 @@ function aBlFootGeneral(){
   var y0=TSM_OPEX_YEARS[0], y1=TSM_OPEX_YEARS[TSM_OPEX_YEARS.length-1], q0=TSM_OPEXQ[0], q1=TSM_OPEXQ[TSM_OPEXQ.length-1];
   return '<div class="ov-foot">Sources — Bloomberg consensus export (BBG_CONSENSUS, as of '+esc(tsmBBG.asOf)+'): reported '+A_FYLAB[0]+'–'+A_FYLAB[A_LA]+
     ' and consensus '+A_FYLAB[A_LA+1]+'–'+A_FYLAB[A_FYLAB.length-1]+' income statement; TSMC Form 20-F and quarterly consolidated financial statements (Form 6-K) for the functional expense lines (FY'+y0+'–FY'+y1+', '+esc(q0.p)+'–'+esc(q1.p)+'), '+
-    'converted from NT$ at the rate implied by the US$ revenue TSMC reports each quarter; Results dataset for quarterly operating income; '+TSM_EW_SRC.replace(/^— /,'')+' for line definitions; Summit DCF model, snapshot of Oct 15 2026 (frozen, not live) — FY2026–FY2028 forecast; FY2022–FY2025 is the model’s own history, not a pre-print estimate, and does not tie to the reported figures. Forward figures are estimates.</div>';
+    'converted from NT$ at the rate implied by the US$ revenue TSMC reports each quarter; Results dataset for quarterly operating income; '+TSM_EW_SRC.replace(/^— /,'')+' for line definitions; Summit DCF model, snapshot of Oct 19 2026 (frozen, not live) — FY2026–FY2028 forecast; FY2022–FY2025 is the model’s own history, not a pre-print estimate, and does not tie to the reported figures. Forward figures are estimates.</div>';
 }
 // Summit annual aggregation from tsmResults quarterly (1Q23..2Q28 → FY23..FY28E). Sums each fiscal
 // year's quarters; FY28 is partial (2 quarters published) so it returns null there to avoid a false low.

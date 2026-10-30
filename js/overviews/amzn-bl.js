@@ -40,9 +40,9 @@ var INK=SUMMIT_INK, MUTE=SUMMIT_MUTE, POS=SUMMIT_POS, NEG=SUMMIT_NEG, ONEOFF=SUM
 var GRID='rgba(0,0,0,0.06)';
 // amzn-bbg.js uses Amazon-native keys (the extractor's CODE map is Amazon-shaped), so no alias block is needed. Signs as
 // exported: otherOpex and otherNonOp / netInterest / nonOpNet / equityMethod are EXPENSE-signed (a gain is negative).
-// Summit diluted shares (M) — FROZEN, Summit DCF snapshot of Aug 4 2026 (the model holds them flat at the FY2025
+// Summit diluted shares (M) — FROZEN, Summit DCF snapshot of Oct 30 2026 (the model holds them flat at the FY2025
 // level). Carried over from the old amzn.js A_SUMMIT_SHARES; FY2027–FY2028 match amzn-target-multiple.js SNAP_DATA.
-var A_SUMMIT_SHARES={ snap:'2026-08-04', y:{ 2026:10827, 2027:10827, 2028:10827 } };
+var A_SUMMIT_SHARES={ snap:'2026-10-30', y:{ 2026:10827, 2027:10827, 2028:10827 } };
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 // ── DOM scope: everything is looked up inside the Amazon Deep Dive root (set by amznBlGeneralBuild), never document-wide.
 var _root=null;

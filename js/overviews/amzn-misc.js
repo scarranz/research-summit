@@ -3,7 +3,7 @@
 // one source footer), with Amazon's chain: capex → power added → (installed capacity: not disclosed) → backlog → AWS revenue.
 // AWS revenue, its consensus and Summit come from js/results-data/amzn.js (the series Results draws); the backlog from
 // js/segments-data/amzn.js (shared.rpo, as Top Line); every text row from amzn-misc-data.js. Summit = the frozen
-// 2026-08-04 snapshot (rule 10).
+// 2026-10-30 snapshot (rule 10; forward years from the Results dataset).
 import { amznResults } from '../results-data/amzn.js';
 import { amznSegments } from '../segments-data/amzn.js';
 import { AMZN_CHAIN, AMZN_BACKLOG_NOTE, AMZN_AWS_REGIONS, AMZN_AWS_REGIONS_SRC } from './amzn-misc-data.js';
@@ -163,7 +163,7 @@ export function amznCapacityBody(){
   h+=h3('What the signed backlog already covers')+
     '<div class="br-sl"><span class="br-sl-l">Remaining life (years)</span><input type="range" data-acap="1" min="3" max="10" step="0.1" value="'+CAP.life+'" aria-label="Weighted-average remaining life of the contracts, years"><span class="br-sl-v" data-acapv="1">'+CAP.life.toFixed(1)+'</span></div>'+
     '<div id="aCapCover">'+coverHtml()+'</div>'+
-    '<div class="ov-fynote">'+AMZN_BACKLOG_NOTE+' Default life = 6.1 years, the weighted-average remaining life Amazon reports (10-Q 3Q26); an even spread is our simplification — the 10-Q says timing "will be driven by customer usage". Consensus = Bloomberg, newest snapshot in the Results dataset; Summit = model snapshot 2026-08-04 (frozen).</div>';
+    '<div class="ov-fynote">'+AMZN_BACKLOG_NOTE+' Default life = 6.1 years, the weighted-average remaining life Amazon reports (10-Q 3Q26); an even spread is our simplification — the 10-Q says timing "will be driven by customer usage". Consensus = Bloomberg, newest snapshot in the Results dataset; Summit = model snapshot 2026-10-30 (frozen).</div>';
   // directory grouped by country, with subtotals (§18): groups by AZ subtotal, largest first; a Total row that ties
   var g={}, order=[];
   AMZN_AWS_REGIONS.forEach(function(r){ if(!g[r[0]]){ g[r[0]]=[]; order.push(r[0]); } g[r[0]].push(r); });
@@ -179,7 +179,7 @@ export function amznCapacityBody(){
   h+=h3('AWS Regions by country ('+nReg+' Regions, '+nAz+' Availability Zones, '+nAnn+' announced)')+
     collap('All Regions', '<div class="twrap mx-twrap"><table class="rt mx-tbl ew-tbl"><thead><tr><th>Region</th><th>Status</th><th class="mx-n">Availability Zones</th><th>Launched</th></tr></thead><tbody>'+body+'</tbody></table></div>', true);
   h+='<div class="ov-fynote">An Availability Zone is one or more data centers; AWS publishes no capacity (MW), investment or site count per Region, so none is shown. The page headline counts 124 Availability Zones in 39 Regions; the list it publishes, read here, also carries the AWS European Sovereign Cloud.</div>';
-  h+='<div class="ov-foot">Sources — Amazon 8-K earnings release (Oct 29 2026), Form 10-Q 3Q26 (filed Oct 30 2026, Note 1) and Form 10-K FY2025 (segment note), SEC EDGAR; earnings calls 4Q25 and 2Q26 (The Motley Fool transcripts); Results dataset (AWS revenue, Bloomberg consensus, Summit snapshot 2026-08-04, frozen); Top Line dataset (backlog, Bloomberg; 3Q26 from the 10-Q); '+AMZN_AWS_REGIONS_SRC+'.</div>';
+  h+='<div class="ov-foot">Sources — Amazon 8-K earnings release (Oct 29 2026), Form 10-Q 3Q26 (filed Oct 30 2026, Note 1) and Form 10-K FY2025 (segment note), SEC EDGAR; earnings calls 4Q25 and 2Q26 (The Motley Fool transcripts); Results dataset (AWS revenue, Bloomberg consensus, Summit snapshot 2026-10-30, frozen); Top Line dataset (backlog, Bloomberg; 3Q26 from the 10-Q); '+AMZN_AWS_REGIONS_SRC+'.</div>';
   return h;
 }
 function backlogSpec(){

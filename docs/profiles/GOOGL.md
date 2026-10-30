@@ -120,6 +120,7 @@ salvo las marcadas. Archivo: `js/summit-map/googl.js` (sin números).
 
 | Snapshot | EV / EBITDA | P / E | Precio ese día |
 |---|---|---|---|
+| 2026-10-29 (después del 3T26; agregado 2026-10-30) | 12.7× · 2027 Fwd · PT $307.71 · FV $299.58 | 20.0× · **2028** Fwd · PT $387.73 · FV $376.82 | $283.82 |
 | 2026-08-06 | 12.7× · 2027 Fwd · PT $344.60 · FV $323.31 | 24.0× · 2027 Fwd · PT $391.52 · FV $367.09 | $357.65 |
 | 2026-07-28 | 12.7× · 2027 Fwd · PT $318.50 · FV $297.37 | 21.3× · 2027 Fwd · PT $317.53 · FV $296.24 | $334.15 |
 | 2026-07-23 | **14.0× · 2029 Fwd** · PT $490.01 · FV $381.04 | 30.0× · 2027 Fwd · PT $434.97 · FV $405.11 | $320.03 |
@@ -184,6 +185,11 @@ siguientes a **2027** (cambio de definición: VA-TM lo marca).
 
 <!-- Solo se agrega: snapshot nuevo → etiqueta nueva, desaparecida o con salto de escala/signo. -->
 - AAAA-MM-DD · snapshot AAAA-MM-DD · <qué cambió> — <qué se hizo>
+- 2026-10-30 · snapshot 2026-10-29 · mismas 62 etiquetas, sin saltos de escala ni de signo; `quality_flags` vacío. Cambios de
+  contenido: `SEG9_REV` (Other Bets) vuelve a proyectarse por trimestre (4T26 410) y crece a 6,365 en 2029; 2029 ahora trae
+  `EBITDA`, `DNA`, `CFO` y `FCF` (antes en cero); `SEG_EBT` y `SEG_NETINC` anual 2026 pasan a 0 (no se usan); `SEG1–4_OPINC`
+  siguen solo en 2026 → "Summit (discontinued)" sin cambio; `SEG8_REV` anual 2026 sigue roto (46,104) → regla de la duda 3.
+  El P/E pasa a valuar **FY2028** (20.0×); EV/EBITDA sigue en FY2027 (12.7×). — mapa sin cambios de rol; notas al día.
 
 ## 2. Tablero de unidades
 
@@ -325,6 +331,10 @@ Destinos aprobados por SAB el 2026-10-26 (B2), incluidas las fusiones #18, #41, 
 | 2026-10-26 | BL-SPLC, TL-CUS tabla | Ubicar el export SPLC de GOOGL del 22-Jul-2026 que usó Dani | SAB / DOAA351 | cerrado: SAB decidió usar las cifras de Dani tal cual |
 | 2026-10-26 | TL-CUS ▸ sección 5 | "What each top customer buys" espera el motor (`segments.js` aún no dibuja `customers.buys`) — PR de motor aparte | Claude (PR de motor) | abierto |
 | 2026-10-26 | TL-* / OV-4 | El motor escribe fijo "net sales" (Alphabet dice "revenue") — generalizar en PR de motor aparte (playbook §10) | Claude (PR de motor) | abierto |
+| 2026-10-30 | Summit 10-29 (todas) | ⚑ DCF: `EBITDA_BBG_EST` (consenso BBG guardado en el modelo) salta ~30 % en todos los años vs 08-06 (FY26 225,902 → 294,539; FY27 296,392 → 391,618; FY28 380,956 → 487,412) mientras `REV_BBG_EST` se mueve ~3 % y `EARNINGS_BBG_EST` ~−3 %: parece otro campo de Bloomberg. Fuera (null) en Estimates y en VA-TM | SAB | abierto |
+| 2026-10-30 | Summit 10-29 (Results, Misc) | ⚑ DCF: los anuales 2026 de `CAPEX` (205,756) y `DNA`/`D&A` (31,635) no se actualizaron con el 3T26 real — siguen sumando el 3T proyectado (capex 51,439 vs 51,355 real; D&A 8,383 vs 8,369). El portal usa reportado 1T–3T + 4T del modelo (205,672 · 31,621); FCF 2026 (−17,608) se toma tal cual del modelo | SAB | abierto |
+| 2026-10-30 | Summit 10-29 (FY2029) | ⚑ DCF: capex 2029 distinto entre fuentes del modelo — `CAPEX` (DEFAULT) −388,738 vs `SEG_CAPEX` −154,317. El portal usa DEFAULT (el que cuadra con `FCF` = `CFO` − capex = 78,183) | SAB | abierto |
+| 2026-10-30 | VA-TM, VA-SUB | Duda del P/E sigue abierta y cambia de signo: 10-29 PT $387.73 a 20.0× implica EPS FY2028 $19.39 vs EARNINGS ÷ SHARES $19.80 (08-06: $16.31 vs $15.96). EV/EBITDA cuadra con ~US$31.1B de deuda neta | SAB | abierto |
 | 2026-10-26 | EV-NOTES | Llevar a la semilla de Notes, con trimestre, las cifras de llamadas de `DD_SEGS`, `DD_CUST` y la tira de KPIs (mapa #9, #12, #13) | Claude | cerrado (semilla v2) |
 
 ## 6b. Conexiones pendientes ("Live data pending")
@@ -597,3 +607,11 @@ Destinos aprobados por SAB el 2026-10-26 (B2), incluidas las fusiones #18, #41, 
 - Portal: Bottom Line ▸ Profitability & margins ▸ Gross profit muestra Actual · Summit · Consenso en anual y trimestral (el trimestral ahora lee el dataset de Results, como Operating income). Results ▸ Margins incluye Gross profit.
 - ⚑ El modelo proyectaba 63.9% de margen bruto para el 3T26; el real fue 59.7% (gross profit $76.2B vs $82.6B de Summit).
 - Autoauditoría: ✔ sintaxis · ✔ Summit GP + COGS = ingreso Summit en cada período · ✗ falta verla en el portal (extensión de Chrome desconectada).
+
+### 2026-10-30 · SUMMIT-1029 Submit del DCF del 2026-10-29 (después del 3T26) — 👀 EN REVISIÓN
+- Qué se hizo: snapshot 2026-10-29 del modelo (`DCF GOOGL - New.xlsm`) jalado una vez del MCP (`list_snapshots`, `get_valuation_history`, `get_fundamentals` 2026-10-29 y 2026-08-06 de 3T26–2029) y congelado con su fecha (regla 10, §20b). Se agrega como vintage; ningún snapshot anterior se borró.
+- Valuación (10-29 vs 08-06): EV/EBITDA 12.7× FY2027 → PT $307.71 (antes $344.60), FV $299.58, +5.6 % vs $283.82; P/E **20.0× FY2028** (antes 24.0× FY2027) → PT $387.73 (antes $391.52), FV $376.82, +32.8 %. WACC 16.8 % (17.2 %), CoE 17.0 %, beta 1.20. Revisión §6.3: PT ÷ FV = 1.027 (EV) / 1.029 (P/E), parejos → el MCP leyó las celdas correctas; `quality_flags` vacío.
+- Números que se movieron: ingreso FY26 $506.3B → $501.5B, FY27 $629.5B → $622.5B, FY28 $754.9B → $783.1B, FY29 $794.4B → $971.8B (Cloud FY29 $256.3B → $431.6B); utilidad operativa FY26 $184.8B → $169.8B, FY27 $245.1B → $211.7B, FY28 $301.0B → $303.4B; EPS del modelo (EARNINGS ÷ SHARES) FY26 $12.01 → $11.03, FY27 $15.96 → $13.78, FY28 $19.73 → $19.80; EBITDA aj. FY27 $334.7B → $300.9B; capex FY26–28 sin cambio, FY29 $317.8B → $388.7B; FCF FY27 −$39.0B → −$62.4B, FY29 por primera vez (+$78.2B); margen bruto FY27 64.4 % → 60.3 %.
+- Archivos: `results-data/googl.js` (Results: 4T26 y anual 2026–29 al 10-29; **3T26 conserva el 08-06**, lo que el modelo esperaba antes del print; FY2026 = reportado 1T–3T + 4T del modelo; EBITDA y FCF 2029 ahora poblados; Evolution ▸ Estimates: tercer vintage "Oct 29, 2026" en las 10 métricas, consenso EBITDA del 10-29 fuera — ver §6) · `submits-data/googl.js` (submit 10-29 con su bloque de modelo 2026–2028) · `googl-target-multiple-data.js` + `googl-target-multiple.js` (fila 10-29; FY2028 entra al selector de año; abre en FY2027; avisos por año; pie con el año de cada pata; la nota de AMZN "2026-08-04 EBITDA redefinition" quedaba visible en FY2028 → ahora depende de `BREAK_ON`, que es null para GOOGL; Live arranca en los múltiplos del último submit aunque valúen años distintos) · `googl-sensitivity-data.js` + `googl-sensitivity.js` (base reemplazada por el 10-29; Cloud 2026 = $113.2B; cobertura de hedging +$120M; pie nombra el año de cada múltiplo) · `googl-misc-data.js` + `googl-misc.js` (depreciación Summit FY26 31,621 · FY27 51,816 · FY28 79,597; textos y pies al 10-29) · `segments-data/googl.js` (solo textos: los segmentos apuntan a Results) · `summit-map/googl.js` (cabecera y nota de Cloud). Earnings ▸ Setup 3T26 (`googl-ce-data.js`) **no se tocó**: lee el 3T26 de Results, que sigue siendo el 08-06 — correcto para un Setup previo al print. Bottom Line lee Results y nombra los snapshots desde las notas (08-06 y 10-29).
+- Validación: `verify_preprint.py GOOGL summit` → blanked 0, ningún periodo reportado cambia (para GOOGL compara contra el `estMatrix.cons`, porque no hay mitad Summit; los "changed" son años forward). Cruce por script de las 78 celdas Summit de Results (4T26 y anual 2026–29) contra el dump del MCP: todas cuadran (±1 por redondeo). Muestras: REV 2028 783,070 ✔ · SEG8_REV 4T26 37,703 ✔ · EARNINGS 2029 334,127 ✔ · PT P/E $387.73 ✔ · DNA 2027 51,816 ✔. `node` no está instalado: sintaxis revisada leyendo el diff (los archivos de datos parsean en JScript).
+- Fuera / pendiente: 2029 no se agrega a Sensitivity ni a Misc (sus ejes son FY2026–28); consenso EBITDA BBG del 10-29 y las otras dudas → §6. Falta verlo en el portal.

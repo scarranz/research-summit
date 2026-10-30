@@ -11,7 +11,7 @@
 // annual = the 20-F's exact NT$ split × the year's US$ revenue. The engine reads `act` and falls back
 // to `summit`, never `cons` — Street figures live in Evolution ▸ Results, not here.
 // Summit (rule 10, frozen not live): the `results:<key>` pointers fall back to the Summit series frozen in
-// js/results-data/tsm.js (snapshot Oct 15 2026), so the axis runs into the forecast periods (4Q26–2Q27, FY2026–FY2028).
+// js/results-data/tsm.js (snapshot Oct 19 2026), so the axis runs into the forecast periods (4Q26–2Q27, FY2026–FY2028).
 //
 // TEXT CHIPS: `tenK` = FILING, verbatim from the FY2025 20-F (the HTML's line-break hyphens such as
 // "2- nanometer" are closed up); `summary` / `brief` / `sells` = OURS. TSMC names no customer — the
@@ -38,7 +38,7 @@ function share(k, label){ return { num: 'results:' + k, den: 'results:rev', unit
 export var tsmSegments = {
   company: 'TSMC',
   updated: 'Oct 2026',
-  source: 'Platform revenue: TSMC quarterly earnings presentations (Form 6-K, SEC EDGAR — "Revenue by Platform", % of revenue) × the quarter\'s US$ revenue from the earnings release, 1Q22–3Q26; annual splits from the exact NT$ figures in the FY2024 and FY2025 Form 20-F (Item 5) × the year\'s US$ revenue. Platform definitions quoted from the FY2025 Form 20-F, Item 4. TSMC has one operating segment (foundry) and discloses no profit by platform. All series are read through from js/results-data/tsm.js. Other cuts: node mix from the quarterly earnings presentations and the 20-F node table, wafer revenue from the quarterly financial statements (6-K), customer region from the 20-F (Item 5). Summit series: DCF model snapshot of Oct 15 2026, frozen (not live), read through Results — forecast for 4Q26–2Q27 and FY2026–FY2028; in reported periods it is the model’s own history in that snapshot, not a pre-print estimate, and it does not tie to the reported figures.',
+  source: 'Platform revenue: TSMC quarterly earnings presentations (Form 6-K, SEC EDGAR — "Revenue by Platform", % of revenue) × the quarter\'s US$ revenue from the earnings release, 1Q22–3Q26; annual splits from the exact NT$ figures in the FY2024 and FY2025 Form 20-F (Item 5) × the year\'s US$ revenue. Platform definitions quoted from the FY2025 Form 20-F, Item 4. TSMC has one operating segment (foundry) and discloses no profit by platform. All series are read through from js/results-data/tsm.js. Other cuts: node mix from the quarterly earnings presentations and the 20-F node table, wafer revenue from the quarterly financial statements (6-K), customer region from the 20-F (Item 5). Summit series: DCF model snapshot of Oct 19 2026, frozen (not live), read through Results — forecast for 4Q26–2Q27 and FY2026–FY2028; in reported periods it is the model’s own history in that snapshot, not a pre-print estimate, and it does not tie to the reported figures.',
 
   axis: {
     q: ['1Q22', '2Q22', '3Q22', '4Q22', '1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24',

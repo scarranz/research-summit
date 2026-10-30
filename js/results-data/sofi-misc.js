@@ -4,19 +4,22 @@
 //   plpbo — personal loan originations through the Loan Platform Business (US$ millions)
 //   take  — loan platform fees as a percentage of those originations, BUILT AT LOAD from sofiResults (fees) and plpbo (volume)
 //
-// plpbo comes from the Summit model, frozen at its dated snapshot (rule 10; DCF SOFI.xlsm snapshot 2026-08-05, Summit MCP metric PLPBO):
+// plpbo comes from the Summit model, frozen at its dated snapshots (rule 10; Summit DCF model, metric PLPBO: snapshot 2026-10-27 for
+// the 3Q26 actual and 4Q26 onward, snapshot 2026-08-05 for the 3Q26 pre-print projection):
 //   act    the model's own actuals_history; the reported quarters tie to what SoFi said on its calls ($1.6B, $2.4B, $3.4B, $3.7B in 2025,
-//          $3.0B in 1Q26, $3.1B in 2Q26)
+//          $3.0B in 1Q26, $3.1B in 2Q26, $3.8B in 3Q26 — "approximately $3.8 billion", Q3 2026 call, Oct 27 2026)
 //   summit the model's projection_history: for the reported quarters that is its PRE-PRINT projection ($4.0B in 4Q25, 1Q26 and 2Q26, all
-//          above what was reported), for 3Q26 onward its forecast.
-//   The model also stores annual cells for 2026 ($22.0B), 2027 ($16.0B) and 2028 ($19.0B) that do not tie to its own quarters; the annual
+//          above what was reported; $3.4B for 3Q26 in the Aug 5 file, below the $3.8B reported), for 4Q26 onward the Oct 27 forecast
+//          ($4.0B in 4Q26, $3.5B a quarter in 2027).
+//   The model also stores annual cells for 2026 ($22.0B), 2027 ($16.0B) and 2028 ($22.0B in the Oct 27 file, $19.0B on Aug 5) that do
+//   not tie to its own quarters (2026: $13.8B; 2027: $14.0B); the annual
 //   view therefore sums the quarters (reported where reported, Summit after), and the discrepancy is an open question for the model author.
 // No Street series: Bloomberg carries no Loan Platform Business volume.
 import { sofiResults } from './sofi.js';
 
 var QP = ['1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27'];
-var ACT_Q = [1600, 2450, 3400, 3656, 2963, 3100, null, null, null, null, null, null];
-var SUM_Q = [null, 1800, 2450, 4000, 4000, 4000, 3400, 3600, 3500, 3500, 3500, 3500];
+var ACT_Q = [1600, 2450, 3400, 3656, 2963, 3100, 3800, null, null, null, null, null];
+var SUM_Q = [null, 1800, 2450, 4000, 4000, 4000, 3400, 4000, 3500, 3500, 3500, 3500];
 
 function nul(a){ return a.map(function(){ return null; }); }
 function yearSum(arr, y){   // a year is filled only when its four quarters are
@@ -40,9 +43,10 @@ var VNOTE = 'Personal loans originated for third-party partners, US$ millions. A
 var TNOTE = 'Loan platform fees divided by Loan Platform Business originations. Fees are the Bloomberg line "Loan Platform Fees"; for 2Q25 that is $127M against the $131M of adjusted net revenue SoFi cites, so read it as a level, not a contract rate.';
 function view(label, key, periods, act, summit){
   var tAct = take(key, periods, act, 'act');
-  // the model's annual loan platform fees (2026: $1,100M) do not tie to its quarters ($625M), so no annual Summit fee rate is drawn
+  // the model's annual loan platform fees (2026: $1,100M) do not tie to its quarters (Oct 27 file: $430M reported through 3Q26 plus a $178M
+  // 4Q26 forecast, $608M), so no annual Summit fee rate is drawn
   var tSum = key === 'y' ? nul(periods) : take(key, periods, periods.map(function(p, i){ return act[i] != null ? null : summit[i]; }), 'summit');
-  return { label: label, note: 'Frozen Summit model (snapshot 2026-08-05) and reported figures; see the file header for the open question on the model\'s annual cells.',
+  return { label: label, note: 'Frozen Summit model (snapshot 2026-10-27; 3Q26 pre-print projection from the 2026-08-05 snapshot) and reported figures; see the file header for the open question on the model\'s annual cells.',
     metrics: {
       plpbo: mk('LPB originations', 'LPB originations', 'usdM', periods, act, summit, VNOTE),
       take:  mk('Loan platform fees on originations', 'Fee on originations', 'pct', periods, tAct, tSum, TNOTE)
@@ -51,6 +55,6 @@ function view(label, key, periods, act, summit){
 export var sofiLpb = {
   forwardQuarters: 2,   // two quarters past the last print (analyst rule Oct 22 2026), same as SPOT
   updated: 'Oct 2026',
-  source: 'Summit DCF model, snapshot 2026-08-05 (metric PLPBO, frozen; reported quarters tie to the earnings calls Q1 2025 to Q2 2026); Bloomberg reported loan platform fees (BBG_CONSENSUS.txt). No Street series on volume.',
+  source: 'Summit DCF model, snapshot 2026-10-27 (metric PLPBO, frozen; the 3Q26 pre-print projection is from the 2026-08-05 snapshot; reported quarters tie to the earnings calls Q1 2025 to Q3 2026); Bloomberg reported loan platform fees (BBG_CONSENSUS.txt). No Street series on volume.',
   views: { q: view('Quarterly', 'q', QP, ACT_Q, SUM_Q), y: view('Annual', 'y', YP, ACT_Y, SUM_Y) }
 };

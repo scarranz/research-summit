@@ -2,7 +2,7 @@
 // Copy of meta-misc.js metaCapexBody/metaCapexBuild (formal layout: tables over cards, no emoji, one source footer),
 // with Alphabet's own routes: owned capex, leases not yet commenced, long-term supply agreements and data-center backstops.
 // Capex and revenue come from js/results-data/googl.js (the same series Results draws); depreciation and every text row
-// from googl-misc-data.js. Summit figures are the frozen 2026-08-06 snapshot (rule 10).
+// from googl-misc-data.js. Summit figures are the frozen 2026-10-29 snapshot (rule 10).
 import { googlResults } from '../results-data/googl.js';
 import { GOOGL_DEPR, GOOGL_LIFE_NOTE, GOOGL_CAPEX_GUIDE, GOOGL_COMMIT, GOOGL_COMMIT_WHAT, GOOGL_COMMIT_AFTER,
          GOOGL_BACKSTOP_NOTE, GOOGL_PPE, GOOGL_LEASES, GOOGL_INTERSECT, GOOGL_FUNDING, GOOGL_FUNDING_ROWS,
@@ -60,7 +60,7 @@ export function googlCapexBody(){
      chartBlock('capex', 280)+
      '<div class="ov-fynote" id="gMxCapexNote"></div>';
   var c26=capexOf('2026'), r26=revOf('2026');
-  h+='<div class="ov-fynote">Capital intensity went from '+(cxA('2021')/rvA('2021')*100).toFixed(0)+'% of revenue in 2021 to '+(cxA('2025')/rvA('2025')*100).toFixed(0)+'% in 2025; the frozen model has it at '+(c26.v/r26.v*100).toFixed(0)+'% in 2026. 2026E = reported 1Q–2Q + the model’s 3Q–4Q; 2026E–2028E: Summit model, snapshot 2026-08-06 (frozen, not live).</div>';
+  h+='<div class="ov-fynote">Capital intensity went from '+(cxA('2021')/rvA('2021')*100).toFixed(0)+'% of revenue in 2021 to '+(cxA('2025')/rvA('2025')*100).toFixed(0)+'% in 2025; the frozen model has it at '+(c26.v/r26.v*100).toFixed(0)+'% in 2026. 2026E = reported 1Q–3Q + the model’s 4Q; 2026E–2028E: Summit model, snapshot 2026-10-29 (frozen, not live).</div>';
   h+=collap('Capex guidance — every revision', tbl(['Given','For','Guide','Context'],GOOGL_CAPEX_GUIDE.map(function(r){ return [r[0],r[1],'<b>'+r[2]+'</b>',r[3]]; })));
 
   // 2 — the four ways the build is paid for
@@ -107,7 +107,7 @@ export function googlCapexBody(){
      tbl(['Item','What the filings say','Source'], GOOGL_FUNDING_ROWS)+
      '<div class="ov-fynote">Long-term debt rose about '+(F.ltDebt[F.ltDebt.length-1]/F.ltDebt[0]).toFixed(0)+'x in 21 months and buybacks stopped; together with the 2026 equity (the 2Q26 offerings and the at-the-market program from 3Q26), the money raised more than covered the spend — cash and securities went from '+bB(F.cash[1])+' to '+bB(F.cash[F.cash.length-1])+' in the first nine months of 2026.</div>';
 
-  h+='<div class="ov-foot">Sources — Alphabet Form 10-K FY2023, FY2024 and FY2025 and Form 10-Q 1Q26, 2Q26 and 3Q26 (MD&amp;A; cash-flow statements; notes on derivatives, leases, variable interest entities, debt, property and equipment, acquisitions, commitments and contingencies), SEC EDGAR, read Oct 27 and Oct 29 2026; earnings calls 4Q23–2Q26 (docs/calls) and SAB’s 3Q26 call notes; Summit DCF model, snapshot 2026-08-06 (frozen, not live).</div>';
+  h+='<div class="ov-foot">Sources — Alphabet Form 10-K FY2023, FY2024 and FY2025 and Form 10-Q 1Q26, 2Q26 and 3Q26 (MD&amp;A; cash-flow statements; notes on derivatives, leases, variable interest entities, debt, property and equipment, acquisitions, commitments and contingencies), SEC EDGAR, read Oct 27 and Oct 29 2026; earnings calls 4Q23–2Q26 (docs/calls) and SAB’s 3Q26 call notes; Summit DCF model, snapshot 2026-10-29 (frozen, not live).</div>';
   return h;
 }
 
@@ -211,7 +211,7 @@ function capexSpec(){
     cE=c.map(function(x){ return !!(x&&x.e); }); dE=d.map(function(x){ return !!(x&&x.e); });
     tbl2=function(){ var hd=['Fiscal year'], sc=vis('capex','capex'), sd=vis('capex','dep');
       if(sc) hd.push('Capex','Revenue','Capex ÷ revenue'); if(sd) hd.push('Depreciation'); if(sc&&sd) hd.push('Depreciation ÷ capex');
-      return '<div class="mx-src">E = estimate: Summit model, snapshot 2026-08-06 (frozen); 2026E = reported 1Q–2Q + the model’s 3Q–4Q.</div>'+
+      return '<div class="mx-src">E = estimate: Summit model, snapshot 2026-10-29 (frozen); 2026E = reported 1Q–3Q + the model’s 4Q.</div>'+
         tbl(hd, YRS.map(function(y){ var cc=capexOf(y), dd=dnaOf(y), rr=revOf(y), est=(cc&&cc.e)||(dd&&dd.e), r=[y+(est?' E':'')];
           if(sc) r.push(cc?bn(cc.v):'—', rr?bn(rr.v):'—', (cc&&rr)?(cc.v/rr.v*100).toFixed(1)+'%':'—'); if(sd) r.push(dd?bn(dd.v):'—'); if(sc&&sd) r.push((cc&&dd)?(dd.v/cc.v*100).toFixed(0)+'%':'—'); return r; }), null, 1); };
   }
@@ -222,7 +222,7 @@ function capexSpec(){
 function capexNote(){
   return MX.view==='q'
     ? 'Bars = quarterly capex (purchases of property and equipment), 1Q23–3Q26; line = depreciation of property and equipment, from the 10-Q year-to-date figures. 3Q26 alone was $51.4B, more than all of 2023.'
-    : 'Bars = capex (purchases of property and equipment); line = depreciation of property and equipment, from the cash-flow statement. Solid = reported; lighter bars and dashed line = Summit model, snapshot 2026-08-06 (frozen) — FY2026E is reported 1Q–2Q plus the model’s 3Q–4Q, and at $205.8B sits at the top of the $195–205B guide.';
+    : 'Bars = capex (purchases of property and equipment); line = depreciation of property and equipment, from the cash-flow statement. Solid = reported; lighter bars and dashed line = Summit model, snapshot 2026-10-29 (frozen) — FY2026E is reported 1Q–3Q plus the model’s 4Q, and at $205.7B sits at the top of the $195–205B guide.';
 }
 function buildCapex(sp){ drawChart(sp, 'capex', capexSpec()); var nt=sp.querySelector('#gMxCapexNote'); if(nt) nt.innerHTML=capexNote(); }
 
@@ -311,7 +311,7 @@ export function googlCapacityBody(){
   h+=h3('What the signed backlog already covers')+
     '<div class="br-sl"><span class="br-sl-l">Recognized in 24 months</span><input type="range" data-gcap="1" min="40" max="70" step="1" value="'+CAP.share+'" aria-label="Share of the backlog recognized within 24 months"><span class="br-sl-v" data-gcapv="1">'+CAP.share+'%</span></div>'+
     '<div id="gCapCover">'+coverHtml()+'</div>'+
-    '<div class="ov-fynote">'+GOOGL_BACKLOG_NOTE+' Consensus = Bloomberg, newest snapshot in the Results dataset; Summit = model snapshot 2026-08-06 (frozen). The backlog also includes TPU system sales, “the vast majority” of which Alphabet expects to be revenue in 2027 (2Q26 call).</div>';
+    '<div class="ov-fynote">'+GOOGL_BACKLOG_NOTE+' Consensus = Bloomberg, newest snapshot in the Results dataset; Summit = model snapshot 2026-10-29 (frozen). The backlog also includes TPU system sales, “the vast majority” of which Alphabet expects to be revenue in 2027 (2Q26 call).</div>';
   // directory grouped by country, with subtotals
   var order=[], g={}, dev=0;
   GOOGL_DC.forEach(function(r){ if(!g[r[0]]){ g[r[0]]=[]; order.push(r[0]); } g[r[0]].push(r); if(r[2]==='In development') dev++; });
@@ -323,7 +323,7 @@ export function googlCapacityBody(){
   h+=h3('Data centers by country ('+GOOGL_DC.length+' locations, '+dev+' in development)')+
     collap('All locations', '<div class="twrap mx-twrap"><table class="rt mx-tbl ew-tbl"><thead><tr><th>Location</th><th>Status</th></tr></thead><tbody>'+body+'</tbody></table></div>');
   h+='<div class="ov-fynote">Google lists each location and whether it is in development; a location may hold more than one data-center site. It publishes no capacity (MW), investment or opening year per site, so none is shown.</div>';
-  h+='<div class="ov-foot">Sources — Alphabet Form 10-K FY2025 and 10-Q 2Q26 and 3Q26 (Notes 2 and 7), SEC EDGAR; 3Q26 earnings release and SAB’s 3Q26 call notes; earnings calls 4Q24, 2Q25–2Q26 (official transcripts for 4Q25–2Q26); Results dataset (Cloud revenue, Bloomberg consensus, Summit snapshot 2026-08-06); Top Line dataset (revenue backlog); '+GOOGL_DC_SRC+'.</div>';
+  h+='<div class="ov-foot">Sources — Alphabet Form 10-K FY2025 and 10-Q 2Q26 and 3Q26 (Notes 2 and 7), SEC EDGAR; 3Q26 earnings release and SAB’s 3Q26 call notes; earnings calls 4Q24, 2Q25–2Q26 (official transcripts for 4Q25–2Q26); Results dataset (Cloud revenue, Bloomberg consensus, Summit snapshot 2026-10-29); Top Line dataset (revenue backlog); '+GOOGL_DC_SRC+'.</div>';
   return h;
 }
 // 3 — revenue backlog (bars, left axis) against Google Cloud revenue (line, right axis); vertical zoom acts on the left axis

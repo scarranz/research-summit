@@ -177,10 +177,11 @@ export var META_CALL_EARNINGS = { ticker:'META', quarters:[
   // GUIDANCE — Q2 2026 press release, 8-K Ex. 99.1 (Jul 29, 2026), "CFO Outlook Commentary".
   // ── UPCOMING: Q4 2026 (quarter ends Dec 31, 2026; Meta reports late January 2027) ──
   // Street = the Bloomberg snapshot of Oct 21 2026, taken BEFORE the 3Q26 print and the 4Q26 guide (said in the
-  // notes until the next export). Guidance = the 3Q26 release (8-K Ex. 99.1, Oct 21 2026).
+  // notes until the next export). Guidance = the 3Q26 release (8-K Ex. 99.1, Oct 21 2026). Summit = the 2026-10-22
+  // snapshot (after the 3Q26 print and the guide), read from js/results-data/meta.js 4Q26 (ceSummitUs).
   { q:'Q4 2026', status:'upcoming', date:'reports late January 2027',
     setup:{
-      source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-10-21 (before the 3Q26 print and the 4Q26 guide) · Summit DCF model — snapshot 2026-08-04, frozen · guidance: 3Q26 press release (8-K Ex. 99.1, Oct 21 2026)', asOf:'2026-10-21',
+      source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-10-21 (before the 3Q26 print and the 4Q26 guide) · Summit DCF model — snapshot 2026-10-22 (after the 3Q26 print), frozen · guidance: 3Q26 press release (8-K Ex. 99.1, Oct 21 2026)', asOf:'2026-10-21',
       notes:{
         'Revenue':{ t:'Guided $73–76B; the Street on file predates the guide', h:'<p>Guide: “We expect fourth quarter 2026 total revenue to be in the range of $73-76 billion. Our guidance assumes foreign currency is an approximately 1% headwind to year-over-year total revenue growth.” The Bloomberg snapshot on file ($73.6B) is from before the print, so it sits inside the range by chance, not by revision.</p>' },
         'Operating income':{ t:'FY26 expenses raised to $175–179B for the $9.9B charge', h:'<p>“We now expect full year 2026 total expenses to be in the range of $175-179 billion.” And: “Excluding the third quarter legal charge, we continue to expect 2026 operating income to be above 2025 operating income.” 2025 operating income was $83.3B; 1Q–3Q26 add up to $54.6B with the charge, $64.5B without it.</p>' },

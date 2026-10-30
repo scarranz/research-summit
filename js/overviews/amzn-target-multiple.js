@@ -7,16 +7,20 @@
 //
 // What changed for AMZN (vs googl-target-multiple.js):
 //   · data — ./amzn-target-multiple-data.js, the Summit DCF model's own valuation per submit, FROZEN from the Summit
-//     data store (rule 10): 2026-02-10, 2026-05-05 and 2026-08-04 (2025-12-18 left out — its price target ÷ fair value
+//     data store (rule 10): 2026-02-10, 2026-05-05, 2026-08-04 and 2026-10-30 (2025-12-18 left out — its price target ÷ fair value
 //     differs between the two methods, docs/profiles/AMZN.md doubt 4). "Recorded multiple" shows the multiple and the
 //     price target the workbook recorded for each method; "Live" recomputes from your own multiples as a secondary read.
 //   · the P/E ↔ EARNINGS ÷ SHARES check is computed per submit, not asserted: the footer raises the doubt only when the
-//     recorded target's implied EPS is more than 0.5% away from the model's (2026-08-04: $11.22 vs $11.00).
+//     recorded target's implied EPS is more than 0.5% away from the model's (2026-08-04: $11.22 vs $11.00; 2026-10-30:
+//     $10.87 vs $10.82, inside the band, so no flag).
 //   · the 2026-08-04 EBITDA step: the old pane called it an "EBITDA redefinition". The definition did not change (the
 //     model's EBITDA still ties to operating income + D&A + SBC, FY2025 $165,198M); what moved is the D&A + SBC bridge
 //     (FY2027 EBITDA − segment operating income: $133.5B on 2026-05-05 → $193.0B on 2026-08-04) in the same submit that
 //     raised the capex plan (FY2027 capex $230.8B → $276.8B, Summit snapshots). The red warning logic is kept, worded as a
 //     step-up, and its numbers are computed from AMZN_TM rather than typed (BREAK_ON / FWD_NOTE below).
+//   · the 2026-10-30 submit (after 3Q26) takes most of that step back: the model's consolidated D&A was re-cut to equal
+//     the sum of its segment D&A (FY2027 $168.4B → $113.3B), so FY2027 EBITDA fell $332.7B → $280.1B while earnings
+//     barely moved. REVERT_ON adds that, computed the same way, to the warning; the BREAK_ON tag stays on 2026-08-04.
 //   · net debt for Live = Amazon's latest balance sheet in ./amzn-histmult-data.js, its source tracked in _ndSrc (A23):
 //     typing a net debt switches the footer to "your input".
 //   · shares are diluted shares (the model holds them flat at the FY2025 count, 10,827M).
@@ -112,6 +116,8 @@ function rsAttachBrush(el, chart, onX, onY, onReset){
 // computed from AMZN_TM, never typed.
 var BREAK_ON = '2026-08-04';
 var BREAK_TAG = 'EBITDA step-up';
+// The submit that took the step back (D&A re-cut to the segment sum). Its sentence is computed from AMZN_TM too.
+var REVERT_ON = '2026-10-30';
 
 // Per forward year, one row per submit: the model's underlying ($M, diluted shares in millions) and
 // that submit's recorded valuation. Built from the frozen file — nothing typed here.
@@ -148,6 +154,16 @@ var FWD_NOTE = {};
       '<b>'+(b.ebitda/b.rev*100).toFixed(1)+'%</b>. The definition is unchanged (operating income + D&amp;A + SBC); the step is the D&amp;A + SBC bridge, '+
       'which rose with the capex plan raised in the same submit, and D&amp;A sits inside EBITDA but not inside earnings. Compare the EV/EBITDA leg across '+
       'that submit with care — the P/E leg is not affected.';
+  });
+  var ri=-1; AMZN_TM.snaps.forEach(function(sn,i){ if(sn.d===REVERT_ON) ri=i; });
+  if(ri<=bi) return;
+  var r0=AMZN_TM.snaps[ri-1], r1=AMZN_TM.snaps[ri];
+  FWD_YEARS.forEach(function(y){
+    var a=r0.y[y], b=r1.y[y]; if(!FWD_NOTE[y]||!a||!b||!a.ebitda||!a.earn||!a.rev||!b.rev) return;
+    var ge=b.ebitda/a.ebitda-1, gn=b.earn/a.earn-1;
+    FWD_NOTE[y]+=' The '+REVERT_ON+' submit took most of it back: EBITDA <b>'+(ge>=0?'+':'−')+(Math.abs(ge)*100).toFixed(1)+'%</b> against earnings '+
+      '<b>'+(gn>=0?'+':'−')+(Math.abs(gn)*100).toFixed(1)+'%</b> (vs '+r0.d+'), margin <b>'+(a.ebitda/a.rev*100).toFixed(1)+'%</b> → <b>'+
+      (b.ebitda/b.rev*100).toFixed(1)+'%</b>, as the model’s consolidated D&amp;A was re-cut to equal the sum of its segment D&amp;A.';
   });
 })();
 
@@ -892,8 +908,8 @@ function renderPeg(scope){
   // to see that from the numbers alone.
   var n=scope.querySelector('#pegNote');
   if(n) n.innerHTML = (FWD_NOTE[FWD_YEAR] && _pegB==='ev')
-    ? '<b>On FY'+FWD_YEAR+' this basis inherits the '+BREAK_ON+' EBITDA step-up through its denominator</b>, which lifts '+
-      'EBITDA growth and flatters the ratio. The PEG does not repair that step.'
+    ? '<b>On FY'+FWD_YEAR+' the '+BREAK_ON+' point inherits that submit’s EBITDA step-up through its denominator</b>, which lifts '+
+      'EBITDA growth and flatters the ratio (the '+REVERT_ON+' submit took most of the step back). The PEG does not repair that step.'
     : '';
 }
 

@@ -162,6 +162,7 @@ Filings: **10-K FY2025** (año al 31-dic-2025) y **10-Q 2Q26** (trimestre al 30-
 ### Cambios del mapa
 
 - 2026-10-26 · snapshot 2026-08-05 · primera pasada — falta cuadre contra filing y el archivo `summit-map/sofi.js`.
+- 2026-10-30 · snapshot 2026-10-27 (después del print de 3T26) · mismas etiquetas y fuentes; `lastActual` = 3T26 / 2025 (actuals_history trae 3T26: ingreso 1,385.1 = release). El 2T26 real del modelo **ya cuadra con el 10-Q** (`SEG_REVENUE` 1,218.7, `OTHER_REVENUE` 85.5, `TP_REVENUE` 52.5): se cierra la diferencia de −21.7 de los reales del modelo; la serie Summit de 2T26 en el perfil sigue siendo la proyección previa al print.
 
 ## 2. Tablero de unidades
 
@@ -300,6 +301,11 @@ playbook (candidata a podar, **solo con tu OK**).
 
 **Arreglos pendientes en el DCF (los hace SAB; anotado 2026-10-28):**
 - [ ] DCF de SOFI: el MCP no encuentra ningún bloque de valuación en los 4 submits (`no_valuations_for_ticker`). Revisar que el DCF tenga el bloque como los demás (Output ▸ VALUATION y la hoja *Discounted Cash Flow* con EV/EBITDA y P/E) y volver a hacer submit. Hasta entonces VA-SUB ⛔ (y el múltiplo del modelo de VA-TM no viene del MCP).
+- [ ] (2026-10-30, submit 2026-10-27) Sigue sin valuación en el MCP (`valuation_count` 0). El workbook sí la tiene (Projection History, bloque ED:ES) y además guarda **dos submits del 27-oct** (13:45:54 y 13:49:05 UTC, mismos targets, precio 16.445 vs 16.4036); el MCP solo parseó el primero. VA-TM usa el de 13:45:54.
+- [ ] (2026-10-27) Los trimestres de 2027 siguen sin sumar al anual: ingreso (`REV`) 7,213 vs 6,470; EBITDA 2,170 vs 2,467; NIE 5,998 vs 4,787; SBC 540 vs 383; PCL 49.4 vs 66.8; `LPB_REVENUE` ~1,153 vs 696; `PLPBO` anual 22,000 / 16,000 / 22,000 (2026–28) vs trimestres 13,863 / 14,000.
+- [ ] (2026-10-27) Filas de armado por segmento que no cuadran con el modelo: `SEG_REVENUE` 2026 = 5,592.2 vs `REV` 5,104.2 (= 3 trimestres reales + 4T26 1,399.2); `OP_INCOME` SEGM 2026 = 1,570.7 vs DEFAULT 1,082.7. El perfil usa `REV` y DEFAULT.
+- [ ] (2026-10-27) `SHARES` anual fijo en 1,259.4M (promedio FY25) mientras los trimestres llevan 1,357.8M (3T26): el EPS anual de Summit (EARNINGS ÷ SHARES) sale alto: FY26 0.67 vs guía 0.61, FY27 1.02 vs guía 0.90.
+- [ ] (2026-10-27) `HLB` (saldo hipotecario) sube a ~2.4B en 3T26/4T26 (4T26 2,481) y los trimestres de 2027 vuelven a ~455; impuesto (`ITE`/`OP_INCOME`) 10% plano en los trimestres de 2027 contra 24% en el anual 2027. Se muestran tal cual, con advertencia en la nota.
 
 ## 6b. Conexiones pendientes ("Live data pending")
 
@@ -616,3 +622,19 @@ Dani: "no todas las métricas están en Evolution, en las cards y en los gráfic
 - **Márgenes** de las cards (EBITDA, utilidad neta, gastos, SBC, D&A, provisión) ahora sobre ingreso ajustado, como los reporta SoFi (3Q26 EBITDA 34.3%). Esto también arregla un error previo: las líneas de gasto en $M se dividían entre un ingreso en $B y mostraban márgenes de 75,111%.
 - **Other noninterest income** no tenía serie de Street: ahora es residual (ingreso no financiero menos origination, tecnología y loan platform del consenso), anotado en la métrica; ya aparece Street, Summit y actual juntos.
 - **Siguen sin actual en 3Q26:** `Credit card balance` y `Commercial and consumer banking balance` (promedios de BBG, no están en el release). Se llenan con el snapshot BBG posterior al print.
+
+### 2026-10-30 · Submit Summit 2026-10-27 cargado (refresh de datos, sin unidades nuevas)
+
+Snapshot nuevo del MCP: **2026-10-27** (source 13:45:54 UTC, después del release de 3T26 de esa mañana; 23,298 hechos, 4 snapshots en total). Se congeló igual que el de 08-05 (regla 10 / §20b): pull con `get_fundamentals` (projection_history, 35 métricas, 3T26–4T27 y 2026–2030) de 08-05 y 10-27 + `compare_snapshots`; cada celda del perfil se casó contra su fila del 08-05 antes de reemplazarla (todas casan, 0 ambiguas).
+
+- **Results (`js/results-data/sofi.js`):** serie `summit` plana: 4T26–4T27 y FY2026–FY2028 = snapshot 10-27 en las 33 métricas (EPS = EARNINGS ÷ SHARES, tasa = ITE ÷ OP_INCOME, como antes). **3T26 se queda en 08-05** (la proyección previa al print: ingreso 1,207.4); el 10-27 guarda en su projection_history un 3T26 de 1,238.9 que ningún snapshot previo al print capturó y no se usa (regla forward-only). Ningún `act`, `cons` ni guía cambió.
+- **estMatrix.summit:** vintage `2026-10-27` (lastActual 3T26 / 2025) agregado; filas 4T26–4T27 y 2026–2029 en las 16 métricas. Las tres vintages anteriores intactas.
+- **Evolution ▸ Estimates:** cuarta vintage "Oct 27, 2026" en las 33 métricas; Street de esa vintage vacío (el archivo BBG, actualizado el 30-oct, no trae snapshot de SOFI posterior al 3-ago). Notas regeneradas (cuatro archivos), guía de la empresa actualizada a la del 27-oct (ingreso ajustado ~$5.04B, EBITDA ~$1.66B, utilidad ~$840M; FY27 $6.4B / $2.24B / $1.28B) y arreglado el texto de EPS del Street ("$1M" → "$0.60").
+- **Top Line / Bottom Line / Setup:** heredan de `sofiResults` (sin cambios de código). Earnings: el Setup de Q4 2026 lee el Summit de 4T26 del dataset (ahora 10-27); Q3 2026 y anteriores siguen con su Summit previo al print. Solo se actualizaron comentario y fuente del Q4 2026.
+- **Target Multiple (`sofi-target-multiple-data.js`):** fila nueva 2026-10-27 (workbook, submit 13:45:54): EV/EBITDA 14.1× 2027, PT $25.55, FV $24.49; P/E **22× 2028** (antes 25× 2027), PT $28.67, FV $27.37; precio $16.445; WACC 26.9%. PT ÷ FV: 1.043 (EV) y 1.047 (P/E) vs 1.100 / 1.106 el 5-ago. Sin `quality_flags` (el MCP no tiene la valuación). REV / EBITDA / EARNINGS / SHARES del snapshot 10-27.
+- **Misc ▸ LPB (`sofi-misc.js`):** 3T26 real = 3,800 (actuals_history del modelo; la llamada dice "approximately $3.8 billion"); Summit 4T26 = 4,000 (10-27), 3T26 se queda en 3,400 (08-05); 2027 sin cambio (3,500 por trimestre).
+- **Sensitivity / SOTP (`sofi.js`):** base FY2026E ingreso $5.10B (fila `REV`, la que decidió Dani para Summit; antes se usaba la de segmentos, $5.32B), utilidad ajustada $840M, NIM 6.14% de 3T26 × $54.2B de activos = ~$3.3B de interés neto. SOTP (oculto) con la utilidad del 10-27: 840 / 1,279 / 1,854 / 2,666.
+- **Validación:** `verify_preprint.py SOFI summit` → same 309, changed 2 (redondeo a 1 decimal de la provisión 1T27/3T27), blanked 0; `cons` → same 586, changed 0, blanked 0 (el sidecar de Summit se armó desde el bloque del dataset; el de cons con `emit_matrix.py`, sin aplicarlo). 18 celdas al azar (plana trimestral y anual, matriz, Evolution, Target Multiple) contra el MCP: 18 OK.
+- **Lo que se movió (08-05 → 10-27):** ingreso FY26 4,845 → 5,104, FY27 6,280 → 6,470; EBITDA 1,647 → 1,692 y 2,186 → 2,467; utilidad ajustada 826 → 840 y 1,095 → 1,279; EPS 0.66 → 0.67 y 0.87 → 1.02; miembros 18,019K → 18,088K y 23,425K → 23,152K.
+- **No se hizo:** Submit History (SOFI no tiene `js/submits-data/sofi.js`; sería unidad nueva con aprobación); consenso BBG (sin snapshot posterior al print); el `.xlsm` no se tocó.
+

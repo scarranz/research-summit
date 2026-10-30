@@ -113,8 +113,8 @@ export var HS_GUIDE = [
     resolve: {
       googl: { first: 180, last: 200, actual: null, src: '$175–185B (4Q25) → $180–190B (1Q26, now including Intersect) → $195–205B (2Q26) → unchanged at 3Q26 (“remain unchanged”). Midpoint plotted.' },
       amzn:  { first: 200, last: 220, actual: null, src: '"About $200 billion" (4Q25) → "approximately $220 billion" (2Q26) → reiterated at 3Q26 ("We continue to expect 2026 cash capital expenditures to be approximately $220 billion", 8-K Oct 29 2026). Jassy attributes the raise to higher memory cost.' },
-      meta:  { first: 125, last: 137.5, actual: null, src: '$115–135B (4Q25) → $125–145B (1Q26) → $130–145B (2Q26, floor raised) → $135–145B (3Q26, “narrowed from our prior outlook”, floor raised again). Midpoint plotted.' },
-      msft:  { first: 190, last: 175, actual: null, flag: 'accounting', src: '⚠ ~$190B (FY26Q3, including ~$25B of higher component pricing) → ~$175B (FY26Q4). The drop is NOT less investment: extending data-centre useful life from 15 to 25 years pushes more leases from finance to operating, and operating leases are not CapEx. Hood: "outside of this useful life impact, our calendar year 2026 CapEx investment expectations remain unchanged." Then ~$170B (FY27Q1): “for the calendar year, spend should be approximately $170 billion due to the 3P capacity delays” — third-party capacity deliveries expected in the quarter slipped.' },
+      meta:  { first: 125, last: 140, actual: null, src: '$115–135B (4Q25) → $125–145B (1Q26) → $130–145B (2Q26, floor raised) → $135–145B (3Q26, “narrowed from our prior outlook”, floor raised again). Midpoint plotted.' },
+      msft:  { first: 190, last: 170, actual: null, flag: 'accounting', src: '⚠ ~$190B (FY26Q3, including ~$25B of higher component pricing) → ~$175B (FY26Q4). The drop is NOT less investment: extending data-centre useful life from 15 to 25 years pushes more leases from finance to operating, and operating leases are not CapEx. Hood: "outside of this useful life impact, our calendar year 2026 CapEx investment expectations remain unchanged." Then ~$170B (FY27Q1): “for the calendar year, spend should be approximately $170 billion due to the 3P capacity delays” — third-party capacity deliveries expected in the quarter slipped.' },
       spcx:  { first: 65.3, last: 85.6, actual: null, d: true, src: '⚠ <b>Total company, derived from quarterly guides</b> — SpaceX never states a full year and never splits CapEx by segment. Aug: the next two quarters “very similar to the current quarter” ($18.4B) → ~$65B. Oct: 4Q raised to <b>$35–40B</b> — “SI infrastructure continuing to come online at Memphis and Southaven gives us visibility into an accelerated build path” → ~$86B ($83–88B). Super Intelligence was 86% and 84% of total CapEx in 2Q and 3Q26.' },
     },
   },
@@ -472,6 +472,18 @@ export var HS_GW_BRIDGE = {
 // ⚠ Model QA, surfaced rather than buried. The previous flag here — that Meta's
 // dollar and percentage columns disagreed on Land, Buildings and Finance-lease ROU
 // — is RESOLVED in this vintage: the percentage column was removed from the Meta
+// The model against the 3Q26 guides (added Oct 30 2026, SAB). The GW above are the August vintage of
+// the Summit build; no newer one exists (Amazon's DCF of Oct 29 2026 carries the same D&A sheet, the
+// Alphabet and Meta DCFs carry no capex/D&A sheet, Microsoft's DCF is unchanged since Aug 4). So the GW
+// are NOT re-solved here: the card only sets the model's 2026 capex (HS_GW_BRIDGE.total26) beside what
+// each company guided on its 3Q26 call, and the gap at the guide midpoint is computed on the tab.
+export var HS_GW_GUIDE_CHECK = [
+  { id: 'amzn',  guide: '~$220B',  mid: 220, read: 'In line. The DCF of Oct 29 2026 keeps $221.5B and the same GW.' },
+  { id: 'googl', guide: '$195–205B', mid: 200, read: 'The model sits at the top of the range, which the 3Q26 call left unchanged.' },
+  { id: 'meta',  guide: '$135–145B', mid: 140, read: 'The model sits at the top of the range; the 3Q26 call narrowed it by raising the floor.' },
+  { id: 'msft',  guide: '~$170B, calendar 2026', mid: null, read: 'Not comparable: the 2026 bar is Microsoft’s reported fiscal year to June 2026 ($115.9B), and calendar 2026 straddles fiscal 2026 and 2027.' },
+];
+
 // build and the dollars now tie to $145.0B exactly (the percentages shown above
 // are computed from the dollars, so they cannot drift again). Two smaller things
 // took its place, both on the newly added Microsoft tab.

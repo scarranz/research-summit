@@ -297,3 +297,11 @@ se quita nada. El conteo de control se hace en F-FINAL contra las sub-tabs de ho
   (dentro de tiendas y suscripciones). Debajo, los dos clientes de AWS que nombra el 10-Q del 3T26 (Nota 1): OpenAI ($38.0B +
   $100.0B a 8 años) y Anthropic (+más de $100.0B a 10 años), como compromisos, no como peso en el ingreso.
 - No se afirma que esos compromisos estén dentro del backlog de $578B: el 10-Q no lo dice (y en el 1T26 Anthropic estaba fuera).
+
+### 2026-10-30 · Hyperscalers ▸ Capacity & Cost/GW — "The model against the 3Q26 guides" (fuera del perfil, misma rama)
+- No hay vintage nuevo de GW: la hoja D&A del DCF de AMZN (29-oct) es igual a la de agosto; los DCF de GOOGL (29-oct) y META (28-oct)
+  no traen hoja de capex/D&A; el de MSFT no cambia desde el 4-ago. SAB: no re-resolver los GW, poner una nota modelo vs guía.
+- Nota nueva (`HS_GW_GUIDE_CHECK`): capex 2026 del modelo vs guía 3T26 — AMZN en línea; GOOGL ($205.8B vs $195–205B) y META
+  ($145.0B vs $135–145B) en el techo, −2.8% y −3.4% de GW al punto medio (aritmética nuestra, rotulada); MSFT no comparable (año fiscal).
+- Ladder CY2026: el resumen de META y MSFT seguía en $137.5B y $175B; ahora $140B y $170B, la guía del 3T26.
+- Pendiente para SAB: actualizar `CapEx D&A DCFs.xlsx` con el 3T26 para re-extraer GW, depreciación y el puente.

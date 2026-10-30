@@ -1727,6 +1727,38 @@ function rsEvoMetric(k){
   if (!st.metric || rsEvoKeys(cfg).indexOf(st.metric) < 0) st.metric = cfg.defaultMetric;
   return rsEvo().metrics[st.metric];
 }
+// The snapshot window [first, last] the block is reading (SAB, Oct 30 2026): the dot slider
+// under the chart picks it, a horizontal drag on the chart sets it, double-click resets it.
+// Indices stay GLOBAL everywhere - the window only decides which snapshots are drawn and
+// tabled, so "vs prior snapshot" still compares with the file before, even when that file
+// sits outside the window.
+function rsEvoWin(k){
+  var st = rsEvoSt(k), n = (rsEvo().vintages || []).length;
+  if (!st.win || st.win[0] < 0 || st.win[1] >= n || st.win[0] > st.win[1]) st.win = [0, Math.max(0, n - 1)];
+  return st.win;
+}
+function rsSyncEvoSlider(k){
+  var ev = rsEvo(), n = (ev.vintages || []).length, w = rsEvoWin(k);
+  var mn = document.getElementById('rsEvoMin-' + k), mx = document.getElementById('rsEvoMax-' + k);
+  if (!mn || !mx || n < 2) return;
+  mn.max = n - 1; mx.max = n - 1; mn.value = w[0]; mx.value = w[1];
+  var fill = document.getElementById('rsEvoFill-' + k);
+  if (fill){ fill.style.left = (w[0] / (n - 1) * 100) + '%'; fill.style.width = ((w[1] - w[0]) / (n - 1) * 100) + '%'; }
+  var e0 = document.getElementById('rsEvoEnd0-' + k), e1 = document.getElementById('rsEvoEnd1-' + k);
+  if (e0) e0.textContent = ev.vintages[w[0]].label;
+  if (e1) e1.textContent = ev.vintages[w[1]].label;
+  // One dot per saved snapshot, filled when inside the window.
+  var ticks = document.getElementById('rsEvoTicks-' + k);
+  if (ticks){
+    var h = '';
+    for (var i = 0; i < n; i++){
+      h += '<span class="rs-tick' + (i >= w[0] && i <= w[1] ? ' on' : '') + '" style="left:' + (i / (n - 1) * 100) +
+        '%" title="' + esc(ev.vintages[i].label + (ev.vintages[i].event ? ' · ' + ev.vintages[i].event : '')) + '"></span>';
+    }
+    ticks.innerHTML = h;
+  }
+}
+
 // The % view of a metric for one source & fiscal year, across vintages.
 // Top Line → IMPLIED YoY GROWTH: what growth each snapshot's estimate implies
 // vs the prior fiscal year AS KNOWN AT THAT SNAPSHOT (chained within the
@@ -1849,7 +1881,7 @@ function rsEvoDetHeadHtml(k){
   var n = rsEvoVisible(k, rsEvoMetric(k)).length;
   return '<span class="rs-collap-ic">' + (open ? '▾' : '▸') + '</span>Snapshot by snapshot' +
     '<span class="rs-collap-sub">' + (open ? 'hide' : 'show') + ' · ' + n + ' line' + (n === 1 ? '' : 's') +
-    ' × ' + ev.vintages.length + ' snapshots, with each revision</span>';
+    ' × ' + (rsEvoWin(k)[1] - rsEvoWin(k)[0] + 1) + ' snapshots, with each revision</span>';
 }
 function rsEvoBlockHtml(k){
   var cfg = rsEvoSecCfg(k), m = rsEvoMetric(k);
@@ -1864,6 +1896,18 @@ function rsEvoBlockHtml(k){
     '<div class="ov-chart-t" id="rsEvoChartT-' + k + '"></div>' +
     '<div class="ov-chart-wrap ovs-tall"><canvas id="rsEvoChart-' + k + '"></canvas></div>' +
   '</div>';
+  // The snapshot slider - the same dot slider as Results, one dot per saved snapshot.
+  if ((rsEvo().vintages || []).length > 1){
+    h += '<div class="sg-controls">' +
+      '<div class="sg-slider">' +
+        '<div class="sg-track"><div class="sg-fill" id="rsEvoFill-' + k + '"></div></div>' +
+        '<div class="rs-ticks" id="rsEvoTicks-' + k + '"></div>' +
+        '<input type="range" id="rsEvoMin-' + k + '" min="0" max="1" value="0" step="1" aria-label="First snapshot">' +
+        '<input type="range" id="rsEvoMax-' + k + '" min="0" max="1" value="1" step="1" aria-label="Last snapshot">' +
+      '</div>' +
+      '<div class="sg-ends"><span id="rsEvoEnd0-' + k + '"></span><span id="rsEvoEnd1-' + k + '"></span></div>' +
+    '</div>';
+  }
   // Chart → per-fiscal-year record → the snapshot-by-snapshot table. Both tables below the
   // chart show ONLY what the chart is currently drawing (see rsEvoVisible).
   // Both tables collapse. The record starts OPEN (it is the reading) and the detail table
@@ -2032,17 +2076,19 @@ function rsBuildEvo(k){
     return a ? a.map(scale) : null;
   }
 
+  var w = rsEvoWin(k), lo = w[0], hi = w[1];
+  function cut(a){ return a ? a.slice(lo, hi + 1) : a; }
   var datasets = [];
   ev.years.forEach(function(y, yi){
     if (st.hidden['y' + y]) return;
     var color = EVO_RAMP[yi] || SUMMIT_MUTE;
-    var s = !st.hidden.summit ? series('summit', yi) : null;
+    var s = !st.hidden.summit ? cut(series('summit', yi)) : null;
     if (s && s.some(function(v){ return v != null; })){
       datasets.push({ label: 'FY' + y + ' · Summit', data: s,
         borderColor: color, backgroundColor: color, borderWidth: 2.5,
         pointRadius: 3.5, pointBackgroundColor: color, tension: 0, spanGaps: true, _src: 'summit', _yi: yi });
     }
-    var c = !st.hidden.cons ? series('cons', yi) : null;
+    var c = !st.hidden.cons ? cut(series('cons', yi)) : null;
     if (c && c.some(function(v){ return v != null; })){
       datasets.push({ label: 'FY' + y + ' · Consensus', data: c,
         borderColor: color, backgroundColor: color, borderWidth: 2, borderDash: [6, 4],
@@ -2058,7 +2104,7 @@ function rsBuildEvo(k){
       var av = derived ? (amt ? scale(rsEvoActualPct(k, st.metric, m, y)) : rsEvoActualPct(k, st.metric, m, y))
                        : scale(rsEvoActual(st.metric, m, y));
       if (av == null) return;
-      datasets.push({ label: 'FY' + y + ' · reported', data: ev.vintages.map(function(){ return av; }),
+      datasets.push({ label: 'FY' + y + ' · reported', data: cut(ev.vintages).map(function(){ return av; }),
         borderColor: EVO_RAMP[yi] || SUMMIT_MUTE, borderWidth: 1.5, borderDash: [2, 3],
         pointRadius: 0, pointHitRadius: 6, tension: 0, fill: false, _src: 'act', _yi: yi, order: 99 });
     });
@@ -2075,7 +2121,7 @@ function rsBuildEvo(k){
 
   st.chart = rsNewChart(el, {
     type: 'line',
-    data: { labels: ev.vintages.map(function(v){ return [v.label, v.event]; }), datasets: datasets },
+    data: { labels: cut(ev.vintages).map(function(v){ return [v.label, v.event]; }), datasets: datasets },
     options: {
       responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
       plugins: {
@@ -2083,11 +2129,11 @@ function rsBuildEvo(k){
         tooltip: {
           callbacks: {
             title: function(items){
-              var v = ev.vintages[items[0].dataIndex];
+              var v = ev.vintages[lo + items[0].dataIndex];
               return v.label + ' · ' + v.event;
             },
             label: function(ctx){
-              var i = ctx.dataIndex;
+              var i = lo + ctx.dataIndex;                // global snapshot index
               // The reported line is one number repeated — no revision to report against it.
               if (ctx.dataset._src === 'act')
                 return ctx.dataset.label + ': ' + (pct ? ctx.parsed.y.toFixed(1) + '%' : rsFmt(m, ctx.parsed.y * div));
@@ -2124,10 +2170,13 @@ function rsBuildEvo(k){
     }
   });
 
-  // Vertical-only brush: only 3 x-points, so any drag adjusts the y-range.
-  rsAttachBrush(el, st.chart, null,
+  // Drag-to-zoom on both axes (chart standard §0): a horizontal drag narrows the snapshot
+  // window, a vertical one the y-range; double-click resets both.
+  rsAttachBrush(el, st.chart,
+    function(a, b){ rsEvoSt(k).win = [lo + a, lo + b]; rsBuildEvo(k); },
     function(v1, v2){ rsEvoSt(k).yr = [v1, v2]; rsBuildEvo(k); },
-    function(){ rsEvoSt(k).yr = null; rsBuildEvo(k); });
+    function(){ var s0 = rsEvoSt(k); s0.yr = null; s0.win = null; rsBuildEvo(k); });
+  rsSyncEvoSlider(k);
 
   // Both tables are rebuilt with the chart, from the same visibility state — so a chip click
   // moves all three together instead of leaving a table describing a line that is gone.
@@ -2170,9 +2219,12 @@ function rsRenderEvoTable(k, m){
   // name as `”rs-ft-cap”` WITH the curly quotes, so the `.rs-ft-cap` rule never matches and
   // the caption under the Estimates table renders unstyled. Straight quotes on both now.
   // The typographic quotes INSIDE the prose (“revision”, the model’s) are intentional.
-  var h = '<div class="rs-ft-cap">' + rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions') + ' · columns are the model’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest' + pctCap + '</div>';
+  var h = '<div class="rs-ft-cap">' + rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions') + ' · columns are the model’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first to the last snapshot on the chart' + pctCap + '</div>';
+  var w = rsEvoWin(k), lo = w[0], hi = w[1], cols = [];
+  for (var ci = lo; ci <= hi; ci++) cols.push(ci);
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
-  ev.vintages.forEach(function(v){
+  cols.forEach(function(i){
+    var v = ev.vintages[i];
     h += '<th>' + esc(v.label) + '<br><span class="rs-ft-dim">' + esc(v.event) + '</span></th>';
   });
   h += '<th class="rs-ft-s">Cumulative revision</th></tr></thead><tbody>';
@@ -2181,20 +2233,21 @@ function rsRenderEvoTable(k, m){
     if (!arr) return '';
     var hasPct = pcts && pcts.some(function(v){ return v != null; });
     var r = '<tr class="rs-ft-main rs-ft-nb"><td class="rs-ft-h">' + label + '</td>';
-    arr.forEach(function(v){ r += '<td><b>' + num(v) + '</b></td>'; });
-    r += '<td class="rs-ft-s">' + rsRevHtml(m, arr[0], arr[nv - 1]) + '</td></tr>';
+    cols.forEach(function(i){ r += '<td><b>' + num(arr[i]) + '</b></td>'; });
+    r += '<td class="rs-ft-s">' + rsRevHtml(m, arr[lo], arr[hi]) + '</td></tr>';
     r += '<tr class="rs-ft-sub' + (hasPct ? ' rs-ft-nb' : '') + '"><td class="rs-ft-h">revision</td>';
-    arr.forEach(function(v, i){ r += '<td>' + (i === 0 ? '<span class="rs-ft-nil">—</span>' : rsRevHtml(m, arr[i - 1], v)) + '</td>'; });
+    cols.forEach(function(i){ r += '<td>' + (i === 0 ? '<span class="rs-ft-nil">—</span>' : rsRevHtml(m, arr[i - 1], arr[i])) + '</td>'; });
     r += '<td class="rs-ft-s"></td></tr>';
     if (hasPct){
       // Growth-as-amount is a currency delta, so its row is money and its summary is a money
       // difference — not points.
       var amtRow = rsEvoIsAmt(k);
       r += '<tr class="rs-ft-sub"><td class="rs-ft-h">' + esc(rsEvoPctLabel(k, m)) + '</td>';
-      pcts.forEach(function(v){
+      cols.forEach(function(i){
+        var v = pcts[i];
         r += '<td>' + (v == null ? '<span class="rs-ft-nil">—</span>' : (amtRow ? rsFmtD(m, v) : v.toFixed(1) + '%')) + '</td>';
       });
-      r += '<td class="rs-ft-s">' + (amtRow ? rsRevHtml(m, pcts[0], pcts[nv - 1]) : rsRevPp(pcts[0], pcts[nv - 1])) + '</td></tr>';
+      r += '<td class="rs-ft-s">' + (amtRow ? rsRevHtml(m, pcts[lo], pcts[hi]) : rsRevPp(pcts[lo], pcts[hi])) + '</td></tr>';
     }
     return r;
   }
@@ -2205,7 +2258,7 @@ function rsRenderEvoTable(k, m){
     h += rows(esc(v.label), m[v.src] ? m[v.src][v.yi] : null, rsEvoPct(k, m, v.src, v.yi));
   });
   if (!vis.length){
-    h += '<tr><td class="rs-ft-h" colspan="' + (nv + 2) + '"><span class="rs-ft-dim">Every line is hidden — click a chip above to bring one back.</span></td></tr>';
+    h += '<tr><td class="rs-ft-h" colspan="' + (cols.length + 2) + '"><span class="rs-ft-dim">Every line is hidden — click a chip above to bring one back.</span></td></tr>';
   }
 
   h += '</tbody></table></div>';
@@ -3658,9 +3711,9 @@ function rsEvoTrackRows(k, m){
                          driftSum: 0, driftN: 0, errSum: 0, errN: 0, errAbs: 0, pp: pct };
   rsEvoVisible(k, m).forEach(function(v){
     var arr = (pct ? rsEvoPct(k, m, v.src, v.yi) : (m[v.src] ? m[v.src][v.yi] : null)) || [];
-    var first = null, fi = -1, last = null, li = -1, up = 0, dn = 0, prev = null;
+    var first = null, fi = -1, last = null, li = -1, up = 0, dn = 0, prev = null, w = rsEvoWin(k);
     arr.forEach(function(val, i){
-      if (val == null) return;
+      if (val == null || i < w[0] || i > w[1]) return;
       if (first == null){ first = val; fi = i; }
       last = val; li = i;
       if (prev != null){
@@ -4328,6 +4381,16 @@ export function initResultsEvo(ticker){
   // Repaint each block's head before building: the "Reported" toggle's availability depends
   // on dataset state, and the markup was generated when the pane's HTML string was built —
   // which can be long before this runs.
+  rsEvo().sections.forEach(function(s){
+    var k = s.key, mn = document.getElementById('rsEvoMin-' + k), mx = document.getElementById('rsEvoMax-' + k);
+    function onSlide(){
+      var a = +mn.value, b = +mx.value;
+      rsEvoSt(k).win = [Math.min(a, b), Math.max(a, b)];
+      rsBuildEvo(k);
+    }
+    if (mn) mn.oninput = onSlide;
+    if (mx) mx.oninput = onSlide;
+  });
   rsEvo().sections.forEach(function(s){ rsRerenderEvoHead(wrap, s.key); rsBuildEvo(s.key); });
   rsBuildCurve();                     // the transpose at the foot of the pane
 }

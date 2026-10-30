@@ -51,7 +51,7 @@ ninguna otra pestaña (§15b).
 - §11 Evolution ▸ Estimates
 - §12 Evolution ▸ Earnings (Setup · Post-Results · Notes)
 - §13 Bottom Line (3 sub-tabs)
-- §14 Valuation (4 sub-tabs)
+- §14 Valuation (5 sub-tabs)
 - §15 Management (4 sub-tabs)
 - §15b Miscellaneous (lo propio de la empresa)
 - §16 Cierre — auditoría final y entrega
@@ -317,7 +317,7 @@ Deep Dive:  Top Line · Bottom Line · Evolution · Valuation · Management (· 
   Top Line:     General · Segments · Other · Customers
   Bottom Line:  General · Segments · Supply Chain
   Evolution:    Earnings (Setup · Post-Results · Notes) · Results · Estimates
-  Valuation:    Historic Multiple · Peers · Target Multiple / PEG · Sensitivity Analysis
+  Valuation:    Historic Multiple · Peers · Target Multiple / PEG · Submit History · Sensitivity Analysis
   Management:   Executives & Board · Ownership · Governance & SBC · Track Record
 ```
 
@@ -340,7 +340,7 @@ de `mgmt` — no repetirlo.)
 | 5 | Evolution ▸ Estimates (§11) | Mismo archivo de datos que Results, bloque `evolution` (Summit congelado, regla 10) |
 | 6 | Evolution ▸ Earnings (§12) | Necesita el consenso por trimestre y las transcripciones |
 | 7 | Bottom Line (§13) | Necesita el export de Bloomberg |
-| 8 | Valuation (§14) | Necesita el dataset de Results/consenso, los peers y el modelo Summit congelado (Target Multiple, Sensitivity) |
+| 8 | Valuation (§14) | Necesita el dataset de Results/consenso, los peers y el modelo Summit congelado (Target Multiple, Submit History, Sensitivity) |
 | 9 | Management (§15) | Independiente; puede adelantarse si el analista quiere |
 | 9b | Miscellaneous (§15b) | Solo si quedó algo propio de la empresa sin lugar; al final, cuando ya se sabe qué sobra |
 | 10 | Cierre (§16) | Auditoría completa + conciliación (modo B) + entrega |
@@ -454,6 +454,19 @@ advertencia. Lo único que se revisa por empresa en F0-SM es la **calidad** (va 
 ❓ <TICKER> · valuación — <qué falla> (p. ej. LYFT: P/E idéntico a EV/EBITDA, quality_flags)
    Mientras tanto: <qué no se muestra>   ·   Quién responde: autor del modelo / Oscar
 ```
+
+**Revisar el precio objetivo contra su fair value antes de congelarlo (SAB, 28 oct 2026).** El MCP solo
+jala lo que trae el DCF: si el bloque de valuación está mal armado, el error llega tal cual, y **se corrige
+en el DCF (lo hace el analista), no en el MCP**. El caso conocido: cuando el `target_year` de un método
+queda dos años adelante, el `price_target` que se guarda es la celda del año siguiente (Q80 / Q49 de la
+hoja *Discounted Cash Flow*), mientras el fair value se descuenta de la de 1 año (P80 / P49) — el target y
+su fair value quedan apuntando a celdas distintas. La prueba rápida: `price_target ÷ fair_value` tiene que
+ser igual en los dos métodos de un mismo submit (es el mismo factor de descuento; en SPOT 22-oct: 532.86 ÷
+514.20 = 1.036 en EV/EBITDA, pero 672.78 ÷ 622.34 = 1.081 en P/E). Si no cuadra: se abre el workbook, se
+congela P80 (P49 para EV/EBITDA) con un campo `fix` que lo explique, y se anota en la bitácora, sección 6,
+como **arreglo pendiente en el DCF** para el analista (corregir el bloque y volver a hacer submit; al
+re-jalar se quita el `fix`). Igual con un valor que el MCP traiga en 0 o una etiqueta rara (caso "0"): se
+revisa primero el DCF.
 
 Estado al 14 oct 2026 (Oscar): con valuación AMZN, CART, NVDA, SPOT, UBER; TBBB solo P/E confiable
 (EV/EBITDA mezcla Bull y Base); LYFT no confiable (P/E copia EV/EBITDA); sin valuación MA, META, SOFI.
@@ -666,6 +679,7 @@ tamaño completo y texto enorme — SAB lo marcó, 2026-10-20).
 | VA-HIST | `amzn-histmult.js` | horizontes deshabilitados con su razón (`sharkninja-histmult.js`) |
 | VA-PEERS | `valuationPeersBody` + el mapa de `amzn.js` | — |
 | VA-TM | `amzn-target-multiple.js` | rastreo de la fuente de la deuda neta (`_ndSrc`, `sharkninja-target-multiple.js`) |
+| VA-SUB | **motor** `js/submits.js` — no se copia: se escribe `js/submits-data/<t>.js` (referencia `spot.js`) | — |
 | VA-SENS | `amzn-sensitivity.js` | — |
 | MG-* | motor `management.js` + `AMZN_MGMT`, `amznOwnBody`, `amznGovBody`, `amznTrackBody` | datos separados del código (`sharkninja-mgmt-data.js`) |
 | MISC | `amzn.js` panel `misc` | — |
@@ -1250,11 +1264,15 @@ Sin gráfica. Cinco secciones (la 5.ª, abajo):
   que sí divulga o que la llamada cuantifica (p. ej. anunciantes de China, verticales de e-commerce y
   gaming), con la misma columna de peso; si nada lo cuantifica, la sección dice eso en una línea y no
   inventa la tabla (regla 7).
-  - **Datos:** `customers.buys = [{name, tk?, what, seg, share?, shareBasis:'filing'|'estimate', src}]`.
-  - **Motor:** `segments.js` **todavía no dibuja esta sección**. La primera empresa que la construya
-    (TSM R1) la agrega al motor en un PR propio de motor y se vuelve la referencia; hasta entonces la
-    unidad TL-CUS se aprueba sin la sección 5 y queda anotada en Bloqueos ("TL-CUS ▸ sección 5 espera el
-    motor").
+  - **Datos:** `customers.buys = [{name, tk?, what, seg, share?, shareBasis:'filing'|'estimate', shareOf?,
+    shareNote?, src}]`. El peso va **tecleado** (`share`, en %; *estimate* salvo que el filing lo dé) o
+    **calculado** de las series anuales del propio dataset (`shareOf: [claves]` sobre
+    `customers.buysBase = {keys, y, label}`, p. ej. las líneas de ingreso del 10-K), así cuadra con el
+    filing sin teclear un número. Sin peso: `shareNote` dice por qué (p. ej. "commitment, not a revenue
+    share"). Opcionales: `buysLede`, `buysNote` (pie). `buys: []` + `buysNone` = la línea única de la regla 7.
+  - **Motor:** `segments.js` la dibuja desde el 30-oct-2026 (PR de motor `feat/segments-customer-buys`;
+    referencia: AMZN, por clase de cliente). Sin `buys` no aparece, así que los perfiles que no la han
+    llenado no cambian.
 - "Named on the record" ya ordena del trimestre más nuevo al más viejo (arreglado).
 
 ---
@@ -1647,7 +1665,7 @@ Solo si la empresa es sujeto en un export SPLC de proveedores; si no, ⏭️ (no
 
 ---
 
-## §14 Valuation — 4 sub-tabs
+## §14 Valuation — 5 sub-tabs
 
 **Responde:** *¿cuánto vale, y contra qué?*
 
@@ -1667,6 +1685,7 @@ sembrados en `sharkninja-peers.js`). De SN solo se toman las dos piezas de la ta
 | VA-HIST | se construye y se aprueba con el aviso | tiene estructura útil; el analista la aprueba en el portal con el aviso (Claude puede revisar la gráfica internamente con `?mockmarket=1`); solo falta desplegar `get-market-history` |
 | VA-PEERS | se construye completa | `liveQuote` ya funciona |
 | VA-TM | se construye completa | valuación y filas del modelo congeladas del MCP (regla 10) |
+| VA-SUB | se construye completa | motor común; valuación y modelo de cada submit congelados del MCP (regla 10); el precio diario va en vivo |
 | VA-SENS | se construye completa | un snapshot Summit congelado (regla 10) |
 
 AMZN muestra hoy VA-TM y VA-SENS con avisos de pendiente (el interruptor `TM_LIVE_READY = false` de
@@ -1769,6 +1788,76 @@ compuerta**: el panel sale con los datos congelados.
 - **Cuando se construya:** rastrear de dónde salió la deuda neta (`_ndSrc` de
   `sharkninja-target-multiple.js`: deck · live · input) para que el pie nunca diga "from the live quote"
   si la llamada falló (A23).
+
+### VA-SUB Submit History (`submits`)
+
+**Responde:** *¿dónde pusimos el precio objetivo en cada submit del DCF, cuánto tiempo estuvo vigente, y
+con qué supuestos?* (Decisión SAB, 28 oct 2026; piloto SPOT, rama `feat/dcf-submit-history`.)
+
+- **Tipo: motor, no panel a medida.** `js/submits.js` exporta `submitsHtml('<T>')` e
+  `initSubmits(root, '<T>')`. Para una empresa nueva se escribe **solo** el archivo de datos
+  `js/submits-data/<t>.js` (referencia: `spot.js`), se agrega a `SUBMITS_DATA` en `submits.js`, y se monta
+  en `<t>.js` como cualquier módulo de §14: el botón `data-ovst="submits"` **entre Target Multiple y
+  Sensitivity**, el `<div class="ovt-subpane" data-ovst="submits" hidden>` con `submitsHtml('<T>')` y la
+  rama `else if (subKey === 'submits') requestAnimationFrame(function(){ initSubmits(root, '<T>'); });`.
+  El colapsable lleva `data-selfwired="1"`: la lista `SELF` del perfil tiene que incluir `[data-selfwired]`.
+  Estilos: reglas `.dsh-*` de `css/overview.css` (ya globales; nada de `<style>`).
+- **Contenido, de arriba a abajo:**
+  1. Título "Submit history — the price target over time".
+  2. Selector **EV/EBITDA | P/E** (`.rs-views`): **un método a la vez**, abre en **P/E**.
+  3. Chips: *Price target · <método>* · *Fair value · <método>* (**apagado al abrir**) · *<T> share price
+     (daily close)*.
+  4. Gráfica: el precio objetivo de cada submit **plano todo el periodo en que estuvo vigente**, y solo sube
+     o baja **el día del siguiente submit** (`stepped:'before'`), con un punto el día de cada submit. Línea
+     del objetivo en **azul Summit** (`--steel`, #3E5A82: el de las pestañas y la línea de Key Facts — no `SUMMIT_CAT[0]`); fair value del mismo azul atenuado y punteado;
+     precio diario en **gris claro** (`fade(SUMMIT_MUTE, .45)`). Eje de días hábiles desde 45 días antes del
+     primer submit hasta hoy; eje Y a la derecha en la moneda del precio. Tooltip: "PT · múltiplo× FYaaaaE,
+     submitted <fecha>". Zoom en los dos ejes, doble clic restablece (§17.2).
+  5. Tabla **"Submit detail"** (abierta), horizontal — una columna por submit, de más viejo a más nuevo, el
+     mismo orden que la gráfica; encabezado = fecha + "after <trimestre>", la última columna sombreada como
+     "in force". Grupos: *Price target · <método>* (múltiplo y base, año objetivo, **precio objetivo**,
+     cambio vs el anterior, fair value solo si su chip está prendido) · *Share price* (cierre del día del
+     submit, objetivo vs ese cierre) · *In force* (días).
+  6. Tabla **"What the target was built on"** (abierta), mismas columnas, cambia con el selector:
+     *Valuation* (múltiplo + año, tasa de descuento — **cost of equity** para P/E, **WACC** para EV/EBITDA —
+     y **crecimiento perpetuo implícito**, en negritas) · *Model at the target year* (en la moneda del
+     modelo, millones): Revenue + crecimiento · Operating income + margen · Adj. EBITDA + margen +
+     crecimiento · Net income + margen · EPS + crecimiento. En negritas la base del método (EPS en P/E,
+     EBITDA en EV/EBITDA). Crecimiento = año objetivo sobre el año anterior, **del mismo submit**.
+  7. Notas (`.ov-fynote`): cómo se lee la gráfica; la fórmula del crecimiento implícito y la diferencia de
+     moneda modelo/precio cuando la hay; "Corrected: …" por cada valor corregido; "Left out: …" por cada
+     submit excluido. Pie (`.ov-foot`) con el modelo, las fechas de los submits, "frozen, not live — pulled
+     <fecha>", y el precio de Massive en vivo.
+- **Datos — `js/submits-data/<t>.js`, congelado (regla 10):** `{ ticker, name, ccy, mccy, pulled, src,
+  submits:[…] }`. `ccy` = moneda del precio objetivo (la del precio de la acción); `mccy` = moneda del modelo. Opcional: `ebitdaLabel` (rótulo de la fila EBITDA; por default "Adj. EBITDA" — TSM usa "EBITDA").
+  Por submit:
+  - de `get_valuation_history`, tal cual: `d` (snapshot_date), `after` (after_quarter → "3Q26"), `px`
+    (current_price), `wacc`, `coe`, y `val.ev` / `val.pe` con `method`, `kase`, `mult`, `year`, `basis`,
+    `pt`, `fv`, `upside`, `flags`;
+  - de `get_metric_snapshot_series(metric, año)` — **solo las filas `projection_history`** (las
+    `actuals_history` traen 0) —: `model[año] = { rev, opi, ebitda, ni, sh }` para el año objetivo y el
+    anterior de cada método (con las métricas `core` del mapa F0-SM: ingreso, utilidad operativa, EBITDA
+    (el que usa el workbook en el bloque EV/EBITDA — en SPOT, `ADJ_EBITDA`), earnings, acciones). Un valor que el MCP guarda en 0 se escribe `null` (la vista muestra — y no calcula su margen; TSM: OP_INCOME).
+  - Lo que la vista calcula y **no** se escribe: crecimientos, márgenes, EPS = earnings ÷ acciones,
+    crecimiento implícito = tasa − 1 ÷ múltiplo (la fórmula de las celdas *Growth* U45 / *Implied Growth*
+    U79 del workbook).
+  - Un submit nuevo se **agrega**, nunca se sobrescribe uno viejo (cada submit es una vintage).
+- **Revisiones antes de congelar (cada una va a la bitácora):**
+  - **Precio objetivo vs fair value** (§6.3): si `pt ÷ fv` no es igual en los dos métodos, el MCP leyó la
+    celda equivocada → se toma la del workbook y se congela con `fix: '<qué se corrigió>'` (la vista lo
+    muestra en "Corrected").
+  - **Moneda:** comparar `px` contra el cierre de Massive de ese día. Si coincide con la moneda de cotización
+    aunque el modelo esté en otra (SPOT: modelo en EUR, precios en US$), `ccy` es la de cotización y
+    `mccy` la del modelo.
+  - **Submits mal armados:** el analista decide cuáles quedan fuera; se dejan en el archivo con
+    `skip: '<razón> (SAB, <fecha>)'` — no se dibujan y se listan en "Left out" (SPOT 18-dic-2025: EV/EBITDA
+    a FY2029 y P/E a FY2026 a 49×).
+  - **`quality_flags` no vacío:** el método se dibuja con la advertencia o se deja fuera, nunca limpio.
+- **Sin valuación en el MCP** (SOFI al 28 oct 2026): ⛔ con la razón; no se siembra a mano. Lo primero es
+  revisar que el DCF tenga el bloque de valuación como lo esperan los demás (Output ▸ VALUATION y la hoja
+  *Discounted Cash Flow*) y volver a hacer submit — es arreglo del analista en el DCF.
+- **Sin modelo Summit:** ⏭️.
+- **Qué decide el analista:** qué submits quedan fuera; nada más (múltiplos y precios son los del modelo).
 
 ### VA-SENS Sensitivity Analysis (`sensitivity`)
 
@@ -2418,6 +2507,7 @@ snapshot; solo lo de mercado (precio, market cap) se lee en vivo.** El navegador
 | VA-HIST | Historic Multiple | EV-RES-DATA (`act` + `estMatrix.cons`, EPS anual por snapshot) · en vivo: `get-market-history` | se hace; se aprueba en el portal con el aviso |
 | VA-PEERS | Peers | OV-6 | se hace |
 | VA-TM | Target Multiple / PEG | F0-SM + valuación del modelo congelada (`get_valuation_history`) | se hace (sin modelo Summit, ⏭️) |
+| VA-SUB | Submit History | F0-SM (métricas `core`) + valuación de cada submit (`get_valuation_history`) + modelo por submit (`get_metric_snapshot_series`) · en vivo: `get-market-history` | se hace (sin valuación en el MCP, ⛔; sin modelo Summit, ⏭️) |
 | VA-SENS | Sensitivity | F0-SM (segmentos) + snapshot Summit congelado + BBG por segmento | se hace (sin modelo Summit, ⏭️) |
 | MG-TEAM · MG-OWN · MG-GOV · MG-TRACK | Management | F1 | se hace |
 | MISC (y `MISC-<clave>` por sub-tab) | Miscellaneous — siempre se proponen `MISC-comp` y, si aplica, `MISC-capacity` (§15b) | F1; al final, cuando ya se sabe qué no cupo en otra pestaña. `MISC-capacity` usa el precio por unidad de TL-SEG y el consenso de EV-RES-DATA | se hace o ⏭️ |
@@ -2466,6 +2556,7 @@ Lo que NO incluí y por qué: …
 | EV-NOTES | "Propongo seguir estos temas, llamada a llamada: … (cada uno como tendencia, promesa o vigilar). ¿Cuáles dejamos y cómo los marcamos?" |
 | BL-GEN-5 | "Las líneas de gasto del MD&A son: … ¿Hago una pestaña por cada una?" |
 | VA-TM | Hoy no se pregunta: queda en espera (⛔). Cuando se pueda: "¿Con qué año hacia adelante trabajamos? (El múltiplo objetivo es el del modelo.)" |
+| VA-SUB | "Estos son los submits con valuación: … ¿Alguno está mal armado y lo dejamos fuera? (Corregí … porque el MCP leyó la celda equivocada.)" |
 | VA-SENS | Hoy no se pregunta: queda en espera (⛔). Cuando se pueda: "¿Qué dos supuestos movemos en la tabla (p. ej. crecimiento de un segmento y su margen)?" |
 | MG-TEAM | "¿Equipo completo que publica la empresa, o solo el C-suite?" |
 | MG-TRACK | "Propongo estas calificaciones: … ¿Las ajustas?" |

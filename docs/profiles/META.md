@@ -203,6 +203,7 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 | VA-HIST | Valuation ▸ Historic Multiple | ✅ | 2026-10-20 | SAB | | copia de tsm-histmult.js; denominadores 10-Q/10-K 1Q19–2Q26 (meta-histmult-data.js); precio FB antes del 9 jun 2022 y META después |
 | VA-PEERS | Valuation ▸ Peers | ✅ | 2026-10-20 | SAB | | mismo mapa de OV-6 + tabla de números, en vivo |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⛔ | 2026-10-21 | | | sin valuación de META en el MCP (revisado 2026-10-21) — §6 |
+| VA-SUB | Valuation ▸ Submit History | ✅ | 2026-10-28 | SAB | | motor `js/submits.js` + `js/submits-data/meta.js` congelado del MCP: 4 submits (feb-3, may-5, ago-4, oct-22), abre en P/E (22.5× → 20× → 20× → 18× FY2028; PT $834.83 → $1,083.32). **Corrección §6.3:** el 22-oct el MCP leyó Q49/Q80 (año siguiente) en los DOS métodos; se usan P49 $1,119.61 y P80 $1,083.32 (verificado en DCF META.xlsm). 15-dic-2025 fuera: mal armado (EV/EBITDA a 2027 y P/E a 2026, target EV < su fair value) y el workbook ya no lo guarda |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | ✅ | 2026-10-20 | SAB | | copia de tsm-sensitivity.js; Summit 2026-08-04 congelado; 3 líneas de ingreso + margen consolidado; múltiplo arranca en el de mercado de hoy (sin valuación del modelo) |
 | MG-TEAM | Management ▸ Executives & Board | ✅ | 2026-10-20 | SAB | | se conserva (management.js, 9 ejecutivos + consejo) |
 | MG-OWN | Management ▸ Ownership | ✅ | 2026-10-20 | SAB | | tabla de insiders del proxy 2026 (Class A/B, % acciones y % votos, valor en vivo) + holders >5% (BlackRock, FMR) + Fiscal.ai |
@@ -237,6 +238,7 @@ lo que el snapshot trae en cero o con escala equivocada **no se usa** (va en nul
 - 2026-10-21 · EV-NOTES · El registro de temas sale de las notas a mano de SAB (META.pdf, 4T22–2T26), no de las transcripciones: 14 hilos en Family of Apps · Reality Labs · AI & compute · Costs & capital. Fuera: el recap del modelo (precio objetivo) y la guía del ecosistema de anuncios.
 - 2026-10-21 · EV-POST · Earnings pasa a la maquinaria de la guía (copia de `tsm-ce.js` → `meta-ce.js`, datos en `meta-ce-data.js`): Setup · Post-Results · Notes. Sin nada generado por IA, sin emojis, colores Summit (Watch List con `palette:'summit'`). Se conserva debajo de Notes la Watch List con filas en Supabase.
 - 2026-10-21 · BL-SPLC · Mismo export SPLC (2026-06-26), en el formato de la guía (copia de `tsm-splc.js`). Fuera: frases de opinión, marcas ⚠, colores por categoría y la comparación con el cliente más grande (ya en Top Line ▸ Customers). Hanwha: la lectura dice que el export no especifica qué línea compra Meta (la del perfil viejo no se pudo confirmar).
+- 2026-10-28 · VA-SUB · Submit History con el motor común (P/E por default, azul Summit `--steel`, precio gris claro, fair value apagado); 15-dic-2025 fuera como el submit de dic-2025 de SPOT — SAB (confirmado 2026-10-28)
 
 ## 4. Excepciones aceptadas
 
@@ -373,6 +375,10 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 | 2026-10-20 | EV-RES-DATA / F0-SM | Summit 2027Q1 proyectado = 643.2 en el snapshot 2026-08-04 (roto) — corregir en el workbook antes del próximo submit | SAB (autor del modelo) | ⬜ |
 | 2026-10-20 | EV-POST 2Q26 | Transcripción verbatim de IR del 2Q26 (hoy reconstruida de prensa) | SAB / Dani | ⬜ |
 
+**Arreglos pendientes en el DCF (los hace SAB; anotado 2026-10-28):**
+- [ ] `DCF META.xlsm`, bloques EV/EBITDA y P/E: con el año objetivo en FY2028 (dos años adelante), el price target que se guarda es la celda del año siguiente — Q49 US$1,151.06 y Q80 US$1,097.56 — y el fair value se descuenta de P49 US$1,119.61 / P80 US$1,083.32. Dejar target y fair value en la misma celda/año y volver a hacer submit. En el portal el 22-oct va congelado con P49/P80 y la nota "Corrected".
+- (sin acción) El submit del 15-dic-2025 (EV/EBITDA a FY2027, P/E a FY2026, target EV < su fair value) ya no se puede arreglar. Sigue fuera (SAB, 2026-10-28).
+
 ## 6b. Conexiones pendientes ("Live data pending")
 
 > `docs/PROFILE_PLAYBOOK.md` §20b. Bloques aprobados que hoy muestran el aviso porque falta el camino
@@ -474,3 +480,9 @@ contradicen Earnings 2Q26; el lede del theme record apunta a un tab "Guidance" q
 - Archivos: `meta-splc.js` (nuevo), `meta.js` (sub-tab + build + modal `splc:`), `css/overview.css` (bloque `.meta-splc-*` con alcance `.ov-meta-dd`, texto en negro).
 - Autoauditoría: ✔ sin errores de consola · ✔ sin emojis · ✔ sin `<style>` en línea · ✔ sumas de cadenas verificadas · ✘→✔ gráfica salía naranja (SUMMIT_CAT[1]) → navy; geografía reordenada por instalaciones.
 
+### 2026-10-28 · VA-SUB Submit History — 👀 EN REVISIÓN
+- Qué se mostró: Valuation ▸ Submit History en localhost (entre Peers y Sensitivity; META no tiene Target Multiple).
+- Fuentes: MCP `get_valuation_history('META')` + `get_metric_snapshot_series` (REV, OP_INCOME, EBITDA, EARNINGS, SHARES · 2026–2028), jalado 2026-10-28; precio Massive.
+- Revisión §6.3: PT÷FV 1.115/1.117 · 1.080/1.082 · 1.049/1.050 limpios; 22-oct 1.054/1.039 → bug Q/P en ambos métodos, corregido con `fix` (se muestra "Corrected: …" bajo la gráfica). Arreglo pendiente en el DCF (sección 6).
+- Chequeo: EPS 2028 = 154,668 ÷ 2,574 = $60.09 × 18 = $1,081.6 ≈ P80 $1,083.32 (Q80 daba $1,097.56).
+- 2026-10-28 · Aprobación: SAB "Aprobado META y TSM" → ✅. Los hallazgos son errores del DCF, no del MCP: los corrige SAB (sección 6).

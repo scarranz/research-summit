@@ -43,12 +43,18 @@ import { spotSegments } from './segments-data/spot.js';
 import { spotResults } from './results-data/spot.js';
 import { metaSegments } from './segments-data/meta.js';
 import { metaResults } from './results-data/meta.js';
+import { googlSegments } from './segments-data/googl.js';
+import { googlResults } from './results-data/googl.js';
+import { maSegments } from './segments-data/ma.js';
+import { maResults } from './results-data/ma.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
 import { SN_THEMES } from './themes-data/sn.js';
 import { TSM_THEMES } from './themes-data/tsm.js';
 import { SPOT_THEMES } from './themes-data/spot.js';
 import { META_THEMES } from './themes-data/meta.js';
+import { GOOGL_THEMES } from './themes-data/googl.js';
+import { MA_THEMES } from './themes-data/ma.js';
 import { SUMMIT_CAT, SUMMIT_MUTE } from './viz-palette.js';   // the portal's fixed categorical palette
 
 // The Notes taxonomy names segments in prose; the datasets key them. One map, stated once.
@@ -58,8 +64,10 @@ var THEME_SEG = {
   TSM: { 'AI & HPC demand': 'hpc', 'Consumer & smartphone': 'smart' },   // the other TSM themes are company-wide
   SPOT: { 'Pricing & ARPU': 'prem', 'Royalties & legal': 'prem', 'Advertising': 'ads', 'Users & subscribers': 'ads' },   // the free tier is the funnel; the other SPOT themes are company-wide
   META: { 'Family of Apps': 'foa', 'Reality Labs': 'rl' },               // AI & compute, Costs & capital are company-wide
+  GOOGL: { 'Google Services': 'svc', 'Google Cloud': 'cloud', 'Other Bets': 'bets' },   // AI & compute, Costs & capital are company-wide
+  MA: { 'Consumer payments': 'pn', 'Commercial and new flows': 'pn', 'Value-added services': 'vas', 'Agentic and digital assets': 'vas' },   // guidance, costs and capital, regulation and litigation are company-wide
 };
-var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES, META: META_THEMES };
+var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES, META: META_THEMES, GOOGL: GOOGL_THEMES, MA: MA_THEMES };
 var SEGMENTS_DATA = {
   AMZN: { seg: amznSegments, res: amznResults },
   DHR:  { seg: dhrSegments,  res: dhrResults  },
@@ -73,7 +81,11 @@ var SEGMENTS_DATA = {
   // SPOT: two reportable segments (Premium, Ad-Supported); the segment profit line is GROSS profit (no segment operating income).
   SPOT: { seg: spotSegments, res: spotResults },
   // META: two reportable segments (Family of Apps, Reality Labs), 10-K Note 15.
-  META: { seg: metaSegments, res: metaResults }
+  META: { seg: metaSegments, res: metaResults },
+  // GOOGL: two Google segments (Services, Cloud) + Other Bets, 10-K Note 15. Alphabet-level activities is not a revenue segment.
+  GOOGL: { seg: googlSegments, res: googlResults },
+  // MA: ONE reportable operating segment (Payment Solutions, 10-K Note 22); its two net-revenue categories stand in as the segments.
+  MA: { seg: maSegments, res: maResults }
 };
 
 export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }
@@ -96,6 +108,7 @@ var RS_FWD  = '#2563EB';
 // hypothetical seventh entity silently re-used the first one's colour. Both are categorical-colour
 // errors. Now the portal's fixed categorical order, assigned by slot and never cycled.
 var SG_RAMP = SUMMIT_CAT;
+function sgY2Ink(i){ var d = sgData(), r = d && d.seg.y2Ramp; return r ? (r[i] || SUMMIT_MUTE) : null; }   // a dataset may keep a second-axis series in its own ink instead of grey
 function sgRamp(i){ var d = sgData(), r = (d && d.seg.ramp) || SG_RAMP; return r[i] || SUMMIT_MUTE; }   // a dataset may restrict the series colours (SPOT: slate greys, no categorical palette)
 
 function rsRR(ctx, x, y, w, h, r){
@@ -332,7 +345,11 @@ function sgResolveRef(ref, view){
     // `history` (segments dataset): reported quarters/years that predate the Results axis, so the Top Line reaches further back than Results does.
     var hi = d.seg.history && d.seg.history[key] && d.seg.history[key][view];
     if (hi) Object.keys(hi).forEach(function(p){ if (act[p] == null) act[p] = hi[p]; });
-    return { unit: m.unit === 'eps' ? 'eps' : (m.unit === 'count' ? 'count' : 'usdM'), label: m.label, short: m.short || m.label,
+    if (m.unit === 'pct'){          // the Results engine stores percent numbers (0.38 = 0.38%); this engine stores fractions
+      Object.keys(act).forEach(function(p){ act[p] = act[p] / 100; });
+      Object.keys(est).forEach(function(p){ est[p] = est[p] / 100; });
+    }
+    return { unit: m.unit === 'eps' ? 'eps' : (m.unit === 'count' ? 'count' : (m.unit === 'pct' ? 'pct' : 'usdM')), label: m.label, short: m.short || m.label,
              act: act, est: est, src: 'Results dataset' };
   }
   if (kind === 'shared'){
@@ -383,13 +400,14 @@ function sgResolve(key, view){
 function cur(){ var d = sgData(); return (d && d.res && d.res.currency) || '$'; }
 function fmtVal(v, unit){
   if (v == null) return '—';
-  if (unit === 'pct')  return (v * 100).toFixed(1) + '%';
+  if (unit === 'pct')  return (v * 100).toFixed(Math.abs(v) < 0.01 ? 2 : 1) + '%';   // a yield of 0.38% needs its second decimal
   if (unit === 'idx')  return v.toFixed(1);
   if (unit === 'x')    return v.toFixed(2) + '×';
   if (unit === 'days') return Math.round(v) + 'd';
   if (unit === 'eps')  return cur() + v.toFixed(2);
   if (unit === 'count') return (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(1)) + 'M';   // users / subscribers, millions
   var a = Math.abs(v);
+  if (a >= 1e6) return cur() + (v / 1e6).toFixed(2) + 'T';   // $M stored: 2,417,000 = $2.42T
   return a >= 1000 ? cur() + (v / 1000).toFixed(1) + 'B' : cur() + Math.round(v) + 'M';
 }
 function pctStr(v){ return v == null ? '—' : (v * 100).toFixed(1) + '%'; }
@@ -554,7 +572,7 @@ function modesHtml(id, opts, list, view){
 function chipsHtml(id, list, view, firstIsTarget){
   return blockSeries(list, view).map(function(x, i){
     var md = blk(id).mode || 'amt', money = x.d.unit === 'usdM' || x.d.unit === 'eps' || (md !== 'amt' && !(md === 'growth' && blk(id).growUnit === 'amt'));   // the chip wears the colour the chart draws: a count is grey only while it sits on the second axis
-    var color = !money ? RS_CONS : (firstIsTarget && i === 0 ? RS_ACT : sgRamp(i));
+    var color = !money ? (sgY2Ink(i) || RS_CONS) : (firstIsTarget && i === 0 ? RS_ACT : sgRamp(i));
     return '<button type="button" class="rs-leg' + (vis(id, x.key) ? '' : ' off') +
       '" data-sgleg="' + esc(id) + '|' + esc(x.key) + '" title="Show / hide">' +
       '<span class="rs-leg-line" style="background:' + color + '"></span>' +
@@ -642,7 +660,7 @@ function buildChartBlock(id, list, view, opts){
       return (x.d.unit === 'usdM') ? v / 1000 : (x.d.unit === 'pct' ? v * 100 : v);
     });
     var isTarget = opts.firstIsTarget && slotOf[x.key] === 0;
-    var color = solo ? RS_ACT : (!m ? RS_CONS : (isTarget ? RS_ACT : sgRamp(slotOf[x.key])));
+    var color = solo ? RS_ACT : (!m ? (sgY2Ink(slotOf[x.key]) || RS_CONS) : (isTarget ? RS_ACT : sgRamp(slotOf[x.key])));
     datasets.push((m && opts.bars && !isTarget && mode !== 'idx')
       ? { label: x.label || x.d.short, data: data, type: 'bar', backgroundColor: color,
           maxBarThickness: 34, order: 3, yAxisID: 'y' }
@@ -661,10 +679,24 @@ function buildChartBlock(id, list, view, opts){
          stacked: mode === 'share' || (opts.stack && mode === 'amt' && st.stack !== false),
          ticks: { callback: function(v){ if (mode === 'idx') return v.toFixed(0); if (solo && mode === 'amt') return sideFmt(solo, v); return (mode === 'amt' || growAmt) ? (leftUnit === 'eps' ? cur() + v.toFixed(2) : cur() + v + 'B') : v.toFixed(mode === 'share' ? 1 : 0) + '%'; } } }
   };
+  // Headroom for the FORECAST badge (top-left of the forward zone) and the group totals above the columns: without it the tallest
+  // forward columns run under the badge.
+  if (f >= 0 && !st.yr && (mode === 'amt' || mode === 'idx')){
+    var yTop = null, stk = !!scales.y.stacked;
+    ps.forEach(function(p, j){
+      var t = null;
+      datasets.forEach(function(d){
+        if (d.yAxisID !== 'y' || typeof d.data[j] !== 'number') return;
+        t = stk ? (t == null ? 0 : t) + d.data[j] : (t == null || d.data[j] > t ? d.data[j] : t);
+      });
+      if (t != null && (yTop == null || t > yTop)) yTop = t;
+    });
+    if (yTop != null && yTop > 0) scales.y.suggestedMax = yTop * 1.16;
+  }
   if (!datasets.some(function(d){ return d.yAxisID === 'y'; })) scales.y.display = false;   // only secondary-axis series (users in M): no empty main axis
   if (needY2) scales.y2 = { position: 'right', weight: 1, grid: { display: false },
     ticks: { callback: function(v){
-      return y2unit === 'pct' ? v.toFixed(0) + '%' : y2unit === 'days' ? v.toFixed(0) + 'd' : y2unit === 'count' ? v.toFixed(0) + 'M' : v.toFixed(2) + '×'; } } };
+      return y2unit === 'pct' ? (Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(0)) + '%' : y2unit === 'days' ? v.toFixed(0) + 'd' : y2unit === 'count' ? v.toFixed(0) + 'M' : v.toFixed(2) + '×'; } } };
   st.chart = new Chart(el.getContext('2d'), {
     data: { labels: ps, datasets: datasets },
     options: { responsive: true, maintainAspectRatio: false, animation: false,
@@ -843,6 +875,7 @@ function buildSegResults(){
   // about the data.
   if (d.res.estMatrix) out.estMatrix = d.res.estMatrix;
   if (d.res.forwardQuarters) out.forwardQuarters = d.res.forwardQuarters;
+  if (d.res.defaultRange) out.defaultRange = d.res.defaultRange;   // opens on the last N reported periods plus the forward ones, like the Results tab
   ['q', 'y'].forEach(function(v){
     var src = d.res.views[v]; if (!src) return;
     var metrics = {}, keys = [];
@@ -859,6 +892,12 @@ function buildSegResults(){
       metrics[mk] = copy; keys.push(mk);
     });
     if (!keys.length) return;
+    var comp = [];   // a segment may carry its gross-to-net build next to the reported line (Mastercard: gross, card related, processing, other, incentives)
+    (s.components || []).forEach(function(ref){
+      var ck = ref.split(':')[1], cm = src.metrics[ck]; if (!cm || metrics[ck]) return;
+      var cc = {}; for (var k2 in cm) cc[k2] = cm[k2];
+      cc.note = ''; metrics[ck] = cc; comp.push(ck);
+    });
     out.views[v] = { label: src.label, note: '',
       metrics: metrics,
       // The section key becomes the engine's element ids (rsChart-<k>, rsTable-<k>, the slider,
@@ -868,7 +907,7 @@ function buildSegResults(){
       // the "hidden duplicate block stealing getElementById" failure the reference warns about.
       // Namespacing the key keeps the two instances apart.
       sections: [{ key: 'segtop', label: s.label + ' — top line', defaultMetric: keys[0],
-                   groups: [{ label: 'Segment', keys: keys }] }] };
+                   groups: [{ label: 'Segment', keys: keys }].concat(comp.length ? [{ label: 'Revenue build (gross to net)', keys: comp }] : []) }] };
   });
   return out;
 }
@@ -919,7 +958,7 @@ function noteEditor(slot, fallback, opt){
   if (editing){
     return '<div class="sg-noteed">' + tierTag('OURS') +
       '<textarea class="sg-note-ta" id="sgNoteTa" rows="' + (opt.rows || 5) + '" placeholder="' +
-        esc(opt.placeholder || 'In our words — the thing the filing does not say.') + '">' +
+        esc(opt.placeholder || 'In Summit’s words — the thing the filing does not say.') + '">' +
         esc(txt) + '</textarea>' +
       '<div class="sg-note-act">' +
         '<button type="button" class="sg-btn primary" data-sgnsave="' + esc(slot) + '">Save</button>' +
@@ -944,12 +983,12 @@ function noteHtml(s){
   return '<div class="rs-collap sg-note">' +
     '<button type="button" class="rs-collap-h" data-sgnote="1">' +
       '<span class="rs-collap-ic">' + (open ? '▾' : '▸') + '</span>' +
-      (txt ? 'Our read on it' : 'Add our read on it') + tierTag('OURS') +
+      (txt ? 'Summit’s read on it' : 'Add Summit’s read on it') + tierTag('OURS') +
       '<span class="rs-collap-sub">' + (open ? 'hide' : (txt ? 'show' : 'nothing written yet')) +
       '</span></button>' +
     '<div class="rs-collap-b"' + (open ? '' : ' hidden') + '>' +
       noteEditor(slot, s.summary || s.lede || '', { rows: 6,
-        placeholder: 'What this segment actually is, in our words — the thing the filing does not say.',
+        placeholder: 'What this segment actually is, in Summit’s words — the thing the filing does not say.',
         empty: 'No note yet for this segment.' }) +
     '</div></div>';
 }
@@ -1059,7 +1098,7 @@ function renderMd(kind){
 // "we think" carry completely different weight, and a tab that mixes them teaches nobody anything.
 function slug(t){ return String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
 function tierTag(kind){
-  return '<span class="sg-tier sg-tier-' + kind.toLowerCase() + '">' + esc(kind) + '</span>';
+  return '<span class="sg-tier sg-tier-' + kind.toLowerCase() + '">' + esc(kind === 'OURS' ? 'SUMMIT' : kind) + '</span>';
 }
 SG_MD.prod = function(s){
   return (s.products || s.sells || []).map(function(it){
@@ -1571,6 +1610,52 @@ function custSplcSection(c, n){
       (sp.file ? ' · ' + esc(sp.file) : '') + '</p>');
 }
 
+// "What each top customer buys" (playbook §10, TL-CUS section 5) — one row per top customer, or per
+// customer CLASS when the company has no large customers. Data: customers.buys = [{name, tk?, what,
+// seg, share?, shareBasis:'filing'|'estimate', shareOf?, shareNote?, src}]. A weight is either typed
+// (`share`, in %, marked estimate unless the filing gives it) or computed from the dataset's own
+// annual series (`shareOf: [keys]` over customers.buysBase = {keys, y, label}), so it ties to the
+// filing. `buys: []` with `buysNone` says in one line that nothing quantifies it (rule 7).
+function custBuysShare(c, r){
+  var d = sgData(), sh = (d && d.seg.shared) || {}, b = c.buysBase;
+  function sum(keys, y){
+    var t = 0;
+    for (var i = 0; i < keys.length; i++){
+      var v = sh[keys[i]] && sh[keys[i]].y && sh[keys[i]].y.act ? sh[keys[i]].y.act[y] : null;
+      if (v == null) return null;
+      t += v;
+    }
+    return t;
+  }
+  if (r.shareOf && b){
+    var num = sum(r.shareOf, b.y), den = sum(b.keys, b.y);
+    if (num != null && den) return (num / den * 100).toFixed(1) + '% <span class="rs-ft-dim">· ' + esc(b.label) + '</span>';
+  }
+  if (r.share != null)
+    return (r.shareBasis === 'filing' ? '' : '~') + r.share + '%' +
+      (r.shareBasis === 'filing' ? '' : ' <span class="rs-ft-dim">· estimate</span>');
+  return '<span class="rs-ft-nil">' + esc(r.shareNote || 'not quantified') + '</span>';
+}
+function custBuysSection(c, n){
+  var rows = c.buys || [], tk = rows.some(function(r){ return r.tk; });
+  if (!rows.length)
+    return sec(n, 'What each top customer buys', 'not quantified',
+      '<div class="sg-needs">⚑ ' + esc(c.buysNone || ('Nothing ' + coName() + ' discloses quantifies what its customers buy.')) + '</div>');
+  return sec(n, 'What each top customer buys', rows.length + ' rows',
+    '<p class="sg-lede">' + esc(c.buysLede || ('What the largest customers of ' + coName() + ' pay it for, and how much of revenue each is.')) + '</p>' +
+    // A ticker column only when some row has one (a list of customer classes has none).
+    '<div class="rs-ft-scroll"><table class="rs-ft sg-buys"><thead><tr>' +
+      '<th class="rs-ft-h">Customer</th>' + (tk ? '<th>Ticker</th>' : '') + '<th>What it buys</th><th>Segment</th>' +
+      '<th class="sg-buys-n">Share of revenue</th><th>Source</th></tr></thead><tbody>' +
+      rows.map(function(r){
+        return '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(r.name) + '</td>' +
+          (tk ? '<td>' + esc(r.tk || '—') + '</td>' : '') +
+          '<td class="sg-buys-w">' + esc(r.what) + '</td><td>' + esc(r.seg || '—') + '</td>' +
+          '<td class="sg-buys-n">' + custBuysShare(c, r) + '</td><td>' + esc(r.src || '—') + '</td></tr>';
+      }).join('') + '</tbody></table></div>' +
+    (c.buysNote ? '<p class="sg-cite">' + esc(c.buysNote) + '</p>' : ''));
+}
+
 // ── the two card decks, in the same master-detail language as the rest of Top Line ────────────
 // A name is the index; the words behind it are one click down. The filing's own paragraphs run
 // from four lines to twenty, so putting any of them on a card is what made this tab a wall.
@@ -1605,7 +1690,7 @@ export function segmentsCustomersHtml(ticker){
   if (conc.disclosed === false){
     h1 = '<div class="sg-finding"><div class="sg-finding-h">⚑ No customer concentration is disclosed at all</div>' +
       '<p>No "no single customer accounted for 10%" sentence, and no named customer anywhere in ' +
-      'the filing. Nothing on this tab is a revenue ranking.</p></div>' +
+      'the filing. Nothing on this tab ranks individual customers by revenue.</p></div>' +
       drill('conc', 'What the filing does and does not say',
         '<p>' + esc(conc.note || '') + '</p>' +
         (c.cite ? '<p class="sg-cite">' + esc(c.cite.form) + ' for ' + esc(c.cite.period) +
@@ -1628,9 +1713,12 @@ export function segmentsCustomersHtml(ticker){
           mdHtml('cname', null)
         : '<div class="sg-needs">⚑ No customer has been named on a call for this company yet.</div>')) +
     (c.splc === false ? '' : custSplcSection(c, 4)) +      // `splc: false` — a consumer business with no counterparty census to load (SPOT): no empty section
+    (c.buys === undefined ? '' : custBuysSection(c, c.splc === false ? 4 : 5)) +   // section 5 only where a profile has filled `buys`
     '<div class="ov-fynote sg-src">' + (c.splc === false ? 'Two registers' : 'Three registers') + ', kept apart on purpose: what the filing says, ' +
     'what management said on a call' + (c.splc === false ? '' : ', and what somebody else disclosed about ' + coName()) + '. None of them ' +
-    'is a revenue ranking, and the tab never presents one.</div></div>';
+    'is a revenue ranking' + ((c.buys || []).length
+      ? '; only the last section weighs customers against revenue, and each weight names its basis.'
+      : ', and the tab never presents one.') + '</div></div>';
 }
 export function initSegmentsCustomers(root, ticker){
   var d = SEGMENTS_DATA[ticker]; if (!d) return;
@@ -1647,7 +1735,7 @@ export function initSegmentsCustomers(root, ticker){
   // No chart on this tab, so a card only ever re-renders its own deck — nothing else moves.
   wrap.addEventListener('click', function(ev){
     var pk = ev.target.closest('[data-sgpick]');
-    if (pk && !ev.target.closest('.sg-panel')){
+    if (pk && (!ev.target.closest('.sg-panel') || pk.classList.contains('sg-panel-x'))){
       var pa = pk.getAttribute('data-sgpick').split('|'), kind = pa[0];
       _sg.open[sgPickKey(kind)] = (pa[1] === 'close') ? null
         : (sgPicked(kind) === +pa[1] ? null : +pa[1]);
@@ -1674,16 +1762,20 @@ export function initSegmentsCustomers(root, ticker){
 // The same total revenue, sliced the other ways the company reports it — by product line and by
 // country. Neither is extra revenue and the pane says so out loud, because a reader who adds a
 // segment chart to a geography chart has just double-counted the company.
-function otherCuts(){ var d = sgData(); return (d && d.seg.other) || []; }
+// The same machinery draws a SECOND family of cuts for Bottom Line: `seg.costs`, the way net revenue is spent (an operating-expense bridge). `_oc` names which
+// family the call in hand belongs to ('other' = Top Line ▸ Other, 'costs' = Bottom Line ▸ Operating costs); each family keeps its own selected cut and block ids.
+var _oc = 'other';
+function otherCuts(){ var d = sgData(); return (d && d.seg[_oc]) || []; }
+function curCutKey(){ return (_sg.cutBy || (_sg.cutBy = {}))[_oc] || (_oc === 'other' ? _sg.cut : null); }
 function otherCut(){
-  var cs = otherCuts();
-  return cs.filter(function(c){ return c.key === _sg.cut; })[0] || cs[0] || null;
+  var cs = otherCuts(), k = curCutKey();
+  return cs.filter(function(c){ return c.key === k; })[0] || cs[0] || null;
 }
-function otherBlockId(c){ return 'oth-' + c.key; }
+function otherBlockId(c){ return (_oc === 'costs' ? 'cst-' : 'oth-') + c.key; }
 function otherOpts(c){
   return { modes: true, views: (c.views || ['q', 'y']).length > 1, bars: true, stack: true,
            totals: true, tableTitle: 'Period detail', height: 330,
-           caption: c.label + ' — the same revenue, cut by ' + c.sub };
+           caption: c.label + (_oc === 'costs' ? ' — ' + c.sub : ' — the same revenue, cut by ' + c.sub) };
 }
 function otherDefault(c){ return (c.views && c.views[0]) || 'y'; }
 
@@ -1698,6 +1790,7 @@ function otherPane(){
   if (c.axis) SG_AXIS[id] = c.axis;
   var view = st.view;
 
+  var costs = _oc === 'costs';
   var pills = '<div class="sg-segpills"><div class="rs-views">' + cs.map(function(x){
     return '<button type="button" class="rs-view' + (x.key === c.key ? ' active' : '') +
       '" data-sgcut="' + esc(x.key) + '">' + esc(x.label) + '</button>'; }).join('') + '</div></div>';
@@ -1732,21 +1825,30 @@ function otherPane(){
         (x.tenK.where ? '<p class="sg-cite">' + esc(x.tenK.where) + '</p>' : '') + '</div>';
     }).join('') + '</div>';
   }
-  var defsSec = body ? sec(2, 'How the filing defines it',
-    defs.length ? defs.length + ' lines defined' : 'verbatim', body) : '';
+  var defsSec = body ? sec(2, _oc === 'costs' ? 'Basis' : 'How the filing defines it',
+    defs.length ? defs.length + ' lines defined' : (_oc === 'costs' ? 'what is on the chart' : 'verbatim'), body) : '';
 
-  return '<div class="sg-wrap" id="sgOthWrap">' + pills + chart + defsSec +
-    '<div class="ov-fynote sg-src">Every cut on this tab disaggregates the SAME consolidated net sales — ' +
+  return '<div class="sg-wrap" id="' + (costs ? 'sgCstWrap' : 'sgOthWrap') + '">' + pills + chart + defsSec +
+    (costs ? '<div class="ov-fynote sg-src">Both cuts read the same reported lines as Evolution ▸ Results; the expense lines add to total operating expenses and, with operating income, to net revenue.</div>'
+           : '<div class="ov-fynote sg-src">Every cut on this tab disaggregates the SAME consolidated net sales — ' +
     'the segments, the product lines and the countries each add to the identical total. They are ' +
-    'alternative slices, never additive.</div></div>';
+    'alternative slices, never additive.</div>') + '</div>';
 }
 
 export function segmentsOtherHtml(ticker){
   var d = SEGMENTS_DATA[ticker];
   if (!d) return '<p class="sg-lede">No segments dataset for ' + esc(ticker) + '.</p>';
-  _sg.ticker = ticker;
+  _sg.ticker = ticker; _oc = 'other';
   if (!_sg.cut && d.seg.other && d.seg.other.length) _sg.cut = d.seg.other[0].key;
   return otherPane();
+}
+// Bottom Line ▸ Operating costs: the same pane, over the dataset's `costs` cuts.
+export function segmentsCostsHtml(ticker){
+  var d = SEGMENTS_DATA[ticker];
+  if (!d || !d.seg.costs || !d.seg.costs.length) return '';
+  _sg.ticker = ticker; _oc = 'costs';
+  if (!curCutKey()) (_sg.cutBy || (_sg.cutBy = {}))[_oc] = d.seg.costs[0].key;
+  var h = otherPane(); _oc = 'other'; return h;
 }
 function renderOther(){
   var c = otherCut(); if (!c) return;
@@ -1756,23 +1858,27 @@ function renderOther(){
   if (allow.indexOf(st.view) < 0) st.view = allow[0];
   renderBlock(id, c.series, st.view, otherOpts(c));
 }
-export function initSegmentsOther(root, ticker){
+export function initSegmentsCosts(root, ticker){ initSegmentsOther(root, ticker, 'costs'); }
+export function initSegmentsOther(root, ticker, scope){
   var d = SEGMENTS_DATA[ticker]; if (!d) return;
+  scope = scope || 'other'; _oc = scope;
   _sg.ticker = ticker;
   var host = root || document;
-  var wrap = host.querySelector ? host.querySelector('#sgOthWrap') : null;
+  var wrap = host.querySelector ? host.querySelector(scope === 'costs' ? '#sgCstWrap' : '#sgOthWrap') : null;
   if (!wrap) return;
   if (!wrap.__sgWired){
     wrap.__sgWired = true;
     wrap.addEventListener('click', function(ev){
+      _oc = scope; _sg.ticker = ticker;
       function redraw(){
         var parent = wrap.parentElement;
-        wrap.outerHTML = segmentsOtherHtml(_sg.ticker);
-        var fresh = parent.querySelector('#sgOthWrap');
-        if (fresh){ fresh.__sgWired = false; initSegmentsOther(parent, _sg.ticker); }
+        wrap.outerHTML = scope === 'costs' ? segmentsCostsHtml(_sg.ticker) : segmentsOtherHtml(_sg.ticker);
+        _oc = scope;
+        var fresh = parent.querySelector(scope === 'costs' ? '#sgCstWrap' : '#sgOthWrap');
+        if (fresh){ fresh.__sgWired = false; initSegmentsOther(parent, _sg.ticker, scope); }
       }
       var cu = ev.target.closest('[data-sgcut]');
-      if (cu){ _sg.cut = cu.getAttribute('data-sgcut');
+      if (cu){ if (scope === 'costs') (_sg.cutBy || (_sg.cutBy = {}))[scope] = cu.getAttribute('data-sgcut'); else _sg.cut = cu.getAttribute('data-sgcut');
                // a different cut is a different set of series on a different axis
                var nid = otherBlockId(otherCut()); _sg.blocks[nid] = blank();
                redraw(); return; }
@@ -1807,7 +1913,7 @@ export function initSegmentsOther(root, ticker){
                if (bd) bd.hidden = !(bst.tbl === true);
                renderOther(); return; }
     });
-    sgWireSlider(wrap, renderOther);
+    sgWireSlider(wrap, function(){ _oc = scope; renderOther(); });
   }
   renderOther();
 }
@@ -1888,7 +1994,7 @@ export function initSegments(root, ticker){
       // Master-detail. Only the cards+panel block is re-rendered, so opening a card never
       // rebuilds the charts underneath it and never moves the page under the reader.
       var pk = ev.target.closest('[data-sgpick]');
-      if (pk && !ev.target.closest('.sg-panel')){
+      if (pk && (!ev.target.closest('.sg-panel') || pk.classList.contains('sg-panel-x'))){
         var pa = pk.getAttribute('data-sgpick').split('|'), pkind = pa[0];
         _sg.open[sgPickKey(pkind)] = (pa[1] === 'close') ? null
           : (sgPicked(pkind) === +pa[1] ? null : +pa[1]);

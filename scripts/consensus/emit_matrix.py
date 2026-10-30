@@ -147,6 +147,20 @@ def read_rows(rows, hdr, origin):
                 if unit == 'usdM': v *= SCALE.get(scale, 1e-6)
                 v *= spec.get('sign', 1)
                 fwd.setdefault(mkey,{})[per]=(v, HORN.get(h,9))
+        # Optional derived metrics: {"sum": ["svc","cloud",...], "optional": ["hedge"]} adds the
+        # parts per period, from the SAME snapshot. For a ticker whose headline line is on a mixed
+        # basis (GOOGL: SALES_REV_TURN consensus mixes gross and net-of-TAC brokers) while its
+        # segment lines are clean. A period is emitted only when every non-optional part is there.
+        for view in ('q','y'):
+            for mkey, raw in MAP.get(view,{}).items():
+                if not isinstance(raw, dict) or 'sum' not in raw: continue
+                opt = set(raw.get('optional', []))
+                pers = set().union(*[set(fwd.get(k,{})) for k in raw['sum']]) if raw['sum'] else set()
+                for per in pers:
+                    if ('Q' in per) != (view == 'q'): continue
+                    if any(per not in fwd.get(k,{}) for k in raw['sum'] if k not in opt): continue
+                    parts = [fwd[k][per] for k in raw['sum'] if per in fwd.get(k,{})]
+                    fwd.setdefault(mkey,{})[per] = (sum(p[0] for p in parts), max(p[1] for p in parts))
         out.append({'live':live,'asof':asof,'fwd':fwd,'lastQ':lastQ,'lastY':lastY,'origin':origin,
                     'slots':slots})
     return out
@@ -190,6 +204,9 @@ for view in ('q','y'):
     for mkey, raw in MAP.get(view,{}).items():
         spec = spec_of(raw); hit = resolve(spec, newest['slots'], {}) if newest else None
         n = sum(1 for s in snaps if s['fwd'].get(mkey))
+        if 'sum' in spec:
+            print('   %-3s %-10s %-34s %-18s  %2d/%d snapshots' % (view, mkey, 'sum of ' + '+'.join(spec['sum']), 'derived', n, len(snaps)))
+            continue
         tag = ('%s scale=%r' % (hit[0], hit[1])) if hit else 'UNRESOLVED'
         print('   %-3s %-10s %-34s %-18s  %2d/%d snapshots' % (
             view, mkey, spec.get('code', spec.get('slot_or_code','')), tag, n, len(snaps)))

@@ -22,6 +22,7 @@ import { metaSplcBody, metaSplcBuild, metaSplcPop } from './meta-splc.js';   // 
 import { metaCompBody, metaCompInit } from './meta-comp.js';   // Misc ▸ Competitive Position (MISC-comp, §15b)
 import { metaCapexBody, metaCapexBuild, metaStrategyBody, metaMnaBody, metaCapacityBody } from './meta-misc.js';   // Misc ▸ Capex, Strategy, M&A, Capacity (formal, §15b)
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/meta.js)
+import { submitsHtml, initSubmits } from '../submits.js';   // Valuation ▸ Submit History (engine + js/submits-data/meta.js)
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -746,6 +747,7 @@ function deepDiveHtml(c){
   h+=subtabs('valuation',[
     { k:'histmult', l:'Historic Multiple', body:metaHistMult.body() },
     { k:'peers', l:'Peers', body:meValuationPeersBody() },
+    { k:'submits', l:'Submit History', body:submitsHtml('META') },   // VA-SUB (Summit valuation per submit, frozen; price live)
     { k:'sensitivity', l:'Sensitivity', body:metaSens.body() },
   ]);
   h+=subtabs('mgmt',[
@@ -808,6 +810,7 @@ function buildSub(root, group, key){
   if(group==='evolution' && key==='estevo') requestAnimationFrame(function(){ initResultsEvo('META'); });
   if(group==='valuation' && key==='histmult') requestAnimationFrame(function(){ metaHistMult.init(root); });
   if(group==='valuation' && key==='peers') requestAnimationFrame(function(){ meWireScatters(root); });
+  if(group==='valuation' && key==='submits') requestAnimationFrame(function(){ initSubmits(root, 'META'); });
   if(group==='valuation' && key==='sensitivity') requestAnimationFrame(function(){ metaSens.init(root); });
   if(group==='mgmt' && key==='team') META_MGMT.init(root);
   if(group==='mgmt' && key==='ownership') metaOwnInit(root);

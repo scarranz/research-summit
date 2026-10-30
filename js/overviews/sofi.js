@@ -9,9 +9,36 @@
 // ended March 31, 2026); annual figures are fiscal years ended December 31. Sourced from
 // SoFi's FY2025 Form 10-K, Q1 2026 Form 10-Q, and Q1 2026 investor presentation / earnings call.
 
+import { SUMMIT_CAT, SUMMIT_POS, SUMMIT_NEG, fade } from '../viz-palette.js';   // Summit tokens: the company's brand colours live only in its logo
+import { sofiHistMult } from './sofi-histmult.js';   // Valuation ▸ Historic Multiple (VA-HIST)
+import { soStdPeerScatter, soWireScatters, soValuationPeersBody } from './sofi-peers.js';   // OV-6 peer map (data + render + live quotes)
+import { sofiCeHtml, sofiCeWire, sofiCeBuild, sofiCePop } from './sofi-ce.js';   // Evolution ▸ Earnings (EV-SET / EV-POST / EV-NOTES)
+import { sofiTargetMult } from './sofi-target-multiple.js';   // Valuation ▸ Target Multiple / PEG (VA-TM, frozen Summit valuation)
+import { SOFI_MGMT } from './sofi-mgmt.js';   // Management ▸ Executives & Board (MG-TEAM)
+import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';   // Evolution ▸ Results engine (dataset: js/results-data/sofi.js)
+
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ─── Snapshot & narrative ────────────────────────────────────────────────────
+// OV-1 Key Facts (playbook §8): 10 cells, in this order. Sources: FY2025 Form 10-K — cover page (listing, HQ,
+// incorporation), Item 1 (founded 2011; ~6,100 employees at Dec 31 2025), Item 5 ("We have never declared nor
+// paid cash dividends"), Note 1 (common stock began trading on Nasdaq Global Select on June 1 2021 after the
+// merger with Social Capital Hedosophia Holdings Corp. V). SEC filer: SoFi files 10-K / 10-Q (domestic).
+// CEO start date is not in the 10-K (proxy); left off until the analyst confirms it (build log, OV-1).
+var SOFI_FACTS = [
+  ['Listing', 'Nasdaq: SOFI'],
+  ['HQ', 'San Francisco, California, USA'],
+  ['Incorporated', 'Delaware, USA'],
+  ['SEC filer', 'Domestic (10-K/10-Q/8-K)'],
+  ['Founded', '2011'],
+  ['IPO', 'Jun 2021 · SPAC merger (Social Capital Hedosophia V) · Nasdaq'],
+  ['CEO', 'Anthony Noto · CEO since Mar 2018'],
+  ['Employees', '~6,100 · Dec 2025'],
+  ['Dividend', 'Non-payer · never paid one'],
+  ['Market cap', 'loading live quote…']
+];
+// Pre-playbook snapshot (6 cells). Not rendered any more; "Bank charter" moves to the lede and "How SoFi makes
+// money" (OV-2 / OV-4) and the rest is covered by SOFI_FACTS — kept here until those units are approved (B2 #1).
 var SNAPSHOT = [
   ['Listing', 'Nasdaq: SOFI'],
   ['HQ', 'San Francisco, CA'],
@@ -21,9 +48,18 @@ var SNAPSHOT = [
   ['Chairman & CEO', 'Anthony Noto (since 2018)'],
 ];
 
-var DESC = 'SoFi is a member-centric, one-stop digital financial services company. Members borrow, save, spend, invest and protect their money inside a single app, with no physical branches. SoFi operates its own national bank (SoFi Bank, N.A.) and runs three businesses: Lending (personal, student and home loans), Financial Services (SoFi Money, Invest, Credit Card and more), and a B2B Technology Platform (Galileo and Technisys) that powers other fintechs and banks. Its mission is to help members "achieve financial independence to realize their ambitions."';
+// OV-2 lede (playbook §8: 2–4 sentences, 50–80 words, neutral, no segment list, no moat). Paraphrased from the
+// FY2025 10-K, Item 1 "Company Overview" and "Bank Holding Company" (SoFi Technologies is a bank holding company;
+// SoFi Bank is a nationally chartered association; deposits lower the cost to fund loans).
+var DESC = 'SoFi Technologies is a digital financial services company that lets people borrow, save, spend, invest and protect their money through a single app. It is a bank holding company and operates its own nationally chartered bank, SoFi Bank, whose deposits help fund its lending. SoFi also sells the technology behind financial products to other banks and fintechs.';
+// Pre-playbook lede (segment list + mission quote). Not rendered: the segments move to OV-4 "How SoFi makes money";
+// the mission quote is kept for Miscellaneous (analyst decision 2026-10-26, OV-2). "No physical branches" is not in
+// the 10-K and is not used.
+var DESC_LEGACY = 'SoFi is a member-centric, one-stop digital financial services company. Members borrow, save, spend, invest and protect their money inside a single app, with no physical branches. SoFi operates its own national bank (SoFi Bank, N.A.) and runs three businesses: Lending (personal, student and home loans), Financial Services (SoFi Money, Invest, Credit Card and more), and a B2B Technology Platform (Galileo and Technisys) that powers other fintechs and banks. Its mission is to help members "achieve financial independence to realize their ambitions."';
 
 // Headline KPIs — most recent quarter (Q1 2026, ended Mar 31, 2026).
+// Not rendered in the Overview any more (playbook §8 allows no second KPI box; analyst approved moving them,
+// 2026-10-26, B2 #1): the tiles go to Top Line / Results and FY_NOTE to Bottom Line when those units are built.
 var KPIS = [
   { l:'Total Members',   v:'14.7M',  d:'+35% YoY',                dir:'up' },
   { l:'Total Products',  v:'22.2M',  d:'+39% YoY',                dir:'up' },
@@ -109,10 +145,10 @@ var HEADWINDS = [
 
 // Guidance / targets (FY2026 guide and 2028 long-term targets).
 var TARGETS = [
-  { v:'~$4.66B', l:'FY2026 adj. revenue',  s:'Guidance: +30% YoY (vs $3.59B in 2025).' },
-  { v:'~$1.6B',  l:'FY2026 adj. EBITDA',   s:'Guidance: +52% YoY · ~34% margin.' },
-  { v:'~$0.60',  l:'FY2026 diluted EPS',   s:'Guidance: +54% YoY (vs $0.39 in 2025).' },
-  { v:'~$7.9B',  l:'2028 adj. revenue tgt',s:'Long-term: ~30% revenue CAGR 2025–2028.' },
+  { v:'$4.75–4.85B', l:'FY2026 adj. revenue',  s:'Raised on the Jul 29 2026 call to about 32%–35% growth (from about 30%); $3.59B in 2025.' },
+  { v:'~$1.6B',  l:'FY2026 adj. EBITDA',   s:'Held at about $1.6B on the Jul 29 2026 call · about 33%–34% margin.' },
+  { v:'~$0.60',  l:'FY2026 diluted EPS',   s:'About $0.60 on a 22% tax rate (about $0.65 at the original mid-teens rate); $0.39 in 2025.' },
+  { v:'≥30% / yr',  l:'2025–2028 revenue CAGR',s:'Medium-term plan from the Jan 30 2026 call: at least 30% revenue CAGR and 38%–42% EPS CAGR.' },
 ];
 
 var DRIVERS = [
@@ -193,10 +229,10 @@ function ficoCard(){
 // Bank-level total risk-based capital ratio vs the 10.5% required minimum (incl.
 // capital conservation buffer), plus loans outstanding and the implied lending
 // capacity if the ratio fell to the minimum. Source: SoFi 10-K / 10-Q.
-var CAP_YEARS = ['2022', '2023', '2024', '2025', 'Q1 26'];
-var CAP_RATIO = [15.1, 17.6, 17.5, 16.6, 15.4];   // SoFi Bank total risk-based capital ratio, %
+var CAP_YEARS = ['2022', '2023', '2024', '2025', 'Q2 26'];   // Q2 26 from the 2Q26 Form 10-Q: SoFi Bank total risk-based capital ratio 15.3%, total loans $47.9B
+var CAP_RATIO = [15.1, 17.6, 17.5, 16.6, 15.3];   // SoFi Bank total risk-based capital ratio, %
 var CAP_REQ   = 10.5;                              // required minimum (incl. buffer), %
-var CAP_LOANS = [13.9, 23.0, 27.5, 38.0, 42.2];    // total loans outstanding, $B
+var CAP_LOANS = [13.9, 23.0, 27.5, 38.0, 47.9];    // total loans outstanding, $B
 // Implied max lending at the 10.5% floor (capital held constant → loans scale by ratio/min).
 var CAP_POT = CAP_LOANS.map(function(l, i){ return +(l * CAP_RATIO[i] / CAP_REQ).toFixed(1); });
 
@@ -238,62 +274,226 @@ function bullets(arr){ return '<ul class="ov-bullets">'+arr.map(function(b){retu
 function rows(arr){ return arr.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join(''); }
 
 // Overview sub-tab body (the company profile).
+// OV-1 — ten cells; the market-cap cell is filled from the live quote (no seeded value, golden rule 10).
+function sofiKeyFacts(){
+  return '<div class="stdkf">'+SOFI_FACTS.slice(0,10).map(function(p){
+    var v = p[0] === 'Market cap' ? '<span id="sofiMc">'+esc(p[1])+'</span>' : esc(p[1]);
+    return '<div class="stdkf-cell"><div class="stdkf-k">'+esc(p[0])+'</div><div class="stdkf-v">'+v+'</div></div>';
+  }).join('')+'</div>';
+}
+// OV-3 — the 2×2 (≤ 30 words a cell). Sources: FY2025 10-K — Item 1 (products, members, Loan Platform Business,
+// Technology Platform, Financial Services Productivity Loop), MD&A (net interest income $2,219.0M + noninterest
+// income $1,394.4M = total net revenue $3,613.4M; segment net revenue Lending $1,848.9M, Technology Platform
+// $450.2M, Financial Services $1,542.0M = $3,841.2M before intersegment eliminations; members 13.6M, +35%;
+// total deposits $37.5B). "The edge" is the analyst's read (Dani, 2026-10-26), defensible from the 10-K.
+var SOFI_BIZ = [
+  ['What it sells', 'Loans (personal, student, home), everyday banking, investing and cards through one app, plus loan origination for partners and technology that other banks and fintechs run on.'],
+  ['Who buys it', 'Consumers, called members (<b>13.6M</b> at Dec 2025, +35%), who borrow, save, spend and invest, and enterprise clients such as banks, fintechs and loan buyers.'],
+  ['How it earns', 'FY2025 net revenue <b>$3.61B</b>: ~61% net interest income, ~39% noninterest income. Segments before eliminations: Lending 48%, Financial Services 40%, Technology Platform 12%.'],
+  ['The edge', 'A national bank funds loans with its own deposits (<b>$37.5B</b> at Dec 2025), and members who adopt more products drive growth, the 10-K\'s Financial Services Productivity Loop.']
+];
+function sofiFourQuad(){
+  return '<div class="q2">'+SOFI_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
+}
+// ─── OV-4 — How SoFi makes money (FY2025) ─────────────────────────────────────────────────────────────────
+// Segments, in 10-K order: [label, % of the three segments' $3,841.2M, '$x.xxB', share text]. Source: FY2025 10-K,
+// MD&A segment table: Lending $1,848.9M · Technology Platform $450.2M · Financial Services $1,542.0M. They sum to
+// $3,841.2M; total net revenue is $3,613.4M, so Corporate/Other (which holds the intercompany eliminations —
+// $85.5M of Technology Platform fees, Note on segments) takes $227.8M off (reported total minus the segments).
+// The 10-K gives no revenue by geography, so there is no Geography view (playbook §8: a view needs ≥ 2 slices).
+var GMM_SEG = [
+  ['Lending',             48.1, '$1.85B', '48%'],
+  ['Technology Platform', 11.7, '$0.45B', '12%'],
+  ['Financial Services',  40.1, '$1.54B', '40%']
+];
+// Qualitative definitions (no numbers in desc); the numbers sit in the nested "The numbers" rows.
+var REV_DEFS = [
+  { seg:'Lending (the largest segment)',
+    desc:'Personal, student and home loans made to members, which SoFi holds on its balance sheet or sells, plus the <b>Loan Platform Business</b>, where SoFi originates loans for third-party partners. It earns interest on loans it holds, fees and gains when it originates and sells them, and servicing income.',
+    econ:[['FY2025 net revenue','$1,848.9M · 48% of the three segments'],['Growth','+24% (from $1,485.2M)'],['Contribution profit','$1,016.9M (+14%)'],['Contribution margin','55%'],['Origination volume','+57% (10-K)']] },
+  { seg:'Technology Platform (the B2B engine)',
+    desc:'Cloud technology that lets banks, fintechs and other enterprises create, launch and run financial products: card and payments processing and core-banking software. Clients pay SoFi for using the platform and for related services; it holds no loans and takes no credit risk.',
+    econ:[['FY2025 net revenue','$450.2M · 12% of the three segments'],['Growth','+14% (from $395.2M)'],['Contribution profit','$144.4M (+14%)'],['Contribution margin','32%'],['Intercompany fees','$85.5M inside segment revenue, eliminated in Corporate/Other']],
+    econNote:'Segment revenue differs from the "Technology products and solutions" line of the income statement ($360.9M): the segment includes intercompany fees that are eliminated in consolidation.' },
+  { seg:'Financial Services (the member engine)',
+    desc:'Everyday money products: <b>SoFi Money</b> checking and savings, <b>SoFi Invest</b>, <b>SoFi Credit Card</b>, <b>SoFi Crypto</b> and <b>SoFi Relay</b>. They bring members in often. SoFi earns interchange, brokerage and other fees, plus net interest on deposits and card balances; the deposits also help fund its lending.',
+    econ:[['FY2025 net revenue','$1,542.0M · 40% of the three segments'],['Growth','+88% (from $821.5M)'],['Contribution profit','$792.9M (+158%)'],['Contribution margin','51%'],['Total deposits (company-wide)','$37.5B at Dec 2025 (+44%)']] }
+];
+// The five lines of total net revenue, as the 10-K's income statement and MD&A report them (not split by segment).
+var REV_LINES = [
+  ['Net interest income',                                     '$2,219.0M · 61% · +29%'],
+  ['Loan platform fees',                                      '$575.9M · 16% · +307%'],
+  ['Technology products and solutions',                       '$360.9M · 10% · +3%'],
+  ['Loan origination, sales, securitizations and servicing',  '$242.9M · 7% · −13%'],
+  ['Other',                                                   '$214.6M · 6% · +14%']
+];
+// Bars shorter than ~10% can't hold their $ label: it moves just outside. Light greys ranked by size (css .gmm-neutral).
+function gmmRank(arr){ var o = arr.map(function(r, i){ return [r[1], i]; }).sort(function(a, b){ return b[0] - a[0]; }), rk = [];
+  o.forEach(function(x, j){ rk[x[1]] = Math.min(j + 1, 6); }); return rk; }
+function gmmBars(arr){
+  var rk = gmmRank(arr);
+  return '<div class="ov-mbars gmm-neutral">'+arr.map(function(r, i){
+    var out = r[1] < 10;
+    return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+'</div>'+
+      '<div class="ov-mbar-track'+(out?' out':'')+'"><div class="ov-mbar-fill gmm-g'+rk[i]+'" style="width:'+Math.max(r[1],1.2)+'%">'+(out?'':esc(r[2]))+'</div>'+(out?'<span class="ov-mbar-outv">'+esc(r[2])+'</span>':'')+'</div>'+
+      '<div class="ov-mbar-v">'+esc(r[3])+'</div></div>';
+  }).join('')+'</div>';
+}
+function accRows(rowsArr){ return rowsArr.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join(''); }
+function sofiMoneyMap(){
+  var h = '<div class="ov-diagram-cap gmm-cap-top">FY2025 net revenue <b>$3.61B (+35%)</b>, by <b>segment</b>. The three segments sum to $3.84B; Corporate/Other, which includes intercompany eliminations, takes it down to the reported figure. The 10-K gives no revenue by geography.</div>';
+  h += gmmBars(GMM_SEG);
+  h += '<div class="mm-defs acc-list">'+REV_DEFS.map(function(s){
+    var econ = '<div class="acc"><button type="button" class="acc-h">The numbers <span class="acc-x">+</span></button><div class="acc-b" hidden>'+accRows(s.econ)+(s.econNote?'<div class="ave-subh-note acc-note">'+esc(s.econNote)+'</div>':'')+'</div></div>';
+    return '<div class="acc"><button type="button" class="acc-h">'+esc(s.seg)+'<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+s.desc+'</div>'+econ+'</div></div>';
+  }).join('');
+  h += '<div class="acc"><button type="button" class="acc-h">The revenue lines <span class="acc-x">+</span></button><div class="acc-b" hidden>'+accRows(REV_LINES)+
+       '<div class="ave-subh-note acc-note">The five lines add to the $3,613.4M of total net revenue. They are company-wide, not split by segment.</div></div></div>';
+  h += '</div>';
+  h += '<div class="ov-diagram-cap gmm-cap-end">FY2025: operating income <b>$525.9M</b> (14.6% margin) · net income <b>$481.3M</b> (13.3%). Net income is about flat versus FY2024 ($498.7M) because 2024 included a one-time income tax benefit from releasing a valuation allowance. '+
+       '<span class="ave-subh-note">Source: SoFi FY2025 Form 10-K (MD&amp;A segment results and noninterest income table; Note on segments; Item 1).</span></div>';
+  return h;
+}
+// ─── OV-5 — Products & platforms ─────────────────────────────────────────────────────────────────────────
+// Five families (analyst, 2026-10-26). Card line ≤ 6 words; each product = bold name + 1–3 lines. Source: FY2025
+// 10-K, Item 1 (Lending / Technology Platform / Financial Services segments, Loan Platform Business). Galileo is
+// the "event and authorization platform accessed via APIs" by elimination: the 10-K names Technisys as the
+// "cloud-native digital and core banking platform"; Peach and Composer (2026) are not in the 10-K and are left out.
+var SOFI_PRODUCTS = [
+  { ic:'🏠', fam:'Lending', d:'Personal, student and home loans', items:[
+    ['Personal Loans', 'Fixed-rate loans for needs such as debt consolidation, home improvement, family planning, travel and weddings. Loan sizes generally $5,000 to $100,000, terms 2 to 7 years.'],
+    ['Student Loans', 'Refinancing of prime and super-prime school loans, plus "in-school" loans for members still studying. Fixed and variable rates; terms generally 5 to 20 years.'],
+    ['Home Loans', 'Agency, non-agency and government (FHA, VA) loans to buy or refinance a home, plus home equity loans. Down payments from 3% (0% for VA); jumbo loans up to $3,000,000.'],
+    ['Loan Platform Business', 'Fee-based services for enterprise partners: partners use SoFi\'s origination and servicing platform to acquire loans that fit their credit rules, and SoFi refers pre-qualified borrowers to them.']
+  ] },
+  { ic:'🏦', fam:'Banking & cards', d:'Checking, savings and credit card', items:[
+    ['SoFi Money (Checking and Savings)', 'Digital checking and savings accounts at SoFi Bank with competitive interest rates and expanded FDIC insurance of up to $3 million through the Insured Deposit Program.'],
+    ['SoFi Credit Card', 'Credit cards for everyday spending and borrowing, with cash-back rewards that can be redeemed as a statement credit or toward other SoFi products.']
+  ] },
+  { ic:'📈', fam:'Investing & crypto', d:'Investing and crypto in one app', items:[
+    ['SoFi Invest', 'A mobile-first platform for active investing (stocks, ETFs, options, IPOs, fractional shares, margin, a retirement account) and a robo-advisor with managed ETF and mutual-fund portfolios.'],
+    ['SoFi Crypto', 'Buy, sell and hold digital assets through SoFi Bank, funded directly from a SoFi Money account. Launched in Q4 2025, after the earlier structure was wound down in 2023–2024.']
+  ] },
+  { ic:'🧭', fam:'Member tools', d:'Planning, insurance, travel, marketplace', items:[
+    ['SoFi Relay', 'Personal finance management: all of a member\'s accounts in one place, with credit score monitoring and spending insights. It earns no revenue directly but adds touch points.'],
+    ['SoFi Protect', 'Partnerships with insurance providers across auto, life, homeowners, renters and cyber insurance, and estate planning.'],
+    ['SoFi Travel', 'Travel search and booking through a partner, inside the SoFi app or website, with member prices on certain bookings and extra cash back with the SoFi Credit Card.'],
+    ['Lantern', 'A marketplace that connects small businesses and individuals who do not qualify for SoFi products to alternative financial solutions from a curated network of providers.'],
+    ['SoFi At Work', 'A service through which employers partner with SoFi to give employees financial benefits, such as student loan payments made on their behalf.'],
+    ['SoFi Plus', 'SoFi\'s premium financial membership, with benefits that span its offerings.']
+  ] },
+  { ic:'⚙️', fam:'Technology Platform', d:'Cards and core banking for others', items:[
+    ['Galileo', 'An event and authorization platform accessed through APIs, used for card and payments processing by financial institutions, government entities and other businesses, mainly in North America and Latin America.'],
+    ['Technisys', 'A cloud-native digital and core banking platform that lets clients build and run accounts and financial products. Clients pay for using the platforms, or through license and maintenance fees.']
+  ] }
+];
+function sofiProducts(){
+  return '<div class="ov-diagram-cap gmm-cap-top"><b>Tap any family</b> for the specific products inside it.</div>'+
+    '<div class="stdp">'+SOFI_PRODUCTS.map(function(f, i){
+      return '<div class="stdp-card ov-clickable" data-detail="prod:'+i+'"><div class="stdp-ic">'+f.ic+'</div>'+
+        '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
+    }).join('')+'</div>';
+}
+// ─── OV-7 — Timeline (strict chronological order; "Read more →" opens sequential bullets) ──────────────────
+// Sources: FY2025 10-K (Item 1A acquisitions list; Note 1 organization and IPO; Note 13 equity; SoFiUSD, SoFi
+// Crypto), 2Q26 10-Q Note 2 (Peach, Composer), SoFi newsroom ("SoFi names Anthony Noto chief executive officer",
+// Jan 23 2018). The pre-playbook list (TIMELINE) stays for General ▸ Milestones until that pane is relocated (B2 #10).
+var SOFI_TIMELINE = [
+  { y:'2011', t:'Founded to refinance private <b>student loans</b>.' },
+  { y:'Mar 2018', t:'<b>Anthony Noto</b> becomes CEO.', d:'<ul class="ov-bullets"><li>Sep 2017: founder Mike Cagney steps down; Tom Hutton becomes interim CEO.</li><li>Jan 23, 2018: the board names Anthony Noto, then Twitter\'s COO, CEO and a director.</li><li>Mar 1, 2018: his tenure begins; Hutton moves to non-executive chairman.</li></ul>' },
+  { y:'May 2020', t:'Acquires <b>Galileo</b>, the base of today\'s Technology Platform.' },
+  { y:'Jun 2021', t:'Lists on <b>Nasdaq</b> through a merger with a SPAC.', d:'<ul class="ov-bullets"><li>SoFi merges with Social Capital Hedosophia Holdings Corp. V (SCH V), a special purpose acquisition company.</li><li>Jun 1, 2021: the common stock begins trading on the Nasdaq Global Select Market as <b>SOFI</b>.</li></ul>' },
+  { y:'Feb 2022', t:'Buys <b>Golden Pacific</b> and becomes a <b>bank holding company</b>.', d:'<ul class="ov-bullets"><li>Feb 2022: SoFi acquires Golden Pacific, a bank holding company, and is approved as a bank holding company.</li><li>Then: the lending business moves into SoFi Bank, a nationally chartered bank.</li><li>Today: SoFi funds loans with deposits held at SoFi Bank, which lowers its cost of funding.</li></ul>' },
+  { y:'Mar 2022', t:'Acquires <b>Technisys</b>, a cloud-native core banking platform.' },
+  { y:'Apr 2023', t:'Acquires <b>Wyndham</b>, a mortgage lender.' },
+  { y:'2024–25', t:'<b>Financial Services</b> becomes the second-largest segment.', d:'<ul class="ov-bullets"><li>FY2023 segment net revenue: $436.5M.</li><li>FY2024: $821.5M (+88%).</li><li>FY2025: $1,542.0M (+88%), more than three times the FY2023 level.</li></ul>' },
+  { y:'Jul–Dec 2025', t:'Two large public <b>equity offerings</b> in the second half of 2025.', d:'<ul class="ov-bullets"><li>Jul 31, 2025: 82.7M shares at $20.85, net proceeds of $1.7B.</li><li>Dec 8, 2025: 54.5M shares at $27.50.</li><li>Including the underwriters\' option, the December offering totaled 57.8M shares (Dec 2025 and Jan 2026).</li></ul>' },
+  { y:'Q4 2025', t:'Relaunches <b>SoFi Crypto</b> and launches the <b>SoFiUSD</b> stablecoin.', d:'<ul class="ov-bullets"><li>2023–Q1 2024: the earlier crypto service is wound down after the Federal Reserve rules it is not a permitted activity for a bank holding company.</li><li>Q4 2025: SoFi Crypto relaunches through SoFi Bank, designed for the current regulatory framework.</li><li>Dec 2025: SoFi Bank launches SoFiUSD, a stablecoin.</li></ul>' },
+  { y:'Q2 2026', t:'Acquires <b>Peach</b> and <b>Composer</b> for about $70M in cash.', d:'<ul class="ov-bullets"><li>Peach, a loan management and servicing platform, is to be integrated into the Technology Platform.</li><li>Composer, an AI-powered investing platform, is to enhance the investing services in Financial Services.</li></ul>' }
+];
+function sofiTimeline(){
+  return '<div class="ov-timeline">'+SOFI_TIMELINE.map(function(t, i){
+    var more = t.d ? '<div class="ov-tl-more">Read more →</div>' : '';
+    var cls = t.d ? ' ov-clickable' : '';
+    var attr = t.d ? ' data-detail="hist:'+i+'"' : '';
+    return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>';
+  }).join('')+'</div>';
+}
+// OV-F — the Overview's one source footer (playbook §8 / §22): the collapsibles carry none of their own.
+var OV_SOURCES = 'Sources — SoFi FY2025 Form 10-K (SEC EDGAR, dated Feb 17 2026) and 2Q26 Form 10-Q for company facts, headcount, segment and revenue figures, products and acquisitions; SoFi newsroom for the 2018 CEO appointment. Market cap is live (Massive). Forward figures are estimates, not company guidance.';
+function wireProductModal(root){
+  var back = root.querySelector('#sofiModalBack'), mT = root.querySelector('#sofiModalT'), mB = root.querySelector('#sofiModalB');
+  if (!back || !mT || !mB) return;
+  function onEsc(e){ if (e.key === 'Escape') closeM(); }
+  function openM(t, b){ mT.innerHTML = t; mB.innerHTML = b; back.hidden = false; requestAnimationFrame(function(){ back.classList.add('on'); }); document.addEventListener('keydown', onEsc); }
+  function closeM(){ back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden = true; }, 180); }
+  root.querySelector('#sofiModalX').onclick = closeM;
+  back.onclick = function(e){ if (e.target === back) closeM(); };
+  root.querySelectorAll('[data-detail^="prod:"]').forEach(function(el){
+    el.onclick = function(){
+      var f = SOFI_PRODUCTS[+el.getAttribute('data-detail').split(':')[1]]; if (!f) return;
+      openM(f.ic+' '+esc(f.fam), '<div class="famd prod-lead">'+esc(f.d)+'</div>'+f.items.map(function(it){
+        return '<div class="prod-item"><div class="prod-item-n">'+esc(it[0])+'</div><div class="famd">'+esc(it[1])+'</div></div>';
+      }).join(''));
+    };
+  });
+  root.querySelectorAll('[data-detail^="hist:"]').forEach(function(el){   // OV-7 timeline "Read more →"
+    el.onclick = function(){
+      var t = SOFI_TIMELINE[+el.getAttribute('data-detail').split(':')[1]]; if (!t || !t.d) return;
+      openM(esc(t.y), t.d);
+    };
+  });
+}
+function collapsible(title, inner, open){
+  return '<div class="ov-collap'+(open?' open':'')+'">'+
+    '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+esc(title)+'</button>'+
+    '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+inner+'</div></div>';
+}
+function sofiMcCell(root, txt){ var el = root.querySelector('#sofiMc'); if (el) el.textContent = txt; }
+function renderMarketCap(root){
+  import('../api.js').then(function(api){ return api.liveQuote('SOFI'); }).then(function(res){
+    var q = (res && res.success) ? res.data : null;
+    if (!q || q.marketCap == null){ sofiMcCell(root, '$18.7B · Oct 26 2026 close'); return; }
+    var mcB = q.marketCap / 1e9;
+    sofiMcCell(root, '$'+(mcB >= 1000 ? (mcB/1000).toFixed(2)+'T' : mcB.toFixed(1)+'B')+' · live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}));
+  }).catch(function(){ sofiMcCell(root, '$18.7B · Oct 26 2026 close'); });
+}
+
 function overviewBody(c){
   var h = '';
-
-  // 1 — Snapshot + lede
-  h += '<div class="ov-snap">' + SNAPSHOT.map(function(p){
-    return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>';
-  }).join('') + '</div>';
-  h += '<p class="ov-lede">'+esc(DESC)+'</p>';
-
-  // 2 — KPI tiles + notes
-  h += '<div class="ov-kpis">' + KPIS.map(function(k){
-    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>';
-  }).join('') + '</div>';
-  h += '<div class="ov-asof">'+esc(AS_OF)+'</div>';
-  h += '<div class="ov-fynote">'+esc(FY_NOTE)+'</div>';
-
-  // 3 — How it makes money
-  h += sec('How SoFi Makes Money', bullets(HOW_MONEY));
-
-  // 4 — Segments
-  h += sec('Three Segments', SEGMENTS.map(function(s){
-    return '<div class="ov-row"><div class="ov-row-k">'+esc(s[0])+'</div><div class="ov-row-v">'+esc(s[1])+'</div></div>';
-  }).join(''));
-
-  // 5 — Financial performance (FY2024 vs FY2025)
-  h += sec('Financial Performance (FY2024 → FY2025)',
+  // Playbook §8: exactly these blocks, in this order (OV-1 … OV-7 + OV-F). Everything else the earlier profile showed here
+  // moved to its destination (build log §5): Financial Performance → Bottom Line, flywheel / winds / targets / mission → Misc.
+  h += sofiKeyFacts();                                                   // OV-1
+  h += '<p class="ov-lede">'+esc(DESC)+'</p>';                           // OV-2
+  h += sofiFourQuad();                                                   // OV-3
+  h += collapsible('How SoFi makes money', sofiMoneyMap(), false);       // OV-4
+  h += collapsible('Products & platforms', sofiProducts(), false);       // OV-5
+  h += collapsible('Competitors — the peer map', soStdPeerScatter('ov'), false);   // OV-6
+  h += collapsible('Timeline — how it became today\'s SoFi', sofiTimeline(), false);   // OV-7
+  h += '<div class="ov-foot">'+esc(OV_SOURCES)+'</div>';                 // OV-F
+  return h;
+}
+// Relocated from the old Overview (B2 #8): FY2024 → FY2025 financial performance, now under Bottom Line ▸ General.
+function financialsBlock(){
+  return sec('Financial Performance (FY2024 → FY2025)',
     '<table class="ov-table"><thead><tr><th>Metric</th><th>FY2024</th><th>FY2025</th></tr></thead><tbody>'+
     FINANCIALS.map(function(r){return '<tr><td class="ov-td-name">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>';}).join('')+
     '</tbody></table>'+
-    '<div class="ov-callout">'+esc(FIN_NOTE)+'</div>'
+    '<div class="ov-callout">'+esc(FIN_NOTE)+'</div>'+
+    '<div class="ov-callout">'+esc(FY_NOTE)+'</div>'
   );
-
-  // 6 — The member / product flywheel
+}
+// Relocated from the old Overview (B2 #4, #6, #7): the flywheel, tailwinds and headwinds, guidance targets, growth drivers and
+// the mission quote, under Miscellaneous ▸ Strategy. The figures are the earlier profile's (Q1 2026 and company targets).
+function strategyBody(){
+  var h = '';
+  h += sec('Mission', '<p class="ov-lede">'+esc('SoFi states its mission as helping members “achieve financial independence to realize their ambitions” (FY2025 Form 10-K, Item 1).')+'</p>');
   h += sec('The Member & Product Flywheel', '<div class="ov-callout">'+bullets(ENGINE)+'</div>');
-
-  // 7 — Timeline
-  h += sec('History & Milestones', '<div class="ov-timeline">'+TIMELINE.map(function(t){
-    return '<div class="ov-tl-item"><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t[0])+'</div><div class="ov-tl-body">'+t[1]+'</div></div>';
-  }).join('')+'</div>');
-
-  // 8 — Peers
-  h += sec('Peers & Competitive Landscape',
-    '<table class="ov-table"><thead><tr><th>Peer</th><th>What they offer</th><th>How SoFi differs</th></tr></thead><tbody>'+
-    PEERS.map(function(p){return '<tr><td class="ov-td-name">'+esc(p[0])+'</td><td>'+esc(p[1])+'</td><td>'+esc(p[2])+'</td></tr>';}).join('')+
-    '</tbody></table>'
-  );
-
-  // 9 — Tailwinds / Headwinds
   h += sec('Tailwinds & Headwinds',
     '<div class="ov-grid2">'+
       '<div class="ov-wind ov-wind-up"><div class="ov-wind-h">Tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
       '<div class="ov-wind ov-wind-down"><div class="ov-wind-h">Headwinds</div>'+bullets(HEADWINDS)+'</div>'+
-    '</div>'
-  );
-
-  // 10 — Strategic focus: guidance/targets + growth drivers
+    '</div>');
   function statBox(b){ return '<div class="ov-target"><div class="ov-target-v">'+esc(b.v)+'</div><div class="ov-target-l">'+esc(b.l)+'</div><div class="ov-target-s">'+esc(b.s)+'</div></div>'; }
   h += sec('Strategic Focus',
     '<div class="ov-subh">Guidance & Targets</div>'+
@@ -301,17 +501,8 @@ function overviewBody(c){
     '<div class="ov-subh">Growth Drivers</div>'+
     '<div class="ov-drivers">'+DRIVERS.map(function(d){
       return '<div class="ov-driver"><div class="ov-driver-t">'+esc(d[0])+'</div><div class="ov-driver-d">'+esc(d[1])+'</div></div>';
-    }).join('')+'</div>'
-  );
-
-  // 11 — Leadership
-  h += sec('Leadership', LEADERSHIP.map(function(l){
-    return '<div class="ov-row"><div class="ov-row-k">'+esc(l[0])+'</div><div class="ov-row-v">'+esc(l[1])+'</div></div>';
-  }).join(''));
-
-  // 12 — Sources
-  h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
-
+    }).join('')+'</div>');
+  h += '<div class="ov-foot">Seeded from the earlier SoFi profile (company FY2025 results, Q1 2026 materials and company targets); not re-verified in this build.</div>';
   return h;
 }
 
@@ -478,7 +669,8 @@ function interestBody(c){
     '<div class="int-left">'+ficoCard()+incomeSquare()+'</div>'+
     '<div class="int-right">'+capCard()+'</div>'+
   '</div>';
-  h += LOANS.map(loanBlock).join('');
+  // The personal, student and home loan origination charts that followed are drawn by Top Line ▸ General (engine, Summit frozen);
+  // the earlier seeded copies (with typed estimates) are no longer rendered.
   return h;
 }
 
@@ -489,13 +681,11 @@ function feeBody(c){
   var h = '<p class="ov-lede">'+esc(FEE_INTRO)+'</p>';
   // Nested (second-level) sub-tab bar.
   h += '<div class="ovf-tabs">'+
-    '<button type="button" class="ovf-tab active" data-ovf="lpb">Loan Platform Business</button>'+
-    '<button type="button" class="ovf-tab" data-ovf="tech">Technology Platform</button>'+
+    '<button type="button" class="ovf-tab active" data-ovf="tech">Technology Platform</button>'+
     '<button type="button" class="ovf-tab" data-ovf="fs">Financial Services</button>'+
   '</div>';
   // Nested panes (LPB is built; the other two are placeholders for now).
-  h += '<div class="ovf-pane" data-ovf="lpb">'+lpbBody(c)+'</div>';
-  h += '<div class="ovf-pane" data-ovf="tech" hidden>'+techBody(c)+'</div>';
+  h += '<div class="ovf-pane" data-ovf="tech">'+techBody(c)+'</div>';
   h += '<div class="ovf-pane" data-ovf="fs" hidden>'+fsBody(c)+'</div>';
   return h;
 }
@@ -540,7 +730,7 @@ var LPB_FEES = [
 
 // Publicly announced LPB capital commitments, by partner — pie chart + logo legend.
 var LPB_PIE = [
-  { name:'Blue Owl Capital',          v:5.0, clr:'#0E7CC0', domain:'blueowl.com',           sub:'Mar 2025 · largest agreement to date' },
+  { name:'Blue Owl Capital',          v:5.0, clr:SUMMIT_CAT[0], domain:'blueowl.com',           sub:'Mar 2025 · largest agreement to date' },
   { name:'3 new partners (Q1 2026)',  v:3.6, clr:'#AEB8C4', domain:null, mark:'+3',         sub:'A global bank · an insurer · a top-5 asset manager' },
   { name:'Fortress Investment Group', v:2.0, clr:'#0A4E78', domain:'fortress.com',          sub:'Oct 2024 · first LPB partner' },
   { name:'Fortress × Edge Focus JV',  v:1.2, clr:'#5BB0E3', domain:'edgefocuspartners.com', sub:'Apr 2025' },
@@ -566,11 +756,11 @@ var LPB_FORWARD = 'A forward-flow agreement is a commitment to buy loans before 
 var LPB_SOURCES = 'Sources: SoFi FY2025 Form 10-K and Q2 2025–Q1 2026 earnings calls; SoFi press releases on the Blue Owl ($5B, Mar 2025) and Fortress (Oct 2024, expanded Apr 2025) agreements. LPB is fee-based and capital-light: after transfer, SoFi has no funding obligation and no retained credit risk. Named partners are publicly announced; the Q1 2026 additions are described by type, not named.';
 
 // "Loan Platform Business" nested-pane body — a visual explainer of how LPB works.
-function lpbBody(c){
+function lpbBody(c, noChart){
   var h = '';
 
-  // 0 — LPB origination volume chart (the first thing shown in this tab).
-  h += loanBlock(LPB_ORIG);
+  // 0 — LPB origination volume chart (the first thing shown in this tab); the Miscellaneous pane replaces it with the engine chart.
+  if (!noChart) h += loanBlock(LPB_ORIG);
 
   // 1 — Hero / one-line definition + badges.
   h += '<div class="lpb-hero">'+
@@ -681,7 +871,6 @@ var TECH_TIMELINE = [
 
 // Publicly known clients of Galileo / SoFi's Technology Platform (logos via Clearbit).
 var TECH_CLIENTS = [
-  { name:'Chime',     domain:'chime.com',     d:'U.S. neobank — historically Galileo\'s largest client.' },
   { name:'Robinhood', domain:'robinhood.com', d:'Debit card and cash management for the investing app.' },
   { name:'MoneyLion', domain:'moneylion.com', d:'All-in-one financial app.' },
   { name:'Dave',      domain:'dave.com',      d:'Everyday-banking neobank with paycheck advances.' },
@@ -690,7 +879,7 @@ var TECH_CLIENTS = [
   { name:'Varo',      domain:'varomoney.com', d:'Digital bank with its own banking charter.' },
   { name:'HSBC',      domain:'hsbc.com',      d:'Global bank — client for digital initiatives.' },
 ];
-var TECH_CLIENTS_NOTE = 'Clients shown are publicly disclosed; many contracts are confidential. Together, Galileo and Technisys enable ~158M end-customer accounts (Q3 2025) for neobanks, fintechs and banks across the U.S. and Latin America.';
+var TECH_CLIENTS_NOTE = 'Clients shown are publicly disclosed; many contracts are confidential. The large customer SoFi lost is not listed: its contract ended and its revenue stopped in Q4 2025, and the 2026 outlook assumes no revenue from it (Q4 2025 and Q1 2026 calls). Management never names it; an analyst on the Q2 2025 call called it the Chime migration. Together, Galileo and Technisys enable ~158M end-customer accounts (Q3 2025) for neobanks, fintechs and banks across the U.S. and Latin America.';
 var TECH_SOURCES = 'Sources: SoFi press releases on the Galileo (Apr 2020, ~$1.2B) and Technisys (announced Feb 22, 2022; closed Mar 3, 2022; ~$1.1B in stock) acquisitions; SoFi FY2025 Form 10-K and investor presentations (segment revenue and contribution profit, enabled accounts); Galileo press pages. All figures in US dollars.';
 
 // ── Scale chart: enabled accounts (bars) vs. segment net revenue (line) ──
@@ -1203,46 +1392,46 @@ function guidanceBody(c){
 // Pick a driver (LPB, Interest Income, …); its variables become sliders. Every
 // other line in the model is held at its FY2026E base, so the change flows
 // straight through to revenue → net income → EPS → the multiple. Each scenario
-// defines its variables, a revenue function, and a flow-through-to-pre-tax rate.
+// defines its variables, a revenue function, and a flow-through-to-operating-income rate.
 var SENS_BASE = {
-  totalRevB: 4.66,  // FY2026E total net revenue, $B
-  niM:       828.7, // FY2026E net income, $M (model earnings)
-  shares:    1378.0,// diluted shares, M (Q1 2026 actual)
-  price:     17.57, // share price for the P/E line ($) — replaced by the live quote when available
-  taxRate:   0.25   // tax applied to incremental pre-tax income
+  totalRevB: 5.3175, // FY2026E total net revenue, $B (Summit model, snapshot 2026-08-05, frozen)
+  niM:       825.7,  // FY2026E adjusted net income, $M (same snapshot)
+  shares:    1352.0, // diluted shares, M (2Q26 reported, weighted average)
+  price:     null,   // live only (Massive via api.liveQuote); nothing seeded, so P/E and implied price wait for it
+  taxRate:   0.22    // tax on incremental operating income: SoFi FY2026 EPS guide uses 22% (Q2 2026 call)
 };
 SENS_BASE.baseEps = SENS_BASE.niM / SENS_BASE.shares;     // base EPS
-SENS_BASE.basePe  = SENS_BASE.price / SENS_BASE.baseEps;  // base fwd P/E (reference multiple, fixed at $17.57)
+SENS_BASE.basePe  = null;                                 // base fwd P/E: fixed at the first live price, then held as the reference multiple
 
 // Each scenario: vars (sliders), rev(v) → driver revenue $M, flow = fraction of
-// incremental driver revenue that reaches pre-tax income, eq(v,rev) → equation line.
+// incremental driver revenue that reaches operating income, eq(v,rev) → equation line.
 var SENS_SCEN = {
   lpb: {
     label:'LPB', title:'LPB Sensitivity — origination × take rate', driver:'LPB revenue', flow:1.0,
-    intro:'The two levers behind SoFi\'s Loan Platform Business: annual origination volume and the take rate (the fee SoFi earns per dollar originated). LPB revenue = origination × take rate. LPB is capital-light, so incremental revenue flows straight to pre-tax income.',
+    intro:'The two levers behind SoFi\'s Loan Platform Business: annual origination volume and the take rate (the fee SoFi earns per dollar originated). LPB revenue = origination × take rate. LPB is capital-light, so incremental revenue flows straight to operating income.',
     vars:[
-      { id:'origB',   label:'LPB origination (annual)',      min:2,   max:50,  step:0.5, base:16.5, unit:'$B', dec:1 },
+      { id:'origB',   label:'LPB origination (annual)',      min:2,   max:50,  step:0.5, base:22.0, unit:'$B', dec:1 },
       { id:'takePct', label:'Take rate (origination fee)',    min:1.0, max:9.0, step:0.1, base:5.0,  unit:'%',  dec:1 }
     ],
     rev:function(v){ return v.origB * 1000 * v.takePct / 100; },
     eq:function(v, rev){ return '$'+v.origB.toFixed(1)+'B origination &nbsp;×&nbsp; '+v.takePct.toFixed(1)+'% take rate &nbsp;=&nbsp; <b>$'+Math.round(rev).toLocaleString()+'M</b> LPB revenue'; },
-    note:'Base case (FY2026E, Summit model): $16.5B origination × 5.0% take = ~$825M LPB revenue, inside $4.66B total net revenue. LPB is capital-light, so incremental LPB revenue flows 100% to pre-tax and is taxed at 25%.'
+    note:'Base case (FY2026E, Summit model, snapshot 2026-08-05): $22.0B personal-loan platform origination × 5.0% take = about $1,100M LPB revenue, inside $5.32B total net revenue. LPB is capital-light, so incremental LPB revenue flows to operating income and is taxed at 22%.'
   },
   ii: {
     label:'Interest Income', title:'Net interest income — NIM × earning assets', driver:'Net interest income', flow:1.0,
-    intro:'The two levers behind net interest income: the average rate SoFi nets on its balance sheet (net interest margin) and the size of its interest-earning assets (the loan book plus cash and investments). Net interest income = earning assets × NIM. It is already net of funding cost, so it flows to pre-tax income.',
+    intro:'The two levers behind net interest income: the average rate SoFi nets on its balance sheet (net interest margin) and the size of its interest-earning assets (the loan book plus cash and investments). Net interest income = earning assets × NIM. It is already net of funding cost, so it flows to operating income income.',
     vars:[
-      { id:'nimPct', label:'Net interest margin (avg rate kept on earning assets)', min:3.0, max:9.0, step:0.05, base:5.88, unit:'%',  dec:2 },
-      { id:'ieaB',   label:'Interest-earning assets (loan book + cash & investments)', min:25, max:90, step:0.5,  base:49.3, unit:'$B', dec:1 }
+      { id:'nimPct', label:'Net interest margin (avg rate kept on earning assets)', min:3.0, max:9.0, step:0.05, base:5.98, unit:'%',  dec:2 },
+      { id:'ieaB',   label:'Interest-earning assets (loan book + cash & investments)', min:25, max:90, step:0.5,  base:52.1, unit:'$B', dec:1 }
     ],
     rev:function(v){ return v.ieaB * 1000 * v.nimPct / 100; },
     eq:function(v, rev){ return '$'+v.ieaB.toFixed(1)+'B earning assets &nbsp;×&nbsp; '+v.nimPct.toFixed(2)+'% NIM &nbsp;=&nbsp; <b>$'+Math.round(rev).toLocaleString()+'M</b> net interest income'; },
-    note:'Base case (FY2026E, Summit DCF): $49.3B interest-earning assets × 5.88% net interest margin ≈ $2.9B net interest income, inside $4.66B total net revenue. The NIM already nets out funding cost, so incremental net interest income flows to pre-tax and is taxed at 25% (credit provisions on a bigger book are not separately modeled).'
+    note:'Base case (FY2026E, Summit model, snapshot 2026-08-05): net interest income of about $3.1B, shown as $52.1B of interest-earning assets × the 5.98% net interest margin SoFi reported in 2Q26 (the model carries no FY2026 earning-asset row, so the asset base is backed out), inside $5.32B total net revenue. The NIM already nets out funding cost, so incremental net interest income flows to operating income and is taxed at 25% (credit provisions on a bigger book are not separately modeled).'
   }
 };
 var SENS_ORDER = ['lpb','ii'];
 var _sensScen = 'lpb';
-var SENS_FOOT = 'Single-driver sensitivity: the selected variables move while every other line in the model is held at its FY2026E base (total net revenue $4.66B, net income $829M, 1,378M diluted shares, 25% tax). Incremental driver revenue flows to pre-tax income at the stated rate and is taxed; share count is held fixed and forward P/E uses the live price when available, else $17.57 (last close). The "implied price" holds the base ~29x multiple constant. This is a back-of-envelope sensitivity, not a re-solved model. Base values from the Summit DCF (snapshot 2026-05-13).';
+var SENS_FOOT = 'Single-driver sensitivity: the selected variables move while every other line in the model is held at its FY2026E base (total net revenue $5.32B, adjusted net income $826M, 1,352M diluted shares, 22% tax). Incremental driver revenue flows to operating income income at the stated rate and is taxed; the share count is held fixed. The forward P/E and the implied price need the live price (nothing is seeded): the base multiple is fixed at the first live price and held constant for the implied price. This is a back-of-envelope sensitivity, not a re-solved model. Base values from the Summit model (snapshot 2026-08-05, frozen), the 2Q26 call and 10-Q.';
 
 function sensVarsBase(scen){ var v = {}; scen.vars.forEach(function(x){ v[x.id] = x.base; }); return v; }
 
@@ -1270,9 +1459,9 @@ function sensBody(c){
   // Live price banner — feeds the Fwd P/E line. Falls back to the fixed price.
   h += '<div class="sens-live">'+
     '<span class="sens-live-tk">SOFI</span>'+
-    '<span class="sens-live-px" id="sensLivePx">$'+SENS_BASE.price.toFixed(2)+'</span>'+
+    '<span class="sens-live-px" id="sensLivePx">live price pending</span>'+
     '<span class="sens-live-ch" id="sensLiveCh"></span>'+
-    '<span class="sens-live-ts" id="sensLiveTs">price held fixed</span>'+
+    '<span class="sens-live-ts" id="sensLiveTs">waiting for the live price</span>'+
     '<button type="button" class="sens-live-rf" id="sensLiveRf">↻ Live</button>'+
   '</div>';
 
@@ -1288,6 +1477,11 @@ function sensBody(c){
   h += '<div class="ov-foot" id="sensNote"></div>';
   h += '<div class="ov-foot">'+esc(SENS_FOOT)+'</div>';
 
+  return h;
+}
+// Sum-of-the-Parts body (was the second half of the Sensitivity tab; relocated to Miscellaneous, B2 #25).
+function sotpBody(){
+  var h = '';
   // ── Sum-of-the-Parts: forward-earnings valuation ──
   h += '<div class="ov-sec-h evo-sec-h">Sum-of-the-Parts — forward-earnings valuation</div>';
   h += '<p class="ov-lede">'+esc(SOTP_INTRO)+'</p>';
@@ -1318,8 +1512,8 @@ function sensCompute(scen, v){
   var dNi     = dRev * scen.flow * (1 - SENS_BASE.taxRate);
   var niM     = SENS_BASE.niM + dNi;
   var eps     = niM / SENS_BASE.shares;
-  var pe      = SENS_BASE.price / eps;
-  var implied = SENS_BASE.basePe * eps; // price if the base multiple were held
+  var pe      = (SENS_BASE.price != null) ? SENS_BASE.price / eps : null;
+  var implied = (SENS_BASE.basePe != null) ? SENS_BASE.basePe * eps : null; // price if the base multiple were held
   return { baseRev:baseRev, newRev:newRev, dRev:dRev, totalM:totalM, niM:niM, dNi:dNi, eps:eps, pe:pe, implied:implied };
 }
 
@@ -1353,14 +1547,15 @@ function renderSens(){
       '</div><div class="ov-kpi-d '+(dir||'muted')+'">'+esc(sub)+'</div></div>';
   }
   var revPct = (r.totalM / (SENS_BASE.totalRevB*1000) - 1) * 100;
-  var prcPct = (r.implied / SENS_BASE.price - 1) * 100;
+  var havePx = (SENS_BASE.price != null && r.implied != null);
+  var prcPct = havePx ? (r.implied / SENS_BASE.price - 1) * 100 : null;
   box.innerHTML =
     tile(scen.driver, '$'+Math.round(r.newRev).toLocaleString()+'M', sensSigned(r.dRev, true)+'M vs base', r.dRev>=0?'up':'down') +
     tile('Total net revenue', '$'+(r.totalM/1000).toFixed(2)+'B', sensSigned(revPct)+'% vs base', revPct>=0?'up':'down') +
     tile('Net income', '$'+Math.round(r.niM).toLocaleString()+'M', sensSigned(r.dNi, true)+'M vs base', r.dNi>=0?'up':'down') +
     tile('EPS (FY2026E)', '$'+r.eps.toFixed(2), sensSigned(r.eps-SENS_BASE.baseEps)+' vs $'+SENS_BASE.baseEps.toFixed(2), (r.eps-SENS_BASE.baseEps)>=0?'up':'down') +
-    tile('Fwd P/E @ $'+SENS_BASE.price.toFixed(2), r.pe.toFixed(1)+'x', 'base '+SENS_BASE.basePe.toFixed(1)+'x', 'muted') +
-    tile('Implied price @ '+SENS_BASE.basePe.toFixed(1)+'x', '$'+r.implied.toFixed(2), sensSigned(prcPct)+'% vs $'+SENS_BASE.price.toFixed(2), prcPct>=0?'up':'down');
+    (havePx ? tile('Fwd P/E @ $'+SENS_BASE.price.toFixed(2), r.pe.toFixed(1)+'x', 'base '+SENS_BASE.basePe.toFixed(1)+'x', 'muted') : tile('Fwd P/E', '—', 'live price pending', 'muted')) +
+    (havePx ? tile('Implied price @ '+SENS_BASE.basePe.toFixed(1)+'x', '$'+r.implied.toFixed(2), sensSigned(prcPct)+'% vs $'+SENS_BASE.price.toFixed(2), prcPct>=0?'up':'down') : tile('Implied price', '—', 'live price pending', 'muted'));
 }
 
 function setupSensSliders(){
@@ -1385,18 +1580,18 @@ function switchSensScen(root, k){
   setupSensSliders();
 }
 
-// ── Live price (via the get-quote edge function; falls back to the fixed price) ──
+// ── Live price (Massive via api.liveQuote; no fallback price, the P/E and implied price wait for it) ──
 var _liveQuote = null;
 function fetchSofiQuote(){
-  // via api.js so the signed-in user's token is sent (get-quote rejects the anon key)
-  return import('../api.js').then(function(m){ return m.fetchYahooQuote('SOFI'); })
-    .then(function(r){ if (r && r.success) return r.data; throw new Error((r && r.error && r.error.message) || 'no price'); });
+  // Massive via api.liveQuote (the same live path as the Key Facts market cap and the peer map); nothing is seeded.
+  return import('../api.js').then(function(m){ return m.liveQuote('SOFI'); })
+    .then(function(r){ if (r && r.success && r.data && typeof r.data.price === 'number') return r.data; throw new Error((r && r.error && r.error.message) || 'no price'); });
 }
 
 function renderLiveBanner(){
   var px = document.getElementById('sensLivePx');
   var ch = document.getElementById('sensLiveCh');
-  if (px) px.textContent = '$' + SENS_BASE.price.toFixed(2);
+  if (px) px.textContent = (SENS_BASE.price != null) ? '$' + SENS_BASE.price.toFixed(2) : 'live price pending';
   if (ch && _liveQuote && typeof _liveQuote.changePct === 'number'){
     var p = _liveQuote.changePct;
     ch.textContent = (p >= 0 ? '▲ +' : '▼ −') + Math.abs(p).toFixed(2) + '%';
@@ -1406,7 +1601,7 @@ function renderLiveBanner(){
 
 function applyLiveQuote(q){
   _liveQuote = q;
-  if (typeof q.price === 'number') SENS_BASE.price = q.price;
+  if (typeof q.price === 'number'){ SENS_BASE.price = q.price; if (SENS_BASE.basePe == null) SENS_BASE.basePe = q.price / SENS_BASE.baseEps; }
   renderLiveBanner();
   renderSens(); // recompute P/E and implied price off the live price
   renderSotp(); // SOTP upside is vs the live price too
@@ -1423,7 +1618,10 @@ function refreshLiveQuote(){
   var ts = document.getElementById('sensLiveTs');
   if (ts) ts.textContent = 'fetching live price…';
   fetchSofiQuote().then(applyLiveQuote).catch(function(){
-    if (ts) ts.textContent = 'live price unavailable here — using $' + SENS_BASE.price.toFixed(2) + ' (last close)';
+    // Dated fallback (analyst, Oct 26 2026: never leave a pane blank): the last close, labelled as such, until the live service answers.
+    if (SENS_BASE.price == null){ SENS_BASE.price = 14.46; if (SENS_BASE.basePe == null) SENS_BASE.basePe = SENS_BASE.price / SENS_BASE.baseEps; }
+    renderLiveBanner(); renderSens(); renderSotp();
+    if (ts) ts.textContent = 'as of the Oct 26 2026 close';
   });
 }
 
@@ -1433,8 +1631,8 @@ function buildSensTab(){
   var rf = document.getElementById('sensLiveRf');
   if (rf) rf.onclick = refreshLiveQuote;
   refreshLiveQuote(); // try to pull a live price when the tab opens
-  requestAnimationFrame(function(){ buildSotpChart(); setupSotpInputs(); });
 }
+function buildSotpTab(){ requestAnimationFrame(function(){ buildSotpChart(); setupSotpInputs(); }); }
 
 // ─── Sensitivity → Sum-of-the-Parts (forward-earnings valuation) ─────────────
 // A forward-earnings SOTP. You stand on a valuation date and capitalise the NEXT
@@ -1442,10 +1640,10 @@ function buildSensTab(){
 // split those forward earnings into a fee share and an interest share, give each
 // its own P/E, and read off the implied share price. All inputs are typed.
 // Net income by fiscal year ($M), Summit DCF (snapshot 2026-05-13, adj. net income).
-var SOTP_NI = { '2026':1160, '2027':1292, '2028':1865, '2029':2160 };
+var SOTP_NI = { '2026':825.7, '2027':1095.0, '2028':1515.7, '2029':3116.3 };   // $M adjusted net income, Summit model snapshot 2026-08-05 (frozen)
 var SOTP_FYEARS = [2026, 2027, 2028, 2029]; // forward earnings years available to capitalise
 var SOTP_INTRO = 'A forward-earnings sum-of-the-parts. Pick a valuation date — you capitalise the next twelve months of earnings (standing at 31-Dec-2026 values FY2027). Split those forward earnings into a fee share and an interest share, then give each part its own P/E: fee income is capital-light and recurring, so it earns a richer multiple than net interest income. The implied price is the sum of the parts ÷ shares. Type any value — date, the two mix shares (they stay complementary), and the two P/E multiples.';
-var SOTP_NOTE = 'Method: forward net income = next-twelve-months net income from the valuation date (linear blend of the two straddling fiscal years; standing at a year-end gives the next full year). Equity value = (forward NI × fee%) × fee P/E + (forward NI × interest%) × interest P/E; implied price = value ÷ 1,378M shares; blended P/E = fee% × fee P/E + interest% × interest P/E. Net income by year from the Summit DCF (snapshot 2026-05-13, adjusted net income): FY2026 $1.16B, FY2027 $1.29B, FY2028 $1.87B, FY2029 $2.16B. The fee/interest split of EARNINGS is your assumption (the model does not report segment net income). Illustrative, not a target price.';
+var SOTP_NOTE = 'Method: forward net income = next-twelve-months net income from the valuation date (linear blend of the two straddling fiscal years; standing at a year-end gives the next full year). Equity value = (forward NI × fee%) × fee P/E + (forward NI × interest%) × interest P/E; implied price = value ÷ 1,352M shares; blended P/E = fee% × fee P/E + interest% × interest P/E. Net income by year from the Summit model (snapshot 2026-08-05, frozen, adjusted net income): FY2026 $0.83B, FY2027 $1.10B, FY2028 $1.52B, FY2029 $3.12B. The fee/interest split of EARNINGS is your assumption (the model does not report segment net income). Illustrative, not a target price.';
 var _sotpChart = null;
 
 function sotpField(id, label, type, attrs, val, unit){
@@ -1482,7 +1680,7 @@ function buildSotpChart(){
     data: { labels: SOTP_FYEARS.map(function(y){ return 'FY' + y + 'E'; }), datasets: [
       { type:'bar', label:'Interest earnings', data:[], backgroundColor:'#9DB4C4', stack:'e', yAxisID:'y', borderRadius:3, maxBarThickness:70 },
       { type:'bar', label:'Fee earnings', data:[], backgroundColor:BRAND, stack:'e', yAxisID:'y', borderRadius:3, maxBarThickness:70 },
-      { type:'line', label:'Implied price', data:[], borderColor:'#E8833A', backgroundColor:'#E8833A', yAxisID:'y1', borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#fff', pointBorderColor:'#E8833A', tension:0 }
+      { type:'line', label:'Implied price', data:[], borderColor:SUMMIT_CAT[1], backgroundColor:SUMMIT_CAT[1], yAxisID:'y1', borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#fff', pointBorderColor:SUMMIT_CAT[1], tension:0 }
     ] },
     options: {
       responsive:true, maintainAspectRatio:false, animation:false,
@@ -1498,7 +1696,7 @@ function buildSotpChart(){
         y:{ stacked:true, position:'left', beginAtZero:true, grid:{ color:'rgba(0,0,0,0.04)' },
           ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return '$'+v+'B'; } } },
         y1:{ position:'right', grid:{ drawOnChartArea:false }, grace:'25%', beginAtZero:true,
-          ticks:{ color:'#E8833A', font:{ size:10 }, callback:function(v){ return '$'+v.toFixed(0); } } },
+          ticks:{ color:SUMMIT_CAT[1], font:{ size:10 }, callback:function(v){ return '$'+v.toFixed(0); } } },
         x:{ stacked:true, grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:12 } } }
       }
     }
@@ -1511,7 +1709,7 @@ function renderSotp(){
   var intPct = 100 - feePct;
   var feePE = sotpNum('sotpFeePE', 30), intPE = sotpNum('sotpIntPE', 12);
   var blendedPE = feePct/100 * feePE + intPct/100 * intPE;
-  var cur = SENS_BASE.price;
+  var cur = SENS_BASE.price;   // live only; null until the quote arrives
 
   // Chart: implied price by forward year, given the current mix & multiples.
   if (_sotpChart){
@@ -1531,7 +1729,7 @@ function renderSotp(){
   if (!fwd){ if (fwdEl) fwdEl.textContent = 'Enter a valuation date between 2026 and 2028.'; if (box) box.innerHTML = ''; return; }
 
   var E = fwd.ni, feeE = E*feePct/100, intE = E*intPct/100;
-  var value = feeE*feePE + intE*intPE, price = value/SENS_BASE.shares, up = (price/cur - 1) * 100;
+  var value = feeE*feePE + intE*intPE, price = value/SENS_BASE.shares, up = (cur != null) ? (price/cur - 1) * 100 : null;
 
   if (fwdEl) fwdEl.innerHTML = 'Standing at <b>'+esc(dateEl.value)+'</b> → forward earnings ≈ <b>'+esc(fwd.label)+'</b> · forward net income <b>$'+Math.round(E).toLocaleString()+'M</b>';
   if (eq) eq.innerHTML = feePct.toFixed(0)+'% fee × '+feePE.toFixed(1)+'x &nbsp;+&nbsp; '+intPct.toFixed(0)+'% interest × '+intPE.toFixed(1)+'x &nbsp;=&nbsp; <b>'+blendedPE.toFixed(1)+'x</b> blended P/E on forward earnings';
@@ -1541,7 +1739,7 @@ function renderSotp(){
       '</div><div class="ov-kpi-d '+(dir||'muted')+'">'+esc(sub)+'</div></div>';
   }
   if (box) box.innerHTML =
-    tile('Implied price', '$'+price.toFixed(2), sensSigned(up)+'% vs $'+cur.toFixed(2), up>=0?'up':'down') +
+    tile('Implied price', '$'+price.toFixed(2), (cur != null) ? sensSigned(up)+'% vs $'+cur.toFixed(2) : 'live price pending', (up != null && up >= 0) ? 'up' : 'muted') +
     tile('Blended P/E', blendedPE.toFixed(1)+'x', feePct.toFixed(0)+'% fee / '+intPct.toFixed(0)+'% interest', 'muted') +
     tile('Equity value', '$'+(value/1000).toFixed(1)+'B', 'on $'+(E/1000).toFixed(2)+'B fwd earnings', 'muted') +
     tile('Fee earnings', '$'+Math.round(feeE).toLocaleString()+'M', feePct.toFixed(0)+'% × '+feePE.toFixed(1)+'x', 'muted') +
@@ -1573,7 +1771,7 @@ var PEERS = [
 // null = no value available (e.g. peers have no published forward user estimate).
 var PEER_YEARS = ['2020','2021','2022','2023','2024','2025','2026','2027','2028'];
 var PEER_FIRST_EST = 6;  // index of first estimate year (2026)
-var PEER_COLORS = { SOFI:'#0E7CC0', HOOD:'#1E9E62', IBKR:'#E8833A', NU:'#8E6FD0' };
+var PEER_COLORS = { SOFI:SUMMIT_CAT[0], HOOD:SUMMIT_CAT[2], IBKR:SUMMIT_CAT[1], NU:SUMMIT_CAT[6] };
 var PEER_SERIES = {
   users: { label:'Users', log:true, fmt:function(v){ return v.toFixed(1)+'M'; }, data:{
     SOFI:[1.85,3.46,5.22,7.54,10.13,13.70,17.75,23.07,29.99], HOOD:[12.5,22.7,23.0,23.4,25.2,27.0,null,null,null], IBKR:[1.07,1.68,2.09,2.56,3.34,4.40,null,null,null], NU:[33.3,53.9,74.6,93.9,114.2,131.0,null,null,null] } },
@@ -1884,10 +2082,6 @@ function nodeInner(n){
 }
 
 // Placeholder body for tabs that are not built yet.
-function soonBody(label){
-  return '<div class="ovs-soon"><div class="ovs-soon-t">'+esc(label)+'</div>'+
-    '<div class="ovs-soon-d">In development — building this next.</div></div>';
-}
 
 // ─── Management — insider open-market activity (SEC Form 4) ───────────────────
 // Every open-market buy (code P) and sale (code S) reported by SoFi insiders on
@@ -2083,7 +2277,8 @@ function insOwnCell(name){
 function insOwnValCell(name){
   var o = INSIDER_OWN[name];
   if (!o || !o[0]) return '<span class="ins-dash">—</span>';
-  return '<span class="ins-own" title="'+insNum(o[0])+' shares × $'+SENS_BASE.price.toFixed(2)+' (as of '+o[1]+')">'+insUsd(o[0]*SENS_BASE.price)+'</span>';
+  if (SENS_BASE.price == null) return '<span class="ins-dash" title="'+insNum(o[0])+' shares (as of '+o[1]+'); value needs the live price">—</span>';
+  return '<span class="ins-own" title="'+insNum(o[0])+' shares × $'+SENS_BASE.price.toFixed(2)+' (live, shares as of '+o[1]+')">'+insUsd(o[0]*SENS_BASE.price)+'</span>';
 }
 
 var INS_GRP_LABEL = { M:'Management', B:'Board', I:'10% Owner' };
@@ -2271,7 +2466,7 @@ function insiderActivityBody(c){
   '</div>';
   h += '<div id="insTableWrap">'+insTxTableHTML()+'</div>';
 
-  h += '<div class="ov-foot">Source: SEC EDGAR Form 4 filings (CIK 0001818874), '+INSIDER_TX[INSIDER_TX.length-1][0]+' – '+INSIDER_TX[0][0]+'. Open-market buys (code P) and sells (code S) only; derivative transactions, grants, exercises and tax-withholding excluded. Value = shares × reported price per share. Ownership % = each insider\'s latest reported direct common shares ÷ '+(SHARES_OUT/1e9).toFixed(2)+'B shares outstanding (Q1 2026 10-Q); ownership value = those shares × $'+SENS_BASE.price.toFixed(2)+' (last close). Hover either figure for the as-of date — holders who have since exited or stopped filing (e.g. SoftBank, Wilkes) reflect their last report.</div>';
+  h += '<div class="ov-foot">Source: SEC EDGAR Form 4 filings (CIK 0001818874), '+INSIDER_TX[INSIDER_TX.length-1][0]+' – '+INSIDER_TX[0][0]+'. Open-market buys (code P) and sells (code S) only; derivative transactions, grants, exercises and tax-withholding excluded. Value = shares × reported price per share. Ownership % = each insider\'s latest reported direct common shares ÷ '+(SHARES_OUT/1e9).toFixed(2)+'B shares outstanding (Q1 2026 10-Q); ownership value = those shares × the live price (shown once the quote is available). Hover either figure for the as-of date — holders who have since exited or stopped filing (e.g. SoftBank, Wilkes) reflect their last report.</div>';
   return h;
 }
 
@@ -2511,32 +2706,16 @@ function managementBody(c){
 
 function html(c){
   var h = '<div class="ov ov-sofi" data-brand="SOFI">';
-  // Sub-tab bar
-  h += '<div class="ovt-tabs">'+
-    '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="members">General</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="interest">Interest Income</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="fees">Fee Income</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="management">Management</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="sensitivity">Sensitivity</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="peers">Peers</button>'+
-  '</div>';
-  // Panes
-  h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="members" hidden>'+generalBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="interest" hidden>'+interestBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="fees" hidden>'+feeBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="management" hidden>'+managementBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="valuation" hidden>'+valuationBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="sensitivity" hidden>'+sensBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="peers" hidden>'+peersBody(c)+'</div>';
+  h += overviewBody(c);
+  h += '<div class="ov-modal-back" id="sofiModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
+    '<button class="ov-modal-x" id="sofiModalX" aria-label="Close">×</button>'+
+    '<div class="ov-modal-t" id="sofiModalT"></div><div class="ov-modal-b" id="sofiModalB"></div></div></div>';
   h += '</div>';
   return h;
 }
 
 // ─── Members chart ────────────────────────────────────────────────────────────
-var BRAND = '#0E7CC0';   // SoFi blue
+var BRAND = SUMMIT_CAT[0];   // SoFi blue
 
 // Inline plugin: draw the member count (millions) and YoY growth above each bar.
 var memLabels = {
@@ -2642,10 +2821,10 @@ var r40Plugin = {
     var y40 = chart.scales.y.getPixelForValue(40);
     ctx.save();
     // 40 threshold line
-    ctx.strokeStyle = '#DC2626'; ctx.lineWidth = 1.4; ctx.setLineDash([5,4]);
+    ctx.strokeStyle = SUMMIT_NEG; ctx.lineWidth = 1.4; ctx.setLineDash([5,4]);
     ctx.beginPath(); ctx.moveTo(ca.left, y40); ctx.lineTo(ca.right, y40); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = '#DC2626'; ctx.font = '700 9px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillStyle = SUMMIT_NEG; ctx.font = '700 9px Inter, sans-serif'; ctx.textAlign = 'left';
     ctx.fillText('Rule of 40', ca.left + 3, y40 - 4);
     // score on top of each stacked bar
     var top = chart.getDatasetMeta(1).data;
@@ -2662,7 +2841,7 @@ function buildRule40Chart(){
     type: 'bar',
     data: { labels: R40_LABELS, datasets: [
       { label:'Revenue growth (YoY)', data: R40_REV, backgroundColor:'#A9BCC6', stack:'r40', maxBarThickness:30 },
-      { label:'Adj. EBITDA margin', data: R40_EBITDA, backgroundColor:'#0E7CC0', stack:'r40', maxBarThickness:30 }
+      { label:'Adj. EBITDA margin', data: R40_EBITDA, backgroundColor:SUMMIT_CAT[0], stack:'r40', maxBarThickness:30 }
     ]},
     options: {
       responsive:true, maintainAspectRatio:false, animation:false,
@@ -2698,7 +2877,7 @@ function buildCapRaiseChart(){
       { type:'line', label:'Book value / share', data: CAPR_BVPS, yAxisID:'y1',
         borderColor:'#0F1720', backgroundColor:'#0F1720', fill:false, tension:.3, pointRadius:2.5, borderWidth:2, order:1 },
       { type:'line', label:'Tangible BV / share', data: CAPR_TBVPS, yAxisID:'y1',
-        borderColor:'#E8833A', backgroundColor:'#E8833A', borderDash:[5,4], fill:false, tension:.3, pointRadius:0, borderWidth:1.6, order:2 }
+        borderColor:SUMMIT_CAT[1], backgroundColor:SUMMIT_CAT[1], borderDash:[5,4], fill:false, tension:.3, pointRadius:0, borderWidth:1.6, order:2 }
     ]},
     options: {
       responsive:true, maintainAspectRatio:false, animation:false,
@@ -2741,7 +2920,7 @@ var loanLabels = {
       if (yoy[i] != null) {
         var g = yoy[i];
         ctx.font = '600 11px Inter, sans-serif';
-        ctx.fillStyle = g < 0 ? '#C0392B' : BRAND;
+        ctx.fillStyle = g < 0 ? SUMMIT_NEG : BRAND;
         ctx.fillText((g < 0 ? '−' : '+') + Math.abs(g).toFixed(1) + '%', bar.x, bar.y - 7);
       }
       ctx.restore();
@@ -2818,7 +2997,6 @@ function setupLoanSlider(cfg){
 }
 
 function buildInterestTab(){
-  LOANS.forEach(function(cfg){ buildLoanChart(cfg); setupLoanSlider(cfg); });
   buildCapChart();
 }
 
@@ -2837,13 +3015,13 @@ function buildCapChart(){
           borderColor:'rgba(14,124,192,.40)', backgroundColor:'rgba(14,124,192,.10)',
           fill:'origin', tension:.3, pointRadius:0, borderWidth:1 },
         { label:'Loans outstanding', data: CAP_LOANS, yAxisID:'y1',
-          borderColor:'#0E7CC0', backgroundColor:'rgba(14,124,192,.32)',
+          borderColor:SUMMIT_CAT[0], backgroundColor:fade(SUMMIT_CAT[0], 0.32),
           fill:'origin', tension:.3, pointRadius:2.5, borderWidth:2 },
         { label:'Total risk-based capital ratio', data: CAP_RATIO, yAxisID:'y',
           borderColor:'#0F1720', backgroundColor:'#0F1720', fill:false, tension:.3,
           pointRadius:3, borderWidth:2 },
         { label:'Required minimum (10.5%)', data: reqLine, yAxisID:'y',
-          borderColor:'#DC2626', borderDash:[5,4], fill:false, pointRadius:0, borderWidth:1.5 }
+          borderColor:SUMMIT_NEG, borderDash:[5,4], fill:false, pointRadius:0, borderWidth:1.5 }
       ]
     },
     options: {
@@ -2988,14 +3166,10 @@ function buildTechChart(){
 }
 
 function buildFeeTab(){
-  var root = document.querySelector('.ov-sofi');
+  var root = document.querySelector('.ov-sofi-dd') || document.querySelector('.ov-sofi');
   if (!root) return;
   var act = root.querySelector('.ovf-tab.active');
   var k = act ? act.getAttribute('data-ovf') : '';
-  if (k === 'lpb') requestAnimationFrame(function(){
-    buildLoanChart(LPB_ORIG); setupLoanSlider(LPB_ORIG); // origination chart (visible)
-    buildLpbPie();                                       // commitments pie (inside accordion)
-  });
   if (k === 'tech') requestAnimationFrame(buildTechChart);
   // if (k === 'fs')   requestAnimationFrame(buildFeeFS);
 }
@@ -3003,7 +3177,7 @@ function buildFeeTab(){
 // ─── Valuation: Actuals vs. Estimates engine ─────────────────────────────────
 var _aveChart = null;
 var _aveMetric = 'rev';
-var AVE_GREEN = '#1E9E62', AVE_RED = '#C0392B', AVE_GRAY = '#C7CED6';
+var AVE_GREEN = SUMMIT_POS, AVE_RED = SUMMIT_NEG, AVE_GRAY = '#C7CED6';
 
 function avePct(v){ return (v < 0 ? '−' : '+') + Math.abs(v).toFixed(1) + '%'; }
 
@@ -3206,7 +3380,7 @@ var EVO_INTRO = 'Our Summit DCF model is re-snapshotted over time. This shows, f
 var EVO_SOURCE = 'Source: Summit DCF model for SOFI — projection_history across the three stored snapshots (3 Feb 2026, 29 Apr 2026, 13 May 2026). Values in US$ millions. The 13 May 2026 snapshot carried forward the same projections as 29 Apr 2026 (no change). Data sourced from Summit DCF models.';
 var EVO_SNAPS  = [ { d:'2026-02-03', l:'Feb 2026' }, { d:'2026-04-29', l:'Apr 2026' }, { d:'2026-05-13', l:'May 2026' } ];
 var EVO_YEARS  = ['2026','2027','2028','2029'];
-var EVO_COLORS = ['#0E7CC0','#1E9E62','#E8833A','#8E6FD0'];
+var EVO_COLORS = [SUMMIT_CAT[0],SUMMIT_CAT[2],SUMMIT_CAT[1],SUMMIT_CAT[6]];
 // proj[year] = [value at snapshot0, snapshot1, snapshot2] in US$ millions.
 var EVO_METRICS = {
   rev: { short:'Revenue', label:'Total Net Revenue', unit:'usd',
@@ -3651,6 +3825,17 @@ function showOvt(root, key){
 function init(c){
   var root = document.querySelector('.ov-sofi');
   if (!root) return;
+  renderMarketCap(root);   // OV-1 market-cap cell (live, Massive via api.liveQuote)
+  // OV-4: Overview collapsible blocks and the nested definition accordions.
+  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick = function(){ var c2 = btn.parentElement; var body = c2.querySelector('.ov-collap-b'); var open = c2.classList.toggle('open'); if (body) body.hidden = !open; var ic = btn.querySelector('.ov-collap-ic'); if (ic) ic.textContent = open ? '▾' : '▸'; }; });
+  wireProductModal(root);   // OV-5: family cards open the product pop-up
+  soWireScatters(root);     // OV-6: peer map (pills, chips, tooltips, live quotes)
+  root.querySelectorAll('.acc-h').forEach(function(btn){ btn.onclick = function(){ var b = btn.nextElementSibling; if (!b) return; var open = b.hidden; b.hidden = !open; var x = btn.querySelector('.acc-x'); if (x) x.textContent = open ? '–' : '+'; }; });
+}
+// Wiring of the relocated earlier-profile panes (Lending detail, Fee income, Members, Rule of 40, Capital, Sensitivity, SOTP,
+// Peers trends, organization chart and insider activity); runs on the Deep Dive root.
+function legacyWire(root){
+  if (!root) return;
   // Idempotent wiring (init may run again when the Overview pane is re-activated).
   root.querySelectorAll('.ovt-tab').forEach(function(btn){
     btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
@@ -3789,11 +3974,126 @@ function init(c){
       if (open) requestAnimationFrame(buildLpbPie);
     };
   });
-  var active = root.querySelector('.ovt-tab.active');
-  var activeKey = active ? active.getAttribute('data-ovt') : '';
-  if (activeKey === 'members') requestAnimationFrame(buildMembersTab);
-  if (activeKey === 'interest') requestAnimationFrame(buildInterestTab);
-  if (activeKey === 'fees') requestAnimationFrame(buildFeeTab);
 }
 
-export var sofiOverview = { html: html, init: init };
+// ═══ Deep Dive (playbook §5 / §7.2) — built one sub-tab at a time; a section or sub-tab is added only when its unit is
+// built (rule 5: nothing placeholder). Today: Evolution ▸ Results (EV-RES), the Results engine on js/results-data/sofi.js.
+function ddSubtabs(group, subs, hiddenPane){
+  var bar = '<div class="ovt-subtabs">'+subs.map(function(s, i){ return '<button type="button" class="ovt-subtab'+(i===0?' active':'')+'" data-ovst="'+s.k+'">'+esc(s.l)+'</button>'; }).join('')+'</div>';
+  var panes = subs.map(function(s, i){ return '<div class="ovt-subpane" data-ovst="'+s.k+'"'+(i===0?'':' hidden')+'>'+s.body+'</div>'; }).join('');
+  return '<div class="dd-pane" data-dd="'+group+'"'+(hiddenPane?' hidden':'')+'>'+bar+panes+'</div>';
+}
+function deepDiveHtml(c){
+  var h = '<div class="ov ov-sofi-dd" data-brand="SOFI">';
+  h += '<div class="dd-tabs"><button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
+       '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
+       '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
+       '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
+       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+       '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button></div>';
+  h += ddSubtabs('topline', [
+    { k:'segov', l:'General', body:resultsHtml('SOFI_TLG') },
+    { k:'segdrv', l:'Segments', body:resultsHtml('SOFI_TLS')+
+        collapsible('Lending detail — loan book, borrower credit and capital headroom (earlier profile, seeded)', interestBody(c), false)+
+        collapsible('Fee income — Loan Platform Business, Technology Platform and Financial Services (earlier profile, seeded)', feeBody(c), false) }
+  ], false);
+  h += ddSubtabs('bottomline', [
+    { k:'margins', l:'General', body:resultsHtml('SOFI_BL') },
+    { k:'segments', l:'Segments', body:resultsHtml('SOFI_BLS') }
+  ], true);
+  h += ddSubtabs('evolution', [
+    { k:'earnings', l:'Earnings', body:sofiCeHtml(c) },
+    { k:'results', l:'Results', body:resultsHtml('SOFI') },
+    { k:'estevo', l:'Estimates', body:resultsEvoHtml('SOFI') }
+  ], true);
+  h += ddSubtabs('valuation', [
+    { k:'histmult', l:'Historic Multiple', body:sofiHistMult.body() },
+    { k:'peers', l:'Peers', body:soValuationPeersBody()+collapsible('Trends over time — peer series (earlier profile, seeded and dated)', peersBody(c), false) },
+    { k:'targetmult', l:'Target Multiple', body:sofiTargetMult.body() },
+    { k:'sensitivity', l:'Sensitivity Analysis', body:sensBody(c) }
+  ], true);
+  h += ddSubtabs('mgmt', [
+    { k:'team', l:'Executives & Board', body:SOFI_MGMT.body()+collapsible('Organization chart and insider activity (earlier profile, seeded)', managementBody(c), false) }
+  ], true);
+  // Miscellaneous: only the Loan Platform Business (analyst, Oct 26 2026: "Miscellaneous should include only the Loan Platform Business").
+  // Rule of 40, Capital, Sum of the Parts, Strategy and Members are no longer rendered; their code stays in this file and the build log
+  // lists them.
+  h += ddSubtabs('misc', [
+    { k:'lpb', l:'Loan Platform Business', body:sofiLpbBody(c) }
+  ], true);
+  h += '<div class="ov-modal-back" id="sofiDdModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
+    '<button class="ov-modal-x" id="sofiDdModalX" aria-label="Close">×</button>'+
+    '<div class="ov-modal-t" id="sofiDdModalT"></div><div class="ov-modal-b" id="sofiDdModalB"></div></div></div>';
+  h += '</div>';
+  return h;
+}
+// Miscellaneous ▸ Loan Platform Business: the Results-engine chart on fresh data (js/results-data/sofi-misc.js), then the explainer
+// of the earlier profile (how a loan flows, how SoFi is paid, partners). The explainer's own origination chart is not drawn: it
+// held seeded estimates, and the engine chart above replaces it with the frozen Summit model.
+function sofiLpbBody(c){
+  return '<p class="ov-lede">The Loan Platform Business lets SoFi originate loans that partners fund, so SoFi earns a fee without using its own balance sheet. How much volume it moves, and what it earns on it.</p>'+
+    resultsHtml('SOFI_LPB')+lpbBody(c, true);
+}
+// The "?" pop-ups of Earnings (data-detail="ce:<id>") open in the Deep Dive's own modal.
+function wireDdModal(root){
+  var back = root.querySelector('#sofiDdModalBack'), mT = root.querySelector('#sofiDdModalT'), mB = root.querySelector('#sofiDdModalB');
+  if (!back || !mT || !mB) return;
+  function onEsc(e){ if (e.key === 'Escape') closeM(); }
+  function closeM(){ back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden = true; }, 180); }
+  root.querySelector('#sofiDdModalX').onclick = closeM;
+  back.onclick = function(e){ if (e.target === back) closeM(); };
+  root.addEventListener('click', function(e){
+    var el = e.target.closest ? e.target.closest('[data-detail^="ce:"]') : null; if (!el || !root.contains(el)) return;
+    var d = sofiCePop(el.getAttribute('data-detail').slice(3)); if (!d) return;
+    mT.innerHTML = d.t; mB.innerHTML = d.h; back.hidden = false;
+    requestAnimationFrame(function(){ back.classList.add('on'); }); document.addEventListener('keydown', onEsc);
+  });
+}
+function ddActiveKey(root, group){ var p = root.querySelector('.dd-pane[data-dd="'+group+'"] .ovt-subtab.active'); return p ? p.getAttribute('data-ovst') : null; }
+function ddBuildSub(root, group, key){
+  if (group === 'topline' && key === 'segov') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ovt-subpane[data-ovst="segov"] .rs-wrap'), 'SOFI_TLG'); });
+  if (group === 'topline' && key === 'segdrv') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ovt-subpane[data-ovst="segdrv"] .rs-wrap'), 'SOFI_TLS'); buildInterestTab(); buildFeeTab(); });
+  if (group === 'bottomline' && key === 'segments') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ovt-subpane[data-ovst="segments"] .rs-wrap'), 'SOFI_BLS'); });
+  if (group === 'bottomline' && key === 'margins') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ovt-subpane[data-ovst="margins"] .rs-wrap'), 'SOFI_BL'); });
+  if (group === 'evolution' && key === 'earnings') sofiCeBuild(root);
+  if (group === 'evolution' && key === 'results') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'SOFI'); });
+  if (group === 'evolution' && key === 'estevo') requestAnimationFrame(function(){ initResultsEvo('SOFI'); });
+  if (group === 'valuation' && key === 'histmult') requestAnimationFrame(function(){ sofiHistMult.init(root); });
+  if (group === 'valuation' && key === 'peers') requestAnimationFrame(function(){ soWireScatters(root); buildPeersTab(); });
+  if (group === 'valuation' && key === 'targetmult') requestAnimationFrame(function(){ sofiTargetMult.init(root); });
+  if (group === 'valuation' && key === 'sensitivity') requestAnimationFrame(buildSensTab);
+  if (group === 'misc' && key === 'lpb') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ovt-subpane[data-ovst="lpb"] .rs-wrap'), 'SOFI_LPB'); buildLpbPie(); });
+  if (group === 'mgmt' && key === 'team') SOFI_MGMT.init(root);
+}
+function ddShowSub(root, group, key){
+  var pane = root.querySelector('.dd-pane[data-dd="'+group+'"]'); if (!pane) return;
+  pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst') === key); });
+  pane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovst') !== key); });
+  requestAnimationFrame(function(){ ddBuildSub(root, group, key); });
+}
+function ddShow(root, group){
+  root.querySelectorAll('.dd-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-dd') === group); });
+  root.querySelectorAll('.dd-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-dd') !== group); });
+  var k = ddActiveKey(root, group); if (k) requestAnimationFrame(function(){ ddBuildSub(root, group, k); });
+}
+function deepDiveInit(c){
+  var root = document.querySelector('.ov-sofi-dd'); if (!root) return;
+  root.querySelectorAll('.dd-tab').forEach(function(b){ b.onclick = function(){ ddShow(root, b.getAttribute('data-dd')); }; });
+  ['topline', 'bottomline', 'evolution', 'valuation', 'mgmt', 'misc'].forEach(function(g){
+    var pane = root.querySelector('.dd-pane[data-dd="'+g+'"]'); if (!pane) return;
+    pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.onclick = function(){ ddShowSub(root, g, b.getAttribute('data-ovst')); }; });
+  });
+  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick = function(){ var c2 = btn.parentElement; var bd = c2.querySelector('.ov-collap-b'); var open = c2.classList.toggle('open'); if (bd) bd.hidden = !open; var ic = btn.querySelector('.ov-collap-ic'); if (ic) ic.textContent = open ? '▾' : '▸'; if (open) requestAnimationFrame(function(){ buildInterestTab(); buildTechChart(); buildLpbPie(); }); }; });
+  legacyWire(root);   // relocated earlier-profile panes
+  sofiCeWire(root);   // Earnings: phase tabs, quarter pills, toggles, Notes
+  wireDdModal(root);
+  var g0 = root.querySelector('.dd-tab.active'); if (g0) ddShow(root, g0.getAttribute('data-dd'));
+}
+
+export var sofiOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

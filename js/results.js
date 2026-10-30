@@ -23,9 +23,19 @@ import { amznResults } from './results-data/amzn.js';
 import { amznSetup } from './results-data/amzn-setup.js';
 import { googlResults } from './results-data/googl.js';
 import { googlSetup } from './results-data/googl-setup.js';
+import { maResults } from './results-data/ma.js';
+import { maSetup } from './results-data/ma-setup.js';
+import { maTlGeneral } from './results-data/ma-tl.js';
+import { maBl } from './results-data/ma-bl.js';
+import { maDrivers } from './results-data/ma-drivers.js';
 import { uberResults, uberSetup } from './results-data/uber.js';
 import { metaResults } from './results-data/meta.js';
+import { sofiResults } from './results-data/sofi.js';
 import { metaSetup } from './results-data/meta-setup.js';
+import { sofiSetup } from './results-data/sofi-setup.js';
+import { sofiBl } from './results-data/sofi-bl.js';
+import { sofiLpb } from './results-data/sofi-misc.js';
+import { sofiTlSegments, sofiTlGeneral, sofiBlSegments } from './results-data/sofi-tl.js';
 import { ibkrResults } from './results-data/ibkr.js';
 import { ibkrSetup } from './results-data/ibkr-setup.js';
 import { spotResults } from './results-data/spot.js';
@@ -49,10 +59,22 @@ var RESULTS_DATA = {
   AMZN_SETUP: amznSetup,
   GOOGL: googlResults,
   GOOGL_SETUP: googlSetup,
+  MA: maResults,
+  MA_SETUP: maSetup,
+  MA_TLG: maTlGeneral,
+  MA_BL: maBl,
+  MA_DRV: maDrivers,
   UBER: uberResults,
   UBER_SETUP: uberSetup,
   META: metaResults,
+  SOFI: sofiResults,
   META_SETUP: metaSetup,
+  SOFI_SETUP: sofiSetup,
+  SOFI_BL: sofiBl,
+  SOFI_TLS: sofiTlSegments,
+  SOFI_TLG: sofiTlGeneral,
+  SOFI_BLS: sofiBlSegments,
+  SOFI_LPB: sofiLpb,
   IBKR: ibkrResults,
   IBKR_SETUP: ibkrSetup,
   SPOT: spotResults,
@@ -251,7 +273,7 @@ var EVO_RAMP = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0', '#C8D7F4'];
 // `growth` (quarterly only): 'yoy' = vs the same quarter last year; 'qoq' = vs
 // the previous reported quarter.
 var _rs = { data: null, view: 'q', growth: 'yoy', mode: 'level', growUnit: 'pct',
-            sec: {}, evo: null, surp: null, vint: 'preprint' };
+            sec: {}, evo: null, surp: null, vint: 'preprint', pref: {} };
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
 
@@ -287,10 +309,18 @@ function rsSt(k){
     var off = (_rs.data && _rs.data.defaultHidden) || [];
     var hid = { act:false, summit:false, cons:false, guide:false, margin:false };
     off.forEach(function(x){ hid[x] = true; });
+    // What the reader switched on or off wins over the dataset's opening default and survives every metric, period-view
+    // and pane change (analyst, Oct 28 2026): the Summit / Consensus / Guidance chips are filters, not part of the view.
+    Object.keys(_rs.pref).forEach(function(x){ hid[x] = _rs.pref[x]; });
     _rs.sec[k] = { metric: null, win: null, yr: null, chart: null,
       view: _rs.view, mode: 'level', growth: 'yoy', growUnit: 'pct', labels: false, tbl: false, hidden: hid };
   }
   return _rs.sec[k];
+}
+function rsPrefSet(key, off){
+  _rs.pref[key] = !!off;
+  Object.keys(_rs.sec).forEach(function(s){ _rs.sec[s].hidden[key] = !!off; });
+  if (_rs.evo && _rs.evo.sec) Object.keys(_rs.evo.sec).forEach(function(s){ _rs.evo.sec[s].hidden[key] = !!off; });
 }
 function rsMetric(k){
   var st = rsSt(k), cfg = rsSecCfg(k);
@@ -310,8 +340,9 @@ function rsFmt(m, v){
   if (v == null) return '—';
   var neg = v < 0 ? '−' : '', a = Math.abs(v), c = rsCur(m);
   if (m.unit === 'eps') return neg + c + a.toFixed(2);
-  if (m.unit === 'pct') return neg + a.toFixed(1) + '%';
+  if (m.unit === 'pct') return neg + a.toFixed(a < 1 && a !== 0 ? 2 : 1) + '%';
   if (m.unit === 'count') return neg + Math.round(a).toLocaleString();
+  if (m.unit === 'cnt') return neg + (a >= 10000 ? (a/1000).toFixed(1) + 'B' : Math.round(a).toLocaleString() + 'M');  // count w/ B/M scaling, no $ (e.g. MA processed txns / shares)
   if (a >= 10000) return neg + c + (a/1000).toFixed(1) + 'B';
   return neg + c + Math.round(a).toLocaleString() + 'M';
 }
@@ -319,8 +350,9 @@ function rsFmtD(m, v, dec){
   if (v == null) return '—';
   var sign = v >= 0 ? '+' : '−', a = Math.abs(v), c = rsCur(m);
   if (m.unit === 'eps') return sign + c + a.toFixed(2);
-  if (m.unit === 'pct') return sign + a.toFixed(dec == null ? 1 : dec) + ' pts';
+  if (m.unit === 'pct') return sign + a.toFixed(dec == null ? (a < 1 && a !== 0 ? 2 : 1) : dec) + ' pts';
   if (m.unit === 'count') return sign + Math.round(a).toLocaleString();
+  if (m.unit === 'cnt') return sign + (a >= 10000 ? (a/1000).toFixed(dec == null ? 1 : dec) + 'B' : Math.round(a).toLocaleString() + 'M');
   if (a >= 10000) return sign + c + (a/1000).toFixed(dec == null ? 1 : dec) + 'B';
   return sign + c + Math.round(a).toLocaleString() + 'M';
 }
@@ -413,11 +445,17 @@ function rsTick(v, unit, div, cur, ticks){
   if (unit === 'eps') return s + c + (+a.toFixed(2));
   if (unit === 'pct') return s + a.toFixed(d) + '%';
   if (unit === 'count') return s + (d ? a.toFixed(d) : Math.round(a).toLocaleString());
+  if (unit === 'cnt') return s + (d ? a.toFixed(d) : Math.round(a)) + (div === 1000 ? 'B' : 'M');   // counts never carry a $
   return s + c + (d ? a.toFixed(d) : Math.round(a)) + (div === 1000 ? 'B' : 'M');
 }
 function rsWin(k, m){
   var st = rsSt(k), n = m.periods.length;
-  if (!st.win || st.win[1] >= n || st.win[0] < 0){ st.win = [0, n - 1]; }
+  if (!st.win || st.win[1] >= n || st.win[0] < 0){
+    // A dataset may open on its last N reported periods plus everything forward (`defaultRange: { q: 8, y: 5 }`): nobody reads
+    // the 2020 quarters first. The presets and the slider still reach the whole history.
+    var dr = _rs.data && _rs.data.defaultRange && _rs.data.defaultRange[rsViewName(k)], lr = rsLastAct(m);
+    st.win = (dr && lr >= 0) ? [Math.max(0, lr - (dr - 1)), n - 1] : [0, n - 1];
+  }
   return st.win;
 }
 function rsRefsFor(m){
@@ -1187,6 +1225,7 @@ function rsBuildChart(k){
               : m.unit === 'eps'  ? cur
               : m.unit === 'pct'  ? '%'
               : m.unit === 'count' ? (m.unitLabel || 'count')
+              : m.unit === 'cnt'   ? (div === 1000 ? 'B' : 'M')
               : (div === 1000 ? cur + 'B' : cur + 'M');
   function sl(a){ return a.slice(lo, hi + 1); }
 
@@ -1282,6 +1321,16 @@ function rsBuildChart(k){
       callback: function(v, i, ts){ return pctMode ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, rsCur(m), ts); } } }
   };
   if (st.yr){ scales.y.min = st.yr[0]; scales.y.max = st.yr[1]; }
+  else if (fwdFrom >= 0){
+    // Headroom for the FORECAST badge, which sits in the top-left of the forward zone: without it the tallest forward bars run
+    // under the badge. Only the primary axis, only when the data is positive.
+    var yTop = null;
+    datasets.forEach(function(d){
+      if (d.yAxisID === 'y2') return;
+      (d.data || []).forEach(function(v){ [].concat(v).forEach(function(x){ if (typeof x === 'number' && (yTop == null || x > yTop)) yTop = x; }); });
+    });
+    if (yTop != null && yTop > 0) scales.y.suggestedMax = yTop * 1.16;
+  }
   if (needY2) scales.y2 = { position: 'right', weight: 1, grid: { display: false },
     ticks: { font: { size: 11 }, callback: function(v){ return v + '%'; } } };
 
@@ -1500,7 +1549,7 @@ function rsRenderTable(k, m){
   function num(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';
     if (m.unit === 'eps') return Number(v).toFixed(2);
-    if (m.unit === 'pct') return Number(v).toFixed(1) + '%';
+    if (m.unit === 'pct') return Number(v).toFixed(Math.abs(v) < 1 && +v !== 0 ? 2 : 1) + '%';
     if (m.unit === 'count') return Math.round(v).toLocaleString();
     return (v/div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
@@ -1562,6 +1611,7 @@ function rsRenderTable(k, m){
   var unitCap = m.unit === 'eps'   ? (rsCurName(m) + ' per share')
               : m.unit === 'pct'   ? 'percent (%)'
               : m.unit === 'count' ? (m.unitLabel || 'count')
+              : m.unit === 'cnt'   ? (div === 1000 ? 'count, billions' : 'count, millions')
               : (rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions'));
   var h = '<div class="rs-ft-cap">' + unitCap + ' · <span class="rs-ft-e">E</span> = estimate, no actual reported yet · the right column summarizes the selected range: how the actual has come in vs each estimate (▲ = beat)' +
     (has.guide && rsGuideRanged(m)
@@ -1669,7 +1719,7 @@ function rsEvoSecCfg(k){ return rsEvo().sections.filter(function(s){ return s.ke
 function rsEvoKeys(cfg){ return (cfg.groups || []).reduce(function(a, g){ return a.concat(g.keys); }, []); }
 function rsEvoSt(k){
   if (!_rs.evo) _rs.evo = { sec: {} };
-  if (!_rs.evo.sec[k]) _rs.evo.sec[k] = { metric: null, mode: 'usd', yr: null, chart: null, hidden: {} };
+  if (!_rs.evo.sec[k]) _rs.evo.sec[k] = { metric: null, mode: 'usd', yr: null, chart: null, hidden: { summit: !!_rs.pref.summit, cons: !!_rs.pref.cons } };
   return _rs.evo.sec[k];
 }
 function rsEvoMetric(k){
@@ -3363,8 +3413,9 @@ function wireResults(pane){
       var bk = blk.getAttribute('data-rsblock'), bst = rsSt(bk);
       if (ctl.hasAttribute('data-rsview')){
         bst.view = ctl.getAttribute('data-rsview');
-        bst.metric = null;                             // the metric list is per view
-        bst.win = null;                                // and so is the period axis
+        // the tracked line is KEPT across a Quarterly/Annual toggle (analyst, Oct 26 2026): rsMetric() falls back to the section
+        // default only when the new view does not carry that line
+        bst.win = null;                                // the period axis is per view
       }
       if (ctl.hasAttribute('data-rsmode')) bst.mode = ctl.getAttribute('data-rsmode');
       if (ctl.hasAttribute('data-rsgrow')) bst.growth = ctl.getAttribute('data-rsgrow');
@@ -3426,8 +3477,8 @@ function wireResults(pane){
     if (l){
       var st2 = rsSt(k);
       var key = l.getAttribute('data-rsleg');
-      st2.hidden[key] = !st2.hidden[key];
-      rsBuildChart(k);
+      rsPrefSet(key, !st2.hidden[key]);
+      rsBuildAll();
     }
   });
   // Metric dropdown (grouped select) per section block, and the pane-wide vintage picker.
@@ -4231,8 +4282,13 @@ export function initResultsEvo(ticker){
     if (evl && (k = secOf(evl))){
       var st = rsEvoSt(k);
       var key = evl.getAttribute('data-rsevleg');
-      st.hidden[key] = !st.hidden[key];
-      rsBuildEvo(k);
+      if (key === 'summit' || key === 'cons'){
+        rsPrefSet(key, !st.hidden[key]);
+        Object.keys(_rs.evo.sec).forEach(function(s){ rsBuildEvo(s); });
+      } else {
+        st.hidden[key] = !st.hidden[key];
+        rsBuildEvo(k);
+      }
     }
   };
   wrap.onchange = function(e){

@@ -7,6 +7,16 @@
 // Nothing here comes from outside the transcript corpus. Where a call stated no
 // figure the value is `null` — NOT interpolated. Read the gaps as gaps.
 //
+// EXCEPTION — the Oct '26 (3Q26) column for Alphabet, Meta and Microsoft (filled
+// Oct 29 2026, SAB): the corpus has no 3Q26 calls yet, so it comes from the 10-Qs
+// (SEC EDGAR) and the call transcripts as published by The Motley Fool (Meta Oct
+// 21, Alphabet Oct 28, Microsoft Oct 28) — the same route as SpaceX. Motley Fool
+// flags its transcripts as partly LLM-assisted: check a quoted fragment against
+// the audio or the official transcript before quoting it outside the portal.
+// Amazon's 3Q26 column (filled Oct 29 2026, the night of its print) comes from its 8-K earnings release (Ex. 99.1):
+// cash capex, the 2026 capex frame and AWS revenue / operating income. The call cells (backlog $578B, the capacity quote,
+// What They Said) were filled Oct 30 2026 from the transcript Dani compiled (Drive: AMZN calls.txt; provider not named).
+//
 // AXIS CONVENTION (per SAB): everything is on a CALENDAR basis so the four are
 // comparable. Microsoft is the only fiscal-year reporter (FY ends 30 June), so its
 // "FY26Q2" call lands in the Jan-2026 calendar column. That offset is surfaced in
@@ -53,8 +63,8 @@ export var HS_VINTAGES = [
   { key: '25q4', label: "Jan '26", calls: '4Q25', msft: 'FY26Q2' },
   { key: '26q1', label: "Apr '26", calls: '1Q26', msft: 'FY26Q3' },
   { key: '26q2', label: "Jul '26", calls: '2Q26', msft: 'FY26Q4' },
-  // Added Oct 21 2026 for SpaceX's 3Q26 call (Oct 20). The four had not reported
-  // 3Q26 yet, so their cells in this column are null until they do.
+  // Added Oct 21 2026 for SpaceX's 3Q26 call (Oct 20); Alphabet, Meta and Microsoft
+  // filled Oct 29 2026; Amazon's from its 8-K the same night, its call-based cells Oct 30 from the transcript.
   { key: '26q3', label: "Oct '26", calls: '3Q26', msft: 'FY27Q1' },
 ];
 
@@ -86,13 +96,13 @@ export var HS_GUIDE = [
   {
     year: '2026',
     label: 'CY2026 CapEx',
-    blurb: 'The step change. All four raise again — and the only line that falls does so because of an accounting change, not less investment.',
+    blurb: 'The step change. All four raise again — and the two lines that fall do so because of an accounting change and late third-party deliveries, not less investment.',
     series: {
       //        Apr24  Jul24  Oct24  Jan25  Apr25  Jul25  Oct25  Jan26  Apr26  Jul26  Oct26
-      googl: [  null,  null,  null,  null,  null,  null,  null,  180,   185,   200,   null ],
-      amzn:  [  null,  null,  null,  null,  null,  null,  null,  200,   null,  220,   null ],
-      meta:  [  null,  null,  null,  null,  null,  null,  null,  125,   135,   137.5, null ],
-      msft:  [  null,  null,  null,  null,  null,  null,  null,  null,  190,   175,   null ],
+      googl: [  null,  null,  null,  null,  null,  null,  null,  180,   185,   200,   200  ],
+      amzn:  [  null,  null,  null,  null,  null,  null,  null,  200,   null,  220,   220  ],
+      meta:  [  null,  null,  null,  null,  null,  null,  null,  125,   135,   137.5, 140  ],
+      msft:  [  null,  null,  null,  null,  null,  null,  null,  null,  190,   175,   170  ],
       // SpaceX guides a QUARTER, never a year, and only at TOTAL-COMPANY level
       // (no Super Intelligence split). Both points are derived:
       //   Jul26 65.3 = 1Q 10.1 + 2Q 18.4 + 2 × 18.4 ("the next 2 quarters are
@@ -101,10 +111,10 @@ export var HS_GUIDE = [
       spcx:  [  null,  null,  null,  null,  null,  null,  null,  null,  null,  65.3,  85.6 ],
     },
     resolve: {
-      googl: { first: 180, last: 200, actual: null, src: '$175–185B (4Q25) → $180–190B (1Q26, now including Intersect) → $195–205B (2Q26). Midpoint plotted.' },
-      amzn:  { first: 200, last: 220, actual: null, src: '"About $200 billion" (4Q25) → "approximately $220 billion" (2Q26). Jassy attributes the raise to higher memory cost.' },
-      meta:  { first: 125, last: 137.5, actual: null, src: '$115–135B (4Q25) → $125–145B (1Q26) → $130–145B (2Q26, floor raised). Midpoint plotted.' },
-      msft:  { first: 190, last: 175, actual: null, flag: 'accounting', src: '⚠ ~$190B (FY26Q3, including ~$25B of higher component pricing) → ~$175B (FY26Q4). The drop is NOT less investment: extending data-centre useful life from 15 to 25 years pushes more leases from finance to operating, and operating leases are not CapEx. Hood: "outside of this useful life impact, our calendar year 2026 CapEx investment expectations remain unchanged."' },
+      googl: { first: 180, last: 200, actual: null, src: '$175–185B (4Q25) → $180–190B (1Q26, now including Intersect) → $195–205B (2Q26) → unchanged at 3Q26 (“remain unchanged”). Midpoint plotted.' },
+      amzn:  { first: 200, last: 220, actual: null, src: '"About $200 billion" (4Q25) → "approximately $220 billion" (2Q26) → reiterated at 3Q26 ("We continue to expect 2026 cash capital expenditures to be approximately $220 billion", 8-K Oct 29 2026). Jassy attributes the raise to higher memory cost.' },
+      meta:  { first: 125, last: 140, actual: null, src: '$115–135B (4Q25) → $125–145B (1Q26) → $130–145B (2Q26, floor raised) → $135–145B (3Q26, “narrowed from our prior outlook”, floor raised again). Midpoint plotted.' },
+      msft:  { first: 190, last: 170, actual: null, flag: 'accounting', src: '⚠ ~$190B (FY26Q3, including ~$25B of higher component pricing) → ~$175B (FY26Q4). The drop is NOT less investment: extending data-centre useful life from 15 to 25 years pushes more leases from finance to operating, and operating leases are not CapEx. Hood: "outside of this useful life impact, our calendar year 2026 CapEx investment expectations remain unchanged." Then ~$170B (FY27Q1): “for the calendar year, spend should be approximately $170 billion due to the 3P capacity delays” — third-party capacity deliveries expected in the quarter slipped.' },
       spcx:  { first: 65.3, last: 85.6, actual: null, d: true, src: '⚠ <b>Total company, derived from quarterly guides</b> — SpaceX never states a full year and never splits CapEx by segment. Aug: the next two quarters “very similar to the current quarter” ($18.4B) → ~$65B. Oct: 4Q raised to <b>$35–40B</b> — “SI infrastructure continuing to come online at Memphis and Southaven gives us visibility into an accelerated build path” → ~$86B ($83–88B). Super Intelligence was 86% and 84% of total CapEx in 2Q and 3Q26.' },
     },
   },
@@ -113,11 +123,13 @@ export var HS_GUIDE = [
 // ── 2 · REPORTED QUARTERLY CAPEX ──────────────────────────────────────────────
 // US$B, as stated on that quarter's call. Definitions differ by company — see
 // HS_BASIS. null = not stated on any call in the corpus.
+// AMZN 3Q26 = 8-K Ex. 99.1 (Oct 29 2026), cash basis like its calls: purchases of property and equipment
+// $77,259M − proceeds from sales and incentives $1,381M = $75.9B (DERIVED from the release, not stated on the call).
 export var HS_QUARTERLY = {
-  googl: [12.0, null, 13.0, 14.0, 17.2, 22.4, 24.0, 27.9, 35.7, 44.9, null],
-  amzn:  [14.0, null, null, 26.3, 24.3, 31.4, 34.2, null, 43.2, 53.1, null],
-  meta:  [6.7,  8.5,  9.2,  14.8, null, 17.0, 19.4, 22.1, 19.8, 31.1, null],
-  msft:  [14.0, 19.0, 20.0, 22.6, 21.4, 24.2, 34.9, 37.5, 31.9, 41.0, null],
+  googl: [12.0, null, 13.0, 14.0, 17.2, 22.4, 24.0, 27.9, 35.7, 44.9, 51.4],
+  amzn:  [14.0, null, null, 26.3, 24.3, 31.4, 34.2, null, 43.2, 53.1, 75.9],
+  meta:  [6.7,  8.5,  9.2,  14.8, null, 17.0, 19.4, 22.1, 19.8, 31.1, 34.9],
+  msft:  [14.0, 19.0, 20.0, 22.6, 21.4, 24.2, 34.9, 37.5, 31.9, 41.0, 45.2],
   // TOTAL-COMPANY CapEx (SAB, Oct 21 2026: same basis as the other four, and the
   // only level SpaceX guides at, so the guide band can sit on the bars). Sum of
   // the three segments = purchases of PP&E. Super Intelligence share in
@@ -160,10 +172,10 @@ export var HS_SPCX_SI_CAPEX = {
 export var HS_YEARS = ['2024', '2025', '2026'];
 
 export var HS_YEAR_QTRS = {
-  googl: { '2024': [12.0, null, 13.0, 14.0], '2025': [17.2, 22.4, 24.0, 27.9], '2026': [35.7, 44.9, null, null] },
-  amzn:  { '2024': [14.0, 16.5, 21.4, 26.3], '2025': [24.3, 31.4, 34.2, 35.1], '2026': [43.2, 53.1, null, null] },
-  meta:  { '2024': [6.7,  8.5,  9.2,  14.8], '2025': [12.5, 17.0, 19.4, 22.1], '2026': [19.8, 31.1, null, null] },
-  msft:  { '2024': [14.0, 19.0, 20.0, 22.6], '2025': [21.4, 24.2, 34.9, 37.5], '2026': [31.9, 41.0, null, null] },
+  googl: { '2024': [12.0, null, 13.0, 14.0], '2025': [17.2, 22.4, 24.0, 27.9], '2026': [35.7, 44.9, 51.4, null] },
+  amzn:  { '2024': [14.0, 16.5, 21.4, 26.3], '2025': [24.3, 31.4, 34.2, 35.1], '2026': [43.2, 53.1, 75.9, null] },
+  meta:  { '2024': [6.7,  8.5,  9.2,  14.8], '2025': [12.5, 17.0, 19.4, 22.1], '2026': [19.8, 31.1, 34.9, null] },
+  msft:  { '2024': [14.0, 19.0, 20.0, 22.6], '2025': [21.4, 24.2, 34.9, 37.5], '2026': [31.9, 41.0, 45.2, null] },
   // Total company, exact $M ÷ 1000 rather than the rounded HS_QUARTERLY figures,
   // so 2025 sums to the S-1's $20.7B and 2026 YTD to $48.1B with no rounding drift.
   spcx:  { '2024': [null, null, null, null], '2025': [4.140, 2.826, 6.880, 6.891], '2026': [10.107, 18.369, 19.593, null] },
@@ -189,8 +201,8 @@ export var HS_YEAR_PARTIAL = {
 export var HS_YEAR_GUIDE = {
   googl: { '2024': null,      '2025': [91, 93],   '2026': [195, 205] },
   amzn:  { '2024': [75, 75],  '2025': [125, 125], '2026': [220, 220] },
-  meta:  { '2024': [38, 40],  '2025': [70, 72],   '2026': [130, 145] },
-  msft:  { '2024': null,      '2025': null,       '2026': [175, 175] },
+  meta:  { '2024': [38, 40],  '2025': [70, 72],   '2026': [135, 145] },
+  msft:  { '2024': null,      '2025': null,       '2026': [170, 170] },
   // DERIVED: SpaceX guides one quarter at a time. 2026 = 1Q–3Q actual $48,069M +
   // the 4Q guide of $35–40B (3Q26 call) = $83.1–88.1B. Same total-company basis
   // as the bars. Private in 2024–25, so no guide.
@@ -237,10 +249,10 @@ export var HS_BASIS = [
 // Meta has none by design — it sells no contracted cloud capacity. That absence
 // is a finding, not missing data.
 export var HS_BACKLOG = {
-  googl: [null, null, null, null, null, null, 155, 240, 462, 514, null],
-  amzn:  [null, null, null, null, 189,  null, 200, 244, 364, 496, null],
+  googl: [null, null, null, null, null, null, 155, 240, 462, 514, 561],
+  amzn:  [null, null, null, null, 189,  null, 200, 244, 364, 496, 578],
   meta:  [null, null, null, null, null, null, null, null, null, null, null],
-  msft:  [null, 269,  null, 298,  315,  368,  392,  625,  627,  678, null],
+  msft:  [null, 269,  null, 298,  315,  368,  392,  625,  627,  678, 677],
 };
 
 export var HS_BACKLOG_NOTES = [
@@ -460,6 +472,18 @@ export var HS_GW_BRIDGE = {
 // ⚠ Model QA, surfaced rather than buried. The previous flag here — that Meta's
 // dollar and percentage columns disagreed on Land, Buildings and Finance-lease ROU
 // — is RESOLVED in this vintage: the percentage column was removed from the Meta
+// The model against the 3Q26 guides (added Oct 30 2026, SAB). The GW above are the August vintage of
+// the Summit build; no newer one exists (Amazon's DCF of Oct 29 2026 carries the same D&A sheet, the
+// Alphabet and Meta DCFs carry no capex/D&A sheet, Microsoft's DCF is unchanged since Aug 4). So the GW
+// are NOT re-solved here: the card only sets the model's 2026 capex (HS_GW_BRIDGE.total26) beside what
+// each company guided on its 3Q26 call, and the gap at the guide midpoint is computed on the tab.
+export var HS_GW_GUIDE_CHECK = [
+  { id: 'amzn',  guide: '~$220B',  mid: 220, read: 'In line. The DCF of Oct 29 2026 keeps $221.5B and the same GW.' },
+  { id: 'googl', guide: '$195–205B', mid: 200, read: 'The model sits at the top of the range, which the 3Q26 call left unchanged.' },
+  { id: 'meta',  guide: '$135–145B', mid: 140, read: 'The model sits at the top of the range; the 3Q26 call narrowed it by raising the floor.' },
+  { id: 'msft',  guide: '~$170B, calendar 2026', mid: null, read: 'Not comparable: the 2026 bar is Microsoft’s reported fiscal year to June 2026 ($115.9B), and calendar 2026 straddles fiscal 2026 and 2027.' },
+];
+
 // build and the dollars now tie to $145.0B exactly (the percentages shown above
 // are computed from the dollars, so they cannot drift again). Two smaller things
 // took its place, both on the newly added Microsoft tab.
@@ -472,15 +496,19 @@ export var HS_GW_MODEL_FLAG =
 export var HS_CAPACITY_QUOTES = [
   { id: 'amzn', when: "Oct '25", q: 'Added more than <b>3.8 GW of power in the past 12 months</b>, more than any other cloud provider — with at least another 1 GW expected in Q4, and a plan to <b>double overall capacity by the end of 2027</b>.' },
   { id: 'amzn', when: "Feb '26", q: '<b>3.99 GW added over the last 12 months</b> — “twice what we had in 2022, when we were an $80 billion annual run-rate business”. 1.2 GW came in Q4 alone. In 2025 AWS added more data-centre capacity than any other company in the world.' },
+  { id: 'amzn', when: "Oct '26", q: 'No GW figure. An AI accelerator installed “about every 14 seconds”; the big chunks — “the hundreds of megawatts or sometimes up to a gigawatt” — are reserved well in advance, with <b>“very good visibility into 2027 and 2028 and some of 2029 too”</b>. (call transcript)' },
   { id: 'msft', when: "Jul '25", q: 'Stood up <b>more than 2 GW of new capacity over the past 12 months</b>. Every Azure region is now AI-first and supports liquid cooling, which raises fleet fungibility.' },
   { id: 'msft', when: "Oct '25", q: 'Will <b>increase total AI capacity by over 80% this year</b> and roughly <b>double the total data-centre footprint over the next two years</b>. Fairwater in Wisconsin alone scales to 2 GW.' },
   { id: 'msft', when: "Jan '26", q: 'Added <b>nearly 1 GW in the quarter alone</b>. Maia 200 comes online at 10+ petaflops FP4 and 30%+ better TCO than the latest hardware already in the fleet.' },
+  { id: 'msft', when: "Oct '26", q: '“Customer demand continues to exceed available supply.” <b>24 new data centers across 5 continents</b> in the quarter, yet CapEx came in short because “some third-party capacity deliveries we expected in Q1 were delayed”. (Motley Fool transcript)' },
   { id: 'msft', when: "Jul '26", q: 'Another gigawatt added, still on track to roughly double capacity in two years — and <b>dock-to-live times for new GPUs cut by nearly 50%</b> in the largest regions.' },
   { id: 'meta', when: "Jan '25", q: 'Expects to bring <b>almost a gigawatt online in 2025</b>, and is building a 2 GW-plus site “so big it would cover a significant part of Manhattan”.' },
   { id: 'meta', when: "Jul '25", q: 'Prometheus (1 GW+) lands in 2026; <b>Hyperion scales to 5 GW</b> over several years, with more Titan clusters in development.' },
+  { id: 'meta', when: "Oct '26", q: 'No gigawatt figure. “Our current capacity and what is scheduled to come online gives us the flexibility” — the 2027 budget and capacity plans are “still” being developed. (Motley Fool transcript)' },
   { id: 'meta', when: "Apr '26", q: 'Rolling out <b>more than 1 GW of its own custom silicon</b> developed with Broadcom, plus significant AMD volume alongside the new NVIDIA systems.' },
   { id: 'spcx', when: "May '26", q: 'S-1: Colossus and Colossus II “collectively provide approximately <b>1.0 gigawatt</b> of compute power” — up from 0.3 GW at end-2024 and 0.8 GW at end-2025.' },
   { id: 'spcx', when: "Oct '26", q: '<b>1.7 GW</b> at the end of 3Q, ~2.2 GW by end-October and <b>2.5–3 GW by year-end</b>. Musk: “highly confident of <b>10 gigawatts incremental</b> next year, so 13 total”, with a plan for 20 GW of power and cooling.' },
+  { id: 'googl', when: "Oct '26", q: 'Still no GW figure. “Given the supply constrained environment, we started utilizing <b>third-party compute capacity</b> at the end of Q3” — it “came online only at the very end of Q3”. (Motley Fool transcript)' },
   { id: 'googl', when: "Oct '24", q: 'The first corporate agreement to buy nuclear power from <b>multiple small modular reactors — up to 500 MW</b> of 24/7 carbon-free power. Google reports the most efficient PUE in the industry but does not disclose GW added.' },
 ];
 
@@ -551,8 +579,14 @@ export var HS_CSP_QTRS = [
   "Q1'26", "Q2'26", "Q3'26",
 ];
 
-// US$M as reported. null = not reported on the restated basis. Q3'26 exists for
-// SpaceX only (reported Oct 20); the other three fill in when they report.
+// US$M as reported. null = not reported on the restated basis. Q3'26: Google Cloud
+// (10-Q, Oct 29) and SpaceX (Oct 20); AWS fills in when Amazon reports.
+//
+// ⚠ MICROSOFT STOPPED REPORTING INTELLIGENT CLOUD in Sep 2026 (FY27Q1 10-Q: new
+// segments Agents and Infra · Devices and Consumer, prior periods recast). The
+// `msft` series therefore ENDS at Q2'26. From Q3'26 Microsoft is `msftaz` = Azure
+// revenue alone (SAB, Oct 29 2026: the most comparable to GCP and AWS), which has
+// no operating income of its own.
 //
 // SPCX = the SUPER INTELLIGENCE segment (xAI + X, plus Cursor from Aug 14 2026),
 // recast by SpaceX for all periods. Q1'25 and Q1'26 from the S-1; Q3'25, Q2'26
@@ -563,38 +597,49 @@ export var HS_CSP_QTRS = [
 export var HS_CSP_REV = {
   googl: [2614, 2777, 3007, 3444, 3831, 4047, 4628, 4990, 5541, 5821, 6276, 6868, 7315,
           7454, 8031, 8411, 9192, 9574, 10347, 11353, 11955, 12260, 13624, 15157, 17664,
-          20028, 24768, null],
+          20028, 24768, 30709],
   amzn:  [9954, 10219, 10808, 11601, 12742, 13503, 14809, 16110, 17780, 18441, 19739, 20538, 21378,
           21354, 22140, 23059, 24204, 25037, 26281, 27452, 28786, 29267, 30873, 33006, 35579,
-          37587, 42232, null],
+          37587, 42232, 45984],
   msft:  [null, null, null, null, null, null, null, null, null, null, null, 16885, 17926,
           18244, 19889, 20013, 21525, 22141, 23785, 24092, 25544, 26751, 29878, 30897, 32907,
           34681, 39306, null],
   spcx:  [null, null, null, null, null, null, null, null, null, null, null, null, null,
           null, null, null, null, null, null, null, null, 727, 738, 813, 923,
           818, 2561, 7560],
+  // AZURE (Microsoft 10-Q FY27Q1, revenue table, recast): the only Azure revenue in
+  // dollars Microsoft has published — Q3'25 and Q3'26. No operating income: Azure
+  // sits inside Agents and Infra with Microsoft 365. Not spliced onto Intelligent
+  // Cloud above, which is a different (wider) business.
+  msftaz:[null, null, null, null, null, null, null, null, null, null, null, null, null,
+          null, null, null, null, null, null, null, null, null, null, 22384, null,
+          null, null, 33165],
 };
 
 export var HS_CSP_OI = {
   googl: [-1194, -1730, -1426, -1208, -1243, -974, -591, -644, -890, -706, -590, -440, -186,
           191, 395, 266, 864, 900, 1172, 1947, 2093, 2177, 2826, 3594, 5313,
-          6598, 8814, null],
+          6598, 8814, 11121],
   amzn:  [2596, 3075, 3357, 3535, 3564, 4163, 4193, 4883, 5293, 6518, 5715, 5403, 5205,
           5123, 5365, 6976, 7167, 9421, 9334, 10447, 10632, 11547, 10160, 11434, 12465,
-          14161, 16621, null],
+          14161, 16621, 17773],
   msft:  [null, null, null, null, null, null, null, null, null, null, null, 6750, 6727,
           7017, 7917, 8908, 9555, 9515, 9835, 10503, 10851, 11095, 12140, 13391, 13873,
           13753, 15955, null],
   spcx:  [null, null, null, null, null, null, null, null, null, null, null, null, null,
           null, null, null, null, null, null, null, null, -936, -1524, -1722, -2173,
           -2469, -1257, 431],
+  msftaz:[null, null, null, null, null, null, null, null, null, null, null, null, null,
+          null, null, null, null, null, null, null, null, null, null, null, null,
+          null, null, null],
 };
 
 export var HS_CSP_NOTES = [
-  'Google Cloud lost money every quarter until 1Q23 — <b>$1.7B of operating loss in a single quarter of 2020</b>. It now earns $8.8B. That swing, not the revenue line, is the strongest CapEx defence any of the three has.',
-  'Google Cloud margin went from <b>9.4% to 35.6%</b> over nine quarters while revenue growth <i>accelerated</i> from 28% to 82%. Expanding margin and accelerating growth at once is rare.',
+  'Google Cloud lost money every quarter until 1Q23 — <b>$1.7B of operating loss in a single quarter of 2020</b>. It now earns $11.1B a quarter (Q3\'26). That swing, not the revenue line, is the strongest CapEx defence any of the three has.',
+  'Google Cloud margin went from <b>9.4% to 36.2%</b> over ten quarters while revenue growth <i>accelerated</i> from 28% to 103% (Q3\'26, with TPU system sales). Expanding margin and accelerating growth at once is rare.',
   'AWS margin peaked at a record <b>39.5% in 1Q25</b>, fell to 32.9% the next quarter — roughly half seasonal stock comp, the rest depreciation on the AI fleet — and has since recovered to 39.4%. Growth troughed at 17% in mid-2025 and reached 36.8% by Q2\'26.',
   'Intelligent Cloud is the steadiest: margin has held a <b>40–43%</b> band for three years while revenue doubled. Note Q1\'26 — revenue grew 30% but operating income <i>fell</i> sequentially, the first quarter that has happened in this dataset.',
+  '<b>Intelligent Cloud ends at Q2\'26.</b> Microsoft dropped the segment in September 2026 (now Agents and Infra · Devices and Consumer). From Q3\'26 its row is <b>Azure</b> revenue alone — $33.2B, <b>+48%</b> — the first time Microsoft has put a dollar figure on Azure; it has no operating income of its own, so it is absent from the Bottom Line charts.',
   'On absolute dollars AWS is still ahead, but Google Cloud has closed the quarterly operating-income gap from <b>$8.5B in Q1\'24 to $7.8B in Q2\'26</b> while growing off a base a third the size.',
   'SpaceX’s <b>Super Intelligence</b> segment is not a cloud segment like the other three — it is X advertising, Grok subscriptions, Cursor and, above all, <b>renting GPU capacity</b> (“cloud services agreements”). Revenue went <b>$0.8B → $2.6B → $7.6B</b> in the three quarters to Q3\'26 and operating income turned positive ($0.4B, or ~$1.6B before $1.2B of Cursor stock comp) after losing $2.5B in Q1\'26. Its percentage growth and margin dwarf the others on these charts — click “SpaceX SI” in the legend to hide it.',
 ];
@@ -729,7 +774,8 @@ export var HS_DEP_NOTES = [
 //
 // SPCX (added Oct 2026) starts at 1Q26, where the cell is the S-1 (May 2026) —
 // a prospectus, not a call. 2Q26 is the Aug 4 call, 3Q26 the Oct 20 call. The
-// 3Q26 row exists for SpaceX only until the other four report.
+// 3Q26 row: SpaceX (Oct 20), Meta (Oct 21), Alphabet and Microsoft (Oct 28), from
+// the Motley Fool transcripts (see the header); Amazon (Oct 29) from the transcript Dani compiled.
 export var HS_THEME_QTRS = ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26'];
 
 export var HS_THEMES = [
@@ -747,6 +793,7 @@ export var HS_THEMES = [
         '2026 guided at <b>$175–185B</b>; 2025 closed at $91.4B.',
         'Raised to <b>$180–190B</b> to fold in Intersect; 2027 “to significantly increase”.',
         'Raised to <b>$195–205B</b> on “an acceleration in the delivery of capacity”.',
+        '<b>$195–205B</b> “remain unchanged”; 2027 still to “increase significantly”, details on the Q4 call. Q3 $51.4B.',
       ],
       amzn: [
         '“Meaningfully increase year-over-year capital expenditures in 2024” — no number yet.',
@@ -759,6 +806,7 @@ export var HS_THEMES = [
         '<b>~$200B for 2026</b>, “predominantly in AWS, because we have very high demand”.',
         'Q1 $43.2B. “The faster AWS grows, the more short-term CapEx we’ll spend.”',
         'Raised to <b>~$220B</b> — “the higher cost of memory pushing this number up”.',
+        '<b>~$220B</b> reiterated; 2027 “meaningfully more”, “with a clear line of sight to attractive financial returns”. Q3 $75.9B.',
       ],
       meta: [
         'Raised to <b>$35–40B</b> from $30–37B; “CapEx will continue to increase next year”.',
@@ -771,6 +819,7 @@ export var HS_THEMES = [
         '<b>$115–135B for 2026</b>, with operating income still expected above 2025.',
         'Raised to <b>$125–145B</b>, “mostly due to higher component costs, particularly memory pricing”.',
         'Narrowed to <b>$130–145B</b>; no 2027 figure — “infrastructure planning remains highly dynamic”.',
+        'Narrowed to <b>$135–145B</b>, “from our prior outlook of $130 billion to $145 billion”; no 2027 number — “still developing our budget and capacity plans for next year”.',
       ],
       msft: [
         'CapEx “to increase materially on a sequential basis”; FY25 to be higher than FY24.',
@@ -783,6 +832,7 @@ export var HS_THEMES = [
         'CapEx “to decrease on a sequential basis” on normal build-out and lease timing.',
         'Over $40B in the quarter; <b>~$190B for calendar 2026</b>, including ~$25B of higher component pricing.',
         'CY2026 restated to <b>~$175B</b> — the cut is the finance-to-operating lease shift, not less investment.',
+        'Q1 $45.2B, short because “some third-party capacity deliveries… were delayed”; calendar 2026 now “approximately <b>$170 billion</b>”; Q2 “over $50 billion”.',
       ],
       spcx: [
         '', '', '', '', '', '', '', '',
@@ -806,6 +856,7 @@ export var HS_THEMES = [
         'Same 60/40, with long-duration assets “40 years or longer” against much shorter-lived machines.',
         '60/40 again — “approximately 60% of our investment in technical infrastructure this quarter was in servers”.',
         '60/40 holds even as the total nearly doubles.',
+        'About <b>65% servers and networking</b>, 35% data centers in Q3 — servers up from the ~60% of earlier calls.',
       ],
       amzn: [
         'Majority to AWS infrastructure “and specifically generative AI efforts”; the rest same-day facilities and fleet.',
@@ -816,6 +867,7 @@ export var HS_THEMES = [
         'Servers & networking 82% of the 2026 plan; heavy equipment 8%, CIP 4%, land under 1%.',
         '“Land, power, buildings, chips, servers, and networking gear” — laid out 6 to 24 months before billing starts.',
         'Same structure, now against a $220B year.',
+        'Q3 $75.9B “primarily relates to AWS and AI”. Capacity is mostly “owned or long leased” — neoclouds run “about 3,500 basis points worse in operating margin”.',
       ],
       meta: [
         'Servers, data centres and network infrastructure; sites staged “at various phases of development” to flex without over-committing.',
@@ -828,6 +880,7 @@ export var HS_THEMES = [
         'Growth comes from MSL, core AI and non-AI alike — “the MSL AI needs are growing the most”.',
         'Custom silicon and AMD alongside NVIDIA, explicitly to raise efficiency per dollar.',
         'BlackRock venture for a 1 GW El Paso site; “near-term capacity is more valuable than long-term capacity”.',
+        'Driven by “servers, data centers, and network infrastructure”; no split given.',
       ],
       msft: [
         '', '<b>“Roughly half is for infrastructure”</b> — land, builds and leases monetised “over the next 15 years and beyond”; the rest CPUs and GPUs.',
@@ -839,6 +892,7 @@ export var HS_THEMES = [
         '<b>“Roughly two-thirds of our CapEx was on short-lived assets.”</b>',
         'Two-thirds short-lived; finance leases $4.7B for large data centre sites.',
         'Two-thirds short-lived. “If the demand environment changes, you just slow down what is the largest component.”',
+        '“Roughly 3/4 of our CapEx was for <b>short-lived assets</b>, primarily CPUs and GPUs”; finance leases $7.4B, cash paid for PP&amp;E $39.4B.',
       ],
       spcx: [
         '', '', '', '', '', '', '', '',
@@ -862,6 +916,7 @@ export var HS_THEMES = [
         '<b>2025 depreciation +$6B, or 38%, from $15.3B to $21.1B</b>; 2026 to “meaningfully increase”.',
         'Depreciation pressure now hits both Cloud and Services as cost is allocated on consumption.',
         'Still flagged as the standing headwind against every efficiency programme.',
+        'Higher depreciation “will continue to weigh on the P&amp;L”; no figure on the call (10-Q: $8.4B in Q3, +49%).',
       ],
       amzn: [
         '<b>Server useful life extended to 6 years</b> — worth ~200bps of AWS margin, repeated all four quarters of 2024.',
@@ -872,6 +927,7 @@ export var HS_THEMES = [
         '“A headwind from the investments in AI and the depreciation on that CapEx”, offset by efficiency work.',
         'Life framing: 30+ years for data centres, 5–6 for chips, servers and networking gear.',
         'Servers break even in “a little less than three years”, with AI capacity contracted for five-year terms.',
+        'Break-even “continuing to move that left” — “finding ways to extend useful lives and to make the break even sooner”.',
       ],
       meta: [
         '', '', 'Back-end-weighted 2024 CapEx means “a significant acceleration in infrastructure expense growth next year”.',
@@ -880,11 +936,13 @@ export var HS_THEMES = [
         'Infrastructure cost growth accelerates on depreciation, data centre opex and third-party cloud.',
         'Infrastructure is the largest driver of 2026 expense growth: cloud spend, depreciation, operating costs.',
         '', 'Expense outlook held at $165–169B even as CapEx rises.',
+        'Infrastructure cost growth “driven by higher third party cloud spend depreciation”; 2026 total expenses $175–179B.',
       ],
       msft: [
         '', '', '', '', '', '', '', '',
         'Server life is six years against an RPO duration of 2.5 — answered with “those are sold for the entirety of the useful life of the GPU”.',
         '⚠ <b>Data centres and offices extended from 15 to 25 years</b> from FY27. “Minimal benefit” to operating income — but it moves leases from finance to operating and cuts reported CapEx ~$15B.',
+        'Not addressed; Microsoft Cloud gross margin down to 66% on the “sales mix shift to Azure”.',
       ],
       spcx: [
         '', '', '', '', '', '', '', '',
@@ -908,6 +966,7 @@ export var HS_THEMES = [
         '“Our own TPUs that we have been developing for a decade” — a 10-year track record in accelerators.',
         '<b>TPU 8t</b>, specialised separately for training and serving, plus Axion CPUs.',
         '<b>TPU 8t and 8i</b> alongside NVIDIA Vera Rubin; Axion CPU “30% better performance per dollar”.',
+        'TPU 8t and 8i; “Nearly <b>100 customers</b> use TPUs today” (later “over 100 significant TPU customers”); TPU system sales “a meaningful contributor” to Cloud.',
       ],
       amzn: [
         'Demand for “our custom silicon, Trainium and Inferentia, is quite high, given its favorable price-performance”.',
@@ -919,6 +978,7 @@ export var HS_THEMES = [
         'Chips business incl. Graviton and Trainium “over $10 billion annual revenue run rate, growing triple digits”.',
         '<b>~$50B standalone run rate — “one of the top three data center chip businesses in the world”</b>; $225B of Trainium revenue commitments.',
         'Chips run rate “over $25 billion”; multi-year, multi-gigawatt Trainium commitments from Anthropic and OpenAI.',
+        'Graviton and Trainium commitments “each increased more than 20x”; <b>Trainium sold outside AWS from “late in 2027”</b>. Most of Bedrock runs on Trainium.',
       ],
       meta: [
         '<b>MTIA</b> “has successfully enabled us to run some of our recommendation workloads”.',
@@ -927,6 +987,7 @@ export var HS_THEMES = [
         '', '', 'Long-term investment in “silicon and energy”; cost per gigawatt expected to fall through optimisation.',
         '<b>“More than 1 GW of our own custom silicon developed with Broadcom”</b>, plus significant AMD volume alongside NVIDIA.',
         'Internal custom silicon framed as “long-term strategic flexibility and supply chain leverage”.',
+        '',
       ],
       msft: [
         'NVIDIA and AMD “as well as our own first-party silicon”.',
@@ -937,6 +998,7 @@ export var HS_THEMES = [
         '<b>Maia 200 online</b> — “10+ petaflops at FP4 precision with over 30% improved TCO”.',
         'Maia 200 “now scaling”; millions of servers already on first-party networking, security and virtualisation silicon.',
         'Maia 200 continues to scale at “30% better performance per dollar than the latest generation hardware”.',
+        'Maia 200 “up to <b>1.7x more tokens per watt</b>” in Teams and Copilot; Cobalt CPUs; NVIDIA and AMD alongside.',
       ],
       spcx: [
         '', '', '', '', '', '', '', '',
@@ -959,6 +1021,7 @@ export var HS_THEMES = [
         '“We’ve been supply constrained even as we’ve been ramping up our capacity.”',
         '“Unprecedented internal and external demand for AI compute resources.”',
         '⚠ <b>Renting third-party capacity as “a bridging strategy”</b> while building internally — with acknowledged margin cost.',
+        'Third-party compute “came online only at the very end of Q3”, bridging a “supply constrained environment”.',
       ],
       amzn: [
         '“The more demand AWS has, the more we have to procure new data centers, power, and hardware.”',
@@ -966,6 +1029,7 @@ export var HS_THEMES = [
         '', '', '<b>+3.8 GW added in twelve months</b>, “more than any other cloud provider”; 1 GW more in Q4; capacity to double by end-2027.',
         '<b>+3.99 GW over twelve months</b> — “twice what we had in 2022”. In 2025 AWS added more capacity than any company in the world.',
         '', 'Still short: “we will still not have enough capacity to meet all the demand we have in 2026, and… 2027 too”.',
+        'An AI accelerator installed “about every 14 seconds” — “almost as fast as we install capacity, customers are gobbling it up”. The big chunks are reserved early: <b>“very good visibility into 2027 and 2028 and some of 2029”</b>.',
       ],
       meta: [
         '', '', '', '<b>“Almost a gigawatt of capacity this year”</b>, plus a 2 GW-plus site “the size of Manhattan”.',
@@ -973,6 +1037,7 @@ export var HS_THEMES = [
         'Front-loading capacity: better to accelerate than “be constrained on CapEx” with profitable investments unmade.',
         'Meta Compute formalised, with a president hired to court sovereigns and strategic capital.',
         '', '“Near-term capacity is more valuable than long-term capacity.”',
+        '“Our current capacity and what is scheduled to come online gives us the flexibility”; no GW figure.',
       ],
       msft: [
         '“Near-term AI demand is a bit higher than our available capacity.”',
@@ -984,6 +1049,7 @@ export var HS_THEMES = [
         '<b>Nearly 1 GW added in the quarter alone.</b> “Customer demand continues to exceed our supply.”',
         'Another gigawatt; still on track to double in two years.',
         '“Demand exceeds available supply in a sort of relatively extreme moment.” Dock-to-live times for new GPUs cut ~50%.',
+        '“Customer demand continues to exceed available supply”; <b>24 new data centers</b> on 5 continents, but third-party deliveries slipped.',
       ],
       spcx: [
         '', '', '', '', '', '', '', '',

@@ -81,7 +81,11 @@ function renderTop(){
     (showNeg && !(showAll && showPos) ? block('neg', showAll ? 'All holdings, bottom to top' : 'Bottom ' + N + ' contributors') : '') + '</tbody>';
   var foot = '<tfoot><tr style="border-top:2px solid var(--navy)">' + years.map(function(y, i){
     var d = yd[y], shown = d.pos.concat(d.neg).reduce(function(s, x){ return s + x.contrib; }, 0), share = Math.abs(d.total) > 1e-9 ? shown / d.total * 100 : 0;
-    return '<td colspan="' + cpy + '" style="padding:7px 8px;font-size:11.5px;color:var(--navy);' + (i ? GAP : '') + '">Listed: <b style="color:' + colr(shown) + '">' + sgn2(shown) + '%</b> of <b style="color:' + colr(d.total) + '">' + sgn2(d.total) + '%</b> SPY return <span style="color:var(--mu)">(' + share.toFixed(0) + '%)</span></td>';
+    // with every holding listed, what is left is SPY's cash and the names with no price: shown, so the sum is exact
+    var rest = showAll ? d.total - shown : null;
+    return '<td colspan="' + cpy + '" style="padding:7px 8px;font-size:11.5px;color:var(--navy);' + (i ? GAP : '') + '">Listed: <b style="color:' + colr(shown) + '">' + sgn2(shown) + '%</b>' +
+      (rest != null ? ' + cash &amp; other <b style="color:' + colr(rest) + '">' + sgn2(rest) + '%</b> = <b style="color:' + colr(d.total) + '">' + sgn2(d.total) + '%</b> SPY return'
+        : ' of <b style="color:' + colr(d.total) + '">' + sgn2(d.total) + '%</b> SPY return <span style="color:var(--mu)">(' + share.toFixed(0) + '%)</span>') + '</td>';
   }).join('') + '</tr></tfoot>';
   html += '<div style="overflow-x:auto"><table style="width:auto;border-collapse:collapse;font-size:12px">' + thead + tbody + foot + '</table></div>' +
     '<div style="font-size:11px;color:var(--mu);margin-top:8px;line-height:1.5"><b>Contrib</b> = weight in SPY at the start of the year × the year\'s return (one snapshot per year). <b>Cum.</b> = running total down the list. ' +

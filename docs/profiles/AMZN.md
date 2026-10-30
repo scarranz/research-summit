@@ -186,7 +186,7 @@ se quita nada. El conteo de control se hace en F-FINAL contra las sub-tabs de ho
 |---|---|---|---|---|
 | 2026-10-29 | VA-SUB / VA-TM | duda 4: valuación del submit 2025-12-18 | SAB | cerrada: se deja fuera |
 | 2026-10-29 | EV-POST ▸ 3T26 | Call Summary del 3T26: transcripción de Motley Fool no publicada el 29-oct (el 2T26 tardó ~8 días) | Claude, al publicarse | cerrada 2026-10-30: transcripción de Dani (Drive, `AMZN calls.txt`) |
-| 2026-10-29 | TL-CUS ▸ sección 5 | "What each top customer buys" — `segments.js` no la dibuja todavía | PR de motor aparte | abierta (igual que GOOGL) |
+| 2026-10-29 | TL-CUS ▸ sección 5 | "What each top customer buys" — `segments.js` no la dibuja todavía | PR de motor aparte | cerrada 2026-10-30: motor en `feat/segments-customer-buys` |
 
 ## 6b. Conexiones pendientes ("Live data pending")
 
@@ -288,3 +288,12 @@ se quita nada. El conteo de control se hace en F-FINAL contra las sub-tabs de ho
 - Backlog: 3T26 = $578B (Nota 1) agregado a la serie de Top Line (Bloomberg aún no lo tenía); Misc ▸ Capacity → Revenue con
   vida remanente 6.1 años (antes 6.4, 10-Q del 2T26).
 - Cierra el pendiente "deuda neta 3T26 completa con el 10-Q". Queda: TL-CUS sección 5 (motor).
+
+### 2026-10-30 · TL-CUS ▸ sección 5 "What each top customer buys" — en revisión
+- Motor: `segments.js` la dibuja ahora (rama propia `feat/segments-customer-buys`, mergeada aquí; la guía §10 actualizada).
+  Peso tecleado o calculado de las series del dataset; sin `buys` no aparece, así que los demás perfiles no cambian.
+- AMZN, por clase de cliente (Amazon no tiene clientes grandes): Consumers 47.6% · Sellers 24.0% · Developers and enterprises
+  18.0% · Advertisers 9.6% del FY2025 (líneas de ingreso del 10-K, Nota 10; las 7 suman $716,924M); Content creators sin peso
+  (dentro de tiendas y suscripciones). Debajo, los dos clientes de AWS que nombra el 10-Q del 3T26 (Nota 1): OpenAI ($38.0B +
+  $100.0B a 8 años) y Anthropic (+más de $100.0B a 10 años), como compromisos, no como peso en el ingreso.
+- No se afirma que esos compromisos estén dentro del backlog de $578B: el 10-Q no lo dice (y en el 1T26 Anthropic estaba fuera).

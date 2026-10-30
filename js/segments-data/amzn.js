@@ -97,6 +97,22 @@ export var amznSegments = {
     ],
     concentration: { disclosed: false, note: 'The filing carries no customer-concentration disclosure of any kind — no "no single customer accounted for 10%" sentence, and no named customer anywhere. Amazon discloses SUPPLIER concentration ("During 2025, no vendor accounted for 10% or more of our purchases") and not the customer side. Named customers therefore have to come from the earnings calls, and any sizing of a customer is somebody\'s estimate, not a disclosure.' },
     cite: { form: '10-K', period: '2025-12-31', accession: '0001018724-26-000004', url: 'https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm' },
+    // Section 5 — "What each top customer buys". Amazon has no large customers, so the rows are the customer
+    // CLASSES of Item 1, each weighted by the 10-K revenue lines it pays for (computed from the series above;
+    // FY2025, the seven lines add to $716,924M of net sales). Then the two AWS customers the 10-Q names, with
+    // their commitments — not revenue shares (Form 10-Q 3Q26, Note 1, filed Oct 30 2026).
+    buysBase: { keys: ['online_y', 'p3_y', 'aws_y', 'ads_y', 'subs_y', 'phys_y', 'other_y'], y: '2025', label: 'FY2025' },
+    buysLede: 'Amazon has no customer large enough to disclose, so the rows are the customer classes it names, each weighed by the revenue lines it pays for — and below them the two AWS customers its 10-Q names, with what they committed to.',
+    buys: [
+      { name: 'Consumers', what: 'Products in the online and physical stores, plus Prime and other non-AWS subscriptions', seg: 'North America · International', shareOf: ['online_y', 'phys_y', 'subs_y'], src: '10-K Note 10: online stores + physical stores + subscription services' },
+      { name: 'Sellers', what: 'Commissions, fulfillment and shipping fees, and other third-party seller services', seg: 'North America · International', shareOf: ['p3_y'], src: '10-K Note 10: third-party seller services' },
+      { name: 'Developers and enterprises', what: 'Compute, storage, database and other AWS services', seg: 'AWS', shareOf: ['aws_y'], src: '10-K Note 10: AWS' },
+      { name: 'Advertisers', what: 'Sponsored ads, display and video advertising — bought by sellers, vendors, publishers and authors', seg: 'North America · International', shareOf: ['ads_y'], src: '10-K Note 10: advertising services' },
+      { name: 'Content creators', what: 'Programs to publish and sell content (authors, musicians, filmmakers, Twitch streamers)', seg: 'North America · International', shareNote: 'not separable — inside the store and subscription lines', src: '10-K Item 1' },
+      { name: 'OpenAI', what: 'AWS capacity, including the performance of AWS chips: a $38.0B multi-year commitment, expanded by $100.0B over 8 years in Q1 2026', seg: 'AWS', shareNote: 'a commitment, not a revenue share', src: '10-Q 3Q26, Note 1' },
+      { name: 'Anthropic', what: 'AWS capacity, including the performance of AWS chips: the multi-year commitment expanded by more than $100.0B over 10 years in Q2 2026', seg: 'AWS', shareNote: 'a commitment, not a revenue share', src: '10-Q 3Q26, Note 1' },
+    ],
+    buysNote: 'Shares are each class\'s revenue lines over total FY2025 net sales, from the 10-K segment note. A class is not a customer: sellers also buy advertising, and consumers buy what sellers list, so the classes overlap even though the revenue lines do not.',
     // Bloomberg SPLC — the only customer register that does not depend on Amazon choosing to speak.
     // It is assembled from what OTHER companies filed about buying from Amazon. Two things about it
     // decide how it may be drawn, and both are stated on screen rather than smoothed over:

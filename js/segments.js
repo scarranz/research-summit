@@ -1637,19 +1637,21 @@ function custBuysShare(c, r){
   return '<span class="rs-ft-nil">' + esc(r.shareNote || 'not quantified') + '</span>';
 }
 function custBuysSection(c, n){
-  var rows = c.buys || [];
+  var rows = c.buys || [], tk = rows.some(function(r){ return r.tk; });
   if (!rows.length)
     return sec(n, 'What each top customer buys', 'not quantified',
       '<div class="sg-needs">⚑ ' + esc(c.buysNone || ('Nothing ' + coName() + ' discloses quantifies what its customers buy.')) + '</div>');
   return sec(n, 'What each top customer buys', rows.length + ' rows',
     '<p class="sg-lede">' + esc(c.buysLede || ('What the largest customers of ' + coName() + ' pay it for, and how much of revenue each is.')) + '</p>' +
-    '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
-      '<th class="rs-ft-h">Customer</th><th>Ticker</th><th>What it buys</th><th>Segment</th>' +
-      '<th>Share of revenue</th><th>Source</th></tr></thead><tbody>' +
+    // A ticker column only when some row has one (a list of customer classes has none).
+    '<div class="rs-ft-scroll"><table class="rs-ft sg-buys"><thead><tr>' +
+      '<th class="rs-ft-h">Customer</th>' + (tk ? '<th>Ticker</th>' : '') + '<th>What it buys</th><th>Segment</th>' +
+      '<th class="sg-buys-n">Share of revenue</th><th>Source</th></tr></thead><tbody>' +
       rows.map(function(r){
         return '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(r.name) + '</td>' +
-          '<td>' + esc(r.tk || '—') + '</td><td>' + esc(r.what) + '</td><td>' + esc(r.seg || '—') + '</td>' +
-          '<td>' + custBuysShare(c, r) + '</td><td>' + esc(r.src || '—') + '</td></tr>';
+          (tk ? '<td>' + esc(r.tk || '—') + '</td>' : '') +
+          '<td class="sg-buys-w">' + esc(r.what) + '</td><td>' + esc(r.seg || '—') + '</td>' +
+          '<td class="sg-buys-n">' + custBuysShare(c, r) + '</td><td>' + esc(r.src || '—') + '</td></tr>';
       }).join('') + '</tbody></table></div>' +
     (c.buysNote ? '<p class="sg-cite">' + esc(c.buysNote) + '</p>' : ''));
 }

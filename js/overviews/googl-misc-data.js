@@ -1,16 +1,18 @@
 // googl-misc-data.js — data for Alphabet Deep Dive ▸ Miscellaneous ▸ Capex & Depreciation (MISC-capex; playbook §15b).
-// Reported figures and filing / call text only, plus the Summit model's depreciation, FROZEN from snapshot 2026-08-06
-// (rule 10 — the same snapshot Results draws). Capex and revenue are read from js/results-data/googl.js, not here.
+// Reported figures and filing / call text only, plus the Summit model's depreciation, FROZEN from snapshot 2026-10-29
+// (rule 10 — the same snapshot Results draws; refreshed from 2026-08-06 on Oct 30 2026). Capex and revenue are read from js/results-data/googl.js, not here.
 // Filings read on SEC EDGAR Oct 27 2026: Form 10-K FY2023 (filed Jan 31 2024), FY2024 (Feb 5 2025), FY2025 (Feb 5 2026);
 // Form 10-Q 1Q26 (Apr 30 2026) and 2Q26 (Jul 23 2026); Form 10-Q 3Q26 (Oct 29 2026, acc. 0001652044-26-000084) read
 // Oct 29 2026. US$ billions unless stated.
 
 // Depreciation of property and equipment, US$ M — the cash-flow line (XBRL Depreciation; Alphabet reports no separate
 // amortization line in operating cash flow). Quarters = differences of the year-to-date 10-Q figures.
-// Forecast: Summit DNA, snapshot 2026-08-06 (frozen, not live); 2026 = reported 1Q–2Q + the model's 3Q–4Q.
+// Forecast: Summit DNA, snapshot 2026-10-29 (frozen, not live); 2026 = reported 1Q–3Q + the model's 4Q (the model's own
+// FY2026 cell, 31,635, still carries its 3Q estimate of 8,383 against 8,369 reported). 2029 (104,423) is in the model but
+// off this chart's FY2021–FY2028E axis.
 export var GOOGL_DEPR = {
   act: { '2021': 10273, '2022': 13475, '2023': 11946, '2024': 15311, '2025': 21136 },
-  summit: { '2026': 31635, '2027': 51816, '2028': 79597 },
+  summit: { '2026': 31621, '2027': 51816, '2028': 79597 },
   q: { '1Q23': 2635, '2Q23': 2824, '3Q23': 3171, '4Q23': 3316, '1Q24': 3413, '2Q24': 3708, '3Q24': 3985, '4Q24': 4205,
        '1Q25': 4487, '2Q25': 4998, '3Q25': 5611, '4Q25': 6040, '1Q26': 6482, '2Q26': 7104, '3Q26': 8369 }
 };

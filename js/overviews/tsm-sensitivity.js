@@ -19,7 +19,7 @@
 //     (DCE 2028, everything 2029) the driver falls back to the model and the strip says so.
 //   • D&A bridge = model EBITDA − operating income, held fixed. The model's EBITDA includes non-operating items, so the
 //     line is labelled "D&A + non-operating"; at the base the grid's EBITDA equals Target Multiple's.
-//   • EXIT MULTIPLE starts at the model's own (./tsm-target-multiple-data.js: 12× EV/EBITDA, 19× P/E); yours to move.
+//   • EXIT MULTIPLE starts at the model's own (./tsm-target-multiple-data.js, latest submit: 12× EV/EBITDA, 20× P/E); yours to move.
 //   • SHARES / TAX from the model (ADR-equivalent shares, model tax rate) — nothing derived.
 //   • NET DEBT = TSMC's latest 6-K balance sheet (./tsm-histmult-data.js), its source named (A23); the live quote
 //     supplies the price only.

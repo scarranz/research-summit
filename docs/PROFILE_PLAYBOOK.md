@@ -1295,6 +1295,11 @@ generador "solo consenso".
   usar la paleta categórica) · Summit (sólida) · Consensus (punteada) · Reported (de puntos).
 - Gráfica de líneas: eje X = snapshots con etiqueta de evento ("Dec 18 2025 · post-3Q"), una línea
   por año × fuente; tooltip con la revisión contra el snapshot anterior.
+- **Slider de snapshots** bajo la gráfica (decisión SAB, 30 oct 2026): el mismo slider de bolitas de
+  Results, una bolita por snapshot; filtra la gráfica **y** las dos tablas. Arrastrar en horizontal
+  sobre la gráfica también fija la ventana; doble clic la reinicia. Lo pone el motor (`rsEvoWin`,
+  `rsSyncEvoSlider` en `results.js`): el perfil no hace nada, y en la autoauditoría se revisa que
+  aparezca con todas las bolitas y que mover el extremo izquierdo recorte las tablas.
 - Tablas "Revision record" y "Snapshot by snapshot" (colapsadas).
 - Bloque **"Projection by snapshot"** (requiere ≥ 2 snapshots): la curva de un snapshot, con selector
   de archivo (más nuevo primero) y "⇄ Compare" contra el anterior; tabla "Projection detail".

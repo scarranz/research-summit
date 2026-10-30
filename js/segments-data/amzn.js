@@ -16,7 +16,7 @@
 export var amznSegments = {
   company: 'Amazon',
   updated: 'Oct 2026',
-  source: 'Segment PP&E, capex and EBITDA from the Summit DCF (snapshot 2026-08-04, actuals_history for reported periods and projection_history forward). Segment D&A, remaining performance obligations, shipping cost and days payable are Bloomberg reported figures assembled across the archive snapshots — Amazon does not publish any of them, so there is no company number to reconcile against. Segment revenue and operating income are read from the Results dataset.',
+  source: 'Segment PP&E, capex and EBITDA from the Summit DCF (snapshot 2026-10-30, actuals_history for reported periods and projection_history forward). Segment D&A, remaining performance obligations, shipping cost and days payable are Bloomberg reported figures assembled across the archive snapshots — Amazon does not publish any of them, so there is no company number to reconcile against. Segment revenue and operating income are read from the Results dataset.',
   axis: { q: ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26'], y: ['2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'] },
   shared: {
     // 3Q26 ($578B) typed from the Form 10-Q for 3Q26 (Oct 30 2026), Note 1 — Bloomberg had not posted it yet.
@@ -290,7 +290,7 @@ export var amznSegments = {
         },
         ebitda: { label: 'Segment EBITDA', short: 'EBITDA', unit: 'usdM', src: 'DCF AWS_EBITDA',
           q: { act: { '1Q23': 7818.816, '2Q23': 8303.6, '3Q23': 10405.5931, '4Q23': 10957.0547, '1Q24': 12684.9862, '2Q24': 12766.8188, '3Q24': 14093.648, '4Q24': 14573.547, '1Q25': 15077, '2Q25': 13902, '3Q25': 15435, '4Q25': 16695, '1Q26': 18441, '2Q26': 21430.5189 }, summit: {  } },
-          y: { act: { '2022': 32717, '2023': 37162, '2024': 53154, '2025': 67056 }, summit: { '2026': 107692.8154, '2027': 149525.6342, '2028': 183363.1838, '2029': 235691.433 } },
+          y: { act: { '2022': 32717, '2023': 37162, '2024': 53154, '2025': 67056 }, summit: { '2026': 110070.7502, '2027': 156552.6832, '2028': 202920.0519, '2029': 267364.5729 } },
         },
         dna: { label: 'Depreciation & amortisation', short: 'D&A', unit: 'usdM', src: 'BBG kpi12',
           q: { act: { '4Q24': 13320, '1Q25': 4390, '2Q25': 4844, '3Q25': 5648, '4Q25': 6568, '1Q26': 7277, '2Q26': 8076 }, summit: {  } },
@@ -411,7 +411,7 @@ export var amznSegments = {
         },
         ebitda: { label: 'Segment EBITDA', short: 'EBITDA', unit: 'usdM', src: 'DCF US_EBITDA',
           q: { act: { '1Q23': 3593.816, '2Q23': 6149.6, '3Q23': 7736.5931, '4Q23': 10251.0547, '1Q24': 8246.9862, '2Q24': 8497.8188, '3Q24': 9309.648, '4Q24': 13197.547, '1Q25': 9371, '2Q25': 11259, '3Q25': 8790, '4Q25': 15702, '1Q26': 12547, '2Q26': 13932.5189 }, summit: {  } },
-          y: { act: { '2022': 8718, '2023': 28555, '2024': 39252, '2025': 45122 }, summit: { '2026': 56832.9257, '2027': 67247.8769, '2028': 73566.9424, '2029': 82722.9424 } },
+          y: { act: { '2022': 8718, '2023': 28555, '2024': 39252, '2025': 45122 }, summit: { '2026': 57630.1611, '2027': 64789.3776, '2028': 73262.2178, '2029': 84974.906 } },
         },
         dna: { label: 'Depreciation & amortisation', short: 'D&A', unit: 'usdM', src: 'BBG kpi10',
           q: { act: { '4Q24': 14285, '1Q25': 3530, '2Q25': 3742, '3Q25': 4001, '4Q25': 4230, '1Q26': 4280, '2Q26': 4500 }, summit: {  } },
@@ -495,7 +495,7 @@ export var amznSegments = {
         },
         ebitda: { label: 'Segment EBITDA', short: 'EBITDA', unit: 'usdM', src: 'DCF INT_EBITDA',
           q: { act: { '1Q23': 1448.816, '2Q23': 2043.6, '3Q23': 3334.5931, '4Q23': 3371.0547, '1Q24': 4166.9862, '2Q24': 3705.8188, '3Q24': 4947.648, '4Q24': 5256.547, '1Q25': 4547, '2Q25': 5236, '3Q25': 5200, '4Q25': 5270, '1Q26': 5704, '2Q26': 6526.5189 }, summit: {  } },
-          y: { act: { '2022': -4263, '2023': 1360, '2024': 8254, '2025': 9657 }, summit: { '2026': 12734.9996, '2027': 15109.752, '2028': 17338.8918, '2029': 19797.1522 } },
+          y: { act: { '2022': -4263, '2023': 1360, '2024': 8254, '2025': 9657 }, summit: { '2026': 12905.8329, '2027': 17049.4464, '2028': 21308.5046, '2029': 25340.8831 } },
         },
         dna: { label: 'Depreciation & amortisation', short: 'D&A', unit: 'usdM', src: 'BBG kpi11',
           q: { act: { '4Q24': 4462, '1Q25': 1136, '2Q25': 1180, '3Q25': 1276, '4Q25': 1315, '1Q26': 1277, '2Q26': 1293 }, summit: {  } },

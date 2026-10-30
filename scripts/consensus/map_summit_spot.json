@@ -23,12 +23,13 @@
   "_decimals_note": "Millions at 1 decimal, like the hand-authored summit arrays.",
   "decimals": { "_default": 1 },
 
-  "_vintages_note": "The four model snapshots in the MCP (2025-12-18 -> 2026-08-05). lastActual = the last period REPORTED when that file was saved (docs/profiles/SPOT.md, valuation-history table: 2025-12-18 and 2026-02-09 both stand after 3Q25; 2026-04-28 after 1Q26; 2026-08-05 after 2Q26). 2026-02-09 is the day before the 4Q25 print (Feb 10).",
+  "_vintages_note": "The five model snapshots in the MCP (2025-12-18 -> 2026-10-22). lastActual = the last period REPORTED when that file was saved (docs/profiles/SPOT.md, valuation-history table: 2025-12-18 and 2026-02-09 both stand after 3Q25; 2026-04-28 after 1Q26; 2026-08-05 after 2Q26; 2026-10-22 after 3Q26, saved the day of the print with the 3Q26 actual inside the FY2026 annual). Since Oct 2026 the 1Q27/2Q27 quarters of every vintage are removed by hand after generation (docs/profiles/SPOT.md section 21: not forecasts), so the 2026-10-22 vintage was spliced by hand, not through apply_matrix.py. 2026-02-09 is the day before the 4Q25 print (Feb 10).",
   "vintages": [
     { "id": "2025-12-18", "label": "Dec 18, 2025", "lastActual": { "q": "3Q25", "y": "2024" } },
     { "id": "2026-02-09", "label": "Feb 9, 2026",  "lastActual": { "q": "3Q25", "y": "2024" } },
     { "id": "2026-04-28", "label": "Apr 28, 2026", "lastActual": { "q": "1Q26", "y": "2025" } },
-    { "id": "2026-08-05", "label": "Aug 5, 2026",  "lastActual": { "q": "2Q26", "y": "2025" } }
+    { "id": "2026-08-05", "label": "Aug 5, 2026",  "lastActual": { "q": "2Q26", "y": "2025" } },
+    { "id": "2026-10-22", "label": "Oct 22, 2026", "lastActual": { "q": "3Q26", "y": "2025" } }
   ],
 
   "_views_note": "MAU / subscribers / ad-supported MAU exist only in the 2025-12-18 snapshot (zero in the later three) and, there, only 4Q25 is a real estimate: 2026Q1 onward repeats a flat 737.6 / 295.1 / 442.6 placeholder. The post-filter in the pipeline script keeps only 4Q25 / FY2025 for those three.",

@@ -3,6 +3,7 @@
 //
 // FROZEN ON PURPOSE, NOT LIVE (SAB, Oct 15 2026: Summit numbers are coded directly; playbook rule 10, §20b).
 // Pulled from the Summit Financial Data store (get_valuation_history('GOOGL')) on 2026-10-28 and written here verbatim;
+// the 2026-10-29 submit (after 3Q26) appended on 2026-10-30 (get_valuation_history + get_fundamentals of that snapshot);
 // refresh by re-pulling after each new submit and APPENDING it — a submit is a vintage, never overwrite one.
 //
 // Fields per submit: d (submit date) · after (last quarter reported at the time) · px (share price on the submit day, as
@@ -13,15 +14,17 @@
 // model: the projections the submit was built on, per fiscal year, US$ millions (sh = diluted shares Class A+B+C,
 // millions): rev = REV, opi = OP_INCOME, ebitda = EBITDA (the model's adjusted EBITDA: op. income + D&A + SBC),
 // ni = EARNINGS (model earnings, adjusted), sh = SHARES — the store's projection_history facts of that snapshot
-// (get_metric_snapshot_series, pulled 2026-10-28). Growth, margins, EPS and the implied growth are worked out by the view.
+// (get_metric_snapshot_series, pulled 2026-10-28; 2026-10-29 from get_fundamentals, pulled 2026-10-30 — FY2028 added
+// because its P/E leg targets FY2028). Growth, margins, EPS and the implied growth are worked out by the view.
 //
 // Check before freezing (playbook §6.3): price target ÷ fair value matches across the two methods of each submit
-// (08-06: 1.066 / 1.067; 07-28: 1.071 / 1.072) — the store read the right cells, no correction needed.
+// (10-29: 1.027 / 1.029; 08-06: 1.066 / 1.067; 07-28: 1.071 / 1.072) — the store read the right cells, no correction
+// needed. 10-29: the P/E leg moved its target year from FY2027 to FY2028 (20.0×); EV/EBITDA stays 12.7× FY2027.
 //
 // skip: a submit the analyst ruled out, kept here so the record is complete; the view lists it under the chart and never
 // draws it.
 export var googlSubmits = {
-  ticker: 'GOOGL', name: 'Alphabet', ccy: 'US$', mccy: 'US$', pulled: '2026-10-28',
+  ticker: 'GOOGL', name: 'Alphabet', ccy: 'US$', mccy: 'US$', pulled: '2026-10-30',
   src: 'Summit DCF model (Alphabet, DCF GOOGL - New.xlsm), the valuation block of each submit',
   submits: [
     { d: '2026-07-23', after: '2Q26', px: 320.03, wacc: 0.17268749, coe: 0.17491231,
@@ -42,6 +45,14 @@ export var googlSubmits = {
         2027: { rev:629543.4705695, opi:245093.38223666, ebitda:334682.20391477, ni:196620.49834001, sh:12317.14285714 } },
       val: {
         ev: { method: 'EV / EBITDA', kase: 'Base', mult: 12.7, year: 2027, basis: 'Forward', pt: 344.59926068, fv: 323.31494206, upside: -0.096011, flags: [] },
-        pe: { method: 'P / E', kase: 'Base', mult: 24, year: 2027, basis: 'Forward', pt: 391.5238559, fv: 367.09294023, upside: 0.026392, flags: [] } } }
+        pe: { method: 'P / E', kase: 'Base', mult: 24, year: 2027, basis: 'Forward', pt: 391.5238559, fv: 367.09294023, upside: 0.026392, flags: [] } } },
+    { d: '2026-10-29', after: '3Q26', px: 283.82, wacc: 0.16784548, coe: 0.17017318,
+      model: {
+        2026: { rev:501466.72629195, opi:169765.84524795, ebitda:233665.1570038, ni:135862.61355492, sh:12317.14285714 },
+        2027: { rev:622531.14535542, opi:211714.31885148, ebitda:300882.40101674, ni:169758.90763682, sh:12317.14285714 },
+        2028: { rev:783070.15487842, opi:303354.06069016, ebitda:426020.2269276, ni:243935.70628768, sh:12317.14285714 } },
+      val: {
+        ev: { method: 'EV / EBITDA', kase: 'Base', mult: 12.7, year: 2027, basis: 'Forward', pt: 307.70721313, fv: 299.57583279, upside: 0.055513, flags: [] },
+        pe: { method: 'P / E', kase: 'Base', mult: 20, year: 2028, basis: 'Forward', pt: 387.7261439, fv: 376.81736928, upside: 0.327663, flags: [] } } }
   ]
 };

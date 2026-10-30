@@ -86,7 +86,7 @@ function ceSummitUs(p){
 export var SOFI_CALL_EARNINGS = { ticker:'SOFI', quarters:[
   // ── UPCOMING: Q4 2026 (quarter ending Dec 31 2026). Consensus = the newest Bloomberg snapshot on file, Aug 3 2026, which sits
   // BEFORE the 3Q26 print (2Q26 was the last reported quarter then, so this quarter was its fq+2): the Street bar below does not yet
-  // reflect the Oct 27 2026 guidance raise. Summit = the 2026-08-05 snapshot, frozen in js/results-data/sofi.js. Guidance: the Oct 27
+  // reflect the Oct 27 2026 guidance raise. Summit = the 2026-10-27 snapshot (saved after the 3Q26 print), frozen in js/results-data/sofi.js. Guidance: the Oct 27
   // 2026 release raised FY2026 (adjusted net revenue about $5.04B, adjusted EBITDA about $1.66B, adjusted net income about $840M,
   // EPS about $0.61) and introduced FY2027 (about $6.4B, $2.24B, $1.28B, $0.90). The release has no discrete 4Q26 guide; on the
   // Oct 27 call management stated the implied quarter: adjusted net revenue about $1.375B (+36%), adjusted EBITDA $492M, adjusted net
@@ -95,7 +95,7 @@ export var SOFI_CALL_EARNINGS = { ticker:'SOFI', quarters:[
   // net income $570.1M, EPS $0.43).
   { q:'Q4 2026', status:'upcoming', date:'quarter ending Dec 31 2026',
     setup:{
-      source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-08-03 (newest on file, before the 3Q26 print) · Summit DCF model — snapshot 2026-08-05, frozen · guidance: 3Q26 release, presentation and call (Oct 27 2026), full year and 4Q26',
+      source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-08-03 (newest on file, before the 3Q26 print) · Summit DCF model — snapshot 2026-10-27, frozen · guidance: 3Q26 release, presentation and call (Oct 27 2026), full year and 4Q26',
       asOf:'2026-08-03',
       notes:{
         'Adjusted net revenue':{ t:'Guided about $1.375B adjusted, up 36%', h:'<p>On the Oct 27 call management said the raised full-year guide (adjusted net revenue about <b>$5.04 billion</b>, from $4.75 billion to $4.85 billion) implies about <b>$1.375 billion</b> for the fourth quarter, up 36%. By segment: lending about <b>$785M</b>, financial services about <b>$550M</b>, technology platform about <b>$90M</b>, and corporate in line with the third quarter. The Street bar on file (<b>$1.31B</b>, GAAP total net revenue) is the Aug 3 Bloomberg snapshot, taken before the raise, so it is stale.</p>' },

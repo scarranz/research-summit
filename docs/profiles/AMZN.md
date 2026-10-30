@@ -22,10 +22,10 @@
 | Fila en `companies` | ✔ | el perfil abre hoy (`AMZN` en `js/overviews/index.js`) | el perfil abre | — |
 | Filing anual | ✔ | 10-K FY2025 (domestic filer, CIK 1018724); 10-Q 2Q26 | Overview, Top Line, verbatim | — |
 | Año fiscal / moneda | ✔ | cierre 31 dic · USD | — | — |
-| Summit DCF | ✔ | **4 snapshots en el MCP**: 2025-12-18 (after Q3-25) · 2026-02-10 (Q4-25) · 2026-05-05 (Q1-26) · **2026-08-04 (Q2-26)**. ⚠ `results-data/amzn.js` dice "7 saved model files Dec 2025 → Aug 2026": el MCP hoy tiene 4 — se re-congela de los 4 | F0-SM; Summit en Results/Top Line/Setup/Bottom Line, EV-EST, VA-TM, VA-SUB, VA-SENS | — |
+| Summit DCF | ✔ | **4 snapshots en el MCP**: 2025-12-18 (after Q3-25) · 2026-02-10 (Q4-25) · 2026-05-05 (Q1-26) · 2026-08-04 (Q2-26) · **2026-10-30 (Q3-26, agregado el 30-oct)**. ⚠ `results-data/amzn.js` dice "7 saved model files Dec 2025 → Aug 2026": el MCP hoy tiene 5 — se re-congela de los 5 (los 3 intermedios de agosto quedan como vintages) | F0-SM; Summit en Results/Top Line/Setup/Bottom Line, EV-EST, VA-TM, VA-SUB, VA-SENS | — |
 | Consenso BBG | ✔ | `AMZN US EQUITY`: **30 snapshots**, 2019-04-30 → **2026-09-10**; headline completo (Revenue, COGS, Gross profit, opex por función, Op. income, EBITDA, EPS, SBC por función, capex, FCF, RPO) + segmentos (rev, op. income, D&A, PP&E) | `estMatrix.cons`, Setup, Bottom Line, forward de peers | — |
 | `get-market-history` (Massive) | ✔ desplegada (PR #142) | precio diario; `ratios` falla → acciones/deuda de EDGAR XBRL (como META/GOOGL) | Historic Multiple, Submit History | — |
-| Valuación del modelo en el MCP | ✔ con una duda | 2 métodos por snapshot, `quality_flags` vacío. 08-04: EV/EBITDA 9.5× y P/E 28.0×, 2027 Forward. ⚠ **12-18: no pasa la prueba PT ÷ FV** (duda 4) | VA-TM, VA-SUB, VA-SENS | — |
+| Valuación del modelo en el MCP | ✔ con una duda | 2 métodos por snapshot, `quality_flags` vacío. 10-30: EV/EBITDA 9.5× y P/E 25.0×, 2027 Forward (08-04: 9.5× y 28.0×). ⚠ **12-18: no pasa la prueba PT ÷ FV** (duda 4) | VA-TM, VA-SUB, VA-SENS | — |
 | SPLC | ✔ | ya cargado en Top Line ▸ Customers y Bottom Line ▸ Supply Chain (fecha a confirmar en su unidad) | TL-CUS, BL-SPLC | — |
 | Transcripciones | ✔ | `docs/calls/AMZN.md` (histórico) + `AMZN-latest.md` (2Q26, 2026-07-30). **3T26: Amazon reporta a fines de oct 2026** — se carga en esta rama (SAB, 2026-10-29) | EV-POST, EV-NOTES, citas | — |
 | Fiscal.ai | ✔ | AMZN está en el plan | tabla en vivo de Management | — |
@@ -80,6 +80,7 @@ Cuadre contra el 10-K FY2025 (snapshot 2026-08-04, `actuals_history`):
 
 | Snapshot | EV/EBITDA | P/E | PT÷FV EV | PT÷FV P/E | |
 |---|---|---|---|---|---|
+| 2026-10-30 | 9.5× 2027 Fwd · PT $241.66 · FV $234.39 | 25.0× 2027 Fwd · PT $271.68 · FV $263.32 | 1.031 | 1.032 | ✔ |
 | 2026-08-04 | 9.5× 2027 Fwd · PT $292.99 | 28.0× 2027 Fwd · PT $314.17 | 1.075 | 1.077 | ✔ |
 | 2026-05-05 | 12.0× 2027 · PT $290.68 | 29.0× 2027 · PT $291.95 | 1.129 | 1.131 | ✔ |
 | 2026-02-10 | 10.0× 2027 · PT $241.44 | 28.0× 2027 · PT $254.86 | 1.171 | 1.175 | ✔ |
@@ -104,6 +105,8 @@ Cuadre contra el 10-K FY2025 (snapshot 2026-08-04, `actuals_history`):
 
 ### Cambios del mapa
 - 2026-10-29 · mapa creado (4 snapshots; antes no existía `js/summit-map/amzn.js`).
+- 2026-10-30 · snapshot 2026-10-30 agregado (5); TAX_RATE ahora 20% en todos los años; duda 1 sigue (OP_INCOME 2026Q4 = 240,000);
+  `fcf` con duda nueva (FCF trimestral real suma el capex, ver §6). Sin etiquetas nuevas.
 
 ## 2. Tablero de unidades
 
@@ -131,7 +134,7 @@ agregó; la nota dice qué. **✅ʰ** se marca solo al revisarla en su turno.
 | TL-SEG | Top Line ▸ Segments | ✅ | 2026-10-29 | SAB | | productos de AWS con nombre concreto (EC2/Graviton · S3/Aurora/DynamoDB · Bedrock/SageMaker/Trainium); clientes nombrados ya estaban; precio × volumen: declarado NOT CHARTED (Amazon no publica unidades ni precio) — cumple; Summit de drivers con snapshot 2026-08-04 en `source`; costos de envío 3T25/4T25/3T26 y FY25 completados del 8-K |
 | TL-OTH | Top Line ▸ Other | ✅ʰ | 2026-10-29 | — | | ya cumple (líneas de ingreso + geografía, citas del 10-K) |
 | TL-CUS | Top Line ▸ Customers | ✅ʰ | 2026-10-29 | — | | secciones 1–4 cumplen; sección 5 espera el motor (como GOOGL) → Bloqueos |
-| EV-EST | Estimates | ✅ʰ | 2026-10-29 | — | | bloque `evolution` con los 7 archivos Summit fechados (Dic-2025 → Ago-2026); no hay submit nuevo desde el 2026-08-04 → nada que agregar |
+| EV-EST | Estimates | ✅ʰ | 2026-10-29 | — | | bloque `evolution` con los 7 archivos Summit fechados (Dic-2025 → Ago-2026); no hay submit nuevo desde el 2026-08-04 → nada que agregar. 2026-10-30: octavo punto (submit 10-30), notas reescritas — en revisión |
 | EV-SET | Earnings ▸ Setup | ✅ | 2026-10-29 | SAB | | máquina formal `amzn-ce.js` (copia de `googl-ce.js`); datos en `amzn-ce-data.js`; CE_CONS se rearma del dataset de Results; `setup.us` leído del dataset (A17 cerrado) |
 | EV-POST | Earnings ▸ Post-Results | ✅ | 2026-10-29 | SAB | | 3T26 (print + notas del 8-K); llamadas 4T25/1T26/2T26 textuales de Motley Fool (77/84/66 citas verificadas); textos IA fuera de la vista; Call Summary 3T26 pendiente (transcripción no publicada) |
 | EV-NOTES | Earnings ▸ Notes | ✅ | 2026-10-29 | SAB | | piel formal + Watch List `palette:'summit'`; el registro guardado en Supabase gana siempre (`AMZN_THEMES_V=0`) — los ganchos cerrados se agregan en el portal, no en la semilla |
@@ -145,8 +148,8 @@ agregó; la nota dice qué. **✅ʰ** se marca solo al revisarla en su turno.
 | VA-HIST | Historic Multiple | ✅ | 2026-10-29 | SAB | | `amzn-histmult.js` copia de `googl-histmult.js` + `amzn-histmult-data.js` (EDGAR XBRL 1Q19–2Q26 + 8-K 3T26); P/E sin no operativos, sin P/E forward (A20 resuelto por decisión); EBITDA adj. forward de `estMatrix.cons.y` |
 | VA-PEERS | Peers | ✅ | 2026-10-29 | SAB | | mismo mapa que OV-6 (aprobado con el Overview) |
 | VA-TM | Target Multiple / PEG | ✅ | 2026-10-29 | SAB | | `amzn-target-multiple.js` copia de `googl-…`; datos congelados `amzn-target-multiple-data.js` (3 submits); sin `TM_LIVE_READY`/`SNAP_DATA`/`MOCK_*` (A22); `_ndSrc` (A23) |
-| VA-SUB | Submit History | ✅ | 2026-10-29 | SAB | | motor `submits.js` + `js/submits-data/amzn.js` (4 submits, 2025-12-18 con `skip`) |
-| VA-SENS | Sensitivity | ✅ | 2026-10-29 | SAB | | `amzn-sensitivity.js` copia de `googl-…` + `amzn-sensitivity-data.js` (snapshot 2026-08-04); múltiplos del modelo 9.5×/28×, año 2027; Street desde BBG por segmento (sin `CONS` inventado, A24); A26 explicado en el pie |
+| VA-SUB | Submit History | ✅ | 2026-10-29 | SAB | | motor `submits.js` + `js/submits-data/amzn.js` (4 submits, 2025-12-18 con `skip`). 2026-10-30: + submit 10-30 (5) — en revisión |
+| VA-SENS | Sensitivity | ✅ | 2026-10-29 | SAB | | `amzn-sensitivity.js` copia de `googl-…` + `amzn-sensitivity-data.js` (snapshot 2026-08-04; **2026-10-30 desde el 30-oct**, múltiplos 9.5×/25×, en revisión); múltiplos del modelo 9.5×/28×, año 2027; Street desde BBG por segmento (sin `CONS` inventado, A24); A26 explicado en el pie |
 | MG-TEAM | Executives & Board | ✅ʰ | 2026-10-29 | — | | ya cumple |
 | MG-OWN | Ownership | ✅ | 2026-10-29 | SAB | | sin emojis en las cajas; `.ew-box` en la hoja de estilos (A29) |
 | MG-GOV | Governance & SBC | ✅ | 2026-10-29 | SAB | | KPIs que no repiten Ownership; sin emojis (A29) |
@@ -187,6 +190,10 @@ se quita nada. El conteo de control se hace en F-FINAL contra las sub-tabs de ho
 | 2026-10-29 | VA-SUB / VA-TM | duda 4: valuación del submit 2025-12-18 | SAB | cerrada: se deja fuera |
 | 2026-10-29 | EV-POST ▸ 3T26 | Call Summary del 3T26: transcripción de Motley Fool no publicada el 29-oct (el 2T26 tardó ~8 días) | Claude, al publicarse | cerrada 2026-10-30: transcripción de Dani (Drive, `AMZN calls.txt`) |
 | 2026-10-29 | TL-CUS ▸ sección 5 | "What each top customer buys" — `segments.js` no la dibuja todavía | PR de motor aparte | cerrada 2026-10-30: motor en `feat/segments-customer-buys` |
+| 2026-10-30 | DCF (submit 2026-10-30) | **FCF real del 3T26 con el signo del capex al revés**: `FCF` 2026Q3 (actuals) = 119,681 = CFO 42,422 + capex 77,259 (debería ser −34,837). No se usa en ningún panel (el FCF del perfil es anual); el anual 2026 sí cuadra (187,894 − 238,922 = −51,028) | SAB (workbook) | abierta |
+| 2026-10-30 | DCF (submit 2026-10-30) | **Reales de 2018 reescritos**: AWS 25,656 → 20,214, USREV 141,366 → 110,641, INTREV 65,865 → 50,990, OP_INCOME 12,420 → 10,493, DNA 15,341 → 0 (parecen 9 meses, no el año). Fuera del eje del perfil (2020+), no se usa | SAB (workbook) | abierta |
+| 2026-10-30 | DCF (submit 2026-10-30) | **Trimestres 2027+ sin re-cortar (duda 5 sigue)**: 1T27–2T27 idénticos al 08-04; suma de trimestres 2027 vs anual: AWS 220,406 vs 246,855 (−10.7%), op. inc. 109,728 vs 146,253 (−25%). Se congelan como vienen (forward-only, mismo patrón que el 08-04); la vista trimestral del Results los muestra para 1T27+ en el modo por defecto, como ya pasaba con el 08-04 | SAB | abierta |
+| 2026-10-30 | DCF (submit 2026-10-30) | **Capex por segmento no suma al total**: US + INT + AWS + CORP 2026 = 171,236 vs CAPEX 238,922 (brecha 67,686; 2027 65,739; 2028 99,013; 2029 172,815) y OTHER_CAPEX = 0 en proyección. Ya pasaba en el 08-04 (brecha 2026 ≈ 50,220): el total subió y los segmentos no. Segments muestra el capex por segmento tal cual | SAB | abierta |
 
 ## 6b. Conexiones pendientes ("Live data pending")
 
@@ -317,3 +324,28 @@ se quita nada. El conteo de control se hace en F-FINAL contra las sub-tabs de ho
   en su snapshot del Sep 8: su crecimiento forward (26.8%) no se reproduce con el ingreso del consenso; pendiente de revisar en GOOGL.
 - No cambia: Estimates (`evolution`) — su consenso es el que viene dentro de cada snapshot Summit; sin snapshot Summit posterior al
   4-ago no hay punto nuevo. Setup del 3T26 (consenso previo al print, 9/10) tampoco.
+
+### 2026-10-30 · Submit Summit DCF 2026-10-30 (después del 3T26) cargado — en revisión
+- Fuente: MCP Summit (`list_snapshots`, `get_valuation_history`, `compare_snapshots` 08-04 → 10-30: 235 cambios,
+  `get_fundamentals` 10-30 `projection_history`, `get_metric_snapshot_series` para el cotejo). Congelado con fecha; nada en vivo.
+- Valuación (prueba PT ÷ FV: 1.031 / 1.032, `quality_flags` vacío): EV/EBITDA **9.5×** FY2027 Forward → PT **$241.66**, FV $234.39
+  (−1.7% vs $238.35 del submit); P/E **25.0×** (antes 28.0×) → PT **$271.68**, FV $263.32 (+10.5%). 08-04: PT $292.99 / $314.17.
+  EPS implícito del P/E $10.87 vs EARNINGS ÷ SHARES $10.82 (0.4%, dentro de la banda: sin aviso; el 08-04 tenía 2%).
+- Qué se movió (FY26 / FY27): ventas $831.1B → $832.0B / $959.8B → $968.1B; op. inc. (suma de segmentos) $110.1B → $113.4B /
+  $139.7B → $146.3B; EBITDA $250.7B → $218.2B / $332.7B → $280.1B (la D&A consolidada se re-cortó a la suma de D&A por segmento:
+  FY27 $168.4B → $113.3B — se revierte casi todo el "EBITDA step-up" del 08-04); earnings $92.0B → $90.3B / $119.1B → $117.2B
+  (tasa del modelo 16% → 20%); EPS modelo (earnings ÷ 10,827M) $8.50 → $8.34 / $11.00 → $10.82; capex $221.5B → $238.9B /
+  $276.8B → $299.0B; FCF $5.0B → −$51.0B / $41.3B → −$47.8B (negativo todos los años). AWS FY28 $292.7B → $345.6B.
+- Paneles: Results (`summit` 4T26 y anuales 2026–28 del 10-30; 3T26 se queda con el 08-04, que es lo que el modelo tenía al print;
+  `estMatrix.summit` + vintage 10-30, los 7 anteriores intactos); Estimates (`evolution` octavo punto, consenso BBG guardado en el
+  snapshot para ventas/EBITDA/earnings y el export BBG 10-30 para AWS/Intl/capex; notas reescritas con el 10-30); Submit History y
+  Target Multiple (fila 10-30 agregada; la advertencia de EBITDA ahora dice, calculado, que el 10-30 revierte el salto del 08-04);
+  Sensitivity (bloque reemplazado por el 10-30; el pie compara D&A consolidada vs por segmento en vez de afirmar "es mayor");
+  Segments (EBITDA por segmento 10-30; PP&E y capex sin cambio); Bottom Line y Misc (leen Results; fechas de pie); mapa Summit.
+- Verificación: `verify_preprint.py AMZN cons` → same=306, changed=0, blanked=0. Para Summit el script lee el sidecar del consenso,
+  así que se repitió su misma regla sobre `estMatrix.summit` (copia del script en scratch): same=174, changed=0, filled=48, blanked=0
+  — igual que antes del cambio (los 48 son trimestres 2027+, ver §6). Ningún periodo reportado cambió. Cotejo contra el MCP: AWS 2028,
+  EBITDA 2027, OPINC2 4T26, CAPEX 2029, INT_EBITDA 2027, EARNINGS 2028 — iguales en los seis archivos donde aparecen. Sintaxis de los
+  10 archivos tocados revisada en Edge sin cabeza.
+- Sin cambio: Earnings ▸ Setup del 3T26 (Summit previo al print = 08-04; no hay entrada 4T26 todavía); Misc ▸ Capex & Depreciation
+  (supuestos del workbook, no del MCP); `amzn.js` viejo sin montar. Problemas del DCF anotados en §6 para SAB.

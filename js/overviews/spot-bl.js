@@ -9,8 +9,8 @@
 //   • expense lines = Spotify's own (20-F Item 5): cost of revenue · research and development · sales and marketing ·
 //     general and administrative. There is no "other operating" line, so the bridge has no such bar.
 //   • no "Normalized" net income: Spotify's non-operating items are shown as one reconciling bar (see spotNetBridge).
-//   • Summit series: read from js/results-data/spot.js, where the Summit DCF snapshot of Aug 5 2026 is FROZEN (rule 10 —
-//     coded directly, not live). Forward years only.
+//   • Summit series: read from js/results-data/spot.js, where the Summit DCF snapshots are FROZEN (rule 10 —
+//     coded directly, not live): FY2026–FY2028 from the snapshot of Oct 22 2026 (after 3Q26). Forward years only.
 //   • inline <style> blocks moved to css/overview.css (.ov-spot-dd scope).
 import { SUMMIT_CAT, SUMMIT_INK } from '../viz-palette.js';
 import { spotBBG } from './spot-bbg.js';
@@ -516,7 +516,7 @@ function aBuildSbc(){
 function aBlFootGeneral(){
   var y0=SPOT_OPEX_YEARS[0], y1=SPOT_OPEX_YEARS[SPOT_OPEX_YEARS.length-1], q0=SPOT_OPEXQ[0], q1=SPOT_OPEXQ[SPOT_OPEXQ.length-1];
   return '<div class="ov-foot">Sources — Bloomberg consensus export (BBG_CONSENSUS, as of '+esc(spotBBG.asOf)+'): reported '+A_FYLAB[0]+'–'+A_FYLAB[A_LA]+
-    ' and consensus '+A_FYLAB[A_LA+1]+'–'+A_FYLAB[A_FYLAB.length-1]+' income statement; functional expense lines FY'+y0+'–FY'+y1+' and '+esc(q0.p)+'–'+esc(q1.p)+' stitched from the reported columns of the ten Bloomberg snapshots on file (Apr 2024 – Sep 2026) and tied to the Form 20-F statement of operations for FY2023–FY2025; share-based compensation by function from the Form 20-F SBC note; Results dataset for quarterly operating income; '+SPOT_EW_SRC.replace(/^— /,'')+' for line definitions and Q2 2026 earnings call (Aug 4 2026) for management commentary; Summit DCF model, snapshot of Aug 5 2026 (frozen, not live) — FY2026–FY2028 forecast. All figures in euros, the currency Spotify reports in. Forward figures are estimates.</div>';
+    ' and consensus '+A_FYLAB[A_LA+1]+'–'+A_FYLAB[A_FYLAB.length-1]+' income statement; functional expense lines FY'+y0+'–FY'+y1+' and '+esc(q0.p)+'–'+esc(q1.p)+' stitched from the reported columns of the ten Bloomberg snapshots on file (Apr 2024 – Sep 2026) and tied to the Form 20-F statement of operations for FY2023–FY2025; share-based compensation by function from the Form 20-F SBC note; Results dataset for quarterly operating income; '+SPOT_EW_SRC.replace(/^— /,'')+' for line definitions and Q2 2026 earnings call (Aug 4 2026) for management commentary; Summit DCF model, snapshot of Oct 22 2026, after the Q3 2026 print (frozen, not live) — FY2026–FY2028 forecast; quarterly Summit cells are the snapshot held going into each print. All figures in euros, the currency Spotify reports in. Forward figures are estimates.</div>';
 }
 // Summit annual aggregation from spotResults quarterly (1Q23..2Q28 → FY23..FY28E). Sums each fiscal
 // year's quarters; FY28 is partial (2 quarters published) so it returns null there to avoid a false low.

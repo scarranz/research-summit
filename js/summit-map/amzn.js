@@ -3,8 +3,9 @@
 // are in docs/profiles/AMZN.md §1b. Not imported by the portal: it is the dictionary Claude reads when freezing
 // Summit numbers into the data files (rule 10, frozen not live — SAB, Oct 15 2026).
 //
-// Model: Summit DCF AMZN (.xlsm, G:\My Drive\Summit\Docs\Research\DCF). 4 snapshots in the MCP:
-// 2025-12-18 (after Q3 - 2025) · 2026-02-10 (Q4 - 2025) · 2026-05-05 (Q1 - 2026) · 2026-08-04 (Q2 - 2026).
+// Model: Summit DCF AMZN (.xlsm, G:\My Drive\Summit\Docs\Research\DCF). 5 snapshots in the MCP:
+// 2025-12-18 (after Q3 - 2025) · 2026-02-10 (Q4 - 2025) · 2026-05-05 (Q1 - 2026) · 2026-08-04 (Q2 - 2026) ·
+// 2026-10-30 (Q3 - 2026).
 // Three sources inside the model:
 //  · DEFAULT — company totals. Actuals = 10-K. Projections ANNUAL ONLY (quarters hold 0).
 //  · SEGM    — the three reportable segments (North America · International · AWS) plus corporate/other,
@@ -22,13 +23,13 @@ export var summitMap = {
                 note: 'DEFAULT is annual only; a quarter is the sum of the three segment lines' },
     opinc:    { mcp: 'OPINC + OPINC2 + OPINC3', base: 'GAAP', unit: 'usd_m', agg: 'sum', label: 'Operating income',
                 note: 'the sum of the three segments; equals the 10-K total (FY25 to the dollar)',
-                doubt: 'OP_INCOME (DEFAULT) projections are broken: 2026Q3 holds 197,000 and 2027+ hold 0 — never read its projections (AMZN.md §1b, doubt 1)' },
+                doubt: 'OP_INCOME (DEFAULT) projections are broken: 2026Q3 held 197,000 (2026-08-04), 2026Q4 holds 240,000 (2026-10-30) and 2027+ hold 0 — never read its projections (AMZN.md §1b, doubt 1)' },
     ebitda:   { mcp: 'EBITDA', mcpQ: 'EBITDA_SEGM', base: 'adjusted (op. income + D&A + SBC)', unit: 'usd_m', agg: 'sum',
                 label: 'EBITDA (adj.)', note: '= 10-K op. income + D&A + SBC, to the dollar (FY25). Not GAAP' },
     earnings: { mcp: 'EARNINGS', base: 'adjusted', unit: 'usd_m', agg: 'sum', label: 'Model earnings (adj.)',
                 note: '= (op. income + interest income − interest expense) × (1 − TAX_RATE): excludes the non-operating gains (Anthropic, Rivian), so it sits well below GAAP net income in FY25' },
     tax_rate: { mcp: 'TAX_RATE', base: 'model', unit: 'pct', agg: 'avg', label: 'Tax rate (model)',
-                note: 'decimal. Actual = the rate that ties EARNINGS, not the 10-K effective rate; projections 16% for 2026–27 and 20% for 2028–29 (snapshot 2026-08-04)' },
+                note: 'decimal. Actual = the rate that ties EARNINGS, not the 10-K effective rate; projections 20% in every year (snapshot 2026-10-30; 2026-08-04 had 16% for 2026–27)' },
     shares:   { mcp: 'SHARES', base: 'diluted', unit: 'shares_m', agg: 'end', label: 'Diluted shares',
                 note: 'projections held flat at the FY25 count (10,827M) in every year' },
     dna:      { mcp: 'DNA', base: 'GAAP', unit: 'usd_m', agg: 'sum', label: 'Depreciation & amortization', note: 'annual only' },
@@ -36,7 +37,8 @@ export var summitMap = {
                 note: 'annual only' },
     cfo:      { mcp: 'CFO', base: 'GAAP', unit: 'usd_m', agg: 'sum', label: 'Cash from operations', note: 'annual only' },
     fcf:      { mcp: 'FCF', base: 'model (CFO − gross capex)', unit: 'usd_m', agg: 'sum', label: 'Free cash flow',
-                note: 'not Amazon\'s reported FCF, which nets proceeds from P&E sales and incentives (FY25 $11.2B vs model $7.7B)' },
+                note: 'not Amazon\'s reported FCF, which nets proceeds from P&E sales and incentives (FY25 $11.2B vs model $7.7B). Annual only',
+                doubt: 'the quarterly ACTUAL row adds capex instead of subtracting it: 2026Q3 = 119,681 = CFO 42,422 + 77,259 (snapshot 2026-10-30) — never read quarterly FCF (AMZN.md §6)' },
     int_inc:  { mcp: 'INT_INC', base: 'GAAP', unit: 'usd_m', agg: 'sum', label: 'Interest income', note: 'annual only' },
     int_exp:  { mcp: 'INT_EXP', base: 'GAAP', unit: 'usd_m', agg: 'sum', label: 'Interest expense', note: 'annual only' }
   },

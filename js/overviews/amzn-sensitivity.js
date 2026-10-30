@@ -7,7 +7,7 @@
 // multiples, its invented `CONS` numbers (A24) and its inline <style> are gone.
 //
 // What changed for AMZN (vs googl-sensitivity.js):
-//   • BASE = the Summit DCF model, ONE snapshot FROZEN in ./amzn-sensitivity-data.js (2026-08-04; rule 10) — the same
+//   • BASE = the Summit DCF model, ONE snapshot FROZEN in ./amzn-sensitivity-data.js (2026-10-30; rule 10) — the same
 //     snapshot as the latest Target Multiple row.
 //   • SEGMENTS = North America · International · AWS, each with a GROWTH and an OPERATING-MARGIN driver: unlike Alphabet,
 //     the model projects segment operating income in every year (OPINC · OPINC2 · OPINC3), so the margins are the
@@ -20,12 +20,12 @@
 //   • STREET = Bloomberg consensus by segment from ./amzn-bbg.js (revenue and operating income, FY2026–2028, as of
 //     newest snapshot, 2026-10-30): growth = CAGR off the 2025 actual to Bloomberg's estimate, margin = Bloomberg operating income ÷ revenue.
 //     2029 has no Bloomberg figure — those drivers fall back to the model, visibly.
-//   • EXIT MULTIPLE starts at the MODEL's own target multiples (EV/EBITDA 9.5×, P/E 28.0× on FY2027 — Target Multiple,
+//   • EXIT MULTIPLE starts at the MODEL's own target multiples (EV/EBITDA 9.5×, P/E 25.0× on FY2027 in the 2026-10-30 submit — Target Multiple,
 //     ./amzn-target-multiple-data.js), never at a hand-picked number; yours to move.
 //   • NET DEBT = Amazon's latest reported balance sheet (./amzn-histmult-data.js), its source named (A23); the quote
 //     supplies the price only.
-//   • YEARS 2026–2029 (the snapshot carries every line through 2029; its unallocated D&A is 0 in 2029, which only touches
-//     the reconciliation in the footer, not the grid).
+//   • YEARS 2026–2029 (the snapshot carries every line through 2029). The footer compares the consolidated D&A with the
+//     segment + unallocated D&A per year instead of asserting it (2026-10-30: equal from 2027, $1.4B apart in 2026).
 //   • styles: css/overview.css (.sens-* / .as-* rules shared via :is(…) — .ov-amzn-dd has to be on those lists).
 
 import { SUMMIT_CAT, SUMMIT_POS, SUMMIT_NEG } from '../viz-palette.js';
@@ -493,7 +493,11 @@ function renderMatrix(scope){
     'A growth on an axis is a <b>flat rate compounded from Amazon’s reported '+BASE_YEAR+' revenue for that segment</b>; a margin is that segment’s operating margin in that year. '+
     '<b>EBITDA</b> = the driven operating income + the model’s D&amp;A and SBC (its EBITDA − operating income), held fixed — so the base case is the same adjusted EBITDA Target Multiple values ('+fmtB(mY.eb)+' in '+y+'). '+
     '<b>Not the sum of the segment EBITDAs:</b> the model’s segment EBITDA is operating income + segment D&amp;A with no SBC; the three segments plus unallocated D&amp;A sum to '+fmtB(segEb)+' in '+y+
-    ', against '+fmtB(mY.eb)+' consolidated — the consolidated line adds SBC, and its D&amp;A ('+fmtB(mY.dna)+') is larger than the segment D&amp;A'+(mY.corp===0?' (the model leaves unallocated D&amp;A at 0 in '+y+')':'')+'. '+
+    ', against '+fmtB(mY.eb)+' consolidated — the consolidated line adds SBC'+(function(){
+      // segment D&A + unallocated = the segment EBITDAs + corp − segment operating income; compared, never asserted
+      var segDna=segEb-SEGS.reduce(function(t,s){ return t+(mY[s.k].op||0); },0), d=mY.dna-segDna;
+      return ', and its D&amp;A ('+fmtB(mY.dna)+') '+(Math.abs(d)<=Math.abs(segDna)*0.005?'equals':(d>0?'is larger than':'is smaller than'))+
+        ' the segment plus unallocated D&amp;A ('+fmtB(segDna)+')'; })()+(mY.corp===0?' (the model leaves unallocated D&amp;A at 0 in '+y+')':'')+'. '+
     '<b>EV/EBITDA</b>: EV = EBITDA × multiple, less net debt, over shares. <b>P/E</b>: the operating-income delta flows through tax onto the model’s earnings, so '+
     'the base reproduces the model’s EPS. <b>Exit multiple</b>: starts at the model’s own target multiples (EV/EBITDA '+(_tmLast.ev?_tmLast.ev.mult.toFixed(1)+'×':'—')+', P/E '+(_tmLast.pe?_tmLast.pe.mult.toFixed(1)+'×':'—')+' on FY'+(_tmLast.ev?_tmLast.ev.year:'—')+', Target Multiple) and is yours to move. '+
     '<b>Net debt</b> = '+fmtB(_netDebt)+' ('+esc(ND_SRC)+'; long-term debt minus cash, equivalents and marketable securities, leases excluded). '+

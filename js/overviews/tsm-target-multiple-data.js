@@ -2,7 +2,8 @@
 // Valuation ▸ Target Multiple / PEG (VA-TM, docs/PROFILE_PLAYBOOK.md §14).
 //
 // FROZEN ON PURPOSE, NOT LIVE (SAB, Oct 15 2026: Summit numbers are coded directly; playbook rule 10, §20b).
-// Pulled once from the Summit Financial Data store on 2026-10-16 and written here; refresh by re-pulling
+// Pulled once from the Summit Financial Data store on 2026-10-16 (snapshot 2026-10-15) and on 2026-10-30 (snapshot
+// 2026-10-19), and written here; refresh by re-pulling
 // when a new snapshot is submitted and APPENDING a row (each row is a vintage — never overwrite one).
 //
 //   val      get_valuation_history('TSM') — the workbook's Output ▸ VALUATION block, per method, verbatim:
@@ -13,12 +14,13 @@
 //            model's actuals_history (reported), flagged act:true.
 //   cons     the same model's Bloomberg consensus columns (REV_BBG_EST · EBITDA_BBG_EST · EARNINGS_BBG_EST).
 //
-// Open doubt for the model author (logged in docs/profiles/TSM.md): the P/E leg's price target ($410.28 at 19×)
-// implies FY2027 EPS of $21.59, while EARNINGS ÷ SHARES for FY2027 is $21.05 (→ $400 at 19×). The EV/EBITDA leg
-// ties: (12 × EBITDA − net debt) ÷ shares = $413.63 with ~US$71.6B of net cash. The pane shows the targets as
+// Open doubt for the model author (logged in docs/profiles/TSM.md): the P/E leg's price target does not tie to
+// EARNINGS ÷ SHARES — 10-15: $410.28 at 19× implies FY2027 EPS $21.59 vs $21.05; 10-19: $453.92 at 20× implies
+// $22.70 vs $22.22 (~2% gap both times). The EV/EBITDA leg ties: (12 × EBITDA − net debt) ÷ shares = $413.63 with
+// ~US$71.5B of net cash (10-15) and $431.59 with ~US$68.0B (10-19). The pane shows the targets as
 // the workbook recorded them and never recomputes them.
 export var TSM_TM = {
-  model: 'e35f84c0-651c-4b14-8295-5af638089cc8', pulled: '2026-10-16',
+  model: 'e35f84c0-651c-4b14-8295-5af638089cc8', pulled: '2026-10-30',
   snaps: [
     { d: '2026-10-15', after: '3Q26', px: 422.10, wacc: 0.19262128,
       val: {
@@ -35,6 +37,21 @@ export var TSM_TM = {
         2026: { rev: 170190.4, ebitda: 125331.9, earn: 86428.1 },
         2027: { rev: 232229.4, ebitda: 170425.1, earn: 116558.0 },
         2028: { rev: 294900.2, ebitda: 216017.1, earn: 148244.7 }
-      } }
+      } },
+    // Appended 2026-10-30 from the same store (get_valuation_history + get_fundamentals, snapshot 2026-10-19).
+    // P/E moved 19× → 20×; EV/EBITDA stays 12×. cons is null: in this submit the model's Bloomberg columns
+    // (REV_BBG_EST · EBITDA_BBG_EST · EARNINGS_BBG_EST) are all 0 — a DCF issue logged in docs/profiles/TSM.md §6.
+    { d: '2026-10-19', after: '3Q26', px: 424.675, wacc: 0.19346028,
+      val: {
+        ev: { method: 'EV / EBITDA', mult: 12, year: 2027, basis: 'Forward', pt: 431.59362263, fv: 416.59439698, upside: -0.019028, flags: [] },
+        pe: { method: 'P / E',       mult: 20, year: 2027, basis: 'Forward', pt: 453.91934689, fv: 437.97605299, upside: 0.031321, flags: [] }
+      },
+      y: {
+        2025: { rev: 122555.6, ebitda: 88178.8,  earn: 55143.9,  sh: 5186.5, act: true },
+        2026: { rev: 173880.63, ebitda: 138703.17, earn: 87697.97,  sh: 5186.474 },
+        2027: { rev: 235653.56, ebitda: 180870.52, earn: 115217.79, sh: 5186.474 },
+        2028: { rev: 302682.6, ebitda: 229675.9, earn: 146454.6, sh: 5186.5 }
+      },
+      cons: null }
   ]
 };

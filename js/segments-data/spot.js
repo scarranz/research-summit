@@ -7,7 +7,7 @@
 //
 // Every revenue / profit series is a POINTER into js/results-data/spot.js (`results:<key>`), so each number has one home. The
 // engine reads `act` and falls back to `summit`, never `cons` — Street figures live in Evolution ▸ Results. Summit (rule 10,
-// frozen, snapshot 2026-08-05) therefore runs the annual axis into FY2026–FY2028.
+// frozen; snapshot 2026-10-22 for 4Q26 and FY2026–FY2028, 2026-08-05 for 3Q26) therefore runs the annual axis into FY2026–FY2028.
 //
 // BASIS BREAK: from 1 Jan 2026 Spotify moved certain activities from Ad-Supported into Premium and restated 2023–25; the actuals
 // here are as originally reported, the Summit years are on the new basis. The Results notes say so; the segment charts do not
@@ -45,7 +45,7 @@ var NO_CONC = 'The Business and Operating sections of the FY2025 Form 20-F (Item
 export var spotSegments = {
   company: 'Spotify',
   updated: 'Oct 2026',
-  source: 'Segment revenue and gross profit: the Results dataset (js/results-data/spot.js) — Spotify quarterly shareholder decks and 6-Ks (1Q24–3Q26; 3Q26 segment gross profit derived from the deck’s segment margins until the interim 6-K is filed), the FY2025 Form 20-F (SEC EDGAR, CIK 1639920, accession 0001628280-26-006874) for the annual totals, and the Bloomberg export for 2023 and segment gross profit by quarter (3Q25 derived from the 20-F segment totals). Subscribers, MAU, ad-supported MAU and ARPU: shareholder decks and the Bloomberg export; definitions verbatim from the 20-F. Quarterly 1Q23–4Q23: the Bloomberg export (reported columns of the oldest snapshot, 2024-04-28). Summit forecast 4Q26 (the model has no 2027 quarterly forecast yet) and FY2026–FY2028 annual: DCF model snapshot of 2026-08-05, frozen. Subscribers, Ad-Supported MAU and ARPU for 3Q24–4Q26 are the estimates of the Summit model supplied by the analyst (the model rows are empty); the total MAU forecast is Street (Bloomberg, 2026-10-21) because the model does not carry it. Everything in EUR.',
+  source: 'Segment revenue and gross profit: the Results dataset (js/results-data/spot.js) — Spotify quarterly shareholder decks and 6-Ks (1Q24–3Q26; 3Q26 segment gross profit derived from the deck’s segment margins until the interim 6-K is filed), the FY2025 Form 20-F (SEC EDGAR, CIK 1639920, accession 0001628280-26-006874) for the annual totals, and the Bloomberg export for 2023 and segment gross profit by quarter (3Q25 derived from the 20-F segment totals). Subscribers, MAU, ad-supported MAU and ARPU: shareholder decks and the Bloomberg export; definitions verbatim from the 20-F. Quarterly 1Q23–4Q23: the Bloomberg export (reported columns of the oldest snapshot, 2024-04-28). Summit forecast 4Q26 (the model has no 2027 quarterly forecast yet) and FY2026–FY2028 annual: Summit DCF model, snapshot of 2026-10-22 (after the 3Q26 print), frozen; the 3Q26 Summit cell is the snapshot of 2026-08-05 held going into that print. Subscribers, Ad-Supported MAU and ARPU for 3Q24–4Q26 are the estimates of the Summit model supplied by the analyst (the model rows are empty); the total MAU forecast is Street (Bloomberg, 2026-10-21) because the model does not carry it. Everything in EUR.',
 
   streetForward: true,   // Top Line quarterly axis reaches two quarters past the last print: Street fills where Summit has no quarter (js/segments.js)
   axis: {

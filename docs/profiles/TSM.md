@@ -188,12 +188,15 @@ No aplica (modo A).
 | 2026-10-15 | F0-SM, EV-EST, VA-TM, VA-SENS | modelo Summit DCF de TSM en el MCP | SAB (hoy) | cerrado 2026-10-15 |
 | 2026-10-15 | EV-EST, VA-TM, VA-SENS | ~~`get-summit-data` desplegada~~ → Summit se codifica directo (snapshot congelado del MCP) | SAB | cerrado 2026-10-15 |
 | 2026-10-15 | EV-RES-DATA, EV-SET, BL-*, VA-HIST forward | decisión: agregar TSM a `Consensus_Portal.xlsm` | SAB | abierto |
-| 2026-10-16 | EV-EST | 2º snapshot del modelo Summit (el eje de Estimates son los snapshots; hoy hay 1) | SAB (submit del 4Q26) | abierto |
+| 2026-10-16 | EV-EST | 2º snapshot del modelo Summit (el eje de Estimates son los snapshots; hoy hay 1) | SAB (submit del 4Q26) | 2º snapshot llegó (2026-10-19); EV-EST queda por construir como unidad propia (no se armó en el refresh del 2026-10-30) |
 | 2026-10-16 | MG-OWN ▸ toggle Top holders | export Bloomberg HDS de 2330 TT Equity (y TSM US Equity), formato NVDA_OWN.xlsx | SAB | abierto |
 
 **Arreglos pendientes en el DCF (los hace SAB; anotado 2026-10-28):**
 - [ ] `DCF TSMC.xlsm`: la utilidad operativa (OP_INCOME) llega en 0 en las proyecciones de los dos submits (15-oct, 19-oct) — revisar que la fila esté ligada en la hoja que lee el MCP. En el portal sale en blanco.
 - [ ] `DCF TSMC.xlsm`, bloque de valuación: el caso está escrito "0" en vez de "Base" en los dos métodos.
+- [ ] `DCF TSMC.xlsm` (anotado 2026-10-30, submit 19-oct): las columnas de consenso Bloomberg del modelo (`REV_BBG_EST`, `EBITDA_BBG_EST`, `EARNINGS_BBG_EST`) llegan **todas en 0** — historia 2020–2025 y proyección 2026–2030 (en el submit 15-oct tenían valores). Sin efecto en pantalla (el portal toma el consenso de `BBG_CONSENSUS.txt`), pero el submit 19-oct queda sin consenso propio en Target Multiple (`cons: null`).
+- [ ] `DCF TSMC.xlsm` (anotado 2026-10-30, submit 19-oct): en la hoja SEGM solo se movieron los **4.º trimestres** (2026Q4…2029Q4: ingresos +12.6–14.6 %, HPC +19.6 %); 1Q–3Q de 2027 en adelante quedaron igual. Resultado: 4Q26 $53.5B → 1Q27 $46.8B (−12.5 % t/t) y HPC $36.0B → $31.5B. Revisar si el ajuste debía repartirse en todos los trimestres.
+- [ ] `DCF TSMC.xlsm` (anotado 2026-10-30): la pierna P/E sigue sin cuadrar con EARNINGS ÷ SHARES — 19-oct: $453.92 a 20× implica EPS FY2027 $22.70 vs $22.22 (15-oct: $21.59 vs $21.05). La pierna EV/EBITDA cuadra (caja neta implícita ~US$68.0B; 15-oct ~US$71.5B).
 
 ## 6b. Conexiones pendientes ("Live data pending")
 
@@ -469,3 +472,11 @@ No aplica (modo A).
 - Fuentes: MCP `get_valuation_history('TSM')` + `get_metric_snapshot_series` (REV, OP_INCOME, EBITDA, EARNINGS, SHARES · 2026–2027), jalado 2026-10-28; precio Massive (ADR).
 - Ojo: OP_INCOME = 0 en el MCP para ambos submits (null en el archivo); caso "0" en vez de "Base" — los dos son arreglos en el DCF (sección 6).
 - 2026-10-28 · Aprobación: SAB "Aprobado META y TSM" → ✅. Los hallazgos son errores del DCF, no del MCP: los corrige SAB (sección 6).
+
+### 2026-10-30 · Refresh Summit — snapshot 2026-10-19 (sin aprobación nueva: mismo diseño, números nuevos)
+- Qué cambió del 15-oct al 19-oct (MCP `compare_snapshots`, 165 filas; `get_valuation_history`): **valuación** — P/E 19× → **20×** FY2027, PT $410.28 → **$453.92**, fair value $395.16 → $437.98 (+3.1 % vs $424.68 al submit); EV/EBITDA sigue 12×, PT $413.63 → **$431.59**, fair value $398.54 → $416.59 (−1.9 %); WACC 19.26 % → 19.35 % (beta 1.426 → 1.433). **Proyecciones** — REV +3.6/+3.8/+4.0 % (2026/27/28: $173.9B / $235.7B / $302.7B), EBITDA +3.6/+4.7/+4.3 %, EARNINGS +4.3/+5.5/+2.7 %, CAPEX +12.1 % todos los años (2026 $64.7B, apenas arriba del techo de la guía de TSMC, $60–64B), FCF −2 a −7 %, TAX_RATE 2028+ 15.7 % → 17.5 % (2026–27 ya era 17.5 %); SEGM: 4Q26 ingresos $47.5B → **$53.5B** (ahora dentro de la guía $52.3–54.3B), HPC, DCE, Others, utilidad bruta y operativa arriba; Smartphone, IoT y Auto sin cambio. Historia del modelo (periodos reportados) sin cambio. OP_INCOME sigue en 0.
+- Actualizado al 19-oct (congelado 2026-10-30): `js/results-data/tsm.js` (serie `summit` forward: 4Q26 trimestral — revenue, HPC, DCE, Others, utilidad bruta y operativa — y FY2026–FY2028 de revenue, HPC, DCE, Others, EBITDA, utilidad neta, utilidad operativa SEGM, utilidad bruta, EPS = EARNINGS ÷ SHARES, capex; cabecera y `source`) · `js/overviews/tsm-sensitivity-data.js` (reemplaza el bloque: Sensitivity lee UN snapshot; tasa de impuesto ahora exacta 0.175 en vez de redondeada) · `js/overviews/tsm-target-multiple-data.js` (**fila 19-oct agregada**, la de 15-oct se queda como vintage; `cons: null`) · textos: `tsm-ce-data.js` (fuente Summit del Setup 4Q26: ya no "debajo de la guía"), `tsm-bl.js`, `segments-data/tsm.js`, comentarios de `tsm-target-multiple.js` y `tsm-sensitivity.js` (múltiplo inicial 20× P/E, lo lee del último submit).
+- Sin tocar: `js/submits-data/tsm.js` (ya tenía los dos submits) · `js/summit-map/tsm.js` (sin etiquetas nuevas) · `estMatrix` (TSM no tiene `estMatrix.summit`; `verify_preprint.py` no aplica — no existe `estmatrix_tsm.json`) · EV-EST (ya hay 2 snapshots, pero es una unidad nueva que necesita aprobación).
+- Verificación: 16 números congelados contra `get_fundamentals` (snapshot 2026-10-19) — todos cuadran; suma de 5 plataformas = REV al centavo; PT ÷ fair value 1.036 en los dos métodos.
+- Problemas del DCF encontrados → sección 6 (consenso BBG del modelo en 0, solo Q4 movido en SEGM, pierna P/E sin cuadrar).
+

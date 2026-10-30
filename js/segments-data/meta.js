@@ -5,7 +5,8 @@
 // the money from advertising, and Reality Labs, which sells hardware and runs at a large loss.
 //
 // Every segment series is a POINTER into js/results-data/meta.js (`results:<key>`), so each number has one
-// home. The engine reads `act` and falls back to `summit` (frozen, snapshot 2026-08-04), never `cons`.
+// home. The engine reads `act` and falls back to `summit` (frozen; forward periods from snapshot 2026-10-22,
+// refreshed 2026-10-30), never `cons`.
 // The KPI series Meta publishes each quarter (ARPP, ad impressions and price per ad growth) are held in
 // `shared`, from Bloomberg's record of the reported values (BBG_CONSENSUS.txt, fq0 of each snapshot), which
 // matches Meta's 8-K figures.
@@ -29,7 +30,7 @@ function qmap(vals){ var o = {}; Q.forEach(function(p, i){ if (vals[i] != null) 
 export var metaSegments = {
   company: 'Meta',
   updated: 'Oct 2026',
-  source: 'Segment revenue and operating income: Meta 8-K earnings releases and the FY2025 10-K (Note 15), through the Results dataset; Summit DCF model, snapshot 2026-08-04 (frozen, not live) for forecast periods. KPIs: Meta\'s reported ARPP and ad impressions / price-per-ad growth as recorded by Bloomberg (BBG_CONSENSUS.txt). Revenue by geography: 10-K Note 2. Customers: 10-K and Bloomberg Supply Chain Analysis (SPLC, as of Jun 26 2026).',
+  source: 'Segment revenue and operating income: Meta 8-K earnings releases and the FY2025 10-K (Note 15), through the Results dataset; Summit DCF model, snapshot 2026-10-22 (frozen, not live) for forecast periods. KPIs: Meta\'s reported ARPP and ad impressions / price-per-ad growth as recorded by Bloomberg (BBG_CONSENSUS.txt). Revenue by geography: 10-K Note 2. Customers: 10-K and Bloomberg Supply Chain Analysis (SPLC, as of Jun 26 2026).',
 
   axis: {
     q: ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26'],
@@ -144,7 +145,7 @@ export var metaSegments = {
     {
       key: 'lines', label: 'Revenue lines', sub: 'advertising, other revenue, Reality Labs',
       lede: 'The same revenue by line: advertising and other revenue inside the Family of Apps, and Reality Labs. Advertising is about 98% of the total.',
-      note: 'Quarterly from Meta\'s 8-K releases; annual from the 10-K (Note 2). Summit forecast from the 2026-08-04 snapshot.',
+      note: 'Quarterly from Meta\'s 8-K releases; annual from the 10-K (Note 2). Summit forecast from the 2026-10-22 snapshot.',
       tenK: { text: 'Revenue disaggregated by revenue source and by segment consists of the following', where: TENK + ', Note 2 (Revenue)' },
       cite: { form: '10-K', period: '2025', accession: '0001628280-26-003942', url: 'https://www.sec.gov/Archives/edgar/data/1326801/000162828026003942/meta-20251231.htm' },
       spans: 'Quarterly 1Q23–2Q26 (8-K); annual from the 10-K.',

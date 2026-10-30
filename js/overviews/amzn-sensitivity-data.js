@@ -2,32 +2,34 @@
 // docs/PROFILE_PLAYBOOK.md §14).
 //
 // FROZEN ON PURPOSE, NOT LIVE (SAB, Oct 15 2026: Summit numbers are coded directly; playbook rule 10, §20b).
-// Pulled once from the Summit DCF model for AMZN, snapshot 2026-08-04 (after 2Q26 — the same snapshot as the latest
-// Target Multiple row), on 2026-10-29 (get_fundamentals, projection_history, annual periods). Refresh by re-pulling when a
+// Pulled once from the Summit DCF model for AMZN, snapshot 2026-10-30 (after 3Q26 — the same snapshot as the latest
+// Target Multiple row), on 2026-10-30 (get_fundamentals, projection_history, annual periods). Replaced the 2026-08-04 block
+// (that snapshot stays in Target Multiple and Submit History as a vintage). Refresh by re-pulling when a
 // new snapshot is submitted (replace the block and its date — Sensitivity reads ONE snapshot). Labels per
 // js/summit-map/amzn.js, US$ millions:
 //   na / intl / aws   rev USREV · INTREV · AWS (they sum to REV exactly) · op OPINC · OPINC2 · OPINC3 (segment operating
 //                     income; their sum is the model's operating income) · eb US_EBITDA · INT_EBITDA · AWS_EBITDA
 //                     (segment operating income + segment D&A, NO SBC — annual only, summit-map doubt 2)
-//   corp              CORP_OTHER_EBITDA (= CORP_OTHER_DNA: D&A not allocated to a segment). ⚠ 0 in 2029 in the model.
+//   corp              CORP_OTHER_EBITDA (= CORP_OTHER_DNA: D&A not allocated to a segment).
 //   rev · eb          REV · EBITDA — the model's consolidated revenue and adjusted EBITDA (operating income + D&A + SBC),
-//                     the EBITDA Target Multiple values. ⚠ The segment EBITDAs + corp do NOT sum to it (2027: $251.7B vs
-//                     $332.7B): the consolidated line adds SBC, and its D&A (DNA, below) is larger than the segment D&A.
+//                     the EBITDA Target Multiple values. ⚠ The segment EBITDAs + corp do NOT sum to it (2027: $259.6B vs
+//                     $280.1B): the consolidated line adds SBC. Its D&A (DNA, below) equals the segment + unallocated D&A from
+//                     2027 in this snapshot (2026: $84.6B vs $86.0B); in 2026-08-04 it was far larger (2027: $168.4B).
 //   dna               DNA — the model's consolidated D&A (for the reconciliation in the footer only).
 //   earn              EARNINGS — the model's adjusted earnings: (operating income + interest income − interest expense) ×
 //                     (1 − TAX_RATE), without the non-operating gains.
-//   tax               TAX_RATE (fraction) — 16% in 2026–2027 and 20% in 2028–2029 in this snapshot.
+//   tax               TAX_RATE (fraction) — 20% in every year in this snapshot (2026-08-04: 16% in 2026–2027).
 //   sh                SHARES — diluted, millions, held flat at the FY2025 count.
 export var AMZN_SENS = {
-  model: 'be6d6393-ae5b-4b62-b59b-883fc0e31dcb', snapshot: '2026-08-04', after: '2Q26', pulled: '2026-10-29',
+  model: 'be6d6393-ae5b-4b62-b59b-883fc0e31dcb', snapshot: '2026-10-30', after: '3Q26', pulled: '2026-10-30',
   y: {
-    2026: { na:{ rev:474879.66, op:37306.0457, eb:56832.9257 }, intl:{ rev:182768, op:6914.9196, eb:12734.9996 }, aws:{ rev:173476.12, op:65880.7154, eb:107692.8154 },
-            corp:18853.3891, rev:831123.78, eb:250686.7223, dna:118954.3787, earn:92038.956, tax:0.16, sh:10827 },
-    2027: { na:{ rev:519993.2277, op:46799.3905, eb:67247.8769 }, intl:{ rev:205614, op:8635.788, eb:15109.752 }, aws:{ rev:234192.762, op:84309.3943, eb:149525.6342 },
-            corp:19822.9479, rev:959799.9897, eb:332725.5287, dna:168379.2933, earn:119053.4144, tax:0.16, sh:10827 },
-    2028: { na:{ rev:571992.5505, op:51479.3295, eb:73566.9424 }, intl:{ rev:236456.1, op:10167.6123, eb:17338.8918 }, aws:{ rev:292740.9525, op:108314.1524, eb:183363.1838 },
-            corp:40308.5449, rev:1101189.603, eb:430087.7403, dna:236845.9333, earn:137411.987, tax:0.2, sh:10827 },
-    2029: { na:{ rev:629191.8055, op:56627.2625, eb:82722.9424 }, intl:{ rev:271924.515, op:11964.6787, eb:19797.1522 }, aws:{ rev:365926.1906, op:139051.9524, eb:235691.433 },
-            corp:0, rev:1267042.5111, eb:531696.2946, dna:297567.4356, earn:169851.0738, tax:0.2, sh:10827 }
+    2026: { na:{ rev:474234.13, op:38103.281, eb:57630.1611 }, intl:{ rev:181397.64, op:7085.7529, eb:12905.8329 }, aws:{ rev:176325.18, op:68258.6502, eb:110070.7502 },
+            corp:18853.3891, rev:831956.95, eb:218164.1559, dna:84598.2123, earn:90332.9513, tax:0.2, sh:10827 },
+    2027: { na:{ rev:521657.543, op:44340.8912, eb:64789.3776 }, intl:{ rev:199537.404, op:10575.4824, eb:17049.4464 }, aws:{ rev:246855.252, op:91336.4432, eb:156552.6832 },
+            corp:21187.1329, rev:968050.199, eb:280123.5746, dna:113325.8233, earn:117182.2364, tax:0.2, sh:10827 },
+    2028: { na:{ rev:568606.7219, op:51174.605, eb:73262.2178 }, intl:{ rev:217495.7704, op:14137.2251, eb:21308.5046 }, aws:{ rev:345597.3528, op:127871.0205, eb:202920.0519 },
+            corp:42431.7108, rev:1131699.845, eb:361508.376, dna:146739.6345, earn:153476.8995, tax:0.2, sh:10827 },
+    2029: { na:{ rev:619781.3268, op:58879.226, eb:84974.906 }, intl:{ rev:250120.1359, op:17508.4095, eb:25340.8831 }, aws:{ rev:449276.5586, op:170725.0923, eb:267364.5729 },
+            corp:56745.17, rev:1319178.0214, eb:461227.1643, dna:187312.8041, earn:195460.0998, tax:0.2, sh:10827 }
   }
 };

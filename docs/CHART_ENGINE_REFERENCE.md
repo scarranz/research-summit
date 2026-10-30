@@ -1089,6 +1089,7 @@ Repeated once per `evolution.sections[]`. On UBER: `top`, `prof`. **Annual by de
   ┌──────────────────────────────────────────────┐
   │  one line per fiscal year, x = snapshots      │
   └──────────────────────────────────────────────┘
+  ○──○──●━━●━━●━━●   ← snapshot slider: one dot per saved snapshot
   ▸ Revision record       ← the reading
   ▸ Snapshot by snapshot  ← the audit trail
 ```
@@ -1102,9 +1103,20 @@ Repeated once per `evolution.sections[]`. On UBER: `top`, `prof`. **Annual by de
 | `rsEvoActYears(k)` | which fiscal years can be marked (drives the Reported toggle's availability **and** its on-screen reason) |
 | `rsRerenderEvoHead(wrap, k)` | repaints toggle + legend in place |
 | **`rsBuildEvo(k)`** | the chart |
+| **`rsEvoWin(k)`** / `rsSyncEvoSlider(k)` | the snapshot window `[first, last]` (global vintage indices) and its dot slider |
 | **`rsEvoVisible(k, m)`** | **the one place** that answers "what is the chart drawing" |
 | `rsEvoTrackRows(k, m)` / `rsRenderEvoTrack(k, m)` | the Revision record |
 | `rsRenderEvoTable(k, m)` | the Snapshot-by-snapshot table |
+
+### The snapshot slider (SAB, Oct 30 2026)
+
+Under the chart, the same dot slider as Results (`.sg-slider` + `.rs-ticks`), **one dot per saved
+snapshot**. It sets `rsEvoSt(k).win`; a horizontal drag on the chart sets it too, a vertical drag the
+y-range, and double-click resets both (§0 non-negotiable 1). The window cuts the chart **and** both
+tables — the record's first/latest view and the detail table's columns and cumulative revision are
+measured inside it. Indices stay global, so "vs prior snapshot" still compares with the file just
+before the window. Only drawn when there are ≥ 2 snapshots. Nothing per profile: every dataset with an
+`evolution` block gets it from the engine.
 
 ### The two tables
 

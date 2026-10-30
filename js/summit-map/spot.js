@@ -3,7 +3,8 @@
 // docs/profiles/SPOT.md §1b. Not imported by the portal: it is the dictionary Claude reads when freezing
 // Summit numbers into the data files (rule 10, frozen not live).
 //
-// Model: Summit MCP instrument SPOT · EUR · millions · 4 snapshots 2025-12-18 → 2026-08-05 · 54 labels.
+// Model: Summit MCP instrument SPOT · EUR · millions · 5 snapshots 2025-12-18 → 2026-10-22 · 54 labels
+// (2026-10-22 re-checked on 2026-10-30 over 3Q26–4Q27 and FY2025–FY2030: the same 54 labels).
 // ⚠ EVERYTHING IS EUROS (reported, guided, modelled and Bloomberg consensus). The MCP tags every label
 // canonical_unit 'EUR' / display_scale 'millions', including counts (MAU, subs) and ARPU — the unit below
 // is the real one.
@@ -20,6 +21,7 @@ export var summitMap = {
   approved: null,                                   // F0-SM gate — pending the analyst
   core: {
     rev:      { mcp: 'REV',       base: 'IFRS',  unit: 'eur_m', agg: 'sum', label: 'Revenue',
+                doubt: '2026-10-22 projection_history holds FY2025 at 17,177 (REV), 2,189 (OP_INCOME), 2,540 (EBITDA): 9 below the reported 17,186 / 2,198 / 2,549 that 2026-08-05 held. Read reported years from actuals_history',
                 note: 'FY25 17,186 = 1Q25–4Q25 (4,190+4,193+4,272+4,531). Projection quarters sum to the annual (2026: 4,533+4,777+5,023+5,428 = 19,762)' },
     opinc:    { mcp: 'OP_INCOME', base: 'IFRS',  unit: 'eur_m', agg: 'sum', label: 'Operating income', note: 'quarterly + annual' },
     ebitda:   { mcp: 'EBITDA',    base: 'model (op. income + D&A)', unit: 'eur_m', agg: 'sum', label: 'EBITDA', note: 'quarterly + annual' },
@@ -66,7 +68,7 @@ export var summitMap = {
     { key: 'row_subs',  label: 'Rest of World subscribers', mcp: 'ROW_MAUPS', unit: 'users_m', agg: 'end' },
     { key: 'employees', label: 'Employees',             mcp: 'EMPLOYEES', unit: 'people', agg: 'end', doubt: 'labelled EUR/millions in the MCP; the values (29,177) are people' }
   ],
-  // Labels present in the catalog but ZERO in every period of the 2026-08-05 snapshot — do not use.
+  // Labels present in the catalog but ZERO in every period of the 2026-08-05 snapshot (and of the 2026-10-22 periods pulled) — do not use.
   empty: ['MAU', 'MAUAD', 'MAUPS', 'ARPU_PREM', 'ARPU_ADS', 'COST_PREM', 'COST_ADS', 'MAUPS_GUIDANCE_LOW', 'MAUPS_GUIDANCE_HIGH'],
   guidance: [
     { key: 'rev', low: 'REVENUE_GUIDANCE_LOW', high: 'REVENUE_GUIDANCE_HIGH', unit: 'eur_m',
@@ -76,7 +78,9 @@ export var summitMap = {
     { key: 'opinc', low: 'OP_INCOME_GUIDANCE_LOW', high: 'OP_INCOME_GUIDANCE_HIGH', unit: 'eur_m', note: '3Q26 669–671 = the €670M point ±1' },
     { key: 'mau', low: 'MAU_GUIDANCE_LOW', high: 'MAU_GUIDANCE_HIGH', unit: 'users_m', note: '3Q26 787–789 = the 788M point (777M + 11M)' }
   ],
-  consensus: { rev: 'REV_BBG_EST', ebitda: 'EBITDA_BBG_EST', earnings: 'EARNINGS_BBG_EST', shares: 'SHARES_BBG_EST' },
-  valuation: { snapshot: '2026-08-05', methods: ['EV / EBITDA', 'P / E'], qualityFlags: [], note: 'both methods clean (no quality_flags); target year 2027 Forward' },
+  consensus: { rev: 'REV_BBG_EST', ebitda: 'EBITDA_BBG_EST', earnings: 'EARNINGS_BBG_EST', shares: 'SHARES_BBG_EST',
+               doubt: '2026-10-22: REV_BBG_EST and EBITDA_BBG_EST are on another scale (FY2026 revenue 22,346 vs 19,530 in the Bloomberg workbook of 2026-10-21, about 1.12–1.14x on revenue: apparently US$) and FY2030 is zero; EARNINGS_BBG_EST and SHARES_BBG_EST are EUR / millions as before. Do not use rev/ebitda from that snapshot (SPOT.md §6)' },
+  valuation: { snapshot: '2026-10-22', methods: ['EV / EBITDA', 'P / E'], qualityFlags: [],
+               note: 'both methods clean (no quality_flags). 2026-10-22: EV/EBITDA 20.5x FY2027 Forward, P/E 28x FY2028 Forward (it was FY2027 through 2026-08-05). The store records the P/E price target from the following year cell (US$672.78); the 1-year target is US$645.14 (js/submits-data/spot.js fix)' },
   valuationUnreliable: []
 };

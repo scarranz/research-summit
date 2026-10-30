@@ -5,7 +5,7 @@
 // else at the base, read the implied share price off a 5×5 grid; exit multiple EV/EBITDA or P/E.
 //
 // What changed for GOOGL:
-//   • BASE = the Summit DCF model, ONE snapshot FROZEN in ./googl-sensitivity-data.js (2026-08-06; rule 10) — the same
+//   • BASE = the Summit DCF model, ONE snapshot FROZEN in ./googl-sensitivity-data.js (2026-10-29; rule 10) — the same
 //     snapshot as Results and Target Multiple, so the EBITDA here is the one Target Multiple values (A26).
 //   • CATEGORIES = the three segments (Google Services · Google Cloud · Other Bets). One margin driver: consolidated
 //     operating margin — the model projects segment operating income for 2026 only, so no segment margin is invented.
@@ -13,11 +13,11 @@
 //   • EBITDA = adjusted (operating income + D&A + SBC), the model's own line; the D&A + SBC bridge is held fixed.
 //   • STREET = Bloomberg consensus through js/results-data/googl.js annual `cons` (segment lines; operating margin =
 //     consensus operating income ÷ the segment-sum revenue).
-//   • EXIT MULTIPLE starts at the MODEL's own target multiples (EV/EBITDA 12.7×, P/E 24.0× on FY2027 — Target Multiple,
+//   • EXIT MULTIPLE starts at the MODEL's own target multiples (EV/EBITDA 12.7× on FY2027, P/E 20.0× on FY2028 — Target Multiple,
 //     ./googl-target-multiple-data.js), never at a hand-picked number; yours to move.
 //   • NET DEBT = Alphabet's latest 10-Q (./googl-histmult-data.js), its source named (A23); the quote supplies the price.
 //   • Relocation #42: Dani's seeded sensitivity (FY2027E EBITDA "~$235B", 15×, sliders) is replaced by this pane.
-//   • YEARS 2026–2028 (the snapshot has no 2029 EBITDA).
+//   • YEARS 2026–2028 (the 2026-08-06 snapshot had no 2029 EBITDA; kept on the same axis after the 2026-10-29 refresh).
 
 import { SUMMIT_CAT, SUMMIT_POS, SUMMIT_NEG } from '../viz-palette.js';
 import { googlResults } from '../results-data/googl.js';
@@ -467,12 +467,12 @@ function renderMatrix(scope){
 
   scope.querySelector('#asFoot').innerHTML =
     'Every base figure is the <b>Summit DCF model</b> for GOOGL, snapshot '+esc(SNAP)+' (after '+esc(GOOGL_SENS.after)+'), frozen into the portal on '+esc(GOOGL_SENS.pulled)+
-    ' (not live; a new submit replaces it): revenue by segment (Google Services · Google Cloud · Other Bets — their sum is the model’s total revenue to within its −$74M of 2026 hedging), operating income, '+
+    ' (not live; a new submit replaces it): revenue by segment (Google Services · Google Cloud · Other Bets — their sum is the model’s total revenue to within its +$120M of 2026 hedging), operating income, '+
     'adjusted EBITDA, the model’s adjusted earnings (without the gains on equity securities), tax rate and diluted shares (held flat in the model). The model projects segment operating income for 2026 only, so the margin '+
     'driver is <b>consolidated</b> operating margin. A growth on an axis is a <b>flat rate compounded from Alphabet’s reported '+BASE_YEAR+' revenue for that segment</b>; a margin is '+
     'that year’s. <b>EBITDA</b> = operating income + the model’s D&amp;A and SBC, held fixed — the same adjusted EBITDA Target Multiple values. '+
     '<b>EV/EBITDA</b>: EV = EBITDA × multiple, less net debt, over shares. <b>P/E</b>: the operating-income delta flows through tax onto the model’s earnings, so '+
-    'the base reproduces the model’s EPS. <b>Exit multiple</b>: starts at the model’s own target multiples (EV/EBITDA '+(_tmLast.ev?_tmLast.ev.mult.toFixed(1)+'×':'—')+', P/E '+(_tmLast.pe?_tmLast.pe.mult.toFixed(1)+'×':'—')+' on FY'+(_tmLast.ev?_tmLast.ev.year:'—')+', Target Multiple) and is yours to move. '+
+    'the base reproduces the model’s EPS. <b>Exit multiple</b>: starts at the model’s own target multiples (EV/EBITDA '+(_tmLast.ev?_tmLast.ev.mult.toFixed(1)+'× on FY'+_tmLast.ev.year:'—')+', P/E '+(_tmLast.pe?_tmLast.pe.mult.toFixed(1)+'× on FY'+_tmLast.pe.year:'—')+', Target Multiple; here applied to the year picked above) and is yours to move. '+
     '<b>Net debt</b> = '+fmtB(_netDebt)+' ('+esc(ND_SRC)+'; long-term debt minus cash and marketable securities, which from 2Q26 include $87.1B of marketable equity securities). '+
     '<b>Street (Bloomberg consensus</b>'+(CONS.asOf?', as of '+esc(CONS.asOf):'')+'): growth of each segment as a CAGR off the 2025 actual to Bloomberg’s estimate, operating margin = '+
     'Bloomberg operating income ÷ the sum of its segment revenue; where Bloomberg has no figure the driver stays at the model and the strip says so. '+

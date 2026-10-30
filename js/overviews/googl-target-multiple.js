@@ -5,7 +5,8 @@
 //
 // What changed for GOOGL:
 //   · data — ./googl-target-multiple-data.js, the Summit DCF model's own valuation per submit, FROZEN from the Summit
-//     data store (rule 10): 2026-07-28 and 2026-08-06 (2026-07-23 left out — taken mid-update). "Recorded multiple" shows
+//     data store (rule 10): 2026-07-28, 2026-08-06 and 2026-10-29 (2026-07-23 left out — taken mid-update). On 2026-10-29
+//     the P/E leg moved to FY2028 (EV/EBITDA stays on FY2027), so FY2028 joins the forward-year toggle. "Recorded multiple" shows
 //     the multiple and the price target the workbook recorded for each method.
 //   · the targets are the workbook's, never recomputed here (the P/E leg does not tie to EARNINGS ÷ SHARES — open doubt
 //     in googl-target-multiple-data.js). "Live" recomputes from your own multiples as a secondary read.
@@ -114,7 +115,9 @@ FWD_YEARS.forEach(function(y){
     return { d:sn.d, after:sn.after, rev:r.rev, ebitda:r.ebitda, earn:r.earn, sh:r.sh, px:sn.px, wacc:sn.wacc,
       ev:(sn.val.ev&&sn.val.ev.year===y)?sn.val.ev:null, pe:(sn.val.pe&&sn.val.pe.year===y)?sn.val.pe:null }; });
 });
-var FWD_YEAR = FWD_YEARS[FWD_YEARS.length-1];   // the year the latest submit values
+// Opens on FY2027: every kept submit values it (EV/EBITDA in all three; P/E until 2026-10-29). FY2028 carries only the
+// 2026-10-29 P/E leg and is one click away on the forward-year toggle.
+var FWD_YEAR = FWD_YEARS.indexOf(2027)>=0 ? 2027 : FWD_YEARS[FWD_YEARS.length-1];
 var SNAPS = SNAP_DATA[FWD_YEAR];
 function setFwd(y){ FWD_YEAR=y; SNAPS=SNAP_DATA[y]; }
 
@@ -122,7 +125,10 @@ function setFwd(y){ FWD_YEAR=y; SNAPS=SNAP_DATA[y]; }
 // Every snapshot carries its own prior year, so growth is what that vintage forecast — never mixed across files.
 function priorOf(y){ return GOOGL_TM.snaps.map(function(sn){ var r=sn.y[y-1]; return r?{ d:sn.d, ebitda:r.ebitda, earn:r.earn }:null; }); }
 
-var FWD_NOTE = {};
+var FWD_NOTE = {
+  2027: 'From the 2026-10-29 submit on, the P/E leg values FY2028: on FY2027 that submit carries its EV/EBITDA leg only.',
+  2028: 'Only the 2026-10-29 submit values FY2028 (its P/E leg, 20.0×); the earlier submits valued FY2027.'
+};
 
 // Classify each snapshot by what actually moved (re-parse vs revision).
 function kindOf(i){
@@ -140,8 +146,9 @@ function isRevision(i){ var k=kindOf(i); return k.rev || k.prof; }
 // ── State ────────────────────────────────────────────────────────────────────────
 var _last = SNAPS[SNAPS.length-1];
 var _mode = 'preview';    // 'preview' = Recorded multiple (the workbook's) · 'live' = your own multiples
-var _mEv  = _last.ev ? _last.ev.mult : 12;     // Live starts from the model's own multiples, never a guess
-var _mPe  = _last.pe ? _last.pe.mult : 19;
+var _lastVal = GOOGL_TM.snaps[GOOGL_TM.snaps.length-1].val;   // the latest submit, whichever year each leg values
+var _mEv  = _lastVal.ev ? _lastVal.ev.mult : 12;     // Live starts from the model's own multiples, never a guess
+var _mPe  = _lastVal.pe ? _lastVal.pe.mult : 19;
 var _ndRow = GOOGL_HM_Q[GOOGL_HM_Q.length-1];
 var _netDebt = _ndRow[9];                       // US$M, negative = net cash (10-Q balance sheet)
 var _ndSrc = 'Alphabet balance sheet, '+_ndRow[0]+' (10-Q filed '+_ndRow[2]+')';
@@ -621,6 +628,9 @@ function renderTable(scope){
 
 function footHtml(){
   var idx=winIdx(), l=SNAPS[idx[idx.length-1]], ev=l.ev, pe=l.pe;
+  // the latest submit's legs may value different years (2026-10-29: EV/EBITDA FY2027, P/E FY2028) — name both
+  if(l.d===GOOGL_TM.snaps[GOOGL_TM.snaps.length-1].d){ ev=_lastVal.ev; pe=_lastVal.pe; }
+  var peY=null; if(pe) GOOGL_TM.snaps.forEach(function(sn){ if(sn.d===l.d) peY=sn.y[pe.year]||null; });
   var pxTxt=(_px!=null)?(' Live price $'+_px.toFixed(2)+' → '+(ev?signPct(ev.pt/_px-1)+' to the EV/EBITDA target':'')+(pe?', '+signPct(pe.pt/_px-1)+' to the P/E target':'')+'.'):'';
   var common='FY'+FWD_YEAR+' revenue, adjusted EBITDA, the model\'s adjusted earnings and diluted shares per submit from the Summit DCF model (instrument GOOGL), '+
     'and each submit\'s <b>recorded valuation</b> from the workbook\'s Output ▸ VALUATION block — frozen into the portal on '+esc(GOOGL_TM.pulled)+' (not live; '+
@@ -632,11 +642,11 @@ function footHtml(){
   }
   return '<b>Latest submit — '+esc(l.d)+' (after '+esc(l.after)+'):</b> '+
     (ev?'EV/EBITDA <b>'+ev.mult.toFixed(1)+'×</b> FY'+ev.year+' '+esc(ev.basis.toLowerCase())+' → price target <b>'+fmtPx2(ev.pt)+'</b>, fair value '+fmtPx2(ev.fv)+' ('+signPct(ev.upside)+' vs $'+l.px.toFixed(2)+' at the submit)':'')+
-    (pe?'; P/E <b>'+pe.mult.toFixed(1)+'×</b> → <b>'+fmtPx2(pe.pt)+'</b>, fair value '+fmtPx2(pe.fv)+' ('+signPct(pe.upside)+')':'')+
+    (pe?'; P/E <b>'+pe.mult.toFixed(1)+'×</b> FY'+pe.year+' → <b>'+fmtPx2(pe.pt)+'</b>, fair value '+fmtPx2(pe.fv)+' ('+signPct(pe.upside)+')':'')+
     '. Fair value = the 1-year target discounted at the model\'s WACC of '+(l.wacc*100).toFixed(1)+'%.'+pxTxt+' '+
     ((ev&&ev.flags.length)||(pe&&pe.flags.length)?'<b>⚑ The store flags this valuation as unreliable — read it with that caveat.</b> ':'')+
-    '<b>⚑ Open doubt for the model author:</b> the P/E target implies FY'+FWD_YEAR+' EPS of $'+(pe?(pe.pt/pe.mult).toFixed(2):'—')+
-    ', while the model\'s EARNINGS ÷ SHARES gives $'+eps(l).toFixed(2)+' — the EV/EBITDA leg ties to its EBITDA. The targets are shown as recorded. '+
+    (pe&&peY?'<b>⚑ Open doubt for the model author:</b> the P/E target implies FY'+pe.year+' EPS of $'+(pe.pt/pe.mult).toFixed(2)+
+    ', while the model\'s EARNINGS ÷ SHARES gives $'+(peY.earn/peY.sh).toFixed(2)+' — the EV/EBITDA leg ties to its EBITDA. ':'')+'The targets are shown as recorded. '+
     'The realized multiple on '+esc(realizedOf().at)+' is pending until that date. '+common+'Data sourced from Summit DCF models.';
 }
 
@@ -861,7 +871,7 @@ function renderPeg(scope){
   // denominator is inflated by the redefinition, so the ratio flatters and the reader has no way
   // to see that from the numbers alone.
   var n=scope.querySelector('#pegNote');
-  if(n) n.innerHTML = (FWD_YEAR===2028 && _pegB==='ev')
+  if(n) n.innerHTML = (BREAK_ON && FWD_YEAR===2028 && _pegB==='ev')   // AMZN-only flag; null for GOOGL
     ? '<b>On FY2028 this basis inherits the 2026-08-04 EBITDA redefinition through its denominator</b>, which inflates '+
       'growth and flatters the ratio. The PEG does not repair that break.'
     : '';

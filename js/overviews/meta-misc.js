@@ -2,7 +2,7 @@
 // (MISC-strategy), M&A (MISC-manda) and Capacity → revenue (MISC-capacity). Playbook §15b.
 // Formal layout (SAB, Oct 20 2026): tables over cards, no emoji, no tap-to-open cards, one source footer per sub-tab.
 // Capex comes from js/results-data/meta.js (the same series Results draws); D&A and every text row from
-// meta-misc-data.js. Summit figures are the frozen 2026-08-04 snapshot (rule 10).
+// meta-misc-data.js. Summit figures are the frozen 2026-10-22 snapshot (rule 10; refreshed 2026-10-30 from 2026-08-04).
 import { metaResults } from '../results-data/meta.js';
 import { META_DNA, META_CAPEX_GUIDE, META_CLOUD_SPLIT, META_EFFIC, META_LOOP, META_BETS,
          META_DEALS, META_CHAIN, META_DC, META_DC_SRC,
@@ -29,8 +29,10 @@ function collap(title, inner, open){
 var CX = metaResults.views.y.metrics.capex, RV = metaResults.views.y.metrics.rev, CQ = metaResults.views.q.metrics.capex;
 var EVO = metaResults.evolution.metrics;
 var YRS = ['2021','2022','2023','2024','2025','2026','2027','2028'];
-// FY2028 is not in the Results annual view; it comes from the same frozen snapshot via the Estimates block (Aug column).
-var CX28 = EVO.capex.summit[2][3], RV28 = EVO.rev.summit[2][3];
+// FY2028 is not in the Results annual view; it comes from the same frozen snapshot via the Estimates block (its
+// newest vintage column, so a refresh that appends a vintage carries through).
+var EVO_LAST = metaResults.evolution.vintages.length - 1;
+var CX28 = EVO.capex.summit[2][EVO_LAST], RV28 = EVO.rev.summit[2][EVO_LAST];
 function pick(m, y){ var i=m.periods.indexOf(y); if(i<0) return null; return m.act[i]!=null?{v:m.act[i],e:false}:(m.summit&&m.summit[i]!=null?{v:m.summit[i],e:true}:null); }
 function capexOf(y){ if(y==='2028') return CX28!=null?{v:CX28,e:true}:null; return pick(CX,y); }
 function revOf(y){ if(y==='2028') return RV28!=null?{v:RV28,e:true}:null; return pick(RV,y); }
@@ -66,7 +68,7 @@ export function metaCapexBody(){
     return [y+(est?'E':''), c?bn(c.v):'—', r?bn(r.v):'—', (c&&r)?(c.v/r.v*100).toFixed(1)+'%':'—', d?bn(d.v):'—', (c&&d)?(d.v/c.v*100).toFixed(0)+'%':'—']; });
   var c26=capexOf('2026'), r26=revOf('2026');
   h+=collap('Data — capex, capital intensity and D&amp;A by year', tbl(['Fiscal year','Capex','Revenue','Capex ÷ revenue','D&amp;A','D&amp;A ÷ capex'],rows,null,1)+
-     '<div class="ov-fynote">Capital intensity went from '+(cxA('2021')/rvA('2021')*100).toFixed(0)+'% of revenue in 2021 to '+(cxA('2025')/rvA('2025')*100).toFixed(0)+'% in 2025; the frozen model has it at '+(c26.v/r26.v*100).toFixed(0)+'% in 2026. 2026E–2028E: Summit model, snapshot 2026-08-04 (frozen, not live).</div>');
+     '<div class="ov-fynote">Capital intensity went from '+(cxA('2021')/rvA('2021')*100).toFixed(0)+'% of revenue in 2021 to '+(cxA('2025')/rvA('2025')*100).toFixed(0)+'% in 2025; the frozen model has it at '+(c26.v/r26.v*100).toFixed(0)+'% in 2026. 2026E–2028E: Summit model, snapshot 2026-10-22 (frozen, not live); FY2026 = reported 1Q–3Q + the model’s 4Q.</div>');
   h+=collap('Capex guidance — every revision', tbl(['Given','For','Range','Context'],META_CAPEX_GUIDE.map(function(r){ return [r[0],r[1],'<b>'+r[2]+'</b>',r[3]]; })));
 
   // 2 — the three ways the build is paid for
@@ -143,7 +145,7 @@ function capexData(){
   var c=YRS.map(capexOf), d=YRS.map(dnaOf);
   return { labels:YRS.map(function(y,i){ return 'FY'+y.slice(2)+(((c[i]&&c[i].e)||(d[i]&&d[i].e))?'E':''); }),
     capex:c.map(function(x){ return x?{ v:x.v/1000, e:x.e }:null; }), line:d.map(function(x){ return x?{ v:x.v/1000, e:x.e }:null; }),
-    note:'Bars = capex as Meta states it (including principal payments on finance leases); line = depreciation and amortization from the cash-flow statement. Solid = reported; lighter = Summit model, snapshot 2026-08-04 (frozen) — the model’s capex is purchases of property and equipment only, a few percent below Meta’s basis.' };
+    note:'Bars = capex as Meta states it (including principal payments on finance leases); line = depreciation and amortization from the cash-flow statement. Solid = reported; lighter = Summit model, snapshot 2026-10-22 (frozen) — the model’s capex is purchases of property and equipment only, a few percent below Meta’s basis.' };
 }
 function buildCapex(root){
   var cv=root.querySelector('#meMxCapex'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;

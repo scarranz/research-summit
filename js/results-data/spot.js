@@ -17,7 +17,10 @@
 //             (Projection History). Reported quarters carry the estimate held on the last
 //             snapshot BEFORE that print; 3Q26 is FROZEN from the Summit MCP snapshot 2026-08-05
 //             (frozen on purpose, not live; the 2026-08-04 vintage this file carried before does
-//             not exist in the MCP). Net income and EPS are NOT carried as
+//             not exist in the MCP). 4Q26 and the annual FY2026-FY2028 Summit cells are the snapshot
+//             2026-10-22 (saved the day of the 3Q26 print, valuation block "after Q3 - 2026"), pulled
+//             once on 2026-10-30. Users and per-user lines for 4Q26 stay the analyst's figures on the
+//             2026-08-05 snapshot (the model rows are zero; no 10-22 figures supplied yet). Net income and EPS are NOT carried as
 //             consolidated lines in the model (gross profit carries only the 3Q26 cell, the sum of the two
 //             segment gross profits), so the rest stay null rather than being derived.
 //   cons    — Street consensus from BBG_CONSENSUS.txt: 10 SPOT snapshots (2024-04-28 -> 2026-10-21),
@@ -27,7 +30,7 @@
 //             vintage picker. The hand-compiled 2Q26 FactSet cell (EUR 4,790M) was dropped in favour
 //             of the 2026-05-03 vintage (EUR 4,795M). Users lines (MAU, subscribers, ad-supported MAU,
 //             Premium ARPU) carry actuals from the Bloomberg export. Summit forecasts them only in the 2025-12-18 snapshot
-//             (4Q25), the three later snapshots hold the total rows at zero.
+//             (4Q25), the four later snapshots hold the total rows at zero.
 // All monetary values in € millions; EPS in euros. null = not available.
 // Arrays are parallel to `periods`. A period with act:null is an upcoming print.
 //
@@ -42,7 +45,8 @@
 //    1Q24–3Q26 from the prior quarter's call (Q4 2023 → Q2 2026 calls). Two guide lines are DERIVED and say so in
 //    their notes: gross profit (guided margin × guided revenue) and ad-supported MAU (guided MAU − guided
 //    subscribers + the overlap between the two definitions, held at the last reported quarter).
-//  • estMatrix.summit is now generated (scripts/consensus/map_summit_spot.json): four Summit snapshots.
+//  • estMatrix.summit is now generated (scripts/consensus/map_summit_spot.json): five Summit snapshots; the fifth
+//    (2026-10-22) was spliced by hand from out/estmatrix_summit_spot.js (4Q26 only: 1Q27/2Q27 are not forecasts, SPOT.md §21).
 //    Open: the 1Q24 and 2Q24 Street cells, because the oldest Bloomberg file (2024-04-28) already knew 1Q24.
 
 export var spotResults = {
@@ -59,7 +63,7 @@ export var spotResults = {
         rev: { label: 'Total Revenue', guided: true, short: 'Total revenue', group: 'Revenue', unit: 'usdM',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [3636, 3807, 3988, 4242, 4190, 4193, 4272, 4531, 4533, 4777, 4969, null, null, null],
-          summit: [3561.9, 3771.4, 3899.6, 4193.6, 4166.5, 4318.9, 4229.1, 4539.6, 4663.8, 4817.3, 5023.1, 5428.4, null, null],
+          summit: [3561.9, 3771.4, 3899.6, 4193.6, 4166.5, 4318.9, 4229.1, 4539.6, 4663.8, 4817.3, 5023.1, 5254.8, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[3600, 3800, 4000, 4100, 4200, 4300, 4200, 4500, 4500, 4800, 5000, 5200, null, null],
           guideHi:[3600, 3800, 4000, 4100, 4200, 4300, 4200, 4500, 4500, 4800, 5000, 5200, null, null],
@@ -67,7 +71,7 @@ export var spotResults = {
         premrev: { label: 'Premium Revenue', short: 'Premium revenue', group: 'Revenue', unit: 'usdM',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [3247, 3351, 3516, 3705, 3771, 3740, 3826, 4013, 4148, 4331, 4487, null, null, null],
-          summit: [3170.0, 3311.9, 3418.0, 3656.6, 3732.8, 3840.8, 3738.5, 4019.6, 4202.5, 4351.6, 4511.6, 4838.4, null, null],
+          summit: [3170.0, 3311.9, 3418.0, 3656.6, 3732.8, 3840.8, 3738.5, 4019.6, 4202.5, 4351.6, 4511.6, 4686.1, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -75,7 +79,7 @@ export var spotResults = {
         adrev: { label: 'Ad-Supported Revenue', short: 'Ad-Supported revenue', group: 'Revenue', unit: 'usdM',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [389, 456, 472, 537, 419, 453, 446, 518, 385, 446, 482, null, null, null],
-          summit: [391.9, 459.4, 481.6, 537.0, 433.8, 478.2, 490.6, 520.0, 461.4, 465.7, 511.6, 590.0, null, null],
+          summit: [391.9, 459.4, 481.6, 537.0, 433.8, 478.2, 490.6, 520.0, 461.4, 465.7, 511.6, 568.7, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -83,7 +87,7 @@ export var spotResults = {
         gp: { label: 'Gross Profit', short: 'Gross profit', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'gross margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [1004, 1112, 1240, 1368, 1326, 1320, 1351, 1499, 1495, 1596, 1639, null, null, null],
-          summit: [809.8, 896, 1057.1, 1140.1, 1174.9, 1254.6, 1202.8, 1499.5, 1518.9, 1598.9, 1653.4, 1831.5, null, null],
+          summit: [809.8, 896, 1057.1, 1140.1, 1174.9, 1254.6, 1202.8, 1499.5, 1518.9, 1598.9, 1653.4, 1777.6, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[950.4, 1067.8, 1208, 1303.8, 1323, 1354.5, 1306.2, 1480.5, 1476, 1588.8, 1645, 1757.6, null, null],
           guideHi:[950.4, 1067.8, 1208, 1303.8, 1323, 1354.5, 1306.2, 1480.5, 1476, 1588.8, 1645, 1757.6, null, null],
@@ -99,7 +103,7 @@ export var spotResults = {
         opinc: { label: 'Operating Income', guided: true, short: 'Op. income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [168, 266, 454, 477, 509, 406, 582, 701, 715, 655, 672, null, null, null],
-          summit: [-59.9, 62.4, 292.7, 287.0, 553.5, 520.8, 510.4, 632.1, 710.9, 637.6, 672.5, 927.2, null, null],
+          summit: [-59.9, 62.4, 292.7, 287.0, 553.5, 520.8, 510.4, 632.1, 710.9, 637.6, 672.5, 839.4, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[180, 250, 405, 481, 548, 539, 485, 620, 660, 630, 670, 820, null, null],
           guideHi:[180, 250, 405, 481, 548, 539, 485, 620, 660, 630, 670, 820, null, null],
@@ -123,7 +127,7 @@ export var spotResults = {
         fcf: { label: 'Free Cash Flow', short: 'Free cash flow', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'FCF margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [207, 490, 711, 877, 534, 700, 806, 834, 824, 797, 735, null, null, null],
-          summit: [108.6, 215.6, 351.2, 391.9, 753.7, 726.4, 706.2, 854.2, 797.6, 716.1, 742.3, 991.2, null, null],
+          summit: [108.6, 215.6, 351.2, 391.9, 753.7, 726.4, 706.2, 854.2, 797.6, 716.1, 742.3, 909.5, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -136,7 +140,7 @@ export var spotResults = {
           fwd:   [null, null, null, null, null, null, null, null, null, null, 788.13, 819.08, 827.43, 842.97],   // Street (Bloomberg, 2026-10-21) for the periods still to print: the Summit model does not carry this line, so the Top Line forecast reads it
           guideLo:[618, 631, 639, 665, 678, 689, 710, 745, 759, 778, 788, 818, null, null],
           guideHi:[618, 631, 639, 665, 678, 689, 710, 745, 759, 778, 788, 818, null, null],
-          note: 'Total monthly active users (millions, end of quarter). Reported by Spotify; the series matches the Bloomberg export (1Q23-3Q26). The guide is the point Spotify gave on the prior quarter’s call, every quarter from 1Q24 (the model holds it only for 4Q25–3Q26; the earlier ones are read from the calls). 3Q26 printed 788M, exactly on the guide (+11M net adds, +11% YoY, growth in all regions). Management says it is optimizing MAU growth across markets (sign-up hygiene, ad load and client migration in markets such as India and Indonesia). The 4Q26 guide is 818M (+30M), with growth the company says is not as high as last year’s record rollout of the new free tier. Summit: only the 2025-12-18 snapshot carries a total-MAU forecast (4Q25 761.2M); in the three later snapshots the row is zero, so there is no Summit line after 4Q25.' },
+          note: 'Total monthly active users (millions, end of quarter). Reported by Spotify; the series matches the Bloomberg export (1Q23-3Q26). The guide is the point Spotify gave on the prior quarter’s call, every quarter from 1Q24 (the model holds it only for 4Q25–3Q26; the earlier ones are read from the calls). 3Q26 printed 788M, exactly on the guide (+11M net adds, +11% YoY, growth in all regions). Management says it is optimizing MAU growth across markets (sign-up hygiene, ad load and client migration in markets such as India and Indonesia). The 4Q26 guide is 818M (+30M), with growth the company says is not as high as last year’s record rollout of the new free tier. Summit: only the 2025-12-18 snapshot carries a total-MAU forecast (4Q25 761.2M); in the four later snapshots the row is zero, so there is no Summit line after 4Q25.' },
         subs: { label: 'Premium Subscribers', guided: true, short: 'Subscribers', group: 'Users', unit: 'count', unitLabel: 'millions of subscribers',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [239, 246, 252, 263, 268, 276, 281, 290, 293, 300, 306, null, null, null],
@@ -172,7 +176,7 @@ export var spotResults = {
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          note: 'Premium cost of revenue (Premium revenue less Premium gross profit) per subscriber per month: quarterly cost divided by subscribers at quarter end and by three, EUR. Reported quarters are computed from the published lines. Summit: the own estimate of the model for each quarter 3Q24 to 4Q26, supplied by the analyst (the model rows are zero; no Summit quarterly forecast for 2027 yet). They reproduce from the projection history of the model (Premium revenue and gross profit, 2026-08-05 snapshot).' },
+          note: 'Premium cost of revenue (Premium revenue less Premium gross profit) per subscriber per month: quarterly cost divided by subscribers at quarter end and by three, EUR. Reported quarters are computed from the published lines. Summit: the own estimate of the model for each quarter 3Q24 to 4Q26, supplied by the analyst (the model rows are zero; no Summit quarterly forecast for 2027 yet). They reproduce from the projection history of the model (Premium revenue and gross profit, 2026-08-05 snapshot). 4Q26 has not been re-supplied on the 2026-10-22 snapshot, so it stays on the Aug 5 figures.' },
         aarpu: { label: 'Ad-Supported ARPU', short: 'Ad-Supported ARPU', group: 'Users', unit: 'eps',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [0.333, 0.387, 0.39, 0.42, 0.33, 0.35, 0.333, 0.363, 0.267, 0.3, 0.322, null, null, null],
@@ -180,7 +184,7 @@ export var spotResults = {
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          note: 'Ad-Supported revenue in the quarter divided by Ad-Supported MAUs at quarter end, EUR per month (the quarterly quotient divided by three, as ARPU is reported). Reported quarters are computed from the published lines. Summit: the own estimate of the model for each quarter 3Q24 to 4Q26, supplied by the analyst (the model rows are zero; no Summit quarterly forecast for 2027 yet). They reproduce from the projection history of the model (Premium revenue and gross profit, 2026-08-05 snapshot).' },
+          note: 'Ad-Supported revenue in the quarter divided by Ad-Supported MAUs at quarter end, EUR per month (the quarterly quotient divided by three, as ARPU is reported). Reported quarters are computed from the published lines. Summit: the own estimate of the model for each quarter 3Q24 to 4Q26, supplied by the analyst (the model rows are zero; no Summit quarterly forecast for 2027 yet). They reproduce from the projection history of the model (Premium revenue and gross profit, 2026-08-05 snapshot). 4Q26 has not been re-supplied on the 2026-10-22 snapshot, so it stays on the Aug 5 figures.' },
         acpu: { label: 'Ad-Supported cost per MAU', short: 'Ad cost / MAU', group: 'Users', unit: 'eps',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [0.313, 0.337, 0.34, 0.357, 0.28, 0.283, 0.273, 0.293, 0.23, 0.243, 0.262, null, null, null],
@@ -188,11 +192,11 @@ export var spotResults = {
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          note: 'Ad-Supported cost of revenue (Ad-Supported revenue less Ad-Supported gross profit) divided by Ad-Supported MAUs at quarter end, EUR per month (the quarterly quotient divided by three, as ARPU is reported). Reported quarters are computed from the published lines. Summit: the own estimate of the model for each quarter 3Q24 to 4Q26, supplied by the analyst (the model rows are zero; no Summit quarterly forecast for 2027 yet). They reproduce from the projection history of the model (Premium revenue and gross profit, 2026-08-05 snapshot).' },
+          note: 'Ad-Supported cost of revenue (Ad-Supported revenue less Ad-Supported gross profit) divided by Ad-Supported MAUs at quarter end, EUR per month (the quarterly quotient divided by three, as ARPU is reported). Reported quarters are computed from the published lines. Summit: the own estimate of the model for each quarter 3Q24 to 4Q26, supplied by the analyst (the model rows are zero; no Summit quarterly forecast for 2027 yet). They reproduce from the projection history of the model (Premium revenue and gross profit, 2026-08-05 snapshot). 4Q26 has not been re-supplied on the 2026-10-22 snapshot, so it stays on the Aug 5 figures.' },
         premgp: { label: 'Premium Gross Profit', short: 'Premium gross profit', group: 'Segments', unit: 'usdM', marginOf: 'premrev', marginLabel: 'Premium gross margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [979, 1051, 1178, 1287, 1262, 1237, 1269, 1398, 1445, 1511, 1549, null, null, null],
-          summit: [820.4, 920.1, 1020.5, 1113, 1136.4, 1188.1, 1136.7, 1386.8, 1428.8, 1501.3, 1543, 1693.5, null, null],
+          summit: [820.4, 920.1, 1020.5, 1113, 1136.4, 1188.1, 1136.7, 1386.8, 1428.8, 1501.3, 1543, 1663.6, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -200,7 +204,7 @@ export var spotResults = {
         adgp: { label: 'Ad-Supported Gross Profit', short: 'Ad-Supported gross profit', group: 'Segments', unit: 'usdM', marginOf: 'adrev', marginLabel: 'Ad-Supported gross margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [25, 61, 62, 81, 64, 83, 82, 101, 50, 85, 90, null, null, null],
-          summit: [-10.6, -24.1, 36.6, 27.1, 38.5, 66.5, 66.1, 112.8, 90, 97.6, 110.4, 138.1, null, null],
+          summit: [-10.6, -24.1, 36.6, 27.1, 38.5, 66.5, 66.1, 112.8, 90, 97.6, 110.4, 114.1, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -208,7 +212,7 @@ export var spotResults = {
         ebitda: { label: 'EBITDA', short: 'EBITDA', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'EBITDA margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26', '4Q26', '1Q27', '2Q27'],
           act:    [350, 378.3, 631.7, 657, 580, 505, 681, 783, 797, 770, 792, null, null, null],
-          summit: [null, null, null, null, null, null, null, 716.8, 892.8, 726.1, 765.3, 1013.2, null, null],
+          summit: [null, null, null, null, null, null, null, 716.8, 892.8, 726.1, 765.3, 931.5, null, null],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -266,20 +270,20 @@ export var spotResults = {
     },
     y: {
       label: 'Annual',
-      note: 'Fiscal-year actuals against the Summit model (snapshot 2026-08-05, frozen) and the Bloomberg consensus vintages. Spotify guides quarters, not years, so there is no guide here. All figures in EUR millions.',
+      note: 'Fiscal-year actuals against the Summit model (snapshot 2026-10-22, after the 3Q26 print, frozen) and the Bloomberg consensus vintages. Spotify guides quarters, not years, so there is no guide here. All figures in EUR millions.',
       metrics: {
         rev: { label: 'Total Revenue', short: 'Total revenue', group: 'Revenue', unit: 'usdM',
           periods: ['2023','2024','2025','2026','2027','2028'],
           act:    [13247, 15673, 17186, null, null, null],
-          summit: [null, null, null, 19761.5, 23118.8, 27097.4],
+          summit: [null, null, null, 19533.8, 22753.5, 26667.2],
           cons:   [null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null],
-          note: 'Consolidated revenue. FY2023 is the sum of the four reported quarters (Bloomberg export); FY2024 and FY2025 are the sums of the quarterly dataset and tie to the Form 20-F. FY2026-FY2028 is the Summit model, snapshot 2026-08-05, frozen. Street comes from the Bloomberg vintages.' },
+          note: 'Consolidated revenue. FY2023 is the sum of the four reported quarters (Bloomberg export); FY2024 and FY2025 are the sums of the quarterly dataset and tie to the Form 20-F. FY2026-FY2028 is the Summit model, snapshot 2026-10-22 (after the 3Q26 print), frozen. Street comes from the Bloomberg vintages.' },
         premrev: { label: 'Premium Revenue', short: 'Premium revenue', group: 'Revenue', unit: 'usdM',
           periods: ['2023','2024','2025','2026','2027','2028'],
           act:    [11566, 13819, 15350, null, null, null],
-          summit: [null, null, null, 17829, 20885, 24358],
+          summit: [null, null, null, 17652, 20588, 24011],
           cons:   [null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null],
@@ -287,7 +291,7 @@ export var spotResults = {
         adrev: { label: 'Ad-Supported Revenue', short: 'Ad-Supported revenue', group: 'Revenue', unit: 'usdM',
           periods: ['2023','2024','2025','2026','2027','2028'],
           act:    [1681, 1854, 1836, null, null, null],
-          summit: [null, null, null, 1933, 2234, 2739],
+          summit: [null, null, null, 1882, 2166, 2656],
           cons:   [null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null],
@@ -295,7 +299,7 @@ export var spotResults = {
         gp: { label: 'Gross Profit', short: 'Gross profit', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'gross margin',
           periods: ['2023','2024','2025','2026','2027','2028'],
           act:    [3397, 4724, 5496, null, null, null],
-          summit: [null, null, null, 6576, 7931, 9728],
+          summit: [null, null, null, 6507, 7787, 9388],
           cons:   [null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null],
@@ -303,7 +307,7 @@ export var spotResults = {
         premgp: { label: 'Premium Gross Profit', short: 'Premium gross profit', group: 'Profitability', unit: 'usdM', marginOf: 'premrev', marginLabel: 'Premium gross margin',
           periods: ['2023','2024','2025','2026','2027','2028'],
           act:    [3334, 4495, 5166, null, null, null],
-          summit: [null, null, null, 6192, 7372, 8769],
+          summit: [null, null, null, 6168, 7267, 8644],
           cons:   [null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null],
@@ -311,7 +315,7 @@ export var spotResults = {
         adgp: { label: 'Ad-Supported Gross Profit', short: 'Ad-Supported gross profit', group: 'Profitability', unit: 'usdM', marginOf: 'adrev', marginLabel: 'Ad-Supported gross margin',
           periods: ['2023','2024','2025','2026','2027','2028'],
           act:    [62, 229, 330, null, null, null],
-          summit: [null, null, null, 384, 559, 959],
+          summit: [null, null, null, 339, 520, 744],
           cons:   [null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null],
@@ -319,7 +323,7 @@ export var spotResults = {
         opinc: { label: 'Operating Income', short: 'Op. income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
           periods: ['2023','2024','2025','2026','2027','2028'],
           act:    [-446, 1365, 2198, null, null, null],
-          summit: [null, null, null, 2969.7, 3914.0, 5259.7],
+          summit: [null, null, null, 2880.6, 3825.0, 5072.0],
           cons:   [null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null],
@@ -327,23 +331,23 @@ export var spotResults = {
         earnings: { label: 'Net Income (model earnings)', short: 'Net income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'net margin',
           periods: ['2023','2024','2025','2026','2027','2028'],
           act:    [null, 1138, 2212, null, null, null],
-          summit: [null, null, null, 2821.6, 3234.8, 4363.4],
+          summit: [null, null, null, 2743.2, 3163.3, 4212.7],
           cons:   [null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null],
-          note: 'Net income attributable to owners of the parent: the sum of the four reported quarters (FY2024 1,138, FY2025 2,212; FY2023 is not on file). Summit: the EARNINGS row of the model, which carries ANNUAL values only (FY2026 2,821.6, FY2027 3,234.8, FY2028 4,363.4 in the 2026-08-05 snapshot) and no quarters, so the quarterly chart has no Summit line.' },
+          note: 'Net income attributable to owners of the parent: the sum of the four reported quarters (FY2024 1,138, FY2025 2,212; FY2023 is not on file). Summit: the EARNINGS row of the model, which carries ANNUAL values only (FY2026 2,743.2, FY2027 3,163.3, FY2028 4,212.7 in the 2026-10-22 snapshot; 2,821.6 / 3,234.8 / 4,363.4 in 2026-08-05) and no quarters, so the quarterly chart has no Summit line.' },
         ebitda: { label: 'EBITDA', short: 'EBITDA', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'EBITDA margin',
           periods: ['2023','2024','2025','2026','2027','2028'],
           act:    [null, 2017, 2549, null, null, null],
-          summit: [null, null, null, null, null, null],
+          summit: [null, null, null, 3289.7, 4173.6, 5353.0],
           cons:   [null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null],
-          note: 'EBITDA as the Bloomberg export defines it: the sum of the four reported quarters (FY2024 2,017, FY2025 2,549; FY2023 is not on file). The Summit model has no annual EBITDA in the 2026-08-05 snapshot (the row is zero), so the annual chart has no Summit line.' },
+          note: 'EBITDA as the Bloomberg export defines it: the sum of the four reported quarters (FY2024 2,017, FY2025 2,549; FY2023 is not on file). Summit: the EBITDA row of the model (operating income + D&A + share-based compensation, the same build as the actuals; FY2025 2,549 in the 2026-08-05 snapshot), snapshot 2026-10-22: FY2026 3,289.7, FY2027 4,173.6, FY2028 5,353.0. (Until Oct 2026 this note said the annual row was zero; it is not, in either the 2026-08-05 or the 2026-10-22 snapshot.)' },
         fcf: { label: 'Free Cash Flow', short: 'Free cash flow', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'FCF margin',
           periods: ['2023','2024','2025','2026','2027','2028'],
           act:    [678, 2285, 2874, null, null, null],
-          summit: [null, null, null, 3508.5, 4340.1, 5621.3],
+          summit: [null, null, null, 3384.5, 4237.6, 5420.2],
           cons:   [null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null],
@@ -735,6 +739,7 @@ export var spotResults = {
         { id: '2026-02-09', label: 'Feb 9, 2026', lastActual: { q: '3Q25', y: '2024' } },
         { id: '2026-04-28', label: 'Apr 28, 2026', lastActual: { q: '1Q26', y: '2025' } },
         { id: '2026-08-05', label: 'Aug 5, 2026', lastActual: { q: '2Q26', y: '2025' } },
+        { id: '2026-10-22', label: 'Oct 22, 2026', lastActual: { q: '3Q26', y: '2025' } },
       ],
       q: {
       rev: {
@@ -742,54 +747,63 @@ export var spotResults = {
         '2026-02-09': { '4Q25': 4539.6, '1Q26': 4663.8, '2Q26': 4893.2, '3Q26': 5083, '4Q26': 5373 },
         '2026-04-28': { '2Q26': 4817.3, '3Q26': 5050.5, '4Q26': 5335.7 },
         '2026-08-05': { '3Q26': 5023.1, '4Q26': 5428.4 },
+        '2026-10-22': { '4Q26': 5254.8 },
       },
       premrev: {
         '2025-12-18': { '4Q25': 4017.3 },
         '2026-02-09': { '4Q25': 4019.6, '1Q26': 4202.5, '2Q26': 4393.7, '3Q26': 4593.6, '4Q26': 4802.6 },
         '2026-04-28': { '2Q26': 4351.6, '3Q26': 4560.7, '4Q26': 4791.6 },
         '2026-08-05': { '3Q26': 4511.6, '4Q26': 4838.4 },
+        '2026-10-22': { '4Q26': 4686.1 },
       },
       adrev: {
         '2025-12-18': { '4Q25': 583.1 },
         '2026-02-09': { '4Q25': 520, '1Q26': 461.4, '2Q26': 499.5, '3Q26': 489.3, '4Q26': 570.4 },
         '2026-04-28': { '2Q26': 465.7, '3Q26': 489.8, '4Q26': 544.1 },
         '2026-08-05': { '3Q26': 511.6, '4Q26': 590 },
+        '2026-10-22': { '4Q26': 568.7 },
       },
       gp: {
         '2025-12-18': { '4Q25': 1478.9 },
         '2026-02-09': { '4Q25': 1499.5, '1Q26': 1518.9, '2Q26': 1605.8, '3Q26': 1671.8, '4Q26': 1778.9 },
         '2026-04-28': { '2Q26': 1598.9, '3Q26': 1694, '4Q26': 1801.2 },
         '2026-08-05': { '3Q26': 1653.4, '4Q26': 1831.5 },
+        '2026-10-22': { '4Q26': 1777.6 },
       },
       premgp: {
         '2025-12-18': { '4Q25': 1386 },
         '2026-02-09': { '4Q25': 1386.8, '1Q26': 1428.8, '2Q26': 1493.9, '3Q26': 1561.8, '4Q26': 1632.9 },
         '2026-04-28': { '2Q26': 1501.3, '3Q26': 1591.7, '4Q26': 1677.1 },
         '2026-08-05': { '3Q26': 1543, '4Q26': 1693.5 },
+        '2026-10-22': { '4Q26': 1663.6 },
       },
       adgp: {
         '2025-12-18': { '4Q25': 93 },
         '2026-02-09': { '4Q25': 112.8, '1Q26': 90, '2Q26': 111.9, '3Q26': 109.9, '4Q26': 146 },
         '2026-04-28': { '2Q26': 97.6, '3Q26': 102.3, '4Q26': 124.2 },
         '2026-08-05': { '3Q26': 110.4, '4Q26': 138.1 },
+        '2026-10-22': { '4Q26': 114.1 },
       },
       opinc: {
         '2025-12-18': { '4Q25': 636.6 },
         '2026-02-09': { '4Q25': 632.1, '1Q26': 710.9, '2Q26': 729.2, '3Q26': 794.1, '4Q26': 825.3 },
         '2026-04-28': { '2Q26': 637.6, '3Q26': 721.7, '4Q26': 848.4 },
         '2026-08-05': { '3Q26': 672.5, '4Q26': 927.2 },
+        '2026-10-22': { '4Q26': 839.4 },
       },
       ebitda: {
         '2025-12-18': { '4Q25': 727.8 },
         '2026-02-09': { '4Q25': 716.8, '1Q26': 892.8, '2Q26': 921.2, '3Q26': 990, '4Q26': 1033.1 },
         '2026-04-28': { '2Q26': 726.1, '3Q26': 810.9, '4Q26': 934.4 },
         '2026-08-05': { '3Q26': 765.3, '4Q26': 1013.2 },
+        '2026-10-22': { '4Q26': 931.5 },
       },
       fcf: {
         '2025-12-18': { '4Q25': 867.3 },
         '2026-02-09': { '4Q25': 854.2, '1Q26': 797.6, '2Q26': 819, '3Q26': 868, '4Q26': 923.8 },
         '2026-04-28': { '2Q26': 716.1, '3Q26': 787.9, '4Q26': 912.4 },
         '2026-08-05': { '3Q26': 742.3, '4Q26': 991.2 },
+        '2026-10-22': { '4Q26': 909.5 },
       },
       mau: {
         '2025-12-18': { '4Q25': 761.2 },
@@ -807,54 +821,63 @@ export var spotResults = {
         '2026-02-09': { '2025': 17194.6, '2026': 19580.9, '2027': 22197.8, '2028': 24857.8, '2029': 27446.5 },
         '2026-04-28': { '2026': 19736.5, '2027': 21963.3, '2028': 24854, '2029': 27700.9 },
         '2026-08-05': { '2026': 19761.5, '2027': 23118.8, '2028': 27097.4, '2029': 31372.9 },
+        '2026-10-22': { '2026': 19533.8, '2027': 22753.5, '2028': 26667.2, '2029': 30872.6 },
       },
       premrev: {
         '2025-12-18': { '2025': 15354.3, '2026': 18578.7, '2027': 22275.9, '2028': 26218.7, '2029': 30571 },
         '2026-02-09': { '2025': 15356.6, '2026': 17487.2, '2027': 19814.4, '2028': 22139.7, '2029': 24400.2 },
         '2026-04-28': { '2026': 17851.9, '2027': 19696.4, '2028': 22326.8, '2029': 24963 },
         '2026-08-05': { '2026': 17829, '2027': 20884.8, '2028': 24358, '2029': 28068.9 },
+        '2026-10-22': { '2026': 17652.1, '2027': 20587.6, '2028': 24011.4, '2029': 27669.5 },
       },
       adrev: {
         '2025-12-18': { '2025': 1901.1, '2026': 2223.5, '2027': 2560.2, '2028': 2893.4, '2029': 3217.3 },
         '2026-02-09': { '2025': 1838, '2026': 2093.6, '2027': 2383.4, '2028': 2718, '2029': 3046.4 },
         '2026-04-28': { '2026': 1884.6, '2027': 2266.9, '2028': 2527.1, '2029': 2737.9 },
         '2026-08-05': { '2026': 1932.5, '2027': 2234, '2028': 2739.5, '2029': 3304 },
+        '2026-10-22': { '2026': 1881.7, '2027': 2165.9, '2028': 2655.9, '2029': 3203.2 },
       },
       gp: {
         '2025-12-18': { '2025': 5475.9, '2026': 6575.7, '2027': 8341.9, '2028': 10189.2, '2029': 11986.8 },
         '2026-02-09': { '2025': 5496.5, '2026': 6364.4, '2027': 7650.1, '2028': 8700.2, '2029': 9758.6 },
         '2026-04-28': { '2026': 6589.1, '2027': 7519.6, '2028': 8810.5, '2029': 9957 },
         '2026-08-05': { '2026': 6575.9, '2027': 7930.8, '2028': 9727.7, '2029': 11707.1 },
+        '2026-10-22': { '2026': 6506.8, '2027': 7787.2, '2028': 9387.7, '2029': 11519 },
       },
       premgp: {
         '2025-12-18': { '2025': 5154, '2026': 6131, '2027': 7573.8, '2028': 9176.5, '2029': 10699.8 },
         '2026-02-09': { '2025': 5154.8, '2026': 5945.7, '2027': 6935, '2028': 7748.9, '2029': 8540.1 },
         '2026-04-28': { '2026': 6215, '2027': 6952.8, '2028': 7926, '2029': 8861.9 },
         '2026-08-05': { '2026': 6192.4, '2027': 7372.3, '2028': 8768.9, '2029': 10385.5 },
+        '2026-10-22': { '2026': 6167.6, '2027': 7267.4, '2028': 8644.1, '2029': 10237.7 },
       },
       adgp: {
         '2025-12-18': { '2025': 322, '2026': 444.7, '2027': 768.1, '2028': 1012.7, '2029': 1286.9 },
         '2026-02-09': { '2025': 341.8, '2026': 418.7, '2027': 715, '2028': 951.3, '2029': 1218.6 },
         '2026-04-28': { '2026': 374, '2027': 566.7, '2028': 884.5, '2029': 1095.2 },
         '2026-08-05': { '2026': 383.5, '2027': 558.5, '2028': 958.8, '2029': 1321.6 },
+        '2026-10-22': { '2026': 339.2, '2027': 519.8, '2028': 743.6, '2029': 1281.3 },
       },
       opinc: {
         '2025-12-18': { '2025': 2133.6, '2026': 3204.6, '2027': 4802.3, '2028': 6472.7, '2029': 8084.4 },
         '2026-02-09': { '2025': 2129.1, '2026': 2852.9, '2027': 3977.6, '2028': 4859, '2029': 5740.6 },
         '2026-04-28': { '2026': 2922.7, '2027': 3659.5, '2028': 4771, '2029': 5729.3 },
         '2026-08-05': { '2026': 2969.7, '2027': 3914, '2028': 5259.7, '2029': 6768.7 },
+        '2026-10-22': { '2026': 2880.6, '2027': 3825, '2028': 5072, '2029': 6756.1 },
       },
       ebitda: {
         '2025-12-18': { '2025': 2491.8, '2026': 3558.3, '2027': 5174.8, '2028': 6851.1, '2029': 8456.1 },
         '2026-02-09': { '2025': 2480.8, '2026': 3149.7, '2027': 4256.2, '2028': 5109.2, '2029': 5951.3 },
         '2026-04-28': { '2026': 3268.4, '2027': 3983.1, '2028': 5024.1, '2029': 5944.1 },
         '2026-08-05': { '2026': 3345.5, '2027': 4258.2, '2028': 5535.3, '2029': 7007.2 },
+        '2026-10-22': { '2026': 3289.7, '2027': 4173.6, '2028': 5353, '2029': 7000.6 },
       },
       fcf: {
         '2025-12-18': { '2025': 2995.3, '2026': 4314.9, '2027': 5222.1, '2028': 6900.7, '2029': 8508.1 },
         '2026-02-09': { '2025': 2982.2, '2026': 3824.7, '2027': 4303.5, '2028': 5158.8, '2029': 6003.4 },
         '2026-04-28': { '2026': 3375.4, '2027': 4054.5, '2028': 5099.1, '2029': 6022.8 },
         '2026-08-05': { '2026': 3508.5, '2027': 4340.1, '2028': 5621.3, '2029': 7097.5 },
+        '2026-10-22': { '2026': 3384.5, '2027': 4237.6, '2028': 5420.2, '2029': 7071.2 },
       },
       mau: {
         '2025-12-18': { '2025': 761.2, '2026': 834.1, '2027': 902.1, '2028': 957.7, '2029': 1003.1 },
@@ -876,12 +899,13 @@ export var spotResults = {
   // "the model against the Street, both moving". Operating income and free cash flow
   // have no BBG counterpart in the model, so they keep `cons: null`.
   evolution: {
-    intro: 'How the forecast itself has moved. Each line tracks one fiscal year’s estimate across the model’s four saved snapshots — and, on revenue, EBITDA and earnings, against the Bloomberg consensus stored in the same snapshot. Three things stand out. First, the February 2026 snapshot cut the out-years hard — FY2029 revenue −19%, FY2029 EBITDA −30% in one revision. ⚠ That revision was NOT an update on the 4Q25 print: its actuals still stop at 3Q25, so it was a re-think of the forward assumptions. Second, the latest snapshot (Aug 5, after the 2Q26 print) reverses most of the out-year cut: against April, FY2028 revenue is +9% and FY2029 revenue +13%, and FY2029 EBITDA +18%, while FY2026 barely moves (+0.1% on revenue). Third, because the Street stayed put (FY2029 consensus revenue €27.1–28.2B in every snapshot), the model is again well above it in the out-years: +4% on FY2027 revenue, +11% on FY2029 revenue and +25% on FY2029 EBITDA — a margin call more than a growth call.',
+    intro: 'How the forecast itself has moved. Each line tracks one fiscal year’s estimate across the model’s five saved snapshots — and, on revenue, EBITDA and earnings, against the Bloomberg consensus stored in the same snapshot. Three things stand out. First, the February 2026 snapshot cut the out-years hard — FY2029 revenue −19%, FY2029 EBITDA −30% in one revision. ⚠ That revision was NOT an update on the 4Q25 print: its actuals still stop at 3Q25, so it was a re-think of the forward assumptions. Second, the Aug 5 snapshot (after the 2Q26 print) reversed most of the out-year cut: against April, FY2028 revenue is +9% and FY2029 revenue +13%, and FY2029 EBITDA +18%, while FY2026 barely moves (+0.1% on revenue). Third, because the Street stayed put (FY2029 consensus revenue €27.1–28.2B in every snapshot), the model is again well above it in the out-years: +4% on FY2027 revenue, +11% on FY2029 revenue and +25% on FY2029 EBITDA — a margin call more than a growth call. The newest snapshot (Oct 22, saved the day of the 3Q26 print) trims every year by 0–4% and changes none of that: FY2026 revenue €19.5B (−1.2%; 4Q26 now €5.25B, against a €5.2B guide), FY2029 revenue €30.9B (−1.6%) and FY2029 EBITDA €7.0B (−0.1%), so the out-year margins went up slightly. ⚠ The Bloomberg revenue and EBITDA stored inside the Oct 22 snapshot are on a different scale (about 1.12–1.14× the EUR consensus, consistent with US dollars), so the Street line stops at Aug 5 on those two metrics; earnings is in EUR and is shown.',
     vintages: [
       { label: 'Dec 18, 2025', event: 'actuals to 3Q25' },
       { label: 'Feb 9, 2026',  event: 'actuals still to 3Q25 — a forward re-think, NOT a post-4Q25 update' },
       { label: 'Apr 28, 2026', event: 'first to carry 4Q25 + 1Q26' },
-      { label: 'Aug 5, 2026',  event: 'carries the 2Q26 print' }
+      { label: 'Aug 5, 2026',  event: 'carries the 2Q26 print' },
+      { label: 'Oct 22, 2026', event: 'carries the 3Q26 print (saved the day of it)' }
     ],
     years: ['2026', '2027', '2028', '2029'],
     sections: [
@@ -894,37 +918,37 @@ export var spotResults = {
     ],
     metrics: {
       rev: { label: 'Total Revenue', unit: 'usdM',
-        summit: [[20802, 19581, 19737, 19762], [24836, 22198, 21963, 23119], [29112, 24858, 24854, 27097], [33788, 27447, 27701, 31373]],
-        cons:   [[19700, 19646, 19512, 19527], [22435, 22348, 22142, 22316], [25185, 25079, 24866, 25333], [27784, 27516, 27104, 28150]],
+        summit: [[20802, 19581, 19737, 19762, 19534], [24836, 22198, 21963, 23119, 22753], [29112, 24858, 24854, 27097, 26667], [33788, 27447, 27701, 31373, 30873]],
+        cons:   [[19700, 19646, 19512, 19527, null], [22435, 22348, 22142, 22316, null], [25185, 25079, 24866, 25333, null], [27784, 27516, 27104, 28150, null]],
         // The FY2025 base each vintage’s implied FY2026 growth is measured against — ONE ENTRY PER
         // VINTAGE (the engine indexes prior[src][vintageIndex], so a short array silently blanks the
         // growth for the newest snapshot). FY2025 is a reported actual (€17,186M), the same in every vintage.
-        prior: { summit: [17186, 17186, 17186, 17186], cons: [17186, 17186, 17186, 17186] },
-        note: 'December 2025 carried FY2026 revenue at €20.8B — +21% on the FY2025 actual of €17.2B, against a company that has since guided to roughly +10%. February corrected it to €19.6B (on judgement, not on new actuals) and it has barely moved since: Aug 5 sits at €19.8B, which is 1H26 actuals (€9,310M) plus the guided 3Q (€5.0B) and a modelled 4Q (€5.4B). The out-years are where it moves. FY2029 went €33.8B → €27.4B (−19%) in February, stayed there in April, and came back to €31.4B (+13%) on Aug 5; FY2028 went €24.9B → €27.1B (+9%). Against the Street (consensus FY2029 revenue €27.1–28.2B in all four snapshots), the model was 22% above in December, level in February (−0.3%), 2% above in April, and is 11% above now. FY2026 is within ~1% of consensus.' },
+        prior: { summit: [17186, 17186, 17186, 17186, 17186], cons: [17186, 17186, 17186, 17186, 17186] },
+        note: 'December 2025 carried FY2026 revenue at €20.8B — +21% on the FY2025 actual of €17.2B, against a company that has since guided to roughly +10%. February corrected it to €19.6B (on judgement, not on new actuals) and it has barely moved since: Aug 5 sits at €19.8B, which is 1H26 actuals (€9,310M) plus the guided 3Q (€5.0B) and a modelled 4Q (€5.4B). Oct 22 (after the 3Q26 print) sits at €19.5B: nine months reported (€14,279M) plus a modelled 4Q of €5.25B against the €5.2B guide. The out-years are where it moves. FY2029 went €33.8B → €27.4B (−19%) in February, stayed there in April, and came back to €31.4B (+13%) on Aug 5, then €30.9B (−1.6%) on Oct 22; FY2028 went €24.9B → €27.1B (+9%) → €26.7B. Against the Street (consensus FY2029 revenue €27.1–28.2B in all four snapshots), the model was 22% above in December, level in February (−0.3%), 2% above in April, and was 11% above on Aug 5. FY2026 is within ~1% of consensus. On Oct 22 the consensus stored in the model is on a different scale (see the tab note), so the dashed line stops at Aug 5; against the Bloomberg workbook of 21 Oct 2026 (EUR) the model is level on FY2026 (€19,534M vs €19,530M), +2% on FY2027 and +5% on FY2028.' },
       ebitda: { label: 'EBITDA', unit: 'usdM', marginOf: 'rev', marginLabel: 'EBITDA margin',
-        summit: [[3558, 3150, 3268, 3345], [5175, 4256, 3983, 4258], [6851, 5109, 5024, 5535], [8456, 5951, 5944, 7007]],
-        cons:   [[3047, 3062, 3172, 3005], [3943, 3922, 3974, 3889], [4607, 4606, 4838, 4816], [5287, 5264, 5267, 5625]],
-        prior: { summit: [2549, 2549, 2549, 2549], cons: [2549, 2549, 2549, 2549] },
-        note: 'The most volatile line in the model. FY2029 EBITDA fell €8.5B → €6.0B (−30%) in February, sat at €5.9B in April, and is back at €7.0B on Aug 5 (+18% in one snapshot). In the margin view the model now runs a ~22% EBITDA margin by FY2029, against ~25% in December and ~21% in April. This is where the model is most differentiated from the Street: consensus FY2029 EBITDA is €5.6B, so the model sits ~25% above it — a wider gap than on revenue (+11%), which means the difference is a margin call, not a growth call. FY2026 is also above the Street (+11%: €3.35B vs €3.00B), the one year where the print is close enough to test it.' },
+        summit: [[3558, 3150, 3268, 3345, 3290], [5175, 4256, 3983, 4258, 4174], [6851, 5109, 5024, 5535, 5353], [8456, 5951, 5944, 7007, 7001]],
+        cons:   [[3047, 3062, 3172, 3005, null], [3943, 3922, 3974, 3889, null], [4607, 4606, 4838, 4816, null], [5287, 5264, 5267, 5625, null]],
+        prior: { summit: [2549, 2549, 2549, 2549, 2549], cons: [2549, 2549, 2549, 2549, 2549] },
+        note: 'The most volatile line in the model. FY2029 EBITDA fell €8.5B → €6.0B (−30%) in February, sat at €5.9B in April, and is back at €7.0B on Aug 5 (+18% in one snapshot), held at €7.0B on Oct 22. In the margin view the model now runs a ~22% EBITDA margin by FY2029, against ~25% in December and ~21% in April. This is where the model is most differentiated from the Street: consensus FY2029 EBITDA is €5.6B, so the model sits ~25% above it — a wider gap than on revenue (+11%), which means the difference is a margin call, not a growth call. FY2026 was also above the Street on Aug 5 (+11%: €3.35B vs €3.00B), the one year where the print is close enough to test it; Oct 22 trims it to €3.29B. The Street line stops at Aug 5: the Bloomberg EBITDA stored in the Oct 22 snapshot (FY2026 3,853) is on a different scale, not EUR.' },
       opinc: { label: 'Operating Income', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
-        summit: [[3205, 2853, 2923, 2970], [4802, 3978, 3659, 3914], [6473, 4859, 4771, 5260], [8084, 5741, 5729, 6769]],
+        summit: [[3205, 2853, 2923, 2970, 2881], [4802, 3978, 3659, 3914, 3825], [6473, 4859, 4771, 5260, 5072], [8084, 5741, 5729, 6769, 6756]],
         cons: null,
-        prior: { summit: [2198, 2198, 2198, 2198] },
-        note: 'Moves with EBITDA: FY2027 operating income went €4.8B → €3.7B (−24%) by April and is back to €3.9B on Aug 5; FY2029 €8.1B → €5.7B → €6.8B. Held next to the Investor Day target of a 20%+ operating margin by 2030, the model’s FY2029 margin is now ~21.6% (it was ~21% in April), so it sits through the promise rather than at it. No Bloomberg operating-income series is stored in the model, so there is no Street line here; use EBITDA for that.' },
+        prior: { summit: [2198, 2198, 2198, 2198, 2198] },
+        note: 'Moves with EBITDA: FY2027 operating income went €4.8B → €3.7B (−24%) by April and is back to €3.9B on Aug 5 (€3.8B on Oct 22); FY2029 €8.1B → €5.7B → €6.8B → €6.8B. Held next to the Investor Day target of a 20%+ operating margin by 2030, the model’s FY2029 margin is now ~21.9% (21.6% on Aug 5, ~21% in April), so it sits through the promise rather than at it. No Bloomberg operating-income series is stored in the model, so there is no Street line here; use EBITDA for that.' },
       earnings: { label: 'Earnings (model definition)', unit: 'usdM', marginOf: 'rev', marginLabel: 'net margin (model def.)',
-        summit: [[2884, 2568, 2686, 2822], [4322, 3580, 3336, 3235], [5825, 4373, 4658, 4363], [7276, 5166, 5634, 5619]],
-        cons:   [[2584, 2535, 2743, 2598], [3277, 3270, 3406, 3219], [3928, 3939, 4068, 3973], [4628, 4621, 4482, 4666]],
-        prior: { summit: [2212, 2212, 2212, 2212], cons: [2212, 2212, 2212, 2212] },
-        note: '⚠ The one line that did NOT follow the re-raise. FY2027 earnings were cut at every snapshot — €4,322M → €3,580M → €3,336M → €3,235M, a cumulative −25% — while revenue and EBITDA went back up on Aug 5. Read with the Street line: consensus FY2027 earnings has sat at €3.2–3.4B throughout, so the model started 32% ABOVE the Street, walked down through it, and now sits on it (+0.5%). FY2028 and FY2029 stay above consensus (+10% and +20%), well below the EBITDA gaps: FY2029 EBITDA is +18% against April while FY2029 earnings is −0.3%, so the model’s tax and below-the-line assumptions are the question to put to its author. ‘Earnings’ here is the model’s definition, not IFRS net income.' },
+        summit: [[2884, 2568, 2686, 2822, 2743], [4322, 3580, 3336, 3235, 3163], [5825, 4373, 4658, 4363, 4213], [7276, 5166, 5634, 5619, 5601]],
+        cons:   [[2584, 2535, 2743, 2598, 2539], [3277, 3270, 3406, 3219, 3175], [3928, 3939, 4068, 3973, 3925], [4628, 4621, 4482, 4666, 4676]],
+        prior: { summit: [2212, 2212, 2212, 2212, 2212], cons: [2212, 2212, 2212, 2212, 2212] },
+        note: '⚠ The one line that did NOT follow the re-raise. FY2027 earnings were cut at every snapshot — €4,322M → €3,580M → €3,336M → €3,235M → €3,163M, a cumulative −27% — while revenue and EBITDA went back up on Aug 5. Read with the Street line: consensus FY2027 earnings has sat at €3.2–3.4B throughout, so the model started 32% ABOVE the Street, walked down through it, and sits on it (−0.4% on Oct 22: €3,163M against €3,175M). FY2028 and FY2029 stay above consensus (+7% and +20% on Oct 22), well below the EBITDA gaps: FY2029 EBITDA is +18% against April while FY2029 earnings is −0.3%, so the model’s tax and below-the-line assumptions are the question to put to its author. ‘Earnings’ here is the model’s definition, not IFRS net income.' },
       fcf: { label: 'Free Cash Flow', unit: 'usdM', marginOf: 'rev', marginLabel: 'FCF margin',
-        summit: [[4315, 3825, 3375, 3508], [5222, 4303, 4055, 4340], [6901, 5159, 5099, 5621], [8508, 6003, 6023, 7097]],
+        summit: [[4315, 3825, 3375, 3508, 3385], [5222, 4303, 4055, 4340, 4238], [6901, 5159, 5099, 5621, 5420], [8508, 6003, 6023, 7097, 7071]],
         cons: null,
-        prior: { summit: [2872, 2872, 2872, 2872] },
-        note: 'FY2026 free cash flow was cut from €4.3B to €3.4B (−22%) by April and is back to €3.5B on Aug 5. The €3.5B reconciles with the €3.3B LTM free cash flow the company reported at 2Q26. The out-years follow EBITDA: FY2029 €8.5B → €6.0B → €7.1B. No Bloomberg free-cash-flow series is stored in the model.' }
+        prior: { summit: [2872, 2872, 2872, 2872, 2872] },
+        note: 'FY2026 free cash flow was cut from €4.3B to €3.4B (−22%) by April and is back to €3.5B on Aug 5, then €3.4B on Oct 22 (3Q26 printed €735M, under the model). The Aug 5 €3.5B reconciled with the €3.3B LTM free cash flow the company reported at 2Q26. The out-years follow EBITDA: FY2029 €8.5B → €6.0B → €7.1B → €7.1B. No Bloomberg free-cash-flow series is stored in the model.' }
     },
-    note: 'Single source: the Summit Research database — the model’s saved snapshots as recorded in the DCF’s Projection History, pulled through the Summit MCP on 20 Oct 2026 (sheet source `projection_history`, annual periods 2026–2029). FOUR vintages, dated by what each one actually CONTAINS: Dec 18 2025 and Feb 9 2026 both carry actuals only to 3Q25; 4Q25 and 1Q26 first appear in the Apr 28 2026 snapshot; Aug 5 2026 carries the 2Q26 print (valuation block “after Q2 - 2026”). ⚠ The two vintages this tab carried until Oct 2026 — “May 22, 2026” and “Aug 4, 2026” — are NOT in the MCP (the snapshot list is Dec 18, Feb 9, Apr 28, Aug 5); they were seeded from the DCF workbook and cannot be reproduced, so they were removed. Their last values (rev FY2027 €22,958M / €22,895M, FY2029 €30,489M / €30,404M) are in the profile log (docs/profiles/SPOT.md). The dashed Consensus series is the Bloomberg estimate stored inside each snapshot (`rev_bbg_est` / `ebitda_bbg_est` / `earnings_bbg_est`) — it exists for revenue, EBITDA and earnings only. ⚠ Cautions that still stand: Spotify’s fixed HISTORY is restated between snapshots, so never build one time series by mixing vintages — compare the same year across vintages, which is what this tab does; the model’s consolidated MAU/subscriber/ARPU lines are empty, which is why no user metric appears here; and the annual `premium_cogs` / `ads_cogs` lines are mirrored to their revenue lines, so segment cost of revenue is unusable. Figures in € millions. Implied growth chains within Summit’s own data; the FY2025 bases are the reported actuals (revenue €17,186M, EBITDA €2,549M, operating income €2,198M, net income €2,212M, free cash flow €2,872M). Data sourced from Summit DCF models.'
+    note: 'Single source: the Summit Research database — the model’s saved snapshots as recorded in the DCF’s Projection History, pulled once on 20 Oct 2026 (the fifth on 30 Oct 2026; sheet source `projection_history`, annual periods 2026–2029). FIVE vintages, dated by what each one actually CONTAINS: Dec 18 2025 and Feb 9 2026 both carry actuals only to 3Q25; 4Q25 and 1Q26 first appear in the Apr 28 2026 snapshot; Aug 5 2026 carries the 2Q26 print (valuation block “after Q2 - 2026”); Oct 22 2026 carries the 3Q26 print (“after Q3 - 2026”). ⚠ The two vintages this tab carried until Oct 2026 — “May 22, 2026” and “Aug 4, 2026” — are NOT in the MCP (the snapshot list is Dec 18, Feb 9, Apr 28, Aug 5); they were seeded from the DCF workbook and cannot be reproduced, so they were removed. Their last values (rev FY2027 €22,958M / €22,895M, FY2029 €30,489M / €30,404M) are in the profile log (docs/profiles/SPOT.md). The dashed Consensus series is the Bloomberg estimate stored inside each snapshot (`rev_bbg_est` / `ebitda_bbg_est` / `earnings_bbg_est`) — it exists for revenue, EBITDA and earnings only. ⚠ In the Oct 22 snapshot the stored revenue and EBITDA consensus are about 1.12–1.14× (revenue) the EUR figures (FY2026 revenue 22,346 against the 19,530 of the Bloomberg workbook a day earlier), consistent with US dollars, and FY2030 is zero, so those two Street points are left out; earnings (2,539) is in EUR and is kept. ⚠ Cautions that still stand: Spotify’s fixed HISTORY is restated between snapshots, so never build one time series by mixing vintages — compare the same year across vintages, which is what this tab does; the model’s consolidated MAU/subscriber/ARPU lines are empty, which is why no user metric appears here; and the annual `premium_cogs` / `ads_cogs` lines are mirrored to their revenue lines, so segment cost of revenue is unusable. Figures in € millions. Implied growth chains within Summit’s own data; the FY2025 bases are the reported actuals (revenue €17,186M, EBITDA €2,549M, operating income €2,198M, net income €2,212M, free cash flow €2,872M). Data sourced from Summit DCF models.'
   },
-  source: 'Sources: Spotify quarterly shareholder decks on investors.spotify.com (actuals, and the guidance issued for the following quarter — each quarter’s figures taken from that quarter’s own deck). The 3Q26 print and the 4Q26 guidance are from the Q3 2026 Update of 22 Oct 2026 (Form 6-K filed the same day, accession 0001140361-26-040435, CIK 0001639920); earlier quarters from each quarter’s own deck. Values in € millions except EPS (€ per share). Street consensus is Bloomberg (BBG_CONSENSUS.txt, 10 snapshots to 2026-10-21, EUR). Summit 4Q26 is the model snapshot 2026-08-05, frozen. Users series (MAU, subscribers, ad-supported MAU, ARPU) from the Bloomberg export, matching the decks.'
+  source: 'Sources: Spotify quarterly shareholder decks on investors.spotify.com (actuals, and the guidance issued for the following quarter — each quarter’s figures taken from that quarter’s own deck). The 3Q26 print and the 4Q26 guidance are from the Q3 2026 Update of 22 Oct 2026 (Form 6-K filed the same day, accession 0001140361-26-040435, CIK 0001639920); earlier quarters from each quarter’s own deck. Values in € millions except EPS (€ per share). Street consensus is Bloomberg (BBG_CONSENSUS.txt, 10 snapshots to 2026-10-21, EUR). Summit DCF model: 3Q26 is the snapshot 2026-08-05 (the estimate held going into that print); 4Q26 and FY2026-FY2028 are the snapshot 2026-10-22 (after the 3Q26 print); both frozen, not live. Users series (MAU, subscribers, ad-supported MAU, ARPU) from the Bloomberg export, matching the decks.'
 };
 
 // ─── Derived estimate lines ───────────────────────────────────────────────────────────────────

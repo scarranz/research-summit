@@ -7,7 +7,7 @@
 // "Alphabet-level activities", which is not a revenue segment.
 //
 // Every segment series is a POINTER into js/results-data/googl.js (`results:<key>`), so each number has one home.
-// The engine reads `act` and falls back to `summit` (frozen, snapshot 2026-08-06), never `cons`.
+// The engine reads `act` and falls back to `summit` (frozen: 2026-10-29 snapshot; 3Q26 keeps the 2026-08-06 pre-print figure), never `cons`.
 // KPI series (paid clicks, cost-per-click, impressions, cost-per-impression — year-on-year change — and the revenue
 // backlog) are held in `shared`, from Bloomberg's record of the reported values (BBG_CONSENSUS.txt, reported columns
 // of each snapshot); every 2Q26 value matches the 2Q26 10-Q. 3Q26 (Oct 29 2026): typed from the 3Q26 10-Q (acc.
@@ -36,7 +36,7 @@ var KPI_SRC = 'Alphabet 10-Q / 10-K (Monetization Metrics), as recorded by Bloom
 export var googlSegments = {
   company: 'Alphabet',
   updated: 'Oct 2026',
-  source: 'Segment revenue and operating income: Alphabet 10-K and 10-Q filings (SEC EDGAR), through the Results dataset; Summit DCF model, snapshot 2026-08-06 (frozen, not live) for forecast periods. KPIs: Alphabet\'s reported monetization metrics and revenue backlog as recorded by Bloomberg (BBG_CONSENSUS.txt), checked against the 2Q26 10-Q. Revenue by geography: FY2025 10-K, Note 2. Customers: FY2025 10-K.',
+  source: 'Segment revenue and operating income: Alphabet 10-K and 10-Q filings (SEC EDGAR), through the Results dataset; Summit DCF model, snapshot 2026-10-29 (frozen, not live) for forecast periods. KPIs: Alphabet\'s reported monetization metrics and revenue backlog as recorded by Bloomberg (BBG_CONSENSUS.txt), checked against the 2Q26 10-Q. Revenue by geography: FY2025 10-K, Note 2. Customers: FY2025 10-K.',
 
   axis: {
     q: ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26'],
@@ -208,7 +208,7 @@ export var googlSegments = {
     {
       key: 'lines', label: 'Revenue lines', sub: 'Search, YouTube, Network, subscriptions, Cloud, Other Bets',
       lede: 'The same revenue by line, as the 10-K reports it. Search & other is just over half of the total; Cloud is the fastest-growing line.',
-      note: 'Quarterly from Alphabet\'s 10-Q filings and 8-K releases; annual from the 10-K. Summit forecast from the 2026-08-06 snapshot. Hedging gains (losses), a few hundred million dollars either way, are left out, so the lines add up to total revenue within that amount.',
+      note: 'Quarterly from Alphabet\'s 10-Q filings and 8-K releases; annual from the 10-K. Summit forecast from the 2026-10-29 snapshot. Hedging gains (losses), a few hundred million dollars either way, are left out, so the lines add up to total revenue within that amount.',
       tenK: { text: 'The following table presents revenues by type (in millions)', where: TENK + ', Item 7 — Financial Results' },
       cite: { form: '10-K', period: '2025', accession: '0001652044-26-000018', url: URL_K },
       spans: 'Quarterly 1Q23–2Q26 (10-Q / 8-K); annual from the 10-K.',

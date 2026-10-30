@@ -1394,8 +1394,8 @@ function guidanceBody(c){
 // straight through to revenue → net income → EPS → the multiple. Each scenario
 // defines its variables, a revenue function, and a flow-through-to-operating-income rate.
 var SENS_BASE = {
-  totalRevB: 5.3175, // FY2026E total net revenue, $B (Summit model, snapshot 2026-08-05, frozen)
-  niM:       825.7,  // FY2026E adjusted net income, $M (same snapshot)
+  totalRevB: 5.1042, // FY2026E total net revenue, $B (Summit DCF model, snapshot 2026-10-27, frozen; the headline REV row, as in Results)
+  niM:       840.3,  // FY2026E adjusted net income, $M (same snapshot)
   shares:    1352.0, // diluted shares, M (2Q26 reported, weighted average)
   price:     null,   // live only (Massive via api.liveQuote); nothing seeded, so P/E and implied price wait for it
   taxRate:   0.22    // tax on incremental operating income: SoFi FY2026 EPS guide uses 22% (Q2 2026 call)
@@ -1415,23 +1415,23 @@ var SENS_SCEN = {
     ],
     rev:function(v){ return v.origB * 1000 * v.takePct / 100; },
     eq:function(v, rev){ return '$'+v.origB.toFixed(1)+'B origination &nbsp;×&nbsp; '+v.takePct.toFixed(1)+'% take rate &nbsp;=&nbsp; <b>$'+Math.round(rev).toLocaleString()+'M</b> LPB revenue'; },
-    note:'Base case (FY2026E, Summit model, snapshot 2026-08-05): $22.0B personal-loan platform origination × 5.0% take = about $1,100M LPB revenue, inside $5.32B total net revenue. LPB is capital-light, so incremental LPB revenue flows to operating income and is taxed at 22%.'
+    note:'Base case (FY2026E, Summit DCF model, snapshot 2026-10-27): $22.0B personal-loan platform origination × 5.0% take = about $1,100M LPB revenue, inside $5.10B total net revenue. LPB is capital-light, so incremental LPB revenue flows to operating income and is taxed at 22%.'
   },
   ii: {
     label:'Interest Income', title:'Net interest income — NIM × earning assets', driver:'Net interest income', flow:1.0,
     intro:'The two levers behind net interest income: the average rate SoFi nets on its balance sheet (net interest margin) and the size of its interest-earning assets (the loan book plus cash and investments). Net interest income = earning assets × NIM. It is already net of funding cost, so it flows to operating income income.',
     vars:[
-      { id:'nimPct', label:'Net interest margin (avg rate kept on earning assets)', min:3.0, max:9.0, step:0.05, base:5.98, unit:'%',  dec:2 },
-      { id:'ieaB',   label:'Interest-earning assets (loan book + cash & investments)', min:25, max:90, step:0.5,  base:52.1, unit:'$B', dec:1 }
+      { id:'nimPct', label:'Net interest margin (avg rate kept on earning assets)', min:3.0, max:9.0, step:0.05, base:6.14, unit:'%',  dec:2 },
+      { id:'ieaB',   label:'Interest-earning assets (loan book + cash & investments)', min:25, max:90, step:0.5,  base:54.2, unit:'$B', dec:1 }
     ],
     rev:function(v){ return v.ieaB * 1000 * v.nimPct / 100; },
     eq:function(v, rev){ return '$'+v.ieaB.toFixed(1)+'B earning assets &nbsp;×&nbsp; '+v.nimPct.toFixed(2)+'% NIM &nbsp;=&nbsp; <b>$'+Math.round(rev).toLocaleString()+'M</b> net interest income'; },
-    note:'Base case (FY2026E, Summit model, snapshot 2026-08-05): net interest income of about $3.1B, shown as $52.1B of interest-earning assets × the 5.98% net interest margin SoFi reported in 2Q26 (the model carries no FY2026 earning-asset row, so the asset base is backed out), inside $5.32B total net revenue. The NIM already nets out funding cost, so incremental net interest income flows to operating income and is taxed at 25% (credit provisions on a bigger book are not separately modeled).'
+    note:'Base case (FY2026E, Summit DCF model, snapshot 2026-10-27): net interest income of about $3.3B, shown as $54.2B of interest-earning assets × the 6.14% net interest margin SoFi reported in 3Q26 (the earning-asset base is backed out from the model net interest income), inside $5.10B total net revenue. The NIM already nets out funding cost, so incremental net interest income flows to operating income and is taxed at 25% (credit provisions on a bigger book are not separately modeled).'
   }
 };
 var SENS_ORDER = ['lpb','ii'];
 var _sensScen = 'lpb';
-var SENS_FOOT = 'Single-driver sensitivity: the selected variables move while every other line in the model is held at its FY2026E base (total net revenue $5.32B, adjusted net income $826M, 1,352M diluted shares, 22% tax). Incremental driver revenue flows to operating income income at the stated rate and is taxed; the share count is held fixed. The forward P/E and the implied price need the live price (nothing is seeded): the base multiple is fixed at the first live price and held constant for the implied price. This is a back-of-envelope sensitivity, not a re-solved model. Base values from the Summit model (snapshot 2026-08-05, frozen), the 2Q26 call and 10-Q.';
+var SENS_FOOT = 'Single-driver sensitivity: the selected variables move while every other line in the model is held at its FY2026E base (total net revenue $5.10B, adjusted net income $840M, 1,352M diluted shares, 22% tax). Incremental driver revenue flows to operating income income at the stated rate and is taxed; the share count is held fixed. The forward P/E and the implied price need the live price (nothing is seeded): the base multiple is fixed at the first live price and held constant for the implied price. This is a back-of-envelope sensitivity, not a re-solved model. Base values from the Summit DCF model (snapshot 2026-10-27, frozen), the 2Q26 10-Q (shares) and the 3Q26 call (net interest margin).';
 
 function sensVarsBase(scen){ var v = {}; scen.vars.forEach(function(x){ v[x.id] = x.base; }); return v; }
 
@@ -1639,11 +1639,11 @@ function buildSotpTab(){ requestAnimationFrame(function(){ buildSotpChart(); set
 // twelve months of net income (e.g. standing at 31-Dec-2026 values FY2027). You
 // split those forward earnings into a fee share and an interest share, give each
 // its own P/E, and read off the implied share price. All inputs are typed.
-// Net income by fiscal year ($M), Summit DCF (snapshot 2026-05-13, adj. net income).
-var SOTP_NI = { '2026':825.7, '2027':1095.0, '2028':1515.7, '2029':3116.3 };   // $M adjusted net income, Summit model snapshot 2026-08-05 (frozen)
+// Net income by fiscal year ($M), Summit DCF model (snapshot 2026-10-27, adj. net income).
+var SOTP_NI = { '2026':840.3, '2027':1279.2, '2028':1854.1, '2029':2665.5 };   // $M adjusted net income, Summit DCF model snapshot 2026-10-27 (frozen)
 var SOTP_FYEARS = [2026, 2027, 2028, 2029]; // forward earnings years available to capitalise
 var SOTP_INTRO = 'A forward-earnings sum-of-the-parts. Pick a valuation date — you capitalise the next twelve months of earnings (standing at 31-Dec-2026 values FY2027). Split those forward earnings into a fee share and an interest share, then give each part its own P/E: fee income is capital-light and recurring, so it earns a richer multiple than net interest income. The implied price is the sum of the parts ÷ shares. Type any value — date, the two mix shares (they stay complementary), and the two P/E multiples.';
-var SOTP_NOTE = 'Method: forward net income = next-twelve-months net income from the valuation date (linear blend of the two straddling fiscal years; standing at a year-end gives the next full year). Equity value = (forward NI × fee%) × fee P/E + (forward NI × interest%) × interest P/E; implied price = value ÷ 1,352M shares; blended P/E = fee% × fee P/E + interest% × interest P/E. Net income by year from the Summit model (snapshot 2026-08-05, frozen, adjusted net income): FY2026 $0.83B, FY2027 $1.10B, FY2028 $1.52B, FY2029 $3.12B. The fee/interest split of EARNINGS is your assumption (the model does not report segment net income). Illustrative, not a target price.';
+var SOTP_NOTE = 'Method: forward net income = next-twelve-months net income from the valuation date (linear blend of the two straddling fiscal years; standing at a year-end gives the next full year). Equity value = (forward NI × fee%) × fee P/E + (forward NI × interest%) × interest P/E; implied price = value ÷ 1,352M shares; blended P/E = fee% × fee P/E + interest% × interest P/E. Net income by year from the Summit DCF model (snapshot 2026-10-27, frozen, adjusted net income): FY2026 $0.84B, FY2027 $1.28B, FY2028 $1.85B, FY2029 $2.67B. The fee/interest split of EARNINGS is your assumption (the model does not report segment net income). Illustrative, not a target price.';
 var _sotpChart = null;
 
 function sotpField(id, label, type, attrs, val, unit){

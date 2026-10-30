@@ -4,7 +4,8 @@
 // Summit numbers into the data files (rule 10, frozen not live — SAB, Oct 15 2026).
 //
 // Model: G:\My Drive\Summit\Docs\Research\DCF\Technology - SAB\GOOGL\DCF GOOGL - New.xlsm.
-// Snapshots 2026-07-23 → 2026-08-06 (all three after Q2 - 2026; ingested 2026-10-26).
+// Snapshots 2026-07-23 → 2026-08-06 (all three after Q2 - 2026; ingested 2026-10-26) + 2026-10-29 (after Q3 - 2026;
+// checked 2026-10-30: same 62 labels, no scale or sign jump — see GOOGL.md §1b "Cambios del mapa").
 // Three sources inside the model:
 //  · DEFAULT — company totals. Actuals = 10-K GAAP. Projections ANNUAL ONLY (2026–2029).
 //  · SEGM    — the 10-K revenue-by-type and segment tables, the P&L lines, and the QUARTERLY projections
@@ -64,7 +65,7 @@ export var summitMap = {
     { key: 'services.ads.network', label: 'Google Network', rev: 'SEG6_REV' },
     { key: 'services.subs', label: 'Google subscriptions, platforms, and devices', rev: 'SEG7_REV' },
     { key: 'cloud', label: 'Google Cloud', rev: 'SEG8_REV', opinc: 'SEG2_OPINC',
-      note: '2026 = reported 1Q–2Q + the model\'s 3Q–4Q (the only basis that ties to the model\'s total revenue, like every other 2026 line); the 2026 annual cell is wrong — never read it (SAB, 2026-10-26, EV-RES-DATA)' },
+      note: '2026 = reported quarters + the model\'s remaining ones (1Q–3Q + 4Q from the 2026-10-29 snapshot; the only basis that ties to the model\'s total revenue, like every other 2026 line); the 2026 annual cell is wrong — never read it (SAB, 2026-10-26, EV-RES-DATA)' },
     { key: 'bets', label: 'Other Bets', rev: 'SEG9_REV', opinc: 'SEG3_OPINC' },
     { key: 'hedging', label: 'Hedging gains (losses)', rev: 'SEG10_REV' },
     { key: 'alphabet_level', label: 'Alphabet-level activities', opinc: 'SEG4_OPINC' }
@@ -82,7 +83,7 @@ export var summitMap = {
   guidance: [],                                    // Alphabet gives no numeric guidance
   consensus: { rev: 'REV_BBG_EST', ebitda: 'EBITDA_BBG_EST', earnings: 'EARNINGS_BBG_EST', shares: 'SHARES_BBG_EST',
     doubt: 'REV_BBG_EST looks like revenue NET of TAC: Street revenue is not comparable with GAAP revenue (doubt 7)' },
-  valuationUnreliable: [],                         // quality_flags empty in all 3 snapshots
+  valuationUnreliable: [],                         // quality_flags empty in all 4 snapshots (through 2026-10-29)
   ignore: [
     { mcp: 'SEG1_REV',  why: 'all zero' },
     { mcp: 'SEG5_OPINC', why: 'all zero' },

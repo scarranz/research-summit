@@ -1264,11 +1264,15 @@ Sin gráfica. Cinco secciones (la 5.ª, abajo):
   que sí divulga o que la llamada cuantifica (p. ej. anunciantes de China, verticales de e-commerce y
   gaming), con la misma columna de peso; si nada lo cuantifica, la sección dice eso en una línea y no
   inventa la tabla (regla 7).
-  - **Datos:** `customers.buys = [{name, tk?, what, seg, share?, shareBasis:'filing'|'estimate', src}]`.
-  - **Motor:** `segments.js` **todavía no dibuja esta sección**. La primera empresa que la construya
-    (TSM R1) la agrega al motor en un PR propio de motor y se vuelve la referencia; hasta entonces la
-    unidad TL-CUS se aprueba sin la sección 5 y queda anotada en Bloqueos ("TL-CUS ▸ sección 5 espera el
-    motor").
+  - **Datos:** `customers.buys = [{name, tk?, what, seg, share?, shareBasis:'filing'|'estimate', shareOf?,
+    shareNote?, src}]`. El peso va **tecleado** (`share`, en %; *estimate* salvo que el filing lo dé) o
+    **calculado** de las series anuales del propio dataset (`shareOf: [claves]` sobre
+    `customers.buysBase = {keys, y, label}`, p. ej. las líneas de ingreso del 10-K), así cuadra con el
+    filing sin teclear un número. Sin peso: `shareNote` dice por qué (p. ej. "commitment, not a revenue
+    share"). Opcionales: `buysLede`, `buysNote` (pie). `buys: []` + `buysNone` = la línea única de la regla 7.
+  - **Motor:** `segments.js` la dibuja desde el 30-oct-2026 (PR de motor `feat/segments-customer-buys`;
+    referencia: AMZN, por clase de cliente). Sin `buys` no aparece, así que los perfiles que no la han
+    llenado no cambian.
 - "Named on the record" ya ordena del trimestre más nuevo al más viejo (arreglado).
 
 ---

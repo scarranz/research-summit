@@ -77,8 +77,8 @@
 | EV-EST | Evolution ▸ Estimates | 👀 parcial | 2026-11-02 | | | Solo Street (10 vintages, FY26-28). Falta la mitad Summit: espera snapshot post-2Q26 (≥2 snapshots) |
 | EV-SET | Earnings ▸ Setup | 👀 | 2026-11-02 | | | `tbbb-setup.js` ahora trimestral + anual con estMatrix |
 | EV-POST | Earnings ▸ Post-Results | 👀 | 2026-11-02 | | | 2Q26 agregado (recap + resumen de call, tono objetivo). Watch List: lock-up cerrado, 4 hooks nuevos para 3Q26. Guidance FY26 actualizada con 1H |
-| EV-NOTES | Earnings ▸ Notes | ⬜ | | | | |
-| BL-GEN-1…5 | Bottom Line ▸ General | 👀 parcial | 2026-11-02 | | | Motor Results (`tbbb-bl.js`): Profitability & margins, Expense lines (ventas, admin, admin ex-SBC, SBC) y Operating profit to net income (financieros, FX, impuesto). Debajo: Unit Economics conservado. The bridge hecho (`bbb-bridge.js`: margen bruto → utilidad operativa → EBITDA → EBITDA ex-SBC → después de rentas, por periodo, % o Ps. M). Falta el bloque de SBC dedicado |
+| EV-NOTES | Earnings ▸ Notes | 👀 | 2026-11-02 | | | Sin notas del equipo: semilla **generada con IA** (`js/themes-data/tbbb.js`: 21 hilos, 95 notas de las 11 calls, 3 guías anuales cerradas) y módulo `bbb-notes.js` (por tema / por trimestre, filtros, alta de notas, guarda en `company_theme_record` solo al editar). Reemplaza la fase Watch List, cuyos 12 hilos quedaron absorbidos en la semilla. Dani: reemplazar o ampliar con sus notas |
+| BL-GEN-1…5 | Bottom Line ▸ General | 👀 parcial | 2026-11-02 | | | Motor Results (`tbbb-bl.js`): Profitability & margins, Expense lines (ventas, admin, admin ex-SBC, SBC) y Operating profit to net income (financieros, FX, impuesto). Debajo: Unit Economics conservado. The bridge hecho (`bbb-bridge.js`: margen bruto → utilidad operativa → EBITDA → EBITDA ex-SBC → después de rentas, por periodo, % o Ps. M). Bloque de SBC dedicado hecho (`bbb-sbc.js`: calendario por programa FY2026E-2029E del release 2Q26 y tabla de acciones diluidas a 30-jun-2026) |
 | BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
 | BL-SPLC | Bottom Line ▸ Supply Chain | 🔨 | 2026-11-02 | | | Sin export SPLC; la sub-tab aloja Logistics (cadena, simulador multi-DC, cuándo abrir un DC) |
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | depende de `get-market-history` |
@@ -86,7 +86,7 @@
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⛔ | | | | espera Summit |
 | VA-SUB | Valuation ▸ Submit History | ⛔ | | | | espera Summit |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | 🔨 | 2026-11-02 | | | Matriz SSS × aperturas reubicada tal cual; su base de EBITDA usa el modelo Summit del 22-may (pendiente de refresh) |
-| MG-TEAM / MG-OWN / MG-GOV | Management (3 sub-tabs) | 👀 | 2026-11-02 | | | Executives & Board (Corporate/Regional + CV) · Ownership · Governance & SBC; contenido intacto. MG-TRACK ⬜ sin dato fuente |
+| MG-TEAM / MG-OWN / MG-GOV / MG-TRACK | Management (4 sub-tabs) | 👀 | 2026-11-02 | | | Executives & Board · Ownership · Governance & SBC (calendario SBC actualizado al release 2Q26) · Track Record con 6 líderes y **calificaciones propuestas** (4 Value creator, 2 Mixed/unproven) a confirmar por Dani |
 | MISC-* | Miscellaneous | 👀 | 2026-11-02 | | | Store Tour · Competitive Landscape · BİM Blueprint (intactos) |
 | F-FINAL | Cierre + conciliación B3 | ⬜ | | | | |
 
@@ -199,6 +199,10 @@ Overview (#1-8) intacto. #9-12 (legacy) siguen sin renderizar y sin borrarse del
 - El Overview y varias notas decían que el SBC de 2025 era un cargo "one-time/one-off" ligado al IPO. Los releases lo atribuyen al **Liquidity Event Plan** (7.5M acciones Class C otorgadas en junio 2025, vesting trimestral a 3 años, reconocimiento gradual), con calendario decreciente hasta 2028. Corregido en el Timeline, FY_NOTE, FIN_NOTE y en el texto de Peers; se agregó el hito 2026 (follow-on de mayo, fin del lock-up el 6-ago).
 - Calls en el repo: 11 (se destilaron 4Q23, 1Q24 y 2Q24).
 
+### Guidance (2026-11-02)
+
+- Nueva tabla "guided vs delivered" con las tres líneas guiadas, verificada en los transcripts: FY2024 (380-420 tiendas, ingresos +28% a +32%, SSS "mid-teens" → 484, +30.3%, +13.4%), FY2025 (500-550, +26% a +29%, SSS +11% a +14% → 574, +36.1%, +18.3%), FY2026 (590-630, +29% a +32%, SSS +13% a +16%; 1H: 278, +36.2%, +16.0%/+20.0%). El lede anterior decía que solo se guiaban aperturas (y en 2026 ingresos): corregido; la guía de SSS 2026 (13%-16%) no estaba en el portal.
+
 ## 6. Bloqueos y preguntas abiertas
 
 - ⛔ **Snapshot Summit** (Dani revisa; es lo único que bloquea EV-EST completo, VA-TM, VA-SUB, VA-HIST y el refresh de Sensitivity): lo cableado es 2026-05-22; el consenso ya llega a 2Q26 (2026-09-09). Mientras no haya snapshot con 2Q26, Summit queda como está y marcado con su fecha; no se inventa ni se mezcla. Mismo patrón que Mastercard (overview hecho sin submit).
@@ -228,5 +232,5 @@ Pendiente de la compuerta: Dani elige 3 periodos al azar para comparar contra el
 2. Top Line y Bottom Line al motor (segments.js, márgenes) con datos trimestrales; hoy son las gráficas a medida reubicadas.
 3. Valuation: Historic Multiple (requiere get-market-history desplegada) y tabla de Peers estilo AMZN.
 4. Overview: auditar OV-1 a OV-7 contra §8 (ya estandarizados; falta revisar Key Facts, 2x2 y pie de fuentes con 2Q26 y follow-on).
-5. Notes (EV-NOTES) y Management ▸ Track Record: sin fuente definida, necesitan la decisión de Dani.
+5. Dani: confirmar o cambiar las calificaciones de Track Record y revisar/ampliar la semilla de Notes (generada por IA).
 6. F-FINAL: conciliación del conteo de control (B3) contra el DOM del portal local.

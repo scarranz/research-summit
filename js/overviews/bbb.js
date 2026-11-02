@@ -14,6 +14,7 @@ import { bbbManagement } from './bbb-management.js';
 import { bbbLogistics } from './bbb-logistics.js';
 import { bbbSensitivity } from './bbb-sensitivity.js';
 import { bbbBridge } from './bbb-bridge.js';
+import { bbbNotes } from './bbb-notes.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1460,18 +1461,18 @@ function bPostResultsBody(){
 // The Earnings sub-pane: IR/EDGAR + 3 phases (Setup · Watch List · Post-Results).
 function bEarningsBody(){
   return bIRButton()+
-    '<div class="ce-note">🎯 <b>Earnings</b> — the decision layer, in three phases: <b>Setup</b> (go in ready — what we track and expect) → <b>Watch List</b> (the themes we carry across quarters) → <b>Post-Results</b> (the print scored against what we froze). Setup reads the Bloomberg consensus and the reported actuals; the Watch List carries the open hooks into the next print.</div>'+
+    '<div class="ce-note">🎯 <b>Earnings</b> — the decision layer, in three phases: <b>Setup</b> (go in ready: what we track and expect) → <b>Post-Results</b> (the print and the call) → <b>Notes</b> (the threads we carry across calls). Setup reads the Bloomberg consensus and the reported actuals; the Watch List carries the open hooks into the next print.</div>'+
     '<div class="ce-phtabs">'+
       '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
-      '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>'+
       '<button type="button" class="ce-phtab" data-cep="results">Post-Results</button>'+
+      '<button type="button" class="ce-phtab" data-cep="watch">Notes</button>'+
     '</div>'+
     '<div class="ce-phpane" data-cep="setup">'+
       
       resultsHtml('TBBB_SETUP')+
     '</div>'+
-    '<div class="ce-phpane" data-cep="watch" hidden>'+bWatchBody()+'</div>'+
-    '<div class="ce-phpane" data-cep="results" hidden>'+bPostResultsBody()+'</div>';
+    '<div class="ce-phpane" data-cep="results" hidden>'+bPostResultsBody()+'</div>'+
+    '<div class="ce-phpane" data-cep="watch" hidden>'+bbbNotes.body()+'</div>';
 }
 
 // ── Guidance — 3B guides only what it controls (store openings every year; +revenue growth &
@@ -1485,9 +1486,24 @@ var GD_TRACK = [
 var GD_CARDS = [
   ['Store openings', '590–630', 'net new · +3–10% over the 574 opened in 2025 · 278 opened in 1H26 (123 + 155)'],
   ['Revenue growth', '+29% to +32%', '1Q26 +33%, 2Q26 +38.7% (1H26 +36.2%) — running above the top'],
+  ['Same-store sales', '+13% to +16%', '1Q26 +16.0%, 2Q26 +20.0% — at and above the top'],
   ['Capex / store', '~Ps.5.5M', 'up from ~Ps.3.9M (bigger-store mix) · ~26-month payback'],
   ['Total capex (FY26)', '~Ps.5.2B', 'stores + distribution centers + fleet']
 ];
+// Guide vs delivered on the three guided lines. Guides: 4Q23 call (FY2024), 4Q24 call (FY2025), 4Q25 call (FY2026).
+// Delivered: FY2024 and FY2025 from the 20-F / releases; FY2026 is first-half (1Q26 + 2Q26) and still open.
+var GD_FULL = [
+  { y:'FY2024', rows:[ ['Net new stores','380–420','484','beat'], ['Revenue growth','+28% to +32%','+30.3%','in'], ['Same-store sales','"mid-teens"','+13.4%','na'] ] },
+  { y:'FY2025', rows:[ ['Net new stores','500–550','574','beat'], ['Revenue growth','+26% to +29%','+36.1%','beat'], ['Same-store sales','+11% to +14%','+18.3%','beat'] ] },
+  { y:'FY2026 (1H)', rows:[ ['Net new stores','590–630','278 in 1H (123 + 155)','open'], ['Revenue growth','+29% to +32%','+36.2% in 1H','open'], ['Same-store sales','+13% to +16%','+16.0% 1Q · +20.0% 2Q','open'] ] }
+];
+function bGuideFull(){
+  var tag = { beat:'<span class="gd-res beat">▲ above the top</span>', in:'<span class="gd-res" style="color:#5B7085">● inside the range</span>', na:'<span class="gd-res" style="color:#5B7085">no range given</span>', open:'<span class="gd-res prog">in progress</span>' };
+  return '<table class="ov-table"><thead><tr><th>Year</th><th>Line</th><th>Guided</th><th>Delivered</th><th></th></tr></thead><tbody>'+
+    GD_FULL.map(function(g){ return g.rows.map(function(r, i){
+      return '<tr>'+(i===0?'<td class="ov-td-name" rowspan="'+g.rows.length+'">'+esc(g.y)+'</td>':'')+'<td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td><b>'+esc(r[2])+'</b></td><td>'+tag[r[3]]+'</td></tr>'; }).join(''); }).join('')+
+    '</tbody></table>';
+}
 var GD_NOT = [
   ['Gross margin', 'Priced SKU-by-SKU for volume × peso margin — deliberately volatile, <b>no target</b> (~16%).'],
   ['EBITDA', '"We don\'t drive to an EBITDA" — it is a <b>consequence</b>, not a target.'],
@@ -1506,10 +1522,11 @@ function bGuidanceBody(){
   }).join('');
   var cards = GD_CARDS.map(function(c){ return '<div class="gd-card"><div class="gd-k">'+esc(c[0])+'</div><div class="gd-v">'+esc(c[1])+'</div><div class="gd-d">'+esc(c[2])+'</div></div>'; }).join('');
   var not = GD_NOT.map(function(n){ return '<div class="gd-not-row"><span class="gd-nochip">'+n[0]+'</span><span class="gd-not-d">'+n[1]+'</span></div>'; }).join('');
-  return '<p class="ov-lede" style="margin-top:0">3B guides <b>only what it controls</b> — store openings (every year) plus, for 2026, revenue growth and per-store capex. It deliberately does <b>not</b> guide margins, EBITDA or SG&amp;A. And it has <b>beaten its store-opening guide every year since the IPO.</b></p>'+
+  return '<p class="ov-lede" style="margin-top:0">3B guides <b>what it controls</b>: net new stores, revenue growth and same-store sales every year, plus capex and unit economics. It deliberately does <b>not</b> guide margins, EBITDA or SG&amp;A. It <b>beat its store-opening guide in 2024 and 2025</b>, and 2025 revenue growth and same-store sales landed above the top of their ranges.</p>'+
     '<div class="ov-sec-h">Store-opening guidance vs delivered</div>'+
     '<div class="gd-track">'+track+'</div>'+
     '<div class="gd-scale"><span>0</span><span>350</span><span>700 stores</span></div>'+
+    '<div class="ov-sec-h" style="margin-top:20px">Guide vs delivered — every guided line</div>'+bGuideFull()+
     '<div class="ov-sec-h" style="margin-top:20px">Current guidance — FY2026</div>'+
     '<div class="gd-cards">'+cards+'</div>'+
     '<div class="ov-sec-h" style="margin-top:20px">What management does NOT guide</div>'+
@@ -1675,12 +1692,12 @@ function bEarningsInit(root){
     pane.querySelectorAll('.ce-phtab').forEach(function(b){ b.classList.toggle('active', b === btn); });
     pane.querySelectorAll('.ce-phpane').forEach(function(p){ p.hidden = (p.getAttribute('data-cep') !== key); });
     if(key === 'setup') bBuildSetupChart(pane);
-    if(key === 'watch') bWireWatch(pane);
+    if(key === 'watch') bbbNotes.init(pane, _co);
     if(key === 'results') bWireSummary(pane);
   }; });
   var act = pane.querySelector('.ce-phtab.active'), akey = act ? act.getAttribute('data-cep') : 'setup';
   if(akey === 'setup') bBuildSetupChart(pane);
-  if(akey === 'watch') bMountWL(pane);
+  if(akey === 'watch') bbbNotes.init(pane, _co);
   if(akey === 'results') bWireSummary(pane);
   bWireSummary(pane);   // wire the summary buttons up-front too (the pane exists even while hidden)
 }

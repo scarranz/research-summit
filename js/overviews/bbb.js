@@ -46,7 +46,7 @@ var KPIS = [
   { l:'Employees',         v:'29,202',   d:'FY2025',      dir:'muted' },
 ];
 var AS_OF = 'Figures are in Mexican pesos (Ps.) unless noted. Headline metrics are for the fiscal year ended December 31, 2025 (FY2025), per the company\'s annual report on Form 20-F.';
-var FY_NOTE = 'FY2025: total revenue Ps.78.2B (+36%) · gross profit Ps.12.6B (16.2% margin) · 825M transactions (+23%) · average ticket Ps.94.9 (+11%). The company reported a net loss of Ps.2.84B (vs. a Ps.0.33B profit in FY2024), driven primarily by a one-time, non-cash share-based compensation charge of ~Ps.2.93B tied to RSUs granted under its Liquidity Event Share Plan, plus an FX translation loss and strategic investment in new regions.';
+var FY_NOTE = 'FY2025: total revenue Ps.78.2B (+36%) · gross profit Ps.12.6B (16.2% margin) · 825M transactions (+23%) · average ticket Ps.94.9 (+11%). The company reported a net loss of Ps.2.84B (vs. a Ps.0.33B profit in FY2024), driven primarily by a non-cash share-based compensation charge of ~Ps.2.93B from the Liquidity Event Plan (vesting over three years, so it steps down through 2028), plus an FX translation loss and strategic investment in new regions.';
 
 var HOW_MONEY = [
   'Sells a limited assortment (~<b>850–900 SKUs</b>) of everyday groceries at the lowest sustainable price. Revenue is overwhelmingly retail merchandise sales, plus a tiny stream from recyclables.',
@@ -94,7 +94,7 @@ var FINANCIALS = [
   ['Operating profit / (loss)','Ps.1.33B (2.3%)', '(Ps.0.68B) (-0.9%)'],
   ['Net profit / (loss)',      'Ps.0.33B',        '(Ps.2.84B)'],
 ];
-var FIN_NOTE = 'The FY2025 operating and net loss is driven by a one-time, non-cash share-based-compensation charge (~Ps.2.93B) recognized on RSUs granted under the Liquidity Event Share Plan, an FX translation loss on US-dollar IPO proceeds, and investment in new regions — not by a deterioration of the core store economics (revenue +36%, gross margin ~flat at 16.2%).';
+var FIN_NOTE = 'The FY2025 operating and net loss is driven by a non-cash share-based-compensation charge (recognized over a three-year vesting schedule, so it steps down through 2028) (~Ps.2.93B) recognized on RSUs granted under the Liquidity Event Share Plan, an FX translation loss on US-dollar IPO proceeds, and investment in new regions — not by a deterioration of the core store economics (revenue +36%, gross margin ~flat at 16.2%).';
 
 // The negative-working-capital / efficiency engine.
 var ENGINE = [
@@ -149,7 +149,7 @@ var LEADERSHIP = [
   ['Diego Apalategui', 'Director of Sales & Operations — joined in December 2004; earlier helped scale retailer EKI to 250 stores.'],
 ];
 
-var SOURCES = 'Sources: BBB Foods Inc. (NYSE: TBBB) FY2025 annual report on Form 20-F (year ended December 31, 2025) — Business Overview and Operating & Financial Review. All figures in Mexican pesos (Ps.) unless stated; the FY2025 net loss reflects a one-time, non-cash share-based-compensation charge. Peer descriptions summarize public information.';
+var SOURCES = 'Sources: BBB Foods Inc. (NYSE: TBBB) FY2025 annual report on Form 20-F (year ended December 31, 2025) — Business Overview and Operating & Financial Review. All figures in Mexican pesos (Ps.) unless stated; the FY2025 net loss reflects non-cash share-based compensation. Peer descriptions summarize public information.';
 
 // ─── Same Store Sales (SSS) — quarterly, TBBB vs. ANTAD ───────────────────────
 // Replicates the "Same Store Sales Growth vs. ANTAD" chart in the earnings decks.
@@ -396,7 +396,7 @@ function wireProducts(root){
 // trailing P/E (peT:null) and drops out of that view.
 var B_PEERS = [
   { tk:'TBBB',     n:'Tiendas 3B', peT:null, peF:40, evT:22,  evF:16,  gt:36, gf:28, mc:4.8, hl:true,
-    why:'The hard-discount pioneer and the growth outlier here — no trailing P/E (FY2025 net loss from a one-off SBC charge); read the forward number.' },
+    why:'The hard-discount pioneer and the growth outlier here — no trailing P/E (FY2025 net loss from non-cash SBC); read the forward number.' },
   { tk:'WALMEX',   n:'Walmex',     peT:23,   peF:21, evT:14,  evF:13,  gt:8,  gf:8,  mc:57,
     logo:'https://logo.clearbit.com/walmartmexico.com.mx',
     why:'Mexico\'s largest retailer and owner of Bodega Aurrerá — 3B\'s closest big-box value rival. Far slower growth at a premium multiple.' },
@@ -537,8 +537,13 @@ var STD_TL = [
   ]],
   ['2025', 'Ends the year with <b>3,346 stores, 20 distribution centers and 29,202 employees</b> — opening a new store roughly every 15 hours.', [
     'Revenue grew <b>+36%</b> to Ps.78.2B, with gross margin roughly flat at ~16.2%.',
-    'Reported a <b>net loss of ~Ps.2.84B</b> — but driven by a one-off, <b>non-cash share-based-compensation charge</b> (~Ps.2.93B) tied to IPO-era RSUs, plus an FX translation loss.',
-    'Core store economics did not deteriorate: the loss is an accounting artifact of the IPO, not an operating one.',
+    'Reported a <b>net loss of ~Ps.2.84B</b>, driven by a <b>non-cash share-based-compensation charge</b> (~Ps.2.93B) from the Liquidity Event Plan (7.5M Class C shares granted in June 2025, vesting quarterly over three years), plus lease interest and an FX translation loss.',
+    'EBITDA excluding that charge (and a Ps.230M receivable write-off) grew <b>+30% to Ps.4.4B</b>. The SBC schedule steps down through 2028.',
+  ]],
+  ['2026', 'Completes an <b>equity follow-on (May)</b> and sees the <b>IPO lock-up expire on Aug 6</b>; ends 2Q26 with <b>3,624 stores and 21 distribution centers</b>.', [
+    'The May follow-on raised about <b>Ps.1.49B of primary proceeds</b>, held mostly in short-term deposits; the net loss widened on SBC.',
+    'On Aug 6 the lock-up on Class C shares expired and all Class C converted one-to-one into Class A.',
+    '2Q26 revenue grew <b>+38.7% to Ps.26.0B</b> on <b>+20.0% same-store sales</b>; first-half operating cash flow rose 119% to Ps.4.3B.',
   ]],
 ];
 function stdTimeline(){

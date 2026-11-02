@@ -13,6 +13,7 @@ import { bbbBim } from './bbb-bim.js';
 import { bbbManagement } from './bbb-management.js';
 import { bbbLogistics } from './bbb-logistics.js';
 import { bbbSensitivity } from './bbb-sensitivity.js';
+import { bbbBridge } from './bbb-bridge.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1826,7 +1827,7 @@ function ddHtml(c){
       '<button type="button" class="dd-subtab active" data-dds="blgen">General</button>'+
       '<button type="button" class="dd-subtab" data-dds="blsc">Supply Chain</button>'+
     '</div>'+
-    '<div class="dd-subpane" data-dds="blgen">'+resultsHtml('TBBB_BL')+ueBody(c)+'</div>'+
+    '<div class="dd-subpane" data-dds="blgen">'+bbbBridge.body()+resultsHtml('TBBB_BL')+ueBody(c)+'</div>'+
     '<div class="dd-subpane" data-dds="blsc" hidden>'+bbbLogistics.body(c)+'</div>'+
   '</div>';
   h += '<div class="dd-pane" data-dd="evolution" hidden>'+bEvolutionBody(c)+'</div>';
@@ -1870,7 +1871,7 @@ function ddHtml(c){
 function ddBuildSub(root, key){
   if (key === 'tlgen')          requestAnimationFrame(function(){ var w = root.querySelector('.dd-subpane[data-dds="tlgen"] .rs-wrap'); if(w) initResults(w, 'TBBB_TL'); buildStoresChart(); setupStoreSlider(); buildVsChart(); buildSSSChart(); });
   else if (key === 'tlseg')     requestAnimationFrame(buildMixChart);
-  else if (key === 'blgen')     requestAnimationFrame(function(){ var w = root.querySelector('.dd-subpane[data-dds="blgen"] .rs-wrap'); if(w) initResults(w, 'TBBB_BL'); buildUeChart(); });
+  else if (key === 'blgen')     requestAnimationFrame(function(){ var w = root.querySelector('.dd-subpane[data-dds="blgen"] .rs-wrap'); if(w) initResults(w, 'TBBB_BL'); bbbBridge.init(root); buildUeChart(); });
   else if (key === 'blsc')      requestAnimationFrame(function(){ bbbLogistics.init(root); });
   else if (key === 'landscape') requestAnimationFrame(function(){ bbbLandscape.init(root); });
   else if (key === 'bim')       requestAnimationFrame(function(){ bbbBim.init(root); });

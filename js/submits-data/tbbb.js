@@ -2,14 +2,14 @@
 // Valuation ▸ Submit History (js/submits.js).
 //
 // FROZEN ON PURPOSE, NOT LIVE (playbook rule 10, §20b). Read on 2026-11-02 from the local model, DCF TBBB.xlsm, tab
-// "Projection History" (the five saved submits, IDs 1-5, each with its valuation block), by
+// "Projection History" (the four submits, IDs 1-4, each with its valuation block; the block dated 2026-11-02 is not a submit and is ignored), by
 // scripts/consensus/tbbb/build_tbbb_summit.py. Refresh = re-read after each new submit and APPEND it; a submit is a
 // vintage, never overwrite one.
 //
 // Fields per submit: d (submit date) · after (the quarter the workbook labels the submit with) · px (share price on the
 // submit day, US$, as the workbook recorded it) · wacc · coe · val.ev = the EV/EBITDA valuation (multiple, target year,
 // 1-year price target, fair value, upside = fair value ÷ px − 1). The model is built in Mexican pesos and the workbook
-// records price and targets in US$ (NYSE), converting at its own rate (Ps.17.0-18.6 per US$ across the five submits).
+// records price and targets in US$ (NYSE), converting at its own rate (Ps.17.0-18.6 per US$ across the four submits).
 // model: the projections each submit was built on, per fiscal year, Ps. millions (sh = diluted shares, millions):
 // rev = REV, ebitda = EBITDA (the model's own line, the one the EV/EBITDA leg multiplies), ni = EARNINGS.
 //
@@ -22,8 +22,6 @@
 //    revenue unchanged), so the model rows are not comparable across that line, and the Aug 13 target (30x on 2028) is not
 //    like-for-like with the May 8 target (25x on 2027). It is a lease-adjusted EBITDA that ties to neither reported nor
 //    company-adjusted EBITDA.
-//  - The Nov 2 submit is the day of the 3Q26 print and was saved before the 3Q26 actuals were loaded (its 3Q26 column is the
-//    pre-print estimate), though the workbook labels it Q3 - 2026.
 //  - Diluted shares in the model are 115.0M (139.6M in the first submit) against 162.5M diluted in the 3Q26 release and a
 //    fully diluted count of 165.4M; the target is not per these shares, it is the workbook's own per-share figure.
 export var tbbbSubmits = {
@@ -57,13 +55,6 @@ export var tbbbSubmits = {
         2027: { rev:141324.66, ebitda:3838.52, ni:1385.92, sh:115.0229 },
         2028: { rev:184993.98, ebitda:5507.57, ni:2914.45, sh:115.0229 } },
       val: {
-        ev: { method: 'EV / EBITDA', kase: 'Base', mult: 30, year: 2028, basis: 'Forward', pt: 62.8548259, fv: 58.85475373, upside: 0.192236, flags: [] } } },
-    { d: '2026-11-02', after: '3Q26', px: 56.99, wacc: 0.08291646, coe: 0.10391358,
-      model: {
-        2026: { rev:107159.75, ebitda:3113.83, ni:-408.1, sh:115.0229 },
-        2027: { rev:142385.3, ebitda:3857.37, ni:1432.18, sh:115.0229 },
-        2028: { rev:186382.36, ebitda:5559.31, ni:2982.31, sh:115.0229 } },
-      val: {
-        ev: { method: 'EV / EBITDA', kase: 'Base', mult: 30, year: 2028, basis: 'Forward', pt: 58.13432477, fv: 56.35184974, upside: -0.011198, flags: [] } } }
+        ev: { method: 'EV / EBITDA', kase: 'Base', mult: 30, year: 2028, basis: 'Forward', pt: 62.8548259, fv: 58.85475373, upside: 0.192236, flags: [] } } }
   ]
 };

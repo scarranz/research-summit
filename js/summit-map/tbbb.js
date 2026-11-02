@@ -3,7 +3,7 @@
 // Not imported by the portal: it is the dictionary read when freezing Summit numbers into the data files (rule 10).
 //
 // Model: local workbook DCF TBBB.xlsm (tab Projection History, read 2026-11-02; the Summit MCP was not reachable in this
-// session) · Mexican pesos · millions · 5 saved submits (2025-12-12, 2026-03-13, 2026-05-08, 2026-08-13, 2026-11-02) · 56 labels.
+// session) · Mexican pesos · millions · 4 submits (2025-12-12, 2026-03-13, 2026-05-08, 2026-08-13; the 2026-11-02 block in the tab is not a submit) · 56 labels.
 // The tab stacks the five submits in blocks of 56 rows (newest first); the quarterly columns of a reported quarter hold the
 // model's frozen pre-print projection, not the actual. Actuals live in the same workbook (Actuals History) and the Aug 13 block
 // of Projection History also carries a pasted "actual" copy of them.
@@ -26,7 +26,7 @@ export var summitMap = {
                 doubt: 'projected at 115.0M (139.6M in the first submit) against 162.5M diluted in the 3Q26 release and a 165.4M fully diluted count: EPS built from it is not comparable' },
     dna:      { mcp: 'DNA',        base: 'IFRS', unit: 'mxn_m', agg: 'sum', label: 'D&A', note: 'annual' },
     capex:    { mcp: 'CAPEX',      base: 'IFRS', unit: 'mxn_m', agg: 'sum', label: 'Capex',
-                doubt: 'the Nov 2 submit annual row holds per-store ratios (1.4, -1.8, -2.4) instead of pesos; the Aug 13 submit row (-4,546 for 2026) is fine. Quarterly rows are populated but mix frozen and new values' },
+                doubt: 'the unconfirmed Nov 2 block holds per-store ratios (1.4, -1.8, -2.4) instead of pesos; the Aug 13 submit row (-4,546 for 2026) is in pesos. Quarterly rows are populated but mix frozen and new values' },
     fcf:      { mcp: 'FCF',        base: 'model', unit: 'mxn_m', agg: 'sum', label: 'Free cash flow', note: 'quarterly only (annual is 0)' },
     cfo:      { mcp: 'CFO',        base: 'IFRS', unit: 'mxn_m', agg: 'sum', label: 'Operating cash flow', note: 'actuals only; projections are 0' },
     sbc:      { mcp: 'SBC',        base: 'company schedule', unit: 'mxn_m', agg: 'sum', label: 'Stock-based compensation', note: 'annual 2026-2029 (2,391 / 882 / 216 / 50) and quarterly to 4Q27; tracks the company graded-vesting schedule (2,376 / 879 / 215 / 50 in the 3Q26 release)' },
@@ -65,7 +65,7 @@ export var summitMap = {
   valuation: {
     method: 'EV / EBITDA only (the DNA, REV and OP_INCOME rows carry it). The P/E block is #VALUE! / #SPILL! in every submit (-US$78 in the first): unusable.',
     case: 'the workbook labels the same EV/EBITDA valuation Base on the D&A row and Bull on the REV row of the same submit: shown as Base',
-    targetYear: '2027 at 25x in the first three submits, 2028 at 30x in the last two',
-    doubt: 'PT / FV discount factors (1.144, 1.060, 1.050, 1.068, 1.032) vary with WACC and timing; with one method per submit the PT-to-FV consistency test cannot be run'
+    targetYear: '2027 at 25x in the first three submits, 2028 at 30x in the last',
+    doubt: 'PT / FV discount factors (1.144, 1.060, 1.050, 1.068) vary with WACC and timing; with one method per submit the PT-to-FV consistency test cannot be run'
   }
 };

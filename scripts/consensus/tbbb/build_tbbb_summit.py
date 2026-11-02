@@ -2,15 +2,14 @@
 #   scripts/consensus/out/summit_tbbb.json         every vintage, annual + quarterly, plus each submit's valuation block
 #   scripts/consensus/out/estmatrix_summit_tbbb.js the SUMMIT half of estMatrix (spliced by apply_matrix.py)
 # Usage:  py -I build_tbbb_summit.py "<path to DCF TBBB.xlsm>"
-# The tab holds five saved submits stacked in blocks of 56 rows (newest first, ID 5 -> ID 1); the header row carries the
+# The tab holds five blocks of 56 rows (newest first, ID 5 -> ID 1); the analyst confirmed the Nov 2 2026 block (ID 5) is not a submit, so only IDs 1-4 are read; the header row carries the
 # annual (2018-2045) and quarterly (Q1 - 2022 ...) columns and the valuation columns (Snapshot Date ... Price Target ...).
 # Facts that shaped the filters (checked Nov 2 2026):
 #  - Quarterly cells for quarters ALREADY reported are the model's frozen pre-print projections (SoFi-style), not actuals.
 #  - ID 1 (Dec 12 2025): its quarterly rows from Q1 - 2026 on are broken for P&L lines (negative gross profit, EBITDA of
 #    -20,000), so only its stores / SSS / DCs quarters are kept; its annual rows are fine.
-#  - ID 5 (Nov 2 2026) was saved BEFORE the 3Q26 actuals were loaded: its 3Q26 column is the model's pre-print estimate
-#    (gross profit 4,318 vs 4,743 reported), so for the estimates matrix its last actual is 2Q26.
-#  - ID 5 annual CAPEX is a per-store ratio (1.4, -1.8) rather than Ps. millions -> capex is not carried.
+#  - The latest submit is ID 4 (Aug 13 2026, after 2Q26): its 3Q26 and 4Q26 columns are the model's pre-print estimates.
+#  - Annual CAPEX is not carried (the unconfirmed Nov 2 block holds per-store ratios there; the Aug 13 row is in pesos).
 #  - The model's EBITDA / ADJ_EBITDA rows are model reconstructions after lease cost (they do not tie to reported or
 #    adjusted EBITDA) -> not carried as comparable lines; used only as the EV/EBITDA basis in the submit history.
 #  - P/E valuation blocks are #VALUE! / #SPILL! (and -78 in ID 1): not usable, not carried.
@@ -20,15 +19,15 @@ XLSM = sys.argv[1]
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.join(HERE, '..', 'out'); os.makedirs(OUT, exist_ok=True)
 wb = openpyxl.load_workbook(XLSM, data_only=True, read_only=True)
 rows = list(wb['Projection History'].iter_rows(values_only=True)); h = rows[0]
-START = {5: 2, 4: 72, 3: 128, 2: 184, 1: 240}
+START = {4: 72, 3: 128, 2: 184, 1: 240}   # the block at rows 2-57 (ID 5, 2026-11-02) is NOT a submit (the analyst did not submit on Nov 2): ignored
 CODES = [rows[i][1] for i in range(1, 57)]
 ycol = {h[c]: c for c in range(8, 36) if isinstance(h[c], int)}
 qcol = {h[c]: c for c in range(37, 120) if isinstance(h[c], str)}
 mc = {n: h.index(n) for n in ['Snapshot Date', 'After Quarter', 'Case', 'Multiple Type', 'Multiple', 'Year ', 'Price Target', 'Fair Value', 'Current Price', 'WACC', 'COE', 'COD', 'Equity to Total Capital', 'Beta', 'Avg Market Return', 'RFR', 'Currency FX']}
 VINT = {  # n -> (snapshot date, last actual quarter in the model at the time, last actual year)
   1: ('2025-12-12', '3Q25', '2024'), 2: ('2026-03-13', '4Q25', '2025'), 3: ('2026-05-08', '1Q26', '2025'),
-  4: ('2026-08-13', '2Q26', '2025'), 5: ('2026-11-02', '2Q26', '2025')}
-LABEL = {1: 'Dec 12, 2025', 2: 'Mar 13, 2026', 3: 'May 8, 2026', 4: 'Aug 13, 2026', 5: 'Nov 2, 2026'}
+  4: ('2026-08-13', '2Q26', '2025')}
+LABEL = {1: 'Dec 12, 2025', 2: 'Mar 13, 2026', 3: 'May 8, 2026', 4: 'Aug 13, 2026'}
 # dataset key -> (code in the tab, scale, decimals, views)
 MET = {'rev': ('REV', 1, 0, 'y'), 'gp': ('GROSS_PROFIT', 1, 0, 'qy'), 'sales': ('SALES_EXP', 1, 0, 'qy'), 'admin': ('ADMIN_EXP', 1, 0, 'qy'),
        'sbc': ('SBC', 1, 0, 'qy'), 'netinc': ('EARNINGS', 1, 0, 'qy'), 'stores': ('EYS', 1, 0, 'qy'), 'sss': ('SSS', 100, 1, 'qy'), 'dcs': ('DC', 1, 0, 'qy')}

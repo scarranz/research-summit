@@ -1643,7 +1643,7 @@ function bWatchBody(){
   var tagbar = '<div class="wl2-tagbar"><span class="wl2-bark">Filter by theme</span>'+
     '<button type="button" class="wl2-tag active" data-wtag="">All</button>'+
     tags.map(function(t){ return '<button type="button" class="wl2-tag" data-wtag="'+esc(t)+'">#'+esc(t)+'</button>'; }).join('')+'</div>';
-  var note = '<div class="ce-note">🎯 <b>Watch List</b> — the themes we carry across quarters. The <b>live</b> list is what we hunt going into the next print (2Q26), seeded from the 1Q26 call; <b>closed</b> hooks stay as the record. Tap <b>the thread ›</b> to see how a theme evolved. (Authored from docs/calls/TBBB.md.)</div>';
+  var note = '<div class="ce-note">🎯 <b>Watch List</b> — the themes we carry across quarters. The <b>live</b> list is what we hunt going into the next print (3Q26), seeded from the 2Q26 call; <b>closed</b> hooks stay as the record. Tap <b>the thread ›</b> to see how a theme evolved. (Authored from docs/calls/TBBB.md.)</div>';
   function grp(title, sub, rows){ return rows.length ? '<div class="wl2-grouph">'+esc(title)+' <span>'+esc(sub)+'</span></div>'+rows.map(bWatchCard).join('') : ''; }
   return note + tagbar + grp('Live — going into 3Q26', live.length+' open hooks', live) + grp('Closed — the record', 'scored against results', closed);
 }
@@ -1817,7 +1817,7 @@ function ddHtml(c){
       '<button type="button" class="dd-subtab active" data-dds="tlgen">General</button>'+
       '<button type="button" class="dd-subtab" data-dds="tlseg">Segments</button>'+
     '</div>'+
-    '<div class="dd-subpane" data-dds="tlgen">'+growthBody()+sssBody()+'</div>'+
+    '<div class="dd-subpane" data-dds="tlgen">'+resultsHtml('TBBB_TL')+growthBody()+sssBody()+'</div>'+
     '<div class="dd-subpane" data-dds="tlseg" hidden>'+mixBody(c)+'</div>'+
   '</div>';
   // Bottom Line — General (unit economics, working capital) · Supply Chain (logistics, DC network)
@@ -1826,7 +1826,7 @@ function ddHtml(c){
       '<button type="button" class="dd-subtab active" data-dds="blgen">General</button>'+
       '<button type="button" class="dd-subtab" data-dds="blsc">Supply Chain</button>'+
     '</div>'+
-    '<div class="dd-subpane" data-dds="blgen">'+ueBody(c)+'</div>'+
+    '<div class="dd-subpane" data-dds="blgen">'+resultsHtml('TBBB_BL')+ueBody(c)+'</div>'+
     '<div class="dd-subpane" data-dds="blsc" hidden>'+bbbLogistics.body(c)+'</div>'+
   '</div>';
   h += '<div class="dd-pane" data-dd="evolution" hidden>'+bEvolutionBody(c)+'</div>';
@@ -1868,9 +1868,9 @@ function ddHtml(c){
 
 // Lazily build a sub-pane's charts/interactions when it becomes visible.
 function ddBuildSub(root, key){
-  if (key === 'tlgen')          requestAnimationFrame(function(){ buildStoresChart(); setupStoreSlider(); buildVsChart(); buildSSSChart(); });
+  if (key === 'tlgen')          requestAnimationFrame(function(){ var w = root.querySelector('.dd-subpane[data-dds="tlgen"] .rs-wrap'); if(w) initResults(w, 'TBBB_TL'); buildStoresChart(); setupStoreSlider(); buildVsChart(); buildSSSChart(); });
   else if (key === 'tlseg')     requestAnimationFrame(buildMixChart);
-  else if (key === 'blgen')     requestAnimationFrame(buildUeChart);
+  else if (key === 'blgen')     requestAnimationFrame(function(){ var w = root.querySelector('.dd-subpane[data-dds="blgen"] .rs-wrap'); if(w) initResults(w, 'TBBB_BL'); buildUeChart(); });
   else if (key === 'blsc')      requestAnimationFrame(function(){ bbbLogistics.init(root); });
   else if (key === 'landscape') requestAnimationFrame(function(){ bbbLandscape.init(root); });
   else if (key === 'bim')       requestAnimationFrame(function(){ bbbBim.init(root); });

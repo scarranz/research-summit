@@ -67,7 +67,7 @@
 | OV-1…OV-7, OV-F | Overview (7 bloques + pie) | ⬜ | | | | ya existen estandarizados; se auditan vs §8, no se reconstruyen |
 | EV-RES-DATA | Dataset de Results (números) | 👀 | 2026-11-02 | | 3bd843e | Trimestral 1Q24-2Q26 + anual 2021-2025; consenso BBG (10 snapshots) vía estMatrix; Summit solo años forward (snapshot 2026-05-22). Cuadre en §8 |
 | EV-RES | Evolution ▸ Results | 👀 | 2026-11-02 | | | Renderiza en el harness: surprise vs Street, Road to the print, márgenes |
-| TL-GEN | Top Line ▸ General | 🔨 | 2026-11-02 | | | Hoy: gráficas a medida (tiendas, vs OXXO, SSS vs ANTAD) reubicadas; falta pasarlas al motor segments.js |
+| TL-GEN | Top Line ▸ General | 👀 | 2026-11-02 | | | Motor Results (`tbbb-tl.js`): ingresos + tiendas, altas, DCs y SSS, trimestral y anual; debajo, las gráficas a medida conservadas (tiendas, vs OXXO, SSS vs ANTAD). El SSS vs ANTAD no tiene 2Q26 (el release solo dice brecha >20 pts) |
 | TL-SEG | Top Line ▸ Segments | 🔨 | 2026-11-02 | | | Hoy: Product Mix a medida (private label vs branded + milk) reubicado |
 | TL-OTH | Top Line ▸ Other | ⬜ | | | | |
 | TL-CUS | Top Line ▸ Customers | ⏭️ propuesto | | | | retailer, sin SPLC (confirmar en F0) |
@@ -75,7 +75,7 @@
 | EV-SET | Earnings ▸ Setup | 👀 | 2026-11-02 | | | `tbbb-setup.js` ahora trimestral + anual con estMatrix |
 | EV-POST | Earnings ▸ Post-Results | 👀 | 2026-11-02 | | | 2Q26 agregado (recap + resumen de call, tono objetivo). Watch List: lock-up cerrado, 4 hooks nuevos para 3Q26. Guidance FY26 actualizada con 1H |
 | EV-NOTES | Earnings ▸ Notes | ⬜ | | | | |
-| BL-GEN-1…5 | Bottom Line ▸ General (5 bloques) | 🔨 | 2026-11-02 | | | Hoy: Unit Economics reubicado (vintage, costo por tienda, capital de trabajo). Faltan los 5 bloques canónicos con datos trimestrales |
+| BL-GEN-1…5 | Bottom Line ▸ General | 👀 parcial | 2026-11-02 | | | Motor Results (`tbbb-bl.js`): Profitability & margins, Expense lines (ventas, admin, admin ex-SBC, SBC) y Operating profit to net income (financieros, FX, impuesto). Debajo: Unit Economics conservado. Falta The bridge (margen bruto a EBITDA en cascada) y el bloque de SBC dedicado |
 | BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
 | BL-SPLC | Bottom Line ▸ Supply Chain | 🔨 | 2026-11-02 | | | Sin export SPLC; la sub-tab aloja Logistics (cadena, simulador multi-DC, cuándo abrir un DC) |
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | depende de `get-market-history` |
@@ -183,6 +183,12 @@ Fuente: lectura de `js/overviews/bbb*.js`, `js/results-data/tbbb*.js`, `docs/cal
 | Miscellaneous | Store Tour · Competitive Landscape · BİM Blueprint | #18 · #22-25 · #26-29 |
 
 Overview (#1-8) intacto. #9-12 (legacy) siguen sin renderizar y sin borrarse del código; decidir en F-FINAL si se fusionan con el Overview estándar. Conteo: 45 piezas originales, 45 con destino (las 2 retiradas estaban vacías; aprobación pendiente).
+
+### Actualizaciones de 2Q26 en piezas heredadas (2026-11-02)
+
+- Supply Chain: 21 DCs y 3,624 tiendas (antes 20 y 3,469, de 1Q26). Competitive Landscape: la cifra de 3B pasa a ~3,624; las de Neto/BARA/OXXO siguen con la fecha original de sus fuentes, así que esa tabla mezcla fechas (se anota en el pie en F-FINAL).
+- Watch List: encabezado y nota pasan a 3Q26.
+- Overview: Key Facts, 2×2 y bloques 4-7 se revisaron; son estándar y con fecha FY2025, sin cambios necesarios.
 
 ## 6. Bloqueos y preguntas abiertas
 

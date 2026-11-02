@@ -193,6 +193,24 @@ table.pvT{min-width:600px}
 .met{border:1px solid var(--line);border-radius:12px;padding:11px 13px}
 .met span{display:block;font-size:12px;color:var(--muted)}.met b{display:block;font-size:18px;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums}
 .met b.gain{color:var(--gain)}.met b.loss{color:var(--loss)}
+.retG{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.retC{border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.retC .rl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;display:block;margin-bottom:5px}
+.retC b{display:block;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.retC b .u{font-size:13px;font-weight:400;color:var(--muted)}
+.retC b.gain{color:var(--gain)}.retC b.loss{color:var(--loss)}.retC b.acc{color:var(--line-acc)}
+.retC small{display:block;font-size:11.5px;color:var(--muted2);margin-top:4px;line-height:1.4}
+.retC .rdiff{display:inline-block;font-size:11px;padding:2px 7px;border-radius:99px;margin-top:6px;font-weight:500}
+.rdiff.ahead{background:rgba(111,207,155,.15);color:var(--gain)}.rdiff.behind{background:rgba(240,138,126,.15);color:var(--loss)}
+.dDepSec{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+.dDepT{width:100%;font-size:13px;border-collapse:collapse}
+.dDepT th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;text-align:left;padding:0 0 10px;border-bottom:1px solid var(--line)}
+.dDepT th:not(:first-child){text-align:right}
+.dDepT td{padding:10px 0;border-bottom:1px solid var(--line2);vertical-align:middle;font-size:13px}
+.dDepT td:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+.dDepT tr.dTot td{border-bottom:0;padding-top:14px;font-weight:600;border-top:1px solid var(--line)}
+.dDepT td.dDate{color:var(--muted2);width:110px}
+.dDepNote{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5;padding:10px 12px;background:var(--ps-bg);border-radius:8px;border:1px solid var(--ps-bd)}
 @media (max-width:700px){
   table.pvT{min-width:0;display:block}
   .pvT thead{display:none}.pvT tbody,.pvT tfoot{display:block}
@@ -1416,8 +1434,18 @@ pvKpis(); pvFilters(); pvTable(); pvSide(); pvDetail();
 /* ---------- public ---------- */
 const PB=[
  {id:'act',n:'Active management',role:'Selecting the managers and funds that run active strategies.',col:'var(--c1)',items:[
-   {n:'Summit Management',v:21384215.47,type:'Public fund, active strategy',held:'J.P. Morgan',ctry:'United States',d:'d',units:15200,pp:1052.40,unit:'units'},
-   {n:'Pershing Square',v:13907562.18,type:'Public fund, active strategy',held:'UBS',ctry:'Canada',d:'d',units:640000,pp:18.10,unit:'units'},
+   {n:'Summit Management',v:21384215.47,type:'Public fund, active strategy',held:'J.P. Morgan',ctry:'United States',d:'d',units:15200,pp:1052.40,unit:'units',
+    irr:16.3,twr:19.8,bench:13.8,
+    deposits:[
+      {date:'Jan 2020',amount:6300000,nav:900.00,units:7000},
+      {date:'Aug 2022',amount:9676000,nav:1180.00,units:8200},
+    ]},
+   {n:'Pershing Square',v:13907562.18,type:'Public fund, active strategy',held:'UBS',ctry:'Canada',d:'d',units:640000,pp:18.10,unit:'units',
+    irr:8.7,twr:11.2,bench:13.8,
+    deposits:[
+      {date:'Jun 2020',amount:4864000,nav:16.00,units:304000},
+      {date:'Mar 2023',amount:6720000,nav:20.00,units:336000},
+    ]},
    {n:'Millennium Management',v:17461038.92,type:'Hedge fund, multi-strategy',held:'J.P. Morgan',ctry:'United States',d:'d',units:9800,pp:1495.00,unit:'units'},
    {n:'Individual Portfolio',sub:'11 individual stocks',v:7420893.00,type:'Individual stocks',held:'J.P. Morgan, Merrill Lynch and UBS',ctry:'United States and Europe',d:'a',about:'A portfolio of individual stocks selected directly, held across three banks. See the portfolio below for each holding.',tags:['Individual stocks','Direct selection']}]},
  {id:'pas',n:'Passive',role:'Execution and cost: the whole market at the lowest cost.',col:'var(--c2)',items:[
@@ -1446,14 +1474,64 @@ function pbHover(it){
 }
 function pbSelect(it){pbSel=it; document.querySelectorAll('.pbR').forEach(b=>b.classList.toggle('sel',b.dataset.id===it.id)); pbHover(null); pbDetail();}
 function pbDetail(){
-  const r=pbSel, el_=$('pbDetail'), d=DEC[r.d], isFund=!!r.units;
-  const cost=isFund?r.units*r.pp:0, gain=r.v-cost, tr=isFund?r.v/cost-1:0, price=isFund?r.v/r.units:0, mx=Math.max(cost,r.v), cl=gain>=0?'gain':'loss';
+  const r=pbSel, el_=$('pbDetail'), isFund=!!r.units;
+  const cost=isFund?(r.deposits?r.deposits.reduce((a,x)=>a+x.amount,0):r.units*r.pp):0;
+  const gain=r.v-cost, tr=isFund?r.v/cost-1:0, price=isFund?r.v/r.units:0, mx=Math.max(cost,r.v), cl=gain>=0?'gain':'loss';
   el_.style.animation='none'; el_.offsetHeight; el_.style.animation='';
+  const avgCost=isFund?cost/r.units:0;
   const left=`<div class="facts"><div class="fact"><span>Strategy</span><b>${r.layer.n}</b></div><div class="fact"><span>Type</span><b>${r.type}</b></div><div class="fact"><span>Held at</span><b>${r.held}</b></div><div class="fact"><span>Country</span><b>${r.ctry}</b></div>${isFund?`<div class="fact"><span>Holding</span><b>${r.units.toLocaleString('en-US')} ${r.unit}</b></div>`:''}</div>`;
-  const right=isFund?`<h3 class="dh3">Performance</h3><div class="vbars"><div class="vb"><span>Purchase</span><span class="t"><span class="f" data-w="${(cost/mx*100).toFixed(1)}" style="background:var(--c2)"></span></span><b>${fmt(cost)}</b></div><div class="vb"><span>Current</span><span class="t"><span class="f" data-w="${(r.v/mx*100).toFixed(1)}" style="background:var(--line-acc)"></span></span><b>${fmt(r.v)}</b></div></div>
-      <div class="mets"><div class="met"><span>Purchase price</span><b>${'$'+r.pp.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</b></div><div class="met"><span>Current price</span><b>${'$'+price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</b></div><div class="met"><span>Return</span><b class="${cl}">${(gain>=0?'+':'\u2212')+Math.abs(tr*100).toFixed(1)}%</b></div></div>`
-    :`<h3 class="dh3">About</h3><p class="about">${r.about}</p><div class="tags">${r.tags.map(t=>`<span>${t}</span>`).join('')}</div>`;
-  el_.innerHTML=`<div class="dhead"><div><h2>${r.n}</h2><div class="sub">${r.layer.n} \u00b7 ${r.type}</div></div><div class="big"><b>${fmt(r.v)}</b><span>${(r.v/pbAll*100).toFixed(1)}% of public \u00b7 ${(r.v/PB_NET*100).toFixed(1)}% of net worth</span></div></div><div class="pvGrid"><div><h3 class="dh3">Position</h3>${left}</div><div>${right}</div></div>`;
+  let right, depot='';
+  if(isFund){
+    const hasRets=r.irr!=null;
+    if(hasRets){
+      const irrCl=r.irr>=r.bench?'gain':'loss', twrCl=r.twr>=r.bench?'acc':'loss';
+      const irrDiff=r.irr-r.bench, twrDiff=r.twr-r.bench;
+      right=`<h3 class="dh3">Returns <em>Illustrative \u00b7 Annualized</em></h3>
+      <div class="retG">
+        <div class="retC">
+          <span class="rl">Your IRR</span>
+          <b class="${irrCl}">${r.irr>=0?'+':''}${r.irr.toFixed(1)}<span class="u">% p.a.</span></b>
+          <small>Money-weighted \u2014 reflects when you invested</small>
+          <span class="rdiff ${irrDiff>=0?'ahead':'behind'}">${irrDiff>=0?'+':''}${irrDiff.toFixed(1)} vs S&amp;P 500</span>
+        </div>
+        <div class="retC">
+          <span class="rl">Fund TWR</span>
+          <b class="${twrCl}">${r.twr>=0?'+':''}${r.twr.toFixed(1)}<span class="u">% p.a.</span></b>
+          <small>Time-weighted \u2014 how the fund itself performed</small>
+          <span class="rdiff ${twrDiff>=0?'ahead':'behind'}">${twrDiff>=0?'+':''}${twrDiff.toFixed(1)} vs S&amp;P 500</span>
+        </div>
+        <div class="retC">
+          <span class="rl">S&amp;P 500</span>
+          <b>${r.bench>=0?'+':''}${r.bench.toFixed(1)}<span class="u">% p.a.</span></b>
+          <small>Benchmark \u00b7 Same period</small>
+        </div>
+      </div>
+      <div class="vbars" style="margin-bottom:12px"><div class="vb"><span>Invested</span><span class="t"><span class="f" data-w="${(cost/mx*100).toFixed(1)}" style="background:var(--c2)"></span></span><b>${fmt(cost)}</b></div><div class="vb"><span>Current</span><span class="t"><span class="f" data-w="${(r.v/mx*100).toFixed(1)}" style="background:var(--line-acc)"></span></span><b>${fmt(r.v)}</b></div></div>
+      <div class="mets">
+        <div class="met"><span>NAV today</span><b>$${price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</b></div>
+        <div class="met"><span>Avg. cost</span><b>$${avgCost.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</b></div>
+        <div class="met"><span>Total gain</span><b class="${cl}">${gain>=0?'+':'\u2212'}${fmt(Math.abs(gain))}</b></div>
+      </div>`;
+    } else {
+      right=`<h3 class="dh3">Performance</h3><div class="vbars"><div class="vb"><span>Invested</span><span class="t"><span class="f" data-w="${(cost/mx*100).toFixed(1)}" style="background:var(--c2)"></span></span><b>${fmt(cost)}</b></div><div class="vb"><span>Current</span><span class="t"><span class="f" data-w="${(r.v/mx*100).toFixed(1)}" style="background:var(--line-acc)"></span></span><b>${fmt(r.v)}</b></div></div>
+      <div class="mets"><div class="met"><span>Avg. cost</span><b>$${avgCost.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</b></div><div class="met"><span>Current NAV</span><b>$${price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</b></div><div class="met"><span>Return</span><b class="${cl}">${(gain>=0?'+':'\u2212')+Math.abs(tr*100).toFixed(1)}%</b></div></div>`;
+    }
+    if(r.deposits&&r.deposits.length){
+      const totalAmt=r.deposits.reduce((a,x)=>a+x.amount,0), totalUnits=r.deposits.reduce((a,x)=>a+x.units,0);
+      const avgNav=totalAmt/totalUnits;
+      const navRet=(price/avgNav-1)*100, navRetCl=navRet>=0?'gain':'loss';
+      depot=`<div class="dDepSec"><h3 class="dh3">Deposit history <em>Illustrative</em></h3>
+        <table class="dDepT"><thead><tr><th>Date</th><th>Amount</th><th>NAV at entry</th><th>Units acquired</th></tr></thead>
+        <tbody>${r.deposits.map(dep=>`<tr><td class="dDate">${dep.date}</td><td>${fmt(dep.amount)}</td><td>$${dep.nav.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td>${dep.units.toLocaleString('en-US')}</td></tr>`).join('')}
+        <tr class="dTot"><td>Total</td><td>${fmt(totalAmt)}</td><td>avg $${avgNav.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td>${totalUnits.toLocaleString('en-US')} ${r.unit}</td></tr>
+        </tbody></table>
+        <p class="dDepNote"><b>Why IRR \u2260 TWR:</b> The NAV-only return is <span class="${navRetCl}">${navRet>=0?'+':'\u2212'}${Math.abs(navRet).toFixed(1)}%</span> total ($${price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} today vs avg entry $${avgNav.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}). But your IRR also reflects <em>how much</em> was invested at each price \u2014 a larger deposit at a higher NAV pulls your personal return down even if the fund has done well.</p>
+      </div>`;
+    }
+  } else {
+    right=`<h3 class="dh3">About</h3><p class="about">${r.about}</p><div class="tags">${r.tags.map(t=>`<span>${t}</span>`).join('')}</div>`;
+  }
+  el_.innerHTML=`<div class="dhead"><div><h2>${r.n}</h2><div class="sub">${r.layer.n} \u00b7 ${r.type}</div></div><div class="big"><b>${fmt(r.v)}</b><span>${(r.v/pbAll*100).toFixed(1)}% of public \u00b7 ${(r.v/PB_NET*100).toFixed(1)}% of net worth</span></div></div><div class="pvGrid"><div><h3 class="dh3">Position</h3>${left}</div><div>${right}</div></div>${depot}`;
   requestAnimationFrame(()=>requestAnimationFrame(()=>el_.querySelectorAll('.vb .f').forEach(b=>b.style.width=b.dataset.w+'%')));
 }
 pbSelect(pbItems[0]);

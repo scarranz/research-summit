@@ -5,9 +5,9 @@ The calls repository for TBBB per docs/EARNINGS_CONVENTIONS.md. Newest call on t
 distilled record that feeds the Earnings tab (`js/overviews/bbb.js`) and the Post-Results "Call
 summary". Reporting is IFRS, fiscal year ends Dec 31; figures in Mexican pesos (Ps.) unless noted.
 
-**Transcripts on file (8), all distilled below (newest first):** 2026-08-13 (2Q26) · 2026-05-07 (1Q26) · 2026-03-12
+**Transcripts on file (11), all distilled below (newest first):** 2026-08-13 (2Q26) · 2026-05-07 (1Q26) · 2026-03-12
 (FY2025/4Q25) · 2025-11-20 (3Q25) · 2025-08-12 (2Q25) · 2025-05-08 (1Q25) · 2025-04-10 (FY2024/4Q24)
-· 2024-11-26 (3Q24). Management is unchanged across all seven: **Anthony Hatoum** (Founder, Chairman
+· 2024-11-26 (3Q24) · 2024-08-22 (2Q24) · 2024-05-23 (1Q24) · 2024-04-26 (4Q23, the first call after the IPO). Management is unchanged across all seven: **Anthony Hatoum** (Founder, Chairman
 & CEO) and **Eduardo Pizzuto** (CFO); 2Q25 added Amparo Martínez (General Counsel) and Joaquín Ley (IR).
 
 **The through-line, seven calls in one paragraph:** revenue has compounded **+30–38% every quarter**
@@ -290,3 +290,76 @@ dollarized input costs pass through over the same window on peso weakness. Unit-
 
 Sources: BBB Foods quarterly earnings releases & call transcripts (2024-11-26 → 2026-05-07, in
 `Desktop/Developer/TBBB/`); FY2024 & FY2025 20-F filings. Figures per management's prepared remarks.
+
+---
+
+## 2Q24 — call Aug 22, 2024
+
+Participants: **Anthony Hatoum** (CEO), **Eduardo Pizzuto** (CFO). Investors/analysts only.
+
+### The print
+
+- **Revenue Ps.13.6B (+27.5% YoY)**; **same-store sales +10.7%**, a slowdown management attributed to Easter falling in
+  1Q24, lower inflation, government payments moved into Q1 (June elections), election-period alcohol restrictions and weather.
+- **Stores: +121 net new → 2,503** (vs 2,288 at YE2023; 215 net YTD) and **one new DC**; guide of **380-420 openings** kept.
+- **EBITDA Ps.689M (+43.2%)**, margin **5.1% (+56bps)**; admin expenses +45.8% (three new regions, talent in IT, purchasing, HR
+  and finance, public-company costs, share-based payment recognition). **Gross margin 16.7%**, on better supplier terms from scale.
+- **1H operating cash flow Ps.1.256B (+25%)**; net cash ~Ps.1.2B plus Ps.2.8B of short-term deposits; **adjusted negative working
+  capital 10.2% of revenue**. Guidance kept: **revenue +28% to +32%**.
+
+### The call, the record
+
+- **Gross margin is not a "new normal":** scale improves purchasing terms across private label and branded, then each SKU is priced
+  for dollar margin and sales (continuous elasticity testing); the tendency is to pass benefits on to the customer; margin will fluctuate.
+- **Openings are lumpy** (about 40% of the quarter's openings came in its last month); no budging from the guide. Two DCs opened YTD
+  with ~100 and ~150 stores at launch ("stretching": a new DC starts with stores already attached).
+- **Fresh and meat tests are encouraging** but are not part of any projection; nothing launches without a highly attractive return.
+- **Peso depreciation** passes through to costs over roughly **12 to 18 months** (dollarized inputs, labor and energy aside).
+- **Cash overseas:** roughly US$150M of US deposits plus ~US$50M of cash abroad (the CFO confirmed "close to 170" in total); assume it stays abroad for the rest of 2024,
+  so FX gains and losses persist. No working-capital improvement assumed for the balance of the year.
+- **Store returns:** each new vintage performs better (brand awareness, value proposition), so returns on a store should improve absent a capex shock.
+- Q&A included Morgan Stanley, JPMorgan, Bank of America, BTG Pactual, Yaksha Capital, a family office and Summit Management (private vs branded mix in margin: multi-year, not quarterly).
+
+Sources: BBB Foods 2Q24 earnings call transcript (2024-08-22), in `G:\My Drive\Summit\Docs\Extras\Team\DAA\Ad hoc info search\TBBB Calls.txt`.
+
+---
+
+## 1Q24 — call May 23, 2024
+
+Participants: **Anthony Hatoum** (CEO), **Eduardo Pizzuto** (CFO).
+
+### The print
+
+- **Revenue Ps.12.7B (+30.9% YoY)**; **same-store sales +14.8%**; **94 net new stores → 2,382** (+27% vs 1Q23 openings, a record first quarter).
+- **EBITDA Ps.626M (+57.9%)**, margin **4.9%** (from 4.1%); excluding Ps.70M of IPO expenses, **Ps.695M and 5.5%**. **Gross margin +80bps** on scale and supplier terms, mostly passed to customers.
+- **Operating cash flow +36.4%**; **net cash Ps.4.3B** after the IPO; adjusted negative working capital Ps.4.8B (vs Ps.4.6B at YE2023).
+- Guidance kept: **380-420 openings**, **revenue +28% to +32%**; white space "no less than 12,000" stores (the figure later raised to ~14,000).
+
+### The call, the record
+
+- Operating costs as a % of sales keep trending down; minimum-wage increases helped the target customer; the virtuous circle (open stores, raise value for money, attract customers, grow sales per store, scale, repeat) is the framing.
+- Store growth CAGR of 15%+ over 2019-2023 is the base for the runway argument.
+
+Sources: BBB Foods 1Q24 earnings call transcript (2024-05-23).
+
+---
+
+## 4Q23 / FY2023 — call Apr 26, 2024 (the first call after the Feb 2024 IPO)
+
+Participants: **Anthony Hatoum** (CEO), **Eduardo Pizzuto** (CFO).
+
+### The print
+
+- **Revenue Ps.44B (+35.3%)** in 2023 and **+30.8%** in Q4; of the 35%, 29 points from stores opened before 2022 and 7 from the 2023 openings.
+- **Record 396 net new stores in 2023 (153 in Q4, 39% of the year) → 2,288 (+21%)**; store-opening CAGR 20%+ over 2019-2023.
+- **Gross margin +86bps** (scale and supplier terms). **EBITDA +44.3%** in 2023 and +32.9% in Q4; one-offs in Q4: **Ps.80M Hurricane Otis** and **Ps.14M pre-IPO** expenses (adjusted Q4 EBITDA margins 5.3% and 4.5% excluding each).
+- **Operating cash flow Ps.3.1B (+48%)**; negative working capital ~10% of revenue (Ps.1.4B generated in 2023); the US-dollar debt fully repaid post-IPO.
+- **Private label 43% to 47% of sales** in 2023.
+- **2024 guidance:** **380-420 openings**, **revenue +28% to +32%**, **same-store sales mid-teens**.
+
+### The call, the record
+
+- **Vintage chart:** every vintage still grows, none has flattened, each newer vintage starts higher and ramps steeper (stores break even faster), driven by a better value proposition and a stronger brand.
+- Gross margin is a product-by-product dynamic and may fluctuate; the 2024 openings are expected to be spread more evenly than 2023's fourth-quarter concentration.
+
+Sources: BBB Foods 4Q23 earnings call transcript (2024-04-26).

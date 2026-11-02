@@ -72,11 +72,11 @@ function blockFlow(){
       'No single supplier is more than <b>3.6%</b> of purchases; top 5 = <b>16.5%</b>',
       'Assortment bought centrally; each region adds up to <b>10 local SKUs</b>']) +
     '<div class="lg-flow-arrow"><span>inbound</span>→</div>'+
-    flowStage(icoDC(DC1), 'Distribution center', '21 DCs · 13,050 m² avg', [
+    flowStage(icoDC(DC1), 'Distribution center', '25 DCs · 13,050 m² avg', [
       'Orders processed <b>overnight</b>, picked at dawn',
       '<b>Cross-docking</b> + floor storage for fast-movers — minimal holding']) +
     '<div class="lg-flow-arrow"><span>next-day · own fleet</span>→</div>'+
-    flowStage(icoStore(), 'Store', '3,624 stores', [
+    flowStage(icoStore(), 'Store', '3,765 stores', [
       '<b>~850–900 SKUs</b>, identical planogram',
       'Restocked <b>2×/week to daily</b> by 3B’s own trucks']) +
   '</div>';

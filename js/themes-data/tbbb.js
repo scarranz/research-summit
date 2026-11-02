@@ -30,12 +30,13 @@ export var TBBB_THEMES = [
       { q:'Q3 2025', items:['131 net new stores (3,162 total); same-store sales <b>+17.9%</b>, the highest of the series; two new DCs (18).'] },
       { q:'Q4 2025', items:['<b>Reconciled:</b> <b>574 net new stores</b> (guide 500-550), same-store sales <b>+18.3%</b> (guide 11-14%, "stratospheric"), revenue <b>+36%</b> to Ps.78B (guide 26-29%).'] },
     ]},
-  { seg:'Growth engine', theme:'FY2026 guide: 590-630 openings, SSS +13% to +16%, revenue +29% to +32%', st:{ k:'promise', since:'Q4 2025', last:'Q2 2026' },
+  { seg:'Growth engine', theme:'FY2026 guide: 590-630 openings, SSS +13% to +16%, revenue +29% to +32%', st:{ k:'promise', since:'Q4 2025', last:'Q3 2026' },
     why:'The live guide; first-half prints are running above the top of the same-store-sales and revenue ranges.',
     updates:[
       { q:'Q4 2025', items:['Guide for 2026: <b>same-store sales +13% to +16%</b>, <b>590-630 net new stores</b>, <b>revenue +29% to +32%</b>. Total capex about <b>Ps.5.2B</b> (stores, distribution centers, trucks and equipment).'] },
       { q:'Q1 2026', items:['<b>123 net new stores</b> (3,469 total); same-store sales <b>+16.0%</b>; revenue <b>+33%</b> to Ps.23.0B.'] },
       { q:'Q2 2026', items:['<b>155 net new stores</b> (3,624; 278 in 1H). Same-store sales <b>+20.0%</b>, revenue <b>+38.7%</b> (1H +36.2%). Three new DCs expected in Q3; more possible in the second half.'] },
+      { q:'Q3 2026', items:['<b>141 net new stores</b> (3,765; 419 in 9M, so 171 to 211 are needed in Q4 to land in the 590-630 guide). Same-store sales <b>+20.5%</b>; revenue <b>+40.3%</b> to Ps.28.4B (9M +37.7%). Release only; the call is on Nov 3.'] },
     ]},
   { seg:'Growth engine', theme:'Runway: how many stores Mexico can hold', st:{ k:'trend', since:'Q4 2023', last:'Q3 2025' },
     why:'The size of the white space frames the length of the growth story; management\'s figure has moved up with each year of results.',
@@ -46,17 +47,18 @@ export var TBBB_THEMES = [
       { q:'Q3 2025', items:['White space reiterated at no less than <b>14,000</b> stores; about half the base opened in the last three years.'] },
       { q:'Q2 2026', items:['"No constraints on real estate"; the runway in Mexico is "tremendous".'] },
     ]},
-  { seg:'Growth engine', theme:'Regions and distribution centers (the "stretching" model)', st:{ k:'watch', since:'Q2 2024', last:'Q2 2026' },
+  { seg:'Growth engine', theme:'Regions and distribution centers (the "stretching" model)', st:{ k:'watch', since:'Q2 2024', last:'Q3 2026' },
     why:'Each new DC starts with stores already attached; new regions carry full cost before full revenue, which drives the consolidated leverage optics.',
     updates:[
       { q:'Q2 2024', items:['Two DCs opened YTD, serving about <b>100</b> and <b>150</b> stores at launch; a new DC does not start from zero.'] },
       { q:'Q1 2025', items:['Hiring for <b>four new regions in 2025</b>. "We pay the full cost of new stores in regions before we see the full revenues."'] },
       { q:'Q4 2025', items:['<b>Four new DCs in 2025</b> (two in Q4); 20 at year end.'] },
       { q:'Q2 2026', items:['<b>21 DCs</b> at quarter end; two more opened in the following weeks and a third is planned within Q3. Management flagged possible pressure on logistics expense from the three openings.'] },
+      { q:'Q3 2026', items:['<b>Four DCs opened in the quarter</b>, 25 in total at Sep 30 (21 at Jun 30). Gross margin still expanded 52bps, with transportation cost lower as a share of revenue. Release only.'] },
     ]},
 
   // ── Same-store sales & unit economics ─────────────────────────────────────────────────────────────────────────
-  { seg:'Same-store sales & unit economics', theme:'Same-store sales: volume and mix, not price', st:{ k:'trend', since:'Q1 2024', last:'Q2 2026' },
+  { seg:'Same-store sales & unit economics', theme:'Same-store sales: volume and mix, not price', st:{ k:'trend', since:'Q1 2024', last:'Q3 2026' },
     why:'The model rides on double-digit same-store sales that outrun ANTAD and are led by volume and mix.',
     updates:[
       { q:'Q1 2024', items:['<b>+14.8%</b>.'] },
@@ -69,6 +71,7 @@ export var TBBB_THEMES = [
       { q:'Q4 2025', items:['<b>+16.6%</b> in Q4, <b>+18.3%</b> for the year; ANTAD gap above 15 points. For stores of 5+ years, transactions per store +2.5% and ticket +11% (more items per ticket and mix).'] },
       { q:'Q1 2026', items:['<b>+16.0%</b>: about <b>two-thirds volume</b>, one-third price, the price piece driven by mix; internal inflation very low; gap above 14 points.'] },
       { q:'Q2 2026', items:['<b>+20.0%</b> on a 17.7% comparison, again about two-thirds volume; gap above <b>20 points</b>. Selling one more item per customer moves the number materially.'] },
+      { q:'Q3 2026', items:['<b>+20.5%</b> on a 17.9% comparison, above the 20.0% of Q2; the release attributes most of the growth to stores open more than a year. Release only.'] },
     ]},
   { seg:'Same-store sales & unit economics', theme:'Vintages: new stores open higher and ramp faster', st:{ k:'trend', since:'Q4 2023', last:'Q2 2026' },
     why:'The annual vintage ("spaghetti") chart is the evidence for returns improving store generation by store generation.',
@@ -101,7 +104,7 @@ export var TBBB_THEMES = [
     ]},
 
   // ── Margins & costs ──────────────────────────────────────────────────────────────────────────────────────────
-  { seg:'Margins & costs', theme:'Gross margin: dollar margin over percent', st:{ k:'trend', since:'Q4 2023', last:'Q2 2026' },
+  { seg:'Margins & costs', theme:'Gross margin: dollar margin over percent', st:{ k:'trend', since:'Q4 2023', last:'Q3 2026' },
     why:'Priced SKU by SKU for dollar margin and volume, so the percentage fluctuates with no target.',
     updates:[
       { q:'Q4 2023', items:['Gross margin <b>+86bps</b> in 2023 (about 16% in Q4) on scale and supplier terms; "a very dynamic number", expected to fluctuate.'] },
@@ -110,8 +113,9 @@ export var TBBB_THEMES = [
       { q:'Q3 2024', items:['<b>15.8%</b>, flat YoY and down from 16.7%; no gross-margin target; price changes and dollarized costs pass through with a lag.'] },
       { q:'Q1 2026', items:['Expansion on mix and supplier efficiencies, flagged as quarter-to-quarter volatile.'] },
       { q:'Q2 2026', items:['<b>16.8% (+54bps)</b>: stronger commercial margin and lower transportation cost. Percent margin can plateau as more is passed to price; the measure that matters is <b>dollar gross margin</b>. No seasonality, only volatility.'] },
+      { q:'Q3 2026', items:['<b>16.7% (+52bps)</b>: stronger commercial margin and lower transportation cost as a share of revenue, despite four DC openings. Release only.'] },
     ]},
-  { seg:'Margins & costs', theme:'Expense leverage against the opening pace', st:{ k:'trend', since:'Q3 2024', last:'Q2 2026' },
+  { seg:'Margins & costs', theme:'Expense leverage against the opening pace', st:{ k:'trend', since:'Q3 2024', last:'Q3 2026' },
     why:'Unit-level leverage is masked at the consolidated level while openings accelerate.',
     updates:[
       { q:'Q3 2024', items:['SG&A <b>13.4%</b> of revenue (-51bps YoY).'] },
@@ -120,8 +124,9 @@ export var TBBB_THEMES = [
       { q:'Q3 2025', items:['Older vintages\' EBITDA margins are described as close to other hard discounters; sales expenses 10.2% (from 10.1%).'] },
       { q:'Q1 2026', items:['Labor fell as a % of revenue despite the minimum-wage increase, on hours-worked efficiency; sales expenses <b>10.3%</b>. G&A about stable this year as DCs and HQ talent are added.'] },
       { q:'Q2 2026', items:['Sales expenses <b>10.0% (-56bps)</b>; admin ex-SBC <b>3.1% (+57bps)</b>. Management: about <b>3% of revenue</b> is a fair assumption for the second half; spend is talent densification (purchasing, logistics, systems), and leverage should come through selling expense.'] },
+      { q:'Q3 2026', items:['Sales expenses <b>9.8% (-36bps)</b>; admin ex-SBC <b>2.6% (-6bps)</b>, Ps.733M (+37%) on talent and new regions, below the roughly 3% pointed to for the second half. Release only.'] },
     ]},
-  { seg:'Margins & costs', theme:'Reported vs adjusted EBITDA (the SBC wedge)', st:{ k:'watch', since:'Q2 2024', last:'Q2 2026' },
+  { seg:'Margins & costs', theme:'Reported vs adjusted EBITDA (the SBC wedge)', st:{ k:'watch', since:'Q2 2024', last:'Q3 2026' },
     why:'Non-cash share-based pay under IFRS pushes reported EBITDA far below the adjusted figure management leads with.',
     updates:[
       { q:'Q2 2024', items:['Admin expenses <b>+45.8%</b> on three new regions, IT, purchasing, HR and finance talent, public-company costs and share-based payment recognition.'] },
@@ -130,14 +135,16 @@ export var TBBB_THEMES = [
       { q:'Q4 2025', items:['Q4 reported EBITDA <b>Ps.79M</b>; excluding SBC and a <b>Ps.230M</b> receivable write-off, <b>+23% to Ps.1.2B</b>. FY adjusted EBITDA <b>+30% to Ps.4.4B</b>.'] },
       { q:'Q1 2026', items:['Reported <b>Ps.554M</b> vs adjusted <b>Ps.1.3B (+39%)</b>; the SBC schedule declines through 2029.'] },
       { q:'Q2 2026', items:['SBC <b>Ps.615M</b>; reported EBITDA <b>Ps.960M</b>, adjusted <b>Ps.1,575M (+43.8%)</b>, margin 6.1% (6.2% before a Ps.37M follow-on cost).'] },
+      { q:'Q3 2026', items:['SBC <b>Ps.550M</b> (Ps.1,574M in 3Q25); reported EBITDA <b>Ps.1,327M</b>, adjusted <b>Ps.1,877M (+60.5%, 6.6% margin)</b>. Company schedule: 4Q26E Ps.489M, FY2026E Ps.2,376M, FY2027E Ps.879M. Release only.'] },
     ]},
-  { seg:'Margins & costs', theme:'Rent under IFRS 16 (EBITDA is before rent)', st:{ k:'watch', since:'Q2 2025', last:'Q2 2026' },
+  { seg:'Margins & costs', theme:'Rent under IFRS 16 (EBITDA is before rent)', st:{ k:'watch', since:'Q2 2025', last:'Q3 2026' },
     why:'Leases are capitalized, so reported EBITDA excludes rent; the company discloses building lease payments each quarter.',
     updates:[
       { q:'Q2 2025', items:['Release disclosure: capitalized lease payments for buildings <b>Ps.439M</b> (vs Ps.338M); IFRS 16 lease expense is not an operating expense.'] },
       { q:'Q4 2025', items:['Building lease payments <b>Ps.533M</b> in Q4 and <b>Ps.1,833M</b> for 2025 (Ps.1,389M in 2024).'] },
       { q:'Q1 2026', items:['Building lease payments <b>Ps.534M</b> (vs Ps.397M).'] },
       { q:'Q2 2026', items:['Building lease payments <b>Ps.593M</b> (vs Ps.439M); financial costs rose 27% on lease interest as stores, DCs and equipment grew.'] },
+      { q:'Q3 2026', items:['Building lease payments <b>Ps.638M</b> (Ps.463M in 3Q25); financial costs <b>+45.7%</b> on lease interest. Adjusted EBITDA less building leases is about Ps.1.24B (4.4% of revenue, derived). Release only.'] },
     ]},
   { seg:'Margins & costs', theme:'Peso and dollarized input costs', st:{ k:'watch', since:'Q2 2024', last:'Q3 2024' },
     why:'Most manufacturing inputs are dollarized; a lasting peso move reaches prices with a lag.',
@@ -147,7 +154,7 @@ export var TBBB_THEMES = [
     ]},
 
   // ── Cash & capital ────────────────────────────────────────────────────────────────────────────────────────────
-  { seg:'Cash & capital', theme:'Negative working capital funds the growth', st:{ k:'trend', since:'Q4 2023', last:'Q2 2026' },
+  { seg:'Cash & capital', theme:'Negative working capital funds the growth', st:{ k:'trend', since:'Q4 2023', last:'Q3 2026' },
     why:'Suppliers fund inventory, so operating cash flow pays for organic expansion.',
     updates:[
       { q:'Q4 2023', items:['Negative working capital about <b>10% of revenue</b>; Ps.1.4B generated in 2023; inventory turned about three times before suppliers are paid. 2023 operating cash flow <b>Ps.3.1B (+48%)</b>.'] },
@@ -160,8 +167,9 @@ export var TBBB_THEMES = [
       { q:'Q4 2025', items:['FY operating cash flow <b>Ps.4.7B (+~25%)</b>.'] },
       { q:'Q1 2026', items:['<b>Ps.9.4B</b> (~11.3% of LTM revenue); operating cash flow Ps.2.0B (+64%).'] },
       { q:'Q2 2026', items:['<b>Ps.10.2B</b> (~11.2%); 1H operating cash flow <b>Ps.4.3B (+119%)</b>. New categories must be high-rotation, so no material working-capital impact; inventory days stay below 20.'] },
+      { q:'Q3 2026', items:['9M operating cash flow <b>Ps.7.1B (+128%)</b>; suppliers added Ps.1.5B in the quarter against Ps.2.7B of 9M purchases of property and equipment. Release only.'] },
     ]},
-  { seg:'Cash & capital', theme:'Capital structure: IPO, follow-ons, lock-up', st:{ k:'watch', since:'Q4 2023', last:'Q2 2026' },
+  { seg:'Cash & capital', theme:'Capital structure: IPO, follow-ons, lock-up', st:{ k:'watch', since:'Q4 2023', last:'Q3 2026' },
     why:'Share supply and cash raised since the IPO shape the float and the funding of the build-out.',
     updates:[
       { q:'Q4 2023', items:['Post-IPO the US-dollar debt was fully repaid.'] },
@@ -169,6 +177,7 @@ export var TBBB_THEMES = [
       { q:'Q3 2024', items:['Dividends: "way too early" to discuss; management notes significant cash will eventually be generated.'] },
       { q:'Q1 2025', items:['One-time follow-on (secondary) expense of <b>Ps.54M</b> in administrative expenses.'] },
       { q:'Q2 2026', items:['<b>May 2026 equity follow-on</b>: about Ps.1.49B of primary proceeds, held mostly in short-term deposits; Ps.37M one-time cash cost. Fully diluted count about <b>162.0M</b> (illustrative at US$35).'] },
+      { q:'Q3 2026', items:['Cash Ps.3.1B and short-term deposits Ps.4.2B (US$237M) at Sep 30; illustrative fully diluted count <b>165.4M shares</b> at US$53, with all Class C converted into Class A. Release only.'] },
     ]},
   { seg:'Cash & capital', theme:'The Aug 6 2026 lock-up expiry', st:{ k:'promise', since:'Q1 2026', last:'Q2 2026', until:'Q2 2026' },
     why:'A dated technical: the IPO lock-up on Class C shares.',

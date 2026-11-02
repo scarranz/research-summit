@@ -130,7 +130,7 @@ function treeHTML(root, showNames){
 var OWN_CLASSES = [
   ['Class A', '62.6M', '1', 'Listed on the NYSE — the public float'],
   ['Class B', '5.2M', '15', '100% founder (Bolton Partners) — super-voting'],
-  ['Class C', '50.0M', '1', 'Pre-IPO holders — convert to Class A on sale'],
+  ['Class C', '50.0M', '1', 'Pre-IPO holders (as of Mar 31, 2026). All Class C converted one-to-one into Class A at the Aug 6, 2026 lock-up expiry (3Q26 release)'],
 ];
 // [block, economic %, voting %, color]
 var OWN_BLOCKS = [
@@ -150,7 +150,7 @@ var OWN_CAP = [
   ['Wasatch Advisors',           'Institutional', 2.9, 1.8],
   ['Orbis',                      'Institutional', 2.8, 1.7],
 ];
-var OWN_SBC = [['2023',385],['2024',523],['2025',2930],['2026',2379],['2027',881],['2028',215],['2029',50]];
+var OWN_SBC = [['2023',385],['2024',523],['2025',2930],['2026',2376],['2027',879],['2028',215],['2029',50]];
 var OWN_SBC_EST = 3; // first projected index (2026E)
 
 function ownershipBody(c){
@@ -200,7 +200,7 @@ function ownershipBody(c){
 // for the analyst to confirm or change (PROFILE_PLAYBOOK §15 MG-TRACK), not a Summit output. `r`: 'g' value creator, 'a' mixed / unproven.
 var TRACK = [
   { id:'hatoum', r:'g', name:'K. Anthony Hatoum', role:'Founder, Chairman & CEO', since:'2004',
-    built:'Took 3B from a first store in 2005 to <b>3,624 stores and 21 distribution centers</b> (Jun 2026) and to a NYSE IPO in Feb 2024; revenue reached Ps.78B in FY2025 with growth self-funded by negative working capital.',
+    built:'Took 3B from a first store in 2005 to <b>3,765 stores and 25 distribution centers</b> (Sep 2026) and to a NYSE IPO in Feb 2024; revenue reached Ps.78B in FY2025 with growth self-funded by negative working capital.',
     ctx:'Investment banking and private equity (J.P. Morgan, McKinsey, Merrill Lynch PE), where he covered the Turkish hard-discounter BİM that 3B is modeled on.',
     read:'Annual guides on stores, revenue and same-store sales have been met or beaten since the IPO, and he sets the pricing and format discipline (SKU count, private label, 100% upgraded format).' },
   { id:'pizzuto', r:'g', name:'Eduardo Pizzuto', role:'Chief Financial Officer & IR', since:'2007',
@@ -208,7 +208,7 @@ var TRACK = [
     ctx:'Nestlé Purina before 3B; MBA from SMU.',
     read:'Consistent, specific guidance and clear disclosure of the SBC and IFRS 16 effects; the open question is the reported-vs-adjusted EBITDA gap, which he explains each quarter.' },
   { id:'apalategui', r:'g', name:'Diego Apalategui', role:'Director of Sales & Operations', since:'2004',
-    built:'Leads the store network that opened <b>574 net new stores in 2025</b> and posted <b>+18.3% same-store sales</b>, with sales expenses falling to 10.0% of revenue in 2Q26.',
+    built:'Leads the store network that opened <b>574 net new stores in 2025</b> and posted <b>+18.3% same-store sales</b>, with sales expenses falling to 9.8% of revenue in 3Q26.',
     ctx:'Helped scale Argentina\'s EKI hard-discount chain from 6 to 250 stores.',
     read:'Attribution inside the team is shared, but store operations are the line where results are most visible and have consistently beaten plan.' },
   { id:'davila', r:'g', name:'Alejandro Dávila', role:'Director of Real Estate', since:'2022',
@@ -257,7 +257,7 @@ function govBody(c){
         '<div class="own-sbc-bar"><div class="own-sbc-f'+(i>=OWN_SBC_EST?' own-sbc-est':'')+'" style="width:'+(s[1]/sbcMax*100).toFixed(1)+'%"></div></div>'+
         '<span class="own-sbc-v">'+s[1].toLocaleString()+'</span></div>';
     }).join('') + '</div>';
-  h += '<div class="ov-foot">SBC (Ps. MM): Ps.2,930M in 2025 and Ps.2,379M in 2026E, tapering to Ps.50M by 2029E. The step-up is the Liquidity Event Plan (7.5M Class C shares granted June 2025, quarterly vesting over three years, graded recognition: higher early, decreasing over time), so the charge fades on schedule. It is non-cash and already in the fully diluted count; it drove the FY2025 and 1H26 IFRS net loss. The by-program schedule and the share-count table are in Bottom Line ▸ General. Sources: FY2025 Form 20-F; 2Q26 earnings release (Appendix 2).</div>';
+  h += '<div class="ov-foot">SBC (Ps. MM): Ps.2,930M in 2025 and Ps.2,376M in 2026E, tapering to Ps.50M by 2029E. The step-up is the Liquidity Event Plan (7.5M Class C shares granted June 2025, quarterly vesting over three years, graded recognition: higher early, decreasing over time), so the charge fades on schedule. It is non-cash and already in the fully diluted count; it drove the FY2025 and 9M26 IFRS net loss. The by-program schedule and the share-count table are in Bottom Line ▸ General. Sources: FY2025 Form 20-F; 3Q26 earnings release (Appendix 2).</div>';
 
   return h;
 }

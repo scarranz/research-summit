@@ -16,6 +16,7 @@ import { bbbSensitivity } from './bbb-sensitivity.js';
 import { bbbBridge } from './bbb-bridge.js';
 import { bbbNotes } from './bbb-notes.js';
 import { bbbSbc } from './bbb-sbc.js';
+import { submitsHtml, initSubmits } from '../submits.js';   // Valuation ▸ Submit History (engine + js/submits-data/tbbb.js)
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -542,7 +543,7 @@ var STD_TL = [
     'Reported a <b>net loss of ~Ps.2.84B</b>, driven by a <b>non-cash share-based-compensation charge</b> (~Ps.2.93B) from the Liquidity Event Plan (7.5M Class C shares granted in June 2025, vesting quarterly over three years), plus lease interest and an FX translation loss.',
     'EBITDA excluding that charge (and a Ps.230M receivable write-off) grew <b>+30% to Ps.4.4B</b>. The SBC schedule steps down through 2028.',
   ]],
-  ['2026', 'Completes an <b>equity follow-on (May)</b> and sees the <b>IPO lock-up expire on Aug 6</b>; ends 2Q26 with <b>3,624 stores and 21 distribution centers</b>.', [
+  ['2026', 'Completes an <b>equity follow-on (May)</b> and sees the <b>IPO lock-up expire on Aug 6</b>; reaches <b>3,765 stores and 25 distribution centers</b> by 3Q26 (3,624 and 21 at 2Q26).', [
     'The May follow-on raised about <b>Ps.1.49B of primary proceeds</b>, held mostly in short-term deposits; the net loss widened on SBC.',
     'On Aug 6 the lock-up on Class C shares expired and all Class C converted one-to-one into Class A.',
     '2Q26 revenue grew <b>+38.7% to Ps.26.0B</b> on <b>+20.0% same-store sales</b>; first-half operating cash flow rose 119% to Ps.4.3B.',
@@ -1407,7 +1408,41 @@ var TBBB_2Q26 = {
   ] }
 };
 
-var TBBB_CALLS = [ TBBB_2Q26, TBBB_1Q26,
+// The latest print, 3Q26 (release Nov 2, 2026; call Nov 3, 2026, not yet on file). Release only: the call record is added when the transcript lands.
+var TBBB_3Q26 = {
+  q: '3Q26', date: 'Nov 2, 2026', pending: 'The call is on Nov 3, 2026. This summary is built from the release only and is updated once the transcript is on file.',
+  print: [
+    ['Revenue', 'Ps.28.4B', '+40.3% YoY'],
+    ['Same-store sales', '+20.5%', 'vs +17.9% in 3Q25'],
+    ['Stores', '3,765', '+141 net · LTM +603 · 25 DCs'],
+    ['Adj. EBITDA', 'Ps.1.9B', '+60.5% (ex-SBC) · 6.6% margin'],
+    ['Reported EBITDA', 'Ps.1.3B', 'vs a Ps.404M loss in 3Q25'],
+    ['Operating cash flow', 'Ps.7.1B', '9M · +128% YoY'],
+  ],
+  summary: { paras: [
+    { p:'Demand stayed at the top of the series. <span class="ce-gl" data-def="Sales from stores open at least ~12 months, so growth that does not come from new openings.">Same-store sales</span> reached <b>20.5%</b> against a <b>17.9%</b> comparison, above the 20.0% of the second quarter, and revenue grew <b>40.3% to Ps.28.4B</b> with <b>141 net new stores</b> taking the base to 3,765. The release attributes most of the growth to stores open more than a year. Nine-month revenue is up 37.7%, above the +29% to +32% guide for the year, and nine-month net openings are 419 against a 590 to 630 guide, which leaves 171 to 211 for the fourth quarter.',
+      moreLabel:'＋ more, the guide arithmetic',
+      more:{ body:'Derived from the releases, not stated by the company:',
+        nodes:[
+          { t:'Openings', body:'123 (1Q) + 155 (2Q) + 141 (3Q) = 419 net new stores. Reaching 590 needs 171 in the fourth quarter and 630 needs 211, against 184 in 4Q25.' },
+          { t:'Revenue', body:'Nine-month revenue of Ps.77.3B is already 99% of the Ps.78.2B reported for all of 2025.' },
+          { t:'Same-store sales', body:'1Q 16.0%, 2Q 20.0% and 3Q 20.5% sit at or above the top of the +13% to +16% guide for 2026.' } ] } },
+    { p:'Margins improved on every operating line. Gross margin expanded <b>52bps to 16.7%</b> on a stronger commercial margin and lower transportation cost as a share of revenue, in a quarter with <b>four new distribution centers</b>. Sales expenses fell to <b>9.8% of revenue (−36bps)</b> on operating leverage including labor, and administrative expense excluding SBC was <b>2.6% of revenue (−6bps)</b>, below the roughly 3% management pointed to for the second half. Adjusted EBITDA margin reached <b>6.6% (+83bps)</b>, and management again states that it does not manage to an EBITDA margin target.',
+      moreLabel:'＋ more, EBITDA after building leases',
+      more:'Building lease payments were Ps.638M (Ps.463M in 3Q25). Adjusted EBITDA less those payments, a derived figure that puts rent back as an operating cost, is about Ps.1.24B, or 4.4% of revenue, against 6.6% before rent.' },
+    { p:'Reported profit turned positive as the share-based charge faded. <span class="ce-gl" data-def="Share-based compensation, a non-cash expense that management adds back to show the operating trend.">SBC</span> was <b>Ps.550M</b> against Ps.1,574M a year earlier, so reported EBITDA was <b>Ps.1,327M</b> and operating profit <b>Ps.682M</b>. Net profit was <b>Ps.23M</b> after Ps.290M of income tax and a Ps.97M exchange gain on the dollar cash position; financial costs rose 45.7% on lease interest as the store and DC network grows. The company projects SBC of Ps.489M for 4Q26 and Ps.2,376M for 2026, falling to Ps.879M in 2027.' },
+    { p:'Cash generation continued to fund the expansion. Nine-month operating cash flow was <b>Ps.7.1B (+128%)</b> against Ps.2.7B of purchases of property and equipment, helped by a Ps.1.5B increase in supplier balances in the quarter. Cash and equivalents were Ps.3.1B with Ps.4.2B (US$237M) in short-term deposits. After the lock-up expiry all Class C shares converted into Class A, and the illustrative fully diluted count is <b>165.4M shares</b> at US$53.',
+      moreLabel:'＋ more, to listen for on the Nov 3 call',
+      more:{ body:'Open items the release leaves to the call:',
+        nodes:[
+          { t:'Logistics', body:'Four DCs opened in the quarter and gross margin still expanded. Whether transportation and pre-operating cost build in the fourth quarter.' },
+          { t:'Guide', body:'Whether the 2026 guide on stores, revenue growth and same-store sales is updated after nine months above the revenue and SSS ranges.' },
+          { t:'Administrative cost', body:'The 2.6% ex-SBC ratio against the roughly 3% second-half comment.' },
+          { t:'Same-store sales', body:'How management frames a second quarter at or above 20%, and the comparison base in 2027.' } ] } }
+  ] }
+};
+
+var TBBB_CALLS = [ TBBB_3Q26, TBBB_2Q26, TBBB_1Q26,
   { q:'FY2025', date:'Mar 12, 2026',
     print: [ ['Revenue (FY)','Ps.78.0B','+36% YoY'], ['Same-store sales (FY)','+18.3%','FY2025'], ['Stores','3,346','+574 net · record'], ['Adj. EBITDA (FY)','Ps.4.4B','+30% (ex-SBC/w-off)'], ['Operating cash flow (FY)','Ps.4.7B','+~25% YoY'], ['Q4 revenue','Ps.22.0B','+34% YoY'] ],
     summary: { paras: [
@@ -1451,7 +1486,7 @@ function bPostResultsBody(){
   }).join('');
   var blocks = TBBB_CALLS.map(function(c, i){
     return '<div class="ce-rqblock" data-rq="'+esc(c.q)+'"'+(i===0?'':' hidden')+'>'+
-      '<p class="ov-lede" style="margin-top:0">The <b>'+esc(c.q)+'</b> print (reported '+esc(c.date)+'), distilled. The AI-generated <b>call summary</b> captures the call; the beat/miss against the Street is on the Results sub-tab.</p>'+
+      '<p class="ov-lede" style="margin-top:0">The <b>'+esc(c.q)+'</b> print (reported '+esc(c.date)+'), distilled. '+(c.pending ? esc(c.pending) : 'The AI-generated <b>call summary</b> captures the call; the beat/miss against the Street is on the Results sub-tab.')+'</p>'+
       bPrintRecap(c.print)+
       bCallSummary(c.q, c.summary)+
     '</div>';
@@ -1858,9 +1893,11 @@ function ddHtml(c){
   h += '<div class="dd-pane" data-dd="valuation" hidden>'+
     '<div class="dd-subtabs">'+
       '<button type="button" class="dd-subtab active" data-dds="vapeers">Peers</button>'+
+      '<button type="button" class="dd-subtab" data-dds="vasubs">Submit History</button>'+
       '<button type="button" class="dd-subtab" data-dds="vasens">Sensitivity Analysis</button>'+
     '</div>'+
     '<div class="dd-subpane" data-dds="vapeers">'+bPeerScatter('va')+'</div>'+
+    '<div class="dd-subpane" data-dds="vasubs" hidden>'+submitsHtml('TBBB')+'</div>'+
     '<div class="dd-subpane" data-dds="vasens" hidden>'+bbbSensitivity.body(c)+'</div>'+
   '</div>';
   // Management — Executives & Board · Ownership · Governance & SBC
@@ -1901,6 +1938,7 @@ function ddBuildSub(root, key){
   else if (key === 'landscape') requestAnimationFrame(function(){ bbbLandscape.init(root); });
   else if (key === 'bim')       requestAnimationFrame(function(){ bbbBim.init(root); });
   else if (key === 'vapeers')   requestAnimationFrame(function(){ wireBScatters(root); });
+  else if (key === 'vasubs')    requestAnimationFrame(function(){ initSubmits(root, 'TBBB'); });
   else if (key === 'vasens')    requestAnimationFrame(function(){ bbbSensitivity.init(root); });
   else if (key === 'mgteam')    requestAnimationFrame(function(){ bbbManagement.init(root); });
   else if (key === 'earnings')  requestAnimationFrame(function(){ bEarningsInit(root); });

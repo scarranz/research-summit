@@ -1366,7 +1366,40 @@ var TBBB_1Q26 = {
 
 // The 7 reported calls, newest first (source: docs/calls/TBBB.md). 1Q26 is the fully-detailed one;
 // the priors carry a tighter 2-para summary. The quarter pills switch between them.
-var TBBB_CALLS = [ TBBB_1Q26,
+// The latest reported call, 2Q26 (call Aug 13, 2026; release Aug 12). Source: docs/calls/TBBB.md + the 2Q26 release.
+var TBBB_2Q26 = {
+  q: '2Q26', date: 'Aug 13, 2026',
+  print: [
+    ['Revenue', 'Ps.26.0B', '+38.7% YoY'],
+    ['Same-store sales', '+20.0%', 'vs +17.7% in 2Q25'],
+    ['Stores', '3,624', '+155 net · LTM +593 · 21 DCs'],
+    ['Adj. EBITDA', 'Ps.1.6B', '+43.8% (ex-SBC) · 6.1% margin'],
+    ['Operating cash flow', 'Ps.4.3B', '1H26 · +119% YoY'],
+    ['Neg. working capital', 'Ps.10.2B', '~11.2% LTM rev'],
+  ],
+  summary: { paras: [
+    { p:'Demand strengthened further. <span class="ce-gl" data-def="Sales from stores open at least ~12 months, so growth that does not come from new openings.">Same-store sales</span> reached <b>20.0%</b> against a <b>17.7%</b> comparison, the highest reading in the series, with revenue at <b>Ps.26.0B (+38.7%)</b> and <b>155 net new stores</b> taking the base to 3,624. Management attributes about two-thirds of the growth to volume and one-third to price, and the price piece is mostly mix, with internal inflation described as very low. The gap to <span class="ce-gl" data-def="ANTAD, Mexico\'s national retailers association; its same-store-sales index is the market benchmark.">ANTAD</span> stayed above 20 points.',
+      moreLabel:'＋ more, what sits behind the acceleration',
+      more:{ body:'Three points from the Q&amp;A frame the durability question:',
+        nodes:[
+          { t:'Wallet share', body:'Selling one more item per customer moves same-store sales materially, and management says the existing portfolio is not fully penetrated even without new SKUs. The SKU count is kept low on purpose.' },
+          { t:'The new format', body:'100% of new stores open in the upgraded format (larger, more refrigeration). Ramp-ups are consistent with the unit-economics update from the fourth quarter and the 2026 vintage is tracking it.' },
+          { t:'Competition and sites', body:'FEMSA\'s rollout adds nothing new to what 3B already faces. Management sees no real-estate constraint and room for several players in hard discount.' } ] } },
+    { p:'Gross margin expanded to <b>16.8% (+54bps)</b> and sales expenses fell to <b>10.0% of revenue (−56bps)</b>, so adjusted EBITDA margin rose to <b>6.1%</b> (6.2% before a one-time follow-on cost). Management frames <b>dollar gross margin</b> as the measure that matters: percent margin can plateau as more of the scale benefit is passed into price. It sees no seasonality in gross margin, only quarter-to-quarter volatility from the SKU-level pricing mechanism.',
+      moreLabel:'＋ more, logistics and the Q3 distribution-center build',
+      more:'Transportation cost fell as a share of revenue on optimization across regions and tighter pre-operating expense in the new region. Two more distribution centers opened in the weeks after quarter end and a third is planned within the third quarter, so management flagged possible pressure on logistics expense. Openings in the first half (about 280) came with one new DC, and more DCs are possible in the second half.' },
+    { p:'Reported results carry the <span class="ce-gl" data-def="Share-based compensation, a non-cash expense that management adds back to show the operating trend.">SBC</span> charge. SBC was <b>Ps.615M</b>, reported EBITDA <b>Ps.960M</b> and the net loss <b>Ps.386M</b>, with the loss driven by SBC, lease interest and a Ps.85M FX loss on the dollar cash position. Administrative expense ex-SBC was <b>3.1% of revenue</b>, including Ps.37M of follow-on costs. For the second half, management expects roughly <b>3% of revenue</b> and describes the spend as talent densification in purchasing, logistics, systems and specialty roles. Operating leverage is expected to come through the selling-expense line.' },
+    { p:'The balance sheet changed with the <b>May equity follow-on</b> (about Ps.1.49B of primary proceeds, held in short-term deposits) and the <b>August 6 lock-up expiry</b>, when Class C shares converted one-to-one into Class A. Management expects no rush of option sales and says orderly-sale mechanisms are already in place. Growth remains self-funded: adjusted negative working capital reached <b>Ps.10.2B (~11.2% of LTM revenue)</b> and first-half operating cash flow rose <b>119% to Ps.4.3B</b>.',
+      moreLabel:'＋ more, the operating items',
+      more:{ body:'Other points from the call:',
+        nodes:[
+          { t:'ERP and AI', body:'Phase one of the new ERP is in testing. AI coding tools pulled forward features planned for later, and the new point of sale is built to offer more than checkout, which gives optionality for services.' },
+          { t:'Tests', body:'The cardless store test showed a non-material impact and is not necessarily being scaled. The World Cup had no relevant effect on sales.' },
+          { t:'Working capital', body:'New categories must be high-rotation, so no material impact is expected. Inventory days stay below 20.' } ] } }
+  ] }
+};
+
+var TBBB_CALLS = [ TBBB_2Q26, TBBB_1Q26,
   { q:'FY2025', date:'Mar 12, 2026',
     print: [ ['Revenue (FY)','Ps.78.0B','+36% YoY'], ['Same-store sales (FY)','+18.3%','FY2025'], ['Stores','3,346','+574 net · record'], ['Adj. EBITDA (FY)','Ps.4.4B','+30% (ex-SBC/w-off)'], ['Operating cash flow (FY)','Ps.4.7B','+~25% YoY'], ['Q4 revenue','Ps.22.0B','+34% YoY'] ],
     summary: { paras: [
@@ -1410,7 +1443,7 @@ function bPostResultsBody(){
   }).join('');
   var blocks = TBBB_CALLS.map(function(c, i){
     return '<div class="ce-rqblock" data-rq="'+esc(c.q)+'"'+(i===0?'':' hidden')+'>'+
-      '<p class="ov-lede" style="margin-top:0">The <b>'+esc(c.q)+'</b> print (reported '+esc(c.date)+'), distilled. The AI-generated <b>call summary</b> captures the call; the full beat/miss scorecard vs frozen expectations lands once the Setup freeze workflow is wired.</p>'+
+      '<p class="ov-lede" style="margin-top:0">The <b>'+esc(c.q)+'</b> print (reported '+esc(c.date)+'), distilled. The AI-generated <b>call summary</b> captures the call; the beat/miss against the Street is on the Results sub-tab.</p>'+
       bPrintRecap(c.print)+
       bCallSummary(c.q, c.summary)+
     '</div>';
@@ -1421,14 +1454,14 @@ function bPostResultsBody(){
 // The Earnings sub-pane: IR/EDGAR + 3 phases (Setup · Watch List · Post-Results).
 function bEarningsBody(){
   return bIRButton()+
-    '<div class="ce-note">🎯 <b>Earnings</b> — the decision layer, in three phases: <b>Setup</b> (go in ready — what we track and expect) → <b>Watch List</b> (the themes we carry across quarters) → <b>Post-Results</b> (the print scored against what we froze). The Watch List is live; Setup &amp; Post-Results fill once we load TBBB\'s earnings data.</div>'+
+    '<div class="ce-note">🎯 <b>Earnings</b> — the decision layer, in three phases: <b>Setup</b> (go in ready — what we track and expect) → <b>Watch List</b> (the themes we carry across quarters) → <b>Post-Results</b> (the print scored against what we froze). Setup reads the Bloomberg consensus and the reported actuals; the Watch List carries the open hooks into the next print.</div>'+
     '<div class="ce-phtabs">'+
       '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
       '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>'+
       '<button type="button" class="ce-phtab" data-cep="results">Post-Results</button>'+
     '</div>'+
     '<div class="ce-phpane" data-cep="setup">'+
-      '<p class="ov-lede" style="margin-top:0">The tracked KPIs going into a print — reported actuals against the <b>Summit model</b> and, on Revenue, <b>Street consensus</b> (Bloomberg), by year. Pick a line, window the range with the lever, read the surprise in the table.</p>'+
+      
       resultsHtml('TBBB_SETUP')+
     '</div>'+
     '<div class="ce-phpane" data-cep="watch" hidden>'+bWatchBody()+'</div>'+
@@ -1444,8 +1477,8 @@ var GD_TRACK = [
   { y:'FY2026', lo:590, hi:630, act:null }
 ];
 var GD_CARDS = [
-  ['Store openings', '590–630', 'net new · +3–10% over the 574 opened in 2025'],
-  ['Revenue growth', '+29% to +32%', '1Q26 printed +33% — running above the top'],
+  ['Store openings', '590–630', 'net new · +3–10% over the 574 opened in 2025 · 278 opened in 1H26 (123 + 155)'],
+  ['Revenue growth', '+29% to +32%', '1Q26 +33%, 2Q26 +38.7% (1H26 +36.2%) — running above the top'],
   ['Capex / store', '~Ps.5.5M', 'up from ~Ps.3.9M (bigger-store mix) · ~26-month payback'],
   ['Total capex (FY26)', '~Ps.5.2B', 'stores + distribution centers + fleet']
 ];
@@ -1486,21 +1519,18 @@ function bEvolutionBody(c){
     '<button type="button" class="dd-subtab" data-dds="results">Results</button>'+
     '<button type="button" class="dd-subtab" data-dds="estimates">Estimates</button>'+
     '<button type="button" class="dd-subtab" data-dds="guidance">Guidance</button>'+
-    '<button type="button" class="dd-subtab" data-dds="strategy">Strategy</button>'+
-    '<button type="button" class="dd-subtab" data-dds="timeline">Timeline</button>'+
   '</div>'+
   '<div class="dd-subpane" data-dds="earnings">'+bEarningsBody()+'</div>'+
   '<div class="dd-subpane" data-dds="results" hidden>'+
-    '<p class="ov-lede" style="margin-top:0">The <b>track record</b> — reported actuals against the <b>Summit model</b> and, on revenue, <b>Street consensus</b> (Bloomberg), across the full history and forward years. Pick a KPI, window the range with the lever, read the surprise in the table.</p>'+
+    
     resultsHtml('TBBB')+
   '</div>'+
   '<div class="dd-subpane" data-dds="estimates" hidden>'+
-    '<p class="ov-lede" style="margin-top:0">The <b>estimate itself, moving</b> — how the Street’s (Bloomberg) forecast for each fiscal year has been revised across 11 snapshots (Apr 2024 → Aug 2026). Toggle Ps. ⇄ % (implied growth); hover a point for the revision vs the prior snapshot.</p>'+
+    
     resultsEvoHtml('TBBB')+
   '</div>'+
   '<div class="dd-subpane" data-dds="guidance" hidden>'+bGuidanceBody()+'</div>'+
-  '<div class="dd-subpane" data-dds="strategy" hidden>'+ddEmptyLabel('Strategy')+'</div>'+
-  '<div class="dd-subpane" data-dds="timeline" hidden>'+ddEmptyLabel('Timeline')+'</div>';
+  '';
 }
 function ddEmptyLabel(name){ return '<div class="dd-empty">🚧 <b>'+esc(name)+'</b> — this section is being built.</div>'; }
 
@@ -1511,41 +1541,65 @@ function ddEmptyLabel(name){ return '<div class="dd-empty">🚧 <b>'+esc(name)+'
 var WL_ROWS_TBBB = [
   // ── LIVE — going into 2Q26 (seeded from 1Q26's newQuestions) ──
   { q:'2Q26', theme:'The Aug 6 lock-up expiry & share overhang', tags:['lockup','technical','shares'],
-    trackSince:'1Q26', trackUntil:null,
+    trackSince:'1Q26', trackUntil:'2Q26',
     definition:'The IPO lock-up expires <b>Aug 6, 2026</b> (the 20-F\'s July 8 date is being amended). It frees pre-IPO/insider shares to trade — a potential technical overhang into H2, independent of the operating story. The tell is how many shares actually come to market and how the stock absorbs it.',
     seededBy:{ q:'1Q26', n:'When exactly does the lock-up expire and how should investors think about the overhang?' },
     src:'1Q26 call: Hatoum clarified Aug 6 (not July 8); the 20-F will be amended.',
-    thread:[ {q:'1Q26', n:'Lock-up expiry clarified to Aug 6, 2026 — the one near-term technical.'} ] },
-  { q:'2Q26', theme:'Gross-margin durability — the deliberately volatile line', tags:['margin','mix','suppliers'],
+    thread:[ {q:'1Q26', n:'Lock-up expiry clarified to Aug 6, 2026 — the one near-term technical.'}, {q:'2Q26', n:'Expired Aug 6; Class C converted 1:1 into Class A. Orderly-sale mechanisms for option holders already in place.'} ] },
+  { q:'3Q26', theme:'Gross-margin durability — the deliberately volatile line', tags:['margin','mix','suppliers'],
     trackSince:'3Q24', trackUntil:null,
     definition:'3B prices <b>SKU-by-SKU for volume × peso margin</b>, so gross margin (~16%) is volatile with no target. The hook tracks whether the mix + supplier-efficiency tailwind keeps margin roughly stable as private label rises — or whether price reinvestment pulls it down (which management calls a win if volume follows).',
     seededBy:{ q:'1Q26', n:'Sources of commercial-margin expansion — mix, terms, or efficiencies — and how durable?' },
     src:'Recurring since 3Q24; 1Q26 attributed the expansion to mix + supplier efficiencies, flagged as quarter-to-quarter volatile.',
-    thread:[ {q:'3Q24', n:'GM 15.8% (flat); 16.7% the prior quarter — "no target, it fluctuates."'}, {q:'1Q26', n:'Commercial margin expanded on mix + supplier efficiencies.'} ] },
-  { q:'2Q26', theme:'Fresh / F&V rollout + Irrepetibles share', tags:['categories','fresh','mix'],
+    thread:[ {q:'3Q24', n:'GM 15.8% (flat); 16.7% the prior quarter — "no target, it fluctuates."'}, {q:'1Q26', n:'Commercial margin expanded on mix + supplier efficiencies.'}, {q:'2Q26', n:'GM 16.8% (+54bps): commercial margin + lower transport cost. Framed on dollar margin; % margin can plateau as more is passed to price.'} ] },
+  { q:'3Q26', theme:'Fresh / F&V rollout + Irrepetibles share', tags:['categories','fresh','mix'],
     trackSince:'1Q26', trackUntil:null,
     definition:'New categories that lift basket size without breaking the low-price model: the <b>fresh fruit-&-vegetable trial</b> (ticket uplift, likely to extend/retrofit) and <b>Irrepetibles</b> ("treasure-hunt" spot buys). The tell is whether these move from "promising trial" to a disclosed contributor to same-store sales.',
     seededBy:{ q:'1Q26', n:'Fresh-trial specifics + the opportunity to extend/retrofit; how Irrepetibles evolve.' },
     src:'1Q26: ~60 lines in test at any time; F&V shows a ticket uplift; Irrepetibles selling bicycles, appliances, clothing.',
     thread:[ {q:'1Q26', n:'F&V trial promising (ticket uplift); Irrepetibles gaining share.'} ] },
-  { q:'2Q26', theme:'G&A trajectory as DCs + HQ talent scale', tags:['sga','opex','leverage'],
+  { q:'3Q26', theme:'G&A trajectory as DCs + HQ talent scale', tags:['sga','opex','leverage'],
     trackSince:'1Q25', trackUntil:null,
     definition:'Consolidated SG&A leverage is masked by the accelerating opening pace (new regions carry full cost before full revenue). The hook tracks whether admin/G&A stays ~stable this year (as guided) and resumes its long-run decline as a % of revenue, with labor leverage holding through the minimum-wage increases.',
     seededBy:{ q:'1Q26', n:'The G&A trajectory this year as DCs + HQ talent are added.' },
     src:'1Q26: labor fell as a % of revenue despite the wage hike; G&A ~stable this year, long-run declining.',
-    thread:[ {q:'1Q25', n:'Admin +60bps on region hiring + SBC.'}, {q:'1Q26', n:'Sales exp 10.3%; labor leverage held through the wage hike.'} ] },
-  { q:'2Q26', theme:'Work-week reduction cost prep (2027)', tags:['labor','regulation'],
+    thread:[ {q:'1Q25', n:'Admin +60bps on region hiring + SBC.'}, {q:'1Q26', n:'Sales exp 10.3%; labor leverage held through the wage hike.'}, {q:'2Q26', n:'Admin ex-SBC 3.1% (incl. Ps.37M follow-on cost); ~3% of revenue guided as fair for H2; talent in purchasing, logistics, systems.'} ] },
+  { q:'3Q26', theme:'Work-week reduction cost prep (2027)', tags:['labor','regulation'],
     trackSince:'1Q26', trackUntil:null,
     definition:'Mexico\'s coming <b>work-week reduction (expected 2027)</b> raises labor cost per hour. Management plays it down — more "hours-worked" efficiency — but the hook tracks whether store-level productivity keeps absorbing wage + work-week pressure without denting the low-cost model.',
     seededBy:{ q:'1Q26', n:'Is the work-week reduction manageable via hours-worked efficiency?' },
     src:'1Q26: "when it happens, next year… not a big concern; we drive efficiencies at store level."',
     thread:[ {q:'1Q26', n:'Work-week reduction expected 2027; framed as manageable.'} ] },
-  { q:'2Q26', theme:'Private-label penetration at the annual update', tags:['private-label','mix','margin'],
+  { q:'3Q26', theme:'Private-label penetration at the annual update', tags:['private-label','mix','margin'],
     trackSince:'3Q24', trackUntil:null,
     definition:'Private label was <b>58% of sales</b> at the last annual update, trending up. Management sees no structural change at higher penetration (50→60→70%), citing Bimbo as the "time machine." The hook is the next annual print and whether the mix shift keeps lifting both customer value and 3B\'s margin.',
     seededBy:{ q:'1Q26', n:'Private-label % this quarter and any threshold effects at higher penetration.' },
     src:'1Q26: updated once a year; 58% last quarter, trend up; "no structural change" 50→70%.',
     thread:[ {q:'1Q26', n:'58% at last update; no structural change at higher penetration.'} ] },
+  { q:'3Q26', theme:'Logistics expense with three new DCs in Q3', tags:['logistics','dc','margin'],
+    trackSince:'2Q26', trackUntil:null,
+    definition:'Transportation cost fell as a share of revenue in 2Q26 on route optimization and tighter pre-operating expense in the new region. Two more distribution centers opened after quarter end and a third is planned in 3Q26, so management flagged possible <b>pressure on logistics expense</b>. The hook tracks gross margin and the transport line through the build.',
+    seededBy:{ q:'2Q26', n:'Three DCs in Q3 and the heads-up on logistics expense.' },
+    src:'2Q26 call (Pizzuto): pre-operating expense managed better in the 2Q DC; "might see some pressure in logistics" with three additional DCs in Q3.',
+    thread:[ {q:'2Q26', n:'21 DCs at quarter end; two more opened since, a third planned in Q3.'} ] },
+  { q:'3Q26', theme:'SSS after +20%: the two-year stack', tags:['sss','volume','mix'],
+    trackSince:'2Q26', trackUntil:null,
+    definition:'Same-store sales reached <b>+20.0%</b> on a +17.7% comparison, about two-thirds volume. The hook tracks whether the two-year stack holds as comparisons toughen, and how much comes from new customers versus wallet share.',
+    seededBy:{ q:'2Q26', n:'Is the two-year momentum the right way to model same-store sales?' },
+    src:'2Q26 call (Hatoum): one more item per customer lifts SSS; existing portfolio not fully penetrated; newer vintages capture clients faster.',
+    thread:[ {q:'2Q26', n:'+20.0% vs +17.7% 2Q25; ANTAD gap above 20 points.'} ] },
+  { q:'3Q26', theme:'Post-lock-up float and option selling', tags:['lockup','shares','technical'],
+    trackSince:'2Q26', trackUntil:null,
+    definition:'After the Aug 6 expiry the Class C shares converted to Class A. The employee option plan restriction window lifts 48 hours after each release. Management expects no rush and says orderly-sale mechanisms exist. The hook tracks insider selling and the fully diluted count (162.0M illustrative at US$35 in the 2Q26 release).',
+    seededBy:{ q:'2Q26', n:'Any mechanism to avoid disorderly sales by management after years of options?' },
+    src:'2Q26 call (Hatoum) and release Appendix 1.',
+    thread:[ {q:'2Q26', n:'Mechanisms already in place; no expected rush.'} ] },
+  { q:'3Q26', theme:'ERP phase one and AI-driven speed', tags:['erp','ai','opex'],
+    trackSince:'1Q26', trackUntil:null,
+    definition:'The new ERP is a three-year build. Phase one is in testing and AI coding tools pulled features forward. The new point of sale is designed for more than checkout. The hook tracks deployment by region and any quantified savings.',
+    seededBy:{ q:'2Q26', n:'ERP rewrite progress and deployment calendar.' },
+    src:'2Q26 call: phase one testing, on track; AI accelerated programming.',
+    thread:[ {q:'1Q26', n:'ERP ~halfway through a 3-year build.'}, {q:'2Q26', n:'Phase one in testing; features pulled forward.'} ] },
   // ── CLOSED — the record (hooks scored against results) ──
   { q:'1Q26', theme:'SSS durability — mix, not inflation', tags:['sss','volume','mix'],
     trackSince:'3Q24', trackUntil:'1Q26',
@@ -1591,7 +1645,7 @@ function bWatchBody(){
     tags.map(function(t){ return '<button type="button" class="wl2-tag" data-wtag="'+esc(t)+'">#'+esc(t)+'</button>'; }).join('')+'</div>';
   var note = '<div class="ce-note">🎯 <b>Watch List</b> — the themes we carry across quarters. The <b>live</b> list is what we hunt going into the next print (2Q26), seeded from the 1Q26 call; <b>closed</b> hooks stay as the record. Tap <b>the thread ›</b> to see how a theme evolved. (Authored from docs/calls/TBBB.md.)</div>';
   function grp(title, sub, rows){ return rows.length ? '<div class="wl2-grouph">'+esc(title)+' <span>'+esc(sub)+'</span></div>'+rows.map(bWatchCard).join('') : ''; }
-  return note + tagbar + grp('Live — going into 2Q26', live.length+' open hooks', live) + grp('Closed — the record', 'scored against results', closed);
+  return note + tagbar + grp('Live — going into 3Q26', live.length+' open hooks', live) + grp('Closed — the record', 'scored against results', closed);
 }
 // Wire the Watch List tag filter (native <details> handle the "the thread" expanders).
 function bWireWatch(pane){
@@ -1755,60 +1809,84 @@ function ddHtml(c){
     '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
     '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
     '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+    '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
   '</div>';
-  // Top Line — revenue drivers: Stores (Growth/SSS) + Product Mix + General (Tour/Logistics/Landscape/BİM)
+  // Top Line — General (store growth + same-store sales) · Segments (product mix: private label vs branded)
   h += '<div class="dd-pane" data-dd="topline">'+
     '<div class="dd-subtabs">'+
-      '<button type="button" class="dd-subtab active" data-dds="growth">Store Growth</button>'+
-      '<button type="button" class="dd-subtab" data-dds="sss">Same-Store Sales</button>'+
-      '<button type="button" class="dd-subtab" data-dds="mix">Product Mix</button>'+
-      '<button type="button" class="dd-subtab" data-dds="tour">Store Tour</button>'+
-      '<button type="button" class="dd-subtab" data-dds="logistics">Logistics</button>'+
+      '<button type="button" class="dd-subtab active" data-dds="tlgen">General</button>'+
+      '<button type="button" class="dd-subtab" data-dds="tlseg">Segments</button>'+
+    '</div>'+
+    '<div class="dd-subpane" data-dds="tlgen">'+growthBody()+sssBody()+'</div>'+
+    '<div class="dd-subpane" data-dds="tlseg" hidden>'+mixBody(c)+'</div>'+
+  '</div>';
+  // Bottom Line — General (unit economics, working capital) · Supply Chain (logistics, DC network)
+  h += '<div class="dd-pane" data-dd="bottomline" hidden>'+
+    '<div class="dd-subtabs">'+
+      '<button type="button" class="dd-subtab active" data-dds="blgen">General</button>'+
+      '<button type="button" class="dd-subtab" data-dds="blsc">Supply Chain</button>'+
+    '</div>'+
+    '<div class="dd-subpane" data-dds="blgen">'+ueBody(c)+'</div>'+
+    '<div class="dd-subpane" data-dds="blsc" hidden>'+bbbLogistics.body(c)+'</div>'+
+  '</div>';
+  h += '<div class="dd-pane" data-dd="evolution" hidden>'+bEvolutionBody(c)+'</div>';
+  // Valuation — Peers (multiples vs growth) · Sensitivity Analysis (SSS x store growth -> implied EV)
+  h += '<div class="dd-pane" data-dd="valuation" hidden>'+
+    '<div class="dd-subtabs">'+
+      '<button type="button" class="dd-subtab active" data-dds="vapeers">Peers</button>'+
+      '<button type="button" class="dd-subtab" data-dds="vasens">Sensitivity Analysis</button>'+
+    '</div>'+
+    '<div class="dd-subpane" data-dds="vapeers">'+bPeerScatter('va')+'</div>'+
+    '<div class="dd-subpane" data-dds="vasens" hidden>'+bbbSensitivity.body(c)+'</div>'+
+  '</div>';
+  // Management — Executives & Board · Ownership · Governance & SBC
+  h += '<div class="dd-pane" data-dd="mgmt" hidden>'+
+    '<div class="dd-subtabs">'+
+      '<button type="button" class="dd-subtab active" data-dds="mgteam">Executives &amp; Board</button>'+
+      '<button type="button" class="dd-subtab" data-dds="mgown">Ownership</button>'+
+      '<button type="button" class="dd-subtab" data-dds="mggov">Governance &amp; SBC</button>'+
+    '</div>'+
+    '<div class="dd-subpane" data-dds="mgteam">'+bbbManagement.body(c)+'</div>'+
+    '<div class="dd-subpane" data-dds="mgown" hidden>'+bbbManagement.own(c)+'</div>'+
+    '<div class="dd-subpane" data-dds="mggov" hidden>'+bbbManagement.gov(c)+'</div>'+
+  '</div>';
+  // Miscellaneous — what is specific to 3B and has no home in the standard spine
+  h += '<div class="dd-pane" data-dd="misc" hidden>'+
+    '<div class="dd-subtabs">'+
+      '<button type="button" class="dd-subtab active" data-dds="tour">Store Tour</button>'+
       '<button type="button" class="dd-subtab" data-dds="landscape">Competitive Landscape</button>'+
       '<button type="button" class="dd-subtab" data-dds="bim">BİM Blueprint</button>'+
     '</div>'+
-    '<div class="dd-subpane" data-dds="growth">'+growthBody()+'</div>'+
-    '<div class="dd-subpane" data-dds="sss" hidden>'+sssBody()+'</div>'+
-    '<div class="dd-subpane" data-dds="mix" hidden>'+mixBody(c)+'</div>'+
-    '<div class="dd-subpane" data-dds="tour" hidden>'+bbbLogistics.tourBody(c)+'</div>'+
-    '<div class="dd-subpane" data-dds="logistics" hidden>'+bbbLogistics.body(c)+'</div>'+
+    '<div class="dd-subpane" data-dds="tour">'+bbbLogistics.tourBody(c)+'</div>'+
     '<div class="dd-subpane" data-dds="landscape" hidden>'+bbbLandscape.body(c)+'</div>'+
     '<div class="dd-subpane" data-dds="bim" hidden>'+bbbBim.body(c)+'</div>'+
   '</div>';
-  h += '<div class="dd-pane" data-dd="bottomline" hidden>'+ueBody(c)+'</div>';
-  h += '<div class="dd-pane" data-dd="evolution" hidden>'+bEvolutionBody(c)+'</div>';
-  h += '<div class="dd-pane" data-dd="valuation" hidden>'+bbbSensitivity.body(c)+'</div>';
-  h += '<div class="dd-pane" data-dd="mgmt" hidden>'+bbbManagement.body(c)+'</div>';
   h += '<div class="ov-foot">'+esc(DD_SOURCES)+'</div>';
   h += '</div>';
   return h;
 }
 
-// Lazily build a Top Line sub-pane's charts/interactions when it becomes visible.
+// Lazily build a sub-pane's charts/interactions when it becomes visible.
 function ddBuildSub(root, key){
-  if (key === 'growth')         requestAnimationFrame(function(){ buildStoresChart(); setupStoreSlider(); buildVsChart(); });
-  else if (key === 'sss')       requestAnimationFrame(buildSSSChart);
-  else if (key === 'mix')       requestAnimationFrame(buildMixChart);
-  else if (key === 'logistics') requestAnimationFrame(function(){ bbbLogistics.init(root); });
+  if (key === 'tlgen')          requestAnimationFrame(function(){ buildStoresChart(); setupStoreSlider(); buildVsChart(); buildSSSChart(); });
+  else if (key === 'tlseg')     requestAnimationFrame(buildMixChart);
+  else if (key === 'blgen')     requestAnimationFrame(buildUeChart);
+  else if (key === 'blsc')      requestAnimationFrame(function(){ bbbLogistics.init(root); });
   else if (key === 'landscape') requestAnimationFrame(function(){ bbbLandscape.init(root); });
   else if (key === 'bim')       requestAnimationFrame(function(){ bbbBim.init(root); });
+  else if (key === 'vapeers')   requestAnimationFrame(function(){ wireBScatters(root); });
+  else if (key === 'vasens')    requestAnimationFrame(function(){ bbbSensitivity.init(root); });
+  else if (key === 'mgteam')    requestAnimationFrame(function(){ bbbManagement.init(root); });
   else if (key === 'earnings')  requestAnimationFrame(function(){ bEarningsInit(root); });
   else if (key === 'results')   requestAnimationFrame(function(){ var w = root.querySelector('.dd-subpane[data-dds="results"] .rs-wrap'); if(w) initResults(w, 'TBBB'); });
-  else if (key === 'estimates') requestAnimationFrame(function(){ resultsEvoHtml('TBBB'); initResultsEvo(); });   // resultsEvoHtml re-establishes _rs.data=TBBB (its evolution block); initResultsEvo builds into #rsEvoWrap
-  // 'tour' (static embed) and the remaining Evolution scaffolds (guidance/strategy/timeline)
-  // have nothing to build.
+  else if (key === 'estimates') requestAnimationFrame(function(){ resultsEvoHtml('TBBB'); initResultsEvo(); });   // resultsEvoHtml re-establishes _rs.data=TBBB (its evolution block); initResultsEvo builds into #rsEvoWra
+  // 'tour', 'mgown', 'mggov' and 'guidance' are static: nothing to build.
 }
-// Lazily build a Deep Dive pane when it becomes visible.
+// Lazily build a Deep Dive pane (its active sub-tab) when it becomes visible.
 function ddBuildPane(root, key){
-  if (key === 'topline' || key === 'evolution'){
-    var tp = root.querySelector('.dd-pane[data-dd="'+key+'"]');
-    var act = tp ? tp.querySelector('.dd-subtab.active') : null;
-    if (act) ddBuildSub(root, act.getAttribute('data-dds'));
-  }
-  else if (key === 'bottomline') requestAnimationFrame(buildUeChart);
-  else if (key === 'valuation')  requestAnimationFrame(function(){ bbbSensitivity.init(root); });
-  else if (key === 'mgmt')       requestAnimationFrame(function(){ bbbManagement.init(root); });
-  // 'evolution' is a blank scaffold — nothing to build.
+  var tp = root.querySelector('.dd-pane[data-dd="'+key+'"]');
+  var act = tp ? tp.querySelector('.dd-subtab.active') : null;
+  if (act) ddBuildSub(root, act.getAttribute('data-dds'));
 }
 function ddInit(c){
   var root = document.querySelector('.ov-tbbb-dd');

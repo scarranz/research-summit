@@ -11,7 +11,7 @@
 | Rama | `feat/tbbb-profile` (desde `origin/main` cc7ede9, 2026-11-01; worktree `research-summit-tbbb`) |
 | Analista responsable | Dani |
 | Inicio | 2026-11-02 |
-| Avance | 0 de M unidades aprobadas (tablero §2; M se fija en la compuerta F0) |
+| Avance | 0 aprobadas por el analista; varias construidas y en revisión (tablero §2). Dani aprueba al final de la sesión de trabajo (2026-11-02) |
 
 ## 1. Inventario de datos (F0)
 
@@ -42,6 +42,15 @@
 7. Código muerto en `bbb.js`: `overviewBody`, `storesBody`, `generalBody`, la barra `ovt-*` y `showOvt` ya no se renderizan (`html()` usa `stdOverviewBody`). Su **contenido** (KPI tiles, tabla FY24→FY25, bullets "How money", Timeline legacy) hay que confirmar que ya vive en el Overview estándar antes de tocarlo (B1 #9–#12).
 8. Post-Results y Watch List llegan hasta **1Q26**; el Watch List ya tiene sembrados los hooks para 2Q26 (lock-up Aug 6, margen bruto, F&V/Irrepetibles, G&A, work-week, private label).
 
+### Hallazgos nuevos al construir (2026-11-02)
+
+9. **El tbbb.js anterior tenía errores de datos.** SSS FY2025 figuraba 16.5% y el 20-F dice **18.3%**; la serie "EBITDA (model)" (p. ej. 2022: 614) no cuadraba con ninguna base reportada (EBITDA 2022 = 1,305 = utilidad operativa + D&A); la utilidad operativa FY2025 es una **pérdida de Ps.675M** y el set anterior no la mostraba. Todo reconstruido desde el 20-F y los releases.
+10. **El bloque evolution (Estimates) anterior convertía USD a MXN sobre cifras que Bloomberg ya trae en pesos**, inflando FY2026 a ~Ps.114B (el Street real es ~Ps.103B, coherente con la guía de +29% a +32% sobre Ps.78.2B). Reconstruido desde estMatrix sin conversión.
+11. **Outlier de consenso**: gp de 4Q26 en dos vintages (2026-03-16: 7,032; 2026-05-11: 7,748; ~24-27% del ingreso vs ~16-17%) es un error de un analista. No se borró el vintage porque arrastraría el consenso pre-print válido de 1Q26. Pendiente de decisión.
+12. **DCs de BBG congelado** (13 únicos de 30 celdas): dcs solo con actuals, sin consenso.
+13. **EBITDA de BBG está en base reportada** (después de SBC) y mezcla bases por analista. Por eso hay dos líneas: EBITDA reportado (comparable con el consenso) y EBITDA ajustado ex-SBC (sin consenso; base de la compañía y de la call).
+14. **Ambigüedad de 4Q24 OCF**: los trimestres 2024 de los releases 2025 suman 2,354.9 y el 9M24 comparativo dice 2,378.2. 4Q24 OCF queda en blanco; capex sí cuadra.
+
 ## 1b. Mapa Summit (F0-SM)
 
 ⛔ Pendiente de acceso al MCP Summit en esta sesión y de la decisión de Dani sobre submit (ver §6). Mientras tanto no se escribe `js/summit-map/tbbb.js` ni se refresca ningún número Summit.
@@ -50,32 +59,32 @@
 
 | ID | Unidad | Estado | Fecha | Aprobó | Commit | Nota |
 |---|---|---|---|---|---|---|
-| F0 | Inventario de datos | 👀 | 2026-11-02 | | | Esta sección §1 espera compuerta |
+| F0 | Inventario de datos | 👀 | 2026-11-02 | | 3bd843e | §1; actualizado con los hallazgos 9-14 |
 | B1 | Inventario de contenido existente | 👀 | 2026-11-02 | | | §5; conteo de control 45 (código); falta contar en DOM del portal local |
 | B2 | Mapa de reubicación | 📝 | 2026-11-02 | | | §5b propuesta; nada se mueve antes de aprobar |
 | F0-SM | Mapa de métricas Summit | ⛔ | | | | espera MCP + decisión submit |
-| F1 | Esqueleto + vista previa | ⬜ | | | | |
+| F1 | Esqueleto + vista previa | 👀 | 2026-11-02 | | | Deep Dive reordenado a la estructura canónica (§5c). Vista previa: `harness-tbbb.html` (local, ignorado por git) |
 | OV-1…OV-7, OV-F | Overview (7 bloques + pie) | ⬜ | | | | ya existen estandarizados; se auditan vs §8, no se reconstruyen |
-| EV-RES-DATA | Dataset de Results (números) | ⬜ | | | | rehacer trimestral + anual con BBG (10 snapshots) |
-| EV-RES | Evolution ▸ Results | ⬜ | | | | |
-| TL-GEN | Top Line ▸ General | ⬜ | | | | |
-| TL-SEG | Top Line ▸ Segments | ⬜ | | | | Merchandise vs Recyclables (BBG kpi1/kpi2) |
+| EV-RES-DATA | Dataset de Results (números) | 👀 | 2026-11-02 | | 3bd843e | Trimestral 1Q24-2Q26 + anual 2021-2025; consenso BBG (10 snapshots) vía estMatrix; Summit solo años forward (snapshot 2026-05-22). Cuadre en §8 |
+| EV-RES | Evolution ▸ Results | 👀 | 2026-11-02 | | | Renderiza en el harness: surprise vs Street, Road to the print, márgenes |
+| TL-GEN | Top Line ▸ General | 🔨 | 2026-11-02 | | | Hoy: gráficas a medida (tiendas, vs OXXO, SSS vs ANTAD) reubicadas; falta pasarlas al motor segments.js |
+| TL-SEG | Top Line ▸ Segments | 🔨 | 2026-11-02 | | | Hoy: Product Mix a medida (private label vs branded + milk) reubicado |
 | TL-OTH | Top Line ▸ Other | ⬜ | | | | |
 | TL-CUS | Top Line ▸ Customers | ⏭️ propuesto | | | | retailer, sin SPLC (confirmar en F0) |
-| EV-EST | Evolution ▸ Estimates | ⬜ | | | | BBG (10) + Summit congelado |
-| EV-SET | Earnings ▸ Setup | ⬜ | | | | |
-| EV-POST | Earnings ▸ Post-Results | ⬜ | | | | **2Q26 nuevo** (call + release + PPT) |
+| EV-EST | Evolution ▸ Estimates | 👀 parcial | 2026-11-02 | | | Solo Street (10 vintages, FY26-28). Falta la mitad Summit: espera snapshot post-2Q26 (≥2 snapshots) |
+| EV-SET | Earnings ▸ Setup | 👀 | 2026-11-02 | | | `tbbb-setup.js` ahora trimestral + anual con estMatrix |
+| EV-POST | Earnings ▸ Post-Results | 👀 | 2026-11-02 | | | 2Q26 agregado (recap + resumen de call, tono objetivo). Watch List: lock-up cerrado, 4 hooks nuevos para 3Q26. Guidance FY26 actualizada con 1H |
 | EV-NOTES | Earnings ▸ Notes | ⬜ | | | | |
-| BL-GEN-1…5 | Bottom Line ▸ General (5 bloques) | ⬜ | | | | |
+| BL-GEN-1…5 | Bottom Line ▸ General (5 bloques) | 🔨 | 2026-11-02 | | | Hoy: Unit Economics reubicado (vintage, costo por tienda, capital de trabajo). Faltan los 5 bloques canónicos con datos trimestrales |
 | BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
-| BL-SPLC | Bottom Line ▸ Supply Chain | ⏭️ propuesto | | | | sin SPLC; Logistics/DC va en MISC |
+| BL-SPLC | Bottom Line ▸ Supply Chain | 🔨 | 2026-11-02 | | | Sin export SPLC; la sub-tab aloja Logistics (cadena, simulador multi-DC, cuándo abrir un DC) |
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | depende de `get-market-history` |
-| VA-PEERS | Valuation ▸ Peers | ⬜ | | | | hay `B_PEERS` y scatter propio |
+| VA-PEERS | Valuation ▸ Peers | 🔨 | 2026-11-02 | | | Scatter de peers (múltiplo vs crecimiento, caps en vivo) reubicado; falta tabla de múltiplos estilo AMZN |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⛔ | | | | espera Summit |
 | VA-SUB | Valuation ▸ Submit History | ⛔ | | | | espera Summit |
-| VA-SENS | Valuation ▸ Sensitivity Analysis | ⛔ | | | | existe matriz SSS×store growth; reubicar (B2 #36) |
-| MG-TEAM / MG-OWN / MG-GOV / MG-TRACK | Management (4 sub-tabs) | ⬜ | | | | existe Corporate/Regional/Ownership & Dilution |
-| MISC-* | Miscellaneous | ⬜ | | | | Store Tour, Logistics, Landscape, BİM, Unit economics (§5b) |
+| VA-SENS | Valuation ▸ Sensitivity Analysis | 🔨 | 2026-11-02 | | | Matriz SSS × aperturas reubicada tal cual; su base de EBITDA usa el modelo Summit del 22-may (pendiente de refresh) |
+| MG-TEAM / MG-OWN / MG-GOV | Management (3 sub-tabs) | 👀 | 2026-11-02 | | | Executives & Board (Corporate/Regional + CV) · Ownership · Governance & SBC; contenido intacto. MG-TRACK ⬜ sin dato fuente |
+| MISC-* | Miscellaneous | 👀 | 2026-11-02 | | | Store Tour · Competitive Landscape · BİM Blueprint (intactos) |
 | F-FINAL | Cierre + conciliación B3 | ⬜ | | | | |
 
 ## 3. Decisiones del analista
@@ -162,9 +171,22 @@ Fuente: lectura de `js/overviews/bbb*.js`, `js/results-data/tbbb*.js`, `docs/cal
 | 42 | Valuation ▸ Sensitivity Analysis (se conserva la matriz SSS×aperturas y se alinea al formato AMZN) | |
 | 43–45 | Management ▸ Executives & Board · Ownership · Governance & SBC | |
 
+## 5c. Estructura del Deep Dive tras la reubicación (2026-11-02)
+
+| Sección | Sub-tabs | Contenido reubicado (B1 #) |
+|---|---|---|
+| Top Line | General · Segments | #13-15 (tiendas, vs OXXO, SSS vs ANTAD) · #16-17 (mix, milk) |
+| Bottom Line | General · Supply Chain | #30-32 (unit economics, costo, capital de trabajo) · #19-21 (logística, simulador, cuándo un DC) |
+| Evolution | Earnings (Setup · Watch List · Post-Results) · Results · Estimates · Guidance | #33-39; **#40-41 Strategy/Timeline vacías retiradas (no tenían contenido)** |
+| Valuation | Peers · Sensitivity Analysis | #6 (scatter, copia; el Overview conserva el suyo) · #42 |
+| Management | Executives & Board · Ownership · Governance & SBC | #43 · #44 · #45 |
+| Miscellaneous | Store Tour · Competitive Landscape · BİM Blueprint | #18 · #22-25 · #26-29 |
+
+Overview (#1-8) intacto. #9-12 (legacy) siguen sin renderizar y sin borrarse del código; decidir en F-FINAL si se fusionan con el Overview estándar. Conteo: 45 piezas originales, 45 con destino (las 2 retiradas estaban vacías; aprobación pendiente).
+
 ## 6. Bloqueos y preguntas abiertas
 
-- ⛔ **Snapshot Summit** (Dani revisa): lo cableado es 2026-05-22; el consenso ya llega a 2Q26 (2026-09-09). Mientras no haya snapshot con 2Q26, Summit queda como está y marcado con su fecha; no se inventa ni se mezcla. Mismo patrón que Mastercard (overview hecho sin submit).
+- ⛔ **Snapshot Summit** (Dani revisa; es lo único que bloquea EV-EST completo, VA-TM, VA-SUB, VA-HIST y el refresh de Sensitivity): lo cableado es 2026-05-22; el consenso ya llega a 2Q26 (2026-09-09). Mientras no haya snapshot con 2Q26, Summit queda como está y marcado con su fecha; no se inventa ni se mezcla. Mismo patrón que Mastercard (overview hecho sin submit).
 - Acceso al MCP Summit en esta sesión: la herramienta no está disponible (solo `authenticate`). Dani decide si autentico o él lo corre.
 - `get-market-history`: verificar si está desplegada (VA-HIST).
 - Confirmar con Dani: base de EBITDA (Adjusted ex-SBC vs reportado) para Results/Bottom Line.
@@ -172,3 +194,24 @@ Fuente: lectura de `js/overviews/bbb*.js`, `js/results-data/tbbb*.js`, `docs/cal
 ## 7. Historial de aprobaciones
 
 (append-only; vacío)
+
+## 8. Cuadre EV-RES-DATA (2026-11-02)
+
+Verificado contra los documentos fuente:
+- La suma de 1Q25-4Q25 = Total Revenue FY2025 del 20-F (Ps.78,152.943M) y 1Q24-4Q24 = FY2024 (57,439.019M). Igual para net income FY2024 (334.422M) y FY2025 (-2,839.571M).
+- EBITDA reportado 2025 (suma de trimestres 1,223.9M) = utilidad operativa FY25 + D&A del flujo de efectivo (-675.230 + 1,899.144 = 1,223.914M). Ajustado 4Q25 = 79.442 + 890.679 + 230.151 = 1,200.272M, igual a lo impreso por la compañía (Ps.1,200M).
+- SBC 4Q25 = 2,930.222 (20-F) - 2,039.543 (3 trimestres) = 890.679M (el release redondea a Ps.891M); 4Q24 = 127.090M (release: Ps.127M).
+- Stores: 2,288 (YE23) más altas trimestrales reproduce 2,634 (3Q24, reportado), 2,772 (YE24), 2,889/3,031/3,162/3,346 (2025) y 3,469/3,624 (2026).
+- verify_preprint.py TBBB cons: changed=0, blanked=0 (el matrix no modifica ningún valor existente).
+- Razonabilidad del consenso: pre-print 2Q26 (vintage 2026-05-11) revenue 24,743 vs actual 26,037 (+5.2%); stores 3,629 vs 3,624.
+
+Pendiente de la compuerta: Dani elige 3 periodos al azar para comparar contra el documento. El cuadre trimestres a año de los años estimados (2026 con 1Q26 y 2Q26 ya reportados) queda para F-FINAL.
+
+## 9. Pendientes para cerrar el perfil (en orden)
+
+1. Summit: tras el submit con data a 2Q26: F0-SM, mitad Summit de estMatrix y evolution, VA-TM, VA-SUB, refresh de VA-SENS.
+2. Top Line y Bottom Line al motor (segments.js, márgenes) con datos trimestrales; hoy son las gráficas a medida reubicadas.
+3. Valuation: Historic Multiple (requiere get-market-history desplegada) y tabla de Peers estilo AMZN.
+4. Overview: auditar OV-1 a OV-7 contra §8 (ya estandarizados; falta revisar Key Facts, 2x2 y pie de fuentes con 2Q26 y follow-on).
+5. Notes (EV-NOTES), Management ▸ Track Record, calls 4Q23/1Q24/2Q24 en el repo.
+6. F-FINAL: conciliación del conteo de control (B3) contra el DOM del portal local.

@@ -532,4 +532,60 @@ export var tbbbResults = {
       },
     },
   },
+  evolution: {
+    note: 'Street only: the Summit model has no snapshot after 2026-05-22 in this build, so the Summit lines are absent until a new submit. Source: BBG_CONSENSUS.txt, 10 TBBB snapshots (data_as_of 2024-05-27 to 2026-09-09), forward fiscal-year estimates mapped from each snapshot to a fixed year, Mexican pesos, millions (Bloomberg is already in pesos, no FX conversion).',
+    vintages: [{"label": "May 27, 2024", "event": "post-1Q24"}, {"label": "Aug 26, 2024", "event": "post-2Q24"}, {"label": "Nov 30, 2024", "event": "post-3Q24"}, {"label": "Apr 14, 2025", "event": "post-4Q24"}, {"label": "May 12, 2025", "event": "post-1Q25"}, {"label": "Aug 16, 2025", "event": "post-2Q25"}, {"label": "Nov 24, 2025", "event": "post-3Q25"}, {"label": "Mar 16, 2026", "event": "post-4Q25"}, {"label": "May 11, 2026", "event": "post-1Q26"}, {"label": "Sep 9, 2026", "event": "post-2Q26"}],
+    years: ["2026", "2027", "2028"],
+    sections: [{ key: "evtop", label: "Revenue", defaultMetric: "rev", groups: [ { label: "Revenue", keys: ["rev", "stores"] } ] }, { key: "evprof", label: "Profitability", defaultMetric: "gp", groups: [ { label: "Profitability", keys: ["gp", "ebitda", "netinc", "capex"] } ] }],
+    metrics: {
+      rev: { label: "Total Revenue", unit: "usdM", summit: null,
+        cons: [
+          [90621.8, 93921.2, 92865.2, 93381.22, 95413.29, 96454.44, 99271.9, 101683.6, 102819.78, 103301.5],
+          [null, null, null, 108918, 118502.67, 118051, 124107.6, 128013.55, 129211.1, 130196.15],
+          [null, null, null, null, null, null, null, 157463.71, 160781.44, 164742.23]
+        ],
+        prior: { cons: [73502.43, 73817.86, 73735.43, 73916.9, 75173.86, 76223, 77723.67, 78152.94, 78152.94, 78152.94] },
+        note: "Street revenue for each fiscal year, one line per year. FY2026 sits near Ps.103B in the latest snapshot, inside the +29% to +32% growth guide on the 2025 base (Ps.78.2B). Bloomberg is already in pesos, millions." },
+      stores: { label: "Stores (end of year)", unit: "count", summit: null, unitLabel: 'stores',
+        cons: [
+          [3608, 3630, 3674, 3786, 3897, 3933, 3912, 3946, 3978, 3977],
+          [null, null, null, 4328, 4497, 4581, 4540, 4623, 4672, 4677],
+          [null, null, null, null, null, null, null, 5344, 5425, 5442]
+        ],
+        prior: { cons: [3153, 3168, 3209, 3259, 3322, 3328, 3322, 3346, 3346, 3346] },
+        note: "Street year-end store count against the 590-630 net-opening guide for 2026." },
+      gp: { label: "Gross Profit", unit: "usdM", summit: null,
+        cons: [
+          [14910.64, 16198.88, 15787.44, 15203.23, 15836.26, 15728.12, 16231.12, 16546.13, 16638.73, 16721.7],
+          [null, null, null, 18831.15, 19785.15, 19126.17, 20414.76, 21218.98, 21467.45, 21738.04],
+          [null, null, null, null, null, null, null, 26502.62, 27202.58, 27516.34]
+        ],
+        prior: { cons: [11996.99, 12687.2, 12422.01, 12121.3, 12424.97, 12588.14, 12553.3, 12643.47, 12643.47, 12643.47] },
+        note: "Street gross profit. One 4Q26 quarterly cell in two vintages is out of line with the rest and is flagged in the build log; the annual rows here are consistent (about 16% of revenue)." },
+      ebitda: { label: "EBITDA (reported basis)", unit: "usdM", summit: null,
+        cons: [
+          [5619.17, 5883.2, 5652, 5378.89, 5351, 4948.56, 3683.78, 3951.5, 3280, 3402.3],
+          [null, null, null, 6179.57, 6944.8, 6418, 5860.78, 5622.89, 5714.9, 6205.85],
+          [null, null, null, null, null, null, null, 7207.14, 7967.5, 8525.73]
+        ],
+        prior: { cons: [4285.57, 4329, 4150.5, 3948.78, 3978.43, 3326.78, 1404.44, 1223.91, 1223.91, 1223.91] },
+        note: "Bloomberg EBITDA is on the reported basis, after non-cash share-based payment, and analysts mix bases, which is why the FY2025 and FY2026 marks fell sharply in late 2025 when the SBC charge hit." },
+      netinc: { label: "Net Income", unit: "usdM", summit: null,
+        cons: [
+          [1666, 1634, 1309, 1411.67, 1436.33, 210.4, -801.6, -1027.17, -1749.86, -1666.88],
+          [null, null, null, -158, 687.5, -37, -355.5, 226.4, -501.14, -144.62],
+          [null, null, null, null, null, null, null, 772, -108.8, 647.57]
+        ],
+        prior: { cons: [995, 1030.67, 891.33, 854.2, 971.33, -644.5, -2376.4, -2839.57, -2839.57, -2839.57] },
+        note: "Street net income, negative through 2026-2027 on SBC, lease interest and FX." },
+      capex: { label: "Capex", unit: "usdM", summit: null,
+        cons: [
+          [3686.5, 3513.25, 3403, 3519.43, 3556.8, 3750, 3868.86, 4150.43, 4379.75, 4513.44],
+          [null, null, null, 4019, 3822.5, 4126.6, 4383.14, 4932.14, 5309.12, 5381.44],
+          [null, null, null, null, null, null, null, 5699, 6183, 6357.67]
+        ],
+        prior: { cons: [3202, 3139.25, 3016, 3126.88, 3262.8, 3389.8, 3527.17, 3548.94, 3548.94, 3548.94] },
+        note: "Street capex; management guided about Ps.5.2B of total capex for FY2026." }
+    }
+  }
 };

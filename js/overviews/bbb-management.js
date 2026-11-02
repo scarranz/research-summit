@@ -191,7 +191,12 @@ function ownershipBody(c){
     }).join('') + '</tbody></table>';
   h += '<div class="ov-foot">Beneficial ownership per FY2025 Form 20-F (Item 7), as of Mar 31, 2026, plus 13G filings. Economic % is derived (shares ÷ 117.9M total) and approximate; Capital Group = combined CRMC divisions. <b>Offerings & lock-ups:</b> IPO Feb 2024 (US$17.50); a Feb 2025 follow-on (US$28.25) was mostly a secondary sell-down by pre-IPO holders; the liquidity lock-up on Class B/C ends <b>Jul 8, 2026</b>.</div>';
 
-  // 4 — Dilution & SBC
+  return h;
+}
+
+// Governance & SBC: the dilution / stock-based-compensation block, split from Ownership.
+function govBody(c){
+  var h = '';
   h += '<div class="ov-sec-h ovt-store-h">Dilution & stock-based compensation</div>';
   h += '<p class="ov-lede">Share-based compensation spiked around the IPO and then fades fast. Shares grew from ~84M (pre-IPO) to ~118M; an option overhang of ~51M (mostly legacy 2004-plan Class C options) implies ~169M fully diluted (~30%).</p>';
   var sbcMax = 2930;
@@ -215,7 +220,6 @@ function mgmtBody(c){
   h += '<div class="mgmt-modes">'+
     '<button type="button" class="mgmt-mode active" data-mg="corp">Corporate</button>'+
     '<button type="button" class="mgmt-mode" data-mg="regional">Regional</button>'+
-    '<button type="button" class="mgmt-mode" data-mg="ownership">Ownership &amp; Dilution</button>'+
   '</div>';
 
   h += '<div class="mgmt-pane" data-mg="corp">'+
@@ -227,8 +231,6 @@ function mgmtBody(c){
     treeHTML(REGIONAL, false)+
     '<div class="ov-foot">How a single autonomous region is organized — positions only; the same template repeats across every region. Each region is led by a Regional Director and contains its full functional stack (HR, real estate, logistics, IT, regional purchasing &amp; accounting), pairing store operations with its own distribution center and truck fleet. Disclosed spans: ~3 Zone Managers per region (40–80 stores each) → District Managers (5–8 stores each) → Store Managers (a store runs with 1 manager, 2 assistant managers and ~4 sales associates). The DC Manager reports directly to the Regional Director. Source: FY2025 Form 20-F (Item 4).</div>'+
   '</div>';
-
-  h += '<div class="mgmt-pane" data-mg="ownership" hidden>'+ownershipBody(c)+'</div>';
 
   // CV modal (hidden until a leader is clicked).
   h += '<div class="mgmt-modal" hidden>'+
@@ -310,4 +312,4 @@ function initMgmt(root){
   }
 }
 
-export var bbbManagement = { body: mgmtBody, init: initMgmt };
+export var bbbManagement = { body: mgmtBody, own: ownershipBody, gov: govBody, init: initMgmt };

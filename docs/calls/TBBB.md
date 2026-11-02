@@ -5,7 +5,7 @@ The calls repository for TBBB per docs/EARNINGS_CONVENTIONS.md. Newest call on t
 distilled record that feeds the Earnings tab (`js/overviews/bbb.js`) and the Post-Results "Call
 summary". Reporting is IFRS, fiscal year ends Dec 31; figures in Mexican pesos (Ps.) unless noted.
 
-**Transcripts on file (7), all distilled below (newest first):** 2026-05-07 (1Q26) · 2026-03-12
+**Transcripts on file (8), all distilled below (newest first):** 2026-08-13 (2Q26) · 2026-05-07 (1Q26) · 2026-03-12
 (FY2025/4Q25) · 2025-11-20 (3Q25) · 2025-08-12 (2Q25) · 2025-05-08 (1Q25) · 2025-04-10 (FY2024/4Q24)
 · 2024-11-26 (3Q24). Management is unchanged across all seven: **Anthony Hatoum** (Founder, Chairman
 & CEO) and **Eduardo Pizzuto** (CFO); 2Q25 added Amparo Martínez (General Counsel) and Joaquín Ley (IR).
@@ -21,6 +21,94 @@ compounding (FY25 +30% to Ps.4.4B). Gross margin is deliberately **volatile / no
 SKU-by-SKU for peso margin × volume). Recurring debates: gross-margin normalization, ticket-vs-traffic,
 SG&A leverage vs. the accelerating-openings drag, the peso/dollarized-cost passthrough (8–18 months),
 and — newest — the **Aug 6, 2026 lock-up expiry**.
+
+---
+
+## 2Q26 — reported Aug 12, 2026 · call Aug 13, 2026
+
+Participants: **Anthony Hatoum** (Chairman & CEO), **Eduardo Pizzuto** (CFO). Investors/analysts only.
+
+### The print (2Q26 earnings release)
+
+- **Revenue Ps.26,037M (+38.7% YoY)**; merchandise Ps.26,002M, recyclables Ps.35M.
+- **Same-store sales +20.0%** (vs +17.7% in 2Q25); call: ~**2/3 volume, 1/3 price, the price piece mostly mix**
+  (internal inflation "very low"); gap vs ANTAD **>20 points**.
+- **Stores: +155 net new → 3,624** (LTM +593, +20% of the base; 2Q25 was +142). **21 distribution centers**
+  (+1 in the quarter; 16 a year ago).
+- **Gross profit Ps.4,362M (+43.4%), margin 16.8% (+54bps)**: stronger commercial margin and lower
+  transportation cost as a % of revenue.
+- **Sales expenses 10.0% of revenue (−56bps)**: leverage in most lines incl. labor. **Admin 5.5% (+159bps)**;
+  ex-SBC admin **3.1% (+57bps)**, which includes a one-time **Ps.37M cash cost of the May 2026 equity follow-on**.
+- **Reported EBITDA Ps.960M (3.7%)** vs Ps.844M; **non-cash SBC Ps.615M** (vs Ps.252M; Liquidity Event Plan
+  vesting). **EBITDA ex-SBC Ps.1,575M (+43.8%), margin 6.1% (+21bps)**; 6.2% excluding the follow-on cost.
+- **Operating profit Ps.352M (1.4% margin)** vs Ps.393M; FX loss Ps.85M (vs Ps.234M); financial costs Ps.483M
+  (+27%, lease interest); **net loss Ps.386M** (vs a Ps.286M loss in 2Q25).
+- **1H26 operating cash flow Ps.4,285M (+119%)**; **adjusted negative working capital Ps.10.2B** (vs Ps.7.1B,
+  ex-IPO/follow-on proceeds), **~11.2% of LTM revenue**: "our operating cash flow fully funds our organic expansion."
+- **May 2026 follow-on:** primary proceeds Ps.1,487M net, of which Ps.1,483M went to short-term deposits (30 Jun:
+  cash Ps.1,981M + deposits Ps.4,129M). **Lock-up expired Aug 6, 2026**: all Class C converted 1:1 into Class A.
+- Fully diluted share count (illustrative, US$35): **162.0M** (release Appendix 1). SBC schedule: Appendix 2.
+
+### The call — the record
+
+- **Gross margin:** a sum over every SKU; scale gives better buying/manufacturing/logistics, the "bigger pie" is
+  split with the supplier and then partly passed to price. Trend "very likely" keeps improving, but percent margin
+  can plateau as more is passed to price; **the metric that matters is dollar gross margin.** No seasonality, only
+  quarter-to-quarter volatility.
+- **Logistics:** lower transport cost from ongoing optimization in all regions and **better management of
+  pre-operating expense in the new region**. **Heads-up:** two more DCs opened "in the past few weeks" and a third
+  within Q3 (**three DCs in Q3**), so possible pressure on logistics expense; more in H2 if opportunities appear.
+- **SSS drivers:** 2/3 volume, 1/3 price (mostly mix). All categories growing; new categories (low base) faster than
+  well-penetrated commodity ones. **SKU count kept low on purpose**; selling one more item per customer moves SSS
+  materially; the existing portfolio is "not fully penetrated" (wallet share has room without new SKUs).
+- **Format:** **100% of new stores open in the upgraded format** (larger, more refrigeration); older stores still
+  perform very well; ramp-ups "very consistent" vs the Q4 unit-economics update; the **2026 vintage** is tracking.
+  Parking only where the site is suburban.
+- **ERP:** phase one in testing; AI coding tools pulled features forward, on track. The new POS can "deliver more
+  than ringing up a product" (optionality for services); back-end logistics is an unexplored lever.
+- **G&A:** ~3% of revenue (ex-SBC) is "a fair assumption" for H2, similar to Q2; the spend is **talent densification**
+  (purchasing, logistics, systems, specialty roles), not salaries/benefits; no limit as long as each hire returns far
+  more than it costs. Operating leverage should come through the **selling-expense** line.
+- **Working capital:** new categories must be high-rotation, so no material impact; inventory days "below 20."
+- **Competition (FEMSA rollout):** "nothing more than what we have already seen"; room for several players.
+- **Real estate:** no constraint, runway "tremendous."
+- **Employee options / lock-up:** restriction window lifts 48h after the release; mechanisms already in place for
+  orderly selling; no expectation of a rush.
+- **Tests:** cardless (no credit/debit) store test, "non-material impact," not necessarily scaled. **World Cup:** no
+  relevant effect on sales.
+
+### Q&A — the record
+
+- **Andrew Ruben (Morgan Stanley):** gross-margin drivers and the lower transportation cost (commercial margin;
+  pre-operating cost discipline; 3 DCs coming in Q3).
+- **Bob Ford (BofA):** ticket vs traffic (2/3 · 1/3), new-SKU contribution, ERP progress/AI, POS and logistics changes.
+- **Joseph Giordano (JPMorgan):** upgraded-format share of openings (100%), uplift, ramp-up speed.
+- **Ulises Argote (Santander):** ~280 openings in H1 with one DC: DC timing and efficiency (3 in Q3).
+- **Héctor Maya (Scotiabank):** World Cup tailwind (none); G&A run-rate in H2 (~3% of revenue).
+- **Irma Sgarz (Goldman Sachs):** where the G&A talent goes (purchasing, logistics, systems); cardless test; 2027 talent.
+- **Jorge Izquierdo (BTG Pactual):** store size and parking as ticket grows.
+- **Antonio Hernández (Actinver):** working capital with new categories (no change; inventory <20 days).
+- **Jo Thomas (HSBC):** 2-year SSS stack and FEMSA competition.
+- **Isabella Lamas (UBS):** new customers vs wallet share; real estate; accelerating openings.
+- **Froylan Méndez (JPMorgan):** gross-margin giveback risk/seasonality; option-sale mechanism.
+
+### Analysis — feeds the Earnings tab
+
+**Scoring vs the 1Q26 hooks:** lock-up **RESOLVED** (expired Aug 6, Class C → Class A; what remains is option-holder
+selling, which management says has orderly mechanisms); gross margin **expanded** (+54bps) with the "dollar margin"
+framing; G&A **guided ~3% of revenue** for H2; SSS **accelerated** (+20%) on volume.
+**New in 2Q26:** the **May equity follow-on** (primary Ps.1.49B, parked in deposits); **3 DCs in Q3** (logistics-cost
+pressure risk); format **100% upgraded**; AI/ERP work pulled forward.
+
+**Into next quarter (3Q26 Watch List seeds):** (1) logistics expense with 3 new DCs; (2) gross-margin giveback vs
+dollar margin; (3) G&A ~3% of revenue and the talent build; (4) post-lock-up float/option selling; (5) SSS 2-year
+stack durability after +20%; (6) FEMSA / hard-discount intensity; (7) ERP phase-one rollout.
+
+**Silences / to-watch:** no SG&A, margin or EBITDA guidance; no quantified AI/ERP savings; the net loss remains an
+IFRS outcome (SBC + lease interest + FX), read through EBITDA ex-SBC.
+
+Sources: BBB Foods 2Q26 earnings release (2026-08-12), 2Q26 earnings deck and call transcript (2026-08-13), in
+`G:\My Drive\Summit\Docs\Extras\Team\DAA\Ad hoc info search\TBBB\`; 20-F/A (2026-05-21) for the lock-up terms.
 
 ---
 

@@ -1,0 +1,90 @@
+{
+  "supersede_latest": true,
+  "_doc": "TBBB metric map for emit_matrix.py (schema v2, Bloomberg CODE). Quarterly and annual (analyst decision, 2026-11-02). 10 TBBB snapshots 2024-05-27 -> 2026-09-09. Currency is Mexican pesos, scale M; the dataset declares currency 'Ps.' so unit 'usdM' here only means 'millions, apply the scale token'. Counts (stores, DCs) have a blank scale and use unit 'eps' (no scaling). Capex: Bloomberg stores spend negative, so sign -1. IS_COMPARABLE_EBITDA basis (adjusted ex-SBC vs reported) is verified against the releases before it is shown, see docs/profiles/TBBB.md. Distribution-center count dropped: frozen series in Bloomberg (13 unique of 30 cells).",
+  "q": {
+    "rev": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM"
+    },
+    "gp": {
+      "code": "CB_IS_GROSS_PROFIT",
+      "unit": "usdM"
+    },
+    "opinc": {
+      "code": "IS_OPER_INC",
+      "unit": "usdM"
+    },
+    "ebitda": {
+      "code": "IS_COMPARABLE_EBITDA",
+      "unit": "usdM"
+    },
+    "netinc": {
+      "code": "NET_INCOME",
+      "unit": "usdM"
+    },
+    "sbc": {
+      "code": "CF_STOCK_BASED_COMPENSATION",
+      "unit": "usdM"
+    },
+    "capex": {
+      "code": "HEADLINE_CAPEX",
+      "unit": "usdM",
+      "sign": -1
+    },
+    "ocf": {
+      "code": "CB_CF_NET_CASH_OPERATING_ACT",
+      "unit": "usdM"
+    },
+    "stores": {
+      "code": "NUMBER_OF_LOCATIONS_END",
+      "unit": "eps"
+    },
+    "adds": {
+      "code": "NET_STORE_ADDITIONS",
+      "unit": "eps"
+    }
+  },
+  "y": {
+    "rev": {
+      "code": "SALES_REV_TURN",
+      "unit": "usdM"
+    },
+    "gp": {
+      "code": "CB_IS_GROSS_PROFIT",
+      "unit": "usdM"
+    },
+    "opinc": {
+      "code": "IS_OPER_INC",
+      "unit": "usdM"
+    },
+    "ebitda": {
+      "code": "IS_COMPARABLE_EBITDA",
+      "unit": "usdM"
+    },
+    "netinc": {
+      "code": "NET_INCOME",
+      "unit": "usdM"
+    },
+    "sbc": {
+      "code": "CF_STOCK_BASED_COMPENSATION",
+      "unit": "usdM"
+    },
+    "capex": {
+      "code": "HEADLINE_CAPEX",
+      "unit": "usdM",
+      "sign": -1
+    },
+    "ocf": {
+      "code": "CB_CF_NET_CASH_OPERATING_ACT",
+      "unit": "usdM"
+    },
+    "stores": {
+      "code": "NUMBER_OF_LOCATIONS_END",
+      "unit": "eps"
+    },
+    "adds": {
+      "code": "NET_STORE_ADDITIONS",
+      "unit": "eps"
+    }
+  }
+}

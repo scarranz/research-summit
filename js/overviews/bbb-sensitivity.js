@@ -7,7 +7,7 @@
 //
 //   Valuation (EV) = Adjusted EBITDA(year, scenario) × EV/EBITDA multiple
 //
-// Adjusted EBITDA build (Ps. millions, Summit DCF snapshot 2026-05-22):
+// Adjusted EBITDA build (Ps. millions, Summit DCF submit of 2026-11-02):
 //   • gross margin held flat at 16.2%
 //   • operating expenses and revenue-per-new-store kept at the model's per-year logic
 //   • Adjusted EBITDA = revenue × 16.2% − operating expenses
@@ -21,7 +21,7 @@ var GM_FIX     = 0.162;   // gross margin, % of revenue
 var SALES_PCT  = 0.103;   // sales expenses, % of revenue
 var ADMIN_PCT  = 0.027;   // administrative expenses ex-SBC, % of revenue
 var ADJ_MARGIN = GM_FIX - SALES_PCT - ADMIN_PCT;          // Adjusted EBITDA margin = 3.2% (SBC added back)
-var SBC = { 2026: 2392, 2027: 882, 2028: 216, 2029: 50 };  // stock-based comp (Ps. MM), added back in Adj EBITDA
+var SBC = { 2026: 2391, 2027: 882, 2028: 216, 2029: 50 };  // stock-based comp (Ps. MM), added back in Adj EBITDA
 var FX = 19.5;        // MXN per USD (context only)
 var YEARS = [2026, 2027, 2028, 2029];
 
@@ -31,12 +31,14 @@ var _sg   = 0.18;     // base store growth
 var _sss  = 0.12;     // base SSS
 var _mult = 12;       // EV/EBITDA multiple
 
+// Summit DCF model, submit of 2026-11-02 (DCF TBBB.xlsm, tab Projection History; frozen). stores = year-end stores (EYS),
+// sss = SSS, rev = REV, gp = GROSS_PROFIT, eb = the model's own EBITDA (reference only, the matrix rebuilds Adjusted EBITDA).
 var BASE = {
   2025: { stores: 3346, rev: 78153.39 },
-  2026: { stores: 3976, sss: 0.16, rev: 103159.00, gp: 17039.72, eb: 3051.71 },
-  2027: { stores: 4692, sss: 0.12, rev: 131354.88, gp: 21279.49, eb: 3654.07 },
-  2028: { stores: 5537, sss: 0.12, rev: 167026.33, gp: 27058.27, eb: 4983.72 },
-  2029: { stores: 6478, sss: 0.10, rev: 207545.27, gp: 34037.42, eb: 6801.82 },
+  2026: { stores: 3964, sss: 0.16, rev: 107159.75, gp: 16995.41, eb: 3113.83 },
+  2027: { stores: 4718, sss: 0.15, rev: 142385.30, gp: 23351.19, eb: 3857.37 },
+  2028: { stores: 5614, sss: 0.13, rev: 186382.36, gp: 30566.71, eb: 5559.31 },
+  2029: { stores: 6624, sss: 0.11, rev: 237830.28, gp: 39242.00, eb: 7614.22 },
 };
 (function(){
   var prev = BASE[2025];
@@ -103,7 +105,7 @@ function sensBody(c){
     '<span class="sens-assum-i">Sales expenses <b>10.3%</b> of rev</span>'+
     '<span class="sens-assum-i">Admin. ex-SBC <b>2.7%</b> of rev</span>'+
     '<span class="sens-assum-i sens-assum-hi">→ Adj. EBITDA margin <b>3.2%</b></span>'+
-    '<span class="sens-assum-i sens-assum-sbc">SBC added back (Ps. MM): 2026 <b>2,392</b> · 2027 <b>882</b> · 2028 <b>216</b> · 2029 <b>50</b></span>'+
+    '<span class="sens-assum-i sens-assum-sbc">SBC added back (Ps. MM): 2026 <b>2,391</b> · 2027 <b>882</b> · 2028 <b>216</b> · 2029 <b>50</b></span>'+
   '</div>';
   h += '<div class="sens-base-sum"></div>';
   h += '<div class="sens-matrix-wrap"></div>';
@@ -112,9 +114,9 @@ function sensBody(c){
   h += '<div class="ov-foot">Implied Enterprise Value = Adjusted EBITDA × your EV/EBITDA multiple. You set the base store growth, base SSS and multiple; '+
     'the matrix steps each axis ±1 point and applies the rates flat to every year from 2026 to the selected year (compounding). '+
     'Adjusted EBITDA = revenue × (16.2% gross margin − 10.3% sales expenses − 2.7% admin ex-SBC) = revenue × 3.2%; stock-based compensation '+
-    '(2026 Ps.2,392M · 2027 Ps.882M · 2028 Ps.216M · 2029 Ps.50M) is added back in Adjusted EBITDA. Revenue per new store follows the Summit DCF model\'s per-year values. '+
+    '(2026 Ps.2,391M · 2027 Ps.882M · 2028 Ps.216M · 2029 Ps.50M) is added back in Adjusted EBITDA. Revenue per new store follows the Summit DCF model\'s per-year values. '+
     '<b>Read the multiple against IFRS 16:</b> the company\'s cost-of-sales and sales-expense lines already include depreciation, including depreciation of right-of-use (lease) assets, so this "Adjusted EBITDA" is closer to operating profit before SBC than to the EBITDA 3B reports (5.6% of revenue in FY2025, which adds all depreciation back and is therefore before rent). Rent is capitalized: the lease interest sits below this line in financial costs. For a like-for-like multiple against retailers that expense rent, use EBITDA after leases (Bottom Line ▸ General). '+
-    'Equity value ≈ EV + net cash (3B is net cash before lease liabilities); USD shown at ~'+FX+' MXN/USD for context. Anchored to the Summit DCF model (snapshot May 2026). Data sourced from Summit DCF models.</div>';
+    'Equity value ≈ EV + net cash (3B is net cash before lease liabilities); USD shown at ~'+FX+' MXN/USD for context. Anchored to the Summit DCF model (submit of Nov 2, 2026). Data sourced from Summit DCF models.</div>';
   return h;
 }
 

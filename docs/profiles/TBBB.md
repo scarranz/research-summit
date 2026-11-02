@@ -65,7 +65,7 @@
 | F0 | Inventario de datos | 👀 | 2026-11-02 | | 3bd843e | §1; actualizado con los hallazgos 9-14 |
 | B1 | Inventario de contenido existente | 👀 | 2026-11-02 | | | §5; conteo de control 45 (código); falta contar en DOM del portal local |
 | B2 | Mapa de reubicación | 📝 | 2026-11-02 | | | §5b propuesta; nada se mueve antes de aprobar |
-| F0-SM | Mapa de métricas Summit | ⛔ | | | | espera MCP + decisión submit |
+| F0-SM | Mapa de métricas Summit | 👀 | 2026-11-02 | | | `js/summit-map/tbbb.js` escrito desde `DCF TBBB.xlsm` (no desde el MCP); `approved: null`, dudas para el autor del modelo en §10 |
 | F1 | Esqueleto + vista previa | 👀 | 2026-11-02 | | | Deep Dive reordenado a la estructura canónica (§5c). Vista previa: `harness-tbbb.html` (local, ignorado por git) |
 | OV-1…OV-7, OV-F | Overview (7 bloques + pie) | ⬜ | | | | ya existen estandarizados; se auditan vs §8, no se reconstruyen |
 | EV-RES-DATA | Dataset de Results (números) | 👀 | 2026-11-02 | | 3bd843e | Trimestral 1Q24-2Q26 + anual 2021-2025; consenso BBG (10 snapshots) vía estMatrix; Summit solo años forward (snapshot 2026-05-22). Cuadre en §8 |
@@ -83,9 +83,9 @@
 | BL-SPLC | Bottom Line ▸ Supply Chain | 🔨 | 2026-11-02 | | | Sin export SPLC; la sub-tab aloja Logistics (cadena, simulador multi-DC, cuándo abrir un DC) |
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | depende de `get-market-history` |
 | VA-PEERS | Valuation ▸ Peers | ⛔ parcial | 2026-11-02 | | | Scatter reubicado. Sus múltiplos y crecimiento de peers están **sembrados a mano (Aug 2026)**, contra la regla 10; no tengo fuente para reemplazarlos. Falta consenso de los peers (WALMEX, FMX, CHDRAUIB, LACOMUBC) y FX para que el múltiplo de TBBB sea en vivo |
-| VA-TM | Valuation ▸ Target Multiple / PEG | ⛔ | | | | espera Summit |
-| VA-SUB | Valuation ▸ Submit History | ⛔ | | | | espera Summit |
-| VA-SENS | Valuation ▸ Sensitivity Analysis | 🔨 | 2026-11-02 | | | Matriz SSS × aperturas reubicada tal cual; su base de EBITDA usa el modelo Summit del 22-may (pendiente de refresh) |
+| VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | Hay datos (5 submits, solo EV/EBITDA); falta construir el motor/pantalla (≈900 líneas en AMZN/SPOT). Siguiente |
+| VA-SUB | Valuation ▸ Submit History | 👀 | 2026-11-02 | | | `js/submits-data/tbbb.js` (5 submits, solo EV/EBITDA) + motor común; ver §10 para los avisos (definición de EBITDA cambió, P/E roto, caso Bull/Base) |
+| VA-SENS | Valuation ▸ Sensitivity Analysis | 👀 (base refrescada al submit del 2-nov) | 2026-11-02 | | | Matriz SSS × aperturas reubicada tal cual; su base de EBITDA usa el modelo Summit del 22-may (pendiente de refresh) |
 | MG-TEAM / MG-OWN / MG-GOV / MG-TRACK | Management (4 sub-tabs) | 👀 | 2026-11-02 | | | Executives & Board · Ownership · Governance & SBC (calendario SBC actualizado al release 2Q26) · Track Record con 6 líderes y **calificaciones propuestas** (4 Value creator, 2 Mixed/unproven) a confirmar por Dani |
 | MISC-* | Miscellaneous | 👀 | 2026-11-02 | | | Store Tour · Competitive Landscape · BİM Blueprint (intactos) |
 | F-FINAL | Cierre + conciliación B3 | ⬜ | | | | |
@@ -234,3 +234,20 @@ Pendiente de la compuerta: Dani elige 3 periodos al azar para comparar contra el
 4. Overview: auditar OV-1 a OV-7 contra §8 (ya estandarizados; falta revisar Key Facts, 2x2 y pie de fuentes con 2Q26 y follow-on).
 5. Dani: confirmar o cambiar las calificaciones de Track Record y revisar/ampliar la semilla de Notes (generada por IA).
 6. F-FINAL: conciliación del conteo de control (B3) contra el DOM del portal local.
+
+## 10. Actualización 2026-11-02 (release 3Q26 + xlsm del modelo Summit)
+
+**Entradas:** release 3Q26 (2-nov-2026, el call es el 3-nov y aún no hay transcript) y `DCF TBBB.xlsm` (hoja Projection History, 5 submits). El MCP de Summit sigue sin estar disponible; el xlsm es la fuente (regla 10: congelado en archivo).
+
+**3Q26 cargado (Ps. M):** ingresos 28,445.449; utilidad bruta 4,743.303; utilidad operativa 681.674; EBITDA 1,327.003; SBC 550.428; EBITDA ex-SBC 1,877.431; utilidad neta 23.255; OCF 2,765.158; capex 1,098.926; tiendas 3,765 (+141); SSS 20.5%; CD 25; rentas de edificios 638 (EBITDA ex-SBC tras rentas 1,239.4, 4.4%). Cuadre: 9M ingresos 22,860.346 + 26,037.292 + 28,445.449 = 77,343.087 = release. Tiendas 3,624 + 141 = 3,765. `gen_tbbb.py` regenerado; consenso BBG sin cambios (último snapshot 2026-09-09, `verify_preprint TBBB cons`: changed=0, blanked=0).
+
+**Summit (`scripts/consensus/tbbb/build_tbbb_summit.py`):** submits 2025-12-12 (después de 3Q25), 2026-03-13 (4Q25), 2026-05-08 (1Q26), 2026-08-13 (2Q26), 2026-11-02. Líneas con base comparable: ingresos (anual), utilidad bruta, gastos de venta y de administración, SBC, utilidad neta, tiendas, SSS, CD. Se descarta: EBITDA (reconstrucción tras rentas que cambió de definición entre 8-may y 13-ago: FY2027 5,762 → 3,839 con ingresos iguales; FY2025 pasó de -18 a 1,921), ADJ_EBITDA, capex anual del 2-nov (viene como razón por tienda), trimestrales del primer submit desde 1Q26 en P&L (utilidad bruta negativa, EBITDA de -20,000). Las celdas trimestrales de un trimestre ya reportado son la proyección congelada previa al print (p. ej. 2Q26 utilidad bruta 3,986 vs 4,362 real).
+- El submit del 2-nov se guardó **antes** de cargar los actuales de 3Q26 (su 3Q26 es estimado: utilidad bruta 4,318 vs 4,743, tiendas 3,769 vs 3,765, SSS 18% vs 20.5%); para el estimado, su último actual es 2Q26. El libro lo etiqueta "Q3 - 2026".
+- `estMatrix.summit` (5 vintages) empalmado con `apply_matrix.py`; `summit` plano = submit del 2-nov. `verify_preprint TBBB summit` reporta cambios porque el script compara contra el lado Street; la comparación directa (node) coincide con el submit. No se usó como compuerta.
+- Evolution ▸ Estimates ya tiene ambas mitades: 11 vintages (10 BBG + el submit del 2-nov sin columna Street); cada submit se ubica en el snapshot BBG más cercano en el tiempo (12-dic en 24-nov, 13-mar en 16-mar, 8-may en 11-may, 13-ago en 9-sep).
+
+**Valuación (VA-SUB):** solo EV/EBITDA (el P/E es #VALUE!/#SPILL! en todos y -US$78 en el primero). PT/FV/precio: 12-dic 42.95/37.56/33.01 (25x 2027); 13-mar 36.19/34.15/33.08 (25x 2027); 8-may 34.52/32.89/37.97 (25x 2027); 13-ago 62.85/58.85/49.37 (30x 2028); 2-nov 58.13/56.35/56.99 (30x 2028). El salto del 13-ago mezcla tres cambios a la vez (múltiplo 25→30, año 2027→2028, definición de EBITDA): no es comparable con el anterior. El libro marca Bull en la fila de ingresos y Base en la de D&A para la misma valuación; se muestra Base. Sin segundo método no se puede correr la prueba PT÷FV del playbook.
+
+**Overview 3Q26:** pestaña Post-Results con 3Q26 **solo del release** (aviso en pantalla; el call del 3-nov se agrega al llegar el transcript); 9 hilos de Notes con nota Q3 2026 (etiquetadas "release only"); bloque de SBC con Apéndices 1 y 2 de 3Q26 (calendario 2,376 / 879 / 215 / 50; conteo diluido 165,423,297 a US$53; las acciones Clase C se convirtieron en Clase A); conteos 3,765 tiendas y 25 CD en Landscape, Logística, Management, Timeline; Sensitivity: base y SBC refrescados al submit (los porcentajes de margen del usuario no se tocaron).
+
+**Pendiente tras esto:** VA-TM (construir), VA-HIST (necesita `get-market-history`), VA-PEERS (multiples de peers sin fuente), call del 3-nov (Post-Results completo, Notes, guía 2026, 3Q26 en `docs/calls/TBBB.md`), ANTAD 3Q26 en el gráfico SSS vs ANTAD, ratings de Track Record, decisión del outlier de utilidad bruta 4Q26. Dudas para el autor del modelo: definición del EBITDA y su cambio, acciones diluidas de 115M, capex anual del 2-nov, P/E roto, etiqueta Bull/Base.

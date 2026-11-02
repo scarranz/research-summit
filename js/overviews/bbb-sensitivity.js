@@ -113,7 +113,8 @@ function sensBody(c){
     'the matrix steps each axis ±1 point and applies the rates flat to every year from 2026 to the selected year (compounding). '+
     'Adjusted EBITDA = revenue × (16.2% gross margin − 10.3% sales expenses − 2.7% admin ex-SBC) = revenue × 3.2%; stock-based compensation '+
     '(2026 Ps.2,392M · 2027 Ps.882M · 2028 Ps.216M · 2029 Ps.50M) is added back in Adjusted EBITDA. Revenue per new store follows the Summit DCF model\'s per-year values. '+
-    'Equity value ≈ EV + net cash (3B is net cash); USD shown at ~'+FX+' MXN/USD for context. Anchored to the Summit DCF model (snapshot May 2026). Data sourced from Summit DCF models.</div>';
+    '<b>Read the multiple against IFRS 16:</b> the company\'s cost-of-sales and sales-expense lines already include depreciation, including depreciation of right-of-use (lease) assets, so this "Adjusted EBITDA" is closer to operating profit before SBC than to the EBITDA 3B reports (5.6% of revenue in FY2025, which adds all depreciation back and is therefore before rent). Rent is capitalized: the lease interest sits below this line in financial costs. For a like-for-like multiple against retailers that expense rent, use EBITDA after leases (Bottom Line ▸ General). '+
+    'Equity value ≈ EV + net cash (3B is net cash before lease liabilities); USD shown at ~'+FX+' MXN/USD for context. Anchored to the Summit DCF model (snapshot May 2026). Data sourced from Summit DCF models.</div>';
   return h;
 }
 

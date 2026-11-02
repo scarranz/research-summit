@@ -51,6 +51,9 @@
 13. **EBITDA de BBG está en base reportada** (después de SBC) y mezcla bases por analista. Por eso hay dos líneas: EBITDA reportado (comparable con el consenso) y EBITDA ajustado ex-SBC (sin consenso; base de la compañía y de la call).
 14. **Ambigüedad de 4Q24 OCF**: los trimestres 2024 de los releases 2025 suman 2,354.9 y el 9M24 comparativo dice 2,378.2. 4Q24 OCF queda en blanco; capex sí cuadra.
 
+15. **EBITDA e IFRS 16 (la renta).** Los costos de ventas y de tienda ya incluyen depreciación, incluida la de los activos por derecho de uso; el EBITDA de la compañía suma toda la depreciación de vuelta y por eso queda **antes de la renta** (el interés del arrendamiento va debajo, en costos financieros). Es lo que infla el EBITDA frente a un comparable que registra renta en opex. La compañía revela cada trimestre los "capitalized lease payments for buildings": Ps.316M (1Q24), 338, 357, 378 (4Q24), 397, 439, 463, 533 (4Q25), 534 (1Q26), 593 (2Q26); suman Ps.1,389M en 2024 y Ps.1,833M en 2025, igual que lo revelado. Se agregaron `rent` (pago de rentas, de la compañía) y `ebitdaal` (**EBITDA ex-SBC después de rentas**, derivado: ajustado menos renta; 2Q26: Ps.982M, 3.8% de ingreso, contra Ps.1,575M y 6.1% antes de renta). Antes de 2024 no hay cifra de renta en los filings disponibles, así que esos años quedan en blanco. No se encontró en el repo ninguna versión anterior de este tratamiento (la que Dani recuerda de Pablo).
+16. **La "Adjusted EBITDA" de Sensitivity no es EBITDA**: es ingreso × (margen bruto 16.2% − ventas 10.3% − admin ex-SBC 2.7%) = 3.2%, y esas líneas ya traen depreciación (incluida la de ROU). Está más cerca de la utilidad operativa antes de SBC que del EBITDA reportado (5.6% del ingreso en FY2025). Se agregó la advertencia en el pie de la matriz; el modelo no se tocó.
+
 ## 1b. Mapa Summit (F0-SM)
 
 ⛔ Pendiente de acceso al MCP Summit en esta sesión y de la decisión de Dani sobre submit (ver §6). Mientras tanto no se escribe `js/summit-map/tbbb.js` ni se refresca ningún número Summit.
@@ -90,6 +93,7 @@
 ## 3. Decisiones del analista
 
 - 2026-11-02 · rama · Se parte de `origin/main` actualizado, **no** del PR viejo (feat/tbbb-overview, >2–3 meses) — Dani.
+- 2026-11-02 · EBITDA · La renta (IFRS 16) se muestra: EBITDA ex-SBC como base de la compañía y, al lado, EBITDA ex-SBC después de rentas (derivado) — Dani pidió tomar en cuenta que el EBITDA de TBBB está antes de renta.
 - 2026-11-02 · Summit · Se incorpora "lo que hay so far"; Dani revisa si hace falta un submit del modelo con data a 2Q26 antes de congelar números Summit — Dani.
 
 ## 4. Excepciones aceptadas

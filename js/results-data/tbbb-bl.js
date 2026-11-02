@@ -6,7 +6,7 @@
 // The unique section keys keep this instance's canvases apart from the Results tab's.
 import { tbbbResults } from './tbbb.js';
 
-var KEEP = ['gp', 'opinc', 'ebitda', 'adj', 'netinc', 'sales', 'admin', 'adminx', 'sbc', 'fin', 'fcost', 'fx', 'tax', 'rev'];
+var KEEP = ['gp', 'opinc', 'ebitda', 'adj', 'ebitdaal', 'netinc', 'sales', 'admin', 'adminx', 'sbc', 'rent', 'fin', 'fcost', 'fx', 'tax', 'rev'];
 function pick(view){
   var out = {};
   KEEP.forEach(function(k){ if (view.metrics[k]) out[k] = view.metrics[k]; });
@@ -15,10 +15,11 @@ function pick(view){
 function sections(){
   return [
     { key: 'blprof', label: 'Profitability & margins', defaultMetric: 'adj', groups: [
-      { label: 'Profit', keys: ['gp', 'opinc', 'ebitda', 'adj', 'netinc'] } ] },
+      { label: 'Profit', keys: ['gp', 'opinc', 'ebitda', 'adj', 'ebitdaal', 'netinc'] } ] },
     { key: 'blexp', label: 'Expense lines', defaultMetric: 'sales', groups: [
       { label: 'Operating expenses', keys: ['sales', 'admin', 'adminx'] },
-      { label: 'Non-cash', keys: ['sbc'] } ] },
+      { label: 'Non-cash', keys: ['sbc'] },
+      { label: 'Leases (IFRS 16)', keys: ['rent'] } ] },
     { key: 'blbelow', label: 'Operating profit to net income', defaultMetric: 'fcost', groups: [
       { label: 'Below operating profit', keys: ['fin', 'fcost', 'fx', 'tax'] } ] }
   ];

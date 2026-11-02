@@ -189,7 +189,23 @@ export var tbbbResults = {
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo: [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi: [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          note: "Income tax expense (shown positive). It stays positive in loss periods because the IFRS loss comes from non-deductible items such as SBC and FX." }
+          note: "Income tax expense (shown positive). It stays positive in loss periods because the IFRS loss comes from non-deductible items such as SBC and FX." },
+        rent: { label: "Building Lease Payments (IFRS 16)", short: "Lease payments", group: "Leases (IFRS 16)", unit: "usdM", marginOf: 'rev', marginLabel: "% of revenue", surprise: false,
+          periods: ["1Q24", "2Q24", "3Q24", "4Q24", "1Q25", "2Q25", "3Q25", "4Q25", "1Q26", "2Q26", "3Q26", "4Q26", "1Q27", "2Q27"],
+          act:    [316, 338, 357, 378, 397, 439, 463, 533, 534, 593, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideLo: [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi: [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: "The rent 3B pays on its stores and distribution centers, as the company discloses it each quarter (\"capitalized lease payments for buildings\"). Under IFRS 16 this is NOT an operating expense: it is capitalized, and shows up below EBITDA as depreciation of right-of-use assets and as lease interest in financial costs. That is why reported EBITDA, with or without SBC, is before rent. Quarterly 2024 sums to the disclosed FY2024 Ps.1,389M and 2025 to Ps.1,833M. Not disclosed before 2024 in the filings on hand, so earlier years are blank." },
+        ebitdaal: { label: "EBITDA ex-SBC after leases", short: "EBITDA after leases", group: "Leases (IFRS 16)", unit: "usdM", marginOf: 'rev', marginLabel: "% of revenue", surprise: false,
+          periods: ["1Q24", "2Q24", "3Q24", "4Q24", "1Q25", "2Q25", "3Q25", "4Q25", "1Q26", "2Q26", "3Q26", "4Q26", "1Q27", "2Q27"],
+          act:    [438.611, 491.351, 457.422, 593.867, 521.4, 656.848, 706.766, 667.272, 741.704, 982.426, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideLo: [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi: [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: "Derived, not reported by the company: EBITDA ex-SBC minus the building lease payments above, i.e. the EBITDA a pre-IFRS 16 reader would see with rent as an operating cost. It is the like-for-like figure against retailers that report rent in opex. In 2Q26 it is Ps.982M (3.8% of revenue) against Ps.1,575M (6.1%) before rent." }
       },
       sections: [
         { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
@@ -200,6 +216,7 @@ export var tbbbResults = {
           { label: 'Company', keys: ['gp', 'opinc', 'ebitda', 'adj', 'netinc'] },
           { label: 'Non-cash', keys: ['sbc'] },
           { label: 'Expenses', keys: ['sales', 'admin', 'adminx'] },
+          { label: 'Leases (IFRS 16)', keys: ['rent', 'ebitdaal'] },
           { label: 'Below operating profit', keys: ['fin', 'fcost', 'fx', 'tax'] },
           { label: 'Cash flow', keys: ['ocf', 'capex'] }
         ] }
@@ -368,7 +385,23 @@ export var tbbbResults = {
           cons:   [null, null, null, null, null, null, null, null],
           guideLo: [null, null, null, null, null, null, null, null],
           guideHi: [null, null, null, null, null, null, null, null],
-          note: "Income tax expense (shown positive). It stays positive in loss periods because the IFRS loss comes from non-deductible items such as SBC and FX." }
+          note: "Income tax expense (shown positive). It stays positive in loss periods because the IFRS loss comes from non-deductible items such as SBC and FX." },
+        rent: { label: "Building Lease Payments (IFRS 16)", short: "Lease payments", group: "Leases (IFRS 16)", unit: "usdM", marginOf: 'rev', marginLabel: "% of revenue", surprise: false,
+          periods: ["2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028"],
+          act:    [null, null, null, 1389, 1833, null, null, null],
+          summit: [null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null],
+          guideLo: [null, null, null, null, null, null, null, null],
+          guideHi: [null, null, null, null, null, null, null, null],
+          note: "The rent 3B pays on its stores and distribution centers, as the company discloses it each quarter (\"capitalized lease payments for buildings\"). Under IFRS 16 this is NOT an operating expense: it is capitalized, and shows up below EBITDA as depreciation of right-of-use assets and as lease interest in financial costs. That is why reported EBITDA, with or without SBC, is before rent. Quarterly 2024 sums to the disclosed FY2024 Ps.1,389M and 2025 to Ps.1,833M. Not disclosed before 2024 in the filings on hand, so earlier years are blank." },
+        ebitdaal: { label: "EBITDA ex-SBC after leases", short: "EBITDA after leases", group: "Leases (IFRS 16)", unit: "usdM", marginOf: 'rev', marginLabel: "% of revenue", surprise: false,
+          periods: ["2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028"],
+          act:    [null, null, null, 1981.251, 2551.287, null, null, null],
+          summit: [null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null],
+          guideLo: [null, null, null, null, null, null, null, null],
+          guideHi: [null, null, null, null, null, null, null, null],
+          note: "Derived, not reported by the company: EBITDA ex-SBC minus the building lease payments above, i.e. the EBITDA a pre-IFRS 16 reader would see with rent as an operating cost. It is the like-for-like figure against retailers that report rent in opex. In 2Q26 it is Ps.982M (3.8% of revenue) against Ps.1,575M (6.1%) before rent." }
       },
       sections: [
         { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
@@ -379,6 +412,7 @@ export var tbbbResults = {
           { label: 'Company', keys: ['gp', 'opinc', 'ebitda', 'adj', 'netinc'] },
           { label: 'Non-cash', keys: ['sbc'] },
           { label: 'Expenses', keys: ['sales', 'admin', 'adminx'] },
+          { label: 'Leases (IFRS 16)', keys: ['rent', 'ebitdaal'] },
           { label: 'Below operating profit', keys: ['fin', 'fcost', 'fx', 'tax'] },
           { label: 'Cash flow', keys: ['ocf', 'capex'] }
         ] }

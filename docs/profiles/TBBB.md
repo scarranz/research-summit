@@ -78,11 +78,11 @@
 | EV-SET | Earnings ▸ Setup | 👀 | 2026-11-02 | | | `tbbb-setup.js` ahora trimestral + anual con estMatrix |
 | EV-POST | Earnings ▸ Post-Results | 👀 | 2026-11-02 | | | 2Q26 agregado (recap + resumen de call, tono objetivo). Watch List: lock-up cerrado, 4 hooks nuevos para 3Q26. Guidance FY26 actualizada con 1H |
 | EV-NOTES | Earnings ▸ Notes | ⬜ | | | | |
-| BL-GEN-1…5 | Bottom Line ▸ General | 👀 parcial | 2026-11-02 | | | Motor Results (`tbbb-bl.js`): Profitability & margins, Expense lines (ventas, admin, admin ex-SBC, SBC) y Operating profit to net income (financieros, FX, impuesto). Debajo: Unit Economics conservado. Falta The bridge (margen bruto a EBITDA en cascada) y el bloque de SBC dedicado |
+| BL-GEN-1…5 | Bottom Line ▸ General | 👀 parcial | 2026-11-02 | | | Motor Results (`tbbb-bl.js`): Profitability & margins, Expense lines (ventas, admin, admin ex-SBC, SBC) y Operating profit to net income (financieros, FX, impuesto). Debajo: Unit Economics conservado. The bridge hecho (`bbb-bridge.js`: margen bruto → utilidad operativa → EBITDA → EBITDA ex-SBC → después de rentas, por periodo, % o Ps. M). Falta el bloque de SBC dedicado |
 | BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
 | BL-SPLC | Bottom Line ▸ Supply Chain | 🔨 | 2026-11-02 | | | Sin export SPLC; la sub-tab aloja Logistics (cadena, simulador multi-DC, cuándo abrir un DC) |
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | depende de `get-market-history` |
-| VA-PEERS | Valuation ▸ Peers | 🔨 | 2026-11-02 | | | Scatter de peers (múltiplo vs crecimiento, caps en vivo) reubicado; falta tabla de múltiplos estilo AMZN |
+| VA-PEERS | Valuation ▸ Peers | ⛔ parcial | 2026-11-02 | | | Scatter reubicado. Sus múltiplos y crecimiento de peers están **sembrados a mano (Aug 2026)**, contra la regla 10; no tengo fuente para reemplazarlos. Falta consenso de los peers (WALMEX, FMX, CHDRAUIB, LACOMUBC) y FX para que el múltiplo de TBBB sea en vivo |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⛔ | | | | espera Summit |
 | VA-SUB | Valuation ▸ Submit History | ⛔ | | | | espera Summit |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | 🔨 | 2026-11-02 | | | Matriz SSS × aperturas reubicada tal cual; su base de EBITDA usa el modelo Summit del 22-may (pendiente de refresh) |
@@ -194,6 +194,11 @@ Overview (#1-8) intacto. #9-12 (legacy) siguen sin renderizar y sin borrarse del
 - Watch List: encabezado y nota pasan a 3Q26.
 - Overview: Key Facts, 2×2 y bloques 4-7 se revisaron; son estándar y con fecha FY2025, sin cambios necesarios.
 
+### Correcciones de contenido (2026-11-02, segunda pasada)
+
+- El Overview y varias notas decían que el SBC de 2025 era un cargo "one-time/one-off" ligado al IPO. Los releases lo atribuyen al **Liquidity Event Plan** (7.5M acciones Class C otorgadas en junio 2025, vesting trimestral a 3 años, reconocimiento gradual), con calendario decreciente hasta 2028. Corregido en el Timeline, FY_NOTE, FIN_NOTE y en el texto de Peers; se agregó el hito 2026 (follow-on de mayo, fin del lock-up el 6-ago).
+- Calls en el repo: 11 (se destilaron 4Q23, 1Q24 y 2Q24).
+
 ## 6. Bloqueos y preguntas abiertas
 
 - ⛔ **Snapshot Summit** (Dani revisa; es lo único que bloquea EV-EST completo, VA-TM, VA-SUB, VA-HIST y el refresh de Sensitivity): lo cableado es 2026-05-22; el consenso ya llega a 2Q26 (2026-09-09). Mientras no haya snapshot con 2Q26, Summit queda como está y marcado con su fecha; no se inventa ni se mezcla. Mismo patrón que Mastercard (overview hecho sin submit).
@@ -223,5 +228,5 @@ Pendiente de la compuerta: Dani elige 3 periodos al azar para comparar contra el
 2. Top Line y Bottom Line al motor (segments.js, márgenes) con datos trimestrales; hoy son las gráficas a medida reubicadas.
 3. Valuation: Historic Multiple (requiere get-market-history desplegada) y tabla de Peers estilo AMZN.
 4. Overview: auditar OV-1 a OV-7 contra §8 (ya estandarizados; falta revisar Key Facts, 2x2 y pie de fuentes con 2Q26 y follow-on).
-5. Notes (EV-NOTES), Management ▸ Track Record, calls 4Q23/1Q24/2Q24 en el repo.
+5. Notes (EV-NOTES) y Management ▸ Track Record: sin fuente definida, necesitan la decisión de Dani.
 6. F-FINAL: conciliación del conteo de control (B3) contra el DOM del portal local.

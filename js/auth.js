@@ -30,7 +30,10 @@ export function canAccess(page) {
 export async function sendOtp(email) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: true },
+    options: {
+      shouldCreateUser: true,
+      emailRedirectTo: window.location.origin + '/login.html',
+    },
   });
   return { error };
 }

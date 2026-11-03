@@ -547,6 +547,7 @@ var STD_TL = [
     'The May follow-on raised about <b>Ps.1.49B of primary proceeds</b>, held mostly in short-term deposits; the net loss widened on SBC.',
     'On Aug 6 the lock-up on Class C shares expired and all Class C converted one-to-one into Class A.',
     '2Q26 revenue grew <b>+38.7% to Ps.26.0B</b> on <b>+20.0% same-store sales</b>; first-half operating cash flow rose 119% to Ps.4.3B.',
+    '3Q26 revenue grew <b>+40.3% to Ps.28.4B</b> on <b>+20.5% same-store sales</b>; four distribution centers opened, EBITDA ex-SBC reached Ps.1.9B (6.6% margin) and reported net profit turned positive (Ps.23M) as the SBC charge faded.',
   ]],
 ];
 function stdTimeline(){
@@ -1222,7 +1223,7 @@ function init(c){
 // TBBB tabs are RE-ARRANGED here (nothing deleted): Top Line = Stores (Growth/SSS) + Product Mix +
 // General (Store Tour · Logistics · Competitive Landscape · BİM Blueprint); Bottom Line = Unit
 // Economics; Evolution = blank scaffold (built later); Valuation = Sensitivity; Management = Management.
-var DD_SOURCES = 'Sources: BBB Foods FY2025 annual report (Form 20-F) and investor relations; Summit DCF model (TBBB, snapshot 2026-05-22) for projections & sensitivity; competitor/logistics detail from company disclosures and cited research. Figures in Mexican pesos (Ps.) unless noted.';
+var DD_SOURCES = 'Sources: BBB Foods FY2025 annual report (Form 20-F) and investor relations; Summit DCF model (TBBB, submit of Aug 13, 2026) for projections & sensitivity; competitor/logistics detail from company disclosures and cited research. Figures in Mexican pesos (Ps.) unless noted.';
 
 function ddEmpty(){ return '<div class="dd-empty">🚧 <b>Evolution</b> — this section is being built.</div>'; }
 function ddPending(title, msg){ return '<div class="dd-empty"><b>'+esc(title)+'</b><div style="margin-top:7px;font-weight:400;max-width:560px;margin-left:auto;margin-right:auto">'+esc(msg)+'</div></div>'; }
@@ -1237,18 +1238,18 @@ var GD_TRACK = [
   { y:'FY2026', lo:590, hi:630, act:null }
 ];
 var GD_CARDS = [
-  ['Store openings', '590–630', 'net new · +3–10% over the 574 opened in 2025 · 278 opened in 1H26 (123 + 155)'],
-  ['Revenue growth', '+29% to +32%', '1Q26 +33%, 2Q26 +38.7% (1H26 +36.2%) — running above the top'],
-  ['Same-store sales', '+13% to +16%', '1Q26 +16.0%, 2Q26 +20.0% — at and above the top'],
+  ['Store openings', '590–630', 'net new · +3–10% over the 574 opened in 2025 · 419 opened in 9M26 (123 + 155 + 141)'],
+  ['Revenue growth', '+29% to +32%', '1Q26 +33%, 2Q26 +38.7%, 3Q26 +40.3% (9M26 +37.7%) — running above the top'],
+  ['Same-store sales', '+13% to +16%', '1Q26 +16.0%, 2Q26 +20.0%, 3Q26 +20.5% — at and above the top'],
   ['Capex / store', '~Ps.5.5M', 'up from ~Ps.3.9M (bigger-store mix) · ~26-month payback'],
   ['Total capex (FY26)', '~Ps.5.2B', 'stores + distribution centers + fleet']
 ];
 // Guide vs delivered on the three guided lines. Guides: 4Q23 call (FY2024), 4Q24 call (FY2025), 4Q25 call (FY2026).
-// Delivered: FY2024 and FY2025 from the 20-F / releases; FY2026 is first-half (1Q26 + 2Q26) and still open.
+// Delivered: FY2024 and FY2025 from the 20-F / releases; FY2026 is nine months (1Q26 to 3Q26) and still open.
 var GD_FULL = [
   { y:'FY2024', rows:[ ['Net new stores','380–420','484','beat'], ['Revenue growth','+28% to +32%','+30.3%','in'], ['Same-store sales','"mid-teens"','+13.4%','na'] ] },
   { y:'FY2025', rows:[ ['Net new stores','500–550','574','beat'], ['Revenue growth','+26% to +29%','+36.1%','beat'], ['Same-store sales','+11% to +14%','+18.3%','beat'] ] },
-  { y:'FY2026 (1H)', rows:[ ['Net new stores','590–630','278 in 1H (123 + 155)','open'], ['Revenue growth','+29% to +32%','+36.2% in 1H','open'], ['Same-store sales','+13% to +16%','+16.0% 1Q · +20.0% 2Q','open'] ] }
+  { y:'FY2026 (9M)', rows:[ ['Net new stores','590–630','419 in 9M (123 + 155 + 141)','open'], ['Revenue growth','+29% to +32%','+37.7% in 9M','open'], ['Same-store sales','+13% to +16%','+16.0% 1Q · +20.0% 2Q · +20.5% 3Q','open'] ] }
 ];
 function bGuideFull(){
   var tag = { beat:'<span class="gd-res beat">▲ above the top</span>', in:'<span class="gd-res" style="color:#5B7085">● inside the range</span>', na:'<span class="gd-res" style="color:#5B7085">no range given</span>', open:'<span class="gd-res prog">in progress</span>' };

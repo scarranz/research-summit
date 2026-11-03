@@ -13,6 +13,7 @@
 // (not quarterly levels), so there is no guide row in the grid (TBBB_GUIDED is empty) and each guide sits in the notes of its line.
 
 import { tbbbResults } from '../results-data/tbbb.js';
+import { TBBB_HIST } from './tbbb-ce-hist.js';
 
 // [name, unit, results key, divisor from the results file]. HEADLINE first (the fixed nHead block), then the company's own lines.
 var TBBB_LINES = [
@@ -252,3 +253,57 @@ export var TBBB_CALL_EARNINGS = { ticker:'TBBB', quarters:[
       ]
     } }
 ] };
+
+// ── Earlier reported quarters (./tbbb-ce-hist.js): the print notes are built here from the Results dataset (reported figure against the same quarter a
+// year earlier, margins on revenue), so no number is typed; the call comes from the transcript entry. ──
+function hFmt(u, v){
+  if (v == null) return '—';
+  var a = Math.abs(v), sg = v < 0 ? '−' : '';
+  if (u === 'Ps.B') return sg + 'Ps.' + (+a.toFixed(2)) + 'B';
+  if (u === 'Ps.M') return sg + 'Ps.' + Math.round(a).toLocaleString('en-US') + 'M';
+  if (u === '%') return sg + a.toFixed(1) + '%';
+  return sg + Math.round(a).toLocaleString('en-US');
+}
+function hMetric(k){ for (var i = 0; i < TBBB_CE_CONS.m.length; i++) if (TBBB_CE_CONS.m[i].k === k) return TBBB_CE_CONS.m[i]; return null; }
+function hRaw(k, idx){   // unrounded reported value in the line's own unit (the grid values are rounded for display)
+  var L = TBBB_LINES.filter(function(x){ return x[0] === k; })[0]; if (!L || idx < 0) return null;
+  var r = tbbbResults.views.q.metrics[L[2]]; if (!r || r.act[idx] == null) return null; return r.act[idx] / L[3];
+}
+function hMul(m){ return m && m.u === 'Ps.B' ? 1000 : 1; }
+function hAutoNotes(q){
+  var Q = TBBB_CE_CONS.q, i = Q.indexOf(q), out = {};
+  if (i < 0) return out;
+  var revA = hRaw('Revenue', i) * 1000, revY = hRaw('Revenue', i - 4) != null ? hRaw('Revenue', i - 4) * 1000 : null;
+  function add(k, kind){
+    var m = hMetric(k); if (!m || m.qa[i] == null) return;
+    var a = hRaw(k, i), y = i >= 4 ? hRaw(k, i - 4) : null, t, h;
+    if (kind === 'growth'){
+      var g = (y != null && y > 0) ? Math.round((a / y - 1) * 1000) / 10 : null;
+      t = (g == null ? '' : (g >= 0 ? '+' : '−') + Math.abs(g).toFixed(1) + '% to ') + hFmt(m.u, a);
+      h = '<p>' + k + ' was ' + hFmt(m.u, a) + (y != null ? ' against ' + hFmt(m.u, y) + ' in the same quarter a year earlier' : '') + '. The Street and Summit comparison is on the card above.</p>';
+    } else if (kind === 'rate'){
+      t = hFmt(m.u, a) + (y != null ? ' on ' + hFmt(m.u, y) + ' a year earlier' : '');
+      h = '<p>Same-store sales growth was ' + hFmt(m.u, a) + (y != null ? ', against ' + hFmt(m.u, y) + ' in the same quarter a year earlier' : '') + '.</p>';
+    } else if (kind === 'abs'){
+      t = hFmt(m.u, a) + (y != null ? ' against ' + hFmt(m.u, y) : '');
+      h = '<p>' + k + ': ' + hFmt(m.u, a) + (y != null ? ' against ' + hFmt(m.u, y) + ' a year earlier' : '') + '.</p>';
+    } else if (kind === 'margin'){
+      var mg = revA ? a * hMul(m) / revA * 100 : null, mgY = (y != null && revY) ? y * hMul(m) / revY * 100 : null;
+      t = hFmt(m.u, a) + (mg != null ? ', ' + mg.toFixed(1) + '% of revenue' : '');
+      h = '<p>' + k + ' was ' + hFmt(m.u, a) + (mg != null ? ', ' + mg.toFixed(1) + '% of revenue' : '') + (mgY != null ? ', against ' + mgY.toFixed(1) + '% a year earlier (' + ((mg - mgY) >= 0 ? '+' : '−') + Math.abs(Math.round((mg - mgY) * 100)) + 'bps)' : '') + '.</p>';
+    } else {
+      t = hFmt(m.u, a) + (y != null ? ' against ' + hFmt(m.u, y) : '');
+      h = '<p>' + k + ' was ' + hFmt(m.u, a) + (y != null ? ' against ' + hFmt(m.u, y) + ' in the same quarter a year earlier' : '') + '.</p>';
+    }
+    out[k] = { t: t, h: h };
+  }
+  [['Revenue','growth'],['Same-store sales','rate'],['Stores','abs'],['Net new stores','abs'],['Gross profit','margin'],['Sales expenses','margin'],['Admin ex-SBC','margin'],
+   ['Stock-based comp','margin'],['EBITDA ex-SBC','margin'],['EBITDA (reported)','level'],['Net income','level'],['Operating cash flow','level']].forEach(function(x){ add(x[0], x[1]); });
+  return out;
+}
+TBBB_HIST.forEach(function(H){
+  var p = H.q.charAt(1) + 'Q' + H.q.slice(-2);
+  TBBB_CALL_EARNINGS.quarters.push({ q:H.q, status:'reported', date:H.date,
+    setup:{ source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot ' + H.snap + ' · Summit DCF model: the frozen pre-print estimate where the model carried the quarter', asOf:H.asOf, notes:{}, us:ceSummitUs(p), debate:{ rows:null, synth:'' } },
+    results:{ headline:H.headline, notes:hAutoNotes(H.q), watch:{} }, call:H.call });
+});

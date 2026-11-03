@@ -66,6 +66,9 @@ export var UBER_CE_CONS = (function(){
       if(r.cons && r.cons[j]!=null && (r.act[j]!=null || m.qr[i][3]==null)) m.qr[i][3]=r2(r.cons[j]/x[2]); });   // reported: the going-in file; forward: only where Bloomberg has no line (Non-GAAP EPS)
   });
   G.m.forEach(function(o){ if(o.u==='M') o.u='Mn'; });
+  Object.keys(byK).forEach(function(k){ var o=byK[k]; Q.forEach(function(q,i){
+    if(o.qa[i]!=null || !o.qr[i] || o.qr[i][3]!=null) return;
+    for(var h=2; h>=0; h--){ if(o.qr[i][h]!=null){ o.qr[i][3]=o.qr[i][h]; break; } } }); });   // two quarters out: the newest file's value
   var order=NHEAD.concat(CUSTOM), m=order.filter(function(k){ return byK[k]; }).map(function(k){
     var o=byK[k]; o.t=(o.qa.some(function(v){ return v!=null; })&&o.qr.some(function(r){ return r.some(function(v){ return v!=null; }); }))?'ok':'nocons';
     o.qy=Q.map(function(q,i){ return i>=4?o.qa[i-4]:null; }); o.qq=Q.map(function(q,i){ return i>=1?o.qa[i-1]:null; });
@@ -75,8 +78,24 @@ export var UBER_CE_CONS = (function(){
 })();
 
 // Summit for a quarter's Setup (`setup.us`): READ from the Results dataset, where the 2026-08-05 submit is frozen (rule 10).
+// Summit lines the Results dataset does not carry — FROZEN from the Summit MCP (submit 2026-08-05, projection_history:
+// each quarter's pre-print estimate; pulled 2026-11-03; frozen on purpose, not live). US$ millions; capex, D&A and SBC
+// are positive amounts. 'Operating income (GAAP)' = the model's OP_INCOME row (2Q26 left at 0 in the submit → omitted).
+// Not in the model, so Summit stays blank: Gross profit (Uber reports none), GAAP net income and diluted shares (rows at 0),
+// GAAP EPS (no GAAP net income to build it from).
+var SUMMIT_EXTRA = {
+  '3Q25': { 'Operating cash flow':3095.0, 'Capex':69.9, 'D&A':174.5, 'Stock-based comp':469.9, 'Freight revenue':1260, 'Mobility op. income':2096.4, 'Delivery op. income':910.6, 'Operating income (GAAP)':1683.9 },
+  '4Q25': { 'Operating cash flow':3191.6, 'Capex':75.5, 'D&A':188.0, 'Stock-based comp':506.2, 'Freight revenue':1307, 'Mobility op. income':2254.8, 'Delivery op. income':972.0, 'Operating income (GAAP)':1823.0 },
+  '1Q26': { 'Operating cash flow':2677.0, 'Capex':71.9, 'D&A':210.6, 'Stock-based comp':491.4, 'Freight revenue':1267, 'Mobility op. income':1944.6, 'Delivery op. income':949.0, 'Operating income (GAAP)':1694.1 },
+  '2Q26': { 'Operating cash flow':2826.3, 'D&A':213.3, 'Stock-based comp':497.8, 'Freight revenue':1334, 'Mobility op. income':2251.9, 'Delivery op. income':1049.6 },
+  '3Q26': { 'Operating cash flow':2790.3, 'Capex':86.0, 'D&A':190.4, 'Stock-based comp':483.4, 'Freight revenue':1445.3, 'Mobility op. income':2268.1, 'Delivery op. income':1139.7, 'Operating income (GAAP)':2192.5 },
+  '4Q26': { 'Operating cash flow':3106.0, 'Capex':96.5, 'D&A':208.3, 'Stock-based comp':528.8, 'Freight revenue':1445.3, 'Mobility op. income':2499.4, 'Delivery op. income':1280.9, 'Operating income (GAAP)':2478.4 },
+  '1Q27': { 'Operating cash flow':3491.2, 'Capex':94.8, 'D&A':240.8, 'Stock-based comp':561.9, 'Freight revenue':1806.7, 'Mobility op. income':2483.1, 'Delivery op. income':1345.1, 'Operating income (GAAP)':2358.7 }
+};
+function r3(v){ return Math.abs(v)>=10?Math.round(v*10)/10:(Math.abs(v)<1?Math.round(v*1000)/1000:Math.round(v*100)/100); }
 function ceSummitUs(p){
   var M=uberResults.views.q.metrics, out={};
+  var X=SUMMIT_EXTRA[p]||{}; Object.keys(X).forEach(function(k){ out[k]={ v:r3(X[k]/1000) }; });
   FROM_RESULTS.forEach(function(x){
     var r=M[x[1]], i=r?r.periods.indexOf(p):-1, v=(i>=0&&r.summit)?r.summit[i]:null;
     if(v!=null){ v=v/x[2]; out[x[0]]={ v:Math.abs(v)>=10?Math.round(v*10)/10:(Math.abs(v)<1?Math.round(v*1000)/1000:Math.round(v*100)/100) }; } });
@@ -274,8 +293,14 @@ var Q3_NOTES={
   'Trips':{ t:'In billions', h:'<p>Q2 2026 printed 3.87B (+18% YoY). Street (Sep 10 2026) 4.09B.</p>' }
 };
 var Q3_SRC='Bloomberg (BST) \u2014 BBG_CONSENSUS.txt, snapshot 2026-09-10 (newest on file) \u00b7 Summit DCF model, submit 2026-08-05 (frozen) \u00b7 guidance: Uber 2Q26 release (Aug 5 2026)';
+function pOfQ(q){ return q.charAt(1)+'Q'+q.slice(-2); }
 export var UB_CALL_EARNINGS = { ticker:'UBER', quarters:UB_CALL_EARNINGS_V1.quarters.map(function(q){
-  if(q.q!=='Q3 2026') return q;
+  if(q.q!=='Q3 2026'){
+    if(!q.setup) return q;
+    var o2={}; for(var k2 in q) o2[k2]=q[k2];
+    o2.setup=Object.assign({}, q.setup, { us:Object.assign({}, ceSummitUs(pOfQ(q.q)), q.setup.us||{}) });
+    return o2;
+  }
   var o={}; for(var k in q) o[k]=q[k];
   o.date='Wed Nov 4, 2026';
   o.setup=Object.assign({}, q.setup, { source:Q3_SRC, asOf:'2026-09-10', notes:Q3_NOTES, us:ceSummitUs('3Q26'), prior:q.setup });

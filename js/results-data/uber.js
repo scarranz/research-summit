@@ -17,7 +17,9 @@
 //    (Mobility, Delivery, Freight, Corporate) = Uber's non-GAAP operating income basis.
 //  * EPS: the v2 export carries only GAAP diluted EPS, so the matrix has no eps row; eps.cons
 //    keeps its frozen Non-GAAP values (from 4Q25) and 3Q26 still reads the older file.
-//  * The Summit half of estMatrix is unchanged (no new model submit after 2026-08-05).
+//  * The Summit half of estMatrix is unchanged (no new model submit after 2026-08-05). Forward quarterly FCF (3Q26-1Q27) now
+//    reads the 2026-08-05 submit (2,704 / 3,010 / 3,396), which does carry those quarters; Freight revenue and Uber One
+//    members gained a Summit series; annual FCF / Freight / members filled from the model with notes (2026-11-03).
 //  * opinc / eps actuals checked against the filings (2026-11-03): Non-GAAP Operating Income and Non-GAAP EPS from the
 //    8-K of Jan 12 2026 (recast 1Q24-3Q25) and the 4Q25-2Q26 releases. Corrected: opinc 2Q24-4Q24 (942/1,073/1,254 ->
 //    1,025/1,146/1,318), FY2024 (3,977 -> 4,310); eps 1Q24-3Q24 and 1Q25 by 1-2 cents, FY2024 1.86 -> 1.82, FY2025 2.47 -> 2.45.
@@ -154,7 +156,7 @@ export var uberResults = {
           note: 'Freight revenue is recognized gross (close to its gross bookings). Actuals: Summit model actuals_history (ties to each release); Street: Bloomberg segment revenue. The model does not project Freight revenue separately.',
           periods: ["3Q22", "4Q22", "1Q23", "2Q23", "3Q23", "4Q23", "1Q24", "2Q24", "3Q24", "4Q24", "1Q25", "2Q25", "3Q25", "4Q25", "1Q26", "2Q26", "3Q26", "4Q26", "1Q27"],
           act:    [1751, 1540, 1400, 1279, 1286, 1280, 1284, 1273, 1309, 1275, 1260, 1261, 1308, 1270, 1337, 1583, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, 1260, 1307, 1267, 1334, 1445.3, 1445.3, 1806.7],
           cons:   [1904.9, 1706.5, 1668.0, 1504.6, 1326.6, 1289.8, 1286.5, 1275.0, 1291.4, 1308.8, 1302.8, 1277.9, 1309.5, 1291.5, 1274.9, 1306.1, 1434.8, 1421.8, 1465.1],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null] },
@@ -182,7 +184,7 @@ export var uberResults = {
         fcf: { label: 'Free Cash Flow', short: 'FCF', group: 'Company', unit: 'usdM', marginOf: 'rev', marginLabel: 'FCF margin (% of revenue)',
           periods: ["3Q22", "4Q22", "1Q23", "2Q23", "3Q23", "4Q23", "1Q24", "2Q24", "3Q24", "4Q24", "1Q25", "2Q25", "3Q25", "4Q25", "1Q26", "2Q26", "3Q26", "4Q26", "1Q27"],
           act:    [358, -496, 549, 1083, 798, 600, 1359, 1721, 2109, 1706, 2250, 2475, 2230, 2808, 2286, 2792, null, null, null],
-          summit: [null, null, null, null, null, null, null, 1913.7, 2167.9, 2129.8, 2409.6, 2632.5, 2910.7, 2988.1, 2454.5, 2589.1, 2756.9, 3032.5, 3202.2],
+          summit: [null, null, null, null, null, null, null, 1913.7, 2167.9, 2129.8, 2409.6, 2632.5, 2910.7, 2988.1, 2454.5, 2589.1, 2704.3, 3009.6, 3396.3],
           cons:   [136.8, -28.1, 498.9, 660, 618.4, 874.7, 1174.8, 1248.6, 1416.2, 1461.1, 1345.7, 1838.3, 1899.5, 2171.4, 2849.5, 3059, 2569.3, 2963.2, 2935.9],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null] },
@@ -275,11 +277,11 @@ export var uberResults = {
           cons:   [7138.4, 5275.9, 5171.2, 5115.1, 5815.5, 6112.4, 6405.2, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null] },
-        frrev: { label: 'Freight Revenue', short: 'Freight rev.', group: 'Freight', unit: 'usdM',
+        frrev: { note: 'Summit FY2026 5,811 equals reported 1H26 + its 3Q/4Q; FY2027-28 (6,491) do not equal the sum of its quarters (10,416 in 2027) and are shown as the model states them.', label: 'Freight Revenue', short: 'Freight rev.', group: 'Freight', unit: 'usdM',
           note: 'Freight revenue is recognized gross (close to its gross bookings). Actuals: Summit model actuals_history (ties to each release); Street: Bloomberg segment revenue. The model does not project Freight revenue separately.',
           periods: ["2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"],
           act:    [6947, 5245, 5141, 5099, null, null, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, 5810.6, 6491.1, 6491.1, null, null],
           cons:   [7119.9, 5239.4, 5214.2, 5118.4, 5747.0, 6182.7, 6529.2, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null] },
@@ -304,14 +306,14 @@ export var uberResults = {
           cons:   [null, null, null, null, 3.311, 4.45, 5.487, 6.565, 7.441],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null] },
-        fcf: { label: 'Free Cash Flow', short: 'FCF', group: 'Company', unit: 'usdM', marginOf: 'rev', marginLabel: 'FCF margin (% of revenue)',
+        fcf: { note: 'Summit = the model\u2019s annual FCF row (submit 2026-08-05); FY2027-28 do not equal the sum of its quarters (15,498 in 2027).', label: 'Free Cash Flow', short: 'FCF', group: 'Company', unit: 'usdM', marginOf: 'rev', marginLabel: 'FCF margin (% of revenue)',
           periods: ["2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"],
           act:    [390, 3362, 6895, 9763, null, null, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, 10791.9, 12413.7, 15570, null, null],
           cons:   [676.5, 3210.2, 6515.4, 9225.8, 10468.5, 12783.5, 14957, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null] },
-        trips: { label: 'Trips', short: 'Trips', group: 'Platform', unit: 'count', unitLabel: 'millions of trips',
+        trips: { note: 'Annual Summit is left blank on purpose: the model\u2019s annual Trips row (FY2026 12,260) sits below the FY2025 actual (13,567) and does not equal its own quarters; read the model\u2019s view on the quarterly axis.', label: 'Trips', short: 'Trips', group: 'Platform', unit: 'count', unitLabel: 'millions of trips',
           periods: ["2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"],
           act:    [7642, 9448, 11273, 13567, null, null, null, null, null],
           summit: [null, null, null, null, null, null, null, null, null],
@@ -329,7 +331,7 @@ export var uberResults = {
           note: 'Members at year end (the fourth-quarter figure Uber stated: 19M 2023, 30M 2024, 46M 2025). Forecast years are not shown: the model’s annual member rows (66.7 / 90.7 for 2026 / 2027) do not equal its own fourth quarters (66.7 / 75.2).',
           periods: ["2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"],
           act:    [null, 19, 30, 46, null, null, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, 66.7, 75.2, 94.9, null, null],
           cons:   [null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null] },

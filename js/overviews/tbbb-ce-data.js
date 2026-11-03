@@ -301,9 +301,20 @@ function hAutoNotes(q){
    ['Stock-based comp','margin'],['EBITDA ex-SBC','margin'],['EBITDA (reported)','level'],['Net income','level'],['Operating cash flow','level']].forEach(function(x){ add(x[0], x[1]); });
   return out;
 }
+// The guide each earlier quarter was reported against (the annual guide of its fiscal year, given on the call that closed the year before).
+var GUIDE_NOTES = {
+  '2024': { 'Revenue':{ t:'FY2024 guide: sales +28% to +32%', h:'<p>Given with the Q4 2023 results and maintained on the Q1 and Q2 2024 calls: <b>380 to 420</b> net new stores and sales growth of <b>+28% to +32%</b>. FY2024 closed with 484 openings and revenue +30.3%.</p>' },
+            'Stores':{ t:'FY2024 guide: 380 to 420 net new stores', h:'<p>Maintained through the year; on the Q3 call the company said it would “solidly meet” it. FY2024 closed at 484.</p>' } },
+  '2025': { 'Revenue':{ t:'FY2025 guide: revenue +26% to +29%', h:'<p>Given on the Q4 2024 call: same-store sales <b>+11% to +14%</b>, revenue growth <b>+26% to +29%</b> and <b>500 to 550</b> net new stores. FY2025 closed at +36.1%, 574 and +18.3%.</p>' },
+            'Same-store sales':{ t:'FY2025 guide: +11% to +14%', h:'<p>Given on the Q4 2024 call. The year closed at +18.3%; management called that “stratospheric” against the guide.</p>' },
+            'Stores':{ t:'FY2025 guide: 500 to 550 net new stores', h:'<p>On the Q2 2025 call the company did not revise the guide and said it was confident of meeting it; the year closed at 574.</p>' } },
+  '2026': { 'Revenue':{ t:'FY2026 guide +29% to +32%', h:FY26_GUIDE },
+            'Same-store sales':{ t:'FY2026 guide +13% to +16%', h:FY26_GUIDE },
+            'Stores':{ t:'FY2026 guide 590 to 630 net new stores', h:FY26_GUIDE } }
+};
 TBBB_HIST.forEach(function(H){
   var p = H.q.charAt(1) + 'Q' + H.q.slice(-2);
   TBBB_CALL_EARNINGS.quarters.push({ q:H.q, status:'reported', date:H.date,
-    setup:{ source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot ' + H.snap + ' · Summit DCF model: the frozen pre-print estimate where the model carried the quarter', asOf:H.asOf, notes:{}, us:ceSummitUs(p), debate:{ rows:null, synth:'' } },
+    setup:{ source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot ' + H.snap + ' · Summit DCF model: the frozen pre-print estimate where the model carried the quarter', asOf:H.asOf, notes:(GUIDE_NOTES[H.q.slice(-4)]||{}), us:ceSummitUs(p), debate:{ rows:null, synth:'' } },
     results:{ headline:H.headline, notes:hAutoNotes(H.q), watch:{} }, call:H.call });
 });

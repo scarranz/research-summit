@@ -711,16 +711,6 @@ function growthBody(){
   g += '<div class="ov-foot">'+esc(VS_NOTE)+'</div>';
   return g;
 }
-// Legacy "Stores" body (nested SSS/Growth). Kept intact — content now also lives in the Deep Dive.
-function storesBody(c){
-  return '<div class="ovt-subtabs">'+
-    '<button type="button" class="ovt-subtab active" data-ovst="sss">SSS</button>'+
-    '<button type="button" class="ovt-subtab" data-ovst="growth">Store Growth</button>'+
-  '</div>'+
-  '<div class="ovt-subpane" data-ovst="sss">'+sssBody()+'</div>'+
-  '<div class="ovt-subpane" data-ovst="growth" hidden>'+growthBody()+'</div>';
-}
-
 // "Unit Economics" sub-tab body — why 3B runs on negative working capital, in plain language.
 function ueBody(c){
   var h = '';
@@ -809,23 +799,6 @@ function mixBody(c){
   '</div>';
   h += '<div class="ov-foot">'+esc(MIX_NOTE)+'</div>';
 
-  return h;
-}
-
-// "General" tab — bundles Store Tour, Logistics, Competitive Landscape and BİM
-// Blueprint as nested sub-tabs.
-function generalBody(c){
-  var h = '';
-  h += '<div class="ovt-subtabs">'+
-    '<button type="button" class="ovt-subtab active" data-ovst="tour">Store Tour</button>'+
-    '<button type="button" class="ovt-subtab" data-ovst="logistics">Logistics</button>'+
-    '<button type="button" class="ovt-subtab" data-ovst="landscape">Competitive Landscape</button>'+
-    '<button type="button" class="ovt-subtab" data-ovst="bim">BİM Blueprint</button>'+
-  '</div>';
-  h += '<div class="ovt-subpane" data-ovst="tour">'+bbbLogistics.tourBody(c)+'</div>';
-  h += '<div class="ovt-subpane" data-ovst="logistics" hidden>'+bbbLogistics.body(c)+'</div>';
-  h += '<div class="ovt-subpane" data-ovst="landscape" hidden>'+bbbLandscape.body(c)+'</div>';
-  h += '<div class="ovt-subpane" data-ovst="bim" hidden>'+bbbBim.body(c)+'</div>';
   return h;
 }
 
@@ -1225,10 +1198,6 @@ function init(c){
 // Economics; Evolution = blank scaffold (built later); Valuation = Sensitivity; Management = Management.
 var DD_SOURCES = 'Sources: BBB Foods FY2025 annual report (Form 20-F) and investor relations; Summit DCF model (TBBB, submit of Aug 13, 2026) for projections & sensitivity; competitor/logistics detail from company disclosures and cited research. Figures in Mexican pesos (Ps.) unless noted.';
 
-function ddEmpty(){ return '<div class="dd-empty">🚧 <b>Evolution</b> — this section is being built.</div>'; }
-function ddPending(title, msg){ return '<div class="dd-empty"><b>'+esc(title)+'</b><div style="margin-top:7px;font-weight:400;max-width:560px;margin-left:auto;margin-right:auto">'+esc(msg)+'</div></div>'; }
-
-
 // ── Guidance — 3B guides only what it controls (store openings every year; +revenue growth &
 // per-store capex for 2026) and has BEATEN its store-opening guide every year. It deliberately
 // does NOT guide margins / EBITDA / SG&A. Source: docs/calls/TBBB.md + the 20-F.
@@ -1309,8 +1278,6 @@ function bEvolutionBody(c){
   '<div class="dd-subpane" data-dds="guidance" hidden>'+bGuidanceBody()+'</div>'+
   '';
 }
-function ddEmptyLabel(name){ return '<div class="dd-empty">🚧 <b>'+esc(name)+'</b> — this section is being built.</div>'; }
-
 function ddHtml(c){
   _co = c;   // capture company (id + ticker) for the Watch List DB wiring
   var h = '<div class="ov ov-tbbb ov-tbbb-dd" data-brand="TBBB" style="--brand:'+BRAND+';--brand-2:'+BRAND2+'">';

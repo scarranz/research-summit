@@ -89,10 +89,10 @@ var CAP = [
 function m$(v){ if(!v) return '—'; return v>=1000?'$'+(v/1000).toFixed(1)+'B':'$'+v+'M'; }
 
 var BENCH = 'The operating bench is long-tenured and mostly home-grown — the COO, the President &amp; Chief Corporate Affairs Officer, the CFO and the heads of product, technology, mobility and autonomous all came up inside Uber. The thin spot is finance: three CFOs since 2023, the current one with no record yet as a public-company CFO. And every record above was built in an expansion; this team has not yet run Uber through a downturn as a profitable company.';
-var FOOT = 'Roles and dates: Uber 2026 proxy statement (DEF 14A filed Mar 23 2026; DEFR14A Apr 20 2026) for the executive officers and uber.com/about/leadership (read Nov 3 2026) for the others; prior-role outcomes from company and press sources (July 2026 profile). Targets: Uber Investor Update, Feb 14 2024. Record: reported Gross Bookings and Adjusted EBITDA (Results dataset; Uber stopped treating Adjusted EBITDA as a key measure in 2Q26), GAAP operating income, free cash flow (cash from operations − capex), repurchases and SBC from the Form 10-K FY2025 (filed Feb 13 2026) and earlier 10-Ks, shares outstanding from the balance sheets, 1H26 from the Form 10-Q for 2Q26 (filed Aug 5 2026); repurchase authorizations from the 10-Qs for 1Q25 and 3Q25. Ratings are an editorial read carried from the July 2026 profile, pending SAB’s review — not a Summit output.';
+var FOOT = 'Roles and dates: Uber 2026 proxy statement (DEF 14A filed Mar 23 2026; DEFR14A Apr 20 2026) for the executive officers and uber.com/about/leadership (read Nov 3 2026) for the others; prior-role outcomes from company and press sources (July 2026 profile). Targets: Uber Investor Update, Feb 14 2024. Record: reported Gross Bookings and Adjusted EBITDA (Results dataset; Uber stopped treating Adjusted EBITDA as a key measure in 2Q26), GAAP operating income, free cash flow (cash from operations − capex), repurchases and SBC from the Form 10-K FY2025 (filed Feb 13 2026) and earlier 10-Ks, shares outstanding from the balance sheets, 1H26 from the Form 10-Q for 2Q26 (filed Aug 5 2026); repurchase authorizations from the 10-Qs for 1Q25 and 3Q25.';
 
 function cardHtml(m){
-  var r = RATE[m.rate];
+  var r = null;   // ratings dropped (SAB, 2026-11-03: evidence only, as GOOGL); `rate` stays in the data
   return '<div class="ov-clickable trk-card" data-detail="exec:'+esc(m.id)+'"'+(r?' style="border-left-color:'+r.c+'"':'')+'>'+
     '<div class="trk-n">'+esc(m.n)+'</div>'+
     '<div class="trk-r">'+esc(m.role)+' · at Uber since '+esc(m.since)+'</div>'+
@@ -104,7 +104,6 @@ function cardHtml(m){
 
 export function uberTrackBody(){
   var h='<p class="ov-lede">The people running Uber today, on <b>what they have actually built</b> — roles from the proxy, outcomes from the reported numbers, and the record against management’s own Investor Day targets and capital-allocation promises. <b>Tap a card</b> for the full history.</p>';
-  h+='<div class="ov-fynote">Each card carries the editorial rating from the July 2026 profile — <b>Value creator</b> or <b>Mixed / unproven</b> (the coloured rule on the left) — kept for SAB’s review; it is a read, not a Summit output.</div>';
   h+='<div class="trk-grid">'+TRACK.map(cardHtml).join('')+'</div>';
 
   h+=sec('The turnaround, in numbers',
@@ -133,5 +132,5 @@ export function uberTrackBody(){
 export function uberTrackPop(id){
   var m=TRACK.filter(function(x){ return x.id===id; })[0]; if(!m) return null;
   var r=RATE[m.rate];
-  return { t:esc(m.n)+' <span class="trk-pop-r">'+esc(m.role)+' · at Uber since '+esc(m.since)+(r?' · editorial rating: '+esc(r.l):'')+'</span>', h:m.detail };
+  return { t:esc(m.n)+' <span class="trk-pop-r">'+esc(m.role)+' · at Uber since '+esc(m.since)+''+'</span>', h:String(m.detail||'').replace(/<p><b>Net read[\s\S]*?<\/p>/g, '') };   // editorial reads dropped from view (SAB, 2026-11-03); kept in the data
 }

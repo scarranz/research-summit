@@ -99,31 +99,31 @@ Cuadre contra el comunicado (vía `act` del dataset de Results, que cuadra con c
 | OV-7 | Overview ▸ Timeline | ✅ | 2026-11-03 | SAB | fc50e3c | timeline movido sin cambios a uber-ov-timeline.js |
 | OV-F | Overview ▸ Pie de fuentes | ✅ | 2026-11-03 | SAB | fc50e3c | un solo pie |
 | EV-RES-DATA | Dataset de Results (números) | ✅ | 2026-11-03 | SAB | | estMatrix.cons v2 (30 snapshots, último 09-10); cons planos sincronizados; Summit anual 2026 de op. inc./EPS con nota |
-| EV-RES | Evolution ▸ Results | ⬜ | | | | |
+| EV-RES | Evolution ▸ Results | ✅ | 2026-11-03 | SAB | 8b8fab9 | motor results.js; "Model vs Reality" y "Guidance vs reality" debajo (B2 #67/#68) — heredado, sin cambios de forma |
 | TL-GEN | Top Line ▸ General | ✅ | 2026-11-03 | SAB | fc50e3c | motor segments.js; cita 10-K Item 1 |
 | TL-SEG | Top Line ▸ Segments | ✅ | 2026-11-03 | SAB | fc50e3c | Mobility/Delivery/Freight con sells/products/kpiNote; frrev nuevo; análisis anterior en colapsable |
 | TL-OTH | Top Line ▸ Other | ✅ | 2026-11-03 | SAB | fc50e3c | geografía región y país (10-K Nota 13) |
 | TL-CUS | Top Line ▸ Customers | ✅ | 2026-11-03 | SAB | fc50e3c | 5 clases del 10-K; sin concentración (no se divulga); Uber One anterior en colapsable |
-| EV-EST | Evolution ▸ Estimates | ⬜ | | | | |
+| EV-EST | Evolution ▸ Estimates | ✅ | 2026-11-03 | SAB | 8b8fab9 | motor; bloque evolution sin cambios (no hay submit nuevo) — heredado |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | ✅ | 2026-11-03 | SAB | | `uber-ce.js` (copia de googl-ce.js) + `uber-ce-data.js`; CE_CONS de `emit_ce_uber.py` (BBG 30 snapshots, último 09-10) + líneas de Results; Q3 2026 con Summit 08-05 y guía del 2T26 |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
-| EV-NOTES | Evolution ▸ Earnings ▸ Notes | ⬜ | | | | |
-| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ⬜ | | | | |
-| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⬜ | | | | |
-| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ⬜ | | | | |
-| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ⬜ | | | | |
-| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ⬜ | | | | |
-| BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
-| BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
-| VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
+| EV-NOTES | Evolution ▸ Earnings ▸ Notes | ✅ | 2026-11-03 | SAB | 8b8fab9 | semilla v2 de las notas a mano de SAB (UBER.pdf): 30 hilos, 298 notas, Q3 2022 → Q2 2026; v1 guardada como UBER_THEMES_V1 |
+| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ✅ | 2026-11-03 | SAB | 8b8fab9 | uber-bl.js (copia de googl-bl.js); margen sobre ingreso o GB |
+| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ✅ | 2026-11-03 | SAB | 8b8fab9 | 6 renglones de costo del 10-K (XBRL); subtotal "After cost of revenue" (Uber no reporta utilidad bruta) |
+| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ✅ | 2026-11-03 | SAB | 8b8fab9 | op. income → net income (marcas de participaciones, liberación fiscal) |
+| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ✅ | 2026-11-03 | SAB | 8b8fab9 | SBC por función (10-K Nota 10) |
+| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ✅ | 2026-11-03 | SAB | 8b8fab9 | una pestaña por renglón de gasto |
+| BL-SEG | Bottom Line ▸ Segments | ✅ | 2026-11-03 | SAB | 8b8fab9 | Adj. EBITDA (a 4T25) y Segment Operating Income (desde 1T24) separados; unit economics anterior en colapsable |
+| BL-SPLC | Bottom Line ▸ Supply Chain | ✅ | 2026-11-03 | SAB | 8b8fab9 | uber-splc.js con suppliersBody + SC_DISCLOSED (BBG 29-jun-2026); sin export SPLC en disco (dicho en el pie) |
+| VA-HIST | Valuation ▸ Historic Multiple | ✅ | 2026-11-03 | SAB | 8b8fab9 | precio en vivo; P/E sobre EPS no-GAAP, sin forward P/E (BBG solo GAAP); deuda/acciones de XBRL |
 | VA-PEERS | Valuation ▸ Peers | ✅ | 2026-11-03 | SAB | fc50e3c | mapa compartido con OV-6 + tabla |
-| VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
-| VA-SUB | Valuation ▸ Submit History | ⬜ | | | | |
-| VA-SENS | Valuation ▸ Sensitivity Analysis | ⬜ | | | | |
-| MG-TEAM | Management ▸ Executives & Board | ⬜ | | | | |
-| MG-OWN | Management ▸ Ownership | ⬜ | | | | |
-| MG-GOV | Management ▸ Governance & SBC | ⬜ | | | | |
-| MG-TRACK | Management ▸ Track Record | ⬜ | | | | |
+| VA-TM | Valuation ▸ Target Multiple / PEG | ✅ | 2026-11-03 | SAB | 8b8fab9 | Summit 2026-08-05 congelado: 14.0× EV/EBITDA y 22.0× P/E sobre 2027 |
+| VA-SUB | Valuation ▸ Submit History | ✅ | 2026-11-03 | SAB | 8b8fab9 | motor submits.js + submits-data/uber.js (4 submits) |
+| VA-SENS | Valuation ▸ Sensitivity Analysis | ✅ | 2026-11-03 | SAB | 8b8fab9 | uber-sensitivity.js sobre 2026-08-05; la calculadora vieja (UBER_VAL, precio y caja tecleados) ya no se muestra; queda en el código |
+| MG-TEAM | Management ▸ Executives & Board | ✅ | 2026-11-03 | SAB | 8b8fab9 | uber-mgmt-data.js: 10 ejecutivos, 10 consejeros (DEF 14A 2026); Susan Anderson fuera del grid (ya no está en la página de liderazgo), queda comentada |
+| MG-OWN | Management ▸ Ownership | ✅ | 2026-11-03 | SAB | 8b8fab9 | tabla de 13 insiders (DEF 14A, 2-mar-2026) + >5% + Fiscal.ai en vivo; sin archivo HDS → sin toggle de top holders |
+| MG-GOV | Management ▸ Governance & SBC | ✅ | 2026-11-03 | SAB | 8b8fab9 | 4 KPIs + tabla de gobierno + gráfica de SBC con acciones de los balances |
+| MG-TRACK | Management ▸ Track Record | ✅ | 2026-11-03 | SAB | 8b8fab9 | 7 tarjetas SIN calificaciones (SAB: quitarlas, como GOOGL); targets 3 años, turnaround, capital allocation |
 | MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab aprobada) | ⬜ | | | | |
 | F-FINAL | Cierre y entrega | ⬜ | | | | |
 
@@ -141,6 +141,7 @@ Cuadre contra el comunicado (vía `act` del dataset de Results, que cuadra con c
 - 2026-11-03 · B1 · la rama de DOAA351 `feat/uber-deep-dive` se usa solo donde sirva — SAB ("si ves que es útil… si no, desde 0")
 - 2026-11-03 · B2 · mapa aprobado con las 9 fusiones (#11, #30, #48, #53, #67, #68, #70, #72, #91) — SAB
 - 2026-11-03 · B2 · TAM → Misc ▸ TAM (sub-tab propia, como GOOGL) — SAB
+- 2026-11-03 · MG-TRACK · sin calificaciones de ejecutivos (solo evidencia, como GOOGL) — SAB
 - 2026-11-03 · EV-RES-DATA · Summit FY2026 de utilidad operativa y EPS se muestra como lo dice el modelo, con nota (ΣQ ≠ anual, −5.2% / −5.6%) — SAB
 
 ## 4. Excepciones aceptadas
@@ -407,6 +408,11 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 
 | Desde | Unidad | Qué falta | Quién lo consigue | Estado |
 |---|---|---|---|---|
+| 2026-11-03 | VA-TM / VA-SENS | **Arreglo pendiente en el DCF:** el PT de P/E ($113.29 a 22×) implica EPS FY27 $5.15; el modelo da $4.98 (earnings ÷ acciones) o $4.89 (fila EPS). El PT de EV/EBITDA implica ~$13.9B de deuda neta vs $7.3B en el 10-Q 2T26 (la celda base de Sensitivity da $111 vs $107.58) | SAB (autor del modelo) | abierto |
+| 2026-11-03 | EV-RES-DATA | `opinc.act` 2T24–4T24 (942 / 1,073 / 1,254) y FY2024 (3,977) vs filings (1,025 / 1,146 / 1,318; 4,310) — posible recast del 8-K 12-ene-2026; revisar contra el filing | Claude | abierto |
+| 2026-11-03 | VA-SUB | Submit History abre en P/E (un solo punto); ¿UBER debería abrir en EV/EBITDA? (requiere tocar submits.js) | SAB | abierto |
+| 2026-11-03 | TL-* | citas del 10-K del borrador de DOAA351 sin cotejar palabra por palabra | Claude | abierto |
+| 2026-11-03 | EV-POST | sin transcripción del 2T26 en docs/calls (Call Summary textual vacío en 2T26/1T26) | Claude (stockanalysis.com / IR) | abierto |
 
 ### EV-NOTES — cifras de las notas de SAB que no se leyeron con seguridad (UBER.pdf)
 
@@ -494,3 +500,8 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 - Qué se mostró: Overview en `uber-ov.js` (copia de googl.js) + `uber-ov-data.js`; Top Line en `segments.js` con `segments-data/uber.js` (rescatado de DOAA351 con sus arreglos); Valuation ▸ Peers.
 - Fuentes: 10-K FY2025 (acc. 0001543151-26-000015) Nota 13 e Item 1; 10-K/20-F FY2025 de DASH, CART, LYFT, GRAB (XBRL); BBG consenso FY2026 (UBER 2026-09-10, LYFT 2026-09-08); Summit actuals para Freight revenue.
 - Excepciones aceptadas: EBITDA trailing (GAAP op. inc. + D&A) vs forward (ajustado BBG) con bases distintas, dicho en el pie; P/E trailing de UBER/LYFT bajo por liberación de reservas fiscales; citas del 10-K del borrador de Dani sin cotejar palabra por palabra (pendiente).
+### 2026-11-03 · Bloque 3 (BL-GEN-1…5, BL-SEG, BL-SPLC, VA-HIST, VA-TM, VA-SUB, VA-SENS, MG-TEAM/OWN/GOV/TRACK, EV-NOTES; EV-RES/EV-EST heredadas) — APROBADO (en bloque)
+- Qué se mostró: Bottom Line (`uber-bl.js`, `uber-bl-data.js`, `uber-bbg.js`, `uber-splc.js`), Valuation (`uber-histmult*`, `uber-target-multiple*`, `submits-data/uber.js`, `uber-sensitivity*`), Management (`uber-mgmt-data.js`, `uber-own.js`, `uber-gov.js`, `uber-track.js`), Notes (`themes-data/uber.js` v2).
+- Fuentes: SEC EDGAR XBRL CIK 1543151 (FY2019–FY2025, 1Q23–2Q26), 10-K FY2025 (Notas 10 y 13), 8-K 12-ene-2026 (recast de Segment Operating Income), comunicados 4T25 y 2T26, DEF 14A 2026, BBG_CONSENSUS.txt (9/10/2026), Summit 2026-08-05 congelado, notas a mano de SAB (UBER.pdf).
+- Autoauditoría (harness, rAF shim): 23 sub-tabs pintan, 0 errores. Live market data sin sesión → "Live data pending" (esperado).
+- Cambios pedidos: quitar calificaciones de Track Record (hecho).

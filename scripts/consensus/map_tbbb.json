@@ -55,6 +55,10 @@
     "dcs": {
       "code": "NUM_OF_DISTRIBUTION_CENTERS",
       "unit": "eps"
+    },
+    "sss": {
+      "code": "SAME_STORE_SALES",
+      "unit": "eps"
     }
   },
   "y": {
@@ -110,6 +114,10 @@
     },
     "dcs": {
       "code": "NUM_OF_DISTRIBUTION_CENTERS",
+      "unit": "eps"
+    },
+    "sss": {
+      "code": "SAME_STORE_SALES",
       "unit": "eps"
     }
   }

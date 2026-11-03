@@ -124,7 +124,7 @@ export var tbbbResults = {
         adds: { label: "Net New Stores", short: "Net new stores", group: "Operating KPIs", unit: "count", unitLabel: 'stores',
           periods: ["1Q24", "2Q24", "3Q24", "4Q24", "1Q25", "2Q25", "3Q25", "4Q25", "1Q26", "2Q26", "3Q26", "4Q26", "1Q27", "2Q27"],
           act:    [94, 121, 131, 138, 117, 142, 131, 184, 123, 155, 141, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, null, 203, 82, 83],
+          summit: [null, null, null, null, null, null, null, null, null, null, 145, 207, 82, 83],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo: [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi: [null, null, null, null, null, null, null, null, null, null, null, null, null, null],

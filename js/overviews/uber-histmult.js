@@ -9,7 +9,7 @@
 //   · P/E      — ONLY on Uber's own Non-GAAP EPS (js/results-data/uber.js, views.q.metrics.eps.act, reported from 1Q24),
 //                the same basis as GOOGL's ex-OI&E choice: GAAP EPS swings with the marks on Uber's equity stakes and
 //                with the 2024 tax valuation-allowance release (GAAP diluted EPS FY2023 $0.87, FY2024 $4.56, FY2025 $4.73
-//                per the 10-Ks, against Non-GAAP $1.86 and $2.47 for 2024 and 2025). Trailing LTM = the four reported
+//                per the 10-Ks, against Non-GAAP $1.82 and $2.45 for 2024 and 2025). Trailing LTM = the four reported
 //                Non-GAAP quarters, so the line starts with 4Q24 (filed 2025-02-14); Last FY = views.y.metrics.eps.act
 //                (FY2024 onward). There is NO forward P/E: the Bloomberg archive (estMatrix.cons) carries only GAAP
 //                EPS for UBER, so it has no eps row — the chip is shown disabled with that reason.
@@ -734,7 +734,7 @@ function footHtml(){
     '<b>NTM</b> blends FY0 × (days left in FY0 ÷ 365) + FY1 × the rest, so it slides instead of stepping. '+
     'Quarterly and annual points are the <b>average</b> over the period. A period where the denominator is zero or negative is left blank. '+
     '<b>Bases.</b> EPS is Uber’s own Non-GAAP EPS, reported from 1Q24, so the trailing P/E starts with the 4Q24 filing: GAAP EPS swings with the marks on Uber’s equity stakes and the 2024 tax valuation-allowance release '+
-    '(GAAP diluted EPS FY2024 $4.56 and FY2025 $4.73, against Non-GAAP $1.86 and $2.47). '+
+    '(GAAP diluted EPS FY2024 $4.56 and FY2025 $4.73, against Non-GAAP $1.82 and $2.45). '+
     'There is no forward P/E, because the Bloomberg consensus archive carries only GAAP EPS for Uber. EBITDA is Uber’s Adjusted EBITDA (quarterly actuals from 3Q22, so the trailing EV/EBITDA starts in 2Q23); '+
     'Uber stopped calling it a key measure in the 2Q26 release. '+
     '<b>Sources.</b> Price: Massive daily close (live). Consensus Adjusted EBITDA: Bloomberg consensus export, one vintage per print ('+

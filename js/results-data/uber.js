@@ -18,6 +18,11 @@
 //  * EPS: the v2 export carries only GAAP diluted EPS, so the matrix has no eps row; eps.cons
 //    keeps its frozen Non-GAAP values (from 4Q25) and 3Q26 still reads the older file.
 //  * The Summit half of estMatrix is unchanged (no new model submit after 2026-08-05).
+//  * opinc / eps actuals checked against the filings (2026-11-03): Non-GAAP Operating Income and Non-GAAP EPS from the
+//    8-K of Jan 12 2026 (recast 1Q24-3Q25) and the 4Q25-2Q26 releases. Corrected: opinc 2Q24-4Q24 (942/1,073/1,254 ->
+//    1,025/1,146/1,318), FY2024 (3,977 -> 4,310); eps 1Q24-3Q24 and 1Q25 by 1-2 cents, FY2024 1.86 -> 1.82, FY2025 2.47 -> 2.45.
+//    Quarters before 1Q24 and years before 2024 are blank (they carried GAAP income from operations). Street for opinc only
+//    from 4Q25 / FY2026 (Bloomberg's earlier operating-income estimates were for another measure).
 //
 // ── THE FOUR SERIES ───────────────────────────────────────────────────────────────────────────
 //   act    = reported actuals. Sourced from the Summit model's actuals_history (which ties 1:1 to
@@ -153,11 +158,11 @@ export var uberResults = {
           cons:   [1904.9, 1706.5, 1668.0, 1504.6, 1326.6, 1289.8, 1286.5, 1275.0, 1291.4, 1308.8, 1302.8, 1277.9, 1309.5, 1291.5, 1274.9, 1306.1, 1434.8, 1421.8, 1465.1],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null] },
-        opinc: { label: 'Operating Income (non-GAAP)', short: 'Op. income', group: 'Company', unit: 'usdM', marginOf: 'gb', marginLabel: 'operating margin (% of Gross Bookings)',
+        opinc: { note: 'Uber\u2019s Non-GAAP Operating Income, the measure that replaced Adjusted EBITDA in 1Q26. Actuals: the 8-K of Jan 12 2026 (acc. 0001543151-26-000005), which recast 1Q24\u20133Q25, and the 4Q25, 1Q26 and 2Q26 releases. It does not exist before 1Q24, so those quarters are blank (the series used to carry GAAP income from operations there: \u2212495, \u2212142, \u2212262, 326, 394, 652, a different basis). Street: only from 4Q25, the first print after the recast was announced; earlier Bloomberg estimates were for a different operating-income measure.', label: 'Operating Income (non-GAAP)', short: 'Op. income', group: 'Company', unit: 'usdM', marginOf: 'gb', marginLabel: 'operating margin (% of Gross Bookings)',
           periods: ["3Q22", "4Q22", "1Q23", "2Q23", "3Q23", "4Q23", "1Q24", "2Q24", "3Q24", "4Q24", "1Q25", "2Q25", "3Q25", "4Q25", "1Q26", "2Q26", "3Q26", "4Q26", "1Q27"],
-          act:    [-495, -142, -262, 326, 394, 652, 821, 942, 1073, 1254, 1326, 1534, 1675, 1918, 1883, 2143, null, null, null],
+          act:    [null, null, null, null, null, null, 821, 1025, 1146, 1318, 1326, 1534, 1675, 1918, 1883, 2143, null, null, null],
           summit: [null, null, null, null, null, null, null, 1193, 1359.5, 1618.2, 1607, 1841.1, 2040.7, 2234.6, 1742.2, 2192.2, 2370, 2690, 2717],
-          cons:   [null, null, null, null, 302.3, 505.2, 620.9, 792.5, 916.9, 1196.1, 1219, 1470.4, 1618.1, 1898.1, 1844.7, 2110.7, 2250.9, 2508.1, 2449],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 1898.1, 1844.7, 2110.7, 2250.9, 2508.1, 2449],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null] },
         ebitda: { label: 'Adjusted EBITDA', short: 'Adj. EBITDA', group: 'Company', unit: 'usdM', marginOf: 'gb', marginLabel: 'EBITDA margin (% of Gross Bookings)',
@@ -169,7 +174,7 @@ export var uberResults = {
           guideHi:[470, 630, 700, 850, 1025, 1240, 1340, 1530, 1680, 1880, 1890, 2120, 2290, 2510, 2470, 2800, 2960, null, null] },
         eps: { label: 'EPS (Non-GAAP)', short: 'EPS', group: 'Company', unit: 'eps',
           periods: ["3Q22", "4Q22", "1Q23", "2Q23", "3Q23", "4Q23", "1Q24", "2Q24", "3Q24", "4Q24", "1Q25", "2Q25", "3Q25", "4Q25", "1Q26", "2Q26", "3Q26", "4Q26", "1Q27"],
-          act:    [null, null, null, null, null, null, 0.37, 0.41, 0.52, 0.56, 0.51, 0.6, 0.65, 0.71, 0.72, 0.81, null, null, null],
+          act:    [null, null, null, null, null, null, 0.35, 0.4, 0.51, 0.56, 0.5, 0.6, 0.65, 0.71, 0.72, 0.81, null, null, null],
           summit: [null, null, null, null, null, null, null, 0.487, 0.537, 0.638, 0.638, 0.737, 0.816, 0.894, 0.672, 0.827, 0.904, 1.041, 1.161],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 0.739, 0.702, 0.809, 0.856, 0.962, 0.949],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.65, 0.78, 0.84, null, null],
@@ -278,11 +283,11 @@ export var uberResults = {
           cons:   [7119.9, 5239.4, 5214.2, 5118.4, 5747.0, 6182.7, 6529.2, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null] },
-        opinc: { note: 'Summit FY2026 (9,582) does not equal the sum of its quarters (9,086, -5.2%) in the 2026-08-05 model; shown as the model states it.', label: 'Operating Income (non-GAAP)', short: 'Op. income', group: 'Company', unit: 'usdM', marginOf: 'gb', marginLabel: 'operating margin (% of Gross Bookings)',
+        opinc: { note: 'Non-GAAP Operating Income: FY2024 4,310 and FY2025 6,453 (4Q25 release); none before 2024 (the series used to carry GAAP: \u22121,832 in 2022, 1,110 in 2023). Street only from FY2026 (earlier Bloomberg estimates were for a different measure). Summit FY2026 (9,582) does not equal the sum of its quarters (9,086, -5.2%) in the 2026-08-05 model; shown as the model states it.', label: 'Operating Income (non-GAAP)', short: 'Op. income', group: 'Company', unit: 'usdM', marginOf: 'gb', marginLabel: 'operating margin (% of Gross Bookings)',
           periods: ["2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"],
-          act:    [-1832, 1110, 3977, 6453, null, null, null, null, null],
+          act:    [null, null, 4310, 6453, null, null, null, null, null],
           summit: [null, null, null, null, 9581.7, 11491.6, 15775.6, 20141.4, 25511.3],
-          cons:   [null, 983.2, 3216.8, 6165, 8723.3, 11266.3, 13891.1, 15833.6, 18264.1],
+          cons:   [null, null, null, null, 8723.3, 11266.3, 13891.1, 15833.6, 18264.1],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null] },
         ebitda: { label: 'Adjusted EBITDA', short: 'Adj. EBITDA', group: 'Company', unit: 'usdM', marginOf: 'gb', marginLabel: 'EBITDA margin (% of Gross Bookings)',
@@ -292,9 +297,9 @@ export var uberResults = {
           cons:   [1643.2, 3993.9, 6490.9, 8719.1, 11383, 13830.5, 16526.6, 18742, 21161],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null] },
-        eps: { note: 'Summit FY2026 (3.68) does not equal the sum of its quarters (3.48, -5.6%) in the 2026-08-05 model; shown as the model states it.', label: 'EPS (Non-GAAP)', short: 'EPS', group: 'Company', unit: 'eps',
+        eps: { note: 'Non-GAAP EPS: FY2024 $1.82 and FY2025 $2.45 (4Q25 release). Summit FY2026 (3.68) does not equal the sum of its quarters (3.48, -5.6%) in the 2026-08-05 model; shown as the model states it.', label: 'EPS (Non-GAAP)', short: 'EPS', group: 'Company', unit: 'eps',
           periods: ["2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"],
-          act:    [null, null, 1.86, 2.47, null, null, null, null, null],
+          act:    [null, null, 1.82, 2.45, null, null, null, null, null],
           summit: [null, null, null, null, 3.681, 4.728, 7.24, 9.73, 12.972],
           cons:   [null, null, null, null, 3.311, 4.45, 5.487, 6.565, 7.441],
           guideLo:[null, null, null, null, null, null, null, null, null],

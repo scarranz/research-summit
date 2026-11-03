@@ -93,10 +93,10 @@ export var U_PRODUCTS=[
 //   epsT/epsF diluted EPS US$ (GAAP) · ebitdaT US$M = operating income + D&A · nd US$M net debt ex leases − cash · gt/gf revenue growth %
 // Bases: trailing EBITDA = GAAP operating income + D&A (10-K); forward EBITDA = Bloomberg's company-adjusted EBITDA, so the
 // two are not like-for-like (Uber FY2025: 6,284 GAAP-based vs 8,730 adjusted). FY2025 GAAP EPS carries tax-valuation-allowance
-// releases at Uber and Lyft. Uber's P/E uses its own Non-GAAP EPS (FY2025 $2.47, the 4Q25 release), as Historic Multiple does
+// releases at Uber and Lyft. Uber's P/E uses its own Non-GAAP EPS (FY2025 $2.45, the 4Q25 release), as Historic Multiple does
 // (SAB, 2026-11-03; GAAP $4.73); peers stay GAAP, so Lyft's trailing P/E still reads low. Net debt excludes leases and short-term investments.
 export var U_PEERS=[
-  { tk:'UBER', n:'Uber', hl:true, epsT:2.47, epsF:null, epsFNote:'no forward P/E — Street EPS is GAAP', ebitdaT:6284, ebitdaF:11383, nd:3416, gt:18.3, gf:11.1,
+  { tk:'UBER', n:'Uber', hl:true, epsT:2.45, epsF:null, epsFNote:'no forward P/E — Street EPS is GAAP', ebitdaT:6284, ebitdaF:11383, nd:3416, gt:18.3, gf:11.1,
     src:'10-K FY2025 (acc. 0001543151-26-000015); EPS = Non-GAAP (4Q25 release); forward EBITDA: Bloomberg consensus FY2026, 2026-09-10',
     why:'Global mobility and delivery platform; the profile company.' },
   { tk:'DASH', n:'DoorDash', epsT:2.13, epsF:null, ebitdaT:1470, ebitdaF:null, nd:-1654, gt:27.9, gf:null,

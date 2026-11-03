@@ -1,3 +1,7 @@
+import { uberHistMult } from './uber-histmult.js';   // VA-HIST
+import { uberTargetMult } from './uber-target-multiple.js';   // VA-TM
+import { submitsHtml, initSubmits } from '../submits.js';   // VA-SUB (engine + js/submits-data/uber.js)
+import { uberSens } from './uber-sensitivity.js';   // VA-SENS
 import { SUMMIT_CAT } from '../viz-palette.js';
 import { UBER_MGMT_DATA } from './uber-mgmt-data.js';   // MG-TEAM data (engine management.js)
 import { uberOwnBody, uberOwnInit } from './uber-own.js';   // MG-OWN
@@ -3885,8 +3889,11 @@ function deepDiveHtml(c){
   // VALUATION — Peers (#84) · Sensitivity Analysis (#83). Historic Multiple, Target Multiple and
   // Submit History are added with their units. Analyst Ratings (#85) return to the Pillars tab.
   h+='<div class="dd-pane" data-dd="valuation" hidden>'+st([
+      ['histmult','Historic Multiple',uberHistMult.body()],
       ['peers','Peers',uberPeersDdBody()],
-      ['sensitivity','Sensitivity Analysis',UBER_VAL.body()] ])+'</div>';
+      ['targetmult','Target Multiple',uberTargetMult.body()],
+      ['submits','Submit History',submitsHtml('UBER')],
+      ['sensitivity','Sensitivity Analysis',uberSens.body()] ])+'</div>';
   // MANAGEMENT — Executives & Board (#89) · Ownership (#90) · Governance & SBC (#91–#92) ·
   // Track Record (#93 + #69 3-year targets + #70 turnaround + #86 capital allocation)
   h+='<div class="dd-pane" data-dd="mgmt" hidden>'+st([
@@ -4161,7 +4168,10 @@ function buildSub(root, group, key){
     else if(key==='results'){ requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'UBER'); buildModelTab(); }); }
     else if(key==='estevo') requestAnimationFrame(function(){ initResultsEvo('UBER'); });
   } else if(group==='valuation'){
-    if(key==='sensitivity')   UBER_VAL.init(root);
+    if(key==='histmult') requestAnimationFrame(function(){ uberHistMult.init(root); });
+    else if(key==='targetmult') requestAnimationFrame(function(){ uberTargetMult.init(root); });
+    else if(key==='submits') requestAnimationFrame(function(){ initSubmits(root,'UBER'); });
+    else if(key==='sensitivity') requestAnimationFrame(function(){ uberSens.init(root); });
   } else if(group==='mgmt'){
     if(key==='team')          UBER_MGMT.init(root);
     else if(key==='ownership') uberOwnInit(root);

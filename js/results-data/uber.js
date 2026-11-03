@@ -195,6 +195,14 @@ export var uberResults = {
           cons:   [127.3, 132.5, 132.2, 137, 143.3, 148.4, 149.7, 154.5, 160.2, 168.2, 168.6, 175.6, 183.8, 195.4, 198.3, 206.7, 215.1, 225.7, 222.8],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null] },
+        members: { label: 'Uber One Members', short: 'Uber One', group: 'Platform', unit: 'count', unitLabel: 'millions of members', surprise: false,
+          note: 'Uber One members at quarter end, as Uber stated them: earnings release (3Q23 15M, 3Q24 "over 25 million", 4Q24 30M, 1Q26 50M) or the call (4Q23 19M, 1Q25 30M, 2Q25 36M, 4Q25 46M). Uber gives no figure in the other quarters, so they are blank (the 4Q22 release figure is garbled in the filed text and is left out). Forecast: Summit DCF submit 2026-08-05 (frozen); the model’s historical member rows are not shown (they interpolate the quarters Uber did not disclose). No Street consensus exists for this line.',
+          periods: ["3Q22", "4Q22", "1Q23", "2Q23", "3Q23", "4Q23", "1Q24", "2Q24", "3Q24", "4Q24", "1Q25", "2Q25", "3Q25", "4Q25", "1Q26", "2Q26", "3Q26", "4Q26", "1Q27"],
+          act:    [null, null, null, null, 15, 19, null, null, 25, 30, 30, 36, null, 46, 50, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 56.8, 66.7, 70.8],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null] },
       },
       sections: [
         { key: 'top', label: 'Top Line', defaultMetric: 'gb', groups: [
@@ -205,7 +213,7 @@ export var uberResults = {
           { label: 'Company', keys: ['ebitda', 'opinc', 'eps', 'fcf'] },
         ] },
         { key: 'kpis', label: 'KPIs', defaultMetric: 'trips', groups: [
-          { label: 'Platform', keys: ['trips', 'mapc'] },
+          { label: 'Platform', keys: ['trips', 'mapc', 'members'] },
         ] }
       ],
     },
@@ -312,6 +320,14 @@ export var uberResults = {
           cons:   [130.6, 144.4, 164.4, 189.7, 218.2, 240.7, 267.4, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null] },
+        members: { label: 'Uber One Members', short: 'Uber One', group: 'Platform', unit: 'count', unitLabel: 'millions of members', surprise: false,
+          note: 'Members at year end (the fourth-quarter figure Uber stated: 19M 2023, 30M 2024, 46M 2025). Forecast years are not shown: the model’s annual member rows (66.7 / 90.7 for 2026 / 2027) do not equal its own fourth quarters (66.7 / 75.2).',
+          periods: ["2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"],
+          act:    [null, 19, 30, 46, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null] },
       },
       sections: [
         { key: 'top', label: 'Top Line', defaultMetric: 'gb', groups: [
@@ -322,7 +338,7 @@ export var uberResults = {
           { label: 'Company', keys: ['ebitda', 'opinc', 'eps', 'fcf'] },
         ] },
         { key: 'kpis', label: 'KPIs', defaultMetric: 'trips', groups: [
-          { label: 'Platform', keys: ['trips', 'mapc'] },
+          { label: 'Platform', keys: ['trips', 'mapc', 'members'] },
         ] }
       ],
     }

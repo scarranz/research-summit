@@ -147,6 +147,7 @@ Cuadre contra el comunicado (vía `act` del dataset de Results, que cuadra con c
 - 2026-11-03 · B2 · TAM → Misc ▸ TAM (sub-tab propia, como GOOGL) — SAB
 - 2026-11-03 · TL-OTH · Gross Bookings por segmento como primer bloque de Top Line ▸ Other (pedido de SAB en la revisión) — SAB
 - 2026-11-03 · OV-6/VA-PEERS · P/E de Uber con EPS no-GAAP ($2.47), como Historic Multiple; peers en GAAP — SAB
+- 2026-11-03 · EV-RES · Uber One Members en Results ▸ KPIs: solo cifras dichas por Uber (comunicado o llamada), trimestres sin cifra en blanco, Summit solo forward (2026-08-05), sin Street — SAB
 - 2026-11-03 · MG-TRACK · sin calificaciones de ejecutivos (solo evidencia, como GOOGL) — SAB
 - 2026-11-03 · EV-RES-DATA · Summit FY2026 de utilidad operativa y EPS se muestra como lo dice el modelo, con nota (ΣQ ≠ anual, −5.2% / −5.6%) — SAB
 
@@ -518,3 +519,6 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 - Recorrido: 24 sub-tabs, 0 errores de consola; en vivo: market cap $136B (Nov 3 2026), precio, múltiplos de peers, Historic Multiple, Fiscal.ai.
 - Agregado: Top Line ▸ Other ▸ Gross Bookings (motor segments.js, `results:mobgb/delgb/frgb`, definición del 10-K textual, cotejada en EDGAR) + KPI de GB de Freight. Aprobado.
 - Cambiado: P/E de Uber en Peers con EPS no-GAAP. Aprobado.
+### 2026-11-03 · EV-RES ▸ KPIs ▸ Uber One Members — APROBADO
+- Fuentes: comunicados 8-K Ex. 99.1 (3Q23, 3Q24, 4Q24, 1Q26) y transcripciones en docs/calls (4Q23, 1Q25, 2Q25, 4Q25); Summit 2026-08-05 (`ONE_MEMBERS_USERS`, projection_history, solo 3Q26–1Q27).
+- Excepción aceptada: el motor sombrea 2Q26 como forecast porque no hay cifra divulgada (se corrige con el dato del 3T26).

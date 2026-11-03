@@ -8,7 +8,7 @@
 // from the 20-F cash flow statement and the 3Q26 release; they are the same figures the Results tab carries as "SBC".
 // Chart.js is a global (CDN).
 var INK = '#14213D', MUTE = '#5B7085', GRID = 'rgba(20,33,61,.08)';
-var COLORS = { legacy: '#5B7085', opts: '#2557D6', rsu: '#7AA7E0', lep: '#C0392B', rep: '#14213D' };
+var COLORS = { legacy: '#5B7085', opts: '#2a78d6', rsu: '#7AA7E0', lep: '#eb6834', rep: '#14213D' };
 var _ch = null;
 
 // Ps. millions. Source: 3Q26 release, "Projected Share-Based Payment Non-Cash Expense" (Appendix 2).

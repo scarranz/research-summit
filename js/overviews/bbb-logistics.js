@@ -14,8 +14,8 @@
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-var DC1 = '#E1251B';   // primary DC (3B red)
-var DC2 = '#F59E0B';   // second DC (amber)
+var DC1 = '#2a78d6';   // primary DC (Summit series 1)
+var DC2 = '#eb6834';   // second DC (Summit series 2)
 var INK = '#3A434F', MUT = '#8A93A0', BDR = '#D7DDE3';
 
 // ─── Inline icons ─────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ function icoDC(color){
 }
 function icoStore(){
   return '<svg viewBox="0 0 52 52" class="lg-ico" aria-hidden="true">'+
-    '<rect x="9" y="22" width="34" height="24" rx="2" fill="#E1251B"/>'+
+    '<rect x="9" y="22" width="34" height="24" rx="2" fill="#2a78d6"/>'+
     '<path d="M7 22 L10 13 H42 L45 22 Z" fill="#9fd585"/>'+
     '<path d="M10 13 h6 l-1.5 9 h-6 z M22 13 h6 l-0.5 9 h-6 z M34 13 h6 l1 9 h-6 z" fill="#7cc15f"/>'+
     '<rect x="22" y="31" width="9" height="15" fill="#fff"/>'+

@@ -18,15 +18,15 @@ function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').r
 
 // ─── Chains ───────────────────────────────────────────────────────────────────
 var CHAINS = [
-  { key:'tbbb', name:'Tiendas 3B', short:'3B', color:'#E1251B',
+  { key:'tbbb', name:'Tiendas 3B', short:'3B', color:'#2a78d6',
     total:3346, totalLabel:'~3,346', states:'~19', parent:'Independent — listed on NYSE (TBBB)',
     since:'2005', format:'Hard discount · ~850–900 SKUs · 300–450 m² stores',
     edge:'Pioneer and leader of hard discount in Mexico. Largest scale and the most aggressive opening pace (~1 store every 15 hours).' },
-  { key:'neto', name:'Tiendas Neto', short:'Neto', color:'#1F4DD8',
+  { key:'neto', name:'Tiendas Neto', short:'Neto', color:'#eb6834',
     total:1700, totalLabel:'~1,700', states:'~21', parent:'Grupo Salinas (Ricardo Salinas Pliego)',
     since:'2009', format:'Hard discount · backed by the Grupo Salinas ecosystem (Elektra, Banco Azteca)',
     edge:'The widest geographic spread of the three. Leverages Grupo Salinas’ network and infrastructure.' },
-  { key:'bara', name:'Tiendas BARA', short:'BARA', color:'#F59E0B',
+  { key:'bara', name:'Tiendas BARA', short:'BARA', color:'#1baf7a',
     total:636, totalLabel:'~636', states:'7', parent:'FEMSA (Fomento Económico Mexicano)',
     since:'~2017', format:'Hard discount · backed by FEMSA logistics (OXXO)',
     edge:'The youngest and most concentrated: roughly 50% of its stores are in Guanajuato. Rapid expansion backed by FEMSA.' },
@@ -92,7 +92,7 @@ function hardDiscountBody(){
   var h = '';
 
   h += '<p class="ov-lede">Mexico’s <b>hard-discount</b> race is led by three chains, each with a very different owner: '+
-    '<b style="color:#E1251B">Tiendas 3B</b> (independent, public), '+
+    '<b style="color:#2a78d6">Tiendas 3B</b> (independent, public), '+
     '<b style="color:#1F4DD8">Neto</b> (Grupo Salinas) and '+
     '<b style="color:#F59E0B">BARA</b> (FEMSA). Below: where each one operates and where they compete head-to-head.</p>';
 

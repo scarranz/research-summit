@@ -23,7 +23,7 @@ import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../res
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // Brand palette (Tiendas 3B red + green) — used for the standardized Overview accent line.
-var BRAND = '#E1251B', BRAND2 = '#00A650';
+var BRAND = '#3E5A82', BRAND2 = '#1E2733';
 
 // Captured company row (id + ticker) for the Watch List DB wiring — set in html()/ddHtml() since
 // deepDive.init() is called with no args (companies.js). Mirrors googl.js's `_co` pattern.
@@ -185,7 +185,7 @@ var VS_OXXO     = [  500,  1000,  2900,  null ];   // OXXO Mexico stores (1993 /
 var VS_OXXO_EST = [ true, false,  true, false ];   // 1998 reported by FEMSA; 1993 & 2003 estimated
 var VS_3B       = [ 1249,  3346,  7500, 14000 ];   // 3B: 2020/2025 actual; ~yr25 (2030) projected; white-space target
 var VS_3B_EST   = [ false, false,  true,  true ];  // 25-yr projected; final point = stated white-space opportunity
-var OXXO_CLR    = '#E8A200';                        // OXXO brand yellow/gold (readable on white)
+var OXXO_CLR    = '#eb6834';                        // OXXO brand yellow/gold (readable on white)
 var VS_CTX = [
   '<b>OXXO</b> (FEMSA) is the benchmark for store rollout in Mexico — the largest convenience chain in the Americas. From its first store in <b>1978</b> it reached <b>1,000 stores by 1998</b> (20 years), <b>6,374 by 2008</b> (30 years), and more than <b>22,000 in Mexico</b> today.',
   '<b>Tiendas 3B</b> (first store <b>2005</b>) runs a similar neighborhood-density playbook in hard-discount grocery — and is scaling <b>faster at the same age</b>: <b>3,346 stores at year 20</b> vs OXXO\'s ~1,000, roughly <b>3×</b>.',
@@ -294,9 +294,9 @@ function collapsible(title, inner, open){
 // rule). The meaningful revenue split is by PRODUCT TYPE — shown as the share-of-sales bar
 // (FY2025). Each type gets a qualitative "What is X?" disclosure with NO numbers (bar has them).
 var MM_MIX = [
-  ['Private label', 58.2, '#00A650'],
+  ['Private label', 58.2, '#1baf7a'],
   ['Branded',       35.9, '#5B7085'],
-  ['Spot',           5.7, '#C99A3B'],
+  ['Spot',           5.7, '#9AA3AE'],
 ];
 var MM_DEFS = [
   ['What is private label?', 'Own-developed house brands, sold only at 3B and made to order by a roster of vetted third-party manufacturers. They match or beat the branded equivalent on quality at a lower shelf price — the lever that lets 3B undercut rivals while still earning a healthier margin, which is why the mix keeps shifting this way.'],
@@ -495,7 +495,7 @@ function bScRenderOne(wrap){
     frag+='<g class="mg-node" data-name="'+esc(p.n)+'" data-tk="'+esc(p.tk)+'" data-logo="'+esc(logo)+'" data-why="'+esc(p.why||'')+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
       '<circle r="'+r.toFixed(1)+'" fill="#fff" stroke="'+(p.hl?BRAND:'#C7CED6')+'" stroke-width="'+(p.hl?3:1.5)+'"></circle>'+
       '<image href="'+esc(logo)+'" x="'+(-r*0.72).toFixed(1)+'" y="'+(-r*0.72).toFixed(1)+'" width="'+(r*1.44).toFixed(1)+'" height="'+(r*1.44).toFixed(1)+'" preserveAspectRatio="xMidYMid meet" style="pointer-events:none" onerror="this.style.display=\'none\'"></image>'+
-      '<text y="'+(r+12).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?'#C0341F':'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
+      '<text y="'+(r+12).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?'#2a78d6':'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
   });
   g.innerHTML=frag;
 }
@@ -725,7 +725,7 @@ function growthBody(){
     '<div class="ov-chart-wrap ovt-vs-wrap"><canvas id="bbbChartVs"></canvas></div>'+
     '<div class="ovt-legend">'+
       '<span class="ovt-lg"><i style="background:'+OXXO_CLR+'"></i>OXXO (Mexico)</span>'+
-      '<span class="ovt-lg"><i style="background:#E1251B"></i>Tiendas 3B</span>'+
+      '<span class="ovt-lg"><i style="background:#2a78d6"></i>Tiendas 3B</span>'+
     '</div>'+
   '</div>';
   g += '<div class="ov-foot">'+esc(VS_NOTE)+'</div>';
@@ -864,7 +864,7 @@ function buildSSSChart(){
   _chartSSS = new Chart(cv.getContext('2d'), {
     type: 'line',
     data: { labels: SSS_Q, datasets: [
-      { label:'TBBB', data:SSS_TBBB, borderColor:'#E1251B', backgroundColor:'#E1251B',
+      { label:'TBBB', data:SSS_TBBB, borderColor:'#2a78d6', backgroundColor:'#2a78d6',
         borderWidth:2.5, pointRadius:3, pointHoverRadius:5, tension:.3, fill:false },
       { label:'ANTAD Self-Service', data:SSS_ANTAD, borderColor:'#9AA3AE', backgroundColor:'#9AA3AE',
         borderWidth:2.5, pointRadius:3, pointHoverRadius:5, tension:.3, fill:false },
@@ -905,7 +905,7 @@ var storesLabels = {
       ctx.fillText(Number(v).toLocaleString(), bar.x, bar.y - 22);
       if (yoy[i] != null) {
         ctx.font = '600 11px Inter, sans-serif';
-        ctx.fillStyle = '#E1251B';
+        ctx.fillStyle = '#2a78d6';
         ctx.fillText('+' + yoy[i].toFixed(1) + '%', bar.x, bar.y - 7);
       }
       ctx.restore();
@@ -946,7 +946,7 @@ function renderStores(a, b){
   for (var i = a; i <= b; i++){
     labels.push(STORE_YEARS[i]);
     data.push(STORE_COUNT[i]);
-    colors.push(i >= STORE_FIRST_EST ? 'rgba(225,37,27,0.40)' : '#E1251B');
+    colors.push(i >= STORE_FIRST_EST ? 'rgba(42,120,214,0.40)' : '#2a78d6');
     yoy.push(storeYoY(i)); // YoY vs. the true prior year (null for 2020)
   }
   _chartStores.data.labels = labels;
@@ -991,7 +991,7 @@ var vsLabels = {
         ctx.save();
         ctx.textAlign = 'center';
         ctx.font = '700 11px Inter, sans-serif';
-        ctx.fillStyle = (di === 0) ? OXXO_CLR : '#E1251B';   // 0 = OXXO, 1 = 3B
+        ctx.fillStyle = (di === 0) ? OXXO_CLR : '#2a78d6';   // 0 = OXXO, 1 = 3B
         ctx.fillText(Number(ds.data[i]).toLocaleString(), pt.x, pt.y + (di === 0 ? 17 : -10));
         ctx.restore();
       });
@@ -1005,15 +1005,15 @@ function buildVsChart(){
   if (_chartVs) { _chartVs.destroy(); _chartVs = null; }
   // Hollow markers flag estimated / projected points.
   var oxxoPt = VS_OXXO_EST.map(function(e){ return e ? '#FFFFFF' : OXXO_CLR; });
-  var b3Pt   = VS_3B_EST.map(function(e){ return e ? '#FFFFFF' : '#E1251B'; });
+  var b3Pt   = VS_3B_EST.map(function(e){ return e ? '#FFFFFF' : '#2a78d6'; });
   _chartVs = new Chart(cv.getContext('2d'), {
     type: 'line',
     data: { labels: VS_AGES, datasets: [
       { label:'OXXO (Mexico)', data:VS_OXXO, borderColor:OXXO_CLR,
         pointBackgroundColor:oxxoPt, pointBorderColor:OXXO_CLR, pointBorderWidth:2,
         borderWidth:2.5, pointRadius:5, pointHoverRadius:6, tension:.25, fill:false },
-      { label:'Tiendas 3B', data:VS_3B, borderColor:'#E1251B',
-        pointBackgroundColor:b3Pt, pointBorderColor:'#E1251B', pointBorderWidth:2,
+      { label:'Tiendas 3B', data:VS_3B, borderColor:'#2a78d6',
+        pointBackgroundColor:b3Pt, pointBorderColor:'#2a78d6', pointBorderWidth:2,
         borderWidth:2.5, pointRadius:5, pointHoverRadius:6, tension:.25, fill:false,
         // Dash the projected segments (25- and 30-year, i.e. from data index 2 on).
         segment:{ borderDash:function(c){ return c.p1DataIndex >= 2 ? [6,4] : undefined; } } },
@@ -1064,7 +1064,7 @@ function buildMixChart(){
   _chartMix = new Chart(cv.getContext('2d'), {
     type: 'bar',
     data: { labels: MIX_YEARS, datasets: [
-      { label:'Private label', data:MIX_PL, backgroundColor:'#E1251B', maxBarThickness:84 },
+      { label:'Private label', data:MIX_PL, backgroundColor:'#2a78d6', maxBarThickness:84 },
       { label:'Branded',       data:MIX_BR, backgroundColor:'#C9CFD6', maxBarThickness:84 },
     ]},
     options: {
@@ -1092,7 +1092,7 @@ var ueLabels = {
       ctx.save();
       ctx.textAlign = 'center';
       ctx.font = '700 12px Inter, sans-serif';
-      ctx.fillStyle = '#E1251B';
+      ctx.fillStyle = '#2a78d6';
       ctx.fillText('Ps.' + Number(chart.data.datasets[0].data[i]).toFixed(1) + 'M', bar.x, bar.y - 8);
       ctx.restore();
     });
@@ -1107,7 +1107,7 @@ function buildUeChart(){
   _chartUe = new Chart(cv.getContext('2d'), {
     type: 'bar',
     data: { labels: UE_VINT_YEARS, datasets: [
-      { type:'bar', label:'First-year sales', data:UE_VINT_SALES, backgroundColor:'#E1251B',
+      { type:'bar', label:'First-year sales', data:UE_VINT_SALES, backgroundColor:'#2a78d6',
         borderRadius:4, maxBarThickness:70, order:2 },
       { type:'line', label:'~Maturity (~Ps.25M)', data:mature, borderColor:'#9AA3AE',
         borderDash:[6,4], borderWidth:2, pointRadius:0, fill:false, order:1 },

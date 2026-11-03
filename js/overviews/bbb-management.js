@@ -134,9 +134,9 @@ var OWN_CLASSES = [
 ];
 // [block, economic %, voting %, color]
 var OWN_BLOCKS = [
-  ['Founder & insiders (18)',      15.2, 47.6, '#E1251B'],
-  ['Quilvest Capital (PE)',         9.8,  6.0, '#F59E0B'],
-  ['Index & active institutions',  22.7, 14.0, '#0E8F8F'],
+  ['Founder & insiders (18)',      15.2, 47.6, '#2a78d6'],
+  ['Quilvest Capital (PE)',         9.8,  6.0, '#eb6834'],
+  ['Index & active institutions',  22.7, 14.0, '#1baf7a'],
   ['Other public float',           52.3, 32.4, '#9AA3AE'],
 ];
 // [holder, role, economic %, voting %]

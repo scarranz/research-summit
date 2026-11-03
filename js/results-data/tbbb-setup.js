@@ -34,6 +34,7 @@ export var tbbbSetup = {
   intro: '',
   source: tbbbResults.source,
   estMatrix: tbbbResults.estMatrix,
+  forwardQuarters: 2,   // two quarters past the last print (analyst rule: always two forward)
   conv: false,   // no "Road to the print" in Setup: it lives in Evolution ▸ Results
   views: {
     q: { label: 'Quarterly', note: '',

@@ -27,6 +27,7 @@ export var tbbbResults = {
   updated: 'Nov 2026',
   currency: 'Ps.',
   currencyName: 'pesos',
+  forwardQuarters: 2,   // two quarters past the last print (analyst rule: always two forward)
   views: {
     q: {
       label: 'Quarterly',

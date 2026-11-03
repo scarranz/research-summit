@@ -211,3 +211,8 @@ export var TBBB_THEMES = [
       { q:'Q2 2026', items:['<b>Phase one of the ERP is in testing</b>; AI coding tools pulled forward features planned for later. The new point of sale can offer more than checkout, which gives optionality for services.'] },
     ]},
 ];
+
+// Seed version and hook window, as the shared Notes engine reads them: `v` on every thread (a saved record older than TBBB_THEMES_V is replaced by
+// this seed) and `trackUntil` = the quarter a closed hook landed (the `st.until` written above).
+export var TBBB_THEMES_V = 1;
+TBBB_THEMES.forEach(function(t){ t.v = TBBB_THEMES_V; if (t.st && t.st.until) t.trackUntil = t.st.until; });

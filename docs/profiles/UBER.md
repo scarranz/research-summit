@@ -415,7 +415,7 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 
 | Desde | Unidad | Qué falta | Quién lo consigue | Estado |
 |---|---|---|---|---|
-| 2026-11-03 | VA-TM / VA-SENS | **Arreglo pendiente en el DCF:** el PT de P/E ($113.29 a 22×) implica EPS FY27 $5.15; el modelo da $4.98 (earnings ÷ acciones) o $4.89 (fila EPS). El PT de EV/EBITDA implica ~$13.9B de deuda neta vs $7.3B en el 10-Q 2T26 (la celda base de Sensitivity da $111 vs $107.58) | SAB (autor del modelo) | abierto |
+| 2026-11-03 | VA-TM / VA-SENS | ~~Arreglo pendiente en el DCF~~ → **no era error**: el PT = múltiplo × métrica FY2027 **+ el flujo de FY2026** (P/E: 22 × EPS $4.89 = $107.61 + FCFE/acción $5.69 = $113.29; EV/EBITDA: 14 × EBITDA = $222.5B + PV FCF $11.7B − deuda neta $5.3B → $107.58). Hipótesis de SAB, confirmada en `DCF UBER.xlsm` ▸ Discounted Cash Flow (P75–P80, I85–I95); notas de Target Multiple y Sensitivity corregidas | SAB | cerrado 2026-11-03 |
 | 2026-11-03 | EV-RES-DATA | `opinc.act` 2T24–4T24 (942 / 1,073 / 1,254) y FY2024 (3,977) vs filings (1,025 / 1,146 / 1,318; 4,310) — posible recast del 8-K 12-ene-2026; revisar contra el filing | Claude | abierto |
 | 2026-11-03 | VA-SUB | Submit History abre en P/E (un solo punto); ¿UBER debería abrir en EV/EBITDA? (requiere tocar submits.js) | SAB | abierto |
 | 2026-11-03 | TL-* | citas del 10-K del borrador de DOAA351 sin cotejar palabra por palabra | Claude | abierto |

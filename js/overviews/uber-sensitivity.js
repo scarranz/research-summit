@@ -475,10 +475,10 @@ function renderMatrix(scope){
     'A growth on an axis is a <b>flat rate compounded from Uber’s reported '+BASE_YEAR+' revenue for that segment</b> (Uber FY2025 10-K); a margin is that year’s. '+
     '<b>EBITDA</b> = operating income + the model’s bridge to Adjusted EBITDA (EBITDA − operating income, held fixed), so at the base it is the same Adjusted EBITDA Target Multiple values. '+
     '<b>EV/EBITDA</b>: EV = EBITDA × multiple, less net debt, over shares. <b>P/E</b>: the operating-income delta flows through tax onto the model’s earnings, so '+
-    'the base reproduces the model’s EARNINGS ÷ SHARES (the workbook’s own P/E target implies a slightly higher FY2027 EPS — see Target Multiple). '+
+    'the base reproduces the model’s EARNINGS ÷ SHARES. '+
     '<b>Exit multiple</b>: starts at the model’s own target multiples (EV/EBITDA '+(_tmLast.ev?_tmLast.ev.mult.toFixed(1)+'× on FY'+_tmLast.ev.year:'—')+', P/E '+(_tmLast.pe?_tmLast.pe.mult.toFixed(1)+'× on FY'+_tmLast.pe.year:'—')+', Target Multiple; here applied to the year picked above) and is yours to move. '+
     '<b>Net debt</b> = '+fmtB(_netDebt)+' ('+esc(ND_SRC)+'; long-term debt + short-term borrowings − cash and short-term investments, SEC EDGAR). '+
-    'That is why the EV/EBITDA base cell does not equal the workbook’s recorded target ($'+(_tmLast.ev?_tmLast.ev.pt.toFixed(2):'—')+'): the workbook’s target implies a larger net debt (about $13.9B), and its bridge is not in the data store. '+
+    'This grid prices the year alone, so its base cells do not equal the workbook’s recorded targets ($'+(_tmLast.ev?_tmLast.ev.pt.toFixed(2):'—')+' EV/EBITDA): the workbook also adds the cash flow generated in FY2026 (PV of free cash flow on EV/EBITDA, FCFE per share on P/E) and uses its own net debt of $5.3B (see Target Multiple). '+
     '<b>Street (Bloomberg consensus</b>'+(CONS.asOf?', as of '+esc(CONS.asOf):'')+'): growth of each segment as a CAGR off the 2025 actual to Bloomberg’s estimate, operating margin = '+
     'Bloomberg non-GAAP operating income ÷ Bloomberg revenue; where Bloomberg has no figure the driver stays at the model and the strip says so. '+
     'The card beside the grid always shows <b>the other side</b> for the two axis drivers. Live price via Massive'+(_px!=null?'':' (unavailable — the grid is read against the base case instead)')+'. '+

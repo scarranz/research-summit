@@ -20,8 +20,8 @@
 // growth are worked out by the view.
 //
 // Check before freezing (playbook §6.3): price target ÷ fair value on 2026-08-05 is 1.060 (EV/EBITDA) and 1.064 (P/E) —
-// the store read the right cells, no correction needed. Open doubt (docs/profiles/UBER.md): the P/E target ($113.29 at
-// 22.0×) implies FY2027 EPS of $5.15 against EARNINGS ÷ SHARES $4.98.
+// the store read the right cells, no correction needed. Each target = multiple × the FY2027 metric + the FY2026 cash flow
+// (FCFE per share on P/E, PV of FCF on EV/EBITDA) — DCF UBER.xlsm, read 2026-11-03.
 export var uberSubmits = {
   ticker: 'UBER', name: 'Uber', ccy: 'US$', mccy: 'US$', pulled: '2026-11-03',
   src: 'Summit DCF model (Uber), the valuation block of each submit',

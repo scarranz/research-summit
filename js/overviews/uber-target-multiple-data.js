@@ -18,11 +18,10 @@
 //            record; the pane uses the model only.
 //
 // Checks before freezing (playbook §6.3): price target ÷ fair value on 2026-08-05 is 1.060 (EV/EBITDA) and 1.064 (P/E) —
-// consistent, the store read the right cells. The EV/EBITDA leg ties to its EBITDA with an implied net debt of about
-// US$13.9B (14.0 × 15,891 − 107.58 × 1,939) — larger than the 2Q26 balance-sheet net debt of US$7.3B
-// (./uber-histmult-data.js); the model's bridge is not in the store, so the pane never recomputes the recorded targets.
-// Open doubt for the model author (logged in docs/profiles/UBER.md): the P/E leg's price target ($113.29 at 22.0× FY2027)
-// implies FY2027 EPS of $5.15, while EARNINGS ÷ SHARES gives $4.98 and the model's ADJ_EPS row $4.89.
+// consistent, the store read the right cells. Both targets tie in the workbook (DCF UBER.xlsm ▸ Discounted Cash Flow,
+// read 2026-11-03): P/E = 22 × ADJ_EPS FY2027 $4.89 ($107.61) + FY2026 FCFE per share $5.69 = $113.29; EV/EBITDA = 14 × FY2027
+// EBITDA ($222.5B) + PV of FY2026 FCF ($11.7B) − net debt $5.3B (debt 10,726 − cash 5,391) → $107.58. The earlier
+// 'implied EPS $5.15' / 'implied net debt $13.9B' readings ignored the FY2026 cash-flow term (closed, SAB 2026-11-03).
 export var UBER_TM = {
   model: '4dbd6471-83b2-4fe7-9ceb-19cb249ff517', pulled: '2026-11-03',
   snaps: [

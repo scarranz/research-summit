@@ -52,17 +52,20 @@ var NHEAD=['Revenue','Gross profit','Operating income','EBITDA','EPS (diluted)',
 var CUSTOM=['EPS (Non-GAAP)','Gross Bookings','Mobility Gross Bookings','Delivery Gross Bookings','Freight Gross Bookings','Mobility revenue',
   'Delivery revenue','Freight revenue','Mobility op. income','Delivery op. income','Trips','MAPCs','Free cash flow','Stock-based comp',
   'Operating income (GAAP)','Net income (GAAP)'];
+// Lines Uber guides each quarter (one quarter ahead; 2Q26 release): Gross Bookings, Adjusted EBITDA, Non-GAAP EPS.
+export var UBER_GUIDED = ['Gross Bookings','EBITDA','EPS (Non-GAAP)'];
 export var UBER_CE_CONS = (function(){
   var G=UBER_CE_CONS_GEN, Q=G.q, M=uberResults.views.q.metrics, byK={};
   G.m.forEach(function(m){ byK[m.k]=m; });
   function pOf(q){ return q.charAt(1)+'Q'+q.slice(-2); }
   function r2(v){ return v==null?null:(Math.abs(v)<1?Math.round(v*1000)/1000:Math.round(v*100)/100); }
   FROM_RESULTS.forEach(function(x){
-    var r=M[x[1]]; if(!r) return; var m=byK[x[0]]||(byK[x[0]]={ k:x[0], u:(x[0].indexOf('EPS')===0?'$':(x[0]==='MAPCs'?'M':(x[0]==='Trips'?'B':'$B'))), qr:Q.map(function(){ return [null,null,null,null]; }), qa:Q.map(function(){ return null; }) });
+    var r=M[x[1]]; if(!r) return; var m=byK[x[0]]||(byK[x[0]]={ k:x[0], u:(x[0].indexOf('EPS')===0?'$':(x[0]==='MAPCs'?'Mn':(x[0]==='Trips'?'B':'$B'))), qr:Q.map(function(){ return [null,null,null,null]; }), qa:Q.map(function(){ return null; }) });
     Q.forEach(function(q,i){ var j=r.periods.indexOf(pOf(q)); if(j<0) return;
       if(r.act[j]!=null) m.qa[i]=r2(r.act[j]/x[2]);
       if(r.cons && r.cons[j]!=null && (r.act[j]!=null || m.qr[i][3]==null)) m.qr[i][3]=r2(r.cons[j]/x[2]); });   // reported: the going-in file; forward: only where Bloomberg has no line (Non-GAAP EPS)
   });
+  G.m.forEach(function(o){ if(o.u==='M') o.u='Mn'; });
   var order=NHEAD.concat(CUSTOM), m=order.filter(function(k){ return byK[k]; }).map(function(k){
     var o=byK[k]; o.t=(o.qa.some(function(v){ return v!=null; })&&o.qr.some(function(r){ return r.some(function(v){ return v!=null; }); }))?'ok':'nocons';
     o.qy=Q.map(function(q,i){ return i>=4?o.qa[i-4]:null; }); o.qq=Q.map(function(q,i){ return i>=1?o.qa[i-1]:null; });

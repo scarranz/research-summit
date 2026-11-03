@@ -1,6 +1,6 @@
 {
   "supersede_latest": true,
-  "_doc": "TBBB metric map for emit_matrix.py (schema v2, Bloomberg CODE). Quarterly and annual (analyst decision, 2026-11-02). 10 TBBB snapshots 2024-05-27 -> 2026-09-09. Currency is Mexican pesos, scale M; the dataset declares currency 'Ps.' so unit 'usdM' here only means 'millions, apply the scale token'. Counts (stores, DCs) have a blank scale and use unit 'eps' (no scaling). Capex: Bloomberg stores spend negative, so sign -1. IS_COMPARABLE_EBITDA basis (adjusted ex-SBC vs reported) is verified against the releases before it is shown, see docs/profiles/TBBB.md. Distribution-center count dropped: frozen series in Bloomberg (13 unique of 30 cells).",
+  "_doc": "TBBB metric map for emit_matrix.py (schema v2, Bloomberg CODE). Quarterly and annual (analyst decision, 2026-11-02). 10 TBBB snapshots 2024-05-27 -> 2026-09-09. Currency is Mexican pesos, scale M; the dataset declares currency 'Ps.' so unit 'usdM' here only means 'millions, apply the scale token'. Counts (stores, DCs) have a blank scale and use unit 'eps' (no scaling). Capex: Bloomberg stores spend negative, so sign -1. IS_COMPARABLE_EBITDA basis (adjusted ex-SBC vs reported) is verified against the releases before it is shown, see docs/profiles/TBBB.md. Distribution-center count carried (NUM_OF_DISTRIBUTION_CENTERS): re-checked 2026-11-03, the forecasts move with every snapshot (the earlier 'frozen series' reading was wrong). 11 TBBB snapshots 2024-05-27 -> 2026-11-03.",
   "q": {
     "rev": {
       "code": "SALES_REV_TURN",
@@ -51,6 +51,10 @@
     "fcost": {
       "code": "IS_FINANCE_COST",
       "unit": "usdM"
+    },
+    "dcs": {
+      "code": "NUM_OF_DISTRIBUTION_CENTERS",
+      "unit": "eps"
     }
   },
   "y": {
@@ -103,6 +107,10 @@
     "fcost": {
       "code": "IS_FINANCE_COST",
       "unit": "usdM"
+    },
+    "dcs": {
+      "code": "NUM_OF_DISTRIBUTION_CENTERS",
+      "unit": "eps"
     }
   }
 }

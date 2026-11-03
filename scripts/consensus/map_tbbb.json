@@ -42,6 +42,15 @@
     "adds": {
       "code": "NET_STORE_ADDITIONS",
       "unit": "eps"
+    },
+    "fin": {
+      "code": "IS_FINANCIAL_INCOME",
+      "unit": "usdM",
+      "sign": -1
+    },
+    "fcost": {
+      "code": "IS_FINANCE_COST",
+      "unit": "usdM"
     }
   },
   "y": {
@@ -85,6 +94,15 @@
     "adds": {
       "code": "NET_STORE_ADDITIONS",
       "unit": "eps"
+    },
+    "fin": {
+      "code": "IS_FINANCIAL_INCOME",
+      "unit": "usdM",
+      "sign": -1
+    },
+    "fcost": {
+      "code": "IS_FINANCE_COST",
+      "unit": "usdM"
     }
   }
 }

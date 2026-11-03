@@ -72,6 +72,22 @@ for vid, (d, lq, ly) in VINT.items():
         'beta': g('Beta'), 'rm': g('Avg Market Return'), 'rfr': g('RFR'), 'fx': g('Currency FX'),
         'pe_pt': code_row(vid, 'EARNINGS')[mc['Price Target']],
         'model': {str(y): {'rev': code_row(vid, 'REV')[ycol[y]], 'ebitda': code_row(vid, 'EBITDA')[ycol[y]], 'ni': code_row(vid, 'EARNINGS')[ycol[y]], 'sh': code_row(vid, 'SHARES')[ycol[y]]} for y in (2025, 2026, 2027, 2028)}}
+# ── Quarterly lines the tab does not carry correctly, pasted by the analyst (2026-11-03) from the model, as of the Aug 13 submit.
+# The tab's quarterly REV row is 0 (it was not being extracted; from the next submit on it will be), and the quarterly interest rows
+# are empty in the projection blocks. Values are the model's own estimates (for reported quarters, the frozen pre-print estimate).
+MANUAL_ID = '2026-08-13'
+MAN = {
+  'rev':   dict(zip(['1Q27','4Q26','3Q26','2Q26','1Q26','4Q25','3Q25','2Q25','1Q25','4Q24','3Q24','2Q24','1Q24','4Q23'],
+                    [29475, 29817, 27328, 24607, 22476, 21430, 19618, 17348, 16354, 16357, 15132, 13574, 12260.3, 11910.8])),
+  # interest income (financial income), 4Q26 back to 4Q24; nothing forward of 4Q26
+  'fin':   dict(zip(['4Q26','3Q26','2Q26','1Q26','4Q25','3Q25','2Q25','1Q25','4Q24'], [49.7, 49.7, 49.7, 49.7, 55.6, 55.6, 55.6, 55.6, 50.8])),
+  # interest expense (financial costs), 4Q26 back to 1Q25 (blank in 4Q24); nothing forward of 4Q26
+  'fcost': dict(zip(['4Q26','3Q26','2Q26','1Q26','4Q25','3Q25','2Q25','1Q25'], [596.33, 546.56, 492.14, 449.52, 407.18, 372.74, 173.48, 163.54])),
+}
+data['frozen'] = MAN
+for key, cells in MAN.items():
+    fwd = {p: v for p, v in cells.items() if order(p) > order('2Q26')}
+    if fwd: data['q'].setdefault(key, {})[MANUAL_ID] = fwd
 json.dump(data, open(os.path.join(OUT, 'summit_tbbb.json'), 'w'), default=str, indent=1)
 L = ['    summit: {', '      vintages: [']
 for v in data['vintages']:
@@ -80,7 +96,7 @@ L.append('      ],')
 def fmt(x): return repr(int(x)) if x == int(x) else repr(x)
 for view in ('q', 'y'):
     L.append('      %s: {' % view)
-    for key in MET:
+    for key in list(MET) + ['fin', 'fcost']:
         if key not in data[view]: continue
         L.append('      %s: {' % key)
         for v in data['vintages']:

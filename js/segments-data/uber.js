@@ -19,6 +19,7 @@ var UBER_CITE = { form: '10-K', period: '2025-12-31', accession: '0001543151-26-
 export var uberSegments = {
   updated: 'Nov 3, 2026',
   company: 'Uber',
+  streetForward: true,   // the quarterly axis reaches two quarters past the last print with the Bloomberg consensus
   source: 'Segment revenue and gross bookings are read from the Results dataset (Summit model actuals + projection). Segment Adjusted EBITDA, Freight revenue and the geographic cut are from Uber’s FY2025 Form 10-K, Note 13 — Segment Information and Geographic Information. Gross Bookings, Revenue Margin, Trips and MAPCs are the Key Metrics defined in MD&A. Uber does not project Adjusted EBITDA by segment, so those series stop at the last reported year.',
   axis: { q: ['3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27'],
           y: ['2022','2023','2024','2025','2026','2027','2028','2029','2030'] },
@@ -68,6 +69,19 @@ export var uberSegments = {
     splc: null,
   },
   other: [
+    {
+      key: 'gb_seg', label: 'Gross Bookings', sub: 'gross bookings by segment',
+      lede: 'Gross Bookings is the dollar value of every ride, order and shipment on the platform, before what Uber pays drivers, couriers and merchants — the scale of the marketplace and the line Uber guides every quarter. Revenue is the share Uber keeps of it.',
+      caveat: 'Gross Bookings is a key metric, not a GAAP line: it is defined in MD&A and reported in each earnings release. Freight is booked gross, so its revenue is close to its bookings.',
+      note: 'Total = Mobility + Delivery + Freight, as each release reports it. Forecast quarters: the Summit DCF submit of 2026-08-05 (frozen); the Bloomberg consensus (2026-09-10) only where Summit has no quarter.',
+      tenK: { text: 'We define Gross Bookings as the total dollar value, including any applicable taxes, tolls, and fees, of: Mobility rides, Delivery orders (in each case without any adjustment for consumer discounts and refunds, Driver and Merchant earnings, and Driver incentives) and Freight revenue. Gross Bookings do not include tips earned by Drivers.', where: 'Item 7 — MD&A, Key Metrics', verbatim: true },
+      cite: UBER_CITE,
+      series: [
+        { key: 'gb_mob', ref: 'results:mobgb', label: 'Mobility' },
+        { key: 'gb_del', ref: 'results:delgb', label: 'Delivery' },
+        { key: 'gb_fr',  ref: 'results:frgb',  label: 'Freight' },
+      ],
+    },
     {
       key: 'geo_region', label: 'Geography (region)', sub: 'revenue by geographic region',
       lede: 'The same total revenue cut by WHERE it is earned. US & Canada is the anchor, but EMEA is the fastest-growing region — revenue there rose from $9.9B (2023) to $16.4B (2025), driven by Delivery and the UK. This cut cross-cuts the segments: every region carries Mobility, Delivery and Freight.',
@@ -166,6 +180,7 @@ export var uberSegments = {
       tenK: { text: 'Freight powers a managed transportation and logistics network and connects Shippers and Carriers in a digital marketplace to move shipments. Freight connects Carriers with Shippers’ shipments available on our platform, and gives Carriers upfront, transparent pricing and the ability to book a shipment with the touch of a button. Freight serves Shippers ranging from small- and medium-sized businesses to global enterprises. Freight operations are principally based in North America and Europe.', verbatim: true, cite: 'UBER TECHNOLOGIES INC, 10-K (period 2025-12-31, accession 0001543151-26-000015)', url: UBER_CITE.url, where: 'Item 1 — Business', needs: null },
       drivers: { rev: { from: 'results:frrev' }, gb: { from: 'results:frgb' }, ebitda: { from: 'shared:fr_ebitda' } },
       kpis: [
+        { name: 'Gross Bookings', definition: 'The total value of Freight shipments; Freight is booked gross, so it sits close to the segment’s revenue.', unit: 'usdM', periodicity: 'Quarterly and annual', source: 'MD&A Key Metrics', series: 'results:frgb', needs: null },
         { name: 'Segment revenue', definition: 'Freight revenue per Note 13. Unlike Mobility and Delivery, Freight books close to the full shipment value, so revenue ≈ gross bookings.', unit: 'usdM', periodicity: 'Annual', source: '10-K Note 13', series: 'shared:fr_rev', needs: null },
         { name: 'Segment Adjusted EBITDA', definition: 'Freight revenue less directly-attributable costs. Near breakeven — held for optionality, not margin.', unit: 'usdM', periodicity: 'Annual', source: '10-K Note 13', series: 'shared:fr_ebitda', needs: null },
       ],

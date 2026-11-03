@@ -1,3 +1,5 @@
+import { uberCeHtml, uberCeWire, uberCeBuild, uberCePop } from './uber-ce.js';   // Evolution ▸ Earnings (EV-SET/POST/NOTES), copy of googl-ce.js
+import { UB_CALL_EARNINGS as CALL_EARNINGS } from './uber-ce-data.js';   // moved (EV-SET, 2026-11-03)
 // overviews/uber.js — custom Overview for Uber Technologies, Inc. (NYSE: UBER)
 // Built individually per the portal's per-company Overview model (see CLAUDE.md).
 //
@@ -2662,184 +2664,6 @@ var CE_ANNUAL = {
 // "Also on the call" supplemental colour for the Q1 2026 print \u2014 bands context/logged only
 // (thesis-movers live on the shared Watch List / company_themes). Every item obeys Rule 0 (fact \u2192 why \u2192 so-what). From the
 // Q1 2026 transcript analysis (docs/calls/UBER-latest.md).
-var UB_Q1_2026_HIGHLIGHTS = [
-  { tag:'watch', band:'logged',
-    head:'Freight returned to growth for the first time in nearly two years \u2014 stated, but not explained',
-    detail:'<p>Management flagged the inflection in one line and gave <b>no driver</b> for it. Freight is small and low-margin, so it barely moves the model \u2014 but the silence is the note: a segment coming off a ~2-year recession with zero colour on <i>why</i> is a datapoint to press, not celebrate.</p><p><b>So what:</b> worth mentioning as a cyclical turn in the industrial economy; not thesis-weight until management attaches a cause.</p>' },
-  { tag:'curious', band:'logged',
-    head:'Hotels via Expedia (700K properties) + Travel Mode \u2014 the on-demand-to-planned bet, funded by Uber One',
-    detail:'<p>Dara\'s logic: Uber Reserve already proved users will book ahead (airports are ~15% of mobility GBs; 40% of US riders travel outside their home city). Expedia supplies inventory; Uber "took most of the economics and gave it back to Uber One members" (10% credits + 20% off a rolling 10K hotels). "Hoping hotels can be just as big as Reserve."</p><p><b>So what:</b> genuine new-category optionality that also deepens the membership moat \u2014 but entirely un-modelled, and the economics are deliberately handed to members, so near-term margin is not the point.</p>' },
-  { tag:'thesis', band:'context',
-    head:'The barbell WAS the answer to "what\'s the AV/ROI payback?" \u2014 a framework, offered instead of a number',
-    detail:'<p>Pressed by Devnani on aggregate ROI, Balaji re-anchored on the barbell: low-cost products drive <b>75% higher frequency</b>, premium products <b>3.5x higher profit growth</b>, and both lift first-time acquisition <b>25%</b> \u2014 the machine that lets Uber "compound at 20% with annual margin expansion."</p><p><b>So what:</b> it confirms the profitable-scaling mechanism, but note it was a <i>deflection</i> of the direct payback question \u2014 the framework stands in for the number.</p>' },
-  { tag:'dots', band:'context',
-    head:'Cross-platform headroom got quantified \u2014 ~$15B run-rate delivery GBs flow from the mobility app; 30% of mobility users have never opened Eats',
-    detail:'<p>Balaji, on new entry points (One Search): the mobility app already funnels ~$15B of delivery bookings, and 30% of eligible mobility consumers have never used Uber Eats. Cross-platform consumers grow 1.5x faster than the base.</p><p><b>So what:</b> connects the "platform" narrative to a concrete, largely untapped cross-sell pool that mono-line competitors structurally cannot replicate.</p>' },
-  { tag:'watch', band:'logged',
-    head:'International delivery is on the offensive \u2014 7 new markets, Finland #1 day one, Australia re-accelerated to 30%',
-    detail:'<p>Balaji: delivery position "improving substantially" globally; expansion into 7 new European markets (Finland launched that morning, already #1 on the App Store); Australia re-accelerated to 30% by pushing into sparse markets; Japan/Taiwan trends strong. Europe faces "incremental competitive intensity from DoorDash and Prosus" \u2014 "held our own."</p><p><b>So what:</b> delivery has a real international growth leg, but the DoorDash/Prosus escalation is the cost/margin risk to watch.</p>' },
-  { tag:'curious', band:'logged',
-    head:'AI is already in the build \u2014 ~10% of code agent-written, and the 2026 budget was re-upped mid-year',
-    detail:'<p>Dara: commits per engineer and lines per commit rising; "about 10% of our code committed is built by autonomous agents" (human-reviewed). AI investment is rising, "offset by slower headcount growth." Balaji, candidly: the November 2026 budget "underestimated the impact AI tools could have" and was re-upped after December model releases.</p><p><b>So what:</b> the efficiency lever is real and measurable, but a mid-year budget increase is a cost signal \u2014 size it against the headcount offset before calling it margin-accretive.</p>' },
-  { tag:'tone', band:'context',
-    head:'Management\'s stance on agentic disintermediation: the travel-metasearch analogy, "we dictate the terms of trade"',
-    detail:'<p>Asked directly (Morton) about personal agents (Meta/Google) abstracting the app away, Dara reached for his Expedia/Booking history: value accrued to the consolidated players, not the metasearch layer; "as long as we build terrific core products\u2026 the majority of transactions come direct." Uber will build APIs to Apple/OpenAI/Claude/Gemini and believes its scale lets it "often dictate the terms of trade."</p><p><b>So what:</b> the clearest articulation yet of how management frames the biggest structural risk \u2014 reassuring and historically grounded, but note there were <i>no</i> terms-of-service specifics despite the direct ask.</p>',
-    open:'No terms-of-service specifics were given despite the direct ask \u2014 the mechanism of defence is asserted, not shown.' },
-];
-// The AI-generated CALL SUMMARY ("the minute") for Q1 2026 \u2014 always-visible punch paragraphs, each
-// with an optional "\uff0b more". Distilled from the Q1 2026 transcript analysis (docs/calls/UBER-latest.md).
-var UB_Q1_2026_SUMMARY = { paras:[
-  { p:'<b>The top line was a broad-based beat delivered at or above the high end of both guided ranges \u2014 and, the part that matters, it was trip- and audience-led, not price.</b> Gross Bookings grew ~21% on ~17% audience (MAPC) growth, so the acceleration is coming from more people taking more trips, not from insurance pass-through or FX. That is the cleanest possible quality-of-beat.',
-    moreLabel:'\uff0b more \u2014 the barbell behind it', more:'<p>Management framed the quarter as the barbell compounding: low-cost products drive 75% higher frequency, premium products 3.5x higher profit growth, and both lift first-time acquisition 25% \u2014 "compounding at 20% with annual margin expansion."</p>' },
-  { p:'<b>The 2026 insurance thesis got its first hard datapoint.</b> Uber said this is the "first year since COVID" that US insurance is a source of operating leverage rather than a cost headwind \u2014 March renewals reset lower and more risk moved to third-party carriers. The tell management volunteered: Los Angeles, its worst market, is now growing "significantly better than California and the rest of the country."',
-    moreLabel:'\uff0b more \u2014 why L.A. is the proof point', more:'<p>L.A. had been depressed by insurance-cost-driven price elasticity; its re-acceleration is the local proof that the savings-to-riders flywheel works. Management said it is "even more confident than in December."</p>' },
-  { p:'<b>AV shifted from demo to infrastructure \u2014 and picked up a genuinely new, capital-light financing doctrine.</b> AV mobility trips grew >10x YoY, Uber launched Uber Autonomous Solutions (operational infrastructure for partners), and disclosed a Santander financing arrangement \u2014 with Hertz fleet management and Marsh/Apollo insurance \u2014 that lets partners scale fleets without Uber owning the capital.',
-    moreLabel:'\uff0b more \u2014 the unproven part', more:'<p>The underwriting basis is "predictable revenue per vehicle per day at a premium to 1P networks." Management acknowledged the AV residual-value risk is not yet liquid \u2014 which is exactly why this sits on the Watch List as a promise to reconcile, not a settled fact.</p>' },
-  { p:'<b>Profit compounded ~2x bookings, and capital return stepped up.</b> Non-GAAP EPS grew +44% against +21% bookings on operating leverage, and Uber returned a record $3B in buybacks. Score the clean lines \u2014 income from operations and Adjusted EBITDA \u2014 because GAAP net income is distorted by mark-to-market swings on Uber\'s equity stakes (Aurora, Grab, Didi).' },
-  { p:'<b>The soft spots are what management would not quantify.</b> AV economics were still described with a "$1T TAM" adjective rather than a payback number; the mid-year AI budget re-up was acknowledged but never sized; and the call itself was unusually short. Those three silences are where the next surprise most likely hides.' },
-] };
-// Thesis red-lines FROZEN going into Q1 2026 (from the Q4 2025 setup / Watch List), checked against
-// the Q1 2026 print — the most falsifiable thing in Post-Results (§6, canonical googl.js). HELD/TRIPPED
-// per the transcript analysis (docs/calls/UBER-latest.md); every note carries fact → why (Rule 0).
-var UB_Q1_2026_THESISCHECK = [
-  { line:'US-mobility acceleration fails to show up in trips / insurance stays a cost headwind', tripped:false,
-    note:'The opposite: Mobility GB accelerated to <b>+20% with record segment margins</b>, and insurance flipped to <b>leverage for the first year since COVID</b>. L.A. — the worst insurance market — is now growing “significantly better than California and the rest of the country.” The 2026 thesis got its first hard market datapoint, in the hardest market.' },
-  { line:'AV scaling triggers a capital or margin shock to the core', tripped:false,
-    note:'Mobility posted <b>record margins</b> while AV mobility trips grew <b>&gt;10x YoY</b> and Uber returned a record <b>$3B</b> in buybacks. The new Santander / Hertz / Marsh financing doctrine is explicitly <b>capital-light</b> — Uber does not own the fleet. No capital or margin shock; the AV residual-value risk was acknowledged, not incurred.' },
-  { line:'Waymo cannibalizes Uber’s core in the live AV markets', tripped:false,
-    note:'“We don’t see any effect of the Waymo launches on our overall business” — SF/L.A. category position <b>higher</b> than six months ago, driver earnings up in Austin/Atlanta. This is management’s own read on a live competitive question, so it stays tracked, not settled (scored quarter by quarter as Waymo expands).' },
-  { line:'Profitable scaling breaks as grocery/retail mixes into Delivery', tripped:false,
-    note:'Non-GAAP EPS <b>+44%</b>, more than 2x the +21% bookings, on operating leverage; Delivery <b>+23%</b> led by grocery/retail <i>with</i> strong retention. The profitable-scaling machine held through the mix shift — though the grocery-margin mechanics were only partially addressed (Colantuoni’s question pivoted to competition).' },
-  { line:'The AI investment step-up shows up as visible margin pressure', tripped:false,
-    note:'It did not hit margins this quarter (record profitability) — but the line is now on watch: Balaji conceded the November 2026 AI budget was <b>re-upped mid-year</b> after December model releases, “traded off against incremental headcount growth,” and never sized it. Held this quarter, flagged for next.' },
-];
-// What the Q1 2026 print TEES UP for the next call — the hunt list, from the transcript’s seeds +
-// logged silences (docs/calls/UBER-latest.md). Everything before the first em-dash is the visible
-// hook; the rest opens behind “＋ the ask.”
-var UB_Q1_2026_INTOCALL = [
-  '🔥 <b>AV economics are still an adjective</b> — the direct ROI/payback question (Devnani) was deflected into the barbell framing and AV revenue was never sized beyond “another trillion-dollar TAM.” Press for a number: revenue per vehicle per day, the “premium to 1P networks” claim, and where the residual-value risk actually sits.',
-  '💸 <b>The AI budget re-up is un-sized</b> — Balaji admitted the November 2026 budget “underestimated the impact AI tools could have” and was re-upped mid-year, “traded off against incremental headcount growth.” How big is the re-up, and does the headcount offset make it net margin-neutral or a real 2026 cost?',
-  '🛵 <b>Delivery margin under a heavier grocery mix</b> — Delivery +23% is increasingly grocery/retail (lower margin), and Europe now faces “incremental competitive intensity from DoorDash and Prosus,” where Uber “held its own.” Does Delivery margin still leverage through the mix, and what does the European fight cost?',
-  '📈 <b>Does insurance leverage compound past L.A.?</b> — the L.A. datapoint is the proof of concept; the thesis needs it to broaden into national US-mobility acceleration through 2026. Watch Mobility segment margin and the breadth of US trip growth beyond the three lead markets.',
-  '👑 <b>When does 50%-a-year Uber One lap?</b> — 50M members, &gt;50% of bookings, now funding a hotels/Expedia push. Management “doesn’t see it slowing,” but 50% growth eventually laps; the deceleration point and whether spend/retention hold as the base scales is the model input.',
-  '🚚 <b>Freight returned to growth, unexplained</b> — the first growth in nearly two years was stated with no driver. Small and low-margin, so it barely moves the model, but a ~2-year recession inflecting with zero colour is worth pressing as an industrial-economy read.',
-];
-// ── Q2 2026 (reported Wed 5 Aug 2026, before open; call 8:00am ET). Print from Uber's release;
-// call material from the Q2 2026 transcript. ──────────────────────────────────────────────────
-var UB_Q2_2026_HIGHLIGHTS = [
-  { tag:'thesis', band:'context',
-    head:'The take-rate collapse finally got a bridge — 400 of the ~500bp is the UK accounting change, ~100bp is deliberate',
-    detail:'<p>The scariest optical line in the model got its first real explanation. Balaji put the decline at "nearly 500 basis points", attributed <b>~400bp to the UK model change</b> and the remaining <b>~100bp to "deliberate investments"</b> — which is why revenue grew <b>+12%</b> against Gross Bookings <b>+24%</b>. Mobility take rate is now ~25.4% against ~29.9% four quarters ago.</p><p><b>So what:</b> this converts a scary trend line into a mostly mechanical one, and it is datable — the UK 400bp laps from 1Q27, after which reported revenue growth should re-converge on bookings growth. But the ~100bp of "deliberate investments" was <b>never broken down by initiative</b>, so the discretionary half of the compression is still unaudited.</p>',
-    open:'The ~100bp of deliberate investment was not split by initiative — the discretionary part of the compression remains unquantified.' },
-  { tag:'watch', band:'logged',
-    head:'Uber is retiring Adjusted EBITDA — announced in the release, never mentioned on the call',
-    detail:'<p>The release states that <b>"Adjusted EBITDA is no longer a key measure used by management; we include a disclosure on Adjusted EBITDA to assist during the transition to our new non-GAAP measures"</b>, and the segment tables have been replaced with <b>Segment Operating Income</b> (Mobility $2,215M +28%, Delivery $1,055M +38%, Freight −$24M, Corporate G&amp;A / Platform R&amp;D −$1,103M). Not one word of it on the call — no analyst asked, and management did not raise it.</p><p><b>So what:</b> a company changing its headline profit measure without explaining why is a governance and comparability question, not a housekeeping note. It also breaks our own tracking: the Q1 setup named <i>Mobility segment Adjusted-EBITDA margin</i> as "the number that can’t wobble", and that number no longer exists. Uber still guided Q3 Adjusted EBITDA ($2.86–2.96B) while calling it non-key — press on what replaces it and how the guide is framed from here.</p>',
-    open:'No reason given for retiring Adjusted EBITDA, and no statement of what the new headline measure is or when the guide switches.' },
-  { tag:'watch', band:'logged',
-    head:'Brazil is the new soft spot — a food-delivery war is raising the cost of two-wheeler supply and costing mobility trips',
-    detail:'<p>An "enormous amount of competition as it relates to the food business" — DiDi Food and Meituan both entering against iFood. The mechanism matters: two-wheeler supply is <b>shared between food and mobility</b>, so "the cost of securing that supply has gone up" and share is moving "from the mobility side of the business to the delivery side". Management says Uber "continue to hold our share in Brazil"; two-wheeler margins are "quite low…certainly not hitting the bottom line, but it is affecting trip volumes."</p><p><b>So what:</b> the honest read is that a delivery price war shows up first as a <i>volume</i> drag in mobility, not a margin one — which is exactly the kind of leakage that hides inside a 22% consolidated growth number. Framed as an investment period, not a threat.</p>' },
-  { tag:'thesis', band:'context',
-    head:'AV is now a $10B commitment against less than 0.5% of trips — and the payback question went unanswered for a fourth quarter',
-    detail:'<p>Live in <b>7 cities, on track for 15 by year-end</b>, "hundreds of thousands of trips per week" — but explicitly <b>"less than 0.5% of our overall trip volume"</b> against ~300M trips a week. Against that, a <b>$10B multi-year investment</b> across equity stakes and infrastructure, plus AV Labs (rideshare-specific data to accelerate partners’ end-to-end models) and a widened partner bench (Wayve, Zoox, Nuro, Baidu, Pony, Verne, Rivian, NVIDIA). On profitability Balaji said only: "we will give you more visibility into that as we go."</p><p><b>So what:</b> management is being unusually candid about how early this is — Dara’s own framing is that unlike foundation models, "AVs are physical, regulated systems that have to be deployed market by market", with school zones, emergency vehicles and motorcade closures as live blockers. Credible, but the spend is now large enough that "more visibility as we go" is wearing thin.</p>',
-    open:'AV revenue per vehicle, payback and per-partner financial commitments all still unquantified — fourth consecutive quarter.' },
-  { tag:'watch', band:'logged',
-    head:'Capital return was paused for M&A — $4B went to Delivery Hero, and the buyback rebuild is a datable promise',
-    detail:'<p>TTM free cash flow crossed <b>$10B for the first time ($10.1B)</b>, and $3.5B of buybacks have been done year-to-date — but Q2 "pivoted heavily to M&amp;A", ~$4B toward the Delivery Hero position. Management committed to rebuilding repurchases "steadily" within <b>"months, not quarters"</b>.</p><p><b>So what:</b> one of the few things on this call with a checkable date attached. Delivery Hero takes Uber to nearly 100 markets — roughly doubling the markets with full platform access — but primary migrations are not until <b>2029</b>, so the synergy story is long-dated while the cash went out now.</p>' },
-  { tag:'curious', band:'logged',
-    head:'The cross-sell pool got re-quantified downward-ish — only 20% of consumers use both Rides and Eats',
-    detail:'<p>Last quarter the framing was "30% of mobility users have never opened Eats"; this quarter it is put the other way round — <b>only 20% of consumers use both</b>, and cross-platform users grow <b>1.5x faster</b>. Alongside: "less than 10% of eligible consumers in our sparse markets have used Uber in the past 12 months", Uber Premium <b>+40% YoY</b>, and "3/4 of our rides happen via a personalized destination suggestion".</p><p><b>So what:</b> the headroom numbers keep getting bigger and more specific, which is the good version of a growth story — but they are all penetration <i>opportunities</i>, not conversion rates achieved.</p>' },
-  { tag:'tone', band:'context',
-    head:'On AI, management refused the aggregate number on purpose — "thousands of small hits"',
-    detail:'<p>Mahaney asked directly for AI’s consumer impact. Dara: <b>"I wouldn’t look for one giant hit from AI. It’s going to be thousands of small hits"</b> — then anecdotes (Cart Assistant lifting average order size "often twice the size", personalized destinations) rather than any aggregate uplift. On the internal side Balaji claimed <b>"near 100% adoption with our engineers on AI-based coding tools"</b> and a <b>"doubling in the code output per engineer"</b>, immediately hedged: "we are being quite smart internally on how we are measuring this and not getting ahead of our skis."</p><p><b>So what:</b> the hedge is the honest part and worth crediting — but a doubling of engineering output with no dollar figure, in the same quarter the AI budget question from Q1 went unanswered again, means the cost side and the benefit side are both still assertions.</p>',
-    open:'No aggregate AI revenue or margin figure; the Q1 AI budget re-up still un-sized two quarters running.' },
-];
-var UB_Q2_2026_SUMMARY = { paras:[
-  { p:'<b>A clean beat on everything Uber actually guides, and the growth is still accelerating.</b> Gross Bookings $58.0B (+24% reported, +22% constant-currency) came in <b>above the $56.25–57.75B guide</b> and above the $57.2B Street; Adjusted EBITDA $2,819M cleared the $2.70–2.80B guide; non-GAAP EPS $0.81 landed inside the $0.78–0.82 guide and effectively on the $0.809 Street. It is the fourth consecutive quarter of 20%+ bookings growth, and trailing-twelve-month free cash flow crossed <b>$10B for the first time</b>.',
-    moreLabel:'＋ more — the quality of it', more:'<p>Trips +18% to 3,867M on MAPCs +16% to 208M — volume-led, not price-led. Adjusted EBITDA margin on Gross Bookings rose to <b>4.9% from 4.5%</b>, and non-GAAP operating income as a share of bookings to 3.7% from 3.3%. Profit compounded roughly 1.5x bookings.</p>' },
-  { p:'<b>The revenue-versus-bookings gap finally has a bridge — and most of it is accounting, not economics.</b> Revenue grew just +12% against +24% bookings. Balaji sized the take-rate decline at "nearly 500 basis points" and attributed <b>~400bp to the UK model change</b>, with ~100bp from "deliberate investments". That is the single most useful number on the call: it dates the drag (the UK change laps from 1Q27) and moves the debate to the ~100bp that is actually discretionary.',
-    moreLabel:'＋ more — why it matters for the model', more:'<p>Mobility take rate is now ~25.4% versus ~29.9% four quarters ago. If the 400bp is genuinely mechanical, reported revenue growth should re-converge on bookings growth from early 2027 without anything changing in the business. The ~100bp was never split by initiative — that is the part still to audit.</p>' },
-  { p:'<b>Uber is retiring Adjusted EBITDA, and did not say so out loud.</b> The release states it "is no longer a key measure used by management" and replaces segment Adjusted EBITDA with <b>Segment Operating Income</b> (Mobility $2,215M +28%, Delivery $1,055M +38%). Nobody raised it on the call. The measure Uber still guides for Q3 is the one it just called non-key — and our own Q1 red line, Mobility segment Adjusted-EBITDA margin, no longer exists to be checked.' },
-  { p:'<b>The spending has moved from the P&amp;L to the balance sheet.</b> A <b>$10B multi-year AV commitment</b> against AV volumes that are still "less than 0.5% of our overall trip volume", and ~$4B toward Delivery Hero that paused the buyback (≈$3.5B YTD, rebuilding "months, not quarters"). Margins were fine this quarter precisely because the investment is showing up as capital deployed, not opex — which is the harder thing to score.' },
-  { p:'<b>Brazil is the leak worth watching.</b> DiDi Food and Meituan entering against iFood has bid up the cost of two-wheeler supply, which Uber shares between food and mobility — so a delivery price war is showing up as <b>mobility trip softness</b>, not a margin line. Small inside a 22% consolidated number, and management frames it as an investment period, but it is the mechanism to keep an eye on.' },
-] };
-// Thesis red-lines FROZEN going into Q2 2026 (from the Q1 2026 setup + Watch List), checked against
-// the Q2 2026 print and transcript. Every note carries fact -> why (Rule 0).
-var UB_Q2_2026_THESISCHECK = [
-  { line:'Insurance leverage fails to broaden beyond L.A. into national US mobility', tripped:false,
-    note:'Held. Insurance is now described flatly as "becoming a tailwind this year", with the savings <b>reinvested into California markets</b>, and Balaji named it first of the three drivers of US mobility momentum. Mobility Gross Bookings +22% YoY to <b>$28,988M</b> and Mobility segment operating income <b>+28% to $2,215M</b> — profit growing faster than bookings is what broadening leverage looks like. Note the caveat management volunteered: the World Cup "was a benefit, but it was as expected to a large extent."' },
-  { line:'The AV/AI investment step-up shows up as visible margin pressure', tripped:false,
-    note:'Held on the P&amp;L — Adjusted EBITDA margin on bookings <i>rose</i> to 4.9% from 4.5% — but for a reason that should be read carefully: the step-up landed as <b>capital</b>, not cost. A $10B multi-year AV commitment and ~$4B of M&amp;A paused the buyback. The red line as written did not trip; the risk simply moved to a line this check does not watch. Re-cut it for Q3 against capital allocation, not margin.' },
-  { line:'The number that can’t wobble: Mobility segment Adjusted-EBITDA margin', tripped:true,
-    note:'Tripped — not by the number, by the disclosure. Uber states Adjusted EBITDA "is no longer a key measure used by management" and has replaced segment Adjusted EBITDA with <b>Segment Operating Income</b>. The metric this red line was struck against no longer exists, and the change was never mentioned on the call. The underlying economics look fine on the new measure (Mobility operating income +28%), but a tracking line that a company can retire mid-thesis is a weak tracking line — restate it on segment operating income.' },
-  { line:'Profitable scaling breaks as grocery/retail mixes into Delivery', tripped:false,
-    note:'Held, and comfortably: Delivery segment operating income <b>+38% to $1,055M</b> against Delivery bookings +26% — profit still compounding faster than volume through the mix. The new colour is the Cart Assistant AI feature, where average order size is "often twice the size". The competitive cost is showing up in Brazil rather than in the margin.' },
-  { line:'Waymo cannibalizes Uber’s core, or Uber ends up dependent on one AV partner', tripped:false,
-    note:'Held, and answered directly for once. Dara: "Waymo is a very important partner of ours, and we continue to operate in Austin and Atlanta… the on-the-ground partnership continues to be very strong" — while conceding the diversification motive out loud: <b>"we want to make sure that we’re not dependent on one partner."</b> The partner bench is now Wayve, Zoox, Nuro, Baidu, Pony, Verne, Rivian and NVIDIA. Stays tracked as Waymo expands.' },
-];
-// What the Q2 2026 print TEES UP for the Q3 call. Everything before the first em-dash is the visible
-// hook; the rest opens behind "+ the ask".
-var UB_Q2_2026_INTOCALL = [
-  '📉 <b>Split the ~100bp of "deliberate investments" in the take rate</b> — Balaji bridged ~400 of the ~500bp decline to the UK model change and left ~100bp as discretionary spend, unbroken-down. Which initiatives, how long do they run, and does the UK 400bp lap cleanly from 1Q27 so reported revenue growth re-converges on bookings growth?',
-  '📐 <b>Why is Adjusted EBITDA being retired, and what replaces it?</b> — the release calls it "no longer a key measure used by management" and swaps segment tables to Segment Operating Income, with no explanation and no question asked on the call. Ask directly: what is the new headline measure, when does the guide switch to it, and what does the restated history look like?',
-  '🇧🇷 <b>Size the Brazil drag</b> — DiDi Food and Meituan entering against iFood has raised two-wheeler supply cost and is "affecting trip volumes" in mobility. How many trips, for how long, and at what point does holding share stop being worth the price?',
-  '🤖 <b>$10B against 0.5% of trips — the payback question is now four quarters old</b> — "we will give you more visibility into that as we go" is the fourth consecutive deferral. Ask for revenue per vehicle per day, the AV Labs data-rights economics, and what the per-partner commitments actually are (Lucid was described only as "guaranteed volume" in a "$70,000–$80,000 range").',
-  '💰 <b>"Months, not quarters" is datable — check it</b> — buybacks were paused at ~$3.5B YTD for the ~$4B Delivery Hero move, with a commitment to rebuild steadily. If Q3 does not show repurchases stepping back up, the M&amp;A pivot is structural rather than opportunistic.',
-  '🧠 <b>Put a number on AI, on either side</b> — "thousands of small hits" on the revenue side and a "doubling in the code output per engineer" on the cost side, with the Q1 budget re-up still un-sized two quarters running. Either the efficiency is large enough to show in opex growth or it is not; ask which.',
-];
-var CALL_EARNINGS = { ticker:'UBER', quarters:[
-  { q:'Q3 2026', status:'upcoming', date:'early November 2026 (date TBC)',
-    setup:{ source:'Bloomberg (BST) — BBG_CONSENSUS.txt snapshot archive · Summit — Summit_Financial_Data model (snapshot 2026-08-05)', asOf:'2026-07-31',
-      notes:{
-        'Revenue':{ t:'Street column is PRE-print', h:'<p>The newest Bloomberg snapshot in the archive is <b>31 Jul 2026</b>, before the 5 Aug print. The Q3 2026 Street figures shown are therefore that file’s <b>two-quarters-out</b> consensus, not a post-print refresh — they will move once the next archive drop lands. Summit is post-print (5 Aug vintage): Q3 2026 revenue <b>$15.17B</b>, raised from $14.93B pre-print.</p>' },
-        'Operating income':{ t:'Non-GAAP, not GAAP', h:'<p>Both the Street line (<code>IS_COMPARABLE_EBIT</code>) and the Summit line (<code>ADJ_OPINC</code>) are the <b>non-GAAP / comparable</b> operating income — $2,143M in Q2 2026, not the $1,890M GAAP figure. Do not mix them.</p>' },
-        'EBITDA':{ t:'A measure Uber is retiring', h:'<p>Uber guided Q3 Adjusted EBITDA at <b>$2.86–2.96B</b> while stating in the same release that Adjusted EBITDA "is no longer a key measure used by management". Summit’s forward EBITDA here is from the <b>31 Jul</b> vintage — the 5 Aug model re-cut revenue and the adjusted P&amp;L but left the quarterly EBITDA row empty.</p><p><b>Margin basis:</b> the margins shown in this grid are struck on <b>revenue</b>, which is Bloomberg’s comparable-EBITDA convention. Uber itself quotes the margin on <b>Gross Bookings</b> (4.9% in Q2 2026, up from 4.5%) — that is the basis used in the Results tab. Same numerator, different denominator; do not compare the two percentages directly.</p>' },
-        'EPS':{ t:'GAAP — whipsawed by equity marks', h:'<p>This line is <b>GAAP</b> EPS (<code>IS_COMP_EPS_GAAP</code>), dominated by mark-to-market swings on Uber’s equity stakes (Aurora, Grab, Didi) — $1.17 in Q2 2026 against $0.81 non-GAAP. Score <b>Adj. EPS</b> instead, which is the line Uber guides.</p>' },
-        'Adj. EPS':{ t:'The guided line', h:'<p>Uber guides Non-GAAP EPS of <b>$0.84–$0.88</b> for Q3 2026 (+28% to +35% YoY). Street ~$0.86, Summit <b>$0.90</b> — Summit sits at or just above the top of the guide, which is the disagreement to watch.</p>' },
-        'Mobility take rate':{ t:'The UK change laps in 1Q27', h:'<p>Take rate fell ~500bp over four quarters; management attributes ~400bp to the UK accounting model change and ~100bp to "deliberate investments". The mechanical part laps from <b>1Q27</b>, so Q3 and Q4 2026 should still show the depressed rate.</p>' },
-        'Capex':{ t:'Sign flip — and asset-light', h:'<p>Capex arrives from the archive as a cash <b>outflow</b> and is shown here as a positive magnitude. Uber is asset-light — ~$0.1B a quarter. Note this does <b>not</b> capture the $10B multi-year AV commitment, which runs through equity stakes and partner infrastructure.</p>' },
-        'Trips':{ t:'Trips — in billions', h:'<p>Total quarterly Trips, in billions. Q2 2026 printed <b>3.87B</b> (+18% YoY) against a 3.90B Street. Summit Q3 2026: <b>4.20B</b>.</p>' }
-      },
-      us:{ 'Revenue':{v:15.169}, 'Operating income':{v:2.370}, 'EBITDA':{v:2.960}, 'Mobility Gross Bookings':{v:30.133}, 'Delivery Gross Bookings':{v:29.386}, 'Mobility take rate':{v:26.1}, 'Delivery take rate':{v:19.5}, 'Adj. EPS':{v:0.904}, 'Trips':{v:4.202}, 'Trips per MAPC':{v:6.33} },
-      pricedIn:'Coming off a quarter that beat both guided lines with bookings accelerating to 22% constant-currency, the bar for Q3 is no longer growth — it is whether the spending discipline holds while $10B of AV commitment and a $4B acquisition sit on the balance sheet, and whether the buyback actually rebuilds inside the "months, not quarters" management promised.',
-      oneLiner:'Pre-call view: guidance of $58.25–60.25B bookings and $0.84–0.88 EPS implies growth holds near 20% with EPS still compounding ~30%; the debate is what the discretionary ~100bp of take-rate investment is buying, and what replaces Adjusted EBITDA now that Uber has called it non-key.',
-      debate:{ rows:null, diverge:[
-      { t:'Summit sits above the guide on EPS — the sharpest disagreement', d:'Uber guides Non-GAAP EPS of <b>$0.84–$0.88</b>; the Street sits at <b>~$0.86</b>, mid-range, as it usually does. Summit is at <b>$0.90</b> — above the top of the guide. Uber has landed inside or above its EPS guide in each of the two quarters it has given one, so Summit is effectively betting the company is sandbagging again. A print at $0.88 or better validates the model; anything at $0.85 makes Summit the outlier, not the Street.' },
-      { t:'Summit is above the Street on revenue, and the Street column is stale', d:'Summit models Q3 revenue at <b>$15.17B</b> against a Street figure of <b>$14.82B</b> — but that Street number is the <b>31 Jul, two-quarters-out</b> consensus, struck before the 5 Aug beat. Treat the gap as provisional: the honest comparison only exists once the next Bloomberg archive drop refreshes the post-print estimates. The same caveat applies to every Street cell in this Setup.' },
-      { t:'The bookings guide is the one number that is not in doubt', d:'Guidance of <b>$58.25–60.25B</b> (+18% to +22% constant-currency) sits against Summit’s <b>$61.09B</b> — above the top of the range — and a stale Street at ~$59.3B. Uber has never printed below its own Gross Bookings guide in seventeen quarters of guiding it (5 above, 11 within, 0 below on our record). The interesting question is not whether the guide is met but whether Summit’s above-the-range number is right, which would mean a third consecutive quarter of accelerating bookings.' } ],
-      synth:'The one thing to resolve: what the ~100bp of "deliberate investment" in the take rate is buying, and whether it is temporary. The second: what replaces Adjusted EBITDA as the measure management runs the company on — because until that is answered, the segment margin trend cannot be tracked across the change.' } },
-    results:null, call:null },
-  { q:'Q2 2026', status:'reported', date:'Wed Aug 5, 2026 · before open',
-    setup:{ source:'Bloomberg (BST) \u2014 BBG_CONSENSUS.txt snapshot archive \u00b7 Summit \u2014 Summit_Financial_Data model', asOf:'2026-07-30',
-      // Summit is filled ONLY on the lines where our model shares the reported/Street BASIS (cross-checked,
-      // \u00a76a). Mobility GB, MAPCs and Trips match the archive 1:1. Revenue / Operating income / EBITDA / EPS
-      // and Delivery GB are on a DIFFERENT Summit basis (grossed-up revenue+delivery, adj vs GAAP) \u2014 shown as
-      // a note, NOT a fake surprise (a reconciliation item for San/Oscar; see js/results-data/uber.js header).
-      notes:{
-        'Revenue':{ t:'Summit reconciles (DHER toggle off)', h:'<p>The Summit revenue line used to run ~30% high ($67.9B vs reported $52.0B FY25) \u2014 that was the <b>Delivery Hero pro-forma consolidation toggle</b>, now OFF. Standalone, Summit revenue matches reported to the dollar (FY25 $52.0B), so the forward is directly comparable and is shown. Q2 2026 Summit: <b>$14.2B</b>.</p>' },
-        'Delivery Gross Bookings':{ t:'Summit reconciles (DHER toggle off)', h:'<p>The ~$42B/quarter Summit Delivery GB was the <b>Delivery Hero pro-forma</b> consolidation; with the toggle off it is <b>~$27.6B</b> (vs reported ~$26B, Street ~$27B) \u2014 same basis, so it is now filled.</p>' },
-        'EBITDA':{ t:'Comparable EBITDA vs Uber Adj. EBITDA', h:'<p>Bloomberg <code>IS_COMPARABLE_EBITDA</code> and Uber\u2019s own <b>Adjusted EBITDA</b> (the Summit line) are close but not identical (~10% historical gap; they converged to the dollar in Q1 2026). Read the surprise on the archive\u2019s own basis.</p>' },
-        'EPS':{ t:'GAAP (Street) vs adjusted (Summit) \u2014 not mixed', h:'<p>Consensus/actual EPS is <b>GAAP</b> (<code>IS_COMP_EPS_GAAP</code>), dominated by mark-to-market swings on Uber\u2019s equity stakes (Aurora, Grab, Didi) \u2014 hence the wild history ($3.21, $0.14, $0.13). Summit only forecasts <b>adjusted</b> EPS (ex-marks, $0.83 for Q2 2026), so we deliberately do <b>not</b> show a Summit EPS here \u2014 scoring a GAAP actual against an adjusted estimate would be a false surprise. Score the clean lines (income from operations, Adj. EBITDA) instead.</p>' },
-        'Capex':{ t:'Sign flip \u2014 and asset-light', h:'<p>Capex arrives from the archive as a cash <b>outflow</b> (negative) and is shown here as a positive magnitude. Uber is asset-light \u2014 capex is only ~$0.1B/quarter, immaterial to the model.</p>' },
-        'Mobility Gross Bookings':{ t:'Like-for-like \u2014 Summit filled', h:'<p>Summit\u2019s Mobility GB matches the reported/archive figure to the dollar (ratio 1.00), so the forward Summit number is directly comparable. Summit Q2 2026: <b>$28.9B</b>.</p>' },
-        'Adj. EPS':{ t:'Non-GAAP EPS \u2014 comparable to Summit', h:'<p>The <b>adjusted (Non-GAAP)</b> EPS the txt now carries as a KPI \u2014 clean of the equity-stake marks that whipsaw the GAAP headline line, so it is directly comparable to Summit. Street Q2 2026 ~<b>$0.81</b> vs Summit <b>$0.83</b>; Uber guides Non-GAAP EPS <b>$0.78\u2013$0.82</b>. (MAPCs was removed from the tracked KPI set.)</p>' },
-        'Trips':{ t:'Trips \u2014 in billions', h:'<p>Total quarterly Trips, in billions. Summit and the archive agree 1:1; Summit Q2 2026: <b>~4.04B</b> against a <b>3.87B</b> print \u2014 the largest single miss in the Summit column this quarter. (The Q1 2026 Trips actual had come through the archive corrupted as <code>Error 2042</code>; it has since been backfilled at <b>3.64B</b>.)</p>' }
-      },
-      us:{ 'Revenue':{v:14.223}, 'Operating income':{v:2.084}, 'EBITDA':{v:2.795}, 'Shares outstanding':{v:2.040}, 'Operating cash flow':{v:2.673}, 'Capex':{v:0.084}, 'D&A':{v:0.213}, 'Mobility Gross Bookings':{v:28.871}, 'Delivery Gross Bookings':{v:27.602}, 'Mobility take rate':{v:26.0}, 'Delivery take rate':{v:19.5}, 'Adj. EPS':{v:0.83}, 'Trips per MAPC':{v:6.395}, 'Trips':{v:4.041} },
-      debate:{ rows:null, diverge:[
-      { t:'Top line ~ties, but the composition differs', d:'Revenue is a near-tie — Summit <b>$14.223B</b> vs Street <b>$14.242B</b> (−0.1%) — but they build it differently. Summit models <b>more trips</b> (4.041B vs 3.901B) and <b>more Delivery GB</b> ($27.602B vs $26.965B, +2.4%), but slightly <b>less Mobility GB</b> ($28.871B vs $28.936B) at <b>lower take rates</b> (Mobility 26.0% vs 26.5%). Summit’s revenue is more volume-led with thinner monetization; the Street leans a touch more on rate. Same destination, different path — the print settles which.' },
-      { t:'On profit they cross over — not a tie', d:'Summit models slightly <b>more EBITDA</b> ($2.795B vs $2.785B) yet slightly <b>less operating income</b> ($2.084B vs $2.111B): because Summit carries higher D&amp;A ($0.213B vs $0.182B), the two swap ranking across the D&amp;A line. Small, but a real cost-structure difference — NOT a rounding tie.' },
-      { t:'The real gap is CASH and capital return', d:'The biggest disagreement by far: Summit models operating cash flow <b>~20% below</b> the Street (<b>$2.673B vs $3.329B</b>, a ~$656M gap) — likely a working-capital / insurance-timing assumption. Yet Summit assumes <b>more buyback</b> (2.040B shares vs 2.059B). So Summit is cautious on cash generated but aggressive on cash returned — the two bets to reconcile against the print.' } ],
-      synth:'The one thing to resolve: does the insurance-leverage acceleration broaden from L.A. to national US mobility, and does the AV/AI investment step-up show up as margin pressure before it shows up as return? The number that can\u2019t wobble: Mobility segment Adjusted-EBITDA margin.' } },
-    results:{ summary:UB_Q2_2026_SUMMARY, thesisCheck:UB_Q2_2026_THESISCHECK, intoCall:UB_Q2_2026_INTOCALL },
-    call:{ highlights:UB_Q2_2026_HIGHLIGHTS } },
-  { q:'Q1 2026', status:'reported', date:'Tue May 6, 2026 \u00b7 after close',
-    setup:{ source:'Bloomberg (BST) \u2014 BBG_CONSENSUS.txt snapshot archive (going-in consensus) \u00b7 Summit \u2014 no frozen pre-print estimate in the model snapshot', asOf:'2026-01-29', notes:{}, us:null,
-      pricedIn:'Coming off a Q4 that confirmed insurance flipping to leverage and US-mobility acceleration for 2026, the bar was: prove the acceleration is showing up in trips, and show AV scaling without a capital or margin shock. The risk was an in-line print on a story already bought, where any margin/AI-cost wobble gets punished harder than the beat is paid.',
-      oneLiner:'Pre-call view: audience + insurance-driven elasticity should keep Mobility accelerating and Delivery in the low-20s; the debate is whether profitable-scaling holds as grocery mixes in and the AV/AI investment steps up.',
-      debate:{ rows:null, synth:null } },
-    results:{ summary:UB_Q1_2026_SUMMARY, thesisCheck:UB_Q1_2026_THESISCHECK, intoCall:UB_Q1_2026_INTOCALL },
-    call:{ highlights:UB_Q1_2026_HIGHLIGHTS } },
-] };
 // Split an intoCall item into [hook, argument] at the first em-dash that is NOT inside markup.
 // Void elements are skipped so <br> / <img> do not throw the depth count off.
 var CE_VOID=/^<(br|hr|img|input|wbr)\b/i;
@@ -4031,6 +3855,10 @@ function html(c){
 // Insiders) via #dd-val-slot / #dd-mgmt-slot filled by companies.js. ──
 function deepDiveHtml(c){
   _co = c;   // capture the live company object (id + ticker) for the Watch List DB wiring
+  // F1 (playbook §7, 2026-11-03): the Amazon spine. Every existing pane sits in its B2 destination
+  // (docs/profiles/UBER.md §5); sub-tabs without content are added when their unit is built (rule 5).
+  function st(list){ return '<div class="ovt-subtabs">'+list.map(function(x,i){ return '<button type="button" class="ovt-subtab'+(i?'':' active')+'" data-ovst="'+x[0]+'">'+x[1]+'</button>'; }).join('')+'</div>'+
+    list.map(function(x,i){ return '<div class="ovt-subpane" data-ovst="'+x[0]+'"'+(i?' hidden':'')+'>'+x[2]+'</div>'; }).join(''); }
   var h='<div class="ov ov-uber ov-uber-dd" data-brand="UBER">';
   h+='<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
@@ -4038,96 +3866,42 @@ function deepDiveHtml(c){
       '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
       '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+      '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
     '</div>';
-  // ── TOP LINE — Segments (with an inner Mobility/Delivery/Freight toggle) · Customers · TAM ·
-  // Industry Analysis. The old "Deep Overview" is dismantled into these (Golden Rule #1). ──
-  h+='<div class="dd-pane" data-dd="topline">'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="segments">Segments</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="customers">Customers</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="tam">TAM</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="industry">Industry Analysis</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="segments">'+ubSegmentsBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="customers" hidden>'+ubCustomersBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="tam" hidden>'+ubTamBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="industry" hidden>'+ubIndustryBody(c)+'</div>'+
-    '</div>';
-  // ── BOTTOM LINE — Unit Economics · Suppliers · Insurance & FCF · Margins (live via Massive). ──
-  h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="unit">Unit Economics</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="suppliers">Suppliers</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="insurance">Insurance & FCF</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="margins">Margins</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="unit">'+unitEconBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="suppliers" hidden>'+suppliersBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="insurance" hidden>'+insuranceBody()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="margins" hidden>'+ubMarginsBody(c)+'</div>'+
-    '</div>';
-  // ── EVOLUTION — Earnings History (narrative) · Guidance (Model vs. Reality + 3-yr targets) ·
-  // Strategy (turnaround + drivers) · Timeline (company history & M&A). ──
-  h+='<div class="dd-pane" data-dd="evolution" hidden>'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="dhacq">Delivery Hero Acquisition</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="earnings">'+
-        ceIRButton()+
-        '<div class="ce-note" style="margin-bottom:12px">\ud83c\udfaf <b>Earnings</b> \u2014 the decision layer, in two phases: <b>\u2460 Pre-Call</b> (Setup \u00b7 Watch List, themes tracked across quarters) \u2192 <b>\u2461 Post-Results</b> (the print scored against what was frozen, plus the call highlights). Append-only per quarter \u2014 pick a quarter below. The <b>Watch List</b> is the single home for what we track over time; the multi-year <b>theme record</b> (the former \u201cEarnings History\u201d compendium) is folded in beneath it.</div>'+
-        '<div class="ce-phtabs">'+
-          '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
-          '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>'+
-          '<button type="button" class="ce-phtab" data-cep="results">Post-Results</button>'+
-        '</div>'+
-        ceQPills()+
-        '<div class="ce-phpane" data-cep="setup">'+ceSetupBody(c)+'</div>'+
-        '<div class="ce-phpane" data-cep="watch" hidden>'+ceWatchBody(c)+'</div>'+
-        '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="results" hidden>'+(resultsHtml('UBER')||ceResultsPending('Results'))+'</div>'+
-      '<div class="ovt-subpane" data-ovst="estevo" hidden>'+(resultsEvoHtml('UBER')||ceResultsPending('Estimates'))+'</div>'+
-      '<div class="ovt-subpane" data-ovst="guidance" hidden>'+modelBody(c)+ub3yrTargets()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="strategy" hidden>'+ubStrategyBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="timeline" hidden>'+historyStoryBody()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="dhacq" hidden>'+deliveryHeroBody()+'</div>'+
-    '</div>';
-  // ── VALUATION — Multiples · Peers (listed-peer multiples) · Analyst Ratings (Massive, absorbed) ·
-  // Capital Allocation · Balance Sheet. (Sensitivity grid removed; competitive map moved to Industry.) ──
-  h+='<div class="dd-pane" data-dd="valuation" hidden>'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="multiples">Multiples</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="ratings">Analyst Ratings</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="capital">Capital Allocation</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="balance">Balance Sheet</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="multiples">'+UBER_VAL.body()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="peers" hidden>'+ubPeerMultBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="ratings" hidden><div id="dd-val-slot"></div></div>'+
-      '<div class="ovt-subpane" data-ovst="capital" hidden>'+ubCapAllocBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="balance" hidden>'+ubBalanceBody(c)+'</div>'+
-    '</div>';
-  // ── MANAGEMENT — Executives & Board · Ownership (Fiscal.ai, absorbed) · Governance & SBC ·
-  // Track Record. ──
-  h+='<div class="dd-pane" data-dd="mgmt" hidden>'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="team">Executives & Board</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="ownership">Ownership</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="governance">Governance & SBC</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="track">Track Record</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="team">'+UBER_MGMT.body()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="ownership" hidden><div id="dd-mgmt-slot"></div></div>'+
-      '<div class="ovt-subpane" data-ovst="governance" hidden>'+ubGovBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="track" hidden>'+ubTrackBody(c)+'</div>'+
-    '</div>';
+  // TOP LINE — Segments (B2 #12–#25, #33, #41) · Customers (#26–#32)
+  h+='<div class="dd-pane" data-dd="topline">'+st([
+      ['segdrv','Segments',ubSegmentsBody(c)],
+      ['segcus','Customers',ubCustomersBody(c)] ])+'</div>';
+  // BOTTOM LINE — General (#52) · Segments (#39–#40) · Supply Chain (#42–#43)
+  h+='<div class="dd-pane" data-dd="bottomline" hidden>'+st([
+      ['margins','General',ubMarginsBody(c)],
+      ['segments','Segments',unitEconBody(c)],
+      ['supplychain','Supply Chain',suppliersBody(c)] ])+'</div>';
+  // EVOLUTION — Earnings (Setup · Post-Results · Notes) · Results (+ #67/#68 merged) · Estimates.
+  // The IR/EDGAR banner and the intro paragraph are retired (B2 #53, playbook §12 EV-SET).
+  h+='<div class="dd-pane" data-dd="evolution" hidden>'+st([
+      ['earnings','Earnings',uberCeHtml(c)],
+      ['results','Results',(resultsHtml('UBER')||'')+modelBody(c)],
+      ['estevo','Estimates',resultsEvoHtml('UBER')||''] ])+'</div>';
+  // VALUATION — Peers (#84) · Sensitivity Analysis (#83). Historic Multiple, Target Multiple and
+  // Submit History are added with their units. Analyst Ratings (#85) return to the Pillars tab.
+  h+='<div class="dd-pane" data-dd="valuation" hidden>'+st([
+      ['peers','Peers',ubPeerMultBody(c)],
+      ['sensitivity','Sensitivity Analysis',UBER_VAL.body()] ])+'</div>';
+  // MANAGEMENT — Executives & Board (#89) · Ownership (#90) · Governance & SBC (#91–#92) ·
+  // Track Record (#93 + #69 3-year targets + #70 turnaround + #86 capital allocation)
+  h+='<div class="dd-pane" data-dd="mgmt" hidden>'+st([
+      ['team','Executives & Board',UBER_MGMT.body()],
+      ['ownership','Ownership','<div id="dd-mgmt-slot"></div>'],
+      ['governance','Governance & SBC',ubGovBody(c)],
+      ['track','Track Record',ubTrackBody(c)+ub3yrTargets()+ubStrategyBody(c)+ubCapAllocBody(c)] ])+'</div>';
+  // MISCELLANEOUS — Competitive position (#37–#38) · Insurance (#44–#51, #87–#88) · M&A and
+  // Delivery Hero (#73–#82) · TAM (#34–#36). Regulation (#20) moves out of Segments with TL-SEG.
+  h+='<div class="dd-pane" data-dd="misc" hidden>'+st([
+      ['comp','Competitive Position',ubIndustryBody(c)],
+      ['insurance','Insurance & Balance Sheet',insuranceBody()+ubBalanceBody(c)],
+      ['manda','M&A and Delivery Hero',historyStoryBody()+deliveryHeroBody()],
+      ['tam','TAM',ubTamBody(c)] ])+'</div>';
   h+='</div>';
   return h;
 }
@@ -4376,32 +4150,22 @@ function buildUberOneCharts(){ buildLines('ubChartMembers', UBERONE_GROWTH.label
 // Build the lazy charts that live inside a sub-pane, by (group, sub-key).
 function buildSub(root, group, key){
   if(group==='topline'){
-    if(key==='segments'){ buildOverviewCharts(); buildActiveSeg(root); }  // GB + EBITDA + active segment
-    else if(key==='customers') buildUberOneCharts();
-    // tam, industry: no charts
+    if(key==='segdrv'){ buildOverviewCharts(); buildActiveSeg(root); }
+    else if(key==='segcus') buildUberOneCharts();
   } else if(group==='bottomline'){
-    if(key==='unit')          buildMobilityCharts();  // ubChartTake (take rate) — moved here
-    else if(key==='margins')  buildUbMargins();        // live Massive margins
-    // suppliers, insurance: no charts
+    if(key==='segments')      buildMobilityCharts();  // take-rate lines (B2 #41 moves to TL-SEG with its unit)
+    else if(key==='margins')  buildUbMargins();
   } else if(group==='evolution'){
-    if(key==='guidance')      buildModelTab();          // Model vs. Reality lives under Guidance
-    else if(key==='earnings'){
-      // Setup chart is the shared Results engine (pending for UBER \u2014 no UBER_SETUP dataset). Build only
-      // when Earnings is visible AND Setup is the active phase (Chart.js needs a laid-out canvas).
-      var ph=root.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phtab.active');
-      if(!ph || ph.getAttribute('data-cep')==='setup'){ requestAnimationFrame(gBuildCeAnnual); }
-    }
-    else if(key==='results') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'UBER'); });
+    if(key==='earnings') uberCeBuild(root);
+    else if(key==='results'){ requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'UBER'); buildModelTab(); }); }
     else if(key==='estevo') requestAnimationFrame(function(){ initResultsEvo('UBER'); });
-    // strategy, timeline, dhacq: no charts
   } else if(group==='valuation'){
-    if(key==='multiples')     UBER_VAL.init(root);
-    else if(key==='balance')  buildUbBal();     // equity-stake portfolio bar
-    // peers (static table), ratings, capital: no charts
+    if(key==='sensitivity')   UBER_VAL.init(root);
   } else if(group==='mgmt'){
     if(key==='team')          UBER_MGMT.init(root);
-    else if(key==='governance') buildUbSbc();   // SBC % vs share-count history
-    // ownership, track: no charts
+    else if(key==='governance') buildUbSbc();
+  } else if(group==='misc'){
+    if(key==='insurance')     buildUbBal();
   }
 }
 // Segments ▸ inner Mobility/Delivery/Freight toggle → build the active segment's chart.
@@ -4471,7 +4235,7 @@ function wireModal(root){
   root.querySelector('#ubModalX').onclick=closeM; back.onclick=function(e){ if(e.target===back) closeM(); };
   function resolve(key){
     var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
-    if(kind==='ce'){ return CE_POP[id]||null; }
+    if(kind==='ce'){ return uberCePop(id); }
     if(kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
     if(kind==='trip'){ var s=TRIP_FLOW[+id]; return s?{t:'Step '+(+id+1)+' — '+s.t,h:s.d}:null; }
     if(kind==='aleka'){ var a=ALEKA_CHAIN[+id]; return a?{t:'Aleka — '+a.t,h:a.d}:null; }
@@ -4523,8 +4287,8 @@ function init(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
   renderLive(root); // Deep Dive ▸ Deep Overview keeps its live-price banner (#ubLive lives only there now); the standardized Overview has no price strip.
   wireDD(root);
-  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt');
-  wireCallEarnings(root); wireCeTrack(root); wireCeAnnual(root); // ported earnings phase system + Setup/Post-Results lens toggles
+  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt'); wireSubtabs(root,'misc');
+  uberCeWire(root);   // Earnings: phase tabs · quarter pills · toggles · Notes (record + Watch List) — uber-ce.js
   // Segments ▸ inner Mobility/Delivery/Freight toggle (the "sub-tabs de los segmentos").
   root.querySelectorAll('.seg-pill').forEach(function(btn){ btn.onclick=function(){
     var seg=btn.getAttribute('data-seg');
@@ -4637,4 +4401,4 @@ function deepDiveInit(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
   var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
 }
-export var uberOverview = { html: html, init: init, absorbsPillars: true, deepDive: { html: deepDiveHtml, init: deepDiveInit } };
+export var uberOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

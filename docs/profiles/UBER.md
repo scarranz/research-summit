@@ -1,0 +1,455 @@
+# UBER — bitácora de construcción del perfil
+
+> Reglas: `docs/PROFILE_PLAYBOOK.md` §3. Claude la lee completa al empezar cada sesión y la actualiza en cada aprobación.
+> Estados: ⬜ pendiente · 📝 propuesta · 🔨 en construcción · 👀 en revisión · 🔁 cambios pedidos ·
+> ✅ aprobada · ⏭️ omitida (con razón) · ⛔ bloqueada (qué falta y quién lo consigue)
+
+| Campo | Valor |
+|---|---|
+| Empresa | Uber Technologies, Inc. (NYSE: UBER) |
+| Modo | B — reordenar existente (`js/overviews/uber.js`, ~4,640 líneas; perfil de DOAA351/SAB/posterdeb, PRs #33/#43/#52/#53/#70/#78) |
+| Rama | `feat/uber-restructure-v2` (desde `origin/main` @ `791f1b7`, 2026-11-03; worktree `rs-uber`). `feat/uber-restructure` ya existe en GitHub (rama vieja de DOAA351, jul 2026, mergeada en #52) y no se toca |
+| Analista responsable | SAB (Santiago Alvarez) |
+| Inicio | 2026-11-03 |
+| Plazo | **3T26 se reporta el 2026-11-04** (mañana). SAB eligió "todo de una vez" (2026-11-03); por el plazo, EV-RES-DATA → EV-SET se adelantan dentro de lo que permiten las dependencias (§2.3) |
+| Avance | 0 de M unidades aprobadas |
+
+## 1. Inventario de datos (F0)
+
+| Fuente | ¿Existe? | Detalle (fechas, cobertura) | Qué habilita | Qué queda fuera sin ella |
+|---|---|---|---|---|
+| Fila en `companies` | ✔ | el perfil ya abre (registrado en `js/overviews/index.js`) | el perfil abre | — |
+| Filing anual (10-K / 20-F) | ✔ | 10-K FY2025 (Uber, CIK 1543151, domestic filer); 10-Q 2T26 | Overview, Top Line, textos verbatim | — |
+| Año fiscal / moneda | ✔ | cierre 31 dic · USD | — | — |
+| Summit DCF | ✔ | MCP: **4 submits** 2025-12-15 (después de 3T25) · 2026-02-05 (4T25) · 2026-05-06 (1T26) · **2026-08-05 (2T26)**. **No hay submit antes del 3T26**; SAB decidió usar el del 5-ago (2026-11-03). El dataset viejo también usaba un guardado 2026-07-31 que el MCP ya no lista (EBITDA/FCF forward) | F0-SM; Summit congelado en Results/Top Line/Setup, EV-EST, VA-TM, VA-SUB, VA-SENS | — |
+| Consenso BBG (`BBG_CONSENSUS.txt` + `Consensus_Portal.xlsm`) | ✔ | `UBER US EQUITY`: **30 snapshots**, 2019-06-04 → **2026-09-10**; nada más nuevo ni en la hoja viva. GB total y por segmento, ingreso por segmento, utilidad operativa ajustada por segmento, EBITDA, FCF, viajes, MAPC. **Sin EPS ajustado** (solo GAAP) | `estMatrix.cons`, Setup, Bottom Line, forward de peers | EPS Street del 3T26 se queda con el archivo viejo |
+| `get-market-history` (Massive) | ✔ desplegada (responde 401 sin sesión, ya no 404) | precio diario | Historic Multiple en vivo | — |
+| Valuación del modelo en el MCP | ✔ | 4 submits, `quality_flags` vacío. 08-05: EV/EBITDA 14.0× 2027 Fwd · PT $107.58 · FV $101.46 · P/E 22.0× 2027 Fwd · PT $113.29 · FV $106.51; precio ese día $66.85. Prueba PT÷FV: 1.060 vs 1.064 → consistente. Submits anteriores solo EV/EBITDA (15×, 15×, 14×) | VA-TM, VA-SUB, VA-SENS | — |
+| SPLC (clientes / proveedores) | ◐ | el perfil actual tiene sub-tabs `customers` y `suppliers` (por revisar en B1 de dónde salen) | TL-CUS, BL-SPLC | — |
+| Transcripciones | ◐ | `docs/calls/UBER.md` (compendio hasta 4T25) + `UBER-latest.md` (**1T26**, sin rotar). La llamada del **2T26 no está en `docs/calls`** (el resumen vive en `uber.js` CALL_EARNINGS). 3T26: 2026-11-04 | EV-POST, EV-NOTES | — |
+| Fiscal.ai (plan) | ✔ | UBER está en el plan gratis | tabla en vivo de Management | — |
+| Massive (`liveQuote`) | ✔ | `covered-calls-massive` | market cap, peers | — |
+| Fotos / imágenes | ✔ | `img/leadership/uber-*` (10) | Management | — |
+
+**Alcance acordado (2026-11-03, SAB):** las 38 unidades + B1/B2 son construibles; Summit = submit 2026-08-05 (no habrá submit antes del 3T26).
+
+## 1b. Mapa Summit (F0-SM)
+
+> Reglas: `docs/PROFILE_PLAYBOOK.md` §6.3. Archivo: `js/summit-map/uber.js` (sin números).
+
+Modelo: MCP `UBER` · USD · millones · 4 submits (2025-12-15 · 2026-02-05 · 2026-05-06 · 2026-08-05) ·
+**67 etiquetas: 17 core · 21 segment · 14 kpi · 6 guidance · 4 consensus · 5 ignore (agrupadas)** · valuación EV / EBITDA
+(4 submits) + P / E (solo 08-05), `quality_flags` vacío · 4 dudas.
+
+Cuadre contra el comunicado (vía `act` del dataset de Results, que cuadra con cada 8-K) — 2T26 y FY2025:
+
+| Etiqueta MCP | Rol | Clave portal | Qué es | Base | Unidad real | Agregación | Cuadre | Confianza |
+|---|---|---|---|---|---|---|---|---|
+| `REV` | core | `rev` | Ingreso | GAAP | USD M | suma | 2T26 14,191 ✔ · FY25 52,017 ✔ | ✔ |
+| `ADJ_OPINC` | core | `opinc` | Utilidad operativa no-GAAP | ajustada | USD M | suma | 2T26 2,143 ✔ · FY25 6,309 vs 6,453 | ❓ (duda 1) |
+| `OP_INCOME` | core | `opinc_gaap` | Utilidad de operación | ¿GAAP? | USD M | suma | 2T26 2,004 vs GAAP 1,890 | ❓ (duda 2) |
+| `EBITDA` | core | `ebitda` | EBITDA ajustado | ajustada | USD M | suma | 2T26 2,819 ✔ · FY25 8,730 ✔ | ⚠ forward trimestral en 0 en 08-05 |
+| `ADJ_NET_INCOME` / `EARNINGS` | core | `earnings` | Utilidad neta no-GAAP | ajustada | USD M | suma | FY25 5,237 (las dos) | ✔ |
+| `GAAP_NET_INCOME` | core | `net_income` | Utilidad neta GAAP | GAAP | USD M | suma | 2T26 2,394 ✔ (BBG reportado) | ✔ |
+| `ADJ_EPS` | core | `eps` | EPS no-GAAP | ajustada | $/acción | — | 2T26 0.806 ✔ · FY25 2.47 ✔ | ✔ |
+| `SHARES` · `SHARES_OUT` | core | `shares` · `shares_out` | Diluidas (anual) · en circulación | — | acciones M | fin | FY25 2,119.7 · 2T26 2,050.2 | ✔ |
+| `CAPEX` · `CFO` · `FCF` | core | `capex` · `cfo` · `fcf` | Flujo | GAAP / empresa | USD M | suma | FCF 2T26 2,792 ✔ · FY25 9,763 ✔ | ⚠ forward trimestral en 0 en 08-05 |
+| `DNA` · `SBC` · `INT_INC` · `INT_EXP` · `TAX_RATE` | core | ídem | — | GAAP / modelo | USD M · % | suma · prom. | signos negativos en DNA/SBC | ✔ |
+| `MOBILITY_*` · `DELIVERY_*` · `FREIGHT_*` (GB, REVENUE, ADJ_OPINC, EBITDA, CFO) · `CORP_GNA_*` | segment | `seg.<x>.*` | Por segmento | — | USD M | suma | GB 2T26 28,988 / 27,463 / 1,571 ✔; ingreso 7,363 / 5,245 ✔; op. inc. 2,215 / 1,055 / −24 / −1,103 = 2,143 ✔ | ⚠ `*_EBITDA` con quiebre de base en 1T26; `*_CFO` es asignación del modelo |
+| `ORDERS` · `USERS` | kpi | `trips` · `mapc` | Viajes · MAPC | — | M | suma · fin | 3,867 ✔ · 208 ✔ | ⚠ ORDERS anual FY26 no sirve |
+| `ONE_*` · `NON_MEMBERS_*` · `DELIVERY_GB_UBER_ONE` · `NEW_UBER_ONE_SPENDING` · `GB_PER_USER` | kpi | `one_*` | Socios Uber One vs no socios (construcción del modelo) | modelo | M · USD | — | ONE_MEMBERS_USERS 2T26 50 (comunicado: "50M+") | ⚠ derivadas del modelo |
+| `SHR_BUYBACK` · `EBITDA_CFO` · `INSURANCE_CFO` | kpi | — | Recompras · conversión · reservas de seguro | — | USD M | suma | — | `EBITDA_CFO` ❓ (duda 4) |
+| `GB/EBITDA/EPS_LOW/HIGH_GUIDANCE` | guidance | — | Guía | — | — | — | **todo en 0** (nunca se llenó) | guía sale de los comunicados |
+| `REV/EBITDA/EARNINGS/SHARES_BBG_EST` | consensus | — | BBG anual dentro del modelo | — | — | — | — | se usa `BBG_CONSENSUS.txt` |
+| `GAI`, `SHR_BUYBACK_PRICE`, `AIR`, `LOTR/LTR/STR/STI/RCUR/RNCUR` | ignore | — | ceros · unidades mezcladas · duplicado · auxiliares de balance | — | — | — | — | — |
+
+### Dudas
+
+```
+❓ UBER · 1 · ADJ_OPINC anual FY2025
+   Lo que se ve: 6,309 en el modelo vs 6,453 en el dataset de Results (los trimestres sí cuadran, p. ej. 2T26 2,143).
+   Quién responde: Claude con el 10-K / SAB.   Mientras tanto: el anual de Results queda como está.
+❓ UBER · 2 · OP_INCOME 2T26 = 2,004 vs GAAP 1,890
+   Quién responde: SAB (autor del modelo).   Mientras tanto: no se usa (la utilidad operativa del perfil es la no-GAAP).
+❓ UBER · 3 · forward trimestral de EBITDA / FCF en 0 en el submit 08-05
+   Lo que se ve: el guardado 07-31 que los traía ya no lo lista el MCP.
+   Mientras tanto: las series forward ya congeladas en el dataset se quedan (fuente 2026-07-31, dicha en el encabezado).
+❓ UBER · 4 · EBITDA_CFO — qué es (FY2025 7,439). No se usa.
+```
+
+### Cambios del mapa
+
+- 2026-11-03 · mapa creado (F0-SM) sobre el submit 2026-08-05.
+
+## 2. Tablero de unidades
+
+| ID | Unidad | Estado | Fecha | Aprobó | Commit | Nota |
+|---|---|---|---|---|---|---|
+| F0 | Inventario de datos | ✅ | 2026-11-03 | SAB | | Summit 4 submits (último 08-05), BBG 30 snapshots (último 09-10) |
+| B1 | Inventario de contenido existente | ✅ | 2026-11-03 | SAB | | 96 piezas (conteo de control) |
+| B2 | Mapa de reubicación | ✅ | 2026-11-03 | SAB | | 96 destinos; 9 fusiones aprobadas; Misc = comp · insurance · regulation · M&A/DH · TAM |
+| F0-SM | Mapa de métricas Summit | ✅ | 2026-11-03 | SAB | | 67 etiquetas; 4 dudas abiertas sin uso |
+| F1 | Esqueleto + vista previa | ✅ | 2026-11-03 | SAB | | 6 secciones, 18 sub-tabs; paneles enteros en su destino B2; Pillars visible otra vez (Ratings) |
+| OV-1 | Overview ▸ Key Facts | ⬜ | | | | |
+| OV-2 | Overview ▸ Descripción | ⬜ | | | | |
+| OV-3 | Overview ▸ Cuadrante 2×2 | ⬜ | | | | |
+| OV-4 | Overview ▸ How it makes money | ⬜ | | | | |
+| OV-5 | Overview ▸ Products & platforms | ⬜ | | | | |
+| OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
+| OV-7 | Overview ▸ Timeline | ⬜ | | | | |
+| OV-F | Overview ▸ Pie de fuentes | ⬜ | | | | |
+| EV-RES-DATA | Dataset de Results (números) | ✅ | 2026-11-03 | SAB | | estMatrix.cons v2 (30 snapshots, último 09-10); cons planos sincronizados; Summit anual 2026 de op. inc./EPS con nota |
+| EV-RES | Evolution ▸ Results | ⬜ | | | | |
+| TL-GEN | Top Line ▸ General | ⬜ | | | | |
+| TL-SEG | Top Line ▸ Segments | ⬜ | | | | |
+| TL-OTH | Top Line ▸ Other | ⬜ | | | | |
+| TL-CUS | Top Line ▸ Customers | ⬜ | | | | |
+| EV-EST | Evolution ▸ Estimates | ⬜ | | | | |
+| EV-SET | Evolution ▸ Earnings ▸ Setup | ✅ | 2026-11-03 | SAB | | `uber-ce.js` (copia de googl-ce.js) + `uber-ce-data.js`; CE_CONS de `emit_ce_uber.py` (BBG 30 snapshots, último 09-10) + líneas de Results; Q3 2026 con Summit 08-05 y guía del 2T26 |
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
+| EV-NOTES | Evolution ▸ Earnings ▸ Notes | ⬜ | | | | |
+| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ⬜ | | | | |
+| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⬜ | | | | |
+| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ⬜ | | | | |
+| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ⬜ | | | | |
+| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ⬜ | | | | |
+| BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
+| BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
+| VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
+| VA-PEERS | Valuation ▸ Peers | ⬜ | | | | |
+| VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
+| VA-SUB | Valuation ▸ Submit History | ⬜ | | | | |
+| VA-SENS | Valuation ▸ Sensitivity Analysis | ⬜ | | | | |
+| MG-TEAM | Management ▸ Executives & Board | ⬜ | | | | |
+| MG-OWN | Management ▸ Ownership | ⬜ | | | | |
+| MG-GOV | Management ▸ Governance & SBC | ⬜ | | | | |
+| MG-TRACK | Management ▸ Track Record | ⬜ | | | | |
+| MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab aprobada) | ⬜ | | | | |
+| F-FINAL | Cierre y entrega | ⬜ | | | | |
+
+(Modo B: agregar B1 — inventario de contenido existente y B2 — mapa de reubicación después de F0.)
+
+> Desde el 15 oct 2026 EV-EST, VA-TM y VA-SENS se construyen con Summit congelado del MCP (regla 10);
+> EV-EST necesita ≥ 2 snapshots. Cada `MISC-<clave>` aprobada reemplaza la fila MISC; en MISC siempre se
+> proponen `MISC-comp` y, si aplica, `MISC-capacity` (playbook §15b).
+
+## 3. Decisiones del analista
+
+<!-- Solo se agrega. Si una decisión cambia, nueva línea que cita la anterior. -->
+- 2026-11-03 · enfoque · "todo de una vez" (reordenar completo + 3T26) — reporte el 2026-11-04 — SAB
+- 2026-11-03 · F0 · Summit del submit 2026-08-05 para el Setup del 3T26 (no habrá submit nuevo antes) — SAB
+- 2026-11-03 · B1 · la rama de DOAA351 `feat/uber-deep-dive` se usa solo donde sirva — SAB ("si ves que es útil… si no, desde 0")
+- 2026-11-03 · B2 · mapa aprobado con las 9 fusiones (#11, #30, #48, #53, #67, #68, #70, #72, #91) — SAB
+- 2026-11-03 · B2 · TAM → Misc ▸ TAM (sub-tab propia, como GOOGL) — SAB
+- 2026-11-03 · EV-RES-DATA · Summit FY2026 de utilidad operativa y EPS se muestra como lo dice el modelo, con nota (ΣQ ≠ anual, −5.2% / −5.6%) — SAB
+
+## 4. Excepciones aceptadas
+
+<!-- Cada FAIL de la autoauditoría que el analista decidió dejar. -->
+- AAAA-MM-DD · <ID> · <qué regla> — <por qué se acepta> — <quién>
+
+## 5. Mapa de reubicación (solo modo B)
+
+Conteo de control (piezas originales): **96** (B1, leído del código de `uber.js` en `main` @ `791f1b7`; código muerto aparte:
+`ubIntro`, `placeholder()`, `PEERS`, `TRIP_CASH`, `A_FCF`). La rama vieja de DOAA351 `feat/uber-deep-dive` (PR #100, cerrado) se
+revisó: se rescata solo como borrador `segments-data/uber.js` (cuadra con el 10-K; con 8 arreglos), los nombres de costos y
+`SEGNAMES` de Bloomberg; lo demás se salta (estilos en línea, verde de Uber, emojis, múltiplos a mano).
+
+### B1 — inventario
+#### B1 (detalle) (control count)
+
+Counting rule: one row per visible content piece (block / section / chart / table / card set / modal set /
+long text) and one row per data constant family that feeds visible content. Pure containers (a tab whose
+only content is the rows listed under it) are not counted separately. Dead code is listed at the end and
+**not** counted.
+
+| # | Piece | file:function | Description | Source footer |
+|---|---|---|---|---|
+| **Overview** |||||
+| 1 | Key Facts | uber.js:stdKeyFacts (STD_FACTS) | 10 cells; market cap seeded "~$150B · Jul 2026", replaced live by liveQuote | covered by #9 |
+| 2 | Lede | uber.js:stdOverviewBody (UB_LEDE) | one-paragraph description | #9 |
+| 3 | 2×2 quadrant | uber.js:stdFourQuad (STD_BIZ) | What it sells / Who buys / How it earns / The edge | #9 |
+| 4 | Money map bars | uber.js:stdMoneyMap (STD_REV, STD_GB) | FY2025 segment bars, Revenue ⇄ Gross Bookings toggle, segment-colored | #9 + inline caption |
+| 5 | "What is X?" accordions + Segment economics | uber.js:stdMoneyMap (STD_SEG_DEF) | per-segment definition; nested GB / revenue / Adj. EBITDA FY2025 | #9 |
+| 6 | Products (two-tier) + `fam:` modal | uber.js:stdProducts (UB_PROD_GROUPS) | 3 groups, 11 family cards with emoji icons → product list modal | #9 |
+| 7 | Peer scatter | uber.js:stdPeerScatter/ubScRender/ubScChips (UB_PEERS, UB_SC) | multiple vs growth, bubble = live mcap; multiples/growth seeded | #9 (says "web-sourced approximations") |
+| 8 | Timeline + `hist:` modal | uber.js:stdTimeline (TIMELINE) | 8 milestones 2009–2026 | #9 |
+| 9 | Overview footer | uber.js (UB_OV_SOURCES) | sources; Summit snapshot 2026-05-07 | itself |
+| 10 | Shared modal | uber.js:html + wireModal | one modal for all `data-detail` keys (key, trip, mna, hist, reg, ins, aleka, note, fam, exec, arena, dh*, ce) | n/a |
+| **Top Line ▸ Segments** |||||
+| 11 | Live price strip | uber.js:ubSegmentsBody `#ubLive` + renderLive/fetchQuote | UBER price, % change, time (get-quote) | none |
+| 12 | Segments lede | uber.js:ubSegmentsBody | "three businesses of very different size" | none at pane level (pane ends with #19's footer) |
+| 13 | Chart: Gross Bookings by segment (annual 2022–2029E) | uber.js:buildOverviewCharts→buildSegStack (A_MOB_GB/A_DEL_GB/A_FRT_GB) | stacked bars, estimate = light | none (SOURCES only below Mobility) |
+| 14 | Chart: Adj. EBITDA annual 2022–2029E | uber.js:buildAnnualBar (A_EBITDA) | bars | none |
+| 15 | The Business in Three Parts | uber.js:segParts | segment cards/split text | none |
+| 16 | Segment pill toggle | uber.js:ubSegmentsBody `.seg-pill` (inline `<style>`) | Mobility / Delivery / Freight | n/a |
+| 17 | Mobility lede | uber.js:mobilityBody | where it came from / where it's going | SOURCES |
+| 18 | The Barbell diagram | uber.js:barbellDiagram (BB_LOW, BB_PREM) | low-cost vs premium SVG economics | SOURCES |
+| 19 | Autonomous Vehicles — Partner or Threat? | uber.js:mobilityBody | own-fleet vs aggregator comparison + evidence note | SOURCES (`ov-foot`) |
+| 20 | Regulation & Driver Classification + `reg:` modal | uber.js:mobilityBody/regCard (REGV) | 4 cards (US, Intl, framing, other drags) | SOURCES |
+| 21 | Delivery hero ("pandemic fad") | uber.js:deliveryBody | margin 1.9% → 4.0% → ~8% progression | SOURCES |
+| 22 | Chart: Margin convergence (segment Adj. EBITDA ÷ GB, 1Q23–4Q25) | uber.js:buildDeliveryCharts→buildLines (MOB_MARGIN, DEL_MARGIN) | Mobility vs Delivery margin lines | SOURCES |
+| 23 | Grocery & Advertising — two growth engines | uber.js:deliveryBody | two cards (~$12B grocery, >$2B ads) | SOURCES |
+| 24 | The Merchant Network | uber.js:deliveryBody/scCard (SC_CUSTOMERS) | merchant logo cards from Bloomberg SPLC | SOURCES |
+| 25 | Freight pane | uber.js:freightBody | lede, 4 KPI tiles, callout | own `ov-foot` (Uber FY2025 / Summit model) |
+| **Top Line ▸ Customers** |||||
+| 26 | Customers lede ×2 + Uber One stat tiles | uber.js:uberOneBody (UBERONE_STAT) | three kinds of customer; Uber One as monetization engine | SOURCES |
+| 27 | Chart: Uber One members 4Q23–1Q26 | uber.js:buildUberOneCharts (UBERONE_GROWTH) | line, 19M → 50M | SOURCES |
+| 28 | Priced to the Planet (SVG) | uber.js:uberOnePricing | USD-equivalent monthly price by country | SOURCES |
+| 29 | Member economics | uber.js:uberOneEconomics (UBERONE_SPEND) | payback curve SVG, spend bars, penetration runway | SOURCES |
+| 30 | The Cross-Sell Flywheel | uber.js:uberOneBody | callout text | SOURCES |
+| 31 | Non-members | uber.js:uberOneBody | text section | SOURCES |
+| 32 | Advertisers — merchant as customer | uber.js:uberOneBody | text section | SOURCES |
+| 33 | Platform Expansion (U4B, Travel) | uber.js:uberOneBody | rows | SOURCES |
+| **Top Line ▸ TAM** |||||
+| 34 | TAM tiles | uber.js:ubTamBody | $5.7T / $2.8T S-1 TAMs, US market sizes | own `ov-foot` |
+| 35 | The runway in two pictures | uber.js:ubTamBody (penBar) | penetration bars ride-hailing / delivery | own `ov-foot` |
+| 36 | How Uber sizes it + Delivery TAM + sourcing callout | uber.js:ubTamBody | 2 text sections + callout | own `ov-foot` |
+| **Top Line ▸ Industry Analysis** |||||
+| 37 | Competitive Landscape — arena by arena + `arena:` modal | uber.js:uberArenaMap (AR_DETAIL) | 6 arenas: lead / contest / bet | SOURCES |
+| 38 | Competitive map — rivals by business traits | uber.js:uberRivalScatter + PEER_NOTE + init peer-dot tips | breadth × geography scatter, 7 rivals incl. private | SOURCES |
+| **Bottom Line ▸ Unit Economics** |||||
+| 39 | How a Trip Makes Money — one $10 ride + `trip:` modal | uber.js:unitEconBody/chain/mbars (TRIP_FLOW, TRIP_SPLIT, TRIP_TAKE) | step chain + where $10 goes + Uber's $3 take | SOURCES; "Illustrative — Summit deck, Dec 2024" |
+| 40 | How a Delivery order makes money | uber.js:unitEconBody (dbar) | split bars + 2 KPI tiles | SOURCES |
+| 41 | Chart: Take rate 1Q23–1Q26 + `note:take` UK modal | uber.js:buildMobilityCharts→buildLines (MOB_TAKE, DEL_TAKE, UK_NOTE) | Mobility vs Delivery take | SOURCES |
+| **Bottom Line ▸ Suppliers** |||||
+| 42 | Driver & courier base | uber.js:suppliersBody | text section | SOURCES |
+| 43 | Vendor layer — asset-light | uber.js:suppliersBody/scCard (SC_SUPPLIERS) | supplier cards (SPLC), 138 suppliers note | SOURCES |
+| **Bottom Line ▸ Insurance & FCF** |||||
+| 44 | Insurance hero + primer chips + machine cards + `ins:` modals | uber.js:insuranceBody (INS_POP) | $12.9B reserve; 3 primer + 3 machine cards | own `ov-foot` |
+| 45 | Follow the money (SVG) + `aleka:` modals | uber.js:insMoneyFlow (ALEKA_CHAIN) | captive-insurer flow diagram | own `ov-foot` |
+| 46 | How its role flipped | uber.js:insuranceBody/irPhase (INS_TL) | crutch → headwind → tailwind | own `ov-foot` |
+| 47 | Reserve build bars 2021–Q1 26 | uber.js:insuranceBody (RES, local) | HTML bars | own `ov-foot` |
+| 48 | Cash-burner → compounder bars 2021–2025 | uber.js:insuranceBody (OI, local) | GAAP op income diverging bars | own `ov-foot` |
+| 49 | Is the cash real? bull/bear | uber.js:insuranceBody | two cards + modals | own `ov-foot` |
+| 50 | Why it is becoming a smaller slice | uber.js:insuranceBody | text | own `ov-foot` |
+| 51 | Uber vs Lyft — two ways to run insurance | uber.js:insModelCompare | comparison table | own `ov-foot` |
+| **Bottom Line ▸ Margins** |||||
+| 52 | Chart: Margins FY21–FY26E (6 lines) + note | uber.js:ubMarginsBody/buildUbMargins/ubLoadMargins (UB_MRG_*) | fallback data, live Massive override | **no `ov-foot`** (note only) |
+| **Evolution ▸ Earnings** |||||
+| 53 | IR / EDGAR banner + intro note | uber.js:ceIRButton + deepDiveHtml `.ce-note` | big IR/EDGAR cards; "decision layer" paragraph (emoji) | n/a |
+| 54 | Phase tabs + quarter pills | uber.js:deepDiveHtml / ceQPills | Setup · Watch List · Post-Results; Q3 2026 (upcoming), Q2 2026, Q1 2026 | n/a |
+| 55 | Setup grid (per quarter) | uber.js:ceSetupBody/ceGrid (CE_CONS, CALL_EARNINGS.setup) | headline + custom KPIs, Street/Summit/Both, YoY/QoQ, margins | per-quarter `ov-foot` ("Frozen at call time") + setup.source |
+| 56 | "Where Summit and the Street differ" | uber.js:ceSetupBody (setup.debate) | diverge bullets + synth | same |
+| 57 | Setup chart | uber.js:ceAnnualBody/gBuildCeAnnual → results.js `UBER_SETUP` | engine chart+table | engine source |
+| 58 | Watch List | uber.js:ceWatchBody → watchlist.js:mountWatchList | shared engine, Supabase `company_themes` | engine |
+| 59 | Theme record (By theme ⇄ By quarter) | uber.js:callsBody/callsByQuarter (UB_THEMES) | 6+ themes across 10 calls Q4'23–Q1'26 | own Sources line |
+| 60 | Post-Results: The print scorecard | uber.js:ceResultsBody/cePrintBlock | Q2 2026, Q1 2026 vs frozen Street/Summit | per-quarter `ov-foot` |
+| 61 | Post-Results: Call summary "the minute" | uber.js:ceSummaryBlock (UB_Q*_SUMMARY) | AI-distilled paragraphs + "＋ more" | per-quarter `ov-foot` |
+| 62 | Post-Results: Thesis red-lines | uber.js:ceResultsBody (UB_Q*_THESISCHECK) | HELD/TRIPPED cards | per-quarter `ov-foot` |
+| 63 | Post-Results: What this tees up | uber.js:ceResultsBody/ceTeeSplit (UB_Q*_INTOCALL) | hunt list, emoji-led | per-quarter `ov-foot` |
+| 64 | Post-Results: Also on the call | uber.js:ceHighlightsBlock (UB_Q*_HIGHLIGHTS) | tagged highlights with detail | per-quarter `ov-foot` |
+| **Evolution ▸ Results / Estimates** |||||
+| 65 | Results | results.js via `resultsHtml('UBER')` (uberResults, 13 metrics × Q/A) | actual / Summit / Street / guidance | engine `source` (Summit 2026-08-05, BBG 2026-07-31) |
+| 66 | Estimates | results.js via `resultsEvoHtml('UBER')` (uberResults.evolution) | annual estimate vintages | engine source |
+| **Evolution ▸ Guidance** |||||
+| 67 | Model vs Reality back-test + stats | uber.js:modelBody/buildAveChart/renderAve (AVE, rangeSlider) | Summit surprise bars by metric, 1Q23–1Q26 | own `ov-foot` (snapshot 2026-05-07) |
+| 68 | Guidance vs reality chart + table | uber.js:modelBody/buildGuideChart/renderGuideTable (GUIDE) | guided band vs actual vs model (GB, EBITDA) | own `ov-foot` |
+| 69 | 3-Year Targets (Investor Day Feb 2024) | uber.js:ub3yrTargets (TARGETS) | 3 target tiles + "running ahead" note | none |
+| **Evolution ▸ Strategy** |||||
+| 70 | Turnaround hero | uber.js:ubStrategyBody (inline `<style>` .utn) | −$3.5B → +$5.6B → $9.8B FCF, chips | SOURCES |
+| 71 | What Truly Drives Uber + `key:` modal | uber.js:ubStrategyBody (KEY_DRIVERS) | 5 driver cards: Flywheel, Uber One, Barbell, Advertising, Cash Machine | SOURCES |
+| **Evolution ▸ Timeline** |||||
+| 72 | History & Milestones | uber.js:historyStoryBody (TIMELINE) | same TIMELINE as #8 | **none** |
+| 73 | M&A — what each deal changed + `mna:` modal | uber.js:mnaTimeline (MNA) | divestitures/acquisitions grouped by financial effect + collapsible | **none** |
+| **Evolution ▸ Delivery Hero Acquisition** |||||
+| 74 | Deal intro + Deal snapshot + `dhp:` modals | uber.js:deliveryHeroBody/dhSnapshotHero (DH_PARAMS) | announced Jul 16 2026 | DH_SOURCES as `.ov-fynote` (not `.ov-foot`) |
+| 75 | Delivery Hero at a glance (FY2025) | uber.js:deliveryHeroBody (DH_GLANCE) | KPI tiles | same |
+| 76 | Where the markets change — world map + list, 3 views + `dhc:` modals | uber.js:dhMarketsSection/dhClassify/dhCountryDetail (DH_UBER_MARKETS, DH_SSW_MARKETS, UBER_MOBILITY/DELIVERY_MARKETS, DH_SETS, DH_REGION_*, WORLD_PATHS) | choropleth Uber today / DH today / after deal | DH_MAP_SOURCES |
+| 77 | Combined scale bars ($236B pro forma) | uber.js:deliveryHeroBody/mbars | GB bars + EBITDA note | same |
+| 78 | KPIs — Uber vs Delivery Hero + `dhk:` modals (incl. EBITDA turnaround) | uber.js:dhKpiSection/dhKpiDetail/dhEbitdaTurnaroundBody (DH_KPI_GLOSSARY, DH_EBITDA_TURN) | KPI comparability glossary | own source note |
+| 79 | Uber One Opportunity + `dhu:`/`dhr:` modals | uber.js:dhUberOneSection/dhRationaleBanner/dhUberOneRegionCard (DH_RATIONALE, DH_UBERONE_REGIONS, DH_SEGMENT_GMV) | 4 region cards | 8-K Ex. 99.2 cite + DH_SEGMENT_SOURCE |
+| 80 | Timeline — stake-building to integration (collapsible) | uber.js:dhTimelineBody (DH_TIMELINE_DEAL) | deal timeline | DH_SOURCES |
+| 81 | Commitment to Germany | uber.js:dhGermanyBody (DH_GERMANY) | commitments | DH_SOURCES |
+| 82 | Deal advisors (collapsible) | uber.js:dhAdvisorsBody (DH_ADVISORS) | list | DH_SOURCES |
+| **Valuation** |||||
+| 83 | Scenario → price target calculator | valuation.js:makeValuation via UBER_VAL.body/init | per-segment GB growth × take × margin × EV/EBITDA → price; net cash/price editable | `.val-foot` (Summit DCF, no snapshot date) |
+| 84 | Peers multiples table | uber.js:ubPeerMultBody (UB_PEER_MULT) | 5 listed peers, mcap / EV/EBITDA / P/E / growth / "the read" | own `ov-foot` ("~Jul 2026, secondary sources") |
+| 85 | Analyst Ratings (live) | companies.js:loadValuationData → `#dd-val-slot` | Massive ratings table + consensus bar (ex-Pillars ▸ Valuation) | engine |
+| 86 | Capital Allocation | uber.js:ubCapAllocBody (local R) | 4 KPI tiles, FY22–25 table, hierarchy, buybacks, dividend, SBC text | own `ov-foot` |
+| 87 | Balance Sheet (WIP banner, KPIs, line-item table) | uber.js:ubBalanceBody | Q1 2026 10-Q; net debt, stakes, insurance reserve | own `ov-foot` |
+| 88 | Chart: equity-stake portfolio + insurance-reserve text + solidity callout | uber.js:buildUbBal (UB_STAKES) + ubBalanceBody | horizontal bars, carrying value | own `ov-foot` |
+| **Management** |||||
+| 89 | Executives & Board (bios modal, board, gov tiles) | management.js:makeManagement via UBER_MGMT | 11 execs, 10 directors, 3 gov tiles | `ov-foot` (cfg.foot) |
+| 90 | Ownership & insiders (live) | companies.js:loadManagementData → `#dd-mgmt-slot` | Fiscal.ai holders + insider trades (ex-Pillars ▸ Management) | engine |
+| 91 | Governance tiles | uber.js:ubGovBody | 4 tiles (voting, board, CEO pay, SBC %) | **none** |
+| 92 | Chart: SBC % of revenue vs shares out FY20–25 + text | uber.js:buildUbSbc (UB_SBC_HIST) + ubGovBody | bar+line combo | **none** |
+| 93 | Track Record cards + `exec:` modal | uber.js:ubTrackBody (TRACK_MGMT, TRACK_RATE) | 7 execs color-rated value creator / mixed / destroyer + CEO callout | own `ov-foot` |
+| **Data constants not already named above (feed visible content)** |||||
+| 94 | Annual + quarterly Summit series | uber.js top (YEARS, A_*, Q13, *_GB_A/E, *_REV_A, *_EB_A, REV_A/E, EB_A/E, MAPC_A/E, FCF_A/E, derived) | snapshot 2026-05-07; feed #13, #14, #22, #41, #67 | SOURCES |
+| 95 | Results dataset | results-data/uber.js (uberResults, uberSetup) | 13 metrics, Q 3Q22–1Q27 + annual, evolution vintages | engine |
+| 96 | Earnings data | uber.js (CE_CONS, CE_ANNUAL, CALL_EARNINGS, UB_Q1/Q2_2026_*) | BBG archive 12 snapshots; Q3'26 setup; Q1/Q2'26 results | per block |
+
+**Control count = 96.**
+
+Dead code (not rendered, not counted, must still get a destination): `ubIntro` + SNAPSHOT, DESC, KPIS,
+AS_OF, FY_NOTE (and the `note:gaap` modal that only FY_NOTE triggers; GAAP_NOTE); `placeholder()`;
+`PEERS`; `TRIP_CASH`; `A_FCF`. Proposed: D1 `ubIntro` set → fused with #1/#2/OV-F data (approval to drop);
+D2 `placeholder` → drop (playbook rule: no placeholder panes); D3 PEERS/TRIP_CASH/A_FCF → drop (unreferenced) or
+TRIP_CASH text → note of #39.
+
+---
+
+
+### B2 — destinos
+#### B2 (borrador)
+
+Legend for "How": **keep** = kept as-is inside the destination · **engine** = replaced by the engine /
+AMZN version, original text → panel note/collapsible, data → data file · **merge #N** = duplicate, fused
+(needs specific approval) · **adapt** = same content reshaped to the playbook format.
+
+| # | Piece | Destination | How |
+|---|---|---|---|
+| 1 | Key Facts | OV-1 | adapt (AMZN `stdKeyFacts`; neutral palette; mcap fallback dated) |
+| 2 | Lede | OV-2 | keep |
+| 3 | 2×2 quadrant | OV-3 | adapt (labels navy, no green) |
+| 4 | Money map bars | OV-4 | adapt to `gmmBars` grey bars; GB toggle kept |
+| 5 | What is X? + Segment economics | OV-4 | adapt (REV_DEFS accordions); econ numbers → from results-data |
+| 6 | Products | OV-5 | adapt (AMZN two-tier; emoji icons removed) |
+| 7 | Peer scatter | OV-6 | engine (AMZN `stdPeerScatter` on liveQuote; seeded multiples removed, `why` text kept) |
+| 8 | Timeline | OV-7 | adapt to §8 OV-7 format |
+| 9 | Overview footer | OV-F | adapt (update snapshot/date) |
+| 10 | Shared modal | profile infrastructure | keep |
+| 11 | Live price strip | — | merge with profile header (playbook §8: no price strip; keep the quote call) — approval |
+| 12 | Segments lede | TL-GEN (segov) | text → `overview.lede` / note |
+| 13 | GB by segment annual | TL-GEN "How revenue divides" | engine (segments.js stacked bars; GB as a segment series); data → segments-data/uber.js |
+| 14 | Adj. EBITDA annual | BL-GEN-1 Profitability & margins | engine (AMZN margins view, EBITDA metric) |
+| 15 | Business in Three Parts | TL-GEN segment cards | engine; text → `brief`/`summary` per segment |
+| 16 | Segment pills | TL-SEG (segdrv) segment pills | engine |
+| 17 | Mobility lede | TL-SEG ▸ Mobility "What it is" | text → `summary` |
+| 18 | Barbell diagram | TL-SEG ▸ Mobility | keep (as segment highlight/interaction block) |
+| 19 | AV — Partner or Threat? | TL-SEG ▸ Mobility (alt: MISC-comp) | keep |
+| 20 | Regulation & driver classification | Misc ▸ Regulation (regulator-specific, §15b) | keep |
+| 21 | Delivery hero | TL-SEG ▸ Delivery | text → `summary`/highlights |
+| 22 | Margin convergence chart | BL-SEG (segments) profit by segment | engine (segment EBITDA ÷ GB as margin line); text → note |
+| 23 | Grocery & Advertising | TL-SEG ▸ Delivery (products/KPIs) | keep |
+| 24 | Merchant Network | TL-CUS (segcus) | adapt (SPLC customers via `load_splc.py`; cards kept) |
+| 25 | Freight pane | TL-SEG ▸ Freight | engine (KPIs/summary); callout → `kpiNote` |
+| 26 | Customers lede + Uber One tiles | TL-CUS | text → section lede; tiles kept |
+| 27 | Uber One members chart | TL-SEG KPIs (Mobility+Delivery cross-segment) or TL-CUS | engine KPI series (`kpis[]`), if not → keep in TL-CUS |
+| 28 | Priced to the Planet | TL-CUS | keep |
+| 29 | Member economics | TL-CUS | keep |
+| 30 | Cross-Sell Flywheel | TL-CUS | merge with #71 "Flywheel" card text → one note (approval) |
+| 31 | Non-members | TL-CUS | keep |
+| 32 | Advertisers | TL-CUS | keep |
+| 33 | Platform Expansion | TL-SEG ▸ Mobility products (U4B) / Delivery | adapt into `products[]` |
+| 34 | TAM tiles | TL-GEN (segov) collapsible, or Misc ▸ TAM | keep (analyst decides; no TAM slot in spine) |
+| 35 | Runway bars | same as #34 | keep |
+| 36 | TAM text + callout | same as #34 | keep |
+| 37 | Arena map | Misc ▸ MISC-comp Competitive position | keep (fits "quality of business" sub-tab) |
+| 38 | Rival map | Misc ▸ MISC-comp | keep; PEER_NOTE → lede |
+| 39 | $10 trip | BL-SEG ▸ Segment deep dives ▸ Mobility (cost structure) | keep; TRIP_CASH text → note |
+| 40 | Delivery order | BL-SEG ▸ Segment deep dives ▸ Delivery | keep |
+| 41 | Take-rate chart | TL-SEG KPIs (take rate = revenue ÷ GB via `derived`) | engine; UK modal → `kpiNote` |
+| 42 | Driver & courier base | BL-SPLC (supplychain) "limitation first" lede | text → lede |
+| 43 | Vendor layer | BL-SPLC | adapt (KPIs + supplier cards + `.rs-ft` table; SPLC as-of) |
+| 44 | Insurance hero/primer/machine | Misc ▸ Insurance (Aleka) | keep |
+| 45 | Money-flow SVG | Misc ▸ Insurance | keep |
+| 46 | Role flipped | Misc ▸ Insurance | keep |
+| 47 | Reserve build bars | Misc ▸ Insurance | keep |
+| 48 | Op-income bars | BL-GEN-1 (GAAP operating income) | merge with BL-GEN chart (data identical in results/BBG) — approval |
+| 49 | Bull/bear cash | Misc ▸ Insurance | keep |
+| 50 | Smaller slice | Misc ▸ Insurance | keep |
+| 51 | Uber vs Lyft insurance | Misc ▸ Insurance | keep |
+| 52 | Margins chart | BL-GEN-1 | engine (AMZN `aMarginsBody` on uber-bbg + results-data); fallback numbers → data file; note text kept |
+| 53 | IR/EDGAR banner + intro | — | removed per §12 EV-SET SAB rule (META) — approval |
+| 54 | Phase tabs + pills | EV Earnings | adapt to Setup · Post-Results · Notes |
+| 55 | Setup grid | EV-SET | engine (re-extract `ce*` from amzn/tsm-ce into `uber-ce.js` + `uber-ce-data.js`) |
+| 56 | Summit vs Street differ | EV-SET | keep |
+| 57 | Setup chart | EV-SET | keep (engine; move to `results-data/uber-setup.js` single `setup` section) |
+| 58 | Watch List | EV-NOTES (below theme record, if it holds saved rows) | keep (engine) |
+| 59 | Theme record | EV-NOTES | engine; UB_THEMES → `js/themes-data/uber.js` + THEME_SRC in segments.js |
+| 60 | Print scorecard | EV-POST | keep |
+| 61 | Call summary "the minute" | EV-POST Call Summary (prepared + Q&A verbatim) | replaced; old prose → Notes seed (approval: playbook bans AI summary) |
+| 62 | Thesis red-lines | EV-NOTES | text → Notes entries (playbook bans red-lines in Post-Results) |
+| 63 | What this tees up | EV-NOTES (open hooks) | text → Notes entries (emoji stripped) |
+| 64 | Also on the call | EV-POST | keep |
+| 65 | Results | EV-RES | keep (engine; dataset needs 3Q26 when printed) |
+| 66 | Estimates | EV-EST | keep (engine) |
+| 67 | Model vs Reality | EV-RES (Summit series + surprise scorecard) | merge with #65 (same back-test, older snapshot) — text → Results note |
+| 68 | Guidance vs reality | EV-RES (guideLo/guideHi band) | merge with #65 — table text → note |
+| 69 | 3-Year Targets | MG-TRACK (management vs its own targets) | keep |
+| 70 | Turnaround hero | MG-TRACK | merge with #93 CEO turnaround callout (approval) |
+| 71 | What Truly Drives Uber cards | TL-SEG interactions/highlights (Flywheel, Uber One, Barbell, Ads); "Cash Machine" → BL-GEN note | adapt (cards split by topic) |
+| 72 | History & Milestones | OV-7 | merge #8 (same TIMELINE const) |
+| 73 | M&A | Misc ▸ M&A (`manda`, as AMZN) | keep |
+| 74 | DH deal snapshot | Misc ▸ M&A ▸ Delivery Hero (or own Misc sub-tab `dhacq`) | keep |
+| 75 | DH at a glance | same | keep |
+| 76 | DH world map | same | keep |
+| 77 | Combined scale | same | keep |
+| 78 | DH KPIs | same | keep |
+| 79 | DH Uber One opportunity | same | keep |
+| 80 | DH timeline | same | keep |
+| 81 | Germany | same | keep |
+| 82 | Advisors | same | keep |
+| 83 | Scenario calculator | VA-SENS (sensitivity) | engine (AMZN `amzn-sensitivity.js` on a frozen Summit snapshot); segment hints → slider hints |
+| 84 | Peers table | VA-PEERS | engine (live multiples); "The read" column kept; seeded multiples removed |
+| 85 | Analyst Ratings | Pillars ▸ Valuation (restore Pillars tab: `absorbsPillars:false`) | keep (engine) |
+| 86 | Capital Allocation | MG-TRACK (capital-allocation record) + SBC part → MG-GOV | keep; SBC text merge #92 |
+| 87 | Balance Sheet table/KPIs | VA-TM / VA-SENS EV→equity bridge (net debt) + Misc ▸ Insurance & balance sheet | keep (net-debt inputs feed bridge; WIP banner resolved or kept) |
+| 88 | Equity-stake chart | Misc ▸ Insurance & balance sheet (or BL-GEN "Operating income → net income" note on stake gains) | keep |
+| 89 | Executives & Board | MG-TEAM | keep (engine; data → `uber-mgmt-data.js`; fix stale foot) |
+| 90 | Ownership live | Pillars ▸ Management + MG-OWN new (insiders table + top holders HDS) | keep |
+| 91 | Governance tiles | MG-GOV | merge with UBER_MGMT.gov tiles (#89 duplicates 3 of 4) |
+| 92 | SBC chart | MG-GOV | keep |
+| 93 | Track Record | MG-TRACK | keep |
+| 94 | Summit series 2026-05-07 | results-data/uber.js / segments-data/uber.js `summit:{}` | data → data file (refresh to latest snapshot) |
+| 95 | Results dataset | EV-RES-DATA | keep |
+| 96 | Earnings data | `uber-ce-data.js` | move (CE_CONS built at load from uberResults per SN pattern) |
+
+Reconciliation check for B3: 96 original = (kept + engine + adapt) + merges. Merges proposed (need specific
+approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text).
+
+---
+
+
+## 6. Bloqueos y preguntas abiertas
+
+| Desde | Unidad | Qué falta | Quién lo consigue | Estado |
+|---|---|---|---|---|
+
+## 6b. Conexiones pendientes ("Live data pending")
+
+> `docs/PROFILE_PLAYBOOK.md` §20b. Bloques aprobados que hoy muestran el aviso porque falta el camino
+> en vivo. No hay números copiados que migrar: al destrabarse, se conecta, se vuelve a mostrar y se cierra.
+
+| Desde | Unidad ▸ bloque | Qué falta (función / dato) | Quién lo destraba | Estado |
+|---|---|---|---|---|
+
+## 6c. Review del analista — pendientes
+
+> `docs/PROFILE_PLAYBOOK.md` §16 paso 7. Pedidos del analista después de entregado el perfil. Cada R pasa
+> por la compuerta normal y se registra en §7 al aprobarse. Si el pedido vale para toda empresa, se
+> propone también como cambio a la guía.
+
+| # | Pedido (textual) | Unidad | Qué hay que construir | Depende de | ¿Va a la guía? | Estado |
+|---|---|---|---|---|---|---|
+
+## 7. Historial de aprobaciones
+
+<!-- Solo se agrega, la más reciente al final. Una entrada por cada paso por la compuerta. -->
+### 2026-11-03 · F0 + F0-SM — APROBADAS
+- Qué se mostró: inventario de datos (§1) y mapa Summit (§1b, `js/summit-map/uber.js`).
+- Fuentes: MCP Summit (`list_snapshots`, `list_metrics`, `get_fundamentals` 2T26/FY25, `get_valuation_history`); `inspect_matrix.py UBER`.
+- Autoauditoría: toda etiqueta de `list_metrics` en el mapa ✔ · core/segment con cuadre o duda ✔ · valuación revisada (PT÷FV 1.060/1.064) ✔ · sin números en el archivo ✔.
+### 2026-11-03 · B1 + B2 — APROBADAS
+- Qué se mostró: 96 piezas con destino; 9 fusiones; Misc con 5 sub-tabs (comp, insurance, regulation, M&A/DH, TAM).
+- Nota: B1 se contó leyendo el código; el conteo en pantalla se hace en el cierre (B3).
+### AAAA-MM-DD · <ID> <Nombre> — <APROBADA | CAMBIOS | OMITIDA>
+- Qué se mostró:
+- Fuentes:
+- Autoauditoría:
+- Cambios pedidos / decisiones:
+### 2026-11-03 · F1 Esqueleto — APROBADA
+- Qué se mostró: Deep Dive con la espina de AMZN + Misc (comp · insurance · M&A/DH · TAM); `.ov-uber-dd` en `css/selectors.css`; `absorbsPillars` quitado (Ratings vuelve a Pillars).
+- Autoauditoría (harness interno, rAF shim): 18 sub-tabs pintan, 0 errores de consola.
+### 2026-11-03 · EV-RES-DATA — APROBADA
+- Qué se mostró: cuadre de 3 periodos vs comunicado (ingreso 3T25, GB 1T24, EBITDA 2T26) y ΣQ vs anual 2026 por fuente.
+- Fuentes: `BBG_CONSENSUS.txt` + `Consensus_Portal.xlsm` (30 snapshots); Summit 2026-08-05 (sin cambio); guía de los comunicados.
+- Nota técnica: `scripts/consensus/apply_matrix.py` se come el bloque `evolution` cuando un comentario del bloque viejo trae un apóstrofe (su `match_brace` no salta comentarios); el empalme se hizo a mano. Arreglo del script → PR aparte.
+### 2026-11-03 · EV-SET Setup — APROBADA
+- Qué se mostró: Setup del Q3 2026 (upcoming, Wed Nov 4 2026): 9 headline + 16 custom; Consensus / Summit / Both; notas de guía (GB $58.25–60.25B, Adj. EBITDA $2.86–2.96B, Non-GAAP EPS $0.84–0.88).
+- Fuentes: `BBG_CONSENSUS.txt` (snapshot 2026-09-10) vía `scripts/consensus/emit_ce_uber.py` + `map_uber_ce.json`; Summit 2026-08-05 leído de `results-data/uber.js` (`ceSummitUs`); comunicado 2T26.
+- Movido sin borrar: `CALL_EARNINGS` y los bloques `UB_Q1/Q2_2026_*` de `uber.js` → `uber-ce-data.js`; `UB_THEMES` → `js/themes-data/uber.js` (con `seg` y `st`). La maquinaria vieja `ce*` de `uber.js` queda sin uso hasta F-FINAL.
+- CSS: `.ov-uber-dd` agregado a los selectores de `css/overview.css` que ya cubrían `.ov-googl-dd`.
+- Autoauditoría: 0 errores · pastillas Q3/Q2/Q1 · Post-Results del Q2 2026 puntúa el print · ✘ Summit vacío en 5 líneas headline (GP, CFO, capex, D&A, acciones: no están en Results) — aceptado tal cual.

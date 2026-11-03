@@ -24,6 +24,24 @@ and — newest — the **Aug 6, 2026 lock-up expiry**.
 
 ---
 
+## 3Q26 — reported Nov 2, 2026 · call Nov 3, 2026
+
+### The call — the record (transcript pasted by the analyst, 2026-11-03)
+
+- **Prepared:** 141 net new stores (3,765; 419 YTD; LTM 603), four new DCs (25 regions); SSS +20.5%; revenue +40% to MXN 28B; reported EBITDA MXN 1.3B, ex-SBC +60% to MXN 1.9B (margin +83bps); 9M OCF MXN 7.1B (+128%); gap to ANTAD above 21 points. Sales expenses −36bps to 9.8%, admin ex-SBC −6bps. Adjusted negative working capital MXN 10.8B (about 10.9% of LTM revenue). Newer vintages start higher and grow faster; momentum continues into Q4.
+- **Guide:** "still well within guidance"; Q4 typically heavier on openings, pipeline healthy, no change in guidance (Ruben).
+- **Margins and logistics:** commercial margin expanded (scale, including rebates); sequential pressure from four DCs, expansion year on year; two DCs opened in July so most pre-opening expense hit Q2; transportation "barely scratched the surface", more in 2027 (Maya, Ford, Sgarz). Q4 "business as normal"; December rebates booked in January.
+- **Tax:** the new law limiting deductions mainly affects cash flow temporarily; no change to next year's plans; guidance on the Q4 call (Maya, Quiroga).
+- **Same-store sales and mix:** two-thirds volume, one-third price (mostly mix; inflation near zero); items per basket 4 to 5 against 2 to 3 at the IPO; frozen and cosmetics outstanding; price gap steady (Strano, Giordano).
+- **Store format and pilots:** grocery, not convenience; frozen capex judged on ROIC; refrigeration strategy dynamic; 60 to 80 pilots; about 900 SKUs; Yema four stores (García, Hernández, Vadia).
+- **Cohorts:** sales curve steeper and maximum sales rising; the cohort chart to be updated "in the next quarter or thereafter" (Giordano).
+- **Suppliers and DCs:** private-label supply planned three years out; each DC still about 150 to 160 stores; new DCs reshuffle stores to compact distances (Arshad, Galassi).
+- **Competition:** nothing notable (Fuchs). **Talent:** "the team" (Vadia, Arshad).
+
+**Into Q4 2026:** openings inside 590 to 630 with a heavier fourth quarter; the 2027 guide; the final tax law; the updated cohort chart; transportation optimization.
+
+---
+
 ## 2Q26 — reported Aug 12, 2026 · call Aug 13, 2026
 
 Participants: **Anthony Hatoum** (Chairman & CEO), **Eduardo Pizzuto** (CFO). Investors/analysts only.

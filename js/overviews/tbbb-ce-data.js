@@ -4,8 +4,7 @@
 //     releases, Bloomberg consensus and the estMatrix vintages: BBG_CONSENSUS.txt, 11 TBBB snapshots May 2024 → Nov 3 2026). Nothing is typed.
 //   TBBB_CALL_EARNINGS — per quarter, newest first: setup (notes per line), results (notes per line) and the call (prepared remarks, analyst
 //     Q&A in management's own words, "also on the call" colour, new questions). Transcripts: TBBB Calls.txt (verbatim; Q2 2026 loaded here, the
-//     earlier calls are in docs/calls/TBBB.md and load into this file as they are distilled). The Q3 2026 call is on Nov 3 2026 and is not on file:
-//     that quarter carries the print from the release and an empty call.
+//     earlier calls are in docs/calls/TBBB.md and load into this file as they are distilled). The Q3 2026 call (Nov 3 2026) is loaded from the transcript the analyst pasted.
 //
 // Money lines are Ps. billions above Ps.1B and Ps. millions below it; counts (stores, DCs) are units; same-store sales is a % (a rate, no growth chip).
 // Capex is positive spend. Summit: the DCF model's quarterly estimates (the Aug 13 2026 submit, js/results-data/tbbb.js) are read into `setup.us`;
@@ -102,9 +101,11 @@ export var TBBB_CALL_EARNINGS = { ticker:'TBBB', quarters:[
       asOf:'2026-11-03',
       notes:{
         'Revenue':{ t:'+29% to +32% for the year implies Ps.23.5B to Ps.25.8B in Q4', h:FY26_GUIDE+'<p>Nine-month revenue is Ps.77.3B (+37.7%). Landing in the guide range would need only Ps.23.5B to Ps.25.8B in the fourth quarter (derived, against Ps.22.0B in 4Q25), so the revenue guide is already exceeded on the current run-rate.</p>' },
-        'Stores':{ t:'171 to 211 net new stores needed to land in 590 to 630', h:FY26_GUIDE+'<p>Nine-month net openings are 419 (123, 155 and 141). Reaching 590 needs 171 in the fourth quarter and 630 needs 211, against 184 in 4Q25. Openings are lumpy within a year.</p>' },
+        'Stores':{ t:'171 to 211 net new stores needed to land in 590 to 630; “no change in guidance”', h:FY26_GUIDE+'<p>Nine-month net openings are 419 (123, 155 and 141). Reaching 590 needs 171 in the fourth quarter and 630 needs 211, against 184 in 4Q25. On the Nov 3 call Hatoum said “we’re still well within guidance… the fourth quarter tends to be a little bit heavier on store openings, and our pipeline looks very healthy at this stage. So no change in guidance.”</p>' },
         'Same-store sales':{ t:'Guide +13% to +16%; 2026 prints at or above the top', h:FY26_GUIDE+'<p>2026 same-store sales were 16.0%, 20.0% and 20.5%. The fourth quarter laps 16.6%.</p>' },
-        'Admin ex-SBC':{ t:'About 3% of revenue for the second half (Q2 call)', h:'<p>On the Aug 13 call the CFO called about 3% of revenue ex-SBC a fair short-term assumption for the second half, describing the spend as talent densification in purchasing, logistics, systems and specialty roles. Q3 printed 2.6%.</p>' },
+        'Gross profit':{ t:'Fourth quarter “business as normal”; transportation is a 2027 theme', h:'<p>On the Nov 3 call Hatoum said that in the fourth quarter “just expect business as normal for us” and that margins go up and down quarter to quarter on a healthy upward trend. Rebates on December sales are booked in January, as every year; December is expected to be “much better” than last year’s.</p>' },
+        'Income tax':{ t:'Mexico’s new tax law on deductions: a temporary cash-flow effect', h:'<p>Pizzuto on the Nov 3 call: the law “would mainly affect temporarily cash flows”; with today’s information there is no change to next year’s plans and guidance comes on the Q4 call.</p>' },
+        'Admin ex-SBC':{ t:'About 3% of revenue for the second half (Q2 call); Q3 printed 2.6%', h:'<p>On the Aug 13 call the CFO called about 3% of revenue ex-SBC a fair short-term assumption for the second half, describing the spend as talent densification in purchasing, logistics, systems and specialty roles. Q3 printed 2.6%.</p>' },
         'Stock-based comp':{ t:'Company schedule: Ps.489M in Q4, Ps.2,376M for 2026', h:'<p>The 3Q26 release projects non-cash share-based payment expense of Ps.489M for 4Q26, Ps.2,376M for 2026, Ps.879M for 2027 and Ps.215M for 2028, on a graded-vesting schedule that is higher early and decreasing over time.</p>' },
         'Distribution centers':{ t:'25 at Sep 30; no new quarterly count given', h:'<p>Four distribution centers opened in Q3, taking the network from 21 to 25. Management said more could open in the second half if opportunities appear.</p>' }
       },
@@ -113,7 +114,7 @@ export var TBBB_CALL_EARNINGS = { ticker:'TBBB', quarters:[
     },
     results:null, call:null },
 
-  // ── REPORTED: Q3 2026 (quarter ended Sep 30 2026; release Nov 2 2026; call Nov 3 2026, transcript not on file).
+  // ── REPORTED: Q3 2026 (quarter ended Sep 30 2026; release Nov 2 2026; call Nov 3 2026, transcript pasted by the analyst).
   // Street = the Bloomberg snapshot of Aug 17 2026, the last before the print. Guidance: the Q2 call (Aug 13 2026) and the FY2026 guide.
   { q:'Q3 2026', status:'reported', date:'November 2, 2026',
     setup:{
@@ -159,7 +160,72 @@ export var TBBB_CALL_EARNINGS = { ticker:'TBBB', quarters:[
       },
       watch:{ 'Same-store sales':1, 'Gross profit':2, 'Admin ex-SBC':3 }
     },
-    call:null },
+    call:{
+      prepared:[
+        { topic:'Operations and growth', body:'Anthony Hatoum: <b>141</b> net new stores, <b>3,765</b> in total, <b>419</b> year to date and <b>603</b> over twelve months; four new distribution centers took the network to <b>25 regions</b>. Same-store sales <b>+20.5%</b>, revenue <b>+40% to MXN 28 billion</b>. Reported EBITDA MXN 1.3 billion; EBITDA ex-SBC <b>+60% to MXN 1.9 billion</b>. Nine-month operating cash flow <b>MXN 7.1 billion (+128%)</b>. The real-estate strategy is unchanged: new markets and density in existing ones. The gap to ANTAD was “more than <b>21 percentage points</b>” with very low internal inflation.' },
+        { topic:'Costs and EBITDA', body:'Eduardo Pizzuto: sales expenses <b>−36bps to 9.8%</b> of revenue with operating leverage in most lines, including labor. Admin ex-SBC <b>−6bps</b>: “strong top-line performance allowed for operational leverage generation” while investing in talent and new regions. EBITDA ex-SBC <b>+60% to MXN 1.9 billion</b>, margin <b>+83bps</b>, on sales growth, improved gross margin and operational efficiencies. “We don’t manage this business to an EBITDA target.”' },
+        { topic:'Working capital', body:'Adjusted negative working capital <b>MXN 10.8 billion</b> against 7.8 billion in 2025, about <b>10.9%</b> of LTM revenue, excluding IPO and follow-on proceeds. “Our operating cash flows fully fund our organic expansion.”' },
+        { topic:'Closing', body:'Hatoum: growth comes from “two powerful engines: the continued expansion of our store network and sustained same-store sales growth.” “Our newer store vintages are performing better than our previous vintages. They start with higher initial sales, and their sales grow faster. This momentum continues into our fourth quarter.”' }
+      ],
+      qanda:[
+        { q:'Openings pace against the 590 to 630 guide, and a heavier fourth quarter', analyst:'Andrew Ruben · Morgan Stanley', theme:'FY2026 guide: 590-630 openings, SSS +13% to +16%, revenue +29% to +32%',
+          qFull:'The pace so far looks to be annualizing a bit below the guide, but the fourth quarter tends to be heavier. How do you feel about 590 to 630, and is there a structural reason for more openings in Q4?',
+          a:'<b>Anthony Hatoum:</b> “We’re still well within guidance, and you’re absolutely right. The fourth quarter tends to be a little bit heavier on store openings, and our pipeline looks very healthy at this stage. So no change in guidance.”' },
+        { q:'Competition and the start of the fourth quarter', analyst:'Alejandro Fuchs · Itaú BBA', theme:'Hard-discount competition (Neto, FEMSA)',
+          qFull:'Have you seen anything different in competition in the last couple of months, and how are the trends starting in the fourth quarter?',
+          a:'<b>Anthony Hatoum:</b> “We haven’t seen anything notable. From our own perspective, nothing has changed. Still are gaining new customers, and we still see a healthy trend in ticket size. But we read what you read, and we see people moving, and I think overall this is healthy for the market and for the consumer.”' },
+        { q:'Commercial margin and the Mexican corporate tax change', analyst:'Héctor Maya · Scotiabank', theme:'Gross margin: dollar margin over percent',
+          qFull:'How much did commercial margin help third-quarter margins and how should we think about it going forward? And how should we think about Mexico’s corporate tax?',
+          a:'<b>Anthony Hatoum:</b> “There is an expansion in commercial margin in this quarter. As we’ve said many times, margins go up a little bit, come down a little bit, but overall, the trend over a longer period of time is a healthy upward trend… we’ve seen a lot of operating leverage this quarter too… in the fourth quarter, just expect business as normal.” <b>Eduardo Pizzuto:</b> on the new law that limits deductions, “with the information that we have today, this is a law that would mainly affect temporarily cash flows. As of today, we do not expect any changes for our plans for next year… we will give you guidance on our next call.”' },
+        { q:'Commercial terms, rebates and the drivers of lower transportation cost', analyst:'Bob Ford · Bank of America', theme:'Regions and distribution centers (the "stretching" model)',
+          qFull:'Were the commercial-term improvements strictly price-volume optimization or did volume-based rebates play a role? What drives lower transportation cost and how should we think about network capacity use? And what is different about seasonality into year end?',
+          a:'<b>Anthony Hatoum:</b> on transportation, “we have barely scratched the surface in what we can do to further optimize transportation costs… you will see a lot more happening in 2027 on that front.” On commercial margin, “it is a little bit of everything you mentioned… the main driver of improvement has always been scale, and as we continue to scale, everything improves, including rebates.” On seasonality: “Big differences, we see none… There might be some timings in payments of rebates for sales that are done in December, you see the rebates in January. That’s nothing new.” December: “probably going to be much better than what we showed you last year.”' },
+        { q:'Gross margin against the four new DCs', analyst:'Irma Sgarz · Goldman Sachs', theme:'Gross margin: dollar margin over percent',
+          qFull:'Analysts expected less gross-margin expansion with four DCs being built. What is the breakdown of the commercial margin between supplier terms, mix, pricing intelligence and shrinkage, and is it sustainable?',
+          a:'<b>Eduardo Pizzuto:</b> “If you look at it sequentially, it did have some pressure on margin, but versus a year ago, there’s no doubt that the overall margin has expanded.” Of the four DCs, “two of them opened in the early part of the quarter, in July. Most of the pre-opening expenses happened in Q2… We continue to get smarter on how we do the opening of distribution centers… The older distribution centers that we opened last year are doing their job, and they’re becoming more efficient. Everything is accretive.”' },
+        { q:'Frozen rollout, and convenience versus grocery identity', analyst:'Álvaro García · BTG Pactual', theme:'Assortment: new categories, fresh and Irrepetibles',
+          qFull:'Where are we in the rollout of freezer capacity across the store base, and do you see the store as a convenience or a grocery format?',
+          a:'<b>Anthony Hatoum:</b> “We firmly believe that we’re still a grocery store where the client comes mainly to fill up their pantry… a lot of value for your money grocery store.” On frozen: “We were the pioneers in Mexico in bringing high value for money frozen to the market… the Frozen is more visible because you see a capex in the freezers, and I remind everybody that we look at the ROIC of this capex very carefully.” “Refrigeration strategy is very dynamic. You’ll see changes in our refrigeration approach in the next years… we try to reduce refrigeration costs while offering you refrigerated goods.”' },
+        { q:'Price gap, ramp-up and terminal sales of new stores', analyst:'Joseph Giordano · JPMorgan', theme:'Vintages: new stores open higher and ramp faster',
+          qFull:'Is the price gap versus peers widening, do new stores show higher terminal sales and returns, and how are new categories such as frozen helping growth?',
+          a:'<b>Anthony Hatoum:</b> “The price gap remains, and it’s steady. In this quarter, we haven’t seen anything that jumps.” On ramp-ups: “the store sales curve becoming steeper, and for all our stores, the maximum sales going up over time. In the next quarter or thereafter, we will update our spaghetti chart, which will clearly show that graphically… It’s driven by two things: our brand is much better recognized today, but most important is the value proposition to customers.”' },
+        { q:'Traffic versus ticket, items per basket and category mix', analyst:'Vinicius Strano · UBS', theme:'Same-store sales: volume and mix, not price',
+          qFull:'Can you break same-store sales into traffic and ticket, how are items per basket evolving, which categories lead and how does mix help gross margin?',
+          a:'<b>Eduardo Pizzuto:</b> “Two-thirds is coming from volume, which is the number of tickets and items per ticket, and the balance is price. And within price, the vast majority comes from mix, not from inflation, because internal inflation is very, very low, actually close to zero.” Items per basket: “at IPO we were talking about two to three items. Today, we’re talking about a range of four to five items per transaction.” <b>Anthony Hatoum:</b> “Everything is contributing to growth. Frozen or cosmetics are having an outstanding performance… Dairy continues to have a very solid growth.” “Our focus is on getting existing customers to buy more from us.”' },
+        { q:'Pilots under way', analyst:'Antonio Hernández · Actinver', theme:'Assortment: new categories, fresh and Irrepetibles',
+          qFull:'Any new pilot across the stores worth highlighting?',
+          a:'<b>Anthony Hatoum:</b> “At any point in time, there is about 60 to 80 pilots… Some you pick on because they’re very visible, like fruits and vegetables or meats… a whole bunch of them you won’t necessarily pick on because they look like any other product.” “Our SKU count today remains very conservative at around 900 products… we have the ability to increase this without changing anything in our operations or in our logistics, but we will maintain our very strict discipline: very high value for money, very high rotation.”' },
+        { q:'Efficiency of the new DCs, and shifts from big box to proximity', analyst:'Federico Galassi · The Rohatyn Group', theme:'Regions and distribution centers (the "stretching" model)',
+          qFull:'How much more efficient are the new distribution centers, with almost ten opened in a year? And with about 20% sales growth against ANTAD near zero, are customers shifting from big box to proximity?',
+          a:'<b>Anthony Hatoum:</b> a DC “still serves roughly the same number of stores… the optimization happens at two levels. One, internal operations, shaving minutes of work and moving boxes. The other is compacting distances: every time we open a new distribution center, we’re also reshuffling the stores, so that the truck distances from warehouse to store become smaller.” On share: “It’s a very hard question to answer because we don’t see the full picture… if the customer did not see more value in our offer, we wouldn’t be seeing the numbers we’re seeing.”' },
+        { q:'Yema and talent below the executive level', analyst:'Alberto Vadia · Fruit Tree Capital', theme:'ERP, AI and talent build-out',
+          qFull:'Where is Yema today and in ten years? And how do you develop talent at the entry level, such as the cashier or the distribution-center stocker?',
+          a:'<b>Anthony Hatoum:</b> “We’re firm believers that investing in talent is a high return on investment effort… it’s the team that makes the difference, and we’re investing in the team at all levels, all the way from the cashier to the most senior person in the company.” On Yema: “It’s only four stores… it will continue to grow, and it will grow at its own pace. It is hitting a niche of the market that nobody seems to have been looking at… we haven’t guided, and we’re unlikely to guide anytime soon.”' },
+        { q:'Scaling private-label suppliers, and the distinctive competence', analyst:'Guli Arshad · private investor', theme:'Private-label penetration',
+          qFull:'How do you manage the scaling of private-label providers, and do you use different providers by region for the same product? What is your distinctive competence?',
+          a:'<b>Anthony Hatoum:</b> “We very proactively manage the procurement side… in 2026, we are not talking about 2026, we are talking about 2028 and 2029 with all our suppliers. That also explains why this business has been able to grow at 30% plus per annum now for the last 12-plus years without experiencing any hiccups.” On two suppliers per product: “There is no right or wrong answer here… sometimes for geographical reasons, sometimes to protect your supply base… on a product-by-product basis.” On the differentiator: “I really think that it is the team. With a better team, you can do great things.”' },
+        { q:'Tax reform: accounting and cash effect, and capital structure', analyst:'Vanessa Quiroga · Eternal Capital Group', theme:'Mexico tax law on deductions',
+          qFull:'What is the potential impact of the tax reform on the effective tax rate, accounting and cash, and would it change your capital structure toward more debt?',
+          a:'<b>Eduardo Pizzuto:</b> “With the information that we have today, this is a law that will temporarily affect, or mainly will temporarily affect, our cash flows. As of today, we have no plans to change our plans for next year… we need to see the final draft, and then we will give you our guidance in our Q4 call.” On capital structure: “We don’t think it has that kind of impact. It might shift the cash flows on a temporary basis. Let’s hold off till Q4.”' }
+      ],
+      highlights:[
+        { tag:'thesis', band:'logged', head:'Gross margin expanded year on year despite four new DCs; the pre-opening cost fell mostly in Q2.',
+          detail:'<p>Pizzuto to Sgarz: two of the four DCs opened in July and most pre-opening expense was already booked in Q2; the company is getting better at DC openings, and the DCs opened last year are becoming more efficient. Sequentially there was some margin pressure.</p>' },
+        { tag:'dots', band:'logged', head:'Mexico’s new tax law on deductions: a temporary cash-flow effect, no change to 2027 plans, guidance on the Q4 call.',
+          detail:'<p>Pizzuto to Maya and Quiroga: the law “would mainly affect temporarily cash flows”; the final draft is still awaited; no change to the capital structure is expected.</p>' },
+        { tag:'curious', band:'logged', head:'Items per basket now four to five against two to three at the IPO.',
+          detail:'<p>Pizzuto to Strano. Same-store sales remain two-thirds volume and one-third price, mostly mix, with internal inflation “close to zero.”</p>' },
+        { tag:'tone', band:'logged', head:'Transportation is a 2027 theme; the cohort chart gets updated “in the next quarter or thereafter.”',
+          detail:'<p>Hatoum to Ford and Giordano: “barely scratched the surface” on transportation cost; the spaghetti chart will show the steeper and higher sales curve of newer vintages.</p>' }
+      ],
+      newQuestions:[
+        {n:'Do fourth-quarter openings land inside 590 to 630, with the usual heavier quarter?', landed:{q:'Q4 2026', rank:1}},
+        {n:'What is the 2027 guide on openings, same-store sales and revenue?', landed:{q:'Q4 2026', rank:2}},
+        {n:'What does the final tax law mean for cash flow and the effective rate?', landed:{q:'Q4 2026', rank:3}},
+        {n:'What does the updated cohort chart show on sales curves and unit economics?', landed:{q:'Q4 2026', rank:4}},
+        {n:'Where does transportation cost go as the 2027 optimization starts?', landed:{q:'Q4 2026', rank:5}}
+      ]
+    } },
 
   // ── REPORTED: Q2 2026 (quarter ended Jun 30 2026; release Aug 12 2026; call Aug 13 2026). Transcript: TBBB Calls.txt (verbatim).
   // Street = the Bloomberg snapshot of May 11 2026, the last before the print.

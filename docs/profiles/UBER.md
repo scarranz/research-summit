@@ -145,6 +145,8 @@ Cuadre contra el comunicado (vía `act` del dataset de Results, que cuadra con c
 - 2026-11-03 · B1 · la rama de DOAA351 `feat/uber-deep-dive` se usa solo donde sirva — SAB ("si ves que es útil… si no, desde 0")
 - 2026-11-03 · B2 · mapa aprobado con las 9 fusiones (#11, #30, #48, #53, #67, #68, #70, #72, #91) — SAB
 - 2026-11-03 · B2 · TAM → Misc ▸ TAM (sub-tab propia, como GOOGL) — SAB
+- 2026-11-03 · TL-OTH · Gross Bookings por segmento como primer bloque de Top Line ▸ Other (pedido de SAB en la revisión) — SAB
+- 2026-11-03 · OV-6/VA-PEERS · P/E de Uber con EPS no-GAAP ($2.47), como Historic Multiple; peers en GAAP — SAB
 - 2026-11-03 · MG-TRACK · sin calificaciones de ejecutivos (solo evidencia, como GOOGL) — SAB
 - 2026-11-03 · EV-RES-DATA · Summit FY2026 de utilidad operativa y EPS se muestra como lo dice el modelo, con nota (ΣQ ≠ anual, −5.2% / −5.6%) — SAB
 
@@ -512,3 +514,7 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 ### 2026-11-03 · MISC (comp, insurance, regulation, manda, tam) — APROBADO
 - Qué se mostró: las 5 sub-tabs con el contenido anterior movido; Regulation sacada de Mobility; estilos de los paneles viejos recuperados (`ubLegacyStyle`) sin tocar el Overview.
 - Pendiente para F-FINAL: pasar esos estilos a `css/overview.css` y quitar el verde de Uber dentro de estos paneles; borrar el código muerto de `uber.js` (maquinaria `ce*` vieja, Overview viejo, UBER_VAL sin uso).
+### 2026-11-03 · Revisión completa en el portal (sesión de SAB) — cambios aprobados
+- Recorrido: 24 sub-tabs, 0 errores de consola; en vivo: market cap $136B (Nov 3 2026), precio, múltiplos de peers, Historic Multiple, Fiscal.ai.
+- Agregado: Top Line ▸ Other ▸ Gross Bookings (motor segments.js, `results:mobgb/delgb/frgb`, definición del 10-K textual, cotejada en EDGAR) + KPI de GB de Freight. Aprobado.
+- Cambiado: P/E de Uber en Peers con EPS no-GAAP. Aprobado.

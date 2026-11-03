@@ -50,7 +50,7 @@ function stdPeerScatter(sfx){
   '</svg></div>';
   h+='<div class="asc-chips uber-sc-chips"></div>';
   h+='<div class="ov-diagram-cap asc-cap-end">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only listed peers plot here. '+
-    '<span class="ave-subh-note">Multiples = live price ÷ figures from each company’s latest annual filing (10-K; Grab: 20-F, IFRS), or the Bloomberg consensus FY2026 where it exists (Uber, Lyft); market caps and EV are live (Massive). Trailing EBITDA is GAAP operating income + D&amp;A; forward is Bloomberg’s adjusted EBITDA, so the bases differ.</span></div>';
+    '<span class="ave-subh-note">Multiples = live price ÷ figures from each company’s latest annual filing (10-K; Grab: 20-F, IFRS), or the Bloomberg consensus FY2026 where it exists (Uber, Lyft); market caps and EV are live (Massive). Trailing EBITDA is GAAP operating income + D&amp;A; forward is Bloomberg’s adjusted EBITDA, so the bases differ. Uber’s P/E uses its Non-GAAP EPS (as in Historic Multiple); the peers’ is GAAP, and FY2025 GAAP EPS at Lyft includes a tax-allowance release.</span></div>';
   // Valuation ▸ Peers only: the receipt under the read (chart standard rule 3), OPEN by default.
   if(sfx==='dd') h+='<div class="rs-collap uber-sc-collap">'+
       '<button type="button" class="rs-collap-h uber-sc-tblh" data-selfwired="1"></button>'+

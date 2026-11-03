@@ -1,0 +1,501 @@
+// overviews/tbbb-ce-hist.js — the earlier calls behind Tiendas 3B's Evolution ▸ Earnings ▸ Post-Results (Q1 2026 and back), newest first.
+// Each entry: the quarter, its release/call date, the one-line headline of the print, the Bloomberg snapshot the Street column reads and the call
+// (prepared remarks, analyst Q&A in management's own words, "also on the call", new questions). The print itself (cards, surprises) and the per-line
+// notes are built in ./tbbb-ce-data.js from js/results-data/tbbb.js, so nothing numeric is typed here except what management said.
+// Source: TBBB Calls.txt (verbatim transcripts, Q4 2023 to Q2 2026). Quotes are trimmed with ellipses, never reworded.
+
+export var TBBB_HIST = [
+  { q:'Q1 2026', date:'May 7, 2026', asOf:'2026-03-16', snap:'2026-03-16 (the last before the print)',
+    headline:'Same-store sales +16.0% and revenue +33% with adjusted EBITDA +39%; management confirmed the lock-up expires on Aug 6 and that it will amend the 20-F.',
+    call:{
+      prepared:[
+        { topic:'Operations and growth', body:'Anthony Hatoum: <b>123</b> net new stores, <b>3,469</b> in total, LTM <b>580</b> (+20% on March 2025); <b>20</b> distribution centers. Same-store sales <b>+16%</b>, revenue <b>+33% to MXN 23 billion</b>. The gap to ANTAD “remains notable… more than 14 percentage points,” with very low internal inflation. The strategy is unchanged: densify existing regions and expand gradually into new ones.' },
+        { topic:'Costs and EBITDA', body:'Eduardo Pizzuto: sales expenses <b>+5bps to 10.3%</b> (utilities, permitting, higher D&amp;A; leverage in most lines). Admin ex-SBC “unchanged”; the first quarter of 2025 carried a <b>MXN 54 million</b> one-time secondary follow-on expense. EBITDA ex-SBC <b>+39% to MXN 1.3 billion</b>, margin <b>+22bps</b>. “As you know, we don’t drive to an EBITDA.”' },
+        { topic:'Cash flow and working capital', body:'Operating cash flow <b>MXN 2 billion (+64%)</b>. Adjusted negative working capital <b>MXN 9.4 billion</b> against 6.5 billion, about <b>11.3%</b> of LTM revenue excluding IPO proceeds. “Our accelerated growth continues to be self-funded.”' },
+        { topic:'Closing', body:'Hatoum: “a very strong start to a 2026 that looks very promising… The market potential is enormous, and the runway for opening stores very long.”' }
+      ],
+      qanda:[
+        { q:'Competitor changes in March, and the lock-up date', analyst:'Héctor Maya · Scotiabank', theme:'Capital structure: IPO, follow-ons, lock-up',
+          qFull:'A key competitor made adjustments that it said improved March; have you seen any change in March and April? And the 20-F says the lock-up expires July 8 while the release says August 6: which is it, and how should investors think about the overhang?',
+          a:'<b>Anthony Hatoum:</b> “It’s August 6th for the expiration of the lock-up. In terms of competition… this is a very competitive market, always has been. Specifically, if we have seen anything different this quarter, the answer is no.” <b>Eduardo Pizzuto:</b> “We will amend the 20-F… to be specific on the August 6th.”' },
+        { q:'How brand recognition is measured', analyst:'Andrew Ruben · Morgan Stanley', theme:'Same-store sales: volume and mix, not price',
+          qFull:'How do you measure and identify brand recognition, and how does it compare between new and denser markets given a minimal marketing approach?',
+          a:'<b>Anthony Hatoum:</b> “We do massive surveys every year. Roughly 15,000 customers and non-customers on a wide geographical area are polled.” Because of the “stretching” strategy, “by the time we get to a new region… people already know us.” Advertising is minimal: “it’s mostly word of mouth and social media… a large part of it is not us. It’s our customers posting about us.”' },
+        { q:'Talent build, the ERP and Irrepetibles', analyst:'Bob Ford · Bank of America', theme:'ERP, AI and talent build-out',
+          qFull:'How advanced is the build-out of skills and redundancy in central administration? What is the ERP progress and deployment window? How are Irrepetibles evolving for Mother’s Day and the World Cup?',
+          a:'<b>Anthony Hatoum:</b> Irrepetibles “change roughly every two week… a treasure hunt and a wow effect”; they have sold bicycles, white and brown goods and clothing, and “don’t be surprised if you see this… take more participation within 3B sales.” On talent: “We will continue to invest in talent this year, and probably through 2027.” On the ERP: “a three-year project. I think we’re halfway through now… it’s gradual and modular… You will see it appear in one region, and then it’ll be fine-tuned… and once it’s bulletproof, it gets deployed to the rest of the company.”' },
+        { q:'Traffic versus ticket, and new stores outside central Mexico', analyst:'Alejandro Fuchs · Itaú BBA', theme:'Same-store sales: volume and mix, not price',
+          qFull:'Can you break same-store sales into traffic and ticket, and how are new stores performing outside the center of Mexico?',
+          a:'<b>Eduardo Pizzuto:</b> “It is 2/3 coming from volume, which is transactions and number of SKUs per ticket. One-third by average price per SKU… largely driven by a better mix, because our internal inflation… is very low.” <b>Anthony Hatoum:</b> “Very consistent performance across the board in new stores, irrespective of geography… we all consume roughly the same amount of toilet paper, irrespective of where we live.”' },
+        { q:'Minimum wage, the shorter work week and the SG&A trajectory', analyst:'Gabriela Leme · Goldman Sachs', theme:'Mexican wages and the work-week reduction',
+          qFull:'What measures address rising labor costs from the minimum wage and the reduction in the work week, and how should G&A, which was roughly stable year on year, trend through the year?',
+          a:'<b>Eduardo Pizzuto:</b> “For selling expenses, we saw leverage in most line items, including labor… labor did decrease as a percentage of revenue.” “We measure everything on hours worked.” On the shorter work week: “it will happen next year. This is something really not a big concern on our side.” On SG&A: “we don’t really provide any type of guidance… in the long run you can expect that SG&A will continue to decrease as a percentage of revenue. For this year, G&A… fairly stable as what you saw last year,” with more talent at headquarters and more distribution centers adding to admin.' },
+        { q:'Sources of gross-margin expansion, and the survey findings', analyst:'Froylan Méndez · JPMorgan', theme:'Gross margin: dollar margin over percent',
+          qFull:'Was the commercial-margin gain from better terms, mix or operational efficiencies? And what did this year’s consumer survey show?',
+          a:'<b>Eduardo Pizzuto:</b> “It’s both. It’s mix and driven by efficiencies with our suppliers… it continues to be volatile.” <b>Anthony Hatoum:</b> “As you scale, you are improving your purchasing power across the board. Not only ours, but whoever is supplying us… those translate partially into margin and partially go into price, and that basically drives a virtuous circle.” The survey shows “increasing brand recognition” and “all the tendencies favor 3B.”' },
+        { q:'Best categories and the new pilots', analyst:'Antonio Hernández · Actinver', theme:'Assortment: new categories, fresh and Irrepetibles',
+          qFull:'Which categories performed best, and what have you learned from the fridge, frozen and other pilots?',
+          a:'<b>Anthony Hatoum:</b> “Across the board, all categories have done extremely well.” Sweetened beverages fell on a new tax on sweeteners that began in January, “more than compensated for by the non-sweetened beverage subcategory.” On new categories: “we don’t launch a new category unless it’s been extensively tested, maybe obsessionally tested.”' },
+        { q:'The fresh trial and the capex phasing', analyst:'Joe Thomas · HSBC', theme:'Unit economics: capex per store and payback',
+          qFull:'What sales uplift has the fruit and vegetable trial shown, can it be retrofitted, and what is the capex outlook and phasing?',
+          a:'<b>Anthony Hatoum:</b> “At any point in time, there’s about 60 different products, slash, new lines being tested in our stores in parallel.” On fruits and vegetables: “the results are promising… you do see an uplift in tickets.” <b>Eduardo Pizzuto:</b> capex “about MXN 5.2 billion… includes the number of stores that we guided, also includes additional distribution centers, and of course all the equipment… We are today quite comfortable with that number.”' },
+        { q:'Private-label share and structural change at higher penetration', analyst:'Héctor Maya · Scotiabank', theme:'Private-label penetration',
+          qFull:'Private label was 58% of sales last quarter; what is it now, and does the business change structurally at 60%, 70% or 80%?',
+          a:'<b>Anthony Hatoum:</b> “We update this number once a year, but you can imagine that the trend continues upwards.” “There is absolutely no change if you go from 50% to 60% to 70%. No structural change.” On Bimbo: “it’s a little bit like a time machine.” Growth is planned ahead: “that has allowed us to sustain these growth rates above 30% now for over 12 years without any hiccups.”' },
+        { q:'AI inside the company', analyst:'Analyst (unnamed in the transcript)', theme:'ERP, AI and talent build-out',
+          qFull:'How are you incorporating an AI mentality and processes inside the company, and is it relevant?',
+          a:'<b>Anthony Hatoum:</b> “A big chunk of that investment in talent is actually in IT… sometimes I joke internally that we’re an IT company selling groceries.” “A very strong component of artificial intelligence is starting to take root in the company… you can already see the effects in terms of improved efficiency, and gains of time.”' },
+        { q:'Is the central structure built for the next years?', analyst:'Federico Galassi · Rohatyn Group', theme:'ERP, AI and talent build-out',
+          qFull:'The corporate structure was a drag on margins over the last year and a half; do you have the structure needed to grow in the next years?',
+          a:'<b>Anthony Hatoum:</b> “This belief and philosophy that we have of planning ahead of time… applies to everything. It applies to thinking about what the corporate structure centrally should be and what kind of talent needs you need… That’s all been planned for and not today. We’re executing on it, and I think we’re in very good shape to sustain future growth.”' }
+      ],
+      highlights:[
+        { tag:'dots', band:'logged', head:'Lock-up: August 6 confirmed, and the 20-F is to be amended.',
+          detail:'<p>Maya asked about the discrepancy between July 8 (20-F) and August 6 (release). Hatoum: August 6. Pizzuto: the company will amend the 20-F. The amended 20-F/A followed on May 21.</p>' },
+        { tag:'thesis', band:'logged', head:'G&A “fairly stable” year on year, with talent still being added.',
+          detail:'<p>Pizzuto to Leme: no SG&amp;A guidance; in the long run it should fall as a share of revenue; this year G&amp;A about as in 2025 while headquarters talent and new distribution centers add to it. Hatoum to Ford: talent investment continues through 2027.</p>' },
+        { tag:'curious', band:'logged', head:'ERP is a three-year project, about halfway, deployed region by region.',
+          detail:'<p>Hatoum to Ford: gradual and modular, one region first, then the rest once “bulletproof.” The point-of-sale hardware follows the same gradual plan.</p>' },
+        { tag:'tone', band:'logged', head:'About 60 product tests run in parallel; fresh produce lifts ticket in test stores.',
+          detail:'<p>Hatoum to Thomas and Hernández: new categories launch only after extensive testing; fruits and vegetables showed a ticket uplift in the test stores.</p>' }
+      ],
+      newQuestions:[
+        {n:'Does gross margin keep expanding on mix and supplier efficiencies, or give back?', landed:{q:'Q2 2026', rank:1}},
+        {n:'What does the August 6 lock-up expiry change for the float?', landed:{q:'Q2 2026', rank:2}},
+        {n:'Does G&A stay fairly stable as a share of revenue as DCs and talent are added?', landed:{q:'Q2 2026', rank:3}},
+        {n:'How far has the ERP rollout reached, and which region goes first?', landed:{q:'Q2 2026', rank:4}}
+      ]
+    } },
+{ q:'Q4 2025', date:'March 12, 2026', asOf:'2025-11-24', snap:'2025-11-24 (the last before the print)',
+    headline:'A record 574 openings and same-store sales of +18.3% for the year; reported EBITDA fell to Ps.79M on SBC and a Ps.230M receivable write-off, and the 2026 guide and updated unit economics were given.',
+    call:{
+      prepared:[
+        { topic:'The quarter and the year', body:'Anthony Hatoum: <b>184</b> net new stores in the quarter and a record <b>574</b> for 2025 (guide 500 to 550); four new distribution centers in 2025, two in Q4. Same-store sales <b>+16.6%</b> in Q4 and <b>+18.3%</b> for the year. Revenue <b>+34% to MXN 22 billion</b> in Q4 and <b>+36% to MXN 78 billion</b> for 2025, a four-year CAGR of 35%. Operating cash flow <b>MXN 4.7 billion</b> (+~25%). The gap to ANTAD above 15 points.' },
+        { topic:'Cohorts and operating metrics', body:'Updated cohort chart (2005 to 2024, inflation-adjusted): newer cohorts open higher and ramp steeper, and older cohorts still grow. For stores of five or more years, transactions per store per month <b>+2.5%</b> and average ticket <b>+11%</b>, mainly more items per ticket and mix. Private label was <b>58%</b> of merchandise sales in 2025 against 54% in 2024.' },
+        { topic:'Costs, EBITDA and the write-off', body:'Eduardo Pizzuto: Q4 sales expenses <b>10.5%</b> of revenue from 11.7% (Q4 2024 carried one-time D&amp;A charges). Admin ex-SBC <b>+35bps</b> on new regions and talent. EBITDA ex-SBC and the write-off <b>+23.5% to MXN 1.2 billion</b>, margin <b>−48bps</b>. A one-time <b>MXN 230 million</b> write-off of a receivable tied to the termination of the payment-terminal provider; processing migrated to a top-three Mexican bank and “we are pursuing all available legal actions.” Full-year adjusted EBITDA <b>+30% to MXN 4.4 billion</b>.' },
+        { topic:'Working capital and unit economics', body:'December adjusted negative working capital <b>MXN 8.9 billion</b> (about 11.4% of revenue, excluding IPO proceeds) against 6.0 billion. Updated unit economics: capex per store about <b>MXN 5.5 million</b> (more refrigeration, slightly larger formats, more stores built from scratch), payback about <b>26 months</b>, cash-on-cash return about <b>55% by year three</b>, with no credit for the incremental revenue from the extra equipment.' },
+        { topic:'2026 guidance', body:'Same-store sales <b>+13% to +16%</b>, <b>590 to 630</b> net new stores and revenue growth <b>+29% to +32%</b>. No margin or SG&amp;A guidance.' }
+      ],
+      qanda:[
+        { q:'Stock-option awards and the unit-economics sales curve', analyst:'Álvaro García · BTG Pactual', theme:'Reported vs adjusted EBITDA (the SBC wedge)',
+          qFull:'Is the option award with a US$35 strike all of the 2025 awards or should we expect more? And does the near MXN 30 million per store in year three include the new initiatives from the higher capex?',
+          a:'<b>Anthony Hatoum:</b> “What you’re seeing in the numbers is what was granted in all of 2025. You should not expect an additional number for 2025… the exact numbers that was granted in December of 2025” are in the appendices. On unit economics: “We’re actually very conservative about updating this chart… We are not assuming, as of now, any incremental sales because of the additional equipment that we’re installing in the new stores.”' },
+        { q:'Traffic versus ticket and product innovation', analyst:'Melissa Byun · Bank of America', theme:'Same-store sales: volume and mix, not price',
+          qFull:'What is the trajectory of transactions as stores mature, how do you split ticket between items and price (private label is deflationary), and how are newer products performing?',
+          a:'<b>Anthony Hatoum:</b> “Two-thirds of the growth is explained by volume and one-third by average price. Average price, in large part, driven by a better mix, with inflation contributing very little.” The 2.5% in older stores: “every time we think that one of our older vintages is maturing, we find that we’re still attracting new clients.” “At any point in time, we are testing about 60 different new products… By the time we introduce a new product, there is an extremely high probability that we know that it’s going to work.” Private label “is deflationary because on average our private labels are significantly cheaper… They more than make up for it by volumes… same-store sales growth when measured by units is extremely healthy.”' },
+        { q:'Size of the new grants and the lease cost behind a low EBITDA', analyst:'Froylan Méndez · JPMorgan', theme:'Reported vs adjusted EBITDA (the SBC wedge)',
+          qFull:'The new grants are about 2% of shares outstanding against about 1% last year; where does the delta come from? And EBITDA after leases looked low: is it the timing of Q4 openings or the larger new format raising lease cost?',
+          a:'<b>Eduardo Pizzuto:</b> Q4 was “fantastic… We opened 184 stores and two new distribution centers… lower than expected EBITDA. It’s just because of that… that’s what explains the spike in lease payments”; the DC equipment (a cold room, frozen room, cars) adds to equipment leases, and stores move “from a 10-door cold room to a 15-door cold room.” <b>Anthony Hatoum:</b> the grants are “simply growth and increased number of people… this option plan has been the best investment with the best return on investment… It aligns incentives with shareholders.” “Dilution is 100% tied to where our share price is going to be… the last grant is almost with zero dilution.” <b>Eduardo Pizzuto:</b> Appendix 1 at US$35 shows dilution “less than 1%.”' },
+        { q:'G&A leverage in 2026 and the build-out of new stores', analyst:'Irma Sgarz · Goldman Sachs', theme:'Expense leverage against the opening pace',
+          qFull:'After the step-up in admin ex-SBC in 2025, should its growth be significantly below the top line in 2026? And what is behind the extra capex, including free-standing stores?',
+          a:'<b>Eduardo Pizzuto:</b> “We don’t provide any specific guidance on either margin or SG&A… over the long run… we should expect these admin expenses to decline as a percentage of sales. Having said that, we will continue to retain talent and increase our talent pool… Specifically for 2026, at this point, I would not give you any specific answer.” <b>Anthony Hatoum:</b> “Our strategy has not changed. We stretch and we densify where we are and the runway is completely open. There’s no impediment to our foreseeable growth in terms of store openings.” The stores are bigger, with new refrigeration equipment, “very conservatively not reflecting any expected sales growth.”' },
+        { q:'What made 2025 an 18% year', analyst:'Andrew Ruben · Morgan Stanley', theme:'Same-store sales: volume and mix, not price',
+          qFull:'Same-store sales were above 18% in 2025, above 2024 and the 2026 guide; what explains a year like that against a low-teens year?',
+          a:'<b>Anthony Hatoum:</b> “That 18% exceeded our expectations… the guidance at that time was 11% to 14%, and suddenly we do 18, which is a stratospheric number… in the 15s and 16s, which are amazing numbers still, I wouldn’t see too much into it. If we continue to grow at the guided same-store sales, I think we’re going to have another fantastic year. Sorry, I can’t tell you exactly why we hit 18.”' },
+        { q:'Store size, from-scratch builds and refrigeration', analyst:'Héctor Maya · Scotiabank', theme:'Unit economics: capex per store and payback',
+          qFull:'Is the larger refrigeration and store size related to introducing fresh categories? How much larger are new stores and why build more from scratch?',
+          a:'<b>Anthony Hatoum:</b> store size has been “fairly consistent for the last two years, but definitely bigger than stores we had 10 years ago.” The 2026 mix assumes, conservatively, more stores built from scratch, derived from the real estate master plan. More refrigeration is because “we are expanding in our categories of refrigerated and frozen. It has nothing to do with fresh, which is a completely different category, which, as you know, we’re testing,” all “while respecting the core tenets of being a hard discounter. Limited SKUs, very high rotation SKUs, focus on private labels.”' },
+        { q:'New payment processor and fees', analyst:'Héctor Maya · Scotiabank', theme:'Expense leverage against the opening pace',
+          qFull:'How do transaction fees and commercial terms with the new bank compare to the previous provider, and will it affect sales expenses?',
+          a:'<b>Anthony Hatoum:</b> “No, not at all. We’re even more competitive.”' },
+        { q:'Which new regions excite most, and which lag', analyst:'Antonio Hernández · Actinver', theme:'Regions and distribution centers (the "stretching" model)',
+          qFull:'Which of the new regions excite you most, and which are underperforming expectations?',
+          a:'<b>Anthony Hatoum:</b> “At the risk of sounding boring, we see extremely consistent performance across all our regions… we are selling basic goods, and customer behavior doesn’t change much when it comes to basic good consumptions… With every store we open, we make sure that it’s going to be successful. Otherwise, we don’t bother opening a store.”' }
+      ],
+      highlights:[
+        { tag:'thesis', band:'logged', head:'The 2026 guide: +13% to +16% same-store sales, 590 to 630 openings, revenue +29% to +32%.',
+          detail:'<p>Pizzuto in the prepared remarks. Same-store sales guide sits below the +18.3% delivered in 2025; Hatoum to Ruben: “in the 15s and 16s, which are amazing numbers still.”</p>' },
+        { tag:'dots', band:'logged', head:'Unit economics reset: capex about MXN 5.5 million per store, 26-month payback, ~55% cash-on-cash by year three.',
+          detail:'<p>The higher capex reflects refrigeration, slightly larger formats and more from-scratch builds; the sales curve is raised only on recent vintage performance and gives no credit for the new equipment.</p>' },
+        { tag:'tone', band:'logged', head:'A MXN 230 million receivable write-off tied to the payment-terminal provider.',
+          detail:'<p>Pizzuto: the balance outstanding at termination was written off in full; processing moved to a top-three Mexican bank without disruption, with legal action under way. Hatoum to Maya: fees at the new bank are “even more competitive.”</p>' },
+        { tag:'curious', band:'logged', head:'Option dilution framed by the strike price, and the plan is likely to continue and expand.',
+          detail:'<p>Hatoum to Méndez: the plan attracts and retains the “can-do” profile and aligns incentives; “when our share price is below, they have zero impact.” Pizzuto: Appendix 1 at an illustrative US$35 shows dilution under 1%.</p>' }
+      ],
+      newQuestions:[
+        {n:'Do first-quarter 2026 same-store sales hold at the top of the +13% to +16% guide?', landed:{q:'Q1 2026', rank:1}},
+        {n:'How do admin ex-SBC and talent investment trend as distribution centers are added?', landed:{q:'Q1 2026', rank:2}},
+        {n:'Does the new store format show its higher capex in ramp-up and sales?', landed:{q:'Q1 2026', rank:3}},
+        {n:'How does the minimum-wage increase and the shorter work week affect labor cost?', landed:{q:'Q1 2026', rank:4}}
+      ]
+    } },
+{ q:'Q3 2025', date:'November 20, 2025', asOf:'2025-08-16', snap:'2025-08-16 (the last before the print)',
+    headline:'Same-store sales hit +17.9% and revenue grew 36.7%; reported EBITDA turned negative on the first Liquidity Event Plan charge while EBITDA ex-SBC rose 43.6%.',
+    call:{
+      prepared:[
+        { topic:'Operations and growth', body:'Anthony Hatoum: <b>131</b> net new stores, <b>3,162</b> in total, LTM <b>528</b>; two new distribution centers for <b>18</b>. Same-store sales <b>+17.9%</b>, revenue <b>+36.7% to MXN 20.3 billion</b>. Nine-month openings <b>390</b> against 346. The gap to ANTAD “almost 17 percentage points.” A net cash position of about <b>MXN 1.1 billion</b> plus US$151 million in short-term deposits.' },
+        { topic:'Costs and EBITDA', body:'Eduardo Pizzuto: sales expenses <b>10.2%</b> of revenue from 10.1% (operating leverage offset by higher D&amp;A; “next quarter, the comparison will be more favorable”). Admin ex-SBC <b>+16bps</b> on new regions and talent. Reported EBITDA a loss of <b>MXN 404 million</b>; ex-SBC <b>+43.6%</b>, a <b>5.8%</b> margin. Close to half of the stores opened in the last three years; older vintages have EBITDA margins “close to those you would see at other hard discounters.”' },
+        { topic:'Working capital and the incentive plan', body:'Adjusted negative working capital <b>MXN 7.8 billion</b> against 5.4 billion, about <b>10.8%</b> of revenue excluding IPO proceeds. Hatoum: the board decided “not to make additional reserves for our equity incentive plan for the year 2026.” Runway: “room for no less than <b>14,000</b> 3B stores in Mexico.”' }
+      ],
+      qanda:[
+        { q:'Margin path, older cohorts and supplier capacity', analyst:'Bob Ford · Bank of America', theme:'Gross margin: dollar margin over percent',
+          qFull:'How should we think about margins, how much room do the oldest cohorts have, and are national suppliers approaching you and are your suppliers keeping up?',
+          a:'<b>Anthony Hatoum:</b> “Because we’re scaling, you’ll naturally see an improvement in our commercial margin over time… The question is how does that translate into percentage margin versus an investment in price… quarter to quarter, we will see volatility in this number. We do not set any specific targets for margins.” Even the oldest vintage grows well above inflation, with “significant room still today to penetrate their wallet.” Suppliers: “we’re getting unsolicited requests from national suppliers… All our planning in terms of supply chain is done three years ahead of time.”' },
+        { q:'Vintages maturing faster, and returns', analyst:'Joseph Giordano · JPMorgan', theme:'Vintages: new stores open higher and ramp faster',
+          qFull:'Is the maturation level still a moving target, and how are the new cohorts behaving on returns against the 60% cash-on-cash mentioned before?',
+          a:'<b>Anthony Hatoum:</b> “New vintages mature faster, and therefore, they have improved return on invested capital… our brand is better recognized in the market today.” Returns “are just as good, if not better”; even when a new store sits next to an old one, “together, their performance is better than what it used to be as a single store.” <b>Eduardo Pizzuto:</b> “We have not seen maturation yet. Even for our 2005 vintage, we continue to see very strong increases… we will do the same modeling this year, and it will be with improved numbers.”' },
+        { q:'Sales-expense comparison next quarter, and ramp-up by region', analyst:'Álvaro García · BTG Pactual', theme:'Expense leverage against the opening pace',
+          qFull:'What makes the sales-expense comparison more favorable next quarter, and is the faster ramp-up only in central Mexico or also in the new regions?',
+          a:'<b>Eduardo Pizzuto:</b> “There is a portion of D&amp;A that was recognized in the fourth quarter of 2024 rather than on the third quarter of 2024. That is why you’ll see a more favorable number in the fourth quarter of 2025.” <b>Anthony Hatoum:</b> “We’re seeing them across the board. There are no notable differences geographically or by type of store… we’re selling basic goods.”' },
+        { q:'Competition by region, and volume versus mix', analyst:'Alejandro Fuchs · Itaú BBA', theme:'Hard-discount competition (Neto, FEMSA)',
+          qFull:'Do you see differences in competition in the new regions, and what is the split of same-store sales between volume and mix?',
+          a:'<b>Anthony Hatoum:</b> “We have seen no increase or change in this competitive landscape. If anything, we are becoming more competitive.” <b>Eduardo Pizzuto:</b> “More transactions in the stores… and more products in the basket. We do not disclose the percentage.” <b>Anthony Hatoum:</b> “That is versus price inflation, which is minimal in our case.”' },
+        { q:'Durability of same-store sales and the use of purchasing savings', analyst:'Héctor Maya · Scotiabank', theme:'Same-store sales: volume and mix, not price',
+          qFull:'How confident are you in holding this pace next year, and how do you decide how much of the commercial-margin savings to keep versus pass to consumers?',
+          a:'<b>Anthony Hatoum:</b> “We do it on a product-by-product basis, very much driven by elasticity testing in the market. At any point in time… about 60 products that are being tested… We optimize then for volumes and dollar margin.” On next year: “we see no reason why [same-store] sales would be any weaker than this year… significant improvements in the products that we’re going to be bringing to market over the next 12 months.”' },
+        { q:'Perishables pilot and new categories', analyst:'Alexandre Namioka · Morgan Stanley', theme:'Assortment: new categories, fresh and Irrepetibles',
+          qFull:'How is the perishables pilot evolving, and will newer categories be in stores next year?',
+          a:'<b>Anthony Hatoum:</b> “We’re constantly innovating, not only in perishables, but across the board.” The latest example is a banana-and-chocolate ice cream bar, “a blockbuster.” On perishables: “we have set ourselves very high standards in terms of quality… We want to make sure that the whole value chain is working perfectly before we launch it. All our tests are extremely positive.”' },
+        { q:'Customer journey, demographics and operating leverage next year', analyst:'Irma Sgarz · Goldman Sachs', theme:'Expense leverage against the opening pace',
+          qFull:'What is the typical customer journey and how do you adapt to demographic shifts? Is it fair to expect operating expenses to grow below same-store sales next year?',
+          a:'<b>Anthony Hatoum:</b> it starts with word of mouth and basics (“eggs… oil… rice”), then canned goods, detergent and cosmetics, helped by a “100% money-back guarantee. No questions asked.” The stores “are designed to absorb much more SKUs without having to change anything.” <b>Eduardo Pizzuto:</b> “Without providing any type of guidance… it becomes on how fast we expand… We’ve opened close to 50% of our stores in the past three years… it’s a little bit perverse because the faster we grow, the less leverage you’ll see in the very short term.” Guidance for next year comes in the next call.' },
+        { q:'Is talent still the gating item, and capex against the budget', analyst:'Alex Wright · Jefferies', theme:'ERP, AI and talent build-out',
+          qFull:'Is the growing talent pool relaxing the HR constraint on expansion pace? Is there headroom below the capex budget of about MXN 3.65 billion after MXN 2.4 billion in nine months?',
+          a:'<b>Anthony Hatoum:</b> talent “has always been the gating item… we work backwards. If we want to open that many stores three years from now, how many people do we need?” <b>Eduardo Pizzuto:</b> one more DC in early December; “we are going to be very close to the number that we projected late last year for around MXN 3.7 billion.”' },
+        { q:'Older-cohort margins and private-label penetration', analyst:'Santiago Alvarez · Summit Management', theme:'Private-label penetration',
+          qFull:'How is the product mix behaving in the older cohorts, and is private label reaching the levels you expected?',
+          a:'<b>Anthony Hatoum:</b> “In regards to EBITDA, we don’t disclose this number, but conceptually… those stores are reaching what other discounters in other geographies are reaching. Let’s talk about around, let’s say, 7% EBITDA margins.” On private label: “end of 2023, we were at mid-40%. End of 2024, we were at mid-50%… Is it as we’re expecting? The answer is yes.”' }
+      ],
+      highlights:[
+        { tag:'thesis', band:'logged', head:'Older stores run near 7% EBITDA, in line with other hard discounters; the consolidated margin is masked by the opening pace.',
+          detail:'<p>Hatoum to Alvarez and Pizzuto to Sgarz: stores open more than two to three years show strong leverage; close to half the base opened in three years, which drags the consolidated number down.</p>' },
+        { tag:'dots', band:'logged', head:'No additional equity-incentive reserve for 2026.',
+          detail:'<p>Hatoum in the closing remarks: the board decided not to make additional reserves for the plan for 2026. The charge is non-cash and in the fully diluted count; the appendix projects it.</p>' },
+        { tag:'curious', band:'logged', head:'Customer journey: from eggs and oil to cosmetics, with a no-questions money-back guarantee.',
+          detail:'<p>Hatoum to Sgarz: private labels are managed as brands; trust is built through the guarantee and customers then migrate to more sensitive categories.</p>' },
+        { tag:'tone', band:'logged', head:'Same-store sales not expected weaker next year; no guide yet.',
+          detail:'<p>Hatoum to Maya: no reason for weaker same-store sales than 2025 on the product pipeline. The guide arrived with the Q4 call (+13% to +16%).</p>' }
+      ],
+      newQuestions:[
+        {n:'What does the 2026 guide look like on openings, same-store sales and revenue?', landed:{q:'Q4 2025', rank:1}},
+        {n:'Do admin ex-SBC and operating leverage improve as the opening pace holds?', landed:{q:'Q4 2025', rank:2}},
+        {n:'Do the new vintages lift the unit-economics sales curve at the annual update?', landed:{q:'Q4 2025', rank:3}},
+        {n:'How much does the Q4 D&A base effect help sales expenses?', landed:{q:'Q4 2025', rank:4}}
+      ]
+    } },
+{ q:'Q2 2025', date:'August 12, 2025', asOf:'2025-05-12', snap:'2025-05-12 (the last before the print)',
+    headline:'The fastest revenue quarter so far (+38.3%) on same-store sales of +17.7%; four new regions for the second half pressure the consolidated margin and the June IPO-tied award starts the SBC charge.',
+    call:{
+      prepared:[
+        { topic:'Team and operations', body:'Anthony Hatoum welcomed <b>Amparo Martínez</b> (General Counsel) and <b>Joaquín Ley</b> (Investor Relations). <b>142</b> net new stores, <b>3,031</b> in total; first-half openings <b>259</b> against 215, LTM <b>528</b> against 460. Same-store sales <b>+17.7%</b> against 10.7%, revenue <b>+38.3% to MXN 18.8 billion</b>. First-half operating cash flow <b>MXN 1.9 billion (+56%)</b>. The gap to ANTAD <b>15 points</b>. Four new regions (distribution centers) to open in the second half.' },
+        { topic:'Costs and the share-based plans', body:'Eduardo Pizzuto: sales expenses <b>10.5%</b> of revenue from 10.4% (store personnel and D&amp;A on the opening pace; 45% of the base opened in three years). Admin <b>3.9%</b> from 3.6%, including an incremental <b>MXN 111 million</b> of non-cash share-based pay. In June the board granted an award tied to the IPO: it “does not change our fully diluted share count” and only books a non-cash expense on grant; a breakdown is in the appendix.' },
+        { topic:'EBITDA and operating leverage', body:'EBITDA <b>MXN 844 million (+22.5%)</b>, margin <b>4.5%</b> (−58bps); ex-SBC margin <b>5.8%</b> (−27bps), EBITDA <b>+32%</b>. The margin pressure is logistics for the four new regions, SBC and the faster opening rate. Operating leverage “is real, but hard to see when viewed on a consolidated basis… on a store vintage basis, we see it clearly.”' },
+        { topic:'Working capital', body:'Adjusted negative working capital <b>MXN 7 billion</b> against 5 billion, about <b>10.5%</b> of LTM revenue excluding IPO proceeds. “Our accelerated growth continues to be self-funded.”' }
+      ],
+      qanda:[
+        { q:'What drove the acceleration, and the meat and produce pilots', analyst:'Bob Ford · BofA Securities', theme:'Same-store sales: volume and mix, not price',
+          qFull:'What do you attribute the same-store-sales acceleration to, how do ticket, traffic and items per basket contribute, and how are the meat and produce pilots developing?',
+          a:'<b>Anthony Hatoum:</b> “Fundamentally, it’s an amazing value proposition that we keep on improving.” “We’re seeing a notable increase in the number of tickets… a real increase in the ticket size”: more items and mix; “internally, we have deflation of prices.” On fresh: “cautiously optimistic… this is still at a test level. By no means is it impacting sales… Even if we never introduced fresh fruits, vegetables, and meats, you would still see significant same-store sales growth.” “We like to make sure that things are running well before we scale them up.”' },
+        { q:'Ramp-up and opening cost of four new regions', analyst:'Andrew Ruben · Morgan Stanley', theme:'Regions and distribution centers (the "stretching" model)',
+          qFull:'Is the opening and ramp-up expense for new regions different in intensity or duration, given four planned for the second half?',
+          a:'<b>Anthony Hatoum:</b> “We stretch, we don’t leap… We tend to open that new region next to an existing region… people already know who we are.” A region opens with 40 to 60 stores and runs “up to 150 stores,” its cruising speed. <b>Eduardo Pizzuto:</b> the added cost is “mainly on additional personnel, transportation, and training… In terms of the ramp-up, really no major changes… adding more regions for us is a great thing because… we become much more efficient.”' },
+        { q:'Private-label development and why lease payments rose', analyst:'Analyst (not labelled in the transcript)', theme:'Rent under IFRS 16 (EBITDA is before rent)',
+          qFull:'How is private label developing, and why were interest plus lease payments a notch higher than expected: refrigeration for the four new DCs, and any upfront payments?',
+          a:'<b>Anthony Hatoum:</b> “This is our bread and butter… I wouldn’t be surprised that this trend continues in 2025. We will typically give you the number in Q4.” <b>Eduardo Pizzuto:</b> leases rose with “more leases coming from growth of stores, equipment at the stores, and also the future new regions, which we’re equipping with cold rooms and frozen rooms.” Upfront payments: “No upfront payments.”' },
+        { q:'Equity-plan grants and the higher-income customer', analyst:'Álvaro García · Pactual', theme:'Reported vs adjusted EBITDA (the SBC wedge)',
+          qFull:'Why did RSUs and options under the 2024 plan increase in Q2, and what might the full-year number be? And is the brand resonating more with higher-income customers?',
+          a:'<b>Anthony Hatoum:</b> “We typically would prefer to leave all of this till the end of the year, but sometimes there are events like hiring key personnel… In terms of guidance for the year… we’re well within market parameters for what you would expect a high-growth company to be distributing.” On income cohorts: “Yes, and no… Anybody who’s looking for value for money, irrespective of social, economic status, is going to be attracted to our store.”' },
+        { q:'Competitive reaction and where the new regions are', analyst:'Alejandro Fuchs · Itaú BBA', theme:'Hard-discount competition (Neto, FEMSA)',
+          qFull:'Do you see competitors reacting, and are the new regions north or south and similar in dynamics to central Mexico?',
+          a:'<b>Anthony Hatoum:</b> “We have seen no real change in the environment… no change in the dynamics of the environment or the competitive level that we’ve seen in the last two quarters.” On expansion: “we’re always expanding by stretching… we are selling basic goods… The ramp-ups of our stores, our client behaviors… have all been very consistent. Possibly when one day we reach the U.S. border, we might see some changes.”' },
+        { q:'Margin dilution into the second half and mature-store sales', analyst:'Irma Sgarz · Goldman Sachs', theme:'Expense leverage against the opening pace',
+          qFull:'How quickly do you grow into the expenses layered on for the new regions, and what is mature-store same-store sales growth? Why do four- and five-year cohorts not already dilute selling expenses?',
+          a:'<b>Anthony Hatoum:</b> “Even our oldest vintages, stores that are 20 years old, they’re still growing extremely healthy, much better than inflation.” On margin: “you have to pay upfront for all these expenses before you see the sales materialize… The perverse thing: the faster we accelerate, the more we have these expenses, even though we’re creating tremendous value for the shareholder.” “If we reduce our store opening rate to zero, you will immediately see a pop in margin and in EBITDA. Of course, we’re not going to do that.”' },
+        { q:'Sustainability of same-store sales, and marketing', analyst:'Héctor Maya · Scotiabank', theme:'Same-store sales: volume and mix, not price',
+          qFull:'Can same-store sales hold at these levels in the second half, and would you ever allocate a marketing budget to broaden awareness?',
+          a:'<b>Anthony Hatoum:</b> “We don’t see anything right now that would say that this would flatten out or decrease. At the same time, I can’t tell you if it’s going to be 17% next quarter or 16% or 15%.” On marketing: “our best marketing has been word of mouth… we don’t exclude it from the future. What we found to be extremely challenging is to link this marketing dollar spent to the increase in sales… it’s the value proposition improvement by itself that drives the vast majority of the increase.”' },
+        { q:'Supplier capacity and store-opening guidance', analyst:'Ulises Argote · Santander', theme:'FY2025 guide: 500-550 openings, SSS +11% to +14%, revenue +26% to +29%',
+          qFull:'Are private-label suppliers keeping up with the faster expansion, and is there room to revise the store-opening guide given the run rate?',
+          a:'<b>Anthony Hatoum:</b> “We’re not revising our guidance. We usually don’t, but I think we’re confident that whatever we gave as guidance is going to be met.” On suppliers: “Everything is long-term planned… Think about a three-year lead time to ensure that you have everything ready.”' },
+        { q:'Compensation once the 2024 plan ends', analyst:'Andrés Ortiz · BTG Pactual Asset Management', theme:'Reported vs adjusted EBITDA (the SBC wedge)',
+          qFull:'The release expects non-cash expense to finish by 2028; how should we think about management compensation after the 2024 plan, more equity plans or higher wages?',
+          a:'<b>Anthony Hatoum:</b> “The 2024 plan goes forward… yearly allocations of equity that the board approves.” “The benefits of equity-linked compensation outweigh the equivalent benefit of just giving out cash compensation.” <b>Eduardo Pizzuto:</b> “That table in the appendix is the non-cash expenses for the next four years for what has been granted. Anything on top of that will affect this table.”' }
+      ],
+      highlights:[
+        { tag:'thesis', band:'logged', head:'Faster openings depress the consolidated margin; the vintage view shows the leverage.',
+          detail:'<p>Hatoum and Pizzuto: expenses are paid up front before the sales arrive, so “the faster we accelerate, the more we have these expenses”; the choice for growth is deliberate because it maximizes shareholder value.</p>' },
+        { tag:'dots', band:'logged', head:'The SBC schedule is spelled out: a June award tied to the IPO and a four-year table in the appendix.',
+          detail:'<p>The award does not change the fully diluted count; the expense is recognized on grant and projected in Appendix 2. The 2024 plan continues with yearly allocations.</p>' },
+        { tag:'curious', band:'logged', head:'Fresh categories stay a test and are not in the sales numbers.',
+          detail:'<p>Hatoum to Ford: even without fresh fruit, vegetables and meat the company would see significant same-store sales growth; any rollout waits until logistics and sourcing are proven.</p>' },
+        { tag:'tone', band:'logged', head:'No revision to the store-opening guide.',
+          detail:'<p>Hatoum to Argote: the company does not usually revise guidance, and is confident of meeting it (the year ended at 574 openings against 500 to 550).</p>' }
+      ],
+      newQuestions:[
+        {n:'Do same-store sales hold in the high teens in the third quarter?', landed:{q:'Q3 2025', rank:1}},
+        {n:'How does the first Liquidity Event Plan charge show up in reported EBITDA?', landed:{q:'Q3 2025', rank:2}},
+        {n:'Do the four new regions open on schedule and what do they cost in logistics?', landed:{q:'Q3 2025', rank:3}},
+        {n:'How are the older vintages performing on margin and ticket?', landed:{q:'Q3 2025', rank:4}}
+      ]
+    } },
+{ q:'Q1 2025', date:'May 8, 2025', asOf:'2025-04-14', snap:'2025-04-14 (the last before the print)',
+    headline:'Revenue +35% and same-store sales +13.5% in a soft market; the EBITDA margin dipped to 4.1% on investment in talent, four new regions and a first step-up in share-based pay.',
+    call:{
+      prepared:[
+        { topic:'Operations and growth', body:'Anthony Hatoum: <b>117</b> net new stores against 94, <b>2,889</b> in total; LTM <b>507</b> against 416 (“roughly 100 stores” more). Same-store sales <b>+13.5%</b>, revenue <b>+35.1% to MXN 17.1 billion</b>; the gap to ANTAD “notable and increasing.” Operating cash flow <b>MXN 1.1 billion (+49%)</b>; net cash about MXN 1.6 billion plus US$150 million.' },
+        { topic:'Costs and EBITDA', body:'Eduardo Pizzuto: sales expenses <b>10.3%</b> of revenue from 10.2% on the faster opening pace; at the unit level the cost ratio keeps falling, but “we pay the full cost of new stores in regions before we see the full revenues.” Admin <b>4.1%</b> from 3.5% (+60bps), including <b>MXN 84 million</b> (about 50bps) of non-cash share-based pay, and hiring for the four new regions of 2025 and headquarters talent in IT, purchasing, controls and legal. EBITDA <b>MXN 705 million (+12.7%)</b>, margin 4.9% to <b>4.1%</b>.' },
+        { topic:'Working capital', body:'Negative working capital <b>MXN 6.5 billion</b> against 4.8 billion a year earlier, about <b>10.5%</b> of revenue. “Our accelerating growth continues to be self-funded.”' }
+      ],
+      qanda:[
+        { q:'Talent investment, distribution-center density and the systems upgrade', analyst:'Bob Ford · Bank of America Merrill Lynch', theme:'ERP, AI and talent build-out',
+          qFull:'How should we think about the magnitude and capabilities of the talent investment, the split of new DCs between density and new regions, and the systems investments mentioned in the release?',
+          a:'<b>Anthony Hatoum:</b> “Any investment we make is made with a simple criteria in mind: what’s the return on this investment?… an increase in talent and density is one of the key competitive advantages.” DCs are standard: “we like them to be all operating exactly the same… we open stores, and based on their location, we decide where to open our next generation of distribution centers.” On systems: “The new generation of tech is significantly more efficient… there is going to be an overlap between the old tech and the new tech, and probably for a period of time, you will see an increase in expenses.” “With the old tech, we can’t use AI with our databases. With the new tech, we absolutely can.” On Mexico City: “there is still significant runway in the areas in which we’re operating.”' },
+        { q:'Timing of sales-expense investments, and whether the SBC step-up is the new normal', analyst:'Álvaro García · BTG Pactual', theme:'Reported vs adjusted EBITDA (the SBC wedge)',
+          qFull:'What is the timing of growth investments in DCs and stores through the year and their effect on sales expenses? And is the share-based expense uptick the new normal?',
+          a:'<b>Eduardo Pizzuto:</b> “We’re increasing from 400 to 500 stores… we’re paying off the initial investment of the stores, and then revenues will come afterwards… These regions, these distribution centers will be open through the year within the next three to six months.” At unit level “we continue to see leverage as expected… the new stores that we’re opening, they’re pretty much on track as what we have been expecting.” On share-based pay: “think about the number that we have today for the remainder of the year. It’s about 1.2% of sales… it has to do with the options and RSUs that were granted at the end of last year. So it is not a bump in Q1.” <b>Anthony Hatoum:</b> “It has protected us from poaching talent. We will continue to do this because it’s an excellent return on investment.”' },
+        { q:'Gross-margin dynamics, consumer weakness and labor offsets', analyst:'Joe Giordano · JPMorgan', theme:'Gross margin: dollar margin over percent',
+          qFull:'Why is gross margin volatile despite private-label growth, are you seeing a weaker consumer or more aggressive peers, and how do you offset wage pressure besides sales growth?',
+          a:'<b>Anthony Hatoum:</b> “Nothing has changed… Whether you’re looking at commercial or private label products, both benefit from scaling, and we will see over time a steady improvement in gross margins while we have quarter to quarter changes and volatility. It’s normal because of the way we manage pricing, on a product-by-product basis.” Pricing pressure: “the answer is no… we basically set prices based on elasticity.” On personnel: salaries rise and training starts ahead of openings, but “these expenses are highly diluted by the growth in our sales numbers.”' },
+        { q:'Traffic versus ticket, and free-cash-flow durability', analyst:'Alejandro Fuchs · Itaú BBA', theme:'Negative working capital funds the growth',
+          qFull:'What is the traffic and ticket breakdown of same-store sales, and will strong free cash flow continue as openings grow?',
+          a:'<b>Anthony Hatoum:</b> “Solid growth in both tickets and ticket size. I’d say 50/50.” <b>Eduardo Pizzuto:</b> “Yes, we did generate significant cash in this quarter. It is really business as usual because the fundamentals of those key metrics have not changed. Payables and inventories continue to be pretty much the same, although inventories have slightly come down… some quarters will be up, some quarters will be down, but overall, the trend will continue to be upwards… That’s why we continue to be self-funded.”' },
+        { q:'Shorter work week, and the YEMA brand', analyst:'Ulises Argote · Santander', theme:'Mexican wages and the work-week reduction',
+          qFull:'How would a gradual reduction of the working week affect store operations, and what is the strategy for the YEMA brand?',
+          a:'<b>Eduardo Pizzuto:</b> “We have some wiggle room in the sense that we have part-times at the store, and we will shuffle those, and we will be able to comply… We might see a small bump in the initial stages, but as we continue to increase our sales, this is something that will eventually stabilize and actually decrease as a percentage of sales.” <b>Anthony Hatoum:</b> “YEMA has been a very successful concept, and we will very likely roll it out. The pace of it would be at a different pace than what we roll out at Tiendas Tres B stores.”' },
+        { q:'Why the gap to ANTAD widened', analyst:'Andrew Ruben · Morgan Stanley', theme:'Same-store sales: volume and mix, not price',
+          qFull:'The comp spread versus ANTAD widened meaningfully; what changed between the fourth and first quarters?',
+          a:'<b>Anthony Hatoum:</b> “Our clients are choosing us because we are offering a better value proposition… we continue to offer basic goods… you’re not going to cut down on these when you decide you want to cut down on your budget of spending… We are also extremely efficient because we have a limited assortment of 800 SKUs. These are real and sustainable competitive advantages.”' },
+        { q:'Payables, inventories and the supplier relationship', analyst:'Pablo Valles · Summit Management', theme:'Negative working capital funds the growth',
+          qFull:'The cash conversion cycle ticked up in 2024 partly on lower payable days; do you expect that to continue, and how has the supplier relationship evolved?',
+          a:'<b>Anthony Hatoum:</b> “Payables and inventories are stable for the foreseeable future. If you see small variations quarter to quarter, that’s completely normal… Our relationship with suppliers has always been extremely strong and only gets stronger as you scale. If your question is, do we try to extract from our suppliers better terms and conditions on this front, I don’t see anything happening there.”' },
+        { q:'Consumer pressure, tariffs and supplier negotiations', analyst:'Héctor Maya · Scotiabank', theme:'Peso and dollarized input costs',
+          qFull:'How are conversations with suppliers evolving under the consumer and tariff context, and how would potential savings be split?',
+          a:'<b>Anthony Hatoum:</b> “2025 was planned three years ago. What we do today is thinking with our suppliers what are we going to be doing in 2027, 2028… How do we divide the pie? It’s already been divided, and there’s nothing new that’s happening right now.” On tariffs or devaluation: “inputs are very dollar priced. What we’ve seen in the past is that they get passed on to the consumer over time… 3B doesn’t get impacted. On the contrary, I see 3B benefiting from scenarios like this.” On consumers: “we haven’t seen the impact of that in what we sell… in previous recessions, we have gained significant new customers. When things get better, customers are sticky.”' },
+        { q:'Stock-based pay, dilution and the secondary sale', analyst:'Investor questions (as answered by management)', theme:'Capital structure: IPO, follow-ons, lock-up',
+          qFull:'Questions on stock-based compensation, future dilution and the founder’s sale in the secondary offering.',
+          a:'<b>Anthony Hatoum:</b> “Stock-based compensation is an investment with a very high return… When you are modeling, you either model this but don’t dilute in the share count, or you don’t take it into account and dilute in the share count. Doing both would be double counting.” On his sale: “a very small stake in the total… The main reason for selling has been fiscal.” <b>Eduardo Pizzuto:</b> the illustrative dilution example published before the follow-on shows “roughly about 160 million shares, which is already, everything is already accounted for.”' }
+      ],
+      highlights:[
+        { tag:'thesis', band:'logged', head:'Margins dipped by choice: investment in talent, systems and four new regions ahead of the sales.',
+          detail:'<p>Hatoum and Pizzuto: the unit-level view shows falling cost ratios; the consolidated view carries the cost of new regions before their revenue. A new tech stack overlaps the old one for a period.</p>' },
+        { tag:'dots', band:'logged', head:'Share-based pay settles near 1.2% of sales for the rest of 2025.',
+          detail:'<p>Pizzuto to García: the first-quarter level reflects options and RSUs granted at the end of 2024 and is “not a bump in Q1.” The IPO-tied award later added to it from the second quarter.</p>' },
+        { tag:'curious', band:'logged', head:'YEMA: a successful concept likely to roll out at its own pace.',
+          detail:'<p>Hatoum to Argote on standalone YEMA stores next to the main format.</p>' },
+        { tag:'tone', band:'logged', head:'The model is described as resilient to a weak consumer and to tariffs.',
+          detail:'<p>Hatoum: basic goods are cut last, inflation helps a negative-working-capital model, and in past recessions the company gained customers who then stayed.</p>' }
+      ],
+      newQuestions:[
+        {n:'Does the EBITDA margin trough as the four new regions open in the second half?', landed:{q:'Q2 2025', rank:1}},
+        {n:'How do share-based charges evolve after the June award?', landed:{q:'Q2 2025', rank:2}},
+        {n:'Does the same-store-sales gap to ANTAD keep widening?', landed:{q:'Q2 2025', rank:3}},
+        {n:'Are payables and inventories stable?', landed:{q:'Q2 2025', rank:4}}
+      ]
+    } },
+{ q:'Q4 2024', date:'April 10, 2025', asOf:'2024-11-30', snap:'2024-11-30 (the last before the print)',
+    headline:'A first full public-company year: revenue +30.3% to Ps.57.4B on 484 openings and same-store sales of +13.4%; the 2025 guide was given (500 to 550 openings, SSS +11% to +14%, revenue +26% to +29%).',
+    call:{
+      prepared:[
+        { topic:'The quarter and the year', body:'Anthony Hatoum: <b>138</b> net new stores in the quarter and <b>484</b> for 2024 (+21%), above the original guide; two new distribution centers. Same-store sales <b>+11.8%</b> in Q4 (ANTAD +2.6%) and <b>+13.4%</b> for the year “despite the notable decrease in inflation.” Revenue <b>+32.7% to MXN 16.3 billion</b> in Q4 and <b>+30.3% to MXN 57.4 billion</b> for the year. Operating cash flow <b>MXN 3.749 billion (+19.4%)</b>; net cash about MXN 1.4 billion plus about US$150 million kept since the IPO.' },
+        { topic:'Cohorts and mix', body:'Updated cohort chart (2005 to 2023, inflation-adjusted): newer cohorts start higher and grow faster, and “no curve has yet flattened.” For stores of five or more years, transactions per store per month <b>+4.6%</b> and ticket <b>+3.6%</b>. Private label <b>54%</b> of sales against 47% in 2023.' },
+        { topic:'Costs, EBITDA and working capital', body:'Eduardo Pizzuto: SG&amp;A <b>15.2%</b> of revenue in Q4 (+96bps). Sales expenses 11.7% from 11.3%, including about <b>47bps</b> of non-recurring non-cash charges; admin 3.4% from 2.9%, about 11bps non-recurring cash (legal matters and the follow-on). About US$2 million expected for the follow-on in Q1 2025. EBITDA <b>MXN 845 million</b>, a 5.2% margin (+51%); <b>MXN 2.8 billion</b> for the year, 5% margin (+51%). Adjusted negative working capital <b>10.6%</b> of revenue.' },
+        { topic:'2025 guidance', body:'Same-store sales <b>+11% to +14%</b>, revenue growth <b>+26% to +29%</b> and <b>500 to 550</b> new stores. “Historically, 3B has performed well during economic downturns and periods of uncertainty, but also in economic upturns.”' }
+      ],
+      qanda:[
+        { q:'Balance of growth, density limits and 2025 innovation', analyst:'Bob Firth · Merrill Lynch', theme:'Runway: how many stores Mexico can hold',
+          qFull:'How do you balance growth across new and existing trade areas, are you seeing a density equilibrium, how much of the cost step-up is capability versus compliance, and how should we think about innovation this year?',
+          a:'<b>Anthony Hatoum:</b> “We haven’t seen any change in how we do real estate… each regional CEO is in charge of doing their own search… more density where we are” plus a stretch to new geographies. On density: “we have yet to see that… stores that we put in high-end neighborhoods have done extremely well… even in areas that are extremely dense, like Mexico City.” On innovation: “at any point in time, we are running up to 60 different tests… next things on the horizon are fruits and vegetables and meats. They will happen when we are ready.” <b>Eduardo Pizzuto:</b> “We do expect to continue to hire talent in 2025… we did a good investment in 2024 [in compliance and controls]… admin expenses over time should trend down as a percentage of revenue.”' },
+        { q:'Will same-store sales continue, and what drives them', analyst:'Joseph Giordano · JPMorgan', theme:'Same-store sales: volume and mix, not price',
+          qFull:'(The question is not captured in the transcript.) Answer on whether same-store sales growth continues and on tickets, ticket size and private label.',
+          a:'<b>Anthony Hatoum:</b> “It is the million-dollar question… we look conservatively at same-store sales growth, and then we are always pleasantly surprised to see it be higher than what we thought it would be.” “As long as we are improving the value proposition in our portfolio of products, we know that we are going to increase same-store sales growth or at least maintain high growth rates.” Unit sales and kilos show “a very very robust increase”; private labels are priced lower, so “we need to be selling more units to compensate.”' },
+        { q:'Why 2024 beat the opening guide, and what limits 2025', analyst:'Andrew Ruben · Morgan Stanley', theme:'FY2025 guide: 500-550 openings, SSS +11% to +14%, revenue +26% to +29%',
+          qFull:'What enabled you to finish above the high end of the 2024 opening guide, what scenarios put you at the high or low end in 2025, and what are the bottlenecks to a faster pace?',
+          a:'<b>Anthony Hatoum:</b> “The three factors in opening stores are availability of real estate, availability of capital, availability of human resources… capital is not an issue. Real estate, white space is abundant… permits… we’ve mitigated that by just increasing the pipeline.” Each regional real-estate team opens “about two stores per month”; four new regions in 2025 means four new teams: “That’s how we project… We are confident that this is the number that we are going to achieve.”' },
+        { q:'Gross-margin trend and competition in a slowing economy', analyst:'Alejandro Fuchs · Itaú', theme:'Gross margin: dollar margin over percent',
+          qFull:'Gross margin expanded 20bps; how are supplier and private-label dynamics, and are you seeing competition change as consumption slows?',
+          a:'<b>Anthony Hatoum:</b> “As we scale, our purchasing power increases… The question is what do you do with this improvement? Do you pass it into gross margin, or into price?… the market tell us what the optimum decision is… continuous elasticity testing of all our products. There’s always a small part that goes into gross margin… quarter to quarter, you’re going to see volatility.” On the economy: “we have been a net beneficiary of downturns. And in upturns, these clients tend to be extremely sticky… No big changes in competition.”' },
+        { q:'Drivers of private-label penetration', analyst:'Ulises Argote · Santander', theme:'Private-label penetration',
+          qFull:'What drove the rise in private-label penetration in 2024, how does it compare with the business plan, and how could it evolve?',
+          a:'<b>Anthony Hatoum:</b> “You might have the benefit of a time machine in the form of BIM in Turkey… The more value you’re offering in your private labels, the more percentage of your sales you’re going to see shifting towards the private label. There’s nothing magical about it… as long as our efforts to scale and our efforts to improve private labels don’t stop, you’ll see this number increase.”' },
+        { q:'Optimal expense ratios and the tax rate', analyst:'Daniela Bretthauer · HSBC', theme:'Expense leverage against the opening pace',
+          qFull:'What expense level is optimal as a share of sales, what were the one-offs, and what tax rate should we model given its volatility and the FX effect?',
+          a:'<b>Anthony Hatoum:</b> the one-offs were “about 18 million [in admin] and 67 million [in selling].” “Every line item should go down as a percentage of sales… selling expenses come down on an annual basis… admin expenses, we will continue to invest in talent… over time this number will come down.” On tax: “strip out all the expenses that are not on the Mexican level… the promissory notes, the ESOPs and the foreign exchange… apply the 30% rate, you will get a pretty good idea.” On FX: the gain “is because of the amount in US dollars that we kept in our accounts since the IPO.”' },
+        { q:'Scaling fresh produce on a margin-neutral basis', analyst:'Froylan Méndez · JPMorgan', theme:'Assortment: new categories, fresh and Irrepetibles',
+          qFull:'How big a game changer is ultra-fresh for hard-discount penetration, and what must happen to scale it without hurting margin?',
+          a:'<b>Anthony Hatoum:</b> “We need to make sure that it meets our criteria: a great value proposition and extremely efficient operations… Until we have that ironed out and working perfectly, you won’t see it. We’re not interested in losing money on anything. The business remains extremely successful standalone without fresh fruits and vegetables and without meats. We’ve never included any of these categories in any of our projections. If it does happen, it’s just icing on the cake.”' },
+        { q:'Fresh within the mix, services such as remittances, and suppliers', analyst:'Jorge Izquierdo · BTG Pactual', theme:'Assortment: new categories, fresh and Irrepetibles',
+          qFull:'Should fresh be counted in private label? (Follow-ups on remittances and supplier management from an analyst not labelled in the transcript.)',
+          a:'<b>Anthony Hatoum:</b> “We have not given any indication that we will be launching fresh fruits and vegetables… If you had to put it in one bucket, put it in the bucket of private label.” On services: “the best way to think about remittances or any other service is 3B as a platform… touches its client three times a week… value for money, efficiency, high rotation… not interested in doing any business that doesn’t make money.” On suppliers: “what we’ll see in 2025 has already been discussed with our suppliers a long time ago… we do not see any major impact from the current volatility.”' }
+      ],
+      highlights:[
+        { tag:'thesis', band:'logged', head:'The 2025 guide: openings 500 to 550, same-store sales +11% to +14%, revenue +26% to +29%.',
+          detail:'<p>Pizzuto in the prepared remarks. The year ended at 574 openings, +18.3% same-store sales and +36.1% revenue, above all three ranges.</p>' },
+        { tag:'dots', band:'logged', head:'Opening capacity is a function of regional real-estate teams, about two stores a month each.',
+          detail:'<p>Hatoum to Ruben: real estate is decentralized; four new regions in 2025 add four teams. Permits are the item “a little bit out of our hands,” mitigated with a larger pipeline.</p>' },
+        { tag:'curious', band:'logged', head:'Fresh produce and meat stay outside every projection.',
+          detail:'<p>Hatoum to Méndez and Izquierdo: tests continue (about 60 products and categories at once); launch only when the operation behind it works; classify any fresh sales as private label.</p>' },
+        { tag:'tone', band:'logged', head:'Tax: strip the non-Mexican items and apply 30%.',
+          detail:'<p>Hatoum to Bretthauer: taxable profit is at the Mexican operating companies; remove the promissory notes, the ESOP and FX effects before applying 30%.</p>' }
+      ],
+      newQuestions:[
+        {n:'Does same-store sales hold in the low-to-mid teens as guided?', landed:{q:'Q1 2025', rank:1}},
+        {n:'How does admin expense evolve as headquarters talent is added?', landed:{q:'Q1 2025', rank:2}},
+        {n:'Do the four new regions open on schedule?', landed:{q:'Q1 2025', rank:3}},
+        {n:'What does the follow-on cost in the first quarter?', landed:{q:'Q1 2025', rank:4}}
+      ]
+    } },
+{ q:'Q3 2024', date:'November 26, 2024', asOf:'2024-08-26', snap:'2024-08-26 (the last before the print)',
+    headline:'Revenue +29.8%, same-store sales +11.6% and EBITDA +54%; 346 openings in nine months put the company solidly on its 380 to 420 guide, and gross margin was flat at 15.8%.',
+    call:{
+      prepared:[
+        { topic:'Operations and growth', body:'Anthony Hatoum: <b>131</b> net new stores, <b>2,634</b> in total; <b>346</b> in nine months against 243 (+42%). The 380 to 420 opening guide “we will solidly meet.” Same-store sales <b>+11.6%</b>, revenue <b>+29.8% to MXN 14.8 billion</b>. Gross margin flat at <b>15.8%</b>: “efficiencies from scaling up were passed to price.” Nine-month operating cash flow about <b>MXN 2.3 billion (+22.4%)</b>; net cash about MXN 1.3 billion plus MXN 2.9 billion in short-term US-dollar deposits.' },
+        { topic:'Costs, EBITDA and cash', body:'Eduardo Pizzuto: SG&amp;A <b>13.4%</b> of revenue from 13.9% (−51bps). EBITDA <b>MXN 688 million (+54%)</b>, up 73bps in margin; “we do not manage our business with an EBITDA goal in mind.” Adjusted negative working capital <b>10.3%</b> of revenue; growth stays self-funded despite a 42% rise in openings and two new distribution centers.' }
+      ],
+      qanda:[
+        { q:'Gross-margin dip, Neto and the 2025 pace', analyst:'Bob Ford · BofA Securities', theme:'Hard-discount competition (Neto, FEMSA)',
+          qFull:'What was behind the sequential gross-margin decline and the larger step-up in operating leverage? What share of stores has a Neto in the trade area? How should we think about the 2025 opening pace?',
+          a:'<b>Anthony Hatoum:</b> “This is a number that’s a consequence of a lot of individual decisions that we make on pricing, and you shouldn’t see much into it as a trend because this number is going to fluctuate quarter to quarter. We continue to price product by product to maximize volumes and peso operating profit.” On Neto: “we have about 1,500 Netos next to our existing stores… We welcome all the competition.” On the reports of Neto’s supplier payment difficulties: “It’s very hard to tease out a Neto effect… if you walk into a 3B and then you walk into a Neto, you can see for yourself where the customer will prefer to shop.” On openings: “we believe that this market can sustain up to 20,000 3B stores over time… for now, very comfortable in meeting guidance.” <b>Eduardo Pizzuto:</b> leverage comes from “hours worked at the store level and our distribution centers”; admin flat on talent, DCs, regional headquarters and public-company costs.' },
+        { q:'Dividends and the cohort chart', analyst:'Álvaro García · BTG Pactual', theme:'Capital structure: IPO, follow-ons, lock-up',
+          qFull:'With cash not burning even at 130 openings, what is the long-term outlook for dividends? And can you update the productivity of newer stores?',
+          a:'<b>Anthony Hatoum:</b> “It’s way too early to talk about dividends, but anybody who’s modeled this business knows that eventually there is significant cash generated. And then the question would be, what’s the wise thing to do with this excess cash? And if it’s dividends, so be it.” The chart is refreshed once a year in Q4; “all our vintages continue to perform very solidly, and the trend that we’ve seen with newer vintages doing strongly continues.”' },
+        { q:'Ticket versus traffic, the normal gross margin and the back-loaded openings', analyst:'Joseph Giordano · JPMorgan', theme:'Same-store sales: volume and mix, not price',
+          qFull:'What is the breakdown of same-store sales between ticket and traffic, where should we anchor a normalized gross margin, and how do the timing of openings and the SG&A leverage reconcile?',
+          a:'<b>Anthony Hatoum:</b> “The number of transactions has increased notably. The average ticket size has increased healthily, and this despite having year-over-year prices that are completely flat in our case.” On gross margin: “we don’t have a gross margin target. We are looking at SKU by SKU and optimizing pricing to maximize unit volumes and peso margin… In our models, we keep our gross margin flat forever.” On timing: “we’d rather just stick to our numbers on an annual basis… nothing that is going to say everything has been bunched in the last quarter.”' },
+        { q:'Elasticity lags and trade-down', analyst:'Andrew Ruben · Morgan Stanley', theme:'Gross margin: dollar margin over percent',
+          qFull:'When you reinvest in price, do you see the sales uplift immediately or over weeks or months? And how does trade-down to 3B build when the industry slows?',
+          a:'<b>Anthony Hatoum:</b> “It’s all over the place. Some categories respond immediately, and some categories respond literally over three quarters.” A price change in the third month of a quarter “spills over into the next quarter.” On the consumer: “We haven’t seen any of this in 3B… Do you see in that that people are switching over to 3B? It’s probably happening. We have no way of measuring exactly how much and how fast… Once you become a Tiendas 3B customer, you’re very sticky.”' },
+        { q:'The dollar cash balance and the FX gain', analyst:'Daniela Bretthauer · HSBC', theme:'Peso and dollarized input costs',
+          qFull:'Why was the FX gain lower than the dollar balance implied, how should we think about Q4, and what gross margin should we use in forecasts?',
+          a:'<b>Eduardo Pizzuto:</b> “The IPO proceeds after paying off the promissory notes… the balance was US$170 million… around US$150 million in short-term deposits, and the balance in our daily balance in that US account. We have not transferred any of that cash to the operation in Mexico.” For Q4: “assume the same thing. We continue to be self-funded.” <b>Anthony Hatoum:</b> “We’ve assumed a sales curve for a given gross margin. You cannot unlink one from the other. If you put a lower gross margin, then you must change your sales curve and make it a steeper and higher sales curve.”' },
+        { q:'Unit economics and capex as a share of cash flow', analyst:'Santiago Álvarez · Summit Management', theme:'Unit economics: capex per store and payback',
+          qFull:'Can you explain the unit economics of a new store and when it shows in the statements, and is there a sweet spot for capex as a share of cash flow?',
+          a:'<b>Eduardo Pizzuto:</b> the target unit economics slide covers the first three years of a store, “the target capex, which is 3.9 million pesos per store, and also the cash on cash… that’s where we continue to be at today.” “We don’t really look at capex as a percentage of sales… we reinvest everything back into growth, meaning that this year, our guidance is 380 to 420 new stores. We want to open as many stores as possible.”' },
+        { q:'The relationship with suppliers', analyst:'Jin Zhang · Captains of Capital', theme:'Gross margin: dollar margin over percent',
+          qFull:'How do you think about the relationship with suppliers over the long term as you gain scale?',
+          a:'<b>Anthony Hatoum:</b> “As you get bigger and you scale, your relationship with suppliers of any kind gets better.” Two groups: traditional FMCG companies, and private-label suppliers that “started as small and medium-sized companies and over the last 15 years have grown at the same pace that we’ve grown at… With them, we do significant planning ahead of time.”' },
+        { q:'The diluted share count and the rain', analyst:'Álvaro García · BTG Pactual', theme:'Capital structure: IPO, follow-ons, lock-up',
+          qFull:'What is in and out of the diluted share count, and did the third-quarter rain help or hurt demand?',
+          a:'<b>Eduardo Pizzuto:</b> the count includes “the options that are both in the money and vested… based on IAS 33.” <b>Anthony Hatoum:</b> “People have a tendency not to go shopping when it’s raining here. But net, net, we haven’t seen any significant impact.”' },
+        { q:'Weak peso and dollar-linked costs', analyst:'Héctor Maya · Scotiabank', theme:'Peso and dollarized input costs',
+          qFull:'Could higher supplier prices with a weaker peso affect gross margin, how quickly do you pass them on, and what share of cost of goods is dollar-linked?',
+          a:'<b>Anthony Hatoum:</b> “This is not the first time we’ve gone through a peso weakness period… a lot of items are dollarized. So you will eventually see the impact… How fast do these increases get passed on to the consumer? If I just look at history, what I’ve seen is that phenomenon takes anywhere between 8 and 18 months to happen. And once it’s been passed on, you basically are back to where you were before as if it never happened.”' }
+      ],
+      highlights:[
+        { tag:'thesis', band:'logged', head:'No gross-margin target: the model keeps it flat and pairs it with a store sales curve.',
+          detail:'<p>Hatoum to Giordano and Bretthauer: a lower assumed margin needs a steeper sales curve; the two cannot be unlinked. Price changes show up with a lag of one to three quarters depending on the category.</p>' },
+        { tag:'dots', band:'logged', head:'About 1,500 Neto stores sit next to a 3B, and no separate Neto effect can be isolated.',
+          detail:'<p>Hatoum to Ford: asked about reports of Neto’s supplier payment problems, he declined to isolate an effect from the same-store-sales trend.</p>' },
+        { tag:'curious', band:'logged', head:'Dividends: “way too early,” but significant cash will eventually be generated.',
+          detail:'<p>Hatoum to García. Capex is not managed as a share of sales; the company reinvests everything in openings (target capex Ps.3.9M per store then).</p>' },
+        { tag:'tone', band:'logged', head:'Weak-peso pass-through takes 8 to 18 months, after which the trend resumes.',
+          detail:'<p>Hatoum to Maya on dollarized manufacturing costs.</p>' }
+      ],
+      newQuestions:[
+        {n:'Do openings land above the 380 to 420 guide for 2024?', landed:{q:'Q4 2024', rank:1}},
+        {n:'What is the guide for 2025?', landed:{q:'Q4 2024', rank:2}},
+        {n:'What does the annual cohort chart show for the newer vintages?', landed:{q:'Q4 2024', rank:3}},
+        {n:'Does gross margin stay volatile around the mid-teens?', landed:{q:'Q4 2024', rank:4}}
+      ]
+    } },
+{ q:'Q2 2024', date:'August 22, 2024', asOf:'2024-05-27', snap:'2024-05-27 (the last before the print)',
+    headline:'Revenue +27.5% with same-store sales slowing to +10.7% on Easter timing, elections and lower inflation, while gross margin rose to 16.7% and EBITDA grew 43.2%.',
+    call:{
+      prepared:[
+        { topic:'Operations and growth', body:'Anthony Hatoum: <b>121</b> net new stores and one new distribution center, <b>2,503</b> stores in total; <b>215</b> since the start of the year, with the 380 to 420 guide maintained. Same-store sales <b>+10.7%</b>, revenue <b>+27.5% to MXN 13.6 billion</b>. The slowdown against the prior-year quarter is put down to Easter falling in Q1, lower inflation, government payments moved forward ahead of the June elections, alcohol-sale restrictions during the elections and the weather. First-half operating cash flow <b>MXN 1.256 billion (+25%)</b>; net cash about MXN 1.2 billion plus MXN 2.8 billion in short-term deposits.' },
+        { topic:'Margins and EBITDA', body:'Gross margin <b>16.7%</b>, “mainly due to improved supplier terms, and this is due to scaling… This number moves quarter to quarter.” Eduardo Pizzuto: EBITDA <b>MXN 689 million (+43.2%)</b>, margin <b>5.1%</b> (+56bps); admin <b>+45.8%</b> on three new regions, talent in IT, purchasing, HR and finance, public-company costs and share-based pay. Adjusted negative working capital <b>10.2%</b> of revenue.' },
+        { topic:'Guidance', body:'Maintained: <b>380 to 420</b> new stores and sales growth of <b>28% to 32%</b>. “Our growth remains self-funded.”' }
+      ],
+      qanda:[
+        { q:'Is 16.7% the new gross-margin normal?', analyst:'Andrew Ruben · Morgan Stanley', theme:'Gross margin: dollar margin over percent',
+          qFull:'Gross margin stepped up again; is this a new normal, or is there a gap between supplier benefits and what is reflected in price?',
+          a:'<b>Anthony Hatoum:</b> “By scaling, we are reaping cost benefits on purchasing across the board, and that’s not going to stop… do you pass it on to your customer in the form of lower prices, or do you keep it? We price our products on a product-by-product basis, optimizing margin in dollar terms and optimizing sales and not necessarily optimizing a percentage gross margin… I would say in general there is a tendency to pass on the benefit to the customer… I wouldn’t say that this is the new normal. It’s likely to fluctuate over time.”' },
+        { q:'Fresh and meat tests, and mature-store trends', analyst:'Froylan Méndez · JPMorgan', theme:'Assortment: new categories, fresh and Irrepetibles',
+          qFull:'How are fresh and meat performing in test stores, how would they affect long-term gross margin, and how are mature stores trending this year?',
+          a:'<b>Anthony Hatoum:</b> “Meat and fruits and vegetables are not part of any projection that we’ve shared with anybody… we will not launch it officially unless the return on investment is highly attractive… to date, the tests are encouraging.” Mature stores: “the trend has been as expected and in general, positive… solid growth on same-store sales across the board.”' },
+        { q:'Expense dilution, IT talent and whether openings beat the guide', analyst:'Gustavo Fratini · Bank of America', theme:'Expense leverage against the opening pace',
+          qFull:'Can you detail the dilution of selling expenses and the talent increase in IT, and could openings come in at or above the top of the guide?',
+          a:'<b>Anthony Hatoum:</b> “We don’t make an investment unless we are convinced that it has a great return on invested capital.” On dilution: “our expenses are not even close to growing at the pace at which we’re seeing growth in revenues and growth in store numbers. That is going to happen over time, mechanically.” On openings: “I’m not going to budge from the guidance numbers… real estate is lumpy, and although we have a very robust pipeline, you’re at the mercy of a number of variables, and therefore, you have to look at it over the course of the year.”' },
+        { q:'Private versus branded mix in the gross-margin gain', analyst:'Analyst · Summit Management', theme:'Private-label penetration',
+          qFull:'Was the gross-margin improvement also driven by the mix between private and branded, or do you see the same improvement in both?',
+          a:'<b>Anthony Hatoum:</b> “There is continuous improvement on the purchasing side, and that is simply driven by scale… product mix does impact, and over time, you will see an impact due to an increasing number of private-label sales versus branded sales. But this is not going to be a quarter-to-quarter event… more like a multi-year tendency. Net-net, it’s an improvement. Whether it appears in one line or the other, the tendency is positive.”' },
+        { q:'Stores served by the new distribution centers', analyst:'Jorge Izquierdo · BTG Pactual', theme:'Regions and distribution centers (the "stretching" model)',
+          qFull:'How many stores do the two distribution centers opened year to date serve?',
+          a:'<b>Eduardo Pizzuto:</b> “We have about 100 stores in one of them, and then about 150 in the second one. The way we do this is that we go by stretching, and every time we open a new distribution center, it starts off with a number of stores already, so it doesn’t start from zero.”' },
+        { q:'Expansion map, northern competition and the peso', analyst:'Sergio Guerrero · RSH Family Office', theme:'Peso and dollarized input costs',
+          qFull:'You have few stores in Jalisco; what are your geographic expansion plans, will competition rise toward the north, and will the weaker peso hit cost of goods?',
+          a:'<b>Eduardo Pizzuto:</b> “We do have stores in the state of Jalisco. Not in Guadalajara.” On the peso: “not immediately… when we get a peso depreciation, this is mostly a pass-through. It takes few months for that to happen.”' },
+        { q:'How many of the 121 openings came late in the quarter', analyst:'Froylan Méndez · JPMorgan', theme:'Expense leverage against the opening pace',
+          qFull:'How many of the 121 openings were in the last part of the quarter, given the higher pre-opening expenses that diluted some of the gross-margin gain?',
+          a:'<b>Eduardo Pizzuto:</b> “Roughly 40% of the openings were in the last month of the quarter.”' },
+        { q:'Imports versus local cost of goods, and the peso path', analyst:'Madhu Kodali · Yaksha Capital', theme:'Peso and dollarized input costs',
+          qFull:'What share of cost of goods is imported versus made in Mexico, and how should we think about dollar-linked cost changes if the peso weakens further?',
+          a:'<b>Anthony Hatoum:</b> “We have seen already two, if not three, devaluations of the peso… all raw materials in Mexico are pretty much dollarized for the vast majority of the goods that are sold. If I had to put a stake in the ground, I’ve always seen it happen in the course of 12 to 18 months.” On diapers: “the super absorbent powder is dollarized, the cellulose is dollarized, the elastic band is dollarized. The non-dollarized part is basically labor and, to some degree, with a delay, energy.”' },
+        { q:'Can the return on store capex hold?', analyst:'Madhu Kodali · Yaksha Capital', theme:'Unit economics: capex per store and payback',
+          qFull:'Can the attractive return on capex per store be maintained over the next two to three years?',
+          a:'<b>Anthony Hatoum:</b> “Unless you see a significant change in capex costs, the tendency is for an improvement on returns, because what we’re seeing is every new vintage of stores performing better than previous vintages… the brand is better known, so you have stores that basically start much stronger… and continued improvement in the value proposition to our customer.”' },
+        { q:'Dollar cash held overseas and the working-capital ratio', analyst:'Analyst (not labelled in the transcript)', theme:'Negative working capital funds the growth',
+          qFull:'Will the US-dollar deposits stay overseas, and is there room to improve the inventory-to-payables ratio?',
+          a:'<b>Eduardo Pizzuto:</b> “For the remainder of the year, yes, let’s assume that we will continue to have this investment overseas… roughly US$150 million in US deposits… US$50 million in cash and cash equivalents overseas as well.” On working capital: “looking at it quarter by quarter, it could be misleading. It’s lumpy… we’re not assuming any improvements for the balance of the year.”' }
+      ],
+      highlights:[
+        { tag:'thesis', band:'logged', head:'Same-store sales slowed on calendar and political effects, not on demand.',
+          detail:'<p>Hatoum in the prepared remarks: Easter in Q1 2024, lower inflation, the shifting of government payments, election-related alcohol restrictions and the weather; same-store sales stay “solidly above industry average.”</p>' },
+        { tag:'dots', band:'logged', head:'About 40% of the quarter’s openings came in its last month.',
+          detail:'<p>Pizzuto to Méndez: back-loaded openings carry the expense before the sales, which dilutes the gross-margin gain.</p>' },
+        { tag:'curious', band:'logged', head:'New distribution centers start with 100 to 150 stores already attached.',
+          detail:'<p>Pizzuto to Izquierdo: the stretching model means a new DC does not start from zero.</p>' },
+        { tag:'tone', band:'logged', head:'Weak-peso pass-through: a few months for goods, 12 to 18 months for a permanent move.',
+          detail:'<p>Pizzuto and Hatoum to Guerrero and Kodali.</p>' }
+      ],
+      newQuestions:[
+        {n:'Does gross margin stay near the mid-teens or fall back?', landed:{q:'Q3 2024', rank:1}},
+        {n:'Do openings pace to the 380 to 420 guide?', landed:{q:'Q3 2024', rank:2}},
+        {n:'Do same-store sales recover after the Easter and election effects?', landed:{q:'Q3 2024', rank:3}},
+        {n:'What does a weaker peso do to input costs and pricing?', landed:{q:'Q3 2024', rank:4}}
+      ]
+    } },
+{ q:'Q1 2024', date:'May 23, 2024', asOf:'2024-05-27', snap:'2024-05-27 (the first on file; it comes after this print, so the Street column is empty)',
+    headline:'The first call as a public company: revenue +30.9%, same-store sales +14.8%, EBITDA +57.9% and a record 94 first-quarter openings; guidance of 380 to 420 stores and +28% to +32% sales maintained.',
+    call:{
+      prepared:[
+        { topic:'Operations and growth', body:'Anthony Hatoum: <b>94</b> net new stores (+27% on the first quarter of 2023), <b>2,382</b> in total. Same-store sales <b>+14.8%</b>, revenue <b>MXN 12.7 billion (+30.9%)</b>. Operating cash flow <b>+36.4%</b>; net cash <b>MXN 4.3 billion</b> after the IPO proceeds. Store openings have compounded at 15%+ from 2019 to 2023 and Mexico offers room for “no less than <b>12,000</b> 3B stores.”' },
+        { topic:'Margins, EBITDA and working capital', body:'Gross margin <b>+80bps</b> on scale and better supplier terms, “most of which we passed on to our customers.” Eduardo Pizzuto: EBITDA <b>MXN 626 million (+57.9%)</b>, margin 4.1% to <b>4.9%</b>; excluding MXN 70 million of IPO expenses, adjusted EBITDA <b>MXN 695 million</b>, a 5.5% margin. Negative working capital (excluding IPO proceeds) <b>MXN 4.8 billion</b> against 4.6 billion at year end.' },
+        { topic:'Guidance', body:'Maintained: <b>380 to 420</b> new stores and sales growth of <b>28% to 32%</b>. “Notwithstanding the IPO, our operating costs as a percentage of sales continue their trend downwards… Our growth is self-funded.”' }
+      ],
+      qanda:[
+        { q:'Post-IPO benefits, the use of cash and new-store quality', analyst:'Bob Ford · Bank of America', theme:'Capital structure: IPO, follow-ons, lock-up',
+          qFull:'Are there tangible benefits since the IPO, such as suppliers, private-label operators or real-estate offers? How are you thinking about the use of the MXN 4.3 billion? Is the quality of new store openings deteriorating?',
+          a:'<b>Anthony Hatoum:</b> “There’s definitely a positive halo effect… the level of motivation and enthusiasm on the part of all our suppliers has gone up significantly.” On cash: “anything that we look at is always looked at through the lens of what’s the return on invested capital”; initiatives in human resources and IT efficiency; “we have a very solid balance sheet today, and we’ve cleaned it up. There is no debt on it.” On new stores: “every vintage seems to be doing better than previous vintages… we haven’t seen anything like that.”' },
+        { q:'Is the gross-margin trend now structurally up?', analyst:'Rodrigo Alcantara · UBS', theme:'Gross margin: dollar margin over percent',
+          qFull:'The roadshow base case was a flattish gross margin; has your view changed given the upside surprise, and could margins now trend structurally up?',
+          a:'<b>Anthony Hatoum:</b> “The increase in gross margin in this first quarter should be seen as a normal fluctuation in our business. Don’t read too much into it. It’s a very dynamic metric… we aim to pass these savings to our customers, which then will generate more traffic, more sales, and ultimately more cash flows. Just look at the long-term trend.”' },
+        { q:'Mature-store performance and the network effect', analyst:'Joseph Giordano · JPMorgan', theme:'Same-store sales: volume and mix, not price',
+          qFull:'How are mature stores of five or more years trending on checkouts, basket and ticket, and what is the network effect?',
+          a:'<b>Anthony Hatoum:</b> “We haven’t seen a slowdown in growth of our older vintages… the fundamental driver is a continued improvement in the value offered to customers… eventually, theoretically, you will reach a point where you’ve touched every customer and penetrated every wallet. I think we’re far away from that point.” Irrepetibles “have sold bicycles, and televisions, and clothes, and shoes.” On basket: “as more people buy private labels, which are priced 20% to 30% lower, the peso basket size is pulled downwards… what you’ll see more is more frequency and more tickets.”' },
+        { q:'Are competitors copying hard discount, and organic versus M&A', analyst:'Gulrez Arshad · private investor', theme:'Hard-discount competition (Neto, FEMSA)',
+          qFull:'Are any competitors adopting your hard-discount model, and are you committed to organic growth or open to M&A?',
+          a:'<b>Anthony Hatoum:</b> “At least this quarter, we haven’t seen anything notable in the market, neither on pricing or in terms of change of strategy of any of our direct competitors… It’s hard to catch up to somebody who’s already scaled up.” On M&A: “today, it’s organic growth… the scarce element is talent. So unless you’re buying talent in your M&A, it’s a low-probability event.”' },
+        { q:'Easter timing, the source of the gross-margin gain, and fresh pilots', analyst:'Álvaro García · BTG', theme:'Gross margin: dollar margin over percent',
+          qFull:'Did the Easter shift help you less than the hypermarkets? What exactly drove the gross-margin gain from sales mix? And what are you seeing in the fresh pilots?',
+          a:'<b>Anthony Hatoum:</b> Easter: “these shifts do see an impact, but in terms of a full quarter, it’s not going to be significant.” Margin: “we don’t drive for gross margin. It’s always a consequence of this very dynamic process… if there is a trend, it would be to pass on value to our customers.” Pilots: “We won’t comment on pilots and tests… at any point of time, there is about 50 to 60 SKUs that are being tested in 3B… those that are not successful, you will never see on the shelf.”' },
+        { q:'Efficiency projects and share-based pay at about 1% of sales', analyst:'Alexander Namioka · Morgan Stanley', theme:'Reported vs adjusted EBITDA (the SBC wedge)',
+          qFull:'Is there a new project to offset higher labor costs, and does share-based pay stay around 1% of sales?',
+          a:'<b>Anthony Hatoum:</b> the current expense is the legacy option plan, which “over time would trail off.” The new 2024 option plan “will only kick in in December of this year… the strike prices on this plan are going to be set to market, and any costs due to this plan are going to be 100% tied to the increase in value creation.” On efficiency: “At any point in time, there is at least two to three initiatives going on” (truck maintenance, routing, ordering systems); the lidless boxes save “hundreds and hundreds of hours of labor costs.” “It’s part of our DNA.”' },
+        { q:'The next milestone', analyst:'Héctor Maya · Scotiabank', theme:'Runway: how many stores Mexico can hold',
+          qFull:'What is the next milestone you have in mind for the company?',
+          a:'<b>Anthony Hatoum:</b> “It might sound boring, but we’re just going to do exactly what we’ve been doing, just better and faster… nothing changes in our business model, nothing changes in the way we operate.”' },
+        { q:'Private-label share of the sales mix', analyst:'Santiago Alvarez · Citi', theme:'Private-label penetration',
+          qFull:'Private label was around 45% in 2023; what is the trend in the first quarter and going forward?',
+          a:'<b>Anthony Hatoum:</b> “You can expect the trend of private label penetration to continue to increase upwards. Just take Aldi as a reference, where their private label penetration is about 90%+… We haven’t reported this number, and we don’t expect to report it on a quarterly basis… maybe next quarter we’ll give an indication of where we stand versus end of year 2023.”' },
+        { q:'Will the SKU count rise as the model evolves?', analyst:'Ignacio Arnau · Bestinver', theme:'Assortment: new categories, fresh and Irrepetibles',
+          qFull:'You keep about 800 SKUs and swap one out for each new one; is there any chance that number increases?',
+          a:'<b>Anthony Hatoum:</b> “Our stores and our business model is designed to handle more, but we’re extremely disciplined in deciding what the more is. If it’s a completely new category, and it meets our criteria, which are high rotation, high value for money, then we can make use of that extra space… We put in one, and we look at the weakest SKU, and we take it out.” On the peso: “we have lived through at least two devaluations… the market readjusts after a period of roughly 12 to 18 months.”' }
+      ],
+      highlights:[
+        { tag:'thesis', band:'logged', head:'Gross margin is a consequence, not a target; the gain was mostly passed on to customers.',
+          detail:'<p>Hatoum to Alcantara and García: the 80bps rise is “a normal fluctuation,” from scale and supplier terms; pricing is set SKU by SKU through continuous elasticity testing.</p>' },
+        { tag:'dots', band:'logged', head:'Legacy option charge trails off; the 2024 plan starts in December and is struck at market.',
+          detail:'<p>Hatoum to Namioka: costs under the new plan are tied to value creation; the share-based charge was about 1% of sales in the quarter. The later Liquidity Event Plan changed that picture from 3Q25.</p>' },
+        { tag:'curious', band:'logged', head:'Private-label share is not reported quarterly; Aldi (90%+) is the reference.',
+          detail:'<p>Hatoum to Alvarez. The company later disclosed 47% for 2023, 54% for 2024 and 58% for 2025.</p>' },
+        { tag:'tone', band:'logged', head:'Runway: no less than 12,000 stores, later 14,000 and up to 20,000 on later calls.',
+          detail:'<p>Hatoum in the prepared remarks.</p>' }
+      ],
+      newQuestions:[
+        {n:'Do openings and same-store sales keep pace with the 380 to 420 and +28% to +32% guide?', landed:{q:'Q2 2024', rank:1}},
+        {n:'Does gross margin hold or fluctuate back?', landed:{q:'Q2 2024', rank:2}},
+        {n:'What do new distribution centers add to expenses?', landed:{q:'Q2 2024', rank:3}},
+        {n:'When is private-label penetration first reported?', landed:{q:'Q2 2024', rank:4}}
+      ]
+    } }
+];

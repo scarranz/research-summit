@@ -130,13 +130,13 @@ function treeHTML(root, showNames){
 var OWN_CLASSES = [
   ['Class A', '62.6M', '1', 'Listed on the NYSE — the public float'],
   ['Class B', '5.2M', '15', '100% founder (Bolton Partners) — super-voting'],
-  ['Class C', '50.0M', '1', 'Pre-IPO holders — convert to Class A on sale'],
+  ['Class C', '50.0M', '1', 'Pre-IPO holders (as of Mar 31, 2026). All Class C converted one-to-one into Class A at the Aug 6, 2026 lock-up expiry (3Q26 release)'],
 ];
 // [block, economic %, voting %, color]
 var OWN_BLOCKS = [
-  ['Founder & insiders (18)',      15.2, 47.6, '#E1251B'],
-  ['Quilvest Capital (PE)',         9.8,  6.0, '#F59E0B'],
-  ['Index & active institutions',  22.7, 14.0, '#0E8F8F'],
+  ['Founder & insiders (18)',      15.2, 47.6, '#2a78d6'],
+  ['Quilvest Capital (PE)',         9.8,  6.0, '#eb6834'],
+  ['Index & active institutions',  22.7, 14.0, '#1baf7a'],
   ['Other public float',           52.3, 32.4, '#9AA3AE'],
 ];
 // [holder, role, economic %, voting %]
@@ -150,7 +150,7 @@ var OWN_CAP = [
   ['Wasatch Advisors',           'Institutional', 2.9, 1.8],
   ['Orbis',                      'Institutional', 2.8, 1.7],
 ];
-var OWN_SBC = [['2023',385],['2024',523],['2025',2930],['2026',2391],['2027',882],['2028',216],['2029',50]];
+var OWN_SBC = [['2023',385],['2024',523],['2025',2930],['2026',2376],['2027',879],['2028',215],['2029',50]];
 var OWN_SBC_EST = 3; // first projected index (2026E)
 
 function ownershipBody(c){
@@ -191,7 +191,63 @@ function ownershipBody(c){
     }).join('') + '</tbody></table>';
   h += '<div class="ov-foot">Beneficial ownership per FY2025 Form 20-F (Item 7), as of Mar 31, 2026, plus 13G filings. Economic % is derived (shares ÷ 117.9M total) and approximate; Capital Group = combined CRMC divisions. <b>Offerings & lock-ups:</b> IPO Feb 2024 (US$17.50); a Feb 2025 follow-on (US$28.25) was mostly a secondary sell-down by pre-IPO holders; the liquidity lock-up on Class B/C ends <b>Jul 8, 2026</b>.</div>';
 
-  // 4 — Dilution & SBC
+  return h;
+}
+
+
+// ─── Track Record: leaders rated on what they have actually built at 3B ───────────────────────────────────────────
+// PROPOSED by Claude from the documented record (20-F bios, earnings calls and releases); the ratings are an editorial read
+// for the analyst to confirm or change (PROFILE_PLAYBOOK §15 MG-TRACK), not a Summit output. `r`: 'g' value creator, 'a' mixed / unproven.
+var TRACK = [
+  { id:'hatoum', r:'g', name:'K. Anthony Hatoum', role:'Founder, Chairman & CEO', since:'2004',
+    built:'Took 3B from a first store in 2005 to <b>3,765 stores and 25 distribution centers</b> (Sep 2026) and to a NYSE IPO in Feb 2024; revenue reached Ps.78B in FY2025 with growth self-funded by negative working capital.',
+    ctx:'Investment banking and private equity (J.P. Morgan, McKinsey, Merrill Lynch PE), where he covered the Turkish hard-discounter BİM that 3B is modeled on.',
+    read:'Annual guides on stores, revenue and same-store sales have been met or beaten since the IPO, and he sets the pricing and format discipline (SKU count, private label, 100% upgraded format).' },
+  { id:'pizzuto', r:'g', name:'Eduardo Pizzuto', role:'Chief Financial Officer & IR', since:'2007',
+    built:'Runs the reporting and guidance that has been beaten on stores (2024, 2025), revenue growth and same-store sales (2025), and the working-capital model behind <b>Ps.10.2B of negative working capital</b> (Jun 2026).',
+    ctx:'Nestlé Purina before 3B; MBA from SMU.',
+    read:'Consistent, specific guidance and clear disclosure of the SBC and IFRS 16 effects; the open question is the reported-vs-adjusted EBITDA gap, which he explains each quarter.' },
+  { id:'apalategui', r:'g', name:'Diego Apalategui', role:'Director of Sales & Operations', since:'2004',
+    built:'Leads the store network that opened <b>574 net new stores in 2025</b> and posted <b>+18.3% same-store sales</b>, with sales expenses falling to 9.8% of revenue in 3Q26.',
+    ctx:'Helped scale Argentina\'s EKI hard-discount chain from 6 to 250 stores.',
+    read:'Attribution inside the team is shared, but store operations are the line where results are most visible and have consistently beaten plan.' },
+  { id:'davila', r:'g', name:'Alejandro Dávila', role:'Director of Real Estate', since:'2022',
+    built:'Real estate is the pacing item for openings: <b>396 (2023), 484 (2024), 574 (2025)</b>, with a 590-630 guide for 2026; management reports no real-estate constraint.',
+    ctx:'Previously General Manager of OXXO Colombia.',
+    read:'The opening cadence rose every year of his tenure; the lumpiness of openings within a year (about 40% of one quarter\'s openings in its last month) is a known feature.' },
+  { id:'suarez', r:'a', name:'Javier Suárez', role:'Director of Human Resources', since:'2004',
+    built:'Staffing for a network of <b>29,202 employees</b> (Dec 2025); store labor fell as a share of revenue through the 2026 minimum-wage increase.',
+    ctx:'McDonald\'s Argentina; operations manager at EKI.',
+    read:'The labor-leverage outcome is visible, but HR\'s contribution is not separable from store operations, so the read is unproven on its own. The 2027 work-week reduction is the next test.' },
+  { id:'grattarola', r:'a', name:'Pablo Grattarola', role:'Director of Information Technology', since:'~2 years (20-F)',
+    built:'Leads the new ERP, a three-year build about halfway done, with phase one in testing in 2Q26.',
+    ctx:'Former CIO of Banco Santander Uruguay; began at AB InBev.',
+    read:'Too early: the deliverable (ERP rollout by region) has not landed yet.' },
+];
+function trackBody(c){
+  var css = '<style>.tr-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}@media(max-width:760px){.tr-grid{grid-template-columns:1fr}}' +
+    '.tr-card{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w)}.tr-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}' +
+    '.tr-n{font-size:13px;font-weight:800;color:var(--navy)}.tr-chip{font-size:10px;font-weight:800;border:1px solid;border-radius:999px;padding:2px 9px;text-transform:uppercase;letter-spacing:.03em}' +
+    '.tr-g{color:#1F9D55;border-color:#1F9D5533;background:#1F9D5512}.tr-a{color:#B7791F;border-color:#B7791F33;background:#B7791F12}' +
+    '.tr-role{font-size:11px;color:var(--mu);margin:3px 0 8px}.tr-p{font-size:12px;color:var(--navy);line-height:1.55;margin:0 0 6px}.tr-p b.tr-k{font-weight:800}' +
+    '.tr-more{margin-top:6px}.tr-more summary{cursor:pointer;font-size:11px;font-weight:700;color:#2557D6}.tr-more div{font-size:12px;color:var(--navy);line-height:1.55;margin-top:5px}' +
+    '.tr-leg{display:flex;gap:12px;font-size:11px;color:var(--mu);margin:2px 0 4px}.tr-bench{border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;background:#F7F9FB;font-size:12px;color:var(--navy);line-height:1.55}</style>';
+  var cards = TRACK.map(function(t){
+    return '<div class="tr-card"><div class="tr-h"><span class="tr-n">' + esc(t.name) + '</span><span class="tr-chip tr-' + t.r + '">' + (t.r === 'g' ? 'Value creator' : 'Mixed / unproven') + '</span></div>' +
+      '<div class="tr-role">' + esc(t.role) + ' · at Tiendas 3B since ' + esc(t.since) + '</div>' +
+      '<p class="tr-p"><b class="tr-k">At 3B:</b> ' + t.built + '</p><p class="tr-p"><b class="tr-k">Context:</b> ' + esc(t.ctx) + '</p>' +
+      '<details class="tr-more"><summary>Full track record ›</summary><div><b>Net read.</b> ' + esc(t.read) + '</div></details></div>';
+  }).join('');
+  return css + '<p class="ov-lede" style="margin-top:0">Management rated on what each leader has actually built at 3B. <b>Proposed ratings, pending analyst confirmation.</b></p>' +
+    '<div class="tr-leg"><span><b style="color:#1F9D55">Value creator</b>: a documented result at 3B</span><span><b style="color:#B7791F">Mixed / unproven</b>: not separable from the team or too early</span></div>' +
+    '<div class="tr-grid">' + cards + '</div>' +
+    '<div class="tr-bench"><b>The bench, in one line.</b> Three purchasing directors (Bermúdez since 2018, Domene 2024, Fernández 2025) and a General Counsel (2025) are recent; gross margin reached 16.8% in 2Q26 on purchasing scale, but the credit is not separable yet.</div>' +
+    '<div class="ov-foot">Ratings are an editorial read, not a Summit output, proposed from the FY2025 Form 20-F (Item 6), the earnings calls and releases. Executive tenure as of the FY2025 20-F.</div>';
+}
+
+// Governance & SBC: the dilution / stock-based-compensation block, split from Ownership.
+function govBody(c){
+  var h = '';
   h += '<div class="ov-sec-h ovt-store-h">Dilution & stock-based compensation</div>';
   h += '<p class="ov-lede">Share-based compensation spiked around the IPO and then fades fast. Shares grew from ~84M (pre-IPO) to ~118M; an option overhang of ~51M (mostly legacy 2004-plan Class C options) implies ~169M fully diluted (~30%).</p>';
   var sbcMax = 2930;
@@ -201,7 +257,7 @@ function ownershipBody(c){
         '<div class="own-sbc-bar"><div class="own-sbc-f'+(i>=OWN_SBC_EST?' own-sbc-est':'')+'" style="width:'+(s[1]/sbcMax*100).toFixed(1)+'%"></div></div>'+
         '<span class="own-sbc-v">'+s[1].toLocaleString()+'</span></div>';
     }).join('') + '</div>';
-  h += '<div class="ov-foot">SBC (Ps. MM): Ps.2,930M in 2025 and Ps.2,391M in 2026E, tapering to Ps.50M by 2029E — front-loaded IPO grants that fade (from ~3.7% to ~0.02% of revenue). This non-cash charge drove the FY2025–26 GAAP net loss; net income turns positive from 2027. The Summit model holds shares roughly flat at ~115M (assumes minimal net dilution after the taper; the 2026 evergreen plan increase was set to zero). Sources: FY2025 Form 20-F; Summit DCF model.</div>';
+  h += '<div class="ov-foot">SBC (Ps. MM): Ps.2,930M in 2025 and Ps.2,376M in 2026E, tapering to Ps.50M by 2029E. The step-up is the Liquidity Event Plan (7.5M Class C shares granted June 2025, quarterly vesting over three years, graded recognition: higher early, decreasing over time), so the charge fades on schedule. It is non-cash and already in the fully diluted count; it drove the FY2025 and 9M26 IFRS net loss. The by-program schedule and the share-count table are in Bottom Line ▸ General. Sources: FY2025 Form 20-F; 3Q26 earnings release (Appendix 2).</div>';
 
   return h;
 }
@@ -215,7 +271,6 @@ function mgmtBody(c){
   h += '<div class="mgmt-modes">'+
     '<button type="button" class="mgmt-mode active" data-mg="corp">Corporate</button>'+
     '<button type="button" class="mgmt-mode" data-mg="regional">Regional</button>'+
-    '<button type="button" class="mgmt-mode" data-mg="ownership">Ownership &amp; Dilution</button>'+
   '</div>';
 
   h += '<div class="mgmt-pane" data-mg="corp">'+
@@ -227,8 +282,6 @@ function mgmtBody(c){
     treeHTML(REGIONAL, false)+
     '<div class="ov-foot">How a single autonomous region is organized — positions only; the same template repeats across every region. Each region is led by a Regional Director and contains its full functional stack (HR, real estate, logistics, IT, regional purchasing &amp; accounting), pairing store operations with its own distribution center and truck fleet. Disclosed spans: ~3 Zone Managers per region (40–80 stores each) → District Managers (5–8 stores each) → Store Managers (a store runs with 1 manager, 2 assistant managers and ~4 sales associates). The DC Manager reports directly to the Regional Director. Source: FY2025 Form 20-F (Item 4).</div>'+
   '</div>';
-
-  h += '<div class="mgmt-pane" data-mg="ownership" hidden>'+ownershipBody(c)+'</div>';
 
   // CV modal (hidden until a leader is clicked).
   h += '<div class="mgmt-modal" hidden>'+
@@ -310,4 +363,4 @@ function initMgmt(root){
   }
 }
 
-export var bbbManagement = { body: mgmtBody, init: initMgmt };
+export var bbbManagement = { body: mgmtBody, own: ownershipBody, gov: govBody, track: trackBody, init: initMgmt };

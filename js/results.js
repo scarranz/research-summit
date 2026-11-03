@@ -46,6 +46,8 @@ import { tbbbResults } from './results-data/tbbb.js';
 import { dhrResults } from './results-data/dhr.js';
 import { dhrSetup } from './results-data/dhr-setup.js';
 import { tbbbSetup } from './results-data/tbbb-setup.js';
+import { tbbbBl } from './results-data/tbbb-bl.js';
+import { tbbbTl } from './results-data/tbbb-tl.js';
 import { snResults } from './results-data/sn.js';
 import { snSetup } from './results-data/sn-setup.js';
 import { tsmResults } from './results-data/tsm.js';
@@ -83,6 +85,8 @@ var RESULTS_DATA = {
   LYFT_SETUP: lyftSetup,
   TBBB: tbbbResults,
   TBBB_SETUP: tbbbSetup,
+  TBBB_BL: tbbbBl,
+  TBBB_TL: tbbbTl,
   DHR: dhrResults,
   DHR_SETUP: dhrSetup,
   SN: snResults,

@@ -1119,6 +1119,23 @@ function ubPeerMultBody(c){
   return h;
 }
 // ─── Pane: Mobility (the rides business) ─────────────────────────────────────
+// Misc ▸ Regulation (B2 #20, moved out of Top Line ▸ Segments ▸ Mobility on 2026-11-03).
+function ubRegulationBody(){
+  var h='';
+  h+=sec('Regulation & Driver Classification', '<div class="ir-diagram-cap" style="font-size:12px;color:var(--mu);margin:0 0 8px">The core question — <b>do drivers stay contractors?</b> — is largely settled in Uber\u2019s favor. Tap any card for the detail.</div><div class="ir-reg">'+REGV.map(function(r,i){return regCard(r,i);}).join('')+'</div>');
+  h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
+  return h;
+}
+// The legacy pane styles (Delivery Hero map, regulation cards, …) lived in the old Overview's <style>; the Deep Dive
+// still needs them for the moved panes until F-FINAL folds them into css/overview.css.
+function ubLegacyStyle(){
+  var h=stdOverviewBody(_co||{}); var j=h.indexOf('</style>'); if(h.indexOf('<style>')!==0 || j<0) return '';
+  // keep only the rules of the moved Deep Dive panes: drop the old Overview / nav rules, which the guide's CSS now owns
+  var css=h.slice(7,j), out=[], depth=0, buf='';
+  for(var i=0;i<css.length;i++){ var ch=css[i]; buf+=ch; if(ch==='{') depth++; else if(ch==='}'){ depth--; if(depth===0){ out.push(buf); buf=''; } } }
+  var DROP=/^\s*(@media[^{]*\{\s*)?\.(stdkf|q2|stdp|ov-lede|mm-|acc|famd|ov-row|mg-|ubsc|ov-collap|dd-tab|dd-pane|ov-foot|ov-callout)/;
+  return '<style>'+out.filter(function(r){ return !DROP.test(r); }).join('')+'</style>';
+}
 function mobilityBody(c){
   var h='<style>'+
     '.usc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 8px}'+
@@ -1179,7 +1196,6 @@ function mobilityBody(c){
     '</div>'+
     '<div class="ov-fynote" style="margin-top:12px"><b>Evidence it’s working:</b> AV mobility trips <b>>10× YoY</b> (Q1 2026), 30+ partners, 15+ cities targeted by end-2026, ~30% higher trips/vehicle on Uber-managed AV vs AV-only — and management reports <b>"no effect of the Waymo launches on our overall business."</b></div>');
   // Supplier ecosystem is covered under Bottom Line ▸ Suppliers; insurance cost/float under Insurance & FCF.
-  h+=sec('Regulation & Driver Classification', '<div class="ir-diagram-cap" style="font-size:12px;color:var(--mu);margin:0 0 8px">The core question — <b>do drivers stay contractors?</b> — is largely settled in Uber\u2019s favor. Tap any card for the detail.</div><div class="ir-reg">'+REGV.map(function(r,i){return regCard(r,i);}).join('')+'</div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
 }
@@ -3862,7 +3878,7 @@ function deepDiveHtml(c){
   // (docs/profiles/UBER.md §5); sub-tabs without content are added when their unit is built (rule 5).
   function st(list){ return '<div class="ovt-subtabs">'+list.map(function(x,i){ return '<button type="button" class="ovt-subtab'+(i?'':' active')+'" data-ovst="'+x[0]+'">'+x[1]+'</button>'; }).join('')+'</div>'+
     list.map(function(x,i){ return '<div class="ovt-subpane" data-ovst="'+x[0]+'"'+(i?' hidden':'')+'>'+x[2]+'</div>'; }).join(''); }
-  var h='<div class="ov ov-uber ov-uber-dd" data-brand="UBER">';
+  var h='<div class="ov ov-uber ov-uber-dd" data-brand="UBER">'+ubLegacyStyle();
   h+='<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
       '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
@@ -3908,6 +3924,7 @@ function deepDiveHtml(c){
   h+='<div class="dd-pane" data-dd="misc" hidden>'+st([
       ['comp','Competitive Position',ubIndustryBody(c)],
       ['insurance','Insurance & Balance Sheet',insuranceBody()+ubBalanceBody(c)],
+      ['regulation','Regulation',ubRegulationBody()],
       ['manda','M&A and Delivery Hero',historyStoryBody()+deliveryHeroBody()],
       ['tam','TAM',ubTamBody(c)] ])+'</div>';
   h+='</div>';

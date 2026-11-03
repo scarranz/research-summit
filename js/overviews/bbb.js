@@ -16,6 +16,7 @@ import { bbbSensitivity } from './bbb-sensitivity.js';
 import { bbbBridge } from './bbb-bridge.js';
 import { tbbbCeHtml, tbbbCeWire, tbbbCeBuild, tbbbCePop } from './tbbb-ce.js';   // Evolution ▸ Earnings (playbook machinery + ./tbbb-ce-data.js)
 import { bbbSbc } from './bbb-sbc.js';
+import { tbbbTargetMult } from './tbbb-target-multiple.js';   // Valuation ▸ Target Multiple / PEG (Summit model, frozen)
 import { submitsHtml, initSubmits } from '../submits.js';   // Valuation ▸ Submit History (engine + js/submits-data/tbbb.js)
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 
@@ -1417,10 +1418,12 @@ function ddHtml(c){
   h += '<div class="dd-pane" data-dd="valuation" hidden>'+
     '<div class="dd-subtabs">'+
       '<button type="button" class="dd-subtab active" data-dds="vapeers">Peers</button>'+
+      '<button type="button" class="dd-subtab" data-dds="vatm">Target Multiple</button>'+
       '<button type="button" class="dd-subtab" data-dds="vasubs">Submit History</button>'+
       '<button type="button" class="dd-subtab" data-dds="vasens">Sensitivity Analysis</button>'+
     '</div>'+
     '<div class="dd-subpane" data-dds="vapeers">'+bPeerScatter('va')+'</div>'+
+    '<div class="dd-subpane" data-dds="vatm" hidden>'+tbbbTargetMult.body()+'</div>'+
     '<div class="dd-subpane" data-dds="vasubs" hidden>'+submitsHtml('TBBB')+'</div>'+
     '<div class="dd-subpane" data-dds="vasens" hidden>'+bbbSensitivity.body(c)+'</div>'+
   '</div>';
@@ -1468,6 +1471,7 @@ function ddBuildSub(root, key){
   else if (key === 'storehist') requestAnimationFrame(function(){ buildStoresChart(); setupStoreSlider(); buildVsChart(); buildSSSChart(); });
   else if (key === 'uecon')     requestAnimationFrame(function(){ buildUeChart(); });
   else if (key === 'vapeers')   requestAnimationFrame(function(){ wireBScatters(root); });
+  else if (key === 'vatm')      requestAnimationFrame(function(){ tbbbTargetMult.init(root); });
   else if (key === 'vasubs')    requestAnimationFrame(function(){ initSubmits(root, 'TBBB'); });
   else if (key === 'vasens')    requestAnimationFrame(function(){ bbbSensitivity.init(root); });
   else if (key === 'mgteam')    requestAnimationFrame(function(){ bbbManagement.init(root); });

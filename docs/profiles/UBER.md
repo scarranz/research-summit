@@ -12,7 +12,7 @@
 | Analista responsable | SAB (Santiago Alvarez) |
 | Inicio | 2026-11-03 |
 | Plazo | **3T26 se reporta el 2026-11-04** (mañana). SAB eligió "todo de una vez" (2026-11-03); por el plazo, EV-RES-DATA → EV-SET se adelantan dentro de lo que permiten las dependencias (§2.3) |
-| Avance | 0 de M unidades aprobadas |
+| Avance | 43 de 45 unidades aprobadas (falta EV-POST con el 3T26 del 2026-11-04 y F-FINAL) |
 
 ## 1. Inventario de datos (F0)
 
@@ -124,7 +124,11 @@ Cuadre contra el comunicado (vía `act` del dataset de Results, que cuadra con c
 | MG-OWN | Management ▸ Ownership | ✅ | 2026-11-03 | SAB | 8b8fab9 | tabla de 13 insiders (DEF 14A, 2-mar-2026) + >5% + Fiscal.ai en vivo; sin archivo HDS → sin toggle de top holders |
 | MG-GOV | Management ▸ Governance & SBC | ✅ | 2026-11-03 | SAB | 8b8fab9 | 4 KPIs + tabla de gobierno + gráfica de SBC con acciones de los balances |
 | MG-TRACK | Management ▸ Track Record | ✅ | 2026-11-03 | SAB | 8b8fab9 | 7 tarjetas SIN calificaciones (SAB: quitarlas, como GOOGL); targets 3 años, turnaround, capital allocation |
-| MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab aprobada) | ⬜ | | | | |
+| MISC-comp | Misc ▸ Competitive Position | ✅ | 2026-11-03 | SAB | 885011a | arena map + rival map (B2 #37–#38) |
+| MISC-insurance | Misc ▸ Insurance & Balance Sheet | ✅ | 2026-11-03 | SAB | 885011a | B2 #44–#51, #87–#88 |
+| MISC-regulation | Misc ▸ Regulation | ✅ | 2026-11-03 | SAB | 885011a | sacada de Top Line ▸ Mobility (B2 #20) |
+| MISC-manda | Misc ▸ M&A and Delivery Hero | ✅ | 2026-11-03 | SAB | 885011a | B2 #73–#82 |
+| MISC-tam | Misc ▸ TAM | ✅ | 2026-11-03 | SAB | 885011a | B2 #34–#36 |
 | F-FINAL | Cierre y entrega | ⬜ | | | | |
 
 (Modo B: agregar B1 — inventario de contenido existente y B2 — mapa de reubicación después de F0.)
@@ -505,3 +509,6 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 - Fuentes: SEC EDGAR XBRL CIK 1543151 (FY2019–FY2025, 1Q23–2Q26), 10-K FY2025 (Notas 10 y 13), 8-K 12-ene-2026 (recast de Segment Operating Income), comunicados 4T25 y 2T26, DEF 14A 2026, BBG_CONSENSUS.txt (9/10/2026), Summit 2026-08-05 congelado, notas a mano de SAB (UBER.pdf).
 - Autoauditoría (harness, rAF shim): 23 sub-tabs pintan, 0 errores. Live market data sin sesión → "Live data pending" (esperado).
 - Cambios pedidos: quitar calificaciones de Track Record (hecho).
+### 2026-11-03 · MISC (comp, insurance, regulation, manda, tam) — APROBADO
+- Qué se mostró: las 5 sub-tabs con el contenido anterior movido; Regulation sacada de Mobility; estilos de los paneles viejos recuperados (`ubLegacyStyle`) sin tocar el Overview.
+- Pendiente para F-FINAL: pasar esos estilos a `css/overview.css` y quitar el verde de Uber dentro de estos paneles; borrar el código muerto de `uber.js` (maquinaria `ce*` vieja, Overview viejo, UBER_VAL sin uso).

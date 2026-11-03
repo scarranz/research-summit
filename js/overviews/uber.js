@@ -1,3 +1,5 @@
+import { uberBlGeneralHtml, uberBlGeneralBuild, uberBlSegmentsHtml, uberBlSegmentsBuild } from './uber-bl.js';   // BL-GEN-1…5, BL-SEG
+import { uberSplcBody, uberSplcBuild, uberSplcPop } from './uber-splc.js';   // BL-SPLC
 import { uberHistMult } from './uber-histmult.js';   // VA-HIST
 import { uberTargetMult } from './uber-target-multiple.js';   // VA-TM
 import { submitsHtml, initSubmits } from '../submits.js';   // VA-SUB (engine + js/submits-data/uber.js)
@@ -3877,9 +3879,9 @@ function deepDiveHtml(c){
       ['segcus','Customers',segmentsCustomersHtml('UBER')+ddMore('Uber One and the customer base — the earlier analysis (moved from the old Customers tab)',ubCustomersBody(c))] ])+'</div>';
   // BOTTOM LINE — General (#52) · Segments (#39–#40) · Supply Chain (#42–#43)
   h+='<div class="dd-pane" data-dd="bottomline" hidden>'+st([
-      ['margins','General',ubMarginsBody(c)],
-      ['segments','Segments',unitEconBody(c)],
-      ['supplychain','Supply Chain',suppliersBody(c)] ])+'</div>';
+      ['margins','General',uberBlGeneralHtml()],
+      ['segments','Segments',uberBlSegmentsHtml()+ddMore('Unit economics — the $10 trip and the delivery order (moved from the old Unit Economics tab)',unitEconBody(c))],
+      ['supplychain','Supply Chain',uberSplcBody()] ])+'</div>';
   // EVOLUTION — Earnings (Setup · Post-Results · Notes) · Results (+ #67/#68 merged) · Estimates.
   // The IR/EDGAR banner and the intro paragraph are retired (B2 #53, playbook §12 EV-SET).
   h+='<div class="dd-pane" data-dd="evolution" hidden>'+st([
@@ -4161,8 +4163,9 @@ function buildSub(root, group, key){
     else if(key==='segoth') requestAnimationFrame(function(){ initSegmentsOther(root, 'UBER'); });
     else if(key==='segcus'){ requestAnimationFrame(function(){ initSegmentsCustomers(root, 'UBER'); }); buildUberOneCharts(); }
   } else if(group==='bottomline'){
-    if(key==='segments')      buildMobilityCharts();  // take-rate lines (B2 #41 moves to TL-SEG with its unit)
-    else if(key==='margins')  buildUbMargins();
+    if(key==='margins') requestAnimationFrame(function(){ uberBlGeneralBuild(root); });
+    else if(key==='segments'){ requestAnimationFrame(function(){ uberBlSegmentsBuild(root); }); buildMobilityCharts(); }
+    else if(key==='supplychain') requestAnimationFrame(uberSplcBuild);
   } else if(group==='evolution'){
     if(key==='earnings') uberCeBuild(root);
     else if(key==='results'){ requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'UBER'); buildModelTab(); }); }
@@ -4249,6 +4252,7 @@ function wireModal(root){
     var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
     if(kind==='ce'){ return uberCePop(id); }
     if(kind==='prod'){ return uberOvPop('prod', id); }
+    if(kind==='splc'){ return uberSplcPop(id); }
     if(kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
     if(kind==='trip'){ var s=TRIP_FLOW[+id]; return s?{t:'Step '+(+id+1)+' — '+s.t,h:s.d}:null; }
     if(kind==='aleka'){ var a=ALEKA_CHAIN[+id]; return a?{t:'Aleka — '+a.t,h:a.d}:null; }

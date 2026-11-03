@@ -31,6 +31,7 @@ OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "js", "overviews")
 # Per-ticker segment id -> friendly name (BBG SEG ids are company-specific). Extend per company.
 SEGNAMES = {
   'AMZN': {'227430':'na', '227462':'intl', '227465':'aws'},
+  'UBER': {'355656':'mobility', '355655':'delivery', '355667':'freight'},
 }
 
 QA = ['fq-4','fq-3','fq-2','fq-1','fq0']         # actual quarters (oldest→newest, fq0=latest)

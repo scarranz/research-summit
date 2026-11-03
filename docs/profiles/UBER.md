@@ -90,20 +90,20 @@ Cuadre contra el comunicado (vía `act` del dataset de Results, que cuadra con c
 | B2 | Mapa de reubicación | ✅ | 2026-11-03 | SAB | | 96 destinos; 9 fusiones aprobadas; Misc = comp · insurance · regulation · M&A/DH · TAM |
 | F0-SM | Mapa de métricas Summit | ✅ | 2026-11-03 | SAB | | 67 etiquetas; 4 dudas abiertas sin uso |
 | F1 | Esqueleto + vista previa | ✅ | 2026-11-03 | SAB | | 6 secciones, 18 sub-tabs; paneles enteros en su destino B2; Pillars visible otra vez (Ratings) |
-| OV-1 | Overview ▸ Key Facts | ⬜ | | | | |
-| OV-2 | Overview ▸ Descripción | ⬜ | | | | |
-| OV-3 | Overview ▸ Cuadrante 2×2 | ⬜ | | | | |
-| OV-4 | Overview ▸ How it makes money | ⬜ | | | | |
-| OV-5 | Overview ▸ Products & platforms | ⬜ | | | | |
-| OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
-| OV-7 | Overview ▸ Timeline | ⬜ | | | | |
-| OV-F | Overview ▸ Pie de fuentes | ⬜ | | | | |
+| OV-1 | Overview ▸ Key Facts | ✅ | 2026-11-03 | SAB | fc50e3c | market cap en vivo con fecha / "unavailable"; 10 celdas |
+| OV-2 | Overview ▸ Descripción | ✅ | 2026-11-03 | SAB | fc50e3c | sin cifras, del 10-K Item 1 |
+| OV-3 | Overview ▸ Cuadrante 2×2 | ✅ | 2026-11-03 | SAB | fc50e3c | sin verde de Uber; cuotas de ingreso FY2025 |
+| OV-4 | Overview ▸ How it makes money | ✅ | 2026-11-03 | SAB | fc50e3c | segmentos y región (10-K Nota 13), ambas cuadran con 52,017 |
+| OV-5 | Overview ▸ Products & platforms | ✅ | 2026-11-03 | SAB | fc50e3c | 10 familias, sin emojis |
+| OV-6 | Overview ▸ Competitors (peer map) | ✅ | 2026-11-03 | SAB | fc50e3c | 5 peers (UBER, DASH, CART, LYFT, GRAB); denominadores 10-K/20-F XBRL; forward BBG solo UBER/LYFT; múltiplos en vivo |
+| OV-7 | Overview ▸ Timeline | ✅ | 2026-11-03 | SAB | fc50e3c | timeline movido sin cambios a uber-ov-timeline.js |
+| OV-F | Overview ▸ Pie de fuentes | ✅ | 2026-11-03 | SAB | fc50e3c | un solo pie |
 | EV-RES-DATA | Dataset de Results (números) | ✅ | 2026-11-03 | SAB | | estMatrix.cons v2 (30 snapshots, último 09-10); cons planos sincronizados; Summit anual 2026 de op. inc./EPS con nota |
 | EV-RES | Evolution ▸ Results | ⬜ | | | | |
-| TL-GEN | Top Line ▸ General | ⬜ | | | | |
-| TL-SEG | Top Line ▸ Segments | ⬜ | | | | |
-| TL-OTH | Top Line ▸ Other | ⬜ | | | | |
-| TL-CUS | Top Line ▸ Customers | ⬜ | | | | |
+| TL-GEN | Top Line ▸ General | ✅ | 2026-11-03 | SAB | fc50e3c | motor segments.js; cita 10-K Item 1 |
+| TL-SEG | Top Line ▸ Segments | ✅ | 2026-11-03 | SAB | fc50e3c | Mobility/Delivery/Freight con sells/products/kpiNote; frrev nuevo; análisis anterior en colapsable |
+| TL-OTH | Top Line ▸ Other | ✅ | 2026-11-03 | SAB | fc50e3c | geografía región y país (10-K Nota 13) |
+| TL-CUS | Top Line ▸ Customers | ✅ | 2026-11-03 | SAB | fc50e3c | 5 clases del 10-K; sin concentración (no se divulga); Uber One anterior en colapsable |
 | EV-EST | Evolution ▸ Estimates | ⬜ | | | | |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | ✅ | 2026-11-03 | SAB | | `uber-ce.js` (copia de googl-ce.js) + `uber-ce-data.js`; CE_CONS de `emit_ce_uber.py` (BBG 30 snapshots, último 09-10) + líneas de Results; Q3 2026 con Summit 08-05 y guía del 2T26 |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
@@ -116,7 +116,7 @@ Cuadre contra el comunicado (vía `act` del dataset de Results, que cuadra con c
 | BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
 | BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
-| VA-PEERS | Valuation ▸ Peers | ⬜ | | | | |
+| VA-PEERS | Valuation ▸ Peers | ✅ | 2026-11-03 | SAB | fc50e3c | mapa compartido con OV-6 + tabla |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
 | VA-SUB | Valuation ▸ Submit History | ⬜ | | | | |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | ⬜ | | | | |
@@ -408,6 +408,43 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 | Desde | Unidad | Qué falta | Quién lo consigue | Estado |
 |---|---|---|---|---|
 
+### EV-NOTES — cifras de las notas de SAB que no se leyeron con seguridad (UBER.pdf)
+
+1. p1 (Q3 2022): GB "Exp. 30 billion": unclear whether this is the quarter or the guide (not used as a note).
+2. p1 (Q3 2022): GB mix percentages are overwritten (45%/47% mobility/delivery?), so they were not used.
+3. p1 (Q3 2022): "Mobility take rate had a benefit of 7.7%" and "delivery … 9%" are unclear, so not used.
+4. p1 (Q3 2022): "DOJ citation … California passed w/58%": probably the DOL contractor rule and Prop 22 (58%). Wording unclear.
+5. p1 (top): an unlabelled 2-line fragment ("US comeback to margins, cont 23 / work to do in 23") with no quarter, not used.
+6. p3 (Q2 2023): Adj EBITDA "up 552M" and margin "up from 1.3%" (prior-year figures) are faint.
+7. p6 (Feb 2024 Investor Update): "89% of countries (top 10) profitable", first digit unclear. Not used.
+8. p6: "Adj EBITDA to FCF, margin high 30s to 40%" seems to repeat the EBITDA CAGR. Not used as a margin.
+9. p6/p8: "<10% of airports penetrated" is legible but seems low against p23 (airports 15% of mobility GB). Check meaning.
+10. p8: page dated 14/FEB/25, content is the Feb 2024 Investor Update. Filed under Q4 2023.
+11. p9 (Q2 2024): "Ad spend more than tripled YoY": may be advertisers or ad revenue. Check.
+12. p12/p14: name of Uber's fleet system written "ERD" / "ERP". Unclear.
+13. p12 (Barclays): "Uber One available in under low 20 countries": wording unclear. Not used.
+14. p12 (Barclays): "Delivery has 4 consecutive Qs @ 1?% growth", second digit illegible.
+15. p12 (Barclays): "Goal for them is to lower their take rate": unclear whose take rate (Uber's or partners').
+16. p16 (Q1 2025): parentheticals "(13%)" after mobility and "(15%)" after delivery GB are unclear, possibly reported (non-cc) growth.
+17. p16: "penetration continues to increase to 60%", base not written (likely delivery GB).
+18. p16: Q2 2025 range is labelled "Revenue" but $45.75–47.25B matches the GB guide. Filed as GB.
+19. p18 (Q2 2025): Q3 GB written "$49.75–$48.25b" and Adj EBITDA "$2.29–2.19b", both reversed. Filed as $48.25–49.75B / $2.19–2.29B.
+20. p21 (Q3 2025): California coverage "$1M → $600K individual & $300K per accident" vs p22 (UBS) "$1M → $300K". Check split.
+21. p21: "members have 3x consumption & 35 higher retention", unit missing (35%?).
+22. p22 (UBS): growth formula "17% × 4% × Δprice = 22%": price term left blank.
+23. p23 (Q4 2025): "UberX ~35% of mobility GB" vs p21 "UberX is 2/3 of trips". Check, not used as a note.
+24. p24: Morgan Stanley conference date "2?/MAR/2026", day unclear.
+25. p25 (Nvidia GTC): "1?M cars built each year": second digit unclear (18M?). Not used.
+26. p26 (Q1 2026): Blacklane "generates $5bn in annual GB" looks high for Blacklane; may be $0.5B. Check.
+27. p26: revenue hit from the UK change "$1B (8% headwind)" is legible but check the exact amount.
+28. p28 (Bernstein): Delivery Hero average cost "low 30s", currency/unit not written (€ per share?).
+29. p29 (DH M&A): offer written "€41.50" (first character ambiguous); "$14.8B ($13.7B w/ previous stock)" and pro-forma GB "$2866" (~$286B?) are unclear.
+30. p30 (Q2 2026): "Take rate decline of 500bp → 400bp from UK → $1.13 revenue impact": the $ figure is probably $1.1B, and which take rate is meant (mobility or total) is not written.
+31. p19 / p32: both GS Communacopia pages are undated, so Sep 2025 / Sep 2026 is assumed from page order.
+
+31 items.
+
+
 ## 6b. Conexiones pendientes ("Live data pending")
 
 > `docs/PROFILE_PLAYBOOK.md` §20b. Bloques aprobados que hoy muestran el aviso porque falta el camino
@@ -453,3 +490,7 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 - Movido sin borrar: `CALL_EARNINGS` y los bloques `UB_Q1/Q2_2026_*` de `uber.js` → `uber-ce-data.js`; `UB_THEMES` → `js/themes-data/uber.js` (con `seg` y `st`). La maquinaria vieja `ce*` de `uber.js` queda sin uso hasta F-FINAL.
 - CSS: `.ov-uber-dd` agregado a los selectores de `css/overview.css` que ya cubrían `.ov-googl-dd`.
 - Autoauditoría: 0 errores · pastillas Q3/Q2/Q1 · Post-Results del Q2 2026 puntúa el print · ✘ Summit vacío en 5 líneas headline (GP, CFO, capex, D&A, acciones: no están en Results) — aceptado tal cual.
+### 2026-11-03 · Bloque 2 (OV-1…OV-F, TL-GEN, TL-SEG, TL-OTH, TL-CUS, VA-PEERS) — APROBADO (en bloque, decisión de SAB)
+- Qué se mostró: Overview en `uber-ov.js` (copia de googl.js) + `uber-ov-data.js`; Top Line en `segments.js` con `segments-data/uber.js` (rescatado de DOAA351 con sus arreglos); Valuation ▸ Peers.
+- Fuentes: 10-K FY2025 (acc. 0001543151-26-000015) Nota 13 e Item 1; 10-K/20-F FY2025 de DASH, CART, LYFT, GRAB (XBRL); BBG consenso FY2026 (UBER 2026-09-10, LYFT 2026-09-08); Summit actuals para Freight revenue.
+- Excepciones aceptadas: EBITDA trailing (GAAP op. inc. + D&A) vs forward (ajustado BBG) con bases distintas, dicho en el pie; P/E trailing de UBER/LYFT bajo por liberación de reservas fiscales; citas del 10-K del borrador de Dani sin cotejar palabra por palabra (pendiente).

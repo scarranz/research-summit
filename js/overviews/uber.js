@@ -1,3 +1,8 @@
+import { SUMMIT_CAT } from '../viz-palette.js';
+import { UBER_MGMT_DATA } from './uber-mgmt-data.js';   // MG-TEAM data (engine management.js)
+import { uberOwnBody, uberOwnInit } from './uber-own.js';   // MG-OWN
+import { uberGovBody, uberGovBuild } from './uber-gov.js';   // MG-GOV
+import { uberTrackBody, uberTrackPop } from './uber-track.js';   // MG-TRACK
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/uber.js)
 import { uberOvBody, uberOvInit, uberOvPop, uberPeersDdBody } from './uber-ov.js';   // Overview OV-1…OV-F + the live peer map (copy of googl.js)
 import { TIMELINE } from './uber-ov-timeline.js';   // moved (OV-7)
@@ -43,7 +48,8 @@ var UBER_VAL = makeValuation({
 });
 
 // Management roster (Management tab). Public-source bios; no ownership/trades.
-var UBER_MGMT = makeManagement({
+var UBER_MGMT = makeManagement(Object.assign({ brand:SUMMIT_CAT[0] }, UBER_MGMT_DATA));
+var UBER_MGMT_V1 = ({   // the previous config, kept as data (moved to uber-mgmt-data.js)
   brand:'#111827',
   lede:"Uber is run by a deep, long-tenured bench under CEO <b>Dara Khosrowshahi</b>, who engineered the turn from cash-burner to cash-compounder. One thing to watch: the <b>finance seat has turned over three times in three years</b>.",
   execs:[
@@ -3885,9 +3891,9 @@ function deepDiveHtml(c){
   // Track Record (#93 + #69 3-year targets + #70 turnaround + #86 capital allocation)
   h+='<div class="dd-pane" data-dd="mgmt" hidden>'+st([
       ['team','Executives & Board',UBER_MGMT.body()],
-      ['ownership','Ownership','<div id="dd-mgmt-slot"></div>'],
-      ['governance','Governance & SBC',ubGovBody(c)],
-      ['track','Track Record',ubTrackBody(c)+ub3yrTargets()+ubStrategyBody(c)+ubCapAllocBody(c)] ])+'</div>';
+      ['ownership','Ownership',uberOwnBody()],
+      ['governance','Governance & SBC',uberGovBody()],
+      ['track','Track Record',uberTrackBody()] ])+'</div>';
   // MISCELLANEOUS — Competitive position (#37–#38) · Insurance (#44–#51, #87–#88) · M&A and
   // Delivery Hero (#73–#82) · TAM (#34–#36). Regulation (#20) moves out of Segments with TL-SEG.
   h+='<div class="dd-pane" data-dd="misc" hidden>'+st([
@@ -4158,7 +4164,8 @@ function buildSub(root, group, key){
     if(key==='sensitivity')   UBER_VAL.init(root);
   } else if(group==='mgmt'){
     if(key==='team')          UBER_MGMT.init(root);
-    else if(key==='governance') buildUbSbc();
+    else if(key==='ownership') uberOwnInit(root);
+    else if(key==='governance') uberGovBuild(root);
   } else if(group==='misc'){
     if(key==='insurance')     buildUbBal();
   }
@@ -4242,7 +4249,7 @@ function wireModal(root){
     if(kind==='mna'){ var m=MNA.filter(function(x){return x.n===id;})[0]; return m?{t:m.n+' <span class="ov-modal-sub">'+esc(m.y)+' · '+esc(m.deal)+'</span>',h:m.detail}:null; }
     if(kind==='arena'){ var ar=AR_DETAIL[id]; return ar?{t:ar.t,h:ar.h}:null; }
     if(kind==='ins'){ var ip=INS_POP[id]; return ip?{t:ip.t,h:ip.h}:null; }
-    if(kind==='exec'){ var ex=TRACK_MGMT.filter(function(x){return x.id===id;})[0]; return ex?{t:ex.n+' <span class="ov-modal-sub">'+ex.role+' · at Uber since '+esc(ex.since)+'</span>',h:ex.detail}:null; }
+    if(kind==='exec'){ return uberTrackPop(id); }
     if(kind==='fam'){ var gp=id.split('-'), gg=UB_PROD_GROUPS[+gp[0]]; var f=gg&&gg.families[+gp[1]]; if(!f) return null;
       var body=f.items.map(function(it){ return '<div style="margin:0 0 10px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">'+esc(it[0])+'</div><div class="famd">'+esc(it[1])+'</div></div>'; }).join('');
       return {t:f.ic+' '+esc(f.fam),h:'<div class="famd" style="margin-bottom:10px;color:var(--mu)">'+esc(f.d)+'</div>'+body}; }

@@ -47,6 +47,8 @@ import { googlSegments } from './segments-data/googl.js';
 import { googlResults } from './results-data/googl.js';
 import { maSegments } from './segments-data/ma.js';
 import { maResults } from './results-data/ma.js';
+import { uberSegments } from './segments-data/uber.js';
+import { uberResults } from './results-data/uber.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
 import { SN_THEMES } from './themes-data/sn.js';
@@ -55,6 +57,7 @@ import { SPOT_THEMES } from './themes-data/spot.js';
 import { META_THEMES } from './themes-data/meta.js';
 import { GOOGL_THEMES } from './themes-data/googl.js';
 import { MA_THEMES } from './themes-data/ma.js';
+import { UBER_THEMES } from './themes-data/uber.js';
 import { SUMMIT_CAT, SUMMIT_MUTE } from './viz-palette.js';   // the portal's fixed categorical palette
 
 // The Notes taxonomy names segments in prose; the datasets key them. One map, stated once.
@@ -65,9 +68,10 @@ var THEME_SEG = {
   SPOT: { 'Pricing & ARPU': 'prem', 'Royalties & legal': 'prem', 'Advertising': 'ads', 'Users & subscribers': 'ads' },   // the free tier is the funnel; the other SPOT themes are company-wide
   META: { 'Family of Apps': 'foa', 'Reality Labs': 'rl' },               // AI & compute, Costs & capital are company-wide
   GOOGL: { 'Google Services': 'svc', 'Google Cloud': 'cloud', 'Other Bets': 'bets' },   // AI & compute, Costs & capital are company-wide
+  UBER: { 'Mobility': 'mobility', 'Delivery': 'delivery', 'Freight': 'freight' },   // AVs, membership, costs & capital are company-wide
   MA: { 'Consumer payments': 'pn', 'Commercial and new flows': 'pn', 'Value-added services': 'vas', 'Agentic and digital assets': 'vas' },   // guidance, costs and capital, regulation and litigation are company-wide
 };
-var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES, META: META_THEMES, GOOGL: GOOGL_THEMES, MA: MA_THEMES };
+var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES, META: META_THEMES, GOOGL: GOOGL_THEMES, MA: MA_THEMES, UBER: UBER_THEMES };
 var SEGMENTS_DATA = {
   AMZN: { seg: amznSegments, res: amznResults },
   DHR:  { seg: dhrSegments,  res: dhrResults  },
@@ -85,7 +89,9 @@ var SEGMENTS_DATA = {
   // GOOGL: two Google segments (Services, Cloud) + Other Bets, 10-K Note 15. Alphabet-level activities is not a revenue segment.
   GOOGL: { seg: googlSegments, res: googlResults },
   // MA: ONE reportable operating segment (Payment Solutions, 10-K Note 22); its two net-revenue categories stand in as the segments.
-  MA: { seg: maSegments, res: maResults }
+  MA: { seg: maSegments, res: maResults },
+  // UBER: three reportable segments (Mobility, Delivery, Freight), 10-K Note 13; segment profit = Adjusted EBITDA to 4Q25.
+  UBER: { seg: uberSegments, res: uberResults }
 };
 
 export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }

@@ -1,3 +1,6 @@
+import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/uber.js)
+import { uberOvBody, uberOvInit, uberOvPop, uberPeersDdBody } from './uber-ov.js';   // Overview OV-1…OV-F + the live peer map (copy of googl.js)
+import { TIMELINE } from './uber-ov-timeline.js';   // moved (OV-7)
 import { uberCeHtml, uberCeWire, uberCeBuild, uberCePop } from './uber-ce.js';   // Evolution ▸ Earnings (EV-SET/POST/NOTES), copy of googl-ce.js
 import { UB_CALL_EARNINGS as CALL_EARNINGS } from './uber-ce-data.js';   // moved (EV-SET, 2026-11-03)
 // overviews/uber.js — custom Overview for Uber Technologies, Inc. (NYSE: UBER)
@@ -192,22 +195,7 @@ var SEGMENTS=[
 ];
 // Note: Advertising and Uber One are NOT reportable segments — they cut across Mobility & Delivery,
 // so they now live in "What Truly Drives Uber" (top of Overview) instead of being listed here twice.
-var TIMELINE=[
-  { y:'2009', t:'<b>Uber founded</b> in San Francisco by Garrett Camp and Travis Kalanick (originally "UberCab").' },
-  { y:'2014', t:'Launches <b>UberX</b> at scale and <b>Uber Eats</b> — the two businesses that define the platform today.' },
-  { y:'Aug 2017', t:'<b>Dara Khosrowshahi</b> (ex-Expedia) becomes CEO after Travis Kalanick\'s ouster.',
-    d:'After a turbulent 2017 (culture scandals, lawsuits, executive departures), founder <b>Travis Kalanick</b> stepped down and the board hired <b>Dara Khosrowshahi</b> from Expedia. His tenure reset the culture, exited unprofitable markets (selling China to Didi, SE Asia to Grab, Russia to Yandex earlier), and drove the long march to GAAP profitability and free-cash-flow generation.' },
-  { y:'May 2019', t:'<b>IPO</b> on the NYSE at $45.00 — one of the largest tech IPOs ever, but it traded down for years.',
-    d:'Uber priced its IPO at <b>$45.00</b> (a ~$82B valuation), below the early hype. The stock spent its first few years underwater as the market questioned whether ride-hailing could ever be profitable. The turnaround thesis — scale + take-rate discipline + Delivery + advertising + Uber One — is what eventually re-rated the stock.' },
-  { y:'2020', t:'California <b>Prop 22</b> passes; Uber sells its self-driving unit (<b>ATG</b>) to Aurora — pivot to asset-light AV.',
-    d:'Two pivotal de-risking moves. <b>Prop 22</b> (Nov 2020) preserved the independent-contractor model in California — later <b>upheld by the state Supreme Court in July 2024</b>. And Uber <b>sold its money-losing self-driving unit (ATG) to Aurora</b> (booking a ~$1.6B gain), choosing to be the <b>demand aggregator</b> for third-party AV developers rather than build its own — the foundation of today\'s AV strategy.' },
-  { y:'2023', t:'<b>First full year of GAAP operating profit</b> ($1.1B); added to the <b>S&P 500</b> (Dec).',
-    d:'The inflection year. Uber posted its <b>first full year of GAAP operating profit</b> (~$1.1B) and was <b>added to the S&P 500 in December 2023</b> — at the time the largest company by market cap not yet in the index. It marked the shift from "can it ever make money?" to a cash-generative compounder.' },
-  { y:'2024', t:'<b>First Investor Day</b> ("Go-Get") sets 3-year targets; inaugural <b>$7B buyback</b>; <b>investment grade</b>.',
-    d:'At its <b>first-ever Investor Day (Feb 2024)</b>, Uber issued three-year targets: <b>mid-to-high-teens Gross Bookings CAGR</b>, <b>high-30s%–40% Adjusted EBITDA CAGR</b>, and <b>&gt;90% free-cash-flow conversion</b>. It also announced its <b>first-ever buyback ($7B)</b> and earned <b>investment-grade ratings</b> (S&P BBB-, Moody\'s Baa2). Uber has since been running ahead of all three targets.' },
-  { y:'2025–26', t:'AV partnerships scale (Waymo, Nuro/Lucid, WeRide…); <b>$20B buyback</b>; Uber One tops <b>50M</b> members.',
-    d:'AV went from concept to commercial: <b>Waymo</b> live on the Uber app in Austin & Atlanta, a flagship <b>Lucid + Nuro</b> program (≥20,000 robotaxis), WeRide in the Gulf, and ~20 partners total — capped by the launch of <b>Uber Autonomous Solutions</b> (Feb 2026). Capital returns scaled to a <b>$20B authorization</b> (~$3B/quarter), and <b>Uber One passed 50M members</b>.' },
-];
+
 // Richer peer table: who they are, where share moves, and the structural edge.
 var PEERS=[
   { n:'Lyft', dom:'lyft.com', arena:'US/Canada rideshare · #2', edge:'Uber holds ~70%+ of US rides and is the only global, multi-product player. Same ~30% take — so scale + the Eats⇄rides bundle are the moat, not pricing.' },
@@ -3833,8 +3821,8 @@ function wireCallEarnings(root){
 
 function html(c){
   _co = c;   // capture the live company object (id + ticker) for the Watch List DB wiring
-  var h='<div class="ov ov-uber" data-brand="UBER">';
-  h+=stdOverviewBody(c);
+  var h='<div class="ov ov-uber" data-brand="UBER" style="--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">';
+  h+=uberOvBody(c);
   // Shared modal (used by Overview data-detail triggers AND, once hoisted to
   // #co-detailview in init, by the Deep Dive triggers too). Kept in the Overview
   // pane's markup; init() moves it up so it stays visible on either profile tab.
@@ -3853,6 +3841,9 @@ function html(c){
 // body is re-slotted into the most relevant tab, and the two live panels from the old
 // Pillars tab are absorbed here (Valuation ▸ Analyst Ratings, Management ▸ Ownership &
 // Insiders) via #dd-val-slot / #dd-mgmt-slot filled by companies.js. ──
+function ddMore(title, inner){
+  return '<div class="ov-collap"><button type="button" class="ov-collap-h"><span class="ov-collap-ic">▸</span>'+esc(title)+'</button><div class="ov-collap-b" hidden>'+inner+'</div></div>';
+}
 function deepDiveHtml(c){
   _co = c;   // capture the live company object (id + ticker) for the Watch List DB wiring
   // F1 (playbook §7, 2026-11-03): the Amazon spine. Every existing pane sits in its B2 destination
@@ -3870,8 +3861,10 @@ function deepDiveHtml(c){
     '</div>';
   // TOP LINE — Segments (B2 #12–#25, #33, #41) · Customers (#26–#32)
   h+='<div class="dd-pane" data-dd="topline">'+st([
-      ['segdrv','Segments',ubSegmentsBody(c)],
-      ['segcus','Customers',ubCustomersBody(c)] ])+'</div>';
+      ['segov','General',segmentsOverviewHtml('UBER')],
+      ['segdrv','Segments',segmentsHtml('UBER')+ddMore('Each segment in depth — the earlier analysis (moved from the old Segments tab)',ubSegmentsBody(c))],
+      ['segoth','Other',segmentsOtherHtml('UBER')],
+      ['segcus','Customers',segmentsCustomersHtml('UBER')+ddMore('Uber One and the customer base — the earlier analysis (moved from the old Customers tab)',ubCustomersBody(c))] ])+'</div>';
   // BOTTOM LINE — General (#52) · Segments (#39–#40) · Supply Chain (#42–#43)
   h+='<div class="dd-pane" data-dd="bottomline" hidden>'+st([
       ['margins','General',ubMarginsBody(c)],
@@ -3886,7 +3879,7 @@ function deepDiveHtml(c){
   // VALUATION — Peers (#84) · Sensitivity Analysis (#83). Historic Multiple, Target Multiple and
   // Submit History are added with their units. Analyst Ratings (#85) return to the Pillars tab.
   h+='<div class="dd-pane" data-dd="valuation" hidden>'+st([
-      ['peers','Peers',ubPeerMultBody(c)],
+      ['peers','Peers',uberPeersDdBody()],
       ['sensitivity','Sensitivity Analysis',UBER_VAL.body()] ])+'</div>';
   // MANAGEMENT — Executives & Board (#89) · Ownership (#90) · Governance & SBC (#91–#92) ·
   // Track Record (#93 + #69 3-year targets + #70 turnaround + #86 capital allocation)
@@ -4150,8 +4143,10 @@ function buildUberOneCharts(){ buildLines('ubChartMembers', UBERONE_GROWTH.label
 // Build the lazy charts that live inside a sub-pane, by (group, sub-key).
 function buildSub(root, group, key){
   if(group==='topline'){
-    if(key==='segdrv'){ buildOverviewCharts(); buildActiveSeg(root); }
-    else if(key==='segcus') buildUberOneCharts();
+    if(key==='segov') requestAnimationFrame(function(){ initSegmentsOverview(root, 'UBER'); });
+    else if(key==='segdrv'){ requestAnimationFrame(function(){ initSegments(root, 'UBER'); }); buildOverviewCharts(); buildActiveSeg(root); }
+    else if(key==='segoth') requestAnimationFrame(function(){ initSegmentsOther(root, 'UBER'); });
+    else if(key==='segcus'){ requestAnimationFrame(function(){ initSegmentsCustomers(root, 'UBER'); }); buildUberOneCharts(); }
   } else if(group==='bottomline'){
     if(key==='segments')      buildMobilityCharts();  // take-rate lines (B2 #41 moves to TL-SEG with its unit)
     else if(key==='margins')  buildUbMargins();
@@ -4236,6 +4231,7 @@ function wireModal(root){
   function resolve(key){
     var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
     if(kind==='ce'){ return uberCePop(id); }
+    if(kind==='prod'){ return uberOvPop('prod', id); }
     if(kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
     if(kind==='trip'){ var s=TRIP_FLOW[+id]; return s?{t:'Step '+(+id+1)+' — '+s.t,h:s.d}:null; }
     if(kind==='aleka'){ var a=ALEKA_CHAIN[+id]; return a?{t:'Aleka — '+a.t,h:a.d}:null; }
@@ -4318,9 +4314,10 @@ function init(c){
       if(mapBlock) mapBlock.hidden=(mode!=='map'); if(listWrap) listWrap.hidden=(mode!=='list');
     }
   }; });
+  uberOvInit(root);   // Overview: money-map toggle, live peer map, live market cap (uber-ov.js)
   wireModal(root);
   // Collapsible sections (reader chooses what to expand)
-  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var c=btn.parentElement; var open=c.classList.toggle('open'); var b=c.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }; });
+  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var c=btn.parentElement; var open=c.classList.toggle('open'); var b=c.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; if(open && btn.closest('.ov-uber-dd')) requestAnimationFrame(function(){ buildDD(root, activeDD(root)); }); }; });
   // Competitive-map scatter: hover/tap a dot → floating detail tip
   var ptip=root.querySelector('#ubPeerTip');
   if(ptip){ root.querySelectorAll('.peer-dot').forEach(function(d){
@@ -4383,7 +4380,7 @@ function init(c){
   root.querySelectorAll('.acc-h').forEach(function(btn){ btn.onclick=function(){ var b=btn.nextElementSibling; if(!b) return; var open=b.hidden; b.hidden=!open; var x=btn.querySelector('.acc-x'); if(x) x.textContent=open?'–':'+'; }; });
   // Live market cap (Key Facts cell + peer bubbles) — Massive via api.liveQuote; degrades gracefully in preview
   function ubLiveOne(tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(q){ if(!q||q.marketCap==null) return; var mcB=q.marketCap/1e9; UB_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; }); if(tk==='UBER'){ var el=root.querySelector('#ubMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live'; } scRefresh(); }).catch(function(){}); }
-  UB_SC.peers.forEach(function(p){ if(p.tk) ubLiveOne(p.tk); });
+  // (old peer scatter retired — the live peer map is uber-ov.js)
   ubScRender(root); // first paint of the standardized Overview scatter (no ovt-tab gate anymore)
   // Hoist the modal to #co-detailview so it stays visible from either profile tab
   // (an inactive .copane is display:none, which would hide a modal nested inside it).

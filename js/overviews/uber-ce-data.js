@@ -46,7 +46,7 @@ var UBER_CE_CONS_GEN = {
 // [grid name, Results key, divisor]: lines whose actual + going-in consensus come from the Results dataset.
 var FROM_RESULTS=[['Revenue','rev',1000],['Operating income','opinc',1000],['EBITDA','ebitda',1000],['Gross Bookings','gb',1000],
   ['Mobility Gross Bookings','mobgb',1000],['Delivery Gross Bookings','delgb',1000],['Freight Gross Bookings','frgb',1000],
-  ['Mobility revenue','mobrev',1000],['Delivery revenue','delrev',1000],['Free cash flow','fcf',1000],['Trips','trips',1000],['MAPCs','mapc',1],
+  ['Mobility revenue','mobrev',1000],['Delivery revenue','delrev',1000],['Freight revenue','frrev',1000],['Free cash flow','fcf',1000],['Trips','trips',1000],['MAPCs','mapc',1],
   ['EPS (Non-GAAP)','eps',1]];
 var NHEAD=['Revenue','Gross profit','Operating income','EBITDA','EPS (diluted)','Operating cash flow','Capex','D&A','Diluted shares'];
 var CUSTOM=['EPS (Non-GAAP)','Gross Bookings','Mobility Gross Bookings','Delivery Gross Bookings','Freight Gross Bookings','Mobility revenue',

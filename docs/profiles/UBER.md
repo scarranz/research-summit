@@ -522,3 +522,7 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 ### 2026-11-03 · EV-RES ▸ KPIs ▸ Uber One Members — APROBADO
 - Fuentes: comunicados 8-K Ex. 99.1 (3Q23, 3Q24, 4Q24, 1Q26) y transcripciones en docs/calls (4Q23, 1Q25, 2Q25, 4Q25); Summit 2026-08-05 (`ONE_MEMBERS_USERS`, projection_history, solo 3Q26–1Q27).
 - Excepción aceptada: el motor sombrea 2Q26 como forecast porque no hay cifra divulgada (se corrige con el dato del 3T26).
+### 2026-11-03 · EV-SET / EV-RES — Street y Summit en todas las líneas (pedido de SAB)
+- Setup 3T26: 21 de 25 líneas con las dos columnas. Summit agregado (congelado del MCP, submit 2026-08-05): flujo operativo, capex, D&A, SBC, ingreso de Freight, utilidad operativa de Mobility y Delivery, utilidad operativa GAAP. Street del segundo trimestre adelante = archivo BBG más nuevo.
+- Sin Summit, con nota en la línea: utilidad bruta (Uber no la reporta; el modelo no la tiene), utilidad neta GAAP y EPS GAAP (fila en 0), acciones diluidas (fila en 0).
+- Results: Freight trimestral y anual, Uber One (trimestral y anual = 4T), FCF anual del modelo y FCF trimestral forward del submit 08-05. Viajes anual sin Summit a propósito (fila anual del modelo rota: FY26 12,260 < FY25 13,567). Sin Street: Uber One (Bloomberg no lo cubre) y EPS no-GAAP forward más allá del 3T26 (el export solo trae EPS GAAP).

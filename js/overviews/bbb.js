@@ -457,7 +457,26 @@ function bPeerScatter(sfx){
   h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here — private rivals like <b>Tiendas Neto</b> and the informal <b>"tienditas"</b> have no market multiple and appear in the Deep Dive\'s competitive map instead. <span class="ave-subh-note">Multiples &amp; growth are seeded approximations (Aug 2026), labeled; market caps are live. TBBB has no trailing P/E (FY2025 net loss).</span></div>';
   h+='<div class="mg-tip tbbb-sc-tip" hidden></div>';
   h+='</div>';
+  if(sfx==='va') h+=bPeerTable();
   return h;
+}
+// VA-PEERS "The numbers behind the map": every peer's forward multiples, growth and market cap side by side, with the peer average and median
+// (the company itself excluded). The multiples and growth are the SEEDED approximations of B_PEERS (Aug 2026, unsourced); market cap is the seeded figure.
+function bPeerTable(){
+  function f1(v,x){ return v==null?'—':v.toFixed(1)+(x||''); }
+  var peers=B_PEERS.filter(function(p){ return !p.hl; });
+  function stat(key, fn){ var v=peers.map(function(p){ return p[key]; }).filter(function(x){ return x!=null; }).sort(function(a,b){ return a-b; }); if(!v.length) return null; return fn(v); }
+  var avg=function(v){ return v.reduce(function(a,b){ return a+b; },0)/v.length; };
+  var med=function(v){ var m=Math.floor(v.length/2); return v.length%2?v[m]:(v[m-1]+v[m])/2; };
+  var keys=['peF','evF','gf','mc'];
+  var self=B_PEERS.filter(function(p){ return p.hl; })[0];
+  var rows=B_PEERS.map(function(p){
+    return '<tr'+(p.hl?' style="font-weight:800;background:var(--surface)"':'')+'><td class="ov-td-name">'+esc(p.n)+'</td><td>'+f1(p.peF,'×')+'</td><td>'+f1(p.evF,'×')+'</td><td>'+f1(p.gf,'%')+'</td><td>US$'+f1(p.mc,'B')+'</td></tr>';
+  }).join('');
+  function srow(label, fn){ return '<tr style="color:var(--mu)"><td class="ov-td-name"><i>'+label+'</i></td>'+keys.map(function(k){ var v=stat(k,fn); return '<td>'+(k==='mc'?'US$'+f1(v,'B'):f1(v,k==='gf'?'%':'×'))+'</td>'; }).join('')+'</tr>'; }
+  return '<div class="ov-sec"><div class="ov-sec-h">The numbers behind the map</div>'+
+    '<table class="ov-table"><thead><tr><th>Peer</th><th>P/E fwd</th><th>EV/EBITDA fwd</th><th>Revenue growth fwd</th><th>Market cap</th></tr></thead><tbody>'+rows+srow('Peer average (ex-'+esc(self?self.n:'company')+')',avg)+srow('Peer median (ex-'+esc(self?self.n:'company')+')',med)+'</tbody></table>'+
+    '<div class="ov-foot">Forward multiples and growth are seeded approximations (Aug 2026) carried over from the earlier build; they are not sourced from Bloomberg consensus and are to be replaced when peer consensus is available. Market cap on the map above is live (Massive). Tiendas 3B has no meaningful trailing P/E: it reports a net loss from non-cash share-based pay.</div></div>';
 }
 function bScRenderOne(wrap){
   var g=wrap.querySelector('.tbbb-sc-nodes'); if(!g||!B_SC.peers) return;

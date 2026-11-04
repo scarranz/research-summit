@@ -1,0 +1,382 @@
+# LYFT — bitácora de construcción del perfil
+
+> Copia este archivo a `docs/profiles/<TICKER>.md` en la Fase 0. Reglas: `docs/PROFILE_PLAYBOOK.md` §3.
+> Claude la lee completa al empezar cada sesión y la actualiza en cada aprobación (no al final).
+> Estados: ⬜ pendiente · 📝 propuesta · 🔨 en construcción · 👀 en revisión · 🔁 cambios pedidos ·
+> ✅ aprobada · ⏭️ omitida (con razón) · ⛔ bloqueada (qué falta y quién lo consigue)
+
+| Campo | Valor |
+|---|---|
+| Empresa | Lyft, Inc. (NASDAQ: LYFT) |
+| Modo | B — reordenar existente (`js/overviews/lyft.js`, 4,439 líneas + `js/results-data/lyft.js` y `lyft-setup.js`) |
+| Rama | `feat/lyft-profile` (desde `origin/main` @ `e2a30fa`, 2026-11-04; worktree `research-summit-lyft`). Ya existen en GitHub `feat/earnings-rollout-lyft` y `feat/lyft-2q26-results` (no se tocan) |
+| Analista responsable | SAB (Santiago Alvarez); la sesión la abre Dani |
+| Inicio | 2026-11-04 |
+| Avance | 0 de 45 unidades aprobadas (F0 en propuesta) |
+
+## 1. Inventario de datos (F0)
+
+| Fuente | ¿Existe? | Detalle (fechas, cobertura) | Qué habilita | Qué queda fuera sin ella |
+|---|---|---|---|---|
+| Fila en `companies` | ✔ | LYFT abre hoy; módulo registrado en `js/overviews/index.js` | el perfil abre | — |
+| Filing anual (10-K / 20-F) | ✔ verificado en EDGAR 2026-11-04 | 10-K FY2025, acc. **0001628280-26-006960**, presentado 2026-02-11 (CIK 1759509), domestic filer, Nasdaq Global Select. Último 10-Q listado: acc. 0001628280-26-054499 (2026-08-07; periodo 30-jun-2026 probable, no abierto). ⚠ las Notas del 10-K (segmentos/geografía) no se alcanzaron a leer: pendiente para OV-4/TL-OTH | Overview, Top Line, textos verbatim | — |
+| Año fiscal / moneda | ✔ | cierre 31 dic · USD (el modelo trae FREENOW en EUR, por revisar) | — | — |
+| Summit DCF | ✔ (archivo local; **el MCP no se usa**) | `DCF LYFT.xlsm` en `Research\DCF\Transportation - SAB\LYFT\`, modificado 2026-08-07 (un día después del 2T26). Hojas Projection History / Actuals History (269×182), Segments, SEG_BBG, SOTP, Output. ⚠ la hoja Output trae caché viejo (LFQE "Q4 - 2023", estado "Offline"): no se lee de ahí. # de submits y último periodo real: se leen de Projection History en F0-SM | F0-SM; Summit congelado en Results/Setup, EV-EST, VA-TM, VA-SUB, VA-SENS | si el archivo no tiene ≥2 vintages, EV-EST y VA-SUB ⏭️ |
+| Consenso BBG | ✔ | `LYFT US EQUITY`: **30 snapshots, 2019-05-12 → 2026-09-08** (`inspect_matrix.py`). ⚠ el dataset actual (`results-data/lyft.js`) dice que LYFT **no** tiene filas en BBG y su consenso es "compilado a mano por print": está **desactualizado**. Último snapshot 09-08; nada posterior | `estMatrix.cons`, Setup, Bottom Line; reemplaza el consenso a mano | — |
+| `get-market-history` (Massive) | ✔ desplegada (confirmado en UBER 2026-11-03) | precio diario | Historic Multiple en vivo | — |
+| Valuación del modelo | ◐ | sin MCP: múltiplo/PT/FV salen de Discounted Cash Flow / SOTP del xlsm (como UBER). Se verifica en F0-SM | VA-TM, VA-SUB, VA-SENS | VA-TM/VA-SUB ⏭️ si no se puede leer |
+| SPLC | ◐ | el perfil actual tiene `supplySection` / `lySuppliersBody` (por revisar en B1); sin export SPLC conocido en disco | TL-CUS, BL-SPLC | BL-SPLC como UBER: lo divulgado, sin export |
+| Transcripciones | ◐ | `docs/calls/LYFT.md` (compendio) + `LYFT-latest.md` = **1T26 (7-may)**. **El 2T26 (6-ago) no está en `docs/calls`**; el 3T26 aún no sale (fecha por confirmar; Lyft reportó el 3T25 el 5-nov) | EV-POST, EV-NOTES, citas | 2T26 sin transcripción verbatim |
+| Fiscal.ai (plan) | ✘ | LYFT no está en el plan gratis (solo AMZN, MA, NVDA, UBER, V) | tabla en vivo de Management | MG-OWN sin tabla en vivo: DEF 14A |
+| Massive (`liveQuote`) | ✔ | `covered-calls-massive` | market cap, peers | — |
+| Fotos / imágenes | ◐ | `img/leadership/lyft-*` por revisar | Management | iniciales |
+
+**Alcance propuesto (pendiente de SAB):** las 45 unidades + B1/B2 son construibles salvo lo marcado ◐; Summit = último submit del xlsm local; consenso = BBG (reemplaza lo compilado a mano).
+
+## 1b. Mapa Summit (F0-SM)
+
+> Reglas: `docs/PROFILE_PLAYBOOK.md` §6.3. Archivo: `js/summit-map/lyft.js` (sin números). **No hay MCP**: las etiquetas salen de las hojas
+> `Projection History` y `Actuals History` de `DCF LYFT.xlsm` (copia leída de Drive, guardado 2026-08-07). Las hojas Output / Summary tienen caché
+> viejo ("Q4 - 2023", "Offline") y **no se leen**.
+
+Modelo: `DCF LYFT.xlsm` · USD · millones · **4 submits distintos**: 2025-12-15 (después de 3T25) · 2026-02-11 (4T25) · 2026-05-08 (1T26) ·
+**2026-08-07 (2T26)** (el 08-07 está guardado dos veces, ID 4 y 5, con 2 segundos de diferencia: es el mismo estado) · 49 filas con código
+(43 códigos únicos; OP_INCOME, DNA, FCF, CFO, CAPEX y CFO_INSURANCE_RESERVES aparecen dos veces con valores distintos) ·
+**43 códigos únicos: 12 core · 3 segment · 11 línea de costo/SBC · 9 kpi · 4 guidance · 4 consensus · 0 ignore** ·
+Reales: `Actuals History` trae **hasta 2T26** (Rev 1,843.5 · Adj. EBITDA 177.2 · GB 5,504.2) — **sin verificar contra el 8-K del 2T26**
+(el comunicado no está en `docs/calls`). Valuación del modelo: **solo EV / EBITDA** en los 4 submits, `target_year` 2027 Forward:
+
+| Submit | Después de | Múltiplo | Price target | Fair value | Precio ese día | FV ÷ precio − 1 |
+|---|---|---|---|---|---|---|
+| 2025-12-15 | 3T25 | 9.0× | $32.01 | $31.96 | $18.85 | +69.5% |
+| 2026-02-11 | 4T25 | 8.0× | $28.21 | $23.03 | $13.99 | +64.6% |
+| 2026-05-08 | 1T26 | 5.0× | $18.73 | $16.47 | $14.37 | +14.6% |
+| 2026-08-07 | 2T26 | 7.0× | $23.76 | $22.00 | $17.11 | +28.6% |
+
+(Cálculo propio de la última columna: FV ÷ precio − 1; la hoja trae PT, FV y precio, no el upside.)
+
+Cuadre — **vía el dataset de Results/Customers existente (que viene de los 8-K)**; el cuadre directo contra 10-K/8-K queda pendiente:
+
+| Etiqueta (código en el xlsm) | Rol | Clave portal | Qué es | Base | Unidad real | Agregación | Cuadre | Confianza |
+|---|---|---|---|---|---|---|---|---|
+| `REV` | core | `rev` | Ingreso | GAAP | USD M | suma | FY25 6,316.3 ✔ · 1T26 1,650.5 ✔ | ✔ (2T26 1,843.5 sin 8-K) |
+| `SEGM_REVENUE` | segment | `seg_rev` | Ingreso del bloque de segmento | — | USD M | suma | FY25 6,484.3 ≠ REV 6,316.3 | ❓ (duda 1) |
+| `GB_REVENUE` · `RENTALS_REVENUE` | segment | `seg.rideshare.rev` · `seg.rentals.rev` | Ingreso Rideshare/plataforma · Rentals | — | USD M | suma | FY25 6,063.4 + 420.9 = 6,484.3 | ❓ (duda 1); Rentals en 0 en 2T26 real |
+| `EBITDA` | core | `ebitda` | EBITDA ajustado (lado core) | ajustada | USD M | suma | FY25 528.9 ✔ · 1T26 132.8 ✔ | ⚠ FY26: 718.8 vs ADJ_EBITDA 706.4 (duda 3) |
+| `ADJ_EBITDA` | segment | `ebitda_adj` | EBITDA ajustado (base de la guía) | ajustada | USD M | suma | FY25 528.9 ✔ | ⚠ ídem |
+| `OP_INCOME` (core) | core | `opinc_core` | Utilidad operativa | ¿GAAP? | USD M | suma | FY25 = 0 · FY26/27 = 0 · trimestres sí traen valor | ❓ (duda 2) |
+| `OP_INCOME` (bloque costos) | segment | `opinc` | Utilidad operativa | GAAP | USD M | suma | FY25 23.3 (sin cotejar) · 1T26 −5.3 | ❓ (duda 2) |
+| `EARNINGS` | core | `earnings` | Utilidad neta GAAP | GAAP | USD M | suma | FY25 134.6 (sin cotejar); trimestres en 0 | ⚠ solo anual |
+| `SHARES` | core | `shares` | Acciones diluidas | diluidas | acciones M | fin de periodo | FY25 417.7; FY26 359.2 | ❓ (duda 4) |
+| `DNA` (core y bloque) | core | `dna` | D&A | GAAP | USD M | suma | 135.227 vs 135.262 | ⚠ dos valores casi iguales |
+| `INT_INC` · `INT_EXP` · `TAX_RATE` | core | ídem | Intereses y tasa | modelo | USD M · % | suma · promedio | INT_INC en 0 siempre; TAX_RATE 0.15 → 0.05 | ❓ (duda 5) |
+| `CFO` (core y bloque) | core | `cfo` | Flujo operativo | GAAP | USD M | suma | FY25 1,168.4 vs 1,168.4 ✔ | ✔ |
+| `CAPEX` (core y bloque) | core | `capex` | Capex | GAAP | USD M | suma | FY25 −52.8 (core) vs −80.1 (bloque) | ❓ (duda 6) |
+| `FCF` (core y bloque) | core | `fcf` | Flujo libre | empresa | USD M | suma | FY25 1,115.6 (core; coincide con el "+$1.12B" del perfil) vs 1,088.3 (bloque) | ❓ (duda 6) |
+| `GROSS_BOOKINGS` | kpi | `gb` | Gross Bookings | empresa | USD M | suma | FY25 18,507.1 ✔ · 1T26 4,946.0 ✔ | ✔ |
+| `RIDES` | kpi | `rides` | Viajes | empresa | M | suma | FY25 945.5 ✔ · 1T26 236.9 ✔ | ✔ |
+| `RIDERS_ACTIVE` | kpi | `riders` | Pasajeros activos | empresa | M | fin de periodo | FY25 29.2 ✔ · 1T26 28.3 ✔ | ✔ |
+| `RIDES_PER_USER` · `GB_PER_RIDE` | kpi | `rides_per_user` · `gb_per_ride` | Derivadas del modelo | modelo | viajes · USD | promedio | FY25 2.78 · 20.84 | ⚠ derivadas |
+| `COGS` · `OPERATION_SUPPORT_OPEX` · `RND_OPEX` · `SNM_OPEX` · `GNA_OPEX` | segment (línea de costo) | `cost.*` | Costos GAAP por línea | GAAP | USD M | suma | COGS 1T26 864.1 ✔ | ✔ (resto sin cotejar) |
+| `SBC_COGS` · `SBC_ONS` · `SBC_RND` · `SBC_SNM` · `SBC_GNA` | segment (línea de costo) | `sbc.*` | SBC por función | GAAP | USD M | suma | FY25 suma 322.3 (sin cotejar) | ⚠ |
+| `CFO_ADJ_EBITDA` · `CFO_INSURANCE_RESERVES` (x2) · `CFO_ACCRUED_LIAB` · `INSURANCE_RESERVES` | kpi | `cfo_ebitda` · `cfo_ins` · `cfo_ins_ind` · `ins_reserves` | Puente del flujo y reservas de seguro (modelo) | modelo | USD M | suma · fin | reservas 2,180.4 (FY25); 2,307.7 (2T26) | ⚠ construcciones del modelo |
+| `GB_GUIDANCE_LOW/HIGH` · `ADJ_EBITDA_GUIDANCE_LOW/HIGH` | guidance | `guide.*` | Guía de Lyft | — | USD M | — | 1T26 4,860–5,000 y 120–140; 2T26 5,300–5,430 y 160–180 (cuadran con el dataset); **3T26 5,500–5,670 y 183–203 sin 8-K** | ⚠ 3T26 pendiente de 8-K |
+| `REV/EBITDA/SHARES/EARNINGS_BBG_EST` | consensus | — | BBG anual dentro del modelo | — | — | — | — | se usa `BBG_CONSENSUS.txt`, no esto |
+
+### Dudas
+
+```
+❓ LYFT · 1 · SEGM_REVENUE vs REV (FY2025: 6,484.3 vs 6,316.3)
+   Lo que se ve: SEGM_REVENUE = GB_REVENUE + RENTALS_REVENUE = 6,484.3, pero el ingreso reportado y REV dan 6,316.3 (el dataset de Results también).
+   Quién responde: autor del modelo / Claude con el 10-K.   Mientras tanto: ingreso por segmento no se usa; Top Line ▸ Segments solo con GB, rides, riders.
+❓ LYFT · 2 · OP_INCOME core en 0 (FY25, FY26, FY27); el del bloque de costos trae 23.3 / 198.6 / 509.4
+   Quién responde: autor del modelo (SAB).   Mientras tanto: no se usa el core; en Bottom Line solo EBITDA y la cascada de costos.
+❓ LYFT · 3 · EBITDA vs ADJ_EBITDA (FY26 718.8 vs 706.4; FY27 959.0 en ambas)
+   Quién responde: autor del modelo.   Mientras tanto: Summit de EBITDA = ADJ_EBITDA (es la base de la guía); se anota en el pie.
+❓ LYFT · 4 · SHARES FY25 417.7 → FY26 359.2 (−14%)
+   Lo que se ve: BBG estima 396.8; recompras no alcanzan para explicar el salto.   Mientras tanto: sin EPS de Summit; no se usa en Sensitivity.
+❓ LYFT · 5 · INT_INC en 0 siempre; TAX_RATE 0.15 (FY25) → 0.05 (FY26+); trimestres en 0.   Mientras tanto: no se usan.
+❓ LYFT · 6 · FCF/CAPEX con dos definiciones (core: 1,115.6 y −52.8; bloque: 1,088.3 y −80.1 en FY25)
+   Quién responde: autor del modelo.   Mientras tanto: se usa el core FCF (coincide con el +$1.12B del perfil actual); se dice en el pie.
+❓ LYFT · valuación — solo EV / EBITDA en los 4 submits (el playbook del 14-oct decía "P/E copia EV/EBITDA": ya no hay P/E en el archivo).
+   Lo lógico: PT ÷ FV varía por submit (1.002 · 1.225 · 1.137 · 1.080) y no hay un segundo método para la prueba de §6.3; el múltiplo saltó 5.0× → 7.0× entre 05-08 y 08-07.
+   Quién responde: autor del modelo.   Mientras tanto: VA-TM y VA-SENS con EV/EBITDA 7.0× 2027 Fwd rotulado "PT/FV sin prueba cruzada".
+```
+
+### Cambios del mapa
+
+- 2026-11-04 · mapa inicial desde el xlsm local (sin MCP) — 2 filas de guardado idéntico el 08-07 tratadas como una.
+
+## 2. Tablero de unidades
+
+| ID | Unidad | Estado | Fecha | Aprobó | Commit | Nota |
+|---|---|---|---|---|---|---|
+| F0 | Inventario de datos | ✅ | 2026-11-04 | SAB | | Summit = DCF LYFT.xlsm local (7-ago); BBG 30 snapshots (último 09-08) |
+| B1 | Inventario de contenido existente | ✅ | 2026-11-04 | SAB | | borrador de código; falta contar en el portal |
+| B2 | Mapa de reubicación | ✅ | 2026-11-04 | SAB | | borrador; Strategy sin hogar en el esqueleto: propuesta MISC-strategy |
+| F0-SM | Mapa de métricas Summit | ✅ | 2026-11-04 | SAB | | desde xlsm local; 49 filas / 43 códigos; 6 dudas + valuación |
+| F1 | Esqueleto + vista previa | ✅ | 2026-11-04 | SAB | | 6 secciones; paneles enteros en su destino B2; absorbsPillars quitado (Pillars vuelve con Ratings); Ownership, General/Other de Top Line, Historic Multiple, Target Multiple y Submit History llegan con su unidad |
+| OV-1 | Overview ▸ Key Facts | ✅ | 2026-11-04 | SAB | | 10 celdas; verificado 10-K: HQ, Delaware, 3,913 empleados, dividendo; Founded/IPO/CEO con fecha sin verificar en fuente primaria; market cap solo en vivo |
+| OV-2 | Overview ▸ Descripción | ⬜ | | | | |
+| OV-3 | Overview ▸ Cuadrante 2×2 | ⬜ | | | | |
+| OV-4 | Overview ▸ How it makes money | ⬜ | | | | |
+| OV-5 | Overview ▸ Products & platforms | ⬜ | | | | |
+| OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
+| OV-7 | Overview ▸ Timeline | ⬜ | | | | |
+| OV-F | Overview ▸ Pie de fuentes | ⬜ | | | | |
+| EV-RES-DATA | Dataset de Results (números) | ⬜ | | | | |
+| EV-RES | Evolution ▸ Results | ⬜ | | | | |
+| TL-GEN | Top Line ▸ General | ⬜ | | | | |
+| TL-SEG | Top Line ▸ Segments | ⬜ | | | | |
+| TL-OTH | Top Line ▸ Other | ⬜ | | | | |
+| TL-CUS | Top Line ▸ Customers | ⬜ | | | | |
+| EV-EST | Evolution ▸ Estimates | ⬜ | | | | |
+| EV-SET | Evolution ▸ Earnings ▸ Setup | ⬜ | | | | |
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
+| EV-NOTES | Evolution ▸ Earnings ▸ Notes | ⬜ | | | | |
+| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ⬜ | | | | |
+| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⬜ | | | | |
+| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ⬜ | | | | |
+| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ⬜ | | | | |
+| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ⬜ | | | | |
+| BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
+| BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
+| VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
+| VA-PEERS | Valuation ▸ Peers | ⬜ | | | | |
+| VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
+| VA-SUB | Valuation ▸ Submit History | ⬜ | | | | |
+| VA-SUB | Valuation ▸ Submit History | ⬜ | | | | |
+| VA-SENS | Valuation ▸ Sensitivity Analysis | ⬜ | | | | |
+| MG-TEAM | Management ▸ Executives & Board | ⬜ | | | | |
+| MG-OWN | Management ▸ Ownership | ⬜ | | | | |
+| MG-GOV | Management ▸ Governance & SBC | ⬜ | | | | |
+| MG-TRACK | Management ▸ Track Record | ⬜ | | | | |
+| MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab aprobada) | ⬜ | | | | |
+| F-FINAL | Cierre y entrega | ⬜ | | | | |
+
+(Modo B: agregar B1 — inventario de contenido existente y B2 — mapa de reubicación después de F0.)
+
+> Desde el 15 oct 2026 EV-EST, VA-TM y VA-SENS se construyen con Summit congelado del MCP (regla 10);
+> EV-EST necesita ≥ 2 snapshots. Cada `MISC-<clave>` aprobada reemplaza la fila MISC; en MISC siempre se
+> proponen `MISC-comp` y, si aplica, `MISC-capacity` (playbook §15b).
+
+## 3. Decisiones del analista
+
+<!-- Solo se agrega. Si una decisión cambia, nueva línea que cita la anterior. -->
+- AAAA-MM-DD · <ID> · <decisión> — <por qué> — <quién>
+
+## 4. Excepciones aceptadas
+
+<!-- Cada FAIL de la autoauditoría que el analista decidió dejar. -->
+- 2026-11-04 · OV-1 · Founded / IPO / fecha de CEO sin fuente primaria — se acepta por ahora; se verifica con prospecto 2019 y proxy 2026 — SAB
+- AAAA-MM-DD · <ID> · <qué regla> — <por qué se acepta> — <quién>
+
+## 5. Mapa de reubicación (solo modo B)
+
+Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en `main` @ `e2a30fa`). ⚠ BORRADOR de Claude: conteo y destinos salen de leer el código; **falta abrir LYFT en el portal local y contar lo que se ve** (§4.2 B1) antes de que SAB apruebe. Datos probablemente muertos (constantes SNAPSHOT, DESC, KPIS, AS_OF, FY_NOTE, SEGMENTS, PEERS, TAILWINDS, HEADWINDS, TARGETS, INITIATIVES, GM_*, `lyIntro`, `placeholder()`) se listan aparte y no se cuentan; se confirma en B2 que ninguna función los usa. Destinos nuevos sin pieza original (TL-OTH, VA-HIST, VA-SUB) no son filas.
+
+### B1 — inventario
+| # | Pieza | file:función | Sección actual |
+|---|---|---|---|
+| 1 | Key Facts | `lyft.js:stdKeyFacts (LY_FACTS)` | Overview |
+| 2 | Lede | `lyft.js:stdOverviewBody (LY_LEDE)` | Overview |
+| 3 | 2×2 quadrant | `lyft.js:stdFourQuad (LY_BIZ)` | Overview |
+| 4 | Money map bars (revenue split) | `lyft.js:stdMoneyMap (LY_REV)` | Overview |
+| 5 | Segment definitions | `lyft.js:stdMoneyMap (LY_SEG_DEF)` | Overview |
+| 6 | Products & platforms + modal | `lyft.js:stdProducts (LY_PROD_GROUPS)` | Overview |
+| 7 | Peer scatter (multiple vs growth) | `lyft.js:stdPeerScatter (LY_PEERS, LY_SC)` | Overview |
+| 8 | Timeline + modal | `lyft.js:stdTimeline (TIMELINE)` | Overview |
+| 9 | Overview footer | `lyft.js (LY_OV_SOURCES)` | Overview |
+| 10 | Shared modal | `lyft.js:html + wireModal` | Overview |
+| 11 | Live price strip | `lyft.js:lySegmentsBody #lyLive` | Top Line ▸ Segments |
+| 12 | Segments lede | `lyft.js:lySegmentsBody` | Top Line ▸ Segments |
+| 13 | Chart: Gross Bookings FY2022-2029E | `lyft.js:buildOverviewCharts (A_GB)` | Top Line ▸ Segments |
+| 14 | Chart: Adj. EBITDA FY2022-2029E | `lyft.js:buildOverviewCharts (A_EBITDA)` | Top Line ▸ Segments |
+| 15 | Where the Revenue Actually Comes From | `lyft.js:revComposition` | Top Line ▸ Segments |
+| 16 | Segment pills Rideshare / Media & Growth | `lyft.js:lySegmentsBody (.seg-pill, estilo en línea)` | Top Line ▸ Segments |
+| 17 | Rideshare in depth (riders x frequency x price, decomposition, rides and riders charts) | `lyft.js:growthBody, renderDecomp, RIDES_CFG, RIDERS_CFG, DECOMP_NOTES` | Top Line ▸ Segments |
+| 18 | Range slider for riders/rides | `lyft.js:rangeSlider` | Top Line ▸ Segments |
+| 19 | The deceleration debate | `lyft.js:growthBody` | Top Line ▸ Segments |
+| 20 | Lyft Media & Growth in depth | `lyft.js:mediaBody` | Top Line ▸ Segments |
+| 21 | KPI strip (riders, rides, partnership share, membership) | `lyft.js:lyCustomersBody` | Top Line ▸ Customers |
+| 22 | Active riders bars | `lyft.js:lyCustomersBody` | Top Line ▸ Customers |
+| 23 | The loyalty stack | `lyft.js:lyCustomersBody` | Top Line ▸ Customers |
+| 24 | Advertisers, the other customer | `lyft.js:lyCustomersBody` | Top Line ▸ Customers |
+| 25 | How the market is defined | `lyft.js:lyTamBody` | Top Line ▸ TAM |
+| 26 | The dollar dimension | `lyft.js:lyTamBody` | Top Line ▸ TAM |
+| 27 | Lyft Media & micromobility sizing | `lyft.js:lyTamBody` | Top Line ▸ TAM |
+| 28 | Competitive Landscape, rivals & adjacent fronts | `lyft.js:lyIndustryBody` | Top Line ▸ Industry |
+| 29 | Competitive map, rivals by business traits | `lyft.js:lyRivalScatter` | Top Line ▸ Industry |
+| 30 | Regulation & driver classification | `lyft.js:REG, lyIndustryBody` | Top Line ▸ Industry |
+| 31 | Follow a single ride, where the money goes | `lyft.js:unitBody, stmtFlow, PR_* / UE_*` | Bottom Line ▸ Unit Economics |
+| 32 | Where each $ of a ride goes (chart) | `lyft.js:unitBody #lyUEdecomp` | Bottom Line ▸ Unit Economics |
+| 33 | Take rate, and why it misleads | `lyft.js:unitBody #lyUEtake, TAKE_EXPL` | Bottom Line ▸ Unit Economics |
+| 34 | Driver classification foundation | `lyft.js:unitBody` | Bottom Line ▸ Unit Economics |
+| 35 | Is the margin jump durable? | `lyft.js:unitBody, COGS_NOTE` | Bottom Line ▸ Unit Economics |
+| 36 | Who Powers Lyft, supplier & customer ecosystem | `lyft.js:lySuppliersBody, supplySection (SC_SUPPLIERS, SC_CUSTOMERS)` | Bottom Line ▸ Suppliers |
+| 37 | Insurance money flow and model compare | `lyft.js:insuranceBody, linsMoneyFlow, insModelCompare, RISK_XFER` | Bottom Line ▸ Insurance |
+| 38 | Margins chart (live Massive) + fallback + notes | `lyft.js:lyMarginsBody, buildLyMargins, lyLoadMargins, LY_MRG_*` | Bottom Line ▸ Margins |
+| 39 | IR button / links | `lyft.js:ceIRButton` | Evolution ▸ Earnings |
+| 40 | Quarter pills | `lyft.js:ceQPills` | Evolution ▸ Earnings |
+| 41 | Setup (grid + annual) | `lyft.js:ceSetupBody, ceGrid, ceAnnualBody, CE_CONS` | Evolution ▸ Earnings |
+| 42 | Watch List (shared engine) + theme record | `lyft.js:ceWatchBody, mountWatchList, LY_THEMES` | Evolution ▸ Earnings |
+| 43 | Post-Results blocks | `lyft.js:ceResultsBody, cePrintBlock, ceSummaryBlock, CALL_EARNINGS` | Evolution ▸ Earnings |
+| 44 | Popover help | `lyft.js:ceQ / ceReg (CE_POP)` | Evolution ▸ Earnings |
+| 45 | Results dataset + chart | `results-data/lyft.js, resultsHtml` | Evolution ▸ Results |
+| 46 | Setup dataset | `results-data/lyft-setup.js` | Evolution ▸ Results |
+| 47 | Estimates evolution | `lyft.js:resultsEvoHtml` | Evolution ▸ Estimates |
+| 48 | Model vs Reality (AVE chart and stats) | `lyft.js:modelBody, AVE, computeAveStats, renderAveStats` | Evolution ▸ Guidance |
+| 49 | Guidance vs reality (GUIDE, GQ) | `lyft.js:modelBody, GUIDE, GQ` | Evolution ▸ Guidance |
+| 50 | Turnaround from to | `lyft.js:strategyBody` | Evolution ▸ Strategy |
+| 51 | Flywheel | `lyft.js:lyFlywheel (FW_DETAIL)` | Evolution ▸ Strategy |
+| 52 | 2027 targets and how | `lyft.js:strategyBody (TGT)` | Evolution ▸ Strategy |
+| 53 | AV bet | `lyft.js:strategyBody` | Evolution ▸ Strategy |
+| 54 | Knockout and engines at a glance | `lyft.js:lyKnockout, lyEnginesGlance` | Evolution ▸ Strategy |
+| 55 | History & Milestones | `lyft.js:historyStoryBody (TIMELINE)` | Evolution ▸ Timeline |
+| 56 | M&A, what each deal changed | `lyft.js:mnaTimeline (MNA)` | Evolution ▸ Timeline |
+| 57 | Scenario to price-target calculator | `lyft.js:LYFT_VAL (makeValuation)` | Valuation ▸ Multiples |
+| 58 | Peers multiples | `lyft.js:lyPeerMultBody (LY_PEER_MULT)` | Valuation ▸ Peers |
+| 59 | Analyst Ratings slot | `lyft.js #dd-val-slot (companies.js)` | Valuation ▸ Ratings |
+| 60 | Capital allocation (framing, dividend, SBC) | `lyft.js:lyCapAllocBody` | Valuation ▸ Capital |
+| 61 | Balance sheet (chart, cash and reserve, debt and dilution) | `lyft.js:lyBalanceBody, buildLyBal (LY_BAL_BARS)` | Valuation ▸ Balance |
+| 62 | Financials chart (GB, revenue, EBITDA, FCF) | `lyft.js:lyFinBody, lyFinSeries (LY_FIN_YEARS)` | Valuation ▸ Financials |
+| 63 | Executives and Board (9 execs, 8 directors, governance) | `lyft.js:LYFT_MGMT (makeManagement)` | Management |
+| 64 | Ownership slot | `lyft.js #dd-mgmt-slot` | Management |
+| 65 | Governance & SBC | `lyft.js:lyGovBody, buildLySbc (LY_SBC_HIST)` | Management |
+| 66 | Track Record cards | `lyft.js:lyTrackBody (LY_TRACK, LY_TRACK_RATE)` | Management |
+| 67 | Annual series A_* and quarterly UE_* | `lyft.js L366-387` | Cross-cutting |
+| 68 | Brand and palette constants | `lyft.js L359-363` | Cross-cutting |
+| 69 | Logo helper | `lyft.js:lyLogo` | Cross-cutting |
+
+### B2 — destinos
+| # | Pieza original | Destino | Cómo | Estado |
+|---|---|---|---|---|
+| 1 | Key Facts | Overview ▸ Key Facts (OV-1) | se rehace con celdas del 10-K; market cap en vivo | ⬜ |
+| 2 | Lede | Overview ▸ Descripción (OV-2) | se reescribe sin cifras | ⬜ |
+| 3 | 2×2 quadrant | Overview ▸ Cuadrante (OV-3) | se adapta al formato | ⬜ |
+| 4 | Money map bars (revenue split) | Overview ▸ How it makes money (OV-4) | se verifica contra el 10-K | ⬜ |
+| 5 | Segment definitions | Overview ▸ How it makes money (OV-4) | acordeones de definición | ⬜ |
+| 6 | Products & platforms + modal | Overview ▸ Products (OV-5) | sin emojis | ⬜ |
+| 7 | Peer scatter (multiple vs growth) | Overview ▸ Competitors (OV-6) | múltiplos en vivo, forward de BBG | ⬜ |
+| 8 | Timeline + modal | Overview ▸ Timeline (OV-7) | movido a lyft-ov-timeline.js | ⬜ |
+| 9 | Overview footer | Overview ▸ Pie de fuentes (OV-F) | un solo pie | ⬜ |
+| 10 | Shared modal | infraestructura compartida (F1) | se conserva | ⬜ |
+| 11 | Live price strip | Top Line ▸ General (TL-GEN) | get-quote | ⬜ |
+| 12 | Segments lede | Top Line ▸ General (TL-GEN) | cita del 10-K Item 1 | ⬜ |
+| 13 | Chart: Gross Bookings FY2022-2029E | Top Line ▸ General (TL-GEN) | el motor segments.js la reemplaza; datos a segments-data | ⬜ |
+| 14 | Chart: Adj. EBITDA FY2022-2029E | Top Line ▸ General (TL-GEN) | datos al archivo | ⬜ |
+| 15 | Where the Revenue Actually Comes From | Top Line ▸ Segments (TL-SEG) | colapsable | ⬜ |
+| 16 | Segment pills Rideshare / Media & Growth | Top Line ▸ Segments (TL-SEG) | el motor trae sus pills; estilo en línea sale | ⬜ |
+| 17 | Rideshare in depth (riders x frequency x price, decomposition, rides and riders charts) | Top Line ▸ Segments ▸ Rideshare (TL-SEG) | KPIs del segmento; análisis en colapsable | ⬜ |
+| 18 | Range slider for riders/rides | Top Line ▸ Segments (TL-SEG) | lo reemplaza el control del motor | ⬜ |
+| 19 | The deceleration debate | Top Line ▸ Segments ▸ Rideshare (TL-SEG) | texto en colapsable | ⬜ |
+| 20 | Lyft Media & Growth in depth | Top Line ▸ Segments ▸ Media (TL-SEG) | sub-segmento | ⬜ |
+| 21 | KPI strip (riders, rides, partnership share, membership) | Top Line ▸ Customers (TL-CUS) | cifras de 1T26, se refrescan | ⬜ |
+| 22 | Active riders bars | Top Line ▸ Customers (TL-CUS) | gráfica del motor | ⬜ |
+| 23 | The loyalty stack | Top Line ▸ Customers (TL-CUS) | colapsable | ⬜ |
+| 24 | Advertisers, the other customer | Top Line ▸ Customers (TL-CUS) | colapsable | ⬜ |
+| 25 | How the market is defined | Miscellaneous ▸ TAM (MISC-tam) | como UBER | ⬜ |
+| 26 | The dollar dimension | Miscellaneous ▸ TAM (MISC-tam) | como UBER | ⬜ |
+| 27 | Lyft Media & micromobility sizing | Miscellaneous ▸ TAM (MISC-tam) | como UBER | ⬜ |
+| 28 | Competitive Landscape, rivals & adjacent fronts | Miscellaneous ▸ Competitive Position (MISC-comp) | como UBER | ⬜ |
+| 29 | Competitive map, rivals by business traits | Miscellaneous ▸ Competitive Position (MISC-comp) | como UBER | ⬜ |
+| 30 | Regulation & driver classification | Miscellaneous ▸ Regulation (MISC-regulation) | como UBER | ⬜ |
+| 31 | Follow a single ride, where the money goes | Bottom Line ▸ General ▸ The bridge (BL-GEN-2) | datos trimestrales a archivo | ⬜ |
+| 32 | Where each $ of a ride goes (chart) | Bottom Line ▸ General ▸ Profitability & margins (BL-GEN-1) | se adapta al formato | ⬜ |
+| 33 | Take rate, and why it misleads | Bottom Line ▸ General (BL-GEN-1) | nota del panel | ⬜ |
+| 34 | Driver classification foundation | Miscellaneous ▸ Regulation (MISC-regulation) | se adapta al formato | ⬜ |
+| 35 | Is the margin jump durable? | Bottom Line ▸ General (BL-GEN-1) | colapsable | ⬜ |
+| 36 | Who Powers Lyft, supplier & customer ecosystem | Bottom Line ▸ Supply Chain (BL-SPLC) | sin export SPLC; se dice en el pie | ⬜ |
+| 37 | Insurance money flow and model compare | Miscellaneous ▸ Insurance & Balance Sheet (MISC-insurance) | como UBER | ⬜ |
+| 38 | Margins chart (live Massive) + fallback + notes | Bottom Line ▸ General ▸ Profitability & margins (BL-GEN-1) | versión AMZN; notas al panel | ⬜ |
+| 39 | IR button / links | Evolution ▸ Earnings | se conserva | ⬜ |
+| 40 | Quarter pills | Evolution ▸ Earnings | motor | ⬜ |
+| 41 | Setup (grid + annual) | Evolution ▸ Earnings ▸ Setup (EV-SET) | consenso de BBG, no a mano | ⬜ |
+| 42 | Watch List (shared engine) + theme record | Evolution ▸ Earnings ▸ Notes (EV-NOTES) | se adapta al formato | ⬜ |
+| 43 | Post-Results blocks | Evolution ▸ Earnings ▸ Post-Results (EV-POST) | hoy solo hasta 1T26 | ⬜ |
+| 44 | Popover help | Evolution ▸ Earnings | se conserva | ⬜ |
+| 45 | Results dataset + chart | Evolution ▸ Results (EV-RES-DATA / EV-RES) | se recarga con BBG y 2T26 real | ⬜ |
+| 46 | Setup dataset | Evolution ▸ Earnings ▸ Setup (EV-SET) | se adapta al formato | ⬜ |
+| 47 | Estimates evolution | Evolution ▸ Estimates (EV-EST) | necesita 2 o más vintages del xlsm | ⬜ |
+| 48 | Model vs Reality (AVE chart and stats) | Evolution ▸ Results (debajo) | como UBER | ⬜ |
+| 49 | Guidance vs reality (GUIDE, GQ) | Evolution ▸ Results (debajo) | como UBER | ⬜ |
+| 50 | Turnaround from to | Miscellaneous ▸ Strategy (MISC-strategy, propuesta nueva) | el esqueleto no tiene Strategy | ⬜ |
+| 51 | Flywheel | Miscellaneous ▸ Strategy (MISC-strategy) | se adapta al formato | ⬜ |
+| 52 | 2027 targets and how | Management ▸ Track Record (MG-TRACK) | metas a 3 años | ⬜ |
+| 53 | AV bet | Miscellaneous ▸ Strategy (MISC-strategy) | se adapta al formato | ⬜ |
+| 54 | Knockout and engines at a glance | Miscellaneous ▸ Strategy (MISC-strategy) | se adapta al formato | ⬜ |
+| 55 | History & Milestones | Overview ▸ Timeline (OV-7), fusionada con #8 | requiere aprobación específica de fusión | ⬜ |
+| 56 | M&A, what each deal changed | Miscellaneous ▸ M&A (MISC-manda) | se adapta al formato | ⬜ |
+| 57 | Scenario to price-target calculator | Valuation ▸ Target Multiple (VA-TM) y Sensitivity (VA-SENS) | precio y caja tecleados dejan de mostrarse | ⬜ |
+| 58 | Peers multiples | Valuation ▸ Peers (VA-PEERS) | mapa compartido con OV-6 | ⬜ |
+| 59 | Analyst Ratings slot | Pillars ▸ Ratings | como UBER | ⬜ |
+| 60 | Capital allocation (framing, dividend, SBC) | Management ▸ Governance & SBC (MG-GOV) | se adapta al formato | ⬜ |
+| 61 | Balance sheet (chart, cash and reserve, debt and dilution) | Miscellaneous ▸ Insurance & Balance Sheet (MISC-insurance) | se adapta al formato | ⬜ |
+| 62 | Financials chart (GB, revenue, EBITDA, FCF) | Bottom Line ▸ General (BL-GEN-1) | motor | ⬜ |
+| 63 | Executives and Board (9 execs, 8 directors, governance) | Management ▸ Executives & Board (MG-TEAM) | DEF 14A 2026 | ⬜ |
+| 64 | Ownership slot | Management ▸ Ownership (MG-OWN) | sin Fiscal.ai; DEF 14A | ⬜ |
+| 65 | Governance & SBC | Management ▸ Governance & SBC (MG-GOV) | se adapta al formato | ⬜ |
+| 66 | Track Record cards | Management ▸ Track Record (MG-TRACK) | sin calificaciones (decisión SAB en UBER/GOOGL) | ⬜ |
+| 67 | Annual series A_* and quarterly UE_* | archivo de datos (EV-RES-DATA) | snapshot 2026-05-13 | ⬜ |
+| 68 | Brand and palette constants | F1: tokens Summit, marca solo en logo | se adapta al formato | ⬜ |
+| 69 | Logo helper | F1 | se adapta al formato | ⬜ |
+
+## 6. Bloqueos y preguntas abiertas
+
+| Desde | Unidad | Qué falta | Quién lo consigue | Estado |
+|---|---|---|---|---|
+
+## 6b. Conexiones pendientes ("Live data pending")
+
+> `docs/PROFILE_PLAYBOOK.md` §20b. Bloques aprobados que hoy muestran el aviso porque falta el camino
+> en vivo. No hay números copiados que migrar: al destrabarse, se conecta, se vuelve a mostrar y se cierra.
+
+| Desde | Unidad ▸ bloque | Qué falta (función / dato) | Quién lo destraba | Estado |
+|---|---|---|---|---|
+
+## 6c. Review del analista — pendientes
+
+> `docs/PROFILE_PLAYBOOK.md` §16 paso 7. Pedidos del analista después de entregado el perfil. Cada R pasa
+> por la compuerta normal y se registra en §7 al aprobarse. Si el pedido vale para toda empresa, se
+> propone también como cambio a la guía.
+
+| # | Pedido (textual) | Unidad | Qué hay que construir | Depende de | ¿Va a la guía? | Estado |
+|---|---|---|---|---|---|---|
+
+## 7. Historial de aprobaciones
+
+<!-- Solo se agrega, la más reciente al final. Una entrada por cada paso por la compuerta. -->
+### AAAA-MM-DD · <ID> <Nombre> — <APROBADA | CAMBIOS | OMITIDA>
+- Qué se mostró:
+- Fuentes:
+- Autoauditoría:
+- Cambios pedidos / decisiones:
+
+### 2026-11-04 · F0 Inventario de datos — APROBADA
+- Qué se mostró: tabla §1 y alcance propuesto.
+- Fuentes: `inspect_matrix.py LYFT`, carpeta DCF de Drive, `docs/calls/LYFT*.md`, `results-data/lyft.js`.
+- Autoauditoría: Output del xlsm con caché viejo (no se usa); 10-K/10-Q sin accession verificado todavía.
+- Cambios pedidos / decisiones: ninguno.
+
+### 2026-11-04 · B1 + B2 — APROBADAS
+- Qué se mostró: 69 piezas con destino; 3 decisiones (Strategy → MISC-strategy y metas 2027 → Track Record; History & Milestones fusionada con Overview ▸ Timeline; código muerto SNAPSHOT/DESC/KPIS/SEGMENTS/PEERS/TAILWINDS/HEADWINDS/TARGETS).
+- Fuentes: lectura de `js/overviews/lyft.js`.
+- Autoauditoría: conteo hecho desde el código; **no se contó en el portal local** (login); se concilia en F-FINAL.
+
+### 2026-11-04 · F0-SM Mapa de métricas Summit — APROBADA
+- Qué se mostró: tabla de 43 códigos, 4 submits, valuación EV/EBITDA, 6 dudas + la de valuación.
+- Fuentes: `DCF LYFT.xlsm` (Projection History / Actuals History), dataset de Results (8-K).
+- Autoauditoría: Output/Summary del xlsm con caché viejo, no se leen; 2T26 y guía 3T26 del modelo sin 8-K; dudas abiertas sin uso.
+- Cambios pedidos / decisiones: ninguno; las dudas quedan en "Bloqueos".
+
+### 2026-11-04 · F1 Esqueleto + vista previa — APROBADA
+- Qué se mostró: 6 secciones con los paneles actuales en su destino B2; `http://localhost:8000/`; Pillars vuelve.
+- Fuentes: —
+- Autoauditoría: sintaxis OK; no se probó en navegador por Claude (login); gráficas de Bottom Line ▸ General apiladas visibles.
+- Cambios pedidos / decisiones: ninguno.
+
+### 2026-11-04 · OV-1 Key Facts — APROBADA
+- Qué se mostró: 10 celdas; market cap solo en vivo ("loading live quote…" / "live quote unavailable").
+- Fuentes: 10-K FY2025 (acc. 0001628280-26-006960): HQ, Delaware, 3,913 empleados Dic 2025, dividendo, Nasdaq; Founded/IPO/CEO desde el perfil anterior (sin fuente primaria).
+- Autoauditoría: PASS 10 celdas, sin celdas vacías, sin semilla de market cap; FAIL parcial (aceptado): Founded, IPO y fecha del CEO sin fuente primaria — verificar con prospecto/proxy.
+- Cambios pedidos / decisiones: ninguno. Datos siguen en `lyft.js` (separación en lyft-ov*.js en F-FINAL).

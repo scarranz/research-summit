@@ -1672,15 +1672,15 @@ function collapsible(title, inner, open){
 // (and a live #lyMc span). No live price strip anywhere in the standardized overview.
 var LY_FACTS=[
   ['Listing','NASDAQ: LYFT'],
-  ['HQ','San Francisco, CA, USA'],
-  ['Incorporation','Delaware, USA'],
+  ['HQ','San Francisco, California, USA'],
+  ['Incorporated','Delaware, USA'],
   ['SEC filer','Domestic (10-K/10-Q/8-K)'],
   ['Founded','2012 (Zimride 2007)'],
-  ['IPO','Mar 2019 · $72.00'],
-  ['CEO','David Risher · since 2023'],
-  ['Employees','~3,913 · Dec 2025'],
-  ['Dividend','Non-payer ($1B buyback ’26)'],
-  ['Market cap','~$5.9B · Jul 2026'],
+  ['IPO','Mar 2019 · NASDAQ'],
+  ['CEO','David Risher · board since 2021 · CEO since Apr 2023'],
+  ['Employees','3,913 · Dec 2025'],
+  ['Dividend','Non-payer · never paid one'],
+  ['Market cap','loading live quote…'],
 ];
 function stdKeyFacts(){
   return '<div class="stdkf">'+LY_FACTS.slice(0,10).map(function(p){
@@ -3572,59 +3572,36 @@ function wireCallEarnings(root){
 }
 
 
+// F1 (playbook section 7, 2026-11-04): the Amazon spine. Every existing pane sits whole in its B2 destination
+// (docs/profiles/LYFT.md section 5); sub-tabs without content are added when their unit is built (rule 5).
+// Analyst Ratings return to the Pillars tab (absorbsPillars is gone), as in UBER.
+function ddMore(title, inner){
+  return '<div class="ov-collap"><button type="button" class="ov-collap-h"><span class="ov-collap-ic">▸</span>'+esc(title)+'</button><div class="ov-collap-b" hidden>'+inner+'</div></div>';
+}
 function deepDiveHtml(c){
-  var h = '<div class="ov ov-lyft ov-lyft-dd" data-brand="LYFT">'+
-    '<div class="dd-tabs">'+
+  _co = c;   // company id + ticker for the shared Watch List (Supabase)
+  function st(list){ return '<div class="ovt-subtabs">'+list.map(function(x,i){ return '<button type="button" class="ovt-subtab'+(i?'':' active')+'" data-ovst="'+x[0]+'">'+x[1]+'</button>'; }).join('')+'</div>'+
+    list.map(function(x,i){ return '<div class="ovt-subpane" data-ovst="'+x[0]+'"'+(i?' hidden':'')+'>'+x[2]+'</div>'; }).join(''); }
+  var h = '<div class="ov ov-lyft ov-lyft-dd" data-brand="LYFT">';
+  h += '<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
       '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
       '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
       '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
-    '</div>'+
-    // ── TOP LINE — Segments (with an inner Rideshare / Media & Growth toggle) · Customers ·
-    // TAM · Industry Analysis. The old "Deep Overview" is dismantled into these (Golden Rule #1). ──
-    '<div class="dd-pane" data-dd="topline">'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="segments">Segments</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="customers">Customers</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="tam">TAM</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="industry">Industry Analysis</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="segments">'+lySegmentsBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="customers" hidden>'+lyCustomersBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="tam" hidden>'+lyTamBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="industry" hidden>'+lyIndustryBody(c)+'</div>'+
-    '</div>'+
-    // ── BOTTOM LINE — Unit Economics · Suppliers · Insurance · Margins (live via Massive). ──
-    '<div class="dd-pane" data-dd="bottomline" hidden>'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="unit">Unit Economics</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="suppliers">Suppliers</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="insurance">Insurance</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="margins">Margins</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="unit">'+unitBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="suppliers" hidden>'+lySuppliersBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="insurance" hidden>'+insuranceBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="margins" hidden>'+lyMarginsBody(c)+'</div>'+
-    '</div>'+
-    // ── EVOLUTION — Earnings History · Guidance (Model vs. Reality) · Strategy (turnaround +
-    // Playbook) · Timeline (company history & M&A). ──
-    '<div class="dd-pane" data-dd="evolution" hidden>'+
-      // Go-forward Evolution row (EARNINGS_CONVENTIONS v2.9): Earnings · Results ·
-      // Estimates · Guidance · Strategy · Timeline. "Earnings History" keeps carrying the
-      // LY_THEMES compendium until the full Earnings v2.10 tab is built for LYFT — at
-      // which point the compendium folds in under its Watch List (§6/v2.3) and this
-      // sub-tab is retired.
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="track">Results</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="earnings">'+
+      '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
+    '</div>';
+  // TOP LINE - Segments (B2 rideshare + media in depth) · Customers
+  h += '<div class="dd-pane" data-dd="topline">'+st([
+      ['segdrv','Segments',lySegmentsBody(c)],
+      ['segcus','Customers',lyCustomersBody(c)] ])+'</div>';
+  // BOTTOM LINE - General (margins + unit economics + financials) · Supply Chain
+  h += '<div class="dd-pane" data-dd="bottomline" hidden>'+st([
+      ['margins','General',lyMarginsBody(c)+unitBody(c)+lyFinBody()],
+      ['supplychain','Supply Chain',lySuppliersBody(c)] ])+'</div>';
+  // EVOLUTION - Earnings (Setup · Watch List · Post-Results) · Results (+ Model/Guidance vs reality) · Estimates
+  h += '<div class="dd-pane" data-dd="evolution" hidden>'+st([
+      ['earnings','Earnings',
         ceIRButton()+
         '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (Setup · Watch List, with the theme record folded in below it) → <b>② Post-Results</b> (the print scored against what was frozen, plus what management said). <b>Lyft reports Q2 2026 on Thursday 6 August, after close</b> — so the live quarter here is a print that has not happened yet, and Post-Results stays empty until it does.</div>'+
         '<div class="ce-phtabs">'+
@@ -3635,47 +3612,26 @@ function deepDiveHtml(c){
         ceQPills()+
         '<div class="ce-phpane" data-cep="setup">'+ceSetupBody(c)+'</div>'+
         '<div class="ce-phpane" data-cep="watch" hidden>'+ceWatchBody(c)+'</div>'+
-        '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="track" hidden>'+resultsHtml('LYFT')+'</div>'+
-      '<div class="ovt-subpane" data-ovst="estevo" hidden>'+resultsEvoHtml('LYFT')+'</div>'+
-      '<div class="ovt-subpane" data-ovst="guidance" hidden>'+modelBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="strategy" hidden>'+lyKnockout()+strategyBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="timeline" hidden>'+historyStoryBody()+'</div>'+
-    '</div>'+
-    // ── VALUATION — Multiples & Targets · Sensitivity · Competitors · Analyst Ratings (Massive,
-    // absorbed) · Capital Allocation · Balance Sheet. ──
-    '<div class="dd-pane" data-dd="valuation" hidden>'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="multiples">Multiples</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="ratings">Analyst Ratings</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="capital">Capital Allocation</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="balance">Balance Sheet</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="financials">Financials</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="multiples">'+LYFT_VAL.body()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="peers" hidden>'+lyPeerMultBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="ratings" hidden><div id="dd-val-slot"></div></div>'+
-      '<div class="ovt-subpane" data-ovst="capital" hidden>'+lyCapAllocBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="balance" hidden>'+lyBalanceBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="financials" hidden>'+lyFinBody()+'</div>'+
-    '</div>'+
-    // ── MANAGEMENT — Executives & Board · Ownership (Fiscal.ai, absorbed) · Governance & SBC ·
-    // Track Record. ──
-    '<div class="dd-pane" data-dd="mgmt" hidden>'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="team">Executives & Board</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="ownership">Ownership</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="governance">Governance & SBC</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="track">Track Record</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="team">'+LYFT_MGMT.body()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="ownership" hidden><div id="dd-mgmt-slot"></div></div>'+
-      '<div class="ovt-subpane" data-ovst="governance" hidden>'+lyGovBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="track" hidden>'+lyTrackBody(c)+'</div>'+
-    '</div>'+
-  '</div>';
+        '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>'],
+      ['results','Results',(resultsHtml('LYFT')||'')+modelBody(c)],
+      ['estevo','Estimates',resultsEvoHtml('LYFT')||''] ])+'</div>';
+  // VALUATION - Peers · Sensitivity Analysis (the earlier calculator stays until VA-SENS rebuilds it)
+  h += '<div class="dd-pane" data-dd="valuation" hidden>'+st([
+      ['peers','Peers',lyPeerMultBody(c)],
+      ['sensitivity','Sensitivity Analysis',LYFT_VAL.body()] ])+'</div>';
+  // MANAGEMENT - Executives & Board · Governance & SBC (+ capital allocation) · Track Record. Ownership comes with MG-OWN.
+  h += '<div class="dd-pane" data-dd="mgmt" hidden>'+st([
+      ['team','Executives & Board',LYFT_MGMT.body()],
+      ['governance','Governance & SBC',lyGovBody(c)+lyCapAllocBody(c)],
+      ['track','Track Record',lyTrackBody(c)] ])+'</div>';
+  // MISCELLANEOUS - Competitive Position · Insurance & Balance Sheet · M&A and history · TAM · Strategy
+  h += '<div class="dd-pane" data-dd="misc" hidden>'+st([
+      ['comp','Competitive Position',lyIndustryBody(c)],
+      ['insurance','Insurance & Balance Sheet',insuranceBody(c)+lyBalanceBody(c)],
+      ['manda','M&A and History',historyStoryBody()],
+      ['tam','TAM',lyTamBody(c)],
+      ['strategy','Strategy',lyKnockout()+strategyBody(c)] ])+'</div>';
+  h += '</div>';
   return h;
 }
 // Evolution ▸ Company History & M&A — the single home for the company story and the
@@ -4212,38 +4168,37 @@ function buildDD(root, key){
 // Build the lazy charts inside a nested sub-pane, by (group, sub-key).
 function buildSub(root, group, key){
   if(group==='topline'){
-    if(key==='segments'){ buildOverviewCharts(); buildActiveSeg(root); }  // GB + EBITDA + active segment
-    // customers, tam, industry: no charts
+    if(key==='segdrv'){ buildOverviewCharts(); buildActiveSeg(root); }  // GB + EBITDA + active segment
+    // segcus: no charts
   } else if(group==='bottomline'){
-    if(key==='unit')          buildUnitTab();
-    else if(key==='margins')  buildLyMargins();   // live Massive margins
-    // suppliers, insurance: no charts (insurance's sf-pill is wired globally in init)
+    if(key==='margins'){ buildLyMargins(); buildUnitTab(); buildLyFin(); }   // live Massive margins + unit economics + financials
+    // supplychain: no charts
   } else if(group==='evolution'){
-    // Earnings ▸ Setup carries its own Results-engine instance (LYFT_SETUP). Build it when the
-    // sub-tab becomes visible AND Setup is the live phase — a build against a hidden container
-    // yields a zero-size canvas. Same guard as amzn.js/googl.js.
+    // Earnings > Setup carries its own Results-engine instance (LYFT_SETUP). Build it when the
+    // sub-tab becomes visible AND Setup is the live phase (a build against a hidden container
+    // yields a zero-size canvas). Same guard as amzn.js/googl.js.
     if(key==='earnings'){
       var ph=root.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phtab.active');
       if(!ph || ph.getAttribute('data-cep')==='setup') requestAnimationFrame(gBuildCeAnnual);
     }
-    else if(key==='guidance') buildModelTab();      // Model vs. Reality lives under Guidance
-    else if(key==='track'){                          // Results — the shared engine (js/results.js)
-      var w=root.querySelector('.ovt-subpane[data-ovst="track"] .rs-wrap');
+    else if(key==='results'){                        // the shared engine (js/results.js) + Model/Guidance vs reality
+      var w=root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap');
       if(w) initResults(w, 'LYFT');
+      buildModelTab();
     }
-    else if(key==='estevo'){                         // Estimate Evolution — binds to #rsEvoWrap
+    else if(key==='estevo'){                         // Estimate Evolution - binds to #rsEvoWrap
       if(root.querySelector('#rsEvoWrap')) initResultsEvo();
     }
-    // strategy, timeline: no lazy charts
   } else if(group==='valuation'){
-    if(key==='multiples')     LYFT_VAL.init(root);
-    else if(key==='balance')  buildLyBal();     // insurance-reserve coverage bar
-    else if(key==='financials') buildLyFin();   // the eight-year arc, from the annual dataset
-    // peers (static table), ratings, capital: no charts
+    if(key==='sensitivity') LYFT_VAL.init(root);
+    // peers (static table): no charts
   } else if(group==='mgmt'){
     if(key==='team')          LYFT_MGMT.init(root);
     else if(key==='governance') buildLySbc();   // SBC % vs share-count history
-    // ownership, track: no charts
+    // track: no charts
+  } else if(group==='misc'){
+    if(key==='insurance')     buildLyBal();     // insurance-reserve coverage bar
+    // comp, manda, tam, strategy: no lazy charts
   }
 }
 // Segments ▸ inner Rideshare / Media & Growth toggle → build the active segment's charts.
@@ -4347,7 +4302,7 @@ function init(c){
   if (!root) return;
   renderLive(root); // Deep Dive ▸ Deep Overview keeps its #lyLive banner; the standardized Overview has no price strip.
   wireDD(root);
-  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt');
+  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt'); wireSubtabs(root,'misc');
   // Segments ▸ inner Rideshare / Media & Growth toggle (the "sub-tabs de los segmentos").
   root.querySelectorAll('.seg-pill').forEach(function(btn){ btn.onclick=function(){
     var seg=btn.getAttribute('data-seg');
@@ -4418,7 +4373,7 @@ function init(c){
   // Collapsible sections (reader chooses what to expand)
   root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var cc=btn.parentElement; var open=cc.classList.toggle('open'); var b=cc.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'\u25be':'\u25b8'; }; });
   // Live market cap (Key Facts #lyMc + peer bubbles) \u2014 Massive via api.liveQuote; degrades gracefully in preview
-  function lyLiveOne(tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(q){ if(!q||q.marketCap==null) return; var mcB=q.marketCap/1e9; LY_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; }); if(tk==='LYFT'){ var el=root.querySelector('#lyMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':(mcB>=10?Math.round(mcB):mcB.toFixed(1))+'B')+' \u00b7 live'; } scRefresh(); }).catch(function(){}); }
+  function lyLiveOne(tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(q){ if(!q||q.marketCap==null){ if(tk==='LYFT'){ var e0=root.querySelector('#lyMc'); if(e0) e0.textContent='live quote unavailable'; } return; } var mcB=q.marketCap/1e9; LY_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; }); if(tk==='LYFT'){ var el=root.querySelector('#lyMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':(mcB>=10?Math.round(mcB):mcB.toFixed(1))+'B')+' \u00b7 live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } scRefresh(); }).catch(function(){ if(tk==='LYFT'){ var e1=root.querySelector('#lyMc'); if(e1) e1.textContent='live quote unavailable'; } }); }
   LY_SC.peers.forEach(function(p){ if(p.tk) lyLiveOne(p.tk); });
   lyScRender(root); // first paint of the standardized Overview scatter (no ovt-tab gate anymore)
   // Hoist the modal to #co-detailview so it stays visible from either profile tab
@@ -4436,4 +4391,4 @@ function deepDiveInit(c){
   var d = activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
 }
 
-export var lyftOverview = { html: html, init: init, absorbsPillars: true, deepDive: { html: deepDiveHtml, init: deepDiveInit } };
+export var lyftOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

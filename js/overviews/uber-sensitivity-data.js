@@ -2,8 +2,9 @@
 // docs/PROFILE_PLAYBOOK.md §14).
 //
 // FROZEN ON PURPOSE, NOT LIVE (SAB, Oct 15 2026: Summit numbers are coded directly; playbook rule 10, §20b).
-// Pulled once from the Summit DCF model for UBER (model 4dbd6471), snapshot 2026-08-05 (after 2Q26 — the latest submit,
-// the same one as the Results dataset and the last Target Multiple row), on 2026-11-03. Refresh by re-pulling when a new
+// Pulled once from the Summit DCF model for UBER (model 4dbd6471), snapshot 2026-11-04 (after 3Q26 — the latest submit,
+// the same one as the Results dataset's forward periods and the last Target Multiple row), on 2026-11-04 (replaced the
+// 2026-08-05 block pulled on 2026-11-03). Refresh by re-pulling when a new
 // snapshot is submitted (replace the block and its date — Sensitivity reads ONE snapshot). Labels per
 // js/summit-map/uber.js, US$ millions, projection_history:
 //   line.*  MOBILITY_REVENUE · DELIVERY_REVENUE · FREIGHT_REVENUE — the three sum to the model's REV in every year.
@@ -16,23 +17,23 @@
 //           · eb EBITDA (Adjusted EBITDA, the line Target Multiple values) · earn EARNINGS (Non-GAAP net income) ·
 //           tax TAX_RATE (fraction) · sh SHARES (diluted, millions — falling with buybacks in the model).
 export var UBER_SENS = {
-  model: '4dbd6471-83b2-4fe7-9ceb-19cb249ff517', snapshot: '2026-08-05', after: '2Q26', pulled: '2026-11-03',
+  model: '4dbd6471-83b2-4fe7-9ceb-19cb249ff517', snapshot: '2026-11-04', after: '3Q26', pulled: '2026-11-04',
   y: {
-    2026: { line: { mob:30052.55997, del:22203.548228, fr:5810.64 },
-            gb:   { mob:118194.49, del:114417.34, fr:5795.64 },
-            seg:  { mob:9011.467991, del:4884.78061016, fr:-97.3596, corp:-4486.2627 },
-            rev:58066.7482, op:9312.6263, eb:11381.8565, earn:6870.6308, tax:0.2, sh:2009.4255 },
-    2027: { line: { mob:34867.37455, del:28997.9306496, fr:6491.1168 },
-            gb:   { mob:139469.4982, del:146454.1952, fr:6491.1168 },
-            seg:  { mob:10808.8861105, del:6234.55508966, fr:-97.366752, corp:-5024.614224 },
-            rev:70356.422, op:11921.4602, eb:15891.1144, earn:9656.3828, tax:0.2, sh:1939.0956 },
-    2028: { line: { mob:43584.2181875, del:30316.0184064, fr:6491.1168 },
-            gb:   { mob:174336.87275, del:168422.32448, fr:6491.1168 },
-            seg:  { mob:13511.10763813, del:7579.0046016, fr:-64.911168, corp:-5125.10650848 },
-            rev:80391.3534, op:15900.0946, eb:18455.4282, earn:13515.0804, tax:0.2, sh:1842.1408 },
-    2029: { line: { mob:54480.27273438, del:34863.42116736, fr:6491.1168 },
-            gb:   { mob:217921.0909375, del:193685.673152, fr:6491.1168 },
-            seg:  { mob:16888.88454766, del:8715.85529184, fr:64.911168, corp:-5227.60863865 },
-            rev:95834.8107, op:20442.0424, eb:22612.7363, earn:17375.736, tax:0.2, sh:1750.0338 }
+    2026: { line: { mob:29873.53468, del:21851.0349, fr:6446 },
+            gb:   { mob:117275.56, del:113019.82, fr:6441 },
+            seg:  { mob:9063.760404, del:4807.227678, fr:-113.52, corp:-4376.46 },
+            rev:58170.5696, op:9381.0081, eb:11458.753, earn:6909.9189, tax:0.2, sh:2029.8208 },
+    2027: { line: { mob:35182.668, del:27989.358423, fr:7213.92 },
+            gb:   { mob:140730.672, del:143535.1714, fr:7213.92 },
+            seg:  { mob:10906.62708, del:6017.71206095, fr:-108.2088, corp:-4901.6352 },
+            rev:70385.9464, op:11914.4951, eb:14677.97, earn:9293.3062, tax:0.2, sh:1989.2243 },
+    2028: { line: { mob:42219.2016, del:34907.75368448, fr:7213.92 },
+            gb:   { mob:168876.8064, del:183725.019392, fr:7213.92 },
+            seg:  { mob:13087.952496, del:7784.42907164, fr:-72.1392, corp:-4999.667904 },
+            rev:84340.8753, op:15800.5745, eb:18239.8278, earn:12640.4596, tax:0.2, sh:1949.4399 },
+    2029: { line: { mob:52774.002, del:38031.07901414, fr:7213.92 },
+            gb:   { mob:211096.008, del:211283.7723008, fr:7213.92 },
+            seg:  { mob:16359.94062, del:9507.76975354, fr:72.1392, corp:-5099.66126208 },
+            rev:98019.001, op:20840.1883, eb:24500.9079, earn:17714.1601, tax:0.2, sh:1851.9679 }
   }
 };

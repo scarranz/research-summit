@@ -5,7 +5,458 @@ EXCEPT the most recent one** (which lives in `UBER-latest.md` with its analysis)
 when a new call lands, the current "latest" is appended to the TOP of this file and the new
 transcript replaces it in `UBER-latest.md`. Append-only — prior quarters are never rewritten.
 
-Coverage: **Q4 2023 → Q4 2025** (9 calls, newest first). Latest (Q1 2026): see `UBER-latest.md`.
+Coverage: **Q4 2023 → Q2 2026** (11 calls, newest first). Latest (Q3 2026): see `UBER-latest.md`.
+
+---
+
+## Q2 2026 — August 5, 2026
+
+Reported before open, August 5, 2026. CEO Dara Khosrowshahi; CFO Balaji Krishnamurthy.
+
+---
+
+## Transcript — Q2 2026 (August 5, 2026)
+
+Source: stockanalysis.com, "Uber Technologies (UBER) Q2 2026 Earnings Call Transcript" (data source Quartr), read Nov 4 2026. Uber also posts its own transcript: s23.q4cdn.com/407969754/files/doc_events/2026/Aug/05/Uber-Q2-26-Earnings-Call-Transcript.pdf. Speaker turns as published; no analysis written for this call.
+
+**Operator:** Hello and welcome to Uber's Q2 2026 earnings conference call. All lines have been placed on mute to prevent any background noise. After the speaker's remarks, there will be a question- and- answer session. If you would like to ask a question during this time, please press star one on your telephone keypad. I would now like to turn the conference over to Alex Wang, Head of Investor Relations. You may begin.
+
+**Alex Wang (Head of Investor Relations, Uber):** Thank you, Sarah. Thank you for joining us today and welcome to Uber's second quarter 2026 earnings presentation. On the call today, we have Uber's CEO, Dara Khosrowshahi, and CFO, Balaji Krishnamurthy. During today's call, we will present both GAAP and non-GAAP financial measures. Additional disclosures regarding these non-GAAP measures, including a reconciliation of GAAP to non-GAAP measures, are included in the press release, supplemental slides, and our filings with the SEC, each of which is posted to investor.uber.com. Certain statements in this presentation and on this call are forward-looking statements. You should not place undue reliance on forward-looking statements. Actual results may differ materially from these forward-looking statements. We do not undertake any obligation to update any forward-looking statements we make today, except as required by law. For more information about factors that may cause actual results to differ materially from forward-looking statements, please refer to the press release we issued today, as well as risks and uncertainties described in our most recent Form 10-K and in other filings made with the SEC. We published our quarterly earnings press release, prepared remarks, and supplemental slides to our investor relations website earlier today. We ask you to review those documents if you haven't already. We will open the call to questions following brief opening remarks from Dara. With that, let me hand it over to Dara.
+
+**Dara Khosrowshahi (CEO, Uber):** Thanks, Alex. Q2 was another outstanding quarter for Uber, with record audience and engagement, driving durable growth, expanding margins, and record cash generation. Gross bookings were 22% year-over-year to more than $58 billion, above the high end of our guidance and marking our fourth consecutive quarter above 20% growth. Just as importantly, that growth translated into significant operating leverage with non-GAAP EPS growing 35% year-over-year and trailing 12-month free cash flow exceeding $10 billion for the first time in our history. Those results give us the ability to continue investing from a position of strength across our priorities. Our recently announced agreement to acquire Delivery Hero is a great example. The combination is going to expand our reach to nearly 100 markets and extend the proven strategy that has underpinned our growth for years by roughly doubling the number of markets where we can offer the full power of our platform across mobility and delivery. By bringing our technology and Uber One to millions more people, we believe this deal will create significant long-term shareholder value. We also continue to invest behind one of the largest opportunities in Uber's history, autonomous vehicles. Over the past year, the conversation around AVs has shifted from whether the technology can deliver a compelling service to how broadly, reliably, and economically it can scale. That distinction matters because we believe the industry structure is becoming clearer. It mirrors what's happening in AI broadly. A few years ago, many expected AI to converge around a single foundation model. Instead, multiple frontier models have emerged alongside a growing open source ecosystem. We believe AVs, which are essentially physical AI, will follow a similar path. Just in the last week, we've seen NVIDIA release its Alpamayo open weight model, and our partners at Wayve received a permit in the U.K., and Zoox received approval to scale its robotaxi. The momentum across our partner base is remarkable. Unlike foundation models, however, AVs are physical, regulated systems that have to be deployed market by market with the variable patterns of ride hailing. That makes the commercialization layer critical, and that's exactly the opportunity we're building towards. Our ambition is straightforward, to become the world's leading commercialization platform for autonomous vehicles. Taken together, we're executing with discipline today while building the capabilities we believe will define Uber's next decade of growth. With that, operator, let's open it up for questions.
+
+**Operator:** Thank you. Your first question comes from the line of Brian Nowak with Morgan Stanley. Your line is open.
+
+**Brian Nowak (Analyst, Morgan Stanley):** Thanks for taking my questions. Maybe, Dara, a double-pronged one on autonomous and one on mobility and delivery. Just you've made a lot of progress with different partnerships and there's a lot of technological progress happening, but maybe help us understand if you look ahead 12 months from now, what are sort of the main milestones or progress sign points you're focused on your mobility strategy and your delivery strategy in AV just to ensure you're going down the right path?
+
+**Dara Khosrowshahi (CEO, Uber):** Yeah, absolutely, Brian. In terms of what the milestones we're looking at, the most important milestones are really launches, and the number of cities that we are live in, both with vehicle operators and then without vehicle operators. To remind you, we're live in seven cities, and we're on track to be live in 15 cities by year-end. We've got a Nuro Lucid launch coming in the Bay. We've got Zoox coming in Vegas. We've got Wayve in London and Tokyo. Baidu also in London, and then Pony and Verne in Zagreb, and potentially more. There's a bunch of launches coming up in the balance of the year. Really, we're looking for more in 2027. We'll continue to launch markets with the partners that I talked about, but we'll be adding additional partners into the ecosystem as well. We expect to see Rivian in the market. This is kind of a full stack kind of a build Which is software and hardware with a very affordable bill of materials. We expect to be in perhaps San Francisco and Miami in 2028 for Rivian. In NVIDIA, we expect to be in L.A. and San Francisco in 2027, and then 28 different cities globally by 2028 as well. Really what we're looking for is launches in markets, accelerating our data collect, which is really driving the newer kind of end-to-end models as well, and then starting to really commercialize this model. The numbers are small at this point, but for us, what we're looking at is, first of all, the quality of the service. Second, the utilization of these vehicles. What we've seen is that launching with us as a partner with the built-in kind of demand that we've got, we can drive very significant utilization per vehicle, often mid to high 20s, low 30s in terms of trips per vehicle per day, which is quite substantial in terms of the needed monetization, as it relates to these vehicles. It's getting partners in market, quality of service, and then obviously the economics of the service that we're looking at. On the delivery side, we're also partnered with a number of partners, whether it's Serve or Cartken, for delivery kind of sidewalk robots. What I am increasingly optimistic about are the potential with drones. We've got, for example, partnerships with Flytrex. There are a number of partnerships coming up in the drone area. The promise of drones, while it will take time to get the economics down to the kind of economics that can be sustainable with drone delivery. With AVs, it's a really cool experience, it's safe, et c., but AVs to some extent are slower than human drivers at this point. We'll see what happens there. Drone delivery can cut the timing of delivery significantly. Already ordering dinner and getting it delivered to your home in 30 minutes is a magical experience. We think in 15 minutes it's going to be, 10-15 minutes, is going to be an even more magical experience. While we're on the sidewalks now as it relates to our delivery business, we're looking forward to getting in the air with some of the partners out there.
+
+**Alex Wang (Head of Investor Relations, Uber):** Next question, please.
+
+**Operator:** Your next question comes from Eric Sheridan with Goldman Sachs. Your line is open.
+
+**Eric Sheridan (Analyst, Goldman Sachs):** Thanks so much for taking the questions. Two, if I could. On the U.S. mobility acceleration, can you unpack a little bit some of the drivers of that acceleration and how much you think might be building permanent signal as opposed to elements of the World Cup that might have played a role in that? I was struck by the comment that the first-time user momentum was as high as it was. What do you think you're putting in place there that's resulting in that type of first-time user momentum? Again, how should we be thinking about that sustaining going forward? Thanks so much.
+
+**Balaji Krishnamurthy (CFO, Uber):** Thanks, Eric. I'll take the question on U.S. mobility. Dara will take the second one. The World Cup definitely was a benefit, but it was as expected to a large extent. What I would say is, the momentum that we're seeing in the U.S. is consistent with the theme that we have been talking about since the beginning of the year. It is far broader than any one-off event that we're talking about here. Just as a reminder, what we have said is we expect the U.S. to accelerate through this year. We highlighted in Q2, both trips and gross bookings accelerated. We continue to hold our expectation for the remainder of the year. What's driving that is three distinct items. The first one is insurance, which we have talked about, is becoming a tailwind this year. We are reinvesting the savings from insurance back into the market, particularly in California, where there's a significant amount of reinvestment. We are seeing a very clear inflection in growth. In L.A. and S.F., our trip growth, for example, meaningfully outpaced the rest of the country. Secondly, our product innovation velocity that we've talked about on both premium products and on affordable products, whether it's Uber Reserve, Uber Premium and Uber Black on the premium side, or Wait & Save and other products on the other side of the spectrum. We are seeing really good traction there. Uber Premium in particular, we saw 40% year-on-year growth. Uber Health is growing even faster. That's the second theme. Finally, sparse markets, which we've been talking about as a long-term opportunity. That continues to be a very strong driver for growth as well. Just for context, in the U.S., less than 10% of eligible consumers in our sparse markets have used Uber in the past 12 months. Whereas in dense markets, that number is over 50%. We're making really good progress there in improving supply, reliability, and investing in marketing to drive awareness and trial. I think all in, it's broad and sustainable.
+
+**Dara Khosrowshahi (CEO, Uber):** In terms of first-time users, we're obviously very happy about the record first-time users, at least over the past couple of years, coming into the platform. The trends are actually, or the drivers are similar. The ones that I would call out generally are lower cost products continue to grow globally, but also in the U.S. as well. Globally, our low-cost products are kind of two-wheelers and three-wheelers. In the U.S., it's Wait & Save, which allows consumers to kind of trade off time against price, and Wait & Save is growing very quickly. Low cost, it kind of introduces a whole new sector of consumers onto the platform, and then we can sell them up to the main line as well. That's one. Second is exactly what Balaji talked about, which is sparse markets. The mobility business and the delivery business is growing significantly faster in sparse markets than in dense markets. We're kind of building out inventory in those markets. Margins are actually quite healthy as well. You get increased growth as well as strong margins as well. We are a very long way from high penetration in those sparse markets, as Balaji pointed out. Third for us is cross-platform. Most of our cross-platform activity has been historically our Rides to Eats, and I'll remind folks that only 20% of our consumers at this point use both Rides and Eats, and that's growing 1.5x faster than single product users as well. That's a very sustainable advantage that we have as it relates to cross-platform. As our Eats business is getting bigger, not only is Rides moving consumers to Eats, our Eats business is moving consumers onto Rides as well, and that's true both globally and in the U.S. as well. Last but not least are new products that we're introducing into the marketplace. For example, Women Preferences is bringing a lot of women, both drivers and riders, into the marketplace. Uber Teens is another new product that's kind of bringing in a whole new demographic and audience into the marketplace. For example, higher margin product like Uber Black gives us high margins, but is also introducing kind of a new enterprise type audience as well. You put all that together, whether it's low cost, cross-platform, newer products, or sparse markets, that's really what's contributing to both the growth of the business as well as the growth of audience.
+
+**Alex Wang (Head of Investor Relations, Uber):** Next question, please.
+
+**Operator:** Your next question comes from Doug Anmuth with JP Morgan. Your line is open.
+
+**Doug Anmuth (Analyst, JPMorgan):** Great. Thanks for taking the questions. I have two. You highlighted some softness in Brazil mobility trips. Could you just talk about the competitive environment there, and then also if there are any other markets where you need to invest in Moto and low-cost mobility products? Secondly, there's been a lot in the press recently regarding Uber's relationship with Waymo. Is there anything you can add or clarify there, and specifically how you're thinking about those Austin and Atlanta partnerships? Thank you.
+
+**Dara Khosrowshahi (CEO, Uber):** Yeah, absolutely, Doug. In Brazil, we are seeing a competitive environment. It's always been competitive as it relates to mobility. We compete against Didi, for example, locally, and Latin America generally has been quite competitive. What we're seeing that's new and different in Brazil is there is an enormous amount of competition as it relates to the food business. Didi's introduced DiDi Food, Meituan has gone in there going against iFood, which is the incumbent in Brazil as well. All of them are going after two-wheeler delivery supply, and that same two-wheeler delivery supply will switch off between delivering food and also moving people as well. The cost of securing that supply has gone up pretty significantly. We're moving incentives that we kind of put on the consumer side, we're moving it to the delivery side to counteract that, if you will. The good news as it relates to Brazil is that we continue to hold our share in Brazil, but you just see kind of share move from the mobility side of the business to the delivery side of the business because it's a period of time where there's a lot of investment going there. I think the good news, if you want to call it that, is our two-wheeler business is one of our newer businesses. The margins in that business are quite low. It's certainly not hitting the bottom line, but it is affecting trip volumes, and it's actually competition outside of our space that is affecting those trip volumes. As it relates to Waymo, listen, Waymo is a very important partner of ours, and we continue to operate in Austin and Atlanta. We believe we'll continue to operate next year in those marketplaces. It's a terrific product, and the on-the-ground partnership continues to be very strong. At the same time, we want to make sure that we're not dependent on one partner. We're absolutely seeing a plethora of newer players in the AV ecosystem, just like you see in the foundation model space. While we continue to provide a great service with Waymo in Austin and Atlanta, we'll continue to build our services with our other players as well. We'll be in 15 markets by the end of the year. Next year, it'll be many more markets than that. Just as a reminder of our scale, AVs are doing kind of hundreds of thousands of trips per week. We're at 300 million kind of trips per week as well. It's even less than 0.5% of our overall trip volume. You compare that again to the foundation model space, people estimate that 20% of search now has gone to AI. 40% of users are using AI search of one way or the other. The penetration of kind of physical AV is going to be slower, it's going to some extent be more deliberate. It's way below where it is at AI. Regulations are a consideration there. We have time to develop the partnerships with our other set of partners to create a competitive playing field with attractive commercials.
+
+**Alex Wang (Head of Investor Relations, Uber):** Next question, please.
+
+**Operator:** Your next question comes from John Colantuoni with Jefferies. Your line is open.
+
+**John Colantuoni (Analyst, Jefferies):** Great. Thanks for taking my questions. Can you talk to the evolving regulatory environment in autonomous vehicles and how you see policy playing into the pace of adoption and geographic expansion? Second, regarding overhead expenses, talk about what has allowed you to temper headcount additions relative to your initial plan and the framework you're using to make decisions about reinvesting these tailwinds versus dropping them to the bottom line. Thanks.
+
+**Dara Khosrowshahi (CEO, Uber):** Yeah, absolutely. John, as it relates to regulation, listen, we are a highly regulated business. We routinely talk to lawmakers, whether they're governors, mayors, council members, who have real concerns about both the effect of AI and AVs with their constituencies. Some of these concerns are real. There are concerns about job loss, there are concerns about safety, there are concerns about congestion. While AVs have been incredible in the markets in which we've introduced them, they've had their fair share of issues, whether it's safe driving through school zones or next to school buses or how they interact with emergency response vehicles or how they react to large power failures where the traffic lights aren't working. These are real issues that have to be discussed. Like, for example, D.C. is talking about this stuff, and we can't have AVs blocking the streets of D.C., when there's a presidential or vice presidential motorcade going through. These are real issues, and we've got to have the proper dialogue with all the constituencies to make sure that any new law reflects the needs of all these stakeholders. We see sometimes the result of trying to go too fast and some of these AI companies with data centers, they were kind of pushing through, you could argue, too quickly with NDAs, etc. , and there's been a huge public blowback against it. What we think is, you need to have the dialogue, you need to have smart regulation and dialogue with our shareholders so you can actually enable innovation going forward. We can drive AV regulation in a way that's sustainable, that doesn't have the same kind of blowback that you're seeing in AI. Sometimes you've got to slow down to drive sustainable regulation. We're very much pro-AV, we want any regulation to kind of address the needs of stakeholders and any model that we have is a model that truly lasts.
+
+**Balaji Krishnamurthy (CFO, Uber):** Great. I'll take the question on the overhead and headcount. What I'd start by saying is we have now shown a track record of being disciplined on headcount addition over multiple years. As we have been going through this year, there are a couple of themes that we have been striking at the company. The first one is the investments we're making in AI. They should result in productivity gains, and that should allow us to be moderating some of the headcount additions. The second piece is really focus on organizational effectiveness and how we operate. I'll take the first one, and give you a little bit more color first. On AI, we are very early, but what we are seeing is that we are able to cost-efficiently deliver some productivity lifts with developers. We are seeing, at the moment, near 100% adoption with our engineers on AI-based coding tools, for the measurement that we are looking at right now, we are seeing a doubling in the code output per engineer. There is a lot more nuance to this, and we are being quite smart internally on how we are measuring this and not getting ahead of our skis. At a minimum, it has allowed us to moderate the pace with which we are adding headcount there. There are other areas where you have very discreet investments in AI. Customer support is a clear area where we should be able to up the quality of our customer support interactions as well as reduce the cost of our effort there. On the marketing side as well, we are making some investments here. There's a broad-based effort that should allow us to moderate the pace of hiring. On the organizational effectiveness side, from time to time, we will review how our organizations are structured, and through the quarter, we were able to surgically, in a couple of organizations, cut headcount by about 10%-20%, and that drives some savings as well, although modest in the grand scheme of things. I think the objective for us here is to really remain disciplined, wherever we find some savings, that allows us to reinvest some of those savings back into driving our marketplace and delivering value to our customers, whether it's consumers or earners.
+
+**Alex Wang (Head of Investor Relations, Uber):** Next question, please.
+
+**Operator:** Your next question comes from Justin Post with Bank of America. Your line is open.
+
+**Justin Post (Analyst, Bank of America):** Great. Thank you. Dara, in the prepared remarks, you talked about $10 billion of investment in AVs. How do you think that flows through to the income statement over time? Any thoughts on margin impact of that? Second, maybe comment a little bit on how you think about Lucid's ability to make those vehicle commitments, given some recent news in the press. Balaji, if you want to comment at all on take rates. I think bookings were up 22%, constant currency revenues up 19%. Just some high-level thoughts on that. Thank you.
+
+**Dara Khosrowshahi (CEO, Uber):** I'll let Balaji talk to the investment in AV and margins and then maybe the take rate as well. I'll talk about Lucid.
+
+**Balaji Krishnamurthy (CFO, Uber):** Okay, great. Justin, just for context, the $10 billion of AV investments we're talking about here, this is investment over a multi-year period. Most of the investments we're talking about, you have seen us announce behind the partners that we've been announcing over the last year or so. When you dig into this, there are two distinct kinds of investments we're talking about. The first one is soft investments in our AV software partners. These typically tend to be equity investments with clear milestones that help us get roadmap visibility and position us front of the line for commercialization with these partners. The additional benefit for our partners is that our anchor role helps catalyze external fundraising for those partners as well. So far, for every dollar that we have invested, our partners have been able to raise an additional $2.50 from other investors. That's the first piece. The second piece is really focused on using our balance sheet selectively to bootstrap the AV infrastructure on the ground. This can be in the form of support for fleet ops, for real estate, or for the OEMs who need some off-take commitments as we go in and deploy on these partners. We talked about 120,000 vehicle commitments that we are looking to deliver over the next few years, and a lot of that would be sort of the example of what we're talking about here. All of this, as Dara has said earlier as well today, this is designed to catalyze the ecosystem. In parallel, we are very actively also looking at financializing the ecosystem, and we are working with third-party financial sponsors to look at what sort of vehicles make sense here. It's not just Uber's balance sheet that's working on this, but we can turbocharge this with that sort of traditional support. In terms of the P&L versus cash flow impact, I would say we will give you more visibility into that as we go. The closer we get to deployment and scale out, there will be a P&L impact, and we'll size that to investors clearly as we have historically done. Do you want to touch on Lucid and I can come back to the other question?
+
+**Dara Khosrowshahi (CEO, Uber):** Yeah, definitely. As it relates to Lucid, they did announce their latest quarter. Silvio has come on as the new CEO. Listen, he's taking some bold steps to go back to the fundamentals, refactoring the cost base of the business, really focusing on the quality of the product. These can be tough kind of actions, but they're necessary and we think positive actions. I've talked with Silvio, and we remain very close with Lucid and kind of the B2B program that they are building and their program with us as it relates to AV are highly strategic. It's a big order with kind of guaranteed volume that we know we can monetize as well, with a car that's a beautiful car that can come in at kind of at the $70,000-$80,000 range. Something that we're quite encouraged by. The Nuro and Lucid teams are working together very closely, and the integration of Nuro's AI into kind of Lucid's driver training on the vehicle in terms of the vehicle weight, in terms of tying into the APIs, all of that is going well, and it's something that we're watching. Of course, Lucid is backed by the Public Investment Fund. They are a big investor of ours. They have a terrific board representative on our board as well. The Public Investment Fund is a definition of a long-term fundamental investor that has held Uber for years and years, and continues to have confidence in and back Lucid as well. We think the combination of ourselves, Nuro, and the Public Investment Fund backing Lucid, along with the actions that Silvio is taking, are kind of the right formula for them to deliver on the commitments that we have on the books with them.
+
+**Balaji Krishnamurthy (CFO, Uber):** Again, remember that we have talked about a business model change in the U.K., which is primarily an impact on our mobility business. If you were to look at our revenue margin for delivery, it's largely stable. I'll set that aside and I'll touch on mobility, where you are seeing a nearly 500 basis points decline year-on-year. Of that 500 basis points, about 400 basis points is entirely related to this U.K. business model change, and it's an optical impact. It moves cost from cost of revenue. Other than that, it's really deliberate investments that we have been talking about. Largely a function of some investments in our lower cost offerings, the sort of investments we're talking about for Moto and Brazil. What I would ask investors to focus on is not necessarily the take rates they're reporting on revenues, but the net sort of take rate that is disclosed in our 10-Q filing that will largely show take rate remaining broadly stable. From an operating income standpoint, our mobility operating income margin remains very strong at 7.6% as well. That's all there is to it in terms of the take rate movement here.
+
+**Alex Wang (Head of Investor Relations, Uber):** Next question, please.
+
+**Operator:** Your next question comes from Mark Mahaney of Evercore. Your line is open.
+
+**Mark Mahaney (Analyst, Evercore):** Hey, I want to ask you an AI question and a capital allocation question. There's this line in here about AI making Uber more intuitive for consumers. I absolutely would think that AI is leading to greater personalization across a series of services, and it would show up in better conversion rates, more spend per consumer, et c. Dara, is there anything you could kind of quantify there about how much better the Uber process from a consumer perspective can be because of AI? Balaji, this comment about steadily returning to a more normalized level of activity in terms of the capital allocation share repurchases. Can you just put a little timing on that? Like, is that steadily return over a year? Are we talking years or quarters? Thanks a lot.
+
+**Dara Khosrowshahi (CEO, Uber):** Absolutely, Mark. When we think about AI, there are a number of functions that it can serve. One is just to make the consumer experience better, easier. One example of that is Cart Assistant for us, where you can introduce a shopping cart, whether you take a picture of a dish or scribble down a recipe. The AI actually interacts with you to build out a cart. The effect there is consumers love it, the ones who use it, but also the size of those carts is often twice the size of non-AI-built carts. That's one where your average order size, you drive consumer delight, and you are driving average order size as well. Second for AI is, this isn't call it foundation model work, but just much larger models can be much smarter about making predictions as it relates to consumer behavior based on a much broader array of signals that they're taking in. You take a bunch of signals from consumers. These models can take signals based on history. They can take real-time signals. They can take behaviors across the platform. We can then show those consumers much more relevant information. It might be ads that are more highly targeted, that can convert better, that help our merchants monetize more effectively. It might be just the sort order for organic results on restaurants so that you find that local gem. It might be deal-ranking algorithms that get deals in front of you so that you can save money while you're getting what you want as well. It can be AI suggesting that a particular item that you have in your shopping cart is likely to be out of stock, so maybe you'll pick another item as well. All of these either drive conversion or improve the fundamental experience of the consumer. I will stress that we are very early in terms of the development of this path. Mark, a lot of people expect these technologies that are revolutionary, and AI is revolutionary, to have some giant hit. The fact is that, the way that we operate is, we optimize the system quarter after quarter after quarter, year after year after year, and you should expect AI to contribute to average order size, the quality and reliability of our service as well, and then putting the right product in front of you at the right time. Another example is 3/4 of our rides on Uber happen via a personalized destination suggestion. Three-quarters of the time, we're actually guessing where you're going to go based on your history, and we're getting it right, and don't require any typing whatsoever. That's another small example of what AI can do, and I wouldn't look for one giant hit from AI. It's going to be thousands of small hits and improvements to our ecosystem that's going to drive, we think, growth for the foreseeable future.
+
+**Balaji Krishnamurthy (CFO, Uber):** I'll take the question on the buybacks. Just as a reminder, we have generated about just a little bit over $10 billion in free cash flows over the trailing 12 months. What we've said historically is that we want to be deploying about 50% of our free cash flows towards buybacks. Where we are so far, halfway through the year, is that we have bought back about $3.5 billion of our stock this year. We tactically pivoted quite heavily towards M&A in the second quarter, and largely that was a function of our market purchases of Delivery Hero stock. We deployed about $4 billion of capital in the second quarter to ensure that we were in a place to be able to act fast on an opportunity that existed there. Now that we're through that announcement, we are steadily looking to rebuild our share repurchase levels. To answer your question, Mark, I don't think this is a year away. We're talking about months, not quarters.
+
+**Alex Wang (Head of Investor Relations, Uber):** Next question, please.
+
+**Mark Mahaney (Analyst, Evercore):** Thank you both
+
+**Operator:** Your next question comes from Nikhil Devnani with Bernstein. Your line is open.
+
+**Nikhil Devnani (Analyst, Bernstein):** Hi. Thanks for taking the question. I had a couple separate ones, please. First on M&A, just given Delivery Hero, you've done bolt-on deals in the past across the U.S. and other markets. What have the learnings been on integration? What worked well? What were some mistakes to avoid as you look to integrate Delivery Hero, which is a bigger and more complex asset? And then separately, in markets where you have AV products that are competing with Uber and not on the Uber network yet, what have you generally observed about mobility cohort engagement and retention behavior? Thank you.
+
+**Balaji Krishnamurthy (CFO, Uber):** Thanks, Nikhil. I'll take the Delivery Hero question, and then Dara will take the next one. What we have seen historically when we have made these kind of acquisitions, albeit at a much smaller scale historically, is that you need to have a clear integration hypothesis before you even pursue the deal. Where we are with Delivery Hero in particular is that we have very high confidence on our integration plan. We are looking to primarily migrate onto an existing global tech platform supported by a proven integration playbook. A realistic timeline, and we are holding a pretty high bar on a disciplined underwriting of the synergies that we've communicated to The Street. We have already looked at the asset in quite a lot of detail. Where we are is we know that we operate a single tech platform for our delivery business, whereas Delivery Hero's business, with the exception of Baemin right now, is on one stack. There is a lot of opportunity for that all to be collapsed and migrated onto a modern tech stack like Uber's. Secondly, from an execution timetable standpoint, assuming we close in the second half of 2027. We'll spend 2028 on planning and development before executing the primary migrations in 2029, and that's an appropriate timeline for a transaction of this size. Finally, what we are talking about on synergies here, they're rooted in areas where we have a very high degree of confidence, moving to a common tech platform overlap, infrastructure, duplicative roles and services, and then finally consolidating shared services such as payments and cloud infrastructure. That's the plan here, we remain committed to delivering the synergies that we communicated a couple of weeks ago.
+
+**Dara Khosrowshahi (CEO, Uber):** As far as operating trends in some of the more mature AV markets, they're really strong. Strength in cohorts and new users shows in our trip growth. Specifically, for example, our trip growth in San Francisco, L.A., and Phoenix accelerated in Q2 versus Q1. Our category position in these markets is actually higher today than it was a year ago. The comparison that I would make is with Google Search. The penetration of Search as it relates to AI is way higher than the penetration of AV has been. Again, AV is a physical good. There's regulation, et c. All the reasons that we've talked about previously. Even with a 20% penetration of AI search on Google searches are actually up on a year-over-year basis because AI is increasing the overall market as well. What you saw with Google was they were later to the market, the power of their distribution, the power of their brand, allowed them to be a significant player and a winner in Search, we think the same is going to be true for us. As we sit here, the trends in those markets are strong. I think the way that you've seen these markets develop shows that our distribution, our brand, can win on a long-term basis.
+
+**Balaji Krishnamurthy (CFO, Uber):** I think.
+
+**Nikhil Devnani (Analyst, Bernstein):** Thank you both.
+
+**Balaji Krishnamurthy (CFO, Uber):** I would add that the opportunity we have, especially in the U.S., is far broader than the markets where AVs operate today. Only 30% of our U.S. gross bookings and 25% of our profits are coming from the top 20 cities. The long tail of thousands of other cities and suburbs, they will remain a primary growth and profit engine for Uber for many years to come. We are continuing to invest in both humans and in AVs, and you should expect that the U.S. remains a great market for these teams.
+
+**Dara Khosrowshahi (CEO, Uber):** Sarah, we'll take our last question, please.
+
+**Operator:** Thank you. Your last question will come from Ross Sandler with Barclays. Your line is open.
+
+**Ross Sandler (Analyst, Barclays):** Hey, guys. Dara, the new AV Labs, just what are those guys working on that complements what your partners are working on? Then, DK, the delivery business has these small acquisitions. We're lapping one in Türkiye, then we're adding these two in the third quarter. Looks like organic growth is picking up. Could you just talk about the organic growth that you're seeing in 2Q and what's implied in 3Q for the delivery? Thanks a lot.
+
+**Dara Khosrowshahi (CEO, Uber):** Yeah, Ross. What we're seeing as it relates to the development of AV models and physical AV in particular is that end-to-end models are replacing the heuristics approach. A bunch of these companies, including Waymo, including Nuro, etc , they have been building AV for years and years, but it was based on heuristics. It was based on if/thens, logical functions. That is quickly being replaced by end-to-end models that take in enormous amounts of data and then make decisions as humans do. What we want to do is position Uber with AV Labs to help accelerate the development and the training of these models on an L4 basis efficiently with real data from rideshare-specific scenarios. We're building out hundreds of cars that are riding in rideshare-specific scenarios with robotaxi-grade kind of sensors. We're collecting a super set of data that then we can provide to all of our partners. One of the issues as it relates to having different partners in the ecosystem is each partner has to collect a unique data set to go out and acquire all of the tail data that you need to train on to make sure that your AV driver is safe. We can go out, collect one set of data that's rideshare specific at very high fidelity with advanced sensors, and we can provide that data to all of our partners so that you bring the benefit of scale to AV development. We are seeing that development accelerate. We want to be a part of that acceleration, AV Labs is what we think is a very, very strong partner and accelerator to the development of the entire AV ecosystem.
+
+**Balaji Krishnamurthy (CFO, Uber):** Yeah. I'll take the M&A question. Just as a reminder, we closed our acquisition in Turkey, Trendyol, in the back half of June 2025. We are rolling off of that in Q3. We are lapping that acquisition fully. At the same time, we just closed the second acquisition in Turkey earlier this month, which was the acquisition of Getir. That will have a positive contribution to growth in Q3 and beyond. We have a small acquisition with Careem reconsolidating as well. There's a couple of puts and takes there. On the whole, it is a headwind to delivery reported growth on a net basis, both for gross bookings and trips, because Trendyol was a lot larger in size than the two acquisitions we're talking about for this quarter. Underneath that, our organic delivery business is accelerating quite nicely. We saw very strong trends in the U.S. We are continuing to see very, very strong trends internationally as well. We gained category possession in all of our large markets. What we are seeing is an organic acceleration, an inorganic handoff from a large acquisition to a small one. On the whole, what you see should be relatively healthy trends for delivery in the third quarter.
+
+**Dara Khosrowshahi (CEO, Uber):** Awesome. Well, thank you everyone for joining the call. Thank you to the entire Uber team for another quarter of really, really strong execution. Looking forward to all of the innovation in the industry and everything that we're going to build for you. We'll talk to you next quarter. Thanks.
+
+**Operator:** This concludes today's conference call. Thank you for joining. You may now disconnect.
+
+---
+
+## Q1 2026 — May 6, 2026
+
+Reported after close, May 6, 2026. CEO Dara Khosrowshahi; CFO **Balaji Krishnamurthy** (first
+full call as CFO, succeeding Prashanth Mahendra-Rajah). Prep target: **Q2 2026**.
+
+## Analysis (per the EARNINGS_CONVENTIONS Part I rules — fact → why → so-what)
+
+**The take:** a broad-based beat delivered "at or above the high end of guidance," and — the part
+that matters — the growth was **trip- and audience-led** (Gross Bookings +21% on audience +17%),
+not price. The 2026 thesis (insurance flips from a multi-year headwind to operating *leverage* →
+US mobility re-accelerates) got its first hard confirmation: **L.A., the worst insurance market,
+is now growing "significantly better than California and the rest of the country,"** and category
+position in SF/L.A. is *higher* than six months ago **despite Waymo**. AV moved from demo to
+infrastructure — trips **>10× YoY**, Uber Autonomous Solutions launched — and the genuinely new
+thread is a **financing doctrine** (Santander / Hertz / Marsh / Apollo) to scale fleets
+capital-light. Profit compounded **2× faster than bookings** (non-GAAP EPS +44%, a record **$3B**
+buyback). The soft spots are the things management would not *quantify*: AV economics remain a
+"$1T TAM" adjective, the mid-year AI budget re-up is an un-sized cost, and the call itself was
+unusually short (eight questions, last one cut).
+
+1. **US mobility re-acceleration is now EVIDENCED, not promised — L.A. "significantly better than
+   California and the rest of the country"** — why: auto-insurance renewals reset lower in March
+   *and* Uber offloaded more risk to third-party carriers into a favorable market → **"first year
+   since COVID" of leverage** (not deleverage) on the US insurance line; savings are passed to
+   riders → elasticity → trip growth (Balaji, pushed by Anmuth) → so-what: the single most
+   important 2026 thesis line got a real datapoint in the *hardest* market, and management is "even
+   more confident today than in December or January." Track whether the acceleration compounds
+   through 2026. `thesis`
+2. **"We don't see any effect of the Waymo launches on our overall business" — SF/L.A. category
+   position HIGHER than six months ago** — why: AV adoption is "expansionary for ridesharing in
+   aggregate"; in the Austin/Atlanta Waymo markets driver earnings are up and more drivers are
+   joining → so-what: the cannibalization bear case got its cleanest rebuttal yet — but this is
+   management's own read on a live competitive question, so it stays a *tracked* line, not a
+   settled one (score it quarter by quarter as Waymo expands). `thesis`
+3. **AV went from demo to infrastructure: trips >10× YoY, Uber Autonomous Solutions launched, >30
+   partners, on track for 15 cities by year-end** — why: Uber's pitch to partners is
+   self-evident — demand + higher utilization of "very, very expensive cars," and Uber builds
+   "everything else around" the AV driver (fleet management, depots, charging, data collection) →
+   so-what: the hybrid-network thesis is scaling on schedule; the bottleneck management names is
+   *physical* ("we just need more cars on the road") + regulatory dialogue, **not** demand. Zoox
+   added as a partner this quarter. `thesis`
+4. **The NEW AV angle — a *financing* doctrine to scale fleets capital-light (Santander, Hertz,
+   Marsh/Apollo)** — why: AV residual values aren't yet liquid the way used-car markets are, so
+   financing is "trickier," BUT Uber's network delivers "very predictable revenue per vehicle per
+   day *at a premium to 1P networks*," which underwrites a financing ecosystem → so-what: this is
+   how Uber intends to participate in a ~$1T AV TAM *without* owning the capital —
+   "financializing the ecosystem." Unproven, un-modeled, and the residual-value risk is explicitly
+   acknowledged; a promise to reconcile. `curious`
+5. **Profit compounded 2× bookings: non-GAAP EPS +44% YoY, a record $3B returned via buybacks** —
+   why: "disciplined cost management and operating leverage" plus strong free cash flow → so-what:
+   the *profitable*-scaling thesis is intact and capital return is now material — but non-GAAP EPS
+   strips the mark-to-market on Uber's equity stakes (Aurora, Grab, Didi), so read **income from
+   operations**, not GAAP net income, as the clean profit line. `thesis`
+6. **AI moved into the product AND the cost base — Cart Assistant live; ~10% of code now
+   agent-written; the 2026 AI budget was RE-UPPED mid-year** — why: Balaji, candidly: "when we set
+   our budgets for 2026 in November, we **underestimated the amount of impact the AI tools could
+   have**"; December model releases forced a re-up, "traded off against incremental headcount
+   growth" → so-what: AI is framed as an efficiency + experience lever ("early innings"), but a
+   mid-year budget *increase* is a genuine cost signal to size — the headcount-growth offset is the
+   thing to watch, not the demo features. `watch`
+7. **Cross-platform headroom quantified: ~$15B run-rate delivery Gross Bookings now flows from the
+   mobility app; 30% of eligible mobility consumers have NEVER used Uber Eats** — why: new entry
+   points (One Search, universal search) + AI personalization drive the flywheel, and
+   cross-platform consumers grow 1.5× faster than the base → so-what: a concrete, largely un-tapped
+   cross-sell pool that mono-line rivals structurally cannot replicate — the number that connects
+   the "platform" narrative to a model input. `dots`
+8. **Uber One at 50M members (+50% YoY), >50% of bookings; hotels/Expedia bolted on** — why:
+   benefits are "structurally better" than rival programs, now work globally, and the new
+   Expedia-powered hotels give 10% Uber credits ("a long weekend in New York pays for your entire
+   membership for the year"); "we don't see it slowing down" → so-what: the retention/cross-sell
+   moat keeps compounding and now *funds* a travel push — but 50%-a-year growth eventually laps;
+   the deceleration point, and whether spend/retention hold as the base grows, is the thing to
+   track. `tone`
+9. **The tell in the tape — an unusually SHORT call (eight questions) while AV economics stayed an
+   adjective** — why: the direct ROI/payback question (Devnani) was deflected — "there isn't a
+   single formula… the payback period will vary" — into the barbell framing, and AV revenue was
+   never sized beyond "another trillion-dollar TAM" → so-what: the Street isn't pressing while the
+   story is working; per the no-follow-up rule, the *unquantified* AV economics and the size of the
+   AI budget re-up are exactly where the next surprise hides. `watch`
+
+**Seeds → Q2 2026 Watch List:** US-mobility acceleration durability (does insurance leverage
+compound past L.A.?) · Waymo/AV net effect on the core (the category-position claim, scored quarter
+by quarter) · AV financing-model traction (Santander/Hertz — does capital-light actually scale?) ·
+AI cost sizing vs the headcount-growth offset · Delivery margin as grocery/retail mixes in +
+European competitive intensity (DoorDash / Prosus) · Uber One growth-deceleration point.
+
+**Silences / deflections logged:** ROI/payback deflected to the barbell framing (no number) · AV
+revenue economics remain "$1T TAM," never sized · delivery-margin mechanics under a heavier grocery
+mix only partially addressed (Colantuoni's question pivoted to competition) · the agentic-
+disintermediation risk (personal agents abstracting the app) answered with a travel-metasearch
+analogy, no terms-of-service specifics · the call was short and the last question was cut ("Sarah,
+we'll take our last question").
+
+---
+
+## Transcript — Q1 2026 (May 6, 2026)
+
+Operator
+
+Welcome to the Uber Q1 2026 Earnings Conference Call. All lines have been placed on mute to prevent any background noise. After the speaker's remarks, there will be a question and answer session. If you would like to ask a question during this time, please press star one on your telephone keypad. I would now like to turn the conference over to Alex Hwang, Head of Investor Relations. You may begin.
+
+Alex Hwang
+
+Thank you, Sarah. Thank you for joining us today. Welcome to Uber's Q1 2026 earnings presentation. On the call today, we have Uber's CEO, Dara Khosrowshahi, and CFO, Balaji Krishnamurthy. During today's call, we will present both GAAP and non-GAAP financial measures. Additional disclosures regarding these non-GAAP measures, including a reconciliation of GAAP to non-GAAP measures, are included in the press release, supplemental slides and our filings with the SEC, each of which is posted to investor.uber.com. Certain statements in this presentation and on this call are forward-looking statements. You should not place undue reliance on forward-looking statements. Actual results may differ materially from these forward-looking statements. We do not undertake any obligation to update any forward-looking statements we make today, except as required by law.
+
+For more information about factors that may cause actual results to differ materially from forward-looking statements, please refer to the press release we issued today, as well as risks and uncertainties described in our most recent form 10-K and in other filings made with the SEC. We published our quarterly earnings press release, prepared remarks and supplemental slides to our investor relations website earlier today, and we ask you to review those documents if you haven't already. We open up to the call to questions following brief opening remarks from Dara. With that, let me hand it over to Dara.
+
+Dara Khosrowshahi
+
+Thanks, Alex. Uber had an exceptional start to 2026, driven by strong execution and a continued focus on product innovation. Despite a complex backdrop marked by war and weather, we delivered top line and profitability at or above the high end of our guidance. Gross bookings were up 21% year on year, reflecting the durability of our platform, and that growth was once again trip and audience-led, with our audience growing 17% alongside strong engagement. Our performance this quarter was balanced and broad-based. Mobility gross bookings accelerated to 20% with record margins. Delivery grew 23%, led by grocery and retail and supported by strong retention. Freight returned to growth for the first time in nearly two years. Importantly, we're scaling this growth profitably.
+
+Non-GAAP EPS increased 44% year-over-year, more than twice as fast as our bookings growth, driven by disciplined cost management and operating leverage. We also generated strong free cash flow and returned a record $3 billion to shareholders through buybacks this quarter. We're also continuing to invest in the strength of our platform, which is compounding over time. We've now surpassed 50 million Uber One members and 10 million drivers and couriers globally, both important milestones that reflect strong customer loyalty and expanding number of earner opportunities on our platform. On the product front, Go-Get, our Go-Get event last week showcased how we're expanding Uber's role in everyday life across travel and local commerce.
+
+From hotel bookings and Travel Mode to new ways to shop and coordinate across our platform, these innovations are designed to deepen the everyday utility of our services and to build engagement and loyalty. We're also making strong progress across our strategic priorities, including autonomous, where we continue to believe a hybrid network will unlock significant long-term value. We now have more than 30 autonomous partners across mobility and delivery and are scaling deployments globally. AV mobility trips grew more than 10x year-on-year, and we remain on track to be live in up to 15 cities by the end of the year, including new deployments in the U.S. With the launch of Uber Autonomous Solutions, we're building the technical and operational infrastructure to help our partners commercialize faster. Looking ahead, our guidance reflects continued momentum, disciplined capital allocation and a clear focus on durable, profitable growth.
+
+With that, operator, if we could open it up for questions.
+
+Operator
+
+Thank you. Your first question comes from Doug Anmuth with J.P. Morgan. Your line is open.
+
+Doug Anmuth
+
+Thanks so much for taking the questions. Dara, can you just talk about how the early benefits of insurance cost savings are playing out in L.A. and San Francisco, and what gives you the confidence in continued further U.S. mobility acceleration in 2026? Also just following up on Go-Get last week, how do you shift Uber users to more of an on-demand from more of an on-demand mentality into booking hotels ahead of time, ahead of when it's needed? Thanks.
+
+Dara Khosrowshahi
+
+Yeah, absolutely, Doug. I'll start with Go-Get and then Balaji can jump in on insurance. You know, we've always had an internal debate whether or not we can make the transition from on-demand kind of behaviors to more kind of preparing ahead, reserving ahead kind of behaviors. It really started with the build of Uber Reserve. We have thought about Uber Reserve as a product that we would build mostly for airport travel. We had some kind of feedback from a user as well. The reliability of Uber is awesome, but if I absolutely knew that the driver was gonna show up 15 minutes early, etc., it could reduce some of the stress as it related to travel. Of course, it was a great opportunity for us to continue to increase travel bookings.
+
+We've consistently seen our Uber Reserve service growth rates continue to grow well in excess of the mainline business, and as you know, the mainline business is growing at healthy rates as well. The margins on Uber Reserve are higher. Customer satisfaction is very, very strong, and now we're developing the Reserve service, not just as a service for people to go to airports, but people to get picked up when they land in airports as well. The experience with Reserve for us demonstrated our ability to go from on-demand to planned services, so to speak. Travel is a very, very natural category for us to get into. Airports are about 15% of our mobility gross bookings, and 40% of, for example, our U.S. riders take trips outside of their home city.
+
+Globally, just last year, we had over 1.5 billion trips happening outside of one of our users' home cities. When you put that together, which is proving ourselves with Reserve, you know, moving from on-demand to kind of planning ahead, and then the incredible audience and efficacy we have with a travel consumer, hotels was, of course, a very, very natural expansion for us. We're very happy to have a relationship with Expedia. Their inventory is second to none, so now we've got 700,000 hotels available on Uber as we speak. We've taken most of the economics of that deal, and we are giving it back to our Uber One members. Uber One members get 10% Uber credits. There's a rolling list of 10,000 hotels where you get another 20% off as well.
+
+Really the focus for us is drive that cross-platform activity, give a bunch of money back to Uber One members, obviously you've seen kind of the momentum that we've had with Uber One, with over 50 million members growing 50%. The retention rates are higher. They spend three times more. It's a unique advantage that we have over our competition. We're very much looking forward to the product. We're really happy that the team put it together and happy about our partnership. We're hoping hotels can be just as big as Reserve. Balaji, you want to talk insurance?
+
+Balaji Krishnamurthy
+
+Yeah, sure. Thanks for the question, Doug. I'll level set first on where we are with our insurance journey. As we said at the end of last year, we expect to see hundreds of millions of dollars of savings in our insurance line this year, thanks to the great work our policy teams have done as well as the tech improvements we have implemented in the market. In addition to that, we also had our auto insurance renewals that went into effect in March, and we've seen continued improvement in rates there, which is also, you know, with the improvement in the market conditions here, for auto insurance, we have found opportunities to also offload more risk to third-party carriers. You know, with that favorable market environment, we've taken advantage of that opportunity.
+
+All in all, it's putting us in a place where this will be the first year since COVID where we expect to see good leverage on our insurance cost line for the U.S. mobility business. As we've said before, our philosophy has been to return that goodness back to the market, and consumers see improvement in the pricing environment for Uber rides on the system. As a result of that, we are seeing really good elasticity and as we would have expected, we've seen that price reduction translate to acceleration in trip growth. You know, the overall California market growth has accelerated.
+
+If you look at L.A., which is the market with the most significant insurance headwinds over the last few years, the trip growth trends there are significantly better than California and the rest of the country. You know, we expect to see this translating to accelerating U.S. business growth in 2026, as we've previously said, and we feel even more confident today than we did in December or January.
+
+Doug Anmuth
+
+Thank you.
+
+Alex Hwang
+
+Next question, please.
+
+Operator
+
+Your next question comes from Eric Sheridan with Goldman Sachs. Your line is open.
+
+Eric Sheridan
+
+Thanks so much for taking the question. Maybe building on Doug's question, I wanted to go a little bit deeper in what you see as some of the critical technology investments you're making on the consumer-facing side to tie all of these services together, and layer in elements of personalization and recommendation so increasingly consumers know how to find these services on your platforms. How much over time do you think some of that behavior will be more agentic driven? How does that, again, line up with what you're making on the investment side? Thanks so much.
+
+Dara Khosrowshahi
+
+Absolutely, Eric. In terms of our tech investment and general investment, the one thing that I would highlight is it remains of utmost importance for us to get the basics right. That means reliability as it relates to mobility, increasing selection of the kinds of rides that you can get, and same thing, reliability and selection and delivery. Those are kind of the core precepts. We think we provide the best reliability, best selection, both mobility and delivery globally. Once you do that, and by the way, we seek to improve that every single year, you can add on services on top of that.
+
+We think AI and agents provide a unique benefit in that, you know, one of the challenges that we've had in the past in terms of offering all of these experiences on our app is that you have to build out UIs that essentially the user interfaces that are standard for all of your users. The fact is that different users like to interact with our services in different ways. If you have to kind of build a fixed UI for the majority or the optimized average of your users on a global basis, there are some users who may not see what you've got to offer, or may prefer to interact with you in a different way. AI solves all that because essentially the way that any user wants to interact with your services is up to that user.
+
+They can talk, and they can ask for whatever they want. "Hey, you know, search for hotels for me. Get me an Uber to the airport. Get me an Uber from the airport to the hotel," et cetera. The UI is whatever the user wants that UI to be. That creates unique opportunities for us to build out new services on our platform, and we think also affords us the ability to drive cross-platform usage, which, as you know, is a very important strategic initiative of ours and a unique way in which we differentiate versus others. The growth of cross-platform consumers is growing one and a half times faster than the overall growth of consumers. We're locking in consumers with our Uber One membership, where they spend three times more than others.
+
+We're using AI, one, to make sure that consumers can interact the way that they want to. For example, Cart Assistant, you can just take a picture of, you know, something that you see on a table or in a store or on a menu, and we'll create a shopping cart for you. Our earners can ask our AI agents questions about earnings, where they should go, when they should work, et cetera, and you can get the exact personalized answers for you. We're using larger models to essentially upsell and offer products for you in a very, very personalized way. That can work in very simple ways, like three-quarters of the time when you get a ride on an Uber, we have preselected the destination for you. In other words, we anticipate where you're gonna go.
+
+We offer it up as a card, and three-quarters of the rides on Uber, you know, we have successfully actually predicted with AI algorithms where we think you're likely to go. After work, you're probably gonna go home, for example. At the same time, come up with upsells that delight and surprise you, like a hot cup of coffee waiting for you in that Uber Reserve when you're going to the airport. AI makes this all possible. We're very early in the early innings, and we're extremely excited about the potential that it has for cross-platform usage on our platform.
+
+Balaji Krishnamurthy
+
+I'll just augment what Dara said. As you think about the cross-platform opportunity for us, we are also investing in new entry points on both our rides and Eats app. At Go-Get, we talked about One Search as another feature that we're introducing that is basically universal search across the product. Just to paint a picture of the size of the prize here, we are already seeing nearly $15 billion of run rate gross bookings for our delivery business coming from our mobility app, and 30% of our eligible mobility consumers have never even used Uber Eats yet. There's a lot of headroom here.
+
+Alex Hwang
+
+I'll take the next question, please.
+
+Operator
+
+Next question comes from Brian Nowak with Morgan Stanley. Your line is open.
+
+Brian Nowak
+
+Great. Thanks for taking my questions. I wanna ask one about U.S. suburban delivery. You know, you've made a lot of progress on the suburban mobility side. Where are you on sort of the overall suburban delivery business and sort of using the mobility growth to drive better delivery growth as well? That's one. Two, the strength of the Uber One, bless you. The strength of Uber One was pretty strong it seems like quarter-over-quarter. Can you just walk us through some of the drivers of growth of Uber One at this point in the quarter?
+
+Dara Khosrowshahi
+
+Sure. Absolutely. We're very happy with our development in terms of U.S. suburban delivery. But I tell you, Brian, it's very, very early innings. I would actually expand this, not just the U.S. suburban delivery, but just growth in sparse markets in the U.S., outside of the U.S., pretty much in every single country that we operate in. We're going out and acquiring selection.
+
+Generally, as we add selection to these markets, whether it's more drivers in your suburbs or outside of the big cities, or it's more merchant selection in the U.S. suburbs or many other suburbs across the world, we're seeing that trip growth rates are growing 2x faster generally in mobility and delivery in these sparse markets versus the core urban markets where kind of we grew up as a company. This is a global playbook that we got. It's about expanding selection. It's about investing in reliability. Then it is also about tailoring our products. For example, we see a higher percentage of Reserve and Wait & Save. Grocery is very strong in suburbs as well.
+
+It's, you know, we think we're very early in terms of the selection and reliability improvements that we see in those markets. Lots to go. It's working in the U.S., it's certainly working pretty much everywhere outside of the U.S. as well. In certain markets, like in Australia, the size of those sparse markets are about two times the size of the average sparse markets in other countries around the world. We think there's a huge amount of potential here. You know, in terms of Uber One and the growth here, it's continuing. I wouldn't say that it's any 1 item that's driving the growth of Uber One. It's 50 million members. It accounts for over 50% of our bookings now, and growing 50% year-over-year.
+
+You know, we ended 2024 with 30 million members, so we've added 20 million members in just a single year, which is pretty extraordinary. The number one is the membership benefits themselves. The membership costs kind of similar amount as competitive membership programs, we offer you no delivery fees, and we offer you credits on mobility as well. Just the benefits of our membership program are structurally better than the benefits, we believe, of any other membership program out there, local membership program. Then we are introducing benefits. We talked about hotels, getting 10% back hotels. You know, on a long weekend in New York City, that's getting $100 back, which pays for your entire Uber One membership for the year.
+
+We're also increasing benefits like membership benefits are now gonna work globally. We have a lot of global travel, travelers, and you get benefits for your global travel. We introduced new features like no fees above a $60 basket for grocery as well. We're also going to run Member Days again, which has been a big feature for our members, delivering lots and lots of savings for the members. We've seen this growth go on for a long time. We've kinda wondered when it's going to slow down. At this point, we don't see it slowing down, thanks to the innovation of the team that I'm very, very proud of.
+
+Alex Hwang
+
+Next question, please.
+
+Brian Nowak
+
+Thanks, Dara.
+
+Operator
+
+Next question comes from Justin Post with Bank of America. Your line is open.
+
+Justin Post
+
+Great. Thanks for taking my question. We'll go to AVs. I know Waymo is launching a bunch of southern cities. Just wondering what you're seeing in those cities, any changes to your growth rate. Then second, some real progress with partners during the quarter. What's kinda putting you over the top with, like, Zoox and others getting those deals done? Thank you.
+
+Dara Khosrowshahi
+
+Yeah, yeah, absolutely, Justin. We continue to believe AVs are huge opportunities for the entire industry. This is, you know, we think another trillion-dollar TAM. We don't see this as being a winner-take-all market. We certainly see Waymo moving very quickly as we are moving very quickly. I'll remind you, we expect to be in 15 markets by year-end and then significantly more than that going into next year with, you know, partners like Nuro, like NVIDIA, like Zoox as well. We're very, very happy about what's going on there. You know, our mobility business accelerated versus last quarter. Our U.S. mobility business actually accelerated more than the overall business, we talked about the anticipation that U.S. mobility is going to continue to accelerate for the balance of the year.
+
+At this point, we don't see any effect of the Waymo launches on our overall business, and we continue to see Waymo, the performance of our businesses with Waymo in Austin and Atlanta continue to be strong. Driver earnings are up. More drivers are joining those platforms as well. If you look at kind of markets where Waymo has been launching, has been around for some period of time, San Francisco and L.A., for example, our category position both in San Francisco and L.A. is higher today than it was six months ago. This is an overall business that is of scale, the overall mobility business. We continue to see very, very healthy trends, and we don't see any signs of that abating at this point.
+
+Of course, we continue to invest in AV aggressively with our partnership model. I think, listen, why are we having success in signing up partners? I think it's self-evident, which is we've got demand. We have shown that the utilization of these cars, which are very, very expensive on our platform, is higher. We're also very excited to talk about Uber with the launch of Uber Autonomous Solutions, which helps our AV partners focus on kind of building the driver, and we can build everything else around them, whether that's fleet management, helping them with data collect, et cetera. We think we're very early innings here, and we're very excited about the AV trends that we're seeing.
+
+Alex Hwang
+
+Next question, please.
+
+Operator
+
+Next question comes from Nikhil Devnani with Bernstein. Your line is open.
+
+Nikhil Devnani
+
+Hi there. Thanks for taking the question. I had a couple, please. Balaji, maybe for you first. Appreciate the ROI framing in the letter. You've clearly been investing behind the business and making some near-term margin trade-offs. What does the successful payback look like for Uber at the aggregate level? Is it this ability to compound at 20% for much longer? How do you think about that? Maybe for Dara, you know, the Santander deal announcement yesterday was interesting around financing. It looks like there's line of sight to financing AV fleets in the future as well. What has that broader conversation been like with those partners, and how do you think about integrating those partners into scaling these fleets over time? Thank you.
+
+Balaji Krishnamurthy
+
+All right. I can take the first one. Thanks for the question. I think the starting position you should think about is this is a global, very broad business, and there isn't a single formula that would help us decide on ROI and payback period for the investments we are making. We have to be cognizant of that, and we kind of take each product initiative on its own merits. Generally what we are looking for is either the products that we're investing behind should be able to drive incremental audience acquisition or frequency lifts and/or it needs to be able to drive margins for the company. I, I think a good way to think about this instructively is to look at the barbell strategy that we've been executing.
+
+On our barbell for mobility, the low-cost products that we've been investing behind, they drive 75% higher frequency than our core products. On the other end of the spectrum, our high, higher fare premium products drive 3.5 times higher profit growth for the company. All of these products are driving 25% lift in first-time acquisition for us as well, right? Effectively, as you pair those kind of fact patterns together, what you're driving towards is the highest lifetime value we can get for our investments we're making. The payback period will vary. There are certain products where you get the payback instantly, and there are others where it may take a few quarters.
+
+As we think about this portfolio, we're able to balance it in a way where we can drive healthy growth on the top line, and we can show you healthy annual margin expansion for the company as well. We're pretty happy with the momentum that we're delivering right now.
+
+Dara Khosrowshahi
+
+Yeah. As far as the Santander deal, it's something that we're very, very excited about. I think to step back for a second, in order for AV to scale, and get into, you know, the hundreds of millions in terms of trip count, we really have to build out a whole ecosystem around the development of these AV drivers. That ecosystem includes fleet management, it includes depots and charging and repair and cleaning. It includes financing, it includes insurance as well. We're investing in that entire ecosystem. You know, we talked about a new relationship that we're building with Hertz on the fleet management side. We have teams going out and securing depots in markets that we think are reg-ready from a regulatory standpoint as well now.
+
+We have been doing so to some extent and working with these fleets for some period of time as an increasing percentage of our drivers have moved from combustion vehicles to EVs as well. These are muscles that we've built for some period of time. Financing and building out kind of financing for AVs is, to some extent, trickier because the residual value of these AVs is not something that is clear, right? There's a residual value for cars and used cars. There are very liquid markets for them. That is not true of AVs at this point, although it will be true.
+
+For us, the advantage that we have is that AVs on our network have a very predictable use in terms of revenues or trips per vehicle per day, which are at a premium to kind of 1P type networks, and as a result, revenue per vehicle per day. That kinda creates the circumstances where we think you can build a very, very healthy financing ecosystem. We can build AV, but we can also build it capital light, essentially. We're really happy to work with Santander, as it's been incredibly innovative in this field on a global basis. Then, you know, on insurance, for example, we talked about a relationship with Marsh and Apollo as well to build out insurance, and we think actually AV insurance is gonna be cheaper than human insurance because AVs ultimately will be safer as well.
+
+We're investing in the whole ecosystem, very happy with the Santander relationship, and we're looking forward to building from there.
+
+Alex Hwang
+
+Next question please.
+
+Nikhil Devnani
+
+Thank you, both.
+
+Operator
+
+Next question comes from John Colantuoni with Jefferies. Your line is open.
+
+John Colantuoni
+
+Hey, great. Thanks for taking my questions. Starting with AI spending, where you already bumped up on your original full year budget not long after the Q1 ended. When thinking about how you're approaching layering AI capabilities into workflows, are you viewing them as more supplementing or replacing existing processes to give just to give a sense for how much those investments are incremental to the existing spend? Second, maybe you could just talk a little bit about any notable market share trends across your top 10 delivery and mobility markets. Maybe talk a little bit about what's helping you deliver leverage across delivery specifically, while growth is simultaneously benefiting from faster growth in some lower margin offerings like grocery and retail. Thanks.
+
+Dara Khosrowshahi
+
+Yeah, absolutely. We're seeing the use of AI just grow at unbelievable rates, and you're seeing it in the market rates, in the market as well. We're certainly seeing it within our company. You know, I think if you look at Uber, we have been using AI tools, whether it's for pricing or matching or routing for years and years. We're kind of very comfortable in the real world, which is a probabilistic world versus a deterministic world. Using these AI tools and building with these AI tools, it's just kind of how we build and how we built for many, many years. We're seeing uptake of these tools, whether it's our legal team or marketing team or developers. We think it's creating kind of employees with superpowers.
+
+I would say that it's important to note that, you know, AI, for example, our engineers don't just write code. There's a lot more that goes into it. You know, there's prototyping ideas and design ideas with designers and PM. There's certainly coding activity, which AI helps with is reviewing and testing your code, whether it's an AI agent reviewing that code, and then humans as well to make sure that there's a proper code review before you check in that code, whether it's being on call and making sure that all the systems are running, or it's maintenance, it's migrating code or improving kind of performance of that code. AI is helping our engineers and our employees across the company become more efficient to move faster across the board in almost every single step of building.
+
+We are seeing it. Like, if we look at the number of code commits for engineer, it's increasing. The number of lines per code is increasing. About 10% of our codes now is committed. That's committed is built by agents, autonomous agents out there. Obviously, we check the code before it gets committed. I think you should just look at AI as an accelerator. For us, for every company, it means that our investment in AI tools and infrastructure is increasing. That will be offset by slower headcount growth. If every person at this company can increase their throughput by 20%, 30%, 50%, 100%, I think leading headcount growth and leaning in on AI investment is gonna be well worth it.
+
+Balaji, do you want to talk about the competitive environment?
+
+Balaji Krishnamurthy
+
+Yeah. I'll get there. Just one last comment on AI. I would say candidly, when we set our budgets for 2026 in November, we underestimated the amount of impact the AI tools could have. Obviously in December, we had new models come in. We've re-upped our investment here, and as Dara said, we are trading that off against incremental headcount growth, which we noted in the remarks as well. On delivery competition, first of all, as we noted in the earnings materials, we are seeing our delivery position improving quite substantially across the globe.
+
+We are as we think about our top 10 markets, really in the U.S., we are continuing to invest in our sparse markets expansion and we expect to see results from that over time. In international markets, we are very much on an offensive footing. If you think about Europe, where we are seeing an incremental level of competitive intensity from both DoorDash and Prosus as they have expanded into the market, we've held our own quite well. In addition to defending our core positions, we are on the offensive in the market. We've announced expansion to seven new markets. Just this morning, we launched in Finland. We are already at the number one position on the App Store there.
+
+In, you know, we've talked about the other large markets in the region that we will continue to go into. In APAC, we are seeing very good trends in Australia, Japan, Taiwan. Australia's been a standout from its highly penetrated position. As we've gone into sparser markets, we've re-accelerated that business back to 30% growth. Similarly in Japan, we're seeing very good trends as well.
+
+Alex Hwang
+
+Next question, please.
+
+Operator
+
+Next question comes from Ron Josey with Citi. Your line is open.
+
+Ron Josey
+
+Great. Thanks for taking the question. Maybe one on AV and another one on just trips growth. On AV, Dara, getting back to your comment on just how everything needs to come together, charging, insurance, financing, et cetera. As we reach services in 15 cities by the end of this year, just would love to hear your thoughts on perhaps what are the bottlenecks or are there bottlenecks as we scale supply and demand really grows across these cities and more, as more services launch? Then on trip growth in San Fran and L.A., I think we've talked about it improving meaningfully. Talk to us a little bit more about the drivers here.
+
+I know we mentioned greater affordability insurance, but just wondering if you're seeing perhaps greater adoption of Uber One and cross-platform usage in those cities specifically and using that as a guide for others. Thank you.
+
+Dara Khosrowshahi
+
+Yeah, absolutely. In terms of getting to market and scaling in market, you know, obviously we continue to expand the number of partners that we have, and our partnerships are very, very broad, from Zoox, to a Nuro, Lucid, to Pony and WeRide and Baidu as well in the international markets. We think they'll continue to broaden. Right now I'd say the blockers are we just need more cars on the road. We have to make sure that these drivers are safe. Usually we introduce them with a safety driver, and then we'll take the safety driver out when our partners kind of pass our safety case as well, such as, you know, Abu Dhabi and Dubai as well.
+
+At the same time, we have to make sure that we are introducing these autonomous vehicles into local markets with the appropriate dialogues with those local markets, making sure that we have dialogue with regulators, which will take time. Regulators are kinda They're asking the right questions, which is, you know, how are AVs going to interact with in situations where the power goes out or interacting in school zones or working with, you know, firefighters, et cetera, in the city? Just the interaction between AVs and real life is something that is critical. Questions about safety, about congestion, about the effect on work and drivers as well.
+
+These are all important questions and dialogues that we have to have. Both in the AI space, in the digital AI space and the physical AI space as it relates to AVs as well. We wanna be a part of that dialogue. You'll see us kind of expanding on our thinking there, but this is going to take time, both in terms of scaling the business, fleet management, financing, insurance, and also making sure that we have the right dialogue with regulators on a local basis and all the constituents that are gonna be affected by these changes in our society. It'll take time, but we think it's worth investment. Balaji, you wanna talk about trips?
+
+Balaji Krishnamurthy
+
+Sure. On SF and L.A., we already talked about this even in the Q4 earnings release that we were seeing the impact of incremental AV adoption in the market as being expansionary for ridesharing in the cities, in aggregate. As Dara mentioned, our category position in these markets has also expanded over the last six months, which has had a accelerating impact on the sort of trajectory we're seeing there. Looking ahead, all of the comments I made earlier about insurance-driven goodness as well will show up in the trip trajectory that you should see in these markets. Not only are we seeing these healthy trends in the market today, we expect that the acceleration should continue as we go through the rest of the year.
+
+Dara Khosrowshahi
+
+Sarah, we'll take our last question, please.
+
+Operator
+
+Thank you, Dara.
+
+Thank you. Your last question comes from Michael Morton with MoffettNathanson. Your line is open.
+
+Michael Morton
+
+Hey, good morning. Thank you for the question. I wanted to talk about an inbound question we're getting from investors a l ot, and that's a greater risk to marketplace's direct relationship with their users as we could see an adoption of personal agents going forward. The view is someone's gonna talk to their personal agent that either Meta or Google builds, and they say, "Order me a rideshare ride with the fastest ETA," or, "Order me pizza from my favorite place," and they never interact with their go-to apps, and you get, like, abstracted away. Could you talk about Uber's approach to this, how you're viewing the risk, if there's, like, some preventative measures in your terms of service or any ways to push back around those fears? Thank you.
+
+Dara Khosrowshahi
+
+Yeah, absolutely. I think the first thing that I would say is we are building an indispensable what we view as an indispensable local service, and the breadth that we have in terms of operating in over 70 countries, and many of them both mobility and delivery, is really unparalleled. We continue to make investments in engagement of our users and our earners as well with the 50 million Uber One members that we talked about growing 50% year-on-year, so that the engagement that they have is a real direct and deep engagement that they have with us. First thing I'd say is we are investing in these agents, and we are investing in these AI tools, and we're seeing kind of the interaction directly with our agents be the first use case.
+
+That's a magical use case, and I talked about this earlier in the call. Like, three-quarters of the time, for example, the mobility, we're guessing we can anticipate where you're going to go, so it's just kind of a one-push button. You know, our agent knows, "Hey, Balaji, time to go home, right, for you." Those are kind of unique benefits that we bring. At the same time, we are working and talking to many of these third-party agents. We have a great market position, so we're able to kind of often dictate the terms of trade in those discussions. I think you'll know that I came from the travel industry many, many years ago, and there were fears, for example, in travel in terms of metasearch and this layer above the travel companies.
+
+As the travel business consolidated with an Expedia or Booking and Airbnb, which are incredible companies, most of the value of those front ends accrued to the large players, the consolidated players, the Expedias, the Airbnbs and the Booking.com. We've kinda seen this movie before. As long as we are building terrific core products, we think we will get more than our fair share of consumers coming direct to our services. We will build in APIs to, whether it's an Apple or an OpenAI or a Claude, or, you know, a Gemini, we will work with these agents as well. I think we'll continue to see that the majority of our transactions come direct. We saw the same theme play out in metasearch.
+
+I don't know if folks remember, but at one point, even Google Maps had kind of comparison shopping between Uber and Lyft, and it wasn't the same experience as coming direct to the app. We're very confident that, you know, AI is going to empower entirely new experiences, but we think the majority of those experiences are gonna come direct to us. All right, I think that's it. Thank you very much for joining the call. Huge thank you to the Uber teams who delivered another terrific quarter for us. Another thank you to our partners, whether it's our earners, couriers, drivers, and also merchants, who make this all possible. Thank you very much for joining, look forward to talking to you in the next couple of quarters.
+
+Operator
+
+This concludes today's conference call. Thank you for joining. You may now disconnect.
 
 ---
 

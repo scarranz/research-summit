@@ -5,10 +5,13 @@
 //
 // What changed for UBER:
 //   · data — ./uber-target-multiple-data.js, the Summit DCF model's own valuation per submit, FROZEN from the Summit data
-//     store (rule 10): 2025-12-15, 2026-02-05, 2026-05-06 and 2026-08-05, all valuing FY2027. The three earlier submits carry
-//     an EV/EBITDA leg only (15.0×, 15.0×, 14.0×); P/E (22.0×) first appears on 2026-08-05, so the P/E line is one point.
-//   · the targets are the workbook's, never recomputed here: each one is multiple × the FY2027 metric PLUS the cash flow
-//     generated in FY2026 (FCFE per share on P/E, PV of FCF on EV/EBITDA) — confirmed in DCF UBER.xlsm, 2026-11-03.
+//     store (rule 10): 2025-12-15, 2026-02-05, 2026-05-06 and 2026-08-05, all valuing FY2027, and 2026-11-04 (after 3Q26),
+//     valuing FY2028 on both legs (EV/EBITDA 16.0×, P/E 23.0×). The three earliest submits carry an EV/EBITDA leg only
+//     (15.0×, 15.0×, 14.0×); P/E (22.0×) first appears on 2026-08-05. The year pills switch FY2027 ⇄ FY2028.
+//   · the targets are the workbook's, never recomputed here: each one is multiple × the target-year metric PLUS the cash
+//     flow generated before it (FCFE per share on P/E, PV of FCF on EV/EBITDA) — confirmed in DCF UBER.xlsm, 2026-11-03.
+//     On 2026-11-04 the data store read both targets from the following year's cell; the data file carries the
+//     workbook's 1-year targets (ptStore = what the store recorded) and the footer says so.
 //     "Live" recomputes from your own multiples as a secondary read.
 //   · net debt for Live = Uber's latest 10-Q balance sheet (./uber-histmult-data.js), its source named in the footer (A23).
 //   · the PEG opens on the EV/EBITDA basis (four submits) rather than P/E (one); it gets its own source footer.
@@ -115,7 +118,7 @@ FWD_YEARS.forEach(function(y){
     return { d:sn.d, after:sn.after, rev:r.rev, ebitda:r.ebitda, earn:r.earn, sh:r.sh, px:sn.px, wacc:sn.wacc,
       ev:(sn.val.ev&&sn.val.ev.year===y)?sn.val.ev:null, pe:(sn.val.pe&&sn.val.pe.year===y)?sn.val.pe:null }; });
 });
-// Opens on FY2027: every submit values it (EV/EBITDA in all four; P/E on 2026-08-05 only).
+// Opens on FY2027, the year four of the five submits value (as GOOGL); FY2028 holds the 2026-11-04 submit.
 var FWD_YEAR = FWD_YEARS.indexOf(2027)>=0 ? 2027 : FWD_YEARS[FWD_YEARS.length-1];
 var SNAPS = SNAP_DATA[FWD_YEAR];
 function setFwd(y){ FWD_YEAR=y; SNAPS=SNAP_DATA[y]; }
@@ -125,7 +128,8 @@ function setFwd(y){ FWD_YEAR=y; SNAPS=SNAP_DATA[y]; }
 function priorOf(y){ return UBER_TM.snaps.map(function(sn){ var r=sn.y[y-1]; return r?{ d:sn.d, ebitda:r.ebitda, earn:r.earn }:null; }); }
 
 var FWD_NOTE = {
-  2027: 'Only the 2026-08-05 submit carries a P/E leg (22.0×); the three earlier submits valued FY2027 on EV/EBITDA alone, so the P/E line is a single point.'
+  2027: 'Only the 2026-08-05 submit carries a P/E leg (22.0×); the three earlier submits valued FY2027 on EV/EBITDA alone, so the P/E line is a single point. The latest submit (2026-11-04) values FY2028: switch to FY2028 to see it.',
+  2028: 'Only the 2026-11-04 submit values FY2028 (EV/EBITDA 16.0×, P/E 23.0×), so each target line is a single point; the earlier rows show the model\u2019s FY2028 line without a recorded valuation.'
 };
 
 // Classify each snapshot by what actually moved (re-parse vs revision).
@@ -644,7 +648,8 @@ function footHtml(){
     (pe?'; P/E <b>'+pe.mult.toFixed(1)+'×</b> FY'+pe.year+' → <b>'+fmtPx2(pe.pt)+'</b>, fair value '+fmtPx2(pe.fv)+' ('+signPct(pe.upside)+')':'')+
     '. Fair value = the 1-year target discounted at the model\'s WACC of '+(l.wacc*100).toFixed(1)+'%.'+pxTxt+' '+
     ((ev&&ev.flags.length)||(pe&&pe.flags.length)?'<b>⚑ The store flags this valuation as unreliable — read it with that caveat.</b> ':'')+
-    'How the workbook builds the targets (DCF UBER.xlsm, sheet Discounted Cash Flow): the multiple is applied to the FY2027 metric and the cash flow generated before then is added. P/E: 22 × the model\'s EPS row ($4.89) = $107.61, plus FY2026 free cash flow to equity per share ($5.69) = $113.29. EV/EBITDA: 14 × FY2027 EBITDA = $222.5B terminal value, plus the present value of FY2026 free cash flow ($11.7B) = $234.1B, less net debt of $5.3B (debt $10.7B − cash $5.4B, at the model\'s balance date). So target ÷ multiple is not the year\'s EPS or EBITDA. The targets are shown as recorded. '+
+    'How the workbook builds the targets (DCF UBER.xlsm, sheet Discounted Cash Flow): the multiple is applied to the target-year metric and the cash flow generated before then is added. On the 2026-08-05 submit, P/E: 22 × the model\'s FY2027 EPS row ($4.89) = $107.61, plus FY2026 free cash flow to equity per share ($5.69) = $113.29; EV/EBITDA: 14 × FY2027 EBITDA = $222.5B terminal value, plus the present value of FY2026 free cash flow ($11.7B) = $234.1B, less net debt of $5.3B (debt $10.7B − cash $5.4B, at the model\'s balance date). So target ÷ multiple is not the year\'s EPS or EBITDA. '+
+    'On the 2026-11-04 submit the targets shown are the workbook\'s 1-year price targets ($150.16 EV/EBITDA, $155.08 P/E, its Output ▸ VALUATION block); the data store recorded $152.04 and $154.36, the cells of the following year, because the target year (FY2028) is two years out. Every other target is shown as recorded. '+
     'The realized multiple on '+esc(realizedOf().at)+' is pending until that date. '+common+'Data sourced from Summit DCF models.';
 }
 

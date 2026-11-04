@@ -92,14 +92,15 @@ export var UBER_CE_CONS = (function(){
 // are positive amounts. 'Operating income (GAAP)' = the model's OP_INCOME row (2Q26 left at 0 in the submit → omitted).
 // Not in the model, so Summit stays blank: Gross profit (Uber reports none), GAAP net income and diluted shares (rows at 0),
 // GAAP EPS (no GAAP net income to build it from).
+// 4Q26 and 1Q27 from the 2026-11-04 submit (after the 3Q26 print; pulled 2026-11-04); 3Q25-3Q26 keep their going-in values.
 var SUMMIT_EXTRA = {
   '3Q25': { 'Operating cash flow':3095.0, 'Capex':69.9, 'D&A':174.5, 'Stock-based comp':469.9, 'Freight revenue':1260, 'Mobility op. income':2096.4, 'Delivery op. income':910.6, 'Operating income (GAAP)':1683.9 },
   '4Q25': { 'Operating cash flow':3191.6, 'Capex':75.5, 'D&A':188.0, 'Stock-based comp':506.2, 'Freight revenue':1307, 'Mobility op. income':2254.8, 'Delivery op. income':972.0, 'Operating income (GAAP)':1823.0 },
   '1Q26': { 'Operating cash flow':2677.0, 'Capex':71.9, 'D&A':210.6, 'Stock-based comp':491.4, 'Freight revenue':1267, 'Mobility op. income':1944.6, 'Delivery op. income':949.0, 'Operating income (GAAP)':1694.1 },
   '2Q26': { 'Operating cash flow':2826.3, 'D&A':213.3, 'Stock-based comp':497.8, 'Freight revenue':1334, 'Mobility op. income':2251.9, 'Delivery op. income':1049.6 },
   '3Q26': { 'Operating cash flow':2790.3, 'Capex':86.0, 'D&A':190.4, 'Stock-based comp':483.4, 'Freight revenue':1445.3, 'Mobility op. income':2268.1, 'Delivery op. income':1139.7, 'Operating income (GAAP)':2192.5 },
-  '4Q26': { 'Operating cash flow':3106.0, 'Capex':96.5, 'D&A':208.3, 'Stock-based comp':528.8, 'Freight revenue':1445.3, 'Mobility op. income':2499.4, 'Delivery op. income':1280.9, 'Operating income (GAAP)':2478.4 },
-  '1Q27': { 'Operating cash flow':3491.2, 'Capex':94.8, 'D&A':240.8, 'Stock-based comp':561.9, 'Freight revenue':1806.7, 'Mobility op. income':2483.1, 'Delivery op. income':1345.1, 'Operating income (GAAP)':2358.7 }
+  '4Q26': { 'Operating cash flow':3081.2, 'Capex':95.9, 'D&A':208.1, 'Stock-based comp':528.3, 'Freight revenue':1768, 'Mobility op. income':2457.8, 'Delivery op. income':1240.3, 'Operating income (GAAP)':2459.3 },
+  '1Q27': { 'Operating cash flow':3569.0, 'Capex':116.8, 'D&A':246.9, 'Stock-based comp':576.1, 'Freight revenue':2210, 'Mobility op. income':2483.1, 'Delivery op. income':1345.1, 'Operating income (GAAP)':3071.6 }
 };
 function r3(v){ return Math.abs(v)>=10?Math.round(v*10)/10:(Math.abs(v)<1?Math.round(v*1000)/1000:Math.round(v*100)/100); }
 function ceSummitUs(p){
@@ -308,7 +309,7 @@ var Q3_SRC='Bloomberg (BST) \u2014 BBG_CONSENSUS.txt, snapshot 2026-11-03 (the d
 // ── Q3 2026 Post-Results (EV-POST, 2026-11-04). The print: Uber's 3Q26 release (8-K of Nov 4 2026, acc. 0001543151-26-000039)
 // and the Q3 2026 Earnings Supplemental Data (investor.uber.com). One note per line: the figure, its growth and the reason
 // Uber gives. Call Summary: the Q3 2026 Prepared Remarks PDF (investor.uber.com), quoted word for word ("…" marks a cut;
-// checked by script against the PDF text). The Q&A is not in yet: it is added when a transcript of the call is on file.
+// checked by script against the PDF text). Q&A and “Also on the call”: the call transcript (Q3_QA below), added Nov 4 2026.
 var Q3_RES_NOTES={
   'Revenue':{ t:'+10%; the UK change took $1.1B', h:'<p>$14.77B, +10% YoY (+10% constant currency). The UK business model change cut revenue by <b>$1.1B</b>, about 8 points of YoY growth; Uber expects a similar accounting impact in Q4 2026 (prepared remarks).</p>' },
   'Gross profit':{ t:'Revenue less cost of revenue', h:'<p>$6.42B ($14,766M revenue less $8,349M cost of revenue, exclusive of D&amp;A), against $5.36B in Q3 2025. Uber reports no gross profit line; this is Bloomberg’s definition.</p>' },
@@ -382,7 +383,57 @@ var Q3_NEWQ=[
   { n:'Q3 2026: U.S. AV partners on Uber run ~30% more trips per vehicle per day than first-party fleets; capital to be concentrated on fewer partners.', theme:"AV economics & Uber's role" },
   { n:'Q3 2026: Uber expects minimal to no further M&A through at least 2027 apart from AV; ezCater (>$2.5B TTM GB) and Delivery Hero awaiting approval.', theme:'Delivery Hero stake & acquisition' },
   { n:'Q3 2026: Q4 is the last quarter Uber translates its outlook into Adjusted EBITDA (it stops with the Q4 2026 report).', theme:'Reporting change: Adj Operating Income & Adj EPS' },
-  { n:'Q3 2026: about $1.5B UK VAT cash payment expected in Q4 2026.', theme:'FCF conversion & insurance float' }
+  { n:'Q3 2026: about $1.5B UK VAT cash payment expected in Q4 2026.', theme:'FCF conversion & insurance float' },
+  { n:'Q3 2026 call: AV fleets go on Uber’s balance sheet early (no established residual value); third-party capital expected once the fleet passes 10,000+ vehicles in 2028, with financing based on revenue.', theme:'AV capital commitments' },
+  { n:'Q3 2026 call: Uber is moving incentives from riders to drivers to fix supply; Q4 supply investment will weigh on Mobility take rate, not on margin.', theme:'Driver supply & fleets' },
+  { n:'Q3 2026 call: next AV adds are Nuro (California, then Houston, early 2027), Pony and Momenta internationally; the goal is tens of thousands of vehicles from 2028.', theme:'AV partners & launches' },
+  { n:'Q3 2026 call: Waymo and Tesla run low-teens trips per vehicle per day in their 2026 launch markets against the high 20s on Uber.', theme:"AV economics & Uber's role" },
+  { n:'Q3 2026 call: Dara does not expect a DoorDash–Instacart combination to affect Uber much; merchants are asking to work more with Uber.', theme:'Grocery & retail' },
+  { n:'Q3 2026 call: members are 70% of Delivery GB; U.S. merchant count +12% YoY; core restaurant delivery accelerating.', theme:'Uber One scale & penetration' },
+  { n:'Q3 2026 call: third-party AI agents brought ~500 Eats orders and 4 rides in Halloween week (~320M trips).', theme:'Product launches & AI' },
+  { n:'Q3 2026 call: Jill Hazelbaker (President, Chief Corporate Affairs Officer) leaves for OpenAI after 10 years.', theme:'Leadership changes' }
+];
+// Q3 2026 Q&A: the nine analyst questions of the Nov 4 2026 call, in order. Source: the call transcript
+// (stockanalysis.com, "Uber Technologies (UBER) Q3 2026 Earnings Call Transcript", data source Quartr, read Nov 4 2026);
+// Uber posted only the prepared remarks on investor.uber.com. Answers quoted word for word ("…" marks a cut; checked by
+// script against the transcript text); the question line is a paraphrase.
+var Q3_QA=[
+  { q:'AV fleet financing: whose balance sheet, and what returns', analyst:'Eric Sheridan · Goldman Sachs', theme:'AV capital commitments',
+    qFull:'How should we think about the balance sheet and the incremental free cash flow Uber puts behind AV fleet financing, and the returns on it?',
+    a:'<b>Balaji Krishnamurthy:</b> “what I would point you to is the $1 billion financing arrangement that we had set up with Santander earlier in the year that was focused on our traditional fleet partners. That is a template for what we could be doing with our AV fleets” … “you should expect that we will have announcements to make both on infrastructure financing, but also on vehicle financing as we go forward. <b>Our long-run expectation is that this should be financed by third-party capital, not by Uber’s balance sheet.</b>” … “as we start scaling out into the <b>10,000+ territory in 2028</b> and beyond, we want to bring in third-party capital against that”<br><b>Dara Khosrowshahi:</b> “I think the residual value of AV vehicles isn’t established yet. As a result, <b>in the early days, we’re going to take these vehicles on our balance sheet.</b>” … “I think a lot of the fleet financing is going to be based on revenue, kind of revenue potential of these fleets.” … “We show a <b>30% kind of utilization premium</b> on our network”' },
+  { q:'What changed in international supply, and how long the investment lasts', analyst:'Nikhil Devnani · Bernstein', theme:'Driver supply & fleets',
+    qFull:'Did something change through the quarter, since more markets than Brazil now show the supply problem, and how large and persistent are the supply investments, given that factors like immigration look lasting?',
+    a:'<b>Balaji Krishnamurthy:</b> “a lot of this is a continuation of the dynamics that we have seen through the year.” … “through the last quarter, we have seen the <b>elevated fuel price impact in markets like Brazil and India</b>, in particular, quite meaningfully impacting the supply situation.” … “This is a good problem, where we are at the scale that we are operating at, and we still are running into <b>supply constraints rather than demand constraints</b>.” … “<b>supply hours growth globally accelerated in October</b>, including notable improvements in Brazil and India.” … “Over the last five years, we have doubled our eligible population penetration in our top 10 markets, but it is still at only 10%.”<br><b>Dara Khosrowshahi:</b> “So it is a <b>seasonal issue and it is a year-on-year issue</b> that are hitting together.”' },
+  { q:'Grocery: where to invest, and whether Uber needs its own dark stores', analyst:'Brian Nowak · Morgan Stanley', theme:'Grocery & retail',
+    qFull:'What investments does grocery and retail need to accelerate in the U.S., and does Uber need a larger first-party presence (its own dark stores or fulfillment)?',
+    a:'<b>Dara Khosrowshahi:</b> “We are run rate now at a <b>$15 billion run rate, growing 40%</b> on a year-on-year basis. We think this is a <b>$10 trillion TAM</b>” … “The areas of investment for us are really about <b>selection</b>, they are about <b>affordability</b>, and they are about <b>consumer experience</b>.” … “As it relates to dark stores, our number one priority has been to work with our partners and to help them grow their businesses.” … “This is a part of the <b>Delivery Hero</b> hopeful potential acquisition that we are very excited about.”<br><b>Balaji Krishnamurthy:</b> “This is, for us, a <b>fit-for-purpose</b> sort of solution, right? We do not want to get into this business everywhere, but there are markets where it makes sense.” … “We will be selective in where we engage with this.”' },
+  { q:'From 700 driverless cars to 2,000: which partners and where', analyst:'Ron Josey · Citi', theme:'AV city roadmap',
+    qFull:'How does the fully driverless rollout from ~700 vehicles this year to 2,000 next year break down by geography and pace?',
+    a:'<b>Dara Khosrowshahi:</b> “We expect to launch Zoox and Motional, as we mentioned, in Vegas this year. Then next year, we expect to add <b>Nuro in California and then in Houston</b> as well in Texas, at least early on in 2027.” … “Internationally, we expect to add <b>Pony and Momenta</b> to our no vehicle operator kind of inventory.” … “But the real goal is to get to <b>tens of thousands of vehicles in 2028</b> and beyond, and really scaling the ecosystem.”' },
+  { q:'How durable the 30% AV utilization lift is; why ezCater', analyst:'Shweta Khajuria · Wolfe Research', theme:"AV economics & Uber's role",
+    qFull:'How durable is the ~30% lift in paid trips per AV that Uber says it adds? And what is the capital-allocation logic, including the rationale for ezCater when Uber expects little further M&A?',
+    a:'<b>Balaji Krishnamurthy:</b> “we believe it is a <b>very durable advantage</b> for Uber.” … “These mature 1P deployments have the advantage of mix in that they include San Francisco, which is a uniquely favorable market for AV deployments today.” … “Both for Waymo and Tesla, their trips per vehicle per day in the new markets that they have launched this year is in the <b>low teens versus high 20s</b> that we are seeing on our network in these hybrid markets.” … “<b>Our goal is for AV trips to deliver margins comparable to human-driven trips over time.</b>”<br><b>Dara Khosrowshahi:</b> “our priorities haven’t changed. Our number one priority is to drive organic growth.” … “we’re going to <b>pull back on M&amp;A</b>, chiefly because we’re really focused on integration of the deals that we’ve already announced.”<br><b>Balaji Krishnamurthy:</b> “relative to building this business, we expect that you would see a <b>few hundred million dollars of profit swing</b> in the build case versus buy.”' },
+  { q:'What a DoorDash–Instacart combination means for Uber', analyst:'Michael Morton · MoffettNathanson', theme:'Grocery & retail',
+    qFull:'What opportunity or risk does the potential combination of DoorDash and Instacart create for Uber?',
+    a:'<b>Dara Khosrowshahi:</b> “<b>I do not think, honestly, Michael, it is going to affect us too much.</b>” … “When we talk to our merchant partners, they want choice.” … “we have already had reach-outs from our partners, both who are very worried about the potential transaction” … “<b>wanting to actually work with us more</b>, wanting to build their business with us so that they are not overly dependent on a single platform” … “It is going to be up to the government to decide whether three alternatives or two alternatives is better.”' },
+  { q:'U.S. mobility against international; what drives organic delivery', analyst:'Ken Gawrelski · Wells Fargo', theme:'Mobility growth & margin',
+    qFull:'How did U.S. mobility trend in Q3 and into Q4 against international, including California and the Texas markets with more AVs? And is core restaurant delivery accelerating inside the organic delivery acceleration?',
+    a:'<b>Balaji Krishnamurthy:</b> “we are seeing a <b>relatively resilient growth in the U.S.</b> versus the international trends we talked about earlier in the call. Growth moderated a bit in Q3, but not as much as in the international markets.” … “the <b>insurance tailwinds continue to build</b>.” … “U.S. barbell products grew at <b>3x the rate of the overall business</b> in Q3” … “Less than 10% of eligible consumers in sparse markets have used Uber in the last 12 months. That number in dense markets is 50% of consumers.”<br><b>Dara Khosrowshahi:</b> “It is the second quarter in a row that organic growth in delivery, in U.S. delivery accelerated.” … “Our <b>core restaurant business is also accelerating</b>, and that is because of really merchant selection.” … “Members are now <b>70% of delivery gross bookings</b>.”' },
+  { q:'Can Mobility hold its 8% margin while it pays for supply', analyst:'Mark Mahaney · Evercore', theme:'Mobility growth & margin',
+    qFull:'With the supply initiatives in international markets, can Mobility keep its ~8% margin, or is there a temporary or structural detour?',
+    a:'<b>Balaji Krishnamurthy:</b> “we want to drive margin expansion for the total company on a year-on-year basis. Ideally, we want to do the same for the segments as well.” … “<b>I would not call out any kind of meaningful changes in the margin trajectory</b> for the business. We would have some color on just the Q4 supply investments for mobility that would have an <b>impact on take rate</b>, but not necessarily from a margin standpoint, anything meaningful.” … “The Q4 outlook that we just provided at the midpoint is a 37% year-on-year growth on our non-GAAP EPS.”<br><b>Dara Khosrowshahi:</b> “Whereas last year, more of the incentives went to riders to reduce price, now this year, <b>we are taking down rider incentives, and we are using those dollars to fund driver incentives</b>. That does mean sometimes higher prices for riders”' },
+  { q:'AI agents: building them in-app and working with third-party assistants', analyst:'Doug Anmuth · JPMorgan', theme:'Product launches & AI',
+    qFull:'What are the goals of building agentic features directly into the Uber platform, and how does Uber think about the opportunity on third-party AI platforms?',
+    a:'<b>Dara Khosrowshahi:</b> “our focus is making sure that we invest for the best possible experience to become direct.” … “Listen, I used to work in the travel business where we were dependent on the Google of the world. <b>I don’t want to go back there.</b>” … “baskets that you build with a Cart Assistant are roughly twice the average of the average basket” … “we will have discussions with third-party AI agents.” … “we’re really now <b>negotiating the terms of trade</b>.”<br><b>Balaji Krishnamurthy:</b> “we did just around 320 million trips on Uber and Uber Eats. The volumes coming from AI agents for Uber Eats were <b>around 500 orders total</b>. And for our rides business, it was a <b>grand total of four trips</b> that we fulfilled from agents.”' }
+];
+// "Also on the call": what the call added that neither the print nor the Q&A rows carry.
+var Q3_HL=[
+  { tag:'watch', band:'logged',
+    head:'Jill Hazelbaker, President and Chief Corporate Affairs Officer, is leaving for OpenAI after 10 years',
+    detail:'<p>Announced by Dara at the end of his opening remarks: <b>“After 10 years here at Uber, she’s moving on to OpenAI.”</b> … “fortunately, she has built a great team who get to step up to more senior positions, many of them working with me directly.”</p>' },
+  { tag:'curious', band:'logged',
+    head:'AI agents are still a rounding error: four rides and about 500 Eats orders in Halloween week',
+    detail:'<p>Balaji put a number on third-party AI agents for the first time: in a week of “just around 320 million trips on Uber and Uber Eats”, agents brought <b>“around 500 orders total”</b> on Uber Eats and <b>“a grand total of four trips”</b> on rides. Dara: “it is very, very early”.</p>' }
 ];
 // Q4 2026 Setup: one note per line with what Uber said for the quarter (3Q26 release and prepared remarks, Nov 4 2026).
 var Q4_NOTES={
@@ -398,10 +449,10 @@ var Q4_NOTES={
   'Operating income':{ t:'Non-GAAP, not GAAP', h:'<p>Street and Summit are both Uber’s non-GAAP operating income (Q3 2026: $2,304M against $1,447M GAAP). The Street figure is the sum of Bloomberg’s four segment lines.</p>' },
   'EPS (diluted)':{ t:'GAAP: equity stakes move it; no Summit', h:'<p>GAAP EPS carries the marks on Uber’s equity stakes ($0.25 in Q3 2026 against $0.88 Non-GAAP). The model carries no GAAP net income.</p>' },
   'Gross profit':{ t:'Bloomberg only; no Summit', h:'<p>Uber reports no gross profit: the Street line is Bloomberg’s revenue less cost of revenue (exclusive of D&amp;A). The Summit model has no gross-profit row.</p>' },
-  'Diluted shares':{ t:'No Summit diluted count', h:'<p>The Summit model’s diluted-share row is 0 in the 2026-08-05 submit, so it is not shown.</p>' },
-  'Net income (GAAP)':{ t:'No Summit GAAP net income', h:'<p>The model’s GAAP net income row is 0 in the 2026-08-05 submit.</p>' }
+  'Diluted shares':{ t:'No Summit diluted count', h:'<p>The Summit model’s diluted-share row is still 0 in the 2026-11-04 submit, so it is not shown.</p>' },
+  'Net income (GAAP)':{ t:'No Summit GAAP net income', h:'<p>The model’s GAAP net income row is still 0 in the 2026-11-04 submit.</p>' }
 };
-var Q4_SRC='Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-11-03 (newest on file, the day before the 3Q26 print) · Summit DCF model, submit 2026-08-05 (frozen) · guidance: Uber 3Q26 release and prepared remarks (Nov 4 2026)';
+var Q4_SRC='Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-11-03 (newest on file, the day before the 3Q26 print) · Summit DCF model, submit 2026-11-04 (after the 3Q26 print; frozen) · guidance: Uber 3Q26 release and prepared remarks (Nov 4 2026)';
 var Q4_2026={ q:'Q4 2026', status:'upcoming', date:'February 2027 (date TBC)',
   setup:{ source:Q4_SRC, asOf:'2026-11-03', notes:Q4_NOTES, us:ceSummitUs('4Q26') }, results:null, call:null };
 function pOfQ(q){ return q.charAt(1)+'Q'+q.slice(-2); }
@@ -416,7 +467,7 @@ export var UB_CALL_EARNINGS = { ticker:'UBER', quarters:UB_CALL_EARNINGS_V1.quar
   o.status='reported'; o.date='Wed Nov 4, 2026 · before open';
   o.setup=Object.assign({}, q.setup, { source:Q3_SRC, asOf:'2026-11-03', notes:Q3_NOTES, us:ceSummitUs('3Q26'), prior:q.setup });
   o.results={ notes:Q3_RES_NOTES };
-  o.call={ prepared:Q3_PREPARED, qanda:[], newQuestions:Q3_NEWQ, highlights:[] };
+  o.call={ prepared:Q3_PREPARED, qanda:Q3_QA, newQuestions:Q3_NEWQ, highlights:Q3_HL };
   return o; }) };
 UB_CALL_EARNINGS.quarters.unshift(Q4_2026);   // newest first: the Q4 2026 Setup opens once the Q3 Post-Results is filled
 export var UBER_CALL_EARNINGS = UB_CALL_EARNINGS;

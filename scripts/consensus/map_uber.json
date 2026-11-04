@@ -1,3 +1,177 @@
-{ "q": { "rev":"rev", "gb":"kpi8", "mobgb":"kpi1", "delgb":"kpi2", "opinc":"opinc",
-         "ebitda":"ebitda", "eps":"eps", "trips":"kpi7" },
-  "y": { "rev":"rev", "gb":"kpi8", "ebitda":"ebitda", "opinc":"opinc", "eps":"eps" } }
+{
+ "_doc": "UBER metric map for emit_matrix.py (schema v2 \u2014 by Bloomberg CODE + segment), written 2026-11-03 off inspect_matrix.py UBER (newest snapshot 9/10/2026). Segment ids: Mobility SEG0000355656, Delivery SEG0000355655, Freight SEG0000355667, Corporate G&A & platform R&D SEG0000355661 (identified by their 2Q26 reported values: 28,988 / 27,463 / 1,571 GB; segment op. income 2,215 / 1,055 / -24 / -1,103). Operating income = SUM of the four segment 'Adj Operating Income' lines (= Uber's non-GAAP operating income, 2Q26 2,143 \u2014 the dataset's opinc basis); the headline IS_EBIT_AS_REPORTED is GAAP (1,890) and is NOT used. EPS: the export carries only GAAP diluted EPS (IS_COMP_EPS_GAAP), not Uber's Non-GAAP EPS, so eps is deliberately absent here. The previous slot-based map (pre-v2 schema) is kept as map_uber.v1-legacy.json.",
+ "segments": {
+  "mob": "SEG0000355656",
+  "del": "SEG0000355655",
+  "fr": "SEG0000355667",
+  "corp": "SEG0000355661"
+ },
+ "q": {
+  "rev": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM"
+  },
+  "gb": {
+   "code": "INTERNET_GROSS_BOOKINGS",
+   "unit": "usdM"
+  },
+  "mobgb": {
+   "code": "INTERNET_GROSS_BOOKINGS",
+   "unit": "usdM",
+   "segment": "mob"
+  },
+  "delgb": {
+   "code": "INTERNET_GROSS_BOOKINGS",
+   "unit": "usdM",
+   "segment": "del"
+  },
+  "frgb": {
+   "code": "INTERNET_GROSS_BOOKINGS",
+   "unit": "usdM",
+   "segment": "fr"
+  },
+  "mobrev": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM",
+   "segment": "mob"
+  },
+  "delrev": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM",
+   "segment": "del"
+  },
+  "mobop": {
+   "code": "IS_OPER_INC",
+   "unit": "usdM",
+   "segment": "mob"
+  },
+  "delop": {
+   "code": "IS_OPER_INC",
+   "unit": "usdM",
+   "segment": "del"
+  },
+  "frop": {
+   "code": "IS_OPER_INC",
+   "unit": "usdM",
+   "segment": "fr"
+  },
+  "corpop": {
+   "code": "IS_OPER_INC",
+   "unit": "usdM",
+   "segment": "corp"
+  },
+  "opinc": {
+   "sum": [
+    "mobop",
+    "delop",
+    "frop",
+    "corpop"
+   ]
+  },
+  "ebitda": {
+   "code": "IS_COMPARABLE_EBITDA",
+   "unit": "usdM"
+  },
+  "fcf": {
+   "code": "HEADLINE_FCF",
+   "unit": "usdM"
+  },
+  "trips": {
+   "code": "NUMBER_ONLINE_TRANSACTIONS_GENL",
+   "unit": "count"
+  },
+  "mapc": {
+   "code": "MONTHLY_ACTIVE_USERS",
+   "unit": "count"
+  },
+  "frrev": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM",
+   "segment": "fr"
+  }
+ },
+ "y": {
+  "rev": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM"
+  },
+  "gb": {
+   "code": "INTERNET_GROSS_BOOKINGS",
+   "unit": "usdM"
+  },
+  "mobgb": {
+   "code": "INTERNET_GROSS_BOOKINGS",
+   "unit": "usdM",
+   "segment": "mob"
+  },
+  "delgb": {
+   "code": "INTERNET_GROSS_BOOKINGS",
+   "unit": "usdM",
+   "segment": "del"
+  },
+  "frgb": {
+   "code": "INTERNET_GROSS_BOOKINGS",
+   "unit": "usdM",
+   "segment": "fr"
+  },
+  "mobrev": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM",
+   "segment": "mob"
+  },
+  "delrev": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM",
+   "segment": "del"
+  },
+  "mobop": {
+   "code": "IS_OPER_INC",
+   "unit": "usdM",
+   "segment": "mob"
+  },
+  "delop": {
+   "code": "IS_OPER_INC",
+   "unit": "usdM",
+   "segment": "del"
+  },
+  "frop": {
+   "code": "IS_OPER_INC",
+   "unit": "usdM",
+   "segment": "fr"
+  },
+  "corpop": {
+   "code": "IS_OPER_INC",
+   "unit": "usdM",
+   "segment": "corp"
+  },
+  "opinc": {
+   "sum": [
+    "mobop",
+    "delop",
+    "frop",
+    "corpop"
+   ]
+  },
+  "ebitda": {
+   "code": "IS_COMPARABLE_EBITDA",
+   "unit": "usdM"
+  },
+  "fcf": {
+   "code": "HEADLINE_FCF",
+   "unit": "usdM"
+  },
+  "trips": {
+   "code": "NUMBER_ONLINE_TRANSACTIONS_GENL",
+   "unit": "count"
+  },
+  "mapc": {
+   "code": "MONTHLY_ACTIVE_USERS",
+   "unit": "count"
+  },
+  "frrev": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM",
+   "segment": "fr"
+  }
+ }
+}

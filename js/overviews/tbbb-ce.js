@@ -917,7 +917,7 @@ function ceVerdict(m, c, a, surp){
   if(a==null) return {l:'—', c:'#9AA4B0', k:'none'};
   if(c==null) return {l:'no est.', c:'#8A93A0', k:'noest'};       // nocons / noact: a print, nothing to score
   if(surp==null) return {l:'—', c:'#9AA4B0', k:'none'};
-  if(Math.abs(surp)<2) return {l:CE_RES.inline.l, c:CE_RES.inline.c, k:'inline'};
+  if(Math.abs(surp)<((m&&m.u==='%')?0.5:2)) return {l:CE_RES.inline.l, c:CE_RES.inline.c, k:'inline'};   // a rate line: under 0.5 pts is in line
   return surp>0 ? {l:CE_RES.beat.l, c:CE_RES.beat.c, k:'beat'} : {l:CE_RES.miss.l, c:CE_RES.miss.c, k:'miss'};
 }
 // ── The print AT A GLANCE — a diverging surprise chart (Aug 2026). The cards give absolute values on
@@ -932,8 +932,8 @@ function cePrintChartRows(qi, us){
     var c=m.qr[qi]?m.qr[qi][3]:null, a=m.qa[qi];
     var uexp=(us[m.k]&&us[m.k].v!=null)?us[m.k].v:null;
     if(c==null&&a==null&&uexp==null) return null;
-    var cS=(c!=null&&a!=null&&c)?((a/c-1)*100):null;
-    var uS=(uexp!=null&&a!=null&&uexp)?((a/uexp-1)*100):null;
+    var isR=(m.u==='%'); var cS=(c!=null&&a!=null&&(isR||c))?(isR?(a-c):((a/c-1)*100)):null;   // rate lines in points
+    var uS=(uexp!=null&&a!=null&&(isR||uexp))?(isR?(a-uexp):((a/uexp-1)*100)):null;
     return { k:m.k, cS:cS, uS:uS, c:c, uexp:uexp, a:a, u:m.u };
   }).filter(Boolean);
 }
@@ -1032,9 +1032,12 @@ function cePrintBlock(qLabel, r, us){
     var uexp=(us[m.k]&&us[m.k].v!=null)?us[m.k].v:null;   // Summit's FROZEN expectation for this line
     if(c==null&&a==null&&uexp==null) return null;
     // Surprise = actual / expected − 1, for BOTH bases (the vs Street ⇄ vs Summit toggle picks one).
-    var cSurp=(c!=null&&a!=null&&c)?((a/c-1)*100):null;
-    var uSurp=(uexp!=null&&a!=null&&uexp)?((a/uexp-1)*100):null;
-    return { m:m, c:c, a:a, uexp:uexp, cSurp:cSurp, uSurp:uSurp,
+    // A line that is already a RATE (u '%', same-store sales) is scored as a DIFFERENCE IN POINTS — dividing one
+    // percentage by another turns 7.5 points into "+57.7%" (playbook §12 EV-POST; the LYFT fix, ported 2026-11-03).
+    var isRate=(m.u==='%');
+    var cSurp=(c!=null&&a!=null&&(isRate||c))?(isRate?(a-c):((a/c-1)*100)):null;
+    var uSurp=(uexp!=null&&a!=null&&(isRate||uexp))?(isRate?(a-uexp):((a/uexp-1)*100)):null;
+    return { m:m, c:c, a:a, uexp:uexp, cSurp:cSurp, uSurp:uSurp, isRate:isRate,
       cV:ceVerdict(m,c,a,cSurp), uV:ceVerdict(m,uexp,a,uSurp),
       py:(m.u==='%'?null:m.qy[qi]), pq:(m.u==='%'?null:m.qq[qi]), stmt:ceStmtIdx(m.k),   // no growth-of-a-margin (fixed in the TSM copy, kept here)
       surpAbs:(cSurp==null?-1:Math.abs(cSurp)) };
@@ -1045,8 +1048,9 @@ function cePrintBlock(qLabel, r, us){
   rows.sort(function(x,z){ return (x.stmt-z.stmt) || (x.od-z.od); });   // top-to-bottom down the statement, EPS last
   var tiles=rows.map(function(r){
     var m=r.m, c=r.c, a=r.a, uexp=r.uexp, cV=r.cV, uV=r.uV;
-    var sp=function(s){ return (s==null)?'':' <span class="ce-fz-sp">'+(s>=0?'+':'−')+(Math.round(Math.abs(s)*10)/10)+'%</span>'; };
-    var surpFmt=function(s){ return (s==null)?'—':((s>=0?'+':'−')+(Math.round(Math.abs(s)*10)/10)+'%'); };
+    var unitS=r.isRate?' pts':'%';
+    var sp=function(s){ return (s==null)?'':' <span class="ce-fz-sp">'+(s>=0?'+':'−')+(Math.round(Math.abs(s)*10)/10)+unitS+'</span>'; };
+    var surpFmt=function(s){ return (s==null)?'—':((s>=0?'+':'−')+(Math.round(Math.abs(s)*10)/10)+unitS); };
     var actStr=(a==null?'—':ceTkFmt(m.u,a));
     // Margins — each margin line ÷ its OWN base (CE_MARGIN_DEN): Street-implied, Summit-implied, realised.
     var denK=CE_MARGIN_DEN[m.k], mgnOn=!!denK, den=mgnOn?denVals(denK):null;

@@ -348,8 +348,8 @@ function ceStyle(){
   return '<style>'+
     /* MA (SAB 2026-10-21): prose is BLACK, not navy/blue — the text tokens are redefined inside Earnings; steel stays
        only on chips, controls and accents. Bold inside a sentence inherits the sentence colour. */
-    '.ov-uberstercard-dd .ovt-subpane[data-ovst="earnings"]{--navy:#111418;--text:#111418;--blue:#111418;color:#111418}'+
-    '.ov-uberstercard-dd .ovt-subpane[data-ovst="earnings"] :is(p,li,td,.ce-cc-row-b,.ce-cc-a,.ce-cc-q,.ce-also-body,.wl-w-def,.wl-thread-row) b{color:inherit}'+
+    '.ov-uber-dd .ovt-subpane[data-ovst="earnings"]{--navy:#111418;--text:#111418;--blue:#111418;color:#111418}'+
+    '.ov-uber-dd .ovt-subpane[data-ovst="earnings"] :is(p,li,td,.ce-cc-row-b,.ce-cc-a,.ce-cc-q,.ce-also-body,.wl-w-def,.wl-thread-row) b{color:inherit}'+
     /* page-styled inline prompt/confirm popover (replaces window.prompt / window.confirm) */
     '.ce-ip{z-index:9999;background:#fff;border:1px solid var(--bdr);border-radius:12px;box-shadow:0 16px 44px rgba(15,23,42,.30);padding:13px 14px;min-width:264px;max-width:380px}'+
     '.ce-ip-t{font-size:11px;font-weight:800;color:var(--navy);margin-bottom:9px;line-height:1.4}'+
@@ -1997,7 +1997,7 @@ function ddStat(items){
 // · Notes) the SAME width — they have identical styling, only the labels differ. Measure both, size both
 // to the wider one, and let the buttons flex to fill (Dani, Aug 2026). Needs both bars visible to measure.
 function ceEqualizeTabBars(root){
-  var ev=root.querySelector('.ov-uberstercard-dd .dd-pane[data-dd="evolution"]'); if(!ev) return;
+  var ev=root.querySelector('.ov-uber-dd .dd-pane[data-dd="evolution"]'); if(!ev) return;
   var a=ev.querySelector('.ce-evohead .ovt-subtabs');
   var b=ev.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phtabs');
   if(!a||!b) return;

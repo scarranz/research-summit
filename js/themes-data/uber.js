@@ -446,3 +446,8 @@ export var UBER_THEMES_V1 = [
       { q:'Q1 2026', items:['<b>Cart Assistant</b> launched \u2014 an AI helper that builds grocery/retail orders for consumers.','AI earner tools for drivers & couriers (smarter dispatch and support).','Management framed AI as a multi-year <b>efficiency + experience lever</b> \u2014 "early innings," something to track rather than a 2026 numbers driver.'] },
     ]},
 ];
+
+// Stamp the seed version on every thread (as meta.js / googl.js do). The hydrate step keeps a saved record only when
+// its threads carry v >= UBER_THEMES_V; without this stamp every saved record read as v0 and was overwritten by the
+// seed on each load, losing notes the team added in the portal (found 2026-11-04).
+UBER_THEMES.forEach(function(t){ t.v = UBER_THEMES_V; });

@@ -1063,7 +1063,11 @@ function cePrintBlock(qLabel, r, us){
     var mixed=(cHas&&uHas&&cK!==uK);
     var bothV=(cHas&&uHas)?((cK===uK)?{l:cV.l+' ×2',c:cV.c}:{l:'MIXED',c:AMBER}):(cHas?{l:cV.l,c:cV.c}:(uHas?{l:uV.l,c:uV.c}:{l:'—',c:'#6b7684'}));
     var guided=UBER_GUIDED.indexOf(m.k)>=0;
-    var hdr='<div class="ce-fz-k"><span class="ce-fz-kn">'+esc(m.k)+(guided?' <span class="ce-fz-gd" title="Uber guides this line; it is tracked against its own guidance">GUIDED</span>':'')+'</span>'+
+    // One note per line (playbook §12 EV-POST): the headline `t` shows under the line name, the detail `h` behind the "?".
+    var nt=notes[m.k];
+    var ntH=nt?('<span class="ce-fz-note" style="display:block;font-size:11.5px;font-weight:500;color:var(--mu);margin-top:3px;line-height:1.35;white-space:normal">'+esc(String(nt.t).replace(/<[^>]+>/g,''))+
+      (nt.h?' '+ceQ('pnote-'+ceQkey(qLabel)+'-'+String(m.k).replace(/\W+/g,''), nt.t, nt.h):'')+'</span>'):'';
+    var hdr='<div class="ce-fz-k"><span class="ce-fz-kn">'+esc(m.k)+(guided?' <span class="ce-fz-gd" title="Uber guides this line; it is tracked against its own guidance">GUIDED</span>':'')+ntH+'</span>'+
       '<span class="ce-fz-vd ce-vd-cons" style="color:'+cV.c+'">'+cV.l+sp(r.cSurp)+'</span>'+
       '<span class="ce-fz-vd ce-vd-us" style="color:'+uV.c+'">'+uV.l+sp(r.uSurp)+'</span>'+
       '<span class="ce-fz-vd ce-vd-both" style="color:'+bothV.c+'">'+bothV.l+'</span></div>';

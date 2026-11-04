@@ -106,7 +106,7 @@ Cuadre contra el comunicado (vía `act` del dataset de Results, que cuadra con c
 | TL-CUS | Top Line ▸ Customers | ✅ | 2026-11-03 | SAB | fc50e3c | 5 clases del 10-K; sin concentración (no se divulga); Uber One anterior en colapsable |
 | EV-EST | Evolution ▸ Estimates | ✅ | 2026-11-03 | SAB | 8b8fab9 | motor; bloque evolution sin cambios (no hay submit nuevo) — heredado |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | ✅ | 2026-11-03 | SAB | | `uber-ce.js` (copia de googl-ce.js) + `uber-ce-data.js`; CE_CONS de `emit_ce_uber.py` (BBG 30 snapshots, último 09-10) + líneas de Results; Q3 2026 con Summit 08-05 y guía del 2T26 |
-| EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results | 🟨 | 2026-11-04 | | | 3T26 construido (8-K 4-nov + suplemento + prepared remarks; 46/46 citas verificadas por script); falta Q&A (sin transcripción) y aprobación de SAB; Setup 4T26 abierto con la guía; Street actualizado al archivo BBG del 3-nov (DOAA351), reemplazó la fila del 10-sep; verify_preprint 335/0/0
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | ✅ | 2026-11-03 | SAB | 8b8fab9 | semilla v2 de las notas a mano de SAB (UBER.pdf): 30 hilos, 298 notas, Q3 2022 → Q2 2026; v1 guardada como UBER_THEMES_V1 |
 | BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ✅ | 2026-11-03 | SAB | 8b8fab9 | uber-bl.js (copia de googl-bl.js); margen sobre ingreso o GB |
 | BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ✅ | 2026-11-03 | SAB | 8b8fab9 | 6 renglones de costo del 10-K (XBRL); subtotal "After cost of revenue" (Uber no reporta utilidad bruta) |
@@ -419,7 +419,7 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 | 2026-11-03 | EV-RES-DATA | `opinc.act` y `eps.act` vs filings → **corregido**: fuente = 8-K 12-ene-2026 (acc. 0001543151-26-000005, recast 1T24–3T25) + comunicados 4T25/1T26/2T26. opinc 2T24–4T24 → 1,025/1,146/1,318, FY2024 → 4,310; antes de 1T24 el dataset traía utilidad de operación GAAP (otra base) → en blanco; Street de opinc solo desde 4T25/FY2026 (antes Bloomberg estimaba otra medida). EPS no-GAAP: 1T24–3T24 y 1T25 ajustados 1–2 centavos; FY2024 1.82, FY2025 2.45 (peers: Uber epsT 2.45) | Claude | cerrado 2026-11-03 |
 | 2026-11-03 | VA-SUB | Submit History abre en P/E (un solo punto); ¿UBER debería abrir en EV/EBITDA? (requiere tocar submits.js) | SAB | abierto |
 | 2026-11-03 | TL-* | citas del 10-K del borrador de DOAA351 sin cotejar palabra por palabra | Claude | abierto |
-| 2026-11-03 | EV-POST | sin transcripción del 2T26 en docs/calls (Call Summary textual vacío en 2T26/1T26) | Claude (stockanalysis.com / IR) | abierto |
+| 2026-11-03 | EV-POST | sin transcripción del 2T26 en docs/calls (Call Summary textual vacío en 2T26/1T26) | Claude (stockanalysis.com / IR) | abierto; 3T26: Q&A también pendiente (Uber solo publica prepared remarks) |
 
 ### EV-NOTES — cifras de las notas de SAB que no se leyeron con seguridad (UBER.pdf)
 

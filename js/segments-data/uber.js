@@ -87,7 +87,7 @@ export var uberSegments = {
       lede: 'The same total revenue cut by WHERE it is earned. US & Canada is the anchor, but EMEA is the fastest-growing region — revenue there rose from $9.9B (2023) to $16.4B (2025), driven by Delivery and the UK. This cut cross-cuts the segments: every region carries Mobility, Delivery and Freight.',
       caveat: 'Revenue only. Uber reports Adjusted EBITDA by SEGMENT, not by region — there is no regional profitability anywhere in the filing.',
       note: 'Regions are Uber’s own reporting buckets: US & Canada, Latin America, EMEA, Asia-Pacific.',
-      tenK: { text: 'The following tables set forth revenue and long-lived assets, net by geographic area as of and for the years ended December 31, 2023, 2024, and 2025.', where: 'Note 13 — Segment Information and Geographic Information' },
+      tenK: { text: 'The following tables set forth revenue and long-lived assets, net by geographic area as of and for the years ended December 31, 2023, 2024, and 2025 (in millions)', where: 'Note 13 — Segment Information and Geographic Information' },
       cite: UBER_CITE,
       axis: { y: ['2023','2024','2025'] }, views: ['y'],
       series: [
@@ -102,7 +102,7 @@ export var uberSegments = {
       lede: 'The country cut Uber discloses: the United States, the United Kingdom, and everything else. The UK is the only non-US country broken out — and the fastest grower of the three, from $6.5B (2023) to $10.6B (2025).',
       caveat: 'Only two countries are ever named; “all other countries” is a single bucket, so nothing below the UK can be sized from the filing.',
       note: 'Long-lived assets are $2.6B in the US and $0.4B elsewhere (2025) — an asset-light, US-weighted footprint.',
-      tenK: { text: 'Revenue by country is presented for the United States, the United Kingdom, and all other countries.', where: 'Note 13 — Geographic Information' },
+      tenK: { text: 'Revenue by geography is based on where the trip or shipment was completed or meal delivered.', where: 'Note 13 — Geographic Information' },
       cite: UBER_CITE,
       axis: { y: ['2023','2024','2025'] }, views: ['y'],
       series: [
@@ -124,7 +124,7 @@ export var uberSegments = {
       kpiNote: 'Uber reports Mobility gross bookings, revenue and segment profit (Adjusted EBITDA through 4Q25, segment operating income from 1Q26). Trips and MAPCs are reported only for the whole platform, so there is no Mobility trip count or price per trip.',
       summary: 'Mobility connects consumers with rides across cars, taxis, two-wheelers, transit and more, plus financial-partnership and advertising activity. It is the largest and most profitable segment: ~$29.7B revenue and $7.9B Adjusted EBITDA in 2025.',
       brief: 'Uber’s original business: match a rider with a nearby driver, take a cut of the fare. It earns more per dollar of bookings than Delivery and throws off most of the company’s profit, which pays for everything else.',
-      tenK: { text: 'Our Mobility offering connects consumers with a wide range of transportation modalities, such as ridesharing, carsharing, micromobility, rentals, public transit, taxis, and more — helping customers go almost anywhere they need. Mobility also includes activity related to our financial partnerships products and advertising.', verbatim: true, cite: 'UBER TECHNOLOGIES INC, 10-K (period 2025-12-31, accession 0001543151-26-000015)', url: UBER_CITE.url, where: 'Item 1 — Business', needs: null },
+      tenK: { text: 'Our Mobility offering connects consumers with a wide range of transportation modalities, such as ridesharing, carsharing, micromobility, rentals, public transit, taxis, and more — helping customers go almost anywhere they need. … Mobility also includes activity related to our financial partnerships products and advertising.', verbatim: true, cite: 'UBER TECHNOLOGIES INC, 10-K (period 2025-12-31, accession 0001543151-26-000015)', url: UBER_CITE.url, where: 'Item 1 — Business', needs: null },
       drivers: { rev: { from: 'results:mobrev' }, gb: { from: 'results:mobgb' }, ebitda: { from: 'shared:mob_ebitda' } },
       kpis: [
         { name: 'Segment revenue', definition: 'Mobility revenue as reported in Note 13 — the platform fee Uber keeps on a ride, after Driver earnings and incentives.', unit: 'usdM', periodicity: 'Quarterly and annual', source: '10-Q / 10-K segment note', series: 'results:mobrev', needs: null },
@@ -177,7 +177,7 @@ export var uberSegments = {
       kpiNote: 'Uber reports Freight gross bookings, revenue and segment profit only; no load, lane or price figures.',
       summary: 'Freight connects Shippers with Carriers in a digital marketplace, principally in North America and Europe. ~$5.1B revenue in 2025 at roughly breakeven Adjusted EBITDA (–$33M) — the smallest segment, run for optionality.',
       brief: 'A digital load board: a company needs a shipment moved, a trucker takes it, Uber runs the marketplace. Barely profitable, a small logistics option kept for the long game.',
-      tenK: { text: 'Freight powers a managed transportation and logistics network and connects Shippers and Carriers in a digital marketplace to move shipments. Freight connects Carriers with Shippers’ shipments available on our platform, and gives Carriers upfront, transparent pricing and the ability to book a shipment with the touch of a button. Freight serves Shippers ranging from small- and medium-sized businesses to global enterprises. Freight operations are principally based in North America and Europe.', verbatim: true, cite: 'UBER TECHNOLOGIES INC, 10-K (period 2025-12-31, accession 0001543151-26-000015)', url: UBER_CITE.url, where: 'Item 1 — Business', needs: null },
+      tenK: { text: 'Freight powers a managed transportation and logistics network and connects Shippers and Carriers in a digital marketplace to move shipments … Freight connects Carriers with Shippers’ shipments available on our platform, and gives Carriers upfront, transparent pricing and the ability to book a shipment with the touch of a button. Freight serves Shippers ranging from small- and medium-sized businesses to global enterprises. … Freight operations are principally based in North America and Europe.', verbatim: true, cite: 'UBER TECHNOLOGIES INC, 10-K (period 2025-12-31, accession 0001543151-26-000015)', url: UBER_CITE.url, where: 'Item 1 — Business', needs: null },
       drivers: { rev: { from: 'results:frrev' }, gb: { from: 'results:frgb' }, ebitda: { from: 'shared:fr_ebitda' } },
       kpis: [
         { name: 'Gross Bookings', definition: 'The total value of Freight shipments; Freight is booked gross, so it sits close to the segment’s revenue.', unit: 'usdM', periodicity: 'Quarterly and annual', source: 'MD&A Key Metrics', series: 'results:frgb', needs: null },

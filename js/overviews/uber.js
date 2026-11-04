@@ -22,11 +22,9 @@ import { UB_CALL_EARNINGS as CALL_EARNINGS } from './uber-ce-data.js';   // move
 // Qualitative content: Uber FY2024 & FY2025 10-Ks, Q4 2025 / Q1 2026 results &
 // prepared remarks, the Feb 2024 "Go-Get" Investor Day (see SOURCES). No live API.
 
-import { makeValuation } from './valuation.js';
 import { makeManagement } from './management.js';
 import { WORLD_PATHS, WORLD_VB } from './world-paths.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
-import { mountWatchList } from '../watchlist.js';
 // Company context for the shared Watch List mount (id+ticker); set in html()/deepDiveHtml()
 // because init(c) may receive no arg depending on the caller (mirrors googl.js _co).
 var _co = null;
@@ -34,85 +32,9 @@ var _co = null;
 // Interactive "Scenario → price target" calculator (Valuation tab). Fundamentals from
 // the Summit DCF (FY2025 actuals; FY2026E estimate). Net cash & price are editable
 // (Summit model carries no balance sheet/quote); defaults reproduce the DCF FY2026E.
-var UBER_VAL = makeValuation({
-  brand:'#111827', sharesM:2119.689,
-  netCashDefaultM:-2888, netCashNote:'Q1 2026: cash + short-term investments ≈ $7.6B − long-term debt $10.5B ≈ −$2.9B net debt.',
-  priceDefault:70.00, priceAsOf:'~Jul 2026', priceHint:"≈$70–76 (Jul 2026); Q1’26 buyback avg $73. Editable — verify live.",
-  volLabel:'Gross Bookings',
-  segments:[
-    { key:'mobility', label:'Mobility', gb2025M:97497, take2025Pct:30.43,  growthDefaultPct:13,
-      hint:{ take:"'22 26.6% · '23 28.8% · '24 30.2% · '25 30.4%", growth:"'23 +31% · '24 +21% · '25 +17%", guide:"Uber guides total Gross Bookings + Adj. EBITDA each quarter." } },
-    { key:'delivery', label:'Delivery', gb2025M:90864, take2025Pct:18.98,  growthDefaultPct:15,
-      hint:{ take:"'22 19.5% · '23 19.2% · '24 18.4% · '25 19.0%", growth:"'23 +14% · '24 +17% · '25 +22%" } },
-    { key:'freight',  label:'Freight',  gb2025M:5093,  take2025Pct:100.12, growthDefaultPct:5,
-      hint:{ take:"'22 99.9% · '23 100.1% · '24 100.1% · '25 100.1%", growth:"'23 −25% · '24 −2% · '25 −1%", note:"Freight books revenue ≈ gross bookings (gross basis) — its ~100% take is not a real margin." } },
-  ],
-  marginBasePct:16.78, marginDefaultPct:19.67,
-  marginHint:"History: '22 5.4% · '23 10.9% · '24 14.7% · '25 16.8%. Uber guides an Adj. EBITDA $ range each quarter.",
-  dcf:{ fy:'FY2026E', revM:58695, ebitdaM:11547 },
-  mult:{ evebitda:{min:6,max:22,def:13}, marginMin:10, marginMax:28 },
-});
 
 // Management roster (Management tab). Public-source bios; no ownership/trades.
 var UBER_MGMT = makeManagement(Object.assign({ brand:SUMMIT_CAT[0] }, UBER_MGMT_DATA));
-var UBER_MGMT_V1 = ({   // the previous config, kept as data (moved to uber-mgmt-data.js)
-  brand:'#111827',
-  lede:"Uber is run by a deep, long-tenured bench under CEO <b>Dara Khosrowshahi</b>, who engineered the turn from cash-burner to cash-compounder. One thing to watch: the <b>finance seat has turned over three times in three years</b>.",
-  execs:[
-    { id:'dara', lead:true, name:'Dara Khosrowshahi', title:'Chief Executive Officer', since:'CEO since 2017', img:'img/leadership/uber-dara.jpg',
-      line:"Architect of the turnaround; ex-CEO of Expedia.",
-      bio:"Chief Executive Officer since August 2017; leads Uber's platform across 70+ countries. Previously CEO of Expedia for ~12 years and CFO of IAC. Also a director of Expedia Group and Grab Holdings." },
-    { id:'macdonald', name:'Andrew Macdonald', title:'President & COO', since:'At Uber since 2012', img:'img/leadership/uber-macdonald.jpg',
-      line:"Top operating leader over Mobility & Delivery.",
-      bio:"President & Chief Operating Officer; joined in 2012 as Toronto's first general manager. Oversees Mobility and Delivery operations globally — effectively the top operating leader. Ex-Bain & Company." },
-    { id:'hazelbaker', name:'Jill Hazelbaker', title:'President, Corporate Affairs', since:'At Uber since 2015', img:'img/leadership/uber-hazelbaker.jpg',
-      line:"Leads marketing, comms, policy & safety; ex-Snap, Google.",
-      bio:"President & Chief Corporate Affairs Officer; oversees marketing, communications, public policy and safety. Prior: communications and public policy at Snap and comms/government relations at Google (EMEA)." },
-    { id:'balaji', name:'Balaji Krishnamurthy', title:'Chief Financial Officer', since:'CFO since Feb 2026', img:'img/leadership/uber-balaji.png',
-      line:"Internal promotion; ex-divisional CFO & IR; ex-Goldman Sachs.",
-      bio:"CFO since February 2026; at Uber since 2019, previously divisional CFO for Mobility and Delivery and head of Investor Relations. Earlier 8+ years at Goldman Sachs. Uber's third CFO in three years, after Nelson Chai and Prashanth Mahendra-Rajah." },
-    { id:'west', name:'Tony West', title:'Chief Legal Officer', since:'At Uber since 2017', img:'img/leadership/uber-west.jpg',
-      line:"Ex-US Associate Attorney General; ex-GC of PepsiCo.",
-      bio:"SVP, Chief Legal Officer & Corporate Secretary; leads Legal, Compliance & Ethics, and Security. Former General Counsel of PepsiCo and held two Senate-confirmed positions at the U.S. DOJ (Associate Attorney General). Stanford Law." },
-    { id:'anderson', name:'Susan Anderson', title:'Head of Delivery', since:'At Uber since 2016', img:'img/leadership/uber-anderson.jpg',
-      line:"Runs Uber Eats across 30+ countries.",
-      bio:"Head of Delivery; runs Uber Eats and global grocery/on-demand delivery. Joined in 2016, starting by leading Uber Eats in Queensland, Australia. Prior: Amazon, Bain, Capital One." },
-    { id:'kannan', name:'Madhu Kannan', title:'Chief Business Officer', since:'Rejoined 2023', img:'img/leadership/uber-kannan.jpg',
-      line:"Leads business development & corporate strategy; ex-BofA.",
-      bio:"Chief Business Officer; oversees global business development and corporate strategy. First joined Uber in 2017 and returned in 2023 from Bank of America Securities." },
-    { id:'kansal', name:'Sachin Kansal', title:'Chief Product Officer', since:'At Uber since 2017', img:'img/leadership/uber-kansal.jpg',
-      line:"Leads products, AV and sustainability.",
-      bio:"Chief Product Officer; joined in 2017 as the first product leader for safety technology. Oversees Mobility and Delivery products plus autonomous and sustainability initiatives. M.S. from Stanford." },
-    { id:'maredia', name:'Sarfraz Maredia', title:'Head of Autonomous', since:'At Uber since 2014', img:'img/leadership/uber-maredia.jpg',
-      line:"Leads Uber's autonomous mobility & delivery.",
-      bio:"Head of Autonomous Mobility & Delivery; leads Uber's AV efforts. Joined in 2014; previously ran US & Canada Mobility and the Americas for Uber Eats." },
-    { id:'praveen', name:'Praveen Neppalli Naga', title:'Chief Technology Officer', since:'At Uber since 2015', img:'img/leadership/uber-praveen.jpg',
-      line:"Leads engineering and science; ex-LinkedIn.",
-      bio:"Chief Technology Officer; leads engineering and science strategy. Joined in 2015; previously ~7 years at LinkedIn building products and data infrastructure." },
-    { id:'pradeep', name:'Pradeep Parameswaran', title:'Head of Mobility', since:'At Uber since 2017', img:'img/leadership/uber-pradeep.jpg',
-      line:"Runs global ride-sharing across 70+ countries.",
-      bio:"Head of Mobility; runs global ride-sharing across 70+ countries. Joined in 2017; previously led mobility in India, South Asia and APAC." },
-  ],
-  board:[
-    { name:'Ronald Sugar', chair:true, independent:true, role:'Independent Chair · ex-Chairman & CEO of Northrop Grumman · chairs Nominating & Governance.' },
-    { name:'Dara Khosrowshahi', dual:true, independent:false, role:'Chief Executive Officer.' },
-    { name:'John Thain', independent:true, role:'Ex-CEO of CIT Group & Merrill Lynch · chairs Audit.' },
-    { name:'Robert Eckert', independent:true, role:'Ex-CEO of Mattel · chairs Compensation.' },
-    { name:'Nikesh Arora', independent:true, role:'Chairman & CEO of Palo Alto Networks · Comp, Nom & Gov.' },
-    { name:'Ursula Burns', independent:true, role:'Ex-CEO of Xerox and VEON · Audit, Nom & Gov.' },
-    { name:'Revathi Advaithi', independent:true, role:'CEO of Flex · Audit.' },
-    { name:'Amanda Ginsberg', independent:true, role:'Ex-CEO of Match Group · Comp, Nom & Gov.' },
-    { name:'Alexander Wynaendts', independent:true, role:'Ex-CEO of Aegon · Audit.' },
-    { name:'Turqi Alnowaiser', independent:true, role:'Head of Int’l Investments, Saudi PIF · Audit.' },
-  ],
-  boardNote:'9 of 10 independent; Chair and CEO roles are separate.',
-  gov:[
-    { k:'Share & voting', v:'1 vote / share', d:'No dual-class or founder control.' },
-    { k:'Board', v:'9 of 10 independent', d:'Chair ≠ CEO · annual elections.' },
-    { k:'CEO pay · FY25', v:'$35.6M · 96% at-risk', d:'Base $1.08M · say-on-pay ~94%.' },
-  ],
-  foot:"Executives per Uber’s leadership page; board, committees and governance per the 2026 proxy (DEF 14A / corrected DEFR14A). Headshots from Uber’s newsroom CDN. Ownership and insider trades live in the Pillars → Management tab.",
-});
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -120,9 +42,6 @@ function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').repla
 function money(m){ if (m==null) return '—'; var neg=m<0,a=Math.abs(m),s;
   if (a>=1000) s='$'+(a/1000).toFixed(2).replace(/\.?0+$/,'')+'B'; else s='$'+Math.round(a)+'M'; return (neg?'−':'')+s; }
 function moneyB(m){ var neg=m<0,a=Math.abs(m); return (neg?'−':'')+'$'+(a/1000).toFixed(a/1000>=100?0:1)+'B'; }
-function pctStr(p){ return (p>=0?'+':'−')+Math.abs(p).toFixed(0)+'%'; }
-function yoy(arr,i){ if(i<1||arr[i-1]==null||arr[i-1]===0) return null; return (arr[i]/arr[i-1]-1)*100; }
-function cagr(v0,v1,yrs){ if(v0==null||v1==null||v0<=0||v1<=0||yrs<=0) return null; return (Math.pow(v1/v0,1/yrs)-1)*100; }
 
 // ─── Brand: Uber black + Uber Eats green ─────────────────────────────────────
 var BRAND='#10141A', BRAND2='#06C167', GRAY='#B8C0CA';
@@ -135,10 +54,7 @@ var A_MOB_GB=[52665,68897,83024,97497,118328,138444,173055,216319];
 var A_DEL_GB=[55778,63726,74614,90864,115023,143779,165346,190147];
 var A_FRT_GB=[6952,5242,5135,5093,5336,5336,5336,5336];
 var A_TOT_GB=A_MOB_GB.map(function(v,i){ return v+A_DEL_GB[i]+A_FRT_GB[i]; });
-var A_REV=[31877,37281,43978,52017,58695,68128,78362,93642];
 var A_EBITDA=[1713,4052,6484,8730,11547,14817,17397,21496];
-var A_FCF=[135,3030,6895,9763,10665,12699,15843,19617];
-var A_MAPC=[131,150,171,202,236,265,297,332];
 
 // ─── Quarterly 1Q23..1Q26 (segment economics + back-test) ────────────────────
 var Q13=['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'];
@@ -170,20 +86,7 @@ var MOB_MARGIN=MOB_EB_A.map(function(e,i){ return e/MOB_GB_A[i]*100; }); // 12 q
 var DEL_MARGIN=DEL_EB_A.map(function(e,i){ return e/DEL_GB_A[i]*100; }); // 12 q
 
 // ─── Snapshot & narrative ────────────────────────────────────────────────────
-var SNAPSHOT=[
-  ['Listing','NYSE: UBER'],['Founded','2009 — San Francisco'],['IPO','May 2019 · $45.00'],
-  ['CEO','Dara Khosrowshahi (2017)'],['Segments','Mobility · Delivery · Freight'],['S&P 500','since Dec 2023'],
-];
-var DESC='Uber runs the largest mobility and delivery platform in the world — ridesharing (Mobility), food/grocery/retail delivery (Delivery) and logistics brokerage (Freight) — across ~70 countries. The thesis is a cross-sell flywheel: "go anywhere and get anything," with Uber One membership and a fast-growing, high-margin advertising business compounding frequency and margin. Asset-light economics convert almost all profit to free cash flow.';
-var KPIS=[
-  { l:'Gross Bookings', v:'$193.5B', d:pctStr((A_TOT_GB[3]/A_TOT_GB[2]-1)*100)+' YoY', dir:'up' },
-  { l:'Revenue',        v:'$52.0B',  d:pctStr((A_REV[3]/A_REV[2]-1)*100)+' YoY',   dir:'up' },
-  { l:'Adj. EBITDA',    v:'$8.73B',  d:pctStr((A_EBITDA[3]/A_EBITDA[2]-1)*100)+' YoY', dir:'up' },
-  { l:'MAPCs',          v:'202M',    d:pctStr((A_MAPC[3]/A_MAPC[2]-1)*100)+' YoY',  dir:'up' },
-];
-var AS_OF='Headline KPIs are FY2025. Most recent quarter (Q1 2026): $53.7B bookings (+25% YoY), $2.48B Adj. EBITDA (+33%), 199M MAPCs (+17%), a record $3.0B of buybacks and ~$9.8B TTM free cash flow.';
 // Trimmed to one scannable line; the GAAP-vs-Non-GAAP accounting nuance lives in a single tap-to-read note.
-var FY_NOTE='<b>FY2025:</b> Gross Bookings $193.5B (+19%) · Adj. EBITDA $8.73B (+35%) · free cash flow $9.76B (+42%, ~112% of Adj. EBITDA). <span class="ov-clickable" data-detail="note:gaap" style="color:#06C167;font-weight:600;cursor:pointer;white-space:nowrap">Why GAAP net income is a poor gauge here ›</span>';
 var GAAP_NOTE='GAAP net income swings on tax and equity-investment items (e.g. just $296M in Q4 2025 on a ~$1.6B equity revaluation), so it is a poor profitability gauge — <b>Adj. EBITDA and free cash flow are the cleaner signals.</b><br><br>From Q1 2026 Uber <b>retired Adjusted EBITDA as its headline</b>, guiding instead on <b>Non-GAAP EPS / Non-GAAP operating income</b> (which fold in stock-comp) — closer to GAAP, but deliberately not GAAP net income, given the equity-stake noise. Forward years (2026E–2029E) are Summit DCF estimates.';
 // ─── What truly drives Uber — the 5 things that matter (front-door emphasis) ───
 // Clickable cards (key = `key:<k>`). These are the economic drivers; Strategy holds the forward bets.
@@ -200,21 +103,10 @@ var KEY_DRIVERS=[
     d:'<b>From cash-burner to cash compounder.</b> Asset-light economics convert <b>~100%+ of Adjusted EBITDA into free cash flow</b> (~$9.8B TTM), topped up by the Aleka insurance float.<br><br>That cash funds a <b>$20B buyback</b> (~$3B/quarter, ~2% annual share-count reduction). Growth no longer needs heavy capital — it drops to cash. See Strategy ▸ Capital returns for how it\'s deployed.' },
 ];
 // Each segment is "Gross Bookings × take rate = revenue". Driver of each is what moves Gross Bookings.
-var SEGMENTS=[
-  ['Mobility', 'The <b>profit engine</b> — ridesharing in ~70 countries. Uber keeps ~<b>30%</b> of bookings; highest take, biggest profit (~7.7% segment op-margin, Q1 2026).'],
-  ['Delivery', 'Uber Eats — food, grocery, retail. Lower take (~<b>19%</b>, merchants paid too), but bookings nearly match Mobility and margin has <b>doubled</b> on ads + scale.'],
-  ['Freight', 'Logistics brokerage, reported <b>gross</b> (no take rate). ~$5B bookings, near-breakeven — kept for optionality, not profit.'],
-];
 // Note: Advertising and Uber One are NOT reportable segments — they cut across Mobility & Delivery,
 // so they now live in "What Truly Drives Uber" (top of Overview) instead of being listed here twice.
 
 // Richer peer table: who they are, where share moves, and the structural edge.
-var PEERS=[
-  { n:'Lyft', dom:'lyft.com', arena:'US/Canada rideshare · #2', edge:'Uber holds ~70%+ of US rides and is the only global, multi-product player. Same ~30% take — so scale + the Eats⇄rides bundle are the moat, not pricing.' },
-  { n:'DoorDash', dom:'doordash.com', arena:'US delivery leader', edge:'The one peer that out-scales Uber in a category (~60% US food vs Eats ~22–25%). Uber counters with Mobility cross-sell, Uber One & ads; Eats is far bigger internationally.' },
-  { n:'Waymo', dom:'waymo.com', arena:'Robotaxi · partner & rival', edge:'On the Uber app in Austin/Atlanta, on its own app in SF/Phoenix/LA — the defining AV question (see Strategy ▸ AV).' },
-  { n:'Grab · Bolt · Didi', dom:'grab.com', arena:'Regional super-apps', edge:'SE Asia, Europe, China/LatAm. Uber competes locally or holds equity stakes; its global brand + capital are the edge.' },
-];
 var PEER_NOTE='Ride-hailing economics rarely turn on take rate (peers cluster ~30%) — they turn on <b>density, cross-sell and regulatory positioning</b>, where Uber\'s global scale and bundle are the edge.';
 // ── Strategy ──
 var TARGETS=[
@@ -628,32 +520,6 @@ function rangeSlider(key,maxI,a,b){
 // and (2) the restaurant/grocery merchant network on the customer side.
 // Very sparse relationship-size data — most entries are undisclosed.
 // Suppliers grouped by what they DO for Uber: role (what they do) + impact (how it helps/threatens Uber).
-var SC_SUPPLIERS = [
-  { h:'Autonomous & Automotive', tag:'30+ partners', big:true,
-    role:'Supply the autonomous vehicles and the self-driving stack — sensors, compute, robotaxis, OEM cars.',
-    players:[['Waymo','waymo.com'],['Aurora','aurora.tech'],['Nuro','nuro.ai'],['Lucid','lucidmotors.com'],['WeRide','weride.ai'],['Pony.ai','pony.ai'],['NVIDIA','nvidia.com'],['Stellantis','stellantis.com'],['Rivian','rivian.com'],['Zoox','zoox.com']],
-    impact:{ kind:'mixed', text:'The future of low-cost supply — but the <b>one group that can disintermediate Uber</b> (Waymo already runs its own app). Mostly strategic/equity ties, not vendor bills. Uber’s hedge: aggregate 30+ so no single AV owns the demand.' } },
-  { h:'Tech & Cloud', tag:'the plumbing',
-    role:'Cloud hosting, mapping, messaging and outsourced engineering.',
-    players:[['Oracle','oracle.com'],['HCLTech','hcl.com'],['Adobe','adobe.com'],['Twilio','twilio.com'],['TomTom','tomtom.com']],
-    impact:{ kind:'good', text:'Keeps Uber <b>asset-light</b> with strikingly low disclosed spend (HCL $127M, Oracle $55M are the only big bills). Commoditized inputs — little leverage over Uber.' } },
-  { h:'Payments & Fintech', tag:'money in & out',
-    role:'Move money in (rider payments) and out (driver & courier payouts).',
-    players:[['Adyen','adyen.com'],['Stripe','stripe.com'],['Marqeta','marqeta.com'],['Block','block.xyz'],['Klarna','klarna.com']],
-    impact:{ kind:'good', text:'Enable global card acceptance + <b>Instant Pay</b> (driver loyalty). Collecting upfront and paying out on Uber’s schedule makes the float mildly <b>working-capital-positive</b>.' } },
-  { h:'Fleet & Charging', tag:'~15% of supply hours',
-    role:'Provide vehicle supply (rental fleets) and EV charging infrastructure.',
-    players:[['Hertz','hertz.com'],['Avis','avisbudgetgroup.com'],['EVgo','evgo.com'],['Moove','moove.io']],
-    impact:{ kind:'good', text:'~<b>15% of mobility supply hours</b> come from fleets; the on-ramp for EV/AV supply. Hertz also runs Uber’s AV fleet operations.' } },
-  { h:'Ad Tech & Marketing', tag:'feeds the ads engine',
-    role:'Measure, target and verify Uber’s in-app advertising.',
-    players:[['The Trade Desk','thetradedesk.com'],['Criteo','criteo.com'],['DoubleVerify','doubleverify.com']],
-    impact:{ kind:'good', text:'Make the <b>>$2B, ~100%-margin ads business</b> sellable to brands — the clearest pure-margin lever Uber has.' } },
-  { h:'Real Estate & Infra', tag:'AV depots',
-    role:'Offices, data centers, and the AV depots Uber is buying for charging & repair.',
-    players:[['Alexandria','are.com'],['Equinix','equinix.com'],['Hudson Pacific','hudsonpacificproperties.com']],
-    impact:{ kind:'good', text:'Physical backbone for the AV scale-up; small dollars (Alexandria $28M is the largest), mostly optionality.' } },
-];
 // Customers in SPLC = the merchant network (Eats / Uber Direct). They are really SUPPLY for the Eats marketplace.
 var SC_CUSTOMERS = [
   { h:'Restaurants', tag:'QSR → casual dining',
@@ -690,125 +556,8 @@ function scCard(g){
   '</div>';
 }
 // ─── Earnings Narrative: theme-based across 10 calls (Q4 2023 → Q1 2026) ────
-var UB_THEMES = [
-  { theme:'Autonomous Vehicles \u2014 The Hybrid Network',
-    why:'The most debated topic in Uber\u2019s investment case: how AVs go from cool tech to scaled business, and why Uber believes it wins either way.',
-    updates:[
-      { q:'Q4 2023', items:['AV commercialization will take "significantly longer" than the tech itself. Five factors needed: <b>regulation, superhuman safety, cost-effective hardware, fleet ops, high-utilization network</b>.','Uber positions as "indispensable partner" for AV players. Nine AV companies mentioned. Austin/Atlanta launches planned with Waymo.'] },
-      { q:'Q2 2024', items:['3P utilization "significantly higher" than 1P standalone. Uber dispatch selects routes where AVs will succeed. <b>14 AV partners</b>.','AV not expected to generate substantial profits "for 5\u201310 years" \u2014 treated as another growth bet funded by the barbell.'] },
-      { q:'Q1 2025', items:['Austin live with ~100 Waymos \u2014 average Waymo <b>busier than 99% of Austin drivers</b>. "Exceptional utilization." High opt-in rates, premium pricing possible.','Five new AV partnerships announced (Waymo expansion, WeRide, May Mobility, VW/Momenta, Avride).'] },
-      { q:'Q2 2025', items:['Atlanta launched. <b>Nuro-Lucid deal</b>: 20K vehicle commitment. Three business models outlined: merchant (fixed $/day), agency (rev share), owned+licensed.','$20B buyback authorized alongside AV investment \u2014 "not an either-or."'] },
-      { q:'Q3 2025', items:['<b>NVIDIA partnership</b>: Hyperion reference architecture for L4; 3M+ hours real-world data collection planned.','Stellantis deal (initial 5K vehicles). AV trips in Austin/Atlanta: growth >2\u00d7 rest of US. Driver earnings UP in AV markets.','Six strategic focus areas formalized; AV as "building a hybrid future."'] },
-      { q:'Q4 2025', items:['<b>30+ AV partners</b> across mobility and delivery. On track for <b>15 cities by year-end 2026</b>.','Waymo valued at $110B pre-money. Uber category position in SF and LA <b>higher</b> than 6 months ago despite Waymo presence.','Santander financing deal; Hertz fleet management; Marsh/Apollo insurance. "Financializing the ecosystem like hotel REITs."'] },
-      { q:'Q1 2026', items:['AV mobility trips <b>>10\u00d7 YoY</b>. <b>Uber Autonomous Solutions</b> launched \u2014 technical + operational infra for partners.','Zoox added as partner. "No effect of Waymo launches on our overall business" \u2014 US mobility actually accelerated.','Santander deal: "line of sight to financing AV fleets" with predictable revenue per vehicle per day on Uber\u2019s network.'] },
-    ]},
-  { theme:'Uber One & the Membership Flywheel',
-    why:'From 19M to 50M+ members in two years \u2014 the retention and cross-sell engine that competitors can\u2019t replicate.',
-    updates:[
-      { q:'Q4 2023', items:['19M members. ~45% of delivery GBs from members. Members spend <b>3.4\u00d7 more</b> per month. Annual Pass rollout improving retention ~200bps.'] },
-      { q:'Q1 2024', items:['22M members. Subscription revenue <b>>$1B run rate</b>. 25% of Uber Cash earned on mobility redeemed on delivery (up from mid-teens). Cross-platform upsell engine working.'] },
-      { q:'Q2 2024', items:['25M members, <b>+70% YoY</b>. >50% of delivery GBs. New benefits: no-fee grocery above $60 basket, global benefits for travelers.'] },
-      { q:'Q4 2024', items:['<b>30M members, +60% YoY</b>. 5M added in Q4 alone. Multi-product use at all-time high: 37% of consumers using >1 Uber product.'] },
-      { q:'Q2 2025', items:['<b>36M members, +60% YoY</b>. Surge savings launched for mobility \u2014 "the #1 product mobility consumers asked for." Mobility membership penetration still early vs delivery.'] },
-      { q:'Q3 2025', items:['46M members. <b>>50% of gross bookings</b> from members. Retention rates improving even as base grows. Now in 42 countries (vs 28 a year ago). Member Days driving savings.'] },
-      { q:'Q1 2026', items:['<b>50M+ members, +50% YoY</b>. Added 20M in a single year. Hotels: 10% Uber credits + 20% off at 10K properties. Global benefits now work internationally.','Members: 3\u00d7 higher spend, higher retention, >50% of bookings. "Don\u2019t see it slowing down."'] },
-    ]},
-  { theme:'The Barbell Strategy',
-    why:'How Uber funds growth bets (low-cost products, AV) with premium margins \u2014 and why it keeps the TAM expanding.',
-    updates:[
-      { q:'Q2 2024', items:['Moto (two-wheelers): <b>>$1.5B GBs, +40%</b>. Premium: >$10B, +35%. Reserve: +60%.','Growth bets portfolio: $11B+ annual GBs, growing 80% \u2014 taxi, two-wheelers, three-wheelers, Share, Reserve.'] },
-      { q:'Q3 2024', items:['Teens trips doubled. Shuttle expanding. U4B (business) >50% CC growth. Insurance cost increases causing elasticity in core \u2014 barbell products offset.'] },
-      { q:'Q4 2024', items:['Barbell formally named. Low-cost: <b>75% higher frequency</b> than core. Premium: <b>3.5\u00d7 higher profit</b> growth. Both: <b>25% lift in first-time acquisition</b>.'] },
-      { q:'Q1 2025', items:['Wait & Save strong in sparse markets. Reserve: 40% of trips now non-travel. Sparse markets = 20% of mobility trips, growing 1.5\u00d7 faster.'] },
-      { q:'Q3 2025', items:['Growth bets now <b>$20B annual GBs, +80%</b>. Grocery/retail at $12B run rate. Sparse markets growing 2\u00d7 faster than dense markets globally.'] },
-      { q:'Q1 2026', items:['Low-cost + premium growing <b>40% combined</b> in 2025. Both wings driving 25% lift in new-user acquisition.','AV treated as the newest "growth bet" \u2014 same barbell playbook: invest at negative margins, build liquidity, then turn profitable.'] },
-    ]},
-  { theme:'Insurance Reform & US Mobility Acceleration',
-    why:'The multi-year headwind that became a tailwind \u2014 and why US mobility is expected to accelerate in 2026.',
-    updates:[
-      { q:'Q3 2024', items:['CPI motor vehicle insurance up 16% YoY (Sep) \u2014 moderating from 20%+ peak in Apr. Passing costs to consumers causing elasticity.','Three-pronged approach: <b>tech</b> (driver insights dashboard), <b>risk mgmt</b> (captive insurer), <b>regulatory</b> (state-by-state reform).'] },
-      { q:'Q4 2024', items:['Insurance CPI down to 11% (Dec). Georgia tort reform bill awaiting signature. California UM/UIM limits reduced from $1M to $60K/$300K. Advantage Mode rewards safe drivers.'] },
-      { q:'Q1 2025', items:['Insurance CPI at <b>7% YoY (Mar)</b> \u2014 lowest in 3 years. "Hundreds of millions of savings" expected for 2025. Passing savings to consumers \u2192 trip growth accelerating.'] },
-      { q:'Q2 2025', items:['July trip growth accelerating vs Q2. "Delayed elasticity" showing up: lower prices \u2192 more sessions \u2192 more return visits weeks later.'] },
-      { q:'Q3 2025', items:['Advantage Mode expanded. >$100M in savings from tech + policy initiatives. California wins legislated. Phoenix/Austin/Atlanta trip growth <b>>2\u00d7 rest of US</b>.'] },
-      { q:'Q4 2025', items:['Insurance going from <b>"deleveraging to leverage"</b> for first time since COVID. Auto renewals improved in March. Offloading more risk to 3rd-party carriers. US acceleration confirmed.'] },
-      { q:'Q1 2026', items:['L.A. trip growth "significantly better than California and rest of country." Category position in SF and LA <b>higher than 6 months ago</b>.','Even more confident than in December: US mobility will keep accelerating through 2026.'] },
-    ]},
-  { theme:'Delivery & Grocery Acceleration',
-    why:'From "delivery is mature" skepticism to 23% growth and rising margins \u2014 driven by grocery, selection, and the platform flywheel.',
-    updates:[
-      { q:'Q4 2023', items:['Delivery 17% GB growth (accelerating). Grocery at <b>$7B run rate</b>, growing 40%+. 14% of Eats users ordering grocery.'] },
-      { q:'Q1 2024', items:['Delivery 17% CC growth. Grocery now variable contribution positive. Restaurant margins "modestly lower than UberX" \u2014 first time disclosed.'] },
-      { q:'Q2 2024', items:['<b>Instacart partnership</b> live: baskets 20% higher, suburban demand. Merchant-funded offers <b>+70% YoY</b>. Record new Eats consumers in US.'] },
-      { q:'Q3 2024', items:['Delivery fastest growth in 4 years (4pp acceleration). Grocery/retail <b>>$12B run rate</b>. Selection active merchants +16% YoY.'] },
-      { q:'Q4 2024', items:['Delivery accelerating again. Coles exclusive (Australia\u2019s largest grocer). Ads penetration passing 2% target. 5 of top 10 US grocers on platform.'] },
-      { q:'Q2 2025', items:['Delivery grew 23%, led by grocery/retail. Toast partnership for seamless restaurant onboarding. Sparse-market delivery growing 1.5\u00d7 dense markets.'] },
-      { q:'Q4 2025', items:['UK: <b>#1 delivery position (organic)</b>. Germany: neck-and-neck with top player. 7 new European markets launched. Finland #1 on App Store day one.','Advertising: enterprise ad growth now outpacing SMBs. Grocery/retail ads and mobility ads both expanding.'] },
-      { q:'Q1 2026', items:['Delivery +23%. Grocery/retail and strong retention driving growth. Go-Get event: One Search, hotel bookings (700K via Expedia), Travel Mode.'] },
-    ]},
-  { theme:'Cross-Platform & Capital Allocation',
-    why:'The platform thesis: why operating mobility + delivery + freight under one roof creates value no mono-line competitor can match.',
-    updates:[
-      { q:'Q4 2023', items:['Multi-product users spend <b>3\u00d7 more</b>. 19M Uber One members. "Everything should be made as simple as possible" \u2014 abstracting complexity.'] },
-      { q:'Q2 2024', items:['Cross-platform consumers growing <b>1.5\u00d7 faster</b> than overall. $10B delivery GBs from mobility app (12% of annualized delivery). 30% of riders never tried Eats.'] },
-      { q:'Q4 2024', items:['Multi-product use at <b>all-time high: 37%</b>. Andrew Macdonald (Mac) as COO to supercharge platform. Delta SkyMiles partnership.','Investment grade achieved. $7B buyback mostly executed. Share count reduction achieved in 2025.'] },
-      { q:'Q2 2025', items:['<b>$20B buyback authorized</b>. Mac running both mobility + delivery. Free cash flow on track to reduce share count "by a healthy amount."'] },
-      { q:'Q4 2025', items:['40% of Q4 consumers using >2 products. <b>$15B delivery GBs from mobility app</b> (run rate). ~$10B free cash flow, +42%.','Balaji Krishnamurthy becomes CFO (Feb 2026). Prashanth Mahendra-Rajah departs for "opportunity to serve America."'] },
-      { q:'Q1 2026', items:['<b>$3B returned to shareholders</b> in Q1 (record). Non-GAAP EPS <b>+44% YoY</b>. Go-Get event showcased hotels, Travel Mode, One Search.','50M Uber One members + 10M drivers/couriers globally \u2014 "important milestones." Freight returned to growth for first time in ~2 years.'] },
-    ]},
-  { theme:'AI in the Product (emerging)',
-    why:'The newest narrative thread \u2014 AI moving from the back-end into consumer- and earner-facing features. Early, but flagged as a multi-year lever to watch.',
-    updates:[
-      { q:'Q1 2026', items:['<b>Cart Assistant</b> launched \u2014 an AI helper that builds grocery/retail orders for consumers.','AI earner tools for drivers & couriers (smarter dispatch and support).','Management framed AI as a multi-year <b>efficiency + experience lever</b> \u2014 "early innings," something to track rather than a 2026 numbers driver.'] },
-    ]},
-];
 
 // Regroup the theme-tagged updates by quarter (newest first) \u2014 same data, different lens.
-function callsByQuarter(){
-  var map={}, order=[];
-  UB_THEMES.forEach(function(ct){ ct.updates.forEach(function(u){ if(!map[u.q]){ map[u.q]=[]; order.push(u.q); } map[u.q].push({ theme:ct.theme, items:u.items }); }); });
-  function qval(q){ var m=String(q).match(/Q(\d)\s+(\d{4})/); return m?(+m[2])*10+(+m[1]):0; }
-  order.sort(function(a,b){ return qval(b)-qval(a); });
-  return { order:order, map:map };
-}
-function callsBody(){
-  var h='<style>.calls-tog{display:inline-flex;gap:4px;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:3px;margin-bottom:14px}'+
-    '.calls-pill{border:none;background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--mu);padding:5px 15px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.calls-pill:hover{color:var(--navy)}.calls-pill.active{background:var(--navy);color:#fff}'+
-    '.calls-tl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin:0 0 4px}</style>';
-  h+='<p class="ov-lede">The key narrative threads from <b>10 earnings calls</b> (Q4 2023 \u2192 Q1 2026). Switch lens: <b>By theme</b> traces how each story evolved; <b>By quarter</b> shows what mattered in a given call. Tap any row to expand.</p>';
-  h+='<div class="calls-tog" role="tablist"><button type="button" class="calls-pill active" data-callsv="theme">By theme</button><button type="button" class="calls-pill" data-callsv="quarter">By quarter</button></div>';
-  // \u2500\u2500 By theme (default) \u2500\u2500
-  h+='<div class="lpb-acc" id="ubCallsTheme">';
-  UB_THEMES.forEach(function(ct){
-    h+='<div class="lpb-acc-item">';
-    h+='<button type="button" class="lpb-acc-h"><span>'+esc(ct.theme)+'</span><span class="lpb-acc-ic">+</span></button>';
-    h+='<div class="lpb-acc-body">';
-    h+='<p style="font-size:12px;color:var(--mu);margin:0 0 10px;font-style:italic">'+esc(ct.why)+'</p>';
-    ct.updates.forEach(function(u){
-      h+='<div style="margin-bottom:10px"><span class="ov-chip" style="margin-right:6px">'+esc(u.q)+'</span>';
-      h+='<ul class="ov-bullets" style="margin-top:4px">'+u.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>';
-    });
-    h+='</div></div>';
-  });
-  h+='</div>';
-  // \u2500\u2500 By quarter \u2500\u2500
-  var byQ=callsByQuarter();
-  h+='<div class="lpb-acc" id="ubCallsQuarter" style="display:none">';
-  byQ.order.forEach(function(q){
-    h+='<div class="lpb-acc-item">';
-    h+='<button type="button" class="lpb-acc-h"><span>'+esc(q)+'</span><span class="lpb-acc-ic">+</span></button>';
-    h+='<div class="lpb-acc-body">';
-    byQ.map[q].forEach(function(row){
-      h+='<div style="margin-bottom:12px"><div class="calls-tl">'+esc(row.theme)+'</div>';
-      h+='<ul class="ov-bullets" style="margin-top:2px">'+row.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>';
-    });
-    h+='</div></div>';
-  });
-  h+='</div>';
-  h+='<div class="ov-fynote" style="margin-top:12px">Sources: Uber Q4 2023\u2013Q1 2026 earnings calls and prepared remarks, cross-checked against full transcripts. Highlights are qualitative and contemporaneous \u2014 written from the perspective of each call, not with hindsight.</div>';
-  return h;
-}
 
 // ─── The Barbell — Uber grows the two ends and leans away from the middle ─────
 // Low-cost = cheap but very frequent; premium = less frequent but far more profitable.
@@ -1006,16 +755,6 @@ function uberRivalScatter(){
 //   • turnaround + key drivers                   → Evolution ▸ Strategy (ubStrategyBody)
 //   • 3-year Investor-Day targets                → Evolution ▸ Guidance (ub3yrTargets)
 //   • rival positioning scatter                  → Top Line ▸ Industry Analysis (uberRivalScatter)
-function ubIntro(){
-  var h='';
-  h+='<div class="ov-snap">'+SNAPSHOT.map(function(p){ return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>'; }).join('')+'</div>';
-  h+='<div class="ov-live" id="ubLive" hidden></div>';
-  h+='<p class="ov-lede">'+esc(DESC)+'</p>';
-  h+='<div class="ov-kpis">'+KPIS.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>'; }).join('')+'</div>';
-  h+='<div class="ov-asof">'+esc(AS_OF)+'</div>';
-  h+='<div class="ov-fynote">'+FY_NOTE+'</div>';
-  return h;
-}
 // Top Line ▸ Segments — the segment split and each engine in depth (inner toggle). Company-level
 // snapshot/description/KPIs live in the Overview tab; this tab is about the segments themselves.
 function ubSegmentsBody(c){
@@ -1088,36 +827,6 @@ function ub3yrTargets(){
 }
 // Valuation ▸ Peers — how the LISTED peers trade (multiples). The qualitative competitive map lives
 // in Top Line ▸ Industry Analysis; unlisted rivals (Waymo, Bolt, DiDi) have no public market multiple.
-var UB_PEER_MULT=[
-  { tk:'UBER', n:'Uber',      mc:'$149B', ev:'~15–16×', pe:'~20×', g:'+20%', self:true, read:'The scaled, profitable, multi-product leader — a premium to Lyft, a discount to the faster growers.' },
-  { tk:'DASH', n:'DoorDash',  mc:'$78B',  ev:'~22×',    pe:'~28×', g:'+38%', read:'US delivery leader; the fastest grower here and richly valued on it. No mobility leg.' },
-  { tk:'GRAB', n:'Grab',      mc:'$16B',  ev:'~13×',    pe:'n/m',  g:'+24%', read:'SE-Asia super-app; only recently GAAP-profitable, so read it on EV/EBITDA rather than P/E.' },
-  { tk:'CART', n:'Instacart', mc:'$11B',  ev:'~15×',    pe:'~18×', g:'+14%', read:'US grocery-delivery specialist; profitable and ad-driven — the value name of the set.' },
-  { tk:'LYFT', n:'Lyft',      mc:'$5.8B', ev:'~8×',     pe:'~9×',  g:'+14%', read:'US/Canada #2 ride-hailing; cheapest of the group — the market prices its lack of scale.' }
-];
-function ubPeerMultBody(c){
-  var rowsHtml=UB_PEER_MULT.map(function(p){
-    var bg=p.self?'background:rgba(6,193,103,0.06);':'';
-    return '<tr style="border-top:1px solid var(--bdr);'+bg+'">'+
-      '<td style="padding:8px 10px;font-weight:'+(p.self?'800':'700')+'">'+esc(p.n)+' <span class="muted" style="font-weight:600">'+esc(p.tk)+'</span></td>'+
-      '<td style="text-align:right;padding:8px 10px;font-variant-numeric:tabular-nums">'+esc(p.mc)+'</td>'+
-      '<td style="text-align:right;padding:8px 10px;font-variant-numeric:tabular-nums">'+esc(p.ev)+'</td>'+
-      '<td style="text-align:right;padding:8px 10px;font-variant-numeric:tabular-nums">'+esc(p.pe)+'</td>'+
-      '<td style="text-align:right;padding:8px 10px;font-variant-numeric:tabular-nums">'+esc(p.g)+'</td>'+
-      '<td style="padding:8px 10px;color:var(--mu);font-size:11px;line-height:1.45">'+esc(p.read)+'</td></tr>';
-  }).join('');
-  var h='<p class="ov-lede">How the <b>listed</b> peers trade — the point is where Uber sits on the value/growth spectrum, not who competes with whom (that map is in <b>Industry Analysis</b>). Uber prices at a <b>premium to Lyft</b> (scale, profitability, diversification) but a <b>discount to the faster growers</b> DoorDash and Grab.</p>';
-  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--mu)">'+
-    '<th style="text-align:left;padding:7px 10px">Company</th>'+
-    '<th style="text-align:right;padding:7px 10px">Mkt cap</th>'+
-    '<th style="text-align:right;padding:7px 10px">EV/EBITDA <span style="font-weight:600">(fwd)</span></th>'+
-    '<th style="text-align:right;padding:7px 10px">P/E <span style="font-weight:600">(fwd)</span></th>'+
-    '<th style="text-align:right;padding:7px 10px">Rev growth</th>'+
-    '<th style="text-align:left;padding:7px 10px">The read</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div>';
-  h+='<div class="ov-callout" style="margin-top:12px"><b>Only listed peers with a public multiple belong here.</b> Unlisted rivals (Waymo, Bolt, DiDi) and captive subsidiaries have no market multiple — they sit on the competitive map in <b>Industry Analysis</b>. "n/m" = no meaningful P/E (earnings too small to annualize). Grab and GoTo are newly profitable, so read them on EV/EBITDA.</div>';
-  h+='<div class="ov-foot">Multiples as of ~Jul 2026, forward where available (secondary/terminal sources); growth is latest reported YoY. Market caps live via Massive on the Overview scatter. Directional, not exact — confirm against a terminal before quoting.</div>';
-  return h;
-}
 // ─── Pane: Mobility (the rides business) ─────────────────────────────────────
 // Misc ▸ Regulation (B2 #20, moved out of Top Line ▸ Segments ▸ Mobility on 2026-11-03).
 function ubRegulationBody(){
@@ -1128,14 +837,6 @@ function ubRegulationBody(){
 }
 // The legacy pane styles (Delivery Hero map, regulation cards, …) lived in the old Overview's <style>; the Deep Dive
 // still needs them for the moved panes until F-FINAL folds them into css/overview.css.
-function ubLegacyStyle(){
-  var h=stdOverviewBody(_co||{}); var j=h.indexOf('</style>'); if(h.indexOf('<style>')!==0 || j<0) return '';
-  // keep only the rules of the moved Deep Dive panes: drop the old Overview / nav rules, which the guide's CSS now owns
-  var css=h.slice(7,j), out=[], depth=0, buf='';
-  for(var i=0;i<css.length;i++){ var ch=css[i]; buf+=ch; if(ch==='{') depth++; else if(ch==='}'){ depth--; if(depth===0){ out.push(buf); buf=''; } } }
-  var DROP=/^\s*(@media[^{]*\{\s*)?\.(stdkf|q2|stdp|ov-lede|mm-|acc|famd|ov-row|mg-|ubsc|ov-collap|dd-tab|dd-pane|ov-foot|ov-callout)/;
-  return '<style>'+out.filter(function(r){ return !DROP.test(r); }).join('')+'</style>';
-}
 function mobilityBody(c){
   var h='<style>'+
     '.usc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 8px}'+
@@ -1215,7 +916,7 @@ function unitEconBody(c){
     '<style>.ov-gal-cap{font-size:12.5px;color:var(--navy);line-height:1.6;margin:12px 0}.ov-gal-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}.ov-gal-btn{font-size:22px;font-weight:800;line-height:1;border:1px solid var(--bdr);background:#fff;border-radius:8px;min-width:46px;height:40px;cursor:pointer;color:var(--navy)}.ov-gal-btn:hover{background:#10141A;color:#fff;border-color:#10141A}.ov-gal-count{font-size:11px;color:var(--mu);font-weight:700}</style><p class="ov-lede" style="margin:0 0 12px">Six steps of a Mobility trip — <b>tap any step for a photo + the detail</b>, then use ‹ › to move through the trip. Below: where the $10 lands.</p>'+
     chain(TRIP_FLOW,'trip',true)+
     '<div class="ov-grid2" style="margin-top:18px"><div><div class="ov-subh">Where every $10 goes</div>'+mbars(TRIP_SPLIT)+'</div><div><div class="ov-subh">…and Uber’s ~$3.00 take</div>'+mbars(TRIP_TAKE)+'</div></div>'+
-    '<div class="ov-fynote" style="margin-top:12px"><b>~$0.75 of every $10 trip converts to cash</b> (incl. the ~$0.35 Aleka insurance float). <span class="ave-subh-note">Illustrative — Summit deck, Dec 2024.</span></div>');
+    '<div class="ov-fynote" style="margin-top:12px">'+TRIP_CASH+'</div>');   // B2 #39: TRIP_CASH text → note
   var dbar=function(l,pct,col){ return '<div style="margin:7px 0"><div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:3px"><span style="color:var(--navy);font-weight:600">'+l+'</span><span style="font-weight:800;color:'+col+'">'+pct+'%</span></div><div style="height:16px;background:#EEF2F7;border-radius:5px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:5px"></div></div></div>'; };
   h+=sec('How a Delivery order makes money — the other half of the platform',
     '<div class="ov-diagram-cap" style="margin:0 0 10px">Delivery runs on a <b>lower take and a lower margin</b> than a ride — but the same structure. On a typical order the consumer pays for food + fees; the money splits between the <b>restaurant</b>, the <b>courier</b> and <b>Uber</b>. Shares below are illustrative of the disclosed structure.</div>'+
@@ -1236,18 +937,6 @@ function unitEconBody(c){
   return h;
 }
 // ── Bottom Line ▸ Suppliers — the vendor ecosystem. MOVED from the Mobility segment. ──
-function suppliersBody(c){
-  var h='';
-  h+='<p class="ov-lede"><b>Uber’s most important supplier is its ~8M drivers and couriers</b> — the people who bring the cars and do the work. They are the real supply constraint and the real cost base; the software, cloud and real-estate vendors below are a rounding error next to them. <b>Autonomous vehicles are a <i>future</i> supply source, not today’s</b>: AV trips are growing fast (&gt;10× YoY) but off a tiny base, and human drivers still supply the <b>overwhelming majority of trips right now</b>. AV stays on the map for where it is going — not for the weight it carries today.</p>';
-  h+=sec('The driver & courier base — the supply that actually matters',
-    '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">The platform lives or dies on <b>liquidity</b>: enough drivers online that wait times stay low and prices stay competitive. That labor supply — recruited, incentivized and retained, but <b>owned by no one</b> — is Uber’s core input and, via driver pay + insurance, its largest cost. It is also the moat: the marketplace with the most drivers gives the best service at the lowest price, which attracts more riders, which attracts more drivers. Everything else here is procurement.</div>');
-  h+=sec('The vendor layer — asset-light by design',
-    '<style>.alp{display:flex;align-items:center;gap:16px;background:rgba(6,193,103,0.07);border:1px solid rgba(6,193,103,0.25);border-radius:12px;padding:14px 18px;margin:0 0 12px}.alp-big{font-size:34px;font-weight:800;color:#06965A;line-height:1;flex:none}.alp-txt{font-size:12.5px;color:var(--navy);line-height:1.5}.alp-txt b{font-weight:800}@media(max-width:560px){.alp{flex-direction:column;align-items:flex-start;gap:6px}}</style><div class="alp"><div class="alp-big">0.11%</div><div class="alp-txt">of Uber’s ~<b>$193B</b> gross bookings is <b>disclosed supplier spend</b> — ~<b>$210M</b> across 138 suppliers, and only three carry any dollar value (HCL $127M, Oracle $55M, Alexandria $28M). <b>Uber does not run a supply chain; it aggregates one.</b></div></div>'+'<div class="ov-diagram-cap" style="margin:0 0 10px">Uber’s supplier base sorted by <b>what they do</b> for the platform. Most are strategic ties, not traditional vendor contracts — which is itself the asset-light thesis in data form.</div>'+
-    '<div class="usc-grid">'+SC_SUPPLIERS.map(scCard).join('')+'</div>'+
-    '<div class="ov-fynote" style="margin-top:12px"><b>The asset-light proof in the data:</b> of 138 identified suppliers, only <b>three carry disclosed dollar values</b> — HCL ($127M, engineering), Oracle ($55M, cloud), Alexandria RE ($28M, offices). Total ~<b>$210M</b> against ~<b>$193B</b> of gross bookings — a ratio that screams platform, not operator. (Of the 30+ AV partners, only ~<b>5–7</b> have real money committed; the rest are MOUs.) <span class="ave-subh-note">Bloomberg SPLC, 29-Jun-2026.</span></div>');
-  h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
-  return h;
-}
 // ── Top Line ▸ Segments ▸ Freight (inner toggle). Freight is the small, near-breakeven third leg —
 // immaterial to the thesis, so it is intentionally covered lightly vs Mobility & Delivery. ──
 function freightBody(c){
@@ -1265,89 +954,10 @@ function freightBody(c){
 // ── Bottom Line ▸ Margins — profitability & cash margins as a % of revenue. Renders from a sourced
 // fallback history so the chart is never empty; the live Massive feed (api.fetchMargins) overrides
 // the fallback when it is reachable in the session. ──
-var UB_MRG_METRICS=[
-  {key:'gross',label:'Gross',color:'#10141A'},
-  {key:'oper',label:'Operating',color:MOB},
-  {key:'net',label:'Net',color:'#7A5AF8'},
-  {key:'ebitda',label:'EBITDA',color:'#12B5A5'},
-  {key:'cfo',label:'CFO',color:'#F2A73B'},
-  {key:'fcf',label:'FCF',color:'#EB5757'}
-];
 // Sourced fallback (% of revenue): gross/op/net = GAAP; EBITDA = Adjusted EBITDA %; CFO & FCF ÷ revenue.
 // FY2021–FY2025 actuals (Summit / Uber filings); FY2026E = consensus + model. Overridden by live Massive.
-var UB_MRG_FALLBACK=[
-  {fy:'FY21', gross:46.4, oper:-20.2, net:-2.8,  ebitda:-4.4, cfo:-2.5, fcf:-4.3},
-  {fy:'FY22', gross:38.3, oper:-5.6,  net:-28.7, ebitda:5.4,  cfo:2.0,  fcf:1.2},
-  {fy:'FY23', gross:39.8, oper:2.7,   net:5.1,   ebitda:10.9, cfo:9.6,  fcf:9.0},
-  {fy:'FY24', gross:39.4, oper:6.4,   net:22.4,  ebitda:14.7, cfo:16.2, fcf:15.7},
-  {fy:'FY25', gross:39.8, oper:10.8,  net:19.3,  ebitda:16.8, cfo:19.4, fcf:18.8},
-  {fy:'FY26E',gross:40.0, oper:12.0,  net:11.9,  ebitda:18.6, cfo:18.7, fcf:18.0, proj:true}
-];
-var UB_MRG_NOTE_FB='Gross / operating / net = <b>GAAP</b>; EBITDA = <b>Adjusted EBITDA</b> %; CFO & FCF ÷ revenue. <b>FY26E</b> = consensus + model. Note: <b>GAAP net margin in FY24–25 is inflated by one-off tax & equity-stake gains</b> (and dips in FY26E as those don’t recur) — read <b>operating</b> and <b>EBITDA</b> margin as the clean, steadily-rising trend. <span style="color:#B7791F">Directional fallback; the live Massive feed overrides it when reachable.</span>';
-var UB_MRG_NOTE_LIVE='Historical margins computed <b>live from Massive</b> (income & cash-flow statements): gross/op/net = line ÷ revenue; EBITDA = (op income + D&A) ÷ revenue; CFO & FCF ÷ revenue. Operating and EBITDA margin are the clean trend; GAAP net is skewed by equity-stake & tax one-offs.';
-var _ubMrgRows=UB_MRG_FALLBACK.slice();
-var _ubMrgSrc='fallback';
-function ubMarginsBody(c){
-  return '<p class="ov-lede">Profitability & cash margins as a % of revenue — gross, operating and net, plus Adjusted EBITDA, CFO and FCF. The turnaround reads cleanest in <b>operating</b> and <b>EBITDA</b> margin, which climb every year from deeply negative (FY21) into the high-teens.</p>'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Margins (% of revenue) <span>· fiscal years · FY26E = estimate</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartMargins"></canvas></div></div>'+
-    '<div class="ave-subh-note" id="ubMrgNote" style="margin-top:8px">'+UB_MRG_NOTE_FB+'</div>';
-}
-function buildUbMargins(){
-  var cv=document.getElementById('ubChartMargins'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
-  destroy('ubChartMargins');
-  var labels=_ubMrgRows.map(function(r){ return r.fy; });
-  var projIdx=_ubMrgRows.reduce(function(a,r,i){ return r.proj?i:a; }, -1);
-  var ds=UB_MRG_METRICS.map(function(m){ return { label:m.label, data:_ubMrgRows.map(function(r){ return r[m.key]; }), borderColor:m.color, backgroundColor:m.color, borderWidth:2, tension:.25, spanGaps:true, fill:false,
-    pointRadius:_ubMrgRows.map(function(r){ return r.proj?4:2; }), pointStyle:_ubMrgRows.map(function(r){ return r.proj?'rectRot':'circle'; }),
-    segment:{ borderDash:function(ctx){ return ctx.p1DataIndex===projIdx?[5,4]:undefined; } } }; });
-  _charts['ubChartMargins']=new Chart(cv.getContext('2d'),{ type:'line', data:{ labels:labels, datasets:ds },
-    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
-      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ title:function(it){ var l=it[0].label; return l==='FY26E'?'FY26E · estimate':l; }, label:function(ctx){ return ctx.dataset.label+': '+(ctx.parsed.y==null?'—':ctx.parsed.y.toFixed(1)+'%'); } } } },
-      scales:{ y:{ ticks:{ callback:function(v){ return v+'%'; }, font:{size:10} }, grid:{color:'#EEF2F7'} }, x:{ grid:{display:false}, ticks:{font:{size:10.5}} } } }
-  });
-  ubLoadMargins();
-}
-function ubLoadMargins(){
-  if(_ubMrgSrc==='massive') return; // already replaced with live data
-  import('../api.js').then(function(api){ return api.fetchMargins?api.fetchMargins('UBER'):null; }).then(function(res){
-    if(!res||!res.success||!res.data||res.data.length<3) return; // keep the fallback chart
-    var proj=UB_MRG_FALLBACK[UB_MRG_FALLBACK.length-1];
-    _ubMrgRows=res.data.concat(proj&&proj.proj?[proj]:[]);
-    _ubMrgSrc='massive';
-    var note=document.getElementById('ubMrgNote'); if(note) note.innerHTML=UB_MRG_NOTE_LIVE;
-    buildUbMargins();
-  }).catch(function(){ /* keep the fallback */ });
-}
 // ── Valuation ▸ Capital Allocation — DATA-BACKED from the Summit model snapshot (FY actuals,
 // $M): FCF, share repurchases, SBC and shares outstanding. Dividend/buyback framing verified. ──
-function ubCapAllocBody(c){
-  var R=[
-    {fy:'FY22', fcf:390,  bb:0,    sbc:1793, sh:2061},
-    {fy:'FY23', fcf:3362, bb:0,    sbc:1935, sh:2122},
-    {fy:'FY24', fcf:6895, bb:1252, sbc:1796, sh:2141},
-    {fy:'FY25', fcf:9763, bb:6523, sbc:1826, sh:2106}
-  ];
-  var bb=function(m){ if(m==null) return '—'; var a=Math.abs(m), s=m<0?'−':''; return a>=1000? s+'$'+(a/1000).toFixed(1)+'B' : s+'$'+a+'M'; };
-  var last=R[3], prev=R[2];
-  var payout=Math.round(last.bb/last.fcf*100);
-  var shChg=(last.sh/prev.sh-1)*100;
-  var h='<p class="ov-lede">How Uber deploys the cash the turnaround now throws off: <b>no dividend</b>, with <b>share repurchases</b> the priority — funded by a fast-growing FCF base on a now investment-grade balance sheet.</p>';
-  h+='<div class="ov-kpis">'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Dividend</div><div class="ov-kpi-v">None</div><div class="ov-kpi-d muted">never paid</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">FY25 buybacks</div><div class="ov-kpi-v">$6.5B</div><div class="ov-kpi-d muted">~'+payout+'% of FCF</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">FY25 SBC</div><div class="ov-kpi-v">$1.8B</div><div class="ov-kpi-d muted">~flat since FY22</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Shares out</div><div class="ov-kpi-v">2.11B</div><div class="ov-kpi-d muted">▼ '+Math.abs(shChg).toFixed(1)+'% YoY</div></div>'+
-  '</div>';
-  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Fiscal year</th><th style="text-align:right;padding:7px 10px">Free cash flow</th><th style="text-align:right;padding:7px 10px">Buybacks</th><th style="text-align:right;padding:7px 10px">SBC</th><th style="text-align:right;padding:7px 10px">Shares out (M)</th></tr></thead><tbody>'+
-    R.map(function(r){ return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:700">'+r.fy+'</td><td style="text-align:right;padding:7px 10px">'+bb(r.fcf)+'</td><td style="text-align:right;padding:7px 10px">'+(r.bb?bb(-r.bb):'—')+'</td><td style="text-align:right;padding:7px 10px">'+bb(-r.sbc)+'</td><td style="text-align:right;padding:7px 10px">'+r.sh.toLocaleString()+'</td></tr>'; }).join('')+
-  '</tbody></table></div>';
-  h+=sec('How management frames it — the capital-allocation hierarchy', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Management lays out an explicit <b>priority stack</b> (Q4 2025 remarks): <b>(1)</b> reinvest in growth where LTV/CAC works · <b>(2)</b> fund the <b>AV</b> strategy (asset-light, partner-financed) · <b>(3)</b> selective <b>bolt-on M&A</b> at a "high bar" · <b>(4)</b> <b>return excess capital</b> via buybacks · <b>(5)</b> hold a <b>solid investment-grade</b> rating. The intent has <b>hardened over time</b>: at the Feb 2024 launch buybacks were meant to "partially offset stock-based compensation," but by 2025 the language is "<b>steadily reduce our share count</b>… opportunistic and aggressive buyers during dislocations."</div>');
-  h+=sec('Repurchase program & how much room', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Authorizations: <b>$7B</b> inaugural (Feb 2024, now exhausted "faster than expected"), a <b>$1.5B</b> accelerated repurchase (Jan 2025), then an added <b>$20B</b> (Aug 2025) — roughly <b>~$19B still authorized</b>. Actual buybacks scaled <b>$0 → $1.3B (FY24) → $6.5B (FY25)</b>, about <b>'+payout+'% of FCF</b>. The tap can stay open: FY25 FCF was <b>$9.8B (+42%)</b>, and Uber holds ~<b>$9.2B of mostly-listed equity stakes</b> (Aurora, Didi, Grab) it plans to monetize opportunistically as <b>extra firepower</b> — so the constraint is willingness, not capacity. Signaled direction: <b>steady-to-more</b>, targeting ongoing share-count reduction.</div>');
-  h+=sec('Dividend policy', '<div class="ov-callout">Uber has <b>never paid a dividend</b> and has not signaled one. All shareholder return runs through <b>buybacks</b>, alongside maintaining the newly investment-grade balance sheet.</div>');
-  h+=sec('SBC & dilution — the honest history', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">SBC has <b>plateaued around ~$1.8B/yr</b> since FY22 while revenue nearly doubled, so as a share of revenue it <b>fell from ~7.4% (2020) to ~3.5% (2025)</b> — a shrinking drag. But dilution was <b>not</b> offset for most of Uber’s life: with <b>$0 of buybacks until 2024</b>, the diluted share count <b>rose every year from 2020 to 2024</b> (~1,753M → ~2,151M). <b>FY25 is the first year it actually fell</b> ('+prev.sh.toLocaleString()+'M → '+last.sh.toLocaleString()+'M, ≈ −1.4%) as $6.5B of repurchases finally out-ran SBC. So the accurate read is not "buybacks always offset SBC" — it is that they <b>failed to for years</b> and have only <b>just begun to more-than-offset</b> it. The full historical picture is charted under <b>Governance & SBC</b>.</div>');
-  h+='<div class="ov-foot">Buyback authorizations and framework: Uber 8-Ks / Q4 2025 earnings materials. FY actuals (FCF, repurchases, SBC, shares): Summit model. Remaining authorization ~$19B is an estimate ($20B less ~$0.8B drawn beyond the exhausted $7B program).</div>';
-  return h;
-}
 // ── Valuation ▸ Balance Sheet — downside/solidity view, sourced from Uber's Q1 2026 10-Q
 // (SEC EDGAR, condensed consolidated balance sheet as of March 31, 2026; $M). WORK IN PROGRESS. ──
 var UB_STAKES=[['Didi',2337],['Grab',1961],['Aurora',1343],['Other non-marketable',1800],['Other marketable',569],['Related-party note',99],['Equity-method',268]];
@@ -1437,106 +1047,10 @@ function ubTamBody(c){
 }
 // ── Management ▸ Governance & SBC — vetted governance facts (share class, board, pay) from the
 // in-repo management config + SBC from the Summit model. Board detail lives in Executives & Board. ──
-var UB_SBC_HIST={ yrs:['FY20','FY21','FY22','FY23','FY24','FY25'], sbcPct:[7.4,6.7,5.6,5.2,4.1,3.5], shares:[1793,2006,2061,2122,2141,2106] };
-function buildUbSbc(){
-  var cv=document.getElementById('ubChartSbc'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
-  destroy('ubChartSbc');
-  _charts['ubChartSbc']=new Chart(cv.getContext('2d'),{
-    data:{ labels:UB_SBC_HIST.yrs, datasets:[
-      { type:'bar', label:'Shares out (M)', data:UB_SBC_HIST.shares, backgroundColor:'rgba(58,123,213,0.26)', borderColor:'#3A7BD5', borderWidth:1, yAxisID:'y', order:2 },
-      { type:'line', label:'SBC % of revenue', data:UB_SBC_HIST.sbcPct, borderColor:'#7A5AF8', backgroundColor:'#7A5AF8', borderWidth:2.5, tension:.3, pointRadius:3, yAxisID:'y1', order:1 }
-    ]},
-    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
-      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.yAxisID==='y1'? ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+'%' : ' '+ctx.dataset.label+': '+ctx.parsed.y.toLocaleString()+'M'; } } } },
-      scales:{ y:{ position:'left', title:{display:true,text:'Shares out (M)',font:{size:9}}, ticks:{font:{size:9}}, grid:{color:'#EEF2F7'}, suggestedMin:1600 },
-        y1:{ position:'right', title:{display:true,text:'SBC % of revenue',font:{size:9}}, ticks:{callback:function(v){return v+'%';},font:{size:9}}, grid:{display:false}, min:0 },
-        x:{ grid:{display:false}, ticks:{font:{size:10}} } } }
-  });
-}
-function ubGovBody(c){
-  var k=[
-    ['Share & voting','1 vote / share','No dual-class or founder control'],
-    ['Board','9 of 10 independent','Chair ≠ CEO · annual elections'],
-    ['CEO pay · FY25','$35.6M','96% at-risk · say-on-pay ~94%'],
-    ['SBC · % of revenue','7.4% → 3.5%','FY20→FY25 · a shrinking drag']
-  ];
-  var h='<p class="ov-lede">Uber’s governance is unusually clean for a founder-era tech company: <b>one share, one vote</b> (Travis Kalanick’s super-voting stock collapsed after the 2019 IPO), a <b>separate independent chair</b>, and a board that is <b>9 of 10 independent</b>.</p>';
-  h+='<div class="ov-kpis">'+k.map(function(f){return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(f[0])+'</div><div class="ov-kpi-v">'+esc(f[1])+'</div><div class="ov-kpi-d muted">'+esc(f[2])+'</div></div>';}).join('')+'</div>';
-  h+=sec('Stock-based compensation & alignment — did buybacks offset it?',
-    '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">The honest answer is <b>not until recently</b>. SBC has run a <b>flat ~$1.8B/yr</b> since FY22 while revenue nearly doubled — so as a share of revenue it <b>fell from ~7.4% (FY20) to ~3.5% (FY25)</b>, a genuinely shrinking drag. But SBC still <b>dilutes</b>, and with <b>no buybacks before 2024</b> the share count <b>rose every year from FY20 to FY24</b> (~1,793M → ~2,141M). Only in <b>FY25</b>, once repurchases hit $6.5B, did the count finally <b>tick down</b> (~2,106M) — the first time buybacks more-than-offset dilution. CEO pay is <b>96% at-risk</b> (base ~$1.08M), say-on-pay support ~<b>94%</b>.</div>'+
-    '<div class="ov-chart-card" style="margin-top:10px"><div class="ov-chart-t">SBC as % of revenue vs shares outstanding <span>· FY2020–FY2025</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartSbc"></canvas></div></div>'+
-    '<div class="ave-subh-note" style="margin-top:8px">Bars = period-end shares outstanding (left); line = SBC ÷ revenue (right). The bar peaks in FY24 and turns down in FY25 — the inflection where buybacks first out-ran SBC. <span style="color:#B7791F">SBC % of revenue and shares from Uber filings / Summit; directional.</span></div>');
-  return h;
-}
 // ── Management ▸ Track Record — per-person scorecard (management only, not the board). Each exec is
 // color-rated (green = value creator · amber = mixed/unproven · red = value destroyer) with an Uber
 // record and a prior-roles record; tap a card for the full read. Roster per Uber's leadership page,
 // Jul 2026 (C-suite turned over materially in 2025–26). ──
-var TRACK_RATE={ green:{c:'#06965A',bg:'rgba(6,193,103,0.09)',bd:'rgba(6,193,103,0.34)',l:'Value creator'},
-  amber:{c:'#B7791F',bg:'rgba(232,160,12,0.10)',bd:'rgba(232,160,12,0.34)',l:'Mixed / unproven'},
-  red:{c:'#C0392B',bg:'rgba(192,57,43,0.09)',bd:'rgba(192,57,43,0.34)',l:'Value destroyer'} };
-var TRACK_MGMT=[
-  { id:'dara', n:'Dara Khosrowshahi', role:'Chief Executive Officer', since:'2017', rate:'green',
-    uber:'Inherited a company in crisis (culture, Waymo suit, bans) and engineered one of tech’s great turnarounds — first full-year GAAP profit (2023), S&P 500 inclusion, ~$10B FCF, buybacks. Refocused the portfolio (exited ATG self-driving, unprofitable geos).',
-    prior:'CEO of <b>Expedia (2005–17)</b>: grew revenue ~$2.1B → ~$10B+ via acquisitions and international expansion. Earlier: IAC/Barry Diller lieutenant; began at Allen & Company (1991).',
-    detail:'<p><b>At Uber (CEO since Sep 2017).</b> Hired to reset the post-founder culture (Holder report, harassment scandal, regulatory bans, the Waymo litigation). Delivered: the <b>May 2019 IPO</b>; the <b>first full-year GAAP operating profit (2023)</b>; <b>S&P 500 inclusion (Dec 2023)</b>; ~<b>$10B</b> annual FCF and the first-ever buyback by 2025; and portfolio discipline — exited money-losing bets (ATG self-driving sold to Aurora; Uber Eats out of unprofitable geographies), converting several into equity stakes.</p>'+
-      '<p><b>Before Uber.</b> CEO of <b>Expedia (2005–2017)</b> — grew revenue from ~$2.1B to ~$10B+ over 12 years via acquisitions (Hotels.com, Hotwire, Trivago, HomeAway/Orbitz) and international expansion, a strong shareholder-value record. Was briefly the highest-paid US CEO (~$94.6M, 2015). Earlier a Barry Diller/IAC lieutenant; began his career at Allen & Company (1991).</p>'+
-      '<p><b>Net read — value creator (green).</b> One of the more successful "professional CEO into a crisis" cases in tech. Caveats, not disqualifying: very high pay (a ~$200M package recruited him), a tone-deaf 2021 Uber Eats "moonlighting" PR stunt, and years of cash burn before the profit inflection.</p>' },
-  { id:'balaji', n:'Balaji Krishnamurthy', role:'Chief Financial Officer', since:'2019 · CFO 2026', rate:'amber',
-    uber:'Internal promotion to CFO (effective Feb 2026). Ran Investor Relations, then Strategic Finance, then was divisional CFO for Mobility & Delivery — deep ownership of the core P&L he now runs.',
-    prior:'~8 years at <b>Goldman Sachs</b> (VP, equity research); earlier Info Edge India, iTrust, Irevna. CFA; MBA (MDI Gurgaon).',
-    detail:'<p><b>At Uber (since 2019; CFO effective Feb 16, 2026).</b> Head of Investor Relations (2020–23), VP Strategic Finance (2023–26), and previously <b>divisional CFO for Mobility and Delivery</b> — Uber’s two largest units. Strong internal knowledge and continuity into the seat.</p>'+
-      '<p><b>Before Uber.</b> ~8 years at <b>Goldman Sachs</b> as a VP in equity research; earlier roles at Info Edge India, iTrust and Irevna. CFA charterholder; MBA from MDI Gurgaon.</p>'+
-      '<p><b>Net read — mixed / unproven (amber).</b> Credible insider with direct ownership of the core-segment finances (continuity is a plus), but he is <b>Uber’s third CFO in ~3 years</b>, and a career largely in IR/equity research rather than a sitting public-company CFO means his standalone record as a top finance chief is not yet established.</p>' },
-  { id:'macdonald', n:'Andrew Macdonald', role:'President & Chief Operating Officer', since:'2012', rate:'green',
-    uber:'14-year veteran (Uber’s first Toronto GM). Rose to run global Mobility, Delivery and Autonomous plus membership/support/safety. Promoted to President & COO (Jun 2025) — Uber’s first COO since 2019.',
-    prior:'Career built essentially at Uber — limited external executive history, so his record <i>is</i> the Uber operating record.',
-    detail:'<p><b>At Uber (since 2012).</b> Joined as the first GM for Toronto and rose through the operating ranks to SVP, Mobility & Business Operations (2019). Promoted to <b>President & COO on Jun 2, 2025</b> (with a $5M performance RSU award), consolidating operational leadership; now runs global <b>Mobility, Delivery and Autonomous</b> plus cross-platform functions (Uber One, support, safety).</p>'+
-      '<p><b>Before Uber.</b> Little notable external executive history — his career is essentially Uber.</p>'+
-      '<p><b>Net read — value creator, lightly caveated (green).</b> A proven internal operator who scaled Uber’s largest businesses; the only caveat is that his résumé is almost entirely Uber, so there is little independent benchmark.</p>' },
-  { id:'west', n:'Tony West', role:'SVP, Chief Legal Officer', since:'2017', rate:'green',
-    uber:'Central architect of the post-scandal governance turnaround: guided the IPO through legal/regulatory risk, ended mandatory arbitration/NDAs for assault victims, published a first-of-its-kind US safety transparency report.',
-    prior:'EVP & GC at <b>PepsiCo</b>; <b>US DOJ #3 (Associate Attorney General, 2012–14)</b> — secured ~$37B in financial-crisis penalties incl. the record BofA ($16.65B) and JPMorgan ($13B) settlements.',
-    detail:'<p><b>At Uber (GC since late 2017).</b> Alongside Dara, a central architect of the cultural and governance recovery — steered the IPO through legal and regulatory risk, ended mandatory arbitration and NDAs for sexual-assault victims, published a first-of-its-kind US safety transparency report, and built governance programs.</p>'+
-      '<p><b>Before Uber.</b> EVP Public Policy & GC at <b>PepsiCo</b>; <b>17th Associate Attorney General of the US (2012–14)</b>, the DOJ’s #3 — secured ~$37B in financial-crisis penalties including the record <b>Bank of America ($16.65B)</b> and <b>JPMorgan ($13B)</b> settlements; earlier a MoFo litigation partner and Assistant US Attorney.</p>'+
-      '<p><b>Net read — value creator (green).</b> Rare blend of top-tier government-litigation credibility and big-company GC experience; directly tied to Uber’s reputational recovery.</p>' },
-  { id:'kansal', n:'Sachin Kansal', role:'Chief Product Officer', since:'2017', rate:'green',
-    uber:'Uber’s first safety-tech product leader; elevated to CPO in 2024. Owns Mobility & Delivery product and product/tech strategy for new bets (AV, taxis, Uber for Teens).',
-    prior:'VP Product at <b>Lookout</b> (mobile security, scaled to 120M+ users); CPO at Flywheel (taxi-hailing); Director of Product at <b>Palm</b> (webOS).',
-    detail:'<p><b>At Uber (since 2017).</b> Joined as its first product leader focused on safety tech; <b>CPO since 2024</b>. Owns Mobility & Delivery product (PM, design, product ops) and product/tech strategy for new bets — autonomous, taxis, sustainability, Uber for Teens.</p>'+
-      '<p><b>Before Uber.</b> VP Product at <b>Lookout</b> (mobile security; scaled the consumer line to 120M+ users); CPO at <b>Flywheel Software</b> (taxi-hailing); Director of Product at <b>Palm</b> (webOS, later acquired by HP).</p>'+
-      '<p><b>Net read — solid, green-leaning.</b> Credible marketplace and safety product operator; Palm/webOS was a commercial failure but that was an org-level outcome, not a personal red flag.</p>' },
-  { id:'naga', n:'Praveen Neppalli Naga', role:'Chief Technology Officer', since:'2015', rate:'green',
-    uber:'Leads engineering & science; oversees ~4,000 engineers/scientists building the core marketplace and data infrastructure; a public voice on Uber’s AI strategy.',
-    prior:'~7 years in engineering leadership at <b>LinkedIn</b>, building early products and data infrastructure through its high-growth era.',
-    detail:'<p><b>At Uber (since 2015).</b> Leads engineering and science strategy; oversees ~4,000 engineers and scientists on the core marketplace and data infrastructure; a public voice on Uber’s AI strategy.</p>'+
-      '<p><b>Before Uber.</b> ~7 years of engineering leadership at <b>LinkedIn</b>, building early products and data infrastructure during its high-growth era. MS CS, University of Nebraska.</p>'+
-      '<p><b>Net read — solid, green-leaning.</b> Long tenure plus a strong LinkedIn scaling pedigree; no red flags surfaced.</p>' },
-  { id:'kannan', n:'Madhu Kannan', role:'Chief Business Officer', since:'2017 · rejoined 2023', rate:'green',
-    uber:'Oversees global business development, corporate development and investments (M&A, partnerships, strategic capital).',
-    prior:'CEO of the <b>Bombay Stock Exchange</b>; Group Head of BD at <b>Tata Sons</b>; senior roles at BofA Securities / Merrill Lynch and NYSE Euronext.',
-    detail:'<p><b>At Uber (first 2017 as CBO Asia-Pacific; rejoined 2023 as global CBO).</b> Runs global business development, corporate development and investments — M&A, partnerships, strategic capital.</p>'+
-      '<p><b>Before Uber.</b> EVC Global Corporate & Investment Banking at <b>Bank of America Securities</b>; Group Head of BD at <b>Tata Sons</b>; <b>CEO of the Bombay Stock Exchange</b>; MD at BofA-Merrill Lynch; SVP at NYSE Euronext.</p>'+
-      '<p><b>Net read — green-leaning.</b> A senior dealmaker with capital-markets and BD depth; the main caveat is a somewhat itinerant career (multiple exits/re-entries).</p>' }
-];
-function ubTrackBody(c){
-  var legend=Object.keys(TRACK_RATE).map(function(k){ var r=TRACK_RATE[k]; return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--navy)"><span style="width:10px;height:10px;border-radius:50%;background:'+r.c+'"></span>'+r.l+'</span>'; }).join('');
-  var cards=TRACK_MGMT.map(function(m){ var r=TRACK_RATE[m.rate];
-    return '<div class="trk-card ov-clickable" data-detail="exec:'+m.id+'" style="border:1px solid '+r.bd+';border-left:4px solid '+r.c+';background:'+r.bg+';border-radius:11px;padding:13px 15px;cursor:pointer;transition:.14s">'+
-      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><div style="font-size:13.5px;font-weight:800;color:var(--navy)">'+esc(m.n)+'</div><div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:'+r.c+'">'+r.l+'</div></div>'+
-      '<div style="font-size:11px;color:var(--mu);font-weight:600;margin:1px 0 8px">'+m.role+' · at Uber since '+esc(m.since)+'</div>'+
-      '<div style="font-size:11.5px;color:var(--navy);line-height:1.5;margin-bottom:6px"><b style="color:'+r.c+'">At Uber:</b> '+m.uber+'</div>'+
-      '<div style="font-size:11.5px;color:var(--navy);line-height:1.5"><b style="color:var(--mu)">Before:</b> '+m.prior+'</div>'+
-      '<div class="ov-more" style="margin-top:7px">Full track record ›</div></div>';
-  }).join('');
-  var h='<p class="ov-lede">The people running Uber today, rated on <b>what they have actually built</b> — an <b>Uber</b> record and a <b>prior-roles</b> record for each. Color = the net read; <b>tap a card</b> for the full history. (Management only — board and ownership are separate tabs.)</p>';
-  h+='<div style="display:flex;gap:14px;flex-wrap:wrap;margin:0 0 12px">'+legend+'</div>';
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">'+cards+'</div>';
-  h+='<style>@media(max-width:640px){.trk-card{}.trk-card{}} .trk-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.08)}</style>';
-  h+='<div class="ov-callout" style="margin-top:14px"><b>CEO turnaround, in one line:</b> first GAAP operating profit Q2 2023 (after ~14 years of losses) · investment-grade rating · free cash flow $0.4B → $9.8B (FY22→FY25) · share count began falling in FY25 as buybacks outran SBC · exited China / SE-Asia / Russia into equity stakes.</div>';
-  h+='<div class="ov-foot">Roster and titles per Uber’s leadership page (Jul 2026); prior-role outcomes from company/press sources. The C-suite turned over materially in 2025–26 (new CFO Feb 2026; new President & COO Jun 2025). Ratings are an editorial read, not a Summit output.</div>';
-  return h;
-}
 // ─── Pane: Insurance & Regulation (the two genuinely-unique deep topics) ─────
 // (Flywheel, Uber One, take-rate & emerging/FX moved to driver cards / Supply Chain /
 //  a tap-modal — this tab is no longer a grab-bag.)
@@ -2242,62 +1756,12 @@ function deliveryHeroBody(){
 // Block 1 — Key Facts. Canonical set; missing cells are omitted (never blank).
 // Sources: Uber FY2025 10-K (EDGAR CIK 0001543151, filed as a DOMESTIC 10-K), IR.
 // Exactly 10 cells (5 columns × 2 rows). CEO carries tenure; Market cap carries an as-of.
-var STD_FACTS=[
-  ['Listing','NYSE: UBER'],
-  ['HQ','San Francisco, CA, USA'],
-  ['Incorporation','Delaware, USA'],
-  ['SEC filer','Domestic (10-K/10-Q/8-K)'],
-  ['Founded','2009'],
-  ['IPO','May 2019'],
-  ['CEO','Dara Khosrowshahi · since 2017'],
-  ['Employees','~34,000 (Dec 2025)'],
-  ['Dividend','Non-payer ($7B buyback ’24)'],
-  ['Market cap','~$150B · Jul 2026'],
-];
-function stdKeyFacts(){
-  return '<div class="stdkf">'+STD_FACTS.slice(0,10).map(function(p){
-    var v=p[0]==='Market cap' ? '<span id="ubMc">'+esc(p[1])+'</span>' : esc(p[1]);
-    return '<div class="stdkf-cell"><div class="stdkf-k">'+esc(p[0])+'</div><div class="stdkf-v">'+v+'</div></div>'; }).join('')+'</div>';
-}
 // Block 3 — the 4-quadrant, rendered as a 2×2 TABLE. Each cell ≤ ~30 words.
-var STD_BIZ=[
-  ['What it sells','Rides, food / grocery / retail delivery and freight brokerage — plus Uber One membership and advertising — on one app across ~70 countries.'],
-  ['Who buys it','Consumers (riders and eaters) on one side; drivers, couriers, merchants and advertisers on the other side of the marketplace.'],
-  ['How it earns','It keeps a share (a “take rate”) of gross bookings. Mobility is the profit engine; Delivery is scaling; advertising is a high-margin add-on.'],
-  ['The edge','Global scale plus a cross-sell bundle — rides ⇄ eats ⇄ membership — that no single-service rival matches; asset-light and cash-generative.'],
-];
-function stdFourQuad(){
-  return '<div class="q2">'+STD_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
-}
 // Block 4 — How it makes money. By SEGMENT, toggled Revenue ⇄ Gross Bookings (both verified &
 // reconcile). Geography IS disclosed in the 10-K, but the FY2025 regional split could not be
 // verified, so it is NOT shown here (a fabricated geo view is worse than none).
-var STD_REV=[['Mobility',57.0,'$29.7B',MOB],['Delivery',33.2,'$17.3B',DEL],['Freight',9.8,'$5.1B',FRT]];
-var STD_GB=[['Mobility',50.4,'$97.5B',MOB],['Delivery',47.0,'$90.9B',DEL],['Freight',2.6,'$5.1B',FRT]];
 // "What is X?" is qualitative (no numbers — the chart has them); the nested "Segment economics"
 // adds the take rate & segment Adjusted EBITDA, which are NOT in the chart above.
-var STD_SEG_DEF=[
-  { seg:'Mobility',
-    desc:'Uber’s ridesharing business and its profit engine: an app that connects riders with nearby independent drivers for on-demand trips of every kind. Uber owns no cars — it runs the marketplace (matching, pricing, payments) and keeps a service fee, its <b>take rate</b>, on each fare, plus rider fees, in-app advertising and Uber One membership.',
-    econ:[['Gross Bookings','$97.5B'],['Revenue (take rate)','$29.7B (~30%)'],['Adjusted EBITDA','~$7.9B']] },
-  { seg:'Delivery',
-    desc:'Uber Eats and the wider delivery marketplace: connects consumers with restaurants, grocers and retailers, and the couriers who fulfill orders. Uber earns fees from merchants and consumers on each order, and increasingly from a <b>high-margin advertising</b> business built on the same app.',
-    econ:[['Gross Bookings','$90.9B'],['Revenue (take rate)','$17.3B (~19%)'],['Adjusted EBITDA','~$3.6B']] },
-  { seg:'Freight',
-    desc:'A digital freight brokerage connecting shippers with truck carriers. Unlike the two consumer segments it is recognized on a <b>gross basis</b> (revenue ≈ bookings) and runs near breakeven — kept for optionality rather than as a core profit driver.',
-    econ:[['Gross Bookings','$5.1B'],['Revenue','$5.1B (gross basis)'],['Adjusted EBITDA','~breakeven']] },
-];
-function stdMoneyMap(){
-  var h='<div class="mm-tog"><button type="button" class="mm-pill active" data-mm="rev">By revenue</button><button type="button" class="mm-pill" data-mm="gb">By gross bookings</button></div>';
-  h+='<div id="ubMMrev">'+mbars(STD_REV)+'</div>';
-  h+='<div id="ubMMgb" hidden>'+mbars(STD_GB)+'</div>';
-  h+='<div class="mm-defs acc-list" style="margin-top:12px">'+STD_SEG_DEF.map(function(s){
-    var econ='<div class="acc" style="margin-top:8px"><button type="button" class="acc-h">Segment economics (FY2025) <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+'</div></div>';
-    return '<div class="acc"><button type="button" class="acc-h">What is “'+esc(s.seg)+'”?<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+s.desc+'</div>'+econ+'</div></div>';
-  }).join('')+'</div>';
-  h+='<div class="ov-diagram-cap" style="margin-top:10px">FY2025 by segment. Mobility is ~57% of <b>revenue</b> but ~50% of <b>gross bookings</b> — because Uber keeps a higher take rate on rides than on delivery. <span class="ave-subh-note">Σ revenue $52.0B · Σ bookings $193.5B (both reconcile). No geography view — FY2025 regional split not verified. Source: Uber FY2025 results; Summit model corroborates.</span></div>';
-  return h;
-}
 // Block 5 — Products (TWO TIERS): Tier-1 family cards → pop-up → Tier-2 the specific products.
 // No photos on file → emoji stands in (icon fallback). Grouped by segment.
 var UB_PROD_GROUPS=[
@@ -2348,15 +1812,6 @@ var UB_PROD_GROUPS=[
     ]},
   ]},
 ];
-function stdProducts(){
-  return UB_PROD_GROUPS.map(function(g,gi){
-    return '<div class="stdp-group"><div class="stdp-seg">'+esc(g.seg)+'</div><div class="stdp">'+
-      g.families.map(function(f,fi){
-        return '<div class="stdp-card ov-clickable" data-detail="fam:'+gi+'-'+fi+'"><div class="stdp-ic">'+f.ic+'</div>'+
-          '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
-      }).join('')+'</div></div>';
-  }).join('');
-}
 // Block 6 — Competitors scatter (DYNAMIC). X = valuation multiple, Y = revenue growth, bubble =
 // LIVE market cap in USD (api.liveQuote per ticker). Multiple toggle: EV/EBITDA ⇄ P/E (never P/S).
 // Basis: Trailing ⇄ Forward (default Forward). Peers add/removable by ticker; a peer with no
@@ -2373,39 +1828,6 @@ var UB_PEERS=[
 var UB_SC={ type:'ev', basis:'f', peers:null };
 function ubScReset(){ UB_SC.peers=UB_PEERS.map(function(p){ var o={}; for(var k in p) o[k]=p[k]; o.on=true; return o; }); }
 function ubScMult(p){ if(UB_SC.type==='ev') return UB_SC.basis==='f'?p.evF:p.evT; return UB_SC.basis==='f'?p.peF:p.peT; }
-function stdPeerScatter(){
-  var h='<style>.mg-tog-row{display:flex;flex-wrap:wrap;gap:14px;margin:2px 0 8px}'+
-    '.mg-tog{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mu)}'+
-    '.mg-seg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
-    '.mg-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
-    '.mg-pill.active{background:var(--navy);color:#fff}'+
-    '.mg-dot{transition:.15s}.mg-node text{pointer-events:none}'+
-    '.ubsc-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 2px}'+
-    '.ubsc-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:999px;padding:3px 9px;background:var(--w);cursor:pointer;color:var(--navy)}'+
-    '.ubsc-chip.off{opacity:.4;text-decoration:line-through}.ubsc-chip .x{color:var(--mu);font-weight:800}'+
-    '.ubsc-add{display:inline-flex;gap:5px;align-items:center}'+
-    '.ubsc-add input{width:74px;font:inherit;font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:3px 7px;text-transform:uppercase}'+
-    '.ubsc-add button{font:inherit;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:7px;padding:3px 9px;background:#F2F5F8;cursor:pointer}'+
-    '.mg-tip{position:fixed;z-index:60;max-width:250px;background:#10141A;color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 22px rgba(16,20,26,.28);pointer-events:none;border-top:3px solid #06C167}'+
-    '.mg-tip .mgt-n{display:block;font-weight:800;font-size:12.5px;color:#06C167;margin-bottom:3px}</style>';
-  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Listed peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD</b> (so a ~$150B Uber dwarfs a ~$5B Lyft, and currencies never distort the comparison). <span style="opacity:.75">Hover or tap a bubble for the read.</span></div>';
-  h+='<div class="mg-tog-row"><span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgtype="ev">EV/EBITDA</button><button type="button" class="mg-pill" data-mgtype="pe">P/E</button></span></span>'+
-     '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgbasis="f">Forward</button><button type="button" class="mg-pill" data-mgbasis="t">Trailing</button></span></span></div>';
-  h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" id="ubScSvg" role="img" aria-label="Peer valuation vs growth map">'+
-    '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
-    '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
-    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← cheaper</text>'+
-    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">more expensive →</text>'+
-    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" id="ubScXlab">EV/EBITDA · forward</text>'+
-    '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">slow</text>'+
-    '<text x="74" y="52" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">fast growth</text>'+
-    '<g id="ubScNodes"></g>'+
-  '</svg></div>';
-  h+='<div class="ubsc-chips" id="ubScChips"></div>';
-  h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here; a name drops out of the P/E view when it has no meaningful P/E, and an added ticker with no multiple on file shows its live bubble only once it has one. Unlisted rivals (Waymo, Bolt, DiDi) have no market multiple — they sit on the competitive map in <b>Deep Dive ▸ Deep Overview</b>. <span class="ave-subh-note">Multiples & growth are approximate, web-sourced (mid-2026), pending the Fiscal.ai feed; market caps are live. Directional, not exact.</span></div>';
-  h+='<div id="ubScTip" class="mg-tip" hidden></div>';
-  return h;
-}
 // Draw the current working set into #ubScNodes given the active type/basis.
 function ubScRender(root){
   var g=root.querySelector('#ubScNodes'); if(!g||!UB_SC.peers) return;
@@ -2431,137 +1853,9 @@ function ubScChips(root){
   box.innerHTML=h;
 }
 // Block 7 — Timeline (compact; full history + M&A live in Deep Dive ▸ History).
-function stdTimeline(){
-  return '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
-}
 // Overview description — high-level "what it is" only; NON-redundant with the quadrant/segments below.
-var UB_LEDE='Uber runs the world’s largest mobility and delivery marketplace, connecting consumers with drivers, couriers and merchants across ~70 countries through a single app. It owns almost none of the cars, kitchens or trucks — it matches supply with demand and takes a cut. After years of losses it is now GAAP-profitable and strongly cash-generative.';
-var UB_OV_SOURCES='Sources — Uber FY2025 Form 10-K and Q4 2025 results (segment revenue, gross bookings, Adjusted EBITDA); Summit DCF model (snapshot 2026-05-07) corroborating the segment series; company IR for product taxonomy and the Feb 2024 Investor Day. Market cap and peer bubbles are live via Massive; peer multiples & growth are web-sourced approximations (mid-2026) pending the Fiscal.ai feed. FY2025 geography split not shown (could not be verified). Forward figures are estimates, not company guidance.';
 // The standardized Overview body — the 7 blocks in fixed order. Hook (Key Facts + Description +
 // 2×2 quadrant table) stays visible; every section below defaults collapsed (progressive disclosure).
-function stdOverviewBody(c){
-  var h='<style>.stdkf{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--bdr);border-top:3px solid var(--brand-2, var(--brand));border-radius:12px;overflow:hidden;background:var(--w);margin:2px 0}'+
-    '.stdkf-cell{padding:11px 13px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
-    '.stdkf-cell:nth-child(5n){border-right:none}.stdkf-cell:nth-child(n+6){border-bottom:none}'+
-    '.stdkf-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:3px}'+
-    '.stdkf-v{font-size:12px;font-weight:700;color:var(--navy);line-height:1.3}'+
-    '@media(max-width:720px){.stdkf{grid-template-columns:repeat(2,1fr)}.stdkf-cell{border-right:none}}'+
-    '.ov-lede{margin:16px 0 6px;font-size:13px;line-height:1.6;color:var(--navy)}'+
-    /* 4-quadrant as a shared-border 2×2 TABLE */
-    '.q2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--bdr);border-radius:12px;overflow:hidden;background:var(--w);margin:4px 0}'+
-    '.q2-cell{padding:13px 15px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
-    '.q2-cell:nth-child(2n){border-right:none}.q2-cell:nth-child(n+3){border-bottom:none}'+
-    '.q2-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#06965A;margin-bottom:5px}'+
-    '.q2-v{font-size:12px;color:var(--navy);line-height:1.5}.q2-v b{font-weight:800}'+
-    '@media(max-width:600px){.q2{grid-template-columns:1fr}.q2-cell{border-right:none}.q2-cell:nth-child(n+2){border-bottom:1px solid var(--bdr)}.q2-cell:last-child{border-bottom:none}}'+
-    '.mm-tog{display:inline-flex;gap:4px;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:3px;margin-bottom:10px}'+
-    '.mm-pill{border:none;background:transparent;font:inherit;font-size:11.5px;font-weight:700;color:var(--mu);padding:5px 14px;border-radius:999px;cursor:pointer}.mm-pill.active{background:var(--navy);color:#fff}'+
-    /* segment "What is X?" accordions */
-    '.acc-list .acc{border:1px solid var(--bdr);border-radius:9px;margin-top:6px;overflow:hidden;background:var(--w)}'+
-    '.acc-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12px;font-weight:700;color:var(--navy);padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}'+
-    '.acc-h:hover{background:#EEF2F6}.acc-x{color:var(--mu);font-weight:800}.acc-b{padding:10px 12px}'+
-    '.famd{font-size:12px;color:var(--navy);line-height:1.55}.famd b{font-weight:800}'+
-    '.ov-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:11.5px}.ov-row:last-child{border-bottom:none}.ov-row-k{color:var(--mu);font-weight:600}.ov-row-v{color:var(--navy);font-weight:800}'+
-    /* products (two-tier) */
-    '.stdp-seg{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:12px 0 7px}.stdp-group:first-child .stdp-seg{margin-top:2px}'+
-    '.stdp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}'+
-    '.stdp-card{border:1px solid var(--bdr);border-radius:11px;padding:13px 14px;background:var(--w);cursor:pointer;transition:.14s}'+
-    '.stdp-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px);border-color:#06965A}'+
-    '.stdp-ic{font-size:26px;line-height:1}.stdp-n{font-size:13px;font-weight:800;color:var(--navy);margin:7px 0 3px}'+
-    '.stdp-d{font-size:11px;color:var(--mu);line-height:1.45}.stdp-more{font-size:10px;font-weight:700;color:#06965A;margin-top:6px}'+
-    /* collapsible sections (shared with Deep Dive; duplicated so the Overview is self-contained) */
-    '.ov-collap{border:1px solid var(--bdr);border-radius:10px;margin:12px 0 0;overflow:hidden}'+
-    '.ov-collap-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12.5px;font-weight:800;color:var(--navy);padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:8px}'+
-    '.ov-collap-h:hover{background:#EEF2F6}.ov-collap-ic{font-size:10px;color:var(--mu)}.ov-collap-b{padding:12px 14px 6px}'+
-    '.dd-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--bdr)}'+
-    '.dd-tab{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--mu);padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}'+
-    '.dd-tab:hover{color:var(--navy)}.dd-tab.active{color:var(--navy);border-bottom-color:var(--navy)}'+
-    '.dd-pane[hidden]{display:none}'+
-    /* Delivery Hero acquisition tab — world map, quotes */
-    '.dhm-wrap{margin:0}'+
-    '.dhm-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px}'+
-    '.dhm-pills{display:flex;gap:6px}'+
-    '.dhm-pill{border:1px solid var(--bdr);background:#fff;font:inherit;font-size:11.5px;font-weight:700;color:var(--mu);padding:6px 13px;border-radius:20px;cursor:pointer;transition:.12s}'+
-    '.dhm-pill:hover{color:var(--navy)}.dhm-pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}'+
-    '.dhm-kpis{display:flex;gap:18px;flex-wrap:wrap}'+
-    '.dhm-kpi{display:flex;flex-direction:column;align-items:flex-end}'+
-    '.dhm-kpi b{font-size:15px;color:var(--navy);font-weight:800;letter-spacing:-.01em}'+
-    '.dhm-kpi span{font-size:9.5px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.02em}'+
-    '.dhm-svg{width:100%;height:auto;display:block;background:#F7F9FB;border-radius:10px;border:1px solid var(--bdr)}'+
-    '.dhm-c{stroke:#fff;stroke-width:.5;transition:opacity .12s}'+
-    '.dhm-c.ov-clickable{cursor:pointer}.dhm-c.ov-clickable:hover{opacity:.72}'+
-    '.dhm-dot{stroke:#fff;stroke-width:1.5;cursor:pointer;transition:opacity .12s}.dhm-dot:hover{opacity:.72}'+
-    '.dhm-legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px}.dhm-legend[hidden]{display:none}'+
-    '.dhm-leg-row{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--blue)}'+
-    '.dhm-leg-sw{width:11px;height:11px;border-radius:3px;display:inline-block;flex-shrink:0}'+
-    '.dhu-banner{border:1px solid var(--bdr);border-radius:10px;padding:12px 16px;margin-bottom:16px;background:var(--surface);cursor:pointer;transition:.14s}'+
-    '.dhu-banner-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
-    '.dhu-banner-d{font-size:11.5px;color:var(--mu);margin-top:3px;line-height:1.5}'+
-    '.dhu-region{border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;margin-bottom:10px;background:#fff;cursor:pointer;transition:.14s}'+
-    '.dhu-region-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}'+
-    '.dhu-region-t{font-size:13px;font-weight:800;color:var(--navy)}'+
-    '.dhu-region-brand{font-size:11px;color:var(--mu);font-weight:600;white-space:nowrap}'+
-    '.dhu-bar{display:flex;align-items:center;gap:10px;margin:9px 0 5px}'+
-    '.dhu-bar-track{flex:1;height:8px;background:var(--surface);border-radius:5px;overflow:hidden}'+
-    '.dhu-bar-fill{height:100%;border-radius:5px}'+
-    '.dhu-bar-v{font-size:12px;font-weight:800;width:40px;text-align:right;flex-shrink:0}'+
-    /* Uber One "where does the 50M come from" — 4 region cards side by side, each with two labeled stats */
-    '.dhreg-grid{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 4px}'+
-    '.dhreg-card{flex:1;min-width:200px;border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;background:#fff;cursor:pointer;transition:.14s}'+
-    '.dhreg-card:hover{border-color:var(--brand-2)}'+
-    '.dhreg-stat{margin-top:9px}'+
-    '.dhreg-stat-l{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu)}'+
-    '.dhreg-stat-v{font-size:19px;font-weight:900;color:var(--navy);letter-spacing:-.01em}'+
-    '.dhreg-stat-d{font-size:10.5px;color:var(--mu);line-height:1.4;margin-top:1px}'+
-    '.dhm-pillrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap}'+
-    '.dhm-mapblock[hidden],.dhm-listwrap[hidden]{display:none}'+
-    '.dhm-chips{display:flex;flex-wrap:wrap;gap:6px}'+
-    '.dhm-chip{font-size:11px;font-weight:600;padding:5px 11px;border-radius:16px;background:#fff;border:1px solid var(--bdr);color:var(--navy);cursor:pointer;transition:.12s}'+
-    '.dhm-chip:hover{border-color:var(--brand);background:var(--surface)}'+
-    '.dhm-chip i{font-style:normal;color:var(--mu);font-weight:500}'+
-    '.dhm-chip-sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}'+
-    '.dhm-listcols{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}'+
-    '.dhm-listcol{flex:1;min-width:260px}'+
-    '.dhm-listcol-h{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bdr)}'+
-    '.dhm-list{margin-top:4px}.dhm-grp{margin-bottom:16px}.dhm-grp:last-child{margin-bottom:0}'+
-    '.dhm-grp-h{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:800;color:var(--navy);margin-bottom:8px}'+
-    '.dhm-grp-region{font-size:12.5px;font-weight:800;color:var(--navy)}'+
-    '.dhm-grp-n{color:var(--mu);font-weight:600;font-size:11px;margin-left:2px}'+
-    /* Big green highlight card (Overview "What Truly Drives Uber" pattern) — duplicated here so this tab is self-contained */
-    '.utn{border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin:8px 0 4px;background:linear-gradient(180deg,rgba(6,193,103,0.05),transparent)}'+
-    '.utn-big{font-size:16px;font-weight:900;color:var(--navy);letter-spacing:-.2px}'+
-    '.utn-prog{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}'+
-    '.utn-step{flex:1;min-width:118px;text-align:center;border:1px solid var(--bdr);border-radius:10px;padding:11px 8px}'+
-    '.utn-sv{font-size:22px;font-weight:900;line-height:1}.utn-sl{font-size:10px;color:var(--mu);font-weight:700;margin-top:4px}'+
-    '.utn-ar{color:#06C167;font-weight:900;font-size:20px}'+
-    '.utn-row{display:flex;flex-wrap:wrap;gap:8px}.utn-chip{font-size:11px;font-weight:700;color:var(--navy);background:rgba(6,193,103,0.08);border-radius:20px;padding:3px 11px}'+
-    '.utn-note{font-size:11px;color:var(--mu);margin-top:9px;line-height:1.5}'+
-    '.dhg-terms{display:flex;flex-wrap:wrap;gap:6px;margin:5px 0 7px}'+
-    '.dhg-term{font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;white-space:nowrap}'+
-    '.dhg-term.uber{background:rgba(16,20,26,.08);color:var(--navy)}'+
-    '.dhg-term.dh{background:rgba(229,52,42,.10);color:#E5342A}'+
-    '.dhg-turn-label{font-size:11.5px;font-weight:800;color:var(--navy)}'+
-    '.dhk-compare{display:flex;gap:12px;flex-wrap:wrap}'+
-    '.dhk-side{flex:1;min-width:150px;border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;border-top:3px solid var(--bdr)}'+
-    '.dhk-side.uber{border-top-color:var(--brand-2)}.dhk-side.dh{border-top-color:#E5342A}'+
-    '.dhk-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}'+
-    '.dhk-term{font-size:11.5px;font-weight:700;color:var(--navy);margin:4px 0 7px;line-height:1.4}'+
-    '.dhk-val{font-size:19px;font-weight:900;color:var(--navy);letter-spacing:-.01em}'+
-    '.dhk-note{font-size:10.5px;color:var(--mu);margin-top:4px;line-height:1.4}'+
-    '@media(max-width:680px){.dhm-toolbar{flex-direction:column;align-items:flex-start}.dhm-kpis{gap:12px}.utn-prog{flex-direction:column}.ov-drivers{grid-template-columns:1fr !important}}'+
-    '</style>';
-  // ── Hook (always visible): Key Facts, Description, 2×2 quadrant table ──
-  h+=stdKeyFacts();
-  h+='<p class="ov-lede">'+esc(UB_LEDE)+'</p>';
-  h+=stdFourQuad();
-  // ── Progressive disclosure: everything below defaults collapsed ──
-  h+=collapsible('How it makes money', stdMoneyMap());
-  h+=collapsible('What it makes — the products', stdProducts());
-  h+=collapsible('Competitors — valuation vs growth', stdPeerScatter());
-  h+=collapsible('Timeline', stdTimeline());
-  h+='<div class="ov-foot">'+esc(UB_OV_SOURCES)+'</div>';
-  return h;
-}
 
 // ===============================================================================================
 // EARNINGS PHASE SYSTEM — ported from js/overviews/googl.js (v2.10), module-scoped ce* machinery
@@ -2569,137 +1863,14 @@ function stdOverviewBody(c){
 // callsBody(); RED added; IR/EDGAR banner re-branded to Uber; the consensus-driven Setup grid,
 // scorecard and Setup chart are stubbed PENDING until CE_CONS is filled from BBG_CONSENSUS.txt.
 // ===============================================================================================
-var RED='#D64545';
-var YELLOW='#FBBC05', BLUE='#1A73E8', PURPLE='#7A5AF8', AMBER='#B7791F';
 // IR/EDGAR identity for the banner buttons (CIK 1543151 = Uber Technologies, Inc.)
-var CE_IR_URL='https://investor.uber.com/financials/default.aspx';
-var CE_EDGAR_URL='https://www.sec.gov/edgar/browse/?CIK=1543151&owner=exclude';
-var CE_LOGO_URL='https://assets.parqet.com/logos/symbol/UBER';
-var CE_SEC_SEAL='img/sec-seal.png';
 // Amber pending note shown wherever a consensus-driven block still needs CE_CONS.
-function cePendingSnap(scope){ return '<div class="ce-note" style="border-color:#E6B34D;background:#FBF4E6;color:#7A5A12">\u2691 <b>Pending Bloomberg snapshots</b> \u2014 '+esc(scope)+', scorecard and charts populate once <code>CE_CONS</code> is filled from <code>BBG_CONSENSUS.txt</code>. The phase system (IR/EDGAR banner, phase tabs, quarter pills, Watch List + theme record) is live; only the consensus numeric blocks wait on the snapshot archive.</div>'; }
 // ── Data stubs — fill from BBG_CONSENSUS.txt (CE_CONS) + Summit projection export (CE_ANNUAL). ──
-var CE_CONS = {
-  src:'Bloomberg (BST) \u00b7 BBG_CONSENSUS.txt snapshot archive',
-  asOf:["2023-10-26", "2024-01-31", "2024-05-01", "2024-07-31", "2024-10-31", "2025-01-30", "2025-05-01", "2025-07-31", "2025-10-30", "2026-01-29", "2026-04-30", "2026-07-30"],
-  q:["Q3 2022", "Q4 2022", "Q1 2023", "Q2 2023", "Q3 2023", "Q4 2023", "Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024", "Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025", "Q1 2026", "Q2 2026", "Q3 2026", "Q4 2026", "Q1 2027"],
-  hz:['4q out','3q out','2q out','1q out'],
-  nHead:9,
-  m:[
-    { k:'Revenue', u:'$B', t:'ok', code:'SALES_REV_TURN',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,9.54],[null,null,10.01,9.78],[null,10.22,9.98,10.11],[10.8,10.52,10.67,10.58],[10.93,11.03,10.95,null],[11.63,11.57,null,11.77],[11.75,null,11.7,11.61],[null,12.4,12.34,12.48],[12.86,12.77,12.88,13.26],[13.65,13.78,14.08,14.29],[13.36,13.62,13.77,13.33],[14.72,14.82,14.2,14.242],[15.55,14.84,14.82,14.82],[15.78,15.82,null,null],[15.36,null,null,null]],
-      qa:[8.34,8.61,8.82,9.23,9.29,9.94,10.13,10.7,11.19,11.96,11.53,12.65,13.47,14.37,13.2,14.19,null,null,null],
-      qy:[null,null,null,null,8.34,8.61,8.82,9.23,9.29,9.94,10.13,10.7,11.19,11.96,11.53,12.65,13.47,14.37,13.2],
-      qq:[null,8.34,8.61,8.82,9.23,9.29,9.94,10.13,10.7,11.19,11.96,11.53,12.65,13.47,14.37,13.2,14.19,null,null] },
-    { k:'Operating income', u:'$B', t:'ok', code:'IS_COMPARABLE_EBIT',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.3],[null,null,0.48,0.51],[null,0.53,0.58,0.62],[null,0.73,0.78,0.79],[null,0.93,0.92,null],[null,1.11,null,1.2],[null,null,1.2,1.22],[null,1.4,1.42,1.47],[null,1.56,1.59,1.62],[null,1.83,1.86,1.9],[null,1.82,1.86,1.84],[null,2.1,2.06,2.111],[null,2.22,2.23,2.23],[2.46,2.5,null,null],[null,null,null,null]],
-      qa:[-0.49,-0.14,-0.26,0.33,0.39,0.65,0.82,0.94,1.07,1.25,1.33,1.53,1.68,1.92,1.88,2.14,null,null,null],
-      qy:[null,null,null,null,-0.49,-0.14,-0.26,0.33,0.39,0.65,0.82,0.94,1.07,1.25,1.33,1.53,1.68,1.92,1.88],
-      qq:[null,-0.49,-0.14,-0.26,0.33,0.39,0.65,0.82,0.94,1.07,1.25,1.33,1.53,1.68,1.92,1.88,2.14,null,null] },
-    { k:'EBITDA', u:'$B', t:'ok', code:'IS_COMPARABLE_EBITDA',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,1.01],[null,null,1.14,1.22],[null,1.19,1.25,1.32],[1.37,1.41,1.47,1.5],[1.54,1.6,1.62,null],[1.8,1.83,null,1.85],[1.88,null,1.84,1.84],[null,2.05,2.05,2.09],[2.19,2.19,2.22,2.27],[2.42,2.44,2.49,2.48],[2.42,2.45,2.45,2.44],[2.74,2.7,2.66,2.785],[2.81,2.8,2.88,2.88],[3.06,3.34,null,null],[3.09,null,null,null]],
-      qa:[0.52,0.67,0.76,0.92,1.09,1.28,0.71,1.57,1.69,1.84,1.87,2.12,2.26,2.49,2.48,2.82,null,null,null],
-      qy:[null,null,null,null,0.52,0.67,0.76,0.92,1.09,1.28,0.71,1.57,1.69,1.84,1.87,2.12,2.26,2.49,2.48],
-      qq:[null,0.52,0.67,0.76,0.92,1.09,1.28,0.71,1.57,1.69,1.84,1.87,2.12,2.26,2.49,2.48,2.82,null,null] },
-    { k:'EPS', u:'$', t:'ok', code:'IS_COMP_EPS_GAAP',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.11],[null,null,0.14,0.17],[null,0.19,0.21,0.23],[0.25,0.27,0.3,0.31],[0.33,0.35,0.34,null],[0.42,0.45,null,0.51],[0.47,null,0.45,0.51],[null,0.56,0.59,0.63],[0.63,0.65,0.67,0.7],[0.75,0.77,0.79,0.8],[0.79,0.79,0.76,0.71],[0.9,0.86,0.78,0.844],[0.91,0.85,0.93,0.93],[0.96,1.03,null,null],[0.96,null,null,null]],
-      qa:[-0.61,0.29,-0.08,0.18,0.1,0.66,-0.32,0.47,1.2,3.21,0.83,0.63,3.11,0.14,0.13,1.17,null,null,null],
-      qy:[null,null,null,null,-0.61,0.29,-0.08,0.18,0.1,0.66,-0.32,0.47,1.2,3.21,0.83,0.63,3.11,0.14,0.13],
-      qq:[null,-0.61,0.29,-0.08,0.18,0.1,0.66,-0.32,0.47,1.2,3.21,0.83,0.63,3.11,0.14,0.13,1.17,null,null] },
-    { k:'Shares outstanding', u:'B', t:'ok', code:'IS_SH_FOR_DILUTED_EPS',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,2.07],[null,null,2.08,2.1],[null,2.12,2.11,2.11],[2.14,2.13,2.12,2.09],[2.14,2.13,2.1,null],[2.15,2.11,null,2.14],[2.12,null,2.13,2.12],[null,2.14,2.12,2.11],[2.15,2.13,2.12,2.1],[2.13,2.12,2.1,2.11],[2.13,2.11,2.1,2.09],[2.11,2.1,2.09,2.059],[2.1,2.08,2.05,2.05],[2.08,2.05,null,null],[2.03,null,null,null]],
-      qa:[1.98,2.06,2.01,2.08,2.11,2.12,2.08,2.15,2.15,2.14,2.12,2.13,2.12,2.11,2.07,2.05,null,null,null],
-      qy:[null,null,null,null,1.98,2.06,2.01,2.08,2.11,2.12,2.08,2.15,2.15,2.14,2.12,2.13,2.12,2.11,2.07],
-      qq:[null,1.98,2.06,2.01,2.08,2.11,2.12,2.08,2.15,2.15,2.14,2.12,2.13,2.12,2.11,2.07,2.05,null,null] },
-    { k:'Operating cash flow', u:'$B', t:'ok', code:'CB_CF_NET_CASH_OPERATING_ACT',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.76],[null,null,1.13,0.95],[null,1.15,1.2,1.22],[1.36,1.41,1.47,1.21],[1.76,1.63,1.53,null],[1.83,1.75,null,1.19],[1.96,null,1.72,1.43],[null,2.09,2.04,1.77],[2.43,2.4,2.24,2.08],[2.39,2.44,2.47,2.06],[3.17,3.22,2.89,2.88],[2.63,2.4,2.45,3.329],[2.55,2.64,2.72,2.72],[2.53,2.74,null,null],[3.08,null,null,null]],
-      qa:[0.43,-0.24,0.61,1.19,0.97,0.82,1.42,1.82,2.15,1.75,2.32,2.56,2.33,2.88,2.35,2.86,null,null,null],
-      qy:[null,null,null,null,0.43,-0.24,0.61,1.19,0.97,0.82,1.42,1.82,2.15,1.75,2.32,2.56,2.33,2.88,2.35],
-      qq:[null,0.43,-0.24,0.61,1.19,0.97,0.82,1.42,1.82,2.15,1.75,2.32,2.56,2.33,2.88,2.35,2.86,null,null] },
-    { k:'Capex', u:'$B', t:'ok', code:'CF_PURCHASE_OF_FIXED_PROD_ASSETS',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.07],[null,null,0.08,0.08],[null,0.09,0.08,0.08],[0.09,0.08,0.08,0.07],[0.09,0.08,0.07,null],[0.08,0.07,null,0.07],[0.07,null,0.08,0.07],[null,0.08,0.07,0.08],[0.08,0.07,0.08,0.09],[0.08,0.08,0.09,0.1],[0.08,0.09,0.1,0.09],[0.09,0.1,0.1,0.11],[0.11,0.1,0.1,0.1],[0.1,0.1,null,null],[0.14,null,null,null]],
-      qa:[0.07,0.06,0.06,0.05,0.06,0.06,0.06,0.1,0.04,0.04,0.07,0.09,0.1,0.07,0.07,0.07,null,null,null],
-      qy:[null,null,null,null,0.07,0.06,0.06,0.05,0.06,0.06,0.06,0.1,0.04,0.04,0.07,0.09,0.1,0.07,0.07],
-      qq:[null,0.07,0.06,0.06,0.05,0.06,0.06,0.06,0.1,0.04,0.04,0.07,0.09,0.1,0.07,0.07,0.07,null,null] },
-    { k:'D&A', u:'$B', t:'ok', code:'CF_DEPR_AMORT',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.21],[null,null,0.21,0.21],[null,0.21,0.21,0.2],[0.21,0.21,0.21,0.2],[0.21,0.2,0.2,null],[0.21,0.2,null,0.19],[0.19,null,0.19,0.17],[null,0.19,0.17,0.17],[0.19,0.17,0.17,0.17],[0.17,0.17,0.17,0.18],[0.18,0.19,0.18,0.19],[0.18,0.19,0.19,0.182],[0.19,0.19,0.19,0.19],[0.2,0.19,null,null],[0.2,null,null,null]],
-      qa:[0.23,0.22,0.21,0.21,0.2,0.2,0.19,0.18,0.19,0.18,0.18,0.18,0.2,0.19,0.19,0.19,null,null,null],
-      qy:[null,null,null,null,0.23,0.22,0.21,0.21,0.2,0.2,0.19,0.18,0.19,0.18,0.18,0.18,0.2,0.19,0.19],
-      qq:[null,0.23,0.22,0.21,0.21,0.2,0.2,0.19,0.18,0.19,0.18,0.18,0.18,0.2,0.19,0.19,0.19,null,null] },
-    { k:'Gross profit', u:'$B', t:'ok', code:'GROSS_PROFIT',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,3.81],[null,null,4.02,3.87],[null,4.2,3.99,4.04],[4.45,4.23,4.27,4.22],[4.38,4.42,4.38,null],[4.69,4.64,null,4.71],[4.72,null,4.72,4.61],[null,5.04,4.94,5.03],[5.23,5.13,5.17,5.29],[5.5,5.52,5.63,5.7],[5.37,5.47,5.51,5.47],[5.91,5.94,5.84,6.16],[6.23,6.12,6.43,6.43],[6.51,6.84,null,null],[6.85,null,null,null]],
-      qa:[3.17,3.3,3.56,3.71,3.67,3.88,3.96,4.21,4.43,4.72,4.6,5.04,5.36,5.68,5.95,6.38,null,null,null],
-      qy:[null,null,null,null,3.17,3.3,3.56,3.71,3.67,3.88,3.96,4.21,4.43,4.72,4.6,5.04,5.36,5.68,5.95],
-      qq:[null,3.17,3.3,3.56,3.71,3.67,3.88,3.96,4.21,4.43,4.72,4.6,5.04,5.36,5.68,5.95,6.38,null,null] },
-    { k:'Mobility Gross Bookings', u:'$B', t:'ok', code:'INTERNET_GROSS_BOOKINGS',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,17.38],[null,null,18.55,19.11],[null,18.37,18.72,19.13],[20.13,20.25,20.75,20.36],[21.48,21.77,21.54,null],[23.22,23.05,null,22.53],[22.32,null,21.73,21.47],[null,23.9,23.71,23.91],[24.58,24.3,24.54,24.85],[26.35,26.69,26.84,27.13],[24.91,25.08,25.23,25.85],[27.69,27.79,28.28,28.936],[29.02,29.47,29.87,29.87],[32.01,32.41,null,null],[30.68,null,null,null]],
-      qa:[13.68,14.89,14.98,16.73,17.9,19.29,18.67,20.55,21,22.8,21.18,23.76,25.11,27.44,26.39,28.99,null,null,null],
-      qy:[null,null,null,null,13.68,14.89,14.98,16.73,17.9,19.29,18.67,20.55,21.0,22.8,21.18,23.76,25.11,27.44,26.39],
-      qq:[null,13.68,14.89,14.98,16.73,17.9,19.29,18.67,20.55,21,22.8,21.18,23.76,25.11,27.44,26.39,28.99,null,null] },
-    { k:'Delivery Gross Bookings', u:'$B', t:'ok', code:'INTERNET_GROSS_BOOKINGS',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,15.8],[null,null,16.5,16.76],[null,17.26,17.11,17.52],[17.87,17.69,18,18.11],[18.32,18.5,18.47,null],[19.47,19.41,null,19.68],[20.23,null,20.33,20.24],[null,20.78,20.81,21.21],[21.38,21.33,21.71,22.84],[22.92,23.26,24.23,24.75],[23.63,24.5,24.82,25.76],[25.66,25.94,26.64,26.965],[27.19,27.76,28.07,28.07],[29.86,30.16,null,null],[30.49,null,null,null]],
-      qa:[13.68,14.31,15.03,15.6,16.09,17.01,17.7,18.13,18.66,20.13,20.38,21.73,23.32,25.43,25.99,27.46,null,null,null],
-      qy:[null,null,null,null,13.68,14.31,15.03,15.6,16.09,17.01,17.7,18.13,18.66,20.13,20.38,21.73,23.32,25.43,25.99],
-      qq:[null,13.68,14.31,15.03,15.6,16.09,17.01,17.7,18.13,18.66,20.13,20.38,21.73,23.32,25.43,25.99,27.46,null,null] },
-    { k:'Mobility take rate', u:'%', t:'ok', code:'NET_TAKE_RATE',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,28],[null,null,27.9,27.9],[null,28.1,28.3,28.6],[28.2,28.5,28.6,29.2],[28.3,28.5,28.9,null],[28.5,29,null,30.2],[29.9,null,30.4,30.4],[null,30.2,30.2,30.4],[30.5,30.6,30.7,30.7],[30.5,30.5,30.6,30.5],[30.8,30.8,30.7,27.6],[30.8,30.7,27.8,26.5],[30.6,27.7,26.6,26.6],[27.5,26.4,null,null],[26,null,null,null]],
-      qa:[27.9,27.8,28.9,29.3,28.3,28.7,30.2,29.8,30.5,30.3,30.7,30.7,30.6,29.9,25.8,25.4,null,null,null],
-      qy:[null,null,null,null,27.9,27.8,28.9,29.3,28.3,28.7,30.2,29.8,30.5,30.3,30.7,30.7,30.6,29.9,25.8],
-      qq:[null,27.9,27.8,28.9,29.3,28.3,28.7,30.2,29.8,30.5,30.3,30.7,30.7,30.6,29.9,25.8,25.4,null,null] },
-    { k:'Delivery take rate', u:'%', t:'ok', code:'NET_TAKE_RATE',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,19.9],[null,null,20,18.7],[null,20.3,19.1,18.8],[20,18.9,18.7,18.5],[18.8,18.6,18.6,null],[18.6,18.6,null,18.7],[18.6,null,18.6,18.6],[null,18.6,18.6,18.5],[18.8,18.8,18.7,18.9],[18.9,18.8,19,19.1],[18.7,18.9,19,19],[19,19.1,19.2,19.4],[19.3,19.4,19.6,19.6],[19.4,19.6,null,null],[19.8,null,null,null]],
-      qa:[20.2,20.5,20.6,19.6,18.2,18.3,18.2,18.2,18.6,18.7,18.5,18.9,19.2,19.2,19.5,19.1,null,null,null],
-      qy:[null,null,null,null,20.2,20.5,20.6,19.6,18.2,18.3,18.2,18.2,18.6,18.7,18.5,18.9,19.2,19.2,19.5],
-      qq:[null,20.2,20.5,20.6,19.6,18.2,18.3,18.2,18.2,18.6,18.7,18.5,18.9,19.2,19.2,19.5,19.1,null,null] },
-    { k:'Adj. EPS', u:'$', t:'ok', code:'IS_COMP_EPS_ADJUSTED',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.219],[null,null,0.269,0.267],[null,0.262,0.292,0.282],[0.336,0.362,0.374,0.405],[0.416,0.433,0.426,null],[0.543,0.546,null,0.523],[0.591,null,0.543,0.542],[null,0.67,0.716,0.843],[0.746,0.799,0.897,0.911],[0.894,0.988,0.979,0.739],[1.041,0.957,0.792,0.702],[1.149,0.9,0.805,0.809],[0.965,0.856,0.856,0.856],[0.955,0.962,null,null],[0.949,null,null,null]],
-      qa:[-0.61,0.29,-0.024,0.031,0.111,0.645,0.285,0.371,0.51,0.56,0.5,0.637,0.683,0.71,0.72,0.81,null,null,null],
-      qy:[null, null, null, null, -0.61, 0.29, -0.024, 0.031, 0.111, 0.645, 0.285, 0.371, 0.51, 0.56, 0.5, 0.637, 0.683, 0.71, 0.72],
-      qq:[null,-0.61,0.29,-0.024,0.031,0.111,0.645,0.285,0.371,0.51,0.56,0.5,0.637,0.683,0.71,0.72,0.81,null,null] },
-        { k:'Trips per MAPC', u:'x', t:'ok', code:'MONTHLY_TRIPS_PER_MAU',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,5.52],[null,null,5.6,5.72],[null,5.63,5.69,5.76],[5.71,5.79,5.87,5.85],[5.97,6.01,6,null],[6.08,6.08,null,6.01],[6.06,null,5.92,5.89],[null,6.08,6.04,6.11],[6.13,6.1,6.14,6.14],[6.19,6.26,6.24,6.27],[6.17,6.18,6.18,6.12],[6.32,6.32,6.26,6.25],[6.45,6.39,6.37,6.37],[6.48,6.42,null,null],[6.32,null,null,null]],
-      qa:[5,5.4,5,5.5,6,5.78,5.75,5.9,5.9,6,5.95,6.1,6.2,6.2,6.1,6.2,null,null,null],
-      qy:[null,null,null,null,5.0,5.4,5.0,5.5,6.0,5.78,5.75,5.9,5.9,6.0,5.95,6.1,6.2,6.2,6.1],
-      qq:[null,5,5.4,5,5.5,6,5.78,5.75,5.9,5.9,6,5.95,6.1,6.2,6.2,6.1,6.2,null,null] },
-    { k:'Trips', u:'B', t:'ok', code:'NUMBER_ONLINE_TRANSACTIONS_GENL',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,2.39],[null,null,2.46,2.54],[null,2.46,2.51,2.59],[2.59,2.64,2.73,2.71],[2.93,2.88,2.87,null],[3.02,3.01,null,3.02],[2.99,null,2.96,2.98],[null,3.15,3.17,3.23],[3.28,3.28,3.33,3.39],[3.48,3.54,3.59,3.66],[3.47,3.54,3.6,3.65],[3.78,3.83,3.89,3.901],[4.05,4.09,4.12,4.12],[4.34,4.37,null,null],[4.22,null,null,null]],
-      qa:[null,null,2.12,2.28,2.44,2.6,2.57,2.77,2.87,3.07,3.04,3.27,3.51,3.75,3.64,3.87,null,null,null],
-      qy:[null,null,null,null,null,null,2.12,2.28,2.44,2.6,2.57,2.77,2.87,3.07,3.04,3.27,3.51,3.75,3.64],
-      qq:[null,null,null,2.12,2.28,2.44,2.6,2.57,2.77,2.87,3.07,3.04,3.27,3.51,3.75,3.64,3.87,null,null] },
-  ]
-};
-var CE_ANNUAL = {
-  years:[2022, 2023, 2024, 2025, 2026, 2027],
-  guidance:false,   // Summit model export carries no UBER guidance values (all zero); shown Street+reported only
-  m:[
-    { k:'Revenue', u:'$B', actual:[31.9,37.3,44.0,52.0,null,null], bbg:[null,37.1,43.8,52.0,58.2,66.9], summit:[null,null,null,null,null,null] },
-    { k:'Operating income', u:'$B', actual:[-1.8,1.1,4.0,6.5,null,null], bbg:[null,1.0,3.2,6.2,8.8,11.0], summit:[null,null,null,null,null,null] },
-    { k:'EBITDA', u:'$B', actual:[1.7,4.1,6.5,8.7,null,null], bbg:[null,4.0,6.5,8.7,11.4,13.5], summit:[null,null,null,null,null,null] },
-  ]
-};
 // "Also on the call" supplemental colour for the Q1 2026 print \u2014 bands context/logged only
 // (thesis-movers live on the shared Watch List / company_themes). Every item obeys Rule 0 (fact \u2192 why \u2192 so-what). From the
 // Q1 2026 transcript analysis (docs/calls/UBER-latest.md).
 // Split an intoCall item into [hook, argument] at the first em-dash that is NOT inside markup.
 // Void elements are skipped so <br> / <img> do not throw the depth count off.
-var CE_VOID=/^<(br|hr|img|input|wbr)\b/i;
-function ceTeeSplit(s){
-  s=String(s); var d=0, re=/<\/?[a-zA-Z][^>]*>|\s+—\s+/g, m;
-  while((m=re.exec(s))){
-    if(m[0].charAt(0)==='<'){
-      if(CE_VOID.test(m[0]) || /\/>$/.test(m[0])) continue;
-      d += (m[0].charAt(1)==='/') ? -1 : 1;
-      continue;
-    }
-    if(d===0) return [s.slice(0, m.index), s.slice(m.index + m[0].length)];
-  }
-  return [s, ''];
-}
-function ceUpcoming(){ return CALL_EARNINGS.quarters.filter(function(q){ return q.status==='upcoming'; })[0]||null; }
-function ceFill(x, muted){ return (x!=null && String(x).trim()!=='') ? x : '<span class="ce-empty">'+(muted||'— to fill')+'</span>'; }
-var CE_POP={};
-function ceReg(id, t, h){ CE_POP[id]={t:t, h:ceProse(h)}; return id; }
-function ceQ(id, t, h){ return '<span class="ce-info ov-clickable" data-detail="ce:'+ceReg(id,t,h)+'" title="'+esc(String(t).replace(/<[^>]+>/g,''))+'">?</span>'; }
 // ─── ceProse · the anti-wall transform ──────────────────────────────────────────────────────────
 // Every pop-up body in this file was authored as flowing <p> prose — 81 of 81 with no bullets —
 // and a reader who taps "＋ detail" got a paragraph block. This runs at REGISTRATION time so the
@@ -2709,523 +1880,35 @@ function ceQ(id, t, h){ return '<span class="ce-info ov-clickable" data-detail="
 //   · any paragraph of 2+ sentences is split into <li> bullets, one sentence each.
 //   · a paragraph opening "<b>Label:</b> …" keeps its label and becomes a labelled row.
 // Content already carrying <ul>/<li> is left exactly as authored. (§6a-iv.)
-function ceSentences(s){
-  // split on sentence end followed by a capital / tag-open — never inside "$1.5B" or "vs. the"
-  return String(s).split(/(?<=[.!?])\s+(?=(?:<[a-z]+>)*[A-Z“"(])/).filter(function(x){ return x.trim(); });
-}
-function ceProse(h){
-  h=String(h||'');
-  if(!h || h.indexOf('<li>')>=0 || h.indexOf('<ul')>=0) return h;   // already structured
-  var paras=h.match(/<p>[\s\S]*?<\/p>/g);
-  if(!paras || paras.length===0) return h;
-  var tail=h.replace(/<p>[\s\S]*?<\/p>/g,'').trim();               // anything not in a <p>
-  var lead='', bullets=[];
-  paras.forEach(function(p,i){
-    var inner=p.replace(/^<p>/,'').replace(/<\/p>$/,'').trim();
-    var lab=inner.match(/^<b>([^<]{1,42}[:—-])<\/b>\s*([\s\S]*)$/);
-    if(lab){ bullets.push('<b>'+lab[1]+'</b> '+lab[2]); return; }
-    var sents=ceSentences(inner);
-    if(i===0){
-      lead=sents.shift();
-      sents.forEach(function(s){ bullets.push(s); });
-    } else {
-      sents.forEach(function(s){ bullets.push(s); });
-    }
-  });
-  var out='';
-  if(lead)          out+='<p class="ce-pop-lead">'+lead+'</p>';
-  if(bullets.length) out+='<ul class="ce-pop-l">'+bullets.map(function(b){ return '<li>'+b+'</li>'; }).join('')+'</ul>';
-  return out+tail;
-}
-function ceStyle(){
-  return '<style>.ce-note{font-size:11px;color:var(--mu);line-height:1.5;background:#F7F9FB;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 12px}'+
-    '.ce-phtabs{display:inline-flex;gap:3px;background:rgba(66,133,244,0.08);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 20px}'+
-    '.ce-phtab{background:none;border:none;color:var(--mu);font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .15s}'+
-    '.ce-phtab:hover{color:var(--navy)}.ce-phtab.active{background:'+BRAND+';color:#fff}'+
-    '.ce-phpane[hidden]{display:none}'+
-    /* quarter selector — one Earnings, many quarters; only the selected quarter renders (page stays light) */
-    '.ce-qpills{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}'+
-    '.ce-qpill{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);padding:5px 13px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.ce-qpill:hover{color:var(--navy)}.ce-qpill.active{background:var(--navy);color:#fff;border-color:var(--navy)}'+
-    '.ce-qpill .ce-qtag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-left:6px;opacity:.75}'+
-    '.ce-qblock[hidden]{display:none}'+
-    '.ce-frozen{display:inline-block;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:'+GRAY+';border-radius:20px;padding:2px 8px;margin-left:7px;vertical-align:middle}'+
-    /* watch-list theme tags (cross-quarter filter) + add-theme form */
-    '.ce-wl-hint{font-size:10.5px;line-height:1.5;color:var(--navy);background:rgba(66,133,244,0.06);border:1px solid rgba(66,133,244,0.28);border-radius:9px;padding:8px 12px;margin:0 0 10px}'+'.ce-wl-tagbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:9px 12px;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px}'+
-    '.ce-wl-tag{border:1px solid rgba(122,90,248,0.35);background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+PURPLE+';padding:3px 10px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.ce-wl-tag:hover{background:rgba(122,90,248,0.08)}.ce-wl-tag.active{background:'+PURPLE+';color:#fff;border-color:'+PURPLE+'}'+
-    '.ce-wl-clear{border-color:var(--bdr);color:var(--mu)}'+
-    '.ce-wl-add-btn{margin-left:auto;border:1px dashed '+BRAND+';background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+BRAND+';padding:3px 10px;border-radius:999px;cursor:pointer}'+
-    '.ce-wl-bar-k{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu)}'+
-    '.ce-wl-win{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 11px;border-radius:999px;cursor:pointer}'+
-    '.ce-wl-win.active{background:var(--navy);color:#fff}'+
-    /* ── the Add / Edit theme form ── */
-    '.ce-wl-addform{display:flex;flex-direction:column;gap:5px;border:1px dashed '+BRAND+';border-radius:10px;padding:14px 15px;margin:0 0 12px;background:rgba(66,133,244,0.03)}'+
-    '.ce-wl-addform[hidden]{display:none}'+
-    '.ce-wl-fh{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:4px}'+
-    '.ce-wl-fh-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
-    '.ce-wl-fh-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
-    '.ce-wl-lb{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--navy);margin-top:5px}'+
-    '.ce-wl-lb span{font-weight:600;text-transform:none;letter-spacing:0;color:var(--mu);font-size:10px;margin-left:5px}'+
-    '.ce-wl-in{font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:7px 10px;background:var(--w);color:var(--navy);width:100%;box-sizing:border-box}'+
-    '.ce-wl-in:focus{outline:none;border-color:'+BRAND+'}'+
-    '.ce-wl-ta{resize:vertical;line-height:1.5}'+
-    '.ce-wl-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:600px){.ce-wl-2col{grid-template-columns:1fr}}'+
-    '.ce-wl-tagpick{display:flex;gap:6px;flex-wrap:wrap;border:1px solid var(--bdr);border-radius:8px;padding:8px 9px;background:var(--w);min-height:20px}'+
-    '.ce-wl-pick{border:1px solid rgba(122,90,248,0.35);background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+PURPLE+';padding:3px 10px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.ce-wl-pick:hover{background:rgba(122,90,248,0.08)}.ce-wl-pick.on{background:'+PURPLE+';color:#fff;border-color:'+PURPLE+'}'+
-    '.ce-wl-newtag{display:flex;gap:7px;align-items:center}.ce-wl-newtag .ce-wl-in{flex:1}'+
-    '.ce-wl-newtag-go{font:inherit;font-size:10.5px;font-weight:800;border:1px dashed '+PURPLE+';background:var(--w);color:'+PURPLE+';padding:6px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}'+
-    '.ce-wl-frow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:9px}'+
-    '.ce-wl-add-go{font:inherit;font-size:11px;font-weight:800;border:none;border-radius:8px;padding:7px 15px;background:'+BRAND+';color:#fff;cursor:pointer}'+
-    '.ce-wl-cancel{font:inherit;font-size:10.5px;font-weight:700;border:1px solid var(--bdr);background:var(--w);color:var(--mu);padding:6px 12px;border-radius:8px;cursor:pointer}'+
-    '.ce-wl-all[hidden]{display:none}.ce-w[data-wlhide]{display:none}'+
-    /* ── the table: the storage view + the copy-out ── */
-    '.ce-wl-tbl-sc[hidden]{display:none}'+'.ce-wl-tbl-wrap{margin-top:22px;border:1px solid var(--bdr);border-top:3px solid '+BRAND+';border-radius:12px;padding:13px 15px;background:var(--w)}'+
-    '.ce-wl-tbl-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:9px}'+
-    '.ce-wl-tbl-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
-    '.ce-wl-tbl-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
-    '.ce-wl-tbl-n{margin-left:auto;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:'+BRAND2+';background:rgba(52,168,83,0.10);border:1px solid rgba(52,168,83,0.3);border-radius:999px;padding:3px 11px;white-space:nowrap}'+
-    '.ce-wl-copy{border:1px solid '+BRAND+';background:'+BRAND+';font:inherit;font-size:10px;font-weight:800;color:#fff;padding:4px 14px;border-radius:999px;cursor:pointer;letter-spacing:.03em;transition:.12s}'+
-    '.ce-wl-copy:hover{filter:brightness(1.08)}'+
-    '.ce-wl-copy.alt{background:var(--w);color:'+BRAND+'}.ce-wl-copy.alt:hover{background:rgba(66,133,244,0.08)}'+
-    '.ce-wl-tbl-sc{overflow-x:auto;border:1px solid var(--bdr);border-radius:9px}'+
-    '.ce-wl-tbl{width:100%;border-collapse:collapse;font-size:10.5px;min-width:1100px}'+
-    '.ce-wl-tbl th{text-align:left;background:#F7F9FB;color:var(--mu);font-weight:800;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;padding:7px 9px;border-bottom:1px solid var(--bdr);white-space:nowrap;position:sticky;top:0}'+
-    '.ce-wl-tbl td{padding:7px 9px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top;max-width:270px}'+
-    '.ce-wl-tbl tr:last-child td{border-bottom:none}'+
-    '.ce-wl-tbl td.wl-key{white-space:nowrap;font-weight:800;color:var(--mu);font-size:10px}'+
-    '.ce-wl-tbl td.wl-th{font-weight:800;min-width:190px}'+
-    '.ce-wl-tbl tr.wl-open td.wl-key{color:'+BRAND2+'}'+
-    '.ce-wl-tbl tbody tr:hover{background:rgba(66,133,244,0.035)}'+
-    '.ce-empty{color:var(--mu);font-style:italic;opacity:.7}'+
-    '.ce-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0}@media(max-width:640px){.ce-grid4{grid-template-columns:1fr 1fr}}'+
-    '.ce-cell{border:1px solid var(--bdr);border-top:3px solid '+BLUE+';border-radius:10px;padding:11px 13px;background:var(--w)}'+
-    '.ce-cell-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}.ce-cell-v{font-size:15px;font-weight:800;color:var(--navy);margin-top:3px;line-height:1.2}'+
-    /* Setup v2 — estimates toggle (Consensus ⇄ Summit ⇄ Both) */
-    '.ce-ev-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
-    '.ce-ev-pill.active{background:var(--navy);color:#fff}'+
-    '.ce-cell-custom{border-top-color:'+YELLOW+'}'+
-    '.ce-row-cap{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:2px 0 4px}'+
-    '.ce-val{display:flex;align-items:baseline;gap:7px}'+
-    '.ce-val-lab{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:1px 7px;flex:none}'+
-    '.ce-val-cons .ce-val-lab{background:rgba(26,115,232,0.10);color:'+BLUE+'}'+
-    '.ce-val-us .ce-val-lab{background:rgba(52,168,83,0.12);color:'+BRAND2+'}'+
-    '.ce-evwrap[data-ev="cons"] .ce-val-us{display:none}'+
-    '.ce-evwrap[data-ev="us"] .ce-val-cons{display:none}'+
-    '.ce-evwrap:not([data-ev="both"]) .ce-val-lab{display:none}'+
-    '.ce-evwrap[data-ev="both"] .ce-cell-v{font-size:13px}'+
-    '.ce-evwrap[data-ev="both"] .ce-val{margin-top:3px}'+
-    '.ce-banner{border:1px solid var(--bdr);border-left:4px solid '+BRAND+';border-radius:11px;padding:13px 15px;background:linear-gradient(180deg,rgba(66,133,244,0.05),transparent);font-size:12.5px;line-height:1.6;color:var(--navy);margin:12px 0}'+
-    '.ce-watch{display:flex;flex-direction:column;gap:11px}'+
-    '.ce-w{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w);position:relative}'+
-    '.ce-w-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}'+
-    /* v2.6: the numbered rank badge is gone — a plain marker, so removing a theme never leaves a
-       stale number behind. `rank` still orders the rows, it just is not rendered. */
-    '.ce-w-dot{width:8px;height:8px;border-radius:50%;background:'+BRAND+';flex:none;margin:0 2px}'+
-    '.ce-w-metric{font-size:13.5px;font-weight:800;color:var(--navy)}'+
-    /* the definition — what the theme means, in our words. (v2.6 replaced the tell 🔎 box, which
-       had been carrying the model's voice; no black slabs left anywhere in the watch cards.) */
-    '.ce-w-def{color:var(--navy);border-left:3px solid rgba(66,133,244,0.35);padding:1px 0 1px 11px;font-size:12px;line-height:1.55;margin-top:7px}'+
-    '.ce-w-def b{color:'+BLUE+'}'+
-    /* per-card edit / delete (live quarter only) + the closed-hook badge */
-    '.ce-w-ctl{margin-left:auto;display:inline-flex;gap:5px;flex:none}'+
-    '.ce-w-ed,.ce-w-del{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);width:24px;height:24px;border-radius:7px;cursor:pointer;line-height:1;transition:.12s}'+
-    '.ce-w-ed:hover{border-color:'+BRAND+';color:'+BRAND+'}.ce-w-del:hover{border-color:'+RED+';color:'+RED+'}'+
-    '.ce-w-closed{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);background:#F2F5F8;border:1px solid var(--bdr);border-radius:20px;padding:2px 8px;flex:none}'+
-    '.ce-kind{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid}'+
-    '.ce-phase{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;border-radius:20px;padding:3px 10px;margin-bottom:8px}'+
-    '.ce-info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:'+AMBER+';color:#fff;font-size:10px;font-weight:800;cursor:pointer;margin-left:5px;vertical-align:middle;flex:none}'+
-    '.ce-info:hover{filter:brightness(1.1)}'+
-    /* (retired Jul 2026: .ce-debate / .ce-dc / .ce-mech — the fear-vs-consensus pair and the
-       mechanism chips. The Setup now goes straight from the estimates grid to the debate box.) */
-    '.ce-synth{border-left:4px solid var(--navy);background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:6px 0}.ce-synth b{color:#AECBFA}'+
-    '.ce-why-btn{display:inline-block;font-size:10px;font-weight:800;color:'+BLUE+';cursor:pointer;margin-top:8px}'+
-    '.ce-w-chips{display:flex;gap:7px;flex-wrap:wrap;margin:6px 0 0}'+
-    '.ce-w-chip{font-size:10px;font-weight:700;border-radius:7px;padding:4px 9px;line-height:1.3;color:var(--navy)}'+
-    '.ce-w-chip.tag{background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3)}'+
-    '.ce-w-chip.since{background:rgba(251,188,5,0.12);border:1px solid rgba(183,121,31,0.35)}'+
-    '.ce-w-chip.until{background:#F2F5F8;border:1px solid var(--bdr);color:var(--mu)}'+
-    '.ce-w-chip.cons{background:rgba(26,115,232,0.08);border:1px solid rgba(26,115,232,0.28)}'+
-    /* .cons and .red are kept for the SPLC infra cards (Deep Dive ▸ SPLC), their only remaining user */
-    '.ce-w-chip.red{background:rgba(234,67,53,0.06);border:1px solid rgba(234,67,53,0.28)}'+
-    '.ce-w-chip b{font-weight:800}'+
-    '.ce-take{border-left:4px solid '+BRAND+';background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:2px 0 14px}.ce-take b{color:#AECBFA}'+
-    '.ce-hl{display:flex;flex-direction:column;gap:8px}'+
-    '.ce-hl-row{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--hc);border-radius:10px;padding:10px 13px;background:var(--w);cursor:pointer;transition:.12s}'+
-    '.ce-hl-row:hover{box-shadow:0 3px 10px rgba(0,0,0,.08)}'+
-    '.ce-hl-tag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:var(--hc);border-radius:20px;padding:3px 9px;white-space:nowrap}'+
-    '.ce-hl-head{font-size:12.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
-    '.ce-hl-more{font-size:15px;color:var(--hc);font-weight:800}'+
-    '@media(max-width:560px){.ce-hl-row{grid-template-columns:auto 1fr}.ce-hl-more{display:none}}'+
-    '.ce-dots{border:1px dashed '+BRAND+';border-radius:11px;padding:12px 15px;margin-top:14px;background:rgba(66,133,244,0.03);font-size:12px;line-height:1.6;color:var(--navy)}.ce-dots b{color:'+BRAND+'}'+
-    '.ce-sc{display:flex;flex-direction:column;gap:6px}'+
-    '.ce-sc-row{display:grid;grid-template-columns:1.1fr 1fr 1.2fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--sc);border-radius:9px;padding:8px 12px}'+
-    '.ce-sc-m{font-size:12px;font-weight:800;color:var(--navy)}.ce-sc-c{font-size:11px;color:var(--mu)}.ce-sc-a{font-size:11.5px;font-weight:700;color:var(--navy)}'+
-    '.ce-sc-v{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 10px;background:var(--sc);white-space:nowrap}'+
-    '@media(max-width:600px){.ce-sc-row{grid-template-columns:1fr auto}.ce-sc-c,.ce-sc-a{display:none}}'+
-    '.ce-tc{display:flex;flex-direction:column;gap:6px}'+
-    '.ce-tc-row{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--navy);line-height:1.45;border:1px solid var(--bdr);border-radius:9px;padding:8px 11px}'+
-    '.ce-tbl{width:100%;border-collapse:collapse;font-size:11.5px}'+
-    '.ce-tbl th{text-align:left;color:var(--mu);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}'+
-    '.ce-tbl td{padding:9px 10px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top}'+
-    '.ce-pill{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 9px;white-space:nowrap}'+
-    /* ── #1 · the chain: seededBy chip on watch items, landing chip on newQuestions ── */
-    '.ce-seed{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;color:'+PURPLE+';background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3);border-radius:20px;padding:2px 9px;white-space:nowrap;flex:none}'+
-    '.ce-nq{display:flex;flex-direction:column;gap:5px}'+
-    '.ce-nq-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:3px solid '+PURPLE+';border-radius:9px;padding:7px 11px;font-size:11.5px;color:var(--navy);line-height:1.45}'+
-    '.ce-nq-land{font-size:9.5px;font-weight:800;color:'+PURPLE+';white-space:nowrap}'+
-    '.ce-nq-land.open{color:var(--mu)}'+
-    '@media(max-width:560px){.ce-nq-row{grid-template-columns:1fr}.ce-nq-land{margin-top:3px}}'+
-    /* ── #2 · scorecard: surprise bars, watch-rank badges, richer result kinds ── */
-    '.ce-sc-row{grid-template-columns:78px 1.1fr 1fr 1.2fr 92px auto}'+
-    '.ce-sc-rk{font-size:9px;font-weight:800;color:'+BRAND+';background:rgba(66,133,244,0.10);border:1px solid rgba(66,133,244,0.3);border-radius:20px;padding:2px 8px;white-space:nowrap;text-align:center}'+
-    '.ce-sc-rk.blank{background:transparent;border:none}'+
-    '.ce-sc-surp{font-size:9.5px;font-weight:800;text-align:center;letter-spacing:.02em;border-radius:20px;padding:2px 8px;white-space:nowrap}'+
-    '.ce-sc-surp.hi{color:'+RED+';background:rgba(234,67,53,0.09);border:1px solid rgba(234,67,53,0.3)}'+
-    '.ce-sc-surp.md{color:'+AMBER+';background:rgba(183,121,31,0.09);border:1px solid rgba(183,121,31,0.3)}'+
-    '.ce-sc-surp.lo{color:var(--mu);background:transparent;border:1px solid var(--bdr)}'+
-    /* the legend that makes the row readable without a manual */
-    '.ce-legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px;padding:10px 13px;margin:0 0 10px}'+
-    '.ce-legend-i{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--navy);line-height:1.4}'+
-    '.ce-legend-i b{font-weight:800}'+
-    '@media(max-width:600px){.ce-sc-row{grid-template-columns:1fr auto}.ce-sc-c,.ce-sc-a,.ce-sc-bw,.ce-sc-rk{display:none}}'+
-    /* ── #3 · post-call highlight bands ── */
-    '.ce-band{margin:16px 0 8px;display:flex;align-items:center;gap:9px}'+
-    '.ce-band-i{font-size:13px;font-weight:800;color:var(--bc);line-height:1}'+
-    '.ce-band-t{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--bc)}'+
-    '.ce-band-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
-    '.ce-band-l{flex:1;height:1px;background:var(--bdr)}'+
-    '@media(max-width:560px){.ce-band-s{display:none}}'+
-    '.ce-hl-open{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:'+AMBER+';border:1px solid '+AMBER+';border-radius:20px;padding:2px 7px;white-space:nowrap;margin-left:7px;vertical-align:middle}'+
-    /* ── #4 · the deliverable: three minutes + what we are not bringing ── */
-    '.ce-3m{border:1px solid var(--bdr);border-top:4px solid '+BRAND+';border-radius:12px;padding:15px 17px;margin:16px 0 0;background:linear-gradient(180deg,rgba(66,133,244,0.05),transparent)}'+
-    '.ce-3m-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px}'+
-    '.ce-3m-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
-    '.ce-3m-sub{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
-    '.ce-3m-copy{margin-left:auto;border:1px solid '+BRAND+';background:var(--w);font:inherit;font-size:10px;font-weight:800;color:'+BRAND+';padding:3px 11px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.ce-3m-copy:hover{background:'+BRAND+';color:#fff}'+
-    '.ce-3m-l{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}'+'@media(max-width:760px){.ce-3m-l{grid-template-columns:1fr}}'+'.ce-3m-n{width:22px;height:22px;border-radius:50%;background:'+BRAND+';color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex:none}'+'.ce-3m-bd{min-width:0}'+'.ce-3m-lead{display:block;font-size:13.5px;font-weight:800;color:var(--navy);line-height:1.4}'+'.ce-3m-ev{display:block;font-size:11px;font-weight:500;color:var(--mu);line-height:1.5;margin-top:4px}'+'.ce-3m-more{margin-top:6px}'+'.ce-3m-more>summary{font-size:9.5px;font-weight:800;color:'+BLUE+';cursor:pointer;list-style:none}'+'.ce-3m-more>summary::-webkit-details-marker{display:none}'+'.ce-3m-more[open]>summary{color:var(--mu)}'+
-    '.ce-3m-i{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--bdr);border-top:3px solid '+BRAND+';border-radius:11px;padding:11px 13px;background:#fff}'+
-    
-    '.ce-nb{margin-top:13px;border-top:1px dashed var(--bdr);padding-top:11px}'+
-    '.ce-nb-h{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:6px}'+
-    '.ce-nb-r{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;font-size:11px;line-height:1.5;color:var(--mu);padding:2px 0}'+
-    '.ce-nb-r b{color:var(--navy);font-weight:800}'+
-    '.ce-nb-x{color:'+GRAY+';font-weight:800;flex:none}'+
-    /* ── #5 · earnings-call theme status with age ── */
-    '.calls-st-age{font-size:8.5px;font-weight:700;opacity:.8;margin-left:4px}</style>';
-}
 // ─── The IR button — every Earnings opens with it. On earnings day the source is ONE tap away:
 // release, webcast, transcripts, straight from the company. Deliberately loud; convention for
 // every company (EARNINGS_CONVENTIONS §6). GOOGL → https://abc.xyz/investor/
-function ceIRButton(){
-  return '<style>'+
-    '.ce-srcrow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 16px}@media(max-width:760px){.ce-srcrow{grid-template-columns:1fr}}'+
-    '.ce-ir{display:flex;align-items:center;gap:20px;text-decoration:none;border-radius:18px;padding:26px 26px;min-height:120px;position:relative;overflow:hidden;'+
-      'background:linear-gradient(115deg,#04060B 0%,#0A1224 60%,#04060B 100%);border:1px solid rgba(66,133,244,.3);box-shadow:0 10px 32px rgba(0,0,0,.4);transition:.18s}'+
-    '.ce-ir:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,'+BRAND+','+RED+','+YELLOW+','+BRAND2+');height:4px;top:0}'+
-    '.ce-ir:hover{transform:translateY(-2px);box-shadow:0 16px 42px rgba(26,115,232,.4);border-color:rgba(66,133,244,.75)}'+
-    /* the giant watermark — the mark itself, monumental, bleeding off the card */
-    '.ce-ir-wm{position:absolute;right:-40px;bottom:-60px;width:230px;height:230px;object-fit:contain;opacity:.09;pointer-events:none;transition:.25s}'+
-    '.ce-ir:hover .ce-ir-wm{opacity:.16;transform:scale(1.04) rotate(-2deg)}'+
-    /* the emblem — transparent mark in a glowing ring, same treatment both cards */
-    '.ce-ir-ic{width:72px;height:72px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:1;'+
-      'box-shadow:0 0 0 1px rgba(138,180,248,.3),0 0 32px rgba(66,133,244,.55)}'+
-    '.ce-ir-ic img{width:52px;height:52px;object-fit:contain;display:block;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}'+
-    '.ce-ir-body{flex:1;min-width:0;position:relative;z-index:1}'+
-    '.ce-ir-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:#8AB4F8;display:flex;align-items:center;gap:7px}'+
-    '.ce-ir-dot{width:7px;height:7px;border-radius:50%;background:'+BRAND2+';box-shadow:0 0 0 0 rgba(52,168,83,.7);animation:cpirp 1.6s infinite}'+
-    '@keyframes cpirp{0%{box-shadow:0 0 0 0 rgba(52,168,83,.6)}70%{box-shadow:0 0 0 8px rgba(52,168,83,0)}100%{box-shadow:0 0 0 0 rgba(52,168,83,0)}}'+
-    '.ce-ir-t{font-size:19px;font-weight:900;color:#fff;letter-spacing:.05em;text-transform:uppercase;margin-top:4px}'+
-    '.ce-ir-s{font-size:11.5px;color:#9FB0C8;font-weight:600;margin-top:3px;letter-spacing:.01em}'+
-    '.ce-ir-go{font-size:13px;font-weight:900;color:#fff;background:'+BLUE+';border-radius:999px;padding:12px 22px;white-space:nowrap;flex:none;display:flex;align-items:center;gap:8px;position:relative;z-index:1;letter-spacing:.04em;transition:.14s}'+
-    '.ce-ir:hover .ce-ir-go{gap:12px;box-shadow:0 4px 18px rgba(26,115,232,.55)}'+
-    '@media(max-width:560px){.ce-ir{flex-wrap:wrap}.ce-ir-go{width:100%;justify-content:center}}'+
-    /* EDGAR variant — federal weight: near-black + the gold of the seal, eagle front and center */
-    '.ce-ir.edgar{background:linear-gradient(115deg,#070502 0%,#171106 60%,#070502 100%);border-color:rgba(197,164,90,.35)}'+
-    '.ce-ir.edgar:before{background:linear-gradient(90deg,#8C6D2F,#E3C878,#8C6D2F)}'+
-    '.ce-ir.edgar:hover{box-shadow:0 16px 42px rgba(197,164,90,.32);border-color:rgba(227,200,120,.75)}'+
-    '.ce-ir.edgar .ce-ir-ic{box-shadow:0 0 0 1px rgba(227,200,120,.28),0 0 32px rgba(197,164,90,.55)}'+
-    '.ce-ir.edgar .ce-ir-ic img{width:72px;height:72px}'+
-    '.ce-ir.edgar .ce-ir-k{color:#E3C878}'+
-    '.ce-ir.edgar .ce-ir-dot{background:#E3C878;animation:none;box-shadow:0 0 8px rgba(227,200,120,.8)}'+
-    '.ce-ir.edgar .ce-ir-go{background:linear-gradient(135deg,#E3C878,#B8933F);color:#1A1305}'+
-    '.ce-ir.edgar:hover .ce-ir-go{box-shadow:0 4px 18px rgba(197,164,90,.6)}'+
-    '.ce-ir.edgar .ce-ir-wm{opacity:.1}'+
-    '.ce-ir.edgar:hover .ce-ir-wm{opacity:.17}'+
-  '</style>'+
-  '<div class="ce-srcrow">'+
-  '<a class="ce-ir" href="'+CE_IR_URL+'" target="_blank" rel="noopener">'+
-    '<img class="ce-ir-wm" src="'+CE_LOGO_URL+'" alt="" aria-hidden="true">'+
-    '<span class="ce-ir-ic"><img src="'+CE_LOGO_URL+'" alt="Uber logo" onerror="this.parentNode.style.display=\'none\'"></span>'+
-    '<span class="ce-ir-body">'+
-      '<span class="ce-ir-k"><span class="ce-ir-dot"></span>THE SOURCE · EARNINGS HQ</span>'+
-      '<span class="ce-ir-t" style="display:block">Uber Investor Relations</span>'+
-      '<span class="ce-ir-s" style="display:block">Release · webcast · slides · transcripts — straight from investor.uber.com. Skip the search, go direct.</span>'+
-    '</span>'+
-    '<span class="ce-ir-go">OPEN IR <span>↗</span></span>'+
-  '</a>'+
-  '<a class="ce-ir edgar" href="'+CE_EDGAR_URL+'" target="_blank" rel="noopener">'+
-    '<img class="ce-ir-wm" src="'+CE_SEC_SEAL+'" alt="" aria-hidden="true">'+
-    '<span class="ce-ir-ic"><img src="'+CE_SEC_SEAL+'" alt="SEC seal" onerror="this.parentNode.style.display=\'none\'"></span>'+
-    '<span class="ce-ir-body">'+
-      '<span class="ce-ir-k"><span class="ce-ir-dot"></span>THE RECORD · U.S. SECURITIES AND EXCHANGE COMMISSION</span>'+
-      '<span class="ce-ir-t" style="display:block">Uber on EDGAR</span>'+
-      '<span class="ce-ir-s" style="display:block">10-K · 10-Q · 8-K · DEF 14A — the regulator\'s copy, as filed. What IR curates, EDGAR certifies.</span>'+
-    '</span>'+
-    '<span class="ce-ir-go">OPEN EDGAR <span>↗</span></span>'+
-  '</a>'+
-  '</div>';
-}
-function ceQkey(q){ return String(q||'').replace(/\s/g,''); }
 // Renders the quarter-pill selector (shared across the three phase panes via .ce-qblock filtering).
 // The quarter selector is PHASE-AWARE: Setup & Watch List offer every quarter, but Post-Results
 // only offers quarters that have a `results` block — the upcoming quarter has none, so it does not
 // exist in that section (its data does not exist yet). The upcoming quarter is added to
 // CALL_EARNINGS.quarters only once the PRIOR quarter's Post-Results (print + call highlights) is
 // filled. data-ceqhas lists the phases each quarter is valid for.
-function ceQPhases(q){
-  var ph=['setup','watch'];
-  if(q.results) ph.push('results');
-  return ph;
-}
-function ceQPills(){
-  return '<div class="ce-qpills">'+CALL_EARNINGS.quarters.map(function(q,i){
-    return '<button type="button" class="ce-qpill'+(i===0?' active':'')+'" data-ceqsel="'+esc(ceQkey(q.q))+'" data-ceqhas="'+ceQPhases(q).join(' ')+'">'+esc(q.q)+(q.status==='upcoming'?'<span class="ce-qtag">upcoming</span>':'')+'</button>';
-  }).join('')+'</div>';
-}
 // A · The Setup — the grid is BUILT FROM THE ARCHIVE, not hand-authored. CE_CONS carries the
 // consensus and both growth bases, so the 13 cells, their YoY and their QoQ can never drift out of
 // sync with the file. What stays hand-authored per quarter: `setup.us` (Summit's own number) and
 // `setup.notes` (the caveat pop-ups), both keyed by metric name. (§6a-ii.)
-function ceFmtV(u,v){
-  if(v==null) return null;
-  if(u==='$')  return '$'+(+v).toFixed(2);
-  if(u==='$B') return '$'+(+v)+'B';
-  if(u==='B')  return (+v)+'B';
-  if(u==='M')  return (+v)+'M';        // a COUNT in millions (MAPCs) — never a dollar sign
-  if(u==='%')  return (+v)+'%';        // a rate (take rate)
-  if(u==='x')  return (+v)+'x';        // a ratio (trips per MAPC)
-  return String(v);
-}
-function ceGrowth(m,qi,base){
-  if(m.t==='basis') return null;                       // never a growth number off a basis mismatch
-  var c=m.qr[qi]?m.qr[qi][3]:null;
-  var b=(base==='qoq')?m.qq[qi]:m.qy[qi];
-  if(c==null||b==null||!b) return null;
-  return Math.round((c/b-1)*100);
-}
-function ceChip(g){
-  if(g==null) return '';
-  var up=g>=0;
-  return '<span class="ce-gchip" style="color:'+(up?'#0a8f4c':'#C5221F')+'">'+(up?'+':'−')+Math.abs(g)+'%</span>';
-}
 // Margin lens (EXCEPTION, headline only): Gross profit / Operating income / EBITDA also carry a
 // margin = the metric ÷ revenue, computed per column. Street margin = BBG metric ÷ BBG revenue;
 // Summit margin = Summit metric ÷ Summit revenue (falls back to BBG revenue if Summit has none).
 // Toggled in the estimates bar; lives in the SAME headline cell, never a new box. (§6a-ii.)
-var CE_MARGIN_ON={'Gross profit':1,'Operating income':1,'EBITDA':1};
-function ceMarginPct(v, rev){ return (v==null||rev==null||!rev)?null:Math.round((v/rev*100)*10)/10; }
-function ceMChip(p){ return p==null?'':'<span class="ce-mm">'+p+'% mgn</span>'; }
 // A dedicated margin ROW for a cell (label + value + the base-period margin in parens). Sits on
 // its own line so it always fits the box — the old inline chip overflowed (§6a-ii). The base
 // swaps with the growth lens: YoY → same quarter a year ago, QoQ → prior quarter.
-function ceMarginRow(cur, baseYoy, baseQoq){
-  if(cur==null) return '';
-  return '<div class="ce-mrow"><span class="ce-mrow-l">margin</span>'+
-    '<span class="ce-mrow-v">'+cur+'%'+
-      (baseYoy!=null?'<span class="ce-mm-b yoy"> (prev '+baseYoy+'%)</span>':'')+
-      (baseQoq!=null?'<span class="ce-mm-b qoq"> (prev '+baseQoq+'%)</span>':'')+
-    '</span></div>';
-}
 // Growth of ANY value (Street OR Summit) against the reported base — YoY vs fq-3, QoQ vs fq0. Same
 // base for both estimates, so the reader compares like-for-like. (Was Street-only before; there is
 // no reason Summit shouldn't carry its own growth against the same actual base.)
-function ceGrowthOf(val, m, qi, base){
-  if(m.t==='basis'||val==null) return null;
-  var b=(base==='qoq')?m.qq[qi]:m.qy[qi];
-  if(b==null||!b) return null;
-  return Math.round((val/b-1)*100);
-}
 // The margin block for a profit line: a "MARGIN" header, then the Street margin (Street colour) and
 // the Summit margin (Summit colour) SIDE BY SIDE so it is never ambiguous whose is whose, then ONE
 // shared "prev" below (the base-period actual margin — identical for both, swaps YoY/QoQ). Each
 // margin is same-vintage (Street = cons/cons-rev, Summit = summit/summit-rev) per §5 rule 7.
-function ceMarginBlock(mStreet, mSummit, prevYoy, prevQoq){
-  if(mStreet==null && mSummit==null) return '';
-  var prev='';
-  if(prevYoy!=null) prev+='<span class="ce-mm-b yoy">prev '+prevYoy+'%</span>';
-  if(prevQoq!=null) prev+='<span class="ce-mm-b qoq">prev '+prevQoq+'%</span>';
-  return '<div class="ce-mrow2"><div class="ce-mrow2-h">MARGIN</div>'+
-    '<div class="ce-mrow2-v">'+
-      '<span class="ce-mgn ce-mgn-cons">'+(mStreet!=null?mStreet+'%':'—')+'</span>'+
-      '<span class="ce-mgn ce-mgn-us">'+(mSummit!=null?mSummit+'%':'—')+'</span>'+
-    '</div>'+
-    (prev?'<div class="ce-mrow2-prev">'+prev+'</div>':'')+
-  '</div>';
-}
 // Current margin + the margin of the period the growth chip compares against. The base swaps with
 // the lens (YoY → the same quarter a year ago; QoQ → the prior quarter), so with Margin + YoY on
-function ceGrid(u,which){
-  var qi=CE_CONS.q.indexOf(u.q); if(qi<0) return '';
-  var st=u.setup||{}, us=st.us||{}, notes=st.notes||{};
-  var revM=CE_CONS.m.filter(function(x){ return x.k==='Revenue'; })[0];
-  var revC=(revM&&revM.qr[qi])?revM.qr[qi][3]:null;      // BBG revenue for the quarter
-  var revS=(us['Revenue']?us['Revenue'].v:null)||revC;   // Summit revenue, else BBG
-  var revQy=revM?revM.qy[qi]:null, revQq=revM?revM.qq[qi]:null;   // revenue actual 1yr / 1q earlier
-  var list=CE_CONS.m.map(function(m,i){ return {m:m,i:i}; })
-    .filter(function(x,i){ return (which==='head')?(x.i<CE_CONS.nHead):(x.i>=CE_CONS.nHead); });
-  return '<div class="ce-mgrid">'+list.map(function(x){
-    var m=x.m, c=m.qr[qi]?m.qr[qi][3]:null;
-    var note=notes[m.k], q=note?ceQ('setnote-'+ceQkey(u.q)+'-'+x.i, note.t, note.h):'';
-    var uv=us[m.k];
-    var mgn=CE_MARGIN_ON[m.k];
-    var street=(c==null)
-      ? '<span class="ce-empty">—</span>'+(m.t==='nocons'?'<span class="ce-nocons" title="The archive carries no forward estimate for this line — actuals only">no est.</span>':'')
-      : ceFmtV(m.u,c)+'<span class="ce-gy">'+ceChip(ceGrowth(m,qi,'yoy'))+'</span><span class="ce-gq">'+ceChip(ceGrowth(m,qi,'qoq'))+'</span>';
-    var summit=uv
-      ? ceFmtV(m.u,uv.v)+'<span class="ce-gy">'+ceChip(ceGrowthOf(uv.v,m,qi,'yoy'))+'</span><span class="ce-gq">'+ceChip(ceGrowthOf(uv.v,m,qi,'qoq'))+'</span>'
-      : '<span class="ce-empty">—</span>';
-    // Margin sits at the END of EACH estimate's OWN row (in that estimate's colour), next to its growth
-    // — so POSITION, not just colour, makes it unambiguous whose margin is whose. One "MARGIN" header
-    // above, one shared "prev" below (identical for both; swaps YoY/QoQ). Same-vintage per §5 rule 7.
-    var mStreet=mgn?ceMarginPct(c,revC):null, mSummit=mgn?ceMarginPct(uv?uv.v:null,revS):null;
-    var rmgn=function(v,cls){ return v==null?'':'<span class="ce-rmgn '+cls+'">'+v+'%</span>'; };
-    var prevYoy=mgn?ceMarginPct(m.qy[qi],revQy):null, prevQoq=mgn?ceMarginPct(m.qq[qi],revQq):null;
-    var mgnHead=(mgn&&(mStreet!=null||mSummit!=null))?'<div class="ce-mgnh">MARGIN</div>':'';
-    var prevRow=(mgn&&(prevYoy!=null||prevQoq!=null))?'<div class="ce-mgnp">'+
-        (prevYoy!=null?'<span class="ce-mm-b yoy">prev '+prevYoy+'%</span>':'')+
-        (prevQoq!=null?'<span class="ce-mm-b qoq">prev '+prevQoq+'%</span>':'')+'</div>':'';
-    return '<div class="ce-mcell'+(which==='cust'?' cust':'')+(m.t==='basis'?' flagged':'')+'">'+
-      '<div class="ce-mcell-k">'+esc(m.k)+q+'</div>'+
-      '<div class="ce-mcell-v">'+mgnHead+
-        '<div class="ce-val ce-val-cons"><span class="ce-val-lab">Street</span>'+street+rmgn(mStreet,'cons')+'</div>'+
-        '<div class="ce-val ce-val-us"><span class="ce-val-lab">Summit</span>'+summit+rmgn(mSummit,'us')+'</div>'+
-        prevRow+
-      '</div></div>';
-  }).join('')+'</div>';
-}
-function ceGridStyle(){
-  return '<style>'+
-    '.ce-mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px;margin:4px 0}'+
-    '.ce-mcell{border:1px solid var(--bdr);border-left:3px solid '+BRAND+';border-radius:9px;padding:8px 10px;background:#fff}'+
-    '.ce-mcell.cust{border-left-color:'+BRAND2+'}'+
-    '.ce-mcell.flagged{border-left-color:'+GRAY+';opacity:.72}'+
-    '.ce-mcell-k{font-size:10px;font-weight:700;color:var(--mu);display:flex;align-items:center;gap:4px;line-height:1.3;min-height:26px}'+
-    '.ce-mcell-v{margin-top:3px}'+
-    '.ce-mcell .ce-val{display:flex;align-items:baseline;gap:5px;font-size:14px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums}'+
-    '.ce-mcell .ce-val-lab{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none;width:38px}'+
-    '.ce-gchip{font-size:10px;font-weight:800;margin-left:2px}'+
-    '.ce-mm{display:none}'+'.ce-mm-b{display:none;font-size:9px;font-weight:700;color:var(--mu);white-space:nowrap}'+'.ce-evwrap[data-mm="on"][data-g="yoy"] .ce-mm-b.yoy{display:inline}'+'.ce-evwrap[data-mm="on"][data-g="qoq"] .ce-mm-b.qoq{display:inline}'+'.ce-mrow{display:none;align-items:baseline;gap:5px;margin-top:5px;padding-top:5px;border-top:1px dashed var(--bdr)}'+'.ce-evwrap[data-mm="on"] .ce-mrow{display:flex}'+'.ce-mrow-l{font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none}'+'.ce-mrow-v{font-size:11px;font-weight:900;color:'+PURPLE+';font-variant-numeric:tabular-nums}'+
-    /* margin block v2 — MARGIN header, Street & Summit margins side-by-side in their colours, shared prev below */
-    '.ce-mrow2{display:none;flex-direction:column;gap:1px;margin-top:5px;padding-top:5px;border-top:1px dashed var(--bdr)}'+
-    '.ce-evwrap[data-mm="on"] .ce-mrow2{display:flex}'+
-    '.ce-mrow2-h{font-size:8px;font-weight:800;letter-spacing:.09em;color:var(--mu)}'+
-    '.ce-mrow2-v{display:flex;gap:12px;align-items:baseline}'+
-    '.ce-mgn{font-size:11.5px;font-weight:900;font-variant-numeric:tabular-nums}'+
-    '.ce-mgn-cons{color:#6B7684}.ce-mgn-us{color:#2563EB}'+
-    '.ce-evwrap[data-ev="cons"] .ce-mgn-us{display:none}.ce-evwrap[data-ev="us"] .ce-mgn-cons{display:none}'+
-    '.ce-mrow2-prev{font-size:9px;color:var(--mu);font-weight:700;margin-top:1px}'+
-    /* per-row margin (v3): at the end of each estimate row, its colour; MARGIN header + shared prev, mm-toggled */
-    '.ce-rmgn{display:none;margin-left:auto;font-size:11px;font-weight:900;font-variant-numeric:tabular-nums;padding-left:8px}'+
-    '.ce-evwrap[data-mm="on"] .ce-rmgn{display:inline-block}'+
-    '.ce-rmgn.cons{color:#6B7684}.ce-rmgn.us{color:#2563EB}'+
-    '.ce-mgnh{display:none;text-align:right;font-size:8px;font-weight:800;letter-spacing:.09em;color:var(--mu);margin-bottom:1px}'+
-    '.ce-mgnp{display:none;text-align:right;font-size:9px;font-weight:700;color:var(--mu);margin-top:2px}'+
-    '.ce-evwrap[data-mm="on"] .ce-mgnh,.ce-evwrap[data-mm="on"] .ce-mgnp{display:block}'+
-    '.ce-evwrap[data-mm="on"] .ce-mm{display:inline}'+
-    '.ce-nocons{font-size:8.5px;font-weight:800;color:var(--mu);border:1px solid var(--bdr);border-radius:999px;padding:1px 6px;margin-left:6px}'+
-    /* the growth lens: CSS-driven, so switching does not re-render the grid */
-    '.ce-evwrap[data-g="yoy"] .ce-gq,.ce-evwrap[data-g="qoq"] .ce-gy,'+
-    '.ce-evwrap[data-g="off"] .ce-gy,.ce-evwrap[data-g="off"] .ce-gq{display:none}'+
-    '.ce-gseg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
-    '.ce-gseg button{font-size:10px;font-weight:800;padding:3px 11px;border:0;border-radius:999px;background:transparent;color:var(--mu);cursor:pointer;transition:.14s}'+
-    '.ce-gseg button.active{background:var(--navy);color:#fff}'+'.ce-vdf{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+'.ce-vdf button{font-size:10px;font-weight:800;padding:3px 11px;border:0;border-radius:999px;background:transparent;color:var(--mu);cursor:pointer;transition:.14s}'+'.ce-vdf button.active{background:var(--navy);color:#fff}'+
-    '.ce-fz[data-ev="cons"] .ce-fz-g[data-f="beat"] .ce-fz-t:not([data-vdc="beat"]),'+'.ce-fz[data-ev="cons"] .ce-fz-g[data-f="miss"] .ce-fz-t:not([data-vdc="miss"]),'+'.ce-fz[data-ev="cons"] .ce-fz-g[data-f="inline"] .ce-fz-t:not([data-vdc="inline"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="beat"] .ce-fz-t:not([data-vdu="beat"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="miss"] .ce-fz-t:not([data-vdu="miss"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="inline"] .ce-fz-t:not([data-vdu="inline"]){display:none}'+
-    '.ce-dbt{display:flex;flex-direction:column;gap:5px}'+
-    '.ce-dbt-r{display:grid;grid-template-columns:1.3fr 1fr 1fr 70px;gap:10px;align-items:center;'+
-      'border:1px solid var(--bdr);border-left:4px solid var(--mu);border-radius:9px;padding:7px 12px;background:#fff}'+
-    '.ce-dbt-r.above{border-left-color:#0a8f4c}.ce-dbt-r.below{border-left-color:'+RED+'}'+
-    '.ce-dbt-k{font-size:11.5px;font-weight:800;color:var(--navy)}'+
-    '.ce-dbt-v{font-size:11px;color:var(--navy);font-variant-numeric:tabular-nums}'+
-    '.ce-dbt-v b{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin-right:5px}'+
-    '.ce-dbt-d{font-size:12px;font-weight:900;text-align:right;font-variant-numeric:tabular-nums}'+
-    '.ce-dbt-r.above .ce-dbt-d{color:#0a8f4c}.ce-dbt-r.below .ce-dbt-d{color:'+RED+'}'+
-    '.ce-dbt-none{border:1px dashed var(--bdr);border-radius:10px;padding:10px 13px;font-size:11px;'+
-      'line-height:1.55;color:var(--mu);background:#FAFBFD}'+
-    '@media(max-width:640px){.ce-dbt-r{grid-template-columns:1fr auto}.ce-dbt-v{display:none}}'+
-    /* the debate as QUALITATIVE bullets (not a table) — where Summit & the Street diverge, and why */
-    '.ce-diverge{margin:2px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}'+
-    '.ce-diverge li{position:relative;padding:9px 12px 9px 30px;border:1px solid var(--bdr);border-left:3px solid '+BLUE+';border-radius:9px;background:#fff;font-size:11.5px;line-height:1.55;color:var(--navy)}'+
-    '.ce-diverge li:before{content:"⇄";position:absolute;left:10px;top:9px;color:'+BLUE+';font-weight:900;font-size:12px}'+
-    '.ce-diverge li b{color:var(--navy)}'+
-  '</style>';
-}
-function ceSetupBody(c){
-  var h=ceStyle()+ceGridStyle();
-  if(!CE_CONS.m||!CE_CONS.m.length) return h+cePendingSnap('Setup grid & chart');
-  h+=CALL_EARNINGS.quarters.map(function(u,qi){
-    var qk=ceQkey(u.q), frozen=(u.status!=='upcoming');
-    var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="ce-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="ce-frozen">frozen</span>':'')+'</div>';
-    var st=u.setup||{}, hasGrid=(CE_CONS.q.indexOf(u.q)>=0);
-    if(hasGrid){
-      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup.</b> The numbers going in — what the <b>Street</b> expects, what <b>Summit</b> expects, and where the two disagree. '+(u.date?((frozen?'Reported <b>':'Reports <b>')+esc(u.date)+'</b>.'):'')+'</p>';
-      b+='<div class="ov-diagram-cap" style="margin:6px 0 6px;display:flex;flex-wrap:wrap;align-items:center;gap:12px"><b>Estimates</b>'+
-        '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
-          '<button type="button" class="ce-ev-pill active" data-ceev="cons">Consensus</button>'+
-          '<button type="button" class="ce-ev-pill" data-ceev="us">Summit</button>'+
-          '<button type="button" class="ce-ev-pill" data-ceev="both">Both</button>'+
-        '</span>'+
-        // Growth lens. `fq-3` and `fq0` are both reported actuals, so the same consensus cell can
-        // be read against either base — that is exactly why the archive carries fq-3.
-        '<span class="ce-gseg"><button type="button" class="active" data-ceg="yoy">YoY</button>'+
-          '<button type="button" data-ceg="qoq">QoQ</button>'+
-          '<button type="button" data-ceg="off">Off</button></span>'+
-        '<span class="ce-gseg"><button type="button" data-cemm="on">Margin</button>'+
-          '<button type="button" class="active" data-cemm="off">Hide mgn</button></span>'+
-        (st.source?'<span style="color:var(--mu);font-weight:600;font-size:10px">'+esc(st.source)+(st.asOf?' · as of '+esc(st.asOf):'')+'</span>':'')+
-      '</div>';
-      b+='<div class="ce-evwrap" data-ev="cons" data-g="yoy">';
-      b+='<div class="ce-row-cap">Headline — every company, always</div>'+ceGrid(u,'head');
-      b+='<div class="ce-row-cap" style="margin-top:12px">Custom KPIs — UBER</div>'+ceGrid(u,'cust');
-      b+='</div>';
-      b+='<div class="ave-subh-note" style="margin-top:6px">Growth chips are computed from the archive: <b>YoY</b> against <code>fq-3</code>, <b>QoQ</b> against <code>fq0</code> — both reported actuals. '+
-         '<b>Street</b> = Bloomberg (BST), hardcoded from the export only. <b>Summit</b> = our own expectation. <b>?</b> = a number with a caveat worth knowing. '+
-         'A line with no chip either has no like-for-like base or failed the basis test.</div>';
-      // ── The debate — a LINE-BY-LINE comparison, not a paragraph ────────────────────────────
-      // It answers one question: where does Summit differ from the Street, and by how much. Built
-      // from the same two columns the grid shows, so it cannot disagree with them. Lines where we
-      // have no number of our own are listed explicitly rather than silently dropped — an empty
-      // Summit column IS the state of the work, and hiding it would misrepresent it (§6a-ii).
-      // Where Summit and the Street differ is explained QUALITATIVELY (bullets), never as a numeric
-      // table — the grid cells above already carry the numbers; here we explain the STORY (e.g. both
-      // reach the same print via different paths). See EARNINGS_CONVENTIONS §5 rule 8.
-      var d=st.debate;
-      if(d&&d.diverge&&d.diverge.length){
-        b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>Where Summit and the Street differ — and why</b>'+
-           '<span style="color:var(--mu);font-weight:600;font-size:10px"> · same print, different paths — the numbers are in the boxes above; this is the story</span></div>';
-        b+='<ul class="ce-diverge">'+d.diverge.map(function(x){ return '<li><b>'+x.t+'</b> — '+x.d+'</li>'; }).join('')+'</ul>';
-      }
-      if(d&&d.synth) b+='<div class="ce-synth" style="margin-top:16px">'+d.synth+'</div>';
-      b+='<div class="ov-foot">Frozen at call time; Post-Results scores actuals against BOTH columns.</div>';
-    }
-    // Frozen pre-call prose only for a reported quarter that has NO consensus grid (fallback). For a
-    // reported quarter WITH a grid, the standalone "contemporaneous read" block was dropped per Dani.
-    if((st.pricedIn||st.oneLiner) && !hasGrid){
-      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup, as it stood going in.</b> '+(u.date?('Reported <b>'+esc(u.date)+'</b>.'):'')+'</p>';
-      if(st.source) b+='<div class="ave-subh-note" style="margin:0 0 8px">'+esc(st.source)+'</div>';
-      if(st.pricedIn) b+='<div class="ce-banner"><b>What was priced in:</b> '+st.pricedIn+'</div>';
-      if(st.oneLiner) b+='<div class="ce-synth">'+st.oneLiner+'</div>';
-      b+='<div class="ov-foot">Frozen — scored in Post-Results for this quarter.</div>';
-    }
-    b+='</div>';
-    return b;
-  }).join('');
-  h+=ceAnnualBody();
-  return h;
-}
 // A1 · The annual picture — how the FY has looked, and what BBG vs Summit expect for the ones
 // still open. Reported FY actuals are bars/line; the forward years carry two forward points,
 // Bloomberg consensus (our txt) and Summit (the DCF, most-recent annual snapshot). If the company
@@ -3235,36 +1918,12 @@ function ceSetupBody(c){
 // rendered inside Earnings > Setup — the SAME chart + integrated table + period-lever + margin lines
 // as the Results tab, clubbed into one (§6a-viii-bis, v2.9). The section key 'setup' keeps its engine
 // canvases/tables/sliders UNIQUE, so the two engine instances (Setup + Results) coexist on the page.
-function ceAnnualBody(){
-  return '<div class="ce-ann" style="margin:20px 0 4px;padding:16px 0 0;border-top:2px solid var(--bdr)">'+
-    '<div class="ov-sec-h">The Setup picture — reported vs Street vs Summit: pick any line, window the period with the lever, toggle margins</div>'+
-    resultsHtml('UBER_SETUP')+'</div>';
-}
-function ceSetupWrap(){ return document.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phpane[data-cep="setup"] .rs-wrap'); }
-function gBuildCeAnnual(){ var w=ceSetupWrap(); if(w) initResults(w, 'UBER_SETUP'); }   // Setup chart IS the Results engine (UBER_SETUP dataset)
-function wireCeAnnual(root){ /* the engine self-wires via initResults->wireResults; the chart builds on Setup visibility (gBuildCeAnnual). */ }
 
-function ceWatchBody(c){
-  // The Watch List is now the SHARED engine (js/watchlist.js): rendering + Supabase persistence
-  // (table company_themes) + sorting, one implementation for every company. We render a mount
-  // host; wireCallEarnings mounts the engine with the company id + quarter list. The multi-year
-  // theme record (the former Evolution > Earnings Calls tab) stays folded in below, as before.
-  var h=ceStyle();
-  h+='<div data-wlmount></div>';
-  h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px">';
-  h+='<div class="ce-band" style="--bc:'+BRAND+'"><span class="ce-band-i">▤</span><span class="ce-band-t">The theme record — every thread, across all calls</span><span class="ce-band-s">the multi-year backbone behind the hunt above (the former "Earnings Calls" tab, folded in)</span><span class="ce-band-l"></span></div>';
-  h+=callsBody();
-  h+='</div>';
-  return h;
-}
 // (Promise Tracker dissolved Jul 2026 — promise-type items now live as tracked themes inside the
 // Watch List `thread`s and in Evolution ▸ Earnings Calls.)
 // Scorecard result kinds. beat/miss/inline score against a consensus line; `nodisc` (a KPI
 // management STOPPED disclosing) and `nocons` (a number nobody modelled) are not beats or misses —
 // they are their own signal, and conflating them with a miss loses the point.
-var CE_RES={ beat:{c:'#0a8f4c',l:'Beat'}, miss:{c:RED,l:'Miss'}, inline:{c:'#6b7684',l:'In line'},
-             nodisc:{c:AMBER,l:'Not disclosed'}, nocons:{c:PURPLE,l:'No consensus'} };
-var CE_HLTAG={ thesis:{c:'#0a8f4c',l:'Thesis'}, curious:{c:'#7A5AF8',l:'Curious'}, dots:{c:'#2E6BE6',l:'Connects dots'}, watch:{c:'#B7791F',l:'Watch'}, tone:{c:'#B7791F',l:'Tone'} };
 // D · Post-Results ── the numbers (available first, before/without the call): a beat/miss scorecard.
 // ─── The frozen Street number, straight from the archive ────────────────────────────────────────
 // "Frozen expectations" used to mean whatever prose someone typed into `scorecard[].cons` before
@@ -3281,360 +1940,14 @@ var CE_HLTAG={ thesis:{c:'#0a8f4c',l:'Thesis'}, curious:{c:'#7A5AF8',l:'Curious'
 // bespoke row that is NOT one of the standardized metrics (an old "funding flip" card, a
 // disclosure with no consensus like Gemini app MAU) is intentionally dropped — the standardized
 // view is the metrics the archive tracks, ranked by how far each landed from the Street. (§6a-ii.)
-function ceVerdict(m, c, a, surp){
-  if(a==null) return {l:'—', c:'#9AA4B0', k:'none'};
-  if(c==null) return {l:'no est.', c:'#7A5AF8', k:'noest'};       // nocons / noact: a print, nothing to score
-  if(surp==null) return {l:'—', c:'#9AA4B0', k:'none'};
-  if(Math.abs(surp)<2) return {l:CE_RES.inline.l, c:CE_RES.inline.c, k:'inline'};
-  return surp>0 ? {l:CE_RES.beat.l, c:CE_RES.beat.c, k:'beat'} : {l:CE_RES.miss.l, c:CE_RES.miss.c, k:'miss'};
-}
-function cePrintBlock(qLabel, r, us){
-  var qi=CE_CONS.q.indexOf(qLabel); if(qi<0) return '';
-  r=r||{}; us=us||{};
-  var notes=r.notes||{}, watch=r.watch||{};
-  // Revenue for the quarter — the margin denominator (§6a-vi). Street, Summit, and the print.
-  var revM=CE_CONS.m.filter(function(x){ return x.k==='Revenue'; })[0];
-  var revC=(revM&&revM.qr[qi])?revM.qr[qi][3]:null, revA=revM?revM.qa[qi]:null;
-  var revS=(us['Revenue']&&us['Revenue'].v!=null)?us['Revenue'].v:revC;   // Summit revenue, else BBG
-  var tiles=CE_CONS.m.map(function(m){
-    var c=m.qr[qi]?m.qr[qi][3]:null, a=m.qa[qi];
-    var uexp=(us[m.k]&&us[m.k].v!=null)?us[m.k].v:null;   // Summit's FROZEN expectation for this line
-    if(c==null&&a==null&&uexp==null) return null;
-    // Surprise = actual / expected − 1, computed for BOTH bases. The estimate-view toggle (vs Street
-    // ⇄ vs Summit) swaps which one drives the expected value, the surprise and the verdict.
-    var cSurp=(c!=null&&a!=null&&c)?((a/c-1)*100):null;
-    var uSurp=(uexp!=null&&a!=null&&uexp)?((a/uexp-1)*100):null;
-    var cV=ceVerdict(m,c,a,cSurp), uV=ceVerdict(m,uexp,a,uSurp);
-    // growth against the print, both bases — the shared YoY/QoQ lens (independent of the estimate view)
-    var g=function(base){
-      var bv=(base==='qoq')?m.qq[qi]:m.qy[qi];
-      if(a==null||bv==null||!bv) return '<span class="ce-fz-g-e">—</span>';
-      var gv=Math.round((a/bv-1)*100);
-      return '<span style="color:'+(gv>=0?'#0a8f4c':'#C5221F')+'">'+(gv>=0?'+':'−')+Math.abs(gv)+'%</span>';
-    };
-    var surpTag=function(s){ return (s==null)?'':'<span class="ce-fz-d '+(s>=0?'up':'dn')+'">'+(s>=0?'+':'−')+(Math.round(Math.abs(s)*10)/10)+'%</span>'; };
-    // MARGIN (GP/OpInc/EBITDA only) — toggled, and it is EXPECTED-vs-REALIZED, not YoY/QoQ. Expected
-    // = the margin IMPLIED by the estimate (estimate's metric ÷ estimate's revenue, same estimate on
-    // both sides): Street = c/revC, Summit = uexp/revS. Realized = the print's own (a/revA). We show
-    // the gap in pts. Basis caveat (see the ? pop-up): the Street's forward revenue runs below the
-    // print, so the Street-implied margin sits above realized by construction — the Δ is partly that.
-    var mgnOn=CE_MARGIN_ON[m.k], mReal=mgnOn?ceMarginPct(a,revA):null;
-    var mExpC=mgnOn?ceMarginPct(c,revC):null, mExpU=mgnOn?ceMarginPct(uexp,revS):null;
-    var dPts=function(exp){ if(mReal==null||exp==null) return ''; var d=Math.round((mReal-exp)*10)/10;
-      return '<span class="ce-fz-mdl '+(d>=0?'up':'dn')+'">'+(d>=0?'+':'−')+Math.abs(d)+' pts</span>'; };
-    var mRow='';
-    if(mgnOn&&mReal!=null){
-      mRow='<div class="ce-fz-mrow"><span class="ce-fz-gl">margin</span>'+
-        '<span class="ce-fz-mexp ce-exp-cons">exp '+(mExpC!=null?mExpC+'%':'—')+dPts(mExpC)+'</span>'+
-        '<span class="ce-fz-mexp ce-exp-us">exp '+(mExpU!=null?mExpU+'%':'—')+dPts(mExpU)+'</span>'+
-        '<span class="ce-fz-ar">→</span><span class="ce-fz-mreal">'+mReal+'% realized</span>'+
-        ceQ('mgn-'+ceQkey(qLabel)+'-'+ceQkey(m.k),'Margin — expected vs realized',
-          '<p><b>Expected</b> is the margin <i>implied by the estimate</i>: the estimate\'s metric ÷ the estimate\'s own revenue (Street = BBG ÷ BBG, Summit = ours ÷ ours). <b>Realized</b> is the print\'s own margin (actual ÷ actual). This is expectation vs outcome for the quarter — <b>there is no YoY/QoQ on the margin</b>.</p>'+
-          '<p><b>Basis caveat:</b> the Street\'s forward revenue runs materially <i>below</i> the print (FX + gross-vs-net), so the Street-implied margin sits above the realized one by construction. Read the Δ with that offset in mind — part of a negative gap is the revenue basis, not a margin miss.</p>')+
-        '</div>';
-    }
-    var note=notes[m.k];
-    var qb=note?ceReg('resnote-'+ceQkey(qLabel)+'-'+ceQkey(m.k), note.t||m.k, note.h||note):null;
-    // watch[m.k] is the frozen Watch-List RANK. The Watch List now lives in Supabase (async), so we
-    // no longer resolve the rank to its theme text inline — show the frozen rank; the full theme is
-    // in the Watch List tab (mirrors the GOOGL migration).
-    var wrRank=watch[m.k];
-    var wr=wrRank?('Watch #'+wrRank):null;
-    // data-vdc / data-vdu carry BOTH verdicts so the verdict filter is estimate-view-aware in pure CSS.
-    return { sort:(cSurp==null?-1:Math.abs(cSurp)), html:
-      '<div class="ce-fz-t" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'"'+(qb?' data-detail="ce:'+qb+'"':'')+'>'+
-        '<div class="ce-fz-k">'+esc(m.k)+
-          '<span class="ce-fz-vd ce-vd-cons" style="color:'+cV.c+'">'+cV.l+'</span>'+
-          '<span class="ce-fz-vd ce-vd-us" style="color:'+uV.c+'">'+uV.l+'</span></div>'+
-        '<div class="ce-fz-r"><span class="ce-fz-c ce-exp-cons">'+(c==null?'—':ceTkFmt(m.u,c))+'</span>'+
-          '<span class="ce-fz-c ce-exp-us">'+(uexp==null?'—':ceTkFmt(m.u,uexp))+'</span>'+
-          '<span class="ce-fz-ar">→</span><span class="ce-fz-a">'+(a==null?'—':ceTkFmt(m.u,a))+'</span>'+
-          '<span class="ce-fz-dw ce-exp-cons">'+surpTag(cSurp)+'</span><span class="ce-fz-dw ce-exp-us">'+surpTag(uSurp)+'</span></div>'+
-        '<div class="ce-fz-gr"><span class="ce-fz-gl">growth</span>'+
-          '<span class="ce-gy">'+g('yoy')+'</span><span class="ce-gq">'+g('qoq')+'</span></div>'+
-        mRow+
-        (wr?'<div class="ce-fz-wl" title="On the frozen Watch List: '+esc(wr)+'">on the list</div>':'')+
-        (qb?'<div class="ce-fz-more">＋ detail</div>':'')+
-      '</div>' };
-  }).filter(Boolean);
-  if(!tiles.length) return '';
-  tiles.sort(function(x,z){ return z.sort-x.sort; });   // biggest surprise first (Street basis)
-  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="off"><div class="ce-fz-h">The print — ranked by surprise'+
-    ceQ('fz-'+ceQkey(qLabel),'How this is built',
-      '<p>One block, archive-driven. Every number and surprise is computed from <code>BBG_CONSENSUS.txt</code>: the last snapshot before the print carries the consensus (<code>fq+1</code>), a later snapshot carries the print (<code>fq0</code>). Reconstructed from data, so it cannot drift.</p>'+
-      '<ul><li><b>vs Street ⇄ vs Summit</b> — swaps which frozen expectation the print is scored against (Street = Bloomberg, Summit = ours). No "Both" — one basis at a time. Where Summit had no number, Summit view reads <b>no est.</b></li>'+
-      '<li><b>Margin</b> — GP / Operating income / EBITDA carry an expected-vs-realized margin (the estimate-implied margin → the print\'s own), Δ in pts. No YoY/QoQ on the margin.</li>'+
-      '<li><b>Verdict</b> — beat / miss / in-line off the computed surprise; <b>no est.</b> where that basis had no number</li>'+
-      '<li><b>on the list</b> — this line was on the Watch List we froze before the call</li></ul>'+
-      '<p>Lines the archive does not track are not shown here — a disclosure with no consensus (e.g. an app-MAU rung) is a supplemental call note (below the scorecard), not a scored line.</p>')+
-    '<span class="ce-vdf"><button type="button" class="active" data-vdf="all">All</button>'+
-      '<button type="button" data-vdf="beat">Beats</button>'+
-      '<button type="button" data-vdf="miss">Misses</button>'+
-      '<button type="button" data-vdf="inline">In line</button></span>'+
-    '<span class="ce-gseg" style="margin-left:auto"><button type="button" class="active" data-fzev="cons">vs Street</button>'+
-      '<button type="button" data-fzev="us">vs Summit</button></span>'+
-    '<span class="ce-gseg"><button type="button" data-fzmm="on">Margin</button>'+
-      '<button type="button" class="active" data-fzmm="off">Hide mgn</button></span>'+
-    '<span class="ce-gseg"><button type="button" class="active" data-ceg="yoy">YoY</button>'+
-      '<button type="button" data-ceg="qoq">QoQ</button>'+
-      '<button type="button" data-ceg="off">Off</button></span>'+
-    '</div><div class="ce-fz-g" data-vdf-host>'+tiles.map(function(t){ return t.html; }).join('')+'</div>'+
-    '<div class="ce-fz-f">Expectation (frozen, 1 quarter out) → the print → the print\'s own growth. Toggle <b>vs Street ⇄ vs Summit</b> and <b>Margin</b> above. Ranked by |surprise vs Street|. Source: <code>BBG_CONSENSUS.txt</code> + Summit.</div></div>';
-}
 // A collapsible block — secondary depth is folded away by default so the phase reads as a page,
 // not a wall. Wired by the generic `.ov-collap-h` handler already in init().
-function ceFold(title, sub, body, open){
-  return '<div class="ov-collap ce-fold'+(open?' open':'')+'">'+
-    '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+
-    '<span class="ce-fold-t">'+title+'</span>'+(sub?'<span class="ce-fold-s">'+sub+'</span>':'')+'</button>'+
-    '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+body+'</div></div>';
-}
-function cePhaseStyle(){
-  return '<style>'+
-    '.ce-fz{border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;margin-bottom:14px;background:#FBFCFE}'+
-    '.ce-fz-h{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-bottom:9px}'+
-    '.ce-fz-g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}'+
-    '@media(max-width:900px){.ce-fz-g{grid-template-columns:repeat(2,1fr)}}'+
-    '@media(max-width:520px){.ce-fz-g{grid-template-columns:1fr}}'+
-    '.ce-fz-t{border:1px solid var(--bdr);border-radius:9px;padding:7px 9px;background:#fff}'+
-    '.ce-fz-t.basis{opacity:.62}'+
-    '.ce-fz-k{font-size:9.5px;font-weight:700;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
-    '.ce-fz-r{display:flex;align-items:baseline;gap:4px;margin-top:2px;font-variant-numeric:tabular-nums}'+
-    '.ce-fz-c{font-size:11px;color:var(--mu);font-weight:700}'+
-    '.ce-fz-ar{font-size:9px;color:var(--mu)}'+
-    '.ce-fz-a{font-size:13px;font-weight:900;color:var(--navy)}'+
-    '.ce-fz-d{font-size:9.5px;font-weight:800;margin-left:auto}'+
-    '.ce-fz-d.up{color:#0a8f4c}.ce-fz-d.dn{color:'+RED+'}.ce-fz-d.na{color:var(--mu);font-weight:700}'+
-    '.ce-fz-f{font-size:9.5px;color:var(--mu);margin-top:8px}'+'.ce-fz-t{position:relative;transition:.14s}'+'.ce-fz-t[data-detail]{cursor:pointer}'+'.ce-fz-t[data-detail]:hover{box-shadow:0 4px 14px rgba(16,24,40,.10);transform:translateY(-1px)}'+'.ce-fz-vd{margin-left:auto;font-size:8.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}'+'.ce-fz-k{display:flex;align-items:center;gap:5px}'+'.ce-fz-wl{font-size:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:'+BLUE+';margin-top:5px}'+'.ce-fz-more{position:absolute;right:9px;bottom:7px;font-size:8.5px;font-weight:800;color:'+BLUE+'}'+'.ce-fz-h{display:flex;align-items:center;gap:6px}'+'.ce-fz-gr{display:flex;align-items:baseline;gap:5px;margin-top:3px;font-size:9.5px;font-weight:800}'+'.ce-fz-gl{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}'+'.ce-fz-mgn{display:flex;align-items:baseline;gap:5px;margin-top:3px;font-size:11px;font-weight:900;color:'+PURPLE+'}'+'.ce-fz-mexp{font-size:9px;font-weight:700;color:var(--mu)}'+'.ce-fz-g-e{color:var(--mu);font-weight:600}'+'.ce-fz[data-g="yoy"] .ce-gq,.ce-fz[data-g="qoq"] .ce-gy,'+'.ce-fz[data-g="off"] .ce-fz-gr{display:none}'+
-    /* estimate view (vs Street ⇄ vs Summit) — pure-CSS swap of expected value, surprise & verdict */
-    '.ce-fz-h{flex-wrap:wrap}'+
-    '.ce-vd-us,.ce-exp-us{display:none}'+
-    '.ce-fz[data-ev="us"] .ce-vd-cons,.ce-fz[data-ev="us"] .ce-exp-cons{display:none}'+
-    '.ce-fz[data-ev="us"] .ce-vd-us,.ce-fz[data-ev="us"] .ce-exp-us{display:inline}'+
-    '.ce-fz-dw{margin-left:auto}'+
-    /* margin row — expected(estimate-implied) → realized, toggled by data-mm; NO YoY/QoQ here */
-    '.ce-fz-mrow{display:none;align-items:baseline;gap:5px;margin-top:4px;padding-top:4px;border-top:1px dashed var(--bdr);font-size:9.5px;font-weight:800}'+
-    '.ce-fz[data-mm="on"] .ce-fz-mrow{display:flex;flex-wrap:wrap}'+
-    '.ce-fz-mreal{font-size:11px;font-weight:900;color:'+PURPLE+'}'+
-    '.ce-fz-mdl{font-weight:800;margin-left:3px}.ce-fz-mdl.up{color:#0a8f4c}.ce-fz-mdl.dn{color:'+RED+'}'+
-    /* folds — secondary depth, closed by default */
-    '.ce-fold{border:1px solid var(--bdr);border-radius:11px;margin:0 0 10px;overflow:hidden;background:#fff}'+
-    '.ce-fold .ov-collap-h{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:#FAFBFD;'+
-      'padding:9px 13px;cursor:pointer;font-family:inherit}'+
-    '.ce-fold .ov-collap-h:hover{background:#F2F6FB}'+
-    '.ce-fold .ov-collap-ic{font-size:10px;color:var(--mu)}'+
-    '.ce-fold-t{font-size:11px;font-weight:800;color:var(--navy)}'+
-    '.ce-fold-s{font-size:10px;color:var(--mu);font-weight:600;margin-left:auto;text-align:right}'+
-    '.ce-fold .ov-collap-b{padding:12px 13px}'+
-    /* the print, as cards rather than full-width rows */
-    '.ce-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}'+
-    '@media(max-width:760px){.ce-cards{grid-template-columns:1fr}}'+
-    '.ce-card{border:1px solid var(--bdr);border-left:4px solid var(--sc,#9AA4B0);border-radius:10px;padding:9px 11px;background:#fff}'+
-    '.ce-card-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}'+
-    '.ce-card-m{font-size:11.5px;font-weight:800;color:var(--navy)}'+
-    '.ce-card-v{font-size:9px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--sc);margin-left:auto}'+
-    '.ce-card-b{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin-top:6px;font-size:10.5px;line-height:1.45}'+
-    '.ce-card-l{color:var(--mu);font-weight:700;white-space:nowrap}'+
-    '.ce-card-x{color:var(--navy)}'+
-    '.ce-card-f{display:flex;align-items:center;gap:6px;margin-top:7px}'+
-    '.ce-chip{font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:999px}'+
-    '.ce-chip.list{background:rgba(26,115,232,.12);color:'+BLUE+'}'+
-    '.ce-chip.hi{background:rgba(234,67,53,.12);color:'+RED+'}'+
-    '.ce-chip.md{background:rgba(251,188,5,.18);color:#7A5B02}'+
-    '.ce-chip.lo{background:#EEF1F5;color:var(--mu)}'+
-    /* "Also on the call" — one box, a plain list, each point a native <details> dropdown (v2.9) */
-    '.ce-alsobox{margin-top:18px;border:1px solid var(--bdr);border-radius:12px;background:#fff;overflow:hidden}'+
-    '.ce-alsobox-h{padding:10px 13px;background:#F6F8FA;border-bottom:1px solid var(--bdr);display:flex;flex-direction:column;gap:2px}'+
-    '.ce-alsobox-h>b{font-size:12px;color:var(--navy);font-weight:800}'+
-    '.ce-alsobox-sub{font-size:9.5px;color:var(--mu);font-weight:600;line-height:1.4}'+
-    '.ce-alsolist{display:flex;flex-direction:column}'+
-    '.ce-also-i{border-bottom:1px solid var(--bdr)}'+'.ce-also-i:last-child{border-bottom:0}'+
-    '.ce-also-s{display:flex;align-items:center;gap:8px;padding:9px 13px;cursor:pointer;list-style:none;font-size:11.5px;font-weight:600;color:var(--navy);line-height:1.45}'+
-    '.ce-also-s::-webkit-details-marker{display:none}'+
-    '.ce-also-s:hover{background:#FAFBFD}'+
-    '.ce-also-tag{font-size:8px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--tc,#6b7684);border:1px solid currentColor;border-radius:999px;padding:1px 7px;flex:none;opacity:.85}'+
-    '.ce-also-hd{flex:1;min-width:0}'+
-    '.ce-also-ar{margin-left:auto;color:var(--mu);font-size:10px;transition:transform .15s;flex:none}'+
-    '.ce-also-i[open] .ce-also-ar{transform:rotate(180deg)}'+
-    '.ce-also-body{padding:0 13px 12px 13px;font-size:10.5px;font-weight:500;color:var(--navy);line-height:1.55;background:#FBFCFE}'+
-    '.ce-also-body p{margin:6px 0}'+
-    /* AI call summary — collapsible outer box + always-visible lede + nested dropdowns + glossary */
-    '.ce-sum{border:1px solid var(--bdr);border-radius:12px;background:#fff;margin:2px 0 14px}'+
-    '.ce-sum>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(122,90,248,.06),transparent)}'+
-    '.ce-sum>summary::-webkit-details-marker{display:none}'+
-    '.ce-sum-ic{font-size:15px}'+'.ce-sum-h b{font-size:13px;color:var(--navy)}'+
-    '.ce-sum-tag{font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:'+PURPLE+';background:rgba(122,90,248,.12);border:1px solid rgba(122,90,248,.25);border-radius:999px;padding:2px 8px;margin-left:auto}'+
-    '.ce-sum[open]>summary{border-bottom:1px solid var(--bdr);border-radius:12px 12px 0 0}'+
-    '.ce-sum-body{padding:12px 15px 15px}'+
-    '.ce-sum-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:11px}'+
-    '.ce-sum-tt{font-size:10px;color:var(--mu);font-weight:600;margin-right:auto}'+
-    '.ce-sum-btn{font-size:9.5px;font-weight:800;color:'+BLUE+';border:1px solid var(--bdr);background:#fff;border-radius:999px;padding:3px 10px;cursor:pointer;transition:.12s}'+
-    '.ce-sum-btn:hover{border-color:'+BLUE+';background:rgba(26,115,232,.06)}'+
-    /* the summary IS the prose: visible punch paragraphs, each with its own "＋ more" expander */
-    '.ce-sum-block{margin:0 0 13px}'+
-    '.ce-sum-para{font-size:12.5px;line-height:1.7;color:var(--navy);font-weight:500;margin:0}'+
-    '.ce-sum-more{border:0!important;background:transparent!important;border-radius:0;margin:5px 0 0}'+
-    '.ce-sum-more>.ce-sum-nt{padding:2px 0;font-size:10px;font-weight:800;color:'+BLUE+';text-transform:none}'+
-    '.ce-sum-more>.ce-sum-nt .ce-sum-caret{color:'+BLUE+'}'+
-    '.ce-sum-more>.ce-sum-nb{padding:7px 0 4px 13px;border-left:2px dashed var(--bdr);margin-top:5px;font-size:11.5px;line-height:1.65}'+
-    '.ce-sum-nodes{display:flex;flex-direction:column;gap:6px}'+
-    '.ce-sum-n{border:1px solid var(--bdr);border-left:3px solid '+BLUE+';border-radius:9px;background:#FBFCFE}'+
-    '.ce-sum-n[data-d="1"]{border-left-color:'+BRAND2+';background:#fff}'+
-    '.ce-sum-n[data-d="2"]{border-left-color:'+AMBER+'}'+
-    '.ce-sum-nt{list-style:none;cursor:pointer;display:flex;align-items:center;gap:7px;padding:8px 11px;font-size:11.5px;font-weight:700;color:var(--navy)}'+
-    '.ce-sum-nt::-webkit-details-marker{display:none}'+
-    '.ce-sum-caret{font-size:9px;color:var(--mu);transition:transform .15s;flex:none}'+
-    '.ce-sum-n[open]>.ce-sum-nt .ce-sum-caret{transform:rotate(90deg)}'+
-    '.ce-sum-nb{padding:0 12px 11px 21px;font-size:11px;line-height:1.65;color:var(--navy);font-weight:500}'+
-    '.ce-sum-nb .ce-sum-nodes{margin-top:9px}'+
-    /* glossary term — dashed underline, attractive hover tooltip (CSS-only, no pop-up) */
-    '.ce-gl{border-bottom:1px dashed '+BLUE+';cursor:help;position:relative}'+
-    '.ce-gl:hover::after{content:attr(data-def);position:absolute;left:0;bottom:calc(100% + 8px);width:min(300px,74vw);white-space:normal;text-align:left;background:#10141A;color:#fff;font-size:10.5px;font-weight:500;line-height:1.55;padding:9px 12px;border-radius:9px;box-shadow:0 10px 28px rgba(16,24,40,.28);z-index:60}'+
-    '.ce-gl:hover::before{content:"";position:absolute;left:16px;bottom:calc(100% + 3px);border:5px solid transparent;border-top-color:#10141A;z-index:61}'+
-    /* highlights, as cards */
-    '.ce-hcards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}'+
-    '@media(max-width:760px){.ce-hcards{grid-template-columns:1fr}}'+
-    '.ce-hcard{border:1px solid var(--bdr);border-top:3px solid var(--hc,#9AA4B0);border-radius:10px;padding:9px 11px;background:#fff;cursor:pointer;transition:.14s}'+
-    '.ce-hcard:hover{box-shadow:0 4px 14px rgba(16,24,40,.09);transform:translateY(-1px)}'+
-    '.ce-hcard-t{font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--hc)}'+
-    '.ce-hcard-h{font-size:11px;color:var(--navy);line-height:1.5;margin-top:3px}'+
-    '.ce-hcard-f{display:flex;align-items:center;gap:6px;margin-top:6px}'+
-    '.ce-hcard-more{font-size:9.5px;font-weight:800;color:'+BLUE+';margin-left:auto}'+
-    '.ce-bandh{display:flex;align-items:center;gap:7px;margin:12px 0 7px}'+
-    '.ce-bandh-i{font-size:12px;color:var(--bc)}'+
-    '.ce-bandh-t{font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--bc)}'+
-    '.ce-bandh-s{font-size:9.5px;color:var(--mu);font-weight:600}'+
-    /* thesis red-lines — verdict word, plain line, depth behind "why" */
-    '.ce-rl{display:flex;flex-direction:column;gap:5px}'+
-    '.ce-rl-row{display:grid;grid-template-columns:74px 1fr auto;gap:10px;align-items:center;'+
-      'border:1px solid var(--bdr);border-left:4px solid #0a8f4c;border-radius:9px;padding:8px 12px;background:#fff}'+
-    '.ce-rl-row.trip{border-left-color:'+RED+';background:rgba(234,67,53,.035)}'+
-    '.ce-rl-v{font-size:9.5px;font-weight:900;letter-spacing:.06em;color:#0a8f4c}'+
-    '.ce-rl-row.trip .ce-rl-v{color:'+RED+'}'+
-    '.ce-rl-l{font-size:11.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
-    '.ce-rl-w{font-size:9.5px;font-weight:800;color:'+BLUE+';white-space:nowrap;cursor:pointer}'+
-    '@media(max-width:600px){.ce-rl-row{grid-template-columns:64px 1fr}.ce-rl-w{display:none}}'+
-    /* what this tees up — short boxes, always visible */
-    '.ce-tee{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}'+
-    '.ce-tee-c{border:1px solid var(--bdr);border-top:3px solid '+AMBER+';border-radius:10px;'+
-      'padding:9px 11px;background:#fff;cursor:pointer;transition:.14s}'+
-    '.ce-tee-c:hover{box-shadow:0 4px 14px rgba(16,24,40,.09);transform:translateY(-1px)}'+
-    '.ce-tee-h{font-size:11.5px;color:var(--navy);line-height:1.45;font-weight:600}'+
-    '.ce-tee-m{font-size:9.5px;font-weight:800;color:'+BLUE+';margin-top:6px}'+
-    /* the triage strip — three bands, always all three, colour is the meaning */
-    '.ce-tri{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 10px}'+
-    '@media(max-width:700px){.ce-tri{grid-template-columns:1fr}}'+
-    '.ce-tri-b{display:grid;grid-template-columns:auto auto 1fr;grid-template-areas:"i t n" "s s s";'+
-      'gap:2px 7px;align-items:center;text-align:left;border:1px solid var(--bdr);border-top:3px solid var(--bc);'+
-      'border-radius:10px;padding:8px 11px;background:#fff;font:inherit;cursor:pointer;transition:.14s;opacity:.45}'+
-    '.ce-tri-b.active{opacity:1;box-shadow:0 2px 10px rgba(16,24,40,.07)}'+
-    '.ce-tri-b:hover{border-color:var(--bc)}'+
-    '.ce-tri-i{grid-area:i;font-size:12px;color:var(--bc);line-height:1}'+
-    '.ce-tri-t{grid-area:t;font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:var(--bc)}'+
-    '.ce-tri-n{grid-area:n;justify-self:end;font-size:11px;font-weight:900;color:var(--navy)}'+
-    '.ce-tri-s{grid-area:s;font-size:9.5px;color:var(--mu);font-weight:600}'+
-    '.ce-hcard-b{margin-right:5px;color:var(--hc)}'+
-    '.ce-hcard[hidden]{display:none}'+
-    '.ce-bandh-n{margin-left:auto;font-size:9.5px;font-weight:800;color:var(--mu)}'+
-  '</style>';
-}
-function ceResultsBody(c){
-  var h=ceStyle()+cePhaseStyle();
-  // The SCORECARD (the numeric print vs frozen expectations) needs the Bloomberg snapshots; until
-  // CE_CONS is filled it renders a pending note. The QUALITATIVE layer — the AI call summary and the
-  // "Also on the call" highlights — comes straight from the transcript analysis and renders now.
-  var consReady=!!(CE_CONS.m&&CE_CONS.m.length);
-  h+=CALL_EARNINGS.quarters.map(function(q,qi){
-    var qk=ceQkey(q.q);
-    var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="ce-phase" style="background:'+BRAND2+'">② Post-Results</div>';
-    var r=q.results;
-    if(!r){ b+='<p class="ov-lede"><b>'+esc(q.q)+' — the numbers vs. the frozen expectations.</b></p>'+
-      '<div class="ce-note">Empty until the print lands.</div></div>'; return b; }
-    b+='<p class="ov-lede"><b>'+esc(q.q)+' — the print, scored against what was frozen going in.</b> '+
-       'Toggle <b>vs Street ⇄ vs Summit</b> to score the print against either expectation, and <b>Margin</b> for the expected-implied → realized margin. Below the scorecard, a supplemental <i>“Also on the call”</i> aside carries the colour — not the meeting-critical items.</p>';
-    // 1 · THE print — archive spine + hand-authored notes, ranked by surprise (one block now).
-    // Pass the quarter's FROZEN Summit expectations (setup.us) so the print can be scored against
-    // Street OR Summit via the vs-Street ⇄ vs-Summit toggle (§6a-iii).
-    b+= consReady ? cePrintBlock(q.q, r, (q.setup&&q.setup.us)||{}) : cePendingSnap('Scorecard');
-    // 2 · the AI-generated call summary — replaces the old one-line "take" black box (v2.10).
-    b+=ceSummaryBlock(q.q, r.summary);
-    // 3 · thesis red-line check — folded unless something tripped
-    if(r.thesisCheck&&r.thesisCheck.length){
-      // One word for the verdict, then the red-line ITSELF in plain language. The reasoning goes
-      // behind "why" — it is the interesting part, but it is not what you scan for (§6a-iv).
-      var tc=r.thesisCheck.slice().sort(function(a,z){ return (z.tripped?1:0)-(a.tripped?1:0); });
-      var nTrip=tc.filter(function(t){ return t.tripped; }).length;
-      b+='<div class="ov-diagram-cap" style="margin:14px 0 6px"><b>Thesis red-lines</b> '+
-         '<span style="color:var(--mu);font-weight:600;font-size:10px">· '+
-         (nTrip?('<b style="color:'+RED+'">'+nTrip+' tripped</b> of '+tc.length):('all '+tc.length+' held'))+'</span></div>';
-      b+='<div class="ce-rl">'+tc.map(function(t,i){
-        var id=t.note?ceReg('rl-'+qk+'-'+i, (t.tripped?'TRIPPED — ':'HELD — ')+t.line, '<p>'+t.note+'</p>'):null;
-        return '<div class="ce-rl-row'+(t.tripped?' trip':'')+'">'+
-          '<span class="ce-rl-v">'+(t.tripped?'TRIPPED':'HELD')+'</span>'+
-          '<span class="ce-rl-l">'+esc(t.line)+'</span>'+
-          (id?'<span class="ce-rl-w ov-clickable" data-detail="ce:'+id+'">why ＋</span>':'<span></span>')+
-        '</div>';
-      }).join('')+'</div>';
-    }
-    // 5 · what the numbers tee up — VISIBLE, as short boxes. Folding it away was hiding the
-    // thing you walk into the call with; the fix was to shorten it, not to bury it (§6a-iv).
-    // NOTE: ceTeeSplit (below) splits on the first em-dash that sits OUTSIDE any markup. Splitting
-    // on the first em-dash full stop cuts a "<b>hook — with a dash</b>" in half and leaks an
-    // unclosed <b> into the page; the HTML parser then re-opens it inside every block that follows,
-    // and Chart.js — which sizes to the nearest BLOCK ancestor — collapses every chart below to its
-    // 150px default. Symptom: bars bunched at the top of an over-tall card, in Results AND Estimates.
-    if(r.intoCall&&r.intoCall.length){
-      b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>What this tees up for the call</b> '+
-         '<span style="color:var(--mu);font-weight:600;font-size:10px">· go in hunting these</span></div>';
-      b+='<div class="ce-tee">'+r.intoCall.map(function(x,i){
-        // Everything up to the first em-dash is the hook; the rest is the argument behind it.
-        var sp=ceTeeSplit(x), head=sp[0], body=sp[1];
-        var id=body?ceReg('tee-'+qk+'-'+i, String(head).replace(/<[^>]+>/g,''), '<p>'+body+'</p>'):null;
-        return '<div class="ce-tee-c"'+(id?' data-detail="ce:'+id+'"':'')+'>'+
-          '<div class="ce-tee-h">'+head+'</div>'+
-          (id?'<div class="ce-tee-m">＋ the ask</div>':'')+'</div>';
-      }).join('')+'</div>';
-    }
-    // 6 · "Also on the call" — the supplemental colour (was the Post-Call tab, dissolved Jul 2026).
-    // Deliberately styled as a secondary aside; NOT the tracking layer (that is the Watch List) and
-    // NOT the meeting-critical read (that is the scorecard). Includes non-trackable call colour.
-    b+=ceHighlightsBlock(q.call, qk);
-    b+='<div class="ov-foot">Numbers scored against the frozen expectation — <b>Street</b> (<code>BBG_CONSENSUS.txt</code>) or <b>Summit</b> via the toggle; actuals = reported. The <i>Also on the call</i> aside is supplemental colour — the tracking layer is the Watch List.</div>';
-    b+='</div>';
-    return b;
-  }).join('');
-  return h;
-}
 // E · "Also on the call" ── the supplemental colour from the call, rendered inside Post-Results as a
 // SINGLE BOX holding a plain LIST, each point with its own native <details> dropdown (v2.9). The
 // Context/Logged band classification and the triage strip are GONE (Dani did not want them). Still
 // not the meeting-critical read (that is the scorecard + the Watch List): a thesis-mover (band:'lead')
 // is tracked on the Watch List and stays filtered out here. `take`/`threeMinutes`/`notBringing`/
 // `newQuestions` survive as data (newQuestions still seeds the next Watch List) but are not rendered.
-function ceHighlightsBlock(cc, qk){
-  if(!cc||!cc.highlights||!cc.highlights.length) return '';
-  // A thesis-mover (band:'lead') is tracked on the Watch List, never here — keep filtering it out.
-  var hls=cc.highlights.filter(function(x){ return (x.band||'context')!=='lead'; });
-  if(!hls.length) return '';
-  var b='<div class="ce-alsobox"><div class="ce-alsobox-h"><b>Also on the call</b>'+
-    '<span class="ce-alsobox-sub">supplemental colour — the meeting-critical items are the scorecard above and the Watch List</span></div>'+
-    '<div class="ce-alsolist">';
-  b+=hls.map(function(x){
-    // No tag chips (tone/curious/connects-dots/…) — just the theme and its dropdown (v2.10).
-    var det=x.detail||'';
-    if(x.open) det+='<p><b>Still open:</b> '+x.open+'</p>';
-    return '<details class="ce-also-i">'+
-      '<summary class="ce-also-s">'+
-        '<span class="ce-also-hd">'+x.head+'</span>'+
-        (det?'<span class="ce-also-ar">▾</span>':'')+
-      '</summary>'+
-      (det?'<div class="ce-also-body">'+det+'</div>':'')+
-    '</details>';
-  }).join('');
-  b+='</div></div>';
-  return b;
-}
 
 // F · The AI-generated CALL SUMMARY — the "minute" (v2.10). Replaces the old one-line black "take".
 // THE SUMMARY IS THE PROSE ITSELF: several always-visible PARAGRAPHS, each landing a punch on a
@@ -3645,44 +1958,6 @@ function ceHighlightsBlock(cc, qk){
 // `<span class="ce-gl" data-def="…">term</span>` and show their definition on hover. Expand-all /
 // Collapse-all toggle only the "＋ more" dropdowns, never the visible paragraphs. A SUMMARY, not a
 // transcript — no roll-call of every exec.
-function ceSumNodes(nodes, depth){   // nested context-guide dropdowns inside a "＋ more"
-  if(!nodes||!nodes.length) return '';
-  return '<div class="ce-sum-nodes">'+nodes.map(function(n){
-    return '<details class="ce-sum-n" data-d="'+(depth>2?2:depth)+'">'+
-      '<summary class="ce-sum-nt"><span class="ce-sum-caret">▸</span><span>'+n.t+'</span></summary>'+
-      '<div class="ce-sum-nb">'+(n.body||'')+ceSumNodes(n.nodes, depth+1)+'</div>'+
-    '</details>';
-  }).join('')+'</div>';
-}
-function ceSumMore(more){   // a "＋ more": deeper prose (string) or { body, nodes:[…] }
-  if(!more) return '';
-  if(typeof more==='string') return more;
-  return (more.body||'')+ceSumNodes(more.nodes, 1);
-}
-function ceSummaryBlock(qLabel, s){
-  if(!s||!s.paras||!s.paras.length) return '';
-  var body=s.paras.map(function(pa,i){
-    var p='<div class="ce-sum-block">'+
-      '<p class="ce-sum-para">'+(pa.p||'')+'</p>';   // the always-visible punch paragraph
-    if(pa.more){
-      p+='<details class="ce-sum-n ce-sum-more" data-d="0">'+
-        '<summary class="ce-sum-nt"><span class="ce-sum-caret">▸</span><span>'+(pa.moreLabel||'＋ more — the detail behind this')+'</span></summary>'+
-        '<div class="ce-sum-nb">'+ceSumMore(pa.more)+'</div>'+
-      '</details>';
-    }
-    return p+'</div>';
-  }).join('');
-  return '<details class="ce-sum" open>'+
-    '<summary class="ce-sum-h"><span class="ce-sum-ic">🧠</span><b>Call summary — the minute</b>'+
-      '<span class="ce-sum-tag">AI-generated</span></summary>'+
-    '<div class="ce-sum-body">'+
-      '<div class="ce-sum-tools"><span class="ce-sum-tt">The summary is the text; each paragraph lands a point · open <b>＋ more</b> for the detail · hover a <span class="ce-gl" data-def="A term with a dashed underline — hover it to read its definition here.">dashed term</span> for its definition</span>'+
-        '<button type="button" class="ce-sum-btn" data-sum="exp">⊕ Expand all</button>'+
-        '<button type="button" class="ce-sum-btn" data-sum="col">⊖ Collapse all</button></div>'+
-      body+
-    '</div>'+
-  '</details>';
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // EVOLUTION ▸ EARNINGS CALLS — GOOGL_THEMES with By theme ⇄ By quarter toggle + accordion
@@ -3690,162 +1965,8 @@ function ceSummaryBlock(qLabel, s){
 // ENHANCED with a status chip per theme (trend / promise-to-reconcile / watch) — the essence of
 // the dissolved Promise Tracker. Source: docs/calls/GOOGL.md + GOOGL-latest.md.
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-var CE_THST={ trend:{c:'#0a8f4c',l:'Confirmed trend'}, promise:{c:'#2E6BE6',l:'Promise — reconcile'}, watch:{c:'#B7791F',l:'Watch'} };
 // A promise open for one quarter and one open for four look identical without this. Age is the
 // signal: how long has it been unreconciled, or how many quarters has the silence run?
-function ceQnum(q){ var m=String(q||'').match(/Q(\d)\s+(\d{4})/); return m?((+m[2])*4+(+m[1])):null; }
-function ceStAge(st){
-  if(!st||typeof st!=='object'||!st.since) return '';
-  var newest=CALL_EARNINGS.quarters.filter(function(q){ return q.status!=='upcoming'; })[0];
-  var a=ceQnum(st.since), b=ceQnum(newest?newest.q:null);
-  if(a==null||b==null) return '';
-  var n=Math.max(1, b-a+1), k=(st.k||'');
-  var lbl = (k==='promise') ? ('unreconciled '+n+' quarter'+(n>1?'s':''))
-          : (st.silent)     ? ('silent '+n+' quarter'+(n>1?'s':''))
-          : (k==='watch')   ? ('tracked '+n+' quarter'+(n>1?'s':''))
-          :                   ('running '+n+' quarter'+(n>1?'s':''));
-  return '<span class="calls-st-age"> · '+lbl+'</span>';
-}
-function ceTkFmt(u,v){
-  if(v==null) return '';
-  if(u==='$')  return '$'+(+v).toFixed(2);
-  if(u==='$B') return '$'+(+v).toFixed(1)+'B';
-  if(u==='B')  return (+v).toFixed(2)+'B';
-  if(u==='M')  return (+v).toFixed(0)+'M';       // count in millions (MAPCs)
-  if(u==='%')  return (+v).toFixed(1)+'%';       // rate (take rate)
-  if(u==='x')  return (+v).toFixed(2)+'x';       // ratio (trips per MAPC)
-  return String(v);
-}
-function wireCeTrack(root){
-  var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
-  // The lens defaults are asserted here as well as in the markup — Consensus + YoY, showing YoY.
-  // Belt and braces: a half-applied default reads as a broken control (§6a-ii).
-  function ceSetLens(v){
-    // MUST scope to [data-ceg] — a bare '.ce-gseg button' also matches the margin toggle that
-    // shares the .ce-gseg pill styling, and would clear its active state (§6a-v cross-check rule).
-    pane.querySelectorAll('.ce-gseg button[data-ceg]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ceg')===v); });
-    pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-g', v); });
-    pane.querySelectorAll('.ce-fz').forEach(function(f){ f.setAttribute('data-g', v); });
-  }
-  ceSetLens('yoy');
-  pane.querySelectorAll('.ce-ev-pill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ceev')==='cons'); });
-  pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-ev','cons'); });
-  // Margin default: off, and its own segment's active state set independently of the growth lens.
-  pane.querySelectorAll('.ce-gseg button[data-cemm]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-cemm')==='off'); });
-  pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-mm','off'); });
-  pane.querySelectorAll('.ce-gseg button[data-ceg]').forEach(function(btn){ btn.onclick=function(){
-    ceSetLens(btn.getAttribute('data-ceg'));
-  }; });
-  // Margin lens (headline GP/OpInc/EBITDA only) — CSS-driven via data-mm on the wrap.
-  pane.querySelectorAll('.ce-gseg button[data-cemm]').forEach(function(btn){ btn.onclick=function(){
-    var v=btn.getAttribute('data-cemm');
-    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-mm', v); });
-  }; });
-  // Post-Results print-block toggles — scoped to their own .ce-fz so each quarter's print block is
-  // independent. These are SEPARATE from the Setup's Consensus/Summit/Both (which does not apply
-  // here: Post-Results has no "Both"). `vs Street ⇄ vs Summit` sets data-ev (swaps the frozen
-  // expectation the print is scored against); `Margin` sets data-mm (expected-implied → realized).
-  pane.querySelectorAll('.ce-gseg button[data-fzev]').forEach(function(btn){ btn.onclick=function(){
-    var v=btn.getAttribute('data-fzev'), fz=btn.closest('.ce-fz');
-    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    if(fz) fz.setAttribute('data-ev', v);
-  }; });
-  pane.querySelectorAll('.ce-gseg button[data-fzmm]').forEach(function(btn){ btn.onclick=function(){
-    var v=btn.getAttribute('data-fzmm'), fz=btn.closest('.ce-fz');
-    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    if(fz) fz.setAttribute('data-mm', v);
-  }; });
-}
-function ceResultsPending(label){
-  return '<div class="ce-note" style="margin:8px 0">📊 <b>'+esc(label)+'</b> — the Amazon-style actuals-vs-estimates chart + table. '+
-    'This pane is wired to the shared Results engine (<code>js/results.js</code>); it will populate once UBER\'s '+
-    'dataset is registered in <code>RESULTS_DATA</code> (built from the CE_CONS archive + the Summit projection export, '+
-    'per <code>docs/RESULTS_CONVENTIONS.md</code> §6).</div>';
-}
-function ceKeepPos(el, fn){
-  var before=el.getBoundingClientRect().top;
-  fn();
-  var after=el.getBoundingClientRect().top, d=after-before;
-  if(Math.abs(d)>1) window.scrollBy(0, d);
-}
-function ceSelectQuarter(pane, qk){
-  pane.querySelectorAll('.ce-qpill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ceqsel')===qk); });
-  pane.querySelectorAll('.ce-qblock').forEach(function(blk){ blk.hidden=(blk.getAttribute('data-ceq')!==qk); });
-  pane.querySelectorAll('.ce-wl-tag').forEach(function(b){ b.classList.remove('active'); });
-  var flat=pane.querySelector('.ce-wl-all'); if(flat) flat.hidden=true;
-}
-function ceApplyPhaseQuarters(pane, phase){
-  var pills=Array.prototype.slice.call(pane.querySelectorAll('.ce-qpill')), lastVisible=null, activeVisible=false;
-  pills.forEach(function(b){
-    var ok=(b.getAttribute('data-ceqhas')||'').split(' ').indexOf(phase)>=0;
-    b.hidden=!ok;
-    if(ok){ lastVisible=b; if(b.classList.contains('active')) activeVisible=true; }
-  });
-  // pills render newest-first, so the FIRST visible is the most recent valid quarter.
-  var firstVisible=pills.filter(function(b){ return !b.hidden; })[0];
-  if(!activeVisible && firstVisible) ceSelectQuarter(pane, firstVisible.getAttribute('data-ceqsel'));
-}
-function wireCallEarnings(root){
-  var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
-  // Call-summary Expand-all / Collapse-all — toggles only the inner dropdown nodes of THIS summary
-  // box, never the always-visible lede or the outer box itself.
-  pane.querySelectorAll('.ce-sum-btn').forEach(function(btn){ btn.onclick=function(e){
-    e.preventDefault();
-    var box=btn.closest('.ce-sum'); if(!box) return;
-    var open=(btn.getAttribute('data-sum')==='exp');
-    box.querySelectorAll('details.ce-sum-n').forEach(function(d){ d.open=open; });
-  }; });
-  pane.querySelectorAll('.ce-phtab').forEach(function(btn){ btn.onclick=function(){
-    var key=btn.getAttribute('data-cep');
-    ceKeepPos(btn, function(){
-    pane.querySelectorAll('.ce-phtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    pane.querySelectorAll('.ce-phpane').forEach(function(p){ p.hidden=(p.getAttribute('data-cep')!==key); });
-    ceApplyPhaseQuarters(pane, key);
-    });
-    // Returning to Setup re-arms the Setup chart (the Results engine; canvases were hidden, so any
-    // earlier build produced a zero-size chart).
-    if(key==='setup') requestAnimationFrame(gBuildCeAnnual);
-  }; });
-  // Setup estimates toggle: Consensus ⇄ Summit ⇄ Both (CSS-driven via data-ev on the wrap)
-  pane.querySelectorAll('.ce-ev-pill').forEach(function(btn){ btn.onclick=function(){
-    var v=btn.getAttribute('data-ceev');
-    pane.querySelectorAll('.ce-ev-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-ev', v); });
-  }; });
-  // Quarter selector: one Earnings, many quarters — only the selected quarter's blocks render.
-  // Picking a quarter also exits the cross-quarter tag view.
-  pane.querySelectorAll('.ce-qpill').forEach(function(btn){ btn.onclick=function(){
-    ceSelectQuarter(pane, btn.getAttribute('data-ceqsel'));
-  }; });
-  // initial phase is Setup — every quarter valid, nothing to hide, but keep it consistent.
-  ceApplyPhaseQuarters(pane, 'setup');
-  // Verdict filter on the print block: All / Beats / Misses / In line. Sets data-f on the tile
-  // grid; CSS hides the non-matching tiles. Scoped per quarter block so the active quarter filters.
-  pane.querySelectorAll('.ce-vdf button').forEach(function(btn){ btn.onclick=function(){
-    var seg=btn.parentNode, host=seg.closest('.ce-fz'); if(!host) return;
-    seg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    var g=host.querySelector('.ce-fz-g'), v=btn.getAttribute('data-vdf');
-    if(g){ if(v==='all') g.removeAttribute('data-f'); else g.setAttribute('data-f', v); }
-  }; });
-  // Band triage filter: each button shows/hides its own cards. All three start on, so the
-  // reader sees the whole call and uses colour to triage; the filter is for narrowing, not for
-  // hiding by default (§6a-iv). The highlight cards now live inside the Post-Results pane (the
-  // Post-Call tab was dissolved Jul 2026), but the filter is pane-scoped so it still finds them.
-  pane.querySelectorAll('.ce-tri-b').forEach(function(btn){ btn.onclick=function(){
-    var on=btn.classList.toggle('active');
-    var qk=btn.getAttribute('data-cebq'), band=btn.getAttribute('data-ceband');
-    var host=pane.querySelector('.ce-hcards[data-cehl="'+qk+'"]'); if(!host) return;
-    host.querySelectorAll('.ce-hcard[data-band="'+band+'"]').forEach(function(c){ c.hidden=!on; });
-  }; });
-  // ── Watch List: mount the SHARED engine (js/watchlist.js). It owns rendering + Supabase
-  // persistence + sorting; only the company id, ticker and quarter list are passed in. ──
-  var wmount=root.querySelector('.ce-phpane[data-cep="watch"] [data-wlmount]');
-  if(wmount && _co && _co.id){
-    mountWatchList(wmount, { companyId:_co.id, ticker:_co.ticker, quarters:CALL_EARNINGS.quarters,
-      colors:{ brand:BRAND, brand2:BLUE, purple:PURPLE, red:RED } });
-  }
-}
 
 function html(c){
   _co = c;   // capture the live company object (id + ticker) for the Watch List DB wiring
@@ -3878,7 +1999,7 @@ function deepDiveHtml(c){
   // (docs/profiles/UBER.md §5); sub-tabs without content are added when their unit is built (rule 5).
   function st(list){ return '<div class="ovt-subtabs">'+list.map(function(x,i){ return '<button type="button" class="ovt-subtab'+(i?'':' active')+'" data-ovst="'+x[0]+'">'+x[1]+'</button>'; }).join('')+'</div>'+
     list.map(function(x,i){ return '<div class="ovt-subpane" data-ovst="'+x[0]+'"'+(i?' hidden':'')+'>'+x[2]+'</div>'; }).join(''); }
-  var h='<div class="ov ov-uber ov-uber-dd" data-brand="UBER">'+ubLegacyStyle();
+  var h='<div class="ov ov-uber ov-uber-dd" data-brand="UBER">';   // legacy pane styles now in css/overview.css (F-FINAL)
   h+='<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
       '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
@@ -4233,23 +2354,6 @@ function showDD(root, key){
 }
 function wireDD(root){ root.querySelectorAll('.dd-tab').forEach(function(btn){ btn.onclick=function(){ showDD(root, btn.getAttribute('data-dd')); }; }); }
 // ── Standardized peer scatter: place bubbles from the active trailing/forward toggles ──
-function positionMG(root){
-  var svg=root.querySelector('#ubMgSvg'); if(!svg) return;
-  var tp=root.querySelector('.mg-pill[data-mgtype].active'), bp=root.querySelector('.mg-pill[data-mgbasis].active');
-  var type=(tp?tp.getAttribute('data-mgtype'):'ev'), basis=(bp?bp.getAttribute('data-mgbasis'):'f');
-  var XMAX=(type==='ev'?45:70);
-  svg.querySelectorAll('.mg-node').forEach(function(g){
-    var multAttr = type==='ev' ? (basis==='f'?'data-evf':'data-evt') : (basis==='f'?'data-pef':'data-pet');
-    var raw=g.getAttribute(multAttr), c=g.querySelector('circle'), t=g.querySelector('text');
-    if(raw===''||raw==null||isNaN(parseFloat(raw))){ if(c) c.style.display='none'; if(t) t.style.display='none'; return; }
-    if(c) c.style.display=''; if(t) t.style.display='';
-    var mult=parseFloat(raw), grow=parseFloat(g.getAttribute(basis==='f'?'data-gf':'data-gt')), r=parseFloat(g.getAttribute('data-r'));
-    var x=80+Math.min(1,mult/XMAX)*(612-80), y=252-Math.min(1,grow/30)*(252-44);
-    if(c){ c.setAttribute('cx',x.toFixed(1)); c.setAttribute('cy',y.toFixed(1)); }
-    if(t){ t.setAttribute('x',x.toFixed(1)); t.setAttribute('y',(y-r-5).toFixed(1)); }
-  });
-  var xl=root.querySelector('#ubMgXlab'); if(xl) xl.textContent=(type==='ev'?'EV/EBITDA':'P/E')+' · '+(basis==='f'?'forward':'trailing');
-}
 function wireModal(root){
   var back=root.querySelector('#ubModalBack'), mT=root.querySelector('#ubModalT'), mB=root.querySelector('#ubModalB'); if(!back) return;
   var galIdx=-1;

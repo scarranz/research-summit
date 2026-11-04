@@ -12,7 +12,7 @@
 | Analista responsable | SAB (Santiago Alvarez) |
 | Inicio | 2026-11-03 |
 | Plazo | **3T26 se reporta el 2026-11-04** (mañana). SAB eligió "todo de una vez" (2026-11-03); por el plazo, EV-RES-DATA → EV-SET se adelantan dentro de lo que permiten las dependencias (§2.3) |
-| Avance | 43 de 45 unidades aprobadas (falta EV-POST con el 3T26 del 2026-11-04 y F-FINAL) |
+| Avance | 45 de 45 unidades aprobadas (2026-11-04) |
 
 ## 1. Inventario de datos (F0)
 
@@ -106,7 +106,7 @@ Cuadre contra el comunicado (vía `act` del dataset de Results, que cuadra con c
 | TL-CUS | Top Line ▸ Customers | ✅ | 2026-11-03 | SAB | fc50e3c | 5 clases del 10-K; sin concentración (no se divulga); Uber One anterior en colapsable |
 | EV-EST | Evolution ▸ Estimates | ✅ | 2026-11-03 | SAB | 8b8fab9 | motor; bloque evolution sin cambios (no hay submit nuevo) — heredado |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | ✅ | 2026-11-03 | SAB | | `uber-ce.js` (copia de googl-ce.js) + `uber-ce-data.js`; CE_CONS de `emit_ce_uber.py` (BBG 30 snapshots, último 09-10) + líneas de Results; Q3 2026 con Summit 08-05 y guía del 2T26 |
-| EV-POST | Evolution ▸ Earnings ▸ Post-Results | 🟨 | 2026-11-04 | | | 3T26 construido (8-K 4-nov + suplemento + prepared remarks; 46/46 citas verificadas por script); falta Q&A (sin transcripción) y aprobación de SAB; Setup 4T26 abierto con la guía; Street actualizado al archivo BBG del 3-nov (DOAA351), reemplazó la fila del 10-sep; verify_preprint 335/0/0
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results | ✅ | 2026-11-04 | SAB | 06408ca | 3T26 construido (8-K 4-nov + suplemento + prepared remarks; 46/46 citas verificadas por script); falta Q&A (sin transcripción) y aprobación de SAB; Setup 4T26 abierto con la guía; Street actualizado al archivo BBG del 3-nov (DOAA351), reemplazó la fila del 10-sep; verify_preprint 335/0/0
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | ✅ | 2026-11-03 | SAB | 8b8fab9 | semilla v2 de las notas a mano de SAB (UBER.pdf): 30 hilos, 298 notas, Q3 2022 → Q2 2026; v1 guardada como UBER_THEMES_V1 |
 | BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ✅ | 2026-11-03 | SAB | 8b8fab9 | uber-bl.js (copia de googl-bl.js); margen sobre ingreso o GB |
 | BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ✅ | 2026-11-03 | SAB | 8b8fab9 | 6 renglones de costo del 10-K (XBRL); subtotal "After cost of revenue" (Uber no reporta utilidad bruta) |
@@ -129,7 +129,7 @@ Cuadre contra el comunicado (vía `act` del dataset de Results, que cuadra con c
 | MISC-regulation | Misc ▸ Regulation | ✅ | 2026-11-03 | SAB | 885011a | sacada de Top Line ▸ Mobility (B2 #20) |
 | MISC-manda | Misc ▸ M&A and Delivery Hero | ✅ | 2026-11-03 | SAB | 885011a | B2 #73–#82 |
 | MISC-tam | Misc ▸ TAM | ✅ | 2026-11-03 | SAB | 885011a | B2 #34–#36 |
-| F-FINAL | Cierre y entrega | ⬜ | | | | |
+| F-FINAL | Cierre y entrega | ✅ | 2026-11-04 | SAB | | B3: 96 = 82 OK + 7 fusionadas + 7 parciales (texto conservado en datos, no en pantalla; §6) · 0 faltantes; 1,894 líneas muertas fuera de uber.js; estilos a css/overview.css; 7 citas del 10-K verificadas (4 corregidas) |
 
 (Modo B: agregar B1 — inventario de contenido existente y B2 — mapa de reubicación después de F0.)
 
@@ -420,6 +420,13 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 | 2026-11-03 | VA-SUB | Submit History abre en P/E (un solo punto); ¿UBER debería abrir en EV/EBITDA? (requiere tocar submits.js) | SAB | abierto |
 | 2026-11-03 | TL-* | citas del 10-K del borrador de DOAA351 sin cotejar palabra por palabra | Claude | abierto |
 | 2026-11-03 | EV-POST | sin transcripción del 2T26 en docs/calls (Call Summary textual vacío en 2T26/1T26) | Claude (stockanalysis.com / IR) | abierto; 3T26: Q&A también pendiente (Uber solo publica prepared remarks) |
+| 2026-11-04 | OV-6 (#7) | texto `why` original de los peers quedó solo en `UB_PEERS` (uber.js), no en pantalla; el mapa vivo usa redacción nueva | SAB | abierto |
+| 2026-11-04 | EV-NOTES (#61–#63) | resumen viejo, red-lines y "what this tees up" del 1T26/2T26 siguen como datos en uber-ce-data.js; no están en la semilla de Notes | SAB | abierto |
+| 2026-11-04 | TL-SEG / BL-GEN (#71) | dos tarjetas de "What Truly Drives Uber" sin lugar en pantalla: "near-100%-margin business inside Delivery" y "Cash Machine" | SAB | abierto |
+| 2026-11-04 | VA-SENS (#83) | las pistas por segmento de la calculadora vieja (take rate y crecimiento históricos) no pasaron a los sliders | SAB | abierto |
+| 2026-11-04 | VA-PEERS (#84) | columna "The read" de la tabla vieja de peers no está en el pane vivo | SAB | abierto |
+| 2026-11-04 | Motor de Results | ids repetidos rsVintNote, rsBlocks, rsConvHost, rsViewNote (el motor se monta 3 veces: Setup, Results, Estimates); es del motor compartido | SAB | abierto |
+| 2026-11-04 | F-FINAL | duplicados visibles que quedan del modo B: TIMELINE también en Misc ▸ M&A (#72), franja de precio vieja en el plegable de Segments (#11), barras de op. income viejas junto a BL-GEN (#48); 21 `<style>` en línea de los panes conservados | SAB | abierto |
 
 ### EV-NOTES — cifras de las notas de SAB que no se leyeron con seguridad (UBER.pdf)
 
@@ -485,6 +492,10 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 ### 2026-11-03 · B1 + B2 — APROBADAS
 - Qué se mostró: 96 piezas con destino; 9 fusiones; Misc con 5 sub-tabs (comp, insurance, regulation, M&A/DH, TAM).
 - Nota: B1 se contó leyendo el código; el conteo en pantalla se hace en el cierre (B3).
+### 2026-11-04 · EV-POST 3T26 + F-FINAL — APROBADAS (SAB pidió PR y merge)
+- EV-POST: print del 8-K del 4-nov, notas por línea, Call Summary con 46 citas verificadas contra las prepared remarks, Setup 4T26 abierto; Street al archivo BBG del 3-nov.
+- F-FINAL: recorrido de las 24 sub-pestañas sin errores ni NaN; B3 sin faltantes (7 parciales en §6); código muerto fuera; estilos legados a css/overview.css; citas del 10-K de Top Line cotejadas (Mobility y Freight sin "…", tabla geográfica, frase por país inexistente → la oración real de la Nota 13).
+
 ### AAAA-MM-DD · <ID> <Nombre> — <APROBADA | CAMBIOS | OMITIDA>
 - Qué se mostró:
 - Fuentes:

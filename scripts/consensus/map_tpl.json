@@ -1,0 +1,103 @@
+{
+ "_doc": "TPL metric map for emit_matrix.py (schema v2, by Bloomberg CODE), written 2026-11-04 off the live CONSENSUS sheet of Consensus_Portal.xlsm (23 snapshots, 2021-05-11 -> 2026-11-03; TPL is not yet in the BBG_CONSENSUS.txt archive). EPS is on the post Dec-2025 split basis in the export. The nine segment/revenue-line slots (SALES_REV_TURN by SEG id: LRM SEG0000616895, oil & gas royalties SEG0000618095, easements LRM SEG0000618093, land & other SEG0000618094, WSO SEG0000616891, water sales SEG0000618101, produced water royalties SEG0000618100, easements WSO SEG0000618099, easements total SEG0000618091) carry reported values only, no forward horizons, so they are not mapped. adjebitda is mapped to IS_COMPARABLE_EBITDA (Bloomberg comparable EBITDA) - check its basis against the company's Adjusted EBITDA with verify_preprint. capex: Bloomberg exports it negative (cash out); sign -1 makes it positive like the dataset.",
+ "segments": {},
+ "q": {
+  "rev": {
+   "code": "IS_COMP_SALES",
+   "unit": "usdM"
+  },
+  "opinc": {
+   "code": "IS_COMPARABLE_EBIT",
+   "unit": "usdM"
+  },
+  "adjebitda": {
+   "code": "IS_COMPARABLE_EBITDA",
+   "unit": "usdM"
+  },
+  "netinc": {
+   "code": "IS_COMP_NET_INCOME_GAAP",
+   "unit": "usdM"
+  },
+  "eps": {
+   "code": "IS_COMP_EPS_GAAP",
+   "unit": "usd"
+  },
+  "da": {
+   "code": "CF_DEPR_AMORT",
+   "unit": "usdM"
+  },
+  "capex": {
+   "code": "HEADLINE_CAPEX",
+   "unit": "usdM",
+   "sign": -1
+  },
+  "fcf": {
+   "code": "HEADLINE_FCF",
+   "unit": "usdM"
+  }
+ },
+ "y": {
+  "rev": {
+   "code": "IS_COMP_SALES",
+   "unit": "usdM"
+  },
+  "opinc": {
+   "code": "IS_COMPARABLE_EBIT",
+   "unit": "usdM"
+  },
+  "adjebitda": {
+   "code": "IS_COMPARABLE_EBITDA",
+   "unit": "usdM"
+  },
+  "netinc": {
+   "code": "IS_COMP_NET_INCOME_GAAP",
+   "unit": "usdM"
+  },
+  "eps": {
+   "code": "IS_COMP_EPS_GAAP",
+   "unit": "usd"
+  },
+  "da": {
+   "code": "CF_DEPR_AMORT",
+   "unit": "usdM"
+  },
+  "capex": {
+   "code": "HEADLINE_CAPEX",
+   "unit": "usdM",
+   "sign": -1
+  },
+  "fcf": {
+   "code": "HEADLINE_FCF",
+   "unit": "usdM"
+  }
+ },
+ "_drop_note": "q.capex: quarterly capex is frozen in the export (9 unique values over 20 cells), so it is not shipped (2026-11-04).",
+ "drop": {
+  "q": [
+   "capex"
+  ]
+ },
+ "_dropVintages_note": "REPRINTED SNAPSHOTS found by emit_matrix.py on 2026-11-04: these rows repeat a later snapshot's values verbatim; only the later row is genuine. Delete an entry once Bloomberg refills that row.",
+ "dropVintages": {
+  "y": {
+   "netinc": [
+    "2022-05-09"
+   ],
+   "eps": [
+    "2023-02-27",
+    "2023-05-08",
+    "2023-08-07",
+    "2024-02-26",
+    "2024-05-13",
+    "2024-08-12",
+    "2024-11-11",
+    "2025-02-24",
+    "2025-05-12"
+   ],
+   "capex": [
+    "2023-02-27",
+    "2023-05-08"
+   ]
+  }
+ }
+}

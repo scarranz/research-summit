@@ -165,3 +165,8 @@ export var MA_THEMES = [
       { q:'Q4 2025', items:['Management says the CCCA, first introduced in 2023, has made little progress and faces united opposition, and argues it would move choice from consumers to merchants and risk security without passing savings on. On the 10% rate cap, Mastercard does not set rates; it is sharing data on credit access and working with issuers on affordability options. No probability offered.'] },
     ]},
 ];
+
+// Stamp the seed version on every thread (as meta.js / googl.js do). The hydrate step keeps a saved record only when
+// its threads carry v >= MA_THEMES_V; without this stamp every saved record read as v0 and was overwritten by the
+// seed on each load, losing notes the team added in the portal (found 2026-11-04).
+MA_THEMES.forEach(function(t){ t.v = MA_THEMES_V; });

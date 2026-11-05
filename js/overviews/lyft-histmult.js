@@ -188,6 +188,7 @@ function buildActFy(){
 // ACT_FY_V[metric] — real annual actuals, direct from the dataset (Adj. EBITDA from FY2022; no annual EPS in the Results dataset).
 function buildActFyY(metric){
   var m=lyftResults.views.y.metrics[metric], out={};
+  if(!m) return out;   // no annual series for this metric (e.g. EPS) in the Results dataset
   m.periods.forEach(function(y,i){ if(m.act[i]!=null) out[y]=m.act[i]; });
   return out;
 }

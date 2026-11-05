@@ -12,7 +12,7 @@
 | Rama | `feat/lyft-profile` (desde `origin/main` @ `e2a30fa`, 2026-11-04; worktree `research-summit-lyft`). Ya existen en GitHub `feat/earnings-rollout-lyft` y `feat/lyft-2q26-results` (no se tocan) |
 | Analista responsable | SAB (Santiago Alvarez); la sesión la abre Dani |
 | Inicio | 2026-11-04 |
-| Avance | 9 de 45 unidades aprobadas (F0, B1, B2, F0-SM, F1, OV-1, OV-2, OV-3, OV-4) |
+| Avance | 10 de 45 unidades aprobadas (F0, B1, B2, F0-SM, F1, OV-1, OV-2, OV-3, OV-4, OV-5) |
 
 ## 1. Inventario de datos (F0)
 
@@ -120,7 +120,7 @@ Cuadre — **vía el dataset de Results/Customers existente (que viene de los 8-
 | OV-2 | Overview ▸ Descripción | ✅ | 2026-11-05 | SAB | | 68 palabras, 3 oraciones, sin cifras; fuente 10-K FY25 Item 1 (p.5) |
 | OV-3 | Overview ▸ Cuadrante 2×2 | ✅ | 2026-11-05 | SAB | | 4 celdas 27/26/25/28 palabras; How it earns con FY25 desde 10-K (6,316.3; ASC 606 5,895.5; ASC 842 420.8) |
 | OV-4 | Overview ▸ How it makes money | ✅ | 2026-11-05 | SAB | | Un solo segmento operativo: vista Revenue lines + Region; todo del 10-K FY25 (rev note p.83, estados p.69, MD&A p.51) |
-| OV-5 | Overview ▸ Products & platforms | ⬜ | | | | |
+| OV-5 | Overview ▸ Products & platforms | ✅ | 2026-11-05 | SAB | | 8 familias planas, 22 productos; fuentes 10-K FY25 Item 1 + Prepared Remarks 2T26 |
 | OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
 | OV-7 | Overview ▸ Timeline | ⬜ | | | | |
 | OV-F | Overview ▸ Pie de fuentes | ⬜ | | | | |
@@ -396,3 +396,8 @@ Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en
 - Reubicado/retirado de la vista (nada se borra): el strip de KPI (GB, Rides, Active Riders, EBITDA, FCF) ya vive en Bottom Line/Results; "take ~34%" y Lyft Media (~$100M, >100% YoY) quedan en `LY_SEG_DEF` hasta TL-SEG, donde se verifican o se marcan sin fuente. El pie de "geografía omitida, solo EE.UU. y Canadá" era obsoleto (Freenow, 10-K muestra Internacional).
 - Autoauditoría: PASS cifras con fuente; barras reconcilian al total (5,895.5+420.8=6,316.3; 6,060.2+256.0=6,316.3).
 - **Hallazgo para el autor del modelo (§6):** el modelo trae EARNINGS FY25 134.6 y OP_INCOME 23.3, pero el 10-K reporta utilidad neta 2,844.0 y pérdida operativa (188.4). Se suma a las dudas 2 y 4 de §1b. No se usan esos campos hasta aclarar. Adj. EBITDA FY25: 10-K 528.8 vs modelo 528.9 (redondeo).
+
+### 2026-11-05 · OV-5 Products & platforms · Aprobado (SAB)
+- Rejilla plana de 8 familias (UBER: `stdProducts` + modal `prod:<i>`); título del desplegable pasa a "Products & platforms". Fuentes: 10-K FY25 Item 1 (modos, Price Lock, Express Drive, bikes y scooters, Lyft Business, Lyft Silver) y Prepared Remarks 2T26 (Freenow, TBR, Curb, XXL, Lyft Teen, sistemas de LUS, Waymo Nashville, Baidu Londres).
+- Retirado de la vista (sigue en `LY_PROD_GROUPS`, se reubica en TL-SEG/MISC): Lyft Pink (precio ~$9.99/$99 sin fuente), Lyft Media/anuncios, May Mobility, Mobileye+Marubeni, Level 5 vendida a Woven Planet, Lyft Healthcare. Ninguno aparece en el 10-K FY25 ni en los remarks; verificar con IR si se reincorporan.
+- Autoauditoría: PASS 8 tarjetas, d ≤ 6 palabras, ningún número sin fuente.

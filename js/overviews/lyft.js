@@ -1807,14 +1807,49 @@ var LY_PROD_GROUPS=[
     ]},
   ]},
 ];
+// OV-5 (playbook section 8): one flat grid of product families, a tap opens the specific products. Sources: 10-K FY25
+// Item 1 (ride modes, Price Lock, Express Drive, bikes and scooters, Lyft Business, Lyft Silver) and the 2Q26 prepared
+// remarks (Freenow, TBR, Curb, XXL, Lyft Teen, LUS systems, Waymo Nashville, Baidu London). LY_PROD_GROUPS above keeps
+// the older grouping (Lyft Pink, Media, May Mobility, Mobileye, Level 5) until TL-SEG / MISC relocate it.
+var LY_PRODUCTS=[
+  { ic:'🚗', fam:'Everyday rides', d:'Standard, saver and fast-pickup modes.', items:[
+    ['Standard rideshare','The core on-demand ride: a rider requests a trip and an independent driver nearby accepts it.'],
+    ['Wait & Save','A lower price for riders who are not in a hurry; the 10-K calls it a substantial portion of rides.'],
+    ['Priority Pickup','A faster driver match for riders who will pay for it.'] ]},
+  { ic:'✨', fam:'Premium & larger', d:'Bigger vehicles and higher-end rides.', items:[
+    ['XL and XXL','Larger vehicles for groups and luggage; XXL is a recent addition, expanding to new markets.'],
+    ['Extra Comfort','Roomier, newer cars for a more comfortable ride.'],
+    ['Black and Black SUV','Premium rides with professional drivers in higher-end vehicles.'] ]},
+  { ic:'📅', fam:'Plan ahead & lock', d:'Book ahead and cap the price.', items:[
+    ['Scheduled rides','Book a ride in advance for a set pickup time, including airport trips.'],
+    ['Price Lock','A subscription launched in 2024 that caps the price of regular and scheduled rides on a chosen route and pickup time.'] ]},
+  { ic:'🚕', fam:'Taxi & chauffeur', d:'Taxis, private hire and chauffeurs.', items:[
+    ['Freenow by Lyft','The European multimodal app with taxi at its core, acquired in July 2025; the Lyft brand is rolling out across it.'],
+    ['Taxis in the Lyft app','Licensed taxi drivers matched through the app, in partnership with Curb in Los Angeles, San Francisco and New York City.'],
+    ['TBR Global Chauffeuring','A global luxury chauffeur company acquired in October 2025; select Lyft drivers with commercial insurance and livery permits can apply to drive for it.'] ]},
+  { ic:'🚲', fam:'Bikes & scooters', d:'City bikeshare systems.', items:[
+    ['Citi Bike (New York City)','Lyft Urban Solutions operates it, with Divvy, Capital Bikeshare, Bluebikes, Lyft Bike and BIKETOWN: six of the largest U.S. bikeshare systems.'],
+    ['Divvy (Chicago)','Chicago’s bikeshare system.'],
+    ['Capital Bikeshare (Washington, D.C.)','Bikeshare in the capital.'],
+    ['Bluebikes (Boston)','Boston’s bikeshare system.'],
+    ['Lyft Bike (San Francisco Bay Area)','Rebranded from Bay Wheels in 2026, under a five-year contract extension with the regional transport agencies and cities.'],
+    ['BIKETOWN (Portland)','Portland’s bikeshare system.'] ]},
+  { ic:'💼', fam:'Business & programs', d:'Organizations, teens and seniors.', items:[
+    ['Lyft Business','Makes the marketplace available to organizations.'],
+    ['Lyft Silver','A feature set for older adults, with strong user growth and higher frequency than the average rider.'],
+    ['Lyft Teen','Rides for teens, launched in markets across the U.S.'] ]},
+  { ic:'🚙', fam:'Express Drive', d:'Vehicle rentals for drivers.', items:[
+    ['Express Drive','A car rental program for drivers who lack a qualifying vehicle; rentals come from the Flexdrive subsidiary and rental car partners.'] ]},
+  { ic:'🤖', fam:'Autonomous (partners)', d:'Partner robotaxis on the Lyft network.', items:[
+    ['Waymo in Nashville','Lyft took over fleet operations in June 2026, with a purpose-built depot due to open in October.'],
+    ['Baidu Apollo Go in London','Lyft is testing the sixth-generation vehicles in the capital.'] ]},
+];
 function stdProducts(){
-  return LY_PROD_GROUPS.map(function(g,gi){
-    return '<div class="stdp-group"><div class="stdp-seg">'+esc(g.seg)+'</div><div class="stdp">'+
-      g.families.map(function(f,fi){
-        return '<div class="stdp-card ov-clickable" data-detail="fam:'+gi+'-'+fi+'"><div class="stdp-ic">'+f.ic+'</div>'+
-          '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
-      }).join('')+'</div></div>';
-  }).join('');
+  return '<div class="ov-diagram-cap" style="margin:0 0 8px"><b>Tap any family</b> for the specific products inside it.</div>'+
+    '<div class="stdp">'+LY_PRODUCTS.map(function(f,i){
+      return '<div class="stdp-card ov-clickable" data-detail="prod:'+i+'"><div class="stdp-ic">'+f.ic+'</div>'+
+        '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
+    }).join('')+'</div>';
 }
 // Block 6 — Competitors scatter (DYNAMIC). X = valuation multiple, Y = revenue growth, bubble =
 // LIVE market cap (api.liveQuote per ticker). Multiple: EV/EBITDA ⇄ P/E. Basis: Trailing ⇄ Forward.
@@ -1930,7 +1965,7 @@ function stdOverviewBody(c){
   h+='<p class="ov-lede">'+esc(LY_LEDE)+'</p>';
   h+=stdFourQuad();
   h+=collapsible('How it makes money', stdMoneyMap());
-  h+=collapsible('What it makes — the products', stdProducts());
+  h+=collapsible('Products & platforms', stdProducts());
   h+=collapsible('Competitors — valuation vs growth', stdPeerScatter());
   h+=collapsible('Timeline', stdTimeline());
   h+='<div class="ov-foot">'+esc(LY_OV_SOURCES)+'</div>';
@@ -4298,6 +4333,8 @@ function wireModal(root){
     if (kind==='lnote'&&id==='cogs'){ return {t:'The Q4 → Q1 cost-of-revenue drop',h:COGS_NOTE}; }
     if (kind==='lnote'&&id==='gm'){ return {t:'Gross margin — structural or one-time?',h:'<div class="ov-wind-h">The structural case</div>'+bullets(GM_STRUCT)+'<div class="ov-wind-h" style="margin-top:14px">Reasons for caution</div>'+bullets(GM_CAUTION)}; }
     if (kind==='mna'){ var m=MNA.filter(function(x){return x.n===id;})[0]; return m?{t:m.n+' <span class="ov-modal-sub">'+esc(m.y)+' · '+esc(m.deal)+'</span>',h:m.detail}:null; }
+    if (kind==='prod'){ var pf=LY_PRODUCTS[+id]; if(!pf) return null;
+      return {t:pf.ic+' '+esc(pf.fam),h:'<div class="famd ov-pop-sub" style="margin-bottom:10px;color:var(--mu)">'+esc(pf.d)+'</div>'+pf.items.map(function(it){ return '<div style="margin:0 0 10px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">'+esc(it[0])+'</div><div class="famd">'+esc(it[1])+'</div></div>'; }).join('')}; }
     if (kind==='fam'){ var gp=id.split('-'), gg=LY_PROD_GROUPS[+gp[0]]; var f=gg&&gg.families[+gp[1]]; if(!f) return null;
       var body=f.items.map(function(it){ return '<div style="margin:0 0 10px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">'+esc(it[0])+'</div><div class="famd">'+esc(it[1])+'</div></div>'; }).join('');
       return {t:f.ic+' '+esc(f.fam),h:'<div class="famd" style="margin-bottom:10px;color:var(--mu)">'+esc(f.d)+'</div>'+body}; }

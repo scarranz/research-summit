@@ -12,7 +12,7 @@
 | Rama | `feat/lyft-profile` (desde `origin/main` @ `e2a30fa`, 2026-11-04; worktree `research-summit-lyft`). Ya existen en GitHub `feat/earnings-rollout-lyft` y `feat/lyft-2q26-results` (no se tocan) |
 | Analista responsable | SAB (Santiago Alvarez); la sesión la abre Dani |
 | Inicio | 2026-11-04 |
-| Avance | 13 de 45 unidades aprobadas (F0, B1, B2, F0-SM, F1, OV-1, OV-2, OV-3, OV-4, OV-5, OV-6, OV-7, OV-F) |
+| Avance | 14 de 45 unidades aprobadas (F0, B1, B2, F0-SM, F1, OV-1, OV-2, OV-3, OV-4, OV-5, OV-6, OV-7, OV-F, EV-RES-DATA) |
 
 ## 1. Inventario de datos (F0)
 
@@ -124,7 +124,7 @@ Cuadre — **vía el dataset de Results/Customers existente (que viene de los 8-
 | OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
 | OV-7 | Overview ▸ Timeline | ✅ | 2026-11-05 | SAB | | 10 hitos en orden cronológico, 8 con Read more; fuentes 10-K FY23/FY25 + Prepared Remarks 2T26 |
 | OV-F | Overview ▸ Pie de fuentes | ✅ | 2026-11-05 | SAB | | pie al formato del playbook; desplegables renombrados |
-| EV-RES-DATA | Dataset de Results (números) | ⬜ | | | | |
+| EV-RES-DATA | Dataset de Results (números) | ✅ | 2026-11-05 | SAB | | BBG pre-print (estMatrix, 30 snapshots), 2T26 real del 10-Q, Summit congelado (4 vintages), guía 3T26; FCF sin consenso |
 | EV-RES | Evolution ▸ Results | ⬜ | | | | |
 | TL-GEN | Top Line ▸ General | ⬜ | | | | |
 | TL-SEG | Top Line ▸ Segments | ⬜ | | | | |
@@ -296,7 +296,7 @@ Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en
 | 42 | Watch List (shared engine) + theme record | Evolution ▸ Earnings ▸ Notes (EV-NOTES) | se adapta al formato | ⬜ |
 | 43 | Post-Results blocks | Evolution ▸ Earnings ▸ Post-Results (EV-POST) | hoy solo hasta 1T26 | ⬜ |
 | 44 | Popover help | Evolution ▸ Earnings | se conserva | ⬜ |
-| 45 | Results dataset + chart | Evolution ▸ Results (EV-RES-DATA / EV-RES) | se recarga con BBG y 2T26 real | ⬜ |
+| 45 | Results dataset + chart | Evolution ▸ Results (EV-RES-DATA / EV-RES) | se recarga con BBG y 2T26 real | ◐ dataset ✅, pestaña pendiente |
 | 46 | Setup dataset | Evolution ▸ Earnings ▸ Setup (EV-SET) | se adapta al formato | ⬜ |
 | 47 | Estimates evolution | Evolution ▸ Estimates (EV-EST) | necesita 2 o más vintages del xlsm | ⬜ |
 | 48 | Model vs Reality (AVE chart and stats) | Evolution ▸ Results (debajo) | como UBER | ⬜ |
@@ -412,3 +412,12 @@ Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en
 - Fuera por falta de fuente (siguen en `TIMELINE` viejo → Misc ▸ M&A and History): Prop 22 (fecha y 58.6%), comprador/precio de Level 5, Investor Day 2024 y sus objetivos 2027, "primera ride-hailing en salir a bolsa", AV partners 2025 (May Mobility, Mobileye, Tensor), recompra de $500M.
 - OV-F: `LY_OV_SOURCES` reescrito al formato del playbook; sin menciones al snapshot Summit de mayo ni a "web-sourced"; desplegables "How Lyft makes money" y "Timeline — how it became today's Lyft".
 - **Overview OV-1…OV-F completo.** Pendiente de Overview para F-FINAL: mover datos a `lyft-ov-data.js`, retirar `stdPeerScatter`/`LY_SC` viejos y el `<style>` inline de `stdOverviewBody` a `css/overview.css`.
+
+### 2026-11-05 · EV-RES-DATA Dataset de Results · Aprobado (SAB)
+- `js/results-data/lyft.js` reconstruido. Actuals 1T24–1T26 como estaban (8-K); 2T26 del 10-Q acc. 0001628280-26-054499: rev 1,843.5 · GB 5,504.2 · EBITDA aj. 177.2 · NI 50.3 · EPS dil. 0.13 · FCF 319.6 · rides 262.4 · riders 30.5 · reservas de seguro 2,307.7. Periodos nuevos: 3T26 y 4T26 (estimados). Guía 3T26 (remarks 2T26): GB 5,500–5,670, EBITDA 183–203.
+- Consenso: `scripts/consensus/map_lyft.json` → `emit_matrix.py` → `apply_matrix.py` (bloque `estMatrix`, 30 snapshots, 2019-05-12 a 2026-11-04; 0 reimpresos, 0 series congeladas). `cons` plano = pre-print BBG; se retiró todo consenso de agregadores (Zacks, LSEG, FactSet, StreetAccount, StockStory). `verify_preprint.py`: blanked 0. FCF excluido (`drop`): la serie HEADLINE_FCF de Bloomberg no usa la definición de Lyft (CFO menos PP&E y flota de scooters); 1T25 Street 132.1 vs reportado 280.7.
+- Summit (xlsm, Projection History): 3T26-4T26 y anual 2026-2029 del vintage 2026-08-07. Cuadre trimestres→año 2026 exacto con Summit (GB 21,888.8; rev 7,268.7; EBITDA 718.8 fila core; FCF 1,265.7); con BBG dentro de 0.05–0.15% (encuestas distintas, no se fuerza).
+- Cuadre de actuals: FY25 suma de trimestres vs 10-K — rev 6,316.3 ✔; GB 18,507.1 vs 18,507.0; EBITDA 528.9 vs 528.8; FCF 1,115.5 vs 1,115.6; rides 945.5 ✔. FY24 rev 5,786.0 ✔, GB 16,099.4 ✔.
+- Notas de métricas corregidas a BBG (sorpresas nuevas; ej. EBITDA superó a BBG en 9 de 10 trimestres; rides −5.0% en 4T25 y −4.0% en 1T26) y a Summit 08-07 (GB 2027 $24.6B; EBITDA 2027 $959M; FCF 2027 $1,277M). Retirado por no tener fuente: "Gett UK (may-2026)".
+- **Duda nueva para el autor del modelo:** RIDES 2T26 en `Actuals History` = 262.0; el 10-Q trae 262.4 (los remarks redondean a 262). Se suma a las dudas de §1b. Además `Actuals History` REV FY25 de `Projection History` = 6,484.3 vs 6,316.3 reportado (duda 1, sin cambio).
+- Pendiente de este archivo: bloque `evolution` (EV-EST, vintages Dec-15/Feb-11/May-13 → agregar Aug-7 y May-08 vs May-13), `LYFT_SETUP` (EV-SET), y que el 3T26 se carga tras el print de hoy.

@@ -1150,7 +1150,7 @@ var LY_TRACK=[
   { id:'risher', n:'David Risher', role:'Chief Executive Officer', since:'2023', rate:'green',
     uber:'Cut ~26% of staff on arrival, simplified the business and delivered Lyft’s <b>first-ever GAAP profit</b> (Q2 2024, then FY2024), record rides/riders/FCF, and the first buyback. Introduced Price Lock, Women+ Connect and the AV partner strategy.',
     prior:'<b>Amazon (1997–2002)</b>: ~37th employee, SVP US Retail — scaled retail to <b>&gt;$4B</b>. Microsoft GM (launched Access). Founder/CEO of the nonprofit <b>Worldreader</b> (2009–2023).',
-    detail:'<p><b>At Lyft (CEO since Apr 2023; board since 2021).</b> Led a decisive turnaround — cut ~26% of staff within days, refocused on riders/drivers, and delivered Lyft’s <b>first-ever quarter and full year of GAAP profitability</b> (Q2 2024 / FY2024), record Gross Bookings and cash flow, and the <b>inaugural $500M buyback</b> (Feb 2025). Drove customer-incentive efficiency and set 2026 as "the year of the AV."</p>'+
+    detail:'<p><b>At Lyft (CEO since Q2 2023; board since 2021).</b> Led a decisive turnaround — cut ~26% of staff within days, refocused on riders/drivers, and delivered Lyft’s <b>first-ever quarter and full year of GAAP profitability</b> (Q2 2024 / FY2024), record Gross Bookings and cash flow, and the <b>inaugural $500M buyback</b> (Feb 2025). Drove customer-incentive efficiency and set 2026 as "the year of the AV."</p>'+
       '<p><b>Before Lyft.</b> <b>Amazon (1997–2002)</b> — ~37th employee, SVP US Retail, scaled the retail business past <b>$4B</b>. GM at <b>Microsoft</b> (launched Access, its first database product). Founder & CEO of <b>Worldreader</b> (2009–2023), a digital-books nonprofit — a social-impact role, not a commercial P&L.</p>'+
       '<p><b>Net read — value creator (green).</b> Turned a money-losing, founder-run company into a profitable, better-governed one. Caveat, not disqualifying: Lyft still has <b>no answer to Uber’s scale and diversification</b>, and the AV/robotaxi threat is unproven for the distant #2.</p>' },
   { id:'brewer', n:'Erin Brewer', role:'Chief Financial Officer', since:'2023', rate:'green',
@@ -1675,9 +1675,9 @@ var LY_FACTS=[
   ['HQ','San Francisco, California, USA'],
   ['Incorporated','Delaware, USA'],
   ['SEC filer','Domestic (10-K/10-Q/8-K)'],
-  ['Founded','2012 (Zimride 2007)'],
+  ['Founded','2012 (incorporated 2007 as Bounder Web)'],
   ['IPO','Mar 2019 · NASDAQ'],
-  ['CEO','David Risher · board since 2021 · CEO since Apr 2023'],
+  ['CEO','David Risher · board since 2021 · CEO since Q2 2023'],
   ['Employees','3,913 · Dec 2025'],
   ['Dividend','Non-payer · never paid one'],
   ['Market cap','loading live quote…'],
@@ -1688,13 +1688,13 @@ function stdKeyFacts(){
     return '<div class="stdkf-cell"><div class="stdkf-k">'+esc(p[0])+'</div><div class="stdkf-v">'+v+'</div></div>'; }).join('')+'</div>';
 }
 // Block 2 — description (high-level "what it is" only; non-redundant with the blocks below).
-var LY_LEDE='Lyft runs the second-largest ridesharing network in North America, an app that matches riders with independent drivers across the United States and Canada. It owns no cars — it operates the marketplace (pricing, payments, insurance, safety) and keeps a share of each fare. Alongside core rideshare it runs city bikeshare and scooter systems and a small but fast-growing advertising business (Lyft Media). After years of losses it reached full-year GAAP profitability in 2024 and now generates strong free cash flow.';
+var LY_LEDE='Lyft operates a global mobility platform built around a ridesharing marketplace that connects independent drivers with riders, alongside taxis, private hire, executive chauffeur services, car sharing, bikes and scooters. It earns service fees and commissions from drivers, with smaller streams from vehicle rentals, bikeshare, advertising, data licensing and Lyft Business. The 2025 acquisitions of Freenow and TBR extended a North American business into Europe and worldwide chauffeur services.';
 // Block 3 — the 4-quadrant, rendered as a 2×2 TABLE. Each cell ≤ ~30 words.
 var LY_BIZ=[
-  ['What it sells','On-demand rides via app, plus city bikeshare & scooters, in-app and vehicle-top advertising (Lyft Media), and a Lyft Business account offering.'],
-  ['Who buys it','Consumers needing point-to-point transport; enterprises and healthcare orgs (Lyft Business); advertisers reaching riders; cities that contract Lyft to run public bikeshare.'],
-  ['How it earns','It keeps a share of each fare’s Gross Bookings (a take of ~34% incl. an accounting effect). Small, fast-growing add-ons: bike/scooter rentals and Lyft Media ads.'],
-  ['The edge','Scale as the #2 North-American rideshare network (a liquidity/density flywheel), a strong consumer brand, and multi-year municipal bikeshare contracts with local network effects.'],
+  ['What it sells','On-demand rides through the Lyft app, from standard rideshare to premium, taxi and chauffeur options, plus shared bikes and scooters and vehicle rentals for drivers (Express Drive).'],
+  ['Who buys it','Riders paying per trip; drivers paying service fees and commissions to use the marketplace; organizations buying rides through Lyft Business; cities and advertisers in smaller lines.'],
+  ['How it earns','FY2025 revenue $6.32B: ~93% from the ridesharing marketplace and other contract revenue, ~7% from rentals (Flexdrive, bikes and scooters). Advertising is not a significant line.'],
+  ['The edge','A scaled two-sided network in the U.S. and Canada, where Uber is the main rival, now extended into European taxi and global chauffeur markets through Freenow and TBR.'],
 ];
 function stdFourQuad(){
   return '<div class="q2">'+LY_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
@@ -1702,7 +1702,6 @@ function stdFourQuad(){
 // Block 4 — How it makes money. Lyft is a SINGLE reportable segment, so there is no segment split
 // to toggle. Show revenue-by-line (2 slices) + a compact key-metrics row + qualitative "What is X?"
 // accordions. Geography OMITTED (US/Canada; substantially all revenue US-based; no country split).
-var LY_REV=[['Rideshare & platform',93,'$5.90B',BRAND],['Rentals (bikes/scooters/car)',7,'$0.42B',BRAND2]];
 var LY_SEG_DEF=[
   { seg:'Rideshare',
     desc:'The core marketplace: it matches a rider requesting a trip with a nearby independent driver in real time; Lyft sets pricing, handles payments, insurance and safety, and keeps a portion of each fare.',
@@ -1714,16 +1713,51 @@ var LY_SEG_DEF=[
     desc:'City-partnered shared micromobility: Lyft operates and maintains public bikeshare fleets under multi-year municipal contracts, plus e-scooters in select markets.',
     econ:[['Reported within','“Rentals revenue” ~$420.9M'],['Standalone figure','blended with car rentals; none disclosed']] },
 ];
-function stdMoneyMap(){
-  var STATS=[['Gross Bookings','$18.51B'],['Rides','945.5M'],['Active Riders','29.2M'],['Adj. EBITDA','$528.9M'],['Free cash flow','$1.09B'],['Revenue / GB','~34%']];
-  var h='<div class="ov-diagram-cap" style="margin:0 0 8px">Lyft has a <b>single reportable segment</b>, so there is no segment split to toggle — here is FY2025 revenue by line, then the key metrics beneath.</div>';
-  h+=mbars(LY_REV);
-  h+='<div class="mm-stats">'+STATS.map(function(s){ return '<div class="mm-stat"><div class="mm-stat-k">'+esc(s[0])+'</div><div class="mm-stat-v">'+esc(s[1])+'</div></div>'; }).join('')+'</div>';
-  h+='<div class="mm-defs acc-list" style="margin-top:6px">'+LY_SEG_DEF.map(function(s){
-    var econ='<div class="acc" style="margin-top:8px"><button type="button" class="acc-h">Economics (FY2025) <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+'</div></div>';
-    return '<div class="acc"><button type="button" class="acc-h">What is “'+esc(s.seg)+'”?<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+s.desc+'</div>'+econ+'</div></div>';
+// OV-4 (playbook section 8, UBER model). Lyft has ONE operating segment (10-K FY25 Note 2), so the first view is
+// revenue lines (the two accounting categories the 10-K discloses), the second is geography. FY2025 vs FY2024 from the
+// 10-K revenue note (disaggregation + geography) and MD&A key metrics. LY_SEG_DEF above keeps the older Media / bikes
+// definitions until TL-SEG relocates them (never delete).
+var LY_GMM_SEG=[
+  ['Marketplace & other contracts', 93.3, '$5.90B', '93%', null],
+  ['Rentals', 6.7, '$0.42B', '7%', null],
+];
+var LY_GMM_GEO=[
+  ['United States', 95.9, '$6.06B', '96%', null],
+  ['International', 4.1, '$0.26B', '4%', null],
+];
+var LY_MM_CAP_TOP='FY2025 revenue <b>$6.32B (+9%)</b> on <b>$18.51B of gross bookings (+15%)</b> — the same total two ways: by <b>revenue line</b> or by <b>region</b>. Lyft reports a single operating segment, so the lines are accounting categories. Both reconcile to the reported figure.';
+var LY_MM_CAP_END='Lyft reports <b>one operating segment</b>. FY2025 loss from operations was <b>$(188)M</b> and net income <b>$2.84B</b>: a <b>$2.90B tax benefit</b> from releasing the valuation allowance outweighed a pre-tax loss of $(53)M. <span class="ave-subh-note">Source: Lyft FY2025 Form 10-K — revenue note (disaggregation and geography), consolidated statements of operations, MD&amp;A key metrics. Region follows where the transaction occurred or where the contracting entity sits.</span>';
+var LY_REV_DEFS=[
+  { seg:'Marketplace & other contracts (the core)',
+    desc:'The ridesharing marketplace that connects riders with independent drivers. Lyft collects service fees and commissions from drivers for using it, and runs pricing, payments and safety. Smaller streams sit in the same line: licensing and data access, bike sales and station software, advertising and Lyft Business.',
+    econ:[['FY2025 revenue','$5.90B (+10%)'],['Share of revenue','93%'],['Gross bookings (company-wide)','$18.51B (+15%)'],['Context','Advertising is not a significant part of revenue (10-K)']] },
+  { seg:'Rentals (vehicles, bikes and scooters)',
+    desc:'Revenue from renting an identified asset: vehicles to drivers through Express Drive (Flexdrive) and the network of shared bikes and scooters. It is recognised as lease revenue rather than as marketplace fees.',
+    econ:[['FY2025 revenue','$0.42B (flat)'],['Share of revenue','7%'],['Context','The 10-K reports rentals as one line']] },
+];
+function gmmRank(arr){ var o=arr.map(function(r,i){ return [r[1],i]; }).sort(function(a,b){ return b[0]-a[0]; }), rk=[];
+  o.forEach(function(x,j){ rk[x[1]]=Math.min(j+1,6); }); return rk; }
+function gmmBars(arr){
+  var rk=gmmRank(arr);
+  return '<div class="ov-mbars gmm-neutral">'+arr.map(function(r,i){
+    var out=r[1]<10;
+    return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+'</div>'+
+      '<div class="ov-mbar-track'+(out?' out':'')+'"><div class="ov-mbar-fill gmm-g'+rk[i]+'" style="width:'+Math.max(r[1],1.2)+'%">'+(out?'':esc(r[2]))+'</div>'+(out?'<span class="ov-mbar-outv">'+esc(r[2])+'</span>':'')+'</div>'+
+      '<div class="ov-mbar-v">'+esc(r[3])+'</div></div>';
   }).join('')+'</div>';
-  h+='<div class="ov-diagram-cap" style="margin-top:10px">FY2025, single reportable segment; reported total net revenue <b>$6,316.3M</b>. The headline ~<b>34% revenue/gross-bookings ratio is inflated by an insurance accounting change</b>, not a clean take rate. <span class="ave-subh-note">Geography omitted — operates in the US and Canada; substantially all revenue is US-based, and no country split is reported, so no geography view. Source: Lyft FY2025 10-K & Q4 2025 results; Summit model corroborates.</span></div>';
+}
+function stdMoneyMap(){
+  var h='<div class="ov-diagram-cap gmm-cap-top">'+LY_MM_CAP_TOP+'</div>';
+  h+='<div class="mg-tog-row"><span class="mg-tog">View: <span class="mg-seg">'+
+    '<button type="button" class="mg-pill active" data-gmm="seg">Revenue lines</button>'+
+    '<button type="button" class="mg-pill" data-gmm="geo">Region</button></span></span></div>';
+  h+='<div class="gmm-view" data-gmm="seg">'+gmmBars(LY_GMM_SEG)+'</div>';
+  h+='<div class="gmm-view" data-gmm="geo" hidden>'+gmmBars(LY_GMM_GEO)+'</div>';
+  h+='<div class="mm-defs acc-list">'+LY_REV_DEFS.map(function(s){
+    var econ='<div class="acc"><button type="button" class="acc-h">The numbers <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+'</div></div>';
+    return '<div class="acc"><button type="button" class="acc-h">'+esc(s.seg)+'<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+s.desc+'</div>'+econ+'</div></div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-diagram-cap gmm-cap-end">'+LY_MM_CAP_END+'</div>';
   return h;
 }
 // Block 5 — Products (TWO TIERS): Tier-1 family cards → pop-up → Tier-2 the specific products.
@@ -4302,6 +4336,12 @@ function init(c){
   if (!root) return;
   renderLive(root); // Deep Dive ▸ Deep Overview keeps its #lyLive banner; the standardized Overview has no price strip.
   wireDD(root);
+  // OV-4: Revenue lines / Region view toggle
+  root.querySelectorAll('.mg-pill[data-gmm]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-gmm');
+    root.querySelectorAll('.mg-pill[data-gmm]').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    root.querySelectorAll('.gmm-view').forEach(function(p){ p.hidden=(p.getAttribute('data-gmm')!==v); });
+  }; });
   wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt'); wireSubtabs(root,'misc');
   // Segments ▸ inner Rideshare / Media & Growth toggle (the "sub-tabs de los segmentos").
   root.querySelectorAll('.seg-pill').forEach(function(btn){ btn.onclick=function(){

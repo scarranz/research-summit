@@ -12,14 +12,14 @@
 | Rama | `feat/lyft-profile` (desde `origin/main` @ `e2a30fa`, 2026-11-04; worktree `research-summit-lyft`). Ya existen en GitHub `feat/earnings-rollout-lyft` y `feat/lyft-2q26-results` (no se tocan) |
 | Analista responsable | SAB (Santiago Alvarez); la sesión la abre Dani |
 | Inicio | 2026-11-04 |
-| Avance | 0 de 45 unidades aprobadas (F0 en propuesta) |
+| Avance | 9 de 45 unidades aprobadas (F0, B1, B2, F0-SM, F1, OV-1, OV-2, OV-3, OV-4) |
 
 ## 1. Inventario de datos (F0)
 
 | Fuente | ¿Existe? | Detalle (fechas, cobertura) | Qué habilita | Qué queda fuera sin ella |
 |---|---|---|---|---|
 | Fila en `companies` | ✔ | LYFT abre hoy; módulo registrado en `js/overviews/index.js` | el perfil abre | — |
-| Filing anual (10-K / 20-F) | ✔ verificado en EDGAR 2026-11-04 | 10-K FY2025, acc. **0001628280-26-006960**, presentado 2026-02-11 (CIK 1759509), domestic filer, Nasdaq Global Select. Último 10-Q listado: acc. 0001628280-26-054499 (2026-08-07; periodo 30-jun-2026 probable, no abierto). ⚠ las Notas del 10-K (segmentos/geografía) no se alcanzaron a leer: pendiente para OV-4/TL-OTH | Overview, Top Line, textos verbatim | — |
+| Filing anual (10-K / 20-F) | ✔ verificado en EDGAR 2026-11-04 | 10-K FY2025, acc. **0001628280-26-006960**, presentado 2026-02-11 (CIK 1759509), domestic filer, Nasdaq Global Select. Último 10-Q listado: acc. 0001628280-26-054499 (2026-08-07; periodo 30-jun-2026 probable, no abierto). Notas leídas 2026-11-05 desde los JSON de `G:\My Drive\Summit\Docs\Extras\Team\DAA\Ad hoc info search\LYFT` (10-K FY23/24/25, 10-Q 2T26 acc. 0001628280-26-054499, Prepared Remarks 2T26): **un solo segmento operativo** (Rideshare/Rentals son categorías de ingreso); ingresos FY25 EE.UU. 6,060.2 / Internacional 256.0 de 6,316.3. Falta: transcripción del Q&A del 2T26 y el print del 3T26 (hoy 2026-11-05 tras cierre) | Overview, Top Line, textos verbatim | — |
 | Año fiscal / moneda | ✔ | cierre 31 dic · USD (el modelo trae FREENOW en EUR, por revisar) | — | — |
 | Summit DCF | ✔ (archivo local; **el MCP no se usa**) | `DCF LYFT.xlsm` en `Research\DCF\Transportation - SAB\LYFT\`, modificado 2026-08-07 (un día después del 2T26). Hojas Projection History / Actuals History (269×182), Segments, SEG_BBG, SOTP, Output. ⚠ la hoja Output trae caché viejo (LFQE "Q4 - 2023", estado "Offline"): no se lee de ahí. # de submits y último periodo real: se leen de Projection History en F0-SM | F0-SM; Summit congelado en Results/Setup, EV-EST, VA-TM, VA-SUB, VA-SENS | si el archivo no tiene ≥2 vintages, EV-EST y VA-SUB ⏭️ |
 | Consenso BBG | ✔ | `LYFT US EQUITY`: **30 snapshots, 2019-05-12 → 2026-09-08** (`inspect_matrix.py`). ⚠ el dataset actual (`results-data/lyft.js`) dice que LYFT **no** tiene filas en BBG y su consenso es "compilado a mano por print": está **desactualizado**. Último snapshot 09-08; nada posterior | `estMatrix.cons`, Setup, Bottom Line; reemplaza el consenso a mano | — |
@@ -43,7 +43,7 @@ Modelo: `DCF LYFT.xlsm` · USD · millones · **4 submits distintos**: 2025-12-1
 **2026-08-07 (2T26)** (el 08-07 está guardado dos veces, ID 4 y 5, con 2 segundos de diferencia: es el mismo estado) · 49 filas con código
 (43 códigos únicos; OP_INCOME, DNA, FCF, CFO, CAPEX y CFO_INSURANCE_RESERVES aparecen dos veces con valores distintos) ·
 **43 códigos únicos: 12 core · 3 segment · 11 línea de costo/SBC · 9 kpi · 4 guidance · 4 consensus · 0 ignore** ·
-Reales: `Actuals History` trae **hasta 2T26** (Rev 1,843.5 · Adj. EBITDA 177.2 · GB 5,504.2) — **sin verificar contra el 8-K del 2T26**
+Reales: `Actuals History` trae **hasta 2T26** (Rev 1,843.5 · Adj. EBITDA 177.2 · GB 5,504.2) — **verificado 2026-11-05**: Rev 1,843.5 contra 10-Q (1,843,544 miles); GB 5.5B (+23%), Adj. EBITDA 177 (+37%), 262M rides y 30.5M riders contra Prepared Remarks. La guía 3T26 (GB 5.50–5.67B, EBITDA 183–203) **no está en el modelo** (columna 3T26 de guía en 0); el modelo trae la guía de 2T26 (GB 5,300–5,430 · EBITDA 160–180)
 (el comunicado no está en `docs/calls`). Valuación del modelo: **solo EV / EBITDA** en los 4 submits, `target_year` 2027 Forward:
 
 | Submit | Después de | Múltiplo | Price target | Fair value | Precio ese día | FV ÷ precio − 1 |
@@ -116,10 +116,10 @@ Cuadre — **vía el dataset de Results/Customers existente (que viene de los 8-
 | B2 | Mapa de reubicación | ✅ | 2026-11-04 | SAB | | borrador; Strategy sin hogar en el esqueleto: propuesta MISC-strategy |
 | F0-SM | Mapa de métricas Summit | ✅ | 2026-11-04 | SAB | | desde xlsm local; 49 filas / 43 códigos; 6 dudas + valuación |
 | F1 | Esqueleto + vista previa | ✅ | 2026-11-04 | SAB | | 6 secciones; paneles enteros en su destino B2; absorbsPillars quitado (Pillars vuelve con Ratings); Ownership, General/Other de Top Line, Historic Multiple, Target Multiple y Submit History llegan con su unidad |
-| OV-1 | Overview ▸ Key Facts | ✅ | 2026-11-04 | SAB | | 10 celdas; verificado 10-K: HQ, Delaware, 3,913 empleados, dividendo; Founded/IPO/CEO con fecha sin verificar en fuente primaria; market cap solo en vivo |
-| OV-2 | Overview ▸ Descripción | ⬜ | | | | |
-| OV-3 | Overview ▸ Cuadrante 2×2 | ⬜ | | | | |
-| OV-4 | Overview ▸ How it makes money | ⬜ | | | | |
+| OV-1 | Overview ▸ Key Facts | ✅ | 2026-11-04 | SAB | | 10 celdas; verificado 10-K: HQ, Delaware, 3,913 empleados, dividendo; Founded/IPO/CEO verificados 2026-11-05 en 10-K (ver §4); market cap solo en vivo |
+| OV-2 | Overview ▸ Descripción | ✅ | 2026-11-05 | SAB | | 68 palabras, 3 oraciones, sin cifras; fuente 10-K FY25 Item 1 (p.5) |
+| OV-3 | Overview ▸ Cuadrante 2×2 | ✅ | 2026-11-05 | SAB | | 4 celdas 27/26/25/28 palabras; How it earns con FY25 desde 10-K (6,316.3; ASC 606 5,895.5; ASC 842 420.8) |
+| OV-4 | Overview ▸ How it makes money | ✅ | 2026-11-05 | SAB | | Un solo segmento operativo: vista Revenue lines + Region; todo del 10-K FY25 (rev note p.83, estados p.69, MD&A p.51) |
 | OV-5 | Overview ▸ Products & platforms | ⬜ | | | | |
 | OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
 | OV-7 | Overview ▸ Timeline | ⬜ | | | | |
@@ -168,7 +168,8 @@ Cuadre — **vía el dataset de Results/Customers existente (que viene de los 8-
 ## 4. Excepciones aceptadas
 
 <!-- Cada FAIL de la autoauditoría que el analista decidió dejar. -->
-- 2026-11-04 · OV-1 · Founded / IPO / fecha de CEO sin fuente primaria — se acepta por ahora; se verifica con prospecto 2019 y proxy 2026 — SAB
+- 2026-11-04 · OV-1 · Founded / IPO / fecha de CEO sin fuente primaria — se acepta por ahora — SAB
+  - Resuelto 2026-11-05: Founded 2012 (inc. 2007 como Bounder Web, Zimride 2008) = 10-K FY25 p.10; IPO $72.00, primer día 29-mar-2019 = 10-K FY23 p.53; CEO: "segundo trimestre de 2023" = 10-K FY23 p.34 (el mes exacto no está en fuente; la celda dice Q2 2023)
 - AAAA-MM-DD · <ID> · <qué regla> — <por qué se acepta> — <quién>
 
 ## 5. Mapa de reubicación (solo modo B)
@@ -253,9 +254,9 @@ Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en
 |---|---|---|---|---|
 | 1 | Key Facts | Overview ▸ Key Facts (OV-1) | se rehace con celdas del 10-K; market cap en vivo | ⬜ |
 | 2 | Lede | Overview ▸ Descripción (OV-2) | se reescribe sin cifras | ⬜ |
-| 3 | 2×2 quadrant | Overview ▸ Cuadrante (OV-3) | se adapta al formato | ⬜ |
-| 4 | Money map bars (revenue split) | Overview ▸ How it makes money (OV-4) | se verifica contra el 10-K | ⬜ |
-| 5 | Segment definitions | Overview ▸ How it makes money (OV-4) | acordeones de definición | ⬜ |
+| 3 | 2×2 quadrant | Overview ▸ Cuadrante (OV-3) | se adapta al formato | ✅ |
+| 4 | Money map bars (revenue split) | Overview ▸ How it makes money (OV-4) | se verifica contra el 10-K | ✅ |
+| 5 | Segment definitions | Overview ▸ How it makes money (OV-4) | acordeones de definición | ✅ |
 | 6 | Products & platforms + modal | Overview ▸ Products (OV-5) | sin emojis | ⬜ |
 | 7 | Peer scatter (multiple vs growth) | Overview ▸ Competitors (OV-6) | múltiplos en vivo, forward de BBG | ⬜ |
 | 8 | Timeline + modal | Overview ▸ Timeline (OV-7) | movido a lyft-ov-timeline.js | ⬜ |
@@ -380,3 +381,18 @@ Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en
 - Fuentes: 10-K FY2025 (acc. 0001628280-26-006960): HQ, Delaware, 3,913 empleados Dic 2025, dividendo, Nasdaq; Founded/IPO/CEO desde el perfil anterior (sin fuente primaria).
 - Autoauditoría: PASS 10 celdas, sin celdas vacías, sin semilla de market cap; FAIL parcial (aceptado): Founded, IPO y fecha del CEO sin fuente primaria — verificar con prospecto/proxy.
 - Cambios pedidos / decisiones: ninguno. Datos siguen en `lyft.js` (separación en lyft-ov*.js en F-FINAL).
+
+### 2026-11-05 · OV-2 Descripción · Aprobado (SAB)
+- Lede nuevo de 68 palabras sin cifras, desde 10-K FY25 Item 1 (p.5). Reemplaza el anterior (con "segundo mayor" y cifras de rentabilidad), que se retira del Overview.
+- Autoauditoría: PASS sin números, 3 oraciones, neutral; el texto anterior queda en el historial de git (commit e2a30fa..).
+
+### 2026-11-05 · OV-3 Cuadrante 2×2 · Aprobado (SAB)
+- Fuente: 10-K FY25 Item 1 (p.5), Nota de ingresos (p.78-79, 83). The edge: lectura del analista, respaldada por 10-K p.7/p.14 (Uber como competidor principal).
+- Hallazgo: el 10-K dice que la publicidad no es un componente significativo; el texto anterior de Lyft Media (~$100M, >100% YoY) y el "take ~34%" no tienen fuente en el 10-K. Se reubican/verifican en OV-4 y Top Line (no se borran).
+
+### 2026-11-05 · OV-4 How Lyft makes money · Aprobado (SAB)
+- Fuente: 10-K FY25 — nota de ingresos (disgregación y geografía, p.83), estado de resultados (p.69), MD&A métricas clave (p.51), Nota 2 (un segmento operativo, p.74).
+- Cifras: ingresos 6,316.3 (+9%); GB 18,507.0 (+15%); ASC 606 5,895.5 (93%, +10%); ASC 842 420.8 (7%, plano); EE.UU. 6,060.2 (96%); Internacional 256.0 (4%; FY24 140.1); pérdida operativa (188.4); utilidad neta 2,844.0 (beneficio fiscal 2,897.3 por liberar la valuation allowance; antes de impuestos (53.2)).
+- Reubicado/retirado de la vista (nada se borra): el strip de KPI (GB, Rides, Active Riders, EBITDA, FCF) ya vive en Bottom Line/Results; "take ~34%" y Lyft Media (~$100M, >100% YoY) quedan en `LY_SEG_DEF` hasta TL-SEG, donde se verifican o se marcan sin fuente. El pie de "geografía omitida, solo EE.UU. y Canadá" era obsoleto (Freenow, 10-K muestra Internacional).
+- Autoauditoría: PASS cifras con fuente; barras reconcilian al total (5,895.5+420.8=6,316.3; 6,060.2+256.0=6,316.3).
+- **Hallazgo para el autor del modelo (§6):** el modelo trae EARNINGS FY25 134.6 y OP_INCOME 23.3, pero el 10-K reporta utilidad neta 2,844.0 y pérdida operativa (188.4). Se suma a las dudas 2 y 4 de §1b. No se usan esos campos hasta aclarar. Adj. EBITDA FY25: 10-K 528.8 vs modelo 528.9 (redondeo).

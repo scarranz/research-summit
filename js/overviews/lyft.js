@@ -14,6 +14,7 @@ import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments,
 import { lyftResults } from '../results-data/lyft.js';
 import { mountWatchList } from '../watchlist.js';
 import { lyPeerScatter, lyWireScatters } from './lyft-peers.js';
+import { lyftCeHtml, lyftCeWire, lyftCeBuild, lyftCePop } from './lyft-ce.js';   // Evolution ▸ Earnings (EV-SET / EV-POST / EV-NOTES), ported from uber-ce.js
 
 // Interactive "Scenario → price target" calculator (Valuation tab). Fundamentals from
 // the Summit DCF (FY2025 actuals; FY2026E estimate). Net cash & price are editable
@@ -3697,18 +3698,7 @@ function deepDiveHtml(c){
       ['supplychain','Supply Chain',lySuppliersBody(c)] ])+'</div>';
   // EVOLUTION - Earnings (Setup · Watch List · Post-Results) · Results (+ Model/Guidance vs reality) · Estimates
   h += '<div class="dd-pane" data-dd="evolution" hidden>'+st([
-      ['earnings','Earnings',
-        ceIRButton()+
-        '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (Setup · Watch List, with the theme record folded in below it) → <b>② Post-Results</b> (the print scored against what was frozen, plus what management said). <b>Lyft reports Q2 2026 on Thursday 6 August, after close</b> — so the live quarter here is a print that has not happened yet, and Post-Results stays empty until it does.</div>'+
-        '<div class="ce-phtabs">'+
-          '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
-          '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>'+
-          '<button type="button" class="ce-phtab" data-cep="results">Post-Results</button>'+
-        '</div>'+
-        ceQPills()+
-        '<div class="ce-phpane" data-cep="setup">'+ceSetupBody(c)+'</div>'+
-        '<div class="ce-phpane" data-cep="watch" hidden>'+ceWatchBody(c)+'</div>'+
-        '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>'],
+      ['earnings','Earnings',lyftCeHtml(c)],
       ['results','Results',(resultsHtml('LYFT')||'')+modelBody(c)],
       ['estevo','Estimates',resultsEvoHtml('LYFT')||''] ])+'</div>';
   // VALUATION - Peers · Sensitivity Analysis (the earlier calculator stays until VA-SENS rebuilds it)
@@ -4275,10 +4265,7 @@ function buildSub(root, group, key){
     // Earnings > Setup carries its own Results-engine instance (LYFT_SETUP). Build it when the
     // sub-tab becomes visible AND Setup is the live phase (a build against a hidden container
     // yields a zero-size canvas). Same guard as amzn.js/googl.js.
-    if(key==='earnings'){
-      var ph=root.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phtab.active');
-      if(!ph || ph.getAttribute('data-cep')==='setup') requestAnimationFrame(gBuildCeAnnual);
-    }
+    if(key==='earnings') lyftCeBuild(root);
     else if(key==='results'){                        // the shared engine (js/results.js) + Model/Guidance vs reality
       var w=root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap');
       if(w) initResults(w, 'LYFT');
@@ -4363,6 +4350,7 @@ function wireModal(root){
     if (kind==='lnote'&&id==='cogs'){ return {t:'The Q4 → Q1 cost-of-revenue drop',h:COGS_NOTE}; }
     if (kind==='lnote'&&id==='gm'){ return {t:'Gross margin — structural or one-time?',h:'<div class="ov-wind-h">The structural case</div>'+bullets(GM_STRUCT)+'<div class="ov-wind-h" style="margin-top:14px">Reasons for caution</div>'+bullets(GM_CAUTION)}; }
     if (kind==='mna'){ var m=MNA.filter(function(x){return x.n===id;})[0]; return m?{t:m.n+' <span class="ov-modal-sub">'+esc(m.y)+' · '+esc(m.deal)+'</span>',h:m.detail}:null; }
+    if (kind==='ce'){ return lyftCePop(id); }
     if (kind==='prod'){ var pf=LY_PRODUCTS[+id]; if(!pf) return null;
       return {t:pf.ic+' '+esc(pf.fam),h:'<div class="famd ov-pop-sub" style="margin-bottom:10px;color:var(--mu)">'+esc(pf.d)+'</div>'+pf.items.map(function(it){ return '<div style="margin:0 0 10px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">'+esc(it[0])+'</div><div class="famd">'+esc(it[1])+'</div></div>'; }).join('')}; }
     if (kind==='fam'){ var gp=id.split('-'), gg=LY_PROD_GROUPS[+gp[0]]; var f=gg&&gg.families[+gp[1]]; if(!f) return null;
@@ -4494,7 +4482,7 @@ function init(c){
 function deepDiveInit(c){
   _co=c;   // company id + ticker for the shared Watch List (Supabase)
   var _r=document.getElementById('co-detailview');
-  if(_r) wireCallEarnings(_r);   // phase tabs, quarter pills, shared Watch List mount
+  if(_r) lyftCeWire(_r);   // phase tabs, quarter pills, toggles, Notes (record + Watch List) — lyft-ce.js
   var root = document.getElementById('co-detailview'); if(!root) return;
   var d = activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
 }

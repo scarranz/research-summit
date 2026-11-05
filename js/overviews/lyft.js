@@ -437,6 +437,29 @@ var TIMELINE = [
     d:'A pivotal year: a wave of <b>AV partnerships</b> (Waymo→Nashville, May Mobility→Atlanta, Baidu→Europe, Mobileye/Benteler shuttles, Tensor "Lyft-ready" cars, NVIDIA DRIVE), the <b>FreeNow acquisition</b> (closed July 31, 2025, ~$197M / €175M) opening ~9 European countries, and a <b>$500M buyback</b> authorization. Lyft also signed/extended consumer partnerships (DoorDash, Chase Sapphire through 2027, United Airlines).' },
 ];
 
+// OV-7 (playbook section 8): the Overview timeline. Strict chronological order, short lines, sources = 10-K FY23/FY25 and the
+// 2Q26 prepared remarks. The older TIMELINE above (Prop 22 vote share, Level 5 price, Investor Day targets, ...) stays for
+// Miscellaneous ▸ M&A and History until each figure has a source.
+var LY_TIMELINE=[
+  { y:'2007', t:'Incorporated in Delaware as <b>Bounder Web</b>; renamed <b>Zimride</b> in 2008.',
+    d:'<ul class="ov-bullets"><li>The company is incorporated in 2007 as Bounder Web, Inc., a Delaware corporation.</li><li>In 2008 it changes its name to Zimride, Inc.</li><li>Zimride is the origin of the business Lyft runs today.</li></ul>' },
+  { y:'2012', t:'<b>Lyft is founded</b>; renamed Lyft, Inc. in 2013 after the Zimride assets are sold.',
+    d:'<ul class="ov-bullets"><li>The company founds Lyft in 2012.</li><li>In 2013 it changes its name to Lyft, Inc. when it sells the assets of its Zimride operations.</li></ul>' },
+  { y:'Mar 2019', t:'<b>IPO</b> on Nasdaq at $72.00 a share; first day of trading is 29 March.',
+    d:'<ul class="ov-bullets"><li>Lyft prices its initial public offering at $72.00 per share.</li><li>The shares close at $78.29 on March 29, 2019, the first day of trading.</li></ul>' },
+  { y:'2021', t:'Sells its <b>Level 5</b> self-driving division; from here autonomy comes through partners.',
+    d:'<ul class="ov-bullets"><li>Lyft sells its Level 5 self-driving vehicle division in 2021.</li><li>Since then it no longer develops its own AV technology.</li><li>It has to build and keep partnerships with AV developers to offer autonomous vehicles on its platform.</li></ul>' },
+  { y:'2022', t:'Enters bikes and station hardware by acquiring <b>PBSC Urban Solutions</b>.',
+    d:'<ul class="ov-bullets"><li>In 2022 Lyft starts earning revenue from selling bikes and bike station software and hardware.</li><li>This comes substantially through its acquisition of PBSC Urban Solutions Inc.</li></ul>' },
+  { y:'Q2 2023', t:'Co-founders step back; <b>David Risher</b> becomes CEO.',
+    d:'<ul class="ov-bullets"><li>In the second quarter of 2023 the co-founders, Logan Green and John Zimmer, move out of their management roles.</li><li>David Risher, a director since 2021, becomes Chief Executive Officer.</li><li>Kristin Sverchek succeeds Zimmer as President.</li></ul>' },
+  { y:'Jul 2025', t:'Closes the <b>Freenow</b> acquisition, taking Lyft into Europe.',
+    d:'<ul class="ov-bullets"><li>Lyft acquires Intelligent Apps GmbH (Freenow), a European multimodal app with taxi at its core; the deal closes on July 31, 2025.</li><li>It adds nine countries and more than 180 cities.</li><li>Lyft starts branding it Freenow by Lyft and plans one global Lyft app, expected to be widely available in 2027.</li></ul>' },
+  { y:'Oct 2025', t:'Acquires <b>TBR Global Chauffeuring</b>, a luxury chauffeur company active in thousands of cities.' },
+  { y:'Q4 2025', t:'Releases its tax <b>valuation allowance</b>: a $2.9B benefit makes FY2025 net income $2.84B despite a pre-tax loss.',
+    d:'<ul class="ov-bullets"><li>In the fourth quarter of 2025 Lyft releases the valuation allowance on its U.S. federal and certain state deferred tax assets.</li><li>The benefit is $2.9 billion and lifts FY2025 net income to $2.84 billion, against a loss before taxes of $53 million.</li><li>From then on the effective tax rate in the GAAP statements changes.</li></ul>' },
+  { y:'Jun 2026', t:'Takes over fleet operations for <b>Waymo in Nashville</b>, with a purpose-built depot due in October.' },
+];
 var PEERS = [
   ['Uber', 'Global super-app — rides + delivery + ads + freight; ~3–4× Lyft\'s US rides and structurally more profitable.', 'Uber holds ~70%+ of US rides; Lyft ~24–29%. Same ~30% take, so the gap is <b>scale and cross-sell</b>, not pricing. Lyft\'s counter: price/reliability parity, driver experience, and a tighter US focus. It cannot match Uber\'s Eats-funded CAC.'],
   ['Waymo (Lyft)', 'Robotaxi operator, live in several US cities.', 'Threat <i>and</i> partner — Lyft hosts third-party AV fleets (Waymo→Nashville) on its network rather than building its own. Same asset-light hybrid bet as Uber, but Lyft has less demand density to offer fleets.'],
@@ -1920,11 +1943,11 @@ function lyScChips(root){
   h+='<span class="lysc-add"><input id="lyScAddTk" placeholder="+ TICKER" maxlength="6"><button type="button" id="lyScAddBtn">Add</button></span>';
   box.innerHTML=h;
 }
-// Block 7 — Timeline (reuses the existing TIMELINE var + data-detail="hist:i", so the modal keeps working).
+// Block 7 — Timeline (LY_TIMELINE + data-detail="lyhist:i").
 function stdTimeline(){
-  return '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
+  return '<div class="ov-timeline">'+LY_TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="lyhist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
 }
-var LY_OV_SOURCES='Sources — Lyft FY2025 Form 10-K & Q4 2025 results (revenue, gross bookings, rides, active riders, Adjusted EBITDA, FCF); Summit DCF model (snapshot 2026-05-13) corroborating the actuals and supplying forward estimates; company IR for products & the AV partnerships. Market cap and peer bubbles are live via Massive; peer multiples & growth are web-sourced approximations (mid-2026). Geography split not shown (US/Canada; no reported country split). FY2025 GAAP net income is distorted by a one-time ~$2.9B deferred-tax benefit, so trailing P/E is shown n.m. Forward figures are model estimates, not company guidance.';
+var LY_OV_SOURCES='Sources — Lyft FY2025 Form 10-K (SEC EDGAR) for revenue by line and region, gross bookings, loss from operations and net income, headcount and the business description; FY2023 10-K for the IPO and the 2023 leadership change; Lyft 2Q26 prepared remarks (Aug 2026) for the Freenow, TBR and Nashville milestones; company IR for the product taxonomy. Market cap, prices and peer multiples are live (Massive), computed from each peer’s latest annual filing (Grab: results release and 20-F) and, for Lyft and Uber, the Bloomberg consensus FY2026 (Nov 2026). Forward figures are estimates, not company guidance.';
 // The standardized Overview body — 7 blocks in fixed order. Hook (Key Facts + Description + 2×2 table)
 // stays visible; every section below defaults collapsed (progressive disclosure).
 function stdOverviewBody(c){
@@ -1965,10 +1988,10 @@ function stdOverviewBody(c){
   h+=stdKeyFacts();
   h+='<p class="ov-lede">'+esc(LY_LEDE)+'</p>';
   h+=stdFourQuad();
-  h+=collapsible('How it makes money', stdMoneyMap());
+  h+=collapsible('How Lyft makes money', stdMoneyMap());
   h+=collapsible('Products & platforms', stdProducts());
   h+=collapsible('Competitors — the peer map', lyPeerScatter('ov'), false);
-  h+=collapsible('Timeline', stdTimeline());
+  h+=collapsible('Timeline — how it became today’s Lyft', stdTimeline());
   h+='<div class="ov-foot">'+esc(LY_OV_SOURCES)+'</div>';
   return h;
 }
@@ -4323,6 +4346,7 @@ function wireModal(root){
   back.onclick = function(e){ if (e.target===back) closeM(); };
   function resolve(key){
     var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
+    if (kind==='lyhist'){ var lt=LY_TIMELINE[+id]; return lt&&lt.d?{t:esc(lt.y),h:lt.d}:null; }
     if (kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
     if (kind==='ride'){ var s=RIDE_FLOW[+id]; return s?{t:'Step '+(+id+1)+' — '+s.t,h:s.d}:null; }
     if (kind==='fw'){ var fw=FW_DETAIL[+id]; return fw?{t:fw.t,h:fw.h}:null; }

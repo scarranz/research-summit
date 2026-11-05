@@ -12,7 +12,7 @@
 | Rama | `feat/lyft-profile` (desde `origin/main` @ `e2a30fa`, 2026-11-04; worktree `research-summit-lyft`). Ya existen en GitHub `feat/earnings-rollout-lyft` y `feat/lyft-2q26-results` (no se tocan) |
 | Analista responsable | SAB (Santiago Alvarez); la sesión la abre Dani |
 | Inicio | 2026-11-04 |
-| Avance | 11 de 45 unidades aprobadas (F0, B1, B2, F0-SM, F1, OV-1, OV-2, OV-3, OV-4, OV-5, OV-6) |
+| Avance | 13 de 45 unidades aprobadas (F0, B1, B2, F0-SM, F1, OV-1, OV-2, OV-3, OV-4, OV-5, OV-6, OV-7, OV-F) |
 
 ## 1. Inventario de datos (F0)
 
@@ -122,7 +122,7 @@ Cuadre — **vía el dataset de Results/Customers existente (que viene de los 8-
 | OV-4 | Overview ▸ How it makes money | ✅ | 2026-11-05 | SAB | | Un solo segmento operativo: vista Revenue lines + Region; todo del 10-K FY25 (rev note p.83, estados p.69, MD&A p.51) |
 | OV-5 | Overview ▸ Products & platforms | ✅ | 2026-11-05 | SAB | | 8 familias planas, 22 productos; fuentes 10-K FY25 Item 1 + Prepared Remarks 2T26 |
 | OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
-| OV-7 | Overview ▸ Timeline | ⬜ | | | | |
+| OV-7 | Overview ▸ Timeline | ✅ | 2026-11-05 | SAB | | 10 hitos en orden cronológico, 8 con Read more; fuentes 10-K FY23/FY25 + Prepared Remarks 2T26 |
 | OV-F | Overview ▸ Pie de fuentes | ⬜ | | | | |
 | EV-RES-DATA | Dataset de Results (números) | ⬜ | | | | |
 | EV-RES | Evolution ▸ Results | ⬜ | | | | |
@@ -406,3 +406,9 @@ Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en
 - Peers (decisión SAB): LYFT, UBER, DASH, GRAB. Motor portado de `uber-ov.js` a `js/overviews/lyft-peers.js` (clases `ly-sc`, estado `LY_SCP`); denominadores en `js/overviews/lyft-ov-data.js` (`LY_PEER_DATA`). Múltiplos y market cap en vivo (Massive), nada sembrado.
 - Fuentes: LYFT 10-K FY25 + BBG 2026-11-04 (EPS GAAP 0.52, EBITDA aj. 701.7, ingresos 7,366.4); UBER BBG 2026-11-03 (EBITDA 11,401); DASH 10-K FY25 (del archivo de UBER); GRAB comunicado FY25 (6-K acc. 0001855612-26-000012), 20-F acc. 0001855612-26-000020 solo cotejado en ingresos (3,370) y EBITDA aj. (500).
 - Pendiente/avisos: crecimiento forward de UBER (11.1%) arrastrado del perfil UBER (BBG 2026-09-10); GRAB EPS/op. profit/D&A/deuda del comunicado, no verificados en el 20-F; DASH y GRAB solo trailing; no probado en navegador por mí. El motor viejo (`LY_SC`, `stdPeerScatter`) sigue en el código para Valuation ▸ Peers hasta VA-PEERS y se retira en F-FINAL.
+
+### 2026-11-05 · OV-7 Timeline + OV-F Pie · Aprobado (SAB)
+- OV-7: `LY_TIMELINE` nuevo (10 hitos; modal `lyhist:<i>`). Entran: Bounder Web/Zimride 2007, Lyft 2012/2013, IPO mar-2019 ($72.00; cierre del primer día $78.29), venta de Level 5 (2021), PBSC (2022), CEO Risher (Q2 2023), Freenow (31-jul-2025), TBR (oct-2025), liberación de valuation allowance (Q4 2025, $2.9B), Waymo Nashville (jun-2026).
+- Fuera por falta de fuente (siguen en `TIMELINE` viejo → Misc ▸ M&A and History): Prop 22 (fecha y 58.6%), comprador/precio de Level 5, Investor Day 2024 y sus objetivos 2027, "primera ride-hailing en salir a bolsa", AV partners 2025 (May Mobility, Mobileye, Tensor), recompra de $500M.
+- OV-F: `LY_OV_SOURCES` reescrito al formato del playbook; sin menciones al snapshot Summit de mayo ni a "web-sourced"; desplegables "How Lyft makes money" y "Timeline — how it became today's Lyft".
+- **Overview OV-1…OV-F completo.** Pendiente de Overview para F-FINAL: mover datos a `lyft-ov-data.js`, retirar `stdPeerScatter`/`LY_SC` viejos y el `<style>` inline de `stdOverviewBody` a `css/overview.css`.

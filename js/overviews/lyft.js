@@ -12,6 +12,7 @@ import { makeManagement } from './management.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { lyftResults } from '../results-data/lyft.js';
 import { mountWatchList } from '../watchlist.js';
+import { lyPeerScatter, lyWireScatters } from './lyft-peers.js';
 
 // Interactive "Scenario → price target" calculator (Valuation tab). Fundamentals from
 // the Summit DCF (FY2025 actuals; FY2026E estimate). Net cash & price are editable
@@ -1966,7 +1967,7 @@ function stdOverviewBody(c){
   h+=stdFourQuad();
   h+=collapsible('How it makes money', stdMoneyMap());
   h+=collapsible('Products & platforms', stdProducts());
-  h+=collapsible('Competitors — valuation vs growth', stdPeerScatter());
+  h+=collapsible('Competitors — the peer map', lyPeerScatter('ov'), false);
   h+=collapsible('Timeline', stdTimeline());
   h+='<div class="ov-foot">'+esc(LY_OV_SOURCES)+'</div>';
   return h;
@@ -4417,6 +4418,7 @@ function init(c){
   }; });
   // \u2500\u2500 Standardized Overview wiring: dynamic peer scatter, segment accordions, live market cap \u2500\u2500
   lyScReset(); lyScRender(root); lyScChips(root);
+  lyWireScatters(root);   // OV-6: the live peer map (lyft-peers.js)
   var sctip=root.querySelector('#lyScTip');
   function wireScNodes(){ if(!sctip) return; root.querySelectorAll('#lyScNodes .mg-node').forEach(function(g){
     function show(){ sctip.innerHTML='<span class="mgt-n">'+g.getAttribute('data-name')+'</span>'+g.getAttribute('data-why'); sctip.hidden=false; }

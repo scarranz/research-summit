@@ -12,7 +12,7 @@
 | Rama | `feat/lyft-profile` (desde `origin/main` @ `e2a30fa`, 2026-11-04; worktree `research-summit-lyft`). Ya existen en GitHub `feat/earnings-rollout-lyft` y `feat/lyft-2q26-results` (no se tocan) |
 | Analista responsable | SAB (Santiago Alvarez); la sesión la abre Dani |
 | Inicio | 2026-11-04 |
-| Avance | 10 de 45 unidades aprobadas (F0, B1, B2, F0-SM, F1, OV-1, OV-2, OV-3, OV-4, OV-5) |
+| Avance | 11 de 45 unidades aprobadas (F0, B1, B2, F0-SM, F1, OV-1, OV-2, OV-3, OV-4, OV-5, OV-6) |
 
 ## 1. Inventario de datos (F0)
 
@@ -401,3 +401,8 @@ Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en
 - Rejilla plana de 8 familias (UBER: `stdProducts` + modal `prod:<i>`); título del desplegable pasa a "Products & platforms". Fuentes: 10-K FY25 Item 1 (modos, Price Lock, Express Drive, bikes y scooters, Lyft Business, Lyft Silver) y Prepared Remarks 2T26 (Freenow, TBR, Curb, XXL, Lyft Teen, sistemas de LUS, Waymo Nashville, Baidu Londres).
 - Retirado de la vista (sigue en `LY_PROD_GROUPS`, se reubica en TL-SEG/MISC): Lyft Pink (precio ~$9.99/$99 sin fuente), Lyft Media/anuncios, May Mobility, Mobileye+Marubeni, Level 5 vendida a Woven Planet, Lyft Healthcare. Ninguno aparece en el 10-K FY25 ni en los remarks; verificar con IR si se reincorporan.
 - Autoauditoría: PASS 8 tarjetas, d ≤ 6 palabras, ningún número sin fuente.
+
+### 2026-11-05 · OV-6 Competitors — the peer map · Aprobado (SAB)
+- Peers (decisión SAB): LYFT, UBER, DASH, GRAB. Motor portado de `uber-ov.js` a `js/overviews/lyft-peers.js` (clases `ly-sc`, estado `LY_SCP`); denominadores en `js/overviews/lyft-ov-data.js` (`LY_PEER_DATA`). Múltiplos y market cap en vivo (Massive), nada sembrado.
+- Fuentes: LYFT 10-K FY25 + BBG 2026-11-04 (EPS GAAP 0.52, EBITDA aj. 701.7, ingresos 7,366.4); UBER BBG 2026-11-03 (EBITDA 11,401); DASH 10-K FY25 (del archivo de UBER); GRAB comunicado FY25 (6-K acc. 0001855612-26-000012), 20-F acc. 0001855612-26-000020 solo cotejado en ingresos (3,370) y EBITDA aj. (500).
+- Pendiente/avisos: crecimiento forward de UBER (11.1%) arrastrado del perfil UBER (BBG 2026-09-10); GRAB EPS/op. profit/D&A/deuda del comunicado, no verificados en el 20-F; DASH y GRAB solo trailing; no probado en navegador por mí. El motor viejo (`LY_SC`, `stdPeerScatter`) sigue en el código para Valuation ▸ Peers hasta VA-PEERS y se retira en F-FINAL.

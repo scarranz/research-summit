@@ -123,7 +123,7 @@ Cuadre — **vía el dataset de Results/Customers existente (que viene de los 8-
 | OV-5 | Overview ▸ Products & platforms | ✅ | 2026-11-05 | SAB | | 8 familias planas, 22 productos; fuentes 10-K FY25 Item 1 + Prepared Remarks 2T26 |
 | OV-6 | Overview ▸ Competitors (peer map) | ⬜ | | | | |
 | OV-7 | Overview ▸ Timeline | ✅ | 2026-11-05 | SAB | | 10 hitos en orden cronológico, 8 con Read more; fuentes 10-K FY23/FY25 + Prepared Remarks 2T26 |
-| OV-F | Overview ▸ Pie de fuentes | ⬜ | | | | |
+| OV-F | Overview ▸ Pie de fuentes | ✅ | 2026-11-05 | SAB | | pie al formato del playbook; desplegables renombrados |
 | EV-RES-DATA | Dataset de Results (números) | ⬜ | | | | |
 | EV-RES | Evolution ▸ Results | ⬜ | | | | |
 | TL-GEN | Top Line ▸ General | ⬜ | | | | |
@@ -259,7 +259,7 @@ Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en
 | 5 | Segment definitions | Overview ▸ How it makes money (OV-4) | acordeones de definición | ✅ |
 | 6 | Products & platforms + modal | Overview ▸ Products (OV-5) | sin emojis | ⬜ |
 | 7 | Peer scatter (multiple vs growth) | Overview ▸ Competitors (OV-6) | múltiplos en vivo, forward de BBG | ⬜ |
-| 8 | Timeline + modal | Overview ▸ Timeline (OV-7) | movido a lyft-ov-timeline.js | ⬜ |
+| 8 | Timeline + modal | Overview ▸ Timeline (OV-7) | movido a lyft-ov-timeline.js | ✅ |
 | 9 | Overview footer | Overview ▸ Pie de fuentes (OV-F) | un solo pie | ⬜ |
 | 10 | Shared modal | infraestructura compartida (F1) | se conserva | ⬜ |
 | 11 | Live price strip | Top Line ▸ General (TL-GEN) | get-quote | ⬜ |

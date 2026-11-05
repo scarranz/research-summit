@@ -14,11 +14,17 @@
 // against the releases or dropped (list in docs/profiles/UBER.md).
 // UBER_THEMES_V1 keeps the previous record (DOAA351/SAB, Q4 2023 → Q1 2026, from the call transcripts) unchanged; it is
 // not rendered (B2 #59 — never deleted).
-export var UBER_THEMES_V = 2;
+// Seed v3 (2026-11-04): Q3 2026 added from SAB’s handwritten notes on the 3Q26 call (GoodNotes export "UBER (1).pdf",
+// 2 pages, read as images), figures checked against the 3Q26 release, prepared remarks and call transcript. Changed on the
+// way: the bond issue is €4.5B (written $4.5B); the "$2T food TAM" is in none of the three documents and was left out.
+// New sub-theme: Costs & capital ▸ Acquisitions & integration. Freight reopened (dormant since Q3 2023). Kept the one team note the
+// saved Supabase copy had and v2 did not (Freight, Q4 2026: "Look after Freight Acceleration, why?"), so replacing the copy loses nothing.
+export var UBER_THEMES_V = 3;
 export var UBER_THEMES = [
-  { seg:"Mobility", theme:"Mobility growth & margin", st:{ k:'trend', since:'Q3 2022', last:'Q2 2026' },
+  { seg:"Mobility", theme:"Mobility growth & margin", st:{ k:'trend', since:'Q3 2022', last:'Q3 2026' },
     why:"Mobility GB growth and its margin come up on almost every call",
     updates:[
+      { q:'Q3 2026', items:["Trips +16% YoY and Mobility GB +17% (constant currency); GB per trip rose on business mix rather than pricing.", "The deceleration came mostly from outside the US."] },
       { q:'Q2 2026', items:["US GB accelerated on premium and lower-cost products, sparser areas and reinvested insurance savings.", "Still expect US acceleration this year, driven by insurance and product."] },
       { q:'Q1 2026', items:["Mobility GB +20%; Middle East and US weather a 60bp headwind; US strong in commute and travel.", "US mobility accelerated more than total mobility; no data showing an impact from Waymo."] },
       { q:'Q4 2025', items:["Expect US mobility GB to accelerate in 2026."] },
@@ -43,9 +49,10 @@ export var UBER_THEMES = [
       { q:'Q4 2024', items:["US mobility insurance costs expected up high single digits, below prior years' increases; safety score via phone telemetry."] },
       { q:'Q3 2024', items:["They pass changes in insurance costs on to riders.", "At the Barclays fireside (Dec 2024), insurance costs were expected to grow high single to low double digits."] }
     ]},
-  { seg:"Mobility", theme:"Sparse markets & low-cost products", st:{ k:'trend', since:'Q4 2023', last:'Q2 2026' },
+  { seg:"Mobility", theme:"Sparse markets & low-cost products", st:{ k:'trend', since:'Q4 2023', last:'Q3 2026' },
     why:"Less dense, suburban markets and cheaper products are a growth lever they keep returning to",
     updates:[
+      { q:'Q3 2026', items:["Wait & Save is now an $8B annualized GB product."] },
       { q:'Q2 2026', items:["Mobility and delivery both growing faster in sparse markets, at healthy margins."] },
       { q:'Q1 2026', items:["Suburban and lower-density markets growing faster than the business overall.", "Low-cost mobility products drive 75% higher frequency than core products."] },
       { q:'Q4 2025', items:["Top-20 US cities are only 30% of US GB and 25% of profit; NYC, the largest rideshare market, is 10% of US trips."] },
@@ -54,10 +61,11 @@ export var UBER_THEMES = [
       { q:'Q3 2024', items:["Focused on expanding in less dense markets."] },
       { q:'Q4 2023', items:["At the Feb 2024 Investor Update, about 50% of consumers take only 1–2 trips a month."] }
     ]},
-  { seg:"Mobility", theme:"Premium, airports, Reserve & Uber for Business", st:{ k:'trend', since:'Q4 2023', last:'Q2 2026' },
+  { seg:"Mobility", theme:"Premium, airports, Reserve & Uber for Business", st:{ k:'trend', since:'Q4 2023', last:'Q3 2026' },
     why:"Higher-value trip types tracked with sizes and growth rates",
     hook:"Open: U4B target of 1M orgs and >$10B GB by 2028 (set Q1 2026)",
     updates:[
+      { q:'Q3 2026', items:["The premium end grew ~35% YoY, driven by Comfort and Black; Uber for Business ~+50% YoY."] },
       { q:'Q2 2026', items:["U4B GB +40%; premium trips bring 2x GB and 4x contribution profit per trip vs UberX."] },
       { q:'Q1 2026', items:["Airports 15% of mobility GB; 40% of US riders take trips outside their home city (1.5B such trips in FY2025).", "U4B growing 2x mobility, $5B annualized GB (+45%), 300K organizations; 400+ spend $1M+, 40 spend $10M+.", "Acquiring Blacklane (high-margin; GB as written \"$5bn\", see illegible list).", "U4B target: serve 1M organizations and exceed $10B GB by 2028; adding sales headcount."] },
       { q:'Q4 2025', items:["Airports are 15% of mobility GB, still an opportunity; best penetration (20–40%) is in Mexico, Rio and NYC."] },
@@ -77,9 +85,10 @@ export var UBER_THEMES = [
       { q:'Q2 2023', items:["Mobility take rate 29.3% vs 26.6% a year earlier."] },
       { q:'Q3 2022', items:["Take rate 27% mobility (18% delivery, 100% freight).", "Plan to improve mobility take rate (linked in the notes to the advertising goal)."] }
     ]},
-  { seg:"Mobility", theme:"Driver supply & fleets", st:{ k:'trend', since:'Q3 2022', last:'Q2 2026' },
+  { seg:"Mobility", theme:"Driver supply & fleets", st:{ k:'trend', since:'Q3 2022', last:'Q3 2026' },
     why:"Driver/courier counts, fleet partners and regulation shape supply",
     updates:[
+      { q:'Q3 2026', items:["10.8M drivers and couriers on the platform.", "Mobility came in 1–2 points below Uber’s own expectations: demand is healthy but supply growth did not keep pace outside the US (fuel prices, tighter local labor, competition).", "Responding with targeted driver acquisition, retention and reactivation; overall growth trends improved in October.", "Supply hours growth accelerated in October, with improvements in Brazil and India."] },
       { q:'Q2 2026', items:["10.2M drivers and couriers."] },
       { q:'Q1 2026', items:["Active drivers +21% YoY."] },
       { q:'Q4 2025', items:["9.7M drivers and couriers (+19% YoY)."] },
@@ -92,17 +101,19 @@ export var UBER_THEMES = [
       { q:'Q2 2023', items:["6M drivers and couriers."] },
       { q:'Q3 2022', items:["Driver classification to be fought state by state; California example cited as passed with 58% (see illegible list)."] }
     ]},
-  { seg:"Mobility", theme:"Geographic mix, FX & Brazil", st:{ k:'watch', since:'Q3 2022', last:'Q2 2026' },
+  { seg:"Mobility", theme:"Geographic mix, FX & Brazil", st:{ k:'watch', since:'Q3 2022', last:'Q3 2026' },
     why:"US vs international mix and LatAm FX recur; Brazil competition is new in Q2 2026",
     updates:[
+      { q:'Q3 2026', items:["The Middle East conflict was a 75bp headwind to GB growth in Q3; the Q4 outlook assumes 100bp."] },
       { q:'Q2 2026', items:["Brazil, the highest-volume market, slowed on food-delivery competition, a ~2pt hit to trips; two-wheeler drivers are hard to retain."] },
       { q:'Q4 2025', items:["At Morgan Stanley (Mar 2026): mobility is in 75 countries, delivery only in ~32–33; expanding delivery to the Nordics."] },
       { q:'Q1 2025', items:["GB +14% including a 4% FX headwind."] },
       { q:'Q4 2024', items:["Half of GB is US; LatAm (Argentina, Brazil, Mexico) is 25% of international GB.", "LatAm FX depreciation does not hurt profitability (costs are local) but lowers the reported amount.", "Q1 GB outlook includes US weather and assumes the same audience as Q4."] }
     ]},
-  { seg:"Delivery", theme:"Delivery growth & margin", st:{ k:'trend', since:'Q2 2023', last:'Q2 2026' },
+  { seg:"Delivery", theme:"Delivery growth & margin", st:{ k:'trend', since:'Q2 2023', last:'Q3 2026' },
     why:"Growth rate, cost per trip and margin are discussed every call",
     updates:[
+      { q:'Q3 2026', items:["GB +23% YoY with organic growth accelerating; segment operating income +30% on operating cost discipline.", "Growth was broad-based, with strong acceleration in the US and LatAm.", "Frequency at an all-time high: better shopping experience, Uber One penetration and merchant investment.", "Trendyol Go (Türkiye) now runs at $4B+ annualized GB; Türkiye is Uber’s largest international delivery market by order volume."] },
       { q:'Q2 2026', items:["Growth from record retention, Uber One, and grocery & retail outgrowing restaurants; led by Australia, UK and Mexico.", "Delivery transaction values are several times mobility's; large group orders and pickup grew strongly."] },
       { q:'Q1 2026', items:["Delivery +23% YoY (retention, membership, grocery & retail); 80bp weather headwind.", "International led by Australia, Japan and the UK (Australia trips +30%); 1.4M merchants.", "At Bernstein SDC (May 2026): Australia +30%; Canada, UK and Japan 20%+ (Japan accelerated)."] },
       { q:'Q4 2025', items:["At Morgan Stanley (Mar 2026), Uber is gaining share internationally and is 2–3x the next player (Canada, France, Australia, Japan, Taiwan, Turkey, UK)."] },
@@ -115,9 +126,10 @@ export var UBER_THEMES = [
       { q:'Q3 2023', items:["Business-model changes cut the delivery take rate; margin helped by cost leverage and advertising."] },
       { q:'Q2 2023', items:["Delivery GB $15.6B (+12%); revenue and take rate stabilizing (19.6% vs 19.4%).", "Delivery Adj EBITDA up on volume, higher ad revenue and lower marketing."] }
     ]},
-  { seg:"Delivery", theme:"Grocery & retail", st:{ k:'trend', since:'Q4 2023', last:'Q2 2026' },
+  { seg:"Delivery", theme:"Grocery & retail", st:{ k:'trend', since:'Q4 2023', last:'Q3 2026' },
     why:"Run-rate GB tracked from $7B to $15B, always growing ~40%",
     updates:[
+      { q:'Q3 2026', items:["Grocery & Retail GB +40% YoY, a $15B run rate; management sizes the grocery & retail TAM at $10T.", "Expanded Costco nationwide in the US and added 1,800 Tesco stores in the UK.", "Dark stores are attractive but depend on the region; Delivery Hero has already built an important presence."] },
       { q:'Q2 2026', items:["Grocery & retail at $15B annualized GB, growing 40% YoY."] },
       { q:'Q1 2026', items:["No fees on eligible US grocery orders above $60 for Uber One members."] },
       { q:'Q4 2025', items:["At Morgan Stanley (Mar 2026): grocery & retail ($12–13B) is where food delivery was in 2019–20 ($14B); total delivery ~$100B."] },
@@ -126,10 +138,11 @@ export var UBER_THEMES = [
       { q:'Q3 2024', items:["At the Barclays fireside (Dec 2024): grocery growing much faster than delivery; 1 in 6 food users uses grocery, and they think 1 in 3 is possible."] },
       { q:'Q4 2023', items:["At the Feb 2024 Investor Update, grocery is a ~$7B GB run rate growing 40%."] }
     ]},
-  { seg:"Delivery", theme:"Advertising", st:{ k:'trend', since:'Q3 2022', last:'Q2 2026' },
+  { seg:"Delivery", theme:"Advertising", st:{ k:'trend', since:'Q3 2022', last:'Q3 2026' },
     why:"Run rate tracked from $650M to $2.5B",
     hook:"Closed: \"$1B ad revenue by 2024\" (set Q3 2022), $1B run rate reached Q3 2023",
     updates:[
+      { q:'Q3 2026', items:["Merchant spend on advertising and offers passed a $10B annualized run rate."] },
       { q:'Q2 2026', items:["Advertising above a $2.5B run rate, growing 50%."] },
       { q:'Q4 2025', items:["Advertising run rate $2B (+50% YoY)."] },
       { q:'Q3 2024', items:["Advertising growing 70–80%; aiming for 2% of delivery GB from mid-1% today.", "Four ad segments: cost-per-click for SMBs, enterprise, sponsored grocery/CPG listings, and in-trip mobility ads."] },
@@ -146,18 +159,20 @@ export var UBER_THEMES = [
       { q:'Q1 2026', items:["At Bernstein SDC (May 2026), Uber bought 37% of Delivery Hero in the open market at an average cost in the low 30s; attractive for Argentina, Korea and the Middle East.", "In the Jul 2026 deal announcement: cash offer of €41.50/share, ~$14.8B (see illegible list), high-single-digit EPS accretion by year three.", "Per the Jul 2026 announcement, Delivery Hero sells 14 markets to SSW Partners (~$1.6B), including Foodora, efood, Foody, Glovo, PedidosYa (Chile, Ecuador) and Yemeksepeti.", "Per the Jul 2026 announcement, cross-platform markets go 34 → 58 and total markets 79 → 99, with 50M+ new eligible cross-platform users.", "Per the Jul 2026 announcement, Uber holds 24.77% plus 11.74% via derivatives; Prosus will tender ~17%, taking Uber's economic interest to ~53%.", "Closing expected in 2H 2027; ~$1.2B synergies 18 months after close, with little revenue synergy.", "Delivery Hero HQ stays in Germany with no Berlin job changes until 2029; Uber to invest €2B in Germany over five years.", "Talabat (MENA) has 8M MAU at a 7% EBITDA margin; Korea's Baemin is the one platform not on DH's global stack.", "Delivery Hero brings quick commerce (which Uber lacks), ads at 3% of GMV, and cross-sell users spending 5x."] },
       { q:'Q2 2024', items:["Delivery Hero listed among the \"other\" equity stakes (with Lime, Joby and Moove)."] }
     ]},
-  { seg:"Freight", theme:"Freight", st:{ k:'watch', since:'Q3 2022', last:'Q3 2023' },
-    why:"Only discussed 2022–23; no mentions since",
-    hook:"Dormant since Q3 2023",
+  { seg:"Freight", theme:"Freight", st:{ k:'watch', since:'Q3 2022', last:'Q3 2026' },
+    why:"Discussed in 2022–23, then silent until Q3 2026, when it came back accelerating (+35%)",
     updates:[
+      { q:'Q4 2026', items:["Look after Freight Acceleration, why?"] },
+      { q:'Q3 2026', items:["Freight GB +35% YoY on sustained enterprise demand; expect Q4 growth consistent with Q3."] },
       { q:'Q3 2023', items:["Q4 outlook has freight GB flat QoQ. No freight mentions after this call."] },
       { q:'Q2 2023', items:["Freight pulled back while mobility and delivery EBITDA grew."] },
       { q:'Q4 2022', items:["The freight acquisition hurts in the short term but should pay off over a 10-year horizon."] },
       { q:'Q3 2022', items:["Freight is 8% of GB, booked at a 100% take rate."] }
     ]},
-  { seg:"Autonomous vehicles", theme:"AV economics & Uber's role", st:{ k:'trend', since:'Q4 2023', last:'Q2 2026' },
+  { seg:"Autonomous vehicles", theme:"AV economics & Uber's role", st:{ k:'trend', since:'Q4 2023', last:'Q3 2026' },
     why:"Their recurring answer: AVs are unprofitable for years and Uber's value is demand plus utilization",
     updates:[
+      { q:'Q3 2026', items:["Next phase is delivering results that show Uber’s advantage.", "In US markets with AVs, Uber’s trips grew faster than the overall US rate and faster than a year earlier.", "Waymo and Tesla run low-teens trips per vehicle per day in the markets they launched in 2026, against the high 20s Uber sees on its network.", "Goal is for AV trips to deliver margins comparable to human-driven trips over time."] },
       { q:'Q2 2026', items:["AVs are a go-to-market puzzle; AV Labs runs its own AVs to collect data for partners.", "Uber can get 20–30 trips per vehicle per day (high 20s to low 30s)."] },
       { q:'Q1 2026', items:["AV scale needs fleet management (depots, repair, charging, cleaning), financing and insurance (Marsh & Apollo partnership).", "AV financing has no residual value today, so revenue per car must be predictable.", "At Bernstein SDC (May 2026): 20B trips a year with 10M drivers, adding 3B a year, vs ~50M global AV trips; UberX costs ~$2 per mile."] },
       { q:'Q3 2025', items:["AVs not expected to be profitable for a few years; Nvidia data partnership lets Uber share data with partners."] },
@@ -167,19 +182,21 @@ export var UBER_THEMES = [
       { q:'Q2 2024', items:["AVs will not contribute to profitability for 5–10 years."] },
       { q:'Q4 2023', items:["At the Feb 2024 Investor Update, autonomous vehicles were noted as a future source of mobility supply."] }
     ]},
-  { seg:"Autonomous vehicles", theme:"AV city roadmap", st:{ k:'promise', since:'Q3 2025', last:'Q2 2026' },
+  { seg:"Autonomous vehicles", theme:"AV city roadmap", st:{ k:'promise', since:'Q3 2025', last:'Q3 2026' },
     why:"Dated city counts are given and updated every quarter",
     hook:"Open: 15 AV cities by end-2026; 28 Nvidia cities by 2028; largest AV facilitator by 2029",
     updates:[
+      { q:'Q3 2026', items:["~700 AVs on Uber by year-end and 2,000 in 2027, half in the US and half international; nearly 200 fully driverless cars in the UAE alone by year-end.", "Zoox to launch on Uber in Las Vegas later in November.", "Fully driverless testing with Nuro and Lucid this quarter, ahead of the Bay Area commercial launch in Q1 2027; Houston and other cities to follow."] },
       { q:'Q2 2026', items:["Still 15 AV cities by year-end; deck shows 7 live cities and 8 launching by end-2026.", "28 cities globally by 2028 (Nvidia program)."] },
       { q:'Q1 2026', items:["AV trips up 10x YoY; live in 8 cities, 15 by year-end."] },
       { q:'Q4 2025', items:["Will facilitate AV trips in 15 cities in 2026 (half US); aim to be the largest AV facilitator worldwide by 2029.", "Live: Atlanta, Austin, Dallas, Phoenix, Abu Dhabi, Dubai, Riyadh. Upcoming: Bay Area, Houston, LA, Hong Kong, London, Madrid, Munich, Zurich.", "At Morgan Stanley (Mar 2026): 15 cities in 2026, half international; Baidu, WeRide and Pony are already deploying."] },
       { q:'Q3 2025', items:["Expect AVs live on Uber in at least 10 cities by end-2026 (live: Abu Dhabi, Atlanta, Austin, Riyadh).", "Coming 2026–27: Arlington, Dallas, Dubai, London, LA, Munich, SF Bay Area."] }
     ]},
-  { seg:"Autonomous vehicles", theme:"AV partners & launches", st:{ k:'trend', since:'Q3 2024', last:'Q2 2026' },
+  { seg:"Autonomous vehicles", theme:"AV partners & launches", st:{ k:'trend', since:'Q3 2024', last:'Q3 2026' },
     why:"Partner list and specific city launches change each quarter",
     hook:"Open: Zoox Las Vegas (Q3 2026), Nuro/Lucid Bay Area (2026), Nvidia LA & SF (1H 2027), Rivian SF & Miami (2028)",
     updates:[
+      { q:'Q3 2026', items:["Fully driverless deployments with Avride in 2027; supervised deployments with Nvidia and Rivian from 2027 and 2028 respectively."] },
       { q:'Q2 2026', items:["Rivian in SF & Miami in 2028; Nvidia in LA & SF in 2027.", "Expect to keep operating with Waymo in Austin and Atlanta next year; will support Lucid under its new CEO.", "Drone partnerships (Flytrex) will be very important."] },
       { q:'Q1 2026', items:["New partners Rivian, Zoox, Verne and Pony.ai; Zoox in Las Vegas in Q3; planning Europe's first robotaxi service.", "Waabi relationship expanded (robotaxi and trucking); Wayve/Nissan robotaxis in Tokyo; Motional live in Las Vegas.", "WeRide fully driverless in Dubai and expanding in Abu Dhabi; Lucid/Nuro employee trips in the Bay Area, public launch in 2026.", "At Bernstein SDC (May 2026): Baidu runs 350K weekly trips in China; Nuro in the Bay Area by year-end."] },
       { q:'Q4 2025', items:["At the Zoox announcement (Mar 2026): Las Vegas this summer, LA summer 2027, rides in both apps; Zoox's first third-party platform.", "At Nvidia GTC (Mar 2026), the Uber partnership covers 28 cities by 2028, starting LA & SF in 1H 2027, in stages from data collection to L4."] },
@@ -187,9 +204,10 @@ export var UBER_THEMES = [
       { q:'Q2 2025', items:["Austin with Waymo, Abu Dhabi with WeRide; Baidu, Lucid, Nuro and Wayve named as important.", "Lucid has 20K vehicle commitments."] },
       { q:'Q3 2024', items:["At the GM Cruise update (Dec 2024), GM refocused on personal vehicles and left robotaxi; the Uber partnership has to be renegotiated.", "At the Barclays fireside (Dec 2024), Waymo in Atlanta and Austin will be Uber-exclusive, with Uber handling fleet operations.", "At the Barclays fireside, Moove (2 Uber board seats, sizeable stake) will likely run Waymo's Miami fleet on Uber's fleet system."] }
     ]},
-  { seg:"Autonomous vehicles", theme:"AV capital commitments", st:{ k:'watch', since:'Q4 2024', last:'Q2 2026' },
+  { seg:"Autonomous vehicles", theme:"AV capital commitments", st:{ k:'watch', since:'Q4 2024', last:'Q3 2026' },
     why:"Balance-sheet commitments keep growing ($1B → $10B)",
     updates:[
+      { q:'Q3 2026', items:["Long run, AVs should be third-party financed; fully third-party once the fleet scales to 10K+ vehicles in 2028.", "A 30% utilization premium vs alternatives means financing will be based on revenue rather than residual value."] },
       { q:'Q2 2026', items:["Expect to commit ~$10B over the coming years in equity, infrastructure and vehicle offtake; partners have committed ~120K vehicles.", "At GS Communacopia (Sep 2026), Uber has secured access to 120K vehicles and is investing in depots and fleet infrastructure."] },
       { q:'Q1 2026', items:["AV vehicle commitments are structured to be passed to fleet or financial partners over time."] },
       { q:'Q4 2025', items:["FCF use #2 is AVs: capital and data for software partners, equity or offtake commitments to OEMs, possibly early vehicle purchases.", "At Morgan Stanley (Mar 2026), Uber's AV partners ex-Waymo have raised ~$7B in 12–24 months ($1.5B last month); Uber committed $1B."] },
@@ -198,9 +216,10 @@ export var UBER_THEMES = [
       { q:'Q1 2025', items:["At the JPMorgan fireside (May 2025), AV fleets are expected to be owned by financial players (Marriott-style)."] },
       { q:'Q4 2024', items:["Many AV business models to test; Uber could buy some cars, bring in financial partners or provide infrastructure, using some balance sheet."] }
     ]},
-  { seg:"Membership & platform", theme:"Uber One scale & penetration", st:{ k:'trend', since:'Q3 2022', last:'Q2 2026' },
+  { seg:"Membership & platform", theme:"Uber One scale & penetration", st:{ k:'trend', since:'Q3 2022', last:'Q3 2026' },
     why:"Members and share of GB are reported every call",
     updates:[
+      { q:'Q3 2026', items:["55M members, representing 50%+ of GB.", "See room for more penetration, especially in Mobility; richer rewards coming."] },
       { q:'Q2 2026', items:["Membership at an all-time high; members are more than 70% of delivery GB (+20pp in two years).", "At GS Communacopia (Sep 2026): 50M+ members growing 50%, 50% of GB; in a number of markets membership is 60% of GB."] },
       { q:'Q1 2026', items:["50M members, over 50% of mobility + delivery GB.", "At Bernstein SDC (May 2026): members are 2/3 of delivery GB, 1/3 of mobility GB and 50% of total GB."] },
       { q:'Q4 2025', items:["46M members (+55% globally); members are more than 35% of US mobility GB.", "At Morgan Stanley (Mar 2026), membership still growing above 50%, with high stickiness."] },
@@ -236,9 +255,10 @@ export var UBER_THEMES = [
       { q:'Q2 2024', items:["Multi-platform consumers spend 3x more."] },
       { q:'Q4 2023', items:["At the Feb 2024 Investor Update: 34% of consumers are multi-product (21% in Q1 2021) and spend 3.4x (3x in Q4 2021)."] }
     ]},
-  { seg:"Membership & platform", theme:"Audience, frequency & consumer health", st:{ k:'trend', since:'Q3 2022', last:'Q2 2026' },
+  { seg:"Membership & platform", theme:"Audience, frequency & consumer health", st:{ k:'trend', since:'Q3 2022', last:'Q3 2026' },
     why:"MAPCs, trips per user and consumer resilience",
     updates:[
+      { q:'Q3 2026', items:["MAPCs +14% YoY to 215M; monthly frequency +2% to a record 6.3."] },
       { q:'Q2 2026', items:["300M trips per week; trips remain the main driver of GB growth."] },
       { q:'Q1 2026', items:["At Bernstein SDC (May 2026), Uber added 40M first-time users in Q1, 40% more than three years ago."] },
       { q:'Q3 2025', items:["Trip growth above prior quarters; record audience (+17%) and engagement (+4%) with flat average price.", "At the UBS conference (Dec 2025), growth = users × frequency × price change (17% × 4%, ≈22% as written)."] },
@@ -268,10 +288,11 @@ export var UBER_THEMES = [
       { q:'Q4 2025', items:["CFO Prashanth leaves on February 16; Balaji, a former Uber executive, becomes CFO."] },
       { q:'Q2 2025', items:["Andrew Macdonald becomes COO over both mobility and delivery."] }
     ]},
-  { seg:"Costs & capital", theme:"Quarterly outlook", st:{ k:'promise', since:'Q2 2023', last:'Q2 2026' },
+  { seg:"Costs & capital", theme:"Quarterly outlook", st:{ k:'promise', since:'Q2 2023', last:'Q3 2026' },
     why:"A GB and profit guide every quarter, checked the next quarter",
     hook:"Rolling: each guide closes at the next call. Latest open: Q3 2026",
     updates:[
+      { q:'Q3 2026', items:["Q4 GB $63.25–65.25B (+18–22% constant currency), assuming ~1 point of FX headwind.", "Q4 Non-GAAP EPS $0.95–0.99 (+34–39%); Q4 Adj EBITDA $3.13–3.23B, the last quarter this translation is given.", "2026 Non-GAAP D&A $500–550M; Non-GAAP ETR 22–24%; cash tax rate mid-to-high single digits in 2026, 10–15% over the next few years on historical tax assets."] },
       { q:'Q2 2026', items:["Q3 guide: GB $58.25–60.25B (+18–22%); non-GAAP EPS $0.84–0.88 (+28–35%); Adj EBITDA $2.86–2.96B.", "FY2026 SBC $1.95–2.10B (top of range cut by $50M); D&A $450–550M; ETR 22–24%; cash tax mid-to-high single digits."] },
       { q:'Q1 2026', items:["Q2 guide: GB $56.25–57.75B (+18–22% cc, 2% FX tailwind, 60bp Middle East headwind); non-GAAP EPS $0.78–0.82 (+31–38%).", "Q2 guide equals Adj EBITDA of $2.7–2.8B; FY2026 SBC $1.95–2.15B, D&A $450–550M, ETR 22–24%."] },
       { q:'Q4 2025', items:["Q1 guide: GB $52–53.5B (+17–21%, 4% FX tailwind); non-GAAP EPS $0.65–0.72 (+37% at midpoint); Adj EBITDA $2.37–2.47B.", "FY2026 non-GAAP tax rate 22–25%; cash tax rate 10–15% thanks to a tax asset."] },
@@ -299,18 +320,20 @@ export var UBER_THEMES = [
       { q:'Q2 2023', items:["Adj EBITDA $916M, margin 2.7% of GB (up from 1.3%, as written); net income positive on equity stakes."] },
       { q:'Q3 2022', items:["Adj EBITDA margin around 1.6% of GB (boxed in notes).", "2024 EBITDA targets will be met despite macro headwinds."] }
     ]},
-  { seg:"Costs & capital", theme:"FCF conversion & insurance float", st:{ k:'trend', since:'Q4 2023', last:'Q4 2025' },
+  { seg:"Costs & capital", theme:"FCF conversion & insurance float", st:{ k:'trend', since:'Q4 2023', last:'Q3 2026' },
     why:"FCF vs Adj EBITDA: 90%+ promised, 110%+ delivered",
     updates:[
+      { q:'Q3 2026', items:["Expect a ~$1.5B cash payment in Q4 for a UK VAT tax matter."] },
       { q:'Q4 2025', items:["FY2025 FCF ~$10B, over 110% of Adj EBITDA.", "FCF uses: invest in markets by LTV/CAC, AVs, M&A, and buybacks."] },
       { q:'Q1 2025', items:["FCF $2.3B in the quarter."] },
       { q:'Q2 2024', items:["TTM FCF $4.8B vs Adj EBITDA $6.3B, i.e. 90%+ conversion."] },
       { q:'Q4 2023', items:["At the Feb 2024 Investor Update, FCF bridge: taxes rise with profit, interest falls as credit improves, working capital is a modest drag, capex stays asset-light.", "At the Investor Update, insurance reserves create a float (premiums in before claims out) that grows with the business, shows up in FCF and earns income.", "Reserve cash is restricted and not available for operations; reserves accrue per mile as trips are completed."] }
     ]},
-  { seg:"Costs & capital", theme:"Buybacks, share count & SBC", st:{ k:'trend', since:'Q4 2022', last:'Q2 2026' },
+  { seg:"Costs & capital", theme:"Buybacks, share count & SBC", st:{ k:'trend', since:'Q4 2022', last:'Q3 2026' },
     why:"Capital return grew from nothing to $20B",
     hook:"Closed: initial $7B program exhausted Q4 2025",
     updates:[
+      { q:'Q3 2026', items:["Repurchased $750M in Q3; ~$15B left on the authorization.", "Issued €4.5B of senior notes (Uber’s first euro bond).", "2026 SBC guide $2.00–2.10B."] },
       { q:'Q1 2026', items:["Repurchased $3B (40M shares); $16B left."] },
       { q:'Q4 2025', items:["Bought $1.9B in Q4, finishing the initial $7B program early; $20B from Aug 2025 still available."] },
       { q:'Q2 2025', items:["New $20B authorization on top of $3B left; spread over a couple of years, ~50% of FCF, aiming to cut share count."] },
@@ -328,6 +351,11 @@ export var UBER_THEMES = [
       { q:'Q1 2026', items:["Q2 guide given as non-GAAP EPS, with the Adj EBITDA equivalent shown alongside."] },
       { q:'Q4 2025', items:["First guide on the new basis (Q1 non-GAAP EPS); new non-GAAP op income includes SBC and depreciation."] },
       { q:'Q3 2025', items:["From Q1 2026, report Adj Operating Income instead of Adj EBITDA (company and segment), now including SBC, depreciation and non-M&A amortization.", "Adjusted EPS will replace quarterly EBITDA guidance.", "Adj net income excludes stake mark-to-market, FX gains/losses, other items and their tax."] }
+    ]},
+  { seg:"Costs & capital", theme:"Acquisitions & integration", st:{ k:'promise', since:'Q3 2026', last:'Q3 2026' },
+    why:"Uber said it expects minimal to no further M&A through at least 2027 while it integrates the deals already announced",
+    updates:[
+      { q:'Q3 2026', items:["Expect minimal to no further M&A through at least 2027, to focus on integrating Delivery Hero, ezCater, Getir, Blacklane and SpotHero.", "ezCater: $2.5B+ TTM GB, average order above $400."] }
     ]},
   { seg:"Costs & capital", theme:"Equity stakes", st:{ k:'watch', since:'Q2 2024', last:'Q1 2026' },
     why:"Stake values move net income and may be sold to fund AVs",
@@ -418,3 +446,8 @@ export var UBER_THEMES_V1 = [
       { q:'Q1 2026', items:['<b>Cart Assistant</b> launched \u2014 an AI helper that builds grocery/retail orders for consumers.','AI earner tools for drivers & couriers (smarter dispatch and support).','Management framed AI as a multi-year <b>efficiency + experience lever</b> \u2014 "early innings," something to track rather than a 2026 numbers driver.'] },
     ]},
 ];
+
+// Stamp the seed version on every thread (as meta.js / googl.js do). The hydrate step keeps a saved record only when
+// its threads carry v >= UBER_THEMES_V; without this stamp every saved record read as v0 and was overwritten by the
+// seed on each load, losing notes the team added in the portal (found 2026-11-04).
+UBER_THEMES.forEach(function(t){ t.v = UBER_THEMES_V; });

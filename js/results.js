@@ -52,6 +52,8 @@ import { snResults } from './results-data/sn.js';
 import { snSetup } from './results-data/sn-setup.js';
 import { tsmResults } from './results-data/tsm.js';
 import { tsmSetup } from './results-data/tsm-setup.js';
+import { tplResults } from './results-data/tpl.js';
+import { tplSetup } from './results-data/tpl-setup.js';
 import { SUMMIT_MUTE } from './viz-palette.js';
 
 var RESULTS_DATA = {
@@ -90,7 +92,9 @@ var RESULTS_DATA = {
   DHR: dhrResults,
   DHR_SETUP: dhrSetup,
   SN: snResults,
-  SN_SETUP: snSetup
+  SN_SETUP: snSetup,
+  TPL_SETUP: tplSetup,
+  TPL: tplResults
 };
 
 // Register a dataset at runtime, so a caller can compose one and get the whole engine — every

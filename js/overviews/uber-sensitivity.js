@@ -5,7 +5,7 @@
 // else at the base, read the implied share price off a 5×5 grid; exit multiple EV/EBITDA or P/E.
 //
 // What changed for UBER:
-//   • BASE = the Summit DCF model, ONE snapshot FROZEN in ./uber-sensitivity-data.js (2026-08-05; rule 10) — the same
+//   • BASE = the Summit DCF model, ONE snapshot FROZEN in ./uber-sensitivity-data.js (2026-11-04; rule 10) — the same
 //     snapshot as Results and the last Target Multiple row, so the EBITDA here is the one Target Multiple values (A26):
 //     at the base, operating income + the held bridge = the model's Adjusted EBITDA exactly.
 //   • CATEGORIES = the three segments (Mobility · Delivery · Freight), revenue lines. One margin driver: consolidated
@@ -15,7 +15,7 @@
 //   • EBITDA = non-GAAP operating income + the model's bridge to Adjusted EBITDA (EBITDA − ADJ_OPINC), held fixed.
 //   • STREET = Bloomberg consensus through js/results-data/uber.js annual `cons` (segment revenue to FY2028; operating
 //     margin = consensus non-GAAP operating income ÷ consensus revenue). FY2029 segment lines fall back to the model, visibly.
-//   • EXIT MULTIPLE starts at the MODEL's own target multiples (EV/EBITDA 14.0× and P/E 22.0× on FY2027 — Target Multiple,
+//   • EXIT MULTIPLE starts at the MODEL’s own target multiples (latest submit: EV/EBITDA 16.0× and P/E 23.0× on FY2028 — Target Multiple,
 //     ./uber-target-multiple-data.js), never at a hand-picked number; yours to move.
 //   • NET DEBT = Uber's latest 10-Q (./uber-histmult-data.js), its source named (A23); the quote supplies the price only.
 //   • YEARS 2026–2029 (base 2025 + 4).

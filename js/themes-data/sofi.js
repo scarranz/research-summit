@@ -137,3 +137,8 @@ export var SOFI_THEMES = [
       { q:'Q2 2026', items:['Adjusted net revenue raised to <b>$4.75B to $4.85B</b> (about <b>+32% to +35%</b>), from about <b>$4.655B</b>. Adjusted EBITDA about <b>$1.6B</b>, adjusted net income about <b>$825M</b>, adjusted EPS about <b>$0.60</b>, all unchanged, at a <b>22%</b> tax rate; members still up at least <b>30%</b>.'] },
     ]},
 ];
+
+// Stamp the seed version on every thread (as meta.js / googl.js do). The hydrate step keeps a saved record only when
+// its threads carry v >= SOFI_THEMES_V; without this stamp every saved record read as v0 and was overwritten by the
+// seed on each load, losing notes the team added in the portal (found 2026-11-04).
+SOFI_THEMES.forEach(function(t){ t.v = SOFI_THEMES_V; });

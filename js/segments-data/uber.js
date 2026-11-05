@@ -73,7 +73,7 @@ export var uberSegments = {
       key: 'gb_seg', label: 'Gross Bookings', sub: 'gross bookings by segment',
       lede: 'Gross Bookings is the dollar value of every ride, order and shipment on the platform, before what Uber pays drivers, couriers and merchants — the scale of the marketplace and the line Uber guides every quarter. Revenue is the share Uber keeps of it.',
       caveat: 'Gross Bookings is a key metric, not a GAAP line: it is defined in MD&A and reported in each earnings release. Freight is booked gross, so its revenue is close to its bookings.',
-      note: 'Total = Mobility + Delivery + Freight, as each release reports it. Forecast quarters: the Summit DCF submit of 2026-08-05 (frozen); the Bloomberg consensus (2026-09-10) only where Summit has no quarter.',
+      note: 'Total = Mobility + Delivery + Freight, as each release reports it. Forecast quarters: the Summit DCF submit of 2026-11-04 (frozen); the Bloomberg consensus (2026-11-03) only where Summit has no quarter.',
       tenK: { text: 'We define Gross Bookings as the total dollar value, including any applicable taxes, tolls, and fees, of: Mobility rides, Delivery orders (in each case without any adjustment for consumer discounts and refunds, Driver and Merchant earnings, and Driver incentives) and Freight revenue. Gross Bookings do not include tips earned by Drivers.', where: 'Item 7 — MD&A, Key Metrics', verbatim: true },
       cite: UBER_CITE,
       series: [

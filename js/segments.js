@@ -49,6 +49,8 @@ import { maSegments } from './segments-data/ma.js';
 import { maResults } from './results-data/ma.js';
 import { uberSegments } from './segments-data/uber.js';
 import { uberResults } from './results-data/uber.js';
+import { tplSegments } from './segments-data/tpl.js';
+import { tplResults } from './results-data/tpl.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
 import { SN_THEMES } from './themes-data/sn.js';
@@ -58,6 +60,7 @@ import { META_THEMES } from './themes-data/meta.js';
 import { GOOGL_THEMES } from './themes-data/googl.js';
 import { MA_THEMES } from './themes-data/ma.js';
 import { UBER_THEMES } from './themes-data/uber.js';
+import { TPL_THEMES } from './themes-data/tpl.js';
 import { SUMMIT_CAT, SUMMIT_MUTE } from './viz-palette.js';   // the portal's fixed categorical palette
 
 // The Notes taxonomy names segments in prose; the datasets key them. One map, stated once.
@@ -69,9 +72,10 @@ var THEME_SEG = {
   META: { 'Family of Apps': 'foa', 'Reality Labs': 'rl' },               // AI & compute, Costs & capital are company-wide
   GOOGL: { 'Google Services': 'svc', 'Google Cloud': 'cloud', 'Other Bets': 'bets' },   // AI & compute, Costs & capital are company-wide
   UBER: { 'Mobility': 'mobility', 'Delivery': 'delivery', 'Freight': 'freight' },   // AVs, membership, costs & capital are company-wide
+  TPL: { 'Land and Resource Management': 'lrm', 'Water Services and Operations': 'wso' },   // next-gen land use, capital allocation, governance are company-wide
   MA: { 'Consumer payments': 'pn', 'Commercial and new flows': 'pn', 'Value-added services': 'vas', 'Agentic and digital assets': 'vas' },   // guidance, costs and capital, regulation and litigation are company-wide
 };
-var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES, META: META_THEMES, GOOGL: GOOGL_THEMES, MA: MA_THEMES, UBER: UBER_THEMES };
+var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES, META: META_THEMES, GOOGL: GOOGL_THEMES, MA: MA_THEMES, UBER: UBER_THEMES, TPL: TPL_THEMES };
 var SEGMENTS_DATA = {
   AMZN: { seg: amznSegments, res: amznResults },
   DHR:  { seg: dhrSegments,  res: dhrResults  },
@@ -91,7 +95,9 @@ var SEGMENTS_DATA = {
   // MA: ONE reportable operating segment (Payment Solutions, 10-K Note 22); its two net-revenue categories stand in as the segments.
   MA: { seg: maSegments, res: maResults },
   // UBER: three reportable segments (Mobility, Delivery, Freight), 10-K Note 13; segment profit = Adjusted EBITDA to 4Q25.
-  UBER: { seg: uberSegments, res: uberResults }
+  UBER: { seg: uberSegments, res: uberResults },
+  // TPL: two reportable segments (Land and Resource Management, Water Services and Operations), 10-K Note 16.
+  TPL: { seg: tplSegments, res: tplResults }
 };
 
 export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }

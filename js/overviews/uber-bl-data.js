@@ -31,7 +31,8 @@
 //    segments + Corporate G&A and Platform R&D = Adjusted EBITDA / Non-GAAP Operating Income.
 //
 // 4) UBER_SUMMIT — the Summit DCF model, FROZEN on purpose, not live (playbook rule 10, SAB Oct 15 2026): pulled once
-//    from the Summit_Financial_Data MCP, snapshot 2026-08-05 (the latest UBER submit), sheet projection_history.
+//    from the Summit_Financial_Data MCP, snapshot 2026-11-04 (the latest UBER submit, after 3Q26; replaced 2026-08-05
+//    on Nov 4 2026), sheet projection_history.
 //    Metric names are the model’s. The model projects no GAAP operating income or GAAP net income (those rows are zero),
 //    so there is no Summit line for them.
 //
@@ -141,21 +142,21 @@ export var UBER_SEG_TXT={
   corp:'Includes costs that are not directly attributable to our reportable segments. Corporate G&A also includes certain shared costs such as finance, accounting, tax, human resources, information technology and legal costs. Platform R&D also includes mapping and payment technologies and support and development of the internal technology infrastructure. Our allocation methodology is periodically evaluated and may change.'
 };
 
-// ═══ Summit DCF model — FROZEN, snapshot 2026-08-05 (projection_history), US$ million; shares in millions ═══
+// ═══ Summit DCF model — FROZEN, snapshot 2026-11-04 (projection_history), US$ million; shares in millions ═══
 export var UBER_SUMMIT={
-  snapshot:'2026-08-05',
+  snapshot:'2026-11-04',
   years:[2026, 2027, 2028],
-  rev:   [58066.7, 70356.4, 80391.4],     // REV
-  gb:    [238407.5, 292414.8, 349250.3],  // MOBILITY_GB + DELIVERY_GB + FREIGHT_GB
-  ngoi:  [9312.6, 11921.5, 15900.1],      // ADJ_OPINC (= the segments + CORP_GNA_ADJ_OPINC)
-  ebitda:[11381.9, 15891.1, 18455.4],     // EBITDA (Adjusted EBITDA)
-  fcf:   [11426.8, 13685.0, 16308.3],     // FCF
-  adjNi: [7318.8, 9656.4, 13515.1],       // ADJ_NET_INCOME (the model’s non-GAAP earnings)
-  shares:[2009.4, 1939.1, 1842.1],        // SHARES (diluted)
-  seg:{ mob:{ rev:[30053.4, 34866.9, 43584.0], gb:[118194.5, 139469.5, 174336.9], soi:[9010.9, 10809.2, 13511.4] },
-        del:{ rev:[22204.0, 28998.3, 30316.3], gb:[114417.3, 146454.2, 168422.3], soi:[4885.2, 6235.5, 7579.0] },
-        fr: { rev:[5810.6, 6491.1, 6491.1],    gb:[5795.6, 6491.1, 6491.1],       soi:[-96.9, -97.0, -64.9] },
-        corp:{ soi:[-4485.9, -5025.4, -5125.4] } }
+  rev:   [58170.6, 70385.9, 84340.9],     // REV
+  gb:    [236736.4, 291479.8, 359815.7],  // MOBILITY_GB + DELIVERY_GB + FREIGHT_GB
+  ngoi:  [9381.0, 11914.5, 15800.6],      // ADJ_OPINC (= the segments + CORP_GNA_ADJ_OPINC)
+  ebitda:[11458.8, 14678.0, 18239.8],     // EBITDA (Adjusted EBITDA)
+  fcf:   [11268.0, 13399.3, 16738.7],     // FCF (DEFAULT row; the SEGM build-up reads lower)
+  adjNi: [7403.9, 9293.3, 12640.5],       // ADJ_NET_INCOME (the model’s non-GAAP earnings)
+  shares:[2029.8, 1989.2, 1949.4],        // SHARES (diluted)
+  seg:{ mob:{ rev:[29873.5, 35182.7, 42219.2], gb:[117275.6, 140730.7, 168876.8], soi:[9063.8, 10906.6, 13088.0] },
+        del:{ rev:[21851.0, 27989.4, 34907.8], gb:[113019.8, 143535.2, 183725.0], soi:[4807.2, 6017.7, 7784.4] },
+        fr: { rev:[6446.0, 7213.9, 7213.9],    gb:[6441.0, 7213.9, 7213.9],       soi:[-113.5, -108.2, -72.1] },
+        corp:{ soi:[-4376.5, -4901.6, -4999.7] } }
 };
 
 export var UBER_EW_SRC='— Uber Form 10-K for FY2025, Item 7 (MD&amp;A), Components of Results of Operations · SEC EDGAR';

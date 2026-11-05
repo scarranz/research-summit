@@ -54,14 +54,14 @@ import { AM_YEARS, AM_ISEST, AM_IS, AM_BS } from './overviews/app-model.js';
 // has reported; everything after it is an estimate and is marked E on screen.
 export const EST_STORE = {
   UBER: {
-    name: "Uber Technologies, Inc.", currency: "USD", snapshot: "2026-08-05", lastActual: 2025,
+    name: "Uber Technologies, Inc.", currency: "USD", snapshot: "2026-11-04", lastActual: 2025,
     consensusAsOf: "2026-09-10", consensusFrom: "bbg",
     summit: {
       2024: { rev: 43978, ebitda: 6484, earnings: 3970, shares: 2154.466 },
       2025: { rev: 52017, ebitda: 8730, earnings: 5237, shares: 2124.391 },
-      2026: { rev: 58066.75, ebitda: 11381.86, earnings: 6870.63, shares: 2009.426 },
-      2027: { rev: 70356.42, ebitda: 15891.11, earnings: 9656.38, shares: 1939.096 },
-      2028: { rev: 80391.35, ebitda: 18455.43, earnings: 13515.08, shares: 1842.141 },
+      2026: { rev: 58170.57, ebitda: 11458.75, earnings: 6909.92, shares: 2029.821 },
+      2027: { rev: 70385.95, ebitda: 14677.97, earnings: 9293.31, shares: 1989.224 },
+      2028: { rev: 84340.88, ebitda: 18239.83, earnings: 12640.46, shares: 1949.44 },
     },
     // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
     // included. It has to be all-or-nothing: the archive carries GAAP lines while

@@ -2,28 +2,34 @@
 // Valuation ▸ Target Multiple / PEG (VA-TM, docs/PROFILE_PLAYBOOK.md §14).
 //
 // FROZEN ON PURPOSE, NOT LIVE (SAB, Oct 15 2026: Summit numbers are coded directly; playbook rule 10, §20b).
-// Pulled once from the Summit Financial Data store on 2026-11-03 (model 4dbd6471, instrument UBER, four submits:
-// 2025-12-15 · 2026-02-05 · 2026-05-06 · 2026-08-05 — the newest snapshot, after 2Q26; there is no submit after the 3Q26
-// print and SAB chose to work on the 2026-08-05 one, Nov 3 2026). Refresh by re-pulling when a new snapshot is submitted
-// and APPENDING a row (each row is a vintage — never overwrite one).
+// Pulled from the Summit Financial Data store on 2026-11-03 (model 4dbd6471, instrument UBER, submits 2025-12-15 ·
+// 2026-02-05 · 2026-05-06 · 2026-08-05) and on 2026-11-04 (the 2026-11-04 submit, after 3Q26, APPENDED — it values FY2028
+// on both legs, the earlier four FY2027). Refresh by re-pulling when a new snapshot is submitted and APPENDING a row
+// (each row is a vintage — never overwrite one).
 //
 //   val      get_valuation_history('UBER') — the workbook's Output ▸ VALUATION block, per method, verbatim: multiple,
 //            target year, basis, price target (1-year), fair value (discounted at the model's WACC), upside = fair value ÷
 //            price at snapshot − 1 (pre-computed by the store), quality flags (none in any submit). The three earlier
-//            submits value EV / EBITDA only; P / E first appears on 2026-08-05.
+//            submits value EV / EBITDA only; P / E first appears on 2026-08-05. On 2026-11-04 both price targets are
+//            corrected to the workbook's 1-year cells (ptStore keeps what the store recorded; see that row).
 //   y        get_fundamentals, projection_history (labels per js/summit-map/uber.js): REV · EBITDA (Adjusted EBITDA) ·
 //            EARNINGS (the model's Non-GAAP net income) · SHARES (diluted, millions). FY2025 is the model's actuals_history
 //            (reported) from the 2026-02-05 submit on, act:true; on 2025-12-15 FY2025 was still a projection.
 //   cons     the same model's Bloomberg consensus columns (REV_BBG_EST · EBITDA_BBG_EST · EARNINGS_BBG_EST), kept for the
-//            record; the pane uses the model only.
+//            record; the pane uses the model only. In the 2026-11-04 file those columns sit one fiscal year late (its FY2026
+//            cell holds the Street's FY2027), so that row stores them under the year they belong to and FY2026 is left null.
 //
 // Checks before freezing (playbook §6.3): price target ÷ fair value on 2026-08-05 is 1.060 (EV/EBITDA) and 1.064 (P/E) —
 // consistent, the store read the right cells. Both targets tie in the workbook (DCF UBER.xlsm ▸ Discounted Cash Flow,
 // read 2026-11-03): P/E = 22 × ADJ_EPS FY2027 $4.89 ($107.61) + FY2026 FCFE per share $5.69 = $113.29; EV/EBITDA = 14 × FY2027
 // EBITDA ($222.5B) + PV of FY2026 FCF ($11.7B) − net debt $5.3B (debt 10,726 − cash 5,391) → $107.58. The earlier
 // 'implied EPS $5.15' / 'implied net debt $13.9B' readings ignored the FY2026 cash-flow term (closed, SAB 2026-11-03).
+// 2026-11-04 (target year FY2028, two years out): the store recorded 152.04 (EV/EBITDA) and 154.36 (P/E) — the workbook's
+// NEXT-year cells Q49 / Q80 (Q80 = 23 × FY2028 EPS $6.42 + FY2027 FCFE per share $6.74). The 1-year targets the workbook's
+// Output ▸ VALUATION block reports (D206 / D208) are P49 = 150.16 and P80 = 155.08; with them price target ÷ fair value is
+// 1.025 (EV/EBITDA) and 1.026 (P/E), consistent. Corrected below; ptStore keeps the stored figure (DCF UBER.xlsm, Nov 4 2026).
 export var UBER_TM = {
-  model: '4dbd6471-83b2-4fe7-9ceb-19cb249ff517', pulled: '2026-11-03',
+  model: '4dbd6471-83b2-4fe7-9ceb-19cb249ff517', pulled: '2026-11-04',
   snaps: [
     { d: '2025-12-15', after: '3Q25', px: 81.60, wacc: 0.12607052,
       val: {
@@ -88,6 +94,28 @@ export var UBER_TM = {
         2026: { rev: 58173.1,     ebitda: 11390.2143, earn: 6901.3913 },
         2027: { rev: 66900.56,    ebitda: 13545.2128, earn: 8926.0938 },
         2028: { rev: 76723.0606,  ebitda: 16288.1818, earn: 10971.2105 }
+      } },
+    { d: '2026-11-04', after: '3Q26', px: 72.27, wacc: 0.17210201,
+      val: {
+        // pt corrected from the workbook on BOTH legs: the target year is FY2028, two years out, and the store read each price
+        // target from the following year's cell (Q49 152.04, Q80 154.37) instead of the 1-year cell (P49 150.16, P80 155.08) —
+        // the cells the workbook's own Output ▸ VALUATION block reports as the 1yr price targets (D206, D208). Fair values
+        // match the store. Checked in DCF UBER.xlsm, Nov 4 2026.
+        ev: { method: 'EV / EBITDA', mult: 16.0, year: 2028, basis: 'Forward', pt: 150.15677610, ptStore: 152.04021742, fv: 146.47878927, upside: 1.026827, flags: [] },
+        pe: { method: 'P / E',       mult: 23.0, year: 2028, basis: 'Forward', pt: 155.08170335, ptStore: 154.36498209, fv: 151.09103647, upside: 1.090647, flags: [] }
+      },
+      y: {
+        2025: { rev: 52017, ebitda: 8730, earn: 5237, sh: 2106.011, act: true },
+        2026: { rev: 58170.5696,  ebitda: 11458.753,  earn: 6909.9189,  sh: 2029.8208 },
+        2027: { rev: 70385.9464,  ebitda: 14677.97,   earn: 9293.3062,  sh: 1989.2243 },
+        2028: { rev: 84340.8753,  ebitda: 18239.8278, earn: 12640.4596, sh: 1949.4399 },
+        2029: { rev: 98019.001,   ebitda: 24500.9079, earn: 17714.1601, sh: 1851.9679 }
+      },
+      cons: {
+        2026: null,
+        2027: { rev: 66601.7708,  ebitda: 13778.6809, earn: 8748.4 },
+        2028: { rev: 76660.0541,  ebitda: 16581,      earn: 10987.6875 },
+        2029: { rev: 85451.2778,  ebitda: 18988.7368, earn: 13068.875 }
       } }
   ]
 };

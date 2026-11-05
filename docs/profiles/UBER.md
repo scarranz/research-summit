@@ -106,7 +106,7 @@ Cuadre contra el comunicado (vía `act` del dataset de Results, que cuadra con c
 | TL-CUS | Top Line ▸ Customers | ✅ | 2026-11-03 | SAB | fc50e3c | 5 clases del 10-K; sin concentración (no se divulga); Uber One anterior en colapsable |
 | EV-EST | Evolution ▸ Estimates | ✅ | 2026-11-03 | SAB | 8b8fab9 | motor; bloque evolution sin cambios (no hay submit nuevo) — heredado |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | ✅ | 2026-11-03 | SAB | | `uber-ce.js` (copia de googl-ce.js) + `uber-ce-data.js`; CE_CONS de `emit_ce_uber.py` (BBG 30 snapshots, último 09-10) + líneas de Results; Q3 2026 con Summit 08-05 y guía del 2T26 |
-| EV-POST | Evolution ▸ Earnings ▸ Post-Results | ✅ | 2026-11-04 | SAB | 06408ca | 3T26 construido (8-K 4-nov + suplemento + prepared remarks; 46/46 citas verificadas por script); falta Q&A (sin transcripción) y aprobación de SAB; Setup 4T26 abierto con la guía; Street actualizado al archivo BBG del 3-nov (DOAA351), reemplazó la fila del 10-sep; verify_preprint 335/0/0
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results | ✅ | 2026-11-04 | SAB | 06408ca | 3T26 construido (8-K 4-nov + suplemento + prepared remarks; 46/46 citas verificadas por script); Q&A (9 preguntas, 56 citas) y Also on the call desde la transcripción el 2026-11-04; Setup 4T26 abierto con la guía; Street actualizado al archivo BBG del 3-nov (DOAA351), reemplazó la fila del 10-sep; verify_preprint 335/0/0
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | ✅ | 2026-11-03 | SAB | 8b8fab9 | semilla v2 de las notas a mano de SAB (UBER.pdf): 30 hilos, 298 notas, Q3 2022 → Q2 2026; v1 guardada como UBER_THEMES_V1 |
 | BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ✅ | 2026-11-03 | SAB | 8b8fab9 | uber-bl.js (copia de googl-bl.js); margen sobre ingreso o GB |
 | BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ✅ | 2026-11-03 | SAB | 8b8fab9 | 6 renglones de costo del 10-K (XBRL); subtotal "After cost of revenue" (Uber no reporta utilidad bruta) |
@@ -419,7 +419,7 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 | 2026-11-03 | EV-RES-DATA | `opinc.act` y `eps.act` vs filings → **corregido**: fuente = 8-K 12-ene-2026 (acc. 0001543151-26-000005, recast 1T24–3T25) + comunicados 4T25/1T26/2T26. opinc 2T24–4T24 → 1,025/1,146/1,318, FY2024 → 4,310; antes de 1T24 el dataset traía utilidad de operación GAAP (otra base) → en blanco; Street de opinc solo desde 4T25/FY2026 (antes Bloomberg estimaba otra medida). EPS no-GAAP: 1T24–3T24 y 1T25 ajustados 1–2 centavos; FY2024 1.82, FY2025 2.45 (peers: Uber epsT 2.45) | Claude | cerrado 2026-11-03 |
 | 2026-11-03 | VA-SUB | Submit History abre en P/E (un solo punto); ¿UBER debería abrir en EV/EBITDA? (requiere tocar submits.js) | SAB | abierto |
 | 2026-11-03 | TL-* | citas del 10-K del borrador de DOAA351 sin cotejar palabra por palabra | Claude | abierto |
-| 2026-11-03 | EV-POST | sin transcripción del 2T26 en docs/calls (Call Summary textual vacío en 2T26/1T26) | Claude (stockanalysis.com / IR) | abierto; 3T26: Q&A también pendiente (Uber solo publica prepared remarks) |
+| 2026-11-03 | EV-POST | sin transcripción del 2T26 en docs/calls (Call Summary textual vacío en 2T26/1T26) | Claude (stockanalysis.com / IR) | 3T26 cerrado (2026-11-04): Q&A de 9 preguntas desde la transcripción de stockanalysis.com, 56/56 citas verificadas; transcripciones 2T26 y 3T26 ya en docs/calls (1T26 rotado a UBER.md). Sigue abierto: Q&A textual de 2T26/1T26 en el portal |
 | 2026-11-04 | OV-6 (#7) | texto `why` original de los peers quedó solo en `UB_PEERS` (uber.js), no en pantalla; el mapa vivo usa redacción nueva | SAB | abierto |
 | 2026-11-04 | EV-NOTES (#61–#63) | resumen viejo, red-lines y "what this tees up" del 1T26/2T26 siguen como datos en uber-ce-data.js; no están en la semilla de Notes | SAB | abierto |
 | 2026-11-04 | TL-SEG / BL-GEN (#71) | dos tarjetas de "What Truly Drives Uber" sin lugar en pantalla: "near-100%-margin business inside Delivery" y "Cash Machine" | SAB | abierto |
@@ -427,6 +427,11 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 | 2026-11-04 | VA-PEERS (#84) | columna "The read" de la tabla vieja de peers no está en el pane vivo | SAB | abierto |
 | 2026-11-04 | Motor de Results | ids repetidos rsVintNote, rsBlocks, rsConvHost, rsViewNote (el motor se monta 3 veces: Setup, Results, Estimates); es del motor compartido | SAB | abierto |
 | 2026-11-04 | F-FINAL | duplicados visibles que quedan del modo B: TIMELINE también en Misc ▸ M&A (#72), franja de precio vieja en el plegable de Segments (#11), barras de op. income viejas junto a BL-GEN (#48); 21 `<style>` en línea de los panes conservados | SAB | abierto |
+| 2026-11-04 | VA-TM / VA-SUB | arreglo en el DCF: en el submit del 2026-11-04 (año objetivo FY2028, a dos años) los dos precios objetivo se leyeron de Q49/Q80 (152.04 EV/EBITDA, 154.36 P/E); los correctos son P49/P80 (150.16 / 155.08), que es lo que muestra el portal con nota `fix`. PT÷FV = 1.025 / 1.026 | SAB | abierto |
+| 2026-11-04 | F0-SM | arreglo en el DCF: las filas de consenso Bloomberg guardadas en el modelo están un año corridas (la celda FY2026 trae el FY2027 de la calle: revenue 66,602, EBITDA 13,779); el portal toma la calle del archivo BBG, no de esas filas | SAB | abierto |
+| 2026-11-04 | F0-SM | el snapshot 2026-08-05 del MCP fue reprocesado y ya no coincide con lo congelado en agosto (4T26 revenue 16,025 vs 16,574; EPS FY2026 3.557 vs 3.681; EBITDA/FCF trimestrales ya no en 0); los guardados 2026-05-07 y 2026-07-31 ya no aparecen. Lo congelado se dejó igual | SAB / Oscar | abierto |
+| 2026-11-04 | F0-SM | revisión del DCF: Freight GB y revenue planos en 7,214 para FY2027–30 (sus propios trimestres 2027 suman 12,742); Uber One FY2027 anual 88.5 vs 73.3 en el 4T; FCF anual duplicado (DEFAULT 11,268 vs build-up 10,598 en FY2026); siguen en 0 GAAP net income, acciones diluidas trimestrales y GAAP op income anual; op income y EPS FY2026 ≈5.5% sobre 1T–3T reales + 4T modelo | SAB | abierto |
+| 2026-11-04 | EV-POST | 10-Q del 3T26 aún no en EDGAR (4-nov tarde): cotejar D&A, SBC, acciones y Uber One cuando salga | Claude | abierto |
 
 ### EV-NOTES — cifras de las notas de SAB que no se leyeron con seguridad (UBER.pdf)
 
@@ -492,6 +497,12 @@ approval): #11, #30, #48, #53, #67, #68, #70, #72, #91 (and partial #86 SBC text
 ### 2026-11-03 · B1 + B2 — APROBADAS
 - Qué se mostró: 96 piezas con destino; 9 fusiones; Misc con 5 sub-tabs (comp, insurance, regulation, M&A/DH, TAM).
 - Nota: B1 se contó leyendo el código; el conteo en pantalla se hace en el cierre (B3).
+### 2026-11-04 · Q&A 3T26 + notas de SAB + submit Summit 2026-11-04 (feat/uber-3q26-call-submit)
+- Call Summary 3T26: 9 preguntas del Q&A desde la transcripción (stockanalysis.com; Uber solo publicó prepared remarks), 56/56 citas verificadas por script; "Also on the call" (salida de Jill Hazelbaker a OpenAI; agentes de IA: 4 viajes y ~500 pedidos en la semana de Halloween); Propose Notes 7 → 15.
+- Notes: semilla v3 con las notas a mano de SAB del 3T26 ("UBER (1).pdf", 2 págs.) en 19 sub-temas + uno nuevo (Costs & capital ▸ Acquisitions & integration); cotejadas con release, prepared remarks y transcripción (€4.5B de bonos, no $; "$2T food TAM" fuera). Se conservó la única nota del equipo que la copia de Supabase tenía y la v2 no (Freight, Q4 2026). El portal reemplazó la copia guardada (31 hilos).
+- docs/calls: 3T26 en UBER-latest.md; 1T26 y 2T26 rotados a UBER.md.
+- Submit Summit 2026-11-04 cargado: Results/Estimates (vintage 6), Submit History, Target Multiple (FY2028), Sensitivity (base), Bottom Line (bloque Summit), Segments (nota), Options (Derivatives), mapa Summit, Setup 4T26 (SUMMIT_EXTRA 4T26/1T27). Problemas del DCF en §6.
+
 ### 2026-11-04 · EV-POST 3T26 + F-FINAL — APROBADAS (SAB pidió PR y merge)
 - EV-POST: print del 8-K del 4-nov, notas por línea, Call Summary con 46 citas verificadas contra las prepared remarks, Setup 4T26 abierto; Street al archivo BBG del 3-nov.
 - F-FINAL: recorrido de las 24 sub-pestañas sin errores ni NaN; B3 sin faltantes (7 parciales en §6); código muerto fuera; estilos legados a css/overview.css; citas del 10-K de Top Line cotejadas (Mobility y Freight sin "…", tabla geográfica, frase por país inexistente → la oración real de la Nota 13).

@@ -30,7 +30,8 @@
     { "id": "2026-02-05", "label": "Feb 5, 2026",  "lastActual": { "q": "4Q25", "y": "2025" } },
     { "id": "2026-05-07", "label": "May 7, 2026",  "lastActual": { "q": "1Q26", "y": "2025" } },
     { "id": "2026-07-31", "label": "Jul 31, 2026", "lastActual": { "q": "1Q26", "y": "2025" } },
-    { "id": "2026-08-05", "label": "Aug 5, 2026",  "lastActual": { "q": "2Q26", "y": "2025" } }
+    { "id": "2026-08-05", "label": "Aug 5, 2026",  "lastActual": { "q": "2Q26", "y": "2025" } },
+    { "id": "2026-11-04", "label": "Nov 4, 2026",  "lastActual": { "q": "3Q26", "y": "2025" } }
   ],
 
   "_views_note": "Which dataset metric keys get a matrix row per view. Order here is the order emitted. ANNUAL trips and fcf are deliberately absent: the model's annual ORDERS row is on the audit list (FY2026 reads 12,260 against a 13,567 FY2025 ACTUAL) and annual FCF carries two competing rows (see prefer_source). The quarterly rows of both are sound. Leaving them out keeps the matrix from re-introducing the exact numbers the dataset chose to null out.",

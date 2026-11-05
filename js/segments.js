@@ -49,6 +49,8 @@ import { maSegments } from './segments-data/ma.js';
 import { maResults } from './results-data/ma.js';
 import { uberSegments } from './segments-data/uber.js';
 import { uberResults } from './results-data/uber.js';
+import { lyftSegments } from './segments-data/lyft.js';
+import { lyftResults } from './results-data/lyft.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
 import { SN_THEMES } from './themes-data/sn.js';
@@ -91,7 +93,9 @@ var SEGMENTS_DATA = {
   // MA: ONE reportable operating segment (Payment Solutions, 10-K Note 22); its two net-revenue categories stand in as the segments.
   MA: { seg: maSegments, res: maResults },
   // UBER: three reportable segments (Mobility, Delivery, Freight), 10-K Note 13; segment profit = Adjusted EBITDA to 4Q25.
-  UBER: { seg: uberSegments, res: uberResults }
+  UBER: { seg: uberSegments, res: uberResults },
+  // LYFT: ONE operating segment (10-K Note 2), like SN: the Segments tab carries the consolidated platform; the revenue-line and geography cuts live in Other (annual).
+  LYFT: { seg: lyftSegments, res: lyftResults }
 };
 
 export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }
@@ -355,7 +359,8 @@ function sgResolveRef(ref, view){
       Object.keys(act).forEach(function(p){ act[p] = act[p] / 100; });
       Object.keys(est).forEach(function(p){ est[p] = est[p] / 100; });
     }
-    return { unit: m.unit === 'eps' ? 'eps' : (m.unit === 'count' ? 'count' : (m.unit === 'pct' ? 'pct' : 'usdM')), label: m.label, short: m.short || m.label,
+    // `segUnit`: a Results metric whose own unit is a stand-in (LYFT rides / riders are counts in millions but sit on usdM in Results) tells this engine the real unit.
+    return { unit: m.segUnit || (m.unit === 'eps' ? 'eps' : (m.unit === 'count' ? 'count' : (m.unit === 'pct' ? 'pct' : 'usdM'))), label: m.label, short: m.short || m.label,
              act: act, est: est, src: 'Results dataset' };
   }
   if (kind === 'shared'){

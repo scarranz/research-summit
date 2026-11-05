@@ -12,7 +12,7 @@
 | Rama | `feat/lyft-profile` (desde `origin/main` @ `e2a30fa`, 2026-11-04; worktree `research-summit-lyft`). Ya existen en GitHub `feat/earnings-rollout-lyft` y `feat/lyft-2q26-results` (no se tocan) |
 | Analista responsable | SAB (Santiago Alvarez); la sesión la abre Dani |
 | Inicio | 2026-11-04 |
-| Avance | 14 de 45 unidades aprobadas (F0, B1, B2, F0-SM, F1, OV-1, OV-2, OV-3, OV-4, OV-5, OV-6, OV-7, OV-F, EV-RES-DATA) |
+| Avance | 19 de 45 unidades aprobadas (F0, B1, B2, F0-SM, F1, OV-1, OV-2, OV-3, OV-4, OV-5, OV-6, OV-7, OV-F, EV-RES-DATA, EV-RES, TL-GEN, TL-SEG, TL-OTH, TL-CUS) |
 
 ## 1. Inventario de datos (F0)
 
@@ -125,11 +125,11 @@ Cuadre — **vía el dataset de Results/Customers existente (que viene de los 8-
 | OV-7 | Overview ▸ Timeline | ✅ | 2026-11-05 | SAB | | 10 hitos en orden cronológico, 8 con Read more; fuentes 10-K FY23/FY25 + Prepared Remarks 2T26 |
 | OV-F | Overview ▸ Pie de fuentes | ✅ | 2026-11-05 | SAB | | pie al formato del playbook; desplegables renombrados |
 | EV-RES-DATA | Dataset de Results (números) | ✅ | 2026-11-05 | SAB | | BBG pre-print (estMatrix, 30 snapshots), 2T26 real del 10-Q, Summit congelado (4 vintages), guía 3T26; FCF sin consenso |
-| EV-RES | Evolution ▸ Results | ⬜ | | | | |
-| TL-GEN | Top Line ▸ General | ⬜ | | | | |
-| TL-SEG | Top Line ▸ Segments | ⬜ | | | | |
-| TL-OTH | Top Line ▸ Other | ⬜ | | | | |
-| TL-CUS | Top Line ▸ Customers | ⬜ | | | | |
+| EV-RES | Evolution ▸ Results | ✅ | 2026-11-05 | SAB | | revisada por SAB en el portal local; FCF sin chip Consensus a propósito |
+| TL-GEN | Top Line ▸ General | ✅ | 2026-11-05 | SAB | | un segmento (10-K Nota 2); revisado por SAB en el portal |
+| TL-SEG | Top Line ▸ Segments | ✅ | 2026-11-05 | SAB | | 1 segmento, 3 productos, 5 KPI con definición verbatim, 3 identidades; ⚑ Notes hasta EV-NOTES |
+| TL-OTH | Top Line ▸ Other | ✅ | 2026-11-05 | SAB | | 2 cortes anuales FY23–25 (línea contable, geografía) |
+| TL-CUS | Top Line ▸ Customers | ✅ | 2026-11-05 | SAB | | sin concentración divulgada; sin SPLC |
 | EV-EST | Evolution ▸ Estimates | ⬜ | | | | |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | ⬜ | | | | |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
@@ -421,3 +421,14 @@ Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en
 - Notas de métricas corregidas a BBG (sorpresas nuevas; ej. EBITDA superó a BBG en 9 de 10 trimestres; rides −5.0% en 4T25 y −4.0% en 1T26) y a Summit 08-07 (GB 2027 $24.6B; EBITDA 2027 $959M; FCF 2027 $1,277M). Retirado por no tener fuente: "Gett UK (may-2026)".
 - **Duda nueva para el autor del modelo:** RIDES 2T26 en `Actuals History` = 262.0; el 10-Q trae 262.4 (los remarks redondean a 262). Se suma a las dudas de §1b. Además `Actuals History` REV FY25 de `Projection History` = 6,484.3 vs 6,316.3 reportado (duda 1, sin cambio).
 - Pendiente de este archivo: bloque `evolution` (EV-EST, vintages Dec-15/Feb-11/May-13 → agregar Aug-7 y May-08 vs May-13), `LYFT_SETUP` (EV-SET), y que el 3T26 se carga tras el print de hoy.
+
+### 2026-11-05 · EV-RES Pestaña Results · Aprobado (SAB)
+- Montada sin cambios de código (motor `results.js`, dataset aprobado en EV-RES-DATA). SAB la revisó en el portal local.
+
+### 2026-11-05 · TL-GEN · TL-SEG · TL-OTH · TL-CUS Top Line · Aprobados (SAB)
+- Archivo nuevo `js/segments-data/lyft.js` (patrón SN: un solo segmento, 10-K Nota 2). Registrado en `js/segments.js` (`LYFT: { seg: lyftSegments, res: lyftResults }`) y montado en `deepDiveHtml` (General · Segments · Other · Customers); el análisis anterior (`lySegmentsBody`, `lyCustomersBody`) quedó debajo en desplegables "the earlier analysis (moved from the old … tab)", nada se borró.
+- Datos anuales de Other (10-K FY25, nota de ingresos): ASC 606 4,116.2 / 5,365.5 / 5,895.5; ASC 842 287.4 / 420.5 / 420.8; EE.UU. 4,245.1 / 5,645.9 / 6,060.2; Internacional 158.5 / 140.1 / 256.0 (2023/2024/2025); ambos cortes suman el ingreso reportado.
+- KPIs con definición verbatim del 10-K (Item 7): Gross Bookings, Rides, Active Riders. **Nota de comparabilidad:** el 10-K dice que en 4T25 se simplificó la definición de Gross Bookings, sin impacto en periodos previos; en 1T25 se actualizó la de Active Riders.
+- Cambio de motor mínimo y aditivo (`js/segments.js`, `sgResolveRef`): campo opcional `segUnit` en la métrica de Results para que Rides y Active Riders (que en Results viven en `usdM` como sustituto) salgan como conteos en Top Line. Para el PR: generalizar el motor aparte.
+- Omitido: tabla SPLC (no hay export con Lyft como sujeto); bloque 5 de TL-SEG ("What management has said") muestra su bandera ⚑ hasta EV-NOTES; precio×volumen: costo por unidad (seguro por ride) pendiente de BL-GEN-5.
+- Sin verificar en navegador por mí: lo revisó SAB en el portal local.

@@ -10,6 +10,7 @@
 import { makeValuation } from './valuation.js';
 import { makeManagement } from './management.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
+import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/lyft.js)
 import { lyftResults } from '../results-data/lyft.js';
 import { mountWatchList } from '../watchlist.js';
 import { lyPeerScatter, lyWireScatters } from './lyft-peers.js';
@@ -3686,8 +3687,10 @@ function deepDiveHtml(c){
     '</div>';
   // TOP LINE - Segments (B2 rideshare + media in depth) · Customers
   h += '<div class="dd-pane" data-dd="topline">'+st([
-      ['segdrv','Segments',lySegmentsBody(c)],
-      ['segcus','Customers',lyCustomersBody(c)] ])+'</div>';
+      ['segov','General',segmentsOverviewHtml('LYFT')],
+      ['segdrv','Segments',segmentsHtml('LYFT')+ddMore('Rideshare and Lyft Media in depth — the earlier analysis (moved from the old Segments tab)',lySegmentsBody(c))],
+      ['segoth','Other',segmentsOtherHtml('LYFT')],
+      ['segcus','Customers',segmentsCustomersHtml('LYFT')+ddMore('Riders and drivers — the earlier analysis (moved from the old Customers tab)',lyCustomersBody(c))] ])+'</div>';
   // BOTTOM LINE - General (margins + unit economics + financials) · Supply Chain
   h += '<div class="dd-pane" data-dd="bottomline" hidden>'+st([
       ['margins','General',lyMarginsBody(c)+unitBody(c)+lyFinBody()],
@@ -4261,8 +4264,10 @@ function buildDD(root, key){
 // Build the lazy charts inside a nested sub-pane, by (group, sub-key).
 function buildSub(root, group, key){
   if(group==='topline'){
-    if(key==='segdrv'){ buildOverviewCharts(); buildActiveSeg(root); }  // GB + EBITDA + active segment
-    // segcus: no charts
+    if(key==='segov') requestAnimationFrame(function(){ initSegmentsOverview(root, 'LYFT'); });
+    else if(key==='segdrv'){ requestAnimationFrame(function(){ initSegments(root, 'LYFT'); }); buildOverviewCharts(); buildActiveSeg(root); }  // engine + the earlier GB/EBITDA charts
+    else if(key==='segoth') requestAnimationFrame(function(){ initSegmentsOther(root, 'LYFT'); });
+    else if(key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'LYFT'); });
   } else if(group==='bottomline'){
     if(key==='margins'){ buildLyMargins(); buildUnitTab(); buildLyFin(); }   // live Massive margins + unit economics + financials
     // supplychain: no charts

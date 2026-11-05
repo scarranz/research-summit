@@ -48,9 +48,12 @@ var LYFT_MGMT = makeManagement({
     { id:'risher', lead:true, name:'David Risher', title:'Chief Executive Officer', since:'CEO since 2023', img:'img/leadership/lyft-risher.jpg',
       line:"Turnaround CEO; ex-Amazon SVP US Retail; founded Worldreader.",
       bio:"Chief Executive Officer and director since April 2023; on the board since 2021. Co-founded and led the nonprofit Worldreader. Prior: SVP US Retail at Amazon and GM at Microsoft. Princeton; Harvard MBA. Took a single large performance-RSU grant in 2023 and $0 new equity since; has pledged his bonus to charity." },
-    { id:'brewer', name:'Erin Brewer', title:'Chief Financial Officer', since:'CFO since 2023', img:'img/leadership/lyft-brewer.jpg',
+    { id:'brous', name:'Michael Brous', title:'Chief Financial Officer', since:'Introduced as CFO on the Q3 2026 call (Nov 5, 2026)',
+      line:"About eight years at Lyft; previously head of Lyft Urban Solutions.",
+      bio:"Introduced as Chief Financial Officer on the Q3 2026 earnings call (Nov 5, 2026) and quoted as CFO in the release. Per the call: about eight years at Lyft in senior roles, the last three on the leadership team, and head of Lyft Urban Solutions (the bike and scooter business) before becoming CFO. He said to expect continuity, not a reset, and that the capital allocation framework is unchanged. The effective date of the change and his earlier career were not given on the call; the 8-K and the 2026 proxy are not on file." },
+    { id:'brewer', name:'Erin Brewer', title:'Chief Financial Officer until the Q3 2026 call', since:'CFO from July 2023', img:'img/leadership/lyft-brewer.jpg',
       line:"Ex-Charles Schwab, Atlassian and McKesson.",
-      bio:"Chief Financial Officer since July 2023. Prior: MD of Enterprise Finance at Charles Schwab; Head of Strategy & Finance at Atlassian; senior finance roles at McKesson. Purdue; Berkeley Haas MBA." },
+      bio:"Chief Financial Officer from July 2023; thanked for her leadership by the CEO and the new CFO on the Q3 2026 call, which introduced Michael Brous as CFO. Prior: MD of Enterprise Finance at Charles Schwab; Head of Strategy & Finance at Atlassian; senior finance roles at McKesson. Purdue; Berkeley Haas MBA." },
     { id:'llewellyn', name:'Lindsay Llewellyn', title:'Chief Legal & Business Officer', since:'In role since 2024 · at Lyft since 2014', img:'img/leadership/lyft-llewellyn.jpg',
       line:"11-year Lyft veteran; GC with expanded business scope.",
       bio:"Chief Legal & Business Officer and Corporate Secretary since July 2024; at Lyft since 2014, rising from litigation counsel to General Counsel. Scope expanded to include business and People functions after the President role was folded in. Prior: Winston & Strawn." },
@@ -2929,7 +2932,7 @@ function lyOwnBody(){
   var h='<p class="ov-lede">Lyft became a <b>single-class company on August 15, 2025</b>, when every Class B share (20 votes) converted into Class A, so each share now carries one vote. Capital is returned through buybacks; Lyft has never paid a dividend.</p>';
   h+='<div class="ov-kpis">'+
     '<div class="ov-kpi"><div class="ov-kpi-v">1 class</div><div class="ov-kpi-d muted">Class A only since Aug 15, 2025; Class B carried 20 votes a share (10-K)</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-v">398.1M</div><div class="ov-kpi-d muted">Class A shares outstanding, Feb 5, 2026 (10-K cover); 379.2M at Jun 30, 2026 (10-Q)</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-v">398.1M</div><div class="ov-kpi-d muted">Class A shares outstanding, Feb 5, 2026 (10-K cover); 379.2M at Jun 30, 2026 (10-Q) and 379.2M at Sep 30, 2026 (3Q26 release)</div></div>'+
     '<div class="ov-kpi"><div class="ov-kpi-v">$322M</div><div class="ov-kpi-d muted">stock-based compensation, FY2025: 5.1% of revenue (10-K)</div></div>'+
     '<div class="ov-kpi"><div class="ov-kpi-v">$500M</div><div class="ov-kpi-d muted">repurchased in FY2025 (30.3M shares); $400M in the first half of 2026 (28.5M shares)</div></div>'+
   '</div>';

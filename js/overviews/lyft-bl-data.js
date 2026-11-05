@@ -32,8 +32,9 @@ export var LYFT_OPEXQ=[
   {"p": "4Q25", "yr": 2025, "q": "Q4", "revenue": 1592.7, "cor": 971.8, "opsSupport": 123.2, "marketing": 258.8, "rnd": 120.0, "gAdmin": 303.9, "oi": -185.0, "sbc": 80.4},
   {"p": "1Q26", "yr": 2026, "q": "Q1", "revenue": 1650.5, "cor": 864.1, "opsSupport": 124.4, "marketing": 272.9, "rnd": 124.2, "gAdmin": 270.2, "oi": -5.3, "sbc": 86.9},
   {"p": "2Q26", "yr": 2026, "q": "Q2", "revenue": 1843.5, "cor": 926.4, "opsSupport": 128.7, "marketing": 320.0, "rnd": 119.2, "gAdmin": 301.6, "oi": 47.6, "sbc": 149.2},
+  {"p": "3Q26", "yr": 2026, "q": "Q3", "revenue": 1821.8, "cor": 871.4, "opsSupport": 134.0, "marketing": 382.0, "rnd": 109.1, "gAdmin": 344.7, "oi": -19.4, "sbc": 53.9},
 ];
-export var LYFT_OPEX_SRC='Lyft Forms 10-K (FY2021–FY2025, consolidated statements of operations) and Bloomberg reported actuals 2Q25–2Q26 (tied to the Form 10-Q for 2Q26)';
+export var LYFT_OPEX_SRC='Lyft Forms 10-K (FY2021–FY2025, consolidated statements of operations) and Bloomberg reported actuals 2Q25–2Q26 (tied to the Form 10-Q for 2Q26) and the 3Q26 release (Nov 5 2026) for 3Q26';
 
 // Stock-based compensation by function (US$ million), 10-K statements of operations.
 export var LYFT_SBC_FN={

@@ -389,7 +389,7 @@ function aBuildCostStructure(){
     var series=A_MB_COST.map(function(it){ return { k:it.k, label:it.lab+' — % of revenue', color:it.c, type:'bar', data:rows.map(function(r){ return pct(r[it.k],r); }) }; });
     series.push({ k:'gm', label:'Revenue less cost of revenue', color:CS_GM, type:'line', stack:'gm', dash:true, data:rows.map(function(r){ return pct(r.revenue-r.cor,r); }) });
     series.push({ k:'om', label:'Operating margin', color:CS_OM, type:'line', stack:'om', data:rows.map(function(r){ return pct(r.oi,r); }) });
-    var note=gran==='q'?'Quarterly lines are Bloomberg actuals, which tie to the 10-Q for 2Q25 and 2Q26. The 4Q25 cost of revenue and G&A carry the legal, tax and regulatory reserve charge.':'FY2021 and FY2022 carry the pandemic-era incentives and restructuring; stock-based compensation peaked in FY2021–FY2022 (mostly R&amp;D) and has fallen since. Source: Forms 10-K.';
+    var note=gran==='q'?'Quarterly lines are Bloomberg actuals, which tie to the 10-Q for 2Q25 and 2Q26; 3Q26 is from the 3Q26 release. The 4Q25 cost of revenue and G&A carry the legal, tax and regulatory reserve charge, and 3Q26 carries a $117.9M reserve item ($69.1M of it as a reduction to revenue).':'FY2021 and FY2022 carry the pandemic-era incentives and restructuring; stock-based compensation peaked in FY2021–FY2022 (mostly R&amp;D) and has fallen since. Source: Forms 10-K.';
     return { labels:labels, lastAct:labels.length-1, type:'bar', stacked:true, series:series, tblWhat:'% of revenue', note:note,
       yFmt:function(x){ return (x==null?'':(+x).toFixed(1))+'%'; },
       legCap:'Bars stack each cost as a share of revenue (cost of revenue first, then the operating expenses); lines = margins. Above 100% = an operating loss.' };
@@ -670,7 +670,7 @@ function lyftBlFootGeneral(){
   var y0=LYFT_OPEX_YEARS[0], y1=LYFT_OPEX_YEARS[LYFT_OPEX_YEARS.length-1], q0=LYFT_OPEXQ[0], q1=LYFT_OPEXQ[LYFT_OPEXQ.length-1];
   return '<div class="ov-foot">Sources — Bloomberg consensus export (BBG_CONSENSUS, as of '+esc(lyftBBG.asOf)+'): reported '+A_FYLAB[0]+'–'+A_FYLAB[A_LA]+
     ' and consensus '+A_FYLAB[A_LA+1]+'–'+A_FYLAB[A_FYLAB.length-1]+' income statement, quarterly '+esc(lyftBBG.qtrs[0])+'–'+esc(lyftBBG.qtrs[lyftBBG.qtrs.length-1])+', SBC by line and diluted shares; '+
-    esc(LYFT_OPEX_SRC)+' for the five cost lines (FY'+y0+'–FY'+y1+'; quarters '+esc(q0.p)+'–'+esc(q1.p)+' are Bloomberg actuals, which tie to the Form 10-Q for 2Q25 and 2Q26) — they tie to reported loss from operations in every year; '+
+    esc(LYFT_OPEX_SRC)+' for the five cost lines (FY'+y0+'–FY'+y1+'; quarters '+esc(q0.p)+'–'+esc(q1.p)+' are Bloomberg actuals, which tie to the Form 10-Q for 2Q25 and 2Q26, except 3Q26, which is from the 3Q26 release) — they tie to reported loss from operations in every year; '+
     esc(LYFT_SBC_FN_SRC)+'; the valuation-allowance release from the Form 10-K FY2025 MD&amp;A; '+
     LYFT_EW_SRC.replace(/^— /,'')+' for line definitions; Results dataset for quarterly Adjusted EBITDA, Gross Bookings and their Summit and consensus series; Summit DCF model, frozen on purpose (not live) — snapshot '+esc(LYFT_SUMMIT.snapshot)+'. Forward figures are estimates.</div>';
 }

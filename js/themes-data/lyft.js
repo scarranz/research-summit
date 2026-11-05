@@ -6,7 +6,7 @@
 //
 // Seed v1 (2026-11-05). Base: the earlier Lyft earnings-narrative record (10 calls, Q4 2023 -> Q1 2026, from the call transcripts)
 // moved unchanged from js/overviews/lyft.js (LY_THEMES, B2 earnings-calls row) with its markup removed, regrouped under the six axes
-// below, plus a Q2 2026 update per axis taken from the 2Q26 prepared remarks (the Q&A transcript is not on file). Entries from earlier
+// below, plus a Q2 2026 update per axis taken from the 2Q26 prepared remarks and a Q3 2026 update per axis (2026-11-05) taken from the 3Q26 release, prepared remarks and the call transcript. Entries from earlier
 // quarters were not re-verified against the transcripts in this pass.
 export var LYFT_THEMES_V = 1;
 export var LYFT_THEMES = [
@@ -16,10 +16,18 @@ export var LYFT_THEMES = [
   "st": {
    "k": "trend",
    "since": "Q2 2024",
-   "last": "Q2 2026"
+   "last": "Q3 2026"
   },
   "why": "The core thesis: ride-count growth is decelerating (S-curve), so Lyft needs revenue per ride to carry the growth story. If mix shift stalls or is just weather/seasonal, the thesis weakens.",
   "updates": [
+   {
+    "q": "Q3 2026",
+    "items": [
+     "Rides +10% year over year to a record 273.5M and Active Riders a record 31.6M (+10%); North American rides growth accelerated for the second quarter in a row, with Canada rides more than doubling. The CFO expects a third straight acceleration in Q4.",
+     "Premium modes grew double digits for the thirteenth quarter in a row; Alcove, a premium chauffeur network built on TBR, launches in early 2027 for business travel.",
+     "Gross Bookings $5,616.9M (+17%), driven by \"strength across all modes, including premium, higher average Gross Bookings per Ride, and the addition of TBR and a full quarter of Freenow\"."
+    ]
+   },
    {
     "q": "Q2 2026",
     "items": [
@@ -71,10 +79,18 @@ export var LYFT_THEMES = [
   "st": {
    "k": "trend",
    "since": "Q1 2024",
-   "last": "Q2 2026"
+   "last": "Q3 2026"
   },
   "why": "Lyft’s survival argument: if AVs disintermediate the driver, the value shifts to whoever aggregates demand + manages fleets. Lyft claims both. The risk: with ~15% US rideshare share vs Uber’s ~70%, AV partners may prefer the larger demand graph.",
   "updates": [
+   {
+    "q": "Q3 2026",
+    "items": [
+     "Waymo vehicles matched to riders on the Lyft app in Nashville since September; the 80,000 sq ft permanent depot opened in October; the deployed AV fleet is to grow \"significantly\" by year-end with Waymo’s Ojai vehicles.",
+     "AV capital needs are funded off the balance sheet and are \"relatively immaterial\"; the CFO expects third-party capital to come in as scale grows. Baidu’s RT6 is in safety-driver testing in London, with commercial service hoped for in 2027.",
+     "Lyft rides in the San Francisco service area shared with AVs had the strongest year-over-year growth of any area where AVs operate."
+    ]
+   },
    {
     "q": "Q2 2026",
     "items": [
@@ -134,10 +150,17 @@ export var LYFT_THEMES = [
   "st": {
    "k": "trend",
    "since": "Q4 2023",
-   "last": "Q2 2026"
+   "last": "Q3 2026"
   },
   "why": "27% of rides from partners = real demand that Lyft doesn’t pay to acquire. The Delta loss (~2% of GBs) proved partnerships can walk. The question: does the portfolio compound (more partners × deeper penetration) or plateau once the obvious deals are signed?",
   "updates": [
+   {
+    "q": "Q3 2026",
+    "items": [
+     "Lyft Go launched in the U.S. on Nov 5, 2026: $9.99 a month with 8% back in Lyft Credits, included with every DashPass; Lyft Go Core is $4.99 for 5% back. \"Hundreds of thousands\" had linked accounts at launch, and its near-term economics are in the Q4 guide.",
+     "A record number of North American rideshare rides were linked to a partner (DoorDash, United Airlines, Chase and others); over 30% of rides are tagged to partners."
+    ]
+   },
    {
     "q": "Q2 2026",
     "items": [
@@ -185,10 +208,17 @@ export var LYFT_THEMES = [
   "st": {
    "k": "trend",
    "since": "Q1 2025",
-   "last": "Q2 2026"
+   "last": "Q3 2026"
   },
   "why": "The biggest strategic bet since founding: Lyft went from US-only to a European footprint overnight. The bull case: FreeNow’s taxi-regulator relationships are the AV entry ticket. The bear case: integration drag, EU gig-law exposure, and capital diverted from the US fight vs Uber.",
   "updates": [
+   {
+    "q": "Q3 2026",
+    "items": [
+     "Active Riders, Rides and Gross Bookings in Europe all grew year over year (organic growth in existing markets and new ones); Q4 is the first full quarter lapping the Freenow acquisition.",
+     "The Lyft app now matches rides in over 160 European cities, with tens of thousands of rides in the first month."
+    ]
+   },
    {
     "q": "Q2 2026",
     "items": [
@@ -223,10 +253,19 @@ export var LYFT_THEMES = [
   "st": {
    "k": "trend",
    "since": "Q2 2024",
-   "last": "Q2 2026"
+   "last": "Q3 2026"
   },
   "why": "Insurance is ~50% of Lyft’s cost of revenue. SB371 cuts mandatory coverage limits in California (Lyft’s largest market) starting Jan 2026 — management estimates >$6/ride savings in LA alone. If durable, this is the single largest margin lever. If reserves re-inflate, it’s a trap.",
   "updates": [
+   {
+    "q": "Q3 2026",
+    "items": [
+     "Cost of revenue fell year over year on lower insurance cost per ride (California reform, low-scale markets and Canada, favorable developments in the insurance portfolio); the 10/1 renewal implies a modest increase in the Q4 cost of insurance.",
+     "Adjusted EBITDA $203.9M (+47%), 3.6% of Gross Bookings, a record; sales and marketing +57% year over year as the cost leverage is reinvested in rider incentives.",
+     "$117.9M accrued for regulatory matters, including the agreement with the State of California on 2016–2020 driver classification; net loss $9.7M after the item.",
+     "Michael Brous introduced as CFO; capital allocation framework unchanged; about $500M of buybacks expected for 2026."
+    ]
+   },
    {
     "q": "Q2 2026",
     "items": [

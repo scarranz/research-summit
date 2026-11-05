@@ -12,7 +12,7 @@
 | Rama | `feat/lyft-profile` (desde `origin/main` @ `e2a30fa`, 2026-11-04; worktree `research-summit-lyft`). Ya existen en GitHub `feat/earnings-rollout-lyft` y `feat/lyft-2q26-results` (no se tocan) |
 | Analista responsable | SAB (Santiago Alvarez); la sesión la abre Dani |
 | Inicio | 2026-11-04 |
-| Avance | 19 de 45 unidades aprobadas (F0, B1, B2, F0-SM, F1, OV-1, OV-2, OV-3, OV-4, OV-5, OV-6, OV-7, OV-F, EV-RES-DATA, EV-RES, TL-GEN, TL-SEG, TL-OTH, TL-CUS) |
+| Avance | 20 de 45 unidades aprobadas (F0, B1, B2, F0-SM, F1, OV-1, OV-2, OV-3, OV-4, OV-5, OV-6, OV-7, OV-F, EV-RES-DATA, EV-RES, TL-GEN, TL-SEG, TL-OTH, TL-CUS, EV-EST) |
 
 ## 1. Inventario de datos (F0)
 
@@ -130,7 +130,7 @@ Cuadre — **vía el dataset de Results/Customers existente (que viene de los 8-
 | TL-SEG | Top Line ▸ Segments | ✅ | 2026-11-05 | SAB | | 1 segmento, 3 productos, 5 KPI con definición verbatim, 3 identidades; ⚑ Notes hasta EV-NOTES |
 | TL-OTH | Top Line ▸ Other | ✅ | 2026-11-05 | SAB | | 2 cortes anuales FY23–25 (línea contable, geografía) |
 | TL-CUS | Top Line ▸ Customers | ✅ | 2026-11-05 | SAB | | sin concentración divulgada; sin SPLC |
-| EV-EST | Evolution ▸ Estimates | ⬜ | | | | |
+| EV-EST | Evolution ▸ Estimates | ✅ | 2026-11-05 | SAB | | 4 snapshots del xlsm (12-15, 02-11, 05-08, 08-07); FY26–FY29; revisado por SAB en el portal |
 | EV-SET | Evolution ▸ Earnings ▸ Setup | ⬜ | | | | |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⬜ | | | | |
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | ⬜ | | | | |
@@ -432,3 +432,11 @@ Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en
 - Cambio de motor mínimo y aditivo (`js/segments.js`, `sgResolveRef`): campo opcional `segUnit` en la métrica de Results para que Rides y Active Riders (que en Results viven en `usdM` como sustituto) salgan como conteos en Top Line. Para el PR: generalizar el motor aparte.
 - Omitido: tabla SPLC (no hay export con Lyft como sujeto); bloque 5 de TL-SEG ("What management has said") muestra su bandera ⚑ hasta EV-NOTES; precio×volumen: costo por unidad (seguro por ride) pendiente de BL-GEN-5.
 - Sin verificar en navegador por mí: lo revisó SAB en el portal local.
+
+### 2026-11-05 · EV-EST Estimates · Aprobado (SAB)
+- Bloque `evolution` de `results-data/lyft.js` rehecho desde `DCF LYFT.xlsm` / Projection History, 4 snapshots (bloques 219, 170, 121 y 1 = 2025-12-15, 2026-02-11, 2026-05-08, 2026-08-07). Métricas: GB, rev, EBITDA, FCF, capex (positivo), FY2026–FY2029; `prior` FY2025 (18,507 / 6,316 / 529 / 1,116).
+- **Corrección de datos:** la versión anterior traía un vintage "May 13, 2026" bajado del MCP cuyos valores de años lejanos no coinciden con el snapshot 05-08 del archivo (GB FY2028 26,769 vs 28,613; FY2029 28,604 vs 32,953; coincide en FY2026). Se usan los valores del xlsm. El texto anterior ("la baja más agresiva...", "−47 %") se reescribió con las cifras nuevas.
+- Lectura: GB FY2029 −15.1 % y rev FY2029 −20.6 % entre dic y ago; EBITDA FY2029 −30.0 %; en agosto EBITDA FY26–28 +5/+3/+14 % vs mayo; FCF FY2027 1,277 vs meta >$1B.
+- Consenso no se muestra en este eje: los snapshots de BBG (2025-11-10, 2026-02-15, 2026-05-12, 2026-11-04) no coinciden con las fechas de los submits de Summit.
+- Montaje: `initResultsEvo('LYFT')` ahora pasa el ticker (regla del §11).
+- Dudas del modelo: FCF tiene dos filas que difieren antes de FY2026 (FY2025 1,088.3 y 1,001.6 vs 1,115.6 reportado); EBITDA vs ADJ_EBITDA FY2026 718.8 vs 706.4 (duda 3 de §1b).

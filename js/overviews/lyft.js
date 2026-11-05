@@ -4285,7 +4285,7 @@ function buildSub(root, group, key){
       buildModelTab();
     }
     else if(key==='estevo'){                         // Estimate Evolution - binds to #rsEvoWrap
-      if(root.querySelector('#rsEvoWrap')) initResultsEvo();
+      if(root.querySelector('#rsEvoWrap')) requestAnimationFrame(function(){ initResultsEvo('LYFT'); });
     }
   } else if(group==='valuation'){
     if(key==='sensitivity') LYFT_VAL.init(root);

@@ -14,6 +14,7 @@ import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments,
 import { lyftResults } from '../results-data/lyft.js';
 import { mountWatchList } from '../watchlist.js';
 import { lyPeerScatter, lyWireScatters } from './lyft-peers.js';
+import { lyftBlGeneralHtml, lyftBlGeneralBuild } from './lyft-bl.js';   // Bottom Line ▸ General (BL-GEN-1…5), ported from uber-bl.js
 import { lyftCeHtml, lyftCeWire, lyftCeBuild, lyftCePop } from './lyft-ce.js';   // Evolution ▸ Earnings (EV-SET / EV-POST / EV-NOTES), ported from uber-ce.js
 
 // Interactive "Scenario → price target" calculator (Valuation tab). Fundamentals from
@@ -3694,7 +3695,7 @@ function deepDiveHtml(c){
       ['segcus','Customers',segmentsCustomersHtml('LYFT')+ddMore('Riders and drivers — the earlier analysis (moved from the old Customers tab)',lyCustomersBody(c))] ])+'</div>';
   // BOTTOM LINE - General (margins + unit economics + financials) · Supply Chain
   h += '<div class="dd-pane" data-dd="bottomline" hidden>'+st([
-      ['margins','General',lyMarginsBody(c)+unitBody(c)+lyFinBody()],
+      ['margins','General',lyftBlGeneralHtml()+ddMore('Margins, unit economics and financials — the earlier analysis (moved from the old General tab)',lyMarginsBody(c)+unitBody(c)+lyFinBody())],
       ['supplychain','Supply Chain',lySuppliersBody(c)] ])+'</div>';
   // EVOLUTION - Earnings (Setup · Watch List · Post-Results) · Results (+ Model/Guidance vs reality) · Estimates
   h += '<div class="dd-pane" data-dd="evolution" hidden>'+st([
@@ -4259,7 +4260,7 @@ function buildSub(root, group, key){
     else if(key==='segoth') requestAnimationFrame(function(){ initSegmentsOther(root, 'LYFT'); });
     else if(key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'LYFT'); });
   } else if(group==='bottomline'){
-    if(key==='margins'){ buildLyMargins(); buildUnitTab(); buildLyFin(); }   // live Massive margins + unit economics + financials
+    if(key==='margins'){ lyftBlGeneralBuild(root); buildLyMargins(); buildUnitTab(); buildLyFin(); }   // the playbook General views + the earlier live Massive margins, unit economics and financials
     // supplychain: no charts
   } else if(group==='evolution'){
     // Earnings > Setup carries its own Results-engine instance (LYFT_SETUP). Build it when the

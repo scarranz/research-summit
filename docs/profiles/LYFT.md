@@ -458,3 +458,7 @@ Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en
 ### 2026-11-05 · EV-SET · EV-POST (2T26) · EV-NOTES · BL-GEN-1…5 · VA-HIST · VA-PEERS · VA-SUB · MG-OWN · Aprobados (SAB)
 - Aprobados en el portal local. VA-HIST con el aviso de datos en vivo (get-market-history no desplegada) y gráfica desde feb-2024 por los 4 balances disponibles. MG-OWN con la bandera del proxy.
 - En pausa (⏸): VA-TM, VA-SENS (dudas 2 y 4 del modelo), MG-TEAM, MG-GOV, MG-TRACK (falta DEF 14A), BL-SPLC (sin export SPLC), F-FINAL (B3 y limpieza del código viejo de `ce*`), y el Post-Results del 3T26 / Setup del 4T26 (print de 2026-11-05).
+
+### 2026-11-05 · F-FINAL (parcial) · limpieza de código
+- Se retiraron de `lyft.js` 25 funciones sin ninguna referencia (maquinaria vieja de Earnings: `ceSetupBody`, `ceResultsBody`, `ceGrid`, `ceQPills` …, el scatter viejo `stdPeerScatter`, `lyIntro`); 4,402 → 3,714 líneas. El contenido de datos (Q1 2026 y anteriores, hilos de llamadas) ya vive en `lyft-ce-data.js` y `themes-data/lyft.js`.
+- Siguen en `lyft.js`, referenciados entre sí y sin uso desde la vista: `CE_CONS`, `CALL_EARNINGS`, `LY_THEMES`, `callsBody`, `wireCallEarnings`, `wireCeTrack`, `gBuildCeAnnual`, `CE_POP`. Su retiro requiere desenredarlos juntos: queda para el cierre (F-FINAL) junto con el cuadre B3.

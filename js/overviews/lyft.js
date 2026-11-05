@@ -951,24 +951,6 @@ function lyKnockout(){
   '</div>';
   return h;
 }
-// ── The old "Deep Overview" subtab is DISMANTLED (Golden Rule #1 — content MOVED, not
-// deleted). Its pieces are recomposed into the new 5-tab spine:
-//   • intro (snapshot/KPIs/lede/as-of) + segment/revenue overview → Top Line ▸ Segments (lySegmentsBody)
-//   • the turnaround knockout (lyKnockout)                        → Evolution ▸ Strategy (with the Playbook)
-//   • the qualitative rival cards / adjacent fronts               → Top Line ▸ Industry Analysis (lyIndustryBody)
-//   • the peer breadth×geography scatter                          → Top Line ▸ Industry Analysis (lyRivalScatter)
-// (There were no explicit multi-year targets in the old Deep Overview — the 2027 targets
-//  already live in the Playbook/strategyBody, and Model vs. Reality is Evolution ▸ Guidance.)
-function lyIntro(){
-  var h='';
-  h+='<div class="ov-snap">'+SNAPSHOT.map(function(p){ return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>'; }).join('')+'</div>';
-  h+='<div class="ov-live" id="lyLive" hidden></div>';
-  h+='<p class="ov-lede">'+esc(DESC)+'</p>';
-  h+='<div class="ov-kpis">'+KPIS.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>'; }).join('')+'</div>';
-  h+='<div class="ov-asof">'+esc(AS_OF)+'</div>';
-  h+='<div class="ov-fynote">'+esc(FY_NOTE)+'</div>';
-  return h;
-}
 // Top Line ▸ Segments — company intro, the segment/revenue overview, then each engine in
 // depth via an inner Rideshare / Media & Growth toggle (mirrors uber's ubSegmentsBody).
 function lySegmentsBody(c){
@@ -1810,39 +1792,6 @@ var LY_PEERS=[
 var LY_SC={ type:'ev', basis:'f', peers:null };
 function lyScReset(){ LY_SC.peers=LY_PEERS.map(function(p){ var o={}; for(var k in p) o[k]=p[k]; o.on=true; return o; }); }
 function lyScMult(p){ if(LY_SC.type==='ev') return LY_SC.basis==='f'?p.evF:p.evT; return LY_SC.basis==='f'?p.peF:p.peT; }
-function stdPeerScatter(){
-  var h='<style>.mg-tog-row{display:flex;flex-wrap:wrap;gap:14px;margin:2px 0 8px}'+
-    '.mg-tog{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mu)}'+
-    '.mg-seg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
-    '.mg-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
-    '.mg-pill.active{background:var(--navy);color:#fff}'+
-    '.mg-dot{transition:.15s}.mg-node text{pointer-events:none}'+
-    '.lysc-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 2px}'+
-    '.lysc-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:999px;padding:3px 9px;background:var(--w);cursor:pointer;color:var(--navy)}'+
-    '.lysc-chip .x{color:var(--mu);font-weight:800}'+
-    '.lysc-add{display:inline-flex;gap:5px;align-items:center}'+
-    '.lysc-add input{width:74px;font:inherit;font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:3px 7px;text-transform:uppercase}'+
-    '.lysc-add button{font:inherit;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:7px;padding:3px 9px;background:#F2F5F8;cursor:pointer}'+
-    '.mg-tip{position:fixed;z-index:60;max-width:250px;background:#10141A;color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 22px rgba(16,20,26,.28);pointer-events:none;border-top:3px solid #E6007A}'+
-    '.mg-tip .mgt-n{display:block;font-weight:800;font-size:12.5px;color:#E6007A;margin-bottom:3px}</style>';
-  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Listed peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD</b> (so a ~$150B Uber dwarfs a ~$6B Lyft, and currencies never distort the comparison). <span style="opacity:.75">Hover or tap a bubble for the read.</span></div>';
-  h+='<div class="mg-tog-row"><span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgtype="ev">EV/EBITDA</button><button type="button" class="mg-pill" data-mgtype="pe">P/E</button></span></span>'+
-     '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgbasis="f">Forward</button><button type="button" class="mg-pill" data-mgbasis="t">Trailing</button></span></span></div>';
-  h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" id="lyScSvg" role="img" aria-label="Peer valuation vs growth map">'+
-    '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
-    '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
-    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← cheaper</text>'+
-    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">more expensive →</text>'+
-    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" id="lyScXlab">EV/EBITDA · forward</text>'+
-    '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">slow</text>'+
-    '<text x="74" y="52" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">fast growth</text>'+
-    '<g id="lyScNodes"></g>'+
-  '</svg></div>';
-  h+='<div class="lysc-chips" id="lyScChips"></div>';
-  h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here; a name drops out of the P/E view when it has no meaningful P/E — Grab is only recently profitable, and Lyft’s trailing P/E is <b>n.m.</b> (FY25 net income is dominated by a one-time ~$2.9B tax benefit). Unlisted rivals (DiDi, Bolt) have no market multiple — they sit on the competitive map in <b>Deep Dive ▸ Deep Overview</b>. <span class="ave-subh-note">Multiples & growth are approximate, web-sourced (mid-2026); market caps are live. Directional, not exact.</span></div>';
-  h+='<div id="lyScTip" class="mg-tip" hidden></div>';
-  return h;
-}
 function lyScRender(root){
   var g=root.querySelector('#lyScNodes'); if(!g||!LY_SC.peers) return;
   var maxMult=LY_SC.type==='ev'?52:80, X0=80, X1=612, Y0=252, Y1=44;
@@ -2224,10 +2173,6 @@ var CALL_EARNINGS = { ticker:'LYFT', quarters:[
     } }
 ]};
 
-function ceUpcoming(){ return CALL_EARNINGS.quarters.filter(function(q){ return q.status==='upcoming'; })[0]||null; }
-
-function ceFill(x, muted){ return (x!=null && String(x).trim()!=='') ? x : '<span class="ce-empty">'+(muted||'— to fill')+'</span>'; }
-
 var CE_POP={};
 
 function ceReg(id, t, h){ CE_POP[id]={t:t, h:ceProse(h)}; return id; }
@@ -2467,66 +2412,6 @@ function ceStyle(){
 
 var CE_SEC_SEAL='img/sec-seal.png';
 
-function ceIRButton(){
-  return '<style>'+
-    '.ce-srcrow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 16px}@media(max-width:760px){.ce-srcrow{grid-template-columns:1fr}}'+
-    '.ce-ir{display:flex;align-items:center;gap:20px;text-decoration:none;border-radius:18px;padding:26px 26px;min-height:120px;position:relative;overflow:hidden;'+
-      'background:linear-gradient(115deg,#04060B 0%,#0A1224 60%,#04060B 100%);border:1px solid rgba(66,133,244,.3);box-shadow:0 10px 32px rgba(0,0,0,.4);transition:.18s}'+
-    '.ce-ir:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,'+BRAND+','+RED+','+YELLOW+','+BRAND2+');height:4px;top:0}'+
-    '.ce-ir:hover{transform:translateY(-2px);box-shadow:0 16px 42px rgba(26,115,232,.4);border-color:rgba(66,133,244,.75)}'+
-    /* the giant watermark — the mark itself, monumental, bleeding off the card */
-    '.ce-ir-wm{position:absolute;right:-40px;bottom:-60px;width:230px;height:230px;object-fit:contain;opacity:.09;pointer-events:none;transition:.25s}'+
-    '.ce-ir:hover .ce-ir-wm{opacity:.16;transform:scale(1.04) rotate(-2deg)}'+
-    /* the emblem — transparent mark in a glowing ring, same treatment both cards */
-    '.ce-ir-ic{width:72px;height:72px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:1;'+
-      'box-shadow:0 0 0 1px rgba(138,180,248,.3),0 0 32px rgba(66,133,244,.55)}'+
-    '.ce-ir-ic img{width:52px;height:52px;object-fit:contain;display:block;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}'+
-    '.ce-ir-body{flex:1;min-width:0;position:relative;z-index:1}'+
-    '.ce-ir-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:#8AB4F8;display:flex;align-items:center;gap:7px}'+
-    '.ce-ir-dot{width:7px;height:7px;border-radius:50%;background:'+BRAND2+';box-shadow:0 0 0 0 rgba(52,168,83,.7);animation:cpirp 1.6s infinite}'+
-    '@keyframes cpirp{0%{box-shadow:0 0 0 0 rgba(52,168,83,.6)}70%{box-shadow:0 0 0 8px rgba(52,168,83,0)}100%{box-shadow:0 0 0 0 rgba(52,168,83,0)}}'+
-    '.ce-ir-t{font-size:19px;font-weight:900;color:#fff;letter-spacing:.05em;text-transform:uppercase;margin-top:4px}'+
-    '.ce-ir-s{font-size:11.5px;color:#9FB0C8;font-weight:600;margin-top:3px;letter-spacing:.01em}'+
-    '.ce-ir-go{font-size:13px;font-weight:900;color:#fff;background:'+BLUE+';border-radius:999px;padding:12px 22px;white-space:nowrap;flex:none;display:flex;align-items:center;gap:8px;position:relative;z-index:1;letter-spacing:.04em;transition:.14s}'+
-    '.ce-ir:hover .ce-ir-go{gap:12px;box-shadow:0 4px 18px rgba(26,115,232,.55)}'+
-    '@media(max-width:560px){.ce-ir{flex-wrap:wrap}.ce-ir-go{width:100%;justify-content:center}}'+
-    /* EDGAR variant — federal weight: near-black + the gold of the seal, eagle front and center */
-    '.ce-ir.edgar{background:linear-gradient(115deg,#070502 0%,#171106 60%,#070502 100%);border-color:rgba(197,164,90,.35)}'+
-    '.ce-ir.edgar:before{background:linear-gradient(90deg,#8C6D2F,#E3C878,#8C6D2F)}'+
-    '.ce-ir.edgar:hover{box-shadow:0 16px 42px rgba(197,164,90,.32);border-color:rgba(227,200,120,.75)}'+
-    '.ce-ir.edgar .ce-ir-ic{box-shadow:0 0 0 1px rgba(227,200,120,.28),0 0 32px rgba(197,164,90,.55)}'+
-    '.ce-ir.edgar .ce-ir-ic img{width:72px;height:72px}'+
-    '.ce-ir.edgar .ce-ir-k{color:#E3C878}'+
-    '.ce-ir.edgar .ce-ir-dot{background:#E3C878;animation:none;box-shadow:0 0 8px rgba(227,200,120,.8)}'+
-    '.ce-ir.edgar .ce-ir-go{background:linear-gradient(135deg,#E3C878,#B8933F);color:#1A1305}'+
-    '.ce-ir.edgar:hover .ce-ir-go{box-shadow:0 4px 18px rgba(197,164,90,.6)}'+
-    '.ce-ir.edgar .ce-ir-wm{opacity:.1}'+
-    '.ce-ir.edgar:hover .ce-ir-wm{opacity:.17}'+
-  '</style>'+
-  '<div class="ce-srcrow">'+
-  '<a class="ce-ir" href="'+CE_IR_URL+'" target="_blank" rel="noopener">'+
-    '<img class="ce-ir-wm" src="'+CE_LOGO_URL+'" alt="" aria-hidden="true">'+
-    '<span class="ce-ir-ic"><img src="'+CE_LOGO_URL+'" alt="Lyft logo" onerror="this.parentNode.style.display=\'none\'"></span>'+
-    '<span class="ce-ir-body">'+
-      '<span class="ce-ir-k"><span class="ce-ir-dot"></span>THE SOURCE · EARNINGS HQ</span>'+
-      '<span class="ce-ir-t" style="display:block">Lyft Investor Relations</span>'+
-      '<span class="ce-ir-s" style="display:block">Release · webcast · slides · transcripts — straight from investor.lyft.com. Skip the search, go direct.</span>'+
-    '</span>'+
-    '<span class="ce-ir-go">OPEN IR <span>↗</span></span>'+
-  '</a>'+
-  '<a class="ce-ir edgar" href="'+CE_EDGAR_URL+'" target="_blank" rel="noopener">'+
-    '<img class="ce-ir-wm" src="'+CE_SEC_SEAL+'" alt="" aria-hidden="true">'+
-    '<span class="ce-ir-ic"><img src="'+CE_SEC_SEAL+'" alt="SEC seal" onerror="this.parentNode.style.display=\'none\'"></span>'+
-    '<span class="ce-ir-body">'+
-      '<span class="ce-ir-k"><span class="ce-ir-dot"></span>THE RECORD · U.S. SECURITIES AND EXCHANGE COMMISSION</span>'+
-      '<span class="ce-ir-t" style="display:block">Lyft on EDGAR</span>'+
-      '<span class="ce-ir-s" style="display:block">10-K · 10-Q · 8-K · DEF 14A — the regulator\'s copy, as filed. What IR curates, EDGAR certifies.</span>'+
-    '</span>'+
-    '<span class="ce-ir-go">OPEN EDGAR <span>↗</span></span>'+
-  '</a>'+
-  '</div>';
-}
-
 function ceQkey(q){ return String(q||'').replace(/\s/g,''); }
 // Renders the quarter-pill selector (shared across the three phase panes via .ce-qblock filtering).
 // The quarter selector is PHASE-AWARE: Setup & Watch List offer every quarter, but Post-Results
@@ -2535,39 +2420,10 @@ function ceQkey(q){ return String(q||'').replace(/\s/g,''); }
 // CALL_EARNINGS.quarters only once the PRIOR quarter's Post-Results (print + call highlights) is
 // filled. data-ceqhas lists the phases each quarter is valid for.
 
-// Renders the quarter-pill selector (shared across the three phase panes via .ce-qblock filtering).
-// The quarter selector is PHASE-AWARE: Setup & Watch List offer every quarter, but Post-Results
-// only offers quarters that have a `results` block — the upcoming quarter has none, so it does not
-// exist in that section (its data does not exist yet). The upcoming quarter is added to
-// CALL_EARNINGS.quarters only once the PRIOR quarter's Post-Results (print + call highlights) is
-// filled. data-ceqhas lists the phases each quarter is valid for.
-function ceQPhases(q){
-  var ph=['setup','watch'];
-  if(q.results) ph.push('results');
-  return ph;
-}
-
-function ceQPills(){
-  return '<div class="ce-qpills">'+CALL_EARNINGS.quarters.map(function(q,i){
-    return '<button type="button" class="ce-qpill'+(i===0?' active':'')+'" data-ceqsel="'+esc(ceQkey(q.q))+'" data-ceqhas="'+ceQPhases(q).join(' ')+'">'+esc(q.q)+(q.status==='upcoming'?'<span class="ce-qtag">upcoming</span>':'')+'</button>';
-  }).join('')+'</div>';
-}
 // A · The Setup — the grid is BUILT FROM THE ARCHIVE, not hand-authored. CE_CONS carries the
 // consensus and both growth bases, so the 13 cells, their YoY and their QoQ can never drift out of
 // sync with the file. What stays hand-authored per quarter: `setup.us` (Summit's own number) and
 // `setup.notes` (the caveat pop-ups), both keyed by metric name. (§6a-ii.)
-
-// A · The Setup — the grid is BUILT FROM THE ARCHIVE, not hand-authored. CE_CONS carries the
-// consensus and both growth bases, so the 13 cells, their YoY and their QoQ can never drift out of
-// sync with the file. What stays hand-authored per quarter: `setup.us` (Summit's own number) and
-// `setup.notes` (the caveat pop-ups), both keyed by metric name. (§6a-ii.)
-function ceFmtV(u,v){
-  if(v==null) return null;
-  if(u==='$')  return '$'+(+v).toFixed(2);
-  if(u==='$B') return '$'+(+v)+'B';
-  if(u==='B')  return (+v)+'B';
-  return String(v);
-}
 
 // A line that IS ALREADY A RATE (the adjusted-EBITDA margin) gets no growth chip —
 // the growth of a percentage is meaningless and reads as if it were a level.
@@ -2585,11 +2441,6 @@ function ceGrowth(m,qi,base){
   return ceGrowthOf(m,qi,base, m.qr[qi]?m.qr[qi][3]:null);
 }
 
-function ceChip(g){
-  if(g==null) return '';
-  var up=g>=0;
-  return '<span class="ce-gchip" style="color:'+(up?'#0a8f4c':'#C5221F')+'">'+(up?'+':'−')+Math.abs(g)+'%</span>';
-}
 // Margin lens: a metric that is a SHARE of another line carries an extra row = metric ÷ denominator,
 // computed per column (Street ÷ Street, Summit ÷ Summit, print ÷ print). Toggled in the estimates
 // bar; lives in the SAME cell, never a new box. (§6a-ii.)
@@ -2620,207 +2471,11 @@ function ceMarginPct(v, base){
   return Math.abs(p)<10 ? Math.round(p*100)/100 : Math.round(p*10)/10;
 }
 
-function ceMChip(p){ return p==null?'':'<span class="ce-mm">'+p+'% mgn</span>'; }
 // A dedicated margin ROW for a cell (label + value + the base-period margin in parens). Sits on
 // its own line so it always fits the box — the old inline chip overflowed (§6a-ii). The base
 // swaps with the growth lens: YoY → same quarter a year ago, QoQ → prior quarter.
 
-// A dedicated margin ROW for a cell (label + value + the base-period margin in parens). Sits on
-// its own line so it always fits the box — the old inline chip overflowed (§6a-ii). The base
-// swaps with the growth lens: YoY → same quarter a year ago, QoQ → prior quarter.
-// `lab` names the denominator ("% of bookings"), because "margin" alone would let the reader assume
-// revenue — which for this company would be the wrong number entirely.
-function ceMarginRow(cur, baseYoy, baseQoq, lab){
-  if(cur==null) return '';
-  return '<div class="ce-mrow"><span class="ce-mrow-l">'+esc(lab||'margin')+'</span>'+
-    '<span class="ce-mrow-v">'+cur+'%'+
-      (baseYoy!=null?'<span class="ce-mm-b yoy"> (prev '+baseYoy+'%)</span>':'')+
-      (baseQoq!=null?'<span class="ce-mm-b qoq"> (prev '+baseQoq+'%)</span>':'')+
-    '</span></div>';
-}
-// Current margin + the margin of the period the growth chip compares against. The base swaps with
-// the lens (YoY → the same quarter a year ago; QoQ → the prior quarter), so with Margin + YoY on
-
-// Current margin + the margin of the period the growth chip compares against. The base swaps with
-// the lens (YoY → the same quarter a year ago; QoQ → the prior quarter), so with Margin + YoY on
-function ceGrid(u,which){
-  var qi=CE_CONS.q.indexOf(u.q); if(qi<0) return '';
-  var st=u.setup||{}, us=st.us||{}, notes=st.notes||{};
-  var list=CE_CONS.m.map(function(m,i){ return {m:m,i:i}; })
-    .filter(function(x,i){ return (which==='head')?(x.i<CE_CONS.nHead):(x.i>=CE_CONS.nHead); });
-  return '<div class="ce-mgrid">'+list.map(function(x){
-    var m=x.m, c=m.qr[qi]?m.qr[qi][3]:null;
-    var note=notes[m.k], q=note?ceQ('setnote-'+ceQkey(u.q)+'-'+x.i, note.t, note.h):'';
-    var uv=us[m.k];
-    // The denominator this metric is a share OF, resolved by name from CE_CONS itself.
-    var dName=CE_MARGIN_ON[m.k], dM=ceMarginBase(dName);
-    var dC=(dM&&dM.qr[qi])?dM.qr[qi][3]:null;                     // the outside expectation's own base
-    var dU=(dM&&us[dName]&&us[dName].v!=null)?us[dName].v:dC;     // Summit's base, else the outside one
-    // THREE named expectation rows, never blended (Rule H). Lyft guides only two lines and the
-    // Street covers a different four, so a single row would have to silently switch basis between
-    // metrics. A row is dropped only when that expectation does not exist for this metric in ANY
-    // quarter — so a metric's cell keeps the same shape as you page across quarters (Rule L).
-    var any=function(arr){ return arr && arr.some(function(v){ return v!=null; }); };
-    var row=function(lab, v, cls){
-      var body=(v==null)
-        ? '<span class="ce-empty">—</span>'
-        : ceFmtV(m.u,v)+'<span class="ce-gy">'+ceChip(ceGrowthOf(m,qi,'yoy',v))+'</span>'+
-          '<span class="ce-gq">'+ceChip(ceGrowthOf(m,qi,'qoq',v))+'</span>';
-      return '<div class="ce-val '+cls+'"><span class="ce-val-lab">'+lab+'</span>'+body+'</div>';
-    };
-    var rows='';
-    if(any(m.qg)) rows+=row('Guide', m.qg[qi], 'ce-val-guide');
-    if(any(m.qs)) rows+=row('Street', m.qs[qi], 'ce-val-cons');
-    // Nothing outside at all — say so once, plainly, instead of two empty rows.
-    if(!any(m.qg)&&!any(m.qs))
-      rows+='<div class="ce-val ce-val-cons"><span class="ce-val-lab">Outside</span>'+
-        '<span class="ce-empty">—</span><span class="ce-nocons" title="Lyft does not guide this line and no published Street estimate exists for it — the Summit model is the only forward number we have">no est.</span></div>';
-    rows+=row('Summit', uv?uv.v:null, 'ce-val-us');
-    // Margin row: the OUTSIDE expectation's implied share, against the same share in the base
-    // periods. Each side divides by its own denominator so the ratio is never mixed-basis.
-    var mRow=dM?ceMarginRow(ceMarginPct(c,dC),
-                            ceMarginPct(m.qy[qi], dM.qy[qi]),
-                            ceMarginPct(m.qq[qi], dM.qq[qi]),
-                            '% of '+(dName==='Gross Bookings'?'bookings':dName.toLowerCase())):'';
-    return '<div class="ce-mcell'+(which==='cust'?' cust':'')+(m.t==='basis'?' flagged':'')+'">'+
-      '<div class="ce-mcell-k">'+esc(m.k)+q+'</div>'+
-      '<div class="ce-mcell-v">'+rows+mRow+'</div></div>';
-  }).join('')+'</div>';
-}
-
-function ceGridStyle(){
-  return '<style>'+
-    '.ce-mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px;margin:4px 0}'+
-    '.ce-mcell{border:1px solid var(--bdr);border-left:3px solid '+BRAND+';border-radius:9px;padding:8px 10px;background:#fff}'+
-    '.ce-mcell.cust{border-left-color:'+BRAND2+'}'+
-    '.ce-mcell.flagged{border-left-color:'+GRAY+';opacity:.72}'+
-    '.ce-mcell-k{font-size:10px;font-weight:700;color:var(--mu);display:flex;align-items:center;gap:4px;line-height:1.3;min-height:26px}'+
-    '.ce-mcell-v{margin-top:3px}'+
-    '.ce-mcell .ce-val{display:flex;align-items:baseline;gap:5px;font-size:14px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums}'+
-    '.ce-mcell .ce-val{margin-top:1px}'+
-    /* wide enough for the longest label now that Guide and Street are separate rows */
-    '.ce-mcell .ce-val-lab{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none;width:46px}'+
-    /* the company\'s own guide reads in the brand colour; the Street stays neutral navy */
-    '.ce-mcell .ce-val-guide{color:'+BRAND+'}'+
-    /* The generic estimates toggle hides the row LABELS unless the view is "Both" — that was safe
-       when a cell held one outside number. Here a cell can hold Guide AND Street AND Summit, so an
-       unlabelled stack reads as two mystery figures. Force the labels on inside the setup grid
-       (higher specificity than the generic rule, and this stylesheet is emitted after it). */
-    '.ce-evwrap .ce-mcell .ce-mcell-v .ce-val-lab{display:inline-block}'+
-    /* Guide belongs to the OUTSIDE view: it must vanish with the Street when Summit-only is picked,
-       otherwise "Summit" mode still shows a company number and the toggle lies. */
-    '.ce-evwrap[data-ev="us"] .ce-mcell .ce-val-guide{display:none}'+
-    '.ce-gchip{font-size:10px;font-weight:800;margin-left:2px}'+
-    '.ce-mm{display:none}'+'.ce-mm-b{display:none;font-size:9px;font-weight:700;color:var(--mu);white-space:nowrap}'+'.ce-evwrap[data-mm="on"][data-g="yoy"] .ce-mm-b.yoy{display:inline}'+'.ce-evwrap[data-mm="on"][data-g="qoq"] .ce-mm-b.qoq{display:inline}'+'.ce-mrow{display:none;align-items:baseline;gap:5px;margin-top:5px;padding-top:5px;border-top:1px dashed var(--bdr)}'+'.ce-evwrap[data-mm="on"] .ce-mrow{display:flex}'+'.ce-mrow-l{font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none}'+'.ce-mrow-v{font-size:11px;font-weight:900;color:'+PURPLE+';font-variant-numeric:tabular-nums}'+
-    '.ce-evwrap[data-mm="on"] .ce-mm{display:inline}'+
-    '.ce-nocons{font-size:8.5px;font-weight:800;color:var(--mu);border:1px solid var(--bdr);border-radius:999px;padding:1px 6px;margin-left:6px}'+
-    /* the growth lens: CSS-driven, so switching does not re-render the grid */
-    '.ce-evwrap[data-g="yoy"] .ce-gq,.ce-evwrap[data-g="qoq"] .ce-gy,'+
-    '.ce-evwrap[data-g="off"] .ce-gy,.ce-evwrap[data-g="off"] .ce-gq{display:none}'+
-    '.ce-gseg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
-    '.ce-gseg button{font-size:10px;font-weight:800;padding:3px 11px;border:0;border-radius:999px;background:transparent;color:var(--mu);cursor:pointer;transition:.14s}'+
-    '.ce-gseg button.active{background:var(--navy);color:#fff}'+'.ce-vdf{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+'.ce-vdf button{font-size:10px;font-weight:800;padding:3px 11px;border:0;border-radius:999px;background:transparent;color:var(--mu);cursor:pointer;transition:.14s}'+'.ce-vdf button.active{background:var(--navy);color:#fff}'+
-    '.ce-fz[data-ev="cons"] .ce-fz-g[data-f="beat"] .ce-fz-t:not([data-vdc="beat"]),'+'.ce-fz[data-ev="cons"] .ce-fz-g[data-f="miss"] .ce-fz-t:not([data-vdc="miss"]),'+'.ce-fz[data-ev="cons"] .ce-fz-g[data-f="inline"] .ce-fz-t:not([data-vdc="inline"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="beat"] .ce-fz-t:not([data-vdu="beat"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="miss"] .ce-fz-t:not([data-vdu="miss"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="inline"] .ce-fz-t:not([data-vdu="inline"]){display:none}'+
-    '.ce-dbt{display:flex;flex-direction:column;gap:5px}'+
-    '.ce-dbt-r{display:grid;grid-template-columns:1.3fr 1fr 1fr 70px;gap:10px;align-items:center;'+
-      'border:1px solid var(--bdr);border-left:4px solid var(--mu);border-radius:9px;padding:7px 12px;background:#fff}'+
-    '.ce-dbt-r.above{border-left-color:#0a8f4c}.ce-dbt-r.below{border-left-color:'+RED+'}'+
-    '.ce-dbt-k{font-size:11.5px;font-weight:800;color:var(--navy)}'+
-    '.ce-dbt-v{font-size:11px;color:var(--navy);font-variant-numeric:tabular-nums}'+
-    '.ce-dbt-v b{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin-right:5px}'+
-    '.ce-dbt-d{font-size:12px;font-weight:900;text-align:right;font-variant-numeric:tabular-nums}'+
-    '.ce-dbt-r.above .ce-dbt-d{color:#0a8f4c}.ce-dbt-r.below .ce-dbt-d{color:'+RED+'}'+
-    '.ce-dbt-none{border:1px dashed var(--bdr);border-radius:10px;padding:10px 13px;font-size:11px;'+
-      'line-height:1.55;color:var(--mu);background:#FAFBFD}'+
-    '@media(max-width:640px){.ce-dbt-r{grid-template-columns:1fr auto}.ce-dbt-v{display:none}}'+
-  '</style>';
-}
-
-function ceSetupBody(c){
-  var h=ceStyle()+ceGridStyle();
-  h+=CALL_EARNINGS.quarters.map(function(u,qi){
-    var qk=ceQkey(u.q), frozen=(u.status!=='upcoming');
-    var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="ce-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="ce-frozen">frozen</span>':'')+'</div>';
-    var st=u.setup||{}, hasGrid=(CE_CONS.q.indexOf(u.q)>=0);
-    if(hasGrid){
-      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup.</b> The numbers going in — what <b>Lyft itself guided</b>, what the <b>Street</b> expects, what <b>Summit</b> expects, and where they disagree. Each is its own labelled row, never blended: Lyft guides only Gross Bookings and Adjusted EBITDA, and the Street covers a different set. '+(u.date?((frozen?'Reported <b>':'Reports <b>')+esc(u.date)+'</b>.'):'')+'</p>';
-      b+='<div class="ov-diagram-cap" style="margin:6px 0 6px;display:flex;flex-wrap:wrap;align-items:center;gap:12px"><b>Estimates</b>'+
-        '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
-          '<button type="button" class="ce-ev-pill active" data-ceev="cons">Consensus</button>'+
-          '<button type="button" class="ce-ev-pill" data-ceev="us">Summit</button>'+
-          '<button type="button" class="ce-ev-pill" data-ceev="both">Both</button>'+
-        '</span>'+
-        // Growth lens. `fq-3` and `fq0` are both reported actuals, so the same consensus cell can
-        // be read against either base — that is exactly why the archive carries fq-3.
-        '<span class="ce-gseg"><button type="button" class="active" data-ceg="yoy">YoY</button>'+
-          '<button type="button" data-ceg="qoq">QoQ</button>'+
-          '<button type="button" data-ceg="off">Off</button></span>'+
-        '<span class="ce-gseg"><button type="button" data-cemm="on">Margin</button>'+
-          '<button type="button" class="active" data-cemm="off">Hide mgn</button></span>'+
-        (st.source?'<span style="color:var(--mu);font-weight:600;font-size:10px">'+esc(st.source)+(st.asOf?' · as of '+esc(st.asOf):'')+'</span>':'')+
-      '</div>';
-      b+='<div class="ce-evwrap" data-ev="cons" data-g="yoy">';
-      b+='<div class="ce-row-cap">Headline — every company, always</div>'+ceGrid(u,'head');
-      b+='<div class="ce-row-cap" style="margin-top:12px">Custom KPIs — LYFT</div>'+ceGrid(u,'cust');
-      b+='</div>';
-      b+='<div class="ave-subh-note" style="margin-top:6px">Each row carries its OWN growth chip, computed off its own number against the same reported bases (<b>YoY</b> = the quarter a year earlier, <b>QoQ</b> = the prior quarter). '+
-         '<b>Guide</b> = Lyft\'s own guidance, midpoint of the guided range. <b>Street</b> = consensus compiled by hand per print — ⚠ Lyft has no rows in <code>BBG_CONSENSUS.txt</code>, so there is no Bloomberg export for this name and any line without a defensible published figure is left blank rather than invented. <b>Summit</b> = our own model. <b>?</b> = a number with a caveat worth knowing. '+
-         'A line reading <b>no est.</b> is neither guided nor covered — an absence of outside expectation, not a gap in our work.</div>';
-      // ── The debate — a LINE-BY-LINE comparison, not a paragraph ────────────────────────────
-      // It answers one question: where does Summit differ from the Street, and by how much. Built
-      // from the same two columns the grid shows, so it cannot disagree with them. Lines where we
-      // have no number of our own are listed explicitly rather than silently dropped — an empty
-      // Summit column IS the state of the work, and hiding it would misrepresent it (§6a-ii).
-      var d=st.debate, dqi=CE_CONS.q.indexOf(u.q), dus=st.us||{};
-      if(dqi>=0){
-        var diffs=[], nous=[];
-        CE_CONS.m.forEach(function(m){
-          var c=m.qr[dqi]?m.qr[dqi][3]:null, uv=dus[m.k]?dus[m.k].v:null;
-          if(c==null) return;
-          if(uv==null){ nous.push(m.k); return; }
-          diffs.push({ k:m.k, c:c, u:uv, d:((uv/c-1)*100), t:m.t, un:m.u });
-        });
-        diffs.sort(function(x,z){ return Math.abs(z.d)-Math.abs(x.d); });
-        b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>The debate — where Summit differs from the Street</b>'+
-           '<span style="color:var(--mu);font-weight:600;font-size:10px"> · sorted by the size of the gap</span></div>';
-        if(diffs.length){
-          b+='<div class="ce-dbt">'+diffs.map(function(x){
-            var side=(x.d>=0)?'above':'below';
-            return '<div class="ce-dbt-r '+side+'">'+
-              '<span class="ce-dbt-k">'+esc(x.k)+'</span>'+
-              '<span class="ce-dbt-v"><b>Street</b> '+ceFmtV(x.un,x.c)+'</span>'+
-              '<span class="ce-dbt-v"><b>Summit</b> '+ceFmtV(x.un,x.u)+'</span>'+
-              '<span class="ce-dbt-d">'+(x.d>=0?'+':'−')+Math.abs(x.d).toFixed(1)+'%</span></div>';
-          }).join('')+'</div>';
-        }
-        if(nous.length){
-          b+='<div class="ce-dbt-none"><b>No Summit number yet on '+nous.length+' of '+(nous.length+diffs.length)+' lines:</b> '+
-             esc(nous.join(' · '))+'.<br>Until those are filled the debate is the Street against itself — '+
-             'the grid above still shows what it expects, and the track record below shows how often it has been wrong.</div>';
-        }
-        if(d&&d.synth) b+='<div class="ce-synth">'+d.synth+'</div>';
-      }
-      b+='<div class="ov-foot">Frozen at call time; Post-Results scores actuals against BOTH columns.</div>';
-    }
-    if(st.pricedIn||st.oneLiner){
-      if(!hasGrid){
-        b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup, as it stood going in.</b> '+(u.date?('Reported <b>'+esc(u.date)+'</b>.'):'')+'</p>';
-        if(st.source) b+='<div class="ave-subh-note" style="margin:0 0 8px">'+esc(st.source)+'</div>';
-      } else {
-        b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The contemporaneous read — written before the print, never rewritten</b></div>';
-      }
-      if(st.pricedIn) b+='<div class="ce-banner"><b>What was priced in:</b> '+st.pricedIn+'</div>';
-      if(st.oneLiner) b+='<div class="ce-synth">'+st.oneLiner+'</div>';
-      b+='<div class="ov-foot">Frozen — scored in Post-Results for this quarter.</div>';
-    }
-    b+='</div>';
-    return b;
-  }).join('');
-  h+=ceAnnualBody();
-  return h;
-}
-// A1 · The annual picture — how the FY has looked, and what BBG vs Summit expect for the ones
+/// A1 · The annual picture — how the FY has looked, and what BBG vs Summit expect for the ones
 // still open. Reported FY actuals are bars/line; the forward years carry two forward points,
 // Bloomberg consensus (our txt) and Summit (the DCF, most-recent annual snapshot). If the company
 // gave numeric FY guidance we would add a third; LYFT does not (it guides two quarterly lines only), so we say so. (§6a-viii.)
@@ -2829,21 +2484,6 @@ function ceSetupBody(c){
 // rendered inside Earnings > Setup — the SAME chart + integrated table + period-lever + margin lines
 // as the Results tab, clubbed into one (§6a-viii-bis, v2.9). The section key 'setup' keeps its engine
 // canvases/tables/sliders UNIQUE, so the two engine instances (Setup + Results) coexist on the page.
-
-// A1 · The annual picture — how the FY has looked, and what BBG vs Summit expect for the ones
-// still open. Reported FY actuals are bars/line; the forward years carry two forward points,
-// Bloomberg consensus (our txt) and Summit (the DCF, most-recent annual snapshot). If the company
-// gave numeric FY guidance we would add a third; LYFT does not (it guides two quarterly lines only), so we say so. (§6a-viii.)
-// Quarterly is deliberately NOT wired yet — see the rules; the annual forecast is what exists today.
-// ── The Setup chart IS the Results engine (js/results.js), one MERGED section (LYFT_SETUP dataset),
-// rendered inside Earnings > Setup — the SAME chart + integrated table + period-lever + margin lines
-// as the Results tab, clubbed into one (§6a-viii-bis, v2.9). The section key 'setup' keeps its engine
-// canvases/tables/sliders UNIQUE, so the two engine instances (Setup + Results) coexist on the page.
-function ceAnnualBody(){
-  return '<div class="ce-ann" style="margin:20px 0 4px;padding:16px 0 0;border-top:2px solid var(--bdr)">'+
-    '<div class="ov-sec-h">The Setup picture — reported vs Street (Summit pending): pick any line, window the period with the lever, toggle margins</div>'+
-    resultsHtml('LYFT_SETUP')+'</div>';
-}
 
 function ceSetupWrap(){ return document.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phpane[data-cep="setup"] .rs-wrap'); }
 
@@ -2853,8 +2493,6 @@ function ceSetupWrap(){ return document.querySelector('.ovt-subpane[data-ovst="e
 // initialised the engine against it. googl.js and amzn.js both carry this one-liner; the splice
 // dropped it. Chart.js needs a visible container, so it is (re)built on visibility, not once.
 function gBuildCeAnnual(){ var w=ceSetupWrap(); if(w) initResults(w, 'LYFT_SETUP'); }
-
-function wireCeAnnual(root){ /* the engine self-wires via initResults->wireResults; the chart builds on Setup visibility (gBuildCeAnnual). */ }
 
 function ceWatchBody(c){
   // The Watch List is now the SHARED engine (js/watchlist.js): one implementation for every
@@ -3018,281 +2656,12 @@ function cePrintBlock(qLabel, r, us){
     '</div><div class="ce-fz-g" data-vdf-host>'+tiles.map(function(t){ return t.html; }).join('')+'</div>'+
     '<div class="ce-fz-f">The frozen expectation → the print → the print\'s own growth. Toggle <b>vs outside ⇄ vs Summit</b> and <b>Margin</b> above; ranked by size of surprise. <b>Sources:</b> actuals and guidance from Lyft\'s 8-K Ex. 99.1 press releases (SEC EDGAR, CIK 0001759509); Street consensus compiled by hand per print — Lyft is not in <code>BBG_CONSENSUS.txt</code>; Summit from the model\'s frozen per-quarter projections.</div></div>';
 }
-// A collapsible block — secondary depth is folded away by default so the phase reads as a page,
-// not a wall. Wired by the generic `.ov-collap-h` handler already in init().
-
-// A collapsible block — secondary depth is folded away by default so the phase reads as a page,
-// not a wall. Wired by the generic `.ov-collap-h` handler already in init().
-function ceFold(title, sub, body, open){
-  return '<div class="ov-collap ce-fold'+(open?' open':'')+'">'+
-    '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+
-    '<span class="ce-fold-t">'+title+'</span>'+(sub?'<span class="ce-fold-s">'+sub+'</span>':'')+'</button>'+
-    '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+body+'</div></div>';
-}
-
-function cePhaseStyle(){
-  return '<style>'+
-    /* the market's verdict on the print — one line, directly under the scorecard */
-    '.ce-pxr{display:flex;align-items:baseline;gap:9px;border:1px solid var(--bdr);border-left:3px solid '+BRAND2+';'+
-      'border-radius:10px;padding:9px 13px;margin:0 0 14px;background:#fff}'+
-    '.ce-pxr-l{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none}'+
-    '.ce-pxr-v{font-size:11.5px;line-height:1.55;color:var(--navy)}'+
-    '@media(max-width:640px){.ce-pxr{flex-direction:column;gap:4px}}'+
-    '.ce-fz{border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;margin-bottom:14px;background:#FBFCFE}'+
-    '.ce-fz-h{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-bottom:9px}'+
-    '.ce-fz-g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}'+
-    '@media(max-width:900px){.ce-fz-g{grid-template-columns:repeat(2,1fr)}}'+
-    '@media(max-width:520px){.ce-fz-g{grid-template-columns:1fr}}'+
-    '.ce-fz-t{border:1px solid var(--bdr);border-radius:9px;padding:7px 9px;background:#fff}'+
-    '.ce-fz-t.basis{opacity:.62}'+
-    '.ce-fz-k{font-size:9.5px;font-weight:700;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
-    '.ce-fz-r{display:flex;align-items:baseline;gap:4px;margin-top:2px;font-variant-numeric:tabular-nums}'+
-    '.ce-fz-c{font-size:11px;color:var(--mu);font-weight:700}'+
-    /* which outside expectation this row is scored against — Street or Lyft\'s own guide */
-    '.ce-fz-bas{font-size:7.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;'+
-      'color:var(--mu);border:1px solid var(--bdr);border-radius:999px;padding:0 4px;margin-left:4px;vertical-align:1px}'+
-    '.ce-fz-ar{font-size:9px;color:var(--mu)}'+
-    '.ce-fz-a{font-size:13px;font-weight:900;color:var(--navy)}'+
-    '.ce-fz-d{font-size:9.5px;font-weight:800;margin-left:auto}'+
-    '.ce-fz-d.up{color:#0a8f4c}.ce-fz-d.dn{color:'+RED+'}.ce-fz-d.na{color:var(--mu);font-weight:700}'+
-    '.ce-fz-f{font-size:9.5px;color:var(--mu);margin-top:8px}'+'.ce-fz-t{position:relative;transition:.14s}'+'.ce-fz-t[data-detail]{cursor:pointer}'+'.ce-fz-t[data-detail]:hover{box-shadow:0 4px 14px rgba(16,24,40,.10);transform:translateY(-1px)}'+'.ce-fz-vd{margin-left:auto;font-size:8.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}'+'.ce-fz-k{display:flex;align-items:center;gap:5px}'+'.ce-fz-wl{font-size:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:'+BLUE+';margin-top:5px}'+'.ce-fz-more{position:absolute;right:9px;bottom:7px;font-size:8.5px;font-weight:800;color:'+BLUE+'}'+'.ce-fz-h{display:flex;align-items:center;gap:6px}'+'.ce-fz-gr{display:flex;align-items:baseline;gap:5px;margin-top:3px;font-size:9.5px;font-weight:800}'+'.ce-fz-gl{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}'+'.ce-fz-mgn{display:flex;align-items:baseline;gap:5px;margin-top:3px;font-size:11px;font-weight:900;color:'+PURPLE+'}'+'.ce-fz-mexp{font-size:9px;font-weight:700;color:var(--mu)}'+'.ce-fz-g-e{color:var(--mu);font-weight:600}'+'.ce-fz[data-g="yoy"] .ce-gq,.ce-fz[data-g="qoq"] .ce-gy,'+'.ce-fz[data-g="off"] .ce-fz-gr{display:none}'+
-    /* estimate view (vs Street ⇄ vs Summit) — pure-CSS swap of expected value, surprise & verdict */
-    '.ce-fz-h{flex-wrap:wrap}'+
-    '.ce-vd-us,.ce-exp-us{display:none}'+
-    '.ce-fz[data-ev="us"] .ce-vd-cons,.ce-fz[data-ev="us"] .ce-exp-cons{display:none}'+
-    '.ce-fz[data-ev="us"] .ce-vd-us,.ce-fz[data-ev="us"] .ce-exp-us{display:inline}'+
-    '.ce-fz-dw{margin-left:auto}'+
-    /* margin row — expected(estimate-implied) → realized, toggled by data-mm; NO YoY/QoQ here */
-    '.ce-fz-mrow{display:none;align-items:baseline;gap:5px;margin-top:4px;padding-top:4px;border-top:1px dashed var(--bdr);font-size:9.5px;font-weight:800}'+
-    '.ce-fz[data-mm="on"] .ce-fz-mrow{display:flex;flex-wrap:wrap}'+
-    '.ce-fz-mreal{font-size:11px;font-weight:900;color:'+PURPLE+'}'+
-    '.ce-fz-mdl{font-weight:800;margin-left:3px}.ce-fz-mdl.up{color:#0a8f4c}.ce-fz-mdl.dn{color:'+RED+'}'+
-    /* folds — secondary depth, closed by default */
-    '.ce-fold{border:1px solid var(--bdr);border-radius:11px;margin:0 0 10px;overflow:hidden;background:#fff}'+
-    '.ce-fold .ov-collap-h{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:#FAFBFD;'+
-      'padding:9px 13px;cursor:pointer;font-family:inherit}'+
-    '.ce-fold .ov-collap-h:hover{background:#F2F6FB}'+
-    '.ce-fold .ov-collap-ic{font-size:10px;color:var(--mu)}'+
-    '.ce-fold-t{font-size:11px;font-weight:800;color:var(--navy)}'+
-    '.ce-fold-s{font-size:10px;color:var(--mu);font-weight:600;margin-left:auto;text-align:right}'+
-    '.ce-fold .ov-collap-b{padding:12px 13px}'+
-    /* the print, as cards rather than full-width rows */
-    '.ce-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}'+
-    '@media(max-width:760px){.ce-cards{grid-template-columns:1fr}}'+
-    '.ce-card{border:1px solid var(--bdr);border-left:4px solid var(--sc,#9AA4B0);border-radius:10px;padding:9px 11px;background:#fff}'+
-    '.ce-card-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}'+
-    '.ce-card-m{font-size:11.5px;font-weight:800;color:var(--navy)}'+
-    '.ce-card-v{font-size:9px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--sc);margin-left:auto}'+
-    '.ce-card-b{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin-top:6px;font-size:10.5px;line-height:1.45}'+
-    '.ce-card-l{color:var(--mu);font-weight:700;white-space:nowrap}'+
-    '.ce-card-x{color:var(--navy)}'+
-    '.ce-card-f{display:flex;align-items:center;gap:6px;margin-top:7px}'+
-    '.ce-chip{font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:999px}'+
-    '.ce-chip.list{background:rgba(26,115,232,.12);color:'+BLUE+'}'+
-    '.ce-chip.hi{background:rgba(234,67,53,.12);color:'+RED+'}'+
-    '.ce-chip.md{background:rgba(251,188,5,.18);color:#7A5B02}'+
-    '.ce-chip.lo{background:#EEF1F5;color:var(--mu)}'+
-    /* "Also on the call" — one box, a plain list, each point a native <details> dropdown (v2.9) */
-    '.ce-alsobox{margin-top:18px;border:1px solid var(--bdr);border-radius:12px;background:#fff;overflow:hidden}'+
-    '.ce-alsobox-h{padding:10px 13px;background:#F6F8FA;border-bottom:1px solid var(--bdr);display:flex;flex-direction:column;gap:2px}'+
-    '.ce-alsobox-h>b{font-size:12px;color:var(--navy);font-weight:800}'+
-    '.ce-alsobox-sub{font-size:9.5px;color:var(--mu);font-weight:600;line-height:1.4}'+
-    '.ce-alsolist{display:flex;flex-direction:column}'+
-    '.ce-also-i{border-bottom:1px solid var(--bdr)}'+'.ce-also-i:last-child{border-bottom:0}'+
-    '.ce-also-s{display:flex;align-items:center;gap:8px;padding:9px 13px;cursor:pointer;list-style:none;font-size:11.5px;font-weight:600;color:var(--navy);line-height:1.45}'+
-    '.ce-also-s::-webkit-details-marker{display:none}'+
-    '.ce-also-s:hover{background:#FAFBFD}'+
-    '.ce-also-tag{font-size:8px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--tc,#6b7684);border:1px solid currentColor;border-radius:999px;padding:1px 7px;flex:none;opacity:.85}'+
-    '.ce-also-hd{flex:1;min-width:0}'+
-    '.ce-also-ar{margin-left:auto;color:var(--mu);font-size:10px;transition:transform .15s;flex:none}'+
-    '.ce-also-i[open] .ce-also-ar{transform:rotate(180deg)}'+
-    '.ce-also-body{padding:0 13px 12px 13px;font-size:10.5px;font-weight:500;color:var(--navy);line-height:1.55;background:#FBFCFE}'+
-    '.ce-also-body p{margin:6px 0}'+
-    /* AI call summary — collapsible outer box + always-visible lede + nested dropdowns + glossary */
-    '.ce-sum{border:1px solid var(--bdr);border-radius:12px;background:#fff;margin:2px 0 14px}'+
-    '.ce-sum>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(122,90,248,.06),transparent)}'+
-    '.ce-sum>summary::-webkit-details-marker{display:none}'+
-    '.ce-sum-ic{font-size:15px}'+'.ce-sum-h b{font-size:13px;color:var(--navy)}'+
-    '.ce-sum-tag{font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:'+PURPLE+';background:rgba(122,90,248,.12);border:1px solid rgba(122,90,248,.25);border-radius:999px;padding:2px 8px;margin-left:auto}'+
-    '.ce-sum[open]>summary{border-bottom:1px solid var(--bdr);border-radius:12px 12px 0 0}'+
-    '.ce-sum-body{padding:12px 15px 15px}'+
-    '.ce-sum-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:11px}'+
-    '.ce-sum-tt{font-size:10px;color:var(--mu);font-weight:600;margin-right:auto}'+
-    '.ce-sum-btn{font-size:9.5px;font-weight:800;color:'+BLUE+';border:1px solid var(--bdr);background:#fff;border-radius:999px;padding:3px 10px;cursor:pointer;transition:.12s}'+
-    '.ce-sum-btn:hover{border-color:'+BLUE+';background:rgba(26,115,232,.06)}'+
-    /* the summary IS the prose: visible punch paragraphs, each with its own "＋ more" expander */
-    '.ce-sum-block{margin:0 0 13px}'+
-    '.ce-sum-para{font-size:12.5px;line-height:1.7;color:var(--navy);font-weight:500;margin:0}'+
-    '.ce-sum-more{border:0!important;background:transparent!important;border-radius:0;margin:5px 0 0}'+
-    '.ce-sum-more>.ce-sum-nt{padding:2px 0;font-size:10px;font-weight:800;color:'+BLUE+';text-transform:none}'+
-    '.ce-sum-more>.ce-sum-nt .ce-sum-caret{color:'+BLUE+'}'+
-    '.ce-sum-more>.ce-sum-nb{padding:7px 0 4px 13px;border-left:2px dashed var(--bdr);margin-top:5px;font-size:11.5px;line-height:1.65}'+
-    '.ce-sum-nodes{display:flex;flex-direction:column;gap:6px}'+
-    '.ce-sum-n{border:1px solid var(--bdr);border-left:3px solid '+BLUE+';border-radius:9px;background:#FBFCFE}'+
-    '.ce-sum-n[data-d="1"]{border-left-color:'+BRAND2+';background:#fff}'+
-    '.ce-sum-n[data-d="2"]{border-left-color:'+AMBER+'}'+
-    '.ce-sum-nt{list-style:none;cursor:pointer;display:flex;align-items:center;gap:7px;padding:8px 11px;font-size:11.5px;font-weight:700;color:var(--navy)}'+
-    '.ce-sum-nt::-webkit-details-marker{display:none}'+
-    '.ce-sum-caret{font-size:9px;color:var(--mu);transition:transform .15s;flex:none}'+
-    '.ce-sum-n[open]>.ce-sum-nt .ce-sum-caret{transform:rotate(90deg)}'+
-    '.ce-sum-nb{padding:0 12px 11px 21px;font-size:11px;line-height:1.65;color:var(--navy);font-weight:500}'+
-    '.ce-sum-nb .ce-sum-nodes{margin-top:9px}'+
-    /* glossary term — dashed underline, attractive hover tooltip (CSS-only, no pop-up) */
-    '.ce-gl{border-bottom:1px dashed '+BLUE+';cursor:help;position:relative}'+
-    '.ce-gl:hover::after{content:attr(data-def);position:absolute;left:0;bottom:calc(100% + 8px);width:min(300px,74vw);white-space:normal;text-align:left;background:#10141A;color:#fff;font-size:10.5px;font-weight:500;line-height:1.55;padding:9px 12px;border-radius:9px;box-shadow:0 10px 28px rgba(16,24,40,.28);z-index:60}'+
-    '.ce-gl:hover::before{content:"";position:absolute;left:16px;bottom:calc(100% + 3px);border:5px solid transparent;border-top-color:#10141A;z-index:61}'+
-    /* highlights, as cards */
-    '.ce-hcards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}'+
-    '@media(max-width:760px){.ce-hcards{grid-template-columns:1fr}}'+
-    '.ce-hcard{border:1px solid var(--bdr);border-top:3px solid var(--hc,#9AA4B0);border-radius:10px;padding:9px 11px;background:#fff;cursor:pointer;transition:.14s}'+
-    '.ce-hcard:hover{box-shadow:0 4px 14px rgba(16,24,40,.09);transform:translateY(-1px)}'+
-    '.ce-hcard-t{font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--hc)}'+
-    '.ce-hcard-h{font-size:11px;color:var(--navy);line-height:1.5;margin-top:3px}'+
-    '.ce-hcard-f{display:flex;align-items:center;gap:6px;margin-top:6px}'+
-    '.ce-hcard-more{font-size:9.5px;font-weight:800;color:'+BLUE+';margin-left:auto}'+
-    '.ce-bandh{display:flex;align-items:center;gap:7px;margin:12px 0 7px}'+
-    '.ce-bandh-i{font-size:12px;color:var(--bc)}'+
-    '.ce-bandh-t{font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--bc)}'+
-    '.ce-bandh-s{font-size:9.5px;color:var(--mu);font-weight:600}'+
-    /* thesis red-lines — verdict word, plain line, depth behind "why" */
-    '.ce-rl{display:flex;flex-direction:column;gap:5px}'+
-    '.ce-rl-row{display:grid;grid-template-columns:74px 1fr auto;gap:10px;align-items:center;'+
-      'border:1px solid var(--bdr);border-left:4px solid #0a8f4c;border-radius:9px;padding:8px 12px;background:#fff}'+
-    '.ce-rl-row.trip{border-left-color:'+RED+';background:rgba(234,67,53,.035)}'+
-    '.ce-rl-v{font-size:9.5px;font-weight:900;letter-spacing:.06em;color:#0a8f4c}'+
-    '.ce-rl-row.trip .ce-rl-v{color:'+RED+'}'+
-    '.ce-rl-l{font-size:11.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
-    '.ce-rl-w{font-size:9.5px;font-weight:800;color:'+BLUE+';white-space:nowrap;cursor:pointer}'+
-    '@media(max-width:600px){.ce-rl-row{grid-template-columns:64px 1fr}.ce-rl-w{display:none}}'+
-    /* what this tees up — short boxes, always visible */
-    '.ce-tee{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}'+
-    '.ce-tee-c{border:1px solid var(--bdr);border-top:3px solid '+AMBER+';border-radius:10px;'+
-      'padding:9px 11px;background:#fff;cursor:pointer;transition:.14s}'+
-    '.ce-tee-c:hover{box-shadow:0 4px 14px rgba(16,24,40,.09);transform:translateY(-1px)}'+
-    '.ce-tee-h{font-size:11.5px;color:var(--navy);line-height:1.45;font-weight:600}'+
-    '.ce-tee-m{font-size:9.5px;font-weight:800;color:'+BLUE+';margin-top:6px}'+
-    /* the triage strip — three bands, always all three, colour is the meaning */
-    '.ce-tri{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 10px}'+
-    '@media(max-width:700px){.ce-tri{grid-template-columns:1fr}}'+
-    '.ce-tri-b{display:grid;grid-template-columns:auto auto 1fr;grid-template-areas:"i t n" "s s s";'+
-      'gap:2px 7px;align-items:center;text-align:left;border:1px solid var(--bdr);border-top:3px solid var(--bc);'+
-      'border-radius:10px;padding:8px 11px;background:#fff;font:inherit;cursor:pointer;transition:.14s;opacity:.45}'+
-    '.ce-tri-b.active{opacity:1;box-shadow:0 2px 10px rgba(16,24,40,.07)}'+
-    '.ce-tri-b:hover{border-color:var(--bc)}'+
-    '.ce-tri-i{grid-area:i;font-size:12px;color:var(--bc);line-height:1}'+
-    '.ce-tri-t{grid-area:t;font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:var(--bc)}'+
-    '.ce-tri-n{grid-area:n;justify-self:end;font-size:11px;font-weight:900;color:var(--navy)}'+
-    '.ce-tri-s{grid-area:s;font-size:9.5px;color:var(--mu);font-weight:600}'+
-    '.ce-hcard-b{margin-right:5px;color:var(--hc)}'+
-    '.ce-hcard[hidden]{display:none}'+
-    '.ce-bandh-n{margin-left:auto;font-size:9.5px;font-weight:800;color:var(--mu)}'+
-  '</style>';
-}
-
-function ceResultsBody(c){
-  var h=ceStyle()+cePhaseStyle();
-  h+=CALL_EARNINGS.quarters.map(function(q,qi){
-    var qk=ceQkey(q.q);
-    var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="ce-phase" style="background:'+BRAND2+'">② Post-Results</div>';
-    var r=q.results;
-    if(!r){ b+='<p class="ov-lede"><b>'+esc(q.q)+' — the numbers vs. the frozen expectations.</b></p>'+
-      '<div class="ce-note">Empty until the print lands.</div></div>'; return b; }
-    b+='<p class="ov-lede"><b>'+esc(q.q)+' — the print, scored against what was frozen going in.</b> '+
-       'Toggle <b>vs outside ⇄ vs Summit</b> to score the print against either expectation, and <b>Margin</b> for the expected-implied → realized margin. Each line is tagged <b>Street</b> or <b>Guide</b> because Lyft is not in our Bloomberg archive, so the outside view is compiled per print. Below the scorecard, a supplemental <i>“Also on the call”</i> aside carries the colour — not the meeting-critical items.</p>';
-    // 1 · THE print — archive spine + hand-authored notes, ranked by surprise (one block now).
-    // Pass the quarter's FROZEN Summit expectations (setup.us) so the print can be scored against
-    // Street OR Summit via the vs-Street ⇄ vs-Summit toggle (§6a-iii).
-    b+=cePrintBlock(q.q, r, (q.setup&&q.setup.us)||{});
-    // 1b · HOW THE MARKET SCORED IT. `results.priceReaction` was being authored and never rendered —
-    // dead data. It is the one line that says whether the print was read the way we read it, and for
-    // LYFT it carries a standing warning: the after-hours tape has been wrong on this name in 4 of
-    // the last 6 prints, so the record we keep is always the NEXT-DAY CLOSE (all releases are AMC).
-    if(r.priceReaction){
-      b+='<div class="ce-pxr"><span class="ce-pxr-l">Market reaction</span>'+
-         '<span class="ce-pxr-v">'+r.priceReaction+'</span></div>';
-    }
-    // 2 · the AI-generated call summary — replaces the old one-line "take" black box (v2.10).
-    b+=ceSummaryBlock(q.q, r.summary);
-    // 3 · thesis red-line check — folded unless something tripped
-    if(r.thesisCheck&&r.thesisCheck.length){
-      // One word for the verdict, then the red-line ITSELF in plain language. The reasoning goes
-      // behind "why" — it is the interesting part, but it is not what you scan for (§6a-iv).
-      var tc=r.thesisCheck.slice().sort(function(a,z){ return (z.tripped?1:0)-(a.tripped?1:0); });
-      var nTrip=tc.filter(function(t){ return t.tripped; }).length;
-      b+='<div class="ov-diagram-cap" style="margin:14px 0 6px"><b>Thesis red-lines</b> '+
-         '<span style="color:var(--mu);font-weight:600;font-size:10px">· '+
-         (nTrip?('<b style="color:'+RED+'">'+nTrip+' tripped</b> of '+tc.length):('all '+tc.length+' held'))+'</span></div>';
-      b+='<div class="ce-rl">'+tc.map(function(t,i){
-        var id=t.note?ceReg('rl-'+qk+'-'+i, (t.tripped?'TRIPPED — ':'HELD — ')+t.line, '<p>'+t.note+'</p>'):null;
-        return '<div class="ce-rl-row'+(t.tripped?' trip':'')+'">'+
-          '<span class="ce-rl-v">'+(t.tripped?'TRIPPED':'HELD')+'</span>'+
-          '<span class="ce-rl-l">'+esc(t.line)+'</span>'+
-          (id?'<span class="ce-rl-w ov-clickable" data-detail="ce:'+id+'">why ＋</span>':'<span></span>')+
-        '</div>';
-      }).join('')+'</div>';
-    }
-    // 5 · what the numbers tee up — VISIBLE, as short boxes. Folding it away was hiding the
-    // thing you walk into the call with; the fix was to shorten it, not to bury it (§6a-iv).
-    if(r.intoCall&&r.intoCall.length){
-      b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>What this tees up for the call</b> '+
-         '<span style="color:var(--mu);font-weight:600;font-size:10px">· go in hunting these</span></div>';
-      b+='<div class="ce-tee">'+r.intoCall.map(function(x,i){
-        // Everything up to the first em-dash is the hook; the rest is the argument behind it.
-        var mm=String(x).match(/^([\s\S]*?)\s+—\s+([\s\S]*)$/);
-        var head=mm?mm[1]:x, body=mm?mm[2]:'';
-        var id=body?ceReg('tee-'+qk+'-'+i, String(head).replace(/<[^>]+>/g,''), '<p>'+body+'</p>'):null;
-        return '<div class="ce-tee-c"'+(id?' data-detail="ce:'+id+'"':'')+'>'+
-          '<div class="ce-tee-h">'+head+'</div>'+
-          (id?'<div class="ce-tee-m">＋ the ask</div>':'')+'</div>';
-      }).join('')+'</div>';
-    }
-    // 6 · "Also on the call" — the supplemental colour (was the Post-Call tab, dissolved Jul 2026).
-    // Deliberately styled as a secondary aside; NOT the tracking layer (that is the Watch List) and
-    // NOT the meeting-critical read (that is the scorecard). Includes non-trackable call colour.
-    b+=ceHighlightsBlock(q.call, qk);
-    b+='<div class="ov-foot">Numbers scored against the frozen expectation — the <b>outside</b> view (Street where one was published, otherwise Lyft\'s own guide, tagged per line) or <b>Summit</b> via the toggle; actuals = reported. The <i>Also on the call</i> aside is supplemental colour — the tracking layer is the Watch List.</div>';
-    b+='</div>';
-    return b;
-  }).join('');
-  return h;
-}
-// E · "Also on the call" ── the supplemental colour from the call, rendered inside Post-Results as a
+/// E · "Also on the call" ── the supplemental colour from the call, rendered inside Post-Results as a
 // SINGLE BOX holding a plain LIST, each point with its own native <details> dropdown (v2.9). The
 // Context/Logged band classification and the triage strip are GONE (Dani did not want them). Still
 // not the meeting-critical read (that is the scorecard + the Watch List): a thesis-mover (band:'lead')
 // is tracked on the Watch List and stays filtered out here. `take`/`threeMinutes`/`notBringing`/
 // `newQuestions` survive as data (newQuestions still seeds the next Watch List) but are not rendered.
-
-// E · "Also on the call" ── the supplemental colour from the call, rendered inside Post-Results as a
-// SINGLE BOX holding a plain LIST, each point with its own native <details> dropdown (v2.9). The
-// Context/Logged band classification and the triage strip are GONE (Dani did not want them). Still
-// not the meeting-critical read (that is the scorecard + the Watch List): a thesis-mover (band:'lead')
-// is tracked on the Watch List and stays filtered out here. `take`/`threeMinutes`/`notBringing`/
-// `newQuestions` survive as data (newQuestions still seeds the next Watch List) but are not rendered.
-function ceHighlightsBlock(cc, qk){
-  if(!cc||!cc.highlights||!cc.highlights.length) return '';
-  // A thesis-mover (band:'lead') is tracked on the Watch List, never here — keep filtering it out.
-  var hls=cc.highlights.filter(function(x){ return (x.band||'context')!=='lead'; });
-  if(!hls.length) return '';
-  var b='<div class="ce-alsobox"><div class="ce-alsobox-h"><b>Also on the call</b>'+
-    '<span class="ce-alsobox-sub">supplemental colour — the meeting-critical items are the scorecard above and the Watch List</span></div>'+
-    '<div class="ce-alsolist">';
-  b+=hls.map(function(x){
-    // No tag chips (tone/curious/connects-dots/…) — just the theme and its dropdown (v2.10).
-    var det=x.detail||'';
-    if(x.open) det+='<p><b>Still open:</b> '+x.open+'</p>';
-    return '<details class="ce-also-i">'+
-      '<summary class="ce-also-s">'+
-        '<span class="ce-also-hd">'+x.head+'</span>'+
-        (det?'<span class="ce-also-ar">▾</span>':'')+
-      '</summary>'+
-      (det?'<div class="ce-also-body">'+det+'</div>':'')+
-    '</details>';
-  }).join('');
-  b+='</div></div>';
-  return b;
-}
 
 // F · The AI-generated CALL SUMMARY — the "minute" (v2.10). Replaces the old one-line black "take".
 // THE SUMMARY IS THE PROSE ITSELF: several always-visible PARAGRAPHS, each landing a punch on a
@@ -3323,37 +2692,6 @@ function ceSumNodes(nodes, depth){   // nested context-guide dropdowns inside a 
   }).join('')+'</div>';
 }
 
-function ceSumMore(more){   // a "＋ more": deeper prose (string) or { body, nodes:[…] }
-  if(!more) return '';
-  if(typeof more==='string') return more;
-  return (more.body||'')+ceSumNodes(more.nodes, 1);
-}
-
-function ceSummaryBlock(qLabel, s){
-  if(!s||!s.paras||!s.paras.length) return '';
-  var body=s.paras.map(function(pa,i){
-    var p='<div class="ce-sum-block">'+
-      '<p class="ce-sum-para">'+(pa.p||'')+'</p>';   // the always-visible punch paragraph
-    if(pa.more){
-      p+='<details class="ce-sum-n ce-sum-more" data-d="0">'+
-        '<summary class="ce-sum-nt"><span class="ce-sum-caret">▸</span><span>'+(pa.moreLabel||'＋ more — the detail behind this')+'</span></summary>'+
-        '<div class="ce-sum-nb">'+ceSumMore(pa.more)+'</div>'+
-      '</details>';
-    }
-    return p+'</div>';
-  }).join('');
-  return '<details class="ce-sum" open>'+
-    '<summary class="ce-sum-h"><span class="ce-sum-ic">🧠</span><b>Call summary — the minute</b>'+
-      '<span class="ce-sum-tag">AI-generated</span></summary>'+
-    '<div class="ce-sum-body">'+
-      '<div class="ce-sum-tools"><span class="ce-sum-tt">The summary is the text; each paragraph lands a point · open <b>＋ more</b> for the detail · hover a <span class="ce-gl" data-def="A term with a dashed underline — hover it to read its definition here.">dashed term</span> for its definition</span>'+
-        '<button type="button" class="ce-sum-btn" data-sum="exp">⊕ Expand all</button>'+
-        '<button type="button" class="ce-sum-btn" data-sum="col">⊖ Collapse all</button></div>'+
-      body+
-    '</div>'+
-  '</details>';
-}
-
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // EVOLUTION ▸ EARNINGS CALLS — LY_THEMES with By theme ⇄ By quarter toggle + accordion
 // (9 threads across 10 calls, Q4 2023 → Q1 2026). Same contract as ibkr/uber/lyft/cart/ma/rely/v,
@@ -3370,23 +2708,6 @@ function ceSummaryBlock(qLabel, s){
 var CE_THST={ trend:{c:'#0a8f4c',l:'Confirmed trend'}, promise:{c:'#2E6BE6',l:'Promise — reconcile'}, watch:{c:'#B7791F',l:'Watch'} };
 // A promise open for one quarter and one open for four look identical without this. Age is the
 // signal: how long has it been unreconciled, or how many quarters has the silence run?
-
-// A promise open for one quarter and one open for four look identical without this. Age is the
-// signal: how long has it been unreconciled, or how many quarters has the silence run?
-function ceQnum(q){ var m=String(q||'').match(/Q(\d)\s+(\d{4})/); return m?((+m[2])*4+(+m[1])):null; }
-
-function ceStAge(st){
-  if(!st||typeof st!=='object'||!st.since) return '';
-  var newest=CALL_EARNINGS.quarters.filter(function(q){ return q.status!=='upcoming'; })[0];
-  var a=ceQnum(st.since), b=ceQnum(newest?newest.q:null);
-  if(a==null||b==null) return '';
-  var n=Math.max(1, b-a+1), k=(st.k||'');
-  var lbl = (k==='promise') ? ('unreconciled '+n+' quarter'+(n>1?'s':''))
-          : (st.silent)     ? ('silent '+n+' quarter'+(n>1?'s':''))
-          : (k==='watch')   ? ('tracked '+n+' quarter'+(n>1?'s':''))
-          :                   ('running '+n+' quarter'+(n>1?'s':''));
-  return '<span class="calls-st-age"> · '+lbl+'</span>';
-}
 
 // ═══ Earnings · Setup charts (Chart.js, lazy — the pane must be visible or offsetParent is null)
 // Quarterly only. Both charts read CE_CONS and redraw on the metric pills and the range control.
@@ -3441,15 +2762,6 @@ function wireCeTrack(root){
 }
 // ═══ Deep-dive charts (Chart.js, lazy per pane) ═════════════════════════════════════════════════
 
-// Results / Estimates panes come from the shared engine (js/results.js), driven by a per-ticker
-// dataset in RESULTS_DATA. LYFT's dataset IS registered (js/results-data/lyft.js), so this fallback
-// should never render — it stays only as the message for a ticker whose dataset is not built yet.
-function ceResultsPending(label){
-  return '<div class="ce-note" style="margin:8px 0">📊 <b>'+esc(label)+'</b> — the actuals-vs-estimates chart + table. '+
-    'This pane is wired to the shared Results engine (<code>js/results.js</code>); it will populate once this ticker\'s '+
-    'dataset is registered in <code>RESULTS_DATA</code> (built from the CE_CONS archive + the Summit projection export, '+
-    'per <code>docs/RESULTS_CONVENTIONS.md</code> §6).</div>';
-}
 // ═══ Sub-tab + Deep Dive tab machinery (standardized contract) ══════════════════════════════════
 
 // Tab switches hide a tall pane and show a shorter one, so the browser clamps scrollTop and the

@@ -12,7 +12,7 @@
 | Rama | `feat/lyft-profile` (desde `origin/main` @ `e2a30fa`, 2026-11-04; worktree `research-summit-lyft`). Ya existen en GitHub `feat/earnings-rollout-lyft` y `feat/lyft-2q26-results` (no se tocan) |
 | Analista responsable | SAB (Santiago Alvarez); la sesión la abre Dani |
 | Inicio | 2026-11-04 |
-| Avance | 20 de 45 unidades aprobadas (F0, B1, B2, F0-SM, F1, OV-1, OV-2, OV-3, OV-4, OV-5, OV-6, OV-7, OV-F, EV-RES-DATA, EV-RES, TL-GEN, TL-SEG, TL-OTH, TL-CUS, EV-EST) |
+| Avance | 31 de 45 unidades aprobadas (más 1 omitida ⏭️ y 8 en pausa ⏸ por dudas del modelo, proxy o el print del 3T26) |
 
 ## 1. Inventario de datos (F0)
 
@@ -131,23 +131,23 @@ Cuadre — **vía el dataset de Results/Customers existente (que viene de los 8-
 | TL-OTH | Top Line ▸ Other | ✅ | 2026-11-05 | SAB | | 2 cortes anuales FY23–25 (línea contable, geografía) |
 | TL-CUS | Top Line ▸ Customers | ✅ | 2026-11-05 | SAB | | sin concentración divulgada; sin SPLC |
 | EV-EST | Evolution ▸ Estimates | ✅ | 2026-11-05 | SAB | | 4 snapshots del xlsm (12-15, 02-11, 05-08, 08-07); FY26–FY29; revisado por SAB en el portal |
-| EV-SET | Evolution ▸ Earnings ▸ Setup | 👀 | 2026-11-05 |  | | ported uber-ce.js → lyft-ce.js; Q3 2026 Setup (BBG 11-04 + Summit 08-07); en revisión |
-| EV-POST | Evolution ▸ Earnings ▸ Post-Results | 👀 | 2026-11-05 |  | | Post-Results Q2 2026 desde 10-Q + Prepared Remarks (sin Q&A); 3T26 queda pendiente del print |
-| EV-NOTES | Evolution ▸ Earnings ▸ Notes | 👀 | 2026-11-05 |  | | semilla themes-data/lyft.js (6 hilos, previo registro movido + Q2 2026) |
-| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | 👀 | 2026-11-05 |  | | ported uber-bl.js → lyft-bl.js; BBG + 10-K; en revisión |
-| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | 👀 | 2026-11-05 |  | | puente con 5 líneas funcionales; cost structure |
-| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | 👀 | 2026-11-05 |  | | normalizado solo quita la liberación de $2.9B |
-| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | 👀 | 2026-11-05 |  | | SBC por función FY21–25 (10-K); acciones Summit no usadas (duda 4) |
-| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | 👀 | 2026-11-05 |  | | 5 pestañas de gasto con MD&A verbatim FY25 y 10-Q 2T26 |
+| EV-SET | Evolution ▸ Earnings ▸ Setup | ✅ | 2026-11-05 | SAB | | ported uber-ce.js → lyft-ce.js; Q3 2026 Setup (BBG 11-04 + Summit 08-07); en revisión |
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results | ✅ | 2026-11-05 | SAB | | Post-Results Q2 2026 desde 10-Q + Prepared Remarks (sin Q&A); 3T26 queda pendiente del print |
+| EV-NOTES | Evolution ▸ Earnings ▸ Notes | ✅ | 2026-11-05 | SAB | | semilla themes-data/lyft.js (6 hilos, previo registro movido + Q2 2026) |
+| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ✅ | 2026-11-05 | SAB | | ported uber-bl.js → lyft-bl.js; BBG + 10-K; en revisión |
+| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ✅ | 2026-11-05 | SAB | | puente con 5 líneas funcionales; cost structure |
+| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ✅ | 2026-11-05 | SAB | | normalizado solo quita la liberación de $2.9B |
+| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ✅ | 2026-11-05 | SAB | | SBC por función FY21–25 (10-K); acciones Summit no usadas (duda 4) |
+| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ✅ | 2026-11-05 | SAB | | 5 pestañas de gasto con MD&A verbatim FY25 y 10-Q 2T26 |
 | BL-SEG | Bottom Line ▸ Segments | ⏭️ | 2026-11-05 |  | | Lyft reporta un solo segmento: no hay Segments en Bottom Line |
 | BL-SPLC | Bottom Line ▸ Supply Chain | ⏸ | 2026-11-05 |  | | sin export SPLC con Lyft como sujeto; se conserva el contenido anterior hasta que SAB lo decida |
-| VA-HIST | Valuation ▸ Historic Multiple | 👀 | 2026-11-05 |  | | P/E forward GAAP + EV/EBITDA; acciones y deuda neta solo de los filings disponibles (4 puntos) |
-| VA-PEERS | Valuation ▸ Peers | 👀 | 2026-11-05 |  | | mismo mapa que OV-6 + tabla; tabla anterior en desplegable |
+| VA-HIST | Valuation ▸ Historic Multiple | ✅ | 2026-11-05 | SAB | | P/E forward GAAP + EV/EBITDA; acciones y deuda neta solo de los filings disponibles (4 puntos) |
+| VA-PEERS | Valuation ▸ Peers | ✅ | 2026-11-05 | SAB | | mismo mapa que OV-6 + tabla; tabla anterior en desplegable |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⏸ | 2026-11-05 |  | | bloqueado: usa SHARES y EARNINGS del modelo (dudas 2 y 4, §1b) |
-| VA-SUB | Valuation ▸ Submit History | 👀 | 2026-11-05 |  | | 4 submits del xlsm; EV/EBITDA; ni/sh/opi en null por las dudas |
+| VA-SUB | Valuation ▸ Submit History | ✅ | 2026-11-05 | SAB | | 4 submits del xlsm; EV/EBITDA; ni/sh/opi en null por las dudas |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | ⏸ | 2026-11-05 |  | | calculadora anterior conservada; la reconstruida espera dudas 2 y 4 del modelo |
 | MG-TEAM | Management ▸ Executives & Board | ⏸ | 2026-11-05 |  | | roster anterior conservado; falta DEF 14A 2026 para verificar consejo y comités |
-| MG-OWN | Management ▸ Ownership | 👀 | 2026-11-05 |  | | sin tabla de tenedores (falta DEF 14A); KPIs, clases, recompras y tabla en vivo |
+| MG-OWN | Management ▸ Ownership | ✅ | 2026-11-05 | SAB | | sin tabla de tenedores (falta DEF 14A); KPIs, clases, recompras y tabla en vivo |
 | MG-GOV | Management ▸ Governance & SBC | ⏸ | 2026-11-05 |  | | contenido anterior conservado (incluye el colapso de la estructura dual en ago-2025, verificado en 10-K); falta DEF 14A |
 | MG-TRACK | Management ▸ Track Record | ⏸ | 2026-11-05 |  | | contenido anterior conservado; calificaciones del analista |
 | MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab aprobada) | ⬜ | | | | |
@@ -454,3 +454,7 @@ Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en
 - **Management:** Ownership nuevo (clase única desde el 15-ago-2025, 10-K); `brand` del roster pasa al token Summit. Roster, gobierno y track record anteriores se conservan; falta DEF 14A.
 - **CSS:** `.ov-lyft-dd` agregado a las listas `:is(...)` y a los selectores por empresa de `css/overview.css` y `css/selectors.css`.
 - **No probado por mí en navegador.** Revisión pendiente de SAB en el portal local.
+
+### 2026-11-05 · EV-SET · EV-POST (2T26) · EV-NOTES · BL-GEN-1…5 · VA-HIST · VA-PEERS · VA-SUB · MG-OWN · Aprobados (SAB)
+- Aprobados en el portal local. VA-HIST con el aviso de datos en vivo (get-market-history no desplegada) y gráfica desde feb-2024 por los 4 balances disponibles. MG-OWN con la bandera del proxy.
+- En pausa (⏸): VA-TM, VA-SENS (dudas 2 y 4 del modelo), MG-TEAM, MG-GOV, MG-TRACK (falta DEF 14A), BL-SPLC (sin export SPLC), F-FINAL (B3 y limpieza del código viejo de `ce*`), y el Post-Results del 3T26 / Setup del 4T26 (print de 2026-11-05).

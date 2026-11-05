@@ -14,6 +14,8 @@ import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments,
 import { lyftResults } from '../results-data/lyft.js';
 import { mountWatchList } from '../watchlist.js';
 import { lyPeerScatter, lyWireScatters } from './lyft-peers.js';
+import { lyftHistMult } from './lyft-histmult.js';   // VA-HIST
+import { submitsHtml, initSubmits } from '../submits.js';   // VA-SUB (engine + js/submits-data/lyft.js)
 import { lyftBlGeneralHtml, lyftBlGeneralBuild } from './lyft-bl.js';   // Bottom Line ▸ General (BL-GEN-1…5), ported from uber-bl.js
 import { lyftCeHtml, lyftCeWire, lyftCeBuild, lyftCePop } from './lyft-ce.js';   // Evolution ▸ Earnings (EV-SET / EV-POST / EV-NOTES), ported from uber-ce.js
 
@@ -3702,9 +3704,13 @@ function deepDiveHtml(c){
       ['earnings','Earnings',lyftCeHtml(c)],
       ['results','Results',(resultsHtml('LYFT')||'')+modelBody(c)],
       ['estevo','Estimates',resultsEvoHtml('LYFT')||''] ])+'</div>';
-  // VALUATION - Peers · Sensitivity Analysis (the earlier calculator stays until VA-SENS rebuilds it)
+  // VALUATION - Historic Multiple (VA-HIST) · Peers (VA-PEERS) · Submit History (VA-SUB) · Sensitivity Analysis (the earlier calculator stays).
+  // Target Multiple (VA-TM) and the rebuilt Sensitivity (VA-SENS) need the model's SHARES / EARNINGS rows, which are in doubt
+  // (docs/profiles/LYFT.md section 1b, doubts 2 and 4): no sub-tab is published for VA-TM until the model's author answers.
   h += '<div class="dd-pane" data-dd="valuation" hidden>'+st([
-      ['peers','Peers',lyPeerMultBody(c)],
+      ['histmult','Historic Multiple',lyftHistMult.body()],
+      ['peers','Peers',lyPeerScatter('dd')+ddMore('Multiples and growth by peer — the earlier table (moved from the old Peers tab)',lyPeerMultBody(c))],
+      ['submits','Submit History',submitsHtml('LYFT')],
       ['sensitivity','Sensitivity Analysis',LYFT_VAL.body()] ])+'</div>';
   // MANAGEMENT - Executives & Board · Governance & SBC (+ capital allocation) · Track Record. Ownership comes with MG-OWN.
   h += '<div class="dd-pane" data-dd="mgmt" hidden>'+st([
@@ -4276,8 +4282,10 @@ function buildSub(root, group, key){
       if(root.querySelector('#rsEvoWrap')) requestAnimationFrame(function(){ initResultsEvo('LYFT'); });
     }
   } else if(group==='valuation'){
-    if(key==='sensitivity') LYFT_VAL.init(root);
-    // peers (static table): no charts
+    if(key==='histmult') requestAnimationFrame(function(){ lyftHistMult.init(root); });
+    else if(key==='peers') lyWireScatters(root);   // the same live peer map as the Overview (shared state)
+    else if(key==='submits') requestAnimationFrame(function(){ initSubmits(root,'LYFT'); });
+    else if(key==='sensitivity') LYFT_VAL.init(root);
   } else if(group==='mgmt'){
     if(key==='team')          LYFT_MGMT.init(root);
     else if(key==='governance') buildLySbc();   // SBC % vs share-count history

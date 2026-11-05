@@ -14,6 +14,9 @@ import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments,
 import { lyftResults } from '../results-data/lyft.js';
 import { mountWatchList } from '../watchlist.js';
 import { lyPeerScatter, lyWireScatters } from './lyft-peers.js';
+import { SUMMIT_CAT } from '../viz-palette.js';
+import { LY_FACTS, LY_LEDE, LY_BIZ, LY_GMM_SEG, LY_GMM_GEO, LY_MM_CAP_TOP, LY_MM_CAP_END, LY_REV_DEFS, LY_PRODUCTS, LY_TIMELINE, LY_OV_SOURCES } from './lyft-ov-data.js';   // Overview data (F-FINAL: moved out of this file)
+
 import { lyftHistMult } from './lyft-histmult.js';   // VA-HIST
 import { submitsHtml, initSubmits } from '../submits.js';   // VA-SUB (engine + js/submits-data/lyft.js)
 import { lyftBlGeneralHtml, lyftBlGeneralBuild } from './lyft-bl.js';   // Bottom Line ▸ General (BL-GEN-1…5), ported from uber-bl.js
@@ -39,7 +42,7 @@ var LYFT_VAL = makeValuation({
 
 // Management roster (Management tab). Public-source bios; no ownership/trades.
 var LYFT_MGMT = makeManagement({
-  brand:'#EA0B8C',
+  brand:SUMMIT_CAT[0],
   lede:"Lyft runs a lean-but-real leadership team under CEO <b>David Risher</b>, who took over in 2023 and refocused the company on profitable growth. Its IR page publishes only the three named executive officers, but the operating bench is deeper. The founder era formally ended in <b>August 2025</b>: Logan Green and John Zimmer left the board and their super-voting shares collapsed to one-share-one-vote.",
   execs:[
     { id:'risher', lead:true, name:'David Risher', title:'Chief Executive Officer', since:'CEO since 2023', img:'img/leadership/lyft-risher.jpg',
@@ -413,7 +416,6 @@ var KPIS = [
 var AS_OF = 'Headline KPIs are FY2025 (year ended Dec 31, 2025). Latest reported quarter is Q1 2026 — $4.95B bookings (+19% YoY), $1.65B revenue (+14%), 236.9M rides (+8.5%), 28.3M active riders (+17%), $133M Adj. EBITDA (+25%), and a record ~$1.12B TTM free cash flow.';
 var FY_NOTE = 'FY2025: record 945.5M rides (+14%), $18.5B bookings (+15%), $529M Adj. EBITDA (+38%), >$1B free cash flow. GAAP net income was $2.84B, but that includes a ~$2.9B one-time non-cash deferred-tax benefit — so Adj. EBITDA and FCF are the cleaner profit signals (FY2024 was the first full-year GAAP profit). Forward years (2026E–2029E) are Summit DCF estimates.';
 
-
 // Lyft reports ONE segment (consolidated); these are revenue *sources*, not GAAP segments. Each is shown with its driver.
 var SEGMENTS = [
   ['Rideshare (core)', '<b>Driver: rides × bookings/ride × take rate.</b> The real-time US/Canada marketplace and the vast majority of revenue. Rides come from active riders × frequency; bookings/ride from mix (airport, long-distance, premium); Lyft keeps ~33% net after driver pay. This is the whole engine.'],
@@ -445,26 +447,7 @@ var TIMELINE = [
 // OV-7 (playbook section 8): the Overview timeline. Strict chronological order, short lines, sources = 10-K FY23/FY25 and the
 // 2Q26 prepared remarks. The older TIMELINE above (Prop 22 vote share, Level 5 price, Investor Day targets, ...) stays for
 // Miscellaneous ▸ M&A and History until each figure has a source.
-var LY_TIMELINE=[
-  { y:'2007', t:'Incorporated in Delaware as <b>Bounder Web</b>; renamed <b>Zimride</b> in 2008.',
-    d:'<ul class="ov-bullets"><li>The company is incorporated in 2007 as Bounder Web, Inc., a Delaware corporation.</li><li>In 2008 it changes its name to Zimride, Inc.</li><li>Zimride is the origin of the business Lyft runs today.</li></ul>' },
-  { y:'2012', t:'<b>Lyft is founded</b>; renamed Lyft, Inc. in 2013 after the Zimride assets are sold.',
-    d:'<ul class="ov-bullets"><li>The company founds Lyft in 2012.</li><li>In 2013 it changes its name to Lyft, Inc. when it sells the assets of its Zimride operations.</li></ul>' },
-  { y:'Mar 2019', t:'<b>IPO</b> on Nasdaq at $72.00 a share; first day of trading is 29 March.',
-    d:'<ul class="ov-bullets"><li>Lyft prices its initial public offering at $72.00 per share.</li><li>The shares close at $78.29 on March 29, 2019, the first day of trading.</li></ul>' },
-  { y:'2021', t:'Sells its <b>Level 5</b> self-driving division; from here autonomy comes through partners.',
-    d:'<ul class="ov-bullets"><li>Lyft sells its Level 5 self-driving vehicle division in 2021.</li><li>Since then it no longer develops its own AV technology.</li><li>It has to build and keep partnerships with AV developers to offer autonomous vehicles on its platform.</li></ul>' },
-  { y:'2022', t:'Enters bikes and station hardware by acquiring <b>PBSC Urban Solutions</b>.',
-    d:'<ul class="ov-bullets"><li>In 2022 Lyft starts earning revenue from selling bikes and bike station software and hardware.</li><li>This comes substantially through its acquisition of PBSC Urban Solutions Inc.</li></ul>' },
-  { y:'Q2 2023', t:'Co-founders step back; <b>David Risher</b> becomes CEO.',
-    d:'<ul class="ov-bullets"><li>In the second quarter of 2023 the co-founders, Logan Green and John Zimmer, move out of their management roles.</li><li>David Risher, a director since 2021, becomes Chief Executive Officer.</li><li>Kristin Sverchek succeeds Zimmer as President.</li></ul>' },
-  { y:'Jul 2025', t:'Closes the <b>Freenow</b> acquisition, taking Lyft into Europe.',
-    d:'<ul class="ov-bullets"><li>Lyft acquires Intelligent Apps GmbH (Freenow), a European multimodal app with taxi at its core; the deal closes on July 31, 2025.</li><li>It adds nine countries and more than 180 cities.</li><li>Lyft starts branding it Freenow by Lyft and plans one global Lyft app, expected to be widely available in 2027.</li></ul>' },
-  { y:'Oct 2025', t:'Acquires <b>TBR Global Chauffeuring</b>, a luxury chauffeur company active in thousands of cities.' },
-  { y:'Q4 2025', t:'Releases its tax <b>valuation allowance</b>: a $2.9B benefit makes FY2025 net income $2.84B despite a pre-tax loss.',
-    d:'<ul class="ov-bullets"><li>In the fourth quarter of 2025 Lyft releases the valuation allowance on its U.S. federal and certain state deferred tax assets.</li><li>The benefit is $2.9 billion and lifts FY2025 net income to $2.84 billion, against a loss before taxes of $53 million.</li><li>From then on the effective tax rate in the GAAP statements changes.</li></ul>' },
-  { y:'Jun 2026', t:'Takes over fleet operations for <b>Waymo in Nashville</b>, with a purpose-built depot due in October.' },
-];
+
 var PEERS = [
   ['Uber', 'Global super-app — rides + delivery + ads + freight; ~3–4× Lyft\'s US rides and structurally more profitable.', 'Uber holds ~70%+ of US rides; Lyft ~24–29%. Same ~30% take, so the gap is <b>scale and cross-sell</b>, not pricing. Lyft\'s counter: price/reliability parity, driver experience, and a tighter US focus. It cannot match Uber\'s Eats-funded CAC.'],
   ['Waymo (Lyft)', 'Robotaxi operator, live in several US cities.', 'Threat <i>and</i> partner — Lyft hosts third-party AV fleets (Waymo→Nashville) on its network rather than building its own. Same asset-light hybrid bet as Uber, but Lyft has less demand density to offer fleets.'],
@@ -1699,32 +1682,16 @@ function collapsible(title, inner, open){
 }
 // Block 1 — Key Facts. Exactly 10 cells (5×2). CEO carries tenure; Market cap carries an as-of
 // (and a live #lyMc span). No live price strip anywhere in the standardized overview.
-var LY_FACTS=[
-  ['Listing','NASDAQ: LYFT'],
-  ['HQ','San Francisco, California, USA'],
-  ['Incorporated','Delaware, USA'],
-  ['SEC filer','Domestic (10-K/10-Q/8-K)'],
-  ['Founded','2012 (incorporated 2007 as Bounder Web)'],
-  ['IPO','Mar 2019 · NASDAQ'],
-  ['CEO','David Risher · board since 2021 · CEO since Q2 2023'],
-  ['Employees','3,913 · Dec 2025'],
-  ['Dividend','Non-payer · never paid one'],
-  ['Market cap','loading live quote…'],
-];
+
 function stdKeyFacts(){
   return '<div class="stdkf">'+LY_FACTS.slice(0,10).map(function(p){
     var v=p[0]==='Market cap' ? '<span id="lyMc">'+esc(p[1])+'</span>' : esc(p[1]);
     return '<div class="stdkf-cell"><div class="stdkf-k">'+esc(p[0])+'</div><div class="stdkf-v">'+v+'</div></div>'; }).join('')+'</div>';
 }
 // Block 2 — description (high-level "what it is" only; non-redundant with the blocks below).
-var LY_LEDE='Lyft operates a global mobility platform built around a ridesharing marketplace that connects independent drivers with riders, alongside taxis, private hire, executive chauffeur services, car sharing, bikes and scooters. It earns service fees and commissions from drivers, with smaller streams from vehicle rentals, bikeshare, advertising, data licensing and Lyft Business. The 2025 acquisitions of Freenow and TBR extended a North American business into Europe and worldwide chauffeur services.';
+
 // Block 3 — the 4-quadrant, rendered as a 2×2 TABLE. Each cell ≤ ~30 words.
-var LY_BIZ=[
-  ['What it sells','On-demand rides through the Lyft app, from standard rideshare to premium, taxi and chauffeur options, plus shared bikes and scooters and vehicle rentals for drivers (Express Drive).'],
-  ['Who buys it','Riders paying per trip; drivers paying service fees and commissions to use the marketplace; organizations buying rides through Lyft Business; cities and advertisers in smaller lines.'],
-  ['How it earns','FY2025 revenue $6.32B: ~93% from the ridesharing marketplace and other contract revenue, ~7% from rentals (Flexdrive, bikes and scooters). Advertising is not a significant line.'],
-  ['The edge','A scaled two-sided network in the U.S. and Canada, where Uber is the main rival, now extended into European taxi and global chauffeur markets through Freenow and TBR.'],
-];
+
 function stdFourQuad(){
   return '<div class="q2">'+LY_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
 }
@@ -1746,24 +1713,7 @@ var LY_SEG_DEF=[
 // revenue lines (the two accounting categories the 10-K discloses), the second is geography. FY2025 vs FY2024 from the
 // 10-K revenue note (disaggregation + geography) and MD&A key metrics. LY_SEG_DEF above keeps the older Media / bikes
 // definitions until TL-SEG relocates them (never delete).
-var LY_GMM_SEG=[
-  ['Marketplace & other contracts', 93.3, '$5.90B', '93%', null],
-  ['Rentals', 6.7, '$0.42B', '7%', null],
-];
-var LY_GMM_GEO=[
-  ['United States', 95.9, '$6.06B', '96%', null],
-  ['International', 4.1, '$0.26B', '4%', null],
-];
-var LY_MM_CAP_TOP='FY2025 revenue <b>$6.32B (+9%)</b> on <b>$18.51B of gross bookings (+15%)</b> — the same total two ways: by <b>revenue line</b> or by <b>region</b>. Lyft reports a single operating segment, so the lines are accounting categories. Both reconcile to the reported figure.';
-var LY_MM_CAP_END='Lyft reports <b>one operating segment</b>. FY2025 loss from operations was <b>$(188)M</b> and net income <b>$2.84B</b>: a <b>$2.90B tax benefit</b> from releasing the valuation allowance outweighed a pre-tax loss of $(53)M. <span class="ave-subh-note">Source: Lyft FY2025 Form 10-K — revenue note (disaggregation and geography), consolidated statements of operations, MD&amp;A key metrics. Region follows where the transaction occurred or where the contracting entity sits.</span>';
-var LY_REV_DEFS=[
-  { seg:'Marketplace & other contracts (the core)',
-    desc:'The ridesharing marketplace that connects riders with independent drivers. Lyft collects service fees and commissions from drivers for using it, and runs pricing, payments and safety. Smaller streams sit in the same line: licensing and data access, bike sales and station software, advertising and Lyft Business.',
-    econ:[['FY2025 revenue','$5.90B (+10%)'],['Share of revenue','93%'],['Gross bookings (company-wide)','$18.51B (+15%)'],['Context','Advertising is not a significant part of revenue (10-K)']] },
-  { seg:'Rentals (vehicles, bikes and scooters)',
-    desc:'Revenue from renting an identified asset: vehicles to drivers through Express Drive (Flexdrive) and the network of shared bikes and scooters. It is recognised as lease revenue rather than as marketplace fees.',
-    econ:[['FY2025 revenue','$0.42B (flat)'],['Share of revenue','7%'],['Context','The 10-K reports rentals as one line']] },
-];
+
 function gmmRank(arr){ var o=arr.map(function(r,i){ return [r[1],i]; }).sort(function(a,b){ return b[0]-a[0]; }), rk=[];
   o.forEach(function(x,j){ rk[x[1]]=Math.min(j+1,6); }); return rk; }
 function gmmBars(arr){
@@ -1840,39 +1790,7 @@ var LY_PROD_GROUPS=[
 // Item 1 (ride modes, Price Lock, Express Drive, bikes and scooters, Lyft Business, Lyft Silver) and the 2Q26 prepared
 // remarks (Freenow, TBR, Curb, XXL, Lyft Teen, LUS systems, Waymo Nashville, Baidu London). LY_PROD_GROUPS above keeps
 // the older grouping (Lyft Pink, Media, May Mobility, Mobileye, Level 5) until TL-SEG / MISC relocate it.
-var LY_PRODUCTS=[
-  { ic:'🚗', fam:'Everyday rides', d:'Standard, saver and fast-pickup modes.', items:[
-    ['Standard rideshare','The core on-demand ride: a rider requests a trip and an independent driver nearby accepts it.'],
-    ['Wait & Save','A lower price for riders who are not in a hurry; the 10-K calls it a substantial portion of rides.'],
-    ['Priority Pickup','A faster driver match for riders who will pay for it.'] ]},
-  { ic:'✨', fam:'Premium & larger', d:'Bigger vehicles and higher-end rides.', items:[
-    ['XL and XXL','Larger vehicles for groups and luggage; XXL is a recent addition, expanding to new markets.'],
-    ['Extra Comfort','Roomier, newer cars for a more comfortable ride.'],
-    ['Black and Black SUV','Premium rides with professional drivers in higher-end vehicles.'] ]},
-  { ic:'📅', fam:'Plan ahead & lock', d:'Book ahead and cap the price.', items:[
-    ['Scheduled rides','Book a ride in advance for a set pickup time, including airport trips.'],
-    ['Price Lock','A subscription launched in 2024 that caps the price of regular and scheduled rides on a chosen route and pickup time.'] ]},
-  { ic:'🚕', fam:'Taxi & chauffeur', d:'Taxis, private hire and chauffeurs.', items:[
-    ['Freenow by Lyft','The European multimodal app with taxi at its core, acquired in July 2025; the Lyft brand is rolling out across it.'],
-    ['Taxis in the Lyft app','Licensed taxi drivers matched through the app, in partnership with Curb in Los Angeles, San Francisco and New York City.'],
-    ['TBR Global Chauffeuring','A global luxury chauffeur company acquired in October 2025; select Lyft drivers with commercial insurance and livery permits can apply to drive for it.'] ]},
-  { ic:'🚲', fam:'Bikes & scooters', d:'City bikeshare systems.', items:[
-    ['Citi Bike (New York City)','Lyft Urban Solutions operates it, with Divvy, Capital Bikeshare, Bluebikes, Lyft Bike and BIKETOWN: six of the largest U.S. bikeshare systems.'],
-    ['Divvy (Chicago)','Chicago’s bikeshare system.'],
-    ['Capital Bikeshare (Washington, D.C.)','Bikeshare in the capital.'],
-    ['Bluebikes (Boston)','Boston’s bikeshare system.'],
-    ['Lyft Bike (San Francisco Bay Area)','Rebranded from Bay Wheels in 2026, under a five-year contract extension with the regional transport agencies and cities.'],
-    ['BIKETOWN (Portland)','Portland’s bikeshare system.'] ]},
-  { ic:'💼', fam:'Business & programs', d:'Organizations, teens and seniors.', items:[
-    ['Lyft Business','Makes the marketplace available to organizations.'],
-    ['Lyft Silver','A feature set for older adults, with strong user growth and higher frequency than the average rider.'],
-    ['Lyft Teen','Rides for teens, launched in markets across the U.S.'] ]},
-  { ic:'🚙', fam:'Express Drive', d:'Vehicle rentals for drivers.', items:[
-    ['Express Drive','A car rental program for drivers who lack a qualifying vehicle; rentals come from the Flexdrive subsidiary and rental car partners.'] ]},
-  { ic:'🤖', fam:'Autonomous (partners)', d:'Partner robotaxis on the Lyft network.', items:[
-    ['Waymo in Nashville','Lyft took over fleet operations in June 2026, with a purpose-built depot due to open in October.'],
-    ['Baidu Apollo Go in London','Lyft is testing the sixth-generation vehicles in the capital.'] ]},
-];
+
 function stdProducts(){
   return '<div class="ov-diagram-cap" style="margin:0 0 8px"><b>Tap any family</b> for the specific products inside it.</div>'+
     '<div class="stdp">'+LY_PRODUCTS.map(function(f,i){
@@ -1952,44 +1870,11 @@ function lyScChips(root){
 function stdTimeline(){
   return '<div class="ov-timeline">'+LY_TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="lyhist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
 }
-var LY_OV_SOURCES='Sources — Lyft FY2025 Form 10-K (SEC EDGAR) for revenue by line and region, gross bookings, loss from operations and net income, headcount and the business description; FY2023 10-K for the IPO and the 2023 leadership change; Lyft 2Q26 prepared remarks (Aug 2026) for the Freenow, TBR and Nashville milestones; company IR for the product taxonomy. Market cap, prices and peer multiples are live (Massive), computed from each peer’s latest annual filing (Grab: results release and 20-F) and, for Lyft and Uber, the Bloomberg consensus FY2026 (Nov 2026). Forward figures are estimates, not company guidance.';
+
 // The standardized Overview body — 7 blocks in fixed order. Hook (Key Facts + Description + 2×2 table)
 // stays visible; every section below defaults collapsed (progressive disclosure).
 function stdOverviewBody(c){
-  var h='<style>.stdkf{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--bdr);border-top:3px solid var(--brand-2, var(--brand));border-radius:12px;overflow:hidden;background:var(--w);margin:2px 0}'+
-    '.stdkf-cell{padding:11px 13px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
-    '.stdkf-cell:nth-child(5n){border-right:none}.stdkf-cell:nth-child(n+6){border-bottom:none}'+
-    '.stdkf-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:3px}'+
-    '.stdkf-v{font-size:12px;font-weight:700;color:var(--navy);line-height:1.3}'+
-    '@media(max-width:720px){.stdkf{grid-template-columns:repeat(2,1fr)}.stdkf-cell{border-right:none}}'+
-    '.ov-lede{margin:16px 0 6px;font-size:13px;line-height:1.6;color:var(--navy)}'+
-    '.q2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--bdr);border-radius:12px;overflow:hidden;background:var(--w);margin:4px 0}'+
-    '.q2-cell{padding:13px 15px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
-    '.q2-cell:nth-child(2n){border-right:none}.q2-cell:nth-child(n+3){border-bottom:none}'+
-    '.q2-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#E6007A;margin-bottom:5px}'+
-    '.q2-v{font-size:12px;color:var(--navy);line-height:1.5}.q2-v b{font-weight:800}'+
-    '@media(max-width:600px){.q2{grid-template-columns:1fr}.q2-cell{border-right:none}.q2-cell:nth-child(n+2){border-bottom:1px solid var(--bdr)}.q2-cell:last-child{border-bottom:none}}'+
-    '.mm-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}@media(max-width:520px){.mm-stats{grid-template-columns:repeat(2,1fr)}}'+
-    '.mm-stat{border:1px solid var(--bdr);border-radius:9px;padding:8px 11px;background:var(--w)}'+
-    '.mm-stat-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}.mm-stat-v{font-size:14px;font-weight:800;color:var(--navy);margin-top:2px}'+
-    '.acc-list .acc{border:1px solid var(--bdr);border-radius:9px;margin-top:6px;overflow:hidden;background:var(--w)}'+
-    '.acc-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12px;font-weight:700;color:var(--navy);padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}'+
-    '.acc-h:hover{background:#EEF2F6}.acc-x{color:var(--mu);font-weight:800}.acc-b{padding:10px 12px}'+
-    '.famd{font-size:12px;color:var(--navy);line-height:1.55}.famd b{font-weight:800}'+
-    '.ov-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:11.5px}.ov-row:last-child{border-bottom:none}.ov-row-k{color:var(--mu);font-weight:600}.ov-row-v{color:var(--navy);font-weight:800}'+
-    '.stdp-seg{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:12px 0 7px}.stdp-group:first-child .stdp-seg{margin-top:2px}'+
-    '.stdp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}'+
-    '.stdp-card{border:1px solid var(--bdr);border-radius:11px;padding:13px 14px;background:var(--w);cursor:pointer;transition:.14s}'+
-    '.stdp-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px);border-color:#E6007A}'+
-    '.stdp-ic{font-size:26px;line-height:1}.stdp-n{font-size:13px;font-weight:800;color:var(--navy);margin:7px 0 3px}'+
-    '.stdp-d{font-size:11px;color:var(--mu);line-height:1.45}.stdp-more{font-size:10px;font-weight:700;color:#E6007A;margin-top:6px}'+
-    '.ov-collap{border:1px solid var(--bdr);border-radius:10px;margin:12px 0 0;overflow:hidden}'+
-    '.ov-collap-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12.5px;font-weight:800;color:var(--navy);padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:8px}'+
-    '.ov-collap-h:hover{background:#EEF2F6}.ov-collap-ic{font-size:10px;color:var(--mu)}.ov-collap-b{padding:12px 14px 6px}'+
-    '.dd-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--bdr)}'+
-    '.dd-tab{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--mu);padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}'+
-    '.dd-tab:hover{color:var(--navy)}.dd-tab.active{color:var(--navy);border-bottom-color:var(--navy)}'+
-    '.dd-pane[hidden]{display:none}</style>';
+  var h='';   // styles: css/overview.css (.stdkf, .q2, .acc, .stdp, .ov-collap …) — no inline <style> (playbook Annex A1)
   h+=stdKeyFacts();
   h+='<p class="ov-lede">'+esc(LY_LEDE)+'</p>';
   h+=stdFourQuad();
@@ -3669,7 +3554,6 @@ function wireCallEarnings(root){
   }
 }
 
-
 // F1 (playbook section 7, 2026-11-04): the Amazon spine. Every existing pane sits whole in its B2 destination
 // (docs/profiles/LYFT.md section 5); sub-tabs without content are added when their unit is built (rule 5).
 // Analyst Ratings return to the Pillars tab (absorbsPillars is gone), as in UBER.
@@ -3715,6 +3599,7 @@ function deepDiveHtml(c){
   // MANAGEMENT - Executives & Board · Governance & SBC (+ capital allocation) · Track Record. Ownership comes with MG-OWN.
   h += '<div class="dd-pane" data-dd="mgmt" hidden>'+st([
       ['team','Executives & Board',LYFT_MGMT.body()],
+      ['ownership','Ownership',lyOwnBody()],
       ['governance','Governance & SBC',lyGovBody(c)+lyCapAllocBody(c)],
       ['track','Track Record',lyTrackBody(c)] ])+'</div>';
   // MISCELLANEOUS - Competitive Position · Insurance & Balance Sheet · M&A and history · TAM · Strategy
@@ -3726,6 +3611,24 @@ function deepDiveHtml(c){
       ['strategy','Strategy',lyKnockout()+strategyBody(c)] ])+'</div>';
   h += '</div>';
   return h;
+// ── MG-OWN Ownership (playbook section 15). Built from the FY2025 10-K and the 2Q26 10-Q; holder-level beneficial ownership needs the 2026
+// proxy statement (DEF 14A), which is not on file — flagged on the pane, not guessed. The live Fiscal.ai table keeps its slot at the foot.
+function lyOwnBody(){
+  var h='<p class="ov-lede">Lyft became a <b>single-class company on August 15, 2025</b>, when every Class B share (20 votes) converted into Class A, so each share now carries one vote. Capital is returned through buybacks; Lyft has never paid a dividend.</p>';
+  h+='<div class="ov-kpis">'+
+    '<div class="ov-kpi"><div class="ov-kpi-v">1 class</div><div class="ov-kpi-d muted">Class A only since Aug 15, 2025; Class B carried 20 votes a share (10-K)</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-v">398.1M</div><div class="ov-kpi-d muted">Class A shares outstanding, Feb 5, 2026 (10-K cover); 379.2M at Jun 30, 2026 (10-Q)</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-v">$322M</div><div class="ov-kpi-d muted">stock-based compensation, FY2025: 5.1% of revenue (10-K)</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-v">$500M</div><div class="ov-kpi-d muted">repurchased in FY2025 (30.3M shares); $400M in the first half of 2026 (28.5M shares)</div></div>'+
+  '</div>';
+  h+='<div class="ov-sec-h" style="margin-top:14px">Who owns Lyft</div>';
+  h+='<div class="rs-noguide">⚑ Holder-level ownership is not shown: beneficial ownership by holder and the insiders table are in the 2026 proxy statement (DEF 14A), which is not on file. The share count and class history above are from the 10-K and 10-Q.</div>';
+  h+='<div class="ov-sec-h" style="margin-top:14px">Capital returned to shareholders</div>';
+  h+='<p class="famd">The board authorized $500 million of buybacks on February 11, 2025 and added $250 million on May 8, 2025, for $750 million in total; that program was complete as of March 31, 2026. In February 2026 it authorized a new program of up to $1.0 billion. In the second quarter of 2026 Lyft repurchased and retired 7.2 million shares for $100.0 million, and for the full year expects buybacks at a level similar to 2025 (2Q26 prepared remarks).</p>';
+  h+='<div class="ov-sec-h" style="margin-top:14px">Executives &amp; insider activity — live from Fiscal.ai</div><div id="dd-mgmt-slot"></div>';
+  h+='<div class="ov-foot">Sources — Lyft Form 10-K for FY2025 (cover page, statement of operations, stockholders’ equity and share repurchase note; the Class B conversion date is from the dual-class risk-factor text); Form 10-Q for 2Q26 (balance sheet, share repurchases); 2Q26 prepared remarks (full-year buyback expectation). The live table is the same as Pillars ▸ Management.</div>';
+  return h;
+}
 }
 // Evolution ▸ Company History & M&A — the single home for the company story and the
 // deal-by-deal financial impact (moved out of the Deep Overview and Strategy to avoid

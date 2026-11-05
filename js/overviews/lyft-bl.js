@@ -350,7 +350,7 @@ function aBridgeBody(){
     '</div>'+
     '<div class="br-wf"><div class="me-bl-h340"><canvas id="ubBrCanvas"></canvas></div>'+
     '<div id="ubBrCanvas-tbl" class="me-bl-tblhost"></div>'+
-    '<div class="me-bl-note br-wf-note">Lyft reports five cost lines and no gross profit, and depreciation and amortization sit inside them, so the subtotal after cost of revenue is “revenue less cost of revenue”, not a reported gross margin. The 10-K gives cost of revenue as one line, so it is one bar. The Forward view moves each line ±25% against the Bloomberg consensus; the rest is held as a fixed residual.</div>'+
+    '<div class="me-bl-note br-wf-note">Lyft reports five cost lines and no gross profit, and depreciation and amortization sit inside them, so the subtotal after cost of revenue is “revenue less cost of revenue”, not a reported gross margin. The 10-K gives cost of revenue as one line, so it is one bar. The Forward view moves each line ±25% against the Bloomberg consensus; the rest is held as a fixed residual.</div></div>'+
     '<div class="br-cs" hidden>'+aStdScaffold({ id:'ub-cs', bare:true, tblTitle:'Cost structure — every line', height:320,
       modes:[{cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]}],
       presets:[['all','All'],['l5','Last 5'],['l8','Last 8']] })+'</div>'+

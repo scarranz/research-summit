@@ -1134,14 +1134,14 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 /* Hidden state must win over .ov-live's display:flex (else an empty banner shows). */
 .ov-live[hidden] { display: none; }
 
-/* Lyft brand accent — Lyft pink (#E6007A) + purple (#6B2BD9). */
+/* Lyft accent — Summit steel tokens only (the company brand lives in its logo, not in the UI). */
 .ov-lyft {
-  --brand: #E6007A;
-  --brand-soft: #FCE4F1;
-  --brand-2: #6B2BD9;
+  --brand: #3E5A82;
+  --brand-soft: #E9EEF5;
+  --brand-2: #2E4663;
 }
 .ov-lyft .ov-snap { border-top: 3px solid var(--brand-2); }
-/* Lyft uses the SoFi-style filled segmented sub-tabs (pink). */
+/* Lyft uses the SoFi-style filled segmented sub-tabs (steel). */
 .ov-lyft .ovt-tabs {
   display: inline-flex; gap: 4px; border-bottom: none;
   background: var(--surface); border: 1px solid var(--bdr);
@@ -1152,10 +1152,10 @@ img.mgmt-av { border: 1px solid var(--bdr); }
   font-size: 13px; font-weight: 600; color: var(--mu);
   padding: 8px 16px; margin-bottom: 0; transition: background .15s, color .15s;
 }
-.ov-lyft .ovt-tab:hover { color: var(--navy); background: rgba(230,0,122,0.06); }
+.ov-lyft .ovt-tab:hover { color: var(--navy); background: rgba(62,90,130,0.07); }
 .ov-lyft .ovt-tab.active {
   color: #fff; background: var(--brand); border-bottom: none;
-  box-shadow: 0 1px 3px rgba(230,0,122,0.28);
+  box-shadow: 0 1px 3px rgba(62,90,130,0.28);
 }
 .ov-lyft .ovt-tab.active:hover { color: #fff; }
 

@@ -5,7 +5,7 @@
 //    (FY2021–FY2023) and Form 10-K FY2025 (FY2024–FY2025). Tie-out run at generation: revenue − the five lines = loss from operations in
 //    every year, to the US$ thousand. Lyft has five functional lines (cost of revenue, operations and support, research and development, sales and
 //    marketing, general and administrative); depreciation and amortization sit inside them and Lyft reports no gross profit.
-//    Quarterly (LYFT_OPEXQ): Bloomberg reported actuals for 2Q25–2Q26 (lyft-bbg.js, as of its asOf); 2Q25 and 2Q26 tie to the Form 10-Q for 2Q26
+//    Quarterly (LYFT_OPEXQ): Bloomberg reported actuals for 2Q25–2Q26 (lyft-bbg.js, as of its asOf); 2Q25 and 2Q26 tie to the Form 10-Q for 2Q26 (listed as 2Q26 / 2Q25)
 //    (cost of revenue 926.4 / 935.7, operations and support 128.7 / 117.4, R&D 119.2 / 109.3, S&M 320.0 / 190.9, G&A 301.6 / 232.3). Older quarters
 //    would need the 10-Qs.
 // 2) LYFT_SBC_FN — stock-based compensation by function (US$ million), from the same statements ("Stock-based compensation included in costs and
@@ -27,11 +27,11 @@ export var LYFT_OPEX={
   2025:{"revenue": 6316.3, "cor": 3697.7, "opsSupport": 478.3, "marketing": 875.1, "rnd": 451.4, "gAdmin": 1002.1, "oi": -188.4, "sbc": 322.3},
 };
 export var LYFT_OPEXQ=[
-  {"p": "2Q25", "yr": 2025, "q": "Q2", "revenue": 1588.2, "cor": 935.7, "opsSupport": 117.4, "marketing": 190.9, "rnd": 109.3, "gAdmin": 232.3, "oi": 2.4, "sbc": 159.9},
+  {"p": "2Q25", "yr": 2025, "q": "Q2", "revenue": 1588.2, "cor": 935.7, "opsSupport": 117.4, "marketing": 190.9, "rnd": 109.3, "gAdmin": 232.3, "oi": 2.4, "sbc": 82.1},
   {"p": "3Q25", "yr": 2025, "q": "Q3", "revenue": 1685.2, "cor": 927.2, "opsSupport": 131.4, "marketing": 243.3, "rnd": 109.6, "gAdmin": 250.6, "oi": 23.1, "sbc": 66.6},
   {"p": "4Q25", "yr": 2025, "q": "Q4", "revenue": 1592.7, "cor": 971.8, "opsSupport": 123.2, "marketing": 258.8, "rnd": 120.0, "gAdmin": 303.9, "oi": -185.0, "sbc": 80.4},
   {"p": "1Q26", "yr": 2026, "q": "Q1", "revenue": 1650.5, "cor": 864.1, "opsSupport": 124.4, "marketing": 272.9, "rnd": 124.2, "gAdmin": 270.2, "oi": -5.3, "sbc": 86.9},
-  {"p": "2Q26", "yr": 2026, "q": "Q2", "revenue": 1843.5, "cor": 926.4, "opsSupport": 128.7, "marketing": 320.0, "rnd": 119.2, "gAdmin": 301.6, "oi": 47.6, "sbc": 149.2},
+  {"p": "2Q26", "yr": 2026, "q": "Q2", "revenue": 1843.5, "cor": 926.4, "opsSupport": 128.7, "marketing": 320.0, "rnd": 119.2, "gAdmin": 301.6, "oi": 47.6, "sbc": 76.6},
   {"p": "3Q26", "yr": 2026, "q": "Q3", "revenue": 1821.8, "cor": 871.4, "opsSupport": 134.0, "marketing": 382.0, "rnd": 109.1, "gAdmin": 344.7, "oi": -19.4, "sbc": 53.9},
 ];
 export var LYFT_OPEX_SRC='Lyft Forms 10-K (FY2021–FY2025, consolidated statements of operations) and Bloomberg reported actuals 2Q25–2Q26 (tied to the Form 10-Q for 2Q26) and the 3Q26 release (Nov 5 2026) for 3Q26';
@@ -78,7 +78,7 @@ export var LYFT_EW_LINES=[
              ['','Restructuring','FY2025 10-K: a $35.0 million decrease in restructuring costs partly offset the insurance increase.']],
     calls:[{q:'Q1 2026', txt:'“Gross margin expanded year over year driven by a reduction in our average insurance cost per ride aided by recent insurance reforms and advancement of our insurance strategies.”', who:'Prepared remarks'},
            {q:'Q2 2026', txt:'“Cost of revenue was down year over year, both on an absolute basis and, more notably, on a per-ride basis.”', who:'Prepared remarks'},
-           {q:'Q2 2026', txt:'“We anticipate a productive annual insurance renewal process in partnership with our carriers, reflecting our team\u2019s ongoing work to bend the insurance cost curve through continued safety feature innovations and proactive policy reforms.”', who:'Prepared remarks'}] },
+           {q:'Q2 2026', txt:'“We anticipate a productive annual renewal process in partnership with our carriers, reflecting our team\u2019s ongoing work to bend the insurance cost curve through continued safety feature innovations and proactive policy reforms.”', who:'Prepared remarks'}] },
   { k:'opsSupport', name:'Operations &amp; support',
     kpiExtra:['$17.0M','more driver onboarding and rider, driver and car rental fleet support costs in FY2025 (10-K MD&amp;A)'],
     def:'Operations and support expenses primarily consist of personnel-related compensation costs of local operations teams and teams who provide phone, email and chat support to users, bikes and scooters fleet operations support costs, driver background checks and onboarding costs, fees paid to third-parties providing operations support, facility costs and certain car rental fleet support costs.',

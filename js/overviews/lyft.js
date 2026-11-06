@@ -27,8 +27,8 @@ import { lyftCeHtml, lyftCeWire, lyftCeBuild, lyftCePop } from './lyft-ce.js';  
 // the Summit DCF (FY2025 actuals; FY2026E estimate). Net cash & price are editable
 // (Summit model carries no balance sheet/quote); defaults reproduce the DCF FY2026E.
 var LYFT_VAL = makeValuation({
-  brand:'#3E5A82', sharesM:417.659,
-  netCashDefaultM:900, netCashNote:'Q1 2026: cash + short-term investments ≈ $1.72B − ~$0.8B convertible notes ≈ +$0.9B net cash.',
+  brand:'#3E5A82', sharesM:379.2,
+  netCashDefaultM:905, netCashNote:'Sep 30, 2026 (3Q26 release): cash + short-term investments $1.90B − long-term debt $1.00B ≈ +$0.9B net cash.',
   priceDefault:14.70, priceAsOf:'~Jul 2026', priceHint:"≈$14.7 (Jul 2026). Editable — verify live.",
   volLabel:'Gross Bookings',
   segments:[
@@ -37,7 +37,7 @@ var LYFT_VAL = makeValuation({
   ],
   marginBasePct:8.37, marginDefaultPct:9.37,
   marginHint:"History: '22 −10.2% · '23 5.0% · '24 6.6% · '25 8.4%. Lyft guides an Adj. EBITDA $ range each quarter.",
-  dcf:{ fy:'FY2026E', revM:7372.7, ebitdaM:691.1 },
+  dcf:{ fy:'FY2026E', revM:7268.7, ebitdaM:718.8 },   // Summit submit 2026-08-07
   mult:{ evebitda:{min:4,max:16,def:7.6}, marginMin:4, marginMax:16 },
 });
 
@@ -374,7 +374,7 @@ function cagr(v0, v1, yrs){ if (v0==null||v1==null||v0<=0||v1<=0||yrs<=0) return
 
 // ─── Brand ───────────────────────────────────────────────────────────────────
 var BRAND  = '#3E5A82';                 // Lyft pink
-var BRAND2 = '#6B2BD9';                 // Lyft purple (secondary)
+var BRAND2 = '#2E4663';                 // Summit deep steel (secondary)
 var EST_FILL = 'rgba(62,90,130,0.30)';  // lighter pink for estimate bars
 var NEG = '#C0392B', NEG_FILL = 'rgba(192,57,43,0.30)';
 var GRAY = '#B8C0CA';
@@ -956,7 +956,7 @@ function buildLySbc(){
   destroy('lyChartSbc');
   _charts['lyChartSbc']=new Chart(cv.getContext('2d'),{
     data:{ labels:LY_SBC_HIST.yrs, datasets:[
-      { type:'bar', label:'Shares out (M)', data:LY_SBC_HIST.shares, backgroundColor:'rgba(107,43,217,0.24)', borderColor:'#6B2BD9', borderWidth:1, yAxisID:'y', order:2 },
+      { type:'bar', label:'Shares out (M)', data:LY_SBC_HIST.shares, backgroundColor:'rgba(62,90,130,0.24)', borderColor:'#2E4663', borderWidth:1, yAxisID:'y', order:2 },
       { type:'line', label:'SBC % of revenue', data:LY_SBC_HIST.sbcPct, borderColor:'#3E5A82', backgroundColor:'#3E5A82', borderWidth:2.5, tension:.3, pointRadius:3, yAxisID:'y1', order:1 }
     ]},
     options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
@@ -969,11 +969,11 @@ function buildLySbc(){
 function lyGovBody(c){
   var k=[
     ['Share & voting','1 vote / share','Dual-class collapsed Aug 2025 (founders 30% → <2%)'],
-    ['Board','7 of 8 independent','Independent chair · classified board'],
+    ['Board','9 directors','8 signed the FY25 10-K, Minicucci joined after · classified board · independence not re-verified'],
     ['CEO pay · FY25','$2.8M','$0 new equity · ~18:1 ratio'],
     ['SBC · % of revenue','22.6% → 5.1%','FY21→FY25 · steep decline']
   ];
-  var h='<p class="ov-lede">Lyft’s governance took a big step in <b>August 2025</b>: the <b>dual-class structure collapsed to one-share-one-vote</b> as co-founders Logan Green & John Zimmer left the board and their super-voting stock converted — their vote fell from ~30% to &lt;2%. The board is <b>7 of 8 independent</b> with a separate independent chair.</p>';
+  var h='<p class="ov-lede">Lyft’s governance took a big step in <b>August 2025</b>: the <b>dual-class structure collapsed to one-share-one-vote</b> as co-founders Logan Green & John Zimmer left the board and their super-voting stock converted — their vote fell from ~30% to &lt;2%. The board is classified into three classes with staggered three-year terms (10-K); eight directors signed the FY2025 10-K and one more joined after the 2Q26 call. Independence and committee roles come from the earlier version (2026 proxy not on file) and were not re-verified.</p>';
   h+='<div class="ov-kpis">'+k.map(function(f){return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(f[0])+'</div><div class="ov-kpi-v">'+esc(f[1])+'</div><div class="ov-kpi-d muted">'+esc(f[2])+'</div></div>';}).join('')+'</div>';
   h+='<div class="ov-fynote"><b>Verified in this build</b> (FY2025 10-K, 2Q26 10-Q, 3Q26 release): Class B stock (20 votes a share) was 8.531M shares at Dec 31, 2024 \u2014 about 29% of the vote (computed: 8.531M \u00d7 20 \u00f7 (409.5M Class A + 8.531M \u00d7 20)) \u2014 and none at Dec 31, 2025; the board is classified into three classes with staggered three-year terms; Class A shares outstanding were 400.9M (Dec 31, 2025) and 379.2M (Sep 30, 2026); Lyft repurchased $500M in FY2025, about $50M in Q3 2026, and expects about $500M for 2026. '+
     '<b>Carried from the earlier version, not re-verified</b> (the 2026 proxy is not on file): the CEO pay figure and ratio, board independence and committee roles, and the founders\u2019 departure date.</div>';
@@ -1070,7 +1070,7 @@ function lyTrackBody(c){
 // the fallback when it is reachable. ──
 var LY_MRG_METRICS=[
   {key:'gross',label:'Gross',color:'#3E5A82'},
-  {key:'oper',label:'Operating',color:'#6B2BD9'},
+  {key:'oper',label:'Operating',color:'#6F5F7A'},
   {key:'net',label:'Net',color:'#7A5AF8'},
   {key:'ebitda',label:'EBITDA',color:'#12B5A5'},
   {key:'cfo',label:'CFO',color:'#F2A73B'},
@@ -1368,7 +1368,7 @@ function stmtFlow(){
     '.sf-pill{border:none;background:none;border-radius:16px;font:600 12px Inter,sans-serif;color:var(--mu);padding:6px 14px;cursor:pointer}.sf-pill.active{background:var(--brand);color:#fff}'+
     '.sf-flow{display:flex;align-items:stretch;gap:6px}'+
     '.sf-box{flex:1;border:1px solid var(--bdr);border-radius:10px;padding:12px 13px;background:var(--w)}'+
-    '.sf-pnl{border-top:3px solid #6B2BD9}.sf-bs{border-top:3px solid #3E5A82}.sf-cf{border-top:3px solid #1E9E62}'+
+    '.sf-pnl{border-top:3px solid #2E4663}.sf-bs{border-top:3px solid #3E5A82}.sf-cf{border-top:3px solid #1E9E62}'+
     '.sf-tag{font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--mu)}'+
     '.sf-label{font-size:12px;font-weight:800;color:var(--navy);margin:1px 0 6px}'+
     '.sf-acct{font-size:11.5px;color:var(--navy);line-height:1.4}'+
@@ -1618,41 +1618,12 @@ function stdProducts(){
         '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
     }).join('')+'</div>';
 }
-// Block 6 — Competitors scatter (DYNAMIC). X = valuation multiple, Y = revenue growth, bubble =
-// LIVE market cap (api.liveQuote per ticker). Multiple: EV/EBITDA ⇄ P/E. Basis: Trailing ⇄ Forward.
-// Peers add/removable by ticker; the chip × DELETES a peer immediately. Multiples web-sourced (mid-2026).
-var LY_PEERS=[
-  { tk:'LYFT', n:'Lyft',     evT:10, evF:8.5, peT:null, peF:15,   gt:9,  gf:17, mc:5.9, hl:true, why:'The #2 North-American rideshare pure-play — now GAAP-profitable and cash-generative, and the cheapest mobility name; the market prices its lack of Uber’s scale and diversification. (Trailing P/E n.m. — FY25 net income is dominated by a one-time ~$2.9B tax benefit.)' },
-  { tk:'UBER', n:'Uber',     evT:22, evF:18,  peT:30,   peF:24,   gt:14, gf:15, mc:150, why:'The scaled, global, multi-product leader (rides + eats + freight). Profitable and cash-generative — the large-cap comp.' },
-  { tk:'DASH', n:'DoorDash', evT:49, evF:30,  peT:75,   peF:28,   gt:30, gf:22, mc:84,  why:'US delivery leader; an adjacency (delivery, not rideshare) shown for the gig-platform read — richly valued on fast growth.' },
-  { tk:'GRAB', n:'Grab',     evT:40, evF:22,  peT:null, peF:null, gt:24, gf:20, mc:16,  why:'SE-Asia super-app (rides + food + payments). Only recently profitable, so P/E is not yet meaningful; drops out of the P/E view.' },
-];
-var LY_SC={ type:'ev', basis:'f', peers:null };
-function lyScReset(){ LY_SC.peers=LY_PEERS.map(function(p){ var o={}; for(var k in p) o[k]=p[k]; o.on=true; return o; }); }
-function lyScMult(p){ if(LY_SC.type==='ev') return LY_SC.basis==='f'?p.evF:p.evT; return LY_SC.basis==='f'?p.peF:p.peT; }
-function lyScRender(root){
-  var g=root.querySelector('#lyScNodes'); if(!g||!LY_SC.peers) return;
-  var maxMult=LY_SC.type==='ev'?52:80, X0=80, X1=612, Y0=252, Y1=44;
-  var lab=root.querySelector('#lyScXlab'); if(lab) lab.textContent=(LY_SC.type==='ev'?'EV/EBITDA':'P/E')+' · '+(LY_SC.basis==='f'?'forward':'trailing');
-  var frag='';
-  LY_SC.peers.forEach(function(p){
-    if(!p.on) return; var m=lyScMult(p); if(m==null||isNaN(m)) return; // drops out of this view
-    var growth=LY_SC.basis==='f'?p.gf:p.gt; if(growth==null) growth=p.gf!=null?p.gf:p.gt;
-    var x=X0+Math.max(0,Math.min(1,m/maxMult))*(X1-X0);
-    var y=Y0-Math.max(0,Math.min(1,(growth||0)/30))*(Y0-Y1);
-    var r=Math.max(6,Math.min(22,5+Math.sqrt(Math.max(1,p.mc))*0.9));
-    frag+='<g class="mg-node" data-name="'+esc(p.n)+'" data-why="'+esc(p.why||'')+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
-      '<circle class="mg-dot" r="'+r.toFixed(1)+'" fill="'+(p.hl?'#3E5A82':'#3A7BD5')+'"'+(p.hl?' stroke="#fff" stroke-width="2"':' opacity="0.82"')+' style="cursor:pointer"></circle>'+
-      '<text y="'+(r+11).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?'#10141A':'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
-  });
-  g.innerHTML=frag;
-}
-function lyScChips(root){
-  var box=root.querySelector('#lyScChips'); if(!box||!LY_SC.peers) return;
-  var h=LY_SC.peers.map(function(p,i){ return '<span class="lysc-chip" data-sci="'+i+'" title="Remove '+esc(p.n)+'">'+esc(p.n)+' <span class="x">×</span></span>'; }).join('');
-  h+='<span class="lysc-add"><input id="lyScAddTk" placeholder="+ TICKER" maxlength="6"><button type="button" id="lyScAddBtn">Add</button></span>';
-  box.innerHTML=h;
-}
+
+
+
+
+
+
 // Block 7 — Timeline (LY_TIMELINE + data-detail="lyhist:i").
 function stdTimeline(){
   return '<div class="ov-timeline">'+LY_TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="lyhist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
@@ -1914,6 +1885,7 @@ function deepDiveHtml(c){
       ['strategy','Strategy',lyKnockout()+strategyBody(c)] ])+'</div>';
   h += '</div>';
   return h;
+}
 // ── MG-OWN Ownership (playbook section 15). Built from the FY2025 10-K and the 2Q26 10-Q; holder-level beneficial ownership needs the 2026
 // proxy statement (DEF 14A), which is not on file — flagged on the pane, not guessed. The live Fiscal.ai table keeps its slot at the foot.
 function lyOwnBody(){
@@ -1931,7 +1903,6 @@ function lyOwnBody(){
   h+='<div class="ov-sec-h" style="margin-top:14px">Executives &amp; insider activity — live from Fiscal.ai</div><div id="dd-mgmt-slot"></div>';
   h+='<div class="ov-foot">Sources — Lyft Form 10-K for FY2025 (cover page, statement of operations, stockholders’ equity and share repurchase note; the Class B conversion date is from the dual-class risk-factor text); Form 10-Q for 2Q26 (balance sheet, share repurchases); 2Q26 prepared remarks (full-year buyback expectation). The live table is the same as Pillars ▸ Management.</div>';
   return h;
-}
 }
 // Evolution ▸ Company History & M&A — the single home for the company story and the
 // deal-by-deal financial impact (moved out of the Deep Overview and Strategy to avoid
@@ -2176,7 +2147,7 @@ function buildTakeChart(){
   destroy(id);
   _charts[id] = new Chart(cv.getContext('2d'), {
     type:'line',
-    data:{ labels:YEARS, datasets:[{ data:A_TAKE, borderColor:BRAND2, backgroundColor:'rgba(107,43,217,0.06)',
+    data:{ labels:YEARS, datasets:[{ data:A_TAKE, borderColor:BRAND2, backgroundColor:'rgba(62,90,130,0.06)',
       borderWidth:2.5, tension:.3, pointRadius:3, pointBackgroundColor:'#fff', pointBorderColor:BRAND2, pointBorderWidth:2, fill:true,
       segment:{ borderDash:function(ctx){ return ctx.p1DataIndex>=FIRST_EST ? [5,4] : undefined; } } }] },
     options:{ responsive:true, maintainAspectRatio:false, animation:false,
@@ -2368,7 +2339,7 @@ function guideLegend(){
   var g=GUIDE[_guideMetric];
   var s='display:inline-flex;align-items:center;gap:7px;margin:0 18px 6px 0;font-size:12px;font-weight:600;color:var(--mu)';
   function dot(c){ return '<span style="width:11px;height:11px;border-radius:50%;background:'+c+';flex:none"></span>'; }
-  function band(){ return '<span style="width:16px;height:11px;border-radius:3px;background:rgba(107,43,217,0.16);border:1px solid rgba(107,43,217,0.4);flex:none"></span>'; }
+  function band(){ return '<span style="width:16px;height:11px;border-radius:3px;background:rgba(62,90,130,0.16);border:1px solid rgba(62,90,130,0.4);flex:none"></span>'; }
   function dash(c){ return '<span style="width:16px;border-top:2px dashed '+c+';flex:none"></span>'; }
   if (g.isMargin){
     return '<span style="'+s+'">'+dot(BRAND)+'Realized margin</span><span style="'+s+'">'+dash(BRAND2)+'2027 target (~4%)</span>';
@@ -2402,7 +2373,7 @@ function buildGuideChart(){
   } else {
     ds.push({ type:'bar', label:'Guided range', order:3, maxBarThickness:32, borderSkipped:false, borderRadius:3, borderWidth:1,
       data:g.glo.map(function(lo,i){ return (lo==null||g.ghi[i]==null)?null:[lo,g.ghi[i]]; }),
-      backgroundColor:'rgba(107,43,217,0.14)', borderColor:'rgba(107,43,217,0.34)' });
+      backgroundColor:'rgba(62,90,130,0.14)', borderColor:'rgba(62,90,130,0.34)' });
     ds.push({ type:'line', label:'Reported actual', data:g.act, borderColor:BRAND, borderWidth:2, tension:0, spanGaps:false, fill:false, order:1,
       pointRadius:g.act.map(function(v){ return v==null?0:5; }),
       pointBackgroundColor:g.act.map(function(v,i){ return guideColor(v,g.glo[i],g.ghi[i]); }),
@@ -2649,45 +2620,19 @@ function init(c){
     if(q) q.style.display=(v==='quarter')?'':'none';
   }; });
   // \u2500\u2500 Standardized Overview wiring: dynamic peer scatter, segment accordions, live market cap \u2500\u2500
-  lyScReset(); lyScRender(root); lyScChips(root);
   lyWireScatters(root);   // OV-6: the live peer map (lyft-peers.js)
-  var sctip=root.querySelector('#lyScTip');
-  function wireScNodes(){ if(!sctip) return; root.querySelectorAll('#lyScNodes .mg-node').forEach(function(g){
-    function show(){ sctip.innerHTML='<span class="mgt-n">'+g.getAttribute('data-name')+'</span>'+g.getAttribute('data-why'); sctip.hidden=false; }
-    function move(e){ sctip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; sctip.style.top=(e.clientY+16)+'px'; }
-    g.addEventListener('mouseenter', show); g.addEventListener('mousemove', move);
-    g.addEventListener('mouseleave', function(){ sctip.hidden=true; });
-    g.addEventListener('click', function(e){ show(); move(e); });
-  }); }
-  function scRefresh(){ lyScRender(root); wireScNodes(); }
-  wireScNodes();
-  root.querySelectorAll('.mg-pill').forEach(function(btn){ btn.onclick=function(){
-    if(btn.hasAttribute('data-mgtype')){ LY_SC.type=btn.getAttribute('data-mgtype'); root.querySelectorAll('.mg-pill[data-mgtype]').forEach(function(b){ b.classList.toggle('active', b===btn); }); }
-    else { LY_SC.basis=btn.getAttribute('data-mgbasis'); root.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(b){ b.classList.toggle('active', b===btn); }); }
-    scRefresh();
-  }; });
-  // peer chips: \u00d7 DELETES a peer immediately (no toggle); ticker input re-adds (restoring a seed's multiples)
-  function wireChips(){
-    root.querySelectorAll('#lyScChips .lysc-chip[data-sci]').forEach(function(ch){ ch.onclick=function(){ var i=+ch.getAttribute('data-sci'); if(LY_SC.peers[i]){ LY_SC.peers.splice(i,1); lyScChips(root); wireChips(); scRefresh(); } }; });
-    var addBtn=root.querySelector('#lyScAddBtn'), addIn=root.querySelector('#lyScAddTk');
-    if(addBtn&&addIn){ addBtn.onclick=function(){ var tk=(addIn.value||'').trim().toUpperCase(); if(!tk) return;
-      if(!LY_SC.peers.some(function(p){ return p.tk===tk; })){
-        var seed=LY_PEERS.filter(function(p){ return p.tk===tk; })[0];
-        if(seed){ var o={}; for(var k in seed) o[k]=seed[k]; o.on=true; LY_SC.peers.push(o); } // restore a known peer's multiples
-        else LY_SC.peers.push({ tk:tk, n:tk, on:true, mc:10, evT:null,evF:null,peT:null,peF:null,gt:null,gf:null, why:'Added by ticker \u2014 live market cap only; no multiple on file, so it plots once one is available.' });
-      }
-      addIn.value=''; lyScChips(root); wireChips(); scRefresh(); lyLiveOne(tk); }; }
-  }
-  wireChips();
   // Segment "What is X?" + economics accordions
   root.querySelectorAll('.acc-h').forEach(function(btn){ btn.onclick=function(){ var b=btn.nextElementSibling; if(!b) return; var open=b.hidden; b.hidden=!open; var x=btn.querySelector('.acc-x'); if(x) x.textContent=open?'\u2013':'+'; }; });
   // Collapsible sections (reader chooses what to expand)
   root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var cc=btn.parentElement; var open=cc.classList.toggle('open'); var b=cc.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'\u25be':'\u25b8';
     if(open) requestAnimationFrame(function(){ var g=activeDD(root), k=activeSubKey(root,g); if(k) buildSub(root,g,k); }); }; });   // charts inside a closed section have no size when the pane is built: build them now that it is open
   // Live market cap (Key Facts #lyMc + peer bubbles) \u2014 Massive via api.liveQuote; degrades gracefully in preview
-  function lyLiveOne(tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(q){ if(!q||q.marketCap==null){ if(tk==='LYFT'){ var e0=root.querySelector('#lyMc'); if(e0) e0.textContent='live quote unavailable'; } return; } var mcB=q.marketCap/1e9; LY_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; }); if(tk==='LYFT'){ var el=root.querySelector('#lyMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':(mcB>=10?Math.round(mcB):mcB.toFixed(1))+'B')+' \u00b7 live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } scRefresh(); }).catch(function(){ if(tk==='LYFT'){ var e1=root.querySelector('#lyMc'); if(e1) e1.textContent='live quote unavailable'; } }); }
-  LY_SC.peers.forEach(function(p){ if(p.tk) lyLiveOne(p.tk); });
-  lyScRender(root); // first paint of the standardized Overview scatter (no ovt-tab gate anymore)
+  import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote('LYFT'); }).then(function(q){
+    var el=root.querySelector('#lyMc'); if(!el) return;
+    if(!q||q.marketCap==null){ el.textContent='live quote unavailable'; return; }
+    var mcB=q.marketCap/1e9;
+    el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':(mcB>=10?Math.round(mcB):mcB.toFixed(1))+'B')+' · live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  }).catch(function(){ var e1=root.querySelector('#lyMc'); if(e1) e1.textContent='live quote unavailable'; });   // Key Facts market cap, live via Massive
   // Hoist the modal to #co-detailview so it stays visible from either profile tab
   // (an inactive .copane is display:none, which would hide a modal nested inside it).
   root.querySelectorAll(':scope > .ov-modal-back').forEach(function(m){ if(m.id!=='lyModalBack') m.remove(); });

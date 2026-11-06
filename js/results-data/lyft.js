@@ -5,18 +5,19 @@
 //             (Gross Bookings and Adjusted EBITDA); every other metric carries no guidance band by design.
 //   summit  — Summit DCF model projection frozen in dated files, from the local DCF LYFT.xlsm (Projection History). 1Q24-4Q25 are
 //             the model's per-quarter projections as they stood at print time; 1Q26 is the 2026-02-11 vintage, 2Q26 the 2026-05-08
-//             one and 3Q26-4Q26 and the annual 2026-2029 points the 2026-08-07 vintage (the latest; stored twice in the file).
-//             Net income and EPS stay null: the model's `earnings` row is annual-only and disagrees with the 10-K (doubts 2 and 4,
-//             docs/profiles/LYFT.md section 1b).
-//   cons    — Bloomberg consensus BEFORE each print, from BBG_CONSENSUS.txt + Consensus_Portal.xlsm via estMatrix (30 snapshots,
-//             2019-05-12 to 2026-11-04; the 2Q26 pre-print is the 2026-05-12 snapshot). Hand-compiled aggregator figures were
-//             removed (rule 3). Free cash flow carries NO consensus: Bloomberg's series is not on Lyft's definition.
+//             one and 3Q26-4Q26 and the annual 2026-2029 points the 2026-08-07 vintage (the latest valid submit). The model's 2027 quarterly columns do
+//             not tie to its FY2027 totals, so Summit stops at 4Q26 and the Street alone reaches 1Q27. Net income and EPS carry a Summit value for
+//             3Q26 only (the pre-print column of the DCF save of 2026-11-05: 71.2 and 0.19); the model has none for other quarters.
+//   cons    — Bloomberg consensus BEFORE each print, from BBG_CONSENSUS.txt + Consensus_Portal.xlsm via estMatrix (31 snapshots,
+//             2019-05-12 to 2026-11-06; the 3Q26 pre-print is the 2026-11-04 row, restored from git because the files no longer carry it).
+//             Hand-compiled aggregator figures were removed (rule 3). Free cash flow carries Bloomberg's own series (not Lyft's definition);
+//             its 3Q26 value is the August file's, as the 11-04 row has no such line.
 //
 // Actuals: 8-K Ex. 99.1 for 1Q24-1Q26 (as in the earlier version); 2Q26 from the 10-Q (acc. 0001628280-26-054499) and the 2Q26
-// prepared remarks. 2Q26 rides are 262.4M in the 10-Q (the remarks round to 262M; the model carries 262.0).
+// prepared remarks; 3Q26 from the 3Q26 release (8-K Ex. 99.1, 2026-11-05). 2Q26 rides are 262.4M in the 10-Q (the remarks round to 262M; the model carries 262.0).
 //
 // All monetary values in US$ millions; EPS in dollars; rides and riders in millions. null = not available.
-// Arrays are parallel to `periods`. 3Q26 is the upcoming print (reports 2026-11-05 after the close); 3Q26-4Q26 have no actual.
+// Arrays are parallel to `periods`. 3Q26 was reported on 2026-11-05 (release and prepared remarks); 4Q26 and 1Q27 have no actual.
 //
 // THREE THINGS THAT MAKE PRINTED QUARTERS NON-COMPARABLE (recorded in the metric notes, not smoothed away):
 //   1. FREENOW closed 31 Jul 2025 and first entered results in 3Q25 with only two months; TBR Global followed in Oct 2025.
@@ -75,7 +76,7 @@ export var lyftResults = {
           cons:   [53.5655, 97.5806, 94, 103.7545, 92.5147, 125.0811, 138.3429, 147.2941, 134.7, 172.3158, 192.7222, 200.6154, 184.0357],
           guideLo:[50, 95, 90, 100, 90, 115, 125, 135, 120, 160, 183, 188, null],
           guideHi:[55, 100, 95, 105, 95, 130, 145, 155, 140, 180, 203, 213, null],
-          note: 'THE LINE THAT CARRIES INFORMATION. Against Bloomberg consensus Lyft beat in nine of the ten reported quarters (+10.9%, +5.5%, +14.1%, +8.7%, +15.1%, +3.5%, +0.4%, +4.6%, then 1Q26 −1.4% and 2Q26 +2.8%), while revenue missed in most of those same quarters. That is the shape of this business as the Street models it: profitability under-modelled, revenue over-modelled. The guidance band is complete for every period. ⚠ READ THE SUMMIT LINE WITH CARE HERE: for 1Q24–3Q24 the model’s “estimate” EQUALS the reported figure to the decimal (59.4 / 102.9 / 107.3). That is the model mirroring an actual on a closed guided line, not a perfect forecast — treat a zero surprise on those quarters as no information. The second and last guided line, and the one Lyft manages to. It has printed at or above the top of the guide in almost every quarter. The margin line is the one management is judged on — % of Gross Bookings, climbing from 1.6% to ~3.0%, against a ~$1B Adjusted EBITDA goal for 2027. ⚠ 4Q25 is CLEAN despite the charge: the full $211.6M is added back, so the $154.1M and its 3.0% margin are comparable.' },
+          note: 'THE LINE THAT CARRIES INFORMATION. Against Bloomberg consensus Lyft beat in ten of the eleven reported quarters (3Q26: $203.9M against $192.7M) quarters (+10.9%, +5.5%, +14.1%, +8.7%, +15.1%, +3.5%, +0.4%, +4.6%, then 1Q26 −1.4% and 2Q26 +2.8%), while revenue missed in most of those same quarters. That is the shape of this business as the Street models it: profitability under-modelled, revenue over-modelled. The guidance band is complete for every period. ⚠ READ THE SUMMIT LINE WITH CARE HERE: for 1Q24–3Q24 the model’s “estimate” EQUALS the reported figure to the decimal (59.4 / 102.9 / 107.3). That is the model mirroring an actual on a closed guided line, not a perfect forecast — treat a zero surprise on those quarters as no information. The second and last guided line, and the one Lyft manages to. It has printed at or above the top of the guide in almost every quarter. The margin line is the one management is judged on — % of Gross Bookings, climbing from 1.6% to ~3.0%, against a ~$1B Adjusted EBITDA goal for 2027. ⚠ 4Q25 is CLEAN despite the charge: the full $211.6M is added back, so the $154.1M and its 3.0% margin are comparable.' },
         ni: { label: 'Net Income (GAAP)', short: 'Net income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'net margin',
           periods: ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27'],
           act:    [-31.5, 5, -12.4, 61.7, 2.6, 40.3, 46.1, 2755.1, 14.2, 50.3, -9.7, null, null],
@@ -169,11 +170,11 @@ export var lyftResults = {
         ebitda: { label: 'Adjusted EBITDA', short: 'Adj. EBITDA', group: 'Profitability', unit: 'usdM', marginOf: 'gb', marginLabel: 'Adj. EBITDA % of Gross Bookings',
           periods: ['2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'],
           act:    [-416.5, 222.3, 382.4, 528.9, null, null, null, null],
-          summit: [null, null, null, 554.8, 718.8, 959, 1186.3, 1334.5],
+          summit: [null, null, null, 528.9, 718.8, 959, 1186.3, 1334.5],
           cons:   [290.9429, 209.9688, 372.7027, 519.8857, 704.7317, 883.4286, 1014.5625, null],
           guideLo:[null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null],
-          note: '⚠ THE LINE TO ARGUE ABOUT. The turnaround is real — <b>−$416.5M in 2022 to +$528.9M in 2025</b>, with margin on bookings going 0% → 2.9%. Set the forward line against management’s own <b>~$1B adjusted-EBITDA goal for 2027</b>: the Aug 2026 snapshot carries <b>$959M</b> (3.9% of bookings), about 4% short, while Bloomberg consensus is $882M. Bookings are on the 2027 goal; this line is just under it. ⚠ Summit starts at 2025 — see the header note on why 2022–2024 projections are excluded.' },
+          note: '⚠ THE LINE TO ARGUE ABOUT. The turnaround is real — <b>−$416.5M in 2022 to +$528.9M in 2025</b>, with margin on bookings going 0% → 2.9%. Set the forward line against management’s own <b>~$1B adjusted-EBITDA goal for 2027</b>: the Aug 2026 snapshot carries <b>$959M</b> (3.9% of bookings), about 4% short, while Bloomberg consensus is $883M. Bookings are on the 2027 goal; this line is just under it. ⚠ Summit starts at 2025 — see the header note on why 2022–2024 projections are excluded.' },
         fcf: { label: 'Free Cash Flow', short: 'Free cash flow', group: 'Profitability', unit: 'usdM', marginOf: 'gb', marginLabel: 'FCF % of Gross Bookings',
           periods: ['2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'],
           act:    [-352.3, -248.1, 766.3, 1115.6, null, null, null, null],
@@ -185,7 +186,7 @@ export var lyftResults = {
         capex: { label: 'Capital Expenditure', short: 'Capex', group: 'Profitability', unit: 'usdM',
           periods: ['2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'],
           act:    [115, 149.8, 83.5, 52.8, null, null, null, null],
-          summit: [null, null, null, null, 85.8, 164.4, 132.7, 141.5],
+          summit: [null, null, null, null, 107.3, 161.4, 129.3, 138.1],
           cons:   [null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null],

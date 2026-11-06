@@ -78,14 +78,6 @@
   "Active Riders": {
    "code": "NUMBER_OF_ACTIVE_CLIENTS",
    "unit": "count"
-  },
-  "Adjusted net income (ex-SBC)": {
-   "code": "IS_COMP_NET_INC_EXCL_STOCK_COMP",
-   "unit": "usdM"
-  },
-  "Adjusted EPS (ex-SBC)": {
-   "code": "IS_COMP_EPS_EXCL_STOCK_COMP",
-   "unit": "eps"
   }
  },
  "y": {}

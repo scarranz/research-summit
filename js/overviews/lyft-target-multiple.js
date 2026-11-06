@@ -8,7 +8,7 @@
 //     (rule 10): 2025-12-15, 2026-02-11, 2026-05-08 and 2026-08-07, all valuing FY2027 on EV/EBITDA (9×, 8×, 5×, 7×). The model
 //     records NO P/E leg in any of the four submits, so the P/E columns and lines are empty and the PEG opens on EV/EBITDA.
 //   · the targets are the workbook's, never recomputed here. "Live" recomputes from your own multiples as a secondary read.
-//   · net debt for Live = Lyft's latest balance sheet (./lyft-histmult-data.js: the 3Q26 release), its source named in the footer (A23).
+//   · net debt for Live = Lyft's latest balance sheet (./lyft-histmult-data.js: the 3Q26 10-Q), its source named in the footer (A23).
 //   · the Live P/E starts at the workbook's own P/E cell (Discounted Cash Flow sheet, 16×, read 2026-11-05), not a guess.
 //   · styles: css/overview.css (.tm-* rules, already scoped to .ov-lyft-dd); no inline <style>.
 
@@ -146,7 +146,7 @@ var _mEv  = _lastVal.ev ? _lastVal.ev.mult : 12;     // Live starts from the mod
 var _mPe  = _lastVal.pe ? _lastVal.pe.mult : 16;   // the model records no P/E leg; 16 = the workbook's own P/E cell (Discounted Cash Flow, read 2026-11-05)
 var _ndRow = LYFT_HM_Q[LYFT_HM_Q.length-1];
 var _netDebt = _ndRow[6];                       // US$M, negative = net cash (10-Q balance sheet)
-var _ndSrc = 'Lyft balance sheet, '+_ndRow[0]+' (3Q26 release of '+_ndRow[2]+'; long-term debt − cash and short-term investments; restricted cash and investments left out)';
+var _ndSrc = 'Lyft balance sheet, '+_ndRow[0]+' (3Q26 10-Q signed '+_ndRow[2]+'; long-term debt − cash and short-term investments; restricted cash and investments left out)';
 var _px = null;
 
 var st = {

@@ -11,7 +11,7 @@
 //   • BASE YEAR 2025 = reported revenue (js/results-data/lyft.js act: 6,316.3).
 //   • STREET = Bloomberg consensus through js/results-data/lyft.js annual `cons` (revenue and Adjusted EBITDA to FY2028).
 //   • EXIT MULTIPLE starts at the model's own target multiple (./lyft-target-multiple-data.js), never at a hand-picked number; yours to move.
-//   • NET DEBT = Lyft's latest balance sheet (./lyft-histmult-data.js: the 3Q26 release), its source named (A23); the quote supplies the price only.
+//   • NET DEBT = Lyft's latest balance sheet (./lyft-histmult-data.js: the 3Q26 10-Q), its source named (A23); the quote supplies the price only.
 //   • The older scenario calculator (valuation.js via LYFT_VAL in lyft.js — gross bookings × take rate × EBITDA margin) stays in the
 //     pane below this one's place in the file, untouched (golden rule 1).
 
@@ -46,7 +46,7 @@ YEARS.forEach(function(y){ var r=LYFT_SENS.y[y]; if(!r) return;
 });
 var _ndRow = LYFT_HM_Q[LYFT_HM_Q.length-1];
 var NET_DEBT_SEED = _ndRow[6];            // $M, negative = net cash — Lyft balance sheet (long-term debt − cash and short-term investments; restricted cash and investments left out)
-var ND_SRC = _ndRow[0]+' balance sheet, 3Q26 release of '+_ndRow[2];
+var ND_SRC = _ndRow[0]+' balance sheet, 3Q26 10-Q signed '+_ndRow[2];
 
 // Every series the calc needs, for every year — if one is missing the pane says so instead of NaN.
 function dataOk(){
@@ -436,7 +436,7 @@ function renderMatrix(scope){
     'A growth on an axis is a <b>flat rate compounded from Lyft’s reported '+BASE_YEAR+' revenue</b> (FY2025 10-K: $6,316.3M); a margin is that year’s. '+
     '<b>EV/EBITDA</b>: EV = Adjusted EBITDA × multiple, less net debt, over shares; the model records no P/E valuation for Lyft, so there is no P/E basis here. '+
     '<b>Exit multiple</b>: starts at the model’s own target multiple (EV/EBITDA '+(_tmLast.ev?_tmLast.ev.mult.toFixed(1)+'× on FY'+_tmLast.ev.year:'—')+', Target Multiple, latest submit); move it in the box. '+
-    '<b>Shares</b>: the model’s diluted count for the year (about 359M), below the 379.2M Lyft had outstanding at Sep 30, 2026 (3Q26 release) — the model’s share count steps down from 417.7M in FY2025 (model doubt 4), so every implied price here carries that. '+
+    '<b>Shares</b>: the model’s diluted count for the year (about 359M), below the 379.2M Lyft had outstanding at Sep 30, 2026 (3Q26 10-Q) — the model’s share count steps down from 417.7M in FY2025 (model doubt 4), so every implied price here carries that. '+
     '<b>Net debt</b> = '+fmtB(_netDebt)+' ('+esc(ND_SRC)+'; long-term debt − cash and short-term investments; restricted cash and restricted investments, which back insurance claims, are left out). '+
     'This grid prices the year alone, so its base cells do not equal the workbook’s recorded target ($'+(_tmLast.ev?_tmLast.ev.pt.toFixed(2):'—')+'): the workbook also adds the present value of the cash flows generated up to the target year and discounts the terminal value at its WACC. '+
     '<b>Street (Bloomberg consensus</b>'+(CONS.asOf?', as of '+esc(CONS.asOf):'')+'): growth as a CAGR off the 2025 actual to Bloomberg’s revenue estimate, margin = Bloomberg Adjusted EBITDA ÷ Bloomberg revenue; where Bloomberg has no figure the driver stays at the model and the strip says so. '+

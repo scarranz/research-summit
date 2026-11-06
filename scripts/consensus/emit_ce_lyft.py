@@ -79,6 +79,7 @@ LINES = [  # name in the grid, map key, unit, divisor
     ('Sales & marketing', 'Sales & marketing', '$M', 1), ('General & administrative', 'General & administrative', '$M', 1),
     ('Operating income (GAAP)', 'Operating income (GAAP)', '$M', 1), ('Adjusted EBITDA', 'Adjusted EBITDA', '$M', 1),
     ('Net income (GAAP)', 'Net income (GAAP)', '$M', 1), ('EPS (diluted)', 'EPS (diluted)', '$', 1), ('Diluted shares', 'Diluted shares', 'M', 1),
+    ('Adjusted net income (ex-SBC)', 'Adjusted net income (ex-SBC)', '$M', 1), ('Adjusted EPS (ex-SBC)', 'Adjusted EPS (ex-SBC)', '$', 1),   # Bloomberg's adjusted series (net income / EPS excluding stock-based compensation), not a Lyft measure
     ('D&A', 'D&A', '$M', 1), ('Stock-based comp', 'SBC', '$M', 1), ('Capex', 'Capex', '$M', 1), ('Operating cash flow', 'Operating cash flow', '$M', 1),
     ('Gross Bookings', 'Gross Bookings', '$M', 1), ('Rides', 'Rides', 'M', 1), ('Active Riders', 'Active Riders', 'M', 1),
 ]

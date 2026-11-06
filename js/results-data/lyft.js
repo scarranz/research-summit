@@ -14,7 +14,7 @@
 //             its 3Q26 value is the August file's, as the 11-04 row has no such line.
 //
 // Actuals: 8-K Ex. 99.1 for 1Q24-1Q26 (as in the earlier version); 2Q26 from the 10-Q (acc. 0001628280-26-054499) and the 2Q26
-// prepared remarks; 3Q26 from the 3Q26 release (8-K Ex. 99.1, 2026-11-05). 2Q26 rides are 262.4M in the 10-Q (the remarks round to 262M; the model carries 262.0).
+// prepared remarks; 3Q26 from the 3Q26 release (8-K Ex. 99.1, 2026-11-05), tied to the 3Q26 Form 10-Q (acc. 0001628280-26-071225). 2Q26 rides are 262.4M in the 10-Q (the remarks round to 262M; the model carries 262.0).
 //
 // All monetary values in US$ millions; EPS in dollars; rides and riders in millions. null = not available.
 // Arrays are parallel to `periods`. 3Q26 was reported on 2026-11-05 (release and prepared remarks); 4Q26 and 1Q27 have no actual.

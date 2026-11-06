@@ -11,8 +11,8 @@
 //   net debt  debt − cash (negative = net cash).
 // The "filed" date is the 10-K signature date (FY2023 Feb 20 2024, FY2024 Feb 14 2025, FY2025 Feb 10 2026) and the 10-Q signature date for 2Q26
 // (Aug 6 2026); the chart steps each series on that date.
-// 3Q26 (added 2026-11-05) is from the 3Q26 release (8-K Ex. 99.1, Nov 5 2026), not a 10-Q: diluted shares 378.5M (the loss quarter, equal to basic), cash 1,308.9 + short-term
-// investments 596.0, long-term debt net of current portion 999.5; its "filed" date is the release date. The 3Q26 10-Q is not on file.
+// 3Q26 is from the Form 10-Q for the quarter ended Sep 30 2026 (acc. 0001628280-26-071225, signed Nov 5 2026): diluted shares 378.5M (the loss quarter, equal to basic),
+// cash 1,308.9 + short-term investments 596.0, long-term debt net of current portion 999.5 (total including the 52.5 current portion: 1,052.0).
 // [quarter, period end, filed, diluted shares (M), cash + ST investments, debt, net debt] — US$ million
 export var LYFT_HM_Q = [
   ['4Q23', '2023-12-31', '2024-02-20', 385.3, 1685.2, 839.4, -845.8],

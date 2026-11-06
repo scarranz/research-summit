@@ -9,12 +9,12 @@
 //     ceGuessTarget maps Lyft's threads
 import { resultsHtml, initResults } from '../results.js';
 import { mountWatchList } from '../watchlist.js';
-import { fetchThemeRecord, saveThemeRecord } from '../api.js';   // durable persistence of the MA theme record (Notes)
+import { fetchThemeRecord, saveThemeRecord } from '../api.js';   // durable persistence of the theme record (Notes)
 import { LYFT_THEMES, LYFT_THEMES_V } from '../themes-data/lyft.js';
 import { SUMMIT_INK } from '../viz-palette.js';
 import { LYFT_CE_CONS as CE_CONS, LYFT_CALL_EARNINGS as CALL_EARNINGS, LYFT_GUIDED } from './lyft-ce-data.js';
 
-// ════ extracted from amzn.js ════════════════════════════════════════════════════════════════════
+// ════ Earnings machinery (ported from uber-ce.js) ════════════════════════════════════════════════════
 function esc(s){ if(s==null) return ''; return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 // Page-styled inline prompt/confirm — a small floating card anchored to the trigger, replacing the
 // browser's window.prompt / window.confirm so every add / edit / delete matches the page. onOk(value)
@@ -127,42 +127,27 @@ function ceNoteAddPop(anchor){
   ta.focus();
 }
 
-// ─── Brand: Amazon orange + Amazon blue ─────────────────────────────────────────────────────
-// These were Amazon's own brand hexes (#FF9900 smile orange, #146EB4 blue, #232F3E squid ink), used
-// as chart colours in ~175 places. They now point at the portal's fixed categorical palette, so the
-// profile no longer paints itself in the company's brand — the brand belongs in the logo, and slot 1
-// is the same blue on every company. The NAMES are kept deliberately: renaming 175 call sites would
-// bury a palette change inside an unreviewable diff. Read BRAND as "series 1", BRAND2 as "series 2".
-// MA: the formal skin — steel accent, navy ink, slate for neutral states (PROFILE_PLAYBOOK §21).
+// ─── Series colours ─────────────────────────────────────────────────────────────────────────────
+// Summit tokens only (PROFILE_PLAYBOOK §21): steel accent, navy ink, slate for neutral states. The company's own brand lives
+// in its logo, never in the UI. Read BRAND as "series 1" and BRAND2 as "series 2".
 var BRAND='#3E5A82', BRAND2='#1E2733', SQUID=SUMMIT_INK, GREEN='#16A34A', GRAY='#8A93A0';
 var _co=null;   // open company (id + ticker), captured in html/deepDiveHtml for the shared Watch List engine
 
 // ════════════════════════════════════════════════════════════════════════════
 //  Evolution ▸ EARNINGS — the decision layer (docs/EARNINGS_CONVENTIONS.md v2.10)
-//  Fresh build on the 2Q26 cycle (machinery ported from googl.js via meta.js —
-//  the v2.10 canonical). Three phases: Setup · Watch List · Post-Results; the
-//  Watch List is the SHARED engine (js/watchlist.js, v3.0) — persistent in Supabase
-//  (table company_themes, scoped by company_id) with sorting + the delete rule; the
-//  theme record is folded in below the mount.
-//  CONSENSUS: AMZN has no rows in the BBG_CONSENSUS.txt archive (GOOGL/MA
-//  only) — CE_CONS is DERIVED at load from js/results-data/amzn.js, whose cons
-//  is the pre-print Street number (Refinitiv/LSEG via earnings-day coverage;
-//  BBG export for forward quarters) — so only the 1q-out horizon exists and the
-//  4q/3q/2q columns stay null. When Dani adds AMZN to the archive, rebuild the
-//  qr matrix from it (the MA parser in the session scratchpad is the recipe).
+//  Lyft build of 2026-11-05 (machinery ported from uber-ce.js). Phases: Setup · Post-Results · Notes; the Watch List is the SHARED
+//  engine (js/watchlist.js) — persistent in Supabase (table company_themes, scoped by company_id) with sorting + the delete rule; the
+//  theme record sits below the mount.
+//  CONSENSUS: LYFT_CE_CONS (js/overviews/lyft-ce-data.js), generated from BBG_CONSENSUS.txt by scripts/consensus/emit_ce_lyft.py; the
+//  lines the Results dataset carries are overlaid at load with its actuals and going-in consensus, so the two tabs never disagree.
 // ════════════════════════════════════════════════════════════════════════════
 var BLUE='#3E5A82', RED='#DC2626', YELLOW='#64748B', PURPLE='#3E5A82', AMBER='#64748B';
 
-// CE_CONS — BUILT FROM THE ARCHIVE (BBG_CONSENSUS.txt, `data_as_of` snapshots), GOOGL-style: each
-// metric carries its rolling revision matrix qr=[4q,3q,2q,1q-out] + actuals (qa) + YoY/QoQ bases
-// (qy/qq). 9 headline + 6 AMZN segment customs. Values $B (EPS $, shares B); capex positive.
-// Re-extract when Dani refreshes the archive (recipe: session scratchpad amzn_ce_cons builder).
-
-
+// The consensus matrix (qr = [4q,3q,2q,1q out]), the actuals (qa) and the Summit overlays live in lyft-ce-data.js (LYFT_CE_CONS).
 
 // ── The theme record — narrative threads across the recent calls (v2.3 fold-in) ──
 // (SRC_CALLS source foot removed — Dani, Aug 2026.)
-// Segment divisions for the theme record (Aug 2026, AMZN only). Each theme carries a `seg`; the
+// Groups of the theme record (Aug 2026). Each theme carries a `seg`; the
 // "By theme" view groups them under these headers, in this order. Empty themes (no `updates`) are
 // tracked placeholders — the section exists so we can fill it as the notes come in.
 var LYFT_SEG_ORDER=['Rideshare','Autonomous vehicles','Europe & new businesses','Platform & media','Costs & capital'];
@@ -208,7 +193,7 @@ function callsBody(){
     '.calls-qrow{border-left:2px solid var(--bdr);padding:1px 0 1px 11px;margin:0 0 11px}'+
     '.calls-qrow:hover{border-left-color:'+BRAND+'}'+
     '.calls-st{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid;flex:none}'+
-    /* segment divisions (Amazon US / International / AWS) — each a dropdown over its themes, */
+    /* theme groups — each a dropdown over its themes, */
     /* styled to match the By-quarter accordion (.lpb-acc-item / .lpb-acc-h / .lpb-acc-ic). */
     '.calls-seg-group{border:1px solid var(--bdr);border-radius:10px;overflow:hidden;background:var(--w)}'+
     '.calls-seg-group.open{border-color:'+BRAND+'}'+
@@ -281,7 +266,7 @@ function callsBody(){
   h+='<div class="lpb-acc" id="aCallsQuarter" style="display:none">';
   byQ.order.forEach(function(q){
     h+='<div class="lpb-acc-item"><button type="button" class="lpb-acc-h"><span>'+esc(q)+'</span><span class="lpb-acc-ic">+</span></button><div class="lpb-acc-body">';
-    // Group the quarter's themes by segment (Amazon US / International / AWS) so they read distinct.
+    // Group the quarter's themes by group so they read distinct.
     LYFT_SEG_ORDER.forEach(function(seg){
       var rows=byQ.map[q].filter(function(r){ return r.seg===seg; });
       if(!rows.length) return;
@@ -346,7 +331,7 @@ function ceStyle(){
   if (_ceStyleEmitted) return '';
   _ceStyleEmitted = true;
   return '<style>'+
-    /* MA (SAB 2026-10-21): prose is BLACK, not navy/blue — the text tokens are redefined inside Earnings; steel stays
+    /* Prose is BLACK (SAB 2026-10-21), not navy/blue — the text tokens are redefined inside Earnings; steel stays
        only on chips, controls and accents. Bold inside a sentence inherits the sentence colour. */
     '.ov-lyft-dd .ovt-subpane[data-ovst="earnings"]{--navy:#111418;--text:#111418;--blue:#111418;color:#111418}'+
     '.ov-lyft-dd .ovt-subpane[data-ovst="earnings"] :is(p,li,td,.ce-cc-row-b,.ce-cc-a,.ce-cc-q,.ce-also-body,.wl-w-def,.wl-thread-row) b{color:inherit}'+
@@ -512,7 +497,7 @@ function ceStyle(){
     '.ce-tbl{width:100%;border-collapse:collapse;font-size:11.5px}'+
     '.ce-tbl th{text-align:left;color:var(--mu);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}'+
     '.ce-tbl td{padding:9px 10px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top}'+
-    /* ── Bottom Line ▸ Supply Chain — stat row (ported from googl.js ddStat) ── */
+    /* ── Bottom Line ▸ Supply Chain — stat row ── */
     '.gdd-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}'+
     '.gdd-kpi{background:var(--w);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px}'+
     '.gdd-kpi-v{font-size:19px;font-weight:800;color:var(--navy);line-height:1.12}'+
@@ -603,7 +588,7 @@ function ceNumM(v){ var a=Math.abs(+v), d=a>=100?0:1; return a.toLocaleString('e
 // YoY/QoQ chip, not just Street (Dani, Aug 2026).
 function ceGrowth(m,qi,base,cur){
   if(m.t==='basis') return null;                       // never a growth number off a basis mismatch
-  if(m.u==='%') return null;                           // a %-line IS a YoY rate — no growth-of-a-growth (AMZN ad KPIs)
+  if(m.u==='%') return null;                           // a %-line IS a YoY rate — no growth-of-a-growth
   var c=(cur!==undefined&&cur!==null)?cur:(m.qr[qi]?m.qr[qi][3]:null);
   var b=(base==='qoq')?m.qq[qi]:m.qy[qi];
   if(c==null||b==null||!(b>0)) return null;   // no growth off a zero or negative base
@@ -796,7 +781,7 @@ function ceSetupBody(c){
 // across the Bloomberg quarterly snapshots (BBG_CONSENSUS.txt). Fixed FY (one line per fiscal year,
 // the revision trend) ⇄ Rolling NTM (Σ next 4 forecast quarters). Revenue only for now; the module
 // (js/consensus-evolution.js) is ticker/metric-agnostic so more slot in with the same data shape.
-function ceConsensusEvoBody(){ return ''; }   // not mounted for MA: consensus-evolution.js carries no MA block (playbook §12)
+function ceConsensusEvoBody(){ return ''; }   // not mounted for Lyft: consensus-evolution.js carries no Lyft block (playbook §12)
 // A1 · The annual picture — how the FY has looked, and what BBG vs Summit expect for the ones
 // still open. Reported FY actuals are bars/line; the forward years carry two forward points,
 // Bloomberg consensus (our txt) and Summit (the DCF, most-recent annual snapshot). If the company
@@ -823,11 +808,11 @@ function ceWatchBody(c){
   var h=ceStyle();
   // ── FUSED: the full multi-year theme record (was the standalone Evolution ▸ Earnings Calls tab,
   // dissolved Jul 2026 — no two tabs on the same call highlights). Moved to the TOP of this sub-tab
-  // (Aug 2026, AMZN only) — it now leads; the Watch List is folded in below it. ──
+  // (Aug 2026) — it now leads; the Watch List is folded in below it. ──
   h+='<div class="ce-band" style="--bc:var(--navy)"><span class="ce-band-t">The theme record — every thread, across all calls</span><span class="ce-band-l"></span></div>';
   // Wrapped so the editor below can re-render it in place when a theme / sub-theme is added.
   h+='<div data-marec>'+callsBody()+'</div>';
-  // ── The editing surface — a Theme → Sub-theme picker (AMZN-only). HIDDEN by default so the record
+  // ── The editing surface — a Theme → Sub-theme picker HIDDEN by default so the record
   // above reads clean; the button reveals it only when you want to add/update. Adding a theme or
   // sub-theme reflects in the record above immediately. ──
   h+='<style>.ma-edit{margin-top:22px}'+
@@ -883,7 +868,7 @@ function ceWatchBody(c){
        '<button type="button" class="ma-edit-tog" data-maeditog aria-expanded="false">Edit notes &amp; tracking <span class="ma-edit-s">— opens only to add/update a theme or sub-theme</span></button>'+
        '<div class="ma-edit-body" hidden><div data-maeditor></div></div>'+
      '</div>';
-  // MA keeps its shared Watch List (open hooks for the next call, saved in Supabase) under the record.
+  // Lyft keeps its shared Watch List (open hooks for the next call, saved in Supabase) under the record.
   h+='<div class="ce-band" style="--bc:var(--navy);margin-top:26px"><span class="ce-band-t">Watch List — open hooks for the next call</span><span class="ce-band-l"></span></div>';
   h+='<div data-wlmount></div>';
   return h;
@@ -920,7 +905,7 @@ function ceVerdict(m, c, a, surp){
 }
 // ── The print AT A GLANCE — a diverging surprise chart (Aug 2026). The cards give absolute values on
 // each metric's own scale; this normalizes EVERY metric to a single % axis (surprise = actual/expected
-// − 1), so revenue, EPS, AWS and capex line up on the same ruler. Green beats grow right, red misses
+// − 1), so revenue, EPS, rides and capex line up on the same ruler. Green beats grow right, red misses
 // grow left, ranked by |Street surprise| like the cards. Both bases are baked in and toggled by the
 // same data-ev (vs Street ⇄ vs Summit) as the cards, so one control drives both views. Outliers past
 // the axis (an EPS mark) clamp to the edge with a ▸ and print their true number.
@@ -1654,9 +1639,9 @@ function ceHighlightsBlock(cc, qk, qlabel){
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // EVOLUTION ▸ EARNINGS CALLS — LYFT_THEMES with By theme ⇄ By quarter toggle + accordion
-// (9 threads across 10 calls, Q4 2023 → Q1 2026). Same contract as ibkr/lyft/lyft/cart/ma/rely/v,
+// (9 threads across 10 calls, Q4 2023 → Q1 2026). Same contract as the other profiles' theme records,
 // ENHANCED with a status chip per theme (trend / promise-to-reconcile / watch) — the essence of
-// the dissolved Promise Tracker. Source: docs/calls/AMZN.md + AMZN-latest.md.
+// the dissolved Promise Tracker. Source: docs/calls/LYFT.md + LYFT-latest.md.
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 var CE_THST={ trend:{c:BRAND,l:'Confirmed trend'}, promise:{c:BRAND2,l:'Promise — reconcile'}, watch:{c:'#64748B',l:'Watch'} };
 // A promise open for one quarter and one open for four look identical without this. Age is the
@@ -1901,7 +1886,7 @@ function ceSelectQuarter(pane, qk){
 function ceApplyPhaseQuarters(pane, phase){
   // The quarter selector drives the Setup & Post-Results per-quarter blocks; the Watch List pane has
   // no per-quarter blocks (the shared engine carries its own quarters), so the pills are inert there.
-  // Hide the whole selector on the Watch List phase (AMZN-only) rather than leave a dead control.
+  // Hide the whole selector on the Watch List phase rather than leave a dead control.
   var pillbar=pane.querySelector('.ce-qpills'); if(pillbar) pillbar.hidden=(phase==='watch');
   var pills=Array.prototype.slice.call(pane.querySelectorAll('.ce-qpill')), lastVisible=null, activeVisible=false;
   pills.forEach(function(b){
@@ -2036,7 +2021,7 @@ function lyftRestoreRecState(host, st){
   }
 }
 function lyftRerenderRecord(root){ var host=root&&root.querySelector('[data-marec]'); if(!host) return; var st=lyftCaptureRecState(host); host.innerHTML=callsBody(); lyftRestoreRecState(host, st); wireThemeRecord(host); lyftPersistThemes(); }
-// ── Durable persistence of the theme record (AMZN Notes) to Supabase (table company_theme_record) ──
+// ── Durable persistence of the theme record (Notes) to Supabase (table company_theme_record) ──
 // The record is Pablo's in-memory LYFT_THEMES; here it becomes durable. HYDRATE on mount (replace the
 // hardcoded seed with the saved record if one exists), then SAVE the whole record after every mutation.
 // lyftRerenderRecord runs after every edit/publish, so a single save hook there covers them all. The
@@ -2062,7 +2047,7 @@ function lyftHydrateThemes(root){
   }).catch(function(){ _maReady=true; });
 }
 
-// ═══ Theme → Sub-theme editor (AMZN-only, in the hidden ✎ panel) ═══════════════════════════════
+// ═══ Theme → Sub-theme editor (in the hidden ✎ panel) ═══════════════════════════════
 // "Theme" = the segment (LYFT_SEG_ORDER); "Sub-theme" = a theme within it (LYFT_THEMES[].theme).
 // Picking a Theme filters the Sub-theme list to that segment. Adding either mutates the in-memory
 // model and re-renders the record above at once. (Session-only for now — see the note to the user.)
@@ -2236,8 +2221,8 @@ function lyftInlineEdit(ct){
 }
 
 
-// ════ MA entry points ══════════════════════════════════════════════════════════════════════════
-// The Earnings subpane's inner HTML — amzn.js deepDiveHtml lines, verbatim.
+// ════ Lyft entry points ══════════════════════════════════════════════════════════════════════════
+// The Earnings subpane's inner HTML.
 export function lyftCeHtml(c){
   _co=c;          // company (id + ticker) for the theme-record persistence
   ceStyleReset(); // one copy of the Earnings CSS per render
@@ -2251,7 +2236,7 @@ export function lyftCeHtml(c){
     '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>'+
     '<div class="ce-phpane" data-cep="watch" hidden>'+ceWatchBody(c)+'</div>';
 }
-// The Earnings wiring from amzn.js wireDD, verbatim (phase tabs · quarter pills · toggles · Notes).
+// The Earnings wiring (phase tabs · quarter pills · toggles · Notes).
 export function lyftCeWire(root){
   wireCallEarnings(root);
   wireCeTrack(root);
@@ -2266,7 +2251,7 @@ export function lyftCeWire(root){
   lyftRenderEditor(root);
   lyftHydrateThemes(root);
 }
-// amzn.js aBuildSub('evolution','earnings'): build the Setup chart when Setup is the active phase.
+// Build the Setup chart when Setup is the active phase.
 export function lyftCeBuild(root){
   var ph=root.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phtab.active');
   if(!ph || ph.getAttribute('data-cep')==='setup') requestAnimationFrame(gBuildCeAnnual);

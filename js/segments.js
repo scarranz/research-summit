@@ -871,8 +871,9 @@ function renderBlock(id, list, view, opts){
 // it hands the whole engine to this section — every mode, the presets, the slider, drag-to-zoom,
 // the chips, the period table — instead of a second, worse implementation of all of it.
 function segResultsKey(){ return _sg.ticker + '_SEG_' + String(_sg.seg).toUpperCase(); }
-function buildSegResults(){
-  var d = sgData(), s = sgSeg();
+function buildSegResults(opts){
+  opts = opts || {};
+  var d = sgData(), s = opts.seg || sgSeg();
   // The segment top line opens on the REPORTED line alone. Summit and the Street are a different
   // question — "was this expected" — and this section asks "how big is it and how fast is it
   // moving". Both are one chip away.
@@ -888,11 +889,12 @@ function buildSegResults(){
   // about the data.
   if (d.res.estMatrix) out.estMatrix = d.res.estMatrix;
   if (d.res.forwardQuarters) out.forwardQuarters = d.res.forwardQuarters;
+  if (d.res.anchorForecast) out.anchorForecast = true;
   if (d.res.defaultRange) out.defaultRange = d.res.defaultRange;   // opens on the last N reported periods plus the forward ones, like the Results tab
   ['q', 'y'].forEach(function(v){
     var src = d.res.views[v]; if (!src) return;
     var metrics = {}, keys = [];
-    ['rev', 'opinc'].forEach(function(dk){
+    (opts.drivers || d.seg.segTop || ['rev', 'opinc']).forEach(function(dk){   // a dataset may name its own top-line drivers (`segTop`); General of a one-segment company names its own (`overview.singleKeys`)
       var spec = (s.drivers || {})[dk];
       if (!spec || !spec.from) return;
       var mk = spec.from.split(':')[1], m = src.metrics[mk];
@@ -919,7 +921,7 @@ function buildSegResults(){
       // Line block and the engine draws into whichever node comes first in the document. That is
       // the "hidden duplicate block stealing getElementById" failure the reference warns about.
       // Namespacing the key keeps the two instances apart.
-      sections: [{ key: 'segtop', label: s.label + ' — top line', defaultMetric: keys[0],
+      sections: [{ key: opts.key || 'segtop', label: opts.label || (s.label + ' — top line'), defaultMetric: keys[0],
                    groups: [{ label: 'Segment', keys: keys }].concat(comp.length ? [{ label: 'Revenue build (gross to net)', keys: comp }] : []) }] };
   });
   return out;
@@ -1441,11 +1443,19 @@ function ovTotal(d, view, p){
   }, 0);
 }
 
+function ovResultsKey(){ return _sg.ticker + '_SEG_OV'; }
 export function segmentsOverviewHtml(ticker){
   var d = SEGMENTS_DATA[ticker];
   if (!d) return '<p class="sg-lede">No segments dataset for ' + esc(ticker) + '.</p>';
   _sg.ticker = ticker;
   var ov = d.seg.overview || {};
+  if (ov.single){        // one operating segment: there is no split to draw, so General carries the engine's own top-line chart (actual · Summit model · consensus)
+    registerResultsData(ovResultsKey(), buildSegResults({ seg: d.seg.segments[0], drivers: ov.singleKeys || ['rev'], key: 'segov', label: 'Top line' }));
+    var b1 = (ov.tenK ? sgTB('FILING', sgQuote(ov.tenK.text, ov.tenK.where)) : (ov.lede ? '<p class="sg-lede">' + esc(ov.lede) + '</p>' : '')) + ovCards(d, 'q');
+    return '<div class="sg-wrap" id="sgOvWrap">' + sec(1, 'The segment', '1 reportable', b1) +
+      sec(2, ov.singleTitle || 'Top line', 'actual · Summit model · consensus', '<div class="sg-engine" id="sgOvEngine">' + (resultsHtml(ovResultsKey()) || '') + '</div>') +
+      '<div class="ov-fynote sg-src">' + esc(d.seg.source) + '</div></div>';
+  }
   var view = blk('ovrev').view || 'q';
   // Was a paragraph of ours explaining the segments — which is what the cards underneath are for.
   // All that belongs at the top is how the COMPANY describes its own structure, word for word.
@@ -1476,6 +1486,7 @@ export function initSegmentsOverview(root, ticker){
   var host = root || document;
   var wrap = host.querySelector ? host.querySelector('#sgOvWrap') : null;
   if (!wrap) return;
+  if (d.seg.overview && d.seg.overview.single){ var ew = wrap.querySelector('#sgOvEngine .rs-wrap'); if (ew) initResults(ew, ovResultsKey()); return; }
   if (!wrap.__sgWired){
     wrap.__sgWired = true;
     wrap.addEventListener('keydown', function(ev){

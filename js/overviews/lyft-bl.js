@@ -125,6 +125,52 @@ function aStdScaffold(cfg){
   return '<div class="'+(cfg.bare?'me-bl-bare':'ov-sec')+'" data-astdblock="'+id+'">'+top+row2+leg+chart+slider+tbl+'</div>';
 }
 function aStdBlk(id){ return R().querySelector('[data-astdblock="'+id+'"]'); }
+// The FORECAST zone, COPIED verbatim from js/segments.js (the engine exports no helper) so Bottom Line shades forecast periods exactly as Top Line and Evolution do.
+function rsRR(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+var rsFwdZone = {
+  id: 'rsFwdZone',
+  beforeDatasetsDraw: function(chart, args, opts){
+    var from = opts && opts.from; if (from == null || from < 0) return;
+    var x = chart.scales.x, area = chart.chartArea, ctx = chart.ctx;
+    var left = (from > 0) ? (x.getPixelForTick(from - 1) + x.getPixelForTick(from)) / 2 : area.left;
+    ctx.save();
+    ctx.fillStyle = 'rgba(37,99,235,0.07)';
+    ctx.fillRect(left, area.top, area.right - left, area.bottom - area.top);
+    ctx.strokeStyle = 'rgba(37,99,235,0.40)'; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(left, area.top); ctx.lineTo(left, area.bottom); ctx.stroke();
+    ctx.setLineDash([]);
+    var label = 'FORECAST', pad = 7;
+    ctx.font = '700 9px Inter, system-ui, sans-serif';
+    var w = ctx.measureText(label).width, px = left + 8, py = area.top + 5;
+    if (px + w + pad * 2 > area.right - 4) px = area.right - w - pad * 2 - 4;
+    ctx.fillStyle = 'rgba(37,99,235,0.92)'; rsRR(ctx, px, py, w + pad * 2, 15, 7); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, px + pad, py + 8);
+    ctx.restore();
+  },
+  afterDraw: function(chart, args, opts){
+    var from = opts && opts.from; if (from == null || from < 0) return;
+    var x = chart.scales.x, ctx = chart.ctx;
+    ctx.save();
+    ctx.font = '700 11px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    var y = x.top + 13, labels = chart.data.labels || [];
+    for (var i = from; i < x.ticks.length; i++){
+      var px = x.getPixelForTick(i);
+      var lbl = labels[i] != null ? String(labels[i]) : '';
+      if (!lbl) continue;
+      var w = ctx.measureText(lbl).width;
+      ctx.fillStyle = 'rgba(37,99,235,0.14)'; rsRR(ctx, px - w / 2 - 7, y - 9, w + 14, 18, 9); ctx.fill();
+      ctx.fillStyle = RS_FWD; ctx.fillText(lbl, px, y);
+    }
+    ctx.restore();
+  }
+};
+
 function aStdRender(id, derive){
   if(derive) _aStdDerive[id]=derive; derive=_aStdDerive[id]; if(!derive) return;
   var cv=aChartReady('astd-'+id); if(!cv) return;
@@ -145,8 +191,9 @@ function aStdRender(id, derive){
     y:{ stacked:anyBar&&spec.stacked, position:'right', min:st.yr?st.yr[0]:spec.yMin, max:st.yr?st.yr[1]:spec.yMax, grid:{ color:GRID }, ticks:{ font:{ size:11 }, callback:function(v){ return yFmt(v); } } } };
   if(needY2) scales.y2={ position:'right', weight:1, grid:{ display:false }, ticks:{ font:{ size:11 }, callback:function(v){ return y2f(v); } } };
   _aCharts['astd-'+id]=new Chart(cv.getContext('2d'),{ type:anyBar?'bar':'line', data:{ labels:labels, datasets:ds },
+    plugins:[rsFwdZone],
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ var f=c.dataset.yAxisID==='y2'?y2f:yFmt; return c.dataset.label+': '+(c.parsed.y==null?'—':f(c.parsed.y))+((lo+c.dataIndex)>la?' (E)':''); } } } },
+      plugins:{ legend:{ display:false }, rsFwdZone:{ from:(la<n-1&&la+1-lo>=0&&la+1-lo<labels.length)?la+1-lo:-1 }, tooltip:{ callbacks:{ label:function(c){ var f=c.dataset.yAxisID==='y2'?y2f:yFmt; return c.dataset.label+': '+(c.parsed.y==null?'—':f(c.parsed.y)); } } } },
       scales:scales } });
   var blk=aStdBlk(id);
   if(blk){ var hm=spec.hideModes||[];   // contextual controls: hide groups that do not apply to the current view
@@ -300,7 +347,7 @@ var BR_FMT_BPS={ axis:function(v){return v.toFixed(0)+'%';}, base:function(v){re
 // ═══ Fiscal-year axis DERIVED from the BBG export (yearsA = reported, yearsF = consensus forward) — never typed ═══
 function fyLab(y){ return 'FY'+String(y).slice(2); }
 var A_YA=lyftBBG.yearsA, A_YF=lyftBBG.yearsF, A_YRS=A_YA.concat(A_YF), A_LA=A_YA.length-1;
-var A_FYLAB=A_YA.map(fyLab).concat(A_YF.map(function(y){ return fyLab(y)+'E'; }));
+var A_FYLAB=A_YA.map(fyLab).concat(A_YF.map(function(y){ return fyLab(y); }));
 function aFyVal(s,y){ if(!s) return null; var i=A_YA.indexOf(y); if(i>=0) return s.a?s.a[i]:null; i=A_YF.indexOf(y); return (i>=0&&s.f)?s.f[i]:null; }
 function aIsVal(k,y){ return aFyVal(lyftBBG.is[k], y); }
 function aFwdBtns(attr){ return A_YF.map(function(y,i){ return '<button type="button" data-'+attr+'="'+i+'"'+(i===0?' class="active"':'')+'>'+fyLab(y)+'E</button>'; }).join(''); }
@@ -330,10 +377,10 @@ function aBridgeBody(){
     '<div class="br-ctl-bu mch-ctl me-bl-ctl">'+
       '<span></span>'+
       '<span class="me-bl-pills">'+
-        '<span class="acx-tog br-gran"><button type="button" data-brg="y" class="active">Annual</button><button type="button" data-brg="q">Quarterly</button></span>'+
-        '<span class="acx-tog br-yr br-sel-y">'+yBtns('bry',LYFT_OPEX_YEARS[yN-1])+'</span>'+
-        '<span class="acx-tog br-qy br-sel-q" hidden>'+qyBtns+'</span>'+
-        '<span class="acx-tog br-qq br-sel-q" hidden>'+qqBtns+'</span>'+
+        '<span class="acx-tog br-gran"><button type="button" data-brg="q" class="active">Quarterly</button><button type="button" data-brg="y">Annual</button></span>'+
+        '<span class="acx-tog br-yr br-sel-y" hidden>'+yBtns('bry',LYFT_OPEX_YEARS[yN-1])+'</span>'+
+        '<span class="acx-tog br-qy br-sel-q">'+qyBtns+'</span>'+
+        '<span class="acx-tog br-qq br-sel-q">'+qqBtns+'</span>'+
       '</span>'+
     '</div>'+
     '<div class="br-ctl-bps mch-ctl me-bl-ctl" hidden><span></span>'+
@@ -352,7 +399,7 @@ function aBridgeBody(){
     '<div id="ubBrCanvas-tbl" class="me-bl-tblhost"></div>'+
     '<div class="me-bl-note br-wf-note">Lyft reports five cost lines and no gross profit, and depreciation and amortization sit inside them, so the subtotal after cost of revenue is “revenue less cost of revenue”, not a reported gross margin. The 10-K gives cost of revenue as one line, so it is one bar. The Forward view moves each line ±25% against the Bloomberg consensus; the rest is held as a fixed residual.</div></div>'+
     '<div class="br-cs" hidden>'+aStdScaffold({ id:'ub-cs', bare:true, tblTitle:'Cost structure — every line', height:320,
-      modes:[{cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]}],
+      modes:[{cls:'gran',label:'Period',opts:[{v:'q',label:'Quarterly',on:true},{v:'y',label:'Annual'}]}],
       presets:[['all','All'],['l5','Last 5'],['l8','Last 8']] })+'</div>'+
     '</div>';
 }
@@ -382,7 +429,7 @@ function aBridgeSync(pane){
 var CS_GM=SUMMIT_MUTE, CS_OM=SUMMIT_INK;
 function aBuildCostStructure(){
   aStdRender('ub-cs', function(st){
-    var gran=st.modes.gran||'y', rows, labels;
+    var gran=st.modes.gran||'q', rows, labels;
     if(gran==='q'){ rows=LYFT_OPEXQ; labels=rows.map(function(r){ return r.p; }); }
     else { rows=LYFT_OPEX_YEARS.map(function(y){ return LYFT_OPEX[y]; }); labels=LYFT_OPEX_YEARS.map(fyLab); }
     function pct(v,r){ return (v==null||!r.revenue)?null:Math.round(v/r.revenue*1000)/10; }
@@ -411,7 +458,7 @@ function aBuildBridge(){
       var v=pane.querySelector('.br-sl-v[data-brxv="'+s.getAttribute('data-brx')+'"]'); if(v) v.textContent=((+s.value)>0?'+':'')+s.value+'%'; });
     r=aFwdOpexRow(fi, adj);
   } else {
-    var g=pane.querySelector('.br-gran .active'), gran=g?g.getAttribute('data-brg'):'y';
+    var g=pane.querySelector('.br-gran .active'), gran=g?g.getAttribute('data-brg'):'q';
     if(gran==='q'){ var yq=pane.querySelector('.br-qy .active'), qb=pane.querySelector('.br-qq .active');
       var yy=yq?+yq.getAttribute('data-brqy'):LYFT_OPEXQ[LYFT_OPEXQ.length-1].yr, qq=qb?qb.getAttribute('data-brqq'):LYFT_OPEXQ[LYFT_OPEXQ.length-1].q;
       r=LYFT_OPEXQ.filter(function(x){ return x.yr===yy && x.q===qq; })[0]; }
@@ -534,7 +581,7 @@ function bbgQF(s, p){ if(!s||!s.qF) return null; var i=BBG_QF.map(noE).indexOf(p
 function aMarginsBody(){
   return aStdScaffold({ id:'ub-margins', title:'Profitability & margins', height:360,
     metricSel:[{v:'operating',label:'Operating income (GAAP)',on:true,group:'Profit'},{v:'ebitda',label:'Adjusted EBITDA (Lyft)',group:'Profit'},{v:'net',label:'Net income (GAAP)',group:'Profit'},{v:'fcf',label:'Free cash flow (Lyft)',group:'Cash'}],
-    modes:[{cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},
+    modes:[{cls:'gran',label:'Period',opts:[{v:'q',label:'Quarterly',on:true},{v:'y',label:'Annual'}]},
            {cls:'base',label:'Margin on',opts:[{v:'rev',label:'Revenue',on:true},{v:'gb',label:'Gross Bookings'}]},
            {cls:'norm',label:'Net',opts:[{v:'rep',label:'Reported',on:true},{v:'norm',label:'Normalized'}]}],
     presets:[['all','All'],['rep','Reported'],['fwd','Forward'],['l5','Last 5']] });
@@ -564,7 +611,7 @@ var MARG_NOTE={
 };
 function aBuildMargins(){
   aStdRender('ub-margins', function(st){
-    var gran=st.modes.gran||'y', metric=st.sel||'operating', lab=MARG_LAB2[metric], gbB=st.modes.base==='gb';
+    var gran=st.modes.gran||'q', metric=st.sel||'operating', lab=MARG_LAB2[metric], gbB=st.modes.base==='gb';
     var normVis=(metric==='net'&&gran==='y'), normOn=normVis&&st.modes.norm==='norm';
     var out={ type:'bar', stacked:false, hideModes:normVis?[]:['norm'], paired:true,
       yFmt:function(x){ return (x<0?'−$':'$')+(x==null?'':Math.abs(x).toFixed(1))+'B'; }, y2Fmt:function(x){ return x+'%'; } };
@@ -589,7 +636,7 @@ function aBuildMargins(){
             con:labels.map(function(p,i){ return i>la?bbgQF(gbB?G:R,p):null; }) };
         if(metric==='fcf') notes.push('Quarterly free cash flow here is Bloomberg’s series and may differ from Lyft’s reported figure; the Results tab carries the reported one.');
       }
-      out.labels=labels.map(function(p,i){ return i>la?p+'E':p; }); out.lastAct=la; out.series=uMargSeries(lab, d, D, false, null, null);
+      out.labels=labels.slice(); out.lastAct=la; out.series=uMargSeries(lab, d, D, false, null, null);
       out.note=notes.join(' '); return out;
     }
     // Annual — BBG years (3 reported + 3 consensus); Gross Bookings reported from the Results dataset.

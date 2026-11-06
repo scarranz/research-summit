@@ -1,5 +1,5 @@
 {
- "_doc": "LYFT metric map for emit_matrix.py (schema v2, by Bloomberg CODE), written 2026-11-05 off inspect_matrix.py LYFT (newest snapshot 11/4/2026, 30 snapshots). Adjusted EBITDA = IS_COMPARABLE_EBITDA (company definition; FY2025 528.8). EPS = IS_COMP_EPS_GAAP (GAAP diluted; FY2025 6.81 includes the $2.9B valuation-allowance release). Net income GAAP. Rides, Active Riders and Gross Bookings are the company KPIs (kpi2/kpi1/kpi3). Insurance reserves and capex are not in the export. HEADLINE_FCF is dropped: the Bloomberg series is not on Lyft's definition (company FCF = operating cash flow less purchases of property and equipment and scooter fleet); e.g. 1Q25 Street 132.1 vs reported 280.7 and 1Q24 42.9 vs 127.1, so every \"surprise\" would be a definition gap.",
+ "_doc": "LYFT metric map for emit_matrix.py (schema v2, by Bloomberg CODE), written 2026-11-05 off inspect_matrix.py LYFT (newest snapshot 11/4/2026, 30 snapshots). Adjusted EBITDA = IS_COMPARABLE_EBITDA (company definition; FY2025 528.8). EPS = IS_COMP_EPS_GAAP (GAAP diluted; FY2025 6.81 includes the $2.9B valuation-allowance release). Net income GAAP. Rides, Active Riders and Gross Bookings are the company KPIs (kpi2/kpi1/kpi3). Insurance reserves and capex are not in the export. HEADLINE_FCF (Bloomberg's free-cash-flow series) is KEPT from 2026-11-06 on the analyst's instruction: it is not on Lyft's definition (company FCF = operating cash flow less purchases of property and equipment and scooter fleet), so a gap against the reported figure is partly definitional (e.g. 1Q25 Street 132.1 vs reported 280.7; 1Q24 42.9 vs 127.1); the pane says so.",
  "segments": {},
  "q": {
   "rev": {
@@ -68,13 +68,5 @@
    "code": "IS_COMP_EPS_GAAP",
    "unit": "eps"
   }
- },
- "drop": {
-  "q": [
-   "fcf"
-  ],
-  "y": [
-   "fcf"
-  ]
  }
 }

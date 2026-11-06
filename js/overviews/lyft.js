@@ -27,7 +27,7 @@ import { lyftCeHtml, lyftCeWire, lyftCeBuild, lyftCePop } from './lyft-ce.js';  
 // the Summit DCF (FY2025 actuals; FY2026E estimate). Net cash & price are editable
 // (Summit model carries no balance sheet/quote); defaults reproduce the DCF FY2026E.
 var LYFT_VAL = makeValuation({
-  brand:'#EA0B8C', sharesM:417.659,
+  brand:'#3E5A82', sharesM:417.659,
   netCashDefaultM:900, netCashNote:'Q1 2026: cash + short-term investments ≈ $1.72B − ~$0.8B convertible notes ≈ +$0.9B net cash.',
   priceDefault:14.70, priceAsOf:'~Jul 2026', priceHint:"≈$14.7 (Jul 2026). Editable — verify live.",
   volLabel:'Gross Bookings',
@@ -104,30 +104,30 @@ function linsMoneyFlow(){
   function mk(id,c){ return '<marker id="'+id+'" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="'+c+'"/></marker>'; }
   var h='<style>'+
     '@keyframes lmfflow{to{stroke-dashoffset:-28}}'+
-    '.lmf-wrap{border:1px solid var(--bdr);border-radius:14px;background:linear-gradient(180deg,#fffafd,#fff);padding:6px 4px 2px;margin:2px 0}'+
+    '.lmf-wrap{border:1px solid var(--bdr);border-radius:14px;background:linear-gradient(180deg,#F7F9FB,#fff);padding:6px 4px 2px;margin:2px 0}'+
     '.lmf-line{stroke-width:5;stroke-dasharray:8 7;animation:lmfflow .8s linear infinite;fill:none;stroke-linecap:round}'+
     '.lmf-node{cursor:pointer}.lmf-node rect{transition:.15s}.lmf-node:hover rect{stroke-width:2.5;filter:drop-shadow(0 2px 5px rgba(0,0,0,.10))}'+
     '.lmf-cap{font-size:11.5px;color:var(--navy);line-height:1.55;padding:9px 14px 4px}.lmf-cap b{font-weight:800}'+
   '</style>';
   h+='<div class="lmf-wrap"><svg viewBox="0 0 720 296" role="img" aria-label="Lyft insurance money flow" style="width:100%;height:auto;font-family:Inter,sans-serif">';
-  h+='<defs>'+mk('lmfg','#049a4f')+mk('lmfa','#C77A11')+mk('lmfp','#E6007A')+'</defs>';
+  h+='<defs>'+mk('lmfg','#049a4f')+mk('lmfa','#C77A11')+mk('lmfp','#3E5A82')+'</defs>';
   h+='<line class="lmf-line" x1="150" y1="150" x2="219" y2="150" stroke="#049a4f" marker-end="url(#lmfg)"/>';
   h+='<line class="lmf-line" x1="416" y1="112" x2="497" y2="92" stroke="#C77A11" marker-end="url(#lmfa)"/>';
-  h+='<line class="lmf-line" x1="416" y1="188" x2="497" y2="210" stroke="#E6007A" marker-end="url(#lmfp)"/>';
+  h+='<line class="lmf-line" x1="416" y1="188" x2="497" y2="210" stroke="#3E5A82" marker-end="url(#lmfp)"/>';
   h+='<text x="184" y="140" text-anchor="middle" font-size="9.5" font-weight="800" fill="#049a4f">NOW</text>';
   h+='<text x="458" y="80" text-anchor="middle" font-size="9.5" font-weight="800" fill="#C77A11">pay LATER</text>';
-  h+='<text x="456" y="228" text-anchor="middle" font-size="9.5" font-weight="800" fill="#E6007A">sell the tail</text>';
+  h+='<text x="456" y="228" text-anchor="middle" font-size="9.5" font-weight="800" fill="#3E5A82">sell the tail</text>';
   // fare -> pvic:0
   h+='<g class="lmf-node ov-clickable" data-detail="pvic:0">'+
     '<rect x="14" y="116" width="136" height="68" rx="10" fill="#fff" stroke="#C7CED6" stroke-width="1.5"/>'+
     '<text x="82" y="140" text-anchor="middle" font-size="12" font-weight="800" fill="#10141A">Every fare</text>'+
     '<text x="82" y="159" text-anchor="middle" font-size="10.5" fill="#3A4552">insurance cost</text>'+
-    '<text x="82" y="177" text-anchor="middle" font-size="12" font-weight="800" fill="#E6007A">~31% of a CA fare</text></g>';
+    '<text x="82" y="177" text-anchor="middle" font-size="12" font-weight="800" fill="#3E5A82">~31% of a CA fare</text></g>';
   // reservoir PVIC -> pvic:3
   h+='<g class="lmf-node ov-clickable" data-detail="pvic:3">'+
-    '<rect x="222" y="60" width="194" height="180" rx="13" fill="rgba(230,0,122,0.06)" stroke="#E6007A" stroke-width="2"/>'+
-    '<text x="319" y="88" text-anchor="middle" font-size="11.5" font-weight="800" fill="#E6007A">PVIC · captive insurer</text>'+
-    '<text x="319" y="150" text-anchor="middle" font-size="37" font-weight="900" fill="#E6007A">$2.18B</text>'+
+    '<rect x="222" y="60" width="194" height="180" rx="13" fill="rgba(62,90,130,0.06)" stroke="#3E5A82" stroke-width="2"/>'+
+    '<text x="319" y="88" text-anchor="middle" font-size="11.5" font-weight="800" fill="#3E5A82">PVIC · captive insurer</text>'+
+    '<text x="319" y="150" text-anchor="middle" font-size="37" font-weight="900" fill="#3E5A82">$2.18B</text>'+
     '<text x="319" y="172" text-anchor="middle" font-size="10.5" fill="#2b3542">reserves — trust-invested</text>'+
     '<text x="319" y="214" text-anchor="middle" font-size="10" font-weight="700" fill="#6b7684">held now · paid over years</text></g>';
   // claims out -> pvic:2
@@ -137,8 +137,8 @@ function linsMoneyFlow(){
     '<text x="603" y="104" text-anchor="middle" font-size="10" fill="#3A4552">carriers reimbursed from trust</text></g>';
   // LPT exit -> pvic:4 (the differentiator)
   h+='<g class="lmf-node ov-clickable" data-detail="pvic:4">'+
-    '<rect x="500" y="178" width="206" height="66" rx="10" fill="rgba(230,0,122,0.06)" stroke="#E6007A" stroke-width="2"/>'+
-    '<text x="603" y="200" text-anchor="middle" font-size="11.5" font-weight="800" fill="#E6007A">Legacy tail SOLD (LPT)</text>'+
+    '<rect x="500" y="178" width="206" height="66" rx="10" fill="rgba(62,90,130,0.06)" stroke="#3E5A82" stroke-width="2"/>'+
+    '<text x="603" y="200" text-anchor="middle" font-size="11.5" font-weight="800" fill="#3E5A82">Legacy tail SOLD (LPT)</text>'+
     '<text x="603" y="217" text-anchor="middle" font-size="9.5" fill="#3A4552">e.g. Riverstone &#183; Feb 2025</text>'+
     '<text x="603" y="232" text-anchor="middle" font-size="9.5" font-weight="700" fill="#049a4f">old liability leaves the B/S</text></g>';
   h+='</svg>';
@@ -161,7 +161,7 @@ function insModelCompare(){
     '.imc-row{display:grid;grid-template-columns:1.05fr 1.5fr 1.5fr;border-top:1px solid var(--bdr)}.imc-row:first-child{border-top:none}'+
     '.imc-cell{padding:9px 12px;font-size:11.5px;line-height:1.45;color:var(--navy);border-left:1px solid var(--bdr)}.imc-cell:first-child{border-left:none}.imc-cell b{font-weight:800}'+
     '.imc-k{font-weight:800;background:#fafbfc}'+
-    '.imc-head .imc-cell{font-weight:900;background:#f4f6f9;font-size:12px}.imc-hu{color:#10141A}.imc-hl{color:#E6007A}'+
+    '.imc-head .imc-cell{font-weight:900;background:#f4f6f9;font-size:12px}.imc-hu{color:#10141A}.imc-hl{color:#3E5A82}'+
     '.imc-so{font-size:12px;color:var(--navy);line-height:1.55;background:#f6f8fa;border-radius:9px;padding:11px 14px;margin-top:12px}.imc-so b{font-weight:800}'+
     '@media(max-width:640px){.imc-row{grid-template-columns:1fr}.imc-cell{border-left:none;border-top:1px dashed var(--bdr)}.imc-cell:first-child{border-top:none}}'+
   '</style>';
@@ -181,25 +181,25 @@ function insuranceBody(c){
     ['Austin / Texas','No state mandate','—','HB 100 (2017) preempts local rules'],
   ];
   var h='<style>'+
-    '.lins-hero{display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:1px solid rgba(230,0,122,0.28);border-radius:14px;background:linear-gradient(180deg,rgba(230,0,122,0.05),transparent);padding:16px 18px;margin:0 0 18px}'+
-    '.lins-hero-v{font-size:30px;font-weight:900;color:#E6007A;line-height:1;flex:none}'+
+    '.lins-hero{display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:1px solid rgba(62,90,130,0.28);border-radius:14px;background:linear-gradient(180deg,rgba(62,90,130,0.05),transparent);padding:16px 18px;margin:0 0 18px}'+
+    '.lins-hero-v{font-size:30px;font-weight:900;color:#3E5A82;line-height:1;flex:none}'+
     '.lins-hero-t{font-size:12.5px;color:var(--navy);line-height:1.6;flex:1;min-width:250px}.lins-hero-t b{font-weight:800}'+
     '.lins-h{font-size:13px;font-weight:800;color:var(--navy);margin:20px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--bdr)}'+
     '.lins-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;align-items:stretch}@media(max-width:640px){.lins-flow{grid-template-columns:1fr 1fr}}'+
     '.lins-ph{border:1px solid var(--bdr);border-top:3px solid #ccc;border-radius:10px;padding:11px 12px;margin:0 4px;position:relative}'+
     '.lins-ph-n{font-size:12px;font-weight:800;color:var(--navy)}.lins-ph-s{font-size:10px;color:var(--mu);margin:1px 0 7px;min-height:26px}'+
     '.lins-ph-who{font-size:10.5px;color:var(--mu);font-weight:700}.lins-ph-lim{font-size:12px;font-weight:800;margin-top:2px}'+
-    '.lins-cov{height:5px;border-radius:4px;margin-top:9px;background:linear-gradient(90deg,#9AA3AE,#5B8DEF,#E6007A)}'+
+    '.lins-cov{height:5px;border-radius:4px;margin-top:9px;background:linear-gradient(90deg,#9AA3AE,#5B8DEF,#3E5A82)}'+
     '.lins-cap{font-size:11px;color:var(--mu);line-height:1.55;margin-top:10px}.lins-cap b{color:var(--navy);font-weight:800}'+
     '.lins-share{display:flex;align-items:flex-end;gap:12px;height:110px;padding:8px 0 0}'+
     '.lins-sb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px}'+
-    '.lins-sb-bar{width:70%;max-width:54px;background:#E6007A;border-radius:5px 5px 0 0;opacity:.85}'+
-    '.lins-sb-v{font-size:12px;font-weight:800;color:#E6007A}.lins-sb-l{font-size:10px;color:var(--mu);font-weight:700;text-align:center}'+
+    '.lins-sb-bar{width:70%;max-width:54px;background:#3E5A82;border-radius:5px 5px 0 0;opacity:.85}'+
+    '.lins-sb-v{font-size:12px;font-weight:800;color:#3E5A82}.lins-sb-l{font-size:10px;color:var(--mu);font-weight:700;text-align:center}'+
     '.lins-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:640px){.lins-two{grid-template-columns:1fr}}'+
-    '.lins-side{border:1px solid var(--bdr);border-radius:11px;padding:13px 15px}.lins-side.pol{border-top:3px solid #5B8DEF}.lins-side.tec{border-top:3px solid #E6007A}'+
-    '.lins-side-h{font-size:12.5px;font-weight:800;margin-bottom:8px}.lins-side.pol .lins-side-h{color:#3A7BD5}.lins-side.tec .lins-side-h{color:#E6007A}'+
+    '.lins-side{border:1px solid var(--bdr);border-radius:11px;padding:13px 15px}.lins-side.pol{border-top:3px solid #5B8DEF}.lins-side.tec{border-top:3px solid #3E5A82}'+
+    '.lins-side-h{font-size:12.5px;font-weight:800;margin-bottom:8px}.lins-side.pol .lins-side-h{color:#3A7BD5}.lins-side.tec .lins-side-h{color:#3E5A82}'+
     '.lins-it{font-size:11.5px;color:var(--navy);line-height:1.5;margin:7px 0}.lins-it b{font-weight:800}.lins-it .win{color:#0a8f0a;font-weight:700}'+
-    '.lins-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}.lins-chip{font-size:10px;font-weight:700;color:#E6007A;background:rgba(230,0,122,0.09);border-radius:20px;padding:2px 8px}'+
+    '.lins-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}.lins-chip{font-size:10px;font-weight:700;color:#3E5A82;background:rgba(62,90,130,0.09);border-radius:20px;padding:2px 8px}'+
     '.lins-ev{background:rgba(10,143,10,0.05);border-left:3px solid #0a8f0a;border-radius:8px;padding:11px 14px;font-size:12px;color:var(--navy);line-height:1.6;margin-top:4px}.lins-ev b{font-weight:800}'+
     '.lins-tbl{width:100%;border-collapse:collapse;font-size:11px}'+
     '.lins-tbl th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);padding:6px 8px;border-bottom:1px solid var(--bdr)}'+
@@ -216,10 +216,10 @@ function insuranceBody(c){
     {name:'Drop-off', lvl:18, badge:'Reverts to Period 1 &rarr; personal', lim:'Back down', inc:'Coverage ends with the ride', note:'The instant the trip completes, coverage steps back down.'}
   ];
   var lcecss='';
-  for(var ci=0;ci<LCE.length;ci++){ lcecss+='#lce-'+ci+':checked~.lce-rail label[for="lce-'+ci+'"] .lce-bar{background:#E6007A}#lce-'+ci+':checked~.lce-rail label[for="lce-'+ci+'"] .lce-lbl{color:#E6007A}#lce-'+ci+':checked~.lce-panels .lce-panel[data-i="'+ci+'"]{display:block}'; }
+  for(var ci=0;ci<LCE.length;ci++){ lcecss+='#lce-'+ci+':checked~.lce-rail label[for="lce-'+ci+'"] .lce-bar{background:#3E5A82}#lce-'+ci+':checked~.lce-rail label[for="lce-'+ci+'"] .lce-lbl{color:#3E5A82}#lce-'+ci+':checked~.lce-panels .lce-panel[data-i="'+ci+'"]{display:block}'; }
   h+='<div class="lins-h">The coverage &mdash; it escalates with the app state <span style="font-size:10px;font-weight:600;color:var(--mu)">(tap a state)</span></div>';
   h+='<div class="ov-diagram-cap" style="margin:0 0 10px">Rideshare insurance runs on the industry-standard <b>3-period model</b> &mdash; your coverage (and its cost) depend on <b>what the app is doing</b>. The bars show coverage <b>escalating</b> from personal (app off) to Lyft&rsquo;s full <b>$1M</b> commercial policy once a rider is aboard, then dropping back at drop-off. <b>Tap any phase</b> for who pays and the limits.</div>';
-  h+='<style>.lce-in{display:none}.lce-rail{display:flex;align-items:flex-end;gap:6px;height:150px;padding:0 2px;border-bottom:2px solid var(--bdr)}.lce-step{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;cursor:pointer;gap:6px}.lce-barwrap{width:100%;flex:1;display:flex;align-items:flex-end}.lce-bar{width:100%;background:#c9d2dc;border-radius:6px 6px 0 0;transition:.2s}.lce-step:hover .lce-bar{background:#f2a8cd}.lce-lbl{font-size:10px;font-weight:800;color:var(--mu);text-align:center;line-height:1.1}.lce-panel{display:none;border:1px solid var(--bdr);border-left:3px solid #E6007A;border-radius:10px;padding:12px 14px;margin-top:10px;animation:lcefade .25s ease}@keyframes lcefade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}.lce-badge{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#E6007A}.lce-lim{font-size:20px;font-weight:900;color:var(--navy);margin:4px 0 2px}.lce-inc{font-size:12px;color:var(--navy);font-weight:700}.lce-note{font-size:11.5px;color:var(--mu);line-height:1.5;margin-top:6px}'+lcecss+'</style>';
+  h+='<style>.lce-in{display:none}.lce-rail{display:flex;align-items:flex-end;gap:6px;height:150px;padding:0 2px;border-bottom:2px solid var(--bdr)}.lce-step{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;cursor:pointer;gap:6px}.lce-barwrap{width:100%;flex:1;display:flex;align-items:flex-end}.lce-bar{width:100%;background:#c9d2dc;border-radius:6px 6px 0 0;transition:.2s}.lce-step:hover .lce-bar{background:#f2a8cd}.lce-lbl{font-size:10px;font-weight:800;color:var(--mu);text-align:center;line-height:1.1}.lce-panel{display:none;border:1px solid var(--bdr);border-left:3px solid #3E5A82;border-radius:10px;padding:12px 14px;margin-top:10px;animation:lcefade .25s ease}@keyframes lcefade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}.lce-badge{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#3E5A82}.lce-lim{font-size:20px;font-weight:900;color:var(--navy);margin:4px 0 2px}.lce-inc{font-size:12px;color:var(--navy);font-weight:700}.lce-note{font-size:11.5px;color:var(--mu);line-height:1.5;margin-top:6px}'+lcecss+'</style>';
   h+='<div class="lce">';
   for(var cj=0;cj<LCE.length;cj++){ h+='<input class="lce-in" type="radio" name="lcestate" id="lce-'+cj+'"'+(cj===2?' checked':'')+'>'; }
   h+='<div class="lce-rail">'+LCE.map(function(x,i){ return '<label class="lce-step" for="lce-'+i+'"><span class="lce-barwrap"><span class="lce-bar" style="height:'+x.lvl+'%"></span></span><span class="lce-lbl">'+x.name+'</span></label>'; }).join('')+'</div>';
@@ -227,7 +227,7 @@ function insuranceBody(c){
   h+='</div>';
   h+='<div class="lins-cap">The <b>$1M jump at Period 2</b> is the whole cost story: full commercial liability kicks in the instant a driver accepts, and Period 3 adds uninsured-motorist + collision. <b>Uber uses the identical 3-period model.</b> (NYC rides fall under the separate TLC / black-car regime.)</div>';
   h+='<div class="lins-h">Why it is so big &mdash; and rising</div>';
-  h+='<style>.lwb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}@media(max-width:720px){.lwb-grid{grid-template-columns:1fr 1fr}}.lwb-c{border:1px solid var(--bdr);border-top:3px solid #E6007A;border-radius:10px;padding:11px 12px;background:#fff}.lwb-v{font-size:20px;font-weight:900;color:#E6007A;line-height:1}.lwb-l{font-size:11px;font-weight:800;color:var(--navy);margin:5px 0 3px}.lwb-d{font-size:10.5px;color:var(--mu);line-height:1.45}</style>';
+  h+='<style>.lwb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}@media(max-width:720px){.lwb-grid{grid-template-columns:1fr 1fr}}.lwb-c{border:1px solid var(--bdr);border-top:3px solid #3E5A82;border-radius:10px;padding:11px 12px;background:#fff}.lwb-v{font-size:20px;font-weight:900;color:#3E5A82;line-height:1}.lwb-l{font-size:11px;font-weight:800;color:var(--navy);margin:5px 0 3px}.lwb-d{font-size:10.5px;color:var(--mu);line-height:1.45}</style>';
   h+='<div class="lwb-grid">'+
     '<div class="lwb-c"><div class="lwb-v">$1M</div><div class="lwb-l">The mandate is enormous</div><div class="lwb-d">CA requires $1M liability &mdash; ~30&times; the personal minimum. TNC rules dwarf personal auto.</div></div>'+
     '<div class="lwb-c"><div class="lwb-v">+23%</div><div class="lwb-l">Cost inflation</div><div class="lwb-d">Auto-insurance CPI peaked at +23% YoY (2024) &mdash; repair, medical & litigation costs.</div></div>'+
@@ -235,7 +235,7 @@ function insuranceBody(c){
     '<div class="lwb-c"><div class="lwb-v">most</div><div class="lwb-l">It is pass-through</div><div class="lwb-d">Most of riders&rsquo; recent price hikes are simply insurance passed straight through.</div></div>'+
   '</div>';
   h+='<div class="lins-cap" style="margin:14px 0 8px"><b>How much of a fare is just insurance?</b> Wildly <b>uneven</b> by state &mdash; which is exactly why <b>California</b> (SB&nbsp;371) is the whole battleground. <span style="font-style:italic;color:var(--mu)">(share of the fare; Uber advocacy est.)</span></div>';
-  h+='<style>.lshr-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}.lshr-l{flex:0 0 92px;font-size:11.5px;font-weight:700;color:var(--navy);text-align:right}.lshr-track{flex:1;height:24px;background:#f1f4f8;border-radius:7px;overflow:hidden}.lshr-fill{height:100%;background:linear-gradient(90deg,#E6007A,#c0006a);border-radius:7px;min-width:3px}.lshr-v{flex:0 0 46px;font-size:14px;font-weight:900;color:#E6007A}</style>';
+  h+='<style>.lshr-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}.lshr-l{flex:0 0 92px;font-size:11.5px;font-weight:700;color:var(--navy);text-align:right}.lshr-track{flex:1;height:24px;background:#f1f4f8;border-radius:7px;overflow:hidden}.lshr-fill{height:100%;background:linear-gradient(90deg,#3E5A82,#2E4663);border-radius:7px;min-width:3px}.lshr-v{flex:0 0 46px;font-size:14px;font-weight:900;color:#3E5A82}</style>';
   h+='<div>'+SHARE.map(function(x){ return '<div class="lshr-row"><div class="lshr-l">'+x[0]+'</div><div class="lshr-track"><div class="lshr-fill" style="width:'+x[1]+'%"></div></div><div class="lshr-v">'+x[1]+'%</div></div>'; }).join('')+'</div>';
   h+='<div class="lins-cap" style="margin-top:6px">Read it as <b>cents on the dollar</b>: in a <b>California</b> fare, ~<b>31¢</b> of every $1 is insurance; in DC/Mass, ~<b>4¢</b>. That spread is why one state&rsquo;s rules (SB&nbsp;371) move the <b>whole</b> margin story.</div>';
   // two-front war
@@ -282,7 +282,7 @@ function lyEnginesGlance(){
     {n:'Lyft Media', v:'$100M&rarr;$400M', d:'~100%-margin ad surfaces (in-app, in-car, email) by 2027', role:'drives margin', rc:'#1E9E62', rb:'rgba(30,158,98,0.12)'},
     {n:'Partnerships', v:'~1 in 4 rides', d:'low-CAC demand borrowed from United, Chase, DoorDash&hellip;', role:'drives frequency', rc:'#3A7BD5', rb:'rgba(58,123,213,0.12)'},
     {n:'Healthcare (NEMT)', v:'21 states', d:'payer-funded, recurring rides that do not move with the consumer cycle', role:'drives durability', rc:'#B8860B', rb:'rgba(184,134,11,0.14)'},
-    {n:'Membership', v:'Pink + Price Lock', d:'a paid tier + a surge hedge that lock riders in', role:'drives retention', rc:'#E6007A', rb:'rgba(230,0,122,0.12)'}
+    {n:'Membership', v:'Pink + Price Lock', d:'a paid tier + a surge hedge that lock riders in', role:'drives retention', rc:'#3E5A82', rb:'rgba(62,90,130,0.12)'}
   ];
   var h='<style>.lmg-eng{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:2px 0 8px}@media(max-width:760px){.lmg-eng{grid-template-columns:1fr 1fr}}.lmg-eng-c{border:1px solid var(--bdr);border-radius:11px;padding:12px 13px;background:#fff}.lmg-eng-n{font-size:12.5px;font-weight:800;color:var(--navy)}.lmg-eng-v{font-size:17px;font-weight:900;margin:5px 0 3px;line-height:1.05}.lmg-eng-d{font-size:10.5px;color:var(--mu);line-height:1.4;min-height:42px}.lmg-eng-role{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:10px;padding:2px 9px;margin-top:8px}</style>';
   h+='<div class="lmg-eng">'+E.map(function(e){ return '<div class="lmg-eng-c" style="border-top:3px solid '+e.rc+'"><div class="lmg-eng-n">'+e.n+'</div><div class="lmg-eng-v" style="color:'+e.rc+'">'+e.v+'</div><div class="lmg-eng-d">'+e.d+'</div><span class="lmg-eng-role" style="color:'+e.rc+';background:'+e.rb+'">'+e.role+'</span></div>'; }).join('')+'</div>';
@@ -306,12 +306,12 @@ function mediaBody(c){
   var h='<style>'+
     '.lmg-lede{font-size:13px;line-height:1.6;color:var(--navy);margin:0 0 14px}.lmg-lede b{font-weight:800}'+
     '.lmg-h{font-size:13px;font-weight:800;color:var(--navy);margin:22px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--bdr)}'+
-    '.lmg-vision{background:linear-gradient(180deg,rgba(230,0,122,0.06),transparent);border:1px solid rgba(230,0,122,0.25);border-radius:12px;padding:14px 16px;margin:0 0 14px}'+
-    '.lmg-vision-t{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#E6007A;margin-bottom:7px}'+
-    '.lmg-vision-l{font-size:12.5px;color:var(--navy);line-height:1.7;padding-left:16px;position:relative}.lmg-vision-l:before{content:"→";position:absolute;left:0;color:#E6007A;font-weight:800}.lmg-vision-l b{font-weight:800}'+
+    '.lmg-vision{background:linear-gradient(180deg,rgba(62,90,130,0.06),transparent);border:1px solid rgba(62,90,130,0.25);border-radius:12px;padding:14px 16px;margin:0 0 14px}'+
+    '.lmg-vision-t{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#3E5A82;margin-bottom:7px}'+
+    '.lmg-vision-l{font-size:12.5px;color:var(--navy);line-height:1.7;padding-left:16px;position:relative}.lmg-vision-l:before{content:"→";position:absolute;left:0;color:#3E5A82;font-weight:800}.lmg-vision-l b{font-weight:800}'+
     '.lmg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}'+
-    '.lmg-c{border:1px solid var(--bdr);border-top:2px solid #E6007A;border-radius:10px;padding:11px 13px}'+
-    '.lmg-c-n{font-size:12.5px;font-weight:800;color:var(--navy);margin-bottom:3px}.lmg-c-d{font-size:11px;color:var(--navy);line-height:1.45}.lmg-c-st{font-size:10px;font-weight:800;color:#E6007A;margin-top:7px}'+
+    '.lmg-c{border:1px solid var(--bdr);border-top:2px solid #3E5A82;border-radius:10px;padding:11px 13px}'+
+    '.lmg-c-n{font-size:12.5px;font-weight:800;color:var(--navy);margin-bottom:3px}.lmg-c-d{font-size:11px;color:var(--navy);line-height:1.45}.lmg-c-st{font-size:10px;font-weight:800;color:#3E5A82;margin-top:7px}'+
     '.lmg-cmp{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:end;border:1px solid var(--bdr);border-radius:12px;padding:16px;background:#fff;margin-top:4px}'+
     '.lmg-cmp-col{text-align:center}.lmg-cmp-bar{margin:0 auto;width:60%;max-width:90px;border-radius:6px 6px 0 0}.lmg-cmp-l{font-size:12px;font-weight:800;color:var(--navy);margin-top:8px}.lmg-cmp-v{font-size:11px;color:var(--mu)}'+
     '.lmg-cmp-cap{font-size:12px;color:var(--navy);line-height:1.55;margin-top:12px}.lmg-cmp-cap b{font-weight:800}'+
@@ -334,7 +334,7 @@ function mediaBody(c){
   h+='<div class="lmg-grid">'+SURF.map(function(x){ return '<div class="lmg-c"><div class="lmg-c-n">'+x.n+'</div><div class="lmg-c-d">'+x.d+'</div><div class="lmg-c-st">'+x.st+'</div></div>'; }).join('')+'</div>';
   h+='<div class="ov-diagram-cap" style="margin:10px 0">Measured with an outside stack — <b>Foursquare</b> (foot-traffic), <b>NCSolutions</b> (sales lift), <b>Nielsen</b>, <b>Kantar</b>, <b>LiveRamp</b> — so a merchant can tie an ad to a store visit and a delivery.</div>';
   // the punch: proven model, Lyft early
-  h+='<div class="lmg-cmp"><div class="lmg-cmp-col"><div class="lmg-cmp-bar" style="height:22px;background:#E6007A"></div><div class="lmg-cmp-l">Lyft Media</div><div class="lmg-cmp-v">~$100M run-rate (2025) → &gt;$400M target 2027</div></div>'+
+  h+='<div class="lmg-cmp"><div class="lmg-cmp-col"><div class="lmg-cmp-bar" style="height:22px;background:#3E5A82"></div><div class="lmg-cmp-l">Lyft Media</div><div class="lmg-cmp-v">~$100M run-rate (2025) → &gt;$400M target 2027</div></div>'+
     '<div class="lmg-cmp-col"><div class="lmg-cmp-bar" style="height:120px;background:#111827"></div><div class="lmg-cmp-l">Uber Advertising</div><div class="lmg-cmp-v">&gt;$2B run-rate (2025)</div></div></div>';
   h+='<div class="lmg-cmp-cap"><b>The punch:</b> the model is already proven — <b>Uber’s ad business is past $2B</b>. Lyft is running the <b>same playbook on a smaller surface</b>, growing <b>&gt;100% a year</b> (~4× to &gt;$400M gross bookings by 2027). Ads are ~100% incremental margin, so this is the single biggest lever on the 4%-of-GB EBITDA target.</div>';
   // Partnerships
@@ -373,9 +373,9 @@ function yoy(arr, i){ if (i<1 || arr[i-1]==null || arr[i-1]===0) return null; re
 function cagr(v0, v1, yrs){ if (v0==null||v1==null||v0<=0||v1<=0||yrs<=0) return null; return (Math.pow(v1/v0, 1/yrs)-1)*100; }
 
 // ─── Brand ───────────────────────────────────────────────────────────────────
-var BRAND  = '#E6007A';                 // Lyft pink
+var BRAND  = '#3E5A82';                 // Lyft pink
 var BRAND2 = '#6B2BD9';                 // Lyft purple (secondary)
-var EST_FILL = 'rgba(230,0,122,0.30)';  // lighter pink for estimate bars
+var EST_FILL = 'rgba(62,90,130,0.30)';  // lighter pink for estimate bars
 var NEG = '#C0392B', NEG_FILL = 'rgba(192,57,43,0.30)';
 var GRAY = '#B8C0CA';
 
@@ -575,10 +575,10 @@ function mnaTimeline(){
   ];
   var acq=MNA.slice().sort(function(a,b){ return (+String(a.y).replace(/\D/g,''))-(+String(b.y).replace(/\D/g,'')); });
   var h='<style>'+
-    '.mnt-h2{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin:14px 0 8px}.mnt-h2.acq{color:#c0006a}.mnt-h2.dv{color:#2E6BE6}'+
+    '.mnt-h2{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin:14px 0 8px}.mnt-h2.acq{color:#2E4663}.mnt-h2.dv{color:#2E6BE6}'+
     '.mnt-rail{display:flex;flex-wrap:wrap;gap:9px}'+
     '.mnt-chip{flex:1;min-width:158px;max-width:250px;border:1px solid var(--bdr);border-radius:11px;padding:10px 12px;background:#fff}'+
-    '.mnt-chip.acq{border-top:3px solid #E6007A}.mnt-chip.dv{border-top:3px solid #2E6BE6}'+
+    '.mnt-chip.acq{border-top:3px solid #3E5A82}.mnt-chip.dv{border-top:3px solid #2E6BE6}'+
     '.mnt-chip.acq.ov-clickable{cursor:pointer;transition:.15s}.mnt-chip.acq.ov-clickable:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px)}'+
     '.mnt-chip.big{box-shadow:0 0 0 2px rgba(46,107,230,.16)}'+
     '.mnt-top{display:flex;justify-content:space-between;align-items:center;gap:6px}'+
@@ -586,9 +586,9 @@ function mnaTimeline(){
     '.mnt-n{font-size:12.5px;font-weight:800;color:var(--navy);margin:5px 0 4px}'+
     '.mnt-fp{font-size:11px;color:var(--navy);line-height:1.45}.mnt-fp b{font-weight:800}'+
     '.mnt-val{font-size:10.5px;font-weight:700;color:#0a8f0a;background:rgba(10,143,10,0.07);border-radius:7px;padding:6px 9px;margin-top:7px;line-height:1.4}.mnt-val b{font-weight:800}'+
-    '.mnt-more{font-size:10px;color:#c0006a;font-weight:700;margin-top:6px}'+
-    '.mnt-axis{text-align:center;font-size:11.5px;color:var(--navy);background:linear-gradient(90deg,transparent,rgba(230,0,122,.08),transparent);border-top:1px dashed var(--bdr);border-bottom:1px dashed var(--bdr);padding:9px;margin:14px 0}.mnt-axis b{font-weight:800}.mnt-star{color:#E8A00C}'+
-    '.mnt-punch{font-size:11.5px;color:var(--navy);line-height:1.6;background:#f6f8fa;border-left:3px solid #E6007A;border-radius:8px;padding:11px 14px;margin-top:14px}.mnt-punch b{font-weight:800}'+
+    '.mnt-more{font-size:10px;color:#2E4663;font-weight:700;margin-top:6px}'+
+    '.mnt-axis{text-align:center;font-size:11.5px;color:var(--navy);background:linear-gradient(90deg,transparent,rgba(62,90,130,.08),transparent);border-top:1px dashed var(--bdr);border-bottom:1px dashed var(--bdr);padding:9px;margin:14px 0}.mnt-axis b{font-weight:800}.mnt-star{color:#E8A00C}'+
+    '.mnt-punch{font-size:11.5px;color:var(--navy);line-height:1.6;background:#f6f8fa;border-left:3px solid #3E5A82;border-radius:8px;padding:11px 14px;margin-top:14px}.mnt-punch b{font-weight:800}'+
   '</style>';
   h+='<div class="ov-diagram-cap" style="margin:0 0 4px">Lyft used M&A to build everything <b>beyond the ride</b> — and one decisive divestiture to stay asset-light. <b>Tap any acquisition</b> for terms.</div>';
   h+='<div class="mnt-h2 acq">↑ Acquisitions — what they <b>added</b> to the financials</div>';
@@ -732,7 +732,7 @@ function lyRivalScatter(){
     '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">multi-service platform →</text>'+
     '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">1 region</text>'+
     '<text x="74" y="52" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">global</text>'+
-    peerDot(144,221,9,'#E6007A','Lyft','US + new Europe',true,'Rides + bikes only — ~7% of revenue is non-rideshare. US-based, plus a new European foothold via FreeNow. So: the narrow-and-domestic corner.')+
+    peerDot(144,221,9,'#3E5A82','Lyft','US + new Europe',true,'Rides + bikes only — ~7% of revenue is non-rideshare. US-based, plus a new European foothold via FreeNow. So: the narrow-and-domestic corner.')+
     peerDot(225,100,7,'#9AA3AE','Didi','China · LatAm',false,'Mostly ride-hailing, with some delivery & fintech in China. Operates across China, Brazil, Mexico and beyond — so: moderate breadth, but broad geography.')+
     peerDot(275,158,7,'#9AA3AE','Bolt','Europe · Africa',false,'Estonia-based mobility app: ride-hailing + e-scooters + Bolt Food + grocery, across ~45 European & African countries. Moderate breadth, regional — the incumbent Lyft now faces via FreeNow.')+
     peerDot(506,175,7,'#9AA3AE','Grab','SE Asia super-app',false,'A true super-app: rides + food delivery + GrabPay financial services — but only ~8 SE-Asian countries. So: high breadth, single region.')+
@@ -754,7 +754,7 @@ var LY_PEER_MULT=[
 ];
 function lyPeerMultBody(c){
   var rowsHtml=LY_PEER_MULT.map(function(p){
-    var bg=p.self?'background:rgba(230,0,122,0.06);':'';
+    var bg=p.self?'background:rgba(62,90,130,0.06);':'';
     return '<tr style="border-top:1px solid var(--bdr);'+bg+'">'+
       '<td style="padding:8px 10px;font-weight:'+(p.self?'800':'700')+'">'+esc(p.n)+' <span class="muted" style="font-weight:600">'+esc(p.tk)+'</span></td>'+
       '<td style="text-align:right;padding:8px 10px;font-variant-numeric:tabular-nums">'+esc(p.mc)+'</td>'+
@@ -830,7 +830,7 @@ function lySegmentsBody(c){
 // Q1 2026 KPIs, partnership share). Pink member counts are NOT disclosed by Lyft → kept qualitative.
 function lyCustomersBody(c){
   var R=A_RIDERS.slice(-6), mx=Math.max.apply(null,R);
-  var bars='<div style="display:flex;align-items:flex-end;gap:6px;height:96px;margin:6px 0 2px">'+R.map(function(v){var hp=Math.max(4,Math.round(v/mx*76));return '<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><div style="width:68%;background:#E6007A;border-radius:3px 3px 0 0;height:'+hp+'px"></div><div style="font-size:9.5px;color:var(--mu);margin-top:3px">'+v.toFixed(0)+'</div></div>';}).join('')+'</div>';
+  var bars='<div style="display:flex;align-items:flex-end;gap:6px;height:96px;margin:6px 0 2px">'+R.map(function(v){var hp=Math.max(4,Math.round(v/mx*76));return '<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><div style="width:68%;background:#3E5A82;border-radius:3px 3px 0 0;height:'+hp+'px"></div><div style="font-size:9.5px;color:var(--mu);margin-top:3px">'+v.toFixed(0)+'</div></div>';}).join('')+'</div>';
   var h='<p class="ov-lede">Lyft has <b>two kinds of customer</b>. <b>Riders</b> are the core — a base that keeps growing while getting <b>more loyal</b> through membership (Lyft Pink, Price Lock) and a fast-growing <b>partnership channel</b>. But <b>advertisers</b> are customers too: <b>Lyft Media</b> sells the app and in-car screens to brands — small (~$100M run-rate) but fast-growing and high-margin. Lyft does <b>not disclose Pink member counts</b>, so the membership view stays qualitative.</p>';
   h+='<div class="ov-kpis">'+
     '<div class="ov-kpi"><div class="ov-kpi-l">Active riders</div><div class="ov-kpi-v">28.3M</div><div class="ov-kpi-d muted">Q1 2026 · +17% YoY</div></div>'+
@@ -909,7 +909,7 @@ function lyCapAllocBody(c){
 // Valuation ▸ Balance Sheet — downside/solidity view from Lyft's Q1 2026 10-Q (Mar 31 2026,
 // SEC EDGAR CIK 0001759509). Asset-light, positive net cash; the defining feature is a large
 // self-insurance reserve that is substantially matched by segregated restricted assets.
-var LY_BAL_BARS=[['Unrestricted liquidity',1905,'#1E9E62'],['Restricted assets (back insurance)',2147,'#5B8DEF'],['Insurance reserve (liability)',2303,'#E6007A'],['Long-term debt (net of current portion)',1000,'#9AA3AE']];   // Sep 30, 2026, 3Q26 release
+var LY_BAL_BARS=[['Unrestricted liquidity',1905,'#1E9E62'],['Restricted assets (back insurance)',2147,'#5B8DEF'],['Insurance reserve (liability)',2303,'#3E5A82'],['Long-term debt (net of current portion)',1000,'#9AA3AE']];   // Sep 30, 2026, 3Q26 release
 function buildLyBal(){
   var cv=document.getElementById('lyChartBal'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
   destroy('lyChartBal');
@@ -957,7 +957,7 @@ function buildLySbc(){
   _charts['lyChartSbc']=new Chart(cv.getContext('2d'),{
     data:{ labels:LY_SBC_HIST.yrs, datasets:[
       { type:'bar', label:'Shares out (M)', data:LY_SBC_HIST.shares, backgroundColor:'rgba(107,43,217,0.24)', borderColor:'#6B2BD9', borderWidth:1, yAxisID:'y', order:2 },
-      { type:'line', label:'SBC % of revenue', data:LY_SBC_HIST.sbcPct, borderColor:'#E6007A', backgroundColor:'#E6007A', borderWidth:2.5, tension:.3, pointRadius:3, yAxisID:'y1', order:1 }
+      { type:'line', label:'SBC % of revenue', data:LY_SBC_HIST.sbcPct, borderColor:'#3E5A82', backgroundColor:'#3E5A82', borderWidth:2.5, tension:.3, pointRadius:3, yAxisID:'y1', order:1 }
     ]},
     options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
       plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.yAxisID==='y1'? ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+'%' : ' '+ctx.dataset.label+': '+ctx.parsed.y+'M'; } } } },
@@ -1069,7 +1069,7 @@ function lyTrackBody(c){
 // fallback history so the chart is never empty; the live Massive feed (api.fetchMargins) overrides
 // the fallback when it is reachable. ──
 var LY_MRG_METRICS=[
-  {key:'gross',label:'Gross',color:'#E6007A'},
+  {key:'gross',label:'Gross',color:'#3E5A82'},
   {key:'oper',label:'Operating',color:'#6B2BD9'},
   {key:'net',label:'Net',color:'#7A5AF8'},
   {key:'ebitda',label:'EBITDA',color:'#12B5A5'},
@@ -1182,33 +1182,33 @@ var FW_DETAIL=[
 ];
 function lyFlywheel(){
   function node(x,y,w,hh,t,sub,i){
-    return '<g class="lyfw-node ov-clickable" data-detail="fw:'+i+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="11" fill="#fff" stroke="#E6007A" stroke-width="1.5"/>'+
-      '<text x="'+(x+w/2)+'" y="'+(y+hh/2-4)+'" text-anchor="middle" font-size="11.5" font-weight="800" fill="#c0006a">'+t+'</text>'+
+    return '<g class="lyfw-node ov-clickable" data-detail="fw:'+i+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="11" fill="#fff" stroke="#3E5A82" stroke-width="1.5"/>'+
+      '<text x="'+(x+w/2)+'" y="'+(y+hh/2-4)+'" text-anchor="middle" font-size="11.5" font-weight="800" fill="#2E4663">'+t+'</text>'+
       '<text x="'+(x+w/2)+'" y="'+(y+hh/2+13)+'" text-anchor="middle" font-size="9.5" fill="#3A4552">'+sub+'</text>'+
-      '<text x="'+(x+w-9)+'" y="'+(y+15)+'" text-anchor="end" font-size="12" font-weight="900" fill="#E6007A">+</text></g>';
+      '<text x="'+(x+w-9)+'" y="'+(y+15)+'" text-anchor="end" font-size="12" font-weight="900" fill="#3E5A82">+</text></g>';
   }
   var h='<style>'+
     '@keyframes lyfwspin{to{stroke-dashoffset:-26}}'+
-    '.lyfw-arw{stroke:#E6007A;stroke-width:4;fill:none;stroke-dasharray:9 7;animation:lyfwspin 1s linear infinite;stroke-linecap:round}'+
+    '.lyfw-arw{stroke:#3E5A82;stroke-width:4;fill:none;stroke-dasharray:9 7;animation:lyfwspin 1s linear infinite;stroke-linecap:round}'+
     '.lyfw-node{cursor:pointer}.lyfw-node rect{transition:.12s}.lyfw-node:hover rect{stroke-width:2.5;filter:drop-shadow(0 2px 5px rgba(0,0,0,.12))}'+
     '.lyfw-src{margin-top:16px}.lyfw-src-h{font-size:12.5px;font-weight:800;color:var(--navy);margin:0 0 9px;padding-bottom:4px;border-bottom:1px solid var(--bdr)}'+
     '.lyfw-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:600px){.lyfw-grid{grid-template-columns:1fr}}'+
-    '.lyfw-c{border:1px solid var(--bdr);border-left:3px solid #E6007A;border-radius:10px;padding:11px 13px}'+
+    '.lyfw-c{border:1px solid var(--bdr);border-left:3px solid #3E5A82;border-radius:10px;padding:11px 13px}'+
     '.lyfw-c-h{font-size:12px;font-weight:800;color:var(--navy);margin-bottom:3px}.lyfw-c-d{font-size:11.5px;color:var(--navy);line-height:1.5}.lyfw-c-d b{font-weight:800}'+
     '.lyfw-punch{font-size:11.5px;color:var(--navy);line-height:1.6;background:var(--brand-soft);border-radius:9px;padding:11px 14px;margin-top:14px}.lyfw-punch b{font-weight:800}'+
   '</style>';
   h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Lyft&rsquo;s Investor-Day thesis is a <b>wheel, not a list</b>: obsess over both sides &rarr; the marketplace densifies &rarr; economics improve &rarr; that funds more driver pay & rider value &rarr; the wheel spins faster. <b>Tap any stage (+)</b> for the mechanics.</div>';
-  h+='<div style="border:1px solid var(--bdr);border-radius:14px;background:linear-gradient(180deg,#fffafd,#fff);padding:4px 2px"><svg viewBox="0 0 640 470" role="img" aria-label="Lyft growth flywheel" style="width:100%;height:auto;font-family:Inter,sans-serif">';
-  h+='<defs><marker id="lyfwh" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#E6007A"/></marker></defs>';
+  h+='<div style="border:1px solid var(--bdr);border-radius:14px;background:linear-gradient(180deg,#F7F9FB,#fff);padding:4px 2px"><svg viewBox="0 0 640 470" role="img" aria-label="Lyft growth flywheel" style="width:100%;height:auto;font-family:Inter,sans-serif">';
+  h+='<defs><marker id="lyfwh" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#3E5A82"/></marker></defs>';
   // clockwise arrows N->E->S->W->N
   h+='<path class="lyfw-arw" d="M434 58 Q 566 74 548 196" marker-end="url(#lyfwh)"/>';
   h+='<path class="lyfw-arw" d="M548 272 Q 566 398 434 412" marker-end="url(#lyfwh)"/>';
   h+='<path class="lyfw-arw" d="M206 412 Q 74 398 92 272" marker-end="url(#lyfwh)"/>';
   h+='<path class="lyfw-arw" d="M92 196 Q 74 74 206 58" marker-end="url(#lyfwh)"/>';
   // hub
-  h+='<circle cx="320" cy="234" r="74" fill="rgba(230,0,122,0.06)" stroke="#E6007A" stroke-width="2"/>';
-  h+='<text x="320" y="222" text-anchor="middle" font-size="13" font-weight="900" fill="#c0006a" font-family="Inter,sans-serif">Customer obsession</text>';
-  h+='<text x="320" y="242" text-anchor="middle" font-size="11" font-weight="700" fill="#E6007A" font-family="Inter,sans-serif">&rarr; profitable growth</text>';
+  h+='<circle cx="320" cy="234" r="74" fill="rgba(62,90,130,0.06)" stroke="#3E5A82" stroke-width="2"/>';
+  h+='<text x="320" y="222" text-anchor="middle" font-size="13" font-weight="900" fill="#2E4663" font-family="Inter,sans-serif">Customer obsession</text>';
+  h+='<text x="320" y="242" text-anchor="middle" font-size="11" font-weight="700" fill="#3E5A82" font-family="Inter,sans-serif">&rarr; profitable growth</text>';
   h+='<text x="320" y="262" text-anchor="middle" font-size="9" fill="#6b7684" font-family="Inter,sans-serif">~15% bookings CAGR &middot; ~4% margin (2027)</text>';
   // nodes
   h+=node(206,30,228,56,'1 &middot; Obsess over both sides','70% driver floor &middot; On-Time Promise &middot; Women+',0);
@@ -1249,7 +1249,7 @@ function strategyBody(c){
     '.lst-tg-st{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;border-radius:20px;padding:2px 9px}.lst-ok{color:#1E9E62;background:rgba(30,158,98,0.12)}.lst-hard{color:#B26A00;background:rgba(255,165,0,0.14)}'+
     '.lst-tg-h{font-size:11.5px;color:var(--navy);line-height:1.55;margin:7px 0}.lst-tg-h b{font-weight:800}'+
     '.lst-tg-p{font-size:11px;color:var(--mu)}.lst-tg-p b{color:var(--navy);font-weight:800}'+
-    '.lst-av{background:linear-gradient(180deg,rgba(230,0,122,0.05),transparent);border:1px solid var(--bdr);border-left:3px solid var(--brand);border-radius:11px;padding:13px 15px;font-size:12px;color:var(--navy);line-height:1.6}.lst-av b{font-weight:800}'+
+    '.lst-av{background:linear-gradient(180deg,rgba(62,90,130,0.05),transparent);border:1px solid var(--bdr);border-left:3px solid var(--brand);border-radius:11px;padding:13px 15px;font-size:12px;color:var(--navy);line-height:1.6}.lst-av b{font-weight:800}'+
   '</style>';
   h+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--brand);margin:0 0 8px">The core · is the marketplace healthy & improving?</div>';
   h+='<p class="ov-lede">It all ladders up to Lyft’s June-2024 Investor Day line — <b>&ldquo;customer obsession drives profitable growth.&rdquo;</b> The turnaround (top of the Overview) is the <i>result</i>; this is the operating system behind it.</p>';
@@ -1318,7 +1318,7 @@ function growthBody(c){
     '.gd-est{font-size:10.5px;font-weight:700;color:var(--mu);background:rgba(138,147,160,0.15);border-radius:10px;padding:2px 8px;margin-left:7px}'+
     '.gd-slwrap{display:flex;flex-direction:column;gap:3px;min-width:200px;max-width:300px;flex:1}'+
     '.gd-ticks{display:flex;justify-content:space-between;font-size:10px;color:var(--mu);font-weight:600;padding:0 1px}'+
-    '.gd-slider{-webkit-appearance:none;appearance:none;height:5px;border-radius:3px;background:linear-gradient(90deg,#1E9E62,#E6007A);outline:none;width:100%}'+
+    '.gd-slider{-webkit-appearance:none;appearance:none;height:5px;border-radius:3px;background:linear-gradient(90deg,#1E9E62,#3E5A82);outline:none;width:100%}'+
     '.gd-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--brand);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2)}'+
     '.gd-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--brand);cursor:pointer}'+
     '.gd-row{display:grid;grid-template-columns:120px 1fr 54px;align-items:center;gap:10px;margin:6px 0}'+
@@ -1368,7 +1368,7 @@ function stmtFlow(){
     '.sf-pill{border:none;background:none;border-radius:16px;font:600 12px Inter,sans-serif;color:var(--mu);padding:6px 14px;cursor:pointer}.sf-pill.active{background:var(--brand);color:#fff}'+
     '.sf-flow{display:flex;align-items:stretch;gap:6px}'+
     '.sf-box{flex:1;border:1px solid var(--bdr);border-radius:10px;padding:12px 13px;background:var(--w)}'+
-    '.sf-pnl{border-top:3px solid #6B2BD9}.sf-bs{border-top:3px solid #E6007A}.sf-cf{border-top:3px solid #1E9E62}'+
+    '.sf-pnl{border-top:3px solid #6B2BD9}.sf-bs{border-top:3px solid #3E5A82}.sf-cf{border-top:3px solid #1E9E62}'+
     '.sf-tag{font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--mu)}'+
     '.sf-label{font-size:12px;font-weight:800;color:var(--navy);margin:1px 0 6px}'+
     '.sf-acct{font-size:11.5px;color:var(--navy);line-height:1.4}'+
@@ -1402,9 +1402,9 @@ function unitBody(c){
     '@media(max-width:640px){.insarc{grid-template-columns:1fr}}'+
   '</style>';
   var corDown=PR_COR[i0]<PR_COR[i1];
-  h+='<style>.ue-ko{border:1px solid var(--bdr);border-left:4px solid #E6007A;border-radius:14px;background:linear-gradient(180deg,var(--brand-soft),transparent);padding:15px 17px;margin:2px 0 14px}.ue-ko-hd{font-size:14.5px;font-weight:800;color:var(--navy);line-height:1.4}.ue-ko-hd b{color:#c0006a}.ue-ko-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:13px}@media(max-width:560px){.ue-ko-row{grid-template-columns:1fr}}.ue-ko-c{background:#fff;border:1px solid var(--bdr);border-radius:10px;padding:11px 13px}.ue-ko-k{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--mu)}.ue-ko-flip{display:flex;align-items:baseline;gap:7px;margin:5px 0 2px}.ue-ko-was{font-size:14px;font-weight:800;color:var(--mu)}.ue-ko-now{font-size:19px;font-weight:900}.ue-ko-sub{font-size:10.5px;font-weight:700}</style>';
+  h+='<style>.ue-ko{border:1px solid var(--bdr);border-left:4px solid #3E5A82;border-radius:14px;background:linear-gradient(180deg,var(--brand-soft),transparent);padding:15px 17px;margin:2px 0 14px}.ue-ko-hd{font-size:14.5px;font-weight:800;color:var(--navy);line-height:1.4}.ue-ko-hd b{color:#2E4663}.ue-ko-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:13px}@media(max-width:560px){.ue-ko-row{grid-template-columns:1fr}}.ue-ko-c{background:#fff;border:1px solid var(--bdr);border-radius:10px;padding:11px 13px}.ue-ko-k{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--mu)}.ue-ko-flip{display:flex;align-items:baseline;gap:7px;margin:5px 0 2px}.ue-ko-was{font-size:14px;font-weight:800;color:var(--mu)}.ue-ko-now{font-size:19px;font-weight:900}.ue-ko-sub{font-size:10.5px;font-weight:700}</style>';
   h+=sec('Follow a single ride — where the money goes',
-    '<style>.ov-gal-cap{font-size:12.5px;color:var(--navy);line-height:1.6;margin:12px 0}.ov-gal-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}.ov-gal-btn{font-size:22px;font-weight:800;line-height:1;border:1px solid var(--bdr);background:#fff;border-radius:8px;min-width:46px;height:40px;cursor:pointer;color:var(--navy)}.ov-gal-btn:hover{background:#E6007A;color:#fff;border-color:#E6007A}.ov-gal-count{font-size:11px;color:var(--mu);font-weight:700}</style><p class="ov-lede" style="margin:0 0 14px">A rideshare trip, end to end — <b>tap any step for a photo + detail</b>, then use ‹ › to move through the ride. Below: where each dollar of a ride lands.</p>'+
+    '<style>.ov-gal-cap{font-size:12.5px;color:var(--navy);line-height:1.6;margin:12px 0}.ov-gal-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}.ov-gal-btn{font-size:22px;font-weight:800;line-height:1;border:1px solid var(--bdr);background:#fff;border-radius:8px;min-width:46px;height:40px;cursor:pointer;color:var(--navy)}.ov-gal-btn:hover{background:#3E5A82;color:#fff;border-color:#3E5A82}.ov-gal-count{font-size:11px;color:var(--mu);font-weight:700}</style><p class="ov-lede" style="margin:0 0 14px">A rideshare trip, end to end — <b>tap any step for a photo + detail</b>, then use ‹ › to move through the ride. Below: where each dollar of a ride lands.</p>'+
     chain(RIDE_FLOW,'ride')+
     '<div class="ov-sec-h ovt-store-h" style="margin-top:20px">Where each $ of a ride goes <span class="ave-subh-note">(Q1 2026, per ride ≈ $20.88)</span></div>'+
     mbars(RIDE_SPLIT)+
@@ -1642,7 +1642,7 @@ function lyScRender(root){
     var y=Y0-Math.max(0,Math.min(1,(growth||0)/30))*(Y0-Y1);
     var r=Math.max(6,Math.min(22,5+Math.sqrt(Math.max(1,p.mc))*0.9));
     frag+='<g class="mg-node" data-name="'+esc(p.n)+'" data-why="'+esc(p.why||'')+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
-      '<circle class="mg-dot" r="'+r.toFixed(1)+'" fill="'+(p.hl?'#E6007A':'#3A7BD5')+'"'+(p.hl?' stroke="#fff" stroke-width="2"':' opacity="0.82"')+' style="cursor:pointer"></circle>'+
+      '<circle class="mg-dot" r="'+r.toFixed(1)+'" fill="'+(p.hl?'#3E5A82':'#3A7BD5')+'"'+(p.hl?' stroke="#fff" stroke-width="2"':' opacity="0.82"')+' style="cursor:pointer"></circle>'+
       '<text y="'+(r+11).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?'#10141A':'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
   });
   g.innerHTML=frag;
@@ -2682,7 +2682,8 @@ function init(c){
   // Segment "What is X?" + economics accordions
   root.querySelectorAll('.acc-h').forEach(function(btn){ btn.onclick=function(){ var b=btn.nextElementSibling; if(!b) return; var open=b.hidden; b.hidden=!open; var x=btn.querySelector('.acc-x'); if(x) x.textContent=open?'\u2013':'+'; }; });
   // Collapsible sections (reader chooses what to expand)
-  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var cc=btn.parentElement; var open=cc.classList.toggle('open'); var b=cc.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'\u25be':'\u25b8'; }; });
+  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var cc=btn.parentElement; var open=cc.classList.toggle('open'); var b=cc.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'\u25be':'\u25b8';
+    if(open) requestAnimationFrame(function(){ var g=activeDD(root), k=activeSubKey(root,g); if(k) buildSub(root,g,k); }); }; });   // charts inside a closed section have no size when the pane is built: build them now that it is open
   // Live market cap (Key Facts #lyMc + peer bubbles) \u2014 Massive via api.liveQuote; degrades gracefully in preview
   function lyLiveOne(tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(q){ if(!q||q.marketCap==null){ if(tk==='LYFT'){ var e0=root.querySelector('#lyMc'); if(e0) e0.textContent='live quote unavailable'; } return; } var mcB=q.marketCap/1e9; LY_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; }); if(tk==='LYFT'){ var el=root.querySelector('#lyMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':(mcB>=10?Math.round(mcB):mcB.toFixed(1))+'B')+' \u00b7 live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } scRefresh(); }).catch(function(){ if(tk==='LYFT'){ var e1=root.querySelector('#lyMc'); if(e1) e1.textContent='live quote unavailable'; } }); }
   LY_SC.peers.forEach(function(p){ if(p.tk) lyLiveOne(p.tk); });

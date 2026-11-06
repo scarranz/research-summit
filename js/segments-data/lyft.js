@@ -21,7 +21,8 @@ export var lyftSegments = {
    "1Q26",
    "2Q26",
    "3Q26",
-   "4Q26"
+   "4Q26",
+   "1Q27"
   ],
   "y": [
    "2022",
@@ -100,7 +101,7 @@ export var lyftSegments = {
   "gbPerRide": {
    "label": "Gross Bookings per ride",
    "short": "$ / ride",
-   "unit": "x",
+   "unit": "eps",
    "num": "gb",
    "den": "rides"
   },
@@ -124,6 +125,13 @@ export var lyftSegments = {
    "unit": "pct",
    "num": "ebitda",
    "den": "gb"
+  },
+  "gbPerRider": {
+   "label": "Gross Bookings per Active Rider",
+   "short": "$ / rider",
+   "unit": "eps",
+   "num": "gb",
+   "den": "riders"
   }
  },
  "overview": {
@@ -131,7 +139,13 @@ export var lyftSegments = {
   "tenK": {
    "text": "the Company has determined that it operates as one operating segment.",
    "where": "FY2025 Form 10-K, Note 2 — Summary of Significant Accounting Policies (Segment Information)"
-  }
+  },
+  "single": true,
+  "singleKeys": [
+   "rev",
+   "gb"
+  ],
+  "singleTitle": "Revenue and Gross Bookings"
  },
  "customers": {
   "classes": [
@@ -409,6 +423,22 @@ export var lyftSegments = {
      "periodicity": "Quarterly and annual",
      "source": "Non-GAAP reconciliation",
      "series": "results:ebitda"
+    },
+    {
+     "name": "Rides per Active Rider",
+     "definition": "Rides divided by Active Riders in the quarter: how often the average active rider rides. Derived, not published.",
+     "unit": "x",
+     "periodicity": "Quarterly",
+     "source": "derived: Rides / Active Riders",
+     "series": "ridesPerRider"
+    },
+    {
+     "name": "Gross Bookings per Active Rider",
+     "definition": "Gross Bookings divided by Active Riders in the quarter: what the average active rider spends on the platform. Derived, not published.",
+     "unit": "eps",
+     "periodicity": "Quarterly",
+     "source": "derived: Gross Bookings / Active Riders",
+     "series": "gbPerRider"
     }
    ],
    "kpiNote": "Lyft publishes Gross Bookings, Rides and Active Riders for the whole platform and no KPI by product, geography or ride mode. It does not publish a take rate, a price list or a rides-per-rider figure; those are derived here from the three published lines.",
@@ -483,5 +513,24 @@ export var lyftSegments = {
     "ebitdaMargin"
    ]
   }
+ ],
+ "streetForward": true,
+ "defaultHidden": [],
+ "segTop": [
+  "rev",
+  "ebitda"
+ ],
+ "ramp": [
+  "#3E5A82",
+  "#7C8694",
+  "#4F7A78",
+  "#8C6F4E",
+  "#6F5F7A"
+ ],
+ "y2Ramp": [
+  "#8C6F4E",
+  "#4F7A78",
+  "#6F5F7A",
+  "#3E5A82"
  ]
 };

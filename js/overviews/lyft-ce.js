@@ -11,7 +11,7 @@ import { resultsHtml, initResults } from '../results.js';
 import { mountWatchList } from '../watchlist.js';
 import { fetchThemeRecord, saveThemeRecord } from '../api.js';   // durable persistence of the MA theme record (Notes)
 import { LYFT_THEMES, LYFT_THEMES_V } from '../themes-data/lyft.js';
-import { SUMMIT_CAT, SUMMIT_INK } from '../viz-palette.js';
+import { SUMMIT_INK } from '../viz-palette.js';
 import { LYFT_CE_CONS as CE_CONS, LYFT_CALL_EARNINGS as CALL_EARNINGS, LYFT_GUIDED } from './lyft-ce-data.js';
 
 // ════ extracted from amzn.js ════════════════════════════════════════════════════════════════════
@@ -797,7 +797,6 @@ function ceSetupBody(c){
 // the revision trend) ⇄ Rolling NTM (Σ next 4 forecast quarters). Revenue only for now; the module
 // (js/consensus-evolution.js) is ticker/metric-agnostic so more slot in with the same data shape.
 function ceConsensusEvoBody(){ return ''; }   // not mounted for MA: consensus-evolution.js carries no MA block (playbook §12)
-function ceConsensusEvoRoot(){ return document.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phpane[data-cep="setup"] .ce-cev'); }
 // A1 · The annual picture — how the FY has looked, and what BBG vs Summit expect for the ones
 // still open. Reported FY actuals are bars/line; the forward years carry two forward points,
 // Bloomberg consensus (our txt) and Summit (the DCF, most-recent annual snapshot). If the company
@@ -1976,14 +1975,6 @@ function ceMountWatchList(){
   }
 }
 
-// ─── Bottom Line ▸ Supply Chain — Bloomberg SPLC (AMZN US Equity), as of 12-Aug-2026 ────────
-// SUPPLIERS side only. The customer/demand side (traceable AWS-IT channel + the Direct-to-Consumer
-// aggregate) belongs in Top Line and is not built here. 1,452 suppliers / 24,052 supplier facilities
-// tracked. Modeled on googl.js splcBody (cards + tables + dependency bars). Geography is the one
-// section rendered as a Chart.js chart.
-function ddStat(items){
-  return '<div class="gdd-kpis">'+items.map(function(s){ return '<div class="gdd-kpi"><div class="gdd-kpi-v">'+s[0]+'</div><div class="gdd-kpi-k">'+esc(s[1])+'</div></div>'; }).join('')+'</div>';
-}
 // Give the Evolution sub-tab bar (Earnings · Results · Estimates) and the phase bar (Setup · Post-Results
 // · Notes) the SAME width — they have identical styling, only the labels differ. Measure both, size both
 // to the wider one, and let the buttons flex to fill (Dani, Aug 2026). Needs both bars visible to measure.

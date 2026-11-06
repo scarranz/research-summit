@@ -139,8 +139,7 @@ function kindOf(i){
 }
 function isRevision(i){ var k=kindOf(i); return k.rev || k.prof; }
 
-// ── State ────────────────────────────────────────────────────────────────────────
-var _last = SNAPS[SNAPS.length-1];
+
 var _mode = 'preview';    // 'preview' = Recorded multiple (the workbook's) · 'live' = your own multiples
 var _lastVal = LYFT_TM.snaps[LYFT_TM.snaps.length-1].val;   // the latest submit, whichever year each leg values
 var _mEv  = _lastVal.ev ? _lastVal.ev.mult : 12;     // Live starts from the model's own multiples, never a guess
@@ -270,7 +269,7 @@ function valAt(k, idx, p){
 function fmtB(v){ var b=v/1000, a=Math.abs(b), sg=b<0?'−':'';
   if(a>=1000) return sg+'$'+(a/1000).toFixed(2)+'T';
   return sg+'$'+(a>=100?Math.round(a):a>=10?a.toFixed(1):a.toFixed(2))+'B'; }
-function fmtPx(v){ return '$'+Math.round(v).toLocaleString('en-US'); }
+
 // Price targets to the cent, as the workbook carries them ($413.63, not $414).
 function fmtPx2(v){ return '$'+v.toFixed(2); }
 function signPct(p){ return (p>=0?'+':'−')+(Math.abs(p)*100).toFixed(1)+'%'; }
@@ -451,7 +450,6 @@ function buildChart(scope){
   var idx=winIdx(), sers=visSeries();
   var labels=idx.map(function(i){ return SNAPS[i].d.slice(2); });   // yy-mm-dd
   var pointR=idx.map(function(i){ return isRevision(i)?4.5:3; });
-  var pointFill=function(c){ return idx.map(function(i){ return isRevision(i)?c:'#fff'; }); };
   var pointBrd =function(c){ return idx.map(function(i){ return SNAPS[i].d===BREAK_ON?SUMMIT_NEG:c; }); };
   var bar=(st.mode==='chg');
 
@@ -630,7 +628,6 @@ function footHtml(){
   var idx=winIdx(), l=SNAPS[idx[idx.length-1]], ev=l.ev, pe=l.pe;
   // the latest submit's legs could value different years — name both
   if(l.d===LYFT_TM.snaps[LYFT_TM.snaps.length-1].d){ ev=_lastVal.ev; pe=_lastVal.pe; }
-  var peY=null; if(pe) LYFT_TM.snaps.forEach(function(sn){ if(sn.d===l.d) peY=sn.y[pe.year]||null; });
   var pxTxt=(_px!=null)?(' Live price $'+_px.toFixed(2)+' → '+(ev?signPct(ev.pt/_px-1)+' to the EV/EBITDA target':'')+(pe?', '+signPct(pe.pt/_px-1)+' to the P/E target':'')+'.'):'';
   var common='FY'+FWD_YEAR+' revenue, Adjusted EBITDA, the model\'s GAAP net income (EARNINGS row) and diluted shares per submit from the Summit DCF model (DCF LYFT.xlsm; submits '+LYFT_TM.snaps.map(function(x){ return x.d; }).join(', ')+'), '+
     'and each submit\'s <b>recorded valuation</b> from the workbook\'s Output ▸ VALUATION block — frozen into the portal on '+esc(LYFT_TM.pulled)+' (not live; '+

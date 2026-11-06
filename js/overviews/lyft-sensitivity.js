@@ -83,7 +83,7 @@ YEARS.forEach(function(y){
   var m=streetMargin(y); if(m!=null) CONS.v.eb_m[y]=m;
 });
 function consValue(k, year){ var row=CONS.v[k]; var v=row?row[year]:null; return v==null?null:v; }
-function consPlaceholder(){ return !CONS.src; }
+
 function consSrcLabel(){ return CONS.src + (CONS.asOf?(' · as of '+CONS.asOf):''); }
 function baseName(b){ return (b||_base)==='cons' ? 'Street (Bloomberg consensus)' : 'the Summit model'; }
 function baseNameCap(b){ return (b||_base)==='cons' ? 'Street' : 'Summit model'; }
@@ -148,19 +148,17 @@ function startAtMarket(){
 startAtMarket();
 function multLabel(){ return _basis==='ev' ? 'EV/EBITDA' : 'P/E'; }
 
-// ── Model reads ──────────────────────────────────────────────────────────────────
-function lastYearWith(field, year){ for(var y=year; y>=BASE_YEAR; y--) if(M[y] && M[y][field]!=null) return y; return YEARS[0]; }
+
 function sharesFor(year){ return M[year].sh; }   // the model's diluted shares for that year
-function sharesHeld(year){ return false; }
+
 function heldFlags(year){ return false; }
-function catSum(year){ var t=0; SEGS.forEach(function(sg){ t += M[year][sg.k].rev; }); return t; }
+
 function modelEbMargin(year){ return M[year].eb / M[year].rev; }
 function modelCagr(seg, year){
   var n = year - BASE_YEAR;
   return Math.pow(M[year][seg].rev / M[BASE_YEAR][seg].rev, 1/n) - 1;
 }
-// The model's EBITDA margin applied to the sum of the lines — the reference the base case is taken off.
-function modelEbTotal(year){ return catSum(year) * modelEbMargin(year); }
+
 
 // The model's own value for a driver — the axis default centres on this.
 function modelValue(k, year){

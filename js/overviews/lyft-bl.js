@@ -530,7 +530,7 @@ function ry(mk, src, y){ var m=RY[mk]; if(!m||!m[src]) return null; var i=m.peri
 function noE(l){ return String(l).replace(/E$/,''); }
 var BBG_QF=lyftBBG.qtrs.slice(lyftBBG.is.rev.qA.length);   // forward quarter labels ('3Q26E' …)
 function bbgQF(s, p){ if(!s||!s.qF) return null; var i=BBG_QF.map(noE).indexOf(p); return i>=0?s.qF[i]:null; }
-function opexQ(p){ for(var i=0;i<LYFT_OPEXQ.length;i++) if(LYFT_OPEXQ[i].p===p) return LYFT_OPEXQ[i]; return null; }
+
 function aMarginsBody(){
   return aStdScaffold({ id:'ub-margins', title:'Profitability & margins', height:360,
     metricSel:[{v:'operating',label:'Operating income (GAAP)',on:true,group:'Profit'},{v:'ebitda',label:'Adjusted EBITDA (Lyft)',group:'Profit'},{v:'net',label:'Net income (GAAP)',group:'Profit'},{v:'fcf',label:'Free cash flow (Lyft)',group:'Cash'}],

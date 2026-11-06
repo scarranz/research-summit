@@ -402,7 +402,7 @@ function statsOf(pts){
 // ── Formatting ───────────────────────────────────────────────────────────────────
 function fmtX(v){ return v==null ? '—' : v.toFixed(1)+'×'; }
 function fmtPxv(v){ return '$'+(v>=100?Math.round(v).toLocaleString('en-US'):v.toFixed(2)); }
-function signPct(p){ return p==null?'—':((p>=0?'+':'−')+(Math.abs(p)*100).toFixed(1)+'%'); }
+
 
 // ── Body ─────────────────────────────────────────────────────────────────────────
 function hmBody(){

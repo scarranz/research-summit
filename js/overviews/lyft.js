@@ -12,7 +12,6 @@ import { makeManagement } from './management.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/lyft.js)
 import { lyftResults } from '../results-data/lyft.js';
-import { mountWatchList } from '../watchlist.js';
 import { lyPeerScatter, lyWireScatters } from './lyft-peers.js';
 import { SUMMIT_CAT } from '../viz-palette.js';
 import { LY_FACTS, LY_LEDE, LY_BIZ, LY_GMM_SEG, LY_GMM_GEO, LY_MM_CAP_TOP, LY_MM_CAP_END, LY_REV_DEFS, LY_PRODUCTS, LY_TIMELINE, LY_OV_SOURCES } from './lyft-ov-data.js';   // Overview data (F-FINAL: moved out of this file)
@@ -384,7 +383,7 @@ var GRAY = '#B8C0CA';
 var YEARS    = ['2022','2023','2024','2025','2026E','2027E','2028E','2029E'];
 var FIRST_EST = 4;
 var A_GB     = [12057.3, 13775.1, 16099.4, 18507.1, 21785.1, 24822.6, 26768.6, 28604.0]; // gross bookings ($M)
-var A_REV    = [4095.1, 4403.6, 5786.0, 6316.3, 7372.7, 8219.3, 8844.8, 9434.9];          // revenue ($M)
+          // revenue ($M)
 var A_EBITDA = [-416.5, 222.3, 382.4, 528.9, 691.1, 829.8, 995.7, 1016.3];                // adj. EBITDA ($M)
 var A_RIDES  = [598.5, 709.1, 828.2, 945.5, 1027.4, 1131.3, 1226.2, 1316.8];              // rides (millions)
 var A_RIDERS = [20.4, 22.4, 24.7, 29.2, 33.0, 36.3, 39.6, 42.7];                          // active riders (millions)
@@ -404,36 +403,14 @@ var PR_GP     = UE_REV.map(function(r,i){ return (r - UE_COGS[i]) / UE_RIDES[i];
 var PR_GB     = perRide(UE_GB);                                                    // bookings $/ride
 var PR_REV    = perRide(UE_REV);                                                   // revenue $/ride (net)
 
-// ─── Snapshot & narrative ────────────────────────────────────────────────────
-var SNAPSHOT = [
-  ['Listing', 'NASDAQ: LYFT'],
-  ['Founded', '2012 — San Francisco'],
-  ['IPO', 'Mar 2019 · $72.00'],
-  ['CEO', 'David Risher (since 2023)'],
-  ['Co-founders', 'Logan Green · John Zimmer'],
-  ['Employees', '~3,000'],
-];
-var DESC = 'Lyft runs a ride-hailing marketplace across the US and Canada — matching riders with drivers in real time — alongside the largest US bikeshare network (Citi Bike, Divvy, Bay Wheels), a fast-growing in-app advertising arm (Lyft Media), and an asset-light platform strategy for autonomous-vehicle partners. In July 2025 it acquired FreeNow to enter European taxi/mobility. The current thesis is profitable growth: shifting mix toward higher-value rides while insurance-cost reform lifts margin.';
 
-// Headline KPIs — FY2025 (latest full year), YoY vs FY2024.
-var KPIS = [
-  { l:'Gross Bookings', v:'$18.5B',  d:pctStr((A_GB[3]/A_GB[2]-1)*100)+' YoY',      dir:'up' },
-  { l:'Revenue',        v:'$6.32B',  d:pctStr((A_REV[3]/A_REV[2]-1)*100)+' YoY',    dir:'up' },
-  { l:'Adj. EBITDA',    v:'$529M',   d:pctStr((A_EBITDA[3]/A_EBITDA[2]-1)*100)+' YoY', dir:'up' },
-  { l:'Active Riders',  v:'29.2M',   d:pctStr((A_RIDERS[3]/A_RIDERS[2]-1)*100)+' YoY', dir:'up' },
-];
-var AS_OF = 'Headline KPIs are FY2025 (year ended Dec 31, 2025). Latest reported quarter is Q1 2026 — $4.95B bookings (+19% YoY), $1.65B revenue (+14%), 236.9M rides (+8.5%), 28.3M active riders (+17%), $133M Adj. EBITDA (+25%), and a record ~$1.12B TTM free cash flow.';
-var FY_NOTE = 'FY2025: record 945.5M rides (+14%), $18.5B bookings (+15%), $529M Adj. EBITDA (+38%), >$1B free cash flow. GAAP net income was $2.84B, but that includes a ~$2.9B one-time non-cash deferred-tax benefit — so Adj. EBITDA and FCF are the cleaner profit signals (FY2024 was the first full-year GAAP profit). Forward years (2026E–2029E) are Summit DCF estimates.';
 
-// Lyft reports ONE segment (consolidated); these are revenue *sources*, not GAAP segments. Each is shown with its driver.
-var SEGMENTS = [
-  ['Rideshare (core)', '<b>Driver: rides × bookings/ride × take rate.</b> The real-time US/Canada marketplace and the vast majority of revenue. Rides come from active riders × frequency; bookings/ride from mix (airport, long-distance, premium); Lyft keeps ~33% net after driver pay. This is the whole engine.'],
-  ['Lyft Media (ads)', '<b>Driver: riders × ad load × CPM.</b> In-app, in-car tablet and bikeshare-station advertising (~$100M annualized run-rate). High-margin revenue that scales with <i>riders</i>, not driver cost — a structural margin lever (advertisers: McDonald\'s, Sephora, Google).'],
-  ['Bikes & Scooters', '<b>Driver: stations × utilization × season.</b> Citi Bike (NYC), Divvy (Chicago), Bay Wheels (SF) — the largest US bikeshare network. <b>Growing</b> (Citi Bike 46M+ rides in 2025, e-bikes ~70% of trips), but highly seasonal (summer peak).'],
-  ['Autonomous (AV)', '<b>Driver: partner fleets on the network.</b> Asset-light "hybrid": Waymo (Nashville), May Mobility (Atlanta, live), Baidu, Mobileye, Tensor deploy fleets; Lyft supplies demand + fleet ops rather than owning cars — same hybrid logic as Uber.'],
-  ['FreeNow (Europe)', '<b>Driver: new geography.</b> Acquired Jul 2025 (~$197M / €175M) — a European taxi / multi-mobility app across ~9 countries; ~€1B annualized run-rate. Lyft\'s first move outside North America; one-app integration planned for 2027.'],
-  ['Lyft Rentals — wound down', '<b>Not a growth line — already gone.</b> The rider-facing car-rental product was <b>shut down in 2022 and discontinued by ~2023</b>; it is not a meaningful disclosed line today. <i>Do not confuse</i> it with <b>Express Drive / Flexdrive</b> (car rentals <i>for drivers</i>), which continues. So "Rentals losing share / may not be reported" is correct — for riders it effectively already isn\'t.'],
-];
+
+
+
+
+
+
 
 // Timeline with optional modal detail (`d`).
 var TIMELINE = [
@@ -457,31 +434,13 @@ var TIMELINE = [
 // 2Q26 prepared remarks. The older TIMELINE above (Prop 22 vote share, Level 5 price, Investor Day targets, ...) stays for
 // Miscellaneous ▸ M&A and History until each figure has a source.
 
-var PEERS = [
-  ['Uber', 'Global super-app — rides + delivery + ads + freight; ~3–4× Lyft\'s US rides and structurally more profitable.', 'Uber holds ~70%+ of US rides; Lyft ~24–29%. Same ~30% take, so the gap is <b>scale and cross-sell</b>, not pricing. Lyft\'s counter: price/reliability parity, driver experience, and a tighter US focus. It cannot match Uber\'s Eats-funded CAC.'],
-  ['Waymo (Lyft)', 'Robotaxi operator, live in several US cities.', 'Threat <i>and</i> partner — Lyft hosts third-party AV fleets (Waymo→Nashville) on its network rather than building its own. Same asset-light hybrid bet as Uber, but Lyft has less demand density to offer fleets.'],
-  ['DoorDash', 'US delivery leader.', 'Adjacent, not head-to-head — now a <b>partner</b>. DoorDash users are high-frequency Lyft riders; the partnership skews Lyft\'s mix toward higher-value trips.'],
-  ['Bolt / FreeNow', 'European mobility apps.', 'Lyft now competes here <b>directly</b> via FreeNow (Jul 2025) — but as a new, sub-scale entrant against incumbents, with EU gig-regulation exposure it didn\'t have before.'],
-];
+
 var PEER_NOTE='The structural reality: <b>Lyft is the US-concentrated #2</b> in a duopoly. It has no take-rate edge and far less scale than Uber, so its thesis rests on <b>profitable-growth discipline</b> (mix up, insurance cost down) rather than winning share. Its sharpest single risk is also its concentration — <b>US driver regulation</b> hits Lyft harder than its global peer (see Regulation).';
 
-var TAILWINDS = [
-  '<b>Insurance cost reform</b> — SB 371 + captive execution keep cutting cost per ride. <i>The single biggest margin lever</i> — the entire 2025–26 gross-margin story.',
-  '<b>Up-market mix + partnerships</b> — higher-value rides (+35–50%) and a record 27% partnership mix lift bookings/ride, defending growth <i>without</i> cutting price.',
-  '<b>Self-funding turnaround</b> — &gt;$1B FCF now funds a $500M buyback. The model finally pays for itself.',
-];
-var HEADWINDS = [
-  '<b>AV disruption</b> — Waymo can pressure pricing in the dense urban cores where Lyft\'s economics are <i>best</i>. The biggest structural unknown.',
-  '<b>Ride-count deceleration</b> — volume growth is slowing (Q1\'26 +8.5%). If the up-market mix also tops out, the ~15% bookings CAGR gets hard.',
-  '<b>US-concentrated regulatory cost</b> — pay floors (NYC/MN/Seattle) + the first US rideshare union (MA) raise cost, and hit Lyft harder than its global peer.',
-];
 
-// ── Strategy: 2027 targets (June 2024 Investor Day) ──
-var TARGETS = [
-  { v:'~15%',  l:'Gross Bookings CAGR', s:'2024–2027 (≈ $25B bookings by 2027).' },
-  { v:'~4%',   l:'Adj. EBITDA margin',  s:'Of Gross Bookings by 2027 (from ~2% in 2024).' },
-  { v:'>90%',  l:'FCF conversion',      s:'Of Adj. EBITDA, each year 2025–2027.' },
-];
+
+
+
 // Clickable initiative cards: teaser on the card, full story in a modal (key = `init:<k>`).
 var INITIATIVES = [
   { k:'highvalue', t:'Higher-value rides', teaser:'Airport, long-distance, premium, Price Lock.',
@@ -595,7 +554,6 @@ var MNA=[
 // ─── Render helpers (shared overview.css classes) ─────────────────────────────
 function sec(title, inner){ return '<section class="ov-sec"><div class="ov-sec-h">'+esc(title)+'</div>'+inner+'</section>'; }
 function bullets(arr){ return '<ul class="ov-bullets">'+arr.map(function(b){return '<li>'+b+'</li>';}).join('')+'</ul>'; }
-function rows(arr){ return arr.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+r[1]+'</div></div>'; }).join(''); }
 // Numbered, optionally-clickable step chain (shared .ov-chain). detailKey → data-detail="<key>:<i>".
 function chain(arr, detailKey){ return '<div class="ov-chain">'+arr.map(function(s,i){
   var cls='ov-chain-step'+(s.payoff?' is-payoff':'')+(detailKey?' ov-clickable':'');
@@ -656,127 +614,13 @@ function rangeSlider(key, maxI, endA, endB){
     '<div class="sg-readout" id="'+key+'Readout"></div></div>';
 }
 
-// ─── Earnings Narrative: theme-based across 10 calls (Q4 2023 → Q1 2026) ────
-var LY_THEMES = [
-  { theme:'Higher-Value Rides & Mix Shift',
-    why:'The core thesis: ride-count growth is decelerating (S-curve), so Lyft needs revenue per ride to carry the growth story. If mix shift stalls or is just weather/seasonal, the thesis weakens.',
-    updates:[
-      { q:'Q2 2024', items:['<b>Price Lock</b> launched \u2014 "removing rideshare\u2019s most hated feature." Converts commuters into locked-in, high-frequency users.','First <b>GAAP profitability</b> in company history.'] },
-      { q:'Q4 2024', items:['Market share <b>highest since 2022</b> and rising. ETAs faster than both the main competitor and newer entrants.','$500M buyback authorized \u2014 first significant shareholder-return program.'] },
-      { q:'Q3 2025', items:['<b>TBR Global</b> chauffeuring acquired \u2014 entry into the $54B executive ground transport segment, 3,000 cities globally.','SB371 framed as catalyst: <b>$6/ride savings in LA</b>, stimulating demand.'] },
-      { q:'Q4 2025', items:['<b>Lyft Teen</b> launched \u2014 teenagers described as "infinitely replenishing" cohort entirely absent from rideshare until now.','Declined to chase every marginal ride \u2014 "disciplined trade-offs" as operating philosophy.'] },
-      { q:'Q1 2026', items:['United MileagePlus: <b>350M miles awarded</b>, "Pay with Miles" launched. Partnership strategy shifting from acquisition to retention.'] },
-    ]},
-  { theme:'AV Strategy \u2014 Asset-Light Hybrid Network',
-    why:'Lyft\u2019s survival argument: if AVs disintermediate the driver, the value shifts to whoever aggregates demand + manages fleets. Lyft claims both. The risk: with ~15% US rideshare share vs Uber\u2019s ~70%, AV partners may prefer the larger demand graph.',
-    updates:[
-      { q:'Q1 2024', items:['AVs explicitly framed as <b>opportunity, not threat</b>. "Building networks \u2260 building AV tech \u2014 the two require different specialists."'] },
-      { q:'Q2 2024', items:['Three AV value-chain pillars formalized: <b>demand generation</b> (40M riders), <b>marketplace management</b>, and <b>fleet operations via FlexDrive</b>.'] },
-      { q:'Q3 2024', items:['Three <b>simultaneous AV models</b>: Mobileye (tech licensing), Nexar (data/learning), May Mobility (live rides in Atlanta). Not one exclusive deal \u2014 present across the supply chain.'] },
-      { q:'Q2 2025', items:['<b>Baidu partnership</b> announced for European AV deployment \u2014 Baidu\u2019s driver-out tech + Lyft\u2019s fleet management + FreeNow\u2019s regulatory relationships. Commercial timeline: 2026.'] },
-      { q:'Q3 2025', items:['<b>Waymo partnership</b>: integrated supply management where cars earn regardless of Waymo or Lyft dispatch. Described as the industry\u2019s first true hybrid network model, built to scale beyond Nashville.'] },
-      { q:'Q4 2025', items:['AV cost structure disclosed: by 2030, AVs expected <b>~20% cheaper per mile</b> than human-driven. FlexDrive\u2019s fleet management adds incremental efficiency on top.'] },
-      { q:'Q1 2026', items:['<b>Gett UK acquired</b> \u2014 70\u201380% of London\u2019s taxi fleets. (Full deal detail, including the London/AV framing, under European Expansion.)'] },
-    ]},
-  { theme:'Partnerships as Growth Engine',
-    why:'27% of rides from partners = real demand that Lyft doesn\u2019t pay to acquire. The Delta loss (~2% of GBs) proved partnerships can walk. The question: does the portfolio compound (more partners \u00d7 deeper penetration) or plateau once the obvious deals are signed?',
-    updates:[
-      { q:'Q4 2023', items:['~<b>20% of rides</b> already partnership-linked. Delta described as evolving from points-only to full commute infrastructure.'] },
-      { q:'Q3 2024', items:['<b>DoorDash partnership</b> announced \u2014 18M DashPass members exposed to Lyft. "Food delivery customers are naturally high-frequency riders."'] },
-      { q:'Q1 2025', items:['<b>Delta partnership loss</b> quantified: ~1% rides, ~2% gross bookings. Disclosed transparently before Q2 hit. Commitment to offset via deeper penetration of existing partners.'] },
-      { q:'Q2 2025', items:['Partnership rides share grew to <b>27%</b>. United Airlines added as first major airline where miles earned on all rides (not just airport). Competitor\u2019s approach called "photocopy strategy."'] },
-      { q:'Q1 2026', items:['27% maintained. <b>"Pay with Miles"</b> launched (United). Partnership strategy described as compounding \u2014 each new partner reaches zero penetration on day one.'] },
-    ]},
-  { theme:'European Expansion \u2014 FreeNow & Beyond',
-    why:'The biggest strategic bet since founding: Lyft went from US-only to a European footprint overnight. The bull case: FreeNow\u2019s taxi-regulator relationships are the AV entry ticket. The bear case: integration drag, EU gig-law exposure, and capital diverted from the US fight vs Uber.',
-    updates:[
-      { q:'Q1 2025', items:['<b>FreeNow acquisition announced</b> (~\u20ac175M). Framed explicitly around its taxi-first model as a <b>regulatory relationship asset</b> critical for AV expansion, not just geographic diversification.'] },
-      { q:'Q2 2025', items:['FreeNow closed. ~\u20ac1B annualized run-rate across ~9 European countries. Baidu partnership announced as the vehicle for European AV deployment.'] },
-      { q:'Q1 2026', items:['<b>Gett UK acquired</b> \u2014 70\u201380% of London\u2019s taxi fleets in the Lyft app. London described as critical not just for revenue but as "the proving ground" for European AV regulatory relationships.'] },
-    ]},
-  { theme:'Insurance Reform & Profitability Discipline',
-    why:'Insurance is ~50% of Lyft\u2019s cost of revenue. SB371 cuts mandatory coverage limits in California (Lyft\u2019s largest market) starting Jan 2026 \u2014 management estimates >$6/ride savings in LA alone. If durable, this is the single largest margin lever. If reserves re-inflate, it\u2019s a trap.',
-    updates:[
-      { q:'Q2 2024', items:['First <b>GAAP profitability</b> in company history \u2014 presented as validation of the "customer obsession" thesis translating into financial discipline.'] },
-      { q:'Q4 2024', items:['Lower prices described as a new dynamic \u2014 management argues lower prices drive ride volume and margins can be protected through <b>mix, media, and higher-value modes</b>.'] },
-      { q:'Q3 2025', items:['<b>SB371</b> (California insurance reform, eff. Jan 2026): "win-win-win" that would reduce rider prices by <b>>$6 per ride in LA</b>, stimulate demand, and benefit drivers.'] },
-      { q:'Q4 2025', items:['Competitor\u2019s "heightened promotional activity" in Q4, but Lyft <b>declined to chase every marginal ride</b> \u2014 framing disciplined trade-offs as a differentiating philosophy.'] },
-    ]},
-  { theme:'Lyft Media & Platform Identity',
-    why:'At ~$100M run-rate vs Uber\u2019s >$2B, Lyft Media is 50\u00d7 smaller \u2014 but it\u2019s near-100% margin and scales with riders, not driver cost. The \u201cAudience Extension\u201d move (off-platform targeting using movement data) is the pivot from ad-format inventory to a data-moat play. If it works, it\u2019s the highest-margin dollar Lyft earns.',
-    updates:[
-      { q:'Q1 2024', items:['Lyft Media positioned as future margin lever: in-app ads, tablets, car-top panels, bike panels. <b>10\u00d7 industry click-through rates</b>. Long-term aspiration: $500M.'] },
-      { q:'Q3 2024', items:['"Serve and connect" introduced as company\u2019s formal purpose. Identity framed not as rideshare platform but as force against physical disconnection.'] },
-      { q:'Q1 2026', items:['Lyft Ads on path to <b>$100M run rate by end 2026</b>. <b>"Audience Extension"</b> off-platform capability added \u2014 evolving from format inventory into a data and targeting platform leveraging first-party movement data.'] },
-    ]},
-];
 
-// Pivot the theme-organized calls into a by-quarter view (mirrors UBER's callsByQuarter).
-function callsByQuarter(){
-  var map={}, order=[];
-  LY_THEMES.forEach(function(ct){ ct.updates.forEach(function(u){ if(!map[u.q]){ map[u.q]=[]; order.push(u.q); } map[u.q].push({ theme:ct.theme, items:u.items }); }); });
-  function qval(q){ var m=String(q).match(/Q(\d)\s+(\d{4})/); return m?(+m[2])*10+(+m[1]):0; }
-  order.sort(function(a,b){ return qval(b)-qval(a); });
-  return { order:order, map:map };
-}
-function callsBody(){
-  var h='<style>.calls-tog{display:inline-flex;gap:4px;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:3px;margin-bottom:14px}'+
-    '.calls-pill{border:none;background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--mu);padding:5px 15px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.calls-pill:hover{color:var(--navy)}.calls-pill.active{background:var(--navy);color:#fff}'+
-    '.calls-tl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin:0 0 4px}</style>';
-  h+='<p class="ov-lede">The key narrative threads from <b>10 earnings calls</b> (Q4 2023 \u2192 Q1 2026). Switch lens: <b>By theme</b> traces how each story evolved; <b>By quarter</b> shows what mattered in a given call. Tap any row to expand.</p>';
-  h+='<div class="calls-tog" role="tablist"><button type="button" class="calls-pill active" data-callsv="theme">By theme</button><button type="button" class="calls-pill" data-callsv="quarter">By quarter</button></div>';
-  // \u2500\u2500 By theme (default) \u2500\u2500
-  h+='<div class="lpb-acc" id="lyCallsTheme">';
-  LY_THEMES.forEach(function(ct){
-    h+='<div class="lpb-acc-item">';
-    h+='<button type="button" class="lpb-acc-h"><span>'+esc(ct.theme)+'</span><span class="lpb-acc-ic">+</span></button>';
-    h+='<div class="lpb-acc-body">';
-    h+='<p style="font-size:12px;color:var(--mu);margin:0 0 10px;font-style:italic">'+esc(ct.why)+'</p>';
-    ct.updates.forEach(function(u){
-      h+='<div style="margin-bottom:10px"><span class="ov-chip" style="margin-right:6px">'+esc(u.q)+'</span>';
-      h+='<ul class="ov-bullets" style="margin-top:4px">'+u.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>';
-    });
-    h+='</div></div>';
-  });
-  h+='</div>';
-  // \u2500\u2500 By quarter \u2500\u2500
-  var byQ=callsByQuarter();
-  h+='<div class="lpb-acc" id="lyCallsQuarter" style="display:none">';
-  byQ.order.forEach(function(q){
-    h+='<div class="lpb-acc-item">';
-    h+='<button type="button" class="lpb-acc-h"><span>'+esc(q)+'</span><span class="lpb-acc-ic">+</span></button>';
-    h+='<div class="lpb-acc-body">';
-    byQ.map[q].forEach(function(row){
-      h+='<div style="margin-bottom:12px"><div class="calls-tl">'+esc(row.theme)+'</div>';
-      h+='<ul class="ov-bullets" style="margin-top:2px">'+row.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>';
-    });
-    h+='</div></div>';
-  });
-  h+='</div>';
-  h+='<div class="ov-fynote" style="margin-top:12px">Sources: Lyft Q4 2023\u2013Q1 2026 earnings calls and prepared remarks via Quartr. Highlights are qualitative and contemporaneous \u2014 written from the perspective of each call, not with hindsight.</div>';
-  return h;
-}
 
-// ─── Supply Chain (Bloomberg SPLC, 29-Jun-2026) ─────────────────────────────
-// Lyft's SPLC is deliberately sparse — only 30 suppliers and 5 customers.
-// The sparseness itself IS the story: Lyft is a pure B2C marketplace.
-var SC_SUPPLIERS = [
-  { fn:'\ud83d\ude97 AV Partners', names:'Baidu \u00b7 Mobileye \u00b7 Aptiv \u00b7 Innoviz (LiDAR) \u00b7 Ambarella (vision chips) \u00b7 Curb Mobility',
-    note:'The SPLC confirms the multi-partner AV strategy. Baidu for European AV, Mobileye for Lyft Ready tech licensing, Aptiv for hardware. <b>Ambarella ($0.06M)</b> is the only relationship with a disclosed dollar value in the entire SPLC.' },
-  { fn:'\u2601\ufe0f Tech & Cloud', names:'Oracle \u00b7 Dell \u00b7 Amazon (AWS) \u00b7 Twilio \u00b7 Elastic \u00b7 Sinch \u00b7 Clickhouse \u00b7 ZoomInfo \u00b7 Calendly',
-    note:'Standard SaaS/cloud stack. No disclosed relationship sizes. Oracle and Dell likely the largest contracts.' },
-  { fn:'\ud83d\udee1\ufe0f Insurance & Fleet', names:'CSAA Insurance Exchange \u00b7 Hertz \u00b7 EverQuote',
-    note:'CSAA is Lyft\u2019s insurance partner (alongside captive PVIC). <b>Hertz</b> powers the FlexDrive rental fleet for drivers. EverQuote for insurance lead generation.' },
-  { fn:'\ud83d\udcca Ad Tech & Data', names:'Integral Ad Science \u00b7 Hinge Health \u00b7 Nielsen \u00b7 FiscalNote \u00b7 Public Policy Holding',
-    note:'Ad measurement and public-policy monitoring. Small names reflect Lyft Media\u2019s early-stage scale (~$100M vs Uber\u2019s $2B+).' },
-];
-var SC_CUSTOMERS = [
-  { n:'ModivCare', ind:'Healthcare Transport', note:'NEMT (non-emergency medical transport) \u2014 Lyft provides rides for Medicaid/Medicare patients.' },
-  { n:'Cano Health', ind:'Healthcare', note:'Same NEMT use case \u2014 healthcare rides are a stable, contract-based revenue source.' },
-  { n:'AXS Group', ind:'Internet Media', note:'Event ticketing / venue access partnership.' },
-  { n:'Sixt SE', ind:'Car Rental (Germany)', note:'European car rental. Likely connected to FreeNow\u2019s taxi/rental network.' },
-];
+
+
+
+
+
 
 function supplySection(){
   var av=[['Waymo',null,'waymo.com'],['Baidu','BIDU','baidu.com'],['Mobileye','MBLY','mobileye.com'],['May Mobility',null,'maymobility.com'],['Aptiv','APTV','aptiv.com'],['NVIDIA','NVDA','nvidia.com'],['Innoviz','INVZ','innoviz.tech'],['Ambarella','AMBA','ambarella.com']];
@@ -981,13 +825,7 @@ function lySegmentsBody(c){
   h+='<div class="seg-body" data-seg="media" hidden>'+mediaBody(c)+'</div>';
   return h;
 }
-// ── Labeled placeholder (user-approved): create the tab now, fill it later with sourced
-// figures — never invent data. Marked "To build" so it's obviously incomplete. ──
-function placeholder(title, note){
-  return '<div style="border:1px dashed var(--bdr);border-radius:12px;padding:16px 18px;margin:10px 0;background:linear-gradient(180deg,rgba(232,160,12,0.045),transparent)">'+
-    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#B7791F;background:rgba(232,160,12,0.14);border-radius:10px;padding:2px 9px">To build</span><span style="font-size:13.5px;font-weight:800;color:var(--navy)">'+esc(title)+'</span></div>'+
-    '<div style="font-size:12px;color:var(--mu);line-height:1.55">'+note+'</div></div>';
-}
+
 // Top Line ▸ Customers — riders + the loyalty stack. Built from in-repo vetted data (A_RIDERS,
 // Q1 2026 KPIs, partnership share). Pink member counts are NOT disclosed by Lyft → kept qualitative.
 function lyCustomersBody(c){
@@ -1690,20 +1528,7 @@ function stdKeyFacts(){
 function stdFourQuad(){
   return '<div class="q2">'+LY_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
 }
-// Block 4 — How it makes money. Lyft is a SINGLE reportable segment, so there is no segment split
-// to toggle. Show revenue-by-line (2 slices) + a compact key-metrics row + qualitative "What is X?"
-// accordions. Geography OMITTED (US/Canada; substantially all revenue US-based; no country split).
-var LY_SEG_DEF=[
-  { seg:'Rideshare',
-    desc:'The core marketplace: it matches a rider requesting a trip with a nearby independent driver in real time; Lyft sets pricing, handles payments, insurance and safety, and keeps a portion of each fare.',
-    econ:[['Gross Bookings','$18.51B'],['Revenue','~$5.9B'],['Take rate','~34% (incl. insurance accounting)'],['Adj. EBITDA (co-wide)','$528.9M']] },
-  { seg:'Lyft Media',
-    desc:'An advertising business that monetizes rider attention across the app, emails, and in-car / vehicle-top screens.',
-    econ:[['Revenue run-rate','~$100M (2025 exit)'],['Growth','>100% YoY (approx.)']] },
-  { seg:'Bikes & Scooters',
-    desc:'City-partnered shared micromobility: Lyft operates and maintains public bikeshare fleets under multi-year municipal contracts, plus e-scooters in select markets.',
-    econ:[['Reported within','“Rentals revenue” ~$420.9M'],['Standalone figure','blended with car rentals; none disclosed']] },
-];
+
 // OV-4 (playbook section 8, UBER model). Lyft has ONE operating segment (10-K FY25 Note 2), so the first view is
 // revenue lines (the two accounting categories the 10-K discloses), the second is geography. FY2025 vs FY2024 from the
 // 10-K revenue note (disaggregation + geography) and MD&A key metrics. LY_SEG_DEF above keeps the older Media / bikes
@@ -1884,322 +1709,20 @@ function html(c){
 // ════════════════════════════════════════════════════════════════════════════
 
 // Accent colours the ported renderers expect (lyft.js already defines BRAND/BRAND2/GRAY).
-var BLUE='#2557D6', RED='#EA4335', YELLOW='#E8A00C', PURPLE='#7A5AF8', AMBER='#B7791F';
-// Captured in init/deepDiveInit — the shared Watch List needs the company id + ticker.
-var _co=null;
+var PURPLE='#7A5AF8';
 
-// The two mandatory source buttons (§6).
-var CE_IR_URL='https://investor.lyft.com/';
-var CE_EDGAR_URL='https://www.sec.gov/edgar/browse/?CIK=1759509&owner=exclude';
-var CE_LOGO_URL='https://assets.parqet.com/logos/symbol/LYFT';
 
-// ─── CE_CONS — the expectation grid ─────────────────────────────────────────
-// ⚠ PROVENANCE. Lyft has NO rows in BBG_CONSENSUS.txt (the archive carries
-// GOOG/GOOGL/HOOD/KKR/MA/META/UBER only), so there is no rolling Street matrix to
-// reconstruct and the horizon columns collapse to ONE. TWO different outside
-// expectations stand in its place, and they are kept in SEPARATE rows because they
-// are not the same thing (Rule H — never blend two bases into one number):
-//
-//   qg — LYFT'S OWN GUIDE, midpoint of the guided range. Lyft guides exactly TWO
-//        lines, Gross Bookings and Adjusted EBITDA (plus the margin those two imply),
-//        so every other row is genuinely unguided rather than missing.
-//   qs — STREET CONSENSUS, compiled PER PRINT from earnings-day coverage because
-//        there is no archive to reconstruct it from. Sourced per quarter below; a
-//        line with no defensible published number stays null rather than invented.
-//
-// `qr[qi][3]` is what the engine SCORES against — the Street where one exists, else
-// the guide — and `qb[qi]` records which of the two it was, so every cell can say on
-// screen which basis it is using instead of leaving the reader to assume.
-// Summit comes from the model's live 2026-05-13 vintage.
-//
-// STREET SOURCES, per quarter (all secondary; upgrade to a Bloomberg export when one exists):
-//   Q2 2026 (upcoming) — Gross Bookings $5.31B, Adj. EBITDA $169M and the 3.19% margin are the
-//     consensus reported against the guide when it was issued on 7 May 2026 (so they are ~3
-//     months stale; treated as the standing bar because nothing newer is published). Revenue
-//     $1.84B and the $0.15 adj. EPS are the CURRENT aggregate (~40 contributors). ⚠ A 31 Jul 2026
-//     preview instead framed revenue as "+14% YoY", which implies ~$1.81B — a ~2% spread between
-//     two published views of the same line. The higher, more recent aggregate is used.
-//   Q1 2026 (reported) — Revenue $1.64B (+13.1% YoY, Investing.com preview, 7 May 2026; StockStory
-//     carried $1.63B the same day), Adj. EBITDA $130.7M (StockStory), Gross Bookings $4.91B and
-//     ⚠ RIDES 241.5M (both TIKR). The rides cell is the important one: the print of 236.9M MISSED
-//     it by 1.9%, and without a consensus that line would render unscoreable — which is exactly
-//     how the quarter got read as a clean beat at the time.
-//   Q4 2025 (reported) — Revenue $1.76B (Zacks consensus, corroborated by earnings-day coverage
-//     noting ADJUSTED revenue "matched analyst expectations of $1.76 billion"). ⚠ THIS IS THE WHOLE
-//     STORY OF THAT PRINT: the $1,592.7M reported is $1.76B less the $168M contra-revenue charge,
-//     so the 9.5% "miss" is the charge and nothing else. Bookings were described as in line but no
-//     figure was published, and no Adj. EBITDA consensus was found — both stay null.
-var CE_CONS = (function(){
-  var q = ['Q2 2026','Q1 2026','Q4 2025'];
-  // qg = guide midpoint · qs = Street consensus · qa = the print · qy = year-ago actual · qq = prior-quarter actual
-  function line(k, u, t, qg, qs, qa, qy, qq){
-    return { k:k, u:u, t:t,
-      qg:qg, qs:qs, qa:qa, qy:qy, qq:qq,
-      qb:qg.map(function(g,i){ return qs[i]!=null ? 'Street' : (g!=null ? 'Guide' : null); }),
-      qr:qg.map(function(g,i){ return [null,null,null, (qs[i]!=null?qs[i]:g)]; }) };
-  }
-  return {
-    src:'TWO outside expectations, kept separate. GUIDE = Lyft\'s own guidance for each quarter, from the prior quarter\'s 8-K Ex. 99.1 (Q2 2026: $5.30–5.43B Gross Bookings and $160–180M Adjusted EBITDA, issued 7 May 2026); the grid shows the MIDPOINT. STREET = consensus compiled per print from earnings-day coverage — Lyft is not in the BBG_CONSENSUS.txt archive, so there is no matrix to reconstruct and any line without a defensible published number is left blank rather than invented. Summit is the model\'s live 2026-05-13 vintage.',
-    asOf:['2026-05-07 (the guide) · Street as noted per line','2026-05-07 (the print)','2026-02-10 (the print)'],
-    q:q, hz:['company guide / Street'], nHead:4,
-    m:[
-      line('Gross Bookings','$M','ok',
-        /*guide*/ [5365, 4930, 5070], /*street*/ [5310, 4910, null],
-        /*print*/ [null, 4946.0, 5074.2], /*yr ago*/ [4490.1, 4162.4, 4278.9], /*prior q*/ [4946.0, 5074.2, 4780.4]),
-      line('Revenue','$M','ok',
-        [null, null, null], [1840, 1640, 1760],
-        [null, 1650.5, 1592.7], [1588.2, 1450.2, 1550.3], [1650.5, 1592.7, 1685.2]),
-      line('Adjusted EBITDA','$M','ok',
-        [170, 130, 145], [169, 130.7, null],
-        [null, 132.8, 154.1], [129.4, 106.5, 112.8], [132.8, 154.1, 138.9]),
-      line('Adj. EBITDA margin','%','ok',
-        [3.15, 2.65, 2.86], [3.19, null, null],
-        [null, 2.7, 3.0], [2.9, 2.6, 2.6], [2.7, 3.0, 2.9]),
-      // ⚠ Rides DOES carry a Street number in 1Q26 (241.5M) — and the print missed it. Without
-      // that cell the quarter's most important line would render as unscoreable.
-      line('Rides','M','ok',
-        [null, null, null], [null, 241.5, null],
-        [null, 236.9, 243.5], [234.8, 218.4, 218.5], [236.9, 243.5, 248.8]),
-      line('Active Riders','M','nocons',
-        [null, null, null], [null, null, null],
-        [null, 28.3, 29.2], [26.1, 24.2, 24.7], [28.3, 29.2, 28.7]),
-      line('Free cash flow','$M','nocons',
-        [null, null, null], [null, null, null],
-        [null, 287.3, 227.6], [329.4, 280.7, 140.0], [287.3, 227.6, 277.8]),
-      line('Insurance reserves','$M','nocons',
-        [null, null, null], [null, null, null],
-        [null, 2245.0, 2180.4], [1947.9, 1823.5, 1701.4], [2245.0, 2180.4, 2070.6])
-    ]
-  };
-})();
 
-var CALL_EARNINGS = { ticker:'LYFT', quarters:[
-  { q:'Q2 2026', status:'upcoming', date:'reports Thu Aug 6, 2026 · after close (the scoreable reaction is the NEXT day)',
-    setup:{
-      source:'Lyft Q2 2026 guidance (8-K Ex. 99.1, 7 May 2026) · Summit — live 2026-05-13 vintage', asOf:'2026-05-07',
-      notes:{
-        'Gross Bookings':{ t:'Guided $5.30–5.43B (+18–21%) — but how much of it is bought?', h:'<p>Guided to <b>$5.30–5.43B, +18–21%</b>; the grid shows the <b>midpoint</b>. That acceleration is the headline, and the honest question is how much of it is organic.</p><p><b>Q2 2026 is the first quarter carrying BOTH acquisitions in full:</b> FREENOW (closed 31 Jul 2025, only two months in 3Q25) and <b>Gett\'s UK business, which closed the week of 7 May 2026</b>. Lyft has <b>never quantified either</b>, published no organic split and restated nothing. So a guide met on a bought top line, with organic decelerating underneath, would still be a miss in substance.</p>' },
-        'Revenue':{ t:'Not guided — and 4Q25 still distorts the comp', h:'<p>Lyft does not guide revenue. Watch the spread against bookings: 4Q25 printed bookings +19% against revenue +3%, entirely because a <b>$168M contra-revenue charge</b> (legal/tax/regulatory) sat inside revenue while bookings and adjusted EBITDA were untouched. That is a comp artifact, not a take-rate collapse.</p>' },
-        'Adjusted EBITDA':{ t:'Guided $160–180M — the line Lyft manages to', h:'<p>Guided to <b>$160–180M</b> (~3.0–3.3% of bookings), implying <b>+30%+</b> growth at the midpoint. Lyft has printed at or above the top of this guide in almost every quarter here, so the bar is really the top of the range, not the midpoint the grid shows.</p><p>⚠ Read the Summit line on this metric with care: for closed quarters the model MIRRORS the reported figure on guided lines, so a zero surprise there is an artifact.</p>' },
-        'Adj. EBITDA margin':{ t:'This line IS a rate', h:'<p>Adjusted EBITDA as a percentage of <b>Gross Bookings</b> — the margin management is judged on, and the one that has to roughly double from here to reach the 2027 goal. The cell shows the rate itself, so the growth lens does not apply.</p><p>Guided to ~3.0–3.3% against 2.7% in Q1.</p>' },
-        'Rides':{ t:'The demand tell, and it disappointed last quarter', h:'<p>Not guided. In millions of rides. <b>Q1 2026 rides FELL sequentially</b> (243.5 → 236.9) and disappointed even as bookings and revenue beat — which means <b>price and mix</b>, not volume, carried that quarter. Whether ride growth reinflates is the real question behind the bookings headline.</p>' },
-        'Active Riders':{ t:'Watch the acquisition effect', h:'<p>Not guided. In millions. The 3Q25 step from 26.1M to 28.7M coincides with FREENOW entering the base, so it is not a clean organic acceleration — and Q1 2026 then fell back to 28.3M.</p>' },
-        'Free cash flow':{ t:'One of the three 2027 targets', h:'<p>Not guided quarterly, but Lyft raised its own 2027 goal from ~$900M to <b>over $1B</b>, and FY2025 generation exceeded $1.1B. Flattered by the insurance-reserve build below while it accrues.</p>' },
-        'Insurance reserves':{ t:'Where the cost claim gets audited', h:'<p>The balance-sheet reserve, not an expense. It has risen <b>every single quarter</b>, $1.39B → $2.25B. Management credits recent insurance reform and its own strategies for a falling average cost per ride; this is the line where that claim can actually be checked over time.</p>' }
-      },
-      us:{ 'Gross Bookings':{v:5363.4}, 'Revenue':{v:1815.3}, 'Adjusted EBITDA':{v:173.6}, 'Rides':{v:254.3}, 'Active Riders':{v:30.5}, 'Free cash flow':{v:276.6} },
-      debate:{ rows:null, synth:'The one thing to resolve: is the guided <b>+18–21% bookings acceleration</b> a real reacceleration, or is it FREENOW plus Gett arriving in the base while organic demand keeps decelerating — the pattern Q1 already hinted at when <b>rides fell sequentially and the beat came from price and mix</b>? Lyft has never disclosed the inorganic split, so the answer has to be inferred from rides and active riders, not from the headline.' }
-    },
-    results:null, call:null },
 
-  // ─── Q1 2026 — REPORTED (May 7, 2026). Frozen pre-print view + the print + the call. ───────────
-  { q:'Q1 2026', status:'reported', date:'Thu May 7, 2026 · after close (call 5:00pm EDT)',
-    setup:{
-      source:'Lyft\'s Q1 2026 guide, issued 10 Feb 2026 with the Q4 2025 results (8-K Ex. 99.1) · Street compiled from earnings-day previews (7 May 2026) · Summit = the pre-print 2026-02-11 vintage',
-      asOf:'2026-02-10 (the guide) · 2026-05-07 (Street)',
-      notes:{
-        'Gross Bookings':{ t:'Guided $4.86–5.00B (+17–20%), Street $4.91B', h:'<p>Guide midpoint <b>$4.93B</b> against a Street of <b>$4.91B</b> — the two are effectively on top of each other, because on this name the Street largely takes the guide. The print, $4,946M, cleared both by well under a percent.</p><p>That is the point: <b>a bookings number this close to the guide carries almost no information.</b> The quarter is decided by the lines underneath it.</p>' },
-        'Revenue':{ t:'Not guided — Street $1.64B', h:'<p>Lyft does not guide revenue, so this line is Street-only: <b>$1.64B, +13.1% YoY</b> (Investing.com\'s 7 May preview; StockStory carried $1.63B the same morning — a ~0.6% spread).</p><p>⚠ The YoY comparison is clean here, but the QoQ is not: 4Q25 revenue carried a <b>$168M contra-revenue charge</b>, so the sequential base is artificially low.</p>' },
-        'Adjusted EBITDA':{ t:'Guided $120–140M — and the guide itself was the problem', h:'<p>Midpoint <b>$130M</b>, against a Street of <b>$130.7M</b>: the two agree almost exactly, because the Street simply took the guide.</p><p>⚠ The real story is that this guide was issued <b>below</b> where the Street stood before the Q4 print (~$139.8M) — which is a large part of why the stock fell 17% on Feb 11. Going into Q1 the bar had already been reset down.</p>' },
-        'Adj. EBITDA margin':{ t:'Guided 2.5–2.8% of Gross Bookings', h:'<p>Lyft\'s own stated range; the grid shows the <b>2.65% midpoint</b>. This line IS a rate, so the growth lens does not apply to it.</p>' },
-        'Rides':{ t:'⚠ THE LINE THE QUARTER TURNED ON — Street 241.5M', h:'<p>Not guided, but the Street DID carry a number: <b>241.5M</b>. Lyft printed <b>236.9M</b>, <b>1.9% short</b> — and down sequentially from 243.5M — in the same quarter bookings and revenue cleared.</p><p><b>The verdict chip reads "in line", and that is the engine being conservative:</b> the tolerance is a flat 2% and this landed at 1.9%. Judge it on the combination instead. A shortfall against the Street <i>plus</i> a sequential decline <i>plus</i> beats everywhere else says the same thing three ways — the quarter came from price and mix, not from more rides.</p><p>⚠ Ignore the Summit line here. It reads <b>236.9</b>, <i>exactly</i> the reported figure to the decimal — the model carrying the actual back into the estimate once the quarter closed, not a forecast. Score nothing off it.</p>' },
-        'Active Riders':{ t:'The line that had to prove FREENOW was not the whole story', h:'<p>Not guided, not covered. The 3Q25 step to 28.7M coincided with FREENOW entering the base; Q1 was the quarter to see whether the level held without a fresh acquisition.</p>' },
-        'Free cash flow':{ t:'One of the three 2027 targets', h:'<p>Not guided quarterly. Summit had <b>$212.8M</b> going in. Watch it against the insurance-reserve build below — the reserve flatters cash while it accrues.</p>' },
-        'Insurance reserves':{ t:'No forward number exists at all', h:'<p>Neither guided, nor covered, nor modelled — the Summit line has actuals but no projection for this metric. It is here as the audit trail on the falling-cost-per-ride claim, not as a scoreable line.</p>' }
-      },
-      us:{ 'Gross Bookings':{v:4937.5}, 'Revenue':{v:1705.4}, 'Adjusted EBITDA':{v:136.2}, 'Adj. EBITDA margin':{v:2.76}, 'Rides':{v:236.9}, 'Active Riders':{v:28.6}, 'Free cash flow':{v:212.8} },
-      debate:{ rows:null, synth:'Going in, the bar had already been cut: the Q1 guide issued in February landed <b>below</b> where the Street had been standing, and the stock had taken a 17% hit for it. So the question was not whether Lyft would clear $130M of adjusted EBITDA — it was whether the February reset was conservatism or the first sign that the 2027 plan was slipping. The tell was never going to be the headline; it was whether <b>rides</b> kept compounding once FREENOW stopped being a fresh addition.' },
-      pricedIn:'A stock that had fallen from $25.54 (Nov 2025) to a $12.46 low on Mar 30 and was trading at $14.23 the day before the print — roughly half its 52-week high. February\'s below-Street guide was in the price; the tape was braced for a soft quarter, not for a good one.',
-      oneLiner:'Pre-call view: the guide was low enough to clear, so a beat on bookings and adjusted EBITDA was the base case. The thing that would actually move the thesis was the demand line underneath it — if rides went sideways while bookings accelerated, the acceleration was price and mix, not more people taking more Lyfts.'
-    },
-    results:{
-      headline:'<b>Beat the headline, missed the point.</b> Bookings +19% to $4.95B and adjusted EBITDA $132.8M both cleared, revenue came in $1.65B against a $1.64B Street — and underneath it <b>rides FELL sequentially</b>, 243.5M → 236.9M, with active riders also down from 29.2M to 28.3M. Both counts are still up strongly YoY. The quarter was carried by price and mix, and the release itself was unusually thin: no mention of the $300M buyback, of Lyft Media, or of any AV partner.',
-      notes:{
-        'Rides':{ t:'⚠ The line that matters, and it went the wrong way', h:'<p><b>236.9M vs 243.5M in Q4</b> — down sequentially, and down against a Summit line that had 236.9M only because the model mirrored the actual. Q1 is seasonally softer and management attributed ~3 million rides to winter storm Hernando, which covers part of the gap but not the trend.</p><p><b>So what:</b> bookings +19% on rides that did not grow sequentially means the acceleration came from <b>price, mix and high-value modes</b> — management said high-value-mode rides were up 35% YoY at <i>more than double</i> a standard ride\'s margin. That is a real margin story and a weak volume story at the same time.</p>' },
-        'Revenue':{ t:'A clean +14%, and a flattered sequential', h:'<p>$1,650.5M, +13.8% YoY against a $1.64B Street. The QoQ (+3.6% off $1,592.7M) looks worse than it is only because the Q4 base carried the $168M charge.</p>' },
-        'Adjusted EBITDA':{ t:'A 1.6% beat — the smallest kind', h:'<p>$132.8M against $130.7M. Lyft has printed at or above the TOP of its guided range in almost every quarter; here it landed just inside the upper half. Margin 2.7% of bookings against a 2.5–2.8% guide.</p>' },
-        'Free cash flow':{ t:'The one big beat on the board', h:'<p>$287.3M against a Summit line of $212.8M — <b>+35%</b>, the largest surprise in the quarter. Helped by the insurance-reserve build (+$64.6M in the quarter), which is cash in hand until the claims land.</p>' }
-      },
-      watch:{ 'Rides':1, 'Active Riders':2, 'Gross Bookings':3, 'Adjusted EBITDA':4 },
-      thesisCheck:[
-        { line:'Bookings acceleration is bought, not organic', tripped:true, note:'Not resolved, and now harder to resolve: bookings +19% with rides DOWN sequentially. FREENOW and TBR are in the base and Lyft still publishes no organic split. The acceleration is real; its source is not disclosed.' },
-        { line:'Demand growth stalls (rides / active riders)', tripped:true, note:'Both fell QoQ — rides 243.5M → 236.9M, riders 29.2M → 28.3M — and rides also landed 1.9% under the Street\'s 241.5M, so this is not purely a seasonal read. Storm Hernando explains ~3M rides. Still +8.5% and +17% YoY, so it is a stall in the sequential rather than a decline in the franchise.' },
-        { line:'Margin expansion stops', tripped:false, note:'Gross margin expanded YoY on a lower average insurance cost per ride; adjusted EBITDA +25% YoY on 2.7% of bookings. The 2027 bridge still needs roughly a doubling from here.' },
-        { line:'AV partnerships stay slideware', tripped:false, note:'Three DATED commitments made on this call: fleet ops taken over "this summer", an 80,000 sq ft Nashville depot "this fall", and Lyft-app Waymo matching in 2H26. First time the AV story carried calendar dates.' },
-      ],
-      intoCall:[
-        '🔥 <b>Rides fell sequentially</b> — how much was storm Hernando, how much was the 30% driver fee cap, and how much is real demand?',
-        '🔩 <b>The organic split</b> — FREENOW, TBR and now Gett are all in the base. Ask directly for a like-for-like bookings number.',
-        '⚖️ <b>$300M of buybacks in one quarter</b> against full-year guidance of "similar to 2025" (~$500M) — that implies a sharp slowdown from here. Is it a rate or a one-off?',
-        '📊 <b>Pricing</b> — Morton asked point-blank what YoY pricing is on a standard ride. Get the number, because it is the other half of the bookings-vs-rides gap.',
-        '❓ <b>Waymo in the Lyft app</b> — 2H26 is a promise with a date. What is the gating item?',
-      ],
-      priceReaction:'<b>+1.34%</b> — next-day close $14.35 on May 8 (prior close $14.23; the day-of close was $14.16). ⚠ The after-hours tape showed roughly −3% and was wrong again; LYFT\'s overnight prints are unreliable and the next-day close is the record we keep.',
-      summary:{ paras:[
-        { p:'<b>Lyft beat the headline and missed the point.</b> Bookings +19% to $4.95B, adjusted EBITDA $132.8M and revenue $1.65B all cleared — and <b>rides came in short of the Street</b>, 236.9M against 241.5M, falling sequentially from 243.5M while active riders slipped from 29.2M to 28.3M. Both counts are still up strongly year over year, so this is a stall in the sequential rather than a decline in the franchise. But it means the acceleration was carried by <b>price and mix</b>, not by more people taking more Lyfts.',
-          moreLabel:'＋ more — what carried the quarter instead of volume',
-          more:'<p>Management\'s own explanation was mix: <b>high-value mode rides up 35% year over year at "margins more than double a standard ride"</b>, still a single-digit percent of rides. Roughly 3 million rides were attributed to winter storm Hernando, which covers part of the sequential gap but not the shape of it.</p><p>The other half is the take rate. Bookings grew faster than rides because the average ride got more expensive or more premium — and when Michael Morton (MoffettNathanson) asked <i>point-blank</i> what year-over-year pricing was on a standard ride, he did not get a number. That number is the missing half of this quarter.</p>' },
-        { p:'<b>We still cannot tell how much of the growth was bought.</b> FREENOW, TBR Global and now Gett\'s UK business are all inside the reported base, and Lyft has never published an organic split or restated anything. That makes Q2 2026 the quarter that matters: it is the <b>first to carry both FREENOW and Gett in full</b>, against a guide of +18–21%.',
-          moreLabel:'＋ more — why Europe was bought, and what it is not for',
-          more:'<p>Gett closed the week of the call — "one of London\'s leading black cab apps… will nearly double the number of rides on the Lyft platform in London" — and was immediately deflated financially: <b>"Although strategically material, this will be financially immaterial to the quarter."</b></p><p>Read together with FREENOW ("a decade of relationships with local governments… gives Lyft a structural advantage that would take years to replicate") and the Baidu partnership, the European acquisitions are one trade, and it is <b>regulatory access for AV deployment</b>. Judging them on near-term revenue misreads what they were bought for — but it also means they contribute bookings without contributing much profit, which is exactly what makes the organic split matter.</p>' },
-        { p:'<b>The AV story got dates for the first time.</b> Fleet operations taken over "this summer", an 80,000 sq ft Nashville depot "this fall", and Waymo matching inside the Lyft app in <b>2H26</b> — three scoreable promises with deadlines, where before there was positioning. The argument underneath them is operations, not autonomy.',
-          moreLabel:'＋ more — the operations claim, and one thing coverage keeps getting wrong',
-          more:'<p>Risher: "The vehicle itself is just the start of the total cost of an AV fleet. The rest — charging, maintenance, cleaning, depot infrastructure, fleet orchestration — is operations. Most have to pay someone else to do that work. We don\'t. Flexdrive has spent a decade and built dozens of facilities doing this. <b>Nashville isn\'t where we\'re learning how to do this, it\'s where we are starting to commercialize it.</b>"</p><p>⚠ <b>The status point most often reported wrong:</b> as of this call you could <b>not</b> order a Waymo in the Lyft app. Waymo launched public rides in Nashville on Apr 7, 2026 through its own <b>Waymo One</b> app; Lyft-app matching is the thing guided to 2H26.</p>' },
-        { p:'<b>Management called its own stock dislocated and bought $300M of it in a single quarter</b> — against full-year guidance of buybacks "at a similar level to 2025", which was about $500M. Either the pace collapses to roughly $200M across the remaining three quarters, or that guidance is deliberately conservative. It cannot be both.',
-          moreLabel:'＋ more — and how thin the press release was',
-          more:'<p>The buyback was <b>not in the press release</b>. Neither was Lyft Media, Waymo, or any AV partner. Call-only material also included the insurance-driven gross-margin bridge, the three dated Nashville milestones, the 58% / 38-point driver-preference figure, the NBER study, the Hamburg pilot, the McDonald\'s campaign launching that day, and that Suzie Reider (ex-YouTube) runs the ad group.</p><p>This is a recurring pattern for this name — the Q4 2025 charge split was Q&A-only too — and it is why the headline number and the actual quarter keep diverging.</p>' }
-      ]},
-    },
-    call:{
-      take:'The call was better than the print. Management put <b>dates</b> on the AV story for the first time — summer, fall, 2H26 — and made the strongest version of the argument that Lyft\'s edge is not autonomy but <b>operations</b>: Flexdrive already runs depots, charging and cleaning at scale, which is the part of an AV fleet nobody else wants to own. Against that: <b>rides fell sequentially</b>, and the release itself was so thin that the buyback, Lyft Media and every AV partner were call-only disclosures.',
-      highlights:[
-        { tag:'thesis', band:'context', open:'Three dated commitments — the first scoreable AV calendar Lyft has given', head:'"Nashville isn\'t where we\'re learning how to do this, it\'s where we are starting to commercialize it"',
-          detail:'<p>Risher put dates on it: fleet operations, facilities and charging taken over <b>this summer</b>; an <b>80,000 sq ft depot this fall</b>; and <b>in 2H26, riders will be able to match with a Waymo vehicle in the Lyft app</b>. The framing: "The vehicle itself is just the start of the total cost of an AV fleet. The rest — charging, maintenance, cleaning, depot infrastructure, fleet orchestration — is operations. Most have to pay someone else to do that work. We don\'t."</p><p><b>So what:</b> this converts the AV story from positioning into three checkable promises with deadlines. ⚠ As of this call you could <b>not</b> yet order a Waymo in the Lyft app — Waymo went live in Nashville on Apr 7 through its own app. Coverage that says otherwise is wrong.</p>' },
-        { tag:'watch', band:'context', open:'Bookings +19% on rides that fell — what is the organic number?', head:'The demand line went backwards, missed the Street, and the release did not explain it',
-          detail:'<p>Rides 243.5M → 236.9M and active riders 29.2M → 28.3M sequentially, with ~3 million rides attributed to winter storm Hernando. Rides also landed <b>1.9% under the Street\'s 241.5M</b> — the only line in the quarter that came in under expectations. Meanwhile <b>high-value mode rides were up 35% YoY at "margins more than double a standard ride"</b> — still a single-digit percent of rides.</p><p><b>So what:</b> the quarter was carried by price and mix. With FREENOW, TBR and now Gett in the base and <b>no organic split ever published</b>, there is currently no way to tell an accelerating marketplace from an acquired one. This is the single biggest open question into Q2.</p>' },
-        { tag:'curious', band:'context', open:'$300M in one quarter vs ~$500M for the year — the pace has to fall by two thirds', head:'A $300M buyback nobody was told about in the release, on an explicit "dislocation" call',
-          detail:'<p>"We repurchased approximately $300 million in shares, <b>taking an opportunistic approach to capital return given what we viewed as a dislocation in our share price.</b> For 2026, we expect buybacks at a similar level to 2025" — and 2025 was ~$500M.</p><p><b>So what:</b> management explicitly called its own stock mispriced near the lows, which is a real signal. But $300M in Q1 against ~$500M for the year implies roughly $200M across the remaining three quarters. Either the guide is conservative or the Q1 pace was a one-off; it cannot be both.</p>' },
-        { tag:'thesis', band:'context', head:'Insurance reform is showing up in the margin, and California beat its own back-half framing',
-          detail:'<p>"Gross margin expanded year over year driven by a reduction in our average insurance cost per ride aided by recent insurance reforms and advancement of our insurance strategies." Brewer reported California already outpacing other top regions in February and March.</p><p><b>So what:</b> on the Q4 call management had guided California\'s benefit as <b>back-half weighted</b>. It arrived early — a rare case of a company beating its own conservatism, and the mechanism behind the margin expansion is now specific rather than generic.</p>' },
-        { tag:'tone', band:'context', head:'The competitive claim widened: 58% of dual-app drivers prefer Lyft, a 38-point advantage (was 31)',
-          detail:'<p>"When dual-app drivers were asked in our most recent survey which rideshare app they prefer, 58% answered Lyft, a 38-percentage point advantage to the other guys." Paired with an NBER study: a NYC rider taking 100 rides in 2024 would have saved ~$177 by checking both apps.</p><p><b>So what:</b> 31 points → 38 points is two consecutive quarters of a <b>management-chosen</b> metric, which promotes it to a tracked trend. It is a survey and it is self-selected — but it is now on the record twice and can be scored.</p>' },
-        { tag:'dots', band:'context', head:'Europe is being assembled as an AV regulatory position, not as a revenue line',
-          detail:'<p>Gett\'s UK business closed that week — "one of London\'s leading black cab apps… will nearly double the number of rides on the Lyft platform in London" — and immediately deflated financially: <b>"Although strategically material, this will be financially immaterial to the quarter."</b> On FREENOW: "a decade of relationships with local governments… gives Lyft a structural advantage that would take years to replicate."</p><p><b>So what:</b> connect the dots — FREENOW, Gett and the Baidu partnership are one trade, and it is regulatory access for European AV deployment. Judging these deals on near-term revenue misreads what they were bought for.</p>' },
-        { tag:'curious', band:'logged', head:'Lyft Media is becoming a data business: $100M run-rate target, "Audience Extension", and an ex-YouTube leader',
-          detail:'<p>Ads on a path to a <b>$100M run rate by end 2026</b>, an off-platform "Audience Extension" product with The Trade Desk, the McDonald\'s campaign launching that day, and Suzie Reider (ex-YouTube) running the group — <b>none of it in the press release</b>.</p><p><b>So what:</b> the pitch has shifted from selling in-app inventory to monetising first-party movement data. Small today; the highest-margin dollar in the model if it works.</p>' },
-      ],
-      dots:'<b>The operations argument is the strongest version of the AV bull case Lyft has made</b> — and it now has three dates attached to it. But the quarter it was delivered in had rides going backwards, an undisclosed organic split, and a press release so thin that the buyback, the ads business and every AV partner had to be found on the call. Score the promises; keep the pressure on the demand line.',
-      threeMinutes:[
-        'Lyft beat on bookings, revenue and adjusted EBITDA — <b>and rides fell sequentially</b>, 243.5M to 236.9M, with active riders down too. Storm Hernando covers about 3 million of that. The rest means the +19% bookings number was carried by <b>price and mix</b>, not by more people taking more Lyfts.',
-        '<b>We still cannot tell how much of the growth was bought.</b> FREENOW, TBR Global and now Gett are all in the base and Lyft has never published an organic split. That is the question for Q2, which is the first quarter carrying both FREENOW and Gett in full.',
-        '<b>The AV story got dates for the first time.</b> Fleet operations this summer, an 80,000 sq ft Nashville depot this fall, and Waymo matching inside the Lyft app in 2H26. The argument underneath it is operations, not autonomy — Flexdrive already runs the depots and charging that AV fleets need and would otherwise outsource.',
-        '<b>Management called its own stock dislocated and bought $300M of it in one quarter</b>, against full-year guidance of roughly $500M. Either the buyback pace collapses from here or that guidance is conservative.',
-      ],
-      notBringing:[
-        { item:'The Hamburg first-mile/last-mile pilot', why:'Real, and the vehicle partner is "being finalized" — but an unnamed partner in one city does not move anything we underwrite this year.' },
-        { item:'Lyft Maps mapping starting in Barcelona', why:'Infrastructure groundwork for European AV. Worth logging, too early to defend meeting time.' },
-        { item:'The fuel relief program', why:'Management sized it itself — "almost a dollar in savings", "not material to our overall financial profile". Resolved by disclosure.' },
-      ],
-      newQuestions:[
-        { n:'The organic bookings split — FREENOW + Gett in full for the first time', landed:{ q:'Q2 2026', rank:1 } },
-        { n:'Do rides reinflate, or was Q1 the shape of things? (1Q26 landed 1.9% under the Street)', landed:{ q:'Q2 2026', rank:2 }, tripped:true },
-        { n:'Buyback pace: $300M/quarter or ~$200M for the rest of the year?', landed:{ q:'Q2 2026', rank:4 } },
-        { n:'YoY pricing on a standard ride — the number Morton asked for', landed:{ q:'Q2 2026', rank:3 } },
-        { n:'Waymo-in-the-Lyft-app: is 2H26 still on?', landed:{ q:'Q2 2026', rank:5 } },
-      ],
-    } },
 
-  // ─── Q4 2025 — REPORTED (Feb 10, 2026). The −17% quarter, and why the revenue "miss" was not one. ─
-  { q:'Q4 2025', status:'reported', date:'Tue Feb 10, 2026 · after close (call 5:00–5:45pm EST)',
-    setup:{
-      source:'Lyft\'s Q4 2025 guide, issued 5 Nov 2025 with the Q3 2025 results (8-K Ex. 99.1) · Street revenue from Zacks consensus · Summit = the pre-print 2025-12-15 vintage',
-      asOf:'2025-11-05 (the guide) · 2026-02-10 (Street)',
-      notes:{
-        'Gross Bookings':{ t:'Guided $5.01–5.13B — midpoint $5.07B', h:'<p>Bookings were described in earnings-day coverage as landing <b>in line</b> with Wall Street, but no consensus figure was published, so the Street row is blank. The guide midpoint is the honest reference here.</p>' },
-        'Revenue':{ t:'⚠ THE MOST IMPORTANT CELL ON THIS GRID — $1.76B', h:'<p>Zacks consensus was <b>$1.76B</b>. Lyft reported <b>$1,592.7M</b>, a 9.5% "miss" that generated the headlines.</p><p><b>It was not a miss.</b> Inside that number sits a <b>$168M contra-revenue charge</b> from legal, tax and regulatory reserve changes (part of a $210M total, a split management gave only in Q&A — it was not in the press release). Add it back and revenue is ~$1.76B: <i>exactly the consensus</i>. Earnings-day coverage that looked at adjusted revenue said so — "matched analyst expectations of $1.76 billion" — but the headline number is what moved the stock.</p>' },
-        'Adjusted EBITDA':{ t:'Guided $135–155M — no published Street number', h:'<p>Midpoint <b>$145M</b>. The charge does <b>not</b> touch this line: the full $211.6M is added back, so the adjusted-EBITDA print and its margin are clean and comparable.</p>' },
-        'Adj. EBITDA margin':{ t:'~2.86% implied by the two guided lines', h:'<p>⚠ Derived, not stated: Lyft published the Q4 margin range for some quarters and not others, so this midpoint is computed as the guided EBITDA midpoint ÷ the guided bookings midpoint. Treat it as an implication of the guide, not as guidance.</p>' },
-        'Rides':{ t:'Not guided, not covered', h:'<p>The Q4 seasonal peak. FY2025 totalled 945.5M rides across 51.3M riders — "that\'s 30 rides a second" (Risher).</p>' },
-        'Active Riders':{ t:'The line the coverage called disappointing', h:'<p>Not guided and not covered, which did not stop rider growth from being named in the headlines as a reason the stock fell. 29.2M, +18% YoY.</p>' },
-        'Free cash flow':{ t:'The FY2025 story more than the quarter', h:'<p>Not guided quarterly. The number that mattered was the full year: FY2025 cash generation <b>exceeded $1.1B</b>, which is what let management raise the 2027 goal from ~$900M to over $1B.</p>' },
-        'Insurance reserves':{ t:'$1.70B → $2.18B over the year', h:'<p>No forward number of any kind. The year-end balance is the audit point on the falling-cost-per-ride claim.</p>' }
-      },
-      us:{ 'Gross Bookings':{v:5076.2}, 'Revenue':{v:1799.4}, 'Adjusted EBITDA':{v:160.8}, 'Adj. EBITDA margin':{v:3.17}, 'Rides':{v:256.5}, 'Active Riders':{v:29.9}, 'Free cash flow':{v:310.7} },
-      debate:{ rows:null, synth:'Going in, this was supposed to be a victory lap: record year, the 2027 plan on track, and a stock that had run to $25.54 in November. The risk was never the quarter — it was <b>2026</b>. Consensus had already moved past Q4 to the shape of the next year, and the one thing that could break the story was a guide that implied the 2027 bridge was getting steeper rather than flatter.' },
-      pricedIn:'Near the highs and priced for the plan. LYFT closed $16.61 the day before and had touched $25.54 in November; the 2027 targets (~$25B bookings, ~$1B adjusted EBITDA) were being underwritten as achievable. Expectations were for a clean record print and a 2026 that stepped toward them.',
-      oneLiner:'Pre-call view: the quarter itself was a formality. What mattered was the first 2026 guide — whether the margin ramp implied by the 2027 plan showed up in Q1, or whether it was being pushed out.'
-    },
-    results:{
-      headline:'<b>A record quarter that the tape read as a disaster.</b> Bookings +19% to $5.07B, adjusted EBITDA +37% to a record $154.1M, FY2025 cash generation over $1.1B, a new $1.0B buyback authorization — and the stock fell <b>17%</b> the next day. Two things did it: a revenue line that printed $1.59B against a $1.76B consensus <i>because of a $168M contra-revenue charge</i>, and a Q1 2026 adjusted-EBITDA guide of $120–140M against a Street sitting near $139.8M.',
-      notes:{
-        'Revenue':{ t:'⚠ The "miss" was the charge, and nothing else', h:'<p>$1,592.7M vs $1.76B consensus = −9.5%. Add back the <b>$168M contra-revenue charge</b> (of a $210M total for legal, tax and regulatory reserve changes and settlements) and revenue is ~$1.76B — the consensus, to the decimal.</p><p><b>So what:</b> this is the single most misread number in Lyft\'s recent record. It is why Q4 2025 shows bookings <b>+19%</b> against revenue <b>+3%</b>. It is not a take-rate collapse and it is not a demand miss. ⚠ The $210M/$168M split was disclosed <b>only in Q&A</b> — it was not in the press release, so the first wave of coverage did not have it.</p>' },
-        'Adjusted EBITDA':{ t:'A record, and clean despite the charge', h:'<p>$154.1M, +37% YoY, 3.0% of bookings against 2.6% a year earlier — inside the guided $135–155M range and near its top. The full $211.6M of charges is added back, so this line and its margin are directly comparable to prior quarters.</p>' },
-        'Gross Bookings':{ t:'+19%, in line, and not the problem', h:'<p>$5,074.2M against a $5.07B guide midpoint — described in coverage as in line with the Street. FY2025 bookings $18.5B, +15%.</p>' },
-        'Active Riders':{ t:'Named in the headlines as a reason for the fall', h:'<p>29.2M, +18% YoY. CNBC\'s headline explicitly cited "rider numbers" alongside the results. Read alongside the sequential picture: this was the peak before Q1 2026 fell back to 28.3M.</p>' }
-      },
-      watch:{ 'Revenue':1, 'Adjusted EBITDA':2, 'Gross Bookings':3, 'Active Riders':4 },
-      thesisCheck:[
-        { line:'The 2027 plan slips', tripped:true, note:'Not in the words — "TL;DR - we\'re on track", with the FCF goal RAISED from ~$900M to over $1B. But the Q1 2026 guide came in below the Street, and the Summit model cut FY2027 adjusted EBITDA in the very next vintage. The plan was reaffirmed; the path to it got steeper.' },
-        { line:'Take rate is deteriorating', tripped:false, note:'The +19% bookings vs +3% revenue gap is entirely the $168M charge. Ex-charge the relationship is normal. Explicitly NOT tripped, despite being the story the tape told.' },
-        { line:'AVs are a threat, not an opportunity', tripped:false, note:'The best single datapoint yet against the threat thesis: in San Francisco, the global AV hub, the market added millions of rides in Q4 and <b>Lyft rides in the region still grew almost 10%</b>. Paired with the honest near-term caveat: "AVs are not going to be material in 2026."' },
-        { line:'Competitive discipline breaks', tripped:false, note:'"During a season of heightened competitive promotions, we prioritized the most durable, profitable demand" — Lyft explicitly declined to chase volume. That choice shows up in the ride count, and management owned it rather than hiding it.' },
-      ],
-      intoCall:[
-        '🔥 <b>The revenue line</b> — get the charge quantified and split. (It was, but only in Q&A.)',
-        '🔩 <b>The Q1 guide</b> — $120–140M is below where the Street stood. Is that conservatism, competitive pressure, or the California insurance benefit arriving later than hoped?',
-        '⚖️ <b>The 2027 bridge</b> — ~$1B of adjusted EBITDA from $528.8M in FY2025. What carries it: margin, mix, or Europe?',
-        '📊 <b>Flexdrive\'s 20% cost claim</b> — how is it measured, and does it hold outside Nashville?',
-        '❓ <b>Why so few AV partners?</b> Is that selectivity or is something not closing?',
-      ],
-      priceReaction:'<b>−16.97%</b> — next-day close $13.99 on Feb 11 (prior close $16.61; the day-of close was $16.85). ⚠ The after-hours tape showed roughly <b>+1.6%</b> and was flatly wrong. This is the worst reaction in the record we keep and the clearest case for never quoting LYFT\'s overnight print.',
-      summary:{ paras:[
-        { p:'<b>The revenue miss was not a miss.</b> $1,592.7M against a $1.76B consensus is a 9.5% shortfall entirely explained by a <b>$168M contra-revenue charge</b> — part of a $210M legal, tax and regulatory reserve — whose existence and split management disclosed <b>only in Q&amp;A</b>. Add it back and revenue is ~$1.76B: the consensus, almost exactly. It is also the whole reason this quarter shows bookings +19% against revenue +3%.',
-          moreLabel:'＋ more — why the charge does not touch the other lines',
-          more:'<p>Adjusted EBITDA adds back the full <b>$211.6M</b>, so the record $154.1M print and its 3.0% margin are clean and directly comparable to prior quarters. Gross Bookings are untouched. Only the revenue line and the GAAP net income carry the distortion.</p><p>Earnings-day coverage that looked at <i>adjusted</i> revenue said so plainly — it "matched analyst expectations of $1.76 billion" — but the headline number is what traded. Treat any single-quarter revenue read on this name as suspect until you have located the charges.</p>' },
-        { p:'<b>What actually cost 17% was the guide.</b> Q1 2026 adjusted EBITDA was guided to <b>$120–140M against a Street sitting near $139.8M</b> — the top of Lyft\'s own range — on a flat-to-lower margin, in the very quarter the ramp toward a ~$1B 2027 target was supposed to begin. The destination was reaffirmed; the first step went the wrong way.',
-          moreLabel:'＋ more — and the model agreed with the market',
-          more:'<p>Risher\'s framing on the long-range plan was "<b>TL;DR - we\'re on track</b>", with the free-cash-flow goal actually <b>raised</b> from ~$900M to over $1B on the back of FY2025 generation exceeding $1.1B. The three 2027 goals as stated: ~$25B gross bookings, ~$1B adjusted EBITDA, >$1B free cash flow.</p><p>But the Summit model cut FY2027 adjusted EBITDA in its <b>very next vintage</b> after this print, and by the May snapshot carried $830M — roughly 17% short of the ~$1B goal, having started above it. The Estimates tab shows that revision in full: what came down was not how big Lyft gets, but how much of it it keeps.</p>' },
-        { p:'<b>The AV evidence got real, and it cuts for Lyft.</b> In San Francisco — the densest AV market on earth — the market added millions of new rides in Q4 and <b>Lyft rides in the region still grew almost 10%</b>. Management paired it with the honest caveat that AVs "are not going to be material in 2026… from a financial perspective." Expansion, not substitution, so far.',
-          moreLabel:'＋ more — the hybrid argument and the Flexdrive number',
-          more:'<p>Why not AV-only: rideshare demand "can vary by 20x in San Francisco throughout the day and week", so AVs supply consistent baseline capacity and human drivers absorb the spikes. Bluntly, in Q&amp;A: <b>"You cannot build an AV only."</b></p><p>The cost claim the whole operations moat rests on: Flexdrive can deliver <b>"cost efficiencies of more than 20%, on top of the broad AVs savings, on a per mile basis"</b> — stretched to "24%, 25%" under questioning. It is management\'s own unaudited estimate and should be scored every quarter Nashville runs.</p>' },
-        { p:'<b>Management was already calling the stock cheap.</b> A new <b>$1.0B</b> repurchase authorization, described as "roughly 15% of Lyft\'s market capitalization, as of today". Three months later, after the stock fell another 17% on this very print, they spent $300M of it in one quarter on an explicit "dislocation" call.',
-          moreLabel:'＋ more — and the discipline choice behind the ride count',
-          more:'<p>FY2025 buybacks were ~$500M, "which reduced our share count by mid-single digits."</p><p>On volume, management pre-announced the softness rather than letting it be discovered: "As the quarter evolved, we made intentional tradeoffs that influenced ride growth, prioritizing durable financial performance over dilutive volume. During a season of heightened competitive promotions, we prioritized the most durable, profitable demand." Whether that is discipline or rationalisation is testable — it should show up as margin, and Q4 margin did reach 3.0%.</p>' }
-      ]},
-    },
-    call:{
-      take:'Management delivered a record year and a reaffirmed plan — <b>"TL;DR - we\'re on track"</b> — and the market ignored all of it. The call\'s real content was the AV argument, which got its strongest evidence yet (San Francisco rides <b>+~10%</b> in the most AV-dense market on earth) and its most honest caveat ("AVs are not going to be material in 2026"). The two things that actually moved the stock were a revenue optic caused by a charge that was only explained in Q&A, and a Q1 guide below the Street.',
-      highlights:[
-        { tag:'thesis', band:'context', open:'Does SF hold as AV density keeps rising?', head:'The best datapoint against the AV-threat thesis: SF added millions of AV rides and Lyft still grew ~10% there',
-          detail:'<p>"In San Francisco, the global hub for this tech, the market added millions of new rides to the ecosystem in Q4 alone. <b>Meanwhile, Lyft rides in the region grew almost 10%.</b>" And in Q&A: "AVs are going to expand the TAM of rideshare. There\'s just no doubt about it" — immediately paired with "AVs are not going to be material in 2026, you know, from a financial perspective."</p><p><b>So what:</b> this is the one place the AV-displacement question has a controlled experiment, and the answer so far is expansion, not substitution. Management made the bull case and refused to monetise it early — candor against interest.</p>' },
-        { tag:'watch', band:'context', open:'A guide below the Street on the quarter the 2027 ramp was supposed to start', head:'The number that cost 17%: Q1 adjusted EBITDA guided $120–140M against a Street near $139.8M',
-          detail:'<p>Guidance: bookings $4.86–5.00B (+17–20%), adjusted EBITDA $120–140M at a 2.5–2.8% margin. The Street was sitting at roughly $139.8M — the <b>top</b> of that range.</p><p><b>So what:</b> the 2027 plan needs adjusted EBITDA to roughly double from FY2025\'s $528.8M. A first quarter guided at a flat-to-lower margin is the opposite of the ramp the plan implies. Reaffirming the destination while guiding the first step down is exactly what a stock prices as a slip — and the Summit model then cut FY2027 adjusted EBITDA in its very next vintage.</p>' },
-        { tag:'curious', band:'context', open:'The $210M total and its $168M revenue split were Q&A-only', head:'The charge that created the "revenue miss" was never in the press release',
-          detail:'<p>Brewer gave it under questioning: a <b>$210M</b> legal, tax and regulatory reserve charge, <b>$168M</b> of it booked as contra-revenue. Ex-charge, revenue was ~$1.8B against a $1.76B consensus.</p><p><b>So what:</b> the first hours of coverage priced a 9.5% revenue miss that did not exist. Disclosure practice has a price, and here it was most of a 17% drawdown. Worth remembering when reading any single quarter of this name off the headline.</p>' },
-        { tag:'thesis', band:'context', head:'Flexdrive quantified: >20% additional cost efficiency per mile on top of the broad AV savings, and "24%, 25%" in Q&A',
-          detail:'<p>"We estimate our operations can deliver additional cost efficiencies of more than 20%, on top of the broad AVs savings, on a per mile basis" — with Brewer stretching it to "24%, 25%" under questioning. Why hybrid: demand varies "by 20x in San Francisco throughout the day and week", so AVs supply the baseline and humans the peaks. Bluntly: <b>"You cannot build an AV only."</b></p><p><b>So what:</b> this is the number the whole operations moat rests on. It is management\'s own estimate, unaudited, and it should be scored every quarter Nashville runs.</p>' },
-        { tag:'tone', band:'context', head:'"We made intentional tradeoffs that influenced ride growth" — Lyft chose not to chase Q4 volume',
-          detail:'<p>"During a season of heightened competitive promotions, we prioritized the most durable, profitable demand in the marketplace." Paired with the Super Bowl: <b>15% more rides at ~20% lower surge</b>.</p><p><b>So what:</b> management pre-announced a soft ride number and explained it as a choice rather than letting it be discovered. Whether it is discipline or rationalisation is testable — it should show up as margin, and Q4 margin did hit 3.0%.</p>' },
-        { tag:'curious', band:'context', head:'A $1.0B buyback authorization — "roughly 15% of Lyft\'s market capitalization, as of today"',
-          detail:'<p>New authorization on top of ~$500M executed in FY2025, "which reduced our share count by mid-single digits." The 15% remark implies a ~$6.7B market cap at the time.</p><p><b>So what:</b> the seed of the "dislocation" buying that showed up as $300M in Q1 2026. Management was signalling the stock was cheap <i>before</i> it fell another 17%.</p>' },
-        { tag:'watch', band:'logged', head:'The IR/FP&A lead left, and it was announced verbally only',
-          detail:'<p>Aurélien Nolf (VP FP&A and IR) departed — "Aurelien, you have been an incredible thought partner and finance leader" — to become <b>CFO of Navan effective Mar 2, 2026</b>, announced the same day. Erin Rome succeeded him.</p><p><b>So what:</b> not a thesis item, but a personnel change disclosed only on the call is worth logging as a pattern alongside the charge split. It also explains any change in IR tone from Q1 2026 onward.</p>' },
-      ],
-      dots:'<b>The gap between what was said and what was priced was the widest in this name\'s record.</b> A record year, a raised FCF goal, a $1B authorization and the strongest AV evidence yet — against a revenue optic created by a charge explained only in Q&A and a first-quarter guide below the Street. The lasting lesson is mechanical: on LYFT, read the adjusted lines and find the charge before reading the headline.',
-      threeMinutes:[
-        '<b>The revenue miss was not a miss.</b> $1.59B against a $1.76B consensus is entirely a $168M contra-revenue charge, part of a $210M legal and tax reserve — a split management gave only in Q&A. Add it back and revenue matched consensus exactly. That is also the whole reason Q4 shows bookings +19% against revenue +3%.',
-        '<b>What actually cost 17% was the guide.</b> Q1 adjusted EBITDA guided $120–140M against a Street near $139.8M, on a flat-to-lower margin — in the quarter the ramp toward a ~$1B 2027 target was supposed to begin. The destination was reaffirmed; the first step went the wrong way.',
-        '<b>The AV evidence got real.</b> In San Francisco, the most AV-dense market anywhere, the market added millions of rides in Q4 and Lyft rides there still grew ~10%. Management paired it with the honest caveat that AVs are not material to 2026 financially. Expansion, not substitution — so far.',
-        '<b>Management was already calling the stock cheap.</b> A new $1.0B buyback authorization, described as roughly 15% of the market cap. Three months later they spent $300M of it in a single quarter on an explicit "dislocation" call.',
-      ],
-      notBringing:[
-        { item:'Lyft Teen, launched the day before the call', why:'A genuinely new cohort — "a 15 billion ride TAM of 13 to 17-year-olds, just in the U.S." — but it is a 2027+ revenue line, not a Q4 item.' },
-        { item:'The named AV suppliers to watch (Rivian, NVIDIA, Mobileye, Zoox)', why:'Risher\'s own caveat disqualifies it as a thesis input: "who the winners are, that\'s the thing that nobody really knows."' },
-        { item:'Super Bowl metrics (15% more rides at ~20% lower surge)', why:'A good proof of marketplace efficiency, and one weekend. Logged, not defended.' },
-      ],
-      newQuestions:[
-        { n:'Does the Q1 guide mean the 2027 margin ramp is slipping?', landed:{ q:'Q1 2026', rank:4 } },
-        { n:'California insurance benefit — back-half weighted, or earlier?', landed:{ q:'Q1 2026', rank:5 }, tripped:true },
-        { n:'Flexdrive\'s 20%+ cost claim: how measured, and does it travel?', landed:{ q:'Q1 2026', rank:6 } },
-        { n:'Is the organic bookings number knowable at all?', landed:{ q:'Q1 2026', rank:3 } },
-      ],
-    } }
-]};
 
-var CE_POP={};
 
-function ceReg(id, t, h){ CE_POP[id]={t:t, h:ceProse(h)}; return id; }
 
-function ceQ(id, t, h){ return '<span class="ce-info ov-clickable" data-detail="ce:'+ceReg(id,t,h)+'" title="'+esc(String(t).replace(/<[^>]+>/g,''))+'">?</span>'; }
-// ─── ceProse · the anti-wall transform ──────────────────────────────────────────────────────────
-// Every pop-up body in this file was authored as flowing <p> prose — 81 of 81 with no bullets —
-// and a reader who taps "＋ detail" got a paragraph block. This runs at REGISTRATION time so the
-// rule cannot be forgotten by the next author, and so it applies to old content too:
-//   · the first paragraph becomes the LEAD — one short block, set larger; if it is itself long,
-//     only its first sentence leads and the remainder joins the bullets.
-//   · any paragraph of 2+ sentences is split into <li> bullets, one sentence each.
-//   · a paragraph opening "<b>Label:</b> …" keeps its label and becomes a labelled row.
-// Content already carrying <ul>/<li> is left exactly as authored. (§6a-iv.)
+
+
+
+
+
 
 // ─── ceProse · the anti-wall transform ──────────────────────────────────────────────────────────
 // Every pop-up body in this file was authored as flowing <p> prose — 81 of 81 with no bullets —
@@ -2210,222 +1733,19 @@ function ceQ(id, t, h){ return '<span class="ce-info ov-clickable" data-detail="
 //   · any paragraph of 2+ sentences is split into <li> bullets, one sentence each.
 //   · a paragraph opening "<b>Label:</b> …" keeps its label and becomes a labelled row.
 // Content already carrying <ul>/<li> is left exactly as authored. (§6a-iv.)
-function ceSentences(s){
-  // split on sentence end followed by a capital / tag-open — never inside "$1.5B" or "vs. the"
-  return String(s).split(/(?<=[.!?])\s+(?=(?:<[a-z]+>)*[A-Z“"(])/).filter(function(x){ return x.trim(); });
-}
 
-function ceProse(h){
-  h=String(h||'');
-  if(!h || h.indexOf('<li>')>=0 || h.indexOf('<ul')>=0) return h;   // already structured
-  var paras=h.match(/<p>[\s\S]*?<\/p>/g);
-  if(!paras || paras.length===0) return h;
-  var tail=h.replace(/<p>[\s\S]*?<\/p>/g,'').trim();               // anything not in a <p>
-  var lead='', bullets=[];
-  paras.forEach(function(p,i){
-    var inner=p.replace(/^<p>/,'').replace(/<\/p>$/,'').trim();
-    var lab=inner.match(/^<b>([^<]{1,42}[:—-])<\/b>\s*([\s\S]*)$/);
-    if(lab){ bullets.push('<b>'+lab[1]+'</b> '+lab[2]); return; }
-    var sents=ceSentences(inner);
-    if(i===0){
-      lead=sents.shift();
-      sents.forEach(function(s){ bullets.push(s); });
-    } else {
-      sents.forEach(function(s){ bullets.push(s); });
-    }
-  });
-  var out='';
-  if(lead)          out+='<p class="ce-pop-lead">'+lead+'</p>';
-  if(bullets.length) out+='<ul class="ce-pop-l">'+bullets.map(function(b){ return '<li>'+b+'</li>'; }).join('')+'</ul>';
-  return out+tail;
-}
 
-function ceStyle(){
-  return '<style>.ce-note{font-size:11px;color:var(--mu);line-height:1.5;background:#F7F9FB;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 12px}'+
-    '.ce-phtabs{display:inline-flex;gap:3px;background:rgba(66,133,244,0.08);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 20px}'+
-    '.ce-phtab{background:none;border:none;color:var(--mu);font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .15s}'+
-    '.ce-phtab:hover{color:var(--navy)}.ce-phtab.active{background:'+BRAND+';color:#fff}'+
-    '.ce-phpane[hidden]{display:none}'+
-    /* quarter selector — one Earnings, many quarters; only the selected quarter renders (page stays light) */
-    '.ce-qpills{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}'+
-    '.ce-qpill{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);padding:5px 13px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.ce-qpill:hover{color:var(--navy)}.ce-qpill.active{background:var(--navy);color:#fff;border-color:var(--navy)}'+
-    '.ce-qpill .ce-qtag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-left:6px;opacity:.75}'+
-    '.ce-qblock[hidden]{display:none}'+
-    '.ce-frozen{display:inline-block;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:'+GRAY+';border-radius:20px;padding:2px 8px;margin-left:7px;vertical-align:middle}'+
-    /* watch-list theme tags (cross-quarter filter) + add-theme form */
-    '.ce-wl-hint{font-size:10.5px;line-height:1.5;color:var(--navy);background:rgba(66,133,244,0.06);border:1px solid rgba(66,133,244,0.28);border-radius:9px;padding:8px 12px;margin:0 0 10px}'+'.ce-wl-tagbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:9px 12px;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px}'+
-    '.ce-wl-tag{border:1px solid rgba(122,90,248,0.35);background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+PURPLE+';padding:3px 10px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.ce-wl-tag:hover{background:rgba(122,90,248,0.08)}.ce-wl-tag.active{background:'+PURPLE+';color:#fff;border-color:'+PURPLE+'}'+
-    '.ce-wl-clear{border-color:var(--bdr);color:var(--mu)}'+
-    '.ce-wl-add-btn{margin-left:auto;border:1px dashed '+BRAND+';background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+BRAND+';padding:3px 10px;border-radius:999px;cursor:pointer}'+
-    '.ce-wl-bar-k{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu)}'+
-    '.ce-wl-win{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 11px;border-radius:999px;cursor:pointer}'+
-    '.ce-wl-win.active{background:var(--navy);color:#fff}'+
-    /* ── the Add / Edit theme form ── */
-    '.ce-wl-addform{display:flex;flex-direction:column;gap:5px;border:1px dashed '+BRAND+';border-radius:10px;padding:14px 15px;margin:0 0 12px;background:rgba(66,133,244,0.03)}'+
-    '.ce-wl-addform[hidden]{display:none}'+
-    '.ce-wl-fh{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:4px}'+
-    '.ce-wl-fh-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
-    '.ce-wl-fh-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
-    '.ce-wl-lb{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--navy);margin-top:5px}'+
-    '.ce-wl-lb span{font-weight:600;text-transform:none;letter-spacing:0;color:var(--mu);font-size:10px;margin-left:5px}'+
-    '.ce-wl-in{font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:7px 10px;background:var(--w);color:var(--navy);width:100%;box-sizing:border-box}'+
-    '.ce-wl-in:focus{outline:none;border-color:'+BRAND+'}'+
-    '.ce-wl-ta{resize:vertical;line-height:1.5}'+
-    '.ce-wl-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:600px){.ce-wl-2col{grid-template-columns:1fr}}'+
-    '.ce-wl-tagpick{display:flex;gap:6px;flex-wrap:wrap;border:1px solid var(--bdr);border-radius:8px;padding:8px 9px;background:var(--w);min-height:20px}'+
-    '.ce-wl-pick{border:1px solid rgba(122,90,248,0.35);background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+PURPLE+';padding:3px 10px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.ce-wl-pick:hover{background:rgba(122,90,248,0.08)}.ce-wl-pick.on{background:'+PURPLE+';color:#fff;border-color:'+PURPLE+'}'+
-    '.ce-wl-newtag{display:flex;gap:7px;align-items:center}.ce-wl-newtag .ce-wl-in{flex:1}'+
-    '.ce-wl-newtag-go{font:inherit;font-size:10.5px;font-weight:800;border:1px dashed '+PURPLE+';background:var(--w);color:'+PURPLE+';padding:6px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}'+
-    '.ce-wl-frow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:9px}'+
-    '.ce-wl-add-go{font:inherit;font-size:11px;font-weight:800;border:none;border-radius:8px;padding:7px 15px;background:'+BRAND+';color:#fff;cursor:pointer}'+
-    '.ce-wl-cancel{font:inherit;font-size:10.5px;font-weight:700;border:1px solid var(--bdr);background:var(--w);color:var(--mu);padding:6px 12px;border-radius:8px;cursor:pointer}'+
-    '.ce-wl-all[hidden]{display:none}.ce-w[data-wlhide]{display:none}'+
-    /* ── the table: the storage view + the copy-out ── */
-    '.ce-wl-tbl-sc[hidden]{display:none}'+'.ce-wl-tbl-wrap{margin-top:22px;border:1px solid var(--bdr);border-top:3px solid '+BRAND+';border-radius:12px;padding:13px 15px;background:var(--w)}'+
-    '.ce-wl-tbl-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:9px}'+
-    '.ce-wl-tbl-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
-    '.ce-wl-tbl-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
-    '.ce-wl-tbl-n{margin-left:auto;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:'+BRAND2+';background:rgba(52,168,83,0.10);border:1px solid rgba(52,168,83,0.3);border-radius:999px;padding:3px 11px;white-space:nowrap}'+
-    '.ce-wl-copy{border:1px solid '+BRAND+';background:'+BRAND+';font:inherit;font-size:10px;font-weight:800;color:#fff;padding:4px 14px;border-radius:999px;cursor:pointer;letter-spacing:.03em;transition:.12s}'+
-    '.ce-wl-copy:hover{filter:brightness(1.08)}'+
-    '.ce-wl-copy.alt{background:var(--w);color:'+BRAND+'}.ce-wl-copy.alt:hover{background:rgba(66,133,244,0.08)}'+
-    '.ce-wl-tbl-sc{overflow-x:auto;border:1px solid var(--bdr);border-radius:9px}'+
-    '.ce-wl-tbl{width:100%;border-collapse:collapse;font-size:10.5px;min-width:1100px}'+
-    '.ce-wl-tbl th{text-align:left;background:#F7F9FB;color:var(--mu);font-weight:800;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;padding:7px 9px;border-bottom:1px solid var(--bdr);white-space:nowrap;position:sticky;top:0}'+
-    '.ce-wl-tbl td{padding:7px 9px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top;max-width:270px}'+
-    '.ce-wl-tbl tr:last-child td{border-bottom:none}'+
-    '.ce-wl-tbl td.wl-key{white-space:nowrap;font-weight:800;color:var(--mu);font-size:10px}'+
-    '.ce-wl-tbl td.wl-th{font-weight:800;min-width:190px}'+
-    '.ce-wl-tbl tr.wl-open td.wl-key{color:'+BRAND2+'}'+
-    '.ce-wl-tbl tbody tr:hover{background:rgba(66,133,244,0.035)}'+
-    '.ce-empty{color:var(--mu);font-style:italic;opacity:.7}'+
-    '.ce-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0}@media(max-width:640px){.ce-grid4{grid-template-columns:1fr 1fr}}'+
-    '.ce-cell{border:1px solid var(--bdr);border-top:3px solid '+BLUE+';border-radius:10px;padding:11px 13px;background:var(--w)}'+
-    '.ce-cell-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}.ce-cell-v{font-size:15px;font-weight:800;color:var(--navy);margin-top:3px;line-height:1.2}'+
-    /* Setup v2 — estimates toggle (Consensus ⇄ Summit ⇄ Both) */
-    '.ce-ev-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
-    '.ce-ev-pill.active{background:var(--navy);color:#fff}'+
-    '.ce-cell-custom{border-top-color:'+YELLOW+'}'+
-    '.ce-row-cap{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:2px 0 4px}'+
-    '.ce-val{display:flex;align-items:baseline;gap:7px}'+
-    '.ce-val-lab{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:1px 7px;flex:none}'+
-    '.ce-val-cons .ce-val-lab{background:rgba(26,115,232,0.10);color:'+BLUE+'}'+
-    '.ce-val-us .ce-val-lab{background:rgba(52,168,83,0.12);color:'+BRAND2+'}'+
-    '.ce-evwrap[data-ev="cons"] .ce-val-us{display:none}'+
-    '.ce-evwrap[data-ev="us"] .ce-val-cons{display:none}'+
-    '.ce-evwrap:not([data-ev="both"]) .ce-val-lab{display:none}'+
-    '.ce-evwrap[data-ev="both"] .ce-cell-v{font-size:13px}'+
-    '.ce-evwrap[data-ev="both"] .ce-val{margin-top:3px}'+
-    '.ce-banner{border:1px solid var(--bdr);border-left:4px solid '+BRAND+';border-radius:11px;padding:13px 15px;background:linear-gradient(180deg,rgba(66,133,244,0.05),transparent);font-size:12.5px;line-height:1.6;color:var(--navy);margin:12px 0}'+
-    '.ce-watch{display:flex;flex-direction:column;gap:11px}'+
-    '.ce-w{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w);position:relative}'+
-    '.ce-w-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}'+
-    /* v2.6: the numbered rank badge is gone — a plain marker, so removing a theme never leaves a
-       stale number behind. `rank` still orders the rows, it just is not rendered. */
-    '.ce-w-dot{width:8px;height:8px;border-radius:50%;background:'+BRAND+';flex:none;margin:0 2px}'+
-    '.ce-w-metric{font-size:13.5px;font-weight:800;color:var(--navy)}'+
-    /* the definition — what the theme means, in our words. (v2.6 replaced the tell 🔎 box, which
-       had been carrying the model's voice; no black slabs left anywhere in the watch cards.) */
-    '.ce-w-def{color:var(--navy);border-left:3px solid rgba(66,133,244,0.35);padding:1px 0 1px 11px;font-size:12px;line-height:1.55;margin-top:7px}'+
-    '.ce-w-def b{color:'+BLUE+'}'+
-    /* per-card edit / delete (live quarter only) + the closed-hook badge */
-    '.ce-w-ctl{margin-left:auto;display:inline-flex;gap:5px;flex:none}'+
-    '.ce-w-ed,.ce-w-del{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);width:24px;height:24px;border-radius:7px;cursor:pointer;line-height:1;transition:.12s}'+
-    '.ce-w-ed:hover{border-color:'+BRAND+';color:'+BRAND+'}.ce-w-del:hover{border-color:'+RED+';color:'+RED+'}'+
-    '.ce-w-closed{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);background:#F2F5F8;border:1px solid var(--bdr);border-radius:20px;padding:2px 8px;flex:none}'+
-    '.ce-kind{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid}'+
-    '.ce-phase{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;border-radius:20px;padding:3px 10px;margin-bottom:8px}'+
-    '.ce-info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:'+AMBER+';color:#fff;font-size:10px;font-weight:800;cursor:pointer;margin-left:5px;vertical-align:middle;flex:none}'+
-    '.ce-info:hover{filter:brightness(1.1)}'+
-    /* (retired Jul 2026: .ce-debate / .ce-dc / .ce-mech — the fear-vs-consensus pair and the
-       mechanism chips. The Setup now goes straight from the estimates grid to the debate box.) */
-    '.ce-synth{border-left:4px solid var(--navy);background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:6px 0}.ce-synth b{color:#AECBFA}'+
-    '.ce-why-btn{display:inline-block;font-size:10px;font-weight:800;color:'+BLUE+';cursor:pointer;margin-top:8px}'+
-    '.ce-w-chips{display:flex;gap:7px;flex-wrap:wrap;margin:6px 0 0}'+
-    '.ce-w-chip{font-size:10px;font-weight:700;border-radius:7px;padding:4px 9px;line-height:1.3;color:var(--navy)}'+
-    '.ce-w-chip.tag{background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3)}'+
-    '.ce-w-chip.since{background:rgba(251,188,5,0.12);border:1px solid rgba(183,121,31,0.35)}'+
-    '.ce-w-chip.until{background:#F2F5F8;border:1px solid var(--bdr);color:var(--mu)}'+
-    '.ce-w-chip.cons{background:rgba(26,115,232,0.08);border:1px solid rgba(26,115,232,0.28)}'+
-    /* .cons and .red are kept for the SPLC infra cards (Deep Dive ▸ SPLC), their only remaining user */
-    '.ce-w-chip.red{background:rgba(234,67,53,0.06);border:1px solid rgba(234,67,53,0.28)}'+
-    '.ce-w-chip b{font-weight:800}'+
-    '.ce-take{border-left:4px solid '+BRAND+';background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:2px 0 14px}.ce-take b{color:#AECBFA}'+
-    '.ce-hl{display:flex;flex-direction:column;gap:8px}'+
-    '.ce-hl-row{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--hc);border-radius:10px;padding:10px 13px;background:var(--w);cursor:pointer;transition:.12s}'+
-    '.ce-hl-row:hover{box-shadow:0 3px 10px rgba(0,0,0,.08)}'+
-    '.ce-hl-tag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:var(--hc);border-radius:20px;padding:3px 9px;white-space:nowrap}'+
-    '.ce-hl-head{font-size:12.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
-    '.ce-hl-more{font-size:15px;color:var(--hc);font-weight:800}'+
-    '@media(max-width:560px){.ce-hl-row{grid-template-columns:auto 1fr}.ce-hl-more{display:none}}'+
-    '.ce-dots{border:1px dashed '+BRAND+';border-radius:11px;padding:12px 15px;margin-top:14px;background:rgba(66,133,244,0.03);font-size:12px;line-height:1.6;color:var(--navy)}.ce-dots b{color:'+BRAND+'}'+
-    '.ce-sc{display:flex;flex-direction:column;gap:6px}'+
-    '.ce-sc-row{display:grid;grid-template-columns:1.1fr 1fr 1.2fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--sc);border-radius:9px;padding:8px 12px}'+
-    '.ce-sc-m{font-size:12px;font-weight:800;color:var(--navy)}.ce-sc-c{font-size:11px;color:var(--mu)}.ce-sc-a{font-size:11.5px;font-weight:700;color:var(--navy)}'+
-    '.ce-sc-v{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 10px;background:var(--sc);white-space:nowrap}'+
-    '@media(max-width:600px){.ce-sc-row{grid-template-columns:1fr auto}.ce-sc-c,.ce-sc-a{display:none}}'+
-    '.ce-tc{display:flex;flex-direction:column;gap:6px}'+
-    '.ce-tc-row{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--navy);line-height:1.45;border:1px solid var(--bdr);border-radius:9px;padding:8px 11px}'+
-    '.ce-tbl{width:100%;border-collapse:collapse;font-size:11.5px}'+
-    '.ce-tbl th{text-align:left;color:var(--mu);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}'+
-    '.ce-tbl td{padding:9px 10px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top}'+
-    '.ce-pill{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 9px;white-space:nowrap}'+
-    /* ── #1 · the chain: seededBy chip on watch items, landing chip on newQuestions ── */
-    '.ce-seed{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;color:'+PURPLE+';background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3);border-radius:20px;padding:2px 9px;white-space:nowrap;flex:none}'+
-    '.ce-nq{display:flex;flex-direction:column;gap:5px}'+
-    '.ce-nq-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:3px solid '+PURPLE+';border-radius:9px;padding:7px 11px;font-size:11.5px;color:var(--navy);line-height:1.45}'+
-    '.ce-nq-land{font-size:9.5px;font-weight:800;color:'+PURPLE+';white-space:nowrap}'+
-    '.ce-nq-land.open{color:var(--mu)}'+
-    '@media(max-width:560px){.ce-nq-row{grid-template-columns:1fr}.ce-nq-land{margin-top:3px}}'+
-    /* ── #2 · scorecard: surprise bars, watch-rank badges, richer result kinds ── */
-    '.ce-sc-row{grid-template-columns:78px 1.1fr 1fr 1.2fr 92px auto}'+
-    '.ce-sc-rk{font-size:9px;font-weight:800;color:'+BRAND+';background:rgba(66,133,244,0.10);border:1px solid rgba(66,133,244,0.3);border-radius:20px;padding:2px 8px;white-space:nowrap;text-align:center}'+
-    '.ce-sc-rk.blank{background:transparent;border:none}'+
-    '.ce-sc-surp{font-size:9.5px;font-weight:800;text-align:center;letter-spacing:.02em;border-radius:20px;padding:2px 8px;white-space:nowrap}'+
-    '.ce-sc-surp.hi{color:'+RED+';background:rgba(234,67,53,0.09);border:1px solid rgba(234,67,53,0.3)}'+
-    '.ce-sc-surp.md{color:'+AMBER+';background:rgba(183,121,31,0.09);border:1px solid rgba(183,121,31,0.3)}'+
-    '.ce-sc-surp.lo{color:var(--mu);background:transparent;border:1px solid var(--bdr)}'+
-    /* the legend that makes the row readable without a manual */
-    '.ce-legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px;padding:10px 13px;margin:0 0 10px}'+
-    '.ce-legend-i{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--navy);line-height:1.4}'+
-    '.ce-legend-i b{font-weight:800}'+
-    '@media(max-width:600px){.ce-sc-row{grid-template-columns:1fr auto}.ce-sc-c,.ce-sc-a,.ce-sc-bw,.ce-sc-rk{display:none}}'+
-    /* ── #3 · post-call highlight bands ── */
-    '.ce-band{margin:16px 0 8px;display:flex;align-items:center;gap:9px}'+
-    '.ce-band-i{font-size:13px;font-weight:800;color:var(--bc);line-height:1}'+
-    '.ce-band-t{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--bc)}'+
-    '.ce-band-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
-    '.ce-band-l{flex:1;height:1px;background:var(--bdr)}'+
-    '@media(max-width:560px){.ce-band-s{display:none}}'+
-    '.ce-hl-open{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:'+AMBER+';border:1px solid '+AMBER+';border-radius:20px;padding:2px 7px;white-space:nowrap;margin-left:7px;vertical-align:middle}'+
-    /* ── #4 · the deliverable: three minutes + what we are not bringing ── */
-    '.ce-3m{border:1px solid var(--bdr);border-top:4px solid '+BRAND+';border-radius:12px;padding:15px 17px;margin:16px 0 0;background:linear-gradient(180deg,rgba(66,133,244,0.05),transparent)}'+
-    '.ce-3m-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px}'+
-    '.ce-3m-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
-    '.ce-3m-sub{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
-    '.ce-3m-copy{margin-left:auto;border:1px solid '+BRAND+';background:var(--w);font:inherit;font-size:10px;font-weight:800;color:'+BRAND+';padding:3px 11px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.ce-3m-copy:hover{background:'+BRAND+';color:#fff}'+
-    '.ce-3m-l{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}'+'@media(max-width:760px){.ce-3m-l{grid-template-columns:1fr}}'+'.ce-3m-n{width:22px;height:22px;border-radius:50%;background:'+BRAND+';color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex:none}'+'.ce-3m-bd{min-width:0}'+'.ce-3m-lead{display:block;font-size:13.5px;font-weight:800;color:var(--navy);line-height:1.4}'+'.ce-3m-ev{display:block;font-size:11px;font-weight:500;color:var(--mu);line-height:1.5;margin-top:4px}'+'.ce-3m-more{margin-top:6px}'+'.ce-3m-more>summary{font-size:9.5px;font-weight:800;color:'+BLUE+';cursor:pointer;list-style:none}'+'.ce-3m-more>summary::-webkit-details-marker{display:none}'+'.ce-3m-more[open]>summary{color:var(--mu)}'+
-    '.ce-3m-i{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--bdr);border-top:3px solid '+BRAND+';border-radius:11px;padding:11px 13px;background:#fff}'+
-    
-    '.ce-nb{margin-top:13px;border-top:1px dashed var(--bdr);padding-top:11px}'+
-    '.ce-nb-h{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:6px}'+
-    '.ce-nb-r{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;font-size:11px;line-height:1.5;color:var(--mu);padding:2px 0}'+
-    '.ce-nb-r b{color:var(--navy);font-weight:800}'+
-    '.ce-nb-x{color:'+GRAY+';font-weight:800;flex:none}'+
-    /* ── #5 · earnings-call theme status with age ── */
-    '.calls-st-age{font-size:8.5px;font-weight:700;opacity:.8;margin-left:4px}</style>';
-}
+
+
+
+
 // ─── The IR button — every Earnings opens with it. On earnings day the source is ONE tap away:
 // release, webcast, transcripts, straight from the company. Deliberately loud; convention for
 // every company (EARNINGS_CONVENTIONS §6). LYFT → https://investor.lyft.com/
 
-var CE_SEC_SEAL='img/sec-seal.png';
 
-function ceQkey(q){ return String(q||'').replace(/\s/g,''); }
+
+
 // Renders the quarter-pill selector (shared across the three phase panes via .ce-qblock filtering).
 // The quarter selector is PHASE-AWARE: Setup & Watch List offer every quarter, but Post-Results
 // only offers quarters that have a `results` block — the upcoming quarter has none, so it does not
@@ -2438,51 +1758,14 @@ function ceQkey(q){ return String(q||'').replace(/\s/g,''); }
 // sync with the file. What stays hand-authored per quarter: `setup.us` (Summit's own number) and
 // `setup.notes` (the caveat pop-ups), both keyed by metric name. (§6a-ii.)
 
-// A line that IS ALREADY A RATE (the adjusted-EBITDA margin) gets no growth chip —
-// the growth of a percentage is meaningless and reads as if it were a level.
-// Growth of an ARBITRARY value against the quarter's own bases. Each expectation row (Guide,
-// Street, Summit) computes its chip off ITS OWN number — blending a Street level with a guide's
-// growth rate would be exactly the kind of mixed basis Rule H forbids.
-function ceGrowthOf(m,qi,base,v){
-  if(m.u==='%') return null;
-  if(m.t==='basis') return null;                       // never a growth number off a basis mismatch
-  var b=(base==='qoq')?m.qq[qi]:m.qy[qi];
-  if(v==null||b==null||!b) return null;
-  return Math.round((v/b-1)*100);
-}
-function ceGrowth(m,qi,base){
-  return ceGrowthOf(m,qi,base, m.qr[qi]?m.qr[qi][3]:null);
-}
 
-// Margin lens: a metric that is a SHARE of another line carries an extra row = metric ÷ denominator,
-// computed per column (Street ÷ Street, Summit ÷ Summit, print ÷ print). Toggled in the estimates
-// bar; lives in the SAME cell, never a new box. (§6a-ii.)
-//
-// ⚠ THE MAP IS METRIC → DENOMINATOR, NOT A BOOLEAN, AND THE NAMES ARE PER-COMPANY. Ported from
-// googl.js it read {'Gross profit':1,'Operating income':1,'EBITDA':1} against a hardcoded revenue
-// denominator — and NONE of those keys exist on LYFT (the metric here is "Adjusted EBITDA"). Every
-// cell therefore evaluated to no-margin, so the Margin button toggled an attribute with nothing to
-// reveal and looked broken. It was.
-//
-// The denominator is also wrong for this company by default: Lyft is judged on % of GROSS BOOKINGS,
-// which is what management guides and what the 2027 target is set in. Revenue-based margins are not
-// a number Lyft ever quotes.
-var CE_MARGIN_ON={ 'Adjusted EBITDA':'Gross Bookings', 'Free cash flow':'Gross Bookings' };
 
-// The denominator's own CE_CONS row, by name.
-function ceMarginBase(name){
-  if(!name) return null;
-  return CE_CONS.m.filter(function(x){ return x.k===name; })[0]||null;
-}
 
-// Lyft's margins live around 2–3%, where one decimal hides everything interesting (a 14bp move
-// disappears). Use two decimals below 10% and one above it, so the same helper serves a 3% adjusted
-// EBITDA margin and a 30% gross margin without lying about either.
-function ceMarginPct(v, base){
-  if(v==null||base==null||!base) return null;
-  var p=v/base*100;
-  return Math.abs(p)<10 ? Math.round(p*100)/100 : Math.round(p*10)/10;
-}
+
+
+
+
+
 
 // A dedicated margin ROW for a cell (label + value + the base-period margin in parens). Sits on
 // its own line so it always fits the box — the old inline chip overflowed (§6a-ii). The base
@@ -2498,43 +1781,20 @@ function ceMarginPct(v, base){
 // as the Results tab, clubbed into one (§6a-viii-bis, v2.9). The section key 'setup' keeps its engine
 // canvases/tables/sliders UNIQUE, so the two engine instances (Setup + Results) coexist on the page.
 
-function ceSetupWrap(){ return document.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phpane[data-cep="setup"] .rs-wrap'); }
 
-// ⚠ THIS LINE WAS MISSING AND IT THREW. `gBuildCeAnnual` was CALLED (on every return to the Setup
-// phase tab) but never defined — an uncaught ReferenceError in the console, and, worse, the Setup
-// chart never built at all: resultsHtml('LYFT_SETUP') emitted the markup and nothing ever
-// initialised the engine against it. googl.js and amzn.js both carry this one-liner; the splice
-// dropped it. Chart.js needs a visible container, so it is (re)built on visibility, not once.
-function gBuildCeAnnual(){ var w=ceSetupWrap(); if(w) initResults(w, 'LYFT_SETUP'); }
 
-function ceWatchBody(c){
-  // The Watch List is now the SHARED engine (js/watchlist.js): one implementation for every
-  // company, persistent against Supabase (table company_themes) and sortable. We render a mount
-  // host here; wireCallEarnings mounts the engine into it (it needs the company id + quarter list).
-  // LYFT's own multi-year "theme record" (LY_THEMES) stays below, folded in as before.
-  var h=ceStyle();
-  h+='<div data-wlmount></div>';
-  h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px">';
-  h+='<div class="ce-band" style="--bc:'+BRAND+'"><span class="ce-band-i">▤</span><span class="ce-band-t">The theme record — every thread, across all calls</span><span class="ce-band-s">the multi-year backbone behind the hunt above (the former "Earnings Calls" tab, folded in)</span><span class="ce-band-l"></span></div>';
-  h+=callsBody();
-  h+='</div>';
-  return h;
-}
-// (Promise Tracker dissolved Jul 2026 — promise-type items now live as tracked themes inside the
-// Watch List `thread`s and in Evolution ▸ Earnings Calls.)
-// Scorecard result kinds. beat/miss/inline score against a consensus line; `nodisc` (a KPI
-// management STOPPED disclosing) and `nocons` (a number nobody modelled) are not beats or misses —
-// they are their own signal, and conflating them with a miss loses the point.
+
+
 
 // (Promise Tracker dissolved Jul 2026 — promise-type items now live as tracked themes inside the
 // Watch List `thread`s and in Evolution ▸ Earnings Calls.)
 // Scorecard result kinds. beat/miss/inline score against a consensus line; `nodisc` (a KPI
 // management STOPPED disclosing) and `nocons` (a number nobody modelled) are not beats or misses —
 // they are their own signal, and conflating them with a miss loses the point.
-var CE_RES={ beat:{c:'#0a8f4c',l:'Beat'}, miss:{c:RED,l:'Miss'}, inline:{c:'#6b7684',l:'In line'},
-             nodisc:{c:AMBER,l:'Not disclosed'}, nocons:{c:PURPLE,l:'No consensus'} };
 
-var CE_HLTAG={ thesis:{c:'#0a8f4c',l:'Thesis'}, curious:{c:'#7A5AF8',l:'Curious'}, dots:{c:'#2E6BE6',l:'Connects dots'}, watch:{c:'#B7791F',l:'Watch'}, tone:{c:'#B7791F',l:'Tone'} };
+
+
+
 // D · Post-Results ── the numbers (available first, before/without the call): a beat/miss scorecard.
 // ─── The frozen expectation, computed rather than recalled ─────────────────────────────
 // "Frozen expectations" used to mean whatever prose someone typed into `scorecard[].cons` before
@@ -2549,126 +1809,9 @@ var CE_HLTAG={ thesis:{c:'#0a8f4c',l:'Thesis'}, curious:{c:'#7A5AF8',l:'Curious'
 // The hand-authored layer contributes only what a number cannot: a per-metric note
 // (`results.notes[metric]`) and the frozen-Watch-List rank (`results.watch[metric]`).
 
-function ceVerdict(m, c, a, surp){
-  if(a==null) return {l:'—', c:'#9AA4B0', k:'none'};
-  if(c==null) return {l:'no est.', c:'#7A5AF8', k:'noest'};       // nocons / noact: a print, nothing to score
-  if(surp==null) return {l:'—', c:'#9AA4B0', k:'none'};
-  // A line that IS ALREADY A RATE is scored in POINTS, not in percent-of-a-percent. 3.0% against a
-  // 2.86% guide is +14bp; expressed the other way it reads "+4.9%", which looks like a large beat
-  // and is not one. Same reasoning as ceGrowth's u==='%' guard (Rule H).
-  var tol = (m.u==='%') ? 0.1 : 2;
-  if(Math.abs(surp)<tol) return {l:CE_RES.inline.l, c:CE_RES.inline.c, k:'inline'};
-  return surp>0 ? {l:CE_RES.beat.l, c:CE_RES.beat.c, k:'beat'} : {l:CE_RES.miss.l, c:CE_RES.miss.c, k:'miss'};
-}
 
-function cePrintBlock(qLabel, r, us){
-  var qi=CE_CONS.q.indexOf(qLabel); if(qi<0) return '';
-  r=r||{}; us=us||{};
-  var notes=r.notes||{}, watch=r.watch||{};
-  var tiles=CE_CONS.m.map(function(m){
-    var c=m.qr[qi]?m.qr[qi][3]:null, a=m.qa[qi];
-    var uexp=(us[m.k]&&us[m.k].v!=null)?us[m.k].v:null;   // Summit's FROZEN expectation for this line
-    if(c==null&&a==null&&uexp==null) return null;
-    // Surprise = actual / expected − 1, computed for BOTH bases. The estimate-view toggle (vs Street
-    // ⇄ vs Summit) swaps which one drives the expected value, the surprise and the verdict.
-    // A RATE line (the adjusted-EBITDA margin) is scored as a DIFFERENCE IN POINTS; everything else
-    // as a percentage surprise. Dividing one percentage by another and calling the result a surprise
-    // turns 14 basis points into "+4.9%" — a measurement that misstates its own size (Rule H).
-    var isRate=(m.u==='%');
-    var cSurp=(c!=null&&a!=null&&(isRate||c))?(isRate?(a-c):((a/c-1)*100)):null;
-    var uSurp=(uexp!=null&&a!=null&&(isRate||uexp))?(isRate?(a-uexp):((a/uexp-1)*100)):null;
-    var cV=ceVerdict(m,c,a,cSurp), uV=ceVerdict(m,uexp,a,uSurp);
-    // growth against the print, both bases — the shared YoY/QoQ lens (independent of the estimate view)
-    var g=function(base){
-      var bv=(base==='qoq')?m.qq[qi]:m.qy[qi];
-      if(a==null||bv==null||!bv) return '<span class="ce-fz-g-e">—</span>';
-      var gv=Math.round((a/bv-1)*100);
-      return '<span style="color:'+(gv>=0?'#0a8f4c':'#C5221F')+'">'+(gv>=0?'+':'−')+Math.abs(gv)+'%</span>';
-    };
-    var surpTag=function(s){ if(s==null) return '';
-      var mag=isRate ? (Math.round(Math.abs(s)*100)/100)+' pts' : (Math.round(Math.abs(s)*10)/10)+'%';
-      return '<span class="ce-fz-d '+(s>=0?'up':'dn')+'">'+(s>=0?'+':'−')+mag+'</span>'; };
-    // MARGIN — toggled, and it is EXPECTED-vs-REALIZED, not YoY/QoQ. Expected = the share IMPLIED by
-    // the estimate (the estimate's metric ÷ THAT SAME estimate's denominator, so the ratio is never
-    // mixed-basis). Realized = the print's own. The gap is shown in points.
-    // ⚠ The denominator is per-metric (CE_MARGIN_ON) — for Lyft, Gross Bookings, not revenue.
-    var dName=CE_MARGIN_ON[m.k], dM=ceMarginBase(dName);
-    var dC=(dM&&dM.qr[qi])?dM.qr[qi][3]:null, dA=dM?dM.qa[qi]:null;
-    var dU=(dM&&us[dName]&&us[dName].v!=null)?us[dName].v:dC;
-    var mReal=dM?ceMarginPct(a,dA):null;
-    var mExpC=dM?ceMarginPct(c,dC):null, mExpU=dM?ceMarginPct(uexp,dU):null;
-    var dPts=function(exp){ if(mReal==null||exp==null) return ''; var d=Math.round((mReal-exp)*100)/100;
-      return '<span class="ce-fz-mdl '+(d>=0?'up':'dn')+'">'+(d>=0?'+':'−')+Math.abs(d)+' pts</span>'; };
-    var mRow='';
-    if(dM&&mReal!=null){
-      mRow='<div class="ce-fz-mrow"><span class="ce-fz-gl">% of '+esc(dName==='Gross Bookings'?'bookings':dName.toLowerCase())+'</span>'+
-        '<span class="ce-fz-mexp ce-exp-cons">exp '+(mExpC!=null?mExpC+'%':'—')+dPts(mExpC)+'</span>'+
-        '<span class="ce-fz-mexp ce-exp-us">exp '+(mExpU!=null?mExpU+'%':'—')+dPts(mExpU)+'</span>'+
-        '<span class="ce-fz-ar">→</span><span class="ce-fz-mreal">'+mReal+'% realized</span>'+
-        ceQ('mgn-'+ceQkey(qLabel)+'-'+ceQkey(m.k),'% of Gross Bookings — expected vs realized',
-          '<p><b>The denominator is Gross Bookings, not revenue.</b> That is the ratio Lyft guides, reports and sets its 2027 target in (~$1B of adjusted EBITDA on ~$25B of bookings). A revenue-based margin would be a number the company never quotes.</p>'+
-          '<p><b>Expected</b> is the share <i>implied by the estimate</i>: that estimate\'s metric ÷ <i>that same estimate\'s</i> bookings, so the ratio is never half-Street and half-print. <b>Realized</b> is the print\'s own. This is expectation vs outcome for the quarter — <b>there is no YoY/QoQ here</b>.</p>'+
-          '<p>⚠ Read the Δ in <b>points, and small ones matter</b>: this line runs at 2–3%, so a 0.2pt gap is a ~7% move in the ratio. It is shown to two decimals for that reason.</p>')+
-        '</div>';
-    }
-    var basis=(m.qb&&m.qb[qi])||null;
-    var note=notes[m.k];
-    var qb=note?ceReg('resnote-'+ceQkey(qLabel)+'-'+ceQkey(m.k), note.t||m.k, note.h||note):null;
-    // watch[m.k] is the frozen Watch-List RANK. Theme NAMES now live in Supabase (loaded async by the
-    // shared Watch List engine), so the scorecard no longer resolves the name synchronously here — it
-    // keeps the "on the list" marker via the rank; the theme text lives on the Watch List itself.
-    var wrRank=watch[m.k], wrTheme=null;
-    var wr=wrTheme||(wrRank?('Watch #'+wrRank):null);
-    // data-vdc / data-vdu carry BOTH verdicts so the verdict filter is estimate-view-aware in pure CSS.
-    return { sort:(cSurp==null?-1:Math.abs(cSurp)), html:
-      '<div class="ce-fz-t" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'"'+(qb?' data-detail="ce:'+qb+'"':'')+'>'+
-        '<div class="ce-fz-k">'+esc(m.k)+
-          '<span class="ce-fz-vd ce-vd-cons" style="color:'+cV.c+'">'+cV.l+'</span>'+
-          '<span class="ce-fz-vd ce-vd-us" style="color:'+uV.c+'">'+uV.l+'</span></div>'+
-        '<div class="ce-fz-r"><span class="ce-fz-c ce-exp-cons">'+(c==null?'—':ceTkFmt(m.u,c))+
-            // WHICH outside expectation this line is scored against. Lyft has no BBG archive, so
-            // some rows are the Street and some are the company's own guide — the tile says which
-            // rather than letting the "vs Street" toggle imply one basis for all of them (Rule L).
-            (basis?'<span class="ce-fz-bas">'+esc(basis)+'</span>':'')+'</span>'+
-          '<span class="ce-fz-c ce-exp-us">'+(uexp==null?'—':ceTkFmt(m.u,uexp))+'</span>'+
-          '<span class="ce-fz-ar">→</span><span class="ce-fz-a">'+(a==null?'—':ceTkFmt(m.u,a))+'</span>'+
-          '<span class="ce-fz-dw ce-exp-cons">'+surpTag(cSurp)+'</span><span class="ce-fz-dw ce-exp-us">'+surpTag(uSurp)+'</span></div>'+
-        '<div class="ce-fz-gr"><span class="ce-fz-gl">growth</span>'+
-          '<span class="ce-gy">'+g('yoy')+'</span><span class="ce-gq">'+g('qoq')+'</span></div>'+
-        mRow+
-        (wr?'<div class="ce-fz-wl" title="On the frozen Watch List: '+esc(wr)+'">on the list</div>':'')+
-        (qb?'<div class="ce-fz-more">＋ detail</div>':'')+
-      '</div>' };
-  }).filter(Boolean);
-  if(!tiles.length) return '';
-  tiles.sort(function(x,z){ return z.sort-x.sort; });   // biggest surprise first (Street basis)
-  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="off"><div class="ce-fz-h">The print — ranked by surprise'+
-    ceQ('fz-'+ceQkey(qLabel),'How this is built',
-      '<p>One block, computed — every number and every surprise comes from the <code>CE_CONS</code> table in this file, so nothing here is typed twice and it cannot drift out of sync with the data.</p>'+
-      '<p>⚠ <b>Lyft is NOT in our Bloomberg archive.</b> <code>BBG_CONSENSUS.txt</code> carries GOOG/GOOGL/HOOD/KKR/MA/META/UBER only, so there is no rolling Street matrix to reconstruct for this name. The expectation each line is scored against is therefore one of TWO things, and the tag on the tile says which:</p>'+
-      '<ul><li><b>Street</b> — consensus compiled BY HAND per print from earnings-day coverage. It exists for revenue and, in one quarter, adjusted EBITDA. Sources are listed against each figure in the file header.</li>'+
-      '<li><b>Guide</b> — Lyft\'s own guidance, midpoint of the guided range. Lyft guides exactly two lines, Gross Bookings and Adjusted EBITDA, plus the margin they imply.</li>'+
-      '<li><b>no est.</b> — neither exists. Rides, active riders, free cash flow and insurance reserves are unguided AND uncovered, so they are shown as the reported record with no verdict. That is an absence of outside expectation, never a comment on the print.</li></ul>'+
-      '<ul><li><b>vs outside ⇄ vs Summit</b> — swaps which frozen expectation the print is scored against. One basis at a time; where Summit had no number, the Summit view reads <b>no est.</b></li>'+
-      '<li><b>Margin</b> — the expected-implied margin → the print\'s own, Δ in pts. No YoY/QoQ on a margin.</li>'+
-      '<li><b>Verdict</b> — beat / miss / in-line off the computed surprise. A line that is ALREADY a rate is scored in <b>points</b>, not in percent-of-a-percent, so a 14bp beat reads as +0.14 pts rather than "+4.9%".</li>'+
-      '<li><b>on the list</b> — this line was on the Watch List we froze before the call</li></ul>')+
-    '<span class="ce-vdf"><button type="button" class="active" data-vdf="all">All</button>'+
-      '<button type="button" data-vdf="beat">Beats</button>'+
-      '<button type="button" data-vdf="miss">Misses</button>'+
-      '<button type="button" data-vdf="inline">In line</button></span>'+
-    // "vs outside" rather than "vs Street": for LYFT this basis is the Street on the lines the
-    // Street covers and Lyft's own guide on the two it guides. Each tile carries its own tag.
-    '<span class="ce-gseg" style="margin-left:auto"><button type="button" class="active" data-fzev="cons">vs outside</button>'+
-      '<button type="button" data-fzev="us">vs Summit</button></span>'+
-    '<span class="ce-gseg"><button type="button" data-fzmm="on">Margin</button>'+
-      '<button type="button" class="active" data-fzmm="off">Hide mgn</button></span>'+
-    '<span class="ce-gseg"><button type="button" class="active" data-ceg="yoy">YoY</button>'+
-      '<button type="button" data-ceg="qoq">QoQ</button>'+
-      '<button type="button" data-ceg="off">Off</button></span>'+
-    '</div><div class="ce-fz-g" data-vdf-host>'+tiles.map(function(t){ return t.html; }).join('')+'</div>'+
-    '<div class="ce-fz-f">The frozen expectation → the print → the print\'s own growth. Toggle <b>vs outside ⇄ vs Summit</b> and <b>Margin</b> above; ranked by size of surprise. <b>Sources:</b> actuals and guidance from Lyft\'s 8-K Ex. 99.1 press releases (SEC EDGAR, CIK 0001759509); Street consensus compiled by hand per print — Lyft is not in <code>BBG_CONSENSUS.txt</code>; Summit from the model\'s frozen per-quarter projections.</div></div>';
-}
+
+
 /// E · "Also on the call" ── the supplemental colour from the call, rendered inside Post-Results as a
 // SINGLE BOX holding a plain LIST, each point with its own native <details> dropdown (v2.9). The
 // Context/Logged band classification and the triage strip are GONE (Dani did not want them). Still
@@ -2686,24 +1829,7 @@ function cePrintBlock(qLabel, r, us){
 // Collapse-all toggle only the "＋ more" dropdowns, never the visible paragraphs. A SUMMARY, not a
 // transcript — no roll-call of every exec.
 
-// F · The AI-generated CALL SUMMARY — the "minute" (v2.10). Replaces the old one-line black "take".
-// THE SUMMARY IS THE PROSE ITSELF: several always-visible PARAGRAPHS, each landing a punch on a
-// specific theme (top line, the bill, EPS, the structural new thing…). Each paragraph carries its own
-// "＋ more" dropdown to go DEEPER — and that deeper content can hold NESTED context-guide dropdowns
-// (dropdowns within dropdowns: drivers → segments → backlog…). It is NOT one generalist paragraph
-// followed by a list. Not pop-ups — inline <details>. Technical terms are wrapped
-// `<span class="ce-gl" data-def="…">term</span>` and show their definition on hover. Expand-all /
-// Collapse-all toggle only the "＋ more" dropdowns, never the visible paragraphs. A SUMMARY, not a
-// transcript — no roll-call of every exec.
-function ceSumNodes(nodes, depth){   // nested context-guide dropdowns inside a "＋ more"
-  if(!nodes||!nodes.length) return '';
-  return '<div class="ce-sum-nodes">'+nodes.map(function(n){
-    return '<details class="ce-sum-n" data-d="'+(depth>2?2:depth)+'">'+
-      '<summary class="ce-sum-nt"><span class="ce-sum-caret">▸</span><span>'+n.t+'</span></summary>'+
-      '<div class="ce-sum-nb">'+(n.body||'')+ceSumNodes(n.nodes, depth+1)+'</div>'+
-    '</details>';
-  }).join('')+'</div>';
-}
+
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // EVOLUTION ▸ EARNINGS CALLS — LY_THEMES with By theme ⇄ By quarter toggle + accordion
@@ -2712,172 +1838,24 @@ function ceSumNodes(nodes, depth){   // nested context-guide dropdowns inside a 
 // the dissolved Promise Tracker. Source: docs/calls/LYFT.md + LYFT-latest.md.
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// EVOLUTION ▸ EARNINGS CALLS — LY_THEMES with By theme ⇄ By quarter toggle + accordion
-// (9 threads across 10 calls, Q4 2023 → Q1 2026). Same contract as ibkr/uber/lyft/cart/ma/rely/v,
-// ENHANCED with a status chip per theme (trend / promise-to-reconcile / watch) — the essence of
-// the dissolved Promise Tracker. Source: docs/calls/LYFT.md + LYFT-latest.md.
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-var CE_THST={ trend:{c:'#0a8f4c',l:'Confirmed trend'}, promise:{c:'#2E6BE6',l:'Promise — reconcile'}, watch:{c:'#B7791F',l:'Watch'} };
+
 // A promise open for one quarter and one open for four look identical without this. Age is the
 // signal: how long has it been unreconciled, or how many quarters has the silence run?
 
-// ═══ Earnings · Setup charts (Chart.js, lazy — the pane must be visible or offsetParent is null)
-// Quarterly only. Both charts read CE_CONS and redraw on the metric pills and the range control.
-function ceTkFmt(u,v){
-  if(v==null) return '';
-  if(u==='$')  return '$'+(+v).toFixed(2);
-  if(u==='$B') return '$'+(+v).toFixed(1)+'B';
-  if(u==='B')  return (+v).toFixed(2)+'B';
-  return String(v);
-}
 
-function wireCeTrack(root){
-  var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
-  // The lens defaults are asserted here as well as in the markup — Consensus + YoY, showing YoY.
-  // Belt and braces: a half-applied default reads as a broken control (§6a-ii).
-  function ceSetLens(v){
-    // MUST scope to [data-ceg] — a bare '.ce-gseg button' also matches the margin toggle that
-    // shares the .ce-gseg pill styling, and would clear its active state (§6a-v cross-check rule).
-    pane.querySelectorAll('.ce-gseg button[data-ceg]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ceg')===v); });
-    pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-g', v); });
-    pane.querySelectorAll('.ce-fz').forEach(function(f){ f.setAttribute('data-g', v); });
-  }
-  ceSetLens('yoy');
-  pane.querySelectorAll('.ce-ev-pill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ceev')==='cons'); });
-  pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-ev','cons'); });
-  // Margin default: off, and its own segment's active state set independently of the growth lens.
-  pane.querySelectorAll('.ce-gseg button[data-cemm]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-cemm')==='off'); });
-  pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-mm','off'); });
-  pane.querySelectorAll('.ce-gseg button[data-ceg]').forEach(function(btn){ btn.onclick=function(){
-    ceSetLens(btn.getAttribute('data-ceg'));
-  }; });
-  // Margin lens (headline GP/OpInc/EBITDA only) — CSS-driven via data-mm on the wrap.
-  pane.querySelectorAll('.ce-gseg button[data-cemm]').forEach(function(btn){ btn.onclick=function(){
-    var v=btn.getAttribute('data-cemm');
-    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-mm', v); });
-  }; });
-  // Post-Results print-block toggles — scoped to their own .ce-fz so each quarter's print block is
-  // independent. These are SEPARATE from the Setup's Consensus/Summit/Both (which does not apply
-  // here: Post-Results has no "Both"). `vs Street ⇄ vs Summit` sets data-ev (swaps the frozen
-  // expectation the print is scored against); `Margin` sets data-mm (expected-implied → realized).
-  pane.querySelectorAll('.ce-gseg button[data-fzev]').forEach(function(btn){ btn.onclick=function(){
-    var v=btn.getAttribute('data-fzev'), fz=btn.closest('.ce-fz');
-    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    if(fz) fz.setAttribute('data-ev', v);
-  }; });
-  pane.querySelectorAll('.ce-gseg button[data-fzmm]').forEach(function(btn){ btn.onclick=function(){
-    var v=btn.getAttribute('data-fzmm'), fz=btn.closest('.ce-fz');
-    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    if(fz) fz.setAttribute('data-mm', v);
-  }; });
-}
+
+
 // ═══ Deep-dive charts (Chart.js, lazy per pane) ═════════════════════════════════════════════════
 
 // ═══ Sub-tab + Deep Dive tab machinery (standardized contract) ══════════════════════════════════
 
-// Tab switches hide a tall pane and show a shorter one, so the browser clamps scrollTop and the
-// page appears to jump to the top. Keep the clicked control visually anchored: measure its
-// viewport position, run the change, then scroll by the delta so it does not move. (§6a-iv.)
-function ceKeepPos(el, fn){
-  var before=el.getBoundingClientRect().top;
-  fn();
-  var after=el.getBoundingClientRect().top, d=after-before;
-  if(Math.abs(d)>1) window.scrollBy(0, d);
-}
 
-// Earnings phase tabs — nested inside Evolution's earnings subpane, wired independently.
-// Show only the quarter pills valid for `phase`; if the active pill just became invalid, activate
-// the most-recent valid one and drive the same block-visibility the pill click would.
-function ceSelectQuarter(pane, qk){
-  pane.querySelectorAll('.ce-qpill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ceqsel')===qk); });
-  pane.querySelectorAll('.ce-qblock').forEach(function(blk){ blk.hidden=(blk.getAttribute('data-ceq')!==qk); });
-  pane.querySelectorAll('.ce-wl-tag').forEach(function(b){ b.classList.remove('active'); });
-  var flat=pane.querySelector('.ce-wl-all'); if(flat) flat.hidden=true;
-}
 
-function ceApplyPhaseQuarters(pane, phase){
-  var pills=Array.prototype.slice.call(pane.querySelectorAll('.ce-qpill')), lastVisible=null, activeVisible=false;
-  pills.forEach(function(b){
-    var ok=(b.getAttribute('data-ceqhas')||'').split(' ').indexOf(phase)>=0;
-    b.hidden=!ok;
-    if(ok){ lastVisible=b; if(b.classList.contains('active')) activeVisible=true; }
-  });
-  // pills render newest-first, so the FIRST visible is the most recent valid quarter.
-  var firstVisible=pills.filter(function(b){ return !b.hidden; })[0];
-  if(!activeVisible && firstVisible) ceSelectQuarter(pane, firstVisible.getAttribute('data-ceqsel'));
-}
 
-function wireCallEarnings(root){
-  var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
-  // ⚠ wireCeTrack owns FOUR controls that nothing else wires: the growth lens (data-ceg), the
-  // Setup margin toggle (data-cemm), and the print block's vs-outside/vs-Summit and margin
-  // toggles (data-fzev / data-fzmm). It was never called — the splice from googl.js brought the
-  // function across but not its call site — so all four rendered as live pills that did nothing.
-  // Called FIRST on purpose: it and this function both touch .ce-qpill and .ce-ev-pill, and these
-  // are `onclick=` assignments, so whichever runs LAST wins. The phase-aware handlers below are
-  // the ones that must win.
-  wireCeTrack(root);
-  // Call-summary Expand-all / Collapse-all — toggles only the inner dropdown nodes of THIS summary
-  // box, never the always-visible lede or the outer box itself.
-  pane.querySelectorAll('.ce-sum-btn').forEach(function(btn){ btn.onclick=function(e){
-    e.preventDefault();
-    var box=btn.closest('.ce-sum'); if(!box) return;
-    var open=(btn.getAttribute('data-sum')==='exp');
-    box.querySelectorAll('details.ce-sum-n').forEach(function(d){ d.open=open; });
-  }; });
-  pane.querySelectorAll('.ce-phtab').forEach(function(btn){ btn.onclick=function(){
-    var key=btn.getAttribute('data-cep');
-    ceKeepPos(btn, function(){
-    pane.querySelectorAll('.ce-phtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    pane.querySelectorAll('.ce-phpane').forEach(function(p){ p.hidden=(p.getAttribute('data-cep')!==key); });
-    ceApplyPhaseQuarters(pane, key);
-    });
-    // Returning to Setup re-arms the Setup chart (the Results engine; canvases were hidden, so any
-    // earlier build produced a zero-size chart).
-    if(key==='setup') requestAnimationFrame(gBuildCeAnnual);
-  }; });
-  // Setup estimates toggle: Consensus ⇄ Summit ⇄ Both (CSS-driven via data-ev on the wrap)
-  pane.querySelectorAll('.ce-ev-pill').forEach(function(btn){ btn.onclick=function(){
-    var v=btn.getAttribute('data-ceev');
-    pane.querySelectorAll('.ce-ev-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-ev', v); });
-  }; });
-  // Quarter selector: one Earnings, many quarters — only the selected quarter's blocks render.
-  // Picking a quarter also exits the cross-quarter tag view.
-  pane.querySelectorAll('.ce-qpill').forEach(function(btn){ btn.onclick=function(){
-    ceSelectQuarter(pane, btn.getAttribute('data-ceqsel'));
-  }; });
-  // initial phase is Setup — every quarter valid, nothing to hide, but keep it consistent.
-  ceApplyPhaseQuarters(pane, 'setup');
-  // Verdict filter on the print block: All / Beats / Misses / In line. Sets data-f on the tile
-  // grid; CSS hides the non-matching tiles. Scoped per quarter block so the active quarter filters.
-  pane.querySelectorAll('.ce-vdf button').forEach(function(btn){ btn.onclick=function(){
-    var seg=btn.parentNode, host=seg.closest('.ce-fz'); if(!host) return;
-    seg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    var g=host.querySelector('.ce-fz-g'), v=btn.getAttribute('data-vdf');
-    if(g){ if(v==='all') g.removeAttribute('data-f'); else g.setAttribute('data-f', v); }
-  }; });
-  // Band triage filter: each button shows/hides its own cards. All three start on, so the
-  // reader sees the whole call and uses colour to triage; the filter is for narrowing, not for
-  // hiding by default (§6a-iv). The highlight cards now live inside the Post-Results pane (the
-  // Post-Call tab was dissolved Jul 2026), but the filter is pane-scoped so it still finds them.
-  pane.querySelectorAll('.ce-tri-b').forEach(function(btn){ btn.onclick=function(){
-    var on=btn.classList.toggle('active');
-    var qk=btn.getAttribute('data-cebq'), band=btn.getAttribute('data-ceband');
-    var host=pane.querySelector('.ce-hcards[data-cehl="'+qk+'"]'); if(!host) return;
-    host.querySelectorAll('.ce-hcard[data-band="'+band+'"]').forEach(function(c){ c.hidden=!on; });
-  }; });
-  // ── Watch List: mount the SHARED engine (js/watchlist.js). It owns rendering + Supabase
-  // persistence + sorting; nothing company-specific leaks in beyond the id, ticker and quarters.
-  // Re-mounting on tab re-init is idempotent (it rebuilds the host). ──
-  var wmount=pane.querySelector('[data-wlmount]');
-  if(wmount && _co && _co.id){
-    mountWatchList(wmount, { companyId:_co.id, ticker:_co.ticker, quarters:CALL_EARNINGS.quarters,
-      colors:{ brand:BRAND, brand2:BRAND2, purple:PURPLE, gray:GRAY, red:RED } });
-  }
-}
+
+
+
+
 
 // F1 (playbook section 7, 2026-11-04): the Amazon spine. Every existing pane sits whole in its B2 destination
 // (docs/profiles/LYFT.md section 5); sub-tabs without content are added when their unit is built (rule 5).
@@ -2886,7 +1864,6 @@ function ddMore(title, inner){
   return '<div class="ov-collap"><button type="button" class="ov-collap-h"><span class="ov-collap-ic">▸</span>'+esc(title)+'</button><div class="ov-collap-b" hidden>'+inner+'</div></div>';
 }
 function deepDiveHtml(c){
-  _co = c;   // company id + ticker for the shared Watch List (Supabase)
   function st(list){ return '<div class="ovt-subtabs">'+list.map(function(x,i){ return '<button type="button" class="ovt-subtab'+(i?'':' active')+'" data-ovst="'+x[0]+'">'+x[1]+'</button>'; }).join('')+'</div>'+
     list.map(function(x,i){ return '<div class="ovt-subpane" data-ovst="'+x[0]+'"'+(i?' hidden':'')+'>'+x[2]+'</div>'; }).join(''); }
   var h = '<div class="ov ov-lyft ov-lyft-dd" data-brand="LYFT">';
@@ -3622,7 +2599,6 @@ function renderLive(root){
   }).catch(function(){ el.hidden=true; el.innerHTML=''; }); // hide cleanly until the get-quote edge fn is deployed
 }
 function init(c){
-  _co=c;   // company id + ticker for the shared Watch List (Supabase)
   // Root spans BOTH profile panes (Overview + Deep Dive copanes under #co-detailview),
   // so this single pass wires the Overview scatter, the Deep Dive tabs and the shared
   // modal — the element set matches the old single .ov-lyft root.
@@ -3719,7 +2695,6 @@ function init(c){
 // Deep Dive charts build lazily: init() already wired the dd-tabs (root spans both
 // panes), so here we only paint the active dd-pane's charts now that it is visible.
 function deepDiveInit(c){
-  _co=c;   // company id + ticker for the shared Watch List (Supabase)
   var _r=document.getElementById('co-detailview');
   if(_r) lyftCeWire(_r);   // phase tabs, quarter pills, toggles, Notes (record + Watch List) — lyft-ce.js
   var root = document.getElementById('co-detailview'); if(!root) return;

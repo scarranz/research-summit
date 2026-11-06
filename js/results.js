@@ -1279,6 +1279,15 @@ function rsBuildChart(k){
     // bars were hidden — the reader had asked for the series to go and half of it stayed, which
     // is exactly what non-negotiable 2 forbids (CHART_ENGINE_REFERENCE §0.2).
     var ma = rsMarginArr(k, m, 'act'), ms = rsMarginArr(k, m, 'summit'), mc = rsMarginArr(k, m, 'cons');
+    // A dataset may ask for the forecast margin lines to EMERGE from the last reported point (`anchorForecast: true`): the actual line
+    // runs to the last print, and Summit / consensus start there instead of floating beside it.
+    if (_rs.data && _rs.data.anchorForecast && ma){
+      var laM = rsLastAct(m);
+      if (laM >= 0 && ma[laM] != null){
+        var anchorM = function(arr){ return arr ? arr.map(function(v, i){ return i < laM ? null : (i === laM ? ma[laM] : v); }) : arr; };
+        ms = anchorM(ms); mc = anchorM(mc);
+      }
+    }
     if (!st.hidden.act && ma && ma.some(function(v){ return v != null; })){
       needY2 = true;
       datasets.push({ label: (m.marginLabel || 'Margin') + ' % (actual)', type: 'line', yAxisID: 'y2', data: sl(ma),

@@ -1,0 +1,84 @@
+{
+ "_doc": "LYFT Earnings-grid map for emit_matrix.py / emit_ce_lyft.py, written 2026-11-05 off inspect_matrix.py LYFT. Free cash flow is deliberately absent: the Bloomberg HEADLINE_FCF series is not on Lyft's definition (see map_lyft.json). Interest, tax and pre-tax lines are not in the grid.",
+ "segments": {},
+ "q": {
+  "Revenue": {
+   "code": "IS_COMP_SALES",
+   "unit": "usdM"
+  },
+  "Cost of revenue": {
+   "code": "IS_COGS_TO_FE_AND_PP_AND_G",
+   "unit": "usdM"
+  },
+  "Gross profit": {
+   "code": "GROSS_PROFIT",
+   "unit": "usdM"
+  },
+  "Operations & support": {
+   "code": "IS_OTHER_OPERATING_EXPENSES_GAAP",
+   "unit": "usdM"
+  },
+  "Research & development": {
+   "code": "IS_OPEX_R_AND_D_GAAP",
+   "unit": "usdM"
+  },
+  "Sales & marketing": {
+   "code": "CB_IS_S_AND_M_EXPENSE",
+   "unit": "usdM"
+  },
+  "General & administrative": {
+   "code": "CB_IS_GENL_AND_ADMIN_EXPN",
+   "unit": "usdM"
+  },
+  "Operating income (GAAP)": {
+   "code": "IS_EBIT_AS_REPORTED",
+   "unit": "usdM"
+  },
+  "Adjusted EBITDA": {
+   "code": "IS_COMPARABLE_EBITDA",
+   "unit": "usdM"
+  },
+  "Net income (GAAP)": {
+   "code": "IS_COMP_NET_INCOME_GAAP",
+   "unit": "usdM"
+  },
+  "EPS (diluted)": {
+   "code": "IS_COMP_EPS_GAAP",
+   "unit": "eps"
+  },
+  "Diluted shares": {
+   "code": "CB_IS_ADJ_DILUTED_AVG_SHS",
+   "unit": "usdM"
+  },
+  "D&A": {
+   "code": "CF_DEPR_AMORT",
+   "unit": "usdM"
+  },
+  "SBC": {
+   "code": "IS_SBC_NON_GAAP",
+   "unit": "usdM"
+  },
+  "Capex": {
+   "code": "HEADLINE_CAPEX",
+   "unit": "usdM",
+   "sign": -1
+  },
+  "Operating cash flow": {
+   "code": "CF_CASH_FROM_OPER",
+   "unit": "usdM"
+  },
+  "Gross Bookings": {
+   "code": "INTERNET_GROSS_BOOKINGS",
+   "unit": "usdM"
+  },
+  "Rides": {
+   "code": "NUMBER_TRANSACTIONS",
+   "unit": "count"
+  },
+  "Active Riders": {
+   "code": "NUMBER_OF_ACTIVE_CLIENTS",
+   "unit": "count"
+  }
+ },
+ "y": {}
+}

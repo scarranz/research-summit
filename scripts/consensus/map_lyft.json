@@ -33,6 +33,54 @@
   "eps": {
    "code": "IS_COMP_EPS_GAAP",
    "unit": "eps"
+  },
+  "cogs": {
+   "code": "IS_COGS_TO_FE_AND_PP_AND_G",
+   "unit": "usdM"
+  },
+  "gp": {
+   "code": "GROSS_PROFIT",
+   "unit": "usdM"
+  },
+  "ops": {
+   "code": "IS_OTHER_OPERATING_EXPENSES_GAAP",
+   "unit": "usdM"
+  },
+  "rnd": {
+   "code": "IS_OPEX_R_AND_D_GAAP",
+   "unit": "usdM"
+  },
+  "snm": {
+   "code": "CB_IS_S_AND_M_EXPENSE",
+   "unit": "usdM"
+  },
+  "gna": {
+   "code": "CB_IS_GENL_AND_ADMIN_EXPN",
+   "unit": "usdM"
+  },
+  "opinc": {
+   "code": "IS_EBIT_AS_REPORTED",
+   "unit": "usdM"
+  },
+  "da": {
+   "code": "CF_DEPR_AMORT",
+   "unit": "usdM"
+  },
+  "sbc": {
+   "code": "IS_SBC_NON_GAAP",
+   "unit": "usdM"
+  },
+  "cfo": {
+   "code": "CF_CASH_FROM_OPER",
+   "unit": "usdM"
+  },
+  "capex": {
+   "code": "HEADLINE_CAPEX",
+   "unit": "usdM"
+  },
+  "shares": {
+   "code": "CB_IS_ADJ_DILUTED_AVG_SHS",
+   "unit": "count"
   }
  },
  "y": {
@@ -67,6 +115,54 @@
   "eps": {
    "code": "IS_COMP_EPS_GAAP",
    "unit": "eps"
+  },
+  "cogs": {
+   "code": "IS_COGS_TO_FE_AND_PP_AND_G",
+   "unit": "usdM"
+  },
+  "gp": {
+   "code": "GROSS_PROFIT",
+   "unit": "usdM"
+  },
+  "ops": {
+   "code": "IS_OTHER_OPERATING_EXPENSES_GAAP",
+   "unit": "usdM"
+  },
+  "rnd": {
+   "code": "IS_OPEX_R_AND_D_GAAP",
+   "unit": "usdM"
+  },
+  "snm": {
+   "code": "CB_IS_S_AND_M_EXPENSE",
+   "unit": "usdM"
+  },
+  "gna": {
+   "code": "CB_IS_GENL_AND_ADMIN_EXPN",
+   "unit": "usdM"
+  },
+  "opinc": {
+   "code": "IS_EBIT_AS_REPORTED",
+   "unit": "usdM"
+  },
+  "da": {
+   "code": "CF_DEPR_AMORT",
+   "unit": "usdM"
+  },
+  "sbc": {
+   "code": "IS_SBC_NON_GAAP",
+   "unit": "usdM"
+  },
+  "cfo": {
+   "code": "CF_CASH_FROM_OPER",
+   "unit": "usdM"
+  },
+  "capex": {
+   "code": "HEADLINE_CAPEX",
+   "unit": "usdM"
+  },
+  "shares": {
+   "code": "CB_IS_ADJ_DILUTED_AVG_SHS",
+   "unit": "count"
   }
  }
 }

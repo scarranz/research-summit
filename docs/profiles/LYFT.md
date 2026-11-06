@@ -520,3 +520,6 @@ Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en
   - **Consenso:** regla previo al print del archivo; el 3T26 sale del grid de Earnings (que conserva la fila del 04-nov). Capex de Bloomberg viene con signo negativo y se muestra positivo, igual que el actual.
 - **Estimates (evolución):** se añaden costo de ingresos, O&S, R&D, S&M, G&A, D&A, SBC y flujo operativo a lo largo de los 4 submits (FY26–FY29, FY25 del 10-K). Ejemplo: S&M FY2026 pasó de $1,012M (dic-2025) a $1,175M (ago-2026), +16.1%.
 - El archivo de consenso cambió otra vez a las 09:03 (GB 4T26 5,849.5, S&M 339.0, costo de ingresos 986.1): se regeneraron Results y el grid de Earnings y se actualizaron los números del Setup 4T26.
+
+### 2026-11-06 · Results: la ventana de periodos se queda al cambiar de métrica (Dani)
+- En `js/results.js` (motor compartido, funcionalidad para todas las empresas, no opción): la ventana de periodos se recuerda por **etiqueta de periodo**, no por índice. Al cambiar de métrica el rango (slider, arrastre o preset) se mantiene; al cambiar entre Quarterly y Annual cada vista conserva **su propia** ventana (lo que dejaste en Quarterly sigue ahí al volver). El eje Y se sigue reiniciando al cambiar de métrica (cambian las unidades). Estimates ya conservaba la ventana al cambiar de métrica.

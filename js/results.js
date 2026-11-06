@@ -452,6 +452,21 @@ function rsTick(v, unit, div, cur, ticks){
   if (unit === 'cnt') return s + (d ? a.toFixed(d) : Math.round(a)) + (div === 1000 ? 'B' : 'M');   // counts never carry a $
   return s + c + (d ? a.toFixed(d) : Math.round(a)) + (div === 1000 ? 'B' : 'M');
 }
+// The period window is remembered by PERIOD LABEL, not by index, so it survives a change of metric (and, per view, a Quarterly/Annual toggle):
+// moving the slider to 2Q25–4Q26 and then picking another line keeps showing 2Q25–4Q26 (analyst, Nov 6 2026).
+function rsOrd(p){ var pq = rsParseQ(p); return pq ? pq.y * 4 + pq.q : +p; }
+function rsWinLabels(k){
+  var st = rsSt(k); if (!st.win) return null;
+  var m = rsMetric(k); if (!m || !m.periods) return null;
+  var lo = Math.max(0, st.win[0]), hi = Math.min(m.periods.length - 1, st.win[1]);
+  return (lo <= hi) ? [m.periods[lo], m.periods[hi]] : null;
+}
+function rsWinFromLabels(m, lbl){
+  if (!lbl || !m || !m.periods) return null;
+  var lo = rsOrd(lbl[0]), hi = rsOrd(lbl[1]), a = -1, b = -1;
+  m.periods.forEach(function(p, i){ var o = rsOrd(p); if (a < 0 && o >= lo) a = i; if (o <= hi) b = i; });
+  return (a >= 0 && b >= a) ? [a, b] : null;
+}
 function rsWin(k, m){
   var st = rsSt(k), n = m.periods.length;
   if (!st.win || st.win[1] >= n || st.win[0] < 0){
@@ -3478,10 +3493,14 @@ function wireResults(pane){
       if (!blk) return;
       var bk = blk.getAttribute('data-rsblock'), bst = rsSt(bk);
       if (ctl.hasAttribute('data-rsview')){
+        var prevView = bst.view, prevWin = rsWinLabels(bk);   // read while the old view is still the current one
         bst.view = ctl.getAttribute('data-rsview');
         // the tracked line is KEPT across a Quarterly/Annual toggle (analyst, Oct 26 2026): rsMetric() falls back to the section
         // default only when the new view does not carry that line
-        bst.win = null;                                // the period axis is per view
+        // the period axis is per view: each view keeps its own window (what was left in Quarterly is still there when you come back)
+        bst.winBy = bst.winBy || {};
+        bst.winBy[prevView] = prevWin;
+        bst.win = rsWinFromLabels(rsMetric(bk), bst.winBy[bst.view]);
       }
       if (ctl.hasAttribute('data-rsmode')) bst.mode = ctl.getAttribute('data-rsmode');
       if (ctl.hasAttribute('data-rsgrow')) bst.growth = ctl.getAttribute('data-rsgrow');
@@ -3621,8 +3640,9 @@ function wireResults(pane){
     var k = block ? block.getAttribute('data-rsblock') : null;
     if (!k) return;
     var st = rsSt(k);
+    var keepWin = rsWinLabels(k);                       // the window follows the reader across metrics
     st.metric = e.target.value;
-    st.win = null;
+    st.win = rsWinFromLabels(rsMetric(k), keepWin);
     st.yr = null;
     rsBuildChart(k);
   });

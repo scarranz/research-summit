@@ -126,6 +126,7 @@ function aStdScaffold(cfg){
 }
 function aStdBlk(id){ return R().querySelector('[data-astdblock="'+id+'"]'); }
 // The FORECAST zone, COPIED verbatim from js/segments.js (the engine exports no helper) so Bottom Line shades forecast periods exactly as Top Line and Evolution do.
+var RS_FWD = '#2563EB';
 function rsRR(ctx, x, y, w, h, r){
   ctx.beginPath();
   ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);

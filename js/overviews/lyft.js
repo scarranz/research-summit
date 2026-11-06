@@ -18,6 +18,8 @@ import { SUMMIT_CAT } from '../viz-palette.js';
 import { LY_FACTS, LY_LEDE, LY_BIZ, LY_GMM_SEG, LY_GMM_GEO, LY_MM_CAP_TOP, LY_MM_CAP_END, LY_REV_DEFS, LY_PRODUCTS, LY_TIMELINE, LY_OV_SOURCES } from './lyft-ov-data.js';   // Overview data (F-FINAL: moved out of this file)
 
 import { lyftHistMult } from './lyft-histmult.js';   // VA-HIST
+import { lyftTargetMult } from './lyft-target-multiple.js';   // VA-TM (Summit DCF valuation per submit, frozen)
+import { lyftSens } from './lyft-sensitivity.js';   // VA-SENS (one frozen Summit snapshot; the earlier calculator stays below it)
 import { submitsHtml, initSubmits } from '../submits.js';   // VA-SUB (engine + js/submits-data/lyft.js)
 import { lyftBlGeneralHtml, lyftBlGeneralBuild } from './lyft-bl.js';   // Bottom Line ▸ General (BL-GEN-1…5), ported from uber-bl.js
 import { lyftCeHtml, lyftCeWire, lyftCeBuild, lyftCePop } from './lyft-ce.js';   // Evolution ▸ Earnings (EV-SET / EV-POST / EV-NOTES), ported from uber-ce.js
@@ -57,6 +59,9 @@ var LYFT_MGMT = makeManagement({
     { id:'llewellyn', name:'Lindsay Llewellyn', title:'Chief Legal & Business Officer', since:'In role since 2024 · at Lyft since 2014', img:'img/leadership/lyft-llewellyn.jpg',
       line:"11-year Lyft veteran; GC with expanded business scope.",
       bio:"Chief Legal & Business Officer and Corporate Secretary since July 2024; at Lyft since 2014, rising from litigation counsel to General Counsel. Scope expanded to include business and People functions after the President role was folded in. Prior: Winston & Strawn." },
+    { id:'hope', name:'Stephen Hope', title:'Chief Accounting Officer', since:'Principal Accounting Officer (FY2025 10-K)',
+      line:"Principal Accounting Officer; signed the FY2025 10-K.",
+      bio:"Chief Accounting Officer and Principal Accounting Officer; signed the FY2025 Form 10-K on February 10, 2026 alongside the CEO and the CFO. His earlier career is not on file in this build." },
     { id:'rasmussen', name:'Dana Rasmussen', title:'Chief People Officer', since:'CPO since 2025', img:'img/leadership/lyft-rasmussen.jpg',
       line:"Ex-Chief People Officer of Stitch Fix.",
       bio:"Chief People Officer since July 2025. Prior: Chief People & Culture Officer at Stitch Fix; HR leadership at Honor, Flywheel, Yahoo and Oracle." },
@@ -85,14 +90,15 @@ var LYFT_MGMT = makeManagement({
     { name:'Jill Beggs', independent:true, role:'EVP & CEO of Reinsurance, Everest Group · Audit.' },
     { name:'Betsey Stevenson', independent:true, role:'Economist, University of Michigan (ex-CEA) · Audit, Nom & Gov.' },
     { name:'Deborah Hersman', independent:true, role:'Ex-Chief Safety Officer at Waymo; former NTSB Chair · Nom & Gov.' },
+    { name:'Ben Minicucci', role:'CEO of Alaska Airlines · joined the board by the 2Q26 call (Aug 6, 2026); committees not on file.' },
   ],
-  boardNote:'7 of 8 independent; independent Chair separate from the CEO.',
+  boardNote:'Eight directors signed the FY2025 10-K (Feb 10, 2026): Aggarwal (Chair), Risher, Beggs, Hersman, Lawee, Stephenson, Stevenson and Whiteside; Ben Minicucci joined afterwards (2Q26 call). The board is classified into three classes with staggered three-year terms (10-K). Independence and committee roles are carried from the earlier version (2026 proxy, not on file) and were not re-verified.',
   gov:[
     { k:'Share & voting', v:'1 vote / share', d:'Dual-class collapsed Aug 2025; founders’ vote 30% → <2%.' },
-    { k:'Board', v:'7 of 8 independent', d:'Independent chair · classified board.' },
-    { k:'CEO pay · FY25', v:'$2.8M · $0 new equity', d:'One 2023 performance-RSU; ~18:1 ratio.' },
+    { k:'Board', v:'9 directors', d:'8 signed the FY25 10-K, Minicucci joined after · classified board (10-K) · independence per the earlier version, unverified.' },
+    { k:'CEO pay · FY25', v:'$2.8M · $0 new equity', d:'Earlier version (2026 proxy, not on file): one 2023 performance-RSU; ~18:1 ratio. Not re-verified.' },
   ],
-  foot:"The three statutory officers (Risher, Brewer, Llewellyn) are from Lyft’s 2026 proxy; the wider operating team is from Lyft’s newsroom and public sources (role confidence varies below the C-suite). Board, committees and governance per the 2026 proxy. Headshots from Lyft IR. Ownership and insider trades live in the Pillars → Management tab.",
+  foot:"CEO, CFO and Chief Accounting Officer are the officers who signed the FY2025 10-K (Feb 10, 2026); Michael Brous was introduced as CFO on the Q3 2026 call (Nov 5, 2026). The wider operating team is from the earlier version (Lyft’s newsroom and public sources; role confidence varies below the C-suite) and was not re-verified here. The director list is the 10-K signature page plus the director named on the 2Q26 call; independence, committees and pay are carried from the earlier version (2026 proxy, not on file). Headshots from Lyft IR.",
 });
 
 function linsMoneyFlow(){
@@ -1065,7 +1071,7 @@ function lyCapAllocBody(c){
 // Valuation ▸ Balance Sheet — downside/solidity view from Lyft's Q1 2026 10-Q (Mar 31 2026,
 // SEC EDGAR CIK 0001759509). Asset-light, positive net cash; the defining feature is a large
 // self-insurance reserve that is substantially matched by segregated restricted assets.
-var LY_BAL_BARS=[['Unrestricted liquidity',1720,'#1E9E62'],['Restricted assets (back insurance)',1998,'#5B8DEF'],['Insurance reserve (liability)',2245,'#E6007A'],['Total debt',1043,'#9AA3AE']];
+var LY_BAL_BARS=[['Unrestricted liquidity',1905,'#1E9E62'],['Restricted assets (back insurance)',2147,'#5B8DEF'],['Insurance reserve (liability)',2303,'#E6007A'],['Long-term debt (net of current portion)',1000,'#9AA3AE']];   // Sep 30, 2026, 3Q26 release
 function buildLyBal(){
   var cv=document.getElementById('lyChartBal'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
   destroy('lyChartBal');
@@ -1078,33 +1084,30 @@ function buildLyBal(){
 }
 function lyBalanceBody(c){
   var rows=[
-    ['Cash & cash equivalents', '$1,034.9M', 'unrestricted'],
-    ['Short-term investments', '$686.1M', 'unrestricted'],
-    ['Restricted cash & restricted investments', '$1,998.3M', 'segregated to back insurance claims'],
-    ['Insurance reserves (current)', '−$2,245.0M', 'largest single liability'],
-    ['Total debt (converts + vehicle financing)', '−$1,042.7M', '0.625% notes ’29 + 0% notes ’30'],
-    ['Total stockholders’ equity', '$3,025.9M', 'book value'],
-    ['Total assets', '$8,889.9M', 'total liabilities $5,864.0M']
+    ['Cash & cash equivalents', '$1,308.9M', 'unrestricted'],
+    ['Short-term investments', '$596.0M', 'unrestricted'],
+    ['Restricted cash & restricted investments', '$2,146.5M', 'segregated to back insurance claims ($833.4M cash + $1,313.2M investments)'],
+    ['Insurance reserves', '\u2212$2,302.9M', 'largest single liability'],
+    ['Long-term debt, net of current portion', '\u2212$999.5M', 'the release does not show the current portion separately'],
+    ['Total stockholders\u2019 equity', '$2,980.9M', 'book value'],
+    ['Total assets', '$9,280.5M', 'total liabilities $6,299.7M']
   ];
-  var h='<div style="border:1px solid rgba(232,160,12,0.45);background:linear-gradient(180deg,rgba(232,160,12,0.10),rgba(232,160,12,0.03));border-radius:12px;padding:12px 15px;margin:0 0 14px;display:flex;align-items:flex-start;gap:10px">'+
-    '<span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#B7791F;background:rgba(232,160,12,0.18);border-radius:10px;padding:3px 10px;flex:none">Work in progress</span>'+
-    '<span style="font-size:11.5px;color:var(--navy);line-height:1.5">This Balance Sheet section is <b>still being developed.</b> The line items and net-cash math below are pulled from Lyft’s Q1 2026 10-Q, but the deeper analysis (insurance-reserve adequacy, convert dilution scenarios, downside stress) is <b>not yet complete</b> — treat it as a draft.</span></div>';
-  h+='<p class="ov-lede">Lyft runs an <b>asset-light</b> balance sheet with <b>positive net cash</b>: as of <b>March 31, 2026</b> it held <b>$1.72B</b> of unrestricted cash & short-term investments against just <b>$1.04B</b> of debt. The distinctive feature is a large <b>insurance reserve (~$2.25B)</b> — but it is substantially matched by <b>~$2.0B of restricted cash & investments</b> plus a loss-portfolio-transfer reinsurance deal, so it is not the leverage risk its size implies.</p>';
+  var h='<p class="ov-lede">Lyft runs an <b>asset-light</b> balance sheet with <b>positive net cash</b>: at <b>September 30, 2026</b> it held <b>$1.90B</b> of unrestricted cash & short-term investments against <b>$1.00B</b> of long-term debt. The distinctive feature is a large <b>insurance reserve (~$2.30B)</b> \u2014 substantially matched by <b>~$2.15B of restricted cash & investments</b> plus a loss-portfolio-transfer reinsurance agreement that caps legacy exposure.</p>';
   h+='<div class="ov-kpis">'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Net cash</div><div class="ov-kpi-v">+$0.68B</div><div class="ov-kpi-d muted">cash + ST inv. less all debt</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Unrestricted liquidity</div><div class="ov-kpi-v">$1.72B</div><div class="ov-kpi-d muted">$1.03B cash + $0.69B ST inv.</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Insurance reserve</div><div class="ov-kpi-v">$2.25B</div><div class="ov-kpi-d muted">~$2.0B restricted-asset backed</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Total debt</div><div class="ov-kpi-v">$1.04B</div><div class="ov-kpi-d muted">convertible notes ’29 / ’30</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Net cash</div><div class="ov-kpi-v">+$0.91B</div><div class="ov-kpi-d muted">cash + ST inv. less long-term debt</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Unrestricted liquidity</div><div class="ov-kpi-v">$1.90B</div><div class="ov-kpi-d muted">$1.31B cash + $0.60B ST inv.</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Insurance reserve</div><div class="ov-kpi-v">$2.30B</div><div class="ov-kpi-d muted">~$2.15B restricted-asset backed</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Long-term debt</div><div class="ov-kpi-v">$1.00B</div><div class="ov-kpi-d muted">convertible notes \u201929 / \u201930 + vehicle loans</div></div>'+
   '</div>';
-  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Line item · Q1 2026 (Mar 31, 2026)</th><th style="text-align:right;padding:7px 10px">Amount</th><th style="text-align:left;padding:7px 10px">Note</th></tr></thead><tbody>'+
+  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Line item \u00b7 Q3 2026 (Sep 30, 2026)</th><th style="text-align:right;padding:7px 10px">Amount</th><th style="text-align:left;padding:7px 10px">Note</th></tr></thead><tbody>'+
     rows.map(function(r){ return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:700">'+r[0]+'</td><td style="text-align:right;padding:7px 10px;font-variant-numeric:tabular-nums">'+r[1]+'</td><td style="padding:7px 10px;color:var(--mu)">'+r[2]+'</td></tr>'; }).join('')+
   '</tbody></table></div>';
-  h+='<div class="ov-chart-card" style="margin-top:10px"><div class="ov-chart-t">Balance-sheet shape <span>· $B · Mar 31, 2026</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="lyChartBal"></canvas></div></div>';
-  h+='<div class="ave-subh-note" style="margin:6px 0 4px">The ~$2.25B insurance reserve is ~<b>89% matched</b> by ~$2.0B of restricted assets set aside to pay claims; unrestricted liquidity ($1.72B) exceeds all debt ($1.04B) → net cash positive.</div>';
-  h+=sec('Cash & the insurance reserve', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Lyft self-insures a portion of auto claims, so it carries a <b>~$2.25B insurance reserve</b> — huge relative to a company its size. Read it against the asset side: <b>~$0.79B restricted cash + ~$1.21B restricted investments (≈$2.0B)</b> are segregated specifically to pay those claims, and a <b>loss-portfolio-transfer reinsurance agreement</b> caps legacy exposure. The reserve is a genuine risk — adverse actuarial revisions flow straight through earnings — but it is <b>not</b> borrowed leverage.</div>');
-  h+=sec('Debt & dilution', '<div class="ov-callout">Debt is <b>$1.04B</b>, essentially two convertible notes — <b>$460M of 0.625% notes due 2029</b> and <b>$500M of 0% notes due 2030</b> — plus small vehicle-financing facilities. The coupons are cheap, but converts are a <b>dilution</b> risk (not just repayment) if the stock re-rates — the one offset to a share count that <b>finally turned down in FY25</b> as buybacks began.</div>');
-  h+='<div class="ov-callout" style="margin-top:10px"><b>Solidity read:</b> Positive net cash (+$0.68B), $3.0B of book equity, and an insurance reserve that is ~90% matched by restricted assets. Downside protection here is <b>financial flexibility, not hard assets</b> — Lyft is asset-light with little tangible collateral, so the key balance-sheet risk is <b>insurance-reserve adequacy</b>, not refinancing.</div>';
-  h+='<div class="ov-foot">Source: Lyft Q1 2026 Form 10-Q, condensed consolidated balance sheet as of March 31, 2026 (SEC EDGAR, CIK 0001759509). Net cash = cash & equivalents + short-term investments − total debt; restricted cash/investments excluded as they back insurance claims.</div>';
+  h+='<div class="ov-chart-card" style="margin-top:10px"><div class="ov-chart-t">Balance-sheet shape <span>\u00b7 $B \u00b7 Sep 30, 2026</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="lyChartBal"></canvas></div></div>';
+  h+='<div class="ave-subh-note" style="margin:6px 0 4px">The ~$2.30B insurance reserve is ~<b>93% matched</b> by ~$2.15B of restricted assets set aside to pay claims (2,146.5 \u00f7 2,302.9); unrestricted liquidity ($1.90B) exceeds long-term debt ($1.00B) \u2192 net cash positive. The reserve was $2,307.7M at June 30 and $2,180.4M at year-end 2025.</div>';
+  h+=sec('Cash & the insurance reserve', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Lyft self-insures a portion of auto claims, so it carries a <b>~$2.30B insurance reserve</b> \u2014 large relative to a company its size. Read it against the asset side: <b>$0.83B restricted cash + $1.31B restricted investments (\u2248$2.15B)</b> are segregated to pay those claims, and a <b>loss-portfolio-transfer reinsurance agreement</b> (Pacific Valley Insurance Company with Riverstone, Feb 2025, 10-Q) reinsures a legacy portfolio. The reserve is a genuine risk \u2014 adverse actuarial revisions flow straight through earnings \u2014 but it is <b>not</b> borrowed leverage. On the Q3 2026 call management said the 10/1 renewal implies only a modest increase in the Q4 cost of insurance.</div>');
+  h+=sec('Debt & dilution', '<div class="ov-callout">Total debt including current maturities was <b>$1,043.9M at June 30, 2026</b> (10-Q): the <b>0.625% convertible notes due March 2029</b> ($453.6M carrying), the <b>0% convertible notes due September 2030</b> ($489.7M) and the <b>master vehicle loan</b> at 5.85%–7.10% ($100.6M); long-term debt net of the current portion was $999.5M at September 30 (3Q26 release). The coupons are cheap, but converts are a <b>dilution</b> risk (not just repayment) if the stock re-rates — the one offset to a share count that <b>finally turned down in FY25</b> as buybacks began.</div>');
+  h+='<div class="ov-callout" style="margin-top:10px"><b>Solidity read:</b> Positive net cash (+$0.91B), $3.0B of book equity, and an insurance reserve that is ~93% matched by restricted assets. Downside protection here is <b>financial flexibility, not hard assets</b> — Lyft is asset-light with little tangible collateral, so the key balance-sheet risk is <b>insurance-reserve adequacy</b>, not refinancing.</div>';
+  h+='<div class="ov-foot">Source: Lyft 3Q26 earnings release (8-K Exhibit 99.1, Nov 5, 2026), condensed consolidated balance sheet as of September 30, 2026; debt detail from the Form 10-Q for 2Q26 (June 30, 2026). The 3Q26 10-Q is not on file. Net cash = cash & equivalents + short-term investments − long-term debt net of the current portion (the current portion, $53.3M at June 30, is not shown separately in the release); restricted cash/investments excluded as they back insurance claims.</div>';
   return h;
 }
 // Management ▸ Governance & SBC — vetted governance facts from the in-repo config; SBC $ not in the
@@ -1134,6 +1137,8 @@ function lyGovBody(c){
   ];
   var h='<p class="ov-lede">Lyft’s governance took a big step in <b>August 2025</b>: the <b>dual-class structure collapsed to one-share-one-vote</b> as co-founders Logan Green & John Zimmer left the board and their super-voting stock converted — their vote fell from ~30% to &lt;2%. The board is <b>7 of 8 independent</b> with a separate independent chair.</p>';
   h+='<div class="ov-kpis">'+k.map(function(f){return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(f[0])+'</div><div class="ov-kpi-v">'+esc(f[1])+'</div><div class="ov-kpi-d muted">'+esc(f[2])+'</div></div>';}).join('')+'</div>';
+  h+='<div class="ov-fynote"><b>Verified in this build</b> (FY2025 10-K, 2Q26 10-Q, 3Q26 release): Class B stock (20 votes a share) was 8.531M shares at Dec 31, 2024 \u2014 about 29% of the vote (computed: 8.531M \u00d7 20 \u00f7 (409.5M Class A + 8.531M \u00d7 20)) \u2014 and none at Dec 31, 2025; the board is classified into three classes with staggered three-year terms; Class A shares outstanding were 400.9M (Dec 31, 2025) and 379.2M (Sep 30, 2026); Lyft repurchased $500M in FY2025, about $50M in Q3 2026, and expects about $500M for 2026. '+
+    '<b>Carried from the earlier version, not re-verified</b> (the 2026 proxy is not on file): the CEO pay figure and ratio, board independence and committee roles, and the founders\u2019 departure date.</div>';
   h+=sec('Stock-based compensation & alignment — did buybacks offset it?',
     '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Two things worth separating. At the <b>top</b>, alignment is cheap: CEO David Risher took a single large <b>performance-RSU in 2023</b> and <b>$0 new equity</b> since (~$2.8M FY25 pay, ~18:1 ratio). Company-<b>wide</b>, SBC was a real dilution drag — but a <b>shrinking</b> one, from a bloated <b>~22.6% of revenue (FY21)</b> to <b>~5.1% (FY25)</b>. With <b>no buybacks before 2025</b>, the share count still <b>rose FY22→FY24</b> (355M → 414M); only in <b>FY25</b>, once ~$500M of repurchases landed on top of falling SBC, did it <b>turn down</b> (~381M) — the first offset in company history.</div>'+
     '<div class="ov-chart-card" style="margin-top:10px"><div class="ov-chart-t">SBC as % of revenue vs shares outstanding <span>· FY2022–FY2025</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="lyChartSbc"></canvas></div></div>'+
@@ -1150,7 +1155,12 @@ var LY_TRACK=[
     detail:'<p><b>At Lyft (CEO since Q2 2023; board since 2021).</b> Led a decisive turnaround — cut ~26% of staff within days, refocused on riders/drivers, and delivered Lyft’s <b>first-ever quarter and full year of GAAP profitability</b> (Q2 2024 / FY2024), record Gross Bookings and cash flow, and the <b>inaugural $500M buyback</b> (Feb 2025). Drove customer-incentive efficiency and set 2026 as "the year of the AV."</p>'+
       '<p><b>Before Lyft.</b> <b>Amazon (1997–2002)</b> — ~37th employee, SVP US Retail, scaled the retail business past <b>$4B</b>. GM at <b>Microsoft</b> (launched Access, its first database product). Founder & CEO of <b>Worldreader</b> (2009–2023), a digital-books nonprofit — a social-impact role, not a commercial P&L.</p>'+
       '<p><b>Net read — value creator (green).</b> Turned a money-losing, founder-run company into a profitable, better-governed one. Caveat, not disqualifying: Lyft still has <b>no answer to Uber’s scale and diversification</b>, and the AV/robotaxi threat is unproven for the distant #2.</p>' },
-  { id:'brewer', n:'Erin Brewer', role:'Chief Financial Officer', since:'2023', rate:'green',
+  { id:'brous', n:'Michael Brous', role:'Chief Financial Officer', since:'CFO from the Q3 2026 call', rate:'amber',
+    uber:'About eight years at Lyft, the last three on the leadership team, and head of Lyft Urban Solutions (bikes and scooters) before becoming CFO; too new in the seat to have a record as CFO.',
+    prior:'At Lyft Urban Solutions \u201cwe ran an international asset-heavy business\u201d (his words on the Q3 2026 call). His career before Lyft is not on file.',
+    detail:'<p><b>At Lyft.</b> Introduced as CFO on the Q3 2026 call (Nov 5, 2026) and named as CFO in the release. By his account on that call: \u201cDuring my time as head of LUS, the team scaled e-bikes and improved those operating drivers, which led to double-digit rides growth, strong margins, and cash flow for the total business.\u201d Lyft Urban Solutions had an all-time high quarter in Q3 2026. He said to expect \u201ccontinuity, not a reset\u201d and that the capital allocation framework is unchanged.</p>'+
+      '<p><b>Net read \u2014 unproven as CFO (amber).</b> An internal promotion from an operating role, so continuity is likely; no CFO record yet. The effective date of the change and his earlier career are not in the documents on file.</p>' },
+  { id:'brewer', n:'Erin Brewer', role:'Chief Financial Officer until the Q3 2026 call', since:'2023', rate:'green',
     uber:'Co-architect of the profitability turnaround — oversaw the path to first full-year GAAP profit, record cash flow and the buyback; runs a stated ~$1.5B FCF strategy for the 2026–27 cycle.',
     prior:'MD, Enterprise Finance at <b>Charles Schwab</b>; Head of Strategy & Finance at <b>Atlassian</b>; <b>EVP & Chief Accounting Officer at McKesson</b> (Fortune-10).',
     detail:'<p><b>At Lyft (CFO since Jul 2023).</b> Co-architect of the financial inflection — the path to first full-year GAAP profit, record FCF ($1.12B FY25), and the share-repurchase program; manages a stated ~<b>$1.5B FCF</b> plan for 2026–27 while preserving investment capacity.</p>'+
@@ -2909,8 +2919,9 @@ function deepDiveHtml(c){
   h += '<div class="dd-pane" data-dd="valuation" hidden>'+st([
       ['histmult','Historic Multiple',lyftHistMult.body()],
       ['peers','Peers',lyPeerScatter('dd')+ddMore('Multiples and growth by peer — the earlier table (moved from the old Peers tab)',lyPeerMultBody(c))],
+      ['targetmult','Target Multiple',lyftTargetMult.body()],
       ['submits','Submit History',submitsHtml('LYFT')],
-      ['sensitivity','Sensitivity Analysis',LYFT_VAL.body()] ])+'</div>';
+      ['sensitivity','Sensitivity Analysis',lyftSens.body()+ddMore('Scenario calculator — the earlier version (moved from the old Valuation tab)',LYFT_VAL.body())] ])+'</div>';
   // MANAGEMENT - Executives & Board · Governance & SBC (+ capital allocation) · Track Record. Ownership comes with MG-OWN.
   h += '<div class="dd-pane" data-dd="mgmt" hidden>'+st([
       ['team','Executives & Board',LYFT_MGMT.body()],
@@ -3502,8 +3513,9 @@ function buildSub(root, group, key){
   } else if(group==='valuation'){
     if(key==='histmult') requestAnimationFrame(function(){ lyftHistMult.init(root); });
     else if(key==='peers') lyWireScatters(root);   // the same live peer map as the Overview (shared state)
+    else if(key==='targetmult') requestAnimationFrame(function(){ lyftTargetMult.init(root); });
     else if(key==='submits') requestAnimationFrame(function(){ initSubmits(root,'LYFT'); });
-    else if(key==='sensitivity') LYFT_VAL.init(root);
+    else if(key==='sensitivity'){ requestAnimationFrame(function(){ lyftSens.init(root); }); LYFT_VAL.init(root); }
   } else if(group==='mgmt'){
     if(key==='team')          LYFT_MGMT.init(root);
     else if(key==='governance') buildLySbc();   // SBC % vs share-count history

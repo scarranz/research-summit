@@ -12,7 +12,7 @@
 | Rama | `feat/lyft-profile` (desde `origin/main` @ `e2a30fa`, 2026-11-04; worktree `research-summit-lyft`). Ya existen en GitHub `feat/earnings-rollout-lyft` y `feat/lyft-2q26-results` (no se tocan) |
 | Analista responsable | SAB (Santiago Alvarez); la sesión la abre Dani |
 | Inicio | 2026-11-04 |
-| Avance | 31 de 45 unidades aprobadas (más 1 omitida ⏭️ y 8 en pausa ⏸ por dudas del modelo, proxy o el print del 3T26) |
+| Avance | 31 de 45 unidades aprobadas; 10 construidas el 2026-11-05 y pendientes de aprobación de SAB (🔍: EV-SET/EV-POST/EV-NOTES con el 3T26, BL-SPLC, VA-HIST, VA-TM, VA-SENS, MG-TEAM, MG-GOV, MG-TRACK); 1 omitida ⏭️; MISC y F-FINAL por cerrar |
 
 ## 1. Inventario de datos (F0)
 
@@ -131,25 +131,25 @@ Cuadre — **vía el dataset de Results/Customers existente (que viene de los 8-
 | TL-OTH | Top Line ▸ Other | ✅ | 2026-11-05 | SAB | | 2 cortes anuales FY23–25 (línea contable, geografía) |
 | TL-CUS | Top Line ▸ Customers | ✅ | 2026-11-05 | SAB | | sin concentración divulgada; sin SPLC |
 | EV-EST | Evolution ▸ Estimates | ✅ | 2026-11-05 | SAB | | 4 snapshots del xlsm (12-15, 02-11, 05-08, 08-07); FY26–FY29; revisado por SAB en el portal |
-| EV-SET | Evolution ▸ Earnings ▸ Setup | ✅ | 2026-11-05 | SAB | | ported uber-ce.js → lyft-ce.js; Q3 2026 Setup (BBG 11-04 + Summit 08-07); en revisión |
-| EV-POST | Evolution ▸ Earnings ▸ Post-Results | ✅ | 2026-11-05 | SAB | | Post-Results Q2 2026 desde 10-Q + Prepared Remarks (sin Q&A); 3T26 queda pendiente del print |
-| EV-NOTES | Evolution ▸ Earnings ▸ Notes | ✅ | 2026-11-05 | SAB | | semilla themes-data/lyft.js (6 hilos, previo registro movido + Q2 2026) |
+| EV-SET | Evolution ▸ Earnings ▸ Setup | 🔍 | 2026-11-05 | | | Setup 3T26 congelado (BBG 11-04 + Summit 08-07) y Setup 4T26 nuevo (guía del 3T26; consenso BBG 11-04 anterior al print; Summit 08-07) |
+| EV-POST | Evolution ▸ Earnings ▸ Post-Results | 🔍 | 2026-11-05 | | | Post-Results 2T26 (con Q&A de 9 preguntas, transcripción de Dani) y 3T26 (comunicado + Prepared Remarks + transcripción; 10 preguntas); pendiente de aprobación SAB |
+| EV-NOTES | Evolution ▸ Earnings ▸ Notes | 🔍 | 2026-11-05 | | | semilla themes-data/lyft.js: 6 hilos, con actualización Q2 2026 y Q3 2026 (5 de 6 ejes) |
 | BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ✅ | 2026-11-05 | SAB | | ported uber-bl.js → lyft-bl.js; BBG + 10-K; en revisión |
 | BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ✅ | 2026-11-05 | SAB | | puente con 5 líneas funcionales; cost structure |
 | BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ✅ | 2026-11-05 | SAB | | normalizado solo quita la liberación de $2.9B |
 | BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ✅ | 2026-11-05 | SAB | | SBC por función FY21–25 (10-K); acciones Summit no usadas (duda 4) |
 | BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ✅ | 2026-11-05 | SAB | | 5 pestañas de gasto con MD&A verbatim FY25 y 10-Q 2T26 |
 | BL-SEG | Bottom Line ▸ Segments | ⏭️ | 2026-11-05 |  | | Lyft reporta un solo segmento: no hay Segments en Bottom Line |
-| BL-SPLC | Bottom Line ▸ Supply Chain | ⏸ | 2026-11-05 |  | | sin export SPLC con Lyft como sujeto; se conserva el contenido anterior hasta que SAB lo decida |
-| VA-HIST | Valuation ▸ Historic Multiple | ✅ | 2026-11-05 | SAB | | P/E forward GAAP + EV/EBITDA; acciones y deuda neta solo de los filings disponibles (4 puntos) |
+| BL-SPLC | Bottom Line ▸ Supply Chain | 🔍 | 2026-11-05 | | | decisión de Dani: no se necesita export SPLC; se conserva el contenido anterior, sin reverificar (proveedores/clientes de la versión anterior) |
+| VA-HIST | Valuation ▸ Historic Multiple | 🔍 | 2026-11-05 | | | añade el balance del 3T26 (comunicado, no 10-Q) como 5.º punto; decisión de Dani: no hacen falta los 10-Q intermedios — 10-K + último 10-Q alcanzan |
 | VA-PEERS | Valuation ▸ Peers | ✅ | 2026-11-05 | SAB | | mismo mapa que OV-6 + tabla; tabla anterior en desplegable |
-| VA-TM | Valuation ▸ Target Multiple / PEG | ⏸ | 2026-11-05 |  | | bloqueado: usa SHARES y EARNINGS del modelo (dudas 2 y 4, §1b) |
+| VA-TM | Valuation ▸ Target Multiple / PEG | 🔍 | 2026-11-05 | | | construida: 4 submits válidos (EV/EBITDA 9×/8×/5×/7× sobre FY2027), sin pierna P/E (el modelo no la registra); EARNINGS del 11-feb nulo por error de escala; el guardado del 05-nov NO se usa (instrucción de Dani) |
 | VA-SUB | Valuation ▸ Submit History | ✅ | 2026-11-05 | SAB | | 4 submits del xlsm; EV/EBITDA; ni/sh/opi en null por las dudas |
-| VA-SENS | Valuation ▸ Sensitivity Analysis | ⏸ | 2026-11-05 |  | | calculadora anterior conservada; la reconstruida espera dudas 2 y 4 del modelo |
-| MG-TEAM | Management ▸ Executives & Board | ⏸ | 2026-11-05 |  | | roster anterior conservado; falta DEF 14A 2026 para verificar consejo y comités |
+| VA-SENS | Valuation ▸ Sensitivity Analysis | 🔍 | 2026-11-05 | | | construida sobre el submit 08-07 con un solo segmento: crecimiento del ingreso, margen de EBITDA aj. (OP_INCOME proyectado = 0, duda 2) y múltiplo; solo EV/EBITDA; calculadora anterior conservada debajo |
+| MG-TEAM | Management ▸ Executives & Board | 🔍 | 2026-11-05 | | | consejo = firmantes del 10-K FY25 (8) + Minicucci (call 2T26); CAO Stephen Hope (10-K); CFO Michael Brous (call 3T26). Independencia y comités: del roster anterior, sin reverificar (no hay proxy ni se pedirá) |
 | MG-OWN | Management ▸ Ownership | ✅ | 2026-11-05 | SAB | | sin tabla de tenedores (falta DEF 14A); KPIs, clases, recompras y tabla en vivo |
-| MG-GOV | Management ▸ Governance & SBC | ⏸ | 2026-11-05 |  | | contenido anterior conservado (incluye el colapso de la estructura dual en ago-2025, verificado en 10-K); falta DEF 14A |
-| MG-TRACK | Management ▸ Track Record | ⏸ | 2026-11-05 |  | | contenido anterior conservado; calificaciones del analista |
+| MG-GOV | Management ▸ Governance & SBC | 🔍 | 2026-11-05 | | | verificado en 10-K/10-Q/comunicado: Clase B 8.531M acciones a 31-dic-24 (~29% del voto, cálculo) y ninguna a 31-dic-25, consejo clasificado, acciones en circulación, recompras. Pago del CEO y razón: del roster anterior, marcados como no reverificados |
+| MG-TRACK | Management ▸ Track Record | 🔍 | 2026-11-05 | | | añade Michael Brous (ámbar, sin historial como CFO); Brewer cerrada "hasta el call del 3T26"; calificaciones son juicio del analista, sin cambios |
 | MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab aprobada) | ⬜ | | | | |
 | F-FINAL | Cierre y entrega | ⏸ | 2026-11-05 |  | | B3 pendiente de revisión; datos del Overview movidos a lyft-ov-data.js; estilo en línea del Overview retirado; falta limpiar el código viejo de ce* |
 
@@ -473,3 +473,13 @@ Conteo de control (piezas): **69 filas** (B1, leído del código de `lyft.js` en
 - **Errores encontrados y corregidos hoy:** (1) un `</div>` faltante en la nota del puente de Bottom Line anidaba Evolution/Valuation/Mgmt/Misc dentro de Bottom Line (pestañas vacías); (2) selectores `.ov-lyftstercard-dd` en `lyft-ce.js` (reemplazo masivo mal hecho); (3) `lyft-histmult.js` rompía sin serie anual de EPS.
 - **Procedencia de los calls anteriores (Q4 2023–Q1 2026):** vienen del código previo del repo (`docs/calls/LYFT.md` y `LYFT-latest.md`: citas de Prepared Remarks leídas del PDF de Lyft y extractos de Q&A de transcripciones de terceros, rotulados). No se re-verificaron en esta pasada.
 - **Pendiente:** 8-K del cambio de CFO y proxy 2026 (Management y Ownership); resto de la lista de §6.
+
+### 2026-11-05 · Desbloqueo de unidades en pausa (instrucción de Dani)
+- **Instrucción:** no pedir proxy, Slides, export SPLC ni 10-Q intermedios; el 10-K FY25 + el último 10-Q (2T26) + el comunicado del 3T26 alcanzan. Las unidades en pausa se construyen con lo que hay y lo no verificable se rotula.
+- **VA-TM** (`lyft-target-multiple.js` + `-data.js`, portado de `uber-target-multiple.js`): 4 submits válidos del xlsm; valuación y filas del modelo congeladas; el modelo solo valúa EV/EBITDA (9×, 8×, 5×, 7× sobre FY2027) → no hay pierna P/E (el P/E "en vivo" parte de la celda P/E del libro, 16×, no de una cifra inventada). EARNINGS del submit 2026-02-11 = null (error de escala ×378). EARNINGS y SHARES se muestran como el modelo los trae, con aviso (dudas 2 y 4).
+- **VA-SENS** (`lyft-sensitivity.js` + `-data.js`, portado de `uber-sensitivity.js`): un snapshot (08-07), un solo segmento; ejes = crecimiento del ingreso, margen de EBITDA aj. sobre ingreso y múltiplo de salida (arranca en el del modelo); base Summit | Street (Bloomberg). OP_INCOME proyectado es 0 en ese submit (duda 2), por eso el margen es de EBITDA y no operativo. La calculadora anterior (`LYFT_VAL`) queda debajo, desplegable.
+- **El guardado del xlsm con fecha 2026-11-05 17:35 no es un submit** (Dani lo guardó corrigiendo líneas del modelo, antes de cargar el 3T26): no se usa como vintage en Estimates, Submit History, Target Multiple ni Sensitivity. Ese guardado ya trae OP_INCOME, EARNINGS y SHARES poblados para los años proyectados; cuando haya un submit posterior al 3T26, podrá reabrirse la duda 2 y 4.
+- **MG-TEAM/GOV/TRACK:** sin proxy. Consejo = los 8 firmantes del 10-K (10-feb-2026) + Ben Minicucci (call del 2T26); CAO Stephen Hope (10-K); CFO Michael Brous (call del 3T26, fecha efectiva no dada). Verificado en 10-K/10-Q/comunicado: Clase B (20 votos) 8.531M acciones a 31-dic-24 ≈ 29% del voto (cálculo propio) y cero a 31-dic-25; consejo clasificado en tres clases; acciones en circulación (400.9M a 31-dic-25; 379.2M a 30-sep-26); recompras. No reverificado (proxy): pago del CEO y razón, independencia y comités.
+- **Insurance & Balance Sheet:** actualizado del 1T26 al 30-sep-2026 con el balance del comunicado del 3T26 (se quita el aviso "work in progress"); detalle de deuda del 10-Q del 2T26.
+- **VA-HIST:** se añade el balance del 3T26 (comunicado; el 10-Q del 3T26 no está en archivo). No se piden los 10-Q de 1T24–3T25: la serie sigue escalonada en los 10-K + 2T26 + 3T26.
+- **Pendiente real (nada que Dani deba traer):** aprobación de SAB de las unidades 🔍; las dudas del modelo 2 y 4 (la última versión guardada ya las corrige; falta un submit posterior al 3T26 para reabrirlas); `get-market-history` (San/Oscar) para el gráfico de precio de Historic Multiple; MISC-* siguen como análisis de la versión anterior sin reverificar (salvo Insurance & Balance Sheet); F-FINAL (código viejo `CE_CONS`, `CALL_EARNINGS`, `LY_THEMES`… y cuadre B3).

@@ -28,6 +28,7 @@ import { nvdaGovBody } from './nvda-gov.js';                           // Manage
 import { nvdaTrackBody, nvdaTrackPop } from './nvda-track.js';          // Management ▸ Track Record (MG-TRACK)
 import { SUMMIT_CAT } from '../viz-palette.js';
 import { nvdaBlGeneralHtml, nvdaBlGeneralBuild } from './nvda-bl.js';   // Bottom Line ▸ General (BL-GEN-1…5)
+import { nvdaCeHtml, nvdaCeWire, nvdaCeBuild, nvdaCePop } from './nvda-ce.js';   // Evolution ▸ Earnings ▸ Setup (EV-SET), copy of lyft-ce.js
 var NVDA_MGMT = makeManagement(Object.assign({ brand:SUMMIT_CAT[0] }, NVDA_MGMT_DATA));
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line (engine + js/segments-data/nvda.js)   // Evolution ▸ Results (engine + js/results-data/nvda.js)
 
@@ -909,6 +910,7 @@ function wireModal(root){
   root.querySelector('#nvdaModalX').onclick=closeM; back.onclick=function(e){ if(e.target===back) closeM(); };
   function resolve(key){
     var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
+    if(kind==='ce'){ return nvdaCePop(id); }       // Evolution ▸ Earnings "?" notes (nvda-ce.js)
     if(kind==='ntrk'){ return nvdaTrackPop(id); }   // Management ▸ Track Record cards (nvda-track.js)
     if(kind==='hist'){ var tl=TIMELINE[+id]; return tl&&tl.d?{t:esc(tl.y),h:tl.d}:null; }
     if(kind==='prod'){ var f=NV_PRODUCTS[+id]; if(!f) return null;
@@ -2569,6 +2571,10 @@ function deepDiveHtml(){
     { k:'supplychain', l:'Supply Chain', body:oldPane('industry', industryBody()) }, // B2 #35 (semis map; the SPLC table joins in BL-SPLC)
   ], true);
   h+=subtabs('evolution',[
+    // EV-SET: Earnings ▸ Setup on the shared Earnings machinery (nvda-ce.js + nvda-ce-data.js); Post-Results and Notes are not
+    // published until an official call transcript is on file (SAB, 2026-11-09). B2 #15 (old "Latest print & guidance") → the
+    // Q2 FY27 Setup notes.
+    { k:'earnings', l:'Earnings', body:nvdaCeHtml({ ticker:'NVDA' }) },
     // EV-RES: the shared Results engine (B2 #27 beats text → metric notes, #28 guidance and #29 consensus → the dataset,
     // #30 approximate Fiscal.ai curve dropped for the real Bloomberg vintages — SAB 2026-11-02).
     { k:'results', l:'Results', body:resultsHtml('NVDA') },
@@ -2604,7 +2610,8 @@ function buildSub(root, group, key){
     else if(key==='margins') requestAnimationFrame(function(){ nvdaBlGeneralBuild(root); });
     else if(key==='supplychain') requestAnimationFrame(function(){ semiIndustry.init(); });
   } else if(group==='evolution'){
-    if(key==='results') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'NVDA'); });
+    if(key==='earnings') nvdaCeBuild(root);
+    else if(key==='results') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'NVDA'); });
     else if(key==='estevo') requestAnimationFrame(function(){ initResultsEvo('NVDA'); });
   } else if(group==='valuation'){
     if(key==='targetmult') requestAnimationFrame(function(){ initValuation(); initMultiples(root.querySelector('.ovt-pane[data-ovt="valuation"]')); });
@@ -2662,6 +2669,7 @@ function deepDiveInit(){
   ['topline','bottomline','evolution','valuation','mgmt','misc'].forEach(function(g){ wireSubtabs(root, g); });
   wireModal(document.getElementById('co-detailview') || root);   // Deep Dive pop-ups (Track Record) on the hoisted Overview modal
   NVDA_MGMT.init(root);                                           // the engine's bio modal (playbook §15)
+  nvdaCeWire(root);                                               // Earnings: phase tab, quarter pills, estimate toggles (nvda-ce.js)
   // Bottom Line ▸ Segments (old Segments pane, temporary): segment / view / forecast-source toggles on the revenue chart.
   // Each .nv-seg-toggle is its own group; active state and state var are scoped to the group.
   root.querySelectorAll('.nv-seg-toggle').forEach(function(grp){

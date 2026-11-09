@@ -12,7 +12,7 @@
 | Rama | `feat/nvda-restructure` (worktree `C:\Users\santi\Developer\rs-nvda`) |
 | Analista responsable | SAB |
 | Inicio | 2026-10-28 (F0 pausada ese día; retomada 2026-11-02) |
-| Avance | 19 de 40 unidades aprobadas · 0 omitidas · 2 bloqueadas (M = filas del tablero − ⏭️ de alcance; Anexo C) |
+| Avance | 29 de 40 unidades aprobadas · 0 omitidas · 2 bloqueadas (M = filas del tablero − ⏭️ de alcance; Anexo C) |
 
 ## 1. Inventario de datos (F0)
 
@@ -138,14 +138,14 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 | TL-OTH | Top Line ▸ Other | ✅ | 2026-11-02 | SAB | — | 4 cortes (C&N/Graphics · esquema viejo · compute/networking · geografía), cuadran al total |
 | TL-CUS | Top Line ▸ Customers | ✅ | 2026-11-02 | SAB | — | concentración 10-K + clases + SPLC (20, 4Q FY26) + qué compra cada cliente (3 filing + 7 BBG estimate) |
 | EV-EST | Evolution ▸ Estimates | ✅ | 2026-11-02 | 2026-11-02 | SAB | motor resultsEvo, 3 submits, Profitability por defecto = op. income non-GAAP |
-| EV-SET | Evolution ▸ Earnings ▸ Setup | ⬜ | | | | |
+| EV-SET | Evolution ▸ Earnings ▸ Setup | ✅ | 2026-11-09 | SAB | — | solo Setup; Q2·Q3·Q4 FY27; 25 líneas; notas solo del 8-K |
 | EV-POST | Evolution ▸ Earnings ▸ Post-Results | ⛔ | 2026-11-02 | | | faltan transcripciones oficiales de IR |
 | EV-NOTES | Evolution ▸ Earnings ▸ Notes | ⛔ | 2026-11-02 | | | depende de EV-POST (transcripciones) |
-| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ⬜ | | | | |
-| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ⬜ | | | | |
-| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ⬜ | | | | |
-| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ⬜ | | | | |
-| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ⬜ | | | | |
+| BL-GEN-1 | Bottom Line ▸ General ▸ Profitability & margins | ✅ | 2026-11-09 | SAB | — | 6 métricas en su base de EV-RES-DATA; EBITDA trimestral cae a anual con nota; arreglo de ventana al cambiar de eje |
+| BL-GEN-2 | Bottom Line ▸ General ▸ The bridge | ✅ | 2026-11-09 | SAB | — | 4 modos; costo de ventas aparte en una barra; Arm FY23 ámbar |
+| BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ✅ | 2026-11-09 | SAB | — | Reported/Normalized FY24–FY29E; forward desde op. income non-GAAP |
+| BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ✅ | 2026-11-09 | SAB | — | Dilution (sin línea Summit, SAB) + SBC by line; % sobre la suma de líneas |
+| BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ✅ | 2026-11-09 | SAB | — | 3 líneas (costo de ventas aparte) · 6 secciones · citas verificadas por script |
 | BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
 | BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
@@ -181,6 +181,11 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 - 2026-11-02 · MG-* · Management adelantado (SAB). Ejecutivos = los 5 del proxy 2026 (Huang, Kress, Puri, Shoquist, Teter) + Chris Malachowsky; consejo completo. Ownership = insiders del proxy + posiciones Form 4 del export BBG (NVDA_OWN.xlsx, jun-2026) y >5% del proxy, sin Top holders (el cache de fondos del export es viejo, dic-2023). Track Record sin calificaciones (como TSM y GOOGL) — SAB
 - 2026-11-02 · TL-CUS · En "What each top customer buys" se muestran los 7 estimados de Bloomberg junto a los clientes sin nombre del filing, marcados estimate, con la nota de que un peso parecido no prueba que sean el mismo cliente — SAB
 - 2026-11-02 · B2 · El mapa de cadena de suministro de semis (`semi-industry.js`) va a Bottom Line ▸ Supply Chain debajo de la tabla SPLC, importando el módulo compartido — SAB
+- 2026-11-02 · BL-GEN · El costo de ventas va en una sola barra (el 10-K no lo desglosa) con una nota — SAB (anotado en el código el 2026-11-02; registrado aquí el 2026-11-09)
+- 2026-11-02 · BL-GEN-5 · Management commentary de las líneas de gasto: transcripciones de The Motley Fool (terceros; NVIDIA publica repeticiones, no texto), marcadas como tales en el pie — SAB (registrado el 2026-11-09). Pendiente: si también valen para EV-POST/EV-NOTES
+- 2026-11-09 · EV-SET · Notas del Setup solo del 8-K de NVIDIA (comunicado + CFO commentary con la guía), sin citas de la llamada: Motley Fool NO se usa en Earnings; EV-POST y EV-NOTES siguen ⛔ hasta tener transcripción oficial — SAB
+- 2026-11-09 · EV-SET · Calle = snapshot BBG 2026-09-09 (el BBG_CONSENSUS.txt del 2026-11-06 no trae uno más nuevo para NVDA); se recarga si SAB actualiza NVDA antes del print — SAB
+- 2026-11-09 · EV-SET · Líneas: ingreso → DC (Hyperscale · ACIE · Compute · Networking) → Edge → utilidad bruta (non-GAAP) → R&D · SG&A · opex → op. income non-GAAP y GAAP → C&N · Graphics → EBITDA → intereses · impuestos → utilidad neta → EPS → CFO · capex · FCF · D&A · acciones; trimestres 3Q FY27 y 4Q FY27 — SAB
 
 ## 4. Excepciones aceptadas
 
@@ -207,7 +212,7 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 | 12 | Deep Dive ▸ Segments ▸ tabla "New framework — revenue by market platform (recast)" `SEG_NEW` — Hyperscale / ACIE / Edge | Top Line ▸ TL-GEN (tabla del periodo) + TL-SEG (qué vende cada segmento y a quién) | definiciones Hyperscale / ACIE / Edge pasan a TL-SEG; números al dataset | ✅ |
 | 13 | Deep Dive ▸ Segments ▸ tabla "Old framework — as reported through FY2026" `SEG_OLD` + texto "The bridge" | Top Line ▸ TL-GEN (esquema viejo como historia) — texto "The bridge" en la nota colapsable | datos al dataset; el puente se conserva textual | ✅ |
 | 14 | Deep Dive ▸ Segments ▸ "GAAP reportable segments (quarterly)" `SEG_GAAP` (Compute & Networking · Graphics) | Bottom Line ▸ BL-SEG (utilidad operativa por segmento GAAP) + TL-GEN (ingreso) | Compute & Networking / Graphics; arregla de paso Anexo A16 (utilidad por segmento en anual) | ⬜ |
-| 15 | Deep Dive ▸ Segments ▸ "Latest print & guidance (Q1 FY2027)" — desactualizado: ya salió 2Q FY27 | Evolution ▸ EV-SET Setup (guía del próximo trimestre) + serie guidance en EV-RES-DATA | se actualiza a 2Q FY27 reportado / guía 3Q FY27 | ⬜ |
+| 15 | Deep Dive ▸ Segments ▸ "Latest print & guidance (Q1 FY2027)" — desactualizado: ya salió 2Q FY27 | Evolution ▸ EV-SET Setup (guía del próximo trimestre) + serie guidance en EV-RES-DATA | se actualiza a 2Q FY27 reportado / guía 3Q FY27 | ✅ |
 | 16 | Deep Dive ▸ Segments ▸ "Milestones by segment" `SEG_MILESTONES` | Top Line ▸ TL-SEG (hitos por segmento) + los principales a OV-7 Timeline |  | ✅ |
 | 17 | Deep Dive ▸ Technology ▸ "What NVIDIA sells — the full stack" `sellsMap`/`initSellsMap` + `TECH_STACK` (tap a layer) | Miscellaneous ▸ MISC-tech "Technology" (nueva sub-tab propuesta) | se conserva tal cual (interactivo) | ⬜ |
 | 18 | Deep Dive ▸ Technology ▸ "The basic logic: transistors = computing power" `transistorShrink` + `TR_STEPS` — animación | Miscellaneous ▸ MISC-tech | se conserva tal cual | ⬜ |
@@ -244,6 +249,7 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 | 2026-11-02 | EV-EST, VA-SUB, VA-TM | Dudas 1 y 3 del Mapa Summit (cambio de definición de "ajustado" entre submits; intereses dentro del EBITDA) | SAB (autor del modelo) | duda 1 cerrada 2026-11-02; duda 3 abierta (EBITDA rotulado "Summit definition", sin consenso) |
 | 2026-11-02 | EV-POST, EV-NOTES | Transcripciones oficiales (PDF de IR) de 3Q FY26, 4Q FY26, 1Q FY27, 2Q FY27; y 3Q FY27 (~2026-11-19) | SAB | abierto |
 | 2026-11-02 | VA-SUB | Submit 2025-12-12: P/E sobre 2027 y EV/EBITDA sobre 2028 — revisar la prueba PT÷FV en la hoja Output | Claude (con el workbook) | abierto |
+| 2026-11-09 | (rama) | Merge de origin/main fdda9d8 en la rama (0648b4b, local, sin push): conflictos solo en listas de selectores (overview.css, selectors.css, segments.js), resueltos con UBER/LYFT + NVDA | Claude | cerrado |
 
 ## 6b. Conexiones pendientes ("Live data pending")
 
@@ -421,3 +427,40 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 
 ### 2026-11-02 · EV-RES Evolution ▸ Results — RE-APROBADA
 - Qué cambió: solo las notas de Total Revenue (Quarterly y Annual) con los textos de #27 y #30 (ver EV-EST). SAB re-aprobó.
+
+### 2026-11-09 · BL-GEN-1 Bottom Line ▸ General ▸ Profitability & margins — APROBADA
+- Qué se mostró: `aMarginsBody`/`aBuildMargins` (copia de googl-bl.js ← amzn.js) en `js/overviews/nvda-bl.js`; desplegable Profit (Gross profit non-GAAP · Operating income GAAP, por defecto · Operating income non-GAAP · EBITDA · Net income GAAP) / Cash (FCF); Annual | Quarterly; Normalized solo con Net income anual; rangos All/Reported/Forward/Last 5; chip por fuente; tabla plegada. Reemplaza la caja vieja de Margins (B2 #7): su FY27E Summit sin fecha se reemplaza por Summit congelado; el texto viejo de la nota quedó en las notas por métrica.
+- Fuentes: `js/results-data/nvda.js` (act 10-K/10-Q; Summit 3 snapshots congelados; consenso BBG 2026-09-09); `nvda-bbg.js` (export BBG 9/9/2026) para Normalized.
+- Autoauditoría: 6 métricas × Annual/Quarterly ✔ · ejes a la derecha ✔ · futuros desvanecidos ✔ · zoom en ambos ejes ✔ · sin `<style>` ✔ · 0 errores (39 botones) ✔ · FAIL arreglado antes de mostrar: en Quarterly, pasar por EBITDA (cae a anual) dejaba la ventana de 10 periodos en las demás métricas (1Q20–2Q22, sin consenso) → `aStdRender` reinicia la ventana cuando cambia el eje (mismo andamiaje en googl/meta/amzn-bl: revisar en PR aparte) · observación: EBITDA trimestral no se dibuja (no está en Results; el export BBG solo trae 9 trimestres "comparable") · Summit FY26 GAAP op. income 129.9 vs 130.4 = el −426 del submit 12-12 (bloqueo §6).
+- Cambios pedidos / decisiones: ninguno.
+
+### 2026-11-09 · BL-GEN-2 Bottom Line ▸ General ▸ The bridge — APROBADA
+- Qué se mostró: Build-up ($B) anual (FY19–FY26) y trimestral (3Q/4Q FY27 deshabilitados), Margin change (bps), Forward (expenses) con 5 sliders contra consenso + "consensus residual", Cost structure (% del ingreso apilado FY19–FY26 + margen bruto y operativo, tabla). Costo de ventas primero y aparte con subtotal Gross profit, una sola barra (decisión 2026-11-02); Arm FY23 en ámbar.
+- Fuentes: SEC XBRL (10-K/10-Q) vía `nvda-bl-data.js`; export BBG 9/9/2026 para Forward.
+- Autoauditoría: FY26 215.9 − 62.5 = 153.5 − 18.5 − 4.6 = 130.4 ✔ · 2Q27 96.2 → 63.7 ✔ · bps FY23 15.7% → FY26 60.4% suma ✔ · FY23 cuadra con el cargo de Arm ✔ · ejes a la derecha ✔ · 0 errores ✔.
+- Cambios pedidos / decisiones: ninguno.
+
+### 2026-11-09 · BL-GEN-3 Bottom Line ▸ General ▸ Operating income → net income — APROBADA
+- Qué se mostró: cascada Op. income → interés neto → otros ingresos (ámbar) → impuestos → Net income; Reported | Normalized; FY24–FY29E (FY27E por defecto); los años estimados parten de op. income non-GAAP (rótulo y texto lo dicen); leyenda de 3 oraciones.
+- Fuentes: 10-K FY2024–FY2026 vía SEC XBRL y líneas reportadas del export BBG; export BBG 9/9/2026 para FY27E–FY29E.
+- Autoauditoría: FY24 29.76 · FY25 72.88 · FY26 120.07 = 10-K ✔ · Normalized FY26 112.41 ✔ · ≤ 3 oraciones, sin fechas tecleadas ✔ · 0 errores ✔ · FAIL arreglado antes de mostrar: el texto decía que FY27E "already contains the reported quarters", pero el consenso (224.2) se pronostica sin ganancias en inversiones y deja fuera las de 1Q27/2Q27 (GAAP real 1H = 118.0 vs 97.8 implícito) → texto corregido.
+- Cambios pedidos / decisiones: ninguno.
+
+### 2026-11-09 · BL-GEN-4 Bottom Line ▸ General ▸ Stock-based compensation — APROBADA
+- Qué se mostró: Dilution (barras SBC + acciones diluidas reportadas y consenso BBG) | SBC by line (costo de ventas · R&D · SG&A); $B | %; ambos ejes a la derecha; tabla plegada.
+- Fuentes: 10-K FY2026 Nota 3 (SBC por línea, FY24–FY26); export BBG 9/9/2026 (FY27E–FY29E, acciones diluidas).
+- Autoauditoría: FY26 SBC 6.4 = 0.3 + 4.7 + 1.4 = 10-K ✔ · acciones 24,940 → 24,514 ✔ · ejes a la derecha (A9) ✔ · 0 errores ✔ · FAIL arreglado antes de mostrar: en SBC by line %, las líneas forward de BBG no suman su total de SBC (FY28E 13.0 vs 9.2) y R&D salía en 108.6% con barras cortadas en el tope de 100% → el % ahora es sobre la suma de las líneas, con nota.
+- Cambios pedidos / decisiones: sin línea de acciones Summit (ofrecida; SAB aprobó sin ella).
+
+### 2026-11-09 · BL-GEN-5 Bottom Line ▸ General ▸ Expense lines — APROBADA
+- Qué se mostró: colapsable "Expense lines — the 3 cost lines of the income statement"; pestañas Cost of revenue · (rótulo Operating expenses) · R&D · SG&A con `$X · Y%` calculados; por línea: Key figures · Definition — Form 10-K (solo costo de ventas; R&D y SG&A sin definición en el 10-K, la nota lo dice) · Share of revenue FY2019–FY2026 · Composition and drivers (una tabla) · Effect on the operating margin · Management commentary · pie.
+- Fuentes: 10-K FY2026 (Item 7, notas), 10-Q 2Q FY27; SEC XBRL (series); transcripciones de The Motley Fool de 3Q FY26–2Q FY27 (decisión SAB 2026-11-02, marcadas de terceros en el pie).
+- Autoauditoría: sin emojis ni íconos ✔ · sin título repetido ✔ · costo de ventas primero ✔ · 15 fragmentos de citas de llamadas verificados por script contra las 4 transcripciones de Motley Fool bajadas el 2026-11-09 ✔ · 7 citas de 10-K/10-Q verificadas contra el texto de los filings ✔ · 0 errores ✔ · desvío aceptado: la guía pide `docs/calls/`; fuente = Motley Fool por decisión de SAB.
+- Cambios pedidos / decisiones: ninguno. Bottom Line ▸ General completo.
+
+### 2026-11-09 · EV-SET Evolution ▸ Earnings ▸ Setup — APROBADA
+- Qué se mostró: Evolution abre en Earnings; solo la fase Setup (Post-Results y Notes sin publicar: sin transcripción oficial, decisión SAB); pastillas Q4 FY27 · **Q3 FY27 (activa)** · Q2 FY27 (reportado, congelado); lista "down the income statement" de 25 líneas con Street | Summit, YoY/QoQ, margen, titular de la nota visible + `?`, GUIDED en ingreso / utilidad bruta / opex; Setup picture (motor de Results, `NVDA_SETUP`); pie de fuentes por trimestre. Reubica B2 #15 ("Latest print & guidance (Q1 FY2027)") en las notas de Q2 FY27, actualizado.
+- Archivos: `js/overviews/nvda-ce.js` (copia de `lyft-ce.js`), `js/overviews/nvda-ce-data.js`, `js/results-data/nvda-setup.js` (registrado `NVDA_SETUP` en `js/results.js`), `js/themes-data/nvda.js` (semilla vacía), `scripts/consensus/map_nvda_ce.json` + `emit_ce_nvda.py` (líneas que Results no trae: R&D, SG&A, EBITDA, intereses, impuestos, CFO, D&A, acciones).
+- Fuentes: BBG_CONSENSUS.txt (30 snapshots; Street Q3/Q4 = 2026-09-09, Q2 = 2026-05-25); Summit congelado en Results (Q3/Q4 = submit 2026-08-28, Q2 = 2026-03-04); 8-K de NVIDIA del 2026-08-26 y 2026-05-20 (Ex. 99.1 y 99.2).
+- Autoauditoría: 23 citas verificadas por script contra los 8-K ✔ · reportados 2Q FY27 de las líneas nuevas = 8-K (R&D non-GAAP 6,884; SG&A 1,348; EBITDA 65,083; impuestos 11,819; CFO 24,077; D&A 1,127; acciones 24,285) ✔ · R&D/SG&A/EBITDA solo en la base nueva (sin YoY hasta 4Q FY27) ✔ · 31 controles sin errores ✔ · sin emojis ni tarjetas IR/EDGAR ✔ · cifras "derived" marcadas ✔ · arreglado sobre la copia de LYFT: abre en el próximo print (no el más lejano), titular de nota visible en la fila (§12), pie de fuentes por trimestre (LYFT no lo pintaba) · advertencia: YoY de Hyperscale/ACIE contra el recast de BBG de 3Q FY26 (bloqueo §6 abierto).
+- Cambios pedidos / decisiones: las tres de la sección 3 (2026-11-09).

@@ -148,7 +148,11 @@ function aStdRender(id, derive){
   var cv=aChartReady('astd-'+id); if(!cv) return;
   var st=_aStd[id]||(_aStd[id]={win:null,hidden:{},sel:null,modes:{}});
   var spec=derive(st); if(!spec) return;
-  var n=spec.labels.length; if(!st.win || st.win[1]>n-1 || st.win[0]>st.win[1]) st.win=[0,n-1];
+  var n=spec.labels.length;
+  // A different period axis (e.g. a line that has no quarterly series falls back to annual) starts on its full range;
+  // otherwise a 10-year window would be carried over to a 34-quarter axis and cut it to its first ten quarters.
+  var axisKey=n+'|'+spec.labels[0]+'|'+spec.labels[n-1]; if(st.axisKey!==axisKey){ if(st.axisKey!=null) st.win=null; st.axisKey=axisKey; }
+  if(!st.win || st.win[1]>n-1 || st.win[0]>st.win[1]) st.win=[0,n-1];
   var lo=st.win[0], hi=st.win[1], la=spec.lastAct==null?n-1:spec.lastAct;
   var labels=spec.labels.slice(lo,hi+1), yFmt=spec.yFmt||function(v){return v;};
   aDestroy('astd-'+id);
@@ -494,7 +498,7 @@ function aBuildNetBridge(){
   if(cap){ var yl=fyLab(y)+(est?'E':''), rm=rev?net/rev*100:null, nm=rev?nNet/rev*100:null;
     var s1='<b>'+yl+'</b> — net margin <b>'+(rm==null?'—':rm.toFixed(1)+'%')+'</b> reported, <b>'+(nm==null?'—':nm.toFixed(1)+'%')+'</b> normalized; effective tax rate <b>'+(t*100).toFixed(0)+'%</b>.';
     var s2=' The <span class="me-bl-amber"><span class="me-bl-swatch" style="background:'+ONEOFF+'"></span>amber bar</span> is '+(est?'other income net of the gap between consensus non-GAAP operating income and GAAP pre-tax income':'other income, net — mostly gains and losses on equity securities')+', '+(O>=0?'+':'−')+aB(O)+'; Normalized removes it after tax.';
-    var s3=' Source: '+(est?'Bloomberg consensus export (as of '+esc(nvdaBBG.asOf)+'); '+yl+' is an estimate'+(y===A_YF[0]?' that already contains the reported quarters':''):'NVIDIA Form 10-K (GAAP), via SEC XBRL and the Bloomberg export’s reported lines')+'.';
+    var s3=' Source: '+(est?'Bloomberg consensus export (as of '+esc(nvdaBBG.asOf)+'); '+yl+' is an estimate'+(y===A_YF[0]?', forecast without gains on equity securities — so it leaves out the gains NVIDIA already reported this fiscal year (Evolution ▸ Results, Net income note)':''):'NVIDIA Form 10-K (GAAP), via SEC XBRL and the Bloomberg export’s reported lines')+'.';
     cap.innerHTML=s1+s2+s3; }
 }
 // ── BL-GEN-4 SBC & dilution (amzn.js aSbcBody / aBuildSbc). Dilution: SBC bars + diluted shares (reported, then
@@ -537,8 +541,10 @@ function aBuildSbc(){
     var s0=sh[0], sL=sh[A_LA], sE=sh[sh.length-1];
     if(legEl) legEl.innerHTML='<span class="me-bl-legcap">Diluted shares '+(s0!=null&&sL!=null?'went from '+Math.round(s0).toLocaleString('en-US')+'M in '+labels[0]+' to '+Math.round(sL).toLocaleString('en-US')+'M in '+labels[A_LA]:'')+(sE!=null?'; consensus has '+Math.round(sE).toLocaleString('en-US')+'M in '+labels[labels.length-1]:'')+'. No Summit share series is frozen for NVIDIA. Click a legend item to hide it.</span>';
   } else {
-    if(legEl) legEl.innerHTML='<span class="me-bl-legcap">Reported years tie to the 10-K table of SBC by line ('+esc(NVDA_SBC_FN_SRC)+'); later years are Bloomberg consensus by line, whose lines need not add up to its total-SBC consensus.</span>';
-    var tot=aSbcSer('sbc');
+    if(legEl) legEl.innerHTML='<span class="me-bl-legcap">Reported years tie to the 10-K table of SBC by line ('+esc(NVDA_SBC_FN_SRC)+'); later years are Bloomberg consensus by line, whose lines need not add up to its total-SBC consensus; in %, each line is its share of the lines’ sum.</span>';
+    // % = each line's share of the lines' SUM: reported years tie to the 10-K total; Bloomberg's forward lines need not add
+    // up to its total-SBC consensus, which pushed a line past 100% (R&D 108.6% in FY28E) and clipped the bars.
+    var tot=labels.map(function(_,i){ var s=0, any=false; SBC_LN.forEach(function(l){ var v=aSbcSer(l.sbc)[i]; if(v!=null){ s+=v; any=true; } }); return any?s:null; });
     var ds=SBC_LN.map(function(l){ var s=aSbcSer(l.sbc), c=aLineColor(l.k);
       var vals=labels.map(function(_,i){ if(s[i]==null) return null; return pct?(tot[i]?Math.round(s[i]/tot[i]*1000)/10:null):Math.round(s[i]/100)/10; });
       return { label:l.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<=A_LA?c:fade(c,0.45); }), borderColor:'white', borderWidth:1, maxBarThickness:44, stack:'s' }; });

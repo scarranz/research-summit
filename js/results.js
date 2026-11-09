@@ -42,6 +42,7 @@ import { spotResults } from './results-data/spot.js';
 import { spotSetup } from './results-data/spot-setup.js';
 import { lyftResults } from './results-data/lyft.js';
 import { lyftSetup } from './results-data/lyft-setup.js';
+import { nvdaSetup } from './results-data/nvda-setup.js';
 import { tbbbResults } from './results-data/tbbb.js';
 import { dhrResults } from './results-data/dhr.js';
 import { dhrSetup } from './results-data/dhr-setup.js';
@@ -85,6 +86,7 @@ var RESULTS_DATA = {
   SPOT_SETUP: spotSetup,
   LYFT: lyftResults,
   LYFT_SETUP: lyftSetup,
+  NVDA_SETUP: nvdaSetup,
   TBBB: tbbbResults,
   TBBB_SETUP: tbbbSetup,
   TBBB_BL: tbbbBl,

@@ -12,7 +12,7 @@
 | Rama | `feat/nvda-restructure` (worktree `C:\Users\santi\Developer\rs-nvda`) |
 | Analista responsable | SAB |
 | Inicio | 2026-10-28 (F0 pausada ese día; retomada 2026-11-02) |
-| Avance | 40 de 43 unidades aprobadas (MISC se abrió en 3 sub-tabs) · 0 omitidas · 2 bloqueadas (EV-POST, EV-NOTES) · falta F-FINAL (M = filas del tablero − ⏭️ de alcance; Anexo C) |
+| Avance | **41 de 43 aprobadas — perfil entregado (F-FINAL ✅ 2026-11-09)** · 0 omitidas · 2 bloqueadas (EV-POST, EV-NOTES: sin transcripción oficial) (M = filas del tablero − ⏭️ de alcance; Anexo C) |
 
 ## 1. Inventario de datos (F0)
 
@@ -160,7 +160,7 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 | MISC-tech | Miscellaneous ▸ Technology | ✅ | 2026-11-09 | SAB | — | pestaña vieja conservada (animaciones); CUDA → MISC-comp; colores Summit; Moore con zoom + tabla; tabla de generaciones; Rubin del 10-Q; pie con fuentes |
 | MISC-comp | Miscellaneous ▸ Competitive position | ✅ | 2026-11-09 | SAB | — | tesis en palabras del 10-K + CUDA (#22) + flywheel (#39); 3 tarjetas con evidencia a favor y en contra; tabla de 7 competidores con fuente por celda |
 | MISC-capacity | Miscellaneous ▸ Capacity → revenue | ✅ | 2026-11-09 | SAB | — | cadena cortada en capacidad y unidades (no publicadas) + cobertura: compromisos ÷ (1 − margen) vs modelo y consenso, con controles |
-| F-FINAL | Cierre y entrega | 🔍 | 2026-11-09 | | — | barrido sin errores; mapa B3 40/40; código muerto fuera (102 piezas, −1,225 líneas); Note 16; falta revisión de SAB en el portal real y aprobación final |
+| F-FINAL | Cierre y entrega | 🔍 | 2026-11-09 | | — | barrido sin errores; mapa B3 40/40; código muerto fuera (102 piezas, −1,225 líneas); Note 16; revisado por SAB en el portal real; perfil aprobado |
 
 
 > Desde el 15 oct 2026 EV-EST, VA-TM y VA-SENS se construyen con Summit congelado del MCP (regla 10);
@@ -537,3 +537,4 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 - Qué se mostró: `js/overviews/nvda-capacity.js` (lee `COMMIT`/`INV` exportados de `nvda-splc.js`, `NVDA_SENS`, `nvdaResults`); sub-tab `capacity`; CSS `.nv-cap-*`. Cobertura: resto de FY27 $92B → $349.8B vs consenso $231.9B (151%); FY28 $87B → $316.6B vs $693.7B (46%); FY29 $88B → $323.1B vs $918.3B (35%). Gráfica de barras con zoom vertical y leyenda que quita la columna; tabla abierta.
 - Autoauditoría: 1S FY27 reportado = 81,615 + 96,221 = 177,836 ✔ · márgenes del modelo 73.7 / 72.5 / 72.8% ✔ · control de margen (70% → FY28 42%) ✔ · el pie aclara que los compromisos son pagos programados, no costo del año ✔ · `nvda-splc.js` solo exporta sus arreglos (sin cambio en pantalla).
 - Cambios pedidos / decisiones: la de MISC-capacity en la sección 3 (2026-11-09).
+- Aprobación final: SAB, 2026-11-09, tras recorrer el portal real. Sin PR por ahora (solo si SAB lo pide). Siguiente: refrescar Setup si SAB actualiza el consenso antes del print del ~2026-11-19; EV-POST/EV-NOTES cuando haya transcripción oficial; revisar en el DCF el fair value EV/EBITDA del submit 2025-12-12.

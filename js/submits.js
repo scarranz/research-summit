@@ -22,8 +22,9 @@ import { tsmSubmits } from './submits-data/tsm.js';
 import { amznSubmits } from './submits-data/amzn.js';
 import { tbbbSubmits } from './submits-data/tbbb.js';
 import { lyftSubmits } from './submits-data/lyft.js';
+import { nvdaSubmits } from './submits-data/nvda.js';
 
-var SUBMITS_DATA = { SPOT: spotSubmits, GOOGL: googlSubmits, META: metaSubmits, TSM: tsmSubmits, AMZN: amznSubmits, TBBB: tbbbSubmits, UBER: uberSubmits, LYFT: lyftSubmits };
+var SUBMITS_DATA = { SPOT: spotSubmits, GOOGL: googlSubmits, META: metaSubmits, TSM: tsmSubmits, AMZN: amznSubmits, TBBB: tbbbSubmits, UBER: uberSubmits, LYFT: lyftSubmits, NVDA: nvdaSubmits };
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 

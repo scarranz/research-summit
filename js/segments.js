@@ -51,6 +51,8 @@ import { uberSegments } from './segments-data/uber.js';
 import { uberResults } from './results-data/uber.js';
 import { lyftSegments } from './segments-data/lyft.js';
 import { lyftResults } from './results-data/lyft.js';
+import { nvdaSegments } from './segments-data/nvda.js';
+import { nvdaResults } from './results-data/nvda.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
 import { SN_THEMES } from './themes-data/sn.js';
@@ -97,7 +99,9 @@ var SEGMENTS_DATA = {
   // UBER: three reportable segments (Mobility, Delivery, Freight), 10-K Note 13; segment profit = Adjusted EBITDA to 4Q25.
   UBER: { seg: uberSegments, res: uberResults },
   // LYFT: ONE operating segment (10-K Note 2), like SN: the Segments tab carries the consolidated platform; the revenue-line and geography cuts live in Other (annual).
-  LYFT: { seg: lyftSegments, res: lyftResults }
+  LYFT: { seg: lyftSegments, res: lyftResults },
+  // NVDA: two reportable segments (C&N, Graphics); its market PLATFORMS (Hyperscale, ACIE, Edge Computing) stand in as the segments (SAB, Nov 2 2026).
+  NVDA: { seg: nvdaSegments, res: nvdaResults }
 };
 
 export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }

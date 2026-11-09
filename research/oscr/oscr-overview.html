@@ -1,0 +1,737 @@
+<title>Oscar Health Overview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: Summit portal Overview — banner, Key Facts strip, lede, 2x2, four collapsibles, one source footer. No categorical colour. */
+:root{
+  --navy:#1E2733; --steel:#3E5A82; --mid:#7C8694; --ink:#111418;
+  --ice:#EEF1F5; --surface:#F6F7F9; --card:#FFFFFF; --bdr:#E7EAEE;
+  --g1:#C9CFD8; --g2:#D5DAE1; --g3:#DEE2E8; --g4:#E5E8ED; --g5:#EBEDF1; --g6:#F0F2F5;
+  --neg:#B42318; --bnr:#1E2733; --bnr-fg:#FFFFFF;
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --navy:#E6EAF0; --steel:#8FA9CF; --mid:#98A2B0; --ink:#E9ECF1;
+  --ice:#1C232D; --surface:#12171E; --card:#181E27; --bdr:#2A323D;
+  --g1:#4A5566; --g2:#3F4958; --g3:#37404D; --g4:#313945; --g5:#2C333E; --g6:#272E38;
+  --neg:#F28B82; --bnr:#0D1218; --bnr-fg:#E9ECF1; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --navy:#E6EAF0; --steel:#8FA9CF; --mid:#98A2B0; --ink:#E9ECF1;
+  --ice:#1C232D; --surface:#12171E; --card:#181E27; --bdr:#2A323D;
+  --g1:#4A5566; --g2:#3F4958; --g3:#37404D; --g4:#313945; --g5:#2C333E; --g6:#272E38;
+  --neg:#F28B82; --bnr:#0D1218; --bnr-fg:#E9ECF1; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--surface);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.55;letter-spacing:-0.005em;font-variant-numeric:tabular-nums;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.bnr{background:var(--bnr);color:var(--bnr-fg);border-radius:16px;padding:22px 24px;position:relative;overflow:hidden}
+.bnr::after{content:"";position:absolute;right:-60px;top:-80px;width:240px;height:240px;border-radius:50%;border:1px solid rgba(255,255,255,.08)}
+.bnr .eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.7}
+.bnr h1{margin:6px 0 4px;font-size:24px;font-weight:700;text-wrap:balance}
+.bnr p{margin:0;font-size:13px;opacity:.8;max-width:70ch}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:14px}
+/* Key Facts */
+.kf{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:3px solid var(--steel);border-radius:14px;overflow:hidden}
+.kf div{padding:12px 14px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr);min-width:0}
+.kf div:nth-child(5n){border-right:0}.kf div:nth-child(n+6){border-bottom:0}
+.kf b{display:block;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--mid);font-weight:600;margin-bottom:3px}
+.kf span{color:var(--navy);font-weight:500;font-size:13px}
+.lede{color:var(--ink);font-size:15px;max-width:78ch;margin:0}
+/* 2x2 */
+.q2{display:grid;grid-template-columns:1fr 1fr;overflow:hidden}
+.q2>div{padding:14px 16px;border-bottom:1px solid var(--bdr);min-width:0}
+.q2>div:nth-child(odd){border-right:1px solid var(--bdr)}.q2>div:nth-child(n+3){border-bottom:0}
+.q2 .k{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--navy);font-weight:700;margin-bottom:4px}
+.q2 .ours{font-size:10px;color:var(--mid);font-weight:600;letter-spacing:.5px;text-transform:none;margin-left:6px}
+/* collapsibles */
+details.col{background:var(--card);border:1px solid var(--bdr);border-radius:14px}
+details.col>summary{list-style:none;cursor:pointer;padding:14px 18px;font-weight:600;color:var(--navy);font-size:15px;display:flex;gap:10px;align-items:center}
+details.col>summary::-webkit-details-marker{display:none}
+details.col>summary::before{content:"▸";color:var(--steel);transition:transform .15s}
+details.col[open]>summary::before{transform:rotate(90deg)}
+details.col>summary:focus-visible{outline:2px solid var(--steel);outline-offset:2px;border-radius:14px}
+.colb{padding:0 18px 18px;display:flex;flex-direction:column;gap:14px}
+.cap{font-size:13px;color:var(--mid);margin:0}.cap b{color:var(--navy)}
+.pills{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pills .lbl{font-size:12px;color:var(--mid);margin-right:4px}
+.pill{font:inherit;font-size:12px;border:1px solid var(--bdr);background:var(--card);color:var(--navy);padding:5px 12px;border-radius:999px;cursor:pointer}
+.pill[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:var(--card)}
+.pill:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+/* bars */
+.bars{display:flex;flex-direction:column;gap:7px}
+.bar{display:grid;grid-template-columns:minmax(120px,210px) 1fr 64px;gap:10px;align-items:center;font-size:13px}
+.bar .n{color:var(--navy);min-width:0}
+.bar .t{background:var(--ice);border-radius:6px;height:24px;position:relative;overflow:hidden}
+.bar .f{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:8px;color:var(--navy);font-size:12px;font-weight:600;white-space:nowrap;min-width:2px}
+.bar .p{text-align:right;color:var(--navy);font-weight:600}
+.bar.neg .p{color:var(--neg)}
+.bar.neg .f{background:repeating-linear-gradient(45deg,var(--g1),var(--g1) 4px,var(--g4) 4px,var(--g4) 8px)}
+.note{font-size:12px;color:var(--mid);margin:0}
+/* accordions */
+.acc{border:1px solid var(--bdr);border-radius:10px;background:var(--card)}
+.acc>summary{cursor:pointer;padding:10px 14px;font-weight:600;color:var(--navy);list-style:none}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary::after{content:" +";color:var(--steel)}.acc[open]>summary::after{content:" –"}
+.acc .in{padding:0 14px 12px;display:flex;flex-direction:column;gap:10px}
+.acc .in p{margin:0;max-width:75ch}
+.acc .acc{background:var(--surface)}
+.kv{width:100%;border-collapse:collapse;font-size:13px}
+.kv td{padding:5px 0;border-bottom:1px solid var(--bdr);vertical-align:top}
+.kv td:first-child{color:var(--mid);width:55%}.kv td:last-child{color:var(--navy);font-weight:500;text-align:right}
+.kv tr:last-child td{border-bottom:0}
+/* products */
+.prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.prod{font:inherit;text-align:left;background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:4px;color:var(--ink)}
+.prod:hover{border-color:var(--steel)}.prod:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+.prod .ic{font-size:22px}.prod .fam{font-weight:600;color:var(--navy)}.prod .d{font-size:12.5px;color:var(--mid)}
+.prod .more{font-size:12px;color:var(--steel);font-weight:600;margin-top:4px}
+/* competitors table */
+.twrap{overflow-x:auto}
+table.rt{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+table.rt th{text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mid);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--bdr)}
+table.rt td{padding:9px 10px;border-bottom:1px solid var(--bdr);vertical-align:top;color:var(--ink)}
+table.rt td:first-child{color:var(--navy);font-weight:600;white-space:nowrap}
+table.rt tr:last-child td{border-bottom:0}
+.factors{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;border:1px solid var(--bdr);border-radius:999px;padding:3px 10px;color:var(--navy);background:var(--ice)}
+.flag{font-size:12px;border:1px solid var(--bdr);border-left:3px solid var(--steel);background:var(--ice);border-radius:8px;padding:8px 12px;color:var(--ink)}
+/* timeline */
+.tl{display:flex;flex-direction:column;position:relative;padding-left:18px}
+.tl::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:var(--bdr)}
+.tli{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:8px 0;position:relative}
+.tli::before{content:"";position:absolute;left:-17px;top:14px;width:9px;height:9px;border-radius:50%;background:var(--card);border:2px solid var(--steel)}
+.tli .y{font-weight:700;color:var(--navy)}
+.tli .rm{font:inherit;font-size:12px;color:var(--steel);font-weight:600;background:none;border:0;padding:0;cursor:pointer;margin-left:6px}
+.tli .rm:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+.foot{font-size:11.5px;color:var(--mid);margin:0;line-height:1.6}
+/* modal */
+.mb{position:fixed;inset:0;background:rgba(17,20,24,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.md{background:var(--card);border:1px solid var(--bdr);border-radius:14px;max-width:620px;width:100%;max-height:85vh;overflow:auto;padding:20px 22px;position:relative}
+.md h3{margin:0 30px 4px 0;color:var(--navy);font-size:17px}
+.md .sub{color:var(--mid);font-size:13px;margin:0 0 12px}
+.md .x{position:absolute;right:12px;top:10px;font:inherit;font-size:20px;background:none;border:0;color:var(--mid);cursor:pointer}
+.md ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px}
+.md .it b{color:var(--navy)}
+/* tabs */
+.tabs{display:flex;gap:22px;border-bottom:1px solid var(--bdr)}
+.tab{font:inherit;font-size:13.5px;font-weight:600;color:var(--mid);background:none;border:0;padding:8px 0;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--navy);border-bottom-color:var(--steel)}
+.tab:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+.tabp{display:flex;flex-direction:column;gap:18px}
+.sect{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--steel);font-weight:700;margin:6px 0 -6px}
+.big{font-size:19px;font-weight:600;color:var(--navy);margin:0;max-width:60ch;text-wrap:balance;line-height:1.4}
+/* four steps */
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}
+.step{padding:16px;border-right:1px solid var(--bdr);display:flex;flex-direction:column;gap:6px;min-width:0;position:relative}
+.step:last-child{border-right:0}
+.step .no{width:26px;height:26px;border-radius:50%;border:2px solid var(--steel);color:var(--steel);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.step .h{font-weight:700;color:var(--navy)}
+.step p{margin:0;font-size:13px}
+.step .fig{font-size:12px;color:var(--mid)}
+/* money flow */
+.flow{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1.1fr) 40px minmax(0,1.3fr);align-items:center;gap:8px;padding:18px}
+.fcol{display:flex;flex-direction:column;gap:8px;min-width:0}
+.fcol .cap2{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);font-weight:700}
+.node{border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;background:var(--card);min-width:0}
+.node .t{font-weight:600;color:var(--navy);font-size:13px}
+.node .s{font-size:12px;color:var(--mid)}
+.node .v{font-size:18px;font-weight:700;color:var(--navy);margin-top:2px}
+.node .v small{font-size:11px;font-weight:500;color:var(--mid)}
+.node.pay{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline}
+.node.pay .v{grid-row:span 2;margin:0;font-size:16px}
+.node.keep{border:2px solid var(--steel)}
+.node.keep.neg .v{color:var(--neg)}
+.oscar{border:2px solid var(--navy);border-radius:14px;padding:16px;text-align:center;background:var(--ice)}
+.oscar .t{font-size:17px;font-weight:700;color:var(--navy)}
+.oscar .s{font-size:12px;color:var(--mid);margin-top:4px}
+.oscar .v{font-size:24px;font-weight:700;color:var(--navy);margin-top:8px}
+.arr{color:var(--steel);font-size:26px;text-align:center;line-height:1}
+.side{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 18px 18px}
+.side .node{background:var(--surface)}
+/* stacked bars */
+.stk{display:flex;flex-direction:column;gap:12px}
+.srow{display:grid;grid-template-columns:70px 1fr;gap:10px;align-items:center}
+.srow .y{font-weight:700;color:var(--navy);font-size:13px}
+.strack{position:relative;height:34px}
+.sbar{display:flex;height:100%;border-radius:6px;overflow:hidden}
+.sbar span{height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--navy);overflow:hidden;white-space:nowrap;border-right:1px solid var(--card)}
+.sbar span.pf{background:var(--steel);color:var(--card)}
+.sbar span.ls{background:repeating-linear-gradient(45deg,var(--g1),var(--g1) 4px,var(--g4) 4px,var(--g4) 8px)}
+.line100{position:absolute;top:-4px;bottom:-4px;border-left:2px dashed var(--navy)}
+.leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--mid)}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+/* why cards */
+.why{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.why .card{padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.why .h{font-weight:700;color:var(--navy)}
+.why p{margin:0;font-size:13px}
+.lever{display:flex;flex-wrap:wrap;align-items:center;gap:14px 24px;padding:16px 18px}
+.lever .num{font-size:28px;font-weight:700;color:var(--navy)}
+.lever p{margin:0;max-width:62ch;font-size:13px}
+/* year strip */
+.year{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;position:relative}
+.ys{padding:14px 14px 14px 0;border-top:3px solid var(--g1);margin-right:8px;min-width:0}
+.ys.hl{border-top-color:var(--steel)}
+.ys .w{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mid);font-weight:700}
+.ys .h{font-weight:600;color:var(--navy);margin:2px 0 4px}
+.ys p{margin:0;font-size:12.5px}
+/* investor day */
+.idmeta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--mid)}
+.idmeta b{color:var(--navy);font-weight:600}
+.eng{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.eng .card{padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.eng .nm{font-size:16px;font-weight:700;color:var(--navy)}
+.eng .rl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mid);font-weight:700}
+.eng p{margin:0;font-size:13px}
+.eng ul{margin:0;padding-left:16px;font-size:13px;display:flex;flex-direction:column;gap:3px}
+.eng .tg{margin-top:auto;border-top:1px solid var(--bdr);padding-top:8px}
+table.rt td.num,table.rt th.num{text-align:right;white-space:nowrap}
+table.rt td.hl{color:var(--navy);font-weight:700}
+table.rt td.sub{color:var(--mid);font-weight:400;white-space:normal;font-size:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.two>.card{padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.ch{font-weight:700;color:var(--navy)}
+.rg{display:flex;flex-direction:column;gap:7px}
+.rgr{display:grid;grid-template-columns:minmax(96px,150px) 1fr 62px;gap:10px;align-items:center;font-size:12.5px}
+.rgr .n{color:var(--navy);min-width:0;line-height:1.3}
+.rgr .t{position:relative;height:22px;background:var(--ice);border-radius:5px}
+.rgr .t span{position:absolute;top:2px;bottom:2px;border-radius:4px}
+.rgr .t .z{top:-3px;bottom:-3px;width:0;border-left:1.5px solid var(--mid);border-radius:0}
+.rgr .v{text-align:right;font-weight:600;color:var(--navy);white-space:nowrap}
+.k-tot{background:var(--steel)}
+.k-up{background:var(--g1)}
+.k-dn{background:repeating-linear-gradient(45deg,var(--g1),var(--g1) 4px,var(--g4) 4px,var(--g4) 8px)}
+.k-open{background:linear-gradient(90deg,var(--steel),transparent)}
+.wf{display:flex;flex-direction:column;gap:6px}
+.how{display:flex;flex-direction:column;gap:8px}
+.ours-box{border:1px solid var(--bdr);border-left:3px solid var(--navy);border-radius:12px;background:var(--card);padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+.ours-box .tt{font-weight:700;color:var(--navy)}
+.ours-box ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.tag{font-size:10px;color:var(--mid);font-weight:600;letter-spacing:.5px;margin-left:6px}
+@media (max-width:860px){
+  .eng,.two{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr;padding:14px}
+  .arr{transform:rotate(90deg)}
+  .side{grid-template-columns:1fr;padding:0 14px 14px}
+  .steps{grid-template-columns:1fr 1fr}.step:nth-child(2){border-right:0}.step:nth-child(-n+2){border-bottom:1px solid var(--bdr)}
+  .why{grid-template-columns:1fr}
+  .year{grid-template-columns:1fr 1fr;row-gap:6px}
+}
+@media (max-width:760px){
+  .kf{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kf div{border-right:1px solid var(--bdr)!important;border-bottom:1px solid var(--bdr)!important}
+  .kf div:nth-child(2n){border-right:0!important}.kf div:nth-child(n+9){border-bottom:0!important}
+  .q2{grid-template-columns:1fr}.q2>div{border-right:0!important;border-bottom:1px solid var(--bdr)!important}.q2>div:last-child{border-bottom:0!important}
+  .bar{grid-template-columns:minmax(0,110px) 1fr 54px}
+  .tli{grid-template-columns:72px 1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="bnr">
+    <div class="eyebrow">Summit Research · Company overview</div>
+    <h1>Oscar Health, Inc. <span style="opacity:.6;font-weight:500">NYSE: OSCR</span></h1>
+    <p>Built only from Oscar’s own documents: SEC filings (FY2025 10-K, 3Q26 10-Q, the Nov 5, 2026 earnings release) and the Sep 16, 2026 Investor Day materials. No market data, no model, no consensus.</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Page sections">
+    <button class="tab" role="tab" id="tb-ov" aria-controls="t-ov" aria-selected="true" data-tab="t-ov">Overview</button>
+    <button class="tab" role="tab" id="tb-how" aria-controls="t-how" aria-selected="false" data-tab="t-how">How Oscar works</button>
+    <button class="tab" role="tab" id="tb-iday" aria-controls="t-iday" aria-selected="false" data-tab="t-iday">Investor Day 2026</button>
+  </nav>
+
+  <div class="tabp" id="t-ov" role="tabpanel" aria-labelledby="tb-ov">
+  <section class="card kf" aria-label="Key facts" id="kf"></section>
+
+  <p class="lede">Oscar Health is a US health insurer that sells individual health plans, mostly through the Affordable Care Act (ACA) marketplaces, to about 2.7 million members in 20 states. It runs its insurance business on a technology platform it built itself, covering claims, member service and care navigation, and since 2025 it also owns enrollment and brokerage businesses aimed at employer-funded individual coverage.</p>
+
+  <section class="card q2" aria-label="The business in four cells">
+    <div><div class="k">What it sells</div>Individual ACA health plans (Catastrophic to Platinum), mostly exclusive-provider networks, plus an enrollment platform and an insurance brokerage.</div>
+    <div><div class="k">Who buys it</div>Individuals and families on the ACA marketplaces, mostly through brokers, and employees using an employer ICHRA allowance. CMS paid 93% of 2025 premiums as subsidies.</div>
+    <div><div class="k">How it earns</div>FY2025: ~98% premiums · ~1.7% investment income · ~0.2% other. Medical costs took 87.4% of premiums in FY2025 (a loss) and 78.1% in 9M26 (a profit).</div>
+    <div><div class="k">The edge <span class="ours">our read · to confirm</span></div>A pure individual-market insurer on its own technology stack. SG&amp;A fell from 19.1% of revenue (FY2024) to 14.4% (9M26) while membership grew.</div>
+  </section>
+
+  <details class="col" id="c-money">
+    <summary>How Oscar makes money</summary>
+    <div class="colb">
+      <p class="cap">FY2025 total revenue <b>$11.7B (+27.5%)</b>. Oscar reports a <b>single reportable segment</b>, so there is no segment split; below, the same total by revenue line, where each revenue dollar goes, and where the members are.</p>
+      <div class="pills" role="group" aria-label="View">
+        <span class="lbl">View:</span>
+        <button class="pill" data-v="rev" aria-pressed="true">Revenue lines</button>
+        <button class="pill" data-v="cost" aria-pressed="false">Where a revenue dollar goes</button>
+        <button class="pill" data-v="geo" aria-pressed="false">Members by state</button>
+      </div>
+      <div class="pills" role="group" aria-label="Period" id="per">
+        <span class="lbl">Period:</span>
+        <button class="pill" data-p="FY2024" aria-pressed="false">FY2024</button>
+        <button class="pill" data-p="FY2025" aria-pressed="true">FY2025</button>
+        <button class="pill" data-p="9M26" aria-pressed="false">9M 2026</button>
+      </div>
+      <div class="bars" id="bars"></div>
+      <p class="note" id="barnote"></p>
+
+      <details class="acc"><summary>Premium (almost all of revenue)</summary><div class="in">
+        <p>A fixed monthly payment per member for the plan the member chose. Most of it is paid by the federal government (CMS) as a tax-credit subsidy; the member pays the rest. Premium is booked <b>net of risk adjustment</b>: the ACA program moves money from plans with healthier members to plans with sicker ones, and Oscar has been a net payer.</p>
+        <details class="acc"><summary>The numbers</summary><div class="in"><table class="kv" id="kv-prem"></table></div></details>
+      </div></details>
+      <details class="acc"><summary>Investment income (the float)</summary><div class="in">
+        <p>Interest and gains on the cash and bonds Oscar holds between collecting premiums and paying claims, mostly inside its regulated insurance subsidiaries, which must keep minimum capital.</p>
+        <details class="acc"><summary>The numbers</summary><div class="in"><table class="kv" id="kv-inv"></table></div></details>
+      </div></details>
+      <details class="acc"><summary>Other revenues (the marketplace businesses)</summary><div class="in">
+        <p>Fees from the brokerage, enrollment platform and consumer-education businesses bought in 2025, revenue sharing on virtual credit card rebates, and sublease income. Fees from the +Oscar technology platform were included in FY2025.</p>
+        <details class="acc"><summary>The numbers</summary><div class="in"><table class="kv" id="kv-oth"></table></div></details>
+      </div></details>
+      <details class="acc"><summary>The cost lines (what the filing breaks out)</summary><div class="in">
+        <p>The segment note splits operating cost into medical expenses and three SG&amp;A lines: member acquisition and servicing (broker commissions and member service), premium taxes and exchange fees, and all other SG&amp;A (employees and administration). The two ratios management tracks are the <b>MLR</b> (medical cost ÷ premiums) and the <b>SG&amp;A ratio</b> (SG&amp;A ÷ revenue).</p>
+        <details class="acc"><summary>The numbers</summary><div class="in"><table class="kv" id="kv-cost"></table></div></details>
+      </div></details>
+      <p class="note">FY2025 loss from operations <b>$(396)M</b> and net loss <b>$(443)M</b>, after higher market-wide morbidity raised the risk-adjustment payable. 9M26 earnings from operations <b>$1,271M</b>; on Nov 5, 2026 the company guided FY2026 earnings from operations to <b>$850–950M</b> on revenue of $19.0–19.3B. Source: FY2025 Form 10-K (segment note; MD&amp;A), 3Q26 Form 10-Q, Ex. 99.1 to the Nov 5, 2026 Form 8-K.</p>
+    </div>
+  </details>
+
+  <details class="col" id="c-prod">
+    <summary>Products &amp; platforms</summary>
+    <div class="colb">
+      <p class="cap"><b>Tap any family</b> for the specific products inside it.</p>
+      <div class="prods" id="prods"></div>
+    </div>
+  </details>
+
+  <details class="col" id="c-comp">
+    <summary>Competitors — who Oscar is up against</summary>
+    <div class="colb">
+      <p class="cap">The 10-K names <b>four kinds of rival</b> in the individual market; which one matters most changes state by state.</p>
+      <div class="twrap"><table class="rt">
+        <thead><tr><th>Kind of rival</th><th>How the 10-K describes it</th><th>Examples (our read, not named by Oscar)</th></tr></thead>
+        <tbody>
+          <tr><td>National carriers</td><td>Plans offered by national insurers</td><td>UnitedHealthcare, Cigna</td></tr>
+          <tr><td>Regional carriers</td><td>Plans offered by regional insurers</td><td>Varies by state</td></tr>
+          <tr><td>Medicaid-focused insurers</td><td>Medicaid-focused insurers offering Health Insurance Marketplaces products</td><td>Centene (Ambetter), Molina</td></tr>
+          <tr><td>Local Blue Cross plans</td><td>Local Blue Cross plans</td><td>Florida Blue, Blue Cross and Blue Shield of Texas</td></tr>
+        </tbody>
+      </table></div>
+      <div>
+        <p class="note" style="margin-bottom:6px">What the 10-K says decides who wins members:</p>
+        <div class="factors">
+          <span class="chip">Range and prices of plans</span><span class="chip">Breadth and quality of provider network</span><span class="chip">Comprehensiveness of coverage</span><span class="chip">Benefits and wellness programs</span><span class="chip">Quality of service and member experience</span><span class="chip">Responsiveness to member needs</span><span class="chip">Market presence</span><span class="chip">Financial stability</span><span class="chip">Reputation</span>
+        </div>
+      </div>
+      <div class="flag">Brokers enroll the vast majority of Oscar’s members, so Oscar also competes on the commissions and bonuses it pays them (10-K, Sales and Marketing).</div>
+      <p class="note">The portal version of this block plots listed peers by valuation multiple and growth on live prices. This page uses filings only, so that map is left out; it can be added once we bring in market data.</p>
+    </div>
+  </details>
+
+  <details class="col" id="c-tl">
+    <summary>Timeline — how it became today’s Oscar</summary>
+    <div class="colb"><div class="tl" id="tl"></div></div>
+  </details>
+
+  <p class="foot">Sources — Oscar Health FY2025 Form 10-K (SEC EDGAR, acc. 0001568651-26-000011, filed Feb 13, 2026: Item 1, Item 5, MD&amp;A, segment note) for business description, membership, revenue and cost lines; Form 10-Q for 3Q26 (acc. 0001568651-26-000086, filed Nov 5, 2026) and Ex. 99.1 to the Form 8-K of Nov 5, 2026 for 2026 results, membership and FY2026 guidance; DEF 14A filed Apr 22, 2026 for the CEO; IPO prospectus (Form 424B4, Mar 4, 2021) for the listing and early history; XBRL company facts for FY2024 net income. FY2026 figures are company guidance, not estimates of ours. Rows marked “our read” are Summit judgment, not filing content. No market data is shown.</p>
+  </div>
+
+  <div class="tabp" id="t-how" role="tabpanel" aria-labelledby="tb-how" hidden>
+    <p class="big">Oscar collects a monthly premium for each member, pays its members’ medical bills, and keeps what is left after paying brokers, taxes and its own staff.</p>
+
+    <div class="sect">The business in four steps</div>
+    <section class="card steps">
+      <div class="step"><span class="no">1</span><span class="h">Sign up a member</span><p>A person or family picks an Oscar plan on the ACA marketplace, almost always through a broker.</p><span class="fig">2.69M members · Sep 2026</span></div>
+      <div class="step"><span class="no">2</span><span class="h">Collect the premium</span><p>A fixed amount per member per month. The government pays most of it as a tax-credit subsidy.</p><span class="fig">93% paid by CMS · FY2025</span></div>
+      <div class="step"><span class="no">3</span><span class="h">Pay for the care</span><p>When members see doctors, go to hospital or fill prescriptions, Oscar pays the bill to its network.</p><span class="fig" id="st3"></span></div>
+      <div class="step"><span class="no">4</span><span class="h">Keep the difference</span><p>What remains after care, brokers, taxes and staff is the operating profit, or a loss when care costs more than planned.</p><span class="fig" id="st4"></span></div>
+    </section>
+
+    <div class="sect">Follow the money</div>
+    <section class="card">
+      <div class="pills" role="group" aria-label="Period" style="padding:16px 18px 0">
+        <span class="lbl">For every $100 of revenue in:</span>
+        <button class="pill" data-fp="FY2024" aria-pressed="false">FY2024</button>
+        <button class="pill" data-fp="FY2025" aria-pressed="false">FY2025</button>
+        <button class="pill" data-fp="9M26" aria-pressed="true">9M 2026</button>
+      </div>
+      <div class="flow">
+        <div class="fcol">
+          <span class="cap2">Who pays Oscar</span>
+          <div class="node"><div class="t">Federal government (CMS)</div><div class="s">ACA premium tax credits</div><div class="v" id="f-cms"></div></div>
+          <div class="node"><div class="t">Members</div><div class="s">their share of the premium</div><div class="v" id="f-mem"></div></div>
+          <div class="node"><div class="t">Its own cash and bonds</div><div class="s">investment income on the float</div><div class="v" id="f-inv"></div></div>
+        </div>
+        <div class="arr" aria-hidden="true">→</div>
+        <div class="oscar"><div class="t">Oscar Health</div><div class="s">insurer · ~20 states · own tech platform</div><div class="v">$100</div><div class="s" id="f-tot"></div></div>
+        <div class="arr" aria-hidden="true">→</div>
+        <div class="fcol" id="f-out"><span class="cap2">Where it goes</span></div>
+      </div>
+      <div class="side">
+        <div class="node"><div class="t">Risk adjustment pool (not in the $100)</div><div class="s">The ACA moves money from insurers with healthier members to those with sicker ones. Oscar pays in: about <b>17 of every 100</b> of direct premium in 9M25 and 9M26. Revenue is shown after this payment.</div></div>
+        <div class="node"><div class="t">Other revenue (≈ $0)</div><div class="s">Brokerage, enrollment platform and consumer-site fees are under half a dollar of every $100 so far.</div></div>
+      </div>
+      <p class="note" style="padding:0 18px 16px">Premium split between CMS and members is the FY2025 ratio (93/7) in every period; the 10-Q does not restate it. Everything else is reported for the period shown.</p>
+    </section>
+
+    <div class="sect">A $100 of revenue, three periods</div>
+    <section class="card" style="padding:18px">
+      <div class="stk" id="stk"></div>
+      <div class="leg" id="leg" style="margin-top:12px"></div>
+      <p class="note" style="margin-top:8px">The dashed line is $100. In FY2025 costs went past it: Oscar spent about $103 for every $100 it took in.</p>
+    </section>
+
+    <div class="sect">Why the profit swings so much</div>
+    <section class="card lever">
+      <span class="num">≈ $190M</span>
+      <p><b>What one point of medical cost ratio (MLR) is worth in 2026.</b> With FY2026 revenue guided at $19.0–19.3B, almost all premium, each point of premium spent on care moves operating profit by roughly $190M, a fifth of the $850–950M guided. That is why the MLR going from 87.4% to 78.1% turned a loss into a $1.27B nine-month profit. <span style="color:var(--mid)">(Our arithmetic on company guidance.)</span></p>
+    </section>
+    <div class="why">
+      <div class="card"><span class="h">Prices are set before the year</span><p>Premium rates must be approved by state and federal regulators, and Oscar decides each year which markets to enter. If care costs more than priced, Oscar absorbs it until the next year’s rates.</p></div>
+      <div class="card"><span class="h">The bill depends on everyone else</span><p>Risk adjustment compares Oscar’s members with the whole market in each state. In 2025 the market got sicker than expected, Oscar owed more into the pool, and the year ended in a loss.</p></div>
+      <div class="card"><span class="h">Who enrolls changes the math</span><p>Subsidy rules decide who buys. Enhanced subsidies expired at the end of 2025 and new eligibility checks apply; a smaller market can be a sicker one.</p></div>
+    </div>
+
+    <div class="sect">The insurance year</div>
+    <section class="card" style="padding:16px 18px">
+      <div class="year">
+        <div class="ys"><div class="w">Before the year</div><div class="h">Set prices and markets</div><p>Rates filed and approved by regulators; Oscar chooses its states (18 in 2025, 20 in 2026).</p></div>
+        <div class="ys hl"><div class="w">Nov 1 – Jan 15</div><div class="h">Open enrollment</div><p>Most members sign up for the year. The 2027 window reverts to these historical dates.</p></div>
+        <div class="ys"><div class="w">Jan – Dec</div><div class="h">Pay claims</div><p>Members pay deductibles first, so Oscar’s share of costs rises in the second half of the year.</p></div>
+        <div class="ys"><div class="w">Up to 12 months after</div><div class="h">Settle risk adjustment</div><p>CMS’s final report arrives later; until then the payable is an estimate that can move results.</p></div>
+      </div>
+    </section>
+
+    <p class="foot">Sources — Oscar Health FY2025 Form 10-K (Item 1: offerings, concentration of premiums, sales and marketing, regulation; MD&amp;A: risk adjustment, seasonality, results; segment note: cost lines, FY2024–FY2025); Form 10-Q for 3Q26 (segment note, MD&amp;A: risk adjustment ≈17% of direct policy premium, membership, 2027 open enrollment dates); Ex. 99.1 to the Form 8-K of Nov 5, 2026 (FY2026 guidance). “Per $100” figures are each line divided by total revenue for the period. The $190M per MLR point is our arithmetic on company guidance, not a company figure.</p>
+  </div>
+
+  <div class="tabp" id="t-iday" role="tabpanel" aria-labelledby="tb-iday" hidden>
+    <p class="big">Oscar wants to go from “the ACA insurer” to the company that leads the individual health market: people, not employers, choosing and buying their own coverage and health products.</p>
+    <div class="idmeta"><span><b>Sep 16, 2026</b> · New York</span><span>Presenters: <b>Mark Bertolini</b> (CEO), <b>Scott Blackley</b> (CFO), <b>Janet Liang</b> (President, Oscar Insurance), <b>Mario Schlosser</b> (co-founder)</span><span>78-slide deck + fact sheet · no transcript published</span></div>
+
+    <div class="sect">Three engines, still one reported segment</div>
+    <div class="eng">
+      <div class="card"><span class="rl">Engine 1 · today’s business</span><span class="nm">Oscar (insurance)</span>
+        <p>ACA insurer with networks built market by market. Almost all revenue today.</p>
+        <ul><li>Earns premium − medical cost − admin cost</li><li>~3.0M members (Q2 2026), up from ~1.6M (Q2 2024)</li><li>~30% share where it operates (OE26), from ~16% (OE24)</li></ul>
+        <div class="tg"><span class="rl">2029 goal</span><p><b>18%+</b> national individual-market share · <b>400–600</b> new counties · <b>~3×</b> CHOICE share</p></div></div>
+      <div class="card"><span class="rl">Engine 2 · new, higher margin</span><span class="nm">Lucie (marketplace)</span>
+        <p>Shop-and-compare platform for consumers, brokers and employers with <b>70+ carriers</b> (Ambetter, BCBS, UnitedHealthcare, Aflac, Allstate, Cigna…), not only Oscar.</p>
+        <ul><li>Earns selling and admin fees per policy</li><li>Services for employers moving to CHOICE</li><li>Later: consumer health products (cash-pay drugs, peptides, OTC)</li></ul>
+        <div class="tg"><span class="rl">2029 goal</span><p><b>~28K</b> active brokers · <b>~2.6M</b> ACA &amp; specialty policies sold</p></div></div>
+      <div class="card"><span class="rl">Engine 3 · enabler</span><span class="nm">Technology &amp; AI</span>
+        <p>Oscar’s own full-stack platform: claims, network, billing, clinical care, member service.</p>
+        <ul><li>Not sold separately</li><li>Its job is to push MLR and SG&amp;A down</li><li>60% of new production code AI-assisted (Aug 2026, from 16% in Jan)</li></ul>
+        <div class="tg"><span class="rl">2029 goal</span><p><b>~100%</b> of office &amp; lab visits paid in real time · <b>90%+</b> member issues solved first pass</p></div></div>
+    </div>
+    <p class="flag"><b>CHOICE</b> is Oscar’s new name for ICHRA: instead of a group plan, the employer gives each worker a fixed amount to buy their own ACA plan. Company example: the employer saves ~15% on contributions, the worker buys a ~$570/month plan and has ~$100/month left for out-of-pocket costs.</p>
+
+    <div class="sect">The 2029 targets</div>
+    <section class="card twrap">
+      <table class="rt">
+        <thead><tr><th>Metric</th><th class="num">2024</th><th class="num">2026E · Investor Day</th><th class="num">2026E · Nov 5 update</th><th class="num">2029 target</th></tr></thead>
+        <tbody>
+          <tr><td>Revenue</td><td class="num">$9.2B</td><td class="num">$18.7–19.0B</td><td class="num">$19.0–19.3B</td><td class="num hl">&gt;20% CAGR 2026–29</td></tr>
+          <tr><td>Operating margin</td><td class="num">0.6%</td><td class="num">3.2–4.2%</td><td class="num">≈4.4–5.0% <span class="tag">our calc</span></td><td class="num hl">5–7%</td></tr>
+          <tr><td>Earnings from operations</td><td class="num">$57M</td><td class="num">$600–800M</td><td class="num">$850–950M</td><td class="num">—</td></tr>
+          <tr><td>MLR</td><td class="num">81.7%</td><td class="num">81.0–82.0%</td><td class="num">80.5–81.5%</td><td class="num hl">~80%</td></tr>
+          <tr><td>SG&amp;A ratio</td><td class="num">19.1%</td><td class="num">15.6–16.1%</td><td class="num">15.1–15.6%</td><td class="num hl">&lt;15%</td></tr>
+          <tr><td>EPS</td><td class="num">$0.10</td><td class="num">—</td><td class="num">—</td><td class="num hl">$4.00+</td></tr>
+          <tr><td>Internal capital generation</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num hl">$4.0–4.5B cumulative 2027–29</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <p class="note">The 2026 base has already moved up twice: earnings from operations guidance went $500–700M → $600–800M at the Investor Day → $850–950M on Nov 5. Operating margin = earnings from operations ÷ revenue.</p>
+
+    <div class="sect">How they get there: the two bridges</div>
+    <div class="two">
+      <section class="card"><span class="ch">Revenue: where the &gt;20% a year comes from</span>
+        <div class="rg" id="rg-rev"></div>
+        <p class="note">Points of annual growth, 2026E–2029E, as company ranges. The pieces overlap and are not meant to add exactly.</p></section>
+      <section class="card"><span class="ch">Operating margin: 2026E → 2029E</span>
+        <div class="rg" id="rg-mar"></div>
+        <p class="note">Percentage points of revenue. Medical inflation (trend) is offset by price; the net gain is efficiency in medical cost and SG&amp;A.</p></section>
+    </div>
+    <div class="two">
+      <section class="card"><span class="ch">The market: ACA lives, 2026 → 2029</span>
+        <div class="wf" id="wf-aca"></div>
+        <p class="note">Growth drivers: CHOICE employer adoption, gig and independent workers, AI-driven workforce shifts, immigration. “Program integrity” is the new eligibility checks.</p></section>
+      <section class="card"><span class="ch">Oscar’s addressable market, 2026 → 2029</span>
+        <div class="wf" id="wf-tam"></div>
+        <p class="note">+65%. Share goals by 2029: <b>30–35%</b> in today’s footprint, <b>5–7%</b> in new markets, <b>10–15%</b> CHOICE share in its footprint.</p></section>
+    </div>
+
+    <div class="sect">How each lever is supposed to work</div>
+    <div class="how">
+      <details class="acc"><summary>Win share in the ACA: networks and niche products</summary><div class="in">
+        <p>2026 is the proof point they lean on: Oscar members grew ~60% (OE25 → OE26) while the whole ACA market shrank ~13%, after the enhanced subsidies expired and competitors exited. Their explanation: cheaper bronze and gold plans, twice the broker partnerships and a plan-guidance tool.</p>
+        <div class="twrap"><table class="rt"><thead><tr><th>Product</th><th>For whom</th><th class="num">2026 TAM</th><th>Proof point</th></tr></thead><tbody>
+          <tr><td>Buena Salud</td><td>Hispanic, Latino, Spanish-speakers</td><td class="num">~2.2M</td><td>NPS 87</td></tr>
+          <tr><td>HelloMeno</td><td>Older millennial and Gen X women</td><td class="num">~5.9M</td><td>~2.5× direct enrollment</td></tr>
+          <tr><td>Hy-Vee + Oscar</td><td>Small-business employees (CHOICE)</td><td class="num">0.5M+</td><td>92% satisfaction</td></tr>
+          <tr><td>Diabetes Care</td><td>People with chronic conditions</td><td class="num">~4.2M</td><td>~$1K average savings</td></tr>
+        </tbody></table></div>
+        <table class="kv">
+          <tr><td>Unit-cost reduction vs budget, 2024–26E</td><td>210 bps</td></tr>
+          <tr><td>Medical cost savings, 2024–26E</td><td>$3B+</td></tr>
+          <tr><td>Retention in 2026 · individual / CHOICE</td><td>~75% / ~85%</td></tr>
+          <tr><td>Consumer NPS (1Q26)</td><td>71</td></tr>
+          <tr><td>Supplemental bundles</td><td>with Allstate</td></tr>
+        </table></div></details>
+      <details class="acc"><summary>Grow CHOICE (ICHRA): the employer channel</summary><div class="in">
+        <p class="cap"><b>CHOICE market, employee lives covered</b> · ~35% a year 2023–26, ~70% a year 2026–29 (company estimate)</p>
+        <div class="wf" id="wf-choice"></div>
+        <p>Small and mid-sized employers drove 2023–26 (~12K small employers offer it as of Jan 2026). Oscar expects large employers to drive 2026–29: ~26K are actively planning a move, and 62% of large employers say they are exploring it. Oscar’s own CHOICE membership roughly doubled in 2026, and it plans 250+ new off-exchange products for OE27.</p>
+        <p class="note">Open item in the deck: Oscar says it will work with state and national policymakers “to establish new regulations for CHOICE”.</p></div></details>
+      <details class="acc"><summary>Lucie: take a bigger share of the money around the policy</summary><div class="in">
+        <p>Lucie is meant to earn from every enrollment, not only Oscar’s, and later from what consumers buy with their health dollars. The company calls the opportunity <b>$650B+</b> and labels the value pools <b>illustrative</b>.</p>
+        <div class="twrap"><table class="rt"><thead><tr><th>Value pool</th><th class="num">Size</th><th class="num">Spend per 100K customers</th><th class="num">Target margin</th></tr></thead><tbody>
+          <tr><td>ACA &amp; supplemental enrollments</td><td class="num">~$30B</td><td class="num">~$60M</td><td class="num">~35%</td></tr>
+          <tr><td>CHOICE enablement services</td><td class="num">~$125B</td><td class="num">~$60M</td><td class="num">~35%</td></tr>
+          <tr><td>Consumer health products &amp; services</td><td class="num">$500B+</td><td class="num">~$30M</td><td class="num">80%+</td></tr>
+        </tbody></table></div>
+        <p class="note">Future features shown: portable health wallet, personal AI guidance, one-checkout bundles, white-label portals for part-time and gig workers. No Lucie revenue figure was given.</p></div></details>
+      <details class="acc"><summary>Technology and AI: lower MLR and SG&amp;A</summary><div class="in">
+        <table class="kv">
+          <tr><td>SG&amp;A ratio · 2024 → 2026E → 2029</td><td>19.1% → 15.9% → &lt;15%</td></tr>
+          <tr><td>Fixed share of SG&amp;A · 2024 → 2026E</td><td>~30% → ~25%</td></tr>
+          <tr><td>Fixed cost ratio (other SG&amp;A ÷ revenue) · 2024 → 2026E</td><td>6.3% → 4.2% (~33% better)</td></tr>
+          <tr><td>Oswell (AI chatbot)</td><td>resolves 30–40% of messages</td></tr>
+          <tr><td>Care-manager co-pilot</td><td>call prep 20 → 5 minutes</td></tr>
+          <tr><td>Pharmacy anomaly detector</td><td>~$28M potential savings from one finding</td></tr>
+          <tr><td>Idea to market</td><td>2–3× faster</td></tr>
+        </table>
+        <p>Medical side: claims automation, fewer prior authorizations, payment integrity and clinical engagement. Their rule is that AI only scales once it shows a measurable gain.</p></div></details>
+      <details class="acc"><summary>Capital: what funds the plan</summary><div class="in">
+        <table class="kv">
+          <tr><td>Statutory capital at insurance subsidiaries</td><td>$1.9B</td></tr>
+          <tr><td>Excess over regulatory requirements</td><td>$994M</td></tr>
+          <tr><td>Parent cash</td><td>$462M</td></tr>
+          <tr><td>Total cash &amp; investments</td><td>$10.2B</td></tr>
+          <tr><td>Long-term debt ÷ capitalization</td><td>17%</td></tr>
+        </table>
+        <p class="note">As of Jun 30, 2026. Priorities for the $4.0–4.5B of 2027–29 capital generation: fund organic growth, optimize quota-share reinsurance, dividends from subsidiaries to the parent, opportunistic M&amp;A, manage dilution. They also say there is “significant capacity to increase leverage”.</p></div></details>
+    </div>
+
+    <div class="sect">Track record</div>
+    <section class="card twrap">
+      <table class="rt">
+        <thead><tr><th></th><th class="num">2021</th><th class="num">2022</th><th class="num">2023</th><th class="num">2024</th><th class="num">2025</th><th class="num">2026E</th></tr></thead>
+        <tbody>
+          <tr><td>Revenue</td><td class="num">$2.7B</td><td class="num">$5.4B</td><td class="num">$5.9B</td><td class="num">$9.2B</td><td class="num">$11.7B</td><td class="num">$18.9B</td></tr>
+          <tr><td>MLR</td><td class="num">88.9%</td><td class="num">85.3%</td><td class="num">81.6%</td><td class="num">81.7%</td><td class="num">87.4%</td><td class="num">81.5%</td></tr>
+          <tr><td>SG&amp;A ratio</td><td class="num">30.9%</td><td class="num">26.8%</td><td class="num">24.3%</td><td class="num">19.1%</td><td class="num">17.5%</td><td class="num">15.9%</td></tr>
+          <tr><td>Operating margin</td><td class="num">−20.1%</td><td class="num">−10.9%</td><td class="num">−4.0%</td><td class="num">0.6%</td><td class="num">−3.4%</td><td class="num">3.7%</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <p class="note">2026E is the midpoint of the Sep 16 guidance. 2021–22 include the net impact of quota-share reinsurance accounted for under deposit accounting. At the 2024 Investor Day they promised ~20% revenue CAGR for 2024–27, a ~5% operating margin and EPS above $2.25 in 2027. On the 2026 guidance they are ahead: ~43% CAGR for 2024–26 and +260–360 bps of margin. The 2025 column is the reminder: one mispriced year took the MLR to 87.4%.</p>
+
+    <div class="ours-box">
+      <span class="tt">What we would watch <span class="tag">our read · not company content</span></span>
+      <ul>
+        <li><b>$4 of EPS needs the upper half of the margin range.</b> On the company’s own assumptions (~$20M interest and other, mid-20s tax rate, 331M diluted shares growing 2–3% a year) and 20% growth from $18.85B (≈$32.6B in 2029), $4.00 needs about a <b>5.8–5.9%</b> operating margin. At 5% EPS is ≈$3.40; at 7% ≈$4.75.</li>
+        <li><b>Policy sets the size of the market.</b> The plan already absorbs −2M lives from program integrity, and the CHOICE leg depends on new rules being written.</li>
+        <li><b>Lucie is still a promise.</b> The value pools are illustrative and there is no revenue target; in the revenue bridge, new products and services are worth 2–4 points of growth.</li>
+        <li><b>Pricing risk does not go away with scale.</b> Each MLR point is ≈$190M of 2026 profit (see How Oscar works). The 2025 loss came from that single line.</li>
+      </ul>
+    </div>
+
+    <p class="foot">Sources — Oscar Health 2026 Investor Day presentation (78 slides) and Investor Day fact sheet, Sep 16, 2026 (ir.oscarhealth.com/news-events/investor-day); Form 8-K of Sep 16, 2026 (acc. 0001568651-26-000074) for the raised 2026 guidance; Ex. 99.1 to the Form 8-K of Nov 5, 2026 for the updated 2026 guidance. Market sizes, TAMs and value pools are company estimates. The Nov 5 operating margin range and the EPS sensitivity are our arithmetic on company figures; the “What we would watch” box is Summit judgment.</p>
+  </div>
+</div>
+
+<div class="mb" id="mb" hidden><div class="md" role="dialog" aria-modal="true" aria-labelledby="mdt">
+  <button class="x" id="mdx" aria-label="Close">×</button>
+  <h3 id="mdt"></h3><p class="sub" id="mds"></p><div id="mdb"></div>
+</div></div>
+
+<script>
+(function(){
+var FACTS=[
+ ['Listing','NYSE: OSCR'],
+ ['HQ','New York, NY, USA'],
+ ['Incorporated','Delaware, USA'],
+ ['SEC filer','Domestic (10-K/10-Q/8-K)'],
+ ['Founded','2012 (Mario Schlosser, Joshua Kushner)'],
+ ['IPO','Mar 2021 · NYSE · $39.00 · dual class'],
+ ['CEO','Mark Bertolini · CEO since Apr 2023'],
+ ['Employees','~2,305 · Dec 2025'],
+ ['Dividend','Non-payer · never paid one'],
+ ['Members','2.69M · Sep 30, 2026']
+];
+document.getElementById('kf').innerHTML=FACTS.map(function(f){return '<div><b>'+f[0]+'</b><span>'+f[1]+'</span></div>';}).join('');
+
+/* Reported figures, US$ thousands (10-K FY2025 segment note & MD&A; 10-Q 3Q26). */
+var P={
+ FY2024:{prem:8971259,inv:185729,oth:20576,rev:9177564,med:7332589,acq:747627,tax:432290,osga:575648,da:32145,op:57265,ni:25432,mlr:81.7,sga:19.1,lbl:'FY2024'},
+ FY2025:{prem:11469893,inv:202941,oth:28593,rev:11701427,med:10019025,acq:975328,tax:446079,osga:628460,da:28892,op:-396357,ni:-443151,mlr:87.4,sga:17.5,lbl:'FY2025'},
+ '9M26':{prem:14412180,inv:236424,oth:18108,rev:14666712,med:11257147,acq:1013064,tax:586019,osga:520123,da:19621,op:1270738,ni:1208085,mlr:78.1,sga:14.4,lbl:'9M 2026',prior:{prem:8723233,inv:153331,oth:19628,rev:8896192}}
+};
+P.FY2025.prior={prem:8971259,inv:185729,oth:20576,rev:9177564};
+var GEO=[['Florida',1179934],['Texas',358910],['Georgia',218746],['Tennessee',91522],['Ohio',63793],['New Jersey',35899],['Iowa',20734],['North Carolina',14427],['Kansas',13986],['Arizona',11398],['Missouri',9482],['New York',8180],['Oklahoma',4260],['Michigan',4258],['Pennsylvania',2716],['Illinois',2316],['Nebraska',1648],['Virginia',240]];
+var GEO_TOT=2042449;
+
+function $m(k){var v=k/1000;var a=Math.abs(v);var s=a>=1000?'$'+(a/1000).toFixed(1)+'B':'$'+Math.round(a)+'M';return v<0?'('+s+')':s;}
+function pct(x){return (x*100).toFixed(1)+'%';}
+function gr(a,b){var g=a/b-1;return (g>=0?'+':'−')+Math.abs(g*100).toFixed(1)+'%';}
+var state={v:'rev',p:'FY2025'};
+
+function rows(){
+ var d=P[state.p];
+ if(state.v==='rev') return [['Premium',d.prem],['Investment income',d.inv],['Other revenues',d.oth]].map(function(r){return {n:r[0],v:r[1],s:r[1]/d.rev};});
+ if(state.v==='cost') return [['Medical expenses',d.med],['Member acquisition & servicing',d.acq],['Premium taxes, exchange fees & other taxes',d.tax],['All other SG&A',d.osga],['Depreciation & amortization',d.da],[d.op>=0?'Earnings from operations':'Loss from operations',d.op]].map(function(r){return {n:r[0],v:r[1],s:r[1]/d.rev};});
+ var out=GEO.slice(0,5).map(function(r){return {n:r[0],v:r[1],s:r[1]/GEO_TOT,mem:1};});
+ var rest=GEO.slice(5).reduce(function(a,r){return a+r[1];},0);
+ out.push({n:'13 other states',v:rest,s:rest/GEO_TOT,mem:1});return out;
+}
+function render(){
+ document.getElementById('per').hidden=(state.v==='geo');
+ var R=rows();var max=Math.max.apply(null,R.map(function(r){return Math.abs(r.s);}));
+ var order=R.map(function(r,i){return i;}).sort(function(a,b){return Math.abs(R[b].v)-Math.abs(R[a].v);});
+ var shade={};order.forEach(function(i,k){shade[i]='var(--g'+Math.min(k+1,6)+')';});
+ document.getElementById('bars').innerHTML=R.map(function(r,i){
+  var w=Math.max(Math.abs(r.s)/max*100,0.6);var neg=r.v<0;
+  var lab=r.mem?(r.v/1e6>=1?(r.v/1e6).toFixed(2)+'M':Math.round(r.v/1000)+'K'):$m(r.v);
+  return '<div class="bar'+(neg?' neg':'')+'"><span class="n">'+r.n+'</span><span class="t"><span class="f" style="width:'+w+'%;'+(neg?'':'background:'+shade[i])+'">'+lab+'</span></span><span class="p">'+(neg?'−':'')+pct(Math.abs(r.s))+'</span></div>';
+ }).join('');
+ var d=P[state.p];var n='';
+ if(state.v==='rev'){n=d.lbl+' total revenue '+$m(d.rev)+(d.prior?' ('+gr(d.rev,d.prior.rev)+' YoY'+(state.p==='9M26'?' vs 9M 2025':'')+')':'')+'. Lines sum to the reported total.';}
+ else if(state.v==='cost'){n='Share of '+d.lbl+' total revenue ('+$m(d.rev)+'). MLR '+d.mlr.toFixed(1)+'% of premiums · SG&A ratio '+d.sga.toFixed(1)+'% of revenue. Costs plus the operating result equal total revenue.';}
+ else{n='Effectuated members at Dec 31, 2025: '+GEO_TOT.toLocaleString('en-US')+' in 18 states. These are members, not revenue: the 10-K does not split revenue by state. Oscar expanded to 20 states for 2026; no state split is filed for 2026.';}
+ document.getElementById('barnote').textContent=n;
+}
+document.querySelectorAll('[data-v]').forEach(function(b){b.addEventListener('click',function(){state.v=b.dataset.v;document.querySelectorAll('[data-v]').forEach(function(x){x.setAttribute('aria-pressed',x===b);});render();});});
+document.querySelectorAll('[data-p]').forEach(function(b){b.addEventListener('click',function(){state.p=b.dataset.p;document.querySelectorAll('[data-p]').forEach(function(x){x.setAttribute('aria-pressed',x===b);});render();});});
+render();
+
+function kv(id,rs){document.getElementById(id).innerHTML=rs.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>';}).join('');}
+var a=P.FY2025,b=P.FY2024,c=P['9M26'];
+kv('kv-prem',[['FY2025 premium',$m(a.prem)+' · '+gr(a.prem,b.prem)],['9M 2026 premium',$m(c.prem)+' · '+gr(c.prem,c.prior.prem)+' vs 9M25'],['Share of FY2025 revenue',pct(a.prem/a.rev)],['Paid by CMS / by members (FY2025)','93% / 7%'],['Risk-adjustment payable, 9M26 and 9M25','~17% of direct policy premium'],['Members, Dec 2025 → Sep 2026','2.04M → 2.69M']]);
+kv('kv-inv',[['FY2025 investment income',$m(a.inv)+' · '+gr(a.inv,b.inv)],['9M 2026 investment income',$m(c.inv)+' · '+gr(c.inv,c.prior.inv)+' vs 9M25'],['Share of FY2025 revenue',pct(a.inv/a.rev)],['Cash & investments in insurance subsidiaries','$5.1B (Dec 2025) → $8.6B (Sep 2026)']]);
+kv('kv-oth',[['FY2025 other revenues',$m(a.oth)+' · '+gr(a.oth,b.oth)],['9M 2026 other revenues',$m(c.oth)+' · '+gr(c.oth,c.prior.oth)+' vs 9M25'],['Share of FY2025 revenue',pct(a.oth/a.rev)],['+Oscar client lives, Dec 2025','~0.6M (Campaign Builder)']]);
+kv('kv-cost',[['MLR · FY2024 / FY2025 / 9M26','81.7% / 87.4% / 78.1%'],['SG&A ratio · FY2024 / FY2025 / 9M26','19.1% / 17.5% / 14.4%'],['Medical expenses FY2025',$m(a.med)+' · '+gr(a.med,b.med)],['Member acquisition & servicing FY2025',$m(a.acq)],['Premium taxes & exchange fees FY2025',$m(a.tax)],['All other SG&A FY2025',$m(a.osga)],['Operating result · FY2024 / FY2025 / 9M26',$m(b.op)+' / '+$m(a.op)+' / '+$m(c.op)]]);
+
+var PRODUCTS=[
+ {ic:'🩺',fam:'Individual health plans',d:'ACA plans for people and families',items:[
+  ['Metal-tier plans','Catastrophic, Bronze, Silver, Gold and Platinum, the five ACA categories. They differ in monthly premium and in how much of the medical bill the member pays.'],
+  ['EPO and HMO networks','Most markets use exclusive-provider plans built on selected health systems rather than every provider in an area; HMO plans in select markets.'],
+  ['Condition-focused plans','Products with benefits aimed at specific needs, such as diabetes, asthma or menopause.'],
+  ['Virtual care and Care Team','24/7 virtual care through Oscar Medical Group (physician-owned, not owned by Oscar) and Care Guides who help members find doctors and understand costs.']]},
+ {ic:'🏢',fam:'ICHRA coverage',d:'Employer money, individual plans',items:[
+  ['ICHRA plans','Employers give employees a defined contribution (an Individual Coverage Health Reimbursement Arrangement) to buy their own individual plan; Oscar wants to be the preferred carrier for those employees.'],
+  ['CHOICE arrangements','Since 2026 membership also counts members enrolled through a Custom Health Option and Individual Care Expense Arrangement (CHOICE).'],
+  ['ICHRA platform partners','Oscar partners with ICHRA platform companies that move small, mid-size and large employers onto individual coverage.']]},
+ {ic:'🧭',fam:'Marketplace businesses',d:'Enrollment, brokerage, consumer education',items:[
+  ['Lucie, Inc.','Direct-enrollment technology platform for consumers, employers and brokers; one of 11 CMS-approved solutions. Acquired in 2025 (formerly INSXCloud).'],
+  ['Trove Group Inc.','Insurance agency selling individual medical and supplemental health products across carriers in all 50 states. Formerly IHC Specialty Benefits, acquired in 2025.'],
+  ['HealthInsurance.org','Consumer education and lead-generation website on health insurance, the ACA and Medicare. Acquired in 2025.']]},
+ {ic:'⚙️',fam:'Technology platform',d:'The stack behind the insurer',items:[
+  ['Full-stack platform','Cloud-native system Oscar built itself, covering member and provider data, utilization management, claims, billing and benefits. Hosted on AWS across multiple availability zones.'],
+  ['Campaign Builder (+Oscar)','Engagement and recommendation engine sold to providers and payors; about 0.6 million client lives at Dec 2025, on top of Oscar’s own members.'],
+  ['AI in operations','Used in claims processing and virtual care automation, member personalization, and self-service chat for members.']]}
+];
+document.getElementById('prods').innerHTML=PRODUCTS.map(function(p,i){return '<button class="prod" data-detail="prod:'+i+'"><span class="ic" aria-hidden="true">'+p.ic+'</span><span class="fam">'+p.fam+'</span><span class="d">'+p.d+'</span><span class="more">See products ›</span></button>';}).join('');
+
+var TIMELINE=[
+ {y:'2012',t:'Founded in New York by Mario Schlosser and Joshua Kushner.',d:['Since inception the company has built its own insurance technology stack (10-K, Item 1).','Thrive Capital, whose general partners Kushner manages, still holds 14.5% of the capital at Dec 2025 (with Kushner).']},
+ {y:'2014',t:'First plans sold as the ACA marketplaces open; every member gets 24/7 virtual care.'},
+ {y:'2017–20',t:'Expands beyond individual plans: Small Group (2017), then Medicare Advantage and the Cigna+Oscar small-group partnership (2020).'},
+ {y:'Mar 2021',t:'IPO on the NYSE at $39.00 with a dual-class structure.',d:['37.0 million Class A shares sold, about $1.4B at the offer price.','Class B shares (20 votes each) go only to Thrive Capital and the co-founders.','At Dec 2025 Class B holders own 16.6% of the capital and 76.1% of the votes.']},
+ {y:'Feb 2022',t:'$305M of 7.25% convertible notes sold to Dragoneer, Thrive and others.',d:['Notes due 2031, convertible into Class A shares.','By Sep 2026 only $35M remained; Oscar gave notice on Nov 4, 2026 to redeem it on Dec 31, 2026.']},
+ {y:'Apr 2023',t:'Mark Bertolini, former Aetna CEO, becomes CEO; Schlosser moves to technology.',d:['Schlosser becomes President of Technology and CTO.','The co-founders cancel their IPO performance awards (4.2M and 2.1M shares), triggering $46.3M of accelerated stock compensation.']},
+ {y:'2024',t:'Back to the individual market only, and the first profitable year: net income $25.4M.',d:['Medicare Advantage is no longer offered from plan year 2024.','Cigna+Oscar is not renewed after its term ends on Dec 31, 2024; small group plans stop.','Members reach 1.68M at year end; MLR 81.7%.']},
+ {y:'2025',t:'Members pass 2.0M, but a $443M net loss as sicker market-wide enrollment raises the risk-adjustment bill.',d:['Premiums +28%, but MLR rises to 87.4% from 81.7%.','Buys Lucie, IHC Specialty Benefits (now Trove) and HealthInsurance.org to build an ICHRA and marketplace business.','Enhanced ACA subsidies (eAPTCs) expire at year end.']},
+ {y:'2026',t:'Members reach 2.69M (+27% YoY) in 20 states; 9M26 net income $1.21B.',d:['Rate increases and membership growth lift 9M premiums 65%.','MLR falls to 78.1% for the nine months; SG&A ratio to 14.4%.','The parent puts $500M into a new Florida HMO subsidiary.','FY2026 guidance raised on Nov 5: revenue $19.0–19.3B, earnings from operations $850–950M.']}
+];
+document.getElementById('tl').innerHTML=TIMELINE.map(function(e,i){return '<div class="tli"><span class="y">'+e.y+'</span><span>'+e.t+(e.d?'<button class="rm" data-detail="hist:'+i+'">Read more →</button>':'')+'</span></div>';}).join('');
+
+var mb=document.getElementById('mb'),last=null;
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function open(kind,i,src){
+ last=src;
+ if(kind==='prod'){var p=PRODUCTS[i];document.getElementById('mdt').textContent=p.ic+'  '+p.fam;document.getElementById('mds').textContent=p.d;
+  document.getElementById('mdb').innerHTML='<ul>'+p.items.map(function(it){return '<li class="it"><b>'+esc(it[0])+'</b> — '+esc(it[1])+'</li>';}).join('')+'</ul>';}
+ else{var e=TIMELINE[i];document.getElementById('mdt').textContent=e.y;document.getElementById('mds').textContent=e.t;
+  document.getElementById('mdb').innerHTML='<ul>'+e.d.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>';}
+ mb.hidden=false;document.getElementById('mdx').focus();
+}
+function close(){mb.hidden=true;if(last)last.focus();}
+document.addEventListener('click',function(ev){var t=ev.target.closest('[data-detail]');if(t){var s=t.dataset.detail.split(':');open(s[0],+s[1],t);}});
+document.getElementById('mdx').addEventListener('click',close);
+mb.addEventListener('click',function(ev){if(ev.target===mb)close();});
+document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&!mb.hidden)close();});
+
+/* tabs */
+var tabs=document.querySelectorAll('[data-tab]');
+var HASH={'t-ov':'#overview','t-how':'#how','t-iday':'#investor-day'};
+function showTab(id){tabs.forEach(function(t){var on=t.dataset.tab===id;t.setAttribute('aria-selected',on);document.getElementById(t.dataset.tab).hidden=!on;});try{history.replaceState(null,'',HASH[id]);}catch(e){}}
+tabs.forEach(function(t){t.addEventListener('click',function(){showTab(t.dataset.tab);});});
+if(location.hash==='#how')showTab('t-how');
+if(location.hash==='#investor-day')showTab('t-iday');
+
+/* Investor Day: range bridges (company ranges) and waterfalls (company point estimates) */
+function rangeRows(el,rows,min,max){
+ var W=max-min;function x(v){return (v-min)/W*100;}
+ document.getElementById(el).innerHTML=rows.map(function(r){
+  var z=min<0?'<span class="z" style="left:'+x(0)+'%"></span>':'';
+  return '<div class="rgr"><span class="n">'+r[0]+'</span><div class="t">'+z+'<span class="'+r[3]+'" style="left:'+x(r[1])+'%;width:'+((r[2]-r[1])/W*100)+'%" title="'+r[0]+': '+r[4]+'"></span></div><span class="v">'+r[4]+'</span></div>';
+ }).join('');
+}
+rangeRows('rg-rev',[
+ ['Existing markets',17,19,'k-up','17–19'],
+ ['New markets',2,4,'k-up','2–4'],
+ ['New products &amp; services',2,4,'k-up','2–4'],
+ ['Total, 2026–29 CAGR',20,25,'k-open','&gt;20%']
+],0,25);
+rangeRows('rg-mar',[
+ ['2026E margin',3.2,4.2,'k-tot','3.2–4.2%'],
+ ['Medical trend',-7,-5,'k-dn','−5 to −7'],
+ ['Price to trend',5,7,'k-up','+5 to +7'],
+ ['Affordability &amp; SG&amp;A efficiency',2,4,'k-up','+2 to +4'],
+ ['2029E margin',5,7,'k-tot','5–7%']
+],-8,8);
+function waterfall(el,steps,max,unit){
+ var run=0;
+ document.getElementById(el).innerHTML=steps.map(function(s){
+  var lo,hi,cls;
+  if(s[2]==='tot'){lo=0;hi=s[1];run=s[1];cls='k-tot';}
+  else if(s[1]>=0){lo=run;hi=run+s[1];run=hi;cls='k-up';}
+  else{hi=run;lo=run+s[1];run=lo;cls='k-dn';}
+  var lbl=s[3]||((s[2]==='tot'?'~':(s[1]>=0?'+':'−'))+Math.abs(s[1])+unit);
+  return '<div class="rgr"><span class="n">'+s[0]+'</span><div class="t"><span class="'+cls+'" style="left:'+(lo/max*100)+'%;width:'+((hi-lo)/max*100)+'%" title="'+s[0]+': '+lbl+'"></span></div><span class="v">'+lbl+'</span></div>';
+ }).join('');
+}
+waterfall('wf-aca',[['2026','19','tot'],['Program integrity',-2],['Market growth drivers',6],['2029','23','tot']].map(function(s){return [s[0],+s[1],s[2]];}),25,'M');
+waterfall('wf-tam',[['2026',9.6,'tot'],['Mature existing markets',2],['New-market expansion',3],['New CHOICE adoption',1.3],['2029',16,'tot']],17,'M');
+waterfall('wf-choice',[['2023',0.2,'tot','&lt;0.2M'],['2026E',0.5,'tot','0.5M+'],['2029E',2.5,'tot','2.5M+']],2.8,'M');
+
+/* How Oscar works: per $100 of total revenue */
+function per(v,d){return v/d.rev*100;}
+function d$(x){var a=Math.abs(x);var s='$'+(a<1?a.toFixed(2):a.toFixed(1));return x<0?'−'+s:s;}
+var OUT=[['med','Doctors, hospitals, pharmacy','medical claims'],['acq','Brokers & member service','acquisition and servicing'],['tax','Taxes & exchange fees','premium taxes, user fees'],['osga','Staff & administration','all other SG&A'],['da','Depreciation','tech & equipment']];
+function flow(p){
+ var d=P[p];var prem=per(d.prem,d);
+ document.getElementById('f-cms').innerHTML=d$(prem*0.93);
+ document.getElementById('f-mem').innerHTML=d$(prem*0.07);
+ document.getElementById('f-inv').innerHTML=d$(per(d.inv,d));
+ document.getElementById('f-tot').textContent=d.lbl+' revenue '+$m(d.rev);
+ var h='<span class="cap2">Where it goes</span>'+OUT.map(function(o){return '<div class="node pay"><span class="t">'+o[1]+'</span><span class="v">'+d$(per(d[o[0]],d))+'</span><span class="s">'+o[2]+'</span></div>';}).join('');
+ var k=per(d.op,d);
+ h+='<div class="node pay keep'+(k<0?' neg':'')+'"><span class="t">'+(k<0?'Loss: Oscar paid out more':'Oscar keeps')+'</span><span class="v">'+d$(k)+'</span><span class="s">operating '+(k<0?'loss':'profit')+' · '+$m(d.op)+'</span></div>';
+ document.getElementById('f-out').innerHTML=h;
+}
+document.querySelectorAll('[data-fp]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('[data-fp]').forEach(function(x){x.setAttribute('aria-pressed',x===b);});flow(b.dataset.fp);});});
+flow('9M26');
+document.getElementById('st3').textContent='$'+per(P['9M26'].med,P['9M26']).toFixed(0)+' of every $100 · 9M 2026';
+document.getElementById('st4').textContent='$'+per(P['9M26'].op,P['9M26']).toFixed(1)+' of every $100 · 9M 2026';
+
+var SEG=[['med','Care (medical)','var(--g2)'],['acq','Brokers & service','var(--g4)'],['tax','Taxes & fees','var(--g3)'],['osga','Staff & admin','var(--g5)'],['da','Depreciation','var(--g1)']];
+var SCALE=105;
+document.getElementById('stk').innerHTML=['FY2024','FY2025','9M26'].map(function(p){
+ var d=P[p];var k=per(d.op,d);
+ var widthTotal=k<0?(100-k):100;
+ var parts=SEG.map(function(s){var v=per(d[s[0]],d);return '<span style="width:'+(v/widthTotal*100)+'%;background:'+s[2]+'" title="'+s[1]+' $'+v.toFixed(1)+'">'+(v>=6?'$'+v.toFixed(0):'')+'</span>';}).join('');
+ parts+='<span class="'+(k<0?'ls':'pf')+'" style="width:'+(Math.abs(k)/widthTotal*100)+'%" title="'+(k<0?'Loss':'Profit')+' '+d$(k)+'">'+(Math.abs(k)>=2.5?d$(k):'')+'</span>';
+ return '<div class="srow"><span class="y">'+d.lbl.replace('9M 2026','9M26')+'</span><div class="strack"><div class="sbar" style="width:'+(widthTotal/SCALE*100)+'%">'+parts+'</div><span class="line100" style="left:'+(100/SCALE*100)+'%"></span></div></div>';
+}).join('');
+document.getElementById('leg').innerHTML=SEG.map(function(s){return '<span><i style="background:'+s[2]+';border:1px solid var(--bdr)"></i>'+s[1]+'</span>';}).join('')+'<span><i style="background:var(--steel)"></i>Profit</span><span><i style="background:repeating-linear-gradient(45deg,var(--g1),var(--g1) 3px,var(--g4) 3px,var(--g4) 6px)"></i>Loss (spent beyond $100)</span>';
+})();
+</script>

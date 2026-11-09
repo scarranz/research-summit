@@ -20,6 +20,7 @@
 // (Valuation tab) are the Summit team's own internal projections — NOT company guidance.
 
 import { semiIndustry } from './semi-industry.js';
+import { nvdaSplcBody, nvdaSplcBuild, nvdaSplcPop } from './nvda-splc.js';   // Bottom Line ▸ Supply Chain (BL-SPLC)
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { makeManagement } from './management.js';                      // Management ▸ Executives & Board (MG-TEAM)
 import { NVDA_MGMT_DATA } from './nvda-mgmt-data.js';
@@ -911,6 +912,7 @@ function wireModal(root){
   function resolve(key){
     var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
     if(kind==='ce'){ return nvdaCePop(id); }       // Evolution ▸ Earnings "?" notes (nvda-ce.js)
+    if(kind==='splc'){ return nvdaSplcPop(id); }   // Bottom Line ▸ Supply Chain cards (nvda-splc.js)
     if(kind==='ntrk'){ return nvdaTrackPop(id); }   // Management ▸ Track Record cards (nvda-track.js)
     if(kind==='hist'){ var tl=TIMELINE[+id]; return tl&&tl.d?{t:esc(tl.y),h:tl.d}:null; }
     if(kind==='prod'){ var f=NV_PRODUCTS[+id]; if(!f) return null;
@@ -2570,7 +2572,7 @@ function deepDiveHtml(){
     // BL-SEG (nvda-bl.js): the old Segments pane leaves the screen — #10–13, #16 live in Top Line, #14 (GAAP segments table
     // and text) here, #15 in Earnings ▸ Setup. segmentsBody() stays in this file, unmounted, until F-FINAL.
     { k:'segments', l:'Segments', body:nvdaBlSegmentsHtml() },
-    { k:'supplychain', l:'Supply Chain', body:oldPane('industry', industryBody()) }, // B2 #35 (semis map; the SPLC table joins in BL-SPLC)
+    { k:'supplychain', l:'Supply Chain', body:nvdaSplcBody()+'<div class="ov-sec meta-splc-geo">'+oldPane('industry', industryBody())+'</div>' }, // BL-SPLC (nvda-splc.js) + B2 #35 semis map below
   ], true);
   h+=subtabs('evolution',[
     // EV-SET: Earnings ▸ Setup on the shared Earnings machinery (nvda-ce.js + nvda-ce-data.js); Post-Results and Notes are not
@@ -2610,7 +2612,7 @@ function buildSub(root, group, key){
   } else if(group==='bottomline'){
     if(key==='segments') requestAnimationFrame(function(){ nvdaBlSegmentsBuild(root); });
     else if(key==='margins') requestAnimationFrame(function(){ nvdaBlGeneralBuild(root); });
-    else if(key==='supplychain') requestAnimationFrame(function(){ semiIndustry.init(); });
+    else if(key==='supplychain') requestAnimationFrame(function(){ nvdaSplcBuild(root); semiIndustry.init(); });
   } else if(group==='evolution'){
     if(key==='earnings') nvdaCeBuild(root);
     else if(key==='results') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'NVDA'); });

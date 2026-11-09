@@ -3748,3 +3748,9 @@ img.org-photo { object-fit: cover; }
 .ov-uber-dd .dhk-val{font-size:19px;font-weight:900;color:var(--navy);letter-spacing:-.01em}
 .ov-uber-dd .dhk-note{font-size:10.5px;color:var(--mu);margin-top:4px;line-height:1.4}
 @media(max-width:680px){.ov-uber-dd .dhm-toolbar{flex-direction:column;align-items:flex-start}.ov-uber-dd .dhm-kpis{gap:12px}.ov-uber-dd .utn-prog{flex-direction:column}.ov-uber-dd .ov-drivers{grid-template-columns:1fr !important}}
+
+/* NVIDIA ▸ Bottom Line ▸ Supply Chain (js/overviews/nvda-splc.js) — the filings block; the rest rides on the meta-splc rules above */
+.ov-nvda-dd .nv-splc-p{font-size:13px;line-height:1.55;color:#111418;margin:6px 0 10px}
+.ov-nvda-dd .nv-splc-c{height:220px;margin:4px 0 8px}
+.ov-nvda-dd .nv-splc-tot td{font-weight:700}
+.ov-nvda-dd .nv-splc-lim{font-size:12px;line-height:1.5;color:var(--mu);border-left:3px solid var(--steel);padding:4px 10px;margin:8px 0 4px}

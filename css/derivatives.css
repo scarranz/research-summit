@@ -214,3 +214,13 @@
 /* Min. portfolio: informative, so it reads a shade quieter than the live numbers */
 #cc-root td.minp { color: var(--steel); font-variant-numeric: tabular-nums; }
 #cc-root th.minp { cursor: help; }
+
+/* Derivatives ▸ Long Put (js/long-put.js) — the history block and the growth block */
+.der-an .lp-avgs{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;}
+.der-an .lp-lbl{font-size:11px;color:var(--mu);font-weight:600;display:flex;align-items:center;gap:6px;}
+.der-an .lp-chart{position:relative;height:280px;margin:4px 0;}
+.der-an .lp-hint{font-size:11px;margin:4px 0 8px;}
+.der-an .lp-p{font-size:13px;line-height:1.55;color:var(--text);margin:0 0 10px;}
+.der-an .lp-tblwrap{margin-top:6px;}
+.der-an .lp-tblwrap > div{margin-top:8px;overflow-x:auto;}
+.der-an table.lp-small{width:auto;min-width:420px;}

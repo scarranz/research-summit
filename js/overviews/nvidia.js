@@ -21,6 +21,7 @@
 
 import { semiIndustry } from './semi-industry.js';
 import { nvdaSplcBody, nvdaSplcBuild, nvdaSplcPop } from './nvda-splc.js';   // Bottom Line ▸ Supply Chain (BL-SPLC)
+import { nvdaHistMult } from './nvda-histmult.js';                          // Valuation ▸ Historic Multiple (VA-HIST)
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { makeManagement } from './management.js';                      // Management ▸ Executives & Board (MG-TEAM)
 import { NVDA_MGMT_DATA } from './nvda-mgmt-data.js';
@@ -2587,6 +2588,7 @@ function deepDiveHtml(){
     { k:'estevo', l:'Estimates', body:resultsEvoHtml('NVDA') },
   ], true);
   h+=subtabs('valuation',[
+    { k:'histmult', l:'Historic Multiple', body:nvdaHistMult.body() },   // VA-HIST (nvda-histmult.js)
     { k:'targetmult', l:'Target Multiple', body:oldPane('valuation', heroMultiples()+valuationBody()) }, // B2 #2 tiles + #32–34 (until VA-TM / VA-SENS)
   ], true);
   h+=subtabs('mgmt',[
@@ -2618,7 +2620,8 @@ function buildSub(root, group, key){
     else if(key==='results') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'NVDA'); });
     else if(key==='estevo') requestAnimationFrame(function(){ initResultsEvo('NVDA'); });
   } else if(group==='valuation'){
-    if(key==='targetmult') requestAnimationFrame(function(){ initValuation(); initMultiples(root.querySelector('.ovt-pane[data-ovt="valuation"]')); });
+    if(key==='histmult') requestAnimationFrame(function(){ nvdaHistMult.init(root); });
+    else if(key==='targetmult') requestAnimationFrame(function(){ initValuation(); initMultiples(root.querySelector('.ovt-pane[data-ovt="valuation"]')); });
   } else if(group==='mgmt'){
     if(key==='team') NVDA_MGMT.init(root);
     else if(key==='ownership') nvdaOwnInit(root);

@@ -23,7 +23,7 @@
 | Año fiscal / moneda | ⚠ no calendario | cierra el último domingo de enero (FY2026 = feb-2025 → ene-2026); USD | — | componentes que asumen año calendario (§14): se etiquetan en año fiscal (FY27, 3Q FY27) |
 | Summit DCF | sí | modelo propio de SAB (`DCF\Semiconductors - SAB\NVDA\DCF NVDA.xlsm`); 3 snapshots: 2025-12-12 (después de 3Q FY26) · 2026-03-04 (4Q FY26) · 2026-08-28 (2Q FY27); 33 etiquetas | Summit en Results/Estimates; Target Multiple; Sensitivity; Submit History | — |
 | Consenso BBG (`BBG_CONSENSUS.txt` + `Consensus_Portal.xlsm`) | sí | 30 snapshots 2019-05-21 → **2026-09-09** (último reportado 2Q FY27); 26 métricas + 8 slots de segmento (revenue, Data Center, op. profit por segmento); layout estable; etiquetas en año fiscal | `estMatrix.cons`, Setup, export de Bottom Line | — |
-| `get-market-history` (Massive) | sí (responde 200, ya no 404) | se confirma en el portal en VA-HIST | Historic Multiple en vivo | — |
+| `get-market-history` (Massive) | sí (responde 200, ya no 404) | confirmado en VA-HIST el 2026-11-09 (precio diario NVDA desde 2019-05-21) | Historic Multiple en vivo | — |
 | Valuación del modelo en el MCP (`get_valuation_history`) | sí, confiable | 3 submits, EV/EBITDA + P/E, sin `quality_flags`. 2026-08-28: 18× EV/EBITDA y 22× P/E sobre 2028 → PT $370.54 / $370.00. Prueba PT÷FV: cuadra en 2026-08-28 (1.112 / 1.112) y 2026-03-04 (1.281 / 1.281); 2025-12-12 usa años distintos por método (EV/EBITDA 2028, P/E 2027) → se revisa en VA-SUB | Summit congelado en todo el perfil: EV-EST, VA-TM, VA-SUB, VA-SENS | — |
 | SPLC (clientes / proveedores) | sí | `nvidia-map-reference/SPLC_BBG.xlsx` (NVDA sujeto) | TL-CUS tabla, BL-SPLC | — |
 | Transcripciones | ❌ no | nada en `docs/calls/`; Quartr no se conectará (SAB, 2026-10-26) | EV-POST, EV-NOTES, citas | EV-POST y EV-NOTES sin fuente hasta conseguir los PDFs oficiales de IR |
@@ -148,7 +148,7 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 | BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ✅ | 2026-11-09 | SAB | — | 3 líneas (costo de ventas aparte) · 6 secciones · citas verificadas por script |
 | BL-SEG | Bottom Line ▸ Segments | ✅ | 2026-11-09 | SAB | — | C&N · Graphics · no asignado; EBITDA anual; sin Summit por segmento; pestaña vieja retirada |
 | BL-SPLC | Bottom Line ▸ Supply Chain | ✅ | 2026-11-09 | SAB | — | 20 proveedores SPLC (sin sumar periodos) + compromisos $279B 10-Q + inventarios + cita 10-K; sin geografía (no hay datos); mapa de semis abajo |
-| VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
+| VA-HIST | Valuation ▸ Historic Multiple | ✅ | 2026-11-09 | SAB | — | `nvda-histmult.js` (copia de `meta-histmult.js`) + `nvda-histmult-data.js` (XBRL 1Q19–2Q27); P/E GAAP; EV/EBITDA fwd desde 2026-03-02; calendario fiscal de enero; precio en vivo |
 | VA-PEERS | Valuation ▸ Peers | ⬜ | | | | |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
 | VA-SUB | Valuation ▸ Submit History | ⬜ | | | | |
@@ -190,6 +190,8 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 - 2026-11-09 · BL-SEG · Comentarios de management en las pestañas de segmento: filings (10-K/10-Q MD&A, 8-K) + citas de Motley Fool verificadas y marcadas de terceros (como BL-GEN-5; distinto de Earnings, que es solo 8-K) — SAB
 - 2026-11-09 · BL-SPLC · Sin gráfica de geografía: el export SPLC de NVDA no trae plantas ni conteo de proveedores; la limitación va arriba; se agrega si SAB exporta la vista geográfica — SAB
 - 2026-11-09 · BL-SPLC · Bloque de filings "What NVIDIA has committed to its suppliers": compromisos de supply & capacity por año fiscal (10-Q 2Q FY27 Note 10, $279B), trayectoria $95.2B → $119B → $279B, inventarios, y la frase del 10-K que nombra proveedores por rol (texto de proveedores del DESC viejo, B2 #3) — SAB
+- 2026-11-09 · VA-HIST · P/E sobre EPS GAAP, forward y trailing (el único con consenso BBG en los 30 snapshots); el pie avisa que el 1S FY27 trae $23.7B de ganancias por inversiones en acciones (10-Q), por eso el trailing de 2026 se ve bajo — SAB
+- 2026-11-09 · VA-HIST · EV/EBITDA forward solo desde el snapshot 2026-03-02 (base nueva, SBC como gasto); trailing = utilidad operativa GAAP + D&A de XBRL desde FY2019; FY+3 deshabilitado (BBG trae 3 años) — SAB
 
 ## 4. Excepciones aceptadas
 
@@ -480,4 +482,10 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 - Qué se mostró: `js/overviews/nvda-splc.js` (copia de `meta-splc.js`), montado en `nvidia.js` arriba del mapa de semis (`semi-industry.js`, B2 #35 ✅). Lede + nota de cobertura; 5 KPIs ($279B compromisos · TSMC 37% del costo de ventas · materias primas $11.3B · KYEC 36% · 20 relaciones); bloque de filings (compromisos por año fiscal con tabla completa $366B, trayectoria $95.2B → $119B → $279B, inventarios ene/jul, cita del 10-K por rol); Cadena 1 silicio (8 tarjetas con modal); Cadena 2 sistemas/componentes/herramientas (12 filas); "who needs whom" top 10.
 - Fuentes: `nvidia-map-reference/SPLC_BBG.xlsx` (NVDA US Equity, relaciones del 2025-06-04 al 2026-06-25); 10-Q 2Q FY27 Note 10 e inventarios; 10-K FY2026 Note 12 e Item 1 Manufacturing.
 - Autoauditoría: 3 citas verificadas por script contra 10-K/10-Q ✔ · nada sumado entre periodos (los 20 "% del costo" suman ~110%) ✔ · Fabrinet/Ibiden = 1/4 del anual (FN FY25 $3.42B × 27.6% ÷ 4 ≈ $236M) → "quarterly avg." ✔ · tabla bajo la gráfica ✔ · paleta Summit, CSS en `css/overview.css` (sin `<style>`) ✔ · modal, desplegable y mapa funcionan ✔.
+- Cambios pedidos / decisiones: las dos de la sección 3 (2026-11-09).
+
+### 2026-11-09 · VA-HIST Valuation ▸ Historic Multiple — APROBADA
+- Qué se mostró: `js/overviews/nvda-histmult.js` (copia de `meta-histmult.js`) + `js/overviews/nvda-histmult-data.js` (SEC XBRL companyfacts CIK 0001045810, 1Q19–2Q27, generado por script el 2026-11-09: acciones diluidas reexpresadas por los splits ×40/×10 según fecha de filing, caja + valores de deuda negociables, deuda, utilidad operativa GAAP, D&A). Primera sub-tab de Valuation (activa por defecto). Año fiscal de NVIDIA (último domingo de enero) en `fyEndDay`/`fy0Of`/`periodKey`/marcas de cambio de año; trimestres 1Q27…, años FY2020…; FY+3 deshabilitado con la razón.
+- Fuentes: precio Massive en vivo (`get-market-history`, confirmado); consenso BBG (estMatrix.cons.y.eps 2019-05-21 → 2026-09-09; ebitda desde 2026-03-02); EPS GAAP reportado de `results-data/nvda.js`; 10-Q 2Q FY27 (ganancias por inversiones en acciones $23.7B en el 1S).
+- Autoauditoría: hoy P/E fwd 12.0× = $176 ÷ NTM $14.73 (0.23 × FY27 $9.94 + 0.77 × FY28 $16.14) ✔ · P/E trail 22.3× = $176 ÷ $7.91 (1.30+1.76+2.39+2.46) ✔ · hoy = 4Q27 (el Q3 FY27 cerró el 2026-10-25) ✔ · acciones 24.3–25.3B en toda la serie ✔ · sin denominador no se dibuja ✔ · tabla, zoom, rangos, chips ✔ · paleta Summit, sin `<style>` ✔.
 - Cambios pedidos / decisiones: las dos de la sección 3 (2026-11-09).

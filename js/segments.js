@@ -47,6 +47,10 @@ import { googlSegments } from './segments-data/googl.js';
 import { googlResults } from './results-data/googl.js';
 import { maSegments } from './segments-data/ma.js';
 import { maResults } from './results-data/ma.js';
+import { uberSegments } from './segments-data/uber.js';
+import { uberResults } from './results-data/uber.js';
+import { lyftSegments } from './segments-data/lyft.js';
+import { lyftResults } from './results-data/lyft.js';
 import { nvdaSegments } from './segments-data/nvda.js';
 import { nvdaResults } from './results-data/nvda.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
@@ -57,6 +61,8 @@ import { SPOT_THEMES } from './themes-data/spot.js';
 import { META_THEMES } from './themes-data/meta.js';
 import { GOOGL_THEMES } from './themes-data/googl.js';
 import { MA_THEMES } from './themes-data/ma.js';
+import { UBER_THEMES } from './themes-data/uber.js';
+import { LYFT_THEMES } from './themes-data/lyft.js';
 import { SUMMIT_CAT, SUMMIT_MUTE } from './viz-palette.js';   // the portal's fixed categorical palette
 
 // The Notes taxonomy names segments in prose; the datasets key them. One map, stated once.
@@ -67,9 +73,11 @@ var THEME_SEG = {
   SPOT: { 'Pricing & ARPU': 'prem', 'Royalties & legal': 'prem', 'Advertising': 'ads', 'Users & subscribers': 'ads' },   // the free tier is the funnel; the other SPOT themes are company-wide
   META: { 'Family of Apps': 'foa', 'Reality Labs': 'rl' },               // AI & compute, Costs & capital are company-wide
   GOOGL: { 'Google Services': 'svc', 'Google Cloud': 'cloud', 'Other Bets': 'bets' },   // AI & compute, Costs & capital are company-wide
+  UBER: { 'Mobility': 'mobility', 'Delivery': 'delivery', 'Freight': 'freight' },   // AVs, membership, costs & capital are company-wide
+  LYFT: { 'Rideshare': 'lyft' },   // the one Lyft segment; AVs, Europe, media, costs & capital are company-wide
   MA: { 'Consumer payments': 'pn', 'Commercial and new flows': 'pn', 'Value-added services': 'vas', 'Agentic and digital assets': 'vas' },   // guidance, costs and capital, regulation and litigation are company-wide
 };
-var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES, META: META_THEMES, GOOGL: GOOGL_THEMES, MA: MA_THEMES };
+var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES, META: META_THEMES, GOOGL: GOOGL_THEMES, MA: MA_THEMES, UBER: UBER_THEMES, LYFT: LYFT_THEMES };
 var SEGMENTS_DATA = {
   AMZN: { seg: amznSegments, res: amznResults },
   DHR:  { seg: dhrSegments,  res: dhrResults  },
@@ -88,6 +96,10 @@ var SEGMENTS_DATA = {
   GOOGL: { seg: googlSegments, res: googlResults },
   // MA: ONE reportable operating segment (Payment Solutions, 10-K Note 22); its two net-revenue categories stand in as the segments.
   MA: { seg: maSegments, res: maResults },
+  // UBER: three reportable segments (Mobility, Delivery, Freight), 10-K Note 13; segment profit = Adjusted EBITDA to 4Q25.
+  UBER: { seg: uberSegments, res: uberResults },
+  // LYFT: ONE operating segment (10-K Note 2), like SN: the Segments tab carries the consolidated platform; the revenue-line and geography cuts live in Other (annual).
+  LYFT: { seg: lyftSegments, res: lyftResults },
   // NVDA: two reportable segments (C&N, Graphics); its market PLATFORMS (Hyperscale, ACIE, Edge Computing) stand in as the segments (SAB, Nov 2 2026).
   NVDA: { seg: nvdaSegments, res: nvdaResults }
 };
@@ -353,7 +365,8 @@ function sgResolveRef(ref, view){
       Object.keys(act).forEach(function(p){ act[p] = act[p] / 100; });
       Object.keys(est).forEach(function(p){ est[p] = est[p] / 100; });
     }
-    return { unit: m.unit === 'eps' ? 'eps' : (m.unit === 'count' ? 'count' : (m.unit === 'pct' ? 'pct' : 'usdM')), label: m.label, short: m.short || m.label,
+    // `segUnit`: a Results metric whose own unit is a stand-in (LYFT rides / riders are counts in millions but sit on usdM in Results) tells this engine the real unit.
+    return { unit: m.segUnit || (m.unit === 'eps' ? 'eps' : (m.unit === 'count' ? 'count' : (m.unit === 'pct' ? 'pct' : 'usdM'))), label: m.label, short: m.short || m.label,
              act: act, est: est, src: 'Results dataset' };
   }
   if (kind === 'shared'){
@@ -862,8 +875,9 @@ function renderBlock(id, list, view, opts){
 // it hands the whole engine to this section — every mode, the presets, the slider, drag-to-zoom,
 // the chips, the period table — instead of a second, worse implementation of all of it.
 function segResultsKey(){ return _sg.ticker + '_SEG_' + String(_sg.seg).toUpperCase(); }
-function buildSegResults(){
-  var d = sgData(), s = sgSeg();
+function buildSegResults(opts){
+  opts = opts || {};
+  var d = sgData(), s = opts.seg || sgSeg();
   // The segment top line opens on the REPORTED line alone. Summit and the Street are a different
   // question — "was this expected" — and this section asks "how big is it and how fast is it
   // moving". Both are one chip away.
@@ -879,11 +893,12 @@ function buildSegResults(){
   // about the data.
   if (d.res.estMatrix) out.estMatrix = d.res.estMatrix;
   if (d.res.forwardQuarters) out.forwardQuarters = d.res.forwardQuarters;
+  if (d.res.anchorForecast) out.anchorForecast = true;
   if (d.res.defaultRange) out.defaultRange = d.res.defaultRange;   // opens on the last N reported periods plus the forward ones, like the Results tab
   ['q', 'y'].forEach(function(v){
     var src = d.res.views[v]; if (!src) return;
     var metrics = {}, keys = [];
-    ['rev', 'opinc'].forEach(function(dk){
+    (opts.drivers || d.seg.segTop || ['rev', 'opinc']).forEach(function(dk){   // a dataset may name its own top-line drivers (`segTop`); General of a one-segment company names its own (`overview.singleKeys`)
       var spec = (s.drivers || {})[dk];
       if (!spec || !spec.from) return;
       var mk = spec.from.split(':')[1], m = src.metrics[mk];
@@ -910,7 +925,7 @@ function buildSegResults(){
       // Line block and the engine draws into whichever node comes first in the document. That is
       // the "hidden duplicate block stealing getElementById" failure the reference warns about.
       // Namespacing the key keeps the two instances apart.
-      sections: [{ key: 'segtop', label: s.label + ' — top line', defaultMetric: keys[0],
+      sections: [{ key: opts.key || 'segtop', label: opts.label || (s.label + ' — top line'), defaultMetric: keys[0],
                    groups: [{ label: 'Segment', keys: keys }].concat(comp.length ? [{ label: 'Revenue build (gross to net)', keys: comp }] : []) }] };
   });
   return out;
@@ -1432,11 +1447,19 @@ function ovTotal(d, view, p){
   }, 0);
 }
 
+function ovResultsKey(){ return _sg.ticker + '_SEG_OV'; }
 export function segmentsOverviewHtml(ticker){
   var d = SEGMENTS_DATA[ticker];
   if (!d) return '<p class="sg-lede">No segments dataset for ' + esc(ticker) + '.</p>';
   _sg.ticker = ticker;
   var ov = d.seg.overview || {};
+  if (ov.single){        // one operating segment: there is no split to draw, so General carries the engine's own top-line chart (actual · Summit model · consensus)
+    registerResultsData(ovResultsKey(), buildSegResults({ seg: d.seg.segments[0], drivers: ov.singleKeys || ['rev'], key: 'segov', label: 'Top line' }));
+    var b1 = (ov.tenK ? sgTB('FILING', sgQuote(ov.tenK.text, ov.tenK.where)) : (ov.lede ? '<p class="sg-lede">' + esc(ov.lede) + '</p>' : '')) + ovCards(d, 'q');
+    return '<div class="sg-wrap" id="sgOvWrap">' + sec(1, 'The segment', '1 reportable', b1) +
+      sec(2, ov.singleTitle || 'Top line', 'actual · Summit model · consensus', '<div class="sg-engine" id="sgOvEngine">' + (resultsHtml(ovResultsKey()) || '') + '</div>') +
+      '<div class="ov-fynote sg-src">' + esc(d.seg.source) + '</div></div>';
+  }
   var view = blk('ovrev').view || 'q';
   // Was a paragraph of ours explaining the segments — which is what the cards underneath are for.
   // All that belongs at the top is how the COMPANY describes its own structure, word for word.
@@ -1467,6 +1490,7 @@ export function initSegmentsOverview(root, ticker){
   var host = root || document;
   var wrap = host.querySelector ? host.querySelector('#sgOvWrap') : null;
   if (!wrap) return;
+  if (d.seg.overview && d.seg.overview.single){ var ew = wrap.querySelector('#sgOvEngine .rs-wrap'); if (ew) initResults(ew, ovResultsKey()); return; }
   if (!wrap.__sgWired){
     wrap.__sgWired = true;
     wrap.addEventListener('keydown', function(ev){

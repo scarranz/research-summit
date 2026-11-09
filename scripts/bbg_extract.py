@@ -31,6 +31,7 @@ OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "js", "overviews")
 # Per-ticker segment id -> friendly name (BBG SEG ids are company-specific). Extend per company.
 SEGNAMES = {
   'AMZN': {'227430':'na', '227462':'intl', '227465':'aws'},
+  'UBER': {'355656':'mobility', '355655':'delivery', '355667':'freight'},
 }
 
 QA = ['fq-4','fq-3','fq-2','fq-1','fq0']         # actual quarters (oldest→newest, fq0=latest)
@@ -55,6 +56,10 @@ CODE = {
  'HEADLINE_FCF':'fcf','BS_REMAINING_PERFORMANCE_OBLIG':'rpo','CF_PURCHSE_OF_COMMN_STOCK':'buyback',
  'TOTAL_SHIPPING_COST':'shipping','INVENT_TURN':'invTurn','ACCOUNTS_PAYABLE_TURNOVER_DAYS':'dpo',
  'CB_BS_PP_AND_E_NET':'ppe','IS_OPER_INC':'oi','IS_DEPR_EXP':'da',
+ # LYFT (2026-11-05): Lyft's own field codes, written off inspect_matrix.py LYFT
+ 'IS_COMP_SALES':'rev','IS_COGS_TO_FE_AND_PP_AND_G':'cogs','IS_OTHER_OPERATING_EXPENSES_GAAP':'fulfillment','IS_EBIT_AS_REPORTED':'operatingIncome',
+ 'CF_DEPR_AMORT':'da','IS_SBC_NON_GAAP':'sbc','CB_IS_ADJ_DILUTED_AVG_SHS':'dilShares','CF_CASH_FROM_OPER':'cfo','CB_IS_INTEREST_EXPENSE':'netInterest',
+ 'INTERNET_GROSS_BOOKINGS':'grossBookings','NUMBER_TRANSACTIONS':'rides','NUMBER_OF_ACTIVE_CLIENTS':'activeRiders','CB_IS_EBITDA_MARGIN':'ebitdaOfGrossBookings',
 }
 
 def slug(name):

@@ -16,11 +16,14 @@ import { SUMMIT_MUTE, fade } from './viz-palette.js';
 import { fetchPriceHistory } from './api.js';
 import { spotSubmits } from './submits-data/spot.js';
 import { googlSubmits } from './submits-data/googl.js';
+import { uberSubmits } from './submits-data/uber.js';
 import { metaSubmits } from './submits-data/meta.js';
 import { tsmSubmits } from './submits-data/tsm.js';
 import { amznSubmits } from './submits-data/amzn.js';
+import { tbbbSubmits } from './submits-data/tbbb.js';
+import { lyftSubmits } from './submits-data/lyft.js';
 
-var SUBMITS_DATA = { SPOT: spotSubmits, GOOGL: googlSubmits, META: metaSubmits, TSM: tsmSubmits, AMZN: amznSubmits };
+var SUBMITS_DATA = { SPOT: spotSubmits, GOOGL: googlSubmits, META: metaSubmits, TSM: tsmSubmits, AMZN: amznSubmits, TBBB: tbbbSubmits, UBER: uberSubmits, LYFT: lyftSubmits };
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 

@@ -21,6 +21,9 @@ ninguna otra pestaña (§15b).
 > se han desviado del código. La guía cita **nombres de función**, no números de línea (se mueven con
 > cada PR); donde aparece un número, va con `~` y es solo orientativo.
 >
+> **Actualizada el 3 nov 2026:** §12 EV-SET / EV-POST con el Setup y Post-Results de TBBB (DOAA351): una lista down the
+> income statement, una nota por línea, líneas en % puntuadas en puntos y la regla exacta de citas.
+>
 > **Actualizada el 20 oct 2026 con el review de TSMC de SAB (2026-10-19)** — lo que pidió para TSM vale
 > para toda empresa: Overview sin color (§8, §21) · trimestres estimados que suman al año (§9.1) · qué
 > vende cada segmento y a quién, y qué le compra cada cliente (TL-SEG, TL-CUS) · precio × volumen y
@@ -1366,6 +1369,17 @@ el trimestre "upcoming" nuevo se agrega cuando el Post-Results anterior ya está
 
 ### EV-SET Setup (antes del print)
 
+> **Ajuste de SAB (2026-11-03, a partir de TBBB/MA de DOAA351):**
+> - **Una sola lista, no dos rejillas.** El Setup lee el trimestre **de arriba a abajo del estado de resultados**:
+>   volumen y transacciones → ingreso y cómo se construye → costos → utilidad → caja (rótulo "The quarter — down the
+>   income statement: …"). Una fila por línea, con Street | Summit lado a lado; el orden es `CE_STMT_ORDER`. Las
+>   9 líneas fijas del Headline siguen existiendo y se buscan siempre, pero ya no se separan en una rejilla aparte.
+>   Por defecto **Both**. Código: la copia de `ma-ce.js` / `tbbb-ce.js` trae la vista (`ceGrid(u,'all')`).
+> - **Una nota por línea** (`setup.notes[línea] = {t, h}`) con **lo que la empresa dijo de esa línea para este
+>   trimestre** — la guía y lo dicho en la llamada anterior, con la fuente nombrada ("Q2 2026 call", "4Q25 release").
+>   `t` es el titular corto que se ve en la fila (la guía o el número clave); `h` el detalle. Si la empresa no
+>   guía la línea, la nota lo dice. En trimestres históricos, la nota cuelga la guía anual vigente ese año.
+
 > **Ajuste de SAB (2026-10-21, META):** Earnings **no** abre con las tarjetas grandes de Investor Relations y
 > EDGAR (`ceIRButton`) ni con el párrafo introductorio "Earnings — the decision layer…": la pestaña empieza
 > directo en Setup · Watch List · Post-Results. Al copiar el bloque `ce*` de AMZN se quitan los dos.
@@ -1373,11 +1387,11 @@ el trimestre "upcoming" nuevo se agrega cuando el Post-Results anterior ya está
 1. Chip "① Pre-Call" (gris "frozen" si el trimestre ya se reportó).
 2. **Barra "Estimates":** Consensus | Summit | Both (Consensus) · YoY | QoQ | Off (YoY) ·
    Margin | Hide mgn (Hide).
-3. **Dos rejillas:** "Headline — every company, always" (9 métricas fijas: Revenue, Gross profit,
-   Operating income, EBITDA, EPS (diluted), Operating cash flow, Capex, D&A, Diluted shares) y
-   "Custom KPIs — <TICKER>" (las propias: ventas y utilidad por segmento, o los KPIs de la empresa).
-   Cada celda: mini-tabla Street | Summit, chips de crecimiento, fila de margen (si aplica) y un `?`
-   con la advertencia de esa métrica (`setup.notes[métrica] = {t, h}`).
+3. **Una lista "down the income statement"** (ajuste del 2026-11-03, arriba): una fila por línea en el orden
+   del estado de resultados — las 9 del Headline (Revenue, Gross profit, Operating income, EBITDA, EPS
+   (diluted), Operating cash flow, Capex, D&A, Diluted shares) **más** las propias de la empresa (segmentos,
+   KPIs), intercaladas donde caen en el estado de resultados. Cada fila: Street | Summit, chips de
+   crecimiento, margen (si aplica) y un `?` con la nota de la línea (`setup.notes[línea] = {t, h}`).
 4. **"The Setup picture — reported vs Summit vs Street: pick any line, window the period with the
    lever, toggle margins"** (`ceAnnualBody`) — segunda instancia del motor de Results con el dataset
    `<T>_SETUP`.
@@ -1398,6 +1412,24 @@ el trimestre "upcoming" nuevo se agrega cuando el Post-Results anterior ya está
 
 ### EV-POST Post-Results (después del print)
 
+> **Ajustes de SAB (2026-11-03, a partir de TBBB de DOAA351):**
+> - **"The print" en filas** (Rows por defecto, Grid como opción), en orden del estado de resultados, Both por
+>   defecto: cada fila Street | Summit | Actual con crecimiento y sorpresa.
+> - **Una nota por línea** (`results.notes[línea] = {t, h}`), que **sí se muestra** en la tarjeta: lo que dice el
+>   comunicado de esa línea (la cifra, el crecimiento y la razón que da la empresa), con las cifras del dataset de
+>   Results. Para trimestres viejos se pueden armar al cargar desde el dataset (patrón `hAutoNotes` de
+>   `tbbb-ce-data.js`), sin teclear números — y **sin frases de relleno** ("the comparison is on the card above").
+> - **Una línea que ya es tasa** (`u:'%'`: same-store sales, margen, take rate) se puntúa como **diferencia en
+>   puntos** (actual − esperado, "+7.5 pts"), nunca como porcentaje de un porcentaje (20.5% vs 13.0% no es "+57.7%").
+>   In line: |Δ| < 0.5 pts. Las demás líneas: |sorpresa| < 2 %.
+> - **Citas textuales, reglas exactas.** Una cita reproduce las palabras de la transcripción **en orden**. Se puede
+>   cortar al principio o al final; en medio, cada tramo omitido —incluidas muletillas ("you know", "I mean")—
+>   se marca con "…". **Nunca** se agregan, cambian ni reordenan palabras ("two-thirds" no se vuelve "2/3", no se
+>   agrega "with"). Aclaraciones solo entre corchetes [ ]. Si no se encuentra el pasaje, no va entre comillas.
+>   Se verifica por script contra la transcripción antes de mostrar la unidad (TBBB, 2026-11-03: ~35 % de las
+>   citas tenía palabras quitadas sin "…" o reescritas; corregido).
+> - El campo `results.headline` no se muestra en ningún lado: no llenarlo.
+
 > **Ajustes de SAB (2026-10-21, META):**
 > - **Sin emojis ni glifos** en Earnings: el chip de fase dice "Pre-Call" / "Post-Results" (sin ①/②), el banco
 >   del analista va sin 🏦, "Propose Notes" sin 📝, botones "Accept" / "Rejected" / "Edit / Add note" sin ✓ ↻ ✎.
@@ -1416,7 +1448,7 @@ Por trimestre reportado:
 2. **"The print — down the income statement"** (`?` "How this is built"): controles View Cards | Chart
    (Cards) · Basis vs Street | vs Summit | Both (vs Street) · filtro All | Beats | Misses | In line ·
    orden Statement order | By surprise · Lines All | Top line | Bottom line · Margin · Growth. Cada
-   tarjeta: métrica + veredicto (**|sorpresa| < 2 % = in line**), tabla Street | Summit | Actual con
+   tarjeta: métrica + veredicto (**|sorpresa| < 2 % = in line**; en líneas `%`, |Δ| < 0.5 pts), tabla Street | Summit | Actual con
    valor / crecimiento / margen. Solo en Cards: Margin | Hide mgn (Margin) y YoY | QoQ | Off (YoY).
    En Chart: barras divergentes de sorpresa en un solo eje %.
 3. **"Call Summary"** (plegado) — *By Prepared Remarks* (tema + cuerpo) | *By Analyst Question*
@@ -1431,11 +1463,11 @@ Por trimestre reportado:
 
 - **Fuentes:** actuals del 8-K; Street/Summit como en Setup; Call Summary de la **transcripción**
   (`docs/calls/<TICKER>-latest.md`, o Quartr). Las respuestas de management son **citas directas**,
-  no resúmenes con voz de Claude.
+  no resúmenes con voz de Claude, recortadas con "…" según la regla de arriba.
 - **Qué decide el analista:** qué temas se proponen como notas y a qué tema se archivan.
 - **No copiar de AMZN:** `ceGuessTarget` tiene expresiones regulares de Amazon (agentic, AWS…) —
-  reescribirlas para la empresa; los campos `results.notes/watch/thesisCheck…` no se muestran: no
-  gastar tiempo llenándolos.
+  reescribirlas para la empresa; `results.notes` **sí** se muestra (una nota por tarjeta, arriba); los campos
+  `results.watch/thesisCheck/headline…` no se muestran: no gastar tiempo llenándolos.
 
 ### EV-NOTES Notes — ver §24 para las reglas de uso
 

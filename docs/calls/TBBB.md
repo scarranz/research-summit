@@ -5,9 +5,9 @@ The calls repository for TBBB per docs/EARNINGS_CONVENTIONS.md. Newest call on t
 distilled record that feeds the Earnings tab (`js/overviews/bbb.js`) and the Post-Results "Call
 summary". Reporting is IFRS, fiscal year ends Dec 31; figures in Mexican pesos (Ps.) unless noted.
 
-**Transcripts on file (7), all distilled below (newest first):** 2026-05-07 (1Q26) · 2026-03-12
+**Transcripts on file (11), all distilled below (newest first):** 2026-08-13 (2Q26) · 2026-05-07 (1Q26) · 2026-03-12
 (FY2025/4Q25) · 2025-11-20 (3Q25) · 2025-08-12 (2Q25) · 2025-05-08 (1Q25) · 2025-04-10 (FY2024/4Q24)
-· 2024-11-26 (3Q24). Management is unchanged across all seven: **Anthony Hatoum** (Founder, Chairman
+· 2024-11-26 (3Q24) · 2024-08-22 (2Q24) · 2024-05-23 (1Q24) · 2024-04-26 (4Q23, the first call after the IPO). Management is unchanged across all seven: **Anthony Hatoum** (Founder, Chairman
 & CEO) and **Eduardo Pizzuto** (CFO); 2Q25 added Amparo Martínez (General Counsel) and Joaquín Ley (IR).
 
 **The through-line, seven calls in one paragraph:** revenue has compounded **+30–38% every quarter**
@@ -21,6 +21,112 @@ compounding (FY25 +30% to Ps.4.4B). Gross margin is deliberately **volatile / no
 SKU-by-SKU for peso margin × volume). Recurring debates: gross-margin normalization, ticket-vs-traffic,
 SG&A leverage vs. the accelerating-openings drag, the peso/dollarized-cost passthrough (8–18 months),
 and — newest — the **Aug 6, 2026 lock-up expiry**.
+
+---
+
+## 3Q26 — reported Nov 2, 2026 · call Nov 3, 2026
+
+### The call — the record (transcript pasted by the analyst, 2026-11-03)
+
+- **Prepared:** 141 net new stores (3,765; 419 YTD; LTM 603), four new DCs (25 regions); SSS +20.5%; revenue +40% to MXN 28B; reported EBITDA MXN 1.3B, ex-SBC +60% to MXN 1.9B (margin +83bps); 9M OCF MXN 7.1B (+128%); gap to ANTAD above 21 points. Sales expenses −36bps to 9.8%, admin ex-SBC −6bps. Adjusted negative working capital MXN 10.8B (about 10.9% of LTM revenue). Newer vintages start higher and grow faster; momentum continues into Q4.
+- **Guide:** "still well within guidance"; Q4 typically heavier on openings, pipeline healthy, no change in guidance (Ruben).
+- **Margins and logistics:** commercial margin expanded (scale, including rebates); sequential pressure from four DCs, expansion year on year; two DCs opened in July so most pre-opening expense hit Q2; transportation "barely scratched the surface", more in 2027 (Maya, Ford, Sgarz). Q4 "business as normal"; December rebates booked in January.
+- **Tax:** the new law limiting deductions mainly affects cash flow temporarily; no change to next year's plans; guidance on the Q4 call (Maya, Quiroga).
+- **Same-store sales and mix:** two-thirds volume, one-third price (mostly mix; inflation near zero); items per basket 4 to 5 against 2 to 3 at the IPO; frozen and cosmetics outstanding; price gap steady (Strano, Giordano).
+- **Store format and pilots:** grocery, not convenience; frozen capex judged on ROIC; refrigeration strategy dynamic; 60 to 80 pilots; about 900 SKUs; Yema four stores (García, Hernández, Vadia).
+- **Cohorts:** sales curve steeper and maximum sales rising; the cohort chart to be updated "in the next quarter or thereafter" (Giordano).
+- **Suppliers and DCs:** private-label supply planned three years out; each DC still about 150 to 160 stores; new DCs reshuffle stores to compact distances (Arshad, Galassi).
+- **Competition:** nothing notable (Fuchs). **Talent:** "the team" (Vadia, Arshad).
+
+**Into Q4 2026:** openings inside 590 to 630 with a heavier fourth quarter; the 2027 guide; the final tax law; the updated cohort chart; transportation optimization.
+
+---
+
+## 2Q26 — reported Aug 12, 2026 · call Aug 13, 2026
+
+Participants: **Anthony Hatoum** (Chairman & CEO), **Eduardo Pizzuto** (CFO). Investors/analysts only.
+
+### The print (2Q26 earnings release)
+
+- **Revenue Ps.26,037M (+38.7% YoY)**; merchandise Ps.26,002M, recyclables Ps.35M.
+- **Same-store sales +20.0%** (vs +17.7% in 2Q25); call: ~**2/3 volume, 1/3 price, the price piece mostly mix**
+  (internal inflation "very low"); gap vs ANTAD **>20 points**.
+- **Stores: +155 net new → 3,624** (LTM +593, +20% of the base; 2Q25 was +142). **21 distribution centers**
+  (+1 in the quarter; 16 a year ago).
+- **Gross profit Ps.4,362M (+43.4%), margin 16.8% (+54bps)**: stronger commercial margin and lower
+  transportation cost as a % of revenue.
+- **Sales expenses 10.0% of revenue (−56bps)**: leverage in most lines incl. labor. **Admin 5.5% (+159bps)**;
+  ex-SBC admin **3.1% (+57bps)**, which includes a one-time **Ps.37M cash cost of the May 2026 equity follow-on**.
+- **Reported EBITDA Ps.960M (3.7%)** vs Ps.844M; **non-cash SBC Ps.615M** (vs Ps.252M; Liquidity Event Plan
+  vesting). **EBITDA ex-SBC Ps.1,575M (+43.8%), margin 6.1% (+21bps)**; 6.2% excluding the follow-on cost.
+- **Operating profit Ps.352M (1.4% margin)** vs Ps.393M; FX loss Ps.85M (vs Ps.234M); financial costs Ps.483M
+  (+27%, lease interest); **net loss Ps.386M** (vs a Ps.286M loss in 2Q25).
+- **1H26 operating cash flow Ps.4,285M (+119%)**; **adjusted negative working capital Ps.10.2B** (vs Ps.7.1B,
+  ex-IPO/follow-on proceeds), **~11.2% of LTM revenue**: "our operating cash flow fully funds our organic expansion."
+- **May 2026 follow-on:** primary proceeds Ps.1,487M net, of which Ps.1,483M went to short-term deposits (30 Jun:
+  cash Ps.1,981M + deposits Ps.4,129M). **Lock-up expired Aug 6, 2026**: all Class C converted 1:1 into Class A.
+- Fully diluted share count (illustrative, US$35): **162.0M** (release Appendix 1). SBC schedule: Appendix 2.
+
+### The call — the record
+
+- **Gross margin:** a sum over every SKU; scale gives better buying/manufacturing/logistics, the "bigger pie" is
+  split with the supplier and then partly passed to price. Trend "very likely" keeps improving, but percent margin
+  can plateau as more is passed to price; **the metric that matters is dollar gross margin.** No seasonality, only
+  quarter-to-quarter volatility.
+- **Logistics:** lower transport cost from ongoing optimization in all regions and **better management of
+  pre-operating expense in the new region**. **Heads-up:** two more DCs opened "in the past few weeks" and a third
+  within Q3 (**three DCs in Q3**), so possible pressure on logistics expense; more in H2 if opportunities appear.
+- **SSS drivers:** 2/3 volume, 1/3 price (mostly mix). All categories growing; new categories (low base) faster than
+  well-penetrated commodity ones. **SKU count kept low on purpose**; selling one more item per customer moves SSS
+  materially; the existing portfolio is "not fully penetrated" (wallet share has room without new SKUs).
+- **Format:** **100% of new stores open in the upgraded format** (larger, more refrigeration); older stores still
+  perform very well; ramp-ups "very consistent" vs the Q4 unit-economics update; the **2026 vintage** is tracking.
+  Parking only where the site is suburban.
+- **ERP:** phase one in testing; AI coding tools pulled features forward, on track. The new POS can "deliver more
+  than ringing up a product" (optionality for services); back-end logistics is an unexplored lever.
+- **G&A:** ~3% of revenue (ex-SBC) is "a fair assumption" for H2, similar to Q2; the spend is **talent densification**
+  (purchasing, logistics, systems, specialty roles), not salaries/benefits; no limit as long as each hire returns far
+  more than it costs. Operating leverage should come through the **selling-expense** line.
+- **Working capital:** new categories must be high-rotation, so no material impact; inventory days "below 20."
+- **Competition (FEMSA rollout):** "nothing more than what we have already seen"; room for several players.
+- **Real estate:** no constraint, runway "tremendous."
+- **Employee options / lock-up:** restriction window lifts 48h after the release; mechanisms already in place for
+  orderly selling; no expectation of a rush.
+- **Tests:** cardless (no credit/debit) store test, "non-material impact," not necessarily scaled. **World Cup:** no
+  relevant effect on sales.
+
+### Q&A — the record
+
+- **Andrew Ruben (Morgan Stanley):** gross-margin drivers and the lower transportation cost (commercial margin;
+  pre-operating cost discipline; 3 DCs coming in Q3).
+- **Bob Ford (BofA):** ticket vs traffic (2/3 · 1/3), new-SKU contribution, ERP progress/AI, POS and logistics changes.
+- **Joseph Giordano (JPMorgan):** upgraded-format share of openings (100%), uplift, ramp-up speed.
+- **Ulises Argote (Santander):** ~280 openings in H1 with one DC: DC timing and efficiency (3 in Q3).
+- **Héctor Maya (Scotiabank):** World Cup tailwind (none); G&A run-rate in H2 (~3% of revenue).
+- **Irma Sgarz (Goldman Sachs):** where the G&A talent goes (purchasing, logistics, systems); cardless test; 2027 talent.
+- **Jorge Izquierdo (BTG Pactual):** store size and parking as ticket grows.
+- **Antonio Hernández (Actinver):** working capital with new categories (no change; inventory <20 days).
+- **Jo Thomas (HSBC):** 2-year SSS stack and FEMSA competition.
+- **Isabella Lamas (UBS):** new customers vs wallet share; real estate; accelerating openings.
+- **Froylan Méndez (JPMorgan):** gross-margin giveback risk/seasonality; option-sale mechanism.
+
+### Analysis — feeds the Earnings tab
+
+**Scoring vs the 1Q26 hooks:** lock-up **RESOLVED** (expired Aug 6, Class C → Class A; what remains is option-holder
+selling, which management says has orderly mechanisms); gross margin **expanded** (+54bps) with the "dollar margin"
+framing; G&A **guided ~3% of revenue** for H2; SSS **accelerated** (+20%) on volume.
+**New in 2Q26:** the **May equity follow-on** (primary Ps.1.49B, parked in deposits); **3 DCs in Q3** (logistics-cost
+pressure risk); format **100% upgraded**; AI/ERP work pulled forward.
+
+**Into next quarter (3Q26 Watch List seeds):** (1) logistics expense with 3 new DCs; (2) gross-margin giveback vs
+dollar margin; (3) G&A ~3% of revenue and the talent build; (4) post-lock-up float/option selling; (5) SSS 2-year
+stack durability after +20%; (6) FEMSA / hard-discount intensity; (7) ERP phase-one rollout.
+
+**Silences / to-watch:** no SG&A, margin or EBITDA guidance; no quantified AI/ERP savings; the net loss remains an
+IFRS outcome (SBC + lease interest + FX), read through EBITDA ex-SBC.
+
+Sources: BBB Foods 2Q26 earnings release (2026-08-12), 2Q26 earnings deck and call transcript (2026-08-13), in
+`G:\My Drive\Summit\Docs\Extras\Team\DAA\Ad hoc info search\TBBB\`; 20-F/A (2026-05-21) for the lock-up terms.
 
 ---
 
@@ -202,3 +308,76 @@ dollarized input costs pass through over the same window on peso weakness. Unit-
 
 Sources: BBB Foods quarterly earnings releases & call transcripts (2024-11-26 → 2026-05-07, in
 `Desktop/Developer/TBBB/`); FY2024 & FY2025 20-F filings. Figures per management's prepared remarks.
+
+---
+
+## 2Q24 — call Aug 22, 2024
+
+Participants: **Anthony Hatoum** (CEO), **Eduardo Pizzuto** (CFO). Investors/analysts only.
+
+### The print
+
+- **Revenue Ps.13.6B (+27.5% YoY)**; **same-store sales +10.7%**, a slowdown management attributed to Easter falling in
+  1Q24, lower inflation, government payments moved into Q1 (June elections), election-period alcohol restrictions and weather.
+- **Stores: +121 net new → 2,503** (vs 2,288 at YE2023; 215 net YTD) and **one new DC**; guide of **380-420 openings** kept.
+- **EBITDA Ps.689M (+43.2%)**, margin **5.1% (+56bps)**; admin expenses +45.8% (three new regions, talent in IT, purchasing, HR
+  and finance, public-company costs, share-based payment recognition). **Gross margin 16.7%**, on better supplier terms from scale.
+- **1H operating cash flow Ps.1.256B (+25%)**; net cash ~Ps.1.2B plus Ps.2.8B of short-term deposits; **adjusted negative working
+  capital 10.2% of revenue**. Guidance kept: **revenue +28% to +32%**.
+
+### The call, the record
+
+- **Gross margin is not a "new normal":** scale improves purchasing terms across private label and branded, then each SKU is priced
+  for dollar margin and sales (continuous elasticity testing); the tendency is to pass benefits on to the customer; margin will fluctuate.
+- **Openings are lumpy** (about 40% of the quarter's openings came in its last month); no budging from the guide. Two DCs opened YTD
+  with ~100 and ~150 stores at launch ("stretching": a new DC starts with stores already attached).
+- **Fresh and meat tests are encouraging** but are not part of any projection; nothing launches without a highly attractive return.
+- **Peso depreciation** passes through to costs over roughly **12 to 18 months** (dollarized inputs, labor and energy aside).
+- **Cash overseas:** roughly US$150M of US deposits plus ~US$50M of cash abroad (the CFO confirmed "close to 170" in total); assume it stays abroad for the rest of 2024,
+  so FX gains and losses persist. No working-capital improvement assumed for the balance of the year.
+- **Store returns:** each new vintage performs better (brand awareness, value proposition), so returns on a store should improve absent a capex shock.
+- Q&A included Morgan Stanley, JPMorgan, Bank of America, BTG Pactual, Yaksha Capital, a family office and Summit Management (private vs branded mix in margin: multi-year, not quarterly).
+
+Sources: BBB Foods 2Q24 earnings call transcript (2024-08-22), in `G:\My Drive\Summit\Docs\Extras\Team\DAA\Ad hoc info search\TBBB Calls.txt`.
+
+---
+
+## 1Q24 — call May 23, 2024
+
+Participants: **Anthony Hatoum** (CEO), **Eduardo Pizzuto** (CFO).
+
+### The print
+
+- **Revenue Ps.12.7B (+30.9% YoY)**; **same-store sales +14.8%**; **94 net new stores → 2,382** (+27% vs 1Q23 openings, a record first quarter).
+- **EBITDA Ps.626M (+57.9%)**, margin **4.9%** (from 4.1%); excluding Ps.70M of IPO expenses, **Ps.695M and 5.5%**. **Gross margin +80bps** on scale and supplier terms, mostly passed to customers.
+- **Operating cash flow +36.4%**; **net cash Ps.4.3B** after the IPO; adjusted negative working capital Ps.4.8B (vs Ps.4.6B at YE2023).
+- Guidance kept: **380-420 openings**, **revenue +28% to +32%**; white space "no less than 12,000" stores (the figure later raised to ~14,000).
+
+### The call, the record
+
+- Operating costs as a % of sales keep trending down; minimum-wage increases helped the target customer; the virtuous circle (open stores, raise value for money, attract customers, grow sales per store, scale, repeat) is the framing.
+- Store growth CAGR of 15%+ over 2019-2023 is the base for the runway argument.
+
+Sources: BBB Foods 1Q24 earnings call transcript (2024-05-23).
+
+---
+
+## 4Q23 / FY2023 — call Apr 26, 2024 (the first call after the Feb 2024 IPO)
+
+Participants: **Anthony Hatoum** (CEO), **Eduardo Pizzuto** (CFO).
+
+### The print
+
+- **Revenue Ps.44B (+35.3%)** in 2023 and **+30.8%** in Q4; of the 35%, 29 points from stores opened before 2022 and 7 from the 2023 openings.
+- **Record 396 net new stores in 2023 (153 in Q4, 39% of the year) → 2,288 (+21%)**; store-opening CAGR 20%+ over 2019-2023.
+- **Gross margin +86bps** (scale and supplier terms). **EBITDA +44.3%** in 2023 and +32.9% in Q4; one-offs in Q4: **Ps.80M Hurricane Otis** and **Ps.14M pre-IPO** expenses (adjusted Q4 EBITDA margins 5.3% and 4.5% excluding each).
+- **Operating cash flow Ps.3.1B (+48%)**; negative working capital ~10% of revenue (Ps.1.4B generated in 2023); the US-dollar debt fully repaid post-IPO.
+- **Private label 43% to 47% of sales** in 2023.
+- **2024 guidance:** **380-420 openings**, **revenue +28% to +32%**, **same-store sales mid-teens**.
+
+### The call, the record
+
+- **Vintage chart:** every vintage still grows, none has flattened, each newer vintage starts higher and ramps steeper (stores break even faster), driven by a better value proposition and a stronger brand.
+- Gross margin is a product-by-product dynamic and may fluctuate; the 2024 openings are expected to be spread more evenly than 2023's fourth-quarter concentration.
+
+Sources: BBB Foods 4Q23 earnings call transcript (2024-04-26).

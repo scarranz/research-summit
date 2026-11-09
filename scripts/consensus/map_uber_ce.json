@@ -1,0 +1,145 @@
+{
+ "_doc": "UBER Earnings-grid map (CE_CONS), 2026-11-03. Same codes as map_uber.json plus the nine headline lines.",
+ "segments": {
+  "mob": "SEG0000355656",
+  "del": "SEG0000355655",
+  "fr": "SEG0000355667",
+  "corp": "SEG0000355661"
+ },
+ "q": {
+  "Revenue": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM"
+  },
+  "Gross profit": {
+   "code": "GROSS_PROFIT",
+   "unit": "usdM"
+  },
+  "mobop": {
+   "code": "IS_OPER_INC",
+   "unit": "usdM",
+   "segment": "mob"
+  },
+  "delop": {
+   "code": "IS_OPER_INC",
+   "unit": "usdM",
+   "segment": "del"
+  },
+  "frop": {
+   "code": "IS_OPER_INC",
+   "unit": "usdM",
+   "segment": "fr"
+  },
+  "corpop": {
+   "code": "IS_OPER_INC",
+   "unit": "usdM",
+   "segment": "corp"
+  },
+  "Operating income": {
+   "sum": [
+    "mobop",
+    "delop",
+    "frop",
+    "corpop"
+   ]
+  },
+  "Operating income (GAAP)": {
+   "code": "IS_EBIT_AS_REPORTED",
+   "unit": "usdM"
+  },
+  "EBITDA": {
+   "code": "IS_COMPARABLE_EBITDA",
+   "unit": "usdM"
+  },
+  "EPS (diluted)": {
+   "code": "IS_COMP_EPS_GAAP",
+   "unit": "eps"
+  },
+  "Operating cash flow": {
+   "code": "CB_CF_NET_CASH_OPERATING_ACT",
+   "unit": "usdM"
+  },
+  "Capex": {
+   "code": "HEADLINE_CAPEX",
+   "unit": "usdM",
+   "sign": -1
+  },
+  "D&A": {
+   "code": "IS_D_AND_A_GAAP",
+   "unit": "usdM"
+  },
+  "Diluted shares": {
+   "code": "IS_SH_FOR_DILUTED_EPS",
+   "unit": "usdM"
+  },
+  "Gross Bookings": {
+   "code": "INTERNET_GROSS_BOOKINGS",
+   "unit": "usdM"
+  },
+  "Mobility GB": {
+   "code": "INTERNET_GROSS_BOOKINGS",
+   "unit": "usdM",
+   "segment": "mob"
+  },
+  "Delivery GB": {
+   "code": "INTERNET_GROSS_BOOKINGS",
+   "unit": "usdM",
+   "segment": "del"
+  },
+  "Freight GB": {
+   "code": "INTERNET_GROSS_BOOKINGS",
+   "unit": "usdM",
+   "segment": "fr"
+  },
+  "Mobility revenue": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM",
+   "segment": "mob"
+  },
+  "Delivery revenue": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM",
+   "segment": "del"
+  },
+  "Freight revenue": {
+   "code": "SALES_REV_TURN",
+   "unit": "usdM",
+   "segment": "fr"
+  },
+  "Mobility op. income": {
+   "code": "IS_OPER_INC",
+   "unit": "usdM",
+   "segment": "mob"
+  },
+  "Delivery op. income": {
+   "code": "IS_OPER_INC",
+   "unit": "usdM",
+   "segment": "del"
+  },
+  "Free cash flow": {
+   "code": "HEADLINE_FCF",
+   "unit": "usdM"
+  },
+  "Trips": {
+   "code": "NUMBER_ONLINE_TRANSACTIONS_GENL",
+   "unit": "count"
+  },
+  "MAPCs": {
+   "code": "MONTHLY_ACTIVE_USERS",
+   "unit": "count"
+  },
+  "Net take rate": {
+   "code": "NET_TAKE_RATE",
+   "unit": "count"
+  },
+  "Net income (GAAP)": {
+   "code": "IS_COMP_NET_INCOME_GAAP",
+   "unit": "usdM"
+  },
+  "SBC": {
+   "code": "CF_STOCK_BASED_COMPENSATION",
+   "unit": "usdM"
+  }
+ },
+ "y": {}
+}

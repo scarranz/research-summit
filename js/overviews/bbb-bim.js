@@ -14,9 +14,9 @@
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-var TBBB_CLR = '#E1251B';     // 3B red
-var BIM_CLR  = '#0E8F8F';     // BİM teal (distinct from 3B red)
-var BIM_LT   = '#8FCBCB';     // BİM light (for the "2011" / early state)
+var TBBB_CLR = '#2a78d6';     // Summit series 1
+var BIM_CLR  = '#eb6834';     // Summit series 2
+var BIM_LT   = '#f3b79e';     // BİM light (for the "2011" / early state)
 
 // ─── Store-count trajectory ──────────────────────────────────────────────────
 // BİM stores by calendar year (Turkey-only pre-2015; consolidated 2020+).
@@ -147,7 +147,7 @@ var bimAlignLine = {
     var px = x.getPixelForValue(2011);
     var ctx = chart.ctx;
     ctx.save();
-    ctx.strokeStyle = 'rgba(225,37,27,0.55)';
+    ctx.strokeStyle = 'rgba(42,120,214,0.55)';
     ctx.setLineDash([5,4]); ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(px, y.top); ctx.lineTo(px, y.bottom); ctx.stroke();
     ctx.setLineDash([]);

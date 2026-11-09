@@ -18,15 +18,15 @@ function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').r
 
 // ─── Chains ───────────────────────────────────────────────────────────────────
 var CHAINS = [
-  { key:'tbbb', name:'Tiendas 3B', short:'3B', color:'#E1251B',
+  { key:'tbbb', name:'Tiendas 3B', short:'3B', color:'#2a78d6',
     total:3346, totalLabel:'~3,346', states:'~19', parent:'Independent — listed on NYSE (TBBB)',
     since:'2005', format:'Hard discount · ~850–900 SKUs · 300–450 m² stores',
     edge:'Pioneer and leader of hard discount in Mexico. Largest scale and the most aggressive opening pace (~1 store every 15 hours).' },
-  { key:'neto', name:'Tiendas Neto', short:'Neto', color:'#1F4DD8',
+  { key:'neto', name:'Tiendas Neto', short:'Neto', color:'#eb6834',
     total:1700, totalLabel:'~1,700', states:'~21', parent:'Grupo Salinas (Ricardo Salinas Pliego)',
     since:'2009', format:'Hard discount · backed by the Grupo Salinas ecosystem (Elektra, Banco Azteca)',
     edge:'The widest geographic spread of the three. Leverages Grupo Salinas’ network and infrastructure.' },
-  { key:'bara', name:'Tiendas BARA', short:'BARA', color:'#F59E0B',
+  { key:'bara', name:'Tiendas BARA', short:'BARA', color:'#1baf7a',
     total:636, totalLabel:'~636', states:'7', parent:'FEMSA (Fomento Económico Mexicano)',
     since:'~2017', format:'Hard discount · backed by FEMSA logistics (OXXO)',
     edge:'The youngest and most concentrated: roughly 50% of its stores are in Guanajuato. Rapid expansion backed by FEMSA.' },
@@ -92,7 +92,7 @@ function hardDiscountBody(){
   var h = '';
 
   h += '<p class="ov-lede">Mexico’s <b>hard-discount</b> race is led by three chains, each with a very different owner: '+
-    '<b style="color:#E1251B">Tiendas 3B</b> (independent, public), '+
+    '<b style="color:#2a78d6">Tiendas 3B</b> (independent, public), '+
     '<b style="color:#1F4DD8">Neto</b> (Grupo Salinas) and '+
     '<b style="color:#F59E0B">BARA</b> (FEMSA). Below: where each one operates and where they compete head-to-head.</p>';
 
@@ -147,7 +147,7 @@ function hardDiscountBody(){
 // Each row: [metric, Tiendas 3B, …competitors]. The 3B column (index 1) is highlighted.
 var CLASSIC_ROWS = [
   ['Main banners','Tiendas 3B','Bodega Aurrerá · Walmart · Sam’s · Express','Chedraui · Súper Che · Supercito','La Comer · City Market · Fresko'],
-  ['Stores (Mexico)','~3,469','3,316','683','92'],
+  ['Stores (Mexico)','~3,765','3,316','683','92'],
   ['Revenue (FY2025)','Ps.78B','Ps.1,012B','~Ps.295B','~Ps.48B'],
   ['Avg. store size','~300 m²','1,200–11,000 m²','~6,500 m²','~6,800 m²'],
   ['SKUs','~850–900','tens of thousands','~101,300','broad / gourmet'],
@@ -156,7 +156,7 @@ var CLASSIC_ROWS = [
 ];
 var OTHER_ROWS = [
   ['Type','Hard-discount grocery','Convenience / proximity','Traditional mom-and-pop'],
-  ['Stores (Mexico)','~3,469','~23,200','~1.0–1.1 million'],
+  ['Stores (Mexico)','~3,765','~23,200','~1.0–1.1 million'],
   ['Scale','Ps.78B revenue','~Ps.307B (proximity)','~36–55% of FMCG sales'],
   ['Store size','~300 m²','~100 m²','very small · informal'],
   ['Pricing','Lowest price (EDLP)','Premium / impulse','Higher than 3B'],
@@ -208,7 +208,7 @@ function otherBody(){
       '<span class="clz-pen-v">'+p[1].toFixed(1)+'%</span></div>';
   }).join('') + '</div>';
   h += '<div class="milk-takeaway">Hard discount is only ~<b>3% of Mexican grocery</b> — a fraction of Germany (24%), Turkey (25%, BİM’s home) or Poland (37%). '+
-    'That gap is 3B’s runway: management sees room for <b>≥14,000</b> stores (vs ~3,469 today).</div>';
+    'That gap is 3B’s runway: management sees room for <b>≥14,000</b> stores (vs ~3,765 today).</div>';
   h += '<div class="ov-foot">OXXO ~23,200 Mexico stores (FEMSA, YE2024); tiendita estimates ~1.0–1.1M (ANPEC/Nielsen) and ~36–55% of FMCG sales (methodology-dependent). Hard-discount penetration: Mexico ~3.0% (2023) vs Germany/Turkey/Poland (Euromonitor/NielsenIQ via the company’s investor materials). Sources: FEMSA; ANPEC; BBB Foods company-overview deck.</div>';
   return h;
 }

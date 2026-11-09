@@ -14,8 +14,8 @@
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-var DC1 = '#E1251B';   // primary DC (3B red)
-var DC2 = '#F59E0B';   // second DC (amber)
+var DC1 = '#2a78d6';   // primary DC (Summit series 1)
+var DC2 = '#eb6834';   // second DC (Summit series 2)
 var INK = '#3A434F', MUT = '#8A93A0', BDR = '#D7DDE3';
 
 // ─── Inline icons ─────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ function icoDC(color){
 }
 function icoStore(){
   return '<svg viewBox="0 0 52 52" class="lg-ico" aria-hidden="true">'+
-    '<rect x="9" y="22" width="34" height="24" rx="2" fill="#E1251B"/>'+
+    '<rect x="9" y="22" width="34" height="24" rx="2" fill="#2a78d6"/>'+
     '<path d="M7 22 L10 13 H42 L45 22 Z" fill="#9fd585"/>'+
     '<path d="M10 13 h6 l-1.5 9 h-6 z M22 13 h6 l-0.5 9 h-6 z M34 13 h6 l1 9 h-6 z" fill="#7cc15f"/>'+
     '<rect x="22" y="31" width="9" height="15" fill="#fff"/>'+
@@ -48,7 +48,7 @@ function icoStore(){
 
 // ─── Hero stat band ───────────────────────────────────────────────────────────
 var STATS = [
-  ['20',        'distribution centers'],
+  ['21',        'distribution centers'],
   ['≤ 200',     'stores per DC (capacity)'],
   ['150',       'store trigger to split'],
   ['150 km',    'typical radius'],
@@ -72,11 +72,11 @@ function blockFlow(){
       'No single supplier is more than <b>3.6%</b> of purchases; top 5 = <b>16.5%</b>',
       'Assortment bought centrally; each region adds up to <b>10 local SKUs</b>']) +
     '<div class="lg-flow-arrow"><span>inbound</span>→</div>'+
-    flowStage(icoDC(DC1), 'Distribution center', '20 DCs · 13,050 m²', [
+    flowStage(icoDC(DC1), 'Distribution center', '25 DCs · 13,050 m² avg', [
       'Orders processed <b>overnight</b>, picked at dawn',
       '<b>Cross-docking</b> + floor storage for fast-movers — minimal holding']) +
     '<div class="lg-flow-arrow"><span>next-day · own fleet</span>→</div>'+
-    flowStage(icoStore(), 'Store', '3,469 stores', [
+    flowStage(icoStore(), 'Store', '3,765 stores', [
       '<b>~850–900 SKUs</b>, identical planogram',
       'Restocked <b>2×/week to daily</b> by 3B’s own trucks']) +
   '</div>';

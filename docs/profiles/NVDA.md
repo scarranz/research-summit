@@ -160,7 +160,7 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 | MISC-tech | Miscellaneous ▸ Technology | ✅ | 2026-11-09 | SAB | — | pestaña vieja conservada (animaciones); CUDA → MISC-comp; colores Summit; Moore con zoom + tabla; tabla de generaciones; Rubin del 10-Q; pie con fuentes |
 | MISC-comp | Miscellaneous ▸ Competitive position | ✅ | 2026-11-09 | SAB | — | tesis en palabras del 10-K + CUDA (#22) + flywheel (#39); 3 tarjetas con evidencia a favor y en contra; tabla de 7 competidores con fuente por celda |
 | MISC-capacity | Miscellaneous ▸ Capacity → revenue | ✅ | 2026-11-09 | SAB | — | cadena cortada en capacidad y unidades (no publicadas) + cobertura: compromisos ÷ (1 − margen) vs modelo y consenso, con controles |
-| F-FINAL | Cierre y entrega | 🔍 | 2026-11-09 | | — | barrido sin errores; mapa B3 40/40; código muerto fuera (102 piezas, −1,225 líneas); Note 16; revisado por SAB en el portal real; perfil aprobado |
+| F-FINAL | Cierre y entrega | ✅ | 2026-11-09 | SAB | — | barrido sin errores; mapa B3 40/40; código muerto fuera (102 piezas, −1,225 líneas); Note 16; revisado por SAB en el portal real; perfil aprobado |
 
 
 > Desde el 15 oct 2026 EV-EST, VA-TM y VA-SENS se construyen con Summit congelado del MCP (regla 10);

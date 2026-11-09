@@ -3769,3 +3769,17 @@ img.org-photo { object-fit: cover; }
 .ov-nvda-dd .nv-comp-ul li,.ov-nvda-dd .nv-comp-ol li{margin:0 0 4px}
 .ov-nvda-dd .nv-comp-fly{margin:10px 0 4px}
 .ov-nvda-dd tr.nv-comp-hl td{background:var(--ice,#F2F6FB);font-weight:600}
+
+/* NVIDIA ▸ Miscellaneous ▸ Capacity → revenue (js/overviews/nvda-capacity.js) — the cut chain, controls, chart */
+.ov-nvda-dd .nv-cap-chain{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:8px 0 4px}
+.ov-nvda-dd .nv-cap-box{border:1px solid var(--line,#E3E7EC);border-top:3px solid var(--navy);border-radius:8px;padding:10px 12px;background:#fff}
+.ov-nvda-dd .nv-cap-box.nv-cap-cut{border-top:3px dashed var(--mu);background:var(--ice,#F7F9FB)}
+.ov-nvda-dd .nv-cap-st{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);margin-bottom:4px}
+.ov-nvda-dd .nv-cap-h{font-size:13px;font-weight:700;color:#111418;margin-bottom:4px}
+.ov-nvda-dd .nv-cap-t{font-size:12px;line-height:1.5;color:#111418}
+.ov-nvda-dd .nv-cap-p{font-size:13px;line-height:1.55;color:#111418;margin:6px 0 10px}
+.ov-nvda-dd .nv-cap-ctl{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin:6px 0 8px;font-size:12px;color:#111418}
+.ov-nvda-dd .nv-cap-l{display:flex;gap:6px;align-items:center}
+.ov-nvda-dd .nv-cap-c{height:260px;margin:4px 0}
+.ov-nvda-dd .nv-cap-note{font-size:11px;color:var(--mu);margin:2px 0 8px}
+.ov-nvda-dd .nv-cap-sub{color:var(--mu);font-weight:400}

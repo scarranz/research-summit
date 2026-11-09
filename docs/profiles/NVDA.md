@@ -159,7 +159,7 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 | MG-TRACK | Management ▸ Track Record | ✅ | 2026-11-02 | 2026-11-02 | SAB | 6 líderes, sin calificaciones, modal `ntrk:` |
 | MISC-tech | Miscellaneous ▸ Technology | ✅ | 2026-11-09 | SAB | — | pestaña vieja conservada (animaciones); CUDA → MISC-comp; colores Summit; Moore con zoom + tabla; tabla de generaciones; Rubin del 10-Q; pie con fuentes |
 | MISC-comp | Miscellaneous ▸ Competitive position | ✅ | 2026-11-09 | SAB | — | tesis en palabras del 10-K + CUDA (#22) + flywheel (#39); 3 tarjetas con evidencia a favor y en contra; tabla de 7 competidores con fuente por celda |
-| MISC-capacity | Miscellaneous ▸ Capacity → revenue | ⬜ | | | | |
+| MISC-capacity | Miscellaneous ▸ Capacity → revenue | ✅ | 2026-11-09 | SAB | — | cadena cortada en capacidad y unidades (no publicadas) + cobertura: compromisos ÷ (1 − margen) vs modelo y consenso, con controles |
 | F-FINAL | Cierre y entrega | ⬜ | | | | |
 
 
@@ -197,6 +197,7 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 - 2026-11-09 · VA-SUB · El submit 2025-12-12 se incluye tal cual; el fair value de su EV/EBITDA ($236.21) va marcado como no verificado en el pie de fuentes (no cuadra con su WACC y la hoja de ese día ya no está) — SAB
 - 2026-11-09 · MISC · Miscellaneous lleva tres sub-tabs: Technology (MISC-tech), Competitive position (MISC-comp) y Capacity → revenue (MISC-capacity, con la cadena cortada donde no haya fuente primaria, diciendo dónde) — SAB
 - 2026-11-09 · MISC-comp · Tabla de competidores: escala (ingreso comparable), margen, R&D + chip de IA actual y fecha + ecosistema de software (y si se vende a terceros) — SAB
+- 2026-11-09 · MISC-capacity · Cadena cortada (capacidad CoWoS y unidades × precio no publicados) + el puente calculable: ingreso que soportan los compromisos = compromisos × % a costo ÷ (1 − margen bruto), contra modelo Summit y consenso BBG; controles de margen y % — SAB
 
 ## 4. Excepciones aceptadas
 
@@ -530,3 +531,9 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 - Qué se mostró: `js/overviews/nvda-comp.js` (`nvdaCompBody(NV_CUDA_MOAT, DIFF.flywheel)`), sub-tab `comp`; CSS `.nv-comp-*`. Tabla: NVIDIA C&N FY26 $193.5B / 67.3% / R&D $18.5B · AMD DC FY25 $16.6B / 21.7% / $8.1B · Intel DCAI FY25 $16.9B / 20.2% / $13.8B · Broadcom Semis FY25 $36.9B / 57.6% / $11.0B · Marvell (empresa) FY26 $8.2B / 16.1% / $2.1B · Google TPU y AWS Trainium "—".
 - Autoauditoría: AMD DC +32% (16,635/12,579) ✔ · Broadcom ≈ 1/5 de C&N ✔ · AMD < 1/10 ✔ · 10-Q: nube de IA $36B, arrendamientos $20B, inversiones $25B, cuentas por cobrar 38.5 → 63.1, CFO 1S $74.4B ✔ · NO usado por falta de fuente primaria: "AI revenue FY25 $20B" de Broadcom (su 8-K solo da +74% del 4Q), "Helios ya lanzado" (AMD dice 2H 2026), fecha de GA de Gaudi 3 ✔ · sin puntajes ✔.
 - Cambios pedidos / decisiones: las dos de MISC-comp en la sección 3 (2026-11-09).
+
+### 2026-11-09 · MISC-capacity Miscellaneous ▸ Capacity → revenue — APROBADA
+- Ficha: **Responde** ¿el suministro asegurado cuadra con el ingreso esperado? · **Contenido** cadena insumo → capacidad → unidades × precio → ingreso, cortada donde no hay fuente; puente de cobertura calculable · **Fuentes** 10-Q 2Q FY27 (Note 10, inventarios), 10-K FY2026 (Note 12), 8-K 1Q/2Q FY27, Summit 2026-08-28, BBG 2026-09-09 · **Verificación** compromisos y margen tomados de los archivos ya aprobados (no retecleados).
+- Qué se mostró: `js/overviews/nvda-capacity.js` (lee `COMMIT`/`INV` exportados de `nvda-splc.js`, `NVDA_SENS`, `nvdaResults`); sub-tab `capacity`; CSS `.nv-cap-*`. Cobertura: resto de FY27 $92B → $349.8B vs consenso $231.9B (151%); FY28 $87B → $316.6B vs $693.7B (46%); FY29 $88B → $323.1B vs $918.3B (35%). Gráfica de barras con zoom vertical y leyenda que quita la columna; tabla abierta.
+- Autoauditoría: 1S FY27 reportado = 81,615 + 96,221 = 177,836 ✔ · márgenes del modelo 73.7 / 72.5 / 72.8% ✔ · control de margen (70% → FY28 42%) ✔ · el pie aclara que los compromisos son pagos programados, no costo del año ✔ · `nvda-splc.js` solo exporta sus arreglos (sin cambio en pantalla).
+- Cambios pedidos / decisiones: la de MISC-capacity en la sección 3 (2026-11-09).

@@ -80,8 +80,8 @@ var TYPE_L={ COGS:'cost of revenue', CAPEX:'capex', 'R&D':'R&D' };
 
 // ─── Data — filings ─────────────────────────────────────────────────────────────────────────────
 // 10-Q Q2 FY27 (quarter ended Jul 26, 2026), Note 10 — future commitments by fiscal year, $B.
-var COMMIT_YRS=['Rest of FY27','FY28','FY29','FY30','FY31','FY32+'];
-var COMMIT=[
+export var COMMIT_YRS=['Rest of FY27','FY28','FY29','FY30','FY31','FY32+'];
+export var COMMIT=[
   { k:'Supply and capacity',         v:[92,87,88,6,5,1],  t:279, draw:true },
   { k:'Cloud service agreements',    v:[3,8,7,6,4,1],     t:29 },
   { k:'Data center leases not commenced', v:[0,1,1,2,1,20], t:25 },
@@ -92,7 +92,7 @@ var COMMIT_TOT={ v:[120,100,98,16,10,22], t:366 };
 // Supply and capacity commitments over time ($B): 10-K FY2026 Note 12; 10-Q Q2 FY27 Note 10 ("from $119 billion last quarter").
 var COMMIT_PATH=[ { d:'Jan 25, 2026', v:95.2, s:'10-K FY2026' }, { d:'Apr 26, 2026', v:119, s:'10-Q Q2 FY27 ("last quarter")' }, { d:'Jul 26, 2026', v:279, s:'10-Q Q2 FY27' } ];
 // Inventories ($M), 10-Q Q2 FY27 balance-sheet components.
-var INV=[ { k:'Raw materials', a:3807, b:11341 }, { k:'Work in process', a:8822, b:13377 }, { k:'Finished goods', a:8774, b:6857 }, { k:'Total inventories', a:21403, b:31575, tot:true } ];
+export var INV=[ { k:'Raw materials', a:3807, b:11341 }, { k:'Work in process', a:8822, b:13377 }, { k:'Finished goods', a:8774, b:6857 }, { k:'Total inventories', a:21403, b:31575, tot:true } ];
 var Q_10K='We utilize foundries, such as Taiwan Semiconductor Manufacturing Company Limited, or TSMC, and Samsung Electronics Co., Ltd., or Samsung, to produce our semiconductor wafers. We purchase memory from SK Hynix Inc., Micron Technology, Inc., and Samsung. We utilize CoWoS technology for semiconductor packaging.';
 var Q_10K2='While currently our supply chain is mainly concentrated in Asia, we are expanding into the U.S. and Latin America.';
 var Q_10Q='These supply commitments are for our data center infrastructure systems, primarily memory and manufacturing facilities';

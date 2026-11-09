@@ -23,6 +23,7 @@ import { semiIndustry } from './semi-industry.js';
 import { nvdaSplcBody, nvdaSplcBuild, nvdaSplcPop } from './nvda-splc.js';   // Bottom Line ▸ Supply Chain (BL-SPLC)
 import { nvdaHistMult } from './nvda-histmult.js';                          // Valuation ▸ Historic Multiple (VA-HIST)
 import { nvdaTargetMult } from './nvda-target-multiple.js';                  // Valuation ▸ Target Multiple / PEG (VA-TM)
+import { submitsHtml, initSubmits } from '../submits.js';                   // Valuation ▸ Submit History (VA-SUB; data js/submits-data/nvda.js)
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { makeManagement } from './management.js';                      // Management ▸ Executives & Board (MG-TEAM)
 import { NVDA_MGMT_DATA } from './nvda-mgmt-data.js';
@@ -2606,6 +2607,7 @@ function deepDiveHtml(){
     { k:'targetmult', l:'Target Multiple', body:nvdaTargetMult.body()+
         '<div class="ov-sec nv-tm-old"><div class="ov-diagram-cap">Earlier calculator — its case builder moves to Sensitivity when that tab is rebuilt</div>'+
         oldPane('valuation', heroMultiples()+valuationBody())+'</div>' },
+    { k:'submits', l:'Submit History', body:submitsHtml('NVDA') },        // VA-SUB (engine js/submits.js)
   ], true);
   h+=subtabs('mgmt',[
     { k:'team', l:'Executives & Board', body:NVDA_MGMT.body() },        // MG-TEAM (B2 #25: the old org tree → the shared engine)
@@ -2638,6 +2640,7 @@ function buildSub(root, group, key){
   } else if(group==='valuation'){
     if(key==='histmult') requestAnimationFrame(function(){ nvdaHistMult.init(root); });
     else if(key==='peers') requestAnimationFrame(function(){ wireScatters(root); });
+    else if(key==='submits') requestAnimationFrame(function(){ initSubmits(root,'NVDA'); });
     else if(key==='targetmult') requestAnimationFrame(function(){ nvdaTargetMult.init(root); initValuation(); initMultiples(root.querySelector('.ovt-pane[data-ovt="valuation"]')); });
   } else if(group==='mgmt'){
     if(key==='team') NVDA_MGMT.init(root);

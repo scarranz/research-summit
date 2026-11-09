@@ -151,7 +151,7 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 | VA-HIST | Valuation ▸ Historic Multiple | ✅ | 2026-11-09 | SAB | — | `nvda-histmult.js` (copia de `meta-histmult.js`) + `nvda-histmult-data.js` (XBRL 1Q19–2Q27); P/E GAAP; EV/EBITDA fwd desde 2026-03-02; calendario fiscal de enero; precio en vivo |
 | VA-PEERS | Valuation ▸ Peers | ✅ | 2026-11-09 | SAB | — | mapa OV-6 con estado compartido (quitar un peer aquí lo quita allá) + tabla abierta; promedio/mediana sin NVIDIA; P/E trailing sobre el último 10-K (no LTM) |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ✅ | 2026-11-09 | SAB | — | `nvda-target-multiple.js` (copia de `uber-target-multiple.js`) + datos congelados de 3 submits; FY2028; cambio de base en 2026-03-04; Live con el balance del modelo; calculadora vieja abajo hasta VA-SENS |
-| VA-SUB | Valuation ▸ Submit History | ⬜ | | | | |
+| VA-SUB | Valuation ▸ Submit History | ✅ | 2026-11-09 | SAB | — | motor `submits.js` + `submits-data/nvda.js` (3 submits congelados); dic-2025 incluido con la advertencia del fair value EV/EBITDA |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | ⬜ | | | | |
 | MG-TEAM | Management ▸ Executives & Board | ✅ | 2026-11-02 | 2026-11-02 | SAB | 6 ejecutivos + consejo de 10 (proxy 2026), motor management.js |
 | MG-OWN | Management ▸ Ownership | ✅ | 2026-11-02 | 2026-11-02 | SAB | 14 insiders (proxy + Form 4) + >5% + Fiscal.ai con aviso de diferencias |
@@ -192,6 +192,7 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 - 2026-11-09 · BL-SPLC · Bloque de filings "What NVIDIA has committed to its suppliers": compromisos de supply & capacity por año fiscal (10-Q 2Q FY27 Note 10, $279B), trayectoria $95.2B → $119B → $279B, inventarios, y la frase del 10-K que nombra proveedores por rol (texto de proveedores del DESC viejo, B2 #3) — SAB
 - 2026-11-09 · VA-HIST · P/E sobre EPS GAAP, forward y trailing (el único con consenso BBG en los 30 snapshots); el pie avisa que el 1S FY27 trae $23.7B de ganancias por inversiones en acciones (10-Q), por eso el trailing de 2026 se ve bajo — SAB
 - 2026-11-09 · VA-HIST · EV/EBITDA forward solo desde el snapshot 2026-03-02 (base nueva, SBC como gasto); trailing = utilidad operativa GAAP + D&A de XBRL desde FY2019; FY+3 deshabilitado (BBG trae 3 años) — SAB
+- 2026-11-09 · VA-SUB · El submit 2025-12-12 se incluye tal cual; el fair value de su EV/EBITDA ($236.21) va marcado como no verificado en el pie de fuentes (no cuadra con su WACC y la hoja de ese día ya no está) — SAB
 
 ## 4. Excepciones aceptadas
 
@@ -254,7 +255,7 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 | 2026-11-02 | EV-RES-DATA | ¿Existe un recast de NVIDIA IR de Hyperscale/ACIE trimestral FY25 después de la reclasificación de 2Q FY27? Hoy esos trimestres van null antes de 1Q26 (3Q26/4Q26 del recast de BBG) | SAB | abierto |
 | 2026-11-02 | EV-EST, VA-SUB, VA-TM | Dudas 1 y 3 del Mapa Summit (cambio de definición de "ajustado" entre submits; intereses dentro del EBITDA) | SAB (autor del modelo) | duda 1 cerrada 2026-11-02; duda 3 abierta (EBITDA rotulado "Summit definition", sin consenso) |
 | 2026-11-02 | EV-POST, EV-NOTES | Transcripciones oficiales (PDF de IR) de 3Q FY26, 4Q FY26, 1Q FY27, 2Q FY27; y 3Q FY27 (~2026-11-19) | SAB | abierto |
-| 2026-11-02 | VA-SUB | Submit 2025-12-12: P/E sobre 2027 y EV/EBITDA sobre 2028 — revisar la prueba PT÷FV en la hoja Output | Claude (con el workbook) | abierto |
+| 2026-11-02 | VA-SUB | Submit 2025-12-12: P/E sobre 2027 y EV/EBITDA sobre 2028 — revisar la prueba PT÷FV en la hoja Output | Claude (con el workbook) | cerrado 2026-11-09: P/E cuadra (1.026 = COE a ene-2026); el fair value EV/EBITDA no cuadra con su WACC (1.056 ≈ 3.5 meses) y la hoja de ese día ya no existe → incluido con advertencia en el pie (SAB). **Para SAB en el DCF:** revisar el bloque EV/EBITDA del 2025-12-12 |
 | 2026-11-09 | (rama) | Merge de origin/main fdda9d8 en la rama (0648b4b, local, sin push): conflictos solo en listas de selectores (overview.css, selectors.css, segments.js), resueltos con UBER/LYFT + NVDA | Claude | cerrado |
 | 2026-11-09 | F-FINAL | El 10-K FY2026 numera la nota de segmentos como **Note 16**; OV-3 y OV-4 (aprobados) citan "Note 17" — revisar y corregir en el cierre (vuelve a mostrarse) | Claude | abierto |
 
@@ -501,3 +502,9 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 - Fuentes: Summit DCF model (instrument NVDA, model 12da9a59); `DCF NVDA.xlsm` ▸ Discounted Cash Flow (archivo del 2026-08-28, leído 2026-11-09).
 - Autoauditoría: PT P/E = (22 × 395,606 + 232,436) ÷ 24,150.4 = $370.00 ✔ · PT EV/EBITDA = 18 × 483,971 + 208,043 − 33,875 + 99,369 = $8,985,014M de equity → $370.54 ✔ · PT÷FV 1.112/1.112 y 1.281/1.281 ✔ · sin `quality_flags` ✔ · Live a 18× = (18 × 483,971 + 65,494) ÷ 23,787 = $368.98 (sin el flujo FY2027, explicado en el pie) ✔ · sin múltiplos inventados ✔ · sin `<style>` ✔.
 - Cambios pedidos / decisiones: ninguno.
+
+### 2026-11-09 · VA-SUB Valuation ▸ Submit History — APROBADA
+- Qué se mostró: motor `js/submits.js` (solo se registró `NVDA: nvdaSubmits`) + `js/submits-data/nvda.js` (congelado: valuación `get_valuation_history` 2026-11-09; modelo REV / OP_INCOME / EBITDA / EARNINGS / SHARES de los volcados 2026-11-02; `ebitdaLabel: 'EBITDA (model)'`). Sub-tab entre Target Multiple y Sensitivity. P/E $201.95 → $245.68 → $370.00; EV/EBITDA $249.54 → $245.69 → $370.54; días vigente 82 / 177 / 73; crecimiento implícito (P/E) 16.8% / 26.7% / 23.7%.
+- Fuentes: Summit DCF model (NVDA); precio Massive en vivo.
+- Autoauditoría: PT÷FV 1.281/1.281 y 1.112/1.112 ✔; dic-2025 P/E 1.026 ✔, EV/EBITDA 1.056 ✘ → advertencia en el pie (decisión SAB) · g = tasa − 1/múltiplo ✔ · EPS modelo = earnings ÷ acciones (FY2028 ago $16.63) ✔ · sin `quality_flags` ✔. En el harness la sesión estaba cerrada y el precio mostró el aviso "Live data pending" (comportamiento correcto del motor); en el portal con sesión carga como en UBER.
+- Cambios pedidos / decisiones: la de la sección 3 (2026-11-09).

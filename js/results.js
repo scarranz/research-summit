@@ -42,6 +42,7 @@ import { spotResults } from './results-data/spot.js';
 import { spotSetup } from './results-data/spot-setup.js';
 import { lyftResults } from './results-data/lyft.js';
 import { lyftSetup } from './results-data/lyft-setup.js';
+import { nvdaSetup } from './results-data/nvda-setup.js';
 import { tbbbResults } from './results-data/tbbb.js';
 import { dhrResults } from './results-data/dhr.js';
 import { dhrSetup } from './results-data/dhr-setup.js';
@@ -52,12 +53,14 @@ import { snResults } from './results-data/sn.js';
 import { snSetup } from './results-data/sn-setup.js';
 import { tsmResults } from './results-data/tsm.js';
 import { tsmSetup } from './results-data/tsm-setup.js';
+import { nvdaResults } from './results-data/nvda.js';
 import { SUMMIT_MUTE } from './viz-palette.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
   TSM: tsmResults,
   TSM_SETUP: tsmSetup,
+  NVDA: nvdaResults,
   AMZN_SETUP: amznSetup,
   GOOGL: googlResults,
   GOOGL_SETUP: googlSetup,
@@ -83,6 +86,7 @@ var RESULTS_DATA = {
   SPOT_SETUP: spotSetup,
   LYFT: lyftResults,
   LYFT_SETUP: lyftSetup,
+  NVDA_SETUP: nvdaSetup,
   TBBB: tbbbResults,
   TBBB_SETUP: tbbbSetup,
   TBBB_BL: tbbbBl,

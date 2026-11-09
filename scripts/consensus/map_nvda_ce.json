@@ -1,0 +1,130 @@
+{
+ "_doc": "NVDA Earnings-grid map (EV-SET, 2026-11-09) for emit_matrix.py / emit_ce_nvda.py: ONLY the lines the Results dataset (map_nvda.json) does not carry. Codes from inspect_matrix.py NVDA (newest snapshot 9/9/2026). Basis: R&D, SG&A and EBITDA are Bloomberg's ADJUSTED lines, i.e. NVIDIA non-GAAP; NVIDIA changed that definition with the Feb 25 2026 release (SBC no longer excluded), so their consensus AND their reported values are kept only from the first snapshot after it (2026-03-02) - earlier vintages are on the old basis (dropVintages, same list as opinc_ng in map_nvda.json). Checked on 2Q FY27: R&D 6,884 = GAAP 7,054 - 170 acquisition-related; SG&A 1,348 = 1,354 - 6; EBITDA 65,083 = non-GAAP op. income 63,956 + D&A 1,127. D&A = HEADLINE_DEPR_EXPN (= cash-flow depreciation and amortization, 1,127 in 2Q FY27; HEADLINE_AMORT_EXPN is a subset and is NOT added). Income tax = GAAP income tax expense (11,819 in 2Q FY27). Diluted shares in millions.",
+ "segments": {},
+ "q": {
+  "rd": {
+   "code": "IS_ADJ_R_AND_D_AS_REPORTED",
+   "unit": "usdM"
+  },
+  "sga": {
+   "code": "IS_ADJ_SG_AND_A_AS_REPORTED",
+   "unit": "usdM"
+  },
+  "ebitda": {
+   "code": "IS_COMPARABLE_EBITDA",
+   "unit": "usdM"
+  },
+  "intinc": {
+   "code": "IS_INT_INC",
+   "unit": "usdM"
+  },
+  "tax": {
+   "code": "IS_INC_TAX_EXP",
+   "unit": "usdM"
+  },
+  "cfo": {
+   "code": "CB_CF_NET_CASH_OPERATING_ACT",
+   "unit": "usdM"
+  },
+  "dna": {
+   "code": "HEADLINE_DEPR_EXPN",
+   "unit": "usdM"
+  },
+  "shares": {
+   "code": "IS_SH_FOR_DILUTED_EPS",
+   "unit": "usdM"
+  }
+ },
+ "y": {},
+ "dropVintages": {
+  "q": {
+   "rd": [
+    "2019-05-21",
+    "2019-08-20",
+    "2019-11-19",
+    "2020-02-18",
+    "2020-05-26",
+    "2020-08-24",
+    "2020-11-23",
+    "2021-03-01",
+    "2021-05-31",
+    "2021-08-23",
+    "2021-11-22",
+    "2022-02-21",
+    "2022-05-30",
+    "2022-08-29",
+    "2022-11-21",
+    "2023-02-27",
+    "2023-05-29",
+    "2023-08-28",
+    "2023-11-26",
+    "2024-02-26",
+    "2024-05-27",
+    "2024-09-02",
+    "2024-11-25",
+    "2025-03-03",
+    "2025-06-02",
+    "2025-09-01",
+    "2025-11-24"
+   ],
+   "sga": [
+    "2019-05-21",
+    "2019-08-20",
+    "2019-11-19",
+    "2020-02-18",
+    "2020-05-26",
+    "2020-08-24",
+    "2020-11-23",
+    "2021-03-01",
+    "2021-05-31",
+    "2021-08-23",
+    "2021-11-22",
+    "2022-02-21",
+    "2022-05-30",
+    "2022-08-29",
+    "2022-11-21",
+    "2023-02-27",
+    "2023-05-29",
+    "2023-08-28",
+    "2023-11-26",
+    "2024-02-26",
+    "2024-05-27",
+    "2024-09-02",
+    "2024-11-25",
+    "2025-03-03",
+    "2025-06-02",
+    "2025-09-01",
+    "2025-11-24"
+   ],
+   "ebitda": [
+    "2019-05-21",
+    "2019-08-20",
+    "2019-11-19",
+    "2020-02-18",
+    "2020-05-26",
+    "2020-08-24",
+    "2020-11-23",
+    "2021-03-01",
+    "2021-05-31",
+    "2021-08-23",
+    "2021-11-22",
+    "2022-02-21",
+    "2022-05-30",
+    "2022-08-29",
+    "2022-11-21",
+    "2023-02-27",
+    "2023-05-29",
+    "2023-08-28",
+    "2023-11-26",
+    "2024-02-26",
+    "2024-05-27",
+    "2024-09-02",
+    "2024-11-25",
+    "2025-03-03",
+    "2025-06-02",
+    "2025-09-01",
+    "2025-11-24"
+   ]
+  }
+ }
+}

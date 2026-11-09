@@ -1,7 +1,7 @@
 // segments-data/nvda.js — the Top Line dataset for NVIDIA (NASDAQ: NVDA).
 // Contract: playbook §10 (units TL-GEN, TL-SEG, TL-OTH, TL-CUS) · log docs/profiles/NVDA.md. Built Nov 2 2026.
 //
-// SHAPE OF THIS COMPANY: NVIDIA reports two segments (Compute & Networking, Graphics; 10-K Note 17), but since
+// SHAPE OF THIS COMPANY: NVIDIA reports two segments (Compute & Networking, Graphics; 10-K Note 16), but since
 // 1Q FY27 it publishes revenue by MARKET PLATFORM — Data Center (split into Hyperscale and ACIE) and Edge
 // Computing — and that is how it explains the business. The platforms are the "segments" on this tab
 // (SAB, Nov 2 2026); the reportable segments, the old platforms and geography are cuts in Other.
@@ -62,7 +62,7 @@ var PXQ = function(label){
 export var nvdaSegments = {
   company: 'NVIDIA',
   updated: 'Nov 2026',
-  source: 'Market-platform revenue: NVIDIA quarterly CFO commentaries (8-K Ex. 99.2) and the 2Q FY27 Form 10-Q (Note 13, Revenue by Market Platform), on the basis after the 2Q FY27 reclassification; 3Q26–4Q26 and the FY2025–FY2026 Hyperscale / ACIE split from Bloomberg’s recast history, which adds up to the reported Data Center. Definitions quoted from the 1Q FY27 earnings release and the FY2026 Form 10-K. Other cuts: reportable segments and the old market platforms from the CFO commentaries (FY2020–FY2026), geography from the FY2026 10-K Note 17 (customer headquarters, prior years recast). Customers: FY2026 10-K and 2Q FY27 10-Q concentration notes; Bloomberg Supply Chain Analysis (estimates). All series read through from js/results-data/nvda.js. Summit DCF model (snapshot 2026-08-28, frozen on purpose, not live) projects Data Center only, so the platforms carry no forecast on this tab.',
+  source: 'Market-platform revenue: NVIDIA quarterly CFO commentaries (8-K Ex. 99.2) and the 2Q FY27 Form 10-Q (Note 13, Revenue by Market Platform), on the basis after the 2Q FY27 reclassification; 3Q26–4Q26 and the FY2025–FY2026 Hyperscale / ACIE split from Bloomberg’s recast history, which adds up to the reported Data Center. Definitions quoted from the 1Q FY27 earnings release and the FY2026 Form 10-K. Other cuts: reportable segments and the old market platforms from the CFO commentaries (FY2020–FY2026), geography from the FY2026 10-K Note 16 (customer headquarters, prior years recast). Customers: FY2026 10-K and 2Q FY27 10-Q concentration notes; Bloomberg Supply Chain Analysis (estimates). All series read through from js/results-data/nvda.js. Summit DCF model (snapshot 2026-08-28, frozen on purpose, not live) projects Data Center only, so the platforms carry no forecast on this tab.',
 
   axis: {
     q: ['1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27'],
@@ -70,15 +70,15 @@ export var nvdaSegments = {
   },
   summit: {},   // frozen on purpose, not live — empty: the model has no Hyperscale / ACIE / Edge series (DC is read through Results)
 
-  // Series for the Other cuts that are not Results metrics: geography by customer headquarters (10-K Note 17).
+  // Series for the Other cuts that are not Results metrics: geography by customer headquarters (10-K Note 16).
   shared: {
-    g_us: { label: 'United States', short: 'United States', unit: 'usdM', scope: 'company', src: K10 + ' Note 17, by customer headquarters (recast)',
+    g_us: { label: 'United States', short: 'United States', unit: 'usdM', scope: 'company', src: K10 + ' Note 16, by customer headquarters (recast)',
       y: { act: { '2024': 31533, '2025': 77482, '2026': 149617 } } },
-    g_tw: { label: 'Taiwan', short: 'Taiwan', unit: 'usdM', scope: 'company', src: K10 + ' Note 17, by customer headquarters (recast)',
+    g_tw: { label: 'Taiwan', short: 'Taiwan', unit: 'usdM', scope: 'company', src: K10 + ' Note 16, by customer headquarters (recast)',
       y: { act: { '2024': 14912, '2025': 23600, '2026': 42345 } } },
-    g_cn: { label: 'China (incl. Hong Kong)', short: 'China', unit: 'usdM', scope: 'company', src: K10 + ' Note 17, by customer headquarters (recast)',
+    g_cn: { label: 'China (incl. Hong Kong)', short: 'China', unit: 'usdM', scope: 'company', src: K10 + ' Note 16, by customer headquarters (recast)',
       y: { act: { '2024': 12330, '2025': 25048, '2026': 19677 } } },
-    g_oth: { label: 'Other', short: 'Other', unit: 'usdM', scope: 'company', src: K10 + ' Note 17, by customer headquarters (recast)',
+    g_oth: { label: 'Other', short: 'Other', unit: 'usdM', scope: 'company', src: K10 + ' Note 16, by customer headquarters (recast)',
       y: { act: { '2024': 2147, '2025': 4367, '2026': 4299 } } },
   },
   derived: {
@@ -278,9 +278,9 @@ export var nvdaSegments = {
     {
       key: 'geo', label: 'Geography', sub: 'by where customers are headquartered',
       lede: 'The same revenue by the headquarters of NVIDIA’s direct customers — not where the chips end up. Taiwan is large because the system builders (ODMs) are based there.',
-      note: 'Annual only: FY2026 10-K, Note 17. NVIDIA switched from billing location to customer headquarters in 3Q FY26 and recast the prior years.',
+      note: 'Annual only: FY2026 10-K, Note 16. NVIDIA switched from billing location to customer headquarters in 3Q FY26 and recast the prior years.',
       caveat: 'Headquarters, not end use: NVIDIA estimates 76% of FY2026 Data Center revenue from Taiwan-headquartered customers went to end customers in the United States and Europe.',
-      tenK: { text: 'Revenue by geographic area is based upon the location of the customers’ headquarters. The end customer and shipping location may be different from our customers’ headquarters location.', where: K10 + ', Note 17' },
+      tenK: { text: 'Revenue by geographic area is based upon the location of the customers’ headquarters. The end customer and shipping location may be different from our customers’ headquarters location.', where: K10 + ', Note 16' },
       cite: { form: '10-K', period: 'FY2026', accession: '0001045810-26-000021', url: URL_K },
       spans: 'FY2024–FY2026, from the FY2026 10-K.',
       axis: { y: ['2024', '2025', '2026'] },

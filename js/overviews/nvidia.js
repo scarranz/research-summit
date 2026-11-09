@@ -22,6 +22,7 @@
 import { semiIndustry } from './semi-industry.js';
 import { nvdaSplcBody, nvdaSplcBuild, nvdaSplcPop } from './nvda-splc.js';   // Bottom Line ▸ Supply Chain (BL-SPLC)
 import { nvdaHistMult } from './nvda-histmult.js';                          // Valuation ▸ Historic Multiple (VA-HIST)
+import { nvdaTargetMult } from './nvda-target-multiple.js';                  // Valuation ▸ Target Multiple / PEG (VA-TM)
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { makeManagement } from './management.js';                      // Management ▸ Executives & Board (MG-TEAM)
 import { NVDA_MGMT_DATA } from './nvda-mgmt-data.js';
@@ -2600,7 +2601,11 @@ function deepDiveHtml(){
   h+=subtabs('valuation',[
     { k:'histmult', l:'Historic Multiple', body:nvdaHistMult.body() },   // VA-HIST (nvda-histmult.js)
     { k:'peers', l:'Peers', body:nvdaValuationPeersBody() },              // VA-PEERS: the OV-6 map + its table
-    { k:'targetmult', l:'Target Multiple', body:oldPane('valuation', heroMultiples()+valuationBody()) }, // B2 #2 tiles + #32–34 (until VA-TM / VA-SENS)
+    // VA-TM (nvda-target-multiple.js). The old pane stays below until VA-SENS takes its case builder (B2 #32); its tiles
+    // (#2), "apply a multiple" (#33) and DCF targets (#34) are covered by VA-TM's recorded / Live modes and PEG block.
+    { k:'targetmult', l:'Target Multiple', body:nvdaTargetMult.body()+
+        '<div class="ov-sec nv-tm-old"><div class="ov-diagram-cap">Earlier calculator — its case builder moves to Sensitivity when that tab is rebuilt</div>'+
+        oldPane('valuation', heroMultiples()+valuationBody())+'</div>' },
   ], true);
   h+=subtabs('mgmt',[
     { k:'team', l:'Executives & Board', body:NVDA_MGMT.body() },        // MG-TEAM (B2 #25: the old org tree → the shared engine)
@@ -2633,7 +2638,7 @@ function buildSub(root, group, key){
   } else if(group==='valuation'){
     if(key==='histmult') requestAnimationFrame(function(){ nvdaHistMult.init(root); });
     else if(key==='peers') requestAnimationFrame(function(){ wireScatters(root); });
-    else if(key==='targetmult') requestAnimationFrame(function(){ initValuation(); initMultiples(root.querySelector('.ovt-pane[data-ovt="valuation"]')); });
+    else if(key==='targetmult') requestAnimationFrame(function(){ nvdaTargetMult.init(root); initValuation(); initMultiples(root.querySelector('.ovt-pane[data-ovt="valuation"]')); });
   } else if(group==='mgmt'){
     if(key==='team') NVDA_MGMT.init(root);
     else if(key==='ownership') nvdaOwnInit(root);

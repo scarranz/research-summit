@@ -1105,7 +1105,17 @@ function nScChipsOne(wrap){
   box.innerHTML=h;
   var inp=box.querySelector('.nvda-sc-addtk'); if(inp) inp.value=typed;
 }
-function nScRenderAll(root){ root.querySelectorAll('.nvda-sc').forEach(function(w){ nScRenderOne(w); wireScChips(root, w); }); }
+// Every NVIDIA peer map on the page (Overview OV-6 and Valuation ▸ Peers) shares N_SC, so all of them re-render
+// together: removing a peer in one removes it in the other (VA-PEERS spec).
+function nScRenderAll(root){ document.querySelectorAll('.nvda-sc').forEach(function(w){ nScRenderOne(w); wireScChips(root, w); }); }
+// Valuation ▸ Peers (VA-PEERS): the OV-6 map with the table under it, open.
+function nvdaValuationPeersBody(){
+  return '<p class="ov-lede">The same peer map as the Overview, kept beside the valuation work, with the numbers behind it. Multiples use live prices; removing a peer here removes it there too.</p>'+
+    stdPeerScatter('dd')+
+    '<div class="ov-foot">Sources — denominators from each company’s latest 10-K on SEC EDGAR (pulled Nov 2, 2026): NVIDIA FY2026 (to Jan 25, 2026), Marvell FY2026 (to Jan 31, 2026), Broadcom FY2025 (to Nov 2, 2025), Qualcomm FY2025 (to Sep 28, 2025), AMD and Intel FY2025 (to Dec 27, 2025). '+
+    'EPS = diluted GAAP; EBITDA = operating income + depreciation + amortization of intangibles; net debt = total debt − cash − current marketable securities. '+
+    'Forward = Bloomberg consensus FY2027 as of Sep 9, 2026, for NVIDIA only (the peers are not in the Bloomberg file). Price, market cap and EV live (Massive). Average and median exclude NVIDIA.</div>';
+}
 function wireScatters(root){
   nScReset();
   root.querySelectorAll('.nvda-sc').forEach(function(wrap){
@@ -2589,6 +2599,7 @@ function deepDiveHtml(){
   ], true);
   h+=subtabs('valuation',[
     { k:'histmult', l:'Historic Multiple', body:nvdaHistMult.body() },   // VA-HIST (nvda-histmult.js)
+    { k:'peers', l:'Peers', body:nvdaValuationPeersBody() },              // VA-PEERS: the OV-6 map + its table
     { k:'targetmult', l:'Target Multiple', body:oldPane('valuation', heroMultiples()+valuationBody()) }, // B2 #2 tiles + #32–34 (until VA-TM / VA-SENS)
   ], true);
   h+=subtabs('mgmt',[
@@ -2621,6 +2632,7 @@ function buildSub(root, group, key){
     else if(key==='estevo') requestAnimationFrame(function(){ initResultsEvo('NVDA'); });
   } else if(group==='valuation'){
     if(key==='histmult') requestAnimationFrame(function(){ nvdaHistMult.init(root); });
+    else if(key==='peers') requestAnimationFrame(function(){ wireScatters(root); });
     else if(key==='targetmult') requestAnimationFrame(function(){ initValuation(); initMultiples(root.querySelector('.ovt-pane[data-ovt="valuation"]')); });
   } else if(group==='mgmt'){
     if(key==='team') NVDA_MGMT.init(root);

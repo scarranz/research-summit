@@ -149,7 +149,7 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 | BL-SEG | Bottom Line ▸ Segments | ✅ | 2026-11-09 | SAB | — | C&N · Graphics · no asignado; EBITDA anual; sin Summit por segmento; pestaña vieja retirada |
 | BL-SPLC | Bottom Line ▸ Supply Chain | ✅ | 2026-11-09 | SAB | — | 20 proveedores SPLC (sin sumar periodos) + compromisos $279B 10-Q + inventarios + cita 10-K; sin geografía (no hay datos); mapa de semis abajo |
 | VA-HIST | Valuation ▸ Historic Multiple | ✅ | 2026-11-09 | SAB | — | `nvda-histmult.js` (copia de `meta-histmult.js`) + `nvda-histmult-data.js` (XBRL 1Q19–2Q27); P/E GAAP; EV/EBITDA fwd desde 2026-03-02; calendario fiscal de enero; precio en vivo |
-| VA-PEERS | Valuation ▸ Peers | ⬜ | | | | |
+| VA-PEERS | Valuation ▸ Peers | ✅ | 2026-11-09 | SAB | — | mapa OV-6 con estado compartido (quitar un peer aquí lo quita allá) + tabla abierta; promedio/mediana sin NVIDIA; P/E trailing sobre el último 10-K (no LTM) |
 | VA-TM | Valuation ▸ Target Multiple / PEG | ⬜ | | | | |
 | VA-SUB | Valuation ▸ Submit History | ⬜ | | | | |
 | VA-SENS | Valuation ▸ Sensitivity Analysis | ⬜ | | | | |
@@ -489,3 +489,9 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 - Fuentes: precio Massive en vivo (`get-market-history`, confirmado); consenso BBG (estMatrix.cons.y.eps 2019-05-21 → 2026-09-09; ebitda desde 2026-03-02); EPS GAAP reportado de `results-data/nvda.js`; 10-Q 2Q FY27 (ganancias por inversiones en acciones $23.7B en el 1S).
 - Autoauditoría: hoy P/E fwd 12.0× = $176 ÷ NTM $14.73 (0.23 × FY27 $9.94 + 0.77 × FY28 $16.14) ✔ · P/E trail 22.3× = $176 ÷ $7.91 (1.30+1.76+2.39+2.46) ✔ · hoy = 4Q27 (el Q3 FY27 cerró el 2026-10-25) ✔ · acciones 24.3–25.3B en toda la serie ✔ · sin denominador no se dibuja ✔ · tabla, zoom, rangos, chips ✔ · paleta Summit, sin `<style>` ✔.
 - Cambios pedidos / decisiones: las dos de la sección 3 (2026-11-09).
+
+### 2026-11-09 · VA-PEERS Valuation ▸ Peers — APROBADA
+- Qué se mostró: `nvdaValuationPeersBody()` en `nvidia.js` = lede + `stdPeerScatter('dd')` (el mapa de OV-6, `N_PEERS`/`N_SC`) + tabla "The numbers behind the map" abierta (peer · múltiplo · crecimiento · market cap · vs peer avg; promedio y mediana sin NVIDIA) + pie. `nScRenderAll` ahora repinta todos los mapas `.nvda-sc` de la página, así el estado es compartido con OV-6 (único cambio en código de OV-6; no altera lo que OV-6 muestra).
+- Fuentes: 10-K de cada empresa (SEC EDGAR, pulled 2026-11-02); forward BBG FY2027 2026-09-09 solo NVIDIA; precio / market cap / EV en vivo (Massive).
+- Autoauditoría: P/E trailing en vivo Qualcomm 34.9× · NVIDIA 36.1× · Marvell 50.5× · Broadcom 66.8× · AMD 188.6× · Intel sin P/E (pérdida); mediana ex-NVIDIA 58.6× ✔ · quitar Intel en Valuation lo quita del Overview (6 → 5 en ambos) ✔ · forward: solo NVIDIA, peers con "trailing only — no Street file" ✔ · sin múltiplos escritos ✔. Excepción aceptada de la guía: sin zoom (los chips × la cubren).
+- Nota mostrada a SAB: P/E trailing de NVIDIA 36× aquí (último 10-K, EPS FY2026 $4.90) vs 22× en VA-HIST (LTM $7.91 con las ganancias por inversiones de FY27).

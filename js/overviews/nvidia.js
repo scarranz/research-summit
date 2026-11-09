@@ -24,6 +24,7 @@ import { nvdaSplcBody, nvdaSplcBuild, nvdaSplcPop } from './nvda-splc.js';   // 
 import { nvdaHistMult } from './nvda-histmult.js';                          // Valuation ▸ Historic Multiple (VA-HIST)
 import { nvdaTargetMult } from './nvda-target-multiple.js';                  // Valuation ▸ Target Multiple / PEG (VA-TM)
 import { submitsHtml, initSubmits } from '../submits.js';                   // Valuation ▸ Submit History (VA-SUB; data js/submits-data/nvda.js)
+import { nvdaSens } from './nvda-sensitivity.js';                            // Valuation ▸ Sensitivity Analysis (VA-SENS)
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { makeManagement } from './management.js';                      // Management ▸ Executives & Board (MG-TEAM)
 import { NVDA_MGMT_DATA } from './nvda-mgmt-data.js';
@@ -2602,12 +2603,12 @@ function deepDiveHtml(){
   h+=subtabs('valuation',[
     { k:'histmult', l:'Historic Multiple', body:nvdaHistMult.body() },   // VA-HIST (nvda-histmult.js)
     { k:'peers', l:'Peers', body:nvdaValuationPeersBody() },              // VA-PEERS: the OV-6 map + its table
-    // VA-TM (nvda-target-multiple.js). The old pane stays below until VA-SENS takes its case builder (B2 #32); its tiles
-    // (#2), "apply a multiple" (#33) and DCF targets (#34) are covered by VA-TM's recorded / Live modes and PEG block.
-    { k:'targetmult', l:'Target Multiple', body:nvdaTargetMult.body()+
-        '<div class="ov-sec nv-tm-old"><div class="ov-diagram-cap">Earlier calculator — its case builder moves to Sensitivity when that tab is rebuilt</div>'+
-        oldPane('valuation', heroMultiples()+valuationBody())+'</div>' },
+    // VA-TM (nvda-target-multiple.js). The old pane (heroMultiples + valuationBody) is off screen: its tiles (#2),
+    // "apply a multiple" (#33) and DCF targets (#34) are VA-TM's recorded / Live modes and PEG block, its case builder
+    // (#32) is VA-SENS. The functions stay in this file until F-FINAL.
+    { k:'targetmult', l:'Target Multiple', body:nvdaTargetMult.body() },
     { k:'submits', l:'Submit History', body:submitsHtml('NVDA') },        // VA-SUB (engine js/submits.js)
+    { k:'sensitivity', l:'Sensitivity', body:nvdaSens.body() },             // VA-SENS (nvda-sensitivity.js)
   ], true);
   h+=subtabs('mgmt',[
     { k:'team', l:'Executives & Board', body:NVDA_MGMT.body() },        // MG-TEAM (B2 #25: the old org tree → the shared engine)
@@ -2641,7 +2642,8 @@ function buildSub(root, group, key){
     if(key==='histmult') requestAnimationFrame(function(){ nvdaHistMult.init(root); });
     else if(key==='peers') requestAnimationFrame(function(){ wireScatters(root); });
     else if(key==='submits') requestAnimationFrame(function(){ initSubmits(root,'NVDA'); });
-    else if(key==='targetmult') requestAnimationFrame(function(){ nvdaTargetMult.init(root); initValuation(); initMultiples(root.querySelector('.ovt-pane[data-ovt="valuation"]')); });
+    else if(key==='targetmult') requestAnimationFrame(function(){ nvdaTargetMult.init(root); });
+    else if(key==='sensitivity') requestAnimationFrame(function(){ nvdaSens.init(root); });
   } else if(group==='mgmt'){
     if(key==='team') NVDA_MGMT.init(root);
     else if(key==='ownership') nvdaOwnInit(root);

@@ -12,7 +12,7 @@
 | Rama | `feat/nvda-restructure` (worktree `C:\Users\santi\Developer\rs-nvda`) |
 | Analista responsable | SAB |
 | Inicio | 2026-10-28 (F0 pausada ese día; retomada 2026-11-02) |
-| Avance | 30 de 40 unidades aprobadas · 0 omitidas · 2 bloqueadas (M = filas del tablero − ⏭️ de alcance; Anexo C) |
+| Avance | 40 de 43 unidades aprobadas (MISC se abrió en 3 sub-tabs) · 0 omitidas · 2 bloqueadas (EV-POST, EV-NOTES) · falta F-FINAL (M = filas del tablero − ⏭️ de alcance; Anexo C) |
 
 ## 1. Inventario de datos (F0)
 

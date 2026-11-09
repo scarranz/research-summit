@@ -47,6 +47,8 @@ import { googlSegments } from './segments-data/googl.js';
 import { googlResults } from './results-data/googl.js';
 import { maSegments } from './segments-data/ma.js';
 import { maResults } from './results-data/ma.js';
+import { nvdaSegments } from './segments-data/nvda.js';
+import { nvdaResults } from './results-data/nvda.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
 import { SN_THEMES } from './themes-data/sn.js';
@@ -85,7 +87,9 @@ var SEGMENTS_DATA = {
   // GOOGL: two Google segments (Services, Cloud) + Other Bets, 10-K Note 15. Alphabet-level activities is not a revenue segment.
   GOOGL: { seg: googlSegments, res: googlResults },
   // MA: ONE reportable operating segment (Payment Solutions, 10-K Note 22); its two net-revenue categories stand in as the segments.
-  MA: { seg: maSegments, res: maResults }
+  MA: { seg: maSegments, res: maResults },
+  // NVDA: two reportable segments (C&N, Graphics); its market PLATFORMS (Hyperscale, ACIE, Edge Computing) stand in as the segments (SAB, Nov 2 2026).
+  NVDA: { seg: nvdaSegments, res: nvdaResults }
 };
 
 export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }

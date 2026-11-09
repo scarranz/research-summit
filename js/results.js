@@ -50,12 +50,14 @@ import { snResults } from './results-data/sn.js';
 import { snSetup } from './results-data/sn-setup.js';
 import { tsmResults } from './results-data/tsm.js';
 import { tsmSetup } from './results-data/tsm-setup.js';
+import { nvdaResults } from './results-data/nvda.js';
 import { SUMMIT_MUTE } from './viz-palette.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
   TSM: tsmResults,
   TSM_SETUP: tsmSetup,
+  NVDA: nvdaResults,
   AMZN_SETUP: amznSetup,
   GOOGL: googlResults,
   GOOGL_SETUP: googlSetup,

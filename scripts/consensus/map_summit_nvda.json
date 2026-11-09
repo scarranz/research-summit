@@ -1,0 +1,217 @@
+{
+ "_note": "Config for emit_summit_matrix.py / emit_evolution.py - the SUMMIT side of estMatrix and the `evolution` block for NVDA (SAB's model, US$ millions, NVIDIA fiscal years). Written Nov 2 2026. Labels: js/summit-map/nvda.js. Dumps: scripts/consensus/dumps/nvda_summit/ (get_fundamentals, projection_history, pulled 2026-11-02).",
+ "metrics": {
+  "rev": "REV",
+  "dc": "DC_REVENUE",
+  "opinc": "GAAP_OP_INCOME",
+  "opinc_ng": "OP_INCOME",
+  "gp": "ADJ_GROSS_PROFIT",
+  "capex": "CAPEX",
+  "fcf": "FCF",
+  "mebitda": "EBITDA"
+ },
+ "sign": {
+  "capex": -1
+ },
+ "decimals": {
+  "_default": 1
+ },
+ "_vintages_note": "lastActual from the data: 2025-12-12 stands after 3Q FY26 (its FY2026 = reported 1Q-3Q + its 4Q); 2026-03-04 after 4Q FY26 (FY2026 = 215,938, the release); 2026-08-28 after 2Q FY27 (FY2027 = reported 1Q-2Q + its 3Q + 4Q).",
+ "vintages": [
+  {
+   "id": "2025-12-12",
+   "label": "Dec 12, 2025",
+   "lastActual": {
+    "q": "3Q26",
+    "y": "2025"
+   }
+  },
+  {
+   "id": "2026-03-04",
+   "label": "Mar 4, 2026",
+   "lastActual": {
+    "q": "4Q26",
+    "y": "2026"
+   }
+  },
+  {
+   "id": "2026-08-28",
+   "label": "Aug 28, 2026",
+   "lastActual": {
+    "q": "2Q27",
+    "y": "2026"
+   }
+  }
+ ],
+ "_horizon_note": "Quarters past the model's current fiscal year are placeholders (2025-12-12: 1Q27 onward are not quarters - 1Q27 124,643, 4Q27 195,323 do not tie to anything; 2026-03-04 and 2026-08-28: 1Q28 repeats 1Q27). Kept: 2025-12-12 -> 4Q26 only; 2026-03-04 -> 1Q27-4Q27; 2026-08-28 -> 3Q27-4Q27.",
+ "horizon": {
+  "2025-12-12": {
+   "q": 1
+  },
+  "2026-03-04": {
+   "q": 4
+  },
+  "2026-08-28": {
+   "q": 2
+  }
+ },
+ "_basis_note": "BASIS: in the 2025-12-12 file the model's adjusted lines (OP_INCOME, ADJ_GROSS_PROFIT, EBITDA, EARNINGS) exclude SBC (NVIDIA's old non-GAAP); from 2026-03-04 they do not (NVIDIA's current definition). The 2025-12-12 cells of opinc_ng / gp / mebitda are removed after generation (post-filter in the build) so the two bases never share a line.",
+ "basis_drop": {
+  "2025-12-12": [
+   "opinc_ng",
+   "gp",
+   "mebitda"
+  ]
+ },
+ "views": {
+  "q": [
+   "rev",
+   "dc",
+   "opinc",
+   "opinc_ng",
+   "gp"
+  ],
+  "y": [
+   "rev",
+   "dc",
+   "opinc",
+   "opinc_ng",
+   "gp",
+   "capex",
+   "fcf",
+   "mebitda"
+  ]
+ },
+ "prefer_source": [
+  "DEFAULT",
+  "SEGM"
+ ],
+ "axis": {
+  "q": [
+   "1Q20",
+   "2Q20",
+   "3Q20",
+   "4Q20",
+   "1Q21",
+   "2Q21",
+   "3Q21",
+   "4Q21",
+   "1Q22",
+   "2Q22",
+   "3Q22",
+   "4Q22",
+   "1Q23",
+   "2Q23",
+   "3Q23",
+   "4Q23",
+   "1Q24",
+   "2Q24",
+   "3Q24",
+   "4Q24",
+   "1Q25",
+   "2Q25",
+   "3Q25",
+   "4Q25",
+   "1Q26",
+   "2Q26",
+   "3Q26",
+   "4Q26",
+   "1Q27",
+   "2Q27",
+   "3Q27",
+   "4Q27",
+   "1Q28",
+   "2Q28"
+  ],
+  "y": [
+   "2020",
+   "2021",
+   "2022",
+   "2023",
+   "2024",
+   "2025",
+   "2026",
+   "2027",
+   "2028",
+   "2029"
+  ]
+ },
+ "evolution": {
+  "years": [
+   "2026",
+   "2027",
+   "2028",
+   "2029"
+  ],
+  "prior": "2025",
+  "keys": [
+   "rev",
+   "dc",
+   "opinc",
+   "opinc_ng",
+   "gp",
+   "capex",
+   "fcf",
+   "mebitda"
+  ],
+  "cons_metrics": {
+   "rev": "REV_BBG_EST"
+  },
+  "_cons_map_note": "Lines the model stores no consensus for: mapped off the Bloomberg workbook (each model date takes the Street's latest file on or before it; up to ~3 months stale). gp / opinc_ng consensus exists only from 2026-03-02 (NVIDIA's definition change), so the Dec 2025 column is empty. No consensus for model EBITDA (Bloomberg's comparable EBITDA is another definition) or GAAP op. income.",
+  "cons_map": {
+   "dc": "dc",
+   "capex": "capex",
+   "fcf": "fcf",
+   "gp": "gp",
+   "opinc_ng": "opinc_ng"
+  },
+  "labels": {
+   "rev": {
+    "label": "Total Revenue",
+    "unit": "usdM",
+    "prior": true
+   },
+   "dc": {
+    "label": "Data Center Revenue",
+    "unit": "usdM",
+    "prior": true
+   },
+   "opinc": {
+    "label": "Operating Income (GAAP)",
+    "unit": "usdM",
+    "marginOf": "rev",
+    "marginLabel": "operating margin"
+   },
+   "opinc_ng": {
+    "label": "Operating Income (non-GAAP)",
+    "unit": "usdM",
+    "marginOf": "rev",
+    "marginLabel": "operating margin"
+   },
+   "gp": {
+    "label": "Gross Profit (non-GAAP)",
+    "unit": "usdM",
+    "marginOf": "rev",
+    "marginLabel": "gross margin"
+   },
+   "capex": {
+    "label": "Capital Expenditure",
+    "unit": "usdM",
+    "marginOf": "rev",
+    "marginLabel": "capex % of revenue"
+   },
+   "fcf": {
+    "label": "Free Cash Flow",
+    "unit": "usdM",
+    "marginOf": "rev",
+    "marginLabel": "FCF margin"
+   },
+   "mebitda": {
+    "label": "Model EBITDA (Summit definition)",
+    "unit": "usdM",
+    "marginOf": "rev",
+    "marginLabel": "EBITDA margin"
+   }
+  }
+ }
+}

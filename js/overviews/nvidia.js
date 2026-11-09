@@ -20,6 +20,16 @@
 // (Valuation tab) are the Summit team's own internal projections — NOT company guidance.
 
 import { semiIndustry } from './semi-industry.js';
+import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
+import { makeManagement } from './management.js';                      // Management ▸ Executives & Board (MG-TEAM)
+import { NVDA_MGMT_DATA } from './nvda-mgmt-data.js';
+import { nvdaOwnBody, nvdaOwnInit } from './nvda-own.js';              // Management ▸ Ownership (MG-OWN)
+import { nvdaGovBody } from './nvda-gov.js';                           // Management ▸ Governance & SBC (MG-GOV)
+import { nvdaTrackBody, nvdaTrackPop } from './nvda-track.js';          // Management ▸ Track Record (MG-TRACK)
+import { SUMMIT_CAT } from '../viz-palette.js';
+import { nvdaBlGeneralHtml, nvdaBlGeneralBuild } from './nvda-bl.js';   // Bottom Line ▸ General (BL-GEN-1…5)
+var NVDA_MGMT = makeManagement(Object.assign({ brand:SUMMIT_CAT[0] }, NVDA_MGMT_DATA));
+import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line (engine + js/segments-data/nvda.js)   // Evolution ▸ Results (engine + js/results-data/nvda.js)
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtB(m){ return '$'+(m/1000).toFixed(1)+'B'; }   // $M → "$xx.xB"
@@ -96,6 +106,9 @@ var HEADWINDS = [
   '<b>Competition</b> from AMD and from increasingly capable custom ASICs (TPU, Trainium, Maia); <b>high expectations</b> already embedded in the stock.',
 ];
 
+// OV-F (playbook §8): the Overview's only footer; the collapsibles carry none of their own. Replaces the old SOURCES
+// (B2 #9), which cited a Summit model synced Jun 4 2026 — the Overview no longer shows any Summit figure.
+var OV_SOURCES = 'Sources — NVIDIA FY2026 Form 10-K (SEC EDGAR, filed Feb 25, 2026) for revenue, segment, geographic, margin, customer and headcount figures; the FY2024 10-K, NVIDIA investor-relations press releases and the 2026 proxy statement for history and leadership; NVIDIA product pages for products. Peer figures from each company’s latest Form 10-K (SEC EDGAR, as of Nov 2026) and, for NVIDIA’s forward multiples, Bloomberg consensus FY2027 (as of Sep 9, 2026). Market cap and peer multiples are live (Massive price ÷ those figures). Forward figures are estimates, not company guidance.';
 var SOURCES = 'Sources: NVIDIA Corporation (Nasdaq: NVDA) FY2024–FY2026 press releases and Annual Reports on Form 10-K, and the Q1 FY2027 press release & CFO commentary (quarter ended April 26, 2026). Forward "Summit DCF model" figures are the Summit team’s internal projections (Summit Financial Data, NVDA model, synced June 4, 2026) — not company guidance or consensus. All figures in US dollars and split-adjusted for the June 2024 10-for-1 split. Peer descriptions summarize public information.';
 
 // ── Layered-reveal overview (progressive disclosure) ─────────────────────────────
@@ -184,6 +197,21 @@ var BIZ = [
   ['How it earns',  '<b>~90% Data Center</b> — selling AI training &amp; inference compute; the rest is Edge (gaming, pro-viz, auto, robotics).'],
   ['The edge',      'CUDA’s <b>20-year software lock-in</b> plus the full networking &amp; systems stack — not just the chip.'],
 ];
+// OV-3 2×2 (playbook §8: one .q2 table, ≤ 30 words per cell; only "How it earns" has numbers). FY2026 10-K
+// (acc. 0001045810-26-000021): revenue by market platform (Data Center 193,737 · Gaming 16,042 · ProViz 3,191 ·
+// Automotive 2,349 · OEM & Other 619 of 215,938), Note 17 segments (operating income: Compute & Networking 130,141 ·
+// Graphics 9,156 of 139,297), and the concentration note (direct customers = ODMs, OEMs, distributors…; indirect =
+// CSPs, neocloud builders, AI model makers, enterprises, public sector). Replaces the old BIZ cards (B2 #4).
+var STD_BIZ = [
+  ['What it sells','GPUs, CPUs and networking chips, sold on their own or as complete rack-scale data-center systems, plus the CUDA software platform and libraries developers build on.'],
+  ['Who buys it','Bought directly by system makers and distributors (ODMs, OEMs, add-in-board makers); the end customers are cloud providers, neocloud builders, AI model makers, enterprises and governments.'],
+  ['How it earns','FY2026: ~90% Data Center · ~7% Gaming · ~3% ProViz, Automotive &amp; OEM — and Compute &amp; Networking earns ~93% of segment operating income ($130.1B of $139.3B).'],
+  ['The edge','A full stack designed together — CUDA and its libraries, networking (NVLink, InfiniBand, Spectrum-X) and complete systems — so customers buy a platform rather than a chip.'],
+];
+function stdFourQuad(){
+  return '<div class="q2">'+STD_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
+}
+
 function heroBusiness(){
   return '<div class="ovlr-biz">'+BIZ.map(function(b){
     return '<div class="ovlr-biz-cell"><div class="ovlr-biz-k">'+esc(b[0])+'</div><div class="ovlr-biz-v">'+b[1]+'</div></div>';
@@ -421,6 +449,13 @@ function multFill(pane){
 }
 
 // ── 3 · Description (expandable) ─────────────────────────────────────────────────
+// OV-2 lede (playbook §8: 2–4 sentences, ~50–80 words, no numbers, neutral; no segments, customers or moat — each has
+// its own block). Paraphrased from the FY2026 10-K, Item 1 ("Our Company"). It replaces the old expandable DESC (B2 #3):
+// DESC's moat sentence is the 2×2 "The edge" (OV-3), its supplier sentence (TSMC, SK hynix, Foxconn) goes to
+// Bottom Line ▸ Supply Chain, and Mellanox to the Timeline (OV-7). DESC stays below until those units are approved.
+var NV_LEDE = 'NVIDIA designs accelerated-computing platforms: graphics processors, central processors and networking chips, sold on their own or built into complete data-center systems, together with the software developers use to program them. The company started in graphics for video games and now describes itself as a data center scale AI infrastructure company. It is fabless — it designs the chips and systems, and partners manufacture and assemble them.';
+function stdLede(){ return '<p class="ov-lede">'+esc(NV_LEDE)+'</p>'; }
+
 function descBox(){
   return '<div class="ovlr-desc" data-desc>'+
     '<p class="ovlr-desc-txt" id="nvDescTxt">'+esc(DESC)+'</p>'+
@@ -750,27 +785,461 @@ function renderCompChips(){
   }).join('');
 }
 
+// ═══ OV-4 How NVIDIA makes money (playbook §8; copied from googl.js gmmBars/stdMoneyMap) ══════════════════════
+// FY2026 10-K (acc. 0001045810-26-000021). Two views of the SAME total, both reconcile to $215,938M exactly:
+//   Segments (Note 17):  Compute & Networking 193,479 + Graphics 22,459 = 215,938
+//   Geography (Note 17, customer HEADQUARTERS — changed from billing location in Q3 FY26, prior years recast):
+//                        United States 149,617 + Taiwan 42,345 + China incl. HK 19,677 + Other 4,299 = 215,938
+//   Revenue lines (revenue by end market): DC 193,737 (Compute 162,361 · Networking 31,376) + Gaming 16,042 +
+//                        ProViz 3,191 + Automotive 2,349 + OEM & Other 619 = 215,938
+// Bars are neutral greys ranked by size (.gmm-neutral). Replaces the old MONEY_SEG / MONEY_REG chart (whose regions
+// were "approx · by billing location"), MONEY_SEG_CARDS, MONEY_REG_DETAIL and HOW_MONEY (B2 #6, #40).
+function collapsible(title, inner, open){
+  return '<div class="ov-collap'+(open?' open':'')+'">'+
+    '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+esc(title)+'</button>'+
+    '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+inner+'</div></div>';
+}
+var GMM_SEG = [
+  ['Compute & Networking', 89.6, '$193.5B', '90%', null],
+  ['Graphics',             10.4, '$22.5B',  '10%', null],
+];
+var GMM_GEO = [
+  ['United States',          69.3, '$149.6B', '69%', null],
+  ['Taiwan',                 19.6, '$42.3B',  '20%', null],
+  ['China (incl. Hong Kong)', 9.1, '$19.7B',  '9%',  null],
+  ['Other',                   2.0, '$4.3B',   '2%',  null],
+];
+var REV_DEFS = [
+  { seg:'Compute & Networking (the data-center business)',
+    desc:'Everything that goes into an AI data center: <b>GPU accelerators</b> and <b>Grace CPUs</b>, the <b>networking</b> that ties them together (NVLink, InfiniBand, Spectrum-X Ethernet), complete rack-scale systems (GB200 / GB300 NVL72), and enterprise software. It also holds the <b>automotive</b> platform (DRIVE) and Jetson robotics modules. Sold mostly to system makers that build for cloud providers and enterprises.',
+    econ:[['FY2026 revenue','$193.5B · 90% of total'],['Growth','+67% (from $116.2B)'],['Operating income','$130.1B · 67.3% margin'],['Customer concentration','Two direct customers were 22% and 14% of total revenue, both mainly in this segment']] },
+  { seg:'Graphics (gaming and professional visualization)',
+    desc:'<b>GeForce</b> GPUs for gaming PCs and laptops, the GeForce NOW cloud-gaming service, <b>RTX PRO</b> workstation GPUs for designers and engineers, <b>Omniverse</b> software for 3D simulation and digital twins, and chips for game consoles (OEM). Sold through add-in-board makers, PC makers and distributors.',
+    econ:[['FY2026 revenue','$22.5B · 10% of total'],['Growth','+57% (from $14.3B)'],['Operating income','$9.2B · 40.8% margin']] },
+  { seg:'The revenue lines (by end market, as the 10-K reports them)',
+    desc:'The 10-K also splits the same total by end market. Data Center (compute and networking) is the whole story; the other four markets together are about a tenth of revenue.',
+    econ:[['Data Center','$193.7B · 89.7% (+68%)'],['  · Compute','$162.4B · 75.2% (+59%)'],['  · Networking','$31.4B · 14.5% (+142%)'],['Gaming','$16.0B · 7.4% (+41%)'],['Professional Visualization','$3.2B · 1.5% (+70%)'],['Automotive','$2.3B · 1.1% (+39%)'],['OEM & Other','$0.6B · 0.3% (+59%)']],
+    econNote:'10-K Note 17, revenue by end market; growth vs FY2025. From Q1 FY2027 NVIDIA reports revenue by market platform as Hyperscale · ACIE · Edge (Deep Dive ▸ Top Line).' },
+];
+function gmmRank(arr){ var o=arr.map(function(r,i){ return [r[1],i]; }).sort(function(a,b){ return b[0]-a[0]; }), rk=[];
+  o.forEach(function(x,j){ rk[x[1]]=Math.min(j+1,6); }); return rk; }
+function gmmBars(arr){
+  var rk=gmmRank(arr);
+  return '<div class="ov-mbars gmm-neutral">'+arr.map(function(r,i){
+    var out=r[1]<10;
+    return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+'</div>'+
+      '<div class="ov-mbar-track'+(out?' out':'')+'"><div class="ov-mbar-fill gmm-g'+rk[i]+'" style="width:'+Math.max(r[1],1.2)+'%">'+(out?'':esc(r[2]))+'</div>'+(out?'<span class="ov-mbar-outv">'+esc(r[2])+'</span>':'')+'</div>'+
+      '<div class="ov-mbar-v">'+esc(r[3])+'</div></div>';
+  }).join('')+'</div>';
+}
+function stdMoneyMap(){
+  var h='<div class="ov-diagram-cap gmm-cap-top">FY2026 revenue <b>$215.9B (+65%)</b> — the same total, two ways: by <b>segment</b> or by <b>geography</b> (where customers are headquartered). Both reconcile to the reported figure.</div>';
+  h+='<div class="mg-tog-row"><span class="mg-tog">View: <span class="mg-seg">'+
+    '<button type="button" class="mg-pill active" data-gmm="seg">Segments</button>'+
+    '<button type="button" class="mg-pill" data-gmm="geo">Geography</button></span></span></div>';
+  h+='<div class="gmm-view" data-gmm="seg">'+gmmBars(GMM_SEG)+'</div>';
+  h+='<div class="gmm-view" data-gmm="geo" hidden>'+gmmBars(GMM_GEO)+
+    '<div class="ave-subh-note">By customer headquarters, not end use: NVIDIA estimates 76% of FY2026 Data Center revenue from Taiwan-headquartered customers went to end customers in the United States and Europe.</div></div>';
+  h+='<div class="mm-defs acc-list">'+REV_DEFS.map(function(s){
+    var econ='<div class="acc"><button type="button" class="acc-h">The numbers <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+(s.econNote?'<div class="ave-subh-note acc-note">'+esc(s.econNote)+'</div>':'')+'</div></div>';
+    return '<div class="acc"><button type="button" class="acc-h">'+esc(s.seg)+'<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+s.desc+'</div>'+econ+'</div></div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-diagram-cap gmm-cap-end">FY2026: operating income <b>$130.4B</b> (60.4% margin) · net income <b>$120.1B</b> (55.6%). The two segments earned $139.3B; the $8.9B gap is costs kept at company level — stock-based compensation $6.4B, unallocated operating expenses $2.0B and acquisition-related costs $0.5B. '+
+    '<span class="ave-subh-note">Source: NVIDIA FY2026 Form 10-K (Note 17 Segment Information: segments, geography, revenue by end market; income statement).</span></div>';
+  return h;
+}
+
+// ═══ OV-5 Products & platforms (playbook §8; copied from googl.js stdProducts) ══════════════════════════════
+// Two tiers: family card → pop-up with the specific products (key = prod:i). Paraphrases the FY2026 10-K Item 1
+// (Data Center, Gaming, Professional Visualization, Automotive; Blackwell, Rubin "production shipments in the second
+// half of fiscal year 2027", NVLink Fusion, NVIDIA AI Enterprise, DRIVE Hyperion) and NVIDIA's product pages.
+// No emoji on the cards or in the pop-up title (SAB, 2026-11-02). Descriptive, no opinion (playbook §19). The four product photos of the old cards (B2 #5) sit inside their family's
+// pop-up; the old PRODUCTS constant (longer copy) stays in this file until F-FINAL.
+function nvPhoto(file, alt){ return '<img src="img/products/'+file+'" alt="'+esc(alt)+'" style="display:block;width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin:2px 0 6px" onerror="this.remove()">'; }
+var NV_PRODUCTS = [
+  { fam:'Data-center GPUs & systems', d:'The accelerators and the racks.', items:[
+    ['Blackwell / Blackwell Ultra GPUs', nvPhoto('nvda-dies.jpg','Blackwell silicon')+'The current data-center GPU generation: two dies joined to act as one chip, surrounded by HBM memory. Designed by NVIDIA, manufactured by TSMC.'],
+    ['GB200 / GB300 NVL72', nvPhoto('nvda-gb300-nvl72.jpg','GB300 NVL72 rack')+'A liquid-cooled rack that links 72 GPUs and 36 Grace CPUs over NVLink so they work as one large accelerator. Sold mostly through system makers.'],
+    ['HGX and DGX', 'HGX: GPU boards that server makers build into their own systems. DGX: NVIDIA\'s own complete AI servers and supercomputers.'],
+    ['Rubin (next generation)', 'The next platform, built for reasoning and agentic AI; production shipments expected in the second half of fiscal 2027 (10-K).'] ]},
+  { fam:'CPUs & superchips', d:'NVIDIA\'s own Arm-based processors.', items:[
+    ['Grace CPU', 'An Arm-based data-center CPU designed to feed GPUs with data and memory bandwidth.'],
+    ['Grace Blackwell Superchip', nvPhoto('nvda-superchip.jpg','Grace Blackwell Superchip')+'Two Blackwell GPUs and one Grace CPU joined by a chip-to-chip NVLink on a single module — the building block of the NVL72 rack.'],
+    ['Vera (next generation)', 'The CPU that pairs with Rubin GPUs in the next platform.'] ]},
+  { fam:'Networking', d:'The fabric that links the GPUs.', items:[
+    ['NVLink & NVLink Switch', nvPhoto('nvda-networking.jpg','NVIDIA networking')+'Connects GPUs inside a rack so they share memory and bandwidth. NVLink Fusion (FY2026) lets hyperscalers plug their own custom CPUs and chips into it.'],
+    ['InfiniBand (Quantum)', 'Switches and adapters that connect racks into large training clusters.'],
+    ['Spectrum-X Ethernet', 'Ethernet switches and SuperNICs tuned for AI traffic, for customers standardised on Ethernet.'],
+    ['BlueField DPUs & ConnectX adapters', 'Processors and network cards that move data and handle security and storage off the main CPU.'] ]},
+  { fam:'Software & AI platforms', d:'What developers program it with.', items:[
+    ['CUDA & CUDA-X', 'The programming platform that runs on every NVIDIA GPU, plus hundreds of acceleration libraries for AI, data processing and science.'],
+    ['NVIDIA AI Enterprise', 'A paid, licensed suite of enterprise AI software (frameworks, NIM microservices, tools) to build and run AI in production.'],
+    ['Omniverse', 'A platform for 3D simulation and digital twins of factories, warehouses and products.'],
+    ['DGX Cloud', 'NVIDIA\'s AI computing offered as a cloud service, hosted with cloud partners.'] ]},
+  { fam:'Gaming', d:'GPUs and cloud gaming for players.', items:[
+    ['GeForce RTX 50 Series', 'Blackwell-based GPUs for gaming desktops and laptops, with ray tracing and DLSS (AI-boosted frame rates).'],
+    ['GeForce NOW', 'A cloud-gaming service that streams PC games to almost any device.'],
+    ['Console chips', 'Systems-on-chip and development services for game consoles.'] ]},
+  { fam:'Professional visualization', d:'Workstations for designers and engineers.', items:[
+    ['RTX PRO GPUs', 'Workstation GPUs for design, engineering and content creation, increasingly used to run AI locally.'],
+    ['vGPU software', 'Licensed software that delivers graphics-rich virtual desktops and workstations from the data center.'] ]},
+  { fam:'Automotive & robotics', d:'Computers for cars and robots.', items:[
+    ['DRIVE Hyperion & DRIVE AGX', 'The in-car computer, operating system (DRIVE OS) and reference sensor set for automated driving.'],
+    ['Jetson', 'Embedded computer modules for robots and edge devices.'],
+    ['Isaac & physical-AI models', 'Software, simulation and open models to train and deploy robots.'] ]},
+];
+function stdProducts(){
+  return '<div class="ov-diagram-cap" style="margin:0 0 8px"><b>Tap any family</b> for the specific products inside it.</div>'+
+    '<div class="stdp">'+NV_PRODUCTS.map(function(f,i){
+      return '<div class="stdp-card ov-clickable" data-detail="prod:'+i+'">'+
+        '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
+    }).join('')+'</div>';
+}
+// Overview modal (copied from googl.js wireModal; resolve() grows with each unit that uses data-detail).
+function nvModalHtml(){
+  return '<div class="ov-modal-back" id="nvdaModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
+    '<button class="ov-modal-x" id="nvdaModalX" aria-label="Close">×</button>'+
+    '<div class="ov-modal-t" id="nvdaModalT"></div><div class="ov-modal-b" id="nvdaModalB"></div></div></div>';
+}
+function wireModal(root){
+  var back=root.querySelector('#nvdaModalBack'), mT=root.querySelector('#nvdaModalT'), mB=root.querySelector('#nvdaModalB'); if(!back) return;
+  function onEsc(e){ if(e.key==='Escape') closeM(); }
+  function openM(t,b){ mT.innerHTML=t; mB.innerHTML=b; back.hidden=false; requestAnimationFrame(function(){ back.classList.add('on'); }); document.addEventListener('keydown', onEsc); }
+  function closeM(){ back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden=true; }, 180); }
+  root.querySelector('#nvdaModalX').onclick=closeM; back.onclick=function(e){ if(e.target===back) closeM(); };
+  function resolve(key){
+    var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
+    if(kind==='ntrk'){ return nvdaTrackPop(id); }   // Management ▸ Track Record cards (nvda-track.js)
+    if(kind==='hist'){ var tl=TIMELINE[+id]; return tl&&tl.d?{t:esc(tl.y),h:tl.d}:null; }
+    if(kind==='prod'){ var f=NV_PRODUCTS[+id]; if(!f) return null;
+      var body=f.items.map(function(it){ return '<div style="margin:0 0 10px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">'+esc(it[0])+'</div><div class="famd">'+it[1]+'</div></div>'; }).join('');
+      return {t:esc(f.fam),h:'<div class="famd" style="margin-bottom:10px;color:var(--mu)">'+esc(f.d)+'</div>'+body}; }
+    return null;
+  }
+  root.querySelectorAll('[data-detail]').forEach(function(el){ el.style.cursor='pointer';
+    el.onclick=function(){ var d=resolve(el.getAttribute('data-detail')); if(d) openM(d.t,d.h); }; });
+}
+
+// ═══ OV-6 Competitors — the peer map (playbook §8; copied from googl.js, the live-multiple reference) ═══════════
+// Peer set: SAB, 2026-11-02 (the old four — AMD, Broadcom, Intel, Qualcomm — plus Marvell). The file keeps
+// DENOMINATORS only (rule 10): P/E = live price ÷ EPS; EV/EBITDA = live EV ÷ EBITDA. Trailing = each company's
+// latest 10-K (SEC XBRL, pulled 2026-11-02): EPS = diluted GAAP; EBITDA = operating income + depreciation +
+// amortization of intangibles (as reported in the cash-flow statement); nd = total debt − cash − current
+// marketable securities (balance sheet); gt = revenue growth of that fiscal year. Forward (NVIDIA only — the
+// peers are not in the Bloomberg file): Bloomberg consensus FY2027 as of Sep 9 2026 — EPS $9.94, EBITDA $272.4B
+// (Bloomberg's "comparable" EBITDA adds back SBC; its FY2026 is $140.1B vs $133.2B here), revenue +89.7%.
+// The same array and state (N_SC) feed Valuation ▸ Peers (VA-PEERS). Replaces the old COMP bubble chart with seeded
+// multiples (B2 #8, and the PEERS constant of #36).
+var N_PEERS=[
+  { tk:'NVDA', n:'NVIDIA', hl:true, epsT:4.90, epsF:9.94, ebitdaT:133230, ebitdaF:272392, nd:-54088, gt:65.5, gf:89.7,
+    src:'10-K FY2026 (year to Jan 25 2026); forward: Bloomberg consensus FY2027, Sep 9 2026',
+    why:'The profile company: data-center GPUs, CPUs, networking and full AI systems, plus gaming and workstation graphics.' },
+  { tk:'AMD', n:'AMD', epsT:2.65, epsF:null, ebitdaT:7265, ebitdaF:null, nd:-7330, gt:34.3, gf:null,
+    src:'10-K FY2025 (year to Dec 27 2025)',
+    why:'The other merchant GPU maker: Instinct accelerators compete with NVIDIA\'s data-center GPUs, Radeon with GeForce, EPYC with Grace.' },
+  { tk:'AVGO', n:'Broadcom', epsT:4.77, epsF:null, ebitdaT:34120, ebitdaF:null, nd:48958, gt:23.9, gf:null,
+    src:'10-K FY2025 (year to Nov 2 2025)',
+    why:'Designs custom AI chips (XPUs) for hyperscalers that replace GPUs, and sells the Ethernet switches that compete with NVIDIA networking.' },
+  { tk:'INTC', n:'Intel', epsT:-0.06, epsF:null, ebitdaT:9492, ebitdaF:null, nd:9169, gt:-0.5, gf:null,
+    src:'10-K FY2025 (year to Dec 27 2025)',
+    why:'Gaudi AI accelerators and Xeon CPUs compete in the data center; Arc GPUs in PCs. A net loss in FY2025, so no P/E.' },
+  { tk:'QCOM', n:'Qualcomm', epsT:5.01, epsF:null, ebitdaT:13957, ebitdaF:null, nd:4656, gt:13.7, gf:null,
+    src:'10-K FY2025 (year to Sep 28 2025)',
+    why:'Entering AI data-center inference chips and Arm PC processors; competes with NVIDIA in automotive computers.' },
+  { tk:'MRVL', n:'Marvell', epsT:3.07, epsF:null, ebitdaT:2835, ebitdaF:null, nd:1832, gt:42.1, gf:null,
+    src:'10-K FY2026 (year to Jan 31 2026)',
+    why:'Designs custom AI chips for hyperscalers and the optical links inside AI data centers.' },
+];
+var N_SC={ metric:'pe', basis:'t', peers:null, _capsFetched:false };   // Trailing by default: of the six, only NVIDIA has a Street forward (Bloomberg file)
+function nTok(name, fb){ try{ var v=getComputedStyle(document.documentElement).getPropertyValue(name).trim(); return v||fb; }catch(e){ return fb; } }
+function nScReset(){ if(!N_SC.peers) N_SC.peers=N_PEERS.map(function(p){ var o={}; for(var k in p) o[k]=p[k]; o.on=true; return o; }); }
+function nScNum(v){ return v!=null && !isNaN(v); }
+function nScMult(p){
+  if(!nScNum(p.px)) return null;                                      // no live price → no bubble (no seeded fallback)
+  var f=N_SC.basis==='f';
+  if(N_SC.metric==='pe'){ var eps=f?p.epsF:p.epsT; return (nScNum(eps)&&eps>0)?p.px/eps:null; }
+  var eb=f?p.ebitdaF:p.ebitdaT; if(!nScNum(eb)||eb<=0) return null;
+  var ev=nScNum(p.ev)?p.ev:(nScNum(p.mc)&&nScNum(p.nd)?p.mc*1000+p.nd:null);   // US$ M
+  return nScNum(ev)?ev/eb:null;
+}
+function nScGrowth(p){ return N_SC.basis==='f'?p.gf:p.gt; }
+function nScVisible(){ return (N_SC.peers||[]).filter(function(p){ return p.on && nScNum(nScMult(p)) && nScNum(nScGrowth(p)); }); }
+// Axes come from the data (max of the visible peers + headroom), never fixed caps.
+function nScNice(v){ var step=v<=20?5:(v<=100?10:25); return Math.ceil(v/step)*step; }
+function scLogoUrl(p){ return p.logo || ('https://assets.parqet.com/logos/symbol/'+p.tk); }
+
+function stdPeerScatter(sfx){
+  sfx=sfx||'ov';
+  var h='<div class="nvda-sc" data-sfx="'+sfx+'">';
+  h+='<div class="ov-diagram-cap asc-cap-top">Peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD.</b> <span class="asc-hint">Hover or tap a bubble for the read.</span></div>';
+  h+='<div class="mg-tog-row">'+
+    '<span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgmetric="pe">P/E</button><button type="button" class="mg-pill" data-mgmetric="ev">EV/EBITDA</button></span></span>'+
+    '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill" data-mgbasis="f">Forward</button><button type="button" class="mg-pill active" data-mgbasis="t">Trailing</button></span></span>'+
+  '</div>';
+  h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" class="nvda-sc-svg" role="img" aria-label="Peer valuation vs growth map">'+
+    '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← cheaper (lower multiple)</text>'+
+    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">more expensive →</text>'+
+    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" class="nvda-sc-xlab">P/E · trailing</text>'+
+    '<text x="74" y="225" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end" class="nvda-sc-ylo">slow</text>'+
+    '<text x="74" y="60" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end" class="nvda-sc-yhi">fast growth</text>'+
+    '<g class="nvda-sc-nodes"></g>'+
+  '</svg></div>';
+  h+='<div class="asc-chips nvda-sc-chips"></div>';
+  h+='<div class="ov-diagram-cap asc-cap-end">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only listed peers plot here. '+
+    '<span class="ave-subh-note">Multiples = live price ÷ figures from each company\'s latest 10-K (fiscal years differ: NVIDIA and Marvell to late January, Broadcom to early November, Qualcomm to late September, AMD and Intel to December), or Bloomberg consensus FY2027 (as of Sep 9, 2026) for NVIDIA\'s forward; market caps are live. Private AI-chip rivals have no market multiple.</span></div>';
+  // Valuation ▸ Peers only: the receipt under the read (chart standard rule 3), OPEN by default.
+  if(sfx==='dd') h+='<div class="rs-collap nvda-sc-collap">'+
+      '<button type="button" class="rs-collap-h nvda-sc-tblh" data-selfwired="1"></button>'+
+      '<div class="rs-collap-b nvda-sc-tblb">'+
+        '<div class="rs-tablewrap asc-tblwrap"><div class="nvda-sc-tbl"></div></div>'+
+      '</div></div>';
+  h+='<div class="mg-tip nvda-sc-tip" hidden></div>';
+  h+='</div>';
+  return h;
+}
+function nScRenderOne(wrap){
+  var g=wrap.querySelector('.nvda-sc-nodes'); if(!g||!N_SC.peers) return;
+  var X0=80, X1=612, Y0=222, Y1=56;   // data area; the axis line sits lower (y 252) so bottom labels clear the axis text
+  var NAVY=nTok('--navy','#1E2733');
+  var vis=nScVisible();
+  var maxMult=nScNice(Math.max.apply(null, vis.map(nScMult).concat([1]))*1.12);
+  var gs=vis.map(nScGrowth), gMax=nScNice(Math.max.apply(null, gs.concat([1]))*1.12), gMin=Math.min.apply(null, gs.concat([0]));
+  gMin=gMin<0?-nScNice(-gMin*1.5):0;
+  var lab=wrap.querySelector('.nvda-sc-xlab'); if(lab) lab.textContent=(N_SC.metric==='pe'?'P/E':'EV/EBITDA')+' · '+(N_SC.basis==='f'?'forward':'trailing')+' · axis 0–'+maxMult+'×';
+  var yhi=wrap.querySelector('.nvda-sc-yhi'); if(yhi) yhi.textContent='+'+gMax+'% growth';
+  var ylo=wrap.querySelector('.nvda-sc-ylo'); if(ylo) ylo.textContent=gMin<0?(gMin+'%'):'0%';
+  wrap.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mgbasis')===N_SC.basis); });
+  wrap.querySelectorAll('.mg-pill[data-mgmetric]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mgmetric')===N_SC.metric); });
+  var frag='';
+  vis.forEach(function(p){
+    var m=nScMult(p), growth=nScGrowth(p);
+    var x=X0+Math.max(0,Math.min(1,m/maxMult))*(X1-X0);
+    var y=Y0-Math.max(0,Math.min(1,(growth-gMin)/(gMax-gMin)))*(Y0-Y1);
+    var r=nScNum(p.mc)?Math.max(11,Math.min(27,9+Math.sqrt(Math.max(1,p.mc))*0.32)):11;
+    var logo=scLogoUrl(p);
+    var read=(N_SC.metric==='pe'?'P/E ':'EV/EBITDA ')+m.toFixed(1)+'× · revenue growth '+(growth>0?'+':'')+growth.toFixed(1)+'%'+(nScNum(p.mc)?' · market cap $'+(p.mc>=1000?(p.mc/1000).toFixed(2)+'T':Math.round(p.mc)+'B'):'');
+    frag+='<g class="mg-node" data-name="'+esc(p.n)+'" data-tk="'+esc(p.tk)+'" data-logo="'+esc(logo)+'" data-why="'+esc(p.why||'')+'" data-read="'+esc(read)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
+      '<circle r="'+r.toFixed(1)+'" fill="#fff" stroke="'+(p.hl?NAVY:'#C7CED6')+'" stroke-width="'+(p.hl?3:1.5)+'"></circle>'+
+      '<image href="'+esc(logo)+'" x="'+(-r*0.72).toFixed(1)+'" y="'+(-r*0.72).toFixed(1)+'" width="'+(r*1.44).toFixed(1)+'" height="'+(r*1.44).toFixed(1)+'" preserveAspectRatio="xMidYMid meet" pointer-events="none"></image>'+
+      '<text y="'+(r+12).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?NAVY:'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
+  });
+  g.innerHTML=frag;
+  nScChipsOne(wrap);
+  nScTableOne(wrap);
+}
+// ─── The comps table under the peer map (Valuation ▸ Peers) — copied from meta.js meScTableOne ─────────
+// Everything the map draws, as numbers: the metric/basis pills pick the column, removing a chip drops the
+// row. Average and median EXCLUDE NVIDIA (the set it is read against). Premium in red, discount in green.
+function nScFmtMult(v){ return nScNum(v)?v.toFixed(1)+'×':'—'; }
+function nScFmtPct(v){ return nScNum(v)?v.toFixed(1)+'%':'—'; }
+function nScFmtMc(v){ return nScNum(v)?('$'+(v>=1000?(v/1000).toFixed(2)+'T':Math.round(v)+'B')):'—'; }
+function nScMean(a){ if(!a.length) return null; return a.reduce(function(s,v){ return s+v; },0)/a.length; }
+function nScMedian(a){ if(!a.length) return null; var s=a.slice().sort(function(x,y){ return x-y; }), h=Math.floor(s.length/2); return s.length%2?s[h]:(s[h-1]+s[h])/2; }
+function nScVsAvg(m, avg){
+  if(!nScNum(m)||!nScNum(avg)||avg===0) return '<span class="asc-nilv">—</span>';
+  var d=(m/avg-1)*100;
+  return '<span class="'+(d>=0?'asc-up':'asc-dn')+'">'+(d>=0?'+':'')+Math.round(d)+'%</span>';
+}
+function nScTableOne(wrap){
+  var box=wrap.querySelector('.nvda-sc-tbl'); if(!box||!N_SC.peers) return;
+  var mLab=(N_SC.metric==='pe'?'P/E':'EV/EBITDA'), bLab=(N_SC.basis==='f'?'forward':'trailing');
+  var rows=N_SC.peers.map(function(p){ return { p:p, m:nScMult(p), g:nScGrowth(p) }; });
+  // Cheapest first on the ACTIVE multiple; a name with no multiple sinks to the bottom (never sorts as zero).
+  rows.sort(function(a,b){
+    var an=nScNum(a.m), bn=nScNum(b.m);
+    if(!an&&!bn) return 0; if(!an) return 1; if(!bn) return -1; return a.m-b.m;
+  });
+  var peers=rows.filter(function(r){ return !r.p.hl; });
+  var avgM=nScMean(peers.filter(function(r){ return nScNum(r.m); }).map(function(r){ return r.m; }));
+  var medM=nScMedian(peers.filter(function(r){ return nScNum(r.m); }).map(function(r){ return r.m; }));
+  var avgG=nScMean(peers.filter(function(r){ return nScNum(r.g); }).map(function(r){ return r.g; }));
+  var medG=nScMedian(peers.filter(function(r){ return nScNum(r.g); }).map(function(r){ return r.g; }));
+  var nM=peers.filter(function(r){ return nScNum(r.m); }).length;
+  var body=rows.map(function(r){
+    var p=r.p, cls=(p.hl?'asc-hl':'')+(nScNum(r.m)?'':' asc-nil'), nt=nScNum(r.m)?'':nScChipNote(p);
+    return '<tr class="'+cls.trim()+'">'+
+      '<td><span class="asc-nm"><img src="'+esc(scLogoUrl(p))+'" alt="" onerror="this.style.display=\'none\'">'+
+        '<span>'+esc(p.n)+' <span class="asc-tk">'+esc(p.tk)+(nt?' · '+esc(nt):'')+'</span></span></span></td>'+
+      '<td class="asc-m">'+nScFmtMult(r.m)+'</td>'+
+      '<td>'+nScFmtPct(r.g)+'</td>'+
+      '<td>'+nScFmtMc(p.mc)+'</td>'+
+      '<td>'+nScVsAvg(r.m, avgM)+'</td></tr>';
+  }).join('');
+  var foot='<tr class="asc-avg"><td>Peer average <span class="asc-tk">ex-NVIDIA · '+nM+' name'+(nM===1?'':'s')+'</span></td>'+
+      '<td>'+nScFmtMult(avgM)+'</td><td>'+nScFmtPct(avgG)+'</td>'+
+      '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>'+
+    '<tr class="asc-med"><td>Peer median <span class="asc-tk">ex-NVIDIA</span></td>'+
+      '<td>'+nScFmtMult(medM)+'</td><td>'+nScFmtPct(medG)+'</td>'+
+      '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>';
+  box.innerHTML='<table class="asc-tbl"><thead><tr>'+
+      '<th>Peer</th><th>'+esc(mLab)+' · '+esc(bLab)+'</th>'+
+      '<th>Rev growth · '+esc(bLab)+'</th><th>Market cap</th><th>vs peer avg</th></tr></thead>'+
+    '<tbody>'+body+'</tbody><tfoot>'+foot+'</tfoot></table>';
+  var hd=wrap.querySelector('.nvda-sc-tblh'), bd=wrap.querySelector('.nvda-sc-tblb');
+  if(hd){ var open=!(bd&&bd.hidden);
+    hd.innerHTML='<span class="rs-collap-ic">'+(open?'▾':'▸')+'</span>The numbers behind the map'+
+      '<span class="rs-collap-sub">'+(open?'hide':'show')+' · '+esc(mLab)+' · '+esc(bLab)+
+      ', '+rows.length+' names</span>'; }
+}
+// A chip says why its peer is missing from the current view (no forward, negative EPS, no live price).
+function nScChipNote(p){
+  if(!nScNum(p.epsT)&&!nScNum(p.ebitdaT)&&!nScNum(p.epsF)&&!nScNum(p.ebitdaF)) return 'no figures on file';
+  if(!nScNum(p.px)) return 'no live price';
+  if(N_SC.basis==='f' && N_SC.metric==='pe' && p.epsFNote) return p.epsFNote;
+  if(N_SC.basis==='f' && !nScNum(N_SC.metric==='pe'?p.epsF:p.ebitdaF)) return 'trailing only — no Street file';
+  if(!nScNum(nScMult(p))) return N_SC.metric==='pe'?'no P/E — loss':'no EBITDA on file';
+  return '';
+}
+function nScChipsOne(wrap){
+  var box=wrap.querySelector('.nvda-sc-chips'); if(!box||!N_SC.peers) return;
+  var keep=box.querySelector('.nvda-sc-addtk'); var typed=keep?keep.value:'';
+  var h=N_SC.peers.map(function(p,i){ var nt=nScChipNote(p); return '<span class="asc-chip" data-sci="'+i+'" title="Remove '+esc(p.n)+'">'+esc(p.n)+(nt?' <span class="asc-chip-note">· '+esc(nt)+'</span>':'')+' <span class="x">×</span></span>'; }).join('');
+  h+='<span class="asc-add"><input class="nvda-sc-addtk" placeholder="+ TICKER" maxlength="6"><button type="button" class="nvda-sc-addbtn">Add</button></span>';
+  box.innerHTML=h;
+  var inp=box.querySelector('.nvda-sc-addtk'); if(inp) inp.value=typed;
+}
+function nScRenderAll(root){ root.querySelectorAll('.nvda-sc').forEach(function(w){ nScRenderOne(w); wireScChips(root, w); }); }
+function wireScatters(root){
+  nScReset();
+  root.querySelectorAll('.nvda-sc').forEach(function(wrap){
+    if(wrap._scWired) return; wrap._scWired=true;
+    var tblH=wrap.querySelector('.nvda-sc-tblh'), tblB=wrap.querySelector('.nvda-sc-tblb');
+    if(tblH&&tblB) tblH.onclick=function(){ tblB.hidden=!tblB.hidden; nScTableOne(wrap); };
+    var g=wrap.querySelector('.nvda-sc-nodes'), tip=wrap.querySelector('.nvda-sc-tip');
+    wrap.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(btn){ btn.onclick=function(){ N_SC.basis=btn.getAttribute('data-mgbasis'); nScRenderAll(root); }; });
+    wrap.querySelectorAll('.mg-pill[data-mgmetric]').forEach(function(btn){ btn.onclick=function(){ N_SC.metric=btn.getAttribute('data-mgmetric'); nScRenderAll(root); }; });
+    if(g&&tip){
+      var svg=wrap.querySelector('.nvda-sc-svg');
+      function nodeOf(e){ return (e.target&&e.target.closest)?e.target.closest('.mg-node'):null; }
+      function show(node){ tip.innerHTML='<div class="mgt-h"><img src="'+node.getAttribute('data-logo')+'" alt="" onerror="this.style.display=\'none\'"><span class="mgt-n">'+node.getAttribute('data-name')+'</span></div>'+node.getAttribute('data-why')+'<div class="mgt-m">'+node.getAttribute('data-read')+'</div>'; tip.hidden=false; }
+      function move(e){ tip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; tip.style.top=(e.clientY+16)+'px'; }
+      function hide(){ tip.hidden=true; }
+      g.addEventListener('pointerover', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } });
+      g.addEventListener('pointermove', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } else hide(); });
+      g.addEventListener('pointerout', function(e){ if(!nodeOf(e)) return; var rt=e.relatedTarget; if(rt&&rt.closest&&rt.closest('.mg-node')) return; hide(); });
+      if(svg) svg.addEventListener('pointerleave', hide);
+      g.addEventListener('click', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } });
+    }
+  });
+  nScRenderAll(root); nScFetchCaps(root);
+}
+function wireScChips(root, wrap){
+  wrap.querySelectorAll('.nvda-sc-chips .asc-chip[data-sci]').forEach(function(ch){ ch.onclick=function(){ var i=+ch.getAttribute('data-sci'); if(N_SC.peers[i]){ N_SC.peers.splice(i,1); nScRenderAll(root); } }; });
+  var addBtn=wrap.querySelector('.nvda-sc-addbtn'), addIn=wrap.querySelector('.nvda-sc-addtk');
+  if(addBtn&&addIn){
+    addIn.onkeydown=function(e){ if(e.key==='Enter') addBtn.click(); };
+    addBtn.onclick=function(){ var tk=(addIn.value||'').trim().toUpperCase(); if(!tk) return;
+      if(!N_SC.peers.some(function(p){ return p.tk===tk; })){
+        var seed=N_PEERS.filter(function(p){ return p.tk===tk; })[0];   // re-adding a known peer restores its file data
+        if(seed){ var o={}; for(var k in seed) o[k]=seed[k]; o.on=true; N_SC.peers.push(o); }
+        else N_SC.peers.push({ tk:tk, n:tk, on:true, epsT:null, epsF:null, ebitdaT:null, ebitdaF:null, nd:null, gt:null, gf:null,
+          why:'Added by ticker — live market cap only; no reported figures on file, so it plots once they are added.' });
+      }
+      addIn.value=''; nScRenderAll(root); nLiveOne(root, tk); };
+  }
+}
+function nScFetchCaps(root){ if(N_SC._capsFetched||!N_SC.peers) return; N_SC._capsFetched=true; N_SC.peers.forEach(function(p){ if(p.tk) nLiveOne(root, p.tk); }); }
+
+// Live quote via Massive (api.liveQuote). Market data is ALWAYS live — no seeded number is ever shown: the
+// Key Facts cell says "loading…" until the quote arrives and "unavailable" if it fails. The same quote feeds the
+// peer bubbles (price → P/E, market cap → bubble size, EV when Massive has one) and the old Sensitivity pane.
+function nLiveOne(root, tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(res){ var q=res&&res.data?res.data:res;
+    if(!q||q.marketCap==null) return;
+    var mcB=q.marketCap/1e9;
+    nScReset();
+    (N_SC.peers||[]).forEach(function(p){ if(p.tk===tk){ p.px=q.price; p.mc=mcB; p.ev=(q.ev!=null?q.ev/1e6:null); } });
+    nScRenderAll(root);
+  }).catch(function(){}); }
+
+// ═══ OV-7 Timeline (playbook §8; copied from googl.js stdTimeline) ═══════════════════════════════════════════
+// Strict chronological order. Sources: FY2026 10-K Item 1 (founding, Delaware reincorporation, GPU 1999, CUDA 2006,
+// AlexNet 2012, Tensor Core 2017, Mellanox 2020, Grace 2023, Blackwell 2024), Item 1A (export controls; the H20
+// $4.5B charge), Note 2 (Groq, Dec 2025: $13.0B paid in FY2026, $14.4B goodwill); NVIDIA press releases (IPO Jan 22
+// 1999; first quarterly dividend Nov 2012; Mellanox closing Apr 27 2020; Arm agreement Sep 13 2020 and termination
+// Feb 8 2022); FY2024 10-K (revenue $60.9B, Data Center $47.5B). Market-cap milestone: only the latest ($5T,
+// Oct 29 2025). The old architecture timeline (TECH_TIMELINE, B2 #24) stays complete in Miscellaneous ▸ Technology;
+// its key launches are here. DESC's Mellanox sentence (B2 #3) lands in the 2020 item.
+var TIMELINE = [
+  { y:'1993–98', t:'<b>Genesis:</b> Jensen Huang, Chris Malachowsky and Curtis Priem found <b>NVIDIA</b> in California (Apr 1993) to build graphics chips for PCs.',
+    d:'<ul class="ov-bullets"><li>Apr 1993 — incorporated in California; Jensen Huang is CEO from the start and still is.</li><li>The first products are graphics accelerators for PC games, sold to add-in-board makers.</li><li>Apr 1998 — reincorporated in Delaware, ahead of the listing.</li></ul>' },
+  { y:'1999', t:'<b>IPO</b> on NASDAQ (Jan) and <b>GeForce 256</b>, which NVIDIA calls the invention of the GPU.',
+    d:'<ul class="ov-bullets"><li>Jan 22, 1999 — initial public offering on NASDAQ.</li><li>Later that year — GeForce 256: graphics processing moved onto one chip, the GPU.</li><li>The GPU becomes the engine of PC gaming, the market that funds the next decade.</li></ul>' },
+  { y:'2006', t:'<b>CUDA</b> opens the GPU to general-purpose computing — the software platform the AI era is later built on.' },
+  { y:'2012', t:'<b>AlexNet</b>, trained on NVIDIA GPUs, wins ImageNet — the start of deep learning; NVIDIA also pays its <b>first dividend</b>.',
+    d:'<ul class="ov-bullets"><li>2012 — the AlexNet neural network, trained on two GeForce GPUs, wins the ImageNet image-recognition contest; the 10-K calls it AI\'s "Big Bang".</li><li>Nov 2012 — first quarterly cash dividend.</li><li>2017 — first Tensor Core GPU (Volta), designed for AI from the ground up.</li></ul>' },
+  { y:'2020', t:'<b>Mellanox</b> acquired (~$7B, closed Apr 2020) — networking makes the data center, not the chip, the unit NVIDIA sells.',
+    d:'<ul class="ov-bullets"><li>Apr 27, 2020 — the acquisition closes.</li><li>Brings InfiniBand and Ethernet networking, adapters and the DPU (BlueField) — the base of today\'s NVLink / Spectrum-X networking line.</li><li>China\'s antitrust regulator later questioned NVIDIA\'s compliance with the conditions set at closing (10-K).</li></ul>' },
+  { y:'2020–22', t:'<b>Arm</b>: agreed to buy it from SoftBank for $40B (Sep 2020); <b>terminated</b> in Feb 2022 after regulatory opposition.',
+    d:'<ul class="ov-bullets"><li>Sep 13, 2020 — agreement to acquire Arm for up to $40B in cash and stock.</li><li>2021 — regulators in the US, UK, EU and China challenge the deal.</li><li>Feb 8, 2022 — both sides terminate it; NVIDIA writes off the $1.36B prepayment. It keeps a 20-year Arm license, used later for the Grace CPU.</li></ul>' },
+  { y:'2022–25', t:'<b>US export controls on China</b> — successive rules restrict NVIDIA\'s data-center chips there, ending in a $4.5B H20 charge.',
+    d:'<ul class="ov-bullets"><li>Aug 2022 — first licence requirements on A100 / H100 exports to China.</li><li>2023 — the rules widen; NVIDIA designs reduced-performance versions for China.</li><li>Apr 2025 — the H20 also needs a licence; NVIDIA takes a $4.5B charge for inventory and purchase obligations (Q1 FY2026).</li></ul>' },
+  { y:'FY2024', t:'<b>Data Center becomes the business</b> — generative-AI demand lifts revenue to $60.9B (+126%), $47.5B of it Data Center.',
+    d:'<ul class="ov-bullets"><li>Late 2022 — generative AI (ChatGPT) sets off a race for GPU capacity at cloud providers and AI labs.</li><li>FY2024 (to Jan 2024) — Data Center revenue $47.5B, overtaking every other market combined.</li><li>FY2026 — Data Center $193.7B, about 90% of revenue.</li></ul>' },
+  { y:'2023–24', t:'From chips to systems: the <b>Grace</b> CPU (2023) and <b>Blackwell</b> rack-scale platform (2024), on a yearly product cadence.',
+    d:'<ul class="ov-bullets"><li>2023 — Grace, NVIDIA\'s first data-center CPU.</li><li>2024 — Blackwell: 36 Grace CPUs and 72 Blackwell GPUs in one liquid-cooled rack (NVL72).</li><li>FY2026 — Blackwell Ultra ships; Rubin is next, with production shipments expected in the second half of FY2027.</li></ul>' },
+  { y:'Oct 2025', t:'First company to reach a <b>$5 trillion</b> market capitalization (Oct 29, 2025).' },
+  { y:'Dec 2025', t:'<b>Groq</b>: non-exclusive license to its inference-chip technology plus hiring of its team — $13.0B paid in FY2026.',
+    d:'<ul class="ov-bullets"><li>Dec 2025 — license agreement for Groq\'s language-processing-unit (LPU) technology; no customers, products or equity bought (10-K Note 2).</li><li>Recorded $14.4B of goodwill and a $2.5B technology intangible.</li><li>Almost twice what NVIDIA paid for Mellanox, its previous largest deal.</li></ul>' },
+];
+function stdTimeline(){
+  return '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
+}
+
+// OV-1 Key Facts (playbook §8: 10 cells, this order). FY2026 10-K (filed 2026-02-25): cover (Delaware, Santa Clara),
+// Item 1 (incorporated in California Apr 1993, reincorporated in Delaware Apr 1998; ~42,000 employees at FY-end
+// Jan 25, 2026), Item 5 (cash dividends paid in FY2026). IPO: NVIDIA IR (Jan 22, 1999, NASDAQ). CEO: DEF 14A 2026.
+// Market cap is live (Massive via liveQuote), never seeded (rule 10). Replaces the old 6-cell SNAPSHOT banner (B2 #1);
+// the old multiples tiles moved to Valuation ▸ Target Multiple (B2 #2).
+var STD_FACTS = [
+  ['Listing','NASDAQ: NVDA'],
+  ['HQ','Santa Clara, California, USA'],
+  ['Incorporated','Delaware, USA'],
+  ['SEC filer','Domestic (10-K/10-Q/8-K)'],
+  ['Founded','1993 (Jensen Huang, Chris Malachowsky & Curtis Priem)'],
+  ['IPO','Jan 1999 · NASDAQ'],
+  ['CEO','Jensen Huang · co-founder, 1993 · CEO since 1993'],
+  ['Employees','~42,000 · Jan 2026 (FY-end)'],
+  ['Dividend','Payer · quarterly'],
+  ['Market cap','loading live quote…'],
+];
+function stdKeyFacts(){
+  return '<div class="stdkf">'+STD_FACTS.slice(0,10).map(function(p){
+    var v = p[0]==='Market cap' ? '<span id="nvdaMc">'+esc(p[1])+'</span>' : esc(p[1]);
+    return '<div class="stdkf-cell"><div class="stdkf-k">'+esc(p[0])+'</div><div class="stdkf-v">'+v+'</div></div>'; }).join('')+'</div>';
+}
+// Live market cap for the Key Facts cell (copied from amzn.js aLiveOne/aMcCell: no seed; dated when live).
+function nvLiveMc(pane){
+  var el = pane.querySelector('#nvdaMc'); if (!el) return;
+  import('../api.js').then(function(api){ return api.liveQuote('NVDA'); }).then(function(res){
+    var q = res && res.data ? res.data : res;
+    if (!q || q.marketCap == null){ el.textContent = 'live quote unavailable'; return; }
+    var mcB = q.marketCap/1e9;
+    el.textContent = '$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live, '+
+      new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  }).catch(function(){ el.textContent = 'live quote unavailable'; });
+}
+
 function overviewBody(){
   var h = '';
-  // 1 — company banner
-  h += '<div class="ov-snap ovlr-snap6">' + SNAPSHOT.map(function(p){
-    return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>';
-  }).join('') + '</div>';
-  // 2 — valuation multiples
-  h += heroMultiples();
-  // 3 — description (expandable)
-  h += descBox();
+  // OV-1 — Key Facts
+  h += stdKeyFacts();
+  // OV-2 — description (lede)
+  h += stdLede();
   // 4 — business snapshot
-  h += heroBusiness();
-  // 5 — products (collapsible)
-  h += ovBox('products', 'What they offer', 'products & platforms', productsBody(), false);
-  // 6 — how it makes money (collapsible)
-  h += ovBox('money', 'How it makes money', 'segments & regions', moneyBody(), false);
-  // 6.5 — margins (collapsible)
-  h += ovBox('margins', 'Margins', 'interactive · profitability & cash', marginsBody(), false);
-  // 7 — competitors (collapsible)
-  h += ovBox('competitors', 'Competitors', 'multiple × growth × size', competitorsBody(), false);
-  h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
+  h += stdFourQuad();
+  // OV-4 — How NVIDIA makes money (collapsed)
+  h += collapsible('How NVIDIA makes money', stdMoneyMap(), false);
+  // OV-5 — Products & platforms (collapsed)
+  h += collapsible('Products & platforms', stdProducts(), false);
+  // OV-6 — Competitors, the peer map (collapsed)
+  h += collapsible('Competitors — the peer map', stdPeerScatter('ov'), false);
+  // OV-7 — Timeline (collapsed)
+  h += collapsible("Timeline — how it became today's NVIDIA", stdTimeline(), false);
+
+  // OV-F — the Overview's one source footer
+  h += '<div class="ov-foot">'+esc(OV_SOURCES)+'</div>';
   return h;
 }
 
@@ -780,7 +1249,45 @@ function initOverview(){
   // (for brand/tab styling), so target the pane by its unique data-ovt instead.
   var pane = document.querySelector('.ovt-pane[data-ovt="overview"]'); if (!pane) return;
 
-  // 2 — multiples: trailing/forward toggle + live price/EV fill.
+  // OV-1 — live market cap cell.
+  nvLiveMc(pane);
+
+  // OV-5 — product pop-ups. Hoist the modal to #co-detailview so it stays visible from either profile tab.
+  // A fresh render brings a fresh modal: it replaces any hoisted one (no duplicate ids).
+  var ovRoot = pane.closest('.ov-nvda') || pane;
+  var detail = document.getElementById('co-detailview');
+  var fresh = ovRoot.querySelector('#nvdaModalBack');
+  if (detail && fresh){
+    detail.querySelectorAll(':scope > .ov-modal-back').forEach(function(m){ m.remove(); });
+    detail.appendChild(fresh);
+  }
+  wireModal(detail || ovRoot);
+
+  // OV-6 — peer map: pills, chips, tooltip, live quotes (state N_SC is shared with Valuation ▸ Peers).
+  wireScatters(ovRoot);
+
+  // OV-4..7 — standard collapsibles, money-map accordions and the Segments ⇄ Geography view (copied from googl.js init).
+  pane.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var cc=btn.parentElement; var open=cc.classList.toggle('open'); var b=cc.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }; });
+  pane.querySelectorAll('.acc-h').forEach(function(btn){ btn.onclick=function(){ var b=btn.nextElementSibling; if(!b) return; var open=b.hidden; b.hidden=!open; var x=btn.querySelector('.acc-x'); if(x) x.textContent=open?'–':'+'; }; });
+  pane.querySelectorAll('.mg-pill[data-gmm]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-gmm');
+    pane.querySelectorAll('.mg-pill[data-gmm]').forEach(function(x){ x.classList.toggle('active', x===btn); });
+    pane.querySelectorAll('.gmm-view').forEach(function(g){ g.hidden=(g.getAttribute('data-gmm')!==v); });
+  }; });
+
+  // 3 — description expand/collapse.
+  var dMore = pane.querySelector('#nvDescMore');
+  if (dMore) dMore.onclick = function(){
+    var box = pane.querySelector('.ovlr-desc'); var open = box.classList.toggle('open');
+    dMore.textContent = open ? 'Read less ▴' : 'Read more ▾';
+  };
+  initOverviewRest(pane);
+}
+
+// Old header multiples tiles (B2 #2) — now shown in Valuation ▸ Target Multiple until VA-TM rebuilds them.
+// Scoped to the pane that holds them: trailing/forward toggle + live price/EV fill.
+function initMultiples(pane){
+  if (!pane || !pane.querySelector('#nvMultToggle')) return;
   pane.querySelectorAll('#nvMultToggle .ovlr-seg-b').forEach(function(b){
     b.onclick = function(){ _multMode = b.getAttribute('data-mult');
       pane.querySelectorAll('#nvMultToggle .ovlr-seg-b').forEach(function(x){ x.classList.toggle('active', x===b); });
@@ -795,14 +1302,9 @@ function initOverview(){
     var evEl = pane.querySelector('#nvMultEv'); if (evEl && q.ev != null) evEl.textContent = fmtBig(q.ev);
     multFill(pane);
   }).catch(function(){});
+}
 
-  // 3 — description expand/collapse.
-  var dMore = pane.querySelector('#nvDescMore');
-  if (dMore) dMore.onclick = function(){
-    var box = pane.querySelector('.ovlr-desc'); var open = box.classList.toggle('open');
-    dMore.textContent = open ? 'Read less ▴' : 'Read more ▾';
-  };
-
+function initOverviewRest(pane){
   // 5/6/7 — collapsible boxes; build the lazy chart when a box opens.
   pane.querySelectorAll('.ovlr-box-h').forEach(function(hb){
     hb.onclick = function(){
@@ -847,16 +1349,25 @@ function initOverview(){
     };
   });
 
-  // 6.5 — margins: metric toggle chips (multi-select) + range slider.
+}
+
+// Old Margins box (B2 #7) — now in Bottom Line ▸ General until BL-GEN-1 rebuilds it. Scoped to its pane.
+function initMargins(pane){
+  if (!pane || !pane.querySelector('#nvMgChart')) return;
   var mgChips = pane.querySelector('#nvMgChips');
   if (mgChips) mgChips.onclick = function(e){ var b = e.target.closest('.ovlr-mg-chip'); if (!b) return;
     var k = b.getAttribute('data-mg'); _mrgSel[k] = !_mrgSel[k]; b.classList.toggle('on', _mrgSel[k]); buildMarginChart(); };
   var w = mrgDefaultWindow(); _mrgStart = w[0]; _mrgEnd = w[1];
   wireMrgSlider(pane);
   renderMrgSlider();
-  requestAnimationFrame(buildMarginChart);   // Margins box starts open — build now.
-  loadMassiveMargins();                       // upgrade history to the live Massive feed when available
+  requestAnimationFrame(buildMarginChart);
+  if (!pane._mrgLoaded){ pane._mrgLoaded = 1; loadMassiveMargins(); }   // upgrade history to the live Massive feed when available
+}
 
+function initOverviewOld(pane){
+
+  // 7 — old competitors box (B2 #8, replaced by OV-6): only wired if its canvas is on the page.
+  if (pane.querySelector('#nvCompChart')) {
   // 7 — competitors: toggles, add/remove, live market cap per ticker.
   pane.querySelectorAll('#nvCompMult .ovlr-seg-b').forEach(function(b){
     b.onclick = function(){ _compMult = b.getAttribute('data-cmult');
@@ -891,6 +1402,7 @@ function initOverview(){
   renderCompChips();
   // Competitors box starts open — build its chart now.
   requestAnimationFrame(buildCompChart);
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -2002,14 +2514,15 @@ function industryBody(){
 }
 
 // ─── Overview shell (the "Overview" company tab) ─────────────────────────────────
-// The Overview tab is now just the box-based overview — no internal sub-tab bar.
-// The former sub-tabs (Segments … Industry Analysis) moved to the "Deep Dive" tab
-// below. The overview body is wrapped in a .ovt-pane[data-ovt="overview"] so
-// initOverview()'s pane-scoped selectors keep working unchanged.
+// The Overview body is wrapped in a .ovt-pane[data-ovt="overview"] so initOverview()'s
+// pane-scoped selectors keep working unchanged. Summit tokens on the root (playbook §7.2, §21):
+// the company's brand lives only in its logo.
+var NV_TOKENS = 'style="--brand:var(--steel);--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)"';
 
 function html(){
-  return '<div class="ov ov-nvda" data-brand="NVDA">'+
+  return '<div class="ov ov-nvda" data-brand="NVDA" '+NV_TOKENS+'>'+
     '<div class="ovt-pane" data-ovt="overview">'+overviewBody()+'</div>'+
+    nvModalHtml()+
     '</div>';
 }
 
@@ -2017,53 +2530,139 @@ function init(){
   requestAnimationFrame(function(){ initOverview(); });
 }
 
-// ─── Deep Dive shell (the "Deep Dive" company tab) ───────────────────────────────
-// Same tab machinery as before, just without the Overview pane. The shell keeps the
-// .ov-nvda class (brand color + tab styling live there) plus .ov-nvda-dd as a unique
-// hook so its init can scope to it even though the Overview shell is also .ov-nvda.
-var DEEP_TABS = [
-  { key:'segments',   label:'Segments',          body:segmentsBody },
-  { key:'technology', label:'Technology',        body:technologyBody },
-  { key:'management', label:'Management',         body:managementBody },
-  { key:'consensus',  label:'Consensus',         body:consensusBody },
-  { key:'valuation',  label:'Valuation',         body:valuationBody },
-  { key:'industry',   label:'Industry Analysis', body:industryBody },
-];
+// ─── Deep Dive shell — the Amazon spine (docs/PROFILE_PLAYBOOK.md §5), set in F1 (2026-11-02) ───
+// Until each unit is rebuilt, the old panes sit at their approved B2 destination (docs/profiles/NVDA.md §5),
+// each still wrapped in its old .ovt-pane[data-ovt=…] so the old builders' selectors keep working.
+// Sub-tabs with nothing to show yet are added when their unit is built (golden rule 5).
+function oldPane(key, body){ return '<div class="ovt-pane" data-ovt="'+key+'">'+body+'</div>'; }
+
+// One Deep Dive section: the first sub-tab starts active and visible.
+function subtabs(group, list, hidden){
+  var h='<div class="dd-pane" data-dd="'+group+'"'+(hidden?' hidden':'')+'><div class="ovt-subtabs">';
+  list.forEach(function(s,i){ h+='<button type="button" class="ovt-subtab'+(i?'':' active')+'" data-ovst="'+s.k+'">'+esc(s.l)+'</button>'; });
+  h+='</div>';
+  list.forEach(function(s,i){ h+='<div class="ovt-subpane" data-ovst="'+s.k+'"'+(i?' hidden':'')+'>'+s.body+'</div>'; });
+  return h+'</div>';
+}
 
 function deepDiveHtml(){
-  var h = '<div class="ov ov-nvda ov-nvda-dd" data-brand="NVDA">';
-  h += '<div class="ovt-tabs">'+DEEP_TABS.map(function(t,i){
-    return '<button type="button" class="ovt-tab'+(i===0?' active':'')+'" data-ovt="'+t.key+'">'+esc(t.label)+'</button>';
-  }).join('')+'</div>';
-  h += DEEP_TABS.map(function(t,i){
-    return '<div class="ovt-pane" data-ovt="'+t.key+'"'+(i===0?'':' hidden')+'>'+t.body()+'</div>';
-  }).join('');
-  h += '</div>';
+  var h='<div class="ov ov-nvda ov-nvda-dd" data-brand="NVDA" '+NV_TOKENS+'>';
+  h+='<div class="dd-tabs">'+
+      '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
+      '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
+      '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
+      '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
+      '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+      '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
+    '</div>';
+  h+=subtabs('topline',[
+    // The shared segments engine (TL-GEN · TL-SEG · TL-OTH · TL-CUS) over js/segments-data/nvda.js: the market platforms
+    // are the segments (SAB, Nov 2 2026). Old Segments pane B2 #11–13, #16 absorbed into the dataset.
+    { k:'segov', l:'General', body:segmentsOverviewHtml('NVDA') },
+    { k:'segdrv', l:'Segments', body:segmentsHtml('NVDA') },
+    { k:'segoth', l:'Other', body:segmentsOtherHtml('NVDA') },
+    { k:'segcus', l:'Customers', body:segmentsCustomersHtml('NVDA') },
+  ]);
+  h+=subtabs('bottomline',[
+    { k:'margins', l:'General', body:nvdaBlGeneralHtml() },   // BL-GEN-1…5 (nvda-bl.js); replaces the old Margins box (B2 #7)
+    { k:'segments', l:'Segments', body:oldPane('segments', segmentsBody()) },          // old Segments pane, temporary: B2 #14 GAAP segments (until BL-SEG) and #15 latest print (until EV-SET)
+    { k:'supplychain', l:'Supply Chain', body:oldPane('industry', industryBody()) }, // B2 #35 (semis map; the SPLC table joins in BL-SPLC)
+  ], true);
+  h+=subtabs('evolution',[
+    // EV-RES: the shared Results engine (B2 #27 beats text → metric notes, #28 guidance and #29 consensus → the dataset,
+    // #30 approximate Fiscal.ai curve dropped for the real Bloomberg vintages — SAB 2026-11-02).
+    { k:'results', l:'Results', body:resultsHtml('NVDA') },
+    // EV-EST: the shared estimates-evolution engine (B2 #31 Summit snapshot by snapshot, re-pulled from the MCP; the old
+    // pane's stories → the rev notes of results-data/nvda.js with verified figures — SAB 2026-11-02).
+    { k:'estevo', l:'Estimates', body:resultsEvoHtml('NVDA') },
+  ], true);
+  h+=subtabs('valuation',[
+    { k:'targetmult', l:'Target Multiple', body:oldPane('valuation', heroMultiples()+valuationBody()) }, // B2 #2 tiles + #32–34 (until VA-TM / VA-SENS)
+  ], true);
+  h+=subtabs('mgmt',[
+    { k:'team', l:'Executives & Board', body:NVDA_MGMT.body() },        // MG-TEAM (B2 #25: the old org tree → the shared engine)
+    { k:'ownership', l:'Ownership', body:nvdaOwnBody() },               // MG-OWN (B2 #26: insider table)
+    { k:'governance', l:'Governance & SBC', body:nvdaGovBody() },       // MG-GOV
+    { k:'track', l:'Track Record', body:nvdaTrackBody() },              // MG-TRACK (no ratings, SAB)
+  ], true);
+  h+=subtabs('misc',[
+    { k:'tech', l:'Technology', body:oldPane('technology', technologyBody()) },     // B2 #17–24 (MISC-tech)
+  ], true);
+  h+='</div>';
   return h;
 }
 
-function showOvt(root, key){
-  root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt') === key); });
-  root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
-  if (key !== 'technology') stopTech();
-  if (key === 'industry') requestAnimationFrame(function(){ semiIndustry.init(); });
-  if (key === 'segments') requestAnimationFrame(function(){ buildSegChart(); });
-  if (key === 'technology') initTech();
-  if (key === 'management') requestAnimationFrame(function(){ initManagement(); });
-  if (key === 'consensus') requestAnimationFrame(function(){ initConsensus(); });
-  if (key === 'valuation') requestAnimationFrame(function(){ initValuation(); });
+// ═══ Sub-tab + Deep Dive tab machinery (standardized contract, copied from googl.js) ═══
+function buildSub(root, group, key){
+  if(group==='topline'){
+    if(key==='segdrv') requestAnimationFrame(function(){ initSegments(root, 'NVDA'); });
+    else if(key==='segoth') requestAnimationFrame(function(){ initSegmentsOther(root, 'NVDA'); });
+    else if(key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'NVDA'); });
+    else requestAnimationFrame(function(){ initSegmentsOverview(root, 'NVDA'); });
+  } else if(group==='bottomline'){
+    if(key==='segments') requestAnimationFrame(function(){ buildSegChart(); });
+    else if(key==='margins') requestAnimationFrame(function(){ nvdaBlGeneralBuild(root); });
+    else if(key==='supplychain') requestAnimationFrame(function(){ semiIndustry.init(); });
+  } else if(group==='evolution'){
+    if(key==='results') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'NVDA'); });
+    else if(key==='estevo') requestAnimationFrame(function(){ initResultsEvo('NVDA'); });
+  } else if(group==='valuation'){
+    if(key==='targetmult') requestAnimationFrame(function(){ initValuation(); initMultiples(root.querySelector('.ovt-pane[data-ovt="valuation"]')); });
+  } else if(group==='mgmt'){
+    if(key==='team') NVDA_MGMT.init(root);
+    else if(key==='ownership') nvdaOwnInit(root);
+  } else if(group==='misc'){
+    if(key==='tech') initTech();
+  }
 }
-
-// Idempotent: called every time the Deep Dive tab becomes visible. Wires the sub-tab
-// bar + segment toggles, then (re)builds whichever sub-tab is currently active now
-// that the pane has layout (Chart.js needs a non-null offsetParent).
-function deepDiveInit(){
-  var root = document.querySelector('.ov-nvda-dd');
-  if (!root) return;
-  root.querySelectorAll('.ovt-tab').forEach(function(btn){
-    btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
+// Keep the clicked control visually anchored when a tall pane is swapped for a shorter one.
+function ddKeepPos(el, fn){
+  var before=el.getBoundingClientRect().top;
+  fn();
+  var d=el.getBoundingClientRect().top-before;
+  if(Math.abs(d)>1) window.scrollBy(0, d);
+}
+function activeSubKey(root, group){
+  var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return null;
+  var b=pane.querySelector('.ovt-subtab.active'); return b?b.getAttribute('data-ovst'):null;
+}
+function showSub(root, pane, group, key){
+  var btn=pane.querySelector('.ovt-subtab[data-ovst="'+key+'"]');
+  stopTech();   // the Technology animations only run while their sub-tab is visible
+  ddKeepPos(btn||pane, function(){
+    pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst')===key); });
+    pane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovst')!==key); });
   });
-  // Segments tab: segment / view / forecast-source toggles on the revenue chart.
+  requestAnimationFrame(function(){ buildSub(root, group, key); });
+}
+function wireSubtabs(root, group){
+  var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return;
+  pane.querySelectorAll('.ovt-subtab').forEach(function(btn){ btn.onclick=function(){ showSub(root, pane, group, btn.getAttribute('data-ovst')); }; });
+}
+function buildDD(root, key){ var s=activeSubKey(root,key); if(s) buildSub(root,key,s); }
+function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'topline'; }
+function showDD(root, key){
+  var btn=root.querySelector('.dd-tab[data-dd="'+key+'"]');
+  stopTech();
+  ddKeepPos(btn||root, function(){
+    root.querySelectorAll('.dd-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-dd')===key); });
+    root.querySelectorAll('.dd-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-dd')!==key); });
+  });
+  requestAnimationFrame(function(){ buildDD(root, key); });
+}
+function wireDD(root){ root.querySelectorAll('.dd-tab').forEach(function(btn){ btn.onclick=function(){ showDD(root, btn.getAttribute('data-dd')); }; }); }
+
+// Idempotent: called every time the Deep Dive tab becomes visible. Wires the section and sub-tab
+// bars + the old segment-chart toggles, then (re)builds the visible sub-tab now that it has layout
+// (Chart.js needs a non-null offsetParent).
+function deepDiveInit(){
+  var root=document.querySelector('.ov-nvda-dd');
+  if(!root) return;
+  wireDD(root);
+  ['topline','bottomline','evolution','valuation','mgmt','misc'].forEach(function(g){ wireSubtabs(root, g); });
+  wireModal(document.getElementById('co-detailview') || root);   // Deep Dive pop-ups (Track Record) on the hoisted Overview modal
+  NVDA_MGMT.init(root);                                           // the engine's bio modal (playbook §15)
+  // Bottom Line ▸ Segments (old Segments pane, temporary): segment / view / forecast-source toggles on the revenue chart.
   // Each .nv-seg-toggle is its own group; active state and state var are scoped to the group.
   root.querySelectorAll('.nv-seg-toggle').forEach(function(grp){
     grp.querySelectorAll('.nv-seg-btn').forEach(function(btn){
@@ -2077,9 +2676,7 @@ function deepDiveInit(){
       };
     });
   });
-  var active = root.querySelector('.ovt-tab.active');
-  var key = active ? active.getAttribute('data-ovt') : 'segments';
-  requestAnimationFrame(function(){ showOvt(root, key); });
+  var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
 }
 
 export var nvidiaOverview = {

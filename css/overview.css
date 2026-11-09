@@ -3755,3 +3755,6 @@ img.org-photo { object-fit: cover; }
 .ov-nvda-dd .nv-splc-tot td{font-weight:700}
 .ov-nvda-dd .nv-splc-lim{font-size:12px;line-height:1.5;color:var(--mu);border-left:3px solid var(--steel);padding:4px 10px;margin:8px 0 4px}
 
+
+/* NVIDIA ▸ Miscellaneous ▸ Technology (MISC-tech): the Moore chart note (was an inline margin) */
+.ov-nvda-dd .nv-moore-note{margin-top:10px}

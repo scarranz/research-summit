@@ -157,7 +157,9 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 | MG-OWN | Management ▸ Ownership | ✅ | 2026-11-02 | 2026-11-02 | SAB | 14 insiders (proxy + Form 4) + >5% + Fiscal.ai con aviso de diferencias |
 | MG-GOV | Management ▸ Governance & SBC | ✅ | 2026-11-02 | 2026-11-02 | SAB | 4 KPIs + tabla de 7 filas (10-K FY26, proxy 2026) |
 | MG-TRACK | Management ▸ Track Record | ✅ | 2026-11-02 | 2026-11-02 | SAB | 6 líderes, sin calificaciones, modal `ntrk:` |
-| MISC | Miscellaneous (una fila `MISC-<clave>` por sub-tab aprobada) | ⬜ | | | | |
+| MISC-tech | Miscellaneous ▸ Technology | ✅ | 2026-11-09 | SAB | — | pestaña vieja conservada (animaciones); CUDA → MISC-comp; colores Summit; Moore con zoom + tabla; tabla de generaciones; Rubin del 10-Q; pie con fuentes |
+| MISC-comp | Miscellaneous ▸ Competitive position | ⬜ | | | | |
+| MISC-capacity | Miscellaneous ▸ Capacity → revenue | ⬜ | | | | |
 | F-FINAL | Cierre y entrega | ⬜ | | | | |
 
 
@@ -193,6 +195,8 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 - 2026-11-09 · VA-HIST · P/E sobre EPS GAAP, forward y trailing (el único con consenso BBG en los 30 snapshots); el pie avisa que el 1S FY27 trae $23.7B de ganancias por inversiones en acciones (10-Q), por eso el trailing de 2026 se ve bajo — SAB
 - 2026-11-09 · VA-HIST · EV/EBITDA forward solo desde el snapshot 2026-03-02 (base nueva, SBC como gasto); trailing = utilidad operativa GAAP + D&A de XBRL desde FY2019; FY+3 deshabilitado (BBG trae 3 años) — SAB
 - 2026-11-09 · VA-SUB · El submit 2025-12-12 se incluye tal cual; el fair value de su EV/EBITDA ($236.21) va marcado como no verificado en el pie de fuentes (no cuadra con su WACC y la hoja de ese día ya no está) — SAB
+- 2026-11-09 · MISC · Miscellaneous lleva tres sub-tabs: Technology (MISC-tech), Competitive position (MISC-comp) y Capacity → revenue (MISC-capacity, con la cadena cortada donde no haya fuente primaria, diciendo dónde) — SAB
+- 2026-11-09 · MISC-comp · Tabla de competidores: escala (ingreso comparable), margen, R&D + chip de IA actual y fecha + ecosistema de software (y si se vende a terceros) — SAB
 
 ## 4. Excepciones aceptadas
 
@@ -221,14 +225,14 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 | 14 | Deep Dive ▸ Segments ▸ "GAAP reportable segments (quarterly)" `SEG_GAAP` (Compute & Networking · Graphics) | Bottom Line ▸ BL-SEG (utilidad operativa por segmento GAAP) + TL-GEN (ingreso) | Compute & Networking / Graphics; arregla de paso Anexo A16 (utilidad por segmento en anual) | ✅ |
 | 15 | Deep Dive ▸ Segments ▸ "Latest print & guidance (Q1 FY2027)" — desactualizado: ya salió 2Q FY27 | Evolution ▸ EV-SET Setup (guía del próximo trimestre) + serie guidance en EV-RES-DATA | se actualiza a 2Q FY27 reportado / guía 3Q FY27 | ✅ |
 | 16 | Deep Dive ▸ Segments ▸ "Milestones by segment" `SEG_MILESTONES` | Top Line ▸ TL-SEG (hitos por segmento) + los principales a OV-7 Timeline |  | ✅ |
-| 17 | Deep Dive ▸ Technology ▸ "What NVIDIA sells — the full stack" `sellsMap`/`initSellsMap` + `TECH_STACK` (tap a layer) | Miscellaneous ▸ MISC-tech "Technology" (nueva sub-tab propuesta) | se conserva tal cual (interactivo) | ⬜ |
-| 18 | Deep Dive ▸ Technology ▸ "The basic logic: transistors = computing power" `transistorShrink` + `TR_STEPS` — animación | Miscellaneous ▸ MISC-tech | se conserva tal cual | ⬜ |
-| 19 | Deep Dive ▸ Technology ▸ "Moore’s Law — and why it matters now" `mooreCard`/`buildMooreChart` + `MOORE` | Miscellaneous ▸ MISC-tech | se conserva; la gráfica cumple §17.2 (zoom, tabla) | ⬜ |
-| 20 | Deep Dive ▸ Technology ▸ "CPU vs GPU — serial vs parallel" `cpuGpuDemo`/`cgRun` + `CPU_GPU` — animación | Miscellaneous ▸ MISC-tech | se conserva tal cual | ⬜ |
-| 21 | Deep Dive ▸ Technology ▸ "Generation over generation" `gpuGenBars` + `GPU_GENS` | Miscellaneous ▸ MISC-tech | se conserva; tabla debajo | ⬜ |
+| 17 | Deep Dive ▸ Technology ▸ "What NVIDIA sells — the full stack" `sellsMap`/`initSellsMap` + `TECH_STACK` (tap a layer) | Miscellaneous ▸ MISC-tech "Technology" (nueva sub-tab propuesta) | se conserva tal cual (interactivo) | ✅ |
+| 18 | Deep Dive ▸ Technology ▸ "The basic logic: transistors = computing power" `transistorShrink` + `TR_STEPS` — animación | Miscellaneous ▸ MISC-tech | se conserva tal cual | ✅ |
+| 19 | Deep Dive ▸ Technology ▸ "Moore’s Law — and why it matters now" `mooreCard`/`buildMooreChart` + `MOORE` | Miscellaneous ▸ MISC-tech | se conserva; la gráfica cumple §17.2 (zoom, tabla) | ✅ |
+| 20 | Deep Dive ▸ Technology ▸ "CPU vs GPU — serial vs parallel" `cpuGpuDemo`/`cgRun` + `CPU_GPU` — animación | Miscellaneous ▸ MISC-tech | se conserva tal cual | ✅ |
+| 21 | Deep Dive ▸ Technology ▸ "Generation over generation" `gpuGenBars` + `GPU_GENS` | Miscellaneous ▸ MISC-tech | se conserva; tabla debajo | ✅ |
 | 22 | Deep Dive ▸ Technology ▸ "CUDA — the software moat" (texto) | Miscellaneous ▸ MISC-comp Competitive position (tesis del moat) | fusión con #39 (flywheel de CUDA, mismo argumento) | ⬜ |
-| 23 | Deep Dive ▸ Technology ▸ "Putting it together: the AI data center" (texto) | Miscellaneous ▸ MISC-tech | se conserva tal cual | ⬜ |
-| 24 | Deep Dive ▸ Technology ▸ "Architecture & product timeline" `TECH_TIMELINE` | Miscellaneous ▸ MISC-tech (roadmap completo) + lanzamientos clave a OV-7 Timeline |  | ⬜ |
+| 23 | Deep Dive ▸ Technology ▸ "Putting it together: the AI data center" (texto) | Miscellaneous ▸ MISC-tech | se conserva tal cual | ✅ |
+| 24 | Deep Dive ▸ Technology ▸ "Architecture & product timeline" `TECH_TIMELINE` | Miscellaneous ▸ MISC-tech (roadmap completo) + lanzamientos clave a OV-7 Timeline |  | ✅ |
 | 25 | Deep Dive ▸ Management ▸ "Leadership & organization" `orgTree` + `LEADERS` (6 fotos, detalle al clic) | Management ▸ MG-TEAM Executives & Board (motor `management.js`) | mismas 6 fotos; el organigrama se conserva si el motor lo permite, si no la vista del motor + nota | ✅ |
 | 26 | Deep Dive ▸ Management ▸ "Insider & board ownership" `ownTable` + `OWNERSHIP` (valor a precio vivo) | Management ▸ MG-OWN Ownership | tabla de insiders `.twrap/.rt` + "Top holders" (formato aprobado en META) | ✅ |
 | 27 | Deep Dive ▸ Consensus ▸ "Beat track record" (texto, 13 beats seguidos) | Evolution ▸ EV-RES (marcador de sorpresas del motor) | el texto pasa a la nota del panel | ✅ |
@@ -514,3 +518,9 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 - Fuentes: Summit DCF model (NVDA) snapshot 2026-08-28; BBG consensus 2026-09-09 vía `results-data/nvda.js`.
 - Autoauditoría: centro EV/EBITDA $369 = (18 × 483,971 + 65,494) ÷ 23,786.9 ✔ (= Live de VA-TM) · centro P/E $366 = 22 × $16.63 ✔ · EBITDA base = op + D&A + intereses = el de VA-TM ✔ · DC CAGR 88.9%, otro 25.7% ✔ · Street DC 87.3%, otro 24.6%, margen 73.6% ✔ · sin consenso inventado ✔ · sin `<style>` ✔.
 - Cambios pedidos / decisiones: ninguno.
+
+### 2026-11-09 · MISC-tech Miscellaneous ▸ Technology — APROBADA
+- Ficha: **Responde** ¿qué vende NVIDIA en términos técnicos y por qué el cómputo acelerado gana? · **Contenido** la pestaña vieja de Tecnología (B2 #17–21, #23, #24) conservada con sus animaciones · **Fuentes** fichas técnicas NVIDIA/Intel, anuncio Rubin (CES ene-2026), 10-Q 2Q FY27, Moore 1965, 10-K Item 1 · **Verificación** cifras de transistores, nodos y TFLOPS contra las fichas; Rubin contra el 10-Q.
+- Qué se mostró (`technologyBody` en `nvidia.js`, sub-tab `tech`): sale la sección CUDA (B2 #22 → MISC-comp; texto guardado en `NV_CUDA_MOAT`); colores Summit (CPU_GPU, TECH_STACK en rampa navy→gris; Moore con `SUMMIT_CAT`, Intel en gris); gráfica de Moore con `attachBrush` (importado de `js/betas-core.js`), leyenda que oculta serie + columna, tabla "Data — what the chart draws" (15 chips); tabla de generaciones con ×prev; "ramping" → "production shipments from 3Q FY27" (10-Q); "Industry Analysis" → Bottom Line ▸ Supply Chain; fuera el emoji; TFLOPS = dense FP16 Tensor Core de las fichas (antes "illustrative"); se quitó la comparación FP4 sin fuente; pie nuevo (antes citaba un deck interno 2024). CSS `.nv-moore-note`.
+- Autoauditoría: P100 21 · V100 125 · A100 312 · H100 990 · B200 2,250 TFLOPS FP16 densos ✔ · transistores 4004 2,300 → B200 208B ✔ · ocultar serie quita su columna ✔ · zoom y doble clic ✔ · Rubin 336B atribuido al anuncio de NVIDIA (no a un filing), dicho a SAB ✔.
+- Cambios pedidos / decisiones: las dos de MISC en la sección 3 (2026-11-09).

@@ -32,6 +32,7 @@ import { nvdaOwnBody, nvdaOwnInit } from './nvda-own.js';              // Manage
 import { nvdaGovBody } from './nvda-gov.js';                           // Management ▸ Governance & SBC (MG-GOV)
 import { nvdaTrackBody, nvdaTrackPop } from './nvda-track.js';          // Management ▸ Track Record (MG-TRACK)
 import { SUMMIT_CAT } from '../viz-palette.js';
+import { attachBrush } from '../betas-core.js';   // drag-to-zoom on both axes, double-click resets (§0.7) — MISC-tech Moore chart
 import { nvdaBlGeneralHtml, nvdaBlGeneralBuild, nvdaBlSegmentsHtml, nvdaBlSegmentsBuild } from './nvda-bl.js';   // Bottom Line ▸ General (BL-GEN-1…5) and Segments (BL-SEG)
 import { nvdaCeHtml, nvdaCeWire, nvdaCeBuild, nvdaCePop } from './nvda-ce.js';   // Evolution ▸ Earnings ▸ Setup (EV-SET), copy of lyft-ce.js
 var NVDA_MGMT = makeManagement(Object.assign({ brand:SUMMIT_CAT[0] }, NVDA_MGMT_DATA));
@@ -1685,16 +1686,16 @@ function segmentsBody(){
 // CPU vs GPU contrast cards.
 var CPU_GPU = [
   ['CPU — the brain', '#6B7A8F', 'A few powerful cores built for <b>general-purpose, sequential (linear) processing</b>. It runs the operating system and logic step by step — versatile, but it does one hard thing at a time.'],
-  ['GPU — the accelerator', '#1F8A70', 'Thousands of smaller cores built for <b>parallel processing</b> — many simple calculations at once. The matrix math behind graphics and AI is massively parallel, which is exactly what a GPU is built for.'],
+  ['GPU — the accelerator', '#3E5A82', 'Thousands of smaller cores built for <b>parallel processing</b> — many simple calculations at once. The matrix math behind graphics and AI is massively parallel, which is exactly what a GPU is built for.'],
 ];
 // What NVIDIA sells — the full stack, silicon up to software.
 // [name, accent, description, product image (in img/products/)]
 var TECH_STACK = [
-  ['Software & ecosystem', '#1F8A70', 'CUDA, cuDNN, TensorRT, AI Enterprise, NIM microservices and Omniverse — the platform developers build on. This is the moat.', ''],
-  ['Systems', '#2E9E78', 'DGX / HGX servers and rack-scale "AI factories" — GB200 / GB300 NVL72 today, the new <b>Vera Rubin NVL72</b> (72 Rubin GPUs + 36 Vera CPUs) ramping. NVIDIA increasingly sells the whole rack, not just the chip.', 'nvda-gb300-nvl72.jpg'],
-  ['Networking', '#3A7CA5', 'NVLink (now 6th-gen, 3.6 TB/s on Rubin), InfiniBand and Spectrum-X Ethernet (from the Mellanox acquisition) — moving data between thousands of GPUs as if they were one.', 'nvda-networking.jpg'],
-  ['Processors', '#5B53A8', 'The GPU (Blackwell → <b>Rubin</b>, ramping now), the CPU (Grace → the new <b>Vera</b>) and the BlueField DPU — designed together to work as one system.', 'nvda-superchip.jpg'],
-  ['Silicon', '#6B7A8F', 'Chips designed by NVIDIA, manufactured by TSMC, with HBM memory from SK hynix / Micron and advanced (CoWoS) packaging.', 'nvda-dies.jpg'],
+  ['Software & ecosystem', '#1E2733', 'CUDA, cuDNN, TensorRT, AI Enterprise, NIM microservices and Omniverse — the platform developers build on. This is the moat.', ''],
+  ['Systems', '#2C3E57', 'DGX / HGX servers and rack-scale "AI factories" — GB200 / GB300 NVL72 today, the new <b>Vera Rubin NVL72</b> (72 Rubin GPUs + 36 Vera CPUs), shipping from 3Q FY27. NVIDIA increasingly sells the whole rack, not just the chip.', 'nvda-gb300-nvl72.jpg'],
+  ['Networking', '#3E5A82', 'NVLink (now 6th-gen, 3.6 TB/s on Rubin), InfiniBand and Spectrum-X Ethernet (from the Mellanox acquisition) — moving data between thousands of GPUs as if they were one.', 'nvda-networking.jpg'],
+  ['Processors', '#5F7896', 'The GPU (Blackwell → <b>Rubin</b>, in production shipments from 3Q FY27), the CPU (Grace → the new <b>Vera</b>) and the BlueField DPU — designed together to work as one system.', 'nvda-superchip.jpg'],
+  ['Silicon', '#8A97A8', 'Chips designed by NVIDIA, manufactured by TSMC, with HBM memory from SK hynix / Micron and advanced (CoWoS) packaging.', 'nvda-dies.jpg'],
 ];
 // Architecture & product timeline.
 var TECH_TIMELINE = [
@@ -1722,7 +1723,7 @@ var MOORE = [
   [2012, 7100000000, 'NVIDIA Kepler GK110', 'n', 28, null], [2016, 15300000000, 'NVIDIA Pascal GP100', 'n', 16, 21],
   [2017, 21100000000, 'NVIDIA Volta GV100', 'n', 12, 125], [2020, 54200000000, 'NVIDIA Ampere GA100', 'n', 7, 312],
   [2022, 80000000000, 'NVIDIA Hopper H100', 'n', 4, 990], [2024, 208000000000, 'NVIDIA Blackwell B200', 'n', 4, 2250],
-  [2026, 336000000000, 'NVIDIA Rubin R200 (ramping)', 'n', 3, null],
+  [2026, 336000000000, 'NVIDIA Rubin R200 (shipping from 3Q FY27)', 'n', 3, null],
 ];
 // Flagship data-center GPU transistor counts (billions) by architecture.
 var GPU_GENS = [['Pascal · 2016','GP100',15.3], ['Volta · 2017','GV100',21.1],
@@ -1746,10 +1747,12 @@ function cpuGpuDemo(){
     '</div></div>';
 }
 function mooreCard(){
-  return '<div class="ov-chart-card"><div class="ov-chart-t">Transistors, process node &amp; AI compute · 1971–2024 '+
-    '<span>(log scales · green = transistors/chip, orange = process node nm, blue = AI TFLOPS)</span></div>'+
+  return '<div class="ov-chart-card"><div class="ov-chart-t">Transistors, process node &amp; AI compute · 1971–2026 '+
+    '<span>(log scales · click a series in the legend to hide it)</span></div>'+
     '<div class="ov-chart-wrap ovs-tall"><canvas id="nvdaMooreChart"></canvas></div>'+
-    '<div class="ov-asof" style="margin-top:10px">As the <b>process node shrinks</b> (orange, falling) more transistors fit per chip (green, rising) and <b>AI compute explodes</b> (blue) — Hopper and Blackwell deliver thousands of FP16 TFLOPS. <b>Vera Rubin</b> (2026, ramping) extends the curve to ~336B transistors on a 3nm node. AI TFLOPS are FP16 tensor figures, illustrative; the CPUs of the 1970s–2000s predate this metric.</div></div>';
+    '<div class="ov-asof nv-moore-note">As the <b>process node shrinks</b> more transistors fit per chip and <b>AI compute explodes</b> — Hopper and Blackwell deliver thousands of FP16 TFLOPS. <b>Vera Rubin</b> (production shipments from 3Q FY27) extends the curve to ~336B transistors. AI compute = dense FP16 Tensor Core throughput from NVIDIA’s datasheets; the CPUs of the 1970s–2000s predate the metric. Drag sideways to zoom the years, up or down to zoom the transistor axis; double-click resets.</div>'+
+    '<div class="rs-collap"><button type="button" class="rs-collap-h" data-selfwired="1" data-nvmoore="1"><span class="rs-collap-ic">▸</span> Data — what the chart draws <span class="rs-collap-sub">'+MOORE.length+' chips</span></button>'+
+      '<div class="rs-collap-b" hidden><div class="rs-ft-scroll" id="nvMooreTbl"></div></div></div></div>';
 }
 function transistorShrink(){
   return '<div class="tr-shrink"><div class="tr-die" id="trDie"></div>'+
@@ -1761,11 +1764,15 @@ function transistorShrink(){
 function gpuGenBars(){
   var max=336;
   return '<div class="gen-bars" id="genBars">'+GPU_GENS.map(function(g){
-    return '<div class="gen-row"><div class="gen-name">'+esc(g[0])+(g[3]?' <span class="gen-tag">ramping</span>':'')+'</div>'+
+    return '<div class="gen-row"><div class="gen-name">'+esc(g[0])+(g[3]?' <span class="gen-tag">shipping from 3Q FY27</span>':'')+'</div>'+
       '<div class="gen-track"><div class="gen-fill'+(g[3]?' ramping':'')+'" style="--w:'+(g[2]/max*100).toFixed(1)+'%"></div></div>'+
       '<div class="gen-val">'+g[2]+'B</div></div>';
   }).join('')+'</div>'+
-  '<div class="ov-asof">Bars = transistors per flagship data-center GPU (billions). <b>Vera Rubin (R200, 2026)</b> — up to ~336B transistors on TSMC 3nm with HBM4 — is <b>ramping now</b> and roughly doubles Blackwell’s FP4 throughput (~50 vs ~20 PFLOPS). Architectural advances (Tensor Cores, FP8/FP4 precision) lifted real AI performance even faster than transistor count. Rubin figures are as reported during its ramp.</div>';
+  '<div class="ov-asof">Bars = transistors per flagship data-center GPU (billions). <b>Vera Rubin</b> (R200, ~336B transistors) began production shipments in the third quarter of fiscal 2027 (10-Q for the quarter ended Jul 26, 2026).</div>'+
+  '<div class="rs-collap"><button type="button" class="rs-collap-h" data-selfwired="1" data-nvgen="1"><span class="rs-collap-ic">▸</span> Data — what the bars draw <span class="rs-collap-sub">'+GPU_GENS.length+' generations</span></button>'+
+    '<div class="rs-collap-b" hidden><div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">Architecture · year</th><th>Chip</th><th>Transistors (billions)</th><th>vs previous</th></tr></thead><tbody>'+
+    GPU_GENS.slice().reverse().map(function(g, i, arr){ var prev=arr[i+1]; return '<tr><td class="rs-ft-h">'+esc(g[0])+'</td><td>'+esc(g[1])+'</td><td>'+g[2]+'</td><td>'+(prev?('×'+(g[2]/prev[2]).toFixed(1)):'—')+'</td></tr>'; }).join('')+
+    '</tbody></table></div></div></div>';
 }
 // Interactive pseudo-3D "what NVIDIA sells" stack. Slabs are stacked silicon→software in an
 // isometric scene; toggles highlight one layer and show its detail (+ a slot for product photos).
@@ -1784,9 +1791,11 @@ function sellsMap(){
     '</div></div>';
 }
 
+// B2 #22: the CUDA section of the old Technology tab, kept verbatim for Miscellaneous ▸ Competitive position.
+var NV_CUDA_MOAT = '<b>CUDA</b> (2006) lets developers program the GPU directly. Twenty years later, essentially every AI framework, library and model is written and optimized for NVIDIA first — so developers build where the install base is, and the install base grows because that’s where the software is. That self-reinforcing loop, more than any single chip, is NVIDIA’s deepest moat and the source of its switching costs.';
 function technologyBody(){
   var h = '';
-  h += '<p class="ov-lede">At its core, NVIDIA sells <b>computing power</b>. This tab walks through the basic logic — from the transistor up to the full AI system — and why NVIDIA’s approach wins. It draws on the Summit team’s 2024 semiconductor case-study deck and public materials.</p>';
+  h += '<p class="ov-lede">At its core, NVIDIA sells <b>computing power</b>. This tab walks through the basic logic — from the transistor up to the full AI system. Who supplies each piece is in Bottom Line ▸ Supply Chain; why rivals struggle to dislodge NVIDIA is in Competitive position.</p>';
 
   // 1 — The basic logic: transistors & computing power
   h += sec('The basic logic: transistors = computing power',
@@ -1795,7 +1804,7 @@ function technologyBody(){
     bullets([
       'A modern GPU contains <b>tens of billions</b> of transistors.',
       'Beyond the transistors, a chip also carries <b>memory (HBM/RAM), cache and I/O controllers</b> — and increasingly several chips are packaged together (advanced packaging) to act as one.',
-      'The whole industry — covered in the <b>Industry Analysis</b> tab — exists to keep shrinking and packaging transistors.',
+      'The whole industry — mapped under <b>Bottom Line ▸ Supply Chain</b> — exists to keep shrinking and packaging transistors.',
     ]));
 
   // 2 — Moore's Law
@@ -1821,9 +1830,7 @@ function technologyBody(){
     '<p class="ov-p">NVIDIA is often described as "a chip company", but it sells a <b>full computing stack</b> — from the silicon up to the software. Owning every layer is what lets it deliver performance rivals can’t match with a chip alone, and it is where the durable margin lives. <b>Tap a layer</b> to explore it.</p>'+
     sellsMap());
 
-  // 5 — CUDA moat
-  h += sec('CUDA — the software moat',
-    '<div class="ov-callout"><b>CUDA</b> (2006) lets developers program the GPU directly. Twenty years later, essentially every AI framework, library and model is written and optimized for NVIDIA first — so developers build where the install base is, and the install base grows because that’s where the software is. That self-reinforcing loop, more than any single chip, is NVIDIA’s deepest moat and the source of its switching costs.</div>');
+  // 5 — CUDA moat: moved to Miscellaneous ▸ Competitive position (B2 #22 → MISC-comp), text in NV_CUDA_MOAT.
 
   // 6 — Architecture & product timeline
   h += sec('Architecture & product timeline', '<div class="ov-timeline">'+TECH_TIMELINE.map(function(t){
@@ -1838,7 +1845,7 @@ function technologyBody(){
     '<p class="ov-p">An AI "factory" is far more than GPUs. NVIDIA’s rack-scale systems combine <b>compute</b> (GPUs + Grace CPUs), <b>networking</b> (NVLink / InfiniBand / Spectrum-X), <b>servers</b> and <b>storage</b> into one tightly-integrated machine — sold as a unit (e.g. the GB200 NVL72 connects 72 GPUs to act as a single giant GPU). The value is in the <b>system</b>, not just the die.</p>'+
     '<div class="ov-asof">Adjacent platforms extend the same compute engine into new markets: <b>Omniverse</b> (industrial digital twins & simulation), <b>Isaac</b> (robotics) and <b>DRIVE</b> (automotive).</div>');
 
-  h += '<div class="ov-foot">Sources: Summit research team 2024 semiconductor case-study deck (internal), plus NVIDIA public materials and technical documentation. Product renders © NVIDIA (press / newsroom imagery), shown for illustration. Simplified for explanation; transistor counts and dates are approximate.</div>';
+  h += '<div class="ov-foot">Sources — transistor counts, process nodes and dense FP16 Tensor Core throughput: NVIDIA architecture whitepapers and datasheets (P100, V100, A100, H100, B200) and Intel’s published processor specifications (4004 to Core 2 Duo); Rubin: NVIDIA’s platform announcement (CES, Jan 2026) and Form 10-Q for the quarter ended Jul 26, 2026 (production shipments from 3Q FY27); Moore’s law: G. Moore, <i>Electronics</i>, Apr 19, 1965. Product line, systems and platforms: NVIDIA Form 10-K FY2026, Item 1. Product renders © NVIDIA (newsroom imagery), shown for illustration. The transistor animation and the CPU/GPU demo are illustrations, not to scale.</div>';
   return h;
 }
 
@@ -1859,7 +1866,7 @@ function cgRun(){
   setS('cgCpuStat','rendering… one pixel at a time'); setS('cgGpuStat','rendering…');
   cpu.forEach(function(c,i){ _cgTimers.push(setTimeout(function(){ c.classList.add('on'); }, 26*i)); });
   gpu.forEach(function(c,i){ _cgTimers.push(setTimeout(function(){ c.classList.add('on'); }, 3*(i%8)+30)); });
-  _cgTimers.push(setTimeout(function(){ setS('cgGpuStat','done — 64 pixels in parallel ⚡'); }, 130));
+  _cgTimers.push(setTimeout(function(){ setS('cgGpuStat','done — 64 pixels in parallel'); }, 130));
   _cgTimers.push(setTimeout(function(){ setS('cgCpuStat','done — 64 sequential steps'); }, 26*64+120));
 }
 function initCpuGpu(){
@@ -1887,29 +1894,46 @@ function initGenBars(){
   el.classList.remove('go');
   requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.add('go'); }); });
 }
+var _mooreX=null, _mooreY=null;   // zoom windows: [minYear, maxYear] and [minTransistors, maxTransistors]
+function mooreTable(){
+  var el=document.getElementById('nvMooreTbl'); if(!el) return;
+  var vis=function(i){ return !_mooreChart || _mooreChart.isDatasetVisible(i); };
+  var cols=[];
+  if(vis(0)) cols.push(['Transistors / chip', function(d){ return fmtTr(d[1]); }]);
+  if(vis(1)) cols.push(['Process node', function(d){ return d[4]!=null ? d[4].toLocaleString('en-US')+' nm' : '—'; }]);
+  if(vis(2)) cols.push(['AI compute (FP16 TFLOPS)', function(d){ return d[5]!=null ? d[5].toLocaleString('en-US') : '—'; }]);
+  var rows=MOORE.filter(function(d){ return !_mooreX || (d[0]>=_mooreX[0] && d[0]<=_mooreX[1]); }).slice().reverse();
+  el.innerHTML='<table class="rs-ft"><thead><tr><th class="rs-ft-h">Year</th><th>Chip</th>'+cols.map(function(c){ return '<th>'+c[0]+'</th>'; }).join('')+'</tr></thead><tbody>'+
+    rows.map(function(d){ return '<tr><td class="rs-ft-h">'+d[0]+'</td><td>'+esc(d[2])+'</td>'+cols.map(function(c){ return '<td>'+c[1](d)+'</td>'; }).join('')+'</tr>'; }).join('')+
+    '</tbody></table>';
+}
 function buildMooreChart(){
   var cv=document.getElementById('nvdaMooreChart');
   if(!cv || typeof Chart==='undefined' || !cv.offsetParent) return;
-  if(_mooreChart){ _mooreChart.destroy(); _mooreChart=null; }
+  var hidden={};
+  if(_mooreChart){ [0,1,2].forEach(function(i){ hidden[i]=!_mooreChart.isDatasetVisible(i); }); _mooreChart.destroy(); _mooreChart=null; }
+  var C_TR=SUMMIT_CAT[0], C_NM=SUMMIT_CAT[1], C_FL=SUMMIT_CAT[2], C_CPU='#9AA6B4';
   var tr=MOORE.map(function(d){ return { x:d[0], y:d[1], name:d[2], era:d[3] }; });
   var nm=MOORE.filter(function(d){ return d[4]!=null; }).map(function(d){ return { x:d[0], y:d[4], name:d[2] }; });
   var fl=MOORE.filter(function(d){ return d[5]!=null; }).map(function(d){ return { x:d[0], y:d[5], name:d[2] }; });
   var P={ parsing:{xAxisKey:'x',yAxisKey:'y'}, tension:0.12, pointBorderColor:'#fff', pointBorderWidth:1 };
   _mooreChart=new Chart(cv.getContext('2d'), {
     data:{ datasets:[
-      Object.assign({ type:'line', label:'Transistors / chip', data:tr, yAxisID:'y',
-        borderColor:'rgba(118,185,0,0.55)', borderWidth:2, pointRadius:4, pointHoverRadius:7,
-        pointBackgroundColor:tr.map(function(p){ return p.era==='n' ? '#76B900' : '#9aa6b4'; }) }, P),
-      Object.assign({ type:'line', label:'Process node (nm)', data:nm, yAxisID:'yNm',
-        borderColor:'#C0772C', borderWidth:2, borderDash:[5,3], pointRadius:3, pointHoverRadius:6,
-        pointBackgroundColor:'#C0772C' }, P),
-      Object.assign({ type:'line', label:'AI compute (FP16 TFLOPS)', data:fl, yAxisID:'yFl',
-        borderColor:'#2D6A9F', borderWidth:2, pointRadius:4, pointHoverRadius:7,
-        pointBackgroundColor:'#2D6A9F' }, P),
+      Object.assign({ type:'line', label:'Transistors / chip (grey dots = Intel CPUs)', data:tr, yAxisID:'y', hidden:!!hidden[0],
+        borderColor:C_TR, borderWidth:2, pointRadius:4, pointHoverRadius:7,
+        pointBackgroundColor:tr.map(function(p){ return p.era==='n' ? C_TR : C_CPU; }) }, P),
+      Object.assign({ type:'line', label:'Process node (nm)', data:nm, yAxisID:'yNm', hidden:!!hidden[1],
+        borderColor:C_NM, borderWidth:2, borderDash:[5,3], pointRadius:3, pointHoverRadius:6,
+        pointBackgroundColor:C_NM }, P),
+      Object.assign({ type:'line', label:'AI compute (FP16 TFLOPS)', data:fl, yAxisID:'yFl', hidden:!!hidden[2],
+        borderColor:C_FL, borderWidth:2, pointRadius:4, pointHoverRadius:7,
+        pointBackgroundColor:C_FL }, P),
     ] },
-    options:{ responsive:true, maintainAspectRatio:false, animation:{ duration:1500, easing:'easeOutCubic' },
+    options:{ responsive:true, maintainAspectRatio:false, animation:{ duration:600, easing:'easeOutCubic' },
       interaction:{ mode:'nearest', intersect:false },
-      plugins:{ legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10, color:'#5b6470' } },
+      plugins:{ legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10, color:'#5b6470' },
+          // hiding a series also drops its column from the table under the chart (§0 rule 2)
+          onClick:function(e, item, legend){ var ch=legend.chart; ch.setDatasetVisibility(item.datasetIndex, !ch.isDatasetVisible(item.datasetIndex)); ch.update(); mooreTable(); } },
         tooltip:{ callbacks:{
           title:function(it){ return it[0].raw.name+' ('+it[0].raw.x+')'; },
           label:function(ctx){ var v=ctx.raw.y, id=ctx.dataset.yAxisID;
@@ -1917,20 +1941,28 @@ function buildMooreChart(){
             if(id==='yFl') return 'AI compute: '+(v>=1000?(v/1000).toFixed(2)+' PFLOPS':v+' TFLOPS')+' (FP16)';
             return 'Transistors: '+fmtTr(v); } } } },
       scales:{
-        x:{ type:'linear', min:1970, max:2027, grid:{ display:false },
-          ticks:{ color:'#8A93A0', font:{size:10}, stepSize:10, callback:function(v){ return v; } } },
-        y:{ type:'logarithmic', position:'left', grid:{ color:'rgba(0,0,0,.05)' },
-          title:{ display:true, text:'Transistors / chip', color:'#5a9e16', font:{size:10,weight:'600'} },
+        x:{ type:'linear', min:_mooreX?_mooreX[0]:1970, max:_mooreX?_mooreX[1]:2027, grid:{ display:false },
+          ticks:{ color:'#8A93A0', font:{size:10}, stepSize:_mooreX?undefined:10, callback:function(v){ return Math.round(v); } } },
+        y:{ type:'logarithmic', position:'left', min:_mooreY?_mooreY[0]:undefined, max:_mooreY?_mooreY[1]:undefined, grid:{ color:'rgba(0,0,0,.05)' },
+          title:{ display:true, text:'Transistors / chip', color:'#5b6470', font:{size:10,weight:'600'} },
           ticks:{ color:'#8A93A0', font:{size:9}, callback:function(v){ return fmtTr(v); } } },
         yNm:{ type:'logarithmic', position:'right', grid:{ drawOnChartArea:false }, reverse:false,
-          title:{ display:true, text:'Process node (nm)', color:'#C0772C', font:{size:10,weight:'600'} },
-          ticks:{ color:'#C0772C', font:{size:9}, callback:function(v){ return v+'nm'; } } },
+          title:{ display:true, text:'Process node (nm)', color:'#5b6470', font:{size:10,weight:'600'} },
+          ticks:{ color:'#8A93A0', font:{size:9}, callback:function(v){ return v+'nm'; } } },
         yFl:{ type:'logarithmic', position:'right', grid:{ drawOnChartArea:false },
-          title:{ display:true, text:'AI TFLOPS', color:'#2D6A9F', font:{size:10,weight:'600'} },
-          ticks:{ color:'#2D6A9F', font:{size:9}, callback:function(v){ return v>=1000?(v/1000)+'P':v; } } }
+          title:{ display:true, text:'AI TFLOPS', color:'#5b6470', font:{size:10,weight:'600'} },
+          ticks:{ color:'#8A93A0', font:{size:9}, callback:function(v){ return v>=1000?(v/1000)+'P':v; } } }
       }
     }
   });
+  attachBrush(cv, _mooreChart,
+    function(a, b){ if(b-a<1) return; _mooreX=[a, b]; buildMooreChart(); },
+    function(a, b){ if(!(b>a)) return; _mooreY=[a, b]; buildMooreChart(); },
+    function(){ _mooreX=null; _mooreY=null; buildMooreChart(); });
+  mooreTable();
+  var hd=document.querySelector('.rs-collap-h[data-nvmoore]');
+  if(hd && !hd._wired){ hd._wired=true; hd.addEventListener('click', function(){ var bd=hd.nextElementSibling; if(!bd) return; bd.hidden=!bd.hidden;
+    var ic=hd.querySelector('.rs-collap-ic'); if(ic) ic.textContent=bd.hidden?'▸':'▾'; }); }
 }
 function initSellsMap(){
   var scene=document.getElementById('nv3dScene'), panel=document.getElementById('nv3dPanel'), tog=document.getElementById('nv3dToggles');
@@ -1971,7 +2003,13 @@ function initSellsMap(){
   layout(-1);
 }
 function initTech(){
-  requestAnimationFrame(function(){ initCpuGpu(); buildMooreChart(); initTransistor(); initGenBars(); initSellsMap(); });
+  requestAnimationFrame(function(){ initCpuGpu(); buildMooreChart(); initTransistor(); initGenBars(); initSellsMap(); wireGenTable(); });
+}
+// The generation table's own toggle (data-selfwired: nothing else flips it).
+function wireGenTable(){
+  var hd=document.querySelector('.rs-collap-h[data-nvgen]'); if(!hd || hd._wired) return; hd._wired=true;
+  hd.addEventListener('click', function(){ var bd=hd.nextElementSibling; if(!bd) return; bd.hidden=!bd.hidden;
+    var ic=hd.querySelector('.rs-collap-ic'); if(ic) ic.textContent=bd.hidden?'▸':'▾'; });
 }
 function stopTech(){
   if(_trTimer){ clearInterval(_trTimer); _trTimer=null; }

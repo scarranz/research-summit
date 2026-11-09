@@ -27,7 +27,7 @@ import { nvdaOwnBody, nvdaOwnInit } from './nvda-own.js';              // Manage
 import { nvdaGovBody } from './nvda-gov.js';                           // Management ▸ Governance & SBC (MG-GOV)
 import { nvdaTrackBody, nvdaTrackPop } from './nvda-track.js';          // Management ▸ Track Record (MG-TRACK)
 import { SUMMIT_CAT } from '../viz-palette.js';
-import { nvdaBlGeneralHtml, nvdaBlGeneralBuild } from './nvda-bl.js';   // Bottom Line ▸ General (BL-GEN-1…5)
+import { nvdaBlGeneralHtml, nvdaBlGeneralBuild, nvdaBlSegmentsHtml, nvdaBlSegmentsBuild } from './nvda-bl.js';   // Bottom Line ▸ General (BL-GEN-1…5) and Segments (BL-SEG)
 import { nvdaCeHtml, nvdaCeWire, nvdaCeBuild, nvdaCePop } from './nvda-ce.js';   // Evolution ▸ Earnings ▸ Setup (EV-SET), copy of lyft-ce.js
 var NVDA_MGMT = makeManagement(Object.assign({ brand:SUMMIT_CAT[0] }, NVDA_MGMT_DATA));
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line (engine + js/segments-data/nvda.js)   // Evolution ▸ Results (engine + js/results-data/nvda.js)
@@ -2567,7 +2567,9 @@ function deepDiveHtml(){
   ]);
   h+=subtabs('bottomline',[
     { k:'margins', l:'General', body:nvdaBlGeneralHtml() },   // BL-GEN-1…5 (nvda-bl.js); replaces the old Margins box (B2 #7)
-    { k:'segments', l:'Segments', body:oldPane('segments', segmentsBody()) },          // old Segments pane, temporary: B2 #14 GAAP segments (until BL-SEG) and #15 latest print (until EV-SET)
+    // BL-SEG (nvda-bl.js): the old Segments pane leaves the screen — #10–13, #16 live in Top Line, #14 (GAAP segments table
+    // and text) here, #15 in Earnings ▸ Setup. segmentsBody() stays in this file, unmounted, until F-FINAL.
+    { k:'segments', l:'Segments', body:nvdaBlSegmentsHtml() },
     { k:'supplychain', l:'Supply Chain', body:oldPane('industry', industryBody()) }, // B2 #35 (semis map; the SPLC table joins in BL-SPLC)
   ], true);
   h+=subtabs('evolution',[
@@ -2606,7 +2608,7 @@ function buildSub(root, group, key){
     else if(key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'NVDA'); });
     else requestAnimationFrame(function(){ initSegmentsOverview(root, 'NVDA'); });
   } else if(group==='bottomline'){
-    if(key==='segments') requestAnimationFrame(function(){ buildSegChart(); });
+    if(key==='segments') requestAnimationFrame(function(){ nvdaBlSegmentsBuild(root); });
     else if(key==='margins') requestAnimationFrame(function(){ nvdaBlGeneralBuild(root); });
     else if(key==='supplychain') requestAnimationFrame(function(){ semiIndustry.init(); });
   } else if(group==='evolution'){

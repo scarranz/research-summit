@@ -26,7 +26,8 @@
 import { SUMMIT_CAT, SUMMIT_INK, SUMMIT_MUTE, SUMMIT_POS, SUMMIT_NEG, fade } from '../viz-palette.js';
 import { nvdaBBG } from './nvda-bbg.js';
 import { nvdaResults } from '../results-data/nvda.js';
-import { NVDA_OPEX_YEARS, NVDA_OPEX, NVDA_OPEXQ, NVDA_SBC_FN, NVDA_SBC_FN_SRC, NVDA_EW_LINES, NVDA_EW_SRC } from './nvda-bl-data.js';
+import { NVDA_OPEX_YEARS, NVDA_OPEX, NVDA_OPEXQ, NVDA_SBC_FN, NVDA_SBC_FN_SRC, NVDA_EW_LINES, NVDA_EW_SRC,
+  NVDA_SEG_SRC, NVDA_SEG_DA, NVDA_SEG_UNALLOC, NVDA_SEG_ALLOC, NVDA_SEG_DIVES } from './nvda-bl-data.js';
 
 var INK=SUMMIT_INK, MUTE=SUMMIT_MUTE, POS=SUMMIT_POS, NEG=SUMMIT_NEG, ONEOFF=SUMMIT_CAT[3];
 var GRID='rgba(0,0,0,0.06)';
@@ -745,3 +746,253 @@ export function nvdaBlGeneralHtml(){
     aCollap('Expense lines — the '+A_MB_COST.filter(function(c){ return !c.oneoff; }).length+' cost lines of the income statement (what is inside, drivers, calls)', expenseTabsBody(), false)+nvdaBlFootGeneral();
 }
 export function nvdaBlGeneralBuild(root){ if(root) _root=root; aBuildMargins(); aBuildExpenses(); }
+
+
+// ═══ BL-SEG Bottom Line ▸ Segments (playbook §13 BL-SEG) — copied from googl-bl.js's segment section ═══
+// Stacked, no picker: Profit by segment → Revenue vs profit → The segment bridge → Segment deep dives → footer.
+// Adapted to what NVIDIA discloses (SAB, 2026-11-09): two reportable segments, Compute & Networking and Graphics, measured
+// by segment operating income — which EXCLUDES stock-based compensation, unallocated operating expenses and acquisition-
+// related costs — plus that unallocated line as its own series (GAAP operating income − the two segments, the 10-K
+// reconciliation), so the three add up to GAAP operating income. Segment revenue and operating income by quarter and year;
+// D&A by segment by year only (10-K), so segment EBITDA is ANNUAL ONLY and has no consensus. Bloomberg forecasts segment
+// operating income but not segment revenue (it forecasts the market platforms), and the Summit model projects neither, so:
+// no Summit line by segment, no forward segment margin.
+function sPane(){ return R().querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]'); }
+var SEG_DEF=[{k:'cn',lab:'Compute & Networking',c:SUMMIT_CAT[0],rk:'cnrev',ok:'cnop'},
+             {k:'gr',lab:'Graphics',c:SUMMIT_CAT[1],rk:'grrev',ok:'grop'},
+             {k:'un',lab:'Unallocated (SBC and corporate costs)',c:MUTE,rk:null,ok:'unop',loss:true}];
+var SEG_CONS={k:'cons',lab:'Consolidated (GAAP)',c:INK,rk:'rev',ok:'opinc'};
+var SEG_TWO=SEG_DEF.filter(function(s){ return !s.loss; });
+function sSeg(k){ return k==='cons'?SEG_CONS:SEG_DEF.filter(function(s){ return s.k===k; })[0]||SEG_DEF[0]; }
+// The unallocated line, derived per period from the Results dataset (actuals only): GAAP operating income − C&N − Graphics.
+var SM={ y:{}, q:{} };
+['y','q'].forEach(function(v){ var M=nvdaResults.views[v].metrics, o=M.opinc, c=M.cnop, g=M.grop;
+  SM[v].unop={ periods:o.periods.slice(), act:o.periods.map(function(p,i){ var j=c.periods.indexOf(p), k=g.periods.indexOf(p);
+    return (o.act[i]==null||j<0||k<0||c.act[j]==null||g.act[k]==null)?null:o.act[i]-c.act[j]-g.act[k]; }) }; });
+function sM(v, mk){ return mk?(SM[v][mk]||nvdaResults.views[v].metrics[mk]):null; }
+// Annual axis: the reported years with segment operating income, then the forward years Bloomberg forecasts.
+var S_YA=(function(){ var m=sM('y','cnop'), o=[]; m.periods.forEach(function(p,i){ if(m.act[i]!=null) o.push(+p); }); return o; })();
+var S_LA=S_YA.length-1;
+var S_YRS=S_YA.concat(A_YF.filter(function(y){ return y>S_YA[S_LA]; }));
+var S_LAB=S_YRS.map(function(y,i){ return fyLab(y)+(i>S_LA?'E':''); });
+function rY(mk, src){ var m=sM('y',mk);
+  return S_YRS.map(function(y){ if(!m||!m[src]) return null; var i=m.periods.indexOf(String(y)); return i>=0?m[src][i]:null; }); }
+function fwdOnly(a){ return a.map(function(v,i){ return i>S_LA?v:null; }); }
+function consOiY(k){ return fwdOnly(rY(sSeg(k).ok,'cons')); }
+function consRevY(k){ return fwdOnly(rY(sSeg(k).rk,'cons')); }
+function sumY(mk){ return rY(mk,'summit'); }
+function sB(v){ return v==null?'—':(v<0?'−':'')+'$'+(Math.abs(v)/1000).toFixed(1)+'B'; }
+function sPct(v){ return v==null?'—':(v<0?'−':'')+Math.abs(v).toFixed(1)+'%'; }
+function sLastIdx(a){ var j=-1; (a||[]).forEach(function(v,i){ if(v!=null) j=i; }); return j; }
+// Operating income of a segment in a year: reported, or Bloomberg consensus for a forward year (none for the unallocated line).
+function sOiY(y, s){ var i=S_YRS.indexOf(y); if(i<0) return null; return i<=S_LA?rY(s.ok,'act')[i]:consOiY(s.k)[i]; }
+// Segment EBITDA (annual, reported only) = segment operating income + the segment's D&A (10-K Note 16). The unallocated line
+// carries the rest of the company's D&A (acquisition-related amortization and other unallocated depreciation).
+var S_EY=Object.keys(NVDA_SEG_DA).map(Number).sort();
+function daY(k, y){ var d=NVDA_SEG_DA[y]; if(!d) return null; var tot=aIsVal('depr',y);
+  if(k==='cn'||k==='gr') return d[k]; if(k==='un') return tot==null?null:tot-d.cn-d.gr; return tot; }
+function ebY(k, y){ var oi=sOiY(y, sSeg(k)), da=daY(k,y); if(k==='cons'){ var i=S_YRS.indexOf(y); oi=i>=0?rY('opinc','act')[i]:null; }
+  return (oi==null||da==null)?null:oi+da; }
+
+// ── 1 · Profit by segment — Actual vs Summit vs Consensus (operating income · EBITDA annual) ──
+function sProfitBody(){
+  return aStdScaffold({ id:'nv-segfc', title:'Profit by segment — Actual vs Summit vs Consensus', height:340,
+    modes:[{cls:'seg',label:'Segment',opts:SEG_DEF.concat([SEG_CONS]).map(function(s,i){ return {v:s.k,label:s.lab,on:i===0}; })},
+           {cls:'meas',label:'Measure',opts:[{v:'oi',label:'Operating income',on:true},{v:'ebitda',label:'EBITDA (annual, '+fyLab(S_EY[0])+'–'+fyLab(S_EY[S_EY.length-1])+')'}]},
+           {cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]}],
+    presets:[['all','All'],['rep','Reported'],['fwd','Forward'],['l5','Last 5']] });
+}
+function sBuildProfit(){
+  aStdRender('nv-segfc', function(st){
+    var s=sSeg(st.modes.seg||'cn'), meas=st.modes.meas||'oi', gran=st.modes.gran||'y', loss=!!s.loss, eb=(meas==='ebitda');
+    if(eb) gran='y';
+    var lab=eb?(loss?'EBITDA (unallocated)':'EBITDA'):(loss?'Op. loss':'Op. income');
+    var labels, la, act, sum, con, rA, rS, rC;
+    if(eb){ labels=S_EY.map(fyLab); la=labels.length-1; act=S_EY.map(function(y){ return ebY(s.k,y); }); sum=null; con=null;
+      rA=S_EY.map(function(y){ var i=S_YRS.indexOf(y); return s.rk&&i>=0?rY(s.rk,'act')[i]:null; }); }
+    else if(gran==='q'){ var o=sM('q',s.ok), r=s.rk?sM('q',s.rk):null;
+      labels=o.periods.slice(); la=aLastActIdx(o.act); act=o.act; sum=o.summit; con=o.cons; rA=r&&r.act; rS=r&&r.summit; rC=r&&r.cons; }
+    else { labels=S_LAB.slice(); la=S_LA;
+      act=rY(s.ok,'act').map(function(v,i){ return i<=la?v:null; }); sum=sumY(s.ok);
+      con=consOiY(s.k); rA=rY(s.rk,'act'); rS=sumY(s.rk); rC=consRevY(s.k); }
+    function amt(a){ return labels.map(function(_,i){ return a&&a[i]!=null?Math.round(a[i]/100)/10:null; }); }
+    function marg(a,r){ return labels.map(function(_,i){ return (a&&a[i]!=null&&r&&r[i])?Math.round(a[i]/r[i]*1000)/10:null; }); }
+    var series=[
+      {k:'act$',grp:'act',src:'Actual',label:lab+' — Actual',color:ASTD_ACT,type:'bar',data:amt(act)},
+      {k:'sum$',grp:'sum',src:SUM_SRC,label:lab+' — Summit',color:ASTD_SUMMIT,type:'bar',data:amt(sum)},
+      {k:'con$',grp:'con',src:'Consensus',label:lab+' — Consensus',color:ASTD_CONS,type:'bar',data:amt(con)}];
+    if(!loss) series.push(
+      {k:'actM',grp:'act',src:'Actual',label:'Margin — Actual',color:ASTD_ACT,type:'line',yAxisID:'y2',data:marg(act,rA)},
+      {k:'sumM',grp:'sum',src:SUM_SRC,label:'Margin — Summit',color:ASTD_SUMMIT,type:'line',yAxisID:'y2',data:marg(sum,rS)},
+      {k:'conM',grp:'con',src:'Consensus',label:'Margin — Consensus',color:ASTD_CONS,type:'line',yAxisID:'y2',dash:true,data:marg(con,rC)});
+    series=series.filter(function(x){ return x.data.some(function(v){ return v!=null; }); });
+    var end=Math.max.apply(null, series.map(function(x){ return sLastIdx(x.data); }));   // end the axis at the last value
+    if(end>=0 && end<labels.length-1){ labels=labels.slice(0,end+1); series.forEach(function(x){ x.data=x.data.slice(0,end+1); }); }
+    var notes=[];
+    if(eb) notes.push('EBITDA = operating income + depreciation and amortization by segment, which the 10-K gives by year only ('+fyLab(S_EY[0])+'–'+fyLab(S_EY[S_EY.length-1])+'; FY2026 Compute &amp; Networking D&amp;A is given rounded, “$1.6 billion”). No quarters, no consensus, no Summit. '+
+      (s.k==='un'?'The unallocated line carries the D&amp;A not attributed to a segment, including acquisition-related amortization.':(s.k==='cons'?'Consolidated = GAAP operating income + total D&amp;A.':'')));
+    else if(s.k==='un') notes.push('The costs NVIDIA does not allocate to its segments — stock-based compensation, unallocated operating expenses and acquisition-related costs: GAAP operating income less the two segments, which is the 10-K reconciliation. No revenue of its own, so no margin; Bloomberg forecasts none of it.');
+    else if(s.k==='cons') notes.push('Consolidated = GAAP operating income = the two segments plus the unallocated line. Bloomberg forecasts operating income only on the adjusted basis, so there is no consensus line here; Summit = the model frozen at its dated snapshots (not live).');
+    else notes.push('Segment operating income excludes stock-based compensation and the other unallocated costs, so it sits above GAAP operating income. Consensus = Bloomberg’s segment operating income. Summit is not drawn — the model projects no segment profit. Bloomberg forecasts no segment revenue, so the forward years have no margin.');
+    if(s.k==='cn' && !eb) notes.push('1Q26 carries the $4.5B H20 charge (10-K MD&amp;A).');
+    var out={ labels:labels, lastAct:la, type:'bar', stacked:false, series:series, note:notes.join(' '),
+      yFmt:function(x){ return (x<0?'−$':'$')+(x==null?'':Math.abs(x).toFixed(1))+'B'; }, y2Fmt:function(x){ return x+'%'; } };
+    if(eb) out.hideModes=['gran'];
+    if(loss) out.legCap=eb?'Bars = EBITDA of the unallocated line, $B':'Bars = operating loss, $B'; else out.paired=true;
+    return out;
+  });
+}
+
+// ── 2 · Revenue vs profit — common size by segment ──
+function sMixBody(){
+  return aStdScaffold({ id:'nv-segmix', title:'Revenue vs profit — common size by segment', height:340,
+    metricSel:[{v:'rev',label:'Revenue',on:true,group:'Revenue'},{v:'oi',label:'Operating income',group:'Profit'}],
+    modes:[{cls:'show',label:'Show',opts:[{v:'amt',label:'$B',on:true},{v:'share',label:'Share'},{v:'growth',label:'Growth'}]},
+           {cls:'layout',label:'Layout',opts:[{v:'stack',label:'Stacked',on:true},{v:'side',label:'Side by side'}]},
+           {cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},
+           {cls:'cmp',label:'Compare',opts:[{v:'yoy',label:'YoY',on:true},{v:'qoq',label:'QoQ'}]},
+           {cls:'gin',label:'Growth in',opts:[{v:'pct',label:'%',on:true},{v:'add',label:'$ added'}]}],
+    presets:[['all','All'],['rep','Reported'],['fwd','Forward']] });
+}
+function sBuildMix(){
+  aStdRender('nv-segmix', function(st){
+    var metric=st.sel||'rev', show=st.modes.show||'amt', layout=st.modes.layout||'stack', gran=st.modes.gran||'y';
+    var cmp=st.modes.cmp||'yoy', gin=st.modes.gin||'pct', notes=[];
+    if(metric==='oi'){
+      if(show==='share') notes.push('Share = each line’s operating income ÷ GAAP operating income. The unallocated line is a cost, so its share is below zero and the two segments add up to more than 100%.');
+      notes.push('Forward = Bloomberg’s consensus operating income for the two segments; Bloomberg forecasts no unallocated costs, so the forward years show the segments only and no consolidated line.'); }
+    else notes.push('Revenue = the two reportable segments (they add up to total revenue). Bloomberg forecasts revenue by market platform, not by segment, so there are no forward years here — see Top Line for the platforms.');
+    var labels, la;
+    if(gran==='q'){ var Qc=sM('q','cnop'); labels=Qc.periods.slice(); la=aLastActIdx(Qc.act); } else { labels=S_LAB.slice(); la=S_LA; }
+    function raw(s){ var mk=metric==='rev'?s.rk:s.ok; if(!mk) return null;
+      if(gran==='q'){ var m=sM('q',mk); return labels.map(function(_,i){ return i<=la?m.act[i]:(m.cons?m.cons[i]:null); }); }
+      var ac=rY(mk,'act'), fw=metric==='rev'?consRevY(s.k):consOiY(s.k);
+      return labels.map(function(_,i){ return i<=la?ac[i]:fw[i]; }); }
+    var step=gran==='q'?(cmp==='qoq'?1:4):1, addMode=(show==='growth'&&gin==='add');
+    var rows=SEG_DEF.map(function(s){ return { s:s, v:raw(s) }; }).filter(function(r){ return r.v; });
+    // A total only where every line has a value (the forward years have no unallocated line, so no consolidated total).
+    var totals=labels.map(function(_,i){ var t=0, all=true; rows.forEach(function(r){ if(r.v[i]==null) all=false; else t+=r.v[i]; }); return all?t:null; });
+    function val(v, pv, tot){ if(v==null) return null;
+      if(show==='share') return tot?Math.round(v/tot*1000)/10:null;
+      if(show==='growth'){ if(pv==null) return null; if(addMode) return Math.round((v-pv)/100)/10; return !pv?null:Math.round((v-pv)/Math.abs(pv)*1000)/10; }
+      return Math.round(v/100)/10; }
+    var series=rows.map(function(r){ return { k:r.s.k, label:r.s.lab, color:r.s.c, type:'bar',
+      data:labels.map(function(_,i){ return val(r.v[i], r.v[i-step], totals[i]); }) }; });
+    if(metric==='oi'&&show==='amt') series.push({ k:'tot', label:'GAAP operating income', color:INK, type:'line', stack:'tot',
+      data:totals.map(function(v){ return v==null?null:Math.round(v/100)/10; }) });
+    var end=Math.max.apply(null, series.map(function(x){ return sLastIdx(x.data); }));
+    if(end>=0 && end<labels.length-1){ labels=labels.slice(0,end+1); series.forEach(function(x){ x.data=x.data.slice(0,end+1); }); }
+    if(metric==='oi'&&show==='growth'&&!addMode) notes.push('For the unallocated line a negative change means the cost grew.');
+    var stacked=show==='share'||(show==='amt'&&layout==='stack')||(addMode&&layout==='stack');
+    var yFmt=(show==='amt'||addMode)?function(x){ return (x<0?'−$':'$')+(x==null?'':Math.abs(x).toFixed(1))+'B'; }:function(x){ return x+'%'; };
+    var hide=[]; if(!(show==='growth'&&gran==='q')) hide.push('cmp'); if(show!=='growth') hide.push('gin'); if(show==='share') hide.push('layout');
+    return { labels:labels, lastAct:la, yFmt:yFmt, type:'bar', stacked:stacked, yMax:(show==='share'&&metric==='rev')?100:undefined, series:series, hideModes:hide, note:notes.join(' ') };
+  });
+}
+
+// ── 3 · The segment bridge — Δ operating income by segment, reported and consensus years ──
+// NVIDIA gives no cost split by segment, so GOOGL's "By cost" mode has no NVIDIA equivalent; the bridge is by segment only.
+function sBridgeBody(){
+  function yB(cls, ys, sel){ return ys.map(function(y){ return '<button type="button" data-'+cls+'="'+y+'"'+(y===sel?' class="active"':'')+'>'+fyLab(y)+(y>S_YA[S_LA]?'E':'')+'</button>'; }).join(''); }
+  var nS=S_YA.length;
+  return '<div class="ov-sec"><div class="ov-sec-h">The segment bridge — what moved operating income</div>'+
+    '<div class="sbr-ctl-seg mch-ctl me-bl-ctl"><span></span><span class="me-bl-pills">'+
+      '<span class="me-bl-lbl">From</span><span class="acx-tog sbr-from">'+yB('sbrf',S_YRS,S_YA[Math.max(0,nS-4)])+'</span>'+
+      '<span class="me-bl-lbl">to</span><span class="acx-tog sbr-to">'+yB('sbrt',S_YRS,S_YA[nS-1])+'</span></span></div>'+
+    '<div class="me-bl-h340"><canvas id="nvSegBr"></canvas></div>'+
+    '<div id="nvSegBr-tbl" class="me-bl-tblhost"></div>'+
+    '<div class="acx-cap me-bl-note" id="nvSegBrCap"></div></div>';
+}
+function sAct(p, mk){ var m=sM('y',mk), i=m.periods.indexOf(String(p)); return i>=0?m.act[i]:null; }
+function sBuildBridge(){
+  var pane=sPane(); if(!pane) return;
+  var cap=pane.querySelector('#nvSegBrCap');
+  function A(sel,attr){ var b=pane.querySelector(sel+' .active'); return b?b.getAttribute(attr):null; }
+  function fy(y){ return fyLab(y)+(y>S_YA[S_LA]?'E':''); }
+  var y0=+A('.sbr-from','data-sbrf'), y1=+A('.sbr-to','data-sbrt');
+  if(!(y1>y0)){ aDestroy('nvSegBr'); var tw=$id('nvSegBr-tbl'); if(tw) tw.innerHTML=''; if(cap) cap.innerHTML='Pick a “to” year after the “from” year.'; return; }
+  // A forward year has no unallocated line: the bridge then runs on segment operating income (the two segments) and says so.
+  var fwd=(y1>S_YA[S_LA]), lines=fwd?SEG_TWO:SEG_DEF, what=fwd?'segment op. income':'op. income';
+  var v0=lines.map(function(s){ return sOiY(y0,s); }), v1=lines.map(function(s){ return sOiY(y1,s); });
+  if(v0.concat(v1).some(function(v){ return v==null; })){ aDestroy('nvSegBr'); if(cap) cap.innerHTML='No segment operating income for one of the two years.'; return; }
+  var t0=v0.reduce(function(a,v){ return a+v; },0)/1000, run=t0;
+  var steps=[{label:fy(y0)+' '+what, kind:'base', color:INK, range:[0,run], runAfter:run, val:run}];
+  var parts=lines.map(function(s,i){ var d=(v1[i]-v0[i])/1000, lo=run; run=lo+d;
+    steps.push({label:s.k==='un'?'Unallocated':s.lab, kind:d>=0?'up':'down', color:s.c, dc:d>=0?POS:NEG, range:[Math.min(lo,run),Math.max(lo,run)], runAfter:run, val:d}); return d; });
+  steps.push({label:fy(y1)+' '+what, kind:'total', color:POS, range:[0,run], runAfter:null, val:run});
+  aBuildBrWaterfall('nvSegBr', steps, BR_FMT_D);
+  if(cap) cap.innerHTML=(fwd?'Segment operating income (before the unallocated costs)':'GAAP operating income')+' went from <b>'+sB(t0*1000)+'</b> in '+fy(y0)+' to <b>'+sB(run*1000)+'</b> in '+fy(y1)+': '+
+    lines.map(function(s,i){ return esc(s.k==='un'?'the unallocated costs':s.lab)+' '+(parts[i]>=0?'added':'took')+' <b>'+sB(Math.abs(parts[i])*1000)+'</b>'; }).join(', ')+'.'+
+    (fwd?' Bloomberg forecasts no unallocated costs (stock-based compensation, corporate costs), so a forward bridge stops at the two segments.':' The two segments and the unallocated line add up to GAAP operating income.')+
+    ' Source: Results dataset (10-K and 10-Q segment notes)'+(fwd?'; '+fy(y1)+' = Bloomberg consensus segment operating income':'')+'.';
+}
+
+// ── 4 · Segment deep dives (collapsible) — one tab per segment, same formal layout as the Expense lines ──
+var S_DY=S_YA.slice(-5);   // the margin bars: last five reported years
+function sSpark(vals, labs, fmt){ var mx=Math.max.apply(null,vals.map(function(v){ return Math.abs(v||0); }))||1;
+  return '<div class="ew-spark">'+vals.map(function(v,i){ return '<div class="ew-sb'+(i===vals.length-1?' on':'')+'"><div class="ew-sb-v">'+fmt(v)+'</div><div class="ew-sb-bar" style="height:'+Math.max(2,Math.round(Math.abs(v||0)/mx*72))+'px"></div><div class="ew-sb-l">'+labs[i]+'</div></div>'; }).join('')+'</div>'; }
+function sQ(mk, p){ var m=sM('q',mk), i=m.periods.indexOf(p); return i>=0?m.act[i]:null; }
+function sDive(d){
+  var k=d.k, s=sSeg(k), yL=S_YA[S_LA];
+  var rev=sAct(yL,s.rk), oi=sAct(yL,s.ok), totRev=sAct(yL,'rev'), segTot=sAct(yL,'cnop')+sAct(yL,'grop');
+  var Qo=sM('q',s.ok), li=aLastActIdx(Qo.act), qL=Qo.periods[li], qP=Qo.periods[li-4];
+  var qo=sQ(s.ok,qL), qr=sQ(s.rk,qL), po=sQ(s.ok,qP), pr=sQ(s.rk,qP), eL=S_EY[S_EY.length-1], eb=ebY(k,eL), er=sAct(eL,s.rk);
+  var kp=[[sB(rev), fyLab(yL)+' revenue · '+sPct(rev/totRev*100)+' of NVIDIA'],
+    [sB(oi), fyLab(yL)+' segment operating income · '+sPct(oi/rev*100)+' margin · '+sPct(oi/segTot*100)+' of segment profit'],
+    [sB(qo), qL+' operating income · '+sPct(qo/qr*100)+' margin ('+sPct(po/pr*100)+' in '+qP+')'],
+    [sB(eb), fyLab(eL)+' EBITDA · '+sPct(eb/er*100)+' margin (D&amp;A '+sB(NVDA_SEG_DA[eL][k])+')']];
+  var h='<div class="ew-h">Key figures</div><div class="ov-kpis">'+kp.map(function(x){ return '<div class="ov-kpi"><div class="ov-kpi-v">'+x[0]+'</div><div class="ov-kpi-d muted">'+x[1]+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="ew-h">Definition — Form 10-K</div><div class="ew-q ew-def">“'+d.def+'”<span class="ew-att">— NVIDIA Form 10-K for FY'+yL+', Note 16</span></div>';
+  h+='<div class="ew-h">The business</div><div class="ew-note">'+d.business+'</div>';
+  var oiS=S_DY.map(function(y){ return sAct(y,s.ok); }), rvS=S_DY.map(function(y){ return sAct(y,s.rk); });
+  h+='<div class="ew-h">Operating margin, '+fyLab(S_DY[0])+'–'+fyLab(S_DY[S_DY.length-1])+'</div>'+
+    sSpark(oiS.map(function(v,i){ return rvS[i]?v/rvS[i]*100:null; }), S_DY.map(fyLab), function(v){ return v==null?'—':v.toFixed(0)+'%'; });
+  h+='<div class="ew-h">What drives it — Form 10-K and 10-Q</div><div class="twrap ew-twrap"><table class="rt ew-tbl"><tbody>'+d.moves.map(function(m){ return '<tr><td class="ew-tk">'+m[0]+'</td><td>'+m[1]+'</td></tr>'; }).join('')+'</tbody></table></div>';
+  var u=NVDA_SEG_UNALLOC[yL];
+  h+='<div class="ew-h">What the segment note discloses — and what it does not</div><div class="twrap ew-twrap"><table class="rt ew-tbl"><tbody>'+
+    ewTableRows('Disclosed by segment', [['','Revenue, operating income','Revenue and segment operating income, annual and quarterly. “'+esc(NVDA_SEG_ALLOC.codm)+'”'],
+      ['','Depreciation and amortization','By year only ('+S_EY.map(function(y){ return fyLab(y)+' '+sB(NVDA_SEG_DA[y][k]); }).join(' · ')+'), so EBITDA by segment is annual.']])+
+    ewTableRows('Not disclosed by segment', [['','Costs by line','No cost of revenue, R&amp;D or SG&amp;A by segment. “'+esc(NVDA_SEG_ALLOC.expenses)+'”'],
+      ['','Assets','“'+esc(NVDA_SEG_ALLOC.assets)+'”']])+
+    ewTableRows('Not allocated to either segment — Form 10-K Note 16', [['','What','“'+esc(NVDA_SEG_ALLOC.unallocated)+'”'],
+      ['','How much, '+fyLab(yL),'Stock-based compensation '+sB(u.sbc)+' · unallocated operating expenses '+sB(u.un)+' · acquisition-related and other costs '+sB(u.acq)+' — '+sB(u.sbc+u.un+u.acq)+' between segment and GAAP operating income.'],
+      ['','Amortization','“'+esc(NVDA_SEG_ALLOC.amort)+'”']])+
+    '</tbody></table></div>';
+  h+=ewCallsTable(d.calls);
+  h+='<div class="ov-foot">Sources: '+NVDA_SEG_SRC+'; Results dataset for '+fyLab(S_DY[0])+'–'+fyLab(S_DY[S_DY.length-1])+' segment revenue and operating income; management commentary from The Motley Fool’s call transcripts (third-party — NVIDIA posts webcast replays, not transcript text), Colette Kress’s prepared remarks.</div>';
+  return h;
+}
+function sDivesBody(){
+  var yL=S_YA[S_LA];
+  var tabs=NVDA_SEG_DIVES.map(function(d,i){ var s=sSeg(d.k), oi=sAct(yL,s.ok), rv=sAct(yL,s.rk);
+    return '<button type="button" class="exp-tab'+(i===0?' active':'')+'" data-segtab="'+d.k+'"><span class="exp-dot" style="background:'+s.c+'"></span>'+esc(d.name)+' <span class="exp-tag">'+sB(oi)+' · '+sPct(oi/rv*100)+' margin · '+fyLab(yL)+'</span></button>'; }).join('');
+  return '<div class="exp-explorer exp-flat"><div class="exp-tabs">'+tabs+'</div><div class="exp-panels">'+
+    NVDA_SEG_DIVES.map(function(d,i){ return '<div class="exp-panel exp-panel-card" data-segpanel="'+d.k+'"'+(i>0?' hidden':'')+'>'+sDive(d)+'</div>'; }).join('')+'</div></div>';
+}
+function nvdaBlFootSegments(){
+  var q=sM('q','cnop'), qs=q.periods[0], ql=q.periods[aLastActIdx(q.act)], snaps=aSummitSnaps();
+  return '<div class="ov-foot">Sources — '+NVDA_SEG_SRC+': segment revenue and operating income '+fyLab(S_YA[0])+'–'+fyLab(S_YA[S_LA])+' and '+esc(qs)+'–'+esc(ql)+' (Results dataset; a Q4 is the year less the nine months), D&amp;A by segment '+fyLab(S_EY[0])+'–'+fyLab(S_EY[S_EY.length-1])+' and the reconciliation to GAAP operating income; '+
+    'Summit DCF model for consolidated GAAP operating income, frozen (not live)'+(snaps.length?', snapshot '+snaps.map(esc).join(' and '):'')+'; '+
+    'Bloomberg consensus (BBG_CONSENSUS, as of '+esc(nvdaBBG.asOf)+') for segment operating income forward; The Motley Fool’s call transcripts for management commentary. Forward figures are estimates.</div>';
+}
+function sBuildSegments(){
+  var pane=sPane(); if(!pane) return;
+  aWireCollaps(pane);
+  sBuildProfit(); sBuildMix(); sBuildBridge();
+  if(pane._segWired) return; pane._segWired=true;
+  var tog=function(sel,after){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); after(); }; }); };
+  ['.sbr-from','.sbr-to'].forEach(function(s){ tog(s, sBuildBridge); });
+  var stabs=pane.querySelectorAll('.exp-tab[data-segtab]');
+  stabs.forEach(function(b){ b.onclick=function(){ var key=b.getAttribute('data-segtab');
+    stabs.forEach(function(x){ x.classList.toggle('active',x===b); });
+    pane.querySelectorAll('.exp-panel[data-segpanel]').forEach(function(p){ p.hidden=(p.getAttribute('data-segpanel')!==key); }); }; });
+}
+// Mount: '<div class="ovt-subpane" data-ovst="segments">'+nvdaBlSegmentsHtml()+'</div>' in the Bottom Line pane;
+// build lazily once visible: nvdaBlSegmentsBuild(root).
+export function nvdaBlSegmentsHtml(){
+  return '<div class="seg-gsec" data-sgsec="oimargin">'+sProfitBody()+'</div>'+
+    '<div class="seg-gsec me-bl-gap" data-sgsec="mix">'+sMixBody()+'</div>'+
+    '<div class="seg-gsec me-bl-gap" data-sgsec="bridge">'+sBridgeBody()+'</div>'+
+    aCollap('Segment deep dives — Compute &amp; Networking and Graphics (key figures, drivers, what is disclosed, calls)', sDivesBody(), false)+nvdaBlFootSegments();
+}
+export function nvdaBlSegmentsBuild(root){ if(root) _root=root; sBuildSegments(); }

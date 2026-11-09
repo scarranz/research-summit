@@ -12,7 +12,7 @@
 | Rama | `feat/nvda-restructure` (worktree `C:\Users\santi\Developer\rs-nvda`) |
 | Analista responsable | SAB |
 | Inicio | 2026-10-28 (F0 pausada ese día; retomada 2026-11-02) |
-| Avance | 29 de 40 unidades aprobadas · 0 omitidas · 2 bloqueadas (M = filas del tablero − ⏭️ de alcance; Anexo C) |
+| Avance | 30 de 40 unidades aprobadas · 0 omitidas · 2 bloqueadas (M = filas del tablero − ⏭️ de alcance; Anexo C) |
 
 ## 1. Inventario de datos (F0)
 
@@ -146,7 +146,7 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 | BL-GEN-3 | Bottom Line ▸ General ▸ Op. income → net income | ✅ | 2026-11-09 | SAB | — | Reported/Normalized FY24–FY29E; forward desde op. income non-GAAP |
 | BL-GEN-4 | Bottom Line ▸ General ▸ Stock-based compensation | ✅ | 2026-11-09 | SAB | — | Dilution (sin línea Summit, SAB) + SBC by line; % sobre la suma de líneas |
 | BL-GEN-5 | Bottom Line ▸ General ▸ Expense lines | ✅ | 2026-11-09 | SAB | — | 3 líneas (costo de ventas aparte) · 6 secciones · citas verificadas por script |
-| BL-SEG | Bottom Line ▸ Segments | ⬜ | | | | |
+| BL-SEG | Bottom Line ▸ Segments | ✅ | 2026-11-09 | SAB | — | C&N · Graphics · no asignado; EBITDA anual; sin Summit por segmento; pestaña vieja retirada |
 | BL-SPLC | Bottom Line ▸ Supply Chain | ⬜ | | | | |
 | VA-HIST | Valuation ▸ Historic Multiple | ⬜ | | | | |
 | VA-PEERS | Valuation ▸ Peers | ⬜ | | | | |
@@ -186,6 +186,8 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 - 2026-11-09 · EV-SET · Notas del Setup solo del 8-K de NVIDIA (comunicado + CFO commentary con la guía), sin citas de la llamada: Motley Fool NO se usa en Earnings; EV-POST y EV-NOTES siguen ⛔ hasta tener transcripción oficial — SAB
 - 2026-11-09 · EV-SET · Calle = snapshot BBG 2026-09-09 (el BBG_CONSENSUS.txt del 2026-11-06 no trae uno más nuevo para NVDA); se recarga si SAB actualiza NVDA antes del print — SAB
 - 2026-11-09 · EV-SET · Líneas: ingreso → DC (Hyperscale · ACIE · Compute · Networking) → Edge → utilidad bruta (non-GAAP) → R&D · SG&A · opex → op. income non-GAAP y GAAP → C&N · Graphics → EBITDA → intereses · impuestos → utilidad neta → EPS → CFO · capex · FCF · D&A · acciones; trimestres 3Q FY27 y 4Q FY27 — SAB
+- 2026-11-09 · BL-SEG · Medidas: utilidad operativa por segmento (anual y trimestral, con consenso BBG) + EBITDA por segmento SOLO anual FY24–FY26 (utilidad + D&A por segmento del 10-K, sin consenso ni Summit); lo no asignado (SBC, gastos no asignados, costos de adquisición) como su propia serie — SAB
+- 2026-11-09 · BL-SEG · Comentarios de management en las pestañas de segmento: filings (10-K/10-Q MD&A, 8-K) + citas de Motley Fool verificadas y marcadas de terceros (como BL-GEN-5; distinto de Earnings, que es solo 8-K) — SAB
 
 ## 4. Excepciones aceptadas
 
@@ -211,7 +213,7 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 | 11 | Deep Dive ▸ Segments ▸ "FY2026 revenue mix (new framework)" `mixBar` | Top Line ▸ TL-GEN (vista mezcla %) | la mezcla la calcula el motor desde el dataset | ✅ |
 | 12 | Deep Dive ▸ Segments ▸ tabla "New framework — revenue by market platform (recast)" `SEG_NEW` — Hyperscale / ACIE / Edge | Top Line ▸ TL-GEN (tabla del periodo) + TL-SEG (qué vende cada segmento y a quién) | definiciones Hyperscale / ACIE / Edge pasan a TL-SEG; números al dataset | ✅ |
 | 13 | Deep Dive ▸ Segments ▸ tabla "Old framework — as reported through FY2026" `SEG_OLD` + texto "The bridge" | Top Line ▸ TL-GEN (esquema viejo como historia) — texto "The bridge" en la nota colapsable | datos al dataset; el puente se conserva textual | ✅ |
-| 14 | Deep Dive ▸ Segments ▸ "GAAP reportable segments (quarterly)" `SEG_GAAP` (Compute & Networking · Graphics) | Bottom Line ▸ BL-SEG (utilidad operativa por segmento GAAP) + TL-GEN (ingreso) | Compute & Networking / Graphics; arregla de paso Anexo A16 (utilidad por segmento en anual) | ⬜ |
+| 14 | Deep Dive ▸ Segments ▸ "GAAP reportable segments (quarterly)" `SEG_GAAP` (Compute & Networking · Graphics) | Bottom Line ▸ BL-SEG (utilidad operativa por segmento GAAP) + TL-GEN (ingreso) | Compute & Networking / Graphics; arregla de paso Anexo A16 (utilidad por segmento en anual) | ✅ |
 | 15 | Deep Dive ▸ Segments ▸ "Latest print & guidance (Q1 FY2027)" — desactualizado: ya salió 2Q FY27 | Evolution ▸ EV-SET Setup (guía del próximo trimestre) + serie guidance en EV-RES-DATA | se actualiza a 2Q FY27 reportado / guía 3Q FY27 | ✅ |
 | 16 | Deep Dive ▸ Segments ▸ "Milestones by segment" `SEG_MILESTONES` | Top Line ▸ TL-SEG (hitos por segmento) + los principales a OV-7 Timeline |  | ✅ |
 | 17 | Deep Dive ▸ Technology ▸ "What NVIDIA sells — the full stack" `sellsMap`/`initSellsMap` + `TECH_STACK` (tap a layer) | Miscellaneous ▸ MISC-tech "Technology" (nueva sub-tab propuesta) | se conserva tal cual (interactivo) | ⬜ |
@@ -250,6 +252,7 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 | 2026-11-02 | EV-POST, EV-NOTES | Transcripciones oficiales (PDF de IR) de 3Q FY26, 4Q FY26, 1Q FY27, 2Q FY27; y 3Q FY27 (~2026-11-19) | SAB | abierto |
 | 2026-11-02 | VA-SUB | Submit 2025-12-12: P/E sobre 2027 y EV/EBITDA sobre 2028 — revisar la prueba PT÷FV en la hoja Output | Claude (con el workbook) | abierto |
 | 2026-11-09 | (rama) | Merge de origin/main fdda9d8 en la rama (0648b4b, local, sin push): conflictos solo en listas de selectores (overview.css, selectors.css, segments.js), resueltos con UBER/LYFT + NVDA | Claude | cerrado |
+| 2026-11-09 | F-FINAL | El 10-K FY2026 numera la nota de segmentos como **Note 16**; OV-3 y OV-4 (aprobados) citan "Note 17" — revisar y corregir en el cierre (vuelve a mostrarse) | Claude | abierto |
 
 ## 6b. Conexiones pendientes ("Live data pending")
 
@@ -464,3 +467,9 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 - Fuentes: BBG_CONSENSUS.txt (30 snapshots; Street Q3/Q4 = 2026-09-09, Q2 = 2026-05-25); Summit congelado en Results (Q3/Q4 = submit 2026-08-28, Q2 = 2026-03-04); 8-K de NVIDIA del 2026-08-26 y 2026-05-20 (Ex. 99.1 y 99.2).
 - Autoauditoría: 23 citas verificadas por script contra los 8-K ✔ · reportados 2Q FY27 de las líneas nuevas = 8-K (R&D non-GAAP 6,884; SG&A 1,348; EBITDA 65,083; impuestos 11,819; CFO 24,077; D&A 1,127; acciones 24,285) ✔ · R&D/SG&A/EBITDA solo en la base nueva (sin YoY hasta 4Q FY27) ✔ · 31 controles sin errores ✔ · sin emojis ni tarjetas IR/EDGAR ✔ · cifras "derived" marcadas ✔ · arreglado sobre la copia de LYFT: abre en el próximo print (no el más lejano), titular de nota visible en la fila (§12), pie de fuentes por trimestre (LYFT no lo pintaba) · advertencia: YoY de Hyperscale/ACIE contra el recast de BBG de 3Q FY26 (bloqueo §6 abierto).
 - Cambios pedidos / decisiones: las tres de la sección 3 (2026-11-09).
+
+### 2026-11-09 · BL-SEG Bottom Line ▸ Segments — APROBADA
+- Qué se mostró: sección de segmentos copiada de `googl-bl.js` en `js/overviews/nvda-bl.js` (`nvdaBlSegmentsHtml/Build`), datos nuevos en `nvda-bl-data.js` (`NVDA_SEG_*`). Profit by segment (C&N · Graphics · Unallocated · Consolidated GAAP; Operating income | EBITDA anual FY24–FY26; anual/trimestral) · Revenue vs profit common size · segment bridge (por segmento; forward = suma de los dos segmentos, sin "By cost" porque NVIDIA no da costos por segmento) · deep dives C&N y Graphics · pie. La pestaña vieja de Segments (`segmentsBody`, B2 #10–16) sale de pantalla: #14 absorbido aquí (tabla trimestral → gráfica + tabla; texto de los dos segmentos GAAP → definición y "The business"); Anexo A16 (utilidad por segmento en anual) resuelto.
+- Fuentes: 10-K FY2026 Nota 16 (definiciones, D&A por segmento, conciliación) y 10-Q 2Q FY27; dataset de Results (cnrev/grrev/cnop/grop; no asignado = op. income GAAP − segmentos); consenso BBG de utilidad por segmento; Summit solo consolidado; Motley Fool (prepared remarks de Kress).
+- Autoauditoría: C&N FY26 130.1 · Graphics 9.2 · no asignado −8.9 (= SBC 6,386 + 1,997 + 527) · 2Q FY27 no asignado −2.86 (= 2,027 + 612 + 222) ✔ · EBITDA = OI + D&A (C&N 131.7, Graphics 9.7, consolidado 133.2) ✔ · puente FY23→FY26 cuadra a 130.4 ✔ · 21 citas verificadas por script (13 filings, 8 llamadas, todas de Kress dentro de la llamada) ✔ · 51 controles sin errores ✔ · sin `<style>` ✔ · observaciones: D&A C&N FY26 redondeado en el 10-K ("$1.6 billion", nota en pantalla); el 10-K numera la nota de segmentos como 16 — OV-3/OV-4 citan "Note 17", revisar en F-FINAL.
+- Cambios pedidos / decisiones: las dos de la sección 3 (2026-11-09).

@@ -111,3 +111,50 @@ export var NVDA_EW_LINES=[
     calls:[],
     callsNone:'No remark specific to sales, general and administrative on the last four calls; management discussed operating expenses only in total (see Research &amp; development).' }
 ];
+
+// ═══ BL-SEG — Bottom Line ▸ Segments (read by ./nvda-bl.js). Reported figures and filing text only (rule 10). ═══
+// NVIDIA has two reportable segments, Compute & Networking and Graphics, measured by segment operating income, which
+// EXCLUDES stock-based compensation, unallocated operating expenses and acquisition-related costs (Form 10-K FY2026,
+// Note 16). Segment revenue and operating income by quarter and year are in ../results-data/nvda.js (cnrev, grrev, cnop,
+// grop); the unallocated line is derived there as GAAP operating income − the two segments, which is exactly the 10-K
+// reconciliation (FY2026: 139,297 − 6,386 SBC − 1,997 unallocated − 527 acquisition-related = 130,387).
+export var NVDA_SEG_SRC='NVIDIA Form 10-K for FY2026 (filed Feb 25 2026), Note 16 Segment Information, and Form 10-Q for 2Q FY27 (filed Aug 26 2026), segment note';
+// Depreciation and amortization by segment — Form 10-K FY2026, Note 16 (annual only; FY2026 C&N is given rounded, "$1.6 billion").
+// Acquisition-related intangible amortization is not allocated to either segment. US$ millions.
+export var NVDA_SEG_DA={ 2024:{ cn:457, gr:307 }, 2025:{ cn:732, gr:372 }, 2026:{ cn:1600, gr:590 } };
+// The reconciling items between segment and GAAP operating income — Form 10-K FY2026 Note 16 (years) and the 2Q FY27 10-Q (quarter).
+export var NVDA_SEG_UNALLOC={ 2024:{ sbc:3549, un:728, acq:613 }, 2025:{ sbc:4737, un:1171, acq:599 }, 2026:{ sbc:6386, un:1997, acq:527 },
+  '2Q27':{ sbc:2027, un:612, acq:222 } };
+// Verbatim, Form 10-K FY2026 Note 16.
+export var NVDA_SEG_ALLOC={
+  unallocated:'Certain expenses are not allocated to either Compute & Networking or Graphics for purposes of making operating decisions or assessing financial performance. The expenses include stock-based compensation expense, corporate infrastructure and support costs, acquisition-related and other costs, and other non-recurring charges and benefits that our CODM deems to be enterprise in nature.',
+  codm:'Our CODM assesses operating performance of each segment based on regularly provided segment revenue and segment operating income.',
+  expenses:'CODM reviews expenses on a consolidated basis, and expenses attributable to each segment are not regularly provided to our CODM.',
+  assets:'Our CODM does not review any information regarding total assets on a reportable segment basis.',
+  amort:'Acquisition-related intangible amortization expense is not allocated to either Compute & Networking or Graphics for purposes of making operating decisions or assessing financial performance.'
+};
+// One dive per segment. def = 10-K Note 16 verbatim. moves = 10-K FY2026 and 10-Q 2Q FY27 MD&A, verbatim. calls = The Motley
+// Fool transcripts (SAB, 2026-11-09: as in the Expense lines), every quote checked by script against the call body — Colette
+// Kress's prepared remarks, not Motley Fool's own summary that heads each page.
+export var NVDA_SEG_DIVES=[
+  { k:'cn', name:'Compute & Networking',
+    def:'The Compute & Networking segment includes our Data Center accelerated computing and networking platforms and AI solutions and software, and Automotive platforms and autonomous and electric vehicle solutions including software.',
+    business:'Almost all of NVIDIA’s profit. In market-platform terms it is Data Center (compute and networking, sold as chips, boards and full rack-scale systems to hyperscalers, AI clouds, model makers, enterprises and governments) plus Automotive — the segment the Data Center build-out runs through.',
+    moves:[['Revenue','FY2026: “The year over year increase was driven by the major platform shifts – accelerated computing and AI. Revenue from Data Center computing grew 59% driven by demand for our Blackwell computing platform.” 2Q FY27: “The year-over-year increase in the second quarter and first half of fiscal year 2027 was driven by the ramp of our Blackwell Ultra infrastructure.”'],
+           ['Operating income','FY2026: “The year over year increase in Compute & Networking segment operating income was driven by growth in revenue, partially offset by a $4.5 billion charge associated with H20 excess inventory and purchase obligations in the first quarter of fiscal year 2026.”'],
+           ['Source','Form 10-K FY2026 and Form 10-Q 2Q FY27, MD&amp;A ▸ Reportable Segments.']],
+    calls:[{q:'3Q26', txt:'“Compute grew 56% year over year driven primarily by the GB 300 ramp while networking more than doubled given the onset of NVLink scale up and robust double-digit growth across Spectrum X Ethernet and Quantum X InfiniBand.”', who:'Colette Kress, CFO'},
+           {q:'4Q26', txt:'“For the full year, our Networking business exceeded $31,000,000,000 in revenue, up more than 10x compared to fiscal 2021, the year we acquired Mellanox.”', who:'Colette Kress, CFO'},
+           {q:'1Q27', txt:'“For your models, data center computing revenue of $60 billion was up 77% year over year, while data center networking revenue of $15 billion nearly tripled year over year.”', who:'Colette Kress, CFO'},
+           {q:'2Q27', txt:'“Our networking business had another record quarter with revenue growing 18% on a sequential basis.”', who:'Colette Kress, CFO'}] },
+  { k:'gr', name:'Graphics',
+    def:'The Graphics segment includes GeForce GPUs for gaming and PCs, and Quadro/NVIDIA RTX GPUs for enterprise workstation graphics.',
+    business:'NVIDIA’s original business: GeForce GPUs for gaming and PCs and RTX workstation GPUs. In market-platform terms it sits inside Edge Computing; it is about a tenth of revenue and a smaller share of segment profit.',
+    moves:[['Revenue','FY2026: “The year over year increase was driven by sales of our Blackwell architecture.” 2Q FY27: “The year-over-year increase in the second quarter and first half of fiscal year 2027 was driven by sales of our Blackwell architecture.”'],
+           ['Operating income','FY2026: “The year over year increase in Graphics segment operating income was driven by the growth in revenue.”'],
+           ['Source','Form 10-K FY2026 and Form 10-Q 2Q FY27, MD&amp;A ▸ Reportable Segments.']],
+    calls:[{q:'3Q26', txt:'“Gaming revenue was $4.3 billion, up 30% year on year driven by strong demand as 42 million gamers, while thousands of fans packed the GeForce Gamer Festival in South Korea.”', who:'Colette Kress, CFO'},
+           {q:'3Q26', txt:'“Professional visualization revenue was $760 million, up 56% year over year.”', who:'Colette Kress, CFO'},
+           {q:'4Q26', txt:'“Gaming revenue of $3,700,000,000 increased 47% year on year, driven by strong Blackwell demand and improved supply.”', who:'Colette Kress, CFO'},
+           {q:'1Q27', txt:'“Robust Blackwell workstation demand a strong contributor to the growth, while consumer demand fell modestly due to higher memory and system prices.”', who:'Colette Kress, CFO'}] }
+];

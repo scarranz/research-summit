@@ -25,6 +25,7 @@ import { nvdaHistMult } from './nvda-histmult.js';                          // V
 import { nvdaTargetMult } from './nvda-target-multiple.js';                  // Valuation ▸ Target Multiple / PEG (VA-TM)
 import { submitsHtml, initSubmits } from '../submits.js';                   // Valuation ▸ Submit History (VA-SUB; data js/submits-data/nvda.js)
 import { nvdaSens } from './nvda-sensitivity.js';                            // Valuation ▸ Sensitivity Analysis (VA-SENS)
+import { nvdaCompBody } from './nvda-comp.js';                               // Miscellaneous ▸ Competitive position (MISC-comp)
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { makeManagement } from './management.js';                      // Management ▸ Executives & Board (MG-TEAM)
 import { NVDA_MGMT_DATA } from './nvda-mgmt-data.js';
@@ -2656,6 +2657,7 @@ function deepDiveHtml(){
   ], true);
   h+=subtabs('misc',[
     { k:'tech', l:'Technology', body:oldPane('technology', technologyBody()) },     // B2 #17–24 (MISC-tech)
+    { k:'comp', l:'Competitive position', body:nvdaCompBody(NV_CUDA_MOAT, DIFF.flywheel) },   // MISC-comp (nvda-comp.js; B2 #22 + #39)
   ], true);
   h+='</div>';
   return h;

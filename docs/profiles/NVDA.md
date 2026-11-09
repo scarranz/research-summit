@@ -158,7 +158,7 @@ Año fiscal: periodo MCP `2026` = FY2026 (feb-2025 → ene-2026); `2027Q2` = 2Q 
 | MG-GOV | Management ▸ Governance & SBC | ✅ | 2026-11-02 | 2026-11-02 | SAB | 4 KPIs + tabla de 7 filas (10-K FY26, proxy 2026) |
 | MG-TRACK | Management ▸ Track Record | ✅ | 2026-11-02 | 2026-11-02 | SAB | 6 líderes, sin calificaciones, modal `ntrk:` |
 | MISC-tech | Miscellaneous ▸ Technology | ✅ | 2026-11-09 | SAB | — | pestaña vieja conservada (animaciones); CUDA → MISC-comp; colores Summit; Moore con zoom + tabla; tabla de generaciones; Rubin del 10-Q; pie con fuentes |
-| MISC-comp | Miscellaneous ▸ Competitive position | ⬜ | | | | |
+| MISC-comp | Miscellaneous ▸ Competitive position | ✅ | 2026-11-09 | SAB | — | tesis en palabras del 10-K + CUDA (#22) + flywheel (#39); 3 tarjetas con evidencia a favor y en contra; tabla de 7 competidores con fuente por celda |
 | MISC-capacity | Miscellaneous ▸ Capacity → revenue | ⬜ | | | | |
 | F-FINAL | Cierre y entrega | ⬜ | | | | |
 
@@ -230,7 +230,7 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 | 19 | Deep Dive ▸ Technology ▸ "Moore’s Law — and why it matters now" `mooreCard`/`buildMooreChart` + `MOORE` | Miscellaneous ▸ MISC-tech | se conserva; la gráfica cumple §17.2 (zoom, tabla) | ✅ |
 | 20 | Deep Dive ▸ Technology ▸ "CPU vs GPU — serial vs parallel" `cpuGpuDemo`/`cgRun` + `CPU_GPU` — animación | Miscellaneous ▸ MISC-tech | se conserva tal cual | ✅ |
 | 21 | Deep Dive ▸ Technology ▸ "Generation over generation" `gpuGenBars` + `GPU_GENS` | Miscellaneous ▸ MISC-tech | se conserva; tabla debajo | ✅ |
-| 22 | Deep Dive ▸ Technology ▸ "CUDA — the software moat" (texto) | Miscellaneous ▸ MISC-comp Competitive position (tesis del moat) | fusión con #39 (flywheel de CUDA, mismo argumento) | ⬜ |
+| 22 | Deep Dive ▸ Technology ▸ "CUDA — the software moat" (texto) | Miscellaneous ▸ MISC-comp Competitive position (tesis del moat) | fusión con #39 (flywheel de CUDA, mismo argumento) | ✅ |
 | 23 | Deep Dive ▸ Technology ▸ "Putting it together: the AI data center" (texto) | Miscellaneous ▸ MISC-tech | se conserva tal cual | ✅ |
 | 24 | Deep Dive ▸ Technology ▸ "Architecture & product timeline" `TECH_TIMELINE` | Miscellaneous ▸ MISC-tech (roadmap completo) + lanzamientos clave a OV-7 Timeline |  | ✅ |
 | 25 | Deep Dive ▸ Management ▸ "Leadership & organization" `orgTree` + `LEADERS` (6 fotos, detalle al clic) | Management ▸ MG-TEAM Executives & Board (motor `management.js`) | mismas 6 fotos; el organigrama se conserva si el motor lo permite, si no la vista del motor + nota | ✅ |
@@ -247,7 +247,7 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 | 36 | (no se muestra) `ovTopics` + `drillCard`/`topicPanel` — tarjetas de temas: `POSITION`, `MIX_THEN`/`MIX_NOW` (`mixShiftBlock`, `heroBar`), `AS_OF`, `FINANCIALS` + `FIN_NOTE`, `PEERS`, `TAILWINDS`, `HEADWINDS` — código sin uso | Repartida: `POSITION` → OV-2 · `MIX_THEN/NOW` → TL-GEN (nota) · `AS_OF`/`FINANCIALS`/`FIN_NOTE` → EV-RES-DATA + nota de Results · `PEERS` → fusión con #8 · `TAILWINDS`/`HEADWINDS` → MISC-comp (tarjetas de cuestionamientos) | se revisan cifra por cifra contra el 10-K | ⬜ |
 | 37 | (no se muestra) `heroScorecard` + `SCORE_TILES` — código sin uso | Overview ▸ OV-1 Key Facts | fusión con #1/#2 (market cap, revenue TTM, márgenes, P/E) | ⬜ |
 | 38 | (no se muestra) `heroProducts` (otra vista de `PRODUCTS`) — código sin uso | Overview ▸ OV-5 | fusión con #5 (otra vista de los mismos `PRODUCTS`) | ✅ |
-| 39 | (no se muestra) `heroDiff` + `DIFF` (diferenciadores) — código sin uso | Miscellaneous ▸ MISC-comp Competitive position | flywheel de CUDA + tesis; fusión con #22 | ⬜ |
+| 39 | (no se muestra) `heroDiff` + `DIFF` (diferenciadores) — código sin uso | Miscellaneous ▸ MISC-comp Competitive position | flywheel de CUDA + tesis; fusión con #22 | ✅ |
 | 40 | (no se muestra) constantes `KPIS`, `FY_NOTE`, `HOW_MONEY` — código sin uso | `KPIS` → OV-1 / OV-3 "The numbers" · `FY_NOTE` → nota de Results · `HOW_MONEY` → OV-4 acordeones |  | ⬜ |
 
 ## 6. Bloqueos y preguntas abiertas
@@ -524,3 +524,9 @@ Conteo de control (piezas originales): **40** — 35 visibles + 5 grupos de cód
 - Qué se mostró (`technologyBody` en `nvidia.js`, sub-tab `tech`): sale la sección CUDA (B2 #22 → MISC-comp; texto guardado en `NV_CUDA_MOAT`); colores Summit (CPU_GPU, TECH_STACK en rampa navy→gris; Moore con `SUMMIT_CAT`, Intel en gris); gráfica de Moore con `attachBrush` (importado de `js/betas-core.js`), leyenda que oculta serie + columna, tabla "Data — what the chart draws" (15 chips); tabla de generaciones con ×prev; "ramping" → "production shipments from 3Q FY27" (10-Q); "Industry Analysis" → Bottom Line ▸ Supply Chain; fuera el emoji; TFLOPS = dense FP16 Tensor Core de las fichas (antes "illustrative"); se quitó la comparación FP4 sin fuente; pie nuevo (antes citaba un deck interno 2024). CSS `.nv-moore-note`.
 - Autoauditoría: P100 21 · V100 125 · A100 312 · H100 990 · B200 2,250 TFLOPS FP16 densos ✔ · transistores 4004 2,300 → B200 208B ✔ · ocultar serie quita su columna ✔ · zoom y doble clic ✔ · Rubin 336B atribuido al anuncio de NVIDIA (no a un filing), dicho a SAB ✔.
 - Cambios pedidos / decisiones: las dos de MISC en la sección 3 (2026-11-09).
+
+### 2026-11-09 · MISC-comp Miscellaneous ▸ Competitive position — APROBADA
+- Ficha: **Responde** ¿por qué no le quitan el lugar? · **Contenido** tesis (10-K Competition + CUDA #22 + flywheel #39), 3 cuestionamientos elegidos por SAB con evidencia a favor y en contra, tabla de 7 competidores (escala, margen, R&D, chip actual + fecha, software, quién puede comprarlo) · **Fuentes** 10-K/10-Q de NVIDIA; 10-K de AMD, Intel, Broadcom, Marvell (+ XBRL); 8-K Broadcom 4Q FY25; anuncios AMD–OpenAI, Google Cloud (Ironwood), AWS (Trainium3), Intel (Crescent Island) · **Verificación** cada cifra contra su documento; lo que no se publica va "—".
+- Qué se mostró: `js/overviews/nvda-comp.js` (`nvdaCompBody(NV_CUDA_MOAT, DIFF.flywheel)`), sub-tab `comp`; CSS `.nv-comp-*`. Tabla: NVIDIA C&N FY26 $193.5B / 67.3% / R&D $18.5B · AMD DC FY25 $16.6B / 21.7% / $8.1B · Intel DCAI FY25 $16.9B / 20.2% / $13.8B · Broadcom Semis FY25 $36.9B / 57.6% / $11.0B · Marvell (empresa) FY26 $8.2B / 16.1% / $2.1B · Google TPU y AWS Trainium "—".
+- Autoauditoría: AMD DC +32% (16,635/12,579) ✔ · Broadcom ≈ 1/5 de C&N ✔ · AMD < 1/10 ✔ · 10-Q: nube de IA $36B, arrendamientos $20B, inversiones $25B, cuentas por cobrar 38.5 → 63.1, CFO 1S $74.4B ✔ · NO usado por falta de fuente primaria: "AI revenue FY25 $20B" de Broadcom (su 8-K solo da +74% del 4Q), "Helios ya lanzado" (AMD dice 2H 2026), fecha de GA de Gaudi 3 ✔ · sin puntajes ✔.
+- Cambios pedidos / decisiones: las dos de MISC-comp en la sección 3 (2026-11-09).

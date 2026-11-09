@@ -3758,3 +3758,14 @@ img.org-photo { object-fit: cover; }
 
 /* NVIDIA ▸ Miscellaneous ▸ Technology (MISC-tech): the Moore chart note (was an inline margin) */
 .ov-nvda-dd .nv-moore-note{margin-top:10px}
+
+/* NVIDIA ▸ Miscellaneous ▸ Competitive position (js/overviews/nvda-comp.js) — formal skin, no categorical colour */
+.ov-nvda-dd .nv-comp-p{font-size:13px;line-height:1.55;color:#111418;margin:6px 0 10px}
+.ov-nvda-dd .nv-comp-card{margin:12px 0}
+.ov-nvda-dd .nv-comp-h{margin:0 0 4px}
+.ov-nvda-dd .nv-comp-q{font-size:13px;color:#111418;margin:0 0 8px}
+.ov-nvda-dd .nv-comp-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);margin:2px 0 4px}
+.ov-nvda-dd .nv-comp-ul,.ov-nvda-dd .nv-comp-ol{margin:0;padding-left:18px;font-size:12.5px;line-height:1.5;color:#111418}
+.ov-nvda-dd .nv-comp-ul li,.ov-nvda-dd .nv-comp-ol li{margin:0 0 4px}
+.ov-nvda-dd .nv-comp-fly{margin:10px 0 4px}
+.ov-nvda-dd tr.nv-comp-hl td{background:var(--ice,#F2F6FB);font-weight:600}

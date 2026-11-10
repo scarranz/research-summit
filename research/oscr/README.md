@@ -7,7 +7,8 @@ This folder only keeps the work so it can be resumed. Nothing here is loaded by 
 
 | File | What it is |
 |---|---|
-| `oscr-overview.html` | Source of the artifact https://claude.ai/artifact/9iFPYAMo9GzSXiHDhvR6SX (v3). Three tabs: **Overview** (playbook-style 7 blocks) · **How Oscar works** (per-$100 money flow) · **Investor Day 2026**. To update the artifact, copy this file to a scratchpad and publish it to the same URL. |
+| `oscr-overview.html` | Source of the artifact https://claude.ai/artifact/9iFPYAMo9GzSXiHDhvR6SX (v11). Four tabs: **Overview** (playbook-style 7 blocks) · **How Oscar works** (per-$100 money flow) · **Investor Day 2026** · **Income statement** (inline drivers; scenarios Oscar plan Low/Mid/High, Consensus-like tied to BBG line items, Our case; compare charts; EPS tornado and MLR×SG&A grid; P/E–PEG valuation). To update the artifact, copy this file to a scratchpad and publish it to the same URL. |
+| `DRIVERS.md` | Nov 10, 2026: every guided driver by income-statement line (Investor Day transcript + slides 38–49, filings), inconsistencies, and the BBG consensus vs company targets. Base for the income statement (no DCF). |
 
 ## Rules for this company
 

@@ -6,21 +6,14 @@
 /* Layout: Summit portal Overview — banner, Key Facts strip, lede, 2x2, four collapsibles, one source footer. No categorical colour. */
 :root{
   --navy:#1E2733; --steel:#3E5A82; --mid:#7C8694; --ink:#111418;
-  --ice:#EEF1F5; --surface:#F6F7F9; --card:#FFFFFF; --bdr:#E7EAEE;
+  --ice:#EEF1F5; --surface:#FFFFFF; --card:#FFFFFF; --bdr:#E7EAEE;
   --g1:#C9CFD8; --g2:#D5DAE1; --g3:#DEE2E8; --g4:#E5E8ED; --g5:#EBEDF1; --g6:#F0F2F5;
-  --neg:#B42318; --bnr:#1E2733; --bnr-fg:#FFFFFF;
+  --neg:#DC2626; --good:#16A34A; --bnr:#1E2733; --bnr-fg:#FFFFFF;
+  --pale:#F4F6F9; --kpi:#F3F6FB; --flash:#DCE7F7; --gblue:#2563EB;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:light;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --navy:#E6EAF0; --steel:#8FA9CF; --mid:#98A2B0; --ink:#E9ECF1;
-  --ice:#1C232D; --surface:#12171E; --card:#181E27; --bdr:#2A323D;
-  --g1:#4A5566; --g2:#3F4958; --g3:#37404D; --g4:#313945; --g5:#2C333E; --g6:#272E38;
-  --neg:#F28B82; --bnr:#0D1218; --bnr-fg:#E9ECF1; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --navy:#E6EAF0; --steel:#8FA9CF; --mid:#98A2B0; --ink:#E9ECF1;
-  --ice:#1C232D; --surface:#12171E; --card:#181E27; --bdr:#2A323D;
-  --g1:#4A5566; --g2:#3F4958; --g3:#37404D; --g4:#313945; --g5:#2C333E; --g6:#272E38;
-  --neg:#F28B82; --bnr:#0D1218; --bnr-fg:#E9ECF1; color-scheme:dark}
+/* Single light theme on purpose: the Summit portal's white look (css/base.css), whatever the viewer's setting. */
 *{box-sizing:border-box}
 body{background:var(--surface);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.55;letter-spacing:-0.005em;font-variant-numeric:tabular-nums;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
@@ -209,8 +202,149 @@ table.rt td.sub{color:var(--mid);font-weight:400;white-space:normal;font-size:12
 .ours-box .tt{font-weight:700;color:var(--navy)}
 .ours-box ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:13px}
 .tag{font-size:10px;color:var(--mid);font-weight:600;letter-spacing:.5px;margin-left:6px}
+/* income statement */
+.pad{padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.hrow{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.hrow h2{margin:0;font-size:15px}
+.gb{display:inline-block;font-size:9.5px;font-weight:700;line-height:1;border:1px solid var(--gblue);color:var(--gblue);border-radius:4px;padding:2px 4px;margin-left:5px;vertical-align:1px}
+.ib{display:inline-block;font-size:9.5px;font-weight:600;line-height:1;border:1px dashed var(--g1);color:var(--mid);border-radius:4px;padding:2px 4px;margin-left:5px;vertical-align:1px}
+table.drv{min-width:760px}
+table.drv td{vertical-align:middle}
+table.drv td.said{color:var(--gblue);font-size:12px;font-weight:400;white-space:normal;max-width:300px}
+.stp{display:inline-flex;align-items:center;border:1px solid var(--bdr);border-radius:8px;background:var(--card);overflow:hidden}
+.stp button{font:inherit;font-size:14px;line-height:1;width:24px;height:28px;border:0;background:var(--pale);color:var(--steel);cursor:pointer;font-weight:700}
+.stp button:hover{background:var(--ice)}
+.stp button:focus-visible{outline:2px solid var(--steel);outline-offset:-2px}
+input.di{width:54px;font:inherit;font-size:13px;text-align:center;padding:4px 2px;border:0;border-left:1px solid var(--bdr);border-right:1px solid var(--bdr);background:var(--card);color:var(--ink);font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+input.di::-webkit-outer-spin-button,input.di::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input.di:focus-visible{outline:2px solid var(--steel);outline-offset:-2px}
+.stp.chg{border-color:var(--steel)}.stp.chg input.di{background:var(--kpi);font-weight:700;color:var(--navy)}
+.chks{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.chk{border:1px solid var(--bdr);border-radius:10px;background:var(--card);padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.chk .w{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--mid);font-weight:600}
+.chk .v{font-size:18px;font-weight:700;color:var(--navy)}
+.chk .s{font-size:12px;font-weight:600}
+.chk.ok .s{color:var(--good)}.chk.no .s{color:var(--neg)}
+.chk.no{border-color:var(--neg)}
+table.ist{min-width:900px;table-layout:fixed}
+table.ist col.c0{width:280px}
+table.ist td{padding:7px 10px;border-bottom:1px solid var(--bdr)}
+table.ist th.e,table.ist td.e{background:var(--pale)}
+table.ist td:first-child{white-space:normal;min-width:230px}
+table.ist tr.ln td:first-child{color:var(--navy);font-weight:600}
+table.ist tr.tot td{font-weight:700;color:var(--navy);border-top:1.5px solid var(--navy)}
+table.ist tr.sec td{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--steel);font-weight:700;padding:16px 10px 6px;border-bottom:1px solid var(--g1);background:var(--card)}
+table.ist tr.kpi td{background:var(--kpi);font-size:12.5px;color:var(--steel);font-weight:600;border-bottom:1px solid #E3E9F2}
+table.ist tr.kpi td.e{background:#EBF0F8}
+table.ist tr.kpi td:first-child{padding-left:38px;font-weight:500;color:var(--steel)}
+table.ist tr.cmp td{font-size:11.5px;color:var(--mid);padding-top:3px;padding-bottom:3px;font-weight:400;border-bottom:1px dashed var(--bdr)}
+table.ist tr.cmp td:first-child{padding-left:38px;color:var(--mid);font-weight:400}
+table.ist tr.cmp.g td:not(:first-child){color:var(--gblue);font-weight:600}
+table.ist tr.cmp.g td:first-child{color:var(--gblue)}
+table.ist tr.kpi.lite td{font-size:11px;color:var(--mid);font-weight:400;padding-top:4px;padding-bottom:4px}
+table.ist tr.kpi.lite td:first-child{color:var(--mid);font-weight:400}
+table.ist tr.kpi.lite .kt{background:var(--g1)}
+table.ist tr.cmp.in td:first-child{padding-left:54px}
+.kt{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1px;color:var(--card);background:var(--steel);border-radius:3px;padding:2px 4px;margin-right:7px;vertical-align:1px}
+.ct{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.5px;border-radius:3px;padding:1px 4px;margin-right:7px;vertical-align:1px;border:1px solid var(--g1);color:var(--mid)}
+.ct.g{border-color:var(--gblue);color:var(--gblue)}
+.cv{font:inherit;width:22px;height:22px;border:1px solid var(--bdr);border-radius:6px;background:var(--card);color:var(--steel);cursor:pointer;margin-right:8px;vertical-align:-1px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;transition:transform .15s}
+.cv[aria-expanded="true"]{transform:rotate(90deg);background:var(--steel);color:var(--card);border-color:var(--steel)}
+.cv:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+.cvs{display:inline-block;width:22px;margin-right:8px}
+.kc{font-size:11px;color:var(--mid);font-weight:500;margin-left:6px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--mid);align-items:center}
+.sw{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;border:1px solid var(--bdr)}
+/* sticky scenario + checks bar */
+.stick{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 14px -10px rgba(30,39,51,.35)}
+.stick .chks .chk{padding:6px 10px}.stick .chk .v{font-size:15px}
+/* inline driver cells */
+table.ist tr.kpi.drv td{background:#EAF1FD;color:var(--navy);font-weight:600;font-size:12.5px}
+table.ist tr.kpi.drv td.e{background:#E3ECFC}
+table.ist tr.kpi.drv .kt{background:var(--gblue)}
+table.ist td.dcell{white-space:nowrap;padding:3px 6px;text-align:right}
+.ded{display:inline-flex;align-items:stretch;width:84px;height:26px;box-sizing:border-box;border:1px solid #B9CCF5;border-radius:7px;background:var(--card);vertical-align:middle;overflow:hidden;transition:border-color .12s,box-shadow .12s,background .12s}
+.ded:hover{border-color:var(--gblue)}
+.ded:focus-within{border-color:var(--gblue);box-shadow:0 0 0 3px rgba(37,99,235,.16)}
+.ded.chg{background:#FFF7E0;border-color:#D9A92E}
+.ded.chg .din{color:#7A5200}
+.ded.bad{border-color:var(--neg);box-shadow:0 0 0 3px rgba(220,38,38,.12)}
+.din{flex:1 1 auto;min-width:0;width:100%;font:inherit;font-size:12.5px;font-weight:700;color:var(--navy);text-align:right;padding:0 1px 0 4px;border:0;background:transparent;font-variant-numeric:tabular-nums}
+.din:focus{outline:none}
+.du{font-size:11px;color:var(--mid);align-self:center;padding:0 4px 0 1px}
+.spn{display:flex;flex-direction:column;width:17px;flex:0 0 17px;border-left:1px solid #DCE6FA}
+.spn button{flex:1 1 0;border:0;padding:0;margin:0;background:transparent;color:var(--gblue);font-size:7px;line-height:1;cursor:pointer;opacity:.5}
+.spn button+button{border-top:1px solid #DCE6FA}
+.ded:hover .spn button,.ded:focus-within .spn button{opacity:.9}
+.spn button:hover{opacity:1;background:#E8EFFD}
+.tgw{display:inline-block;width:20px;text-align:left}
+#ist.notag .tgw{visibility:hidden}
+table.ist tr.cmp td.num{white-space:normal}
+/* scenario segment */
+.seg{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--bdr);border-radius:999px;padding:2px;background:var(--card)}
+.seg .sl{font-size:12px;color:var(--navy);font-weight:600;padding:0 6px 0 9px}
+.seg .pill{border-color:transparent;padding:4px 11px}
+.seg.on{border-color:var(--navy)}
+/* valuation */
+.val{padding:16px 18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.vctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px 20px;align-items:start}
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fld .pills{flex-wrap:nowrap}
+.fld .fll{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--mid);font-weight:600}
+.per{display:flex;align-items:center;gap:10px;min-width:0}
+.per input[type=range]{flex:1 1 auto;min-width:0;accent-color:var(--steel)}
+.nbox{display:inline-flex;align-items:center;gap:3px;height:30px;box-sizing:border-box;border:1px solid var(--bdr);border-radius:8px;padding:0 9px;background:var(--card);width:max-content;transition:border-color .12s,box-shadow .12s}
+.nbox:focus-within{border-color:var(--steel);box-shadow:0 0 0 3px rgba(62,90,130,.15)}
+.nbox input{border:0;width:50px;font:inherit;font-size:14px;font-weight:700;color:var(--navy);text-align:right;background:transparent;font-variant-numeric:tabular-nums;padding:0}
+.nbox input:focus{outline:none}
+.nbox span{font-size:12px;color:var(--mid)}
+.vt{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.vt .chk .s{color:var(--mid);font-weight:500;font-size:11.5px;line-height:1.35}
+.vt .chk .s b{color:var(--navy)}
+.vt .chk .s .up{color:var(--good);font-weight:700}.vt .chk .s .dn{color:var(--neg);font-weight:700}
+table.vm{min-width:640px}
+table.vm th.cur,table.vm td.cur{background:var(--kpi)}
+table.vm tr.vh td{font-size:12px;color:var(--steel)}
+table.vm tr.vs td{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--steel);font-weight:700;padding-top:14px}
+table.vm tr.sel td{font-weight:700;color:var(--navy);border-top:1.5px solid var(--navy);border-bottom:1.5px solid var(--navy)}
+table.vm td.up{color:var(--good)}table.vm td.dn{color:var(--neg)}
+.dv{display:inline-block;font-size:11px;font-weight:700;color:var(--navy);border:1px solid #B9CCF5;border-radius:5px;padding:0 5px;margin-right:6px;background:var(--card)}
+/* comparison charts */
+.cc{padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.cch{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+.msel{font:inherit;font-size:13px;font-weight:600;color:var(--navy);border:1px solid var(--bdr);border-radius:8px;padding:5px 8px;background:var(--card);max-width:100%}
+.msel:focus-visible{outline:2px solid var(--steel);outline-offset:1px}
+.pill:disabled{opacity:.4;cursor:not-allowed}
+.clg{display:flex;flex-wrap:wrap;gap:6px}
+.chip2{font:inherit;font-size:11.5px;color:var(--navy);background:var(--card);border:1px solid var(--bdr);border-radius:999px;padding:3px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip2[aria-pressed="false"]{opacity:.45;text-decoration:line-through}
+.chip2:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+.chip2 .sq{width:10px;height:10px;border-radius:2px;display:inline-block}
+.chip2 .band{width:14px;height:10px;border-radius:2px;display:inline-block;background:rgba(37,99,235,.16);border:1px solid}
+.cbox{position:relative;height:260px;width:100%}
+.ctab>summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--steel)}
+table.ctt{min-width:520px;font-size:12px}
+table.ctt td{padding:5px 8px}
+td.fl{animation:fl .9s ease-out}
+@keyframes fl{from{background:var(--flash)}}
+@media (prefers-reduced-motion:reduce){td.fl{animation:none}.cv{transition:none}}
+.tor{display:flex;flex-direction:column;gap:7px}
+.tr{display:grid;grid-template-columns:minmax(110px,170px) 1fr 92px;gap:10px;align-items:center;font-size:12.5px}
+.tr .n{color:var(--navy);line-height:1.3;min-width:0}.tr .n small{display:block;color:var(--mid);font-size:11px}
+.tr .t{position:relative;height:22px;background:var(--ice);border-radius:5px}
+.tr .t span{position:absolute;top:2px;bottom:2px}
+.tr .t .lo{border-radius:4px 0 0 4px}.tr .t .hi{border-radius:0 4px 4px 0}
+.tr .t .z{top:-3px;bottom:-3px;width:0;border-left:1.5px solid var(--navy)}
+.tr .v{text-align:right;font-weight:600;color:var(--navy);white-space:nowrap}
+table.hg{border-collapse:separate;border-spacing:2px;font-size:12.5px;width:100%}
+table.hg th{font-size:11px;color:var(--mid);font-weight:600;padding:4px;text-align:center}
+table.hg td{text-align:center;padding:7px 4px;border-radius:5px;color:var(--navy);font-weight:500}
+table.hg td.hit{font-weight:700;outline:1.5px solid var(--navy);outline-offset:-1.5px}
+table.hg td.base{box-shadow:inset 0 0 0 2px var(--steel)}
 @media (max-width:860px){
+  .chks{grid-template-columns:repeat(2,minmax(0,1fr))}
   .eng,.two{grid-template-columns:1fr}
+  .vt{grid-template-columns:repeat(2,minmax(0,1fr))}
   .flow{grid-template-columns:1fr;padding:14px}
   .arr{transform:rotate(90deg)}
   .side{grid-template-columns:1fr;padding:0 14px 14px}
@@ -233,13 +367,14 @@ table.rt td.sub{color:var(--mid);font-weight:400;white-space:normal;font-size:12
   <header class="bnr">
     <div class="eyebrow">Summit Research · Company overview</div>
     <h1>Oscar Health, Inc. <span style="opacity:.6;font-weight:500">NYSE: OSCR</span></h1>
-    <p>Built only from Oscar’s own documents: SEC filings (FY2025 10-K, 3Q26 10-Q, the Nov 5, 2026 earnings release) and the Sep 16, 2026 Investor Day materials. No market data, no model, no consensus.</p>
+    <p>Built only from Oscar’s own documents: SEC filings (FY2025 10-K, 3Q26 10-Q, the Nov 5, 2026 earnings release) and the Sep 16, 2026 Investor Day materials. No market data. The Income statement tab adds a driver model and, for comparison only, the Bloomberg consensus.</p>
   </header>
 
   <nav class="tabs" role="tablist" aria-label="Page sections">
     <button class="tab" role="tab" id="tb-ov" aria-controls="t-ov" aria-selected="true" data-tab="t-ov">Overview</button>
     <button class="tab" role="tab" id="tb-how" aria-controls="t-how" aria-selected="false" data-tab="t-how">How Oscar works</button>
     <button class="tab" role="tab" id="tb-iday" aria-controls="t-iday" aria-selected="false" data-tab="t-iday">Investor Day 2026</button>
+    <button class="tab" role="tab" id="tb-is" aria-controls="t-is" aria-selected="false" data-tab="t-is">Income statement</button>
   </nav>
 
   <div class="tabp" id="t-ov" role="tabpanel" aria-labelledby="tb-ov">
@@ -536,6 +671,72 @@ table.rt td.sub{color:var(--mid);font-weight:400;white-space:normal;font-size:12
 
     <p class="foot">Sources — Oscar Health 2026 Investor Day presentation (78 slides) and Investor Day fact sheet, Sep 16, 2026 (ir.oscarhealth.com/news-events/investor-day); Form 8-K of Sep 16, 2026 (acc. 0001568651-26-000074) for the raised 2026 guidance; Ex. 99.1 to the Form 8-K of Nov 5, 2026 for the updated 2026 guidance. Market sizes, TAMs and value pools are company estimates. The Nov 5 operating margin range and the EPS sensitivity are our arithmetic on company figures; the “What we would watch” box is Summit judgment.</p>
   </div>
+
+  <div class="tabp" id="t-is" role="tabpanel" aria-labelledby="tb-is" hidden>
+    <p class="sect">Income statement</p>
+    <p class="big">Line by line: where Oscar gave a number, where the street sits, and what the drivers imply.</p>
+    <p class="cap">2024 and 2025 are reported. 2026E sits on the Nov 5 guidance range (low end, midpoint or high end, with the Oscar plan case). 2027–2029 come from the <b>drivers</b>, the blue-framed cells inside the table: change one and every line, check, chart and the valuation below recalculates. Oscar’s guidance sits in blue right under the line or KPI it refers to. US$ millions, except members and per-share data.</p>
+
+    <div class="stick" id="stick">
+      <div class="hrow">
+        <div class="pills" role="group" aria-label="Scenario"><span class="lbl">Scenario</span>
+          <span class="seg on" id="seg-plan"><span class="sl">Oscar plan</span><button class="pill" data-sc="low" aria-pressed="false" title="The less favorable end of every range Oscar gave">Low</button><button class="pill" data-sc="mid" aria-pressed="true" title="Midpoints of Oscar’s ranges">Mid</button><button class="pill" data-sc="high" aria-pressed="false" title="The more favorable end of every range Oscar gave">High</button></span>
+          <button class="pill" data-sc="cons" aria-pressed="false">Consensus-like</button>
+          <button class="pill" data-sc="ours" aria-pressed="false">Our case</button>
+        </div>
+        <button class="pill" id="sc-reset">Reset our case</button>
+      </div>
+      <p class="note" id="sc-note"></p>
+      <div class="chks" id="chks" aria-live="polite"></div>
+    </div>
+
+    <section class="card pad" aria-labelledby="h-ist">
+      <div class="hrow"><h2 class="ch" id="h-ist">Income statement, 2024A–2029E</h2>
+        <div class="pills" role="group" aria-label="Rows to show"><span class="lbl">Show</span><button class="pill" id="sw-k" aria-pressed="true">KPIs</button><button class="pill" id="sw-g" aria-pressed="true">Oscar guidance</button><button class="pill" id="sw-b" aria-pressed="false">BBG consensus</button></div></div>
+      <div class="legend"><span><span class="dv">14.0</span>Driver: type a value, or use ▴ ▾ and the arrow keys (Shift = ×5)</span><span><span class="dv" style="background:#FFF7E0;border-color:#D9A92E;color:#7A5200">14.0</span>Changed from the scenario it started from</span><span><span class="kt">KPI</span>Ratio or operating figure tied to the line</span><span><span class="ct g">OSCAR</span>What Oscar guided</span><span><span class="ct">BBG</span>Bloomberg consensus</span><span><span class="gb">G</span>driver taken from Oscar · <span class="ib">i</span>our interpolation</span></div>
+      <div class="twrap"><table class="rt ist" id="ist"></table></div>
+      <p class="note" id="ist-note"></p>
+    </section>
+
+    <p class="sect">Compare</p>
+    <div class="two">
+      <section class="card cc" id="cc1" aria-label="Chart 1"></section>
+      <section class="card cc" id="cc2" aria-label="Chart 2"></section>
+    </div>
+
+    <div class="two">
+      <section class="card" aria-labelledby="h-tor">
+        <div class="ch" id="h-tor">What moves 2029 EPS</div>
+        <p class="cap" id="tor-cap"></p>
+        <div class="tor" id="tor"></div>
+        <p class="note">Each driver is moved by the step shown in all three years, holding the others at their current values. Bars are sorted by the size of the swing.</p>
+      </section>
+      <section class="card" aria-labelledby="h-hg">
+        <div class="ch" id="h-hg">2029 EPS by MLR and SG&amp;A ratio</div>
+        <p class="cap">2029 values only; 2027–28 and every other driver stay as set. Bold outline: at or above Oscar’s $4.00 target. Blue frame: the current drivers.</p>
+        <div class="twrap"><table class="hg" id="hg"></table></div>
+      </section>
+    </div>
+
+    <p class="sect">Valuation</p>
+    <section class="card val" aria-labelledby="h-val">
+      <div class="hrow"><h2 class="ch" id="h-val">What the EPS is worth at a P/E</h2><span class="note" id="v-src"></span></div>
+      <p class="cap">Pick the multiple, the EPS year it applies to, and the year EPS growth is measured from. The cards use the scenario selected at the top; the table runs the same math on every scenario and on the BBG EPS. No share price is loaded: type one to compare.</p>
+      <div class="vctl">
+        <div class="fld"><span class="fll" id="l-pe">P/E multiple</span><div class="per"><input type="range" id="v-pe-r" min="5" max="40" step="0.5" aria-labelledby="l-pe"><span class="nbox"><input id="v-pe" type="text" inputmode="decimal" aria-labelledby="l-pe"><span>×</span></span></div></div>
+        <div class="fld"><span class="fll">EPS year</span><div class="pills" role="group" aria-label="EPS year" id="v-yr"><button class="pill" data-v="2027E">2027E</button><button class="pill" data-v="2028E">2028E</button><button class="pill" data-v="2029E">2029E</button></div></div>
+        <div class="fld"><span class="fll">Multiple applied</span><div class="pills" role="group" aria-label="Multiple applied" id="v-bs"><button class="pill" data-v="fwd" title="Price at the end of the year before, on that year's EPS">Forward</button><button class="pill" data-v="trl" title="Price at the end of the same year, on that year's EPS">Trailing</button></div></div>
+        <div class="fld"><span class="fll">EPS CAGR from</span><div class="pills" role="group" aria-label="EPS CAGR from" id="v-cs"><button class="pill" data-v="2026E">2026E</button><button class="pill" data-v="2027E">2027E</button></div></div>
+        <div class="fld"><span class="fll" id="l-dr">Discount rate</span><span class="nbox"><input id="v-dr" type="text" inputmode="decimal" aria-labelledby="l-dr"><span>%</span></span></div>
+        <div class="fld"><span class="fll" id="l-px">Share price to compare</span><span class="nbox"><span>$</span><input id="v-px" type="text" inputmode="decimal" placeholder="—" aria-labelledby="l-px"></span></div>
+      </div>
+      <div class="vt" id="v-tiles"></div>
+      <div class="twrap"><table class="rt vm" id="v-mx"></table></div>
+      <p class="note" id="v-note"></p>
+    </section>
+
+    <p class="foot">Sources — Reported: Form 10-K FY2025 (acc. 0001568651-26-000011) and Form 10-Q 3Q26 (acc. 0001568651-26-000086). Guidance: Ex. 99.1 to the Form 8-K of Nov 5, 2026; Investor Day presentation and webcast of Sep 16, 2026 (slides 38–49; CFO remarks on 2027 rates, tax rate, investment income and share count). Consensus: Bloomberg BEst estimates (OSCR US Equity, annual), Summit file without an as-of date; its 2026 column matches the Sep 16 guidance, so it likely predates the 3Q26 print. BBG SG&amp;A ratio and medical expenses are derived from its gross profit, operating income and D&amp;A. “Consensus-like” turns BBG’s line items into drivers (MLR from gross profit, not BBG’s separate MLR field, which does not tie) so operating and net income match BBG; the gap between BBG total revenue and its premium, investment income and service revenue (from about $20M to about $390M, largest in 2027) sits in other revenues so total revenue ties. BBG’s EPS fields (GAAP $4.18 and adjusted $4.01 in 2029) do not equal its net income ÷ shares ($4.08), because each BBG line averages a different set of brokers. Guidance bands in the charts for tax rate (“mid-single digits”, “mid-20s”), shares (+2–3% a year) and investment income (+10–15% a year) are our numeric reading of Oscar’s words. Oscar plan Low / Mid / High: the 2026E base uses the low end, midpoint and high end of the Nov 5 ranges; the revenue CAGR uses the slide 44 walk (21–27%); 2027 member growth is our reading (0% / 3% / 6%) of a market Oscar sees stable at ~17M in 2027, on a 2.51M year-end 2026 base (BBG); the other drivers use the ends of each range Oscar gave, and where Oscar gave a single point (2027 filed rate ~14%, 2029 MLR ~80%, SG&amp;A below 15%) Low and High are our reading, set so the 2029 operating margin lands near the ends of the 5–7% target. Valuation: the multiple, discount rate and share price are inputs, not market data. Every 2027–2029 figure in the main rows is model output, not a company or consensus number.</p>
+  </div>
 </div>
 
 <div class="mb" id="mb" hidden><div class="md" role="dialog" aria-modal="true" aria-labelledby="mdt">
@@ -661,11 +862,12 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&!mb.hidde
 
 /* tabs */
 var tabs=document.querySelectorAll('[data-tab]');
-var HASH={'t-ov':'#overview','t-how':'#how','t-iday':'#investor-day'};
+var HASH={'t-ov':'#overview','t-how':'#how','t-iday':'#investor-day','t-is':'#income-statement'};
 function showTab(id){tabs.forEach(function(t){var on=t.dataset.tab===id;t.setAttribute('aria-selected',on);document.getElementById(t.dataset.tab).hidden=!on;});try{history.replaceState(null,'',HASH[id]);}catch(e){}}
 tabs.forEach(function(t){t.addEventListener('click',function(){showTab(t.dataset.tab);});});
 if(location.hash==='#how')showTab('t-how');
 if(location.hash==='#investor-day')showTab('t-iday');
+if(location.hash==='#income-statement')showTab('t-is');
 
 /* Investor Day: range bridges (company ranges) and waterfalls (company point estimates) */
 function rangeRows(el,rows,min,max){
@@ -733,5 +935,474 @@ document.getElementById('stk').innerHTML=['FY2024','FY2025','9M26'].map(function
  return '<div class="srow"><span class="y">'+d.lbl.replace('9M 2026','9M26')+'</span><div class="strack"><div class="sbar" style="width:'+(widthTotal/SCALE*100)+'%">'+parts+'</div><span class="line100" style="left:'+(100/SCALE*100)+'%"></span></div></div>';
 }).join('');
 document.getElementById('leg').innerHTML=SEG.map(function(s){return '<span><i style="background:'+s[2]+';border:1px solid var(--bdr)"></i>'+s[1]+'</span>';}).join('')+'<span><i style="background:var(--steel)"></i>Profit</span><span><i style="background:repeating-linear-gradient(45deg,var(--g1),var(--g1) 3px,var(--g4) 3px,var(--g4) 6px)"></i>Loss (spent beyond $100)</span>';
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+/* Income statement tab: driver model with inline drivers, scenarios, Oscar guidance and BBG consensus. US$ millions. */
+(function(){
+var COLS=['2024A','2025A','2026E','2027E','2028E','2029E'];
+var PY=['2027E','2028E','2029E'];
+/* Reported (10-K FY2025; BBG for 2024 pre-tax and share count) */
+var A={
+ '2024A':{mem:1.68,prem:8971.3,inv:185.7,oth:20.6,rev:9177.6,med:7332.6,sga:1755.6,da:32.1,op:57.3,io:23.9,pt:33.4,tax:7.3,ni:25.4,sh:265.9,eps:0.10},
+ '2025A':{mem:2.04,prem:11469.9,inv:202.9,oth:28.6,rev:11701.4,med:10019.0,sga:2049.9,da:28.9,op:-396.4,io:41.1,pt:-437.5,tax:5.6,ni:-443.2,sh:262.4,eps:-1.69}
+};
+/* 2026E base: Nov 5 guidance midpoints; inv. income = 9M26 + 3Q26 run-rate; members = year-end 2026 estimate (2.51M, BBG; Oscar gives none; 2.69M at Sep 30) */
+var B26={mem:2.51,rev:19150,inv:327,oth:24,mlr:81.0,sgar:15.35,io:20,taxr:4.7,sh:331};
+
+/* Drivers: d[k][i] for 2027E..2029E. kpi = the KPI row that hosts the driver. */
+var DRV={
+ mg:{kpi:'mg',st:0.5,tag:['i','i','i']},
+ ppm:{kpi:'ppmg',st:0.5,tag:['G','G','G']},
+ ig:{kpi:'invg',st:1,tag:['G','G','G']},
+ mlr:{kpi:'mlr',st:0.1,tag:['i','i','G']},
+ sga:{kpi:'sgar',st:0.1,tag:['i','i','G']},
+ tax:{kpi:'taxr',st:1,tag:['G','i','G']},
+ sg:{kpi:'sg',st:0.5,tag:['G','G','G']}
+};
+var KPI2DRV={};Object.keys(DRV).forEach(function(k){KPI2DRV[DRV[k].kpi]=k;});
+var DK=Object.keys(DRV);
+/* Oscar plan, three cases. b = the 2026E base on the Nov 5 ranges; cagr = 2026–29 revenue CAGR from the slide 44 walk
+   (existing markets 17–19 pts + new markets 2–4 + new products 2–4 = 21–27%); 2028–29 member growth is backed out of it.
+   2029 MLR and SG&A: Oscar gave points (~80%, <15%), so Low and High are set to land the operating margin near 5% and 7%. */
+var SC={
+ low: {mg:[0,0,0],ppm:[14,5,5],ig:[10,10,10],mlr:[81.3,81.2,81.0],sga:[15.4,15.2,15.0],tax:[6,16,26],sg:[3,3,3],b:{rev:19000,mlr:81.5,sga:15.6},cagr:21},
+ mid: {mg:[3,0,0],ppm:[14,6,6],ig:[12.5,12.5,12.5],mlr:[80.7,80.3,80.0],sga:[15.2,15.0,14.8],tax:[5,15,25],sg:[2.5,2.5,2.5],b:{rev:19150,mlr:81.0,sga:15.35},cagr:24},
+ high:{mg:[6,0,0],ppm:[14,7,7],ig:[15,15,15],mlr:[80.2,79.8,79.5],sga:[14.9,14.7,14.5],tax:[4,14,24],sg:[2,2,2],b:{rev:19300,mlr:80.5,sga:15.1},cagr:27},
+ /* Backed out of BBG: member growth from BBG members, premium per member = premium growth ÷ member growth, the rest as printed */
+ cons:null /* built from BBG line items below */
+};
+var PLAN=['low','mid','high'];
+var SCN={low:'Oscar plan · Low',mid:'Oscar plan · Mid',high:'Oscar plan · High',cons:'Consensus-like',ours:'Our case'};
+var SC_NOTE={
+ low:'Oscar plan · Low: the less favorable end of every range. 2026E at the bottom of the revenue range and the top of the MLR and SG&A ranges; revenue CAGR 21% (low end of the slide 44 walk); members flat in 2027 (market stable at ~17M), with 2028–29 member growth backed out of the CAGR; premium per member +5% after 2027 (cost trend 5%); investment income +10%; 2029 MLR 81.0% and SG&A 15.0%, which put the operating margin near the 5% floor of the target; tax 6% then 26%; shares +3% a year.',
+ mid:'Oscar plan · Mid: the midpoints. 2026E on the Nov 5 midpoints; revenue CAGR 24% (middle of the 21–27% walk on slide 44); members +3% in 2027, with 2028–29 backed out of the CAGR; premium per member +6% after 2027; investment income +12.5%; 2029 MLR 80.0% and SG&A 14.8%; tax 5% then 25%; shares +2.5% a year.',
+ high:'Oscar plan · High: the more favorable end. 2026E at the top of the revenue range and the bottom of the MLR and SG&A ranges; revenue CAGR 27% (top of the walk); members +6% in 2027 (share gains in a flat market), with 2028–29 backed out of the CAGR; premium per member +7% after 2027; investment income +15%; 2029 MLR 79.5% and SG&A 14.5%, near the 7% top of the margin target; tax 4% then 24%; shares +2% a year.',
+ cons:'Consensus-like: BBG’s own line items turned into drivers — MLR from its gross profit, SG&A from its gross profit less operating income and D&A, its tax expense, shares, members, premium and investment income — so revenue, operating income and net income tie to BBG (the gap between BBG’s total revenue and its parts is carried in other revenues). BBG’s separate MLR field (80.1% in 2029) does not tie to its gross profit and is not used. EPS still differs from BBG’s EPS fields, which do not equal BBG net income ÷ BBG shares.'
+};
+var BBG={
+ prem:{'2026E':18621.9,'2027E':20453,'2028E':24056.2,'2029E':30442.4},
+ inv:{'2026E':301.7,'2027E':313.4,'2028E':326.3,'2029E':363.5},
+ rev:{'2026E':18988.8,'2027E':21189.2,'2028E':24593.3,'2029E':30853.5},
+ med:{'2026E':15194.4,'2027E':16842.9,'2028E':19144.7,'2029E':23958.9},
+ mem:{'2026E':2.51,'2027E':2.60,'2028E':2.86,'2029E':3.43},
+ mlr:{'2026E':81.5,'2027E':81.2,'2028E':80.6,'2029E':80.1},
+ sgar:{'2026E':15.6,'2027E':15.8,'2028E':16.7,'2029E':16.1},
+ op:{'2026E':800.8,'2027E':960.9,'2028E':1309.6,'2029E':1901.7},
+ opm:{'2026E':4.0,'2027E':4.5,'2028E':5.4,'2029E':6.2},
+ taxr:{'2026E':4.7,'2027E':12.9,'2028E':19.1,'2029E':23.6},
+ ni:{'2026E':758.1,'2027E':856,'2028E':1037.9,'2029E':1432},
+ sh:{'2026E':322.9,'2027E':329.4,'2028E':334.5,'2029E':350.9},
+ eps:{'2026E':2.43,'2027E':2.68,'2028E':3.13,'2029E':4.18}
+};
+function gmap(o,base){var r={};var ks=Object.keys(o);ks.forEach(function(y,i){var p=i?o[ks[i-1]]:base;if(p!=null&&p>0)r[y]=o[y]/p-1;});return r;}
+BBG.sga={};BBG.nim={};BBG.prem_cs={};BBG.inv_cs={};
+Object.keys(BBG.rev).forEach(function(y){BBG.sga[y]=BBG.sgar[y]/100*BBG.rev[y];BBG.nim[y]=BBG.ni[y]/BBG.rev[y]*100;BBG.prem_cs[y]=BBG.prem[y]/BBG.rev[y]*100;BBG.inv_cs[y]=BBG.inv[y]/BBG.rev[y]*100;});
+BBG.grw=gmap(BBG.rev,11701.4);BBG.prem_g=gmap(BBG.prem,11469.9);BBG.op_g=gmap(BBG.op,-396.4);BBG.ni_g=gmap(BBG.ni,-443.2);
+BBG.mg=gmap(BBG.mem,2.04);BBG.invg=gmap(BBG.inv,202.9);BBG.sg=gmap(BBG.sh,null);BBG.epsg=gmap(BBG.eps,null);BBG.med_g=gmap(BBG.med,10019.0);BBG.sga_g=gmap(BBG.sga,2049.9);
+/* Consensus-like, rebuilt from BBG's own line items so it ties to BBG's operating income and net income:
+   MLR = (revenue − gross profit) ÷ premium; SG&A = (gross profit − operating income − D&A) ÷ revenue;
+   interest & other = operating income − pre-tax; tax = tax expense ÷ pre-tax; members, premium, investment income and shares from BBG.
+   BBG's own MLR field (80.1% in 2029) is not used: it comes from a different set of brokers and does not tie to its gross profit. */
+var BR={rev:[18988.8,21189.2,24593.3,30853.5],prem:[18621.9,20453,24056.2,30442.4],inv:[301.7196,313.4276,326.3165,363.5093],
+ gp:[3794.4,4346.3,5448.6,6894.6],op:[800.8182,960.9091,1309.6,1901.7],da:[27.4293,28.3655,31.9909,37.7577],pt:[806.8889,984.5,1292,1883.2],
+ tax:[37.1614,124.9623,253.0416,448.0622],sh:[322.8776,329.4126,334.4608,350.8976],mem:[2.514297,2.59845,2.862592,3.425933]};
+(function(){var r=BR,c={mg:[],ppm:[],ig:[],mlr:[],sga:[],tax:[],sg:[],io:[],oth:[]};
+ function mlr(j){return (r.rev[j]-r.gp[j])/r.prem[j]*100;}function sga(j){return (r.gp[j]-r.op[j]-r.da[j])/r.rev[j]*100;}
+ for(var j=1;j<4;j++){var mg=r.mem[j]/r.mem[j-1];c.mg.push((mg-1)*100);c.ppm.push((r.prem[j]/r.prem[j-1]/mg-1)*100);c.ig.push((r.inv[j]/r.inv[j-1]-1)*100);
+  c.mlr.push(mlr(j));c.sga.push(sga(j));c.tax.push(r.tax[j]/r.pt[j]*100);c.sg.push((r.sh[j]/r.sh[j-1]-1)*100);c.io.push(r.op[j]-r.pt[j]);c.oth.push(r.rev[j]-r.prem[j]-r.inv[j]);}
+ c.b={rev:r.rev[0],mlr:mlr(0),sga:sga(0),inv:r.inv[0],oth:r.rev[0]-r.prem[0]-r.inv[0],mem:r.mem[0],sh:r.sh[0],io:r.op[0]-r.pt[0],taxr:r.tax[0]/r.pt[0]*100};
+ SC.cons=c;})();
+BBG.eps_adj={'2026E':2.2218,'2027E':2.4967,'2028E':3.077,'2029E':4.0083};
+/* Guidance as text (table) */
+var G={
+ mem:{'2029E':'≈4.1M (18% × 23M)'},
+ ppmg:{'2027E':'~14% filed rate','2028E':'5–7% cost trend','2029E':'5–7% cost trend'},
+ invg:{'2027E':'+10–15%','2028E':'+10–15%','2029E':'+10–15%'},
+ rev:{'2026E':'19,000–19,300'},
+ grw:{'2029E':'>20% CAGR 2026–29'},
+ mlr:{'2026E':'80.5–81.5%','2029E':'~80%'},
+ sgar:{'2026E':'15.1–15.6%','2029E':'<15%'},
+ op:{'2026E':'850–950'},
+ opm:{'2027E':'>5%','2029E':'5–7%'},
+ io:{'2029E':'~20'},
+ taxr:{'2027E':'mid-single digits','2029E':'mid-20s'},
+ sh:{'2026E':'331 at 2Q26'},
+ sg:{'2027E':'+2–3%','2028E':'+2–3%','2029E':'+2–3%'},
+ eps:{'2027E':'>$2.25','2029E':'>$4.00'}
+};
+/* Guidance as numbers (charts): [lo,hi] band or {pt,lbl} single mark */
+var GN={
+ rev:{'2026E':[19000,19300],'2029E':{pt:19150*Math.pow(1.2,3),lbl:'floor: 20% CAGR from the 2026 midpoint'}},
+ mlr:{'2026E':[80.5,81.5],'2029E':{pt:80,lbl:'~80%'}},
+ sgar:{'2026E':[15.1,15.6],'2029E':{pt:15,lbl:'ceiling: below 15%'}},
+ op:{'2026E':[850,950]},
+ opm:{'2026E':[850/19300*100,950/19000*100],'2027E':{pt:5,lbl:'floor: above 5%'},'2029E':[5,7]},
+ taxr:{'2027E':[4,6],'2029E':[24,26]},
+ eps:{'2027E':{pt:2.25,lbl:'floor: above $2.25'},'2029E':{pt:4,lbl:'floor: above $4.00'}},
+ sh:{'2026E':{pt:331,lbl:'331M at 2Q26'},'2027E':[331*1.02,331*1.03],'2028E':[331*Math.pow(1.02,2),331*Math.pow(1.03,2)],'2029E':[331*Math.pow(1.02,3),331*Math.pow(1.03,3)]},
+ inv:{'2027E':[327*1.10,327*1.15],'2028E':[327*Math.pow(1.10,2),327*Math.pow(1.15,2)],'2029E':[327*Math.pow(1.10,3),327*Math.pow(1.15,3)]},
+ mem:{'2029E':{pt:4.1,lbl:'≈18% of a ~23M market'}}
+};
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function clone(d){var c={};DK.forEach(function(k){c[k]=d[k].slice();});c.b=Object.assign({},d.b||SC.mid.b);if(d.io)c.io=d.io.slice();if(d.oth)c.oth=d.oth.slice();return c;}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
+/* Our case = {base: scenario it was copied from, d: drivers}. Older saves were the bare drivers. */
+var OURS=null;try{OURS=JSON.parse(ls('oscr-is-ours')||'null');}catch(e){OURS=null;}
+if(OURS&&!OURS.d){OURS={base:'mid',d:clone(OURS)};}
+if(OURS&&!SC[OURS.base])OURS.base='mid';
+var cur='mid';var D=clone(SC.mid);
+
+var GK=['prem','oth','med','sga','da','op','pt','ni'];
+var CK=['prem','inv','oth','med','da','pt'];
+function model(d){
+ var o={};
+ var bb=d.b||SC.mid.b;
+ function dv(k){return bb[k]!=null?bb[k]:B26[k];}
+ var b={mem:dv("mem"),rev:bb.rev,inv:dv("inv"),oth:dv("oth")};b.prem=b.rev-b.inv-b.oth;
+ b.med=b.prem*bb.mlr/100;b.sga=b.rev*bb.sga/100;b.da=b.rev*0.0013;b.op=b.rev-b.med-b.sga-b.da;
+ b.io=dv("io");b.pt=b.op-b.io;b.tax=b.pt*dv("taxr")/100;b.ni=b.pt-b.tax;b.sh=dv("sh");b.eps=b.ni/b.sh;
+ o['2026E']=b;var p=b;
+ PY.forEach(function(y,i){
+  var c={};c.mem=p.mem*(1+d.mg[i]/100);
+  c.prem=p.prem*(1+d.mg[i]/100)*(1+d.ppm[i]/100);
+  c.inv=p.inv*(1+d.ig[i]/100);c.oth=d.oth?d.oth[i]:p.oth;c.rev=c.prem+c.inv+c.oth;
+  c.med=c.prem*d.mlr[i]/100;c.sga=c.rev*d.sga[i]/100;c.da=c.rev*0.0013;
+  c.op=c.rev-c.med-c.sga-c.da;c.io=d.io?d.io[i]:20;c.pt=c.op-c.io;c.tax=c.pt*d.tax[i]/100;c.ni=c.pt-c.tax;
+  c.sh=p.sh*(1+d.sg[i]/100);c.eps=c.ni/c.sh;c.ppmg=d.ppm[i]/100;o[y]=c;p=c;
+ });
+ Object.keys(A).forEach(function(y){o[y]=Object.assign({},A[y]);});
+ COLS.forEach(function(y,i){var c=o[y],q=i?o[COLS[i-1]]:null;
+  c.mlr=c.med/c.prem*100;c.sgar=c.sga/c.rev*100;c.opm=c.op/c.rev*100;c.taxr=c.pt>0?c.tax/c.pt*100:null;c.nim=c.ni/c.rev*100;
+  c.grw=q?c.rev/q.rev-1:null;c.mg=q?c.mem/q.mem-1:null;c.invg=q?c.inv/q.inv-1:null;
+  c.sg=q&&y!=='2026E'?c.sh/q.sh-1:null;c.epsg=!q?null:(q.eps>0?c.eps/q.eps-1:'nm');
+  if(c.ppmg===undefined)c.ppmg=null;
+  GK.forEach(function(k){c[k+'_g']=!q?null:(q[k]>0?c[k]/q[k]-1:'nm');});
+  CK.forEach(function(k){c[k+'_cs']=c[k]/c.rev*100;});});
+ return o;
+}
+/* 2028–29 member growth for the plan cases: solved so the 2026–29 revenue CAGR equals the case's target */
+PLAN.forEach(function(c){var s=SC[c],lo=-20,hi=80;
+ for(var n=0;n<60;n++){var m=(lo+hi)/2;s.mg[1]=s.mg[2]=m;var o=model(s);var g=Math.pow(o['2029E'].rev/o['2026E'].rev,1/3)-1;if(g*100<s.cagr)lo=m;else hi=m;}
+ s.mg[1]=s.mg[2]=Math.round((lo+hi)/2*10)/10;});
+D=clone(SC.mid);
+
+function n0(v){if(v==null||isNaN(v))return '—';var s=Math.abs(Math.round(v)).toLocaleString('en-US');return v<0?'('+s+')':s;}
+function p1(v){return v==null||isNaN(v)?'—':v.toFixed(1)+'%';}
+function gpc(v){if(v==='nm')return 'n.m.';return v==null||isNaN(v)?'—':(v>=0?'+':'−')+Math.abs(v*100).toFixed(1)+'%';}
+function eps(v){return v==null||isNaN(v)?'—':(v<0?'(':'')+'$'+Math.abs(v).toFixed(2)+(v<0?')':'');}
+function mm(v){return v==null?'—':v.toFixed(2)+'M';}
+function s1(v){return v==null?'—':v.toFixed(1);}
+
+var SECTIONS=[
+ {h:'Revenue',lines:[
+  {k:'prem',n:'Premium revenue',f:n0,kpis:[{k:'mem',n:'Members, year-end',f:mm},{k:'mg',n:'Member growth',f:gpc},{k:'ppmg',n:'Premium per member growth',f:gpc},{k:'prem_g',n:'Growth',f:gpc},{k:'prem_cs',n:'% of total revenue',f:p1}]},
+  {k:'inv',n:'Investment income',f:n0,kpis:[{k:'invg',n:'Growth',f:gpc},{k:'inv_cs',n:'% of total revenue',f:p1}]},
+  {k:'oth',n:'Other revenues',f:n0,kpis:[{k:'oth_g',n:'Growth',f:gpc},{k:'oth_cs',n:'% of total revenue',f:p1}]},
+  {k:'rev',n:'Total revenue',f:n0,tot:1,kpis:[{k:'grw',n:'Growth',f:gpc}]}]},
+ {h:'Costs',lines:[
+  {k:'med',n:'Medical expenses',f:n0,kpis:[{k:'mlr',n:'MLR, % of premium',f:p1},{k:'med_g',n:'Growth',f:gpc},{k:'med_cs',n:'% of total revenue',f:p1}]},
+  {k:'sga',n:'SG&A',f:n0,kpis:[{k:'sgar',n:'SG&A ratio, % of total revenue',f:p1},{k:'sga_g',n:'Growth',f:gpc}]},
+  {k:'da',n:'Depreciation & amortization',f:n0,kpis:[{k:'da_g',n:'Growth',f:gpc},{k:'da_cs',n:'% of total revenue',f:p1}]}]},
+ {h:'Profit',lines:[
+  {k:'op',n:'Earnings from operations',f:n0,tot:1,kpis:[{k:'opm',n:'Operating margin',f:p1},{k:'op_g',n:'Growth',f:gpc}]},
+  {k:'io',n:'Interest & other, net',f:n0},
+  {k:'pt',n:'Pre-tax income',f:n0,kpis:[{k:'pt_g',n:'Growth',f:gpc},{k:'pt_cs',n:'Pre-tax margin',f:p1}]},
+  {k:'tax',n:'Income tax',f:n0,kpis:[{k:'taxr',n:'Effective tax rate',f:p1}]},
+  {k:'ni',n:'Net income',f:n0,tot:1,kpis:[{k:'nim',n:'Net margin',f:p1},{k:'ni_g',n:'Growth',f:gpc}]}]},
+ {h:'Per share',lines:[
+  {k:'sh',n:'Diluted shares (M)',f:s1,kpis:[{k:'sg',n:'Share growth',f:gpc}]},
+  {k:'eps',n:'Diluted EPS',f:eps,tot:1,kpis:[{k:'epsg',n:'EPS growth',f:gpc}]}]}
+];
+function isLite(k){return /(_g|_cs)$/.test(k)||['grw','epsg'].indexOf(k)>=0;}
+var show={k:true,g:true,b:false};var open={};
+SECTIONS.forEach(function(s){s.lines.forEach(function(l){if(l.kpis)open[l.k]=true;});});
+var prev={};
+function ec(y){return y.slice(-1)==='E'?' e':'';}
+function fl(id,s){var f=(prev[id]!==undefined&&prev[id]!==s)?' fl':'';prev[id]=s;return f;}
+
+var FMT={};
+function cells(key,o,f){FMT[key]=f;return COLS.map(function(y){var s=f(o[y][key]);return '<td class="num'+ec(y)+fl(key+'|'+y,s)+'" data-c="'+key+'|'+y+'">'+s+'</td>';}).join('');}
+function baseOf(){return cur==='ours'?(OURS?OURS.base:'mid'):cur;}
+function isChg(dk,i){var r=SC[baseOf()];return Math.abs(D[dk][i]-r[dk][i])>1e-9;}
+function fmtD(v){return (+v.toFixed(2)).toFixed(Math.abs(v*10-Math.round(v*10))>1e-9?2:1);}
+var TAGT={G:'Oscar gave this number',i:'Our interpolation between Oscar’s 2026 guidance and its 2029 target, or backed out of the revenue CAGR'};
+function drvCells(kpi,o,f){
+ var dk=KPI2DRV[kpi];
+ return COLS.map(function(y){
+  var i=PY.indexOf(y);
+  if(i<0){FMT[kpi]=f;var s=f(o[y][kpi]);return '<td class="num'+ec(y)+fl(kpi+'|'+y,s)+'" data-c="'+kpi+'|'+y+'">'+s+'</td>';}
+  var v=D[dk][i];var tg=DRV[dk].tag[i];
+  return '<td class="num e dcell"><span class="ded'+(isChg(dk,i)?' chg':'')+'">'+
+   '<input class="din" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" id="din-'+dk+'-'+i+'" data-k="'+dk+'" data-i="'+i+'" value="'+fmtD(v)+'" aria-label="'+esc(kpi)+' '+y+', percent">'+
+   '<span class="du">%</span><span class="spn"><button type="button" data-k="'+dk+'" data-i="'+i+'" data-s="1" tabindex="-1" aria-label="Up">▲</button><button type="button" data-k="'+dk+'" data-i="'+i+'" data-s="-1" tabindex="-1" aria-label="Down">▼</button></span></span>'+
+   '<span class="tgw">'+(tg==='G'?'<span class="gb" title="'+TAGT.G+'">G</span>':'<span class="ib" title="'+TAGT.i+'">i</span>')+'</span></td>';
+ }).join('');
+}
+/* Update numbers in place: the table keeps its size and the focused input is never rebuilt */
+function patchTable(o){
+ ist.querySelectorAll('td[data-c]').forEach(function(td){var p=td.dataset.c.split('|');var s=FMT[p[0]](o[p[1]][p[0]]);prev[td.dataset.c]=s;
+  if(td.textContent!==s){td.textContent=s;td.classList.remove('fl');void td.offsetWidth;td.classList.add('fl');}});
+ ist.querySelectorAll('.din').forEach(function(el){el.parentNode.classList.toggle('chg',isChg(el.dataset.k,+el.dataset.i));});
+}
+function cmpRows(key,f,indent){
+ var h='';var cls=indent?' in':'';
+ if(show.g&&G[key])h+='<tr class="cmp g'+cls+'"><td><span class="ct g">OSCAR</span>guided</td>'+COLS.map(function(y){return '<td class="num'+ec(y)+'">'+esc(G[key][y]||'')+'</td>';}).join('')+'</tr>';
+ if(show.b&&BBG[key])h+='<tr class="cmp'+cls+'"><td><span class="ct">BBG</span>consensus</td>'+COLS.map(function(y){var v=BBG[key][y];return '<td class="num'+ec(y)+'">'+(v==null?'':f(v))+'</td>';}).join('')+'</tr>';
+ if(show.b&&key==='eps')h+='<tr class="cmp'+cls+'"><td><span class="ct">BBG</span>adjusted EPS</td>'+COLS.map(function(y){var v=BBG.eps_adj[y];return '<td class="num'+ec(y)+'">'+(v==null?'':f(v))+'</td>';}).join('')+'</tr>';
+ return h;
+}
+function renderTable(o){
+ var h='<colgroup><col class="c0">'+COLS.map(function(){return '<col>';}).join('')+'</colgroup><thead><tr><th>US$ millions</th>'+COLS.map(function(y){return '<th class="num'+ec(y)+'">'+y+(y==='2026E'?'<br><span style="text-transform:none;letter-spacing:0;font-weight:500">guide mid</span>':'')+'</th>';}).join('')+'</tr></thead><tbody>';
+ SECTIONS.forEach(function(s){
+  h+='<tr class="sec"><td colspan="'+(COLS.length+1)+'">'+s.h+'</td></tr>';
+  s.lines.forEach(function(l){
+   var nonDrv=(l.kpis||[]).filter(function(k){return !KPI2DRV[k.k];});
+   var hasToggle=nonDrv.length>0,isOpen=hasToggle&&show.k&&open[l.k];
+   var btn=hasToggle?'<button type="button" class="cv" data-line="'+l.k+'" aria-expanded="'+isOpen+'" aria-label="'+(isOpen?'Hide':'Show')+' KPIs for '+esc(l.n)+'"'+(show.k?'':' disabled')+'>▸</button>':'<span class="cvs"></span>';
+   var cnt=hasToggle&&!isOpen?'<span class="kc">'+nonDrv.length+' KPI'+(nonDrv.length>1?'s':'')+'</span>':'';
+   h+='<tr class="ln'+(l.tot?' tot':'')+'"><td>'+btn+esc(l.n)+cnt+'</td>'+cells(l.k,o,l.f)+'</tr>';
+   h+=cmpRows(l.k,l.f,false);
+   (l.kpis||[]).forEach(function(k){
+    var isD=!!KPI2DRV[k.k];
+    if(!isD&&!isOpen)return;
+    h+='<tr class="kpi'+(isD?' drv':'')+(isLite(k.k)?' lite':'')+'"><td><span class="kt">'+(isD?'DRIVER':'KPI')+'</span>'+esc(k.n)+'</td>'+(isD?drvCells(k.k,o,k.f):cells(k.k,o,k.f))+'</tr>';
+    h+=cmpRows(k.k,k.f,true);
+   });
+  });
+ });
+ ist.innerHTML=h+'</tbody>';ist.classList.toggle('notag',cur==='cons');
+ var b=o['2026E'],bb=D.b;
+ document.getElementById('ist-note').innerHTML='Growth is year over year; n.m. means not meaningful because the prior year was a loss. “% of total revenue” is the common-size view; margins are the same ratio for profit lines. Driver rows stay visible when a line’s other KPIs are closed. 2026E: revenue $'+(bb.rev/1000).toFixed(2)+'B, MLR '+bb.mlr.toFixed(2)+'% and SG&amp;A '+bb.sga.toFixed(2)+'% imply earnings from operations of about $'+n0(b.op)+'M against the $850–950M range; the ends of separate ranges need not add up. Investment income 2026E is 9M26 plus the 3Q26 run-rate (our estimate). Members are year-end. 2026E is an estimate of 2.51M (BBG; Oscar gives none), below the 2.69M at Sep 30 because members keep leaving in 4Q (eAPTC expiry and a second CMS eligibility review of ~500k lives). 2027 member growth is set by case (0% / 3% / 6%) for a market Oscar sees stable at ~17M; 2028–29 is backed out of the revenue CAGR. Shares use Oscar’s 331M basis; the reported 3Q26 weighted diluted count was 346.5M, including convertible notes. The 2026E tax rate (4.7%) is the BBG figure; Oscar gave none.';
+}
+
+function chk(label,val,ok,target){return '<div class="chk '+(ok?'ok':'no')+'"><span class="w">'+label+'</span><span class="v">'+val+'</span><span class="s">'+(ok?'✓ Meets ':'✗ Misses ')+target+'</span></div>';}
+function renderChecks(o){
+ var cagr=Math.pow(o['2029E'].rev/o['2026E'].rev,1/3)-1;
+ var m27=o['2027E'].opm,e27=o['2027E'].eps,m29=o['2029E'].opm,e29=o['2029E'].eps;
+ document.getElementById('chks').innerHTML=
+  chk('Revenue CAGR 2026–29',(cagr*100).toFixed(1)+'%',cagr>=0.1995,'&gt;20%')+
+  chk('Op. margin 2027',m27.toFixed(1)+'%',m27>5,'&gt;5%')+
+  chk('EPS 2027',eps(e27),e27>2.25,'&gt;$2.25')+
+  chk('Op. margin 2029',m29.toFixed(1)+'%',m29>=4.95&&m29<=7.05,'5–7%')+
+  chk('EPS 2029',eps(e29),e29>=4,'≥$4.00');
+}
+
+var FLEX=[['mlr','MLR',1,'±1 pt'],['sga','SG&A ratio',1,'±1 pt'],['mg','Member growth',3,'±3 pts a year'],['ppm','Premium per member',1,'±1 pt a year'],['tax','Tax rate',5,'±5 pts'],['sg','Share growth',1,'±1 pt a year'],['ig','Investment income growth',5,'±5 pts a year']];
+function renderTornado(o){
+ var base=o['2029E'].eps;
+ var R=FLEX.map(function(f){
+  var up=clone(D),dn=clone(D);up[f[0]]=up[f[0]].map(function(v){return v+f[2];});dn[f[0]]=dn[f[0]].map(function(v){return v-f[2];});
+  var a=model(up)['2029E'].eps,b=model(dn)['2029E'].eps;return {n:f[1],s:f[3],lo:Math.min(a,b,base),hi:Math.max(a,b,base)};
+ }).sort(function(x,y){return (y.hi-y.lo)-(x.hi-x.lo);});
+ var mn=Math.min.apply(null,R.map(function(r){return r.lo;})),mx=Math.max.apply(null,R.map(function(r){return r.hi;}));
+ var pad=(mx-mn)*0.05||0.1;mn-=pad;mx+=pad;function x(v){return (v-mn)/(mx-mn)*100;}
+ document.getElementById('tor-cap').innerHTML='Base 2029 EPS with the current drivers: <b>'+eps(base)+'</b>.';
+ document.getElementById('tor').innerHTML=R.map(function(r){
+  return '<div class="tr"><span class="n">'+esc(r.n)+'<small>'+esc(r.s)+'</small></span><div class="t" title="'+esc(r.n)+': '+eps(r.lo)+' to '+eps(r.hi)+'">'+
+   '<span class="lo k-dn" style="left:'+x(r.lo)+'%;width:'+(x(base)-x(r.lo))+'%"></span><span class="hi k-tot" style="left:'+x(base)+'%;width:'+(x(r.hi)-x(base))+'%"></span><span class="z" style="left:'+x(base)+'%"></span></div><span class="v">'+eps(r.lo)+' – '+eps(r.hi)+'</span></div>';
+ }).join('');
+}
+function renderGrid(){
+ var ML=[79,79.5,80,80.5,81],SG=[14,14.5,15,15.5,16];var vals=[];
+ ML.forEach(function(m){SG.forEach(function(s){var d=clone(D);d.mlr[2]=m;d.sga[2]=s;vals.push(model(d)['2029E'].eps);});});
+ var mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals),k=0;
+ var h='<thead><tr><th>MLR ↓ · SG&amp;A →</th>'+SG.map(function(s){return '<th>'+s.toFixed(1)+'%</th>';}).join('')+'</tr></thead><tbody>';
+ ML.forEach(function(m){h+='<tr><th>'+m.toFixed(1)+'%</th>'+SG.map(function(s){var v=vals[k++];var t=(v-mn)/((mx-mn)||1);
+  var base=Math.abs(D.mlr[2]-m)<0.001&&Math.abs(D.sga[2]-s)<0.001;
+  return '<td class="'+(v>=4?'hit':'')+(base?' base':'')+'" style="background:color-mix(in srgb,var(--steel) '+Math.round(8+t*42)+'%,var(--card))">'+eps(v)+'</td>';}).join('')+'</tr>';});
+ document.getElementById('hg').innerHTML=h+'</tbody>';
+}
+
+/* ---------- Comparison charts (portal Results style: bars by year, guidance as band or tick) ---------- */
+var C_ACT='rgba(30,39,51,0.92)',C_OURS='rgba(62,90,130,0.88)',C_CONS='rgba(124,134,148,0.75)',C_G='rgba(37,99,235,0.16)',C_GL='rgba(37,99,235,0.95)';
+var MET=[
+ {fam:'Income statement',k:'rev',n:'Total revenue',u:'$M'},
+ {fam:'Income statement',k:'prem',n:'Premium revenue',u:'$M'},
+ {fam:'Income statement',k:'med',n:'Medical expenses',u:'$M'},
+ {fam:'Income statement',k:'sga',n:'SG&A',u:'$M'},
+ {fam:'Income statement',k:'op',n:'Earnings from operations',u:'$M'},
+ {fam:'Income statement',k:'ni',n:'Net income',u:'$M'},
+ {fam:'Income statement',k:'eps',n:'Diluted EPS',u:'$'},
+ {fam:'Ratios',k:'mlr',n:'MLR (% of premium)',u:'%'},
+ {fam:'Ratios',k:'sgar',n:'SG&A ratio',u:'%'},
+ {fam:'Ratios',k:'opm',n:'Operating margin',u:'%'},
+ {fam:'Ratios',k:'nim',n:'Net margin',u:'%'},
+ {fam:'Ratios',k:'taxr',n:'Effective tax rate',u:'%'},
+ {fam:'Operating',k:'mem',n:'Members, year-end',u:'M'},
+ {fam:'Operating',k:'inv',n:'Investment income',u:'$M'},
+ {fam:'Operating',k:'sh',n:'Diluted shares',u:'M sh'}
+];
+function metBy(k){return MET.filter(function(m){return m.k===k;})[0];}
+function fmtU(u,v){if(v==null||isNaN(v))return '—';if(u==='%')return v.toFixed(1)+'%';if(u==='$')return eps(v);if(u==='M')return v.toFixed(2)+'M';if(u==='M sh')return v.toFixed(1)+'M';return '$'+n0(v)+'M';}
+var CH={};
+function chartSeries(st,o){
+ var m=metBy(st.k),gm=st.mode==='g'&&m.u!=='%';
+ function gr(arr){return arr.map(function(v,i){if(!gm)return v;if(i===0||v==null)return null;var p=arr[i-1];if(p==null){p=(i===2?o['2025A'][m.k]:null);}return p!=null&&p>0?(v/p-1)*100:null;});}
+ var act=COLS.map(function(y){return y.slice(-1)==='A'?o[y][m.k]:null;});
+ var ours=COLS.map(function(y){return y.slice(-1)==='E'?o[y][m.k]:null;});
+ var cons=COLS.map(function(y){return BBG[m.k]&&BBG[m.k][y]!=null?BBG[m.k][y]:null;});
+ if(gm){var full=COLS.map(function(y,i){return act[i]!=null?act[i]:ours[i];});var fg=gr(full);act=act.map(function(v,i){return v==null?null:fg[i];});ours=ours.map(function(v,i){return v==null?null:fg[i];});
+  var cfull=COLS.map(function(y,i){return cons[i]!=null?cons[i]:(y==='2025A'?o['2025A'][m.k]:null);});var cg=gr(cfull);cons=cons.map(function(v,i){return v==null?null:cg[i];});}
+ var band=COLS.map(function(){return null;}),tick=COLS.map(function(){return null;}),tlbl=COLS.map(function(){return null;});
+ if(!gm&&GN[m.k])COLS.forEach(function(y,i){var g=GN[m.k][y];if(!g)return;if(Array.isArray(g))band[i]=g;else{tick[i]=g.pt;tlbl[i]=g.lbl;}});
+ return {m:m,gm:gm,act:act,ours:ours,cons:cons,band:band,tick:tick,tlbl:tlbl};
+}
+var fwdZone={id:'fwdZone',beforeDraw:function(c){var x=c.scales.x,a=c.chartArea;if(!x||!a)return;var i=COLS.indexOf('2026E');var x0=(x.getPixelForValue(i-1)+x.getPixelForValue(i))/2;var ctx=c.ctx;ctx.save();ctx.fillStyle='rgba(244,246,249,0.9)';ctx.fillRect(x0,a.top,a.right-x0,a.bottom-a.top);ctx.fillStyle='rgba(124,134,148,0.9)';ctx.font='600 9.5px Inter, system-ui, sans-serif';ctx.fillText('ESTIMATES',x0+6,a.top+11);ctx.restore();}};
+function buildChart(id,k){
+ var host=document.getElementById(id);
+ var st={k:k,mode:'l',hide:{act:false,ours:false,cons:false,g:false},chart:null};CH[id]=st;
+ var fams={};MET.forEach(function(m){(fams[m.fam]=fams[m.fam]||[]).push(m);});
+ var sel='<select class="msel" id="'+id+'-sel" aria-label="Metric">'+Object.keys(fams).map(function(f){return '<optgroup label="'+f+'">'+fams[f].map(function(m){return '<option value="'+m.k+'"'+(m.k===k?' selected':'')+'>'+esc(m.n)+'</option>';}).join('')+'</optgroup>';}).join('')+'</select>';
+ host.innerHTML='<div class="cch">'+sel+'<div class="pills" role="group" aria-label="View"><button class="pill" data-md="l" aria-pressed="true">Level</button><button class="pill" data-md="g" aria-pressed="false">Growth</button></div></div>'+
+  '<div class="clg">'+[['act','Actual','sq',C_ACT],['ours','Selected scenario','sq',C_OURS],['cons','BBG consensus','sq',C_CONS],['g','Oscar guidance','band',C_GL]].map(function(s){return '<button type="button" class="chip2" data-hide="'+s[0]+'" aria-pressed="true"><span class="'+s[2]+'" style="'+(s[2]==='sq'?'background:'+s[3]:'border-color:'+s[3])+'"></span>'+s[1]+'</button>';}).join('')+'</div>'+
+  '<div class="cbox"><canvas id="'+id+'-cv" role="img" aria-label="Comparison chart"></canvas></div><p class="note cnote" id="'+id+'-nt"></p>'+
+  '<details class="ctab"><summary>Table</summary><div class="twrap"><table class="rt ctt" id="'+id+'-tb"></table></div></details>';
+ host.querySelector('select').addEventListener('change',function(e){st.k=e.target.value;var m=metBy(st.k);if(m.u==='%'){st.mode='l';}syncPills();drawChart(id);});
+ function syncPills(){var pc=metBy(st.k).u==='%';host.querySelectorAll('[data-md]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.md===st.mode);b.disabled=pc&&b.dataset.md==='g';});}
+ host.querySelectorAll('[data-md]').forEach(function(b){b.addEventListener('click',function(){if(b.disabled)return;st.mode=b.dataset.md;syncPills();drawChart(id);});});
+ host.querySelectorAll('[data-hide]').forEach(function(b){b.addEventListener('click',function(){var s=b.dataset.hide;st.hide[s]=!st.hide[s];b.setAttribute('aria-pressed',!st.hide[s]);drawChart(id);});});
+ syncPills();
+}
+function drawChart(id){
+ var st=CH[id];if(!st||!window.Chart)return;var host=document.getElementById(id);if(!host.offsetParent)return;
+ var o=model(D),S=chartSeries(st,o),m=S.m,u=S.gm?'%':m.u;
+ var ds=[];
+ if(!st.hide.g&&S.band.some(function(v){return v;}))ds.push({label:'Oscar guidance',type:'bar',data:S.band,backgroundColor:C_G,borderColor:'rgba(37,99,235,0.45)',borderWidth:1,borderSkipped:false,barPercentage:0.98,categoryPercentage:0.98,grouped:false,order:10});
+ if(!st.hide.g&&S.tick.some(function(v){return v!=null;}))ds.push({label:'Oscar guidance ',type:'line',data:S.tick,showLine:false,pointStyle:'line',pointRadius:16,pointHoverRadius:16,borderColor:C_GL,borderWidth:2.5,order:1});
+ if(!st.hide.act)ds.push({label:'Actual',type:'bar',data:S.act,backgroundColor:C_ACT,borderRadius:3,maxBarThickness:24,skipNull:true,order:3});
+ if(!st.hide.ours)ds.push({label:'Selected scenario',type:'bar',data:S.ours,backgroundColor:C_OURS,borderRadius:3,maxBarThickness:24,skipNull:true,order:4});
+ if(!st.hide.cons)ds.push({label:'BBG consensus',type:'bar',data:S.cons,backgroundColor:C_CONS,borderRadius:3,maxBarThickness:24,skipNull:true,order:5});
+ var opt={responsive:true,maintainAspectRatio:false,animation:{duration:250},interaction:{mode:'index',intersect:false},
+  plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){var v=c.raw;if(v==null)return null;if(Array.isArray(v))return 'Oscar guidance: '+fmtU(u,v[0])+' – '+fmtU(u,v[1]);if(c.dataset.label==='Oscar guidance ')return 'Oscar guidance: '+fmtU(u,v)+(S.tlbl[c.dataIndex]?' ('+S.tlbl[c.dataIndex]+')':'');return c.dataset.label+': '+fmtU(u,v);}}}},
+  scales:{x:{grid:{display:false},ticks:{color:'rgba(80,90,104,0.9)',font:{size:11}}},y:{position:'right',grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:11},callback:function(v){return u==='%'?(+v.toFixed(1))+'%':(u==='$'?'$'+v.toFixed(2):(u==='$M'?(Math.abs(v)>=1000?'$'+(v/1000).toFixed(0)+'B':'$'+v+'M'):v));}}}}};
+ if(m.u==='%'&&!S.gm){var all=[].concat(S.act,S.ours,S.cons,S.tick).filter(function(v){return v!=null;});S.band.forEach(function(b){if(b)all.push(b[0],b[1]);});if(all.length){var lo=Math.min.apply(null,all),hi=Math.max.apply(null,all),pd=(hi-lo)*0.25||1;opt.scales.y.min=Math.floor(lo-pd);opt.scales.y.max=Math.ceil(hi+pd);}}
+ if(st.chart){st.chart.data.datasets=ds;st.chart.options=opt;st.chart.update();}
+ else st.chart=new Chart(document.getElementById(id+'-cv'),{type:'bar',data:{labels:COLS,datasets:ds},options:opt,plugins:[fwdZone]});
+ document.getElementById(id+'-nt').textContent=S.gm?'Growth view: year-over-year change; 2026E growth is against 2025 actuals. Guidance is shown in the level view only.':(m.u==='%'?'Bands are guided ranges; a single tick is a point, floor or ceiling (hover for which).':'Bands are guided ranges; a single tick is a floor or a point (hover for which). Click a legend item to hide it from the chart and the table.');
+ var rows=[];
+ if(!st.hide.act)rows.push(['Actual',S.act.map(function(v){return fmtU(u,v);})]);
+ if(!st.hide.ours)rows.push(['Selected scenario',S.ours.map(function(v){return v==null?'':fmtU(u,v);})]);
+ if(!st.hide.cons)rows.push(['BBG consensus',S.cons.map(function(v){return v==null?'':fmtU(u,v);})]);
+ if(!st.hide.g&&!S.gm&&(S.band.some(function(v){return v;})||S.tick.some(function(v){return v!=null;})))rows.push(['Oscar guidance',COLS.map(function(y,i){return S.band[i]?fmtU(u,S.band[i][0])+' – '+fmtU(u,S.band[i][1]):(S.tick[i]!=null?fmtU(u,S.tick[i]):'');})]);
+ document.getElementById(id+'-tb').innerHTML='<thead><tr><th>'+esc(m.n)+(S.gm?' · growth':'')+'</th>'+COLS.map(function(y){return '<th class="num">'+y+'</th>';}).join('')+'</tr></thead><tbody>'+rows.map(function(r){return '<tr><td>'+r[0]+'</td>'+r[1].map(function(c){return '<td class="num">'+(c==='—'&&r[0]!=='Actual'?'':c)+'</td>';}).join('')+'</tr>';}).join('')+'</tbody>';
+}
+function drawCharts(){drawChart('cc1');drawChart('cc2');}
+buildChart('cc1','rev');buildChart('cc2','eps');
+
+/* ---------- scenarios and render ---------- */
+var ist=document.getElementById('ist');
+function syncSc(){
+ document.querySelectorAll('[data-sc]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.sc===cur);});
+ document.getElementById('seg-plan').classList.toggle('on',PLAN.indexOf(cur)>=0);
+ var n;
+ if(cur==='ours'){var k=0;DK.forEach(function(d){D[d].forEach(function(v,i){if(isChg(d,i))k++;});});
+  n='Our case: a copy of '+SCN[OURS?OURS.base:'mid']+' that differs only where you change a blue cell ('+k+' changed so far, shown in amber). Saved in this browser only; other viewers do not see it.';}
+ else n=SC_NOTE[cur];
+ document.getElementById('sc-note').textContent=n;
+ document.getElementById('sc-reset').disabled=!OURS;
+ ist.classList.toggle('notag',cur==='cons');
+}
+function refresh(){var o=model(D);patchTable(o);renderChecks(o);renderTornado(o);renderGrid();drawCharts();renderVal(o);syncSc();}
+function render(){var o=model(D);renderTable(o);renderChecks(o);renderTornado(o);renderGrid();drawCharts();renderVal(o);}
+function save(){ls('oscr-is-ours',JSON.stringify(OURS));}
+function setScenario(s){
+ if(s==='ours'){if(!OURS){OURS={base:cur,d:clone(D)};save();}D=clone(OURS.d);}
+ else D=clone(SC[s]);
+ cur=s;syncSc();render();}
+function edited(){if(cur!=='ours'){OURS={base:cur,d:null};cur='ours';}OURS.d=clone(D);save();}
+ist.addEventListener('input',function(ev){var el=ev.target;if(!el.classList||!el.classList.contains('din'))return;
+ var v=parseFloat(el.value.replace(',','.'));var bad=isNaN(v)||v<-50||v>200;el.parentNode.classList.toggle('bad',bad);if(bad)return;
+ D[el.dataset.k][+el.dataset.i]=v;edited();refresh();});
+ist.addEventListener('focusout',function(ev){var el=ev.target;if(!el.classList||!el.classList.contains('din'))return;el.parentNode.classList.remove('bad');el.value=fmtD(D[el.dataset.k][+el.dataset.i]);});
+ist.addEventListener('focusin',function(ev){var el=ev.target;if(el.classList&&el.classList.contains('din'))setTimeout(function(){try{el.select();}catch(e){}},0);});
+ist.addEventListener('keydown',function(ev){var el=ev.target;if(!el.classList||!el.classList.contains('din'))return;
+ if(ev.key==='Enter'){el.blur();return;}
+ if(ev.key==='Escape'){el.value=fmtD(D[el.dataset.k][+el.dataset.i]);el.blur();return;}
+ if(ev.key!=='ArrowUp'&&ev.key!=='ArrowDown')return;ev.preventDefault();stepEl(el,(ev.key==='ArrowUp'?1:-1)*(ev.shiftKey?5:1));});
+function stepEl(el,s){var k=el.dataset.k,i=+el.dataset.i;D[k][i]=Math.round((D[k][i]+DRV[k].st*s)*100)/100;edited();refresh();el.value=fmtD(D[k][i]);el.parentNode.classList.remove('bad');}
+ist.addEventListener('mousedown',function(ev){if(ev.target.closest('.spn button'))ev.preventDefault();});
+ist.addEventListener('click',function(ev){
+ var b=ev.target.closest('.spn button');if(b){stepEl(document.getElementById('din-'+b.dataset.k+'-'+b.dataset.i),+b.dataset.s*(ev.shiftKey?5:1));return;}
+ var c=ev.target.closest('.cv');if(!c||c.disabled)return;open[c.dataset.line]=!open[c.dataset.line];render();var nb=document.querySelector('.cv[data-line="'+c.dataset.line+'"]');if(nb)nb.focus();});
+document.querySelectorAll('[data-sc]').forEach(function(b){b.addEventListener('click',function(){setScenario(b.dataset.sc);});});
+document.getElementById('sc-reset').addEventListener('click',function(){if(!OURS)return;var base=OURS.base;OURS=null;try{localStorage.removeItem('oscr-is-ours');}catch(e){}if(cur==='ours')setScenario(base);else syncSc();});
+
+/* ---------- valuation: P/E on a chosen EPS year, EPS CAGR, PEG, value today ---------- */
+var V={pe:15,yr:'2029E',bs:'fwd',cs:'2026E',dr:10,px:null};
+try{var sv=JSON.parse(ls('oscr-val')||'null');if(sv)Object.keys(V).forEach(function(k){if(sv[k]!==undefined)V[k]=sv[k];});}catch(e){}
+if(PY.indexOf(V.yr)<0)V.yr='2029E';if(['fwd','trl'].indexOf(V.bs)<0)V.bs='fwd';if(['2026E','2027E'].indexOf(V.cs)<0||+V.cs.slice(0,4)>=+V.yr.slice(0,4))V.cs='2026E';
+if(!(V.pe>0))V.pe=15;if(!(V.dr>=0))V.dr=10;if(!(V.px>0))V.px=null;
+function vsave(){ls('oscr-val',JSON.stringify(V));}
+var TODAY=new Date();
+function yn(y){return +y.slice(0,4);}
+function vmath(epsOf,pe){
+ var eY=epsOf(V.yr),eS=epsOf(V.cs),n=yn(V.yr)-yn(V.cs);
+ var cg=(n>0&&eS>0&&eY>0)?Math.pow(eY/eS,1/n)-1:null;
+ var end=V.bs==='fwd'?yn(V.yr)-1:yn(V.yr);
+ var t=Math.max(0,(new Date(end,11,31)-TODAY)/31557600000);
+ var px=eY>0?pe*eY:null,pv=px==null?null:px/Math.pow(1+V.dr/100,t);
+ return {eY:eY,eS:eS,cg:cg,n:n,peg:cg&&cg>0?pe/(cg*100):null,px:px,pv:pv,t:t,end:end};
+}
+function money(v){return v==null||isNaN(v)?'—':'$'+v.toFixed(2);}
+function xx(v){return v==null||isNaN(v)?'—':v.toFixed(2)+'×';}
+function pct1(v){return v==null?'n.m.':(v*100).toFixed(1)+'%';}
+function updn(pv){if(V.px==null||pv==null)return '';var u=pv/V.px-1;return '<span class="'+(u>=0?'up':'dn')+'">'+(u>=0?'+':'−')+Math.abs(u*100).toFixed(0)+'%</span> vs your $'+V.px.toFixed(2);}
+function renderVal(o){
+ if(!o)o=model(D);
+ var Y=V.yr,S=V.cs,pe=V.pe;
+ var r=vmath(function(y){return o[y].eps;},pe);
+ var ttl=SCN[cur];
+ document.getElementById('v-src').textContent='Cards: '+ttl;
+ var atPx=V.px!=null&&r.eY>0;
+ document.getElementById('v-tiles').innerHTML=
+  '<div class="chk"><span class="w">EPS '+Y+'</span><span class="v">'+eps(r.eY)+'</span><span class="s">'+esc(ttl)+'<br>'+S+' EPS '+eps(r.eS)+'</span></div>'+
+  '<div class="chk"><span class="w">EPS CAGR '+yn(S)+'–'+yn(Y)+'</span><span class="v">'+pct1(r.cg)+'</span><span class="s">'+(r.cg==null?'Needs positive EPS in both years':'Compound annual growth over '+r.n+' year'+(r.n>1?'s':''))+'</span></div>'+
+  '<div class="chk"><span class="w">PEG at '+pe.toFixed(1)+'×</span><span class="v">'+xx(r.peg)+'</span><span class="s">'+(r.cg>0?'PEG 1.0× = <b>'+(r.cg*100).toFixed(1)+'×</b> P/E'+(atPx?'<br>At $'+V.px.toFixed(2)+': P/E '+(V.px/r.eY).toFixed(1)+'×, PEG '+xx(V.px/r.eY/(r.cg*100)):''):'—')+'</span></div>'+
+  '<div class="chk"><span class="w">Value per share today</span><span class="v">'+money(r.pv)+'</span><span class="s">'+money(r.px)+' at Dec '+r.end+', discounted '+r.t.toFixed(1)+' yrs at '+V.dr.toFixed(1)+'%'+(V.px!=null?'<br>'+updn(r.pv):'')+'</span></div>';
+ var cols=[];
+ PLAN.concat(['cons']).forEach(function(s){var m=model(cur===s?D:SC[s]);cols.push({id:s,n:s==='cons'?'Consensus-like':'Oscar '+s.charAt(0).toUpperCase()+s.slice(1),e:function(y){return m[y].eps;}});});
+ cols.push({id:'bbg',n:'BBG EPS (GAAP)',e:function(y){return BBG.eps[y];}});
+ cols.push({id:'bbga',n:'BBG adj. EPS',e:function(y){return BBG.eps_adj[y];}});
+ if(OURS){var mo=model(cur==='ours'?D:OURS.d);cols.push({id:'ours',n:'Our case',e:function(y){return mo[y].eps;}});}
+ var R=cols.map(function(c){return vmath(c.e,pe);});
+ var mults=[];[-6,-4,-2,0,2,4,6].forEach(function(dl){var m=dl===0?pe:Math.round((pe+dl)*2)/2;if(m>0&&mults.indexOf(m)<0)mults.push(m);});
+ function td(c,s,cls){return '<td class="num'+(c.id===cur?' cur':'')+(cls?' '+cls:'')+'">'+s+'</td>';}
+ function row(lbl,f){return '<tr class="vh"><td>'+lbl+'</td>'+cols.map(function(c,i){return td(c,f(R[i]));}).join('')+'</tr>';}
+ var h='<thead><tr><th>Per share</th>'+cols.map(function(c){return '<th class="num'+(c.id===cur?' cur':'')+'">'+esc(c.n)+'</th>';}).join('')+'</tr></thead><tbody>';
+ h+=row('EPS '+Y,function(q){return eps(q.eY);});
+ h+=row('EPS CAGR '+yn(S)+'–'+yn(Y),function(q){return pct1(q.cg);});
+ h+=row('PEG at '+pe.toFixed(1)+'×',function(q){return xx(q.peg);});
+ if(V.px!=null){
+  h+=row('P/E at $'+V.px.toFixed(2),function(q){return q.eY>0?(V.px/q.eY).toFixed(1)+'×':'—';});
+  h+=row('PEG at $'+V.px.toFixed(2),function(q){return q.eY>0&&q.cg>0?xx(V.px/q.eY/(q.cg*100)):'—';});}
+ h+='<tr class="vs"><td colspan="'+(cols.length+1)+'">Value per share today, by P/E</td></tr>';
+ mults.forEach(function(m){h+='<tr'+(m===pe?' class="sel"':'')+'><td>'+(+m.toFixed(2))+'×</td>'+cols.map(function(c){var q=vmath(c.e,m);var cls=V.px!=null&&q.pv!=null?(q.pv>=V.px?'up':'dn'):'';return td(c,money(q.pv),cls);}).join('')+'</tr>';});
+ document.getElementById('v-mx').innerHTML=h+'</tbody>';
+ document.getElementById('v-note').innerHTML=(V.bs==='fwd'?'Forward: the price at the end of '+(yn(Y)-1)+' is the P/E times '+Y+' EPS.':'Trailing: the price at the end of '+yn(Y)+' is the P/E times '+Y+' EPS.')+' Value today discounts that Dec 31 price back to today at the discount rate. PEG = P/E ÷ annual EPS growth in percent, so 1.0× means one turn of P/E for each point of growth. The two BBG columns are BBG’s GAAP and adjusted EPS fields as printed; the others run through our model. Shaded column: the scenario selected at the top'+(V.px!=null?'; green or red: at or above, or below, the price you typed':'')+'.';
+ syncV();
+}
+function syncV(){
+ var pi=document.getElementById('v-pe');if(document.activeElement!==pi)pi.value=+V.pe.toFixed(2);document.getElementById('v-pe-r').value=V.pe;
+ var di=document.getElementById('v-dr');if(document.activeElement!==di)di.value=V.dr.toFixed(1);
+ var xi=document.getElementById('v-px');if(document.activeElement!==xi)xi.value=V.px==null?'':V.px.toFixed(2);
+ [['v-yr','yr'],['v-bs','bs'],['v-cs','cs']].forEach(function(p){document.querySelectorAll('#'+p[0]+' [data-v]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.v===V[p[1]]);if(p[1]==='cs')b.disabled=yn(b.dataset.v)>=yn(V.yr);});});
+}
+[['v-yr','yr'],['v-bs','bs'],['v-cs','cs']].forEach(function(p){document.querySelectorAll('#'+p[0]+' [data-v]').forEach(function(b){b.addEventListener('click',function(){if(b.disabled)return;V[p[1]]=b.dataset.v;if(yn(V.cs)>=yn(V.yr))V.cs='2026E';vsave();renderVal();});});});
+document.getElementById('v-pe-r').addEventListener('input',function(e){V.pe=+e.target.value;vsave();renderVal();});
+function numIn(id,fn){var el=document.getElementById(id);
+ el.addEventListener('input',function(){var t=el.value.replace(/[$,×x%\s]/g,'');var v=t===''?null:parseFloat(t);var ok=fn(v,t);el.parentNode.style.borderColor=ok?'':'var(--neg)';if(ok){vsave();renderVal();}});
+ el.addEventListener('blur',function(){el.parentNode.style.borderColor='';syncV();});
+ el.addEventListener('focus',function(){setTimeout(function(){try{el.select();}catch(e){}},0);});
+ el.addEventListener('keydown',function(e){if(e.key==='Enter')el.blur();});}
+numIn('v-pe',function(v){if(v==null||isNaN(v)||v<=0||v>100)return false;V.pe=v;return true;});
+numIn('v-dr',function(v){if(v==null||isNaN(v)||v<0||v>40)return false;V.dr=v;return true;});
+numIn('v-px',function(v,t){if(t===''){V.px=null;return true;}if(isNaN(v)||v<=0)return false;V.px=v;return true;});
+['k','g','b'].forEach(function(k){var b=document.getElementById('sw-'+k);b.addEventListener('click',function(){show[k]=!show[k];b.setAttribute('aria-pressed',show[k]);if(k==='k'&&show.k){Object.keys(open).forEach(function(x){open[x]=true;});}render();});});
+document.getElementById('tb-is').addEventListener('click',function(){setTimeout(drawCharts,30);});
+if(!window.Chart){['cc1','cc2'].forEach(function(id){document.getElementById(id+'-nt').textContent='The charting library did not load, so the charts are unavailable; the table above has every number.';});}
+syncSc();render();
+setTimeout(drawCharts,60);
 })();
 </script>

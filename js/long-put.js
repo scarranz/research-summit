@@ -48,8 +48,7 @@ const st = {
   expand: false,
   avgKey: 'x10',             // which historical average the scenario reverts to
   target: null,              // a typed target multiple overrides the average
-  account: 1000000,          // the account the position is sized against
-  riskPct: 0.01,             // the share of it the premium may cost
+  riskPct: 0.005,            // the premium is this share of the portfolio (SAB, Nov 10 2026: 0.5%)
   hist: { win: null, yr: null, hidden: {}, tbl: false },
 };
 let instOpen = false;
@@ -119,17 +118,14 @@ function rowFor(K) {
   const be = (prem != null) ? K - prem : null;
   const value = (sc.price != null) ? Math.max(K - sc.price, 0) : null;
   const cost = (prem != null) ? prem * 100 : null;
-  const budget = st.account * st.riskPct;
-  const contracts = (cost > 0) ? Math.floor(budget / cost) : 0;
   return {
-    ...base, c, prem, days, be, cost, contracts,
+    ...base, c, prem, days, be, cost,
     pe: sc.eps ? K / sc.eps : null,                       // the P/E at which the put starts to pay
     bePE: (be != null && sc.eps) ? be / sc.eps : null,     // the P/E the trade needs to break even
     beDrop: (be != null && st.spot) ? be / st.spot - 1 : null,
     value, pnl: (value != null && prem != null) ? (value - prem) * 100 : null,
     ret: (value != null && prem) ? value / prem - 1 : null,
-    spent: cost != null ? cost * contracts : null,
-    notional: K * 100 * contracts,
+    minPort: (cost != null && st.riskPct > 0) ? cost / st.riskPct : null,   // the smallest portfolio one contract fits
     iv: c.implied_volatility == null ? null : c.implied_volatility,
     delta: c.greeks ? c.greeks.delta : null,
     exp: c.details.expiration_date,
@@ -175,6 +171,7 @@ async function loadTicker(tk) {
   st.ticker = tk.toUpperCase();
   D = LP_DATA[st.ticker] || null;
   st.chain = []; st.strikes = []; st.seeded = false; st.rangeFrom = null; st.rangeTo = null; st.selected = null;
+  if (st.growth) { st.growth.win = null; st.growth.yr = null; }
   if (!D) { st.loading = false; st.err = `${st.ticker} has no consensus and P/E history on file — this tab needs both (see the foot)`; render(); return; }
   st.loading = true; st.err = null; render();
   st.expiries = await fetchExpiries(st.ticker);
@@ -209,18 +206,17 @@ function renderLadder() {
         <button type="button" class="xp" id="lp-expand" title="${st.expand ? 'hide IV and delta' : 'show IV and delta'}">${st.expand ? '−' : '+'}</button></th>
       <th colspan="3" class="grp sep">As a valuation · NTM EPS on ${esc(st.expiry || '')} ${px(sc.eps)}</th>
       <th colspan="3" class="grp sep">If the P/E goes to ${mult(sc.m)} by expiry → ${px(sc.price)}</th>
-      <th colspan="3" class="grp sep">Size · premium budget ${pct(st.riskPct, 1)} of
-        <input id="lp-acct" class="hnum wide" type="number" step="100000" min="0" value="${st.account}"></th>
+      <th class="grp sep">Size · premium = ${pct(st.riskPct, 1)} of the portfolio</th>
       <th rowspan="2" class="sep"></th>
     </tr>
     <tr>
       <th class="lft">Strike</th><th>Below spot</th><th>Premium</th>${st.expand ? '<th>IV</th><th>Delta</th>' : ''}
       <th class="sep">P/E at strike</th><th>Breakeven</th><th>P/E at breakeven</th>
       <th class="sep">Put value</th><th>P&amp;L / contract</th><th>Return on premium</th>
-      <th class="sep">Contracts</th><th>Premium paid</th><th>Notional</th>
+      <th class="sep" title="the smallest portfolio for which one contract's premium is ${pct(st.riskPct, 1)} of it">Min. portfolio</th>
       <th class="sep" title="tick the contracts to hand to Instruments">Add</th><th title="drop this strike">Remove</th>
     </tr>`;
-  const ncol = nC + 3 + 3 + 3 + 2;
+  const ncol = nC + 3 + 3 + 1 + 2;
   if (!rows.length) { $('lp-tbody').innerHTML = `<tr><td colspan="${ncol}" class="muted">no strikes picked yet — add them below.</td></tr>`; return; }
   const selK = (selectedRow() || {}).K;
   $('lp-tbody').innerHTML = rows.map((r) => {
@@ -241,9 +237,7 @@ function renderLadder() {
       <td class="sep ${inScn ? 'up' : 'muted'}">${px(r.value)}</td>
       <td class="${r.pnl > 0 ? 'up' : 'dn'}">${cash(r.pnl)}</td>
       <td class="big ${r.ret > 0 ? 'up' : 'dn'}">${r.ret == null ? '—' : pctS(r.ret, 0)}</td>
-      <td class="sep">${r.contracts.toLocaleString()}</td>
-      <td>${cash(r.spent)}</td>
-      <td class="muted">${cash(r.notional)}<span class="ttip" data-tip="${esc(`<b>Notional</b> = strike × 100 × contracts — ${pct(st.account ? r.notional / st.account : null, 1)} of the account`)}">i</span></td>
+      <td class="sep big">${cash(r.minPort)}<span class="ttip" data-tip="${esc(`One contract costs <b>${cash(r.cost)}</b> (${px(r.prem)} × 100). At ${pct(st.riskPct, 1)} of the portfolio that needs a portfolio of at least <b>${cash(r.minPort)}</b>; a larger one takes more contracts, one per ${cash(r.minPort)}.`)}">i</span></td>
       <td class="sep">${r.c ? `<input type="checkbox" class="pick" data-pick="${r.K}" ${selHas('lp', symbolOf(r.c, st.ticker, st.expiry, 'put', r.K)) ? 'checked' : ''}>` : '<span class="muted">—</span>'}</td>
       <td><button class="x" data-del="${r.K}" title="remove this strike">✕</button></td>
     </tr>`;
@@ -350,30 +344,545 @@ function buildHistChart() {
     () => { st.hist.win = null; st.hist.yr = null; buildHistChart(); });
 }
 
-// ── Render: the growth block ──────────────────────────────────────────────────
+// ── Render: the P&L of the selected strike ────────────────────────────────────
+// Click a row in the ladder and this block charts that put's P&L at expiry across
+// the price of the stock, with the same prices as a table under it. The x-axis is
+// the price; a second axis on top reads the same price as a P/E on the expiry-date
+// EPS, so "where does it pay" is a valuation as well as a price. Portal chart
+// standard (CHART_ENGINE_REFERENCE §0): both axes zoom, double-click resets; the
+// chips hide a marker from the chart AND its column from the table; the table sits
+// in a dropdown; every number has its unit.
+const P_LINE = 'rgba(30,39,51,0.92)';
+const P_MARK = [
+  { k: 'spot', l: 'Spot', c: '#7C8694' },
+  { k: 'strike', l: 'Strike', c: '#3E5A82' },
+  { k: 'be', l: 'Breakeven', c: '#B7791F' },
+  { k: 'scn', l: 'Scenario', c: '#2563EB' },
+];
+let _pChart = null;
+const pst = () => st.pnl || (st.pnl = { hidden: {}, xr: null, yr: null, tbl: true, K: null });
+
+function pnlAt(r, S) {
+  const value = Math.max(r.K - S, 0);
+  return { value, pnl: (value - r.prem) * 100, ret: r.prem ? value / r.prem - 1 : null };
+}
+function pnlMarks(r) {
+  const sc = scenario();
+  return { spot: st.spot, strike: r.K, be: r.be, scn: sc.price };
+}
+// The price grid of the table: every 2x of P/E on the expiry-date EPS across the
+// range that matters, plus the four marked prices themselves.
+function pnlGrid(r) {
+  const sc = scenario(), eps = sc.eps, mk = pnlMarks(r), s = pst();
+  const pts = [];
+  if (eps) {
+    const pes = [mk.scn, mk.be, mk.strike, mk.spot].filter((v) => v != null).map((v) => v / eps);
+    const lo = Math.max(2, Math.floor((Math.min(...pes) - 4) / 2) * 2), hi = Math.ceil((Math.max(...pes) + 2) / 2) * 2;
+    for (let m = lo; m <= hi + 1e-9; m += 2) pts.push({ S: m * eps, key: null });
+  }
+  P_MARK.forEach((m) => { if (mk[m.k] != null && !s.hidden[m.k]) pts.push({ S: mk[m.k], key: m.k }); });
+  const inWin = (S) => !s.xr || (S >= s.xr[0] - 1e-9 && S <= s.xr[1] + 1e-9);
+  return pts.filter((p) => inWin(p.S)).sort((a, b) => a.S - b.S);
+}
+
+function pnlHead(r) {
+  const s = pst(), open = s.tbl === true, n = pnlGrid(r).length;
+  return `<span class="rs-collap-ic">${open ? '▾' : '▸'}</span>P&amp;L by price` +
+    `<span class="rs-collap-sub">${open ? 'hide' : 'show'} · $${r.K} put, ${n} prices at expiry</span>`;
+}
+function pnlTable(r) {
+  const grid = pnlGrid(r), eps = scenario().eps;
+  if (!grid.length) return '<div class="rs-ft-cap">No price in the zoomed range — double-click the chart to reset.</div>';
+  const markL = Object.fromEntries(P_MARK.map((m) => [m.k, m]));
+  const td = (p, txt, cls = '') => `<td class="${p.key ? 'lp-pk' : ''}${cls}">${txt}</td>`;
+  const line = (label, fn, main) => `<tr class="${main ? 'rs-ft-main' : 'rs-ft-sub'}"><td class="rs-ft-h">${label}</td>${grid.map((p) => fn(p)).join('')}</tr>`;
+  return `<div class="rs-ft-cap">At expiry (${esc(r.exp)}) · US$ · per contract = 100 shares · premium ${px(r.prem)} (${esc(st.premBasis)}) · P/E on the NTM EPS of that date, ${px(eps)}</div>
+    <div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">Stock at expiry</th>
+      ${grid.map((p) => `<th class="${p.key ? 'lp-pk' : ''}">${p.key ? `<span class="lp-pkl" style="color:${markL[p.key].c}">${esc(markL[p.key].l)}</span><br>` : ''}${px(p.S)}</th>`).join('')}
+    </tr></thead><tbody>
+      ${line('vs spot', (p) => td(p, pctS(st.spot ? p.S / st.spot - 1 : null)))}
+      ${line('P/E on expiry EPS', (p) => td(p, mult(eps ? p.S / eps : null)))}
+      ${line('Put value', (p) => td(p, px(pnlAt(r, p.S).value)))}
+      ${line('P&amp;L / contract', (p) => { const v = pnlAt(r, p.S).pnl; return td(p, cash(v), Math.abs(v) < 0.5 ? '' : v > 0 ? ' up' : ' dn'); }, true)}
+      ${line('Return on premium', (p) => { const v = pnlAt(r, p.S).ret; return td(p, v == null ? '—' : pctS(v, 0), v > 0 ? ' up' : v < 0 ? ' dn' : ''); })}
+      ${line(`Portfolio impact (premium = ${pct(st.riskPct, 1)})`, (p) => { const v = pnlAt(r, p.S).ret; return td(p, v == null ? '—' : pctS(v * st.riskPct, 2), v > 0 ? ' up' : v < 0 ? ' dn' : ''); })}
+    </tbody></table></div>`;
+}
+function pnlChips() {
+  const s = pst();
+  return `<span class="rs-leg lp-static"><span class="rs-leg-line" style="background:${P_LINE}"></span>P&amp;L / contract</span>` +
+    P_MARK.map((m) => `<button type="button" class="rs-leg${s.hidden[m.k] ? ' off' : ''}" data-plg="${m.k}" title="Show / hide">` +
+      `<span class="rs-leg-dash" style="color:${m.c}"></span>${esc(m.l)}</button>`).join('');
+}
+
+function renderPnl() {
+  const box = $('lp-pnl'); if (!box) return;
+  const r = selectedRow();
+  if (!r || r.prem == null) { box.hidden = true; box.innerHTML = ''; return; }   // nothing selected: nothing drawn
+  box.hidden = false;
+  const s = pst();
+  if (s.K !== r.K) { s.K = r.K; s.xr = null; s.yr = null; }      // a new strike drops the zoom
+  const sc = scenario(), atScn = sc.price != null ? pnlAt(r, sc.price) : null;
+  box.innerHTML = `
+    <div class="block-top"><div class="block-h">P&amp;L at expiry — $${r.K} put, ${esc(r.exp)}, premium ${px(r.prem)}</div>
+      <span class="muted">Click another strike in the table above to chart it</span></div>
+    <p class="lp-p">Breakeven <b>${px(r.be)}</b> (${pctS(r.beDrop)} vs spot, ${mult(r.bePE)} on expiry EPS). The most this contract can lose is the premium, <b>${cash(r.cost)}</b>; at ${mult(sc.m)} the stock would be ${px(sc.price)} and the contract ${atScn ? `<b class="${atScn.pnl > 0 ? 'up' : 'dn'}">${cash(atScn.pnl)}</b> (${atScn.ret == null ? '—' : pctS(atScn.ret, 0)} on the premium)` : '—'}.</p>
+    <div class="lp-gleg">${pnlChips()}</div>
+    <div class="lp-chart lp-pchart"><canvas id="lp-pChart"></canvas></div>
+    <div class="muted lp-hint">Hover to read any price on both axes: the stock price at the bottom, the same price as a P/E on the expiry-date EPS on top, the P&amp;L on the right. Drag sideways to zoom the prices, up or down to zoom the P&amp;L; double-click resets.</div>
+    <div class="rs-collap">
+      <button type="button" class="rs-collap-h" id="lp-pTblB">${pnlHead(r)}</button>
+      <div class="rs-collap-b" id="lp-pTblBody"${s.tbl === true ? '' : ' hidden'}><div class="rs-tablewrap">${pnlTable(r)}</div></div>
+    </div>`;
+  requestAnimationFrame(buildPnlChart);
+}
+
+// The chart's own drawing: rounded pills for the markers, and a crosshair that follows
+// the mouse and reads the hovered price on BOTH x-axes (bottom: the stock price; top:
+// that price as a P/E on the expiry-date EPS) and the P&L on the right axis.
+function pPill(ctx, x, y, text, bg, fg = '#fff', font = '700 10.5px Inter, system-ui, sans-serif') {
+  ctx.font = font;
+  const w = ctx.measureText(text).width + 12, h = 18;
+  gRR(ctx, x - w / 2, y - h / 2, w, h, 9); ctx.fillStyle = bg; ctx.fill();
+  ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 0.5);
+  return w;
+}
+const pMarkers = {
+  id: 'pMarkers',
+  beforeDatasetsDraw(chart, args, opts) {          // the marker lines sit under the P&L line
+    const list = (opts && opts.list) || [], x = chart.scales.x, a = chart.chartArea, ctx = chart.ctx;
+    ctx.save();
+    list.forEach((m) => {
+      if (m.v == null || m.v < x.min || m.v > x.max) return;
+      const p = x.getPixelForValue(m.v);
+      ctx.strokeStyle = m.c; ctx.globalAlpha = 0.75; ctx.lineWidth = 1.2; ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(p, a.top + 2); ctx.lineTo(p, a.bottom); ctx.stroke();
+    });
+    ctx.restore();
+  },
+  afterDatasetsDraw(chart, args, opts) {           // pills on top, stepped down when two would collide
+    const list = ((opts && opts.list) || []).filter((m) => m.v != null && m.v >= chart.scales.x.min && m.v <= chart.scales.x.max)
+      .sort((p, q) => p.v - q.v);
+    const x = chart.scales.x, a = chart.chartArea, ctx = chart.ctx, rows = [];
+    ctx.save(); ctx.font = '700 10.5px Inter, system-ui, sans-serif';
+    list.forEach((m) => {
+      const t = `${m.l} ${px(m.v)}`, w = ctx.measureText(t).width + 12;
+      let cx = Math.min(Math.max(x.getPixelForValue(m.v), a.left + w / 2 + 2), a.right - w / 2 - 2);
+      let row = 0; while (rows[row] != null && rows[row] > cx - w / 2 - 4) row++;
+      rows[row] = cx + w / 2;
+      pPill(ctx, cx, a.top + 12 + row * 22, t, m.c);
+    });
+    ctx.restore();
+  },
+};
+const pCross = {
+  id: 'pCross',
+  afterEvent(chart, args) {
+    const e = args.event, a = chart.chartArea;
+    const inside = e.type !== 'mouseout' && e.x >= a.left && e.x <= a.right && e.y >= a.top && e.y <= a.bottom;
+    const nx = inside ? e.x : null;
+    if (chart.$crossX !== nx) { chart.$crossX = nx; args.changed = true; }
+  },
+  afterDraw(chart, args, opts) {
+    const cx = chart.$crossX; if (cx == null || !opts || !opts.r) return;
+    const { r, eps } = opts, x = chart.scales.x, top = chart.scales.xpe, y = chart.scales.y, a = chart.chartArea, ctx = chart.ctx;
+    const S = x.getValueForPixel(cx), p = pnlAt(r, S), py = y.getPixelForValue(p.pnl);
+    const col = p.pnl > 0.5 ? '#1E9E62' : p.pnl < -0.5 ? '#C0392B' : '#1E2733';
+    ctx.save();
+    // the crosshair: a vertical line through both axes and a horizontal one to the P&L axis
+    ctx.strokeStyle = 'rgba(30,39,51,0.45)'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(cx, a.top); ctx.lineTo(cx, a.bottom); ctx.stroke();
+    if (py >= a.top && py <= a.bottom) { ctx.beginPath(); ctx.moveTo(cx, py); ctx.lineTo(a.right, py); ctx.stroke(); }
+    ctx.setLineDash([]);
+    if (py >= a.top && py <= a.bottom) {
+      ctx.beginPath(); ctx.arc(cx, py, 5, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
+      ctx.lineWidth = 2.5; ctx.strokeStyle = col; ctx.stroke();
+    }
+    // the hovered value on each axis, in a pill over the tick labels
+    const clampX = (w) => Math.min(Math.max(cx, a.left + w / 2), a.right - w / 2);
+    ctx.font = '700 11px Inter, system-ui, sans-serif';
+    const tb = `$${S.toFixed(2)}`, tt = eps ? `${(S / eps).toFixed(1)}x` : '—';
+    pPill(ctx, clampX(ctx.measureText(tb).width + 12), x.top + 11, tb, '#1E2733', '#fff', '700 11px Inter, system-ui, sans-serif');
+    pPill(ctx, clampX(ctx.measureText(tt).width + 12), top.bottom - 11, tt, '#2563EB', '#fff', '700 11px Inter, system-ui, sans-serif');
+    if (py >= a.top && py <= a.bottom) {
+      const tp = cash(p.pnl), w = ctx.measureText(tp).width + 12;
+      pPill(ctx, a.right + 4 + w / 2, py, tp, col, '#fff', '700 11px Inter, system-ui, sans-serif');
+    }
+    // a small card beside the cursor: what this price means for the contract
+    const lines = [
+      [`P&L ${cash(p.pnl)}`, col, '800 12.5px Inter, system-ui, sans-serif'],
+      [`${p.ret == null ? '—' : pctS(p.ret, 0)} on the premium · ${pctS(p.ret == null ? null : p.ret * st.riskPct, 2)} of portfolio`, '#475467', '500 11px Inter, system-ui, sans-serif'],
+      [`Put worth ${px(p.value)} · stock ${pctS(st.spot ? S / st.spot - 1 : null)} vs spot`, '#475467', '500 11px Inter, system-ui, sans-serif'],
+    ];
+    let w = 0; lines.forEach(([t, , f]) => { ctx.font = f; w = Math.max(w, ctx.measureText(t).width); });
+    const cw = w + 20, ch = 16 + lines.length * 16;
+    let bx = cx + 14; if (bx + cw > a.right - 4) bx = cx - 14 - cw;
+    let by = (py >= a.top && py <= a.bottom ? py : (a.top + a.bottom) / 2) - ch - 10;
+    if (by < a.top + 4) by = Math.min(a.bottom - ch - 4, (py || a.top) + 12);
+    ctx.shadowColor = 'rgba(16,24,40,0.12)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 3;
+    gRR(ctx, bx, by, cw, ch, 8); ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.shadowColor = 'transparent'; ctx.strokeStyle = '#E4E7EC'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = col; ctx.fillRect(bx, by + 8, 3, ch - 16);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    lines.forEach(([t, c, f], i) => { ctx.font = f; ctx.fillStyle = c; ctx.fillText(t, bx + 11, by + 9 + i * 16); });
+    ctx.restore();
+  },
+};
+
+function buildPnlChart() {
+  const cv = $('lp-pChart'); if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_pChart) { _pChart.destroy(); _pChart = null; }
+  const r = selectedRow(); if (!r || r.prem == null) return;
+  const s = pst(), mk = pnlMarks(r), eps = scenario().eps;
+  const ref = [mk.spot, mk.strike, mk.be, mk.scn].filter((v) => v != null).concat(pnlGrid(r).map((p) => p.S));   // the chart spans every price in the table
+  const x0 = s.xr ? s.xr[0] : Math.max(0, Math.min(...ref) * 0.97), x1 = s.xr ? s.xr[1] : Math.max(...ref) * 1.02;
+  const N = 200, line = [];
+  for (let i = 0; i <= N; i++) { const S = x0 + (x1 - x0) * i / N; line.push({ x: S, y: pnlAt(r, S).pnl }); }
+  [r.K, r.be].forEach((S) => { if (S > x0 && S < x1) line.push({ x: S, y: pnlAt(r, S).pnl }); });   // the kink lands exactly
+  line.sort((a, b) => a.x - b.x);
+  const dots = pnlGrid(r).map((p) => ({ x: p.S, y: pnlAt(r, p.S).pnl }));
+  const marks = P_MARK.filter((m) => !s.hidden[m.k]).map((m) => ({ ...m, v: mk[m.k] }));
+  // profit / loss fills fade toward the zero line
+  const grad = (ctx, area, up) => {
+    if (!area) return up ? 'rgba(30,158,98,0.12)' : 'rgba(192,57,43,0.10)';
+    const y0 = ctx.chart.scales.y.getPixelForValue(0);
+    const g0 = ctx.chart.ctx.createLinearGradient(0, up ? area.top : area.bottom, 0, Math.min(Math.max(y0, area.top), area.bottom));
+    g0.addColorStop(0, up ? 'rgba(30,158,98,0.28)' : 'rgba(192,57,43,0.22)');
+    g0.addColorStop(1, up ? 'rgba(30,158,98,0.03)' : 'rgba(192,57,43,0.03)');
+    return g0;
+  };
+  const tickFont = { family: 'Inter, system-ui, sans-serif', size: 11 }, mu = '#7C8694';
+  _pChart = new Chart(cv.getContext('2d'), {
+    type: 'line',
+    data: { datasets: [
+      { label: 'P&L / contract', data: line, borderColor: P_LINE, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 0, tension: 0,
+        borderCapStyle: 'round', borderJoinStyle: 'round',
+        fill: { target: { value: 0 }, above: (c) => grad(c, c.chart.chartArea, true), below: (c) => grad(c, c.chart.chartArea, false) } },
+      { label: 'Table prices', data: dots, borderColor: 'rgba(30,39,51,0.55)', backgroundColor: '#fff', pointRadius: 2.5, pointHoverRadius: 2.5, pointBorderWidth: 1.2, showLine: false },
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, animation: false, parsing: false,
+      layout: { padding: { top: 2, right: 6 } },
+      events: ['mousemove', 'mouseout'],
+      plugins: { legend: { display: false }, tooltip: { enabled: false },
+        pMarkers: { list: marks }, pCross: { r, eps } },
+      scales: {
+        x: { type: 'linear', min: x0, max: x1, border: { color: '#D0D5DD' },
+          grid: { color: 'rgba(16,24,40,0.04)', drawTicks: false },
+          afterBuildTicks: (ax) => {                     // round prices only, not the odd range ends
+            const span = x1 - x0, step = [5, 10, 20, 25, 50, 100, 200].find((k) => span / k <= 10) || 500, out = [];
+            for (let v = Math.ceil(x0 / step) * step; v <= x1; v += step) out.push({ value: v });
+            ax.ticks = out;
+          },
+          ticks: { padding: 8, font: tickFont, color: mu, callback: (v) => `$${Math.round(v)}` },
+          title: { display: true, text: 'STOCK PRICE AT EXPIRY', font: { ...tickFont, size: 10, weight: '700' }, color: mu, padding: { top: 6 } } },
+        xpe: { type: 'linear', position: 'top', min: x0, max: x1, border: { color: '#D0D5DD' }, grid: { display: false, drawTicks: false },
+          afterBuildTicks: (ax) => {                     // ticks on whole multiples, so the top axis reads 20x, 22x, 24x
+            if (!eps) return;
+            const m0 = Math.ceil(x0 / eps), m1 = Math.floor(x1 / eps), step = (m1 - m0) > 14 ? 4 : (m1 - m0) > 7 ? 2 : 1;
+            const out = []; for (let m = Math.ceil(m0 / step) * step; m <= m1; m += step) out.push({ value: m * eps });
+            ax.ticks = out;
+          },
+          ticks: { padding: 8, font: tickFont, color: '#2563EB', callback: (v) => (eps ? `${Math.round(v / eps)}x` : '') },
+          title: { display: true, text: 'P/E ON EXPIRY-DATE EPS', font: { ...tickFont, size: 10, weight: '700' }, color: '#2563EB', padding: { bottom: 4 } } },
+        y: { position: 'right', min: s.yr ? s.yr[0] : undefined, max: s.yr ? s.yr[1] : undefined, border: { display: false },
+          grid: { color: (c) => (c.tick && c.tick.value === 0 ? 'rgba(30,39,51,0.55)' : 'rgba(16,24,40,0.05)'), lineWidth: (c) => (c.tick && c.tick.value === 0 ? 1.2 : 1), drawTicks: false },
+          ticks: { padding: 8, font: tickFont, color: mu, maxTicksLimit: 8, callback: (v) => cash(v) } } } },
+    plugins: [pMarkers, pCross],
+  });
+  attachBrush(cv, _pChart,
+    (v1, v2) => { s.xr = [v1, v2]; setTimeout(renderPnl, 0); },
+    (v1, v2) => { s.yr = [v1, v2]; setTimeout(buildPnlChart, 0); },
+    () => { s.xr = null; s.yr = null; setTimeout(renderPnl, 0); });
+}
+function pnlClick(ev) {
+  const s = pst();
+  const lg = ev.target.closest('[data-plg]');
+  if (lg) { const k = lg.dataset.plg; s.hidden[k] = !s.hidden[k]; renderPnl(); return true; }
+  const tb = ev.target.closest('#lp-pTblB');
+  if (tb) {
+    s.tbl = s.tbl !== true;
+    const b = $('lp-pTblBody'); if (b) b.hidden = s.tbl !== true;
+    const r = selectedRow(); if (r) tb.innerHTML = pnlHead(r);
+    return true;
+  }
+  return false;
+}
+
+// ── Render: the income statement block ────────────────────────────────────────
+// One chart of any income-statement line by fiscal year (Total revenue by default), and
+// the full consensus income statement under it: every line, with its growth and its
+// common size / margin beneath it in small gray. Portal chart standard
+// (docs/CHART_ENGINE_REFERENCE.md §0, path 3): both axes zoom and double-click resets;
+// the chips hide reported or consensus years from the chart AND the table; the table
+// sits in a dropdown and carries everything drawn; the metric dropdown is grouped by
+// section; every number has its unit; consensus years are shaded and marked E; a
+// ticker without an income statement on file renders nothing.
+//
 // EPS growth = (1 + net-income growth) × (1 + the share-count effect) − 1, so the
 // buyback piece is what is left once net-income growth is taken out.
-function renderGrowth() {
-  const box = $('lp-growth'); if (!box || !D) return;
-  const ys = Object.keys(D.years).map(Number).sort();
-  const rows = ys.slice(1).map((y) => {
-    const a = D.years[y - 1], b = D.years[y];
-    const gE = b.eps / a.eps - 1, gN = b.ni / a.ni - 1, gS = (1 + gE) / (1 + gN) - 1;
-    return { y, est: b.est, eps: b.eps, gE, gN, gS, sh: b.sh };
+const G_ACT = 'rgba(30,39,51,0.92)', G_FWD = '#2563EB', G_FWD_BAR = 'rgba(37,99,235,0.78)';
+let _gChart = null;
+const g = () => st.growth || (st.growth = { metric: 'rev', mode: 'lvl', win: null, yr: null, hidden: {}, tbl: true });
+const IS = () => (D && D.is) || null;
+const isLine = (k) => IS().lines[k];
+const isEntry = (k) => IS().layout.find((e) => e.k === k) || {};
+const isVal = (k, i) => { const l = isLine(k); return l && l.v[i] != null ? l.v[i] : null; };
+function isGrowth(k, i) {
+  const a = isVal(k, i - 1), b = isVal(k, i);
+  if (!(i > 0 && a != null && b != null && a !== 0)) return null;
+  return (a > 0) === (b > 0) ? b / a - 1 : (b - a) / Math.abs(a);   // a negative line growing more negative reads as growth
+}
+const isDiff = (k, i) => { const a = isVal(k, i - 1), b = isVal(k, i); return (i > 0 && a != null && b != null) ? b - a : null; };
+function isCs(k, i) {
+  const e = isEntry(k); if (!e.cs) return null;
+  const v = isVal(k, i), d = isVal(e.cs, i);
+  return (v != null && d) ? v / d : null;
+}
+// The share-count effect on EPS: what adj. EPS growth has over adj. net-income growth.
+function isShareEff(i) {
+  const gE = isGrowth('eps', i), gN = isGrowth('a_ni', i);
+  return (gE != null && gN != null) ? (1 + gE) / (1 + gN) - 1 : null;
+}
+
+// Years: the index into IS().years, whether it is consensus, and the ONE predicate.
+function gYearsAll() { return IS().years.map((y, i) => ({ y, i, est: y > D.lastActual })); }
+const gVis = (r) => !g().hidden[r.est ? 'est' : 'act'];                       // rule 2
+function gShown() {
+  const all = gYearsAll(), w = g().win || [0, all.length - 1];
+  return all.slice(w[0], w[1] + 1).filter(gVis);
+}
+const gLabel = (r) => `FY${String(r.y).slice(2)}${r.est ? 'E' : ''}`;
+
+// Units: US$ millions, US$ per share, or millions of shares.
+function gAbs(v, u) {
+  if (v == null || !isFinite(v)) return '—';
+  if (u === 'ps') return (v < 0 ? '−$' : '$') + Math.abs(v).toFixed(2);
+  if (u === 'sh') return Math.abs(v).toFixed(1) + 'M';
+  return (v < 0 ? '−' : '') + '$' + Math.round(Math.abs(v)).toLocaleString('en-US') + 'M';
+}
+const gDelta = (v, u) => (v == null || !isFinite(v)) ? '—' : (v >= 0 ? '+' : '−') + gAbs(Math.abs(v), u);
+// The table writes millions without the unit on every cell (the caption carries it).
+function gCell(v, u) {
+  if (v == null || !isFinite(v)) return '—';
+  if (u === 'ps') return (v < 0 ? '−' : '') + '$' + Math.abs(v).toFixed(2);
+  if (u === 'sh') return v.toFixed(1);
+  return (v < 0 ? '(' : '') + Math.round(Math.abs(v)).toLocaleString('en-US') + (v < 0 ? ')' : '');
+}
+function gModes(k) {
+  const l = isLine(k), e = isEntry(k), unit = l.u === 'ps' ? 'US$' : l.u === 'sh' ? 'M sh.' : 'US$M';
+  const m = [['lvl', unit], ['pct', 'Growth %'], ['amt', 'Growth $']];
+  if (e.cs) m.push(['cs', e.csL]);
+  return m;
+}
+function gVal(k, i, mode) {
+  return mode === 'pct' ? isGrowth(k, i) : mode === 'amt' ? isDiff(k, i) : mode === 'cs' ? isCs(k, i) : isVal(k, i);
+}
+function gFmt(v, k, mode) {
+  if (v == null || !isFinite(v)) return '—';
+  const u = isLine(k).u;
+  return mode === 'pct' || mode === 'cs' ? (mode === 'pct' ? pctS(v) : pct(v, 1)) : mode === 'amt' ? gDelta(v, u) : gAbs(v, u);
+}
+// Compound annual growth between the first and last year on screen (both must be positive).
+function gCagr(k, rows) {
+  if (rows.length < 2) return null;
+  const a = isVal(k, rows[0].i), b = isVal(k, rows[rows.length - 1].i), n = rows[rows.length - 1].y - rows[0].y;
+  return (a > 0 && b > 0 && n > 0) ? Math.pow(b / a, 1 / n) - 1 : null;
+}
+
+function gHead() {
+  const s = g(), rows = gShown(), open = s.tbl === true;
+  const span = rows.length ? `${gLabel(rows[0])}–${gLabel(rows[rows.length - 1])}` : 'no years';
+  const n = IS().layout.filter((e) => e.k).length;
+  return `<span class="rs-collap-ic">${open ? '▾' : '▸'}</span>Income statement` +
+    `<span class="rs-collap-sub">${open ? 'hide' : 'show'} · ${n} lines with growth and margins, ${rows.length} years (${esc(span)})</span>`;
+}
+
+function gTable() {
+  const s = g(), rows = gShown(), I = IS();
+  if (!rows.length) return '<div class="rs-ft-cap">No year selected — turn Reported or Bloomberg consensus back on above.</div>';
+  const span = `${gLabel(rows[0])}→${gLabel(rows[rows.length - 1])}`, nc = rows.length + 2;
+  const est = (r) => (r.est ? ' rs-ft-este' : '');
+  const val = (r, txt) => `<td class="${est(r).trim()}${txt === '—' ? ' rs-ft-nil' : ''}">${txt}</td>`;
+  const sub = (label, fn, sum = '') =>
+    `<tr class="lp-is-sub"><td class="rs-ft-h">${esc(label)}</td>${rows.map((r) => `<td class="${est(r).trim()}">${fn(r)}</td>`).join('')}<td class="rs-ft-s">${sum}</td></tr>`;
+  let body = '';
+  I.layout.forEach((e) => {
+    if (e.sec) { body += `<tr class="lp-is-sec"><td class="rs-ft-h">${esc(e.sec)}</td><td colspan="${nc - 1}"></td></tr>`; return; }
+    const l = I.lines[e.k], on = e.k === s.metric;
+    const c = gCagr(e.k, rows);
+    body += `<tr class="${e.kind === 'main' ? 'rs-ft-main' : 'lp-is-seg'}${on ? ' lp-is-on' : ''}" data-gline="${e.k}">` +
+      `<td class="rs-ft-h" title="Bloomberg field ${esc(l.f)} — click to chart it">${esc(l.l)}</td>` +
+      `${rows.map((r) => val(r, gCell(isVal(e.k, r.i), l.u))).join('')}<td class="rs-ft-s">${c == null ? '' : pctS(c)}</td></tr>`;
+    if (e.g) body += sub(e.k === 'sh' ? 'Change' : 'Growth', (r) => pctS(isGrowth(e.k, r.i)));
+    if (e.cs) {
+      const a = isCs(e.k, rows[0].i), b = isCs(e.k, rows[rows.length - 1].i);
+      const pp = (a != null && b != null) ? `${(b - a) * 100 >= 0 ? '+' : '−'}${Math.abs((b - a) * 100).toFixed(1)}pp` : '';
+      body += sub(e.csL, (r) => pct(isCs(e.k, r.i), 1), pp);
+    }
+    if (e.k === 'eps') {
+      const cE = gCagr('eps', rows), cN = gCagr('a_ni', rows);
+      body += sub('Share-count effect on EPS', (r) => pctS(isShareEff(r.i)), (cE != null && cN != null) ? pctS((1 + cE) / (1 + cN) - 1) : '');
+    }
   });
-  const span = (y0, y1) => {
-    const n = y1 - y0, a = D.years[y0], b = D.years[y1];
-    const cE = Math.pow(b.eps / a.eps, 1 / n) - 1, cN = Math.pow(b.ni / a.ni, 1 / n) - 1;
-    return { cE, cN, cS: (1 + cE) / (1 + cN) - 1, n };
-  };
-  const f = span(D.lastActual, D.lastActual + 4);
+  return `<div class="rs-ft-cap">US$ millions unless noted · per-share lines in US$ · shares in millions · (negative) in parentheses · gray rows: growth, and common size or margin · <span class="rs-ft-e">E</span> = Bloomberg consensus · last column = compound annual growth ${esc(span)} (margins: change in points) · click a line to chart it</div>
+    <div class="rs-ft-scroll"><table class="rs-ft lp-is"><thead><tr><th class="rs-ft-h"></th>
+      ${rows.map((r) => `<th class="${est(r).trim()}">FY${r.y}${r.est ? ' <span class="rs-ft-e">E</span>' : ''}</th>`).join('')}
+      <th class="rs-ft-s">CAGR</th></tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+function gChips() {
+  const s = g();
+  return [['act', 'Reported', G_ACT], ['est', 'Bloomberg consensus', G_FWD_BAR]].map(([k, l, c]) =>
+    `<button type="button" class="rs-leg${s.hidden[k] ? ' off' : ''}" data-glg="${k}" title="Show / hide">` +
+    `<span class="ave-leg-act" style="background:${c}"></span>${esc(l)}</button>`).join('');
+}
+
+function renderGrowth() {
+  const box = $('lp-growth'); if (!box) return;
+  if (!D || !IS()) { box.innerHTML = ''; box.hidden = true; return; }      // rule 6
+  box.hidden = false;
+  const s = g(), I = IS();
+  if (!I.lines[s.metric]) s.metric = 'rev';
+  if (!gModes(s.metric).some(([k]) => k === s.mode)) s.mode = 'lvl';
+  const all = gYearsAll();
+  const f = (() => {
+    const a = D.years[D.lastActual], b = D.years[D.lastActual + 4];
+    if (!a || !b) return null;
+    const cE = Math.pow(b.eps / a.eps, 1 / 4) - 1, cN = Math.pow(b.ni / a.ni, 1 / 4) - 1;
+    const ir = I.years.indexOf(D.lastActual), r0 = isVal('rev', ir), r1 = isVal('rev', ir + 4);
+    return { cE, cN, cS: (1 + cE) / (1 + cN) - 1, cR: (r0 && r1) ? Math.pow(r1 / r0, 1 / 4) - 1 : null };
+  })();
+  let opts = '', open = false;
+  I.layout.forEach((e) => {
+    if (e.sec) { opts += `${open ? '</optgroup>' : ''}<optgroup label="${esc(e.sec)}">`; open = true; return; }
+    opts += `<option value="${e.k}" ${e.k === s.metric ? 'selected' : ''}>${esc(I.lines[e.k].l)}</option>`;
+  });
+  if (open) opts += '</optgroup>';
+  const modes = gModes(s.metric).map(([k, l]) => `<button type="button" class="${k === s.mode ? 'on' : ''}" data-gmode="${k}">${esc(l)}</button>`).join('');
+  const la = all.findIndex((r) => r.y === D.lastActual);
+  const pres = [['all', 'All years', null], ['fwd', `FY${String(D.lastActual).slice(2)} onward`, la >= 0 ? [la, all.length - 1] : null]]
+    .filter((p) => p[0] === 'all' || p[2]);
+  const winKey = !s.win ? 'all' : (pres.find((p) => p[2] && p[2][0] === s.win[0] && p[2][1] === s.win[1]) || [''])[0];
+  const preBtns = pres.map(([k, l]) => `<button type="button" class="${k === winKey ? 'on' : ''}" data-gpre="${k}">${esc(l)}</button>`).join('');
   box.innerHTML = `
-    <div class="block-top"><div class="block-h">How fast earnings really grow — net income vs buybacks</div>
+    <div class="block-top"><div class="block-h">How fast earnings really grow — from revenue to EPS</div>
       <span class="muted">Bloomberg consensus · ${esc(D.asOf)}</span></div>
-    <p class="lp-p">From FY${D.lastActual} to FY${D.lastActual + 4}E the consensus has adjusted EPS compounding at <b>${pct(f.cE, 1)}</b> a year, but adjusted net income at <b>${pct(f.cN, 1)}</b>: about <b>${pct(f.cS, 1)}</b> a year of the EPS growth is a falling share count (buybacks), not a growing business.</p>
-    <table class="an-tbl lp-small"><thead><tr><th class="lft">Year</th><th>Adj. EPS</th><th>EPS growth</th><th>Net income growth</th><th>Share-count effect</th><th>Diluted shares (M)</th></tr></thead>
-      <tbody>${rows.slice().reverse().map((r) => `<tr><td class="lft">FY${r.y}${r.est ? 'E' : ''}</td><td>${px(r.eps)}</td><td>${pctS(r.gE)}</td><td>${pctS(r.gN)}</td><td>${pctS(r.gS)}</td><td>${r.sh.toFixed(1)}</td></tr>`).join('')}</tbody></table>
-    <div class="muted lp-hint">EPS and net income are Bloomberg's adjusted lines; the share-count effect is what EPS growth has over net-income growth, (1 + EPS growth) ÷ (1 + net-income growth) − 1. Consensus EPS and consensus net income are separate Bloomberg averages, so the effect is approximate (it also absorbs the small mismatch between them).</div>`;
+    ${f ? `<p class="lp-p">From FY${D.lastActual} to FY${D.lastActual + 4}E the consensus has revenue compounding at <b>${pct(f.cR, 1)}</b> a year and adjusted EPS at <b>${pct(f.cE, 1)}</b>, but adjusted net income at only <b>${pct(f.cN, 1)}</b>: about <b>${pct(f.cS, 1)}</b> a year of the EPS growth is a falling share count (buybacks), not a growing business.</p>` : ''}
+    <div class="lp-gctl"><div class="lp-avgs"><span class="lp-lbl">Metric</span><select id="lp-gMetric" class="lp-gsel">${opts}</select><div class="seg">${modes}</div></div><div class="lp-avgs"><span class="lp-lbl">Range</span><div class="seg">${preBtns}</div></div></div>
+    <div class="lp-gleg">${gChips()}</div>
+    <div class="lp-chart"><canvas id="lp-gChart"></canvas></div>
+    <div class="muted lp-hint">Drag sideways to zoom the years, up or down to zoom the values; double-click resets. Click Reported or Bloomberg consensus to hide those years from the chart and the table; click any line of the table to chart it.</div>
+    <div class="rs-collap">
+      <button type="button" class="rs-collap-h" id="lp-gTblB">${gHead()}</button>
+      <div class="rs-collap-b" id="lp-gTblBody"${s.tbl === true ? '' : ' hidden'}><div class="rs-tablewrap">${gTable()}</div></div>
+    </div>
+    <div class="muted lp-hint">Bloomberg's lines as exported (Company Financial, BST consensus): expenses are expense-positive, and its comparable pre-tax line does not tie exactly to operating income less the lines between them. Total revenue includes cost reimbursements passed through from owners and franchisees, which is why reported margins are thin; the Adjusted block is the fee view, margins on revenue ex reimbursements. The share-count effect is (1 + adj. EPS growth) ÷ (1 + adj. net-income growth) − 1; consensus EPS and net income are separate Bloomberg averages, so it is approximate.</div>`;
+  requestAnimationFrame(buildGrowthChart);
+}
+
+// The forecast zone: the same shaded band, dashed boundary, FORECAST pill and blue
+// label bubbles as js/results.js rsFwdZone, so a consensus year reads the same here.
+function gRR(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+const gFwdZone = {
+  id: 'gFwdZone',
+  beforeDatasetsDraw(chart, args, opts) {
+    const from = opts && opts.from; if (from == null || from < 0) return;
+    const x = chart.scales.x, area = chart.chartArea, ctx = chart.ctx;
+    const left = from > 0 ? (x.getPixelForTick(from - 1) + x.getPixelForTick(from)) / 2 : area.left;
+    ctx.save();
+    ctx.fillStyle = 'rgba(37,99,235,0.07)'; ctx.fillRect(left, area.top, area.right - left, area.bottom - area.top);
+    ctx.strokeStyle = 'rgba(37,99,235,0.40)'; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(left, area.top); ctx.lineTo(left, area.bottom); ctx.stroke(); ctx.setLineDash([]);
+    const label = 'FORECAST', pad = 7;
+    ctx.font = '700 9px Inter, system-ui, sans-serif';
+    const w = ctx.measureText(label).width; let px0 = left + 8; const py = area.top + 5;
+    if (px0 + w + pad * 2 > area.right - 4) px0 = area.right - w - pad * 2 - 4;
+    ctx.fillStyle = 'rgba(37,99,235,0.92)'; gRR(ctx, px0, py, w + pad * 2, 15, 7); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(label, px0 + pad, py + 8);
+    ctx.restore();
+  },
+  afterDraw(chart, args, opts) {
+    const from = opts && opts.from; if (from == null || from < 0) return;
+    const x = chart.scales.x, ctx = chart.ctx, labels = chart.data.labels || [];
+    ctx.save();
+    ctx.font = '700 11px Inter, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const y = x.top + 13;
+    for (let i = from; i < x.ticks.length; i++) {
+      const lbl = labels[i] != null ? String(labels[i]) : ''; if (!lbl) continue;
+      const p = x.getPixelForTick(i), w = ctx.measureText(lbl).width;
+      ctx.fillStyle = 'rgba(37,99,235,0.14)'; gRR(ctx, p - w / 2 - 7, y - 9, w + 14, 18, 9); ctx.fill();
+      ctx.fillStyle = G_FWD; ctx.fillText(lbl, p, y);
+    }
+    ctx.restore();
+  },
+};
+
+function buildGrowthChart() {
+  const cv = $('lp-gChart'); if (!cv || typeof Chart === 'undefined' || !cv.offsetParent || !IS()) return;
+  if (_gChart) { _gChart.destroy(); _gChart = null; }
+  const s = g(), k = s.metric, rows = gShown(), l = isLine(k);
+  const from = rows.findIndex((r) => r.est);
+  const isPct = s.mode === 'pct' || s.mode === 'cs';
+  const name = s.mode === 'lvl' ? l.l : s.mode === 'pct' ? `${l.l} growth` : s.mode === 'amt' ? `${l.l} change` : `${l.l} — ${isEntry(k).csL}`;
+  _gChart = new Chart(cv.getContext('2d'), {
+    type: 'bar',
+    data: { labels: rows.map(gLabel), datasets: [{
+      label: name, data: rows.map((r) => gVal(k, r.i, s.mode)),
+      backgroundColor: rows.map((r) => (r.est ? G_FWD_BAR : G_ACT)), borderRadius: 3, maxBarThickness: 46,
+    }] },
+    options: { responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: { legend: { display: false }, gFwdZone: { from },
+        tooltip: { callbacks: {
+          title: (it) => { const r = rows[it[0].dataIndex]; return `FY${r.y}${r.est ? ' — Bloomberg consensus' : ' — reported'}`; },
+          label: (c) => {
+            const r = rows[c.dataIndex], out = [`${c.dataset.label}: ${gFmt(c.parsed.y, k, s.mode)}`];
+            if (s.mode !== 'pct' && isGrowth(k, r.i) != null) out.push(`Growth ${pctS(isGrowth(k, r.i))}`);
+            if (s.mode !== 'cs' && isEntry(k).cs && isCs(k, r.i) != null) out.push(`${isEntry(k).csL} ${pct(isCs(k, r.i), 1)}`);
+            if (k === 'eps' && isShareEff(r.i) != null) out.push(`Adj. net income growth ${pctS(isGrowth('a_ni', r.i))} · share-count effect ${pctS(isShareEff(r.i))}`);
+            return out;
+          } } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { callback: function (v, i) { return from >= 0 && i >= from ? '' : this.getLabelForValue(v); } } },
+        y: { position: 'right', min: s.yr ? s.yr[0] : undefined, max: s.yr ? s.yr[1] : undefined,
+          beginAtZero: !s.yr && s.mode === 'lvl' && l.u !== 'sh', grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { callback: (v) => isPct ? `${+(v * 100).toFixed(1)}%` : (s.mode === 'amt' ? gDelta(+v, l.u) : gAbs(+v, l.u)) } } } },
+    plugins: [gFwdZone],
+  });
+  const all = gYearsAll(), shownYears = rows.map((r) => r.y);
+  attachBrush(cv, _gChart,
+    (i, j) => {
+      const a = all.findIndex((r) => r.y === shownYears[i]), b = all.findIndex((r) => r.y === shownYears[j]);
+      if (a >= 0 && b >= a) { s.win = [a, b]; setTimeout(renderGrowth, 0); }   // after Chart.js finishes the event
+    },
+    (v1, v2) => { s.yr = [v1, v2]; setTimeout(buildGrowthChart, 0); },
+    () => { s.win = null; s.yr = null; setTimeout(renderGrowth, 0); });
+}
+
+// Clicks, delegated from the pane root (wireControls). The metric dropdown is a change event there.
+function gClick(ev) {
+  const s = g();
+  const md = ev.target.closest('[data-gmode]');
+  if (md) { s.mode = md.dataset.gmode; s.yr = null; renderGrowth(); return true; }
+  const pr = ev.target.closest('[data-gpre]');
+  if (pr) {
+    const all = gYearsAll(), la = all.findIndex((r) => r.y === D.lastActual);
+    s.win = pr.dataset.gpre === 'fwd' && la >= 0 ? [la, all.length - 1] : null; s.yr = null; renderGrowth(); return true;
+  }
+  const lg = ev.target.closest('[data-glg]');
+  if (lg) { const k = lg.dataset.glg; s.hidden[k] = !s.hidden[k]; s.yr = null; renderGrowth(); return true; }
+  const ln = ev.target.closest('[data-gline]');
+  if (ln) { s.metric = ln.dataset.gline; s.yr = null; renderGrowth(); return true; }
+  const tb = ev.target.closest('#lp-gTblB');
+  if (tb) {
+    s.tbl = s.tbl !== true;
+    const b = $('lp-gTblBody'); if (b) b.hidden = s.tbl !== true;
+    tb.innerHTML = gHead(); return true;
+  }
+  return false;
 }
 
 function renderFoot() {
@@ -382,7 +891,8 @@ function renderFoot() {
     <b>Contract</b> — a buyer lifts the <b>ask</b> (the default); <b>mid</b> is the fair-value view, <b>last</b> the last print. Hover the <b>i</b> for bid/ask/mid, last trade, open interest and theta. <b>+</b> opens IV and delta.<br>
     <b>As a valuation</b> — <b>P/E at strike</b> = strike ÷ expiry-date EPS: the multiple below which the put is in the money at expiry. <b>Breakeven</b> = strike − premium, and its P/E is the multiple the trade needs to get paid back.<br>
     <b>If the P/E goes to …</b> — <b>Put value</b> = strike − scenario price (zero when the scenario price is above the strike); <b>P&amp;L</b> = (value − premium) × 100; <b>Return on premium</b> = value ÷ premium − 1. At expiry only — before then the put also carries time value.<br>
-    <b>Size</b> — the premium budget is the share of the account (header) you allow this trade to cost; <b>Contracts</b> = how many whole contracts it buys at each strike, <b>Premium paid</b> the cash that leaves the account (the most that can be lost), <b>Notional</b> = strike × 100 × contracts, what the position controls.<br>
+    <b>Size</b> — the premium is set at ${pct(st.riskPct, 1)} of the portfolio (header); <b>Min. portfolio</b> = one contract's premium × 100 ÷ ${pct(st.riskPct, 1)}: the smallest portfolio in which one contract fits that rule. The premium is also the most the trade can lose.<br>
+    <b>P&amp;L at expiry</b> — click a strike: the chart and its table give the contract's P&amp;L at each stock price on the expiry date, (max(strike − price, 0) − premium) × 100; the price grid steps every 2x of P/E on the expiry-date EPS, plus spot, strike, breakeven and the scenario. <b>Portfolio impact</b> = return on premium × ${pct(st.riskPct, 1)}.<br>
     Sources — option chain, price, IV and greeks live from Massive; EPS, net income, shares and the forward-P/E history: ${esc(D ? D.src : '')}; ${esc(D ? D.histSrc : '')} — frozen in js/long-put-data.js, not live. Nothing on this page is stored.`;
 }
 
@@ -395,13 +905,13 @@ function render() {
   $('lp-body').hidden = !!st.err || st.loading;
   syncControls();
   if (st.err || st.loading) return;
-  renderKpis(); renderLadder(); renderPicker(); renderHist(); renderGrowth(); renderFoot();
+  renderKpis(); renderLadder(); renderPicker(); renderPnl(); renderHist(); renderGrowth(); renderFoot();
 }
 function syncControls() {
   const sel = $('lp-expiry');
   if (sel) sel.innerHTML = st.expiries.map((d) => `<option value="${esc(d)}" ${d === st.expiry ? 'selected' : ''}>${esc(d)} · ${daysTo(d)}d</option>`).join('') || '<option>—</option>';
   root().querySelectorAll('#lp-premSel button').forEach((b) => b.classList.toggle('on', b.dataset.prem === st.premBasis));
-  const r = $('lp-risk'); if (r && document.activeElement !== r) r.value = (st.riskPct * 100).toFixed(1);
+  const r = $('lp-risk'); if (r && document.activeElement !== r) r.value = +(st.riskPct * 100).toFixed(2);
   const tt = $('lp-tickers');
   if (tt) tt.innerHTML = Object.keys(LP_DATA).map((t) => `<button type="button" class="chip ${t === st.ticker ? 'on' : ''}" data-tkbtn="${esc(t)}">${esc(t)}</button>`).join('');
 }
@@ -416,7 +926,7 @@ function injectMarkup() {
         <div class="ctl"><label>Ticker</label><input id="lp-ticker" value="${esc(st.ticker)}" size="6"></div>
         <div class="ctl"><label>Expiry</label><select id="lp-expiry"></select></div>
         <div class="ctl"><label>Premium</label><div class="seg" id="lp-premSel"><button data-prem="ask">Ask</button><button data-prem="mid">Mid</button><button data-prem="last">Last</button></div></div>
-        <div class="ctl"><label>Premium budget, % of account</label><input id="lp-risk" type="number" step="0.5" min="0" max="100"></div>
+        <div class="ctl"><label>Premium, % of portfolio</label><input id="lp-risk" type="number" step="0.1" min="0" max="100"></div>
         <div class="ctl"><label>&nbsp;</label><button id="lp-refresh">↻ Refresh</button></div>
       </div>
       <div class="chips" id="lp-tickers"></div>
@@ -435,6 +945,7 @@ function injectMarkup() {
           <button id="lp-clear" class="ghost sm">Clear all</button>
           <span class="muted" id="lp-pickinfo"></span>
         </div>
+        <div class="block" id="lp-pnl" hidden></div>
         <div class="block" id="lp-growth"></div>
         ${instrumentsBar('lp')}
         <div class="foot" id="lp-foot"></div>
@@ -464,8 +975,8 @@ function wireControls() {
   $('lp-clear').onclick = () => { st.strikes = []; st.selected = null; render(); };
   r.addEventListener('change', (ev) => {
     const id = ev.target.id, v = parseFloat(ev.target.value);
-    if (id === 'lp-acct') { st.account = (isFinite(v) && v >= 0) ? v : st.account; render(); }
     if (id === 'lp-risk') { st.riskPct = (isFinite(v) && v >= 0) ? v / 100 : st.riskPct; render(); }
+    if (id === 'lp-gMetric') { g().metric = ev.target.value; g().yr = null; renderGrowth(); return; }
     if (id === 'lp-target') { st.target = (ev.target.value === '' || !isFinite(v) || v <= 0) ? null : v; render(); }
   });
   r.addEventListener('click', (ev) => {
@@ -475,6 +986,7 @@ function wireControls() {
     if (av) { st.avgKey = av.dataset.avg; st.target = null; render(); return; }
     if (ev.target.closest('#lp-expand')) { st.expand = !st.expand; render(); return; }
     if (ev.target.closest('#lp-histTbl')) { st.hist.tbl = !st.hist.tbl; renderHist(); return; }
+    if (gClick(ev) || pnlClick(ev)) return;
     const tk = ev.target.closest('[data-tkbtn]');
     if (tk) { $('lp-ticker').value = tk.dataset.tkbtn; loadTicker(tk.dataset.tkbtn); }
   });

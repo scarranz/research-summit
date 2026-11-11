@@ -767,7 +767,7 @@ table.hg td.base{box-shadow:inset 0 0 0 2px var(--steel)}
       <p class="note" id="v-note"></p>
     </section>
 
-    <p class="foot">Sources — Reported: Form 10-K FY2025 (acc. 0001568651-26-000011) and Form 10-Q 3Q26 (acc. 0001568651-26-000086). Guidance: Ex. 99.1 to the Form 8-K of Nov 5, 2026; Investor Day presentation and webcast of Sep 16, 2026 (slides 38–49; CFO remarks on 2027 rates, tax rate, investment income and share count). Consensus: Bloomberg BEst estimates (OSCR US Equity, annual), Summit file without an as-of date; its 2026 column matches the Sep 16 guidance, so it likely predates the 3Q26 print. BBG SG&amp;A ratio and medical expenses are derived from its gross profit, operating income and D&amp;A. BBG’s line items do not tie to each other: its MLR field differs from the MLR its gross profit implies, and its EPS fields (GAAP $4.18 and adjusted $4.01 in 2029) do not equal its net income ÷ shares ($4.08), because each BBG line averages a different set of brokers. Guidance bands in the charts for tax rate (“mid-single digits”, “mid-20s”), shares (+2–3% a year) and investment income (+10–15% a year) are our numeric reading of Oscar’s words. Oscar plan Low / Mid / High: the 2026E base uses the low end, midpoint and high end of the Nov 5 ranges; the revenue CAGR uses the slide 44 walk (21–27%); 2027 member growth is our reading (0% / 3% / 6%) of a market Oscar sees stable at ~17M in 2027, on a 2.51M year-end 2026 base (BBG); the other drivers use the ends of each range Oscar gave, and where Oscar gave a single point (2027 filed rate ~14%, 2029 MLR ~80%, SG&amp;A below 15%) Low and High are our reading, set so the 2029 operating margin lands near the ends of the 5–7% target. Valuation: the P/E half of the “Discounted Cash Flow” sheet in the Summit DCF models, without interim cash flows. Risk-free rate (3.8%) and average market return (14.8%) default to the house values in those workbooks (DCF UBER.xlsm, Nov 4, 2026 submit); beta is set at 2.00. The multiple, the CAPM inputs and the share price are inputs, not market data. Every 2027–2029 figure in the main rows is model output, not a company or consensus number.</p>
+    <p class="foot">Sources — Reported: Form 10-K FY2025 (acc. 0001568651-26-000011) and Form 10-Q 3Q26 (acc. 0001568651-26-000086). Guidance: Ex. 99.1 to the Form 8-K of Nov 5, 2026; Investor Day presentation and webcast of Sep 16, 2026 (slides 38–49; CFO remarks on 2027 rates, tax rate, investment income and share count). Consensus: Bloomberg BEst estimates (OSCR US Equity, annual), Summit file without an as-of date; its 2026 column matches the Sep 16 guidance, so it likely predates the 3Q26 print. BBG SG&amp;A ratio and medical expenses are derived from its gross profit, operating income and D&amp;A. BBG’s line items do not tie to each other: its MLR field differs from the MLR its gross profit implies, and its EPS fields (GAAP $4.18 and adjusted $4.01 in 2029) do not equal its net income ÷ shares ($4.08), because each BBG line averages a different set of brokers. Guidance bands in the charts for tax rate (“mid-single digits”, “mid-20s”), shares (+2–3% a year) and investment income (+10–15% a year) are our numeric reading of Oscar’s words. Oscar plan Low / Mid / High: the 2026E base uses the low end, midpoint and high end of the Nov 5 ranges; the revenue CAGR uses the slide 44 walk (21–27%); 2027 member growth is our reading (0% / 3% / 6%) of a market Oscar sees stable at ~17M in 2027, on a 2.51M year-end 2026 base (BBG); the other drivers use the ends of each range Oscar gave, and where Oscar gave a single point (2027 filed rate ~14%, 2029 MLR ~80%, SG&amp;A below 15%) Low and High are our reading, set so the 2029 operating margin lands near the ends of the 5–7% target. Premium per member per month (informational, not a driver) = premium revenue ÷ year-end members ÷ 12. Year-end members are what the model projects, so the row is the same base as the premium-per-member driver. ACA enrollment peaks after open enrollment (2.96M at Jun 30, 2026) and falls through the year, so the per-year-end-member figure runs above a per-average-member figure. It is meant to show the trend, not the level. The average of two year-ends would be worse: it mixes a December count with the January jump. Valuation: the P/E half of the “Discounted Cash Flow” sheet in the Summit DCF models, without interim cash flows. Risk-free rate (3.8%) and average market return (14.8%) default to the house values in those workbooks (DCF UBER.xlsm, Nov 4, 2026 submit); beta is set at 2.00. The multiple, the CAPM inputs and the share price are inputs, not market data. Every 2027–2029 figure in the main rows is model output, not a company or consensus number.</p>
   </div>
 </div>
 
@@ -1029,6 +1029,7 @@ var BBG={
  eps:{'2026E':2.43,'2027E':2.68,'2028E':3.13,'2029E':4.18}
 };
 function gmap(o,base){var r={};var ks=Object.keys(o);ks.forEach(function(y,i){var p=i?o[ks[i-1]]:base;if(p!=null&&p>0)r[y]=o[y]/p-1;});return r;}
+BBG.ppmm={};Object.keys(BBG.prem).forEach(function(y){BBG.ppmm[y]=BBG.prem[y]/BBG.mem[y]/12;});
 BBG.sga={};BBG.nim={};BBG.prem_cs={};BBG.inv_cs={};
 Object.keys(BBG.rev).forEach(function(y){BBG.sga[y]=BBG.sgar[y]/100*BBG.rev[y];BBG.nim[y]=BBG.ni[y]/BBG.rev[y]*100;BBG.prem_cs[y]=BBG.prem[y]/BBG.rev[y]*100;BBG.inv_cs[y]=BBG.inv[y]/BBG.rev[y]*100;});
 BBG.grw=gmap(BBG.rev,11701.4);BBG.prem_g=gmap(BBG.prem,11469.9);BBG.op_g=gmap(BBG.op,-396.4);BBG.ni_g=gmap(BBG.ni,-443.2);
@@ -1106,7 +1107,7 @@ function model(d){
  });
  Object.keys(A).forEach(function(y){o[y]=Object.assign({},A[y]);});
  COLS.forEach(function(y,i){var c=o[y],q=i?o[COLS[i-1]]:null;
-  c.mlr=c.med/c.prem*100;c.sgar=c.sga/c.rev*100;c.opm=c.op/c.rev*100;c.taxr=c.pt>0?c.tax/c.pt*100:null;c.nim=c.ni/c.rev*100;
+  c.ppmm=c.mem>0?c.prem/c.mem/12:null;c.mlr=c.med/c.prem*100;c.sgar=c.sga/c.rev*100;c.opm=c.op/c.rev*100;c.taxr=c.pt>0?c.tax/c.pt*100:null;c.nim=c.ni/c.rev*100;
   c.grw=q?c.rev/q.rev-1:null;c.mg=q?c.mem/q.mem-1:null;c.invg=q?c.inv/q.inv-1:null;
   c.sg=q&&y!=='2026E'?c.sh/q.sh-1:null;c.epsg=!q?null:(q.eps>0?c.eps/q.eps-1:'nm');
   if(c.ppmg===undefined)c.ppmg=null;
@@ -1125,11 +1126,12 @@ function p1(v){return v==null||isNaN(v)?'—':v.toFixed(1)+'%';}
 function gpc(v){if(v==='nm')return 'n.m.';return v==null||isNaN(v)?'—':(v>=0?'+':'−')+Math.abs(v*100).toFixed(1)+'%';}
 function eps(v){return v==null||isNaN(v)?'—':(v<0?'(':'')+'$'+Math.abs(v).toFixed(2)+(v<0?')':'');}
 function mm(v){return v==null?'—':v.toFixed(2)+'M';}
+function usd0(v){return v==null||isNaN(v)?'—':'$'+Math.round(v).toLocaleString('en-US');}
 function s1(v){return v==null?'—':v.toFixed(1);}
 
 var SECTIONS=[
  {h:'Revenue',lines:[
-  {k:'prem',n:'Premium revenue',f:n0,kpis:[{k:'mem',n:'Members, year-end',f:mm},{k:'mg',n:'Member growth',f:gpc},{k:'ppmg',n:'Premium per member growth',f:gpc},{k:'prem_g',n:'Growth',f:gpc},{k:'prem_cs',n:'% of total revenue',f:p1}]},
+  {k:'prem',n:'Premium revenue',f:n0,kpis:[{k:'mem',n:'Members, year-end',f:mm},{k:'mg',n:'Member growth',f:gpc},{k:'ppmm',n:'Premium per member per month ($, on year-end members)',f:usd0},{k:'ppmg',n:'Premium per member growth',f:gpc},{k:'prem_g',n:'Growth',f:gpc},{k:'prem_cs',n:'% of total revenue',f:p1}]},
   {k:'inv',n:'Investment income',f:n0,kpis:[{k:'invg',n:'Growth',f:gpc},{k:'inv_cs',n:'% of total revenue',f:p1}]},
   {k:'oth',n:'Other revenues',f:n0,kpis:[{k:'oth_g',n:'Growth',f:gpc},{k:'oth_cs',n:'% of total revenue',f:p1}]},
   {k:'rev',n:'Total revenue',f:n0,tot:1,kpis:[{k:'grw',n:'Growth',f:gpc}]}]},
@@ -1387,7 +1389,6 @@ function xx(v){return v==null||isNaN(v)?'—':v.toFixed(2)+'×';}
 function x1(v){return v==null||isNaN(v)||!isFinite(v)?'—':v.toFixed(1)+'×';}
 function pct1(v){return v==null?'n.m.':(v*100).toFixed(1)+'%';}
 function pp(v){return v==null||isNaN(v)?'—':v.toFixed(1)+'%';}
-function mm(v){return v==null||isNaN(v)?'—':(v<0?'(':'')+Math.abs(v).toLocaleString('en-US',{maximumFractionDigits:0})+(v<0?')':'');}
 function gg(g){return g==null?'':g==='nm'?'n.m.':(g>=0?'+':'−')+Math.abs(g*100).toFixed(1)+'%';}
 function updn(pv){if(V.px==null||pv==null)return '';var u=pv/V.px-1;return '<span class="'+(u>=0?'up':'dn')+'">'+(u>=0?'+':'−')+Math.abs(u*100).toFixed(0)+'%</span> vs your $'+V.px.toFixed(2);}
 function trade(pv){if(V.px==null||pv==null)return '—';var u=pv/V.px-1;return (u>=0?'Discount ':'Premium ')+Math.abs(u*100).toFixed(0)+'%';}
@@ -1423,7 +1424,7 @@ function renderVal(o){
  /* by year */
  var yh='<thead><tr><th>US$ M, except per share</th>'+COLS.map(function(y){return '<th class="num">'+y+'</th>';}).join('')+'</tr></thead><tbody>';
  function yrow(lbl,f,cls){return '<tr'+(cls?' class="'+cls+'"':'')+'><td>'+lbl+'</td>'+COLS.map(function(y){var v=f(y);var obj=v&&typeof v==='object';return '<td class="num'+(obj&&v.c?' '+v.c:'')+'">'+(obj?v.t:(v==null?'':v))+'</td>';}).join('')+'</tr>';}
- yh+=yrow('Net income',function(y){return mm(o[y].ni);});
+ yh+=yrow('Net income',function(y){return n0(o[y].ni);});
  yh+=yrow('Growth',function(y){var g=o[y].ni_g;return g!=null&&o[y].ni<0?'n.m.':gg(g);},'vh');
  yh+=yrow('Diluted shares (M)',function(y){return o[y].sh.toFixed(1);});
  yh+=yrow('EPS',function(y){return {t:eps(o[y].eps),c:y===Y?'tv':''};});

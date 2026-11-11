@@ -308,6 +308,7 @@ table.vm th.cur,table.vm td.cur{background:var(--kpi)}
 table.vm tr.vh td{font-size:12px;color:var(--steel)}
 table.vm tr.vs td{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--steel);font-weight:700;padding-top:14px}
 table.vm tr.sel td{font-weight:700;color:var(--navy);border-top:1.5px solid var(--navy);border-bottom:1.5px solid var(--navy)}
+table.rt.tamm{min-width:0;width:100%}table.rt.tamm th,table.rt.tamm td{padding-left:6px;padding-right:6px;white-space:normal}table.rt.tamm .tsm{font-size:11px;color:var(--mid)}
 table.vm td.up,table.vm tr.vh td.up{color:var(--good);font-weight:600}table.vm td.dn,table.vm tr.vh td.dn{color:var(--neg);font-weight:600}
 .vpx{display:grid;grid-template-columns:minmax(0,320px);}
 .vpx .chk{gap:6px}.vpx .s{color:var(--mid);font-weight:500;font-size:11.5px}
@@ -605,7 +606,15 @@ table.hg td.base{box-shadow:inset 0 0 0 2px var(--steel)}
         <p class="note">Growth drivers: CHOICE employer adoption, gig and independent workers, AI-driven workforce shifts, immigration. “Program integrity” is the new eligibility checks.</p></section>
       <section class="card"><span class="ch">Oscar’s addressable market, 2026 → 2029</span>
         <div class="wf" id="wf-tam"></div>
-        <p class="note">+65%. Share goals by 2029: <b>30–35%</b> in today’s footprint, <b>5–7%</b> in new markets, <b>10–15%</b> CHOICE share in its footprint.</p></section>
+        <p class="note">+65%. Share goals by 2029: <b>30–35%</b> in today’s footprint, <b>5–7%</b> in new markets, <b>10–15%</b> CHOICE share in its footprint.</p>
+        <p class="note"><b>What that means in members, 2029</b> (our calc: each block of addressable lives × Oscar’s share goal for it)</p>
+        <div class="twrap"><table class="rt tamm"><thead><tr><th>2029</th><th class="num">Lives</th><th class="num">Share goal</th><th class="num">Members</th></tr></thead><tbody>
+          <tr><td>Existing markets<br><span class="tsm">9.6M + 2M maturing</span></td><td class="num">11.6M</td><td class="num">30–35%</td><td class="num">3.5–4.1M</td></tr>
+          <tr><td>New counties</td><td class="num">3.0M</td><td class="num">5–7%</td><td class="num">0.15–0.21M</td></tr>
+          <tr><td>New CHOICE adoption</td><td class="num">1.3M</td><td class="num">10–15%</td><td class="num">0.13–0.20M</td></tr>
+          <tr><td><b>Total</b></td><td class="num"><b>16M</b></td><td class="num"><b>~24–28%</b></td><td class="num"><b>3.8–4.5M</b></td></tr>
+        </tbody></table></div>
+        <p class="note">Cross-check: 18%+ national share × ~23M ACA market ≈ 4.1M, inside the range. The 2M, 3M and 1.3M are market lives, not Oscar members. Today: 2.69M members (Sep 30, 2026) ÷ 9.6M ≈ 28%, close to the ~30% in-footprint share Oscar reports.</p></section>
     </div>
 
     <div class="sect">How each lever is supposed to work</div>
@@ -767,7 +776,7 @@ table.hg td.base{box-shadow:inset 0 0 0 2px var(--steel)}
       <p class="note" id="v-note"></p>
     </section>
 
-    <p class="foot">Sources — Reported: Form 10-K FY2025 (acc. 0001568651-26-000011) and Form 10-Q 3Q26 (acc. 0001568651-26-000086). Guidance: Ex. 99.1 to the Form 8-K of Nov 5, 2026; Investor Day presentation and webcast of Sep 16, 2026 (slides 38–49; CFO remarks on 2027 rates, tax rate, investment income and share count). Consensus: Bloomberg BEst estimates (OSCR US Equity, annual), Summit file without an as-of date; its 2026 column matches the Sep 16 guidance, so it likely predates the 3Q26 print. BBG SG&amp;A ratio and medical expenses are derived from its gross profit, operating income and D&amp;A. BBG’s line items do not tie to each other: its MLR field differs from the MLR its gross profit implies, and its EPS fields (GAAP $4.18 and adjusted $4.01 in 2029) do not equal its net income ÷ shares ($4.08), because each BBG line averages a different set of brokers. Guidance bands in the charts for tax rate (“mid-single digits”, “mid-20s”), shares (+2–3% a year) and investment income (+10–15% a year) are our numeric reading of Oscar’s words. Oscar plan Low / Mid / High: the 2026E base uses the low end, midpoint and high end of the Nov 5 ranges; the revenue CAGR uses the slide 44 walk (21–27%); 2027 member growth is our reading (0% / 3% / 6%) of a market Oscar sees stable at ~17M in 2027, on a 2.51M year-end 2026 base (BBG); the other drivers use the ends of each range Oscar gave, and where Oscar gave a single point (2027 filed rate ~14%, 2029 MLR ~80%, SG&amp;A below 15%) Low and High are our reading, set so the 2029 operating margin lands near the ends of the 5–7% target. Premium per member per month (informational, not a driver) = premium revenue ÷ year-end members ÷ 12. Year-end members are what the model projects, so the row is the same base as the premium-per-member driver. ACA enrollment peaks after open enrollment (2.96M at Jun 30, 2026) and falls through the year, so the per-year-end-member figure runs above a per-average-member figure. It is meant to show the trend, not the level. The average of two year-ends would be worse: it mixes a December count with the January jump. Valuation: the P/E half of the “Discounted Cash Flow” sheet in the Summit DCF models, without interim cash flows. Risk-free rate (3.8%) and average market return (14.8%) default to the house values in those workbooks (DCF UBER.xlsm, Nov 4, 2026 submit); beta is set at 2.00. The multiple, the CAPM inputs and the share price are inputs, not market data. Every 2027–2029 figure in the main rows is model output, not a company or consensus number.</p>
+    <p class="foot">Sources — Reported: Form 10-K FY2025 (acc. 0001568651-26-000011) and Form 10-Q 3Q26 (acc. 0001568651-26-000086). Guidance: Ex. 99.1 to the Form 8-K of Nov 5, 2026; Investor Day presentation and webcast of Sep 16, 2026 (slides 38–49; CFO remarks on 2027 rates, tax rate, investment income and share count). Consensus: Bloomberg BEst estimates (OSCR US Equity, annual), Summit file without an as-of date; its 2026 column matches the Sep 16 guidance, so it likely predates the 3Q26 print. BBG SG&amp;A ratio and medical expenses are derived from its gross profit, operating income and D&amp;A. BBG’s line items do not tie to each other: its MLR field differs from the MLR its gross profit implies, and its EPS fields (GAAP $4.18 and adjusted $4.01 in 2029) do not equal its net income ÷ shares ($4.08), because each BBG line averages a different set of brokers. Guidance bands in the charts for tax rate (“mid-single digits”, “mid-20s”), shares (+2–3% a year) and investment income (+10–15% a year) are our numeric reading of Oscar’s words. Oscar plan Low / Mid / High: the 2026E base uses the low end, midpoint and high end of the Nov 5 ranges; the revenue CAGR uses the slide 44 walk (21–27%); 2027 member growth is our reading (0% / 3% / 6%) of a market Oscar sees stable at ~17M in 2027, on a 2.51M year-end 2026 base (BBG); the other drivers use the ends of each range Oscar gave, and where Oscar gave a single point (2027 filed rate ~14%, 2029 MLR ~80%, SG&amp;A below 15%) Low and High are our reading, set so the 2029 operating margin lands near the ends of the 5–7% target. Members 2029 guidance band (3.8–4.5M) is our calc from the Investor Day addressable market: 11.6M lives in existing markets × 30–35%, 3M in new counties × 5–7%, 1.3M of new CHOICE adoption × 10–15%; the 18%+ national share on ~23M (≈4.1M) falls inside it. Premium per member per month (informational, not a driver) = premium revenue ÷ year-end members ÷ 12. Year-end members are what the model projects, so the row is the same base as the premium-per-member driver. ACA enrollment peaks after open enrollment (2.96M at Jun 30, 2026) and falls through the year, so the per-year-end-member figure runs above a per-average-member figure. It is meant to show the trend, not the level. The average of two year-ends would be worse: it mixes a December count with the January jump. Valuation: the P/E half of the “Discounted Cash Flow” sheet in the Summit DCF models, without interim cash flows. Risk-free rate (3.8%) and average market return (14.8%) default to the house values in those workbooks (DCF UBER.xlsm, Nov 4, 2026 submit); beta is set at 2.00. The multiple, the CAPM inputs and the share price are inputs, not market data. Every 2027–2029 figure in the main rows is model output, not a company or consensus number.</p>
   </div>
 </div>
 
@@ -1050,7 +1059,7 @@ var BR={rev:[18988.8,21189.2,24593.3,30853.5],prem:[18621.9,20453,24056.2,30442.
 BBG.eps_adj={'2026E':2.2218,'2027E':2.4967,'2028E':3.077,'2029E':4.0083};
 /* Guidance as text (table) */
 var G={
- mem:{'2029E':'≈4.1M (18% × 23M)'},
+ mem:{'2029E':'3.8–4.5M · 16M addressable × 30–35% / 5–7% / 10–15%'},
  ppmg:{'2027E':'~14% filed rate','2028E':'5–7% cost trend','2029E':'5–7% cost trend'},
  invg:{'2027E':'+10–15%','2028E':'+10–15%','2029E':'+10–15%'},
  rev:{'2026E':'19,000–19,300'},
@@ -1076,7 +1085,7 @@ var GN={
  eps:{'2027E':{pt:2.25,lbl:'floor: above $2.25'},'2029E':{pt:4,lbl:'floor: above $4.00'}},
  sh:{'2026E':{pt:331,lbl:'331M at 2Q26'},'2027E':[331*1.02,331*1.03],'2028E':[331*Math.pow(1.02,2),331*Math.pow(1.03,2)],'2029E':[331*Math.pow(1.02,3),331*Math.pow(1.03,3)]},
  inv:{'2027E':[327*1.10,327*1.15],'2028E':[327*Math.pow(1.10,2),327*Math.pow(1.15,2)],'2029E':[327*Math.pow(1.10,3),327*Math.pow(1.15,3)]},
- mem:{'2029E':{pt:4.1,lbl:'≈18% of a ~23M market'}}
+ mem:{'2029E':[3.76,4.47]}
 };
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function clone(d){var c={};DK.forEach(function(k){c[k]=d[k].slice();});c.b=Object.assign({},d.b||SC.mid.b);if(d.io)c.io=d.io.slice();if(d.oth)c.oth=d.oth.slice();return c;}

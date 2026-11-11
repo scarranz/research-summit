@@ -57,7 +57,8 @@ The 2027 guidance comes in February 2027 [ID-T Scott].
 | Oscar addressable market | **9.6M → 16M** (+65%): in-market share 30%→35% (+2M) · 400–600 new counties (+3M; 150 added last year) · CHOICE (+1.3M) | [ID-T Janet], [ID-s54] |
 | In-market share | ~16% (2024) → ~30% (2026) | [ID-s52] |
 | New-market entry share | 5–7%, then grows | [ID-T Scott] |
-| National share 2029 | **18%+** → ~4.1M members on a 23M market (calc) | [ID-s54], [ID-s64] |
+| National share 2029 | **18%+** → ~4.1M members on a 23M market (calc; cross-check only) | [ID-s54], [ID-s64] |
+| **Members 2029, footprint build (calc, Nov 11 2026)** | **3.8–4.5M**: 11.6M lives in existing markets (9.6M + 2M maturing) × 30–35% = 3.5–4.1M · 3M new counties × 5–7% = 0.15–0.21M · 1.3M new CHOICE × 10–15% = 0.13–0.20M. Blended ~24–28% of the 16M addressable. The 2M/3M/1.3M are market lives, not members. This is the 2029 guidance band in the artifact (SAB, Nov 11 2026). | [ID-s54], waterfall in the artifact |
 | Retention 2026 | ~75% IFP · ~85% CHOICE | [ID-s63] |
 | CHOICE | 2x members YoY in 2026; 3x share by 2029; 20% share in priority markets; 250+ off-exchange products for OE27; quotes doubled | [ID-s55], [ID-T Janet] |
 | Distribution | +60% brokers in 2026; Allstate bundle adds ~30k new brokers (38k, ~20% overlap) | [ID-T Janet] |
@@ -78,7 +79,7 @@ The 2027 guidance comes in February 2027 [ID-T Scott].
 | Consensus-like (BBG) | 2.60M | 10.2% / 19.7% | 3.43M | $2.61 | $4.08 |
 
 **Takeaways:**
-- With a year-end base, every case lands below the ~4.1M (18% of 23M) that Oscar's share target implies.
+- Against the footprint build of 3.8–4.5M (§3), only High (3.96M) is inside; Low (3.55M) and Mid (3.75M) sit just below the floor. The 18% × 23M ≈ 4.1M national cross-check sits mid-range.
 - A 21–27% revenue CAGR with premium per member at only +5–7% requires ~19–22% member growth a year in 2028–29. That is the weak point of the target: it depends on the market returning to ~23M and on Oscar gaining share in exactly those two years.
 
 ## 4. Revenue
@@ -195,7 +196,7 @@ The 2026 column (revenue $18,989M, EFO $801M, MLR 81.49%) matches the **Sep 16**
 | — growth | | +62% | **+11.6%** | +16.1% | +25.5% | +5.7% | consensus 2026–29 CAGR **17.6%** (calc) |
 | Premium revenue | 11,470 | 18,622 | 20,453 | 24,056 | 30,442 | 32,201 | |
 | Investment income | 203 | 302 | 313 | 326 | 364 | 366 | +10–15%/yr → consensus ~+6%/yr |
-| Members (Ind. & SG, year-end) | 2.04M | **2.51M** | 2.60M | 2.86M | 3.43M | 3.29M | 18% national share ≈ 4.1M (calc) |
+| Members (Ind. & SG, year-end) | 2.04M | **2.51M** | 2.60M | 2.86M | 3.43M | 3.29M | footprint build 3.8–4.5M; 18% national ≈ 4.1M (calc) |
 | MLR | 87.4% | 81.5% | 81.2% | 80.6% | **80.1%** | 79.9% | ~80% |
 | Gross profit (rev − medical) | 1,682 | 3,794 | 4,346 | 5,449 | 6,895 | 7,926 | |
 | SG&A + other opex (GP − EBIT, calc) | 17.8% | 15.8% | 16.0% | 16.8% | **16.2%** | 17.9% | <15% (reported SG&A runs ~0.3 pts below this line) |

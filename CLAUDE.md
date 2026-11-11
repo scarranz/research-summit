@@ -41,6 +41,8 @@ js/covered-calls.js     — Derivatives ▸ Covered Calls (the live book of sold
 js/protective-put.js    — Derivatives ▸ Protective Put (downside insurance on stock we own)
 js/buy-calls.js         — Derivatives ▸ Buy Calls (long-call analyzer)
 js/short-puts.js        — Derivatives ▸ Short Puts (cash-secured puts)
+js/long-put.js          — Derivatives ▸ Long Put (valuation short via puts; any ticker, opens on MAR)
+js/long-put-data.js     — Long Put's frozen Bloomberg exports (consensus, forward-P/E history, income statement)
 js/betas.js             — Tools ▸ Betas shell (Calculator · History · Portfolio sub-tabs)
 js/betas-core.js        — Betas engine: prices (Massive), regression, rolling β, beta history store
 js/betas-calc.js        — Betas ▸ Calculator (beta of any name, every variable, Submit)
@@ -401,6 +403,7 @@ table header. That is the point of the tab; the option chain alone shows none of
 | `js/options-data.js` | `OPT_ESTIMATES` — forward revenue/EBITDA/net income/EPS/shares/net debt per ticker. APP from `js/overviews/app-model.js` (Bloomberg consensus), everything else from `js/covered-calls-summit.js` (Summit DCF snapshots). Nothing is retyped, so nothing drifts. |
 | `js/covered-calls.js` | The book of sold calls (nine positions, all in %) — its own table shape and its own sheet, `css/covered-calls.css` |
 | `js/protective-put.js` · `js/buy-calls.js` · `js/short-puts.js` | One hand-picked strike ladder each, all on the shared `.der-an` chrome in `css/derivatives.css` |
+| `js/long-put.js` · `js/long-put-data.js` | **Long Put** (fifth pane, outside the 2×2): a valuation short through puts on a stock priced above its own forward-P/E history. P/E only. Works for **any ticker**, opens on MAR, in three tiers: a Bloomberg export in `long-put-data.js` (MAR: consensus + 10-year forward-P/E history + full income statement) → the estimate store in `options-data.js` (live P/E, scenario on a typed target P/E, growth split) → live chain only (non-USD reporters and names with nothing on file; valuation columns blank). To give a name the history, SAB exports the same two BBG sheets (Annual + Historic fwd PE). |
 
 ### Adding or changing a strategy pane
 

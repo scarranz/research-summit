@@ -21,10 +21,14 @@
 //
 // Price, premium, IV and greeks are live from the Massive option chain (options-core.js);
 // EPS, net income, shares and the forward-P/E history are SAB's Bloomberg export, frozen in
-// ./long-put-data.js with its date. Nothing is stored; every input resets on reload.
+// ./long-put-data.js with its date. Any other ticker works too (see lpDataFor): EPS from the
+// Derivatives estimate store when the name is in it, else the live chain alone. Opens on MAR.
+// Nothing is stored; every input resets on reload.
 
 import { LP_DATA } from './long-put-data.js';
+import { OPT_ESTIMATES } from './options-data.js';
 import {
+  estimatesFor,
   esc, px, mult, pct, pctS, cash, daysTo,
   fetchExpiries, fetchUnderlying, fetchChain,
   listedStrikes, bandAround, premiumOf, quoteTip, wireTooltip,
@@ -52,14 +56,74 @@ const st = {
   hist: { win: null, yr: null, hidden: {}, tbl: false },
 };
 let instOpen = false;
-let D = null;                // LP_DATA[ticker]
+let D = null;                // lpDataFor(ticker)
 let _chart = null;
 
+// ── Any ticker: what we know about it, from the richest source on file ────────
+// Three tiers, so the tab works for any optionable name and opens on MAR:
+//   'bbg'  — a Bloomberg export in long-put-data.js: consensus EPS + the ten-year
+//            forward-P/E history + the full income statement (MAR today).
+//   'est'  — no export, but the name is in the Derivatives estimate store
+//            (options-data.js: BBG consensus, else the Summit DCF): forward EPS, net
+//            income and shares, so the P/E, the scenario and the growth split work;
+//            there is no history, so the P/E to revert to is typed.
+//   'none' — nothing on file (or a non-USD reporter, whose EPS is not in the option's
+//            currency): the live chain, premiums, breakevens and sizing still work;
+//            every valuation column stays blank rather than guessed.
+const LP_TICKERS = () => [...new Set([...Object.keys(LP_DATA), ...Object.keys(OPT_ESTIMATES)])];
+function lpDataFor(tk) {
+  if (LP_DATA[tk]) return { kind: 'bbg', ...LP_DATA[tk] };
+  const e = OPT_ESTIMATES[tk];
+  if (!e) return { kind: 'none', name: null, years: {}, why: `${tk} has no consensus on file` };
+  if ((e.currency || 'USD') !== 'USD') {
+    return { kind: 'none', name: e.name, years: {}, why: `${e.name} reports in ${e.currency}, so its EPS is not in the option's dollars — no P/E is shown` };
+  }
+  const src = e.sources.consensus ? 'consensus' : (e.sources.summit ? 'summit' : null);
+  const x = src ? estimatesFor(tk, src) : null;
+  if (!x) return { kind: 'none', name: e.name, years: {}, why: `${tk} has no estimates on file` };
+  const years = {}; let lastActual = null;
+  Object.keys(x.years).map(Number).sort((a, b) => a - b).forEach((y) => {
+    const r = x.years[y];
+    years[y] = { eps: r.eps, ni: r.netIncome, sh: r.shares, rev: r.rev, ebitda: r.ebitda, est: !!r.est };
+    if (!r.est) lastActual = y;
+  });
+  return {
+    kind: 'est', name: x.name, currency: x.currency, asOf: x.asOf || '', lastActual, years,
+    srcLabel: src === 'consensus' ? 'Bloomberg consensus' : 'Summit DCF model', epsLabel: x.epsLabel || 'EPS',
+    src: x.source, hist: null, is: estIs(years, lastActual),
+  };
+}
+// The income-statement block on the lines the estimate store carries.
+function estIs(years, lastActual) {
+  const ys = Object.keys(years).map(Number).sort((a, b) => a - b).filter((y) => lastActual == null || y >= lastActual - 3);
+  if (ys.length < 2) return null;
+  const v = (k) => ys.map((y) => (years[y][k] == null || !isFinite(years[y][k]) ? null : years[y][k]));
+  const lines = {
+    rev: { l: 'Revenue', u: 'm', v: v('rev'), f: 'revenue' },
+    ebitda: { l: 'EBITDA', u: 'm', v: v('ebitda'), f: 'EBITDA' },
+    a_ni: { l: 'Net income', u: 'm', v: v('ni'), f: 'net income' },
+    sh: { l: 'Diluted shares', u: 'sh', v: v('sh'), f: 'diluted shares' },
+    eps: { l: 'EPS (net income ÷ shares)', u: 'ps', v: v('eps'), f: 'net income ÷ diluted shares' },
+  };
+  Object.keys(lines).forEach((k) => { if (lines[k].v.every((x) => x == null)) delete lines[k]; });
+  if (!lines.eps || !lines.a_ni) return null;
+  const layout = [{ sec: 'Income statement' }];
+  if (lines.rev) layout.push({ k: 'rev', kind: 'main', g: true });
+  if (lines.ebitda) layout.push({ k: 'ebitda', g: true, cs: lines.rev ? 'rev' : null, csL: 'Margin' });
+  layout.push({ k: 'a_ni', kind: 'main', g: true, cs: lines.rev ? 'rev' : null, csL: 'Margin' });
+  layout.push({ sec: 'Per share' });
+  if (lines.sh) layout.push({ k: 'sh', g: true });
+  layout.push({ k: 'eps', kind: 'main', g: true });
+  return { years: ys, lines, layout };
+}
+const hasHist = () => !!(D && D.hist && D.hist.length);
+
 // ── Forward EPS on any date: the blended next twelve months ──────────────────
-// The fiscal year is the calendar year (MAR); a date d inside FY y blends y and y+1 by
-// the days left in y — the same construction as Bloomberg's BF (blended forward) EPS.
+// Years are calendar years (MAR's fiscal year is; the estimate store re-keys any other
+// fiscal year to the calendar once). A date d inside year y blends y and y+1 by the days
+// left in y — the same construction as Bloomberg's BF (blended forward) EPS.
 function ntmEps(dateStr) {
-  if (!D) return null;
+  if (!D || !D.years) return null;
   const d = new Date(dateStr + 'T00:00:00Z');
   const y = d.getUTCFullYear();
   const end = Date.UTC(y, 11, 31), start = Date.UTC(y - 1, 11, 31);
@@ -74,15 +138,15 @@ const todayStr = () => new Date().toISOString().slice(0, 10);
 const AVGS = [
   { k: 'x10', l: '10Y ex-COVID', t: 'Ten years, leaving out Mar 2020 – Dec 2021, when forward EPS collapsed and the P/E printed up to the 60s' },
   { k: 'a10', l: '10Y', t: 'Every day of the ten years, COVID included' },
-  { k: 'a5', l: '5Y', t: 'The last five years (from Nov 2021)' },
-  { k: 'a3', l: '3Y', t: 'The last three years' },
-  { k: 'pre', l: 'Pre-COVID', t: 'Nov 2016 – Feb 2020' },
+  { k: 'a5', l: '5Y', t: 'The last five years of the history' },
+  { k: 'a3', l: '3Y', t: 'The last three years of the history' },
+  { k: 'pre', l: 'Pre-COVID', t: 'From the start of the history to Feb 2020' },
 ];
 function avgOf(k) {
-  if (!D) return null;
+  if (!hasHist()) return null;
   const h = D.hist, last = h[h.length - 1][0];
   const back = (n) => String(+last.slice(0, 4) - n) + last.slice(4);
-  const [c0, c1] = D.covid;
+  const [c0, c1] = D.covid || ['2020-03-01', '2021-12-31'];
   const pick = {
     x10: (d) => !(d >= c0 && d <= c1),
     a10: () => true,
@@ -140,12 +204,20 @@ const selectedRow = () => {
 
 // ── Fetching ──────────────────────────────────────────────────────────────────
 // A multiple takes time to come back: open on the first expiry a year or more out
-// (the January LEAPS when listed).
+// (the January LEAPS when listed) — among the expiries the EPS on file reaches, so the
+// scenario has an expiry-date EPS to price (a name whose estimates stop at FY2028 cannot
+// price an expiry in 2028, which needs FY2029).
 function defaultExpiry(dates) {
-  const yr = dates.filter((d) => daysTo(d) >= 365);
+  const priced = (D && D.kind !== 'none') ? dates.filter((d) => ntmEps(d) != null) : [];
+  const pool = priced.length ? priced : dates;
+  const yr = pool.filter((d) => daysTo(d) >= 365);
   const jan = yr.find((d) => d.slice(5, 7) === '01');
-  return jan || yr[0] || dates[dates.length - 1];
+  return jan || yr[0] || pool[pool.length - 1];
 }
+const lastEpsYear = () => {
+  const ys = D && D.years ? Object.keys(D.years).map(Number).filter((y) => D.years[y] && D.years[y].eps != null) : [];
+  return ys.length ? Math.max(...ys) : null;
+};
 async function loadChain() {
   st.loading = true; st.err = null; render();
   try {
@@ -169,10 +241,10 @@ async function loadChain() {
 }
 async function loadTicker(tk) {
   st.ticker = tk.toUpperCase();
-  D = LP_DATA[st.ticker] || null;
+  D = lpDataFor(st.ticker);
   st.chain = []; st.strikes = []; st.seeded = false; st.rangeFrom = null; st.rangeTo = null; st.selected = null;
-  if (st.growth) { st.growth.win = null; st.growth.yr = null; }
-  if (!D) { st.loading = false; st.err = `${st.ticker} has no consensus and P/E history on file — this tab needs both (see the foot)`; render(); return; }
+  st.target = null; st.hist.win = null; st.hist.yr = null;   // a typed P/E belongs to the name it was typed for
+  if (st.growth) { st.growth.win = null; st.growth.yr = null; st.growth.metric = 'rev'; }
   st.loading = true; st.err = null; render();
   st.expiries = await fetchExpiries(st.ticker);
   if (!st.expiries.length) { st.err = `no listed options found for ${st.ticker}`; st.loading = false; render(); return; }
@@ -183,11 +255,19 @@ async function loadTicker(tk) {
 // ── Render: KPIs ──────────────────────────────────────────────────────────────
 function renderKpis() {
   const r = selectedRow(), sc = scenario(), pe = nowPE(), a = avgOf(st.avgKey);
-  const lbl = st.target != null ? `your ${mult(st.target)}` : (AVGS.find((x) => x.k === st.avgKey) || {}).l;
+  const noEps = D && D.kind === 'none';
+  const peSub = noEps ? (D.why || 'no EPS on file')
+    : st.target != null ? `vs your ${mult(st.target)} · ${pctS(pe ? pe / st.target - 1 : null)}`
+    : a ? `${(AVGS.find((x) => x.k === st.avgKey) || {}).l} average ${mult(a.mean)} · ${pctS(pe && a.mean ? pe / a.mean - 1 : null)} vs it`
+    : 'no P/E history on file — type a target P/E below';
+  const scSub = noEps ? 'needs EPS on file'
+    : !sc.eps ? (st.expiry && lastEpsYear() ? `EPS on file ends FY${lastEpsYear()} — pick an expiry before ${lastEpsYear()}` : 'pick an expiry')
+    : sc.m == null ? `NTM EPS ${px(sc.eps)} · type a target P/E`
+    : `${mult(sc.m)} × NTM EPS ${px(sc.eps)} · ${pctS(sc.price && st.spot ? sc.price / st.spot - 1 : null)} vs spot`;
   const cells = [
     ['Spot', px(st.spot), st.changePct != null ? `${pctS(st.changePct)} today` : esc(st.ticker)],
-    ['Forward P/E today', mult(pe), a ? `${lbl} average ${mult(a.mean)} · ${pctS(pe && a.mean ? pe / a.mean - 1 : null)} above` : '—'],
-    [`Price at ${mult(sc.m)} on expiry`, px(sc.price), sc.eps ? `${mult(sc.m)} × NTM EPS ${px(sc.eps)} · ${pctS(sc.price && st.spot ? sc.price / st.spot - 1 : null)} vs spot` : 'pick an expiry'],
+    ['Forward P/E today', mult(pe), peSub],
+    [sc.m != null ? `Price at ${mult(sc.m)} on expiry` : 'Price on expiry', px(sc.price), scSub],
     ['Strike · premium', r ? `$${r.K} · ${px(r.prem)}` : '—', r ? `${pctS(r.below)} · ${r.days}d to ${r.exp} · ${st.premBasis}` : 'pick a strike'],
     ['Breakeven', r ? px(r.be) : '—', r ? `${mult(r.bePE)} on expiry EPS · ${pctS(r.beDrop)} vs spot` : '—'],
     ['If it re-rates', r ? (r.ret == null ? '—' : pctS(r.ret, 0)) : '—', r && r.pnl != null ? `${cash(r.pnl)} per contract on ${cash(r.cost)}` : '—'],
@@ -294,6 +374,18 @@ function histPoints() {
 function renderHist() {
   const box = $('lp-hist'); if (!box || !D) return;
   const pe = nowPE();
+  if (!hasHist()) {
+    if (_chart) { _chart.destroy(); _chart = null; }
+    const e = ntmEps(todayStr());
+    box.innerHTML = D.kind === 'none'
+      ? `<div class="block-top"><div class="block-h">How expensive — forward P/E</div></div>
+        <p class="lp-p muted">${esc(D.why || 'No EPS on file')}. The chain, the premiums, the breakevens and the sizing below are live; the valuation columns stay blank. To add the P/E, its history and the income statement, export the same two Bloomberg sheets as MAR (see the foot).</p>`
+      : `<div class="block-top"><div class="block-h">How expensive — forward P/E</div>
+          <span class="muted">Today (live) ${mult(pe)} on NTM EPS ${px(e)} · ${esc(D.srcLabel)}${D.asOf ? ` as of ${esc(D.asOf)}` : ''}</span></div>
+        <div class="lp-avgs"><label class="lp-lbl">Revert to a P/E of <input id="lp-target" class="hnum" type="number" step="0.5" min="1" value="${st.target == null ? '' : st.target}" placeholder="—"></label>
+          <span class="muted">No forward-P/E history on file for ${esc(st.ticker)}, so the multiple the thesis reverts to is yours to type. The ten-year chart and its averages appear once a Bloomberg export is added (see the foot).</span></div>`;
+    return;
+  }
   const avgBtns = AVGS.map((a) => `<button type="button" class="${a.k === st.avgKey && st.target == null ? 'on' : ''}" data-avg="${a.k}" title="${esc(a.t)}">${esc(a.l)} ${mult((avgOf(a.k) || {}).mean)}</button>`).join('');
   const yrs = {};
   D.hist.forEach(([d, p]) => { const y = d.slice(0, 4); (yrs[y] = yrs[y] || []).push(p); });
@@ -426,7 +518,7 @@ function renderPnl() {
   box.innerHTML = `
     <div class="block-top"><div class="block-h">P&amp;L at expiry — $${r.K} put, ${esc(r.exp)}, premium ${px(r.prem)}</div>
       <span class="muted">Click another strike in the table above to chart it</span></div>
-    <p class="lp-p">Breakeven <b>${px(r.be)}</b> (${pctS(r.beDrop)} vs spot, ${mult(r.bePE)} on expiry EPS). The most this contract can lose is the premium, <b>${cash(r.cost)}</b>; at ${mult(sc.m)} the stock would be ${px(sc.price)} and the contract ${atScn ? `<b class="${atScn.pnl > 0 ? 'up' : 'dn'}">${cash(atScn.pnl)}</b> (${atScn.ret == null ? '—' : pctS(atScn.ret, 0)} on the premium)` : '—'}.</p>
+    <p class="lp-p">Breakeven <b>${px(r.be)}</b> (${pctS(r.beDrop)} vs spot${r.bePE != null ? `, ${mult(r.bePE)} on expiry EPS` : ''}). The most this contract can lose is the premium, <b>${cash(r.cost)}</b>${sc.price == null ? '.' : `; at ${mult(sc.m)} the stock would be ${px(sc.price)} and the contract ${atScn ? `<b class="${atScn.pnl > 0 ? 'up' : 'dn'}">${cash(atScn.pnl)}</b> (${atScn.ret == null ? '—' : pctS(atScn.ret, 0)} on the premium)` : '—'}.`}</p>
     <div class="lp-gleg">${pnlChips()}</div>
     <div class="lp-chart lp-pchart"><canvas id="lp-pChart"></canvas></div>
     <div class="muted lp-hint">Hover to read any price on both axes: the stock price at the bottom, the same price as a P/E on the expiry-date EPS on top, the P&amp;L on the right. Drag sideways to zoom the prices, up or down to zoom the P&amp;L; double-click resets.</div>
@@ -625,6 +717,7 @@ let _gChart = null;
 const g = () => st.growth || (st.growth = { metric: 'rev', mode: 'lvl', win: null, yr: null, hidden: {}, tbl: true });
 const IS = () => (D && D.is) || null;
 const isLine = (k) => IS().lines[k];
+const lineOk = (k) => !!(IS() && IS().lines[k]);
 const isEntry = (k) => IS().layout.find((e) => e.k === k) || {};
 const isVal = (k, i) => { const l = isLine(k); return l && l.v[i] != null ? l.v[i] : null; };
 function isGrowth(k, i) {
@@ -711,7 +804,7 @@ function gTable() {
     const l = I.lines[e.k], on = e.k === s.metric;
     const c = gCagr(e.k, rows);
     body += `<tr class="${e.kind === 'main' ? 'rs-ft-main' : 'lp-is-seg'}${on ? ' lp-is-on' : ''}" data-gline="${e.k}">` +
-      `<td class="rs-ft-h" title="Bloomberg field ${esc(l.f)} — click to chart it">${esc(l.l)}</td>` +
+      `<td class="rs-ft-h" title="${D.kind === 'bbg' ? 'Bloomberg field ' : ''}${esc(l.f)} — click to chart it">${esc(l.l)}</td>` +
       `${rows.map((r) => val(r, gCell(isVal(e.k, r.i), l.u))).join('')}<td class="rs-ft-s">${c == null ? '' : pctS(c)}</td></tr>`;
     if (e.g) body += sub(e.k === 'sh' ? 'Change' : 'Growth', (r) => pctS(isGrowth(e.k, r.i)));
     if (e.cs) {
@@ -724,7 +817,7 @@ function gTable() {
       body += sub('Share-count effect on EPS', (r) => pctS(isShareEff(r.i)), (cE != null && cN != null) ? pctS((1 + cE) / (1 + cN) - 1) : '');
     }
   });
-  return `<div class="rs-ft-cap">US$ millions unless noted · per-share lines in US$ · shares in millions · (negative) in parentheses · gray rows: growth, and common size or margin · <span class="rs-ft-e">E</span> = Bloomberg consensus · last column = compound annual growth ${esc(span)} (margins: change in points) · click a line to chart it</div>
+  return `<div class="rs-ft-cap">US$ millions unless noted · per-share lines in US$ · shares in millions · (negative) in parentheses · gray rows: growth, and common size or margin · <span class="rs-ft-e">E</span> = ${esc(D.srcLabel || 'Bloomberg consensus')} · last column = compound annual growth ${esc(span)} (margins: change in points) · click a line to chart it</div>
     <div class="rs-ft-scroll"><table class="rs-ft lp-is"><thead><tr><th class="rs-ft-h"></th>
       ${rows.map((r) => `<th class="${est(r).trim()}">FY${r.y}${r.est ? ' <span class="rs-ft-e">E</span>' : ''}</th>`).join('')}
       <th class="rs-ft-s">CAGR</th></tr></thead><tbody>${body}</tbody></table></div>`;
@@ -746,11 +839,14 @@ function renderGrowth() {
   if (!gModes(s.metric).some(([k]) => k === s.mode)) s.mode = 'lvl';
   const all = gYearsAll();
   const f = (() => {
-    const a = D.years[D.lastActual], b = D.years[D.lastActual + 4];
-    if (!a || !b) return null;
-    const cE = Math.pow(b.eps / a.eps, 1 / 4) - 1, cN = Math.pow(b.ni / a.ni, 1 / 4) - 1;
-    const ir = I.years.indexOf(D.lastActual), r0 = isVal('rev', ir), r1 = isVal('rev', ir + 4);
-    return { cE, cN, cS: (1 + cE) / (1 + cN) - 1, cR: (r0 && r1) ? Math.pow(r1 / r0, 1 / 4) - 1 : null };
+    // Up to four years out — fewer when the estimates stop sooner.
+    const last = Math.max(...Object.keys(D.years).map(Number).filter((y) => D.years[y] && D.years[y].eps != null));
+    const n = Math.min(4, last - D.lastActual);
+    const a = D.years[D.lastActual], b = D.years[D.lastActual + n];
+    if (!(n >= 1) || !a || !b || !(a.eps > 0 && b.eps > 0 && a.ni > 0 && b.ni > 0)) return null;
+    const cE = Math.pow(b.eps / a.eps, 1 / n) - 1, cN = Math.pow(b.ni / a.ni, 1 / n) - 1;
+    const ir = I.years.indexOf(D.lastActual), r0 = lineOk('rev') ? isVal('rev', ir) : null, r1 = lineOk('rev') ? isVal('rev', ir + n) : null;
+    return { n, cE, cN, cS: (1 + cE) / (1 + cN) - 1, cR: (r0 && r1) ? Math.pow(r1 / r0, 1 / n) - 1 : null };
   })();
   let opts = '', open = false;
   I.layout.forEach((e) => {
@@ -766,8 +862,14 @@ function renderGrowth() {
   const preBtns = pres.map(([k, l]) => `<button type="button" class="${k === winKey ? 'on' : ''}" data-gpre="${k}">${esc(l)}</button>`).join('');
   box.innerHTML = `
     <div class="block-top"><div class="block-h">How fast earnings really grow — from revenue to EPS</div>
-      <span class="muted">Bloomberg consensus · ${esc(D.asOf)}</span></div>
-    ${f ? `<p class="lp-p">From FY${D.lastActual} to FY${D.lastActual + 4}E the consensus has revenue compounding at <b>${pct(f.cR, 1)}</b> a year and adjusted EPS at <b>${pct(f.cE, 1)}</b>, but adjusted net income at only <b>${pct(f.cN, 1)}</b>: about <b>${pct(f.cS, 1)}</b> a year of the EPS growth is a falling share count (buybacks), not a growing business.</p>` : ''}
+      <span class="muted">${esc(D.srcLabel || 'Bloomberg consensus')}${D.asOf ? ` · ${esc(D.asOf)}` : ''}</span></div>
+    ${f ? (() => {
+      const adj = D.kind === 'bbg' ? 'adjusted ' : '', who = D.srcLabel === 'Summit DCF model' ? 'the Summit model' : 'the consensus';
+      const head = `From FY${D.lastActual} to FY${D.lastActual + f.n}E ${who} has ${f.cR != null ? `revenue compounding at <b>${pct(f.cR, 1)}</b> a year and ` : ''}${adj}EPS at <b>${pct(f.cE, 1)}</b>`;
+      return `<p class="lp-p">${head}${f.cS >= 0
+        ? `, but ${adj}net income at only <b>${pct(f.cN, 1)}</b>: about <b>${pct(f.cS, 1)}</b> a year of the EPS growth is a falling share count (buybacks), not a growing business.`
+        : ` and ${adj}net income at <b>${pct(f.cN, 1)}</b>: the share count grows, diluting EPS by about <b>${pct(-f.cS, 1)}</b> a year.`}</p>`;
+    })() : ''}
     <div class="lp-gctl"><div class="lp-avgs"><span class="lp-lbl">Metric</span><select id="lp-gMetric" class="lp-gsel">${opts}</select><div class="seg">${modes}</div></div><div class="lp-avgs"><span class="lp-lbl">Range</span><div class="seg">${preBtns}</div></div></div>
     <div class="lp-gleg">${gChips()}</div>
     <div class="lp-chart"><canvas id="lp-gChart"></canvas></div>
@@ -837,12 +939,12 @@ function buildGrowthChart() {
     options: { responsive: true, maintainAspectRatio: false, animation: false,
       plugins: { legend: { display: false }, gFwdZone: { from },
         tooltip: { callbacks: {
-          title: (it) => { const r = rows[it[0].dataIndex]; return `FY${r.y}${r.est ? ' — Bloomberg consensus' : ' — reported'}`; },
+          title: (it) => { const r = rows[it[0].dataIndex]; return `FY${r.y}${r.est ? ` — ${D.srcLabel || 'Bloomberg consensus'}` : ' — reported'}`; },
           label: (c) => {
             const r = rows[c.dataIndex], out = [`${c.dataset.label}: ${gFmt(c.parsed.y, k, s.mode)}`];
             if (s.mode !== 'pct' && isGrowth(k, r.i) != null) out.push(`Growth ${pctS(isGrowth(k, r.i))}`);
             if (s.mode !== 'cs' && isEntry(k).cs && isCs(k, r.i) != null) out.push(`${isEntry(k).csL} ${pct(isCs(k, r.i), 1)}`);
-            if (k === 'eps' && isShareEff(r.i) != null) out.push(`Adj. net income growth ${pctS(isGrowth('a_ni', r.i))} · share-count effect ${pctS(isShareEff(r.i))}`);
+            if (k === 'eps' && isShareEff(r.i) != null) out.push(`${D.kind === 'bbg' ? 'Adj. net' : 'Net'} income growth ${pctS(isGrowth('a_ni', r.i))} · share-count effect ${pctS(isShareEff(r.i))}`);
             return out;
           } } } },
       scales: {
@@ -893,7 +995,12 @@ function renderFoot() {
     <b>If the P/E goes to …</b> — <b>Put value</b> = strike − scenario price (zero when the scenario price is above the strike); <b>P&amp;L</b> = (value − premium) × 100; <b>Return on premium</b> = value ÷ premium − 1. At expiry only — before then the put also carries time value.<br>
     <b>Size</b> — the premium is set at ${pct(st.riskPct, 1)} of the portfolio (header); <b>Min. portfolio</b> = one contract's premium × 100 ÷ ${pct(st.riskPct, 1)}: the smallest portfolio in which one contract fits that rule. The premium is also the most the trade can lose.<br>
     <b>P&amp;L at expiry</b> — click a strike: the chart and its table give the contract's P&amp;L at each stock price on the expiry date, (max(strike − price, 0) − premium) × 100; the price grid steps every 2x of P/E on the expiry-date EPS, plus spot, strike, breakeven and the scenario. <b>Portfolio impact</b> = return on premium × ${pct(st.riskPct, 1)}.<br>
-    Sources — option chain, price, IV and greeks live from Massive; EPS, net income, shares and the forward-P/E history: ${esc(D ? D.src : '')}; ${esc(D ? D.histSrc : '')} — frozen in js/long-put-data.js, not live. Nothing on this page is stored.`;
+    <b>Any ticker</b> — type it in the header. A name with a Bloomberg export in js/long-put-data.js (MAR) gets the ten-year forward-P/E history, its averages and the full income statement; a name in the Derivatives estimate store (js/options-data.js) gets the live P/E, the scenario on a P/E you type and the growth split; any other optionable name gets the live chain, premiums, breakevens and sizing, with the valuation columns blank. To add the history for a name, export the same two Bloomberg sheets as MAR (Annual + Historic fwd PE).<br>
+    Sources — option chain, price, IV and greeks live from Massive; ${!D || D.kind === 'none'
+      ? `no EPS on file for ${esc(st.ticker)}.`
+      : D.kind === 'bbg'
+        ? `EPS, net income, shares and the forward-P/E history: ${esc(D.src)}; ${esc(D.histSrc)} — frozen in js/long-put-data.js, not live.`
+        : `EPS, net income and shares: ${esc(D.src)} — frozen in js/options-data.js, not live.`} Nothing on this page is stored.`;
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -913,7 +1020,11 @@ function syncControls() {
   root().querySelectorAll('#lp-premSel button').forEach((b) => b.classList.toggle('on', b.dataset.prem === st.premBasis));
   const r = $('lp-risk'); if (r && document.activeElement !== r) r.value = +(st.riskPct * 100).toFixed(2);
   const tt = $('lp-tickers');
-  if (tt) tt.innerHTML = Object.keys(LP_DATA).map((t) => `<button type="button" class="chip ${t === st.ticker ? 'on' : ''}" data-tkbtn="${esc(t)}">${esc(t)}</button>`).join('');
+  // Names with a P/E history first (the full page), then the estimate store; a typed
+  // ticker that is in neither still gets its own chip while it is open.
+  const list = LP_TICKERS();
+  if (list.indexOf(st.ticker) < 0) list.push(st.ticker);
+  if (tt) tt.innerHTML = list.map((t) => `<button type="button" class="chip ${t === st.ticker ? 'on' : ''}" data-tkbtn="${esc(t)}" title="${LP_DATA[t] ? 'Bloomberg export: P/E history + income statement' : OPT_ESTIMATES[t] ? 'Estimates on file: P/E on a target you type' : 'Live chain only'}">${esc(t)}</button>`).join('');
 }
 
 function injectMarkup() {

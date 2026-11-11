@@ -214,3 +214,49 @@
 /* Min. portfolio: informative, so it reads a shade quieter than the live numbers */
 #cc-root td.minp { color: var(--steel); font-variant-numeric: tabular-nums; }
 #cc-root th.minp { cursor: help; }
+
+/* Derivatives ▸ Long Put (js/long-put.js) — the history block and the growth block */
+.der-an .lp-avgs{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;}
+.der-an .lp-lbl{font-size:11px;color:var(--mu);font-weight:600;display:flex;align-items:center;gap:6px;}
+.der-an .lp-chart{position:relative;height:280px;margin:4px 0;}
+.der-an .lp-hint{font-size:11px;margin:4px 0 8px;}
+.der-an .lp-p{font-size:13px;line-height:1.55;color:var(--text);margin:0 0 10px;}
+.der-an .lp-tblwrap{margin-top:6px;}
+.der-an .lp-tblwrap > div{margin-top:8px;overflow-x:auto;}
+.der-an table.lp-small{width:auto;min-width:420px;}
+/* Long Put ▸ growth chart. Modes and range use the tab's own .seg pills; the chips and the
+   table dropdown are the portal's rs-* chart chrome (css/results.css), re-asserted here because
+   `.der-an button` would otherwise paint them as navy action buttons. */
+.der-an .lp-gctl{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+.der-an .lp-gsel{font-size:12px;padding:5px 8px;}
+.der-an .lp-gleg{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 4px;}
+.der-an #lp-growth button.rs-leg{appearance:none;border:1px solid transparent;background:transparent;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font:600 12px 'Inter',sans-serif;color:var(--mu);padding:3px 8px;border-radius:999px;}
+.der-an #lp-growth button.rs-leg:hover{border-color:var(--bdr);color:var(--navy);opacity:1;}
+.der-an #lp-growth button.rs-leg.off{opacity:.45;text-decoration:line-through;}
+.der-an #lp-growth .ave-leg-act{width:10px;height:10px;border-radius:2px;display:inline-block;}
+.der-an #lp-growth button.rs-collap-h{width:100%;text-align:left;border:0;border-radius:0;background:#F7F9FB;font:inherit;font-size:12.5px;font-weight:800;color:var(--navy);padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;}
+.der-an #lp-growth button.rs-collap-h:hover{background:#EEF2F6;opacity:1;}
+.der-an #lp-growth .rs-collap{margin-top:6px;}
+/* Long Put ▸ P&L at expiry: the marked prices (spot, strike, breakeven, scenario) as highlighted columns */
+.der-an #lp-pnl .rs-ft th.lp-pk,.der-an #lp-pnl .rs-ft td.lp-pk{background:#F4F7FB;}
+.der-an #lp-pnl .lp-pkl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;}
+.der-an #lp-pnl .rs-ft td.up{color:#1E9E62;}
+.der-an #lp-pnl .rs-ft td.dn{color:#C0392B;}
+.der-an #lp-pnl .rs-leg.lp-static{cursor:default;}
+.der-an #lp-pnl button.rs-leg{appearance:none;border:1px solid transparent;background:transparent;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font:600 12px 'Inter',sans-serif;color:var(--mu);padding:3px 8px;border-radius:999px;}
+.der-an #lp-pnl button.rs-leg:hover{border-color:var(--bdr);color:var(--navy);opacity:1;}
+.der-an #lp-pnl button.rs-leg.off{opacity:.45;text-decoration:line-through;}
+.der-an #lp-pnl button.rs-collap-h{width:100%;text-align:left;border:0;border-radius:0;background:#F7F9FB;font:inherit;font-size:12.5px;font-weight:800;color:var(--navy);padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;}
+.der-an #lp-pnl button.rs-collap-h:hover{background:#EEF2F6;opacity:1;}
+.der-an #lp-pnl .rs-collap{margin-top:6px;}
+.der-an .lp-chart.lp-pchart{height:360px;margin:6px 0 4px;}
+/* Long Put ▸ income statement table: lines in black, their growth and margin rows small and gray beneath */
+.der-an #lp-growth table.lp-is tr[data-gline]{cursor:pointer;}
+.der-an #lp-growth table.lp-is tr[data-gline]:hover td{background:#F7F9FC;}
+.der-an #lp-growth table.lp-is tr.lp-is-seg td.rs-ft-h{padding-left:22px;font-weight:500;}
+.der-an #lp-growth table.lp-is tr.lp-is-sub td{font-size:10.5px;color:#98A2B3;padding-top:1px;padding-bottom:4px;font-weight:500;}
+.der-an #lp-growth table.lp-is tr.lp-is-sub td.rs-ft-h{padding-left:30px;font-style:italic;}
+.der-an #lp-growth table.lp-is tr.lp-is-sec td{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--steel,#3E5A82);padding-top:14px;border-bottom:1px solid var(--bdr);background:transparent;}
+.der-an #lp-growth table.lp-is tr.lp-is-on td.rs-ft-h{box-shadow:inset 3px 0 0 var(--accent,#2563EB);color:var(--navy);font-weight:800;}
+.der-an #lp-growth table.lp-is tr.lp-is-on td{background:#EEF3FC;}
+.der-an #lp-growth .rs-ft-scroll{max-height:none;}

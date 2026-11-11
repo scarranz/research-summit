@@ -6,6 +6,13 @@
 //                          paid the premium        paying the premium
 //   stock you own          Covered Calls           Protective Put
 //   stock you want         Short Puts              Buy Calls
+//   stock you think is     —                       Long Put
+//   too expensive
+//
+// Long Put is the fifth: a valuation short through options (js/long-put.js). It reads its
+// own frozen Bloomberg data (js/long-put-data.js: consensus EPS and the forward-P/E
+// history) rather than the shared estimates, because its question is "how far above its
+// own history is the multiple", which none of the other four asks.
 //
 // Each pane is its own module with its own live chain, and each is built the first
 // time it is opened — four option chains on a tab nobody has scrolled to would be
@@ -17,12 +24,14 @@ import { loadCoveredCallsPage } from './covered-calls.js';
 import { loadProtectivePutPage } from './protective-put.js';
 import { loadBuyCallsPage } from './buy-calls.js';
 import { loadShortPutsPage } from './short-puts.js';
+import { loadLongPutPage } from './long-put.js';
 
 const PANES = [
   { id: 'covered-calls',  label: 'Covered Calls',  load: loadCoveredCallsPage },
   { id: 'protective-put', label: 'Protective Put', load: loadProtectivePutPage },
   { id: 'buy-calls',      label: 'Buy Calls',      load: loadBuyCallsPage },
   { id: 'short-puts',     label: 'Short Puts',     load: loadShortPutsPage },
+  { id: 'long-put',       label: 'Long Put',       load: loadLongPutPage },
 ];
 
 const _loaded = new Set();

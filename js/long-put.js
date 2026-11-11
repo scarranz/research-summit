@@ -781,6 +781,18 @@ function gCagr(k, rows) {
   const a = isVal(k, rows[0].i), b = isVal(k, rows[rows.length - 1].i), n = rows[rows.length - 1].y - rows[0].y;
   return (a > 0 && b > 0 && n > 0) ? Math.pow(b / a, 1 / n) - 1 : null;
 }
+// The CAGR column runs over the life of the trade: from the current fiscal year (the first
+// estimate year, FY2026 today) to the fiscal year of the selected expiry — Jan 2028 → FY2028,
+// any 2029 expiry → FY2029. Capped at the last year on file; if the expiry falls inside the
+// current year (or there is no expiry yet) it falls back to the years on screen.
+function cagrRows(shown) {
+  const all = gYearsAll(), y0 = D.lastActual + 1;
+  const y1raw = st.expiry ? +st.expiry.slice(0, 4) : null;
+  const y1 = y1raw == null ? null : Math.min(y1raw, all[all.length - 1].y);
+  const a = all.find((r) => r.y === y0), b = y1 != null ? all.find((r) => r.y === y1) : null;
+  return (a && b && b.y > a.y) ? [a, b] : shown;
+}
+const cagrSpan = (cr) => `${gLabel(cr[0])}→${gLabel(cr[cr.length - 1])}`;
 
 function gHead() {
   const s = g(), rows = gShown(), open = s.tbl === true;
@@ -793,7 +805,7 @@ function gHead() {
 function gTable() {
   const s = g(), rows = gShown(), I = IS();
   if (!rows.length) return '<div class="rs-ft-cap">No year selected — turn Reported or Bloomberg consensus back on above.</div>';
-  const span = `${gLabel(rows[0])}→${gLabel(rows[rows.length - 1])}`, nc = rows.length + 2;
+  const cr = cagrRows(rows), span = cagrSpan(cr), nc = rows.length + 2;
   const est = (r) => (r.est ? ' rs-ft-este' : '');
   const val = (r, txt) => `<td class="${est(r).trim()}${txt === '—' ? ' rs-ft-nil' : ''}">${txt}</td>`;
   const sub = (label, fn, sum = '') =>
@@ -802,25 +814,25 @@ function gTable() {
   I.layout.forEach((e) => {
     if (e.sec) { body += `<tr class="lp-is-sec"><td class="rs-ft-h">${esc(e.sec)}</td><td colspan="${nc - 1}"></td></tr>`; return; }
     const l = I.lines[e.k], on = e.k === s.metric;
-    const c = gCagr(e.k, rows);
+    const c = gCagr(e.k, cr);
     body += `<tr class="${e.kind === 'main' ? 'rs-ft-main' : 'lp-is-seg'}${on ? ' lp-is-on' : ''}" data-gline="${e.k}">` +
       `<td class="rs-ft-h" title="${D.kind === 'bbg' ? 'Bloomberg field ' : ''}${esc(l.f)} — click to chart it">${esc(l.l)}</td>` +
       `${rows.map((r) => val(r, gCell(isVal(e.k, r.i), l.u))).join('')}<td class="rs-ft-s">${c == null ? '' : pctS(c)}</td></tr>`;
     if (e.g) body += sub(e.k === 'sh' ? 'Change' : 'Growth', (r) => pctS(isGrowth(e.k, r.i)));
     if (e.cs) {
-      const a = isCs(e.k, rows[0].i), b = isCs(e.k, rows[rows.length - 1].i);
+      const a = isCs(e.k, cr[0].i), b = isCs(e.k, cr[cr.length - 1].i);
       const pp = (a != null && b != null) ? `${(b - a) * 100 >= 0 ? '+' : '−'}${Math.abs((b - a) * 100).toFixed(1)}pp` : '';
       body += sub(e.csL, (r) => pct(isCs(e.k, r.i), 1), pp);
     }
     if (e.k === 'eps') {
-      const cE = gCagr('eps', rows), cN = gCagr('a_ni', rows);
+      const cE = gCagr('eps', cr), cN = gCagr('a_ni', cr);
       body += sub('Share-count effect on EPS', (r) => pctS(isShareEff(r.i)), (cE != null && cN != null) ? pctS((1 + cE) / (1 + cN) - 1) : '');
     }
   });
   return `<div class="rs-ft-cap">US$ millions unless noted · per-share lines in US$ · shares in millions · (negative) in parentheses · gray rows: growth, and common size or margin · <span class="rs-ft-e">E</span> = ${esc(D.srcLabel || 'Bloomberg consensus')} · last column = compound annual growth ${esc(span)} (margins: change in points) · click a line to chart it</div>
     <div class="rs-ft-scroll"><table class="rs-ft lp-is"><thead><tr><th class="rs-ft-h"></th>
       ${rows.map((r) => `<th class="${est(r).trim()}">FY${r.y}${r.est ? ' <span class="rs-ft-e">E</span>' : ''}</th>`).join('')}
-      <th class="rs-ft-s">CAGR</th></tr></thead><tbody>${body}</tbody></table></div>`;
+      <th class="rs-ft-s" title="Compound annual growth from the current fiscal year to the fiscal year of the selected expiry">CAGR<br><span class="muted">${esc(span)}</span></th></tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
 function gChips() {

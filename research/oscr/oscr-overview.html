@@ -99,6 +99,7 @@ table.rt tr:last-child td{border-bottom:0}
 .tli .rm:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
 .foot{font-size:11.5px;color:var(--mid);margin:0;line-height:1.6}
 /* modal */
+[hidden]{display:none!important}
 .mb{position:fixed;inset:0;background:rgba(17,20,24,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
 .md{background:var(--card);border:1px solid var(--bdr);border-radius:14px;max-width:620px;width:100%;max-height:85vh;overflow:auto;padding:20px 22px;position:relative}
 .md h3{margin:0 30px 4px 0;color:var(--navy);font-size:17px}
@@ -308,6 +309,17 @@ table.vm tr.vh td{font-size:12px;color:var(--steel)}
 table.vm tr.vs td{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--steel);font-weight:700;padding-top:14px}
 table.vm tr.sel td{font-weight:700;color:var(--navy);border-top:1.5px solid var(--navy);border-bottom:1.5px solid var(--navy)}
 table.vm td.up{color:var(--good)}table.vm td.dn{color:var(--neg)}
+table.vsn .vsm2{font-size:10.5px;color:var(--mid);font-weight:400}
+.vh3{margin:0 0 8px;font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--steel);font-weight:700}
+.vbox{border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;min-width:0}
+.vk td{vertical-align:middle}.vk .nbox{margin-left:auto}
+.vk .vsm{display:block;font-size:11px;color:var(--mid);opacity:.85}
+.vk tr.vtot td{font-weight:700;color:var(--navy);border-top:1.5px solid var(--navy)}
+.vk tr.vtot td:first-child{color:var(--navy)}
+.vk td.up{color:var(--good)}.vk td.dn{color:var(--neg)}
+.v3 td:first-child{width:46%}.v3 td{text-align:right}.v3 th{font-size:10.5px;color:var(--mid);font-weight:600;text-align:right;padding:0 0 4px}
+table.vm td.tv{background:var(--kpi);font-weight:700;color:var(--navy)}
+table.vsn td.ctr{font-weight:700;color:var(--navy);outline:1.5px solid var(--navy);outline-offset:-2px}
 .dv{display:inline-block;font-size:11px;font-weight:700;color:var(--navy);border:1px solid #B9CCF5;border-radius:5px;padding:0 5px;margin-right:6px;background:var(--card)}
 /* comparison charts */
 .cc{padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -719,22 +731,39 @@ table.hg td.base{box-shadow:inset 0 0 0 2px var(--steel)}
 
     <p class="sect">Valuation</p>
     <section class="card val" aria-labelledby="h-val">
-      <div class="hrow"><h2 class="ch" id="h-val">What the EPS is worth at a P/E</h2><span class="note" id="v-src"></span></div>
-      <p class="cap">Pick the multiple, the EPS year it applies to, and the year EPS growth is measured from. The cards use the scenario selected at the top; the table runs the same math on every scenario and on the BBG EPS. No share price is loaded: type one to compare.</p>
+      <div class="hrow"><h2 class="ch" id="h-val">P/E valuation, laid out like the Summit DCF</h2><span class="note" id="v-src"></span></div>
+      <p class="cap">The equity (P/E) half of the “Discounted Cash Flow” sheet in the Summit models. The terminal price is the P/E times the EPS of the year you pick. It is discounted to today at a cost of equity built with CAPM. No interim cash flows: the value is the terminal price alone. The cards, the bridge and the year table use the scenario selected at the top. No share price is loaded: type one to compare.</p>
       <div class="vctl">
-        <div class="fld"><span class="fll" id="l-pe">P/E multiple</span><div class="per"><input type="range" id="v-pe-r" min="5" max="40" step="0.5" aria-labelledby="l-pe"><span class="nbox"><input id="v-pe" type="text" inputmode="decimal" aria-labelledby="l-pe"><span>×</span></span></div></div>
+        <div class="fld"><span class="fll" id="l-pe">Terminal P/E</span><div class="per"><input type="range" id="v-pe-r" min="5" max="40" step="0.5" aria-labelledby="l-pe"><span class="nbox"><input id="v-pe" type="text" inputmode="decimal" aria-labelledby="l-pe"><span>×</span></span></div></div>
         <div class="fld"><span class="fll">EPS year</span><div class="pills" role="group" aria-label="EPS year" id="v-yr"><button class="pill" data-v="2027E">2027E</button><button class="pill" data-v="2028E">2028E</button><button class="pill" data-v="2029E">2029E</button></div></div>
         <div class="fld"><span class="fll">Multiple applied</span><div class="pills" role="group" aria-label="Multiple applied" id="v-bs"><button class="pill" data-v="fwd" title="Price at the end of the year before, on that year's EPS">Forward</button><button class="pill" data-v="trl" title="Price at the end of the same year, on that year's EPS">Trailing</button></div></div>
         <div class="fld"><span class="fll">EPS CAGR from</span><div class="pills" role="group" aria-label="EPS CAGR from" id="v-cs"><button class="pill" data-v="2026E">2026E</button><button class="pill" data-v="2027E">2027E</button></div></div>
-        <div class="fld"><span class="fll" id="l-dr">Discount rate</span><span class="nbox"><input id="v-dr" type="text" inputmode="decimal" aria-labelledby="l-dr"><span>%</span></span></div>
         <div class="fld"><span class="fll" id="l-px">Share price to compare</span><span class="nbox"><span>$</span><input id="v-px" type="text" inputmode="decimal" placeholder="—" aria-labelledby="l-px"></span></div>
       </div>
       <div class="vt" id="v-tiles"></div>
-      <div class="twrap"><table class="rt vm" id="v-mx"></table></div>
+      <div class="two">
+        <div class="vbox"><h3 class="vh3">Cost of equity (CAPM)</h3>
+          <table class="kv vk">
+            <tr><td id="l-rf">Risk-free rate</td><td><span class="nbox"><input id="v-rf" type="text" inputmode="decimal" aria-labelledby="l-rf"><span>%</span></span></td></tr>
+            <tr><td id="l-mkt">Average market return</td><td><span class="nbox"><input id="v-mkt" type="text" inputmode="decimal" aria-labelledby="l-mkt"><span>%</span></span></td></tr>
+            <tr><td>Market risk premium<span class="vsm">market return − risk-free</span></td><td id="v-mrp"></td></tr>
+            <tr><td id="l-beta">Levered beta<span class="vsm" id="v-bnote"></span></td><td><span class="nbox"><input id="v-beta" type="text" inputmode="decimal" aria-labelledby="l-beta"></span></td></tr>
+            <tr class="vtot"><td>Cost of equity<span class="vsm">risk-free + beta × premium</span></td><td id="v-coe"></td></tr>
+          </table>
+        </div>
+        <div class="vbox"><h3 class="vh3">Value of equity, per share</h3><table class="kv vk" id="v-br"></table></div>
+      </div>
+      <div><h3 class="vh3">By year</h3><div class="twrap"><table class="rt vm" id="v-yrs"></table></div></div>
+      <div class="two">
+        <div class="vbox"><h3 class="vh3">Multiples</h3><table class="kv vk v3" id="v-mul"></table></div>
+        <div class="vbox"><h3 class="vh3">What the value pays for growth (PVGO)</h3><table class="kv vk" id="v-pvgo"></table></div>
+      </div>
+      <div><h3 class="vh3">Sensitivity: value per share today, cost of equity × perpetual growth</h3><div class="twrap"><table class="rt vm vsn" id="v-sens"></table></div></div>
+      <div><h3 class="vh3">By scenario</h3><div class="twrap"><table class="rt vm" id="v-mx"></table></div></div>
       <p class="note" id="v-note"></p>
     </section>
 
-    <p class="foot">Sources — Reported: Form 10-K FY2025 (acc. 0001568651-26-000011) and Form 10-Q 3Q26 (acc. 0001568651-26-000086). Guidance: Ex. 99.1 to the Form 8-K of Nov 5, 2026; Investor Day presentation and webcast of Sep 16, 2026 (slides 38–49; CFO remarks on 2027 rates, tax rate, investment income and share count). Consensus: Bloomberg BEst estimates (OSCR US Equity, annual), Summit file without an as-of date; its 2026 column matches the Sep 16 guidance, so it likely predates the 3Q26 print. BBG SG&amp;A ratio and medical expenses are derived from its gross profit, operating income and D&amp;A. BBG’s line items do not tie to each other: its MLR field differs from the MLR its gross profit implies, and its EPS fields (GAAP $4.18 and adjusted $4.01 in 2029) do not equal its net income ÷ shares ($4.08), because each BBG line averages a different set of brokers. Guidance bands in the charts for tax rate (“mid-single digits”, “mid-20s”), shares (+2–3% a year) and investment income (+10–15% a year) are our numeric reading of Oscar’s words. Oscar plan Low / Mid / High: the 2026E base uses the low end, midpoint and high end of the Nov 5 ranges; the revenue CAGR uses the slide 44 walk (21–27%); 2027 member growth is our reading (0% / 3% / 6%) of a market Oscar sees stable at ~17M in 2027, on a 2.51M year-end 2026 base (BBG); the other drivers use the ends of each range Oscar gave, and where Oscar gave a single point (2027 filed rate ~14%, 2029 MLR ~80%, SG&amp;A below 15%) Low and High are our reading, set so the 2029 operating margin lands near the ends of the 5–7% target. Valuation: the multiple, discount rate and share price are inputs, not market data. Every 2027–2029 figure in the main rows is model output, not a company or consensus number.</p>
+    <p class="foot">Sources — Reported: Form 10-K FY2025 (acc. 0001568651-26-000011) and Form 10-Q 3Q26 (acc. 0001568651-26-000086). Guidance: Ex. 99.1 to the Form 8-K of Nov 5, 2026; Investor Day presentation and webcast of Sep 16, 2026 (slides 38–49; CFO remarks on 2027 rates, tax rate, investment income and share count). Consensus: Bloomberg BEst estimates (OSCR US Equity, annual), Summit file without an as-of date; its 2026 column matches the Sep 16 guidance, so it likely predates the 3Q26 print. BBG SG&amp;A ratio and medical expenses are derived from its gross profit, operating income and D&amp;A. BBG’s line items do not tie to each other: its MLR field differs from the MLR its gross profit implies, and its EPS fields (GAAP $4.18 and adjusted $4.01 in 2029) do not equal its net income ÷ shares ($4.08), because each BBG line averages a different set of brokers. Guidance bands in the charts for tax rate (“mid-single digits”, “mid-20s”), shares (+2–3% a year) and investment income (+10–15% a year) are our numeric reading of Oscar’s words. Oscar plan Low / Mid / High: the 2026E base uses the low end, midpoint and high end of the Nov 5 ranges; the revenue CAGR uses the slide 44 walk (21–27%); 2027 member growth is our reading (0% / 3% / 6%) of a market Oscar sees stable at ~17M in 2027, on a 2.51M year-end 2026 base (BBG); the other drivers use the ends of each range Oscar gave, and where Oscar gave a single point (2027 filed rate ~14%, 2029 MLR ~80%, SG&amp;A below 15%) Low and High are our reading, set so the 2029 operating margin lands near the ends of the 5–7% target. Valuation: the P/E half of the “Discounted Cash Flow” sheet in the Summit DCF models, without interim cash flows. Risk-free rate (3.8%) and average market return (14.8%) default to the house values in those workbooks (DCF UBER.xlsm, Nov 4, 2026 submit); beta starts at 1.00 as a placeholder. The multiple, the CAPM inputs and the share price are inputs, not market data. Every 2027–2029 figure in the main rows is model output, not a company or consensus number.</p>
   </div>
 </div>
 
@@ -1328,63 +1357,134 @@ ist.addEventListener('click',function(ev){
 document.querySelectorAll('[data-sc]').forEach(function(b){b.addEventListener('click',function(){setScenario(b.dataset.sc);});});
 document.getElementById('sc-reset').addEventListener('click',function(){if(!OURS)return;var base=PLAN.indexOf(OURS.base)>=0?OURS.base:'mid';OURS=null;try{localStorage.removeItem('oscr-is-ours');}catch(e){}if(cur==='ours')setScenario(base);else syncSc();});
 
-/* ---------- valuation: P/E on a chosen EPS year, EPS CAGR, PEG, value today ---------- */
-var V={pe:15,yr:'2029E',bs:'fwd',cs:'2026E',dr:10,px:null};
+/* ---------- valuation: the P/E half of the Summit DCF sheet. Terminal price = P/E x EPS of the chosen year,
+   no interim cash flows, discounted at a CAPM cost of equity. Risk-free 3.8% and market return 14.8% are the
+   house values in the Summit DCF workbooks (DCF UBER.xlsm, Nov 4 2026 submit); beta is an input. ---------- */
+var V={pe:15,yr:'2029E',bs:'fwd',cs:'2026E',rf:3.8,mkt:14.8,beta:1,px:null};
 try{var sv=JSON.parse(ls('oscr-val')||'null');if(sv)Object.keys(V).forEach(function(k){if(sv[k]!==undefined)V[k]=sv[k];});}catch(e){}
 if(PY.indexOf(V.yr)<0)V.yr='2029E';if(['fwd','trl'].indexOf(V.bs)<0)V.bs='fwd';if(['2026E','2027E'].indexOf(V.cs)<0||+V.cs.slice(0,4)>=+V.yr.slice(0,4))V.cs='2026E';
-if(!(V.pe>0))V.pe=15;if(!(V.dr>=0))V.dr=10;if(!(V.px>0))V.px=null;
+if(!(V.pe>0))V.pe=15;if(!(V.rf>=0))V.rf=3.8;if(!(V.mkt>=0))V.mkt=14.8;if(!(V.beta>0))V.beta=1;if(!(V.px>0))V.px=null;
 function vsave(){ls('oscr-val',JSON.stringify(V));}
+function coe(){return V.rf+V.beta*(V.mkt-V.rf);}
 var TODAY=new Date();
 function yn(y){return +y.slice(0,4);}
-function vmath(epsOf,pe){
+function yrs(d){return (d-TODAY)/31557600000;}
+function vmath(epsOf,pe,r){
+ if(r==null)r=coe();
  var eY=epsOf(V.yr),eS=epsOf(V.cs),n=yn(V.yr)-yn(V.cs);
  var cg=(n>0&&eS>0&&eY>0)?Math.pow(eY/eS,1/n)-1:null;
  var end=V.bs==='fwd'?yn(V.yr)-1:yn(V.yr);
- var t=Math.max(0,(new Date(end,11,31)-TODAY)/31557600000);
- var px=eY>0?pe*eY:null,pv=px==null?null:px/Math.pow(1+V.dr/100,t);
- return {eY:eY,eS:eS,cg:cg,n:n,peg:cg&&cg>0?pe/(cg*100):null,px:px,pv:pv,t:t,end:end};
+ var t=Math.max(0,yrs(new Date(end,11,31)));
+ var px=eY>0?pe*eY:null,pv=px==null?null:px/Math.pow(1+r/100,t);
+ return {eY:eY,eS:eS,cg:cg,n:n,peg:cg&&cg>0?pe/(cg*100):null,px:px,pv:pv,t:t,end:end,r:r};
 }
 function money(v){return v==null||isNaN(v)?'—':'$'+v.toFixed(2);}
 function xx(v){return v==null||isNaN(v)?'—':v.toFixed(2)+'×';}
+function x1(v){return v==null||isNaN(v)||!isFinite(v)?'—':v.toFixed(1)+'×';}
 function pct1(v){return v==null?'n.m.':(v*100).toFixed(1)+'%';}
+function pp(v){return v==null||isNaN(v)?'—':v.toFixed(1)+'%';}
+function mm(v){return v==null||isNaN(v)?'—':(v<0?'(':'')+Math.abs(v).toLocaleString('en-US',{maximumFractionDigits:0})+(v<0?')':'');}
+function gg(g){return g==null?'':g==='nm'?'n.m.':(g>=0?'+':'−')+Math.abs(g*100).toFixed(1)+'%';}
 function updn(pv){if(V.px==null||pv==null)return '';var u=pv/V.px-1;return '<span class="'+(u>=0?'up':'dn')+'">'+(u>=0?'+':'−')+Math.abs(u*100).toFixed(0)+'%</span> vs your $'+V.px.toFixed(2);}
+function trade(pv){if(V.px==null||pv==null)return '—';var u=pv/V.px-1;return (u>=0?'Discount ':'Premium ')+Math.abs(u*100).toFixed(0)+'%';}
 function renderVal(o){
  if(!o)o=model(D);
- var Y=V.yr,S=V.cs,pe=V.pe;
- var r=vmath(function(y){return o[y].eps;},pe);
+ var Y=V.yr,S=V.cs,pe=V.pe,r=coe(),mrp=V.mkt-V.rf;
+ var q=vmath(function(y){return o[y].eps;},pe,r);
  var ttl=SCN[cur];
- document.getElementById('v-src').textContent='Cards: '+ttl;
- var atPx=V.px!=null&&r.eY>0;
+ document.getElementById('v-src').textContent='Scenario: '+ttl;
+ var g0=r/100-1/pe;
+ /* tiles */
  document.getElementById('v-tiles').innerHTML=
-  '<div class="chk"><span class="w">EPS '+Y+'</span><span class="v">'+eps(r.eY)+'</span><span class="s">'+esc(ttl)+'<br>'+S+' EPS '+eps(r.eS)+'</span></div>'+
-  '<div class="chk"><span class="w">EPS CAGR '+yn(S)+'–'+yn(Y)+'</span><span class="v">'+pct1(r.cg)+'</span><span class="s">'+(r.cg==null?'Needs positive EPS in both years':'Compound annual growth over '+r.n+' year'+(r.n>1?'s':''))+'</span></div>'+
-  '<div class="chk"><span class="w">PEG at '+pe.toFixed(1)+'×</span><span class="v">'+xx(r.peg)+'</span><span class="s">'+(r.cg>0?'PEG 1.0× = <b>'+(r.cg*100).toFixed(1)+'×</b> P/E'+(atPx?'<br>At $'+V.px.toFixed(2)+': P/E '+(V.px/r.eY).toFixed(1)+'×, PEG '+xx(V.px/r.eY/(r.cg*100)):''):'—')+'</span></div>'+
-  '<div class="chk"><span class="w">Value per share today</span><span class="v">'+money(r.pv)+'</span><span class="s">'+money(r.px)+' at Dec '+r.end+', discounted '+r.t.toFixed(1)+' yrs at '+V.dr.toFixed(1)+'%'+(V.px!=null?'<br>'+updn(r.pv):'')+'</span></div>';
+  '<div class="chk"><span class="w">Cost of equity</span><span class="v">'+pp(r)+'</span><span class="s">'+pp(V.rf)+' + '+V.beta.toFixed(2)+' × '+pp(mrp)+'</span></div>'+
+  '<div class="chk"><span class="w">Terminal price, Dec '+q.end+'</span><span class="v">'+money(q.px)+'</span><span class="s">'+pe.toFixed(1)+'× '+Y+' EPS of '+eps(q.eY)+'</span></div>'+
+  '<div class="chk"><span class="w">Value per share today</span><span class="v">'+money(q.pv)+'</span><span class="s">Discounted '+q.t.toFixed(1)+' yrs at '+pp(r)+(V.px!=null?'<br>'+updn(q.pv):'')+'</span></div>'+
+  '<div class="chk"><span class="w">Implied perpetual growth</span><span class="v">'+pp(g0*100)+'</span><span class="s">Cost of equity − 1 ÷ P/E: the growth a '+pe.toFixed(1)+'× multiple assumes forever</span></div>';
+ /* CAPM calc cells */
+ document.getElementById('v-mrp').textContent=pp(mrp);
+ document.getElementById('v-coe').textContent=pp(r);
+ document.getElementById('v-bnote').textContent=V.beta===1?'placeholder at 1.00: type Oscar’s beta':'typed by you';
+ /* bridge (the "Value of Equity" column of the DCF sheet) */
+ var df=q.t>0?1/Math.pow(1+r/100,q.t):1;
+ function at(yr){return q.px==null||yr>q.end?null:q.px/Math.pow(1+r/100,q.end-yr);}
+ var br=[
+  ['PV of free cash flow to equity<span class="vsm">not used: terminal price only</span>','—'],
+  ['EPS '+Y+'<span class="vsm">'+esc(ttl)+'</span>',eps(q.eY)],
+  ['× Terminal P/E',pe.toFixed(1)+'×'],
+  ['Terminal price<span class="vsm">at Dec 31, '+q.end+' ('+(V.bs==='fwd'?'forward':'trailing')+')</span>',money(q.px)],
+  ['× Discount factor<span class="vsm">'+q.t.toFixed(2)+' yrs at '+pp(r)+'</span>',df.toFixed(3)],
+  ['Intrinsic value today',money(q.pv)],
+  ['Intrinsic value at Dec 31, 2025',money(at(2025))],
+  ['Intrinsic value at Dec 31, 2026',money(at(2026))]];
+ var bh=br.map(function(x,i){return '<tr'+(i===5?' class="vtot"':'')+'><td>'+x[0]+'</td><td>'+x[1]+'</td></tr>';}).join('');
+ if(V.px!=null&&q.pv!=null){var u=q.pv/V.px-1;bh+='<tr><td>Your price $'+V.px.toFixed(2)+'<span class="vsm">value today vs price</span></td><td class="'+(u>=0?'up':'dn')+'">'+trade(q.pv)+'</td></tr>';}
+ document.getElementById('v-br').innerHTML=bh;
+ /* by year */
+ var yh='<thead><tr><th>US$ M, except per share</th>'+COLS.map(function(y){return '<th class="num">'+y+'</th>';}).join('')+'</tr></thead><tbody>';
+ function yrow(lbl,f,cls){return '<tr'+(cls?' class="'+cls+'"':'')+'><td>'+lbl+'</td>'+COLS.map(function(y){var v=f(y);var obj=v&&typeof v==='object';return '<td class="num'+(obj&&v.c?' '+v.c:'')+'">'+(obj?v.t:(v==null?'':v))+'</td>';}).join('')+'</tr>';}
+ yh+=yrow('Net income',function(y){return mm(o[y].ni);});
+ yh+=yrow('Growth',function(y){var g=o[y].ni_g;return g!=null&&o[y].ni<0?'n.m.':gg(g);},'vh');
+ yh+=yrow('Diluted shares (M)',function(y){return o[y].sh.toFixed(1);});
+ yh+=yrow('EPS',function(y){return {t:eps(o[y].eps),c:y===Y?'tv':''};});
+ yh+=yrow('Growth',function(y){var g=o[y].epsg;return g!=null&&o[y].eps<0?'n.m.':gg(g);},'vh');
+ yh+=yrow('<span class="ct">BBG</span> EPS (GAAP)',function(y){return BBG.eps[y]!=null?eps(BBG.eps[y]):'';},'cmp');
+ yh+=yrow('% difference vs BBG',function(y){return BBG.eps[y]?gg(o[y].eps/BBG.eps[y]-1):'';},'vh');
+ yh+=yrow('Discount factor at '+pp(r),function(y){var t=yrs(new Date(yn(y),11,31));return t>0?(1/Math.pow(1+r/100,t)).toFixed(3):'';});
+ yh+=yrow('Value per share at Dec 31',function(y){var v=at(yn(y));return v==null?'':{t:money(v),c:yn(y)===q.end?'tv':''};});
+ document.getElementById('v-yrs').innerHTML=yh+'</tbody>';
+ /* multiples: our value vs your price */
+ var e26=o['2026E'].eps,e27=o['2027E'].eps,hasP=V.px!=null&&q.eY>0;
+ var peImp=hasP?V.px*Math.pow(1+r/100,q.t)/q.eY:null;
+ var mh='<tr><th></th><th>Our value</th><th>Your price</th></tr>';
+ function mrow(l,a,b){mh+='<tr><td>'+l+'</td><td>'+a+'</td><td>'+(V.px!=null?b:'—')+'</td></tr>';}
+ mrow('Per share',money(q.pv),money(V.px));
+ mrow('P/E on 2026E EPS',x1(q.pv/e26),x1(V.px/e26));
+ mrow('P/E on 2027E EPS',x1(q.pv/e27),x1(V.px/e27));
+ mrow('Terminal P/E on '+Y+' EPS<span class="vsm">price at Dec '+q.end+' ÷ EPS</span>',pe.toFixed(1)+'×',x1(peImp));
+ mrow('Implied perpetual growth',pp(g0*100),peImp?pp((r/100-1/peImp)*100):'—');
+ mrow('PEG on EPS CAGR '+yn(S)+'–'+yn(Y)+'<span class="vsm">'+pct1(q.cg)+' a year</span>',q.cg>0?xx(pe/(q.cg*100)):'—',q.cg>0&&peImp?xx(peImp/(q.cg*100)):'—');
+ document.getElementById('v-mul').innerHTML=mh;
+ /* PVGO, on 2026E EPS (2025 was a loss) */
+ var v0=e26>0?e26/(r/100):null;
+ var ph=[['EPS 2026E<span class="vsm">first year of positive EPS; includes the 2026 one-offs</span>',eps(e26)],
+  ['No-growth value<span class="vsm">EPS ÷ cost of equity</span>',money(v0)],
+  ['Value today',money(q.pv)],
+  ['Share of value paid for growth',v0&&q.pv?pct1(1-v0/q.pv):'—']];
+ if(V.px!=null)ph.push(['Share of your price paid for growth',v0?pct1(1-v0/V.px):'—']);
+ document.getElementById('v-pvgo').innerHTML=ph.map(function(x,i){return '<tr'+(i===3?' class="vtot"':'')+'><td>'+x[0]+'</td><td>'+x[1]+'</td></tr>';}).join('');
+ /* sensitivity: rows cost of equity, columns perpetual growth; terminal P/E = 1 / (CoE − g) */
+ var RS=[-1,-0.5,0,0.5,1].map(function(d){return r+d;}),GS=[-1,-0.5,0,0.5,1].map(function(d){return g0*100+d;});
+ var sh='<thead><tr><th>Cost of equity ↓ · growth →</th>'+GS.map(function(g){return '<th class="num">'+pp(g)+'</th>';}).join('')+'</tr></thead><tbody>';
+ RS.forEach(function(rr,i){sh+='<tr><td>'+pp(rr)+'</td>'+GS.map(function(g,j){var m=rr-g>0?100/(rr-g):null;var v=m&&q.eY>0?m*q.eY/Math.pow(1+rr/100,q.t):null;
+  var cls=(i===2&&j===2?' ctr':'')+(V.px!=null&&v!=null?(v>=V.px?' up':' dn'):'');
+  return '<td class="num'+cls+'" title="'+(m?'Terminal P/E '+m.toFixed(1)+'×':'')+'">'+(m&&m<200?money(v)+'<span class="vsm2"> '+m.toFixed(1)+'×</span>':'n.m.')+'</td>';}).join('')+'</tr>';});
+ document.getElementById('v-sens').innerHTML=sh+'</tbody>';
+ /* by scenario */
  var cols=[];
  PLAN.forEach(function(s){var m=model(cur===s?D:SC[s]);cols.push({id:s,n:'Oscar '+s.charAt(0).toUpperCase()+s.slice(1),e:function(y){return m[y].eps;}});});
  cols.push({id:'bbg',n:'BBG EPS (GAAP)',e:function(y){return BBG.eps[y];}});
  cols.push({id:'bbga',n:'BBG adj. EPS',e:function(y){return BBG.eps_adj[y];}});
  if(OURS){var mo=model(cur==='ours'?D:OURS.d);cols.push({id:'ours',n:'Our case',e:function(y){return mo[y].eps;}});}
- var R=cols.map(function(c){return vmath(c.e,pe);});
+ var R=cols.map(function(c){return vmath(c.e,pe,r);});
  var mults=[];[-6,-4,-2,0,2,4,6].forEach(function(dl){var m=dl===0?pe:Math.round((pe+dl)*2)/2;if(m>0&&mults.indexOf(m)<0)mults.push(m);});
  function td(c,s,cls){return '<td class="num'+(c.id===cur?' cur':'')+(cls?' '+cls:'')+'">'+s+'</td>';}
  function row(lbl,f){return '<tr class="vh"><td>'+lbl+'</td>'+cols.map(function(c,i){return td(c,f(R[i]));}).join('')+'</tr>';}
  var h='<thead><tr><th>Per share</th>'+cols.map(function(c){return '<th class="num'+(c.id===cur?' cur':'')+'">'+esc(c.n)+'</th>';}).join('')+'</tr></thead><tbody>';
- h+=row('EPS '+Y,function(q){return eps(q.eY);});
- h+=row('EPS CAGR '+yn(S)+'–'+yn(Y),function(q){return pct1(q.cg);});
- h+=row('PEG at '+pe.toFixed(1)+'×',function(q){return xx(q.peg);});
+ h+=row('EPS '+Y,function(x){return eps(x.eY);});
+ h+=row('EPS CAGR '+yn(S)+'–'+yn(Y),function(x){return pct1(x.cg);});
+ h+=row('PEG at '+pe.toFixed(1)+'×',function(x){return xx(x.peg);});
  if(V.px!=null){
-  h+=row('P/E at $'+V.px.toFixed(2),function(q){return q.eY>0?(V.px/q.eY).toFixed(1)+'×':'—';});
-  h+=row('PEG at $'+V.px.toFixed(2),function(q){return q.eY>0&&q.cg>0?xx(V.px/q.eY/(q.cg*100)):'—';});}
- h+='<tr class="vs"><td colspan="'+(cols.length+1)+'">Value per share today, by P/E</td></tr>';
- mults.forEach(function(m){h+='<tr'+(m===pe?' class="sel"':'')+'><td>'+(+m.toFixed(2))+'×</td>'+cols.map(function(c){var q=vmath(c.e,m);var cls=V.px!=null&&q.pv!=null?(q.pv>=V.px?'up':'dn'):'';return td(c,money(q.pv),cls);}).join('')+'</tr>';});
+  h+=row('P/E at $'+V.px.toFixed(2),function(x){return x.eY>0?(V.px/x.eY).toFixed(1)+'×':'—';});
+  h+=row('PEG at $'+V.px.toFixed(2),function(x){return x.eY>0&&x.cg>0?xx(V.px/x.eY/(x.cg*100)):'—';});}
+ h+='<tr class="vs"><td colspan="'+(cols.length+1)+'">Value per share today at '+pp(r)+', by terminal P/E</td></tr>';
+ mults.forEach(function(m){h+='<tr'+(m===pe?' class="sel"':'')+'><td>'+(+m.toFixed(2))+'×</td>'+cols.map(function(c){var x=vmath(c.e,m,r);var cls=V.px!=null&&x.pv!=null?(x.pv>=V.px?'up':'dn'):'';return td(c,money(x.pv),cls);}).join('')+'</tr>';});
  document.getElementById('v-mx').innerHTML=h+'</tbody>';
- document.getElementById('v-note').innerHTML=(V.bs==='fwd'?'Forward: the price at the end of '+(yn(Y)-1)+' is the P/E times '+Y+' EPS.':'Trailing: the price at the end of '+yn(Y)+' is the P/E times '+Y+' EPS.')+' Value today discounts that Dec 31 price back to today at the discount rate. PEG = P/E ÷ annual EPS growth in percent, so 1.0× means one turn of P/E for each point of growth. The two BBG columns are BBG’s GAAP and adjusted EPS fields as printed; the others run through our model. Shaded column: the scenario selected at the top'+(V.px!=null?'; green or red: at or above, or below, the price you typed':'')+'.';
+ document.getElementById('v-note').innerHTML=(V.bs==='fwd'?'Forward: the terminal price at Dec 31, '+(yn(Y)-1)+' is the P/E times '+Y+' EPS.':'Trailing: the terminal price at Dec 31, '+yn(Y)+' is the P/E times '+Y+' EPS.')+' It is discounted to today, and to each Dec 31 before it, at the cost of equity. As in the Summit DCF sheet, implied perpetual growth = cost of equity − 1 ÷ P/E. In the sensitivity each cell uses the terminal P/E 1 ÷ (cost of equity − growth), shown next to the value, so the center cell is the P/E you picked. PEG = P/E ÷ annual EPS growth in percent. By scenario: the two BBG columns are BBG’s GAAP and adjusted EPS fields as printed; the others run through our model. Shaded column: the scenario selected at the top'+(V.px!=null?'; green or red: at or above, or below, the price you typed':'')+'.';
  syncV();
 }
 function syncV(){
  var pi=document.getElementById('v-pe');if(document.activeElement!==pi)pi.value=+V.pe.toFixed(2);document.getElementById('v-pe-r').value=V.pe;
- var di=document.getElementById('v-dr');if(document.activeElement!==di)di.value=V.dr.toFixed(1);
+ [['v-rf','rf',1],['v-mkt','mkt',1],['v-beta','beta',2]].forEach(function(a){var el=document.getElementById(a[0]);if(document.activeElement!==el)el.value=V[a[1]].toFixed(a[2]);});
  var xi=document.getElementById('v-px');if(document.activeElement!==xi)xi.value=V.px==null?'':V.px.toFixed(2);
  [['v-yr','yr'],['v-bs','bs'],['v-cs','cs']].forEach(function(p){document.querySelectorAll('#'+p[0]+' [data-v]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.v===V[p[1]]);if(p[1]==='cs')b.disabled=yn(b.dataset.v)>=yn(V.yr);});});
 }
@@ -1396,7 +1496,9 @@ function numIn(id,fn){var el=document.getElementById(id);
  el.addEventListener('focus',function(){setTimeout(function(){try{el.select();}catch(e){}},0);});
  el.addEventListener('keydown',function(e){if(e.key==='Enter')el.blur();});}
 numIn('v-pe',function(v){if(v==null||isNaN(v)||v<=0||v>100)return false;V.pe=v;return true;});
-numIn('v-dr',function(v){if(v==null||isNaN(v)||v<0||v>40)return false;V.dr=v;return true;});
+numIn('v-rf',function(v){if(v==null||isNaN(v)||v<0||v>20)return false;V.rf=v;return true;});
+numIn('v-mkt',function(v){if(v==null||isNaN(v)||v<0||v>40)return false;V.mkt=v;return true;});
+numIn('v-beta',function(v){if(v==null||isNaN(v)||v<=0||v>5)return false;V.beta=v;return true;});
 numIn('v-px',function(v,t){if(t===''){V.px=null;return true;}if(isNaN(v)||v<=0)return false;V.px=v;return true;});
 ['k','g','b'].forEach(function(k){var b=document.getElementById('sw-'+k);b.addEventListener('click',function(){show[k]=!show[k];b.setAttribute('aria-pressed',show[k]);if(k==='k'&&show.k){Object.keys(open).forEach(function(x){open[x]=true;});}render();});});
 document.getElementById('tb-is').addEventListener('click',function(){setTimeout(drawCharts,30);});

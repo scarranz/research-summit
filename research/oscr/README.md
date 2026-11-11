@@ -7,7 +7,7 @@ This folder only keeps the work so it can be resumed. Nothing here is loaded by 
 
 | File | What it is |
 |---|---|
-| `oscr-overview.html` | Source of the artifact https://claude.ai/artifact/9iFPYAMo9GzSXiHDhvR6SX (v12). Four tabs: **Overview** (playbook-style 7 blocks) · **How Oscar works** (per-$100 money flow) · **Investor Day 2026** · **Income statement** (inline drivers; scenarios Oscar plan Low/Mid/High and Our case (Consensus-like toggle removed Nov 11, 2026: it was nearly identical to Our case; BBG stays as comparison rows and chart bars); compare charts; EPS tornado and MLR×SG&A grid; P/E–PEG valuation). To update the artifact, copy this file to a scratchpad and publish it to the same URL. |
+| `oscr-overview.html` | Source of the artifact https://claude.ai/artifact/9iFPYAMo9GzSXiHDhvR6SX (v13). Four tabs: **Overview** (playbook-style 7 blocks) · **How Oscar works** (per-$100 money flow) · **Investor Day 2026** · **Income statement** (inline drivers; scenarios Oscar plan Low/Mid/High and Our case (Consensus-like toggle removed Nov 11, 2026: it was nearly identical to Our case; BBG stays as comparison rows and chart bars); compare charts; EPS tornado and MLR×SG&A grid; valuation laid out like the P/E half of the Summit DCF sheet: terminal price only, CoE by CAPM with rf 3.8% and market 14.8% from DCF UBER.xlsm, beta a placeholder at 1.00). To update the artifact, copy this file to a scratchpad and publish it to the same URL. |
 | `DRIVERS.md` | Nov 10, 2026: every guided driver by income-statement line (Investor Day transcript + slides 38–49, filings), inconsistencies, and the BBG consensus vs company targets. Base for the income statement (no DCF). |
 
 ## Rules for this company

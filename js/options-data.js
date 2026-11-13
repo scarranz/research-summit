@@ -54,14 +54,14 @@ import { AM_YEARS, AM_ISEST, AM_IS, AM_BS } from './overviews/app-model.js';
 // has reported; everything after it is an estimate and is marked E on screen.
 export const EST_STORE = {
   UBER: {
-    name: "Uber Technologies, Inc.", currency: "USD", snapshot: "2026-08-05", lastActual: 2025,
+    name: "Uber Technologies, Inc.", currency: "USD", snapshot: "2026-11-04", lastActual: 2025,
     consensusAsOf: "2026-09-10", consensusFrom: "bbg",
     summit: {
-      2024: { rev: 43978, ebitda: 6484, earnings: 3970, shares: 2154.466 },
-      2025: { rev: 52017, ebitda: 8730, earnings: 5237, shares: 2124.391 },
-      2026: { rev: 58066.75, ebitda: 11381.86, earnings: 6870.63, shares: 2009.426 },
-      2027: { rev: 70356.42, ebitda: 15891.11, earnings: 9656.38, shares: 1939.096 },
-      2028: { rev: 80391.35, ebitda: 18455.43, earnings: 13515.08, shares: 1842.141 },
+      2024: { rev: 43978, ebitda: 6484, earnings: 3970, shares: 2141.426 },
+      2025: { rev: 52017, ebitda: 8730, earnings: 5237, shares: 2106.011 },
+      2026: { rev: 58170.57, ebitda: 11458.753, earnings: 6909.919, shares: 2029.821 },
+      2027: { rev: 70385.946, ebitda: 14677.97, earnings: 9293.306, shares: 1989.224 },
+      2028: { rev: 84340.875, ebitda: 18239.828, earnings: 12640.46, shares: 1949.44 },
     },
     // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
     // included. It has to be all-or-nothing: the archive carries GAAP lines while
@@ -82,14 +82,14 @@ export const EST_STORE = {
     },
   },
   META: {
-    name: "Meta Platforms, Inc.", currency: "USD", snapshot: "2026-08-04", lastActual: 2025,
+    name: "Meta Platforms, Inc.", currency: "USD", snapshot: "2026-10-22", lastActual: 2025,
     consensusAsOf: "2026-09-08", consensusFrom: "bbg",
     summit: {
       2024: { rev: 164500, ebitda: null, earnings: 56719.51, shares: 2614 },
-      2025: { rev: 200965, ebitda: 127054.03, earnings: 73881.33, shares: 2574 },
-      2026: { rev: 256178.17, ebitda: 143334.44, earnings: 75680.57, shares: 2574 },
-      2027: { rev: 326206.34, ebitda: 190857.97, earnings: 101026.33, shares: 2574 },
-      2028: { rev: 392845.9, ebitda: 271129.28, earnings: 140777.71, shares: 2574 },
+      2025: { rev: 200965, ebitda: 127054.028, earnings: 73881.333, shares: 2574 },
+      2026: { rev: 257833.277, ebitda: 144857.612, earnings: 73335.497, shares: 2574 },
+      2027: { rev: 345404.914, ebitda: 209214.553, earnings: 112093.753, shares: 2574 },
+      2028: { rev: 447536.354, ebitda: 297991.941, earnings: 154667.819, shares: 2574 },
     },
     // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
     // included. It has to be all-or-nothing: the archive carries GAAP lines while
@@ -179,14 +179,14 @@ export const EST_STORE = {
     },
   },
   AMZN: {
-    name: "Amazon.com, Inc.", currency: "USD", snapshot: "2026-08-04", lastActual: 2025,
+    name: "Amazon.com, Inc.", currency: "USD", snapshot: "2026-10-30", lastActual: 2025,
     consensusAsOf: "2026-09-10", consensusFrom: "bbg",
     summit: {
-      2024: { rev: 637959, ebitda: 155229.17, earnings: 54772.65, shares: 10721 },
-      2025: { rev: 716924, ebitda: 185600.08, earnings: 64969.21, shares: 10827 },
-      2026: { rev: 831123.78, ebitda: 250686.72, earnings: 92038.96, shares: 10827 },
-      2027: { rev: 959799.99, ebitda: 332725.53, earnings: 119053.41, shares: 10827 },
-      2028: { rev: 1101189.6, ebitda: 430087.74, earnings: 137411.99, shares: 10827 },
+      2024: { rev: 637959, ebitda: 144162.64, earnings: 54772.648, shares: 10721 },
+      2025: { rev: 716924, ebitda: 168024.215, earnings: 64969.208, shares: 10827 },
+      2026: { rev: 831956.95, ebitda: 218164.156, earnings: 90332.951, shares: 10827 },
+      2027: { rev: 968050.199, ebitda: 280123.575, earnings: 117182.236, shares: 10827 },
+      2028: { rev: 1131699.845, ebitda: 361508.376, earnings: 153476.9, shares: 10827 },
     },
     // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
     // included. It has to be all-or-nothing: the archive carries GAAP lines while
@@ -207,7 +207,7 @@ export const EST_STORE = {
     },
   },
   SPOT: {
-    name: "Spotify Technology S.A.", currency: "EUR", snapshot: "2026-08-05", lastActual: 2025,
+    name: "Spotify Technology S.A.", currency: "EUR", snapshot: "2026-10-22", lastActual: 2025,
     consensusAsOf: "2026-09-09", consensusFrom: "bbg",
     // Net CASH of 8,930 EUR M (9,390 cash against ~460 of debt), per Fiscal.ai —
     // SAB, 10 Sep 2026. Carried explicitly for the same two reasons as TBBB:
@@ -215,11 +215,11 @@ export const EST_STORE = {
     // has no balance-sheet lines at all — 46 metrics, every one of them P&L or KPI.
     // Held flat across every year, as net debt is everywhere else here.
     summit: {
-      2024: { rev: 15673, ebitda: 2016.97, earnings: 2136.58, shares: 206.99, netDebt: -8930 },
-      2025: { rev: 17186, ebitda: 2549, earnings: 3234.11, shares: 210.509, netDebt: -8930 },
-      2026: { rev: 19761.54, ebitda: 3345.46, earnings: 2821.64, shares: 206.363, netDebt: -8930 },
-      2027: { rev: 23118.84, ebitda: 4258.22, earnings: 3234.78, shares: 202.218, netDebt: -8930 },
-      2028: { rev: 27097.44, ebitda: 5535.33, earnings: 4363.44, shares: 198.072, netDebt: -8930 },
+      2024: { rev: 15673, ebitda: 2016.97, earnings: 2136.578, shares: 206.99, netDebt: -8930 },
+      2025: { rev: 17177, ebitda: 2540, earnings: 3226.009, shares: 210.509, netDebt: -8930 },
+      2026: { rev: 19533.807, ebitda: 3289.686, earnings: 2743.182, shares: 207.082, netDebt: -8930 },
+      2027: { rev: 22753.479, ebitda: 4173.556, earnings: 3163.275, shares: 203.655, netDebt: -8930 },
+      2028: { rev: 26667.23, ebitda: 5352.98, earnings: 4212.679, shares: 200.228, netDebt: -8930 },
     },
     // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
     // included. It has to be all-or-nothing: the archive carries GAAP lines while
@@ -240,14 +240,14 @@ export const EST_STORE = {
     },
   },
   SOFI: {
-    name: "SoFi Technologies, Inc.", currency: "USD", snapshot: "2026-08-05", lastActual: 2025,
+    name: "SoFi Technologies, Inc.", currency: "USD", snapshot: "2026-10-27", lastActual: 2025,
     consensusAsOf: "2026-09-10", consensusFrom: "bbg",
     summit: {
-      2024: { rev: 2676, ebitda: 666.48, earnings: 227.22, shares: 1101.39 },
-      2025: { rev: 3613.35, ebitda: 1053.9, earnings: 481.32, shares: 1259.367 },
-      2026: { rev: 4845.19, ebitda: 1647.14, earnings: 825.68, shares: 1259.367 },
-      2027: { rev: 6280.3, ebitda: 2186.06, earnings: 1094.96, shares: 1259.367 },
-      2028: { rev: 8083.79, ebitda: 2902.39, earnings: 1515.7, shares: 1259.367 },
+      2024: { rev: 2675.997, ebitda: 666.48, earnings: 227.222, shares: 1101.39 },
+      2025: { rev: 3613.354, ebitda: 1053.898, earnings: 481.32, shares: 1259.367 },
+      2026: { rev: 5104.217, ebitda: 1692.135, earnings: 840.257, shares: 1259.367 },
+      2027: { rev: 6469.75, ebitda: 2466.7, earnings: 1279.202, shares: 1259.367 },
+      2028: { rev: 8472.103, ebitda: 3376.833, earnings: 1854.141, shares: 1259.367 },
     },
     consensus: {
       2024: { rev: 2606.17, ebitda: 666.48, earnings: 498.67, shares: 1101.39 },
@@ -258,14 +258,14 @@ export const EST_STORE = {
     },
   },
   MA: {
-    name: "Mastercard Incorporated", currency: "USD", snapshot: "2026-07-30", lastActual: 2025,
+    name: "Mastercard Incorporated", currency: "USD", snapshot: "2026-10-28", lastActual: 2025,
     consensusAsOf: "2026-09-10", consensusFrom: "bbg",
     summit: {
       2024: { rev: 28167, ebitda: 16493, earnings: 12570, shares: 927 },
       2025: { rev: 32791, ebitda: 20100, earnings: 14625, shares: 906 },
-      2026: { rev: 38058.05, ebitda: 23962.19, earnings: 17319.83, shares: 884.698 },
-      2027: { rev: 41679.56, ebitda: 26905.36, earnings: 18652.76, shares: 863.395 },
-      2028: { rev: 46385.62, ebitda: 29856.48, earnings: 20777.52, shares: 842.093 },
+      2026: { rev: 37413.524, ebitda: 23427.422, earnings: 16923.299, shares: 886.36 },
+      2027: { rev: 41400.712, ebitda: 26952.03, earnings: 18745.095, shares: 866.719 },
+      2028: { rev: 45753.463, ebitda: 29568.135, earnings: 20611.848, shares: 847.079 },
     },
     consensus: {
       2024: { rev: 28167, ebitda: 17397, earnings: 12874, shares: 927 },
@@ -328,9 +328,15 @@ export const EST_STORE = {
   // The EBITDA series is smooth and is the multiple to trust here. Flagged in the
   // source note so the P/E is read with that in mind rather than at face value.
   GOOGL: {
-    name: "Alphabet Inc.", currency: "USD", snapshot: "2026-09-08", lastActual: 2025,
+    name: "Alphabet Inc.", currency: "USD", snapshot: "2026-10-29", lastActual: 2025,
     consensusAsOf: "2026-09-08", consensusFrom: "bbg",
-    summit: null,   // not in the Summit DCF universe — building one is San's call
+    summit: {
+      2024: { rev: 350018, ebitda: 150486, earnings: 96778.208, shares: 12447 },
+      2025: { rev: 402836, ebitda: 175128, earnings: 110178.911, shares: 12230 },
+      2026: { rev: 501466.726, ebitda: 233665.157, earnings: 135862.614, shares: 12317.143 },
+      2027: { rev: 622531.145, ebitda: 300882.401, earnings: 169758.908, shares: 12317.143 },
+      2028: { rev: 783070.155, ebitda: 426020.227, earnings: 243935.706, shares: 12317.143 },
+    },
     consensus: {
       2023: { rev: 307394, ebitda: 118699, earnings: 73795, shares: 12722 },
       2024: { rev: 350018, ebitda: 127701, earnings: 100118, shares: 12447 },

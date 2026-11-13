@@ -118,13 +118,20 @@ export const EST_STORE = {
     // with the rest of the book. Without it, picking "2026E" compared everyone
     // else's calendar 2026 against an NVIDIA year that had already been reported.
     fiscalOffset: 1,   // fiscal year = calendar year + 1
-    consensusAsOf: "2026-09-09", consensusFrom: "bbg",
+    consensusAsOf: "2026-11-12", consensusFrom: "bbg",
+    // Net debt: NVIDIA is NET CASH. Massive's live EV − market cap read +$238B for
+    // NVDA (Nov 12 2026), which inflated EV/EBITDA by ~1x, so the figure is carried
+    // here instead — the Summit model's own balance at the 2026-08-28 submit (DCF
+    // NVDA.xlsm ▸ Discounted Cash Flow): debt 33,875 − cash, marketable and equity
+    // securities 99,369 = −65,494. Same number the NVDA profile's Target Multiple and
+    // Sensitivity use (js/overviews/nvda-target-multiple-data.js), so a multiple means
+    // the same thing on both pages. Held flat across years, on BOTH sources.
     summit: {
-      2024: { rev: 60922, ebitda: 35729.51, earnings: 29288.15, shares: 24940 },
-      2025: { rev: 130497, ebitda: 85093.05, earnings: 70206.73, shares: 24804 },
-      2026: { rev: 215938, ebitda: 136224.68, earnings: 110555.8, shares: 24514 },
-      2027: { rev: 413720.31, ebitda: 276114.35, earnings: 225369.79, shares: 24150.438 },
-      2028: { rev: 726095.49, ebitda: 483970.93, earnings: 395606.12, shares: 23786.876 },
+      2024: { rev: 60922, ebitda: 35729.51, earnings: 29288.15, shares: 24940, netDebt: -65494 },
+      2025: { rev: 130497, ebitda: 85093.05, earnings: 70206.73, shares: 24804, netDebt: -65494 },
+      2026: { rev: 215938, ebitda: 136224.68, earnings: 110555.8, shares: 24514, netDebt: -65494 },
+      2027: { rev: 413720.31, ebitda: 276114.35, earnings: 225369.79, shares: 24150.438, netDebt: -65494 },
+      2028: { rev: 726095.49, ebitda: 483970.93, earnings: 395606.12, shares: 23786.876, netDebt: -65494 },
     },
     // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
     // included. It has to be all-or-nothing: the archive carries GAAP lines while
@@ -136,12 +143,12 @@ export const EST_STORE = {
     // accounting basis, not a disagreement about the future, and the "vs" row in
     // the income statement now prints it on reported years instead of hiding it.
     consensus: {
-      2024: { rev: 60922, ebitda: 38642, earnings: 32312, shares: 24940 },
-      2025: { rev: 130497, ebitda: 88653, earnings: 74265, shares: 24804 },
-      2026: { rev: 215938, ebitda: 140143, earnings: 116997, shares: 24514 },
-      2027: { rev: 409702.7, ebitda: 272391.84, earnings: 228497.45, shares: 24249.93 },
-      2028: { rev: 693718.06, ebitda: 451047.94, earnings: 380886.77, shares: 23998.13 },
-      2029: { rev: 918348.91, ebitda: 596848, earnings: 503486.14, shares: 23732.79 },
+      2024: { rev: 60922, ebitda: 38642, earnings: 32312, shares: 24940, netDebt: -65494 },
+      2025: { rev: 130497, ebitda: 88653, earnings: 74265, shares: 24804, netDebt: -65494 },
+      2026: { rev: 215938, ebitda: 140143, earnings: 116997, shares: 24514, netDebt: -65494 },
+      2027: { rev: 411122.21, ebitda: 272977.68, earnings: 226786.45, shares: 24257.04, netDebt: -65494 },
+      2028: { rev: 702864.3, ebitda: 460282.27, earnings: 381521.69, shares: 24018.36, netDebt: -65494 },
+      2029: { rev: 931141.43, ebitda: 603222.64, earnings: 509321.53, shares: 23735.36, netDebt: -65494 },
     },
   },
   TBBB: {

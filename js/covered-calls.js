@@ -762,10 +762,24 @@ async function loadExpirations() {
     const d = new Date(); for (let i = 0; i < 6; i++) { d.setDate(d.getDate() + 30); dates.push(d.toISOString().slice(0, 10)); }
   }
 
+  // The contracts endpoint pages from the nearest expiry, so on a name with many
+  // strikes (META leads the book since 13 Nov 2026) the first page ends a couple
+  // of weeks out and never reaches a roll date — the tab then fell back to an
+  // expiry of TODAY. Ask for each roll date directly instead of hoping the first
+  // page reaches it.
+  const targets = seasonFridays(4);
+  await Promise.all(targets.map(async (t) => {
+    try {
+      const jt = await mfetch('expirations', ref, { 'expiration_date.gte': t });
+      const got = (jt.results || []).map((c) => c.expiration_date).filter(Boolean).sort();
+      if (got.length) dates.push(got[0]);
+    } catch { /* that roll date simply drops out */ }
+  }));
+  dates = [...new Set(dates)].sort();
   // Each season Friday, mapped onto what is actually listed (they are standard
   // monthlies, so this is normally the same date). Anything past the end of the
   // chain simply drops out.
-  const season = seasonFridays(4).map((t) => dates.find((d) => d >= t)).filter(Boolean);
+  const season = targets.map((t) => dates.find((d) => d >= t)).filter(Boolean);
   const isSeason = new Set(season);
   // The menu: the next couple of months of ordinary expiries, plus every roll
   // date, so the book can be moved forward a quarter without leaving the tab.

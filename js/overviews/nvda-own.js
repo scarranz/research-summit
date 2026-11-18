@@ -10,6 +10,8 @@
 // Sources: NVIDIA 2026 proxy statement (DEF 14A, filed May 12 2026), Security Ownership of Certain Beneficial Owners and
 // Management, as of Mar 23 2026 (24,312,141,810 shares outstanding); Form 4 filings via the Bloomberg export; Form 10-Q
 // for 2Q FY27, cover page (24.1B shares outstanding as of Aug 21 2026) — reported figures (rule 10 allows them in a file).
+// Nov 2026: Jensen Huang resigned as President, CEO and director on Nov 11 2026 (8-K filed Nov 12 2026, Item 5.02 + Ex. 99.1);
+// his row keeps the same share data and is relabelled; Kress adds Interim CEO; Jones is Chair.
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -17,17 +19,17 @@ var OUT_PROXY = 24312141810;     // shares outstanding, Mar 23 2026 (proxy)
 var OUT_NOW = 24100000000;       // shares outstanding, Aug 21 2026 (10-Q 2Q FY27 cover, as reported)
 // [name, position, group, proxy shares (Mar 23 2026), latest Form 4 shares, Form 4 net change, Form 4 date, note]
 var INSIDERS = [
-  ['Jen-Hsun Huang', 'Founder, President & CEO · director since 1993', 'exec', 870604104, 812004746, -45723, 'Jun 17 2026', 'mostly via family trusts; see note below'],
+  ['Jen-Hsun Huang', 'Co-founder · former President, CEO and director (1993 – Nov 11 2026)', 'exec', 870604104, 812004746, -45723, 'Jun 17 2026', 'former insider; mostly via family trusts; see note below'],
   ['Mark A. Stevens', 'Director since 2008 (and 1993–2006)', 'board', 34069572, 31769633, 1211, 'Jun 25 2026', ''],
   ['Tench Coxe', 'Director since 1993', 'board', 30555240, 30581218, 1211, 'Jun 25 2026', ''],
-  ['Harvey C. Jones', 'Director since 1993', 'board', 7003687, 7004898, 1211, 'Jun 25 2026', ''],
-  ['Colette M. Kress', 'EVP & CFO', 'exec', 4443523, 4851271, -40746, 'Jun 17 2026', 'incl. family trusts; see note below'],
+  ['Harvey C. Jones', 'Chair of the Board (since Nov 11 2026) · director since 1993', 'board', 7003687, 7004898, 1211, 'Jun 25 2026', ''],
+  ['Colette M. Kress', 'Interim CEO (since Nov 11 2026) · EVP & CFO', 'exec', 4443523, 4851271, -40746, 'Jun 17 2026', 'incl. family trusts; see note below'],
   ['Ajay K. Puri', 'EVP, Worldwide Field Operations', 'exec', 3266897, 3665228, -36927, 'Jun 17 2026', ''],
   ['Timothy S. Teter', 'EVP, General Counsel & Secretary', 'exec', 2687197, 3052096, -35742, 'Jun 17 2026', ''],
   ['A. Brooke Seawell', 'Director since 1997 · Audit Committee chair', 'board', 2506607, 2507818, 1211, 'Jun 25 2026', ''],
   ['Debora Shoquist', 'EVP, Operations', 'exec', 1580729, 1946358, -35012, 'Jun 17 2026', ''],
   ['Dawn Hudson', 'Director since 2013 · Compensation Committee chair', 'board', 368887, 370098, 1211, 'Jun 25 2026', ''],
-  ['Stephen C. Neal', 'Lead Director · director since 2019', 'board', 184867, 170578, 1211, 'Jun 25 2026', ''],
+  ['Stephen C. Neal', 'Lead Director in the 2026 proxy · director since 2019', 'board', 184867, 170578, 1211, 'Jun 25 2026', ''],
   ['Aarti Shah', 'Director since 2020', 'board', 25620, 37218, 1211, 'Jun 25 2026', ''],
   ['Melissa B. Lora', 'Director since 2023', 'board', 1799, 16868, 1211, 'Jun 25 2026', ''],
   ['John O. Dabiri', 'Director since 2020', 'board', 14788, 15374, 1211, 'Jun 25 2026', ''],
@@ -68,21 +70,21 @@ function holders5Html(){
 
 export function nvdaOwnBody(){
   var h='';
-  h+='<p class="ov-lede">One share, one vote: NVIDIA has a single class of stock, so ownership and control are the same thing. Jensen Huang is the largest individual holder, with about 3.4% of the company; all directors and executive officers together held 3.9% in the 2026 proxy.</p>';
+  h+='<p class="ov-lede">One share, one vote: NVIDIA has a single class of stock, so ownership and control are the same thing. Co-founder Jensen Huang, who resigned as CEO and director on Nov 11 2026, was the largest individual holder at his last Form 4, with about 3.4% of the company; all directors and executive officers together held 3.9% in the 2026 proxy.</p>';
   h+='<div class="ov-sec-h mg-sec-gap">Insiders — directors and executive officers</div>';
   h+='<div class="mg-tog-row own-ctl"><span class="mg-tog">Show: <span class="mg-seg">'+
      [['all','All'],['board','Board'],['exec','Executive officers']].map(function(f){ return '<button type="button" class="mg-pill'+(OWN.filter===f[0]?' active':'')+'" data-ownf="'+f[0]+'">'+f[1]+'</button>'; }).join('')+
      '</span></span><span class="own-px" id="nvOwnPx">loading live price…</span></div>';
   h+='<div class="twrap own-wrap"><table class="rt own-tbl own-ins"><thead><tr><th class="own-rk">#</th><th>Holder</th><th>Position at NVIDIA</th>'+
      '<th>Shares<br>proxy, Mar 23 2026</th><th>Shares<br>latest Form 4</th><th>Last Form 4<br>change</th><th>% of<br>shares</th><th>Value<br>(live)</th></tr></thead><tbody id="nvOwnBody">'+rowsHtml()+'</tbody></table></div>';
-  h+='<div class="ov-fynote">“% of shares” and “Value” use the latest Form 4 position; % against the 24.1B shares outstanding on the 2Q FY27 10-Q cover (Aug 21 2026). “Last Form 4 change” is the net change on the holder’s most recent Form 4, as reported. Chris Malachowsky is not a Section 16 officer, so his holding is not reported. Jensen Huang holds mostly through family trusts and TARG LLCs, and his proxy figure includes 58.7M shares of the Huang Foundation, in which he has no pecuniary interest; Colette Kress’s includes shares held by family members, an LLC and four grantor retained annuity trusts (proxy).</div>';
+  h+='<div class="ov-fynote">“% of shares” and “Value” use the latest Form 4 position; % against the 24.1B shares outstanding on the 2Q FY27 10-Q cover (Aug 21 2026). “Last Form 4 change” is the net change on the holder’s most recent Form 4, as reported. Chris Malachowsky is not a Section 16 officer, so his holding is not reported. Jensen Huang left as CEO and director on Nov 11 2026 (8-K, Nov 12 2026): his row is the last position he reported as an insider; once his Section 16 reporting ends, later trades will no longer appear on Form 4, so the row will go stale. He holds mostly through family trusts and TARG LLCs, and his proxy figure includes 58.7M shares of the Huang Foundation, in which he has no pecuniary interest; Colette Kress’s includes shares held by family members, an LLC and four grantor retained annuity trusts (proxy).</div>';
   h+='<div class="ov-sec-h mg-sec-gap">Holders above 5%</div>';
   h+='<div class="twrap own-wrap"><table class="rt own-tbl own-h5"><thead><tr><th>Holder</th><th>Shares</th><th>% of shares</th><th>Value (live)</th></tr></thead><tbody id="nvOwn5">'+holders5Html()+'</tbody></table></div>';
   h+='<div class="ov-fynote">As the proxy reports them, from each holder’s Schedule 13G/A; percentages against the 24.31B shares outstanding on Mar 23 2026. Other institutional holders are below 5% and are not disclosed in the proxy.</div>';
   h+='<div class="ov-sec-h mg-sec-gap">Executives &amp; insider activity — live from Fiscal.ai</div>';
   h+='<div id="dd-mgmt-slot"></div>';
   h+='<div class="ov-fynote">Fiscal.ai’s share counts can differ from the latest Form 4 (it does not state how it counts indirect and trust holdings); the insider table above, from the proxy and Form 4 filings, is the primary source.</div>';   // filled by companies.js (the same live table as Pillars ▸ Management)
-  h+='<div class="ov-foot">Holdings: '+esc(SRC)+'. Shares outstanding now: Form 10-Q for 2Q FY27 (filed Aug 26 2026), cover page. Value = shares × the live NVDA price (Massive). Insider activity: Fiscal.ai, live.</div>';
+  h+='<div class="ov-foot">Holdings: '+esc(SRC)+'. Positions after the CEO transition: NVIDIA Form 8-K filed Nov 12 2026 (Item 5.02 and Ex. 99.1 press release, “NVIDIA Announces CEO Transition”). Shares outstanding now: Form 10-Q for 2Q FY27 (filed Aug 26 2026), cover page. Value = shares × the live NVDA price (Massive). Insider activity: Fiscal.ai, live.</div>';
   return h;
 }
 export function nvdaOwnInit(root){

@@ -30,6 +30,7 @@ import {
   HS_CSP_QTRS, HS_CSP_REV, HS_CSP_OI, HS_CSP_NOTES,
   HS_THEME_QTRS, HS_THEMES,
   HS_GW_SPCX_TOTAL, HS_GW_SPCX_NOTES, HS_SPCX_SI_CAPEX,
+  HS_PROJ, HS_PROJ_YEARS,
 } from './hyperscalers-data.js';
 
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -46,7 +47,8 @@ var INK_MUTED = '#8A93A0', GRID = '#EEF1F5', AXIS = '#D7DDE4';
 // View state that the panes own (which target year, which backlog view).
 var _view = { guideYear: '2026', backView: 'abs', yearView: 'all',
               cspPeriod: 'q', cspGrowth: 'yoy', cspTop: 'rev', cspBot: 'opInc',
-              cspZoom: null, theme: 'guide' };
+              cspZoom: null, theme: 'guide',
+              projBasis: 'house', projHide: {}, projZoom: {} };
 var _charts = {};
 
 // ─── Direct end-of-line labels ────────────────────────────────────────────────
@@ -600,6 +602,7 @@ function quarterlyBody(){
       'Six quarters are derived rather than stated (Amazon 2Q24/3Q24/4Q25, Meta 1Q25, SpaceX 2Q25/4Q25) — marked in the tooltip and listed in the data file.</p>' +
       table(yrRows, [''].concat(HS_YEARS)) +
     '</div>' +
+    projBody() +
     sec('Every reported quarter') +
     '<div class="hs-card">' +
       '<div class="hs-chart-head"><span class="hs-chart-t">Reported CapEx by quarter</span>' +
@@ -612,6 +615,319 @@ function quarterlyBody(){
     sec('Table') +
     '<div class="hs-card">' + table(rows, [''].concat(LABELS)) + '</div>';
 }
+
+// What the Summit models project for each company's CapEx, against Bloomberg.
+// Chart 1: annual CapEx stacked by company on one basis (house view = Summit where we
+// have a model, Bloomberg otherwise; or Bloomberg for all), with the OTHER basis's
+// total as a dashed line. Chart 2: one panel per company, Summit solid vs Bloomberg
+// dashed. Then the table. Clicking a company in chart 1's legend hides it from the
+// chart, the table and both totals (§0); drag zooms either axis, double-click resets.
+function projHasModel(id){ return HS_PROJ[id].summit.some(function(v){ return v != null; }); }
+// One company's CapEx at year index i on a basis ('house' | 'bbg' | 'summit'), US$M.
+function projVal(id, i, basis){
+  var p = HS_PROJ[id];
+  if (i === 0) return p.act;
+  if (basis === 'summit') return p.summit[i];
+  if (basis === 'house' && projHasModel(id)) return p.summit[i];
+  return p.cons[i];
+}
+function projShown(){ return HS_COMPANIES.map(function(c){ return c.id; }).filter(function(id){ return !_view.projHide[id]; }); }
+// A year is totalled only when every shown name has a number — a partial sum would read as a fall.
+function projTotal(i, basis){
+  var ids = projShown();
+  if (!ids.length) return null;
+  var vs = ids.map(function(id){ return projVal(id, i, basis); });
+  return vs.some(function(v){ return v == null; }) ? null : vs.reduce(function(a, v){ return a + v; }, 0);
+}
+function projLab(i){ return HS_PROJ_YEARS[i] + (i ? 'E' : 'A'); }
+function projZ(k){ if (!_view.projZoom[k]) _view.projZoom[k] = { win: null, yr: null }; return _view.projZoom[k]; }
+
+function projBody(){
+  var Y = HS_PROJ_YEARS;
+  function b(v){ return v == null ? '<span class="hs-na">—</span>' : '$' + (v / 1000).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'B'; }
+  function gr(v, p){ return (v == null || !p) ? '' : ' <span class="hs-sub">' + (v >= p ? '+' : '−') + Math.abs((v / p - 1) * 100).toFixed(0) + '%</span>'; }
+  var ids = HS_COMPANIES.map(function(c){ return c.id; });
+  var shown = projShown();
+  var head = '<tr><th></th><th>Source</th>' + Y.map(function(y, i){ return '<th class="num">' + projLab(i) + '</th>'; }).join('') + '</tr>';
+  function line(vals, strong){
+    return vals.map(function(v, i){
+      var t = b(v); if (strong) t = '<b>' + t + '</b>';
+      return '<td class="num">' + t + (i ? gr(v, vals[i - 1]) : '') + '</td>';
+    }).join('');
+  }
+  var rows = '';
+  shown.forEach(function(id){
+    var p = HS_PROJ[id], c = co(id), m = projHasModel(id);
+    var k = Y.map(function(y, i){ return projVal(id, i, 'bbg'); });
+    var lbl = '<td' + (m ? ' rowspan="2"' : '') + '>' + dot(id) + '<b>' + c.ticker + '</b></td>';
+    if (m){
+      var s = Y.map(function(y, i){ return projVal(id, i, 'summit'); });
+      rows += '<tr>' + lbl + '<td>Summit <span class="hs-sub">' + esc(p.snap) + '</span></td>' + line(s) + '</tr>' +
+        '<tr><td><span class="hs-sub">Bloomberg ' + esc(p.consAsOf) + '</span></td>' +
+        k.map(function(v, i){ return '<td class="num"><span class="hs-sub">' + (i ? b(v) : '') + '</span></td>'; }).join('') + '</tr>';
+    } else {
+      rows += '<tr>' + lbl + '<td>Bloomberg <span class="hs-sub">' + esc(p.consAsOf) + ' · no model</span></td>' + line(k) + '</tr>';
+    }
+  });
+  var th = Y.map(function(y, i){ return projTotal(i, 'house'); });
+  var tc = Y.map(function(y, i){ return projTotal(i, 'bbg'); });
+  var mod = shown.filter(projHasModel).map(function(id){ return co(id).ticker; }).join(', ');
+  var hidden = ids.filter(function(id){ return _view.projHide[id]; });
+  var totLab = hidden.length ? 'Total, ' + shown.length + ' shown' : 'Total, five';
+  if (shown.length){
+    rows += '<tr class="hs-tot"><td rowspan="2"><b>' + totLab + '</b></td><td>House view' + (mod ? ' <span class="hs-sub">Summit for ' + esc(mod) + '</span>' : '') + '</td>' + line(th, true) + '</tr>' +
+      '<tr><td>Bloomberg</td>' + line(tc) + '</tr>';
+  }
+  var notes = ids.map(function(id){
+    return '<li>' + dot(id) + '<b>' + co(id).ticker + '</b> — ' + esc(HS_PROJ[id].basis) + '</li>';
+  }).join('');
+  var house = _view.projBasis === 'house';
+  var z = _view.projZoom.all;
+  var zoomed = z && (z.win || z.yr);
+  var panels = ids.map(function(id){
+    var c = co(id);
+    return '<div class="hs-panel">' +
+      '<div class="hs-panel-h">' + dot(id) + '<b>' + c.ticker + '</b><span class="hs-panel-s">' +
+        esc(projHasModel(id) ? 'Summit vs Bloomberg' : 'Bloomberg only — no Summit model') + '</span></div>' +
+      '<div class="hs-panel-c"><canvas id="hs-pj-' + id + '"></canvas></div></div>';
+  }).join('');
+  return sec('What we project — Summit models vs consensus') +
+    '<div class="hs-card">' +
+      '<p class="hs-body">Annual CapEx each Summit model carries, with the Bloomberg consensus beside it; Microsoft and SpaceX have no Summit model and show Bloomberg only. This is the demand side of NVIDIA’s data-center line: the total is what the five are set to spend, and its growth is the ceiling on what they can buy.</p>' +
+      '<div class="hs-chart-head"><span class="hs-chart-t">Projected CapEx, stacked by company</span>' +
+        '<span class="hs-chart-u">US$B · calendar years · dashed line = the other basis’s total</span></div>' +
+      '<div class="hs-seg" style="margin-bottom:10px">' +
+        '<button type="button" class="hs-seg-b' + (house ? ' active' : '') + '" data-pbasis="house">House view</button>' +
+        '<button type="button" class="hs-seg-b' + (!house ? ' active' : '') + '" data-pbasis="bbg">Bloomberg</button>' +
+        (zoomed ? '<button type="button" class="hs-seg-b hs-reset" data-preset="all">Reset zoom</button>' : '') +
+      '</div>' +
+      '<div class="hs-canvas"><canvas id="hs-proj"></canvas></div>' +
+      '<p class="hs-cap"><b>House view</b> = Summit for AMZN, GOOGL and META, Bloomberg for MSFT and SpaceX. A year is drawn only when every company shown has a number, so 2029 appears once the names without a 2029 column are hidden. Click a company in the legend to take it out of the chart, the table and both totals; drag across the chart (or up the y-axis) to zoom, double-click to reset. Hover a column for the total and its growth.</p>' +
+      '<div class="hs-chart-head" style="margin-top:18px"><span class="hs-chart-t">' + esc(totLab) + ' together — house view vs Bloomberg</span>' +
+        '<span class="hs-chart-u">US$B · one pair of bars per year · labels = total and growth</span></div>' +
+      (_view.projZoom.tot && (_view.projZoom.tot.win || _view.projZoom.tot.yr) ? '<div class="hs-seg" style="margin-bottom:10px"><button type="button" class="hs-seg-b hs-reset" data-preset="tot">Reset zoom</button></div>' : '') +
+      '<div class="hs-canvas"><canvas id="hs-proj-tot"></canvas></div>' +
+      '<p class="hs-cap">The same total as the table’s two bottom rows: the dark bar is the house view (Summit where we have a model), the light bar Bloomberg for all five. Each bar is labelled with its total and its growth on the year before; hover for the gap between the two. Companies hidden in the stacked chart’s legend drop out here too. Drag to zoom, double-click to reset.</p>' +
+      sec('Summit against Bloomberg, company by company') +
+      '<div class="hs-panels">' + panels + '</div>' +
+      '<p class="hs-cap">Solid = Summit model, dashed = Bloomberg consensus; 2025 is reported. Same company colour in both, the line style carries the source. Hover a year for the gap between the two.</p>' +
+      sec('Table') +
+      '<div class="hs-tw"><table class="hs-table"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div>' +
+      (hidden.length ? '<p class="hs-cap">Hidden from the chart, the table and the totals: ' + esc(hidden.map(function(id){ return co(id).ticker; }).join(', ')) + '.</p>' : '') +
+      '<p class="hs-cap">US$, calendar years. 2025 = reported, on each row’s basis. Growth is year over year. A total is left blank in a year where any shown name has no column (Meta’s model and Bloomberg’s AMZN/GOOGL/META rows stop at 2028). Bases are not identical across names — see the notes — so treat the total as an order of magnitude, not to the billion.</p>' +
+      '<ul class="hs-src">' + notes + '</ul>' +
+      '<p class="hs-cap">Sources: Summit DCF models (frozen, snapshot dates per row); Bloomberg consensus — BBG_CONSENSUS (AMZN, GOOGL, META, newest row each) and SAB’s Bloomberg pull of Nov 18 2026 (MSFT, SPCX); reported 2025 from each 10-K / S-1 and Microsoft’s calls.</p>' +
+    '</div>';
+}
+
+var PROJ_TIP = { backgroundColor: '#1E2733', padding: 10, cornerRadius: 6, boxWidth: 8, boxHeight: 8, usePointStyle: true,
+  titleFont: { size: 11, family: 'Inter' }, bodyFont: { size: 11.5, family: 'Inter' } };
+var PROJ_LEG = { boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'circle',
+  color: '#1E2733', font: { size: 11, family: 'Inter', weight: '600' }, padding: 14 };
+function projFmt(v){ return v == null ? '—' : '$' + (v / 1000).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'B'; }
+function projY(st){
+  var y = { beginAtZero: true, grid: { color: GRID, drawTicks: false }, border: { display: false },
+    ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' }, padding: 8, callback: function(n){ return '$' + Number(axisNum(n)).toLocaleString('en-US') + 'B'; } } };
+  if (st.yr){ y.min = st.yr[0]; y.max = st.yr[1]; y.beginAtZero = false; }
+  return y;
+}
+function projRepaint(){ var root = document.querySelector('.hs'); if (root) repaint(root, 'qtr', quarterlyBody); }
+
+function projChart(){
+  var el = document.getElementById('hs-proj');
+  if (!el || !el.offsetParent) return;
+  if (_charts['hs-proj']) { _charts['hs-proj'].destroy(); delete _charts['hs-proj']; }
+  var basis = _view.projBasis, other = basis === 'house' ? 'bbg' : 'house';
+  var idx = HS_PROJ_YEARS.map(function(y, i){ return i; }).filter(function(i){ return projTotal(i, basis) != null; });
+  var st = projZ('all');
+  if (st.win) idx = idx.slice(st.win[0], st.win[1] + 1);
+  var datasets = HS_COMPANIES.map(function(c){
+    var hid = !!_view.projHide[c.id];
+    return { type: 'bar', label: c.ticker, cid: c.id, hidden: hid, stack: 's', order: 2,
+      data: idx.map(function(i){ return hid ? null : projVal(c.id, i, basis) / 1000; }),
+      backgroundColor: c.color, borderRadius: 2, borderSkipped: false, categoryPercentage: 0.7, barPercentage: 0.92 };
+  });
+  datasets.push({ type: 'line', label: (other === 'bbg' ? 'Bloomberg' : 'House view') + ' total', order: 1,
+    data: idx.map(function(i){ var t = projTotal(i, other); return t == null ? null : t / 1000; }),
+    borderColor: '#1E2733', backgroundColor: '#1E2733', borderDash: [5, 4], borderWidth: 1.5, tension: 0,
+    pointRadius: 3.5, pointBackgroundColor: '#fff', pointBorderColor: '#1E2733', pointBorderWidth: 1.5, spanGaps: false });
+  var chart = new Chart(el.getContext('2d'), {
+    type: 'bar',
+    data: { labels: idx.map(projLab), datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', align: 'start', labels: PROJ_LEG,
+          onClick: function(e, item, legend){
+            var ds = legend.chart.data.datasets[item.datasetIndex];
+            if (ds.cid){ _view.projHide[ds.cid] = !_view.projHide[ds.cid]; _view.projZoom.all = null; _view.projZoom.tot = null; projRepaint(); return; }
+            var m = legend.chart.getDatasetMeta(item.datasetIndex); m.hidden = !m.hidden; legend.chart.update();
+          } },
+        tooltip: Object.assign({}, PROJ_TIP, { callbacks: {
+          label: function(c){ return c.raw == null ? null : c.dataset.label + ': ' + projFmt(c.raw * 1000); },
+          footer: function(items){
+            var i = idx[items[0].dataIndex];
+            var t = projTotal(i, basis), p = i ? projTotal(i - 1, basis) : null;
+            var s = (basis === 'house' ? 'House view' : 'Bloomberg') + ' total: ' + projFmt(t);
+            if (t != null && p) s += ' (' + (t >= p ? '+' : '−') + Math.abs((t / p - 1) * 100).toFixed(0) + '% YoY)';
+            return s;
+          } } }),
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, border: { color: AXIS },
+             ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' } } },
+        y: Object.assign(projY(st), { stacked: true }),
+      },
+    },
+  });
+  _charts['hs-proj'] = chart;
+  var base = st.win ? st.win[0] : 0;
+  cspBrush(el, chart,
+    function(a, b){ st.win = [base + a, base + b]; projRepaint(); },
+    function(v1, v2){ st.yr = snapYRange(v1, v2); projRepaint(); },
+    function(){ st.win = null; st.yr = null; projRepaint(); });
+}
+
+function projPanel(id){
+  var cid = 'hs-pj-' + id, el = document.getElementById(cid);
+  if (!el || !el.offsetParent) return;
+  if (_charts[cid]) { _charts[cid].destroy(); delete _charts[cid]; }
+  var c = co(id), st = projZ(id);
+  var idx = HS_PROJ_YEARS.map(function(y, i){ return i; });
+  if (st.win) idx = idx.slice(st.win[0], st.win[1] + 1);
+  var sets = [];
+  if (projHasModel(id)) sets.push({ label: 'Summit', dash: [], data: idx.map(function(i){ var v = projVal(id, i, 'summit'); return v == null ? null : v / 1000; }) });
+  sets.push({ label: 'Bloomberg', dash: [5, 4], data: idx.map(function(i){ var v = projVal(id, i, 'bbg'); return v == null ? null : v / 1000; }) });
+  var chart = new Chart(el.getContext('2d'), {
+    type: 'line',
+    data: { labels: idx.map(projLab), datasets: sets.map(function(s){
+      return { label: s.label, data: s.data, borderColor: c.color, backgroundColor: c.color, borderDash: s.dash,
+        borderWidth: 2, tension: 0.2, spanGaps: false, pointRadius: 3.5, pointHoverRadius: 5.5,
+        pointBackgroundColor: s.dash.length ? '#fff' : c.color, pointBorderColor: c.color, pointBorderWidth: 1.5 };
+    }) },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: sets.length > 1, position: 'top', align: 'start', labels: PROJ_LEG },
+        tooltip: Object.assign({}, PROJ_TIP, { callbacks: {
+          label: function(x){ return x.raw == null ? null : x.dataset.label + ': ' + projFmt(x.raw * 1000); },
+          footer: function(items){
+            var s = items.filter(function(x){ return x.dataset.label === 'Summit'; })[0];
+            var k = items.filter(function(x){ return x.dataset.label === 'Bloomberg'; })[0];
+            if (!s || !k || s.raw == null || k.raw == null || idx[items[0].dataIndex] === 0) return '';
+            var d = (s.raw / k.raw - 1) * 100;
+            return 'Summit vs Bloomberg: ' + (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(1) + '%';
+          } } }),
+      },
+      scales: {
+        x: { grid: { display: false }, border: { color: AXIS }, ticks: { color: INK_MUTED, font: { size: 10, family: 'Inter' } } },
+        y: projY(st),
+      },
+    },
+  });
+  _charts[cid] = chart;
+  var base = st.win ? st.win[0] : 0;
+  cspBrush(el, chart,
+    function(a, b){ st.win = [base + a, base + b]; projPanel(id); },
+    function(v1, v2){ st.yr = snapYRange(v1, v2); projPanel(id); },
+    function(){ st.win = null; st.yr = null; projPanel(id); });
+}
+// Total and growth printed above each bar — the two numbers this chart exists for.
+var projBarLabels = {
+  id: 'hsProjBarLabels',
+  afterDatasetsDraw: function(chart){
+    var ctx = chart.ctx;
+    ctx.save();
+    ctx.textAlign = 'center';
+    chart.data.datasets.forEach(function(ds, di){
+      var meta = chart.getDatasetMeta(di);
+      if (meta.hidden) return;
+      meta.data.forEach(function(bar, i){
+        var v = ds.data[i];
+        if (v == null) return;
+        ctx.fillStyle = '#1E2733';
+        ctx.font = '600 10.5px Inter, sans-serif';
+        ctx.fillText('$' + Math.round(v).toLocaleString('en-US') + 'B', bar.x, bar.y - (ds.growth[i] != null ? 16 : 5));
+        if (ds.growth[i] != null){
+          ctx.fillStyle = INK_MUTED;
+          ctx.font = '500 9.5px Inter, sans-serif';
+          ctx.fillText((ds.growth[i] >= 0 ? '+' : '−') + Math.abs(ds.growth[i]).toFixed(0) + '%', bar.x, bar.y - 5);
+        }
+      });
+    });
+    ctx.restore();
+  },
+};
+
+function projTotChart(){
+  var el = document.getElementById('hs-proj-tot');
+  if (!el || !el.offsetParent) return;
+  if (_charts['hs-proj-tot']) { _charts['hs-proj-tot'].destroy(); delete _charts['hs-proj-tot']; }
+  var idx = HS_PROJ_YEARS.map(function(y, i){ return i; })
+    .filter(function(i){ return projTotal(i, 'house') != null || projTotal(i, 'bbg') != null; });
+  var st = projZ('tot');
+  if (st.win) idx = idx.slice(st.win[0], st.win[1] + 1);
+  function series(basis){
+    var vals = idx.map(function(i){ var t = projTotal(i, basis); return t == null ? null : t / 1000; });
+    var growth = idx.map(function(i){
+      var t = projTotal(i, basis), p = i ? projTotal(i - 1, basis) : null;
+      return (t == null || !p) ? null : (t / p - 1) * 100;
+    });
+    return { vals: vals, growth: growth };
+  }
+  var h = series('house'), k = series('bbg');
+  var y = projY(st);
+  // Headroom for the two-line label above the tallest bar.
+  if (!st.yr){
+    var mx = Math.max.apply(null, h.vals.concat(k.vals).filter(function(v){ return v != null; }));
+    y.suggestedMax = mx * 1.12;
+  }
+  var chart = new Chart(el.getContext('2d'), {
+    type: 'bar',
+    data: { labels: idx.map(projLab), datasets: [
+      { label: 'House view', data: h.vals, growth: h.growth, backgroundColor: '#354658',
+        borderRadius: 2, borderSkipped: false, categoryPercentage: 0.66, barPercentage: 0.9 },
+      { label: 'Bloomberg', data: k.vals, growth: k.growth, backgroundColor: '#A6B3C2',
+        borderRadius: 2, borderSkipped: false, categoryPercentage: 0.66, barPercentage: 0.9 },
+    ] },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      layout: { padding: { top: 6 } },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', align: 'start', labels: Object.assign({}, PROJ_LEG, { pointStyle: 'rect' }) },
+        tooltip: Object.assign({}, PROJ_TIP, { callbacks: {
+          label: function(c){
+            if (c.raw == null) return null;
+            var g = c.dataset.growth[c.dataIndex];
+            return c.dataset.label + ': ' + projFmt(c.raw * 1000) + (g != null ? ' (' + (g >= 0 ? '+' : '−') + Math.abs(g).toFixed(0) + '% YoY)' : '');
+          },
+          footer: function(items){
+            var a = items.filter(function(x){ return x.dataset.label === 'House view'; })[0];
+            var b = items.filter(function(x){ return x.dataset.label === 'Bloomberg'; })[0];
+            if (!a || !b || a.raw == null || b.raw == null || idx[items[0].dataIndex] === 0) return '';
+            var d = a.raw - b.raw;
+            return 'House view vs Bloomberg: ' + (d >= 0 ? '+' : '−') + projFmt(Math.abs(d) * 1000) + ' (' + (d >= 0 ? '+' : '−') + Math.abs((a.raw / b.raw - 1) * 100).toFixed(1) + '%)';
+          } } }),
+      },
+      scales: {
+        x: { grid: { display: false }, border: { color: AXIS }, ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' } } },
+        y: y,
+      },
+    },
+    plugins: [projBarLabels],
+  });
+  _charts['hs-proj-tot'] = chart;
+  var base = st.win ? st.win[0] : 0;
+  cspBrush(el, chart,
+    function(a, b){ st.win = [base + a, base + b]; projRepaint(); },
+    function(v1, v2){ st.yr = snapYRange(v1, v2); projRepaint(); },
+    function(){ st.win = null; st.yr = null; projRepaint(); });
+}
+
+function projCharts(){ projChart(); projTotChart(); HS_COMPANIES.forEach(function(c){ projPanel(c.id); }); }
 
 // ─── Tab 3 · Backlog & Coverage ───────────────────────────────────────────────
 // Deliberately NOT a dual-axis "backlog vs CapEx" chart. Two measures on two
@@ -1523,6 +1839,7 @@ function buildFor(key){
     cspCharts();
   }
   if (key === 'qtr'){
+    projCharts();
     if (_view.yearView === 'all') combinedYearChart('hs-yr-all');
     else HS_COMPANIES.forEach(function(c){ yearChart('hs-yr-' + c.id, c.id); });
   }
@@ -1586,6 +1903,10 @@ function init(){
       if (tm){ _view.theme = tm.getAttribute('data-theme'); repaint(root, 'said', themesBody); return; }
       var cb = e.target.closest('[data-cspbot]');
       if (cb){ _view.cspBot = cb.getAttribute('data-cspbot'); repaint(root, 'csp', cspBody); return; }
+      var pb = e.target.closest('[data-pbasis]');
+      if (pb){ _view.projBasis = pb.getAttribute('data-pbasis'); _view.projZoom.all = null; repaint(root, 'qtr', quarterlyBody); return; }
+      var pr = e.target.closest('[data-preset]');
+      if (pr){ _view.projZoom[pr.getAttribute('data-preset')] = null; repaint(root, 'qtr', quarterlyBody); return; }
       var yv = e.target.closest('[data-yv]');
       if (yv){ _view.yearView = yv.getAttribute('data-yv'); repaint(root, 'qtr', quarterlyBody); return; }
     });

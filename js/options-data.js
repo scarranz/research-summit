@@ -110,7 +110,7 @@ export const EST_STORE = {
     },
   },
   NVDA: {
-    name: "NVIDIA Corporation", currency: "USD", snapshot: "2026-08-28", lastActual: 2026,
+    name: "NVIDIA Corporation", currency: "USD", snapshot: "2026-11-18", lastActual: 2026,
     // NVIDIA's fiscal year ends in late January, so its FY2026 ran Feb-2025 to
     // Jan-2026 and is really CALENDAR 2025. Both sources below are keyed on the
     // fiscal label — the model and Bloomberg both call that year 2024/2025/2026 —
@@ -121,10 +121,10 @@ export const EST_STORE = {
     consensusAsOf: "2026-09-09", consensusFrom: "bbg",
     summit: {
       2024: { rev: 60922, ebitda: 35729.51, earnings: 29288.15, shares: 24940 },
-      2025: { rev: 130497, ebitda: 85093.05, earnings: 70206.73, shares: 24804 },
+      2025: { rev: 130497, ebitda: 84932.05, earnings: 70069.88, shares: 24804 },
       2026: { rev: 215938, ebitda: 136224.68, earnings: 110555.8, shares: 24514 },
-      2027: { rev: 413720.31, ebitda: 276114.35, earnings: 225369.79, shares: 24150.438 },
-      2028: { rev: 726095.49, ebitda: 483970.93, earnings: 395606.12, shares: 23786.876 },
+      2027: { rev: 430544.95, ebitda: 288285.29, earnings: 235401.84, shares: 23987.303 },
+      2028: { rev: 771961.89, ebitda: 516213.26, earnings: 422142.0, shares: 22775.182 },
     },
     // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
     // included. It has to be all-or-nothing: the archive carries GAAP lines while

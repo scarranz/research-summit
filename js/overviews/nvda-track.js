@@ -4,20 +4,21 @@
 // and GOOGL): every card on the Summit accent, no verdict chip, no legend. Leaders = the six of Executives & Board.
 // Roles and dates: FY2026 10-K (Item 1, Information About Our Executive Officers). Outcomes: reported figures already in
 // the portal (Results dataset — 10-K / 10-Q — and Governance), and the 10-K's own history (Item 1, Item 1A, Note 2).
-// No call transcripts yet (SAB to provide the official IR PDFs), so there are no management quotes.
+// No management quotes. CEO transition (Nov 11 2026): 8-K filed Nov 12 2026 (Item 5.02 + Ex. 99.1): Kress is Interim CEO
+// and CFO; Huang’s card is kept as the former CEO.
 // `at` / `prior` / `detail` are HTML (<b>, <p>). Modal: data-detail="ntrk:<id>" (nvidia.js wireModal).
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 var TRACK = [
-  { id:'huang', n:'Jen-Hsun “Jensen” Huang', role:'Founder, President & CEO', since:'1993',
-    at:'CEO for the company’s whole life. In the six years to FY2026, revenue went from <b>$10.9B (FY2020) to $215.9B (FY2026)</b>, Data Center from <b>$3.0B to $193.7B</b>, and GAAP operating income from <b>$2.8B to $130.4B</b>.',
+  { id:'huang', n:'Jen-Hsun “Jensen” Huang', role:'Co-founder · former President & CEO (1993–Nov 2026)', since:'1993',
+    at:'CEO from the founding in 1993 until he resigned as President, CEO and director on Nov 11 2026 (8-K). In the six years to FY2026, revenue went from <b>$10.9B (FY2020) to $215.9B (FY2026)</b>, Data Center from <b>$3.0B to $193.7B</b>, and GAAP operating income from <b>$2.8B to $130.4B</b>.',
     prior:'Microprocessor designer at AMD (1983–85), then LSI Logic (1985–93), where he ran Coreware, the system-on-chip unit.',
-    detail:'<p><b>At NVIDIA (co-founded 1993).</b> The 10-K’s own history lists the bets made under him: the GPU (1999), CUDA (2006), the first Tensor Core GPU (2017), the Mellanox acquisition (2020), the Grace CPU (2023) and the Blackwell rack-scale platform (2024). Not every move landed: the $40B Arm deal was terminated in 2022, and US export rules cost a $4.5B H20 charge in Q1 FY2026.</p><p><b>The numbers in the portal.</b> Revenue $10,918M (FY2020) → $215,938M (FY2026); GAAP operating margin 26.1% → 60.4%; free cash flow $4.3B → $96.7B (Results ▸ Annual).</p>' },
-  { id:'kress', n:'Colette M. Kress', role:'EVP & Chief Financial Officer', since:'2013',
-    at:'CFO since 2013. In FY2026 NVIDIA bought back <b>$40.1B</b> of stock and paid <b>$974M</b> of dividends; diluted shares fell from <b>24,940M (FY2024) to 24,514M (FY2026)</b> while stock-based pay rose to $6.4B.',
+    detail:'<p><b>Resigned Nov 11 2026.</b> The board accepted his resignation as President, CEO and director, effective immediately, and named CFO Colette Kress Interim CEO (8-K, Nov 12 2026).</p><p><b>At NVIDIA (co-founded 1993).</b> The 10-K’s own history lists the bets made under him: the GPU (1999), CUDA (2006), the first Tensor Core GPU (2017), the Mellanox acquisition (2020), the Grace CPU (2023) and the Blackwell rack-scale platform (2024). Not every move landed: the $40B Arm deal was terminated in 2022, and US export rules cost a $4.5B H20 charge in Q1 FY2026.</p><p><b>The numbers in the portal.</b> Revenue $10,918M (FY2020) → $215,938M (FY2026); GAAP operating margin 26.1% → 60.4%; free cash flow $4.3B → $96.7B (Results ▸ Annual).</p>' },
+  { id:'kress', n:'Colette M. Kress', role:'Interim CEO · EVP & Chief Financial Officer', since:'2013',
+    at:'CFO since 2013 and Interim CEO since Nov 11 2026, while the board searches for a permanent CEO (8-K). In FY2026 NVIDIA bought back <b>$40.1B</b> of stock and paid <b>$974M</b> of dividends; diluted shares fell from <b>24,940M (FY2024) to 24,514M (FY2026)</b> while stock-based pay rose to $6.4B.',
     prior:'SVP and CFO of Cisco’s Business Technology and Operations Finance organization (2010–13); Microsoft (1997–2010), including CFO of Server and Tools; eight years at Texas Instruments.',
-    detail:'<p><b>At NVIDIA (joined 2013).</b> Leads finance and investor relations through the Data Center scale-up. Buybacks went from $9.5B (FY2024) to $33.7B (FY2025) and $40.1B (FY2026); the board added $60.0B of authorization in August 2025 (Governance). In FY2027 NVIDIA changed its non-GAAP definition to stop excluding stock-based compensation, restating history (Feb 25 2026 release).</p>' },
+    detail:'<p><b>Interim CEO (Nov 11 2026).</b> Appointed after Jensen Huang’s resignation; she remains EVP and CFO until a permanent successor is named, and the board will consider internal and external candidates (8-K, Nov 12 2026).</p><p><b>At NVIDIA (joined 2013).</b> Leads finance and investor relations through the Data Center scale-up. Buybacks went from $9.5B (FY2024) to $33.7B (FY2025) and $40.1B (FY2026); the board added $60.0B of authorization in August 2025 (Governance). In FY2027 NVIDIA changed its non-GAAP definition to stop excluding stock-based compensation, restating history (Feb 25 2026 release).</p>' },
   { id:'puri', n:'Ajay K. “Jay” Puri', role:'EVP, Worldwide Field Operations', since:'2005',
     at:'Runs global sales since 2005 (EVP since 2009). Data Center revenue went from <b>$47.5B (FY2024) to $193.7B (FY2026)</b>; in FY2026 two direct customers were 22% and 14% of revenue.',
     prior:'22 years at Sun Microsystems in sales, marketing and general management, after Hewlett-Packard, Booz Allen Hamilton and Texas Instruments.',
@@ -35,8 +36,8 @@ var TRACK = [
     prior:'Engineer before co-founding NVIDIA with Jensen Huang and Curtis Priem.',
     detail:'<p><b>At NVIDIA (co-founded 1993).</b> One of the three founders; held senior engineering and technical leadership roles and serves as an NVIDIA Fellow. He is neither an executive officer nor a director in the 2026 filings.</p>' },
 ];
-var BENCH = 'The four other executive officers have worked alongside Huang for nine to twenty-one years, and the figures above all come from the AI build-out years (FY2020–FY2026); the filings name no successor, and the company’s direction still runs through its founder-CEO.';
-var FOOT = 'Roles and dates: NVIDIA Form 10-K for fiscal 2026 (Item 1, Information About Our Executive Officers, as of Feb 20 2026). Outcomes: reported figures carried in the portal (Form 10-K and 10-Q via the Results dataset; Governance), the 10-K balance sheet (inventory) and the 10-K narrative (Item 1, Item 1A, Note 2). No ratings — a factual record, not a Summit verdict.';
+var BENCH = 'The figures above all come from the AI build-out years (FY2020–FY2026), under founder-CEO Jensen Huang. He resigned on Nov 11 2026; the CFO, Colette Kress, is Interim CEO, the four other executive officers have worked together for nine to twenty-one years, and the board is searching for a permanent CEO among internal and external candidates (8-K, Nov 12 2026).';
+var FOOT = 'Roles and dates: NVIDIA Form 10-K for fiscal 2026 (Item 1, Information About Our Executive Officers, as of Feb 20 2026); CEO transition: NVIDIA Form 8-K filed Nov 12 2026 (Item 5.02 and Ex. 99.1 press release, “NVIDIA Announces CEO Transition”). Outcomes: reported figures carried in the portal (Form 10-K and 10-Q via the Results dataset; Governance), the 10-K balance sheet (inventory) and the 10-K narrative (Item 1, Item 1A, Note 2). No ratings — a factual record, not a Summit verdict.';
 
 export function nvdaTrackBody(){
   var cards=TRACK.map(function(m){

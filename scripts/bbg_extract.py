@@ -83,7 +83,9 @@ def main(ticker):
     # anywhere in the archive (META's 10/21/2026 row landed below the older ones, Oct 2026).
     def asof_key(r):
         i = idx.get('data_as_of'); m = re.match(r'(\d+)/(\d+)/(\d{4})', (r[i] if i is not None and i < len(r) else '') or '')
-        return (int(m.group(3)), int(m.group(1)), int(m.group(2))) if m else (0, 0, 0)
+        if m: return (int(m.group(3)), int(m.group(1)), int(m.group(2)))
+        m = re.match(r'(\d{4})-(\d{2})-(\d{2})', (r[i] if i is not None and i < len(r) else '') or '')   # ISO dates too (NVDA 2026-11-12)
+        return (int(m.group(1)), int(m.group(2)), int(m.group(3))) if m else (0, 0, 0)
     cand = [r for r in rows[1:] if r and r[0].strip().upper().startswith(ticker.upper())]
     if not cand: raise SystemExit("ticker not found: "+ticker)
     row = max(cand, key=asof_key)
@@ -122,6 +124,11 @@ def main(ticker):
     if not asof:                                  # the LIVE row leaves data_as_of blank -> dated by the file (the export day)
         import time, datetime; d = datetime.date.fromtimestamp(os.path.getmtime(SRC)); asof = '%d/%d/%d' % (d.month, d.day, d.year)
     # anchor calendar from the close_ dates: fy0 year and fq0 quarter/year
+    def _serial(d):                               # some exports leave the close dates as Excel serials ('46229.') -> 7/26/2026
+        if d and re.fullmatch(r'\s*\d{5}\.?0*\s*', d):
+            import datetime as _dt; x=_dt.date(1899,12,30)+_dt.timedelta(days=int(float(d))); return '%d/%d/%d'%(x.month,x.day,x.year)
+        return d
+    _g = g; g = lambda col: (_serial(_g(col)) if col.startswith('close_') else _g(col))
     def yr(datestr):
         m=re.search(r'/(\d{4})$', datestr or ''); return int(m.group(1)) if m else None
     def qtr(datestr):

@@ -54,7 +54,7 @@ function bullets(arr){ return '<ul class="ov-bullets">'+arr.map(function(b){retu
 
 // OV-F (playbook §8): the Overview's only footer; the collapsibles carry none of their own. Replaces the old SOURCES
 // (B2 #9), which cited a Summit model synced Jun 4 2026 — the Overview no longer shows any Summit figure.
-var OV_SOURCES = 'Sources — NVIDIA FY2026 Form 10-K (SEC EDGAR, filed Feb 25, 2026) for revenue, segment, geographic, margin, customer and headcount figures; the FY2024 10-K, NVIDIA investor-relations press releases and the 2026 proxy statement for history and leadership; NVIDIA product pages for products. Peer figures from each company’s latest Form 10-K (SEC EDGAR, as of Nov 2026) and, for NVIDIA’s forward multiples, Bloomberg consensus FY2027 (as of Sep 9, 2026). Market cap and peer multiples are live (Massive price ÷ those figures). Forward figures are estimates, not company guidance.';
+var OV_SOURCES = 'Sources — NVIDIA FY2026 Form 10-K (SEC EDGAR, filed Feb 25, 2026) for revenue, segment, geographic, margin, customer and headcount figures; the FY2024 10-K, NVIDIA investor-relations press releases and the 2026 proxy statement for history and leadership; NVIDIA product pages for products. Peer figures from each company’s latest Form 10-K (SEC EDGAR, as of Nov 2026) and, for NVIDIA’s forward multiples, Bloomberg consensus FY2027 (as of Nov 12, 2026). Market cap and peer multiples are live (Massive price ÷ those figures). Forward figures are estimates, not company guidance.';
 
 // ── Layered-reveal overview (progressive disclosure) ─────────────────────────────
 // The tab opens minimal — snapshot, one positioning line, KPIs and ONE signature
@@ -459,13 +459,13 @@ function wireModal(root){
 // latest 10-K (SEC XBRL, pulled 2026-11-02): EPS = diluted GAAP; EBITDA = operating income + depreciation +
 // amortization of intangibles (as reported in the cash-flow statement); nd = total debt − cash − current
 // marketable securities (balance sheet); gt = revenue growth of that fiscal year. Forward (NVIDIA only — the
-// peers are not in the Bloomberg file): Bloomberg consensus FY2027 as of Sep 9 2026 — EPS $9.94, EBITDA $272.4B
-// (Bloomberg's "comparable" EBITDA adds back SBC; its FY2026 is $140.1B vs $133.2B here), revenue +89.7%.
+// peers are not in the Bloomberg file): Bloomberg consensus FY2027 as of Nov 12 2026 (the last file before the 3Q FY27 print) — EPS $9.94, EBITDA $273.0B
+// (Bloomberg's "comparable" EBITDA adds back SBC; its FY2026 is $140.1B vs $133.2B here), revenue +90.4%.
 // The same array and state (N_SC) feed Valuation ▸ Peers (VA-PEERS). Replaces the old COMP bubble chart with seeded
 // multiples (B2 #8, and the PEERS constant of #36).
 var N_PEERS=[
-  { tk:'NVDA', n:'NVIDIA', hl:true, epsT:4.90, epsF:9.94, ebitdaT:133230, ebitdaF:272392, nd:-54088, gt:65.5, gf:89.7,
-    src:'10-K FY2026 (year to Jan 25 2026); forward: Bloomberg consensus FY2027, Sep 9 2026',
+  { tk:'NVDA', n:'NVIDIA', hl:true, epsT:4.90, epsF:9.94, ebitdaT:133230, ebitdaF:272978, nd:-54088, gt:65.5, gf:90.4,
+    src:'10-K FY2026 (year to Jan 25 2026); forward: Bloomberg consensus FY2027, Nov 12 2026',
     why:'The profile company: data-center GPUs, CPUs, networking and full AI systems, plus gaming and workstation graphics.' },
   { tk:'AMD', n:'AMD', epsT:2.65, epsF:null, ebitdaT:7265, ebitdaF:null, nd:-7330, gt:34.3, gf:null,
     src:'10-K FY2025 (year to Dec 27 2025)',
@@ -521,7 +521,7 @@ function stdPeerScatter(sfx){
   '</svg></div>';
   h+='<div class="asc-chips nvda-sc-chips"></div>';
   h+='<div class="ov-diagram-cap asc-cap-end">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only listed peers plot here. '+
-    '<span class="ave-subh-note">Multiples = live price ÷ figures from each company\'s latest 10-K (fiscal years differ: NVIDIA and Marvell to late January, Broadcom to early November, Qualcomm to late September, AMD and Intel to December), or Bloomberg consensus FY2027 (as of Sep 9, 2026) for NVIDIA\'s forward; market caps are live. Private AI-chip rivals have no market multiple.</span></div>';
+    '<span class="ave-subh-note">Multiples = live price ÷ figures from each company\'s latest 10-K (fiscal years differ: NVIDIA and Marvell to late January, Broadcom to early November, Qualcomm to late September, AMD and Intel to December), or Bloomberg consensus FY2027 (as of Nov 12, 2026) for NVIDIA\'s forward; market caps are live. Private AI-chip rivals have no market multiple.</span></div>';
   // Valuation ▸ Peers only: the receipt under the read (chart standard rule 3), OPEN by default.
   if(sfx==='dd') h+='<div class="rs-collap nvda-sc-collap">'+
       '<button type="button" class="rs-collap-h nvda-sc-tblh" data-selfwired="1"></button>'+
@@ -701,12 +701,13 @@ function nLiveOne(root, tk){ import('../api.js').then(function(m){ if(!m||!m.liv
 // AlexNet 2012, Tensor Core 2017, Mellanox 2020, Grace 2023, Blackwell 2024), Item 1A (export controls; the H20
 // $4.5B charge), Note 2 (Groq, Dec 2025: $13.0B paid in FY2026, $14.4B goodwill); NVIDIA press releases (IPO Jan 22
 // 1999; first quarterly dividend Nov 2012; Mellanox closing Apr 27 2020; Arm agreement Sep 13 2020 and termination
-// Feb 8 2022); FY2024 10-K (revenue $60.9B, Data Center $47.5B). Market-cap milestone: only the latest ($5T,
+// Feb 8 2022); FY2024 10-K (revenue $60.9B, Data Center $47.5B). Nov 2026 CEO transition: 8-K filed Nov 12 2026 (Item 5.02 +
+// Ex. 99.1) and the 3Q FY27 call (search firm, oversight committee; docs/calls/NVDA-latest.md). Market-cap milestone: only the latest ($5T,
 // Oct 29 2025). The old architecture timeline (TECH_TIMELINE, B2 #24) stays complete in Miscellaneous ▸ Technology;
 // its key launches are here. DESC's Mellanox sentence (B2 #3) lands in the 2020 item.
 var TIMELINE = [
   { y:'1993–98', t:'<b>Genesis:</b> Jensen Huang, Chris Malachowsky and Curtis Priem found <b>NVIDIA</b> in California (Apr 1993) to build graphics chips for PCs.',
-    d:'<ul class="ov-bullets"><li>Apr 1993 — incorporated in California; Jensen Huang is CEO from the start and still is.</li><li>The first products are graphics accelerators for PC games, sold to add-in-board makers.</li><li>Apr 1998 — reincorporated in Delaware, ahead of the listing.</li></ul>' },
+    d:'<ul class="ov-bullets"><li>Apr 1993 — incorporated in California; Jensen Huang is CEO from the start and stays CEO for 33 years, until Nov 2026.</li><li>The first products are graphics accelerators for PC games, sold to add-in-board makers.</li><li>Apr 1998 — reincorporated in Delaware, ahead of the listing.</li></ul>' },
   { y:'1999', t:'<b>IPO</b> on NASDAQ (Jan) and <b>GeForce 256</b>, which NVIDIA calls the invention of the GPU.',
     d:'<ul class="ov-bullets"><li>Jan 22, 1999 — initial public offering on NASDAQ.</li><li>Later that year — GeForce 256: graphics processing moved onto one chip, the GPU.</li><li>The GPU becomes the engine of PC gaming, the market that funds the next decade.</li></ul>' },
   { y:'2006', t:'<b>CUDA</b> opens the GPU to general-purpose computing — the software platform the AI era is later built on.' },
@@ -725,6 +726,8 @@ var TIMELINE = [
   { y:'Oct 2025', t:'First company to reach a <b>$5 trillion</b> market capitalization (Oct 29, 2025).' },
   { y:'Dec 2025', t:'<b>Groq</b>: non-exclusive license to its inference-chip technology plus hiring of its team — $13.0B paid in FY2026.',
     d:'<ul class="ov-bullets"><li>Dec 2025 — license agreement for Groq\'s language-processing-unit (LPU) technology; no customers, products or equity bought (10-K Note 2).</li><li>Recorded $14.4B of goodwill and a $2.5B technology intangible.</li><li>Almost twice what NVIDIA paid for Mellanox, its previous largest deal.</li></ul>' },
+  { y:'Nov 2026', t:'<b>CEO transition:</b> co-founder Jensen Huang resigns as President, CEO and director (Nov 11); CFO <b>Colette Kress</b> becomes Interim CEO and Harvey C. Jones the board’s <b>first-ever Chair</b>.',
+    d:'<ul class="ov-bullets"><li>Nov 11, 2026 — the board accepts Huang’s resignation, effective immediately; Kress is Interim CEO and stays EVP &amp; CFO; Jones, a director since 1993, is named Chair (8-K filed Nov 12, 2026, Item 5.02 and Ex. 99.1).</li><li>The board searches for a permanent CEO among internal and external candidates; on the Nov 17 call the Chair said Heidrick &amp; Struggles leads the search and that the board “does not intend to reinstate Jensen as CEO.”</li><li>Nov 17, 2026 — the board sets up a National Security and Export Control Oversight Committee of independent directors, senior external advisors and legal counsel (3Q FY27 call).</li></ul>' },
 ];
 function stdTimeline(){
   return '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
@@ -732,7 +735,8 @@ function stdTimeline(){
 
 // OV-1 Key Facts (playbook §8: 10 cells, this order). FY2026 10-K (filed 2026-02-25): cover (Delaware, Santa Clara),
 // Item 1 (incorporated in California Apr 1993, reincorporated in Delaware Apr 1998; ~42,000 employees at FY-end
-// Jan 25, 2026), Item 5 (cash dividends paid in FY2026). IPO: NVIDIA IR (Jan 22, 1999, NASDAQ). CEO: DEF 14A 2026.
+// Jan 25, 2026), Item 5 (cash dividends paid in FY2026). IPO: NVIDIA IR (Jan 22, 1999, NASDAQ). CEO: 8-K filed Nov 12 2026
+// (Item 5.02 + Ex. 99.1): Jensen Huang resigned Nov 11 2026; Colette Kress is Interim CEO.
 // Market cap is live (Massive via liveQuote), never seeded (rule 10). Replaces the old 6-cell SNAPSHOT banner (B2 #1);
 // the old multiples tiles moved to Valuation ▸ Target Multiple (B2 #2).
 var STD_FACTS = [
@@ -742,7 +746,7 @@ var STD_FACTS = [
   ['SEC filer','Domestic (10-K/10-Q/8-K)'],
   ['Founded','1993 (Jensen Huang, Chris Malachowsky & Curtis Priem)'],
   ['IPO','Jan 1999 · NASDAQ'],
-  ['CEO','Jensen Huang · co-founder, 1993 · CEO since 1993'],
+  ['CEO','Colette Kress · Interim CEO since Nov 2026 (also CFO) · co-founder Jensen Huang resigned Nov 11 2026'],
   ['Employees','~42,000 · Jan 2026 (FY-end)'],
   ['Dividend','Payer · quarterly'],
   ['Market cap','loading live quote…'],

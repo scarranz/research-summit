@@ -4,7 +4,7 @@
 // Summit numbers into the data files (rule 10, frozen not live — SAB, Oct 15 2026).
 //
 // Model: G:\My Drive\Summit\Docs\Research\DCF\Semiconductors - SAB\NVDA\DCF NVDA.xlsm (SAB's own model).
-// Snapshots 2025-12-12 (after Q3 FY26) · 2026-03-04 (after Q4 FY26) · 2026-08-28 (after Q2 FY27). 33 labels.
+// Snapshots 2025-12-12 (after Q3 FY26) · 2026-03-04 (after Q4 FY26) · 2026-08-28 (after Q2 FY27) · 2026-11-18 (after Q3 FY27). 33 labels.
 // FISCAL YEARS: NVIDIA's year ends the last Sunday of January. MCP period '2026' = FY2026 (Feb 2025 → Jan 2026);
 // '2027Q2' = Q2 FY27 (quarter ended late Jul 2026). Every label in the portal is fiscal (FY27, 2Q FY27).
 // Three sources inside the model:

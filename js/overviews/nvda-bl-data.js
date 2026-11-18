@@ -21,7 +21,7 @@
 //    Form 10-Q 2Q FY2027 (filed Aug 26 2026), MD&A. The 10-K defines cost of revenue but gives no definition of R&D or
 //    SG&A beyond the line name, so those two dives carry no "Definition" block. Management commentary: The Motley Fool's
 //    transcripts of the 3Q FY26, 4Q FY26, 1Q FY27 and 2Q FY27 calls (SAB, 2026-11-02: NVIDIA posts webcast replays, not
-//    transcript text) — third-party, to be checked against the replays; no SG&A-specific remark was made on any of the
+//    transcript text) and The Singju Post’s transcript of the 3Q FY27 call (docs/calls/NVDA-latest.md) — third-party, to be checked against the replays; no SG&A-specific remark was made on any of the
 //    four calls. The amount, share of revenue, margin effect and the share-of-revenue bars are computed in nvda-bl.js
 //    from the series above — never typed here.
 //
@@ -52,6 +52,7 @@ export var NVDA_OPEXQ=[
   {"p": "4Q26", "yr": 2026, "q": "Q4", "revenue": 68127, "costOfRevenue": 17034, "rnd": 5512, "sga": 1282, "arm": 0, "oi": 44299},
   {"p": "1Q27", "yr": 2027, "q": "Q1", "revenue": 81615, "costOfRevenue": 20458, "rnd": 6321, "sga": 1300, "arm": 0, "oi": 53536},
   {"p": "2Q27", "yr": 2027, "q": "Q2", "revenue": 96221, "costOfRevenue": 24079, "rnd": 7054, "sga": 1354, "arm": 0, "oi": 63734},
+  {"p": "3Q27", "yr": 2027, "q": "Q3", "revenue": 115844, "costOfRevenue": 29168, "rnd": 7454, "sga": 1702, "arm": 0, "oi": 77520},  // added 2026-11-18 by hand from the 3Q FY27 8-K (Ex. 99.3, Nov 17 2026) — the 10-Q is not filed yet; the next build_nvda_bl.py run regenerates it from XBRL
 ];
 // END GENERATED
 
@@ -83,7 +84,9 @@ export var NVDA_EW_LINES=[
            {q:'4Q26', txt:'“The single most important lever of our gross margins is actually delivering generational leads to our customers.”', who:'Colette Kress, CFO'},
            {q:'1Q27', txt:'“For the full year, we are still expecting to be in the mid seventies.”', who:'Colette Kress, CFO'},
            {q:'2Q27', txt:'“As you are already aware, we are experiencing extreme pricing conditions in memory.” … “As a result, we are resetting expectations today.”', who:'Colette Kress, CFO'},
-           {q:'2Q27', txt:'“We expect margins to bottom in Q4 in the 71% to 72% range before settling at 72% to 73% in fiscal year ’28…”', who:'Colette Kress, CFO'}] },
+           {q:'2Q27', txt:'“We expect margins to bottom in Q4 in the 71% to 72% range before settling at 72% to 73% in fiscal year ’28…”', who:'Colette Kress, CFO'},
+           {q:'3Q27', txt:'“GAAP and non-GAAP gross margins were 74.8% and 74.9% and exceeded our guidance due to better product mix.”', who:'Colette Kress, Interim CEO and CFO'},
+           {q:'3Q27', txt:'“We expect Q4 to mark the bottom of gross margins before improving to the 72 to 73 range in fiscal year ’28.”', who:'Colette Kress, Interim CEO and CFO'}] },
   { k:'rnd', name:'Research &amp; development',
     kpiExtra:['31,000','of NVIDIA’s ~42,000 employees work in research and development (10-K, end of FY2026)'],
     def:null,
@@ -99,7 +102,9 @@ export var NVDA_EW_LINES=[
            {q:'4Q26', txt:'“Starting this quarter, we will be including stock-based compensation expense in our non-GAAP results.”', who:'Colette Kress, CFO'},
            {q:'1Q27', txt:'“For the full year, we now expect OpEx to grow somewhere in the upper forties on a year over year basis.” … “Driven by higher R&amp;D and acceleration in the usage of AI tools to enhance productivity.”', who:'Colette Kress, CFO'},
            {q:'2Q27', txt:'“GAAP and non-GAAP operating expenses were up 10% and 11% sequentially, primarily due to high compute infrastructure costs…”', who:'Colette Kress, CFO'},
-           {q:'2Q27', txt:'“For the full year, we now expect OpEx to grow in the low 50s driven by a broadening of our product portfolio…”', who:'Colette Kress, CFO'}] },
+           {q:'2Q27', txt:'“For the full year, we now expect OpEx to grow in the low 50s driven by a broadening of our product portfolio…”', who:'Colette Kress, CFO'},
+           {q:'3Q27', txt:'“GAAP and non-GAAP operating expenses were up 9% and 7% sequentially, respectively, on higher compute and infrastructure spend.”', who:'Colette Kress, Interim CEO and CFO'},
+           {q:'3Q27', txt:'“…impacted by the additional week and transition-related costs.” [the 4Q FY27 opex outlook, ~$11.0B GAAP / ~$10.7B non-GAAP]', who:'Colette Kress, Interim CEO and CFO'}] },
   { k:'sga', name:'Sales, general &amp; administrative',
     kpiExtra:['11,000','employees in sales, marketing, operations and administration (10-K, end of FY2026)'],
     def:null,

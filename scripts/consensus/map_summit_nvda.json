@@ -1,5 +1,5 @@
 {
- "_note": "Config for emit_summit_matrix.py / emit_evolution.py - the SUMMIT side of estMatrix and the `evolution` block for NVDA (SAB's model, US$ millions, NVIDIA fiscal years). Written Nov 2 2026. Labels: js/summit-map/nvda.js. Dumps: scripts/consensus/dumps/nvda_summit/ (get_fundamentals, projection_history, pulled 2026-11-02).",
+ "_note": "Config for emit_summit_matrix.py / emit_evolution.py - the SUMMIT side of estMatrix and the `evolution` block for NVDA (SAB's model, US$ millions, NVIDIA fiscal years). Written Nov 2 2026. Labels: js/summit-map/nvda.js. Dumps: scripts/consensus/dumps/nvda_summit/ (get_fundamentals, projection_history, pulled 2026-11-02; the 2026-11-18 dump pulled 2026-11-18).",
  "metrics": {
   "rev": "REV",
   "dc": "DC_REVENUE",
@@ -16,7 +16,7 @@
  "decimals": {
   "_default": 1
  },
- "_vintages_note": "lastActual from the data: 2025-12-12 stands after 3Q FY26 (its FY2026 = reported 1Q-3Q + its 4Q); 2026-03-04 after 4Q FY26 (FY2026 = 215,938, the release); 2026-08-28 after 2Q FY27 (FY2027 = reported 1Q-2Q + its 3Q + 4Q).",
+ "_vintages_note": "lastActual from the data: 2025-12-12 stands after 3Q FY26 (its FY2026 = reported 1Q-3Q + its 4Q); 2026-03-04 after 4Q FY26 (FY2026 = 215,938, the release); 2026-08-28 after 2Q FY27 (FY2027 = reported 1Q-2Q + its 3Q + 4Q). 2026-11-18 after 3Q FY27 (FY2027 = reported 1Q-3Q + its 4Q 136,865; FY2028 quarters are real, they sum to the annual 771,962).",
  "vintages": [
   {
    "id": "2025-12-12",
@@ -41,9 +41,17 @@
     "q": "2Q27",
     "y": "2026"
    }
+  },
+  {
+   "id": "2026-11-18",
+   "label": "Nov 18, 2026",
+   "lastActual": {
+    "q": "3Q27",
+    "y": "2026"
+   }
   }
  ],
- "_horizon_note": "Quarters past the model's current fiscal year are placeholders (2025-12-12: 1Q27 onward are not quarters - 1Q27 124,643, 4Q27 195,323 do not tie to anything; 2026-03-04 and 2026-08-28: 1Q28 repeats 1Q27). Kept: 2025-12-12 -> 4Q26 only; 2026-03-04 -> 1Q27-4Q27; 2026-08-28 -> 3Q27-4Q27.",
+ "_horizon_note": "Quarters past the model's current fiscal year are placeholders (2025-12-12: 1Q27 onward are not quarters - 1Q27 124,643, 4Q27 195,323 do not tie to anything; 2026-03-04 and 2026-08-28: 1Q28 repeats 1Q27). Kept: 2025-12-12 -> 4Q26 only; 2026-03-04 -> 1Q27-4Q27; 2026-08-28 -> 3Q27-4Q27. 2026-11-18 -> 4Q27-4Q28 (clipped to the axis).",
  "horizon": {
   "2025-12-12": {
    "q": 1
@@ -53,6 +61,9 @@
   },
   "2026-08-28": {
    "q": 2
+  },
+  "2026-11-18": {
+   "q": 5
   }
  },
  "_basis_note": "BASIS: in the 2025-12-12 file the model's adjusted lines (OP_INCOME, ADJ_GROSS_PROFIT, EBITDA, EARNINGS) exclude SBC (NVIDIA's old non-GAAP); from 2026-03-04 they do not (NVIDIA's current definition). The 2025-12-12 cells of opinc_ng / gp / mebitda are removed after generation (post-filter in the build) so the two bases never share a line.",

@@ -104,7 +104,7 @@ export var NVDA_CE_CONS=(function(){
 })();
 
 // Summit for a quarter's Setup (`setup.us`): READ from the Results dataset — each quarter carries the model as frozen at its latest
-// submit BEFORE that print (2Q FY27: 2026-03-04; 3Q and 4Q FY27: 2026-08-28). The model projects revenue, Data Center, gross profit
+// submit BEFORE that print (2Q FY27: 2026-03-04; 3Q FY27: 2026-08-28; 4Q FY27: 2026-11-18). The model projects revenue, Data Center, gross profit
 // and operating income (both bases) by quarter; every other line reads "—".
 var FROM_SUMMIT=[['Revenue','rev'],['Data Center','dc'],['Gross profit','gp'],['Operating income','opinc_ng'],['Operating income (GAAP)','opinc']];
 function ceSummitUs(p){
@@ -124,7 +124,7 @@ export var NVDA_CALL_EARNINGS={ ticker:'NVDA', quarters:[
   // has no column for it: the generated Bloomberg block’s quarter list stops at Q4 FY27 (the newest NVIDIA file is 2026-11-12, pre-print); it comes with the first post-print pull.
   { q:'Q4 FY27', status:'upcoming', date:'quarter ending Jan 31 2027 (14 weeks) · results expected late February 2027',
     setup:{
-      source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-11-12 (Dani’s pull, five days before the print — the last before it); a post-print refresh is pending · Summit DCF model: 2026-08-28 submit, frozen (a post-print model update is pending) · guidance: '+SRC_8K_NOV+' · call: Q3 FY27 earnings call, Nov 17 2026 (third-party transcript, The Singju Post)',
+      source:'Bloomberg (BST) — BBG_CONSENSUS.txt, snapshot 2026-11-12 (Dani’s pull, five days before the print — the last before it); a post-print refresh is pending · Summit DCF model: 2026-11-18 submit, after the Q3 print, frozen · guidance: '+SRC_8K_NOV+' · call: Q3 FY27 earnings call, Nov 17 2026 (third-party transcript, The Singju Post)',
       asOf:'2026-11-12',
       notes:{
         'Revenue':{ t:'Guide $130.0B ±3% ($126.1B–$133.9B); 14-week quarter; no China DC compute', h:'<p>The outlook: “Revenue is expected to be $130.0 billion, plus or minus 3%. We are not assuming any Data Center compute revenue from China in our outlook.” The quarter “includes an additional week.” The midpoint is +12% on the third quarter’s $115.8B (derived).</p><p>Colette Kress, Q3 FY27 call: “We expect sequential growth to be driven by robust demand for AI infrastructure and the continued ramp of Vera Rubin.” … “New export controls were released by the U.S. Commerce Department this week. However, with demand far exceeding supply, we expect our performance to remain strong.”</p><p>The Street figure is the consensus of Sep 9 2026, before both the Q3 print and this outlook.</p><p>Source: '+SRC_8K_NOV+'.</p>' },

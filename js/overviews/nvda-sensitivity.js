@@ -5,7 +5,7 @@
 // everything else at the base, read the implied share price off a 5×5 grid; exit multiple EV/EBITDA or P/E.
 //
 // What changed for NVDA:
-//   • BASE = the Summit DCF model, ONE snapshot FROZEN in ./nvda-sensitivity-data.js (2026-08-28; rule 10) — the same
+//   • BASE = the Summit DCF model, ONE snapshot FROZEN in ./nvda-sensitivity-data.js (2026-11-18; rule 10) — the same
 //     snapshot as the last Target Multiple and Submit History rows, so the EBITDA here is the one Target Multiple values
 //     (A26): at the base, operating income + the held bridge (D&A + interest income) = the model's EBITDA exactly.
 //   • CATEGORIES = Data Center and everything else (Gaming, ProViz, Automotive, OEM & other) — the model projects Data
@@ -16,9 +16,9 @@
 //   • BASE YEAR FY2026 = reported revenue (js/results-data/nvda.js act: Data Center 193,737; other 22,201).
 //   • STREET = Bloomberg consensus through js/results-data/nvda.js annual `cons` (Data Center, Edge Computing for the other
 //     line, non-GAAP gross profit ÷ revenue, to FY2029). FY2030 falls back to the model, visibly.
-//   • EXIT MULTIPLE starts at the MODEL's own target multiples (EV/EBITDA 18.0× and P/E 22.0× on FY2028 — Target
+//   • EXIT MULTIPLE starts at the MODEL's own target multiples (EV/EBITDA 15.0× and P/E 18.0× on FY2028 at 2026-11-18 — Target
 //     Multiple, ./nvda-target-multiple-data.js), never at a hand-picked number; yours to move.
-//   • NET DEBT = the model's own balance at the 2026-08-28 submit (NVDA_TM.balance), its source named (A23).
+//   • NET DEBT = the model's own balance at the newest submit (NVDA_TM.balance, 2026-11-18), its source named (A23).
 //   • YEARS FY2027–FY2030 (base FY2026 + 4), NVIDIA fiscal years.
 
 import { SUMMIT_CAT, SUMMIT_POS, SUMMIT_NEG } from '../viz-palette.js';
@@ -482,7 +482,7 @@ function renderMatrix(scope){
     '<b>EV/EBITDA</b>: EV = EBITDA × multiple, less net debt, over shares. <b>P/E</b>: the operating-income delta flows through tax onto the model’s earnings, so '+
     'the base reproduces the model’s EARNINGS ÷ SHARES. '+
     '<b>Exit multiple</b>: starts at the model’s own target multiples (EV/EBITDA '+(_tmLast.ev?_tmLast.ev.mult.toFixed(1)+'× on FY'+_tmLast.ev.year:'—')+', P/E '+(_tmLast.pe?_tmLast.pe.mult.toFixed(1)+'× on FY'+_tmLast.pe.year:'—')+', Target Multiple; here applied to the year picked above) and is yours to move. '+
-    '<b>Net debt</b> = '+fmtB(_netDebt)+' ('+esc(ND_SRC)+': debt $33.9B − cash, marketable and equity securities $99.4B, DCF NVDA.xlsm). '+
+    '<b>Net debt</b> = '+fmtB(_netDebt)+' ('+esc(ND_SRC)+': the model’s net cash of $29.1B, the one balance figure the Nov 18 file carries — its debt and cash cells are empty, DCF NVDA.xlsm). '+
     'This grid prices the year alone, so its base cells do not equal the workbook’s recorded targets ($'+(_tmLast.ev?_tmLast.ev.pt.toFixed(2):'—')+' EV/EBITDA, $'+(_tmLast.pe?_tmLast.pe.pt.toFixed(2):'—')+' P/E): the workbook also adds the FY2027 cash flow (free cash flow to the firm on EV/EBITDA, to equity on P/E) and divides by FY2027 shares (see Target Multiple). '+
     '<b>Street (Bloomberg consensus</b>'+(CONS.asOf?', as of '+esc(CONS.asOf):'')+'): growth of each line as a CAGR off the FY2026 actual to Bloomberg’s estimate, gross margin = '+
     'Bloomberg non-GAAP gross profit ÷ Bloomberg revenue; the other line is Bloomberg’s Edge Computing estimate (its total and Data Center estimates come from different contributors, so their difference is not used); where Bloomberg has no figure (FY2030) the driver stays at the model and the strip says so. '+

@@ -9,7 +9,7 @@
 //
 // Every series is a POINTER into js/results-data/nvda.js (`results:<key>`), so each number has one home. The engine
 // reads `act` and falls back to `summit`, never `cons`. Summit (rule 10, frozen on purpose, not live): the model
-// (snapshot 2026-08-28) projects Data Center but not Hyperscale, ACIE or Edge Computing, so the platforms carry no
+// (snapshot 2026-11-18) projects Data Center but not Hyperscale, ACIE or Edge Computing, so the platforms carry no
 // forecast here and `summit` below stays empty; the Data Center forecast is in Evolution ▸ Results and Estimates.
 // Hyperscale / ACIE are on the basis after the 2Q FY27 reclassification of one customer from ACIE to Hyperscale,
 // which NVIDIA has published for 1Q26 onward — so the platform axis starts at 1Q26 (annual: FY2025–FY2026).

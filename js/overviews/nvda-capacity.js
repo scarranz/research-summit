@@ -8,7 +8,7 @@
 //                                            ÷ (1 − gross margin)
 // against the Summit model and Bloomberg consensus for the same period. The two assumptions are controls.
 // Data, not retyped: commitments from ./nvda-splc.js (10-Q Note 10), inventories from the same file, model revenue and
-// adjusted gross margin from ./nvda-sensitivity-data.js (Summit 2026-08-28, frozen), consensus and reported revenue
+// adjusted gross margin from ./nvda-sensitivity-data.js (Summit 2026-11-18, frozen), consensus and reported revenue
 // from js/results-data/nvda.js.
 
 import { SUMMIT_CAT } from '../viz-palette.js';
@@ -45,7 +45,7 @@ function chain(){
     box(true, '1 · Input: supply secured', 'Supply and capacity commitments of <b>$'+COMMIT[0].t+'B</b> as of Oct 25, 2026 — “primarily related to the multi-year procurement of memory supply” — plus <b>'+bn(INV[3].b)+'</b> of inventories (3Q FY27 CFO commentary and supplemental financial information).')+
     box(false, '2 · Capacity', 'How many advanced-packaging (CoWoS) wafers and GPUs that supply turns into. NVIDIA does not disclose it, and TSMC does not report capacity by customer.')+
     box(false, '3 · Units × price', 'GPUs or racks shipped and their price. NVIDIA publishes neither (Top Line ▸ Segments).')+
-    box(true, '4 · Revenue', 'Reported Data Center revenue to 3Q FY27; forward revenue from the Summit model (2026-08-28) and Bloomberg consensus.')+
+    box(true, '4 · Revenue', 'Reported Data Center revenue to 3Q FY27; forward revenue from the Summit model (2026-11-18) and Bloomberg consensus.')+
   '</div>';
 }
 function table(){
@@ -61,7 +61,7 @@ function controls(){
   var g=st.gm!=null?st.gm:null;
   return '<div class="nv-cap-ctl">'+
     '<label class="nv-cap-l">Gross margin <select class="nv-cap-gm">'+
-      '<option value="model"'+(g==null?' selected':'')+'>Summit model, each year (73.7% · 72.5% · 72.8%)</option>'+
+      '<option value="model"'+(g==null?' selected':'')+'>Summit model, each year ('+ROWS.map(function(r){ return (modelGm(r.y)*100).toFixed(1)+'%'; }).join(' · ')+')</option>'+
       [0.70,0.72,0.74,0.76].map(function(v){ return '<option value="'+v+'"'+(g===v?' selected':'')+'>'+(v*100).toFixed(0)+'% every year</option>'; }).join('')+
     '</select></label>'+
     '<label class="nv-cap-l">Share of commitments that becomes cost of revenue <input class="nv-cap-share" type="range" min="50" max="100" step="5" value="'+Math.round(st.share*100)+'"> <b class="nv-cap-sv">'+Math.round(st.share*100)+'%</b></label>'+
@@ -81,7 +81,7 @@ export function nvdaCapacityBody(){
       '<div class="rs-collap-b"><div class="rs-ft-scroll" id="nvCapTbl">'+table()+'</div></div></div>'+
   '</div>';
   h+='<div class="ov-foot">Sources — supply and capacity commitments by fiscal year and inventories: NVIDIA 3Q FY27 CFO commentary (8-K Ex. 99.2, Nov 17, 2026) and Supplemental Financial Information (Ex. 99.3), as of Oct 25, 2026; January figure: Form 10-K FY2026 (Note 12). '+
-    'Revenue: reported 1Q–3Q FY27 (8-K) — the rest of FY2027 is the full-year figure less the reported first nine months ('+bn(H1_27)+'); Summit DCF model, snapshot 2026-08-28 (frozen, not live), with its adjusted gross margin; Bloomberg consensus as of '+esc(nvdaResults.estMatrix.cons.vintages[nvdaResults.estMatrix.cons.vintages.length-1].id)+'. '+
+    'Revenue: reported 1Q–3Q FY27 (8-K) — the rest of FY2027 is the full-year figure less the reported first nine months ('+bn(H1_27)+'); Summit DCF model, snapshot 2026-11-18 (frozen, not live), with its adjusted gross margin; Bloomberg consensus as of '+esc(nvdaResults.estMatrix.cons.vintages[nvdaResults.estMatrix.cons.vintages.length-1].id)+'. '+
     'Commitments are scheduled payments, not cost recognised in the year, so the coverage is a cross-check, not a forecast. Capacity, units and prices are not disclosed by NVIDIA or by TSMC per customer.</div>';
   return h;
 }

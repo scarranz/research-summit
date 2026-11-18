@@ -244,6 +244,57 @@ export var HS_BASIS = [
     note: '⚠ Like Amazon’s retail spend, not all of it is AI: Starship and Starlink satellites sit in the same total. Super Intelligence was 61% of CapEx in 2025 but 84–86% in 2Q–3Q26 — hover any bar for the split. 2Q25 and 4Q25 are derived from year-to-date totals, and the 2026 guide band is derived from the 4Q guide ($35–40B) on top of the three reported quarters.' },
 ];
 
+// ── 2c · WHAT WE PROJECT — SUMMIT MODELS vs BLOOMBERG CONSENSUS ───────────────
+// Annual CapEx, US$M, positive spend. Added Nov 18 2026 (SAB) as an input for NVDA's
+// earnings: the hyperscalers' spend is NVIDIA's data-center revenue line.
+//   summit — the company's Summit DCF, frozen from the MCP (CAPEX metric, the snapshot
+//            in `snap`). null = the model has no column for that year.
+//   cons   — Bloomberg consensus (BBG_CONSENSUS.txt, the newest row = `consAsOf`):
+//            HEADLINE_CAPEX for AMZN / META, CF_PURCHASE_OF_FIXED_PROD_ASSETS for GOOGL.
+//   act    — reported 2025 on the model's own basis (10-K).
+//   summit null for the whole row = no Summit model (MSFT, SPCX): those two come from
+//            SAB's Bloomberg FA pull "SPCX MSFT BBG CONSENSUS.xlsx" (Drive, DCF/Technology - SAB/3,
+//            saved Nov 18 2026), not from BBG_CONSENSUS.txt, which does not carry them.
+// Bases differ — see `basis`. Two totals: the HOUSE VIEW (Summit where a model exists,
+// Bloomberg otherwise) and Bloomberg for all five.
+export var HS_PROJ_YEARS = ['2025', '2026', '2027', '2028', '2029'];
+export var HS_PROJ = {
+  amzn: { snap: '2026-10-30', consAsOf: '2026-10-30',
+    act:    131819,
+    summit: [null, 238922, 298965, 343810, 429763],
+    cons:   [null, 222352, 293523, 330059, null],
+    basis: 'Gross purchases of property and equipment. Amazon guides on cash CapEx net of proceeds and incentives (~$220B for 2026), so the model sits ~$19B above the guide on the same spend.' },
+  googl: { snap: '2026-10-29', consAsOf: '2026-10-30',
+    act:    91447,
+    summit: [null, 205672, 308634, 385792, 388738],
+    cons:   [null, 201378, 319997, 367395, null],
+    basis: 'Purchases of property and equipment. 2026 = reported 1Q–3Q + the model’s 4Q, against a $195–205B guide (the model is at the top of the range).' },
+  meta:  { snap: '2026-10-22', consAsOf: '2026-10-26',
+    act:    72220,
+    summit: [null, 135442, 203000, 223300, null],
+    cons:   [null, 139721, 220372, 238178, null],
+    basis: 'Purchases of property and equipment. 2026 = reported 1Q–3Q + the model’s 4Q26 ($52.4B); the model’s own annual cell still reads $145.0B. The model stops at 2028. Bloomberg follows Meta’s definition (incl. finance-lease principal), a few percent higher.' },
+  // Bloomberg IS_CAPEX_AS_REPORTED = CapEx INCLUDING finance leases (Microsoft's own
+  // headline, the basis of the rest of this tab), fiscal years to June:
+  //   FY26 145,300 (reported) · FY27 220,722 · FY28 256,054 · FY29 288,302 · FY30 316,562.
+  // Calendarised as ½ FY(n) + ½ FY(n+1) — DERIVED. (The excl.-leases line, HEADLINE_CAPEX,
+  // is FY27 191,839 / FY28 225,949 / FY29 251,211.) 2025A = the four calendar-2025
+  // quarters stated on the calls ($21.4 + 24.2 + 34.9 + 37.5B), as on the Guidance Ladder.
+  msft:  { snap: null, consAsOf: '2026-11-18',
+    act:    118000,
+    summit: [null, null, null, null, null],
+    cons:   [null, 183011, 238388, 272178, 302432],
+    basis: 'No Summit model — Bloomberg only. CapEx including finance leases, Microsoft’s headline. Bloomberg has it by fiscal year (June): FY27 $220.7B, FY28 $256.1B; each calendar year here is half of one fiscal year plus half of the next (derived). CY2026 $183B sits above the ~$170B guide — the guide already reflects the 3P capacity delays and the lease reclassification.' },
+  // Bloomberg HEADLINE_CAPEX, total company (Space + Connectivity + Super Intelligence),
+  // calendar years: 2025 20,737 (reported) · 2026 84,344 · 2027 277,866 · 2028 279,363 · 2029 306,966.
+  // Super Intelligence segment (IS_CAPEX_AS_REPORTED, SEG5185647327): 2026 73,927 · 2027 265,233 · 2028 271,063.
+  spcx:  { snap: null, consAsOf: '2026-11-18',
+    act:    20737,
+    summit: [null, null, null, null, null],
+    cons:   [null, 84344, 277866, 279363, 306966],
+    basis: 'No Summit model — Bloomberg only. Total company, as on the rest of this tab. 2026 $84.3B lands inside the $83–88B the guides imply; 2027 more than triples to $277.9B, of which $265.2B is Super Intelligence — the largest single step in the table.' },
+};
+
 // ── 3 · CONTRACTED BACKLOG ────────────────────────────────────────────────────
 // US$B. Alphabet "Cloud backlog", Amazon "backlog", Microsoft "commercial RPO".
 // Meta has none by design — it sells no contracted cloud capacity. That absence

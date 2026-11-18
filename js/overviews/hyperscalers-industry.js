@@ -30,6 +30,7 @@ import {
   HS_CSP_QTRS, HS_CSP_REV, HS_CSP_OI, HS_CSP_NOTES,
   HS_THEME_QTRS, HS_THEMES,
   HS_GW_SPCX_TOTAL, HS_GW_SPCX_NOTES, HS_SPCX_SI_CAPEX,
+  HS_PROJ, HS_PROJ_YEARS,
 } from './hyperscalers-data.js';
 
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -600,6 +601,7 @@ function quarterlyBody(){
       'Six quarters are derived rather than stated (Amazon 2Q24/3Q24/4Q25, Meta 1Q25, SpaceX 2Q25/4Q25) — marked in the tooltip and listed in the data file.</p>' +
       table(yrRows, [''].concat(HS_YEARS)) +
     '</div>' +
+    projBody() +
     sec('Every reported quarter') +
     '<div class="hs-card">' +
       '<div class="hs-chart-head"><span class="hs-chart-t">Reported CapEx by quarter</span>' +
@@ -611,6 +613,62 @@ function quarterlyBody(){
     '<div class="hs-card hs-card--warn"><ul class="hs-src">' + basis + '</ul></div>' +
     sec('Table') +
     '<div class="hs-card">' + table(rows, [''].concat(LABELS)) + '</div>';
+}
+
+// What the Summit models project for each company's CapEx, against Bloomberg.
+// One row per company (Summit on top when a model exists, Bloomberg under it), then
+// two totals — the HOUSE VIEW (Summit where we have a model, Bloomberg otherwise) and
+// Bloomberg for all five — with their growth: the line NVDA's data-center revenue rides on.
+function projBody(){
+  var Y = HS_PROJ_YEARS;
+  function b(v){ return v == null ? '<span class="hs-na">—</span>' : '$' + (v / 1000).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'B'; }
+  function gr(v, p){ return (v == null || !p) ? '' : ' <span class="hs-sub">' + (v >= p ? '+' : '−') + Math.abs((v / p - 1) * 100).toFixed(0) + '%</span>'; }
+  var ids = HS_COMPANIES.map(function(c){ return c.id; });
+  function hasModel(id){ return HS_PROJ[id].summit.some(function(v){ return v != null; }); }
+  var head = '<tr><th></th><th>Source</th>' + Y.map(function(y, i){ return '<th class="num">' + y + (i ? 'E' : 'A') + '</th>'; }).join('') + '</tr>';
+  function line(vals, strong){
+    return vals.map(function(v, i){
+      var t = b(v); if (strong) t = '<b>' + t + '</b>';
+      return '<td class="num">' + t + (i ? gr(v, vals[i - 1]) : '') + '</td>';
+    }).join('');
+  }
+  var rows = '';
+  ids.forEach(function(id){
+    var p = HS_PROJ[id], c = co(id), m = hasModel(id);
+    var k = [p.act].concat(p.cons.slice(1));
+    var lbl = '<td' + (m ? ' rowspan="2"' : '') + '>' + dot(id) + '<b>' + c.ticker + '</b></td>';
+    if (m){
+      var s = [p.act].concat(p.summit.slice(1));
+      rows += '<tr>' + lbl + '<td>Summit <span class="hs-sub">' + esc(p.snap) + '</span></td>' + line(s) + '</tr>' +
+        '<tr><td><span class="hs-sub">Bloomberg ' + esc(p.consAsOf) + '</span></td>' +
+        k.map(function(v, i){ return '<td class="num"><span class="hs-sub">' + (i ? b(v) : '') + '</span></td>'; }).join('') + '</tr>';
+    } else {
+      rows += '<tr>' + lbl + '<td>Bloomberg <span class="hs-sub">' + esc(p.consAsOf) + ' · no model</span></td>' + line(k) + '</tr>';
+    }
+  });
+  // A year is totalled only when every name has a number — a partial sum would read as a fall.
+  function tot(pick){
+    return Y.map(function(y, i){
+      var vs = ids.map(function(id){ return i === 0 ? HS_PROJ[id].act : pick(id, i); });
+      return vs.some(function(v){ return v == null; }) ? null : vs.reduce(function(a, v){ return a + v; }, 0);
+    });
+  }
+  var th = tot(function(id, i){ return hasModel(id) ? HS_PROJ[id].summit[i] : HS_PROJ[id].cons[i]; });
+  var tc = tot(function(id, i){ return HS_PROJ[id].cons[i]; });
+  var mod = ids.filter(hasModel).map(function(id){ return co(id).ticker; }).join(', ');
+  rows += '<tr class="hs-tot"><td rowspan="2"><b>Total, five</b></td><td>House view <span class="hs-sub">Summit for ' + esc(mod) + '</span></td>' + line(th, true) + '</tr>' +
+    '<tr><td>Bloomberg</td>' + line(tc) + '</tr>';
+  var notes = ids.map(function(id){
+    return '<li>' + dot(id) + '<b>' + co(id).ticker + '</b> — ' + esc(HS_PROJ[id].basis) + '</li>';
+  }).join('');
+  return sec('What we project — Summit models vs consensus') +
+    '<div class="hs-card">' +
+      '<p class="hs-body">Annual CapEx each Summit model carries, with the Bloomberg consensus under it; Microsoft and SpaceX have no Summit model and show Bloomberg only. This is the demand side of NVIDIA’s data-center line: the total is what the five are set to spend, and its growth is the ceiling on what they can buy.</p>' +
+      '<div class="hs-tw"><table class="hs-table"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div>' +
+      '<p class="hs-cap">US$, calendar years. 2025 = reported, on each row’s basis. Growth is year over year. <b>House view</b> = Summit for the three names we model, Bloomberg for the other two. A total is left blank in a year where any name has no column (Meta’s model and Bloomberg’s AMZN/GOOGL/META rows stop at 2028). Bases are not identical across names — see the notes — so treat the total as an order of magnitude, not to the billion.</p>' +
+      '<ul class="hs-src">' + notes + '</ul>' +
+      '<p class="hs-cap">Sources: Summit DCF models (frozen, snapshot dates per row); Bloomberg consensus — BBG_CONSENSUS (AMZN, GOOGL, META, newest row each) and SAB’s Bloomberg pull of Nov 18 2026 (MSFT, SPCX); reported 2025 from each 10-K / S-1 and Microsoft’s calls.</p>' +
+    '</div>';
 }
 
 // ─── Tab 3 · Backlog & Coverage ───────────────────────────────────────────────

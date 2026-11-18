@@ -62,7 +62,7 @@ var PXQ = function(label){
 export var nvdaSegments = {
   company: 'NVIDIA',
   updated: 'Nov 2026',
-  source: 'Market-platform revenue: NVIDIA quarterly CFO commentaries (8-K Ex. 99.2) and the 2Q FY27 Form 10-Q (Note 13, Revenue by Market Platform), on the basis after the 2Q FY27 reclassification; 3Q27 from the 3Q FY27 CFO commentary (8-K, Nov 17, 2026), to $0.1B until the 10-Q; 3Q26–4Q26 and the FY2025–FY2026 Hyperscale / ACIE split from Bloomberg’s recast history, which adds up to the reported Data Center. Definitions quoted from the 1Q FY27 earnings release and the FY2026 Form 10-K. Other cuts: reportable segments and the old market platforms from the CFO commentaries (FY2020–FY2026), geography from the FY2026 10-K Note 16 (customer headquarters, prior years recast). Customers: FY2026 10-K and 2Q FY27 10-Q concentration notes; Bloomberg Supply Chain Analysis (estimates). All series read through from js/results-data/nvda.js. Summit DCF model (snapshot 2026-08-28, frozen on purpose, not live) projects Data Center only, so the platforms carry no forecast on this tab.',
+  source: 'Market-platform revenue: NVIDIA quarterly CFO commentaries (8-K Ex. 99.2) and the 2Q FY27 Form 10-Q (Note 13, Revenue by Market Platform), on the basis after the 2Q FY27 reclassification; 3Q27 from the 3Q FY27 CFO commentary (8-K, Nov 17, 2026), to $0.1B until the 10-Q; 3Q26–4Q26 and the FY2025–FY2026 Hyperscale / ACIE split from Bloomberg’s recast history, which adds up to the reported Data Center. Definitions quoted from the 1Q FY27 earnings release and the FY2026 Form 10-K. Other cuts: reportable segments and the old market platforms from the CFO commentaries (FY2020–FY2026), geography from the FY2026 10-K Note 16 and the 10-Qs (customer headquarters, prior years recast; China also as first reported, by billing location). Customers: FY2026 10-K and 2Q FY27 10-Q concentration notes; Bloomberg Supply Chain Analysis (estimates). All series read through from js/results-data/nvda.js. Summit DCF model (snapshot 2026-08-28, frozen on purpose, not live) projects Data Center only, so the platforms carry no forecast on this tab.',
 
   axis: {
     q: ['1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27'],
@@ -72,13 +72,22 @@ export var nvdaSegments = {
 
   // Series for the Other cuts that are not Results metrics: geography by customer headquarters (10-K Note 16).
   shared: {
-    g_us: { label: 'United States', short: 'United States', unit: 'usdM', scope: 'company', src: K10 + ' Note 16, by customer headquarters (recast)',
+    g_us: { label: 'United States', short: 'United States', unit: 'usdM', scope: 'company', src: K10 + ' Note 16 (years); quarters from the 10-Qs and the 3Q FY27 supplemental (8-K Ex. 99.3), by customer headquarters',
+      q: { act: { '3Q25': 19620, '4Q25': 23609, '1Q26': 25685, '2Q26': 32897, '3Q26': 39177, '4Q26': 51858, '1Q27': 63769, '2Q27': 60074, '3Q27': 72899 } },
       y: { act: { '2024': 31533, '2025': 77482, '2026': 149617 } } },
-    g_tw: { label: 'Taiwan', short: 'Taiwan', unit: 'usdM', scope: 'company', src: K10 + ' Note 16, by customer headquarters (recast)',
+    g_tw: { label: 'Taiwan', short: 'Taiwan', unit: 'usdM', scope: 'company', src: K10 + ' Note 16 (years); quarters from the 10-Qs and the 3Q FY27 supplemental (8-K Ex. 99.3), by customer headquarters',
+      q: { act: { '3Q25': 6188, '4Q25': 6236, '1Q26': 7648, '2Q26': 8902, '3Q26': 13751, '4Q26': 12044, '1Q27': 12006, '2Q27': 26985, '3Q27': 30295 } },
       y: { act: { '2024': 14912, '2025': 23600, '2026': 42345 } } },
-    g_cn: { label: 'China (incl. Hong Kong)', short: 'China', unit: 'usdM', scope: 'company', src: K10 + ' Note 16, by customer headquarters (recast)',
+    g_cn: { label: 'China (incl. Hong Kong)', short: 'China', unit: 'usdM', scope: 'company', src: K10 + ' Note 16 (years); quarters from the 10-Qs and the 3Q FY27 supplemental (8-K Ex. 99.3), by customer headquarters',
+      q: { act: { '3Q25': 8142, '4Q25': 7818, '1Q26': 9659, '2Q26': 3985, '3Q26': 2973, '4Q26': 3060, '1Q27': 4550, '2Q27': 7880, '3Q27': 11050 } },
       y: { act: { '2024': 12330, '2025': 25048, '2026': 19677 } } },
-    g_oth: { label: 'Other', short: 'Other', unit: 'usdM', scope: 'company', src: K10 + ' Note 16, by customer headquarters (recast)',
+    // China as ORIGINALLY reported, on the billing-location basis NVIDIA used until 2Q FY26 (each 10-Q / 10-K as filed;
+    // fourth quarters = the 10-K year − the 10-Q nine months). Not comparable with g_cn: never drawn on the same chart.
+    g_cn_bill: { label: 'China (incl. Hong Kong) — billing location', short: 'China (billing)', unit: 'usdM', scope: 'company', src: 'NVIDIA 10-Q and 10-K filings FY2023–2Q FY26, as originally filed (billing location)',
+      q: { act: { '1Q23': 2081, '2Q23': 1602, '3Q23': 1148, '4Q23': 954, '1Q24': 1590, '2Q24': 2740, '3Q24': 4030, '4Q24': 1946, '1Q25': 2491, '2Q25': 3667, '3Q25': 5416, '4Q25': 5534, '1Q26': 5522, '2Q26': 2769 } },
+      y: { act: { '2021': 3886, '2022': 7111, '2023': 5785, '2024': 10306, '2025': 17108 } } },
+    g_oth: { label: 'Other', short: 'Other', unit: 'usdM', scope: 'company', src: K10 + ' Note 16 (years); quarters from the 10-Qs and the 3Q FY27 supplemental (8-K Ex. 99.3), by customer headquarters',
+      q: { act: { '3Q25': 1132, '4Q25': 1668, '1Q26': 1070, '2Q26': 959, '3Q26': 1105, '4Q26': 1165, '1Q27': 1290, '2Q27': 1282, '3Q27': 1600 } },
       y: { act: { '2024': 2147, '2025': 4367, '2026': 4299 } } },
   },
   derived: {
@@ -278,18 +287,31 @@ export var nvdaSegments = {
     {
       key: 'geo', label: 'Geography', sub: 'by where customers are headquartered',
       lede: 'The same revenue by the headquarters of NVIDIA’s direct customers — not where the chips end up. Taiwan is large because the system builders (ODMs) are based there.',
-      note: 'Annual only: FY2026 10-K, Note 16. NVIDIA switched from billing location to customer headquarters in 3Q FY26 and recast the prior years.',
+      note: 'Customer-headquarters basis, the one NVIDIA adopted in 3Q FY26. Years: FY2026 10-K, Note 16 (FY2024–FY2025 recast). Quarters: 3Q25 and 3Q26 from the 3Q FY26 10-Q; 1Q26, 2Q26, 1Q27 and 2Q27 from the FY2027 10-Qs (current quarter and the recast year-ago column); 3Q27 from the 3Q FY27 supplemental financial information (8-K Ex. 99.3); 4Q25 = FY2025 recast − the recast nine months in the 3Q FY26 10-Q; 4Q26 = FY2026 − nine months. Each quarter adds up to total revenue. 1Q25–2Q25 were never published on this basis. For China before 3Q25, see the billing-location cut below — the two bases are not comparable (on the new basis China is larger: 1Q26 $9.7B vs $5.5B as first reported).',
       caveat: 'Headquarters, not end use: NVIDIA estimates 76% of FY2026 Data Center revenue from Taiwan-headquartered customers went to end customers in the United States and Europe.',
       tenK: { text: 'Revenue by geographic area is based upon the location of the customers’ headquarters. The end customer and shipping location may be different from our customers’ headquarters location.', where: K10 + ', Note 16' },
       cite: { form: '10-K', period: 'FY2026', accession: '0001045810-26-000021', url: URL_K },
-      spans: 'FY2024–FY2026, from the FY2026 10-K.',
-      axis: { y: ['2024', '2025', '2026'] },
-      views: ['y'],
+      spans: 'Quarterly 3Q25–3Q27; annual FY2024–FY2026.',
+      axis: { q: ['3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27'], y: ['2024', '2025', '2026'] },
+      views: ['q', 'y'],
       series: [
         { key: 'g_us', ref: 'shared:g_us', label: 'United States' },
         { key: 'g_tw', ref: 'shared:g_tw', label: 'Taiwan' },
         { key: 'g_cn', ref: 'shared:g_cn', label: 'China (incl. Hong Kong)' },
         { key: 'g_oth', ref: 'shared:g_oth', label: 'Other' },
+      ],
+    },
+    {
+      key: 'geo_bill', label: 'China — before the basis change', sub: 'as originally reported, by billing location (FY2021–2Q FY26)',
+      lede: 'China as NVIDIA first reported it, by where customers were billed. It shows the long arc through the US export rules, but not the level: on today’s headquarters basis the same quarters are larger.',
+      note: 'Each 10-Q and 10-K as filed; fourth quarters = the 10-K year − the 10-Q nine months. NVIDIA moved to customer headquarters in 3Q FY26, so this series stops at 2Q26 and is never drawn with the Geography cut above. Hopper / H20 shipments to China in the period: $4.6B in 1Q26, none in 2Q26 (CFO commentaries).',
+      tenK: { text: 'Revenue by geographic area is based upon the billing location of the customer. The end customer and shipping location may be different from our customer’s billing location.', where: 'FY2025 Form 10-K, Note 16' },
+      cite: { form: '10-K', period: 'FY2025', accession: '0001045810-25-000023', url: 'https://www.sec.gov/Archives/edgar/data/1045810/000104581025000023/nvda-20250126.htm' },
+      spans: 'Quarterly 1Q23–2Q26; annual FY2021–FY2025.',
+      axis: { q: ['1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26'], y: ['2021', '2022', '2023', '2024', '2025'] },
+      views: ['q', 'y'],
+      series: [
+        { key: 'g_cn_bill', ref: 'shared:g_cn_bill', label: 'China (incl. Hong Kong) — billing location' },
       ],
     },
   ],

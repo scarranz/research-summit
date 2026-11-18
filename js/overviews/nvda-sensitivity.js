@@ -482,7 +482,7 @@ function renderMatrix(scope){
     '<b>EV/EBITDA</b>: EV = EBITDA × multiple, less net debt, over shares. <b>P/E</b>: the operating-income delta flows through tax onto the model’s earnings, so '+
     'the base reproduces the model’s EARNINGS ÷ SHARES. '+
     '<b>Exit multiple</b>: starts at the model’s own target multiples (EV/EBITDA '+(_tmLast.ev?_tmLast.ev.mult.toFixed(1)+'× on FY'+_tmLast.ev.year:'—')+', P/E '+(_tmLast.pe?_tmLast.pe.mult.toFixed(1)+'× on FY'+_tmLast.pe.year:'—')+', Target Multiple; here applied to the year picked above) and is yours to move. '+
-    '<b>Net debt</b> = '+fmtB(_netDebt)+' ('+esc(ND_SRC)+': the model’s net cash of $29.1B, the one balance figure the Nov 18 file carries — its debt and cash cells are empty, DCF NVDA.xlsm). '+
+    '<b>Net debt</b> = '+fmtB(_netDebt)+' ('+esc(ND_SRC)+': debt $32.4B less cash and securities $97.7B, DCF NVDA.xlsm). '+
     'This grid prices the year alone, so its base cells do not equal the workbook’s recorded targets ($'+(_tmLast.ev?_tmLast.ev.pt.toFixed(2):'—')+' EV/EBITDA, $'+(_tmLast.pe?_tmLast.pe.pt.toFixed(2):'—')+' P/E): the workbook also adds the FY2027 cash flow (free cash flow to the firm on EV/EBITDA, to equity on P/E) and divides by FY2027 shares (see Target Multiple). '+
     '<b>Street (Bloomberg consensus</b>'+(CONS.asOf?', as of '+esc(CONS.asOf):'')+'): growth of each line as a CAGR off the FY2026 actual to Bloomberg’s estimate, gross margin = '+
     'Bloomberg non-GAAP gross profit ÷ Bloomberg revenue; the other line is Bloomberg’s Edge Computing estimate (its total and Data Center estimates come from different contributors, so their difference is not used); where Bloomberg has no figure (FY2030) the driver stays at the model and the strip says so. '+

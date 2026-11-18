@@ -23,11 +23,12 @@
 //
 // Checks before freezing (playbook §6.3): price target ÷ fair value = 1.053 / 1.053 on 2026-11-18, 1.112 / 1.112 on
 // 2026-08-28 and 1.281 / 1.281 on 2026-03-04 (consistent per submit).
-// 2026-11-18 ties in the workbook (DCF NVDA.xlsm ▸ Discounted Cash Flow, file of Nov 18 2026, read 2026-11-18): P/E = (18 ×
-// FY2028 earnings $422,142M + FY2027 FCFE $239,665M) = $7,838,221M ÷ FY2027 diluted shares 23,988M = $326.76; EV/EBITDA =
-// 15 × FY2028 EBITDA $516,213M + FY2027 FCFF $215,272M = EV $7,958,471M, + the model’s net cash $29,093M (row “Net
-// Debt”, added to EV) = $7,987,564M → $332.99. ⚠ In this file the Value-of-Firm block’s Debt and Cash cells are 0: the
-// balance enters only as that one net figure (Aug: debt $33,875M and cash $99,369M, net cash $65,494M).
+// 2026-11-18 ties in the workbook (DCF NVDA.xlsm ▸ Discounted Cash Flow, the RE-SUBMIT of Nov 18 2026 13:28 with Bloomberg
+// online — the 12:32 file had been saved offline, debt/cash 0 and a stale price; replaced in the MCP under the same date):
+// P/E = (18 × FY2028 earnings $422,142M + FY2027 FCFE $239,665M) = $7,838,221M ÷ FY2027 diluted shares 23,987M = $326.77;
+// EV/EBITDA = 15 × FY2028 EBITDA $516,213M + FY2027 FCFF $215,263M = EV $7,958,462M, + the model’s FY2027 YEAR-END net
+// cash $29,093M (row “Net Debt”, column FY2027) = $7,987,555M → $332.99. Unlike Aug, the recorded EV target adds the
+// projected FY2027 net cash, not today’s balance (debt $32,371M, cash $97,731M = net cash $65,360M, the Value-of-Firm block).
 // Earlier submits: Both 2026-08-28 targets tie in the workbook (DCF NVDA.xlsm ▸ Discounted Cash Flow,
 // file of Aug 28 2026, read 2026-11-09): P/E = (22 × FY2028 earnings $395,606M + FY2027 free cash flow to equity
 // $232,436M) = $8,935,771M ÷ FY2027 diluted shares 24,150M = $370.00; EV/EBITDA = 18 × FY2028 EBITDA $483,971M + FY2027
@@ -38,8 +39,9 @@ export var NVDA_TM = {
   model: '12da9a59-d0b8-4317-a214-80b70760c532', pulled: '2026-11-18',
   // The model's own balance at the newest submit (DCF sheet): the net debt Live uses, so a Live target at the recorded
   // multiple reads off the same balance as the recorded one (A23: the source is named in the foot). The 2026-11-18 file
-  // carries only the net figure (debt and cash cells are 0), so it is stored as debt 0 / cash = the net cash.
-  balance: { d: '2026-11-18', debt: 0, cash: 29093, src: 'Summit DCF model balance at the 2026-11-18 submit (DCF NVDA.xlsm ▸ Discounted Cash Flow: net cash $29.1B, the one figure the file carries — its debt and cash cells are empty)' },
+  // is today’s balance (3Q FY27), as in Aug; the recorded EV target instead adds the projected FY2027 year-end net cash
+  // ($29.1B), so Live at 15× reads ~$1.5 a share above the recorded $332.99.
+  balance: { d: '2026-11-18', debt: 32371, cash: 97731, src: 'Summit DCF model balance at the 2026-11-18 submit (DCF NVDA.xlsm ▸ Discounted Cash Flow, Value of Firm: debt $32.4B; cash, marketable and equity securities $97.7B)' },
   snaps: [
     { d: '2025-12-12', after: '3Q26', px: 174.82, wacc: 0.20958122,
       val: {
@@ -93,22 +95,22 @@ export var NVDA_TM = {
         2028: { rev: 670087.28358209, ebitda: 430132.56756757, earn: 372561.22641509 },
         2029: { rev: 863857.16666667, ebitda: 542333.2, earn: 466765 }
       } },
-    { d: '2026-11-18', after: '3Q27', px: 152.00, wacc: 0.29208745,
+    { d: '2026-11-18', after: '3Q27', px: 151.89, wacc: 0.29208701,
       val: {
-        ev: { method: 'EV / EBITDA', mult: 15.0, year: 2028, basis: 'Forward', pt: 332.9860273, fv: 316.12782217, upside: 1.079788, flags: [] },
-        pe: { method: 'P / E', mult: 18.0, year: 2028, basis: 'Forward', pt: 326.76020096, fv: 310.1875727, upside: 1.040708, flags: [] }
+        ev: { method: 'EV / EBITDA', mult: 15.0, year: 2028, basis: 'Forward', pt: 332.99095399, fv: 316.13252124, upside: 1.081325, flags: [] },
+        pe: { method: 'P / E', mult: 18.0, year: 2028, basis: 'Forward', pt: 326.76539486, fv: 310.19250317, upside: 1.042218, flags: [] }
       },
       y: {
         2025: { rev: 130497, ebitda: 84932.047, earn: 70069.8809, sh: 24804, act: true },
         2026: { rev: 215938, ebitda: 136224.6765, earn: 110555.801095, sh: 24514, act: true },
-        2027: { rev: 430544.95, ebitda: 288285.289, earn: 235401.8437775, sh: 23987.68421053 },
-        2028: { rev: 771961.8925, ebitda: 516213.25768664, earn: 422141.99756979, sh: 22775.56299841 },
-        2029: { rev: 1017815.71425, ebitda: 689014.70353181, earn: 569845.99421762, sh: 22775.56299841 }
+        2027: { rev: 430544.95, ebitda: 288285.289, earn: 235401.8437775, sh: 23987.30304826 },
+        2028: { rev: 771961.8925, ebitda: 516213.26029379, earn: 422141.99973372, sh: 22775.18183614 },
+        2029: { rev: 1017815.71425, ebitda: 689014.71303883, earn: 569846.00220352, sh: 22775.18183614 }
       },
       cons: {
-        2027: { rev: 419120.64179104, ebitda: 279404.48571429, earn: 243249.98181818 },
-        2028: { rev: 720278.94029851, ebitda: 476093.41176471, earn: 396035.24074074 },
-        2029: { rev: 929754.73584906, ebitda: 603096.75, earn: 511119.09302326 }
+        2027: { rev: 419925.85074627, ebitda: 279674.91428571, earn: 243817.22641509 },
+        2028: { rev: 722790.0, ebitda: 476902.52941177, earn: 396807.71153846 },
+        2029: { rev: 926769.46296296, ebitda: 603096.75, earn: 512447.73170732 }
       } }
   ]
 };

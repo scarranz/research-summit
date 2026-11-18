@@ -123,8 +123,8 @@ export const EST_STORE = {
       2024: { rev: 60922, ebitda: 35729.51, earnings: 29288.15, shares: 24940 },
       2025: { rev: 130497, ebitda: 84932.05, earnings: 70069.88, shares: 24804 },
       2026: { rev: 215938, ebitda: 136224.68, earnings: 110555.8, shares: 24514 },
-      2027: { rev: 430544.95, ebitda: 288285.29, earnings: 235401.84, shares: 23987.684 },
-      2028: { rev: 771961.89, ebitda: 516213.26, earnings: 422142.0, shares: 22775.563 },
+      2027: { rev: 430544.95, ebitda: 288285.29, earnings: 235401.84, shares: 23987.303 },
+      2028: { rev: 771961.89, ebitda: 516213.26, earnings: 422142.0, shares: 22775.182 },
     },
     // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
     // included. It has to be all-or-nothing: the archive carries GAAP lines while

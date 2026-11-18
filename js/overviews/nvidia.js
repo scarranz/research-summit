@@ -54,7 +54,7 @@ function bullets(arr){ return '<ul class="ov-bullets">'+arr.map(function(b){retu
 
 // OV-F (playbook §8): the Overview's only footer; the collapsibles carry none of their own. Replaces the old SOURCES
 // (B2 #9), which cited a Summit model synced Jun 4 2026 — the Overview no longer shows any Summit figure.
-var OV_SOURCES = 'Sources — NVIDIA FY2026 Form 10-K (SEC EDGAR, filed Feb 25, 2026) for revenue, segment, geographic, margin, customer and headcount figures; the FY2024 10-K, NVIDIA investor-relations press releases and the 2026 proxy statement for history and leadership; NVIDIA product pages for products. Peer figures from each company’s latest Form 10-K (SEC EDGAR, as of Nov 2026) and, for NVIDIA’s forward multiples, Bloomberg consensus FY2027 (as of Sep 9, 2026). Market cap and peer multiples are live (Massive price ÷ those figures). Forward figures are estimates, not company guidance.';
+var OV_SOURCES = 'Sources — NVIDIA FY2026 Form 10-K (SEC EDGAR, filed Feb 25, 2026) for revenue, segment, geographic, margin, customer and headcount figures; the FY2024 10-K, NVIDIA investor-relations press releases and the 2026 proxy statement for history and leadership; NVIDIA product pages for products. Peer figures from each company’s latest Form 10-K (SEC EDGAR, as of Nov 2026) and, for NVIDIA’s forward multiples, Bloomberg consensus FY2027 (as of Nov 12, 2026). Market cap and peer multiples are live (Massive price ÷ those figures). Forward figures are estimates, not company guidance.';
 
 // ── Layered-reveal overview (progressive disclosure) ─────────────────────────────
 // The tab opens minimal — snapshot, one positioning line, KPIs and ONE signature
@@ -459,13 +459,13 @@ function wireModal(root){
 // latest 10-K (SEC XBRL, pulled 2026-11-02): EPS = diluted GAAP; EBITDA = operating income + depreciation +
 // amortization of intangibles (as reported in the cash-flow statement); nd = total debt − cash − current
 // marketable securities (balance sheet); gt = revenue growth of that fiscal year. Forward (NVIDIA only — the
-// peers are not in the Bloomberg file): Bloomberg consensus FY2027 as of Sep 9 2026 — EPS $9.94, EBITDA $272.4B
-// (Bloomberg's "comparable" EBITDA adds back SBC; its FY2026 is $140.1B vs $133.2B here), revenue +89.7%.
+// peers are not in the Bloomberg file): Bloomberg consensus FY2027 as of Nov 12 2026 (the last file before the 3Q FY27 print) — EPS $9.94, EBITDA $273.0B
+// (Bloomberg's "comparable" EBITDA adds back SBC; its FY2026 is $140.1B vs $133.2B here), revenue +90.4%.
 // The same array and state (N_SC) feed Valuation ▸ Peers (VA-PEERS). Replaces the old COMP bubble chart with seeded
 // multiples (B2 #8, and the PEERS constant of #36).
 var N_PEERS=[
-  { tk:'NVDA', n:'NVIDIA', hl:true, epsT:4.90, epsF:9.94, ebitdaT:133230, ebitdaF:272392, nd:-54088, gt:65.5, gf:89.7,
-    src:'10-K FY2026 (year to Jan 25 2026); forward: Bloomberg consensus FY2027, Sep 9 2026',
+  { tk:'NVDA', n:'NVIDIA', hl:true, epsT:4.90, epsF:9.94, ebitdaT:133230, ebitdaF:272978, nd:-54088, gt:65.5, gf:90.4,
+    src:'10-K FY2026 (year to Jan 25 2026); forward: Bloomberg consensus FY2027, Nov 12 2026',
     why:'The profile company: data-center GPUs, CPUs, networking and full AI systems, plus gaming and workstation graphics.' },
   { tk:'AMD', n:'AMD', epsT:2.65, epsF:null, ebitdaT:7265, ebitdaF:null, nd:-7330, gt:34.3, gf:null,
     src:'10-K FY2025 (year to Dec 27 2025)',
@@ -521,7 +521,7 @@ function stdPeerScatter(sfx){
   '</svg></div>';
   h+='<div class="asc-chips nvda-sc-chips"></div>';
   h+='<div class="ov-diagram-cap asc-cap-end">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only listed peers plot here. '+
-    '<span class="ave-subh-note">Multiples = live price ÷ figures from each company\'s latest 10-K (fiscal years differ: NVIDIA and Marvell to late January, Broadcom to early November, Qualcomm to late September, AMD and Intel to December), or Bloomberg consensus FY2027 (as of Sep 9, 2026) for NVIDIA\'s forward; market caps are live. Private AI-chip rivals have no market multiple.</span></div>';
+    '<span class="ave-subh-note">Multiples = live price ÷ figures from each company\'s latest 10-K (fiscal years differ: NVIDIA and Marvell to late January, Broadcom to early November, Qualcomm to late September, AMD and Intel to December), or Bloomberg consensus FY2027 (as of Nov 12, 2026) for NVIDIA\'s forward; market caps are live. Private AI-chip rivals have no market multiple.</span></div>';
   // Valuation ▸ Peers only: the receipt under the read (chart standard rule 3), OPEN by default.
   if(sfx==='dd') h+='<div class="rs-collap nvda-sc-collap">'+
       '<button type="button" class="rs-collap-h nvda-sc-tblh" data-selfwired="1"></button>'+

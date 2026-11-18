@@ -56,7 +56,9 @@ for v in V:
     asof2id[v['id']] = v['lastActual']['q']
 rep = {}   # line -> {period: value}
 for r in rows:
-    m, d, y = r['data_as_of'].split('/'); vid = '%s-%02d-%02d' % (y, int(m), int(d))
+    da = str(r['data_as_of']).strip()
+    if '/' in da: m, d, y = da.split('/'); vid = '%s-%02d-%02d' % (y, int(m), int(d))
+    else: vid = da[:10]                       # the export also writes ISO dates (2026-11-12, Dani's pre-print pull)
     la = asof2id.get(vid)
     if not la: continue
     dropped = {k for k, ids in mp.get('dropVintages', {}).get('q', {}).items() if vid in ids}   # old non-GAAP basis: no reported value from these

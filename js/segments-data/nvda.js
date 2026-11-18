@@ -62,10 +62,10 @@ var PXQ = function(label){
 export var nvdaSegments = {
   company: 'NVIDIA',
   updated: 'Nov 2026',
-  source: 'Market-platform revenue: NVIDIA quarterly CFO commentaries (8-K Ex. 99.2) and the 2Q FY27 Form 10-Q (Note 13, Revenue by Market Platform), on the basis after the 2Q FY27 reclassification; 3Q26–4Q26 and the FY2025–FY2026 Hyperscale / ACIE split from Bloomberg’s recast history, which adds up to the reported Data Center. Definitions quoted from the 1Q FY27 earnings release and the FY2026 Form 10-K. Other cuts: reportable segments and the old market platforms from the CFO commentaries (FY2020–FY2026), geography from the FY2026 10-K Note 16 (customer headquarters, prior years recast). Customers: FY2026 10-K and 2Q FY27 10-Q concentration notes; Bloomberg Supply Chain Analysis (estimates). All series read through from js/results-data/nvda.js. Summit DCF model (snapshot 2026-08-28, frozen on purpose, not live) projects Data Center only, so the platforms carry no forecast on this tab.',
+  source: 'Market-platform revenue: NVIDIA quarterly CFO commentaries (8-K Ex. 99.2) and the 2Q FY27 Form 10-Q (Note 13, Revenue by Market Platform), on the basis after the 2Q FY27 reclassification; 3Q27 from the 3Q FY27 CFO commentary (8-K, Nov 17, 2026), to $0.1B until the 10-Q; 3Q26–4Q26 and the FY2025–FY2026 Hyperscale / ACIE split from Bloomberg’s recast history, which adds up to the reported Data Center. Definitions quoted from the 1Q FY27 earnings release and the FY2026 Form 10-K. Other cuts: reportable segments and the old market platforms from the CFO commentaries (FY2020–FY2026), geography from the FY2026 10-K Note 16 (customer headquarters, prior years recast). Customers: FY2026 10-K and 2Q FY27 10-Q concentration notes; Bloomberg Supply Chain Analysis (estimates). All series read through from js/results-data/nvda.js. Summit DCF model (snapshot 2026-08-28, frozen on purpose, not live) projects Data Center only, so the platforms carry no forecast on this tab.',
 
   axis: {
-    q: ['1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27'],
+    q: ['1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27'],
     y: ['2025', '2026'],
   },
   summit: {},   // frozen on purpose, not live — empty: the model has no Hyperscale / ACIE / Edge series (DC is read through Results)
@@ -231,8 +231,8 @@ export var nvdaSegments = {
       note: 'CFO commentary, "Revenue by Reportable Segments", each quarter since 1Q FY21 (FY2020 quarters from the FY2021 commentaries’ year-ago column, when the segments were introduced). Segment operating income is in Bottom Line.',
       tenK: { text: 'We report our business results in two segments.', where: K10 + ', Item 1 — Our Businesses' },
       cite: { form: '10-K', period: 'FY2026', accession: '0001045810-26-000021', url: URL_K },
-      spans: 'Quarterly 1Q20–2Q27; annual FY2020–FY2026.',
-      axis: { q: ['1Q20', '2Q20', '3Q20', '4Q20', '1Q21', '2Q21', '3Q21', '4Q21', '1Q22', '2Q22', '3Q22', '4Q22', '1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27'],
+      spans: 'Quarterly 1Q20–3Q27; annual FY2020–FY2026.',
+      axis: { q: ['1Q20', '2Q20', '3Q20', '4Q20', '1Q21', '2Q21', '3Q21', '4Q21', '1Q22', '2Q22', '3Q22', '4Q22', '1Q23', '2Q23', '3Q23', '4Q23', '1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26', '3Q26', '4Q26', '1Q27', '2Q27', '3Q27'],
               y: ['2020', '2021', '2022', '2023', '2024', '2025', '2026'] },
       views: ['q', 'y'],
       series: [
@@ -349,6 +349,7 @@ export var nvdaSegments = {
       { name: 'Direct customer (unnamed, largest)', what: 'Data Center systems and components', seg: 'Compute & Networking', share: 22, shareBasis: 'filing', src: '10-K FY2026, Concentration of Revenue (FY2026)' },
       { name: 'Direct customer (unnamed, second)', what: 'Data Center systems and components', seg: 'Compute & Networking', share: 14, shareBasis: 'filing', src: '10-K FY2026, Concentration of Revenue (FY2026)' },
       { name: 'Direct customer (unnamed, largest in 2Q FY27)', what: 'Data Center systems and components', seg: 'Compute & Networking', share: 16, shareBasis: 'filing', src: '10-Q 2Q FY27, Concentration of Revenue (the quarter)' },
+      { name: 'Direct customer (unnamed, largest in 3Q FY27; the next two 11% each)', what: 'Data Center systems and components', seg: 'Compute & Networking', share: 14, shareBasis: 'filing', src: '3Q FY27 Supplemental Financial Information (8-K Ex. 99.3, Nov 17, 2026), Customer Concentration' },
       { name: 'One AI research and deployment company', what: 'Cloud services built on NVIDIA systems, bought from NVIDIA’s customers', seg: 'Data Center', shareNote: '“a meaningful amount” — not quantified', src: '10-K FY2026; 10-Q 2Q FY27' },
       { name: 'Microsoft', tk: 'MSFT', what: 'GB200 / GB300 rack capacity for Azure', seg: 'Hyperscale', share: 22.0, shareBasis: 'estimate', src: 'Bloomberg SPLC, 4Q FY26' },
       { name: 'Amazon.com', tk: 'AMZN', what: 'GPU capacity for AWS', seg: 'Hyperscale', share: 14.0, shareBasis: 'estimate', src: 'Bloomberg SPLC, 4Q FY26' },
@@ -358,6 +359,6 @@ export var nvdaSegments = {
       { name: 'Oracle', tk: 'ORCL', what: 'GPU capacity for Oracle Cloud Infrastructure', seg: 'Hyperscale', share: 2.0, shareBasis: 'estimate', src: 'Bloomberg SPLC, 4Q FY26' },
       { name: 'CoreWeave', tk: 'CRWV', what: 'Rack-scale systems for its GPU cloud', seg: 'ACIE', share: 1.4, shareBasis: 'estimate', src: 'Bloomberg SPLC, 4Q FY26' },
     ],
-    buysNote: 'The filing shares are of FY2026 or 2Q FY27 total revenue and refer to DIRECT customers (often system builders); Bloomberg’s rows mix end buyers (clouds) and system builders, so a cloud and the server maker that built its racks can both carry the same dollars. A Bloomberg weight that matches a filing share (Microsoft ~22% next to the unnamed 22%) does not show they are the same customer — the filings identify no one. What each buys is our reading of the platform it sits in (OURS).',
+    buysNote: 'The filing shares are of FY2026, 2Q FY27 or 3Q FY27 total revenue and refer to DIRECT customers (often system builders); Bloomberg’s rows mix end buyers (clouds) and system builders, so a cloud and the server maker that built its racks can both carry the same dollars. A Bloomberg weight that matches a filing share (Microsoft ~22% next to the unnamed 22%) does not show they are the same customer — the filings identify no one. What each buys is our reading of the platform it sits in (OURS).',
   },
 };

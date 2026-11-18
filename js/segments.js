@@ -63,6 +63,7 @@ import { GOOGL_THEMES } from './themes-data/googl.js';
 import { MA_THEMES } from './themes-data/ma.js';
 import { UBER_THEMES } from './themes-data/uber.js';
 import { LYFT_THEMES } from './themes-data/lyft.js';
+import { NVDA_THEMES } from './themes-data/nvda.js';
 import { SUMMIT_CAT, SUMMIT_MUTE } from './viz-palette.js';   // the portal's fixed categorical palette
 
 // The Notes taxonomy names segments in prose; the datasets key them. One map, stated once.
@@ -74,10 +75,11 @@ var THEME_SEG = {
   META: { 'Family of Apps': 'foa', 'Reality Labs': 'rl' },               // AI & compute, Costs & capital are company-wide
   GOOGL: { 'Google Services': 'svc', 'Google Cloud': 'cloud', 'Other Bets': 'bets' },   // AI & compute, Costs & capital are company-wide
   UBER: { 'Mobility': 'mobility', 'Delivery': 'delivery', 'Freight': 'freight' },   // AVs, membership, costs & capital are company-wide
-  LYFT: { 'Rideshare': 'lyft' },   // the one Lyft segment; AVs, Europe, media, costs & capital are company-wide
+  LYFT: { 'Rideshare': 'lyft' },
+  NVDA: { 'Hyperscale': 'hyper', 'AI Clouds, Industrial & Enterprise': 'acie', 'Edge Computing': 'edge' },   // market platforms; Data Center, supply, margins, China and leadership are company-wide   // the one Lyft segment; AVs, Europe, media, costs & capital are company-wide
   MA: { 'Consumer payments': 'pn', 'Commercial and new flows': 'pn', 'Value-added services': 'vas', 'Agentic and digital assets': 'vas' },   // guidance, costs and capital, regulation and litigation are company-wide
 };
-var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES, META: META_THEMES, GOOGL: GOOGL_THEMES, MA: MA_THEMES, UBER: UBER_THEMES, LYFT: LYFT_THEMES };
+var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES, META: META_THEMES, GOOGL: GOOGL_THEMES, MA: MA_THEMES, UBER: UBER_THEMES, LYFT: LYFT_THEMES, NVDA: NVDA_THEMES };
 var SEGMENTS_DATA = {
   AMZN: { seg: amznSegments, res: amznResults },
   DHR:  { seg: dhrSegments,  res: dhrResults  },
@@ -1342,7 +1344,7 @@ function secManagement(s){
       map[u.q].push({ theme: t.theme, items: u.items }); }); });
     // Newest first, by the label itself — encounter order breaks as soon as a theme opens later
     // than the one listed above it. Labels that are not 'Q# YYYY' keep their relative order.
-    var qKey = function(q){ var m = /^Q([1-4]) (\d{4})$/.exec(q); return m ? +m[2] * 10 + +m[1] : null; };
+    var qKey = function(q){ var m = /^Q([1-4]) (?:FY)?(\d{2}|\d{4})$/.exec(q); return m ? (m[2].length === 2 ? 2000 + +m[2] : +m[2]) * 10 + +m[1] : null; };   // 'Q3 2026' or a fiscal 'Q3 FY27' (NVDA)
     qs = qs.map(function(q, i){ return { q: q, i: i, k: qKey(q) }; })
       .sort(function(a, b){ return (a.k != null && b.k != null) ? b.k - a.k : b.i - a.i; })
       .map(function(e){ return e.q; });

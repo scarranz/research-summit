@@ -701,12 +701,13 @@ function nLiveOne(root, tk){ import('../api.js').then(function(m){ if(!m||!m.liv
 // AlexNet 2012, Tensor Core 2017, Mellanox 2020, Grace 2023, Blackwell 2024), Item 1A (export controls; the H20
 // $4.5B charge), Note 2 (Groq, Dec 2025: $13.0B paid in FY2026, $14.4B goodwill); NVIDIA press releases (IPO Jan 22
 // 1999; first quarterly dividend Nov 2012; Mellanox closing Apr 27 2020; Arm agreement Sep 13 2020 and termination
-// Feb 8 2022); FY2024 10-K (revenue $60.9B, Data Center $47.5B). Market-cap milestone: only the latest ($5T,
+// Feb 8 2022); FY2024 10-K (revenue $60.9B, Data Center $47.5B). Nov 2026 CEO transition: 8-K filed Nov 12 2026 (Item 5.02 +
+// Ex. 99.1) and the 3Q FY27 call (search firm, oversight committee; docs/calls/NVDA-latest.md). Market-cap milestone: only the latest ($5T,
 // Oct 29 2025). The old architecture timeline (TECH_TIMELINE, B2 #24) stays complete in Miscellaneous ▸ Technology;
 // its key launches are here. DESC's Mellanox sentence (B2 #3) lands in the 2020 item.
 var TIMELINE = [
   { y:'1993–98', t:'<b>Genesis:</b> Jensen Huang, Chris Malachowsky and Curtis Priem found <b>NVIDIA</b> in California (Apr 1993) to build graphics chips for PCs.',
-    d:'<ul class="ov-bullets"><li>Apr 1993 — incorporated in California; Jensen Huang is CEO from the start and still is.</li><li>The first products are graphics accelerators for PC games, sold to add-in-board makers.</li><li>Apr 1998 — reincorporated in Delaware, ahead of the listing.</li></ul>' },
+    d:'<ul class="ov-bullets"><li>Apr 1993 — incorporated in California; Jensen Huang is CEO from the start and stays CEO for 33 years, until Nov 2026.</li><li>The first products are graphics accelerators for PC games, sold to add-in-board makers.</li><li>Apr 1998 — reincorporated in Delaware, ahead of the listing.</li></ul>' },
   { y:'1999', t:'<b>IPO</b> on NASDAQ (Jan) and <b>GeForce 256</b>, which NVIDIA calls the invention of the GPU.',
     d:'<ul class="ov-bullets"><li>Jan 22, 1999 — initial public offering on NASDAQ.</li><li>Later that year — GeForce 256: graphics processing moved onto one chip, the GPU.</li><li>The GPU becomes the engine of PC gaming, the market that funds the next decade.</li></ul>' },
   { y:'2006', t:'<b>CUDA</b> opens the GPU to general-purpose computing — the software platform the AI era is later built on.' },
@@ -725,6 +726,8 @@ var TIMELINE = [
   { y:'Oct 2025', t:'First company to reach a <b>$5 trillion</b> market capitalization (Oct 29, 2025).' },
   { y:'Dec 2025', t:'<b>Groq</b>: non-exclusive license to its inference-chip technology plus hiring of its team — $13.0B paid in FY2026.',
     d:'<ul class="ov-bullets"><li>Dec 2025 — license agreement for Groq\'s language-processing-unit (LPU) technology; no customers, products or equity bought (10-K Note 2).</li><li>Recorded $14.4B of goodwill and a $2.5B technology intangible.</li><li>Almost twice what NVIDIA paid for Mellanox, its previous largest deal.</li></ul>' },
+  { y:'Nov 2026', t:'<b>CEO transition:</b> co-founder Jensen Huang resigns as President, CEO and director (Nov 11); CFO <b>Colette Kress</b> becomes Interim CEO and Harvey C. Jones the board’s <b>first-ever Chair</b>.',
+    d:'<ul class="ov-bullets"><li>Nov 11, 2026 — the board accepts Huang’s resignation, effective immediately; Kress is Interim CEO and stays EVP &amp; CFO; Jones, a director since 1993, is named Chair (8-K filed Nov 12, 2026, Item 5.02 and Ex. 99.1).</li><li>The board searches for a permanent CEO among internal and external candidates; on the Nov 17 call the Chair said Heidrick &amp; Struggles leads the search and that the board “does not intend to reinstate Jensen as CEO.”</li><li>Nov 17, 2026 — the board sets up a National Security and Export Control Oversight Committee of independent directors, senior external advisors and legal counsel (3Q FY27 call).</li></ul>' },
 ];
 function stdTimeline(){
   return '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
@@ -732,7 +735,8 @@ function stdTimeline(){
 
 // OV-1 Key Facts (playbook §8: 10 cells, this order). FY2026 10-K (filed 2026-02-25): cover (Delaware, Santa Clara),
 // Item 1 (incorporated in California Apr 1993, reincorporated in Delaware Apr 1998; ~42,000 employees at FY-end
-// Jan 25, 2026), Item 5 (cash dividends paid in FY2026). IPO: NVIDIA IR (Jan 22, 1999, NASDAQ). CEO: DEF 14A 2026.
+// Jan 25, 2026), Item 5 (cash dividends paid in FY2026). IPO: NVIDIA IR (Jan 22, 1999, NASDAQ). CEO: 8-K filed Nov 12 2026
+// (Item 5.02 + Ex. 99.1): Jensen Huang resigned Nov 11 2026; Colette Kress is Interim CEO.
 // Market cap is live (Massive via liveQuote), never seeded (rule 10). Replaces the old 6-cell SNAPSHOT banner (B2 #1);
 // the old multiples tiles moved to Valuation ▸ Target Multiple (B2 #2).
 var STD_FACTS = [
@@ -742,7 +746,7 @@ var STD_FACTS = [
   ['SEC filer','Domestic (10-K/10-Q/8-K)'],
   ['Founded','1993 (Jensen Huang, Chris Malachowsky & Curtis Priem)'],
   ['IPO','Jan 1999 · NASDAQ'],
-  ['CEO','Jensen Huang · co-founder, 1993 · CEO since 1993'],
+  ['CEO','Colette Kress · Interim CEO since Nov 2026 (also CFO) · co-founder Jensen Huang resigned Nov 11 2026'],
   ['Employees','~42,000 · Jan 2026 (FY-end)'],
   ['Dividend','Payer · quarterly'],
   ['Market cap','loading live quote…'],

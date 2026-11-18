@@ -703,6 +703,11 @@ function projBody(){
       '</div>' +
       '<div class="hs-canvas"><canvas id="hs-proj"></canvas></div>' +
       '<p class="hs-cap"><b>House view</b> = Summit for AMZN, GOOGL and META, Bloomberg for MSFT and SpaceX. A year is drawn only when every company shown has a number, so 2029 appears once the names without a 2029 column are hidden. Click a company in the legend to take it out of the chart, the table and both totals; drag across the chart (or up the y-axis) to zoom, double-click to reset. Hover a column for the total and its growth.</p>' +
+      '<div class="hs-chart-head" style="margin-top:18px"><span class="hs-chart-t">' + esc(totLab) + ' together — house view vs Bloomberg</span>' +
+        '<span class="hs-chart-u">US$B · one pair of bars per year · labels = total and growth</span></div>' +
+      (_view.projZoom.tot && (_view.projZoom.tot.win || _view.projZoom.tot.yr) ? '<div class="hs-seg" style="margin-bottom:10px"><button type="button" class="hs-seg-b hs-reset" data-preset="tot">Reset zoom</button></div>' : '') +
+      '<div class="hs-canvas"><canvas id="hs-proj-tot"></canvas></div>' +
+      '<p class="hs-cap">The same total as the table’s two bottom rows: the dark bar is the house view (Summit where we have a model), the light bar Bloomberg for all five. Each bar is labelled with its total and its growth on the year before; hover for the gap between the two. Companies hidden in the stacked chart’s legend drop out here too. Drag to zoom, double-click to reset.</p>' +
       sec('Summit against Bloomberg, company by company') +
       '<div class="hs-panels">' + panels + '</div>' +
       '<p class="hs-cap">Solid = Summit model, dashed = Bloomberg consensus; 2025 is reported. Same company colour in both, the line style carries the source. Hover a year for the gap between the two.</p>' +
@@ -756,7 +761,7 @@ function projChart(){
         legend: { position: 'top', align: 'start', labels: PROJ_LEG,
           onClick: function(e, item, legend){
             var ds = legend.chart.data.datasets[item.datasetIndex];
-            if (ds.cid){ _view.projHide[ds.cid] = !_view.projHide[ds.cid]; _view.projZoom.all = null; projRepaint(); return; }
+            if (ds.cid){ _view.projHide[ds.cid] = !_view.projHide[ds.cid]; _view.projZoom.all = null; _view.projZoom.tot = null; projRepaint(); return; }
             var m = legend.chart.getDatasetMeta(item.datasetIndex); m.hidden = !m.hidden; legend.chart.update();
           } },
         tooltip: Object.assign({}, PROJ_TIP, { callbacks: {
@@ -829,7 +834,100 @@ function projPanel(id){
     function(v1, v2){ st.yr = snapYRange(v1, v2); projPanel(id); },
     function(){ st.win = null; st.yr = null; projPanel(id); });
 }
-function projCharts(){ projChart(); HS_COMPANIES.forEach(function(c){ projPanel(c.id); }); }
+// Total and growth printed above each bar — the two numbers this chart exists for.
+var projBarLabels = {
+  id: 'hsProjBarLabels',
+  afterDatasetsDraw: function(chart){
+    var ctx = chart.ctx;
+    ctx.save();
+    ctx.textAlign = 'center';
+    chart.data.datasets.forEach(function(ds, di){
+      var meta = chart.getDatasetMeta(di);
+      if (meta.hidden) return;
+      meta.data.forEach(function(bar, i){
+        var v = ds.data[i];
+        if (v == null) return;
+        ctx.fillStyle = '#1E2733';
+        ctx.font = '600 10.5px Inter, sans-serif';
+        ctx.fillText('$' + Math.round(v).toLocaleString('en-US') + 'B', bar.x, bar.y - (ds.growth[i] != null ? 16 : 5));
+        if (ds.growth[i] != null){
+          ctx.fillStyle = INK_MUTED;
+          ctx.font = '500 9.5px Inter, sans-serif';
+          ctx.fillText((ds.growth[i] >= 0 ? '+' : '−') + Math.abs(ds.growth[i]).toFixed(0) + '%', bar.x, bar.y - 5);
+        }
+      });
+    });
+    ctx.restore();
+  },
+};
+
+function projTotChart(){
+  var el = document.getElementById('hs-proj-tot');
+  if (!el || !el.offsetParent) return;
+  if (_charts['hs-proj-tot']) { _charts['hs-proj-tot'].destroy(); delete _charts['hs-proj-tot']; }
+  var idx = HS_PROJ_YEARS.map(function(y, i){ return i; })
+    .filter(function(i){ return projTotal(i, 'house') != null || projTotal(i, 'bbg') != null; });
+  var st = projZ('tot');
+  if (st.win) idx = idx.slice(st.win[0], st.win[1] + 1);
+  function series(basis){
+    var vals = idx.map(function(i){ var t = projTotal(i, basis); return t == null ? null : t / 1000; });
+    var growth = idx.map(function(i){
+      var t = projTotal(i, basis), p = i ? projTotal(i - 1, basis) : null;
+      return (t == null || !p) ? null : (t / p - 1) * 100;
+    });
+    return { vals: vals, growth: growth };
+  }
+  var h = series('house'), k = series('bbg');
+  var y = projY(st);
+  // Headroom for the two-line label above the tallest bar.
+  if (!st.yr){
+    var mx = Math.max.apply(null, h.vals.concat(k.vals).filter(function(v){ return v != null; }));
+    y.suggestedMax = mx * 1.12;
+  }
+  var chart = new Chart(el.getContext('2d'), {
+    type: 'bar',
+    data: { labels: idx.map(projLab), datasets: [
+      { label: 'House view', data: h.vals, growth: h.growth, backgroundColor: '#354658',
+        borderRadius: 2, borderSkipped: false, categoryPercentage: 0.66, barPercentage: 0.9 },
+      { label: 'Bloomberg', data: k.vals, growth: k.growth, backgroundColor: '#A6B3C2',
+        borderRadius: 2, borderSkipped: false, categoryPercentage: 0.66, barPercentage: 0.9 },
+    ] },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      layout: { padding: { top: 6 } },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', align: 'start', labels: Object.assign({}, PROJ_LEG, { pointStyle: 'rect' }) },
+        tooltip: Object.assign({}, PROJ_TIP, { callbacks: {
+          label: function(c){
+            if (c.raw == null) return null;
+            var g = c.dataset.growth[c.dataIndex];
+            return c.dataset.label + ': ' + projFmt(c.raw * 1000) + (g != null ? ' (' + (g >= 0 ? '+' : '−') + Math.abs(g).toFixed(0) + '% YoY)' : '');
+          },
+          footer: function(items){
+            var a = items.filter(function(x){ return x.dataset.label === 'House view'; })[0];
+            var b = items.filter(function(x){ return x.dataset.label === 'Bloomberg'; })[0];
+            if (!a || !b || a.raw == null || b.raw == null || idx[items[0].dataIndex] === 0) return '';
+            var d = a.raw - b.raw;
+            return 'House view vs Bloomberg: ' + (d >= 0 ? '+' : '−') + projFmt(Math.abs(d) * 1000) + ' (' + (d >= 0 ? '+' : '−') + Math.abs((a.raw / b.raw - 1) * 100).toFixed(1) + '%)';
+          } } }),
+      },
+      scales: {
+        x: { grid: { display: false }, border: { color: AXIS }, ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' } } },
+        y: y,
+      },
+    },
+    plugins: [projBarLabels],
+  });
+  _charts['hs-proj-tot'] = chart;
+  var base = st.win ? st.win[0] : 0;
+  cspBrush(el, chart,
+    function(a, b){ st.win = [base + a, base + b]; projRepaint(); },
+    function(v1, v2){ st.yr = snapYRange(v1, v2); projRepaint(); },
+    function(){ st.win = null; st.yr = null; projRepaint(); });
+}
+
+function projCharts(){ projChart(); projTotChart(); HS_COMPANIES.forEach(function(c){ projPanel(c.id); }); }
 
 // ─── Tab 3 · Backlog & Coverage ───────────────────────────────────────────────
 // Deliberately NOT a dual-axis "backlog vs CapEx" chart. Two measures on two

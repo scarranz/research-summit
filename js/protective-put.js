@@ -141,8 +141,24 @@ const selectedRow = () => {
 // which on a name with LEAPS is the January a year ahead and on a thinner chain is
 // whatever sits closest. Nearest rather than "at least", because a put three years
 // out is as wrong an answer as one three weeks out.
-function defaultExpiry(dates) {
+//
+// A ticker can pin the month instead (SAB, Nov 20 2026: SPY on June 2027, to track
+// what protection to that date costs). Inside the month the standard monthly — the
+// third Friday — wins over the dailies and weeklies; if it is not listed, the last
+// date of the month. Month not listed at all → the one-year rule below.
+const PP_EXPIRY_MONTH = { SPY: '2027-06' };
+function defaultExpiry(dates, ticker) {
   if (!dates.length) return null;
+  const ym = PP_EXPIRY_MONTH[ticker];
+  const inMonth = ym ? dates.filter((d) => d.slice(0, 7) === ym) : [];
+  if (inMonth.length) {
+    // The monthly lands in the 15th–21st: a Friday, or the Thursday before when that
+    // Friday is a holiday (June 18 2027 is Juneteenth → SPY's June monthly is the 17th).
+    const wk3 = inMonth.filter((d) => +d.slice(8) >= 15 && +d.slice(8) <= 21);
+    const dow = (d) => new Date(d + 'T12:00:00Z').getUTCDay();
+    const third = wk3.find((d) => dow(d) === 5) || wk3.find((d) => dow(d) === 4);
+    return third || inMonth[inMonth.length - 1];
+  }
   const far = dates.filter((d) => daysTo(d) >= 150);
   const pool = far.length ? far : dates;
   return pool.reduce((best, d) =>
@@ -200,9 +216,10 @@ async function loadTicker(tk) {
   const ys = yearsOf(est), ey = estYearsOf(est);
   st.basisYear = ey.length ? ey[0] : (ys.length ? ys[ys.length - 1] : null);
   render();
-  st.expiries = await fetchExpiries(st.ticker);
+  const ym = PP_EXPIRY_MONTH[st.ticker];
+  st.expiries = await fetchExpiries(st.ticker, ym ? [`${ym}-01`] : []);
   if (!st.expiries.length) { st.err = `no listed options found for ${st.ticker}`; st.loading = false; render(); return; }
-  st.expiry = defaultExpiry(st.expiries);
+  st.expiry = defaultExpiry(st.expiries, st.ticker);
   await loadChain();
 }
 

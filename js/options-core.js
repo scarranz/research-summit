@@ -68,7 +68,7 @@ export async function mfetch(resource, ticker, params = {}) {
 // Expiries listed for a name. The edge function's `expirations` route asks for
 // calls, which is fine for puts too: listed equity options carry the same
 // expiration series on both sides.
-export async function fetchExpiries(ticker) {
+export async function fetchExpiries(ticker, alsoFrom = []) {
   const today = new Date().toISOString().slice(0, 10);
   let dates = [];
   try {
@@ -91,6 +91,14 @@ export async function fetchExpiries(ticker) {
       dates = [...new Set(dates.concat((j3.results || []).map((c) => c.expiration_date)))].filter(Boolean).sort();
     }
   } catch { /* what we have stands */ }
+  // A pane that targets a specific month (Protective Put opens SPY on June 2027)
+  // asks from that month directly: on a daily chain the pages above skip it.
+  for (const from of alsoFrom) {
+    try {
+      const j4 = await mfetch('expirations', ticker, { 'expiration_date.gte': from });
+      dates = [...new Set(dates.concat((j4.results || []).map((c) => c.expiration_date)))].filter(Boolean).sort();
+    } catch { /* what we have stands */ }
+  }
   return dates;
 }
 
@@ -235,7 +243,7 @@ export async function ensureFx(cur) {
 // A set is usable for multiples when it is in USD, or when we hold a rate to put
 // it in USD. Show nothing rather than something broken.
 export const usable = (e) => !!e && fxRate(e.currency) != null;
-export const yl = (e, y) => (e && e.years[y] && e.years[y].est) ? `${y}E` : `${y}`;
+export const yl = (e, y) => y == null ? '—' : (e && e.years[y] && e.years[y].est) ? `${y}E` : `${y}`;
 // Every year in the store is a CALENDAR year. For a company whose fiscal year is
 // not the calendar one, say which fiscal year that column actually is — NVIDIA's
 // calendar 2027 is its FY2028, and someone reading "2027E" next to a filing that

@@ -110,7 +110,7 @@ export const EST_STORE = {
     },
   },
   NVDA: {
-    name: "NVIDIA Corporation", currency: "USD", snapshot: "2026-08-28", lastActual: 2026,
+    name: "NVIDIA Corporation", currency: "USD", snapshot: "2026-11-18", lastActual: 2026,
     // NVIDIA's fiscal year ends in late January, so its FY2026 ran Feb-2025 to
     // Jan-2026 and is really CALENDAR 2025. Both sources below are keyed on the
     // fiscal label — the model and Bloomberg both call that year 2024/2025/2026 —
@@ -118,20 +118,27 @@ export const EST_STORE = {
     // with the rest of the book. Without it, picking "2026E" compared everyone
     // else's calendar 2026 against an NVIDIA year that had already been reported.
     fiscalOffset: 1,   // fiscal year = calendar year + 1
-    consensusAsOf: "2026-11-12", consensusFrom: "bbg",
+    consensusAsOf: "2026-11-20", consensusFrom: "bbg",
     // Net debt: NVIDIA is NET CASH. Massive's live EV − market cap read +$238B for
     // NVDA (Nov 12 2026), which inflated EV/EBITDA by ~1x, so the figure is carried
-    // here instead — the Summit model's own balance at the 2026-08-28 submit (DCF
-    // NVDA.xlsm ▸ Discounted Cash Flow): debt 33,875 − cash, marketable and equity
-    // securities 99,369 = −65,494. Same number the NVDA profile's Target Multiple and
-    // Sensitivity use (js/overviews/nvda-target-multiple-data.js), so a multiple means
-    // the same thing on both pages. Held flat across years, on BOTH sources.
+    // here instead — the Summit model's own balance at the 2026-11-18 submit (DCF
+    // NVDA.xlsm ▸ Discounted Cash Flow, Value of Firm, re-submit of 13:28): debt
+    // 32,371 − cash, marketable and equity securities 97,731 = −65,360. Same number
+    // the NVDA profile's Target Multiple and Sensitivity use
+    // (js/overviews/nvda-target-multiple-data.js), so a multiple means the same thing
+    // on both pages. Held flat across years, on BOTH sources.
+    // Summit: FY2027–FY2029 from the 2026-11-18 submit (get_fundamentals,
+    // projection_history: REV, EBITDA, EARNINGS, SHARES). FY2024–FY2026 are REPORTED
+    // years and keep the 2026-08-28 values: the Nov 18 re-submit broke the FY2025
+    // history (EBITDA 84,932 → 60,898, earnings 70,070 → 49,641), which SAB chose to
+    // leave in the workbook (NVDA.md §6, accepted 2026-11-18) — the profile does the same.
     summit: {
-      2024: { rev: 60922, ebitda: 35729.51, earnings: 29288.15, shares: 24940, netDebt: -65494 },
-      2025: { rev: 130497, ebitda: 85093.05, earnings: 70206.73, shares: 24804, netDebt: -65494 },
-      2026: { rev: 215938, ebitda: 136224.68, earnings: 110555.8, shares: 24514, netDebt: -65494 },
-      2027: { rev: 413720.31, ebitda: 276114.35, earnings: 225369.79, shares: 24150.438, netDebt: -65494 },
-      2028: { rev: 726095.49, ebitda: 483970.93, earnings: 395606.12, shares: 23786.876, netDebt: -65494 },
+      2024: { rev: 60922, ebitda: 35729.51, earnings: 29288.15, shares: 24940, netDebt: -65360 },
+      2025: { rev: 130497, ebitda: 85093.05, earnings: 70206.73, shares: 24804, netDebt: -65360 },
+      2026: { rev: 215938, ebitda: 136224.68, earnings: 110555.8, shares: 24514, netDebt: -65360 },
+      2027: { rev: 430544.95, ebitda: 288285.29, earnings: 235401.84, shares: 23987.303, netDebt: -65360 },
+      2028: { rev: 771961.89, ebitda: 516213.26, earnings: 422142, shares: 22775.182, netDebt: -65360 },
+      2029: { rev: 1017815.71, ebitda: 689014.71, earnings: 569846, shares: 22775.182, netDebt: -65360 },
     },
     // Bloomberg consensus straight from BBG_CONSENSUS.txt, ALL YEARS — history
     // included. It has to be all-or-nothing: the archive carries GAAP lines while
@@ -142,13 +149,16 @@ export const EST_STORE = {
     // ⚠ THE REPORTED YEARS THEREFORE DIFFER BETWEEN THE TWO TOGGLES. That is the
     // accounting basis, not a disagreement about the future, and the "vs" row in
     // the income statement now prints it on reported years instead of hiding it.
+    // Vintage data_as_of 11/20/2026 (export of Nov 20 13:57) — the first one after
+    // the 3Q FY27 print (Nov 19). Codes: SALES_REV_TURN, IS_COMPARABLE_EBITDA,
+    // IS_COMP_NET_INCOME_ADJUST_OLD, IS_SH_FOR_DILUTED_EPS.
     consensus: {
-      2024: { rev: 60922, ebitda: 38642, earnings: 32312, shares: 24940, netDebt: -65494 },
-      2025: { rev: 130497, ebitda: 88653, earnings: 74265, shares: 24804, netDebt: -65494 },
-      2026: { rev: 215938, ebitda: 140143, earnings: 116997, shares: 24514, netDebt: -65494 },
-      2027: { rev: 411122.21, ebitda: 272977.68, earnings: 226786.45, shares: 24257.04, netDebt: -65494 },
-      2028: { rev: 702864.3, ebitda: 460282.27, earnings: 381521.69, shares: 24018.36, netDebt: -65494 },
-      2029: { rev: 931141.43, ebitda: 603222.64, earnings: 509321.53, shares: 23735.36, netDebt: -65494 },
+      2024: { rev: 60922, ebitda: 38642, earnings: 32312, shares: 24940, netDebt: -65360 },
+      2025: { rev: 130497, ebitda: 88653, earnings: 74265, shares: 24804, netDebt: -65360 },
+      2026: { rev: 215938, ebitda: 140143, earnings: 116997, shares: 24514, netDebt: -65360 },
+      2027: { rev: 422222.26, ebitda: 280434.36, earnings: 235011.78, shares: 24219.24, netDebt: -65360 },
+      2028: { rev: 728636.2, ebitda: 476957.14, earnings: 396610.08, shares: 23865.63, netDebt: -65360 },
+      2029: { rev: 935654.91, ebitda: 597076.32, earnings: 512275.14, shares: 23410.96, netDebt: -65360 },
     },
   },
   TBBB: {

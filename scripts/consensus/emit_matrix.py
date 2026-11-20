@@ -120,6 +120,8 @@ def read_rows(rows, hdr, origin):
         if asof in ('', 'None'):                         # the LIVE row: the export leaves data_as_of blank -> dated by the file (today)
             asof=time.strftime('%Y-%m-%d', time.localtime(os.path.getmtime(TXT)))
             live=True
+        if asof.isdigit() and 4 <= len(asof) <= 5:      # an Excel date serial left unformatted in the live sheet (46338 -> 2026-11-12)
+            import datetime as _dt; asof = (_dt.date(1899,12,30) + _dt.timedelta(days=int(asof))).isoformat()
         if '/' in asof:                                  # 8/4/2026 -> 2026-08-04
             mm,dd,yy = asof.split('/'); asof = '%s-%02d-%02d' % (yy, int(mm), int(dd))
         slots = slot_index(r, idx)

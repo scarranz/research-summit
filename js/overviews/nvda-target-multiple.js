@@ -5,14 +5,14 @@
 //
 // What changed for NVDA:
 //   · data — ./nvda-target-multiple-data.js, the Summit DCF model's own valuation per submit, FROZEN from the Summit data
-//     store (rule 10): 2025-12-12, 2026-03-04 and 2026-08-28. Both legs value FY2028 from 2026-03-04 (18.0× EV/EBITDA,
-//     22.0× P/E); on 2025-12-12 the EV/EBITDA leg valued FY2028 (16.0×) and the P/E leg FY2027 (24.0×). Opens on FY2028.
+//     store (rule 10): 2025-12-12, 2026-03-04, 2026-08-28 and 2026-11-18. Both legs value FY2028 from 2026-03-04 (18.0×
+//     EV/EBITDA, 22.0× P/E through 2026-08-28; 15.0× and 18.0× on 2026-11-18); on 2025-12-12 the EV/EBITDA leg valued FY2028 (16.0×) and the P/E leg FY2027 (24.0×). Opens on FY2028.
 //   · basis break at 2026-03-04 (BREAK_ON): the 2025-12-12 submit's EBITDA and earnings still added back stock-based
 //     compensation; from 2026-03-04 they count it as a cost (NVIDIA's non-GAAP since Feb 2026). Flagged on the point, in
 //     the table and in the red note of the year.
 //   · the targets are the workbook's, never recomputed here: multiple × the FY2028 metric PLUS the FY2027 cash flow (FCFE
-//     on P/E, FCFF on EV/EBITDA) — tied in DCF NVDA.xlsm on 2026-11-09 (see the data file header).
-//   · net debt for Live = the model's own balance at the 2026-08-28 submit (NVDA_TM.balance), its source named in the
+//     on P/E, FCFF on EV/EBITDA) — tied in DCF NVDA.xlsm on 2026-11-09 and again for the 2026-11-18 file (data file header).
+//   · net debt for Live = the model's own balance at the newest submit, 2026-11-18 (NVDA_TM.balance), its source named in the
 //     footer (A23). Years are NVIDIA fiscal years; the target date is the end of the fiscal year before the forward year.
 //   · styles: css/overview.css (.tm-* rules, shared via :is(…)); no inline <style>.
 
@@ -648,7 +648,7 @@ function footHtml(){
     (pe?'; P/E <b>'+pe.mult.toFixed(1)+'×</b> FY'+pe.year+' → <b>'+fmtPx2(pe.pt)+'</b>, fair value '+fmtPx2(pe.fv)+' ('+signPct(pe.upside)+')':'')+
     '. Fair value = the 1-year target discounted at the model\'s WACC of '+(l.wacc*100).toFixed(1)+'%.'+pxTxt+' '+
     ((ev&&ev.flags.length)||(pe&&pe.flags.length)?'<b>⚑ The store flags this valuation as unreliable — read it with that caveat.</b> ':'')+
-    'How the workbook builds the targets (DCF NVDA.xlsm, sheet Discounted Cash Flow, 2026-08-28 submit): the multiple is applied to the FY2028 metric and the FY2027 cash flow is added. P/E: 22 × FY2028 earnings ($395.6B) + FY2027 free cash flow to equity ($232.4B) = $8.94T, ÷ 24,150M FY2027 diluted shares = $370.00. EV/EBITDA: 18 × FY2028 EBITDA ($484.0B) + FY2027 free cash flow to the firm ($208.0B) = EV $8.92T, less debt $33.9B plus cash and securities $99.4B = $8.99T of equity → $370.54. So target ÷ multiple is not the year\'s EPS or EBITDA. The targets are shown as recorded. '+
+    'How the workbook builds the targets (DCF NVDA.xlsm, sheet Discounted Cash Flow, 2026-11-18 submit): the multiple is applied to the FY2028 metric and the FY2027 cash flow is added. P/E: 18 × FY2028 earnings ($422.1B) + FY2027 free cash flow to equity ($239.7B) = $7.84T, ÷ 23,987M FY2027 diluted shares = $326.77. EV/EBITDA: 15 × FY2028 EBITDA ($516.2B) + FY2027 free cash flow to the firm ($215.3B) = EV $7.96T, plus the net cash the model projects for the end of FY2027 ($29.1B; today’s balance is $65.4B, which is what Live uses) = $7.99T of equity → $332.99. So target ÷ multiple is not the year’s EPS or EBITDA. At this submit the multiples came down (EV/EBITDA 18× → 15×, P/E 22× → 18×) while the FY2028 estimates went up, so the targets fell from about $370 to about $330. The targets are shown as recorded. '+
 'The realized multiple on '+esc(realizedOf().at)+' (the target date) is not shown: it needs that day\'s price and estimates. '+common+'Data sourced from Summit DCF models.';
 }
 

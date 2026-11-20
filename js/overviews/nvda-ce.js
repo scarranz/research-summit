@@ -2,10 +2,10 @@
 //
 // COPIED from ./lyft-ce.js (2026-11-05, itself uber-ce.js ← the Amazon closure as amended 2026-11-03: Setup and Post-Results read
 // as ONE list down the income statement). Data swapped:
-//   • CE_CONS / CALL_EARNINGS / NVDA_GUIDED from ./nvda-ce-data.js; NVDA_THEMES (themes-data/nvda.js) is the Notes seed (empty)
+//   • CE_CONS / CALL_EARNINGS / NVDA_GUIDED from ./nvda-ce-data.js; NVDA_THEMES (themes-data/nvda.js) is the Notes seed
 //   • CE_MARGIN_DEN / CE_STMT_ORDER / CE_TOPLINE carry NVIDIA's lines (money in US$ billions, diluted shares in millions)
-//   • only the Setup phase is published: Post-Results and Notes wait for an official call transcript (SAB, 2026-11-09 — the
-//     notes quote NVIDIA's 8-K only). Their code stays in this copy, unmounted, so EV-POST / EV-NOTES add data, not code.
+//   • Setup only until 2026-11-18; Post-Results and Notes published with the 3Q FY27 call (Nov 17 2026), the first NVIDIA call
+//     on file: docs/calls/NVDA-latest.md (third-party transcript, The Singju Post — NVIDIA publishes a replay, not text).
 //   • quarters are NVIDIA fiscal ('Q3 FY27'); the Setup chart is the Results engine on the NVDA_SETUP dataset.
 import { resultsHtml, initResults } from '../results.js';
 import { mountWatchList } from '../watchlist.js';
@@ -135,7 +135,7 @@ var _co=null;   // open company (id + ticker), captured in html/deepDiveHtml for
 
 // ════════════════════════════════════════════════════════════════════════════
 //  Evolution ▸ EARNINGS — the decision layer (docs/EARNINGS_CONVENTIONS.md v2.10)
-//  NVIDIA build of 2026-11-09 (machinery copied from lyft-ce.js). Published phase: Setup only (Post-Results · Notes unmounted); the Watch List is the SHARED
+//  NVIDIA build of 2026-11-09 (machinery copied from lyft-ce.js). Phases: Setup · Post-Results · Notes (the last two from 2026-11-18); the Watch List is the SHARED
 //  engine (js/watchlist.js) — persistent in Supabase (table company_themes, scoped by company_id) with sorting + the delete rule; the
 //  theme record sits below the mount.
 //  CONSENSUS: NVDA_CE_CONS (js/overviews/nvda-ce-data.js), generated from BBG_CONSENSUS.txt by scripts/consensus/emit_ce_nvda.py; the
@@ -150,7 +150,8 @@ var BLUE='#3E5A82', RED='#DC2626', YELLOW='#64748B', PURPLE='#3E5A82', AMBER='#6
 // Groups of the theme record (Aug 2026). Each theme carries a `seg`; the
 // "By theme" view groups them under these headers, in this order. Empty themes (no `updates`) are
 // tracked placeholders — the section exists so we can fill it as the notes come in.
-var NVDA_SEG_ORDER=[];   // filled with the Notes seed at EV-NOTES (axes of NVIDIA's business), empty until then
+// The axes of NVIDIA's business: Data Center as a whole, its two platforms, Edge, then the company-wide threads.
+var NVDA_SEG_ORDER=['Data Center','Hyperscale','AI Clouds, Industrial & Enterprise','Edge Computing','Supply & commitments','Margins & capital','China & export controls','Leadership & governance'];
 // The theme list is not stored on its own — the saved record only holds sub-themes — so any theme
 // that a saved sub-theme belongs to is folded back in on every render. Without this, a note filed
 // under a NEW theme (composer, Propose Notes, or a reload of a record that has one) never showed.
@@ -1462,6 +1463,8 @@ function ceResultsBody(c){
     // Kept at the very BOTTOM for now. NOT the tracking layer (Watch List) nor the meeting-critical
     // read (the scorecard). Includes non-trackable call colour.
     b+=ceHighlightsBlock(q.call, qk, q.q);
+    // NVIDIA: every pane ends with its sources (playbook §22).
+    if(r.source) b+='<div class="ov-foot" style="margin-top:12px">Sources — '+esc(r.source)+'.</div>';
     // (Foot caption "Numbers scored against the frozen expectation…" removed — Dani, Aug 2026.)
     b+='</div>';
     return b;
@@ -1542,16 +1545,24 @@ function ceSegsList(){
   return ceWlThemes().map(function(g){ return g.seg; });
 }
 function ceSubsOfSeg(seg){ var g=ceWlThemes().filter(function(x){ return x.seg===seg; })[0]; return g?g.themes:[]; }
-// Sub-theme names will be the ones in js/themes-data/nvda.js (empty until EV-NOTES). A newQuestions entry can name its target
-// explicitly (`theme:`); the regexes are only the fallback for free text — to be rewritten with the seed (unused while
-// Post-Results is unpublished).
+// Sub-theme names are the ones in js/themes-data/nvda.js. A newQuestions entry names its target explicitly (`theme:`); the
+// regexes are only the fallback for free text typed into a card.
 function ceGuessTarget(txt, explicit){
   var tx=(txt||'').toLowerCase(), theme=explicit||null;
   if(!theme){
-    if(/china|export|h20|licen/.test(tx)) theme='China & export controls';
-    else if(/gross margin|memory|input cost|mix/.test(tx)) theme='Gross margin';
-    else if(/supply|capacity|commitment|inventory/.test(tx)) theme='Supply & commitments';
-    else theme='Data Center demand';
+    if(/ceo|chair|board|search|leadership|succession/.test(tx)) theme='CEO transition and search';
+    else if(/china|export|hopper|licen/.test(tx)) theme='Licensed Hopper shipments to China';
+    else if(/gross margin|margin|pricing/.test(tx)) theme='Gross margin: Q4 bottom, FY28 72–73%';
+    else if(/buyback|repurchase|dividend|return/.test(tx)) theme='Capital return';
+    else if(/guarantee|financing|neocloud|land|power|shell/.test(tx)) theme='Neocloud financing and guarantees';
+    else if(/supply|commitment|memory|packaging|substrate/.test(tx)) theme='Supply commitments';
+    else if(/vera cpu|\bcpu/.test(tx)) theme='Vera CPU';
+    else if(/rubin|feynman|roadmap/.test(tx)) theme='Vera Rubin ramp';
+    else if(/network|photonic|cpo/.test(tx)) theme='Networking';
+    else if(/edge|workstation|\bpc\b/.test(tx)) theme='Edge Computing and PC demand';
+    else if(/sovereign|enterprise|physical ai|acie/.test(tx)) theme='Neoclouds, sovereign, enterprise and physical AI';
+    else if(/hyperscal|backlog/.test(tx)) theme='Hyperscale demand';
+    else theme='FY28 revenue outlook ~75%';
   }
   var seg=(ceSegsList()[0]||'Data Center');
   ceWlThemes().forEach(function(g){ if(g.themes.indexOf(theme)>=0) seg=g.seg; });
@@ -1650,14 +1661,14 @@ function ceHighlightsBlock(cc, qk, qlabel){
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // EVOLUTION ▸ EARNINGS CALLS — NVDA_THEMES with By theme ⇄ By quarter toggle + accordion
-// (9 threads across 10 calls, Q4 2023 → Q1 2026). Same contract as the other profiles' theme records,
-// ENHANCED with a status chip per theme (trend / promise-to-reconcile / watch) — the essence of
-// the dissolved Promise Tracker. Source: docs/calls/LYFT.md + LYFT-latest.md.
+// Same contract as the other profiles' theme records, with a status chip per theme (trend / promise-to-reconcile / watch).
+// NVIDIA seed: js/themes-data/nvda.js (from the Q3 FY27 call, docs/calls/NVDA-latest.md).
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 var CE_THST={ trend:{c:BRAND,l:'Confirmed trend'}, promise:{c:BRAND2,l:'Promise — reconcile'}, watch:{c:'#64748B',l:'Watch'} };
 // A promise open for one quarter and one open for four look identical without this. Age is the
 // signal: how long has it been unreconciled, or how many quarters has the silence run?
-function ceQnum(q){ var m=String(q||'').match(/Q(\d)\s+(\d{4})/); return m?((+m[2])*4+(+m[1])):null; }
+// NVIDIA's quarters are fiscal ('Q3 FY27'); a calendar label ('Q3 2026') still parses.
+function ceQnum(q){ var m=String(q||'').match(/Q(\d)\s+(?:FY)?(\d{2,4})\b/); if(!m) return null; var y=+m[2]; if(y<100) y+=2000; return y*4+(+m[1]); }
 function ceStAge(st, until){
   if(!st||typeof st!=='object'||!st.since) return '';
   // A closed hook (trackUntil set) is history, not an open count: say when it closed and how long it ran.
@@ -2237,19 +2248,31 @@ function nvdaInlineEdit(ct){
 export function nvdaCeHtml(c){
   _co=c;          // company (id + ticker) for the theme-record persistence
   ceStyleReset(); // one copy of the Earnings CSS per render
-  // Setup only (SAB, 2026-11-09): Post-Results and Notes are not published until an official transcript is on file — no
-  // placeholder phases (playbook rule 5). Adding them back = the two buttons + panes as in lyft-ce.js.
+  // Setup only until 2026-11-18; Post-Results and Notes mounted with the 3Q FY27 call (as in lyft-ce.js / meta-ce.js).
   return '<div class="ce-phtabs">'+
       '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
+      '<button type="button" class="ce-phtab" data-cep="results">Post-Results</button>'+
+      '<button type="button" class="ce-phtab" data-cep="watch">Notes</button>'+
     '</div>'+
     ceQPills()+
-    '<div class="ce-phpane" data-cep="setup">'+ceSetupBody(c)+'</div>';
+    '<div class="ce-phpane" data-cep="setup">'+ceSetupBody(c)+'</div>'+
+    '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>'+
+    '<div class="ce-phpane" data-cep="watch" hidden>'+ceWatchBody(c)+'</div>';
 }
 // The Earnings wiring (phase tabs · quarter pills · toggles · Notes).
 export function nvdaCeWire(root){
   wireCallEarnings(root);
   wireCeTrack(root);
-  // No theme record / editor / Watch List while Notes is unpublished: nothing reads or writes company_theme_record for NVDA yet.
+  wireThemeRecord(root);
+  root.querySelectorAll('.ma-edit-tog[data-maeditog]').forEach(function(btn){ btn.onclick=function(){
+    var wrap=btn.closest('.ma-edit'); if(!wrap) return;
+    var body=wrap.querySelector('.ma-edit-body'); if(!body) return;
+    var open=body.hidden; body.hidden=!open;
+    wrap.setAttribute('data-open', open?'1':'0');
+    btn.setAttribute('aria-expanded', open?'true':'false');
+  }; });
+  nvdaRenderEditor(root);
+  nvdaHydrateThemes(root);
 }
 // Build the Setup chart when Setup is the active phase.
 export function nvdaCeBuild(root){

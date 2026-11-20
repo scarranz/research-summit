@@ -129,12 +129,12 @@ export const EST_STORE = {
     // on both pages. Held flat across years, on BOTH sources.
     // Summit: FY2027–FY2029 from the 2026-11-18 submit (get_fundamentals,
     // projection_history: REV, EBITDA, EARNINGS, SHARES). FY2024–FY2026 are REPORTED
-    // years and keep the 2026-08-28 values: the Nov 18 re-submit broke the FY2025
+    // years and keep the history from before the 13:28 re-submit, which broke FY2025
     // history (EBITDA 84,932 → 60,898, earnings 70,070 → 49,641), which SAB chose to
     // leave in the workbook (NVDA.md §6, accepted 2026-11-18) — the profile does the same.
     summit: {
       2024: { rev: 60922, ebitda: 35729.51, earnings: 29288.15, shares: 24940, netDebt: -65360 },
-      2025: { rev: 130497, ebitda: 85093.05, earnings: 70206.73, shares: 24804, netDebt: -65360 },
+      2025: { rev: 130497, ebitda: 84932.05, earnings: 70069.88, shares: 24804, netDebt: -65360 },
       2026: { rev: 215938, ebitda: 136224.68, earnings: 110555.8, shares: 24514, netDebt: -65360 },
       2027: { rev: 430544.95, ebitda: 288285.29, earnings: 235401.84, shares: 23987.303, netDebt: -65360 },
       2028: { rev: 771961.89, ebitda: 516213.26, earnings: 422142, shares: 22775.182, netDebt: -65360 },

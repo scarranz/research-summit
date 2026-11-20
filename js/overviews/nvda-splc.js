@@ -79,23 +79,26 @@ var CHAIN2=SPLC.filter(function(s){ return CHAIN1_N.indexOf(s.n)<0; });
 var TYPE_L={ COGS:'cost of revenue', CAPEX:'capex', 'R&D':'R&D' };
 
 // ─── Data — filings ─────────────────────────────────────────────────────────────────────────────
-// 10-Q Q2 FY27 (quarter ended Jul 26, 2026), Note 10 — future commitments by fiscal year, $B.
+// Future commitments by fiscal year, $B, as of Oct 25, 2026: 3Q FY27 CFO commentary (8-K Ex. 99.2, Nov 17 2026) — the 10-Q
+// (not filed yet) carries the same table in its commitments note. Updated 2026-11-18; the Jul 26 table (10-Q 2Q FY27) is in git history.
 export var COMMIT_YRS=['Rest of FY27','FY28','FY29','FY30','FY31','FY32+'];
 export var COMMIT=[
-  { k:'Supply and capacity',         v:[92,87,88,6,5,1],  t:279, draw:true },
-  { k:'Cloud service agreements',    v:[3,8,7,6,4,1],     t:29 },
-  { k:'Data center leases not commenced', v:[0,1,1,2,1,20], t:25 },
-  { k:'Equity investments',          v:[18,3,2,2,0,0],    t:25 },
-  { k:'Capital expenditures',        v:[7,1,0,0,0,0],     t:8 },
+  { k:'Supply and capacity',         v:[69,203,92,10,8,8], t:390, draw:true },
+  { k:'Cloud service agreements',    v:[2,7,7,6,4,2],     t:28 },
+  { k:'Data center leases not commenced', v:[0,1,2,4,4,63], t:74 },
+  { k:'Equity investments',          v:[5,11,2,2,0,0],    t:20 },
+  { k:'Capital expenditures',        v:[6,0,0,0,0,0],     t:6 },
 ];
-var COMMIT_TOT={ v:[120,100,98,16,10,22], t:366 };
+var COMMIT_TOT={ v:[82,222,103,22,16,73], t:518 };
 // Supply and capacity commitments over time ($B): 10-K FY2026 Note 12; 10-Q Q2 FY27 Note 10 ("from $119 billion last quarter").
-var COMMIT_PATH=[ { d:'Jan 25, 2026', v:95.2, s:'10-K FY2026' }, { d:'Apr 26, 2026', v:119, s:'10-Q Q2 FY27 ("last quarter")' }, { d:'Jul 26, 2026', v:279, s:'10-Q Q2 FY27' } ];
-// Inventories ($M), 10-Q Q2 FY27 balance-sheet components.
-export var INV=[ { k:'Raw materials', a:3807, b:11341 }, { k:'Work in process', a:8822, b:13377 }, { k:'Finished goods', a:8774, b:6857 }, { k:'Total inventories', a:21403, b:31575, tot:true } ];
+var COMMIT_PATH=[ { d:'Jan 25, 2026', v:95.2, s:'10-K FY2026' }, { d:'Apr 26, 2026', v:119, s:'10-Q Q2 FY27 ("last quarter")' }, { d:'Jul 26, 2026', v:279, s:'10-Q Q2 FY27' }, { d:'Oct 25, 2026', v:390, s:'CFO commentary Q3 FY27' } ];
+// Inventories ($M), balance-sheet components at Oct 25, 2026: 3Q FY27 Supplemental Financial Information (8-K Ex. 99.3).
+// (Jul 26, 2026, 10-Q Q2 FY27: 11,341 / 13,377 / 6,857 / 31,575.)
+export var INV=[ { k:'Raw materials', a:3807, b:15802 }, { k:'Work in process', a:8822, b:17767 }, { k:'Finished goods', a:8774, b:6155 }, { k:'Total inventories', a:21403, b:39724, tot:true } ];
 var Q_10K='We utilize foundries, such as Taiwan Semiconductor Manufacturing Company Limited, or TSMC, and Samsung Electronics Co., Ltd., or Samsung, to produce our semiconductor wafers. We purchase memory from SK Hynix Inc., Micron Technology, Inc., and Samsung. We utilize CoWoS technology for semiconductor packaging.';
 var Q_10K2='While currently our supply chain is mainly concentrated in Asia, we are expanding into the U.S. and Latin America.';
 var Q_10Q='These supply commitments are for our data center infrastructure systems, primarily memory and manufacturing facilities';
+var Q_CFO='Our supply commitments increased from $279 billion last quarter to $390 billion, primarily related to the multi-year procurement of memory supply';
 
 function money(m){ return '$'+(m>=1000?(m/1000).toFixed(1)+'B':Math.round(m)+'M'); }
 function bn(v){ return v===0?'—':'$'+v; }
@@ -112,9 +115,9 @@ export function nvdaSplcBody(){
   var dep=SPLC.slice().sort(function(a,b){ return b.their-a.their; });
   var h='';
   // Limitation first (§13).
-  h+='<p class="ov-lede">NVIDIA designs its chips and systems and has others make them: TSMC makes the wafers, SK hynix and Micron the memory, and contract manufacturers such as Wistron, Hon Hai and Fabrinet assemble the products. Since January it has <b>almost tripled what it is committed to buy from suppliers, to $279B</b>, mostly memory and manufacturing capacity.</p>';
+  h+='<p class="ov-lede">NVIDIA designs its chips and systems and has others make them: TSMC makes the wafers, SK hynix and Micron the memory, and contract manufacturers such as Wistron, Hon Hai and Fabrinet assemble the products. Since January it has <b>quadrupled what it is committed to buy from suppliers, to $390B</b>, mostly memory and manufacturing capacity.</p>';
   h+='<div class="nv-splc-lim"><b>Coverage.</b> The Bloomberg export lists NVIDIA’s 20 largest supplier relationships only — no supplier count and no facility geography. Each row is the supplier’s own latest period (Q1 2025 to Q1 2026), so the sizes are read one by one and are not added up.</div>';
-  h+=ddStat([[bn(279)+'B','supply and capacity commitments (Jul 26, 2026)'],
+  h+=ddStat([[bn(390)+'B','supply and capacity commitments (Oct 25, 2026)'],
     [top.cost.toFixed(0)+'%','of NVIDIA’s cost of revenue is TSMC (largest supplier)'],
     ['$'+(inv.b/1000).toFixed(1)+'B','raw materials in inventory, from $'+(inv.a/1000).toFixed(1)+'B in January'],
     [dep[0].their.toFixed(0)+'%','of '+dep[0].n+'’s revenue is NVIDIA (most dependent supplier)'],
@@ -122,8 +125,8 @@ export function nvdaSplcBody(){
 
   // 1 · Filings — what NVIDIA has committed to its suppliers.
   h+='<div class="ov-sec"><div class="ov-sec-h">What NVIDIA has committed to its suppliers</div>';
-  h+='<p class="nv-splc-p">Supply and capacity commitments went from <b>$95.2B</b> (Jan 25, 2026) to <b>$119B</b> (Apr 26) and <b>$279B</b> (Jul 26). NVIDIA: “'+esc(Q_10Q)+'.” Almost two thirds (63%) falls due in fiscal 2028 and 2029.</p>';
-  h+='<div class="ov-diagram-cap meta-splc-cap"><b>Supply and capacity commitments by fiscal year</b> ($B, as of Jul 26, 2026)</div>';
+  h+='<p class="nv-splc-p">Supply and capacity commitments went from <b>$95.2B</b> (Jan 25, 2026) to <b>$119B</b> (Apr 26), <b>$279B</b> (Jul 26) and <b>$390B</b> (Oct 25). NVIDIA: “'+esc(Q_10Q)+'” (10-Q 2Q FY27); “'+esc(Q_CFO)+'” (CFO commentary 3Q FY27). About three quarters (76%) falls due in fiscal 2028 and 2029.</p>';
+  h+='<div class="ov-diagram-cap meta-splc-cap"><b>Supply and capacity commitments by fiscal year</b> ($B, as of Oct 25, 2026)</div>';
   h+='<div class="nv-splc-c"><canvas id="nvSplcCommit"></canvas></div>';
   h+=collap('commit', (COMMIT.length+1)+' rows', '<table class="rs-ft"><thead><tr><th class="rs-ft-h">Commitment ($B)</th>'+COMMIT_YRS.map(function(y){ return '<th>'+y+'</th>'; }).join('')+'<th>Total</th></tr></thead><tbody>'+
     COMMIT.map(function(r){ return '<tr><td class="rs-ft-h">'+esc(r.k)+(r.draw?' (drawn)':'')+'</td>'+r.v.map(function(v){ return '<td>'+bn(v)+'</td>'; }).join('')+'<td>'+bn(r.t)+'</td></tr>'; }).join('')+
@@ -131,7 +134,7 @@ export function nvdaSplcBody(){
     '<tr><td class="rs-ft-h" colspan="8">Supply and capacity over time: '+COMMIT_PATH.map(function(p){ return '$'+p.v+'B ('+p.d+', '+p.s+')'; }).join(' → ')+'</td></tr>'+
     '</tbody></table>');
   h+='<div class="ov-diagram-cap meta-splc-cap"><b>Inventories</b> ($M) — raw materials nearly tripled as NVIDIA buys memory and components itself</div>';
-  h+='<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">Inventories ($M)</th><th>Jan 25, 2026</th><th>Jul 26, 2026</th><th>Change</th></tr></thead><tbody>'+
+  h+='<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">Inventories ($M)</th><th>Jan 25, 2026</th><th>Oct 25, 2026</th><th>Change</th></tr></thead><tbody>'+
     INV.map(function(r){ return '<tr'+(r.tot?' class="nv-splc-tot"':'')+'><td class="rs-ft-h">'+esc(r.k)+'</td><td>'+r.a.toLocaleString('en-US')+'</td><td>'+r.b.toLocaleString('en-US')+'</td><td>'+(r.b>=r.a?'+':'−')+Math.abs(r.b-r.a).toLocaleString('en-US')+'</td></tr>'; }).join('')+
     '</tbody></table></div>';
   h+='<div class="ov-diagram-cap meta-splc-cap"><b>Who the 10-K names</b></div>';
@@ -165,7 +168,7 @@ export function nvdaSplcBody(){
 
   h+='<div class="ov-foot">Sources — Bloomberg Supply Chain Analysis (SPLC), NVDA US Equity, relationships dated '+SPLC_RANGE+' (each supplier’s own latest period; Fabrinet and Ibiden from their own annual filings, shown as a quarter of the annual figure; the rest Bloomberg estimates). Relationship sizes are Bloomberg estimates; directional, not audited. '+
     '"NVIDIA cost %" = the relationship as a share of NVIDIA’s cost of that type (cost of revenue, capex or R&D); "their exposure" = NVIDIA’s share of the supplier’s revenue. '+
-    'Commitments: Form 10-Q for the quarter ended Jul 26, 2026, Note 10; Form 10-K FY2026 (Jan 25, 2026), Note 12. Inventories: same 10-Q. Supplier roles: 10-K FY2026, Item 1, Manufacturing. Categories and card readings are Summit’s.</div>';
+    'Commitments: 3Q FY27 CFO commentary (8-K Ex. 99.2, Nov 17, 2026), as of Oct 25, 2026 (earlier points: Form 10-Q for the quarter ended Jul 26, 2026, Note 10; Form 10-K FY2026, Note 12). Inventories: 3Q FY27 Supplemental Financial Information (8-K Ex. 99.3). Supplier roles: 10-K FY2026, Item 1, Manufacturing. Categories and card readings are Summit’s.</div>';
   return h;
 }
 

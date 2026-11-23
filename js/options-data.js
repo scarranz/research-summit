@@ -34,6 +34,13 @@
 //                   the trustworthy one.
 //       null        no consensus for this name at all.
 //
+// Nov 23 2026 refresh: every ticker in BBG_CONSENSUS.txt moved to its newest vintage
+// (the first after each 3Q26 print) — UBER 11/03, META 10/26, SPOT 10/21, MA 10/28,
+// AMZN 10/30, GOOGL 10/30, LYFT 11/06, TBBB 11/03; NVDA was already on 11/20. Same
+// codes as before per ticker; a missing cell (TBBB forward shares, 2025 EBITDA)
+// keeps the value it had. SOFI (newest vintage 8/03, older than the 9/10 export
+// it is on) and TSM (7/21) have no newer vintage; CART is not in the file.
+//
 // The panes print the date next to the Estimates toggle and age it in days, so a
 // stale column announces itself instead of being mistaken for today's Street.
 //
@@ -55,7 +62,7 @@ import { AM_YEARS, AM_ISEST, AM_IS, AM_BS } from './overviews/app-model.js';
 export const EST_STORE = {
   UBER: {
     name: "Uber Technologies, Inc.", currency: "USD", snapshot: "2026-11-04", lastActual: 2025,
-    consensusAsOf: "2026-09-10", consensusFrom: "bbg",
+    consensusAsOf: "2026-11-03", consensusFrom: "bbg",
     summit: {
       2024: { rev: 43978, ebitda: 6484, earnings: 3970, shares: 2141.426 },
       2025: { rev: 52017, ebitda: 8730, earnings: 5237, shares: 2106.011 },
@@ -76,14 +83,14 @@ export const EST_STORE = {
       2023: { rev: 37281, ebitda: 4052, earnings: 1887, shares: 2091.78 },
       2024: { rev: 43978, ebitda: 6484, earnings: 9856, shares: 2150.51 },
       2025: { rev: 52017, ebitda: 8730, earnings: 10053, shares: 2119.69 },
-      2026: { rev: 57792.22, ebitda: 11383.04, earnings: 6741.22, shares: 2050.31 },
-      2027: { rev: 66656.1, ebitda: 13830.49, earnings: 9055.02, shares: 2020.62 },
-      2028: { rev: 76497, ebitda: 16526.59, earnings: 10880.27, shares: 1975.28 },
+      2026: { rev: 57741.19, ebitda: 11401.3, earnings: 6722.86, shares: 2051.17 },
+      2027: { rev: 66601.77, ebitda: 13778.68, earnings: 8935.02, shares: 2022.91 },
+      2028: { rev: 76660.05, ebitda: 16581, earnings: 10948.25, shares: 1978.17 },
     },
   },
   META: {
     name: "Meta Platforms, Inc.", currency: "USD", snapshot: "2026-10-22", lastActual: 2025,
-    consensusAsOf: "2026-09-08", consensusFrom: "bbg",
+    consensusAsOf: "2026-10-26", consensusFrom: "bbg",
     summit: {
       2024: { rev: 164500, ebitda: null, earnings: 56719.51, shares: 2614 },
       2025: { rev: 200965, ebitda: 127054.028, earnings: 73881.333, shares: 2574 },
@@ -104,9 +111,9 @@ export const EST_STORE = {
       2023: { rev: 134902, ebitda: 57929, earnings: 39098, shares: 2629 },
       2024: { rev: 164501, ebitda: 84878, earnings: 62360, shares: 2614 },
       2025: { rev: 200966, ebitda: 101892, earnings: 60458, shares: 2574 },
-      2026: { rev: 253945.64, ebitda: 119146.61, earnings: 81357.64, shares: 2566.43 },
-      2027: { rev: 304784.98, ebitda: 150997.09, earnings: 86681.53, shares: 2582.53 },
-      2028: { rev: 361436.61, ebitda: 194833.75, earnings: 101239.57, shares: 2597.27 },
+      2026: { rev: 256768.47, ebitda: 114308.45, earnings: 74408.94, shares: 2570.36 },
+      2027: { rev: 313654.56, ebitda: 156563.2, earnings: 87978.11, shares: 2596.98 },
+      2028: { rev: 374849.07, ebitda: 203382.57, earnings: 103476.79, shares: 2625.74 },
     },
   },
   NVDA: {
@@ -163,7 +170,7 @@ export const EST_STORE = {
   },
   TBBB: {
     name: "BBB Foods Inc.", currency: "MXN", snapshot: "2026-08-13", lastActual: 2025,
-    consensusAsOf: "2026-09-09", consensusFrom: "bbg",
+    consensusAsOf: "2026-11-03", consensusFrom: "bbg",
     summit: {
       2024: { rev: 57439.02, ebitda: 1498.87, earnings: 681.67, shares: 139.607, netDebt: 9810 },
       2025: { rev: 78153.39, ebitda: 1921.37, earnings: -2275.6, shares: 115.023, netDebt: 9810 },
@@ -182,15 +189,15 @@ export const EST_STORE = {
     // the income statement now prints it on reported years instead of hiding it.
     consensus: {
       2024: { rev: 57439.02, ebitda: 2847, earnings: 334.42, shares: 139.61, netDebt: 21540 },
-      2025: { rev: 78152.94, ebitda: null, earnings: -2839.57, shares: 115.02, netDebt: 21540 },
-      2026: { rev: 103301.5, ebitda: 3402.3, earnings: -1666.88, shares: 115.02, netDebt: 21540 },
-      2027: { rev: 130196.15, ebitda: 6205.85, earnings: -144.62, shares: 115.02, netDebt: 21540 },
-      2028: { rev: 164742.23, ebitda: 8525.73, earnings: 647.57, shares: 115.02, netDebt: 21540 },
+      2025: { rev: 78152.94, ebitda: 1223.91, earnings: -2839.57, shares: 115.02, netDebt: 21540 },
+      2026: { rev: 106033.85, ebitda: 3697.22, earnings: -1518.67, shares: 115.02, netDebt: 21540 },
+      2027: { rev: 138325.92, ebitda: 6960.15, earnings: 284.67, shares: 115.02, netDebt: 21540 },
+      2028: { rev: 174375.62, ebitda: 9463.42, earnings: 1108.43, shares: 115.02, netDebt: 21540 },
     },
   },
   AMZN: {
     name: "Amazon.com, Inc.", currency: "USD", snapshot: "2026-10-30", lastActual: 2025,
-    consensusAsOf: "2026-09-10", consensusFrom: "bbg",
+    consensusAsOf: "2026-10-30", consensusFrom: "bbg",
     summit: {
       2024: { rev: 637959, ebitda: 144162.64, earnings: 54772.648, shares: 10721 },
       2025: { rev: 716924, ebitda: 168024.215, earnings: 64969.208, shares: 10827 },
@@ -211,14 +218,14 @@ export const EST_STORE = {
       2023: { rev: 574785, ebitda: 109538, earnings: 29793, shares: 10492 },
       2024: { rev: 637959, ebitda: 143399, earnings: 59248, shares: 10721 },
       2025: { rev: 716924, ebitda: 165198, earnings: 77670, shares: 10827 },
-      2026: { rev: 828782.97, ebitda: 220794.4, earnings: 137894.33, shares: 10888.6 },
-      2027: { rev: 949660.5, ebitda: 283087.5, earnings: 118437.6, shares: 10992.06 },
-      2028: { rev: 1092284.64, ebitda: 356131.13, earnings: 151833.86, shares: 11079.91 },
+      2026: { rev: 829167.61, ebitda: 222017.73, earnings: 138214.51, shares: 10889.49 },
+      2027: { rev: 956397.7, ebitda: 286891.05, earnings: 118816.37, shares: 11029.38 },
+      2028: { rev: 1102181.6, ebitda: 365202.94, earnings: 153896.35, shares: 11091.28 },
     },
   },
   SPOT: {
     name: "Spotify Technology S.A.", currency: "EUR", snapshot: "2026-10-22", lastActual: 2025,
-    consensusAsOf: "2026-09-09", consensusFrom: "bbg",
+    consensusAsOf: "2026-10-21", consensusFrom: "bbg",
     // Net CASH of 8,930 EUR M (9,390 cash against ~460 of debt), per Fiscal.ai —
     // SAB, 10 Sep 2026. Carried explicitly for the same two reasons as TBBB:
     // Massive returns no fundamentals for a foreign issuer, and SPOT's Summit model
@@ -244,9 +251,9 @@ export const EST_STORE = {
       2023: { rev: 13247, ebitda: -288, earnings: -532, shares: 194.73, netDebt: -8930 },
       2024: { rev: 15673, ebitda: 1486, earnings: 1138, shares: 206.99, netDebt: -8930 },
       2025: { rev: 17186, ebitda: 2300, earnings: 2212, shares: 210.51, netDebt: -8930 },
-      2026: { rev: 19522, ebitda: 3011.5, earnings: 2589.47, shares: 209.23, netDebt: -8930 },
-      2027: { rev: 22305.67, ebitda: 3887.12, earnings: 3212.43, shares: 209.91, netDebt: -8930 },
-      2028: { rev: 25231.66, ebitda: 4809.61, earnings: 3947.64, shares: 208.42, netDebt: -8930 },
+      2026: { rev: 19530.09, ebitda: 2952.21, earnings: 2546.34, shares: 208.98, netDebt: -8930 },
+      2027: { rev: 22341.74, ebitda: 3852.03, earnings: 3176.57, shares: 209.29, netDebt: -8930 },
+      2028: { rev: 25306.86, ebitda: 4799.38, earnings: 3924.22, shares: 207.38, netDebt: -8930 },
     },
   },
   SOFI: {
@@ -269,7 +276,7 @@ export const EST_STORE = {
   },
   MA: {
     name: "Mastercard Incorporated", currency: "USD", snapshot: "2026-10-28", lastActual: 2025,
-    consensusAsOf: "2026-09-10", consensusFrom: "bbg",
+    consensusAsOf: "2026-10-28", consensusFrom: "bbg",
     summit: {
       2024: { rev: 28167, ebitda: 16493, earnings: 12570, shares: 927 },
       2025: { rev: 32791, ebitda: 20100, earnings: 14625, shares: 906 },
@@ -280,14 +287,14 @@ export const EST_STORE = {
     consensus: {
       2024: { rev: 28167, ebitda: 17397, earnings: 12874, shares: 927 },
       2025: { rev: 32791, ebitda: 20544, earnings: 14968, shares: 906 },
-      2026: { rev: 37278.26, ebitda: 23610.61, earnings: 17286, shares: 880.05 },
-      2027: { rev: 41953.5, ebitda: 26669.18, earnings: 19677.14, shares: 856.14 },
-      2028: { rev: 46966.19, ebitda: 30219.26, earnings: 22271, shares: 834.37 },
+      2026: { rev: 37288.55, ebitda: 23590.09, earnings: 17253.79, shares: 880.21 },
+      2027: { rev: 41975.68, ebitda: 26694.5, earnings: 19690.63, shares: 856.79 },
+      2028: { rev: 46997.32, ebitda: 30197.9, earnings: 22279.76, shares: 834.32 },
     },
   },
   LYFT: {
     name: "Lyft, Inc.", currency: "USD", snapshot: "2026-08-07", lastActual: 2025,
-    consensusAsOf: "2026-09-08", consensusFrom: "bbg",
+    consensusAsOf: "2026-11-06", consensusFrom: "bbg",
     summit: {
       2024: { rev: 5785.98, ebitda: 382.4, earnings: -54.17, shares: 413.651 },
       2025: { rev: 6484.3, ebitda: 528.9, earnings: -2.53, shares: 388.428 },
@@ -308,9 +315,9 @@ export const EST_STORE = {
       2023: { rev: 4403.59, ebitda: 222.4, earnings: -340.3, shares: 385.3 },
       2024: { rev: 5786.02, ebitda: 382.4, earnings: 22.8, shares: 413.7 },
       2025: { rev: 6316.3, ebitda: 528.8, earnings: 2844, shares: 417.66 },
-      2026: { rev: 7354.98, ebitda: 695.45, earnings: 218.29, shares: 393.18 },
-      2027: { rev: 8287.7, ebitda: 871.76, earnings: 383.56, shares: 390.58 },
-      2028: { rev: 9090.71, ebitda: 1008.54, earnings: 455.64, shares: 388.16 },
+      2026: { rev: 7284.14, ebitda: 707.49, earnings: 169.25, shares: 389.95 },
+      2027: { rev: 8203.48, ebitda: 881.74, earnings: 369.28, shares: 386.99 },
+      2028: { rev: 8993.93, ebitda: 1013.97, earnings: 465.45, shares: 386.73 },
     },
   },
   CART: {
@@ -339,7 +346,7 @@ export const EST_STORE = {
   // source note so the P/E is read with that in mind rather than at face value.
   GOOGL: {
     name: "Alphabet Inc.", currency: "USD", snapshot: "2026-10-29", lastActual: 2025,
-    consensusAsOf: "2026-09-08", consensusFrom: "bbg",
+    consensusAsOf: "2026-10-30", consensusFrom: "bbg",
     summit: {
       2024: { rev: 350018, ebitda: 150486, earnings: 96778.208, shares: 12447 },
       2025: { rev: 402836, ebitda: 175128, earnings: 110178.911, shares: 12230 },
@@ -351,9 +358,9 @@ export const EST_STORE = {
       2023: { rev: 307394, ebitda: 118699, earnings: 73795, shares: 12722 },
       2024: { rev: 350018, ebitda: 127701, earnings: 100118, shares: 12447 },
       2025: { rev: 402836, ebitda: 175128, earnings: 132170, shares: 12230 },
-      2026: { rev: 430767.78, ebitda: 226427.79, earnings: 240569.63, shares: 12294.79 },
-      2027: { rev: 535776.03, ebitda: 291785.21, earnings: 185861.36, shares: 12326.86 },
-      2028: { rev: 657907.18, ebitda: 376882.66, earnings: 220542.31, shares: 12448.55 },
+      2026: { rev: 436030.91, ebitda: 223531.06, earnings: 244100.45, shares: 12299.76 },
+      2027: { rev: 565137.38, ebitda: 292708.2, earnings: 184682.29, shares: 12348.99 },
+      2028: { rev: 712495.62, ebitda: 391060.03, earnings: 226326.07, shares: 12467.5 },
     },
   },
   // Taiwan Semiconductor. Three things make this one different from every other

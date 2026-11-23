@@ -44,20 +44,21 @@
 // Weights: the "Alloc" column of the broker's Active positions screen, 13 Nov 2026.
 // Equities ordered by weight, largest first. The three ETFs are not on that
 // screen: their weights and strikes are the old ones, kept below the stocks.
-// Counted in the totals: AMZN, SPOT, TSM, SOFI, SMH; everything else starts
-// `excluded` (toggle per row with the ● beside the ✕).
+// Nov 23 2026 (SAB): the book to sell is META 750, AMZN 300, SPOT 680, TSM 470 —
+// only those four count in the totals; everything else starts `excluded`
+// (toggle per row with the ● beside the ✕).
 export const POSITIONS = [
-  { ticker: 'META',  reason: 'EV EBITDA',     strike: 900,  pt: 1097.56, ptSrc: 'Summit submit 2026-10-22 · P/E 18x 2028E', weight: 0.1389, seedPrime: 0.95, excluded: true },
+  { ticker: 'META',  reason: 'EV EBITDA',     strike: 750,  pt: 1097.56, ptSrc: 'Summit submit 2026-10-22 · P/E 18x 2028E', weight: 0.1389, seedPrime: 0.95 },
   { ticker: 'UBER',  reason: 'EV Adj EBITDA', strike: 90,   pt: 154.36,  ptSrc: 'Summit submit 2026-11-04 · P/E 23x 2028E', weight: 0.1375, seedPrime: 0.07, excluded: true },
   { ticker: 'NVDA',  reason: 'EV EBITDA',     strike: 300,  pt: 370.00,  ptSrc: 'Summit submit 2026-08-28 · P/E 22x FY2028E (no newer submit)', weight: 0.1002, seedPrime: 0.13, excluded: true },
-  { ticker: 'AMZN',  reason: 'EV Adj EBITDA', strike: 330,  pt: 271.68,  ptSrc: 'Summit submit 2026-10-30 · P/E 25x 2027E', weight: 0.0899, seedPrime: 0.17 },
+  { ticker: 'AMZN',  reason: 'EV Adj EBITDA', strike: 300,  pt: 271.68,  ptSrc: 'Summit submit 2026-10-30 · P/E 25x 2027E', weight: 0.0899, seedPrime: 0.17 },
   { ticker: 'GOOGL', reason: '',              strike: 370,  pt: 387.73,  ptSrc: 'Summit submit 2026-10-29 · P/E 20x 2028E', weight: 0.0597, seedPrime: null, excluded: true },
-  { ticker: 'SPOT',  reason: 'EV Adj EBITDA', strike: 720,  pt: 532.86,  ptSrc: 'Summit submit 2026-10-22 · EV/EBITDA 20.5x 2027E (no P/E target in the submit)', weight: 0.0477, seedPrime: 2.48 },
+  { ticker: 'SPOT',  reason: 'EV Adj EBITDA', strike: 680,  pt: 532.86,  ptSrc: 'Summit submit 2026-10-22 · EV/EBITDA 20.5x 2027E (no P/E target in the submit)', weight: 0.0477, seedPrime: 2.48 },
   { ticker: 'TSM',   reason: '',              strike: 470,  pt: 453.92,  ptSrc: 'Summit submit 2026-10-19 · P/E 20x 2027E', weight: 0.0459, seedPrime: null },
   { ticker: 'MA',    reason: 'EV Adj EBITDA', strike: 740,  pt: 619.80,  ptSrc: 'Summit submit 2026-10-28 · P/E 28x 2027E', weight: 0.0444, seedPrime: 0.33, excluded: true },
-  { ticker: 'SOFI',  reason: 'EV Adj EBITDA', strike: 21,   pt: 28.67,   ptSrc: 'Summit submit 2026-10-27 · P/E 22x 2028E (read from the workbook; the MCP carries no SOFI valuation)', weight: 0.0351, seedPrime: 0.14 },
+  { ticker: 'SOFI',  reason: 'EV Adj EBITDA', strike: 21,   pt: 28.67,   ptSrc: 'Summit submit 2026-10-27 · P/E 22x 2028E (read from the workbook; the MCP carries no SOFI valuation)', weight: 0.0351, seedPrime: 0.14, excluded: true },
   { ticker: 'LYFT',  reason: 'EV Adj EBITDA', strike: 19,   pt: 23.76,   ptSrc: 'Summit submit 2026-08-07 · P/E 16x 2027E — the workbook copies one target into both methods, so read it as unreliable (no newer submit)', weight: 0.0124, seedPrime: 0.04, excluded: true },
   { ticker: 'QQQ',   reason: '',              strike: 790, weight: 0.0480, seedPrime: null, isEtf: true, excluded: true },
   { ticker: 'XLG',   reason: '',              strike: null, weight: 0.0470, seedPrime: null, isEtf: true, excluded: true },
-  { ticker: 'SMH',   reason: '',              strike: 640, weight: 0.0200, seedPrime: null, isEtf: true },
+  { ticker: 'SMH',   reason: '',              strike: 640, weight: 0.0200, seedPrime: null, isEtf: true, excluded: true },
 ];

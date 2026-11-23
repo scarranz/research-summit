@@ -1,0 +1,159 @@
+[
+  {
+    "q": "Q4'21",
+    "comp": -1.1,
+    "traffic": "slightly positive (comp transactions; first positive quarter since 2018), per call",
+    "ticket": "down y/y (lower units outweighed higher average retail)",
+    "items_per_basket": "down y/y as SFM cycled pandemic-sized baskets; still above Q4'19 levels and up on a 2-year basis every quarter",
+    "price_per_item": "up (average retail rose, mainly inflationary cost pass-through)",
+    "inflation": "no % given; pricing lagged cost inflation, gross margin 35.7% (about -100 bp)",
+    "ecom": "10.4% of sales (described as a stable run rate); growth not given",
+    "other": "cycling COVID-boosted 2020 (2-year stack +2.7%; FY20 had a 53rd week); Omicron wave, with shoppers less afraid to enter stores than in the first wave; digital marketing and post-holiday bounce-back messages; narrower promotions and no margin investment or loss leaders",
+    "why": "Comps were slightly negative because Sprouts was still cycling the pandemic-inflated baskets of late 2020. Traffic turned slightly positive for the first time since 2018 and inflation lifted price per item, but customers bought fewer items than a year earlier.",
+    "sources": [
+      {"what": "Q4'21 call, Feb 24/25 2022 (traffic, units, AUR, e-com 10.4%, gross margin) via allmind.ai transcript summary (aggregator, not the official IR copy; the official transcript is not on investors.sprouts.com)", "url": "https://allmind.ai/earnings/event/bt_SFM_2021_Q4"},
+      {"what": "Supermarket News press report (comp -1.1%, 2-year stack +2.7%, CEO says comp transactions were positive)", "url": "https://www.supermarketnews.com/retailers/sprouts-farmers-market-reports-q4-dip-sales"},
+      {"what": "Q3'22 call, Nov 8 2022: CFO says the 3 quarters before Q3'22 had net positive traffic (corroborates Q4'21)", "url": "https://s206.q4cdn.com/808897563/files/doc_events/2022/11/1/SFM-USQ_Transcript_2022-11-08.pdf"},
+      {"what": "8-K EX-99.1 Q4'21 earnings release, Feb 24 2022 (comp -1.1%)", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000095017022001959/sfm-ex99_1.htm"},
+      {"what": "10-K FY2021 (FY comp -6.7%, from cycling COVID demand and the 53rd week; no Q4 driver split)", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000095017022001976/sfm-20220102.htm"}
+    ],
+    "confidence": "B"
+  },
+  {
+    "q": "Q1'22",
+    "comp": 1.6,
+    "traffic": "positive (comp transactions positive in every month of the quarter), per call",
+    "ticket": "up modestly; average basket above $40, per call",
+    "items_per_basket": "down; customers putting 1 to 2 fewer items in the basket than a year earlier (about 11-12 units per basket)",
+    "price_per_item": "up; average unit retail around mid-$3, rising in line with inflation (management cited double-digit inflation over 2 years)",
+    "inflation": "no quarterly %; inflation 'not slowing', pricing caught up with cost inflation",
+    "ecom": "11.5% of sales (lifted early in the quarter by Omicron); growth not given",
+    "other": "King Soopers strike in Colorado and the Omicron peak helped early in the quarter; New Year's resolution season; strength in deli, grocery, dairy and vitamins; consumers squeezed by gas and utility costs and spending on travel and restaurants; no unusual competitor promotions",
+    "why": "Comps turned positive because traffic grew and inflation pushed up price per item. Customers bought 1-2 fewer items per trip, which held the gain to 1.6%. Omicron and a competitor strike in Colorado gave a one-off lift early in the quarter.",
+    "sources": [
+      {"what": "Q1'22 call transcript, May 4 2022 (traffic, units, AUR, basket $, e-com 11.5%, strike/Omicron)", "url": "https://s206.q4cdn.com/808897563/files/doc_events/2022/05/1/SFM-USQ_Transcript_2022-05-04-2.pdf"},
+      {"what": "10-Q Q1'22, filed May 4 2022, acc. 0000950170-22-007411 (comp +1.6%; MD&A gives only new stores + comp, no driver split)", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000095017022007411/sfm-20220403.htm"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q2'22",
+    "comp": 2.0,
+    "traffic": "positive (comp transactions positive; slight sequential improvement, improving through the quarter), per call",
+    "ticket": "up (inflation-driven)",
+    "items_per_basket": "down y/y; the decline was slightly smaller than in Q1",
+    "price_per_item": "up (retail prices raised to keep up with inflation)",
+    "inflation": "no %; CEO said it was broadly in line with food-at-home CPI, with more volatile produce pricing",
+    "ecom": "+15% y/y; 11.1% of sales",
+    "other": "weak April, then a better May-June; basket-building pushes (sampling, signage, consultative selling); EBT SNAP accepted on Instacart delivery and pickup from Q2; high gas prices; lapping last year's Delta wave",
+    "why": "Comps rose 2% on slightly positive traffic and inflation-driven price increases. Customers kept buying fewer items, but that decline eased a little compared with Q1.",
+    "sources": [
+      {"what": "Q2'22 call transcript, Aug 3 2022 (traffic, units, CPI comment, e-com +15% / 11.1%, SNAP)", "url": "https://s206.q4cdn.com/808897563/files/doc_events/2022/08/1/SFM-USQ_Transcript_2022-08-03-1.pdf"},
+      {"what": "10-Q Q2'22, filed Aug 3 2022, acc. 0000950170-22-014247 (comp +2.0%; no driver split for the quarter)", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000095017022014247/sfm-20220703.htm"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q3'22",
+    "comp": 2.4,
+    "traffic": "down 'just a hair' (some months up and some down, net slightly negative; October flat), per call",
+    "ticket": "up; basket value rose on retail price inflation (10-Q)",
+    "items_per_basket": "slightly lower; about one less item, mostly produce",
+    "price_per_item": "up (retail price inflation)",
+    "inflation": "no %; cost inflation still 'pretty high' and steady",
+    "ecom": "+19% y/y; 11.1% of sales",
+    "other": "no classic trade-down, with higher-priced categories growing fastest; Hurricane Ian (Florida stores reopened within 4 days); less promotional than Q3'21, which had heavy promotion tests; DoorDash partnership launched",
+    "why": "Comps rose entirely on higher prices: inflation lifted the value of each basket while traffic slipped slightly. Customers dropped about one produce item per trip to manage spending.",
+    "sources": [
+      {"what": "10-Q Q3'22, filed Nov 8 2022, acc. 0000950170-22-023215 (comp +2.4%; basket up on retail inflation, slight drop in items per basket)", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000095017022023215/sfm-20221002.htm"},
+      {"what": "Q3'22 call transcript, Nov 8 2022 (traffic down a hair, one less produce item, e-com +19% / 11.1%)", "url": "https://s206.q4cdn.com/808897563/files/doc_events/2022/11/1/SFM-USQ_Transcript_2022-11-08.pdf"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q4'22",
+    "comp": 2.9,
+    "traffic": "'just a hair down', per call",
+    "ticket": "up; average unit retail and inflation offset a slight drop in units",
+    "items_per_basket": "slightly lower y/y",
+    "price_per_item": "up (AUR / retail inflation)",
+    "inflation": "no %; management expected inflation to persist through 1H23, then ease",
+    "ecom": "+16.5% y/y; 11.4% of sales",
+    "other": "easy comparison: Q4'21 margins were squeezed by lagging price increases; holiday promotional activity helped somewhat; deli strength; trading down in item count and within some categories; lapping Omicron (late Q4'21)",
+    "why": "Comps accelerated to 2.9% because inflation-driven price per item outweighed a slight fall in traffic and in items per basket. Some holiday promotional activity also helped.",
+    "sources": [
+      {"what": "Q4'22 call transcript, Mar 1-2 2023 (traffic a hair down, ticket up via AUR, e-com +16.5% / 11.4%)", "url": "https://s206.q4cdn.com/808897563/files/doc_events/2023/03/1/Final-Transcript-SFM.pdf"},
+      {"what": "10-K FY2022, filed Mar 2 2023, acc. 0000950170-23-005723 (FY comp +2.2%: basket up on inflation, slightly fewer items; quarter not split)", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000095017023005723/sfm-20230101.htm"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q1'23",
+    "comp": 3.1,
+    "traffic": "positive (comp transactions positive; better than planned), per call and 10-Q",
+    "ticket": "up (net basket increase from inflation)",
+    "items_per_basket": "slightly lower y/y",
+    "price_per_item": "up (retail inflation); AUR in line with plan",
+    "inflation": "no quarterly %; per the Q2'23 call, management had expected double-digit y/y inflation at the start of 2023",
+    "ecom": "'double digit' growth; 12.2% of sales",
+    "other": "the beat vs guidance came mainly from traffic; lapping Omicron and the King Soopers strike; heavy California rain hurt produce supply; 11 store closures announced; strong in California and in Florida's new stores; value items such as multipacks",
+    "why": "Comps beat guidance mainly because traffic was better than expected. Inflation still raised basket value while items per basket edged down, in line with plan.",
+    "sources": [
+      {"what": "10-Q Q1'23, filed May 1 2023, acc. 0000950170-23-016253 (comp +3.1%; basket up on inflation, slightly fewer items)", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000095017023016253/sfm-20230402.htm"},
+      {"what": "Q1'23 call transcript, May 1 2023 (positive traffic, beat was traffic, e-com 12.2%)", "url": "https://s206.q4cdn.com/808897563/files/doc_events/2023/05/1/SFM-Q1-Earnings-Transcript-FINAL-5-1-23.pdf"},
+      {"what": "Q2'23 call transcript, Aug 1 2023 (expected inflation trajectory from double digits early in 2023)", "url": "https://s206.q4cdn.com/808897563/files/doc_events/2023/08/1/SFM-Q2-Earnings-Transcript-FINAL-8-1-23.pdf"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q2'23",
+    "comp": 3.2,
+    "traffic": "positive throughout the quarter (comp transactions), both in-store and e-commerce",
+    "ticket": "slight net increase (similar to recent quarters)",
+    "items_per_basket": "slightly lower y/y, stabilizing at 'slightly under 10' units per basket",
+    "price_per_item": "up (retail inflation), with the y/y benefit starting to taper late in Q2",
+    "inflation": "no quarterly %; trajectory from double digits early in the year toward mid-single digits by Q3-Q4",
+    "ecom": "+16% y/y; 12.1% of sales; DoorDash adds less than 1 pt to the comp",
+    "other": "impact of the 11 store closures (10-Q); more sampling; more vendor-funded promotion in the industry; meat inflation slowing with better unit volumes; mix toward organics and higher-margin categories",
+    "why": "Comps rose 3.2% on positive traffic, both online and in stores, plus a small inflation-driven lift in basket value. Fewer items per basket and the store closures partly offset the gain.",
+    "sources": [
+      {"what": "10-Q Q2'23, filed Aug 1 2023, acc. 0000950170-23-036475 (comp +3.2%: positive traffic, slight basket increase from inflation, slightly fewer items, store closures)", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000095017023036475/sfm-20230702.htm"},
+      {"what": "Q2'23 call transcript, Aug 1 2023 (units under 10, e-com +16% / 12.1%, DoorDash under 1 pt, inflation path)", "url": "https://s206.q4cdn.com/808897563/files/doc_events/2023/08/1/SFM-Q2-Earnings-Transcript-FINAL-8-1-23.pdf"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q3'23",
+    "comp": 3.9,
+    "traffic": "'solid positive' (comp transactions positive in every period, in-store and online); no number given",
+    "ticket": "up, but the gain narrowed through the quarter",
+    "items_per_basket": "still down y/y, but the decline lessened through the quarter",
+    "price_per_item": "up y/y; sequential AUR increases eased",
+    "inflation": "high end of low-to-mid single digits, falling through the quarter",
+    "ecom": "+16% y/y; 12.1% of sales",
+    "other": "all categories positive, strongest in meat, grocery, dairy and frozen; merchandising and seasonal events (back-to-school up high single digits); marketing changes improved in-store traffic; Sprouts brand +14%; 10 new stores",
+    "why": "Comps accelerated to 3.9% mainly on stronger traffic, in stores and online, helped by merchandising and marketing changes. Inflation was smaller but still positive and the drop in items per basket kept shrinking, so the drag from basket size eased.",
+    "sources": [
+      {"what": "Q3'23 call transcript, Oct 31 2023 (traffic every period, inflation range, e-com +16% / 12.1%, categories); file is mislabeled 'Q2' on IR", "url": "https://s206.q4cdn.com/808897563/files/doc_events/2023/10/1/SFM-Q2-Earnings-Transcript-FINAL-10-31-23.pdf"},
+      {"what": "10-Q Q3'23, filed Oct 31 2023, acc. 0000950170-23-056562 (comp +3.9%; no driver split for the quarter)", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000095017023056562/sfm-20231001.htm"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q4'23",
+    "comp": 3.3,
+    "traffic": "positive in store and online throughout the quarter, per call",
+    "ticket": "slightly up (AUR up slightly)",
+    "items_per_basket": "stabilizing sequentially; units 'coming back' as disinflation sets in",
+    "price_per_item": "slightly up y/y; stabilizing sequentially",
+    "inflation": "higher end of low single digits",
+    "ecom": "about +17% y/y; 12.4% of sales",
+    "other": "comps steady month to month; a third e-commerce partner added alongside Instacart and DoorDash; strong comps in Florida; attribute-driven products (organic, grass-fed, vegan, keto) growing faster than the company",
+    "why": "Comps held above 3% mainly on positive traffic in stores and online. Inflation slowed to low single digits, but items per basket stopped falling, so the shrinking price lift did not pull comps down.",
+    "sources": [
+      {"what": "Q4'23 call transcript, Feb 22 2024 (traffic, AUR/units, inflation, e-com about +17% / 12.4%)", "url": "https://s206.q4cdn.com/808897563/files/doc_events/2024/02/1/SFM-Q4-Earnings-Transcript-FINAL-02-22-24.pdf"},
+      {"what": "10-K FY2023, filed Feb 22 2024, acc. 0000950170-24-018768 (FY comp +3.4%: basket up on inflation plus positive traffic, offset by slightly fewer items and store closures; quarter not split)", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000095017024018768/sfm-20231231.htm"}
+    ],
+    "confidence": "A"
+  }
+]

@@ -1,0 +1,208 @@
+[
+  {
+    "q": "Q1'24",
+    "comp": "+4.0%",
+    "traffic": "positive (not quantified) - call",
+    "ticket": "positive in both e-com and stores (not quantified) - call",
+    "items_per_basket": "stabilizing sequentially (units 'continued to stabilize') - call",
+    "price_per_item": "AUR stabilizing sequentially - call",
+    "inflation": "low single digit, a bit lower than Q4'23 - call (CFO, Q&A)",
+    "ecom": "+~25%, 14% of sales - call",
+    "other": "Most differentiated categories (grocery, dairy, frozen, meat) led; comps consistent through the quarter; January weather pushed some shoppers to e-commerce; new stores performing better.",
+    "why": "Comps were driven by positive traffic in stores and online, while price per item and units per basket, which had been falling, were leveling off. Inflation was low single digit, so most growth was more customers rather than price.",
+    "sources": [
+      {"what": "Q1 2024 call transcript (LSEG), call May 1 2024 GMT (Apr 30 US) - all driver detail", "url": "https://s206.q4cdn.com/808897563/files/doc_events/2024/05/1/SFM-Q1-Earnings-Transcript-FINAL-05-01-24.pdf"},
+      {"what": "10-Q Q1 2024 (filed May 1 2024) - comp +4.0% only, no driver split", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000157551524000095/sfm-20240331.htm"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q2'24",
+    "comp": "+6.7%",
+    "traffic": "accelerated, slightly under half of the comp ('almost 50-50, a little more basket than traffic') - call (CFO, Q&A)",
+    "ticket": "slightly over half of the comp - call",
+    "items_per_basket": "back to roughly flat ('still just barely negative') - call",
+    "price_per_item": "AUR up (low-single-digit inflation); basket gain = AUR, not units - call",
+    "inflation": "low single digit - call",
+    "ecom": "+30%, 14% of sales - call",
+    "other": "Early and strong seasonal produce season; acceleration came from brick-and-mortar traffic; marketing/influencer media mix; new vintages comping double digit; some cannibalization as openings rose (no number).",
+    "why": "Store traffic sped up on better in-stock levels, new products and an early, strong produce season, and price per item kept rising at a low-single-digit rate while units per basket were about flat. The comp was roughly half traffic, half basket.",
+    "sources": [
+      {"what": "Q2 2024 call transcript (LSEG), Jul 29 2024 - all driver detail (note: release/call was Jul 29, not Jul 31)", "url": "https://s206.q4cdn.com/808897563/files/doc_events/2024/07/1/SFM-Q2-Earnings-Transcript-FINAL-06-30-24.pdf"},
+      {"what": "10-Q Q2 2024 (filed Jul 29 2024) - comp +6.7% only", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000157551524000121/sfm-20240630.htm"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q3'24",
+    "comp": "+8.4%",
+    "traffic": "about half of the comp ('split fairly evenly between traffic and basket'); strong in-store and online - call",
+    "ticket": "about half of the comp - call; new/more frequent customers bring some smaller baskets",
+    "items_per_basket": "total units up y/y; on like-for-like core SKUs units flat - call (CFO)",
+    "price_per_item": "AUR 'stable and normalized', still a contributor - call",
+    "inflation": "low single digit on like-for-like SKUs - call",
+    "ecom": "+36%, 14.5% of sales - call",
+    "other": "Q2->Q3 acceleration came mainly from in-store traffic and new vintages comping strongly; marketing driving new customers, retention and frequency; cannibalization modeled and 'in tune' (no number).",
+    "why": "More customers and more frequent trips, especially in physical stores, pushed comps higher, helped by marketing and strong newer stores. Basket grew on low-single-digit price, with units on core items flat.",
+    "sources": [
+      {"what": "Q3 2024 call transcript (LSEG), Oct 30 2024 - all driver detail", "url": "https://s206.q4cdn.com/808897563/files/doc_financials/2024/q3/SFM-Q3-Earnings-Transcript-FINAL-10-30-24.pdf"},
+      {"what": "10-Q Q3 2024 (filed Oct 30 2024) - comp +8.4% only", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000157551524000172/sfm-20240929.htm"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q4'24",
+    "comp": "+11.5%",
+    "traffic": "strong; comp 'balanced' across baskets and traffic (no split) - call",
+    "ticket": "up; FY24 basket up mainly due to product mix - call",
+    "items_per_basket": "flat (~10 items per basket, units per basket flattened out) - call (CFO, Q&A)",
+    "price_per_item": null,
+    "inflation": "Not given for the quarter on the call. FY2024 10-K: basket value up partly on retail price inflation, slight reduction in items per basket (full-year, not Q4).",
+    "ecom": "+~37%, 14.5% of sales; Uber Eats added as partner; e-com passed $1B for the year - call",
+    "other": "October the strongest month, all three months double digit; acceleration from new stores and brick-and-mortar traffic; weather/wildfires immaterial; SNAP small for Sprouts.",
+    "why": "Comps peaked as store traffic kept accelerating and new stores entered the comp base strongly, with baskets also up on product mix. It was a broad-based quarter across channels and regions, with no one-off event called out.",
+    "sources": [
+      {"what": "Q4 2024 call transcript (LSEG), Feb 20 2025 - driver detail", "url": "https://s206.q4cdn.com/808897563/files/doc_financials/2024/q4/SFM-Q4-Earnings-Transcript-FINAL-02-20-25.pdf"},
+      {"what": "10-K FY2024 (filed Feb 20 2025) - full-year 7.6% comp: basket up partly on inflation, items/basket slightly down", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000157551525000011/sfm-20241229.htm"}
+    ],
+    "confidence": "B"
+  },
+  {
+    "q": "Q1'25",
+    "comp": "+11.7%",
+    "traffic": "~70% of the comp (no % growth given), strongest in stores - call (CFO, Q&A)",
+    "ticket": "~30% of the comp, 'pretty normal basket' - call",
+    "items_per_basket": null,
+    "price_per_item": null,
+    "inflation": null,
+    "ecom": "+~28%, 15% of sales - call",
+    "other": "One-offs worth ~50 bp of the comp: a strike at a conventional competitor in Colorado (King Soopers) plus vitamin sales from a heavy cold/flu season. New stores entering the base helped; cannibalization ~100-150 bp (~125 bp blended), roughly offset by new-store comps.",
+    "why": "Traffic drove most of the growth as new and returning customers kept coming, with an ordinary basket. A competitor's strike and a bad flu season added about half a point.",
+    "sources": [
+      {"what": "Q1 2025 call transcript (LSEG), Apr 30 2025 - all driver detail", "url": "https://s206.q4cdn.com/808897563/files/doc_financials/2025/q1/SFM-Q1-Earnings-Transcript-FINAL-04-30-25.pdf"},
+      {"what": "10-Q Q1 2025 (filed Apr 30 2025) - comp +11.7% only", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000157551525000178/sfm-20250330.htm"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q2'25",
+    "comp": "+10.2%",
+    "traffic": "majority of the comp; moderated slightly from Q1 - call",
+    "ticket": "minority of the comp (implied) - call",
+    "items_per_basket": null,
+    "price_per_item": "AUR similar to Q1 - call",
+    "inflation": "consistent quarter to quarter, similar to Q1 (not quantified) - call",
+    "ecom": "+27%, ~15% of sales - call",
+    "other": "'External tailwinds' in May-June pushed the two-year stack above its ~15% run rate: a strong produce season and the UNFI cyberattack disrupting the natural/organic supply chain (named on the Q3'25 and Q2'26 calls). New stores entering base; loyalty program launched in Arizona.",
+    "why": "Traffic was still the main engine but started to slow as Sprouts began lapping its 2024 surge. Strong produce and a competitor's supply-chain disruption helped May-June.",
+    "sources": [
+      {"what": "Q2 2025 call transcript (LSEG), Jul 30 2025 - driver detail", "url": "https://s206.q4cdn.com/808897563/files/doc_earnings/2025/q2/transcript/SFM-Q225-Earnings-Transcript-FINAL.pdf"},
+      {"what": "Q3 2025 call (Oct 29 2025) - names the May/June supply and cyber disruption", "url": "https://s206.q4cdn.com/808897563/files/doc_earnings/2025/q3/transcript/SFM-Q325-Earnings-Transcript-FINAL.pdf"},
+      {"what": "10-Q Q2 2025 (filed Jul 30 2025) - comp +10.2% only", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000157551525000222/sfm-20250629.htm"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q3'25",
+    "comp": "+5.9%",
+    "traffic": "positive, ~40% of the comp; slowing - call",
+    "ticket": "~60% of the comp (implied) - call",
+    "items_per_basket": "pressure on units per basket; customers trimming the end of the basket - call",
+    "price_per_item": null,
+    "inflation": null,
+    "ecom": "+21%, ~15.5% of sales - call",
+    "other": "Tough compares (Sep 2024 ~+10%, Oct 2024 ~+13%); 'softening consumer', especially lower/middle income; SNAP is 2-3% of sales, early effects of SNAP changes/government shutdown; cannibalization in line; promotions under review.",
+    "why": "Comps slowed faster than planned late in the quarter as Sprouts lapped double-digit months and a more stretched shopper visited a bit less often and dropped the last items from the basket. Traffic slowed most, though it stayed positive.",
+    "sources": [
+      {"what": "Q3 2025 call transcript (LSEG), Oct 29 2025 - all driver detail", "url": "https://s206.q4cdn.com/808897563/files/doc_earnings/2025/q3/transcript/SFM-Q325-Earnings-Transcript-FINAL.pdf"},
+      {"what": "10-Q Q3 2025 (filed Oct 29 2025) - comp +5.9% only", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000157551525000237/sfm-20250928.htm"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q4'25",
+    "comp": "+1.6%",
+    "traffic": "slightly negative - call",
+    "ticket": "positive; basket drove the comp - call",
+    "items_per_basket": "some unit pressure returning (customers buying fewer items; produce units down) - call",
+    "price_per_item": "AUR up on inflation plus mix to premium/organic - call",
+    "inflation": "low single digits, in line with CPI; coffee and meat notably inflationary - call (CFO, Q&A)",
+    "ecom": "+15%, ~15.5% of sales - call",
+    "other": "Disappointing holiday season; lapping a ~10.5% Nov/Dec 2024; the low-engagement customers gained in late 2024 visiting less and buying fewer items; value-focused consumer; the Q3->Q4 slowdown was mainly traffic plus a little units.",
+    "why": "Comps fell to about 1.6% because the customers won in the late-2024 surge stopped coming as often, so traffic turned slightly negative. Inflation (coffee, meat) and premium mix kept the basket growing.",
+    "sources": [
+      {"what": "Q4 2025 call transcript (LSEG), Feb 19 2026 - all driver detail (file is labeled Q325 but is the Q4 call)", "url": "https://s206.q4cdn.com/808897563/files/doc_earnings/2025/q4/transcript/SFM-Q325-Earnings-Transcript-FINAL.pdf"},
+      {"what": "10-K FY2025 (filed Feb 19 2026) - FY comp +7.3%, no quarterly driver split", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000157551526000008/sfm-20251228.htm"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q1'26",
+    "comp": "-1.7%",
+    "traffic": "negative (not quantified) - call",
+    "ticket": "positive, low single digits - call (COO, Q&A)",
+    "items_per_basket": "some pressure on the last item in the basket ('not material') - call",
+    "price_per_item": "AUR up on mix; like-for-like inflation at or slightly above CPI - call",
+    "inflation": "like-for-like ~CPI or a touch higher; tariffs lifting coffee and other prices - call",
+    "ecom": "+10%, ~16% of sales - call",
+    "other": "Hardest compare of the year (Feb 2025 King Soopers strike, Q1'25 +11.7%); first 'targeted value'/selective price actions and a more focused promo plan; loyalty points investment; rising fuel costs on consumers; April running slightly above the guide midpoint; newer vintages still comping positive.",
+    "why": "Fewer shopping trips against the strongest prior-year quarter pushed comps negative, partly offset by a low-single-digit rise in basket from inflation and mix. Management expected improvement to come from traffic as compares eased.",
+    "sources": [
+      {"what": "Q1 2026 call transcript (LSEG), Apr 29 2026 - all driver detail", "url": "https://s206.q4cdn.com/808897563/files/doc_earnings/2026/q1/transcript/SFM-Q126-Earnings-Transcript-FINAL.pdf"},
+      {"what": "10-Q Q1 2026 (filed Apr 29 2026) - comp -1.7% only", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000157551526000022/sfm-20260329.htm"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q2'26",
+    "comp": "-1.0%",
+    "traffic": "negative (not quantified); traffic is what moderated and drove the softening - call",
+    "ticket": null,
+    "items_per_basket": "all customers managing units per basket, produce most - call",
+    "price_per_item": "AUR up a bit on premium/innovation mix; not expected to drive improvement - call",
+    "inflation": "like-for-like in line with CPI - call (CFO, Q&A)",
+    "ecom": "+12%+, ~16% of sales; called a big driver of the comp improvement - call",
+    "other": "Monthly: comps improved through May, June the weakest (lapping strong 2025 produce and the UNFI disruption), July slightly negative with modest gains in traffic and units. First-half affordability tests were mixed: better unit movement, slower traffic response. Low-engagement, lower-income cohorts hardest hit. Cyclospora flagged as live in July.",
+    "why": "Comps were still slightly negative because fewer trips (mostly from less-engaged, lower-income shoppers) and fewer items per basket outweighed modest price/mix gains, against a tough June compare. Early price cuts lifted units on the affected items but did not yet bring in more trips.",
+    "sources": [
+      {"what": "Q2 2026 call transcript (LSEG), Jul 29 2026 - all driver detail", "url": "https://s206.q4cdn.com/808897563/files/doc_earnings/2026/q2/transcript/SFM-Q226-Earnings-Transcript-FINAL.pdf"},
+      {"what": "10-Q Q2 2026 (filed Jul 29 2026) - comp -1.0% and 'uneven macroeconomic backdrop' framing; no transaction split", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000157551526000037/sfm-20260628.htm"}
+    ],
+    "confidence": "B"
+  },
+  {
+    "q": "Q3'26",
+    "comp": "-0.9%",
+    "traffic": "-3.3% comp transactions - 10-Q and call",
+    "ticket": "+2.5% comp transaction size (basket) - 10-Q and call",
+    "items_per_basket": "slightly fewer units in the basket, now also among core customers - call",
+    "price_per_item": null,
+    "inflation": null,
+    "ecom": "+12%, >16% of sales; Shipt launched as a fourth platform - call",
+    "other": "Cyclospora outbreak hit produce, about -60 bp to comps (peaked Aug-early Sep, still a slight drag in Q4) - 10-Q and call. Comps softened in Aug-Sep after July progress and did not improve as compares eased; uneven macro, shoppers moving to value channels; prior price tests 'not deep or broad enough'; higher fuel costs.",
+    "why": "Trips fell about 3% as stretched shoppers, now including core customers, visited less and the cyclospora scare hurt produce. Bigger baskets (+2.5%) only partly offset it, and the decline did not ease even though the prior-year compare got easier.",
+    "sources": [
+      {"what": "10-Q Q3 2026 (filed Oct 28 2026) MD&A - transactions -3.3%, transaction size +2.5%, cyclospora -0.6%", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000157551526000060/sfm-20260927.htm"},
+      {"what": "Q3 2026 call transcript (LSEG), Oct 28 2026 - same numbers + qualitative detail", "url": "https://s206.q4cdn.com/808897563/files/doc_earnings/2026/q3/transcript/SFM-Q326-Earnings-Transcript-FINAL.pdf"}
+    ],
+    "confidence": "A"
+  },
+  {
+    "q": "Q4'26 outlook",
+    "comp": "guide -2% to -4% for Q4'26; FY2026 ~-1.7% (52-week basis)",
+    "traffic": "Not quantified. Management's top priority is to win back traffic/transactions ('traffic first'); traffic, units and trip frequency were not recovering even against easier compares.",
+    "ticket": null,
+    "items_per_basket": "Deeper, broader price cuts are expected to lift units; success will be measured on units, transactions and returning customers - call",
+    "price_per_item": "Lower prices on a broad set of items (affordable entry points via Sprouts brand, e.g. cage-free eggs; competitive high-frequency 'trust builder' items; produce priced better across the board) - implies pressure on price per item; not quantified",
+    "inflation": null,
+    "ecom": "Keep expanding (Shipt added; e-com baskets are larger) - call",
+    "other": "Q4 EPS guide $0.47-0.51; Q4 includes ~90 bp gross-margin deleverage from deeper affordability investment and ~170 bp SG&A deleverage (fixed-cost deleverage, store labor and benefits); shrink not where they want it; cyclospora still a slight Q4 drag; 53rd week adds ~$190M sales / $20M EBIT / $0.16 EPS (excluded from comps). New CEO (Nick Konat) with Jack Sinclair moving to Executive Chairman; holiday-essentials price cuts in Q4, affordability to headline January 2027 marketing. 2027: no guidance (to come in February 2027) - EBIT margin expected to stay above 5% (called the floor) while investing in price, tech and supply chain, offset by self-distribution, retail media and loyalty data; they called Q4 a '2026 Q4 phenomenon' not indicative of 2027 quarters.",
+    "why": "Sprouts is making a bigger price investment in Q4, accepting lower margins, to stop the traffic decline. The Q4 comp guide is worse than Q3 because trips are still falling and the price cuts take time to work. Management gave no traffic/basket numbers for Q4 or 2027, only that improvement must come from traffic and units, not price.",
+    "sources": [
+      {"what": "Q3 2026 call transcript (LSEG), Oct 28 2026 - prepared remarks (CFO guide) + Q&A", "url": "https://s206.q4cdn.com/808897563/files/doc_earnings/2026/q3/transcript/SFM-Q326-Earnings-Transcript-FINAL.pdf"},
+      {"what": "8-K Ex.99.1 Q3 2026 earnings release (Oct 28 2026, guidance)", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000157551526000059/sfm-20260927xex991.htm"},
+      {"what": "8-K Ex.99.2 Q3 2026 earnings presentation (Oct 28 2026), not read in detail", "url": "https://www.sec.gov/Archives/edgar/data/1575515/000157551526000059/sfm-ex992.htm"}
+    ],
+    "confidence": "A"
+  }
+]

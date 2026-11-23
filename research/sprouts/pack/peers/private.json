@@ -1,0 +1,236 @@
+{
+  "_meta": {
+    "built": "2026-11-23",
+    "scope": "Private or not-separately-reported US grocers that compete with Sprouts Farmers Market (SFM)",
+    "rules": "Every figure has a source id (see each company's 'sources'). null = not found in a credible source. 'estimate' = third-party figure, not disclosed by the company. Nothing here was calculated by us, except where marked 'derived' (sums of quarterly numbers the company disclosed).",
+    "reliability_scale": "A = company statement or filing; B = reputable trade press reporting company data; C = third-party estimate (panel data, rankings, store-locator scrapes); D = low-quality or single local report"
+  },
+  "companies": [
+    {
+      "name": "Trader Joe's",
+      "owner": "Private (Aldi Nord group, Albrecht family)",
+      "product_focus": "Small-box specialty grocer selling a tight, mostly own-brand range (snacks, frozen, prepared, produce, wine) at moderate prices; not organic-led, novelty and private label are the draw.",
+      "skus_per_store": {"value": null, "range_cited": "2,500-4,000", "note": "No company figure found. ~4,000 items (Wikipedia) vs 2,500-3,000 (Supermarket News, outside estimates). Per Supermarket News, the company only confirms 'more than 800' private-label products.", "reliability": "C/D", "src": ["tj_sn_pl"]},
+      "private_label": {"value_pct_of_sales": 70, "basis": "share of sales, Numerator panel, trailing 12 months to ~Dec 2024", "estimate": true, "reliability": "C", "src": ["numerator_tb"], "other_cited": "~80% of items carry TJ brand names (widely repeated; attributed to the company podcast, not verified)"},
+      "us_store_count": {
+        "latest": {"value": 660, "approx": true, "as_of": "2026-10", "reliability": "B/C", "src": ["tj_fox_oct26"]},
+        "history": [
+          {"as_of": "2025-01-01", "value": 579, "reliability": "B", "src": ["tj_gd_apr25"]},
+          {"as_of": "2026-01", "value": 631, "reliability": "C", "src": ["tj_scrape_jan26"], "note": "store-locator scrape; approximate"}
+        ],
+        "openings": [
+          {"year": 2024, "value": 34, "src": ["tj_gd_apr25", "tj_gd_mar26"]},
+          {"year": 2025, "value": 43, "src": ["tj_gd_mar26"]},
+          {"year": 2026, "value": "plan >20 (spokesperson, Mar 2026)", "src": ["tj_gd_mar26"]}
+        ],
+        "plans": "~30 stores listed as 'coming soon' across 16 states as of Oct 2026, no dates given (Supermarket News / Fox, Oct 20-21 2026)."
+      },
+      "avg_store_sqft": {"value": null, "range_cited": "10,000-15,000", "reliability": "D", "note": "range sourced only from Wikipedia"},
+      "revenue_estimate": {"value_usd_bn": null, "note": "No credible current estimate. NRF/Kantar 2026 Top 100 counts Trader Joe's inside Aldi ($58.36B, 2025). Older press figures of '$16B+' have no source.", "src": ["nrf_2026"]},
+      "margins_comps_disclosed": "None disclosed (private).",
+      "sales_per_sqft": {"value": null, "note": "Often described as the highest in US grocery (BusinessWeek, 2008), but no credible current number."},
+      "sources": {
+        "tj_gd_apr25": {"url": "https://www.grocerydive.com/news/trader-joes-store-growth-2025/745936/", "date": "2025-04-22", "publisher": "Grocery Dive"},
+        "tj_gd_mar26": {"url": "https://www.grocerydive.com/news/trader-joes-store-growth-2026/816131/", "date": "2026-03-31", "publisher": "Grocery Dive"},
+        "tj_fox_oct26": {"url": "https://www.ktvu.com/news/trader-joes-expanding-new-locations", "date": "2026-10-21", "publisher": "KTVU / Fox Television Stations"},
+        "tj_scrape_jan26": {"url": "https://www.scrapehero.com/location-reports/Trader%20Joes-USA/", "date": "2026-01", "publisher": "ScrapeHero (location scrape)"},
+        "tj_sn_pl": {"url": "https://www.supermarketnews.com/center-store/private-label-trader-joe-s", "date": "undated (older)", "publisher": "Supermarket News"},
+        "numerator_tb": {"url": "https://talkbusiness.net/2025/01/the-supply-side-private-brands-continue-to-grow-retail-market-share-in-2024/", "date": "2025-01-07", "publisher": "Talk Business & Politics, citing Numerator"},
+        "nrf_2026": {"url": "https://nrf.com/research-insights/top-retailers/top-100-retailers/top-100-retailers-2026-list", "date": "2026-07-01", "publisher": "NRF / Kantar"}
+      }
+    },
+    {
+      "name": "Aldi US",
+      "owner": "Private (Aldi Sud group)",
+      "product_focus": "Hard discounter: limited range, >90% Aldi-exclusive brands, lowest-price positioning; growing fresh and organic (SimplyNature), but price comes first.",
+      "skus_per_store": {"value": null, "range_cited": "1,300-1,800", "note": "No company figure found. Trade and press figures conflict (1,300 / ~1,400 / ~1,600 / ~1,800). Do not show a single number.", "reliability": "D"},
+      "private_label": {
+        "value_pct_of_items": ">90",
+        "basis": "Company FAQ: 'more than 90 percent of the products in our stores are ALDI exclusive brands' (seen in search results; fetching the FAQ directly redirected to an empty help page)",
+        "reliability": "A (fetch not confirmed)",
+        "src": ["aldi_faq"],
+        "share_of_sales_estimate": {"value_pct": 80, "estimate": true, "reliability": "C", "src": ["numerator_tb"]}
+      },
+      "us_store_count": {
+        "latest": {"value": "nearly 2,800 (company target for end-2026)", "as_of": "2026-01-12", "reliability": "A", "src": ["aldi_jan26"]},
+        "history": [
+          {"as_of": "2024-12-31", "value": ">2,400", "reliability": "B", "src": ["aldi_feb25_cs"]},
+          {"as_of": "2025-12-31", "value": 2614, "reliability": "C", "note": "single secondary report, not found in an Aldi release", "src": ["aldi_2614"]}
+        ],
+        "openings": [
+          {"year": 2024, "value": "~120 (Aldi) vs 'a little over 100' (another report)", "src": ["aldi_feb25_cs"]},
+          {"year": 2025, "value": "plan 225+, including ~100 Southeastern Grocers conversions", "src": ["aldi_feb25_cs"]},
+          {"year": 2026, "value": "plan >180 in 31 states, including ~80 Southeastern Grocers conversions", "src": ["aldi_jan26"]}
+        ],
+        "plans": "800 new stores 2024-2028, ~3,200 stores by end-2028; $9B US investment through 2028; >200 Winn-Dixie/Harveys conversions by end-2027; entering Maine (40th state) and Colorado (50+ stores)."
+      },
+      "avg_store_sqft": {"value": null, "note": "Only a local report (~22,000 sq ft average, Jacksonville Daily Record, Jun 2026) and older trade figures (~12,000 sq ft of selling space). Not used.", "reliability": "D"},
+      "revenue_estimate": {"value_usd_bn": 58.36, "year": 2025, "yoy": -0.002, "estimate": true, "caveat": "NRF/Kantar estimate that INCLUDES Trader Joe's (Aldi Nord) and the acquired Winn-Dixie/Harveys stores. NRF says its figures are estimated and may not match filings.", "reliability": "C", "src": ["nrf_2026"]},
+      "margins_comps_disclosed": "None disclosed. The company says about 1 in 3 US households shopped at Aldi in the past year and 17M new customers visited in 2025 (its own data).",
+      "sales_per_sqft": {"value": null},
+      "sources": {
+        "aldi_jan26": {"url": "https://corporate.aldi.us/newsroom/news/aldi-us-doubles-down-on-growth-in-2026", "date": "2026-01-12", "publisher": "ALDI US press release"},
+        "aldi_feb25_cs": {"url": "https://chainstoreage.com/aldi-plans-more-220-new-stores-2025", "date": "2025-02-07", "publisher": "Chain Store Age (reporting Aldi release)"},
+        "aldi_2614": {"url": "https://www.foodrepublic.com/1969477/number-aldi-stores-america-2025/", "date": "2026", "publisher": "Food Republic (secondary)"},
+        "aldi_faq": {"url": "https://aldi.us/about-us/faqs/about-aldi", "date": "accessed 2026-11-23", "publisher": "ALDI US FAQ"},
+        "numerator_tb": {"url": "https://talkbusiness.net/2025/01/the-supply-side-private-brands-continue-to-grow-retail-market-share-in-2024/", "date": "2025-01-07", "publisher": "Talk Business & Politics, citing Numerator"},
+        "nrf_2026": {"url": "https://nrf.com/research-insights/top-retailers/top-100-retailers/top-100-retailers-2026-list", "date": "2026-07-01", "publisher": "NRF / Kantar"}
+      }
+    },
+    {
+      "name": "Whole Foods Market",
+      "owner": "Amazon.com, Inc. (since Aug 2017); not a reported segment",
+      "product_focus": "Large-format natural and organic supermarket with strict ingredient standards (~500 banned ingredients) at premium prices; private label '365 by Whole Foods Market' is the value tier; adding small 'Daily Shop' urban stores.",
+      "skus_per_store": {"value": null, "note": "Not disclosed. Related figure: prices were cut on more than 1,000 private-label products in the past year (Modern Retail, Sep 2025).", "src": ["wfm_modernretail"]},
+      "private_label": {"value_pct": null, "note": "The only figure found is ~15% of revenue, from 2017 (around the acquisition). Too old; not used."},
+      "us_store_count": {
+        "latest": {"value": 544, "as_of": "2026 (Fast Facts page, undated; 568 in total including 12 UK + 12 Canada)", "reliability": "A", "src": ["wfm_fastfacts"]},
+        "history": [
+          {"as_of": "2026-03", "value": ">545 total (US+Canada+UK)", "src": ["wfm_uk_mar26"]},
+          {"as_of": "2026-05-13", "value": ">550 total", "src": ["wfm_dailyshop_may26"]}
+        ],
+        "plans": "Amazon (Jan 27 2026): >100 new Whole Foods stores over the next few years; closing all Amazon Go and Amazon Fresh stores, converting some into Whole Foods. Daily Shop: 8 locations (May 2026), Boston, Chicago and Philadelphia next."
+      },
+      "avg_store_sqft": {"value": null, "note": "Last figure ~40,000 gross sq ft (2017, via Statista); too old. Daily Shop stores are much smaller.", "reliability": "C (old)"},
+      "amazon_physical_stores_segment": {
+        "caveat": "Amazon's 'Physical stores' line = sales where the customer picks items in a store. It INCLUDES Amazon Fresh, Amazon Go and other Amazon-branded stores, and EXCLUDES Whole Foods orders placed online for delivery or pickup (those are in 'Online stores'). It is the best public stand-in for Whole Foods, but it is not Whole Foods. Fresh and Go close from 2026, so the line will move closer to Whole Foods-only going forward.",
+        "annual_usd_mn": {"2023": 20030, "2024": 21215, "2025": 22561},
+        "annual_basis": "derived = sum of the four quarters in Amazon's quarterly earnings releases (supplemental 'Net sales' table). It should match the 10-K product-group table, but the 10-K PDF could not be read here; check before publishing.",
+        "quarterly_usd_mn": {"Q4-22": 4957, "Q1-23": 4895, "Q2-23": 5024, "Q3-23": 4959, "Q4-23": 5152, "Q1-24": 5202, "Q2-24": 5206, "Q3-24": 5228, "Q4-24": 5579, "Q1-25": 5533, "Q2-25": 5595, "Q3-25": 5578, "Q4-25": 5855},
+        "yoy_ex_fx": {"Q4-22": 0.06, "Q1-23": 0.07, "Q2-23": 0.07, "Q3-23": 0.06, "Q4-23": 0.04, "Q1-24": 0.06, "Q2-24": 0.04, "Q3-24": 0.05, "Q4-24": 0.08, "Q1-25": 0.06, "Q2-25": 0.07, "Q3-25": 0.07, "Q4-25": 0.05},
+        "reliability": "A (quarters); derived (annual)",
+        "src": ["amzn_q4_23", "amzn_q4_24", "amzn_q4_25"]
+      },
+      "revenue_estimate": {"value_usd_bn": null, "note": "No separate Whole Foods revenue. Amazon says Whole Foods sales have grown 'over 40%' since the 2017 acquisition (Jan 2026).", "src": ["amzn_fresh_go_jan26"]},
+      "margins_comps_disclosed": "None. Amazon does not report Whole Foods profit or same-store sales.",
+      "sales_per_sqft": {"value": null},
+      "sources": {
+        "wfm_fastfacts": {"url": "https://www.wholefoodsmarket.com/company-info/newsroom/fast-facts", "date": "accessed 2026-11-23", "publisher": "Whole Foods Market"},
+        "wfm_uk_mar26": {"url": "https://www.wholefoodsmarket.com/company-info/newsroom/news-releases/whole-foods-market-to-open-six-new-u-k-stores", "date": "2026-03", "publisher": "Whole Foods Market release"},
+        "wfm_dailyshop_may26": {"url": "https://www.wholefoodsmarket.com/company-info/newsroom/news-releases/whole-foods-market-to-bring-its-daily-shop-concept-to-three-new-u-s-markets", "date": "2026-05-13", "publisher": "Whole Foods Market release"},
+        "amzn_fresh_go_jan26": {"url": "https://aboutamazon.com/news/company-news/amazon-fresh-go-stores-closing-expanding-whole-foods", "date": "2026-01-27", "publisher": "Amazon"},
+        "amzn_q4_23": {"url": "https://ir.aboutamazon.com/news-release/news-release-details/2024/Amazon-com-Announces-Fourth-Quarter-Results/default.aspx", "date": "2024-02-01", "publisher": "Amazon earnings release"},
+        "amzn_q4_24": {"url": "https://ir.aboutamazon.com/news-release/news-release-details/2025/Amazon-com-Announces-Fourth-Quarter-Results/default.aspx", "date": "2025-02-06", "publisher": "Amazon earnings release"},
+        "amzn_q4_25": {"url": "https://ir.aboutamazon.com/news-release/news-release-details/2026/Amazon-com-Announces-Fourth-Quarter-Results/default.aspx", "date": "2026-02-05", "publisher": "Amazon earnings release"},
+        "wfm_modernretail": {"url": "https://www.modernretail.co/operations/whole-foods-exec-says-even-high-income-shoppers-are-now-more-cost-conscious/", "date": "2025-09-30", "publisher": "Modern Retail"}
+      }
+    },
+    {
+      "name": "H-E-B",
+      "owner": "Private (Butt family), San Antonio TX",
+      "product_focus": "Full-line conventional supermarket chain (Texas + northern Mexico) with strong fresh and prepared food and a deep own-brand program (H-E-B, Hill Country Fare value tier); competes on price and service; also runs the upscale Central Market and Mi Tienda banners.",
+      "skus_per_store": {"value": null},
+      "private_label": {"value_pct_of_sales": 34, "basis": "Numerator, trailing 12 months to ~Dec 2024 (Chain Store Age reported 32% of sales volume from the same report)", "estimate": true, "reliability": "C", "src": ["numerator_tb"]},
+      "us_store_count": {
+        "latest": {"value": 460, "scope": "Texas AND Mexico combined (no US-only split in the boilerplate)", "as_of": "2026-06-03", "reliability": "A", "src": ["heb_jun26"]},
+        "history": [
+          {"as_of": "~2024", "value": ">435 (Texas and Mexico)", "src": ["heb_boiler_2024"]},
+          {"as_of": "2025-10-29", "value": 460, "src": ["heb_forney"]},
+          {"as_of": "early 2026", "value": "465 in one release; other Feb-Jun 2026 releases say 460", "src": ["heb_forney"]}
+        ],
+        "plans": "Ongoing Dallas-Fort Worth expansion (Rockwall, Forney, Irving, Murphy, Hurst openings 2025-26); $700M supply-chain investment announced May 2026."
+      },
+      "avg_store_sqft": {"value": null},
+      "revenue_estimate": {
+        "company_statement": {"value": "over $50 billion annual sales (Texas + Mexico)", "as_of": "2026 release boilerplate", "reliability": "A", "src": ["heb_jun26"], "history": [{"as_of": "~2024", "value": "$43 billion", "src": ["heb_boiler_2024"]}]},
+        "third_party": {"value_usd_bn": 44.16, "year": 2025, "yoy": 0.068, "scope": "US retail sales", "estimate": true, "reliability": "C", "src": ["nrf_2026"]},
+        "forbes": [
+          {"list": "2023", "value_usd_bn": 43.6, "src": ["heb_forbes23"]},
+          {"list": "2022", "value_usd_bn": 38.9, "src": ["heb_forbes22"]}
+        ]
+      },
+      "margins_comps_disclosed": "None disclosed.",
+      "sales_per_sqft": {"value": null},
+      "sources": {
+        "heb_jun26": {"url": "https://newsroom.heb.com/h-e-b-tournament-of-champions-raises-record-breaking-18-5-million-for-texas-nonprofits-supporting-children-and-families/", "date": "2026-06-03", "publisher": "H-E-B newsroom (boilerplate)"},
+        "heb_forney": {"url": "https://newsroom.heb.com/?p=18113", "date": "2026-02-04", "publisher": "H-E-B newsroom (Forney opening)"},
+        "heb_boiler_2024": {"url": "https://newsroom.heb.com/?p=574", "date": "~2024", "publisher": "H-E-B newsroom 'About H-E-B'"},
+        "heb_forbes23": {"url": "https://ksat.com/news/local/2023/11/20/h-e-b-ranks-among-top-five-biggest-companies-list-by-forbes", "date": "2023-11-20", "publisher": "KSAT citing Forbes"},
+        "heb_forbes22": {"url": "https://www.tpr.org/business/2022-12-06/forbes-list-names-h-e-b-as-the-6th-largest-private-company-in-the-u-s", "date": "2022-12-06", "publisher": "Texas Public Radio citing Forbes"},
+        "numerator_tb": {"url": "https://talkbusiness.net/2025/01/the-supply-side-private-brands-continue-to-grow-retail-market-share-in-2024/", "date": "2025-01-07", "publisher": "Talk Business & Politics, citing Numerator"},
+        "nrf_2026": {"url": "https://nrf.com/research-insights/top-retailers/top-100-retailers/top-100-retailers-2026-list", "date": "2026-07-01", "publisher": "NRF / Kantar"}
+      }
+    },
+    {
+      "name": "Erewhon",
+      "owner": "Private (Antoci family; Clearlake Capital minority stake reported 2023)",
+      "product_focus": "Ultra-premium organic and wellness market in Southern California; cafes and tonic bars take ~30% of floor space; prepared foods + private label ~40% of revenue (2021 interview); the highest price positioning in this set.",
+      "skus_per_store": {"value": null},
+      "private_label": {"value": null, "note": "Prepared foods + private label together were ~40% of revenue (Tony Antoci, 2021 interview, via LA Times Jan 2025). This is not a private-label share on its own.", "src": ["erewhon_lat"]},
+      "us_store_count": {
+        "latest": {"value": 14, "as_of": "2026-09-01", "note": "Thousand Oaks = 14th location; the Pacific Palisades store closed after the Jan 2025 fire (reopening planned)", "reliability": "B", "src": ["erewhon_gd"]},
+        "history": [{"as_of": "2025-01-22", "value": 10, "src": ["erewhon_lat"]}],
+        "plans": "Downtown LA (Jun 2027), Costa Mesa (Sep 2027), Palisades reopening; NYC Tonic Bar (not a grocery store)."
+      },
+      "avg_store_sqft": {"value": null},
+      "revenue_estimate": {"value_usd_bn": null, "note": "The company declines to share financials (LA Times). Data-aggregator estimates are not credible."},
+      "margins_comps_disclosed": "None.",
+      "sales_per_sqft": {"value": "$1,800-$2,500 (reported)", "estimate": true, "reliability": "D", "note": "LA Times credits LA Business Journal and a 2019 Forbes item; the period and basis (annual vs weekly) are unclear, and other outlets misquote it as weekly. Show only as 'reported'.", "src": ["erewhon_lat"]},
+      "sources": {
+        "erewhon_lat": {"url": "https://www.yahoo.com/news/erewhon-2-0-coming-three-110030491.html", "date": "2025-01-22", "publisher": "Los Angeles Times (via Yahoo)"},
+        "erewhon_gd": {"url": "https://www.grocerydive.com/news/erewhon-thousand-oaks-location-open/829266/", "date": "2026-09-01", "publisher": "Grocery Dive"}
+      }
+    },
+    {
+      "name": "The Fresh Market",
+      "owner": "Cencosud S.A. (Chile, listed): 67% since 2022, 100% since 3Q25 (bought Apollo's 33% for $295M). Reported as Cencosud's 'United States' segment.",
+      "product_focus": "Upscale specialty supermarket (mostly in the Southeast) focused on fresh produce, premium meat and seafood, bakery and prepared foods; not organic-first; premium price positioning.",
+      "skus_per_store": {"value": null},
+      "private_label": {"value": null},
+      "us_store_count": {
+        "latest": {"value": 172, "as_of": "2026-01-15", "states": 22, "reliability": "B", "src": ["tfm_shelby_jan26"]},
+        "history": [
+          {"as_of": "2025-04-23", "value": 171, "note": "170th and 171st stores opened", "src": ["tfm_bw_apr25"]},
+          {"as_of": "late 2025", "value": 166, "note": "Grocery Dive citing the company website, after 2 closures; conflicts with the count from releases", "src": ["tfm_gd_dec25"]}
+        ],
+        "openings": [
+          {"year": 2025, "value": 7, "closures": 2, "src": ["tfm_gd_dec25"]},
+          {"year": 2026, "value": "plan 7 (part of Cencosud's ~$600M group-wide 2026 plan)", "src": ["tfm_shelby_jan26"]}
+        ],
+        "plans": "A WSOC-TV headline mentions a push to 200 stores by 2031; the article could not be read, so this is unconfirmed."
+      },
+      "avg_store_sqft": {"value": null, "note": "Individual new stores ~27,000-29,000 sq ft (Reston, Falls Church); no fleet average."},
+      "revenue_estimate": {"value": "~US$500M in 3Q26 (+1.4% y/y in USD)", "basis": "Cencosud segment reporting, via The Shelby Report", "reliability": "B", "src": ["tfm_shelby_nov26"], "note": "Cencosud reports the segment in CLP: 3Q25 revenue CLP 490,652M, +5.1% y/y in USD."},
+      "margins_comps_disclosed": {
+        "note": "YES: disclosed by the parent, Cencosud (USA segment)",
+        "3Q25": {"revenue_growth_usd": 0.051, "sss": -0.002, "ss_tickets": -0.022, "avg_ticket": 0.021, "adj_ebitda_margin": 0.075, "adj_ebitda_margin_prior_year": 0.074, "online_growth": 0.154, "online_penetration": 0.085, "src": ["cenco_3q25"], "reliability": "A"},
+        "3Q24": {"sss": 0.009, "src": ["cenco_3q25"]},
+        "3Q26": {"revenue_growth_usd": 0.014, "sss": -0.008, "adj_ebitda_margin": 0.074, "adj_ebitda_margin_prior_year": 0.075, "online_growth_lc": 0.178, "online_penetration": 0.099, "src": ["tfm_shelby_nov26"], "reliability": "B (secondary report of Cencosud's 3Q26 release; check against the original)"}
+      },
+      "sales_per_sqft": {"value": null},
+      "sources": {
+        "cenco_3q25": {"url": "https://www.cencosud.com/cencosud/site/docs/20251104/20251104173743/press_release_cencosud_3q25__eng_.pdf", "date": "2025-11-04", "publisher": "Cencosud 3Q25 press release"},
+        "tfm_shelby_nov26": {"url": "https://theshelbyreport.com/2026/11/11/the-fresh-market-comps-dip-in-q3-parent-co-posts-strongest-quarter-of-26/", "date": "2026-11-11", "publisher": "The Shelby Report"},
+        "tfm_shelby_jan26": {"url": "https://theshelbyreport.com/2026/01/15/the-fresh-market-to-open-7-new-stores/", "date": "2026-01-15", "publisher": "The Shelby Report"},
+        "tfm_bw_apr25": {"url": "https://www.businesswire.com/news/home/20250423994812/en/The-Fresh-Market-Opens-170th-171st-Stores-in-Fla-Conn.", "date": "2025-04-23", "publisher": "The Fresh Market release (Business Wire)"},
+        "tfm_gd_dec25": {"url": "https://www.grocerydive.com/news/the-fresh-market-new-stores-chicago-lexington-kentucky/807775/", "date": "2025-12", "publisher": "Grocery Dive"}
+      }
+    },
+    {
+      "name": "Lidl US",
+      "owner": "Private (Schwarz Group)",
+      "product_focus": "Hard discounter with a bigger box than Aldi: ~3,300 core items, ~80% private label, in-store bakery and rotating non-food; price-first, East Coast only.",
+      "skus_per_store": {"value": 3300, "basis": "core items, excluding seasonal; CEO Joel Rampoldt, PLMA keynote Nov 2025 (cut from ~4,500)", "reliability": "B", "src": ["lidl_drc_nov25", "lidl_mr_oct25"]},
+      "private_label": {"value_pct_of_items": 80, "basis": "~80% of core items (CEO, Nov 2025)", "reliability": "B", "src": ["lidl_drc_nov25"]},
+      "us_store_count": {
+        "latest": {"value": "about 200", "as_of": "2026-11-10", "states": "9 + DC", "reliability": "B", "src": ["lidl_gd_nov26"]},
+        "history": [
+          {"as_of": "2025-10-16", "value": "about 190", "src": ["lidl_mr_oct25"]},
+          {"as_of": "2025-08-27", "value": 192, "reliability": "C (scrape)", "src": ["lidl_scrapehero"]}
+        ],
+        "openings": [{"year": 2026, "value": "9 through mid-December 2026 (Baltimore, Dec 16 = 9th)", "src": ["lidl_gd_nov26"]}],
+        "plans": "'Modest' growth focused on existing markets (NYC metro, DC, Atlanta)."
+      },
+      "avg_store_sqft": {"value": null, "note": "Original prototype 36,000 gross / 21,000 selling sq ft (2017); newer stores ~25,000-27,000 sq ft; no fleet average.", "reliability": "B (old)"},
+      "revenue_estimate": {"value_usd_bn": null, "note": "Not in the NRF 2026 Top 100; no credible estimate found."},
+      "margins_comps_disclosed": "None. Only Placer.ai foot-traffic gains, Jan-Aug 2026.",
+      "sales_per_sqft": {"value": null},
+      "sources": {
+        "lidl_drc_nov25": {"url": "https://www.discountretailconsulting.com/post/usa-lidl-us-ceo-private-brands-are-life-and-death-for-us", "date": "2025-11-18", "publisher": "Discount Retail Consulting (PLMA keynote)"},
+        "lidl_mr_oct25": {"url": "https://www.modernretail.co/operations/how-lidl-positions-itself-against-walmart-aldi-trader-joes-as-it-grows-in-us/", "date": "2025-10-16", "publisher": "Modern Retail"},
+        "lidl_gd_nov26": {"url": "https://www.grocerydive.com/news/lidl-us-store-growth-grocery/874203/", "date": "2026-11-10", "publisher": "Grocery Dive"},
+        "lidl_scrapehero": {"url": "https://www.scrapehero.com/location-reports/Lidl-USA", "date": "2025-08-27", "publisher": "ScrapeHero"}
+      }
+    }
+  ]
+}

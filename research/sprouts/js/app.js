@@ -1,7 +1,7 @@
 /* ═════════════ APP — sidebar, top bar, routing ═════════════ */
 const NAV = [
   ['Sprouts',       [['biz','The business'], ['now','Where it is today'], ['evo','How it evolved']]],
-  ['The story now', [['drv','Growth engine'], ['watch','What to watch']]]
+  ['The story now', [['drv','Growth engine'], ['cst','Comps & the stock'], ['comp','Competitors'], ['watch','What to watch']]]
 ];
 
 function renderNav(){

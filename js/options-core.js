@@ -91,6 +91,30 @@ export async function fetchExpiries(ticker, alsoFrom = []) {
       dates = [...new Set(dates.concat((j3.results || []).map((c) => c.expiration_date)))].filter(Boolean).sort();
     }
   } catch { /* what we have stands */ }
+  // Still a gap in the middle: on a daily chain the pages above jump from a few
+  // weeks out straight to ~10 months, so the monthlies in between (Jan–Apr 2027 on
+  // SPY, Nov 23 2026) never show up. Ask for each missing standard monthly inside
+  // the list's span directly — the third Friday and the Thursday before it (the
+  // holiday case), a two-day window that stays well under the 1000-row cap.
+  try {
+    const known = new Set(dates);
+    const lastKnown = dates[dates.length - 1];
+    const now = new Date();
+    const probes = [];
+    for (let i = 0; i < 24 && lastKnown; i++) {
+      const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + i, 1));
+      const fri = new Date(first.getTime() + (((5 - first.getUTCDay() + 7) % 7) + 14) * 86400000);
+      const thu = new Date(fri.getTime() - 86400000);
+      const [a, b] = [thu, fri].map((d) => d.toISOString().slice(0, 10));
+      if (b < today || b > lastKnown || known.has(a) || known.has(b)) continue;
+      probes.push(mfetch('expirations', ticker, { 'expiration_date.gte': a, 'expiration_date.lte': b })
+        .then((j) => (j.results || []).map((c) => c.expiration_date)).catch(() => []));
+    }
+    if (probes.length) {
+      const found = (await Promise.all(probes)).flat();
+      dates = [...new Set(dates.concat(found))].filter(Boolean).sort();
+    }
+  } catch { /* what we have stands */ }
   // A pane that targets a specific month (Protective Put opens SPY on June 2027)
   // asks from that month directly: on a daily chain the pages above skip it.
   for (const from of alsoFrom) {

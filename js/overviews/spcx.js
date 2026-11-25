@@ -434,6 +434,7 @@ function deepDiveHtml(c){
       '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
       '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
       '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
+      '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
       '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
     '</div>';
   h+=subtabs('topline', [
@@ -444,6 +445,7 @@ function deepDiveHtml(c){
   ], false);   // TL-GEN · TL-SEG · TL-OTH · TL-CUS
   h+=subtabs('bottomline', [ { k:'blgen', l:'General', body:spcxMiscHtml('blgen') }, { k:'blseg', l:'Segments', body:spcxMiscHtml('blseg') } ], true);   // BL-GEN · BL-SEG (views in spcx-misc.js)
   h+=subtabs('evolution', [ { k:'results', l:'Results', body:resultsHtml('SPCX') } ], true);   // EV-RES (Earnings and Estimates follow)
+  h+=subtabs('valuation', [ { k:'histmult', l:'Historic Multiple', body:spcxMiscHtml('vahist') }, { k:'peers', l:'Peers', body:stdPeerScatter('dd') } ], true);   // VA-HIST (view in spcx-misc.js) · VA-PEERS (same map + table as OV-6). VA-TM, VA-SUB, VA-SENS need a Summit model: the scenario valuation lives in Miscellaneous.
   h+=subtabs('misc', SPCX_MISC_TABS.map(function(t){ return { k:t.k, l:t.l, body:spcxMiscHtml(t.k) }; }), true);
   h+='</div>';
   return h;
@@ -458,6 +460,10 @@ function buildSub(root, group, key){
     return;
   }
   if(group==='misc' || group==='bottomline') requestAnimationFrame(function(){ spcxMiscBuild(root, key); });
+  else if(group==='valuation'){
+    if(key==='histmult') requestAnimationFrame(function(){ spcxMiscBuild(root, 'vahist'); });
+    if(key==='peers') requestAnimationFrame(function(){ wireScatters(root); });
+  }
   else if(group==='evolution' && key==='results') requestAnimationFrame(function(){
     initResults(root.querySelector('.ov-spcx-dd .ovt-subpane[data-ovst="results"] .rs-wrap'), 'SPCX'); });
 }
@@ -520,7 +526,7 @@ function init(c){
 }
 function deepDiveInit(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
-  wireDD(root); wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'misc'); wireModal(root);
+  wireDD(root); wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'misc'); wireModal(root);
   spcxMiscWire(root, onSpcxPrice);
   var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
 }

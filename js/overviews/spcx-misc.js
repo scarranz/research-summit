@@ -73,7 +73,7 @@ function chartBlock(root, cfg){
   const ds = () => vis().map(s => ({
     label:s.label, data:s.data, type:s.type || cfg.type || 'bar', borderColor:s.color,
     backgroundColor: s.type === 'line' ? s.color : (s.est ? s.color + '66' : s.color),
-    borderWidth: s.type === 'line' ? 2 : 0, borderDash: s.dash ? [5,4] : [], pointRadius: s.type === 'line' ? 3 : 0,
+    borderWidth: s.type === 'line' ? 2 : 0, borderDash: s.dash ? [5,4] : [], pointRadius: s.type === 'line' ? (cfg.pointRadius != null ? cfg.pointRadius : 3) : 0,
     borderRadius: (s.type||cfg.type||'bar') === 'bar' ? 3 : 0, maxBarThickness: 46, spanGaps:false, stack: s.stack, order: s.type === 'line' ? 0 : 1
   }));
   const chartCfg = { type: cfg.type || 'bar', data:{ labels:cfg.labels, datasets:ds() },
@@ -1596,6 +1596,74 @@ registerView({ id:'blseg',
     const em = k => blPct(blFull('q', BL_SEGS.find(s => s[0] === k)[3]), blFull('q', k))[6];
     $('#blseg-tiles').innerHTML = BL_SEGS.map(([k, lab]) => tile(lab + ' · 3Q26', num(om(k),1) + '%', 'Operating margin · EBITDA ' + num(em(k),1) + '%')).join('') +
       tile('Share of operating income · 3Q26', 'SI ' + num(blFull('q','siopinc')[6] / blFull('q','opinc')[6] * 100, 0) + '%', 'Starlink ' + num(blFull('q','connopinc')[6] / blFull('q','opinc')[6] * 100, 0) + '%; Space ~0%');
+  }
+});
+
+/* ───── Valuation ▸ Historic Multiple (VA-HIST) — mounted under Deep Dive ▸ Valuation ─────
+   Price: daily closes since the IPO, LIVE from Massive (api.fetchPriceHistory → get-market-history). Nothing seeded.
+   Shares: 10-Q cover counts (Class A + B), stepped — 13,181.8M as of Jul 28 2026 (used from the IPO until Oct 14) and
+   13,581.1M as of Oct 15 2026. Net debt: balance sheets, stepped — Jun 30 2026 −$60.5B (cash $93.5B + securities $6.5B
+   − debt and finance leases $39.5B; used from the IPO), Sep 30 2026 −$51.0B (liquidity $89.9B − debt $38.8B). The Saturn
+   GPU lease (Nov 2026) is off balance sheet and not in EV.
+   Denominators: Bloomberg consensus (one snapshot, Nov 25 2026) from js/results-data/spcx.js — so the line moves with the
+   PRICE only; it is not a record of how the multiple looked at the time, when the Street's numbers were far lower. */
+const VH_SH = [['2026-06-12', 13181.8], ['2026-10-15', 13581.1]];
+const VH_ND = [['2026-06-12', -60497], ['2026-10-01', -51011]];
+const vhStep = (tbl, d) => { let v = tbl[0][1]; tbl.forEach(([k, x]) => { if(d >= k) v = x; }); return v; };
+const VH_IPO = 135;
+const vhCons = (key, yr) => { const m = spcxResults.views.y.metrics[key]; const i = m.periods.indexOf(yr); return i < 0 ? null : (m.cons[i] != null ? m.cons[i] : m.act[i]); };
+
+registerView({ id:'vahist',
+  html: `
+  <div class="srow" id="vahist-tiles"></div>
+
+  ${sec({ t:'Price and multiples since the IPO', s:'Daily close, live. Multiples divide each day\'s price by today\'s consensus for the year you pick',
+    ctl:`<div class="ctls">${seg('vahist-m','Show',[['px','Price'],['pe','P/E'],['ev','EV/EBITDA'],['evs','EV/Sales']],'px')}${seg('vahist-y','Year',[['2027','2027E'],['2028','2028E']],'2027')}</div>`,
+    b:`<div id="vahist-c"><div class="snote" style="margin:0">Loading daily prices (Massive)…</div></div>`,
+    n:'Price: Massive daily closes (get-market-history). Shares: 10-Q cover counts (13,181.8M at Jul 28 2026; 13,581.1M at Oct 15 2026). Net debt: Jun 30 and Sep 30 2026 balance sheets (net cash $60.5B and $51.0B). EV excludes the off-balance Saturn GPU lease. Denominators: Bloomberg consensus, Nov 25 2026.' })}
+
+  ${sec({ t:'How to read it', s:'Five months of history and one consensus snapshot — what this chart can and cannot say',
+    b:`<ul class="pl">
+      <li><strong>The line moves with the price only.</strong> Every day is divided by today's consensus, so the multiple "at IPO" here is not what investors paid at the time: in July the Street expected far less — J.P. Morgan's own 2027 revenue estimate went from $75B (Jul 7) to $254B (Oct 21).</li>
+      <li><strong>On today's numbers the stock has de-rated twice over:</strong> the price is below the IPO while 2027 consensus earnings are several times higher than in July. A historic multiple series needs dated consensus snapshots; this is the first one on file.</li>
+      <li><strong>2026 is not a usable base</strong> (three-quarters reported, with the compute contracts only from 2Q26), which is why the picker starts at 2027.</li>
+    </ul>`,
+    n:'J.P. Morgan initiation (Jul 7 2026) and update (Oct 21 2026) for the estimate change; Bloomberg consensus Nov 25 2026.' })}
+  `,
+  init(){
+    let mk = 'px', yr = '2027', rows = null, blk = null;
+    const calc = () => rows.map(r => {
+      const sh = vhStep(VH_SH, r.d), nd = vhStep(VH_ND, r.d), mc = r.c * sh, ev = mc + nd;   // $M
+      const eps = vhCons('eps', yr), eb = vhCons('ebitda', yr), rev = vhCons('rev', yr);
+      return { d:r.d, px:r.c, pe: eps > 0 ? r.c / eps : null, ev: eb > 0 ? ev / eb : null, evs: rev > 0 ? ev / rev : null, mc };
+    });
+    const cfg = () => {
+      const s = calc(), lab = { px:'Share price', pe:'P/E · ' + yr + 'E', ev:'EV/EBITDA · ' + yr + 'E', evs:'EV/Sales · ' + yr + 'E' }[mk];
+      const isPx = mk === 'px';
+      return { labels:s.map(x => x.d.slice(5).replace('-', '/')), unit: isPx ? '$' : '×', fmt: isPx ? (v => '$' + num(v,2)) : (v => num(v,1) + '×'), rowHead:'Date (2026)', type:'line', stacked:false, pointRadius:0,
+        series:[ { key:'v', label:lab, color:C.si, type:'line', data:s.map(x => x[mk]) },
+                 ...(isPx ? [{ key:'ipo', label:'IPO price $135', color:C.grey, type:'line', dash:true, data:s.map(() => VH_IPO) }] : []) ],
+        extra: c => { c.options.scales.x.ticks = { autoSkip:true, maxTicksLimit:10, maxRotation:0 }; },
+        tableNote: isPx ? '' : 'Denominator: Bloomberg consensus ' + yr + ' (' + { pe:'diluted EPS $' + num(vhCons('eps', yr),2), ev:'adjusted EBITDA ' + usd(vhCons('ebitda', yr)), evs:'revenue ' + usd(vhCons('rev', yr)) }[mk] + '), Nov 25 2026.' };
+    };
+    pills('#vahist-m', v => { mk = v; if(blk) blk.set({ tableNote:'', ...cfg() }); });
+    pills('#vahist-y', v => { yr = v; if(blk) blk.set({ tableNote:'', ...cfg() }); });
+    const today = new Date().toISOString().slice(0,10);
+    import('../api.js').then(m => m.fetchPriceHistory('SPCX', '2026-06-12', today)).then(res => {
+      if(!res || !res.success || !res.data || !res.data.length) throw new Error(res && res.error || 'no data');
+      rows = res.data.map(x => ({ d:new Date(x.t).toISOString().slice(0,10), c:x.c })).filter(x => x.d >= '2026-06-12');
+      $('#vahist-c').innerHTML = '';
+      blk = chartBlock($('#vahist-c'), cfg());
+      const s = calc(), last = s[s.length - 1], hi = s.reduce((a, b) => b.px > a.px ? b : a, s[0]);
+      const s28 = (() => { const y0 = yr; yr = '2028'; const v = calc()[s.length - 1]; yr = y0; return v; })();
+      $('#vahist-tiles').innerHTML =
+        tile('Close · ' + last.d, '$' + num(last.px,2), (last.px >= VH_IPO ? '+' : '−') + num(Math.abs(last.px / VH_IPO - 1) * 100,0) + '% vs the $135 IPO') +
+        tile('High since IPO', '$' + num(hi.px,2), hi.d + ' · now ' + num((last.px / hi.px - 1) * 100,0) + '%') +
+        tile('P/E on consensus', num(last.pe,1) + '× 2027E', num(s28.pe,1) + '× 2028E') +
+        tile('EV/EBITDA on consensus', num(last.ev,1) + '× 2027E', num(s28.ev,1) + '× 2028E · EV ' + usd(last.mc + vhStep(VH_ND, last.d), 0));
+    }).catch(e => {
+      $('#vahist-c').innerHTML = '<div class="snote" style="margin:0">⚑ Live data pending — daily prices from Massive (get-market-history) did not load' + (e && e.message ? ' (' + e.message + ')' : '') + '. Sign in to the portal and reload.</div>';
+    });
   }
 });
 

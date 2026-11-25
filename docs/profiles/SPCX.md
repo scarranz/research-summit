@@ -66,8 +66,8 @@ Mucho del análisis va a Miscellaneous. Unidades que dependen de Summit → ⏭�
 | EV-SET · EV-POST · EV-NOTES Earnings | ⬜ | | bloque 3/4; Q3 2026 transcript disponible |
 | BL-GEN · BL-SEG | 👀 | 2026-11-25 | vistas `blgen`/`blseg` en spcx-misc.js (motor chartBlock del dashboard): márgenes reportado vs consenso, estructura de costos, D&A y SBC; márgenes por segmento. Leen Results; costos del export BBG |
 | BL-SPLC Supply Chain | ⬜ | | sin export SPLC de SPCX todavía |
-| VA-HIST Historic Multiple | ⬜ | | bloque 4; historia desde jun 2026 |
-| VA-PEERS Peers | ⬜ | | bloque 4 (mismo arreglo que OV-6) |
+| VA-HIST Historic Multiple | 👀 | 2026-11-25 | vista `vahist`: cierres diarios en vivo (Massive, get-market-history) desde el IPO; P/E, EV/EBITDA y EV/Sales sobre el consenso 2027E/2028E (una sola foto: la línea se mueve solo con el precio, se dice en pantalla); acciones de las portadas de los 10-Q, deuda neta de los balances |
+| VA-PEERS Peers | 👀 | 2026-11-25 | mismo mapa y estado que OV-6 + tabla |
 | VA-TM · VA-SUB · VA-SENS | ⏭️ | | sin modelo Summit |
 | MG-TEAM · MG-OWN · MG-GOV · MG-TRACK | ⬜ | | bloque 4 |
 | F-FINAL | ⬜ | | |

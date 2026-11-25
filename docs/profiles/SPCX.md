@@ -12,8 +12,7 @@
 | Inicio | 2026-11-25 |
 | Avance | Bloques 1 (Overview) y 2 (Miscellaneous) construidos 👀 · 0 aprobados |
 
-**⚠ Publicación.** El 2026-11-18 SAB pidió que SpaceX **no se suba a GitHub** (repo público; vivía solo en Drive). El
-2026-11-25 pidió montarlo en el portal. Hasta que SAB lo confirme explícitamente: **commits solo locales, sin push y sin PR.**
+**Publicación.** 2026-11-25: SAB autorizó subir SpaceX a GitHub ("sí súbelo a github"); rama pusheada, sin PR hasta que SAB lo pida.
 
 ## 1. Inventario de datos (F0) — 2026-11-25
 
@@ -111,3 +110,6 @@ Mucho del análisis va a Miscellaneous. Unidades que dependen de Summit → ⏭�
   (TomorrowX 18-nov). Flight 15: nave atrapada, **booster perdido** (NASASpaceFlight, Aviation Week) — corregido en
   Overview, Products y Starship & Launch. Verificación de cifras: 15 de 16 confirmadas en transcripciones/reportes;
   "<$100/kg en 2–3 años" no lleva fecha en la transcripción (se quitó la fecha).
+- 2026-11-25 · SAB no podía dar de alta SPCX: Add Company busca solo en la lista S&P 500 y en Fiscal.ai (plan gratuito).
+  Arreglo en `js/companies.js`: si no hay resultados y el texto parece ticker, se consulta `lookup-ticker` (Yahoo) y se
+  ofrece la empresa. El alta la sigue haciendo el usuario con su sesión (Claude no escribe en la base).

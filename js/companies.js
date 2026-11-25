@@ -1289,8 +1289,25 @@ function handleCompanySearch() {
   searchCompany(q).then(function(result) {
     if (version !== _searchVersion) return; // stale response
     if (!result.success || !result.data || !result.data.length) {
-      resultsBox.innerHTML = '<div class="co-search-loading">No results found</div>';
-      resultsBox.classList.add('open');
+      // 3) Nothing in the S&P 500 list or Fiscal.ai (e.g. a recent IPO such as SPCX): if the text looks like a
+      //    ticker, look it up directly (lookup-ticker → Yahoo) and offer it, so the user can still add it.
+      var tk = searchInput.value.trim().toUpperCase();
+      if (!/^[A-Z][A-Z0-9.\-]{0,6}$/.test(tk)) {
+        resultsBox.innerHTML = '<div class="co-search-loading">No results found</div>';
+        resultsBox.classList.add('open');
+        return;
+      }
+      resultsBox.innerHTML = '<div class="co-search-loading">Looking up ' + esc(tk) + ' by ticker…</div>';
+      lookupTicker(tk).then(function(lk) {
+        if (version !== _searchVersion) return;
+        var d = lk && lk.success && lk.data ? lk.data : null;
+        if (!d || !d.name || d.name === tk) {
+          resultsBox.innerHTML = '<div class="co-search-loading">No results found for ' + esc(tk) + '</div>';
+          resultsBox.classList.add('open');
+          return;
+        }
+        renderSearchResults(resultsBox, [{ ticker: tk, name: d.name, sector: d.sector || '', industry: d.industry || '' }]);
+      });
       return;
     }
     var apiItems = result.data.map(function(c) {

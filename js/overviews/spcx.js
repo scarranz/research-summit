@@ -207,6 +207,12 @@ function scVisible(){ return (SP_SC.peers||[]).filter(function(p){ return p.on &
 function scNice(v){ var step=v<=20?5:(v<=100?10:(v<=500?50:100)); return Math.ceil(v/step)*step; }
 function scLogoUrl(p){ return p.logo || ('https://assets.parqet.com/logos/symbol/'+p.tk); }
 
+// VA-PEERS — copied from googl.js googlValuationPeersBody: lede + the same map/state as OV-6 + one source footer.
+function spcxValuationPeersBody(){
+  return '<p class="ov-lede">The same peer map as the Overview, with the numbers behind it; multiples use live prices. SpaceX has no single listed twin — it is set against a launch company, satellite networks and the GPU-rental neoclouds, one for each business it runs.</p>'+
+    stdPeerScatter('dd')+
+    '<div class="ov-foot">Sources — denominators from each company’s latest annual report on SEC EDGAR (EPS GAAP diluted; EBITDA = operating income + D&amp;A; net debt = borrowings ex leases − cash and equivalents; SpaceX net debt from the Q3 2026 10-Q, Sep 30 2026, after the IPO); forward = Bloomberg consensus (SpaceX FY2027E, adjusted EBITDA, as of Nov 25 2026; Amazon FY2026E, as of Sep 10 2026), the other peers trailing only. SpaceX trailing EBITDA is GAAP operating loss + D&amp;A from the 424B4 (FY2025), so trailing and forward are on different bases. Price, market cap and EV are live (Massive).</div>';
+}
 function stdPeerScatter(sfx){
   sfx=sfx||'ov';
   var h='<div class="spcx-sc" data-sfx="'+sfx+'">';
@@ -462,7 +468,7 @@ function deepDiveHtml(c){
   ], false);   // TL-GEN · TL-SEG · TL-OTH · TL-CUS
   h+=subtabs('bottomline', [ { k:'margins', l:'General', body:spcxBlGeneralHtml() }, { k:'segments', l:'Segments', body:spcxBlSegmentsHtml() } ], true);   // BL-GEN · BL-SEG (views in spcx-misc.js)
   h+=subtabs('evolution', [ { k:'results', l:'Results', body:resultsHtml('SPCX') } ], true);   // EV-RES (Earnings and Estimates follow)
-  h+=subtabs('valuation', [ { k:'histmult', l:'Historic Multiple', body:spcxMiscHtml('vahist') }, { k:'peers', l:'Peers', body:stdPeerScatter('dd') } ], true);   // VA-HIST (view in spcx-misc.js) · VA-PEERS (same map + table as OV-6). VA-TM, VA-SUB, VA-SENS need a Summit model: the scenario valuation lives in Miscellaneous.
+  h+=subtabs('valuation', [ { k:'histmult', l:'Historic Multiple', body:spcxMiscHtml('vahist') }, { k:'peers', l:'Peers', body:spcxValuationPeersBody() } ], true);   // VA-HIST (view in spcx-misc.js) · VA-PEERS (same map + table as OV-6). VA-TM, VA-SUB, VA-SENS need a Summit model: the scenario valuation lives in Miscellaneous.
   h+=subtabs('misc', SPCX_MISC_TABS.map(function(t){ return { k:t.k, l:t.l, body:spcxMiscHtml(t.k) }; }), true);
   h+='</div>';
   return h;

@@ -3783,3 +3783,7 @@ img.org-photo { object-fit: cover; }
 .ov-nvda-dd .nv-cap-c{height:260px;margin:4px 0}
 .ov-nvda-dd .nv-cap-note{font-size:11px;color:var(--mu);margin:2px 0 8px}
 .ov-nvda-dd .nv-cap-sub{color:var(--mu);font-weight:400}
+/* SPCX Overview — product modal rows (replaces inline styles, §23) */
+.stdp-item { margin: 0 0 10px; }
+.stdp-item-n { font-size: 12.5px; font-weight: 800; color: var(--navy); }
+.famd.stdp-item-lead { margin-bottom: 10px; color: var(--mu); }

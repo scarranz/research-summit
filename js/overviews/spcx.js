@@ -21,6 +21,22 @@ function collapsible(title, inner, open){
     '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+inner+'</div></div>';
 }
 
+
+// Header source buttons (§7.1 step 3) — copied from tsm.js ceHeaderSources. CIK 1181412 = SEC company_tickers.json.
+var CE_IR_URL='https://ir.spacex.com';   // as printed in the Q2/Q3 2026 earnings releases
+var CE_EDGAR_URL='https://www.sec.gov/edgar/browse/?CIK=1181412&owner=exclude';
+var CE_LOGO_URL='https://assets.parqet.com/logos/symbol/SPCX';
+var CE_SEC_SEAL='img/sec-seal.png';
+function ceHeaderSources(){
+  return '<div class="cohd-src">'+
+  '<a href="'+CE_IR_URL+'" target="_blank" rel="noopener" title="SpaceX Investor Relations" aria-label="SpaceX Investor Relations">'+
+    '<img src="'+CE_LOGO_URL+'" alt="SpaceX logo" onerror="this.style.display=\'none\'">'+
+  '</a>'+
+  '<a class="edgar" href="'+CE_EDGAR_URL+'" target="_blank" rel="noopener" title="SpaceX on SEC EDGAR" aria-label="SpaceX on SEC EDGAR">'+
+    '<img src="'+CE_SEC_SEAL+'" alt="SEC seal" onerror="this.style.display=\'none\'">'+
+  '</a>'+
+  '</div>';
+}
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // DATA — Overview
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -30,24 +46,24 @@ function collapsible(title, inner, open){
 var STD_FACTS=[
   ['Listing','NASDAQ: SPCX'],
   ['HQ','Starbase, Texas, USA'],
-  ['Incorporated','Texas, USA · since Feb 2024'],
+  ['Incorporated','Texas, USA'],
   ['SEC filer','Domestic (10-K/10-Q/8-K)'],
   ['Founded','2002 (Elon Musk)'],
   ['IPO','Jun 2026 · NASDAQ, at $135'],
-  ['CEO','Elon Musk · founder · CEO since 2002'],
+  ['CEO','Elon Musk · founder 2002 · CEO since 2002'],
   ['Employees','22,000+ · Mar 2026'],
   ['Dividend','Non-payer · never paid one'],
   ['Market cap','loading live quote…'],
 ];
 
 // OV-2 lede — 424B4 Business section, paraphrased. No figures, no thesis.
-var SPCX_LEDE='SpaceX designs, builds and flies reusable rockets and spacecraft, and runs Starlink, a network of low-Earth-orbit satellites that sells internet access to homes, businesses, airlines, ships, phones and governments. Since combining with xAI in February 2026 it also builds and rents large AI computing clusters and develops the Grok models and the X social platform.';
+var SPCX_LEDE='SpaceX designs, builds and launches reusable rockets and spacecraft, and operates Starlink, a low-Earth-orbit satellite internet network. Since combining with xAI in February 2026 it is also an artificial-intelligence company, building its own models and the data centers that train and run them.';
 
 // OV-3 2×2. "How it earns": 424B4 revenue by type and segment (FY2025) and the Q3 2026 release (9M 2026).
 var STD_BIZ=[
   ['What it sells','Launches and human spaceflight; satellite internet (Starlink) for homes, planes, ships and phones; AI computing capacity rented to AI labs; Grok subscriptions and ads on X.'],
-  ['Who buys it','Consumers in ~174 markets; airlines, shipping and enterprises; NASA, the U.S. Department of War and other governments; AI developers (Anthropic, Google); advertisers.'],
-  ['How it earns','FY2025: ~61% Connectivity · ~22% Space · ~17% AI — but by 9M 2026 compute (SI) was <b>40%</b> of revenue ($10.9B of $27.1B), and Starlink was still the only large profit pool.'],
+  ['Who buys it','Consumers worldwide; airlines, shipping and enterprises; NASA, the U.S. Department of War and other governments; AI developers (Anthropic, Google); advertisers.'],
+  ['How it earns','FY2025: ~61% Connectivity · ~22% Space · ~17% AI — but by 9M 2026 SI (the AI segment) was <b>40%</b> of revenue ($10.9B of $27.1B), and Starlink was still the only large profit pool.'],
   ['The edge','Reusable heavy launch at a cost and cadence no one else matches — which is what made Starlink possible — and the same vertical integration applied to satellites and data centers.'],
 ];
 
@@ -56,27 +72,27 @@ var STD_BIZ=[
 //   Space 4,086 + Connectivity 11,387 + AI 3,201 = 18,674
 //   USA 12,966 + Ireland 1,827 + Canada 764 + All other 3,117 = 18,674
 var GMM_SEG=[
-  ['Connectivity (Starlink)', 61.0, '$11.4B', '61%', null],
   ['Space (launch)',          21.9, '$4.1B',  '22%', null],
+  ['Connectivity (Starlink)', 61.0, '$11.4B', '61%', null],
   ['AI (now "SI")',           17.1, '$3.2B',  '17%', null],
 ];
 var GMM_GEO=[
   ['United States', 69.4, '$13.0B', '69%', null],
   ['Ireland',        9.8, '$1.8B',  '10%', null],
-  ['Canada',         4.1, '$0.8B',  '4%',  null],
+  ['Canada',         4.1, '$764M',  '4%',  null],
   ['All other',     16.7, '$3.1B',  '17%', null],
 ];
 var REV_DEFS=[
+  { seg:'Space (launch and spacecraft)',
+    desc:'<b>Launch services</b> on Falcon 9 and Falcon Heavy for commercial, NASA and military customers, and <b>launch & development</b> work — Dragon cargo and crew missions to the Space Station and development contracts such as Starship for NASA\'s Moon landing. Most launches carry SpaceX\'s own Starlink satellites, which earn no Space revenue.',
+    econ:[['FY2025 revenue','$4.1B · 22% of total'],['Growth','+8% (from $3.8B)'],['Operating income','−$657M (Starship development spending)'],['Launch services','$2.6B (flat)'],['Launch & development','$1.5B (+25%)'],['Falcon launches','165 in 2025 vs 134 in 2024; customer launches and price per launch roughly flat']] },
   { seg:'Connectivity (Starlink — the profit engine)',
     desc:'<b>Starlink</b> internet from thousands of low-orbit satellites: monthly subscriptions for homes and roaming users, plus plans for <b>enterprises, airlines, ships and governments</b>, and the dish (kit) sold up front. Also <b>Starlink Mobile</b>, direct-to-phone service shared with carriers, and <b>Starshield</b>, a separate network for U.S. national security.',
     econ:[['FY2025 revenue','$11.4B · 61% of total'],['Growth','+50% (from $7.6B)'],['Operating income','$4.4B · 38.8% margin'],['Consumer','$7.2B (+49%)'],['Enterprise & government','$4.2B (+51%)'],['Products (kits) inside revenue','$1.5B — all product revenue is in this segment']] },
-  { seg:'Space (launch and spacecraft)',
-    desc:'<b>Launch services</b> on Falcon 9 and Falcon Heavy for commercial, NASA and military customers, and <b>launch & development</b> work — Dragon cargo and crew missions to the Space Station and development contracts such as Starship for NASA\'s Moon landing. Most launches carry SpaceX\'s own Starlink satellites, which earn no Space revenue.',
-    econ:[['FY2025 revenue','$4.1B · 22% of total'],['Growth','+8% (from $3.8B)'],['Operating income','−$0.7B (Starship development spending)'],['Launch services','$2.6B (flat)'],['Launch & development','$1.5B (+25%)'],['Falcon launches','165 in 2025 vs 134 in 2024; customer launches and price per launch roughly flat']] },
-  { seg:'AI — renamed Super Intelligence (SI) in 2026',
-    desc:'What came with xAI: the <b>Grok</b> models and apps, the <b>X</b> social platform (advertising and subscriptions) and, since 2026, <b>AI computing capacity</b> in the Colossus data centers rented to AI labs on short contracts. Cursor (AI coding) joined in August 2026.',
-    econ:[['FY2025 revenue','$3.2B · 17% of total'],['Growth','+22% (from $2.6B)'],['Operating income','−$6.4B'],['Advertising (X)','$1.8B'],['AI solutions & infrastructure','$1.4B'],['9M 2026','$10.9B (+380%), 40% of the group — rented compute ramped from Q2 2026']],
-    econNote:'FY2025 is the AI segment as reported in the 424B4; the Q3 2026 release calls it SI (Super Intelligence).' },
+  { seg:'AI / SI (Grok, X and rented compute)',
+    desc:'What came with xAI: the <b>Grok</b> models and apps, the <b>X</b> social platform (advertising and subscriptions), <b>AI computing capacity</b> in the Colossus data centers rented to AI labs on short contracts, and the <b>Cursor</b> AI coding editor.',
+    econ:[['FY2025 revenue','$3.2B · 17% of total'],['Growth','+22% (from $2.6B)'],['Operating income','−$6.4B'],['Advertising (X)','$1.8B'],['AI solutions & infrastructure','$1.4B'],['9M 2026','$10.9B (+380%), 40% of the group — rented compute ramped from Q2 2026'],['Cursor','Acquired Aug 2026']],
+    econNote:'FY2025 is the AI segment as reported in the 424B4; from 2026 the company calls it SI (Super Intelligence).' },
   { seg:'The revenue lines (as the prospectus reports them)',
     desc:'The same total, split into the six lines the company discloses.',
     econ:[['Consumer (Starlink)','$7.2B · 38.6% (+49%)'],['Enterprise & government (Starlink)','$4.2B · 22.4% (+51%)'],['Launch services','$2.6B · 13.8% (0%)'],['Advertising (X)','$1.8B · 9.9% (+7%)'],['Launch & development','$1.5B · 8.1% (+25%)'],['AI solutions & infrastructure','$1.4B · 7.3% (+52%)']],
@@ -88,7 +104,7 @@ var S_PRODUCTS=[
   { ic:'🚀', fam:'Launch', d:'Reusable rockets to orbit.', items:[
     ['Falcon 9','The workhorse: reusable first stage, ~620 orbital launches by Mar 2026; most of the world\'s mass to orbit.'],
     ['Falcon Heavy','Three Falcon 9 cores strapped together for heavy and national-security payloads.'],
-    ['Starship','Fully reusable two-stage super-heavy rocket. Reached orbit on Flight 14 (Sep 2026); the ship was caught on Flight 15 (Nov 2026), the booster lost.'],
+    ['Starship','Fully reusable two-stage super-heavy rocket. Reached orbit on Flight 14 (Sep 2026); V3 satellites deployed from it since.'],
     ['Rideshare','Shared Falcon 9 flights for small satellites.'] ]},
   { ic:'👩‍🚀', fam:'Human spaceflight & cargo', d:'Dragon and Moon missions.', items:[
     ['Crew Dragon','Carries astronauts to the Space Station for NASA and private customers; first private crewed vehicle (May 2020).'],
@@ -120,8 +136,7 @@ var S_PRODUCTS=[
     ['Orbital compute','AI satellites in space — planned, not yet earning revenue.'] ]},
 ];
 
-// OV-7 Timeline — strict chronology. 424B4 (history, xAI Merger), Q3 2026 release (Cursor), J.P. Morgan Key Investor
-// FAQs Nov 2026 (Flight 15 ship catch, Nov 14 2026).
+// OV-7 Timeline — strict chronology. 424B4 (history, xAI Merger, Texas redomicile), Q3 2026 release (Cursor).
 var TIMELINE=[
   { y:'2002', t:'<b>Genesis:</b> Elon Musk founds Space Exploration Technologies to cut the cost of reaching space.' },
   { y:'2008', t:'<b>Falcon 1 reaches orbit</b> and NASA awards the first cargo-resupply contract — the company survives.',
@@ -130,23 +145,24 @@ var TIMELINE=[
   { y:'2015–17', t:'<b>Reusability:</b> first Falcon 9 booster landing (Dec 2015), first reflight (2017) — the cost break everything else rests on.' },
   { y:'2019–21', t:'<b>Starlink</b> launches its first batch (2019) and starts service (2020); <b>Crew Dragon</b> flies NASA astronauts (May 2020).',
     d:'<ul class="ov-bullets"><li>2019 — first 60-satellite Starlink batch.</li><li>2020 — Starlink service begins; Demo-2 makes Dragon the first privately built vehicle to carry humans to the Space Station.</li><li>2021 — Starlink exits beta; acquires Swarm Technologies.</li></ul>' },
-  { y:'2023–24', t:'<b>Starship</b> flies (2023); first booster catch by the tower\'s "chopsticks" (Oct 2024); reincorporates in <b>Texas</b> (Feb 2024).' },
+  { y:'2023', t:'<b>Starship</b> first flies — the fully reusable rocket the long-term plan rests on.' },
+  { y:'Feb 2024', t:'Reincorporates in <b>Texas</b> (Starbase HQ).' },
+  { y:'Oct 2024', t:'First Starship <b>booster caught</b> by the launch tower.' },
   { y:'Feb 2026', t:'<b>Combines with xAI</b> (which had absorbed X) — SpaceX becomes an AI company too.',
     d:'<ul class="ov-bullets"><li>2025 — xAI merges with X (the "X Merger").</li><li>Feb 2 2026 — SpaceX acquires xAI (the "xAI Merger"): Grok, X and the Colossus data centers come in.</li><li>Mar 2026 — a $20B bridge loan refinances xAI and X debt.</li></ul>' },
-  { y:'Jun 2026', t:'<b>IPO on Nasdaq</b> at $135 — ~$85.7B of net proceeds; a $25B investment-grade bond follows.' },
+  { y:'Jun 2026', t:'<b>IPO on Nasdaq</b> at $135 — $85.7B of net proceeds.' },
   { y:'Aug 2026', t:'Acquires <b>Cursor</b> (AI coding) at an implied $60B equity value.' },
-  { y:'Sep–Nov 2026', t:'<b>Starship reaches orbit</b> (Flight 14, 26 V3 satellites) and the <b>ship is caught</b> for the first time (Flight 15, Nov 14) — the booster on that flight was lost.' },
 ];
 
 // ═══ OV-6 peer map (same SP_PEERS / SP_SC feed Valuation ▸ Peers when it is built) — copied from googl.js ═══
 // Rule 10: no multiple or market cap is written here — only DENOMINATORS from each company's latest annual report
 // (SEC EDGAR) or Bloomberg consensus; price, market cap and EV are live. P/E = price ÷ EPS; EV/EBITDA = EV ÷ EBITDA.
 // SpaceX: FY2025 from the 424B4 (EBITDA = operating loss −2,589 + D&A 6,701 = 4,112; net debt = debt 22,896 − cash
-// 24,747). Forward = Bloomberg consensus FY2027 (SPCX BBG CONSENSUS.xlsx, Nov 25 2026) because FY2026 is three-quarters
+// 24,747; superseded for EV by the Sep 30 2026 10-Q net cash of 51,011 — the IPO proceeds). Forward = Bloomberg consensus FY2027 (SPCX BBG CONSENSUS.xlsx, Nov 25 2026) because FY2026 is three-quarters
 // reported. Amazon: same denominators as the AMZN/GOOGL profiles (10-K FY2025; Bloomberg FY2026, Sep 10 2026).
 var SP_PEERS=[
-  { tk:'SPCX', n:'SpaceX', hl:true, epsT:-1.69, epsF:4.22, ebitdaT:4112, ebitdaF:119658, nd:-1851, gt:33.2, gf:279.3,
-    src:'424B4 (FY2025); forward: Bloomberg consensus FY2027, Nov 25 2026',
+  { tk:'SPCX', n:'SpaceX', hl:true, epsT:-1.69, epsF:4.22, ebitdaT:4112, ebitdaF:119658, nd:-51011, gt:33.2, gf:279.3,
+    src:'424B4 (FY2025; EBITDA = operating loss + D&A); forward: Bloomberg consensus FY2027 (adjusted EBITDA), Nov 25 2026; net debt: Q3 2026 10-Q (Sep 30 2026, post-IPO)', asOf:'2026-11-25',
     why:'The profile company: launch, Starlink and rented AI compute.' },
   { tk:'AMZN', n:'Amazon', epsT:7.17, epsF:12.66, ebitdaT:145731, ebitdaF:220794, nd:-17974, gt:12.4, gf:15.6,
     src:'10-K FY2025; forward: Bloomberg consensus FY2026, Sep 10 2026',
@@ -174,7 +190,7 @@ var SP_PEERS=[
     why:'Neocloud renting GPU capacity; files a 20-F (Netherlands) in USD.' },
 ];
 
-var SP_SC={ metric:'ev', basis:'f', peers:null, _capsFetched:false };
+var SP_SC={ metric:'pe', basis:'f', peers:null, _capsFetched:false };
 function gTok(name, fb){ try{ var v=getComputedStyle(document.documentElement).getPropertyValue(name).trim(); return v||fb; }catch(e){ return fb; } }
 function scReset(){ if(!SP_SC.peers) SP_SC.peers=SP_PEERS.map(function(p){ var o={}; for(var k in p) o[k]=p[k]; o.on=true; return o; }); }
 function scNum(v){ return v!=null && !isNaN(v); }
@@ -196,21 +212,21 @@ function stdPeerScatter(sfx){
   var h='<div class="spcx-sc" data-sfx="'+sfx+'">';
   h+='<div class="ov-diagram-cap asc-cap-top">Peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD.</b> <span class="asc-hint">Hover or tap a bubble for the read.</span></div>';
   h+='<div class="mg-tog-row">'+
-    '<span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill" data-mgmetric="pe">P/E</button><button type="button" class="mg-pill active" data-mgmetric="ev">EV/EBITDA</button></span></span>'+
+    '<span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgmetric="pe">P/E</button><button type="button" class="mg-pill" data-mgmetric="ev">EV/EBITDA</button></span></span>'+
     '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgbasis="f">Forward</button><button type="button" class="mg-pill" data-mgbasis="t">Trailing</button></span></span>'+
   '</div>';
   h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" class="spcx-sc-svg" role="img" aria-label="Peer valuation vs growth map">'+
-    '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
-    '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
-    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← cheaper (lower multiple)</text>'+
-    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">more expensive →</text>'+
-    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" class="spcx-sc-xlab">EV/EBITDA · forward</text>'+
-    '<text x="74" y="225" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end" class="spcx-sc-ylo">slow</text>'+
-    '<text x="74" y="60" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end" class="spcx-sc-yhi">fast growth</text>'+
+    '<line x1="80" y1="252" x2="612" y2="252" stroke="var(--bdr)" stroke-width="1.5"/>'+
+    '<line x1="80" y1="252" x2="80" y2="44" stroke="var(--bdr)" stroke-width="1.5"/>'+
+    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="var(--mu)">← cheaper (lower multiple)</text>'+
+    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="var(--mu)" text-anchor="end">more expensive →</text>'+
+    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="var(--mu)" text-anchor="middle" class="spcx-sc-xlab">P/E · forward</text>'+
+    '<text x="74" y="225" font-family="Inter,sans-serif" font-size="10" fill="var(--mu)" text-anchor="end" class="spcx-sc-ylo">slow</text>'+
+    '<text x="74" y="60" font-family="Inter,sans-serif" font-size="10" fill="var(--mu)" text-anchor="end" class="spcx-sc-yhi">fast growth</text>'+
     '<g class="spcx-sc-nodes"></g>'+
   '</svg></div>';
   h+='<div class="asc-chips spcx-sc-chips"></div>';
-  h+='<div class="ov-diagram-cap asc-cap-end">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only listed peers plot here — Blue Origin and the Chinese launch and satellite groups are private or not comparable. '+
+  h+='<div class="ov-diagram-cap asc-cap-end">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers plot here — Blue Origin and China’s state-backed constellations (Guowang, Qianfan) have no market multiple. '+
     '<span class="ave-subh-note">Multiples = live price ÷ figures from each company\'s latest annual report (SEC EDGAR; fiscal years differ where noted on the chip), or Bloomberg consensus where it exists. SpaceX forward = FY2027 consensus (Nov 25 2026), because FY2026 is three-quarters reported; Amazon forward = FY2026 (Sep 10 2026). Market caps are live.</span></div>';
   if(sfx==='dd') h+='<div class="rs-collap spcx-sc-collap">'+
       '<button type="button" class="rs-collap-h spcx-sc-tblh" data-selfwired="1"></button>'+
@@ -222,7 +238,7 @@ function stdPeerScatter(sfx){
 function scRenderOne(wrap){
   var g=wrap.querySelector('.spcx-sc-nodes'); if(!g||!SP_SC.peers) return;
   var X0=80, X1=612, Y0=222, Y1=56;
-  var NAVY=gTok('--navy','#1E2733');
+  var NAVY=gTok('--navy','navy'), BDR=gTok('--bdr','silver'), WHITE=gTok('--w','white'), TXT=gTok('--blue','black');
   var vis=scVisible();
   var maxMult=scNice(Math.max.apply(null, vis.map(scMult).concat([1]))*1.12);
   var gs=vis.map(scGrowth), gMax=scNice(Math.max.apply(null, gs.concat([1]))*1.12), gMin=Math.min.apply(null, gs.concat([0]));
@@ -241,9 +257,9 @@ function scRenderOne(wrap){
     var logo=scLogoUrl(p);
     var read=(SP_SC.metric==='pe'?'P/E ':'EV/EBITDA ')+m.toFixed(1)+'× · revenue growth '+(growth>0?'+':'')+growth.toFixed(1)+'%'+(scNum(p.mc)?' · market cap $'+(p.mc>=1000?(p.mc/1000).toFixed(2)+'T':Math.round(p.mc)+'B'):'');
     frag+='<g class="mg-node" data-name="'+esc(p.n)+'" data-tk="'+esc(p.tk)+'" data-logo="'+esc(logo)+'" data-why="'+esc(p.why||'')+'" data-read="'+esc(read)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
-      '<circle r="'+r.toFixed(1)+'" fill="#fff" stroke="'+(p.hl?NAVY:'#C7CED6')+'" stroke-width="'+(p.hl?3:1.5)+'"></circle>'+
+      '<circle r="'+r.toFixed(1)+'" fill="'+WHITE+'" stroke="'+(p.hl?NAVY:BDR)+'" stroke-width="'+(p.hl?3:1.5)+'"></circle>'+
       '<image href="'+esc(logo)+'" x="'+(-r*0.72).toFixed(1)+'" y="'+(-r*0.72).toFixed(1)+'" width="'+(r*1.44).toFixed(1)+'" height="'+(r*1.44).toFixed(1)+'" preserveAspectRatio="xMidYMid meet" pointer-events="none"></image>'+
-      '<text y="'+(r+12).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?NAVY:'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
+      '<text y="'+(r+12).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?NAVY:TXT)+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
   });
   g.innerHTML=frag;
   scChipsOne(wrap);
@@ -344,11 +360,11 @@ function liveOne(root, tk){ import('../api.js').then(function(m){ if(!m||!m.live
     var mcB=q.marketCap/1e9;
     scReset();
     (SP_SC.peers||[]).forEach(function(p){ if(p.tk===tk){ p.px=q.price; p.mc=mcB; p.ev=(q.ev!=null?q.ev/1e6:null); } });
-    if(tk==='SPCX'){ var el=document.querySelector('#spcxMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    if(tk==='SPCX'){ var el=root&&root.querySelector?root.querySelector('#spcxMc'):null; if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live, '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
       _lastQ=q; _pxHooks.forEach(function(fn){ try{ fn(q); }catch(e){ console.error('[spcx price hook]', e); } }); }
     scRenderAll(root);
   }).catch(function(){ if(tk==='SPCX') mcFail(root); }); }
-function mcFail(root){ var el=document.querySelector('#spcxMc'); if(el) el.textContent='live quote unavailable'; }
+function mcFail(root){ var el=root&&root.querySelector?root.querySelector('#spcxMc'):null; if(el) el.textContent='live quote unavailable'; }
 
 // ═══ Standardized Overview body ═════════════════════════════════════════════════════════════════
 function stdTimeline(){
@@ -384,18 +400,18 @@ function stdMoneyMap(){
     var econ='<div class="acc"><button type="button" class="acc-h">The numbers <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+(s.econNote?'<div class="ave-subh-note acc-note">'+esc(s.econNote)+'</div>':'')+'</div></div>';
     return '<div class="acc"><button type="button" class="acc-h">'+esc(s.seg)+'<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+s.desc+'</div>'+econ+'</div></div>';
   }).join('')+'</div>';
-  h+='<div class="ov-diagram-cap gmm-cap-end">FY2025: operating loss <b>−$2.6B</b> · net loss <b>−$4.9B</b> · diluted EPS <b>−$1.69</b>. Starlink earned <b>$4.4B</b> of operating income; AI lost $6.4B and Space $0.7B. In 9M 2026 revenue was $27.1B (+97%) and the group turned an operating profit of $0.7B. '+
+  h+='<div class="ov-diagram-cap gmm-cap-end">FY2025: operating loss <b>−$2.6B</b> · net loss <b>−$4.9B</b> · diluted EPS <b>−$1.69</b>. Starlink earned <b>$4.4B</b> of operating income; AI lost $6.4B and Space $657M. In 9M 2026 revenue was $27.1B (+97%) and the group turned an operating profit of $705M. '+
     '<span class="ave-subh-note">Source: 424B4 prospectus (Jun 12 2026) — Notes: revenue by type and segment, revenue by geography, segment information; Q3 2026 earnings release for 9M 2026.</span></div>';
   return h;
 }
 function stdProducts(){
-  return '<div class="ov-diagram-cap" style="margin:0 0 8px"><b>Tap any family</b> for the specific products inside it.</div>'+
+  return '<div class="ov-diagram-cap gmm-cap-top"><b>Tap any family</b> for the specific products inside it.</div>'+
     '<div class="stdp">'+S_PRODUCTS.map(function(f,i){
       return '<div class="stdp-card ov-clickable" data-detail="prod:'+i+'"><div class="stdp-ic">'+f.ic+'</div>'+
         '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
     }).join('')+'</div>';
 }
-var OV_SOURCES='Sources — SpaceX 424B4 prospectus (SEC EDGAR, Jun 12 2026) for FY2023–FY2025 revenue by type, segment and geography, segment results, headcount, incorporation and history; Q3 2026 earnings release (Oct 20 2026) for nine-month 2026 figures; SpaceX IR and product pages for qualitative content; J.P. Morgan Key Investor FAQs (Nov 2026) and NASASpaceFlight / Aviation Week for Flight 15 (ship caught, booster lost); SEC EDGAR for filer status. Market cap and peer multiples are live (Massive price ÷ figures from each company\'s latest annual report, or Bloomberg consensus as of Nov 2026). Forward figures are estimates, not company guidance.';
+var OV_SOURCES='Sources — SpaceX 424B4 prospectus (SEC EDGAR, Jun 12 2026) for FY2023–FY2025 revenue by type, segment and geography, segment results, headcount, incorporation and history; Q3 2026 earnings release (Oct 20 2026) for nine-month 2026 figures; SpaceX IR and product pages for qualitative content; SEC EDGAR for filer status. Market cap and peer multiples are live (Massive price ÷ figures from each company\'s latest annual report, or Bloomberg consensus (SpaceX FY2027E as of Nov 25 2026; Amazon FY2026E as of Sep 10 2026)). Forward figures are estimates, not company guidance.';
 function stdOverviewBody(){
   var h=stdKeyFacts();
   h+='<p class="ov-lede">'+SPCX_LEDE+'</p>';
@@ -473,6 +489,7 @@ function buildSub(root, group, key){
 function keepPos(el, fn){ var before=el.getBoundingClientRect().top; fn(); var d=el.getBoundingClientRect().top-before; if(Math.abs(d)>1) window.scrollBy(0, d); }
 function activeSubKey(root, group){ var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return null; var b=pane.querySelector('.ovt-subtab.active'); return b?b.getAttribute('data-ovst'):null; }
 function showSub(root, pane, group, key){
+  if(root._spcxCloseModal) root._spcxCloseModal();
   var btn=pane.querySelector('.ovt-subtab[data-ovst="'+key+'"]');
   keepPos(btn||pane, function(){
     pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst')===key); });
@@ -484,6 +501,7 @@ function wireSubtabs(root, group){ var pane=root.querySelector('.dd-pane[data-dd
 function buildDD(root, key){ var s=activeSubKey(root,key); if(s) buildSub(root,key,s); }
 function activeDD(root){ var b=root.querySelector('.ov-spcx-dd .dd-tab.active'); return b?b.getAttribute('data-dd'):'topline'; }
 function showDD(root, key){
+  if(root._spcxCloseModal) root._spcxCloseModal();
   var btn=root.querySelector('.dd-tab[data-dd="'+key+'"]');
   keepPos(btn||root, function(){
     root.querySelectorAll('.ov-spcx-dd .dd-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-dd')===key); });
@@ -498,13 +516,14 @@ function wireModal(root){
   function onEsc(e){ if(e.key==='Escape') closeM(); }
   function openM(t,b){ mT.innerHTML=t; mB.innerHTML=b; back.hidden=false; requestAnimationFrame(function(){ back.classList.add('on'); }); document.addEventListener('keydown', onEsc); }
   function closeM(){ back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden=true; }, 180); }
+  root._spcxCloseModal=closeM;
   root.querySelector('#spcxModalX').onclick=closeM; back.onclick=function(e){ if(e.target===back) closeM(); };
   function resolve(key){
     var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
     if(kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
     if(kind==='prod'){ var f=S_PRODUCTS[+id]; if(!f) return null;
-      var body=f.items.map(function(it){ return '<div style="margin:0 0 10px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">'+esc(it[0])+'</div><div class="famd">'+it[1]+'</div></div>'; }).join('');
-      return {t:f.ic+' '+esc(f.fam),h:'<div class="famd" style="margin-bottom:10px;color:var(--mu)">'+esc(f.d)+'</div>'+body}; }
+      var body=f.items.map(function(it){ return '<div class="stdp-item"><div class="stdp-item-n">'+esc(it[0])+'</div><div class="famd">'+it[1]+'</div></div>'; }).join('');
+      return {t:f.ic+' '+esc(f.fam),h:'<div class="famd stdp-item-lead">'+esc(f.d)+'</div>'+body}; }
     return null;
   }
   root.querySelectorAll('[data-detail]').forEach(function(el){ if(el._spDetail) return; el._spDetail=true; el.style.cursor='pointer';
@@ -533,4 +552,4 @@ function deepDiveInit(c){
   spcxMiscWire(root, onSpcxPrice);
   var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
 }
-export var spcxOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };
+export var spcxOverview = { html: html, init: init, headerSources: ceHeaderSources, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

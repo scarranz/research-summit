@@ -100,6 +100,7 @@
   <div class="res-subnav">
     <button class="res-pill active" data-sub="companies" onclick="switchResearchTab('companies')">Companies</button>
     <button class="res-pill" data-sub="industries" onclick="switchResearchTab('industries')">Industries</button>
+    <button class="res-pill" data-sub="spacex" onclick="switchResearchTab('spacex')">SpaceX</button>
     <button class="res-pill" data-sub="summit" onclick="switchResearchTab('summit')">Summit</button>
   </div>
 
@@ -161,6 +162,11 @@
   <!-- INDUSTRIES SUB-TAB -->
   <div id="res-industries" class="res-sub">
     <div id="ind-root"></div>
+  </div>
+
+  <!-- SPACEX SUB-TAB — the standalone SpaceX deep dive (spacex-deep-dive/), isolated in a same-origin iframe like Industries -->
+  <div id="res-spacex" class="res-sub">
+    <iframe id="spcx-frame" class="ind-frame" title="SpaceX deep dive" data-src="spacex-deep-dive/index.html"></iframe>
   </div>
 
   <!-- SUMMIT SUB-TAB -->
@@ -784,6 +790,7 @@ async function boot() {
           _resLoaded[sub] = true;
           if (sub === 'companies') loadCompaniesPage();
           if (sub === 'industries') loadIndustryPage();
+          if (sub === 'spacex') { const f = document.getElementById('spcx-frame'); if (f && !f.src) f.src = f.dataset.src; }
           if (sub === 'summit') switchSummitTab('thesis');
         }
       };

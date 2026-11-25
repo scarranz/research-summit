@@ -1,0 +1,2124 @@
+Q3 2026 - October 20, 2026
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+Hello, everyone. We are coming to you live from our Starlink factory and future Starlink production site here in Bastrop, Texas. I'm Andrea Williams, Head of Investor Relations, and thank you for joining us for SpaceX's third quarter 2026 earnings presentation. Joining us are Elon, Gwynne, and Bret, and we are live streaming on X. Our third quarter financial results were announced just after 3:00 p.m. Texas time, and all relevant materials have been published to our investor relations website at ir.spacex.com. For today's presentation, our prepared remarks will be followed by a question and answer session.
+
+We will take live Q&A from equity analysts and then move to questions directly from our investors that were polled on our dedicated earnings Q&A platform, which the SpaceX team built with Grok. During this webcast, we will discuss our business outlook and make forward-looking statements.
+
+These statements are based on our predictions and expectations as of today. Actual events or results could differ materially due to a number of risks and uncertainties, including those mentioned in our earnings release and the most recent filings with the SEC, including our final prospectus. During the presentation, we may discuss certain non-GAAP financial measures. In today's earnings release and our filings with the SEC, you can find additional disclosures regarding these non-GAAP measures, including all the reconciliations with comparable GAAP measures. For the third quarter of 2026, we announced the following financial results as compared to the prior year period.
+
+Revenues of $14.6 billion, up 161% from $5.6 billion. Net income of $4.4 billion, an improvement of $5.5 billion from a net loss of $1.1 billion. Adjusted EBITDA of $8.8 billion, up 306% from $2.2 billion. With that, I'll hand the call over to Elon.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Thank you. We are in an inflection moment for SpaceX across launch connectivity and super intelligence. Starting with Starship, flight 14 was a critical milestone. Starship made it to orbit for the first time and deployed operational Starlink V3 satellites. I think we have a recap video we're going to play. All right. For flight 15, which we expect to happen next month, we're going to attempt to catch both the booster and the ship. If we succeed, it will be the first time that an orbital launch vehicle has been fully recovered. This is a massive technology milestone. The only way that we can extend consciousness beyond Earth on a sustained basis is with a fully reusable orbital launch vehicle. I think this is a profound technology milestone in the history of civilization consciousness.
+
+Let's look at what a simulation of flight 15 would look like if we succeed. If we don't succeed in flight 15, we'll get there. Success is not guaranteed on these first flights, but I'd say it's more likely than not that this succeeds next flight. If not, we have a steady stream of Starship flight attempts through the end of this year, and then accelerating next year. With that, the flight 15 simulation. We've also announced the development of the Louisiana Spaceport. That's going to be an incredible asset to the country and to the world, that will, I think, at some point, probably have on the order of 20 or more launch towers, and enable the transport of millions of tons per year to orbit and beyond. That's really going to be a big deal.
+
+We expect Starship to fly weekly at some point in the first half of next year, and then second half of next year, twice weekly or maybe even more frequently than that by the end of next year. The rate at which we launch Starship will increase dramatically as we solve the rapid and complete reusability.
+
+We will have complete reusability, then at first, there will be a little bit of refurbishment that is needed between each flight, and we will iron out the need for any refurbishment, such that you can immediately land the rocket and launch it again, just like an airplane. As I said, this is a profound technology milestone that most people in the world don't realize how important it is, but it will be obvious in hindsight. Starlink is also just getting started. Flight 14 deployed 26 terabits per second of Starlink bandwidth.
+
+That is equivalent to 10 Falcon 9 launches. A single Starship launch, which wasn't even fully loaded, it was about maybe half loaded, and it did the equivalent of 10 Falcon 9 launches. What I expect over time is, not in the distant future, probably within three years, is that we will have about 100 times the bandwidth of the current Starlink constellation. Because we will have launched satellites with an order of magnitude more bandwidth, and we will place into orbit an order of magnitude more Starlink satellites. Probably something on the order of 100,000 satellites, each of which has more than 10 times the bandwidth of the current Starlink system.
+
+I think revenue for Starlink will be at least somewhat proportionate to the total bandwidth limit, and we will also have direct-to-cell, high-bandwidth direct-to-cell capability, and we will be building out our terrestrial network such that there is broad-based connectivity anywhere that SpaceX and Starlink are allowed to operate. Anywhere in the world that we are allowed to operate. I think the demand for bandwidth is going to be dramatically higher than it is today.
+
+I think in three to five years, there is probably a demand for 1,000 times more bandwidth than there is currently. Because AI/SI agents will, even up on a per-agent basis, use far more bandwidth than a person, and there will be far more agents than there are people. This ends up requiring several orders of magnitude increase in communication bandwidth in order to satisfy that communication demand.
+
+Talking about SpaceX Superintelligence, SpaceX SI, I don't know. As I think people are starting to realize, the constraint on deployment of superintelligence is more in power and cooling and infrastructure than it is in chips. What we have done at SpaceX is we have taken a team that has been able to achieve a market share in mass to orbit that is almost 90% of all mass to orbit of Earth, where China is about, I think, roughly 6%, and the rest of the world combined, including the rest of the U.S., is about 4%.
+
+A team that has been able to achieve results that are an order of magnitude greater than the rest of all competitors in space combined, and applied that same team to the deployment of terrestrial compute. This is a bit like the New York Yankees playing in Little League.
+
+It's not fair. The net result is being able to deploy power cooling infrastructure at a rate that is vastly faster than anyone else, and may at some point be faster than everyone else combined. I'll just let that sink in for a minute. I've been spending personally a lot of my time in Terafab, often four days a week, night and day, just getting the Terafab supercompute clusters online. We're tracking to be able to bring roughly 200,000 GB300s online per month for every month for the remainder of this year, and continuing that pace next year. With next year being primarily Vera Rubin compute. At this point, obviously, I'm fairly confident of being able to bring an incremental 10 gigawatts of compute online in 2027.
+
+That would be in addition to the roughly 3 gigawatts, maybe 2.5, 3 gigawatts that we'll have online by the end of this year. Put it this way, I would be surprised if we brought on less than 13 gigawatts of compute by the end of next year. As I mentioned earlier, the power cooling, electrical equipment infrastructure is somewhat of a limiting factor. To make sure that that is not a constraint for our build-out, we're actually going to aim for an incremental 20 gigawatts of power cooling infrastructure next year. So that the amount of power cooling that we have is far in excess of what is needed to turn the GPUs on. There's a non-zero possibility, maybe it's a small possibility at this point, but it's not zero, of SpaceX having over 20 gigawatts of SI compute online next year.
+
+A small possibility, but it used to be zero. It's not zero anymore. We're also planning to have the most powerful training cluster online by the end of Q2, which will be 440,000 Vera Rubin computers deployed for optimal training. This will, I think, be extremely helpful for getting Grok to be potentially the best model, but certainly to be extremely competitive. On the Grok Bot side, we're seeing the fastest growth of a product that I've ever seen in my life for Grok Bot. I've never seen anything grow this fast. We're also seeing that the usage of Grok Bot grows over time per user. It does not decline. As we make Grok Bot more useful, we're seeing users use it more per week, not use it less.
+
+And we'll be deploying Grok Bot at scale for enterprise customers, which is a very big deal, so it can be used effectively in teams by companies as though it were a virtual human. We already are in early deployment with some trusted customers, and we expect to be in wide deployment within a few weeks for enterprise customers for Grok Bot. I think Grok Bot may end up being what uses most of our SI compute. I mean, in a nutshell, what this implies for SpaceX annual recurring revenue by the end of 2027 is somewhere between $500 billion and $1 trillion. Bret?
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+Okay, Bret, you can go instead.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Sorry. On that crazy note, I thought I-
+
+Yeah, on that crazy note.
+
+Yeah, I don't want to give Bret a heart attack.
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+Thanks, Elon. We had an exceptional execution and quarter again. Today, I'll focus both on the operational and the commercial highlights, as well as talk about the priority initiatives for next quarter. Showing a slide with the KPIs, and I'll go ahead and walk through it. Starting with our space business, we remain the leading launch provider for the world, flying the vast majority of payload mass to orbit. During the third quarter, our 35 launches included 21 flights of Starlink on Falcon 9, 2 flights of Starship, a Falcon Heavy, which I'll talk about in a second, and 12 high-profile customer missions, including the Falcon Heavy launch, which we flew NASA's Roman Space Telescope into deep space. We also flew 6 national security space launch missions.
+
+We've also secured important new business, winning 3 additional human spaceflight missions on Dragon, which will take us through 2028, along with the Starlink communications contract on NASA's Artemis III mission. In addition, we signed 18 new national security space launch missions, a contract to deliver payload to the lunar surface with Starship and 3 new Starfall missions on Starship. We just did a Starfall mission today, by the way, on Falcon 9. Starfall is our space capsule, which provides routine, relatively low-cost access to microgravity environments for scientific research, including improving our understanding of diseases like cancer and diabetes, and developing better protocols for patients here on Earth. During the final week of the quarter, we flew Starship Flight 14 to orbit, as Elon talked about, followed just after on October 1st by a triple header.
+
+We flew 3 Falcon missions across our 3 Falcon launch sites in just 13 hours. Crew 13, we brought safely to the International Space Station, a Falcon Heavy NRO mission, and a rideshare mission flying 130 payloads. It's incredible display of what we can deliver in a single day across crew, commercial, and national security missions. We're also incredibly excited for what's ahead for Starship, flying the largest payloads to help build the space economy in orbit and on other planets and the moon. As Elon said, Starship Flight 14 was a major technical milestone, and we remain on track with our goals to bring back both the first and second stages to the tower this year, refly the second stage by early next year, and ramp our launch cadence as we make progress towards rapid reusability.
+
+We'll attempt an on-orbit refueling early next year, and we'll begin flying mobile V2 and Starmind satellites in 2027. We have had significant constructive engagement with the FAA, and we expect the license for our Flight 15 to include return to launch site and tower catch for both stages. I'm also extremely excited about expanding the Starship operations to Louisiana with the second Louisiana purchase.
+
+The geography of Louisiana, the community, and their work ethic is so aligned for an amazing Starship future. Moving on to Starlink. We had another standout quarter driven by continued growth across both our consumer, enterprise, and government businesses. We ended the quarter active in 174 markets, including new market launches for Vietnam and Uganda. Looking at subscriber growth, we added 1.6 million consumers, not total users, but consumers in the quarter, reaching just under 14 million global broadband consumer subscribers.
+
+As I mentioned, this number does not include additional hundreds of thousands of enterprise subscribers and aviation customers. We remain incredibly inspired by the impact of Starlink on communities around the world, including providing services to hundreds of thousands of students and teachers in schools globally, as well as for emergency response during natural disasters. Over the third quarter, Starlink's rapid response capabilities enabled support across 25 crises, including the Venezuela earthquake, the earthquake in western Colombia, and Hurricane Lowell in Hawaii. In Venezuela alone, Starlink donated over 1,400 kits to response agencies, providing critical Starlink broadband connectivity to over 250,000 people. As we mentioned last quarter, we continue to see significant growth opportunities on the enterprise and government side of the business, with aviation a continuing major focus and fixed site gaining momentum.
+
+Starlink is now contracted for roughly 12,000 planes, almost a quarter of the available aircraft, and we are expanding quickly with both new and existing customers. We have signed agreements with three of the four major U.S. carriers, along with a growing list of leading international airlines. During the quarter, Lufthansa, Swiss, Copa Airlines, Korean Air, Austrian Airlines, and Asiana Airlines all flew their first Starlink-equipped aircraft. To keep pace with this demand, we have quadrupled aviation production rates since the beginning of the year, and we expect to double before the end of the year. Our aviation partners report that Starlink has become a key reason customers choose to fly with them, both business travelers who increasingly rely on full connectivity in the skies, or even individuals who want to stay connected all the time everywhere.
+
+Our data shows Starlink, and frankly, our customers tell us that Starlink-equipped flights carry higher load factors on the planes, and full connectivity is quickly becoming table stakes for passengers. On the government side, Starshield continues to deliver unique mission-critical capabilities, and we see further room for growth. We remain on pace for enterprise and government revenues to exceed consumer connectivity revenues in the future, each. The successful deployment of the operational V3 broadband satellites on Starship's Flight 14 marks an important step and an inflection point for Starlink. The increased capability from these satellites, as Elon talked about, and the Starship launcher itself will provide additional capacity across markets and enable new sales in high-demand areas. We expect the market for communications to grow far beyond just human communication that we traditionally think about.
+
+Connecting cars, robots, and the adoption of super intelligence will increase communication demands, not in percentages, but in many orders of magnitude. In the years ahead, we expect Starlink alone to represent a significant portion of global internet traffic. In mobile, we continue to expand international partnerships, turning on service with new carriers across multiple countries in the third quarter, including Uganda, the Democratic Republic of Congo, Kazakhstan, and Costa Rica. We surpassed 22 million monthly users on Starlink Mobile as of the end of the quarter, up 37% quarter-over-quarter. Our near-term priority remains flying the mobile V2 constellation through next year and integrating our spectrum purchases to turn on service in early 2028.
+
+Just a few weeks ago, we received approval from the FCC to launch 15,000 mobile V2 sats and announced an agreement to acquire a portfolio of low-band spectrum, which will pave the way for Starlink Mobile to become a major mobile carrier in the U.S. Moving to super intelligence, the industry continues to demand ever more massive amounts of compute. We're rapidly expanding capacity to meet both our own needs as Grok and related product scale, and those of our cloud service customers. Enterprise feedback on recent model releases has been positive, and Grok Bot in particular is seeing strong adoption out of the gate. Grok Bot, our agentic assistant, launched in August, and we already had paid weekly users of 800,000 earlier this month, more than doubling over the last month.
+
+B2B is our fastest-growing category, with companies increasingly using Grok Bot as a force multiplier across sales, marketing, IT, and engineering, treating it as an always-on teammate for complex end-to-end workflows. We're also accelerating our Grok model release cadence with significant performance gains expected in the near term. Well, have been and more in the near term. At the same time, the integration of Cursor continues to progress well, strengthening both our product capabilities and our go-to -market reach with a scaled enterprise sales force.
+
+Early evidence of this momentum is already visible. Grok enterprise customers with more than $1 million in run rate revenue, including Cursor, were up 50% quarter-over-quarter on a pro forma basis. Last week, we further integrated the portfolio by announcing a new scheme that brings together Grok Bot, Cursor, and X Premium on a single plan.
+
+In review, our business is experiencing extremely strong momentum across all three segments. Our engineering teams are scaling Starship and next-generation satellites across broadband, mobile, and Starshield, while our commercial teams expand Starlink across aviation, enterprise, government, and global markets. At the same time, we're scaling our super intelligence business in the key areas of critical compute infrastructure, leveraging our hardware expertise. Now, Bret, you get to go.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Thank you, Gwynne. We delivered another strong quarter in Q3. Revenue grew an impressive 161% year-over-year to $14.6 billion, fueled by the continued momentum in the connectivity business and our clear inflection point in the super intelligence or SI business. Adjusted EBITDA once again grew faster than revenue to $8.8 billion, up 306% year-over-year. The combination of our launch leadership, recurring Starlink revenue, and the significant expansion of our SI infrastructure business have combined to drive meaningful operating leverage in the business. Our balance sheet remains very strong, and our focus on capital allocation continues to keep us in a position to accelerate the pace of innovation that underpins the significant revenue opportunity across all of our businesses. I'll now walk through the financials by segment.
+
+The space revenues of $1.8 billion were up 84% sequentially and up 6% year-over-year , anchored by a favorable customer mix. We are on track to deliver strong growth for the year based on our robust customer manifest for Falcon and Dragon vehicles. As far as capital allocation, we continue to invest in our Starship program, accelerating Raptor engine and vehicle production, advancing Mega bay construction, and progressing multiple launch pads at both Starbase and the Cape. Importantly, we secured the location for the next phase of U.S. space launch leadership in Louisiana. These investments remain essential to unlocking the step change in cost and capacity that Starship will deliver. Connectivity again delivered robust revenue growth and profitability with revenues of $5.2 billion, up 69% year-over-year and 22% sequentially.
+
+As Gwynne mentioned, we reached 13.6 million Starlink consumer subscribers, adding 1.6 million subscribers just in Q3 alone, driven by growth in more developed markets. During the quarter, we began ramping production of our V5 kits, which supported our progress on alleviating inventory constraints. We strategically managed our channel distribution and prioritized delivery of kits to retail channels ahead of the holiday season, which we expect will lead to increased activations in Q4. Starlink consumer average revenue per user or ARPU, monthly average revenue per user, increased 5% sequentially to $69 per month, benefiting from a favorable customer mix dynamic in the quarter. Enterprise and government revenues grew 91% year-over-year and 18% sequentially, highlighted by growth in our Starshield program with the U.S. government and the continued momentum in the aviation industry.
+
+Aviation remains a major growth opportunity as we are still early in the installation phase with many of the largest carriers worldwide and have line of sight into an accelerated activation path into 2027 for our key partners. Connectivity gross profits doubled year-over-year with gross margins of 55%, including a one-time benefit of roughly 3% primarily driven by tariff refunds in the quarter. Excluding the one-time benefits, adjusted EBITDA margins expanded roughly 2% year-over-year .
+
+Looking ahead, the satellite roadmap is a key driver of both the capacity and capability of our connectivity segment. Through the end of the year and throughout 2027, we expect to deploy V3 broadband satellites in meaningful volume, with each Starship launch ramping towards a payload that delivers over 20 times the downlink capacity of the current generation of Falcon 9 launches today.
+
+In parallel, we will ramp Starlink Mobile V2 satellites on Starship starting in 2027 and leverage our newly enhanced wireless spectrum portfolio to expand our direct-to-cell service and become a major mobile carrier, as Gwynne mentioned, in the U.S. Across all three of our connectivity applications, Starlink broadband, Starlink Mobile, and Starshield, the launch cadence on Starship is expected to drive a step change in total capacity, coverage, and service quality. SI, or Super Intelligence, was again the standout growth driver for the quarter. Segment revenue increased substantially to $7.6 billion, up $5 billion quarter over quarter, and $6.7 billion year-over-year, primarily powered by the ramp of our cloud services agreements. We meaningfully improved the segment's profitability profile as we monetized newly deployed capacity and delivered powerful operating leverage for the business.
+
+We ended the third quarter with 1.7 gigawatts of nameplate compute capacity, with additional data halls already online in early October. For SI solutions and infrastructure, revenues were $7 billion, of which $608 million came from the Cursor acquisition closed roughly mid-quarter. Even excluding Cursor, SI solutions and infrastructure revenues grew 192% sequentially, driven primarily by the activation of new cloud services agreements. There are many customers asking for compute, and we are actively building the supply to meet both internal and external demand.
+
+We expect to have additional new customers in future deals and will continuously evaluate the highest -margin usage for our compute assets across both new and existing cloud service agreements and serving inference for our own SI products. What we are seeing in the market is extraordinary. At current pricing, new compute deployments are generating a payback of less than a year.
+
+Pricing is currently tracking slightly above the high end of the $30 to $50 per watt range we were discussing just last quarter, which further supports the attractiveness of these terrestrial SI compute investments. We will continue to be demand-led and prudent in the pace of deployment, matching our disciplined and proactive capital planning for procurement of semiconductor supply to the near-term customer demand. Our current customer contracts for SI compute have the benefit of allowing us to flexibly manage our capacity for our own model training purposes, as well as be able to monetize for our SI cloud service agreements revenue at favorable pricing as the market availability continues to tighten. Advertising revenues grew 19% year-over-year as we build more momentum on the new advertising tech platform that we rolled out just last quarter in Q2.
+
+SI segment adjusted EBITDA was $5 billion, up $3.8 billion quarter-over-quarter, and $5.4 billion year-over-year, driven primarily by higher -margin cloud service agreements. SI segment operating income was $431 million, but excluding the $1.2 billion of stock-based compensation expense related to the Cursor acquisition, the segment delivered $1.6 billion of operating profit just in Q3. Double-clicking on the share-based compensation expenses of the $60 billion equity value for Cursor when we purchased it, $23 billion was attributed towards retaining key employees and replacing outstanding equity awards, including revesting agreements for key executives. These equity awards will be recognized as stock-based compensation over roughly the next three-year vesting period. Total company capital expenditures in the third quarter were $19.6 billion, primarily in support of our SI compute build-out, Starship infrastructure, and satellite production.
+
+We ended the quarter with substantial backlog totaling $63 billion as of September 30, of which $17.5 billion was recognized as deferred revenue. Approximately $42 billion of this backlog is expected to be recognized within the next year. Looking ahead, demand remains robust across all three segments, particularly in our cloud services business. We remain on track to deliver our previously stated goal of $100 billion in ARR by the end of this year, defined as annualized revenue based on the month of December. SI infrastructure continuing to come online at Memphis and Southaven gives us visibility into an accelerated build path through the remainder of this year.
+
+As a result, we are on track to reach nearly 2 gigawatts of nameplate compute at the end of this month alone in October and have a clear line of sight, as Elon highlighted, to nameplate compute in the range of 2.5 to 3 gigawatts just by the end of this quarter. Because of the additional capacity coming online this quarter, we expect fourth quarter capital expenditures to now be in the range of $35 billion to $40 billion for this quarter.
+
+We also expect total company gross margins in Q4 to be more consistent with the second quarter, given some one-time benefits in customer mix that we highlighted in Q3. Given the increased visibility into our compute contract pipeline over the next six months, we have the opportunity to provide additional look-forward guidance on the acceleration we see in our business in Q1 2027.
+
+We now see total company revenues in the range of $33 billion to $37 billion for Q1 of 2027. In closing, we are in a transformative phase for the company's financial profile. We are investing aggressively across SI Compute, Starship development and production, and next-generation Starlink broadband and mobile constellations. The three areas we believe will generate the highest long-term returns. These are demand-led investments in markets with visible, tangible returns in the near term.
+
+We are building the infrastructure of the future with discipline, focused on capital efficiency, strong returns on invested capital, and maintaining a strong investment-grade balance sheet, while still moving with the velocity to capture the opportunity in front of us. The combination of our diversified earnings base, focus on extreme vertical integration, and the robust demand in the market for superintelligence gives us conviction in the path ahead. With that, I will turn it back to Andrea.
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+Thanks, Bret. We are now going to begin the Q&A session. If you would like to ask a question, please use the Raise Hand function at the bottom of your screen. If you have dialed in today, please press star nine to raise your hand and star six to unmute yourself. I think we have assembled a queue. We will take the first question from Adam Jonas at Morgan Stanley.
+
+Adam Jonas
+
+Analyst, Morgan Stanley
+
+Hey, everybody, can you hear me? Great. First, Elon, thank you for making flying cars real.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+You are welcome.
+
+Adam Jonas
+
+Analyst, Morgan Stanley
+
+That was freaking insane. My first comment.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Yeah. There are things in this world that make life real life, and that is one of them.
+
+Adam Jonas
+
+Analyst, Morgan Stanley
+
+It is super inspiring for people all over the world, especially young people that want to build.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Yeah.
+
+Adam Jonas
+
+Analyst, Morgan Stanley
+
+I got a two-part question on Terafab. You want to make chips, you want to make crazy amounts of chips on shore or in a safe and secure place.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Yeah.
+
+Adam Jonas
+
+Analyst, Morgan Stanley
+
+First, can you confirm if SpaceX has placed orders for EUV machines? If so, when do you expect delivery? Just as a second part to the question, when you take a first principles approach to the semi fab supply chain, I know you've toured TSMC, ASML, AMD, Lam. These are very impressive companies, as I'm sure you'd agree. Where do you see the biggest areas to improve their processes and supply chain when you do it your way? Thanks.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Well, we're just figuring out chip fabrication. I'll tell you what our internal expectations are, which obviously I'd put big error bars on this because we don't know if we will actually achieve this or not. But it's what we're aiming for internally is to make our first test chip functional in approximately May or June of next year. That's just a kind of a SRAM chip or something that I think basically tests the line. That's at the research fab in Austin. Our aspiration is to reach volume production around Q3 of 2028 at Terafab at Gibbons Creek, the main Terafab location. Now, these are very aggressive dates, and we're very appreciative of ASML and all of our other suppliers in accelerating equipment deliveries in order to achieve this outcome.
+
+Let's just say that outcome of achieving volume production is at least in the set of possible outcomes for Q3 or Q4 of 2028. These are obviously insanely fast time frames for chip production. We do have, I think, some significant potential breakthroughs in chip fabrication, but I don't think I should discuss that on an earnings call. Let's not give away the shop here. But I am optimistic that we will dramatically accelerate chip production and that Terafab will ultimately do what the name suggests, which is to make a terawatt of superintelligence chips per year.
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+We'll take our next question from Doug Anmuth at J.P. Morgan.
+
+Doug Anmuth
+
+Analyst, J.P. Morgan
+
+Great. Thank you. Elon, can you talk more about just how you're working through those constraints in power cooling and infra and just what gets you comfortable with the 13 gigawatts ending 2027? Bret, if you could also help us understand how you're thinking about the funding requirements, just as you look out to that kind of capacity. Thanks.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Yeah. Well, 3 gigawatts of that or very close to 3 gigawatts is what we expect to have done just in the next few months. If you just look at the rate at which we are actually deploying and turning on compute. What I think you hear from, I guess, other hyperscalers is you don't hear a lot of detail about how many GPUs they're actually turning on every month. With us, you are. I'm being as precise as possible about this. It is absolutely insane to be deploying, providing the power and all the electrical equipment, the cooling, the batteries, the networking, and everything else that's needed to turn on 220,000 GB300s a month. That is actually what we're doing right now, and that pace will obviously accelerate next year. We're not going to slow down.
+
+Again, some of this. If you say, how are we going to get all this power? Let's just say, we actually do have a plan that gets to 20 gigawatts of power and cooling by the end of next year. That is not something that I should spell out. That is highly proprietary because if I tell you about it, others are going to try to do the same thing.
+
+I'm not saying we'll have 20 gigawatts of power. I'm saying we have a plan where, if everything goes right, we'll have 20 gigawatts of incremental power, I should say, next year. So 23 gigawatts roughly in total. Now, I don't expect everything to go right. That's why I said I'm confident of 10, highly confident of 10 next year. 20 is difficult, but not impossible. Some of the things we're doing, I have mentioned publicly.
+
+We're casting the blades and vanes for the turbines. SpaceX already has a very advanced casting capability that was built for rocket engines.
+
+We have, I think, actually the most advanced casting capability on Earth, because the demands for castings for rocket engines exceed the demands for anything else you could possibly imagine. Taking that incredible team that has, I think, objectively the most advanced casting technology in the world and saying, "Hey, can you guys also make some blades and vanes for terrestrial turbines?" is much easier than what they have done in the past. When we talk to the turbine suppliers, they tell us that the blades and vanes are 12 to 18 months behind the rest of the turbine, meaning they can deliver everything except the blades and vanes 12 to 18 months before they can deliver the blades and vanes.
+
+Casting is this really difficult bottleneck. If anything, it seems to be getting worse. That means that we can bring power online 12 to 18 months faster than anyone else. That's the kind of advantage that's difficult to replicate. Unless someone else is building an advanced casting shop, they will be unable to compete with SpaceX in this regard. We're looking at many different sources of power, not just gas turbines.
+
+We obviously want to use solar, wind, and every other source of power that we can obtain. We think there's also a lot of opportunity for inference compute if you manufacture modular inference compute at the factory level, and then such that the power and cooling are built in at the factory, and then you distribute modular inference compute clusters all over the country, if not all over the world.
+
+That's about as much as I should say about scaling power cooling. Like I said, at this point, I'd say I feel highly confident of 10 gigawatts incremental next year, so 13 total. Some number over 20, the probability of achieving that is rising rapidly.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Doug, the second part of your question related to funding. I think we certainly have the advantage related to others in that we are investment grade, have a very strong balance sheet, and there are a number of available pools of debt capital that we are talking to at the moment related to funding this incredible growth. The other really important thing to emphasize is the payback period is very short, and so this capability starts to fund itself in a pretty near-term situation. The fact even that we're finishing this quarter with more capability starts the funding mechanism even into the first half of next year. You have your operational cash flows, first and foremost. You have multiple pools of capital available in the debt market, especially because of our investment grade status and strong balance sheet.
+
+You also have the opportunity, from what we've seen, to partner with, I would say, the whole value chain related to on the vendor and customer side. There's nothing easy about SpaceX for sure, so might as well have the finance piece be part of the challenge at the same time. But we have a lot of conviction that we are going to be able to do this in a very measured fashion and continue to keep ourselves in that IG status along the way.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Certainly, if you look at our track record with respect to capital efficiency-
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Absolutely
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Starship and all of our other projects, you'd be hard-pressed to find any company in the world that is as good at capital efficiency as SpaceX.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Exactly.
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+Next question from Edison Yu at Deutsche Bank.
+
+Edison Yu
+
+Analyst, Deutsche Bank
+
+Hi. Thank you for taking our questions, and I will echo Adam's enthusiasm about the Roadster. There has been a lot of reporting, a lot of anticipation of a merger with Tesla. I realize you may be limited on what you can say, but if we take a step back, how do you think about the pros and cons of a potential combination? As part of that framework, are there any roadblocks that you need to address before embarking on it? Thank you.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+This is definitely a kind of question where I feel like I am tap dancing through a minefield. I have to be thoughtful about what I say here. Both SpaceX and Tesla have formed special committees to discuss this idea, at the request of shareholders. These special committees consist of independent directors. Because I am a conflicted party, I cannot actually be in the discussions of the special committees. It is an odd kabuki dance, where two groups of people are talking, and I cannot be in the conversation. I think some people out there assume that a SpaceX and Tesla merger is a certainty, and I think that would be overstating it. Do I think it would be a good idea? Yes. At the end of the day, the shareholders have to be supportive of this.
+
+Particularly on the Tesla side, we will need a 50% vote of all shares, not just those who vote, but of all shareholders. That is quite a high hurdle to try to achieve. I can just say that at this point that the special committees have not reached agreement on the terms of any transaction. Obviously, there is no guarantee that they will. But I do think there is a lot of merit to combining the companies, as we are pretty much in the super intelligent singularity. There is a lot to be gained from cooperating on developing super intelligent software, chip design, the Terafab, obviously, robotics, mass to orbit with the Starmind constellation.
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+Connectivity.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Connectivity. I think it would be a good idea, but it is really up to the special committees of both companies. They have got to come up with something, and then that has got to be put to the shareholders as a vote.
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+Next question from Kutgun Maral at Evercore.
+
+Kutgun Maral
+
+Analyst, Evercore
+
+Great. Thank you for taking the question. I wanted to ask about Starlink Mobile, which has come a long way in a short time, including the recent low-band deal. Even so, there is still some uncertainty about how your spectrum portfolio, even though it is much improved and possibly will continue to grow, can compete with incumbents in the U.S. And part of the unknown for us on the outside is how much coverage and capacity the satellite layer can really provide to bridge the terrestrial gap to peers. So what roles do you expect the satellite and terrestrial parts of the network will play, and how should we think about the traffic mix between them in delivering a 5G-like experience in the U.S.?
+
+How much of the connectivity focus is on traditional retail wireless versus what could be a massive physical AI opportunity? Thank you.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Do you want to say something?
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+Yeah. Elon can fill in some details, but let me point out that the vast majority of mobile connectivity is actually Wi-Fi, right? I think it is something between 85% and 93% is done through Wi-Fi. Keep in mind, Starlink broadband does a lot of Wi-Fi work as well. As far as the mix goes, I think we expect that the S-band spectrum will provide the majority. Then obviously you need the low-band spectrum, the 800 megahertz spectrum, to basically penetrate buildings. So if you are not on Wi-Fi, you can still receive the signal. By the way, I will correct myself if I am wrong afterwards, but I think the S-band will carry the majority, and then the low-band spectrum will carry less, but provide a critical piece, by the way.
+
+Also, we talked last quarter at the last earnings call about smaller, not quite tower capable, but smaller radios that we could put on already installed homes for Starlink, businesses for Starlink, towers as well. It's not just the spectrum that we've talked about with the S-band. We will basically leverage the real estate from Starlink installs and other towers.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Yeah, I think we probably should do a longer presentation on the game plan for Starlink connectivity, and why we think it will ultimately be a business that generates several hundred billion dollars of revenue a year. Because you are missing some of the pieces that we know about internally. I can say we do see a clear path to several hundred billion dollars a year in connectivity revenue. But I think we should probably describe that in more detail in a forum that's not limited to a few minutes at an earnings call.
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+I think that's really three minutes, right?
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Well, we can go a little longer, I think.
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+A little longer?
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+I'll take the next question from Eric Sheridan at Goldman Sachs.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Thanks so much for taking the question. Maybe if I can turn to the scaling of compute you laid out at the beginning part of the call. When you think about a framework for applying that compute to the external opportunity that presents itself from cloud services relative to the internal needs of that compute for scaling Cursor and Grok and Grok Bot. How has your view evolved about striking the right balance in that mix, and how to think through the output from a monetization standpoint of what that mix might produce for the business in the next 12 to 18 months? Thanks so much.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Well, the relative allocation of compute to third parties versus internal is something that's going to change from one month to the next. I guess as a rough approximation, our goal is to split it 50/50, more or less, where half of the compute is used internally and half of it is rented to others.
+
+That number could shift 60/40 one way or the other. It's going to be dynamic. And obviously, our approach is to rent at effectively the spot market rate as opposed to sign these long-term deals. Our belief is that the value of compute per watt will increase over time, not decrease. The reason for that, I think it should be obvious to people really, is that as you improve the AI software, as the models get better and better, you get more useful intelligence per watt.
+
+The value of that compute is proportionate to the useful intelligence per watt. That is why you see things like even old computers, like the H100s, renting for more than they rented when they were new. I think that is likely to continue. I think we are going to face a shortage of super intelligence compute, and that shortage is going to remain for a long time. I think the smart move is to do short-term contracts and essentially to place the bet on useful intelligence per watt increasing rapidly, which obviously that is what has happened so far. Also if you look at, say, how are our short-term contracts renewing? Are they renewing at higher dollars per watt or lower? We see them renewing at higher dollars per watt, not lower dollars per watt.
+
+We are also, frankly, hounded relentlessly by every hyperscaler and by dozens of smaller companies to rent more of our compute. We could rent out our compute several times over if we said yes to everyone. That is just the situation here. That is why I posted that video meme of the Monty Python Cheese Shop sketch, where the guy goes into a cheese shop to get some cheese, and they actually have no cheese.
+
+He goes to like, "What about this kind of cheese? What about that kind of cheese?" They really just do not have any cheese. We have actually tried to offload some of our inference compute to other cloud providers so that we can use more compute for training. We get the cheese shop sketch. We will ask them about, what about some GB300s? "Nope, do not have any of those." What about some GB200s?
+
+Nope, do not have any of those." What about some TPUs? "Nope." What about some Trainiums? "Nope." Okay, how about some H100s? They are like, "Well, we might have some overseas somewhere." Then they will check and come back and say, "Nope, we do not have that either." It is ridiculous. I do not think we are going to have a demand issue here. I am not saying this will happen, it is not impossible that we will have a six-month payback period for compute next year.
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+We are now going to turn to some questions from individual investors that were posted directly onto our public Q&A platform. We have talked a lot about compute deployment terrestrially. Let us move to a question on V3 sats. When will capacity gains from V3 satellites actually show up as meaningfully higher speeds and lower latency for users? How many V3 sats are needed before the network feels noticeably better in high-demand areas?
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+I think we'll need a few hundred V3 satellites for people to really feel the impact, because right now with very few satellites, you'll get an impact and then 10 minutes later it won't be there. So a few hundred satellites, and I think we can achieve that by mid-next year. Yeah.
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+Great. I'll take number six, which is, can you provide an update on Starbase Louisiana? What's the timeline and what's your current confidence level in achieving a first Starship launch from the site as early as 2029?
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Well, our internal aspiration for first launch from Louisiana is actually in two years. So 2028 is our goal. But I think 2029 is highly likely. I think we'll be at scale launching from Louisiana at scale in 2029. I'm highly confident.
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+You ready to wrap? Yep. Thanks, everyone. This wraps up the Q3 2026 earnings report. Thank you all for tuning in, and we will see you next quarter.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Thank you.
+
+Goldman Sachs Communacopia + Technology Conference 2026 - September 10, 2026
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Okay. I think here we go. We're going to get started with our next fireside chat. It's my pleasure to welcome SpaceX AI to the conference this year, Bret Johnsen, CFO. I am going to do a little bit of housekeeping, and then Bret and I are going to get into a conversation. With a company like this, we are going to try to cover as much ground as we possibly can, but I'm up against a shot clock. Some of the statements made today by SpaceX may be considered forward-looking.
+
+These statements involve a number of risks and uncertainties that could cause actual results to differ materially. Any forward-looking statements made today by the company are based on assumptions as of today, and SpaceX undertakes no obligation to update them. Please refer to SpaceX's Form 10-Q for a discussion of risk factors that may impact actual results. Bret, thanks for agreeing to do the conference.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Thank you.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Great to have the opportunity to talk. Let's start with what we've even talked about in some of our work, which is the central theme I think of this company is vertical integration.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Talk a little bit about how that is the anchor for this company, both at the company level and even at the segment level.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah. I think vertical integration is core to who we are. I totally agree with you. We really believe that we are building the infrastructure of the future, and we're taking a very different approach, and we have since inception. If you go back to the old days when we were a rocket company which wasn't too long ago, by the way, we have always taken a very vertically integrated approach.
+
+Starting when we were really just focused on rockets in the beginning, or I should say rockets and spacecraft, a lot of it was because we couldn't find elements of the supply chain that were moving at the pace we needed or in an element of quality that we needed for sure. Quality is so important when you're flying payloads to space, especially when the payloads could be you and me.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Right? Certainly that was in our DNA. Then when we looked up and headed down the path of being a communications business, and started Starlink, it was the same type of thing over again. We want to own all the way from in the rockets, the metal coming in the door to building the engines, doing all the avionics and the software, and then the customer relationship. In comms, it became the same thing, where we were owning the launch, we were owning building the satellites themselves, and then going to the end customer or enterprise.
+
+Taking that approach now to the AI side of our business, we are very vertically integrated, all the way to the point that we're building our own infrastructure. We're the GC building the building, putting up the power, and then using our own model to get directly to the end customer, whether it's consumer or enterprise. Then very soon with orbital compute as well.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Okay. Well understood. Let's come back to that launch business. I think when I think about where you're going over the next 5- 10 years, so much of it is tied to rapid reusability in the launch business tied to Starship. Talk to us a little bit about the building blocks to take Starship to where you want it to go, and what some of the key learnings have been from recent launches.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Well, I'm glad you start with Starship because Starship is so core to the rest of our business in really all the segments. It's been years and years in the making. We had a huge milestone event with flight 13. So much learning came from that. If you didn't get a chance to see it, we were able to not only deliver payloads, I would say demonstration payloads of V3 satellites, but also did a relight of the Raptor engine, but probably most importantly, had the softest splash down, kind of precision splash down over the ocean of the second stage.
+
+Then kind of magically, we're able to tow what looked like a big whale back into shore, thanks to the efforts of pretty incredible recovery team on the SpaceX side, we're able to get that vehicle back. We were able to get our engineers climbing all over that vehicle to see exactly the environments that the heat shield went through.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+There's been so much learning just in the last number of weeks, that we're able to take back into our flights coming forward. So very exciting related to how the heat shield performed already on flight 13, but then the learnings that we got from that will carry right into flight 14 and beyond. Then we've got another flight coming up later this month for flight 14, which for the CFO is very exciting because it's going to be a revenue-generating flight. I love the demonstration flights, and now I'm excited that we're moving into production cadence and flying production V3 Starlink satellites-
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+...to orbit on our next flight. I think that'll be a huge milestone for us. If you look beyond flight 14, starting to get a shot at bringing back both the first and second stage, will be big milestones coming up for later this year.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Okay. Let's pivot the conversation to AI infrastructure. We'll start with orbital compute. When you think about orbital compute and you try to conceptualize this for investors, how should investors think about the challenges that are being solved for to stand up and scale orbital compute and the timeline over which feasibility and scale can be built in orbital compute?
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah, it's interesting. I think I've heard conversations in two sides of it. One is it feels like almost every leader in the AI industry is willing to openly acknowledge that orbital compute is the future, right? It's clean energy. You don't have all the constraints. You don't affect any type of community from that perspective. I think it's clear that a large majority, if not almost everybody thinks that's the future. But most, if not everybody other than us, think it's many, many years away. The huge difference is we're actually, again, very vertically integrated, and we're in control of all the pieces that are required.
+
+We're actually targeting to fly our first orbital compute satellites next year. I think that will be an enormous moment when they start, and when everybody starts to see that we're putting up huge amounts of compute into space going into 2028, because that's the right way to do this anyway, and then everyone will see that the timeline is far shorter than people had expected. Some of that circles right back to Starship.
+
+What these are, is these are largely the same V3 bus that we were just talking about for Starlink that we're flying literally later this month, coming days and weeks. Then changing out the payload, giving it more solar, so certainly the solar arrays will be larger. I think that is incredibly important, and people will see that and then realize how close this is to becoming a reality. It doesn't mean we're not continuing to expand our terrestrial footprint on compute as well, but I do think orbital compute is definitely the future.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Okay, maybe just one last quick one on orbital before we turn to terrestrial. You touched upon it a little bit, but just help us better understand how to think about the cost advantages of orbital compute relative to terrestrial compute, because that could be a real-
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+...competitive differentiation factor for the company over the long term.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah. I think that the moment when it becomes better than terrestrial is all about reusability.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Really, that's been a core capability of our company for over a decade now. We brought back first stage boosters for Falcon 9 in December of 2015 and started reflying them the year after that. For now a decade, we've been reflying, I think, over 500 rocket boosters now to space, reflown. It is knowledge that we're carrying into that Starship platform.
+
+When you get to the point, hopefully very soon. Because we've already recovered a first stage multiple times and reflown a first stage of Starship. You just heard me talk about the recovery progress on the second stage. When you get into, hopefully as soon as next year, where you're reflying both first and second stage of Starship, the cost curve goes down dramatically. What's really great about it is you look terrestrial versus orbital. In terrestrial, everything's getting actually more expensive.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Just inflation plays out and power gets more expensive, cooling, everything else, buildings, construction, real estate. You're actually on the wrong curve for all of us in tech. In tech, where you used to, I was a semiconductor guy before a space guy. You're used to going down that cost curve.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+The great part is when you're flying orbital compute, you're going down the cost curve. The rockets are going to get more and more efficient, more and more capable. The cost structure will go down related to the deployment cost, and the satellite will get more and more cost-effective. You'll benefit from Moore's law or whatever the equivalent there is and following is. You'll be able to get to scale and get the economies to scale as well. I think you're going to end up going down a cost curve even when you hit parity, maybe as soon as next year.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Okay. Super interesting. Let's come back to terrestrial compute. On the earnings call, you guys talked about a goal and a range of getting to terrestrial compute that could be stood up over the next 18 months. Talk to us a little bit about the visibility you have into those potential outcomes, how to think about the cost of standing up that terrestrial compute relative to what you did with Colossus 1 and Colossus 2.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Would love to understand the framing of what was put out there.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah, absolutely. Well, one of the other things that we did put out, certainly, and it's related to the terrestrial compute and the results thereof, is we talked about the fact that by the end of this year, with annualizing our December number, we're on track, or we believe we're on track to hit $100 billion ARR. What I would tell you, an update to that is that just earlier this month, we closed another hosting deal, and that translates into about $1.11 billion a month starting December 1st of this year, which is another roughly $13 billion of ARR that starts December 1st of this year. I would say we have even more conviction now-
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Got it.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+...about that $100 billion ARR target by the end of this year. I think that's incredibly compelling. If you look at where our company was even a couple quarters ago to where we'll be by Q4 of this year, a lot of that's driven by certainly the growth in terrestrial compute.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+We talked about a range next year of 5 GW-10 GW deployed.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Ending this year with a little over 2 GW.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+That's a lot of additional growth in gigawatts in one year. The reason that we have the confidence is again, that vertical integration. Circling back, Eric, to that same comment, the fact that we have line of sight to the power specifically-
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+...because some of it we're going to stand up ourselves-
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+...in existing locations, I think is hugely important. Elon talked about even, I don't know, beginning of this year, maybe even last year, about the fact that he thought power would become the constraint and that people would work through the allocation of some of the rest of the supply chain, but you're seeing that already play out. In fact, even when we went through the IPO process a couple months back, when we would say, "I think power is actually going to be the issue, and that's why orbital compute will become so compelling," people were still a little, "Well, I'm not sure." I think everybody's seeing it.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+You're seeing it across the industry now. It's pretty magical that orbital compute is clearly the solution here on the power and cooling and permitting side. We wouldn't give that range for next year unless we had line of sight to power specifically, but power and facilities and permitting needed. Certainly, we have a strong relationship with NVIDIA. In fact, we came out and talked about the fact that we're NVIDIA exclusive.
+
+That strong relationship, we hope certainly will translate into good allocation from a compute perspective because that's the piece that we don't control. Having a great partner like that is, I think, hugely important. I think when you talk about that, the other thing that we do that certainly I think is helpful for them is when we get this allocation, we stand it up.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+I think having certainty that you have a partner who's actually going to stand up that compute, not maybe not just for themselves, but also for the industry-
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+...it's a different dynamic, right? I think that relationship has been very strong and will continue to be very strong for us.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah, that certainly was an interesting part of the earnings, the partnership with NVIDIA and the-
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+...framing of that. Talk to us a little bit broadly about your own silicon solutions over the longer term. You obviously have a plan around Terafab, but you're this very important partner to NVIDIA. How do you think about the landscape evolving between first party and third party solutions around silicon for, again, against your ambitions of how much compute-
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+...you want to try to stand up?
+
+Bret Johnsen
+
+CFO, SpaceX
+
+I think it is an interesting world for us right now. We have done these compute deals, right? Almost all of them, if not all of them, have been, in essence, 90-day with a 90-day out, so roughly six-month commits.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+In fact, the one I just talked about that we just did earlier this month is also the same structure and timeline. I think largely that is because we have so much internal conviction about our own products. In fact, if you look at our own product cycles, it is pretty great that we closed the deal with Cursor just a few weeks ago. That brings a huge, very capable team to us officially now. You are already seeing improved product cycles. Announcing Grok Bot and getting that out there, that is a viral product. It is-
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+...really amazing. If you have not tried it, you should. It is just getting started down that path, right? Certainly it takes a little longer on the enterprise side than it does the consumer side related to security and other things you need to work through. But as people start using it and seeing all of the benefits of it and starting to talk to their friends, anecdotally, that is what I am seeing constantly around this. We are starting to see that. We saw Grok 4.6 come out and be a notable-
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+...improvement from Grok 4.5. We are talking about Grok 4.7 here shortly. The product cycle is improving, the size of the models, the capability. We are in this interesting dynamic where we have so much conviction about these products and more coming that you do not want to get in a situation where you constrain your own products-
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+...in the years to come because you were giving away the compute forever. For me and for my finance team, it is an interesting one because you are actually basically building this model of I am going to have this much compute from a wattage perspective, and this is my assumption of how I am going to monetize it. We know for a certain period of time what the range is. I think on the earnings call, we talked about $30-$50 is where we expect next year to be from a range of monetization, and that we were at the high end of that range-
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+...is probably, I think, the wording we used. If not, we are on the high end of the range. Really now it sets the bar for our internal team.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Right? Because you do not want to be pivoting over to your internal solutions and have any degradation related to the monetization.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+You want to have improvement. I do not have the financials of some of these big guys like Anthropic or OpenAI related to visibility of their financials, I should say. I think our financials might be better, but whatever. But visibility to their financials to know exactly what they are getting from a monetization of dollars per watt. Based upon what we are seeing, it is higher than the range.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Right? That is why it makes sense for them to be coming to someone like us to get the compute. We have a very strong relationship with Anthropic and Google, for example.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+You see that and you say to your team, "Well, look, if you just forecast that range for monetization, when our tools start ramping, it will actually be an improvement to that range.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Right? When we are using our compute and our software models.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+It is pretty great because you could take the situation where you guys want to model something in that range and say, "Okay, well, I see certainty to that. I actually do not even have to have any conviction on their products and see that." All of the upside of the product starting to kick in the Grok world will all be upside to what I have in my model.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Right.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Certainly we are at the very early days of something incredibly compelling on the AI evolution, revolution, and really, we are still only in the digital AI side.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+When you start talking about physical AI in the years to come, that even expands the market another fold.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah. Understood. There are maybe two themes in there. I just want to pull on the string a little bit.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah, sure.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Obviously you're talking about this third deal for compute. How do you think about the array of potential partners for those types of deals? Because you're standing up compute in a very constrained environment and delivering a solution to the industry that there's a high degree of demand for. How long do we think that narrative could sort of play out? Or how do you even think about who the people are that will call and ask you about that-
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+...sort of availability?
+
+Bret Johnsen
+
+CFO, SpaceX
+
+It feels like almost everybody.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Okay.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+There might be one company that hasn't called us, and we haven't called them. But other than that, almost everybody else in the industry, we have, first of all, very strong relationships with in many ways and are talking to. I think that just It speaks to the environment that we're all seeing, right? This hyper growth dynamic that from everything we're seeing is not slowing down by any stretch. We don't predict anything other than up and to the right in a meaningful way into next year as well from everything we're seeing.
+
+When you see that, first of all, you want to continue to invest with great software solutions and do deals like Cursor to make sure anything you can do to get your product right up there is important. But you also then have a lot of conviction about making investments for the future. The other side of this is, the risk related to these investments for us is dramatically less when we are in less than a one-year payback mode.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Right? Because you can see a situation, even when you are doing six months at a time, that likely continues beyond that. Now you are sitting with compute that will likely last for many years. In fact, you are seeing the monetization of many generations old now compute from NVIDIA still holding its own from a pricing perspective. And so that tells you, related to the residual value on these GPUs, that it is going to be a great product cycle for a long time. It also opens up markets from a financing perspective, right?
+
+Because now you are taking, in essence, creating a whole asset class related to GPU financing because everyone is seeing the value of this. And in fact, in the earnings call, I talked about the fact, and one of my buddies made fun of me, said, "I am going to use that line," that not all capital is the same, right? CapEx is not the same.
+
+When you are talking about assets that you can buy that others could use as well that have less than a one-year payback, that is very different from what the rocket guy would say is like a hangar or a launch tower that let me talk about the next couple of decades for that asset. So it is an interesting time, and it has kind of a ripple effect to a lot of other pieces of the business.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Okay, so one more piece I just want to click on that you mentioned, just to give you the opportunity. Because if I think about what has changed over the last couple of months, the closing of Cursor, the success you have had on the model side, that was not where the conversation was four months ago, and now it is where it is now, at least based on my experience. So talk a little bit about how that is evolving the strategy. You talked a little bit before about striking a balance in the business. There is compute deals, but you do not want to starve your internal operations that want to go-
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yep.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+...and external for the long term. Talk about what you are learning about the opportunity set as a foundational model company, as a solution like Cursor into the enterprise space, and how that could build in momentum.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah, we have certainly, up till this year, and I have been the CFO for 15 years, so we have certainly been all about organic growth, right? I think, really proud of our track record related to capital allocation and value creation. This year we certainly did some M&A between AI and Cursor so far this year. But it is because when you are faced with a product cycle as amazing as the AI product cycle, time to market becomes so critical, you then look at how do I get there, and how do I get to the very, not just the frontier, but how am I winning at the frontier?
+
+We feel like we have a very logical strategic advantage because we are an infrastructure company. Because of the fact that we have reusable rocketry that nobody really else has. I think the Chinese are trying to get there, right? To their credit, they have got an amazing space program, and I do think in the years to come, we will see things. But not on a Starship level anytime soon, let us put it that way.
+
+When you have that asset and you believe that that should be the solution for infrastructure for AI, and it will drive our cost of compute dramatically lower than others in the industry, then you do want to play it forward, even maybe as soon as next year, and say, well, if there is multiple solutions out there and our model is even close to at the tier one, if not better, hopefully, and our token cost is less, I think that puts us in the best position related to our customers.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+I think in the end, that is the key, is you want to be able to say that you are delivering a better service. We can absolutely say that with rockets, most reliable rocket ever flown, let alone lower cost per kilogram. We can absolutely say that with Starlink. If you look at our Starlink product offering, no one has ever had that before. If you go on an airplane now and it has Starlink, you will know what I mean, or on a cruise ship or at your house for that matter. Now we want to be able to do the same thing with AI.
+
+Honestly, this is a company that is only used to being in number one and winning. What I would tell you is since the IPO, I have a couple of friends that are like, "Oh, at least you got through that. Now you can relax a bit." I'm like, "Are you kidding me?" It's probably more intense now than it was. Because it's such an exciting time, and all we want to do is get out there and deliver the best product.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+I think there's an opportunity for us, and you're seeing Grok Bot start to be part of that, and Grok continuing to evolve to that. We're not going to settle.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Not going to settle for anything other than going after being the best product for our customers. I think that's really compelling, and I think people are starting to see that, and that's probably the change, to your point-
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+...of maybe the talking points from a couple of months ago is people said, "Yes, I get it. I understand why you guys could be the best infrastructure solution for AI." But they were a little hesitant related to the products, and already, like 90 days later, not even-
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+...I think people are seeing, oh, they were very serious about this side of the business as well.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+It's exciting.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah, definitely. I do want to touch upon connectivity. Let's go with Starlink broadband first. You brought up the example of if you experience the product and then don't experience the product, I can personally attest there is a difference for what it's worth. But talk a little bit about what you've learned about the addressable market for Starlink broadband, especially some of the key verticals that you're attacking globally, and how you think about building or scaling competitive advantages around that business.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah. What's interesting is we started out, and actually, the first year we called it Better Than Nothing Service in 2020 or 2021. We were learning, and we were getting satellites up there, and then a couple of years later, it was clear that we had a very strong service. Consumer was still a big focus because we hadn't gotten to the point of being able to go to a CTO, CIO, and show that we were three or four nines uptime and that we could give commitment levels and SLAs. But in the last couple of years, we're there, and enterprise has been a big push, and everybody wants to talk to us.
+
+Because when you're now in a world where resiliency is so important, not having Starlink be part of your networking solution just doesn't make any sense. Right? There isn't really another solution that's anything close to Starlink at all. You're seeing that, and we're seeing that. In almost every industry, this makes sense. Whether you want to use Starlink as your backup or your primary, why wouldn't you do that? Because certainly, any Board member could look up in any of those companies and go, "Why were you down? Why wasn't there Starlink in the solution?"
+
+I think we're seeing that on the fixed wireless side, and then we have a huge opportunity in anything related to mobility. We were talking about aircraft. We have a huge backlog, actually, on the aircraft side that we're actually ramping up our production for right now and addressing. Pretty exciting on that front. Almost every major airline, three of the four largest, we can't even talk about the one that's not in the fold because it's just kind of embarrassing. We'll make sure that we embarrass. But cruise ships, yachts, trains, any time where the connectivity wasn't there, it now can be there.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+What's great if you just say cruises or airlines for a minute, is now it's exposure to millions and millions of folks that are getting great connectivity from Starlink that otherwise wouldn't. Now thinking, "Geez, I could have this at my home or office.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+What we were facing in the past is actually most of our issue, if we didn't have an issue because we were selling every terminal we were making, but issue overall, on the demand side was just awareness. People weren't aware that we were there. We still face a lot of that outside the U.S., especially, where you go places and you say, "Well, you could have Starlink." They ask you what Starlink is, and you're like, it just means we have some work to do.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Opportunity set.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+But it certainly is a huge opportunity, and I am very excited actually about what the next step is. What I mean by that is even on the broadband, let alone what we can talk about mobile in a minute, but the fact that AI and physical AI will probably be a large conversation when we start into next year and beyond of devices everywhere. These devices are going to want to have AI embed from a knowledge perspective, and capabilities will be there, but they also need to be connected basically at all times.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+They can't be down. Connectivity to a humanoid robot or autonomous car or other any type of flying vehicle, that is not something that you're going to do with threshold solutions.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+I think it's going to open up the connectivity market dramatically when you see these solutions coming out because they need so much more data for that connectivity. It's really exciting on that front.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Understood. Let's turn to the medium to longer term mobile ambitions of the company.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+You have been very upfront about these ambitions. You have invested in assets that can build out a portfolio of solutions to deliver globally and to consumers. How are you thinking about investing, building, and scaling against the broader mobile telephony opportunity that could present in front of the company in the years ahead?
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah. Someone asked me just recently, "Well, is it a distraction at this point?" I said, "Not at all." What is beautiful about this model is we are going to take largely the same V3 bus that you are about to see fly in production for our V3 satellites for broadband, and we are going to change the payload out and be able to deliver starting next year, flying satellites for building out our network for direct to device. Right? For the mobile.
+
+That is probably all through next year. Then the first half of 2028, we will be able to turn on a service that is completely differentiated from anything out there. I think that is pretty magical because then you can put that team onto the AI satellite as well next year. Right? You basically have all because of Starship, which is why I want to start the conversation always when we talk about SpaceX with Starship, this capability that nobody else has-
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+...and won't for years and years, delivers to all three of those businesses. That broadband business, that mobile direct to device business, and the AI satellite business. Flying those satellites in those constellations will be really, really terrific related to getting our cadence up on our own rocket business as well. But circling back to direct to device, we're planning to fly the satellites next year and have the capability to turn on service first half of 2028. Now what that means is we've got some time to figure out exactly if there are other assets we need related to it. We can look at that.
+
+But what we went out and did is we saw that this is where the business was going, and it just looked like a missed opportunity to not be also in mobile when you have this capability to deliver from space that no one's ever had before. We turned on our version one of this and flew 600 satellites very quickly within a year. Right?
+
+And turned on the service that, for example, in the U.S., you look at T-Mobile, and they call it T-Satellite, I think, and that's the Starlink version one. Right? But that's more like a text-only service and maybe light voice, and it's awesome for disaster recovery. It's awesome from an emergency perspective. If you get into a dead zone somewhere, you can still connect, but it's not what you and I are used to with full 5G.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+The next version of this, what we're going to start flying next year with the satellites, is full 5G quality service. Now it's a matter of when we go to market, we bought the spectrum, the mid-band spectrum from EchoStar for U.S.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+We feel like we've got the spectrum where we can go turn on service. We've got that, and it has direct from space and terrestrial capability already, FCC approved. So if we need to, we can stand up terrestrial solutions to put the terrestrial piece in place too, or we could work with existing carriers. We're open to, I think, a lot of different ways to do it, but we're marching down that path in the U.S. Overseas, we're probably going to have to go through the same process that we did with broadband.
+
+We started out with a service that was approved in the U.S., and then over the next couple of years went, and now we're in over 170 countries around the world with Starlink on the broadband side. We worked with each regulator in each country really just to demonstrate that we are bringing a product offering that is better for the consumer. Again, I think it circles back to, is this a product that is better than what is out there? For sure it is on the broadband side, and for sure it will be in an industry that just has not innovated for decades, if you think about the wireless industry, right? In essence, the service you have is largely the same.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+I do not even remember when 5G was talked about. It was a long time ago.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+I was at Qualcomm way back in the day myself. Now you are talking about being able to come to market with a product that should not have dead zones, can have global roaming. You can go anywhere you need to with it, and that is pretty magical, especially if you are charging same or slightly less than a service that does not have any of those things.
+
+I think that is why the big three operators were a little concerned about us and wanted to create a cartel maybe. I do not know what this term is. I am not a lawyer, and I will let them figure that out. The point being, I think that the whole industry is seeing that we have the ability to deliver a service that will be really compelling for people.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Yeah. Let me try to tie it together with one final question. You face all these decisions about what to invest in. All these different durations and return profiles. Talk a little bit about allocating capital to all of these opportunities, and then bring it home with the theme of what are you the most excited about to continue to demonstrate to the market in the years ahead?
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah. I think our track record on capital allocation kind of speaks for itself. What it looks like, there's a lot of different things we're investing in. I think really right now, you should think we're investing in Starship specifically because it enables our other businesses, and we're investing in terrestrial compute because the better we get at that, I think will help us on the orbital compute side and will also be an incredible funding mechanism for some of the other pieces of the business.
+
+I think in the longer term, I think right now the piece that's still a little misunderstood is orbital compute, simply because I think the timeframe that others have related to when is this going to be bringing gigawatts or tens of gigawatts to the table is different than what we're actually going to be able to deliver.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Okay.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+I really appreciate the opportunity. Thank you.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Bret, thanks for coming. We really appreciate you being part of the conference. Please join me in thanking SpaceX for being a part of-
+
+Q2 2026 - August 4, 2026
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+Good afternoon, everyone. Thank you for joining us today for SpaceX's second quarter 2026 earnings conference call. I'm Andrea Williams, Head of Investor Relations. Joining me today are Elon, Gwyn, and Bret, we are speaking to you from our facility in Bastrop, Texas. Our second quarter financial results were announced just after 3:00 P.M. Central Time, all relevant materials have been published to our investor relations website at ir.spacex.com. For this webcast, our prepared remarks will be followed by a question and answer session. We will take live Q&A from equity analysts then move to questions directly from our investors that were polled on our dedicated earnings Q&A platform. Thank you to everyone who submitted your questions in advance. During this webcast, we will discuss our business outlook and make forward-looking statements. These statements are based on our predictions and expectations as of today.
+
+Actual events or results could differ materially due to a number of risks and uncertainties, including those mentioned in our most recent filings with the SEC, including our final prospectus and today's published Form 10-Q. Additionally, during this call, we may discuss certain non-GAAP measures. In our press release and our filings with the SEC, you can find additional disclosures, including all reconciliations with comparable GAAP measures. For the second quarter of 2026, we announced the following financial results as compared to the prior year quarter. Revenues of $7.8 billion, up 92% from $4.1 billion, a quarterly net loss of $541 million, an improvement of $467 million, an adjusted EBITDA of $3.5 billion, up 191% from $1.2 billion. I will hand the call over to Elon for his opening remarks.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Thank you. It's been another milestone year for SpaceX so far. We're making great progress developing a fully and rapidly reusable reliable rocket with Starship. We're connecting millions more people globally across 170 markets with fast, reliable Starlink internet. We're building AI compute capacity at scale faster than anyone else, we believe. We're significantly improving our AI models, most notably with the release of Grok 4.5 last month. I'll dive into each of those topics separately. With Starship, we completed two successful flights of Starship B3 in the past 90 days. Flight 13 demonstrated core capabilities necessary to achieve an orbital mission and return to Starbase for catch. On Flight 14 will be our first flight to fly our version three Starlink satellites, our communication satellites, to operational orbit.
+
+We will try to actually catch the first and the second stage of Starlink V3 this year, we could possibly catch the ship as soon as the next flight. It's difficult to actually explain to most people just the incredible significance of Starship. I think perhaps describing it in terms of tonnage to orbit is a good way to appreciate the magnitude of the impact Starship will have on the future of civilization. Right now we deliver, call it, roughly 2,500 tons a year to orbit via Falcon. This is a big number by normal standards. The rest of the world, I think, delivers around 300 tons. We deliver 80%-90% of total Earth mass to orbit per year with Falcon.
+
+With Starship, our aspirations, and I think we will achieve these aspirations, are to deliver well over 1 million tons to orbit per year, and probably ultimately 10 million tons per year. If you had a chart where you plotted things, you would need a very big table to put the chart on to even see any of our competitors on that chart and to make that. Our next biggest competitor was one pixel high on the bar chart. You would still need a very big bar chart to represent the SpaceX Starship vehicle. It's worth noting that we actually encourage our competitors to copy us. We do nothing to slow them down. We launch competing satellite constellations at fair prices, the same price we charge everyone.
+
+We do encourage our competitors to copy us, it's quite difficult to copy something like Starship. We don't use patents as a sort of a landmine exercise to stop people from copying us. We actively encourage it. When you think about it on that, you go from 2,500 tons a year to 1 million, potentially 10 million tons per year, it's really a ridiculously profound difference. That is our plan, and I think we will achieve that plan. Regarding Starlink, it's also worth just noting that the Starlink V3 satellite is about an order of magnitude more capable than the Starlink V2 satellite, which was already a very capable satellite. We expect to launch about an order of magnitude more Starlink V3 satellites. That would mean a roughly two order of magnitude increase in the delivered bandwidth.
+
+Even if our monetization per bit dropped by a factor of 10, that would still mean a 10X increase in the revenue of Starlink. I think people are really underestimating Starlink here. This is a big deal. It's kind of hard for people to wrap their minds around this, but it's not out of the question that at some point, Starlink will deliver a majority of the world's internet, at least in countries where we're allowed to operate, which is the vast majority of countries. This is important to bear in mind, and it's not in the infinity future. It's less than 10 years. With the advent of AI, and humanoid robotics and vehicle robotics and just a massive number of robots, the appetite for bandwidth will be much greater than it has been in the past.
+
+You think of a human consuming perhaps or producing perhaps about a few hundred bits per second of output. Actually, the average human is outputting less than one bit per second over the course of a day, which is 86,400 seconds. Computers could easily do billions of bits per second continuously over a 24-hour period. This is why I would expect the appetite for bandwidth to grow dramatically with the growth of AI and robotics. Really, I think Starlink is the only thing that can actually service that bandwidth. Regarding AI, we're making rapid progress on Grok, because Grok 4.5 was a huge improvement. We have Grok 4.6 coming out probably next week and then Grok 4.7 is about three or four weeks from today. We expect the cadence of AI development to improve dramatically.
+
+With Grok 5, which should be out before the end of this year, we will be incorporating the entire corpus of SpaceX data. Basically, all the data that SpaceX has ever produced, which is a tremendous amount over the course of a quarter century, will be incorporated into Grok training. We think this will make Grok by far the best engineer. These are all very big things. In addition, of course, we are providing compute to others, and we are building and deploying compute, I think, faster. Our rate of growth certainly is faster than anyone else. Our efficiency of compute deployment, I think, is also the highest. We expect to end this year with over two gigawatts of compute. Probably our cumulative compute online by the end of next year will be several times higher.
+
+It may, let's say, be closer to 10 GW of compute than 5 GW of compute, as a way to think about it. Going forward, we've decided to build exclusively on Nvidia, because we think the Vera Rubin architecture is the best architecture. We think it's the best AI computer, and we greatly value our close cooperation and partnership on many levels with Nvidia. We're exclusive to Nvidia. This new capacity coming online will obviously further benefit the development of Grok, as will our Cursor acquisition, which should close quite soon. I think we're through almost all of the regulatory hurdles. With respect to the Starmind AI satellite, which will be essentially an optimized Vera Rubin NVL72 computer. This is not some sort of far future distant thing. We expect to start launching this next year .
+
+We think the design of the NVL72 VR computer is a much better design than, say, having a standard rack style design. We expect to actually deploy this on the ground as well as in orbit, because we think it's going to be a radical simplification of the normal NVL72 rack. It will cost less. It'll be more effective. If we're going to put it in space, why not put it on the ground? I think that's going to be pretty cool. In conclusion, the SpaceX team is solving some of the hardest engineering problems in the history of humanity. I think the team is succeeding because I think we've got, in a lot of ways, the smartest, most dedicated team of humans that has ever existed.
+
+I'm incredibly proud to work with such a team, and I'd like to thank the team for their incredible hard work. Thank you to investors who have supported us along the way.
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+Thanks, Elon. We had an exceptional second quarter, and today I'll focus on the operational and commercial highlights, as well as the initiatives we are prioritized going forward. Starting with our space business, we remain the leading launch provider globally, with 78 total launches and 1,041 tons of mass to orbit delivered in the first half of this year, primarily allocated to our own internal Starlink missions, but with great customer missions as well. While our launch capabilities are key to supporting our connectivity business, we continue to have a very robust commercial manifest and a very robust and growing U.S. government mission demand, which drives revenue for the segment. We're currently launching at our highest Falcon cadence and are on the precipice of operationalizing Starship.
+
+As Elon said, the first two flights of our V3 Starship vehicles put us in an excellent position to achieve our near-term goals of reaching orbit, catching and reusing the ships and boosters, and deploying our V3 Starlink broadband satellites. Speaking of which, Starlink had a standout quarter, driven by continued growth across our consumer, enterprise, and government businesses. During the second quarter, we added net more than 1.7 million Starlink subscribers globally, consumer. This reflects our best quarter of new customers to date, an increase from the 1.4 million we added during the first quarter. We achieved this by holding ARPU, which is the average revenue per user, stable at $66 per month compared to the first quarter.
+
+We ended the second quarter with service availability in 167 markets and have continued to activate new markets since then, with some very exciting announcements coming soon, maybe even as early as today. As of June 30th, our constellation of operational Starlink broadband and mobile satellites in orbit grew to roughly 10,200, with our 9,600 broadband satellites delivering roughly 800 terabits per second of total downlink capacity. Following a successful speed run test of the V3 Starlink satellites on the most recent Starship launch, during which we connected every satellite through every laser link, we intend to deploy V3 satellites into the constellation for operational use on the upcoming Starship missions.
+
+The significant amount of capacity we're able to add to the Starlink constellation from the V3 satellites will enable us to continue providing even better service, I think it's pretty great already, but to do so while serving more and more customers over the world. In fact, in the years ahead, we expect Starlink will represent a significant portion of global internet traffic, which Elon also talked about. We also see significant growth opportunities for Starlink on the enterprise and government side of the business. We believe revenue from these markets have the potential to reach a scale at least comparable but likely exceed our consumer business as we continue to gain share. In the second quarter, we signed a major agreement with American Airlines, as well as activated our service with new partners including Southwest, Virgin Atlantic, Iberia, and Aer Lingus.
+
+We have become the provider of choice among major airlines with outstanding customer feedback but still have significant room for growth. In fact, we heard from one of our airline customers, shockingly, customers are flying shorter hop flights instead of direct so that they could ensure that they're on a Starlink-activated flight. They'd never seen this in the business before. On the government side, we won more than $6 billion in U.S. contracts in Q2, supporting major Space Force programs that offer our nation mission-critical communications and sensing capabilities, and we see even more room for growth in this sector in this coming year. In Q2, we also launched the new Starlink Mobile partnerships with international carriers, including SoftBank, NTT Docomo, and Spark New Zealand. Our near-term priority is launching Mobile V2 satellites on Starship ahead of integrating the 65 MHz of EchoStar spectrum later next year.
+
+This spectrum transfer was recently approved by the FCC and represents a foundational competitive advantage for Starlink Mobile. In AI, the industry is hurtling towards ever more compute demands. We're rapidly expanding our compute capacity to meet our own needs as Grok expands, as well as those for other leading companies such as Google and Anthropic. In terms of our own Grok models, the enterprise feedback on rollout of Grok 4.5 has been very positive so far. Token consumption tripled out of the gate after the July release, and we continue to see strong signals on usage and monetization for the model. We're looking forward to welcoming the Cursor team to SpaceX to integrate our engineering and begin to benefit from a combined sales capability. In review, our momentum as a business is extraordinary.
+
+Our engineering teams are scaling Starship and our next-gen satellites, while our sales teams expand Starlink, aviation, mobility, and global markets. At the same time, we're bringing on additional compute capacity and expanding and deepening our AI partnerships across a broader set of customers. And though I've been in this business for 24 years, I could not be more excited about the months ahead with all the exciting and amazing things going on. It really feels like we're just getting started all over again. Now I'll turn the call over to Bret.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Thank you, Gwynne. We demonstrated strong results in Q2. Revenue growth accelerated across every segment. We narrowed our net losses by nearly half on a year-over-year basis, and we grew adjusted EBITDA meaningfully faster than revenue. Importantly, we significantly strengthened the balance sheet through our IPO and inaugural investment-grade bond offering. The combination of our global launch leadership, recurring Starlink revenue, and rapid growth in AI infrastructure continues to drive improved operating leverage. Now I'll walk through the financials for each segment. For the space segment, revenue grew 55% sequentially and 29% year-over-year to $962 million, driven by a higher number of larger customer launches and a favorable customer mix. Segment costs and expenses rose $389 million year-over-year, and we continued to accelerate R&D investments in our Starship program.
+
+Starship aims to quadruple payload capacity and reduce launch costs by 10x compared to our Falcon 9 rocket, unlocking significant capabilities across all of our business segments. We continue to make progress building the infrastructure required to support thousands of Starships launches per year, including accelerating Raptor and launch vehicle production, the build-out of our Gigabay, and making significant progress towards activating multiple launch pads at Starbase and in Cape Canaveral at Pad 39A and Pad 37. Space adjusted EBITDA was a loss of $205 million for the quarter, primarily reflecting these higher R&D expenses. Moving to the Connectivity segment, revenue was up in the Connectivity segment up to $4.3 billion, up 32% sequentially and 66% year-over-year. Growth was driven by record net additions of Starlink subscribers and a sharp increase in enterprise and government revenue. Starlink subscriber ARPU was $66, unchanged compared to Q1.
+
+As we continue our global expansion, we're taking a localized go-to-market approach that ensures our product and service offerings fit local needs. While our geographic expansion may drive down blended ARPU over time, we anticipate continued subscriber momentum to deliver strong revenue growth. Enterprise and government revenue grew 108% year-over-year and represents a durable source of revenue, contributing to strong segment margins overall. As Gwyn mentioned, we see enormous opportunity for growth in this segment as we remain, for example, less than 10% penetrated in one of the largest segments being aviation. Total costs and expenses for the Connectivity segment increased $970 million or approximately 58% year-over-year. The increase was driven by higher spend to support our revenue growth, including growth in our satellite constellation, increased R&D investment for our next gen V3 satellites, and incremental marketing spend.
+
+As Elon mentioned, our V3 satellites are expected to deliver 10x the amount of broadband capacity and data density from our current generations, which I think we believe are already pretty amazing, and which are essential to supporting continued subscriber growth and higher value service tiers. Income from operations from the Connectivity segment increased 79% year-over-year to $1.7 billion, outpacing revenue growth and driving nearly three points of operating margin expansion. Connectivity segment adjusted EBITDA rose 64% year-over-year to $2.6 billion. AI Segment revenue was $2.6 billion, up 213% sequentially and 247% year-over-year. The increase was driven primarily by new cloud services agreements, as well as growth in Grok and X subscription revenue. Advertising revenue grew 7% sequentially as we overhauled our advertising platform technology to enable AI functionality and enhance self-service for all customer types.
+
+In Q2, we entered into cloud services agreements providing access to compute capacity at our Colossus and Colossus two sites. The initial ramp from these agreements contributed $1.6 billion of incremental AI infrastructure revenue in the quarter. Total costs and expenses for the AI Segment rose $1.6 billion year-over-year, reflecting increased R&D, primarily due to higher infrastructure spend as we accelerated compute deployment. We meaningfully narrowed our AI Segment net operating loss to $1.3 billion and turned adjusted EBITDA positive for the segment in the second quarter at $1.1 billion. The incremental revenue from new hosting deals generated high incremental EBITDA margins as we monetized available compute capacity. We ended the second quarter with 1.4 GW of nameplate compute up from one gigawatt in Q1 and 400 MW a year earlier. We expect to end this year at over two gigawatts of compute capacity.
+
+Total company capital expenditures in the second quarter were approximately $18.4 billion, of which roughly $15.8 billion supported AI compute infrastructure. The remainder funded ongoing Starship and launch infrastructure, satellite production, and global ground station expansion. Additionally, we paid out $856 million during the quarter under our spectrum credit agreement related to our pending EchoStar transaction. Our capital allocation priorities remain clear and disciplined. We plan to continue to invest aggressively in the three areas we believe generate the highest long-term returns: Starship development and production scale, next generation Starlink broadband and mobile constellations, and AI compute infrastructure. Across all three of these investments, we remain focused on capital efficiency, return on investment, and preservation of a strong investment-grade balance sheet. The second quarter was transformative from a capital markets perspective.
+
+We completed our initial public offering, raising approximately $85.7 billion in net proceeds, and followed that with a $25 billion inaugural investment-grade senior notes offering that was partially used to repay our $20 billion bridge loan. The senior notes were issued across five tranches with a weighted average interest rate of 5.855% and average maturity of 11.7 years. We ended the quarter with $100 billion of cash equivalents in marketable securities, and $47.5 billion in backlog. Looking ahead, we continue to see robust demand in all three of our business segments, but in particular in our cloud services arrangements. We see increasingly favorable economics with each agreement we sign, and as Elon mentioned, we expect the supply-demand imbalance in the compute market to continue. The current economics have translated into a less than one-year payback on our new capital deployments for compute.
+
+For example, in the first few weeks of the third quarter, we've already contracted an additional $6.7 billion of cloud services revenue over a six-month period that begins ramping starting in October of this year. We believe this puts us on a trajectory, including contribution from Cursor, to reach $100 billion of ARR, or annualized revenue run rate, by the end of this year, based on our expected revenue in the month of December of this year. With that, I'll turn the call back to Andrea.
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+Thank you, Elon, Gwyn, and Bret. This concludes our prepared remarks. For today's Q&A session, we will take our first questions from the equity analysts. Please press star one to join the question queue, and also please limit yourself to one question. Operator, please proceed with the queue.
+
+Operator
+
+We will now begin the question-and-answer session. If you would like to ask a question, please press star one to raise your hand. To withdraw your question, press star one again. We ask that you pick up your handset when asking a question to allow for optimum sound quality. If you are muted locally, please remember to unmute your device. Please stand by while we compile the Q&A roster. Your first question comes from the line of Eric Sheridan with Goldman Sachs. Your line is open. Please go ahead.
+
+Eric Sheridan
+
+Analyst, Goldman Sachs
+
+Thanks so much for taking the question, and thanks for all the details in the prepared remarks. Maybe just one on the connectivity segment. Can you discuss the backlog of enterprise and government contracts in that segment of the business, and how we think about that backlog converting into revenue, and what that might mean for the pace and cadence of growth in the next couple of years? Thanks so much.
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+We are quite bullish on our enterprise activities. I mentioned a loan that we received from the government over $6 billion in contracts. You can look at those as tranches and beginnings of additional capability that we will bring online. Some of which we will have to compete, but fundamentally, we have the contracts in place to fulfill many phenomenologies, both the ones we've recently announced, as well as additional ones that we'll be working on going forward. Enterprise revenue is quite sticky. We have never lost an enterprise customer. They're quite happy with the Starlink capability that we have right now. Bret mentioned we are only 10% penetrated in the aviation industry, which definitely represents a lot of headroom for revenue going forward. Maritime, I think, Starlink opens up the TAM dramatically.
+
+Starlink offers the capability that ships that don't really have much connectivity right now because they can't afford VSATs. We can basically outfit those ships with Starlink Maritime. I'm quite bullish on enterprise, very bullish on government, and quite happy with the stickiness that we've seen in those markets.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Yeah. I'll just elaborate a little bit on that, which is that, obviously, in order to secure a large amount of enterprise revenue, you have to demonstrate a very high reliability, very high uptime. In the early days, Starlink did not have high uptime. There's a lot of enterprise customers, most enterprise customers, I'd say, that still have that maybe early Starlink experience where it was a little patchy. We actually were building up a large enterprise sales team just to go out there, meet with
+
+enterprise, basically corporate and government customers, show them the incredible uptime and low latency of the Starlink system today. They realize that they can actually treat Starlink as a primary provider, not sort of as a backup provider. This requires just going out there, talking to people, educating them about the current state of the Starlink system and where it's going. I would expect enterprise revenue to substantially exceed consumer revenue.
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+Next question, operator.
+
+Operator
+
+Your next question comes from the line of Adam Jonas with Morgan Stanley. Your line is open. Please go ahead.
+
+Adam Jonas
+
+Analyst, Morgan Stanley
+
+Thanks. Elon, first one for you. Just confirming, you said you expect to be closer to 10 GW of nameplate compute by end of 2027, closer to 10 than five. Do you have line of sight? How confident is your line of sight on permitting, chips, and turbines for that? I have a follow-up for Gwyn. Thanks.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+We're actually aiming to far exceed that gigawatt number in terms of power online, power cooling, and electrical equipment. Our tentative target is to actually have 20 GW at the power and cooling level online by the end of next year. Now, I don't think we're going to achieve 20 GW , but we want to have a series of projects that cumulatively come to 20 GW by the end of next year. Some of them won't pan out exactly on time, but I would expect that we'd still probably have, at the power plant level, something close to 15 GW. Assuming that maybe a quarter of the projects take longer than expected. Our goal is to have far more power cooling and electrical equipment than we have GPUs. That's the logical thing to do, given the relative expense of GPUs versus balance of system.
+
+SpaceX as a company is incredibly good at hardware. In fact, I'd say probably outside of China, SpaceX and Tesla are the two best companies on Earth at hardware. Yeah, I think perhaps even including China. We're taking a small amount of the expertise that we use for rockets and satellites and applying that to scaling terrestrial data centers. We're finding that even a small amount of what we've learned building rockets, which are incredibly difficult, applied to data centers, yields tremendous benefits. Yeah, we expect to have far in excess of the power and cooling that's needed. Our understanding with NVIDIA is that we will receive a very significant percentage of their GPUs next year.
+
+Adam Jonas
+
+Analyst, Morgan Stanley
+
+Okay. Thanks, Elon. Gwyn, just a follow-up. You were recently asked what is one of the more underappreciated parts of the SpaceX investment story, you said robotics. Can you elaborate on why you believe that? How do robots fit into the SpaceX camp? Thanks, Gwyn.
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+Let me try to put something together for you. I think what I might have said is underappreciating the amount of connectivity that we will need going forward. I think robotics, especially robotics tied to AI, like for autos and humanoid robot, will dramatically increase the demand for connectivity. Dramatically. Elon talked about that in his remarks.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+You can think of our satellites as being robots.
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+Yes.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+They're autonomous, and they do not need servicing. In the sort of what may seem the far future but will come faster than you think, using robots on the Moon to scale up manufacturing on the Moon, which I know it sounds like super sci-fi right now, but it's going to happen, will enable us to build the mass accelerator on the Moon. If you have a mass accelerator on the Moon, and you have solar and radiator production on the Moon, you can I know this sounds totally nuts, but you can probably scale to 1,000x the economy of Earth in terms of intelligence launched to space. Probably maybe even a million times. We are going to land a lot of tonnage on the Moon. We're going to build the factories on the Moon. The robots will be helpful with that.
+
+It's like, well, how much intelligence would you like as we grow towards being a Kardashev 2 scale civilization?
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+Did that get that for you, Adam?
+
+Operator
+
+Your next question comes from the line of John Godyn with Citigroup. Your line is open. Please go ahead.
+
+John Godyn
+
+Analyst, Citigroup
+
+Hey, thanks for taking my question. One of the hallmarks of SpaceX to date is how efficiently the organization has used capital so far in its journey. It's also no secret that the capital needs are significant to support your vision from here. Obviously, the company's moving fast, I was hoping you could talk a bit more about the CapEx outlook across the segments, touch upon any areas where buying versus building might accelerate growth. The mobile strategy obviously comes to mind there. Any related thoughts on capital needs for next steps in extreme vertical integration like Terafab, anything that's needed to support future growth. Thanks.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Yeah, no, I appreciate the question. I think we are very proud of how we have managed capital allocation over the years, for sure. I think we are continuing down that path, right? If you look at it, we have been very efficient to date, and I think we'll continue to be. If you look at the rest of this year, to answer specifically on CapEx, I think you should probably think that the next two quarters are very similar to the current quarter from a CapEx level perspective. I do think, as you look longer term, I think CapEx really, I think from our perspective, all CapEx is not the same, right?
+
+What we're seeing right now is a situation where we're able to deploy, specifically on the AI compute side, we're able to deploy capital in such a way that we're getting less than a one-year payback. It's almost like your capital is becoming almost an item that you would put otherwise in COGS because it's moving so quickly and as far as monetization and moving into revenue. That's different than, I would say, historically on the SpaceX level, where we're building assets that are going to benefit us from launch sites for the next couple of decades. We certainly manage for optimizing ROI on our capital all the time from that perspective.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+I'll add a little bit to that. As Bret mentioned, we are expecting to reach $100 billion+ ARR in December of this year. It's probably also worth mentioning that our internal projections for reaching $1 trillion in revenue, not ARR, but revenue, have moved up from 2031 to 2030. Prior to the IPO, the financial projections we had were reaching $1 trillion in revenue in 2031. We now expect that to be in 2030. There's a non-zero chance of that being in 2029.
+
+Operator
+
+Your next question comes from the line of Ronald Epstein with Bank of America. Your line is open. Please go ahead.
+
+Ronald Epstein
+
+Analyst, Bank of America
+
+Hey, good evening, everybody. Could you walk through what you learned on Starship Launch 13? What was better than expected? What was worse? How do we think about this in the journey to rapid reusability, the heat shields, so on and so forth?
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Sure. Actually, Flight 13, I was a little worried about that Flight 13, because you think about Apollo 13, things went wrong on that flight. This flight actually went incredibly well. The heat shield appears to be very robust. The ship is still floating in the ocean. We expect to recover the ship and bring it back for analysis. I'd say things look very good. That's why we, assuming we receive regulatory approval to do so, will attempt to catch the ship with the tower on the next flight, which is tentatively scheduled for the end of this month. We expect the cadence of flights to be increasing rapidly, and probably a year from now, we will be doing at least one flight a day, possibly more.
+
+Operator
+
+Your next question comes from the line of Doug Anmuth with JP Morgan. Your line is open. Please go ahead.
+
+Doug Anmuth
+
+Analyst, JPMorgan
+
+Thanks so much for taking the questions. Elon, can you elaborate on the key unlocks from leveraging your rockets and satellite expertise just in accelerating the pace of compute build-out? Totally appreciate the $6.7 billion in incremental compute deals. Can you talk more about just how you expect the supply-demand environment to persist going forward and whether you'll be able to keep this kind of premium pricing for these deals and sustainability? Thanks.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Sure. Well, as the saying goes, normally they would say, like, "This ain't rocket science." Well, actually, rocket science is literally our daily business. Rocket science is a idiomatic expression for extreme technological difficulty, and there's a reason for it, because let me tell you what rockets desperately want to do every flight. They desperately want to blow themselves into tiny pieces. The engineering struggle is to convince the rocket not to blow itself into tiny pieces and actually deliver payload to orbit. You'll note that some of our competitors do in fact blow their rockets up. This does not mean they're incapable. In fact, I think our competitors are very smart people, but despite being very smart, the rockets still blow up.
+
+Now if you apply a small amount of the engineering skill that goes into making gigantic rockets reach orbit on a regular basis reliably to terrestrial data centers, this is like, frankly, the New York Yankees going in and playing a little league team, and it is kind of ridiculous, frankly. The terrestrial data centers are a trivial problem compared to making gigantic reusable rockets, which are launched frequently. The Starlink satellites also are like alien-level technology. There is still nothing that compares to our Starlink V2 satellites, and our Starlink V3 satellites are really more than an order of magnitude better than our Starlink V2 satellites. You take a small percentage of that engineering applied to terrestrial data centers, and you get an amazing outcome. That is what we are seeing. Yeah.
+
+Now, from a monetization standpoint, if you say, what is my best guess for monetization per watt of, say, Rubin? My guess would be somewhere between $30 and $50. This is just a guess. Take a guess as a guess. What we are seeing with AI is that the intelligence per watt is increasing rapidly. That means the usefulness per watt is increasing rapidly. I think anyone who is a close follower of the AI arena, you start seeing smaller and smaller models do more and more amazing things. There is an argument that we may get to the point where even an H100 is able to deliver useful AI that is comparable to a human engineer. Based on current trends, I think that is not an impossible outcome. It is like, how useful would that be? I think the usefulness is going to be extremely high.
+
+If you think of where was AI 12 was months ago , 12 months ago would have been August last year. That would have been before the advent of Claude 3.5, which I think should be considered one of the milestones and a credit to Anthropic of, I would say a shock to the system, was how good Claude 3.5 was. That was 10 months ago, basically. If you say, "Well, what about an AI two years ago?" I think, well, an AI two years ago feels like something that should be in a museum, okay? Where you are like, "You are not going to believe this, but two years ago, this was AI." This relic.
+
+I think, by the end of next year, it is not clear to me that there is anything that digital, at least, that AI will not be able to do based on the current rate of improvement. Look at the rate at which logic and memory is being produced. One must always consider the limiting factor here. Limiting factor currently is memory. The memory output is increasing by around 20% per year. Now, normally, that would be fantastically fast and amazing for any large mature industry. Ask yourself, is the demand increasing by 20% a year? No, the demand is increasing by 200% a year, maybe higher. If you have got demand increasing much faster than supply, Economics 101 would suggest that the price increases. It does not decrease.
+
+Operator
+
+Your next question comes from the line of Edison Yu with Deutsche Bank. Your line is open. Please go ahead.
+
+Edison Yu
+
+Analyst, Deutsche Bank
+
+Hi, good evening. Thank you for taking our question. Wanted to come back on the comment about the $100 billion in ARR. Is there any way you can unpack that a little bit and perhaps kind of what it takes to get there? In relation to that, Elon, I know you mentioned you pulled the revenue target forward by a year. Can you maybe call out maybe a few things that gave you this extra confidence? Thank you.
+
+Bret Johnsen
+
+CFO, SpaceX
+
+Well, on the unpacking, I think that the key there is it's really growth in all three of the business segments, but the biggest piece is, and we already talked about additional business we've already closed in the first couple of weeks of July on the AI cloud services side. Certainly, as you know, we've already announced some previous deals with Google and Anthropic that start to ramp either later this quarter or in October. There's a lot of momentum from that side of the business as well as we're seeing strength in our own models and Cursor coming into the fold as well. It's really all three segments that are driving that, but the cloud services piece being the largest contributor of that piece.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Yes. To be clear, the $100 billion ARR in December is not a question mark. That's what we'd achieve if we basically did nothing. I think it may be higher than that. It probably will be higher than that. I think in terms of the relative percentage of breakdown of what revenue generates what, I think the breakdown's probably similar to what we shared pre-IPO. It's just happening a year sooner. I will go back to what I said and what Gwyn and Bret mentioned earlier, which is that we do expect a very rapid increase in revenue from Starlink communications from the V3 satellite. Like I said, we're more than 10x the capability of the V2 satellite, and we'll be launching 10 times as many, and we have the direct-to-cell constellation going up as well.
+
+Some of you were looking at the historical growth of Starlink based on V2, but we have a step change, a massive step change happening with the V3 satellite.
+
+Operator
+
+Your next question comes from the line of John Hodulik with UBS. Your line is open. Please go ahead.
+
+John Hodulik
+
+Analyst, UBS
+
+Great. Thank you. Two things. First for Elon, just following up on that comment on Starlink Mobile. When do you expect to start launching the V2s? Can you talk about your appetite for additional spectrum after the EchoStar deal? Just how big do you think that the opportunity is in mobile? If you could compare that to the broadband business, that would be great. Secondly, just a quick follow-up on the compute. Looks like you have a big ramp in compute coming in 2027. How should we think of that capacity being leased versus used to train Grok? I guess, in other words, how much of that has to be withheld to train Grok versus that can be leased out to third parties? Thanks.
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+I'll go ahead and take the Starlink mobile questions, John. We're going to start flying the next generation Starlink mobile satellite. It's confusing. It's actually the second version, as opposed to the V3, which is the next generation broadband satellite. We're going to start flying those next year. Currently, the system that we're operating uses about five megahertz of bandwidth, and we operate that through local telco providers. We have 65 MHz of bandwidth available to us through the EchoStar spectrum, which gives massive increase in capability. Another way to look at it is we will also probably 10x the number of satellites. Simplifying, you could look at the Starlink mobile leveraging the next generation satellite and the EchoStar spectrum as being 100x better, 10x 10 better than what we've got right now. It's a pretty decent service.
+
+You can do voice and video calls over Signal and WhatsApp. We anticipate really strong uptake of that capability. As far as revenue, I'm just going to take a very high level kind of top-down. The big three in the U.S., AT&T, Verizon, and T-Mobile, roughly between them, $600 billion a year. I anticipate us to be able to acquire quite a few of their customers because I think our service will be better. We will eliminate dead zones leveraging basically the satellites in orbit. It'll be better during any sort of natural disaster because surprisingly, even though space movies make space look super dangerous, it's a pretty quiescent environment. I'm quite excited about Starlink Mobile going forward. We will start to fly the satellites next year, and we will start providing service end of next year.
+
+Operator
+
+You're next.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+I guess I should elaborate on. We obviously have more than one question being asked here. Obviously if somebody's trying to create a financial model, some of these questions you have to plug in some number here. For Grok training, we do expect the percentage of compute that we use internally for Grok training to decrease over time and to have far more of the compute used for inference, or for renting training and inference compute to others. I would expect maybe 10% of our compute to be used for Grok training, something like that.
+
+Operator
+
+Your next question comes from the line of Kutgun Maral with Evercore ISI. Your line is open. Please go ahead.
+
+Kutgun Maral
+
+Analyst, Evercore ISI
+
+Good afternoon, and thanks for taking the question. I had a follow-up on Starlink Mobile and your ambitions in the U.S. market in particular. I think a lot of us are trying to better understand what a U.S. direct-to-consumer service could look like. To become a true fourth U.S. carrier would imply well over $100 billion of mobile CapEx over time, much of it auction spectrum and greenfield infrastructure. How are you weighing that potential build plan against the MVNO or acquisition path? What's your internal base case on how far you'll take this ambition? Is this all a little bit too premature at this point? Thank you.
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+The spectrum that we purchased from EchoStar does have terrestrial components, we definitely intend to build out the terrestrial component. You will have not only the capacity from the satellites themselves, but you will have a build-out of the terrestrial, basically the hardware and systems necessary to make a true mobile service exactly what you want it to be. I'm not going to talk about the CapEx for that. Well, I don't want to say it's immature. I'm just going to say I'm not going to talk about the CapEx for that right now. Let me give a little hint, and that is you could put a cellular base station on basically the gear that holds a Starlink broadband dish. You can have kind of these little femtocells around the country, and you deploy that as you need it.
+
+You don't have to necessarily spend $10 or many billions of dollars in low-band spectrum all upfront before you deploy your system. That's why I don't want to talk about the CapEx for building out the terrestrial, because we have a lot of really great and new ideas for how we're going to do that, and I think it will be quite CapEx efficient.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Yeah. That point is probably worth just a few more words. This is quite an important point. Instead of having to deploy these very expensive and difficult-to-locate large cellular base stations, we feel reasonably confident that we can deploy a large number of sort of small stations essentially. They're really just Starlink dishes that also provide connectivity in the mobile spectrum bands and have them be all over the place. The Starlink antennas are located on the roofs of houses and businesses, so they've got a sort of clear view for providing connectivity directly to cell phones on the ground. In fact, providing connectivity that is, we think, probably better and higher bandwidth than what is currently available from cellular providers. This is an important point.
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+Thank you. With the remaining time, we would like to cover some of the questions from individual shareholders. I will read them aloud. We got a lot of questions on the progress for Starship human landing system. Can we provide any updates?
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+For Starship, obviously we need to make Starship super reliable for satellites before we put any people on board. We are expecting to have a very high launch rate and thus achieve a level of safety needed for humans very quickly, probably by the end of next year.
+
+Gwynne Shotwell
+
+President and COO, SpaceX
+
+As far as the milestones go, propellant transfer in orbit is critical to both our internal SpaceX as well as our HLS ambitions. Artemis III mission is next year. That's where we will dock with the Orion spacecraft. We will follow that up with a direct to lunar cargo mission, uncrewed. We want to put boots on the ground, boots on the moon in 2028.
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+For the Cursor acquisition, there were several questions asking about the combined product roadmap for the companies once it closes.
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+I think we'll leave that. We'll probably make some announcement or discussion of that outside of the earnings call. We don't want to jump the gun on regulators for the closing acquisition, we're trying to get the acquisition closed as quickly as possible. I think we're pretty close to that, we have to be wary of sort of jumping the gun on regulatory closures.
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+Next question from the individual shareholders. Once you start launching broadband V3 satellites, how quickly will they translate into improved Starlink service?
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+We'd need some critical mass of V3 satellites, probably at least on the order of about 1,000. Probably that's approximately second quarter next year would be, I think, where we'd get to that point.
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+Our last question, is the heat shield the hardest remaining problem for Starship?
+
+Elon Musk
+
+CEO and Chief Engineer, SpaceX
+
+Look, I don't want to jinx it or anything, but I think I'd consider the heat shield problem solved at this point. We want to take a close look at the ship that is currently floating in the ocean. All indications from data and our visual inspection suggest that we have solved the heat shield problem, which is arguably the single biggest problem. That doesn't mean we won't make improvements to the heat shield. Of course, we'll continue to make improvements to the heat shield, but I would say that we do not see any technical obstacles at this point to achieving full and rapid reusability.
+
+Andrea Williams
+
+Head of Investor Relations, SpaceX
+
+Thank you. This concludes today's call. You can reach us at ir.spacex.com, and we will see you next quarter. Cheers.
+
+Operator
+
+This concludes today's call. Thank you for attending. You may now disconnect.
+
+IPO Roadshow Update - June 4, 2026
+Bret Johnsen
+
+CFO, SpaceX
+
+Hi, I'm Bret Johnsen, Chief Financial Officer of SpaceX for the last 15 years. Only one the company's ever had, actually. It's a pleasure to talk with you about SpaceX. Elon started SpaceX with the goal to change mankind and make us a multi-planetary species. What's been very exciting is we've been able to expand that mission with our Starlink constellation as well as with our AI solutions. At our core, we're really builders. We're the only company building the integrated hardware and software infrastructure to really power multiple businesses. We started back in 2002 at our roots as a space business. We achieve what others think is really the impossible, and we make that possible.
+
+If you look at some of the milestones that we have accomplished already in the space business, we're the first private company to develop and launch a liquid fuel rocket and reach orbit back in 2008 with the Falcon 1. We're the first private company to successfully dock a spacecraft with the International Space Station in 2012. The first to successfully propulsively land a rocket from space, specifically the first stage booster back in 2015, and refly an orbital class rocket booster in 2017. The first private company to launch astronauts to orbit and fly to the International Space Station in 2020. We are the first to have really a fleet of rockets that end with reusability and drive from Falcon reusability today of the first stage to full reusability with Starship.
+
+23 metric tons of capability with Falcon 9, going to 64 metric tons of capability with Falcon Heavy, to now about to be 100 metric tons with the version three of Starship. Really, from a rocket reuse perspective, that has been the unlock mechanism. It's really driven down the cost of launch and given us the ability to drive up launch cadence. Specifically, having a hangar full of rockets to show our launch customers or having the ability to ramp to, just last year alone, 165 launches of our Falcon 9, now moving into fully reusable with Starship. Starship really has an unparalleled capability from a cost efficiency perspective. If you look at where this industry has been historically and where we were able to get to with just first stage reuse on the Falcon class, where we were able to drive out 85% of the historic cost.
+
+We're looking at a vehicle that's intended to go drive a 10x improvement even from where we were already industry-leading with Falcon. Along with the unlock from a cost perspective, Starship also gives us an unlock from a throughput perspective. You see with Falcon 9 in the expendable category, let alone Falcon Heavy at 64 metric tons, going to 100 metric tons with version 3, already starting to work on version 4 in the design that should double that again to 200 metric tons to orbit. We talk about the mission and certainly how we accomplish the mission. One of the reasons that we're able to do this is we run what Elon calls the algorithm. The algorithm starts with, first and foremost, making the requirements less dumb. Question the requirements is a key piece of our culture.
+
+We move into deleting parts and process steps, and you see that as an example in the picture here, where you have the first version of the Raptor engine on the left going all the way to Raptor 3. Once you delete the parts in the process step, you move into optimization, acceleration, and automation. Pivoting to the connectivity business. Again, the connectivity business is really enabled by our core launch capabilities. We have now launched and operate a high-speed, low latency global broadband constellation, otherwise known as Starlink. Really, we feel Starlink is an unrivaled satellite constellation. The V2 satellites that we fly today on Falcon deliver 96 gigabits per second per satellite, and we fly roughly 27 satellites per launch. The V3 satellites we're about to fly in the back half of this year are a huge step function in capability.
+
+In fact, per launch on a Falcon today with the V2 satellites to the V3 satellites, it's a 20x improvement related to the capacity per launch with V3. In fact, that translates into, with 60 satellites flying per launch on Starship and each of them delivering roughly one terabit per second, that we will be able to fly 61 terabits per second of downlink capability per launch of Starship coming up here. What that quickly translates into is after 20 launches of Starship, we will be launching 1.2 petabytes of capacity per year. When you start talking about it in petabytes, you start actually looking at the Starlink network as a percentage of global internet traffic. It's also important to note that because of the fact that we're delivering from space, we're able to deliver in many areas and in many cases where terrestrial just can't deliver.
+
+Whether it's low density populated areas, whether it's very remote areas. Whether it's in very challenging topography where you just couldn't handle it from a terrestrial perspective, or on the mobility side, in the air, on the ocean. We've been able to demonstrate over and over again, being able to bring capabilities and services and communication to areas in a disaster zone. We have the world's largest satellite internet network, roughly over 9,600 satellites. You look at all the others combined, and they're a fraction of what our constellation is. We're actually representing 75% of all active maneuverable satellites in orbit at this point. Our user base is significantly expanding. We ended 2024 with roughly 4.4 million users. End of last year, we had roughly doubled year-over-year in the number of users to roughly 8.9 million.
+
+As of the end of Q1, approximately 10.3 million users on our network. Over 100% year-over-year growth. Over 164 countries/territories. That represents over 3 billion people being covered by our network. As more and more companies and industries look to resiliency and reliability as critical capabilities, you're starting to see Starlink being brought in as either the primary or at least the backup solution in a lot of the fixed site as well. Aviation specifically, I have to call out because there's a tremendous amount of traction. You see an announcement almost every week now related to another airline talking about Starlink adoption. Also on the government side of the business, delivering Starshield capability as a whole separate constellation for the U.S. government. Again, resiliency being critical here in delivering core capabilities.
+
+The other piece of our very diversified connectivity offering is direct to the handset. Direct to device, we started out with our Gen 1 solution, which was really a proof of concept. We flew 650 satellites, turned on a service with 30 different mobile network operators around the world, the largest being T-Mobile in the U.S. Have coverage now for 1.9 billion people and have proved that there's certainly a demand and excitement about having this capability. We now are in work to fly our Gen 2. This is full 5G quality to your phone. I think this will be the transformational unlock of connecting the other 3 billion people on the planet that had really been left out from the digital divide. Lastly, our AI business.
+
+It is really exciting to talk about where we're at from an AI perspective, because this is again following that same repeatable business model that I talked about, leveraging that unrivaled launch capability. We looked at following down the same path that we had done with the other businesses and really owning the full value chain all the way to the end customer. What made the most sense is for us to have our own frontier model and be able to capture all of that value. That's exactly what we did. We now have the world's largest coherent supercomputer with the Colossus-2 data center that we stood up with best-in-class compute GB300s specifically from NVIDIA. We have the first gigawatt scale training cluster, the first gigawatt scale Megapack battery installation there as well, and first to deploy the GB200s and 300s at significant scale.
+
+Having 1 GW of nameplate compute draw is really compelling for us. Certainly, I want to talk about the orbital AI compute that's coming in the next couple of years because this seems to be the future of AI infrastructure, and this is the clean energy solution. This is the solution that really addresses some of the concerns related to AI data centers popping up. The distribution capability that others may think is a constraint related to this, we've already demonstrated with our Starlink network today. Having, in essence, no operating cost because you're leveraging the power of the sun and cooling is radiative cooling off the satellite, makes this readily available and incredibly cost efficient.
+
+We are ramping up this capability right now and in essence, leveraging a ton of capability that we already have in place, whether it's the ion propulsion thrusters, whether it's the inter-satellite laser links between the satellites or the flight computer or reaction wheels. Again, a lot of technology that otherwise would be blockers to doing this in the near term, we have in place. It's why we feel like we are the only company that can do this in any meaningful timeframe.
+
+What matters related to AI infrastructure is really creating that business model where if you start at the very top and leverage that connectivity capability that we have to drive that infrastructure advantage for us, we then get to go right into the cycle of leveraging that, driving improved quality of intelligence, and lowering the cost at the same time of our token cost, monetizing that, and driving that reinvestment back into that cycle of infrastructure. We certainly demonstrated our capability to go monetize this infrastructure with key partners in the industry.
+
+For example, we signed a deal with Anthropic just recently to give them access and host their model on our data center, while at the same time allowing us to make investments in our own model with an example of that being the deal that we announced with Cursor related to improving our own coding capability on our compute resources. Continuing down the path of monetization and leveraging our, what we believe is best in class in the industry, deployment of cutting-edge compute, and at the same time continuing to invest in our own models to even further that monetization in the future. I would be remiss if I didn't talk about the fact that we believe one of our differentiators related to our models is certainly the fact that we are designing them as advanced, truth-seeking AI from the very beginning.
+
+It's certainly one of the reasons that Elon got into the AI business to begin with, is to have that really truth-seeking model. We certainly are also going to leverage the X platform that we have in place now that really brings us real-time information. Real-time data is, I think, critical at all times, and I don't know that there's a better place to get real-time data than on X. Our growth strategy starts with space, increasing our launch payloads, getting to full reusability from Starship perspective, and certainly over time opens up whole new markets in the space industry. What it immediately does is it enables our connectivity business to grow meaningfully and now AI as well, where it's not just growth of our own platform on the infrastructure side, it also allows us to start hosting others and building out that piece of our AI business model.
+
+There's almost $6 trillion of available market that we're going after, really in three pieces. We are moving faster and cheaper than others in the industry, even related to deploying terrestrial compute. We think over time, the enterprise AI market is massive. An incredibly large total addressable market that we're going after, over $28 trillion. Not only are we positioned for those markets today, but I think it's exciting to talk about where some of the future growth beyond that really is even happening. Certainly when you start talking about space, we start to talk about point-to-point transportation terrestrially, manufacturing or productivity, potentially asteroid mining in the future. I think very exciting also is the lunar economy.
+
+The fact that we're on track in the next couple of years to put boots back on the Moon, being able to build out sustainable capabilities on the Moon, I think in the years to come will be a tremendous unlock for really, for humanity. We feel like we've had a stellar track record already related to capital allocation and value creation. If you look at even in the life of the company from a space and connectivity business, the fact that we really only raised $9 billion and have created the business that we now have today, with last year alone generating $7.8 billion in positive adjusted EBITDA, while also investing for the future with another $3.6 billion of R&D just last year alone. I think, clearly we have demonstrated both on the capital allocation side and the value creation, that this is what we're all about.
+
+What that means from a financial perspective on top line, revenue has continued to grow meaningfully year- after- year . In fact, in 2025 alone, over 30% growth year-over-year, just as we were starting to ramp, in essence, in the connectivity business. In generating that roughly $19 billion in revenue, also generated almost $7 billion in positive adjusted EBITDA just last year alone. In the connectivity business portion, you can see the significant step up where we grew roughly 50% in 2025 year-over-year. As far as building the infrastructure of the future, that typically takes capital. We are not alone in investing meaningfully in CapEx, especially in the AI side of the business now.
+
+That's been the lion's share of the CapEx deployment for the last two years now that we have consolidated in our AI business into the fold here, where just last year alone, roughly $21 billion of CapEx, but a large percentage of that was for AI. You're already seeing us monetizing a decent amount of that with the hosting deal that we just announced on the Anthropic side. On the financials for Q1, we delivered roughly $5 billion of top line just in the first quarter. The connectivity segment alone was a highlight, with roughly $3 billion of that revenue just in Q1. If you look at where we think we will be in the longer term, our future model, we think that our revenue growth will be even significantly higher than that year-over-year.
+
+We think our gross margins are more like 70%, and that our GAAP net income margin is more like 45%. We're very excited about where we're ramping into related to the profitability of business, and yet the significant growth that we believe we're marching towards. Lastly, why do we think we're going to win? I think it starts first and foremost with our global leadership position in orbital launch services. We have an unrivaled satellite and connectivity platform that really leverages vertical integration from design, manufacturing, deployment, and operations. Now really truth-seeking AI models enhanced by real-time data from our X platform. That extreme vertical integration really enables high velocity and superior cost efficiency at scale. Really, the business models are incredibly difficult to replicate, right?
+
+Because of the fact that at the core, you first have to have that global leadership position in orbital launch. That unique ability to scale into new trillion-dollar markets across space, connectivity, and AI is certainly a reason that we think we're going to win and continue to be this mission-driven culture that is enabled by our world-class talent. Thank you very much. I appreciate the opportunity.
+
+Fireside chat - June 4, 2026
+Moderator
+
+Elon, welcome to J.P. Morgan's headquarters. You're on the 51st floor, which is about the equivalent of the nowhere near where you go generally in space but as high as we can get in New York City. Before we get started with you and Jamie, we had a very special guest that wanted to welcome you here this afternoon. Your mother, Maye Musk, is here to welcome you.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+All right. Great.
+
+Moderator
+
+Maye, please stand up.
+
+Maye Musk
+
+Founder, Maye Musk
+
+I don't think you can see me or everybody here. Oh, you can.
+
+Moderator
+
+They can see you. Yes, we can.
+
+Maye Musk
+
+Founder, Maye Musk
+
+Okay. This is your party.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+I actually can't see my mom, but I can hear her, certainly.
+
+Maye Musk
+
+Founder, Maye Musk
+
+Okay.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Oh, there you are. Okay.
+
+Maye Musk
+
+Founder, Maye Musk
+
+What I'd like to say is when you were three years old and I told people I have a genius son, they would roll their eyes.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Sure. Well, understandable, frankly.
+
+Maye Musk
+
+Founder, Maye Musk
+
+I'm you.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Yeah
+
+Maye Musk
+
+Founder, Maye Musk
+
+When you said you wanted to start with rockets, then I rolled my eyes.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Sure.
+
+Maye Musk
+
+Founder, Maye Musk
+
+You did it. This is just a great party here, and we're celebrating.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Sounds good.
+
+Moderator
+
+Well, that-
+
+Maye Musk
+
+Founder, Maye Musk
+
+Love you so much.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Love you too.
+
+Moderator
+
+One proud mama. Please.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Let me, Elon, welcome you. It's a real privilege to have you here on this momentous occasion. It's new for us, but it's an important thing, the trajectory of American innovation. You know we're here live, 3,500 people of our top individual investors around the world are in 100 branches. There are 350 people here, 3,500 around the country. This is a very unique thing, by the way, because Elon has spoken to me about democratizing finance. This is part of it, treating individual investors the same way institutions are treated, and hedge funds and all those things. My view is it's a wonderful thing to do. Elon, very brave, by the way, because I would never let my mother speak publicly when I was in the room. God knows what she would've said.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+I had no idea she was there, actually.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Elon is the Edison of our time. I remember visiting Elon in Tesla 15 years ago. A whole new way of building cars, vertical integration, which had not been anything remote what our car companies are doing. Now you have SpaceX. I visited the SpaceX factory in California, and it's kind of exceptional to have more than 650 rockets. You told me one today putting satellites in space. You have almost 10,000 Starlink satellites up there. Starlink 3 is coming, which is a whole new generation, which hopefully will replace some of these undersea cables. It's been an extraordinary 24 years with watching Elon grow over time. Now, making a massive leap into the future. Welcome in coming here. Elon, I have 10 questions for you, I want to make sure I get to each one. Some of them came from folks here.
+
+They're all kind of important. One just to start is why SpaceX public now? You had choices, you didn't have to. Why now?
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Yeah. I've been asked for many years about taking SpaceX public. It's probably been almost 10 years that people have been suggesting to me that I should take SpaceX public. We've been positive cash flow for quite a long time, I think since around 2014, 2015. We've been self-funding. In fact, in our sort of private equity rounds, they actually have not been fundraising rounds. They've been liquidity rounds for investors and employees because we give everyone at the company stock. SpaceX has actually bought back stock in most of our funding events. What's different about now is that Well, it's a number of things, but we are embarking on a significant growth phase, like a capital growth phase, where we are going to put in orbit probably 100,000 satellites, or probably over 100,000 satellites just for communications.
+
+These will be of the Version 3 and beyond, versus Version 2 and Version 1 that are currently in orbit. Version 3 is, depending on how you count it, 10 to 20 times more capable than the Version 2 satellite. There were three chips that the SpaceX chip design team taped out that are specific to this that are far beyond state of the art, which means it's 100 times more bandwidth than the SpaceX Starlink system currently offers. Also half the latency because the altitude will be about half the altitude. I think it'll actually be the highest bandwidth, lowest latency means of communicating. The future with AI and robots is actually going to require a lot more bandwidth than we currently use. You can imagine, what's the bandwidth of a human?
+
+Peak bandwidth of a human is a few hundred bits per second. Bandwidth of a computer can be 1 trillion bits a second. The appetite for bandwidth of AI and robots is going to be enormous. We're also doing the AI data centers in space, which is another massive capital endeavor. I think it'll be the primary means by which AI can be expanded. It's increasingly difficult to build power plants on the ground. There are very few people who want a power plant in their backyard. If we wanted to, say, double the electricity usage of the United States, which is on average about 500 gigawatts, we would have to build about twice as many power plants, which most communities are not super excited about that. Actually, if we go to space, we can go far beyond the electricity generation of Earth.
+
+In fact, this is going to sound kind of crazy, but you could actually increase harnessed energy by a factor of 1 million and still be using much less than a 1 millionth of the Sun's energy. Current human civilization uses much less than a 1 trillionth of the Sun's energy output, which is kind of humbling to think about. When you see the true size of Earth relative to the Sun, we're a tiny dust mote in a vast darkness, and the Sun is enormous. The Sun is 99.8% of all mass in the solar system, and most of the remaining 0.2% is Jupiter. Sometimes people ask me, I'm sort of maybe going a little wide-ranging in this answer.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Yeah
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Because I was just asking why you made it public now. I'm talking about the Sun's power output. I'm like, I got a bit of a long-winded answer here. If I was an AI, you might tell me to shut Okay. Some of these things are kind of important because people sometimes wonder, what's the future of energy generation? I can say that it is absolutely solar power, or maybe a better word for solar power is star power. It's the power of a star. The crazy thing is that if you burnt all mass in the solar system that was not the Sun, the amount of energy produced by the Sun would still round up to 100%, because the Sun is 99.8% of the mass of the solar system.
+
+Even if you somehow teleported two more Jupiters from another solar system and burnt them, too, the Sun would round up to 100%. It's very much the Sun. You could scale to a million times Earth's economy in space, in terms of harnessed power, which is a good proxy for economic output, and still be much less than a millionth of the Sun's energy, which is humbling, really, to think about how tiny we are. This is just one star among many. I guess the TLDR it would be, we're embarking on a massive new growth phase, and we need capital for that.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Okay. Okay, Number 2.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Another thing is, I also feel pretty good about the revenue projections. Before, revenue was a little unstable, but now I feel like the revenues much more predictable. Yeah.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Yeah, I always learn listening to you, I guarantee you. When people hear about multi-planetary species, travel to space, one of the most exciting ideas in human history, can you explain the bridge that you speak about, I've heard you talk about, from the Earth to the Moon to Mars?
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Yeah. You don't necessarily have to go through the Moon to get to Mars. I just think that we can build a self-growing city on the Moon faster than we could do so on Mars, and there's also the potential, if you say you want to scale far beyond what you can do from Earth, is that because the Moon has no atmosphere and about one sixth Earth's gravity, you can use an electromagnetic accelerator or a railgun or mass driver. Basically, you don't need to use rockets to do AI data centers into deep space from the Moon. You can literally just shoot them like a railgun type of thing. You can manufacture the solar and the solar-powered radiators on the Moon from Moon materials. That would allow scaling potentially to beyond 1,000 terawatts a year, which is a truly staggering number.
+
+I think we can do probably somewhere around one terawatt per year of AI space compute from Earth. We can do 1,000 terawatts or more from the Moon. Like I said, we can also make a Moon base, and I think it would be pretty cool if you could vacation on the Moon. That would be the most epic vacation. Not everybody wants to go to the Moon, but I think a lot of people do. I think it would be pretty amazing to Obviously, provided you could do so safely, and come back safely and everything. I think that will be possible in the future. Mars is another step beyond that. Mars is a whole planet, and with gravity much closer to that of Earth, and it has an atmosphere.
+
+If you warm up Mars, you could one day make Mars like Earth, meaning with liquid oceans and life, and where you could walk outside without a spacesuit type of thing. I call Mars a fixer-upper of a planet. It's got a lot of potential.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Let me go to Number 3, but I never, ever thought you'd be in the hospitality business.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Yeah. Absolutely.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+What-
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+We should have been hotels, don't you think? Yeah.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Musk Hotels. Like.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Well, actually, you think of us more like we're the Union Pacific. When they built the Union Pacific back in the day, people thought they were crazy because why are you trying to carry all this cargo and people to California? No one's there. Now California's the biggest state in the country.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Yeah. Not for long, but yeah.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Yeah, no, admittedly it's self-defeating. Yes.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Yeah. Starship, you built it. Unbelievable ship. I think it's already had 12 flights, I read. Obviously, technically, it's just hard to do. What are some?
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Yeah
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+of the breakthroughs you had that people should know about, that they don't know about?
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Well, our webcasts are very good. I recommend anyone, if they want to learn about Starship, the SpaceX website or any of the Starship live casts are a great way to learn about it. The fundamental breakthrough of Starship is that it will be the first orbital rocket that is fully reusable. This might sound like an obvious thing, but because in every other mode of transport, whether that's aircraft, cars, bicycles, horses, you name it, ships, these are all. We take it for granted that they are reusable. An aircraft journey would be very expensive if you had to throw the plane away every time. That's how rockets have been in the past. It's very difficult from a technology standpoint to achieve full reusability for a rocket.
+
+We've got part of the way there with Falcon 9, but we'll get all the way there with Starship. Once you achieve full reusability, then the cost of access to orbit is just the cost of propellant, because now you can reuse all aspects of the vehicle. The propellant we used for Starship is liquid oxygen and liquid methane, which is the cheapest propellant you could possibly get. We can just literally get oxygen from the air and methane from natural gas. The cost of propellant for Starship will be less than the cost of jet aviation fuel, which means that you should be able to actually send cargo to space for less than the cost of cargo on an airplane going on a transoceanic trip.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+That's unbelievable. Starlink, another thing that has been amazing. Global communications. We already mentioned Ukraine. You had mentioned to me that V3 would maybe be able to replace some of these subsea cables, which by the way, is a huge security risk for all of us because several have already been cut.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Right
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+in the Baltic Sea. What's the next view for Starlink, both V3 and maybe V4?
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+You can look it up on the internet. As I said, it's 10 to 20 times more capable than V2. It's a very big satellite. In fact, it can only be launched on Starship. It's too big to be launched on any other rocket on Earth. Starship has the 30-foot diameter cargo bay. The V3 satellites are, let's see, they're about seven meters, so, about 22 or 23 feet wide. Very big. They're the size of a small bus, essentially. There's a bunch of technical details. We have much bigger phased array antennas. We've got more Ku ground links. Our satellites communicate with each other with lasers that we developed and manufacture. It's got a lot more lasers and more advanced lasers. It's also got W-band and E-band. These are kind of technical details.
+
+It's like a crazy orbiting radio station.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Doesn't Starship do 12 of them or 15 at once?
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Well, it should be able to do 50.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+50.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Yeah. Starship V3 is aiming to do 100 tons to orbit with full reusability. Starship V4, we're aiming for over 200 tons per mission.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Yes.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Being able to launch every hour.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Next one, data centers in space. You've been talking about that. Other people have mentioned it, but obviously it has different technical capabilities. It's colder up there. There's less vibration. You also got to get the data back to the Earth by some method, or I think you mentioned to me lasers.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Lasers, yeah
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+in good weather and bad. How hard is it to do now that you've looked at it for a while?
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+We don't think this is a particularly difficult thing to do. In fact, we think it's easier than our communication satellites. Like quite a bit easier than our communication satellites. The Starlink V3 communication satellite is an incredibly complex machine. The AI data center would be much simpler by comparison, because it's really just solar power plus radiator. Some basic equipment for operating the satellite and then the laser links, which would connect to the Starlink communications constellation, and then to the ground. The connection would happen no matter what the weather is, because once you connect via lasers to the Starlink communication constellation, the Starlink communicates to the ground with frequencies that are cloud penetrating. They, in fact, even roof penetrating to some degree. You would always be able to close the link with the data centers.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Excellent. Talking about America, one of the big things here, we even talk about the re-industrialization of America for a long time, bringing back advanced manufacturing. Now you're talking about building the Terafab, building chip fabs in New York. What compelled you to do that now with all the other things you're working on?
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+What's the limiting factor? What we see as the limiting factor is being able to make chips, both logic, memory, and packaging. It's worth noting that there's not a single high-volume computer memory fab in the U.S. right now. Zero. There's one being built in Idaho, by Micron, but that will not reach volume production until, I believe, 2028. There's some being built in New York, but they are in, I think, 2029 and 2030. This is a tiny fraction of the memory that's needed. In fact, even if you take the best-case assumptions of the memory makers and the logic makers, it is not enough to meet the demand that is anticipated. That is why you're seeing stocks of Micron go to, I think, $1.2 trillion or some quite high number.
+
+There's just clearly a need for AI logic, memory, and packaging, AI computers, essentially, that is far beyond what even the best-case assumptions of the existing fabricators can do. That's why we need to do the Terafab. Yeah, it seems like essential, otherwise there will not be enough chips.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+I'm going to do one more on some of the stuff you're building and then a little bit more on other issues. AI strategy, you've also took Grok inside into SpaceX. How does that fit into this platform you're building?
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Yeah. We do intend with the SpaceX AI satellites to allow people to put whatever GPU or TPU they want. If NVIDIA GPUs can be put on it, Google TPUs can be put on it, Amazon Trainium or any other chips that people want to put on, can be put on. We will also offer our chips in the future. I think we also want to offer our software, our AI software as well in the future. It will be such that you can run anyone's AI on hardware or software on the SpaceX AI satellite or SpaceX AI satellites. Yeah. Okay.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+The next three are completely different. I'm going to mention each one. I'll ask you each one, but one's about his view of patriotism, his service to this country. Ones about culture and bench, how do you actually build these wonderful companies, because a lot of people here have those issues. Then leadership, and I have a very specific question about that. First, I'll start with patriotism. You've served this country. I know you're a patriot. We've spoken about it. How do you view your role of being an American patriot helping the United States?
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Yeah, I'm incredibly pro-American. Thank you, always have been. Yeah. SpaceX does do a lot of work for what used to be called the Department of Defense, the Department of War these days, I guess. We have a division called Starshield, which provides military communications. There's some other stuff that's kind of classified; I guess. We can't talk about that. We are helping the Department of War and Intel, part of the government. We're a vital element of that. Yeah. I'm just super pro-America. Always have been.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Thank you. Culture bench, Bret has been with you for 15, 20 years. I know you've built a huge bench in SpaceX. How do you keep it going? What's important to you? How do you make sure you keep the best talent?
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Yeah. I guess Gwynne was, I think, around the seventh person to join the company, and that was 2002. It's been like 24 years. Generally, the senior executives at the company have a very long tenure. I think Bret Johnsen's been CFO for 15 years. Yeah, I think because people really believe in the mission, I think they want to stay, and they want to keep building it. We want to make humanity a spacefaring civilization. We want to take humanity to Mars and the Moon and ultimately beyond. We want to make science fiction, make it real. Go to places that have never been explored before. Make Star Trek real.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+That was one of my favorite shows.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Yeah.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Excellent. Last one, you've built multiple companies. How have you changed from maybe 20 years ago? Actually, maybe I should ask you guys, how have you changed from when you started to today, lessons you've learned, how you've changed both as a leader and as a person?
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Well, I think I'm probably more chill than I used to be. I'm way more laid back than I used to be. Which I'm still not that laid back, but more than I used to be, for sure. One of the things I've found over time, and I've mentioned this before, is that in terms of recruiting people to the company or having people work at the company, their individual abilities and their intellectual capabilities matter a lot, but it also matters if they have a good heart. It's not just about whether somebody has a certain IQ or whatever, but just are they a good person? That matters a lot. I don't know. I guess I've learned a lot, although I feel like I still have a lot to learn and make a lot of mistakes.
+
+I suppose, I think maybe the future AI will say, "Not bad for a human.
+
+Jamie Dimon
+
+Chairman of the Board and CEO, JPMorgan Chase
+
+Listen, before we thank Elon for coming, I just want to thank him. Just watching him build companies, and I can't wait to watch the next 10 or 15 years about what you accomplish and what you dream of, and getting to Mars, and building new businesses, and being creative. Elon, I want to thank you, on behalf of everybody, for coming here, sharing your ideas. There are brochures out there about the whole SpaceX thing. Elon, thank you.
+
+Elon Musk
+
+Founder, CEO, and Chief Engineer, Space Exploration Technologies
+
+Thank you. Thanks for having me.

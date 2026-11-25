@@ -34,6 +34,8 @@ function brute(ix, base, ka, kb) {
         near(gs.reduce(function (s, o) { return s + o.cE; }, 0), p.G, 1e-9, tag + ' level ' + i + ' adds up to G');
         gs.forEach(function (o) { if (o.m != null) near((1 + o.g) * (1 + o.m), 1 + o.ret, 1e-9, 'group (1+g)(1+m) = 1+ret'); });
       });
+      var all = E.group(p.rows, function () { return 'index'; })[0];
+      near(all.ret, p.R, 1e-9, tag + ' index as one group = R'); near((1 + all.g) * (1 + all.m), 1 + p.R, 1e-9, tag + ' index compounded (1+g)(1+m) = 1+R');
       var b = brute(ix, base, k0, k1);
       near(b.R, p.R, 1e-9, tag + ' brute-force R'); near(b.G, p.G, 1e-9, tag + ' brute-force G');
       p.rows.forEach(function (r) { var x = b.perId[r.id]; ok(x, tag + ' row has brute-force twin'); if (x) { near(x.cP, r.cP, 1e-9, tag + ' ' + D.secs[r.id].t + ' cP'); near(x.cE, r.cE, 1e-9, tag + ' ' + D.secs[r.id].t + ' cE'); } });

@@ -6,7 +6,7 @@
 // Maths: js/eps-engine.js · charts: js/eps-charts.js · data: js/eps-attribution-data.js
 // (scripts/eps-attribution/extract_eps.py) · method: docs/EPS_ATTRIBUTION.md.
 import { makeEngine } from './eps-engine.js';
-import { divStack, lineChart, barList, stackBars, ppTxt } from './eps-charts.js';
+import { lineChart, barList, stackBars, ppTxt } from './eps-charts.js';
 
 var BASE = 'cy27', Y = 'CY2027';
 var C = { eps: '#3E5A82', mult: '#B7C4D8', pos: '#177A4E', neg: '#9B2A20', price: '#1E2733', earn: '#7C9CC4' };
@@ -83,7 +83,7 @@ function domains() {
   ['spx', 'ndx'].forEach(function (ix) {
     for (var k1 = K0 + 1; k1 < E.dates.length; k1++) {
       var p = E.period(ix, K0, k1, BASE, null);
-      ext(d.hero, Math.min(p.G, p.M, p.R), Math.max(p.G, p.M, p.R));
+      var o = indexChange(p); ext(d.hero, Math.min(o.g, o.m, o.ret), Math.max(o.g, o.m, o.ret));
       LV.forEach(function (L) { E.group(p.rows, keyOf(L[0])).forEach(function (g) { keys.forEach(function (k) { if (g[k] != null) ext(d[k][L[0]], g[k], g[k]); }); }); });
     }
   });
@@ -92,20 +92,30 @@ function domains() {
 // the whole index at the latest date fixes the row order of the detail table, so rows never move when something is excluded
 function order(ix) { return ORD[ix] || (ORD[ix] = E.period(ix, K0, E.dates.length - 1, BASE, null)); }
 
-// ─── 1 · return = EPS effect + multiple effect ────────────────────
+// ─── 1 · price return = (1 + EPS change) × (1 + multiple change) − 1 ──
+// Compounded, as the CIO reads it (Nov 2026). The index is one group of all its stocks: its EPS change is the weight-average
+// of theirs, chained over the snapshots, and the multiple change is what is left, so the product gives the price return exactly.
+// The sections below still split the return into points of contribution (those add up).
 // Not linked to the exclusions of the detail table (as in Index Analysis): always the whole index, one period at a time.
+function indexChange(p) { return E.group(p.rows, function () { return 'index'; })[0]; }
+function sign(v) { return v == null || isNaN(v) ? '—' : (v >= 0 ? '+ ' : '− ') + Math.abs(v * 100).toFixed(1) + '%'; }
 function hero() {
-  var k = S.hero.k1, tiles = {}, rows = [];
+  var k = S.hero.k1, tiles = {}, rows = {}, total = {};
   ['spx', 'ndx'].forEach(function (ix) {
-    var p = E.period(ix, K0, k, BASE, null), span = dShort(E.dates[K0]) + ' → ' + dShort(E.dates[k]);
+    var p = E.period(ix, K0, k, BASE, null), o = indexChange(p), span = dShort(E.dates[K0]) + ' → ' + dShort(E.dates[k]);
     tiles[ix] = '<div class="eps-eq">' +
-      '<div class="eps-eqt"><div class="k">EPS effect</div><div class="v" style="color:' + col(p.G) + '">' + pp(p.G, 1) + ' pp</div><div class="s">' + Y + ' EPS estimates</div></div><div class="op">+</div>' +
-      '<div class="eps-eqt"><div class="k">Multiple effect</div><div class="v" style="color:' + col(p.M) + '">' + pp(p.M, 1) + ' pp</div><div class="s">forward P/E ' + x1(p.pe0) + ' → ' + x1(p.pe1) + '</div></div><div class="op">=</div>' +
-      '<div class="eps-eqt tot"><div class="k">Price return</div><div class="v" style="color:' + col(p.R) + '">' + pc(p.R) + '</div><div class="s">' + span + '</div></div></div>';
-    rows.push({ label: span, a: p.G, b: p.M, net: p.R,
-      tip: '<b style="font-size:13px">' + IXN[ix] + ' · ' + span + '</b><span class="tp">EPS effect: ' + pp(p.G, 1) + ' pp (each stock\'s weight × the change of its ' + Y + ' EPS estimate, added up)<br>Multiple effect: ' + pp(p.M, 1) + ' pp (each stock\'s weight × (1 + its EPS change) × its own P/E change, added up)<br><b>Price return: ' + pc(p.R) + '</b></span>' });
+      '<div class="eps-eqt"><div class="k">EPS change</div><div class="v" style="color:' + col(o.g) + '">' + pc(o.g) + '</div><div class="s">' + Y + ' EPS estimates</div></div><div class="op">×</div>' +
+      '<div class="eps-eqt"><div class="k">Multiple change</div><div class="v" style="color:' + col(o.m) + '">' + pc(o.m) + '</div><div class="s">price paid per unit of EPS</div></div><div class="op">=</div>' +
+      '<div class="eps-eqt tot"><div class="k">Price return</div><div class="v" style="color:' + col(o.ret) + '">' + pc(o.ret) + '</div><div class="s">' + span + '</div></div></div>' +
+      '<div class="eps-split">(1 ' + sign(o.g) + ') × (1 ' + sign(o.m) + ') − 1 = <b>' + pc(o.ret) + '</b></div>';
+    var tip = function (t) { return '<b style="font-size:13px">' + IXN[ix] + ' · ' + span + '</b><span class="tp">' + t + '</span>'; };
+    rows[ix] = [
+      { label: 'EPS change', v: o.g, tip: tip('Weight-average change of its stocks\' ' + Y + ' EPS estimates, chained over the snapshots: <b>' + pc(o.g) + '</b>') },
+      { label: 'Multiple change', v: o.m, tip: tip('(1 + price return) ÷ (1 + EPS change) − 1: <b>' + pc(o.m) + '</b>') }
+    ];
+    total[ix] = { label: 'Price return', v: o.ret };
   });
-  return { tiles: tiles, rows: rows };
+  return { tiles: tiles, rows: rows, total: total };
 }
 
 
@@ -278,13 +288,13 @@ function dataBlock() {
   var li = function (cond, t) { return cond ? '<li>' + t + '</li>' : ''; };
   var neg = p.rows.filter(function (r) { return r.g == null; }).map(function (r) { return E.secs[r.id].t; });
   var steps = [
-    ['1', 'Weights', 'The period is walked one snapshot at a time (Jan 2 → Apr 1 → Jul 1 → Oct 16). In each step, each stock\'s weight is its float-adjusted market-cap weight in the ' + ixn + ' at the start of the step, from the file. A stock counts from the snapshot where it joined until the one where it left. The order is always: EPS and multiple changes move the price, the price moves the weight (the file already holds that weight at the next snapshot), and the weight at the start of a step says how much of the index each change was worth. Within a step the weight never reacts to the EPS change. Prices and share counts are not used for weighting.'],
+    ['1', 'Weights', 'The period is walked one snapshot at a time (' + E.dates.slice(K0).map(dShort).join(' → ') + '). In each step, each stock\'s weight is its float-adjusted market-cap weight in the ' + ixn + ' at the start of the step, from the file. A stock counts from the snapshot where it joined until the one where it left. The order is always: EPS and multiple changes move the price, the price moves the weight (the file already holds that weight at the next snapshot), and the weight at the start of a step says how much of the index each change was worth. Within a step the weight never reacts to the EPS change. Prices and share counts are not used for weighting.'],
     ['2', 'Own changes', 'Between the two dates: the change of its ' + Y + ' EPS estimate (Bloomberg consensus, calendarised to December), its price return, and its own multiple = price ÷ ' + Y + ' EPS on each date. (1 + EPS change) × (1 + P/E change) = 1 + price return.'],
     ['3', 'Contribution', 'Price = weight × price return. EPS effect = weight × EPS change. Multiple effect = weight × (1 + EPS change) × P/E change: the multiple moves on the new EPS, so the cross term sits here. The two add up to the price.'],
     ['4', 'Add up', 'Each step\'s contributions are scaled by how much the index had grown at the start of the step, then summed over the steps. Stocks add up to industry groups, groups to sectors, sectors to the index, and the index return is the sum of the price contributions.']
   ];
   return '<div class="eps-h2" style="margin-top:0">What it measures</div>' +
-    '<p class="eps-p">How much of the ' + ixn + ' move since ' + dLong(E.dates[K0]) + ' came from analysts raising or cutting ' + Y + ' EPS estimates (EPS effect), and how much from the price the market pays per unit of those estimates (multiple effect). Both are in percentage points (pp) of the index return and add up to it. A missing estimate takes the first one available later.</p>' +
+    '<p class="eps-p">How much of the ' + ixn + ' move since ' + dLong(E.dates[K0]) + ' came from analysts raising or cutting ' + Y + ' EPS estimates (EPS effect), and how much from the price the market pays per unit of those estimates (multiple effect). The top section shows the two as compounded changes: (1 + EPS change) × (1 + multiple change) = 1 + price return. The sections below split the same return into percentage points (pp) of contribution, which add up to it. A missing estimate takes the first one available later.</p>' +
     '<div class="eps-h2">The calculation</div><table class="rt eps-t3 eps-defs"><tbody>' + steps.map(function (d) { return '<tr><td class="nm">' + d[0] + '. ' + d[1] + '</td><td>' + d[2] + '</td></tr>'; }).join('') + '</tbody></table>' + exampleTable(p, ixn) +
     '<p class="eps-p">A small weight dilutes any change: a stock at 0.01% of the index whose EPS estimate rises 500% adds 0.01% × 500% = 0.05 pp to the EPS effect.</p>' +
     '<div class="eps-h2">Coverage</div>' +
@@ -305,7 +315,7 @@ function dataBlock() {
 function skeleton() {
   var hb = function (ix) { return '<div class="eps-hb"><div class="eps-eqn">' + IXN[ix] + '</div><div id="eps-h-' + ix + '"></div><div id="eps-hc-' + ix + '"></div></div>'; };
   root.innerHTML =
-    sec('eps-s1', 'Return = EPS effect + multiple effect', '<div id="eps-c1"></div><div class="card">' + hb('spx') + hb('ndx') + '</div>') +
+    sec('eps-s1', 'Price return = EPS change × multiple change', '<div id="eps-c1"></div><div class="card">' + hb('spx') + hb('ndx') + '</div>') +
     sec('eps-s2', 'Attribution detail & simulation', '<div id="eps-c2"></div><div id="eps-detail"></div>') +
     sec('eps-s3', 'Who moved the index', '<div id="eps-c3"></div><div class="card"><div class="eps-h2" style="margin-top:0" id="eps-t3"></div><div id="eps-who"></div><div class="eps-note" id="eps-who-n"></div></div>') +
     sec('eps-s4', 'One stock: EPS estimate and what moved its price', '<div id="eps-c4"></div><div class="card"><div class="eps-msg" id="eps-em"></div><div id="eps-et"></div><div id="eps-ex"></div><div id="eps-ec" style="margin-top:14px"></div></div>') +
@@ -317,8 +327,9 @@ function render() {
   var h = hero();
   set('eps-c1', ctl('hero', ['to'])); set('eps-s1-n', 'whole index, not affected by the exclusions below · from ' + dShort(E.dates[K0]) + ' · ' + Y + ' EPS');
   set('eps-h-spx', h.tiles.spx); set('eps-h-ndx', h.tiles.ndx);
-  ['spx', 'ndx'].forEach(function (ix, i) {
-    divStack(document.getElementById('eps-hc-' + ix), [h.rows[i]], { colA: C.eps, colB: C.mult, pos: C.pos, neg: C.neg, domain: d.hero, unit: '%', axisTitle: 'points of return since ' + dShort(E.dates[K0]), netTitle: 'Price return', labA: 'EPS effect', labB: 'Multiple effect', diaLabel: 'Price return' });
+  ['spx', 'ndx'].forEach(function (ix) {
+    barList(document.getElementById('eps-hc-' + ix), h.rows[ix], { pos: C.pos, neg: C.neg, domain: d.hero, unit: '%', dec: 1, total: h.total[ix],
+      axisTitle: 'change since ' + dShort(E.dates[K0]) + ' (compounded, not added)' });
   });
   set('eps-c2', ctl('detail', ['ix', 'to'])); set('eps-s2-n', ctxLine(IXN[S.detail.ix], S.detail.k1)); set('eps-detail', detail());
   var cw = S.who; set('eps-c3', ctl('who', ['ix', 'to', 'what', 'as', 'lvl', 'side', 'n'])); set('eps-s3-n', ctxLine(IXN[cw.ix], cw.k1));

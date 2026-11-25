@@ -15,6 +15,11 @@ A small weight dilutes any change: 0.01% x +500% = 0.05 pp. This is what the CIO
 Memo only (Data & method): the index-level forward P/E (index price / earnings of everything it holds) and the aggregate EPS change; the engine keeps them as `gAgg`, `m`, `pe0`, `pe1`.
 Earnings concentration uses a company's earnings inside the index = weight / forward P/E.
 
+## Top section: compounded (CIO, Nov 2026)
+Price return = (1 + EPS change) x (1 + multiple change) - 1, never a sum of effects. The index is treated as one group of all
+its stocks: EPS change = their weight-average, chained over the snapshots; multiple change = the rest. Everything below the
+top section (table, who moved the index, one stock's pp) still uses the additive contributions described above.
+
 ## Changing constituents (v9)
 The period is walked one snapshot at a time (Jan 2 -> Apr 1 -> Jul 1 -> Oct 16). In each step the basket is the index at the START of the step; weights are rescaled to the names with a price and a CY2027 estimate at both ends of the step. A name that joined counts from the snapshot where it joined; a name that left counts until its last snapshot (the file keeps its price and estimate on the snapshot after it left). Steps are linked by the index's own growth (contribution = sum over steps of index value at the step start x the step's contribution), so securities, groups, sectors and index add up exactly to the index return. Check against the index quotes (Yahoo ^GSPC / ^NDX, price return Jan 2 -> Oct 16): S&P 500 +11.68% vs +11.78% here, Nasdaq-100 +15.80% vs +15.30%; a fixed Jan 2 basket gave +12.1% / +17.8%. Steps match within 0.5 pp (S&P -4.2/13.9/2.4 vs -4.1/13.8/2.4; NDX -5.0/23.8/-2.0 vs -4.7/24.1/-2.1).
 A stock's own change (EPS, P/E, price) is its steps chained over the time it was held; a group's own change is its steps chained, each step the weight-average of its stocks. A name with no price/estimate in the file for a step is n/a for that step (0 pp). A name with EPS <= 0 at the start of a step has no % change: EPS effect 0, price move all multiple. Row weights shown: start = weight in the first step (0 if it joined later), end = weight at the end date (0 if it left).

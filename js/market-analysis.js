@@ -2,7 +2,7 @@
 // index toggle (S&P 500 · Nasdaq-100 · both where that makes sense), Oct 2026:
 //
 //   Sector Return / Contribution    S&P | Nasdaq            js/spx-sector-alpha.js · js/ndx-sector-returns.js
-//   Attribution Detail & Simulation S&P | Nasdaq | Both     js/ma-detail.js (one table) · engines in spx-/ndx-attribution.js
+//   Attribution Detail & Simulation both, side by side      js/ma-detail.js (one table) · engines in spx-/ndx-attribution.js
 //   Sector Summary — Market Beaters S&P | Nasdaq            this file (one table, two datasets)
 //   Index Composition               S&P | Nasdaq            this file · js/ndx-attribution.js
 //   Top Contributors                S&P | Nasdaq            js/spx-securities.js · js/ndx-attribution.js
@@ -13,7 +13,7 @@
 // Nasdaq data: the ndx-attribution snapshot (docs/NDX_ATTRIBUTION.md).
 import { SCOLS } from './portal-data.js';
 import { loadNdxAttribution, ndxStocks, ndxDetail, ndxDetailYears, ndxIGs, ndxSetSim, ndxShowYear } from './ndx-attribution.js';
-import { initDetail, setDetailNdx, setDetailIndex } from './ma-detail.js';
+import { initDetail, setDetailNdx } from './ma-detail.js';
 import { ndxLatestReturn } from './ndx-sector-returns.js';
 import { spyAttributionYears, spyWeightSnaps } from './spx-attribution.js';
 import { initSpxSectorAlpha } from './spx-sector-alpha.js';
@@ -46,14 +46,13 @@ var SEC_TICKER = {
 // ─── Index toggles, one per section ─────────────────────────────────
 var MA_OPTS = {
   sector:  [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']],
-  detail:  [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100'], ['both', 'Both']],
   summary: [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']],
   comp:    [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']],
   wl:      [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']],
   top:     [['spx', 'S&amp;P 500'], ['ndx', 'Nasdaq-100']]
 };
 // S&P 500 first and selected by default in every section
-var MA_IDX = { sector: 'spx', detail: 'spx', summary: 'spx', comp: 'spx', wl: 'spx', top: 'spx' };
+var MA_IDX = { sector: 'spx', summary: 'spx', comp: 'spx', wl: 'spx', top: 'spx' };
 function maSec(k){ return document.querySelector('.sec[data-ma="' + k + '"]'); }
 function renderToggle(k){
   var t = maSec(k) && maSec(k).querySelector('.ma-idx'); if (!t) return;
@@ -74,7 +73,6 @@ function maIdx(k, v){
   // Index Composition and Winners vs Losers keep the same year whichever index is shown
   if (k === 'wl'){ if (v === 'spx') renderSpxWL(); else ndxShowYear('wl', WL_YEAR); }
   if (k === 'comp' && v === 'ndx') ndxShowYear('comp', COMP_YEAR);
-  if (k === 'detail') setDetailIndex(v);
   if (k === 'comp' && v === 'spx') renderSpxComp();
 }
 window.maIdx = maIdx;

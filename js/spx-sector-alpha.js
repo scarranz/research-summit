@@ -1,11 +1,13 @@
 // spx-sector-alpha.js — the S&P 500 side of Market Analysis ▸ Sector Return / Contribution.
-// Used as a series of questions, top to bottom:
-//   1 · Level (Sectors / Industry Groups) → 2 · How many (One / Multiple) →
-//   3 · Period (Yearly / Monthly) → 4 · Show (Returns / Contribution to SPY; yearly only)
-//   + Measured with (SPDR ETFs / S&P 500 indices; sectors' returns only) and
-//     Absolute / Relative (returns only)
-// then one dates box: Years (at least one on); Monthly adds the months — the same picked
-// months for EVERY year switched on — Single month / Cumulative YTD and a Custom period.
+// Used as a series of questions, top to bottom, one block per decision:
+//   what   1 · Level (Sectors / Industry Groups) → 2 · How many (One / Multiple), with
+//          Measured with (SPDR ETFs / S&P 500 indices) and the sector / group chips
+//   when   3 · Period (Yearly / Monthly) → 4 · Show (Returns / Contribution to SPY; yearly
+//          only), then Years (at least one on) and, for Monthly, the months — the same
+//          picked months for EVERY year switched on
+//   view   5 · Absolute / Relative (returns) · Single month / Cumulative YTD and Custom
+//          period (monthly)
+// A control that does not apply stays on screen, greyed.
 // Data: js/spx-data.js — sector levels (S5 indices or SPDR ETFs), industry-group levels
 // (data.groups, S5 industry-group indices) and the yearly SPY attribution
 // (spx-attribution.js). Relative = minus SPY (ETFs) or the S&P 500 (indices), in pp.
@@ -85,22 +87,32 @@ function seg(fn, opts, cur){
     return '<button class="sb-tbtn' + (o[0] === cur ? ' active' : '') + '" onclick="' + fn + '(\'' + o[0] + '\')">' + o[1] + '</button>'; }).join('') + '</span>';
 }
 function q(label, ctl){ return '<span style="display:inline-flex;align-items:center;gap:8px"><span class="sb-secrow-lbl" style="margin-right:0">' + label + '</span>' + ctl + '</span>'; }
+// a toggle that does not apply right now: same place, greyed, with the reason on hover
+function off2(opts, cur, why){
+  return '<span class="sb-toggle" style="margin-left:0;opacity:.45" title="' + why + '">' + opts.map(function(o){
+    return '<button class="sb-tbtn' + (o[0] === cur ? ' active' : '') + '" disabled>' + o[1] + '</button>'; }).join('') + '</span>';
+}
+function line(id, h){ var e = el(id); e.className = 'sb-line q'; e.innerHTML = h; }
 function renderQuestions(){
-  var n = 0, h = '';
-  if (D.groups) h += q(++n + ' · Level', seg('saLevel', [['sec', 'Sectors'], ['ig', 'Industry Groups']], st.level));
-  h += q(++n + ' · How many', seg('saOne', [['one', 'One'], ['multi', 'Multiple']], st.one ? 'one' : 'multi'));
-  h += q(++n + ' · Period', seg('saPeriod', [['year', 'Yearly'], ['month', 'Monthly']], st.period));
-  if (st.period === 'year' && ATTR.length) h += q(++n + ' · Show', seg('saShow', [['ret', 'Returns'], ['attr', 'Contribution to SPY']], st.show));
-  // Always on screen (never appears / disappears); greyed where it does not apply: industry groups
-  // have no ETFs, and Contribution is SPY's own holdings × the S&P 500 indices
+  var n = 0, what = '', when = '', view = '';
+  if (D.groups) what += q(++n + ' · Level', seg('saLevel', [['sec', 'Sectors'], ['ig', 'Industry Groups']], st.level));
+  what += q(++n + ' · How many', seg('saOne', [['one', 'One'], ['multi', 'Multiple']], st.one ? 'one' : 'multi'));
+  // industry groups have no ETFs, and Contribution is SPY's own holdings × the S&P 500 indices
   if (D.etf){
-    var na = isIG() || isAttr();
-    h += q('Measured with', na
-      ? '<span class="sb-toggle" style="margin-left:0;opacity:.45" title="' + (isAttr() ? 'Contribution uses SPY&rsquo;s holdings and the S&amp;P 500 indices' : 'There are no sector ETFs for industry groups: S&amp;P 500 indices') + '"><button class="sb-tbtn" disabled>SPDR sector ETFs</button><button class="sb-tbtn active" disabled>S&amp;P 500 indices</button></span>'
-      : seg('saSrc', [['etf', 'SPDR sector ETFs'], ['index', 'S&amp;P 500 indices']], st.src));
+    var src = [['etf', 'SPDR sector ETFs'], ['index', 'S&amp;P 500 indices']];
+    what += q('Measured with', isIG() || isAttr()
+      ? off2(src, 'index', isAttr() ? 'Contribution uses SPY&rsquo;s holdings and the S&amp;P 500 indices' : 'There are no sector ETFs for industry groups: S&amp;P 500 indices')
+      : seg('saSrc', src, st.src));
   }
-  if (!isAttr()) h += '<span style="margin-left:auto">' + seg('saRel', [['abs', 'Absolute'], ['rel', 'Relative']], st.rel ? 'rel' : 'abs') + '</span>';
-  var e = el('sb-qbar'); e.style.gap = '16px'; e.innerHTML = h;
+  when += q(++n + ' · Period', seg('saPeriod', [['year', 'Yearly'], ['month', 'Monthly']], st.period));
+  var show = [['ret', 'Returns'], ['attr', 'Contribution to SPY']];
+  if (ATTR.length) when += q(++n + ' · Show', st.period === 'year' ? seg('saShow', show, st.show) : off2(show, 'ret', 'Contribution is yearly only'));
+  var rl = [['abs', 'Absolute'], ['rel', 'Relative']], mv = [['month', 'Single month'], ['ytd', 'Cumulative YTD']];
+  view += q(++n + ' · View as', isAttr() ? off2(rl, 'abs', 'Contribution is already in points of SPY&rsquo;s return') : seg('saRel', rl, st.rel ? 'rel' : 'abs'));
+  if (st.period === 'month') view += seg('saMView', mv, st.mview) +
+    '<span class="sb-toggle" style="margin-left:0"><button class="sb-tbtn' + (st.custom ? ' active' : '') + '" onclick="saCustom()">Custom period</button></span>';
+  else view += off2(mv, '', 'For Monthly');
+  line('sb-qbar', what); line('sb-when', when); line('sb-view', view);
 }
 function renderChips(){
   var P = picked(), list = names().sort(function(a, b){ var p = { type: 'year', year: curYear() }; return (val(b, p) || -1e9) - (val(a, p) || -1e9); });
@@ -118,24 +130,23 @@ function ymPicker(id, v, first, last){
   return h + '</select></span>';
 }
 function renderDates(){
-  var h = '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="sb-secrow-lbl">Years</span>' + yearKeys().map(function(y){
+  var h = '<div class="sb-line"><span class="sb-secrow-lbl">Years</span>' + yearKeys().map(function(y){
     return '<span class="sb-secchip' + (st.years[y] ? ' active' : '') + '" onclick="saYear(\'' + y + '\')"' + (y === curYear() ? ' title="Year to date, through ' + asOfTxt(D.asOf) + '"' : '') + '>' + y + '</span>'; }).join('') + '</div>';
+  var range = '';
   if (st.period === 'month'){
     var ms = dataMonths(), ys = onYears();
-    h += '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="sb-secrow-lbl">Months</span>' + MON.map(function(n, i){
+    h += '<div class="sb-line"><span class="sb-secrow-lbl">Months</span>' + MON.map(function(n, i){
       var mm = (i < 9 ? '0' : '') + (i + 1), any = ys.some(function(y){ return ms.indexOf(y + '-' + mm) >= 0; });
       if (!any) return '<span class="sb-secchip" style="opacity:.35;cursor:default">' + n + '</span>';
       return '<span class="sb-secchip' + (st.months[mm] ? ' active' : '') + '" onclick="saMonth(\'' + mm + '\')">' + n + '</span>'; }).join('');
     var k = Object.keys(st.months).filter(function(m){ return st.months[m]; }).length;
     if (k) h += '<button class="sb-secchip-all" style="margin-left:0" onclick="saMonthsClear()">Clear (' + k + ')</button>';
-    h += '<span style="margin-left:auto;display:inline-flex;gap:6px">' + seg('saMView', [['month', 'Single month'], ['ytd', 'Cumulative YTD']], st.mview) +
-      '<span class="sb-toggle" style="margin-left:0"><button class="sb-tbtn' + (st.custom ? ' active' : '') + '" onclick="saCustom()">Custom period</button></span></span></div>';
-    if (st.custom){
-      h += '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end"><span class="sb-secrow-lbl">From</span>' +
-        ymPicker('sa-from', st.from, ms[0], ms[ms.length - 1]) + '<span class="sb-secrow-lbl" style="margin-left:4px">to</span>' + ymPicker('sa-to', st.to, ms[0], ms[ms.length - 1]) + '</div>';
-    }
+    h += '</div>';
+    if (st.custom) range = '<div class="sb-line"><span class="sb-secrow-lbl">From</span>' +
+      ymPicker('sa-from', st.from, ms[0], ms[ms.length - 1]) + '<span class="sb-secrow-lbl" style="margin-left:4px">to</span>' + ymPicker('sa-to', st.to, ms[0], ms[ms.length - 1]) + '</div>';
   }
   el('sb-dates').innerHTML = h;
+  el('sb-range').innerHTML = range;
 }
 function bar(lbl, v, maxV, hl){
   var u = rel() ? ' pp' : '%';
@@ -198,8 +209,8 @@ window.saPick = function(n){
 window.saAll = function(on){ var P = picked(); names().forEach(function(n){ P[n] = on; }); if (!on) keepOne(); renderChips(); renderBars(); };
 window.saMonth = function(m){ st.months[m] = !st.months[m]; renderDates(); renderBars(); };
 window.saMonthsClear = function(){ st.months = {}; renderDates(); renderBars(); };
-window.saMView = function(v){ st.mview = v; renderDates(); renderBars(); };
-window.saCustom = function(){ st.custom = !st.custom; renderDates(); renderBars(); };
+window.saMView = function(v){ st.mview = v; renderQuestions(); renderBars(); };
+window.saCustom = function(){ st.custom = !st.custom; render(); };
 window.saRange = function(){
   var ms = dataMonths(), f = el('sa-from-y').value + '-' + el('sa-from-m').value, t = el('sa-to-y').value + '-' + el('sa-to-m').value;
   function clamp(v){ return v < ms[0] ? ms[0] : v > ms[ms.length - 1] ? ms[ms.length - 1] : v; }

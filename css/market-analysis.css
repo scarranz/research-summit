@@ -75,6 +75,13 @@
   align-items: center;
 }
 
+/* Sector Return / Contribution: one block per decision (what · when · how it is shown) */
+.sb-block { padding: 10px 14px; background: var(--surface); border: .5px solid var(--bdr); border-radius: 10px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+.sb-line { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.sb-line.q { gap: 18px; }
+.sb-stack { display: flex; flex-direction: column; gap: 10px; }
+.sb-block > div:empty { display: none; }
+
 .sb-secrow-lbl {
   font-size: 10px;
   letter-spacing: 1px;
@@ -468,6 +475,8 @@
 .sec[data-ma] > .sechdr { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .ma-idx { margin-left: auto; display: inline-flex; }
 .ma-pane[hidden] { display: none; }
+/* Attribution Detail: a rule where each index starts */
+.ma-dt th.ma-dt-k, .ma-dt td.ma-dt-k { border-left: 1.5px solid var(--bdr); }
 /* Attribution Detail with both indices: side by side (stacked on narrow screens) */
 .ma-panes-row { display: grid; grid-template-columns: 1fr; gap: 14px; }
 .ma-panes-row.both { grid-template-columns: 1fr 1fr; }

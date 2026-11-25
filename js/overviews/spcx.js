@@ -11,6 +11,7 @@
 import { spcxMiscHtml, spcxMiscBuild, spcxMiscWire, SPCX_MISC_TABS } from './spcx-misc.js';
 import { resultsHtml, initResults } from '../results.js';   // Evolution ▸ Results (engine; data in js/results-data/spcx.js)
 import { segmentsOverviewHtml, initSegmentsOverview, segmentsHtml, initSegments, segmentsOtherHtml, initSegmentsOther, segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line engine (data: js/segments-data/spcx.js)
+import { spcxBlGeneralHtml, spcxBlGeneralBuild, spcxBlSegmentsHtml, spcxBlSegmentsBuild } from './spcx-bl.js';   // Bottom Line ▸ General (copy of tsm-bl.js; data: spcx-bbg.js, spcx-bl-data.js)
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -443,7 +444,7 @@ function deepDiveHtml(c){
     { k:'segoth', l:'Other', body:segmentsOtherHtml('SPCX') },
     { k:'segcus', l:'Customers', body:segmentsCustomersHtml('SPCX') },
   ], false);   // TL-GEN · TL-SEG · TL-OTH · TL-CUS
-  h+=subtabs('bottomline', [ { k:'blgen', l:'General', body:spcxMiscHtml('blgen') }, { k:'blseg', l:'Segments', body:spcxMiscHtml('blseg') } ], true);   // BL-GEN · BL-SEG (views in spcx-misc.js)
+  h+=subtabs('bottomline', [ { k:'margins', l:'General', body:spcxBlGeneralHtml() }, { k:'segments', l:'Segments', body:spcxBlSegmentsHtml() } ], true);   // BL-GEN · BL-SEG (views in spcx-misc.js)
   h+=subtabs('evolution', [ { k:'results', l:'Results', body:resultsHtml('SPCX') } ], true);   // EV-RES (Earnings and Estimates follow)
   h+=subtabs('valuation', [ { k:'histmult', l:'Historic Multiple', body:spcxMiscHtml('vahist') }, { k:'peers', l:'Peers', body:stdPeerScatter('dd') } ], true);   // VA-HIST (view in spcx-misc.js) · VA-PEERS (same map + table as OV-6). VA-TM, VA-SUB, VA-SENS need a Summit model: the scenario valuation lives in Miscellaneous.
   h+=subtabs('misc', SPCX_MISC_TABS.map(function(t){ return { k:t.k, l:t.l, body:spcxMiscHtml(t.k) }; }), true);
@@ -459,7 +460,9 @@ function buildSub(root, group, key){
     else requestAnimationFrame(function(){ initSegmentsOverview(root, 'SPCX'); });
     return;
   }
-  if(group==='misc' || group==='bottomline') requestAnimationFrame(function(){ spcxMiscBuild(root, key); });
+  if(group==='bottomline' && key==='margins') requestAnimationFrame(function(){ spcxBlGeneralBuild(); });
+  else if(group==='bottomline' && key==='segments') requestAnimationFrame(function(){ spcxBlSegmentsBuild(); });
+  else if(group==='misc' || group==='bottomline') requestAnimationFrame(function(){ spcxMiscBuild(root, key); });
   else if(group==='valuation'){
     if(key==='histmult') requestAnimationFrame(function(){ spcxMiscBuild(root, 'vahist'); });
     if(key==='peers') requestAnimationFrame(function(){ wireScatters(root); });

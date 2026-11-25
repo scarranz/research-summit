@@ -64,7 +64,7 @@ Mucho del análisis va a Miscellaneous. Unidades que dependen de Summit → ⏭�
 | TL-GEN · TL-SEG · TL-OTH · TL-CUS | 👀 | 2026-11-25 | `js/segments-data/spcx.js`: 3 segmentos (Space, Connectivity, SI) con productos, KPIs, puentes (suscriptores × ARPU; MW × revenue por MW); Other: líneas, geografía, productos vs servicios; Customers: Customer A (gobierno, 20.9% 2025) y **Customer B (SI) 34.5% del revenue de 3Q26** (10-Q) |
 | EV-EST Estimates | ⏭️ | | sin modelo Summit (solo consenso) |
 | EV-SET · EV-POST · EV-NOTES Earnings | ⬜ | | bloque 3/4; Q3 2026 transcript disponible |
-| BL-GEN · BL-SEG | 👀 | 2026-11-25 | vistas `blgen`/`blseg` en spcx-misc.js (motor chartBlock del dashboard): márgenes reportado vs consenso, estructura de costos, D&A y SBC; márgenes por segmento. Leen Results; costos del export BBG |
+| BL-GEN · BL-SEG | 👀 | 2026-11-25 | **rehecho (SAB: "no se siente como el portal")**: `spcx-bl.js` copiado de `tsm-bl.js` (General: márgenes, puente revenue→utilidad operativa en $/bps/forward, puente utilidad operativa→neta, explorador de las 4 líneas de gasto) + Segments copiado de `googl-bl.js` (profit by segment con utilidad operativa o EBITDA; revenue vs profit). Datos: `spcx-bbg.js` (generado del export BBG, misma forma que *-bbg.js) y `spcx-bl-data.js` (líneas de gasto del 424B4/10-Q, citas del MD&A) |
 | BL-SPLC Supply Chain | ⬜ | | sin export SPLC de SPCX todavía |
 | VA-HIST Historic Multiple | 👀 | 2026-11-25 | vista `vahist`: cierres diarios en vivo (Massive, get-market-history) desde el IPO; P/E, EV/EBITDA y EV/Sales sobre el consenso 2027E/2028E (una sola foto: la línea se mueve solo con el precio, se dice en pantalla); acciones de las portadas de los 10-Q, deuda neta de los balances |
 | VA-PEERS Peers | 👀 | 2026-11-25 | mismo mapa y estado que OV-6 + tabla |
@@ -119,3 +119,4 @@ Mucho del análisis va a Miscellaneous. Unidades que dependen de Summit → ⏭�
   Mientras SPCX no esté en `companies`, se revisa ahí; no hay nada que portar.
 - 2026-11-25 · Bloque 3 (parte 1): Evolution ▸ Results construido con el motor `results.js` (dataset sin Summit, como DHR).
 - 2026-11-25 · Bloque 3 (parte 2): Top Line construido con el motor `segments.js`; utilidad operativa por segmento agregada al dataset de Results.
+- 2026-11-25 · SAB: el look de Bottom Line, Historic Multiple y Misc no se sentía del portal (se habían armado con el kit del dashboard). Bottom Line rehecho copiando tsm-bl.js \/ googl-bl.js; css/overview.css: .ov-spcx-dd agregado a los 131 selectores :is(... .ov-tsm-dd ...). Siguen Historic Multiple (copiar googl-histmult.js) y Misc.

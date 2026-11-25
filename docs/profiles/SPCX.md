@@ -120,3 +120,10 @@ Mucho del análisis va a Miscellaneous. Unidades que dependen de Summit → ⏭�
 - 2026-11-25 · Bloque 3 (parte 1): Evolution ▸ Results construido con el motor `results.js` (dataset sin Summit, como DHR).
 - 2026-11-25 · Bloque 3 (parte 2): Top Line construido con el motor `segments.js`; utilidad operativa por segmento agregada al dataset de Results.
 - 2026-11-25 · SAB: el look de Bottom Line, Historic Multiple y Misc no se sentía del portal (se habían armado con el kit del dashboard). Bottom Line rehecho copiando tsm-bl.js \/ googl-bl.js; css/overview.css: .ov-spcx-dd agregado a los 131 selectores :is(... .ov-tsm-dd ...). Siguen Historic Multiple (copiar googl-histmult.js) y Misc.
+
+### Decisiones SAB — 2026-11-25 (auditoría completa contra la guía)
+- **Consenso:** el export único de Bloomberg (SPCX BBG CONSENSUS.xlsx, 25 nov 2026) es la fuente de `cons` (SPCX no está en BBG_CONSENSUS.txt).
+- **Trimestres ≠ año:** consenso trimestral solo hasta 4Q27 (cuadra ±5%); 2028 solo anual. Se dice en la nota de cada métrica.
+- **EPS:** base GAAP en todo el perfil (real y consenso, vista anual y trimestral).
+- **Miscellaneous:** de 12 sub-tabs a 6 (Scenario model · Capex & funding · Capacity → revenue · Competitive position · Starship → orbital compute · Licences & defense). Stated Targets, gobierno y ownership → sección nueva **Management**; los gráficos 9M de Starlink/SI/Space → Top Line ▸ Segments. Nada se borra; todo se reubica.
+- **Peer map:** default P/E · Forward (lo que dice la guía).

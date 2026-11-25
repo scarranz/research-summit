@@ -26,6 +26,7 @@ import { sharkninjaOverview } from './sharkninja.js';
 import { dhrOverview } from './dhr.js';
 import { marOverview } from './mar.js';
 import { tsmOverview } from './tsm.js';
+import { spcxOverview } from './spcx.js';
 
 var OVERVIEWS = {
   SN: sharkninjaOverview,
@@ -53,6 +54,7 @@ var OVERVIEWS = {
   DHR: dhrOverview,
   MAR: marOverview,
   TSM: tsmOverview,
+  SPCX: spcxOverview,
 };
 
 // Returns the overview module for a ticker, or null if none is built yet.

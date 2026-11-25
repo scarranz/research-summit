@@ -64,7 +64,8 @@ Mucho del análisis va a Miscellaneous. Unidades que dependen de Summit → ⏭�
 | TL-GEN · TL-SEG · TL-OTH · TL-CUS | 👀 | 2026-11-25 | `js/segments-data/spcx.js`: 3 segmentos (Space, Connectivity, SI) con productos, KPIs, puentes (suscriptores × ARPU; MW × revenue por MW); Other: líneas, geografía, productos vs servicios; Customers: Customer A (gobierno, 20.9% 2025) y **Customer B (SI) 34.5% del revenue de 3Q26** (10-Q) |
 | EV-EST Estimates | ⏭️ | | sin modelo Summit (solo consenso) |
 | EV-SET · EV-POST · EV-NOTES Earnings | ⬜ | | bloque 3/4; Q3 2026 transcript disponible |
-| BL-GEN · BL-SEG · BL-SPLC | ⬜ | | bloque 4 |
+| BL-GEN · BL-SEG | 👀 | 2026-11-25 | vistas `blgen`/`blseg` en spcx-misc.js (motor chartBlock del dashboard): márgenes reportado vs consenso, estructura de costos, D&A y SBC; márgenes por segmento. Leen Results; costos del export BBG |
+| BL-SPLC Supply Chain | ⬜ | | sin export SPLC de SPCX todavía |
 | VA-HIST Historic Multiple | ⬜ | | bloque 4; historia desde jun 2026 |
 | VA-PEERS Peers | ⬜ | | bloque 4 (mismo arreglo que OV-6) |
 | VA-TM · VA-SUB · VA-SENS | ⏭️ | | sin modelo Summit |

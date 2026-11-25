@@ -432,6 +432,7 @@ function deepDiveHtml(c){
   var h='<div class="ov ov-spcx ov-spcx-dd" data-brand="SPCX" style="--brand:var(--steel);--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">';
   h+='<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
+      '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
       '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
       '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
     '</div>';
@@ -441,6 +442,7 @@ function deepDiveHtml(c){
     { k:'segoth', l:'Other', body:segmentsOtherHtml('SPCX') },
     { k:'segcus', l:'Customers', body:segmentsCustomersHtml('SPCX') },
   ], false);   // TL-GEN · TL-SEG · TL-OTH · TL-CUS
+  h+=subtabs('bottomline', [ { k:'blgen', l:'General', body:spcxMiscHtml('blgen') }, { k:'blseg', l:'Segments', body:spcxMiscHtml('blseg') } ], true);   // BL-GEN · BL-SEG (views in spcx-misc.js)
   h+=subtabs('evolution', [ { k:'results', l:'Results', body:resultsHtml('SPCX') } ], true);   // EV-RES (Earnings and Estimates follow)
   h+=subtabs('misc', SPCX_MISC_TABS.map(function(t){ return { k:t.k, l:t.l, body:spcxMiscHtml(t.k) }; }), true);
   h+='</div>';
@@ -455,7 +457,7 @@ function buildSub(root, group, key){
     else requestAnimationFrame(function(){ initSegmentsOverview(root, 'SPCX'); });
     return;
   }
-  if(group==='misc') requestAnimationFrame(function(){ spcxMiscBuild(root, key); });
+  if(group==='misc' || group==='bottomline') requestAnimationFrame(function(){ spcxMiscBuild(root, key); });
   else if(group==='evolution' && key==='results') requestAnimationFrame(function(){
     initResults(root.querySelector('.ov-spcx-dd .ovt-subpane[data-ovst="results"] .rs-wrap'), 'SPCX'); });
 }
@@ -518,7 +520,7 @@ function init(c){
 }
 function deepDiveInit(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
-  wireDD(root); wireSubtabs(root,'topline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'misc'); wireModal(root);
+  wireDD(root); wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'misc'); wireModal(root);
   spcxMiscWire(root, onSpcxPrice);
   var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
 }

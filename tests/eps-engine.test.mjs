@@ -48,5 +48,13 @@ ok(az && az.last < last - 1, 'AZN counted until it left'); ok(pn.entered.n > 0, 
 // excluding everything but one name leaves that name's own numbers
 var one = new Set(); D.secs.forEach(function (s, i) { if (s.t !== 'NVDA') one.add(i); });
 var n = E.period('spx', k0, last, 'cy26', one); ok(n.n === 1, 'single name'); near(n.R, n.rows[0].ret, 1e-12, 'single-name return'); near(n.G + n.M, n.R, 1e-12, 'single-name EPS + multiple = return');
+// index EPS built from the companies: contributions add up, and growth x multiple gives the basket's price return
+['spx', 'ndx'].forEach(function (ix) {
+  var p = E.period(ix, k0, last, 'cy27'), en = E.earnings(p, function () { return 'all'; });
+  near(Object.keys(en.contrib).reduce(function (a, i) { return a + en.contrib[i]; }, 0), en.total, 1e-9, ix + ' EPS contributions add up');
+  near(en.group.all, en.total, 1e-9, ix + ' one group of everything = index');
+  var one = E.earnings(p, function (r) { return r.id; }), id = D.secs.findIndex(function (s) { return s.t === 'AAPL'; }), r = p.rows.find(function (x) { return x.id === id; });
+  near(one.group[id], r.g, 1e-9, ix + ' own EPS growth of a company');
+});
 console.log(bad ? bad + ' failures' : 'all engine checks pass');
 process.exit(bad ? 1 : 0);

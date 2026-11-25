@@ -12,10 +12,11 @@
 // S&P data: js/spx-data.js (scripts/spx/extract_spx.py — docs/SPX_MARKET_ANALYSIS.md).
 // Nasdaq data: the ndx-attribution snapshot (docs/NDX_ATTRIBUTION.md).
 import { SCOLS } from './portal-data.js';
-import { loadNdxAttribution, ndxStocks, ndxDetail, ndxDetailYears, ndxIGs, ndxSetSim, ndxShowYear } from './ndx-attribution.js';
+import { loadNdxAttribution, ndxStocks, ndxDetail, ndxLink, ndxDetailYears, ndxIGs, ndxSetSim, ndxShowYear } from './ndx-attribution.js';
 import { initDetail, setDetailNdx } from './ma-detail.js';
 import { ndxLatestReturn } from './ndx-sector-returns.js';
 import { spyAttributionYears, spyWeightSnaps } from './spx-attribution.js';
+import { setEpsSources } from './eps-index-link.js';
 import { initSpxSectorAlpha } from './spx-sector-alpha.js';
 import { dumbbell, distribution } from './ma-charts.js';
 import { initSpxSecurities } from './spx-securities.js';
@@ -315,7 +316,8 @@ function initMarketAnalysis(D) {
   renderFilterBar(); applyFilters(); renderSSExclChips();
   renderSpxComp(); renderSpxWL();
   // S&P company weights (one SPY holdings snapshot per year): Top Contributors
-  import('./spx-holdings-data.js').then(function(m){ initSpxSecurities(document.getElementById('ma-spx-top'), m.SPX_HOLDINGS); },
+  var holdings = null;
+  var holdingsReady = import('./spx-holdings-data.js').then(function(m){ holdings = m.SPX_HOLDINGS; initSpxSecurities(document.getElementById('ma-spx-top'), m.SPX_HOLDINGS); },
     function(){ var e = document.getElementById('ma-spx-top'); if (e) e.innerHTML = '<div class="ma-pending">S&amp;P 500 company weights are not in the data.</div>';; });
   buildLookup();
   var si = document.getElementById('sr-inp');
@@ -336,5 +338,7 @@ function initMarketAnalysis(D) {
     setDetailNdx({ detail: ndxDetail, years: ndxDetailYears(), igs: ndxIGs(), setSim: ndxSetSim });
     buildLookup();
     Object.keys(MA_IDX).forEach(function(k){ renderToggle(k); showPanes(k); });
-  }, function(e){ console.error('[market-analysis] Nasdaq-100 data failed', e); });
+    // EPS Attribution takes its prices from these same engines
+    holdingsReady.then(function(){ setEpsSources({ spx: SPX, holdings: holdings, ndxLink: ndxLink, ndxIGs: ndxIGs() }); });
+  }, function(e){ console.error('[market-analysis] Nasdaq-100 data failed', e); setEpsSources(null); });
 }

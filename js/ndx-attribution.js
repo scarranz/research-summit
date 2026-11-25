@@ -2881,6 +2881,40 @@ export function ndxDetail(year, exSecs, exIGs) {
   return { bySec: res.bySec, byIG: res.byIG, total: res.ytd, cash: res.bySec[CASH], cashW: [o.sec[CASH] || 0, c.sec[CASH] || 0],
     wOpen: o.sec, wClose: c.sec, wOpenIG: o.ig, wCloseIG: c.ig, ytd: key.indexOf('ytd') === 0, CASH: CASH };
 }
+// For EPS Attribution (js/eps-index-link.js): the same year's numbers, with each sector's, group's and
+// company's own price return and contribution. Figures in %; names in this file's own spelling.
+export function ndxLink(year, exSecs, exIGs) {
+  var d = ndxDetail(year, exSecs, exIGs);
+  if (!d) return null;
+  var key = chronoYears().filter(function(k) { return +yearOf(k) === year; })[0], hocs = hocsForYear(key);
+  var exS = new Set(exSecs || []), exG = new Set(exIGs || []);
+  function own(field) {
+    var level = {};
+    hocs.forEach(function(h) {
+      var step = {};
+      h.sec.forEach(function(x) {
+        if (isCash(x.t) || x[field] === CASH || exS.has(x.s) || exG.has(x.g)) return;
+        var o = step[x[field]] || (step[x[field]] = { w: 0, c: 0 }); o.w += x.w || 0; o.c += (x.w || 0) * x.r;
+      });
+      Object.keys(step).forEach(function(n) { if (step[n].w) level[n] = (level[n] == null ? 1 : level[n]) * (1 + step[n].c / step[n].w); });
+    });
+    return level;
+  }
+  function pack(c, w0, w1, level) {
+    var out = {};
+    Object.keys(w0).concat(Object.keys(w1)).forEach(function(n) {
+      if (n === CASH) return;
+      out[n] = { c: c[n] || 0, ret: level[n] == null ? null : (level[n] - 1) * 100, w0: w0[n] || 0, w1: w1[n] || 0 };
+    });
+    return out;
+  }
+  var t = {};
+  computeSecurities(exS, exG, hocs).forEach(function(x) {
+    if (isCash(x.name) || x.sect === CASH) return;
+    t[x.name] = { c: x.contrib, ret: x.ret, w0: x.w0, w1: x.w1 };
+  });
+  return { total: d.total, cash: d.cash, sec: pack(d.bySec, d.wOpen, d.wClose, own('s')), ig: pack(d.byIG, d.wOpenIG, d.wCloseIG, own('g')), t: t };
+}
 // The Detail table's exclusions also drive Top Contributors (simulation), as before
 export function ndxSetSim(exSecs, exIGs) {
   exclSecs = new Set(exSecs || []); exclIGs = new Set(exIGs || []);

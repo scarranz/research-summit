@@ -1,6 +1,6 @@
-# SpaceX (SPCX) — standalone deep dive (Research ▸ SpaceX)
+# SpaceX (SPCX) — standalone deep dive (sidebar ▸ SpaceX)
 
-The SpaceX deep dive shown under **Research ▸ SpaceX** in the portal. Owner: SAB. It is a standalone dashboard
+The SpaceX deep dive shown in the portal’s **SpaceX** tab (sidebar, below Derivatives; admin role), full width. Owner: SAB. It is a standalone dashboard
 (its own sidebar, 16 pages) embedded in a same-origin iframe — the same way Industries embeds
 `industry-embed.html` — so its CSS and JS cannot collide with the portal.
 

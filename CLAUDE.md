@@ -362,10 +362,10 @@ Every company has **Overview**, **Pillars** and **Resources**, plus **Deep Dive*
 - Overview is custom-designed per company with Claude's help
 - Claude handles all the technical work — the user just describes what they want to see
 
-## SpaceX deep dive (Research ▸ SpaceX) — read research/spacex/README.md first
+## SpaceX deep dive (sidebar ▸ SpaceX, below Derivatives) — read research/spacex/README.md first
 
-A standalone dashboard (`spacex-deep-dive/`, its own sidebar and 16 pages, plain scripts — not ES modules) embedded in a
-same-origin iframe from `index.html` (`#res-spacex`, lazy `src`), exactly like Industries; `netlify.toml` lets
+A standalone dashboard (`spacex-deep-dive/`, its own sidebar and 16 pages, plain scripts — not ES modules) embedded full width in a
+same-origin iframe from `index.html` (`#tp-spx`, page `spacex`, tab `spx`, lazy `src` in its page loader), the way Industries embeds its pages; `netlify.toml` lets
 `/spacex-deep-dive/*` be framed by our origin. Owner SAB. Numbers are frozen (Bloomberg consensus Nov 25 2026, filings,
 call transcripts); public sources live in `research/spacex/sources/`. SAB's notes, sell-side reports and Bloomberg exports
 are NOT committed (public repo) — they stay in SAB's Drive. Not the Companies ▸ SpaceX profile (`feat/spcx-profile`).

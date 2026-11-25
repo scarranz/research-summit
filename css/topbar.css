@@ -90,3 +90,8 @@
   opacity: .7;
   margin-top: 3px;
 }
+
+/* SpaceX tab: the deep dive takes the whole content area (no max-width or padding) */
+.main:has(#tp-spx.active) { max-width: none; padding: 0; }
+.main:has(#tp-spx.active) + .ftr { display: none; }   /* one scrollbar: the deep dive scrolls inside its frame */
+.spx-frame { display: block; width: 100%; height: calc(100vh - 58px); border: 0; background: #fff; }

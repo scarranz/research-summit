@@ -46,6 +46,7 @@ import { nvdaSetup } from './results-data/nvda-setup.js';
 import { tbbbResults } from './results-data/tbbb.js';
 import { dhrResults } from './results-data/dhr.js';
 import { dhrSetup } from './results-data/dhr-setup.js';
+import { spcxResults } from './results-data/spcx.js';
 import { tbbbSetup } from './results-data/tbbb-setup.js';
 import { tbbbBl } from './results-data/tbbb-bl.js';
 import { tbbbTl } from './results-data/tbbb-tl.js';
@@ -93,6 +94,7 @@ var RESULTS_DATA = {
   TBBB_TL: tbbbTl,
   DHR: dhrResults,
   DHR_SETUP: dhrSetup,
+  SPCX: spcxResults,
   SN: snResults,
   SN_SETUP: snSetup
 };

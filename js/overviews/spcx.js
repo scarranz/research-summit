@@ -9,6 +9,7 @@
 // There is no Summit DCF model for SPCX in the MCP (checked 2026-11-25), so nothing here is a Summit number.
 
 import { spcxMiscHtml, spcxMiscBuild, spcxMiscWire, SPCX_MISC_TABS } from './spcx-misc.js';
+import { resultsHtml, initResults } from '../results.js';   // Evolution ▸ Results (engine; data in js/results-data/spcx.js)
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -429,15 +430,19 @@ function subtabs(group, list, hidden){
 function deepDiveHtml(c){
   var h='<div class="ov ov-spcx ov-spcx-dd" data-brand="SPCX" style="--brand:var(--steel);--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">';
   h+='<div class="dd-tabs">'+
-      '<button type="button" class="dd-tab active" data-dd="misc">Miscellaneous</button>'+
+      '<button type="button" class="dd-tab active" data-dd="evolution">Evolution</button>'+
+      '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
     '</div>';
-  h+=subtabs('misc', SPCX_MISC_TABS.map(function(t){ return { k:t.k, l:t.l, body:spcxMiscHtml(t.k) }; }), false);
+  h+=subtabs('evolution', [ { k:'results', l:'Results', body:resultsHtml('SPCX') } ], false);   // EV-RES (Earnings and Estimates follow)
+  h+=subtabs('misc', SPCX_MISC_TABS.map(function(t){ return { k:t.k, l:t.l, body:spcxMiscHtml(t.k) }; }), true);
   h+='</div>';
   return h;
 }
 
 function buildSub(root, group, key){
   if(group==='misc') requestAnimationFrame(function(){ spcxMiscBuild(root, key); });
+  else if(group==='evolution' && key==='results') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ov-spcx-dd .ovt-subpane[data-ovst="results"] .rs-wrap'), 'SPCX'); });
 }
 function keepPos(el, fn){ var before=el.getBoundingClientRect().top; fn(); var d=el.getBoundingClientRect().top-before; if(Math.abs(d)>1) window.scrollBy(0, d); }
 function activeSubKey(root, group){ var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return null; var b=pane.querySelector('.ovt-subtab.active'); return b?b.getAttribute('data-ovst'):null; }
@@ -451,7 +456,7 @@ function showSub(root, pane, group, key){
 }
 function wireSubtabs(root, group){ var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return; pane.querySelectorAll('.ovt-subtab').forEach(function(btn){ btn.onclick=function(){ showSub(root, pane, group, btn.getAttribute('data-ovst')); }; }); }
 function buildDD(root, key){ var s=activeSubKey(root,key); if(s) buildSub(root,key,s); }
-function activeDD(root){ var b=root.querySelector('.ov-spcx-dd .dd-tab.active'); return b?b.getAttribute('data-dd'):'misc'; }
+function activeDD(root){ var b=root.querySelector('.ov-spcx-dd .dd-tab.active'); return b?b.getAttribute('data-dd'):'evolution'; }
 function showDD(root, key){
   var btn=root.querySelector('.dd-tab[data-dd="'+key+'"]');
   keepPos(btn||root, function(){
@@ -498,7 +503,7 @@ function init(c){
 }
 function deepDiveInit(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
-  wireDD(root); wireSubtabs(root,'misc'); wireModal(root);
+  wireDD(root); wireSubtabs(root,'evolution'); wireSubtabs(root,'misc'); wireModal(root);
   spcxMiscWire(root, onSpcxPrice);
   var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
 }

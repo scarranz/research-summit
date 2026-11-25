@@ -66,6 +66,7 @@ import { MA_THEMES } from './themes-data/ma.js';
 import { UBER_THEMES } from './themes-data/uber.js';
 import { LYFT_THEMES } from './themes-data/lyft.js';
 import { NVDA_THEMES } from './themes-data/nvda.js';
+import { SPCX_THEMES } from './themes-data/spcx.js';
 import { SUMMIT_CAT, SUMMIT_MUTE } from './viz-palette.js';   // the portal's fixed categorical palette
 
 // The Notes taxonomy names segments in prose; the datasets key them. One map, stated once.
@@ -78,10 +79,11 @@ var THEME_SEG = {
   GOOGL: { 'Google Services': 'svc', 'Google Cloud': 'cloud', 'Other Bets': 'bets' },   // AI & compute, Costs & capital are company-wide
   UBER: { 'Mobility': 'mobility', 'Delivery': 'delivery', 'Freight': 'freight' },   // AVs, membership, costs & capital are company-wide
   LYFT: { 'Rideshare': 'lyft' },
+  SPCX: { 'Space': 'space', 'Connectivity (Starlink)': 'conn', 'SI (Super Intelligence)': 'si' },
   NVDA: { 'Hyperscale': 'hyper', 'AI Clouds, Industrial & Enterprise': 'acie', 'Edge Computing': 'edge' },   // market platforms; Data Center, supply, margins, China and leadership are company-wide   // the one Lyft segment; AVs, Europe, media, costs & capital are company-wide
   MA: { 'Consumer payments': 'pn', 'Commercial and new flows': 'pn', 'Value-added services': 'vas', 'Agentic and digital assets': 'vas' },   // guidance, costs and capital, regulation and litigation are company-wide
 };
-var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES, META: META_THEMES, GOOGL: GOOGL_THEMES, MA: MA_THEMES, UBER: UBER_THEMES, LYFT: LYFT_THEMES, NVDA: NVDA_THEMES };
+var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_THEMES, META: META_THEMES, GOOGL: GOOGL_THEMES, MA: MA_THEMES, UBER: UBER_THEMES, LYFT: LYFT_THEMES, NVDA: NVDA_THEMES, SPCX: SPCX_THEMES };
 var SEGMENTS_DATA = {
   AMZN: { seg: amznSegments, res: amznResults },
   DHR:  { seg: dhrSegments,  res: dhrResults  },

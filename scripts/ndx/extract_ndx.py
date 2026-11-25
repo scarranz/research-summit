@@ -10,7 +10,7 @@ workbook after the Bloomberg refresh) and turns it into the HOC list the portal 
   python scripts/ndx/extract_ndx.py --refresh-prices   # no Excel: only re-price the open HOC of the newest snapshot
   python scripts/ndx/extract_ndx.py --write-js --prices-as-of 2026-10-12   # rewrite js/ndx-attribution-data.js (the bundled copy); date = the close the Excel was priced at
 
-Options: --xlsx PATH, repeatable to merge several workbooks (or env NDX_XLSX) · --note "text" (stored with the snapshot).
+Options: --sheet "NDX BBG" (read the live formula sheet when its values were not pasted into 'NDX nonBBG') · --xlsx PATH, repeatable to merge several workbooks (or env NDX_XLSX) · --note "text" (stored with the snapshot).
 Upload needs the ingest key: env NDX_INGEST_KEY or the gitignored file scripts/ndx/.ingest-key
 (San / Oscar set the same value as the NDX_INGEST_KEY secret). URL + anon key come from env.js.
 
@@ -112,6 +112,12 @@ def find_header(ws):
             return r, col
     return FIRST_ROW - 1, None
 
+# Once a company stops trading, Bloomberg returns '#N/A N/A' for its sector / group on every refresh.
+# Fallback = what the same sheet carried before (Oct 14, 2026 load). Only used when the cell is an error.
+GICS_FALLBACK = {
+    'WBD': ('Communication Services', 'Media and Entertainment'),
+}
+
 def read_blocks(xlsx):
     print(f'Reading {xlsx}')
     wb = openpyxl.load_workbook(xlsx, data_only=True, read_only=True)
@@ -128,10 +134,15 @@ def read_blocks(xlsx):
         if not eff or not isinstance(k, str) or not k.strip():
             continue
         key = (eff, day(i) or eff, day(j))
+        sec, ig = str(u or '').strip(), norm_ig(v)
+        fb = GICS_FALLBACK.get(fmt_ticker(k))
+        if fb:
+            sec = fb[0] if not sec or sec.startswith('#') else sec
+            ig = fb[1] if not ig or str(ig).startswith('#') else ig
         blocks.setdefault(key, []).append({
             't': fmt_ticker(k), 'co': str(l or '').strip(),
             'w': num(n) or 0, 'wi': num(o) or 0, 'r': num(r) or 0,
-            's': str(u or '').strip(), 'g': norm_ig(v),
+            's': sec, 'g': ig,
             'p0': num(p, 4), 'p1': num(q, 4),
         })
         if type_col is not None and row[type_col] is not None and str(row[type_col]).strip() != '':
@@ -378,6 +389,7 @@ def main():
     sys.stdout.reconfigure(encoding='utf-8')   # Windows consoles default to cp1252
     ap = argparse.ArgumentParser()
     ap.add_argument('--xlsx', action='append', help='repeat for several workbooks (e.g. one per year); default = the 2026 file')
+    ap.add_argument('--sheet', default=SHEET, help='sheet to read (default: %(default)s)')
     ap.add_argument('--upload', action='store_true')
     ap.add_argument('--refresh-prices', action='store_true')
     ap.add_argument('--write-js', action='store_true')
@@ -387,6 +399,8 @@ def main():
     a = ap.parse_args()
     if a.refresh_prices:
         return call({'action': 'refresh-prices', 'note': a.note})
+    globals()['SHEET'] = a.sheet
+    print(f'Sheet: {a.sheet}')
     paths = a.xlsx or [os.environ.get('NDX_XLSX', DEFAULT_XLSX)]
     hocs = extract(paths)
     if a.write_js:

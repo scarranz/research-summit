@@ -8,7 +8,7 @@ before changing the data, `scripts/spx/extract_spx.py` or the page.
 | Section | S&P 500 | Nasdaq-100 | Module |
 |---|---|---|---|
 | Sector Return / Contribution | one or the other | | `js/spx-sector-alpha.js` · `js/ndx-sector-returns.js` |
-| Attribution Detail & Simulation | ONE table: S&P, Nasdaq or both side by side | | `js/ma-detail.js` (engines: `spx-attribution.js` · `ndx-attribution.js`) |
+| Attribution Detail & Simulation | ONE table: S&P and Nasdaq always side by side (Nov 2026) | | `js/ma-detail.js` (engines: `spx-attribution.js` · `ndx-attribution.js`) |
 | Sector Summary — Market Beaters | one or the other (same table) | | `js/market-analysis.js` |
 | Index Composition — Weight Change | one or the other, sectors | | `js/market-analysis.js` · `js/ndx-attribution.js` |
 | Top Contributors | one or the other | | `js/spx-securities.js` · `js/ndx-attribution.js` |
@@ -147,3 +147,7 @@ Lessons that cost a day:
    eligible per year, names that joined this year) and the warnings (stale prices, unmatched IDs,
    truncated GICS).
 3. `... --write` → `js/spx-data.js`; check the page on localhost; commit through a PR.
+
+## Refresh notes (Nov 25, 2026)
+
+- `extract_spx_holdings.py --latest-sheet "SPX BBG"` takes the current year from the live formula sheet when its values were not pasted into `SPX nonBBG`.

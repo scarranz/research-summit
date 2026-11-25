@@ -22,6 +22,8 @@ Cleaning (the sheet is a first draft; every fix is printed):
     sector / group is taken from the same ticker in another year, else from js/spx-data.js.
 
 Usage:  python scripts/spx/extract_spx_holdings.py "<SP 500 2026 RETURNS.xlsx>" [--write]
+        --latest-sheet "SPX BBG"  take the newest snapshot (the current year) from the live
+                                  formula sheet when its values were not pasted into "SPX nonBBG"
 """
 import argparse, datetime as dt, json, os, re, sys
 import openpyxl
@@ -53,27 +55,38 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("xlsx")
     ap.add_argument("--write", action="store_true")
+    ap.add_argument("--latest-sheet")
     a = ap.parse_args()
 
     wb = openpyxl.load_workbook(a.xlsx, read_only=True, data_only=True)
-    ws = wb["SPX nonBBG"]
-    hdr = None
-    rows = []
-    for i, row in enumerate(ws.iter_rows(values_only=True)):
+    def read(name):
+        hdr = None
+        out = []
+        for i, row in enumerate(wb[name].iter_rows(values_only=True)):
+            if hdr is None:
+                if any(isinstance(v, str) and "Rebalance Effective" in v for v in row if v):
+                    hdr = i
+                continue
+            if not iso(row[7]):
+                continue
+            out.append(dict(eff=iso(row[7]), prev=iso(row[8]), close=iso(row[9]), t=row[10], co=row[11],
+                            w=num(row[12]), p0=num(row[15]), p1=num(row[16]), r=num(row[17]),
+                            s=row[20], g=row[21]))
         if hdr is None:
-            if any(isinstance(v, str) and "Rebalance Effective" in v for v in row if v):
-                hdr = i
-            continue
-        if not iso(row[7]):
-            continue
-        rows.append(dict(eff=iso(row[7]), prev=iso(row[8]), close=iso(row[9]), t=row[10], co=row[11],
-                         w=num(row[12]), p0=num(row[15]), p1=num(row[16]), r=num(row[17]),
-                         s=row[20], g=row[21]))
-    if hdr is None:
-        sys.exit("SPX nonBBG: no 'Rebalance Effective Date' header")
+            sys.exit(f"{name}: no 'Rebalance Effective Date' header")
+        return out
+
+    rows = read("SPX nonBBG")
+    swapped = None
+    if a.latest_sheet:
+        live = read(a.latest_sheet)
+        last = max(r["eff"] for r in live)
+        new = [r for r in live if r["eff"] == last]
+        rows = [r for r in rows if r["eff"] != last] + new
+        swapped = f"{last}: snapshot read from sheet '{a.latest_sheet}' ({len(new)} rows, closes {new[0]['close']})"
 
     # group by snapshot date; a ticker seen again in the same date = a second, stacked snapshot
-    years, fixes = [], []
+    years, fixes = [], [swapped] if swapped else []
     by = {}
     for r in rows:
         by.setdefault(r["eff"], []).append(r)

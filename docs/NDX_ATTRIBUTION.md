@@ -226,8 +226,9 @@ A new dummy code makes the extractor print `unmapped Bloomberg dummy ticker(s)` 
 
 **Oct 14, 2026 — one page for both indices.** The Nasdaq-100 sections are now panes of the unified
 Market Analysis page (map in `docs/SPX_MARKET_ANALYSIS.md`): `loadNdxAttribution(hosts)` fills the
-Sector, Detail, Composition, Top Contributors, Winners vs Losers and Scatter panes; `ndxPriceData()`
-feeds the joint Index Price Return (`js/ma-price.js`, the old NDX hero is no longer drawn) and
+Sector, Detail, Composition, Top Contributors and Winners vs Losers panes (the Scatter pane and the
+joint Index Price Return were removed Oct 23, 2026; the NDX scatter code in `ndx-attribution.js` is
+now unreachable) and
 `ndxStocks()` the Nasdaq side of Sector Summary and Stock Lookup (every company of every year, with
 the whole-year flag e<yy> = in every HOC of the year). Years are labelled by their number (2026, not
 "YTD 2026"). Removed: the Detail Chart / Treemap views, the Winners vs Losers Sector Matrix and
@@ -310,3 +311,10 @@ y = drifted closing weight.
   per-ticker calls.
 - The repo is public and `js/ndx-attribution-data.js` holds the full Bloomberg-derived history;
   once Supabase serves the data, consider shrinking or removing the bundled copy.
+
+## Refresh notes (Nov 25, 2026)
+
+- `extract_ndx.py --sheet "NDX BBG"` reads the live formula sheet when its values were not pasted into `NDX nonBBG`.
+- A split restated by hand on past HOCs must change columns **P, Q and X** together: the opening weight is drifted with P / X.
+- The closed HOC must end where the next one starts (column J from the date table, not `=TODAY()`), or the move is counted twice.
+- Delisted names lose their sector on refresh (`#N/A N/A`): see `GICS_FALLBACK` in the extractor.

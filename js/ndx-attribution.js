@@ -546,7 +546,7 @@ window.ndxSetHeroStart = function(key) {
 };
 
 function renderHero() {
-  if (!document.getElementById('ndx-hero-growth')) return;   // the price block now lives in js/ma-price.js
+  if (!document.getElementById('ndx-hero-growth')) return;   // the Index Price Return section was removed
   var yrs = chronoYears();
   if (!_heroStart || !YEAR_HOCS[_heroStart]) _heroStart = yrs[yrs.length - 1];
   var start = _heroStart, startIdx = yrs.indexOf(start);
@@ -2190,10 +2190,12 @@ function renderPareto() {
     var d = yrData[yr];
     var shown = d.pos.concat(d.neg).reduce(function(s, x) { return s + x.contrib; }, 0);
     var share = Math.abs(d.total) > 1e-9 ? shown / d.total * 100 : 0;
+    // with every constituent listed, what is left is QQQ's cash & futures: shown, so the sum is exact
+    var rest = showAll ? d.total - shown : null;
     foot += '<td colspan="' + colsPerYr + '" style="padding:7px 8px;font-size:11.5px;color:var(--navy);' + (yi ? GAP : '') + '">' +
-      'Listed: <b style="color:' + colr(shown) + '">' + (shown >= 0 ? '+' : '') + shown.toFixed(2) + '%</b>' +
-      ' of <b style="color:' + colr(d.total) + '">' + (d.total >= 0 ? '+' : '') + d.total.toFixed(2) + '%</b> index return' +
-      ' <span style="color:var(--mu)">(' + share.toFixed(0) + '%)</span></td>';
+      'Listed: <b style="color:' + colr(shown) + '">' + sgn2(shown) + '%</b>' +
+      (rest != null ? ' + cash &amp; other <b style="color:' + colr(rest) + '">' + sgn2(rest) + '%</b> = <b style="color:' + colr(d.total) + '">' + sgn2(d.total) + '%</b> index return'
+        : ' of <b style="color:' + colr(d.total) + '">' + sgn2(d.total) + '%</b> index return <span style="color:var(--mu)">(' + share.toFixed(0) + '%)</span>') + '</td>';
   });
   foot += '</tr></tfoot>';
 
@@ -2459,7 +2461,7 @@ function renderWLSection() {
   var items = computeSecurities(new Set(), new Set(), hocs)
     .filter(function(d) { return inAll[d.name] === hocs.length; })
     .map(function(d) { return { name: d.name, co: d.co, ret: d.ret }; });
-  distribution(box, items, _wlState);
+  distribution(box, items, _wlState, 'only companies in the Nasdaq-100 the whole year (those that joined or left during it are left out)');
 }
 
 // ── Master refresh ────────────────────────────────────────────────────────
@@ -2843,7 +2845,7 @@ function buildPanes() {
           '<div id="ndx-scat-pills" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-basis:100%">' + scatPillsHtml() + '</div>' +
         '</div>' +
         '<div id="ndx-scatter-box"></div>' +
-        '<div style="font-size:11px;color:var(--mu);margin-top:6px">One dot per company: return or contribution (across) vs weight in the index (up); bubble size = contribution. Same axes for every sector or group within a year. Return = only the time the company has been in the Nasdaq-100 (from its entry date if it joined during the year), so it can differ from the S&amp;P 500 view, which takes the whole year for the companies in the index at the start of it.</div>' +
+        '<div style="font-size:12px;color:var(--mu);margin-top:6px;line-height:1.5">One dot per company: return or contribution (across) vs weight in the index (up); bubble size = contribution. Same axes for every sector or group within a year. <b style="color:var(--text)">Return = only the time the company has been in the Nasdaq-100 (from its entry date if it joined during the year), so it can differ from the S&amp;P 500 view, which takes the whole year for the companies in the index at the start of it.</b></div>' +
       '</div>'
   };
 }
@@ -2879,23 +2881,47 @@ export function ndxDetail(year, exSecs, exIGs) {
   return { bySec: res.bySec, byIG: res.byIG, total: res.ytd, cash: res.bySec[CASH], cashW: [o.sec[CASH] || 0, c.sec[CASH] || 0],
     wOpen: o.sec, wClose: c.sec, wOpenIG: o.ig, wCloseIG: c.ig, ytd: key.indexOf('ytd') === 0, CASH: CASH };
 }
+// For EPS Attribution (js/eps-index-link.js): the same year's numbers, with each sector's, group's and
+// company's own price return and contribution. Figures in %; names in this file's own spelling.
+export function ndxLink(year, exSecs, exIGs) {
+  var d = ndxDetail(year, exSecs, exIGs);
+  if (!d) return null;
+  var key = chronoYears().filter(function(k) { return +yearOf(k) === year; })[0], hocs = hocsForYear(key);
+  var exS = new Set(exSecs || []), exG = new Set(exIGs || []);
+  function own(field) {
+    var level = {};
+    hocs.forEach(function(h) {
+      var step = {};
+      h.sec.forEach(function(x) {
+        if (isCash(x.t) || x[field] === CASH || exS.has(x.s) || exG.has(x.g)) return;
+        var o = step[x[field]] || (step[x[field]] = { w: 0, c: 0 }); o.w += x.w || 0; o.c += (x.w || 0) * x.r;
+      });
+      Object.keys(step).forEach(function(n) { if (step[n].w) level[n] = (level[n] == null ? 1 : level[n]) * (1 + step[n].c / step[n].w); });
+    });
+    return level;
+  }
+  function pack(c, w0, w1, level) {
+    var out = {};
+    Object.keys(w0).concat(Object.keys(w1)).forEach(function(n) {
+      if (n === CASH) return;
+      out[n] = { c: c[n] || 0, ret: level[n] == null ? null : (level[n] - 1) * 100, w0: w0[n] || 0, w1: w1[n] || 0 };
+    });
+    return out;
+  }
+  var t = {};
+  computeSecurities(exS, exG, hocs).forEach(function(x) {
+    if (isCash(x.name) || x.sect === CASH) return;
+    t[x.name] = { c: x.contrib, ret: x.ret, w0: x.w0, w1: x.w1 };
+  });
+  return { total: d.total, cash: d.cash, sec: pack(d.bySec, d.wOpen, d.wClose, own('s')), ig: pack(d.byIG, d.wOpenIG, d.wCloseIG, own('g')), t: t };
+}
 // The Detail table's exclusions also drive Top Contributors (simulation), as before
 export function ndxSetSim(exSecs, exIGs) {
   exclSecs = new Set(exSecs || []); exclIGs = new Set(exIGs || []);
   refresh();
 }
 
-// For the joint sections (js/ma-price.js, the Nasdaq-100 side of Sector Summary and Stock Lookup)
-// Year returns + a growth path of the index from the start of the first year (HOC closes).
-export function ndxPriceData() {
-  var yrs = chronoYears();
-  var path = growthPath(yrs[0]);
-  return {
-    years: yrs.map(function(k) { return { key: k, year: +yearOf(k), ytd: k.indexOf('ytd') === 0, ret: computeYearReturn(k) }; }),
-    points: path.map(function(p) { return { d: p.d, v: p.v }; }),
-    asOf: latestDate()
-  };
-}
+// For the joint sections (the Nasdaq-100 side of Sector Summary and Stock Lookup)
 // Every security that was in the index in any year: its return in each year (compounded over
 // the HOCs it was in) and whether it was in for the whole year (every HOC of that year).
 export function ndxStocks() {
@@ -2925,7 +2951,7 @@ export function ndxStocks() {
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────
-// hosts: { sector, detail, comp, top, wl, scatter } — elements of the unified Market Analysis page
+// hosts: { sector, detail, comp, top, wl } — elements of the unified Market Analysis page
 export async function loadNdxAttribution(hosts) {
   var _allYears = hosts.allYears || [];
   _onYear = hosts.onYear || null;

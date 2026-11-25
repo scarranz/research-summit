@@ -102,3 +102,13 @@
 #eps-root details.eps-det { margin-top: 14px; font-size: 12px; }
 #eps-root details.eps-det > summary { cursor: pointer; font-weight: 600; color: var(--steel); padding: 4px 0; }
 #eps-root details.eps-det[open] > summary { margin-bottom: 8px; }
+
+/* controls follow Index Analysis (.sb-block / .sb-line in market-analysis.css) */
+#eps-root .eps-q { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#eps-root .eps-q input[type=text] { width: 120px; font: 600 12px Inter, sans-serif; padding: 5px 10px; border: 1.5px solid var(--bdr); border-radius: 8px; color: var(--navy); text-transform: uppercase; }
+#eps-root .eps-q input[type=number] { width: 74px; font: 500 10.5px Inter, sans-serif; padding: 4px 8px; border: 1.5px solid var(--bdr); border-radius: 14px; }
+#eps-root .eps-src { font-size: 11px; color: var(--mu); margin: 0 2px 8px; line-height: 1.5; }
+#eps-root .eps-sep { width: 1.5px; align-self: stretch; background: var(--navy); opacity: .35; }
+#eps-root .eps-eqt .s b { color: var(--navy); font-size: 12px; }
+#eps-root .eps-t3 .eps-hl { background: var(--surface); font-weight: 700; }
+@media (max-width: 700px) { #eps-root .eps-sep { display: none; } }

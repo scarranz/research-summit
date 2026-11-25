@@ -198,18 +198,13 @@
   <div id="eps-root"></div>
   <div id="ndx-tip" style="position:fixed;pointer-events:none;opacity:0;transition:opacity .09s;background:var(--w,#fff);border:1px solid rgba(0,0,0,.1);border-radius:9px;padding:8px 12px;font-size:12px;box-shadow:0 5px 18px rgba(0,0,0,.14);z-index:1999;max-width:260px;font-family:Inter,sans-serif"></div>
 
-  <div class="sec" data-ma="price">
-    <div class="sechdr"><span class="sect">Index Price Return</span><span class="secn" id="ma-price-asof"></span></div>
-    <div class="card" id="ma-price"></div>
-  </div>
-
   <div class="sec" data-ma="sector">
     <div class="sechdr"><span class="sect">Sector Return / Contribution</span><span class="ma-idx"></span></div>
     <div class="ma-pane" data-idx="spx">
       <div class="card">
-        <div class="sb-secrow" id="sb-qbar"></div>
-        <div class="sb-secrow" id="sb-secrow"></div>
-        <div class="sb-secrow" id="sb-dates" style="flex-direction:column;align-items:stretch;gap:10px"></div>
+        <div class="sb-block"><div class="sb-line" id="sb-qbar"></div><div class="sb-line" id="sb-secrow"></div></div>
+        <div class="sb-block"><div class="sb-line" id="sb-when"></div><div id="sb-dates" class="sb-stack"></div></div>
+        <div class="sb-block"><div class="sb-line" id="sb-view"></div><div id="sb-range"></div></div>
         <div class="sbrs" id="sb-wrap"></div>
         <div id="sb-note" style="font-size:11px;color:var(--mu);margin-top:12px;line-height:1.5"></div>
       </div>
@@ -218,7 +213,7 @@
   </div>
 
   <div class="sec" data-ma="detail">
-    <div class="sechdr"><span class="sect">Attribution Detail &amp; Simulation</span><span class="ma-idx"></span></div>
+    <div class="sechdr"><span class="sect">Attribution Detail &amp; Simulation</span><span class="secn">S&amp;P 500 and Nasdaq-100</span></div>
     <div class="card" id="ma-detail"></div>
   </div>
 
@@ -254,12 +249,6 @@
     <div class="sechdr"><span class="sect">Winners vs Losers</span><span class="ma-idx"></span></div>
     <div class="ma-pane" data-idx="spx"><div class="card" id="ma-spx-wl"></div></div>
     <div class="ma-pane" data-idx="ndx" id="ma-ndx-wl"></div>
-  </div>
-
-  <div class="sec" data-ma="scatter">
-    <div class="sechdr"><span class="sect">Security Return vs Weight</span><span class="ma-idx"></span></div>
-    <div class="ma-pane" data-idx="spx"><div class="card" id="ma-spx-scatter"></div></div>
-    <div class="ma-pane" data-idx="ndx" id="ma-ndx-scatter"></div>
   </div>
 
   <div class="sec" data-ma="lookup">

@@ -1,5 +1,6 @@
-// ma-detail.js — Market Analysis ▸ Attribution Detail & Simulation: ONE table for the
-// S&P 500, the Nasdaq-100 or both, one year selector, one Sector / Industry Group column.
+// ma-detail.js — Market Analysis ▸ Attribution Detail & Simulation: ONE table with the
+// S&P 500 and the Nasdaq-100 side by side (no index toggle), one year selector, one
+// Sector / Industry Group column.
 // Each index shows its weight (open → close) and its contribution; clicking a row
 // excludes that sector or group from BOTH indices and both recalculate (the remaining
 // weights rescale to 100%: monthly for the S&P 500, per HOC for the Nasdaq-100).
@@ -9,7 +10,7 @@
 import { spxDetail, spxDetailYears, spxGroups } from './spx-attribution.js';
 
 var SPX = null, NDX = null;      // NDX: { detail, years, setSim } once its snapshot is loaded
-var st = { idx: 'spx', year: null, excl: {}, open: {} };
+var st = { year: null, excl: {}, open: {} };
 var root = null, lastSim = '';
 
 function key(s){ return String(s).toLowerCase().replace(/\band\b/g, '&').replace(/[^a-z&()]/g, ''); }
@@ -17,7 +18,6 @@ function key(s){ return String(s).toLowerCase().replace(/\band\b/g, '&').replace
 var NDX_ALIAS = { 'realestate': 'Real Estate Management & Development' };
 function canonIG(n, canon){ return canon[key(n)] || NDX_ALIAS[key(n)] || n; }
 
-function show(k){ return st.idx === k || st.idx === 'both'; }
 function years(){
   var a = spxDetailYears(SPX), b = NDX ? NDX.years : [], all = {};
   a.concat(b).forEach(function(y){ all[y] = 1; });
@@ -39,8 +39,8 @@ function data(){
   var exSec = Object.keys(st.excl).filter(function(k){ return st.excl[k] && k.indexOf('sec:') === 0; }).map(function(k){ return k.slice(4); });
   var exIG = Object.keys(st.excl).filter(function(k){ return st.excl[k] && k.indexOf('sec:') !== 0; });
   var out = { canon: canon, groups: g, spx: null, ndx: null };
-  if (show('spx') && hasYear('spx', y)) out.spx = spxDetail(SPX, y, st.excl);
-  if (show('ndx') && NDX && hasYear('ndx', y)){
+  if (hasYear('spx', y)) out.spx = spxDetail(SPX, y, st.excl);
+  if (NDX && hasYear('ndx', y)){
     // the Nasdaq engine takes its own group names: map the exclusions back
     var back = {}; NDX.igs.forEach(function(n){ back[canonIG(n, canon)] = n; });
     var r = NDX.detail(y, exSec, exIG.map(function(n){ return back[n] || n; }));
@@ -57,16 +57,13 @@ function render(){
   if (!root) return;
   var ys = years();
   if (!st.year || ys.indexOf(st.year) < 0) st.year = ys[ys.length - 1];
-  if (st.idx === 'spx' && !hasYear('spx', st.year)) st.year = spxDetailYears(SPX).slice(-1)[0];
-  var d = data(), first = d.spx ? 'spx' : 'ndx', R = d[first] || {};
-  var cols = ['spx', 'ndx'].filter(show);
+  var d = data(), R;
+  var cols = ['spx', 'ndx'];
   var sim = Object.keys(st.excl).some(function(k){ return st.excl[k]; });
 
-  // rows: a FIXED order — the first index shown, its latest year, nothing excluded (largest
-  // contribution first) — so rows never move when switching year or excluding
-  var base = first === 'spx' ? spxDetail(SPX, spxDetailYears(SPX).slice(-1)[0], {}) : NDX ? NDX.detail(NDX.years.slice(-1)[0], [], []) : null;
-  if (first === 'ndx' && base){ var bm = {}; Object.keys(base.byIG || {}).forEach(function(k){ bm[canonIG(k, d.canon)] = (bm[canonIG(k, d.canon)] || 0) + base.byIG[k]; }); base = { bySec: base.bySec, byIG: bm }; }
-  R = base || R;
+  // rows: a FIXED order — the S&P 500, latest year, nothing excluded (largest contribution
+  // first) — so rows never move when switching year or excluding
+  R = spxDetail(SPX, spxDetailYears(SPX).slice(-1)[0], {}) || {};
   var secs = d.groups.secs.slice().sort(function(a, b){ return ((R.bySec || {})[b] || 0) - ((R.bySec || {})[a] || 0); });
   function igsOf(sec){
     var l = (d.groups.igsOf[sec] || []).slice();
@@ -111,17 +108,17 @@ function render(){
     '<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:10px">' +
       '<div style="display:flex;gap:3px;flex-wrap:wrap">' + ys.map(function(y){
         var ok = cols.some(function(k){ return hasYear(k, y); });
-        return '<button class="ndx-tab-btn' + (y === st.year ? ' active' : '') + '"' + (ok ? ' onclick="maDetYear(' + y + ')"' : ' disabled style="opacity:.35;cursor:default" title="No ' + (st.idx === 'spx' ? 'S&amp;P 500' : '') + ' attribution for ' + y + '"') + '>' + y + '</button>'; }).join('') + '</div>' +
+        return '<button class="ndx-tab-btn' + (y === st.year ? ' active' : '') + '"' + (ok ? ' onclick="maDetYear(' + y + ')"' : ' disabled style="opacity:.35;cursor:default" title="No attribution for ' + y + '"') + '>' + y + '</button>'; }).join('') + '</div>' +
       '<span style="margin-left:auto;display:flex;gap:3px">' +
         '<button class="ndx-tab-btn" onclick="maDetOpenAll(true)">Expand All</button><button class="ndx-tab-btn" onclick="maDetOpenAll(false)">Collapse All</button>' +
         '<button class="sb-tbtn" onclick="maDetReset()">Reset</button></span>' +
     '</div>' +
-    '<table class="rt" style="width:100%;table-layout:fixed">' +
+    '<table class="rt ma-dt" style="width:100%;table-layout:fixed">' +
       '<colgroup><col style="width:32px"><col style="width:26px"><col>' + cols.map(function(){ return '<col style="width:150px"><col style="width:100px">'; }).join('') + '</colgroup>' +
       '<thead><tr><th></th><th></th><th></th>' + cols.map(function(k){ return '<th colspan="2" class="ma-dt-k" style="text-align:center;color:var(--navy)">' + NAME[k] + '</th>'; }).join('') + '</tr>' +
       '<tr><th></th><th></th><th>Sector / Industry Group</th>' + cols.map(function(){ return '<th class="num ma-dt-k">Weight: open → close</th><th class="num">Contribution</th>'; }).join('') + '</tr></thead>' +
       '<tbody>' + body + '</tbody></table>' +
-    '<div style="font-size:11px;color:var(--mu);margin-top:8px">Click a row to exclude it from ' + (cols.length > 1 ? 'both indices' : 'the index') + '; the rest rescale to 100%. S&amp;P 500 = the SPY fund, from its holdings (not the sector ETFs), from 2024.</div>';
+    '<div style="font-size:11px;color:var(--mu);margin-top:8px">Click a row to exclude it from both indices; the rest rescale to 100%. S&amp;P 500 = the SPY fund, from its holdings (not the sector ETFs), from 2024.</div>';
 }
 
 window.maDetYear = function(y){ st.year = y; render(); };
@@ -139,4 +136,3 @@ window.maDetToggle = function(k){
 export function initDetail(host, spx){ root = host; SPX = spx; if (root && spxGroups(SPX)) render(); }
 // ndx: { detail(year, exSecs, exIGs), years: [2020 …], igs: [names], setSim(exSecs, exIGs) }
 export function setDetailNdx(ndx){ NDX = ndx; render(); }
-export function setDetailIndex(idx){ st.idx = idx; render(); }

@@ -1,8 +1,10 @@
 // ndx-sector-returns.js — Market Analysis ▸ Nasdaq-100 ▸ Sector Returns & Attribution.
 // The Nasdaq-100 counterpart of the S&P 500 panel's Sector Alpha, one year per bar.
 // It is used as a short series of questions, top to bottom:
-//   1. Sectors or Industry Groups?   2. One or Multiple?   3. Returns or Attribution?
-//   then the years (and, for Returns only, Absolute / Relative).
+//   what  1. Sectors or Industry Groups?  2. One or Multiple?  (+ the sector chips)
+//   when  3. Period (yearly only here)    4. Returns or Contribution?  (+ the years)
+//   view  5. Absolute / Relative (Returns only)
+// Same three blocks as the S&P 500 side.
 //
 // Returns — there is no official Nasdaq-100 sector index, so a sector's return is
 // built from QQQ's holdings in the HOC data (docs/NDX_ATTRIBUTION.md):
@@ -101,25 +103,33 @@ function seg(fn, opts, cur){
 function q(num, label, ctl){
   return '<span style="display:inline-flex;align-items:center;gap:8px"><span class="sb-secrow-lbl" style="margin-right:0">' + num + ' · ' + label + '</span>' + ctl + '</span>';
 }
-function questions(){
-  var h = '<div class="sb-secrow" style="gap:18px">' +
-    q(1, 'Level', seg('ndxSrLevel', [['sec', 'Sectors'], ['ig', 'Industry Groups']], st.ig ? 'ig' : 'sec')) +
-    q(2, 'How many', seg('ndxSrOne', [['one', 'One'], ['multi', 'Multiple']], st.one ? 'one' : 'multi')) +
-    q(3, 'Show', seg('ndxSrShow', [['ret', 'Returns'], ['attr', 'Contribution to index']], st.show));
-  if (!isAttr()) h += '<span style="margin-left:auto">' + seg('ndxSrRel', [['abs', 'Absolute'], ['rel', 'Relative']], st.rel ? 'rel' : 'abs') + '</span>';
-  return h + '</div>';
+// a toggle that does not apply: same place, greyed, with the reason on hover
+function off2(opts, cur, why){
+  return '<span class="sb-toggle" style="margin-left:0;opacity:.45" title="' + why + '">' + opts.map(function(o){
+    return '<button class="sb-tbtn' + (o[0] === cur ? ' active' : '') + '" disabled>' + o[1] + '</button>'; }).join('') + '</span>';
 }
 function chips(){
   var P = picked();
-  return '<div class="sb-secrow"><span class="sb-secrow-lbl">' + (st.ig ? 'Industry groups:' : 'Sectors:') + '</span>' + names().map(function(n){
+  return '<div class="sb-line"><span class="sb-secrow-lbl">' + (st.ig ? 'Industry groups:' : 'Sectors:') + '</span>' + names().map(function(n){
     return '<span class="sb-secchip' + (P[n] ? ' active' : '') + '" onclick="ndxSrPick(\'' + jsq(n) + '\')"' + (st.ig ? ' title="' + esc(IG_SEC[n] || '') + '"' : '') + '>' + esc(n) + '</span>';
   }).join('') +
     (st.one ? '' : '<span style="margin-left:auto;display:inline-flex;gap:6px"><button class="sb-secchip-all" style="margin-left:0" onclick="ndxSrAll(true)">All</button><button class="sb-secchip-all" style="margin-left:0" onclick="ndxSrAll(false)">None</button></span>') + '</div>';
 }
-function yearsRow(){
-  return '<div class="sb-secrow"><span class="sb-secrow-lbl">Years</span>' + YEARS.map(function(y){
-    return '<span class="sb-secchip' + (st.years[y.key] ? ' active' : '') + '" onclick="ndxSrYear(\'' + y.key + '\')"' + (y.ytd ? ' title="Year to date"' : '') + '>' + y.label + '</span>';
-  }).join('') + '</div>';
+function controls(){
+  var rl = [['abs', 'Absolute'], ['rel', 'Relative']];
+  return '<div class="sb-block"><div class="sb-line q">' +
+      q(1, 'Level', seg('ndxSrLevel', [['sec', 'Sectors'], ['ig', 'Industry Groups']], st.ig ? 'ig' : 'sec')) +
+      q(2, 'How many', seg('ndxSrOne', [['one', 'One'], ['multi', 'Multiple']], st.one ? 'one' : 'multi')) +
+    '</div>' + chips() + '</div>' +
+    '<div class="sb-block"><div class="sb-line q">' +
+      q(3, 'Period', off2([['year', 'Yearly'], ['month', 'Monthly']], 'year', 'The Nasdaq-100 data is by holdings period: yearly only')) +
+      q(4, 'Show', seg('ndxSrShow', [['ret', 'Returns'], ['attr', 'Contribution to index']], st.show)) +
+    '</div><div class="sb-line"><span class="sb-secrow-lbl">Years</span>' + YEARS.map(function(y){
+      return '<span class="sb-secchip' + (st.years[y.key] ? ' active' : '') + '" onclick="ndxSrYear(\'' + y.key + '\')"' + (y.ytd ? ' title="Year to date"' : '') + '>' + y.label + '</span>';
+    }).join('') + '</div></div>' +
+    '<div class="sb-block"><div class="sb-line q">' +
+      q(5, 'View as', isAttr() ? off2(rl, 'abs', 'Contribution is already in points of the index return') : seg('ndxSrRel', rl, st.rel ? 'rel' : 'abs')) +
+    '</div></div>';
 }
 
 function render(){
@@ -139,7 +149,7 @@ function render(){
   if (!rel() && !isAttr()) yrs.forEach(function(y){ seen(benchVal(y.key)); });
   maxV = Math.max(maxV, isAttr() ? 5 : rel() ? 15 : 30);
 
-  var html = questions() + chips() + yearsRow() + '<div class="sbrs">';
+  var html = controls() + '<div class="sbrs">';
   // The index first (in Relative it is the zero line, so it is left out)
   if (!rel()){
     html += '<div class="sbr"><span class="sbn key" style="' + NAME + '">Nasdaq-100</span><div class="sbbs">' +

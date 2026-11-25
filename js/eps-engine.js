@@ -157,6 +157,35 @@ export function makeEngine(D) {
     });
   }
 
-  return { D: D, secs: secs, dates: dates, members: members, universe: universe, period: period, concentration: concentration,
+  // Index EPS built from its companies: each one adds (weight / price) x its EPS, step by step, on the basket held
+  // at the start of the step. Growth is that sum's change, steps chained, so every company's contribution adds up
+  // to the index's growth and (1 + EPS growth) x (1 + multiple change) = 1 + the basket's price return.
+  // keyFn gives the same growth for each sector / group / company (null if it starts a step at EPS <= 0).
+  function earnings(p, keyFn) {
+    var steps = {};
+    p.rows.forEach(function (r) { r.subs.forEach(function (s) { (steps[s.j] || (steps[s.j] = [])).push({ r: r, w: s.w }); }); });
+    var G = 1, contrib = {}, group = {}, bad = {};
+    Object.keys(steps).map(Number).sort(function (a, b) { return a - b; }).forEach(function (j) {
+      var list = steps[j].map(function (o) {
+        var a = dataAt(j, o.r.id, p.base), b = dataAt(j + 1, o.r.id, p.base), q = o.w / a[3];
+        return { r: o.r, e0: q * epsOf(a, p.base), e1: q * epsOf(b, p.base) };
+      });
+      var E0 = 0, E1 = 0, by = {};
+      list.forEach(function (x) { E0 += x.e0; E1 += x.e1; });
+      list.forEach(function (x) {
+        contrib[x.r.id] = (contrib[x.r.id] || 0) + G * (x.e1 - x.e0) / E0;
+        if (!keyFn) return;
+        var k = keyFn(x.r), o = by[k] || (by[k] = { e0: 0, e1: 0 }); o.e0 += x.e0; o.e1 += x.e1;
+      });
+      Object.keys(by).forEach(function (k) {
+        if (by[k].e0 > 0) group[k] = (group[k] == null ? 1 : group[k]) * (by[k].e1 / by[k].e0); else bad[k] = true;
+      });
+      G *= E1 / E0;
+    });
+    Object.keys(group).forEach(function (k) { group[k] = bad[k] || group[k] <= 0 ? null : group[k] - 1; });
+    return { total: G - 1, contrib: contrib, group: group };
+  }
+
+  return { earnings: earnings, D: D, secs: secs, dates: dates, members: members, universe: universe, period: period, concentration: concentration,
     group: group, fy: fy, fyLabel: fyLabel };
 }

@@ -70,8 +70,9 @@ export function barList(box, rows, o) {
   var VW = 900, P = { t: 28, r: 84, b: 26, l: Math.max(150, Math.round(maxLab * 6.3) + 22) };
   var lo = 0, hi = 0; all.forEach(function (r) { lo = Math.min(lo, r.v); hi = Math.max(hi, r.v); });
   if (o.domain) { lo = Math.min(lo, o.domain[0]); hi = Math.max(hi, o.domain[1]); }
-  var pct = o.unit === '%', suf = pct ? '%' : ' pp', dec = pct ? 0 : 2;
-  var A = axis(lo * 100, hi * 100, 7), VH = P.t + all.length * rowH + P.b + (o.total ? 8 : 0);
+  var pct = o.unit === '%', suf = pct ? '%' : ' pp', dec = o.dec != null ? o.dec : pct ? 0 : 2;
+  var span = (hi - lo) || 0.01;
+  var A = axis((lo < 0 ? lo - span * 0.14 : lo) * 100, (hi > 0 ? hi + span * 0.1 : hi) * 100, 7), VH = P.t + all.length * rowH + P.b + (o.total ? 8 : 0);
   function X(v) { return P.l + (v * 100 - A.lo) / (A.hi - A.lo) * (VW - P.l - P.r); }
   var svg = se('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: 'width:100%;height:auto;display:block' });
   A.ticks.forEach(function (t) {
@@ -148,4 +149,3 @@ export function lineChart(box, labels, series, yfmt, o) {
   });
   mount(box, svg, series.length > 1 ? series.map(function (s) { return legendItem(s.color, s.name, s.dash); }).join('') : '');
 }
-

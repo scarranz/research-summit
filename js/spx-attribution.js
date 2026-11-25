@@ -104,6 +104,13 @@ export function spyAttributionYears(data){
   return YEARS.map(function(y){ var r = compute(y, {}); return { key: y.key, bySec: r.bySec, byIG: r.byIG, residual: r.residual, total: r.total }; });
 }
 // Open → close SPY weights by sector for a year key ('2024' …) — Index Composition
+// The same attribution cut at an earlier month-end of the latest year ('2026-03'), for EPS Attribution's earlier dates
+export function spxDetailThrough(data, ym, excl){
+  if (!setup(data)) return null;
+  var last = YEARS[YEARS.length - 1], ds = dates(), i1 = -1;
+  for (var i = last.i0 + 1; i <= last.i1; i++) if (ds[i].slice(0, 7) === ym) i1 = i;
+  return i1 < 0 ? null : compute({ key: last.key, i0: last.i0, i1: i1 }, excl || {});
+}
 export function spyWeightSnaps(data, key){
   if (!setup(data)) return null;
   var y = +key, i0 = yearEndIdx(y - 1), i1 = yearEndIdx(y);

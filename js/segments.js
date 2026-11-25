@@ -33,6 +33,8 @@
 
 import { amznSegments } from './segments-data/amzn.js';
 import { dhrSegments } from './segments-data/dhr.js';
+import { spcxSegments } from './segments-data/spcx.js';
+import { spcxResults } from './results-data/spcx.js';
 import { amznResults } from './results-data/amzn.js';
 import { dhrResults } from './results-data/dhr.js';
 import { snSegments } from './segments-data/sn.js';
@@ -83,6 +85,8 @@ var THEME_SRC = { AMZN: AMZN_THEMES, SN: SN_THEMES, TSM: TSM_THEMES, SPOT: SPOT_
 var SEGMENTS_DATA = {
   AMZN: { seg: amznSegments, res: amznResults },
   DHR:  { seg: dhrSegments,  res: dhrResults  },
+  // SPCX: three reportable segments (Space, Connectivity, SI — called AI in the 424B4), 424B4 segment note. No Summit model.
+  SPCX: { seg: spcxSegments, res: spcxResults },
   // SN has ONE reportable segment (Domestic + International aggregated), so its Segments tab
   // carries the consolidated company; the revenue analysis lives in Top Line ▸ Other, which is
   // what `other` (alternative cuts of the same total) is for. See segments-data/sn.js.

@@ -61,7 +61,7 @@ Mucho del análisis va a Miscellaneous. Unidades que dependen de Summit → ⏭�
 | MISC-tgt Stated Targets | 👀 | 2026-11-25 | 24 metas públicas de Musk/Shotwell/CFO con evidencia y estado; verificadas contra transcripciones (guía `SOURCES/ELON_MEDIA_GUIDE.md`) |
 | MISC-src Sources & Open Questions | 👀 | 2026-11-25 | |
 | EV-RES-DATA / EV-RES Results | 👀 | 2026-11-25 | `js/results-data/spcx.js`: trimestral 1Q25–4Q28 y anual 2023–2030; reportado (424B4, 10-Q, release Q3; 4Q25 derivado) + consenso Bloomberg (export propio, campo por campo, sin recomponer totales); guía 1Q27 revenue y 4Q26 capex; sin Summit |
-| TL-GEN · TL-SEG · TL-OTH · TL-CUS | ⬜ | | bloque 3 |
+| TL-GEN · TL-SEG · TL-OTH · TL-CUS | 👀 | 2026-11-25 | `js/segments-data/spcx.js`: 3 segmentos (Space, Connectivity, SI) con productos, KPIs, puentes (suscriptores × ARPU; MW × revenue por MW); Other: líneas, geografía, productos vs servicios; Customers: Customer A (gobierno, 20.9% 2025) y **Customer B (SI) 34.5% del revenue de 3Q26** (10-Q) |
 | EV-EST Estimates | ⏭️ | | sin modelo Summit (solo consenso) |
 | EV-SET · EV-POST · EV-NOTES Earnings | ⬜ | | bloque 3/4; Q3 2026 transcript disponible |
 | BL-GEN · BL-SEG · BL-SPLC | ⬜ | | bloque 4 |
@@ -117,3 +117,4 @@ Mucho del análisis va a Miscellaneous. Unidades que dependen de Summit → ⏭�
   sirve en localhost:8000 (rama feat/spcx-profile), con la sesión de SAB → precio y market cap en vivo funcionan.
   Mientras SPCX no esté en `companies`, se revisa ahí; no hay nada que portar.
 - 2026-11-25 · Bloque 3 (parte 1): Evolution ▸ Results construido con el motor `results.js` (dataset sin Summit, como DHR).
+- 2026-11-25 · Bloque 3 (parte 2): Top Line construido con el motor `segments.js`; utilidad operativa por segmento agregada al dataset de Results.

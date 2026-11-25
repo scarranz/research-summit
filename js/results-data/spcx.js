@@ -49,7 +49,7 @@ export var spcxResults = {
                    { label: 'Operating metrics', keys: ['subs', 'arpu', 'gw', 'launches'] }] },
         { key: 'margins', label: 'Margins & profitability', defaultMetric: 'ebitda',
           groups: [{ label: 'Adjusted EBITDA', keys: ['ebitda', 'spaceebitda', 'connebitda', 'siebitda'] },
-                   { label: 'GAAP', keys: ['opinc', 'ni', 'eps'] },
+                   { label: 'GAAP', keys: ['opinc', 'spaceopinc', 'connopinc', 'siopinc', 'ni', 'eps'] },
                    { label: 'Cash', keys: ['cfo', 'capex', 'fcf'] }] }
       ],
       metrics: {
@@ -92,6 +92,12 @@ export var spcxResults = {
           [3750,3995,4331,4964,5411,5923,6908,8565,9552]), { note:'The profit engine. 3Q26 includes ~3 points of one-off tariff refunds (Q3 call). ' + D4Q })),
         siebitda: m({ label:'SI — adjusted EBITDA', short:'SI EBITDA', unit:'usdM', marginOf:'si', marginLabel:'Segment EBITDA margin' }, Object.assign(q([-112,-276,-428,-421,-609,1146,4953],
           [9115,15099,21415,28723,38170,41321,48468,56939,64438]), { note:'Turned positive with the compute rental contracts in 2Q26. ' + D4Q })),
+        spaceopinc: m({ label:'Space — operating income', short:'Space op.', unit:'usdM', marginOf:'space', marginLabel:'Segment operating margin' }, Object.assign(q([-70,-369,259,-477,-662,-542,-7],
+          [-370,9,0,-69,-118,30,-16,-65,-68]), { note:'GAAP segment operating income; Starship R&D runs through here. ' + D4Q })),
+        connopinc: m({ label:'Connectivity — operating income', short:'Conn. op.', unit:'usdM', marginOf:'conn', marginLabel:'Segment operating margin' }, Object.assign(q([1033,923,1190,1277,1188,1656,2367],
+          [2528,2730,2926,3381,3719,4044,4767,6028,6811]), { note:'GAAP segment operating income. ' + D4Q })),
+        siopinc: m({ label:'SI — operating income', short:'SI op.', unit:'usdM', marginOf:'si', marginLabel:'Segment operating margin' }, Object.assign(q([-936,-1524,-1722,-2173,-2469,-1257,431],
+          [2989,6656,10852,15242,21209,24008,33466,43141,52858]), { note:'GAAP segment operating income. 3Q26 carries $1.2B of stock-based pay tied to the Cursor acquisition; ex that, $1.6B. ' + D4Q })),
         opinc: m({ label:'Operating income (GAAP)', short:'Op. income', unit:'usdM', marginOf:'rev', marginLabel:'Operating margin' }, Object.assign(q([27,-970,-273,-1373,-1943,-143,2791],
           [5468,10198,16005,22241,30970,37135,52206,67447,83601]), { note:'3Q26 SI operating income includes $1.2B of stock-based pay tied to the Cursor acquisition. ' + D4Q })),
         ni: m({ label:'Net income (GAAP)', short:'Net income', unit:'usdM', marginOf:'rev', marginLabel:'Net margin' }, Object.assign(q([-528,-1008,-1054,-2347,-4276,-541,4404],
@@ -120,7 +126,7 @@ export var spcxResults = {
                    { label: 'Operating metrics', keys: ['subs', 'arpu', 'gw', 'launches'] }] },
         { key: 'margins', label: 'Margins & profitability', defaultMetric: 'ebitda',
           groups: [{ label: 'Adjusted EBITDA', keys: ['ebitda', 'spaceebitda', 'connebitda', 'siebitda'] },
-                   { label: 'GAAP', keys: ['opinc', 'ni', 'eps'] },
+                   { label: 'GAAP', keys: ['opinc', 'spaceopinc', 'connopinc', 'siopinc', 'ni', 'eps'] },
                    { label: 'Cash', keys: ['cfo', 'capex', 'fcf'] }] }
       ],
       metrics: {
@@ -143,6 +149,9 @@ export var spcxResults = {
         spaceebitda: m({ label:'Space — adjusted EBITDA', short:'Space EBITDA', unit:'usdM', marginOf:'space', marginLabel:'Segment EBITDA margin' }, Object.assign(y([997,1154,653],[-158,1810,3130,3745,6728]), { note:'' })),
         connebitda: m({ label:'Connectivity — adjusted EBITDA', short:'Conn. EBITDA', unit:'usdM', marginOf:'conn', marginLabel:'Segment EBITDA margin' }, Object.assign(y([1602,3849,7168],[11913,18408,32188,52030,80390]), { note:'' })),
         siebitda: m({ label:'SI — adjusted EBITDA', short:'SI EBITDA', unit:'usdM', marginOf:'si', marginLabel:'Segment EBITDA margin' }, Object.assign(y([1222,347,-1237],[14450,103891,206151,282380,389319]), { note:'' })),
+        spaceopinc: m({ label:'Space — operating income', short:'Space op.', unit:'usdM', marginOf:'space', marginLabel:'Segment operating margin' }, Object.assign(y([-1,21,-657],[-1581,-181,259,-120,1944]), { note:'GAAP segment operating income.' })),
+        connopinc: m({ label:'Connectivity — operating income', short:'Conn. op.', unit:'usdM', marginOf:'conn', marginLabel:'Segment operating margin' }, Object.assign(y([469,2006,4423],[7719,12995,24038,40604,64733]), { note:'GAAP segment operating income.' })),
+        siopinc: m({ label:'SI — operating income', short:'SI op.', unit:'usdM', marginOf:'si', marginLabel:'Segment operating margin' }, Object.assign(y([3973,-1561,-6355],[278,56494,141484,206322,279651]), { note:'GAAP segment operating income. FY2023 is positive because of a gain at X, not trading.' })),
         opinc: m({ label:'Operating income (GAAP)', short:'Op. income', unit:'usdM', marginOf:'rev', marginLabel:'Operating margin' }, Object.assign(y([-3505,466,-2589],[5901,77775,197255,290980,405811]), { note:'FY2023 includes a $3.8B impairment at X.' })),
         ni: m({ label:'Net income (GAAP)', short:'Net income', unit:'usdM', marginOf:'rev', marginLabel:'Net margin' }, Object.assign(y([-4628,791,-4937],[2542,49482,139237,217472,264256]), { note:'' })),
         eps: m({ label:'Diluted EPS (GAAP)', short:'EPS', unit:'eps' }, Object.assign(y([-1.68,0.08,-1.69],[0.28,4.22,8.53,13.19,18.01]), { note:'Bloomberg GAAP diluted EPS. The share count changes meaning across the xAI merger (Feb 2026) and the IPO (Jun 2026), so years before 2026 are not comparable per share.' })),

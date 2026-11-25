@@ -59,6 +59,7 @@ Mucho del análisis va a Miscellaneous. Unidades que dependen de Summit → ⏭�
 | MISC-def Defense | 👀 | 2026-11-25 | |
 | MISC-comp Competitive Position | 👀 | 2026-11-25 | |
 | MISC-risk Risks | 👀 | 2026-11-25 | |
+| MISC-tgt Stated Targets | 👀 | 2026-11-25 | 24 metas públicas de Musk/Shotwell/CFO con evidencia y estado; verificadas contra transcripciones (guía `SOURCES/ELON_MEDIA_GUIDE.md`) |
 | MISC-src Sources & Open Questions | 👀 | 2026-11-25 | |
 | EV-RES-DATA / EV-RES Results | ⬜ | | bloque 3: reportado (424B4, 10-Q) + consenso del export |
 | TL-GEN · TL-SEG · TL-OTH · TL-CUS | ⬜ | | bloque 3 |
@@ -105,3 +106,8 @@ Mucho del análisis va a Miscellaneous. Unidades que dependen de Summit → ⏭�
   `harness-spcx.html` (local): 10 celdas de Key Facts, 11 sub-tabs de Misc construyen sin errores de consola ni
   NaN; con un precio de prueba inyectado solo en el navegador, la valuación coincide con el dashboard de Drive
   (Consensus P/E 20× 2028E → $192 hoy). Falta la vista en el portal real con sesión (SAB).
+- 2026-11-25 · SAB ("hazlo") · MISC-tgt Stated Targets agregado (también en el dashboard de Drive). Bull = metas de Musk:
+  13 GW a fin de 2027, ~$38/W → ~$500B de ARR de salida ("best guess", Baron 6-nov), costo ~60% de la industria
+  (TomorrowX 18-nov). Flight 15: nave atrapada, **booster perdido** (NASASpaceFlight, Aviation Week) — corregido en
+  Overview, Products y Starship & Launch. Verificación de cifras: 15 de 16 confirmadas en transcripciones/reportes;
+  "<$100/kg en 2–3 años" no lleva fecha en la transcripción (se quitó la fecha).

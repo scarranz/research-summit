@@ -85,7 +85,7 @@ var S_PRODUCTS=[
   { ic:'🚀', fam:'Launch', d:'Reusable rockets to orbit.', items:[
     ['Falcon 9','The workhorse: reusable first stage, ~620 orbital launches by Mar 2026; most of the world\'s mass to orbit.'],
     ['Falcon Heavy','Three Falcon 9 cores strapped together for heavy and national-security payloads.'],
-    ['Starship','Fully reusable two-stage super-heavy rocket. Reached orbit on Flight 14 (Sep 2026); the ship was caught on Flight 15 (Nov 2026).'],
+    ['Starship','Fully reusable two-stage super-heavy rocket. Reached orbit on Flight 14 (Sep 2026); the ship was caught on Flight 15 (Nov 2026), the booster lost.'],
     ['Rideshare','Shared Falcon 9 flights for small satellites.'] ]},
   { ic:'👩‍🚀', fam:'Human spaceflight & cargo', d:'Dragon and Moon missions.', items:[
     ['Crew Dragon','Carries astronauts to the Space Station for NASA and private customers; first private crewed vehicle (May 2020).'],
@@ -132,7 +132,7 @@ var TIMELINE=[
     d:'<ul class="ov-bullets"><li>2025 — xAI merges with X (the "X Merger").</li><li>Feb 2 2026 — SpaceX acquires xAI (the "xAI Merger"): Grok, X and the Colossus data centers come in.</li><li>Mar 2026 — a $20B bridge loan refinances xAI and X debt.</li></ul>' },
   { y:'Jun 2026', t:'<b>IPO on Nasdaq</b> at $135 — ~$85.7B of net proceeds; a $25B investment-grade bond follows.' },
   { y:'Aug 2026', t:'Acquires <b>Cursor</b> (AI coding) at an implied $60B equity value.' },
-  { y:'Sep–Nov 2026', t:'<b>Starship reaches orbit</b> (Flight 14, 26 V3 satellites) and the <b>ship is caught</b> for the first time (Flight 15, Nov 14).' },
+  { y:'Sep–Nov 2026', t:'<b>Starship reaches orbit</b> (Flight 14, 26 V3 satellites) and the <b>ship is caught</b> for the first time (Flight 15, Nov 14) — the booster on that flight was lost.' },
 ];
 
 // ═══ OV-6 peer map (same SP_PEERS / SP_SC feed Valuation ▸ Peers when it is built) — copied from googl.js ═══
@@ -392,7 +392,7 @@ function stdProducts(){
         '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
     }).join('')+'</div>';
 }
-var OV_SOURCES='Sources — SpaceX 424B4 prospectus (SEC EDGAR, Jun 12 2026) for FY2023–FY2025 revenue by type, segment and geography, segment results, headcount, incorporation and history; Q3 2026 earnings release (Oct 20 2026) for nine-month 2026 figures; SpaceX IR and product pages for qualitative content; J.P. Morgan Key Investor FAQs (Nov 2026) for the Flight 15 ship catch; SEC EDGAR for filer status. Market cap and peer multiples are live (Massive price ÷ figures from each company\'s latest annual report, or Bloomberg consensus as of Nov 2026). Forward figures are estimates, not company guidance.';
+var OV_SOURCES='Sources — SpaceX 424B4 prospectus (SEC EDGAR, Jun 12 2026) for FY2023–FY2025 revenue by type, segment and geography, segment results, headcount, incorporation and history; Q3 2026 earnings release (Oct 20 2026) for nine-month 2026 figures; SpaceX IR and product pages for qualitative content; J.P. Morgan Key Investor FAQs (Nov 2026) and NASASpaceFlight / Aviation Week for Flight 15 (ship caught, booster lost); SEC EDGAR for filer status. Market cap and peer multiples are live (Massive price ÷ figures from each company\'s latest annual report, or Bloomberg consensus as of Nov 2026). Forward figures are estimates, not company guidance.';
 function stdOverviewBody(){
   var h=stdKeyFacts();
   h+='<p class="ov-lede">'+SPCX_LEDE+'</p>';

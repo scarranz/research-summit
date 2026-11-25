@@ -148,6 +148,27 @@ var SP_PEERS=[
   { tk:'AMZN', n:'Amazon', epsT:7.17, epsF:12.66, ebitdaT:145731, ebitdaF:220794, nd:-17974, gt:12.4, gf:15.6,
     src:'10-K FY2025; forward: Bloomberg consensus FY2026, Sep 10 2026',
     why:'Amazon Leo is the main rival LEO broadband network; AWS competes for AI compute.' },
+  // Below: latest annual report on SEC EDGAR (financial-statement pages, checked against XBRL company facts).
+  // EBITDA = GAAP operating income + D&A (cash-flow statement), not company "Adjusted EBITDA". Net debt = borrowings
+  // ex leases − cash & equivalents (no restricted cash or securities). None is in the Bloomberg file → trailing only.
+  { tk:'RKLB', n:'Rocket Lab', epsT:-0.37, epsF:null, ebitdaT:-184.9, ebitdaF:null, nd:-674.5, gt:38.0, gf:null,
+    src:'10-K FY2025 (acc. 0001819994-26-000013)',
+    why:'The most advanced independent launch company (Electron, Neutron in development) and a satellite maker.' },
+  { tk:'ASTS', n:'AST SpaceMobile', epsT:-1.34, epsF:null, ebitdaT:-236.6, ebitdaF:null, nd:-116.1, gt:1505.2, gf:null,
+    src:'10-K FY2025 (acc. 0001780312-26-000006); growth off a $4M 2024 base; operating loss = revenue − operating expenses',
+    why:'Satellite-to-phone broadband with carrier partners — the direct rival to Starlink Mobile.' },
+  { tk:'IRDM', n:'Iridium', epsT:1.06, epsF:null, ebitdaT:446.2, ebitdaF:null, nd:1664.0, gt:4.9, gf:null,
+    src:'10-K FY2025 (acc. 0001418819-26-000009)',
+    why:'Established LEO voice, data and IoT network; government and maritime customers.' },
+  { tk:'VSAT', n:'Viasat', epsT:-0.25, epsF:null, ebitdaT:1462.6, ebitdaF:null, nd:4562.8, gt:2.7, gf:null, chip:'FY to Mar 2026',
+    src:'10-K FY2026, year to Mar 31 2026 (acc. 0001193125-26-248290); debt ex finance leases',
+    why:'Geostationary broadband (incl. Inmarsat): competes with Starlink in aviation, maritime and defense.' },
+  { tk:'CRWV', n:'CoreWeave', epsT:-2.81, epsF:null, ebitdaT:2408, ebitdaF:null, nd:18246, gt:167.9, gf:null,
+    src:'10-K FY2025 (acc. 0001769628-26-000104); debt includes $4.2B of vendor financing',
+    why:'The largest listed neocloud renting GPU capacity to AI labs — the closest comparable to SpaceX\'s rented compute.' },
+  { tk:'NBIS', n:'Nebius', epsT:0.33, epsF:null, ebitdaT:-193.8, ebitdaF:null, nd:449.6, gt:479.0, gf:null,
+    src:'20-F FY2025 (acc. 0001104659-26-052948); EPS 0.33 includes discontinued operations (continuing: 0.04); 2024 revenue as restated',
+    why:'Neocloud renting GPU capacity; files a 20-F (Netherlands) in USD.' },
 ];
 
 var SP_SC={ metric:'ev', basis:'f', peers:null, _capsFetched:false };

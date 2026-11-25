@@ -46,7 +46,7 @@ Mucho del análisis va a Miscellaneous. Unidades que dependen de Summit → ⏭�
 | OV-3 2×2 | 👀 | 2026-11-25 | |
 | OV-4 How SpaceX makes money | 👀 | 2026-11-25 | segmento y geografía cuadran a $18,674M (424B4) |
 | OV-5 Products & platforms | 👀 | 2026-11-25 | 7 familias |
-| OV-6 Peer map | 🔨 | 2026-11-25 | hoy SPCX + AMZN; peers RKLB, ASTS, IRDM, VSAT, CRWV, NBIS en camino (denominadores de EDGAR) |
+| OV-6 Peer map | 👀 | 2026-11-25 | 8 nombres: SPCX, AMZN, RKLB, ASTS, IRDM, VSAT, CRWV, NBIS — denominadores de EDGAR (10-K/20-F FY2025; VSAT FY a mar-2026); solo trailing salvo SPCX y AMZN; las burbujas necesitan el precio en vivo (portal con sesión) |
 | OV-7 Timeline | 👀 | 2026-11-25 | 10 hitos |
 | OV-F Pie | 👀 | 2026-11-25 | |
 | MISC-fin Financial Model | 👀 | 2026-11-25 | consenso BBG + 8 supuestos; JPM referencia |

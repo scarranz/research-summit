@@ -362,6 +362,14 @@ Every company has **Overview**, **Pillars** and **Resources**, plus **Deep Dive*
 - Overview is custom-designed per company with Claude's help
 - Claude handles all the technical work — the user just describes what they want to see
 
+## SpaceX deep dive (sidebar ▸ SpaceX, below Derivatives) — read research/spacex/README.md first
+
+A standalone dashboard (`spacex-deep-dive/`, its own sidebar and 16 pages, plain scripts — not ES modules) embedded full width in a
+same-origin iframe from `index.html` (`#tp-spx`, page `spacex`, tab `spx`, lazy `src` in its page loader), the way Industries embeds its pages; `netlify.toml` lets
+`/spacex-deep-dive/*` be framed by our origin. Owner SAB. Numbers are frozen (Bloomberg consensus Nov 25 2026, filings,
+call transcripts); public sources live in `research/spacex/sources/`. SAB's notes, sell-side reports and Bloomberg exports
+are NOT committed (public repo) — they stay in SAB's Drive. Not the Companies ▸ SpaceX profile (`feat/spcx-profile`).
+
 ## NDX 100 Return Attribution — read docs/NDX_ATTRIBUTION.md first
 
 Market Analysis ▸ Nasdaq-100 Analysis (`js/ndx-attribution.js`). **Before changing its data, the extractor (`scripts/ndx/extract_ndx.py`), the `ndx-attribution` edge function or the page, read `docs/NDX_ATTRIBUTION.md`**: source sheet and columns, HOC / year rules (no hard-coded dates; a new year needs no code change), Carino math, drifted close weights, Bloomberg dummy tickers (`9990294D` → LBTYA, `9999794D` → LBTYK, `9210611D` → SIRI, `9996651D` → AZN — never show the dummy code), the Supabase refresh routine, and the page conventions agreed with the analyst.

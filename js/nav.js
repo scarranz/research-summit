@@ -16,6 +16,7 @@ const TAB_MAP = {
   'dcf-models': 'dcf',
   'betas': 'betas',
   'derivatives': 'der',
+  'spacex': 'spx',
 };
 
 const TAB_TITLES = {
@@ -29,6 +30,7 @@ const TAB_TITLES = {
   'dcf': 'DCF Models',
   'betas': 'Betas',
   'der': 'Derivatives',
+  'spx': 'SpaceX',
 };
 
 export function registerPageLoader(page, loader) {
